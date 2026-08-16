@@ -64,12 +64,12 @@ export function PartnerInvoiceDrawer({
     }
   }, [open, taxCode]);
 
-  const barIn = "#059669"; // Emerald 600
-  const barOut = "#ea580c"; // Orange 600
+  const barIn = "#ea580c"; // Orange 600 (Đầu vào - Chi phí)
+  const barOut = "#059669"; // Emerald 600 (Đầu ra - Doanh thu)
 
   const cashTrendLabels = statsData?.cashTrend?.map((t) => t.label) || [];
-  const cashTrendIn = statsData?.cashTrend?.map((t) => t.cashIn) || [];
-  const cashTrendOut = statsData?.cashTrend?.map((t) => t.cashOut) || [];
+  const cashTrendIn = statsData?.cashTrend?.map((t) => t.cashOut) || []; // Đầu vào (invoices in)
+  const cashTrendOut = statsData?.cashTrend?.map((t) => t.cashIn) || []; // Đầu ra (invoices out)
 
   const getSortState = (key: string) => {
     if (listHook.tableState.sorts.includes(key)) return "asc";
@@ -171,8 +171,8 @@ export function PartnerInvoiceDrawer({
           <span
             className={`inline-block px-2 py-1 rounded text-xs font-medium ${
               inv.direction === "IN"
-                ? "bg-emerald-100 text-emerald-800"
-                : "bg-orange-100 text-orange-800"
+                ? "bg-orange-100 text-orange-800"
+                : "bg-emerald-100 text-emerald-800"
             }`}
           >
             {inv.direction === "IN" ? "Đầu vào" : "Đầu ra"}
@@ -453,13 +453,13 @@ export function PartnerInvoiceDrawer({
                   yCallback={(v) => money(Number(v))}
                   datasets={[
                     {
-                      data: cashTrendOut,
-                      color: barIn, // Đầu vào -> Phải trả tiền -> Ghi nhận là chi phí (invoices in)
+                      data: cashTrendIn,
+                      color: barIn, // Đầu vào -> Cam
                       label: "HĐ Đầu vào",
                     },
                     {
-                      data: cashTrendIn,
-                      color: barOut, // Đầu ra -> Thu tiền -> (invoices out)
+                      data: cashTrendOut,
+                      color: barOut, // Đầu ra -> Xanh lục
                       label: "HĐ Đầu ra",
                     },
                   ]}

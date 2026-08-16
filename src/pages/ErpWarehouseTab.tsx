@@ -58,6 +58,7 @@ import {
 import { useCompanyProfile } from "@/core/api/companyProfileApi";
 import { inventoryCoreApi } from "@/modules/inventory-core/api/inventoryCoreApi";
 import { StatusBadge } from "@/shared/components/badges";
+import { Badge } from "@/shared/components/ui/badge";
 import { TableDateCell } from "@/shared/components/DataTable/TableDateCell";
 
 // ─── Main page ────────────────────────────────────────────────────────────────
@@ -381,7 +382,14 @@ export function ErpWarehouseTab() {
     }
 
     let formatOptionLabel: ((val: string) => string) | undefined;
-    if (["qtyReceipt", "qtyIssue", "qtyAdjustment"].includes(key)) {
+    if (key === "type") {
+      formatOptionLabel = (val: string) => {
+        if (val === "receipt") return t("Nhập kho");
+        if (val === "issue") return t("Xuất kho");
+        if (val === "adjustment") return t("Điều chỉnh");
+        return val;
+      };
+    } else if (["qtyReceipt", "qtyIssue", "qtyAdjustment"].includes(key)) {
       formatOptionLabel = (val: string | number) => {
         const n = Number(val || 0);
         if (isNaN(n)) return String(val);
@@ -505,18 +513,63 @@ export function ErpWarehouseTab() {
         key: "date",
         header: renderHeaderFilter("date", t("Ngày")),
         size: 130,
+        enableResizing: true,
         className: "text-right",
         cell: (row) => <TableDateCell date={row.createdAt} />,
       },
       {
+        key: "type",
+        header: renderHeaderFilter("type", t("Loại phiếu")),
+        size: 130,
+        enableResizing: true,
+        className: "text-center",
+        headerClassName: "p-0 h-full",
+        cell: (row) => {
+          const typeMap: Record<string, { label: string; cls: string }> = {
+            receipt: {
+              label: t("Nhập kho"),
+              cls: "bg-emerald-100 text-emerald-700",
+            },
+            issue: {
+              label: t("Xuất kho"),
+              cls: "bg-orange-100 text-orange-700",
+            },
+            adjustment: {
+              label: t("Điều chỉnh"),
+              cls: "bg-blue-100 text-blue-700",
+            },
+          };
+          const item = typeMap[row.type] ?? {
+            label: row.type,
+            cls: "bg-slate-100 text-slate-700",
+          };
+          return (
+            <div className="w-full flex justify-center">
+              <Tooltip content={item.label}>
+                <span
+                  className={cn(
+                    "text-[11px] px-2 py-[3px] rounded-md font-semibold whitespace-nowrap w-[80px] inline-flex items-center justify-center text-center truncate",
+                    item.cls,
+                  )}
+                >
+                  {item.label}
+                </span>
+              </Tooltip>
+            </div>
+          );
+        },
+      },
+      {
         key: "voucherNo",
         header: renderHeaderFilter("voucherNo", t("Số phiếu")),
-        size: 200,
+        size: 220,
+        enableResizing: true,
         className: "font-mono text-sm text-left",
         headerClassName: "p-0 h-full",
         cell: (row) => (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 w-full min-w-0">
             <TableText
+              className="flex-1 min-w-0"
               text={row.voucherNo || ""}
               onDrawerClick={(e) => {
                 e.stopPropagation();
@@ -532,6 +585,26 @@ export function ErpWarehouseTab() {
               enableCopy={true}
               textClassName="font-medium text-primary"
             />
+            {row.status === "DRAFT" && (
+              <Tooltip content={t("Nháp")}>
+                <Badge
+                  variant="secondary"
+                  className="text-[10px] px-1.5 py-0 h-4 flex-shrink-0 font-medium ml-auto w-[50px] inline-flex items-center justify-center text-center truncate"
+                >
+                  {t("Nháp")}
+                </Badge>
+              </Tooltip>
+            )}
+            {(row.status === "CANCELLED" || row.status === "CANCELED") && (
+              <Tooltip content={t("Hủy")}>
+                <Badge
+                  variant="destructive"
+                  className="text-[10px] px-1.5 py-0 h-4 flex-shrink-0 font-medium ml-auto w-[50px] inline-flex items-center justify-center text-center truncate"
+                >
+                  {t("Hủy")}
+                </Badge>
+              </Tooltip>
+            )}
           </div>
         ),
       },
@@ -539,6 +612,7 @@ export function ErpWarehouseTab() {
         key: "qtyReceipt",
         header: renderHeaderFilter("qtyReceipt", t("SL Nhập")),
         size: 150,
+        enableResizing: true,
         className: "text-right",
         headerClassName: "p-0 h-full",
         cell: (row) => {
@@ -557,6 +631,7 @@ export function ErpWarehouseTab() {
         key: "qtyIssue",
         header: renderHeaderFilter("qtyIssue", t("SL Xuất")),
         size: 150,
+        enableResizing: true,
         className: "text-right",
         headerClassName: "p-0 h-full",
         cell: (row) => {
@@ -575,6 +650,7 @@ export function ErpWarehouseTab() {
         key: "qtyAdjustment",
         header: renderHeaderFilter("qtyAdjustment", t("SL Điều chỉnh")),
         size: 150,
+        enableResizing: true,
         className: "text-right",
         headerClassName: "p-0 h-full",
         cell: (row) => {
@@ -598,22 +674,50 @@ export function ErpWarehouseTab() {
       },
       {
         key: "poNo",
-        header: renderHeaderFilter("poNo", t("Số PO")),
-        size: 150,
+        header: renderHeaderFilter("poNo", t("Chứng từ")),
+        size: 200,
+        enableResizing: true,
         className: "font-mono text-sm text-left",
         headerClassName: "p-0 h-full",
-        cell: (row) => (
-          <Tooltip content={row.poNo || ""}>
-            <div className="whitespace-normal break-words w-full">
-              {row.poNo ?? ""}
-            </div>
-          </Tooltip>
-        ),
+        cell: (row) => {
+          if (!row.poNo) return null;
+          return (
+            <TableText
+              text={row.poNo}
+              tooltip={row.poNo}
+              enableCopy={true}
+              onDrawerClick={(e) => {
+                e.stopPropagation();
+                if (row.purchaseOrderId || row.type === "receipt") {
+                  window.dispatchEvent(
+                    new CustomEvent("open_erp_document", {
+                      detail: {
+                        type: "erp_purchase_order",
+                        id: row.purchaseOrderId || row.poNo,
+                      },
+                    }),
+                  );
+                } else if (row.salesOrderId || row.type === "issue") {
+                  window.dispatchEvent(
+                    new CustomEvent("open_erp_document", {
+                      detail: {
+                        type: "erp_sales_order",
+                        id: row.salesOrderId || row.poNo,
+                      },
+                    }),
+                  );
+                }
+              }}
+              textClassName="font-medium text-primary"
+            />
+          );
+        },
       },
       {
         key: "partnerName",
         header: renderHeaderFilter("partnerName", t("Đối tác")),
         size: 200,
+        enableResizing: true,
         className: "text-left",
         headerClassName: "p-0 h-full",
         cell: (row) => (
@@ -628,6 +732,7 @@ export function ErpWarehouseTab() {
         key: "remarks",
         header: renderHeaderFilter("remarks", t("Ghi chú")),
         size: 300,
+        enableResizing: true,
         className: "text-left",
         headerClassName: "p-0 h-full",
         cell: (row) => (
@@ -642,11 +747,17 @@ export function ErpWarehouseTab() {
         key: "status",
         header: renderHeaderFilter("status", t("Trạng thái")),
         size: 150,
+        enableResizing: true,
         className: "text-center",
         headerClassName: "p-0 h-full",
         cell: (row) => (
           <div className="w-full flex justify-center">
-            <StatusBadge status={row.status || ""} />
+            <Tooltip content={t(row.status || "")}>
+              <StatusBadge
+                status={row.status || ""}
+                className="w-[88px] inline-flex items-center justify-center text-center truncate"
+              />
+            </Tooltip>
           </div>
         ),
       },
@@ -697,6 +808,15 @@ export function ErpWarehouseTab() {
         onRefresh={() => void vouchersQuery.refetch()}
         filterConfig={filterConfig}
         filter={filterPanel}
+        activeFilterCount={
+          (filterPanel?.activeFilterCount || 0) +
+          (tableState.activeFilterCount || 0)
+        }
+        onClearAllFilters={() => {
+          filterPanel.resetAll();
+          tableState.resetFilters();
+          setPage(1);
+        }}
         rowActions={(row) => [
           {
             groupLabel: t("groupTraCuu", "Tra cứu"),

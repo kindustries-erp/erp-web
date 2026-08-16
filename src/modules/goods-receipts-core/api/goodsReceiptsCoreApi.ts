@@ -1,6 +1,13 @@
 import axiosInstance from "@/core/api/axiosInstance";
 import type { PaginatedResponse, ListParams } from "@/shared/types/pagination";
 
+export interface ErpGrDeclaredSerial {
+  serialNo: string;
+  notes?: string | null;
+  lotNo?: string | null;
+  attributes?: Record<string, string> | null;
+}
+
 export interface ErpGrLine {
   id?: string;
   purchaseOrderLineId?: string;
@@ -10,6 +17,7 @@ export interface ErpGrLine {
   qtyReceived: string;
   unitCost?: string;
   amount?: string;
+  declaredSerials?: ErpGrDeclaredSerial[];
 }
 
 export interface ErpGoodsReceipt {
@@ -115,5 +123,31 @@ export const goodsReceiptsCoreApi = {
       { params: date ? { date } : {} },
     );
     return data.nextNo;
+  },
+  validateSerials: async (payload: {
+    itemId?: string;
+    serials: string[];
+  }): Promise<{
+    valid: boolean;
+    internalDuplicates: string[];
+    dbDuplicates: string[];
+  }> => {
+    const { data } = await axiosInstance.post<{
+      valid: boolean;
+      internalDuplicates: string[];
+      dbDuplicates: string[];
+    }>(`${BASE}/validate-serials`, payload);
+    return data;
+  },
+  autoGeneratePreview: async (payload: {
+    itemId: string;
+    qty: number;
+    receiptDate?: string;
+  }): Promise<{ serials: string[] }> => {
+    const { data } = await axiosInstance.post<{ serials: string[] }>(
+      `${BASE}/auto-generate-preview`,
+      payload,
+    );
+    return data;
   },
 };

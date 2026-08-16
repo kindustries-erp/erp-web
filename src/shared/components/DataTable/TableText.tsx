@@ -67,7 +67,7 @@ export function TableText({
   const textNode = <div className={cn("truncate", textClassName)}>{text}</div>;
 
   const wrappedText = tooltip ? (
-    <Tooltip content={typeof tooltip === "string" ? tooltip : text}>
+    <Tooltip content={typeof tooltip === "boolean" ? text : tooltip}>
       {textNode}
     </Tooltip>
   ) : (

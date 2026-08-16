@@ -313,8 +313,13 @@ export function TableColumnHeaderFilter({
         <Popover.Content
           align={align === "right" ? "end" : "start"}
           sideOffset={8}
+          style={{
+            background: "var(--popup-bg, rgba(246, 248, 252, 0.65))",
+            backdropFilter: "blur(24px) saturate(200%)",
+            WebkitBackdropFilter: "blur(24px) saturate(200%)",
+          }}
           className={cn(
-            "z-[9999] rounded-xl border border-border bg-surface p-0 shadow-lg outline-none",
+            "z-[9999] rounded-xl border border-border/70 p-0 shadow-[0_16px_40px_-8px_rgba(15,23,42,0.18),0_4px_12px_rgba(15,23,42,0.08),0_0_0_1px_rgba(255,255,255,0.6)_inset] outline-none",
             dateRangeSlot ? "w-72" : "w-64",
           )}
         >
@@ -478,7 +483,7 @@ export function TableColumnHeaderFilter({
 
           {/* Footer Actions */}
           {!hideFooter && (
-            <div className="p-2 border-t border-border flex justify-between items-center bg-muted/50 rounded-b-xl">
+            <div className="p-2 border-t border-border flex justify-between items-center bg-muted/30 rounded-b-xl">
               <Button
                 variant="ghost"
                 size="sm"

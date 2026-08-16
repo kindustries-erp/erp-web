@@ -10,6 +10,8 @@ export interface WarehouseRow {
   partnerId: string | null;
   partnerName: string | null;
   poNo?: string | null;
+  purchaseOrderId?: string | null;
+  salesOrderId?: string | null;
   remarks: string | null;
   createdAt: string;
   totalQty?: number | string;

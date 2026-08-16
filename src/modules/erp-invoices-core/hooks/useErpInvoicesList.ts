@@ -55,8 +55,15 @@ export function useErpInvoicesList(
   const loadInvoices = useCallback(async () => {
     setLoading(true);
     try {
+      let apiDirection: "IN" | "OUT" | undefined = undefined;
+      if (direction === "IN" || direction === "CHECKPOINT_IN") {
+        apiDirection = "IN";
+      } else if (direction === "OUT" || direction === "CHECKPOINT_OUT") {
+        apiDirection = "OUT";
+      }
+
       const res = await erpInvoicesCoreApi.list({
-        direction: direction === "ALL" ? undefined : direction,
+        direction: apiDirection,
         partner_tax_code: partnerTaxCode,
         search: state.search || undefined,
         seller_name: state.seller_name || undefined,

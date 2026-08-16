@@ -184,10 +184,10 @@ export function DashboardTabsContent({
         {/* Kinh doanh & Doanh thu */}
         <div>
           <div className="flex items-center gap-3 mb-3">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-md shadow-sm border border-emerald-100/50">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-md border border-slate-200/80 dark:border-slate-700 shadow-sm">
               Kinh doanh & Doanh thu
             </h4>
-            <div className="h-px bg-emerald-100/50 flex-1"></div>
+            <div className="h-px bg-slate-200/80 dark:bg-slate-700 flex-1"></div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <KpiCard
@@ -234,10 +234,10 @@ export function DashboardTabsContent({
         {/* Dòng tiền */}
         <div>
           <div className="flex items-center gap-3 mb-3 mt-6">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-blue-700 bg-blue-50 px-3 py-1.5 rounded-md shadow-sm border border-blue-100/50">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-md border border-slate-200/80 dark:border-slate-700 shadow-sm">
               Dòng tiền
             </h4>
-            <div className="h-px bg-blue-100/50 flex-1"></div>
+            <div className="h-px bg-slate-200/80 dark:bg-slate-700 flex-1"></div>
           </div>
           <Panel title={t("panel.cashTrend")}>
             <div className="relative h-[260px]">
@@ -272,10 +272,10 @@ export function DashboardTabsContent({
         {/* Kho & Vận hành (Phụ tùng Vinfast) */}
         <div>
           <div className="flex items-center gap-3 mb-3 mt-6">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-orange-700 bg-orange-50 px-3 py-1.5 rounded-md shadow-sm border border-orange-200/50">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-md border border-slate-200/80 dark:border-slate-700 shadow-sm">
               Kho & Vận hành (Phụ tùng)
             </h4>
-            <div className="h-px bg-orange-200/50 flex-1"></div>
+            <div className="h-px bg-slate-200/80 dark:bg-slate-700 flex-1"></div>
           </div>
           <div className="mb-4">
             <VinfastPartsSummaryCards filterState={filter.state} />
@@ -298,10 +298,10 @@ export function DashboardTabsContent({
       <TabsContent value="sales" className="space-y-6">
         <div>
           <div className="flex items-center gap-3 mb-3">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-md shadow-sm border border-emerald-100/50">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-md border border-slate-200/80 dark:border-slate-700 shadow-sm">
               Doanh thu bán hàng
             </h4>
-            <div className="h-px bg-emerald-100/50 flex-1"></div>
+            <div className="h-px bg-slate-200/80 dark:bg-slate-700 flex-1"></div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <KpiCard
@@ -402,10 +402,10 @@ export function DashboardTabsContent({
 
         <div>
           <div className="flex items-center gap-3 mb-3 mt-6">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-orange-700 bg-orange-50 px-3 py-1.5 rounded-md shadow-sm border border-orange-200/50">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-md border border-slate-200/80 dark:border-slate-700 shadow-sm">
               Chi phí mua hàng
             </h4>
-            <div className="h-px bg-orange-200/50 flex-1"></div>
+            <div className="h-px bg-slate-200/80 dark:bg-slate-700 flex-1"></div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <KpiCard
@@ -505,9 +505,12 @@ export function DashboardTabsContent({
         </div>
 
         <div>
-          <h3 className="text-lg font-semibold mb-4 text-slate-800">
-            Biến động Doanh thu / Chi phí
-          </h3>
+          <div className="flex items-center gap-3 mb-3 mt-6">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-md border border-slate-200/80 dark:border-slate-700 shadow-sm">
+              Biến động Doanh thu / Chi phí
+            </h4>
+            <div className="h-px bg-slate-200/80 dark:bg-slate-700 flex-1"></div>
+          </div>
           {!selectedBranchId && (
             <div className="mb-4">
               <BranchInvoiceChart
@@ -543,9 +546,12 @@ export function DashboardTabsContent({
       <TabsContent value="inventory" className="space-y-8">
         <VinfastPartsSummaryCards filterState={filter.state} />
         <div>
-          <h3 className="text-lg font-semibold mb-4">
-            Biến động Mua / Bán phụ tùng
-          </h3>
+          <div className="flex items-center gap-3 mb-3">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-md border border-slate-200/80 dark:border-slate-700 shadow-sm">
+              Biến động Mua / Bán phụ tùng
+            </h4>
+            <div className="h-px bg-slate-200/80 dark:bg-slate-700 flex-1"></div>
+          </div>
           <div className="mb-4">
             <VinfastPartTrendChart
               title="Tất cả phụ tùng (Tổng hợp)"

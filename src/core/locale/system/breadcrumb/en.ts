@@ -35,6 +35,7 @@ export const breadcrumbEn = {
   inventoryVouchers: "Vouchers",
   suppliers: "Suppliers",
   manufacturing: "Manufacturing",
+  vinfast: "VINFAST",
   mfgItems: "Components",
   mfgPo: "Component POs",
   mfgVehicles: "Vehicles / VIN",

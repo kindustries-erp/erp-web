@@ -40,11 +40,26 @@
   --glass-blur: 0px;
 
   /* ── Popups & dropdowns ── */
-  --popup-bg: #1e1e1e;
-  --popup-bg-hover: #2a2a2a;
-  --popup-border: #333333;
-  --popup-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
-  --drawer-footer-bg: rgba(30, 30, 30, 0.82);
+  --popup-bg: rgba(18, 18, 18, 0.68);
+  --popup-bg-hover: rgba(255, 255, 255, 0.08);
+  --popup-border: rgba(51, 51, 51, 0.8);
+  --popup-shadow:
+    0 16px 40px -8px rgba(0, 0, 0, 0.5), 0 4px 12px rgba(0, 0, 0, 0.3);
+
+  /* ── Modals & Tooltips ── */
+  --modal-bg: rgba(18, 18, 18, 0.75);
+  --tooltip-bg: #1e1e1e;
+  /* ── Table sticky glass ── */
+  --table-header-bg: rgba(26, 26, 26, 0.68);
+  --table-footer-bg: rgba(26, 26, 26, 0.72);
+
+  /* ── Drawer frosted glass ── */
+  --drawer-bg: rgba(18, 18, 18, 0.72);
+  --drawer-header-bg: rgba(22, 22, 22, 0.74);
+  --drawer-header-scrolled-bg: rgba(22, 22, 22, 0.84);
+  --drawer-footer-bg: rgba(22, 22, 22, 0.74);
+  --drawer-footer-scrolled-bg: rgba(22, 22, 22, 0.84);
+  --drawer-section-bg: rgba(28, 28, 28, 0.55);
 
   /* ── App shell ── */
   --app-shell-bg: #0f0f0f;

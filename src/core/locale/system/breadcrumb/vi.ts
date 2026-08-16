@@ -36,6 +36,7 @@ export const breadcrumbVi = {
   inventoryVouchers: "Chứng từ",
   suppliers: "Nhà cung cấp",
   manufacturing: "Sản xuất / Xưởng",
+  vinfast: "VINFAST",
   mfgItems: "Danh mục linh kiện",
   mfgPo: "PO linh kiện",
   mfgVehicles: "Xe / VIN",

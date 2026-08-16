@@ -46,50 +46,50 @@ export function FifoFlatTable({
   const { t } = useTranslation(["vinfastParts", "common"]);
 
   return (
-    <div className="w-full overflow-x-auto max-h-[520px] overflow-y-auto border border-slate-200 rounded-md bg-white relative">
+    <div className="w-full overflow-x-auto overflow-y-visible border border-slate-200 rounded-md bg-white relative">
       <Table className="w-full text-sm text-left whitespace-nowrap min-w-max border-collapse">
-        <TableHeader className="sticky top-0 z-10 bg-slate-50 text-slate-700 shadow-[0_1px_0_0_var(--border-light)]">
+        <TableHeader className="sticky top-0 z-10 table-header-glass text-slate-700 border-b border-border">
           <TableRow className="hover:bg-transparent border-b-0">
             <TableHead
               rowSpan={2}
-              className="px-3 py-2 border-r border-slate-200 font-semibold text-center w-10 bg-slate-100 shadow-[0_1px_0_0_var(--border-light)]"
+              className="px-3 py-2 border-r border-slate-200 font-semibold text-center w-10 bg-slate-100/75 shadow-[0_1px_0_0_var(--border-light)]"
             >
               #
             </TableHead>
             <TableHead
-              colSpan={3}
-              className="px-3 py-2 border-r border-slate-200 font-semibold text-center bg-slate-100 shadow-[0_1px_0_0_var(--border-light)]"
+              colSpan={2}
+              className="px-3 py-2 border-r border-slate-200 font-semibold text-center bg-slate-100/75 shadow-[0_1px_0_0_var(--border-light)]"
             >
               THÔNG TIN CHUNG
             </TableHead>
             <TableHead
               colSpan={3}
-              className="px-3 py-2 border-r border-slate-200 font-semibold text-center bg-orange-50 text-orange-800 shadow-[0_1px_0_0_var(--border-light)]"
+              className="px-3 py-2 border-r border-slate-200 font-semibold text-center bg-orange-50/75 text-orange-800 shadow-[0_1px_0_0_var(--border-light)]"
             >
               {t("vinfastParts:INBOUND_GROUP", "NHẬP KHO")}
             </TableHead>
             <TableHead
               colSpan={3}
-              className="px-3 py-2 border-r border-slate-200 font-semibold text-center bg-emerald-50 text-emerald-800 shadow-[0_1px_0_0_var(--border-light)]"
+              className="px-3 py-2 border-r border-slate-200 font-semibold text-center bg-emerald-50/75 text-emerald-800 shadow-[0_1px_0_0_var(--border-light)]"
             >
               {t("vinfastParts:OUTBOUND_FIFO_GROUP", "XUẤT KHO - FIFO")}
             </TableHead>
             <TableHead
               colSpan={2}
-              className="px-3 py-2 border-r border-slate-200 font-semibold text-center bg-blue-50 text-blue-800 shadow-[0_1px_0_0_var(--border-light)]"
+              className="px-3 py-2 border-r border-slate-200 font-semibold text-center bg-blue-50/75 text-blue-800 shadow-[0_1px_0_0_var(--border-light)]"
             >
               {t("vinfastParts:STOCK_GROUP", "TỒN KHO")}
             </TableHead>
             <TableHead
               colSpan={7}
-              className="px-3 py-2 font-semibold text-center bg-purple-50 text-purple-800 shadow-[0_1px_0_0_var(--border-light)]"
+              className="px-3 py-2 font-semibold text-center bg-purple-50/75 text-purple-800 shadow-[0_1px_0_0_var(--border-light)]"
             >
               HIỆU QUẢ KINH DOANH
             </TableHead>
           </TableRow>
           <TableRow className="hover:bg-transparent border-b-0 shadow-[0_1px_0_0_var(--border-light)]">
             {/* THONG TIN CHUNG */}
-            <TableHead className="px-3 py-2 border-r border-t border-slate-200 font-medium text-center bg-slate-50 shadow-[0_1px_0_0_var(--border-light)] min-w-[100px]">
+            <TableHead className="px-3 py-2 border-r border-t border-slate-200 font-medium text-center bg-slate-50/75 shadow-[0_1px_0_0_var(--border-light)] min-w-[100px]">
               <TableColumnHeaderFilter
                 title={t("common:date", "Ngày")}
                 align="center"
@@ -535,7 +535,7 @@ export function FifoFlatTable({
           {data.length === 0 ? (
             <TableRow>
               <TableCell
-                colSpan={17}
+                colSpan={18}
                 className="text-center py-6 text-slate-500"
               >
                 {t("common:noData", "Không có dữ liệu")}
@@ -661,8 +661,8 @@ export function FifoFlatTable({
             ))
           )}
         </TableBody>
-        <TableFooter className="sticky bottom-0 z-10 font-semibold bg-slate-50 border-t-2 border-slate-300 shadow-[0_-2px_10px_rgba(0,0,0,0.05)]">
-          <TableRow className="hover:bg-slate-50">
+        <TableFooter className="sticky bottom-0 z-10 font-semibold table-footer-glass border-t-2 border-slate-300 dark:border-border shadow-[0_-2px_6px_rgba(0,0,0,0.04)]">
+          <TableRow className="hover:bg-transparent bg-transparent">
             <TableCell
               colSpan={3}
               className="px-3 py-3 border-r border-slate-200 text-right uppercase text-slate-700"
