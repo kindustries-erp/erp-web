@@ -1,4 +1,10 @@
-import React, { type ReactNode, useState, useEffect, useMemo } from "react";
+import React, {
+  type ReactNode,
+  useState,
+  useEffect,
+  useMemo,
+  useCallback,
+} from "react";
 import { createPortal } from "react-dom";
 import * as Popover from "@radix-ui/react-popover";
 import { Settings2, GripVertical } from "lucide-react";
@@ -461,6 +467,26 @@ export function DataTable<T>({
     };
   }, [tableId, internalColumnOrder, internalVisibility, setTablePreferences]);
 
+  const scrollContainerRef = React.useRef<HTMLDivElement>(null);
+  const [isScrolledTop, setIsScrolledTop] = useState(false);
+  const [isScrolledBottom, setIsScrolledBottom] = useState(false);
+
+  const handleTableScroll = useCallback(() => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    setIsScrolledTop(el.scrollTop > 2);
+    const atBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 4;
+    setIsScrolledBottom(!atBottom && el.scrollHeight > el.clientHeight);
+  }, []);
+
+  useEffect(() => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    handleTableScroll();
+    el.addEventListener("scroll", handleTableScroll, { passive: true });
+    return () => el.removeEventListener("scroll", handleTableScroll);
+  }, [handleTableScroll, items, loading]);
+
   const showPagination =
     page != null &&
     pageSize != null &&
@@ -712,6 +738,8 @@ export function DataTable<T>({
       {filters && <div className="flex gap-2 mb-3 flex-wrap">{filters}</div>}
       <div className="flex items-stretch flex-1 min-h-0 w-full">
         <div
+          ref={scrollContainerRef}
+          onScroll={handleTableScroll}
           className={cn(
             "bg-surface border border-border rounded-[10px] overflow-auto relative flex-1 min-h-0 shadow-panel",
             elevated && "card-shadow",
@@ -728,11 +756,18 @@ export function DataTable<T>({
               variant === "spreadsheet" && "border-collapse border-spacing-0",
             )}
           >
-            <TableHeader className="sticky top-0 z-30 bg-muted border-b border-border shadow-[0_2px_4px_-1px_rgba(0,0,0,0.06),0_1px_2px_-1px_rgba(0,0,0,0.04)]">
+            <TableHeader
+              className={cn(
+                "sticky top-0 z-30 table-header-glass border-b border-border transition-shadow duration-200",
+                isScrolledTop
+                  ? "shadow-[0_4px_16px_-2px_rgba(15,23,42,0.10),0_2px_4px_-2px_rgba(15,23,42,0.06)]"
+                  : "shadow-none",
+              )}
+            >
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow
                   key={headerGroup.id}
-                  className="hover:bg-transparent border-b border-border bg-muted"
+                  className="hover:bg-transparent border-b border-border bg-transparent"
                 >
                   {headerGroup.headers.map((header, index) => {
                     const meta = header.column.columnDef
@@ -745,11 +780,11 @@ export function DataTable<T>({
                         key={header.id}
                         className={cn(
                           meta?.headerClassName,
-                          "sticky top-0 bg-muted z-20 border-r border-border",
+                          "sticky top-0 bg-transparent z-20 border-r border-border",
                           isFirstCol &&
                             !enableRowSelection &&
                             variant !== "spreadsheet" &&
-                            "left-0 z-30 shadow-[1px_1px_0_0_var(--border-light)]",
+                            "left-0 z-35 table-header-glass shadow-[1px_1px_0_0_var(--border-light)]",
                           variant === "spreadsheet" &&
                             "border-r border-border py-1 h-auto text-[11px]",
                           variant === "spreadsheet" &&
@@ -881,7 +916,7 @@ export function DataTable<T>({
                     );
                   })}
                   <TableHead
-                    className="w-auto p-0 m-0 border-none"
+                    className="w-auto p-0 m-0 border-none bg-transparent sticky top-0"
                     style={{ width: "auto" }}
                   />
                 </TableRow>
@@ -1048,8 +1083,15 @@ export function DataTable<T>({
                 })}
             </TableBody>
             {summaryRow && (
-              <TableFooter className="sticky bottom-0 z-30 bg-muted border-t border-border shadow-[0_-2px_6px_rgba(0,0,0,0.04)]">
-                <TableRow className="hover:bg-transparent bg-muted">
+              <TableFooter
+                className={cn(
+                  "sticky bottom-0 z-30 table-footer-glass border-t border-border transition-shadow duration-200",
+                  isScrolledBottom
+                    ? "shadow-[0_-4px_16px_-2px_rgba(15,23,42,0.10)]"
+                    : "shadow-none",
+                )}
+              >
+                <TableRow className="hover:bg-transparent bg-transparent">
                   {table.getVisibleLeafColumns().map((column, index) => {
                     const meta = column.columnDef.meta as DataTableRowMeta;
                     const isFirstCol = index === 0;
@@ -1058,10 +1100,11 @@ export function DataTable<T>({
                         key={column.id}
                         className={cn(
                           meta.className,
+                          "bg-transparent",
                           isFirstCol &&
                             !enableRowSelection &&
                             variant !== "spreadsheet" &&
-                            "sticky left-0 bg-muted z-10 shadow-[1px_0_0_0_var(--border-light)]",
+                            "sticky left-0 table-footer-glass z-35 shadow-[1px_0_0_0_var(--border-light)]",
                           variant === "spreadsheet" &&
                             "border-r border-border px-2 py-1 text-xs truncate font-semibold",
                         )}
@@ -1078,7 +1121,7 @@ export function DataTable<T>({
                     );
                   })}
                   <TableCell
-                    className="w-auto p-0 m-0 border-none"
+                    className="w-auto p-0 m-0 border-none bg-transparent"
                     style={{ width: "auto" }}
                   />
                 </TableRow>

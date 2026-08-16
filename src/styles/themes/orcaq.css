@@ -42,6 +42,10 @@
   --popup-border: #e4e4e7;
   --popup-shadow: 0 4px 16px rgba(24, 24, 27, 0.06);
 
+  /* ── Table sticky glass ── */
+  --table-header-bg: rgba(244, 244, 245, 0.68);
+  --table-footer-bg: rgba(244, 244, 245, 0.72);
+
   /* ── App shell ── */
   --app-shell-bg: #18181b;
   --app-shell-border: transparent;

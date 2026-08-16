@@ -40,35 +40,35 @@ export function InventoryFlatLedgerTable({
   return (
     <div className="w-full overflow-x-auto overflow-y-visible border border-border rounded-lg bg-card relative shadow-sm">
       <Table className="w-full text-sm text-left whitespace-nowrap min-w-max border-collapse">
-        <TableHeader className="sticky top-0 z-10 bg-muted/60 text-foreground shadow-[0_1px_0_0_var(--border)]">
+        <TableHeader className="sticky top-0 z-10 table-header-glass text-foreground border-b border-border">
           <TableRow className="hover:bg-transparent border-b-0">
             <TableHead
               rowSpan={2}
-              className="px-3 py-2 border-r border-border font-semibold text-center w-12 bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 shadow-[0_1px_0_0_var(--border)]"
+              className="px-3 py-2 border-r border-border font-semibold text-center w-12 bg-slate-100/75 dark:bg-slate-800/75 text-slate-800 dark:text-slate-200 shadow-[0_1px_0_0_var(--border)]"
             >
               #
             </TableHead>
             <TableHead
               colSpan={2}
-              className="px-3 py-2 border-r border-border font-semibold text-center bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 shadow-[0_1px_0_0_var(--border)]"
+              className="px-3 py-2 border-r border-border font-semibold text-center bg-slate-100/75 dark:bg-slate-800/75 text-slate-800 dark:text-slate-200 shadow-[0_1px_0_0_var(--border)]"
             >
               {t("inventory.ledger.generalInfo", "THÔNG TIN CHUNG")}
             </TableHead>
             <TableHead
               colSpan={3}
-              className="px-3 py-2 border-r border-border font-semibold text-center bg-orange-50 dark:bg-orange-950/40 text-orange-800 dark:text-orange-300 shadow-[0_1px_0_0_var(--border)]"
+              className="px-3 py-2 border-r border-border font-semibold text-center bg-orange-50/75 dark:bg-orange-950/40 text-orange-800 dark:text-orange-300 shadow-[0_1px_0_0_var(--border)]"
             >
               {t("inventory.ledger.inGroup", "NHẬP KHO")}
             </TableHead>
             <TableHead
               colSpan={3}
-              className="px-3 py-2 border-r border-border font-semibold text-center bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 shadow-[0_1px_0_0_var(--border)]"
+              className="px-3 py-2 border-r border-border font-semibold text-center bg-emerald-50/75 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 shadow-[0_1px_0_0_var(--border)]"
             >
               {t("inventory.ledger.outGroup", "XUẤT KHO")}
             </TableHead>
             <TableHead
               colSpan={2}
-              className="px-3 py-2 border-r border-border font-semibold text-center bg-blue-50 dark:bg-blue-950/40 text-blue-800 dark:text-blue-300 shadow-[0_1px_0_0_var(--border)]"
+              className="px-3 py-2 border-r border-border font-semibold text-center bg-blue-50/75 dark:bg-blue-950/40 text-blue-800 dark:text-blue-300 shadow-[0_1px_0_0_var(--border)]"
             >
               {t("inventory.ledger.stockGroup", "TỒN KHO")}
             </TableHead>
@@ -362,8 +362,8 @@ export function InventoryFlatLedgerTable({
           )}
         </TableBody>
 
-        <TableFooter className="sticky bottom-0 z-10 font-semibold bg-slate-50 dark:bg-slate-900 border-t-2 border-border shadow-[0_-2px_6px_rgba(0,0,0,0.04)]">
-          <TableRow className="hover:bg-transparent bg-slate-50 dark:bg-slate-900">
+        <TableFooter className="sticky bottom-0 z-10 font-semibold table-footer-glass border-t-2 border-border shadow-[0_-2px_6px_rgba(0,0,0,0.04)]">
+          <TableRow className="hover:bg-transparent bg-transparent">
             <TableCell
               colSpan={3}
               className="px-3 py-2.5 border-r border-border text-right uppercase text-slate-700 dark:text-slate-300 text-xs font-bold"

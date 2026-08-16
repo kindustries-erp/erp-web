@@ -1268,7 +1268,7 @@ export function ErpInvoicesTab({
                       );
                     })}
                   </tbody>
-                  <tfoot className="bg-slate-50 sticky bottom-0 border-t">
+                  <tfoot className="table-footer-glass sticky bottom-0 border-t border-border shadow-[0_-2px_6px_rgba(0,0,0,0.04)]">
                     <tr>
                       <td className="px-2 py-2 font-semibold text-right text-slate-700">
                         Tổng cộng

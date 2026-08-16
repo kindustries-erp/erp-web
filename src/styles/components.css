@@ -198,3 +198,19 @@
 .animate-slide-down-custom {
   animation: slideDownAndFadeCustom 300ms ease-out forwards;
 }
+
+/* ── Table Sticky Frosted Glass ── */
+.table-header-glass {
+  background-color: var(
+    --table-header-bg,
+    rgba(244, 246, 248, 0.65)
+  ) !important;
+  backdrop-filter: blur(16px) saturate(200%) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(200%) !important;
+}
+
+.table-footer-glass {
+  background-color: var(--table-footer-bg, rgba(244, 246, 248, 0.7)) !important;
+  backdrop-filter: blur(16px) saturate(200%) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(200%) !important;
+}
