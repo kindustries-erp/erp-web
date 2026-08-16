@@ -401,8 +401,6 @@ interface AppState {
   logout: () => void;
   setCustomBreadcrumbs: (crumbs: Array<[string, string?]> | null) => void;
   preloadTab: (page: PageKey) => void;
-  sidebarSearchQuery: string;
-  setSidebarSearchQuery: (q: string) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -419,12 +417,10 @@ export const useAppStore = create<AppState>()(
       companyProfileOpen: false,
       currentBranchId: null,
       customBreadcrumbs: null,
-      sidebarSearchQuery: "",
 
       setForbidden: (value) => set({ forbidden: value }),
       setCurrentBranchId: (id) => set({ currentBranchId: id }),
       setCustomBreadcrumbs: (crumbs) => set({ customBreadcrumbs: crumbs }),
-      setSidebarSearchQuery: (q) => set({ sidebarSearchQuery: q }),
 
       navigate: (page) => {
         const { openTabs } = get();

@@ -2,6 +2,13 @@ export const navEn = {
   appName: "ERP System",
   appSubtitle: "Business Management",
   searchPlaceholder: "Search menu...",
+  universalSearch: {
+    placeholder: "Search menu...",
+    noResults: "No pages found",
+    hintNavigate: "navigate",
+    hintOpen: "open",
+    hintClose: "close",
+  },
   sections: {
     accounting: "ACCOUNTING",
     hr: "HR",

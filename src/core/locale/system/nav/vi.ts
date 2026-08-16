@@ -2,6 +2,13 @@ export const navVi = {
   appName: "Hệ thống ERP",
   appSubtitle: "Quản trị doanh nghiệp",
   searchPlaceholder: "Tìm kiếm menu...",
+  universalSearch: {
+    placeholder: "Tìm kiếm menu...",
+    noResults: "Không tìm thấy trang nào",
+    hintNavigate: "di chuyển",
+    hintOpen: "mở",
+    hintClose: "đóng",
+  },
   sections: {
     accounting: "KẾ TOÁN",
     hr: "NHÂN SỰ",

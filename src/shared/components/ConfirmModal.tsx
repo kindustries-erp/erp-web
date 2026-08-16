@@ -1,9 +1,17 @@
-import { createPortal } from "react-dom";
-
+import * as React from "react";
 import { useT } from "@/core/i18n";
 import { Button } from "@/shared/components/ui/Button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/shared/components/ui/Dialog";
+import { cn } from "@/shared/utils";
 
-interface ConfirmModalProps {
+export interface ConfirmModalProps {
   open: boolean;
   title?: string;
   message: React.ReactNode | string;
@@ -27,40 +35,27 @@ export function ConfirmModal({
   onCancel,
   loading = false,
   danger = true,
-  zIndex = 500,
   confirmDisabled = false,
 }: ConfirmModalProps) {
   const t = useT();
 
-  if (!open) return null;
-
-  return createPortal(
-    <div
-      className="fixed inset-0 transition-all duration-300 flex items-center justify-center p-4"
-      style={{
-        zIndex,
-        backgroundColor: "rgba(15, 23, 42, 0.20)",
-        backdropFilter: "blur(2px)",
-        WebkitBackdropFilter: "blur(2px)",
-      }}
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onCancel();
-      }}
-    >
-      <div
-        className="relative bg-surface border border-border rounded-2xl p-6 w-full max-w-[360px] animate-in fade-in-0 zoom-in-95 duration-150"
-        style={{
-          boxShadow:
-            "0 24px 48px -12px rgba(15, 23, 42, 0.22), 0 4px 16px rgba(15, 23, 42, 0.08)",
-        }}
+  return (
+    <Dialog open={open} onOpenChange={(v) => !v && onCancel()}>
+      <DialogContent
+        hideCloseButton
+        hideOverlay
+        className={cn("max-w-[380px] p-6")}
       >
-        <h3 className="text-sm font-semibold text-foreground mb-1.5">
-          {title || t("confirmModal.defaultTitle")}
-        </h3>
-        <div className="text-xs text-[color:var(--muted-fg)] mb-6 leading-relaxed">
-          {message}
-        </div>
-        <div className="flex gap-2 justify-end">
+        <DialogHeader className="text-left space-y-1.5 mb-2">
+          <DialogTitle className="text-sm font-semibold text-foreground">
+            {title || t("confirmModal.defaultTitle")}
+          </DialogTitle>
+          <DialogDescription className="text-xs text-[color:var(--muted-fg)] leading-relaxed">
+            {message}
+          </DialogDescription>
+        </DialogHeader>
+
+        <DialogFooter className="flex-row justify-end gap-2 mt-4 sm:space-x-0">
           <Button
             variant="secondary"
             size="md"
@@ -78,7 +73,7 @@ export function ConfirmModal({
           >
             {loading && (
               <svg
-                className="animate-spin w-3 h-3"
+                className="animate-spin w-3 h-3 mr-1.5"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -91,9 +86,8 @@ export function ConfirmModal({
               ? t("common.processing")
               : confirmLabel || t("confirmModal.defaultConfirm")}
           </Button>
-        </div>
-      </div>
-    </div>,
-    document.body,
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
