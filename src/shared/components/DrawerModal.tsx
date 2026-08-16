@@ -360,6 +360,7 @@ export function DrawerSection({
   collapsed,
   onToggleCollapse,
   children,
+  className,
 }: {
   title: React.ReactNode;
   titleExtra?: React.ReactNode;
@@ -367,10 +368,14 @@ export function DrawerSection({
   collapsed?: boolean;
   onToggleCollapse?: () => void;
   children: React.ReactNode;
+  className?: string;
 }) {
   return (
     <div
-      className="mb-3 rounded-xl border border-border/80 p-3 card-shadow"
+      className={cn(
+        "mb-3 rounded-xl border border-border/80 p-3 card-shadow",
+        className,
+      )}
       style={{
         background: "var(--drawer-section-bg, rgba(255,255,255,0.55))",
         backdropFilter: "blur(12px) saturate(180%)",
