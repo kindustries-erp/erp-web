@@ -99,7 +99,11 @@ header: <TableColumnHeaderFilter
 Cột liên quan tới mã hệ thống, số phiếu (voucher code, item code) bắt buộc sử dụng component `<TableText>` để có tính năng copy, tooltip khi bị dài (ellipsis) và click để mở detail drawer:
 
 - **Chiều rộng**: Bắt buộc set `size: 200` và `enableResizing: true`.
-- **Quick Status Badge**: Nếu dòng dữ liệu đang ở trạng thái **Nháp (Draft)** hoặc **Hủy (Canceled/Voided)**, phải hiển thị thêm một Badge nhỏ nhắn ngay cạnh mã code để user nhận diện nhanh.
+- **Quick Status Badge**: Nếu dòng dữ liệu đang ở trạng thái **Nháp (Draft)** hoặc **Hủy (Canceled/Voided)**, phải hiển thị thêm một Badge nhỏ nhắn.
+  - **Align Right**: Badge trạng thái **BẮT BUỘC** phải được căn sát mép phải của cell (sử dụng class `ml-auto flex-shrink-0`), trong khi mã code và icon drawer/copy nằm bên trái.
+  - **Fixed Width đồng đều**: Thiết lập chiều rộng cố định cho badge (ví dụ: `w-[50px] inline-flex items-center justify-center text-center truncate`) để badge ở các dòng luôn bằng nhau và thẳng hàng.
+  - **Sử dụng App Badge**: Bắt buộc dùng component `Badge` từ `@/shared/components/ui/badge`.
+  - **Tooltip & Ellipsis**: Bọc Badge trong `<Tooltip>` và có `truncate` phòng trường hợp text trạng thái bị dài hoặc đa ngôn ngữ.
 
 **Mẫu code cho cột Code/SKU**:
 
@@ -110,8 +114,9 @@ Cột liên quan tới mã hệ thống, số phiếu (voucher code, item code) 
   enableResizing: true,
   // ... header config ...
   cell: (row) => (
-    <div className="flex items-center gap-2 w-full">
+    <div className="flex items-center gap-1.5 w-full min-w-0">
       <TableText
+        className="flex-1 min-w-0"
         text={row.code}
         enableCopy={true}
         tooltip={true} // Bật tính năng tooltip & ellipsis (truncate) nếu text quá dài
@@ -121,14 +126,24 @@ Cột liên quan tới mã hệ thống, số phiếu (voucher code, item code) 
         }}
       />
       {row.status === "DRAFT" && (
-        <Badge variant="secondary" className="text-[10px] px-1 py-0 h-4 flex-shrink-0">
-          {t("Nháp", "Draft")}
-        </Badge>
+        <Tooltip content={t("Nháp", "Draft")}>
+          <Badge
+            variant="secondary"
+            className="text-[10px] px-1.5 py-0 h-4 flex-shrink-0 font-medium ml-auto w-[50px] inline-flex items-center justify-center text-center truncate"
+          >
+            {t("Nháp", "Draft")}
+          </Badge>
+        </Tooltip>
       )}
-      {row.status === "CANCELED" && (
-        <Badge variant="destructive" className="text-[10px] px-1 py-0 h-4 flex-shrink-0">
-          {t("Hủy", "Canceled")}
-        </Badge>
+      {(row.status === "CANCELED" || row.status === "CANCELLED") && (
+        <Tooltip content={t("Hủy", "Canceled")}>
+          <Badge
+            variant="destructive"
+            className="text-[10px] px-1.5 py-0 h-4 flex-shrink-0 font-medium ml-auto w-[50px] inline-flex items-center justify-center text-center truncate"
+          >
+            {t("Hủy", "Canceled")}
+          </Badge>
+        </Tooltip>
       )}
     </div>
   )
@@ -161,17 +176,30 @@ import { TableDateCell } from "@/shared/components/DataTable/TableDateCell";
 
 ## 7. Cột Trạng Thái (Status/State)
 
-Bất kỳ cột nào liên quan đến **Status**, **State** thì bắt buộc phải dùng **Badge component** có sẵn trong app (`@/shared/components/ui/badge`).
-Nếu màu sắc / variant chưa có sẵn, hãy thêm các class custom (hoặc tạo variant mới trong theme) thay vì viết thẻ div / span thủ công.
+Bất kỳ cột nào liên quan đến **Status**, **State** thì bắt buộc phải tuân thủ các quy tắc sau:
+- **Dùng App Badge component**: Bắt buộc dùng `<Badge>` (`@/shared/components/ui/badge`) hoặc `<StatusBadge>` (`@/shared/components/badges`).
+- **Fixed Width đồng đều**: Bắt buộc thiết lập chiều rộng cố định cho badge (ví dụ: `w-[88px] inline-flex items-center justify-center text-center truncate`) để các trạng thái trên các dòng luôn thẳng tắp và đồng đều.
+- **Tooltip & Ellipsis**: Bọc `<Tooltip>` cho Badge và thêm class `truncate` để không làm tràn vỡ layout khi text trạng thái dài.
 
-**Mẫu code cho Badge**:
+**Mẫu code cho cột Trạng Thái**:
 
 ```tsx
-cell: (row) => (
-  <Badge variant={row.status === "DONE" ? "default" : "secondary"}>
-    {t(row.status)}
-  </Badge>
-);
+{
+  key: "status",
+  header: renderHeaderFilter("status", t("Trạng thái")),
+  size: 130,
+  className: "text-center",
+  cell: (row) => (
+    <div className="w-full flex justify-center">
+      <Tooltip content={t(row.status)}>
+        <StatusBadge
+          status={row.status || ""}
+          className="w-[88px] inline-flex items-center justify-center text-center truncate"
+        />
+      </Tooltip>
+    </div>
+  ),
+}
 ```
 
 ## 8. Subtotal Row (Dòng tổng cộng)
@@ -225,10 +253,10 @@ cell: (row) => (
 - [ ] Các cột thường KHÔNG set `hideFilter={true}` để hiện search box & options chưa?
 - [ ] Cột ngày tháng (Date) đã dùng `dateRangeSlot` và `hideFilter={true}` chưa?
 - [ ] Drawer thì client-side filter, Page thì server-side chưa? Nếu client-side filter thì `useMemo` đã có đủ dependency chưa?
-- [ ] Các cột mã/code (size: 200px) đã dùng `<TableText>` bật `enableCopy`, `tooltip`, `onDrawerClick` và Badge status (nếu Nháp/Hủy) chưa?
+- [ ] Các cột mã/code (size: 200px) đã dùng `<TableText>` bật `enableCopy`, `tooltip`, `onDrawerClick` và Quick Status Badge (align right `ml-auto`, fixed width, bọc Tooltip & ellipsis) chưa?
 - [ ] Cột thời gian có format 2 dòng (Ngày to, Giờ nhỏ xám) chưa?
 - [ ] Cột số lượng có class `tabular-nums`, cột tiền tệ có class `font-semibold` chưa?
-- [ ] Cột trạng thái (status/state) độc lập có dùng `<Badge>` không?
+- [ ] Cột trạng thái (status/state) độc lập có dùng App `<Badge>`/`<StatusBadge>`, fixed width đều nhau, bọc `<Tooltip>` & `truncate` chưa?
 - [ ] Các cột số tiền / số lượng có `summaryRow` tổng không?
 - [ ] Text đã có namespace i18n (`t(...)`) chưa?
 - [ ] Đã bỏ default state `sortBy` ở UI và dùng default sort ở Backend chưa?

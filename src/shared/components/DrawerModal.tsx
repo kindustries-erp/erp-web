@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "@/shared/utils";
 import { useT } from "@/core/i18n";
@@ -40,27 +40,31 @@ export interface DrawerModalProps {
   /** Extra element rendered to the right of title+subtitle, before the × button */
   headerExtra?: React.ReactNode;
 
-  /** Footer action buttons (right-aligned) */
+  /** Footer action buttons */
   actions?: DrawerAction[];
+  /** Custom element on left side of footer (e.g. status indicator, delete button) */
+  footerLeft?: React.ReactNode;
 
-  /** When true, clicking the backdrop / pressing Escape / clicking × shows a confirm dialog */
-  confirmOnClose?: boolean;
-
-  children: React.ReactNode;
-
-  /** z-index tier — defaults to 400 (same as SlidePanel) */
-  stackOffset?: number;
-  zIndex?: number;
-
-  /** Optional classes for special drawer layouts */
+  /** Width / style overrides */
   panelClassName?: string;
   bodyClassName?: string;
 
-  /** When true, skip slide-in/out animation (instant show/hide). Useful for inline type switching. */
+  /** Confirm prompt before closing when form is dirty */
+  confirmOnClose?: boolean;
+
+  /** Disable open/close slide transition */
   noAnimation?: boolean;
 
-  /** Custom element to render on the left side of the footer */
-  footerLeft?: React.ReactNode;
+  /**
+   * Override stacking offset percentage (default: auto -2% per deeper drawer).
+   * Set 0 to disable stacking shift.
+   */
+  stackOffset?: number;
+
+  /** Custom z-index (default: 400) */
+  zIndex?: number;
+
+  children: React.ReactNode;
 }
 
 // ── Btn helper ─────────────────────────────────────────────────────────────
@@ -111,30 +115,55 @@ export function DrawerModal({
   subtitle,
   headerExtra,
   actions,
-  confirmOnClose = false,
-  children,
-  zIndex = 400,
-  stackOffset,
+  footerLeft,
   panelClassName,
   bodyClassName,
+  confirmOnClose = false,
   noAnimation = false,
-  footerLeft,
+  stackOffset,
+  zIndex = 400,
+  children,
 }: DrawerModalProps) {
   const t = useT();
+  const [visible, setVisible] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [isScrolledTop, setIsScrolledTop] = useState(false);
+  const [isScrolledBottom, setIsScrolledBottom] = useState(false);
 
-  // Mount/unmount portal: mount immediately on open, delay unmount for exit animation
-  const [mounted, setMounted] = useState(open);
-  // Separate "visible" state to trigger enter animation after mount
-  const [visible, setVisible] = useState(open);
+  const checkScrollState = useCallback(() => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    const hasScroll = el.scrollHeight > el.clientHeight;
+    setIsScrolledTop(el.scrollTop > 0);
+    setIsScrolledBottom(
+      hasScroll && el.scrollTop + el.clientHeight < el.scrollHeight - 1,
+    );
+  }, []);
 
+  useEffect(() => {
+    if (!open) return;
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    checkScrollState();
+    el.addEventListener("scroll", checkScrollState, { passive: true });
+    const ro = new ResizeObserver(checkScrollState);
+    ro.observe(el);
+    return () => {
+      el.removeEventListener("scroll", checkScrollState);
+      ro.disconnect();
+    };
+  }, [open, checkScrollState]);
+
+  // Mount/unmount lifecycle for CSS transitions
   useEffect(() => {
     if (open) {
       setMounted(true);
       if (noAnimation) {
         setVisible(true);
       } else {
-        // Trigger enter animation on next frame after portal is in DOM
+        // Double RAF ensures browser has painted mounted DOM before transition starts
         requestAnimationFrame(() => {
           requestAnimationFrame(() => {
             setVisible(true);
@@ -200,8 +229,6 @@ export function DrawerModal({
       className={cn("slide-panel-overlay", visible && "open")}
       style={{
         zIndex,
-        // backdropFilter: "blur(1px)",
-        // WebkitBackdropFilter: "blur(1px)",
       }}
       onClick={(e) => {
         if (e.target === e.currentTarget) requestClose();
@@ -209,7 +236,7 @@ export function DrawerModal({
     >
       <div
         className={cn(
-          "slide-panel min-h-0 min-[1024px]:min-w-[450px]",
+          "slide-panel min-h-0 min-[1024px]:min-w-[450px] flex flex-col",
           panelClassName,
         )}
         style={
@@ -218,75 +245,79 @@ export function DrawerModal({
             : undefined
         }
       >
-        {/* ── Header ── */}
-        <div className="px-[18px] py-[14px] border-b border-border flex items-center gap-[10px] flex-shrink-0">
-          {icon && (
-            <div className="w-[30px] h-[30px] bg-[color:var(--muted)] rounded-lg flex items-center justify-center flex-shrink-0 text-[color:var(--muted-fg)]">
-              {icon}
-            </div>
-          )}
-          <div className="flex-1 min-w-0">
-            <div className="text-sm font-semibold text-foreground leading-tight truncate flex items-center gap-2">
-              <span className="truncate">{title}</span>
-              {titleExtra}
-            </div>
-            {subtitle && (
-              <div className="text-xs text-[color:var(--muted-fg)] truncate mt-[1px]">
-                {subtitle}
+        <div
+          ref={scrollContainerRef}
+          className="flex-1 overflow-y-auto overflow-x-hidden flex flex-col min-h-0 relative"
+        >
+          {/* ── Sticky Header ── */}
+          <div
+            className={cn(
+              "sticky top-0 z-20 px-5 py-3.5 border-b border-border table-header-glass flex items-center gap-2.5 flex-shrink-0 transition-shadow duration-200",
+              isScrolledTop
+                ? "shadow-[0_4px_16px_-4px_rgba(15,23,42,0.08),0_2px_4px_-2px_rgba(15,23,42,0.04)]"
+                : "shadow-none",
+            )}
+          >
+            {icon && (
+              <div className="w-[30px] h-[30px] bg-[color:var(--muted)] rounded-lg flex items-center justify-center flex-shrink-0 text-[color:var(--muted-fg)]">
+                {icon}
               </div>
             )}
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-semibold text-foreground leading-tight truncate flex items-center gap-2">
+                <span className="truncate">{title}</span>
+                {titleExtra}
+              </div>
+              {subtitle && (
+                <div className="text-xs text-[color:var(--muted-fg)] truncate mt-[1px]">
+                  {subtitle}
+                </div>
+              )}
+            </div>
+            {headerExtra}
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              onClick={requestClose}
+              className="text-[color:var(--faint)]"
+            >
+              <X className="w-4 h-4" />
+            </Button>
           </div>
-          {headerExtra}
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            onClick={requestClose}
-            className="text-[color:var(--faint)]"
-          >
-            <X className="w-4 h-4" />
-          </Button>
-        </div>
 
-        {/* ── Body ── */}
-        <div
-          className={cn(
-            "flex-1 overflow-y-auto overflow-x-hidden p-[18px]",
-            "min-h-0",
-            bodyClassName,
+          {/* ── Body ── */}
+          <div className={cn("flex-1 p-[18px]", bodyClassName)}>{children}</div>
+
+          {/* ── Sticky Footer ── */}
+          {(footerLeft || (actions && actions.length > 0)) && (
+            <div
+              className={cn(
+                "sticky bottom-0 z-20 mt-auto px-5 py-3 border-t border-border table-footer-glass flex gap-2 flex-shrink-0 transition-shadow duration-200",
+                isScrolledBottom
+                  ? "shadow-[0_-4px_16px_-4px_rgba(15,23,42,0.08),0_-2px_4px_-2px_rgba(15,23,42,0.04)]"
+                  : "shadow-none",
+              )}
+            >
+              {/* Left-aligned actions or custom footerLeft */}
+              <div className="flex gap-2 flex-1 min-w-0 items-center">
+                {footerLeft}
+                {actions
+                  ?.filter((a) => a.align === "left")
+                  .map((a) => (
+                    <Btn key={a.label} action={a} />
+                  ))}
+              </div>
+              {/* Right-aligned actions (default) */}
+              <div className="flex gap-2">
+                {actions
+                  ?.filter((a) => a.align !== "left")
+                  .map((a) => (
+                    <Btn key={a.label} action={a} />
+                  ))}
+              </div>
+            </div>
           )}
-        >
-          {children}
         </div>
-
-        {/* ── Footer ── */}
-        {(footerLeft || (actions && actions.length > 0)) && (
-          <div
-            className="mt-auto px-[18px] py-3 border-t border-[rgba(228,231,236,0.6)] flex gap-2 flex-shrink-0"
-            style={{
-              background: "var(--drawer-footer-bg, rgba(249,251,255,0.82))",
-              backdropFilter: "blur(16px)",
-              WebkitBackdropFilter: "blur(16px)",
-            }}
-          >
-            {/* Left-aligned actions or custom footerLeft */}
-            <div className="flex gap-2 flex-1 min-w-0 items-center">
-              {footerLeft}
-              {actions
-                ?.filter((a) => a.align === "left")
-                .map((a) => (
-                  <Btn key={a.label} action={a} />
-                ))}
-            </div>
-            {/* Right-aligned actions (default) */}
-            <div className="flex gap-2">
-              {actions
-                ?.filter((a) => a.align !== "left")
-                .map((a) => (
-                  <Btn key={a.label} action={a} />
-                ))}
-            </div>
-          </div>
-        )}
 
         {/* ── Confirm-before-close overlay ── */}
         <ConfirmModal
@@ -318,6 +349,7 @@ export function DrawerSection({
   collapsed,
   onToggleCollapse,
   children,
+  className,
 }: {
   title: React.ReactNode;
   titleExtra?: React.ReactNode;
@@ -325,9 +357,20 @@ export function DrawerSection({
   collapsed?: boolean;
   onToggleCollapse?: () => void;
   children: React.ReactNode;
+  className?: string;
 }) {
   return (
-    <div className="mb-3 rounded-xl border border-border bg-surface p-3 card-shadow">
+    <div
+      className={cn(
+        "mb-3 rounded-xl border border-border/80 p-3 card-shadow",
+        className,
+      )}
+      style={{
+        background: "var(--drawer-section-bg, rgba(255,255,255,0.55))",
+        backdropFilter: "blur(12px) saturate(180%)",
+        WebkitBackdropFilter: "blur(12px) saturate(180%)",
+      }}
+    >
       <div
         className={cn(
           "text-[11px] font-bold text-foreground/80 uppercase tracking-[0.06em] mb-[10px] pb-[6px] border-b border-[color:var(--border)] flex justify-between items-center",

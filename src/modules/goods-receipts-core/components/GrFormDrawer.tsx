@@ -4,7 +4,7 @@
  * to the unified InventoryVoucherFormDrawer shell.
  */
 import { useRef, useEffect, useState } from "react";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, CheckCircle2, AlertTriangle } from "lucide-react";
 import { Tooltip, TooltipProvider } from "@/core/components/ui/Tooltip";
 import { cn } from "@/shared/utils";
 import { Button } from "@/shared/components/ui/Button";
@@ -28,9 +28,13 @@ import { basicMastersApi } from "@/modules/basic-masters/api/basicMastersApi";
 import { useT } from "@/core/i18n";
 import toast from "react-hot-toast";
 import { FilterButton } from "@/shared/components/FilterPanel";
-import type { UseGrDrawerReturn } from "@/modules/goods-receipts-core/hooks/useGrDrawer";
+import type {
+  UseGrDrawerReturn,
+  GrLineForm,
+} from "@/modules/goods-receipts-core/hooks/useGrDrawer";
 import { InventoryVoucherFormDrawer } from "@/modules/inventory-core/components/inventory-voucher-drawer/InventoryVoucherFormDrawer";
 import { useVoucherClientFilter } from "@/modules/inventory-core/hooks/useVoucherClientFilter";
+import { GoodsReceiptSerialDrawer } from "./GoodsReceiptSerialDrawer";
 
 function fmtQty(value?: string | null) {
   if (!value) return "0";
@@ -80,6 +84,78 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
   });
   const { data: companyProfile } = useCompanyProfile();
   const [isImportOpen, setIsImportOpen] = useState(false);
+
+  const [serialDrawerState, setSerialDrawerState] = useState<{
+    open: boolean;
+    lineIndex: number;
+    line: GrLineForm | null;
+    itemId?: string;
+    itemSku?: string;
+    itemName?: string;
+    trackingPolicyCode?: string;
+    trackingPolicyName?: string;
+    requiredQty: number;
+    receiptDate?: string;
+    initialSerials?: any[];
+    viewOnly?: boolean;
+  }>({
+    open: false,
+    lineIndex: -1,
+    line: null,
+    requiredQty: 0,
+    viewOnly: false,
+  });
+
+  const handleOpenSerialDrawer = (
+    line: any,
+    lineIndex: number,
+    item: any,
+    qty: number,
+    isViewOnly = false,
+  ) => {
+    setSerialDrawerState({
+      open: true,
+      lineIndex,
+      line,
+      itemId: line?.itemId || item?.id,
+      itemSku: item?.sku || line?.itemCode || "",
+      itemName: item?.itemName || line?.itemName || "",
+      trackingPolicyCode: item?.trackingPolicy?.code || "SERIAL",
+      trackingPolicyName: item?.trackingPolicy?.name || "Theo Serial Number",
+      requiredQty: qty,
+      receiptDate: form.receiptDate,
+      initialSerials: line?.declaredSerials || [],
+      viewOnly: isViewOnly,
+    });
+  };
+
+  const handleSaveSerialsForLine = (serials: any[]) => {
+    setForm((f) => {
+      const lines = [...f.lines];
+      let targetIdx = serialDrawerState.lineIndex;
+      if (serialDrawerState.line?.purchaseOrderLineId) {
+        const found = lines.findIndex(
+          (l) =>
+            l.purchaseOrderLineId ===
+            serialDrawerState.line?.purchaseOrderLineId,
+        );
+        if (found >= 0) targetIdx = found;
+      } else if (targetIdx < 0 || targetIdx >= lines.length) {
+        const found = lines.findIndex(
+          (l) => l.itemId === serialDrawerState.itemId,
+        );
+        if (found >= 0) targetIdx = found;
+      }
+
+      if (targetIdx >= 0 && lines[targetIdx]) {
+        lines[targetIdx] = {
+          ...lines[targetIdx],
+          declaredSerials: serials,
+        };
+      }
+      return { ...f, lines };
+    });
+  };
 
   const tableMode: "po" | "other-edit" | "view" = poDetail
     ? "po"
@@ -348,6 +424,132 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
         ) : null;
       },
     },
+    {
+      key: "serials",
+      header: makeFilterHeader("serials", t("Serial / Tracking"), [], {
+        hideFilter: true,
+        queryPrefix: "gr-form-po-serials",
+      }),
+      minSize: 170,
+      enableResizing: true,
+      headerClassName: "text-center w-[170px] min-w-[170px]",
+      className: "text-center w-[170px] min-w-[170px]",
+      cell: (poLine: any) => {
+        const lineIdx = form.lines.findIndex(
+          (l) => l.purchaseOrderLineId === poLine.id,
+        );
+        const currentLine = lineIdx >= 0 ? form.lines[lineIdx] : null;
+        const itemId = poLine.itemId || currentLine?.itemId;
+        const item = itemId ? itemsDict[itemId] : null;
+        const trackingCode = item?.trackingPolicy?.code;
+        const hasTracking =
+          trackingCode &&
+          (trackingCode === "SERIAL" ||
+            trackingCode === "VEHICLE" ||
+            trackingCode === "CUSTOM");
+        const qty = Math.round(Number(currentLine?.qtyReceived ?? 0));
+        const declaredCount = currentLine?.declaredSerials?.length || 0;
+
+        if (!hasTracking) {
+          return <span className="text-muted-foreground text-xs">—</span>;
+        }
+        if (qty <= 0) {
+          return (
+            <span className="text-muted-foreground text-xs">
+              {t("Chưa nhập SL")}
+            </span>
+          );
+        }
+
+        const isComplete = declaredCount === qty;
+
+        if (viewOnly || editing?.status === "POSTED") {
+          return (
+            <button
+              type="button"
+              className={cn(
+                "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold border transition-all shadow-sm cursor-pointer",
+                isComplete
+                  ? "bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100 dark:bg-emerald-950/30 dark:text-emerald-300"
+                  : "bg-amber-50 text-amber-700 border-amber-300 hover:bg-amber-100 dark:bg-amber-950/30 dark:text-amber-300",
+              )}
+              onClick={() => {
+                const actualQty = Math.round(
+                  Number(currentLine?.qtyReceived || qty || 0),
+                );
+                handleOpenSerialDrawer(
+                  currentLine || poLine,
+                  lineIdx,
+                  item,
+                  actualQty,
+                  true,
+                );
+              }}
+              title={t("Bấm để xem danh sách số serial")}
+            >
+              {isComplete ? (
+                <CheckCircle2 className="w-3.5 h-3.5" />
+              ) : (
+                <AlertTriangle className="w-3.5 h-3.5" />
+              )}
+              <span>
+                {declaredCount}/{qty} serial
+              </span>
+            </button>
+          );
+        }
+
+        return (
+          <button
+            type="button"
+            className={cn(
+              "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold border transition-all shadow-sm cursor-pointer",
+              isComplete
+                ? "bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100 dark:bg-emerald-950/30 dark:text-emerald-300"
+                : "bg-amber-50 text-amber-700 border-amber-300 hover:bg-amber-100 dark:bg-amber-950/30 dark:text-amber-300",
+            )}
+            onClick={() => {
+              let idx = lineIdx;
+              let target = currentLine;
+              if (idx < 0 || !target) {
+                const ordered = Number(poLine.qtyOrdered ?? 0);
+                const received = Number(poLine.qtyReceived ?? 0);
+                const rem = Math.max(0, ordered - received);
+                const newLine: GrLineForm = {
+                  purchaseOrderLineId: poLine.id ?? "",
+                  productionOrderMaterialId: "",
+                  itemId: poLine.itemId ?? "",
+                  itemCode: poLine.itemCode || "",
+                  itemName: poLine.itemName ?? "",
+                  qtyReceived: String(rem > 0 ? rem : 1),
+                  unitCost: poLine.unitPrice ?? "",
+                  declaredSerials: [],
+                };
+                setForm((f) => ({ ...f, lines: [...f.lines, newLine] }));
+                idx = form.lines.length;
+                target = newLine;
+              }
+              const actualQty = Math.round(
+                Number(target.qtyReceived || qty || 1),
+              );
+              handleOpenSerialDrawer(target, idx, item, actualQty);
+            }}
+          >
+            {isComplete ? (
+              <>
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                <span>{t(`Đủ ${declaredCount}/${qty} serial`)}</span>
+              </>
+            ) : (
+              <>
+                <AlertTriangle className="w-3.5 h-3.5" />
+                <span>{t(`Khai báo (${declaredCount}/${qty})`)}</span>
+              </>
+            )}
+          </button>
+        );
+      },
+    },
   ];
 
   // ── OTHER edit table columns ───────────────────────────────────────────────
@@ -437,6 +639,92 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
         );
       },
     },
+    {
+      key: "serials",
+      header: makeFilterHeader("serials", t("Serial / Tracking"), [], {
+        hideFilter: true,
+        queryPrefix: "gr-form-other-serials",
+      }),
+      minSize: 170,
+      enableResizing: true,
+      headerClassName: "text-center w-[170px] min-w-[170px]",
+      className: "text-center w-[170px] min-w-[170px]",
+      cell: (line: any) => {
+        const i = form.lines.indexOf(line);
+        const item = line.itemId ? itemsDict[line.itemId] : null;
+        const trackingCode = item?.trackingPolicy?.code;
+        const hasTracking =
+          trackingCode &&
+          (trackingCode === "SERIAL" ||
+            trackingCode === "VEHICLE" ||
+            trackingCode === "CUSTOM");
+        const qty = Math.round(Number(line.qtyReceived || 0));
+        const declaredCount = line.declaredSerials?.length || 0;
+
+        if (!hasTracking) {
+          return <span className="text-muted-foreground text-xs">—</span>;
+        }
+        if (qty <= 0) {
+          return (
+            <span className="text-muted-foreground text-xs">
+              {t("Chưa nhập SL")}
+            </span>
+          );
+        }
+
+        const isComplete = declaredCount === qty;
+
+        if (viewOnly || editing?.status === "POSTED") {
+          return (
+            <button
+              type="button"
+              className={cn(
+                "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold border transition-all shadow-sm cursor-pointer",
+                isComplete
+                  ? "bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100 dark:bg-emerald-950/30 dark:text-emerald-300"
+                  : "bg-amber-50 text-amber-700 border-amber-300 hover:bg-amber-100 dark:bg-amber-950/30 dark:text-amber-300",
+              )}
+              onClick={() => handleOpenSerialDrawer(line, i, item, qty, true)}
+              title={t("Bấm để xem danh sách số serial")}
+            >
+              {isComplete ? (
+                <CheckCircle2 className="w-3.5 h-3.5" />
+              ) : (
+                <AlertTriangle className="w-3.5 h-3.5" />
+              )}
+              <span>
+                {declaredCount}/{qty} serial
+              </span>
+            </button>
+          );
+        }
+
+        return (
+          <button
+            type="button"
+            className={cn(
+              "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold border transition-all shadow-sm cursor-pointer",
+              isComplete
+                ? "bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100 dark:bg-emerald-950/30 dark:text-emerald-300"
+                : "bg-amber-50 text-amber-700 border-amber-300 hover:bg-amber-100 dark:bg-amber-950/30 dark:text-amber-300",
+            )}
+            onClick={() => handleOpenSerialDrawer(line, i, item, qty)}
+          >
+            {isComplete ? (
+              <>
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                <span>{t(`Đủ ${declaredCount}/${qty} serial`)}</span>
+              </>
+            ) : (
+              <>
+                <AlertTriangle className="w-3.5 h-3.5" />
+                <span>{t(`Khai báo (${declaredCount}/${qty})`)}</span>
+              </>
+            )}
+          </button>
+        );
+      },
+    },
   ];
 
   // ── View-only table columns ────────────────────────────────────────────────
@@ -520,6 +808,65 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
           +{fmtQty(line.qtyReceived)}
         </div>
       ),
+    },
+    {
+      key: "serials",
+      header: makeFilterHeader("serials", t("Serial / Tracking"), [], {
+        hideFilter: true,
+        queryPrefix: "gr-form-view-serials",
+      }),
+      minSize: 170,
+      enableResizing: true,
+      headerClassName: "text-center w-[170px] min-w-[170px]",
+      className: "text-center w-[170px] min-w-[170px]",
+      cell: (line: any) => {
+        const item = line.itemId ? itemsDict[line.itemId] : null;
+        const trackingCode = item?.trackingPolicy?.code;
+        const hasTracking =
+          trackingCode &&
+          (trackingCode === "SERIAL" ||
+            trackingCode === "VEHICLE" ||
+            trackingCode === "CUSTOM");
+        const qty = Math.round(Number(line.qtyReceived || 0));
+        const declaredCount = line.declaredSerials?.length || 0;
+
+        if (!hasTracking) {
+          return <span className="text-muted-foreground text-xs">—</span>;
+        }
+
+        const isComplete = declaredCount === qty;
+
+        return (
+          <button
+            type="button"
+            className={cn(
+              "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold border transition-all shadow-sm cursor-pointer",
+              isComplete
+                ? "bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100 dark:bg-emerald-950/30 dark:text-emerald-300"
+                : "bg-amber-50 text-amber-700 border-amber-300 hover:bg-amber-100 dark:bg-amber-950/30 dark:text-amber-300",
+            )}
+            onClick={() =>
+              handleOpenSerialDrawer(
+                line,
+                form.lines.indexOf(line),
+                item,
+                qty,
+                true,
+              )
+            }
+            title={t("Bấm để xem danh sách số serial")}
+          >
+            {isComplete ? (
+              <CheckCircle2 className="w-3.5 h-3.5" />
+            ) : (
+              <AlertTriangle className="w-3.5 h-3.5" />
+            )}
+            <span>
+              {declaredCount}/{qty} serial
+            </span>
+          </button>
+        );
+      },
     },
   ];
 
@@ -882,169 +1229,192 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
   // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
-    <InventoryVoucherFormDrawer
-      open={open}
-      mode={viewOnly ? "view" : editing ? "edit" : "create"}
-      noAnimation={!!drawer.unifiedContext}
-      title={
-        editing
-          ? viewOnly
-            ? t("Phiếu nhập kho")
-            : t("Sửa nhập kho")
-          : t("Tạo phiếu nhập kho")
-      }
-      subtitle={editing?.receiptNo ?? t("Nhập kho")}
-      statusBadge={statusBadge}
-      onClose={close}
-      onToggleEdit={
-        viewOnly &&
-        editing &&
-        canUpdate &&
-        !["CANCELLED", "VOIDED"].includes(editing.status || "DRAFT")
-          ? () => setViewOnly(false)
-          : undefined
-      }
-      actions={actions}
-      loading={loading}
-      error={saveError}
-      unifiedContext={drawer.unifiedContext}
-      // Table
-      sectionTitle={sectionTitle}
-      sectionTitleExtra={sectionTitleExtra}
-      tableItems={tableItems}
-      getRowKey={getRowKey}
-      tableColumns={tableColumns}
-      summaryRow={summaryRow}
-      actionsColumn={actionsColumn}
-      emptyLabel={emptyLabel}
-      tableFooter={tableFooter}
-      // Right panel
-      rightPanelContent={rightPanelContent}
-      remarksContent={remarksContent}
-      // Slots
-      printSlot={
-        <div className="hidden">
-          <GoodsReceiptPrintTemplate
-            ref={printRef}
-            companyProfile={companyProfile}
-            data={{
-              receiptNo: editing?.receiptNo || form.receiptNo || "...",
-              receiptDate:
-                editing?.receiptDate ||
-                form.receiptDate ||
-                new Date().toISOString(),
-              supplierName: "",
-              poNo:
-                poOptions.find((o) => o.value === form.purchaseOrderId)
-                  ?.label || "",
-              remarks: form.remarks,
-              lines: form.lines.map((l) => {
-                const dictItem = itemsDict[l.itemId];
-                return {
-                  itemId: l.itemId,
-                  itemCode: dictItem?.sku || l.itemId,
-                  itemName: l.itemName || dictItem?.itemName || "",
-                  qtyReceived: l.qtyReceived,
-                  unitCost: l.unitCost,
-                };
-              }),
-            }}
-          />
-        </div>
-      }
-      importModalSlot={
-        <ImportExcelModal
-          isOpen={isImportOpen}
-          onClose={() => setIsImportOpen(false)}
-          onDownloadTemplate={async () => {
-            const headers = [
-              "Mã linh kiện",
-              "Tên linh kiện",
-              "Số lượng",
-              "Đơn giá",
-            ];
-            let refItems: any[] = [];
-            try {
-              const res = await basicMastersApi.list({
-                entities: "inventoryItems",
-                limit: 5000,
-              });
-              refItems = (res.items.inventoryItems || []).map((item: any) => ({
-                sku: item.sku || "",
-                name: item.itemName || "",
-              }));
-            } catch (e) {
-              console.error("Failed to fetch reference items", e);
-            }
-            downloadInventoryTemplate(
-              headers,
-              "Template_NhapKho.xlsx",
-              refItems,
-            );
-          }}
-          onUpload={async (file, overwrite) => {
-            try {
-              const data = await parseExcelFile(file);
-              let skipped = 0;
-              const newLines: any[] = [];
-              let allItems: any[] = [];
+    <>
+      <InventoryVoucherFormDrawer
+        open={open}
+        mode={viewOnly ? "view" : editing ? "edit" : "create"}
+        noAnimation={!!drawer.unifiedContext}
+        title={
+          editing
+            ? viewOnly
+              ? t("Phiếu nhập kho")
+              : t("Sửa nhập kho")
+            : t("Tạo phiếu nhập kho")
+        }
+        subtitle={editing?.receiptNo ?? t("Nhập kho")}
+        statusBadge={statusBadge}
+        onClose={close}
+        onToggleEdit={
+          viewOnly &&
+          editing &&
+          canUpdate &&
+          !["CANCELLED", "VOIDED"].includes(editing.status || "DRAFT")
+            ? () => setViewOnly(false)
+            : undefined
+        }
+        actions={actions}
+        loading={loading}
+        error={saveError}
+        unifiedContext={drawer.unifiedContext}
+        // Table
+        sectionTitle={sectionTitle}
+        sectionTitleExtra={sectionTitleExtra}
+        tableItems={tableItems}
+        getRowKey={getRowKey}
+        tableColumns={tableColumns}
+        summaryRow={summaryRow}
+        actionsColumn={actionsColumn}
+        emptyLabel={emptyLabel}
+        tableFooter={tableFooter}
+        // Right panel
+        rightPanelContent={rightPanelContent}
+        remarksContent={remarksContent}
+        // Slots
+        printSlot={
+          <div className="hidden">
+            <GoodsReceiptPrintTemplate
+              ref={printRef}
+              companyProfile={companyProfile}
+              data={{
+                receiptNo: editing?.receiptNo || form.receiptNo || "...",
+                receiptDate:
+                  editing?.receiptDate ||
+                  form.receiptDate ||
+                  new Date().toISOString(),
+                supplierName: "",
+                poNo:
+                  poOptions.find((o) => o.value === form.purchaseOrderId)
+                    ?.label || "",
+                remarks: form.remarks,
+                lines: form.lines.map((l) => {
+                  const dictItem = itemsDict[l.itemId];
+                  return {
+                    itemId: l.itemId,
+                    itemCode: dictItem?.sku || l.itemId,
+                    itemName: l.itemName || dictItem?.itemName || "",
+                    qtyReceived: l.qtyReceived,
+                    unitCost: l.unitCost,
+                  };
+                }),
+              }}
+            />
+          </div>
+        }
+        importModalSlot={
+          <ImportExcelModal
+            isOpen={isImportOpen}
+            onClose={() => setIsImportOpen(false)}
+            onDownloadTemplate={async () => {
+              const headers = [
+                "Mã linh kiện",
+                "Tên linh kiện",
+                "Số lượng",
+                "Đơn giá",
+              ];
+              let refItems: any[] = [];
               try {
                 const res = await basicMastersApi.list({
                   entities: "inventoryItems",
                   limit: 5000,
                 });
-                allItems = res.items.inventoryItems || [];
-              } catch (e) {
-                console.error("Failed to fetch items for upload lookup", e);
-              }
-              const skuToId: Record<string, string> = {};
-              const idToName: Record<string, string> = {};
-              const idToSku: Record<string, string> = {};
-              allItems.forEach((item: any) => {
-                if (item.sku) {
-                  skuToId[item.sku.toLowerCase()] = item.id;
-                  idToName[item.id] = item.itemName;
-                  idToSku[item.id] = item.sku;
-                }
-              });
-              data.forEach((row: any) => {
-                const sku = row["Mã linh kiện"]?.toString().trim();
-                const qty = row["Số lượng"]?.toString().trim();
-                const price = row["Đơn giá"]?.toString().trim();
-                if (!sku) return;
-                const itemId = skuToId[sku.toLowerCase()];
-                if (itemId) {
-                  newLines.push({
-                    purchaseOrderLineId: "",
-                    productionOrderMaterialId: "",
-                    itemId,
-                    itemCode: idToSku[itemId] || "",
-                    itemName: idToName[itemId] || "",
-                    qtyReceived: qty || "",
-                    unitCost: price || "",
-                  });
-                } else {
-                  skipped++;
-                }
-              });
-              if (skipped > 0) {
-                toast.error(
-                  `Đã bỏ qua ${skipped} dòng chứa mã linh kiện không tồn tại.`,
+                refItems = (res.items.inventoryItems || []).map(
+                  (item: any) => ({
+                    sku: item.sku || "",
+                    name: item.itemName || "",
+                  }),
                 );
+              } catch (e) {
+                console.error("Failed to fetch reference items", e);
               }
-              setForm((f) => {
-                const filteredOldLines = overwrite
-                  ? []
-                  : f.lines.filter((l: any) => l.itemId);
-                return { ...f, lines: [...filteredOldLines, ...newLines] };
-              });
-              setIsImportOpen(false);
-            } catch {
-              toast.error("Lỗi khi đọc file Excel");
-            }
-          }}
-        />
-      }
-    />
+              downloadInventoryTemplate(
+                headers,
+                "Template_NhapKho.xlsx",
+                refItems,
+              );
+            }}
+            onUpload={async (file, overwrite) => {
+              try {
+                const data = await parseExcelFile(file);
+                let skipped = 0;
+                const newLines: any[] = [];
+                let allItems: any[] = [];
+                try {
+                  const res = await basicMastersApi.list({
+                    entities: "inventoryItems",
+                    limit: 5000,
+                  });
+                  allItems = res.items.inventoryItems || [];
+                } catch (e) {
+                  console.error("Failed to fetch items for upload lookup", e);
+                }
+                const skuToId: Record<string, string> = {};
+                const idToName: Record<string, string> = {};
+                const idToSku: Record<string, string> = {};
+                allItems.forEach((item: any) => {
+                  if (item.sku) {
+                    skuToId[item.sku.toLowerCase()] = item.id;
+                    idToName[item.id] = item.itemName;
+                    idToSku[item.id] = item.sku;
+                  }
+                });
+                data.forEach((row: any) => {
+                  const sku = row["Mã linh kiện"]?.toString().trim();
+                  const qty = row["Số lượng"]?.toString().trim();
+                  const price = row["Đơn giá"]?.toString().trim();
+                  if (!sku) return;
+                  const itemId = skuToId[sku.toLowerCase()];
+                  if (itemId) {
+                    newLines.push({
+                      purchaseOrderLineId: "",
+                      productionOrderMaterialId: "",
+                      itemId,
+                      itemCode: idToSku[itemId] || "",
+                      itemName: idToName[itemId] || "",
+                      qtyReceived: qty || "",
+                      unitCost: price || "",
+                    });
+                  } else {
+                    skipped++;
+                  }
+                });
+                if (skipped > 0) {
+                  toast.error(
+                    `Đã bỏ qua ${skipped} dòng chứa mã linh kiện không tồn tại.`,
+                  );
+                }
+                setForm((f) => {
+                  const filteredOldLines = overwrite
+                    ? []
+                    : f.lines.filter((l: any) => l.itemId);
+                  return { ...f, lines: [...filteredOldLines, ...newLines] };
+                });
+                setIsImportOpen(false);
+              } catch {
+                toast.error("Lỗi khi đọc file Excel");
+              }
+            }}
+          />
+        }
+      />
+      <GoodsReceiptSerialDrawer
+        open={serialDrawerState.open}
+        onClose={() =>
+          setSerialDrawerState((s) => ({ ...s, open: false, lineIndex: -1 }))
+        }
+        viewOnly={
+          serialDrawerState.viewOnly ??
+          (viewOnly || editing?.status === "POSTED")
+        }
+        itemId={serialDrawerState.itemId}
+        itemSku={serialDrawerState.itemSku}
+        itemName={serialDrawerState.itemName}
+        trackingPolicyCode={serialDrawerState.trackingPolicyCode}
+        trackingPolicyName={serialDrawerState.trackingPolicyName}
+        requiredQty={serialDrawerState.requiredQty}
+        receiptDate={serialDrawerState.receiptDate}
+        initialSerials={serialDrawerState.initialSerials}
+        onSaveSerials={handleSaveSerialsForLine}
+      />
+    </>
   );
 }

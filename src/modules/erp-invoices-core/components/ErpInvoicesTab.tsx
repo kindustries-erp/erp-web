@@ -1,15 +1,5 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
-import {
-  format,
-  isValid,
-  startOfMonth,
-  endOfMonth,
-  startOfWeek,
-  endOfWeek,
-  subMonths,
-  subWeeks,
-  subDays,
-} from "date-fns";
+import { format, isValid } from "date-fns";
 import { InvoiceDateRangeSlot } from "@/modules/erp-invoices-core/components/InvoiceDateRangeSlot";
 import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
 import { TableText } from "@/shared/components/DataTable/TableText";
@@ -30,11 +20,9 @@ import {
   MoreHorizontal,
   X,
   GitMerge,
+  KeyRound,
 } from "lucide-react";
 import { Tooltip } from "@/core/components/ui/Tooltip";
-import { KpiCard } from "@/shared/components/KpiCard";
-import { KpiSparkline } from "@/shared/components/KpiSparkline";
-import { money } from "@/shared/utils/format";
 
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate/SpreadsheetPageTemplate";
 import { Popover } from "@/core/components/ui/Popover";
@@ -58,9 +46,12 @@ import {
 import { ErpInvoiceInternalDrawer } from "@/modules/erp-invoices-core/components/ErpInvoiceInternalDrawer";
 
 import { InvoiceImportSyncDrawer } from "@/modules/erp-invoices-core/components/InvoiceImportSyncDrawer";
+import { GdtPortalAuthDrawer } from "@/modules/erp-invoices-core/components/GdtPortalAuthDrawer";
+import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { VietnamInvoiceTemplate } from "@/modules/erp-invoices-core/components/VietnamInvoiceTemplate";
 import { InvoiceBulkPostingDrawer } from "@/modules/erp-invoices-core/components/InvoiceBulkPostingDrawer";
 import { InvoiceBulkNetOffDrawer } from "@/modules/erp-invoices-core/components/InvoiceBulkNetOffDrawer";
+import { PartnerInvoiceDrawer } from "@/modules/erp-invoices-core/components/PartnerInvoiceDrawer";
 import { BankTransactionDetailDrawer } from "@/pages/finance/components/BankTransactionDetailDrawer";
 import {
   ErpInvoiceInternalMain,
@@ -149,141 +140,39 @@ function formatTaxProcessStatus(val?: number | null) {
   }
 }
 
-interface ErpInvoicesTabProps {
+export interface ErpInvoicesTabProps {
   direction: "IN" | "OUT";
+  initialDateFrom?: string;
+  initialDateTo?: string;
+  isDrawer?: boolean;
 }
 
-export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
+export function ErpInvoicesTab({
+  direction,
+  initialDateFrom,
+  initialDateTo,
+  isDrawer = false,
+}: ErpInvoicesTabProps) {
   const { t } = useTranslation("erpInvoices");
-  const listHook = useErpInvoicesList(direction);
+  const canEditInvoice = useHasPermission("invoices", "update");
+  const listDir = isDrawer
+    ? direction === "IN"
+      ? "CHECKPOINT_IN"
+      : "CHECKPOINT_OUT"
+    : direction;
+  const listHook = useErpInvoicesList(listDir);
   const formHook = useErpInvoiceForm(listHook.loadInvoices);
   const showToast = useUIStore((s) => s.showToast);
   const [exportDrawerOpen, setExportDrawerOpen] = useState(false);
+  const [portalAuthOpen, setPortalAuthOpen] = useState(false);
 
-  type SelectedPeriod = {
-    type: "month" | "week" | "day";
-    index: number;
-    label: string;
-    dateFrom: string;
-    dateTo: string;
-  } | null;
-
-  const [selectedPeriod, setSelectedPeriod] = useState<SelectedPeriod>(null);
-
-  const handleMonthClick = (index: number) => {
-    const monthsAgo = 5 - index;
-    const date = subMonths(new Date(), monthsAgo);
-    const startStr = format(startOfMonth(date), "yyyy-MM-dd");
-    const endStr = format(endOfMonth(date), "yyyy-MM-dd");
-    listHook.filterPanel.setDateFrom(startStr);
-    listHook.filterPanel.setDateTo(endStr);
-    listHook.tableState.setColumnFilter("taxInvoiceStatus", [
-      "1",
-      "2",
-      "3",
-      "5",
-      "6",
-      "null",
-    ]);
-    listHook.setPage(1);
-
-    if (selectedPeriod?.type === "month" && selectedPeriod.index === index) {
-      setSelectedPeriod(null);
-    } else {
-      setSelectedPeriod({
-        type: "month",
-        index,
-        label: `Tháng ${format(date, "MM/yyyy")}`,
-        dateFrom: startStr,
-        dateTo: endStr,
-      });
+  useEffect(() => {
+    if (isDrawer && (initialDateFrom || initialDateTo)) {
+      if (initialDateFrom) listHook.filterPanel.setDateFrom(initialDateFrom);
+      if (initialDateTo) listHook.filterPanel.setDateTo(initialDateTo);
+      listHook.setPage(1);
     }
-  };
-
-  const handleWeekClick = (index: number) => {
-    const weeksAgo = 3 - index;
-    const date = subWeeks(new Date(), weeksAgo);
-    const startStr = format(
-      startOfWeek(date, { weekStartsOn: 1 }),
-      "yyyy-MM-dd",
-    );
-    const endStr = format(endOfWeek(date, { weekStartsOn: 1 }), "yyyy-MM-dd");
-    listHook.filterPanel.setDateFrom(startStr);
-    listHook.filterPanel.setDateTo(endStr);
-    listHook.tableState.setColumnFilter("taxInvoiceStatus", [
-      "1",
-      "2",
-      "3",
-      "5",
-      "6",
-      "null",
-    ]);
-    listHook.setPage(1);
-
-    if (selectedPeriod?.type === "week" && selectedPeriod.index === index) {
-      setSelectedPeriod(null);
-    } else {
-      setSelectedPeriod({
-        type: "week",
-        index,
-        label: `Tuần ${format(startOfWeek(date, { weekStartsOn: 1 }), "dd/MM")} - ${format(endOfWeek(date, { weekStartsOn: 1 }), "dd/MM")}`,
-        dateFrom: startStr,
-        dateTo: endStr,
-      });
-    }
-  };
-
-  const handleDayClick = (index: number) => {
-    const daysAgo = 6 - index;
-    const date = subDays(new Date(), daysAgo);
-    const dateStr = format(date, "yyyy-MM-dd");
-    listHook.filterPanel.setDateFrom(dateStr);
-    listHook.filterPanel.setDateTo(dateStr);
-    listHook.tableState.setColumnFilter("taxInvoiceStatus", [
-      "1",
-      "2",
-      "3",
-      "5",
-      "6",
-      "null",
-    ]);
-    listHook.setPage(1);
-
-    if (selectedPeriod?.type === "day" && selectedPeriod.index === index) {
-      setSelectedPeriod(null);
-    } else {
-      setSelectedPeriod({
-        type: "day",
-        index,
-        label: `${format(date, "dd/MM/yyyy")}`,
-        dateFrom: dateStr,
-        dateTo: dateStr,
-      });
-    }
-  };
-
-  const monthLabels = useMemo(() => {
-    return Array.from({ length: 6 }).map((_, i) => {
-      const d = subMonths(new Date(), 5 - i);
-      return `Tháng ${format(d, "MM/yyyy")}`;
-    });
-  }, []);
-
-  const weekLabels = useMemo(() => {
-    return Array.from({ length: 4 }).map((_, i) => {
-      const d = subWeeks(new Date(), 3 - i);
-      const start = startOfWeek(d, { weekStartsOn: 1 });
-      const end = endOfWeek(d, { weekStartsOn: 1 });
-      return `${format(start, "dd/MM")} - ${format(end, "dd/MM")}`;
-    });
-  }, []);
-
-  const dayLabels = useMemo(() => {
-    return Array.from({ length: 7 }).map((_, i) => {
-      const d = subDays(new Date(), 6 - i);
-      return format(d, "dd/MM/yyyy");
-    });
-  }, []);
+  }, [isDrawer, initialDateFrom, initialDateTo]);
 
   // Hook theo dõi tiến trình nền SSE, tự động refresh bảng khi hoàn thành
   useInvoiceSyncProgress(listHook.loadInvoices);
@@ -319,6 +208,11 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
   const [bulkPostingMode, setBulkPostingMode] = useState<"post" | "unpost">(
     "post",
   );
+  const [selectedPartner, setSelectedPartner] = useState<{
+    taxCode: string;
+    partnerName: string;
+  } | null>(null);
+  const [partnerDrawerOpen, setPartnerDrawerOpen] = useState(false);
 
   const selectedIds = useMemo(
     () => Object.keys(rowSelection).filter((k) => rowSelection[k]),
@@ -513,27 +407,6 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
   const { data: branches = [] } = useQuery({
     queryKey: ["branches-options"],
     queryFn: getBranchOptionsApi,
-  });
-
-  const { data: statsData, isLoading: statsLoading } = useQuery({
-    queryKey: ["erp-invoices-stats", direction],
-    queryFn: () => erpInvoicesCoreApi.getStats(direction),
-  });
-
-  const { data: periodStats, isLoading: periodLoading } = useQuery({
-    queryKey: [
-      "erp-invoices-stats",
-      direction,
-      selectedPeriod?.dateFrom,
-      selectedPeriod?.dateTo,
-    ],
-    queryFn: () =>
-      erpInvoicesCoreApi.getStats(
-        direction,
-        selectedPeriod!.dateFrom,
-        selectedPeriod!.dateTo,
-      ),
-    enabled: !!selectedPeriod,
   });
 
   useEffect(() => {
@@ -1052,12 +925,28 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             inv.buyerName?.trim() || inv.buyerPersonalName?.trim() || "—";
           const text =
             direction === "IN" ? inv.sellerName || "—" : buyerDisplayName;
+          const taxCode =
+            direction === "IN" ? inv.sellerTaxCode : inv.buyerTaxCode;
+
           return (
-            <Tooltip content={text !== "—" ? text : ""}>
-              <div className="whitespace-normal line-clamp-2 break-words w-full cursor-pointer">
-                {text}
-              </div>
-            </Tooltip>
+            <TableText
+              text={text}
+              onDrawerClick={
+                taxCode
+                  ? (e) => {
+                      e.stopPropagation();
+                      setSelectedPartner({
+                        taxCode,
+                        partnerName: text !== "—" ? text : "",
+                      });
+                      setPartnerDrawerOpen(true);
+                    }
+                  : undefined
+              }
+              tooltip={true}
+              enableCopy={true}
+              textClassName="whitespace-normal line-clamp-2 break-words"
+            />
           );
         },
       },
@@ -1083,10 +972,34 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         size: 150,
         headerClassName: "text-center",
         className: "text-muted-foreground text-xs text-left",
-        cell: (inv) =>
-          direction === "IN"
-            ? inv.sellerTaxCode || "—"
-            : inv.buyerTaxCode || "—",
+        cell: (inv) => {
+          const taxCode =
+            direction === "IN"
+              ? inv.sellerTaxCode || "—"
+              : inv.buyerTaxCode || "—";
+          const buyerDisplayName =
+            inv.buyerName?.trim() || inv.buyerPersonalName?.trim() || "";
+          const partnerName =
+            direction === "IN" ? inv.sellerName || "" : buyerDisplayName;
+
+          if (!taxCode || taxCode === "—") return "—";
+
+          return (
+            <TableText
+              text={taxCode}
+              onDrawerClick={(e) => {
+                e.stopPropagation();
+                setSelectedPartner({
+                  taxCode,
+                  partnerName,
+                });
+                setPartnerDrawerOpen(true);
+              }}
+              tooltip={true}
+              enableCopy={true}
+            />
+          );
+        },
       },
       {
         key: "taxInvoiceType",
@@ -1279,7 +1192,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
               </h4>
               {row.items && row.items.length > 0 ? (
                 <table className="w-full text-sm text-left border-collapse min-w-[700px]">
-                  <thead className="bg-slate-50 sticky top-0">
+                  <thead className="bg-slate-100/60 sticky top-0 backdrop-blur-sm">
                     <tr>
                       <th className="px-2 py-1 border-b text-slate-600 font-medium">
                         Tên mặt hàng
@@ -1355,7 +1268,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
                       );
                     })}
                   </tbody>
-                  <tfoot className="bg-slate-50 sticky bottom-0 border-t">
+                  <tfoot className="table-footer-glass sticky bottom-0 border-t border-border shadow-[0_-2px_6px_rgba(0,0,0,0.04)]">
                     <tr>
                       <td className="px-2 py-2 font-semibold text-right text-slate-700">
                         Tổng cộng
@@ -2042,174 +1955,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
   return (
     <>
       <SpreadsheetPageTemplate
-        topNode={
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
-            <KpiCard
-              compact
-              loading={
-                statsLoading ||
-                (selectedPeriod?.type === "month" && periodLoading)
-              }
-              label={
-                selectedPeriod?.type === "month"
-                  ? `${direction === "OUT" ? "Doanh thu" : "Chi phí"} ${selectedPeriod.label}`
-                  : direction === "OUT"
-                    ? "Doanh thu Tháng này"
-                    : "Chi phí Tháng này"
-              }
-              value={money(
-                selectedPeriod?.type === "month" && periodStats
-                  ? periodStats.monthTotal
-                  : statsData?.monthTotal || 0,
-              )}
-              sub={`Trước thuế: ${money(
-                selectedPeriod?.type === "month" && periodStats
-                  ? periodStats.monthPreVat
-                  : statsData?.monthPreVat || 0,
-              )}`}
-              active={selectedPeriod?.type === "month"}
-              onClear={() => setSelectedPeriod(null)}
-              rightNode={
-                <KpiSparkline
-                  data={statsData?.monthChart || [0, 0, 0, 0, 0, 0]}
-                  preVatData={statsData?.monthPreVatChart || [0, 0, 0, 0, 0, 0]}
-                  labels={monthLabels}
-                  onClick={handleMonthClick}
-                />
-              }
-              bottomNode={(() => {
-                const branches =
-                  selectedPeriod?.type === "month" && periodStats
-                    ? periodStats.byBranch
-                    : statsData?.byBranch;
-                return branches && branches.length > 0 ? (
-                  <div className="pt-3 border-t border-border/50 grid grid-cols-3 gap-2">
-                    {branches.map((b) => (
-                      <div key={b.branchName} className="flex flex-col min-w-0">
-                        <span className="text-[10px] text-muted-foreground uppercase tracking-wider truncate">
-                          {b.branchName}
-                        </span>
-                        <span className="font-semibold text-foreground text-sm mt-0.5 truncate">
-                          {money(b.monthTotal)}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                ) : null;
-              })()}
-            />
-            <KpiCard
-              compact
-              loading={
-                statsLoading ||
-                (selectedPeriod?.type === "week" && periodLoading)
-              }
-              label={
-                selectedPeriod?.type === "week"
-                  ? `${direction === "OUT" ? "Doanh thu" : "Chi phí"} ${selectedPeriod.label}`
-                  : direction === "OUT"
-                    ? "Doanh thu Tuần này"
-                    : "Chi phí Tuần này"
-              }
-              value={money(
-                selectedPeriod?.type === "week" && periodStats
-                  ? periodStats.weekTotal
-                  : statsData?.weekTotal || 0,
-              )}
-              sub={`Trước thuế: ${money(
-                selectedPeriod?.type === "week" && periodStats
-                  ? periodStats.weekPreVat
-                  : statsData?.weekPreVat || 0,
-              )}`}
-              active={selectedPeriod?.type === "week"}
-              onClear={() => setSelectedPeriod(null)}
-              rightNode={
-                <KpiSparkline
-                  data={statsData?.weekChart || [0, 0, 0, 0]}
-                  preVatData={statsData?.weekPreVatChart || [0, 0, 0, 0]}
-                  labels={weekLabels}
-                  onClick={handleWeekClick}
-                />
-              }
-              bottomNode={(() => {
-                const branches =
-                  selectedPeriod?.type === "week" && periodStats
-                    ? periodStats.byBranch
-                    : statsData?.byBranch;
-                return branches && branches.length > 0 ? (
-                  <div className="pt-3 border-t border-border/50 grid grid-cols-3 gap-2">
-                    {branches.map((b) => (
-                      <div key={b.branchName} className="flex flex-col min-w-0">
-                        <span className="text-[10px] text-muted-foreground uppercase tracking-wider truncate">
-                          {b.branchName}
-                        </span>
-                        <span className="font-semibold text-foreground text-sm mt-0.5 truncate">
-                          {money(b.weekTotal)}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                ) : null;
-              })()}
-            />
-            <KpiCard
-              compact
-              loading={
-                statsLoading ||
-                (selectedPeriod?.type === "day" && periodLoading)
-              }
-              label={
-                selectedPeriod?.type === "day"
-                  ? `${direction === "OUT" ? "Doanh thu" : "Chi phí"} ${selectedPeriod.label}`
-                  : direction === "OUT"
-                    ? "Doanh thu Hôm nay"
-                    : "Chi phí Hôm nay"
-              }
-              value={money(
-                selectedPeriod?.type === "day" && periodStats
-                  ? periodStats.dayTotal
-                  : statsData?.dayTotal || 0,
-              )}
-              sub={`Trước thuế: ${money(
-                selectedPeriod?.type === "day" && periodStats
-                  ? periodStats.dayPreVat
-                  : statsData?.dayPreVat || 0,
-              )}`}
-              active={selectedPeriod?.type === "day"}
-              onClear={() => setSelectedPeriod(null)}
-              rightNode={
-                <KpiSparkline
-                  data={statsData?.dayChart || [0, 0, 0, 0, 0, 0, 0]}
-                  preVatData={
-                    statsData?.dayPreVatChart || [0, 0, 0, 0, 0, 0, 0]
-                  }
-                  labels={dayLabels}
-                  onClick={handleDayClick}
-                />
-              }
-              bottomNode={(() => {
-                const branches =
-                  selectedPeriod?.type === "day" && periodStats
-                    ? periodStats.byBranch
-                    : statsData?.byBranch;
-                return branches && branches.length > 0 ? (
-                  <div className="pt-3 border-t border-border/50 grid grid-cols-3 gap-2">
-                    {branches.map((b) => (
-                      <div key={b.branchName} className="flex flex-col min-w-0">
-                        <span className="text-[10px] text-muted-foreground uppercase tracking-wider truncate">
-                          {b.branchName}
-                        </span>
-                        <span className="font-semibold text-foreground text-sm mt-0.5 truncate">
-                          {money(b.dayTotal)}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                ) : null;
-              })()}
-            />
-          </div>
-        }
+        hideHeader={isDrawer}
         defaultColumnOrder={["__selection", "__actions", "__expand"]}
         title={
           direction === "IN"
@@ -2218,7 +1964,11 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         }
         desc={t("invoiceDesc", "Quản lý danh sách hóa đơn điện tử")}
         icon={<Receipt className="h-5 w-5" />}
-        tableId={`erp-invoices-table-${direction}`}
+        tableId={
+          isDrawer
+            ? `erp-invoices-table-checkpoint-${direction}`
+            : `erp-invoices-table-${direction}`
+        }
         items={listHook.invoices}
         columns={columns}
         getRowKey={(r) => r.id}
@@ -2355,8 +2105,9 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             },
           ];
         }}
-        onCreate={() => formHook.openNew(direction)}
-        createLabel={t("createInvoice", "Tạo hóa đơn")}
+        onCreate={() => setImportModalOpen(true)}
+        createLabel={t("syncInvoices", "Đồng bộ hóa đơn")}
+        createIcon={<DownloadCloud className="w-4 h-4 mr-1 text-indigo-100" />}
         createActions={[
           {
             groupLabel: t("groupTraCuu", "Tra cứu"),
@@ -2368,16 +2119,20 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
               },
             ],
           },
-          {
-            groupLabel: t("groupThaoTac", "Thao tác"),
-            items: [
-              {
-                label: t("syncInvoices", "Đồng bộ hóa đơn"),
-                icon: <DownloadCloud className="w-4 h-4 text-indigo-600" />,
-                onClick: () => setImportModalOpen(true),
-              },
-            ],
-          },
+          ...(canEditInvoice
+            ? [
+                {
+                  groupLabel: t("groupThaoTac", "Thao tác"),
+                  items: [
+                    {
+                      label: t("loginTaxPortal", "Đăng nhập Cổng Thuế"),
+                      icon: <KeyRound className="w-4 h-4 text-primary" />,
+                      onClick: () => setPortalAuthOpen(true),
+                    },
+                  ],
+                },
+              ]
+            : []),
         ]}
       />
 
@@ -2516,6 +2271,11 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             void listHook.loadInvoices();
           }
         }}
+      />
+
+      <GdtPortalAuthDrawer
+        open={portalAuthOpen}
+        onClose={() => setPortalAuthOpen(false)}
       />
 
       <FilePreviewDrawer
@@ -2760,6 +2520,13 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
           setRowSelection({});
           listHook.loadInvoices();
         }}
+      />
+
+      <PartnerInvoiceDrawer
+        open={partnerDrawerOpen}
+        onClose={() => setPartnerDrawerOpen(false)}
+        taxCode={selectedPartner?.taxCode}
+        partnerName={selectedPartner?.partnerName}
       />
     </>
   );

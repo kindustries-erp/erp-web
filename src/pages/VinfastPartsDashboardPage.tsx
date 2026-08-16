@@ -6,6 +6,7 @@ import React from "react";
 import { useQuery, useQueryClient, useIsFetching } from "@tanstack/react-query";
 import api from "@/core/api/axiosInstance";
 import { Panel } from "@/shared/components/Panel";
+import { DrawerSection } from "@/shared/components/DrawerModal";
 import { BarChart } from "@/shared/components/charts/BarChart";
 import { ChartSkeleton } from "@/shared/components/Skeleton";
 import { KpiCard } from "@/shared/components/KpiCard";
@@ -15,7 +16,7 @@ import { money } from "@/shared/utils/format";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
 
 export function VinfastPartsDashboardPage() {
-  const hasVinfastPerm = useHasPermission("vinfast_parts_reports", "read");
+  const hasVinfastPerm = useHasPermission("vinfast", "read");
 
   const queryClient = useQueryClient();
   const isFetchingCount = useIsFetching({
@@ -228,6 +229,7 @@ export function VinfastPartTrendChart({
   groupBy,
   itemCode,
   chartHeight = 300,
+  variant = "panel",
 }: {
   title: string;
   vehicleType: string;
@@ -235,6 +237,7 @@ export function VinfastPartTrendChart({
   groupBy: string;
   itemCode?: string;
   chartHeight?: number;
+  variant?: "panel" | "drawer";
 }) {
   const { data, isLoading } = useQuery({
     queryKey: [
@@ -270,8 +273,8 @@ export function VinfastPartTrendChart({
   const colorExpense = "#ea580c"; // Orange 600 (Giá vốn)
   const lineProfit = "#1e293b"; // Slate 800 (Lợi nhuận gộp)
 
-  return (
-    <Panel title={title}>
+  const content = (
+    <>
       <div className="relative" style={{ height: chartHeight }}>
         {!isLoading && trendLabels.length > 0 ? (
           <BarChart
@@ -309,13 +312,19 @@ export function VinfastPartTrendChart({
           </div>
         )}
       </div>
-      <div className="flex gap-4 mt-[10px] justify-center">
+      <div className="flex gap-4 mt-[10px] justify-center flex-wrap">
         <LegendItem color={colorExpense} label="Giá vốn" />
         <LegendItem color={colorRevenue} label="Doanh thu" />
         <LegendItem color={lineProfit} label="Lợi nhuận gộp" isLine={true} />
       </div>
-    </Panel>
+    </>
   );
+
+  if (variant === "drawer") {
+    return <DrawerSection title={title}>{content}</DrawerSection>;
+  }
+
+  return <Panel title={title}>{content}</Panel>;
 }
 
 function LegendItem({

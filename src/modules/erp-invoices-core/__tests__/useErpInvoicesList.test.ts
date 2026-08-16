@@ -12,41 +12,30 @@ vi.mock("../api/erpInvoicesCoreApi", () => ({
   },
 }));
 
+const initialSubState = {
+  searchInput: "",
+  search: "",
+  page: 1,
+  pageSize: 50,
+  period: "",
+  dateFrom: "",
+  dateTo: "",
+  status: "",
+  seller_name: "",
+  buyer_name: "",
+  tag_id: "",
+  sortBy: "invoiceDate",
+  sortOrder: "desc" as const,
+  filterPanelOpen: false,
+};
+
 const resetZustand = () => {
   useErpInvoiceListStore.setState({
     states: {
-      IN: {
-        searchInput: "",
-        search: "",
-        page: 1,
-        pageSize: 50,
-        period: "",
-        dateFrom: "",
-        dateTo: "",
-        status: "",
-        seller_name: "",
-        buyer_name: "",
-        tag_id: "",
-        sortBy: "invoiceDate",
-        sortOrder: "desc",
-        filterPanelOpen: false,
-      },
-      OUT: {
-        searchInput: "",
-        search: "",
-        page: 1,
-        pageSize: 50,
-        period: "",
-        dateFrom: "",
-        dateTo: "",
-        status: "",
-        seller_name: "",
-        buyer_name: "",
-        tag_id: "",
-        sortBy: "invoiceDate",
-        sortOrder: "desc",
-        filterPanelOpen: false,
-      },
+      IN: { ...initialSubState },
+      OUT: { ...initialSubState },
+      CHECKPOINT_IN: { ...initialSubState },
+      CHECKPOINT_OUT: { ...initialSubState },
     },
   });
   useTableColumnStore.setState({ tables: {} });

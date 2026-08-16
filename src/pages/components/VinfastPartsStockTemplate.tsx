@@ -28,7 +28,7 @@ export function VinfastPartsStockTemplate({
   description,
 }: VinfastPartsStockTemplateProps) {
   const { t } = useTranslation(["vinfastParts", "reports", "common"]);
-  const hasVinfastPerm = useHasPermission("vinfast_parts_reports", "read");
+  const hasVinfastPerm = useHasPermission("vinfast", "read");
   const queryClient = useQueryClient();
   const [selectedSku, setSelectedSku] = useState<string | null>(null);
   const [catalogData, setCatalogData] = useState<any>(null);

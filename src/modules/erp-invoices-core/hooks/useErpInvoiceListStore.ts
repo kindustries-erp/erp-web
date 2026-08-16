@@ -4,7 +4,7 @@ import {
   periodLastDay,
 } from "@/modules/finance/utils/financeHelpers";
 
-export type Direction = "IN" | "OUT";
+export type Direction = "IN" | "OUT" | "CHECKPOINT_IN" | "CHECKPOINT_OUT";
 
 export interface ErpInvoiceListState {
   searchInput: string;
@@ -26,11 +26,11 @@ export interface ErpInvoiceListState {
   filterPanelOpen: boolean;
 }
 
-const defaultState = (): ErpInvoiceListState => ({
+const defaultState = (pageSize = 50): ErpInvoiceListState => ({
   searchInput: "",
   search: "",
   page: 1,
-  pageSize: 50,
+  pageSize,
   period: "",
   dateFrom: "",
   dateTo: "",
@@ -73,8 +73,10 @@ export interface ErpInvoiceListStore {
 export const useErpInvoiceListStore = create<ErpInvoiceListStore>(
   (set, get) => ({
     states: {
-      IN: defaultState(),
-      OUT: defaultState(),
+      IN: defaultState(50),
+      OUT: defaultState(50),
+      CHECKPOINT_IN: defaultState(20),
+      CHECKPOINT_OUT: defaultState(20),
     },
 
     updateState: (dir, updates) => {

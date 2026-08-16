@@ -12,6 +12,7 @@ export interface SpreadsheetPageTemplateProps<T> {
   title: string;
   desc?: string;
   icon?: ReactNode;
+  hideHeader?: boolean;
 
   // --- Table Data & State ---
   tableId: string;
@@ -38,6 +39,7 @@ export interface SpreadsheetPageTemplateProps<T> {
   onCreate?: () => void;
   extraActions?: ReactNode;
   createLabel?: string;
+  createIcon?: ReactNode;
   createActions?: ActionDropdownItem[];
   bulkActionsNode?: ReactNode;
   customActionsNode?: ReactNode;

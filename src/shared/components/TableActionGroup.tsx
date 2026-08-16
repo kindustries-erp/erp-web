@@ -14,6 +14,7 @@ interface TableActionGroupProps {
 
   onCreate?: () => void;
   createLabel?: string;
+  createIcon?: React.ReactNode;
   createActions?: import("@/shared/components/ActionDropdown").ActionDropdownItem[];
 
   extraActions?: React.ReactNode;
@@ -32,6 +33,7 @@ export function TableActionGroup({
   onClearAllFilters,
   onCreate,
   createLabel = "Tạo mới",
+  createIcon,
   createActions,
   extraActions,
   children,
@@ -82,7 +84,7 @@ export function TableActionGroup({
 
       {onCreate && (!createActions || createActions.length === 0) && (
         <Button onClick={onCreate} className="h-8 px-3">
-          <Plus className="h-4 w-4 mr-1" />
+          {createIcon || <Plus className="h-4 w-4 mr-1" />}
           {t(createLabel)}
         </Button>
       )}
@@ -93,6 +95,7 @@ export function TableActionGroup({
           align="end"
           customTrigger={
             <Button className="h-8 px-3">
+              {createIcon}
               {t(createLabel)}
               <ChevronDown className="h-4 w-4 ml-1 opacity-70" />
             </Button>
@@ -106,7 +109,7 @@ export function TableActionGroup({
             onClick={onCreate}
             className="h-8 rounded-r-none px-3 border-r-0 focus:z-10"
           >
-            <Plus className="h-4 w-4 mr-1" />
+            {createIcon || <Plus className="h-4 w-4 mr-1" />}
             {t(createLabel)}
           </Button>
           <div className="w-[1px] h-8 bg-primary-foreground/20 z-10" />

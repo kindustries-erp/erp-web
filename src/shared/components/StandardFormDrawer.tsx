@@ -83,6 +83,9 @@ export interface StandardFormDrawerProps {
 
   /** Custom element to render on the left side of the footer */
   footerLeft?: React.ReactNode;
+
+  /** Optional class for drawer body container */
+  bodyClassName?: string;
 }
 
 export function StandardFormDrawer({
@@ -103,6 +106,7 @@ export function StandardFormDrawer({
   leftPanel,
   rightPanel,
   panelClassName,
+  bodyClassName,
   hideRightPanel = false,
   rightPanelTitle,
   rightPanelDefaultCollapsed = false,
@@ -183,7 +187,9 @@ export function StandardFormDrawer({
         <FormLoadingSkeleton />
       ) : layout === "1-column" ? (
         // 1-column: render leftPanel raw — caller uses DrawerSection/DrawerField directly
-        <div className="w-full pb-4">{leftPanel}</div>
+        <div className="w-full h-full flex flex-col flex-1 min-h-0">
+          {leftPanel}
+        </div>
       ) : (
         <div
           className={cn(
@@ -276,6 +282,7 @@ export function StandardFormDrawer({
       confirmOnClose={confirmOnClose}
       headerExtra={headerExtra}
       panelClassName={cn(defaultPanelClassName, panelClassName)}
+      bodyClassName={bodyClassName}
       title={title}
       titleExtra={titleExtra}
       subtitle={subtitle}
