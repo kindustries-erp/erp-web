@@ -37,9 +37,17 @@ Use this skill only inside this repository.
 - **Strict Git Workflow**: Follow the exact sequence: pull -> build -> check:ci -> test -> commit -> push (see rules for exact trigger definitions).
 - When task docs are stale, verify with code + build/test + git state before correcting status/checklist
 
+## Module Knowledge Repository (.agents/skills/modules/)
+
+Mỗi domain/module frontend đều có tài liệu tri thức chuyên sâu (Routing, PageKey, Table columns, Drawers, Modals, API client, UX) được lưu tại `.agents/skills/modules/<module-name>/SKILL.md`.
+
+- Khi làm việc trên module cụ thể: Đọc trực tiếp skill của module đó (vd: `bom-core` tại `.agents/skills/modules/bom-core/SKILL.md`).
+- Khi cần quét mới hoặc cập nhật tài liệu cho một module: Sử dụng skill `scan-module-knowledge` (`.agents/skills/scan-module-knowledge/SKILL.md`).
+
 ## Team-scale reminders
 
 - Use `must` only for standards already enforced in this repo; use `prefer` for target-direction conventions.
 - Keep page boundaries clean: page -> domain hook/query -> domain components -> shared primitives.
 - If a new helper/component is created instead of reusing one, note the reason in the task artifact.
 - A frontend task is not done until validation evidence and commit/push status are recorded.
+
