@@ -14,6 +14,7 @@ vi.mock("@/shared/components/StandardFormDrawer", () => ({
     onToggleEdit,
     panelClassName,
     layout,
+    relatedTabs,
   }: any) => (
     <div
       data-testid="drawer"
@@ -29,8 +30,20 @@ vi.mock("@/shared/components/StandardFormDrawer", () => ({
       <div>{leftPanel}</div>
       {rightPanelTitle && <div>{rightPanelTitle}</div>}
       <div>{rightPanel}</div>
+      {relatedTabs && (
+        <div data-testid="related-tabs">
+          {relatedTabs.map((t: any) => (
+            <div key={t.key}>
+              <h3>{t.label}</h3>
+              <div>{t.content}</div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   ),
+  DrawerDocumentTraceability: () => <div data-testid="traceability-mock" />,
+  DrawerAuditTimeline: () => <div data-testid="audit-timeline-mock" />,
 }));
 
 vi.mock("@/shared/components/accounting/PostingSection", () => ({

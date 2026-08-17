@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   StandardFormDrawer,
   DrawerAuditTimeline,
@@ -27,9 +28,11 @@ import {
   type ActionDropdownItem,
 } from "@/shared/components/ActionDropdown";
 import { ErpInvoiceLinkedDocuments } from "./ErpInvoiceLinkedDocuments";
+import { VoucherNetoffSelectionModal } from "./VoucherNetoffSelectionModal";
 import { PostedAccountingSummary } from "@/shared/components/accounting/PostedAccountingSummary";
 import { PostingSection } from "@/shared/components/accounting/PostingSection";
 import { ErpInvoicePdfUpload } from "./ErpInvoicePdfUpload";
+import toast from "react-hot-toast";
 
 function createClientId() {
   const maybeCrypto = (globalThis as any)?.crypto;
@@ -110,6 +113,25 @@ export function ErpInvoiceInternalDrawer({
   bottomPanel,
 }: Props) {
   const { t } = useTranslation("erpInvoices");
+  const [showNetOffModal, setShowNetOffModal] = useState(false);
+
+  const handleSelectBankNetOff = (
+    selected: { id: string; amount: number }[],
+  ) => {
+    if (selected.length === 0) return;
+    const current = form?.pendingDocumentChanges || [];
+    const newChanges = selected.map((s) => ({
+      action: "ADD" as const,
+      type: "BANK" as const,
+      refId: s.id,
+      amount: s.amount,
+    }));
+    fieldSet?.("pendingDocumentChanges", [...current, ...newChanges]);
+    toast.success(
+      t("Đã thêm giao dịch ngân hàng vào danh sách cấn trừ chờ lưu."),
+    );
+    onSyncDetail?.();
+  };
 
   const editActions = [
     {
@@ -255,6 +277,52 @@ export function ErpInvoiceInternalDrawer({
             rootType="INVOICE"
             fetchGraph={(id) => erpInvoicesCoreApi.getTraceabilityGraph(id)}
             editMode={editMode}
+            onAddLink={(stageKey) => {
+              if (stageKey === "ORDER_STOCK") {
+                window.dispatchEvent(
+                  new CustomEvent("open_erp_document", {
+                    detail: { type: "erp_purchase_order", id: "new" },
+                  }),
+                );
+              } else {
+                setShowNetOffModal(true);
+              }
+            }}
+            onCreateNewDoc={(stageKey) => {
+              if (stageKey === "PAYMENT") {
+                window.dispatchEvent(
+                  new CustomEvent("open_erp_document", {
+                    detail: { type: "bank_transaction", id: "new" },
+                  }),
+                );
+              } else {
+                window.dispatchEvent(
+                  new CustomEvent("open_erp_document", {
+                    detail: { type: "erp_purchase_order", id: "new" },
+                  }),
+                );
+              }
+            }}
+            onUnlinkNode={async (node) => {
+              try {
+                if (node.docType === "BANK_TXN") {
+                  await erpInvoicesCoreApi.removeVoucherLink(
+                    detailInvoice.id,
+                    node.id,
+                  );
+                  toast.success(t("Đã gỡ liên kết giao dịch ngân hàng."));
+                } else if (node.docType === "PURCHASE_ORDER") {
+                  await erpInvoicesCoreApi.update(detailInvoice.id, {
+                    purchaseOrderId: undefined,
+                  });
+                  toast.success(t("Đã gỡ liên kết đơn mua hàng."));
+                }
+
+                onSyncDetail?.();
+              } catch (err: any) {
+                toast.error(err?.message || t("Lỗi gỡ liên kết chứng từ"));
+              }
+            }}
             editActionsSlot={
               editMode ? (
                 <ErpInvoiceLinkedDocuments
@@ -478,25 +546,38 @@ export function ErpInvoiceInternalDrawer({
   }
 
   return (
-    <StandardFormDrawer
-      open={open}
-      mode={editMode ? "edit" : "view"}
-      onClose={onClose}
-      onToggleEdit={!editMode && !hideEditToggle ? startEdit : undefined}
-      title={drawerTitle}
-      titleExtra={titleExtra}
-      size="xl"
-      layout={rightPanel ? "2-columns" : "1-column"}
-      collapsibleRightPanel={true}
-      confirmOnClose={editMode}
-      actions={editMode ? editActions : undefined}
-      footerLeft={footerLeft}
-      leftPanel={children}
-      rightPanel={rightPanel}
-      relatedTabs={resolvedRelatedTabs}
-      defaultRelatedTabKey={defaultRelatedTabKey}
-      defaultRelatedCollapsed={defaultRelatedCollapsed}
-      bottomPanel={bottomPanel}
-    />
+    <>
+      <StandardFormDrawer
+        open={open}
+        mode={editMode ? "edit" : "view"}
+        onClose={onClose}
+        onToggleEdit={!editMode && !hideEditToggle ? startEdit : undefined}
+        title={drawerTitle}
+        titleExtra={titleExtra}
+        size="xl"
+        layout={rightPanel ? "2-columns" : "1-column"}
+        collapsibleRightPanel={true}
+        confirmOnClose={editMode}
+        actions={editMode ? editActions : undefined}
+        footerLeft={footerLeft}
+        leftPanel={children}
+        rightPanel={rightPanel}
+        relatedTabs={resolvedRelatedTabs}
+        defaultRelatedTabKey={defaultRelatedTabKey}
+        defaultRelatedCollapsed={defaultRelatedCollapsed}
+        bottomPanel={bottomPanel}
+      />
+
+      {detailInvoice && (
+        <VoucherNetoffSelectionModal
+          open={showNetOffModal}
+          onClose={() => setShowNetOffModal(false)}
+          onSelect={handleSelectBankNetOff}
+          existingVoucherIds={(detailInvoice.voucherNetOffs || []).map(
+            (v) => v.bankTransactionId,
+          )}
+        />
+      )}
+    </>
   );
 }

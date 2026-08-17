@@ -9,6 +9,7 @@ import {
   useEdgesState,
   useReactFlow,
   ReactFlowProvider,
+  MarkerType,
   type Node,
   type Edge,
   type NodeProps,
@@ -28,15 +29,99 @@ import {
   RotateCcw,
   ArrowRight,
   ShieldAlert,
+  Plus,
+  Trash2,
+  ChevronDown,
+  FilePlus,
+  Link2,
 } from "lucide-react";
 
 import { Button } from "@/shared/components/ui/Button";
+import { ConfirmModal } from "@/shared/components/ConfirmModal";
+import { ActionDropdown } from "@/shared/components/ActionDropdown";
 import { money, formatGMT7 } from "@/shared/utils/format";
 import type {
   TraceabilityGraphData,
   TraceabilityNode,
   TraceabilityNodeType,
 } from "@/shared/types/traceability";
+
+// ─── 4 Enterprise Business Stages ─────────────────────────────────────────────
+
+export type BusinessStageKey =
+  | "ORDER_STOCK"
+  | "INVOICE"
+  | "PAYMENT"
+  | "GENERAL_LEDGER";
+
+export interface StageConfig {
+  key: BusinessStageKey;
+  stageNo: number;
+  title: string;
+  shortTitle: string;
+  types: TraceabilityNodeType[];
+  accentBorder: string;
+  badgeCls: string;
+  bgCls: string;
+}
+
+export const STAGES_CONFIG: StageConfig[] = [
+  {
+    key: "ORDER_STOCK",
+    stageNo: 1,
+    title: "1. Mua / Bán hàng & Kho",
+    shortTitle: "ĐƠN HÀNG & KHO",
+    types: [
+      "PURCHASE_ORDER",
+      "SALES_ORDER",
+      "GOODS_RECEIPT",
+      "GOODS_ISSUE",
+      "GARAGE_CASE",
+    ],
+    accentBorder: "border-zinc-300/80 dark:border-zinc-700",
+    badgeCls: "bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200",
+    bgCls: "bg-zinc-50/50 dark:bg-zinc-950/40",
+  },
+  {
+    key: "INVOICE",
+    stageNo: 2,
+    title: "2. Hóa đơn VAT",
+    shortTitle: "HÓA ĐƠN VAT",
+    types: ["INVOICE"],
+    accentBorder: "border-slate-300/80 dark:border-slate-700",
+    badgeCls:
+      "bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200",
+    bgCls: "bg-slate-50/50 dark:bg-slate-950/40",
+  },
+  {
+    key: "PAYMENT",
+    stageNo: 3,
+    title: "3. Dòng tiền & Sổ quỹ",
+    shortTitle: "DÒNG TIỀN / SAO KÊ",
+    types: ["BANK_TXN"],
+    accentBorder: "border-slate-300/80 dark:border-slate-700",
+    badgeCls:
+      "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300",
+    bgCls: "bg-slate-50/50 dark:bg-slate-950/40",
+  },
+  {
+    key: "GENERAL_LEDGER",
+    stageNo: 4,
+    title: "4. Sổ cái Kế toán",
+    shortTitle: "SỔ CÁI KẾ TOÁN",
+    types: ["JOURNAL_ENTRY"],
+    accentBorder: "border-neutral-300/80 dark:border-neutral-700",
+    badgeCls:
+      "bg-neutral-100 text-neutral-800 dark:bg-neutral-800 dark:text-neutral-200",
+    bgCls: "bg-neutral-50/50 dark:bg-neutral-950/40",
+  },
+];
+
+export function getStageForDocType(docType: TraceabilityNodeType): StageConfig {
+  return (
+    STAGES_CONFIG.find((s) => s.types.includes(docType)) || STAGES_CONFIG[0]
+  );
+}
 
 // ─── Module Badge & Config (Business Neutral Tone) ────────────────────────────
 
@@ -108,11 +193,75 @@ export function openGlobalErpDocument(
   }
 }
 
-// ─── Custom Canvas Node Card (Business Neutral Standard) ──────────────────────
+// ─── Custom Stage Group Background Node (Swimlane Container) ─────────────────
 
-function TraceabilityNodeCard({ data }: NodeProps<Node<TraceabilityNode>>) {
+interface StageGroupData extends Record<string, unknown> {
+  stage: StageConfig;
+  count: number;
+  width: number;
+  height: number;
+  allowEdit?: boolean;
+  onAddLink?: (stageKey: BusinessStageKey) => void;
+}
+
+function StageGroupNodeCard({ data }: NodeProps<Node<StageGroupData>>) {
   const t = useT();
-  const node = data as TraceabilityNode;
+  const group = data as StageGroupData;
+  const { stage, count, width, height, allowEdit, onAddLink } = group;
+
+  return (
+    <div
+      style={{ width: `${width}px`, height: `${height}px` }}
+      className={cn(
+        "rounded-2xl border-2 border-dashed relative pointer-events-none transition-all",
+        stage.accentBorder,
+        stage.bgCls,
+      )}
+    >
+      {/* Top Header of Swimlane / Stage Group */}
+      <div className="absolute top-2.5 left-3.5 right-3.5 flex items-center justify-between pointer-events-auto">
+        <div className="flex items-center gap-2 min-w-0">
+          <span
+            className={cn(
+              "px-2 py-0.5 rounded-md text-[11px] font-bold tracking-wider font-mono uppercase border",
+              stage.badgeCls,
+            )}
+          >
+            {stage.shortTitle}
+          </span>
+          <span className="text-[11px] font-mono font-medium text-slate-500 dark:text-slate-400">
+            {count} {t("chứng từ")}
+          </span>
+        </div>
+
+        {allowEdit && onAddLink && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-6 px-2 text-[11px] text-slate-500 hover:text-slate-900 bg-white/80 dark:bg-slate-800 hover:bg-white border border-slate-200 dark:border-slate-700 shadow-2xs gap-1"
+            onClick={() => onAddLink(stage.key)}
+            title={t("Ghép nối chứng từ vào giai đoạn này")}
+          >
+            <Plus className="w-3 h-3" />
+            <span>{t("Ghép nối")}</span>
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Custom Canvas Document Node Card ─────────────────────────────────────────
+
+interface NodeCardCustomData extends TraceabilityNode, Record<string, unknown> {
+  allowEdit?: boolean;
+  onUnlink?: (node: TraceabilityNode) => void;
+}
+
+function TraceabilityNodeCard({ data }: NodeProps<Node<NodeCardCustomData>>) {
+  const t = useT();
+  const node = data as NodeCardCustomData;
   const cfg = MODULE_CONFIG[node.docType] || {
     label: node.docType,
     badgeCls: "bg-slate-100 text-slate-700 border-slate-200",
@@ -136,13 +285,28 @@ function TraceabilityNodeCard({ data }: NodeProps<Node<TraceabilityNode>>) {
     }
   };
 
+  const handleUnlink = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (node.onUnlink) {
+      node.onUnlink(node);
+    }
+  };
+
+  const canUnlink = Boolean(
+    node.allowEdit &&
+    !node.isCurrent &&
+    !node.restricted &&
+    node.depth === 1 &&
+    node.onUnlink,
+  );
+
   return (
     <div
       className={cn(
-        "w-[290px] rounded-xl border bg-white dark:bg-slate-900 transition-all duration-200 group text-left relative",
+        "w-[290px] rounded-xl border bg-white dark:bg-slate-900 transition-all duration-200 group text-left relative z-10",
         node.isCurrent
-          ? "ring-1.5 ring-slate-800 dark:ring-slate-200 border-slate-400 shadow-sm"
-          : "border-slate-200/90 dark:border-slate-800 shadow-2xs hover:border-slate-400 dark:hover:border-slate-600 hover:shadow-xs",
+          ? "ring-2 ring-slate-900 dark:ring-slate-100 border-slate-500 shadow-md"
+          : "border-slate-200/90 dark:border-slate-800 shadow-2xs hover:border-slate-400 dark:hover:border-slate-600 hover:shadow-sm",
         node.restricted &&
           "border-dashed border-slate-300 bg-slate-50/70 dark:bg-slate-900/50 opacity-80",
       )}
@@ -150,12 +314,12 @@ function TraceabilityNodeCard({ data }: NodeProps<Node<TraceabilityNode>>) {
       <Handle
         type="target"
         position={Position.Left}
-        className="w-2.5 h-2.5 !bg-slate-400 border border-white opacity-0 group-hover:opacity-100 transition-opacity z-10"
+        className="w-2.5 h-2.5 !bg-slate-400 border border-white opacity-0 group-hover:opacity-100 transition-opacity z-20"
       />
       <Handle
         type="source"
         position={Position.Right}
-        className="w-2.5 h-2.5 !bg-slate-400 border border-white opacity-0 group-hover:opacity-100 transition-opacity z-10"
+        className="w-2.5 h-2.5 !bg-slate-400 border border-white opacity-0 group-hover:opacity-100 transition-opacity z-20"
       />
 
       {/* Top Header Row */}
@@ -195,6 +359,19 @@ function TraceabilityNodeCard({ data }: NodeProps<Node<TraceabilityNode>>) {
             </span>
           )}
 
+          {canUnlink && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              className="h-6 w-6 text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors"
+              title={t("Gỡ liên kết chứng từ này")}
+              onClick={handleUnlink}
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </Button>
+          )}
+
           {node.restricted ? (
             <div
               className="p-1 rounded text-slate-400 cursor-not-allowed"
@@ -202,7 +379,7 @@ function TraceabilityNodeCard({ data }: NodeProps<Node<TraceabilityNode>>) {
             >
               <Lock className="w-3.5 h-3.5 text-slate-400" />
             </div>
-          ) : (
+          ) : !node.isCurrent ? (
             <Button
               type="button"
               variant="ghost"
@@ -213,7 +390,7 @@ function TraceabilityNodeCard({ data }: NodeProps<Node<TraceabilityNode>>) {
             >
               <ExternalLink className="w-3.5 h-3.5" />
             </Button>
-          )}
+          ) : null}
         </div>
       </div>
 
@@ -258,51 +435,136 @@ function TraceabilityNodeCard({ data }: NodeProps<Node<TraceabilityNode>>) {
 
 const NODE_TYPES = {
   traceabilityNode: TraceabilityNodeCard,
+  stageGroupNode: StageGroupNodeCard,
 };
 
-// ─── Graph Layout Auto-Arranger (DAG / Column-based) ──────────────────────────
+// ─── Graph Layout Auto-Arranger with Stage Swimlanes ──────────────────────────
 
-const COL_GAP = 340;
-const ROW_GAP = 120;
+const CARD_WIDTH = 290;
+const STAGE_COL_WIDTH = 330;
+const STAGE_HEADER_HEIGHT = 48;
+const CARD_ROW_GAP = 130;
+const STAGE_COL_GAP = 120;
 
 function computeLayout(
   graphData: TraceabilityGraphData,
   direction: "horizontal" | "vertical" = "horizontal",
-): { nodes: Node<TraceabilityNode>[]; edges: Edge[] } {
-  const nodes: Node<TraceabilityNode>[] = [];
+  allowEdit?: boolean,
+  onAddLink?: (stageKey: BusinessStageKey) => void,
+  onUnlinkNode?: (node: TraceabilityNode) => void,
+): { nodes: Node[]; edges: Edge[] } {
+  const nodes: Node[] = [];
   const edges: Edge[] = [];
 
-  // Group nodes by depth / column
-  const depthGroups = new Map<number, TraceabilityNode[]>();
+  // 1. Group nodes by Stage
+  const stageGroupsMap = new Map<BusinessStageKey, TraceabilityNode[]>();
+  STAGES_CONFIG.forEach((s) => stageGroupsMap.set(s.key, []));
+
   graphData.nodes.forEach((n) => {
-    const list = depthGroups.get(n.depth) || [];
-    list.push(n);
-    depthGroups.set(n.depth, list);
+    const stage = getStageForDocType(n.docType);
+    stageGroupsMap.get(stage.key)!.push(n);
   });
 
-  depthGroups.forEach((groupNodes, depth) => {
-    const totalInCol = groupNodes.length;
-    const offset = -((totalInCol - 1) * ROW_GAP) / 2;
+  // Filter only active stages (stages with at least 1 document)
+  const activeStages = STAGES_CONFIG.filter(
+    (s) => (stageGroupsMap.get(s.key) || []).length > 0,
+  );
 
-    groupNodes.forEach((n, idx) => {
-      let x = depth * COL_GAP;
-      let y = offset + idx * ROW_GAP;
+  activeStages.forEach((stage, stageIdx) => {
+    const stageDocs = stageGroupsMap.get(stage.key) || [];
+    const count = stageDocs.length;
 
-      if (direction === "vertical") {
-        const vOffset = -((totalInCol - 1) * COL_GAP) / 2;
-        x = vOffset + idx * COL_GAP;
-        y = depth * ROW_GAP * 1.5;
-      }
+    if (direction === "horizontal") {
+      const stageWidth = STAGE_COL_WIDTH;
+      const stageHeight = Math.max(
+        180,
+        STAGE_HEADER_HEIGHT + count * CARD_ROW_GAP + 20,
+      );
+      const stageX = stageIdx * (stageWidth + STAGE_COL_GAP);
+      const stageY = 0;
+
+      // Add Stage Group Container Background Node
+      nodes.push({
+        id: `stage-group-${stage.key}`,
+        type: "stageGroupNode",
+        position: { x: stageX, y: stageY },
+        selectable: false,
+        draggable: false,
+        data: {
+          stage,
+          count,
+          width: stageWidth,
+          height: stageHeight,
+          allowEdit,
+          onAddLink,
+        },
+        zIndex: -1,
+      });
+
+      // Add Document Nodes inside this Stage Column
+      stageDocs.forEach((doc, docIdx) => {
+        const docX = stageX + (stageWidth - CARD_WIDTH) / 2;
+        const docY = stageY + STAGE_HEADER_HEIGHT + docIdx * CARD_ROW_GAP;
+
+        nodes.push({
+          id: doc.id,
+          type: "traceabilityNode",
+          position: { x: docX, y: docY },
+          data: {
+            ...doc,
+            allowEdit,
+            onUnlink: onUnlinkNode,
+          },
+          zIndex: 10,
+        });
+      });
+    } else {
+      // Vertical Stage Rows
+      const stageWidth = Math.max(
+        STAGE_COL_WIDTH,
+        count * (CARD_WIDTH + 30) + 30,
+      );
+      const stageHeight = 220;
+      const stageX = 0;
+      const stageY = stageIdx * (stageHeight + 50);
 
       nodes.push({
-        id: n.id,
-        type: "traceabilityNode",
-        position: { x, y },
-        data: n,
+        id: `stage-group-${stage.key}`,
+        type: "stageGroupNode",
+        position: { x: stageX, y: stageY },
+        selectable: false,
+        draggable: false,
+        data: {
+          stage,
+          count,
+          width: stageWidth,
+          height: stageHeight,
+          allowEdit,
+          onAddLink,
+        },
+        zIndex: -1,
       });
-    });
+
+      stageDocs.forEach((doc, docIdx) => {
+        const docX = stageX + 20 + docIdx * (CARD_WIDTH + 30);
+        const docY = stageY + STAGE_HEADER_HEIGHT + 10;
+
+        nodes.push({
+          id: doc.id,
+          type: "traceabilityNode",
+          position: { x: docX, y: docY },
+          data: {
+            ...doc,
+            allowEdit,
+            onUnlink: onUnlinkNode,
+          },
+          zIndex: 10,
+        });
+      });
+    }
   });
 
+  // 2. Build Edges with Directional Arrows & Clean Labels
   graphData.edges.forEach((e) => {
     edges.push({
       id: e.id,
@@ -310,24 +572,34 @@ function computeLayout(
       target: e.target,
       type: "smoothstep",
       label: e.label || undefined,
+      markerEnd: {
+        type: MarkerType.ArrowClosed,
+        width: 14,
+        height: 14,
+        color: "#94a3b8",
+      },
       labelStyle: {
         fontSize: 10,
         fontFamily: "monospace",
-        fill: "#475569",
+        fontWeight: 600,
+        fill: "#0f172a",
       },
       labelBgStyle: {
-        fill: "#f8fafc",
-        fillOpacity: 0.95,
-        rx: 4,
-        ry: 4,
+        fill: "#ffffff",
+        fillOpacity: 1,
+        stroke: "#94a3b8",
+        strokeWidth: 1,
+        rx: 6,
+        ry: 6,
       },
-      labelBgBorderRadius: 4,
-      labelBgPadding: [6, 2],
+      labelBgBorderRadius: 6,
+      labelBgPadding: [8, 4],
       style: {
-        stroke: "#cbd5e1",
-        strokeWidth: 1.5,
+        stroke: "#94a3b8",
+        strokeWidth: 1.8,
         strokeDasharray: e.isTransitive ? "4 4" : undefined,
       },
+      zIndex: 30,
     });
   });
 
@@ -337,25 +609,51 @@ function computeLayout(
 function CanvasFlowInner({
   graphData,
   direction,
+  allowEdit,
+  onAddLink,
+  onUnlinkNode,
 }: {
   graphData: TraceabilityGraphData;
   direction: "horizontal" | "vertical";
+  allowEdit?: boolean;
+  onAddLink?: (stageKey: BusinessStageKey) => void;
+  onUnlinkNode?: (node: TraceabilityNode) => void;
 }) {
   const { fitView } = useReactFlow();
   const { nodes: initialNodes, edges: initialEdges } = useMemo(
-    () => computeLayout(graphData, direction),
-    [graphData, direction],
+    () =>
+      computeLayout(graphData, direction, allowEdit, onAddLink, onUnlinkNode),
+    [graphData, direction, allowEdit, onAddLink, onUnlinkNode],
   );
 
-  const [nodes, , onNodesChange] = useNodesState(initialNodes);
-  const [edges, , onEdgesChange] = useEdgesState(initialEdges);
+  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
   useEffect(() => {
+    const { nodes: nextNodes, edges: nextEdges } = computeLayout(
+      graphData,
+      direction,
+      allowEdit,
+      onAddLink,
+      onUnlinkNode,
+    );
+    setNodes(nextNodes);
+    setEdges(nextEdges);
+
     const t = setTimeout(() => {
-      fitView({ duration: 400, padding: 0.25 });
-    }, 50);
+      fitView({ duration: 400, padding: 0.2 });
+    }, 60);
     return () => clearTimeout(t);
-  }, [graphData, direction, fitView]);
+  }, [
+    graphData,
+    direction,
+    allowEdit,
+    onAddLink,
+    onUnlinkNode,
+    fitView,
+    setNodes,
+    setEdges,
+  ]);
 
   return (
     <ReactFlow
@@ -365,7 +663,7 @@ function CanvasFlowInner({
       onEdgesChange={onEdgesChange}
       nodeTypes={NODE_TYPES}
       fitView
-      fitViewOptions={{ padding: 0.25 }}
+      fitViewOptions={{ padding: 0.2 }}
       minZoom={0.1}
       maxZoom={2}
       nodesDraggable
@@ -386,41 +684,48 @@ function CanvasFlowInner({
 
 function TraceabilityPipelineView({
   graphData,
+  allowEdit,
+  onAddLink,
+  onUnlinkNode,
 }: {
   graphData: TraceabilityGraphData;
+  allowEdit?: boolean;
+  onAddLink?: (stageKey: BusinessStageKey) => void;
+  onUnlinkNode?: (node: TraceabilityNode) => void;
 }) {
   const t = useT();
 
-  const stages: { title: string; types: TraceabilityNodeType[] }[] = [
-    {
-      title: t("1. Mua / Bán hàng"),
-      types: ["PURCHASE_ORDER", "SALES_ORDER", "GARAGE_CASE"],
-    },
-    { title: t("2. Nhập / Xuất kho"), types: ["GOODS_RECEIPT", "GOODS_ISSUE"] },
-    { title: t("3. Hóa đơn VAT"), types: ["INVOICE"] },
-    { title: t("4. Dòng tiền / Sao kê"), types: ["BANK_TXN"] },
-    { title: t("5. Sổ cái Kế toán"), types: ["JOURNAL_ENTRY"] },
-  ];
-
   return (
     <div className="flex items-start gap-4 overflow-x-auto p-4 min-h-[360px] bg-slate-50/50 dark:bg-slate-950/40 rounded-xl border border-slate-200/80">
-      {stages.map((stage, sIdx) => {
+      {STAGES_CONFIG.map((stage, sIdx) => {
         const stageNodes = graphData.nodes.filter((n) =>
           stage.types.includes(n.docType),
         );
 
         return (
-          <React.Fragment key={stage.title}>
-            <div className="flex-1 min-w-[240px] max-w-[300px] flex flex-col gap-2.5">
+          <React.Fragment key={stage.key}>
+            <div className="flex-1 min-w-[250px] max-w-[310px] flex flex-col gap-2.5">
               <div className="flex items-center justify-between pb-1.5 border-b border-slate-200 text-xs font-semibold text-slate-700 dark:text-slate-300">
                 <span>{stage.title}</span>
-                <span className="text-[11px] font-mono px-1.5 py-0.2 rounded bg-slate-200/60 dark:bg-slate-800 text-slate-600">
-                  {stageNodes.length}
-                </span>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[11px] font-mono px-1.5 py-0.2 rounded bg-slate-200/60 dark:bg-slate-800 text-slate-600">
+                    {stageNodes.length}
+                  </span>
+                  {allowEdit && onAddLink && (
+                    <button
+                      type="button"
+                      onClick={() => onAddLink(stage.key)}
+                      className="text-slate-400 hover:text-slate-700 p-0.5 rounded transition-colors"
+                      title={t("Ghép nối")}
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
               </div>
 
               {stageNodes.length === 0 ? (
-                <div className="py-8 text-center text-xs text-slate-400 border border-dashed rounded-lg border-slate-200">
+                <div className="py-8 text-center text-xs text-slate-400 border border-dashed rounded-lg border-slate-200 bg-white/40">
                   {t("Không có chứng từ")}
                 </div>
               ) : (
@@ -429,9 +734,9 @@ function TraceabilityPipelineView({
                     <div
                       key={n.id}
                       className={cn(
-                        "p-3 rounded-lg border bg-white dark:bg-slate-900 transition-all",
+                        "p-3 rounded-lg border bg-white dark:bg-slate-900 transition-all group",
                         n.isCurrent
-                          ? "ring-1.5 ring-slate-800 dark:ring-slate-200 border-slate-400 shadow-xs"
+                          ? "ring-2 ring-slate-900 dark:ring-slate-100 border-slate-500 shadow-xs"
                           : "border-slate-200/90 shadow-2xs hover:border-slate-400",
                         n.restricted && "border-dashed bg-slate-50 opacity-80",
                       )}
@@ -440,22 +745,41 @@ function TraceabilityPipelineView({
                         <span className="font-mono text-xs font-bold text-slate-900 dark:text-slate-100 truncate">
                           {n.docNo}
                         </span>
-                        {!n.restricted && n.hasPermission ? (
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon-sm"
-                            className="h-5 w-5 text-slate-400 hover:text-slate-900"
-                            onClick={() =>
-                              openGlobalErpDocument(n.docType, n.id)
-                            }
-                            title={t("Xem chi tiết")}
-                          >
-                            <ExternalLink className="w-3 h-3" />
-                          </Button>
-                        ) : (
-                          <Lock className="w-3 h-3 text-slate-400" />
-                        )}
+                        <div className="flex items-center gap-1">
+                          {allowEdit &&
+                            !n.isCurrent &&
+                            !n.restricted &&
+                            n.depth === 1 &&
+                            onUnlinkNode && (
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon-sm"
+                                className="h-5 w-5 text-slate-400 hover:text-red-600 hover:bg-red-50"
+                                onClick={() => onUnlinkNode(n)}
+                                title={t("Gỡ liên kết")}
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </Button>
+                            )}
+
+                          {!n.restricted && n.hasPermission && !n.isCurrent ? (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon-sm"
+                              className="h-5 w-5 text-slate-400 hover:text-slate-900"
+                              onClick={() =>
+                                openGlobalErpDocument(n.docType, n.id)
+                              }
+                              title={t("Xem chi tiết")}
+                            >
+                              <ExternalLink className="w-3 h-3" />
+                            </Button>
+                          ) : n.restricted ? (
+                            <Lock className="w-3 h-3 text-slate-400" />
+                          ) : null}
+                        </div>
                       </div>
 
                       <div className="text-[11px] text-slate-500 truncate mb-2">
@@ -482,7 +806,7 @@ function TraceabilityPipelineView({
               )}
             </div>
 
-            {sIdx < stages.length - 1 && (
+            {sIdx < STAGES_CONFIG.length - 1 && (
               <div className="pt-8 flex-shrink-0 text-slate-300 dark:text-slate-700">
                 <ArrowRight className="w-4 h-4" />
               </div>
@@ -500,10 +824,14 @@ function TraceabilityTableView({
   graphData,
   editMode,
   editActionsSlot,
+  allowEdit,
+  onUnlinkNode,
 }: {
   graphData: TraceabilityGraphData;
   editMode?: boolean;
   editActionsSlot?: React.ReactNode;
+  allowEdit?: boolean;
+  onUnlinkNode?: (node: TraceabilityNode) => void;
 }) {
   const t = useT();
 
@@ -517,18 +845,22 @@ function TraceabilityTableView({
     [graphData],
   );
 
-  const renderTableSection = (title: string, list: TraceabilityNode[]) => {
+  const renderTableSection = (
+    title: string,
+    list: TraceabilityNode[],
+    isDirect: boolean,
+  ) => {
     return (
       <div className="space-y-2">
         <div className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center justify-between">
           <span>{title}</span>
           <span className="font-mono text-[11px] text-slate-500">
-            {list.length} bản ghi
+            {list.length} {t("bản ghi")}
           </span>
         </div>
 
         {list.length === 0 ? (
-          <div className="py-4 text-center text-xs text-slate-400 border border-dashed rounded-lg">
+          <div className="py-4 text-center text-xs text-slate-400 border border-dashed rounded-lg bg-white/40">
             {t("Không có chứng từ liên kết.")}
           </div>
         ) : (
@@ -554,7 +886,7 @@ function TraceabilityTableView({
                   <th className="px-3 py-2 font-medium text-slate-600 text-right">
                     {t("Đã cấn trừ")}
                   </th>
-                  <th className="px-3 py-2 font-medium text-slate-600 text-right w-12"></th>
+                  <th className="px-3 py-2 font-medium text-slate-600 text-right w-20"></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
@@ -594,22 +926,37 @@ function TraceabilityTableView({
                           : "—"}
                     </td>
                     <td className="px-3 py-2 text-right">
-                      {!row.restricted && row.hasPermission ? (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon-sm"
-                          className="h-6 w-6 text-slate-400 hover:text-slate-900"
-                          onClick={() =>
-                            openGlobalErpDocument(row.docType, row.id)
-                          }
-                          title={t("Mở chi tiết")}
-                        >
-                          <ExternalLink className="w-3.5 h-3.5" />
-                        </Button>
-                      ) : (
-                        <Lock className="w-3.5 h-3.5 text-slate-300" />
-                      )}
+                      <div className="flex items-center justify-end gap-1">
+                        {allowEdit && isDirect && onUnlinkNode && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon-sm"
+                            className="h-6 w-6 text-slate-400 hover:text-red-600 hover:bg-red-50"
+                            onClick={() => onUnlinkNode(row)}
+                            title={t("Gỡ liên kết")}
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </Button>
+                        )}
+
+                        {!row.restricted && row.hasPermission ? (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon-sm"
+                            className="h-6 w-6 text-slate-400 hover:text-slate-900"
+                            onClick={() =>
+                              openGlobalErpDocument(row.docType, row.id)
+                            }
+                            title={t("Mở chi tiết")}
+                          >
+                            <ExternalLink className="w-3.5 h-3.5" />
+                          </Button>
+                        ) : (
+                          <Lock className="w-3.5 h-3.5 text-slate-300" />
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -632,10 +979,12 @@ function TraceabilityTableView({
       {renderTableSection(
         t("Chứng từ liên kết trực tiếp (1-hop)"),
         directNodes,
+        true,
       )}
       {renderTableSection(
         t("Chứng từ liên kết trung gian / gián tiếp (Multi-hops)"),
         transitiveNodes,
+        false,
       )}
     </div>
   );
@@ -645,10 +994,14 @@ function TraceabilityTableView({
 
 export interface DrawerDocumentTraceabilityProps {
   rootId: string;
-  rootType: TraceabilityNodeType;
+  rootType?: TraceabilityNodeType;
   fetchGraph: (id: string) => Promise<TraceabilityGraphData>;
   editMode?: boolean;
+  allowEdit?: boolean;
   editActionsSlot?: React.ReactNode;
+  onAddLink?: (stageKey?: BusinessStageKey) => void;
+  onCreateNewDoc?: (stageKey?: BusinessStageKey) => void;
+  onUnlinkNode?: (node: TraceabilityNode) => Promise<void> | void;
   className?: string;
 }
 
@@ -657,6 +1010,9 @@ export function DrawerDocumentTraceability({
   fetchGraph,
   editMode = false,
   editActionsSlot,
+  onAddLink,
+  onCreateNewDoc,
+  onUnlinkNode,
   className,
 }: DrawerDocumentTraceabilityProps) {
   const t = useT();
@@ -671,6 +1027,15 @@ export function DrawerDocumentTraceability({
   );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Unlink Confirm State
+  const [unlinkingNode, setUnlinkingNode] = useState<TraceabilityNode | null>(
+    null,
+  );
+  const [unlinkingLoading, setUnlinkingLoading] = useState(false);
+
+  // Strict Edit Mode enforcement: Only enable adding, linking or deleting when in editMode
+  const effectiveAllowEdit = Boolean(editMode);
 
   const loadData = useCallback(async () => {
     if (!rootId) return;
@@ -690,11 +1055,29 @@ export function DrawerDocumentTraceability({
     loadData();
   }, [loadData]);
 
+  const handleRequestUnlink = (node: TraceabilityNode) => {
+    setUnlinkingNode(node);
+  };
+
+  const handleConfirmUnlink = async () => {
+    if (!unlinkingNode || !onUnlinkNode) return;
+    setUnlinkingLoading(true);
+    try {
+      await onUnlinkNode(unlinkingNode);
+      setUnlinkingNode(null);
+      await loadData();
+    } catch (err: any) {
+      console.error(err);
+    } finally {
+      setUnlinkingLoading(false);
+    }
+  };
+
   return (
     <div className={cn("w-full flex flex-col gap-3 py-1", className)}>
       {/* Top Header Bar: Statistics & View Switcher */}
       <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
-        <div className="flex items-center gap-3 text-xs">
+        <div className="flex items-center gap-3 text-xs flex-wrap">
           <span className="text-slate-500">
             {t("Tổng chứng từ:")}{" "}
             <strong className="font-mono text-slate-800 dark:text-slate-200">
@@ -715,68 +1098,117 @@ export function DrawerDocumentTraceability({
           )}
         </div>
 
-        {/* View Switcher Tabs */}
-        <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200/80">
-          <button
-            type="button"
-            onClick={() => setViewMode("canvas")}
-            className={cn(
-              "flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-all",
-              viewMode === "canvas"
-                ? "bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-2xs font-semibold"
-                : "text-slate-500 hover:text-slate-900",
-            )}
-          >
-            <Network className="w-3.5 h-3.5" />
-            <span>{t("Canvas")}</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setViewMode("pipeline")}
-            className={cn(
-              "flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-all",
-              viewMode === "pipeline"
-                ? "bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-2xs font-semibold"
-                : "text-slate-500 hover:text-slate-900",
-            )}
-          >
-            <GitCommit className="w-3.5 h-3.5" />
-            <span>{t("Quy trình")}</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setViewMode("table")}
-            className={cn(
-              "flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-all",
-              viewMode === "table"
-                ? "bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-2xs font-semibold"
-                : "text-slate-500 hover:text-slate-900",
-            )}
-          >
-            <TableIcon className="w-3.5 h-3.5" />
-            <span>{t("Bảng kê")}</span>
-          </button>
-
-          {viewMode === "canvas" && (
-            <div className="flex items-center pl-1 border-l border-slate-200 dark:border-slate-700 ml-1">
+        {/* Action Controls & View Switcher Tabs */}
+        <div className="flex items-center gap-2 flex-wrap">
+          {effectiveAllowEdit &&
+            (onAddLink || onCreateNewDoc) &&
+            (onAddLink && onCreateNewDoc ? (
+              <ActionDropdown
+                items={[
+                  {
+                    groupLabel: t("THAO TÁC CHỨNG TỪ"),
+                    items: [
+                      {
+                        label: t("Ghép nối chứng từ có sẵn..."),
+                        icon: <Link2 className="w-4 h-4" />,
+                        onClick: () => onAddLink?.(),
+                      },
+                      {
+                        label: t("Tạo mới chứng từ liên quan..."),
+                        icon: <FilePlus className="w-4 h-4" />,
+                        onClick: () => onCreateNewDoc?.(),
+                      },
+                    ],
+                  },
+                ]}
+                customTrigger={
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-7 text-xs gap-1.5 text-primary border-primary/30 bg-primary/5 hover:bg-primary/10 font-medium"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>{t("Thêm chứng từ")}</span>
+                    <ChevronDown className="w-3 h-3 ml-0.5 opacity-70" />
+                  </Button>
+                }
+              />
+            ) : (
               <Button
                 type="button"
-                variant="ghost"
-                size="icon-sm"
-                className="h-6 w-6 text-slate-500 hover:text-slate-900"
-                onClick={() =>
-                  setCanvasDirection((d) =>
-                    d === "horizontal" ? "vertical" : "horizontal",
-                  )
-                }
-                title={t("Đổi hướng bố cục Ngang/Dọc")}
+                variant="outline"
+                size="sm"
+                onClick={() => onAddLink?.()}
+                className="h-7 text-xs gap-1.5 text-primary border-primary/30 bg-primary/5 hover:bg-primary/10 font-medium"
               >
-                <RotateCcw className="w-3 h-3" />
+                <Plus className="w-3.5 h-3.5" />
+                <span>{t("Ghép nối chứng từ")}</span>
               </Button>
-            </div>
-          )}
+            ))}
+
+          <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200/80">
+            <button
+              type="button"
+              onClick={() => setViewMode("canvas")}
+              className={cn(
+                "flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-all",
+                viewMode === "canvas"
+                  ? "bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-2xs font-semibold"
+                  : "text-slate-500 hover:text-slate-900",
+              )}
+            >
+              <Network className="w-3.5 h-3.5" />
+              <span>{t("Canvas")}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setViewMode("pipeline")}
+              className={cn(
+                "flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-all",
+                viewMode === "pipeline"
+                  ? "bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-2xs font-semibold"
+                  : "text-slate-500 hover:text-slate-900",
+              )}
+            >
+              <GitCommit className="w-3.5 h-3.5" />
+              <span>{t("Quy trình")}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setViewMode("table")}
+              className={cn(
+                "flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-all",
+                viewMode === "table"
+                  ? "bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-2xs font-semibold"
+                  : "text-slate-500 hover:text-slate-900",
+              )}
+            >
+              <TableIcon className="w-3.5 h-3.5" />
+              <span>{t("Bảng kê")}</span>
+            </button>
+
+            {viewMode === "canvas" && (
+              <div className="flex items-center pl-1 border-l border-slate-200 dark:border-slate-700 ml-1">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  className="h-6 w-6 text-slate-500 hover:text-slate-900"
+                  onClick={() =>
+                    setCanvasDirection((d) =>
+                      d === "horizontal" ? "vertical" : "horizontal",
+                    )
+                  }
+                  title={t("Đổi hướng bố cục Ngang/Dọc")}
+                >
+                  <RotateCcw className="w-3 h-3" />
+                </Button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -800,27 +1232,47 @@ export function DrawerDocumentTraceability({
           </Button>
         </div>
       ) : !graphData || graphData.nodes.length <= 1 ? (
-        <div className="h-[220px] flex flex-col items-center justify-center gap-2 text-slate-400 border border-dashed rounded-xl bg-slate-50/40">
-          <Network className="w-6 h-6 opacity-40" />
-          <span className="text-xs">
+        <div className="h-[240px] flex flex-col items-center justify-center gap-3 text-slate-400 border border-dashed rounded-xl bg-slate-50/40 p-4">
+          <Network className="w-7 h-7 opacity-40" />
+          <span className="text-xs text-center">
             {t("Chưa có chứng từ liên kết trực tiếp hay gián tiếp nào.")}
           </span>
+          {effectiveAllowEdit && onAddLink && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => onAddLink()}
+              className="gap-1.5 text-xs text-primary border-primary/30"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>{t("Ghép nối chứng từ đầu tiên")}</span>
+            </Button>
+          )}
         </div>
       ) : (
         <div className="w-full">
           {viewMode === "canvas" && (
-            <div className="w-full h-[460px] rounded-xl border border-slate-200/90 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-950 overflow-hidden relative shadow-2xs">
+            <div className="w-full h-[500px] rounded-xl border border-slate-200/90 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-950 overflow-hidden relative shadow-2xs">
               <ReactFlowProvider>
                 <CanvasFlowInner
                   graphData={graphData}
                   direction={canvasDirection}
+                  allowEdit={effectiveAllowEdit}
+                  onAddLink={onAddLink}
+                  onUnlinkNode={handleRequestUnlink}
                 />
               </ReactFlowProvider>
             </div>
           )}
 
           {viewMode === "pipeline" && (
-            <TraceabilityPipelineView graphData={graphData} />
+            <TraceabilityPipelineView
+              graphData={graphData}
+              allowEdit={effectiveAllowEdit}
+              onAddLink={onAddLink}
+              onUnlinkNode={handleRequestUnlink}
+            />
           )}
 
           {viewMode === "table" && (
@@ -828,10 +1280,28 @@ export function DrawerDocumentTraceability({
               graphData={graphData}
               editMode={editMode}
               editActionsSlot={editActionsSlot}
+              allowEdit={effectiveAllowEdit}
+              onUnlinkNode={handleRequestUnlink}
             />
           )}
         </div>
       )}
+
+      {/* Unlink Confirmation Modal */}
+      <ConfirmModal
+        open={!!unlinkingNode}
+        title={t("Gỡ liên kết chứng từ")}
+        message={
+          unlinkingNode
+            ? `${t("Bạn có chắc chắn muốn gỡ liên kết chứng từ")} "${unlinkingNode.docNo}" (${unlinkingNode.partnerName || unlinkingNode.title || ""}) ${t("khỏi chuỗi chứng từ này không?")}`
+            : ""
+        }
+        confirmLabel={t("Gỡ liên kết")}
+        danger
+        loading={unlinkingLoading}
+        onConfirm={handleConfirmUnlink}
+        onCancel={() => setUnlinkingNode(null)}
+      />
     </div>
   );
 }

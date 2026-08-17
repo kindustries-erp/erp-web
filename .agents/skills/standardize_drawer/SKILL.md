@@ -168,10 +168,12 @@ export function VoucherDrawer({ open, onClose, mode, setMode, data }) {
   - Cung cấp các Segmented Pill Tabs với Badge đếm số lượng bản ghi và nút Thu gọn / Mở rộng (`ChevronUp`/`ChevronDown`).
   - Hỗ trợ các sub-components chuẩn từ `@/shared/components/drawer`:
     - `<DrawerDocumentTraceability>`: **Mạng lưới chứng từ liên kết & Cấn trừ thông minh (Multi-hop Traceability Graph)**:
-      - 3 View Modes: **Canvas View** (`@xyflow/react` node graph với DAG layout), **Pipeline View** (luồng quy trình 5 giai đoạn), **Matrix Table View** (phân loại 1-hop vs Multi-hops).
+      - 3 View Modes: **Canvas View** (`@xyflow/react` node graph với phân nhóm **Stage Group Swimlanes** 4 giai đoạn chuẩn doanh nghiệp & mũi tên định hướng `MarkerType.ArrowClosed`), **Pipeline View** (luồng tuần tự theo cột), **Matrix Table View** (phân loại 1-hop vs Multi-hops).
+      - **Thao tác Ghép nối & Gỡ liên kết trực tiếp**: Nút `+ Ghép nối chứng từ` trên thanh công cụ & từng Stage Group, nút gỡ `[✕]` kèm `ConfirmModal` trên từng node hoặc hàng trong bảng.
       - **Zero-Trust RBAC**: Tự động sanitize & mask chứng từ bảo mật (`***`, icon 🔒) khi user không có quyền trên module đó mà vẫn giữ cấu trúc cầu nối.
       - **Detail Drawer Navigation**: Nút `[↗]` trên từng node/dòng tự động kích hoạt `open_erp_document` để mở drawer chi tiết của chứng từ tương ứng (Hóa đơn, Sao kê/UNC, PO, SO, Phiếu kho...).
       - Thiết kế chuẩn Business Neutral Enterprise (Slate/Zinc tối giản, không màu mè).
+
     - `<DrawerAuditTimeline>`: Timeline lịch sử thao tác, diff thay đổi trường dữ liệu (`oldVal` -> `newVal`), avatar người dùng và timestamp.
     - `<DrawerRelatedDocs>`: Mạng lưới chứng từ liên quan (PO, Phiếu nhập, Hóa đơn, Phiếu chi...) dạng Flow Cards rút gọn.
     - `<DrawerAttachmentsDeck>`: Danh sách/Grid tệp đính kèm, preview, download và dropzone upload.

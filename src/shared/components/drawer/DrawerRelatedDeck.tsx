@@ -60,6 +60,7 @@ export function DrawerRelatedDeck({
   const [collapsed, setCollapsed] = useState(defaultCollapsed);
   const [searchQuery, setSearchQuery] = useState("");
   const [showSearchInput, setShowSearchInput] = useState(false);
+  const deckRef = React.useRef<HTMLDivElement>(null);
 
   const activeTabKey = useMemo(() => {
     if (defaultTabKey && tabs.some((t) => t.key === defaultTabKey)) {
@@ -77,12 +78,45 @@ export function DrawerRelatedDeck({
     }
   }, [activeTabKey, currentTab, tabs]);
 
+  const scrollToDeck = () => {
+    setTimeout(() => {
+      if (deckRef.current) {
+        let parent = deckRef.current.parentElement;
+        while (parent && parent !== document.body) {
+          const overflowY = window.getComputedStyle(parent).overflowY;
+          if (overflowY === "auto" || overflowY === "scroll") {
+            parent.scrollTo({
+              top: parent.scrollHeight,
+              behavior: "smooth",
+            });
+            return;
+          }
+          parent = parent.parentElement;
+        }
+
+        deckRef.current.scrollIntoView({
+          behavior: "smooth",
+          block: "end",
+        });
+      }
+    }, 120);
+  };
+
   const handleTabClick = (key: string) => {
     setCurrentTab(key);
     if (collapsed) {
       setCollapsed(false);
     }
     onTabChange?.(key);
+    scrollToDeck();
+  };
+
+  const handleToggleCollapse = () => {
+    const nextState = !collapsed;
+    setCollapsed(nextState);
+    if (!nextState) {
+      scrollToDeck();
+    }
   };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -99,8 +133,9 @@ export function DrawerRelatedDeck({
 
   return (
     <div
+      ref={deckRef}
       className={cn(
-        "mt-3 w-full flex flex-col transition-all duration-200",
+        "mt-3 w-full flex flex-col transition-all duration-200 scroll-mt-2",
         className,
       )}
     >
@@ -223,7 +258,7 @@ export function DrawerRelatedDeck({
             type="button"
             variant="ghost"
             size="icon-sm"
-            onClick={() => setCollapsed((s) => !s)}
+            onClick={handleToggleCollapse}
             className="text-muted-foreground hover:text-foreground h-7 w-7"
             title={collapsed ? t("Mở rộng") : t("Thu gọn")}
           >
