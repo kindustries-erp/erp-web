@@ -268,13 +268,17 @@ export function DrawerModal({
                 {icon}
               </div>
             )}
-            <div className="flex-1 min-w-0">
-              <div className="text-sm font-semibold text-foreground leading-tight truncate flex items-center gap-2">
-                <span className="truncate">{title}</span>
-                {titleExtra}
-              </div>
+            <div className="flex-1 min-w-0 flex items-center gap-2.5 flex-wrap">
+              <span className="text-sm font-semibold text-foreground leading-tight">
+                {title}
+              </span>
+              {titleExtra && (
+                <div className="inline-flex items-center shrink-0">
+                  {titleExtra}
+                </div>
+              )}
               {subtitle && (
-                <div className="text-xs text-[color:var(--muted-fg)] truncate mt-[1px]">
+                <div className="w-full text-xs text-[color:var(--muted-fg)] truncate mt-[1px]">
                   {subtitle}
                 </div>
               )}

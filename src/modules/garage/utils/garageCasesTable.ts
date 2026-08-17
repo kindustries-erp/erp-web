@@ -35,6 +35,9 @@ function getCellValue(item: Record<string, any>, key: string) {
       return item.updatedAt || "";
     case "createdAt":
       return item.createdAt || "";
+    case "ngayHoanThanhCongViec":
+    case "completionDate":
+      return item.ngayHoanThanhCongViec || "";
     case "dataAsOf":
       return item.dataAsOf || "";
     case "totalAmount":

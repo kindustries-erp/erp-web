@@ -16,6 +16,7 @@ describe("applyGarageCasesTableState", () => {
       khachHangCode: "C001",
       rawData: { XeLamBaoHiem: true },
       createdAt: "2024-01-01T00:00:00.000Z",
+      ngayHoanThanhCongViec: "2024-01-02T15:00:00.000Z",
     },
     {
       id: "2",
@@ -30,6 +31,7 @@ describe("applyGarageCasesTableState", () => {
       khachHangCode: "C002",
       rawData: { XeLamBaoHiem: false },
       createdAt: "2023-12-31T00:00:00.000Z",
+      ngayHoanThanhCongViec: null,
     },
   ];
 
@@ -60,6 +62,24 @@ describe("applyGarageCasesTableState", () => {
       {
         caseDate: { from: "2024-01-01", to: "2024-01-02" },
         createdAt: { from: "2024-01-01", to: "2024-01-01" },
+      },
+    );
+
+    expect(result).toHaveLength(1);
+    expect(result[0].id).toBe("1");
+  });
+
+  it("filters by ngayHoanThanhCongViec / completionDate range", () => {
+    const result = applyGarageCasesTableState(
+      items,
+      {
+        sorts: [],
+        columnSearch: {},
+        columnFilters: {},
+      },
+      "",
+      {
+        ngayHoanThanhCongViec: { from: "2024-01-02", to: "2024-01-02" },
       },
     );
 

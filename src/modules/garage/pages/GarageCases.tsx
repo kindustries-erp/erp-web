@@ -5,7 +5,7 @@ import { DateRangeColumnSlot } from "@/shared/components/DataTable/DateRangeColu
 import { useFilterPanel } from "@/shared/hooks/useFilterPanel";
 import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
 import { TableText } from "@/shared/components/DataTable/TableText";
-import { KpiCard } from "@/shared/components/KpiCard";
+import { TableDateCell } from "@/shared/components/DataTable/TableDateCell";
 import { money } from "@/shared/utils/format";
 import { useGarageStore } from "../store/garageStore";
 import { garageApi } from "../api/garageApi";
@@ -166,7 +166,7 @@ export function GarageCases() {
     hideFilter,
   });
 
-  const { data: profitData, isLoading: isProfitLoading } = useGarageGrossProfit(
+  const { data: profitData } = useGarageGrossProfit(
     selectedBranchId,
     filter.state.dateFrom || undefined,
     filter.state.dateTo || undefined,
@@ -176,17 +176,6 @@ export function GarageCases() {
     const groups = profitData?.results?.Groups || profitData?.Groups || [];
     return groups.flatMap((g: any) => g.Items || []);
   }, [profitData]);
-
-  const totalRevenue =
-    profitData?.results?.TongCong?.DoanhThu ??
-    profitData?.TongCong?.DoanhThu ??
-    0;
-  const totalCost =
-    profitData?.results?.TongCong?.ChiPhi ?? profitData?.TongCong?.ChiPhi ?? 0;
-  const totalGrossProfit =
-    profitData?.results?.TongCong?.LaiGop ?? profitData?.TongCong?.LaiGop ?? 0;
-  const averageMargin =
-    totalRevenue > 0 ? (totalGrossProfit / totalRevenue) * 100 : 0;
 
   const {
     data: casesData,
@@ -255,25 +244,25 @@ export function GarageCases() {
 
   const columns = [
     {
-      key: "updatedAt",
+      key: "createdAt",
       header: (
         <TableColumnHeaderFilter
           {...createHeaderProps(
-            "updatedAt",
-            t("cases.columns.updatedAt"),
+            "createdAt",
+            t("cases.columns.createdAt", "Ngày tạo"),
             "center",
             true,
           )}
           isActive={
-            !!(getDateRange("updatedAt").from || getDateRange("updatedAt").to)
+            !!(getDateRange("createdAt").from || getDateRange("createdAt").to)
           }
           hideFooter={true}
           dateRangeSlot={({ close }) => (
             <DateRangeColumnSlot
-              dateFrom={getDateRange("updatedAt").from}
-              dateTo={getDateRange("updatedAt").to}
+              dateFrom={getDateRange("createdAt").from}
+              dateTo={getDateRange("createdAt").to}
               onChange={(from, to) => {
-                handleDateRangeChange("updatedAt", from, to);
+                handleDateRangeChange("createdAt", from, to);
                 close();
               }}
               onClose={close}
@@ -282,31 +271,36 @@ export function GarageCases() {
         />
       ),
       sortable: false,
-      cell: (item: any) => {
-        if (!item.updatedAt) return "-";
-        return new Date(item.updatedAt).toLocaleString();
-      },
+      size: 150,
+      enableResizing: true,
+      className: "text-right",
+      cell: (item: any) => (
+        <TableDateCell date={item.createdAt} className="justify-end w-full" />
+      ),
     },
     {
-      key: "caseDate",
+      key: "ngayHoanThanhCongViec",
       header: (
         <TableColumnHeaderFilter
           {...createHeaderProps(
-            "caseDate",
-            t("cases.columns.caseDate"),
+            "ngayHoanThanhCongViec",
+            t("cases.columns.completionDate", "Ngày hoàn thành"),
             "center",
             true,
           )}
           isActive={
-            !!(getDateRange("caseDate").from || getDateRange("caseDate").to)
+            !!(
+              getDateRange("ngayHoanThanhCongViec").from ||
+              getDateRange("ngayHoanThanhCongViec").to
+            )
           }
           hideFooter={true}
           dateRangeSlot={({ close }) => (
             <DateRangeColumnSlot
-              dateFrom={getDateRange("caseDate").from}
-              dateTo={getDateRange("caseDate").to}
+              dateFrom={getDateRange("ngayHoanThanhCongViec").from}
+              dateTo={getDateRange("ngayHoanThanhCongViec").to}
               onChange={(from, to) => {
-                handleDateRangeChange("caseDate", from, to);
+                handleDateRangeChange("ngayHoanThanhCongViec", from, to);
                 close();
               }}
               onClose={close}
@@ -315,12 +309,15 @@ export function GarageCases() {
         />
       ),
       sortable: false,
-      cell: (item: any) => {
-        if (!item.ngayPhatSinh) return "-";
-        const d = new Date(item.ngayPhatSinh);
-        const pad = (n: number) => n.toString().padStart(2, "0");
-        return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
-      },
+      size: 150,
+      enableResizing: true,
+      className: "text-right",
+      cell: (item: any) => (
+        <TableDateCell
+          date={item.ngayHoanThanhCongViec}
+          className="justify-end w-full"
+        />
+      ),
     },
     {
       key: "statusName",
@@ -335,6 +332,8 @@ export function GarageCases() {
         />
       ),
       sortable: false,
+      size: 130,
+      enableResizing: true,
       cell: (item: any) => (
         <KgaraCaseStatusBadge
           status={item.tenTinhTrangDichVu || t("cases.common.unknown")}
@@ -355,11 +354,13 @@ export function GarageCases() {
       ),
       sortable: false,
       size: 200,
+      enableResizing: true,
       cell: (item: any) => (
         <TableText
           text={item.soChungTu}
           textClassName="font-medium text-primary text-left"
           enableCopy={true}
+          tooltip={true}
           onDrawerClick={() => setSelectedCaseId(item.soChungTu)}
         />
       ),
@@ -377,6 +378,8 @@ export function GarageCases() {
         />
       ),
       sortable: false,
+      size: 130,
+      enableResizing: true,
       cell: (item: any) => item.bienSoXe || "-",
     },
     {
@@ -392,6 +395,8 @@ export function GarageCases() {
         />
       ),
       sortable: false,
+      size: 130,
+      enableResizing: true,
       cell: (item: any) => item.khachHangCode || "-",
     },
     {
@@ -407,6 +412,8 @@ export function GarageCases() {
         />
       ),
       sortable: false,
+      size: 200,
+      enableResizing: true,
       cell: (item: any) => item.khachHangName || "-",
     },
     {
@@ -422,6 +429,8 @@ export function GarageCases() {
         />
       ),
       sortable: false,
+      size: 100,
+      enableResizing: true,
       cell: (item: any) =>
         item.rawData?.XeLamBaoHiem
           ? t("cases.common.yes")
@@ -436,6 +445,9 @@ export function GarageCases() {
         />
       ),
       sortable: false,
+      size: 130,
+      enableResizing: true,
+      className: "text-right font-semibold tabular-nums",
       cell: (item: any) => {
         const pItem = profitCases.find(
           (p: any) => p.VuViecCode === item.soChungTu,
@@ -458,6 +470,9 @@ export function GarageCases() {
         />
       ),
       sortable: false,
+      size: 130,
+      enableResizing: true,
+      className: "text-right font-semibold tabular-nums",
       cell: (item: any) => {
         const pItem = profitCases.find(
           (p: any) => p.VuViecCode === item.soChungTu,
@@ -480,6 +495,9 @@ export function GarageCases() {
         />
       ),
       sortable: false,
+      size: 130,
+      enableResizing: true,
+      className: "text-right font-semibold tabular-nums",
       cell: (item: any) => {
         const pItem = profitCases.find(
           (p: any) => p.VuViecCode === item.soChungTu,
@@ -513,6 +531,9 @@ export function GarageCases() {
         />
       ),
       sortable: false,
+      size: 100,
+      enableResizing: true,
+      className: "text-right",
       cell: (item: any) => {
         const pItem = profitCases.find(
           (p: any) => p.VuViecCode === item.soChungTu,
@@ -571,6 +592,9 @@ export function GarageCases() {
         />
       ),
       sortable: false,
+      size: 130,
+      enableResizing: true,
+      className: "text-right font-semibold tabular-nums",
       cell: (item: any) =>
         new Intl.NumberFormat("vi-VN", {
           style: "currency",
@@ -590,6 +614,9 @@ export function GarageCases() {
         />
       ),
       sortable: false,
+      size: 130,
+      enableResizing: true,
+      className: "text-right font-semibold tabular-nums",
       cell: (item: any) =>
         new Intl.NumberFormat("vi-VN", {
           style: "currency",
@@ -605,12 +632,52 @@ export function GarageCases() {
         />
       ),
       sortable: false,
+      size: 160,
+      enableResizing: true,
       cell: (item: any) => {
         const b = branches?.find(
           (b: any) => b.externalId === item.branchExternalId,
         );
         return b?.name || "-";
       },
+    },
+    {
+      key: "caseDate",
+      header: (
+        <TableColumnHeaderFilter
+          {...createHeaderProps(
+            "caseDate",
+            t("cases.columns.caseDate"),
+            "center",
+            true,
+          )}
+          isActive={
+            !!(getDateRange("caseDate").from || getDateRange("caseDate").to)
+          }
+          hideFooter={true}
+          dateRangeSlot={({ close }) => (
+            <DateRangeColumnSlot
+              dateFrom={getDateRange("caseDate").from}
+              dateTo={getDateRange("caseDate").to}
+              onChange={(from, to) => {
+                handleDateRangeChange("caseDate", from, to);
+                close();
+              }}
+              onClose={close}
+            />
+          )}
+        />
+      ),
+      sortable: false,
+      size: 150,
+      enableResizing: true,
+      className: "text-right",
+      cell: (item: any) => (
+        <TableDateCell
+          date={item.ngayPhatSinh}
+          className="justify-end w-full"
+        />
+      ),
     },
     {
       key: "dataAsOf",
@@ -640,31 +707,33 @@ export function GarageCases() {
         />
       ),
       sortable: false,
-      cell: (item: any) => {
-        if (!item.dataAsOf) return "-";
-        return new Date(item.dataAsOf).toLocaleString();
-      },
+      size: 150,
+      enableResizing: true,
+      className: "text-right",
+      cell: (item: any) => (
+        <TableDateCell date={item.dataAsOf} className="justify-end w-full" />
+      ),
     },
     {
-      key: "createdAt",
+      key: "updatedAt",
       header: (
         <TableColumnHeaderFilter
           {...createHeaderProps(
-            "createdAt",
-            t("cases.columns.createdAt"),
+            "updatedAt",
+            t("cases.columns.updatedAt"),
             "center",
             true,
           )}
           isActive={
-            !!(getDateRange("createdAt").from || getDateRange("createdAt").to)
+            !!(getDateRange("updatedAt").from || getDateRange("updatedAt").to)
           }
           hideFooter={true}
           dateRangeSlot={({ close }) => (
             <DateRangeColumnSlot
-              dateFrom={getDateRange("createdAt").from}
-              dateTo={getDateRange("createdAt").to}
+              dateFrom={getDateRange("updatedAt").from}
+              dateTo={getDateRange("updatedAt").to}
               onChange={(from, to) => {
-                handleDateRangeChange("createdAt", from, to);
+                handleDateRangeChange("updatedAt", from, to);
                 close();
               }}
               onClose={close}
@@ -673,10 +742,12 @@ export function GarageCases() {
         />
       ),
       sortable: false,
-      cell: (item: any) => {
-        if (!item.createdAt) return "-";
-        return new Date(item.createdAt).toLocaleString();
-      },
+      size: 150,
+      enableResizing: true,
+      className: "text-right",
+      cell: (item: any) => (
+        <TableDateCell date={item.updatedAt} className="justify-end w-full" />
+      ),
     },
   ];
 
@@ -686,34 +757,6 @@ export function GarageCases() {
         title={t("cases.title")}
         desc={t("cases.desc")}
         icon={<FileText className="w-5 h-5 text-slate-700" />}
-        topNode={
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-            <KpiCard
-              compact
-              loading={isLoading || isProfitLoading}
-              label="Tổng doanh thu"
-              value={money(totalRevenue)}
-            />
-            <KpiCard
-              compact
-              loading={isLoading || isProfitLoading}
-              label="Tổng chi phí (Giá vốn)"
-              value={money(totalCost)}
-            />
-            <KpiCard
-              compact
-              loading={isLoading || isProfitLoading}
-              label="Lợi nhuận gộp"
-              value={money(totalGrossProfit)}
-            />
-            <KpiCard
-              compact
-              loading={isLoading || isProfitLoading}
-              label="Biên LN trung bình"
-              value={totalRevenue > 0 ? `${averageMargin.toFixed(1)}%` : "0%"}
-            />
-          </div>
-        }
         tableId="garage-cases-table"
         items={visibleCases}
         columns={columns}
