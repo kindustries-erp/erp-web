@@ -132,4 +132,27 @@ export const purchaseOrdersCoreApi = {
   unlinkInvoice: async (id: string, invoiceId: string): Promise<void> => {
     await axiosInstance.delete(`${BASE}/${id}/invoices/${invoiceId}`);
   },
+  exportExcel: async (
+    id: string,
+    poNo?: string,
+    status?: string,
+  ): Promise<void> => {
+    const response = await axiosInstance.get(`${BASE}/${id}/export/excel`, {
+      responseType: "blob",
+    });
+    const prefix =
+      status === "DRAFT" ? "phieu-de-xuat-mua-hang" : "bang-ke-mua-hang";
+    const now = new Date();
+    const pad = (n: number) => String(n).padStart(2, "0");
+    const timestamp = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+    const filename = `${prefix}_${poNo || id}_${timestamp}.xlsx`;
+    const url = URL.createObjectURL(response.data);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  },
 };
