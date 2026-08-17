@@ -38,6 +38,31 @@ function emptyForm(direction: Direction = "IN"): CreateErpInvoicePayload {
   };
 }
 
+let cachedPortalConfig: {
+  token?: string;
+  username?: string;
+  hasPassword?: boolean;
+} | null = null;
+let lastPortalConfigFetch = 0;
+
+async function isPortalAuthAvailable(): Promise<boolean> {
+  const now = Date.now();
+  if (cachedPortalConfig && now - lastPortalConfigFetch < 60000) {
+    return Boolean(
+      cachedPortalConfig.token ||
+      (cachedPortalConfig.username && cachedPortalConfig.hasPassword),
+    );
+  }
+  try {
+    const config = await erpInvoicesCoreApi.getPortalConfig();
+    cachedPortalConfig = config;
+    lastPortalConfigFetch = now;
+    return Boolean(config?.token || (config?.username && config?.hasPassword));
+  } catch {
+    return false;
+  }
+}
+
 export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
   const { t } = useTranslation("erpInvoices");
 
@@ -151,12 +176,15 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
 
     try {
       let fullInv = await erpInvoicesCoreApi.get(inv.id);
-      // Auto query detail if items are empty
+      // Auto query detail if items are empty and portal auth is available
       if (!fullInv.items || fullInv.items.length === 0) {
-        try {
-          fullInv = await erpInvoicesCoreApi.syncDetail(inv.id);
-        } catch (syncErr) {
-          console.warn("Auto sync detail failed", syncErr);
+        const canSync = await isPortalAuthAvailable();
+        if (canSync) {
+          try {
+            fullInv = await erpInvoicesCoreApi.syncDetail(inv.id);
+          } catch (syncErr) {
+            console.warn("Auto sync detail failed", syncErr);
+          }
         }
       }
       setDetailInvoice(fullInv);
@@ -216,10 +244,13 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
     try {
       let fullInv = await erpInvoicesCoreApi.get(inv.id);
       if (!fullInv.items || fullInv.items.length === 0) {
-        try {
-          fullInv = await erpInvoicesCoreApi.syncDetail(inv.id);
-        } catch (syncErr) {
-          console.warn("Auto sync detail failed", syncErr);
+        const canSync = await isPortalAuthAvailable();
+        if (canSync) {
+          try {
+            fullInv = await erpInvoicesCoreApi.syncDetail(inv.id);
+          } catch (syncErr) {
+            console.warn("Auto sync detail failed", syncErr);
+          }
         }
       }
       setDetailInvoice(fullInv);
