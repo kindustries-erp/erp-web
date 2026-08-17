@@ -90,12 +90,12 @@ export function GarageCaseStandaloneDrawer({
       }
       leftPanel={
         isLoadingCase || isSyncingDetail ? (
-          <div className="space-y-4 animate-pulse pt-2 px-2 w-full">
+          <div className="space-y-4 animate-pulse px-2 w-full">
             <div className="h-48 bg-slate-100 rounded-lg w-full"></div>
             <div className="h-64 bg-slate-100 rounded-lg w-full"></div>
           </div>
         ) : selectedCase ? (
-          <div className="space-y-4 pt-2">
+          <div className="space-y-4">
             {drawerMode === "view" && (
               <GarageCasePreview
                 caseData={selectedCase}

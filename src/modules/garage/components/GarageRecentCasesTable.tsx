@@ -64,25 +64,25 @@ export function GarageRecentCasesTable({
         <table className="w-full text-xs text-left">
           <thead className="bg-muted/40 text-muted-foreground uppercase text-[11px] font-semibold border-b">
             <tr>
-              <th className="px-4 py-2.5">
+              <th className="px-4 py-2.5 text-center">
                 {t("dashboard.recentCases.caseCode", "Số chứng từ")}
               </th>
-              <th className="px-4 py-2.5">
+              <th className="px-4 py-2.5 text-center">
                 {t("dashboard.recentCases.licensePlate", "Biển số xe")}
               </th>
-              <th className="px-4 py-2.5">
+              <th className="px-4 py-2.5 text-center">
                 {t("dashboard.recentCases.customer", "Khách hàng")}
               </th>
-              <th className="px-4 py-2.5">
+              <th className="px-4 py-2.5 text-center">
                 {t("dashboard.recentCases.status", "Trạng thái")}
               </th>
-              <th className="px-4 py-2.5 text-right">
+              <th className="px-4 py-2.5 text-center">
                 {t("dashboard.recentCases.revenue", "Doanh thu")}
               </th>
-              <th className="px-4 py-2.5 text-right">
+              <th className="px-4 py-2.5 text-center">
                 {t("dashboard.recentCases.profit", "Lãi gộp")}
               </th>
-              <th className="px-4 py-2.5 text-right">
+              <th className="px-4 py-2.5 text-center">
                 {t("dashboard.recentCases.margin", "Biên LN")}
               </th>
               <th className="px-4 py-2.5 text-center">
@@ -101,19 +101,23 @@ export function GarageRecentCasesTable({
                   key={c.id || c.soChungTu}
                   className="hover:bg-muted/30 transition-colors"
                 >
-                  <td className="px-4 py-3 font-medium text-primary cursor-pointer hover:underline">
+                  <td className="px-4 py-3 font-medium text-primary cursor-pointer hover:underline text-left">
                     <span onClick={() => onSelectCase(c.soChungTu)}>
                       {c.soChungTu}
                     </span>
                   </td>
-                  <td className="px-4 py-3 font-medium">{c.bienSoXe || "-"}</td>
-                  <td className="px-4 py-3 text-muted-foreground">
+                  <td className="px-4 py-3 font-medium text-left">
+                    {c.bienSoXe || "-"}
+                  </td>
+                  <td className="px-4 py-3 text-muted-foreground text-left">
                     {c.khachHangName || "-"}
                   </td>
-                  <td className="px-4 py-3">
-                    <KgaraCaseStatusBadge
-                      status={c.tenTinhTrangDichVu || "Không rõ"}
-                    />
+                  <td className="px-4 py-3 text-center">
+                    <div className="w-full flex justify-center">
+                      <KgaraCaseStatusBadge
+                        status={c.tenTinhTrangDichVu || "Không rõ"}
+                      />
+                    </div>
                   </td>
                   <td className="px-4 py-3 text-right font-medium text-foreground">
                     {rev > 0 ? money(rev) : "-"}

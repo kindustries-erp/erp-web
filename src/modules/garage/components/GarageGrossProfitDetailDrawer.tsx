@@ -120,7 +120,7 @@ export function GarageGrossProfitDetailDrawer({
           : []
       }
       leftPanel={
-        <div className="space-y-4 pt-2">
+        <div className="space-y-4">
           <GarageCaseLinkedDocuments
             linkedDocs={linkedDocs}
             editMode={drawerMode === "edit"}

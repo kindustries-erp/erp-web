@@ -7,7 +7,7 @@ import {
   ActionDropdown,
   type ActionDropdownItem,
 } from "@/shared/components/ActionDropdown";
-import type { Updater } from "@tanstack/react-table";
+import type { Updater, VisibilityState } from "@tanstack/react-table";
 
 export interface StandardTableProps<T> {
   items: T[];
@@ -34,6 +34,7 @@ export interface StandardTableProps<T> {
   renderSubRow?: (row: T) => React.ReactNode;
   onRowClick?: (row: T) => void;
   enableColumnVisibility?: boolean;
+  defaultColumnVisibility?: VisibilityState;
   tableId?: string;
   enableColumnResizing?: boolean;
   enableRowSelection?: boolean;
@@ -70,6 +71,7 @@ export function StandardTable<T>({
   renderSubRow,
   onRowClick,
   enableColumnVisibility = true,
+  defaultColumnVisibility,
   tableId,
   enableColumnResizing,
   enableRowSelection,
@@ -144,6 +146,7 @@ export function StandardTable<T>({
       }
       renderSubRow={renderSubRow}
       enableColumnVisibility={enableColumnVisibility}
+      defaultColumnVisibility={defaultColumnVisibility}
       tableId={tableId}
       enableColumnResizing={enableColumnResizing}
       enableRowSelection={enableRowSelection}

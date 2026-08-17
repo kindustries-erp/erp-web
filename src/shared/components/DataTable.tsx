@@ -134,6 +134,7 @@ interface DataTableProps<T> {
   sortArray?: string[];
   onSort?: (key: string) => void;
   enableColumnVisibility?: boolean;
+  defaultColumnVisibility?: VisibilityState;
   tableId?: string;
   enableColumnResizing?: boolean;
   enableRowSelection?: boolean;
@@ -339,6 +340,7 @@ export function DataTable<T>({
   sortArray,
   onSort,
   enableColumnVisibility,
+  defaultColumnVisibility,
   tableId,
   enableColumnResizing,
   enableRowSelection,
@@ -353,7 +355,18 @@ export function DataTable<T>({
   const { getTablePreference, setTablePreferences } = useUserPreferences();
 
   const [internalVisibility, setInternalVisibility] = useState<VisibilityState>(
-    () => (tableId ? getTablePreference(tableId)?.columnVisibility || {} : {}),
+    () => {
+      if (tableId) {
+        const pref = getTablePreference(tableId)?.columnVisibility;
+        if (pref && Object.keys(pref).length > 0) {
+          return {
+            ...(defaultColumnVisibility || {}),
+            ...pref,
+          };
+        }
+      }
+      return defaultColumnVisibility || {};
+    },
   );
 
   const [internalColumnOrder, setInternalColumnOrder] = useState<string[]>(
@@ -504,10 +517,9 @@ export function DataTable<T>({
   const tableColumns: ColumnDef<T, unknown>[] = useMemo(() => {
     const cols: ColumnDef<T, unknown>[] = effectiveColumns.map((column) => {
       let cellClass = column.className;
-      let headerClass = column.headerClassName;
+      const headerClass = column.headerClassName || "text-center";
       if (column.valueType === "number" || column.valueType === "date") {
         cellClass = cn("text-right", cellClass);
-        headerClass = cn("text-right", headerClass);
       }
       return {
         id: column.key,

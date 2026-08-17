@@ -28,6 +28,7 @@ import {
   XCircle,
   FileClock,
   Wrench,
+  ShieldCheck,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
@@ -137,12 +138,23 @@ export function GarageCases() {
         filtersStr,
       );
       return {
-        items: res.items.map((item: string) => ({ label: item, value: item })),
+        items: res.items.map((item: string) => {
+          if (columnKey === "isInsuranceClaim") {
+            return {
+              label:
+                item === "yes"
+                  ? t("cases.common.yes", "Có")
+                  : t("cases.common.no", "Không"),
+              value: item,
+            };
+          }
+          return { label: item, value: item };
+        }),
         total: res.total,
         next: res.page < res.totalPages ? res.page + 1 : null,
       };
     },
-    [selectedBranchId],
+    [selectedBranchId, t],
   );
 
   const commonOptionProps = {
@@ -155,8 +167,9 @@ export function GarageCases() {
   const createHeaderProps = (
     key: string,
     title: string,
-    align: "left" | "center" | "right" = "left",
+    align: "left" | "center" | "right" = "center",
     hideFilter = false,
+    formatOptionLabel?: (label: string) => string,
   ) => ({
     title,
     columnKey: key,
@@ -169,6 +182,7 @@ export function GarageCases() {
     onFilterChange: (vals: string[]) => handleFilterChange(key, vals),
     align,
     hideFilter,
+    formatOptionLabel,
   });
 
   const { data: profitData } = useGarageGrossProfit(selectedBranchId);
@@ -181,6 +195,7 @@ export function GarageCases() {
   const {
     data: casesData,
     isLoading,
+    isFetching,
     refetch,
   } = useGarageCases(
     selectedBranchId,
@@ -198,6 +213,16 @@ export function GarageCases() {
     [cases, tableState, dateRanges],
   );
   const totalCases = casesData?.pagination?.total || 0;
+
+  const defaultColumnVisibility = useMemo(
+    () => ({
+      statusName: false,
+      branchName: false,
+      createdAt: false,
+      dataAsOf: false,
+    }),
+    [],
+  );
 
   const { mutate: syncCaseDetail } = useSyncGarageCaseDetail();
 
@@ -242,6 +267,7 @@ export function GarageCases() {
     // 1. Mã vụ việc (Số chứng từ)
     {
       key: "caseCode",
+      label: t("cases.columns.caseCode", "Số chứng từ"),
       header: (
         <TableColumnHeaderFilter
           {...createHeaderProps(
@@ -255,6 +281,7 @@ export function GarageCases() {
       sortable: false,
       size: 220,
       enableResizing: true,
+      className: "text-left",
       cell: (item: any) => {
         const s = (item.tenTinhTrangDichVu || "").toLowerCase();
         const isCanceled =
@@ -266,8 +293,11 @@ export function GarageCases() {
           s.includes("đang làm") ||
           s.includes("tiếp nhận") ||
           s.includes("đang xử lý") ||
-          s.includes("kiểm tra");
-        const isDraft = s.includes("nháp") || s.includes("báo giá");
+          s.includes("kiểm tra") ||
+          s.includes("sửa chữa") ||
+          s.includes("xử lý");
+        const isDraft =
+          s.includes("nháp") || s.includes("báo giá") || s.includes("chờ");
 
         return (
           <div className="flex items-center gap-1.5 w-full min-w-0">
@@ -281,23 +311,17 @@ export function GarageCases() {
             />
             {isCanceled && (
               <Tooltip content={item.tenTinhTrangDichVu}>
-                <span className="inline-flex items-center justify-center p-1 rounded-md bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 ml-auto flex-shrink-0">
-                  <XCircle className="w-3.5 h-3.5" />
-                </span>
+                <XCircle className="w-3.5 h-3.5 text-rose-500 dark:text-rose-400 shrink-0 ml-auto" />
               </Tooltip>
             )}
             {isInProgress && (
               <Tooltip content={item.tenTinhTrangDichVu}>
-                <span className="inline-flex items-center justify-center p-1 rounded-md bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 ml-auto flex-shrink-0">
-                  <Wrench className="w-3.5 h-3.5" />
-                </span>
+                <Wrench className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400 shrink-0 ml-auto" />
               </Tooltip>
             )}
             {isDraft && (
               <Tooltip content={item.tenTinhTrangDichVu}>
-                <span className="inline-flex items-center justify-center p-1 rounded-md bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 ml-auto flex-shrink-0">
-                  <FileClock className="w-3.5 h-3.5" />
-                </span>
+                <FileClock className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 shrink-0 ml-auto" />
               </Tooltip>
             )}
           </div>
@@ -307,6 +331,7 @@ export function GarageCases() {
     // 2. Biển số xe
     {
       key: "licensePlate",
+      label: t("cases.columns.licensePlate", "Biển số xe"),
       header: (
         <TableColumnHeaderFilter
           {...createHeaderProps(
@@ -320,12 +345,13 @@ export function GarageCases() {
       sortable: false,
       size: 130,
       enableResizing: true,
-      className: "font-medium text-center",
+      className: "font-medium text-left",
       cell: (item: any) => item.bienSoXe || "-",
     },
     // 3. Trạng thái
     {
       key: "statusName",
+      label: t("cases.columns.status", "Trạng thái"),
       header: (
         <TableColumnHeaderFilter
           {...createHeaderProps(
@@ -354,6 +380,7 @@ export function GarageCases() {
     // 4. Mã khách hàng
     {
       key: "customerCode",
+      label: t("cases.columns.customerCode", "Mã KH"),
       header: (
         <TableColumnHeaderFilter
           {...createHeaderProps(
@@ -367,18 +394,19 @@ export function GarageCases() {
       sortable: false,
       size: 130,
       enableResizing: true,
-      className: "text-center",
+      className: "text-left font-mono",
       cell: (item: any) => item.khachHangCode || "-",
     },
     // 5. Tên khách hàng
     {
       key: "customerName",
+      label: t("cases.columns.customerName", "Tên khách hàng"),
       header: (
         <TableColumnHeaderFilter
           {...createHeaderProps(
             "customerName",
             t("cases.columns.customerName", "Tên khách hàng"),
-            "left",
+            "center",
           )}
           {...commonOptionProps}
         />
@@ -392,28 +420,45 @@ export function GarageCases() {
     // 6. Bảo hiểm
     {
       key: "isInsuranceClaim",
+      label: t("cases.columns.insurance", "Bảo hiểm"),
       header: (
         <TableColumnHeaderFilter
           {...createHeaderProps(
             "isInsuranceClaim",
             t("cases.columns.insurance", "Bảo hiểm"),
             "center",
+            false,
+            (val: string) =>
+              val === "yes"
+                ? t("cases.common.yes", "Có")
+                : val === "no"
+                  ? t("cases.common.no", "Không")
+                  : val,
           )}
           {...commonOptionProps}
         />
       ),
       sortable: false,
-      size: 110,
+      size: 90,
       enableResizing: true,
       className: "text-center",
       cell: (item: any) =>
-        item.rawData?.XeLamBaoHiem
-          ? t("cases.common.yes", "Có")
-          : t("cases.common.no", "Không"),
+        item.rawData?.XeLamBaoHiem ? (
+          <div className="w-full flex justify-center">
+            <Tooltip content={t("cases.drawer.insuranceClaim", "Làm bảo hiểm")}>
+              <ShieldCheck className="w-4 h-4 text-slate-600 dark:text-slate-400 hover:text-primary transition-colors" />
+            </Tooltip>
+          </div>
+        ) : (
+          <span className="text-muted-foreground/30 select-none font-normal">
+            —
+          </span>
+        ),
     },
     // 7. Ngày tiếp nhận (Ngày chứng từ)
     {
       key: "caseDate",
+      label: t("cases.columns.caseDate", "Ngày tiếp nhận"),
       header: (
         <TableColumnHeaderFilter
           {...createHeaderProps(
@@ -453,6 +498,7 @@ export function GarageCases() {
     // 8. Ngày hoàn thành
     {
       key: "ngayHoanThanhCongViec",
+      label: t("cases.columns.completionDate", "Ngày kết thúc"),
       header: (
         <TableColumnHeaderFilter
           {...createHeaderProps(
@@ -495,12 +541,13 @@ export function GarageCases() {
     // 9. Doanh thu
     {
       key: "doanhThu",
+      label: t("cases.columns.doanhThu", "Doanh thu"),
       header: (
         <TableColumnHeaderFilter
           {...createHeaderProps(
             "doanhThu",
             t("cases.columns.doanhThu", "Doanh thu"),
-            "right",
+            "center",
           )}
           {...commonOptionProps}
         />
@@ -516,21 +563,32 @@ export function GarageCases() {
         const val = item.doanhThu ?? pItem?.DoanhThu ?? item.rawData?.DoanhThu;
         if (item.tenTinhTrangDichVu === "Kết thúc" && val == null) {
           return (
-            <span className="text-red-500 text-xs italic">Chưa đồng bộ</span>
+            <span className="inline-flex items-center text-[11px] font-medium text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 px-1.5 py-0.5 rounded border border-rose-200/60 dark:border-rose-800/40">
+              {t("cases.common.notSynced", "Chưa đồng bộ")}
+            </span>
           );
         }
-        return money(Number(val) || 0);
+        const numVal = Number(val) || 0;
+        if (numVal === 0) {
+          return (
+            <span className="text-muted-foreground/60 font-normal select-none">
+              —
+            </span>
+          );
+        }
+        return money(numVal);
       },
     },
     // 10. Chi phí
     {
       key: "chiPhi",
+      label: t("cases.columns.chiPhi", "Chi phí"),
       header: (
         <TableColumnHeaderFilter
           {...createHeaderProps(
             "chiPhi",
             t("cases.columns.chiPhi", "Chi phí"),
-            "right",
+            "center",
           )}
           {...commonOptionProps}
         />
@@ -546,21 +604,32 @@ export function GarageCases() {
         const val = item.chiPhi ?? pItem?.ChiPhi ?? item.rawData?.ChiPhi;
         if (item.tenTinhTrangDichVu === "Kết thúc" && val == null) {
           return (
-            <span className="text-red-500 text-xs italic">Chưa đồng bộ</span>
+            <span className="inline-flex items-center text-[11px] font-medium text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 px-1.5 py-0.5 rounded border border-rose-200/60 dark:border-rose-800/40">
+              {t("cases.common.notSynced", "Chưa đồng bộ")}
+            </span>
           );
         }
-        return money(Number(val) || 0);
+        const numVal = Number(val) || 0;
+        if (numVal === 0) {
+          return (
+            <span className="text-muted-foreground/60 font-normal select-none">
+              —
+            </span>
+          );
+        }
+        return money(numVal);
       },
     },
     // 11. Lợi nhuận
     {
       key: "loiNhuan",
+      label: t("cases.columns.loiNhuan", "Lợi nhuận"),
       header: (
         <TableColumnHeaderFilter
           {...createHeaderProps(
             "loiNhuan",
             t("cases.columns.loiNhuan", "Lợi nhuận"),
-            "right",
+            "center",
           )}
           {...commonOptionProps}
         />
@@ -576,10 +645,19 @@ export function GarageCases() {
         const val = item.loiNhuan ?? pItem?.LoiNhuan ?? item.rawData?.LoiNhuan;
         if (item.tenTinhTrangDichVu === "Kết thúc" && val == null) {
           return (
-            <span className="text-red-500 text-xs italic">Chưa đồng bộ</span>
+            <span className="inline-flex items-center text-[11px] font-medium text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 px-1.5 py-0.5 rounded border border-rose-200/60 dark:border-rose-800/40">
+              {t("cases.common.notSynced", "Chưa đồng bộ")}
+            </span>
           );
         }
         const numVal = Number(val) || 0;
+        if (numVal === 0) {
+          return (
+            <span className="text-muted-foreground/60 font-normal select-none">
+              —
+            </span>
+          );
+        }
         return (
           <span
             className={
@@ -596,12 +674,13 @@ export function GarageCases() {
     // 12. Biên LN (%)
     {
       key: "margin",
+      label: t("cases.columns.margin", "Biên LN"),
       header: (
         <TableColumnHeaderFilter
           {...createHeaderProps(
             "margin",
             t("cases.columns.margin", "Biên LN"),
-            "right",
+            "center",
             true,
           )}
           hideFooter={true}
@@ -610,7 +689,7 @@ export function GarageCases() {
       sortable: false,
       size: 100,
       enableResizing: true,
-      className: "text-right",
+      className: "text-right tabular-nums",
       cell: (item: any) => {
         const pItem = profitCases.find(
           (p: any) => p.VuViecCode === item.soChungTu,
@@ -628,11 +707,17 @@ export function GarageCases() {
           pItem?.DoanhThu == null
         ) {
           return (
-            <span className="text-red-500 text-xs italic">Chưa đồng bộ</span>
+            <span className="inline-flex items-center text-[11px] font-medium text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 px-1.5 py-0.5 rounded border border-rose-200/60 dark:border-rose-800/40">
+              {t("cases.common.notSynced", "Chưa đồng bộ")}
+            </span>
           );
         }
         if (!rev || rev <= 0) {
-          return <span className="text-muted-foreground text-xs">-</span>;
+          return (
+            <span className="text-muted-foreground/60 font-normal select-none">
+              —
+            </span>
+          );
         }
 
         const margin = (profit / rev) * 100;
@@ -659,12 +744,13 @@ export function GarageCases() {
     // 13. Tổng tiền có thuế
     {
       key: "totalAmount",
+      label: t("cases.columns.totalAmount", "Tổng tiền"),
       header: (
         <TableColumnHeaderFilter
           {...createHeaderProps(
             "totalAmount",
             t("cases.columns.totalAmount", "Tổng tiền"),
-            "right",
+            "center",
           )}
           {...commonOptionProps}
         />
@@ -673,21 +759,31 @@ export function GarageCases() {
       size: 140,
       enableResizing: true,
       className: "text-right font-semibold tabular-nums",
-      cell: (item: any) =>
-        new Intl.NumberFormat("vi-VN", {
+      cell: (item: any) => {
+        const numVal = Number(item.tienCoThue) || 0;
+        if (numVal === 0) {
+          return (
+            <span className="text-muted-foreground/60 font-normal select-none">
+              —
+            </span>
+          );
+        }
+        return new Intl.NumberFormat("vi-VN", {
           style: "currency",
           currency: "VND",
-        }).format(Number(item.tienCoThue) || 0),
+        }).format(numVal);
+      },
     },
     // 14. Còn phải thu
     {
       key: "balanceAmount",
+      label: t("cases.columns.balanceAmount", "Còn phải thu"),
       header: (
         <TableColumnHeaderFilter
           {...createHeaderProps(
             "balanceAmount",
             t("cases.columns.balanceAmount", "Còn phải thu"),
-            "right",
+            "center",
           )}
           {...commonOptionProps}
         />
@@ -696,21 +792,31 @@ export function GarageCases() {
       size: 140,
       enableResizing: true,
       className: "text-right font-semibold tabular-nums",
-      cell: (item: any) =>
-        new Intl.NumberFormat("vi-VN", {
+      cell: (item: any) => {
+        const numVal = Number(item.tienConPhaiThanhToan) || 0;
+        if (numVal === 0) {
+          return (
+            <span className="text-muted-foreground/60 font-normal select-none">
+              —
+            </span>
+          );
+        }
+        return new Intl.NumberFormat("vi-VN", {
           style: "currency",
           currency: "VND",
-        }).format(Number(item.tienConPhaiThanhToan) || 0),
+        }).format(numVal);
+      },
     },
     // 15. Chi nhánh Kgara
     {
       key: "branchName",
+      label: t("cases.columns.branchName", "Chi nhánh"),
       header: (
         <TableColumnHeaderFilter
           {...createHeaderProps(
             "branchName",
             t("cases.columns.branchName", "Chi nhánh"),
-            "left",
+            "center",
             true,
           )}
           hideFooter={true}
@@ -730,6 +836,7 @@ export function GarageCases() {
     // 16. Ngày tạo HT
     {
       key: "createdAt",
+      label: t("cases.columns.createdAt", "Ngày tạo"),
       header: (
         <TableColumnHeaderFilter
           {...createHeaderProps(
@@ -766,6 +873,7 @@ export function GarageCases() {
     // 17. Dữ liệu lúc
     {
       key: "dataAsOf",
+      label: t("cases.columns.dataAsOf", "Dữ liệu lúc"),
       header: (
         <TableColumnHeaderFilter
           {...createHeaderProps(
@@ -802,6 +910,7 @@ export function GarageCases() {
     // 18. Ngày cập nhật
     {
       key: "updatedAt",
+      label: t("cases.columns.updatedAt", "Ngày cập nhật"),
       header: (
         <TableColumnHeaderFilter
           {...createHeaderProps(
@@ -913,8 +1022,9 @@ export function GarageCases() {
         tableId="garage-cases-table"
         items={visibleCases}
         columns={columns}
+        defaultColumnVisibility={defaultColumnVisibility}
         getRowKey={(item: any) => item.id}
-        loading={isLoading}
+        loading={isLoading || isFetching}
         onRefresh={() => {
           refetch();
           queryClient.invalidateQueries({

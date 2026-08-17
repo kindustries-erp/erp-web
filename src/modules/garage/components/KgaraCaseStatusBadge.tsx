@@ -33,13 +33,23 @@ export function KgaraCaseStatusBadge({
     s.includes("xong") ||
     s.includes("đã thanh toán")
   ) {
-    variant = "success"; // Xanh ngọc pastel dịu mắt
+    variant = "success"; // Xanh lá pastel dịu mắt (Hoàn thành / Đã thanh toán)
   } else if (
     s.includes("hủy") ||
     s.includes("từ chối") ||
     s.includes("không duyệt")
   ) {
-    variant = "destructive"; // Đỏ hồng pastel dịu mắt
+    variant = "destructive"; // Đỏ pastel dịu mắt (Hủy / Từ chối)
+  } else if (
+    s.includes("đang sửa") ||
+    s.includes("đang làm") ||
+    s.includes("tiếp nhận") ||
+    s.includes("đang xử lý") ||
+    s.includes("kiểm tra") ||
+    s.includes("sửa chữa") ||
+    s.includes("xử lý")
+  ) {
+    variant = "warning"; // Hổ phách / Vàng (Đang làm / Đang xử lý - WIP)
   } else if (
     s.includes("báo giá") ||
     s.includes("chờ") ||
@@ -47,17 +57,9 @@ export function KgaraCaseStatusBadge({
     s.includes("nháp") ||
     s.includes("khách")
   ) {
-    variant = "warning"; // Hổ phách pastel dịu mắt
-  } else if (
-    s.includes("đang sửa") ||
-    s.includes("đang làm") ||
-    s.includes("tiếp nhận") ||
-    s.includes("đang xử lý") ||
-    s.includes("kiểm tra")
-  ) {
-    variant = "info"; // Xanh dương pastel dịu mắt
+    variant = "secondary"; // Màu xám trung tính dịu mắt (Báo giá / Nháp / Chờ duyệt)
   } else {
-    variant = "secondary";
+    variant = "secondary"; // Màu xám mặc định cho các trạng thái thông thường
   }
 
   return (
