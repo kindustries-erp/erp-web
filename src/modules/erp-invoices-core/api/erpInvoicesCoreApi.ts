@@ -187,7 +187,7 @@ export interface PortalInvoiceDto {
 }
 
 export interface PortalSyncPayload {
-  token: string;
+  token?: string;
   cookies?: string;
   dateFrom: string;
   dateTo: string;
@@ -409,7 +409,7 @@ export const erpInvoicesCoreApi = {
   syncDetail: async (id: string, token?: string): Promise<ErpInvoice> => {
     const { data } = await axiosInstance.post<ErpInvoice>(
       `${BASE}/${id}/sync-detail`,
-      { token },
+      token ? { token } : {},
     );
     return data;
   },
@@ -445,7 +445,7 @@ export const erpInvoicesCoreApi = {
   },
 
   bulkDownloadXml: async (params: {
-    token: string;
+    token?: string;
     cookies?: string;
     direction: "IN" | "OUT";
   }): Promise<{ message: string; count: number }> => {
