@@ -57,7 +57,6 @@ import {
   ErpInvoiceInternalMain,
   ErpInvoiceInternalSidebar,
 } from "@/modules/erp-invoices-core/components/ErpInvoiceInternalInfo";
-import { ErpInvoicePdfUpload } from "@/modules/erp-invoices-core/components/ErpInvoicePdfUpload";
 import { BulkEditDrawer } from "@/modules/erp-invoices-core/components/BulkEditDrawer";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import { FilePreviewDrawer } from "@/shared/components/FilePreviewDrawer";

@@ -168,7 +168,7 @@ export function DrawerAuditTimeline({
         {/* Continuous vertical divider spine (Solid, clearly visible) */}
         <div className="absolute left-[13px] top-3.5 bottom-3.5 w-[2px] bg-slate-300 dark:bg-slate-700 rounded-full" />
 
-        <div className="space-y-6">
+        <div className={cn(compact ? "space-y-3" : "space-y-6")}>
           {items.map((item, idx) => {
             const isLatest = idx === 0;
             const { icon, badgeCls } = getActionMeta(item.actionType);

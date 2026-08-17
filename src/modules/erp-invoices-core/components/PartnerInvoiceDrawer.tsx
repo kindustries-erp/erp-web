@@ -20,9 +20,8 @@ import {
   ErpInvoiceInternalMain,
   ErpInvoiceInternalSidebar,
 } from "./ErpInvoiceInternalInfo";
-import { ErpInvoicePdfUpload } from "./ErpInvoicePdfUpload";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
-import { erpInvoicesCoreApi, type ErpInvoice } from "../api/erpInvoicesCoreApi";
+import { erpInvoicesCoreApi } from "../api/erpInvoicesCoreApi";
 
 interface PartnerInvoiceDrawerProps {
   open: boolean;

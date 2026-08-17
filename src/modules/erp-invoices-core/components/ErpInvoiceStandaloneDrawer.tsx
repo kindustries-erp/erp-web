@@ -8,7 +8,6 @@ import {
   ErpInvoiceInternalMain,
   ErpInvoiceInternalSidebar,
 } from "./ErpInvoiceInternalInfo";
-import { ErpInvoicePdfUpload } from "./ErpInvoicePdfUpload";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
 
 interface ErpInvoiceStandaloneDrawerProps {

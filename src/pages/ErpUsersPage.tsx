@@ -22,7 +22,6 @@ import {
 import {
   StandardFormDrawer,
   DrawerAuditTimeline,
-  type DrawerRelatedTabItem,
 } from "@/shared/components/StandardFormDrawer";
 import { History } from "lucide-react";
 import { Combobox } from "@/shared/components/Combobox";
