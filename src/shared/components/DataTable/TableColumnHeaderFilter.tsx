@@ -209,7 +209,7 @@ export function TableColumnHeaderFilter({
     showBlankOption,
   ]);
 
-  // Restore local search when popover opens
+  // Restore local search when popover opens, or clear when searchValue is cleared from outside
   useEffect(() => {
     if (open) {
       if (columnKey && dropdownSearchState.has(columnKey)) {
@@ -217,6 +217,9 @@ export function TableColumnHeaderFilter({
       } else {
         setLocalSearch(searchValue);
       }
+    } else if (!searchValue) {
+      setLocalSearch("");
+      if (columnKey) dropdownSearchState.set(columnKey, "");
     }
   }, [open, searchValue, columnKey]);
 
@@ -378,7 +381,8 @@ export function TableColumnHeaderFilter({
                 <div className="relative flex items-center">
                   <Search className="absolute left-2.5 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder="Tìm trong bảng..."
+                    placeholder='Tìm... ("..." chính xác, ; nhiều từ)'
+                    title='Mẹo: Dùng "text" để tìm chính xác, dùng a;b để tìm nhiều giá trị (OR)'
                     className="pl-8 pr-8 h-8 text-xs"
                     value={localSearch}
                     onChange={(e) => {

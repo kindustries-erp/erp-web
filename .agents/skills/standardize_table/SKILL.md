@@ -17,41 +17,110 @@ Khi tạo mới hoặc enhance một `DataTable` trong hệ thống, bạn **B�
 
 ## 2. Table Header Filter & Sorting Popover
 
-Tất cả các cột dữ liệu (trừ cột Action, Index, Checkbox) **phải sử dụng component `<TableColumnHeaderFilter>`** cho header để tích hợp sẵn Filter và Sorting.
+Tất cả các cột dữ liệu (trừ cột Action, Index, Checkbox) **phải sử dụng component `<TableColumnHeaderFilter>`** (`@/shared/components/DataTable/TableColumnHeaderFilter`) cho header để tích hợp sẵn Filter và Sorting.
 
 - Cần truyền thêm prop `align="center"` cho `<TableColumnHeaderFilter>` để header luôn được canh giữa một cách chuẩn xác.
 - **Cột thường**: TUYỆT ĐỐI KHÔNG set `hideFilter: true` (hoặc `hideFilter={true}`), để đảm bảo user luôn nhìn thấy search box và danh sách checkbox options (column options) trong popover. Kể cả khi hook filter hiện tại chưa hỗ trợ cột đó, bạn phải chủ động update hook (ví dụ: làm cho `useVoucherClientFilter` trở nên dynamic để support mọi trường) chứ **KHÔNG ĐƯỢC LÁCH LUẬT** bằng cách ẩn filter.
-- **Clear All Filters Button**: Khi bảng có sử dụng TableColumnHeaderFilter, bắt buộc phải bổ sung thêm nút xóa lọc (`FilterButton` từ `@/shared/components/FilterPanel`) hiển thị cạnh tiêu đề bảng (title) nếu `activeFilterCount > 0`. Nút này (cùng với nút Thêm dòng) BẮT BUỘC phải được đặt vào prop `titleExtra` của component `DrawerSection` để chúng hiển thị đồng bộ ở góc trên bên phải, ngang hàng với tiêu đề.
-- **Cột Ngày Tháng (Date)**: Phải sử dụng `dateRangeSlot` (sử dụng component `DateRangeColumnSlot` trong `@/shared/components/DataTable/DateRangeColumnSlot`) để hiển thị bộ lọc Date Range, và set `hideFilter={true}` cùng `hideFooter={true}` để ẩn list checkbox mặc định.
-- **Cascading Filter Options (Lọc phụ thuộc)**: Đối với các bảng có filter ở client-side, dữ liệu tùy chọn (filter options) của một cột **BẮT BUỘC** phải được tính toán dựa trên danh sách dữ liệu đã bị filter bởi **TẤT CẢ CÁC CỘT KHÁC**. Nghĩa là khi user chọn filter ở một cột A (ví dụ Mã linh kiện), thì filter options ở cột B (ví dụ Tên linh kiện) chỉ được hiển thị các giá trị tương ứng còn lại trong bảng. Khi update hook filter, hãy đảm bảo loop logic filter hỗ trợ dynamic key thay vì hardcode.
-- **Nút Hành Động (Table Action Buttons)**: Đối với các bảng nằm trong `DrawerSection`, các nút thao tác chung của bảng như "Thêm dòng" (`+ Thêm dòng`), "Bộ lọc", "Nhập từ Excel"... TUYỆT ĐỐI KHÔNG ĐƯỢC đặt ở dưới đáy bảng hay thả rông bên ngoài. Bạn BẮT BUỘC phải truyền cụm nút này vào prop `titleExtra` của `DrawerSection` để hệ thống tự động gióng hàng chúng sang góc trên cùng bên phải, ngang hàng với tiêu đề.
+- **2 Cơ Chế Nạp Filter Options**:
+  1. **Server-Side Infinite Scroll (`fetchOptions`)** (Ưu tiên cho Page): Truyền `columnKey`, `queryKeyPrefix`, `allFilters={listHook.columnFilters}`, và hàm `fetchOptions` gọi API `getColumnOptions` của backend. Popover sẽ tự động phân trang infinite scroll khi cuộn danh sách options và hỗ trợ cascading filter từ server.
+  2. **Client-Side Computed (`filterOptions`)** (Ưu tiên cho Drawer / local table): Truyền mảng `filterOptions={options}` đã được tính toán cascading từ dữ liệu hiện hành.
+- **Định dạng nhãn tùy chọn (`formatOptionLabel`)**: Khi giá trị lưu trữ là ID (vd: `branchId`, `partnerId`) hoặc mã enum, sử dụng prop `formatOptionLabel={(val) => mapLabel(val)}` để hiển thị tên thân thiện trên dropdown checkbox.
+- **Xử lý giá trị Trống / Null (`showBlankOption`)**: Với các cột có thể chứa giá trị null/rỗng (vd: Chi nhánh, Biển số xe, Ghi chú), thêm `showBlankOption={true}` để cho phép người dùng lọc các dòng mang giá trị `(Trống)`.
+- **Cột Ngày Tháng (Date)**: Phải sử dụng `dateRangeSlot` (sử dụng component `<DateRangeColumnSlot>` trong `@/shared/components/DataTable/DateRangeColumnSlot`) để hiển thị bộ chọn khoảng ngày + presets (Hôm nay, Tháng này, Năm nay, Theo quý...), đồng thời set `hideFilter={true}` cùng `hideFooter={true}` để ẩn list checkbox mặc định.
+- **Clear All Filters Button**: Khi bảng có sử dụng TableColumnHeaderFilter, bắt buộc phải bổ sung thêm nút xóa lọc (`FilterButton` từ `@/shared/components/FilterPanel` hoặc Button Reset Filter) hiển thị cạnh tiêu đề bảng nếu `activeFilterCount > 0`. Đối với bảng trong `DrawerSection`, BẮT BUỘC đặt vào prop `titleExtra` của `DrawerSection`.
+- **Cascading Filter Options (Lọc phụ thuộc)**: Đối với các bảng có filter ở client-side, dữ liệu tùy chọn (filter options) của một cột **BẮT BUỘC** phải được tính toán dựa trên danh sách dữ liệu đã bị filter bởi **TẤT CẢ CÁC CỘT KHÁC**.
+- **Nút Hành Động (Table Action Buttons)**: Đối với các bảng nằm trong `DrawerSection`, các nút thao tác chung của bảng như "Thêm dòng" (`+ Thêm dòng`), "Bộ lọc", "Nhập từ Excel"... BẮT BUỘC phải truyền vào prop `titleExtra` của `DrawerSection`.
 
 ### Client-side vs Server-side Logic
 
-- **Trong Page**: Filter và Sorting thường thực hiện ở **Server-side** thông qua query params hoặc hook call API (như `useErpInvoicesList`).
-- **Trong Drawer**: Filter và Sorting thường thực hiện ở **Client-side** (trừ trường hợp dataset quá lớn cần paginate từ server).
+- **Trong Page**: Filter và Sorting thực hiện ở **Server-side** thông qua query params hoặc hook call API (như `useErpInvoicesList`). Dùng `fetchOptions` cho popover options.
+- **Trong Drawer**: Filter và Sorting thực hiện ở **Client-side** (trừ trường hợp dataset quá lớn). Dùng `filterOptions` dạng computed.
   - **Lưu ý quan trọng**: Khi filter/sort ở client-side bằng hook `useMemo`, **bắt buộc** phải truyền đủ các object filter vào array dependencies (VD: `tableState.columnFilters`, `tableState.sorts`, `tableState.columnSearch`), nếu không UI sẽ không update khi user chọn filter.
 
-**Mẫu code cho `<TableColumnHeaderFilter>`**:
+---
 
+### Mẫu code cho `<TableColumnHeaderFilter>`:
+
+#### 1. Cột Server-side dùng `fetchOptions` (Chuẩn cho Page):
 ```tsx
-header: <TableColumnHeaderFilter
-  title={t("Mã linh kiện", "Item Code")}
-  sortState={
-    listHook.sorts.includes("itemCode")
-      ? "asc"
-      : listHook.sorts.includes("-itemCode")
-        ? "desc"
-        : "none"
-  }
-  onSortChange={(state) => listHook.setSort("itemCode", state)}
-  searchValue={listHook.columnSearch["itemCode"] || ""}
-  onSearchChange={(val) => listHook.setColumnSearch("itemCode", val)}
-  selectedFilters={listHook.columnFilters["itemCode"] || []}
-  onFilterChange={(vals) => listHook.setColumnFilter("itemCode", vals)}
-  isActive={!!listHook.columnFilters["itemCode"]?.length}
-  align="center"
-/>;
+header: (
+  <TableColumnHeaderFilter
+    title={t("Mã linh kiện", "Item Code")}
+    columnKey="itemCode"
+    queryKeyPrefix="items-column-options"
+    allFilters={listHook.columnFilters}
+    fetchOptions={({ columnKey, search, pageParam, filtersStr }) =>
+      itemsApi.getColumnOptions(columnKey, search, pageParam, 20, filtersStr)
+    }
+    sortState={
+      listHook.sorts.includes("itemCode")
+        ? "asc"
+        : listHook.sorts.includes("-itemCode")
+          ? "desc"
+          : "none"
+    }
+    onSortChange={(state) => listHook.setSort("itemCode", state)}
+    searchValue={listHook.columnSearch["itemCode"] || ""}
+    onSearchChange={(val) => listHook.setColumnSearch("itemCode", val)}
+    selectedFilters={listHook.columnFilters["itemCode"] || []}
+    onFilterChange={(vals) => listHook.setColumnFilter("itemCode", vals)}
+    isActive={!!listHook.columnFilters["itemCode"]?.length}
+    align="center"
+  />
+)
+```
+
+#### 2. Cột Ngày Tháng dùng `<DateRangeColumnSlot>`:
+```tsx
+header: (
+  <TableColumnHeaderFilter
+    title={t("Ngày chứng từ", "Voucher Date")}
+    sortState={
+      listHook.sorts.includes("voucherDate")
+        ? "asc"
+        : listHook.sorts.includes("-voucherDate")
+          ? "desc"
+          : "none"
+    }
+    onSortChange={(state) => listHook.setSort("voucherDate", state)}
+    searchValue=""
+    onSearchChange={() => {}}
+    selectedFilters={[]}
+    onFilterChange={() => {}}
+    hideFilter={true}
+    hideFooter={true}
+    isActive={Boolean(listHook.dateFrom || listHook.dateTo)}
+    align="center"
+    dateRangeSlot={({ close }) => (
+      <DateRangeColumnSlot
+        dateFrom={listHook.dateFrom || ""}
+        dateTo={listHook.dateTo || ""}
+        onChange={(from, to) => {
+          listHook.setDateRange(from, to);
+        }}
+        onClose={close}
+      />
+    )}
+  />
+)
+```
+
+#### 3. Cột Client-side dùng `filterOptions` (Chuẩn cho Drawer):
+```tsx
+header: (
+  <TableColumnHeaderFilter
+    title={t("Trạng thái", "Status")}
+    sortState={clientSortState}
+    onSortChange={(s) => setClientSort("status", s)}
+    filterOptions={computedStatusOptions}
+    selectedFilters={clientFilters["status"] || []}
+    onFilterChange={(vals) => setClientFilter("status", vals)}
+    searchValue={clientSearch["status"] || ""}
+    onSearchChange={(val) => setClientSearch("status", val)}
+    isActive={!!clientFilters["status"]?.length}
+    align="center"
+  />
+)
 ```
 
 ## 3. Row Click, View Detail & Action Menu

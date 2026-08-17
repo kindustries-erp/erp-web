@@ -1,7 +1,13 @@
-import { FileText, PackagePlus, Network } from "lucide-react";
+import {
+  FileText,
+  PackagePlus,
+  Network,
+  Trash2,
+  XCircle,
+  Eye,
+  FileSpreadsheet,
+} from "lucide-react";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate";
-
-import { Trash2, XCircle, Eye } from "lucide-react";
 import { PurchaseOrderDrawer } from "./PurchaseOrderDrawer";
 import { ConnectionGraphDrawer } from "./ConnectionGraphDrawer";
 import { usePurchaseColumns } from "@/modules/operational/components/list/columns/purchaseColumns";
@@ -14,6 +20,7 @@ import {
   operationalApi,
   type OperationalDocument,
 } from "@/modules/operational/api/operationalApi";
+import { purchaseOrdersCoreApi } from "../api/purchaseOrdersCoreApi";
 
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { canReceiveInventory } from "@/modules/operational/utils/operationalHelpers";
@@ -132,6 +139,18 @@ export function PurchaseOrderListPage() {
     return () => window.removeEventListener("open_erp_document", handleOpenDoc);
   }, [openDetail]);
 
+  const handleExportExcel = async (row: OperationalDocument) => {
+    try {
+      await purchaseOrdersCoreApi.exportExcel(
+        row.id,
+        row.purchase_no || (row as any).poNo || row.id,
+        row.status,
+      );
+    } catch (e: any) {
+      console.error("Failed to export Excel", e);
+    }
+  };
+
   const columns = usePurchaseColumns({
     variant: "purchase",
     onOpenDetail: openDetail,
@@ -214,6 +233,21 @@ export function PurchaseOrderListPage() {
           ],
         },
         {
+          groupLabel: t("common.exportGroup", "Xuất dữ liệu"),
+          items: [
+            {
+              label:
+                row.status === "DRAFT"
+                  ? t("Xuất phiếu đề xuất")
+                  : t("Xuất bảng kê mua hàng"),
+              icon: (
+                <FileSpreadsheet className="h-[13px] w-[13px] text-emerald-600 dark:text-emerald-400" />
+              ),
+              onClick: () => void handleExportExcel(row),
+            },
+          ],
+        },
+        {
           groupLabel: t("groupThaoTac", "Thao tác"),
           items: [
             {
@@ -252,6 +286,9 @@ export function PurchaseOrderListPage() {
         }}
         onSaved={handleFormSaved}
         onToggleEdit={canUpdatePo ? handleToggleEdit : undefined}
+        onExportExcel={
+          editingRow ? () => handleExportExcel(editingRow) : undefined
+        }
         isAdminEmail={isAdminEmail}
         pendingTagIds={pendingTagIds}
         onPendingTagsChange={setPendingTagIds}

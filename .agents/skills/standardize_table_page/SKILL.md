@@ -163,28 +163,48 @@ import { EmptyState } from "@/shared/components/EmptyState";
 ## 5. Server-side Filter & Sort — BẮT BUỘC
 
 - Filter và Sort trong **Page** bắt buộc phải thực hiện ở **Server-side** (khác Drawer là client-side).
-- Tạo sẵn custom hook `use[Module]List` để quản lý toàn bộ state và gọi API.
-- Tạo sẵn file API `src/modules/[module]/api/[module]Api.ts` dù chưa có backend.
-- `onSortChange`, `onFilterChange`, `onSearchChange` của Table Header phải update vào hook state → hook thay đổi sẽ trigger call API.
+- Tạo sẵn custom hook `use[Module]List` để quản lý toàn bộ state (`page`, `pageSize`, `sorts`, `dateFrom`, `dateTo`, `columnFilters`, `columnSearch`, `activeFilterCount`) và gọi API qua TanStack Query.
+- Tạo sẵn file API `src/modules/[module]/api/[module]Api.ts` với đầy đủ các hàm CRUD và `getColumnOptions(column, search, page, pageSize, filtersStr)`.
+- `onSortChange`, `onFilterChange`, `onSearchChange`, `dateRangeSlot` của Table Header phải update vào hook state → hook thay đổi sẽ tự động reset `page = 1` và trigger call API.
 
-**Mẫu Hook:**
+**Mẫu Hook Chuẩn (`use[Module]List.ts`):**
 
 ```ts
 // src/modules/[module]/hooks/use[Module]List.ts
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 // import { [module]Api } from "@/modules/[module]/api/[module]Api";
 
 export function use[Module]List() {
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
   const [sorts, setSorts] = useState<string[]>([]);
+  const [dateFrom, setDateFrom] = useState<string>("");
+  const [dateTo, setDateTo] = useState<string>("");
   const [columnFilters, setColumnFilters] = useState<Record<string, string[]>>({});
   const [columnSearch, setColumnSearch] = useState<Record<string, string>>({});
 
   const { data, isLoading, refetch } = useQuery({
-    queryKey: ["[module]-list", page, sorts, columnFilters, columnSearch],
+    queryKey: [
+      "[module]-list",
+      page,
+      pageSize,
+      sorts,
+      dateFrom,
+      dateTo,
+      columnFilters,
+      columnSearch,
+    ],
     queryFn: () => {
-      // TODO: return [module]Api.getList({ page, sorts, columnFilters, columnSearch });
+      // return [module]Api.getList({
+      //   page,
+      //   pageSize,
+      //   sorts,
+      //   date_from: dateFrom || undefined,
+      //   date_to: dateTo || undefined,
+      //   column_filters: Object.keys(columnFilters).length ? JSON.stringify(columnFilters) : undefined,
+      //   column_search: Object.keys(columnSearch).length ? JSON.stringify(columnSearch) : undefined,
+      // });
       return Promise.resolve({ data: [], total: 0, totalPages: 0 });
     },
   });
@@ -209,18 +229,52 @@ export function use[Module]List() {
     setPage(1);
   };
 
+  const setDateRange = (from: string, to: string) => {
+    setDateFrom(from);
+    setDateTo(to);
+    setPage(1);
+  };
+
+  const activeFilterCount = useMemo(() => {
+    let count = 0;
+    Object.values(columnFilters).forEach((vals) => {
+      if (vals && vals.length > 0) count += vals.length;
+    });
+    Object.values(columnSearch).forEach((val) => {
+      if (val && val.trim().length > 0) count += 1;
+    });
+    if (dateFrom || dateTo) count += 1;
+    return count;
+  }, [columnFilters, columnSearch, dateFrom, dateTo]);
+
+  const clearAllFilters = () => {
+    setColumnFilters({});
+    setColumnSearch({});
+    setDateFrom("");
+    setDateTo("");
+    setPage(1);
+  };
+
   return {
     data: data?.data ?? [],
     total: data?.total ?? 0,
+    totalPages: data?.totalPages ?? 0,
     isLoading,
     page,
     setPage,
+    pageSize,
+    setPageSize,
     sorts,
     setSort,
+    dateFrom,
+    dateTo,
+    setDateRange,
     columnFilters,
     setColumnFilter,
     columnSearch,
     setColumnSearch,
+    activeFilterCount,
+    clearAllFilters,
     refetch,
   };
 }
@@ -253,13 +307,17 @@ import { useTranslation } from "react-i18next";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate/SpreadsheetPageTemplate";
 import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
 import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
+import { DateRangeColumnSlot } from "@/shared/components/DataTable/DateRangeColumnSlot";
 import { TableText } from "@/shared/components/DataTable/TableText";
 import { TableDateCell } from "@/shared/components/DataTable/TableDateCell";
 import { Badge } from "@/shared/components/ui/badge";
+import { Button } from "@/shared/components/ui/Button";
 import { ActionDropdown } from "@/shared/components/ActionDropdown";
 import { EmptyState } from "@/shared/components/EmptyState";
+import { FilterX } from "lucide-react";
 // import { use[Module]List } from "@/modules/[module]/hooks/use[Module]List";
 // import { [Module]DetailDrawer } from "@/modules/[module]/components/[Module]DetailDrawer";
+// import { [module]Api } from "@/modules/[module]/api/[module]Api";
 
 // Kiểu dữ liệu ví dụ
 type ExampleRow = {
@@ -278,12 +336,17 @@ export function ExampleTablePage() {
     data: [] as ExampleRow[],
     isLoading: false,
     sorts: [] as string[],
+    dateFrom: "",
+    dateTo: "",
+    setDateRange: (_from: string, _to: string) => {},
     columnFilters: {} as Record<string, string[]>,
     columnSearch: {} as Record<string, string>,
     setSort: (_k: string, _s: string) => {},
     setColumnFilter: (_k: string, _v: string[]) => {},
     setColumnSearch: (_k: string, _v: string) => {},
     setPage: (_p: number) => {},
+    activeFilterCount: 0,
+    clearAllFilters: () => {},
   };
 
   const [drawerOpen, setDrawerOpen] = React.useState(false);
@@ -312,17 +375,20 @@ export function ExampleTablePage() {
         className: "text-center w-[40px] min-w-[40px]",
         cell: (_: ExampleRow, idx: number) => <span>{idx}</span>,
       },
-      // Cột Mã (Code)
+      // Cột Mã (Code) — Hỗ trợ fetchOptions server-side
       {
         key: "code",
         header: (
           <TableColumnHeaderFilter
             title={t("code", "Mã phiếu")}
+            columnKey="code"
+            queryKeyPrefix="example-column-options"
+            allFilters={listHook.columnFilters}
+            // fetchOptions={({ columnKey, search, pageParam, filtersStr }) =>
+            //   exampleApi.getColumnOptions(columnKey, search, pageParam, 20, filtersStr)
+            // }
             sortState={getSortState("code")}
-            onSortChange={(s) => {
-              listHook.setSort("code", s);
-              listHook.setPage(1);
-            }}
+            onSortChange={(s) => listHook.setSort("code", s)}
             searchValue={listHook.columnSearch["code"] || ""}
             onSearchChange={(v) => listHook.setColumnSearch("code", v)}
             selectedFilters={listHook.columnFilters["code"] || []}
@@ -334,15 +400,26 @@ export function ExampleTablePage() {
         size: 200,
         enableResizing: true,
         cell: (row: ExampleRow) => (
-          <TableText
-            text={row.code}
-            enableCopy={true}
-            tooltip={true}
-            onDrawerClick={(e) => {
-              e.stopPropagation();
-              openDetail(row.id);
-            }}
-          />
+          <div className="flex items-center gap-1.5 w-full min-w-0">
+            <TableText
+              className="flex-1 min-w-0"
+              text={row.code}
+              enableCopy={true}
+              tooltip={true}
+              onDrawerClick={(e) => {
+                e.stopPropagation();
+                openDetail(row.id);
+              }}
+            />
+            {row.status === "DRAFT" && (
+              <Badge
+                variant="secondary"
+                className="text-[10px] px-1.5 py-0 h-4 flex-shrink-0 font-medium ml-auto w-[50px] inline-flex items-center justify-center text-center truncate"
+              >
+                {t("draft", "Nháp")}
+              </Badge>
+            )}
+          </div>
         ),
       },
       // Cột Trạng thái
@@ -352,10 +429,7 @@ export function ExampleTablePage() {
           <TableColumnHeaderFilter
             title={t("status", "Trạng thái")}
             sortState={getSortState("status")}
-            onSortChange={(s) => {
-              listHook.setSort("status", s);
-              listHook.setPage(1);
-            }}
+            onSortChange={(s) => listHook.setSort("status", s)}
             searchValue={listHook.columnSearch["status"] || ""}
             onSearchChange={(v) => listHook.setColumnSearch("status", v)}
             selectedFilters={listHook.columnFilters["status"] || []}
@@ -366,13 +440,19 @@ export function ExampleTablePage() {
         ),
         size: 150,
         enableResizing: true,
+        className: "text-center",
         cell: (row: ExampleRow) => (
-          <Badge variant={row.status === "DONE" ? "default" : "secondary"}>
-            {t(row.status, row.status)}
-          </Badge>
+          <div className="w-full flex justify-center">
+            <Badge
+              variant={row.status === "DONE" ? "default" : "secondary"}
+              className="w-[88px] inline-flex items-center justify-center text-center truncate"
+            >
+              {t(row.status, row.status)}
+            </Badge>
+          </div>
         ),
       },
-      // Cột Ngày tháng
+      // Cột Ngày tháng — tích hợp DateRangeColumnSlot
       {
         key: "createdAt",
         className: "text-right",
@@ -380,18 +460,23 @@ export function ExampleTablePage() {
           <TableColumnHeaderFilter
             title={t("createdAt", "Ngày tạo")}
             sortState={getSortState("createdAt")}
-            onSortChange={(s) => {
-              listHook.setSort("createdAt", s);
-              listHook.setPage(1);
-            }}
+            onSortChange={(s) => listHook.setSort("createdAt", s)}
             searchValue=""
             onSearchChange={() => {}}
             selectedFilters={[]}
             onFilterChange={() => {}}
             hideFilter={true}
             hideFooter={true}
+            isActive={Boolean(listHook.dateFrom || listHook.dateTo)}
             align="center"
-            // dateRangeSlot={<DateRangeColumnSlot ... />}
+            dateRangeSlot={({ close }) => (
+              <DateRangeColumnSlot
+                dateFrom={listHook.dateFrom || ""}
+                dateTo={listHook.dateTo || ""}
+                onChange={(from, to) => listHook.setDateRange(from, to)}
+                onClose={close}
+              />
+            )}
           />
         ),
         size: 140,
@@ -408,10 +493,7 @@ export function ExampleTablePage() {
           <TableColumnHeaderFilter
             title={t("amount", "Số tiền")}
             sortState={getSortState("amount")}
-            onSortChange={(s) => {
-              listHook.setSort("amount", s);
-              listHook.setPage(1);
-            }}
+            onSortChange={(s) => listHook.setSort("amount", s)}
             searchValue={listHook.columnSearch["amount"] || ""}
             onSearchChange={(v) => listHook.setColumnSearch("amount", v)}
             selectedFilters={listHook.columnFilters["amount"] || []}
@@ -457,20 +539,35 @@ export function ExampleTablePage() {
         ),
       },
     ],
-    [listHook.sorts, listHook.columnFilters, listHook.columnSearch, t],
+    [listHook.sorts, listHook.columnFilters, listHook.columnSearch, listHook.dateFrom, listHook.dateTo, t],
   );
 
   return (
     <SpreadsheetPageTemplate>
       <div className="flex flex-col gap-4 p-4 h-full">
-        {/* Page Header */}
-        <div>
-          <h1 className="text-2xl font-bold">
-            {t("pageTitle", "Danh sách dữ liệu")}
-          </h1>
-          <p className="text-muted-foreground">
-            {t("pageDesc", "Mô tả danh sách")}
-          </p>
+        {/* Page Header & Actions */}
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-bold">
+              {t("pageTitle", "Danh sách dữ liệu")}
+            </h1>
+            <p className="text-muted-foreground text-sm">
+              {t("pageDesc", "Mô tả danh sách")}
+            </p>
+          </div>
+
+          {/* Clear Filters Button khi có bộ lọc hoạt động */}
+          {listHook.activeFilterCount > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={listHook.clearAllFilters}
+              className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+            >
+              <FilterX className="w-3.5 h-3.5 text-destructive" />
+              {t("clearFilters", "Xóa bộ lọc")} ({listHook.activeFilterCount})
+            </Button>
+          )}
         </div>
 
         {/* Data Table */}
@@ -536,22 +633,25 @@ export function ExampleTablePage() {
 - [ ] Page có bọc trong `<SpreadsheetPageTemplate>` chưa?
 - [ ] Bảng có dùng `variant="spreadsheet"` chưa?
 - [ ] Bảng đã có `emptyLabel={t(...)}` **VÀ** `<EmptyState>` khi data rỗng sau khi load xong chưa?
+- [ ] Có nút Xóa bộ lọc (Clear All Filters) hiển thị số lượng `activeFilterCount` khi có filter chưa?
 
-### Server-side Logic
+### Server-side Logic & Filter Standard
 
 - [ ] Logic Filter & Sort có được thực hiện **Server-side** thông qua custom hook `use[Module]List` chưa?
-- [ ] Đã tạo sẵn hook `use[Module]List` trong `src/modules/[module]/hooks/` chưa?
+- [ ] Hook `use[Module]List` đã có đủ `dateFrom`, `dateTo`, `columnFilters`, `columnSearch`, `activeFilterCount`, `clearAllFilters` chưa?
+- [ ] Cột Date dùng `<DateRangeColumnSlot>` trong `dateRangeSlot={({ close }) => ...}` với `hideFilter={true}` & `hideFooter={true}` chưa?
+- [ ] Các cột ID / Mã hỗ trợ Server-side phân trang dùng `fetchOptions` gọi API `getColumnOptions` chưa?
 
 ### Table Columns (`standardize-table`)
 
 - [ ] Cột STT/Action/Checkbox rộng đúng 40px chưa? (STT dùng `{idx}`, không `idx + 1`)
-- [ ] Cột Code/SKU size 200px, dùng `<TableText>` bật `enableCopy`, `tooltip`, `onDrawerClick` chưa?
-- [ ] Cột Date dùng `dateRangeSlot` + `hideFilter={true}` chưa?
-- [ ] Cột Status dùng `<Badge>` chưa?
-- [ ] Cột số/tiền có class `tabular-nums text-right` chưa?
+- [ ] Cột Code/SKU size 200px, dùng `<TableText>` bật `enableCopy`, `tooltip`, `onDrawerClick` và Quick Status Badge chưa?
+- [ ] Cột Status dùng `<Badge>` fixed width `w-[88px]`, bọc `<Tooltip>` & `truncate` chưa?
+- [ ] Cột số/tiền có class `tabular-nums text-right` (tiền tệ có `font-semibold`) chưa?
 - [ ] Header filterable có `<TableColumnHeaderFilter align="center">` với `isActive` chưa?
 
 ### Detail Drawer (`standardize-drawer`)
 
 - [ ] Đã tạo sẵn component `[Module]DetailDrawer` tuân thủ `standardize-drawer` chưa?
 - [ ] Click vào `<TableText>` hoặc ActionDropdown mở Drawer (không điều hướng trang) chưa?
+
