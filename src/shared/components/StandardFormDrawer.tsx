@@ -6,6 +6,13 @@ import { Button } from "@/shared/components/ui/Button";
 import { cn } from "@/shared/utils";
 import type { DrawerMode } from "../stores/useDrawerStore";
 import { FormLoadingSkeleton } from "@/modules/operational/components/form/FormLoadingSkeleton";
+import {
+  DrawerRelatedDeck,
+  type DrawerRelatedTabItem,
+} from "./drawer/DrawerRelatedDeck";
+
+export type { DrawerRelatedTabItem };
+export * from "./drawer";
 
 // ── Size presets ──────────────────────────────────────────────────────────────
 // All sizes are bounded by max-width: calc(100vw - 208px) on desktop (panels.css)
@@ -86,6 +93,33 @@ export interface StandardFormDrawerProps {
 
   /** Optional class for drawer body container */
   bodyClassName?: string;
+
+  /**
+   * Danh sách các tab thông tin liên quan (Lịch sử, Chứng từ liên quan, Đính kèm, Ghi chú...)
+   * Hiển thị bên dưới Horizon Divider Bar ở đáy Main Body.
+   */
+  relatedTabs?: DrawerRelatedTabItem[];
+
+  /** Tab mặc định được kích hoạt trong relatedTabs */
+  defaultRelatedTabKey?: string;
+
+  /** Trạng thái thu gọn mặc định của vùng thông tin liên quan (mặc định: false - mở) */
+  defaultRelatedCollapsed?: boolean;
+
+  /** Custom hoàn toàn nội dung bên dưới Horizon Divider Bar nếu không dùng relatedTabs */
+  bottomPanel?: React.ReactNode;
+
+  /** Tiêu đề thanh phân cách nếu dùng custom bottomPanel */
+  bottomPanelTitle?: React.ReactNode;
+
+  /** Callback khi người dùng chuyển đổi tab liên quan */
+  onRelatedTabChange?: (tabKey: string) => void;
+
+  /** Bật ô tìm kiếm nhanh trên thanh Horizon Divider */
+  enableRelatedSearch?: boolean;
+
+  /** Callback khi thay đổi từ khóa tìm kiếm */
+  onRelatedSearchChange?: (query: string) => void;
 }
 
 export function StandardFormDrawer({
@@ -116,6 +150,14 @@ export function StandardFormDrawer({
   asContent = false,
   noAnimation = false,
   footerLeft,
+  relatedTabs,
+  defaultRelatedTabKey,
+  defaultRelatedCollapsed = false,
+  bottomPanel,
+  bottomPanelTitle,
+  onRelatedTabChange,
+  enableRelatedSearch = false,
+  onRelatedSearchChange,
 }: StandardFormDrawerProps) {
   const t = useT();
   const [rightPanelCollapsed, setRightPanelCollapsed] = useState(
@@ -176,6 +218,10 @@ export function StandardFormDrawer({
   const resolvedSize = size ?? (layout === "1-column" ? "sm" : "xl");
   const defaultPanelClassName = SIZE_CLASS[resolvedSize];
 
+  const hasRelatedContent = Boolean(
+    bottomPanel || (relatedTabs && relatedTabs.length > 0),
+  );
+
   const innerContent = (
     <>
       {error && (
@@ -187,13 +233,13 @@ export function StandardFormDrawer({
         <FormLoadingSkeleton />
       ) : layout === "1-column" ? (
         // 1-column: render leftPanel raw — caller uses DrawerSection/DrawerField directly
-        <div className="w-full h-full flex flex-col flex-1 min-h-0">
+        <div className="w-full h-auto flex flex-col flex-1 min-h-0">
           {leftPanel}
         </div>
       ) : (
         <div
           className={cn(
-            "flex flex-col lg:flex-row items-start w-full max-w-full relative h-full transition-all duration-300",
+            "flex flex-col lg:flex-row items-start w-full max-w-full relative h-auto transition-all duration-300",
             rightPanelCollapsed ? "gap-0" : "gap-6",
           )}
         >
@@ -264,6 +310,20 @@ export function StandardFormDrawer({
               </div>
             ))}
         </div>
+      )}
+
+      {/* ── Horizon Divider & Connected Context Deck ── */}
+      {hasRelatedContent && (
+        <DrawerRelatedDeck
+          tabs={relatedTabs}
+          defaultTabKey={defaultRelatedTabKey}
+          defaultCollapsed={defaultRelatedCollapsed}
+          customContent={bottomPanel}
+          customTitle={bottomPanelTitle}
+          onTabChange={onRelatedTabChange}
+          enableSearch={enableRelatedSearch}
+          onSearchChange={onRelatedSearchChange}
+        />
       )}
     </>
   );

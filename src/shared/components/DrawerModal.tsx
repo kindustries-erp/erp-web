@@ -245,93 +245,93 @@ export function DrawerModal({
             : undefined
         }
       >
+        {/* ── Fixed Header at Top of Panel ── */}
+        <div
+          className={cn(
+            "z-20 px-5 py-3.5 border-b border-border/80 table-header-glass flex items-center gap-2.5 flex-shrink-0 transition-shadow duration-200",
+            isScrolledTop
+              ? "shadow-[0_4px_16px_-4px_rgba(15,23,42,0.08),0_2px_4px_-2px_rgba(15,23,42,0.04)]"
+              : "shadow-none",
+          )}
+          style={{
+            backgroundColor: isScrolledTop
+              ? "var(--drawer-header-scrolled-bg, rgba(246, 248, 252, 0.90))"
+              : "var(--drawer-header-bg, rgba(246, 248, 252, 0.75))",
+          }}
+        >
+          {icon && (
+            <div className="w-[30px] h-[30px] bg-[color:var(--muted)] rounded-lg flex items-center justify-center flex-shrink-0 text-[color:var(--muted-fg)]">
+              {icon}
+            </div>
+          )}
+          <div className="flex-1 min-w-0 flex items-center gap-2.5 flex-wrap">
+            <span className="text-sm font-semibold text-foreground leading-tight">
+              {title}
+            </span>
+            {titleExtra && (
+              <div className="inline-flex items-center shrink-0">
+                {titleExtra}
+              </div>
+            )}
+            {subtitle && (
+              <div className="w-full text-xs text-[color:var(--muted-fg)] truncate mt-[1px]">
+                {subtitle}
+              </div>
+            )}
+          </div>
+          {headerExtra}
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            onClick={requestClose}
+            className="text-[color:var(--faint)]"
+          >
+            <X className="w-4 h-4" />
+          </Button>
+        </div>
+
+        {/* ── Scrollable Body Container (Takes remaining height, scrolls cleanly) ── */}
         <div
           ref={scrollContainerRef}
           className="flex-1 overflow-y-auto overflow-x-hidden flex flex-col min-h-0 relative"
         >
-          {/* ── Sticky Header ── */}
+          <div className={cn("flex-1 p-[18px]", bodyClassName)}>{children}</div>
+        </div>
+
+        {/* ── Fixed Footer at Bottom of Slide Panel (Always cleanly at bottom) ── */}
+        {(footerLeft || (actions && actions.length > 0)) && (
           <div
             className={cn(
-              "sticky top-0 z-20 px-5 py-3.5 border-b border-border/80 table-header-glass flex items-center gap-2.5 flex-shrink-0 transition-shadow duration-200",
-              isScrolledTop
-                ? "shadow-[0_4px_16px_-4px_rgba(15,23,42,0.08),0_2px_4px_-2px_rgba(15,23,42,0.04)]"
+              "z-20 mt-auto px-5 py-3 border-t border-border/80 table-footer-glass flex gap-2 flex-shrink-0 transition-shadow duration-200",
+              isScrolledBottom
+                ? "shadow-[0_-4px_16px_-4px_rgba(15,23,42,0.08),0_-2px_4px_-2px_rgba(15,23,42,0.04)]"
                 : "shadow-none",
             )}
             style={{
-              backgroundColor: isScrolledTop
-                ? "var(--drawer-header-scrolled-bg, rgba(246, 248, 252, 0.90))"
-                : "var(--drawer-header-bg, rgba(246, 248, 252, 0.75))",
+              backgroundColor: isScrolledBottom
+                ? "var(--drawer-footer-scrolled-bg, rgba(246, 248, 252, 0.90))"
+                : "var(--drawer-footer-bg, rgba(246, 248, 252, 0.75))",
             }}
           >
-            {icon && (
-              <div className="w-[30px] h-[30px] bg-[color:var(--muted)] rounded-lg flex items-center justify-center flex-shrink-0 text-[color:var(--muted-fg)]">
-                {icon}
-              </div>
-            )}
-            <div className="flex-1 min-w-0 flex items-center gap-2.5 flex-wrap">
-              <span className="text-sm font-semibold text-foreground leading-tight">
-                {title}
-              </span>
-              {titleExtra && (
-                <div className="inline-flex items-center shrink-0">
-                  {titleExtra}
-                </div>
-              )}
-              {subtitle && (
-                <div className="w-full text-xs text-[color:var(--muted-fg)] truncate mt-[1px]">
-                  {subtitle}
-                </div>
-              )}
+            {/* Left-aligned actions or custom footerLeft */}
+            <div className="flex gap-2 flex-1 min-w-0 items-center">
+              {footerLeft}
+              {actions
+                ?.filter((a) => a.align === "left")
+                .map((a) => (
+                  <Btn key={a.label} action={a} />
+                ))}
             </div>
-            {headerExtra}
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              onClick={requestClose}
-              className="text-[color:var(--faint)]"
-            >
-              <X className="w-4 h-4" />
-            </Button>
+            {/* Right-aligned actions (default) */}
+            <div className="flex gap-2">
+              {actions
+                ?.filter((a) => a.align !== "left")
+                .map((a) => (
+                  <Btn key={a.label} action={a} />
+                ))}
+            </div>
           </div>
-
-          {/* ── Body ── */}
-          <div className={cn("flex-1 p-[18px]", bodyClassName)}>{children}</div>
-
-          {/* ── Sticky Footer ── */}
-          {(footerLeft || (actions && actions.length > 0)) && (
-            <div
-              className={cn(
-                "sticky bottom-0 z-20 mt-auto px-5 py-3 border-t border-border/80 table-footer-glass flex gap-2 flex-shrink-0 transition-shadow duration-200",
-                isScrolledBottom
-                  ? "shadow-[0_-4px_16px_-4px_rgba(15,23,42,0.08),0_-2px_4px_-2px_rgba(15,23,42,0.04)]"
-                  : "shadow-none",
-              )}
-              style={{
-                backgroundColor: isScrolledBottom
-                  ? "var(--drawer-footer-scrolled-bg, rgba(246, 248, 252, 0.90))"
-                  : "var(--drawer-footer-bg, rgba(246, 248, 252, 0.75))",
-              }}
-            >
-              {/* Left-aligned actions or custom footerLeft */}
-              <div className="flex gap-2 flex-1 min-w-0 items-center">
-                {footerLeft}
-                {actions
-                  ?.filter((a) => a.align === "left")
-                  .map((a) => (
-                    <Btn key={a.label} action={a} />
-                  ))}
-              </div>
-              {/* Right-aligned actions (default) */}
-              <div className="flex gap-2">
-                {actions
-                  ?.filter((a) => a.align !== "left")
-                  .map((a) => (
-                    <Btn key={a.label} action={a} />
-                  ))}
-              </div>
-            </div>
-          )}
-        </div>
+        )}
 
         {/* ── Confirm-before-close overlay ── */}
         <ConfirmModal

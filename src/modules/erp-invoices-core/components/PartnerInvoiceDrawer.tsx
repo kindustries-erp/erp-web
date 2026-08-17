@@ -524,8 +524,16 @@ export function PartnerInvoiceDrawer({
         saving={formHook.saving}
         handleSave={formHook.handleSave}
         cancelEdit={formHook.cancelEdit}
+        form={formHook.form}
+        fieldSet={(key: string, value: any) =>
+          formHook.setForm((prev) => ({ ...prev, [key]: value }))
+        }
+        direction={formHook.form.direction || "IN"}
+        postingState={formHook.postingState}
+        pendingUnpost={formHook.pendingUnpost}
+        onUnpost={() => formHook.setPendingUnpost(true)}
         rightPanel={
-          <div className="flex flex-col gap-5">
+          <div className="flex flex-col gap-4">
             <ErpInvoiceInternalSidebar
               form={formHook.form}
               editMode={formHook.editMode}
@@ -538,60 +546,16 @@ export function PartnerInvoiceDrawer({
               direction={formHook.form.direction || "IN"}
               detailInvoice={formHook.detailInvoice}
               onRefreshDetail={formHook.handleSyncDetail}
-              pdfSlot={
-                <ErpInvoicePdfUpload
-                  invoiceId={formHook.detailInvoice?.id ?? null}
-                  attachments={formHook.detailInvoice?.attachments ?? null}
-                  pdfFileKey={formHook.detailInvoice?.pdfFileKey ?? null}
-                  pdfFiles={formHook.detailInvoice?.pdfFiles ?? null}
-                  editMode={formHook.editMode}
-                  pendingDeletedPdfs={formHook.form.pendingDeletedPdfs}
-                  onPendingDeletePdf={(key) => {
-                    const current = formHook.form.pendingDeletedPdfs || [];
-                    formHook.setForm((prev) => ({
-                      ...prev,
-                      pendingDeletedPdfs: [...current, key],
-                    }));
-                  }}
-                  pendingAddedAttachments={
-                    formHook.form.pendingAddedAttachments
-                  }
-                  onPendingAddedAttachmentsChange={(files) => {
-                    formHook.setForm((prev) => ({
-                      ...prev,
-                      pendingAddedAttachments: files,
-                    }));
-                  }}
-                />
-              }
             />
           </div>
         }
       >
-        <div className="flex flex-col gap-5">
+        <div className="flex flex-col gap-4">
           <ErpInvoiceInternalMain
-            form={formHook.form}
-            editMode={formHook.editMode}
-            fieldSet={(key: string, value: any) =>
-              formHook.setForm((prev) => ({ ...prev, [key]: value }))
-            }
-            direction={formHook.form.direction || "IN"}
             detailInvoice={formHook.detailInvoice}
-            postingState={formHook.postingState}
-            pendingUnpost={formHook.pendingUnpost}
-            onUnpost={() => formHook.setPendingUnpost(true)}
-            onRefreshDetail={() => {
-              if (formHook.detailInvoice?.id) {
-                formHook.openInternal({
-                  id: formHook.detailInvoice.id,
-                } as ErpInvoice);
-              }
-            }}
             invoicePreview={
               formHook.detailInvoice ? (
-                <div className="flex justify-center bg-slate-100 p-8 min-h-full">
-                  <VietnamInvoiceTemplate invoice={formHook.detailInvoice} />
-                </div>
+                <VietnamInvoiceTemplate invoice={formHook.detailInvoice} />
               ) : undefined
             }
           />

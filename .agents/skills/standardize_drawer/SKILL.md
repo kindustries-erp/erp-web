@@ -158,6 +158,99 @@ export function VoucherDrawer({ open, onClose, mode, setMode, data }) {
 }
 ```
 
+## 4. Quy tắc cho Thông tin liên quan & Phụ trợ (Horizon Divider Bar & Connected Context Deck)
+
+Đối với các thông tin thứ cấp, bổ trợ như **Lịch sử thao tác / Audit Log**, **Chuỗi chứng từ liên đới**, **Tệp đính kèm**, **Ghi chú nội bộ**:
+- **KHÔNG** nhồi nhét vào `rightPanel` (vì cột phải hẹp, chỉ phù hợp với metadata tóm tắt).
+- **KHÔNG** đặt thành các `DrawerSection` dài vô tận ở cuối `leftPanel` (vì làm loãng form nhập liệu chính).
+- **BẮT BUỘC** sử dụng hệ thống **Horizon Divider Bar & Connected Context Deck** thông qua prop `relatedTabs` của `<StandardFormDrawer>`:
+  - Tự động hiển thị thanh Horizon Divider Bar phân tách nội dung chính và nội dung liên quan ở đáy Main Body.
+  - Cung cấp các Segmented Pill Tabs với Badge đếm số lượng bản ghi và nút Thu gọn / Mở rộng (`ChevronUp`/`ChevronDown`).
+  - Hỗ trợ các sub-components chuẩn từ `@/shared/components/drawer`:
+    - `<DrawerAuditTimeline>`: Timeline lịch sử thao tác, diff thay đổi trường dữ liệu (`oldVal` -> `newVal`), avatar người dùng và timestamp.
+    - `<DrawerRelatedDocs>`: Mạng lưới chứng từ liên quan (PO, Phiếu nhập, Hóa đơn, Phiếu chi...) dạng Flow Cards kèm nút xem nhanh và copy mã.
+    - `<DrawerAttachmentsDeck>`: Danh sách/Grid tệp đính kèm, preview, download và dropzone upload.
+    - `<DrawerInternalNotes>`: Luồng thảo luận / ghi chú trao đổi nội bộ.
+
+**Mẫu code 2-Columns Drawer kết hợp `relatedTabs`**:
+
+```tsx
+import {
+  StandardFormDrawer,
+  DrawerAuditTimeline,
+  DrawerRelatedDocs,
+  DrawerAttachmentsDeck,
+  type DrawerRelatedTabItem,
+} from "@/shared/components/StandardFormDrawer";
+import { Badge } from "@/shared/components/ui/badge";
+import {
+  DrawerSection,
+  DrawerField,
+  inputCls,
+} from "@/shared/components/DrawerModal";
+import { History, Link2, Paperclip } from "lucide-react";
+import { useTranslation } from "react-i18next";
+
+export function PurchaseOrderDrawer({ open, onClose, mode, setMode, data, auditLogs, relatedDocs, attachments }) {
+  const { t } = useTranslation("purchase");
+
+  const relatedTabs: DrawerRelatedTabItem[] = [
+    {
+      key: "history",
+      label: t("Lịch sử thay đổi", "Audit History"),
+      icon: <History className="w-3.5 h-3.5" />,
+      badgeCount: auditLogs?.length,
+      content: <DrawerAuditTimeline items={auditLogs} />,
+    },
+    {
+      key: "connected_docs",
+      label: t("Chứng từ liên đới", "Connected Documents"),
+      icon: <Link2 className="w-3.5 h-3.5" />,
+      badgeCount: relatedDocs?.length,
+      content: <DrawerRelatedDocs docs={relatedDocs} onOpenDoc={(doc) => console.log(doc)} />,
+    },
+    {
+      key: "files",
+      label: t("Tệp đính kèm", "Attachments"),
+      icon: <Paperclip className="w-3.5 h-3.5" />,
+      badgeCount: attachments?.length,
+      content: <DrawerAttachmentsDeck attachments={attachments} />,
+    },
+  ];
+
+  return (
+    <StandardFormDrawer
+      open={open}
+      mode={mode}
+      onClose={onClose}
+      onToggleEdit={() => setMode("edit")}
+      title={t("Đơn mua hàng: PO-202608-001")}
+      titleExtra={<Badge variant="default">{t(data.status)}</Badge>}
+      layout="2-columns"
+      size="xl"
+      collapsibleRightPanel={true}
+      actions={[{ label: t("Đóng", "Close"), onClick: onClose }]}
+      leftPanel={
+        <div className="flex flex-col gap-4">
+          <DrawerSection title={t("Chi tiết mặt hàng")}>
+            {/* Table danh sách sản phẩm */}
+          </DrawerSection>
+        </div>
+      }
+      rightPanel={
+        <div className="flex flex-col gap-4">
+          <DrawerSection title={t("Thông tin nhà cung cấp")}>
+            <DrawerField label={t("Nhà cung cấp")}>...</DrawerField>
+          </DrawerSection>
+        </div>
+      }
+      relatedTabs={relatedTabs}
+      defaultRelatedCollapsed={false}
+    />
+  );
+}
+```
+
 ## Summary Checklist trước khi hoàn thành:
 
 - [ ] Drawer đã sử dụng `<StandardFormDrawer>` chưa?
@@ -168,5 +261,8 @@ export function VoucherDrawer({ open, onClose, mode, setMode, data }) {
 - [ ] Drawer chứng từ (2 cột) đã set `layout="2-columns"` và `size="xl"`/`"lg"` chưa?
 - [ ] Phần nội dung bên trong đã dùng các khối chuẩn như `<DrawerSection>`, `<DrawerField>` để bao bọc các input chưa?
 - [ ] Các action button của một `<DrawerSection>` (như nút Thêm, Xóa, Liên kết cho bảng) đã được đưa lên góc trên bên phải bằng prop `titleExtra` của `DrawerSection` chưa?
+- [ ] Các thông tin phụ trợ (Lịch sử thao tác, Chứng từ liên quan, Đính kèm, Ghi chú) đã được tách bạch qua prop `relatedTabs` của `StandardFormDrawer` thay vì nhồi vào `rightPanel` hay cuối form chưa?
+- [ ] Đã sử dụng các widgets chuẩn hóa (`<DrawerAuditTimeline>`, `<DrawerRelatedDocs>`, `<DrawerAttachmentsDeck>`, `<DrawerInternalNotes>`) cho `relatedTabs` chưa?
 - [ ] Input đã sử dụng CSS class `inputCls` từ `@/shared/components/DrawerModal` (nếu có) chưa?
 - [ ] Chức năng cảnh báo đóng Drawer khi đang Edit (`confirmOnClose={mode === 'edit'}`) đã được cấu hình đúng chưa?
+
