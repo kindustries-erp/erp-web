@@ -47,6 +47,11 @@ function getCellValue(item: Record<string, any>, key: string) {
       return item.chiPhi ?? item.rawData?.ChiPhi ?? 0;
     case "loiNhuan":
       return item.loiNhuan ?? item.rawData?.LoiNhuan ?? 0;
+    case "margin": {
+      const rev = Number(item.doanhThu ?? item.rawData?.DoanhThu ?? 0);
+      const profit = Number(item.loiNhuan ?? item.rawData?.LoiNhuan ?? 0);
+      return rev > 0 ? (profit / rev) * 100 : 0;
+    }
     default:
       return item[key] ?? "";
   }

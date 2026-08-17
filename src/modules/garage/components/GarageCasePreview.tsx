@@ -160,7 +160,11 @@ export function GarageCasePreview({ caseData, grossProfit }: Props) {
                   <tr key={i}>
                     <td className="border border-black p-1">{i + 1}</td>
                     <td className="border border-black p-1">
-                      {p.MaChiTiet || "---"}
+                      {p.SanPhamCode ||
+                        p.MaChiTiet ||
+                        p.MaSanPham ||
+                        p.MaPhuTung ||
+                        "---"}
                     </td>
                     <td className="border border-black p-1 text-left">
                       {p.NoiDungChiTiet}
@@ -261,7 +265,12 @@ export function GarageCasePreview({ caseData, grossProfit }: Props) {
                   <tr key={i}>
                     <td className="border border-black p-1">{i + 1}</td>
                     <td className="border border-black p-1">
-                      {s.MaChiTiet || "---"}
+                      {s.SanPhamCode ||
+                        s.MaChiTiet ||
+                        s.MaSanPham ||
+                        s.MaDichVu ||
+                        s.MaCongViec ||
+                        "---"}
                     </td>
                     <td className="border border-black p-1 text-left">
                       {s.NoiDungChiTiet}

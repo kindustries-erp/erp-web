@@ -1,7 +1,47 @@
 export const garageVi = {
+  dashboard: {
+    title: "Tổng quan Garage",
+    desc: "Báo cáo tổng quan hiệu quả hoạt động xưởng dịch vụ, doanh thu, chi phí và tình trạng phiếu sửa chữa",
+    kpis: {
+      totalRevenue: "Tổng doanh thu",
+      totalCost: "Tổng chi phí (Giá vốn)",
+      grossProfit: "Lợi nhuận gộp",
+      avgMargin: "Biên LN trung bình",
+      totalCases: "Tổng số phiếu tiếp nhận",
+      completedCases: "Số phiếu hoàn thành",
+      inProgressCases: "Đang xử lý",
+    },
+    charts: {
+      revenueProfitTrend: "Xu hướng Doanh thu & Lợi nhuận gộp theo kỳ",
+      revenueProfitTrendDesc:
+        "So sánh doanh thu, giá vốn và lợi nhuận gộp theo từng mốc thời gian",
+      statusDistribution: "Phân bổ Trạng thái Phiếu dịch vụ",
+      statusDistributionDesc:
+        "Tỷ lệ các trạng thái phiếu tiếp nhận trong xưởng",
+      revenue: "Doanh thu",
+      cost: "Giá vốn",
+      profit: "Lợi nhuận gộp",
+      noChartData: "Chưa có dữ liệu biểu đồ trong khoảng thời gian này",
+    },
+    recentCases: {
+      title: "Phiếu dịch vụ gần đây",
+      desc: "Danh sách 10 phiếu dịch vụ cập nhật mới nhất",
+      caseCode: "Số chứng từ",
+      licensePlate: "Biển số xe",
+      customer: "Khách hàng",
+      date: "Ngày tiếp nhận",
+      revenue: "Doanh thu",
+      profit: "Lãi gộp",
+      margin: "Biên LN",
+      status: "Trạng thái",
+      viewDetail: "Xem chi tiết",
+      viewAll: "Xem tất cả phiếu dịch vụ",
+      empty: "Không có phiếu dịch vụ nào gần đây",
+    },
+  },
   cases: {
-    title: "Sổ báo giá",
-    desc: "Quản lý phiếu dịch vụ từ hệ thống Garage",
+    title: "Phiếu dịch vụ",
+    desc: "Quản lý phiếu dịch vụ và sổ báo giá từ hệ thống xưởng Garage",
     columns: {
       caseDate: "Ngày tiếp nhận",
       caseCode: "Số chứng từ",
@@ -9,8 +49,13 @@ export const garageVi = {
       customerCode: "Mã khách hàng",
       customerName: "Tên khách hàng",
       insurance: "Bảo hiểm",
+      doanhThu: "Doanh thu",
+      chiPhi: "Chi phí",
+      loiNhuan: "Lợi nhuận",
+      margin: "Biên LN",
       totalAmount: "Tổng tiền",
       balanceAmount: "Còn phải thu",
+      branchName: "Chi nhánh",
       dataAsOf: "Dữ liệu lúc",
       createdAt: "Ngày tạo",
       updatedAt: "Ngày cập nhật",
@@ -18,7 +63,25 @@ export const garageVi = {
     },
     actions: {
       syncCases: "Đồng bộ Sổ báo giá",
+      syncGrossProfit: "Đồng bộ Lợi nhuận gộp",
+      syncOptions: "Tùy chọn đồng bộ",
       syncDetails: "Đồng bộ chi tiết",
+      createCase: "Tạo phiếu dịch vụ",
+      viewDetail: "Xem chi tiết",
+    },
+    syncDrawer: {
+      titleCases: "Đồng bộ Cases từ Garage",
+      titleGrossProfit: "Đồng bộ Lợi nhuận gộp Garage",
+      descCases:
+        "Chọn khoảng thời gian để đồng bộ phiếu dịch vụ (Cases) và doanh thu chi phí từ hệ thống Garage về ERP.",
+      descGrossProfit:
+        "Chọn khoảng thời gian để cập nhật lại dữ liệu Doanh thu - Chi phí - Lợi nhuận gộp từ hệ thống Garage.",
+      quickPreset: "Chọn nhanh kỳ...",
+      dateFrom: "Từ ngày",
+      dateTo: "Đến ngày",
+      startSync: "Bắt đầu đồng bộ",
+      syncing: "Đang xử lý...",
+      close: "Đóng",
     },
     drawer: {
       caseDetails: "Sổ báo giá:",
@@ -82,5 +145,10 @@ export const garageVi = {
       no: "Không",
       unknown: "Không rõ",
     },
+  },
+  branches: {
+    label: "Chi nhánh:",
+    all: "Tất cả chi nhánh",
+    select: "Chọn chi nhánh xưởng",
   },
 };

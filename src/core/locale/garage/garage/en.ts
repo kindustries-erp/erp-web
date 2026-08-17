@@ -1,4 +1,3 @@
-import { garageVi as legacyGarageVi } from "@/modules/garage/locales/vi";
+import { garageEn as legacyGarageEn } from "@/modules/garage/locales/en";
 
-// TODO: replace with proper English translations.
-export const garageEn = legacyGarageVi;
+export const garageEn = legacyGarageEn;

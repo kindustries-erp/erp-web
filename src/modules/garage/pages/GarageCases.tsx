@@ -5,6 +5,8 @@ import { DateRangeColumnSlot } from "@/shared/components/DataTable/DateRangeColu
 import { useFilterPanel } from "@/shared/hooks/useFilterPanel";
 import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
 import { TableText } from "@/shared/components/DataTable/TableText";
+import { KpiCard } from "@/shared/components/KpiCard";
+import { money } from "@/shared/utils/format";
 import { useGarageStore } from "../store/garageStore";
 import { garageApi } from "../api/garageApi";
 import { GarageCaseSyncDrawer } from "../components/GarageCaseSyncDrawer";
@@ -16,17 +18,21 @@ import {
   useSyncGarageCaseDetail,
   useGarageGrossProfit,
 } from "../hooks/useGarage";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   RefreshCw,
   DownloadCloud,
+  TrendingUp,
   MoreHorizontal,
   FileText,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { applyGarageCasesTableState } from "../utils/garageCasesTable";
 
 export function GarageCases() {
   const { t } = useTranslation("garage");
+  const queryClient = useQueryClient();
   const { selectedBranchId, setSelectedBranchId } = useGarageStore();
   const { data: branches } = useGarageBranches();
   const tableState = useTableColumnState("garage-cases-table");
@@ -160,7 +166,7 @@ export function GarageCases() {
     hideFilter,
   });
 
-  const { data: profitData } = useGarageGrossProfit(
+  const { data: profitData, isLoading: isProfitLoading } = useGarageGrossProfit(
     selectedBranchId,
     filter.state.dateFrom || undefined,
     filter.state.dateTo || undefined,
@@ -170,6 +176,17 @@ export function GarageCases() {
     const groups = profitData?.results?.Groups || profitData?.Groups || [];
     return groups.flatMap((g: any) => g.Items || []);
   }, [profitData]);
+
+  const totalRevenue =
+    profitData?.results?.TongCong?.DoanhThu ??
+    profitData?.TongCong?.DoanhThu ??
+    0;
+  const totalCost =
+    profitData?.results?.TongCong?.ChiPhi ?? profitData?.TongCong?.ChiPhi ?? 0;
+  const totalGrossProfit =
+    profitData?.results?.TongCong?.LaiGop ?? profitData?.TongCong?.LaiGop ?? 0;
+  const averageMargin =
+    totalRevenue > 0 ? (totalGrossProfit / totalRevenue) * 100 : 0;
 
   const {
     data: casesData,
@@ -200,23 +217,40 @@ export function GarageCases() {
   const { mutate: syncCaseDetail } = useSyncGarageCaseDetail();
 
   const [syncDrawerOpen, setSyncDrawerOpen] = useState(false);
+  const [syncMode, setSyncMode] = useState<"cases" | "gross-profit">("cases");
 
   const [selectedCaseId, setSelectedCaseId] = useState<string | null>(null);
 
+  const canCreateGarage = useHasPermission("garage", "create");
+  const canUpdateGarage = useHasPermission("garage", "update");
+  const canCreateGreenway = useHasPermission("greenway_integration", "create");
+  const canCreateKgara = useHasPermission("kgara_integration", "create");
+  const canSyncGarage =
+    canCreateGarage || canUpdateGarage || canCreateGreenway || canCreateKgara;
+
   const createActions = useMemo(
-    () => [
-      {
-        groupLabel: "Thao tác",
-        items: [
-          {
-            label: t("cases.actions.syncCases", "Đồng bộ Sổ báo giá"),
-            icon: <DownloadCloud className="w-4 h-4 text-indigo-600" />,
-            onClick: () => setSyncDrawerOpen(true),
-          },
-        ],
-      },
-    ],
-    [t],
+    () =>
+      canSyncGarage
+        ? [
+            {
+              groupLabel: t("cases.actions.syncOptions", "Tùy chọn đồng bộ"),
+              items: [
+                {
+                  label: t(
+                    "cases.actions.syncGrossProfit",
+                    "Đồng bộ Lợi nhuận gộp",
+                  ),
+                  icon: <TrendingUp className="w-4 h-4 text-emerald-600" />,
+                  onClick: () => {
+                    setSyncMode("gross-profit");
+                    setSyncDrawerOpen(true);
+                  },
+                },
+              ],
+            },
+          ]
+        : undefined,
+    [canSyncGarage, t],
   );
 
   const columns = [
@@ -406,16 +440,13 @@ export function GarageCases() {
         const pItem = profitCases.find(
           (p: any) => p.VuViecCode === item.soChungTu,
         );
-        const val = pItem?.DoanhThu ?? item.doanhThu ?? item.rawData?.DoanhThu;
+        const val = item.doanhThu ?? pItem?.DoanhThu ?? item.rawData?.DoanhThu;
         if (item.tenTinhTrangDichVu === "Kết thúc" && val == null) {
           return (
             <span className="text-red-500 text-xs italic">Chưa đồng bộ</span>
           );
         }
-        return new Intl.NumberFormat("vi-VN", {
-          style: "currency",
-          currency: "VND",
-        }).format(Number(val) || 0);
+        return money(Number(val) || 0);
       },
     },
     {
@@ -431,16 +462,13 @@ export function GarageCases() {
         const pItem = profitCases.find(
           (p: any) => p.VuViecCode === item.soChungTu,
         );
-        const val = pItem?.ChiPhi ?? item.chiPhi ?? item.rawData?.ChiPhi;
+        const val = item.chiPhi ?? pItem?.ChiPhi ?? item.rawData?.ChiPhi;
         if (item.tenTinhTrangDichVu === "Kết thúc" && val == null) {
           return (
             <span className="text-red-500 text-xs italic">Chưa đồng bộ</span>
           );
         }
-        return new Intl.NumberFormat("vi-VN", {
-          style: "currency",
-          currency: "VND",
-        }).format(Number(val) || 0);
+        return money(Number(val) || 0);
       },
     },
     {
@@ -456,16 +484,78 @@ export function GarageCases() {
         const pItem = profitCases.find(
           (p: any) => p.VuViecCode === item.soChungTu,
         );
-        const val = pItem?.LoiNhuan ?? item.loiNhuan ?? item.rawData?.LoiNhuan;
+        const val = item.loiNhuan ?? pItem?.LoiNhuan ?? item.rawData?.LoiNhuan;
         if (item.tenTinhTrangDichVu === "Kết thúc" && val == null) {
           return (
             <span className="text-red-500 text-xs italic">Chưa đồng bộ</span>
           );
         }
-        return new Intl.NumberFormat("vi-VN", {
-          style: "currency",
-          currency: "VND",
-        }).format(Number(val) || 0);
+        const numVal = Number(val) || 0;
+        return (
+          <span
+            className={
+              numVal >= 0
+                ? "text-emerald-600 font-semibold"
+                : "text-rose-600 font-semibold"
+            }
+          >
+            {money(numVal)}
+          </span>
+        );
+      },
+    },
+    {
+      key: "margin",
+      header: (
+        <TableColumnHeaderFilter
+          {...createHeaderProps("margin", "Biên LN", "right", true)}
+          hideFooter={true}
+        />
+      ),
+      sortable: false,
+      cell: (item: any) => {
+        const pItem = profitCases.find(
+          (p: any) => p.VuViecCode === item.soChungTu,
+        );
+        const rev =
+          Number(item.doanhThu ?? pItem?.DoanhThu ?? item.rawData?.DoanhThu) ||
+          0;
+        const profit =
+          Number(item.loiNhuan ?? pItem?.LoiNhuan ?? item.rawData?.LoiNhuan) ||
+          0;
+
+        if (
+          item.tenTinhTrangDichVu === "Kết thúc" &&
+          item.doanhThu == null &&
+          pItem?.DoanhThu == null
+        ) {
+          return (
+            <span className="text-red-500 text-xs italic">Chưa đồng bộ</span>
+          );
+        }
+        if (!rev || rev <= 0) {
+          return <span className="text-muted-foreground text-xs">-</span>;
+        }
+
+        const margin = (profit / rev) * 100;
+        const isHigh = margin >= 20;
+        const isMid = margin >= 0 && margin < 20;
+
+        return (
+          <div className="flex items-center justify-end">
+            <span
+              className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold ${
+                isHigh
+                  ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40"
+                  : isMid
+                    ? "bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 border border-blue-200 dark:border-blue-800/40"
+                    : "bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300 border border-rose-200 dark:border-rose-800/40"
+              }`}
+            >
+              {margin > 0 ? `+${margin.toFixed(1)}%` : `${margin.toFixed(1)}%`}
+            </span>
+          </div>
+        );
       },
     },
     {
@@ -596,26 +686,68 @@ export function GarageCases() {
         title={t("cases.title")}
         desc={t("cases.desc")}
         icon={<FileText className="w-5 h-5 text-slate-700" />}
+        topNode={
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+            <KpiCard
+              compact
+              loading={isLoading || isProfitLoading}
+              label="Tổng doanh thu"
+              value={money(totalRevenue)}
+            />
+            <KpiCard
+              compact
+              loading={isLoading || isProfitLoading}
+              label="Tổng chi phí (Giá vốn)"
+              value={money(totalCost)}
+            />
+            <KpiCard
+              compact
+              loading={isLoading || isProfitLoading}
+              label="Lợi nhuận gộp"
+              value={money(totalGrossProfit)}
+            />
+            <KpiCard
+              compact
+              loading={isLoading || isProfitLoading}
+              label="Biên LN trung bình"
+              value={totalRevenue > 0 ? `${averageMargin.toFixed(1)}%` : "0%"}
+            />
+          </div>
+        }
         tableId="garage-cases-table"
         items={visibleCases}
         columns={columns}
         getRowKey={(item: any) => item.id}
         loading={isLoading}
-        onRefresh={() => refetch()}
+        onRefresh={() => {
+          refetch();
+          queryClient.invalidateQueries({
+            queryKey: ["garage", "grossProfitReport"],
+          });
+        }}
         filterConfig={filterConfig}
         filter={filter}
-        createLabel="Tạo phiếu dịch vụ"
+        createLabel={t("cases.actions.syncCases", "Đồng bộ Sổ báo giá")}
+        createIcon={<DownloadCloud className="w-4 h-4 mr-1.5" />}
+        onCreate={
+          canSyncGarage
+            ? () => {
+                setSyncMode("cases");
+                setSyncDrawerOpen(true);
+              }
+            : undefined
+        }
         createActions={createActions}
         rowActions={(item: any) => [
           {
-            label: "Xem chi tiết",
+            label: t("cases.actions.viewDetail", "Xem chi tiết"),
             icon: <MoreHorizontal className="w-4 h-4" />,
             onClick: () => {
               setSelectedCaseId(item.id);
             },
           },
           {
-            label: t("cases.actions.syncDetails"),
+            label: t("cases.actions.syncDetails", "Đồng bộ chi tiết"),
             icon: <RefreshCw className="w-4 h-4" />,
             onClick: () => {
               syncCaseDetail({
@@ -640,13 +772,40 @@ export function GarageCases() {
         isOpen={!!selectedCaseId}
         caseCode={selectedCaseId}
         onClose={() => setSelectedCaseId(null)}
-        onSuccess={() => refetch()}
+        onSuccess={() => {
+          refetch();
+          queryClient.invalidateQueries({
+            queryKey: ["garage", "grossProfitReport"],
+          });
+        }}
       />
 
       <GarageCaseSyncDrawer
         open={syncDrawerOpen}
+        mode={syncMode}
+        title={
+          syncMode === "gross-profit"
+            ? t("cases.syncDrawer.titleGrossProfit", "Đồng bộ Lợi nhuận gộp")
+            : t("cases.syncDrawer.titleCases", "Đồng bộ Sổ báo giá")
+        }
+        description={
+          syncMode === "gross-profit"
+            ? t(
+                "cases.syncDrawer.descGrossProfit",
+                "Chọn khoảng thời gian để cập nhật lại dữ liệu Doanh thu - Chi phí - Lợi nhuận gộp từ hệ thống Garage.",
+              )
+            : t(
+                "cases.syncDrawer.descCases",
+                "Chọn khoảng thời gian để đồng bộ phiếu dịch vụ (Cases) và doanh thu chi phí từ hệ thống Garage về ERP.",
+              )
+        }
         onClose={() => setSyncDrawerOpen(false)}
-        onSuccess={() => refetch()}
+        onSuccess={() => {
+          refetch();
+          queryClient.invalidateQueries({
+            queryKey: ["garage", "grossProfitReport"],
+          });
+        }}
       />
     </>
   );
