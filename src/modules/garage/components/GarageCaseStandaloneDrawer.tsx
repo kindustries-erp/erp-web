@@ -289,7 +289,7 @@ export function GarageCaseStandaloneDrawer({
                 }
               />
               <DrawerRow
-                label={t("cases.drawer.completionDate", "Ngày hoàn thành")}
+                label={t("cases.drawer.completionDate", "Ngày kết thúc")}
                 value={
                   selectedCase.rawData?.NgayHoanThanhCongViec
                     ? formatGMT7(

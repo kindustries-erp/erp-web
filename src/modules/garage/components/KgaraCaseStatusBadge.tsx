@@ -16,31 +16,48 @@ export function KgaraCaseStatusBadge({
 
   const s = status.toLowerCase();
 
-  // Mặc định là outline
-  let variant: "default" | "secondary" | "destructive" | "outline" | "ghost" =
-    "outline";
+  let variant:
+    | "default"
+    | "success"
+    | "secondary"
+    | "destructive"
+    | "warning"
+    | "info"
+    | "outline"
+    | "ghost";
 
   if (
     s.includes("kết thúc") ||
     s.includes("hoàn thành") ||
     s.includes("giao xe") ||
-    s.includes("xong")
+    s.includes("xong") ||
+    s.includes("đã thanh toán")
   ) {
-    variant = "default"; // Màu chính (xanh primary)
-  } else if (s.includes("hủy") || s.includes("từ chối")) {
-    variant = "destructive"; // Màu đỏ
+    variant = "success"; // Xanh ngọc pastel dịu mắt
+  } else if (
+    s.includes("hủy") ||
+    s.includes("từ chối") ||
+    s.includes("không duyệt")
+  ) {
+    variant = "destructive"; // Đỏ hồng pastel dịu mắt
   } else if (
     s.includes("báo giá") ||
     s.includes("chờ") ||
-    s.includes("phụ tùng")
+    s.includes("phụ tùng") ||
+    s.includes("nháp") ||
+    s.includes("khách")
   ) {
-    variant = "secondary"; // Màu xám (muted)
+    variant = "warning"; // Hổ phách pastel dịu mắt
   } else if (
     s.includes("đang sửa") ||
     s.includes("đang làm") ||
-    s.includes("tiếp nhận")
+    s.includes("tiếp nhận") ||
+    s.includes("đang xử lý") ||
+    s.includes("kiểm tra")
   ) {
-    variant = "outline"; // Viền
+    variant = "info"; // Xanh dương pastel dịu mắt
+  } else {
+    variant = "secondary";
   }
 
   return (
@@ -48,7 +65,7 @@ export function KgaraCaseStatusBadge({
       <Badge
         variant={variant}
         className={cn(
-          "w-[88px] inline-flex items-center justify-center text-center truncate text-xs shrink-0",
+          "w-[88px] inline-flex items-center justify-center text-center truncate text-xs shrink-0 font-medium",
           className,
         )}
       >

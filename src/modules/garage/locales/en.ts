@@ -167,6 +167,7 @@ export const garageEn = {
       yes: "Yes",
       no: "No",
       unknown: "Unknown",
+      total: "Total",
     },
   },
   branches: {
