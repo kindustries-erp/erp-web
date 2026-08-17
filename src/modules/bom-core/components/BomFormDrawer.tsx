@@ -4,14 +4,12 @@ import { useT } from "@/core/i18n";
 import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
 import { DataTable } from "@/shared/components/DataTable";
 import { Button } from "@/shared/components/ui/Button";
+import { Input } from "@/shared/components/ui/input";
+import { Textarea } from "@/shared/components/ui/textarea";
 import { Checkbox } from "@/shared/components/ui/checkbox";
 import { Combobox } from "@/shared/components/Combobox";
 import { DatePicker } from "@/shared/components/DatePicker";
-import {
-  DrawerField,
-  DrawerSection,
-  inputCls,
-} from "@/shared/components/DrawerModal";
+import { DrawerField, DrawerSection } from "@/shared/components/DrawerModal";
 import { CellInput } from "@/shared/components/CellInput";
 import { bomCoreApi, type ErpBom } from "@/modules/bom-core/api/bomCoreApi";
 import {
@@ -1209,33 +1207,23 @@ export function BomFormDrawer({
           <DrawerSection title={t("Thông tin chung")}>
             <div className="flex flex-col gap-3">
               <DrawerField label={t("Mã BOM")} required>
-                <input
+                <Input
                   value={form.bomCode}
                   readOnly={viewOnly || !!editing || isLockedByProduction}
                   onChange={(e) =>
                     setForm((prev) => ({ ...prev, bomCode: e.target.value }))
                   }
-                  className={inputCls}
-                />
-              </DrawerField>
-              <DrawerField label={t("Version")} required>
-                <input
-                  value={form.version}
-                  readOnly={viewOnly || !!editing || isLockedByProduction}
-                  onChange={(e) =>
-                    setForm((prev) => ({ ...prev, version: e.target.value }))
-                  }
-                  className={inputCls}
+                  placeholder={t("Mã BOM...")}
                 />
               </DrawerField>
               <DrawerField label={t("Tên BOM")} required>
-                <input
+                <Input
                   value={form.bomName}
                   readOnly={viewOnly || !!editing || isLockedByProduction}
                   onChange={(e) =>
                     setForm((prev) => ({ ...prev, bomName: e.target.value }))
                   }
-                  className={inputCls}
+                  placeholder={t("Tên BOM...")}
                 />
               </DrawerField>
               <DrawerField label={t("Thành phẩm")}>
@@ -1374,14 +1362,14 @@ export function BomFormDrawer({
                               label={attr.name}
                               required={attr.isRequired}
                             >
-                              <input
+                              <Input
                                 type="number"
+                                step="0.1"
                                 value={val}
                                 readOnly={viewOnly || isLockedByProduction}
                                 onChange={(e) =>
                                   handleAttributeChange(attr.id, e.target.value)
                                 }
-                                className={inputCls}
                                 placeholder={`Nhập ${attr.name.toLowerCase()}...`}
                               />
                             </DrawerField>
@@ -1390,14 +1378,13 @@ export function BomFormDrawer({
                               label={attr.name}
                               required={attr.isRequired}
                             >
-                              <input
+                              <Input
                                 type="text"
                                 value={val}
                                 readOnly={viewOnly || isLockedByProduction}
                                 onChange={(e) =>
                                   handleAttributeChange(attr.id, e.target.value)
                                 }
-                                className={inputCls}
                                 placeholder={`Nhập ${attr.name.toLowerCase()}...`}
                               />
                             </DrawerField>
@@ -1421,13 +1408,14 @@ export function BomFormDrawer({
           {/* Section: Ghi chú */}
           <DrawerSection title={t("Ghi chú")}>
             <div className="flex flex-col gap-3">
-              <textarea
+              <Textarea
                 value={form.notes}
                 readOnly={viewOnly}
                 onChange={(e) =>
                   setForm((prev) => ({ ...prev, notes: e.target.value }))
                 }
-                className={`${inputCls} min-h-[88px] resize-y`}
+                placeholder={t("Ghi chú thêm...")}
+                className="min-h-[88px] resize-y"
               />
             </div>
           </DrawerSection>

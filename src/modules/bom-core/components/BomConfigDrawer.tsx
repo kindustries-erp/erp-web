@@ -309,7 +309,7 @@ export function BomConfigDrawer({ open, onClose }: BomConfigDrawerProps) {
   };
 
   const handleAddOption = () => {
-    const key = newOptionKey.trim().toUpperCase();
+    const key = newOptionKey.trim();
     const label = newOptionLabel.trim();
 
     if (!key || !label) {
@@ -322,7 +322,7 @@ export function BomConfigDrawer({ open, onClose }: BomConfigDrawerProps) {
       return;
     }
 
-    if (attrOptions.some((o) => o.value.toUpperCase() === key)) {
+    if (attrOptions.some((o) => o.value.toLowerCase() === key.toLowerCase())) {
       toast.error(
         t(
           "bomConfig.optionKeyExists",
@@ -798,12 +798,10 @@ export function BomConfigDrawer({ open, onClose }: BomConfigDrawerProps) {
                                 <input
                                   type="text"
                                   className={inputCls}
-                                  placeholder="Mã key (vd: RED, BLUE)..."
+                                  placeholder="Mã key (vd: red, blue)..."
                                   value={newOptionKey}
                                   onChange={(e) =>
-                                    setNewOptionKey(
-                                      e.target.value.toUpperCase(),
-                                    )
+                                    setNewOptionKey(e.target.value)
                                   }
                                 />
                               </div>
@@ -991,12 +989,10 @@ export function BomConfigDrawer({ open, onClose }: BomConfigDrawerProps) {
                                     <input
                                       type="text"
                                       className={inputCls}
-                                      placeholder="Mã key (vd: RED, BLUE)..."
+                                      placeholder="Mã key (vd: red, blue)..."
                                       value={newOptionKey}
                                       onChange={(e) =>
-                                        setNewOptionKey(
-                                          e.target.value.toUpperCase(),
-                                        )
+                                        setNewOptionKey(e.target.value)
                                       }
                                     />
                                   </div>
