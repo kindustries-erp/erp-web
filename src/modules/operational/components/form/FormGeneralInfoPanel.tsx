@@ -1,6 +1,3 @@
-import { ChevronRight, ChevronLeft } from "lucide-react";
-import { cn } from "@/shared/utils";
-import { Button } from "@/shared/components/ui/Button";
 import {
   DrawerField,
   DrawerSection,
@@ -42,8 +39,6 @@ interface FormGeneralInfoPanelProps {
 
 /**
  * Cột phải của OperationalFormDrawer — thông tin chung + fields theo variant.
- * Extracted từ OperationalFormDrawer.tsx (dòng 1007–1318).
- * Có collapsible animation.
  */
 export function FormGeneralInfoPanel({
   variant,
@@ -60,8 +55,6 @@ export function FormGeneralInfoPanel({
 }: FormGeneralInfoPanelProps) {
   const t = useT();
   const {
-    showGeneralInfo,
-    setShowGeneralInfo,
     docNo,
     setDocNo,
     branchId,
@@ -118,263 +111,191 @@ export function FormGeneralInfoPanel({
         : expenseStatusOptions;
 
   return (
-    <div
-      className={cn(
-        "shrink-0 order-1 xl:order-2 space-y-4 transition-all duration-300 xl:sticky xl:top-0",
-        showGeneralInfo ? "w-full xl:w-[320px]" : "w-full xl:w-[52px]",
-      )}
-    >
-      <DrawerSection
-        title={
-          <span
-            className={cn(
-              "transition-all duration-300 inline-block overflow-hidden whitespace-nowrap align-middle",
-              showGeneralInfo
-                ? "max-w-[200px] opacity-100"
-                : "max-w-0 opacity-0",
-            )}
-          >
-            {t("Thông tin chung")}
-          </span>
-        }
-        titleExtra={
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-sm"
-            onClick={() => setShowGeneralInfo((s) => !s)}
-            className="-mr-1 text-muted-foreground"
-            title={showGeneralInfo ? t("Thu gọn") : t("Mở rộng")}
-          >
-            {showGeneralInfo ? (
-              <ChevronRight className="w-4 h-4" />
-            ) : (
-              <ChevronLeft className="w-4 h-4" />
-            )}
-          </Button>
-        }
-      >
-        <div
-          className={cn(
-            "grid transition-all duration-300 ease-in-out",
-            showGeneralInfo ? "opacity-100" : "opacity-0",
+    <div className="space-y-4">
+      <DrawerSection title={t("Thông tin chung")}>
+        <div className="flex flex-col gap-3 pt-1">
+          {/* Số chứng từ */}
+          <DrawerField label={t("Số chứng từ")}>
+            <input
+              className={inputCls}
+              value={docNo}
+              disabled={purchaseFieldLocked("poNo")}
+              placeholder={variant === "purchase" ? "PO-YYYYMM001" : undefined}
+              onChange={(e) => setDocNo(e.target.value)}
+            />
+          </DrawerField>
+
+          {/* Chi nhánh — chỉ sales & expenses */}
+          {variant !== "purchase" && (
+            <DrawerField label={t("Chi nhánh")}>
+              <Combobox
+                options={branchOptions}
+                value={branchId}
+                disabled={isPurchaseLocked}
+                onChange={(v) => setBranchId(v || "")}
+              />
+            </DrawerField>
           )}
-          style={{ gridTemplateRows: showGeneralInfo ? "1fr" : "0fr" }}
-        >
-          <div
-            className="overflow-x-hidden overflow-y-auto w-full xl:max-h-[calc(100vh-190px)]"
-            style={{ scrollbarWidth: "none" }}
+
+          {/* Khách hàng / Nhà cung cấp */}
+          <DrawerField
+            label={variant === "sales" ? t("Khách hàng") : t("Nhà cung cấp")}
+            required={variant === "purchase" || variant === "expenses"}
           >
-            <div className="flex flex-col gap-3 pt-1 min-w-[280px]">
-              {/* Số chứng từ */}
-              <DrawerField label={t("Số chứng từ")}>
-                <input
-                  className={inputCls}
-                  value={docNo}
-                  disabled={purchaseFieldLocked("poNo")}
-                  placeholder={
-                    variant === "purchase" ? "PO-YYYYMM001" : undefined
-                  }
-                  onChange={(e) => setDocNo(e.target.value)}
-                />
+            <Combobox
+              options={partnerOptions}
+              value={partnerId}
+              disabled={isPurchaseLocked}
+              onChange={(v) => setPartnerId(v || "")}
+            />
+          </DrawerField>
+
+          {/* Tên snapshot — chỉ sales & expenses */}
+          {variant !== "purchase" && (
+            <DrawerField label={t("Tên snapshot")}>
+              <input
+                className={inputCls}
+                value={partnerNameSnapshot}
+                disabled={isPurchaseLocked}
+                onChange={(e) => setPartnerNameSnapshot(e.target.value)}
+              />
+            </DrawerField>
+          )}
+
+          {/* Ngày chứng từ */}
+          <DrawerField label={t("Ngày chứng từ")} required>
+            <DatePicker
+              className={inputCls}
+              value={documentDate?.slice(0, 10) || ""}
+              disabled={isPurchaseLocked}
+              onChange={(v) => setDocumentDate(v)}
+            />
+          </DrawerField>
+
+          {/* Ngày nhận dự kiến — chỉ purchase */}
+          {variant === "purchase" && (
+            <DrawerField label={t("Ngày nhận dự kiến")}>
+              <DatePicker
+                className={inputCls}
+                value={expectedDate?.slice(0, 10) || ""}
+                disabled={purchaseFieldLocked("expectedDate")}
+                onChange={(v) => setExpectedDate(v)}
+              />
+            </DrawerField>
+          )}
+
+          {/* Ngày đến hạn — chỉ sales & expenses */}
+          {variant !== "purchase" && (
+            <DrawerField label={t("Ngày đến hạn")}>
+              <DatePicker
+                className={inputCls}
+                value={dueDate?.slice(0, 10) || ""}
+                disabled={isPurchaseLocked}
+                onChange={(v) => setDueDate(v)}
+              />
+            </DrawerField>
+          )}
+
+          {/* Trạng thái hóa đơn — chỉ sales & expenses */}
+          {variant !== "purchase" && (
+            <DrawerField label={t("Trạng thái hóa đơn")}>
+              <Combobox
+                options={invoiceOptions}
+                value={invoiceStatus}
+                disabled={isPurchaseLocked}
+                onChange={(v) => setInvoiceStatus(v || "NO_INVOICE")}
+                allowClear={false}
+              />
+            </DrawerField>
+          )}
+
+          {/* Trạng thái — chỉ sales & expenses */}
+          {variant !== "purchase" && (
+            <DrawerField label={t("Trạng thái")}>
+              <Combobox
+                options={statusOptions}
+                value={status}
+                disabled={purchaseFieldLocked("status")}
+                onChange={(v) => setStatus(v || "DRAFT")}
+                allowClear={false}
+              />
+            </DrawerField>
+          )}
+
+          {/* Fields theo variant */}
+          {variant === "sales" && (
+            <SalesFields
+              vehiclePlate={vehiclePlate}
+              vehicleVin={vehicleVin}
+              vehicleModel={vehicleModel}
+              serviceAdvisorName={serviceAdvisorName}
+              expectedDate={expectedDate}
+              disabled={isPurchaseLocked}
+              onVehiclePlate={setVehiclePlate}
+              onVehicleVin={setVehicleVin}
+              onVehicleModel={setVehicleModel}
+              onServiceAdvisorName={setServiceAdvisorName}
+              onExpectedDate={setExpectedDate}
+            />
+          )}
+
+          {variant === "expenses" && (
+            <ExpenseFields
+              title={title}
+              expenseCategory={expenseCategory}
+              recurrenceType={recurrenceType}
+              recurrenceInterval={recurrenceInterval}
+              recurrenceStartDate={recurrenceStartDate}
+              recurrenceEndDate={recurrenceEndDate}
+              nextDueDate={nextDueDate}
+              autoGenerateNext={autoGenerateNext}
+              disabled={isPurchaseLocked}
+              onTitle={setTitle}
+              onExpenseCategory={setExpenseCategory}
+              onRecurrenceType={setRecurrenceType}
+              onRecurrenceInterval={setRecurrenceInterval}
+              onRecurrenceStartDate={setRecurrenceStartDate}
+              onRecurrenceEndDate={setRecurrenceEndDate}
+              onNextDueDate={setNextDueDate}
+              onAutoGenerateNext={setAutoGenerateNext}
+            />
+          )}
+
+          {/* Tags — purchase & sales only */}
+          {isAdminEmail &&
+            (variant === "purchase" || variant === "sales") &&
+            entityType && (
+              <DrawerField label={t("Thẻ nhãn")}>
+                {entityId ? (
+                  <EntityTagSelector
+                    entityType={entityType}
+                    entityId={entityId}
+                    readOnly={viewOnly}
+                  />
+                ) : !viewOnly ? (
+                  <EntityTagSelector
+                    entityType={entityType}
+                    entityId="__pending__"
+                    readOnly={false}
+                    pendingMode
+                    pendingTagIds={pendingTagIds}
+                    onPendingChange={onPendingTagsChange}
+                  />
+                ) : null}
               </DrawerField>
-
-              {/* Chi nhánh — chỉ sales & expenses */}
-              {variant !== "purchase" && (
-                <DrawerField label={t("Chi nhánh")}>
-                  <Combobox
-                    options={branchOptions}
-                    value={branchId}
-                    disabled={isPurchaseLocked}
-                    onChange={(v) => setBranchId(v || "")}
-                  />
-                </DrawerField>
-              )}
-
-              {/* Khách hàng / Nhà cung cấp */}
-              <DrawerField
-                label={
-                  variant === "sales" ? t("Khách hàng") : t("Nhà cung cấp")
-                }
-                required={variant === "purchase" || variant === "expenses"}
-              >
-                <Combobox
-                  options={partnerOptions}
-                  value={partnerId}
-                  disabled={isPurchaseLocked}
-                  onChange={(v) => setPartnerId(v || "")}
-                />
-              </DrawerField>
-
-              {/* Tên snapshot — chỉ sales & expenses */}
-              {variant !== "purchase" && (
-                <DrawerField label={t("Tên snapshot")}>
-                  <input
-                    className={inputCls}
-                    value={partnerNameSnapshot}
-                    disabled={isPurchaseLocked}
-                    onChange={(e) => setPartnerNameSnapshot(e.target.value)}
-                  />
-                </DrawerField>
-              )}
-
-              {/* Ngày chứng từ */}
-              <DrawerField label={t("Ngày chứng từ")} required>
-                <DatePicker
-                  className={inputCls}
-                  value={documentDate?.slice(0, 10) || ""}
-                  disabled={isPurchaseLocked}
-                  onChange={(v) => setDocumentDate(v)}
-                />
-              </DrawerField>
-
-              {/* Ngày nhận dự kiến — chỉ purchase */}
-              {variant === "purchase" && (
-                <DrawerField label={t("Ngày nhận dự kiến")}>
-                  <DatePicker
-                    className={inputCls}
-                    value={expectedDate?.slice(0, 10) || ""}
-                    disabled={purchaseFieldLocked("expectedDate")}
-                    onChange={(v) => setExpectedDate(v)}
-                  />
-                </DrawerField>
-              )}
-
-              {/* Ngày đến hạn — chỉ sales & expenses */}
-              {variant !== "purchase" && (
-                <DrawerField label={t("Ngày đến hạn")}>
-                  <DatePicker
-                    className={inputCls}
-                    value={dueDate?.slice(0, 10) || ""}
-                    disabled={isPurchaseLocked}
-                    onChange={(v) => setDueDate(v)}
-                  />
-                </DrawerField>
-              )}
-
-              {/* Trạng thái hóa đơn — chỉ sales & expenses */}
-              {variant !== "purchase" && (
-                <DrawerField label={t("Trạng thái hóa đơn")}>
-                  <Combobox
-                    options={invoiceOptions}
-                    value={invoiceStatus}
-                    disabled={isPurchaseLocked}
-                    onChange={(v) => setInvoiceStatus(v || "NO_INVOICE")}
-                    allowClear={false}
-                  />
-                </DrawerField>
-              )}
-
-              {/* Trạng thái — chỉ sales & expenses */}
-              {variant !== "purchase" && (
-                <DrawerField label={t("Trạng thái")}>
-                  <Combobox
-                    options={statusOptions}
-                    value={status}
-                    disabled={purchaseFieldLocked("status")}
-                    onChange={(v) => setStatus(v || "DRAFT")}
-                    allowClear={false}
-                  />
-                </DrawerField>
-              )}
-
-              {/* Fields theo variant */}
-              {variant === "sales" && (
-                <SalesFields
-                  vehiclePlate={vehiclePlate}
-                  vehicleVin={vehicleVin}
-                  vehicleModel={vehicleModel}
-                  serviceAdvisorName={serviceAdvisorName}
-                  expectedDate={expectedDate}
-                  disabled={isPurchaseLocked}
-                  onVehiclePlate={setVehiclePlate}
-                  onVehicleVin={setVehicleVin}
-                  onVehicleModel={setVehicleModel}
-                  onServiceAdvisorName={setServiceAdvisorName}
-                  onExpectedDate={setExpectedDate}
-                />
-              )}
-
-              {variant === "expenses" && (
-                <ExpenseFields
-                  title={title}
-                  expenseCategory={expenseCategory}
-                  recurrenceType={recurrenceType}
-                  recurrenceInterval={recurrenceInterval}
-                  recurrenceStartDate={recurrenceStartDate}
-                  recurrenceEndDate={recurrenceEndDate}
-                  nextDueDate={nextDueDate}
-                  autoGenerateNext={autoGenerateNext}
-                  disabled={isPurchaseLocked}
-                  onTitle={setTitle}
-                  onExpenseCategory={setExpenseCategory}
-                  onRecurrenceType={setRecurrenceType}
-                  onRecurrenceInterval={setRecurrenceInterval}
-                  onRecurrenceStartDate={setRecurrenceStartDate}
-                  onRecurrenceEndDate={setRecurrenceEndDate}
-                  onNextDueDate={setNextDueDate}
-                  onAutoGenerateNext={setAutoGenerateNext}
-                />
-              )}
-
-              {/* Tags — purchase & sales only */}
-              {isAdminEmail &&
-                (variant === "purchase" || variant === "sales") &&
-                entityType && (
-                  <DrawerField label={t("Thẻ nhãn")}>
-                    {entityId ? (
-                      <EntityTagSelector
-                        entityType={entityType}
-                        entityId={entityId}
-                        readOnly={viewOnly}
-                      />
-                    ) : !viewOnly ? (
-                      <EntityTagSelector
-                        entityType={entityType}
-                        entityId="__pending__"
-                        readOnly={false}
-                        pendingMode
-                        pendingTagIds={pendingTagIds}
-                        onPendingChange={onPendingTagsChange}
-                      />
-                    ) : null}
-                  </DrawerField>
-                )}
-            </div>
-          </div>
+            )}
         </div>
       </DrawerSection>
 
-      <DrawerSection
-        title={
-          <span
-            className={cn(
-              "transition-all duration-300 inline-block overflow-hidden whitespace-nowrap align-middle",
-              showGeneralInfo
-                ? "max-w-[200px] opacity-100"
-                : "max-w-0 opacity-0",
-            )}
-          >
-            {t("Ghi chú")}
-          </span>
-        }
-      >
-        <div
-          className={cn(
-            "grid transition-all duration-300 ease-in-out",
-            showGeneralInfo ? "opacity-100" : "opacity-0",
-          )}
-          style={{ gridTemplateRows: showGeneralInfo ? "1fr" : "0fr" }}
-        >
-          <div className="overflow-hidden">
-            <textarea
-              className={`${inputCls} min-h-[84px] w-full mt-1 mb-2`}
-              value={notes}
-              disabled={viewOnly}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder={t("Nhập ghi chú...")}
-            />
-          </div>
+      <DrawerSection title={t("Ghi chú")}>
+        <div className="overflow-hidden">
+          <textarea
+            className={`${inputCls} min-h-[84px] w-full mt-1 mb-2`}
+            value={notes}
+            disabled={viewOnly}
+            onChange={(e) => setNotes(e.target.value)}
+            placeholder={t("Nhập ghi chú...")}
+          />
         </div>
       </DrawerSection>
     </div>

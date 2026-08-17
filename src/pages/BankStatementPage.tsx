@@ -18,7 +18,10 @@ import { Tooltip } from "@/core/components/ui/Tooltip";
 import toast from "react-hot-toast";
 
 import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
-import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
+import {
+  TableColumnHeaderFilter,
+  clearAllDropdownSearchStates,
+} from "@/shared/components/DataTable/TableColumnHeaderFilter";
 import { TableText } from "@/shared/components/DataTable/TableText";
 import { PartnerTransactionsDrawer } from "@/pages/components/PartnerTransactionsDrawer";
 import { DateRangeColumnSlot } from "@/shared/components/DataTable/DateRangeColumnSlot";
@@ -267,6 +270,17 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
       ];
     }
 
+    const showBlank = [
+      "account",
+      "referenceNumber",
+      "description",
+      "correspondentName",
+      "correspondentAccount",
+      "correspondentBank",
+      "invoiceSubject",
+      "branch",
+    ].includes(key);
+
     return (
       <TableColumnHeaderFilter
         title={label}
@@ -284,6 +298,7 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
         formatOptionLabel={formatOptionLabel}
         filterOptions={filterOptions}
         queryKeyPrefix={`bank-statement-${type}-column-options`}
+        showBlankOption={showBlank}
       />
     );
   };
@@ -651,6 +666,7 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
         onClearAllFilters={() => {
           filter.resetAll();
           tableState.resetFilters();
+          clearAllDropdownSearchStates();
           setPage(1);
         }}
         sortArray={tableState.sorts}
