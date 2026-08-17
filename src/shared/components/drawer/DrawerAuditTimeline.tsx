@@ -163,7 +163,7 @@ export function DrawerAuditTimeline({
   }
 
   return (
-    <div className={cn("relative py-2 pl-1", className)}>
+    <div className={cn("relative pl-1", compact ? "py-1" : "py-2", className)}>
       <div className="relative">
         {/* Continuous vertical divider spine (Solid, clearly visible) */}
         <div className="absolute left-[13px] top-3.5 bottom-3.5 w-[2px] bg-slate-300 dark:bg-slate-700 rounded-full" />

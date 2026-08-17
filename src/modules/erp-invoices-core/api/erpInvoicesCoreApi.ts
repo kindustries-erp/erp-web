@@ -793,6 +793,19 @@ export const erpInvoicesCoreApi = {
     );
     return data;
   },
+
+  getTraceabilityGraph: async (
+    id: string,
+  ): Promise<import("@/shared/types/traceability").TraceabilityGraphData> => {
+    const { data } = await axiosInstance.get<{
+      rootId: string;
+      rootType: any;
+      nodes: any[];
+      edges: any[];
+      summary: any;
+    }>(`${BASE}/${id}/traceability-graph`);
+    return data as any;
+  },
 };
 
 export interface BulkImportSkippedItem {

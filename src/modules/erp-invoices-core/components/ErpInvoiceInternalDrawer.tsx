@@ -1,6 +1,7 @@
 import {
   StandardFormDrawer,
   DrawerAuditTimeline,
+  DrawerDocumentTraceability,
   type DrawerRelatedTabItem,
   type DrawerAuditLogItem,
 } from "@/shared/components/StandardFormDrawer";
@@ -8,7 +9,9 @@ import { useTranslation } from "react-i18next";
 import {
   type ErpInvoice,
   type CreateErpInvoicePayload,
+  erpInvoicesCoreApi,
 } from "../api/erpInvoicesCoreApi";
+
 import {
   ChevronDown,
   RefreshCw,
@@ -240,26 +243,37 @@ export function ErpInvoiceInternalDrawer({
       (detailInvoice.attachments?.length || 0);
 
     resolvedRelatedTabs = [
-      // 1. Tab Chứng từ liên đới
+      // 1. Tab Chứng từ liên đới & Mạng lưới quan hệ (Canvas Graph)
       {
         key: "linked_docs",
-        label: t("Chứng từ liên đới & Cấn trừ"),
+        label: t("Chứng từ liên kết & Cấn trừ"),
         icon: <Link2 className="w-3.5 h-3.5" />,
         badgeCount: linkedCount,
         content: (
-          <ErpInvoiceLinkedDocuments
-            form={form || ({} as any)}
-            fieldSet={fieldSet || (() => {})}
-            invoiceId={detailInvoice.id}
-            invoiceNo={detailInvoice.invoiceNo}
-            direction={direction || detailInvoice.direction || "IN"}
-            voucherNetOffs={detailInvoice.voucherNetOffs || []}
-            relatedPos={(detailInvoice as any).relatedPos || []}
+          <DrawerDocumentTraceability
+            rootId={detailInvoice.id}
+            rootType="INVOICE"
+            fetchGraph={(id) => erpInvoicesCoreApi.getTraceabilityGraph(id)}
             editMode={editMode}
-            onRefresh={onSyncDetail || (() => {})}
+            editActionsSlot={
+              editMode ? (
+                <ErpInvoiceLinkedDocuments
+                  form={form || ({} as any)}
+                  fieldSet={fieldSet || (() => {})}
+                  invoiceId={detailInvoice.id}
+                  invoiceNo={detailInvoice.invoiceNo}
+                  direction={direction || detailInvoice.direction || "IN"}
+                  voucherNetOffs={detailInvoice.voucherNetOffs || []}
+                  relatedPos={(detailInvoice as any).relatedPos || []}
+                  editMode={editMode}
+                  onRefresh={onSyncDetail || (() => {})}
+                />
+              ) : undefined
+            }
           />
         ),
       },
+
       // 2. Tab Hạch toán kế toán (View & Edit)
       {
         key: "accounting",

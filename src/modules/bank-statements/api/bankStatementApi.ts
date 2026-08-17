@@ -360,4 +360,12 @@ export const bankStatementApi = {
     );
     return res.data;
   },
+  getTraceabilityGraph: async (
+    id: string,
+  ): Promise<import("@/shared/types/traceability").TraceabilityGraphData> => {
+    const res = await axiosInstance.get(
+      `/api/v1/bank-transactions-core/transactions/${id}/traceability-graph`,
+    );
+    return res.data;
+  },
 };
