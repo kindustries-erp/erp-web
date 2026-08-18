@@ -238,3 +238,15 @@ export interface TraceabilityEdge {
   isTransitive?: boolean;
 }
 ```
+
+---
+
+## 9. Quy tắc Gỡ liên kết Client-side & Lưu theo Batch (Client-side Staging)
+
+- **Nguyên tắc cốt lõi**:
+  1. Khi ở chế độ Chỉnh sửa (`editMode`), thao tác gỡ liên kết chứng từ (bấm nút thùng rác và xác nhận trong `ConfirmModal`) **phải được xử lý hoàn toàn trên Client-side** (lưu vào mảng pending changes của form/hook).
+  2. `useTraceabilityLogic` tự động cập nhật lạc quan (`optimistic update`) loại bỏ node và các edges kết nối khỏi state đồ thị cục bộ `graphData`, đồng thời tự động tính toán lại số tiền đã cấn trừ (`summary.totalNetOffAmount`).
+  3. **Tuyệt đối không gọi API xóa ngay lập tức** trong `onUnlinkNode` khi đang `editMode`.
+  4. Chỉ khi người dùng bấm nút **"Lưu thay đổi"** của Drawer thì toàn bộ danh sách chứng từ đã đánh dấu gỡ liên kết mới được gửi xuống Backend API theo batch.
+  5. Nếu người dùng bấm **"Hủy"**, toàn bộ thay đổi pending sẽ được reset và đồ thị khôi phục lại trạng thái ban đầu.
+

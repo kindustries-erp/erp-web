@@ -649,6 +649,12 @@ export function GarageCaseSettlementSection({
                         </span>
                       )}
 
+                      {s.isViaInvoice && (
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-medium bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                          {t("Qua HĐ")} {s.invoiceNo || ""}
+                        </span>
+                      )}
+
                       <span className="text-slate-600 dark:text-slate-400 flex items-center gap-1 text-[11px]">
                         {isOnSystem ? (
                           <>
@@ -692,7 +698,7 @@ export function GarageCaseSettlementSection({
                     </div>
 
                     {/* Nút sửa chỉ xuất hiện khi ở chế độ editMode và là giao dịch ngoài sổ sách */}
-                    {editMode && !isOnSystem && (
+                    {editMode && !isOnSystem && !s.isViaInvoice && (
                       <button
                         type="button"
                         onClick={() => handleEditSettlement(s)}
@@ -703,7 +709,7 @@ export function GarageCaseSettlementSection({
                       </button>
                     )}
 
-                    {editMode && (
+                    {editMode && !s.isViaInvoice && (
                       <button
                         type="button"
                         onClick={() => handleDeleteSettlement(s)}

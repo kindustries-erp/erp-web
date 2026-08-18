@@ -51,6 +51,8 @@ export function DrawerDocumentTraceability(
     loadData,
     linkSelectorOpen,
     setLinkSelectorOpen,
+    emptyLinkSelectorOpen,
+    setEmptyLinkSelectorOpen,
     unlinkingNode,
     setUnlinkingNode,
     unlinkingLoading,
@@ -119,7 +121,9 @@ export function DrawerDocumentTraceability(
                     selectableDocTypes={selectableDocTypes}
                     onSelect={(type) => {
                       setLinkSelectorOpen(false);
-                      onAddLink?.(undefined, type);
+                      setTimeout(() => {
+                        onAddLink?.(undefined, type);
+                      }, 50);
                     }}
                   />
                 }
@@ -256,16 +260,18 @@ export function DrawerDocumentTraceability(
               </Button>
             ) : (
               <Popover
-                open={linkSelectorOpen}
-                onOpenChange={setLinkSelectorOpen}
+                open={emptyLinkSelectorOpen}
+                onOpenChange={setEmptyLinkSelectorOpen}
                 side="bottom"
                 align="center"
                 content={
                   <LinkSelectorPopoverContent
                     selectableDocTypes={selectableDocTypes}
                     onSelect={(type) => {
-                      setLinkSelectorOpen(false);
-                      onAddLink?.(undefined, type);
+                      setEmptyLinkSelectorOpen(false);
+                      setTimeout(() => {
+                        onAddLink?.(undefined, type);
+                      }, 50);
                     }}
                   />
                 }

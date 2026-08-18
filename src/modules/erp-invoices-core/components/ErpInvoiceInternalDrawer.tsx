@@ -34,7 +34,7 @@ import { GarageCaseSelectionModal } from "./GarageCaseSelectionModal";
 import { PostedAccountingSummary } from "@/shared/components/accounting/PostedAccountingSummary";
 import { PostingSection } from "@/shared/components/accounting/PostingSection";
 import { ErpInvoicePdfUpload } from "./ErpInvoicePdfUpload";
-import { garageApi } from "@/modules/garage/api/garageApi";
+import { resolvePurchaseDebitAccountCode } from "../utils/invoiceTaxCodeAccounting";
 import toast from "react-hot-toast";
 
 function createClientId() {
@@ -360,37 +360,56 @@ export function ErpInvoiceInternalDrawer({
             }}
             onUnlinkNode={async (node) => {
               try {
-                if (node.docType === "BANK_TXN") {
-                  await erpInvoicesCoreApi.removeVoucherLink(
-                    detailInvoice.id,
-                    node.id,
-                  );
-                  toast.success(t("Đã gỡ liên kết giao dịch ngân hàng."));
-                } else if (node.docType === "PURCHASE_ORDER") {
-                  await erpInvoicesCoreApi.update(detailInvoice.id, {
-                    purchaseOrderId: undefined,
-                  });
-                  toast.success(t("Đã gỡ liên kết đơn mua hàng."));
-                } else if (node.docType === "GARAGE_CASE") {
-                  const links = await garageApi.getCaseLinkedInvoices(node.id);
-                  const target = links.find(
-                    (l: any) => l.invoiceId === detailInvoice.id,
-                  );
-                  if (target) {
-                    await garageApi.removeCaseLinkedInvoice(node.id, target.id);
+                if (editMode) {
+                  const currentChanges = form?.pendingDocumentChanges || [];
+                  if (node.docType === "BANK_TXN") {
+                    fieldSet?.("pendingDocumentChanges", [
+                      ...currentChanges,
+                      { type: "BANK", action: "REMOVE", refId: node.id },
+                    ]);
+                    toast.success(
+                      t(
+                        "Đã đánh dấu gỡ liên kết giao dịch ngân hàng (chờ Lưu thay đổi).",
+                      ),
+                    );
+                  } else if (node.docType === "PURCHASE_ORDER") {
+                    fieldSet?.("pendingDocumentChanges", [
+                      ...currentChanges,
+                      { type: "PO", action: "REMOVE", refId: node.id },
+                    ]);
+                    toast.success(
+                      t(
+                        "Đã đánh dấu gỡ liên kết đơn mua hàng (chờ Lưu thay đổi).",
+                      ),
+                    );
+                  } else if (node.docType === "GARAGE_CASE") {
+                    fieldSet?.("pendingDocumentChanges", [
+                      ...currentChanges,
+                      { type: "CASE", action: "REMOVE", refId: node.id },
+                    ]);
+                    toast.success(
+                      t(
+                        "Đã đánh dấu gỡ liên kết phiếu dịch vụ (chờ Lưu thay đổi).",
+                      ),
+                    );
+                  } else if (node.docType === "SALES_ORDER") {
+                    fieldSet?.("pendingDocumentChanges", [
+                      ...currentChanges,
+                      { type: "SO", action: "REMOVE", refId: node.id },
+                    ]);
+                    toast.success(
+                      t(
+                        "Đã đánh dấu gỡ liên kết đơn bán hàng (chờ Lưu thay đổi).",
+                      ),
+                    );
                   }
-                  if (
-                    detailInvoice.settlementOrder === node.docNo ||
-                    detailInvoice.settlementOrder === node.id
-                  ) {
-                    await erpInvoicesCoreApi.update(detailInvoice.id, {
-                      settlementOrder: "",
-                    });
-                  }
-                  toast.success(t("Đã gỡ liên kết phiếu dịch vụ garage."));
+                } else {
+                  toast.error(
+                    t(
+                      "Vui lòng bấm 'Chỉnh sửa' trước khi gỡ liên kết chứng từ.",
+                    ),
+                  );
                 }
-
-                onSyncDetail?.();
               } catch (err: any) {
                 toast.error(err?.message || t("Lỗi gỡ liên kết chứng từ"));
               }
@@ -491,11 +510,22 @@ export function ErpInvoiceInternalDrawer({
 
                     const newLines = [];
                     if (direction === "IN") {
+                      const sellerTaxCode =
+                        detailInvoice?.sellerTaxCode ||
+                        form?.sellerTaxCode ||
+                        "";
+                      const debitCode =
+                        resolvePurchaseDebitAccountCode(sellerTaxCode);
+                      const debitAccountId =
+                        debitCode === "642"
+                          ? findAccount("642") || findAccount("632")
+                          : findAccount("632") || findAccount("642");
+
                       if (preVat > 0)
                         newLines.push({
                           id: createClientId(),
                           accountId:
-                            findAccount("642") ||
+                            debitAccountId ||
                             findAccount("152") ||
                             findAccount("156"),
                           debit: preVat,

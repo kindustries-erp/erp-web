@@ -796,6 +796,13 @@ export const erpInvoicesCoreApi = {
     return data;
   },
 
+  autoPostStandard: async (id: string): Promise<ErpInvoice> => {
+    const { data } = await axiosInstance.post<ErpInvoice>(
+      `${BASE}/${id}/auto-post-standard`,
+    );
+    return data;
+  },
+
   getTraceabilityGraph: async (
     id: string,
   ): Promise<import("@/shared/types/traceability").TraceabilityGraphData> => {

@@ -42,6 +42,7 @@ export function useTraceabilityLogic(props: DrawerDocumentTraceabilityProps) {
 
   // Link Selector Popover State
   const [linkSelectorOpen, setLinkSelectorOpen] = useState(false);
+  const [emptyLinkSelectorOpen, setEmptyLinkSelectorOpen] = useState(false);
 
   // Unlink Confirm State
   const [unlinkingNode, setUnlinkingNode] = useState<TraceabilityNode | null>(
@@ -103,9 +104,17 @@ export function useTraceabilityLogic(props: DrawerDocumentTraceabilityProps) {
         // Optimistically update local graphData
         setGraphData((prev) => {
           if (!prev) return prev;
+          const removedNode = prev.nodes.find((n) => n.id === unlinkedId);
+          const removedAmount = Number(
+            removedNode?.netOffAmount || removedNode?.amount || 0,
+          );
           const filteredNodes = prev.nodes.filter((n) => n.id !== unlinkedId);
           const filteredEdges = prev.edges.filter(
             (e) => e.source !== unlinkedId && e.target !== unlinkedId,
+          );
+          const newNetOff = Math.max(
+            0,
+            (prev.summary?.totalNetOffAmount || 0) - removedAmount,
           );
           return {
             ...prev,
@@ -114,6 +123,7 @@ export function useTraceabilityLogic(props: DrawerDocumentTraceabilityProps) {
             summary: {
               ...prev.summary,
               directCount: Math.max(0, (prev.summary?.directCount || 1) - 1),
+              totalNetOffAmount: newNetOff,
             },
           };
         });
@@ -164,6 +174,8 @@ export function useTraceabilityLogic(props: DrawerDocumentTraceabilityProps) {
     loadData,
     linkSelectorOpen,
     setLinkSelectorOpen,
+    emptyLinkSelectorOpen,
+    setEmptyLinkSelectorOpen,
     unlinkingNode,
     setUnlinkingNode,
     unlinkingLoading,

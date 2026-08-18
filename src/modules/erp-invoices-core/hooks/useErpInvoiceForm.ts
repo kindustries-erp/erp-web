@@ -356,13 +356,6 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
       else if (p.action === "REMOVE") linkedCount--;
     });
 
-    if (linkedCount > 0 && !(form as any).accountingEnabled) {
-      setFormError(
-        "Bắt buộc phải bật Hạch toán kế toán khi có Chứng từ liên kết.",
-      );
-      return;
-    }
-
     setSaving(true);
     setFormError(null);
     try {
@@ -538,11 +531,11 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
 
       // Auto-post accounting if there are lines and it should post
       const wasPosted = detailInvoice?.postingStatus === "POSTED";
-      const shouldPost =
+      const shouldPostManual =
         accountingEnabled &&
         (!wasPosted || needsRepost) &&
         postingState.lines.length > 0;
-      if (shouldPost) {
+      if (shouldPostManual) {
         // Validate accountId trước khi submit
         const emptyAccountLine = postingState.lines.find((l) => !l.accountId);
         if (emptyAccountLine) {
@@ -573,6 +566,15 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
               err.message ||
               "Lỗi hạch toán tự động sau khi lưu.",
           );
+        }
+      } else if (
+        !wasPosted &&
+        (linkedCount > 0 || (form.branchId && (form.totalAmount || 0) > 0))
+      ) {
+        try {
+          await erpInvoicesCoreApi.autoPostStandard(invoiceIdToProcess);
+        } catch (autoErr: any) {
+          console.warn("Auto-post standard failed (non-blocking)", autoErr);
         }
       }
 

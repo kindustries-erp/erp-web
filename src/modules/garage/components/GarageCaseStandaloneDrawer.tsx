@@ -25,7 +25,7 @@ import {
 } from "@/shared/components/ActionDropdown";
 import { Wallet, Link2, History, RefreshCw, ChevronDown } from "lucide-react";
 import { toast } from "react-hot-toast";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 
 interface GarageCaseStandaloneDrawerProps {
   isOpen: boolean;
@@ -40,7 +40,6 @@ export function GarageCaseStandaloneDrawer({
   onClose,
 }: GarageCaseStandaloneDrawerProps) {
   const { t } = useTranslation(["garage", "common"]);
-  const queryClient = useQueryClient();
   const { selectedBranchId } = useGarageStore();
 
   const { data: selectedCase, isLoading: isLoadingCase } = useGarageCaseByCode(
@@ -103,23 +102,6 @@ export function GarageCaseStandaloneDrawer({
     serverSummary,
     activeSettlements,
   );
-
-  const refreshAllData = () => {
-    if (selectedCase?.id) {
-      queryClient.invalidateQueries({
-        queryKey: ["garage-case-financial-summary", selectedCase.id],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["garage-case-settlements", selectedCase.id],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["garage-case-linked-invoices", selectedCase.id],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["garage-case-traceability-graph", selectedCase.id],
-      });
-    }
-  };
 
   // Dropdown menu items for the left side of the footer (View mode only)
   let footerLeft: React.ReactNode = undefined;
@@ -358,55 +340,34 @@ export function GarageCaseStandaloneDrawer({
                 if (editMode) {
                   if (node.docType === "INVOICE") {
                     const target = activeLinkedInvoices.find(
-                      (l: any) => l.invoiceId === node.id || l.id === node.id,
+                      (l: any) =>
+                        l.invoiceId === node.id ||
+                        l.id === node.id ||
+                        l.invoice?.id === node.id,
                     );
                     if (target) {
-                      removeLinkedInvoice(target.id);
+                      removeLinkedInvoice(target.id || target.tempId);
                     }
                   } else if (node.docType === "BANK_TXN") {
                     const target = activeSettlements.find(
                       (s: any) =>
                         s.bank_transaction_id === node.id ||
+                        s.bankTransactionId === node.id ||
                         s.id === node.id ||
+                        s.tempId === node.id ||
                         `manual-${s.id}` === node.id,
                     );
                     if (target) {
-                      removeSettlement(target.id);
+                      removeSettlement(target.id || target.tempId);
                     }
                   }
                 } else {
-                  if (node.docType === "INVOICE") {
-                    const links = await garageApi.getCaseLinkedInvoices(
-                      selectedCase.id,
-                    );
-                    const target = links.find(
-                      (l: any) => l.invoiceId === node.id,
-                    );
-                    if (target) {
-                      await garageApi.removeCaseLinkedInvoice(
-                        selectedCase.id,
-                        target.id,
-                      );
-                      toast.success("Đã hủy liên kết hóa đơn");
-                    }
-                  } else if (node.docType === "BANK_TXN") {
-                    const settlements = await garageApi.getCaseSettlements(
-                      selectedCase.id,
-                    );
-                    const target = settlements.find(
-                      (s: any) =>
-                        s.bank_transaction_id === node.id ||
-                        `manual-${s.id}` === node.id,
-                    );
-                    if (target) {
-                      await garageApi.removeCaseSettlement(
-                        selectedCase.id,
-                        target.id,
-                      );
-                      toast.success("Đã xóa giao dịch thanh toán");
-                    }
-                  }
-                  refreshAllData();
+                  toast.error(
+                    t(
+                      "cases.drawer.enterEditToUnlink",
+                      "Vui lòng chuyển sang chế độ Chỉnh sửa trước khi gỡ liên kết chứng từ.",
+                    ),
+                  );
                 }
               } catch (err: any) {
                 toast.error(

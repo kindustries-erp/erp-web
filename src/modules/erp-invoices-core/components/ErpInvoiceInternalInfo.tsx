@@ -10,6 +10,7 @@ import { Checkbox } from "@/shared/components/ui/checkbox";
 import { erpInvoicesCoreApi } from "../api/erpInvoicesCoreApi";
 import toast from "react-hot-toast";
 import { Textarea } from "@/shared/components/ui/textarea";
+import { FileText } from "lucide-react";
 
 export function ErpInvoiceInternalSidebar({
   form,
@@ -45,7 +46,11 @@ export function ErpInvoiceInternalSidebar({
 
   return (
     <div className="flex flex-col gap-4">
-      <DrawerSection title="THÔNG TIN CHUNG">
+      <DrawerSection
+        title={t("generalInfo", "THÔNG TIN CHUNG")}
+        collapsible={true}
+        defaultCollapsed={false}
+      >
         <div className="space-y-4">
           <DrawerField label={t("branchId", "Chi nhánh")}>
             {editMode ? (
@@ -189,6 +194,7 @@ export function ErpInvoiceInternalMain({
   invoicePreview?: React.ReactNode;
   hideLinkedDocuments?: boolean;
 }) {
+  const { t } = useTranslation("erpInvoices");
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [isPdfLoading, setIsPdfLoading] = useState<boolean>(false);
   const pdfKey =
@@ -220,25 +226,38 @@ export function ErpInvoiceInternalMain({
     <div className="flex flex-col gap-4">
       {/* Invoice preview — ALWAYS rendered in both view and edit mode */}
       {(pdfKey || invoicePreview) && (
-        <div className="w-full">
-          {isPdfLoading ? (
-            <div className="w-full min-h-[350px] flex items-center justify-center bg-muted/30 rounded-xl border border-border/60 animate-pulse">
-              <div className="text-muted-foreground font-medium text-xs">
-                Đang tải PDF...
+        <DrawerSection
+          title={
+            <span className="flex items-center gap-1.5 text-xs font-bold text-foreground">
+              <FileText className="w-3.5 h-3.5 text-primary" />
+              {t("previewInvoiceTitle", "Xem trước hóa đơn")}
+            </span>
+          }
+          collapsible
+          defaultCollapsed={false}
+          fitViewportHeight
+          peekRelatedDeck
+        >
+          <div className="w-full">
+            {isPdfLoading ? (
+              <div className="w-full min-h-[350px] flex items-center justify-center bg-muted/30 rounded-xl border border-border/60 animate-pulse">
+                <div className="text-muted-foreground font-medium text-xs">
+                  {t("loadingPdf", "Đang tải PDF...")}
+                </div>
               </div>
-            </div>
-          ) : pdfUrl ? (
-            <div className="rounded-xl overflow-hidden border border-border/60">
-              <iframe
-                src={pdfUrl}
-                className="w-full min-h-[480px] border-0"
-                title="PDF Preview"
-              />
-            </div>
-          ) : (
-            <div className="w-full">{invoicePreview}</div>
-          )}
-        </div>
+            ) : pdfUrl ? (
+              <div className="rounded-xl overflow-hidden border border-border/60">
+                <iframe
+                  src={pdfUrl}
+                  className="w-full min-h-[500px] border-0"
+                  title="PDF Preview"
+                />
+              </div>
+            ) : (
+              <div className="w-full">{invoicePreview}</div>
+            )}
+          </div>
+        </DrawerSection>
       )}
     </div>
   );

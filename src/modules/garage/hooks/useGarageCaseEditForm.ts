@@ -320,7 +320,7 @@ export function useGarageCaseEditForm(caseId?: string) {
     [pendingDeletedInvoiceIds, pendingAddedInvoices],
   );
 
-  // Compute client-adjusted financial summary
+  // Compute client-adjusted financial summary strictly based on cashflow settlements
   const getActiveFinancialSummary = useCallback(
     (serverSummary: any, activeSettlements: any[]) => {
       if (!serverSummary) return null;
@@ -328,23 +328,36 @@ export function useGarageCaseEditForm(caseId?: string) {
       const targetRevenue = Number(serverSummary.targetRevenue || 0);
       const targetCost = Number(serverSummary.targetCost || 0);
 
-      let totalCollected = 0;
-      let totalPaid = 0;
+      let directReceiptOnSystem = 0;
+      let directReceiptOffSystem = 0;
+      let directPaymentOnSystem = 0;
+      let directPaymentOffSystem = 0;
 
       activeSettlements.forEach((s) => {
         const amt = Number(s.amount || 0);
-        if (s.settlement_type === "RECEIPT") {
-          totalCollected += amt;
-        } else if (s.settlement_type === "PAYMENT") {
-          totalPaid += amt;
+        const isReceipt =
+          s.settlement_type === "RECEIPT" || s.settlementType === "RECEIPT";
+        const isOnSystem =
+          s.source_channel === "ON_SYSTEM" || s.sourceChannel === "ON_SYSTEM";
+
+        if (isReceipt) {
+          if (isOnSystem) directReceiptOnSystem += amt;
+          else directReceiptOffSystem += amt;
+        } else {
+          if (isOnSystem) directPaymentOnSystem += amt;
+          else directPaymentOffSystem += amt;
         }
       });
 
+      const totalCollected = directReceiptOnSystem + directReceiptOffSystem;
       const remainingReceivable = Math.max(0, targetRevenue - totalCollected);
-      const isOverCollected = totalCollected > targetRevenue;
+      const isOverCollected =
+        totalCollected > targetRevenue && targetRevenue > 0;
       const overCollectedAmount = isOverCollected
         ? totalCollected - targetRevenue
         : 0;
+
+      const totalPaid = directPaymentOnSystem + directPaymentOffSystem;
       const remainingPayable = Math.max(0, targetCost - totalPaid);
       const realizedCashProfit = totalCollected - totalPaid;
 
@@ -360,6 +373,8 @@ export function useGarageCaseEditForm(caseId?: string) {
           ...serverSummary.breakdown,
           receipts: {
             ...serverSummary.breakdown?.receipts,
+            directReceiptOnSystem,
+            directReceiptOffSystem,
             totalCollected,
             remainingReceivable,
             isOverCollected,
@@ -367,6 +382,8 @@ export function useGarageCaseEditForm(caseId?: string) {
           },
           payments: {
             ...serverSummary.breakdown?.payments,
+            directPaymentOnSystem,
+            directPaymentOffSystem,
             totalPaid,
             remainingPayable,
           },
@@ -377,6 +394,7 @@ export function useGarageCaseEditForm(caseId?: string) {
           erpCollectedAmount: totalCollected,
           discrepancy,
           hasDiscrepancy,
+          status: hasDiscrepancy ? "MISMATCH" : "MATCHED",
         },
       };
     },
