@@ -2,31 +2,26 @@ import React, { useState } from "react";
 import { Handle, Position, type Node, type NodeProps } from "@xyflow/react";
 import { cn } from "@/shared/utils";
 import { useT } from "@/core/i18n";
-import { ExternalLink, Lock, Copy, Check, Trash2, Edit3 } from "lucide-react";
+import {
+  ExternalLink,
+  Lock,
+  Copy,
+  Check,
+  Trash2,
+  Edit3,
+  ArrowDownLeft,
+  ArrowUpRight,
+} from "lucide-react";
 import { Button } from "@/shared/components/ui/Button";
 import { money, formatGMT7 } from "@/shared/utils/format";
-import { DOC_TYPE_META, openGlobalErpDocument } from "../constants";
+import {
+  getNodeVisualMeta,
+  isManualSettlementNode,
+  openGlobalErpDocument,
+} from "../constants";
 import type { NodeCardCustomData } from "../types";
 
-export function isManualSettlementNode(node: {
-  id?: string;
-  docType?: string;
-  docNo?: string;
-  title?: string;
-  partnerName?: string | null;
-  sourceChannel?: string;
-}) {
-  if (node.docType !== "BANK_TXN") return false;
-  if (node.id?.startsWith("manual-")) return true;
-  if (node.sourceChannel === "OFF_SYSTEM_MANUAL") return true;
-  if (node.docNo?.includes("NGOAI")) return true;
-  const str = `${node.title || ""} ${node.partnerName || ""}`.toLowerCase();
-  return (
-    str.includes("ngoài sổ sách") ||
-    str.includes("ngoài erp") ||
-    str.includes("tiền ngoài")
-  );
-}
+export { isManualSettlementNode };
 
 async function copyToClipboard(text: string): Promise<boolean> {
   if (!text) return false;
@@ -59,13 +54,11 @@ async function copyToClipboard(text: string): Promise<boolean> {
 
 export function TraceabilityNodeCard({
   data,
+  selected,
 }: NodeProps<Node<NodeCardCustomData>>) {
   const t = useT();
   const node = data as NodeCardCustomData;
-  const cfg = DOC_TYPE_META[node.docType] || {
-    label: node.docType,
-    badgeCls: "bg-slate-100 text-slate-700 border-slate-200",
-  };
+  const visualMeta = getNodeVisualMeta(node);
 
   const [copied, setCopied] = useState(false);
 
@@ -128,14 +121,42 @@ export function TraceabilityNodeCard({
     node.onUnlink,
   );
 
+  // Determine amount string & style
+  const amtNumber = Number(node.netOffAmount || node.amount || 0);
+  const formattedAmt = money(amtNumber);
+
+  let amountDisplay = formattedAmt;
+  let amountClassName = "text-slate-800 dark:text-slate-200 font-semibold";
+
+  if (visualMeta.isReceipt) {
+    amountDisplay = `+${formattedAmt}`;
+    amountClassName = "text-emerald-600 dark:text-emerald-400 font-bold";
+  } else if (visualMeta.isPayment) {
+    amountDisplay = `-${formattedAmt}`;
+    amountClassName = "text-[#ea580c] dark:text-orange-400 font-bold";
+  } else if (node.netOffAmount) {
+    amountClassName = "text-emerald-700 dark:text-emerald-400 font-semibold";
+  }
+
+  // Display subtitle / partner
+  let subtitleText = node.partnerName || node.title || "—";
+  if (visualMeta.isInvoiceIn && node.partnerName) {
+    subtitleText = `NCC: ${node.partnerName}`;
+  } else if (visualMeta.isInvoiceOut && node.partnerName) {
+    subtitleText = `KH: ${node.partnerName}`;
+  }
+
   return (
     <div
       onDoubleClick={handleOpenDetail}
       className={cn(
-        "w-[290px] rounded-xl border bg-white dark:bg-slate-900 transition-all duration-200 group text-left relative z-10 cursor-pointer",
+        "w-[290px] rounded-xl bg-white dark:bg-slate-900 transition-all duration-200 group text-left relative z-10 cursor-pointer overflow-hidden",
+        visualMeta.cardBorderCls,
         node.isCurrent
-          ? "ring-2 ring-slate-900 dark:ring-slate-100 border-slate-500 shadow-md"
-          : "border-slate-200/90 dark:border-slate-800 shadow-2xs hover:border-slate-400 dark:hover:border-slate-600 hover:shadow-sm",
+          ? "ring-2 ring-slate-900 dark:ring-slate-100 border-2 border-slate-700 dark:border-slate-300 shadow-md"
+          : selected
+            ? "border-2 border-slate-800 dark:border-slate-200 shadow-md ring-2 ring-slate-800/15 dark:ring-slate-200/15"
+            : "border border-slate-200/90 dark:border-slate-800 shadow-2xs hover:border-slate-400 dark:hover:border-slate-600 hover:shadow-sm",
         node.restricted &&
           "border-dashed border-slate-300 bg-slate-50/70 dark:bg-slate-900/50 opacity-80 cursor-default",
       )}
@@ -145,25 +166,25 @@ export function TraceabilityNodeCard({
         type="target"
         id="left"
         position={Position.Left}
-        className="w-2.5 h-2.5 !bg-slate-400 border border-white opacity-0 group-hover:opacity-100 transition-opacity z-20"
+        className="w-3 h-3 !bg-slate-400 border-2 border-white opacity-0 group-hover:opacity-100 transition-opacity z-30 cursor-crosshair"
       />
       <Handle
         type="source"
         id="right"
         position={Position.Right}
-        className="w-2.5 h-2.5 !bg-slate-400 border border-white opacity-0 group-hover:opacity-100 transition-opacity z-20"
+        className="w-3 h-3 !bg-slate-400 border-2 border-white opacity-0 group-hover:opacity-100 transition-opacity z-30 cursor-crosshair"
       />
       <Handle
         type="target"
         id="top"
         position={Position.Top}
-        className="w-2.5 h-2.5 !bg-slate-400 border border-white opacity-0 group-hover:opacity-100 transition-opacity z-20"
+        className="w-3 h-3 !bg-slate-400 border-2 border-white opacity-0 group-hover:opacity-100 transition-opacity z-30 cursor-crosshair"
       />
       <Handle
         type="source"
         id="bottom"
         position={Position.Bottom}
-        className="w-2.5 h-2.5 !bg-slate-400 border border-white opacity-0 group-hover:opacity-100 transition-opacity z-20"
+        className="w-3 h-3 !bg-slate-400 border-2 border-white opacity-0 group-hover:opacity-100 transition-opacity z-30 cursor-crosshair"
       />
 
       {/* Top Header Row */}
@@ -171,11 +192,18 @@ export function TraceabilityNodeCard({
         <div className="flex items-center gap-1.5 min-w-0">
           <span
             className={cn(
-              "px-1.5 py-0.5 rounded text-[10px] font-bold border font-mono tracking-wider",
-              cfg.badgeCls,
+              "px-1.5 py-0.5 rounded text-[10px] font-bold border font-mono tracking-wider flex items-center gap-1",
+              visualMeta.badgeCls,
             )}
+            title={visualMeta.fullTitle}
           >
-            {cfg.label}
+            {visualMeta.isInvoiceIn && (
+              <ArrowDownLeft className="w-2.5 h-2.5 opacity-80" />
+            )}
+            {visualMeta.isInvoiceOut && (
+              <ArrowUpRight className="w-2.5 h-2.5 opacity-80" />
+            )}
+            {visualMeta.label}
           </span>
           <span className="font-mono text-xs font-bold text-slate-900 dark:text-slate-100 truncate">
             {node.docNo}
@@ -262,7 +290,7 @@ export function TraceabilityNodeCard({
               <Lock className="w-3 h-3" /> {t("Chứng từ bảo mật")}
             </span>
           ) : (
-            node.partnerName || node.title || "—"
+            subtitleText
           )}
         </div>
 
@@ -271,20 +299,13 @@ export function TraceabilityNodeCard({
             {node.date ? formatGMT7(node.date, "date") : "—"}
           </span>
 
-          <div className="flex items-center gap-1.5 font-semibold text-slate-800 dark:text-slate-200">
+          <div className="flex items-center gap-1.5 font-mono">
             {node.restricted ? (
               <span className="text-slate-400 font-normal">***</span>
-            ) : node.netOffAmount ? (
-              <span
-                className="text-emerald-700 dark:text-emerald-400"
-                title={t("Số tiền cấn trừ")}
-              >
-                {money(node.netOffAmount)}
-              </span>
-            ) : node.amount ? (
-              <span>{money(node.amount)}</span>
             ) : (
-              <span className="text-slate-400 font-normal">0 ₫</span>
+              <span className={amountClassName} title={visualMeta.fullTitle}>
+                {amountDisplay}
+              </span>
             )}
           </div>
         </div>

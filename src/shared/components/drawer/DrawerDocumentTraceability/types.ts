@@ -27,7 +27,9 @@ export type CanvasLayoutDirection = "horizontal" | "vertical";
 export interface DrawerDocumentTraceabilityProps {
   rootId: string;
   rootType?: TraceabilityNodeType;
-  fetchGraph: (id: string) => Promise<TraceabilityGraphData>;
+  fetchGraph?: (id: string) => Promise<TraceabilityGraphData>;
+  /** Direct/Controlled graph data from parent (useful for real-time optimistic updates in edit mode) */
+  graphData?: TraceabilityGraphData | null;
   editMode?: boolean;
   allowEdit?: boolean;
   allowedDocTypes?: TraceabilityNodeType[];

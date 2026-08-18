@@ -1,4 +1,10 @@
-import React, { useMemo, useEffect } from "react";
+import React, {
+  useMemo,
+  useEffect,
+  useState,
+  useCallback,
+  useRef,
+} from "react";
 import {
   ReactFlow,
   Background,
@@ -9,8 +15,10 @@ import {
   useReactFlow,
   ReactFlowProvider,
   MarkerType,
+  reconnectEdge,
   type Node,
   type Edge,
+  type Connection,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import type {
@@ -50,9 +58,50 @@ export function computeLayout(
   onUnlinkNode?: (node: TraceabilityNode) => void,
   allowedDocTypes?: TraceabilityNodeType[],
   onEditManualSettlement?: (node: TraceabilityNode) => void,
+  selectedNodeId?: string | null,
 ): { nodes: Node[]; edges: Edge[] } {
   const nodes: Node[] = [];
   const edges: Edge[] = [];
+
+  // Compute connected nodes & edges if selectedNodeId is present (Full Multi-hop Traverse)
+  const connectedEdgeIds = new Set<string>();
+  const connectedNodeIds = new Set<string>();
+
+  if (selectedNodeId) {
+    connectedNodeIds.add(selectedNodeId);
+
+    // BFS Downstream
+    let current = [selectedNodeId];
+    while (current.length > 0) {
+      const next: string[] = [];
+      for (const nId of current) {
+        for (const e of graphData.edges) {
+          if (e.source === nId && !connectedEdgeIds.has(e.id)) {
+            connectedEdgeIds.add(e.id);
+            connectedNodeIds.add(e.target);
+            next.push(e.target);
+          }
+        }
+      }
+      current = next;
+    }
+
+    // BFS Upstream
+    current = [selectedNodeId];
+    while (current.length > 0) {
+      const next: string[] = [];
+      for (const nId of current) {
+        for (const e of graphData.edges) {
+          if (e.target === nId && !connectedEdgeIds.has(e.id)) {
+            connectedEdgeIds.add(e.id);
+            connectedNodeIds.add(e.source);
+            next.push(e.source);
+          }
+        }
+      }
+      current = next;
+    }
+  }
 
   // 1. Group nodes by Stage
   const stageGroupsMap = new Map<BusinessStageKey, TraceabilityNode[]>();
@@ -105,6 +154,7 @@ export function computeLayout(
       stageDocs.forEach((doc, docIdx) => {
         const docX = (stageWidth - CARD_WIDTH) / 2;
         const docY = STAGE_HEADER_HEIGHT + docIdx * CARD_ROW_GAP;
+        const isSelfSelected = selectedNodeId === doc.id;
 
         nodes.push({
           id: doc.id,
@@ -112,13 +162,14 @@ export function computeLayout(
           parentId: `stage-group-${stage.key}`,
           extent: "parent",
           position: { x: docX, y: docY },
+          selected: isSelfSelected,
           data: {
             ...doc,
             allowEdit,
             onUnlink: onUnlinkNode,
             onEditManualSettlement,
           },
-          zIndex: 10,
+          zIndex: isSelfSelected ? 30 : 10,
         });
       });
     } else {
@@ -158,6 +209,7 @@ export function computeLayout(
       stageDocs.forEach((doc, docIdx) => {
         const docX = 20 + docIdx * (CARD_WIDTH + 30);
         const docY = STAGE_HEADER_HEIGHT + 8;
+        const isSelfSelected = selectedNodeId === doc.id;
 
         nodes.push({
           id: doc.id,
@@ -165,20 +217,26 @@ export function computeLayout(
           parentId: `stage-group-${stage.key}`,
           extent: "parent",
           position: { x: docX, y: docY },
+          selected: isSelfSelected,
           data: {
             ...doc,
             allowEdit,
             onUnlink: onUnlinkNode,
             onEditManualSettlement,
           },
-          zIndex: 10,
+          zIndex: isSelfSelected ? 30 : 10,
         });
       });
     }
   });
 
-  // 2. Build Edges with Directional Handles & Clean Floating Labels
+  // 2. Build Edges: Giữ nguyên màu neutral chuẩn (#94a3b8), khi được click thì kích hoạt animated
+  const edgeStroke = "#94a3b8";
+
   graphData.edges.forEach((e) => {
+    const isConnectedToSelection = connectedEdgeIds.has(e.id);
+    const isAnimated = isConnectedToSelection;
+
     edges.push({
       id: e.id,
       source: e.source,
@@ -187,18 +245,21 @@ export function computeLayout(
       targetHandle: direction === "vertical" ? "top" : "left",
       type: "labeledSmoothStep",
       label: e.label || undefined,
+      animated: isAnimated,
+      interactionWidth: 30,
+      reconnectable: true,
       markerEnd: {
         type: MarkerType.ArrowClosed,
         width: 14,
         height: 14,
-        color: "#94a3b8",
+        color: edgeStroke,
       },
       style: {
-        stroke: "#94a3b8",
-        strokeWidth: 1.8,
-        strokeDasharray: e.isTransitive ? "4 4" : undefined,
+        stroke: edgeStroke,
+        strokeWidth: isAnimated ? 2.2 : 1.8,
+        strokeDasharray: e.isTransitive && !isAnimated ? "4 4" : undefined,
       },
-      zIndex: 30,
+      zIndex: isConnectedToSelection ? 40 : 30,
     });
   });
 
@@ -232,6 +293,9 @@ function CanvasFlowInner({
   onEditManualSettlement,
 }: CanvasFlowInnerProps) {
   const { fitView } = useReactFlow();
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  const edgeReconnectSuccessful = useRef(true);
+
   const { nodes: initialNodes, edges: initialEdges } = useMemo(
     () =>
       computeLayout(
@@ -242,6 +306,7 @@ function CanvasFlowInner({
         onUnlinkNode,
         allowedDocTypes,
         onEditManualSettlement,
+        selectedNodeId,
       ),
     [
       graphData,
@@ -251,12 +316,14 @@ function CanvasFlowInner({
       onUnlinkNode,
       allowedDocTypes,
       onEditManualSettlement,
+      selectedNodeId,
     ],
   );
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
+  // Sync layout changes when graphData, direction, or selectedNodeId changes
   useEffect(() => {
     const { nodes: nextNodes, edges: nextEdges } = computeLayout(
       graphData,
@@ -266,14 +333,10 @@ function CanvasFlowInner({
       onUnlinkNode,
       allowedDocTypes,
       onEditManualSettlement,
+      selectedNodeId,
     );
     setNodes(nextNodes);
     setEdges(nextEdges);
-
-    const t = setTimeout(() => {
-      fitView({ duration: 400, padding: 0.2 });
-    }, 60);
-    return () => clearTimeout(t);
   }, [
     graphData,
     direction,
@@ -282,10 +345,18 @@ function CanvasFlowInner({
     onUnlinkNode,
     allowedDocTypes,
     onEditManualSettlement,
-    fitView,
+    selectedNodeId,
     setNodes,
     setEdges,
   ]);
+
+  // Initial fit view on mount or layout direction change
+  useEffect(() => {
+    const t = setTimeout(() => {
+      fitView({ duration: 400, padding: 0.2 });
+    }, 60);
+    return () => clearTimeout(t);
+  }, [graphData.rootId, direction, fitView]);
 
   // Re-fit view when transitioning between fullscreen and regular drawer mode
   useEffect(() => {
@@ -295,12 +366,52 @@ function CanvasFlowInner({
     return () => clearTimeout(t);
   }, [isFullscreen, fitView]);
 
+  // Handle node click to toggle active path animation & bold border
+  const handleNodeClick = useCallback(
+    (_event: React.MouseEvent, node: Node) => {
+      if (node.type === "stageGroupNode") return;
+      setSelectedNodeId((prev) => (prev === node.id ? null : node.id));
+    },
+    [],
+  );
+
+  // Handle canvas background click to clear active path animation
+  const handlePaneClick = useCallback(() => {
+    setSelectedNodeId(null);
+  }, []);
+
+  // Allow drag & reconnect edge endpoints
+  const onReconnectStart = useCallback(() => {
+    edgeReconnectSuccessful.current = false;
+  }, []);
+
+  const onReconnect = useCallback(
+    (oldEdge: Edge, newConnection: Connection) => {
+      edgeReconnectSuccessful.current = true;
+      setEdges((els) => reconnectEdge(oldEdge, newConnection, els));
+    },
+    [setEdges],
+  );
+
+  const onReconnectEnd = useCallback(() => {
+    edgeReconnectSuccessful.current = true;
+  }, []);
+
   return (
     <ReactFlow
       nodes={nodes}
       edges={edges}
       onNodesChange={onNodesChange}
       onEdgesChange={onEdgesChange}
+      onNodeClick={handleNodeClick}
+      onPaneClick={handlePaneClick}
+      onReconnectStart={onReconnectStart}
+      onReconnect={onReconnect}
+      onReconnectEnd={onReconnectEnd}
+      edgesReconnectable={true}
+      reconnectRadius={30}
+      edgesFocusable={true}
+      elevateEdgesOnSelect={true}
       nodeTypes={NODE_TYPES}
       edgeTypes={EDGE_TYPES}
       fitView
@@ -308,7 +419,7 @@ function CanvasFlowInner({
       minZoom={0.6}
       maxZoom={1.2}
       nodesDraggable
-      nodesConnectable={false}
+      nodesConnectable={true}
       elementsSelectable
       proOptions={{ hideAttribution: true }}
     >

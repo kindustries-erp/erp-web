@@ -88,7 +88,7 @@ export const garageVi = {
     drawer: {
       caseDetails: "Sổ báo giá:",
       quotePreview: "Sổ báo giá & Lợi nhuận dự kiến",
-      linkedDocs: "Mạng lưới chứng từ",
+      linkedDocs: "Chứng từ liên kết",
       cashflowReconciliation: "Dòng tiền & Hóa đơn đối soát",
       syncHistory: "Lịch sử & Đồng bộ",
       syncInfoTitle: "Thông tin Trạng thái & Đồng bộ từ Hệ thống KGara",

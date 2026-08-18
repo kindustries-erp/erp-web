@@ -88,7 +88,7 @@ export const garageEn = {
     drawer: {
       caseDetails: "Quotation Sheet:",
       quotePreview: "Quotation & Expected Profit Sheet",
-      linkedDocs: "Document Network",
+      linkedDocs: "Linked Documents",
       cashflowReconciliation: "Cashflow & Reconciliation",
       syncHistory: "History & Sync",
       syncInfoTitle: "KGara System Status & Synchronization Information",

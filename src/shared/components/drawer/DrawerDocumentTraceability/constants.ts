@@ -115,6 +115,174 @@ export const DOC_TYPE_META: Record<
 
 export const MODULE_CONFIG = DOC_TYPE_META;
 
+export interface NodeVisualMeta {
+  label: string;
+  subLabel?: string;
+  fullTitle: string;
+  badgeCls: string;
+  cardBorderCls?: string;
+  isReceipt?: boolean;
+  isPayment?: boolean;
+  isInvoiceIn?: boolean;
+  isInvoiceOut?: boolean;
+  amountCls?: string;
+  amountPrefix?: string;
+}
+
+export function isManualSettlementNode(node: {
+  id?: string;
+  docType?: string;
+  docNo?: string;
+  title?: string;
+  partnerName?: string | null;
+  sourceChannel?: string;
+}) {
+  if (node.docType !== "BANK_TXN") return false;
+  if (node.id?.startsWith("manual-")) return true;
+  if (node.sourceChannel === "OFF_SYSTEM_MANUAL") return true;
+  if (node.docNo?.includes("NGOAI")) return true;
+  const str = `${node.title || ""} ${node.partnerName || ""}`.toLowerCase();
+  return (
+    str.includes("ngoài sổ sách") ||
+    str.includes("ngoài erp") ||
+    str.includes("tiền ngoài")
+  );
+}
+
+export function getNodeVisualMeta(node: {
+  id?: string;
+  docType: TraceabilityNodeType;
+  docNo?: string;
+  title?: string;
+  partnerName?: string | null;
+  metadata?: any;
+  sourceChannel?: string;
+}): NodeVisualMeta {
+  const dt = node.docType;
+
+  // 1. INVOICE:
+  // - HĐ Mua (Chi tiền) đồng bộ màu Cam (Orange #ea580c) giống UNC / Phiếu Chi
+  // - HĐ Bán (Thu tiền) đồng bộ màu Xanh Lá (Emerald) giống GBC / Phiếu Thu
+  if (dt === "INVOICE") {
+    const isOut =
+      node.metadata?.direction === "OUT" ||
+      node.metadata?.linkType === "OUT" ||
+      node.title?.toLowerCase().includes("đầu ra") ||
+      node.title?.toLowerCase().includes("bán");
+
+    if (isOut) {
+      return {
+        label: "HĐ BÁN",
+        subLabel: "Đầu ra",
+        fullTitle: "Hóa đơn bán ra (Đầu ra - Thu tiền)",
+        badgeCls:
+          "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-400 dark:border-emerald-800",
+        cardBorderCls: "border-l-4 border-l-emerald-500",
+        isInvoiceOut: true,
+      };
+    }
+
+    return {
+      label: "HĐ MUA",
+      subLabel: "Đầu vào",
+      fullTitle: "Hóa đơn mua vào (Đầu vào - Chi tiền)",
+      badgeCls:
+        "bg-orange-50 text-[#ea580c] border-orange-200 dark:bg-orange-950/50 dark:text-orange-400 dark:border-orange-800",
+      cardBorderCls: "border-l-4 border-l-[#ea580c]",
+      isInvoiceIn: true,
+    };
+  }
+
+  // 2. BANK_TXN: Phân biệt Thu (Emerald) vs Chi (Orange #ea580c) theo chuẩn Cashflow Dashboard
+  if (dt === "BANK_TXN") {
+    const isManual = isManualSettlementNode(node);
+    const titleLower = (node.title || "").toLowerCase();
+    const docNoUpper = (node.docNo || "").toUpperCase();
+
+    const isReceipt =
+      node.metadata?.isCredit === true ||
+      node.metadata?.settlementType === "RECEIPT" ||
+      docNoUpper.startsWith("GBC") ||
+      docNoUpper.includes("THU") ||
+      titleLower.includes("báo có") ||
+      titleLower.includes("thu") ||
+      titleLower.includes("khoản thu");
+
+    if (isManual) {
+      if (isReceipt) {
+        return {
+          label: "THU NGOÀI",
+          subLabel: "Ngoài sổ",
+          fullTitle: "Khoản thu ngoài ERP (Nội bộ)",
+          badgeCls:
+            "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-400 dark:border-emerald-800",
+          cardBorderCls: "border-l-4 border-l-emerald-500",
+          isReceipt: true,
+          amountCls: "text-emerald-600 dark:text-emerald-400 font-bold",
+          amountPrefix: "+",
+        };
+      }
+      return {
+        label: "CHI NGOÀI",
+        subLabel: "Ngoài sổ",
+        fullTitle: "Khoản chi ngoài ERP (Nội bộ)",
+        badgeCls:
+          "bg-orange-50 text-[#ea580c] border-orange-200 dark:bg-orange-950/50 dark:text-orange-400 dark:border-orange-800",
+        cardBorderCls: "border-l-4 border-l-[#ea580c]",
+        isPayment: true,
+        amountCls: "text-[#ea580c] dark:text-orange-400 font-bold",
+        amountPrefix: "-",
+      };
+    }
+
+    const isCash =
+      node.metadata?.sourceType === "CASH" ||
+      titleLower.includes("sổ quỹ") ||
+      titleLower.includes("phiếu");
+
+    if (isReceipt) {
+      return {
+        label: isCash ? "PHIẾU THU" : "GBC",
+        subLabel: isCash ? "Tiền mặt" : "Báo có",
+        fullTitle: isCash
+          ? "Phiếu thu tiền mặt"
+          : "Giấy báo có ngân hàng (GBC)",
+        badgeCls:
+          "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-400 dark:border-emerald-800",
+        cardBorderCls: "border-l-4 border-l-emerald-500",
+        isReceipt: true,
+        amountCls: "text-emerald-600 dark:text-emerald-400 font-bold",
+        amountPrefix: "+",
+      };
+    }
+
+    return {
+      label: isCash ? "PHIẾU CHI" : "UNC",
+      subLabel: isCash ? "Tiền mặt" : "Ủy nhiệm chi",
+      fullTitle: isCash ? "Phiếu chi tiền mặt" : "Ủy nhiệm chi ngân hàng (UNC)",
+      badgeCls:
+        "bg-orange-50 text-[#ea580c] border-orange-200 dark:bg-orange-950/50 dark:text-orange-400 dark:border-orange-800",
+      cardBorderCls: "border-l-4 border-l-[#ea580c]",
+      isPayment: true,
+      amountCls: "text-[#ea580c] dark:text-orange-400 font-bold",
+      amountPrefix: "-",
+    };
+  }
+
+  // 3. Các loại chứng từ khác
+  const defaultMeta = DOC_TYPE_META[dt] || {
+    label: dt,
+    fullTitle: dt,
+    badgeCls: "bg-slate-100 text-slate-700 border-slate-200",
+  };
+
+  return {
+    label: defaultMeta.label,
+    fullTitle: defaultMeta.fullTitle,
+    badgeCls: defaultMeta.badgeCls,
+  };
+}
+
 export function openGlobalErpDocument(
   docType: TraceabilityNodeType,
   id: string,

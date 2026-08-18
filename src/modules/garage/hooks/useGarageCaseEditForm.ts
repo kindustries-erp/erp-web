@@ -107,6 +107,15 @@ export function useGarageCaseEditForm(caseId?: string) {
       return prev;
     });
 
+    // If it's a temporary ID, do NOT add to pending deleted list
+    if (
+      id.startsWith("tmp-") ||
+      id.startsWith("manual-tmp-") ||
+      id.startsWith("manual-")
+    ) {
+      return;
+    }
+
     // If it's a persisted item, track in pendingDeletedSettlementIds
     setPendingDeletedSettlementIds((prev) => {
       if (!prev.includes(id)) {
@@ -163,6 +172,11 @@ export function useGarageCaseEditForm(caseId?: string) {
       return prev;
     });
 
+    // If it's a temporary ID, do NOT add to pending deleted list
+    if (id.startsWith("tmp-")) {
+      return;
+    }
+
     // If it's a persisted item, track in pendingDeletedInvoiceIds
     setPendingDeletedInvoiceIds((prev) => {
       if (!prev.includes(id)) {
@@ -198,8 +212,15 @@ export function useGarageCaseEditForm(caseId?: string) {
           });
         }
 
-        // 2. Remove pending deleted settlements
+        // 2. Remove pending deleted settlements (filter out any temporary IDs)
         for (const settlementId of pendingDeletedSettlementIds) {
+          if (
+            settlementId.startsWith("tmp-") ||
+            settlementId.startsWith("manual-tmp-") ||
+            settlementId.startsWith("manual-")
+          ) {
+            continue;
+          }
           await garageApi.removeCaseSettlement(activeCaseId, settlementId);
         }
 
@@ -213,8 +234,11 @@ export function useGarageCaseEditForm(caseId?: string) {
           );
         }
 
-        // 4. Remove pending deleted linked invoices
+        // 4. Remove pending deleted linked invoices (filter out any temporary IDs)
         for (const linkedId of pendingDeletedInvoiceIds) {
+          if (linkedId.startsWith("tmp-")) {
+            continue;
+          }
           await garageApi.removeCaseLinkedInvoice(activeCaseId, linkedId);
         }
 
@@ -286,6 +310,9 @@ export function useGarageCaseEditForm(caseId?: string) {
         bank_transaction_id: item.bankTransactionId,
         referenceNumber: item.referenceNumber,
         bankName: item.bankName,
+        sourceType: item.sourceType,
+        accountNumber: item.accountNumber,
+        cashBookName: item.cashBookName,
         correspondentName: item.correspondentName || item.partnerName,
       }));
 

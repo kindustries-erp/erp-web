@@ -33,6 +33,9 @@ export interface SettlementSubmissionItem {
   referenceNumber?: string;
   bankName?: string;
   correspondentName?: string;
+  sourceType?: "BANK" | "CASH_BOOK";
+  accountNumber?: string;
+  cashBookName?: string;
 }
 
 interface GarageCaseSettlementDrawerModalProps {
@@ -627,6 +630,9 @@ export function GarageCaseSettlementDrawerModal({
             bankName:
               txn?.bankAccount?.bankName || txn?.cashBook?.name || undefined,
             correspondentName: txn?.correspondentName || undefined,
+            sourceType: txn?.sourceType,
+            accountNumber: txn?.bankAccount?.accountNumber,
+            cashBookName: txn?.cashBook?.name,
           });
         }
 

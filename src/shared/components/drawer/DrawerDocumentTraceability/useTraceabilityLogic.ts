@@ -14,6 +14,7 @@ export function useTraceabilityLogic(props: DrawerDocumentTraceabilityProps) {
   const {
     rootId,
     fetchGraph,
+    graphData: controlledGraphData,
     editMode = false,
     allowedDocTypes,
     onUnlinkNode,
@@ -23,11 +24,15 @@ export function useTraceabilityLogic(props: DrawerDocumentTraceabilityProps) {
   const [canvasDirection, setCanvasDirection] =
     useState<CanvasLayoutDirection>("horizontal");
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [graphData, setGraphData] = useState<TraceabilityGraphData | null>(
-    null,
+  const [internalGraphData, setInternalGraphData] =
+    useState<TraceabilityGraphData | null>(null);
+  const [loading, setLoading] = useState(
+    controlledGraphData === undefined && Boolean(rootId && fetchGraph),
   );
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const graphData =
+    controlledGraphData !== undefined ? controlledGraphData : internalGraphData;
 
   // Keyboard shortcut to exit fullscreen
   useEffect(() => {
@@ -60,32 +65,42 @@ export function useTraceabilityLogic(props: DrawerDocumentTraceabilityProps) {
 
   const loadData = useCallback(
     async (silent = false) => {
-      if (!rootId) return;
+      if (
+        !rootId ||
+        controlledGraphData !== undefined ||
+        !fetchGraphRef.current
+      )
+        return;
       if (!silent) {
-        setLoading(!graphData);
+        setLoading(!internalGraphData);
       }
       setError(null);
       try {
         const data = await fetchGraphRef.current(rootId);
-        setGraphData(data);
+        setInternalGraphData(data);
       } catch (err: any) {
         setError(err?.message || "Không thể tải đồ thị chứng từ liên đới");
       } finally {
         setLoading(false);
       }
     },
-    [rootId, graphData],
+    [rootId, internalGraphData, controlledGraphData],
   );
 
   useEffect(() => {
-    loadData();
-  }, [rootId]);
+    if (controlledGraphData !== undefined) {
+      setLoading(false);
+      setError(null);
+    } else {
+      loadData();
+    }
+  }, [rootId, controlledGraphData]);
 
   useEffect(() => {
-    if (!editMode) {
+    if (!editMode && controlledGraphData === undefined) {
       loadData(true);
     }
-  }, [editMode]);
+  }, [editMode, controlledGraphData]);
 
   const handleRequestUnlink = (node: TraceabilityNode) => {
     setUnlinkingNode(node);
@@ -99,36 +114,37 @@ export function useTraceabilityLogic(props: DrawerDocumentTraceabilityProps) {
       const unlinkedId = unlinkingNode.id;
       setUnlinkingNode(null);
 
-      if (editMode) {
-        // In editMode, do not reload from BE because changes are client-side only!
-        // Optimistically update local graphData
-        setGraphData((prev) => {
-          if (!prev) return prev;
-          const removedNode = prev.nodes.find((n) => n.id === unlinkedId);
-          const removedAmount = Number(
-            removedNode?.netOffAmount || removedNode?.amount || 0,
-          );
-          const filteredNodes = prev.nodes.filter((n) => n.id !== unlinkedId);
-          const filteredEdges = prev.edges.filter(
-            (e) => e.source !== unlinkedId && e.target !== unlinkedId,
-          );
-          const newNetOff = Math.max(
-            0,
-            (prev.summary?.totalNetOffAmount || 0) - removedAmount,
-          );
-          return {
-            ...prev,
-            nodes: filteredNodes,
-            edges: filteredEdges,
-            summary: {
-              ...prev.summary,
-              directCount: Math.max(0, (prev.summary?.directCount || 1) - 1),
-              totalNetOffAmount: newNetOff,
-            },
-          };
-        });
-      } else {
-        await loadData(true);
+      if (controlledGraphData === undefined) {
+        if (editMode) {
+          // In editMode without controlled graph, optimistically update internalGraphData
+          setInternalGraphData((prev) => {
+            if (!prev) return prev;
+            const removedNode = prev.nodes.find((n) => n.id === unlinkedId);
+            const removedAmount = Number(
+              removedNode?.netOffAmount || removedNode?.amount || 0,
+            );
+            const filteredNodes = prev.nodes.filter((n) => n.id !== unlinkedId);
+            const filteredEdges = prev.edges.filter(
+              (e) => e.source !== unlinkedId && e.target !== unlinkedId,
+            );
+            const newNetOff = Math.max(
+              0,
+              (prev.summary?.totalNetOffAmount || 0) - removedAmount,
+            );
+            return {
+              ...prev,
+              nodes: filteredNodes,
+              edges: filteredEdges,
+              summary: {
+                ...prev.summary,
+                directCount: Math.max(0, (prev.summary?.directCount || 1) - 1),
+                totalNetOffAmount: newNetOff,
+              },
+            };
+          });
+        } else {
+          await loadData(true);
+        }
       }
     } catch (err: any) {
       console.error(err);

@@ -87,18 +87,17 @@ Hệ thống tự động gom nhóm các chứng từ vào 4 Swimlanes giai đo�
 
 ---
 
-## 5. 3 Chế độ hiển thị (View Modes)
+## 5. 3 Chế độ hiển thị (View Modes) & Tương tác Nâng cao
 
 1. **Canvas View (`@xyflow/react`)**:
-   - Hiển thị đồ thị trực quan với các Swimlane Stages bao quanh.
-   - Các đường nối (`LabeledSmoothStepEdge`) với nhãn cấn trừ nổi và mũi tên định hướng (`MarkerType.ArrowClosed`).
-   - Cụm điều khiển `<Controls>` góc dưới tích hợp sẵn nút **Đổi hướng bố cục Ngang ↔ Dọc** (`RotateCcw`) qua component chuẩn `<ControlButton>`.
-   - Nút **Sao chép số chứng từ** có cơ chế an toàn đa tầng (`nodrag nopan` + fallback clipboard).
-   - Nút **Toàn màn hình / Thu nhỏ** (`Maximize2`/`Minimize2`) nằm trực tiếp trên Tab Bar phía trên, hiển thị đồng nhất ở mọi chế độ xem.
+   - **Multi-hop Flowing Dash Animation**: Khi click vào một chứng từ bất kỳ, hệ thống duyệt BFS toàn bộ chuỗi chứng từ liên quan (cả upstream & downstream) và tự động kích hoạt hiệu ứng nét đứt chuyển động (`animated: true`) trên toàn bộ dây nối trong luồng.
+   - **Tô đậm viền Node đã chọn**: Node được click sẽ tự động tô đậm viền (`border-2 border-slate-800 dark:border-slate-200`) kèm bóng đổ nhẹ mà không thay đổi màu sắc gốc của Node.
+   - **Kéo thả & Kết nối lại Dây nối (Edge Draggable & Reconnect)**: Kích hoạt `edgesReconnectable={true}`, `reconnectRadius={30}`, `interactionWidth={30}` và các cổng kết nối Handles `w-3 h-3 cursor-crosshair` cho phép người dùng kéo thả đầu mút dây nối sang chứng từ khác một cách mượt mà.
+   - **Đổi hướng bố cục Ngang ↔ Dọc**: Nút `<ControlButton>` tích hợp sẵn trong Controls góc dưới.
+   - **Toàn màn hình / Thu nhỏ**: Tích hợp trên Tab Bar đồng bộ ở mọi chế độ xem.
 
 2. **Pipeline View (Quy trình tuần tự)**:
-   - Hiển thị các cột giai đoạn theo luồng tuần tự từ trái sang phải.
-   - Phù hợp khi người dùng muốn xem danh sách chứng từ phân loại theo từng bước nghiệp vụ.
+   - Hiển thị các cột giai đoạn theo luồng tuần tự từ trái sang phải với đầy đủ badge nhận diện và số tiền `+` / `-`.
 
 3. **Matrix Table View (Bảng kê chi tiết)**:
    - Phân tách rõ thành 2 bảng:
@@ -107,141 +106,33 @@ Hệ thống tự động gom nhóm các chứng từ vào 4 Swimlanes giai đo�
 
 ---
 
-## 6. Điều hướng Node Chi tiết & Zero-Trust RBAC
+## 6. Bảng Màu Chuẩn Hóa Theo Bản Chất Thu - Chi Tài Chính
+
+| Nhóm Tài Chính | Loại Chứng Từ | Badge Label | Màu sắc Badge | Viền nhận diện Node | Định dạng Tiền |
+|---|---|---|---|---|---|
+| **Dòng Tiền Chi (Tiền ra)** | `HĐ MUA` (Đầu vào) | `HĐ MUA` | `bg-orange-50 text-[#ea580c] border-orange-200` | `border-l-4 border-l-[#ea580c]` | Số tiền chuẩn |
+| | `UNC` (Ngân hàng) | `UNC` | `bg-orange-50 text-[#ea580c] border-orange-200` | `border-l-4 border-l-[#ea580c]` | `-[Số tiền] ₫` (Màu cam) |
+| | `Phiếu Chi` (Tiền mặt) | `PHIẾU CHI` | `bg-orange-50 text-[#ea580c] border-orange-200` | `border-l-4 border-l-[#ea580c]` | `-[Số tiền] ₫` (Màu cam) |
+| | `Chi Ngoài ERP` | `CHI NGOÀI` | `bg-orange-50 text-[#ea580c] border-orange-200` | `border-l-4 border-l-[#ea580c]` | `-[Số tiền] ₫` (Màu cam) |
+| **Dòng Tiền Thu (Tiền vào)** | `HĐ BÁN` (Đầu ra) | `HĐ BÁN` | `bg-emerald-50 text-emerald-700 border-emerald-200` | `border-l-4 border-l-emerald-500` | Số tiền chuẩn |
+| | `GBC` (Ngân hàng) | `GBC` | `bg-emerald-50 text-emerald-700 border-emerald-200` | `border-l-4 border-l-emerald-500` | `+[Số tiền] ₫` (Màu xanh) |
+| | `Phiếu Thu` (Tiền mặt) | `PHIẾU THU` | `bg-emerald-50 text-emerald-700 border-emerald-200` | `border-l-4 border-l-emerald-500` | `+[Số tiền] ₫` (Màu xanh) |
+| | `Thu Ngoài ERP` | `THU NGOÀI` | `bg-emerald-50 text-emerald-700 border-emerald-200` | `border-l-4 border-l-emerald-500` | `+[Số tiền] ₫` (Màu xanh) |
+
+---
+
+## 7. Điều hướng Node Chi tiết & Zero-Trust RBAC
 
 - **Phân nhánh điều hướng khi click nút chi tiết hoặc Double-click**:
-  1. **Sổ cái kế toán (`JOURNAL_ENTRY` / `GL`)**: Ẩn nút icon `[↗]`, không kích hoạt mở drawer (vì module đang phát triển).
-  2. **Thu / Chi ngoài sổ sách (`manual-*` / `NOTE-TIEN_MAT_NGOAI`)**: Kích hoạt `onEditManualSettlement` (hoặc dispatch event `open_manual_settlement_editor`) để mở Drawer/Modal chỉnh sửa chi tiết nội dung, số tiền, ngày giao dịch.
+  1. **Sổ cái kế toán (`JOURNAL_ENTRY` / `GL`)**: Ẩn nút icon `[↗]`, không kích hoạt mở drawer.
+  2. **Thu / Chi ngoài sổ sách (`manual-*` / `NOTE-TIEN_MAT_NGOAI`)**: Kích hoạt `onEditManualSettlement` để mở Drawer/Modal chỉnh sửa chi tiết nội dung, số tiền, ngày giao dịch.
   3. **Chứng từ ERP chuẩn (Hóa đơn, PO, SO, RO, Sao kê ERP)**: Dispatch event `open_erp_document` để mở Global Drawer của module tương ứng.
 - **Zero-Trust RBAC**:
   - Nếu node có `restricted: true` (người dùng không có quyền trên module đó), dữ liệu số tiền sẽ bị mask thành `***`, tiêu đề hiển thị icon 🔒 `Chứng từ bảo mật` nhưng cấu trúc cầu nối trên đồ thị vẫn được bảo toàn.
 
-
 ---
 
-## 7. Mẫu tích hợp chuẩn trong `StandardFormDrawer`
-
-```tsx
-import React, { useState } from "react";
-import { useTranslation } from "react-i18next";
-import { Network, History, Paperclip } from "lucide-react";
-import {
-  StandardFormDrawer,
-  type DrawerRelatedTabItem,
-} from "@/shared/components/StandardFormDrawer";
-import { DrawerDocumentTraceability } from "@/shared/components/drawer/DrawerDocumentTraceability";
-import { getInvoiceTraceabilityGraph, unlinkInvoiceDocument } from "@/shared/api/invoices";
-
-export function InvoiceDetailDrawer({ open, onClose, mode, setMode, invoice }) {
-  const { t } = useTranslation("invoices");
-  const [linkModalOpen, setLinkModalOpen] = useState(false);
-  const [selectedLinkStage, setSelectedLinkStage] = useState<string | undefined>();
-  const [selectedLinkType, setSelectedLinkType] = useState<string | undefined>();
-
-  const handleOpenLink = (stageKey?: string, docType?: string) => {
-    setSelectedLinkStage(stageKey);
-    setSelectedLinkType(docType);
-    setLinkModalOpen(true);
-  };
-
-  const handleUnlink = async (node: any) => {
-    await unlinkInvoiceDocument(invoice.id, node.id, node.docType);
-  };
-
-  const relatedTabs: DrawerRelatedTabItem[] = [
-    {
-      key: "traceability",
-      label: t("Mạng lưới chứng từ", "Document Network"),
-      icon: <Network className="w-3.5 h-3.5" />,
-      badgeCount: invoice?.linkedDocsCount,
-      flush: true, // BẮT BUỘC: bật flush để canvas tràn viền đẹp mắt
-      content: (
-        <DrawerDocumentTraceability
-          rootId={invoice.id}
-          rootType="INVOICE"
-          fetchGraph={getInvoiceTraceabilityGraph}
-          editMode={mode === "edit"}
-          allowedDocTypes={[
-            "BANK_TXN",
-            "PURCHASE_ORDER",
-            "SALES_ORDER",
-            "GARAGE_CASE",
-            "GOODS_RECEIPT",
-            "GOODS_ISSUE",
-          ]}
-          onAddLink={handleOpenLink}
-          onUnlinkNode={handleUnlink}
-        />
-      ),
-    },
-  ];
-
-  return (
-    <StandardFormDrawer
-      open={open}
-      mode={mode}
-      onClose={onClose}
-      onToggleEdit={() => setMode("edit")}
-      title={t(`Hóa đơn: ${invoice?.invoiceNo}`)}
-      layout="2-columns"
-      size="xl"
-      relatedTabs={relatedTabs}
-      leftPanel={<div>{/* Chi tiết hóa đơn */}</div>}
-      rightPanel={<div>{/* Metadata hóa đơn */}</div>}
-    />
-  );
-}
-```
-
----
-
-## 8. Backend Contract (`TraceabilityGraphData`)
-
-Hàm `fetchGraph(id)` cần trả về cấu trúc dữ liệu:
-
-```typescript
-export interface TraceabilityGraphData {
-  rootId: string;
-  rootType: TraceabilityNodeType;
-  nodes: TraceabilityNode[];
-  edges: TraceabilityEdge[];
-  summary: {
-    totalNetOffAmount: number;
-    matchRatio: number;
-    directCount: number;
-    transitiveCount: number;
-  };
-}
-
-export interface TraceabilityNode {
-  id: string;
-  docType: TraceabilityNodeType;
-  docNo: string;
-  date?: string;
-  title?: string;
-  partnerName?: string;
-  amount?: number;
-  netOffAmount?: number;
-  isCurrent?: boolean;
-  depth: number;
-  restricted?: boolean;
-  hasPermission?: boolean;
-  requiredResource?: string;
-}
-
-export interface TraceabilityEdge {
-  id: string;
-  source: string;
-  target: string;
-  label?: string;
-  netOffAmount?: number;
-  isTransitive?: boolean;
-}
-```
-
----
-
-## 9. Quy tắc Gỡ liên kết Client-side & Lưu theo Batch (Client-side Staging)
+## 8. Quy tắc Gỡ liên kết Client-side & Lưu theo Batch (Client-side Staging)
 
 - **Nguyên tắc cốt lõi**:
   1. Khi ở chế độ Chỉnh sửa (`editMode`), thao tác gỡ liên kết chứng từ (bấm nút thùng rác và xác nhận trong `ConfirmModal`) **phải được xử lý hoàn toàn trên Client-side** (lưu vào mảng pending changes của form/hook).
@@ -249,4 +140,3 @@ export interface TraceabilityEdge {
   3. **Tuyệt đối không gọi API xóa ngay lập tức** trong `onUnlinkNode` khi đang `editMode`.
   4. Chỉ khi người dùng bấm nút **"Lưu thay đổi"** của Drawer thì toàn bộ danh sách chứng từ đã đánh dấu gỡ liên kết mới được gửi xuống Backend API theo batch.
   5. Nếu người dùng bấm **"Hủy"**, toàn bộ thay đổi pending sẽ được reset và đồ thị khôi phục lại trạng thái ban đầu.
-

@@ -8,6 +8,8 @@ import {
   Lock,
   ArrowRight,
   Edit3,
+  ArrowDownLeft,
+  ArrowUpRight,
 } from "lucide-react";
 import { Button } from "@/shared/components/ui/Button";
 import { money, formatGMT7 } from "@/shared/utils/format";
@@ -19,10 +21,11 @@ import type {
 import {
   STAGES_CONFIG,
   getStageForDocType,
+  getNodeVisualMeta,
   openGlobalErpDocument,
+  isManualSettlementNode,
 } from "../constants";
 import type { BusinessStageKey } from "../types";
-import { isManualSettlementNode } from "./DocNode";
 
 interface TraceabilityPipelineViewProps {
   graphData: TraceabilityGraphData;
@@ -135,6 +138,27 @@ export function TraceabilityPipelineView({
                   {stageNodes.map((n) => {
                     const isJournal = n.docType === "JOURNAL_ENTRY";
                     const isManual = isManualSettlementNode(n);
+                    const visualMeta = getNodeVisualMeta(n);
+
+                    const amtNumber = Number(n.netOffAmount || n.amount || 0);
+                    const formattedAmt = money(amtNumber);
+
+                    let amountDisplay = formattedAmt;
+                    let amountClassName =
+                      "text-slate-800 dark:text-slate-200 font-semibold";
+
+                    if (visualMeta.isReceipt) {
+                      amountDisplay = `+${formattedAmt}`;
+                      amountClassName =
+                        "text-emerald-600 dark:text-emerald-400 font-bold";
+                    } else if (visualMeta.isPayment) {
+                      amountDisplay = `-${formattedAmt}`;
+                      amountClassName =
+                        "text-[#ea580c] dark:text-orange-400 font-bold";
+                    } else if (n.netOffAmount) {
+                      amountClassName =
+                        "text-emerald-700 dark:text-emerald-400 font-semibold";
+                    }
 
                     return (
                       <div
@@ -149,10 +173,28 @@ export function TraceabilityPipelineView({
                         )}
                       >
                         <div className="flex items-center justify-between gap-1 mb-1.5">
-                          <span className="font-mono text-xs font-bold text-slate-900 dark:text-slate-100 truncate">
-                            {n.docNo}
-                          </span>
-                          <div className="flex items-center gap-1">
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <span
+                              className={cn(
+                                "px-1.5 py-0.2 rounded text-[9px] font-bold border font-mono tracking-wider flex items-center gap-0.5",
+                                visualMeta.badgeCls,
+                              )}
+                              title={visualMeta.fullTitle}
+                            >
+                              {visualMeta.isInvoiceIn && (
+                                <ArrowDownLeft className="w-2.5 h-2.5 opacity-70" />
+                              )}
+                              {visualMeta.isInvoiceOut && (
+                                <ArrowUpRight className="w-2.5 h-2.5 opacity-70" />
+                              )}
+                              {visualMeta.label}
+                            </span>
+                            <span className="font-mono text-xs font-bold text-slate-900 dark:text-slate-100 truncate">
+                              {n.docNo}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center gap-1 flex-shrink-0">
                             {allowEdit &&
                               !n.isCurrent &&
                               !n.restricted &&
@@ -205,16 +247,15 @@ export function TraceabilityPipelineView({
                             : n.partnerName || n.title || "—"}
                         </div>
 
-                        <div className="flex items-center justify-between text-[11px] pt-1.5 border-t border-slate-100 font-mono">
+                        <div className="flex items-center justify-between text-[11px] pt-1.5 border-t border-slate-100 dark:border-slate-800/80 font-mono">
                           <span className="text-slate-400 font-sans">
                             {n.date ? formatGMT7(n.date, "date") : "—"}
                           </span>
-                          <span className="font-semibold text-slate-800">
-                            {n.restricted
-                              ? "***"
-                              : n.netOffAmount
-                                ? money(n.netOffAmount)
-                                : money(n.amount || 0)}
+                          <span
+                            className={amountClassName}
+                            title={visualMeta.fullTitle}
+                          >
+                            {n.restricted ? "***" : amountDisplay}
                           </span>
                         </div>
                       </div>

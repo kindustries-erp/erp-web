@@ -6,6 +6,7 @@ import {
   Position,
   type EdgeProps,
 } from "@xyflow/react";
+import { cn } from "@/shared/utils";
 
 function renderEdgeLabelContent(rawLabel: any) {
   if (!rawLabel) return null;
@@ -16,13 +17,23 @@ function renderEdgeLabelContent(rawLabel: any) {
     const parts = str.split(":");
     const title = parts[0]?.trim();
     const value = parts.slice(1).join(":").trim();
+    const titleLower = title.toLowerCase();
+    const isThu = titleLower.includes("thu");
+    const isChi = titleLower.includes("chi");
+
+    let valClass = "text-slate-900 dark:text-slate-100 font-bold";
+    if (isThu) valClass = "text-emerald-600 dark:text-emerald-400 font-bold";
+    else if (isChi) valClass = "text-[#ea580c] dark:text-orange-400 font-bold";
+
     return (
       <div className="flex flex-col items-center justify-center text-center leading-tight py-0.5 px-1 max-w-[130px]">
         <span className="text-[9px] text-slate-500 dark:text-slate-400 font-medium tracking-tight whitespace-nowrap">
           {title}
         </span>
         {value && (
-          <span className="text-[10px] font-mono font-bold text-slate-900 dark:text-slate-100 whitespace-nowrap">
+          <span
+            className={`text-[10px] font-mono whitespace-nowrap ${valClass}`}
+          >
             {value}
           </span>
         )}
@@ -66,6 +77,7 @@ export function LabeledSmoothStepEdge({
   style = {},
   markerEnd,
   label,
+  animated,
 }: EdgeProps) {
   let edgePath: string;
   let finalLabelX: number;
@@ -163,9 +175,12 @@ export function LabeledSmoothStepEdge({
               position: "absolute",
               transform: `translate(-50%, -50%) translate(${finalLabelX}px,${finalLabelY}px)`,
               pointerEvents: "all",
-              zIndex: 1000,
+              zIndex: animated ? 1100 : 1000,
             }}
-            className="nodrag nopan select-none px-2 py-0.5 rounded-lg bg-white/95 dark:bg-slate-900/95 border border-slate-200/90 dark:border-slate-700 shadow-sm text-slate-800 dark:text-slate-200 backdrop-blur-xs transition-all hover:border-primary/50"
+            className={cn(
+              "nodrag nopan select-none px-2 py-0.5 rounded-lg bg-white/95 dark:bg-slate-900/95 border border-slate-200/90 dark:border-slate-700 shadow-sm text-slate-800 dark:text-slate-200 backdrop-blur-xs transition-all hover:border-slate-400",
+              animated && "shadow-md",
+            )}
           >
             {renderEdgeLabelContent(label)}
           </div>

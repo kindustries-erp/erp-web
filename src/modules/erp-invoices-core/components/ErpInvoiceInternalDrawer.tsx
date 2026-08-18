@@ -20,6 +20,7 @@ import {
   Link2,
   BookOpen,
   Paperclip,
+  Wallet,
 } from "lucide-react";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/Button";
@@ -31,6 +32,7 @@ import { VoucherNetoffSelectionModal } from "./VoucherNetoffSelectionModal";
 import { PurchaseOrderSelectionModal } from "./PurchaseOrderSelectionModal";
 import { SalesOrderSelectionModal } from "./SalesOrderSelectionModal";
 import { GarageCaseSelectionModal } from "./GarageCaseSelectionModal";
+import { ErpInvoiceSettlementTab } from "./ErpInvoiceSettlementTab";
 import { PostedAccountingSummary } from "@/shared/components/accounting/PostedAccountingSummary";
 import { PostingSection } from "@/shared/components/accounting/PostingSection";
 import { ErpInvoicePdfUpload } from "./ErpInvoicePdfUpload";
@@ -111,7 +113,7 @@ export function ErpInvoiceInternalDrawer({
   pendingUnpost = false,
   onUnpost,
   relatedTabs: customRelatedTabs,
-  defaultRelatedTabKey,
+  defaultRelatedTabKey = "financials",
   defaultRelatedCollapsed = false,
   bottomPanel,
 }: Props) {
@@ -324,10 +326,31 @@ export function ErpInvoiceInternalDrawer({
       (detailInvoice.attachments?.length || 0);
 
     resolvedRelatedTabs = [
-      // 1. Tab Chứng từ liên đới & Mạng lưới quan hệ (Canvas Graph)
+      // 1. Tab Tài chính & Công nợ (Nằm ở vị trí đầu tiên, mặc định)
+      {
+        key: "financials",
+        label: t("Tài chính & Công nợ"),
+        icon: <Wallet className="w-3.5 h-3.5" />,
+        badgeCount:
+          (detailInvoice.voucherNetOffs?.length || 0) +
+          (form?.pendingDocumentChanges?.filter((p) => p.type === "BANK")
+            ?.length || 0),
+        content: (
+          <ErpInvoiceSettlementTab
+            invoice={detailInvoice}
+            form={form}
+            editMode={editMode}
+            fieldSet={fieldSet}
+            direction={direction}
+            onRefresh={onSyncDetail}
+          />
+        ),
+      },
+
+      // 2. Tab Chứng từ liên kết (Canvas Graph & Traceability)
       {
         key: "linked_docs",
-        label: t("Chứng từ liên kết & Cấn trừ"),
+        label: t("Chứng từ liên kết"),
         icon: <Link2 className="w-3.5 h-3.5" />,
         badgeCount: linkedCount,
         content: (
@@ -418,7 +441,7 @@ export function ErpInvoiceInternalDrawer({
         ),
       },
 
-      // 2. Tab Hạch toán kế toán (View & Edit)
+      // 3. Tab Hạch toán kế toán (View & Edit)
       {
         key: "accounting",
         label: t("Hạch toán kế toán"),
@@ -589,7 +612,8 @@ export function ErpInvoiceInternalDrawer({
             </div>
           ),
       },
-      // 3. Tab Tài liệu đính kèm
+
+      // 4. Tab Tài liệu đính kèm
       {
         key: "attachments",
         label: t("Tài liệu đính kèm"),
@@ -615,7 +639,8 @@ export function ErpInvoiceInternalDrawer({
           />
         ),
       },
-      // 4. Tab Lịch sử & Kiểm duyệt (Nằm cuối cùng)
+
+      // 5. Tab Lịch sử & Kiểm duyệt (Nằm cuối cùng)
       {
         key: "history",
         label: t("Lịch sử & Kiểm duyệt"),
