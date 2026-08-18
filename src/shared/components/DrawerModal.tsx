@@ -199,12 +199,17 @@ export function DrawerModal({
     };
   }, [instanceId, open]);
 
+  const order = drawerStackOrder.get(instanceId) || 1;
+
   const computedStackOffset = useMemo(() => {
     if (stackOffset !== undefined) return stackOffset;
-    const order = drawerStackOrder.get(instanceId);
-    if (!order || order <= 1) return 0;
+    if (order <= 1) return 0;
     return (order - 1) * DEFAULT_STACK_OFFSET;
-  }, [instanceId, stackOffset]);
+  }, [order, stackOffset]);
+
+  const effectiveZIndex = useMemo(() => {
+    return (zIndex || 400) + (order - 1) * 50;
+  }, [zIndex, order]);
 
   const requestClose = useCallback(() => {
     if (confirmOnClose) setShowConfirm(true);
@@ -228,7 +233,7 @@ export function DrawerModal({
     <div
       className={cn("slide-panel-overlay", visible && "open")}
       style={{
-        zIndex,
+        zIndex: effectiveZIndex,
       }}
       onClick={(e) => {
         if (e.target === e.currentTarget) requestClose();

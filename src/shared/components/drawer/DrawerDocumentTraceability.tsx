@@ -5,6 +5,7 @@ import React, {
   useCallback,
   useRef,
 } from "react";
+import { createPortal } from "react-dom";
 import {
   ReactFlow,
   Background,
@@ -43,6 +44,8 @@ import {
   Trash2,
   ChevronDown,
   Link2,
+  Maximize2,
+  Minimize2,
 } from "lucide-react";
 
 import { Button } from "@/shared/components/ui/Button";
@@ -318,7 +321,7 @@ function TraceabilityNodeCard({ data }: NodeProps<Node<NodeCardCustomData>>) {
 
   const handleOpenDetail = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!node.restricted && node.hasPermission) {
+    if (!node.restricted && node.hasPermission !== false) {
       openGlobalErpDocument(node.docType, node.id);
     }
   };
@@ -340,23 +343,39 @@ function TraceabilityNodeCard({ data }: NodeProps<Node<NodeCardCustomData>>) {
 
   return (
     <div
+      onDoubleClick={handleOpenDetail}
       className={cn(
-        "w-[290px] rounded-xl border bg-white dark:bg-slate-900 transition-all duration-200 group text-left relative z-10",
+        "w-[290px] rounded-xl border bg-white dark:bg-slate-900 transition-all duration-200 group text-left relative z-10 cursor-pointer",
         node.isCurrent
           ? "ring-2 ring-slate-900 dark:ring-slate-100 border-slate-500 shadow-md"
           : "border-slate-200/90 dark:border-slate-800 shadow-2xs hover:border-slate-400 dark:hover:border-slate-600 hover:shadow-sm",
         node.restricted &&
-          "border-dashed border-slate-300 bg-slate-50/70 dark:bg-slate-900/50 opacity-80",
+          "border-dashed border-slate-300 bg-slate-50/70 dark:bg-slate-900/50 opacity-80 cursor-default",
       )}
     >
+      {/* Directional Connection Handles */}
       <Handle
         type="target"
+        id="left"
         position={Position.Left}
         className="w-2.5 h-2.5 !bg-slate-400 border border-white opacity-0 group-hover:opacity-100 transition-opacity z-20"
       />
       <Handle
         type="source"
+        id="right"
         position={Position.Right}
+        className="w-2.5 h-2.5 !bg-slate-400 border border-white opacity-0 group-hover:opacity-100 transition-opacity z-20"
+      />
+      <Handle
+        type="target"
+        id="top"
+        position={Position.Top}
+        className="w-2.5 h-2.5 !bg-slate-400 border border-white opacity-0 group-hover:opacity-100 transition-opacity z-20"
+      />
+      <Handle
+        type="source"
+        id="bottom"
+        position={Position.Bottom}
         className="w-2.5 h-2.5 !bg-slate-400 border border-white opacity-0 group-hover:opacity-100 transition-opacity z-20"
       />
 
@@ -471,7 +490,53 @@ function TraceabilityNodeCard({ data }: NodeProps<Node<NodeCardCustomData>>) {
   );
 }
 
-// ─── Custom Floating Labeled Edge (Always on Top) ────────────────────────────
+function renderEdgeLabelContent(rawLabel: any) {
+  if (!rawLabel) return null;
+  const str = String(rawLabel).trim();
+
+  // 1. Phân tách theo dấu hai chấm ":" (vd: "Thu trực tiếp: 2.160.000 đ" -> dòng 1: "Thu trực tiếp", dòng 2: "2.160.000 đ")
+  if (str.includes(":")) {
+    const parts = str.split(":");
+    const title = parts[0]?.trim();
+    const value = parts.slice(1).join(":").trim();
+    return (
+      <div className="flex flex-col items-center justify-center text-center leading-tight py-0.5 px-1 max-w-[130px]">
+        <span className="text-[9px] text-slate-500 dark:text-slate-400 font-medium tracking-tight whitespace-nowrap">
+          {title}
+        </span>
+        {value && (
+          <span className="text-[10px] font-mono font-bold text-slate-900 dark:text-slate-100 whitespace-nowrap">
+            {value}
+          </span>
+        )}
+      </div>
+    );
+  }
+
+  // 2. Phân tách theo dấu ngoặc đơn "(...)" (vd: "Doanh thu dịch vụ (HĐ bán)" -> dòng 1: "Doanh thu dịch vụ", dòng 2: "(HĐ bán)")
+  if (str.includes("(") && str.includes(")")) {
+    const match = str.match(/^(.*?)\s*(\(.*?\))$/);
+    if (match) {
+      return (
+        <div className="flex flex-col items-center justify-center text-center leading-tight py-0.5 px-1 max-w-[130px]">
+          <span className="text-[9px] text-slate-700 dark:text-slate-300 font-medium tracking-tight whitespace-nowrap">
+            {match[1]?.trim()}
+          </span>
+          <span className="text-[9px] text-slate-500 dark:text-slate-400 italic whitespace-nowrap">
+            {match[2]?.trim()}
+          </span>
+        </div>
+      );
+    }
+  }
+
+  // 3. Chuỗi bình thường (tự động xuống dòng nếu dài)
+  return (
+    <div className="text-[10px] font-medium text-slate-800 dark:text-slate-200 text-center py-0.5 px-1 max-w-[130px] leading-tight break-words">
+      {str}
+    </div>
+  );
+}
 
 function LabeledSmoothStepEdge({
   id,
@@ -485,15 +550,91 @@ function LabeledSmoothStepEdge({
   markerEnd,
   label,
 }: EdgeProps) {
-  const [edgePath, labelX, labelY] = getSmoothStepPath({
-    sourceX,
-    sourceY,
-    sourcePosition,
-    targetX,
-    targetY,
-    targetPosition,
-    borderRadius: 8,
-  });
+  let edgePath: string;
+  let finalLabelX: number;
+  let finalLabelY: number;
+
+  if (targetPosition === Position.Top) {
+    // ─── Chiều dọc (Top -> Bottom) ───
+    const deltaY = targetY - sourceY;
+    const isSkippingStage = deltaY > 360;
+
+    if (isSkippingStage) {
+      // Đi đường vòng bên phải ngoài swimlanes
+      const bypassX = Math.max(sourceX, targetX) + 180;
+      const r = 16;
+      const midY1 = sourceY + 45;
+      const midY2 = targetY - 45;
+
+      edgePath = `M ${sourceX} ${sourceY} L ${sourceX} ${midY1 - r} Q ${sourceX} ${midY1} ${sourceX + (bypassX > sourceX ? r : -r)} ${midY1} L ${bypassX - (bypassX > sourceX ? r : -r)} ${midY1} Q ${bypassX} ${midY1} ${bypassX} ${midY1 + r} L ${bypassX} ${midY2 - r} Q ${bypassX} ${midY2} ${bypassX + (targetX > bypassX ? r : -r)} ${midY2} L ${targetX - (targetX > bypassX ? r : -r)} ${midY2} Q ${targetX} ${midY2} ${targetX} ${midY2 + r} L ${targetX} ${targetY}`;
+
+      finalLabelX = bypassX;
+      finalLabelY = (midY1 + midY2) / 2;
+    } else {
+      const [path] = getSmoothStepPath({
+        sourceX,
+        sourceY,
+        sourcePosition,
+        targetX,
+        targetY,
+        targetPosition,
+        borderRadius: 16,
+      });
+      edgePath = path;
+
+      const isStraight = Math.abs(targetX - sourceX) < 10;
+      const centerY = (sourceY + targetY) / 2;
+
+      if (isStraight) {
+        finalLabelX = targetX;
+        finalLabelY = centerY;
+      } else {
+        // Đặt nhãn tại đoạn dây dọc tiến vào node đích
+        finalLabelX = targetX;
+        finalLabelY = (centerY + targetY) / 2;
+      }
+    }
+  } else {
+    // ─── Chiều ngang (Left -> Right) ───
+    const deltaX = targetX - sourceX;
+    const isSkippingStage = deltaX > 450;
+
+    if (isSkippingStage) {
+      // Đi đường vòng bên dưới ngoài swimlanes
+      const bypassLevelY = Math.max(sourceY, targetY) + 65;
+      const r = 16;
+      const midX1 = sourceX + 60;
+      const midX2 = targetX - 60;
+
+      edgePath = `M ${sourceX} ${sourceY} L ${midX1 - r} ${sourceY} Q ${midX1} ${sourceY} ${midX1} ${sourceY + (bypassLevelY > sourceY ? r : -r)} L ${midX1} ${bypassLevelY - (bypassLevelY > sourceY ? r : -r)} Q ${midX1} ${bypassLevelY} ${midX1 + r} ${bypassLevelY} L ${midX2 - r} ${bypassLevelY} Q ${midX2} ${bypassLevelY} ${midX2} ${bypassLevelY + (targetY > bypassLevelY ? r : -r)} L ${midX2} ${targetY - (targetY > bypassLevelY ? r : -r)} Q ${midX2} ${targetY} ${midX2 + r} ${targetY} L ${targetX} ${targetY}`;
+
+      finalLabelX = (midX1 + midX2) / 2;
+      finalLabelY = bypassLevelY;
+    } else {
+      const [path] = getSmoothStepPath({
+        sourceX,
+        sourceY,
+        sourcePosition,
+        targetX,
+        targetY,
+        targetPosition,
+        borderRadius: 16,
+      });
+      edgePath = path;
+
+      const isStraight = Math.abs(targetY - sourceY) < 10;
+      const centerX = (sourceX + targetX) / 2;
+
+      if (isStraight) {
+        finalLabelX = centerX;
+        finalLabelY = targetY;
+      } else {
+        // Đặt nhãn tại đoạn dây ngang tiến vào node đích
+        finalLabelX = (centerX + targetX) / 2;
+        finalLabelY = targetY;
+      }
+    }
+  }
 
   return (
     <>
@@ -503,13 +644,13 @@ function LabeledSmoothStepEdge({
           <div
             style={{
               position: "absolute",
-              transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
+              transform: `translate(-50%, -50%) translate(${finalLabelX}px,${finalLabelY}px)`,
               pointerEvents: "all",
               zIndex: 1000,
             }}
-            className="nodrag nopan select-none px-2 py-0.5 rounded-md bg-white/95 dark:bg-slate-900/95 border border-slate-300/90 dark:border-slate-700 shadow-xs text-[10px] font-mono font-semibold text-slate-800 dark:text-slate-200 backdrop-blur-xs whitespace-nowrap"
+            className="nodrag nopan select-none px-2 py-0.5 rounded-lg bg-white/95 dark:bg-slate-900/95 border border-slate-200/90 dark:border-slate-700 shadow-sm text-slate-800 dark:text-slate-200 backdrop-blur-xs transition-all hover:border-primary/50"
           >
-            {label}
+            {renderEdgeLabelContent(label)}
           </div>
         </EdgeLabelRenderer>
       )}
@@ -531,8 +672,8 @@ const EDGE_TYPES = {
 const CARD_WIDTH = 290;
 const STAGE_COL_WIDTH = 330;
 const STAGE_HEADER_HEIGHT = 48;
-const CARD_ROW_GAP = 130;
-const STAGE_COL_GAP = 120;
+const CARD_ROW_GAP = 145;
+const STAGE_COL_GAP = 170;
 
 function computeLayout(
   graphData: TraceabilityGraphData,
@@ -580,6 +721,7 @@ function computeLayout(
         id: `stage-group-${stage.key}`,
         type: "stageGroupNode",
         position: { x: stageX, y: stageY },
+        style: { width: stageWidth, height: stageHeight },
         selectable: false,
         draggable: false,
         data: {
@@ -594,14 +736,16 @@ function computeLayout(
         zIndex: -1,
       });
 
-      // Add Document Nodes inside this Stage Column
+      // Add Document Nodes inside this Stage Column (Bounded by parent stage group)
       stageDocs.forEach((doc, docIdx) => {
-        const docX = stageX + (stageWidth - CARD_WIDTH) / 2;
-        const docY = stageY + STAGE_HEADER_HEIGHT + docIdx * CARD_ROW_GAP;
+        const docX = (stageWidth - CARD_WIDTH) / 2;
+        const docY = STAGE_HEADER_HEIGHT + docIdx * CARD_ROW_GAP;
 
         nodes.push({
           id: doc.id,
           type: "traceabilityNode",
+          parentId: `stage-group-${stage.key}`,
+          extent: "parent",
           position: { x: docX, y: docY },
           data: {
             ...doc,
@@ -612,25 +756,31 @@ function computeLayout(
         });
       });
     } else {
-      // Vertical Stage Rows
-      const stageWidth = Math.max(
-        STAGE_COL_WIDTH,
-        count * (CARD_WIDTH + 30) + 30,
+      // Vertical Stage Rows (Symmetric, well-spaced)
+      const maxStageDocs = Math.max(
+        ...activeStages.map((s) => (stageGroupsMap.get(s.key) || []).length),
+        1,
       );
-      const stageHeight = 220;
+      const uniformStageWidth = Math.max(
+        780,
+        maxStageDocs * (CARD_WIDTH + 30) + 30,
+      );
+      const stageHeight = 190;
+      const STAGE_ROW_GAP = 120;
       const stageX = 0;
-      const stageY = stageIdx * (stageHeight + 50);
+      const stageY = stageIdx * (stageHeight + STAGE_ROW_GAP);
 
       nodes.push({
         id: `stage-group-${stage.key}`,
         type: "stageGroupNode",
         position: { x: stageX, y: stageY },
+        style: { width: uniformStageWidth, height: stageHeight },
         selectable: false,
         draggable: false,
         data: {
           stage,
           count,
-          width: stageWidth,
+          width: uniformStageWidth,
           height: stageHeight,
           allowEdit,
           onAddLink,
@@ -640,12 +790,14 @@ function computeLayout(
       });
 
       stageDocs.forEach((doc, docIdx) => {
-        const docX = stageX + 20 + docIdx * (CARD_WIDTH + 30);
-        const docY = stageY + STAGE_HEADER_HEIGHT + 10;
+        const docX = 20 + docIdx * (CARD_WIDTH + 30);
+        const docY = STAGE_HEADER_HEIGHT + 8;
 
         nodes.push({
           id: doc.id,
           type: "traceabilityNode",
+          parentId: `stage-group-${stage.key}`,
+          extent: "parent",
           position: { x: docX, y: docY },
           data: {
             ...doc,
@@ -658,12 +810,14 @@ function computeLayout(
     }
   });
 
-  // 2. Build Edges with Directional Arrows & Clean Floating Labels
+  // 2. Build Edges with Directional Handles & Clean Floating Labels
   graphData.edges.forEach((e) => {
     edges.push({
       id: e.id,
       source: e.source,
       target: e.target,
+      sourceHandle: direction === "vertical" ? "bottom" : "right",
+      targetHandle: direction === "vertical" ? "top" : "left",
       type: "labeledSmoothStep",
       label: e.label || undefined,
       markerEnd: {
@@ -687,6 +841,9 @@ function computeLayout(
 function CanvasFlowInner({
   graphData,
   direction,
+  isFullscreen,
+  onToggleDirection,
+  onToggleFullscreen,
   allowEdit,
   onAddLink,
   onUnlinkNode,
@@ -694,6 +851,9 @@ function CanvasFlowInner({
 }: {
   graphData: TraceabilityGraphData;
   direction: "horizontal" | "vertical";
+  isFullscreen?: boolean;
+  onToggleDirection?: () => void;
+  onToggleFullscreen?: () => void;
   allowEdit?: boolean;
   onAddLink?: (
     stageKey: BusinessStageKey,
@@ -747,6 +907,14 @@ function CanvasFlowInner({
     setEdges,
   ]);
 
+  // Re-fit view when transitioning between fullscreen and regular drawer mode
+  useEffect(() => {
+    const t = setTimeout(() => {
+      fitView({ duration: 350, padding: 0.2 });
+    }, 120);
+    return () => clearTimeout(t);
+  }, [isFullscreen, fitView]);
+
   return (
     <ReactFlow
       nodes={nodes}
@@ -767,8 +935,35 @@ function CanvasFlowInner({
       <Background color="#cbd5e1" gap={20} size={1} />
       <Controls
         showInteractive={false}
-        className="!border-slate-200 !bg-white !shadow-xs !rounded-lg overflow-hidden"
-      />
+        className="!border-slate-200 dark:!border-slate-700 !bg-white dark:!bg-slate-900 !shadow-sm !rounded-lg overflow-hidden !m-3.5"
+      >
+        {onToggleDirection && (
+          <button
+            type="button"
+            onClick={onToggleDirection}
+            className="react-flow__controls-button !flex !items-center !justify-center hover:!bg-slate-100 dark:hover:!bg-slate-800"
+            title="Đổi hướng bố cục Ngang/Dọc"
+          >
+            <RotateCcw className="w-3.5 h-3.5 text-slate-600 dark:text-slate-300" />
+          </button>
+        )}
+        {onToggleFullscreen && (
+          <button
+            type="button"
+            onClick={onToggleFullscreen}
+            className="react-flow__controls-button !flex !items-center !justify-center hover:!bg-slate-100 dark:hover:!bg-slate-800"
+            title={
+              isFullscreen ? "Thu nhỏ Canvas (Esc)" : "Toàn màn hình Canvas"
+            }
+          >
+            {isFullscreen ? (
+              <Minimize2 className="w-3.5 h-3.5 text-primary" />
+            ) : (
+              <Maximize2 className="w-3.5 h-3.5 text-slate-600 dark:text-slate-300" />
+            )}
+          </button>
+        )}
+      </Controls>
     </ReactFlow>
   );
 }
@@ -1127,11 +1322,23 @@ export function DrawerDocumentTraceability({
   const [canvasDirection, setCanvasDirection] = useState<
     "horizontal" | "vertical"
   >("horizontal");
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const [graphData, setGraphData] = useState<TraceabilityGraphData | null>(
     null,
   );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Keyboard shortcut to exit fullscreen
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isFullscreen) {
+        setIsFullscreen(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isFullscreen]);
 
   // Link Selector Popover State
   const [linkSelectorOpen, setLinkSelectorOpen] = useState(false);
@@ -1188,8 +1395,31 @@ export function DrawerDocumentTraceability({
     setUnlinkingLoading(true);
     try {
       await onUnlinkNode(unlinkingNode);
+      const unlinkedId = unlinkingNode.id;
       setUnlinkingNode(null);
-      await loadData(true);
+
+      if (editMode) {
+        // In editMode, do not reload from BE because changes are client-side only!
+        // Optimistically update local graphData
+        setGraphData((prev) => {
+          if (!prev) return prev;
+          const filteredNodes = prev.nodes.filter((n) => n.id !== unlinkedId);
+          const filteredEdges = prev.edges.filter(
+            (e) => e.source !== unlinkedId && e.target !== unlinkedId,
+          );
+          return {
+            ...prev,
+            nodes: filteredNodes,
+            edges: filteredEdges,
+            summary: {
+              ...prev.summary,
+              directCount: Math.max(0, (prev.summary?.directCount || 1) - 1),
+            },
+          };
+        });
+      } else {
+        await loadData(true);
+      }
     } catch (err: any) {
       console.error(err);
     } finally {
@@ -1254,10 +1484,17 @@ export function DrawerDocumentTraceability({
     </div>
   );
 
-  return (
-    <div className={cn("w-full flex flex-col gap-3 py-1", className)}>
+  const renderContent = (fullscreen: boolean) => (
+    <div
+      className={cn(
+        "w-full flex flex-col gap-3 transition-all",
+        fullscreen
+          ? "fixed inset-0 z-[420] bg-white dark:bg-slate-950 p-4 sm:p-6 shadow-2xl overflow-hidden animate-in fade-in duration-200"
+          : "py-1",
+      )}
+    >
       {/* Top Header Bar: Statistics & View Switcher */}
-      <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
+      <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-100 dark:border-slate-800 flex-shrink-0">
         <div className="flex items-center gap-3 text-xs flex-wrap">
           <span className="text-slate-500">
             {t("Tổng chứng từ:")}{" "}
@@ -1360,21 +1597,17 @@ export function DrawerDocumentTraceability({
               <span>{t("Bảng kê")}</span>
             </button>
 
-            {viewMode === "canvas" && (
+            {fullscreen && (
               <div className="flex items-center pl-1 border-l border-slate-200 dark:border-slate-700 ml-1">
                 <Button
                   type="button"
                   variant="ghost"
                   size="icon-sm"
                   className="h-6 w-6 text-slate-500 hover:text-slate-900"
-                  onClick={() =>
-                    setCanvasDirection((d) =>
-                      d === "horizontal" ? "vertical" : "horizontal",
-                    )
-                  }
-                  title={t("Đổi hướng bố cục Ngang/Dọc")}
+                  onClick={() => setIsFullscreen(false)}
+                  title={t("Thu nhỏ Canvas (Esc)")}
                 >
-                  <RotateCcw className="w-3 h-3" />
+                  <Minimize2 className="w-3.5 h-3.5 text-primary" />
                 </Button>
               </div>
             )}
@@ -1384,7 +1617,12 @@ export function DrawerDocumentTraceability({
 
       {/* Main Viewport Content */}
       {loading ? (
-        <div className="h-[380px] flex flex-col items-center justify-center gap-2 text-slate-400">
+        <div
+          className={cn(
+            "flex flex-col items-center justify-center gap-2 text-slate-400",
+            fullscreen ? "flex-1 min-h-[400px]" : "h-[380px]",
+          )}
+        >
           <Loader2 className="w-6 h-6 animate-spin text-slate-500" />
           <span className="text-xs">{t("Đang tải mạng lưới chứng từ...")}</span>
         </div>
@@ -1445,13 +1683,32 @@ export function DrawerDocumentTraceability({
             ))}
         </div>
       ) : (
-        <div className="w-full">
+        <div
+          className={cn(
+            "w-full transition-all",
+            fullscreen && "flex-1 flex flex-col min-h-0",
+          )}
+        >
           {viewMode === "canvas" && (
-            <div className="w-full h-[500px] rounded-xl border border-slate-200/90 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-950 overflow-hidden relative shadow-2xs">
+            <div
+              className={cn(
+                "w-full rounded-xl border border-slate-200/90 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-950 overflow-hidden relative shadow-2xs transition-all",
+                fullscreen
+                  ? "flex-1 h-[calc(100vh-110px)] min-h-[500px]"
+                  : "h-[500px]",
+              )}
+            >
               <ReactFlowProvider>
                 <CanvasFlowInner
                   graphData={graphData}
                   direction={canvasDirection}
+                  isFullscreen={fullscreen}
+                  onToggleDirection={() =>
+                    setCanvasDirection((d) =>
+                      d === "horizontal" ? "vertical" : "horizontal",
+                    )
+                  }
+                  onToggleFullscreen={() => setIsFullscreen((f) => !f)}
                   allowEdit={effectiveAllowEdit}
                   onAddLink={onAddLink}
                   onUnlinkNode={handleRequestUnlink}
@@ -1497,5 +1754,36 @@ export function DrawerDocumentTraceability({
         onCancel={() => setUnlinkingNode(null)}
       />
     </div>
+  );
+
+  return (
+    <>
+      <div className={cn("w-full flex flex-col gap-3 py-1", className)}>
+        {isFullscreen ? (
+          <div className="h-[220px] flex flex-col items-center justify-center gap-3 border border-dashed border-slate-300 dark:border-slate-700 rounded-xl p-6 text-slate-500 bg-slate-50/50 dark:bg-slate-900/50 text-center">
+            <Network className="w-8 h-8 text-primary animate-pulse" />
+            <div className="text-xs font-medium text-slate-700 dark:text-slate-200">
+              {t("Canvas đang được mở ở chế độ Toàn màn hình.")}
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setIsFullscreen(false)}
+              className="text-xs gap-1.5"
+            >
+              <Minimize2 className="w-3.5 h-3.5" />
+              <span>{t("Thu nhỏ lại (Esc)")}</span>
+            </Button>
+          </div>
+        ) : (
+          renderContent(false)
+        )}
+      </div>
+
+      {isFullscreen &&
+        typeof document !== "undefined" &&
+        createPortal(renderContent(true), document.body)}
+    </>
   );
 }

@@ -10,20 +10,18 @@ import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColu
 import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
 import { Input } from "@/shared/components/ui/input";
 import { Textarea } from "@/shared/components/ui/textarea";
-import { Button } from "@/shared/components/ui/Button";
 import { toast } from "react-hot-toast";
 import {
   ArrowDownLeft,
   ArrowUpRight,
-  CreditCard,
   DollarSign,
   Landmark,
-  Plus,
-  Trash2,
 } from "lucide-react";
 import { cn } from "@/shared/utils";
+import { Tabs, TabsList, TabsTrigger } from "@/shared/components/ui/tabs";
 
 export interface SettlementSubmissionItem {
+  id?: string;
   bankTransactionId?: string;
   settlementType: "RECEIPT" | "PAYMENT";
   sourceChannel: "ON_SYSTEM" | "OFF_SYSTEM_MANUAL";
@@ -32,17 +30,20 @@ export interface SettlementSubmissionItem {
   transDate?: string;
   partnerName?: string;
   note?: string;
+  referenceNumber?: string;
+  bankName?: string;
+  correspondentName?: string;
 }
 
 interface GarageCaseSettlementDrawerModalProps {
   open: boolean;
   onClose: () => void;
-  caseId: string;
+  caseId?: string;
   caseCode?: string;
   defaultType?: "RECEIPT" | "PAYMENT";
   suggestedAmount?: number;
   existingTxnIds?: string[];
-  onSubmit: (items: SettlementSubmissionItem[]) => Promise<void>;
+  onSubmit: (items: SettlementSubmissionItem[]) => Promise<void> | void;
 }
 
 function NetOffInput({
@@ -97,7 +98,6 @@ function NetOffInput({
 export function GarageCaseSettlementDrawerModal({
   open,
   onClose,
-  caseId,
   caseCode,
   defaultType = "RECEIPT",
   suggestedAmount = 0,
@@ -122,7 +122,6 @@ export function GarageCaseSettlementDrawerModal({
   const [netOffAmounts, setNetOffAmounts] = useState<Record<string, number>>(
     {},
   );
-  const [maxAmounts, setMaxAmounts] = useState<Record<string, number>>({});
   const [selectedTxns, setSelectedTxns] = useState<Record<string, any>>({});
 
   const tableState = useTableColumnState(
@@ -176,7 +175,6 @@ export function GarageCaseSettlementDrawerModal({
       setSettlementType(defaultType);
       setSelectedIds([]);
       setNetOffAmounts({});
-      setMaxAmounts({});
       setSelectedTxns({});
       setManualAmount(suggestedAmount || 0);
       setManualDate(new Date().toISOString().slice(0, 10));
@@ -210,16 +208,10 @@ export function GarageCaseSettlementDrawerModal({
         ...prev,
         [v.id]: remaining > 0 ? remaining : 0,
       }));
-      setMaxAmounts((prev) => ({ ...prev, [v.id]: remaining }));
       setSelectedTxns((prev) => ({ ...prev, [v.id]: v }));
     } else {
       setSelectedIds((prev) => prev.filter((id) => id !== v.id));
       setNetOffAmounts((prev) => {
-        const next = { ...prev };
-        delete next[v.id];
-        return next;
-      });
-      setMaxAmounts((prev) => {
         const next = { ...prev };
         delete next[v.id];
         return next;
@@ -233,25 +225,13 @@ export function GarageCaseSettlementDrawerModal({
   };
 
   const handleAmountChange = (v: any, val: number) => {
-    const credit = parseFloat(v.creditAmount) || 0;
-    const debit = parseFloat(v.debitAmount) || 0;
-    const amount = credit > 0 ? credit : debit;
-    const netOff = parseFloat(v.netOffAmount) || 0;
-    const remaining = amount - netOff;
-
     if (val > 0) {
       setSelectedIds((prev) => (prev.includes(v.id) ? prev : [...prev, v.id]));
       setNetOffAmounts((prev) => ({ ...prev, [v.id]: val }));
-      setMaxAmounts((prev) => ({ ...prev, [v.id]: remaining }));
       setSelectedTxns((prev) => ({ ...prev, [v.id]: v }));
     } else {
       setSelectedIds((prev) => prev.filter((id) => id !== v.id));
       setNetOffAmounts((prev) => {
-        const next = { ...prev };
-        delete next[v.id];
-        return next;
-      });
-      setMaxAmounts((prev) => {
         const next = { ...prev };
         delete next[v.id];
         return next;
@@ -268,7 +248,6 @@ export function GarageCaseSettlementDrawerModal({
     if (checked) {
       const newIds: string[] = [];
       const newAmounts: Record<string, number> = {};
-      const newMax: Record<string, number> = {};
       const newTxns: Record<string, any> = {};
 
       vouchers.forEach((v: any) => {
@@ -280,18 +259,15 @@ export function GarageCaseSettlementDrawerModal({
         const remaining = amount - netOff;
 
         newAmounts[v.id] = remaining > 0 ? remaining : 0;
-        newMax[v.id] = remaining;
         newTxns[v.id] = v;
       });
 
       setSelectedIds(newIds);
       setNetOffAmounts(newAmounts);
-      setMaxAmounts(newMax);
       setSelectedTxns(newTxns);
     } else {
       setSelectedIds([]);
       setNetOffAmounts({});
-      setMaxAmounts({});
       setSelectedTxns({});
     }
   };
@@ -398,7 +374,10 @@ export function GarageCaseSettlementDrawerModal({
     },
     {
       key: "transDate",
-      header: renderHeaderFilter("transDate", "Ngày GD"),
+      header: renderHeaderFilter(
+        "transDate",
+        t("cases.settlementDrawer.columns.date", "Ngày GD"),
+      ),
       size: 110,
       cell: (row: any) => (
         <span className="text-xs text-slate-600 dark:text-slate-400 font-mono">
@@ -408,7 +387,10 @@ export function GarageCaseSettlementDrawerModal({
     },
     {
       key: "referenceNumber",
-      header: renderHeaderFilter("referenceNumber", "Số tham chiếu / Bút toán"),
+      header: renderHeaderFilter(
+        "referenceNumber",
+        t("cases.settlementDrawer.columns.ref", "Số tham chiếu / Bút toán"),
+      ),
       size: 180,
       cell: (row: any) => (
         <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">
@@ -418,7 +400,10 @@ export function GarageCaseSettlementDrawerModal({
     },
     {
       key: "bankAccount",
-      header: renderHeaderFilter("bankAccount", "Tài khoản / Sổ quỹ"),
+      header: renderHeaderFilter(
+        "bankAccount",
+        t("cases.settlementDrawer.columns.account", "Tài khoản / Sổ quỹ"),
+      ),
       size: 160,
       cell: (row: any) => (
         <div className="flex flex-col text-xs">
@@ -427,14 +412,19 @@ export function GarageCaseSettlementDrawerModal({
           </span>
           <span className="text-[10px] text-slate-400 font-mono">
             {row.bankAccount?.accountNumber ||
-              (row.sourceType === "BANK" ? "Ngân hàng" : "Tiền mặt")}
+              (row.sourceType === "BANK"
+                ? t("common:bank", "Ngân hàng")
+                : t("common:cash", "Tiền mặt"))}
           </span>
         </div>
       ),
     },
     {
       key: "correspondentName",
-      header: renderHeaderFilter("correspondentName", "Đối tác / Người nộp"),
+      header: renderHeaderFilter(
+        "correspondentName",
+        t("cases.settlementDrawer.columns.partner", "Đối tác / Người nộp"),
+      ),
       size: 200,
       cell: (row: any) => (
         <span className="text-xs text-slate-700 dark:text-slate-300 truncate">
@@ -444,7 +434,10 @@ export function GarageCaseSettlementDrawerModal({
     },
     {
       key: "description",
-      header: renderHeaderFilter("description", "Nội dung diễn giải"),
+      header: renderHeaderFilter(
+        "description",
+        t("cases.settlementDrawer.columns.desc", "Nội dung diễn giải"),
+      ),
       size: 220,
       cell: (row: any) => (
         <span
@@ -457,7 +450,7 @@ export function GarageCaseSettlementDrawerModal({
     },
     {
       key: "amount",
-      header: "Số tiền GD",
+      header: t("cases.settlementDrawer.columns.amount", "Số tiền GD"),
       align: "right",
       size: 130,
       cell: (row: any) => {
@@ -482,7 +475,7 @@ export function GarageCaseSettlementDrawerModal({
     },
     {
       key: "remainingAmount",
-      header: "Còn khả dụng",
+      header: t("cases.settlementDrawer.columns.available", "Còn khả dụng"),
       align: "right",
       size: 130,
       cell: (row: any) => {
@@ -500,7 +493,7 @@ export function GarageCaseSettlementDrawerModal({
     },
     {
       key: "currentNetOff",
-      header: "Cấn trừ đợt này",
+      header: t("cases.settlementDrawer.columns.netoff", "Cấn trừ đợt này"),
       align: "right",
       size: 150,
       cell: (row: any) => {
@@ -551,8 +544,11 @@ export function GarageCaseSettlementDrawerModal({
 
     return {
       selection: "",
-      transDate: "Tổng cộng",
-      referenceNumber: `${vouchers.length} giao dịch`,
+      transDate: t("cases.settlementDrawer.columns.total", "Tổng cộng"),
+      referenceNumber: t("cases.settlementDrawer.columns.txnCount", {
+        count: vouchers.length,
+        defaultValue: `${vouchers.length} giao dịch`,
+      }),
       bankAccount: "",
       correspondentName: "",
       description: "",
@@ -571,7 +567,7 @@ export function GarageCaseSettlementDrawerModal({
           </span>
         ),
     };
-  }, [vouchers, netOffAmounts]);
+  }, [vouchers, netOffAmounts, t]);
 
   const handleSave = async () => {
     try {
@@ -579,7 +575,12 @@ export function GarageCaseSettlementDrawerModal({
 
       if (activeTab === "ON_SYSTEM") {
         if (selectedIds.length === 0) {
-          toast.error("Vui lòng tích chọn ít nhất 1 giao dịch để cấn trừ");
+          toast.error(
+            t(
+              "cases.settlementDrawer.toasts.selectAtLeastOne",
+              "Vui lòng tích chọn ít nhất 1 giao dịch để cấn trừ",
+            ),
+          );
           return;
         }
 
@@ -600,20 +601,39 @@ export function GarageCaseSettlementDrawerModal({
               : undefined,
             partnerName: txn?.correspondentName || undefined,
             note: txn?.description || undefined,
+            referenceNumber: txn?.referenceNumber || undefined,
+            bankName:
+              txn?.bankAccount?.bankName || txn?.cashBook?.name || undefined,
+            correspondentName: txn?.correspondentName || undefined,
           });
         }
 
         if (items.length === 0) {
-          toast.error("Số tiền cấn trừ phải lớn hơn 0");
+          toast.error(
+            t(
+              "cases.settlementDrawer.toasts.amountGreaterThanZero",
+              "Số tiền cấn trừ phải lớn hơn 0",
+            ),
+          );
           return;
         }
 
         await onSubmit(items);
-        toast.success(`Đã cấn trừ thành công ${items.length} giao dịch!`);
+        toast.success(
+          t("cases.settlementDrawer.toasts.netoffSuccess", {
+            count: items.length,
+            defaultValue: `Đã cấn trừ thành công ${items.length} giao dịch!`,
+          }),
+        );
       } else {
         // Ghi nhận Ngoài sổ sách
         if (!manualAmount || manualAmount <= 0) {
-          toast.error("Vui lòng nhập số tiền hợp lệ (> 0)");
+          toast.error(
+            t(
+              "cases.settlementDrawer.toasts.validAmount",
+              "Vui lòng nhập số tiền hợp lệ (> 0)",
+            ),
+          );
           return;
         }
 
@@ -628,7 +648,12 @@ export function GarageCaseSettlementDrawerModal({
         };
 
         await onSubmit([manualItem]);
-        toast.success("Đã ghi nhận dòng tiền ngoài sổ sách thành công!");
+        toast.success(
+          t(
+            "cases.settlementDrawer.toasts.manualSuccess",
+            "Đã ghi nhận dòng tiền ngoài sổ sách thành công!",
+          ),
+        );
       }
 
       onClose();
@@ -645,7 +670,10 @@ export function GarageCaseSettlementDrawerModal({
     <DrawerModal
       open={open}
       onClose={onClose}
-      title={`Ghi nhận & Cấn trừ Dòng tiền: ${caseCode || ""}`}
+      title={t("cases.settlementDrawer.title", {
+        code: caseCode || "",
+        defaultValue: `Ghi nhận & Cấn trừ Dòng tiền: ${caseCode || ""}`,
+      })}
       panelClassName="w-full md:w-[95vw] lg:w-[1200px] xl:w-[1200px]"
       actions={[
         {
@@ -656,10 +684,16 @@ export function GarageCaseSettlementDrawerModal({
         },
         {
           label: isSubmitting
-            ? "Đang lưu..."
+            ? t("common:saving", "Đang lưu...")
             : activeTab === "ON_SYSTEM"
-              ? `Xác nhận cấn trừ (${selectedIds.length})`
-              : "Xác nhận ghi nhận ngoài",
+              ? t("cases.settlementDrawer.confirmNetoff", {
+                  count: selectedIds.length,
+                  defaultValue: `Xác nhận cấn trừ (${selectedIds.length})`,
+                })
+              : t(
+                  "cases.settlementDrawer.confirmManual",
+                  "Xác nhận ghi nhận ngoài",
+                ),
           primary: true,
           disabled:
             isSubmitting ||
@@ -671,68 +705,95 @@ export function GarageCaseSettlementDrawerModal({
       ]}
     >
       <div className="flex flex-col h-full space-y-4">
-        {/* Thanh chọn Chế độ: Sao kê ERP vs Ngoài sổ sách */}
-        <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
-          <div className="flex bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl gap-1">
-            <button
-              type="button"
-              onClick={() => setActiveTab("ON_SYSTEM")}
-              className={cn(
-                "px-3 py-1.5 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer",
-                activeTab === "ON_SYSTEM"
-                  ? "bg-white dark:bg-slate-700 text-indigo-700 dark:text-indigo-300 shadow-sm"
-                  : "text-slate-600 hover:text-slate-900 dark:text-slate-400",
-              )}
-            >
-              <Landmark className="w-3.5 h-3.5" />
-              1. Cấn trừ Sao kê Ngân hàng / Sổ quỹ ERP
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab("OFF_SYSTEM_MANUAL")}
-              className={cn(
-                "px-3 py-1.5 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer",
-                activeTab === "OFF_SYSTEM_MANUAL"
-                  ? "bg-white dark:bg-slate-700 text-indigo-700 dark:text-indigo-300 shadow-sm"
-                  : "text-slate-600 hover:text-slate-900 dark:text-slate-400",
-              )}
-            >
-              <DollarSign className="w-3.5 h-3.5" />
-              2. Ghi nhận Dòng tiền Ngoài sổ sách (Tiền mặt ngoài / CK cá nhân)
-            </button>
-          </div>
+        {/* Segmented Animated Pill Tabs (Dashboard style) */}
+        <Tabs
+          value={activeTab}
+          onValueChange={(val) =>
+            setActiveTab(val as "ON_SYSTEM" | "OFF_SYSTEM_MANUAL")
+          }
+          className="w-full"
+        >
+          <div className="flex flex-wrap items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3 gap-3">
+            <TabsList className="h-10 rounded-full bg-slate-100/80 dark:bg-slate-800/80 p-1 gap-1.5 shadow-[0_1px_2px_rgba(15,23,42,.03)]">
+              <TabsTrigger
+                value="ON_SYSTEM"
+                className={cn(
+                  "group relative shrink-0 rounded-full px-4 h-full gap-0 transition-all duration-150 ease-out cursor-pointer",
+                  "data-[state=inactive]:text-slate-500 data-[state=inactive]:font-medium hover:text-slate-700 dark:data-[state=inactive]:text-slate-400",
+                  "data-[state=active]:text-indigo-700 data-[state=active]:font-semibold dark:data-[state=active]:text-indigo-300",
+                )}
+              >
+                <Landmark
+                  className={cn(
+                    "shrink-0 transition-[width,height,opacity,margin] duration-150 ease-out overflow-hidden",
+                    "w-0 h-0 opacity-0 mr-0",
+                    "group-data-[state=active]:w-3.5 group-data-[state=active]:h-3.5 group-data-[state=active]:opacity-100 group-data-[state=active]:mr-1.5",
+                  )}
+                />
+                <span className="text-xs font-semibold tracking-tight">
+                  {t(
+                    "cases.settlementDrawer.tabs.erp",
+                    "1. Cấn trừ Sao kê / Sổ quỹ ERP",
+                  )}
+                </span>
+              </TabsTrigger>
 
-          {activeTab === "OFF_SYSTEM_MANUAL" && (
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setSettlementType("RECEIPT")}
+              <TabsTrigger
+                value="OFF_SYSTEM_MANUAL"
                 className={cn(
-                  "px-2.5 py-1 rounded-lg text-xs font-medium border flex items-center gap-1 transition-all cursor-pointer",
-                  settlementType === "RECEIPT"
-                    ? "bg-emerald-50 border-emerald-300 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 font-semibold"
-                    : "border-slate-200 text-slate-500",
+                  "group relative shrink-0 rounded-full px-4 h-full gap-0 transition-all duration-150 ease-out cursor-pointer",
+                  "data-[state=inactive]:text-slate-500 data-[state=inactive]:font-medium hover:text-slate-700 dark:data-[state=inactive]:text-slate-400",
+                  "data-[state=active]:text-emerald-700 data-[state=active]:font-semibold dark:data-[state=active]:text-emerald-300",
                 )}
               >
-                <ArrowDownLeft className="w-3 h-3 text-emerald-600" />
-                Ghi nhận Thu tiền
-              </button>
-              <button
-                type="button"
-                onClick={() => setSettlementType("PAYMENT")}
-                className={cn(
-                  "px-2.5 py-1 rounded-lg text-xs font-medium border flex items-center gap-1 transition-all cursor-pointer",
-                  settlementType === "PAYMENT"
-                    ? "bg-amber-50 border-amber-300 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 font-semibold"
-                    : "border-slate-200 text-slate-500",
-                )}
-              >
-                <ArrowUpRight className="w-3 h-3 text-amber-600" />
-                Ghi nhận Chi tiền
-              </button>
-            </div>
-          )}
-        </div>
+                <DollarSign
+                  className={cn(
+                    "shrink-0 transition-[width,height,opacity,margin] duration-150 ease-out overflow-hidden",
+                    "w-0 h-0 opacity-0 mr-0",
+                    "group-data-[state=active]:w-3.5 group-data-[state=active]:h-3.5 group-data-[state=active]:opacity-100 group-data-[state=active]:mr-1.5",
+                  )}
+                />
+                <span className="text-xs font-semibold tracking-tight">
+                  {t(
+                    "cases.settlementDrawer.tabs.manual",
+                    "2. Ghi nhận Dòng tiền Ngoài sổ sách",
+                  )}
+                </span>
+              </TabsTrigger>
+            </TabsList>
+
+            {activeTab === "OFF_SYSTEM_MANUAL" && (
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setSettlementType("RECEIPT")}
+                  className={cn(
+                    "px-3 py-1.5 rounded-full text-xs font-medium border flex items-center gap-1.5 transition-all cursor-pointer",
+                    settlementType === "RECEIPT"
+                      ? "bg-emerald-50 border-emerald-300 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 font-semibold shadow-xs ring-1 ring-emerald-500/20"
+                      : "border-slate-200 text-slate-500 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-400",
+                  )}
+                >
+                  <ArrowDownLeft className="w-3.5 h-3.5 text-emerald-600" />
+                  {t("cases.settlementDrawer.typeReceipt", "Ghi nhận Thu tiền")}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSettlementType("PAYMENT")}
+                  className={cn(
+                    "px-3 py-1.5 rounded-full text-xs font-medium border flex items-center gap-1.5 transition-all cursor-pointer",
+                    settlementType === "PAYMENT"
+                      ? "bg-amber-50 border-amber-300 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 font-semibold shadow-xs ring-1 ring-amber-500/20"
+                      : "border-slate-200 text-slate-500 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-400",
+                  )}
+                >
+                  <ArrowUpRight className="w-3.5 h-3.5 text-amber-600" />
+                  {t("cases.settlementDrawer.typePayment", "Ghi nhận Chi tiền")}
+                </button>
+              </div>
+            )}
+          </div>
+        </Tabs>
 
         {/* Nội dung Tab 1: StandardTable Spreadsheet */}
         {activeTab === "ON_SYSTEM" ? (
@@ -761,13 +822,16 @@ export function GarageCaseSettlementDrawerModal({
             <div className="p-4 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40 space-y-4">
               <h4 className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-2">
                 <DollarSign className="w-4 h-4 text-indigo-600" />
-                Thông tin Dòng tiền Ngoài Sổ sách ERP
+                {t(
+                  "cases.settlementDrawer.manualSectionTitle",
+                  "Thông tin Dòng tiền Ngoài Sổ sách ERP",
+                )}
               </h4>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <label className="text-xs font-medium text-slate-700 dark:text-slate-300">
-                    Số tiền (VNĐ) *
+                    {t("cases.settlementDrawer.amount", "Số tiền (VNĐ) *")}
                   </label>
                   <Input
                     type="number"
@@ -776,14 +840,17 @@ export function GarageCaseSettlementDrawerModal({
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                       setManualAmount(Number(e.target.value))
                     }
-                    placeholder="Nhập số tiền..."
+                    placeholder={t(
+                      "cases.settlementDrawer.amountPlaceholder",
+                      "Nhập số tiền...",
+                    )}
                     className="h-9 text-xs font-semibold"
                   />
                 </div>
 
                 <div className="space-y-1.5">
                   <label className="text-xs font-medium text-slate-700 dark:text-slate-300">
-                    Ngày giao dịch *
+                    {t("cases.settlementDrawer.transDate", "Ngày giao dịch *")}
                   </label>
                   <Input
                     type="date"
@@ -797,7 +864,10 @@ export function GarageCaseSettlementDrawerModal({
 
                 <div className="space-y-1.5">
                   <label className="text-xs font-medium text-slate-700 dark:text-slate-300">
-                    Phân loại nguồn ngoài
+                    {t(
+                      "cases.settlementDrawer.category",
+                      "Phân loại nguồn ngoài",
+                    )}
                   </label>
                   <select
                     value={manualCategory}
@@ -807,28 +877,39 @@ export function GarageCaseSettlementDrawerModal({
                     className="w-full h-9 rounded-md border border-slate-200 bg-white px-3 py-1 text-xs shadow-sm dark:border-slate-800 dark:bg-slate-950"
                   >
                     <option value="TIEN_MAT_NGOAI">
-                      Tiền mặt ngoài sổ sách
+                      {t(
+                        "cases.settlementDrawer.catCash",
+                        "Tiền mặt ngoài sổ sách",
+                      )}
                     </option>
                     <option value="CHUYEN_KHOAN_CA_NHAN">
-                      Chuyển khoản tài khoản cá nhân
+                      {t(
+                        "cases.settlementDrawer.catBank",
+                        "Chuyển khoản tài khoản cá nhân",
+                      )}
                     </option>
-                    <option value="HOA_HONG_THO_NGOAI">
-                      Chi hoa hồng / Thợ ngoài
+                    <option value="CHI_PHI_KHAC">
+                      {t("cases.settlementDrawer.catOther", "Khác")}
                     </option>
-                    <option value="CHI_PHI_KHAC">Chi phí vận hành khác</option>
                   </select>
                 </div>
 
                 <div className="space-y-1.5">
                   <label className="text-xs font-medium text-slate-700 dark:text-slate-300">
-                    Đối tác / Người nộp / nhận
+                    {t(
+                      "cases.settlementDrawer.partner",
+                      "Đối tác / Người nộp / Người nhận",
+                    )}
                   </label>
                   <Input
                     value={manualPartner}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                       setManualPartner(e.target.value)
                     }
-                    placeholder="Họ tên hoặc gara/thợ..."
+                    placeholder={t(
+                      "cases.settlementDrawer.partnerPlaceholder",
+                      "Tên người giao dịch...",
+                    )}
                     className="h-9 text-xs"
                   />
                 </div>
@@ -836,7 +917,7 @@ export function GarageCaseSettlementDrawerModal({
 
               <div className="space-y-1.5">
                 <label className="text-xs font-medium text-slate-700 dark:text-slate-300">
-                  Ghi chú / Diễn giải
+                  {t("cases.settlementDrawer.note", "Ghi chú diễn giải")}
                 </label>
                 <Textarea
                   rows={3}
@@ -844,7 +925,10 @@ export function GarageCaseSettlementDrawerModal({
                   onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
                     setManualNote(e.target.value)
                   }
-                  placeholder="Ghi chú chi tiết mục đích thu chi ngoài..."
+                  placeholder={t(
+                    "cases.settlementDrawer.notePlaceholder",
+                    "Lý do thu / chi, nội dung chứng từ...",
+                  )}
                   className="text-xs resize-none"
                 />
               </div>

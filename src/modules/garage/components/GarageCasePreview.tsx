@@ -10,7 +10,7 @@ interface Props {
 }
 
 export function GarageCasePreview({ caseData, grossProfit }: Props) {
-  const { t } = useTranslation("garage");
+  const { t } = useTranslation(["garage", "common"]);
   const { rawData } = caseData || {};
 
   const formatNumber = (val: string | number | null | undefined) => {
@@ -44,9 +44,9 @@ export function GarageCasePreview({ caseData, grossProfit }: Props) {
   }, [rawData]);
 
   const dateStr = rawData?.NgayTiepNhan
-    ? format(new Date(rawData.NgayTiepNhan), "dd 'tháng' MM 'năm' yyyy")
+    ? format(new Date(rawData.NgayTiepNhan), "dd/MM/yyyy")
     : caseData?.ngayPhatSinh
-      ? format(new Date(caseData.ngayPhatSinh), "dd 'tháng' MM 'năm' yyyy")
+      ? format(new Date(caseData.ngayPhatSinh), "dd/MM/yyyy")
       : "---";
 
   return (
@@ -68,12 +68,28 @@ export function GarageCasePreview({ caseData, grossProfit }: Props) {
           <div className="flex justify-between items-start mb-6 mt-1">
             <div className="flex-1 space-y-0.5 text-xs text-slate-600 dark:text-slate-400">
               <h2 className="text-sm font-bold uppercase text-emerald-700 dark:text-emerald-400">
-                CÔNG TY CỔ PHẦN GREENWAY AUTOMOTIVES
+                {t(
+                  "cases.quotePreview.companyName",
+                  "CÔNG TY CỔ PHẦN GREENWAY AUTOMOTIVES",
+                )}
               </h2>
-              <p>CN1: 66 Phổ Quang, Phường Tân Sơn Hòa, TP. Hồ Chí Minh</p>
-              <p>CN2: 554 Lê Văn Lương, Phường Tân Hưng, TP. Hồ Chí Minh</p>
+              <p>
+                {t(
+                  "cases.quotePreview.branch1",
+                  "CN1: 66 Phổ Quang, Phường Tân Sơn Hòa, TP. Hồ Chí Minh",
+                )}
+              </p>
+              <p>
+                {t(
+                  "cases.quotePreview.branch2",
+                  "CN2: 554 Lê Văn Lương, Phường Tân Hưng, TP. Hồ Chí Minh",
+                )}
+              </p>
               <p className="pt-1 font-medium text-slate-700 dark:text-slate-300">
-                Hotline: 0853.64.65.66 & 0858.64.65.66
+                {t(
+                  "cases.quotePreview.hotline",
+                  "Hotline: 0853.64.65.66 & 0858.64.65.66",
+                )}
               </p>
             </div>
             <div className="flex-shrink-0 text-right ml-4">
@@ -81,7 +97,7 @@ export function GarageCasePreview({ caseData, grossProfit }: Props) {
                 GREENWAY
               </h1>
               <p className="text-[10px] font-semibold tracking-[0.15em] text-emerald-800 dark:text-emerald-400 uppercase">
-                Luxury Cars | Services
+                {t("cases.quotePreview.tagline", "Luxury Cars | Services")}
               </p>
             </div>
           </div>
@@ -89,17 +105,22 @@ export function GarageCasePreview({ caseData, grossProfit }: Props) {
           {/* Title */}
           <div className="text-center mb-6 border-t border-b border-slate-100 dark:border-slate-800 py-3 bg-slate-50/50 dark:bg-slate-800/30 rounded-lg">
             <h1 className="text-lg font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100">
-              SỔ BÁO GIÁ & LỢI NHUẬN DỰ KIẾN
+              {t("cases.quotePreview.title", "SỔ BÁO GIÁ & LỢI NHUẬN DỰ KIẾN")}
             </h1>
             <div className="flex justify-center items-center gap-6 mt-1 text-xs text-slate-500 dark:text-slate-400">
               <span>
-                Số phiếu:{" "}
-                <strong className="text-emerald-600 dark:text-emerald-400 font-semibold">
+                {t("cases.quotePreview.caseNo", "Số phiếu:")}{" "}
+                <strong className="text-emerald-600 dark:text-emerald-400 font-semibold font-mono">
                   {caseData?.soChungTu || rawData?.SoPhieu || "---"}
                 </strong>
               </span>
               <span>•</span>
-              <span>Ngày {dateStr}</span>
+              <span>
+                {t("cases.quotePreview.date", {
+                  date: dateStr,
+                  defaultValue: `Ngày ${dateStr}`,
+                })}
+              </span>
             </div>
           </div>
 
@@ -108,33 +129,37 @@ export function GarageCasePreview({ caseData, grossProfit }: Props) {
             <div className="space-y-1.5">
               <div className="flex">
                 <span className="w-28 text-slate-500 shrink-0">
-                  Khách hàng:
+                  {t("cases.quotePreview.customer", "Khách hàng:")}
                 </span>
                 <span className="font-semibold uppercase text-slate-900 dark:text-slate-100">
                   {rawData?.KhachHangName || caseData?.khachHangName || "---"}
                 </span>
               </div>
               <div className="flex">
-                <span className="w-28 text-slate-500 shrink-0">Địa chỉ:</span>
+                <span className="w-28 text-slate-500 shrink-0">
+                  {t("cases.quotePreview.address", "Địa chỉ:")}
+                </span>
                 <span className="text-slate-700 dark:text-slate-300 truncate">
                   {rawData?.DiaChiKhachHang || "---"}
                 </span>
               </div>
               <div className="flex">
                 <span className="w-28 text-slate-500 shrink-0">
-                  Mã số thuế:
+                  {t("cases.quotePreview.taxCode", "Mã số thuế:")}
                 </span>
-                <span>{rawData?.MaSoThue || "---"}</span>
+                <span className="font-mono">{rawData?.MaSoThue || "---"}</span>
               </div>
               <div className="flex">
                 <span className="w-28 text-slate-500 shrink-0">
-                  Điện thoại:
+                  {t("cases.quotePreview.phone", "Điện thoại:")}
                 </span>
-                <span>{rawData?.DienThoaiKhachHang || "---"}</span>
+                <span className="font-mono">
+                  {rawData?.DienThoaiKhachHang || "---"}
+                </span>
               </div>
               <div className="flex">
                 <span className="w-28 text-slate-500 shrink-0">
-                  Yêu cầu DV:
+                  {t("cases.quotePreview.serviceRequest", "Yêu cầu DV:")}
                 </span>
                 <span className="text-slate-700 dark:text-slate-300">
                   {rawData?.YeuCauDichVu || "---"}
@@ -144,15 +169,15 @@ export function GarageCasePreview({ caseData, grossProfit }: Props) {
             <div className="space-y-1.5 md:border-l md:border-slate-200 dark:md:border-slate-700 md:pl-4">
               <div className="flex">
                 <span className="w-24 text-slate-500 shrink-0">
-                  Biển số xe:
+                  {t("cases.quotePreview.plate", "Biển số xe:")}
                 </span>
-                <span className="font-bold text-primary">
+                <span className="font-bold text-primary font-mono">
                   {caseData?.bienSoXe || "---"}
                 </span>
               </div>
               <div className="flex">
                 <span className="w-24 text-slate-500 shrink-0">
-                  Hãng / Dòng:
+                  {t("cases.quotePreview.carModel", "Hãng / Dòng:")}
                 </span>
                 <span>
                   {rawData?.HangXeName || "---"} {rawData?.DongXeName || ""}
@@ -160,19 +185,25 @@ export function GarageCasePreview({ caseData, grossProfit }: Props) {
                 </span>
               </div>
               <div className="flex">
-                <span className="w-24 text-slate-500 shrink-0">Số KM:</span>
-                <span className="font-medium">
+                <span className="w-24 text-slate-500 shrink-0">
+                  {t("cases.quotePreview.km", "Số KM:")}
+                </span>
+                <span className="font-medium font-mono">
                   {formatNumber(rawData?.SoKM || rawData?.SoKMTruoc || 0)} km
                 </span>
               </div>
               <div className="flex">
-                <span className="w-24 text-slate-500 shrink-0">Số VIN:</span>
+                <span className="w-24 text-slate-500 shrink-0">
+                  {t("cases.quotePreview.vin", "Số VIN:")}
+                </span>
                 <span className="font-mono text-slate-600 dark:text-slate-400">
                   {rawData?.SoKhung || caseData?.soKhung || "---"}
                 </span>
               </div>
               <div className="flex">
-                <span className="w-24 text-slate-500 shrink-0">Số máy:</span>
+                <span className="w-24 text-slate-500 shrink-0">
+                  {t("cases.quotePreview.engineNo", "Số máy:")}
+                </span>
                 <span className="font-mono text-slate-600 dark:text-slate-400">
                   {rawData?.SoMay || "---"}
                 </span>
@@ -187,23 +218,49 @@ export function GarageCasePreview({ caseData, grossProfit }: Props) {
               <div className="flex items-center justify-between mb-2">
                 <h3 className="font-bold text-xs uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-blue-500"></span>
-                  1. Vật tư & Phụ tùng ({parts.length})
+                  {t("cases.quotePreview.partsSection", {
+                    count: parts.length,
+                    defaultValue: `1. Vật tư & Phụ tùng (${parts.length})`,
+                  })}
                 </h3>
               </div>
               <div className="rounded-lg border border-slate-200 dark:border-slate-800 overflow-x-auto shadow-sm">
                 <table className="w-full border-collapse text-xs text-center">
                   <thead>
                     <tr className="bg-slate-50 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 font-semibold border-b border-slate-200 dark:border-slate-800">
-                      <th className="p-2 w-10">STT</th>
-                      <th className="p-2 w-28 text-left">Mã PT/VT</th>
-                      <th className="p-2 text-left">Tên phụ tùng / vật tư</th>
-                      <th className="p-2 w-12">SL</th>
-                      <th className="p-2 w-20 text-right">Đơn giá</th>
-                      <th className="p-2 w-12">%GG</th>
-                      <th className="p-2 w-24 text-right">Thành tiền</th>
-                      <th className="p-2 w-12">Thuế</th>
-                      <th className="p-2 w-20 text-right">ĐG vốn</th>
-                      <th className="p-2 w-24 text-right">Tổng vốn</th>
+                      <th className="p-2 w-10">
+                        {t("cases.quotePreview.stt", "STT")}
+                      </th>
+                      <th className="p-2 w-28 text-left">
+                        {t("cases.quotePreview.partCode", "Mã PT/VT")}
+                      </th>
+                      <th className="p-2 text-left">
+                        {t(
+                          "cases.quotePreview.partName",
+                          "Tên phụ tùng / vật tư",
+                        )}
+                      </th>
+                      <th className="p-2 w-12">
+                        {t("cases.quotePreview.qty", "SL")}
+                      </th>
+                      <th className="p-2 w-20 text-right">
+                        {t("cases.quotePreview.unitPrice", "Đơn giá")}
+                      </th>
+                      <th className="p-2 w-12">
+                        {t("cases.quotePreview.discount", "%GG")}
+                      </th>
+                      <th className="p-2 w-24 text-right">
+                        {t("cases.quotePreview.amount", "Thành tiền")}
+                      </th>
+                      <th className="p-2 w-12">
+                        {t("cases.quotePreview.tax", "Thuế")}
+                      </th>
+                      <th className="p-2 w-20 text-right">
+                        {t("cases.quotePreview.unitCost", "ĐG vốn")}
+                      </th>
+                      <th className="p-2 w-24 text-right">
+                        {t("cases.quotePreview.totalCost", "Tổng vốn")}
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -255,9 +312,12 @@ export function GarageCasePreview({ caseData, grossProfit }: Props) {
                       <tr className="bg-slate-50/80 dark:bg-slate-800/60 font-semibold border-t-2 border-slate-200 dark:border-slate-700">
                         <td
                           colSpan={6}
-                          className="p-2 text-right text-slate-600"
+                          className="p-2 text-right text-slate-600 dark:text-slate-400"
                         >
-                          Cộng phụ tùng:
+                          {t(
+                            "cases.quotePreview.subtotalParts",
+                            "Cộng phụ tùng:",
+                          )}
                         </td>
                         <td className="p-2 text-right tabular-nums text-primary font-bold">
                           {formatNumber(
@@ -287,7 +347,10 @@ export function GarageCasePreview({ caseData, grossProfit }: Props) {
                           colSpan={10}
                           className="p-4 text-center text-slate-400 italic"
                         >
-                          Không có vật tư phụ tùng
+                          {t(
+                            "cases.quotePreview.noParts",
+                            "Không có vật tư phụ tùng",
+                          )}
                         </td>
                       </tr>
                     )}
@@ -301,22 +364,46 @@ export function GarageCasePreview({ caseData, grossProfit }: Props) {
               <div className="flex items-center justify-between mb-2">
                 <h3 className="font-bold text-xs uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                  2. Nhân công & Dịch vụ ({services.length})
+                  {t("cases.quotePreview.laborSection", {
+                    count: services.length,
+                    defaultValue: `2. Nhân công & Dịch vụ (${services.length})`,
+                  })}
                 </h3>
               </div>
               <div className="rounded-lg border border-slate-200 dark:border-slate-800 overflow-x-auto shadow-sm">
                 <table className="w-full border-collapse text-xs text-center">
                   <thead>
                     <tr className="bg-slate-50 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 font-semibold border-b border-slate-200 dark:border-slate-800">
-                      <th className="p-2 w-10">STT</th>
-                      <th className="p-2 w-28 text-left">Mã C/V</th>
-                      <th className="p-2 text-left">Tên công việc / Dịch vụ</th>
-                      <th className="p-2 w-12">SL</th>
-                      <th className="p-2 w-20 text-right">Đơn giá</th>
-                      <th className="p-2 w-12">%GG</th>
-                      <th className="p-2 w-24 text-right">Thành tiền</th>
-                      <th className="p-2 w-12">Thuế</th>
-                      <th className="p-2 w-28 text-left">Kỹ thuật viên</th>
+                      <th className="p-2 w-10">
+                        {t("cases.quotePreview.stt", "STT")}
+                      </th>
+                      <th className="p-2 w-28 text-left">
+                        {t("cases.quotePreview.laborCode", "Mã C/V")}
+                      </th>
+                      <th className="p-2 text-left">
+                        {t(
+                          "cases.quotePreview.laborName",
+                          "Tên công việc / Dịch vụ",
+                        )}
+                      </th>
+                      <th className="p-2 w-12">
+                        {t("cases.quotePreview.qty", "SL")}
+                      </th>
+                      <th className="p-2 w-20 text-right">
+                        {t("cases.quotePreview.unitPrice", "Đơn giá")}
+                      </th>
+                      <th className="p-2 w-12">
+                        {t("cases.quotePreview.discount", "%GG")}
+                      </th>
+                      <th className="p-2 w-24 text-right">
+                        {t("cases.quotePreview.amount", "Thành tiền")}
+                      </th>
+                      <th className="p-2 w-12">
+                        {t("cases.quotePreview.tax", "Thuế")}
+                      </th>
+                      <th className="p-2 w-28 text-left">
+                        {t("cases.quotePreview.technician", "Kỹ thuật viên")}
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -364,9 +451,12 @@ export function GarageCasePreview({ caseData, grossProfit }: Props) {
                       <tr className="bg-slate-50/80 dark:bg-slate-800/60 font-semibold border-t-2 border-slate-200 dark:border-slate-700">
                         <td
                           colSpan={6}
-                          className="p-2 text-right text-slate-600"
+                          className="p-2 text-right text-slate-600 dark:text-slate-400"
                         >
-                          Cộng nhân công:
+                          {t(
+                            "cases.quotePreview.subtotalLabor",
+                            "Cộng nhân công:",
+                          )}
                         </td>
                         <td className="p-2 text-right tabular-nums text-primary font-bold">
                           {formatNumber(
@@ -386,7 +476,10 @@ export function GarageCasePreview({ caseData, grossProfit }: Props) {
                           colSpan={9}
                           className="p-4 text-center text-slate-400 italic"
                         >
-                          Không có nhân công - dịch vụ
+                          {t(
+                            "cases.quotePreview.noLabor",
+                            "Không có nhân công - dịch vụ",
+                          )}
                         </td>
                       </tr>
                     )}
@@ -401,7 +494,10 @@ export function GarageCasePreview({ caseData, grossProfit }: Props) {
             <div className="w-full md:w-7/12 p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 text-xs space-y-2">
               <div className="flex justify-between py-0.5">
                 <span className="text-slate-600 dark:text-slate-400">
-                  Tổng thành tiền (chưa thuế)
+                  {t(
+                    "cases.quotePreview.totalPreVat",
+                    "Tổng thành tiền (chưa thuế)",
+                  )}
                 </span>
                 <span className="font-medium tabular-nums">
                   {formatNumber(rawData?.TongTienHang || 0)} ₫
@@ -409,7 +505,9 @@ export function GarageCasePreview({ caseData, grossProfit }: Props) {
               </div>
               {Number(rawData?.TienChietKhau || 0) > 0 && (
                 <div className="flex justify-between py-0.5 text-rose-600">
-                  <span>Chiết khấu</span>
+                  <span>
+                    {t("cases.quotePreview.discountSummary", "Chiết khấu")}
+                  </span>
                   <span className="font-medium tabular-nums">
                     -{formatNumber(rawData?.TienChietKhau || 0)} ₫
                   </span>
@@ -417,7 +515,7 @@ export function GarageCasePreview({ caseData, grossProfit }: Props) {
               )}
               <div className="flex justify-between py-0.5">
                 <span className="text-slate-600 dark:text-slate-400">
-                  Thuế VAT
+                  {t("cases.quotePreview.vatSummary", "Thuế VAT")}
                 </span>
                 <span className="font-medium tabular-nums">
                   {formatNumber(rawData?.TienThue || 0)} ₫
@@ -425,7 +523,7 @@ export function GarageCasePreview({ caseData, grossProfit }: Props) {
               </div>
               <div className="flex justify-between py-1 border-t border-slate-200 dark:border-slate-700 text-sm font-bold">
                 <span className="text-slate-900 dark:text-slate-100">
-                  Tổng tiền thanh toán
+                  {t("cases.quotePreview.totalPayable", "Tổng tiền thanh toán")}
                 </span>
                 <span className="text-emerald-600 dark:text-emerald-400 tabular-nums">
                   {formatNumber(
@@ -436,14 +534,18 @@ export function GarageCasePreview({ caseData, grossProfit }: Props) {
               </div>
               <div className="grid grid-cols-2 gap-2 pt-1 border-t border-slate-200 dark:border-slate-700 text-[11px]">
                 <div>
-                  <span className="text-slate-500">Khách hàng TT:</span>{" "}
-                  <span className="font-medium">
+                  <span className="text-slate-500">
+                    {t("cases.quotePreview.customerPay", "Khách hàng TT:")}
+                  </span>{" "}
+                  <span className="font-medium font-mono">
                     {formatNumber(rawData?.TienThanhToanKH || 0)} ₫
                   </span>
                 </div>
                 <div className="text-right">
-                  <span className="text-slate-500">Bảo hiểm TT:</span>{" "}
-                  <span className="font-medium">
+                  <span className="text-slate-500">
+                    {t("cases.quotePreview.insurancePay", "Bảo hiểm TT:")}
+                  </span>{" "}
+                  <span className="font-medium font-mono">
                     {formatNumber(rawData?.TienThanhToanBH || 0)} ₫
                   </span>
                 </div>
@@ -453,14 +555,24 @@ export function GarageCasePreview({ caseData, grossProfit }: Props) {
               {grossProfit && (
                 <div className="mt-3 pt-2.5 border-t border-dashed border-emerald-300 dark:border-emerald-700 space-y-1">
                   <div className="flex justify-between font-semibold text-emerald-800 dark:text-emerald-300">
-                    <span>Giá vốn phụ tùng</span>
-                    <span className="tabular-nums">
+                    <span>
+                      {t(
+                        "cases.quotePreview.partCostSummary",
+                        "Giá vốn phụ tùng",
+                      )}
+                    </span>
+                    <span className="tabular-nums font-mono">
                       {formatNumber(grossProfit.TongGiaVon || 0)} ₫
                     </span>
                   </div>
                   <div className="flex justify-between font-bold text-emerald-700 dark:text-emerald-400">
-                    <span>Lợi nhuận gộp (tạm tính)</span>
-                    <span className="tabular-nums">
+                    <span>
+                      {t(
+                        "cases.quotePreview.grossProfitSummary",
+                        "Lợi nhuận gộp (tạm tính)",
+                      )}
+                    </span>
+                    <span className="tabular-nums font-mono">
                       {formatNumber(grossProfit.LoiNhuan || 0)} ₫
                     </span>
                   </div>
@@ -472,27 +584,35 @@ export function GarageCasePreview({ caseData, grossProfit }: Props) {
           {/* Signatures */}
           <div className="grid grid-cols-4 text-center text-xs font-semibold text-slate-700 dark:text-slate-300 pt-4 border-t border-slate-100 dark:border-slate-800">
             <div>
-              <p className="uppercase">Giám Đốc</p>
+              <p className="uppercase">
+                {t("cases.quotePreview.director", "Giám Đốc")}
+              </p>
               <p className="text-[10px] text-slate-400 font-normal mt-0.5">
-                (Ký, ghi rõ họ tên)
+                {t("cases.quotePreview.signatureNote", "(Ký, ghi rõ họ tên)")}
               </p>
             </div>
             <div>
-              <p className="uppercase">Kế Toán DV</p>
+              <p className="uppercase">
+                {t("cases.quotePreview.accountant", "Kế Toán DV")}
+              </p>
               <p className="text-[10px] text-slate-400 font-normal mt-0.5">
-                (Ký, ghi rõ họ tên)
+                {t("cases.quotePreview.signatureNote", "(Ký, ghi rõ họ tên)")}
               </p>
             </div>
             <div>
-              <p className="uppercase">Trưởng Phòng DV</p>
+              <p className="uppercase">
+                {t("cases.quotePreview.serviceManager", "Trưởng Phòng DV")}
+              </p>
               <p className="text-[10px] text-slate-400 font-normal mt-0.5">
-                (Ký, ghi rõ họ tên)
+                {t("cases.quotePreview.signatureNote", "(Ký, ghi rõ họ tên)")}
               </p>
             </div>
             <div>
-              <p className="uppercase">Cố Vấn DV</p>
+              <p className="uppercase">
+                {t("cases.quotePreview.advisor", "Cố Vấn DV")}
+              </p>
               <p className="text-[10px] text-slate-400 font-normal mt-0.5">
-                (Ký, ghi rõ họ tên)
+                {t("cases.quotePreview.signatureNote", "(Ký, ghi rõ họ tên)")}
               </p>
             </div>
           </div>

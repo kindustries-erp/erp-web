@@ -90,25 +90,12 @@ export function DrawerRelatedDeck({
   const scrollToDeck = () => {
     setTimeout(() => {
       if (deckRef.current) {
-        let parent = deckRef.current.parentElement;
-        while (parent && parent !== document.body) {
-          const overflowY = window.getComputedStyle(parent).overflowY;
-          if (overflowY === "auto" || overflowY === "scroll") {
-            parent.scrollTo({
-              top: parent.scrollHeight,
-              behavior: "smooth",
-            });
-            return;
-          }
-          parent = parent.parentElement;
-        }
-
         deckRef.current.scrollIntoView({
           behavior: "smooth",
-          block: "end",
+          block: "nearest",
         });
       }
-    }, 120);
+    }, 100);
   };
 
   const handleTabClick = (key: string) => {
