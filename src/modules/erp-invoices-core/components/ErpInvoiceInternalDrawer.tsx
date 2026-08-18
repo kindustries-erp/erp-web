@@ -509,24 +509,23 @@ export function ErpInvoiceInternalDrawer({
         icon: <Paperclip className="w-3.5 h-3.5" />,
         badgeCount: attachmentCount,
         content: (
-          <div className="py-1">
-            <ErpInvoicePdfUpload
-              invoiceId={detailInvoice.id}
-              attachments={detailInvoice.attachments ?? null}
-              pdfFileKey={detailInvoice.pdfFileKey ?? null}
-              pdfFiles={detailInvoice.pdfFiles ?? null}
-              editMode={editMode}
-              pendingDeletedPdfs={form?.pendingDeletedPdfs}
-              onPendingDeletePdf={(key) => {
-                const current = form?.pendingDeletedPdfs || [];
-                fieldSet?.("pendingDeletedPdfs", [...current, key]);
-              }}
-              pendingAddedAttachments={form?.pendingAddedAttachments}
-              onPendingAddedAttachmentsChange={(files) => {
-                fieldSet?.("pendingAddedAttachments", files);
-              }}
-            />
-          </div>
+          <ErpInvoicePdfUpload
+            noCard={true}
+            invoiceId={detailInvoice.id}
+            attachments={detailInvoice.attachments ?? null}
+            pdfFileKey={detailInvoice.pdfFileKey ?? null}
+            pdfFiles={detailInvoice.pdfFiles ?? null}
+            editMode={editMode}
+            pendingDeletedPdfs={form?.pendingDeletedPdfs}
+            onPendingDeletePdf={(key) => {
+              const current = form?.pendingDeletedPdfs || [];
+              fieldSet?.("pendingDeletedPdfs", [...current, key]);
+            }}
+            pendingAddedAttachments={form?.pendingAddedAttachments}
+            onPendingAddedAttachmentsChange={(files) => {
+              fieldSet?.("pendingAddedAttachments", files);
+            }}
+          />
         ),
       },
       // 4. Tab Lịch sử & Kiểm duyệt (Nằm cuối cùng)

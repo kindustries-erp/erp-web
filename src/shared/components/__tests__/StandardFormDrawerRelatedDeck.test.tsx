@@ -157,6 +157,90 @@ describe("StandardFormDrawer Related Deck & Horizon Divider", () => {
     expect(screen.getByText("Thông tin phụ trợ")).toBeInTheDocument();
     expect(screen.getByText("Custom Bottom Deck Details")).toBeInTheDocument();
   });
+
+  it("renders active tab content inside Standard Deck Card Container with card-shadow", () => {
+    const mockTabs = [
+      {
+        key: "tab1",
+        label: "Tab Chuẩn",
+        content: <div data-testid="tab-inner">Nội dung trong Card</div>,
+      },
+    ];
+
+    render(
+      <StandardFormDrawer
+        open={true}
+        mode="view"
+        onClose={() => {}}
+        title="Card Container Test"
+        leftPanel={<div>Main Body</div>}
+        relatedTabs={mockTabs}
+      />,
+    );
+
+    const cardContainer = screen.getByTestId("drawer-deck-card-container");
+    expect(cardContainer).toBeInTheDocument();
+    expect(cardContainer).toHaveClass("card-shadow");
+    expect(cardContainer).toHaveClass("rounded-xl");
+    expect(cardContainer).toHaveClass("border");
+    expect(cardContainer).toHaveClass("p-3.5");
+    expect(screen.getByTestId("tab-inner")).toBeInTheDocument();
+  });
+
+  it("handles flush and custom cardClassName options", () => {
+    const mockTabs = [
+      {
+        key: "flushTab",
+        label: "Tab Tràn Viền",
+        flush: true,
+        cardClassName: "custom-deck-class",
+        content: <div>Full Bleed Graph</div>,
+      },
+    ];
+
+    render(
+      <StandardFormDrawer
+        open={true}
+        mode="view"
+        onClose={() => {}}
+        title="Flush Card Test"
+        leftPanel={<div>Main Body</div>}
+        relatedTabs={mockTabs}
+      />,
+    );
+
+    const cardContainer = screen.getByTestId("drawer-deck-card-container");
+    expect(cardContainer).toHaveClass("p-0");
+    expect(cardContainer).toHaveClass("overflow-hidden");
+    expect(cardContainer).toHaveClass("custom-deck-class");
+  });
+
+  it("supports noCard option to bypass card wrapper when requested", () => {
+    const mockTabs = [
+      {
+        key: "rawTab",
+        label: "Tab Tự Quản Lý",
+        noCard: true,
+        content: <div data-testid="raw-content">Raw Unwrapped Content</div>,
+      },
+    ];
+
+    render(
+      <StandardFormDrawer
+        open={true}
+        mode="view"
+        onClose={() => {}}
+        title="No Card Test"
+        leftPanel={<div>Main Body</div>}
+        relatedTabs={mockTabs}
+      />,
+    );
+
+    expect(screen.getByTestId("raw-content")).toBeInTheDocument();
+    expect(
+      screen.queryByTestId("drawer-deck-card-container"),
+    ).not.toBeInTheDocument();
+  });
 });
 
 describe("Pre-built Related Deck Sub-Components", () => {

@@ -37,6 +37,7 @@ interface Props {
   onPendingAddedAttachmentsChange?: (files: PendingAttachment[]) => void;
   onLinkExistingAttachment?: (attachmentId: string) => void;
   onUnlinkAttachment?: (attachmentId: string) => void;
+  noCard?: boolean;
 }
 
 const TYPE_OPTS = [
@@ -58,6 +59,7 @@ export function ErpInvoicePdfUpload({
   onPendingAddedAttachmentsChange,
   onLinkExistingAttachment,
   onUnlinkAttachment,
+  noCard = false,
 }: Props) {
   const [previewFile, setPreviewFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<{
@@ -133,125 +135,109 @@ export function ErpInvoicePdfUpload({
     onPendingAddedAttachmentsChange(newPendingList);
   };
 
-  return (
-    <DrawerSection
-      title="Tài liệu đính kèm"
-      titleExtra={
-        <div className="flex items-center gap-2">
-          {editMode && invoiceId && onLinkExistingAttachment && (
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-6 text-xs px-2"
-              onClick={() => setShowSelectDrawer(true)}
-            >
-              <Search className="w-3.5 h-3.5 mr-1" />
-              Tìm tài liệu có sẵn
-            </Button>
-          )}
-          {displayFiles.length > 1 && invoiceId && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-6 text-xs px-2"
-              onClick={async () => {
-                if (!invoiceId) return;
-                try {
-                  toast.loading("Đang nén file...", { id: "zip-download" });
-                  const blob =
-                    await erpInvoicesCoreApi.downloadPdfsZip(invoiceId);
-                  const url = window.URL.createObjectURL(blob);
-                  const a = document.createElement("a");
-                  a.href = url;
-                  a.download = `hoadon_${invoiceId}_attachments.zip`;
-                  document.body.appendChild(a);
-                  a.click();
-                  window.URL.revokeObjectURL(url);
-                  document.body.removeChild(a);
-                  toast.success("Tải xuống hoàn tất", { id: "zip-download" });
-                } catch {
-                  toast.error("Lỗi khi tải xuống file zip", {
-                    id: "zip-download",
-                  });
+  const sectionHeaderExtra = (
+    <div className="flex items-center gap-2">
+      {editMode && invoiceId && onLinkExistingAttachment && (
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-6 text-xs px-2"
+          onClick={() => setShowSelectDrawer(true)}
+        >
+          <Search className="w-3.5 h-3.5 mr-1" />
+          Tìm tài liệu có sẵn
+        </Button>
+      )}
+      {displayFiles.length > 1 && invoiceId && (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-6 text-xs px-2"
+          onClick={async () => {
+            if (!invoiceId) return;
+            try {
+              toast.loading("Đang nén file...", { id: "zip-download" });
+              const blob = await erpInvoicesCoreApi.downloadPdfsZip(invoiceId);
+              const url = window.URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = `hoadon_${invoiceId}_attachments.zip`;
+              document.body.appendChild(a);
+              a.click();
+              window.URL.revokeObjectURL(url);
+              document.body.removeChild(a);
+              toast.success("Tải xuống hoàn tất", { id: "zip-download" });
+            } catch {
+              toast.error("Lỗi khi tải xuống file zip", {
+                id: "zip-download",
+              });
+            }
+          }}
+        >
+          <Download className="w-3.5 h-3.5 mr-1" />
+          Tải tất cả (ZIP)
+        </Button>
+      )}
+    </div>
+  );
+
+  const mainContent = (
+    <div className="flex flex-col gap-3">
+      {displayFiles.length === 0 && pendingAddedAttachments.length === 0 && (
+        <EmptyState size="md" message="Chưa có tài liệu đính kèm." />
+      )}
+      {displayFiles.length > 0 && (
+        <div className="rounded-lg border border-border overflow-hidden">
+          {displayFiles.map((item, i) => {
+            const att = item.attachment;
+            if (!att) return null;
+            return (
+              <AttachmentRow
+                key={att.id || i}
+                item={
+                  {
+                    file: {
+                      id: att.id,
+                      filename_download: att.fileName,
+                    },
+                    attachment_type:
+                      TYPE_OPTS.find((t) => t.value === att.documentType)
+                        ?.label || att.documentType,
+                  } as any
                 }
-              }}
-            >
-              <Download className="w-3.5 h-3.5 mr-1" />
-              Tải tất cả (ZIP)
-            </Button>
-          )}
-        </div>
-      }
-    >
-      <div className="flex flex-col gap-3">
-        {displayFiles.length === 0 && pendingAddedAttachments.length === 0 && (
-          <EmptyState size="md" message="Chưa có tài liệu đính kèm." />
-        )}
-        {displayFiles.length > 0 && (
-          <div className="rounded-lg border border-border overflow-hidden">
-            {displayFiles.map((item, i) => {
-              const att = item.attachment;
-              if (!att) return null;
-              return (
-                <AttachmentRow
-                  key={att.id || i}
-                  item={
-                    {
-                      file: {
-                        id: att.id,
-                        filename_download: att.fileName,
-                      },
-                      attachment_type:
-                        TYPE_OPTS.find((t) => t.value === att.documentType)
-                          ?.label || att.documentType,
-                    } as any
-                  }
-                  onDelete={
-                    editMode && !item._isLegacy
-                      ? () => {
-                          if (onUnlinkAttachment) {
-                            onUnlinkAttachment(att.id);
-                          } else if (onPendingDeletePdf) {
-                            onPendingDeletePdf(att.id);
-                          }
+                onDelete={
+                  editMode && !item._isLegacy
+                    ? () => {
+                        if (onUnlinkAttachment) {
+                          onUnlinkAttachment(att.id);
+                        } else if (onPendingDeletePdf) {
+                          onPendingDeletePdf(att.id);
                         }
-                      : undefined
+                      }
+                    : undefined
+                }
+                onPreview={() => {
+                  if (item._isLegacy && att.fileKey) {
+                    erpInvoicesCoreApi
+                      .getPdfDownloadUrl(invoiceId!, att.fileKey)
+                      .then((res) => window.open(res.url, "_blank"))
+                      .catch((err) =>
+                        console.error("Error downloading legacy PDF:", err),
+                      );
+                    return;
                   }
-                  onPreview={() => {
-                    if (item._isLegacy && att.fileKey) {
-                      erpInvoicesCoreApi
-                        .getPdfDownloadUrl(invoiceId!, att.fileKey)
-                        .then((res) => window.open(res.url, "_blank"))
-                        .catch((err) =>
-                          console.error("Error downloading legacy PDF:", err),
-                        );
-                      return;
-                    }
-                    const url = getFileViewUrl(att.id);
-                    setPreviewUrl({
-                      url,
-                      fileName: att.fileName,
-                      fileKey: att.id,
-                      mimeType: att.mimeType,
-                    });
-                  }}
-                  onDownload={() => {
-                    if (item._isLegacy && att.fileKey) {
-                      erpInvoicesCoreApi
-                        .getPdfDownloadUrl(invoiceId!, att.fileKey)
-                        .then((res) => {
-                          const a = document.createElement("a");
-                          a.href = res.url;
-                          a.target = "_blank";
-                          a.download = att.fileName;
-                          a.click();
-                        })
-                        .catch((err) =>
-                          console.error("Error downloading legacy PDF:", err),
-                        );
-                      return;
-                    }
-                    getAttachmentDownloadUrlApi(att.id)
+                  const url = getFileViewUrl(att.id);
+                  setPreviewUrl({
+                    url,
+                    fileName: att.fileName,
+                    fileKey: att.id,
+                    mimeType: att.mimeType,
+                  });
+                }}
+                onDownload={() => {
+                  if (item._isLegacy && att.fileKey) {
+                    erpInvoicesCoreApi
+                      .getPdfDownloadUrl(invoiceId!, att.fileKey)
                       .then((res) => {
                         const a = document.createElement("a");
                         a.href = res.url;
@@ -259,39 +245,56 @@ export function ErpInvoicePdfUpload({
                         a.download = att.fileName;
                         a.click();
                       })
-                      .catch((err) => {
-                        console.error("Error downloading attachment:", err);
-                      });
-                  }}
-                />
-              );
-            })}
-          </div>
-        )}
-        {editMode && onPendingAddedAttachmentsChange && (
-          <div className="mt-2 space-y-3">
-            <div className="flex items-center gap-3 bg-muted/50 p-2 rounded-md">
-              <span className="text-sm font-medium whitespace-nowrap text-muted-foreground">
-                Loại tài liệu tải lên:
-              </span>
-              <Combobox
-                options={TYPE_OPTS}
-                value={uploadType}
-                onChange={(v) => setUploadType(v as string)}
-                className="w-[180px] bg-background"
-                placeholder="Chọn loại tài liệu"
+                      .catch((err) =>
+                        console.error("Error downloading legacy PDF:", err),
+                      );
+                    return;
+                  }
+                  getAttachmentDownloadUrlApi(att.id)
+                    .then((res) => {
+                      const a = document.createElement("a");
+                      a.href = res.url;
+                      a.target = "_blank";
+                      a.download = att.fileName;
+                      a.click();
+                    })
+                    .catch((err) => {
+                      console.error("Error downloading attachment:", err);
+                    });
+                }}
               />
-            </div>
-            <Attachment
-              files={pendingAddedAttachments.map((p) => p.file)}
-              onFilesChange={handleFilesChange}
-              maxFiles={10}
-              maxSizeMb={20}
-              onPreview={setPreviewFile}
+            );
+          })}
+        </div>
+      )}
+      {editMode && onPendingAddedAttachmentsChange && (
+        <div className="mt-2 space-y-3">
+          <div className="flex items-center gap-3 bg-muted/50 p-2 rounded-md">
+            <span className="text-sm font-medium whitespace-nowrap text-muted-foreground">
+              Loại tài liệu tải lên:
+            </span>
+            <Combobox
+              options={TYPE_OPTS}
+              value={uploadType}
+              onChange={(v) => setUploadType(v as string)}
+              className="w-[180px] bg-background"
+              placeholder="Chọn loại tài liệu"
             />
           </div>
-        )}
-      </div>
+          <Attachment
+            files={pendingAddedAttachments.map((p) => p.file)}
+            onFilesChange={handleFilesChange}
+            maxFiles={10}
+            maxSizeMb={20}
+            onPreview={setPreviewFile}
+          />
+        </div>
+      )}
+    </div>
+  );
+
+  const modalDrawers = (
+    <>
       <FilePreviewDrawer
         open={!!previewFile || !!previewUrl}
         onClose={() => {
@@ -333,6 +336,31 @@ export function ErpInvoicePdfUpload({
           }}
         />
       )}
+    </>
+  );
+
+  if (noCard) {
+    const hasHeaderActions =
+      (editMode && invoiceId && Boolean(onLinkExistingAttachment)) ||
+      (displayFiles.length > 1 && Boolean(invoiceId));
+
+    return (
+      <div className="w-full space-y-3">
+        {hasHeaderActions && (
+          <div className="flex items-center justify-end pb-2 border-b border-border/40">
+            {sectionHeaderExtra}
+          </div>
+        )}
+        {mainContent}
+        {modalDrawers}
+      </div>
+    );
+  }
+
+  return (
+    <DrawerSection title="Tài liệu đính kèm" titleExtra={sectionHeaderExtra}>
+      {mainContent}
+      {modalDrawers}
     </DrawerSection>
   );
 }

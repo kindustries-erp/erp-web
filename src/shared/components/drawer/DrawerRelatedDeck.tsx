@@ -19,6 +19,12 @@ export interface DrawerRelatedTabItem {
   content: React.ReactNode;
   /** Nút hoặc element bổ sung ở góc phải của tab */
   headerExtra?: React.ReactNode;
+  /** Bật chế độ tràn viền (p-0 overflow-hidden), thích hợp cho Canvas Graph, Full-width Table */
+  flush?: boolean;
+  /** Tùy chỉnh class cho Card Container của tab */
+  cardClassName?: string;
+  /** Tắt Card Container nếu tab tự quản lý container riêng */
+  noCard?: boolean;
 }
 
 export interface DrawerRelatedDeckProps {
@@ -40,8 +46,10 @@ export interface DrawerRelatedDeckProps {
   searchPlaceholder?: string;
   /** Callback khi thay đổi từ khóa tìm kiếm */
   onSearchChange?: (query: string) => void;
-  /** ClassName bổ sung */
+  /** ClassName bổ sung cho toàn deck */
   className?: string;
+  /** ClassName bổ sung cho card container */
+  cardClassName?: string;
 }
 
 export function DrawerRelatedDeck({
@@ -55,6 +63,7 @@ export function DrawerRelatedDeck({
   searchPlaceholder,
   onSearchChange,
   className,
+  cardClassName,
 }: DrawerRelatedDeckProps) {
   const t = useT();
   const [collapsed, setCollapsed] = useState(defaultCollapsed);
@@ -130,6 +139,12 @@ export function DrawerRelatedDeck({
   if (!customContent && tabs.length === 0) {
     return null;
   }
+
+  const isNoCard = activeTabItem?.noCard;
+  const isFlush = activeTabItem?.flush;
+  const effectiveContent = customContent
+    ? customContent
+    : activeTabItem?.content;
 
   return (
     <div
@@ -271,12 +286,30 @@ export function DrawerRelatedDeck({
         </div>
       </div>
 
-      {/* ── Content Sub-Deck (Clean, Seamless, No Nested Boxes) ── */}
-      {!collapsed && (
-        <div className="w-full pt-2 pb-1 transition-all">
-          {customContent ? customContent : activeTabItem?.content}
-        </div>
-      )}
+      {/* ── Content Sub-Deck (Standard Deck Card Container with card-shadow & frosted glass) ── */}
+      {!collapsed &&
+        (isNoCard ? (
+          <div className="w-full pt-2 pb-1 transition-all">
+            {effectiveContent}
+          </div>
+        ) : (
+          <div
+            data-testid="drawer-deck-card-container"
+            className={cn(
+              "w-full mt-2 rounded-xl border border-border/80 card-shadow transition-all",
+              isFlush ? "p-0 overflow-hidden" : "p-3.5",
+              cardClassName,
+              activeTabItem?.cardClassName,
+            )}
+            style={{
+              background: "var(--drawer-section-bg, rgba(255,255,255,0.65))",
+              backdropFilter: "blur(12px) saturate(180%)",
+              WebkitBackdropFilter: "blur(12px) saturate(180%)",
+            }}
+          >
+            {effectiveContent}
+          </div>
+        ))}
     </div>
   );
 }

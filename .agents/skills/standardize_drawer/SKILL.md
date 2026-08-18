@@ -163,9 +163,16 @@ export function VoucherDrawer({ open, onClose, mode, setMode, data }) {
 Đối với các thông tin thứ cấp, bổ trợ như **Lịch sử thao tác / Audit Log**, **Chuỗi chứng từ liên đới**, **Tệp đính kèm**, **Ghi chú nội bộ**:
 - **KHÔNG** nhồi nhét vào `rightPanel` (vì cột phải hẹp, chỉ phù hợp với metadata tóm tắt).
 - **KHÔNG** đặt thành các `DrawerSection` dài vô tận ở cuối `leftPanel` (vì làm loãng form nhập liệu chính).
-- **BẮT BUỘC** sử dụng hệ thống **Horizon Divider Bar & Connected Context Deck** thông qua prop `relatedTabs` của `<StandardFormDrawer>`:
-  - Tự động hiển thị thanh Horizon Divider Bar phân tách nội dung chính và nội dung liên quan ở đáy Main Body.
-  - Cung cấp các Segmented Pill Tabs với Badge đếm số lượng bản ghi và nút Thu gọn / Mở rộng (`ChevronUp`/`ChevronDown`).
+- **BẮT BUỘC** sử dụng hệ thống **Horizon Divider Bar & Connected Context Deck** thông qua prop `relatedTabs` (hoặc `bottomPanel`) của `<StandardFormDrawer>`:
+  - Tự động hiển thị thanh **Horizon Divider Bar** phân tách nội dung chính và nội dung liên quan ở đáy Main Body.
+  - Cung cấp các **Segmented Pill Tabs** với Badge đếm số lượng bản ghi (`badgeCount`) và nút Thu gọn / Mở rộng (`ChevronUp`/`ChevronDown`).
+  - **Chuẩn hóa Giao diện Card Deck**: Mọi nội dung tab khi mở đều được tự động đặt trong **Standard Deck Card Container** với:
+    - Bo góc `rounded-xl`, viền `border border-border/80`, bóng đổ `card-shadow` đồng bộ với `<DrawerSection>` phía trên.
+    - Hiệu ứng kính mờ (frosted glass) chuẩn ERP: `background: var(--drawer-section-bg, rgba(255,255,255,0.65))` và `backdropFilter: blur(12px) saturate(180%)`.
+    - Mặc định padding `p-3.5`. Hỗ trợ tùy biến qua các props trên từng tab:
+      - `flush: true`: Chế độ tràn viền (`p-0 overflow-hidden`) dành cho biểu đồ Canvas Graph (`@xyflow/react`) hoặc bảng dữ liệu full-bleed.
+      - `cardClassName`: Tùy chỉnh class cho Card Container của tab.
+      - `noCard: true`: Tắt Card Container nếu tab tự quản lý khung ngoài.
   - Hỗ trợ các sub-components chuẩn từ `@/shared/components/drawer`:
     - `<DrawerDocumentTraceability>`: **Mạng lưới chứng từ liên kết & Cấn trừ thông minh (Multi-hop Traceability Graph)**:
       - 3 View Modes: **Canvas View** (`@xyflow/react` node graph với phân nhóm **Stage Group Swimlanes** 4 giai đoạn chuẩn doanh nghiệp & mũi tên định hướng `MarkerType.ArrowClosed`), **Pipeline View** (luồng tuần tự theo cột), **Matrix Table View** (phân loại 1-hop vs Multi-hops).
@@ -270,6 +277,7 @@ export function PurchaseOrderDrawer({ open, onClose, mode, setMode, data, auditL
 - [ ] Phần nội dung bên trong đã dùng các khối chuẩn như `<DrawerSection>`, `<DrawerField>` để bao bọc các input chưa?
 - [ ] Các action button của một `<DrawerSection>` (như nút Thêm, Xóa, Liên kết cho bảng) đã được đưa lên góc trên bên phải bằng prop `titleExtra` của `DrawerSection` chưa?
 - [ ] Các thông tin phụ trợ (Lịch sử thao tác, Chứng từ liên quan, Đính kèm, Ghi chú) đã được tách bạch qua prop `relatedTabs` của `StandardFormDrawer` thay vì nhồi vào `rightPanel` hay cuối form chưa?
+- [ ] Vùng tab thông tin liên quan đã tận dụng cấu trúc chuẩn **Deck Card Container** với `card-shadow` và glassmorphism đồng bộ chưa?
 - [ ] Đã sử dụng các widgets chuẩn hóa (`<DrawerAuditTimeline>`, `<DrawerRelatedDocs>`, `<DrawerAttachmentsDeck>`, `<DrawerInternalNotes>`) cho `relatedTabs` chưa?
 - [ ] Input đã sử dụng CSS class `inputCls` từ `@/shared/components/DrawerModal` (nếu có) chưa?
 - [ ] Chức năng cảnh báo đóng Drawer khi đang Edit (`confirmOnClose={mode === 'edit'}`) đã được cấu hình đúng chưa?

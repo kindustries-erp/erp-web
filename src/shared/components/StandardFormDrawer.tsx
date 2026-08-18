@@ -120,6 +120,9 @@ export interface StandardFormDrawerProps {
 
   /** Callback khi thay đổi từ khóa tìm kiếm */
   onRelatedSearchChange?: (query: string) => void;
+
+  /** ClassName bổ sung cho card container của Related Deck */
+  deckCardClassName?: string;
 }
 
 export function StandardFormDrawer({
@@ -158,6 +161,7 @@ export function StandardFormDrawer({
   onRelatedTabChange,
   enableRelatedSearch = false,
   onRelatedSearchChange,
+  deckCardClassName,
 }: StandardFormDrawerProps) {
   const t = useT();
   const [rightPanelCollapsed, setRightPanelCollapsed] = useState(
@@ -323,6 +327,7 @@ export function StandardFormDrawer({
           onTabChange={onRelatedTabChange}
           enableSearch={enableRelatedSearch}
           onSearchChange={onRelatedSearchChange}
+          cardClassName={deckCardClassName}
         />
       )}
     </>
