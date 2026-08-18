@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import {
   StandardFormDrawer,
   DrawerAuditTimeline,
@@ -27,8 +27,10 @@ import {
   ActionDropdown,
   type ActionDropdownItem,
 } from "@/shared/components/ActionDropdown";
-import { ErpInvoiceLinkedDocuments } from "./ErpInvoiceLinkedDocuments";
 import { VoucherNetoffSelectionModal } from "./VoucherNetoffSelectionModal";
+import { PurchaseOrderSelectionModal } from "./PurchaseOrderSelectionModal";
+import { SalesOrderSelectionModal } from "./SalesOrderSelectionModal";
+import { GarageCaseSelectionModal } from "./GarageCaseSelectionModal";
 import { PostedAccountingSummary } from "@/shared/components/accounting/PostedAccountingSummary";
 import { PostingSection } from "@/shared/components/accounting/PostingSection";
 import { ErpInvoicePdfUpload } from "./ErpInvoicePdfUpload";
@@ -114,6 +116,14 @@ export function ErpInvoiceInternalDrawer({
 }: Props) {
   const { t } = useTranslation("erpInvoices");
   const [showNetOffModal, setShowNetOffModal] = useState(false);
+  const [showPoModal, setShowPoModal] = useState(false);
+  const [showSoModal, setShowSoModal] = useState(false);
+  const [showGarageCaseModal, setShowGarageCaseModal] = useState(false);
+
+  const handleFetchGraph = useCallback(
+    (id: string) => erpInvoicesCoreApi.getTraceabilityGraph(id),
+    [],
+  );
 
   const handleSelectBankNetOff = (
     selected: { id: string; amount: number }[],
@@ -128,9 +138,57 @@ export function ErpInvoiceInternalDrawer({
     }));
     fieldSet?.("pendingDocumentChanges", [...current, ...newChanges]);
     toast.success(
-      t("Đã thêm giao dịch ngân hàng vào danh sách cấn trừ chờ lưu."),
+      t(
+        "Đã thêm giao dịch ngân hàng vào danh sách cấn trừ (chờ Lưu thay đổi).",
+      ),
     );
-    onSyncDetail?.();
+  };
+
+  const handleSelectPo = (po: any) => {
+    if (!po) return;
+    const current = form?.pendingDocumentChanges || [];
+    fieldSet?.("pendingDocumentChanges", [
+      ...current,
+      { action: "ADD" as const, type: "PO" as const, refId: po.id },
+    ]);
+    fieldSet?.("purchaseOrderId", po.id);
+    toast.success(
+      t("Đã chọn đơn mua hàng {{poNo}} để liên kết (chờ Lưu thay đổi).", {
+        poNo: po.poNo,
+      }),
+    );
+  };
+
+  const handleSelectSo = (so: any) => {
+    if (!so) return;
+    const current = form?.pendingDocumentChanges || [];
+    fieldSet?.("pendingDocumentChanges", [
+      ...current,
+      { action: "ADD" as const, type: "SO" as const, refId: so.id },
+    ]);
+    fieldSet?.("salesOrderId", so.id);
+    toast.success(
+      t("Đã chọn đơn bán hàng {{soNo}} để liên kết (chờ Lưu thay đổi).", {
+        soNo: so.soNo,
+      }),
+    );
+  };
+
+  const handleSelectGarageCase = (caseItem: any) => {
+    if (!caseItem) return;
+    const refId = caseItem.id || caseItem.VuViecCode;
+    const code = caseItem.VuViecCode || caseItem.SoBaoGia || refId;
+    const current = form?.pendingDocumentChanges || [];
+    fieldSet?.("pendingDocumentChanges", [
+      ...current,
+      { action: "ADD" as const, type: "CASE" as const, refId },
+    ]);
+    fieldSet?.("settlementOrder", code);
+    toast.success(
+      t("Đã chọn vụ việc garage {{code}} để liên kết (chờ Lưu thay đổi).", {
+        code,
+      }),
+    );
   };
 
   const editActions = [
@@ -275,32 +333,28 @@ export function ErpInvoiceInternalDrawer({
           <DrawerDocumentTraceability
             rootId={detailInvoice.id}
             rootType="INVOICE"
-            fetchGraph={(id) => erpInvoicesCoreApi.getTraceabilityGraph(id)}
+            fetchGraph={handleFetchGraph}
             editMode={editMode}
-            onAddLink={(stageKey) => {
-              if (stageKey === "ORDER_STOCK") {
-                window.dispatchEvent(
-                  new CustomEvent("open_erp_document", {
-                    detail: { type: "erp_purchase_order", id: "new" },
-                  }),
-                );
+            allowedDocTypes={[
+              "BANK_TXN",
+              "PURCHASE_ORDER",
+              "SALES_ORDER",
+              "GARAGE_CASE",
+            ]}
+            onAddLink={(stageKey, docType) => {
+              if (docType === "BANK_TXN" || stageKey === "PAYMENT") {
+                setShowNetOffModal(true);
+              } else if (
+                docType === "PURCHASE_ORDER" ||
+                stageKey === "ORDER_STOCK"
+              ) {
+                setShowPoModal(true);
+              } else if (docType === "SALES_ORDER") {
+                setShowSoModal(true);
+              } else if (docType === "GARAGE_CASE") {
+                setShowGarageCaseModal(true);
               } else {
                 setShowNetOffModal(true);
-              }
-            }}
-            onCreateNewDoc={(stageKey) => {
-              if (stageKey === "PAYMENT") {
-                window.dispatchEvent(
-                  new CustomEvent("open_erp_document", {
-                    detail: { type: "bank_transaction", id: "new" },
-                  }),
-                );
-              } else {
-                window.dispatchEvent(
-                  new CustomEvent("open_erp_document", {
-                    detail: { type: "erp_purchase_order", id: "new" },
-                  }),
-                );
               }
             }}
             onUnlinkNode={async (node) => {
@@ -323,21 +377,6 @@ export function ErpInvoiceInternalDrawer({
                 toast.error(err?.message || t("Lỗi gỡ liên kết chứng từ"));
               }
             }}
-            editActionsSlot={
-              editMode ? (
-                <ErpInvoiceLinkedDocuments
-                  form={form || ({} as any)}
-                  fieldSet={fieldSet || (() => {})}
-                  invoiceId={detailInvoice.id}
-                  invoiceNo={detailInvoice.invoiceNo}
-                  direction={direction || detailInvoice.direction || "IN"}
-                  voucherNetOffs={detailInvoice.voucherNetOffs || []}
-                  relatedPos={(detailInvoice as any).relatedPos || []}
-                  editMode={editMode}
-                  onRefresh={onSyncDetail || (() => {})}
-                />
-              ) : undefined
-            }
           />
         ),
       },
@@ -568,14 +607,36 @@ export function ErpInvoiceInternalDrawer({
       />
 
       {detailInvoice && (
-        <VoucherNetoffSelectionModal
-          open={showNetOffModal}
-          onClose={() => setShowNetOffModal(false)}
-          onSelect={handleSelectBankNetOff}
-          existingVoucherIds={(detailInvoice.voucherNetOffs || []).map(
-            (v) => v.bankTransactionId,
-          )}
-        />
+        <>
+          <VoucherNetoffSelectionModal
+            open={showNetOffModal}
+            onClose={() => setShowNetOffModal(false)}
+            onSelect={handleSelectBankNetOff}
+            existingVoucherIds={(detailInvoice.voucherNetOffs || []).map(
+              (v) => v.bankTransactionId,
+            )}
+          />
+          <PurchaseOrderSelectionModal
+            open={showPoModal}
+            onClose={() => setShowPoModal(false)}
+            onSelect={handleSelectPo}
+            existingPoIds={
+              detailInvoice.purchaseOrderId
+                ? [detailInvoice.purchaseOrderId]
+                : []
+            }
+          />
+          <SalesOrderSelectionModal
+            open={showSoModal}
+            onClose={() => setShowSoModal(false)}
+            onSelect={handleSelectSo}
+          />
+          <GarageCaseSelectionModal
+            open={showGarageCaseModal}
+            onClose={() => setShowGarageCaseModal(false)}
+            onSelect={handleSelectGarageCase}
+          />
+        </>
       )}
     </>
   );

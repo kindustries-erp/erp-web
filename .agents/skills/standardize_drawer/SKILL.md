@@ -175,8 +175,12 @@ export function VoucherDrawer({ open, onClose, mode, setMode, data }) {
       - `noCard: true`: Tắt Card Container nếu tab tự quản lý khung ngoài.
   - Hỗ trợ các sub-components chuẩn từ `@/shared/components/drawer`:
     - `<DrawerDocumentTraceability>`: **Mạng lưới chứng từ liên kết & Cấn trừ thông minh (Multi-hop Traceability Graph)**:
-      - 3 View Modes: **Canvas View** (`@xyflow/react` node graph với phân nhóm **Stage Group Swimlanes** 4 giai đoạn chuẩn doanh nghiệp & mũi tên định hướng `MarkerType.ArrowClosed`), **Pipeline View** (luồng tuần tự theo cột), **Matrix Table View** (phân loại 1-hop vs Multi-hops).
-      - **Thao tác Ghép nối & Gỡ liên kết trực tiếp**: Nút `+ Ghép nối chứng từ` trên thanh công cụ & từng Stage Group, nút gỡ `[✕]` kèm `ConfirmModal` trên từng node hoặc hàng trong bảng.
+      - 3 View Modes: **Canvas View** (`@xyflow/react` node graph với phân nhóm **Stage Group Swimlanes** 4 giai đoạn chuẩn doanh nghiệp & mũi tên định hướng `MarkerType.ArrowClosed`, giới hạn zoom `minZoom=0.35` / `maxZoom=1.4`), **Pipeline View** (luồng tuần tự theo cột), **Matrix Table View** (phân loại 1-hop vs Multi-hops).
+      - **Thao tác Ghép nối & Gỡ liên kết trực tiếp (Link-Only)**:
+        - Nút **Ghép nối chứng từ** trên Header Bar tự động hiển thị **Inline Doc-Type Pill Selector** để chọn chính xác loại chứng từ trước khi mở modal ghép nối.
+        - Nút **+ Thêm liên kết** trên từng Stage Group Swimlane tự động truyền stage & loại chứng từ tương ứng vào callback `onAddLink(stageKey, docType)`.
+        - Prop `allowedDocTypes` (ví dụ: `["BANK_TXN", "PURCHASE_ORDER", "SALES_ORDER", "GARAGE_CASE"]` cho Hóa đơn) để hạn chế các loại chứng từ hợp lệ.
+        - Nút gỡ liên kết `[🗑]` kèm `ConfirmModal` trên từng node hoặc dòng bảng (chỉ khả dụng cho node trực tiếp `depth=1` khi ở chế độ `editMode`).
       - **Zero-Trust RBAC**: Tự động sanitize & mask chứng từ bảo mật (`***`, icon 🔒) khi user không có quyền trên module đó mà vẫn giữ cấu trúc cầu nối.
       - **Detail Drawer Navigation**: Nút `[↗]` trên từng node/dòng tự động kích hoạt `open_erp_document` để mở drawer chi tiết của chứng từ tương ứng (Hóa đơn, Sao kê/UNC, PO, SO, Phiếu kho...).
       - Thiết kế chuẩn Business Neutral Enterprise (Slate/Zinc tối giản, không màu mè).

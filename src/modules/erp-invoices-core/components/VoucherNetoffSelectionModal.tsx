@@ -8,6 +8,7 @@ import { Checkbox } from "@/shared/components/ui/checkbox";
 import { StandardTable } from "@/shared/components/StandardTable";
 import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
 import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
+import { cn } from "@/shared/utils";
 
 interface Props {
   open: boolean;
@@ -27,10 +28,12 @@ interface Props {
 function NetOffInput({
   initialValue,
   maxAmount,
+  isSelected,
   onChange,
 }: {
   initialValue: number | "";
   maxAmount: number;
+  isSelected: boolean;
   onChange: (val: number) => void;
 }) {
   const [val, setVal] = useState<string | number>(initialValue);
@@ -41,19 +44,32 @@ function NetOffInput({
 
   const handleBlur = () => {
     let numericVal = Number(val);
+    if (isNaN(numericVal) || numericVal < 0) numericVal = 0;
     if (numericVal > maxAmount) numericVal = maxAmount;
-    if (numericVal < 0) numericVal = 0;
-    setVal(numericVal);
+    setVal(numericVal === 0 ? "" : numericVal);
     onChange(numericVal);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      handleBlur();
+    }
   };
 
   return (
     <input
-      className="w-full text-right h-8 border rounded-md px-2 focus:outline-none focus:ring-1 focus:ring-primary"
+      className={cn(
+        "w-full text-right h-8 border rounded-md px-2 text-xs font-mono font-medium focus:outline-none transition-colors",
+        isSelected
+          ? "border-primary bg-primary/5 text-slate-900 font-semibold focus:ring-1 focus:ring-primary"
+          : "border-slate-200 hover:border-slate-300 focus:border-primary focus:ring-1 focus:ring-primary text-slate-600 bg-white dark:bg-slate-900 dark:border-slate-700",
+      )}
       type="number"
+      placeholder={money(maxAmount)}
       value={val}
       onChange={(e) => setVal(e.target.value)}
       onBlur={handleBlur}
+      onKeyDown={handleKeyDown}
     />
   );
 }
@@ -167,7 +183,35 @@ export function VoucherNetoffSelectionModal({
   };
 
   const handleAmountChange = (v: any, val: number) => {
-    setNetOffAmounts((prev) => ({ ...prev, [v.id]: val }));
+    const credit = parseFloat(v.creditAmount) || 0;
+    const debit = parseFloat(v.debitAmount) || 0;
+    const amount = credit > 0 ? credit : debit;
+    const netOff = parseFloat(v.netOffAmount) || 0;
+    const remaining = amount - netOff;
+
+    if (val > 0) {
+      setSelectedIds((prev) => (prev.includes(v.id) ? prev : [...prev, v.id]));
+      setNetOffAmounts((prev) => ({ ...prev, [v.id]: val }));
+      setMaxAmounts((prev) => ({ ...prev, [v.id]: remaining }));
+      setSelectedTxns((prev) => ({ ...prev, [v.id]: v }));
+    } else {
+      setSelectedIds((prev) => prev.filter((id) => id !== v.id));
+      setNetOffAmounts((prev) => {
+        const next = { ...prev };
+        delete next[v.id];
+        return next;
+      });
+      setMaxAmounts((prev) => {
+        const next = { ...prev };
+        delete next[v.id];
+        return next;
+      });
+      setSelectedTxns((prev) => {
+        const next = { ...prev };
+        delete next[v.id];
+        return next;
+      });
+    }
   };
 
   const handleSubmit = () => {
@@ -366,15 +410,14 @@ export function VoucherNetoffSelectionModal({
       header: renderHeaderFilter("currentNetOff", t("netOffAmount", "Cấn trừ")),
       className: "text-right",
       headerClassName: "text-center",
-      size: 150,
+      size: 160,
       cell: (row: any) => {
         const isSelected = selectedIds.includes(row.id);
-        if (!isSelected) return null;
         const credit = parseFloat(row.creditAmount) || 0;
         const debit = parseFloat(row.debitAmount) || 0;
         const amount = credit > 0 ? credit : debit;
         const netOff = parseFloat(row.netOffAmount) || 0;
-        const remaining = amount - netOff;
+        const remaining = Math.max(0, amount - netOff);
 
         return (
           <NetOffInput
@@ -382,6 +425,7 @@ export function VoucherNetoffSelectionModal({
               netOffAmounts[row.id] !== undefined ? netOffAmounts[row.id] : ""
             }
             maxAmount={remaining}
+            isSelected={isSelected}
             onChange={(val: number) => handleAmountChange(row, val)}
           />
         );

@@ -436,24 +436,57 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
                 );
               }
             } else if (change.type === "PO") {
-              const po = await purchaseOrdersCoreApi.get(change.refId);
-              let invNos = (po.supplierInvoiceNo || "")
-                .split(",")
-                .map((s) => s.trim())
-                .filter((s) => s);
-
-              if (
-                change.action === "ADD" &&
-                !invNos.includes(invoiceNoToProcess)
-              ) {
-                invNos.push(invoiceNoToProcess);
-                await purchaseOrdersCoreApi.update(change.refId, {
-                  supplierInvoiceNo: invNos.join(", "),
+              if (change.action === "ADD") {
+                await erpInvoicesCoreApi.update(invoiceIdToProcess, {
+                  purchaseOrderId: change.refId,
                 });
               } else if (change.action === "REMOVE") {
-                invNos = invNos.filter((s) => s !== invoiceNoToProcess);
-                await purchaseOrdersCoreApi.update(change.refId, {
-                  supplierInvoiceNo: invNos.join(", "),
+                await erpInvoicesCoreApi.update(invoiceIdToProcess, {
+                  purchaseOrderId: undefined,
+                });
+              }
+              try {
+                const po = await purchaseOrdersCoreApi.get(change.refId);
+                let invNos = (po.supplierInvoiceNo || "")
+                  .split(",")
+                  .map((s) => s.trim())
+                  .filter((s) => s);
+
+                if (
+                  change.action === "ADD" &&
+                  !invNos.includes(invoiceNoToProcess)
+                ) {
+                  invNos.push(invoiceNoToProcess);
+                  await purchaseOrdersCoreApi.update(change.refId, {
+                    supplierInvoiceNo: invNos.join(", "),
+                  });
+                } else if (change.action === "REMOVE") {
+                  invNos = invNos.filter((s) => s !== invoiceNoToProcess);
+                  await purchaseOrdersCoreApi.update(change.refId, {
+                    supplierInvoiceNo: invNos.join(", "),
+                  });
+                }
+              } catch (poErr) {
+                console.warn("Could not sync PO supplierInvoiceNo", poErr);
+              }
+            } else if (change.type === "SO") {
+              if (change.action === "ADD") {
+                await erpInvoicesCoreApi.update(invoiceIdToProcess, {
+                  salesOrderId: change.refId,
+                });
+              } else if (change.action === "REMOVE") {
+                await erpInvoicesCoreApi.update(invoiceIdToProcess, {
+                  salesOrderId: undefined,
+                });
+              }
+            } else if (change.type === "CASE") {
+              if (change.action === "ADD") {
+                await erpInvoicesCoreApi.update(invoiceIdToProcess, {
+                  settlementOrder: change.refId,
+                });
+              } else if (change.action === "REMOVE") {
+                await erpInvoicesCoreApi.update(invoiceIdToProcess, {
+                  settlementOrder: undefined,
                 });
               }
             }

@@ -102,13 +102,15 @@ export interface CreateErpInvoicePayload {
   totalAmount?: number;
   purchaseOrderId?: string;
   salesOrderId?: string;
+  settlementOrder?: string;
+  licensePlate?: string;
   paymentDocumentNos?: string;
   notes?: string;
   isValid?: boolean;
   items?: ErpInvoiceItem[];
   pendingDocumentChanges?: {
     action: "ADD" | "REMOVE";
-    type: "PO" | "BANK";
+    type: "PO" | "BANK" | "SO" | "CASE";
     refId: string;
     amount?: number;
   }[];

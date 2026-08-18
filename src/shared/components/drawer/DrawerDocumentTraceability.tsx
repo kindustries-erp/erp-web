@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, {
+  useState,
+  useEffect,
+  useMemo,
+  useCallback,
+  useRef,
+} from "react";
 import {
   ReactFlow,
   Background,
@@ -10,9 +16,13 @@ import {
   useReactFlow,
   ReactFlowProvider,
   MarkerType,
+  BaseEdge,
+  EdgeLabelRenderer,
+  getSmoothStepPath,
   type Node,
   type Edge,
   type NodeProps,
+  type EdgeProps,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { cn } from "@/shared/utils";
@@ -37,6 +47,7 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/shared/components/ui/Button";
+import { Popover } from "@/core/components/ui/Popover";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import { ActionDropdown } from "@/shared/components/ActionDropdown";
 import { money, formatGMT7 } from "@/shared/utils/format";
@@ -96,8 +107,8 @@ export const STAGES_CONFIG: StageConfig[] = [
   {
     key: "PAYMENT",
     stageNo: 3,
-    title: "3. Dòng tiền & Sổ quỹ",
-    shortTitle: "DÒNG TIỀN / SAO KÊ",
+    title: "3. Dòng tiền",
+    shortTitle: "DÒNG TIỀN",
     types: ["BANK_TXN"],
     accentBorder: "border-slate-300/80 dark:border-slate-700",
     badgeCls:
@@ -125,51 +136,61 @@ export function getStageForDocType(docType: TraceabilityNodeType): StageConfig {
 
 // ─── Module Badge & Config (Business Neutral Tone) ────────────────────────────
 
-const MODULE_CONFIG: Record<
+export const DOC_TYPE_META: Record<
   TraceabilityNodeType,
-  { label: string; badgeCls: string }
+  { label: string; fullTitle: string; badgeCls: string }
 > = {
   INVOICE: {
     label: "HĐ",
+    fullTitle: "Hóa đơn VAT",
     badgeCls:
       "bg-slate-100 text-slate-800 border-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700",
   },
   BANK_TXN: {
     label: "UNC / GBC",
+    fullTitle: "Sao kê / Sổ quỹ",
     badgeCls:
       "bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700",
   },
   PURCHASE_ORDER: {
     label: "PO",
+    fullTitle: "Đơn mua hàng (PO)",
     badgeCls:
       "bg-zinc-100 text-zinc-800 border-zinc-200 dark:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-700",
   },
   SALES_ORDER: {
     label: "SO",
+    fullTitle: "Đơn bán hàng (SO)",
     badgeCls:
       "bg-zinc-100 text-zinc-800 border-zinc-200 dark:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-700",
   },
   GOODS_RECEIPT: {
     label: "NK",
+    fullTitle: "Phiếu nhập kho (NK)",
     badgeCls:
       "bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700",
   },
   GOODS_ISSUE: {
     label: "XK",
+    fullTitle: "Phiếu xuất kho (XK)",
     badgeCls:
       "bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700",
   },
   JOURNAL_ENTRY: {
     label: "GL",
+    fullTitle: "Bút toán sổ cái (GL)",
     badgeCls:
       "bg-neutral-100 text-neutral-800 border-neutral-200 dark:bg-neutral-800 dark:text-neutral-200 dark:border-neutral-700",
   },
   GARAGE_CASE: {
     label: "RO / QTO",
+    fullTitle: "Phiếu dịch vụ Garage (RO)",
     badgeCls:
       "bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700",
   },
 };
+
+const MODULE_CONFIG = DOC_TYPE_META;
 
 export function openGlobalErpDocument(
   docType: TraceabilityNodeType,
@@ -201,13 +222,27 @@ interface StageGroupData extends Record<string, unknown> {
   width: number;
   height: number;
   allowEdit?: boolean;
-  onAddLink?: (stageKey: BusinessStageKey) => void;
+  onAddLink?: (
+    stageKey: BusinessStageKey,
+    docType?: TraceabilityNodeType,
+  ) => void;
+  allowedDocTypes?: TraceabilityNodeType[];
 }
 
 function StageGroupNodeCard({ data }: NodeProps<Node<StageGroupData>>) {
   const t = useT();
   const group = data as StageGroupData;
-  const { stage, count, width, height, allowEdit, onAddLink } = group;
+  const { stage, count, width, height, allowEdit, onAddLink, allowedDocTypes } =
+    group;
+
+  const validStageTypes = useMemo(() => {
+    if (!allowedDocTypes) return stage.types;
+    return stage.types.filter((t) => allowedDocTypes.includes(t));
+  }, [stage.types, allowedDocTypes]);
+
+  const canAddInThisStage = Boolean(
+    allowEdit && onAddLink && validStageTypes.length > 0,
+  );
 
   return (
     <div
@@ -230,21 +265,26 @@ function StageGroupNodeCard({ data }: NodeProps<Node<StageGroupData>>) {
             {stage.shortTitle}
           </span>
           <span className="text-[11px] font-mono font-medium text-slate-500 dark:text-slate-400">
-            {count} {t("chứng từ")}
+            ({count})
           </span>
         </div>
 
-        {allowEdit && onAddLink && (
+        {canAddInThisStage && (
           <Button
             type="button"
             variant="ghost"
             size="sm"
             className="h-6 px-2 text-[11px] text-slate-500 hover:text-slate-900 bg-white/80 dark:bg-slate-800 hover:bg-white border border-slate-200 dark:border-slate-700 shadow-2xs gap-1"
-            onClick={() => onAddLink(stage.key)}
-            title={t("Ghép nối chứng từ vào giai đoạn này")}
+            onClick={() =>
+              onAddLink?.(
+                stage.key,
+                validStageTypes.length === 1 ? validStageTypes[0] : undefined,
+              )
+            }
+            title={`${t("Ghép nối chứng từ vào")} ${stage.title}`}
           >
             <Plus className="w-3 h-3" />
-            <span>{t("Ghép nối")}</span>
+            <span>{t("Thêm liên kết")}</span>
           </Button>
         )}
       </div>
@@ -433,9 +473,59 @@ function TraceabilityNodeCard({ data }: NodeProps<Node<NodeCardCustomData>>) {
   );
 }
 
+// ─── Custom Floating Labeled Edge (Always on Top) ────────────────────────────
+
+function LabeledSmoothStepEdge({
+  id,
+  sourceX,
+  sourceY,
+  targetX,
+  targetY,
+  sourcePosition,
+  targetPosition,
+  style = {},
+  markerEnd,
+  label,
+}: EdgeProps) {
+  const [edgePath, labelX, labelY] = getSmoothStepPath({
+    sourceX,
+    sourceY,
+    sourcePosition,
+    targetX,
+    targetY,
+    targetPosition,
+    borderRadius: 8,
+  });
+
+  return (
+    <>
+      <BaseEdge id={id} path={edgePath} style={style} markerEnd={markerEnd} />
+      {label && (
+        <EdgeLabelRenderer>
+          <div
+            style={{
+              position: "absolute",
+              transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
+              pointerEvents: "all",
+              zIndex: 1000,
+            }}
+            className="nodrag nopan select-none px-2 py-0.5 rounded-md bg-white/95 dark:bg-slate-900/95 border border-slate-300/90 dark:border-slate-700 shadow-xs text-[10px] font-mono font-semibold text-slate-800 dark:text-slate-200 backdrop-blur-xs whitespace-nowrap"
+          >
+            {label}
+          </div>
+        </EdgeLabelRenderer>
+      )}
+    </>
+  );
+}
+
 const NODE_TYPES = {
   traceabilityNode: TraceabilityNodeCard,
   stageGroupNode: StageGroupNodeCard,
+};
+
+const EDGE_TYPES = {
+  labeledSmoothStep: LabeledSmoothStepEdge,
 };
 
 // ─── Graph Layout Auto-Arranger with Stage Swimlanes ──────────────────────────
@@ -450,8 +540,12 @@ function computeLayout(
   graphData: TraceabilityGraphData,
   direction: "horizontal" | "vertical" = "horizontal",
   allowEdit?: boolean,
-  onAddLink?: (stageKey: BusinessStageKey) => void,
+  onAddLink?: (
+    stageKey: BusinessStageKey,
+    docType?: TraceabilityNodeType,
+  ) => void,
   onUnlinkNode?: (node: TraceabilityNode) => void,
+  allowedDocTypes?: TraceabilityNodeType[],
 ): { nodes: Node[]; edges: Edge[] } {
   const nodes: Node[] = [];
   const edges: Edge[] = [];
@@ -497,6 +591,7 @@ function computeLayout(
           height: stageHeight,
           allowEdit,
           onAddLink,
+          allowedDocTypes,
         },
         zIndex: -1,
       });
@@ -541,6 +636,7 @@ function computeLayout(
           height: stageHeight,
           allowEdit,
           onAddLink,
+          allowedDocTypes,
         },
         zIndex: -1,
       });
@@ -564,13 +660,13 @@ function computeLayout(
     }
   });
 
-  // 2. Build Edges with Directional Arrows & Clean Labels
+  // 2. Build Edges with Directional Arrows & Clean Floating Labels
   graphData.edges.forEach((e) => {
     edges.push({
       id: e.id,
       source: e.source,
       target: e.target,
-      type: "smoothstep",
+      type: "labeledSmoothStep",
       label: e.label || undefined,
       markerEnd: {
         type: MarkerType.ArrowClosed,
@@ -578,22 +674,6 @@ function computeLayout(
         height: 14,
         color: "#94a3b8",
       },
-      labelStyle: {
-        fontSize: 10,
-        fontFamily: "monospace",
-        fontWeight: 600,
-        fill: "#0f172a",
-      },
-      labelBgStyle: {
-        fill: "#ffffff",
-        fillOpacity: 1,
-        stroke: "#94a3b8",
-        strokeWidth: 1,
-        rx: 6,
-        ry: 6,
-      },
-      labelBgBorderRadius: 6,
-      labelBgPadding: [8, 4],
       style: {
         stroke: "#94a3b8",
         strokeWidth: 1.8,
@@ -612,18 +692,30 @@ function CanvasFlowInner({
   allowEdit,
   onAddLink,
   onUnlinkNode,
+  allowedDocTypes,
 }: {
   graphData: TraceabilityGraphData;
   direction: "horizontal" | "vertical";
   allowEdit?: boolean;
-  onAddLink?: (stageKey: BusinessStageKey) => void;
+  onAddLink?: (
+    stageKey: BusinessStageKey,
+    docType?: TraceabilityNodeType,
+  ) => void;
   onUnlinkNode?: (node: TraceabilityNode) => void;
+  allowedDocTypes?: TraceabilityNodeType[];
 }) {
   const { fitView } = useReactFlow();
   const { nodes: initialNodes, edges: initialEdges } = useMemo(
     () =>
-      computeLayout(graphData, direction, allowEdit, onAddLink, onUnlinkNode),
-    [graphData, direction, allowEdit, onAddLink, onUnlinkNode],
+      computeLayout(
+        graphData,
+        direction,
+        allowEdit,
+        onAddLink,
+        onUnlinkNode,
+        allowedDocTypes,
+      ),
+    [graphData, direction, allowEdit, onAddLink, onUnlinkNode, allowedDocTypes],
   );
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
@@ -636,6 +728,7 @@ function CanvasFlowInner({
       allowEdit,
       onAddLink,
       onUnlinkNode,
+      allowedDocTypes,
     );
     setNodes(nextNodes);
     setEdges(nextEdges);
@@ -650,6 +743,7 @@ function CanvasFlowInner({
     allowEdit,
     onAddLink,
     onUnlinkNode,
+    allowedDocTypes,
     fitView,
     setNodes,
     setEdges,
@@ -662,10 +756,11 @@ function CanvasFlowInner({
       onNodesChange={onNodesChange}
       onEdgesChange={onEdgesChange}
       nodeTypes={NODE_TYPES}
+      edgeTypes={EDGE_TYPES}
       fitView
       fitViewOptions={{ padding: 0.2 }}
-      minZoom={0.1}
-      maxZoom={2}
+      minZoom={0.45}
+      maxZoom={1.25}
       nodesDraggable
       nodesConnectable={false}
       elementsSelectable
@@ -687,11 +782,16 @@ function TraceabilityPipelineView({
   allowEdit,
   onAddLink,
   onUnlinkNode,
+  allowedDocTypes,
 }: {
   graphData: TraceabilityGraphData;
   allowEdit?: boolean;
-  onAddLink?: (stageKey: BusinessStageKey) => void;
+  onAddLink?: (
+    stageKey: BusinessStageKey,
+    docType?: TraceabilityNodeType,
+  ) => void;
   onUnlinkNode?: (node: TraceabilityNode) => void;
+  allowedDocTypes?: TraceabilityNodeType[];
 }) {
   const t = useT();
 
@@ -700,6 +800,14 @@ function TraceabilityPipelineView({
       {STAGES_CONFIG.map((stage, sIdx) => {
         const stageNodes = graphData.nodes.filter((n) =>
           stage.types.includes(n.docType),
+        );
+
+        const validStageTypes = allowedDocTypes
+          ? stage.types.filter((t) => allowedDocTypes.includes(t))
+          : stage.types;
+
+        const canAddInThisStage = Boolean(
+          allowEdit && onAddLink && validStageTypes.length > 0,
         );
 
         return (
@@ -711,12 +819,19 @@ function TraceabilityPipelineView({
                   <span className="text-[11px] font-mono px-1.5 py-0.2 rounded bg-slate-200/60 dark:bg-slate-800 text-slate-600">
                     {stageNodes.length}
                   </span>
-                  {allowEdit && onAddLink && (
+                  {canAddInThisStage && (
                     <button
                       type="button"
-                      onClick={() => onAddLink(stage.key)}
+                      onClick={() =>
+                        onAddLink?.(
+                          stage.key,
+                          validStageTypes.length === 1
+                            ? validStageTypes[0]
+                            : undefined,
+                        )
+                      }
                       className="text-slate-400 hover:text-slate-700 p-0.5 rounded transition-colors"
-                      title={t("Ghép nối")}
+                      title={`${t("Ghép nối chứng từ vào")} ${stage.title}`}
                     >
                       <Plus className="w-3.5 h-3.5" />
                     </button>
@@ -823,7 +938,6 @@ function TraceabilityPipelineView({
 function TraceabilityTableView({
   graphData,
   editMode,
-  editActionsSlot,
   allowEdit,
   onUnlinkNode,
 }: {
@@ -970,12 +1084,6 @@ function TraceabilityTableView({
 
   return (
     <div className="space-y-5">
-      {editMode && editActionsSlot && (
-        <div className="p-3 bg-slate-50 dark:bg-slate-900/60 border border-slate-200 rounded-lg">
-          {editActionsSlot}
-        </div>
-      )}
-
       {renderTableSection(
         t("Chứng từ liên kết trực tiếp (1-hop)"),
         directNodes,
@@ -998,20 +1106,24 @@ export interface DrawerDocumentTraceabilityProps {
   fetchGraph: (id: string) => Promise<TraceabilityGraphData>;
   editMode?: boolean;
   allowEdit?: boolean;
+  allowedDocTypes?: TraceabilityNodeType[];
   editActionsSlot?: React.ReactNode;
-  onAddLink?: (stageKey?: BusinessStageKey) => void;
-  onCreateNewDoc?: (stageKey?: BusinessStageKey) => void;
+  onAddLink?: (
+    stageKey?: BusinessStageKey,
+    docType?: TraceabilityNodeType,
+  ) => void;
   onUnlinkNode?: (node: TraceabilityNode) => Promise<void> | void;
   className?: string;
 }
 
 export function DrawerDocumentTraceability({
   rootId,
+  rootType,
   fetchGraph,
   editMode = false,
+  allowedDocTypes,
   editActionsSlot,
   onAddLink,
-  onCreateNewDoc,
   onUnlinkNode,
   className,
 }: DrawerDocumentTraceabilityProps) {
@@ -1028,6 +1140,9 @@ export function DrawerDocumentTraceability({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Link Selector Popover State
+  const [linkSelectorOpen, setLinkSelectorOpen] = useState(false);
+
   // Unlink Confirm State
   const [unlinkingNode, setUnlinkingNode] = useState<TraceabilityNode | null>(
     null,
@@ -1037,23 +1152,39 @@ export function DrawerDocumentTraceability({
   // Strict Edit Mode enforcement: Only enable adding, linking or deleting when in editMode
   const effectiveAllowEdit = Boolean(editMode);
 
-  const loadData = useCallback(async () => {
-    if (!rootId) return;
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await fetchGraph(rootId);
-      setGraphData(data);
-    } catch (err: any) {
-      setError(err?.message || "Không thể tải đồ thị chứng từ liên đới");
-    } finally {
-      setLoading(false);
-    }
-  }, [rootId, fetchGraph]);
+  const fetchGraphRef = useRef(fetchGraph);
+  useEffect(() => {
+    fetchGraphRef.current = fetchGraph;
+  }, [fetchGraph]);
+
+  const loadData = useCallback(
+    async (silent = false) => {
+      if (!rootId) return;
+      if (!silent) {
+        setLoading((prev) => (graphData ? false : true));
+      }
+      setError(null);
+      try {
+        const data = await fetchGraphRef.current(rootId);
+        setGraphData(data);
+      } catch (err: any) {
+        setError(err?.message || "Không thể tải đồ thị chứng từ liên đới");
+      } finally {
+        setLoading(false);
+      }
+    },
+    [rootId, graphData],
+  );
 
   useEffect(() => {
     loadData();
-  }, [loadData]);
+  }, [rootId]);
+
+  useEffect(() => {
+    if (!editMode) {
+      loadData(true);
+    }
+  }, [editMode]);
 
   const handleRequestUnlink = (node: TraceabilityNode) => {
     setUnlinkingNode(node);
@@ -1065,13 +1196,70 @@ export function DrawerDocumentTraceability({
     try {
       await onUnlinkNode(unlinkingNode);
       setUnlinkingNode(null);
-      await loadData();
+      await loadData(true);
     } catch (err: any) {
       console.error(err);
     } finally {
       setUnlinkingLoading(false);
     }
   };
+
+  const selectableDocTypes = useMemo(() => {
+    if (allowedDocTypes && allowedDocTypes.length > 0) {
+      return allowedDocTypes;
+    }
+    return [
+      "BANK_TXN",
+      "PURCHASE_ORDER",
+      "SALES_ORDER",
+      "GARAGE_CASE",
+      "GOODS_RECEIPT",
+      "GOODS_ISSUE",
+    ] as TraceabilityNodeType[];
+  }, [allowedDocTypes]);
+
+  const linkPopoverContent = (
+    <div className="p-2.5 min-w-[260px]">
+      <div className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider px-1 pb-1.5 mb-1 border-b border-slate-100 dark:border-slate-800 font-mono">
+        {t("Chọn loại để ghép nối")}
+      </div>
+      <div className="flex flex-col gap-1 max-h-64 overflow-y-auto">
+        {selectableDocTypes.map((type) => {
+          const meta = DOC_TYPE_META[type] || {
+            label: type,
+            fullTitle: type,
+            badgeCls: "bg-slate-100 text-slate-700",
+          };
+          return (
+            <button
+              key={type}
+              type="button"
+              onClick={() => {
+                setLinkSelectorOpen(false);
+                onAddLink?.(undefined, type);
+              }}
+              className="flex items-center justify-between w-full px-2 py-1.5 rounded-lg text-xs font-medium hover:bg-slate-100 dark:hover:bg-slate-800 text-left transition-colors group"
+            >
+              <div className="flex items-center gap-2">
+                <span
+                  className={cn(
+                    "px-1.5 py-0.5 rounded text-[10px] font-mono font-bold border",
+                    meta.badgeCls,
+                  )}
+                >
+                  {meta.label}
+                </span>
+                <span className="text-slate-700 dark:text-slate-200 group-hover:text-slate-900 dark:group-hover:text-white">
+                  {t(meta.fullTitle)}
+                </span>
+              </div>
+              <Plus className="w-3.5 h-3.5 text-slate-400 group-hover:text-primary transition-colors" />
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
 
   return (
     <div className={cn("w-full flex flex-col gap-3 py-1", className)}>
@@ -1101,50 +1289,39 @@ export function DrawerDocumentTraceability({
         {/* Action Controls & View Switcher Tabs */}
         <div className="flex items-center gap-2 flex-wrap">
           {effectiveAllowEdit &&
-            (onAddLink || onCreateNewDoc) &&
-            (onAddLink && onCreateNewDoc ? (
-              <ActionDropdown
-                items={[
-                  {
-                    groupLabel: t("THAO TÁC CHỨNG TỪ"),
-                    items: [
-                      {
-                        label: t("Ghép nối chứng từ có sẵn..."),
-                        icon: <Link2 className="w-4 h-4" />,
-                        onClick: () => onAddLink?.(),
-                      },
-                      {
-                        label: t("Tạo mới chứng từ liên quan..."),
-                        icon: <FilePlus className="w-4 h-4" />,
-                        onClick: () => onCreateNewDoc?.(),
-                      },
-                    ],
-                  },
-                ]}
-                customTrigger={
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="h-7 text-xs gap-1.5 text-primary border-primary/30 bg-primary/5 hover:bg-primary/10 font-medium"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                    <span>{t("Thêm chứng từ")}</span>
-                    <ChevronDown className="w-3 h-3 ml-0.5 opacity-70" />
-                  </Button>
-                }
-              />
-            ) : (
+            onAddLink &&
+            (selectableDocTypes.length === 1 ? (
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={() => onAddLink?.()}
-                className="h-7 text-xs gap-1.5 text-primary border-primary/30 bg-primary/5 hover:bg-primary/10 font-medium"
+                onClick={() => onAddLink?.(undefined, selectableDocTypes[0])}
+                className="h-8 text-xs gap-1.5 text-primary border-primary/30 bg-primary/5 hover:bg-primary/10 font-medium"
+                title={t("Ghép nối chứng từ có sẵn")}
               >
-                <Plus className="w-3.5 h-3.5" />
+                <Link2 className="w-3.5 h-3.5" />
                 <span>{t("Ghép nối chứng từ")}</span>
               </Button>
+            ) : (
+              <Popover
+                open={linkSelectorOpen}
+                onOpenChange={setLinkSelectorOpen}
+                side="bottom"
+                align="end"
+                content={linkPopoverContent}
+              >
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-8 text-xs gap-1.5 text-primary border-primary/30 bg-primary/5 hover:bg-primary/10 font-medium"
+                  title={t("Ghép nối chứng từ có sẵn")}
+                >
+                  <Link2 className="w-3.5 h-3.5" />
+                  <span>{t("Ghép nối chứng từ")}</span>
+                  <ChevronDown className="w-3 h-3 ml-0.5 opacity-70" />
+                </Button>
+              </Popover>
             ))}
 
           <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200/80">
@@ -1225,30 +1402,54 @@ export function DrawerDocumentTraceability({
           <Button
             variant="outline"
             size="sm"
-            onClick={loadData}
+            onClick={() => loadData()}
             className="mt-2 text-xs"
           >
             {t("Thử lại")}
           </Button>
         </div>
       ) : !graphData || graphData.nodes.length <= 1 ? (
-        <div className="h-[240px] flex flex-col items-center justify-center gap-3 text-slate-400 border border-dashed rounded-xl bg-slate-50/40 p-4">
+        <div className="h-[240px] flex flex-col items-center justify-center gap-3 text-slate-400 border border-dashed rounded-xl bg-slate-50/40 p-6 text-center">
           <Network className="w-7 h-7 opacity-40" />
-          <span className="text-xs text-center">
-            {t("Chưa có chứng từ liên kết trực tiếp hay gián tiếp nào.")}
+          <span className="text-xs max-w-md text-slate-600 dark:text-slate-400 leading-relaxed">
+            {rootType === "INVOICE"
+              ? t(
+                  "Chưa có chứng từ ghép nối. Hóa đơn là nguồn đối soát chính và có thể ghép nối với sao kê ngân hàng, đơn mua/bán hàng hoặc phiếu dịch vụ.",
+                )
+              : t("Chưa có chứng từ liên kết trực tiếp hay gián tiếp nào.")}
           </span>
-          {effectiveAllowEdit && onAddLink && (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => onAddLink()}
-              className="gap-1.5 text-xs text-primary border-primary/30"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>{t("Ghép nối chứng từ đầu tiên")}</span>
-            </Button>
-          )}
+          {effectiveAllowEdit &&
+            onAddLink &&
+            (selectableDocTypes.length === 1 ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => onAddLink?.(undefined, selectableDocTypes[0])}
+                className="gap-1.5 text-xs text-primary border-primary/30"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>{t("Ghép nối chứng từ đầu tiên")}</span>
+              </Button>
+            ) : (
+              <Popover
+                open={linkSelectorOpen}
+                onOpenChange={setLinkSelectorOpen}
+                side="bottom"
+                align="center"
+                content={linkPopoverContent}
+              >
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5 text-xs text-primary border-primary/30"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>{t("Ghép nối chứng từ đầu tiên")}</span>
+                </Button>
+              </Popover>
+            ))}
         </div>
       ) : (
         <div className="w-full">
@@ -1261,6 +1462,7 @@ export function DrawerDocumentTraceability({
                   allowEdit={effectiveAllowEdit}
                   onAddLink={onAddLink}
                   onUnlinkNode={handleRequestUnlink}
+                  allowedDocTypes={allowedDocTypes}
                 />
               </ReactFlowProvider>
             </div>
@@ -1272,6 +1474,7 @@ export function DrawerDocumentTraceability({
               allowEdit={effectiveAllowEdit}
               onAddLink={onAddLink}
               onUnlinkNode={handleRequestUnlink}
+              allowedDocTypes={allowedDocTypes}
             />
           )}
 
@@ -1279,7 +1482,6 @@ export function DrawerDocumentTraceability({
             <TraceabilityTableView
               graphData={graphData}
               editMode={editMode}
-              editActionsSlot={editActionsSlot}
               allowEdit={effectiveAllowEdit}
               onUnlinkNode={handleRequestUnlink}
             />
