@@ -58,6 +58,9 @@ export function GarageCasePreview({ caseData, grossProfit }: Props) {
         </span>
       }
       collapsible
+      defaultCollapsed={false}
+      fitViewportHeight
+      peekRelatedDeck
     >
       <div className="w-full text-[13px] leading-relaxed text-slate-800 dark:text-slate-200">
         <div className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 md:p-6 shadow-sm relative overflow-hidden rounded-xl">
@@ -552,32 +555,93 @@ export function GarageCasePreview({ caseData, grossProfit }: Props) {
               </div>
 
               {/* Gross profit data if available */}
-              {grossProfit && (
-                <div className="mt-3 pt-2.5 border-t border-dashed border-emerald-300 dark:border-emerald-700 space-y-1">
-                  <div className="flex justify-between font-semibold text-emerald-800 dark:text-emerald-300">
-                    <span>
-                      {t(
-                        "cases.quotePreview.partCostSummary",
-                        "Giá vốn phụ tùng",
-                      )}
-                    </span>
-                    <span className="tabular-nums font-mono">
-                      {formatNumber(grossProfit.TongGiaVon || 0)} ₫
-                    </span>
+              {(() => {
+                const previewRev = Number(
+                  grossProfit?.DoanhThu ??
+                    caseData?.doanhThu ??
+                    rawData?.DoanhThu ??
+                    rawData?.TongTienHang ??
+                    0,
+                );
+                const previewCost = Number(
+                  grossProfit?.ChiPhi ??
+                    caseData?.chiPhi ??
+                    rawData?.ChiPhi ??
+                    0,
+                );
+                const previewProfit = Number(
+                  grossProfit?.LoiNhuan ??
+                    caseData?.loiNhuan ??
+                    rawData?.LoiNhuan ??
+                    previewRev - previewCost,
+                );
+                const previewMargin =
+                  grossProfit?.BienLoiNhuan != null
+                    ? Number(grossProfit.BienLoiNhuan)
+                    : previewRev > 0
+                      ? Number(((previewProfit / previewRev) * 100).toFixed(1))
+                      : 0;
+
+                if (previewRev === 0 && previewCost === 0 && !grossProfit) {
+                  return null;
+                }
+
+                return (
+                  <div className="mt-3 pt-2.5 border-t border-dashed border-emerald-300 dark:border-emerald-700 space-y-1">
+                    <div className="flex justify-between font-semibold text-slate-700 dark:text-slate-300">
+                      <span>
+                        {t(
+                          "cases.quotePreview.totalCostSummary",
+                          "Tổng chi phí vụ việc",
+                        )}
+                      </span>
+                      <span className="tabular-nums font-mono">
+                        {formatNumber(previewCost)} ₫
+                      </span>
+                    </div>
+                    {Number(grossProfit?.GiaVonPhuTung || 0) > 0 && (
+                      <div className="flex justify-between text-[11px] text-slate-500 dark:text-slate-400 pl-2">
+                        <span>
+                          {t(
+                            "cases.quotePreview.partCostSummary",
+                            "↳ Giá vốn phụ tùng",
+                          )}
+                        </span>
+                        <span className="tabular-nums font-mono">
+                          {formatNumber(grossProfit.GiaVonPhuTung)} ₫
+                        </span>
+                      </div>
+                    )}
+                    <div className="flex justify-between font-bold text-emerald-700 dark:text-emerald-400">
+                      <span>
+                        {t(
+                          "cases.quotePreview.grossProfitSummary",
+                          "Lợi nhuận gộp (tạm tính)",
+                        )}
+                      </span>
+                      <span className="tabular-nums font-mono">
+                        {formatNumber(previewProfit)} ₫
+                      </span>
+                    </div>
+                    {previewRev > 0 && (
+                      <div className="flex justify-between font-semibold text-emerald-600 dark:text-emerald-400 text-[11px]">
+                        <span>
+                          {t(
+                            "cases.quotePreview.profitMarginSummary",
+                            "Biên lợi nhuận",
+                          )}
+                        </span>
+                        <span className="tabular-nums font-mono">
+                          {previewMargin >= 0
+                            ? `+${previewMargin}`
+                            : previewMargin}
+                          %
+                        </span>
+                      </div>
+                    )}
                   </div>
-                  <div className="flex justify-between font-bold text-emerald-700 dark:text-emerald-400">
-                    <span>
-                      {t(
-                        "cases.quotePreview.grossProfitSummary",
-                        "Lợi nhuận gộp (tạm tính)",
-                      )}
-                    </span>
-                    <span className="tabular-nums font-mono">
-                      {formatNumber(grossProfit.LoiNhuan || 0)} ₫
-                    </span>
-                  </div>
-                </div>
-              )}
+                );
+              })()}
             </div>
           </div>
 

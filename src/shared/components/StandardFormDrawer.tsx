@@ -174,6 +174,12 @@ export function StandardFormDrawer({
     }
   }, [open, rightPanelDefaultCollapsed]);
 
+  const isRightPanelCollapsible =
+    collapsibleRightPanel !== undefined
+      ? collapsibleRightPanel
+      : (layout === "2-columns" && Boolean(rightPanel) && !hideRightPanel) ||
+        Boolean(rightPanelTitle);
+
   // view mode: border-primary outline, hover fills primary bg
   const headerExtra = (
     <div className="flex items-center gap-2">
@@ -186,7 +192,7 @@ export function StandardFormDrawer({
           {t("Chỉnh sửa")}
         </button>
       )}
-      {!hideRightPanel && rightPanel && collapsibleRightPanel && (
+      {!hideRightPanel && rightPanel && isRightPanelCollapsible && (
         <div
           className={cn(
             "flex items-center",
@@ -200,7 +206,7 @@ export function StandardFormDrawer({
             variant="ghost"
             size="icon-sm"
             onClick={() => setRightPanelCollapsed((s) => !s)}
-            className="text-[color:var(--faint)]"
+            className="text-[color:var(--faint)] hover:text-foreground"
             title={
               rightPanelCollapsed
                 ? t("Mở rộng cột phải")
@@ -255,13 +261,13 @@ export function StandardFormDrawer({
           {/* Cột phải: Thông tin chung / Metadata */}
           {!hideRightPanel &&
             rightPanel &&
-            (rightPanelTitle !== undefined || collapsibleRightPanel ? (
+            (rightPanelTitle !== undefined || isRightPanelCollapsible ? (
               <div
                 className={cn(
-                  "shrink-0 order-1 lg:order-2 space-y-4 transition-all duration-300 overflow-x-hidden",
+                  "shrink-0 order-1 lg:order-2 space-y-4 transition-all duration-300 overflow-x-hidden p-0.5 pb-3",
                   stickyRightPanel && "lg:sticky lg:top-0",
                   rightPanelCollapsed
-                    ? "w-full lg:w-0 h-0 lg:h-auto opacity-0 overflow-hidden"
+                    ? "w-full lg:w-0 h-0 lg:h-auto opacity-0 overflow-hidden !p-0"
                     : "w-full lg:w-[300px] xl:w-[320px] 2xl:w-[360px] opacity-100",
                 )}
               >
@@ -271,8 +277,8 @@ export function StandardFormDrawer({
                       className={cn(
                         "w-full",
                         stickyRightPanel
-                          ? "overflow-x-hidden overflow-y-auto lg:max-h-[calc(100vh-190px)]"
-                          : "overflow-x-hidden overflow-y-visible",
+                          ? "overflow-x-hidden overflow-y-auto lg:max-h-[calc(100vh-190px)] pb-2"
+                          : "overflow-x-hidden overflow-y-visible pb-1",
                       )}
                       style={
                         stickyRightPanel
@@ -290,8 +296,8 @@ export function StandardFormDrawer({
                     className={cn(
                       "w-full",
                       stickyRightPanel
-                        ? "overflow-x-hidden overflow-y-auto lg:max-h-[calc(100vh-190px)]"
-                        : "overflow-x-hidden overflow-y-visible",
+                        ? "overflow-x-hidden overflow-y-auto lg:max-h-[calc(100vh-190px)] pb-2"
+                        : "overflow-x-hidden overflow-y-visible pb-1",
                     )}
                     style={
                       stickyRightPanel ? { scrollbarWidth: "none" } : undefined
@@ -306,7 +312,7 @@ export function StandardFormDrawer({
             ) : (
               <div
                 className={cn(
-                  "shrink-0 order-1 lg:order-2 w-full lg:w-[300px] xl:w-[320px] 2xl:w-[360px]",
+                  "shrink-0 order-1 lg:order-2 w-full lg:w-[300px] xl:w-[320px] 2xl:w-[360px] p-0.5 pb-3",
                   stickyRightPanel && "lg:sticky lg:top-0",
                 )}
               >

@@ -478,6 +478,7 @@ export function GarageCaseStandaloneDrawer({
       onToggleEdit={!editMode ? startEdit : undefined}
       confirmOnClose={editMode && hasPendingChanges}
       onClose={onClose}
+      collapsibleRightPanel={true}
       title={`${t("cases.drawer.caseDetails", "Sổ báo giá:")} ${selectedCase?.soChungTu || ""}`}
       titleExtra={
         <KgaraCaseStatusBadge status={selectedCase?.tenTinhTrangDichVu} />
@@ -506,10 +507,12 @@ export function GarageCaseStandaloneDrawer({
             <div className="h-40 bg-slate-100 rounded-lg w-full"></div>
           </div>
         ) : selectedCase ? (
-          <div className="space-y-4">
-            {/* THÔNG TIN CHUNG */}
+          <div className="space-y-3 pb-3">
+            {/* 1. THÔNG TIN CHUNG */}
             <DrawerSection
               title={t("cases.drawer.generalInfo", "Thông tin chung")}
+              collapsible
+              defaultCollapsed={false}
             >
               <DrawerRow
                 label={t("cases.drawer.caseCode", "Số chứng từ")}
@@ -533,100 +536,325 @@ export function GarageCaseStandaloneDrawer({
               />
             </DrawerSection>
 
-            {/* TÀI CHÍNH BÁO GIÁ */}
-            <DrawerSection
-              title={t("cases.drawer.financials", "Tài chính báo giá")}
-            >
-              <DrawerRow
-                label={t("cases.drawer.totalAmount", "Tổng tiền")}
-                cls="font-semibold"
-                value={money(Number(selectedCase.tienCoThue || 0))}
-              />
-              <DrawerRow
-                label={t(
-                  "cases.drawer.paidAmountCombined",
-                  "Đã thanh toán (KH & BH)",
-                )}
-                cls="text-emerald-600 font-semibold"
-                value={money(
-                  Number(selectedCase.khachHangDaThanhToan || 0) +
-                    Number(selectedCase.baoHiemDaThanhToan || 0),
-                )}
-              />
-              <DrawerRow
-                label={t("cases.drawer.customerPaid", "Khách hàng thanh toán")}
-                value={money(Number(selectedCase.khachHangDaThanhToan || 0))}
-              />
-              <DrawerRow
-                label={t("cases.drawer.insurancePaid", "Bảo hiểm thanh toán")}
-                value={money(Number(selectedCase.baoHiemDaThanhToan || 0))}
-              />
-              <DrawerRow
-                label={t("cases.drawer.remaining", "Còn phải thu")}
-                cls="text-rose-600 font-semibold"
-                value={money(Number(selectedCase.tienConPhaiThanhToan || 0))}
-              />
-            </DrawerSection>
+            {/* 2. HIỆU QUẢ KINH DOANH & LỢI NHUẬN GỘP */}
+            {(() => {
+              const revenueAmount = Number(
+                grossProfit?.DoanhThu ??
+                  selectedCase.doanhThu ??
+                  selectedCase.rawData?.DoanhThu ??
+                  selectedCase.rawData?.TongTienHang ??
+                  0,
+              );
+              const totalCostAmount = Number(
+                grossProfit?.ChiPhi ??
+                  selectedCase.chiPhi ??
+                  selectedCase.rawData?.ChiPhi ??
+                  0,
+              );
+              const grossProfitAmount = Number(
+                grossProfit?.LoiNhuan ??
+                  selectedCase.loiNhuan ??
+                  selectedCase.rawData?.LoiNhuan ??
+                  revenueAmount - totalCostAmount,
+              );
+              const profitMargin =
+                grossProfit?.BienLoiNhuan != null
+                  ? Number(grossProfit.BienLoiNhuan)
+                  : revenueAmount > 0
+                    ? Number(
+                        ((grossProfitAmount / revenueAmount) * 100).toFixed(1),
+                      )
+                    : 0;
 
-            {/* LỢI NHUẬN GỘP & CHI PHÍ */}
-            {grossProfit && (
-              <DrawerSection
-                title={t(
-                  "cases.drawer.grossProfitSection",
-                  "Lợi nhuận gộp & Chi phí",
-                )}
-              >
-                <DrawerRow
-                  label={t("cases.drawer.revenue", "Doanh thu")}
-                  value={money(
-                    Number(grossProfit.DoanhThu || selectedCase.doanhThu || 0),
+              if (
+                revenueAmount === 0 &&
+                totalCostAmount === 0 &&
+                !grossProfit
+              ) {
+                return null;
+              }
+
+              return (
+                <DrawerSection
+                  title={t(
+                    "cases.drawer.businessPerformance",
+                    "Hiệu quả kinh doanh & Lợi nhuận",
                   )}
-                />
-                <DrawerRow
-                  label={t("cases.drawer.partCost", "Giá vốn phụ tùng")}
-                  value={money(Number(grossProfit.GiaVonPhuTung || 0))}
-                />
-                <DrawerRow
-                  label={t("cases.drawer.subcontractCost", "Gia công ngoài")}
-                  value={money(Number(grossProfit.ChiPhiGiaCongNgoai || 0))}
-                />
-                {Number(grossProfit.ChiPhiHoaHongGDV || 0) > 0 && (
+                  collapsible
+                  defaultCollapsed={false}
+                >
                   <DrawerRow
                     label={t(
-                      "cases.drawer.commissionSurveyor",
-                      "Hoa hồng Giám định viên",
+                      "cases.drawer.preTaxRevenue",
+                      "Doanh thu (chưa thuế)",
                     )}
-                    value={money(Number(grossProfit.ChiPhiHoaHongGDV || 0))}
+                    value={money(revenueAmount)}
                   />
-                )}
-                {Number(grossProfit.ChiPhiHoaHongMG || 0) > 0 && (
                   <DrawerRow
-                    label={t(
-                      "cases.drawer.commissionBroker",
-                      "Hoa hồng Môi giới",
-                    )}
-                    value={money(Number(grossProfit.ChiPhiHoaHongMG || 0))}
+                    label={t("cases.drawer.totalCost", "Tổng chi phí vụ việc")}
+                    cls="text-slate-700 dark:text-slate-300 font-medium"
+                    value={money(totalCostAmount)}
                   />
-                )}
-                <DrawerRow
-                  label={t("cases.drawer.grossProfit", "Lãi tạm tính")}
-                  cls="text-emerald-600 font-bold"
-                  value={money(
-                    Number(grossProfit.LoiNhuan || selectedCase.loiNhuan || 0),
+                  {Number(grossProfit?.GiaVonPhuTung || 0) > 0 && (
+                    <DrawerRow
+                      label={t("cases.drawer.partCost", "↳ Giá vốn phụ tùng")}
+                      cls="text-xs text-slate-500 pl-2"
+                      value={money(Number(grossProfit.GiaVonPhuTung))}
+                    />
                   )}
-                />
-                {grossProfit.LoiNhuanCoThue != null && (
+                  {Number(grossProfit?.ChiPhiGiaCongNgoai || 0) > 0 && (
+                    <DrawerRow
+                      label={t(
+                        "cases.drawer.subcontractCost",
+                        "↳ Gia công ngoài",
+                      )}
+                      cls="text-xs text-slate-500 pl-2"
+                      value={money(Number(grossProfit.ChiPhiGiaCongNgoai))}
+                    />
+                  )}
+                  {Number(grossProfit?.ChiPhiHoaHongGDV || 0) > 0 && (
+                    <DrawerRow
+                      label={t(
+                        "cases.drawer.commissionSurveyor",
+                        "↳ Hoa hồng Giám định viên",
+                      )}
+                      cls="text-xs text-slate-500 pl-2"
+                      value={money(Number(grossProfit.ChiPhiHoaHongGDV))}
+                    />
+                  )}
+                  {Number(grossProfit?.ChiPhiHoaHongMG || 0) > 0 && (
+                    <DrawerRow
+                      label={t(
+                        "cases.drawer.commissionBroker",
+                        "↳ Hoa hồng Môi giới",
+                      )}
+                      cls="text-xs text-slate-500 pl-2"
+                      value={money(Number(grossProfit.ChiPhiHoaHongMG))}
+                    />
+                  )}
                   <DrawerRow
-                    label={t(
-                      "cases.drawer.grossProfitTax",
-                      "Lãi tạm tính có thuế",
-                    )}
-                    cls="text-emerald-700 font-bold"
-                    value={money(Number(grossProfit.LoiNhuanCoThue || 0))}
+                    label={t("cases.drawer.grossProfit", "Lợi nhuận gộp")}
+                    cls="text-emerald-600 font-bold"
+                    value={money(grossProfitAmount)}
                   />
-                )}
-              </DrawerSection>
-            )}
+                  {revenueAmount > 0 && (
+                    <DrawerRow
+                      label={t("cases.drawer.profitMargin", "Biên lợi nhuận")}
+                      cls={
+                        profitMargin >= 0
+                          ? "text-emerald-600 font-bold font-mono"
+                          : "text-rose-600 font-bold font-mono"
+                      }
+                      value={`${profitMargin >= 0 ? "+" : ""}${profitMargin}%`}
+                    />
+                  )}
+                  {grossProfit?.LoiNhuanCoThue != null && (
+                    <DrawerRow
+                      label={t(
+                        "cases.drawer.grossProfitTax",
+                        "Lợi nhuận gộp có thuế",
+                      )}
+                      cls="text-emerald-700 font-semibold"
+                      value={money(Number(grossProfit.LoiNhuanCoThue || 0))}
+                    />
+                  )}
+                </DrawerSection>
+              );
+            })()}
+
+            {/* 3. TÀI CHÍNH & CÔNG NỢ ERP (THU & CHI) */}
+            {(() => {
+              const totalPayableAmount = Number(
+                selectedCase.tienCoThue ||
+                  selectedCase.rawData?.TongTienThanhToan ||
+                  activeSummary?.targetRevenue ||
+                  0,
+              );
+              const erpTotalCollected = Number(
+                activeSummary?.breakdown?.receipts?.totalCollected || 0,
+              );
+              const erpBankCollected = Number(
+                (activeSummary?.breakdown?.receipts?.directReceiptOnSystem ||
+                  0) +
+                  (activeSummary?.breakdown?.receipts?.invoiceCollected || 0),
+              );
+              const erpCashCollected = Number(
+                activeSummary?.breakdown?.receipts?.directReceiptOffSystem || 0,
+              );
+              const erpRemaining = Math.max(
+                0,
+                totalPayableAmount - erpTotalCollected,
+              );
+              const isSettled = erpRemaining === 0 && totalPayableAmount > 0;
+              const collectionPercent =
+                totalPayableAmount > 0
+                  ? Math.min(
+                      Math.round(
+                        (erpTotalCollected / totalPayableAmount) * 100,
+                      ),
+                      999,
+                    )
+                  : erpTotalCollected > 0
+                    ? 100
+                    : 0;
+
+              const targetCostAmount = Number(
+                grossProfit?.ChiPhi ??
+                  selectedCase.chiPhi ??
+                  selectedCase.rawData?.ChiPhi ??
+                  activeSummary?.targetCost ??
+                  0,
+              );
+              const erpTotalPaid = Number(
+                activeSummary?.breakdown?.payments?.totalPaid || 0,
+              );
+              const erpBankPaid = Number(
+                (activeSummary?.breakdown?.payments?.directPaymentOnSystem ||
+                  0) + (activeSummary?.breakdown?.payments?.invoicePaid || 0),
+              );
+              const erpCashPaid = Number(
+                activeSummary?.breakdown?.payments?.directPaymentOffSystem || 0,
+              );
+              const erpRemainingPayable = Math.max(
+                0,
+                targetCostAmount - erpTotalPaid,
+              );
+              const paymentPercent =
+                targetCostAmount > 0
+                  ? Math.min(
+                      Math.round((erpTotalPaid / targetCostAmount) * 100),
+                      999,
+                    )
+                  : erpTotalPaid > 0
+                    ? 100
+                    : 0;
+              const isPaidFull =
+                erpRemainingPayable === 0 && targetCostAmount > 0;
+
+              return (
+                <DrawerSection
+                  title={t("cases.drawer.financials", "Tài chính & Công nợ")}
+                  collapsible
+                  defaultCollapsed={false}
+                >
+                  {/* Nhóm 1: Thu tiền (Doanh thu / Khách hàng) */}
+                  <div className="space-y-0.5 pb-2">
+                    <div className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider mb-1 flex items-center justify-between">
+                      <span>
+                        {t(
+                          "cases.drawer.receiptsFlow",
+                          "1. Dòng tiền Thu (Khách hàng)",
+                        )}
+                      </span>
+                      <span className="font-mono text-[10px] font-normal">
+                        {collectionPercent}%
+                      </span>
+                    </div>
+                    <DrawerRow
+                      label={t("cases.drawer.totalPayable", "Mục tiêu thu")}
+                      cls="font-semibold"
+                      value={money(totalPayableAmount)}
+                    />
+                    <DrawerRow
+                      label={t("cases.drawer.erpCollected", "Đã thu thực tế")}
+                      cls="text-emerald-600 font-semibold"
+                      value={`${money(erpTotalCollected)} (${collectionPercent}%)`}
+                    />
+                    {erpBankCollected > 0 && (
+                      <DrawerRow
+                        label={t(
+                          "cases.drawer.erpCollectedBank",
+                          "↳ Qua Ngân hàng / Sao kê",
+                        )}
+                        cls="text-xs text-slate-500 pl-2"
+                        value={money(erpBankCollected)}
+                      />
+                    )}
+                    {erpCashCollected > 0 && (
+                      <DrawerRow
+                        label={t(
+                          "cases.drawer.erpCollectedCash",
+                          "↳ Tiền mặt / Ngoài sổ",
+                        )}
+                        cls="text-xs text-slate-500 pl-2"
+                        value={money(erpCashCollected)}
+                      />
+                    )}
+                    <DrawerRow
+                      label={t("cases.drawer.erpRemaining", "Còn phải thu")}
+                      cls={
+                        isSettled
+                          ? "text-emerald-600 font-semibold"
+                          : "text-rose-600 font-semibold"
+                      }
+                      value={money(erpRemaining)}
+                    />
+                  </div>
+
+                  {/* Nhóm 2: Chi tiền (Chi phí / NCC) */}
+                  {targetCostAmount > 0 && (
+                    <div className="space-y-0.5 pt-2 border-t border-dashed border-border/80">
+                      <div className="text-[11px] font-semibold text-sky-700 dark:text-sky-400 uppercase tracking-wider mb-1 flex items-center justify-between">
+                        <span>
+                          {t(
+                            "cases.drawer.paymentsFlow",
+                            "2. Dòng tiền Chi (Chi phí / NCC)",
+                          )}
+                        </span>
+                        <span className="font-mono text-[10px] font-normal">
+                          {paymentPercent}%
+                        </span>
+                      </div>
+                      <DrawerRow
+                        label={t(
+                          "cases.drawer.targetCostTitle",
+                          "Tổng chi phí",
+                        )}
+                        cls="font-semibold"
+                        value={money(targetCostAmount)}
+                      />
+                      <DrawerRow
+                        label={t("cases.drawer.erpPaid", "Đã thanh toán")}
+                        cls="text-sky-600 dark:text-sky-400 font-semibold"
+                        value={`${money(erpTotalPaid)} (${paymentPercent}%)`}
+                      />
+                      {erpBankPaid > 0 && (
+                        <DrawerRow
+                          label={t(
+                            "cases.drawer.erpPaidBank",
+                            "↳ Qua Ngân hàng / Sao kê",
+                          )}
+                          cls="text-xs text-slate-500 pl-2"
+                          value={money(erpBankPaid)}
+                        />
+                      )}
+                      {erpCashPaid > 0 && (
+                        <DrawerRow
+                          label={t(
+                            "cases.drawer.erpPaidCash",
+                            "↳ Tiền mặt / Ngoài sổ",
+                          )}
+                          cls="text-xs text-slate-500 pl-2"
+                          value={money(erpCashPaid)}
+                        />
+                      )}
+                      <DrawerRow
+                        label={t(
+                          "cases.drawer.erpRemainingPayable",
+                          "Còn phải chi trả",
+                        )}
+                        cls={
+                          isPaidFull
+                            ? "text-emerald-600 font-semibold"
+                            : "text-amber-600 font-semibold"
+                        }
+                        value={money(erpRemainingPayable)}
+                      />
+                    </div>
+                  )}
+                </DrawerSection>
+              );
+            })()}
           </div>
         ) : null
       }

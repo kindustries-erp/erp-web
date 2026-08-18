@@ -304,9 +304,9 @@ function CanvasFlowInner({
       nodeTypes={NODE_TYPES}
       edgeTypes={EDGE_TYPES}
       fitView
-      fitViewOptions={{ padding: 0.2 }}
-      minZoom={0.35}
-      maxZoom={1.4}
+      fitViewOptions={{ padding: 0.15 }}
+      minZoom={0.6}
+      maxZoom={1.2}
       nodesDraggable
       nodesConnectable={false}
       elementsSelectable

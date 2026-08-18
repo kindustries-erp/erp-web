@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "@/shared/utils";
 import { useT } from "@/core/i18n";
-import { X } from "lucide-react";
+import { X, ChevronDown } from "lucide-react";
 import { Button } from "@/shared/components/ui/Button";
 import { ConfirmModal } from "./ConfirmModal";
 
@@ -361,27 +361,54 @@ export function DrawerModal({
 
 // ── Section / Row helpers (re-exported for use inside drawers) ─────────────
 
-export function DrawerSection({
-  title,
-  titleExtra,
-  collapsible,
-  collapsed,
-  onToggleCollapse,
-  children,
-  className,
-}: {
+export interface DrawerSectionProps {
   title: React.ReactNode;
   titleExtra?: React.ReactNode;
   collapsible?: boolean;
   collapsed?: boolean;
+  defaultCollapsed?: boolean;
   onToggleCollapse?: () => void;
+  fitViewportHeight?: boolean;
+  peekRelatedDeck?: boolean;
   children: React.ReactNode;
   className?: string;
-}) {
+  bodyClassName?: string;
+}
+
+export function DrawerSection({
+  title,
+  titleExtra,
+  collapsible,
+  collapsed: controlledCollapsed,
+  defaultCollapsed = false,
+  onToggleCollapse,
+  fitViewportHeight,
+  peekRelatedDeck,
+  children,
+  className,
+  bodyClassName,
+}: DrawerSectionProps) {
+  const [internalCollapsed, setInternalCollapsed] = useState(defaultCollapsed);
+  const isCollapsed =
+    controlledCollapsed !== undefined ? controlledCollapsed : internalCollapsed;
+
+  const handleToggle = () => {
+    if (collapsible) {
+      if (onToggleCollapse) {
+        onToggleCollapse();
+      } else {
+        setInternalCollapsed((prev) => !prev);
+      }
+    }
+  };
+
+  const isFitHeight = fitViewportHeight || peekRelatedDeck;
+
   return (
     <div
       className={cn(
-        "mb-3 rounded-xl border border-border/80 p-3 card-shadow",
+        "mb-3 rounded-xl border border-border/80 p-3 shadow-[0_2px_8px_-1px_rgba(0,0,0,0.06),0_1px_4px_-1px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_8px_-1px_rgba(0,0,0,0.3)] transition-all duration-200",
+        isFitHeight && "flex flex-col max-h-[calc(100vh-210px)]",
         className,
       )}
       style={{
@@ -392,37 +419,51 @@ export function DrawerSection({
     >
       <div
         className={cn(
-          "text-[11px] font-bold text-foreground/80 uppercase tracking-[0.06em] mb-[10px] pb-[6px] border-b border-[color:var(--border)] flex justify-between items-center",
-          collapsible && "cursor-pointer select-none",
+          "text-[11px] font-bold text-foreground/80 uppercase tracking-[0.06em] pb-[6px] border-b border-[color:var(--border)] flex justify-between items-center flex-shrink-0",
+          !isCollapsed && "mb-[10px]",
+          collapsible && "cursor-pointer select-none group",
         )}
-        onClick={collapsible ? onToggleCollapse : undefined}
+        onClick={handleToggle}
       >
         <div className="flex items-center gap-2">
-          <span>{title}</span>
           {collapsible && (
-            <svg
+            <ChevronDown
               className={cn(
-                "w-4 h-4 transition-transform duration-200",
-                collapsed ? "-rotate-90" : "rotate-0",
+                "w-3.5 h-3.5 text-muted-foreground transition-transform duration-200 group-hover:text-foreground",
+                isCollapsed ? "-rotate-90" : "rotate-0",
               )}
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <polyline points="6 9 12 15 18 9"></polyline>
-            </svg>
+            />
           )}
+          <span>{title}</span>
         </div>
         {titleExtra && (
-          <div className="text-foreground normal-case font-semibold text-sm">
+          <div
+            className="text-foreground normal-case font-semibold text-sm"
+            onClick={(e) => e.stopPropagation()}
+          >
             {titleExtra}
           </div>
         )}
       </div>
-      {children}
+      <div
+        className={cn(
+          "grid transition-[grid-template-rows,opacity] duration-300 ease-in-out",
+          isCollapsed
+            ? "grid-rows-[0fr] opacity-0 pointer-events-none"
+            : "grid-rows-[1fr] opacity-100",
+          isFitHeight && !isCollapsed && "flex-1 flex flex-col min-h-0",
+        )}
+      >
+        <div
+          className={cn(
+            "overflow-hidden min-h-0",
+            isFitHeight && !isCollapsed && "flex-1 overflow-y-auto pr-1",
+            bodyClassName,
+          )}
+        >
+          {children}
+        </div>
+      </div>
     </div>
   );
 }
