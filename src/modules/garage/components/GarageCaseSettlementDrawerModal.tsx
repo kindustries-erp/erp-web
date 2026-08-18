@@ -43,6 +43,7 @@ interface GarageCaseSettlementDrawerModalProps {
   defaultType?: "RECEIPT" | "PAYMENT";
   suggestedAmount?: number;
   existingTxnIds?: string[];
+  editingItem?: SettlementSubmissionItem | null;
   onSubmit: (items: SettlementSubmissionItem[]) => Promise<void> | void;
 }
 
@@ -102,16 +103,17 @@ export function GarageCaseSettlementDrawerModal({
   defaultType = "RECEIPT",
   suggestedAmount = 0,
   existingTxnIds = [],
+  editingItem = null,
   onSubmit,
 }: GarageCaseSettlementDrawerModalProps) {
   const { t } = useTranslation(["garage", "common"]);
 
   // Tab mode: "ON_SYSTEM" (Sao kê/Sổ quỹ) vs "OFF_SYSTEM_MANUAL" (Ngoài sổ sách)
   const [activeTab, setActiveTab] = useState<"ON_SYSTEM" | "OFF_SYSTEM_MANUAL">(
-    "ON_SYSTEM",
+    editingItem ? "OFF_SYSTEM_MANUAL" : "ON_SYSTEM",
   );
   const [settlementType, setSettlementType] = useState<"RECEIPT" | "PAYMENT">(
-    defaultType,
+    editingItem?.settlementType || defaultType,
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -159,31 +161,51 @@ export function GarageCaseSettlementDrawerModal({
 
   // State cho Mode 2: Ghi nhận Ngoài sổ sách
   const [manualAmount, setManualAmount] = useState<number>(
-    suggestedAmount || 0,
+    editingItem?.amount || suggestedAmount || 0,
   );
   const [manualDate, setManualDate] = useState<string>(
-    new Date().toISOString().slice(0, 10),
+    editingItem?.transDate
+      ? String(editingItem.transDate).slice(0, 10)
+      : new Date().toISOString().slice(0, 10),
   );
-  const [manualCategory, setManualCategory] =
-    useState<string>("TIEN_MAT_NGOAI");
-  const [manualPartner, setManualPartner] = useState<string>("");
-  const [manualNote, setManualNote] = useState<string>("");
+  const [manualCategory, setManualCategory] = useState<string>(
+    editingItem?.category || "TIEN_MAT_NGOAI",
+  );
+  const [manualPartner, setManualPartner] = useState<string>(
+    editingItem?.partnerName || "",
+  );
+  const [manualNote, setManualNote] = useState<string>(editingItem?.note || "");
 
   // Reset state on open
   useEffect(() => {
     if (open) {
-      setSettlementType(defaultType);
-      setSelectedIds([]);
-      setNetOffAmounts({});
-      setSelectedTxns({});
-      setManualAmount(suggestedAmount || 0);
-      setManualDate(new Date().toISOString().slice(0, 10));
-      setManualCategory("TIEN_MAT_NGOAI");
-      setManualPartner("");
-      setManualNote("");
+      if (editingItem) {
+        setActiveTab("OFF_SYSTEM_MANUAL");
+        setSettlementType(editingItem.settlementType || defaultType);
+        setManualAmount(editingItem.amount || 0);
+        setManualDate(
+          editingItem.transDate
+            ? String(editingItem.transDate).slice(0, 10)
+            : new Date().toISOString().slice(0, 10),
+        );
+        setManualCategory(editingItem.category || "TIEN_MAT_NGOAI");
+        setManualPartner(editingItem.partnerName || "");
+        setManualNote(editingItem.note || "");
+      } else {
+        setActiveTab("ON_SYSTEM");
+        setSettlementType(defaultType);
+        setSelectedIds([]);
+        setNetOffAmounts({});
+        setSelectedTxns({});
+        setManualAmount(suggestedAmount || 0);
+        setManualDate(new Date().toISOString().slice(0, 10));
+        setManualCategory("TIEN_MAT_NGOAI");
+        setManualPartner("");
+        setManualNote("");
+      }
       setIsSubmitting(false);
     }
-  }, [open, defaultType, suggestedAmount]);
+  }, [open, defaultType, suggestedAmount, editingItem]);
 
   const vouchers = (txnData?.items || []).filter((v: any) => {
     if (existingTxnIds.includes(v.id)) return false;

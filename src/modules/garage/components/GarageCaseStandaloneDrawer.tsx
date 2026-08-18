@@ -325,6 +325,7 @@ export function GarageCaseStandaloneDrawer({
         badgeCount:
           (activeLinkedInvoices?.length || 0) +
           (activeSettlements?.length || 0),
+        flush: true,
         content: (
           <DrawerDocumentTraceability
             rootId={selectedCase.id}
@@ -332,6 +333,13 @@ export function GarageCaseStandaloneDrawer({
             fetchGraph={(id) => garageApi.getCaseTraceabilityGraph(id)}
             editMode={editMode}
             allowedDocTypes={["PURCHASE_ORDER", "SALES_ORDER"]}
+            onEditManualSettlement={(node) => {
+              window.dispatchEvent(
+                new CustomEvent("open_manual_settlement_editor", {
+                  detail: { node },
+                }),
+              );
+            }}
             onAddLink={(stageKey, docType) => {
               if (docType === "PURCHASE_ORDER" || stageKey === "ORDER_STOCK") {
                 toast(

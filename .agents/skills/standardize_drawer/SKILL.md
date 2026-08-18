@@ -175,16 +175,9 @@ export function VoucherDrawer({ open, onClose, mode, setMode, data }) {
       - `noCard: true`: Tắt Card Container nếu tab tự quản lý khung ngoài.
   - Hỗ trợ các sub-components chuẩn từ `@/shared/components/drawer`:
     - `<DrawerDocumentTraceability>`: **Mạng lưới chứng từ liên kết & Cấn trừ thông minh (Multi-hop Traceability Graph)**:
-      - 3 View Modes: **Canvas View** (`@xyflow/react` node graph với phân nhóm **Stage Group Swimlanes** 4 giai đoạn chuẩn doanh nghiệp & mũi tên định hướng `MarkerType.ArrowClosed`, giới hạn zoom `minZoom=0.35` / `maxZoom=1.4`), **Pipeline View** (luồng tuần tự theo cột), **Matrix Table View** (phân loại 1-hop vs Multi-hops).
-      - **Thao tác Ghép nối & Gỡ liên kết trực tiếp (Link-Only)**:
-        - Nút **Ghép nối chứng từ** trên Header Bar tự động hiển thị **Inline Doc-Type Pill Selector** để chọn chính xác loại chứng từ trước khi mở modal ghép nối.
-        - Nút **+ Thêm liên kết** trên từng Stage Group Swimlane tự động truyền stage & loại chứng từ tương ứng vào callback `onAddLink(stageKey, docType)`.
-        - Prop `allowedDocTypes` (ví dụ: `["BANK_TXN", "PURCHASE_ORDER", "SALES_ORDER", "GARAGE_CASE"]` cho Hóa đơn) để hạn chế các loại chứng từ hợp lệ.
-        - Nút gỡ liên kết `[🗑]` kèm `ConfirmModal` trên từng node hoặc dòng bảng (chỉ khả dụng cho node trực tiếp `depth=1` khi ở chế độ `editMode`).
-      - **Zero-Trust RBAC**: Tự động sanitize & mask chứng từ bảo mật (`***`, icon 🔒) khi user không có quyền trên module đó mà vẫn giữ cấu trúc cầu nối.
-      - **Detail Drawer Navigation**: Nút `[↗]` trên từng node/dòng tự động kích hoạt `open_erp_document` để mở drawer chi tiết của chứng từ tương ứng (Hóa đơn, Sao kê/UNC, PO, SO, Phiếu kho...).
-      - Thiết kế chuẩn Business Neutral Enterprise (Slate/Zinc tối giản, không màu mè).
-
+      - 3 View Modes: **Canvas View** (`@xyflow/react` node graph với phân nhóm **Stage Group Swimlanes** 4 giai đoạn chuẩn & mũi tên định hướng, xoay hướng bố cục Ngang/Dọc), **Pipeline View** (luồng tuần tự theo cột), **Matrix Table View** (phân loại 1-hop vs Multi-hops).
+      - Hỗ trợ nút **Toàn màn hình / Thu nhỏ** (`Maximize2`/`Minimize2`) trực tiếp trên Tab Bar cho mọi chế độ xem.
+      - Chi tiết cấu hình đầy đủ xem tại skill: 👉 [`drawer-document-traceability`](../drawer-document-traceability/SKILL.md).
     - `<DrawerAuditTimeline>`: Timeline lịch sử thao tác, diff thay đổi trường dữ liệu (`oldVal` -> `newVal`), avatar người dùng và timestamp.
     - `<DrawerRelatedDocs>`: Mạng lưới chứng từ liên quan (PO, Phiếu nhập, Hóa đơn, Phiếu chi...) dạng Flow Cards rút gọn.
     - `<DrawerAttachmentsDeck>`: Danh sách/Grid tệp đính kèm, preview, download và dropzone upload.
@@ -196,24 +189,44 @@ export function VoucherDrawer({ open, onClose, mode, setMode, data }) {
 ```tsx
 import {
   StandardFormDrawer,
+  DrawerDocumentTraceability,
   DrawerAuditTimeline,
   DrawerRelatedDocs,
   DrawerAttachmentsDeck,
   type DrawerRelatedTabItem,
-} from "@/shared/components/StandardFormDrawer";
+} from "@/shared/components/drawer";
 import { Badge } from "@/shared/components/ui/badge";
 import {
   DrawerSection,
   DrawerField,
   inputCls,
 } from "@/shared/components/DrawerModal";
-import { History, Link2, Paperclip } from "lucide-react";
+import { Network, History, Link2, Paperclip } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { getPurchaseOrderTraceabilityGraph, unlinkPurchaseOrderDocument } from "@/shared/api/purchasing";
 
 export function PurchaseOrderDrawer({ open, onClose, mode, setMode, data, auditLogs, relatedDocs, attachments }) {
   const { t } = useTranslation("purchase");
 
   const relatedTabs: DrawerRelatedTabItem[] = [
+    {
+      key: "traceability",
+      label: t("Mạng lưới chứng từ", "Document Network"),
+      icon: <Network className="w-3.5 h-3.5" />,
+      badgeCount: data?.linkedDocsCount,
+      flush: true, // Bắt buộc bật flush để canvas tràn viền tối đa
+      content: (
+        <DrawerDocumentTraceability
+          rootId={data.id}
+          rootType="PURCHASE_ORDER"
+          fetchGraph={getPurchaseOrderTraceabilityGraph}
+          editMode={mode === "edit"}
+          allowedDocTypes={["INVOICE", "BANK_TXN", "GOODS_RECEIPT"]}
+          onAddLink={(stageKey, docType) => console.log("Add link", stageKey, docType)}
+          onUnlinkNode={(node) => unlinkPurchaseOrderDocument(data.id, node.id, node.docType)}
+        />
+      ),
+    },
     {
       key: "history",
       label: t("Lịch sử thay đổi", "Audit History"),
@@ -280,9 +293,9 @@ export function PurchaseOrderDrawer({ open, onClose, mode, setMode, data, auditL
 - [ ] Drawer chứng từ (2 cột) đã set `layout="2-columns"` và `size="xl"`/`"lg"` chưa?
 - [ ] Phần nội dung bên trong đã dùng các khối chuẩn như `<DrawerSection>`, `<DrawerField>` để bao bọc các input chưa?
 - [ ] Các action button của một `<DrawerSection>` (như nút Thêm, Xóa, Liên kết cho bảng) đã được đưa lên góc trên bên phải bằng prop `titleExtra` của `DrawerSection` chưa?
-- [ ] Các thông tin phụ trợ (Lịch sử thao tác, Chứng từ liên quan, Đính kèm, Ghi chú) đã được tách bạch qua prop `relatedTabs` của `StandardFormDrawer` thay vì nhồi vào `rightPanel` hay cuối form chưa?
+- [ ] Các thông tin phụ trợ (Lịch sử thao tác, Mạng lưới chứng từ, Đính kèm, Ghi chú) đã được tách bạch qua prop `relatedTabs` của `StandardFormDrawer` thay vì nhồi vào `rightPanel` hay cuối form chưa?
 - [ ] Vùng tab thông tin liên quan đã tận dụng cấu trúc chuẩn **Deck Card Container** với `card-shadow` và glassmorphism đồng bộ chưa?
-- [ ] Đã sử dụng các widgets chuẩn hóa (`<DrawerAuditTimeline>`, `<DrawerRelatedDocs>`, `<DrawerAttachmentsDeck>`, `<DrawerInternalNotes>`) cho `relatedTabs` chưa?
+- [ ] Đã sử dụng các widgets chuẩn hóa (`<DrawerDocumentTraceability>`, `<DrawerAuditTimeline>`, `<DrawerRelatedDocs>`, `<DrawerAttachmentsDeck>`, `<DrawerInternalNotes>`) cho `relatedTabs` chưa?
 - [ ] Input đã sử dụng CSS class `inputCls` từ `@/shared/components/DrawerModal` (nếu có) chưa?
 - [ ] Chức năng cảnh báo đóng Drawer khi đang Edit (`confirmOnClose={mode === 'edit'}`) đã được cấu hình đúng chưa?
 
