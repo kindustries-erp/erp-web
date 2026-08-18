@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { render, fireEvent } from "@testing-library/react";
+import { render } from "@testing-library/react";
 import React from "react";
 import { DataTable, type DataTableColumn } from "../DataTable";
 import { TooltipProvider } from "@/core/components/ui/Tooltip";
@@ -27,7 +27,7 @@ describe("DataTable - rowHoverActions trailing action column", () => {
           columns={columns}
           emptyLabel="No data"
           getRowKey={(item) => item.id}
-          rowHoverActions={(item) => [
+          rowHoverActions={() => [
             { label: "Chi tiết", onClick: () => {} },
             { label: "Xóa", onClick: () => {} },
           ]}
@@ -62,7 +62,7 @@ describe("DataTable - rowHoverActions trailing action column", () => {
             cell: () => <span>LEGACY_ACTION</span>,
             header: "Thao tác",
           }}
-          rowHoverActions={(item) => [{ label: "Chi tiết", onClick: () => {} }]}
+          rowHoverActions={() => [{ label: "Chi tiết", onClick: () => {} }]}
         />
       </TooltipProvider>,
     );

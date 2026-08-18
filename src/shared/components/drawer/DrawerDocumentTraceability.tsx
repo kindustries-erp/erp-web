@@ -42,14 +42,12 @@ import {
   Plus,
   Trash2,
   ChevronDown,
-  FilePlus,
   Link2,
 } from "lucide-react";
 
 import { Button } from "@/shared/components/ui/Button";
 import { Popover } from "@/core/components/ui/Popover";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
-import { ActionDropdown } from "@/shared/components/ActionDropdown";
 import { money, formatGMT7 } from "@/shared/utils/format";
 import type {
   TraceabilityGraphData,
@@ -937,13 +935,10 @@ function TraceabilityPipelineView({
 
 function TraceabilityTableView({
   graphData,
-  editMode,
   allowEdit,
   onUnlinkNode,
 }: {
   graphData: TraceabilityGraphData;
-  editMode?: boolean;
-  editActionsSlot?: React.ReactNode;
   allowEdit?: boolean;
   onUnlinkNode?: (node: TraceabilityNode) => void;
 }) {
@@ -1107,7 +1102,6 @@ export interface DrawerDocumentTraceabilityProps {
   editMode?: boolean;
   allowEdit?: boolean;
   allowedDocTypes?: TraceabilityNodeType[];
-  editActionsSlot?: React.ReactNode;
   onAddLink?: (
     stageKey?: BusinessStageKey,
     docType?: TraceabilityNodeType,
@@ -1122,7 +1116,6 @@ export function DrawerDocumentTraceability({
   fetchGraph,
   editMode = false,
   allowedDocTypes,
-  editActionsSlot,
   onAddLink,
   onUnlinkNode,
   className,
@@ -1161,7 +1154,7 @@ export function DrawerDocumentTraceability({
     async (silent = false) => {
       if (!rootId) return;
       if (!silent) {
-        setLoading((prev) => (graphData ? false : true));
+        setLoading(!graphData);
       }
       setError(null);
       try {
@@ -1481,7 +1474,6 @@ export function DrawerDocumentTraceability({
           {viewMode === "table" && (
             <TraceabilityTableView
               graphData={graphData}
-              editMode={editMode}
               allowEdit={effectiveAllowEdit}
               onUnlinkNode={handleRequestUnlink}
             />

@@ -4,7 +4,6 @@ import React, {
   useEffect,
   useMemo,
   useCallback,
-  useRef,
 } from "react";
 import { createPortal } from "react-dom";
 import * as Popover from "@radix-ui/react-popover";
@@ -40,7 +39,6 @@ import {
   type Column,
   type Updater,
   type ColumnSizingState,
-  type Row,
 } from "@tanstack/react-table";
 import { Skeleton } from "@/shared/components/Skeleton";
 import { TablePagination } from "@/shared/components/TablePagination";
@@ -1003,78 +1001,80 @@ export function DataTable<T>({
             </TableHeader>
             <TableBody>
               {loading &&
-                Array.from({ length: pageSize || 10 }).map((_, i) => (
-                  <TableRow
-                    key={i}
-                    className="hover:bg-transparent border-b border-border"
-                  >
-                    {table.getVisibleLeafColumns().map((column, index) => {
-                      if (column.id === "__hover_actions") {
+                Array.from({ length: loadingRows || pageSize || 10 }).map(
+                  (_, i) => (
+                    <TableRow
+                      key={i}
+                      className="hover:bg-transparent border-b border-border"
+                    >
+                      {table.getVisibleLeafColumns().map((column, index) => {
+                        if (column.id === "__hover_actions") {
+                          return (
+                            <TableCell
+                              key={column.id}
+                              className={cn(
+                                "w-[116px] min-w-[116px] max-w-[116px] p-0 border-r border-border",
+                                variant !== "spreadsheet"
+                                  ? "bg-surface"
+                                  : "bg-surface",
+                              )}
+                              style={{
+                                width: 116,
+                                minWidth: 116,
+                                maxWidth: 116,
+                              }}
+                            />
+                          );
+                        }
+                        const meta = column.columnDef.meta as DataTableRowMeta;
+                        const isFirstCol = index === 0;
                         return (
                           <TableCell
                             key={column.id}
                             className={cn(
-                              "w-[116px] min-w-[116px] max-w-[116px] p-0 border-r border-border",
-                              variant !== "spreadsheet"
-                                ? "bg-surface"
-                                : "bg-surface",
+                              meta.className,
+                              isFirstCol &&
+                                !enableRowSelection &&
+                                variant !== "spreadsheet" &&
+                                "sticky left-0 bg-surface shadow-[1px_0_0_0_var(--border-light)] z-10",
+                              variant === "spreadsheet" &&
+                                "border-r border-border py-1 text-xs",
+                              variant === "spreadsheet" &&
+                                ![
+                                  "__actions",
+                                  "__selection",
+                                  "__expand",
+                                ].includes(column.id) &&
+                                "px-2 truncate",
                             )}
                             style={{
-                              width: 116,
-                              minWidth: 116,
-                              maxWidth: 116,
+                              maxWidth: enableColumnResizing
+                                ? column.getSize()
+                                : undefined,
                             }}
-                          />
+                          >
+                            {meta.skeletonClassName !== "" && (
+                              <Skeleton
+                                className={cn(
+                                  "h-4 w-3/4 max-w-[120px]",
+                                  meta.className?.includes("text-center") &&
+                                    "mx-auto",
+                                  meta.className?.includes("text-right") &&
+                                    "ml-auto",
+                                  meta.skeletonClassName,
+                                )}
+                              />
+                            )}
+                          </TableCell>
                         );
-                      }
-                      const meta = column.columnDef.meta as DataTableRowMeta;
-                      const isFirstCol = index === 0;
-                      return (
-                        <TableCell
-                          key={column.id}
-                          className={cn(
-                            meta.className,
-                            isFirstCol &&
-                              !enableRowSelection &&
-                              variant !== "spreadsheet" &&
-                              "sticky left-0 bg-surface shadow-[1px_0_0_0_var(--border-light)] z-10",
-                            variant === "spreadsheet" &&
-                              "border-r border-border py-1 text-xs",
-                            variant === "spreadsheet" &&
-                              ![
-                                "__actions",
-                                "__selection",
-                                "__expand",
-                              ].includes(column.id) &&
-                              "px-2 truncate",
-                          )}
-                          style={{
-                            maxWidth: enableColumnResizing
-                              ? column.getSize()
-                              : undefined,
-                          }}
-                        >
-                          {meta.skeletonClassName !== "" && (
-                            <Skeleton
-                              className={cn(
-                                "h-4 w-3/4 max-w-[120px]",
-                                meta.className?.includes("text-center") &&
-                                  "mx-auto",
-                                meta.className?.includes("text-right") &&
-                                  "ml-auto",
-                                meta.skeletonClassName,
-                              )}
-                            />
-                          )}
-                        </TableCell>
-                      );
-                    })}
-                    <TableCell
-                      className="w-auto p-0 m-0 border-none"
-                      style={{ width: "auto" }}
-                    />
-                  </TableRow>
-                ))}
+                      })}
+                      <TableCell
+                        className="w-auto p-0 m-0 border-none"
+                        style={{ width: "auto" }}
+                      />
+                    </TableRow>
+                  ),
+                )}
 
               {!loading && error && (
                 <TableRow className="hover:bg-transparent">

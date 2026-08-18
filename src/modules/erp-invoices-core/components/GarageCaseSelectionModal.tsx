@@ -10,7 +10,6 @@ import { formatGMT7, money } from "@/shared/utils/format";
 import { garageApi } from "@/modules/garage/api/garageApi";
 import { useGarageBranches } from "@/modules/garage/hooks/useGarage";
 import { Wrench, Check, Building2 } from "lucide-react";
-import { cn } from "@/shared/utils";
 
 interface Props {
   open: boolean;
