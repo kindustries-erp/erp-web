@@ -31,6 +31,8 @@ export interface StandardTableProps<T> {
   error?: string | null;
   actions?: (row: T) => ActionDropdownItem[];
   actionColumnSize?: number;
+  enableRowHoverActions?: boolean;
+  hideLegacyActionColumn?: boolean;
   renderSubRow?: (row: T) => React.ReactNode;
   onRowClick?: (row: T) => void;
   enableColumnVisibility?: boolean;
@@ -68,6 +70,8 @@ export function StandardTable<T>({
   error = null,
   actions,
   actionColumnSize,
+  enableRowHoverActions = true,
+  hideLegacyActionColumn = false,
   renderSubRow,
   onRowClick,
   enableColumnVisibility = true,
@@ -107,7 +111,7 @@ export function StandardTable<T>({
       loading={loading}
       error={error}
       actionsColumn={
-        actions
+        actions && !hideLegacyActionColumn
           ? {
               header: tableId ? (
                 <Tooltip content="Khôi phục độ rộng">
@@ -136,6 +140,11 @@ export function StandardTable<T>({
               minSize: actionColumnSize,
               maxSize: actionColumnSize,
             }
+          : undefined
+      }
+      rowHoverActions={
+        actions && enableRowHoverActions !== false
+          ? (row) => actions(row)
           : undefined
       }
       expandedRowKeys={

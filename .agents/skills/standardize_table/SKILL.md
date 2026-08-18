@@ -123,17 +123,26 @@ header: (
 )
 ```
 
-## 3. Row Click, View Detail & Action Menu
+## 3. Row Click, View Detail & Row Hover Action Menu
 
 - **Tuyệt đối KHÔNG sử dụng `onRowClick`** để mở trang / ngăn kéo chi tiết (detail drawer).
 - Chỉ có 2 cách hợp lệ để xem chi tiết một bản ghi (View Detail):
   1. Click vào biểu tượng icon detail nằm trong `<TableText>` (xem phần Mã Code/SKU bên dưới).
-  2. Click vào tùy chọn **"Chi tiết"** trong Action Menu của hàng.
-- **Action Menu (Cột Thao Tác)**: Bắt buộc sử dụng component `<ActionDropdown>` (`@/shared/components/ActionDropdown`).
+  2. Click vào tùy chọn **"Chi tiết"** trong Action Menu hoặc Quick Action button của hàng.
+- **Row Hover Floating Actions (Ô Nổi Thao Tác Khi Hover Hàng)**:
+  - Khi rê chuột (hover) vào bất kỳ dòng nào trong bảng, một ô nổi chứa **2 nút thao tác nhanh (Quick Action Buttons)** (như Chi tiết 👁️, Tải XML 📥, Chỉnh sửa ✏️) và **nút ba chấm `...`** mở Action Menu đầy đủ sẽ xuất hiện nổi tại mép phải của dòng (`sticky right-0` trong suốt, không đè nền/viền lên dữ liệu).
+  - **Button Pill luôn Floating ở mép phải khung nhìn**: Nút nổi luôn xuất hiện ở mép phải của hàng hiển thị trên màn hình (`absolute right-3.5 top-1/2 -translate-y-1/2`) bất kể bạn đang ở đầu, giữa hay cuối bảng. Cell chứa nút nổi hoàn toàn trong suốt (`bg-transparent border-none pointer-events-none`), không tạo bất kỳ dải cột cố định hay viền dọc nào che khuất dữ liệu khi cuộn.
+  - **Cột đệm 116px ở cuối bảng (Không sticky header/footer)**: Header và Footer của cột cuối cuộn tự nhiên theo bảng. Khi cuộn ngang hết cỡ sang phải, cột đệm 116px này đóng vai trò khoảng trống an toàn để ô nổi nằm gọn gàng bên trong với lề 14px đều đặn, không đè lên dữ liệu của cột liền trước.
+  - **Khoảng cách 3 Icon Buttons đều đặn**: Cả 3 nút đều có kích thước chuẩn (`w-6 h-6 rounded-lg`), giãn cách đều `gap-1` (4px), không dùng thanh ngăn cách để đảm bảo đối xứng thị giác hoàn hảo.
+  - **Glassmorphism Styling**: Ô nổi sử dụng hiệu ứng kính mờ cao cấp đồng bộ với Universal Search (`backdrop-filter: blur(20px) saturate(180%)`, nền `var(--popup-bg)`, viền `var(--popup-border)` và viền sáng âm `inset`, đổ bóng mịn).
+  - **Hiệu năng 0ms Lag**: Sử dụng hardware-accelerated CSS hover (`group-hover:opacity-100`), không gây re-render React khi di chuột, hoạt động mượt mà 60fps/120fps.
+  - **Chuẩn Tooltip Bottom**: Toàn bộ tooltip trong bảng và hệ thống mặc định mở xuống dưới (`side="bottom"`) để không bao giờ che khuất các nút thao tác nổi.
+  - **Giai đoạn thử nghiệm (Trial Phase)**: Cột thao tác hiện tại ở đầu bảng (cột 1) và ô nổi ở cuối hàng hoạt động song song. Khi người dùng trải nghiệm thực tế và duyệt, hệ thống sẽ bật `hideLegacyActionColumn: true` để ẩn cột 1.
+- **Action Menu (Cấu trúc ActionDropdownItem)**: Bắt buộc sử dụng component `<ActionDropdown>` (`@/shared/components/ActionDropdown`) hoặc truyền qua prop `actions` / `rowActions` / `rowHoverActions`.
   - Các thao tác bên trong phải được **phân nhóm logic (Group)** rõ ràng bằng thuộc tính `groupLabel`.
   - Ví dụ nhóm "TRA CỨU" (Chi tiết, Tải XML, In), nhóm "THAO TÁC" (Sửa, Xóa, Đồng bộ).
 
-**Mẫu code `<ActionDropdown>`**:
+**Mẫu code `<ActionDropdown>` / `rowActions`**:
 
 ```tsx
 <ActionDropdown
@@ -141,10 +150,10 @@ header: (
     {
       groupLabel: "TRA CỨU",
       items: [
-        { label: "Chi tiết", icon: <Eye />, onClick: () => openDetail(row.id) },
+        { label: "Chi tiết", icon: <Eye className="w-3.5 h-3.5" />, onClick: () => openDetail(row.id) },
         {
           label: "Tải XML",
-          icon: <Download />,
+          icon: <Download className="w-3.5 h-3.5" />,
           onClick: () => downloadXML(row.id),
         },
       ],
@@ -154,7 +163,7 @@ header: (
       items: [
         {
           label: "Đồng bộ lại từ XML",
-          icon: <RefreshCw />,
+          icon: <RefreshCw className="w-3.5 h-3.5" />,
           onClick: () => syncXML(row.id),
         },
       ],

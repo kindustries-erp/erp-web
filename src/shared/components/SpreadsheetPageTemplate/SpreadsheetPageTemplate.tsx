@@ -48,6 +48,8 @@ export function SpreadsheetPageTemplate<T>({
   sortArray,
   onSort,
   rowActions,
+  enableRowHoverActions,
+  hideLegacyActionColumn,
   summaryRow,
   children,
   onRowClick,
@@ -181,6 +183,8 @@ export function SpreadsheetPageTemplate<T>({
             onSort={onSort}
             actions={rowActions}
             actionColumnSize={actionColumnSize}
+            enableRowHoverActions={enableRowHoverActions}
+            hideLegacyActionColumn={hideLegacyActionColumn}
             summaryRow={summaryRow}
             page={page}
             pageSize={pageSize}

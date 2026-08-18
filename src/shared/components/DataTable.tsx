@@ -4,6 +4,7 @@ import React, {
   useEffect,
   useMemo,
   useCallback,
+  useRef,
 } from "react";
 import { createPortal } from "react-dom";
 import * as Popover from "@radix-ui/react-popover";
@@ -39,6 +40,7 @@ import {
   type Column,
   type Updater,
   type ColumnSizingState,
+  type Row,
 } from "@tanstack/react-table";
 import { Skeleton } from "@/shared/components/Skeleton";
 import { TablePagination } from "@/shared/components/TablePagination";
@@ -58,6 +60,8 @@ import { format as formatDate, isValid } from "date-fns";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import { Badge } from "@/shared/components/ui/badge";
 import { EmptyState } from "@/shared/components/EmptyState";
+import { TableRowHoverActions } from "./DataTable/TableRowHoverActions";
+import type { ActionDropdownItem } from "@/shared/components/ActionDropdown";
 
 function getNestedValue(obj: any, path: string | number | symbol) {
   if (typeof path !== "string") return obj[path];
@@ -118,6 +122,11 @@ interface DataTableProps<T> {
   elevated?: boolean;
   containerClassName?: string;
   actionsColumn?: ActionsColumnConfig<T>;
+  rowHoverActions?: (
+    item: T,
+    index: number,
+    meta?: any,
+  ) => ActionDropdownItem[];
   page?: number;
   pageSize?: number;
   pageSizeOptions?: number[];
@@ -228,7 +237,11 @@ function ColumnToggle<T>({
   const [open, setOpen] = useState(false);
   const hideableColumns = table.getAllLeafColumns().filter((col) => {
     const meta = col.columnDef.meta as DataTableRowMeta;
-    return meta?.hideable !== false && col.id !== "__actions";
+    return (
+      meta?.hideable !== false &&
+      col.id !== "__actions" &&
+      col.id !== "__hover_actions"
+    );
   });
 
   const sensors = useSensors(
@@ -305,9 +318,10 @@ import { subscribePortalTarget } from "./portalStore";
 function sanitizeActionColumnSizing(
   sizing: ColumnSizingState,
 ): ColumnSizingState {
-  if (!("__actions" in sizing)) return sizing;
+  if (!("__actions" in sizing) && !("__hover_actions" in sizing)) return sizing;
   const next = { ...sizing };
   delete next.__actions;
+  delete next.__hover_actions;
   return next;
 }
 
@@ -324,6 +338,7 @@ export function DataTable<T>({
   elevated = false,
   containerClassName,
   actionsColumn,
+  rowHoverActions,
   page,
   pageSize,
   pageSizeOptions,
@@ -651,6 +666,40 @@ export function DataTable<T>({
       });
     }
 
+    if (rowHoverActions) {
+      cols.push({
+        id: "__hover_actions",
+        header: () => null,
+        cell: ({ row, table }) => {
+          const actionItems = rowHoverActions(
+            row.original,
+            page && pageSize
+              ? (page - 1) * pageSize + row.index + 1
+              : row.index + 1,
+            table.options.meta,
+          );
+          if (!actionItems || actionItems.length === 0) return null;
+          return (
+            <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-auto">
+              <TableRowHoverActions items={actionItems} />
+            </div>
+          );
+        },
+        enableResizing: false,
+        size: 116,
+        minSize: 116,
+        maxSize: 116,
+        meta: {
+          className:
+            "w-[116px] min-w-[116px] max-w-[116px] p-0 m-0 border-none bg-transparent sticky right-0 z-20 overflow-visible pointer-events-none",
+          headerClassName:
+            "w-[116px] min-w-[116px] max-w-[116px] p-0 m-0 border-r border-border",
+          skeletonClassName: "",
+          hideable: false,
+        } satisfies DataTableRowMeta,
+      });
+    }
+
     if (enableRowSelection) {
       cols.unshift({
         id: "__selection",
@@ -700,6 +749,7 @@ export function DataTable<T>({
   }, [
     effectiveColumns,
     actionsColumn,
+    rowHoverActions,
     enableRowSelection,
     page,
     pageSize,
@@ -748,7 +798,7 @@ export function DataTable<T>({
           )
         : null}
       {filters && <div className="flex gap-2 mb-3 flex-wrap">{filters}</div>}
-      <div className="flex items-stretch flex-1 min-h-0 w-full">
+      <div className="flex items-stretch flex-1 min-h-0 w-full relative">
         <div
           ref={scrollContainerRef}
           onScroll={handleTableScroll}
@@ -782,6 +832,26 @@ export function DataTable<T>({
                   className="hover:bg-transparent border-b border-border bg-transparent"
                 >
                   {headerGroup.headers.map((header, index) => {
+                    const isHoverActionsCol =
+                      header.column.id === "__hover_actions";
+                    if (isHoverActionsCol) {
+                      return (
+                        <TableHead
+                          key={header.id}
+                          className={cn(
+                            "w-[116px] min-w-[116px] max-w-[116px] p-0 sticky top-0 bg-transparent z-20 border-r border-border",
+                            variant !== "spreadsheet"
+                              ? "table-header-glass"
+                              : "bg-muted",
+                          )}
+                          style={{
+                            width: 116,
+                            minWidth: 116,
+                            maxWidth: 116,
+                          }}
+                        />
+                      );
+                    }
                     const meta = header.column.columnDef
                       .meta as DataTableRowMeta;
                     const isFirstCol = index === 0;
@@ -908,27 +978,24 @@ export function DataTable<T>({
                             header.getContext(),
                           )
                         )}
-                        {enableColumnResizing &&
-                          header.column.getCanResize() && (
-                            <div
-                              {...{
-                                onMouseDown: header.getResizeHandler(),
-                                onTouchStart: header.getResizeHandler(),
-                                className: cn(
-                                  "absolute right-0 top-0 h-full w-[4px] cursor-col-resize select-none touch-none bg-transparent group-hover:bg-primary/30 z-50",
-                                  header.column.getIsResizing()
-                                    ? "bg-primary/50 w-[4px]"
-                                    : "",
-                                ),
-                              }}
-                              onClick={(e) => e.stopPropagation()}
-                            />
-                          )}
+                        {enableColumnResizing && (
+                          <div
+                            onDoubleClick={() => header.column.resetSize()}
+                            onMouseDown={header.getResizeHandler()}
+                            onTouchStart={header.getResizeHandler()}
+                            className={cn(
+                              "absolute right-0 top-0 h-full w-[5px] cursor-col-resize user-select-none touch-none hover:bg-primary/50 transition-colors",
+                              header.column.getIsResizing()
+                                ? "bg-primary w-[2px]"
+                                : "bg-transparent",
+                            )}
+                          />
+                        )}
                       </TableHead>
                     );
                   })}
                   <TableHead
-                    className="w-auto p-0 m-0 border-none bg-transparent sticky top-0"
+                    className="w-auto p-0 m-0 border-none bg-transparent"
                     style={{ width: "auto" }}
                   />
                 </TableRow>
@@ -936,9 +1003,30 @@ export function DataTable<T>({
             </TableHeader>
             <TableBody>
               {loading &&
-                Array.from({ length: loadingRows }).map((_, rowIndex) => (
-                  <TableRow key={rowIndex} className="hover:bg-transparent">
+                Array.from({ length: pageSize || 10 }).map((_, i) => (
+                  <TableRow
+                    key={i}
+                    className="hover:bg-transparent border-b border-border"
+                  >
                     {table.getVisibleLeafColumns().map((column, index) => {
+                      if (column.id === "__hover_actions") {
+                        return (
+                          <TableCell
+                            key={column.id}
+                            className={cn(
+                              "w-[116px] min-w-[116px] max-w-[116px] p-0 border-r border-border",
+                              variant !== "spreadsheet"
+                                ? "bg-surface"
+                                : "bg-surface",
+                            )}
+                            style={{
+                              width: 116,
+                              minWidth: 116,
+                              maxWidth: 116,
+                            }}
+                          />
+                        );
+                      }
                       const meta = column.columnDef.meta as DataTableRowMeta;
                       const isFirstCol = index === 0;
                       return (
@@ -1021,6 +1109,7 @@ export function DataTable<T>({
                       <TableRow
                         data-state={row.getIsSelected() && "selected"}
                         className={cn(
+                          "group",
                           onRowClick && "cursor-pointer",
                           isExpanded &&
                             "bg-muted/5 font-medium border-l-2 border-l-primary",
@@ -1032,6 +1121,26 @@ export function DataTable<T>({
                         }
                       >
                         {row.getVisibleCells().map((cell, index) => {
+                          const isHoverActionsCol =
+                            cell.column.id === "__hover_actions";
+                          if (isHoverActionsCol) {
+                            return (
+                              <TableCell
+                                key={cell.id}
+                                className="w-[116px] min-w-[116px] max-w-[116px] p-0 m-0 border-none bg-transparent sticky right-0 z-20 overflow-visible pointer-events-none"
+                                style={{
+                                  width: 116,
+                                  minWidth: 116,
+                                  maxWidth: 116,
+                                }}
+                              >
+                                {flexRender(
+                                  cell.column.columnDef.cell,
+                                  cell.getContext(),
+                                )}
+                              </TableCell>
+                            );
+                          }
                           const meta = cell.column.columnDef
                             .meta as DataTableRowMeta;
                           const isFirstCol = index === 0;
@@ -1105,6 +1214,24 @@ export function DataTable<T>({
               >
                 <TableRow className="hover:bg-transparent bg-transparent">
                   {table.getVisibleLeafColumns().map((column, index) => {
+                    if (column.id === "__hover_actions") {
+                      return (
+                        <TableCell
+                          key={column.id}
+                          className={cn(
+                            "w-[116px] min-w-[116px] max-w-[116px] p-0 border-r border-border",
+                            variant !== "spreadsheet"
+                              ? "table-footer-glass"
+                              : "table-footer-glass",
+                          )}
+                          style={{
+                            width: 116,
+                            minWidth: 116,
+                            maxWidth: 116,
+                          }}
+                        />
+                      );
+                    }
                     const meta = column.columnDef.meta as DataTableRowMeta;
                     const isFirstCol = index === 0;
                     return (
@@ -1158,3 +1285,8 @@ export function DataTable<T>({
     </>
   );
 }
+
+export {
+  TableRowHoverActions,
+  type TableRowHoverActionsProps,
+} from "./DataTable/TableRowHoverActions";

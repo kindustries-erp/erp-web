@@ -63,6 +63,8 @@ export interface SpreadsheetPageTemplateProps<T> {
   sortArray?: string[];
   onSort?: (key: string) => void;
   rowActions?: (row: T) => ActionDropdownItem[];
+  enableRowHoverActions?: boolean;
+  hideLegacyActionColumn?: boolean;
   summaryRow?: Record<string, ReactNode>;
 
   // --- Drawers / Modals ---

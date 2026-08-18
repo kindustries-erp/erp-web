@@ -29,6 +29,7 @@ import {
   FileClock,
   Wrench,
   ShieldCheck,
+  Eye,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
@@ -1047,21 +1048,31 @@ export function GarageCases() {
         createActions={createActions}
         rowActions={(item: any) => [
           {
-            label: t("cases.actions.viewDetail", "Xem chi tiết"),
-            icon: <MoreHorizontal className="w-4 h-4" />,
-            onClick: () => {
-              setSelectedCaseId(item.soChungTu || item.id);
-            },
+            groupLabel: "TRA CỨU",
+            items: [
+              {
+                label: t("cases.actions.viewDetail", "Xem chi tiết"),
+                icon: <Eye className="w-4 h-4" />,
+                onClick: () => {
+                  setSelectedCaseId(item.soChungTu || item.id);
+                },
+              },
+            ],
           },
           {
-            label: t("cases.actions.syncDetails", "Đồng bộ chi tiết"),
-            icon: <RefreshCw className="w-4 h-4" />,
-            onClick: () => {
-              syncCaseDetail({
-                branchId: selectedBranchId!,
-                caseId: item.hdPhieuDichVuId,
-              });
-            },
+            groupLabel: "THAO TÁC",
+            items: [
+              {
+                label: t("cases.actions.syncDetails", "Đồng bộ chi tiết"),
+                icon: <RefreshCw className="w-4 h-4" />,
+                onClick: () => {
+                  syncCaseDetail({
+                    branchId: selectedBranchId!,
+                    caseId: item.hdPhieuDichVuId,
+                  });
+                },
+              },
+            ],
           },
         ]}
         page={page}
