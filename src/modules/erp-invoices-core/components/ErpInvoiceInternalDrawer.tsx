@@ -34,6 +34,7 @@ import { GarageCaseSelectionModal } from "./GarageCaseSelectionModal";
 import { PostedAccountingSummary } from "@/shared/components/accounting/PostedAccountingSummary";
 import { PostingSection } from "@/shared/components/accounting/PostingSection";
 import { ErpInvoicePdfUpload } from "./ErpInvoicePdfUpload";
+import { garageApi } from "@/modules/garage/api/garageApi";
 import toast from "react-hot-toast";
 
 function createClientId() {
@@ -370,6 +371,23 @@ export function ErpInvoiceInternalDrawer({
                     purchaseOrderId: undefined,
                   });
                   toast.success(t("Đã gỡ liên kết đơn mua hàng."));
+                } else if (node.docType === "GARAGE_CASE") {
+                  const links = await garageApi.getCaseLinkedInvoices(node.id);
+                  const target = links.find(
+                    (l: any) => l.invoiceId === detailInvoice.id,
+                  );
+                  if (target) {
+                    await garageApi.removeCaseLinkedInvoice(node.id, target.id);
+                  }
+                  if (
+                    detailInvoice.settlementOrder === node.docNo ||
+                    detailInvoice.settlementOrder === node.id
+                  ) {
+                    await erpInvoicesCoreApi.update(detailInvoice.id, {
+                      settlementOrder: "",
+                    });
+                  }
+                  toast.success(t("Đã gỡ liên kết phiếu dịch vụ garage."));
                 }
 
                 onSyncDetail?.();

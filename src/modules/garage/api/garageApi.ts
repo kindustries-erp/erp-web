@@ -321,4 +321,51 @@ export const garageApi = {
     );
     return res.data;
   },
+
+  // ─── Case Traceability, Financial Summary & Settlements ───────────────────
+  getCaseTraceabilityGraph: async (caseId: string) => {
+    const res = await axiosInstance.get(
+      `${BASE}/cases/${caseId}/traceability-graph`,
+    );
+    return res.data;
+  },
+
+  getCaseFinancialSummary: async (caseId: string) => {
+    const res = await axiosInstance.get(
+      `${BASE}/cases/${caseId}/financial-summary`,
+    );
+    return res.data;
+  },
+
+  getCaseSettlements: async (caseId: string) => {
+    const res = await axiosInstance.get(`${BASE}/cases/${caseId}/settlements`);
+    return res.data;
+  },
+
+  addCaseSettlement: async (
+    caseId: string,
+    payload: {
+      bankTransactionId?: string;
+      settlementType: "RECEIPT" | "PAYMENT";
+      sourceChannel?: "ON_SYSTEM" | "OFF_SYSTEM_MANUAL";
+      category?: string;
+      amount: number;
+      transDate?: string;
+      partnerName?: string;
+      note?: string;
+    },
+  ) => {
+    const res = await axiosInstance.post(
+      `${BASE}/cases/${caseId}/settlements`,
+      payload,
+    );
+    return res.data;
+  },
+
+  removeCaseSettlement: async (caseId: string, settlementId: string) => {
+    const res = await axiosInstance.delete(
+      `${BASE}/cases/${caseId}/settlements/${settlementId}`,
+    );
+    return res.data;
+  },
 };
