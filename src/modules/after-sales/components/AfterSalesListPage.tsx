@@ -10,6 +10,7 @@ import { AfterSalesDrawer } from "./AfterSalesDrawer";
 import { format } from "date-fns";
 import { Shield, Eye } from "lucide-react";
 import { Tooltip } from "@/core/components/ui/Tooltip";
+import { Badge } from "@/shared/components/ui/badge";
 import { useAfterSalesQuery } from "../hooks/useAfterSalesQuery";
 import { SoPreviewDrawer } from "@/modules/sales-orders-core/components/SoPreviewDrawer";
 import { useBasicMasterInfinite } from "@/modules/basic-masters/hooks/useBasicMasterInfinite";
@@ -18,6 +19,7 @@ import { DateRangeColumnSlot } from "@/shared/components/DataTable/DateRangeColu
 import { TableText } from "@/shared/components/DataTable/TableText";
 import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
 import { inventoryCoreApi } from "@/modules/inventory-core/api/inventoryCoreApi";
+import type { DataTableColumn } from "@/shared/components/DataTable";
 
 export function AfterSalesListPage() {
   const t = useT();
@@ -80,7 +82,7 @@ export function AfterSalesListPage() {
 
   const filterConfig: FilterPanelConfig = useMemo(
     () => ({
-      search: { placeholder: t("Tìm theo serial, khách hàng...") },
+      search: false,
       period: true,
       noDefaultPeriod: true,
       custom: [
@@ -108,7 +110,6 @@ export function AfterSalesListPage() {
   } = useAfterSalesQuery({
     page,
     pageSize,
-    search: filter.state.search,
     dateFrom: filter.state.dateFrom,
     dateTo: filter.state.dateTo,
     sortField: tableState.sorts[0]
@@ -130,7 +131,23 @@ export function AfterSalesListPage() {
     setPage(1);
   }, [tableState.columnSearch, tableState.columnFilters, tableState.sorts]);
 
-  // handleSort removed in favor of tableState
+  const activeFilterCount = useMemo(() => {
+    let count = tableState.activeFilterCount;
+    if (filter.state.dateFrom || filter.state.dateTo) count += 1;
+    if (filter.state.custom?.dealerId) count += 1;
+    return count;
+  }, [
+    tableState.activeFilterCount,
+    filter.state.dateFrom,
+    filter.state.dateTo,
+    filter.state.custom?.dealerId,
+  ]);
+
+  const handleClearAllFilters = () => {
+    tableState.resetFilters();
+    filter.resetAll();
+    setPage(1);
+  };
 
   const data = resData?.items || [];
   const total = resData?.total || 0;
@@ -160,10 +177,20 @@ export function AfterSalesListPage() {
     },
   ];
 
-  const columns = [
+  const columns: DataTableColumn<any>[] = [
+    {
+      key: "index",
+      header: <span className="w-full block text-center">#</span>,
+      size: 40,
+      enableResizing: false,
+      headerClassName: "text-center w-[40px] min-w-[40px]",
+      className: "text-center w-[40px] min-w-[40px]",
+      cell: (_: any, idx: number) => <span>{idx}</span>,
+    },
     {
       key: "expectedDeliveryDate",
       size: 150,
+      enableResizing: true,
       header: (
         <TableColumnHeaderFilter
           align="center"
@@ -184,6 +211,10 @@ export function AfterSalesListPage() {
           fetchOptions={fetchAfterSalesColumnOptions}
           hideFilter={true}
           hideFooter={true}
+          isActive={Boolean(
+            tableState.columnSearch["expectedDeliveryDate"] ||
+            tableState.columnFilters["expectedDeliveryDate"]?.length,
+          )}
           dateRangeSlot={({ close }) => {
             const val = tableState.columnSearch["expectedDeliveryDate"] || "";
             const [from = "", to = ""] = val.split("|");
@@ -209,6 +240,7 @@ export function AfterSalesListPage() {
     {
       key: "deliveryDate",
       size: 150,
+      enableResizing: true,
       header: (
         <TableColumnHeaderFilter
           align="center"
@@ -223,6 +255,10 @@ export function AfterSalesListPage() {
           fetchOptions={fetchAfterSalesColumnOptions}
           hideFilter={true}
           hideFooter={true}
+          isActive={Boolean(
+            tableState.columnSearch["deliveryDate"] ||
+            tableState.columnFilters["deliveryDate"]?.length,
+          )}
           dateRangeSlot={({ close }) => {
             const val = tableState.columnSearch["deliveryDate"] || "";
             const [from = "", to = ""] = val.split("|");
@@ -247,6 +283,8 @@ export function AfterSalesListPage() {
     },
     {
       key: "itemName",
+      size: 200,
+      enableResizing: true,
       header: (
         <TableColumnHeaderFilter
           align="center"
@@ -259,6 +297,10 @@ export function AfterSalesListPage() {
           selectedFilters={tableState.columnFilters["itemName"] || []}
           onFilterChange={(v) => tableState.setColumnFilter("itemName", v)}
           fetchOptions={fetchAfterSalesColumnOptions}
+          isActive={Boolean(
+            tableState.columnSearch["itemName"] ||
+            tableState.columnFilters["itemName"]?.length,
+          )}
         />
       ),
       cell: (row: any) => (
@@ -270,6 +312,8 @@ export function AfterSalesListPage() {
     },
     {
       key: "serialNo",
+      size: 180,
+      enableResizing: true,
       header: (
         <TableColumnHeaderFilter
           align="center"
@@ -282,9 +326,12 @@ export function AfterSalesListPage() {
           selectedFilters={tableState.columnFilters["serialNo"] || []}
           onFilterChange={(v) => tableState.setColumnFilter("serialNo", v)}
           fetchOptions={fetchAfterSalesColumnOptions}
+          isActive={Boolean(
+            tableState.columnSearch["serialNo"] ||
+            tableState.columnFilters["serialNo"]?.length,
+          )}
         />
       ),
-      size: 170,
       cell: (row: any) => (
         <TableText
           text={row.serialNo || "—"}
@@ -296,6 +343,8 @@ export function AfterSalesListPage() {
     },
     {
       key: "vinNo",
+      size: 180,
+      enableResizing: true,
       header: (
         <TableColumnHeaderFilter
           align="center"
@@ -308,15 +357,20 @@ export function AfterSalesListPage() {
           selectedFilters={tableState.columnFilters["vinNo"] || []}
           onFilterChange={(v) => tableState.setColumnFilter("vinNo", v)}
           fetchOptions={fetchAfterSalesColumnOptions}
+          isActive={Boolean(
+            tableState.columnSearch["vinNo"] ||
+            tableState.columnFilters["vinNo"]?.length,
+          )}
         />
       ),
-      size: 170,
       cell: (row: any) => (
         <TableText text={row.vinNo || "—"} enableCopy={Boolean(row.vinNo)} />
       ),
     },
     {
       key: "engineNo",
+      size: 180,
+      enableResizing: true,
       header: (
         <TableColumnHeaderFilter
           align="center"
@@ -329,9 +383,12 @@ export function AfterSalesListPage() {
           selectedFilters={tableState.columnFilters["engineNo"] || []}
           onFilterChange={(v) => tableState.setColumnFilter("engineNo", v)}
           fetchOptions={fetchAfterSalesColumnOptions}
+          isActive={Boolean(
+            tableState.columnSearch["engineNo"] ||
+            tableState.columnFilters["engineNo"]?.length,
+          )}
         />
       ),
-      size: 170,
       cell: (row: any) => (
         <TableText
           text={row.engineNo || "—"}
@@ -341,6 +398,8 @@ export function AfterSalesListPage() {
     },
     {
       key: "soNo",
+      size: 180,
+      enableResizing: true,
       header: (
         <TableColumnHeaderFilter
           align="center"
@@ -353,6 +412,10 @@ export function AfterSalesListPage() {
           selectedFilters={tableState.columnFilters["soNo"] || []}
           onFilterChange={(v) => tableState.setColumnFilter("soNo", v)}
           fetchOptions={fetchAfterSalesColumnOptions}
+          isActive={Boolean(
+            tableState.columnSearch["soNo"] ||
+            tableState.columnFilters["soNo"]?.length,
+          )}
         />
       ),
       cell: (row: any) => (
@@ -368,6 +431,8 @@ export function AfterSalesListPage() {
     },
     {
       key: "trackingAttributes",
+      size: 220,
+      enableResizing: true,
       header: (
         <TableColumnHeaderFilter
           align="center"
@@ -380,9 +445,12 @@ export function AfterSalesListPage() {
           selectedFilters={tableState.columnFilters["color"] || []}
           onFilterChange={(v) => tableState.setColumnFilter("color", v)}
           fetchOptions={fetchAfterSalesColumnOptions}
+          isActive={Boolean(
+            tableState.columnSearch["color"] ||
+            tableState.columnFilters["color"]?.length,
+          )}
         />
       ),
-      size: 250,
       cell: (row: any) => {
         if (
           !row.trackingAttributes ||
@@ -413,6 +481,8 @@ export function AfterSalesListPage() {
     },
     {
       key: "customerName",
+      size: 180,
+      enableResizing: true,
       header: (
         <TableColumnHeaderFilter
           align="center"
@@ -425,6 +495,10 @@ export function AfterSalesListPage() {
           selectedFilters={tableState.columnFilters["customerName"] || []}
           onFilterChange={(v) => tableState.setColumnFilter("customerName", v)}
           fetchOptions={fetchAfterSalesColumnOptions}
+          isActive={Boolean(
+            tableState.columnSearch["customerName"] ||
+            tableState.columnFilters["customerName"]?.length,
+          )}
         />
       ),
       cell: (row: any) => (
@@ -438,6 +512,8 @@ export function AfterSalesListPage() {
     },
     {
       key: "activationDate",
+      size: 150,
+      enableResizing: true,
       header: (
         <TableColumnHeaderFilter
           align="center"
@@ -456,6 +532,10 @@ export function AfterSalesListPage() {
           fetchOptions={fetchAfterSalesColumnOptions}
           hideFilter={true}
           hideFooter={true}
+          isActive={Boolean(
+            tableState.columnSearch["activationDate"] ||
+            tableState.columnFilters["activationDate"]?.length,
+          )}
           dateRangeSlot={({ close }) => {
             const val = tableState.columnSearch["activationDate"] || "";
             const [from = "", to = ""] = val.split("|");
@@ -485,6 +565,8 @@ export function AfterSalesListPage() {
     },
     {
       key: "warrantyActivatedAt",
+      size: 150,
+      enableResizing: true,
       header: (
         <TableColumnHeaderFilter
           align="center"
@@ -502,6 +584,10 @@ export function AfterSalesListPage() {
           onFilterChange={(v) =>
             tableState.setColumnFilter("warrantyActivatedAt", v)
           }
+          isActive={Boolean(
+            tableState.columnSearch["warrantyActivatedAt"] ||
+            tableState.columnFilters["warrantyActivatedAt"]?.length,
+          )}
           fetchOptions={async (params) => {
             const all = [
               { label: "Đang bảo hành", value: "ACTIVE" },
@@ -519,15 +605,33 @@ export function AfterSalesListPage() {
       ),
       cell: (row: any) => {
         if (!row.warrantyActivatedAt)
-          return <span className="text-gray-400">Chưa kích hoạt</span>;
+          return (
+            <div className="w-full flex justify-center">
+              <Tooltip content={t("Chưa kích hoạt")}>
+                <Badge
+                  variant="secondary"
+                  className="w-[110px] inline-flex items-center justify-center text-center truncate"
+                >
+                  {t("Chưa kích hoạt")}
+                </Badge>
+              </Tooltip>
+            </div>
+          );
         const isActive =
           !row.warrantyEndDate || new Date(row.warrantyEndDate) >= new Date();
         return (
-          <div className="flex flex-col">
-            <span className={isActive ? "text-green-600" : "text-red-600"}>
-              {isActive ? "Đang bảo hành" : "Hết bảo hành"}
-            </span>
-            <span className="text-xs text-muted-foreground">
+          <div className="flex flex-col items-center gap-0.5">
+            <Tooltip
+              content={isActive ? t("Đang bảo hành") : t("Hết bảo hành")}
+            >
+              <Badge
+                variant={isActive ? "default" : "destructive"}
+                className="w-[110px] inline-flex items-center justify-center text-center truncate"
+              >
+                {isActive ? t("Đang bảo hành") : t("Hết bảo hành")}
+              </Badge>
+            </Tooltip>
+            <span className="text-[11px] text-muted-foreground">
               Đến:{" "}
               {row.warrantyEndDate
                 ? format(new Date(row.warrantyEndDate), "dd/MM/yyyy")
@@ -539,6 +643,8 @@ export function AfterSalesListPage() {
     },
     {
       key: "dealerName",
+      size: 180,
+      enableResizing: true,
       header: (
         <TableColumnHeaderFilter
           align="center"
@@ -551,6 +657,10 @@ export function AfterSalesListPage() {
           selectedFilters={tableState.columnFilters["dealerName"] || []}
           onFilterChange={(v) => tableState.setColumnFilter("dealerName", v)}
           fetchOptions={fetchAfterSalesColumnOptions}
+          isActive={Boolean(
+            tableState.columnSearch["dealerName"] ||
+            tableState.columnFilters["dealerName"]?.length,
+          )}
         />
       ),
       cell: (row: any) => row.dealerName || "-",
@@ -568,6 +678,9 @@ export function AfterSalesListPage() {
         columns={columns}
         getRowKey={(row: any) => row.lifecycleId}
         loading={loading || isFetching}
+        emptyLabel={t("Không có dữ liệu")}
+        activeFilterCount={activeFilterCount}
+        onClearAllFilters={handleClearAllFilters}
         sortArray={
           tableState.sorts.length > 0
             ? tableState.sorts.map((s) => (s.startsWith("-") ? s : s))

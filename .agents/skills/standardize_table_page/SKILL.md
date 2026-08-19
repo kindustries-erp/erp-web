@@ -367,7 +367,7 @@ export function ExampleTablePage() {
       // Cột STT
       {
         key: "index",
-        header: <div className="text-center w-[40px] min-w-[40px]">#</div>,
+        header: <span className="w-full block text-center">#</span>,
         size: 40,
         enableResizing: false,
         headerClassName: "text-center w-[40px] min-w-[40px]",
@@ -614,7 +614,7 @@ export function ExampleTablePage() {
 
 ### Table Columns (`standardize-table`)
 
-- [ ] Cột STT/Checkbox rộng đúng 40px chưa? (STT dùng `{idx}`, không `idx + 1`)
+- [ ] Cột STT/Checkbox rộng đúng 40px, header căn giữa chuẩn (`header: <span className="w-full block text-center">#</span>`, `headerClassName: "text-center"`) chưa? (STT dùng `{idx}`, không `idx + 1`)
 - [ ] TUYỆT ĐỐI không khai báo cột action tĩnh `{ key: "actions" }` trong `columns`, đã chuyển sang `rowActions` chưa?
 - [ ] TUYỆT ĐỐI không đặt nút Reset Column ở header cột Action hay dữ liệu, đã sử dụng nút Khôi phục trong dropdown `ColumnToggle` (`Settings2`) chưa?
 - [ ] Cột Code/SKU size 200px, dùng `<TableText>` bật `enableCopy`, `tooltip`, `onDrawerClick` và Quick Status Badge chưa?

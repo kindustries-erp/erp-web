@@ -10,7 +10,8 @@ Khi tạo mới hoặc enhance một `DataTable` trong hệ thống, bạn **B�
 ## 1. Cấu trúc cột (Columns Structure)
 
 - **Cột đầu tiên (First Column)**: Thường là cột **Index (STT)** hoặc **Checkbox**, với `width: 40px`.
-  - Cần set `size: 40`, `headerClassName: "text-center w-[40px] min-w-[40px]"`, `className: "text-center w-[40px] min-w-[40px]"`.
+  - Cần set `size: 40`, `headerClassName: "text-center w-[40px] min-w-[40px]"`, `className: "text-center w-[40px] min-w-[40px]"`, `enableResizing: false`.
+  - **Căn giữa Header STT**: Header bắt buộc phải căn giữa hoàn toàn bằng cách wrap trong span block: `header: <span className="w-full block text-center">#</span>` kết hợp `headerClassName: "text-center"`.
   - **Lưu ý với cột Index (STT)**: Khi dùng cell renderer mặc định của framework, CHỈ SỬ DỤNG `{idx}` (VD: `cell: (_, idx) => <span>{idx}</span>`), **KHÔNG CỘNG THÊM 1** (`idx + 1`). Lý do: Core `DataTable` đã tự động xử lý pagination offset và trả về `idx` hệ 1-based.
   - **TUYỆT ĐỐI KHÔNG** định nghĩa cột Action tĩnh thủ công `{ key: "actions", ... }` trong mảng `columns`. Tất cả các thao tác theo dòng phải được quản lý qua prop `rowActions` (Row Hover Floating Actions).
 - **Enable Resizing**: Luôn bật tính năng resize cho các cột dữ liệu bằng cách thêm `enableResizing: true` vào config của từng cột.
@@ -347,7 +348,7 @@ Bất kỳ cột nào liên quan đến **Status**, **State** thì bắt buộc 
 - [ ] Bảng đã có `tableId` duy nhất để tự động lưu & khôi phục column sizing, visibility, order chưa?
 - [ ] `<ActionDropdown>` đã phân nhóm menu bằng `groupLabel` (TRA CỨU, THAO TÁC, ...) chưa?
 - [ ] Các cột dữ liệu đã có `enableResizing: true` chưa?
-- [ ] Cột đầu tiên (STT/Checkbox) rộng đúng `40px` chưa? (STT dùng `{idx}` thay vì `idx + 1` chưa?)
+- [ ] Cột đầu tiên (STT/Checkbox) rộng đúng `40px`, header và cell đã căn giữa chuẩn (`header: <span className="w-full block text-center">#</span>`, `headerClassName: "text-center"`) chưa? (STT dùng `{idx}` thay vì `idx + 1` chưa?)
 - [ ] Header có `<TableColumnHeaderFilter align="center">` và truyền prop `isActive` chưa?
 - [ ] Các cột thường KHÔNG set `hideFilter={true}` để hiện search box & options chưa?
 - [ ] Cột ngày tháng (Date) đã dùng `dateRangeSlot` và `hideFilter={true}` chưa?
