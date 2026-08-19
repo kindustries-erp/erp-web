@@ -65,6 +65,8 @@ export type PageKey =
   | "garage-cases"
   | "garage-receivables"
   | "garage-payables"
+  | "garage-customers"
+  | "garage-suppliers"
   | "after-sales"
   | "vinfast-parts"
   | "vinfast-parts-dashboard"

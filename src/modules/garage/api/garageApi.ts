@@ -381,6 +381,152 @@ export const garageApi = {
     );
     return res.data;
   },
+
+  // ─── Customer Debt & Aging ───────────────────────────────────────────────
+  getCustomersDebt: async (params: {
+    branchId: string;
+    page?: number;
+    pageSize?: number;
+    q?: string;
+    from?: string;
+    to?: string;
+    sorts?: string[];
+    filtersStr?: string;
+    column_filters?: string;
+    column_search?: string;
+  }) => {
+    const queryParams = new URLSearchParams();
+    if (params.page) queryParams.append("page", params.page.toString());
+    if (params.pageSize)
+      queryParams.append("pageSize", params.pageSize.toString());
+    if (params.q) queryParams.append("q", params.q);
+    if (params.from) queryParams.append("from", params.from);
+    if (params.to) queryParams.append("to", params.to);
+    if (params.sorts && params.sorts.length > 0) {
+      params.sorts.forEach((s) => queryParams.append("sorts", s));
+    }
+    if (params.filtersStr) queryParams.append("filtersStr", params.filtersStr);
+    if (params.column_filters)
+      queryParams.append("column_filters", params.column_filters);
+    if (params.column_search)
+      queryParams.append("column_search", params.column_search);
+
+    const res = await axiosInstance.get(
+      `${BASE}/cases/customers-debt?${queryParams.toString()}`,
+      {
+        headers: {
+          "x-greenway-branch-id": params.branchId || "",
+        },
+      },
+    );
+    return res.data;
+  },
+
+  getCustomersDebtColumnOptions: async (
+    branchId: string,
+    column: string,
+    search: string = "",
+    page: number = 1,
+    pageSize: number = 20,
+    filtersStr?: string,
+  ) => {
+    const res = await axiosInstance.get(
+      `${BASE}/cases/customers-debt/column-options`,
+      {
+        params: { column, search, page, pageSize, filtersStr },
+        headers: { "x-greenway-branch-id": branchId || "" },
+      },
+    );
+    return res.data as {
+      items: string[];
+      total: number;
+      page: number;
+      totalPages: number;
+    };
+  },
+
+  getCasesByCustomer: async (branchId: string, customerCode: string) => {
+    const res = await axiosInstance.get(
+      `${BASE}/cases/by-customer/${encodeURIComponent(customerCode)}`,
+      {
+        headers: { "x-greenway-branch-id": branchId || "" },
+      },
+    );
+    return res.data;
+  },
+
+  // ─── Supplier Debt & Aging ───────────────────────────────────────────────
+  getSuppliersDebt: async (params: {
+    branchId: string;
+    page?: number;
+    pageSize?: number;
+    q?: string;
+    from?: string;
+    to?: string;
+    sorts?: string[];
+    filtersStr?: string;
+    column_filters?: string;
+    column_search?: string;
+  }) => {
+    const queryParams = new URLSearchParams();
+    if (params.page) queryParams.append("page", params.page.toString());
+    if (params.pageSize)
+      queryParams.append("pageSize", params.pageSize.toString());
+    if (params.q) queryParams.append("q", params.q);
+    if (params.from) queryParams.append("from", params.from);
+    if (params.to) queryParams.append("to", params.to);
+    if (params.sorts && params.sorts.length > 0) {
+      params.sorts.forEach((s) => queryParams.append("sorts", s));
+    }
+    if (params.filtersStr) queryParams.append("filtersStr", params.filtersStr);
+    if (params.column_filters)
+      queryParams.append("column_filters", params.column_filters);
+    if (params.column_search)
+      queryParams.append("column_search", params.column_search);
+
+    const res = await axiosInstance.get(
+      `${BASE}/payables/suppliers-debt?${queryParams.toString()}`,
+      {
+        headers: {
+          "x-greenway-branch-id": params.branchId || "",
+        },
+      },
+    );
+    return res.data;
+  },
+
+  getSuppliersDebtColumnOptions: async (
+    branchId: string,
+    column: string,
+    search: string = "",
+    page: number = 1,
+    pageSize: number = 20,
+    filtersStr?: string,
+  ) => {
+    const res = await axiosInstance.get(
+      `${BASE}/payables/suppliers-debt/column-options`,
+      {
+        params: { column, search, page, pageSize, filtersStr },
+        headers: { "x-greenway-branch-id": branchId || "" },
+      },
+    );
+    return res.data as {
+      items: string[];
+      total: number;
+      page: number;
+      totalPages: number;
+    };
+  },
+
+  getCasesBySupplier: async (branchId: string, supplierId: string) => {
+    const res = await axiosInstance.get(
+      `${BASE}/payables/by-supplier/${encodeURIComponent(supplierId)}/cases`,
+      {
+        headers: { "x-greenway-branch-id": branchId || "" },
+      },
+    );
+    return res.data;
+  },
 };
 
 export interface GarageSmartSettlementSuggestionItem {

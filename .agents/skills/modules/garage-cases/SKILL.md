@@ -28,19 +28,25 @@ src/modules/garage/
 │   ├── GarageCaseSettlementSection.tsx # Section quản lý cấn trừ thu/chi dòng tiền vụ việc
 │   ├── GarageCaseStandaloneDrawer.tsx # Drawer chi tiết phiếu dịch vụ 2 cột chuẩn UI
 │   ├── GarageCaseSyncDrawer.tsx     # Drawer cấu hình đồng bộ dữ liệu
+│   ├── GarageCustomerDetailDrawer.tsx # Drawer 2 cột chi tiết công nợ khách hàng, danh sách phiếu dịch vụ & tuổi nợ
 │   ├── GarageGrossProfitDetailDrawer.tsx # Drawer xem lợi nhuận gộp
 │   ├── GarageRecentCasesTable.tsx   # Bảng 10 phiếu dịch vụ gần nhất cho Dashboard
+│   ├── GarageSupplierDetailDrawer.tsx # Drawer 2 cột chi tiết công nợ nhà cung cấp (TK 331), vụ việc & bút toán
 │   └── KgaraCaseStatusBadge.tsx     # Badge trạng thái dịch vụ với màu sắc chuẩn mực
 ├── hooks/
-│   └── useGarage.ts                 # Custom React Query hooks (useGarageCases, useGarageCaseByCode, useSyncGarageCases, etc.)
+│   ├── useGarage.ts                 # Custom React Query hooks (useGarageCases, useGarageCaseByCode, useSyncGarageCases, etc.)
+│   ├── useGarageCustomersList.ts    # Hook quản lý state, phân trang, lọc server-side & summary công nợ khách hàng (từ 07/2026)
+│   └── useGarageSuppliersList.ts    # Hook quản lý state, phân trang, lọc server-side & summary công nợ nhà cung cấp (từ 07/2026)
 ├── locales/
 │   ├── vi.ts                        # Bản dịch tiếng Việt đầy đủ
 │   └── en.ts                        # Bản dịch tiếng Anh đầy đủ
 ├── pages/
 │   ├── GarageCases.tsx              # Trang chính Quản lý Phiếu dịch vụ
+│   ├── GarageCustomers.tsx          # Trang Quản lý Công nợ Khách hàng (SpreadsheetPageTemplate)
 │   ├── GarageDashboard.tsx          # Dashboard tổng quan hoạt động Garage
-│   ├── GaragePayables.tsx           # Sổ công nợ phải trả Garage
-│   └── GarageReceivables.tsx        # Sổ công nợ phải thu Garage
+│   ├── GaragePayables.tsx           # Sổ công nợ phải trả Garage (legacy)
+│   ├── GarageReceivables.tsx        # Sổ công nợ phải thu Garage (legacy)
+│   └── GarageSuppliers.tsx          # Trang Quản lý Công nợ Nhà cung cấp (SpreadsheetPageTemplate)
 ├── store/
 │   └── garageStore.ts               # Zustand store lưu selectedBranchId
 └── utils/
@@ -74,6 +80,13 @@ src/modules/garage/
 
 ## 4. Tích hợp Drawer Chuẩn Hóa (`standardize-drawer`)
 
+### 4.1. Phiếu Dịch Vụ (`GarageCaseStandaloneDrawer`)
 - Sử dụng `<StandardFormDrawer layout="2-columns" size="xl">`.
 - **Cột trái (`leftPanel`)**: Chứa `GarageCasePreview` bọc trong `<DrawerSection title="Sổ báo giá & Lợi nhuận dự kiến" collapsible>`, căn thẳng hàng trên cùng (`align-top`) với cột phải.
 - **Cột phải (`rightPanel`)**: Các `DrawerSection` thông tin (Khách hàng, Xe & Bảo hiểm, Cố vấn & Phân công, Tiến độ & Ghi chú).
+
+### 4.2. Công Nợ Đối Tác (`GarageCustomerDetailDrawer` & `GarageSupplierDetailDrawer`)
+- Sử dụng `<StandardFormDrawer layout="2-columns" size="xl">`.
+- **Khách hàng**: Cột trái thông tin khách hàng & bảng phiếu dịch vụ phát sinh kèm tuổi nợ; cột phải phân bổ tuổi nợ (Aging: 0-30, 31-60, 61-90, >90 ngày) và tiến độ thu hồi. Bấm "Cấn trừ" hoặc mã phiếu sẽ mở tiếp `GarageCaseStandaloneDrawer`.
+- **Nhà cung cấp**: Cột trái thông tin nhà cung cấp & danh sách vụ việc/chứng từ liên đới; cột phải thẻ tổng hợp cân đối phát sinh Nợ/Có TK 331 và phân tích tuổi nợ.
+

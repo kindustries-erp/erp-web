@@ -116,6 +116,9 @@ export const navEn = {
     garageCases: "Service Cases",
     garageReceivables: "Receivables (Garage)",
     garagePayables: "Payables (Garage)",
+    garagePartnersGroup: "Partners",
+    garageCustomers: "Customers",
+    garageSuppliers: "Suppliers",
   },
   bottom: {
     themeLight: "Light mode",

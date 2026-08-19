@@ -218,6 +218,14 @@ export const SECTION_ROOTS: Partial<Record<PageKey, SectionRoot>> = {
     labelKey: "nav.items.garagePayables",
     group: "garage",
   },
+  "garage-customers": {
+    labelKey: "nav.items.garageCustomers",
+    group: "garage",
+  },
+  "garage-suppliers": {
+    labelKey: "nav.items.garageSuppliers",
+    group: "garage",
+  },
   budget: {
     labelKey: "budget:pageTitle",
     group: "accounting",
@@ -363,6 +371,16 @@ export const BREADCRUMBS: Partial<Record<PageKey, Array<[string, string?]>>> = {
   "garage-cases": [["nav.items.garage"], ["nav.items.garageCases"]],
   "garage-receivables": [["nav.items.garage"], ["nav.items.garageReceivables"]],
   "garage-payables": [["nav.items.garage"], ["nav.items.garagePayables"]],
+  "garage-customers": [
+    ["nav.items.garage"],
+    ["nav.items.garagePartnersGroup"],
+    ["nav.items.garageCustomers"],
+  ],
+  "garage-suppliers": [
+    ["nav.items.garage"],
+    ["nav.items.garagePartnersGroup"],
+    ["nav.items.garageSuppliers"],
+  ],
 };
 
 interface AppState {

@@ -243,6 +243,16 @@ const GaragePayables = lazy(() =>
     default: m.GaragePayables,
   })),
 );
+const GarageCustomers = lazy(() =>
+  import("@/modules/garage/pages/GarageCustomers").then((m) => ({
+    default: m.GarageCustomers,
+  })),
+);
+const GarageSuppliers = lazy(() =>
+  import("@/modules/garage/pages/GarageSuppliers").then((m) => ({
+    default: m.GarageSuppliers,
+  })),
+);
 const AfterSalesPage = lazy(() =>
   import("@/modules/after-sales/components/AfterSalesPage").then((m) => ({
     default: m.AfterSalesPage,
@@ -300,6 +310,8 @@ const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   "garage-cases": GarageCases,
   "garage-receivables": GarageReceivables,
   "garage-payables": GaragePayables,
+  "garage-customers": GarageCustomers,
+  "garage-suppliers": GarageSuppliers,
   "after-sales": AfterSalesPage,
   "vinfast-parts": VinfastPartsTrackingPage,
   "vinfast-parts-dashboard": VinfastPartsDashboardPage,

@@ -269,6 +269,39 @@ export function useNavItems(): NavSearchItem[] {
         ],
         icon: <Car className="w-4 h-4" />,
       });
+      const garagePartnersGroup = t("nav.items.garagePartnersGroup", "Đối tác");
+      items.push({
+        key: "garage-customers",
+        label: t("nav.items.garageCustomers", "Khách hàng"),
+        group: garagePartnersGroup,
+        section: garageSection,
+        keywords: [
+          "garage",
+          "khach hang",
+          "doi tac",
+          "cong no",
+          "phai thu",
+          "tuoi no",
+        ],
+        icon: <Users className="w-4 h-4" />,
+      });
+      items.push({
+        key: "garage-suppliers",
+        label: t("nav.items.garageSuppliers", "Nhà cung cấp"),
+        group: garagePartnersGroup,
+        section: garageSection,
+        keywords: [
+          "garage",
+          "nha cung cap",
+          "doi tac",
+          "cong no",
+          "phai tra",
+          "tuoi no",
+          "supplier",
+          "vendor",
+        ],
+        icon: <Building2 className="w-4 h-4" />,
+      });
     }
 
     // 6. Vinfast
