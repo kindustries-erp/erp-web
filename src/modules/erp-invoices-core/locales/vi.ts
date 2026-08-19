@@ -59,6 +59,9 @@ export const erpInvoicesVi = {
   actionSaveChange: "Lưu thay đổi",
   actionSaving: "Đang lưu...",
   actionClose: "Đóng",
+  actionNetOff: "Cấn trừ sao kê",
+  netOffSuccess: "Đã cấn trừ sao kê thành công",
+  netOffError: "Lỗi khi cấn trừ sao kê",
 
   // Modal Text
   emptyData: "Chưa có hóa đơn nào.",

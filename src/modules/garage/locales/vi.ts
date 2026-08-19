@@ -81,7 +81,10 @@ export const garageVi = {
       syncDetails: "Đồng bộ chi tiết từ KGara",
       createCase: "Tạo phiếu dịch vụ",
       viewDetail: "Xem chi tiết",
+      netOffSettlement: "Cấn trừ sao kê",
     },
+    settlementSuccess: "Đã ghi nhận cấn trừ sao kê thành công",
+    settlementError: "Lỗi ghi nhận cấn trừ sao kê",
     syncDrawer: {
       titleCases: "Đồng bộ Cases từ Garage",
       titleGrossProfit: "Đồng bộ Lợi nhuận gộp Garage",

@@ -21,6 +21,7 @@ import {
   X,
   GitMerge,
   KeyRound,
+  Scale,
 } from "lucide-react";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 
@@ -51,6 +52,7 @@ import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { VietnamInvoiceTemplate } from "@/modules/erp-invoices-core/components/VietnamInvoiceTemplate";
 import { InvoiceBulkPostingDrawer } from "@/modules/erp-invoices-core/components/InvoiceBulkPostingDrawer";
 import { InvoiceBulkNetOffDrawer } from "@/modules/erp-invoices-core/components/InvoiceBulkNetOffDrawer";
+import { VoucherNetoffSelectionModal } from "@/modules/erp-invoices-core/components/VoucherNetoffSelectionModal";
 import { PartnerInvoiceDrawer } from "@/modules/erp-invoices-core/components/PartnerInvoiceDrawer";
 import { BankTransactionDetailDrawer } from "@/pages/finance/components/BankTransactionDetailDrawer";
 import {
@@ -189,6 +191,7 @@ export function ErpInvoicesTab({
     invoiceId: string;
     isAttachment?: boolean;
   } | null>(null);
+  const [netOffInvoice, setNetOffInvoice] = useState<any | null>(null);
 
   const [bulkDrawerOpen, setBulkDrawerOpen] = useState(false);
   const [bulkMonth, setBulkMonth] = useState("");
@@ -2082,6 +2085,14 @@ export function ErpInvoicesTab({
             });
           }
 
+          if (canEditInvoice && inv.status !== "CANCELLED") {
+            thaoTacItems.push({
+              label: t("actionNetOff", "Cấn trừ sao kê"),
+              icon: <Scale className="w-3.5 h-3.5" />,
+              onClick: () => setNetOffInvoice(inv),
+            });
+          }
+
           if (inv.status === "DRAFT") {
             thaoTacItems.push({
               label: t("actionDelete", "Xóa"),
@@ -2492,6 +2503,37 @@ export function ErpInvoicesTab({
         taxCode={selectedPartner?.taxCode}
         partnerName={selectedPartner?.partnerName}
       />
+
+      {netOffInvoice && (
+        <VoucherNetoffSelectionModal
+          open={!!netOffInvoice}
+          onClose={() => setNetOffInvoice(null)}
+          invoice={netOffInvoice}
+          existingVoucherIds={(netOffInvoice.voucherNetOffs || []).map(
+            (v: any) => v.bankTransactionId,
+          )}
+          onSelect={async (selected) => {
+            if (selected.length === 0) return;
+            try {
+              await erpInvoicesCoreApi.linkVouchers(
+                netOffInvoice.id,
+                selected.map((s) => ({
+                  bankTransactionId: s.id,
+                  netOffAmount: s.amount,
+                })),
+              );
+              toast.success(t("netOffSuccess", "Đã cấn trừ sao kê thành công"));
+              setNetOffInvoice(null);
+              listHook.loadInvoices();
+            } catch (e: any) {
+              toast.error(
+                e.response?.data?.message ||
+                  t("netOffError", "Lỗi khi cấn trừ sao kê"),
+              );
+            }
+          }}
+        />
+      )}
     </>
   );
 }

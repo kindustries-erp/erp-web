@@ -30,10 +30,13 @@ import {
   Wrench,
   ShieldCheck,
   Eye,
+  Scale,
 } from "lucide-react";
+import { toast } from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { applyGarageCasesTableState } from "../utils/garageCasesTable";
+import { GarageCaseSettlementDrawerModal } from "../components/GarageCaseSettlementDrawerModal";
 
 export function GarageCases() {
   const { t } = useTranslation("garage");
@@ -231,6 +234,7 @@ export function GarageCases() {
   const [syncMode, setSyncMode] = useState<"cases" | "gross-profit">("cases");
 
   const [selectedCaseId, setSelectedCaseId] = useState<string | null>(null);
+  const [settlementCase, setSettlementCase] = useState<any | null>(null);
 
   const canCreateGarage = useHasPermission("garage", "create");
   const canUpdateGarage = useHasPermission("garage", "update");
@@ -1271,6 +1275,20 @@ export function GarageCases() {
                   });
                 },
               },
+              ...(canUpdateGarage
+                ? [
+                    {
+                      label: t(
+                        "cases.actions.netOffSettlement",
+                        "Cấn trừ sao kê",
+                      ),
+                      icon: <Scale className="w-4 h-4" />,
+                      onClick: () => {
+                        setSettlementCase(item);
+                      },
+                    },
+                  ]
+                : []),
             ],
           },
         ]}
@@ -1324,6 +1342,53 @@ export function GarageCases() {
           });
         }}
       />
+
+      {settlementCase && (
+        <GarageCaseSettlementDrawerModal
+          open={!!settlementCase}
+          onClose={() => setSettlementCase(null)}
+          caseId={settlementCase.id}
+          caseCode={settlementCase.soChungTu || settlementCase.hdPhieuDichVuId}
+          defaultType="RECEIPT"
+          suggestedAmount={Number(
+            settlementCase.tienConPhaiThanhToan ||
+              settlementCase.tienCoThue ||
+              0,
+          )}
+          onSubmit={async (items) => {
+            try {
+              for (const item of items) {
+                await garageApi.addCaseSettlement(settlementCase.id, item);
+              }
+              toast.success(
+                t(
+                  "cases.settlementSuccess",
+                  "Đã ghi nhận cấn trừ sao kê thành công",
+                ),
+              );
+              setSettlementCase(null);
+              refetch();
+              queryClient.invalidateQueries({
+                queryKey: ["garage", "grossProfitReport"],
+              });
+              queryClient.invalidateQueries({
+                queryKey: ["garage-case-financial-summary", settlementCase.id],
+              });
+              queryClient.invalidateQueries({
+                queryKey: ["garage-case-settlements", settlementCase.id],
+              });
+              queryClient.invalidateQueries({
+                queryKey: ["garage-case-traceability-graph", settlementCase.id],
+              });
+            } catch (err: any) {
+              toast.error(
+                err.response?.data?.message ||
+                  t("cases.settlementError", "Lỗi ghi nhận cấn trừ sao kê"),
+              );
+            }
+          }}
+        />
+      )}
     </>
   );
 }

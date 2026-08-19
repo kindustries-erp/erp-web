@@ -81,7 +81,10 @@ export const garageEn = {
       syncDetails: "Sync Details from KGara",
       createCase: "Create Service Order",
       viewDetail: "View Details",
+      netOffSettlement: "Bank Statement Net-off",
     },
+    settlementSuccess: "Successfully recorded bank statement settlement",
+    settlementError: "Failed to record bank statement settlement",
     syncDrawer: {
       titleCases: "Sync Cases from Garage",
       titleGrossProfit: "Sync Garage Gross Profit",
