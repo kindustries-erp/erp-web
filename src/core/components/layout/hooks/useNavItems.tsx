@@ -60,10 +60,10 @@ export function useNavItems(): NavSearchItem[] {
 
   const canReadBom = useHasPermission("bom", "read");
   const canReadProduction = useHasPermission("production", "read");
-  const canReadGreenwayIntegration = useHasPermission(
-    "greenway_integration",
-    "read",
-  );
+  const canReadGarageDirect = useHasPermission("garage", "read");
+  const canReadGreenway = useHasPermission("greenway_integration", "read");
+  const canReadKgara = useHasPermission("kgara_integration", "read");
+  const canReadGarage = canReadGarageDirect || canReadGreenway || canReadKgara;
 
   const canReadInvoices = useHasPermission("invoices", "read");
   const canReadBankStatements = useHasPermission("bank_statements", "read");
@@ -227,7 +227,6 @@ export function useNavItems(): NavSearchItem[] {
 
     // 5. Manufacturing (Sản xuất / Xưởng)
     const manufacturingSection = t("nav.sections.manufacturing");
-    const garageGroup = t("nav.items.garage");
     if (canReadBom) {
       items.push({
         key: "erp-bom",
@@ -246,22 +245,43 @@ export function useNavItems(): NavSearchItem[] {
         icon: <Factory className="w-4 h-4" />,
       });
     }
-    if (canReadGreenwayIntegration) {
+
+    // 6. Garage
+    const garageSection = t("nav.sections.garage", "GARAGE");
+    if (canReadGarage) {
+      items.push({
+        key: "garage-dashboard",
+        label: t("nav.items.garageDashboard"),
+        section: garageSection,
+        keywords: ["garage", "tong quan garage", "dashboard", "xuong"],
+        icon: <LayoutDashboard className="w-4 h-4" />,
+      });
       items.push({
         key: "garage-cases",
         label: t("nav.items.garageCases"),
-        group: garageGroup,
-        section: manufacturingSection,
-        keywords: ["garage", "phieu dich vu", "sua chua", "xuong"],
+        section: garageSection,
+        keywords: [
+          "garage",
+          "phieu dich vu",
+          "so bao gia",
+          "sua chua",
+          "xuong",
+        ],
         icon: <Car className="w-4 h-4" />,
       });
       items.push({
-        key: "garage-gross-profit",
-        label: t("nav.items.garageGrossProfit"),
-        group: garageGroup,
-        section: manufacturingSection,
-        keywords: ["garage", "doanh thu", "chi phi", "loi nhuan"],
-        icon: <Car className="w-4 h-4" />,
+        key: "garage-customers",
+        label: t("nav.items.garageCustomers", "Khách hàng"),
+        section: garageSection,
+        keywords: [
+          "garage",
+          "khach hang",
+          "doi tac",
+          "cong no",
+          "phai thu",
+          "tuoi no",
+        ],
+        icon: <Users className="w-4 h-4" />,
       });
     }
 
@@ -580,7 +600,7 @@ export function useNavItems(): NavSearchItem[] {
     isAdminEmail,
     canReadBom,
     canReadProduction,
-    canReadGreenwayIntegration,
+    canReadGarage,
     canReadInvoices,
     canReadBankStatements,
     showAccounting,

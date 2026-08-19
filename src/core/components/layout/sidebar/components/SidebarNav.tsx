@@ -70,12 +70,13 @@ export function SidebarNav({
 
   const canReadBom = useHasPermission("bom", "read");
   const canReadProduction = useHasPermission("production", "read");
-  const canReadGreenwayIntegration = useHasPermission(
-    "greenway_integration",
-    "read",
-  );
-  const showManufacturing =
-    canReadBom || canReadProduction || canReadGreenwayIntegration;
+  const showManufacturing = canReadBom || canReadProduction;
+
+  const canReadGarageDirect = useHasPermission("garage", "read");
+  const canReadGreenway = useHasPermission("greenway_integration", "read");
+  const canReadKgara = useHasPermission("kgara_integration", "read");
+  const canReadGarage = canReadGarageDirect || canReadGreenway || canReadKgara;
+  const showGarage = canReadGarage;
 
   const canReadInvoices = useHasPermission("invoices", "read");
   const canReadBankStatements = useHasPermission("bank_statements", "read");
@@ -300,30 +301,38 @@ export function SidebarNav({
               contextPage="erp-production"
             />
           )}
-          {canReadGreenwayIntegration && (
-            <NavGroup
-              collapsed={c}
-              icon={<Car className="w-4 h-4 opacity-65 flex-shrink-0" />}
-              label={t("nav.items.garage")}
-              active={
-                currentPage === "garage-cases" ||
-                currentPage === "garage-gross-profit"
-              }
-            >
-              <NavGroupItem
-                label={t("nav.items.garageCases")}
-                active={currentPage === "garage-cases"}
-                onClick={() => navTo("garage-cases")}
-                contextPage="garage-cases"
-              />
-              <NavGroupItem
-                label={t("nav.items.garageGrossProfit")}
-                active={currentPage === "garage-gross-profit"}
-                onClick={() => navTo("garage-gross-profit")}
-                contextPage="garage-gross-profit"
-              />
-            </NavGroup>
-          )}
+        </NavSection>
+      )}
+
+      {/* GARAGE */}
+      {showGarage && (
+        <NavSection collapsed={c} label={t("nav.sections.garage", "GARAGE")}>
+          <NavItem
+            collapsed={c}
+            icon={
+              <LayoutDashboard className="w-4 h-4 opacity-65 flex-shrink-0" />
+            }
+            label={t("nav.items.garageDashboard")}
+            active={currentPage === "garage-dashboard"}
+            onClick={() => navTo("garage-dashboard")}
+            contextPage="garage-dashboard"
+          />
+          <NavItem
+            collapsed={c}
+            icon={<Car className="w-4 h-4 opacity-65 flex-shrink-0" />}
+            label={t("nav.items.garageCases")}
+            active={currentPage === "garage-cases"}
+            onClick={() => navTo("garage-cases")}
+            contextPage="garage-cases"
+          />
+          <NavItem
+            collapsed={c}
+            icon={<Users className="w-4 h-4 opacity-65 flex-shrink-0" />}
+            label={t("nav.items.garageCustomers", "Khách hàng")}
+            active={currentPage === "garage-customers"}
+            onClick={() => navTo("garage-customers")}
+            contextPage="garage-customers"
+          />
         </NavSection>
       )}
 

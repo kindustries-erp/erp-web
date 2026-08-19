@@ -68,4 +68,12 @@ export const breadcrumbEn = {
   catalogFunds: "Cash Funds",
   catalogBank: "Bank Accounts",
   catalogAccounts: "Chart of Accounts",
+  garage: "Garage",
+  garageDashboard: "Dashboard",
+  garageCases: "Service Cases",
+  garagePartnersGroup: "Partners",
+  garageCustomers: "Customers",
+  garageSuppliers: "Suppliers",
+  garageReceivables: "Receivables (Garage)",
+  garagePayables: "Payables (Garage)",
 };

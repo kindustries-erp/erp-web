@@ -68,4 +68,12 @@ export const breadcrumbVi = {
   catalogFunds: "Quỹ tiền mặt",
   catalogBank: "Tài khoản ngân hàng",
   catalogAccounts: "Hệ thống tài khoản",
+  garage: "Garage",
+  garageDashboard: "Tổng quan",
+  garageCases: "Phiếu dịch vụ",
+  garagePartnersGroup: "Đối tác",
+  garageCustomers: "Khách hàng",
+  garageSuppliers: "Nhà cung cấp",
+  garageReceivables: "Phải thu từ Garage",
+  garagePayables: "Phải trả cho Garage",
 };
