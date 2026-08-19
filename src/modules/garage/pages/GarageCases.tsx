@@ -30,6 +30,7 @@ import {
   Wrench,
   ShieldCheck,
   Eye,
+  Pencil,
   Scale,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
@@ -174,6 +175,7 @@ export function GarageCases() {
     align: "left" | "center" | "right" = "center",
     hideFilter = false,
     formatOptionLabel?: (label: string) => string,
+    showBlankOption = false,
   ) => ({
     title,
     columnKey: key,
@@ -187,6 +189,7 @@ export function GarageCases() {
     align,
     hideFilter,
     formatOptionLabel,
+    showBlankOption,
   });
 
   const { data: profitData } = useGarageGrossProfit(selectedBranchId);
@@ -234,6 +237,7 @@ export function GarageCases() {
   const [syncMode, setSyncMode] = useState<"cases" | "gross-profit">("cases");
 
   const [selectedCaseId, setSelectedCaseId] = useState<string | null>(null);
+  const [drawerEditMode, setDrawerEditMode] = useState<boolean>(false);
   const [settlementCase, setSettlementCase] = useState<any | null>(null);
 
   const canCreateGarage = useHasPermission("garage", "create");
@@ -355,6 +359,9 @@ export function GarageCases() {
             "licensePlate",
             t("cases.columns.licensePlate", "Biển số xe"),
             "center",
+            false,
+            undefined,
+            true,
           )}
           {...commonOptionProps}
         />
@@ -375,6 +382,9 @@ export function GarageCases() {
             "statusName",
             t("cases.columns.status", "Trạng thái"),
             "center",
+            false,
+            undefined,
+            true,
           )}
           {...commonOptionProps}
         />
@@ -404,6 +414,9 @@ export function GarageCases() {
             "customerCode",
             t("cases.columns.customerCode", "Mã KH"),
             "center",
+            false,
+            undefined,
+            true,
           )}
           {...commonOptionProps}
         />
@@ -424,6 +437,9 @@ export function GarageCases() {
             "customerName",
             t("cases.columns.customerName", "Tên khách hàng"),
             "center",
+            false,
+            undefined,
+            true,
           )}
           {...commonOptionProps}
         />
@@ -565,6 +581,9 @@ export function GarageCases() {
             "doanhThu",
             t("cases.columns.doanhThu", "Doanh thu"),
             "center",
+            false,
+            undefined,
+            true,
           )}
           {...commonOptionProps}
         />
@@ -606,6 +625,9 @@ export function GarageCases() {
             "chiPhi",
             t("cases.columns.chiPhi", "Chi phí"),
             "center",
+            false,
+            undefined,
+            true,
           )}
           {...commonOptionProps}
         />
@@ -647,6 +669,9 @@ export function GarageCases() {
             "loiNhuan",
             t("cases.columns.loiNhuan", "Lợi nhuận"),
             "center",
+            false,
+            undefined,
+            true,
           )}
           {...commonOptionProps}
         />
@@ -1017,6 +1042,8 @@ export function GarageCases() {
             t("cases.columns.branchName", "Chi nhánh"),
             "center",
             true,
+            undefined,
+            true,
           )}
           hideFooter={true}
         />
@@ -1257,6 +1284,7 @@ export function GarageCases() {
                 label: t("cases.actions.viewDetail", "Xem chi tiết"),
                 icon: <Eye className="w-4 h-4" />,
                 onClick: () => {
+                  setDrawerEditMode(false);
                   setSelectedCaseId(item.soChungTu || item.id);
                 },
               },
@@ -1265,6 +1293,14 @@ export function GarageCases() {
           {
             groupLabel: "THAO TÁC",
             items: [
+              {
+                label: t("cases.actions.editCase", "Chỉnh sửa"),
+                icon: <Pencil className="w-4 h-4" />,
+                onClick: () => {
+                  setDrawerEditMode(true);
+                  setSelectedCaseId(item.soChungTu || item.id);
+                },
+              },
               {
                 label: t("cases.actions.syncDetails", "Đồng bộ chi tiết"),
                 icon: <RefreshCw className="w-4 h-4" />,
@@ -1275,20 +1311,13 @@ export function GarageCases() {
                   });
                 },
               },
-              ...(canUpdateGarage
-                ? [
-                    {
-                      label: t(
-                        "cases.actions.netOffSettlement",
-                        "Cấn trừ sao kê",
-                      ),
-                      icon: <Scale className="w-4 h-4" />,
-                      onClick: () => {
-                        setSettlementCase(item);
-                      },
-                    },
-                  ]
-                : []),
+              {
+                label: t("cases.actions.netOffSettlement", "Cấn trừ sao kê"),
+                icon: <Scale className="w-4 h-4" />,
+                onClick: () => {
+                  setSettlementCase(item);
+                },
+              },
             ],
           },
         ]}
@@ -1306,7 +1335,11 @@ export function GarageCases() {
       <GarageCaseStandaloneDrawer
         isOpen={!!selectedCaseId}
         caseCode={selectedCaseId}
-        onClose={() => setSelectedCaseId(null)}
+        initialEditMode={drawerEditMode}
+        onClose={() => {
+          setSelectedCaseId(null);
+          setDrawerEditMode(false);
+        }}
         onSuccess={() => {
           refetch();
           queryClient.invalidateQueries({

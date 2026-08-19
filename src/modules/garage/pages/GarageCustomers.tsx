@@ -87,6 +87,8 @@ export function GarageCustomers() {
               listHook.columnFilters["customerCode"]?.length ||
               listHook.columnSearch["customerCode"],
             )}
+            enableSelectAllMatching={true}
+            showBlankOption={true}
             align="center"
           />
         ),
@@ -145,6 +147,8 @@ export function GarageCustomers() {
               listHook.columnFilters["customerName"]?.length ||
               listHook.columnSearch["customerName"],
             )}
+            enableSelectAllMatching={true}
+            showBlankOption={true}
             align="center"
           />
         ),
@@ -227,6 +231,7 @@ export function GarageCustomers() {
               listHook.columnFilters["paymentProgress"]?.length,
             )}
             align="center"
+            enableSelectAllMatching={true}
             formatOptionLabel={(val: string) => {
               if (val === "PAID")
                 return t("customers.filter.paid", "Đã thu đủ");
@@ -356,6 +361,7 @@ export function GarageCustomers() {
             selectedFilters={listHook.columnFilters["maxAgingDays"] || []}
             onFilterChange={(v) => listHook.setColumnFilter("maxAgingDays", v)}
             isActive={Boolean(listHook.columnFilters["maxAgingDays"]?.length)}
+            enableSelectAllMatching={true}
             align="center"
             formatOptionLabel={(val: string) => {
               if (val === "0-30")
@@ -574,6 +580,8 @@ export function GarageCustomers() {
               listHook.columnFilters["branchName"]?.length ||
               listHook.columnSearch["branchName"],
             )}
+            enableSelectAllMatching={true}
+            showBlankOption={true}
             align="center"
           />
         ),

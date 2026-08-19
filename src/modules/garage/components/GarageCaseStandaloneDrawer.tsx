@@ -40,6 +40,7 @@ import type {
 interface GarageCaseStandaloneDrawerProps {
   isOpen: boolean;
   caseCode?: string | null;
+  initialEditMode?: boolean;
   onClose: () => void;
   onSuccess?: () => void;
 }
@@ -47,6 +48,7 @@ interface GarageCaseStandaloneDrawerProps {
 export function GarageCaseStandaloneDrawer({
   isOpen,
   caseCode,
+  initialEditMode = false,
   onClose,
 }: GarageCaseStandaloneDrawerProps) {
   const { t } = useTranslation(["garage", "common"]);
@@ -119,12 +121,16 @@ export function GarageCaseStandaloneDrawer({
   // Reset state when caseId changes or drawer opens
   useEffect(() => {
     if (isOpen) {
-      cancelEdit();
+      if (initialEditMode) {
+        startEdit();
+      } else {
+        cancelEdit();
+      }
       setShowSettlementModal(false);
       setEditingSettlementItem(null);
       setShowInvoiceModal(false);
     }
-  }, [isOpen, caseCode, cancelEdit]);
+  }, [isOpen, caseCode, initialEditMode, cancelEdit, startEdit]);
 
   const activeSettlements = getActiveSettlements(serverSettlements);
   const activeLinkedInvoices = getActiveLinkedInvoices(serverLinkedInvoices);

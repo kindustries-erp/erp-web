@@ -133,9 +133,56 @@ export function applyGarageCasesTableState(
       tableState.columnFilters,
     )) {
       if (!filters || filters.length === 0) continue;
+
       const rawValue = getCellValue(item, columnKey);
+      const isBlank =
+        rawValue == null ||
+        rawValue === "" ||
+        rawValue === undefined ||
+        (typeof rawValue === "number" && isNaN(rawValue));
+
+      if (filters[0] === "__ALL_MATCHING__") {
+        const rawSearch = (filters[1] || "").trim();
+        if (!rawSearch) continue;
+        const val = normalizeString(rawValue);
+        const keywords = rawSearch
+          .split(";")
+          .map((k) => k.trim())
+          .filter(Boolean);
+        if (keywords.length === 0) continue;
+
+        const matchesAnyKw = keywords.some((kw) => {
+          let isExact = false;
+          let cleanKw = kw;
+          if (kw.startsWith('"') && kw.endsWith('"') && kw.length >= 2) {
+            isExact = true;
+            cleanKw = kw.slice(1, -1);
+          }
+          const normKw = normalizeString(cleanKw);
+          if (isExact) {
+            return val === normKw;
+          }
+          return val.includes(normKw);
+        });
+
+        if (!matchesAnyKw) {
+          return false;
+        }
+        continue;
+      }
+
+      const hasBlank = filters.includes("__BLANK__");
+      if (hasBlank && isBlank) {
+        continue;
+      }
+
+      if (isBlank) {
+        return false;
+      }
+
       const value = normalizeString(rawValue);
       const matches = filters.some((filter) => {
+        if (filter === "__BLANK__") return isBlank;
         const normalizedFilter = normalizeString(filter);
         if (isNumericLike(value) && isNumericLike(normalizedFilter)) {
           return Number(value) === Number(normalizedFilter);
