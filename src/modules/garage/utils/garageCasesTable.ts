@@ -30,7 +30,10 @@ function getCellValue(item: Record<string, any>, key: string) {
     case "isInsuranceClaim":
       return item.rawData?.XeLamBaoHiem ? "yes" : "no";
     case "caseDate":
-      return item.ngayPhatSinh || "";
+    case "ngayPhatSinh":
+      return item.ngayPhatSinh || item.ngayTiepNhan || "";
+    case "ngayTiepNhan":
+      return item.ngayTiepNhan || item.ngayPhatSinh || "";
     case "updatedAt":
       return item.updatedAt || "";
     case "createdAt":
@@ -166,10 +169,14 @@ export function applyGarageCasesTableState(
 
   const sorted = [...filtered].sort((a, b) => {
     if (tableState.sorts.length === 0) {
-      return (
-        new Date(b.updatedAt || 0).getTime() -
-        new Date(a.updatedAt || 0).getTime()
-      );
+      const timeB =
+        parseDateValue(b.ngayPhatSinh || b.ngayTiepNhan)?.getTime() ?? 0;
+      const timeA =
+        parseDateValue(a.ngayPhatSinh || a.ngayTiepNhan)?.getTime() ?? 0;
+      if (timeB !== timeA) return timeB - timeA;
+      return (b.soChungTu || "").localeCompare(a.soChungTu || "", undefined, {
+        numeric: true,
+      });
     }
 
     for (const sortExpr of tableState.sorts) {
@@ -195,8 +202,19 @@ export function applyGarageCasesTableState(
           return isDesc ? -result : result;
         }
       } else {
+        // Check if both left and right are parsable date strings
+        const dateLeft = parseDateValue(left);
+        const dateRight = parseDateValue(right);
+        if (dateLeft && dateRight) {
+          const result = dateLeft.getTime() - dateRight.getTime();
+          if (result !== 0) {
+            return isDesc ? -result : result;
+          }
+        }
+
         const result = String(left).localeCompare(String(right), undefined, {
           sensitivity: "base",
+          numeric: true,
         });
         if (result !== 0) {
           return isDesc ? -result : result;
@@ -204,10 +222,14 @@ export function applyGarageCasesTableState(
       }
     }
 
-    return (
-      new Date(b.updatedAt || 0).getTime() -
-      new Date(a.updatedAt || 0).getTime()
-    );
+    const timeB =
+      parseDateValue(b.ngayPhatSinh || b.ngayTiepNhan)?.getTime() ?? 0;
+    const timeA =
+      parseDateValue(a.ngayPhatSinh || a.ngayTiepNhan)?.getTime() ?? 0;
+    if (timeB !== timeA) return timeB - timeA;
+    return (b.soChungTu || "").localeCompare(a.soChungTu || "", undefined, {
+      numeric: true,
+    });
   });
 
   return sorted;
