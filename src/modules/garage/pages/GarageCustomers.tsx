@@ -6,23 +6,23 @@ import { DateRangeColumnSlot } from "@/shared/components/DataTable/DateRangeColu
 import { TableText } from "@/shared/components/DataTable/TableText";
 import { TableDateCell } from "@/shared/components/DataTable/TableDateCell";
 import { Badge } from "@/shared/components/ui/badge";
-import { Button } from "@/shared/components/ui/Button";
-import { ActionDropdown } from "@/shared/components/ActionDropdown";
+import { Progress } from "@/shared/components/ui/progress";
 import { useGarageStore } from "../store/garageStore";
-import { GarageBranchSelector } from "../components/GarageBranchSelector";
 import {
   useGarageCustomersList,
   type CustomerDebtItem,
 } from "../hooks/useGarageCustomersList";
+import { useGarageBranches } from "../hooks/useGarage";
 import { GarageCustomerDetailDrawer } from "../components/GarageCustomerDetailDrawer";
 import { garageApi } from "../api/garageApi";
 import { money } from "@/shared/utils/format";
-import { Users, FilterX, RefreshCw, Eye } from "lucide-react";
+import { Users, Eye } from "lucide-react";
 import type { DataTableColumn } from "@/shared/components/DataTable";
 
 export function GarageCustomers() {
   const { t } = useTranslation("garage");
   const { selectedBranchId } = useGarageStore();
+  const { data: branches } = useGarageBranches();
 
   const listHook = useGarageCustomersList(selectedBranchId || undefined);
 
@@ -49,7 +49,7 @@ export function GarageCustomers() {
         className: "text-center w-[40px] min-w-[40px]",
         cell: (_: CustomerDebtItem, idx: number) => <span>{idx}</span>,
       },
-      // 2. Mã Khách Hàng
+      // 2. Mã Khách Hàng (Mở Drawer chi tiết khi click icon trên TableText)
       {
         key: "customerCode",
         header: (
@@ -60,7 +60,7 @@ export function GarageCustomers() {
             allFilters={listHook.columnFilters}
             fetchOptions={async ({ search, pageParam, filtersStr }) => {
               const res = await garageApi.getCustomersDebtColumnOptions(
-                selectedBranchId || "",
+                selectedBranchId || undefined,
                 "customerCode",
                 search,
                 pageParam,
@@ -89,7 +89,7 @@ export function GarageCustomers() {
             align="center"
           />
         ),
-        size: 150,
+        size: 200,
         enableResizing: true,
         cell: (row: CustomerDebtItem) => (
           <TableText
@@ -98,7 +98,7 @@ export function GarageCustomers() {
             tooltip={true}
             className="font-mono text-primary font-medium"
             onDrawerClick={(e) => {
-              e.stopPropagation();
+              e?.stopPropagation();
               setSelectedCustomer({
                 code: row.customerCode,
                 name: row.customerName,
@@ -107,7 +107,7 @@ export function GarageCustomers() {
           />
         ),
       },
-      // 3. Tên Khách Hàng
+      // 3. Tên Khách Hàng (Chỉ hiển thị text, không mở Drawer khi click tên)
       {
         key: "customerName",
         header: (
@@ -118,7 +118,7 @@ export function GarageCustomers() {
             allFilters={listHook.columnFilters}
             fetchOptions={async ({ search, pageParam, filtersStr }) => {
               const res = await garageApi.getCustomersDebtColumnOptions(
-                selectedBranchId || "",
+                selectedBranchId || undefined,
                 "customerName",
                 search,
                 pageParam,
@@ -150,25 +150,17 @@ export function GarageCustomers() {
         size: 220,
         enableResizing: true,
         cell: (row: CustomerDebtItem) => (
-          <div
-            className="font-medium text-foreground truncate cursor-pointer hover:text-primary transition-colors"
-            onClick={() =>
-              setSelectedCustomer({
-                code: row.customerCode,
-                name: row.customerName,
-              })
-            }
-          >
+          <div className="font-medium text-foreground truncate select-text">
             {row.customerName || "—"}
           </div>
         ),
       },
-      // 4. Số Phiếu Dịch Vụ
+      // 4. SL Phiếu DV (Width 120px)
       {
         key: "caseCount",
         header: (
           <TableColumnHeaderFilter
-            title={t("customers.columns.caseCount", "Số phiếu")}
+            title={t("customers.columns.caseCount", "SL Phiếu DV")}
             sortState={getSortState("caseCount")}
             onSortChange={(s) => listHook.setSort("caseCount", s)}
             searchValue=""
@@ -179,7 +171,7 @@ export function GarageCustomers() {
             align="center"
           />
         ),
-        size: 90,
+        size: 120,
         className: "text-center",
         cell: (row: CustomerDebtItem) => (
           <Badge variant="secondary" className="tabular-nums font-mono">
@@ -187,13 +179,13 @@ export function GarageCustomers() {
           </Badge>
         ),
       },
-      // 5. Tổng Doanh Thu
+      // 5. Phải Thu
       {
         key: "totalAmount",
         className: "text-right",
         header: (
           <TableColumnHeaderFilter
-            title={t("customers.columns.totalAmount", "Tổng doanh thu")}
+            title={t("customers.columns.receivableAmount", "Phải thu")}
             sortState={getSortState("totalAmount")}
             onSortChange={(s) => listHook.setSort("totalAmount", s)}
             searchValue=""
@@ -212,13 +204,13 @@ export function GarageCustomers() {
           </span>
         ),
       },
-      // 6. Đã Thanh Toán
+      // 6. Tiến Độ Thanh Toán (Gom gọn chuẩn xác trong 2 hàng, phong cách Neutral Business)
       {
-        key: "paidAmount",
-        className: "text-right",
+        key: "paymentProgress",
+        className: "text-left",
         header: (
           <TableColumnHeaderFilter
-            title={t("customers.columns.paidAmount", "Đã thu")}
+            title={t("customers.columns.paymentProgress", "Tiến độ thanh toán")}
             sortState={getSortState("paidAmount")}
             onSortChange={(s) => listHook.setSort("paidAmount", s)}
             searchValue=""
@@ -226,52 +218,89 @@ export function GarageCustomers() {
             selectedFilters={[]}
             onFilterChange={() => {}}
             hideFilter={true}
-            align="right"
+            align="center"
           />
         ),
-        size: 140,
+        size: 210,
         enableResizing: true,
-        cell: (row: CustomerDebtItem) => (
-          <span className="tabular-nums font-medium text-emerald-600 dark:text-emerald-400">
-            {money(row.paidAmount)}
-          </span>
-        ),
+        cell: (row: CustomerDebtItem) => {
+          const total = Number(row.totalAmount) || 0;
+          const paid = Number(row.paidAmount) || 0;
+          const bal = Number(row.balanceAmount) || 0;
+
+          if (total <= 0 && bal <= 0 && paid <= 0) {
+            return (
+              <span className="text-muted-foreground/60 font-normal select-none">
+                —
+              </span>
+            );
+          }
+
+          const rate =
+            total > 0
+              ? Math.min(100, Math.round((paid / total) * 100))
+              : bal <= 0 && paid > 0
+                ? 100
+                : 0;
+
+          const isAllPaid = bal <= 0 && paid > 0;
+          const isUnpaid = paid <= 0 && bal > 0;
+
+          return (
+            <div className="flex flex-col gap-1 w-full py-0.5 justify-center">
+              {/* Hàng 1: Badge / % bên trái + Đã thu / Còn nợ bên phải */}
+              <div className="flex items-center justify-between text-xs tabular-nums leading-none">
+                <div className="flex items-center gap-1.5 flex-shrink-0">
+                  {isAllPaid ? (
+                    <Badge
+                      variant="outline"
+                      className="text-[10px] px-1.5 py-0 h-4 font-medium border-slate-300 dark:border-slate-700 text-foreground"
+                    >
+                      Đã thu đủ
+                    </Badge>
+                  ) : isUnpaid ? (
+                    <Badge
+                      variant="outline"
+                      className="text-[10px] px-1.5 py-0 h-4 font-normal text-muted-foreground border-muted-foreground/30"
+                    >
+                      Chưa thu
+                    </Badge>
+                  ) : (
+                    <span className="text-foreground font-semibold text-[11px]">
+                      {rate}%
+                    </span>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-1 font-mono text-[11px] truncate">
+                  <span className="text-foreground font-medium">
+                    {money(paid)}
+                  </span>
+                  {bal > 0 && (
+                    <>
+                      <span className="text-muted-foreground/40">/</span>
+                      <span className="text-muted-foreground font-normal">
+                        {money(bal)}
+                      </span>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* Hàng 2: Progress bar Neutral */}
+              <Progress
+                value={rate}
+                className="h-1.5 bg-muted"
+                indicatorClassName="bg-slate-700 dark:bg-slate-300"
+              />
+            </div>
+          );
+        },
       },
-      // 7. Còn Phải Thu
-      {
-        key: "balanceAmount",
-        className: "text-right",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("customers.columns.balanceAmount", "Còn phải thu")}
-            sortState={getSortState("balanceAmount")}
-            onSortChange={(s) => listHook.setSort("balanceAmount", s)}
-            searchValue=""
-            onSearchChange={() => {}}
-            selectedFilters={[]}
-            onFilterChange={() => {}}
-            hideFilter={true}
-            align="right"
-          />
-        ),
-        size: 150,
-        enableResizing: true,
-        cell: (row: CustomerDebtItem) => (
-          <span
-            className={`tabular-nums font-bold ${
-              row.balanceAmount > 0
-                ? "text-destructive"
-                : "text-muted-foreground"
-            }`}
-          >
-            {money(row.balanceAmount)}
-          </span>
-        ),
-      },
-      // 8. Tuổi Nợ (Aging)
+      // 7. Tuổi Nợ (Aging - Thể hiện số ngày và nhóm tuổi nợ rõ ràng)
       {
         key: "maxAgingDays",
-        className: "text-center",
+        className: "text-left",
         header: (
           <TableColumnHeaderFilter
             title={t("customers.columns.maxAgingDays", "Tuổi nợ")}
@@ -285,30 +314,59 @@ export function GarageCustomers() {
             align="center"
           />
         ),
-        size: 110,
+        size: 140,
         enableResizing: true,
         cell: (row: CustomerDebtItem) => {
-          if (row.balanceAmount <= 0) {
+          const bal = Number(row.balanceAmount) || 0;
+          const aging = row.maxAgingDays || 0;
+
+          if (bal <= 0) {
             return (
-              <Badge
-                variant="outline"
-                className="text-[10px] text-muted-foreground font-normal"
-              >
-                0d
-              </Badge>
+              <div className="flex flex-col gap-1 w-full py-0.5 justify-center">
+                <div className="flex items-center justify-between text-xs tabular-nums leading-none">
+                  <span className="text-[11px] text-muted-foreground font-mono">
+                    0 ngày
+                  </span>
+                </div>
+                <Progress value={0} className="h-1.5 bg-muted" />
+              </div>
             );
           }
-          const aging = row.maxAgingDays;
-          const variant =
-            aging <= 30 ? "success" : aging <= 60 ? "warning" : "destructive";
+
+          const agingPercent = Math.min(100, Math.round((aging / 90) * 100));
+          const bracket =
+            aging <= 30
+              ? "0-30 ngày"
+              : aging <= 60
+                ? "31-60 ngày"
+                : aging <= 90
+                  ? "61-90 ngày"
+                  : ">90 ngày";
+
           return (
-            <Badge variant={variant} className="tabular-nums text-xs">
-              {aging} {t("common.daysShort", "d")}
-            </Badge>
+            <div className="flex flex-col gap-1 w-full py-0.5 justify-center">
+              <div className="flex items-center justify-between text-xs tabular-nums leading-none">
+                <span className="text-[11px] font-semibold text-foreground font-mono">
+                  {aging} ngày
+                </span>
+                <span className="text-[10px] text-muted-foreground font-sans">
+                  {bracket}
+                </span>
+              </div>
+              <Progress
+                value={agingPercent}
+                className="h-1.5 bg-muted"
+                indicatorClassName={
+                  aging > 90
+                    ? "bg-rose-500/80"
+                    : "bg-slate-700 dark:bg-slate-300"
+                }
+              />
+            </div>
           );
         },
       },
-      // 9. Ngày Phát Sinh Gần Nhất
+      // 8. Ngày Phát Sinh Gần Nhất (Width 150px)
       {
         key: "latestDate",
         className: "text-right",
@@ -335,7 +393,7 @@ export function GarageCustomers() {
             )}
           />
         ),
-        size: 130,
+        size: 150,
         enableResizing: true,
         cell: (row: CustomerDebtItem) => (
           <TableDateCell
@@ -344,34 +402,65 @@ export function GarageCustomers() {
           />
         ),
       },
-      // 10. Actions
+      // 9. Chi Nhánh (Chuyển xuống cuối cùng)
       {
-        key: "actions",
-        header: <div className="w-[40px] min-w-[40px]" />,
-        size: 40,
-        enableResizing: false,
-        headerClassName: "w-[40px] min-w-[40px]",
-        className: "w-[40px] min-w-[40px]",
-        cell: (row: CustomerDebtItem) => (
-          <ActionDropdown
-            items={[
-              {
-                groupLabel: "TRA CỨU",
-                items: [
-                  {
-                    label: t("customers.viewDetail", "Xem chi tiết công nợ"),
-                    icon: <Eye className="w-4 h-4" />,
-                    onClick: () =>
-                      setSelectedCustomer({
-                        code: row.customerCode,
-                        name: row.customerName,
-                      }),
-                  },
-                ],
-              },
-            ]}
+        key: "branchName",
+        header: (
+          <TableColumnHeaderFilter
+            title={t("customers.columns.branchName", "Chi nhánh")}
+            columnKey="branchName"
+            queryKeyPrefix="garage-customer-branch-options"
+            allFilters={listHook.columnFilters}
+            fetchOptions={async ({ search, pageParam, filtersStr }) => {
+              const res = await garageApi.getCustomersDebtColumnOptions(
+                selectedBranchId || undefined,
+                "branchName",
+                search,
+                pageParam,
+                20,
+                filtersStr,
+              );
+              return {
+                items: res.items.map((it: string) => {
+                  const b = branches?.find((br: any) => br.externalId === it);
+                  return {
+                    label: b?.name || it,
+                    value: it,
+                  };
+                }),
+                total: res.total,
+                next: res.page < res.totalPages ? res.page + 1 : null,
+              };
+            }}
+            formatOptionLabel={(val: string) => {
+              const b = branches?.find((br: any) => br.externalId === val);
+              return b?.name || val;
+            }}
+            sortState={getSortState("branchName")}
+            onSortChange={(s) => listHook.setSort("branchName", s)}
+            searchValue={listHook.columnSearch["branchName"] || ""}
+            onSearchChange={(v) => listHook.setColumnSearch("branchName", v)}
+            selectedFilters={listHook.columnFilters["branchName"] || []}
+            onFilterChange={(v) => listHook.setColumnFilter("branchName", v)}
+            isActive={Boolean(
+              listHook.columnFilters["branchName"]?.length ||
+              listHook.columnSearch["branchName"],
+            )}
+            align="left"
           />
         ),
+        size: 180,
+        enableResizing: true,
+        cell: (row: CustomerDebtItem) => {
+          const b = branches?.find(
+            (br: any) => br.externalId === row.branchExternalId,
+          );
+          return (
+            <span className="truncate text-muted-foreground text-xs font-medium">
+              {b?.name || row.branchExternalId || "—"}
+            </span>
+          );
+        },
       },
     ],
     [
@@ -381,6 +470,7 @@ export function GarageCustomers() {
       listHook.dateFrom,
       listHook.dateTo,
       selectedBranchId,
+      branches,
       t,
     ],
   );
@@ -391,13 +481,15 @@ export function GarageCustomers() {
         title={t("customers.title", "Công nợ khách hàng")}
         desc={t(
           "customers.desc",
-          "Theo dõi tổng hợp công nợ phải thu, tuổi nợ và danh sách phiếu dịch vụ theo từng khách hàng",
+          "Theo dõi tổng hợp công nợ phải thu, tuổi nợ và danh sách phiếu dịch vụ theo từng khách hàng (Dữ liệu công nợ ghi nhận từ tháng 07/2026)",
         )}
         icon={<Users className="w-5 h-5 text-primary" />}
         tableId="garage-customers-table"
         items={listHook.data}
         columns={columns}
-        getRowKey={(row) => row.customerCode}
+        getRowKey={(row) =>
+          `${row.customerCode}_${row.branchExternalId || "all"}`
+        }
         loading={listHook.isLoading}
         emptyLabel={t("customers.empty", "Không có dữ liệu khách hàng")}
         page={listHook.page}
@@ -410,57 +502,38 @@ export function GarageCustomers() {
           listHook.setPage(1);
         }}
         onRefresh={() => listHook.refetch()}
-        onRowClick={(row) =>
-          setSelectedCustomer({
-            code: row.customerCode,
-            name: row.customerName,
-          })
-        }
-        customActionsNode={
-          <div className="flex items-center gap-2">
-            <GarageBranchSelector />
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => listHook.refetch()}
-              disabled={listHook.isLoading}
-              className="h-8 gap-1.5"
-            >
-              <RefreshCw
-                className={`w-3.5 h-3.5 ${
-                  listHook.isLoading ? "animate-spin" : ""
-                }`}
-              />
-              {t("common.refresh", "Làm mới")}
-            </Button>
-            {listHook.activeFilterCount > 0 && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={listHook.clearAllFilters}
-                className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground h-8"
-              >
-                <FilterX className="w-3.5 h-3.5 text-destructive" />
-                {t("customers.clearFilters", "Xóa bộ lọc")} (
-                {listHook.activeFilterCount})
-              </Button>
-            )}
-          </div>
-        }
+        activeFilterCount={listHook.activeFilterCount}
+        onClearAllFilters={listHook.clearAllFilters}
+        rowActions={(row: CustomerDebtItem) => [
+          {
+            groupLabel: "TRA CỨU",
+            items: [
+              {
+                label: t("customers.viewDetail", "Xem chi tiết công nợ"),
+                icon: <Eye className="w-4 h-4" />,
+                onClick: () =>
+                  setSelectedCustomer({
+                    code: row.customerCode,
+                    name: row.customerName,
+                  }),
+              },
+            ],
+          },
+        ]}
         summaryRow={{
           totalAmount: (
             <div className="text-right font-bold tabular-nums text-foreground">
               {money(listHook.summary.totalRevenue)}
             </div>
           ),
-          paidAmount: (
-            <div className="text-right font-bold tabular-nums text-emerald-600 dark:text-emerald-400">
-              {money(listHook.summary.totalPaid)}
-            </div>
-          ),
-          balanceAmount: (
-            <div className="text-right font-bold tabular-nums text-destructive">
-              {money(listHook.summary.totalBalance)}
+          paymentProgress: (
+            <div className="flex flex-col gap-0.5 text-right font-bold tabular-nums">
+              <div className="text-emerald-600 dark:text-emerald-400 text-xs">
+                Đã thu: {money(listHook.summary.totalPaid)}
+              </div>
+              <div className="text-destructive text-[11px]">
+                Còn lại: {money(listHook.summary.totalBalance)}
+              </div>
             </div>
           ),
         }}

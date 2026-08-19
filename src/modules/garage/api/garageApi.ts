@@ -384,7 +384,7 @@ export const garageApi = {
 
   // ─── Customer Debt & Aging ───────────────────────────────────────────────
   getCustomersDebt: async (params: {
-    branchId: string;
+    branchId?: string;
     page?: number;
     pageSize?: number;
     q?: string;
@@ -423,7 +423,7 @@ export const garageApi = {
   },
 
   getCustomersDebtColumnOptions: async (
-    branchId: string,
+    branchId: string | undefined,
     column: string,
     search: string = "",
     page: number = 1,

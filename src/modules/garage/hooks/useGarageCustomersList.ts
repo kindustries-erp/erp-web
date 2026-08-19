@@ -5,6 +5,7 @@ import { garageApi } from "../api/garageApi";
 export interface CustomerDebtItem {
   customerCode: string;
   customerName: string;
+  branchExternalId?: string;
   caseCount: number;
   totalAmount: number;
   paidAmount: number;
@@ -33,7 +34,7 @@ export function useGarageCustomersList(branchId?: string) {
   const [pageSize, setPageSize] = useState(20);
   const [searchQ, setSearchQ] = useState("");
   const [sorts, setSorts] = useState<string[]>(["-balanceAmount"]);
-  const [dateFrom, setDateFrom] = useState<string>("2026-07-01");
+  const [dateFrom, setDateFrom] = useState<string>("");
   const [dateTo, setDateTo] = useState<string>("");
   const [columnFilters, setColumnFilters] = useState<Record<string, string[]>>(
     {},
@@ -54,24 +55,8 @@ export function useGarageCustomersList(branchId?: string) {
       columnSearch,
     ],
     queryFn: () => {
-      if (!branchId) {
-        return Promise.resolve({
-          data: [] as CustomerDebtItem[],
-          total: 0,
-          totalPages: 0,
-          summary: {
-            totalRevenue: 0,
-            totalPaid: 0,
-            totalBalance: 0,
-            totalAging0_30: 0,
-            totalAging31_60: 0,
-            totalAging61_90: 0,
-            totalAgingOver90: 0,
-          } as CustomerDebtSummary,
-        });
-      }
       return garageApi.getCustomersDebt({
-        branchId,
+        branchId: branchId || undefined,
         page,
         pageSize,
         q: searchQ || undefined,
@@ -86,7 +71,6 @@ export function useGarageCustomersList(branchId?: string) {
           : undefined,
       });
     },
-    enabled: !!branchId,
     staleTime: 1000 * 30,
   });
 

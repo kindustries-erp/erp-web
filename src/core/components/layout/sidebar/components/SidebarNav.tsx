@@ -325,28 +325,14 @@ export function SidebarNav({
             onClick={() => navTo("garage-cases")}
             contextPage="garage-cases"
           />
-          <NavGroup
+          <NavItem
             collapsed={c}
             icon={<Users className="w-4 h-4 opacity-65 flex-shrink-0" />}
-            label={t("nav.items.garagePartnersGroup", "Đối tác")}
-            active={
-              currentPage === "garage-customers" ||
-              currentPage === "garage-suppliers"
-            }
-          >
-            <NavGroupItem
-              label={t("nav.items.garageCustomers", "Khách hàng")}
-              active={currentPage === "garage-customers"}
-              onClick={() => navTo("garage-customers")}
-              contextPage="garage-customers"
-            />
-            <NavGroupItem
-              label={t("nav.items.garageSuppliers", "Nhà cung cấp")}
-              active={currentPage === "garage-suppliers"}
-              onClick={() => navTo("garage-suppliers")}
-              contextPage="garage-suppliers"
-            />
-          </NavGroup>
+            label={t("nav.items.garageCustomers", "Khách hàng")}
+            active={currentPage === "garage-customers"}
+            onClick={() => navTo("garage-customers")}
+            contextPage="garage-customers"
+          />
         </NavSection>
       )}
 

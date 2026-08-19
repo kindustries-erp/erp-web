@@ -5,6 +5,8 @@ import { DateRangeColumnSlot } from "@/shared/components/DataTable/DateRangeColu
 import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
 import { TableText } from "@/shared/components/DataTable/TableText";
 import { TableDateCell } from "@/shared/components/DataTable/TableDateCell";
+import { Badge } from "@/shared/components/ui/badge";
+import { Progress } from "@/shared/components/ui/progress";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import { money } from "@/shared/utils/format";
 import { useGarageStore } from "../store/garageStore";
@@ -741,70 +743,186 @@ export function GarageCases() {
         );
       },
     },
-    // 13. Tổng tiền có thuế
+    // 13. Tiến độ thu tiền (Phong cách Neutral Business)
     {
-      key: "totalAmount",
-      label: t("cases.columns.totalAmount", "Tổng tiền"),
+      key: "collectionProgress",
+      label: t("cases.columns.collectionProgress", "Tiến độ thu"),
       header: (
         <TableColumnHeaderFilter
           {...createHeaderProps(
-            "totalAmount",
-            t("cases.columns.totalAmount", "Tổng tiền"),
+            "collectionProgress",
+            t("cases.columns.collectionProgress", "Tiến độ thu"),
             "center",
+            true,
           )}
-          {...commonOptionProps}
+          hideFooter={true}
         />
       ),
       sortable: false,
-      size: 140,
+      size: 210,
       enableResizing: true,
-      className: "text-right font-semibold tabular-nums",
+      className: "text-left",
       cell: (item: any) => {
-        const numVal = Number(item.tienCoThue) || 0;
-        if (numVal === 0) {
+        const total = Number(item.tienCoThue) || 0;
+        const paid = Number(item.tienDaThanhToan) || 0;
+        const bal = Number(item.tienConPhaiThanhToan) || 0;
+
+        if (total <= 0 && bal <= 0 && paid <= 0) {
           return (
             <span className="text-muted-foreground/60 font-normal select-none">
               —
             </span>
           );
         }
-        return new Intl.NumberFormat("vi-VN", {
-          style: "currency",
-          currency: "VND",
-        }).format(numVal);
+
+        const rate =
+          total > 0
+            ? Math.min(100, Math.round((paid / total) * 100))
+            : bal <= 0 && paid > 0
+              ? 100
+              : 0;
+
+        const isAllPaid = bal <= 0 && paid > 0;
+        const isUnpaid = paid <= 0 && bal > 0;
+
+        return (
+          <div className="flex flex-col gap-1 w-full py-0.5 justify-center">
+            <div className="flex items-center justify-between text-xs tabular-nums leading-none">
+              <div className="flex items-center gap-1.5 flex-shrink-0">
+                {isAllPaid ? (
+                  <Badge
+                    variant="outline"
+                    className="text-[10px] px-1.5 py-0 h-4 font-medium border-slate-300 dark:border-slate-700 text-foreground"
+                  >
+                    Đã thu đủ
+                  </Badge>
+                ) : isUnpaid ? (
+                  <Badge
+                    variant="outline"
+                    className="text-[10px] px-1.5 py-0 h-4 font-normal text-muted-foreground border-muted-foreground/30"
+                  >
+                    Chưa thu
+                  </Badge>
+                ) : (
+                  <span className="text-foreground font-semibold text-[11px]">
+                    {rate}%
+                  </span>
+                )}
+              </div>
+
+              <div className="flex items-center gap-1 font-mono text-[11px] truncate">
+                <span className="text-foreground font-medium">
+                  {money(paid)}
+                </span>
+                {bal > 0 && (
+                  <>
+                    <span className="text-muted-foreground/40">/</span>
+                    <span className="text-muted-foreground font-normal">
+                      {money(bal)}
+                    </span>
+                  </>
+                )}
+              </div>
+            </div>
+
+            <Progress
+              value={rate}
+              className="h-1.5 bg-muted"
+              indicatorClassName="bg-slate-700 dark:bg-slate-300"
+            />
+          </div>
+        );
       },
     },
-    // 14. Còn phải thu
+    // 14. Tiến độ chi trả NCC (Dựa trên số tiền đã chi thực tế / tổng chi phí)
     {
-      key: "balanceAmount",
-      label: t("cases.columns.balanceAmount", "Còn phải thu"),
+      key: "costProgress",
+      label: t("cases.columns.costProgress", "Tiến độ chi"),
       header: (
         <TableColumnHeaderFilter
           {...createHeaderProps(
-            "balanceAmount",
-            t("cases.columns.balanceAmount", "Còn phải thu"),
+            "costProgress",
+            t("cases.columns.costProgress", "Tiến độ chi"),
             "center",
+            true,
           )}
-          {...commonOptionProps}
+          hideFooter={true}
         />
       ),
       sortable: false,
-      size: 140,
+      size: 200,
       enableResizing: true,
-      className: "text-right font-semibold tabular-nums",
+      className: "text-left",
       cell: (item: any) => {
-        const numVal = Number(item.tienConPhaiThanhToan) || 0;
-        if (numVal === 0) {
+        const pItem = profitCases.find(
+          (p: any) => p.VuViecCode === item.soChungTu,
+        );
+        const cost =
+          Number(item.chiPhi ?? pItem?.ChiPhi ?? item.rawData?.ChiPhi) || 0;
+        const paidCost =
+          Number(item.tienDaChi ?? item.rawData?.TienDaChi ?? 0) || 0;
+        const balCost = Math.max(0, cost - paidCost);
+
+        if (cost <= 0) {
           return (
             <span className="text-muted-foreground/60 font-normal select-none">
               —
             </span>
           );
         }
-        return new Intl.NumberFormat("vi-VN", {
-          style: "currency",
-          currency: "VND",
-        }).format(numVal);
+
+        const costRate =
+          cost > 0 ? Math.min(100, Math.round((paidCost / cost) * 100)) : 0;
+        const isAllPaidCost = balCost <= 0 && paidCost > 0;
+        const isUnpaidCost = paidCost <= 0 && cost > 0;
+
+        return (
+          <div className="flex flex-col gap-1 w-full py-0.5 justify-center">
+            <div className="flex items-center justify-between text-xs tabular-nums leading-none">
+              <div className="flex items-center gap-1.5 flex-shrink-0">
+                {isAllPaidCost ? (
+                  <Badge
+                    variant="outline"
+                    className="text-[10px] px-1.5 py-0 h-4 font-medium border-slate-300 dark:border-slate-700 text-foreground"
+                  >
+                    Đã chi đủ
+                  </Badge>
+                ) : isUnpaidCost ? (
+                  <Badge
+                    variant="outline"
+                    className="text-[10px] px-1.5 py-0 h-4 font-normal text-muted-foreground border-muted-foreground/30"
+                  >
+                    Chưa chi
+                  </Badge>
+                ) : (
+                  <span className="text-foreground font-semibold text-[11px]">
+                    {costRate}%
+                  </span>
+                )}
+              </div>
+
+              <div className="flex items-center gap-1 font-mono text-[11px] truncate">
+                <span className="text-foreground font-medium">
+                  {money(paidCost)}
+                </span>
+                {balCost > 0 && (
+                  <>
+                    <span className="text-muted-foreground/40">/</span>
+                    <span className="text-muted-foreground font-normal">
+                      {money(balCost)}
+                    </span>
+                  </>
+                )}
+              </div>
+            </div>
+
+            <Progress
+              value={costRate}
+              className="h-1.5 bg-muted"
+              indicatorClassName="bg-slate-600 dark:bg-slate-400"
+            />
+          </div>
+        );
       },
     },
     // 15. Chi nhánh Kgara
@@ -953,6 +1071,7 @@ export function GarageCases() {
     let totalCost = 0;
     let totalProfit = 0;
     let totalAmountVal = 0;
+    let totalPaidVal = 0;
     let totalBalanceVal = 0;
 
     for (const item of visibleCases) {
@@ -966,12 +1085,14 @@ export function GarageCases() {
       const profit =
         Number(item.loiNhuan ?? pItem?.LoiNhuan ?? item.rawData?.LoiNhuan) || 0;
       const totalAmt = Number(item.tienCoThue) || 0;
+      const paidAmt = Number(item.tienDaThanhToan) || 0;
       const balAmt = Number(item.tienConPhaiThanhToan) || 0;
 
       totalRev += rev;
       totalCost += cost;
       totalProfit += profit;
       totalAmountVal += totalAmt;
+      totalPaidVal += paidAmt;
       totalBalanceVal += balAmt;
     }
 
@@ -1000,14 +1121,19 @@ export function GarageCases() {
           {money(totalProfit)}
         </div>
       ),
-      totalAmount: (
-        <div className="text-right font-bold text-primary tabular-nums">
-          {money(totalAmountVal)}
+      collectionProgress: (
+        <div className="flex flex-col gap-0.5 text-right font-bold tabular-nums">
+          <div className="text-emerald-600 dark:text-emerald-400 text-xs">
+            Đã thu: {money(totalPaidVal)}
+          </div>
+          <div className="text-destructive text-[11px]">
+            Còn lại: {money(totalBalanceVal)}
+          </div>
         </div>
       ),
-      balanceAmount: (
-        <div className="text-right font-bold text-rose-600 dark:text-rose-400 tabular-nums">
-          {money(totalBalanceVal)}
+      costProgress: (
+        <div className="text-right font-bold text-slate-600 dark:text-slate-300 tabular-nums text-xs">
+          Tổng chi: {money(totalCost)}
         </div>
       ),
     };

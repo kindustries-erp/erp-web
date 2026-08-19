@@ -45,7 +45,6 @@ export const ALL_PAGE_KEYS: PageKey[] = [
   "garage-receivables",
   "garage-payables",
   "garage-customers",
-  "garage-suppliers",
   "after-sales",
   "purchasing-report-dashboard",
   "vinfast-invoice-settlement",

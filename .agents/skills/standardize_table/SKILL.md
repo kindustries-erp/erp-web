@@ -9,9 +9,10 @@ Khi tạo mới hoặc enhance một `DataTable` trong hệ thống, bạn **B�
 
 ## 1. Cấu trúc cột (Columns Structure)
 
-- **Cột đầu tiên (First Column)**: Thường là cột **Index (STT)**, **Checkbox** hoặc **Action** (nếu có action theo dòng), với `width: 40px`.
+- **Cột đầu tiên (First Column)**: Thường là cột **Index (STT)** hoặc **Checkbox**, với `width: 40px`.
   - Cần set `size: 40`, `headerClassName: "text-center w-[40px] min-w-[40px]"`, `className: "text-center w-[40px] min-w-[40px]"`.
   - **Lưu ý với cột Index (STT)**: Khi dùng cell renderer mặc định của framework, CHỈ SỬ DỤNG `{idx}` (VD: `cell: (_, idx) => <span>{idx}</span>`), **KHÔNG CỘNG THÊM 1** (`idx + 1`). Lý do: Core `DataTable` đã tự động xử lý pagination offset và trả về `idx` hệ 1-based.
+  - **TUYỆT ĐỐI KHÔNG** định nghĩa cột Action tĩnh thủ công `{ key: "actions", ... }` trong mảng `columns`. Tất cả các thao tác theo dòng phải được quản lý qua prop `rowActions` (Row Hover Floating Actions).
 - **Enable Resizing**: Luôn bật tính năng resize cho các cột dữ liệu bằng cách thêm `enableResizing: true` vào config của từng cột.
 - **Đa ngôn ngữ (i18n)**: Tất cả các text trong table (header, empty state, action tooltip...) phải được bọc trong hàm `t` từ `useTranslation("namespace")`. KHÔNG hardcode tiếng Việt/Anh trực tiếp mà không qua hook translation.
 
@@ -137,7 +138,7 @@ header: (
   - **Glassmorphism Styling**: Ô nổi sử dụng hiệu ứng kính mờ cao cấp đồng bộ với Universal Search (`backdrop-filter: blur(20px) saturate(180%)`, nền `var(--popup-bg)`, viền `var(--popup-border)` và viền sáng âm `inset`, đổ bóng mịn).
   - **Hiệu năng 0ms Lag**: Sử dụng hardware-accelerated CSS hover (`group-hover:opacity-100`), không gây re-render React khi di chuột, hoạt động mượt mà 60fps/120fps.
   - **Chuẩn Tooltip Bottom**: Toàn bộ tooltip trong bảng và hệ thống mặc định mở xuống dưới (`side="bottom"`) để không bao giờ che khuất các nút thao tác nổi.
-  - **Giai đoạn thử nghiệm (Trial Phase)**: Cột thao tác hiện tại ở đầu bảng (cột 1) và ô nổi ở cuối hàng hoạt động song song. Khi người dùng trải nghiệm thực tế và duyệt, hệ thống sẽ bật `hideLegacyActionColumn: true` để ẩn cột 1.
+  - **Quy chuẩn Chính thức**: Cột action tĩnh ở đầu bảng đã được loại bỏ hoàn toàn. BẮT BUỘC sử dụng Row Hover Floating Actions thông qua prop `rowActions` trên `<SpreadsheetPageTemplate>` hoặc `actions` trên `<StandardTable>`. TUYỆT ĐỐI KHÔNG thêm cột `{ key: "actions" }` thủ công vào `columns`.
 - **Action Menu (Cấu trúc ActionDropdownItem)**: Bắt buộc sử dụng component `<ActionDropdown>` (`@/shared/components/ActionDropdown`) hoặc truyền qua prop `actions` / `rowActions` / `rowHoverActions`.
   - Các thao tác bên trong phải được **phân nhóm logic (Group)** rõ ràng bằng thuộc tính `groupLabel`.
   - Ví dụ nhóm "TRA CỨU" (Chi tiết, Tải XML, In), nhóm "THAO TÁC" (Sửa, Xóa, Đồng bộ).
@@ -323,10 +324,11 @@ Bất kỳ cột nào liên quan đến **Status**, **State** thì bắt buộc 
 
 ## Summary Checklist trước khi hoàn thành:
 
-- [ ] TUYỆT ĐỐI không dùng `onRowClick` mở detail, chỉ mở từ `<TableText>` hoặc `ActionDropdown` chưa?
+- [ ] TUYỆT ĐỐI không dùng `onRowClick` mở detail, chỉ mở từ `<TableText>` hoặc Row Hover Floating Actions (`rowActions`) chưa?
+- [ ] TUYỆT ĐỐI không định nghĩa cột action tĩnh thủ công `{ key: "actions" }` trong `columns`, đã truyền prop `rowActions` chưa?
 - [ ] `<ActionDropdown>` đã phân nhóm menu bằng `groupLabel` (TRA CỨU, THAO TÁC, ...) chưa?
 - [ ] Các cột dữ liệu đã có `enableResizing: true` chưa?
-- [ ] Cột đầu tiên (STT/Checkbox/Action) rộng đúng `40px` chưa? (STT dùng `{idx}` thay vì `idx + 1` chưa?)
+- [ ] Cột đầu tiên (STT/Checkbox) rộng đúng `40px` chưa? (STT dùng `{idx}` thay vì `idx + 1` chưa?)
 - [ ] Header có `<TableColumnHeaderFilter align="center">` và truyền prop `isActive` chưa?
 - [ ] Các cột thường KHÔNG set `hideFilter={true}` để hiện search box & options chưa?
 - [ ] Cột ngày tháng (Date) đã dùng `dateRangeSlot` và `hideFilter={true}` chưa?
