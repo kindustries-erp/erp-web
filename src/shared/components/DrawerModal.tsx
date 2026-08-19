@@ -403,12 +403,17 @@ export function DrawerSection({
   };
 
   const isFitHeight = fitViewportHeight || peekRelatedDeck;
+  const heightClass = peekRelatedDeck
+    ? "max-h-[calc(100vh-260px)]"
+    : isFitHeight
+      ? "max-h-[calc(100vh-210px)]"
+      : undefined;
 
   return (
     <div
       className={cn(
         "mb-3 rounded-xl border border-border/80 p-3 shadow-[0_2px_8px_-1px_rgba(0,0,0,0.06),0_1px_4px_-1px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_8px_-1px_rgba(0,0,0,0.3)] transition-all duration-200",
-        isFitHeight && "flex flex-col max-h-[calc(100vh-210px)]",
+        isFitHeight && cn("flex flex-col", heightClass),
         className,
       )}
       style={{

@@ -24,6 +24,8 @@ src/modules/garage/
 │   ├── GarageBranchSelector.tsx     # Dropdown chọn chi nhánh xưởng
 │   ├── GarageCaseLinkedDocuments.tsx# Quản lý liên kết hóa đơn thuế
 │   ├── GarageCasePreview.tsx        # Bản xem trước Sổ báo giá & Lợi nhuận dự kiến (bọc trong DrawerSection)
+│   ├── GarageCaseSettlementDrawerModal.tsx # Wrapper cấn trừ dòng tiền & sổ ngoài sử dụng VoucherNetoffSelectionModal
+│   ├── GarageCaseSettlementSection.tsx # Section quản lý cấn trừ thu/chi dòng tiền vụ việc
 │   ├── GarageCaseStandaloneDrawer.tsx # Drawer chi tiết phiếu dịch vụ 2 cột chuẩn UI
 │   ├── GarageCaseSyncDrawer.tsx     # Drawer cấu hình đồng bộ dữ liệu
 │   ├── GarageGrossProfitDetailDrawer.tsx # Drawer xem lợi nhuận gộp

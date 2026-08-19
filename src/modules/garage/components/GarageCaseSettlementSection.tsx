@@ -744,6 +744,8 @@ export function GarageCaseSettlementSection({
             ? remainingReceivable || 0
             : remainingPayable || 0
         }
+        remainingReceivable={remainingReceivable || 0}
+        remainingPayable={remainingPayable || 0}
         existingTxnIds={
           settlements
             ?.map((s: any) => s.bank_transaction_id || s.bankTransactionId)

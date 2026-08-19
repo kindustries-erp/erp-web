@@ -1033,6 +1033,12 @@ export function GarageCaseStandaloneDrawer({
                 ? activeSummary?.breakdown?.receipts?.remainingReceivable || 0
                 : activeSummary?.breakdown?.payments?.remainingPayable || 0
             }
+            remainingReceivable={
+              activeSummary?.breakdown?.receipts?.remainingReceivable || 0
+            }
+            remainingPayable={
+              activeSummary?.breakdown?.payments?.remainingPayable || 0
+            }
             existingTxnIds={
               activeSettlements
                 ?.map((s: any) => s.bank_transaction_id || s.bankTransactionId)
