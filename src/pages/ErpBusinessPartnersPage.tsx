@@ -162,7 +162,7 @@ export function ErpBusinessPartnersPage({
           text={item.code || "—"}
           tooltip={item.code || false}
           enableCopy={Boolean(item.code)}
-          onDrawerClick={item.code ? () => openView(item) : undefined}
+          onDetailClick={item.code ? () => openView(item) : undefined}
         />
       ),
       className: "text-left",

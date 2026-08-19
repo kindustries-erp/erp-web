@@ -98,7 +98,7 @@ export function GarageCustomers() {
             enableCopy={true}
             tooltip={true}
             className="font-mono text-primary font-medium"
-            onDrawerClick={(e) => {
+            onDetailClick={(e) => {
               e?.stopPropagation();
               setSelectedCustomer({
                 code: row.customerCode,

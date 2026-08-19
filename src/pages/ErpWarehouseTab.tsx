@@ -571,7 +571,7 @@ export function ErpWarehouseTab() {
             <TableText
               className="flex-1 min-w-0"
               text={row.voucherNo || ""}
-              onDrawerClick={(e) => {
+              onDetailClick={(e) => {
                 e.stopPropagation();
                 if (row.type === "receipt") {
                   grDrawer.openDetail(row.id);

@@ -287,7 +287,7 @@ Bảng dữ liệu bên trong trang **BẮT BUỘC** tuân thủ nghiêm ngặt 
 - **Định danh Bảng (`tableId`)**: BẮT BUỘC truyền `tableId="[module]-table"` duy nhất vào `<SpreadsheetPageTemplate>` để kích hoạt tự động Portal Target cho dropdown **Tùy chỉnh cột (`ColumnToggle`)** và lưu trữ preferences (độ rộng, thứ tự, ẩn/hiện) vào `localStorage`.
 - **Tùy chỉnh & Khôi phục cột (Reset Layout)**: Toàn bộ thao tác ẩn/hiện cột, sắp xếp thứ tự, và nút "Khôi phục mặc định" (`RotateCcw`) đã được tích hợp tập trung trong dropdown `ColumnToggle`. TUYỆT ĐỐI KHÔNG đặt nút Reset ở cột Action hay bất kỳ header nào.
 - Cột STT / Checkbox: `size: 40`, `w-[40px] min-w-[40px]`. (STT dùng `{idx}`, không cộng 1).
-- Cột Code/ID/SKU: `size: 200`, dùng `<TableText enableCopy tooltip onDrawerClick>`.
+- Cột Code/ID/SKU chính: `size: 200`, dùng `<TableText enableCopy tooltip onDetailClick>`. (Dùng `onDrawerClick` nếu là dữ liệu phụ mở drawer tham chiếu).
 - Header tất cả cột filterable: dùng `<TableColumnHeaderFilter align="center">`.
 - Cột Date: dùng `dateRangeSlot` + `hideFilter={true}`.
 - Cột trạng thái: dùng `<Badge>`.
@@ -405,7 +405,7 @@ export function ExampleTablePage() {
               text={row.code}
               enableCopy={true}
               tooltip={true}
-              onDrawerClick={(e) => {
+              onDetailClick={(e) => {
                 e.stopPropagation();
                 openDetail(row.id);
               }}
@@ -617,7 +617,7 @@ export function ExampleTablePage() {
 - [ ] Cột STT/Checkbox rộng đúng 40px, header căn giữa chuẩn (`header: <span className="w-full block text-center">#</span>`, `headerClassName: "text-center"`) chưa? (STT dùng `{idx}`, không `idx + 1`)
 - [ ] TUYỆT ĐỐI không khai báo cột action tĩnh `{ key: "actions" }` trong `columns`, đã chuyển sang `rowActions` chưa?
 - [ ] TUYỆT ĐỐI không đặt nút Reset Column ở header cột Action hay dữ liệu, đã sử dụng nút Khôi phục trong dropdown `ColumnToggle` (`Settings2`) chưa?
-- [ ] Cột Code/SKU size 200px, dùng `<TableText>` bật `enableCopy`, `tooltip`, `onDrawerClick` và Quick Status Badge chưa?
+- [ ] Cột Code/SKU size 200px, dùng `<TableText>` bật `enableCopy`, `tooltip`, `onDetailClick` (hoặc `onDrawerClick`) và Quick Status Badge chưa?
 - [ ] Cột Status dùng `<Badge>` fixed width `w-[88px]`, bọc `<Tooltip>` & `truncate` chưa?
 - [ ] Cột số/tiền có class `tabular-nums text-right` (tiền tệ có `font-semibold`) chưa?
 - [ ] Header filterable có `<TableColumnHeaderFilter align="center">` với `isActive` chưa?

@@ -101,4 +101,20 @@ describe("applyGarageCasesTableState", () => {
     expect(result).toHaveLength(1);
     expect(result[0].id).toBe("1");
   });
+
+  it("sorts by ngayPhatSinh DESC by default when sorts is empty", () => {
+    const result = applyGarageCasesTableState(
+      items,
+      {
+        sorts: [],
+        columnSearch: {},
+        columnFilters: {},
+      },
+      "",
+    );
+
+    expect(result).toHaveLength(2);
+    expect(result[0].id).toBe("1"); // 2024-01-01
+    expect(result[1].id).toBe("2"); // 2023-12-31
+  });
 });

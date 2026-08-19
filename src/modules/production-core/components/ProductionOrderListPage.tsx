@@ -365,7 +365,7 @@ export function ProductionOrderListPage() {
               text={item.referenceNo || item.id.split("-")[0]}
               enableCopy={true}
               tooltip={true}
-              onDrawerClick={(e) => {
+              onDetailClick={(e) => {
                 e?.stopPropagation();
                 handleEdit(item.id, !canUpdate);
               }}

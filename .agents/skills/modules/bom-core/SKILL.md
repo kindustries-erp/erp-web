@@ -152,6 +152,6 @@ export const bomCoreApi = {
 
 1. **Spreadsheet Page Standard**: Bắt buộc dùng `SpreadsheetPageTemplate`, truyền đầy đủ `filter` trả về từ `useFilterPanel`.
 2. **Cột STT**: Dùng `#` size `40px` (w-[40px] min-w-[40px]).
-3. **Cột Code**: Luôn dùng `<TableText>` có copy, tooltip và `onDrawerClick`.
+3. **Cột Code**: Luôn dùng `<TableText>` có copy, tooltip và `onDetailClick` (Icon `Eye` mở chi tiết BOM).
 4. **Delete/Cancel**: Bắt buộc có modal xác nhận `<ConfirmModal>`.
 5. **Typecheck & CI**: Bắt buộc chạy `bun run check:ci` và `bun run test` trước khi commit/push.
