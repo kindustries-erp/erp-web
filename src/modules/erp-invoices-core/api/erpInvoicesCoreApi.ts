@@ -355,6 +355,17 @@ export const erpInvoicesCoreApi = {
     return data;
   },
 
+  getSmartNetOffSuggestions: async (
+    invoiceIds: string[],
+  ): Promise<Record<string, SmartNetOffSuggestionItem[]>> => {
+    const { data } = await axiosInstance.post<
+      Record<string, SmartNetOffSuggestionItem[]>
+    >(`${BASE}/smart-net-off-suggestions`, {
+      invoiceIds,
+    });
+    return data;
+  },
+
   create: async (payload: CreateErpInvoicePayload): Promise<ErpInvoice> => {
     const { data } = await axiosInstance.post<{ data: ErpInvoice }>(
       BASE,
@@ -846,4 +857,40 @@ export interface BulkImportResult {
     totalAmount?: string | null;
   }[];
   pdfOrphans?: { filename: string; reason: string }[];
+}
+
+export interface SmartNetOffSuggestionItem {
+  txn: {
+    id: string;
+    transDate: string;
+    referenceNumber?: string;
+    seqNo?: string;
+    description: string;
+    debitAmount: number;
+    creditAmount: number;
+    sourceType: string;
+    correspondentName?: string;
+    bankAccount?: {
+      bankName?: string;
+      accountNumber?: string;
+    };
+    cashBook?: {
+      name?: string;
+    };
+    remainingAmount: number;
+  };
+  score: {
+    score: number;
+    amountMatch: boolean;
+    invoiceNoMatch: boolean;
+    correspondentMatch: boolean;
+    badge:
+      | "PERFECT"
+      | "HIGH"
+      | "LIKELY"
+      | "POSSIBLE"
+      | "NOTICE_STRONG"
+      | "NOTICE";
+  };
+  matchedKeywords: string[];
 }

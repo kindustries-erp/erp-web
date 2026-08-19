@@ -380,6 +380,14 @@ export function ErpInvoiceLinkedDocuments({
       <VoucherNetoffSelectionModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
+        invoice={{
+          id: invoiceId,
+          invoiceNo: form.invoiceNo,
+          totalAmount: form.totalAmount,
+          sellerName: form.sellerName,
+          buyerName: form.buyerName,
+          direction,
+        }}
         onSelect={handleSelectBank}
         existingVoucherIds={voucherNetOffs.map((v) => v.bankTransactionId)}
       />

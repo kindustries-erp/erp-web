@@ -684,6 +684,7 @@ export function ErpInvoiceInternalDrawer({
           <VoucherNetoffSelectionModal
             open={showNetOffModal}
             onClose={() => setShowNetOffModal(false)}
+            invoice={detailInvoice}
             onSelect={handleSelectBankNetOff}
             existingVoucherIds={(detailInvoice.voucherNetOffs || []).map(
               (v) => v.bankTransactionId,

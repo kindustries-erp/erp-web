@@ -342,6 +342,19 @@ export const garageApi = {
     return res.data;
   },
 
+  getSmartSettlementSuggestions: async (
+    caseId: string,
+    type: "RECEIPT" | "PAYMENT" = "RECEIPT",
+  ): Promise<GarageSmartSettlementSuggestionItem[]> => {
+    const res = await axiosInstance.get(
+      `${BASE}/cases/${caseId}/smart-settlement-suggestions`,
+      {
+        params: { type },
+      },
+    );
+    return res.data;
+  },
+
   addCaseSettlement: async (
     caseId: string,
     payload: {
@@ -369,3 +382,40 @@ export const garageApi = {
     return res.data;
   },
 };
+
+export interface GarageSmartSettlementSuggestionItem {
+  txn: {
+    id: string;
+    transDate: string;
+    referenceNumber?: string;
+    seqNo?: string;
+    description: string;
+    debitAmount: number;
+    creditAmount: number;
+    sourceType: string;
+    correspondentName?: string;
+    bankAccount?: {
+      bankName?: string;
+      accountNumber?: string;
+    };
+    cashBook?: {
+      name?: string;
+    };
+    remainingAmount: number;
+  };
+  score: {
+    score: number;
+    amountMatch: boolean;
+    codeMatch: boolean;
+    plateMatch: boolean;
+    customerMatch: boolean;
+    badge:
+      | "PERFECT"
+      | "HIGH"
+      | "LIKELY"
+      | "POSSIBLE"
+      | "NOTICE_STRONG"
+      | "NOTICE";
+  };
+  matchedKeywords: string[];
+}

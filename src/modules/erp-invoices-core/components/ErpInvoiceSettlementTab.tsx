@@ -404,6 +404,7 @@ export function ErpInvoiceSettlementTab({
       <VoucherNetoffSelectionModal
         open={showModal}
         onClose={() => setShowModal(false)}
+        invoice={invoice}
         onSelect={handleSelectBankNetOff}
         existingVoucherIds={activeVouchers.map((v) => v.bankTransactionId)}
       />
