@@ -1,8 +1,10 @@
-import { useState, useCallback } from "react";
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
 import {
   type VisibilityState,
   type ColumnSizingState,
 } from "@tanstack/react-table";
+import { updateUserPreferencesApi } from "@/core/api/appConfigApi";
 
 export interface TablePreference {
   columnOrder: string[];
@@ -16,56 +18,80 @@ export interface UserPreferences {
   tables: Record<string, TablePreference>;
 }
 
-const PREF_KEY = "erp_preferences";
+export interface UserPreferencesStoreState {
+  tables: Record<string, TablePreference>;
+  getTablePreference: (tableId: string) => TablePreference | undefined;
+  setTablePreferences: (tableId: string, pref: TablePreference) => void;
+  hydrateFromServer: (tableConfigs?: Record<string, TablePreference>) => void;
+}
 
-const defaultPreferences: UserPreferences = {
-  tables: {},
-};
+let syncTimeout: ReturnType<typeof setTimeout> | null = null;
+let pendingTableSync: Record<string, TablePreference> = {};
 
-export function useUserPreferences() {
-  const [preferences, setPreferencesState] = useState<UserPreferences>(() => {
+function debouncedSyncToBackend(tableId: string, pref: TablePreference) {
+  pendingTableSync[tableId] = pref;
+  if (syncTimeout) {
+    clearTimeout(syncTimeout);
+  }
+  syncTimeout = setTimeout(async () => {
+    const toSend = { ...pendingTableSync };
+    pendingTableSync = {};
     try {
-      const stored = localStorage.getItem(PREF_KEY);
-      if (stored) {
-        return { ...defaultPreferences, ...JSON.parse(stored) };
-      }
-    } catch (e) {
-      console.error("Failed to parse user preferences", e);
+      await updateUserPreferencesApi({ tableConfigs: toSend });
+    } catch {
+      // Non-blocking sync error
     }
-    return defaultPreferences;
-  });
+  }, 500);
+}
 
-  const setTablePreferences = useCallback(
-    (tableId: string, pref: TablePreference) => {
-      setPreferencesState((prev) => {
-        const newPrefs = {
-          ...prev,
+export const useUserPreferencesStore = create<UserPreferencesStoreState>()(
+  persist(
+    (set, get) => ({
+      tables: {},
+
+      getTablePreference: (tableId: string) => {
+        return get().tables?.[tableId];
+      },
+
+      setTablePreferences: (tableId: string, pref: TablePreference) => {
+        set((state) => ({
           tables: {
-            ...(prev.tables || {}),
+            ...(state.tables || {}),
             [tableId]: pref,
           },
-        };
-        try {
-          localStorage.setItem(PREF_KEY, JSON.stringify(newPrefs));
-        } catch (e) {
-          console.error("Failed to save user preferences", e);
-        }
-        return newPrefs;
-      });
-    },
-    [],
-  );
+        }));
+        debouncedSyncToBackend(tableId, pref);
+      },
 
-  const getTablePreference = useCallback(
-    (tableId: string): TablePreference | undefined => {
-      return preferences.tables?.[tableId];
+      hydrateFromServer: (tableConfigs) => {
+        if (!tableConfigs || typeof tableConfigs !== "object") return;
+        set((state) => ({
+          tables: {
+            ...(state.tables || {}),
+            ...tableConfigs,
+          },
+        }));
+      },
+    }),
+    {
+      name: "erp_preferences",
     },
-    [preferences],
+  ),
+);
+
+// Backward-compatible hook signature for DataTable and existing components
+export function useUserPreferences() {
+  const tables = useUserPreferencesStore((s) => s.tables);
+  const getTablePreference = useUserPreferencesStore(
+    (s) => s.getTablePreference,
+  );
+  const setTablePreferences = useUserPreferencesStore(
+    (s) => s.setTablePreferences,
   );
 
   return {
-    preferences,
-    setTablePreferences,
+    preferences: { tables },
     getTablePreference,
+    setTablePreferences,
   };
 }

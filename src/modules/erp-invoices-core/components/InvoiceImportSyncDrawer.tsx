@@ -143,18 +143,9 @@ export function InvoiceImportSyncDrawer({
   };
 
   const handleBulkXml = async () => {
-    const token = portal.token;
-    if (!token) {
-      toast.error(
-        "Vui lòng cấu hình token Cổng thuế trong nút Cấu hình token trước.",
-      );
-      return;
-    }
     try {
       setBulkXmlLoading(true);
       const res = await erpInvoicesCoreApi.bulkDownloadXml({
-        token,
-        cookies: portal.cookies,
         direction,
       });
       toast.success(res.message);

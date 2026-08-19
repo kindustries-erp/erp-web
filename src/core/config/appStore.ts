@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { PageKey, TabInfo, SectionRoot } from "@/shared/types";
 import { pageToPath } from "@/shared/utils/pageUrl";
+import { updateUserPreferencesApi } from "@/core/api/appConfigApi";
 
 export type AppTheme = "shell" | "classic" | "orcaq" | "midnight";
 
@@ -203,23 +204,23 @@ export const SECTION_ROOTS: Partial<Record<PageKey, SectionRoot>> = {
     group: "accounting",
   },
   "garage-dashboard": {
-    labelKey: "nav.items.garageDashboard",
+    labelKey: "breadcrumb.garageDashboard",
     group: "garage",
   },
   "garage-cases": {
-    labelKey: "nav.items.garageCases",
-    group: "garage",
-  },
-  "garage-gross-profit": {
-    labelKey: "Báo cáo lợi nhuận gộp",
+    labelKey: "breadcrumb.garageCases",
     group: "garage",
   },
   "garage-receivables": {
-    labelKey: "nav.items.garageReceivables",
+    labelKey: "breadcrumb.garageReceivables",
     group: "garage",
   },
   "garage-payables": {
-    labelKey: "nav.items.garagePayables",
+    labelKey: "breadcrumb.garagePayables",
+    group: "garage",
+  },
+  "garage-customers": {
+    labelKey: "breadcrumb.garageCustomers",
     group: "garage",
   },
   budget: {
@@ -362,12 +363,19 @@ export const BREADCRUMBS: Partial<Record<PageKey, Array<[string, string?]>>> = {
   ],
   "settings-branch": [["breadcrumb.settings"], ["thietlap.tabs.chi-nhanh"]],
   "settings-bank": [["breadcrumb.settings"], ["thietlap.tabs.ngan-hang"]],
-  "settings-cash-fund": [["breadcrumb.settings"], ["thietlap.tabs.quy"]],
-  "garage-dashboard": [["nav.items.garage"], ["nav.items.garageDashboard"]],
-  "garage-cases": [["nav.items.garage"], ["nav.items.garageCases"]],
-  "garage-gross-profit": [["nav.items.garage"], ["Báo cáo lợi nhuận gộp"]],
-  "garage-receivables": [["nav.items.garage"], ["nav.items.garageReceivables"]],
-  "garage-payables": [["nav.items.garage"], ["nav.items.garagePayables"]],
+  "garage-dashboard": [["breadcrumb.garage"], ["breadcrumb.garageDashboard"]],
+  "garage-cases": [["breadcrumb.garage"], ["breadcrumb.garageCases"]],
+  "garage-customers": [["breadcrumb.garage"], ["breadcrumb.garageCustomers"]],
+  "garage-receivables": [
+    ["breadcrumb.garage"],
+    ["breadcrumb.garagePartnersGroup", "garage-receivables"],
+    ["breadcrumb.garageReceivables"],
+  ],
+  "garage-payables": [
+    ["breadcrumb.garage"],
+    ["breadcrumb.garagePartnersGroup", "garage-payables"],
+    ["breadcrumb.garagePayables"],
+  ],
 };
 
 interface AppState {
@@ -563,15 +571,31 @@ export const useAppStore = create<AppState>()(
         const appTheme = order[(idx + 1) % order.length];
         set({ appTheme });
         applyDocumentTheme(appTheme);
+        if (get().isLoggedIn) {
+          updateUserPreferencesApi({ theme: appTheme }).catch(() => {});
+        }
       },
       setAppTheme: (theme) => {
         set({ appTheme: theme });
         applyDocumentTheme(theme);
+        if (get().isLoggedIn) {
+          updateUserPreferencesApi({ theme }).catch(() => {});
+        }
       },
 
-      toggleLocale: () =>
-        set((s) => ({ locale: s.locale === "vi" ? "en" : "vi" })),
-      setLocale: (locale) => set({ locale }),
+      toggleLocale: () => {
+        const newLocale = get().locale === "vi" ? "en" : "vi";
+        set({ locale: newLocale });
+        if (get().isLoggedIn) {
+          updateUserPreferencesApi({ language: newLocale }).catch(() => {});
+        }
+      },
+      setLocale: (locale) => {
+        set({ locale });
+        if (get().isLoggedIn) {
+          updateUserPreferencesApi({ language: locale }).catch(() => {});
+        }
+      },
 
       login: () => set({ isLoggedIn: true }),
       logout: () =>

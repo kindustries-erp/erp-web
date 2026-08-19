@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import type { Updater } from "@tanstack/react-table";
+import type { Updater, VisibilityState } from "@tanstack/react-table";
 import type {
   FilterPanelConfig,
   FilterPanelReturn,
@@ -19,6 +19,7 @@ export interface SpreadsheetPageTemplateProps<T> {
   items: T[];
   columns: DataTableColumn<T>[];
   defaultColumnOrder?: string[];
+  defaultColumnVisibility?: VisibilityState;
   getRowKey: (row: T) => string;
   loading?: boolean;
   error?: string | null;
@@ -62,6 +63,8 @@ export interface SpreadsheetPageTemplateProps<T> {
   sortArray?: string[];
   onSort?: (key: string) => void;
   rowActions?: (row: T) => ActionDropdownItem[];
+  enableRowHoverActions?: boolean;
+  hideLegacyActionColumn?: boolean;
   summaryRow?: Record<string, ReactNode>;
 
   // --- Drawers / Modals ---

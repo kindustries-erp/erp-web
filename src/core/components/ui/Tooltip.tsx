@@ -11,7 +11,7 @@ export function TooltipProvider({ children }: { children: React.ReactNode }) {
 export function Tooltip({
   children,
   content,
-  side = "right",
+  side = "bottom",
   disabled,
 }: {
   children: React.ReactNode;

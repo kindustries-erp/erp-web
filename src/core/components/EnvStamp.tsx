@@ -15,7 +15,11 @@ export function EnvStamp() {
     envPrefix,
   } = useEnvStore();
 
-  if (isProduction || env === AppEnvironment.KLOTUS_PRODUCTION) {
+  if (
+    isProduction ||
+    env === AppEnvironment.KLOTUS_PRODUCTION ||
+    env === AppEnvironment.GREENWAY_PRODUCTION
+  ) {
     return null;
   }
 
@@ -26,15 +30,17 @@ export function EnvStamp() {
   } else if (isLocal) {
     const name = envPrefix ? envPrefix.toUpperCase() : "LOCAL";
     text = `💻 ${name} LOCAL`;
-  } else if (isDevelopment) {
-    text = "Development";
   } else if (env === AppEnvironment.KLOTUS_STAGING) {
     text = "Klotus Demo";
   } else if (env === AppEnvironment.GREENWAY_STAGING) {
     text = "Greenway Demo";
+  } else if (isDevelopment) {
+    text = "Development";
   } else {
     // Generic fallback: takes the first word before the dash and capitalizes it
-    const name = envPrefix.charAt(0).toUpperCase() + envPrefix.slice(1);
+    const name = envPrefix
+      ? envPrefix.charAt(0).toUpperCase() + envPrefix.slice(1)
+      : "Demo";
     text = `${name} Demo`;
   }
 

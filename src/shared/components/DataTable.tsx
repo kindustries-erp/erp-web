@@ -7,7 +7,7 @@ import React, {
 } from "react";
 import { createPortal } from "react-dom";
 import * as Popover from "@radix-ui/react-popover";
-import { Settings2, GripVertical } from "lucide-react";
+import { Settings2, GripVertical, RotateCcw } from "lucide-react";
 import { Button } from "@/shared/components/ui/Button";
 import {
   DndContext,
@@ -58,6 +58,8 @@ import { format as formatDate, isValid } from "date-fns";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import { Badge } from "@/shared/components/ui/badge";
 import { EmptyState } from "@/shared/components/EmptyState";
+import { TableRowHoverActions } from "./DataTable/TableRowHoverActions";
+import type { ActionDropdownItem } from "@/shared/components/ActionDropdown";
 
 function getNestedValue(obj: any, path: string | number | symbol) {
   if (typeof path !== "string") return obj[path];
@@ -118,6 +120,11 @@ interface DataTableProps<T> {
   elevated?: boolean;
   containerClassName?: string;
   actionsColumn?: ActionsColumnConfig<T>;
+  rowHoverActions?: (
+    item: T,
+    index: number,
+    meta?: any,
+  ) => ActionDropdownItem[];
   page?: number;
   pageSize?: number;
   pageSizeOptions?: number[];
@@ -134,6 +141,7 @@ interface DataTableProps<T> {
   sortArray?: string[];
   onSort?: (key: string) => void;
   enableColumnVisibility?: boolean;
+  defaultColumnVisibility?: VisibilityState;
   tableId?: string;
   enableColumnResizing?: boolean;
   enableRowSelection?: boolean;
@@ -218,16 +226,22 @@ function SortableColumnItem<T>({ id, column }: SortableItemProps<T>) {
 
 function ColumnToggle<T>({
   table,
+  onReset,
 }: {
   table: TanstackTable<T>;
   _visibility?: VisibilityState;
   _order?: string[];
+  onReset?: () => void;
 }) {
   const t = useT();
   const [open, setOpen] = useState(false);
   const hideableColumns = table.getAllLeafColumns().filter((col) => {
     const meta = col.columnDef.meta as DataTableRowMeta;
-    return meta?.hideable !== false && col.id !== "__actions";
+    return (
+      meta?.hideable !== false &&
+      col.id !== "__actions" &&
+      col.id !== "__hover_actions"
+    );
   });
 
   const sensors = useSensors(
@@ -259,7 +273,7 @@ function ColumnToggle<T>({
           variant="secondary"
           size="icon"
           className="h-8 w-8 px-0"
-          title={t("Hiển thị cột")}
+          title={t("table.columnVisibility", "Tùy chỉnh cột")}
           onClick={(e) => {
             e.stopPropagation();
             setOpen(true);
@@ -273,26 +287,48 @@ function ColumnToggle<T>({
         <Popover.Content
           align="end"
           sideOffset={6}
-          className="z-[9999] min-w-[180px] rounded-lg p-1 popup-content border border-border shadow-md"
+          className="z-[9999] min-w-[210px] max-w-[280px] rounded-lg p-1.5 popup-content border border-border shadow-md"
         >
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragEnd={handleDragEnd}
-          >
-            <SortableContext
-              items={hideableColumns.map((col) => col.id)}
-              strategy={verticalListSortingStrategy}
+          <div className="flex items-center justify-between px-2 py-1.5 border-b border-border/60 mb-1">
+            <span className="text-xs font-semibold text-muted-foreground select-none">
+              {t("table.columnVisibility", "Tùy chỉnh cột")}
+            </span>
+            {onReset && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-6 px-1.5 text-[11px] text-muted-foreground hover:text-foreground gap-1 -mr-1"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onReset();
+                }}
+                title={t("table.resetColumns", "Khôi phục mặc định")}
+              >
+                <RotateCcw className="h-3 w-3" />
+                <span>{t("table.reset", "Khôi phục")}</span>
+              </Button>
+            )}
+          </div>
+          <div className="max-h-[min(360px,75vh)] overflow-y-auto overflow-x-hidden space-y-0.5 pr-0.5">
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
             >
-              {hideableColumns.map((column) => (
-                <SortableColumnItem<T>
-                  key={column.id}
-                  id={column.id}
-                  column={column}
-                />
-              ))}
-            </SortableContext>
-          </DndContext>
+              <SortableContext
+                items={hideableColumns.map((col) => col.id)}
+                strategy={verticalListSortingStrategy}
+              >
+                {hideableColumns.map((column) => (
+                  <SortableColumnItem<T>
+                    key={column.id}
+                    id={column.id}
+                    column={column}
+                  />
+                ))}
+              </SortableContext>
+            </DndContext>
+          </div>
         </Popover.Content>
       </Popover.Portal>
     </Popover.Root>
@@ -304,9 +340,10 @@ import { subscribePortalTarget } from "./portalStore";
 function sanitizeActionColumnSizing(
   sizing: ColumnSizingState,
 ): ColumnSizingState {
-  if (!("__actions" in sizing)) return sizing;
+  if (!("__actions" in sizing) && !("__hover_actions" in sizing)) return sizing;
   const next = { ...sizing };
   delete next.__actions;
+  delete next.__hover_actions;
   return next;
 }
 
@@ -323,6 +360,7 @@ export function DataTable<T>({
   elevated = false,
   containerClassName,
   actionsColumn,
+  rowHoverActions,
   page,
   pageSize,
   pageSizeOptions,
@@ -339,6 +377,7 @@ export function DataTable<T>({
   sortArray,
   onSort,
   enableColumnVisibility,
+  defaultColumnVisibility,
   tableId,
   enableColumnResizing,
   enableRowSelection,
@@ -353,7 +392,18 @@ export function DataTable<T>({
   const { getTablePreference, setTablePreferences } = useUserPreferences();
 
   const [internalVisibility, setInternalVisibility] = useState<VisibilityState>(
-    () => (tableId ? getTablePreference(tableId)?.columnVisibility || {} : {}),
+    () => {
+      if (tableId) {
+        const pref = getTablePreference(tableId)?.columnVisibility;
+        if (pref && Object.keys(pref).length > 0) {
+          return {
+            ...(defaultColumnVisibility || {}),
+            ...pref,
+          };
+        }
+      }
+      return defaultColumnVisibility || {};
+    },
   );
 
   const [internalColumnOrder, setInternalColumnOrder] = useState<string[]>(
@@ -445,28 +495,6 @@ export function DataTable<T>({
     }
   };
 
-  React.useEffect(() => {
-    if (!tableId) return;
-    const handleResetSizing = () => {
-      setInternalColumnSizing({});
-      setTablePreferences(tableId, {
-        columnOrder: internalColumnOrder,
-        columnVisibility: internalVisibility,
-        columnSizing: undefined,
-      });
-    };
-    window.addEventListener(
-      `reset-column-sizing-${tableId}`,
-      handleResetSizing,
-    );
-    return () => {
-      window.removeEventListener(
-        `reset-column-sizing-${tableId}`,
-        handleResetSizing,
-      );
-    };
-  }, [tableId, internalColumnOrder, internalVisibility, setTablePreferences]);
-
   const scrollContainerRef = React.useRef<HTMLDivElement>(null);
   const [isScrolledTop, setIsScrolledTop] = useState(false);
   const [isScrolledBottom, setIsScrolledBottom] = useState(false);
@@ -504,10 +532,9 @@ export function DataTable<T>({
   const tableColumns: ColumnDef<T, unknown>[] = useMemo(() => {
     const cols: ColumnDef<T, unknown>[] = effectiveColumns.map((column) => {
       let cellClass = column.className;
-      let headerClass = column.headerClassName;
+      const headerClass = column.headerClassName || "text-center";
       if (column.valueType === "number" || column.valueType === "date") {
         cellClass = cn("text-right", cellClass);
-        headerClass = cn("text-right", headerClass);
       }
       return {
         id: column.key,
@@ -639,6 +666,40 @@ export function DataTable<T>({
       });
     }
 
+    if (rowHoverActions) {
+      cols.push({
+        id: "__hover_actions",
+        header: () => null,
+        cell: ({ row, table }) => {
+          const actionItems = rowHoverActions(
+            row.original,
+            page && pageSize
+              ? (page - 1) * pageSize + row.index + 1
+              : row.index + 1,
+            table.options.meta,
+          );
+          if (!actionItems || actionItems.length === 0) return null;
+          return (
+            <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-auto">
+              <TableRowHoverActions items={actionItems} />
+            </div>
+          );
+        },
+        enableResizing: false,
+        size: 116,
+        minSize: 116,
+        maxSize: 116,
+        meta: {
+          className:
+            "w-[116px] min-w-[116px] max-w-[116px] p-0 m-0 border-none bg-transparent sticky right-0 z-20 overflow-visible pointer-events-none",
+          headerClassName:
+            "w-[116px] min-w-[116px] max-w-[116px] p-0 m-0 border-r border-border",
+          skeletonClassName: "",
+          hideable: false,
+        } satisfies DataTableRowMeta,
+      });
+    }
+
     if (enableRowSelection) {
       cols.unshift({
         id: "__selection",
@@ -688,6 +749,7 @@ export function DataTable<T>({
   }, [
     effectiveColumns,
     actionsColumn,
+    rowHoverActions,
     enableRowSelection,
     page,
     pageSize,
@@ -716,6 +778,54 @@ export function DataTable<T>({
     onColumnSizingChange: handleColumnSizingChange,
   });
 
+  const handleResetTableLayout = useCallback(() => {
+    // 1. Reset sizing state
+    setInternalColumnSizing({});
+
+    // 2. Reset visibility to default
+    const defaultVis = defaultColumnVisibility || {};
+    setInternalVisibility(defaultVis);
+    table.setColumnVisibility(defaultVis);
+
+    // 3. Reset order to default
+    const defaultOrder = defaultColumnOrder || [];
+    setInternalColumnOrder(defaultOrder);
+    if (defaultOrder.length > 0) {
+      table.setColumnOrder(defaultOrder);
+    } else {
+      table.resetColumnOrder();
+    }
+
+    // 4. Update user preferences
+    if (tableId) {
+      setTablePreferences(tableId, {
+        columnOrder: defaultOrder,
+        columnVisibility: defaultVis,
+        columnSizing: undefined,
+      });
+    }
+  }, [
+    tableId,
+    defaultColumnVisibility,
+    defaultColumnOrder,
+    table,
+    setTablePreferences,
+  ]);
+
+  React.useEffect(() => {
+    if (!tableId) return;
+    const handleResetEvent = () => {
+      handleResetTableLayout();
+    };
+    window.addEventListener(`reset-column-sizing-${tableId}`, handleResetEvent);
+    return () => {
+      window.removeEventListener(
+        `reset-column-sizing-${tableId}`,
+        handleResetEvent,
+      );
+    };
+  }, [tableId, handleResetTableLayout]);
+
   const [portalTarget, setPortalTarget] = useState<Element | null>(null);
 
   useEffect(() => {
@@ -731,12 +841,13 @@ export function DataTable<T>({
               table={table}
               _visibility={internalVisibility}
               _order={internalColumnOrder}
+              onReset={handleResetTableLayout}
             />,
             portalTarget,
           )
         : null}
       {filters && <div className="flex gap-2 mb-3 flex-wrap">{filters}</div>}
-      <div className="flex items-stretch flex-1 min-h-0 w-full">
+      <div className="flex items-stretch flex-1 min-h-0 w-full relative">
         <div
           ref={scrollContainerRef}
           onScroll={handleTableScroll}
@@ -770,6 +881,26 @@ export function DataTable<T>({
                   className="hover:bg-transparent border-b border-border bg-transparent"
                 >
                   {headerGroup.headers.map((header, index) => {
+                    const isHoverActionsCol =
+                      header.column.id === "__hover_actions";
+                    if (isHoverActionsCol) {
+                      return (
+                        <TableHead
+                          key={header.id}
+                          className={cn(
+                            "w-[116px] min-w-[116px] max-w-[116px] p-0 sticky top-0 bg-transparent z-20 border-r border-border",
+                            variant !== "spreadsheet"
+                              ? "table-header-glass"
+                              : "bg-muted",
+                          )}
+                          style={{
+                            width: 116,
+                            minWidth: 116,
+                            maxWidth: 116,
+                          }}
+                        />
+                      );
+                    }
                     const meta = header.column.columnDef
                       .meta as DataTableRowMeta;
                     const isFirstCol = index === 0;
@@ -896,27 +1027,24 @@ export function DataTable<T>({
                             header.getContext(),
                           )
                         )}
-                        {enableColumnResizing &&
-                          header.column.getCanResize() && (
-                            <div
-                              {...{
-                                onMouseDown: header.getResizeHandler(),
-                                onTouchStart: header.getResizeHandler(),
-                                className: cn(
-                                  "absolute right-0 top-0 h-full w-[4px] cursor-col-resize select-none touch-none bg-transparent group-hover:bg-primary/30 z-50",
-                                  header.column.getIsResizing()
-                                    ? "bg-primary/50 w-[4px]"
-                                    : "",
-                                ),
-                              }}
-                              onClick={(e) => e.stopPropagation()}
-                            />
-                          )}
+                        {enableColumnResizing && (
+                          <div
+                            onDoubleClick={() => header.column.resetSize()}
+                            onMouseDown={header.getResizeHandler()}
+                            onTouchStart={header.getResizeHandler()}
+                            className={cn(
+                              "absolute right-0 top-0 h-full w-[5px] cursor-col-resize user-select-none touch-none hover:bg-primary/50 transition-colors",
+                              header.column.getIsResizing()
+                                ? "bg-primary w-[2px]"
+                                : "bg-transparent",
+                            )}
+                          />
+                        )}
                       </TableHead>
                     );
                   })}
                   <TableHead
-                    className="w-auto p-0 m-0 border-none bg-transparent sticky top-0"
+                    className="w-auto p-0 m-0 border-none bg-transparent"
                     style={{ width: "auto" }}
                   />
                 </TableRow>
@@ -924,57 +1052,80 @@ export function DataTable<T>({
             </TableHeader>
             <TableBody>
               {loading &&
-                Array.from({ length: loadingRows }).map((_, rowIndex) => (
-                  <TableRow key={rowIndex} className="hover:bg-transparent">
-                    {table.getVisibleLeafColumns().map((column, index) => {
-                      const meta = column.columnDef.meta as DataTableRowMeta;
-                      const isFirstCol = index === 0;
-                      return (
-                        <TableCell
-                          key={column.id}
-                          className={cn(
-                            meta.className,
-                            isFirstCol &&
-                              !enableRowSelection &&
-                              variant !== "spreadsheet" &&
-                              "sticky left-0 bg-surface shadow-[1px_0_0_0_var(--border-light)] z-10",
-                            variant === "spreadsheet" &&
-                              "border-r border-border py-1 text-xs",
-                            variant === "spreadsheet" &&
-                              ![
-                                "__actions",
-                                "__selection",
-                                "__expand",
-                              ].includes(column.id) &&
-                              "px-2 truncate",
-                          )}
-                          style={{
-                            maxWidth: enableColumnResizing
-                              ? column.getSize()
-                              : undefined,
-                          }}
-                        >
-                          {meta.skeletonClassName !== "" && (
-                            <Skeleton
+                Array.from({ length: loadingRows || pageSize || 10 }).map(
+                  (_, i) => (
+                    <TableRow
+                      key={i}
+                      className="hover:bg-transparent border-b border-border"
+                    >
+                      {table.getVisibleLeafColumns().map((column, index) => {
+                        if (column.id === "__hover_actions") {
+                          return (
+                            <TableCell
+                              key={column.id}
                               className={cn(
-                                "h-4 w-3/4 max-w-[120px]",
-                                meta.className?.includes("text-center") &&
-                                  "mx-auto",
-                                meta.className?.includes("text-right") &&
-                                  "ml-auto",
-                                meta.skeletonClassName,
+                                "w-[116px] min-w-[116px] max-w-[116px] p-0 border-r border-border",
+                                variant !== "spreadsheet"
+                                  ? "bg-surface"
+                                  : "bg-surface",
                               )}
+                              style={{
+                                width: 116,
+                                minWidth: 116,
+                                maxWidth: 116,
+                              }}
                             />
-                          )}
-                        </TableCell>
-                      );
-                    })}
-                    <TableCell
-                      className="w-auto p-0 m-0 border-none"
-                      style={{ width: "auto" }}
-                    />
-                  </TableRow>
-                ))}
+                          );
+                        }
+                        const meta = column.columnDef.meta as DataTableRowMeta;
+                        const isFirstCol = index === 0;
+                        return (
+                          <TableCell
+                            key={column.id}
+                            className={cn(
+                              meta.className,
+                              isFirstCol &&
+                                !enableRowSelection &&
+                                variant !== "spreadsheet" &&
+                                "sticky left-0 bg-surface shadow-[1px_0_0_0_var(--border-light)] z-10",
+                              variant === "spreadsheet" &&
+                                "border-r border-border py-1 text-xs",
+                              variant === "spreadsheet" &&
+                                ![
+                                  "__actions",
+                                  "__selection",
+                                  "__expand",
+                                ].includes(column.id) &&
+                                "px-2 truncate",
+                            )}
+                            style={{
+                              maxWidth: enableColumnResizing
+                                ? column.getSize()
+                                : undefined,
+                            }}
+                          >
+                            {meta.skeletonClassName !== "" && (
+                              <Skeleton
+                                className={cn(
+                                  "h-4 w-3/4 max-w-[120px]",
+                                  meta.className?.includes("text-center") &&
+                                    "mx-auto",
+                                  meta.className?.includes("text-right") &&
+                                    "ml-auto",
+                                  meta.skeletonClassName,
+                                )}
+                              />
+                            )}
+                          </TableCell>
+                        );
+                      })}
+                      <TableCell
+                        className="w-auto p-0 m-0 border-none"
+                        style={{ width: "auto" }}
+                      />
+                    </TableRow>
+                  ),
+                )}
 
               {!loading && error && (
                 <TableRow className="hover:bg-transparent">
@@ -1009,6 +1160,7 @@ export function DataTable<T>({
                       <TableRow
                         data-state={row.getIsSelected() && "selected"}
                         className={cn(
+                          "group",
                           onRowClick && "cursor-pointer",
                           isExpanded &&
                             "bg-muted/5 font-medium border-l-2 border-l-primary",
@@ -1020,6 +1172,26 @@ export function DataTable<T>({
                         }
                       >
                         {row.getVisibleCells().map((cell, index) => {
+                          const isHoverActionsCol =
+                            cell.column.id === "__hover_actions";
+                          if (isHoverActionsCol) {
+                            return (
+                              <TableCell
+                                key={cell.id}
+                                className="w-[116px] min-w-[116px] max-w-[116px] p-0 m-0 border-none bg-transparent sticky right-0 z-20 overflow-visible pointer-events-none"
+                                style={{
+                                  width: 116,
+                                  minWidth: 116,
+                                  maxWidth: 116,
+                                }}
+                              >
+                                {flexRender(
+                                  cell.column.columnDef.cell,
+                                  cell.getContext(),
+                                )}
+                              </TableCell>
+                            );
+                          }
                           const meta = cell.column.columnDef
                             .meta as DataTableRowMeta;
                           const isFirstCol = index === 0;
@@ -1093,6 +1265,24 @@ export function DataTable<T>({
               >
                 <TableRow className="hover:bg-transparent bg-transparent">
                   {table.getVisibleLeafColumns().map((column, index) => {
+                    if (column.id === "__hover_actions") {
+                      return (
+                        <TableCell
+                          key={column.id}
+                          className={cn(
+                            "w-[116px] min-w-[116px] max-w-[116px] p-0 border-r border-border",
+                            variant !== "spreadsheet"
+                              ? "table-footer-glass"
+                              : "table-footer-glass",
+                          )}
+                          style={{
+                            width: 116,
+                            minWidth: 116,
+                            maxWidth: 116,
+                          }}
+                        />
+                      );
+                    }
                     const meta = column.columnDef.meta as DataTableRowMeta;
                     const isFirstCol = index === 0;
                     return (
@@ -1146,3 +1336,8 @@ export function DataTable<T>({
     </>
   );
 }
+
+export {
+  TableRowHoverActions,
+  type TableRowHoverActionsProps,
+} from "./DataTable/TableRowHoverActions";

@@ -19,7 +19,12 @@ import {
   DrawerSection,
   inputCls,
 } from "@/shared/components/DrawerModal";
-import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
+import {
+  StandardFormDrawer,
+  DrawerAuditTimeline,
+} from "@/shared/components/StandardFormDrawer";
+
+import { History } from "lucide-react";
 import { Combobox } from "@/shared/components/Combobox";
 import type { DrawerMode } from "@/shared/stores/useDrawerStore";
 import {
@@ -475,64 +480,53 @@ export function ErpUsersPage() {
         }
         actions={drawerActions}
         layout="1-column"
+        relatedTabs={
+          isViewMode
+            ? [
+                {
+                  key: "history",
+                  label: t("Timeline audit"),
+                  icon: <History className="w-3.5 h-3.5" />,
+                  badgeCount: timeline.length,
+                  content: (
+                    <DrawerAuditTimeline
+                      items={timeline.map((entry) => ({
+                        id: entry.id,
+                        actionType: entry.actionType,
+                        actorEmail: entry.actorEmail || "system",
+                        timestamp: entry.createdAt,
+                        status: entry.status,
+                        message: entry.message || undefined,
+                      }))}
+                      loading={timelineLoading}
+                      emptyLabel={t("Chưa có log")}
+                    />
+                  ),
+                },
+              ]
+            : undefined
+        }
         leftPanel={
           isViewMode ? (
-            <>
-              <DrawerSection title={t("Thông tin hiện tại")}>
-                <DrawerRow label="Email" value={selectedUser?.email || "—"} />
-                <DrawerRow
-                  label={t("Trạng thái")}
-                  value={selectedUser?.status || "—"}
-                />
-                <DrawerRow
-                  label="Employee"
-                  value={
-                    selectedUser?.employee
-                      ? `${selectedUser.employee.fullName} (${selectedUser.employee.employeeCode})`
-                      : "—"
-                  }
-                />
-                <DrawerRow
-                  label="Last login"
-                  value={formatDate(selectedUser?.lastLoginAt ?? null)}
-                />
-              </DrawerSection>
-              <DrawerSection title={t("Timeline audit")}>
-                {timelineLoading ? (
-                  <div className="text-sm text-muted-foreground">
-                    {t("Đang tải timeline...")}
-                  </div>
-                ) : timeline.length === 0 ? (
-                  <div className="text-sm text-muted-foreground">
-                    {t("Chưa có log")}
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {timeline.map((entry) => (
-                      <div
-                        key={entry.id}
-                        className="rounded-xl border border-border bg-surface p-3 text-sm"
-                      >
-                        <div className="flex items-center justify-between gap-3">
-                          <span className="font-medium">
-                            {entry.actionType}
-                          </span>
-                          <span className="text-xs text-muted-foreground">
-                            {formatDate(entry.createdAt)}
-                          </span>
-                        </div>
-                        <div className="mt-1 text-xs text-muted-foreground">
-                          {entry.actorEmail || "system"} • {entry.status}
-                        </div>
-                        {entry.message ? (
-                          <div className="mt-2 text-sm">{entry.message}</div>
-                        ) : null}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </DrawerSection>
-            </>
+            <DrawerSection title={t("Thông tin hiện tại")}>
+              <DrawerRow label="Email" value={selectedUser?.email || "—"} />
+              <DrawerRow
+                label={t("Trạng thái")}
+                value={selectedUser?.status || "—"}
+              />
+              <DrawerRow
+                label="Employee"
+                value={
+                  selectedUser?.employee
+                    ? `${selectedUser.employee.fullName} (${selectedUser.employee.employeeCode})`
+                    : "—"
+                }
+              />
+              <DrawerRow
+                label="Last login"
+                value={formatDate(selectedUser?.lastLoginAt ?? null)}
+              />
+            </DrawerSection>
           ) : (
             <DrawerSection title={t("Thông tin user")}>
               <DrawerField label="Email" required>

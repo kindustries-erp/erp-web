@@ -83,8 +83,6 @@ export function usePortalSync() {
       setResult(null);
       try {
         const res = await erpInvoicesCoreApi.portalSync({
-          token: "",
-          cookies: "",
           dateFrom,
           dateTo,
           type,

@@ -14,7 +14,8 @@ export function SpreadsheetPageTemplate<T>({
   tableId,
   items,
   columns,
-  defaultColumnOrder = ["__actions", "__expand", "__selection"],
+  defaultColumnOrder = ["__selection", "__expand"],
+  defaultColumnVisibility,
   getRowKey,
   loading,
   error,
@@ -47,6 +48,8 @@ export function SpreadsheetPageTemplate<T>({
   sortArray,
   onSort,
   rowActions,
+  enableRowHoverActions,
+  hideLegacyActionColumn = true,
   summaryRow,
   children,
   onRowClick,
@@ -73,7 +76,17 @@ export function SpreadsheetPageTemplate<T>({
         combined.includes("total") ||
         combined.includes("tax") ||
         combined.includes("discount") ||
-        combined.includes("rate")
+        combined.includes("rate") ||
+        combined.includes("cost") ||
+        combined.includes("revenue") ||
+        combined.includes("profit") ||
+        combined.includes("margin") ||
+        combined.includes("doanhthu") ||
+        combined.includes("chiphi") ||
+        combined.includes("loinhuan") ||
+        combined.includes("balance") ||
+        combined.includes("tienco") ||
+        combined.includes("tiencon")
       ) {
         alignClass = "align-middle text-right";
       } else if (
@@ -151,6 +164,7 @@ export function SpreadsheetPageTemplate<T>({
           <StandardTable
             tableId={tableId}
             defaultColumnOrder={defaultColumnOrder}
+            defaultColumnVisibility={defaultColumnVisibility}
             enableColumnVisibility={true}
             enableColumnResizing={true}
             variant="spreadsheet"
@@ -169,6 +183,8 @@ export function SpreadsheetPageTemplate<T>({
             onSort={onSort}
             actions={rowActions}
             actionColumnSize={actionColumnSize}
+            enableRowHoverActions={enableRowHoverActions}
+            hideLegacyActionColumn={hideLegacyActionColumn}
             summaryRow={summaryRow}
             page={page}
             pageSize={pageSize}

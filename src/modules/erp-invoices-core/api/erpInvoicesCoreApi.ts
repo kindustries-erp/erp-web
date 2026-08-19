@@ -102,13 +102,15 @@ export interface CreateErpInvoicePayload {
   totalAmount?: number;
   purchaseOrderId?: string;
   salesOrderId?: string;
+  settlementOrder?: string;
+  licensePlate?: string;
   paymentDocumentNos?: string;
   notes?: string;
   isValid?: boolean;
   items?: ErpInvoiceItem[];
   pendingDocumentChanges?: {
     action: "ADD" | "REMOVE";
-    type: "PO" | "BANK";
+    type: "PO" | "BANK" | "SO" | "CASE";
     refId: string;
     amount?: number;
   }[];
@@ -187,7 +189,7 @@ export interface PortalInvoiceDto {
 }
 
 export interface PortalSyncPayload {
-  token: string;
+  token?: string;
   cookies?: string;
   dateFrom: string;
   dateTo: string;
@@ -353,6 +355,17 @@ export const erpInvoicesCoreApi = {
     return data;
   },
 
+  getSmartNetOffSuggestions: async (
+    invoiceIds: string[],
+  ): Promise<Record<string, SmartNetOffSuggestionItem[]>> => {
+    const { data } = await axiosInstance.post<
+      Record<string, SmartNetOffSuggestionItem[]>
+    >(`${BASE}/smart-net-off-suggestions`, {
+      invoiceIds,
+    });
+    return data;
+  },
+
   create: async (payload: CreateErpInvoicePayload): Promise<ErpInvoice> => {
     const { data } = await axiosInstance.post<{ data: ErpInvoice }>(
       BASE,
@@ -409,7 +422,7 @@ export const erpInvoicesCoreApi = {
   syncDetail: async (id: string, token?: string): Promise<ErpInvoice> => {
     const { data } = await axiosInstance.post<ErpInvoice>(
       `${BASE}/${id}/sync-detail`,
-      { token },
+      token ? { token } : {},
     );
     return data;
   },
@@ -445,7 +458,7 @@ export const erpInvoicesCoreApi = {
   },
 
   bulkDownloadXml: async (params: {
-    token: string;
+    token?: string;
     cookies?: string;
     direction: "IN" | "OUT";
   }): Promise<{ message: string; count: number }> => {
@@ -793,6 +806,26 @@ export const erpInvoicesCoreApi = {
     );
     return data;
   },
+
+  autoPostStandard: async (id: string): Promise<ErpInvoice> => {
+    const { data } = await axiosInstance.post<ErpInvoice>(
+      `${BASE}/${id}/auto-post-standard`,
+    );
+    return data;
+  },
+
+  getTraceabilityGraph: async (
+    id: string,
+  ): Promise<import("@/shared/types/traceability").TraceabilityGraphData> => {
+    const { data } = await axiosInstance.get<{
+      rootId: string;
+      rootType: any;
+      nodes: any[];
+      edges: any[];
+      summary: any;
+    }>(`${BASE}/${id}/traceability-graph`);
+    return data as any;
+  },
 };
 
 export interface BulkImportSkippedItem {
@@ -824,4 +857,40 @@ export interface BulkImportResult {
     totalAmount?: string | null;
   }[];
   pdfOrphans?: { filename: string; reason: string }[];
+}
+
+export interface SmartNetOffSuggestionItem {
+  txn: {
+    id: string;
+    transDate: string;
+    referenceNumber?: string;
+    seqNo?: string;
+    description: string;
+    debitAmount: number;
+    creditAmount: number;
+    sourceType: string;
+    correspondentName?: string;
+    bankAccount?: {
+      bankName?: string;
+      accountNumber?: string;
+    };
+    cashBook?: {
+      name?: string;
+    };
+    remainingAmount: number;
+  };
+  score: {
+    score: number;
+    amountMatch: boolean;
+    invoiceNoMatch: boolean;
+    correspondentMatch: boolean;
+    badge:
+      | "PERFECT"
+      | "HIGH"
+      | "LIKELY"
+      | "POSSIBLE"
+      | "NOTICE_STRONG"
+      | "NOTICE";
+  };
+  matchedKeywords: string[];
 }

@@ -6,6 +6,13 @@ import { Button } from "@/shared/components/ui/Button";
 import { cn } from "@/shared/utils";
 import type { DrawerMode } from "../stores/useDrawerStore";
 import { FormLoadingSkeleton } from "@/modules/operational/components/form/FormLoadingSkeleton";
+import {
+  DrawerRelatedDeck,
+  type DrawerRelatedTabItem,
+} from "./drawer/DrawerRelatedDeck";
+
+export type { DrawerRelatedTabItem };
+export * from "./drawer";
 
 // ── Size presets ──────────────────────────────────────────────────────────────
 // All sizes are bounded by max-width: calc(100vw - 208px) on desktop (panels.css)
@@ -86,6 +93,36 @@ export interface StandardFormDrawerProps {
 
   /** Optional class for drawer body container */
   bodyClassName?: string;
+
+  /**
+   * Danh sách các tab thông tin liên quan (Lịch sử, Chứng từ liên quan, Đính kèm, Ghi chú...)
+   * Hiển thị bên dưới Horizon Divider Bar ở đáy Main Body.
+   */
+  relatedTabs?: DrawerRelatedTabItem[];
+
+  /** Tab mặc định được kích hoạt trong relatedTabs */
+  defaultRelatedTabKey?: string;
+
+  /** Trạng thái thu gọn mặc định của vùng thông tin liên quan (mặc định: false - mở) */
+  defaultRelatedCollapsed?: boolean;
+
+  /** Custom hoàn toàn nội dung bên dưới Horizon Divider Bar nếu không dùng relatedTabs */
+  bottomPanel?: React.ReactNode;
+
+  /** Tiêu đề thanh phân cách nếu dùng custom bottomPanel */
+  bottomPanelTitle?: React.ReactNode;
+
+  /** Callback khi người dùng chuyển đổi tab liên quan */
+  onRelatedTabChange?: (tabKey: string) => void;
+
+  /** Bật ô tìm kiếm nhanh trên thanh Horizon Divider */
+  enableRelatedSearch?: boolean;
+
+  /** Callback khi thay đổi từ khóa tìm kiếm */
+  onRelatedSearchChange?: (query: string) => void;
+
+  /** ClassName bổ sung cho card container của Related Deck */
+  deckCardClassName?: string;
 }
 
 export function StandardFormDrawer({
@@ -116,6 +153,15 @@ export function StandardFormDrawer({
   asContent = false,
   noAnimation = false,
   footerLeft,
+  relatedTabs,
+  defaultRelatedTabKey,
+  defaultRelatedCollapsed = false,
+  bottomPanel,
+  bottomPanelTitle,
+  onRelatedTabChange,
+  enableRelatedSearch = false,
+  onRelatedSearchChange,
+  deckCardClassName,
 }: StandardFormDrawerProps) {
   const t = useT();
   const [rightPanelCollapsed, setRightPanelCollapsed] = useState(
@@ -127,6 +173,12 @@ export function StandardFormDrawer({
       setRightPanelCollapsed(rightPanelDefaultCollapsed);
     }
   }, [open, rightPanelDefaultCollapsed]);
+
+  const isRightPanelCollapsible =
+    collapsibleRightPanel !== undefined
+      ? collapsibleRightPanel
+      : (layout === "2-columns" && Boolean(rightPanel) && !hideRightPanel) ||
+        Boolean(rightPanelTitle);
 
   // view mode: border-primary outline, hover fills primary bg
   const headerExtra = (
@@ -140,7 +192,7 @@ export function StandardFormDrawer({
           {t("Chỉnh sửa")}
         </button>
       )}
-      {!hideRightPanel && rightPanel && collapsibleRightPanel && (
+      {!hideRightPanel && rightPanel && isRightPanelCollapsible && (
         <div
           className={cn(
             "flex items-center",
@@ -154,7 +206,7 @@ export function StandardFormDrawer({
             variant="ghost"
             size="icon-sm"
             onClick={() => setRightPanelCollapsed((s) => !s)}
-            className="text-[color:var(--faint)]"
+            className="text-[color:var(--faint)] hover:text-foreground"
             title={
               rightPanelCollapsed
                 ? t("Mở rộng cột phải")
@@ -176,6 +228,10 @@ export function StandardFormDrawer({
   const resolvedSize = size ?? (layout === "1-column" ? "sm" : "xl");
   const defaultPanelClassName = SIZE_CLASS[resolvedSize];
 
+  const hasRelatedContent = Boolean(
+    bottomPanel || (relatedTabs && relatedTabs.length > 0),
+  );
+
   const innerContent = (
     <>
       {error && (
@@ -187,13 +243,13 @@ export function StandardFormDrawer({
         <FormLoadingSkeleton />
       ) : layout === "1-column" ? (
         // 1-column: render leftPanel raw — caller uses DrawerSection/DrawerField directly
-        <div className="w-full h-full flex flex-col flex-1 min-h-0">
+        <div className="w-full h-auto flex flex-col flex-1 min-h-0">
           {leftPanel}
         </div>
       ) : (
         <div
           className={cn(
-            "flex flex-col lg:flex-row items-start w-full max-w-full relative h-full transition-all duration-300",
+            "flex flex-col lg:flex-row items-start w-full max-w-full relative h-auto transition-all duration-300",
             rightPanelCollapsed ? "gap-0" : "gap-6",
           )}
         >
@@ -205,13 +261,13 @@ export function StandardFormDrawer({
           {/* Cột phải: Thông tin chung / Metadata */}
           {!hideRightPanel &&
             rightPanel &&
-            (rightPanelTitle !== undefined || collapsibleRightPanel ? (
+            (rightPanelTitle !== undefined || isRightPanelCollapsible ? (
               <div
                 className={cn(
-                  "shrink-0 order-1 lg:order-2 space-y-4 transition-all duration-300 overflow-x-hidden",
+                  "shrink-0 order-1 lg:order-2 space-y-4 transition-all duration-300 overflow-x-hidden p-0.5 pb-3",
                   stickyRightPanel && "lg:sticky lg:top-0",
                   rightPanelCollapsed
-                    ? "w-full lg:w-0 h-0 lg:h-auto opacity-0 overflow-hidden"
+                    ? "w-full lg:w-0 h-0 lg:h-auto opacity-0 overflow-hidden !p-0"
                     : "w-full lg:w-[300px] xl:w-[320px] 2xl:w-[360px] opacity-100",
                 )}
               >
@@ -221,8 +277,8 @@ export function StandardFormDrawer({
                       className={cn(
                         "w-full",
                         stickyRightPanel
-                          ? "overflow-x-hidden overflow-y-auto lg:max-h-[calc(100vh-190px)]"
-                          : "overflow-x-hidden overflow-y-visible",
+                          ? "overflow-x-hidden overflow-y-auto lg:max-h-[calc(100vh-190px)] pb-2"
+                          : "overflow-x-hidden overflow-y-visible pb-1",
                       )}
                       style={
                         stickyRightPanel
@@ -240,8 +296,8 @@ export function StandardFormDrawer({
                     className={cn(
                       "w-full",
                       stickyRightPanel
-                        ? "overflow-x-hidden overflow-y-auto lg:max-h-[calc(100vh-190px)]"
-                        : "overflow-x-hidden overflow-y-visible",
+                        ? "overflow-x-hidden overflow-y-auto lg:max-h-[calc(100vh-190px)] pb-2"
+                        : "overflow-x-hidden overflow-y-visible pb-1",
                     )}
                     style={
                       stickyRightPanel ? { scrollbarWidth: "none" } : undefined
@@ -256,7 +312,7 @@ export function StandardFormDrawer({
             ) : (
               <div
                 className={cn(
-                  "shrink-0 order-1 lg:order-2 w-full lg:w-[300px] xl:w-[320px] 2xl:w-[360px]",
+                  "shrink-0 order-1 lg:order-2 w-full lg:w-[300px] xl:w-[320px] 2xl:w-[360px] p-0.5 pb-3",
                   stickyRightPanel && "lg:sticky lg:top-0",
                 )}
               >
@@ -264,6 +320,21 @@ export function StandardFormDrawer({
               </div>
             ))}
         </div>
+      )}
+
+      {/* ── Horizon Divider & Connected Context Deck ── */}
+      {hasRelatedContent && (
+        <DrawerRelatedDeck
+          tabs={relatedTabs}
+          defaultTabKey={defaultRelatedTabKey}
+          defaultCollapsed={defaultRelatedCollapsed}
+          customContent={bottomPanel}
+          customTitle={bottomPanelTitle}
+          onTabChange={onRelatedTabChange}
+          enableSearch={enableRelatedSearch}
+          onSearchChange={onRelatedSearchChange}
+          cardClassName={deckCardClassName}
+        />
       )}
     </>
   );

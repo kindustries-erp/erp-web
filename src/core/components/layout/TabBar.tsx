@@ -48,6 +48,11 @@ const TAB_ICONS: Partial<Record<PageKey, React.ElementType>> = {
   "mfg-vehicles": Car,
   "erp-bom": Network,
   "erp-production": Factory,
+  "garage-dashboard": LayoutDashboard,
+  "garage-cases": Car,
+  "garage-customers": Users,
+  "garage-receivables": ReceiptText,
+  "garage-payables": ReceiptText,
 };
 
 function TabItem({

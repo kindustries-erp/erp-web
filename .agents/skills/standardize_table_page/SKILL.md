@@ -284,14 +284,16 @@ export function use[Module]List() {
 
 Bảng dữ liệu bên trong trang **BẮT BUỘC** tuân thủ nghiêm ngặt kỹ năng `standardize-table`:
 
-- Cột STT / Checkbox: `size: 40`, `w-[40px] min-w-[40px]`.
+- **Định danh Bảng (`tableId`)**: BẮT BUỘC truyền `tableId="[module]-table"` duy nhất vào `<SpreadsheetPageTemplate>` để kích hoạt tự động Portal Target cho dropdown **Tùy chỉnh cột (`ColumnToggle`)** và lưu trữ preferences (độ rộng, thứ tự, ẩn/hiện) vào `localStorage`.
+- **Tùy chỉnh & Khôi phục cột (Reset Layout)**: Toàn bộ thao tác ẩn/hiện cột, sắp xếp thứ tự, và nút "Khôi phục mặc định" (`RotateCcw`) đã được tích hợp tập trung trong dropdown `ColumnToggle`. TUYỆT ĐỐI KHÔNG đặt nút Reset ở cột Action hay bất kỳ header nào.
+- Cột STT / Checkbox: `size: 40`, `w-[40px] min-w-[40px]`. (STT dùng `{idx}`, không cộng 1).
 - Cột Code/ID/SKU: `size: 200`, dùng `<TableText enableCopy tooltip onDrawerClick>`.
 - Header tất cả cột filterable: dùng `<TableColumnHeaderFilter align="center">`.
 - Cột Date: dùng `dateRangeSlot` + `hideFilter={true}`.
 - Cột trạng thái: dùng `<Badge>`.
 - Cột số lượng / tiền tệ: class `text-right tabular-nums`, tiền tệ thêm `font-semibold`.
 - Cột tiền tệ/số lượng: cần có `summaryRow` tổng cộng.
-- Cột Action cuối: dùng `<ActionDropdown>` phân nhóm `groupLabel`.
+- **Row Actions**: BẮT BUỘC dùng prop `rowActions` của `<SpreadsheetPageTemplate>` (Row Hover Floating Actions). TUYỆT ĐỐI KHÔNG thêm cột `{ key: "actions" }` thủ công vào mảng `columns`.
 
 ## 7. Detail Drawer — BẮT BUỘC
 
@@ -304,17 +306,14 @@ Bảng dữ liệu bên trong trang **BẮT BUỘC** tuân thủ nghiêm ngặt 
 ```tsx
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate/SpreadsheetPageTemplate";
-import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
+import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate";
 import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
 import { DateRangeColumnSlot } from "@/shared/components/DataTable/DateRangeColumnSlot";
 import { TableText } from "@/shared/components/DataTable/TableText";
 import { TableDateCell } from "@/shared/components/DataTable/TableDateCell";
 import { Badge } from "@/shared/components/ui/badge";
-import { Button } from "@/shared/components/ui/Button";
-import { ActionDropdown } from "@/shared/components/ActionDropdown";
-import { EmptyState } from "@/shared/components/EmptyState";
-import { FilterX } from "lucide-react";
+import { Eye, FileText, Trash2 } from "lucide-react";
+import type { DataTableColumn } from "@/shared/components/DataTable";
 // import { use[Module]List } from "@/modules/[module]/hooks/use[Module]List";
 // import { [Module]DetailDrawer } from "@/modules/[module]/components/[Module]DetailDrawer";
 // import { [module]Api } from "@/modules/[module]/api/[module]Api";
@@ -368,7 +367,7 @@ export function ExampleTablePage() {
       // Cột STT
       {
         key: "index",
-        header: <div className="text-center w-[40px] min-w-[40px]">#</div>,
+        header: <span className="w-full block text-center">#</span>,
         size: 40,
         enableResizing: false,
         headerClassName: "text-center w-[40px] min-w-[40px]",
@@ -510,104 +509,75 @@ export function ExampleTablePage() {
           </span>
         ),
       },
-      // Cột Action
-      {
-        key: "actions",
-        header: <div className="w-[40px] min-w-[40px]" />,
-        size: 40,
-        enableResizing: false,
-        headerClassName: "w-[40px] min-w-[40px]",
-        className: "w-[40px] min-w-[40px]",
-        cell: (row: ExampleRow) => (
-          <ActionDropdown
-            items={[
-              {
-                groupLabel: "TRA CỨU",
-                items: [
-                  {
-                    label: t("viewDetail", "Chi tiết"),
-                    onClick: () => openDetail(row.id),
-                  },
-                ],
-              },
-              {
-                groupLabel: "THAO TÁC",
-                items: [{ label: t("delete", "Xóa"), onClick: () => {} }],
-              },
-            ]}
-          />
-        ),
-      },
     ],
     [listHook.sorts, listHook.columnFilters, listHook.columnSearch, listHook.dateFrom, listHook.dateTo, t],
   );
 
   return (
-    <SpreadsheetPageTemplate>
-      <div className="flex flex-col gap-4 p-4 h-full">
-        {/* Page Header & Actions */}
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold">
-              {t("pageTitle", "Danh sách dữ liệu")}
-            </h1>
-            <p className="text-muted-foreground text-sm">
-              {t("pageDesc", "Mô tả danh sách")}
-            </p>
-          </div>
+    <>
+      <SpreadsheetPageTemplate<ExampleRow>
+        title={t("pageTitle", "Danh sách dữ liệu")}
+        desc={t("pageDesc", "Mô tả danh sách")}
+        icon={<FileText className="w-5 h-5 text-primary" />}
+        tableId="example-table"
+        items={listHook.data}
+        columns={columns}
+        getRowKey={(row) => row.id}
+        loading={listHook.isLoading}
+        emptyLabel={t("noData", "Không có dữ liệu")}
+        page={listHook.page}
+        pageSize={listHook.pageSize}
+        total={listHook.total}
+        totalPages={listHook.totalPages}
+        onPage={(p) => listHook.setPage(p)}
+        onPageSize={(s) => {
+          listHook.setPageSize(s);
+          listHook.setPage(1);
+        }}
+        onRefresh={() => listHook.refetch()}
+        activeFilterCount={listHook.activeFilterCount}
+        onClearAllFilters={listHook.clearAllFilters}
+        rowActions={(row: ExampleRow) => [
+          {
+            groupLabel: "TRA CỨU",
+            items: [
+              {
+                label: t("viewDetail", "Chi tiết"),
+                icon: <Eye className="w-4 h-4" />,
+                onClick: () => openDetail(row.id),
+              },
+            ],
+          },
+          {
+            groupLabel: "THAO TÁC",
+            items: [
+              {
+                label: t("delete", "Xóa"),
+                icon: <Trash2 className="w-4 h-4 text-destructive" />,
+                onClick: () => handleDelete(row.id),
+              },
+            ],
+          },
+        ]}
+        summaryRow={{
+          amount: (
+            <div className="text-right font-bold text-primary tabular-nums">
+              {listHook.data
+                .reduce((sum, r) => sum + r.amount, 0)
+                .toLocaleString("vi-VN")}{" "}
+              đ
+            </div>
+          ),
+        }}
+      />
 
-          {/* Clear Filters Button khi có bộ lọc hoạt động */}
-          {listHook.activeFilterCount > 0 && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={listHook.clearAllFilters}
-              className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground"
-            >
-              <FilterX className="w-3.5 h-3.5 text-destructive" />
-              {t("clearFilters", "Xóa bộ lọc")} ({listHook.activeFilterCount})
-            </Button>
-          )}
-        </div>
-
-        {/* Data Table */}
-        <DataTable
-          columns={columns}
-          data={listHook.data}
-          loading={listHook.isLoading}
-          variant="spreadsheet"
-          emptyLabel={t("noData", "Không có dữ liệu")}
-          summaryRow={
-            {
-              // Đặt key cột tiền tệ/số lượng vào đây để hiện tổng
-              // amount: (
-              //   <div className="text-right font-bold text-primary">
-              //     {listHook.data.reduce((sum, r) => sum + r.amount, 0).toLocaleString("vi-VN")} đ
-              //   </div>
-              // ),
-            }
-          }
-        />
-
-        {/* Empty State tường minh — hiển thị khi không có data sau khi load xong */}
-        {!listHook.isLoading && listHook.data.length === 0 && (
-          <EmptyState
-            message={t("noData", "Không có dữ liệu")}
-            description={t(
-              "noDataDesc",
-              "Thử điều chỉnh bộ lọc hoặc thêm bản ghi mới",
-            )}
-          />
-        )}
-
-        {/* Detail Drawer */}
-        {/* <[Module]DetailDrawer
-          open={drawerOpen}
-          onClose={() => setDrawerOpen(false)}
-          id={selectedId}
-        /> */}
-      </div>
-    </SpreadsheetPageTemplate>
+      {/* Detail Drawer */}
+      {/* <[Module]DetailDrawer
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        id={selectedId}
+      /> */}
+    </>
   );
 }
 ```
@@ -630,10 +600,10 @@ export function ExampleTablePage() {
 
 ### UI & Empty State
 
-- [ ] Page có bọc trong `<SpreadsheetPageTemplate>` chưa?
-- [ ] Bảng có dùng `variant="spreadsheet"` chưa?
-- [ ] Bảng đã có `emptyLabel={t(...)}` **VÀ** `<EmptyState>` khi data rỗng sau khi load xong chưa?
-- [ ] Có nút Xóa bộ lọc (Clear All Filters) hiển thị số lượng `activeFilterCount` khi có filter chưa?
+- [ ] Page có dùng `<SpreadsheetPageTemplate>` truyền đầy đủ props (`tableId`, `items`, `columns`, `loading`, `page`, `pageSize`, `total`, `onRefresh`, `activeFilterCount`, `onClearAllFilters`) chưa?
+- [ ] Đã truyền `tableId` duy nhất để kích hoạt dropdown Tùy chỉnh cột (`ColumnToggle`) và lưu/khôi phục layout chưa?
+- [ ] Đã truyền `rowActions` vào `<SpreadsheetPageTemplate>` để kích hoạt Row Hover Floating Actions chưa?
+- [ ] Bảng đã có `emptyLabel={t(...)}` khi data rỗng sau khi load xong chưa?
 
 ### Server-side Logic & Filter Standard
 
@@ -644,7 +614,9 @@ export function ExampleTablePage() {
 
 ### Table Columns (`standardize-table`)
 
-- [ ] Cột STT/Action/Checkbox rộng đúng 40px chưa? (STT dùng `{idx}`, không `idx + 1`)
+- [ ] Cột STT/Checkbox rộng đúng 40px, header căn giữa chuẩn (`header: <span className="w-full block text-center">#</span>`, `headerClassName: "text-center"`) chưa? (STT dùng `{idx}`, không `idx + 1`)
+- [ ] TUYỆT ĐỐI không khai báo cột action tĩnh `{ key: "actions" }` trong `columns`, đã chuyển sang `rowActions` chưa?
+- [ ] TUYỆT ĐỐI không đặt nút Reset Column ở header cột Action hay dữ liệu, đã sử dụng nút Khôi phục trong dropdown `ColumnToggle` (`Settings2`) chưa?
 - [ ] Cột Code/SKU size 200px, dùng `<TableText>` bật `enableCopy`, `tooltip`, `onDrawerClick` và Quick Status Badge chưa?
 - [ ] Cột Status dùng `<Badge>` fixed width `w-[88px]`, bọc `<Tooltip>` & `truncate` chưa?
 - [ ] Cột số/tiền có class `tabular-nums text-right` (tiền tệ có `font-semibold`) chưa?
@@ -653,5 +625,5 @@ export function ExampleTablePage() {
 ### Detail Drawer (`standardize-drawer`)
 
 - [ ] Đã tạo sẵn component `[Module]DetailDrawer` tuân thủ `standardize-drawer` chưa?
-- [ ] Click vào `<TableText>` hoặc ActionDropdown mở Drawer (không điều hướng trang) chưa?
+- [ ] Click vào `<TableText>` hoặc Row Hover Actions mở Drawer (không điều hướng trang) chưa?
 

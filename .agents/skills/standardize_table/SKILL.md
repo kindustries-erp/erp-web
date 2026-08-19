@@ -9,9 +9,11 @@ Khi tạo mới hoặc enhance một `DataTable` trong hệ thống, bạn **B�
 
 ## 1. Cấu trúc cột (Columns Structure)
 
-- **Cột đầu tiên (First Column)**: Thường là cột **Index (STT)**, **Checkbox** hoặc **Action** (nếu có action theo dòng), với `width: 40px`.
-  - Cần set `size: 40`, `headerClassName: "text-center w-[40px] min-w-[40px]"`, `className: "text-center w-[40px] min-w-[40px]"`.
+- **Cột đầu tiên (First Column)**: Thường là cột **Index (STT)** hoặc **Checkbox**, với `width: 40px`.
+  - Cần set `size: 40`, `headerClassName: "text-center w-[40px] min-w-[40px]"`, `className: "text-center w-[40px] min-w-[40px]"`, `enableResizing: false`.
+  - **Căn giữa Header STT**: Header bắt buộc phải căn giữa hoàn toàn bằng cách wrap trong span block: `header: <span className="w-full block text-center">#</span>` kết hợp `headerClassName: "text-center"`.
   - **Lưu ý với cột Index (STT)**: Khi dùng cell renderer mặc định của framework, CHỈ SỬ DỤNG `{idx}` (VD: `cell: (_, idx) => <span>{idx}</span>`), **KHÔNG CỘNG THÊM 1** (`idx + 1`). Lý do: Core `DataTable` đã tự động xử lý pagination offset và trả về `idx` hệ 1-based.
+  - **TUYỆT ĐỐI KHÔNG** định nghĩa cột Action tĩnh thủ công `{ key: "actions", ... }` trong mảng `columns`. Tất cả các thao tác theo dòng phải được quản lý qua prop `rowActions` (Row Hover Floating Actions).
 - **Enable Resizing**: Luôn bật tính năng resize cho các cột dữ liệu bằng cách thêm `enableResizing: true` vào config của từng cột.
 - **Đa ngôn ngữ (i18n)**: Tất cả các text trong table (header, empty state, action tooltip...) phải được bọc trong hàm `t` từ `useTranslation("namespace")`. KHÔNG hardcode tiếng Việt/Anh trực tiếp mà không qua hook translation.
 
@@ -123,17 +125,26 @@ header: (
 )
 ```
 
-## 3. Row Click, View Detail & Action Menu
+## 3. Row Click, View Detail & Row Hover Action Menu
 
 - **Tuyệt đối KHÔNG sử dụng `onRowClick`** để mở trang / ngăn kéo chi tiết (detail drawer).
 - Chỉ có 2 cách hợp lệ để xem chi tiết một bản ghi (View Detail):
   1. Click vào biểu tượng icon detail nằm trong `<TableText>` (xem phần Mã Code/SKU bên dưới).
-  2. Click vào tùy chọn **"Chi tiết"** trong Action Menu của hàng.
-- **Action Menu (Cột Thao Tác)**: Bắt buộc sử dụng component `<ActionDropdown>` (`@/shared/components/ActionDropdown`).
+  2. Click vào tùy chọn **"Chi tiết"** trong Action Menu hoặc Quick Action button của hàng.
+- **Row Hover Floating Actions (Ô Nổi Thao Tác Khi Hover Hàng)**:
+  - Khi rê chuột (hover) vào bất kỳ dòng nào trong bảng, một ô nổi chứa **2 nút thao tác nhanh (Quick Action Buttons)** (như Chi tiết 👁️, Tải XML 📥, Chỉnh sửa ✏️) và **nút ba chấm `...`** mở Action Menu đầy đủ sẽ xuất hiện nổi tại mép phải của dòng (`sticky right-0` trong suốt, không đè nền/viền lên dữ liệu).
+  - **Button Pill luôn Floating ở mép phải khung nhìn**: Nút nổi luôn xuất hiện ở mép phải của hàng hiển thị trên màn hình (`absolute right-3.5 top-1/2 -translate-y-1/2`) bất kể bạn đang ở đầu, giữa hay cuối bảng. Cell chứa nút nổi hoàn toàn trong suốt (`bg-transparent border-none pointer-events-none`), không tạo bất kỳ dải cột cố định hay viền dọc nào che khuất dữ liệu khi cuộn.
+  - **Cột đệm 116px ở cuối bảng (Không sticky header/footer)**: Header và Footer của cột cuối cuộn tự nhiên theo bảng. Khi cuộn ngang hết cỡ sang phải, cột đệm 116px này đóng vai trò khoảng trống an toàn để ô nổi nằm gọn gàng bên trong với lề 14px đều đặn, không đè lên dữ liệu của cột liền trước.
+  - **Khoảng cách 3 Icon Buttons đều đặn**: Cả 3 nút đều có kích thước chuẩn (`w-6 h-6 rounded-lg`), giãn cách đều `gap-1` (4px), không dùng thanh ngăn cách để đảm bảo đối xứng thị giác hoàn hảo.
+  - **Glassmorphism Styling**: Ô nổi sử dụng hiệu ứng kính mờ cao cấp đồng bộ với Universal Search (`backdrop-filter: blur(20px) saturate(180%)`, nền `var(--popup-bg)`, viền `var(--popup-border)` và viền sáng âm `inset`, đổ bóng mịn).
+  - **Hiệu năng 0ms Lag**: Sử dụng hardware-accelerated CSS hover (`group-hover:opacity-100`), không gây re-render React khi di chuột, hoạt động mượt mà 60fps/120fps.
+  - **Chuẩn Tooltip Bottom**: Toàn bộ tooltip trong bảng và hệ thống mặc định mở xuống dưới (`side="bottom"`) để không bao giờ che khuất các nút thao tác nổi.
+  - **Quy chuẩn Chính thức**: Cột action tĩnh ở đầu bảng đã được loại bỏ hoàn toàn. BẮT BUỘC sử dụng Row Hover Floating Actions thông qua prop `rowActions` trên `<SpreadsheetPageTemplate>` hoặc `actions` trên `<StandardTable>`. TUYỆT ĐỐI KHÔNG thêm cột `{ key: "actions" }` thủ công vào `columns`.
+- **Action Menu (Cấu trúc ActionDropdownItem)**: Bắt buộc sử dụng component `<ActionDropdown>` (`@/shared/components/ActionDropdown`) hoặc truyền qua prop `actions` / `rowActions` / `rowHoverActions`.
   - Các thao tác bên trong phải được **phân nhóm logic (Group)** rõ ràng bằng thuộc tính `groupLabel`.
   - Ví dụ nhóm "TRA CỨU" (Chi tiết, Tải XML, In), nhóm "THAO TÁC" (Sửa, Xóa, Đồng bộ).
 
-**Mẫu code `<ActionDropdown>`**:
+**Mẫu code `<ActionDropdown>` / `rowActions`**:
 
 ```tsx
 <ActionDropdown
@@ -141,10 +152,10 @@ header: (
     {
       groupLabel: "TRA CỨU",
       items: [
-        { label: "Chi tiết", icon: <Eye />, onClick: () => openDetail(row.id) },
+        { label: "Chi tiết", icon: <Eye className="w-3.5 h-3.5" />, onClick: () => openDetail(row.id) },
         {
           label: "Tải XML",
-          icon: <Download />,
+          icon: <Download className="w-3.5 h-3.5" />,
           onClick: () => downloadXML(row.id),
         },
       ],
@@ -154,7 +165,7 @@ header: (
       items: [
         {
           label: "Đồng bộ lại từ XML",
-          icon: <RefreshCw />,
+          icon: <RefreshCw className="w-3.5 h-3.5" />,
           onClick: () => syncXML(row.id),
         },
       ],
@@ -312,12 +323,32 @@ Bất kỳ cột nào liên quan đến **Status**, **State** thì bắt buộc 
 - UI **KHÔNG ĐƯỢC** set state `sortBy` mặc định (vd: `const [sortBy, setSortBy] = useState<string | undefined>(undefined);`) nếu muốn bảng sắp xếp mặc định theo ngày tạo/ngày chứng từ.
 - Backend **PHẢI** tự động apply sort mặc định (thường là `createdAt` DESC hoặc theo ngày chứng từ) khi UI truyền lên `sort` rỗng. Việc này đảm bảo khi vừa vào trang, bảng dữ liệu đã được sort mới nhất lên đầu nhưng trên Header UI không bị khoá cứng icon "đang sort" tại bất kỳ cột nào cho đến khi User click.
 
+## 11. Quản lý Hiển thị, Tùy biến Cột & Khôi phục mặc định (Column Visibility, Ordering & Reset)
+
+- **Trung tâm Tùy chỉnh cột (`ColumnToggle`)**:
+  - Menu popover với icon bánh răng (`Settings2`) trên thanh công cụ bảng là nơi duy nhất quản lý tùy biến giao diện cột:
+    1. **Ẩn / Hiện cột**: Toggle bật/tắt checkbox của từng cột.
+    2. **Kéo thả đổi thứ tự cột**: Dnd Sortable kéo thả để thay đổi vị trí hiển thị các cột.
+    3. **Giới hạn chiều cao & Cuộn dọc**: Danh sách các cột có chiều cao tối đa `max-h-[min(360px,75vh)]` kết hợp cuộn dọc (`overflow-y-auto`), tránh tình trạng tràn màn hình khi bảng có hàng chục cột.
+    4. **Nút Khôi phục mặc định (Reset)**: Nút "Khôi phục" (với icon `RotateCcw`) được gắn **cố định trên header** của popup menu `ColumnToggle`. Khi click, hệ thống sẽ tự động khôi phục toàn bộ:
+       - Độ rộng cột (`columnSizing` → `{}`)
+       - Trạng thái ẩn/hiện cột (`columnVisibility` → `defaultColumnVisibility`)
+       - Thứ tự cột (`columnOrder` → `defaultColumnOrder`)
+       - Xóa cache preference tương ứng trong `localStorage` (`erp_preferences`).
+- **NGHIÊM CẤM ĐẶT NÚT RESET Ở CỘT KHÁC**:
+  - **TUYỆT ĐỐI KHÔNG** đặt nút Reset Column thủ công tại header của cột Action, cột STT hay bất kỳ cột dữ liệu nào. Toàn bộ logic reset đã được tích hợp tự động vào dropdown `ColumnToggle`.
+- **Yêu cầu `tableId` duy nhất**:
+  - Bảng bắt buộc phải được truyền prop `tableId` (dạng chuỗi unique, vd: `"erp-invoices-in"`, `"garage-cases"`, `"bom-list"`) để Core `DataTable` tự động kết nối Portal Target hiển thị nút `ColumnToggle` và lưu trữ trạng thái người dùng.
+
 ## Summary Checklist trước khi hoàn thành:
 
-- [ ] TUYỆT ĐỐI không dùng `onRowClick` mở detail, chỉ mở từ `<TableText>` hoặc `ActionDropdown` chưa?
+- [ ] TUYỆT ĐỐI không dùng `onRowClick` mở detail, chỉ mở từ `<TableText>` hoặc Row Hover Floating Actions (`rowActions`) chưa?
+- [ ] TUYỆT ĐỐI không định nghĩa cột action tĩnh thủ công `{ key: "actions" }` trong `columns`, đã truyền prop `rowActions` chưa?
+- [ ] TUYỆT ĐỐI không đặt nút Reset Column ở header cột Action hay cột dữ liệu, đã dựa vào nút Khôi phục trong dropdown `ColumnToggle` (`Settings2`) chưa?
+- [ ] Bảng đã có `tableId` duy nhất để tự động lưu & khôi phục column sizing, visibility, order chưa?
 - [ ] `<ActionDropdown>` đã phân nhóm menu bằng `groupLabel` (TRA CỨU, THAO TÁC, ...) chưa?
 - [ ] Các cột dữ liệu đã có `enableResizing: true` chưa?
-- [ ] Cột đầu tiên (STT/Checkbox/Action) rộng đúng `40px` chưa? (STT dùng `{idx}` thay vì `idx + 1` chưa?)
+- [ ] Cột đầu tiên (STT/Checkbox) rộng đúng `40px`, header và cell đã căn giữa chuẩn (`header: <span className="w-full block text-center">#</span>`, `headerClassName: "text-center"`) chưa? (STT dùng `{idx}` thay vì `idx + 1` chưa?)
 - [ ] Header có `<TableColumnHeaderFilter align="center">` và truyền prop `isActive` chưa?
 - [ ] Các cột thường KHÔNG set `hideFilter={true}` để hiện search box & options chưa?
 - [ ] Cột ngày tháng (Date) đã dùng `dateRangeSlot` và `hideFilter={true}` chưa?

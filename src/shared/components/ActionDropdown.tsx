@@ -26,14 +26,27 @@ export interface ActionDropdownProps {
   items: ActionDropdownItem[];
   customTrigger?: React.ReactNode;
   align?: "start" | "center" | "end";
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 export function ActionDropdown({
   items,
   customTrigger,
   align = "start",
+  open: controlledOpen,
+  onOpenChange: controlledOnOpenChange,
 }: ActionDropdownProps) {
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isControlled = controlledOpen !== undefined;
+  const open = isControlled ? controlledOpen : internalOpen;
+
+  const setOpen = (val: boolean) => {
+    if (!isControlled) {
+      setInternalOpen(val);
+    }
+    controlledOnOpenChange?.(val);
+  };
 
   // Normalize items to easily handle separators
   const renderItem = (item: ActionItem) => {

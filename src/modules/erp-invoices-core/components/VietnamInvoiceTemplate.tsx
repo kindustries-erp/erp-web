@@ -144,127 +144,121 @@ export function VietnamInvoiceTemplate({ invoice }: Props) {
         </div>
 
         {/* Table */}
-        <div className="mb-8 rounded-xl border border-slate-200 bg-white overflow-hidden">
-          <div className="max-h-[600px] overflow-auto">
-            <table className="w-full border-separate border-spacing-0 border-l border-t border-slate-300 text-sm relative">
-              <thead className="sticky top-0 z-10 bg-slate-50/95 backdrop-blur">
-                <tr className="text-center font-bold text-slate-700">
-                  <th className="border-b border-r border-slate-300 p-2.5 w-12">
-                    STT
-                  </th>
-                  <th className="border-b border-r border-slate-300 p-2.5">
-                    Tên hàng hóa, dịch vụ
-                  </th>
-                  <th className="border-b border-r border-slate-300 p-2.5 w-20">
-                    ĐVT
-                  </th>
-                  <th className="border-b border-r border-slate-300 p-2.5 w-20">
-                    Số lượng
-                  </th>
-                  <th className="border-b border-r border-slate-300 p-2.5 w-28">
-                    Đơn giá
-                  </th>
-                  <th className="border-b border-r border-slate-300 p-2.5 w-20">
-                    Chiết khấu
-                  </th>
-                  <th className="border-b border-r border-slate-300 p-2.5 w-20">
-                    Thuế suất
-                  </th>
-                  <th className="border-b border-r border-slate-300 p-2.5 w-32">
-                    Thành tiền chưa có thuế GTGT
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {displayItems.map((item, index) => (
-                  <tr
-                    key={item.id || index}
-                    className="even:bg-slate-50/50 hover:bg-slate-50 transition-colors"
-                  >
-                    <td className="border-b border-r border-slate-300 p-2.5 text-center">
-                      {index + 1}
-                    </td>
-                    <td className="border-b border-r border-slate-300 p-2.5">
-                      {item.description
-                        ? item.description.normalize("NFC")
-                        : ""}
-                    </td>
-                    <td className="border-b border-r border-slate-300 p-2.5 text-center">
-                      {item.unit ? item.unit.normalize("NFC") : ""}
-                    </td>
-                    <td className="border-b border-r border-slate-300 p-2.5 text-right">
-                      {item.quantity ? formatNumber(item.quantity) : ""}
-                    </td>
-                    <td className="border-b border-r border-slate-300 p-2.5 text-right">
-                      {item.unitPrice ? formatNumber(item.unitPrice) : ""}
-                    </td>
-                    <td className="border-b border-r border-slate-300 p-2.5 text-right">
-                      {formatNumber(item.discountAmount)}
-                    </td>
-                    <td className="border-b border-r border-slate-300 p-2.5 text-center">
-                      {item.vatRate != null
-                        ? `${Number(item.vatRate) * 100}%`
-                        : ""}
-                    </td>
-                    <td className="border-b border-r border-slate-300 p-2.5 text-right">
-                      {formatNumber(item.preVatAmount)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-              <tfoot className="sticky bottom-0 z-10 shadow-[0_-1px_0_0_var(--border)] bg-white">
-                <tr className="font-medium">
-                  <td
-                    colSpan={7}
-                    className="border-b border-r border-slate-300 p-2.5 text-right bg-slate-50"
-                  >
-                    Tổng cộng tiền chưa thuế:
+        <div className="mb-8 rounded-xl border border-slate-200 bg-white overflow-x-auto">
+          <table className="w-full border-separate border-spacing-0 border-l border-t border-slate-300 text-sm relative">
+            <thead className="sticky top-0 z-10 bg-slate-50/95 backdrop-blur">
+              <tr className="text-center font-bold text-slate-700">
+                <th className="border-b border-r border-slate-300 p-2.5 w-12">
+                  STT
+                </th>
+                <th className="border-b border-r border-slate-300 p-2.5">
+                  Tên hàng hóa, dịch vụ
+                </th>
+                <th className="border-b border-r border-slate-300 p-2.5 w-20">
+                  ĐVT
+                </th>
+                <th className="border-b border-r border-slate-300 p-2.5 w-20">
+                  Số lượng
+                </th>
+                <th className="border-b border-r border-slate-300 p-2.5 w-28">
+                  Đơn giá
+                </th>
+                <th className="border-b border-r border-slate-300 p-2.5 w-20">
+                  Chiết khấu
+                </th>
+                <th className="border-b border-r border-slate-300 p-2.5 w-20">
+                  Thuế suất
+                </th>
+                <th className="border-b border-r border-slate-300 p-2.5 w-32">
+                  Thành tiền chưa có thuế GTGT
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {displayItems.map((item, index) => (
+                <tr
+                  key={item.id || index}
+                  className="even:bg-slate-50/50 hover:bg-slate-50 transition-colors"
+                >
+                  <td className="border-b border-r border-slate-300 p-2.5 text-center">
+                    {index + 1}
                   </td>
-                  <td className="border-b border-r border-slate-300 p-2.5 text-right bg-slate-50">
-                    {formatNumber(preVatAmount)}
+                  <td className="border-b border-r border-slate-300 p-2.5">
+                    {item.description ? item.description.normalize("NFC") : ""}
+                  </td>
+                  <td className="border-b border-r border-slate-300 p-2.5 text-center">
+                    {norm(item.unit)}
+                  </td>
+                  <td className="border-b border-r border-slate-300 p-2.5 text-right font-mono">
+                    {formatNumber(item.quantity)}
+                  </td>
+                  <td className="border-b border-r border-slate-300 p-2.5 text-right font-mono">
+                    {formatNumber(item.unitPrice)}
+                  </td>
+                  <td className="border-b border-r border-slate-300 p-2.5 text-right font-mono">
+                    {formatNumber(item.discountAmount)}
+                  </td>
+                  <td className="border-b border-r border-slate-300 p-2.5 text-center font-mono">
+                    {item.vatRate != null ? `${item.vatRate}%` : "---"}
+                  </td>
+                  <td className="border-b border-r border-slate-300 p-2.5 text-right font-mono font-medium">
+                    {formatNumber(item.preVatAmount)}
                   </td>
                 </tr>
-                <tr className="font-medium">
-                  <td
-                    colSpan={7}
-                    className="border-b border-r border-slate-300 p-2.5 text-right bg-slate-50"
-                  >
-                    Tổng tiền thuế:
-                  </td>
-                  <td className="border-b border-r border-slate-300 p-2.5 text-right bg-slate-50">
-                    {formatNumber(vatAmount)}
-                  </td>
-                </tr>
-                <tr className="font-medium">
-                  <td
-                    colSpan={7}
-                    className="border-b border-r border-slate-300 p-2.5 text-right bg-slate-50"
-                  >
-                    Tổng chiết khấu:
-                  </td>
-                  <td className="border-b border-r border-slate-300 p-2.5 text-right bg-slate-50">
-                    {formatNumber(
-                      displayItems.reduce(
-                        (acc, item) => acc + (Number(item.discountAmount) || 0),
-                        0,
-                      ) || discountAmount,
-                    )}
-                  </td>
-                </tr>
-                <tr className="font-bold">
-                  <td
-                    colSpan={7}
-                    className="border-b border-r border-slate-300 p-3 text-right text-slate-800 text-base bg-slate-100"
-                  >
-                    Tổng tiền thanh toán:
-                  </td>
-                  <td className="border-b border-r border-slate-300 p-3 text-right text-slate-800 text-base bg-slate-100">
-                    {formatNumber(totalAmount)}
-                  </td>
-                </tr>
-              </tfoot>
-            </table>
-          </div>
+              ))}
+            </tbody>
+            <tfoot className="sticky bottom-0 z-10 shadow-[0_-1px_0_0_var(--border)] bg-white">
+              <tr className="font-medium">
+                <td
+                  colSpan={7}
+                  className="border-b border-r border-slate-300 p-2.5 text-right bg-slate-50"
+                >
+                  Tổng cộng tiền chưa thuế:
+                </td>
+                <td className="border-b border-r border-slate-300 p-2.5 text-right bg-slate-50">
+                  {formatNumber(preVatAmount)}
+                </td>
+              </tr>
+              <tr className="font-medium">
+                <td
+                  colSpan={7}
+                  className="border-b border-r border-slate-300 p-2.5 text-right bg-slate-50"
+                >
+                  Tổng tiền thuế:
+                </td>
+                <td className="border-b border-r border-slate-300 p-2.5 text-right bg-slate-50">
+                  {formatNumber(vatAmount)}
+                </td>
+              </tr>
+              <tr className="font-medium">
+                <td
+                  colSpan={7}
+                  className="border-b border-r border-slate-300 p-2.5 text-right bg-slate-50"
+                >
+                  Tổng chiết khấu:
+                </td>
+                <td className="border-b border-r border-slate-300 p-2.5 text-right bg-slate-50">
+                  {formatNumber(
+                    displayItems.reduce(
+                      (acc, item) => acc + (Number(item.discountAmount) || 0),
+                      0,
+                    ) || discountAmount,
+                  )}
+                </td>
+              </tr>
+              <tr className="font-bold">
+                <td
+                  colSpan={7}
+                  className="border-b border-r border-slate-300 p-3 text-right text-slate-800 text-base bg-slate-100"
+                >
+                  Tổng tiền thanh toán:
+                </td>
+                <td className="border-b border-r border-slate-300 p-3 text-right text-slate-800 text-base bg-slate-100">
+                  {formatNumber(totalAmount)}
+                </td>
+              </tr>
+            </tfoot>
+          </table>
         </div>
       </div>
     </div>
