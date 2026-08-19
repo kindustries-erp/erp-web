@@ -120,7 +120,7 @@ export function GarageGrossProfitDetailDrawer({
           : []
       }
       leftPanel={
-        <div className="space-y-4 pt-2">
+        <div className="space-y-4">
           <GarageCaseLinkedDocuments
             linkedDocs={linkedDocs}
             editMode={drawerMode === "edit"}
@@ -145,7 +145,7 @@ export function GarageGrossProfitDetailDrawer({
             <div className="space-y-2 text-sm">
               <div className="grid grid-cols-[100px_1fr] gap-2">
                 <span className="text-gray-500">
-                  {t("cases.drawer.customer")}:
+                  {t("cases.drawer.customerName", "Khách hàng")}:
                 </span>
                 <span className="font-medium text-gray-900">
                   {grossProfitData.TenKhachHang || "-"}
@@ -153,14 +153,16 @@ export function GarageGrossProfitDetailDrawer({
               </div>
               <div className="grid grid-cols-[100px_1fr] gap-2">
                 <span className="text-gray-500">
-                  {t("cases.drawer.licensePlate")}:
+                  {t("cases.drawer.licensePlate", "Biển số xe")}:
                 </span>
                 <span className="font-medium text-gray-900">
                   {caseData?.bienSoXe || "-"}
                 </span>
               </div>
               <div className="grid grid-cols-[100px_1fr] gap-2">
-                <span className="text-gray-500">{t("cases.drawer.car")}:</span>
+                <span className="text-gray-500">
+                  {t("cases.drawer.car", "Loại xe")}:
+                </span>
                 <span className="font-medium text-gray-900">
                   {caseData?.loaiXe || "-"}
                 </span>

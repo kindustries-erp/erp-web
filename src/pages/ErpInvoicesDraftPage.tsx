@@ -1,7 +1,7 @@
 import { toast } from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import React, { useState } from "react";
-import { FileText, Eye, DownloadCloud } from "lucide-react";
+import { FileText, Eye, DownloadCloud, Settings } from "lucide-react";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate/SpreadsheetPageTemplate";
 import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
 import { Tooltip } from "@/core/components/ui/Tooltip";
@@ -18,14 +18,18 @@ import {
 } from "@/modules/accounting/api/sinvoiceDraftApi";
 import { SinvoiceDraftModal } from "@/modules/accounting/components/SinvoiceDraftModal";
 import { SinvoiceDraftDetailWrapper } from "@/modules/accounting/components/SinvoiceDraftDetailWrapper";
+import { SinvoiceConfigDrawer } from "@/modules/accounting/components/SinvoiceConfigDrawer";
 import { useSinvoiceDraftsList } from "@/modules/accounting/hooks/useSinvoiceDraftsList";
+import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { InvoiceDateRangeSlot } from "@/modules/erp-invoices-core/components/InvoiceDateRangeSlot";
 
 export function ErpInvoicesDraftPage() {
   const { t } = useTranslation("erpInvoices");
+  const canEditInvoice = useHasPermission("invoices", "update");
   const listHook = useSinvoiceDraftsList();
 
   const [draftOpen, setDraftOpen] = useState(false);
+  const [configDrawerOpen, setConfigDrawerOpen] = useState(false);
   const [detailDraft, setDetailDraft] = useState<SinvoiceDraft | null>(null);
   const setGlobalLoading = useUIStore((s) => s.setGlobalLoading);
 
@@ -361,7 +365,7 @@ export function ErpInvoicesDraftPage() {
 
                 return (
                   <table className="w-full text-sm text-left border-collapse min-w-[700px]">
-                    <thead className="bg-slate-50 sticky top-0">
+                    <thead className="bg-slate-100/60 sticky top-0 backdrop-blur-sm">
                       <tr>
                         <th className="px-2 py-1 border-b text-slate-600 font-medium">
                           Tên mặt hàng
@@ -429,7 +433,7 @@ export function ErpInvoicesDraftPage() {
                         </tr>
                       ))}
                     </tbody>
-                    <tfoot className="bg-slate-50 sticky bottom-0 border-t">
+                    <tfoot className="table-footer-glass sticky bottom-0 border-t border-border shadow-[0_-2px_6px_rgba(0,0,0,0.04)]">
                       <tr>
                         <td className="px-2 py-2 font-semibold text-right text-slate-700">
                           Tổng cộng
@@ -675,6 +679,15 @@ export function ErpInvoicesDraftPage() {
                 icon: <DownloadCloud className="w-4 h-4 text-indigo-600" />,
                 onClick: handleSync,
               },
+              ...(canEditInvoice
+                ? [
+                    {
+                      label: t("sinvoiceDraft.config", "Cấu hình SInvoice"),
+                      icon: <Settings className="w-4 h-4 text-primary" />,
+                      onClick: () => setConfigDrawerOpen(true),
+                    },
+                  ]
+                : []),
             ],
           },
         ]}
@@ -697,6 +710,11 @@ export function ErpInvoicesDraftPage() {
           onClose={() => setDetailDraft(null)}
         />
       )}
+
+      <SinvoiceConfigDrawer
+        open={configDrawerOpen}
+        onClose={() => setConfigDrawerOpen(false)}
+      />
     </>
   );
 }

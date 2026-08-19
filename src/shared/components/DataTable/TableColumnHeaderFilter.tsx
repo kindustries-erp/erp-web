@@ -209,7 +209,7 @@ export function TableColumnHeaderFilter({
     showBlankOption,
   ]);
 
-  // Restore local search when popover opens
+  // Restore local search when popover opens, or clear when searchValue is cleared from outside
   useEffect(() => {
     if (open) {
       if (columnKey && dropdownSearchState.has(columnKey)) {
@@ -217,6 +217,9 @@ export function TableColumnHeaderFilter({
       } else {
         setLocalSearch(searchValue);
       }
+    } else if (!searchValue) {
+      setLocalSearch("");
+      if (columnKey) dropdownSearchState.set(columnKey, "");
     }
   }, [open, searchValue, columnKey]);
 
@@ -313,8 +316,13 @@ export function TableColumnHeaderFilter({
         <Popover.Content
           align={align === "right" ? "end" : "start"}
           sideOffset={8}
+          style={{
+            background: "var(--popup-bg, rgba(246, 248, 252, 0.65))",
+            backdropFilter: "blur(24px) saturate(200%)",
+            WebkitBackdropFilter: "blur(24px) saturate(200%)",
+          }}
           className={cn(
-            "z-[9999] rounded-xl border border-border bg-surface p-0 shadow-lg outline-none",
+            "z-[9999] rounded-xl border border-border/70 p-0 shadow-[0_16px_40px_-8px_rgba(15,23,42,0.18),0_4px_12px_rgba(15,23,42,0.08),0_0_0_1px_rgba(255,255,255,0.6)_inset] outline-none",
             dateRangeSlot ? "w-72" : "w-64",
           )}
         >
@@ -373,7 +381,8 @@ export function TableColumnHeaderFilter({
                 <div className="relative flex items-center">
                   <Search className="absolute left-2.5 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder="Tìm trong bảng..."
+                    placeholder='Tìm... ("..." chính xác, ; nhiều từ)'
+                    title='Mẹo: Dùng "text" để tìm chính xác, dùng a;b để tìm nhiều giá trị (OR)'
                     className="pl-8 pr-8 h-8 text-xs"
                     value={localSearch}
                     onChange={(e) => {
@@ -478,7 +487,7 @@ export function TableColumnHeaderFilter({
 
           {/* Footer Actions */}
           {!hideFooter && (
-            <div className="p-2 border-t border-border flex justify-between items-center bg-muted/50 rounded-b-xl">
+            <div className="p-2 border-t border-border flex justify-between items-center bg-muted/30 rounded-b-xl">
               <Button
                 variant="ghost"
                 size="sm"

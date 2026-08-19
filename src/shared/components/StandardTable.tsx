@@ -1,13 +1,10 @@
 import React from "react";
-import { RotateCcw } from "lucide-react";
-import { Tooltip } from "@/core/components/ui/Tooltip";
-import { Button } from "@/shared/components/ui/Button";
 import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
 import {
   ActionDropdown,
   type ActionDropdownItem,
 } from "@/shared/components/ActionDropdown";
-import type { Updater } from "@tanstack/react-table";
+import type { Updater, VisibilityState } from "@tanstack/react-table";
 
 export interface StandardTableProps<T> {
   items: T[];
@@ -31,9 +28,12 @@ export interface StandardTableProps<T> {
   error?: string | null;
   actions?: (row: T) => ActionDropdownItem[];
   actionColumnSize?: number;
+  enableRowHoverActions?: boolean;
+  hideLegacyActionColumn?: boolean;
   renderSubRow?: (row: T) => React.ReactNode;
   onRowClick?: (row: T) => void;
   enableColumnVisibility?: boolean;
+  defaultColumnVisibility?: VisibilityState;
   tableId?: string;
   enableColumnResizing?: boolean;
   enableRowSelection?: boolean;
@@ -67,9 +67,12 @@ export function StandardTable<T>({
   error = null,
   actions,
   actionColumnSize,
+  enableRowHoverActions = true,
+  hideLegacyActionColumn = false,
   renderSubRow,
   onRowClick,
   enableColumnVisibility = true,
+  defaultColumnVisibility,
   tableId,
   enableColumnResizing,
   enableRowSelection,
@@ -105,35 +108,19 @@ export function StandardTable<T>({
       loading={loading}
       error={error}
       actionsColumn={
-        actions
+        actions && !hideLegacyActionColumn
           ? {
-              header: tableId ? (
-                <Tooltip content="Khôi phục độ rộng">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (tableId) {
-                        const event = new CustomEvent(
-                          `reset-column-sizing-${tableId}`,
-                        );
-                        window.dispatchEvent(event);
-                      }
-                    }}
-                  >
-                    <RotateCcw className="h-3.5 w-3.5 text-muted-foreground" />
-                  </Button>
-                </Tooltip>
-              ) : (
-                ""
-              ),
+              header: "",
               cell: (row) => <ActionDropdown items={actions(row)} />,
               size: actionColumnSize,
               minSize: actionColumnSize,
               maxSize: actionColumnSize,
             }
+          : undefined
+      }
+      rowHoverActions={
+        actions && enableRowHoverActions !== false
+          ? (row) => actions(row)
           : undefined
       }
       expandedRowKeys={
@@ -144,6 +131,7 @@ export function StandardTable<T>({
       }
       renderSubRow={renderSubRow}
       enableColumnVisibility={enableColumnVisibility}
+      defaultColumnVisibility={defaultColumnVisibility}
       tableId={tableId}
       enableColumnResizing={enableColumnResizing}
       enableRowSelection={enableRowSelection}

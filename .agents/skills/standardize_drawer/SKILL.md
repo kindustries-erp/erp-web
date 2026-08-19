@@ -95,6 +95,8 @@ Dành cho các màn hình nghiệp vụ phức tạp có chứng từ (như Hóa
 - **`leftPanel`**: Chứa thông tin chi tiết chứng từ (ví dụ: Thông tin chung, Bảng danh sách hàng hóa/dịch vụ).
 - **`rightPanel`**: Chứa các thông tin meta, tham chiếu, file đính kèm (Metadata, Logs). (Không cần Status ở đây nếu đã dùng `titleExtra` trên Header).
 - **Bắt buộc**: Các nhóm nội dung (content group) độc lập (ví dụ: Thông tin chung, Thuộc tính, Ghi chú, Lịch sử...) phải được đặt trong một `<DrawerSection>` riêng biệt. Component này sẽ tự động tạo một thẻ (card) có tiêu đề và đường phân cách theo đúng chuẩn UI.
+- **Tính năng Thu gọn / Mở rộng (`collapsible`)**: Sử dụng prop `collapsible={true}` và `defaultCollapsed={false}` trên `<DrawerSection>` để cho phép người dùng đóng/mở mượt mà từng khối nội dung. Mũi tên `ChevronDown` sẽ tự động hiển thị cạnh tiêu đề và xoay mượt với hiệu ứng CSS grid transition 300ms.
+- **Tính năng Fit Viewport & Peek Context Deck (`fitViewportHeight` / `peekRelatedDeck`)**: Đối với các section chứa nội dung chính (như form dài, preview chứng từ, sheet báo giá) có kèm thanh `relatedTabs` (Context Deck) phía dưới, bật `fitViewportHeight={true}` hoặc `peekRelatedDeck={true}` trên `<DrawerSection>`. Khung nội dung sẽ tự động giới hạn `max-h-[calc(100vh-210px)]` kèm thanh cuộn dọc nội bộ `overflow-y-auto`, để lộ một khoảng vừa vặn ở đáy viewport giúp người dùng luôn nhận biết được các tab liên quan bên dưới.
 - **Button trong DrawerSection**: Đối với các phần (section) chứa bảng dữ liệu (như table danh sách) hoặc các section cần hành động (Add, Link, Delete All...), **bắt buộc** phải đặt các action button này ở góc trên bên phải của section. Để làm điều này, sử dụng prop `titleExtra` của `<DrawerSection>`. Không được đặt button ở bên trong nội dung dưới title hoặc phía trên table.
 
 **Mẫu code 2-Columns Drawer**:
@@ -158,6 +160,131 @@ export function VoucherDrawer({ open, onClose, mode, setMode, data }) {
 }
 ```
 
+## 4. Quy tắc cho Thông tin liên quan & Phụ trợ (Horizon Divider Bar & Connected Context Deck)
+
+Đối với các thông tin thứ cấp, bổ trợ như **Lịch sử thao tác / Audit Log**, **Chuỗi chứng từ liên đới**, **Tệp đính kèm**, **Ghi chú nội bộ**:
+- **KHÔNG** nhồi nhét vào `rightPanel` (vì cột phải hẹp, chỉ phù hợp với metadata tóm tắt).
+- **KHÔNG** đặt thành các `DrawerSection` dài vô tận ở cuối `leftPanel` (vì làm loãng form nhập liệu chính).
+- **BẮT BUỘC** sử dụng hệ thống **Horizon Divider Bar & Connected Context Deck** thông qua prop `relatedTabs` (hoặc `bottomPanel`) của `<StandardFormDrawer>`:
+  - Tự động hiển thị thanh **Horizon Divider Bar** phân tách nội dung chính và nội dung liên quan ở đáy Main Body.
+  - Cung cấp các **Segmented Pill Tabs** với Badge đếm số lượng bản ghi (`badgeCount`) và nút Thu gọn / Mở rộng (`ChevronUp`/`ChevronDown`).
+  - **Chuẩn hóa Giao diện Card Deck**: Mọi nội dung tab khi mở đều được tự động đặt trong **Standard Deck Card Container** với:
+    - Bo góc `rounded-xl`, viền `border border-border/80`, bóng đổ `card-shadow` đồng bộ với `<DrawerSection>` phía trên.
+    - Hiệu ứng kính mờ (frosted glass) chuẩn ERP: `background: var(--drawer-section-bg, rgba(255,255,255,0.65))` và `backdropFilter: blur(12px) saturate(180%)`.
+    - Mặc định padding `p-3.5`. Hỗ trợ tùy biến qua các props trên từng tab:
+      - `flush: true`: Chế độ tràn viền (`p-0 overflow-hidden`) dành cho biểu đồ Canvas Graph (`@xyflow/react`) hoặc bảng dữ liệu full-bleed.
+      - `cardClassName`: Tùy chỉnh class cho Card Container của tab.
+      - `noCard: true`: Tắt Card Container nếu tab tự quản lý khung ngoài.
+  - Hỗ trợ các sub-components chuẩn từ `@/shared/components/drawer`:
+    - `<DrawerDocumentTraceability>`: **Mạng lưới chứng từ liên kết & Cấn trừ thông minh (Multi-hop Traceability Graph)**:
+      - 3 View Modes: **Canvas View** (`@xyflow/react` node graph với phân nhóm **Stage Group Swimlanes** 4 giai đoạn chuẩn & mũi tên định hướng, xoay hướng bố cục Ngang/Dọc), **Pipeline View** (luồng tuần tự theo cột), **Matrix Table View** (phân loại 1-hop vs Multi-hops).
+      - Hỗ trợ nút **Toàn màn hình / Thu nhỏ** (`Maximize2`/`Minimize2`) trực tiếp trên Tab Bar cho mọi chế độ xem.
+      - Chi tiết cấu hình đầy đủ xem tại skill: 👉 [`drawer-document-traceability`](../drawer-document-traceability/SKILL.md).
+    - `<DrawerAuditTimeline>`: Timeline lịch sử thao tác, diff thay đổi trường dữ liệu (`oldVal` -> `newVal`), avatar người dùng và timestamp.
+    - `<DrawerRelatedDocs>`: Mạng lưới chứng từ liên quan (PO, Phiếu nhập, Hóa đơn, Phiếu chi...) dạng Flow Cards rút gọn.
+    - `<DrawerAttachmentsDeck>`: Danh sách/Grid tệp đính kèm, preview, download và dropzone upload.
+    - `<DrawerInternalNotes>`: Luồng thảo luận / ghi chú trao đổi nội bộ.
+
+
+**Mẫu code 2-Columns Drawer kết hợp `relatedTabs`**:
+
+```tsx
+import {
+  StandardFormDrawer,
+  DrawerDocumentTraceability,
+  DrawerAuditTimeline,
+  DrawerRelatedDocs,
+  DrawerAttachmentsDeck,
+  type DrawerRelatedTabItem,
+} from "@/shared/components/drawer";
+import { Badge } from "@/shared/components/ui/badge";
+import {
+  DrawerSection,
+  DrawerField,
+  inputCls,
+} from "@/shared/components/DrawerModal";
+import { Network, History, Link2, Paperclip } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { getPurchaseOrderTraceabilityGraph, unlinkPurchaseOrderDocument } from "@/shared/api/purchasing";
+
+export function PurchaseOrderDrawer({ open, onClose, mode, setMode, data, auditLogs, relatedDocs, attachments }) {
+  const { t } = useTranslation("purchase");
+
+  const relatedTabs: DrawerRelatedTabItem[] = [
+    {
+      key: "traceability",
+      label: t("Mạng lưới chứng từ", "Document Network"),
+      icon: <Network className="w-3.5 h-3.5" />,
+      badgeCount: data?.linkedDocsCount,
+      flush: true, // Bắt buộc bật flush để canvas tràn viền tối đa
+      content: (
+        <DrawerDocumentTraceability
+          rootId={data.id}
+          rootType="PURCHASE_ORDER"
+          fetchGraph={getPurchaseOrderTraceabilityGraph}
+          editMode={mode === "edit"}
+          allowedDocTypes={["INVOICE", "BANK_TXN", "GOODS_RECEIPT"]}
+          onAddLink={(stageKey, docType) => console.log("Add link", stageKey, docType)}
+          onUnlinkNode={(node) => unlinkPurchaseOrderDocument(data.id, node.id, node.docType)}
+        />
+      ),
+    },
+    {
+      key: "history",
+      label: t("Lịch sử thay đổi", "Audit History"),
+      icon: <History className="w-3.5 h-3.5" />,
+      badgeCount: auditLogs?.length,
+      content: <DrawerAuditTimeline items={auditLogs} />,
+    },
+    {
+      key: "connected_docs",
+      label: t("Chứng từ liên đới", "Connected Documents"),
+      icon: <Link2 className="w-3.5 h-3.5" />,
+      badgeCount: relatedDocs?.length,
+      content: <DrawerRelatedDocs docs={relatedDocs} onOpenDoc={(doc) => console.log(doc)} />,
+    },
+    {
+      key: "files",
+      label: t("Tệp đính kèm", "Attachments"),
+      icon: <Paperclip className="w-3.5 h-3.5" />,
+      badgeCount: attachments?.length,
+      content: <DrawerAttachmentsDeck attachments={attachments} />,
+    },
+  ];
+
+  return (
+    <StandardFormDrawer
+      open={open}
+      mode={mode}
+      onClose={onClose}
+      onToggleEdit={() => setMode("edit")}
+      title={t("Đơn mua hàng: PO-202608-001")}
+      titleExtra={<Badge variant="default">{t(data.status)}</Badge>}
+      layout="2-columns"
+      size="xl"
+      collapsibleRightPanel={true}
+      actions={[{ label: t("Đóng", "Close"), onClick: onClose }]}
+      leftPanel={
+        <div className="flex flex-col gap-4">
+          <DrawerSection title={t("Chi tiết mặt hàng")}>
+            {/* Table danh sách sản phẩm */}
+          </DrawerSection>
+        </div>
+      }
+      rightPanel={
+        <div className="flex flex-col gap-4">
+          <DrawerSection title={t("Thông tin nhà cung cấp")}>
+            <DrawerField label={t("Nhà cung cấp")}>...</DrawerField>
+          </DrawerSection>
+        </div>
+      }
+      relatedTabs={relatedTabs}
+      defaultRelatedCollapsed={false}
+    />
+  );
+}
+```
+
 ## Summary Checklist trước khi hoàn thành:
 
 - [ ] Drawer đã sử dụng `<StandardFormDrawer>` chưa?
@@ -168,5 +295,9 @@ export function VoucherDrawer({ open, onClose, mode, setMode, data }) {
 - [ ] Drawer chứng từ (2 cột) đã set `layout="2-columns"` và `size="xl"`/`"lg"` chưa?
 - [ ] Phần nội dung bên trong đã dùng các khối chuẩn như `<DrawerSection>`, `<DrawerField>` để bao bọc các input chưa?
 - [ ] Các action button của một `<DrawerSection>` (như nút Thêm, Xóa, Liên kết cho bảng) đã được đưa lên góc trên bên phải bằng prop `titleExtra` của `DrawerSection` chưa?
+- [ ] Các thông tin phụ trợ (Lịch sử thao tác, Mạng lưới chứng từ, Đính kèm, Ghi chú) đã được tách bạch qua prop `relatedTabs` của `StandardFormDrawer` thay vì nhồi vào `rightPanel` hay cuối form chưa?
+- [ ] Vùng tab thông tin liên quan đã tận dụng cấu trúc chuẩn **Deck Card Container** với `card-shadow` và glassmorphism đồng bộ chưa?
+- [ ] Đã sử dụng các widgets chuẩn hóa (`<DrawerDocumentTraceability>`, `<DrawerAuditTimeline>`, `<DrawerRelatedDocs>`, `<DrawerAttachmentsDeck>`, `<DrawerInternalNotes>`) cho `relatedTabs` chưa?
 - [ ] Input đã sử dụng CSS class `inputCls` từ `@/shared/components/DrawerModal` (nếu có) chưa?
 - [ ] Chức năng cảnh báo đóng Drawer khi đang Edit (`confirmOnClose={mode === 'edit'}`) đã được cấu hình đúng chưa?
+

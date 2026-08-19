@@ -3,6 +3,7 @@ import { ErpInvoiceStandaloneDrawer } from "@/modules/erp-invoices-core/componen
 import { GarageCaseStandaloneDrawer } from "@/modules/garage/components/GarageCaseStandaloneDrawer";
 import { PurchaseOrderStandaloneDrawer } from "@/modules/purchase-orders-core/components/PurchaseOrderStandaloneDrawer";
 import { ErpSalesOrderStandaloneDrawer } from "@/modules/sales-orders-core/components/ErpSalesOrderStandaloneDrawer";
+import { BankTransactionDetailDrawer } from "@/pages/finance/components/BankTransactionDetailDrawer";
 
 interface OpenErpDocumentDetail {
   type:
@@ -11,7 +12,9 @@ interface OpenErpDocumentDetail {
     | "erp_purchase_order"
     | "purchase_order"
     | "erp_sales_order"
-    | "sales_order";
+    | "sales_order"
+    | "bank_transaction"
+    | "bank_statement";
   id: string;
 }
 
@@ -20,6 +23,7 @@ export function GlobalErpDocumentOpener() {
   const [activeCaseId, setActiveCaseId] = useState<string | null>(null);
   const [activePoId, setActivePoId] = useState<string | null>(null);
   const [activeSoId, setActiveSoId] = useState<string | null>(null);
+  const [activeBankTxnId, setActiveBankTxnId] = useState<string | null>(null);
 
   const handleOpenDoc = useCallback((e: Event) => {
     const detail = (e as CustomEvent<OpenErpDocumentDetail>).detail;
@@ -42,6 +46,13 @@ export function GlobalErpDocumentOpener() {
     ) {
       if (window.location.pathname.includes("/erp-sales-orders")) return;
       setActiveSoId(detail.id);
+    } else if (
+      detail &&
+      (detail.type === "bank_transaction" ||
+        detail.type === "bank_statement") &&
+      detail.id
+    ) {
+      setActiveBankTxnId(detail.id);
     }
   }, []);
 
@@ -73,6 +84,11 @@ export function GlobalErpDocumentOpener() {
         isOpen={!!activeSoId}
         soId={activeSoId}
         onClose={() => setActiveSoId(null)}
+      />
+      <BankTransactionDetailDrawer
+        isOpen={!!activeBankTxnId}
+        transactionId={activeBankTxnId}
+        onClose={() => setActiveBankTxnId(null)}
       />
     </>
   );

@@ -10,7 +10,7 @@ import {
   CheckCircle,
   FileSpreadsheet,
   FileText,
-  Plus,
+  Settings,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useUIStore } from "@/core/config/uiStore";
@@ -52,6 +52,7 @@ import {
   emptyLine,
   toPayload,
 } from "@/modules/bom-core/components/BomFormDrawer";
+import { BomConfigDrawer } from "@/modules/bom-core/components/BomConfigDrawer";
 
 function fmtDate(value?: string | null) {
   if (!value) return "—";
@@ -503,6 +504,7 @@ export function ErpBomPage() {
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [bomConfigOpen, setBomConfigOpen] = useState(false);
   const [drawerLoading, setDrawerLoading] = useState(false);
   const [editing, setEditing] = useState<ErpBom | null>(null);
   const [viewOnly, setViewOnly] = useState(false);
@@ -1386,14 +1388,15 @@ export function ErpBomPage() {
         setPageSize(value);
       }}
       onRefresh={() => void loadBoms()}
+      onCreate={openCreate}
       createActions={[
         {
-          groupLabel: t("groupThemMoi", "Thêm mới"),
+          groupLabel: t("groupCauHinh", "Cấu hình"),
           items: [
             {
-              label: t("common.create", "Tạo mới"),
-              icon: <Plus className="w-4 h-4 text-emerald-600" />,
-              onClick: openCreate,
+              label: t("bomConfig.title", "Cấu hình BOM"),
+              icon: <Settings className="w-4 h-4 text-violet-500" />,
+              onClick: () => setBomConfigOpen(true),
             },
           ],
         },
@@ -1454,6 +1457,11 @@ export function ErpBomPage() {
               icon: <Ban className="h-[13px] w-[13px]" />,
               variant: "danger",
               hidden: item.status !== "ACTIVE",
+            },
+            {
+              label: t("bomConfig.title", "Cấu hình BOM"),
+              onClick: () => setBomConfigOpen(true),
+              icon: <Settings className="h-[13px] w-[13px]" />,
             },
             {
               label: t("Xóa"),
@@ -1539,6 +1547,11 @@ export function ErpBomPage() {
         itemUomMap={itemUomMap}
         uomOptions={uomOptions}
         onExport={(format) => editing && handleExport(editing, format)}
+      />
+
+      <BomConfigDrawer
+        open={bomConfigOpen}
+        onClose={() => setBomConfigOpen(false)}
       />
     </SpreadsheetPageTemplate>
   );

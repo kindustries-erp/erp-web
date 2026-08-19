@@ -69,4 +69,11 @@ describe("ErpInvoicePdfUpload", () => {
     render(<ErpInvoicePdfUpload {...defaultProps} editMode={false} />);
     expect(screen.queryByTitle("Xóa đính kèm")).not.toBeInTheDocument();
   });
+
+  it("should render without DrawerSection wrapper when noCard is true", () => {
+    render(<ErpInvoicePdfUpload {...defaultProps} noCard={true} />);
+    expect(screen.getByText("main-pdf.pdf")).toBeInTheDocument();
+    // In noCard mode, the duplicate "Tài liệu đính kèm" DrawerSection title should not be rendered
+    expect(screen.queryByText("Tài liệu đính kèm")).not.toBeInTheDocument();
+  });
 });

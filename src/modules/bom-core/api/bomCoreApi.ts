@@ -20,11 +20,17 @@ export interface ErpBom {
   finishedGoodItemId?: string | null;
   finishedGoodItemCode?: string | null;
   finishedGoodItemName?: string | null;
+  categoryId?: string | null;
+  categoryCode?: string | null;
+  categoryName?: string | null;
+  attributes?: Record<string, string>;
   version: string;
   status?: string | null;
   effectiveFrom?: string | null;
   effectiveTo?: string | null;
   notes?: string | null;
+  hasProduction?: boolean;
+  productionCount?: number;
   createdAt?: string;
   lines?: ErpBomLine[];
 }
@@ -33,6 +39,8 @@ export interface CreateBomPayload {
   bomCode: string;
   bomName: string;
   finishedGoodItemId?: string;
+  categoryId?: string;
+  attributes?: Record<string, string>;
   version: string;
   status?: string;
   effectiveFrom?: string;

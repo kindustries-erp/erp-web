@@ -1,20 +1,33 @@
 import React, { useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useT } from "@/core/i18n";
 import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
 import { DataTable } from "@/shared/components/DataTable";
 import { Button } from "@/shared/components/ui/Button";
+import { Input } from "@/shared/components/ui/input";
+import { Textarea } from "@/shared/components/ui/textarea";
+import { Checkbox } from "@/shared/components/ui/checkbox";
 import { Combobox } from "@/shared/components/Combobox";
 import { DatePicker } from "@/shared/components/DatePicker";
-import {
-  DrawerField,
-  DrawerSection,
-  inputCls,
-} from "@/shared/components/DrawerModal";
+import { DrawerField, DrawerSection } from "@/shared/components/DrawerModal";
 import { CellInput } from "@/shared/components/CellInput";
 import { bomCoreApi, type ErpBom } from "@/modules/bom-core/api/bomCoreApi";
+import {
+  bomConfigApi,
+  type BomAttributeDef,
+} from "@/modules/bom-core/api/bomConfigApi";
 import type { DrawerMode } from "@/shared/stores/useDrawerStore";
 import toast from "react-hot-toast";
-import { Upload, Download, Loader2, Trash2 } from "lucide-react";
+import { ActionDropdown } from "@/shared/components/ActionDropdown";
+import {
+  Download,
+  Loader2,
+  Trash2,
+  ChevronDown,
+  FileSpreadsheet,
+  Plus,
+  AlertCircle,
+} from "lucide-react";
 import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
 import { FilterButton } from "@/shared/components/FilterPanel";
 
@@ -30,6 +43,8 @@ export interface BomForm {
   bomCode: string;
   bomName: string;
   finishedGoodItemId: string;
+  categoryId: string;
+  attributes: Record<string, string>;
   version: string;
   status: string;
   effectiveFrom: string;
@@ -50,6 +65,8 @@ export const emptyForm = (): BomForm => ({
   bomCode: "",
   bomName: "",
   finishedGoodItemId: "",
+  categoryId: "",
+  attributes: {},
   version: "1.0",
   status: "ACTIVE",
   effectiveFrom: "",
@@ -74,6 +91,8 @@ export function buildForm(bom: ErpBom): BomForm {
     bomCode: bom.bomCode ?? "",
     bomName: bom.bomName ?? "",
     finishedGoodItemId: bom.finishedGoodItemId ?? "",
+    categoryId: bom.categoryId ?? "",
+    attributes: bom.attributes ?? {},
     version: bom.version ?? "1.0",
     status: bom.status ?? "ACTIVE",
     effectiveFrom: bom.effectiveFrom ? bom.effectiveFrom.slice(0, 10) : "",
@@ -96,6 +115,11 @@ export function toPayload(form: BomForm) {
     bomCode: form.bomCode.trim(),
     bomName: form.bomName.trim(),
     finishedGoodItemId: form.finishedGoodItemId || undefined,
+    categoryId: form.categoryId || undefined,
+    attributes:
+      form.attributes && Object.keys(form.attributes).length > 0
+        ? form.attributes
+        : undefined,
     version: form.version.trim() || "1.0",
     status: form.status || "ACTIVE",
     effectiveFrom: form.effectiveFrom || undefined,
@@ -169,6 +193,55 @@ export function BomFormDrawer({
   const t = useT();
   const viewOnly = mode === "view";
   const isEditing = mode === "edit";
+  const isLockedByProduction = Boolean(editing?.hasProduction);
+
+  // Query BOM Categories
+  const { data: allCategories = [] } = useQuery({
+    queryKey: ["bom-config-categories"],
+    queryFn: () => bomConfigApi.getCategories(),
+    enabled: open,
+  });
+
+  const activeCategories = useMemo(() => {
+    return allCategories.filter((c) => c.isActive !== false);
+  }, [allCategories]);
+
+  const categoryOptions = useMemo(() => {
+    return activeCategories.map((c) => ({
+      value: c.id,
+      label: `${c.name} [${c.code}]`,
+    }));
+  }, [activeCategories]);
+
+  const selectedCategory = useMemo(() => {
+    return allCategories.find((c) => c.id === form.categoryId);
+  }, [allCategories, form.categoryId]);
+
+  const activeAttributeDefs = useMemo(() => {
+    if (!selectedCategory?.attributeDefs) return [];
+    return selectedCategory.attributeDefs
+      .filter((d) => d.isActive !== false)
+      .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
+  }, [selectedCategory]);
+
+  const handleCategoryChange = (val: string) => {
+    setForm((prev) => ({
+      ...prev,
+      categoryId: val,
+      attributes: {},
+    }));
+  };
+
+  const handleAttributeChange = (attrDefId: string, val: string) => {
+    setForm((prev) => ({
+      ...prev,
+      attributes: {
+        ...(prev.attributes || {}),
+        [attrDefId]: val,
+      },
+    }));
+  };
+
   const [submittingStatus, setSubmittingStatus] = React.useState<string | null>(
     null,
   );
@@ -413,28 +486,75 @@ export function BomFormDrawer({
   const total = sortedAndFilteredLines.length;
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
-  const exportActions =
-    editing && onExport
-      ? [
+  const validateForm = () => {
+    if (selectedCategory && activeAttributeDefs.length > 0) {
+      for (const attr of activeAttributeDefs) {
+        if (attr.isRequired) {
+          const val = form.attributes?.[attr.id];
+          if (
+            val === undefined ||
+            val === null ||
+            (typeof val === "string" && val.trim() === "")
+          ) {
+            toast.error(
+              `${t("Vui lòng chọn hoặc điền thuộc tính bắt buộc")}: ${attr.name}`,
+            );
+            return false;
+          }
+        }
+      }
+    }
+    return true;
+  };
+
+  const onSaveWithValidation = (statusTarget?: string) => {
+    if (!validateForm()) return;
+    setSubmittingStatus(statusTarget || null);
+    handleSave(statusTarget);
+  };
+
+  const footerLeft =
+    editing && onExport ? (
+      <ActionDropdown
+        align="start"
+        items={[
           {
-            label: t("common.exportExcel"),
-            onClick: () => onExport("xlsx"),
-            variant: "outline" as const,
-            disabled: drawerLoading || saving,
+            groupLabel: t("common.exportGroup", "XUẤT DỮ LIỆU"),
+            items: [
+              {
+                label: t("common.exportExcel", "Tải file Excel"),
+                icon: (
+                  <FileSpreadsheet className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                ),
+                onClick: () => onExport("xlsx"),
+                disabled: drawerLoading || saving,
+              },
+              {
+                label: t("common.exportCsv", "Tải file CSV"),
+                icon: <FileSpreadsheet className="w-4 h-4 text-primary" />,
+                onClick: () => onExport("csv"),
+                disabled: drawerLoading || saving,
+              },
+            ],
           },
-          {
-            label: t("common.exportCsv"),
-            onClick: () => onExport("csv"),
-            variant: "outline" as const,
-            disabled: drawerLoading || saving,
-          },
-        ]
-      : [];
+        ]}
+        customTrigger={
+          <button
+            type="button"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium border border-[color:var(--border)] bg-white dark:bg-zinc-800 hover:bg-[color:var(--bg-muted)] text-[color:var(--fg)] shadow-sm transition-colors"
+          >
+            <span className="font-semibold text-[color:var(--fg)]">
+              {t("common.actions", "Thao tác")}
+            </span>
+            <ChevronDown className="w-3.5 h-3.5 text-[color:var(--faint)]" />
+          </button>
+        }
+      />
+    ) : undefined;
 
   const drawerActions =
     viewOnly || drawerLoading
       ? [
-          ...exportActions,
           {
             label: t("Đóng"),
             onClick: onClose,
@@ -456,8 +576,7 @@ export function BomFormDrawer({
               loading: saving && submittingStatus === "DRAFT",
               disabled: saving,
               onClick: () => {
-                setSubmittingStatus("DRAFT");
-                handleSave("DRAFT");
+                onSaveWithValidation("DRAFT");
               },
             },
             {
@@ -466,13 +585,11 @@ export function BomFormDrawer({
               loading: saving && submittingStatus === "ACTIVE",
               disabled: saving,
               onClick: () => {
-                setSubmittingStatus("ACTIVE");
-                handleSave("ACTIVE");
+                onSaveWithValidation("ACTIVE");
               },
             },
           ]
         : [
-            ...exportActions,
             {
               label: t("Hủy"),
               onClick: onClose,
@@ -485,8 +602,7 @@ export function BomFormDrawer({
               loading: saving && submittingStatus === "ACTIVE",
               disabled: saving,
               onClick: () => {
-                setSubmittingStatus("ACTIVE");
-                handleSave("ACTIVE");
+                onSaveWithValidation("ACTIVE");
               },
             },
           ];
@@ -621,7 +737,7 @@ export function BomFormDrawer({
         cell: (line: BomLineForm, _: number, meta: any) => {
           const {
             viewOnly,
-            editing,
+            isLockedByProduction,
             form,
             updateLine,
             mergedItemOptions,
@@ -635,7 +751,7 @@ export function BomFormDrawer({
             <Combobox
               variant="spreadsheet"
               value={line.componentItemId}
-              readOnly={viewOnly || !!editing}
+              readOnly={viewOnly || isLockedByProduction}
               onChange={(value) => {
                 const patch: Partial<BomLineForm> = {
                   componentItemId: value || "",
@@ -718,14 +834,14 @@ export function BomFormDrawer({
         headerClassName: "min-w-[150px]",
         className: "min-w-[150px] p-0 align-middle",
         cell: (line: BomLineForm, _: number, meta: any) => {
-          const { viewOnly, editing, form, updateLine } = meta;
+          const { viewOnly, isLockedByProduction, form, updateLine } = meta;
           const trueIdx = form.lines.indexOf(line);
           return (
             <CellInput
               type="number"
               step="0.1"
               value={line.qtyRequired}
-              disabled={viewOnly || !!editing}
+              disabled={viewOnly || isLockedByProduction}
               onBlur={(e) => {
                 const val = parseFloat(e.target.value);
                 if (!isNaN(val)) {
@@ -760,13 +876,19 @@ export function BomFormDrawer({
         headerClassName: "min-w-[150px]",
         className: "min-w-[150px] p-0 align-middle",
         cell: (line: BomLineForm, _: number, meta: any) => {
-          const { viewOnly, editing, form, updateLine, uomOptions } = meta;
+          const {
+            viewOnly,
+            isLockedByProduction,
+            form,
+            updateLine,
+            uomOptions,
+          } = meta;
           const trueIdx = form.lines.indexOf(line);
           return (
             <Combobox
               variant="spreadsheet"
               value={line.uomId}
-              readOnly={viewOnly || !!editing}
+              readOnly={viewOnly || isLockedByProduction}
               onChange={(value) => updateLine(trueIdx, { uomId: value || "" })}
               options={uomOptions || []}
               placeholder={t("Chọn ĐVT")}
@@ -797,14 +919,14 @@ export function BomFormDrawer({
         headerClassName: "min-w-[150px]",
         className: "min-w-[150px] p-0 align-middle",
         cell: (line: BomLineForm, _: number, meta: any) => {
-          const { viewOnly, editing, form, updateLine } = meta;
+          const { viewOnly, isLockedByProduction, form, updateLine } = meta;
           const trueIdx = form.lines.indexOf(line);
           return (
             <CellInput
               type="number"
               step="0.01"
               value={line.scrapRate}
-              disabled={viewOnly || !!editing}
+              disabled={viewOnly || isLockedByProduction}
               onBlur={(e) => {
                 const val = parseFloat(e.target.value);
                 if (!isNaN(val)) {
@@ -839,12 +961,12 @@ export function BomFormDrawer({
         headerClassName: "min-w-[150px]",
         className: "min-w-[150px] p-0 align-middle",
         cell: (line: BomLineForm, _: number, meta: any) => {
-          const { viewOnly, form, updateLine } = meta;
+          const { viewOnly, isLockedByProduction, form, updateLine } = meta;
           const trueIdx = form.lines.indexOf(line);
           return (
             <CellInput
               value={line.notes}
-              disabled={viewOnly}
+              disabled={viewOnly || isLockedByProduction}
               onValueChange={(val) => updateLine(trueIdx, { notes: val })}
             />
           );
@@ -855,25 +977,32 @@ export function BomFormDrawer({
   );
 
   const actionColumnDef = useMemo(() => {
-    if (viewOnly || isEditing) return undefined;
+    if (viewOnly || isLockedByProduction) return undefined;
     return {
-      header: "",
+      header: (
+        <div className="text-center font-bold text-[11px] uppercase tracking-wider text-muted-foreground">
+          {t("XÓA")}
+        </div>
+      ),
       cell: (line: BomLineForm, _: number, meta: any) => {
         const { form, removeLine } = meta;
         const trueIdx = form.lines.indexOf(line);
         return (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 text-red-500"
-            onClick={() => removeLine(trueIdx)}
-          >
-            ✕
-          </Button>
+          <div className="flex items-center justify-center">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+              onClick={() => removeLine(trueIdx)}
+              title={t("common.deleteRow", "Xóa dòng")}
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </Button>
+          </div>
         );
       },
     };
-  }, [viewOnly, isEditing]);
+  }, [viewOnly, isLockedByProduction, t]);
 
   return (
     <StandardFormDrawer
@@ -898,175 +1027,209 @@ export function BomFormDrawer({
       }
       subtitle={editing ? editing.bomCode : t("Định mức nguyên vật liệu")}
       actions={drawerActions}
+      footerLeft={footerLeft}
       size="xl"
       error={saveError}
       loading={drawerLoading}
       leftPanel={
-        <DrawerSection
-          title={
-            <span className="shrink-0">
-              {t("Định mức nguyên vật liệu")} (
-              {sortedAndFilteredLines.length < form.lines.length
-                ? `${sortedAndFilteredLines.length}/${form.lines.length}`
-                : form.lines.length}
-              )
-            </span>
-          }
-          titleExtra={
-            <div className="flex flex-wrap items-center gap-3 w-full sm:justify-end justify-between overflow-hidden">
-              {!viewOnly && (
-                <div className="flex flex-wrap items-center gap-2 order-2 sm:order-1 min-w-0">
-                  <button
-                    type="button"
-                    onClick={handleDownloadTemplate}
-                    className="inline-flex items-center gap-1 text-xs px-2 py-1 bg-white border border-gray-300 text-gray-700 rounded hover:bg-gray-50 focus:outline-none"
+        <div className="h-full flex flex-col flex-1 min-h-0">
+          {/* Hidden File Input for Excel Import */}
+          <input
+            type="file"
+            ref={fileInputRef}
+            className="hidden"
+            accept=".xlsx,.csv"
+            onChange={handleFileUpload}
+          />
+
+          {/* Section: Định mức nguyên vật liệu */}
+          <DrawerSection
+            className="h-full flex flex-col flex-1 min-h-0 mb-0"
+            title={
+              <span className="shrink-0">
+                {t("Định mức nguyên vật liệu")} (
+                {sortedAndFilteredLines.length < form.lines.length
+                  ? `${sortedAndFilteredLines.length}/${form.lines.length}`
+                  : form.lines.length}
+                )
+              </span>
+            }
+            titleExtra={
+              <div className="flex items-center gap-2 flex-wrap justify-end">
+                {!viewOnly && !isLockedByProduction && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-7 text-xs font-semibold gap-1"
+                    onClick={addLine}
                   >
-                    <Download size={14} />
-                    {t("Template")}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={importing}
-                    className="inline-flex items-center gap-1 text-xs px-2 py-1 bg-white border border-gray-300 text-gray-700 rounded hover:bg-gray-50 focus:outline-none disabled:opacity-50"
-                  >
-                    {importing ? (
-                      <Loader2 size={14} className="animate-spin" />
-                    ) : (
-                      <Upload size={14} />
-                    )}
-                    {t("Tải lên")}
-                  </button>
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    className="hidden"
-                    accept=".xlsx,.csv"
-                    onChange={handleFileUpload}
+                    <Plus className="w-3.5 h-3.5" />
+                    {t("common.addRow", "Thêm dòng")}
+                  </Button>
+                )}
+
+                {!viewOnly && !isLockedByProduction && (
+                  <ActionDropdown
+                    align="end"
+                    customTrigger={
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={importing}
+                        className="h-7 text-xs font-semibold gap-1"
+                      >
+                        {importing && (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        )}
+                        <span>{t("common.actions", "Thao tác")}</span>
+                        <ChevronDown className="w-3.5 h-3.5 opacity-60" />
+                      </Button>
+                    }
+                    items={[
+                      {
+                        groupLabel: t("EXCEL"),
+                        items: [
+                          {
+                            label: t("Tải file mẫu Excel"),
+                            icon: (
+                              <Download className="w-4 h-4 text-emerald-600" />
+                            ),
+                            onClick: handleDownloadTemplate,
+                          },
+                          {
+                            label: t("Nhập từ file Excel"),
+                            icon: (
+                              <FileSpreadsheet className="w-4 h-4 text-primary" />
+                            ),
+                            onClick: () => fileInputRef.current?.click(),
+                          },
+                        ],
+                      },
+                      ...(!editing || form.status === "DRAFT"
+                        ? [
+                            {
+                              groupLabel: t("KHÁC"),
+                              items: [
+                                {
+                                  label: t("Xóa tất cả"),
+                                  icon: (
+                                    <Trash2 className="w-4 h-4 text-destructive" />
+                                  ),
+                                  variant: "danger" as const,
+                                  onClick: () => {
+                                    if (
+                                      window.confirm(
+                                        t(
+                                          "Bạn có chắc chắn muốn xóa tất cả linh kiện?",
+                                        ),
+                                      )
+                                    ) {
+                                      setForm((prev) => ({
+                                        ...prev,
+                                        lines: [emptyLine()],
+                                      }));
+                                    }
+                                  },
+                                },
+                              ],
+                            },
+                          ]
+                        : []),
+                    ]}
                   />
-                  {(!editing || form.status === "DRAFT") && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (
-                          window.confirm(
-                            t("Bạn có chắc chắn muốn xóa tất cả linh kiện?"),
-                          )
-                        ) {
-                          setForm((prev) => ({
-                            ...prev,
-                            lines: [
-                              {
-                                componentItemId: "",
-                                qtyRequired: "1",
-                                uomId: "",
-                                scrapRate: "0",
-                                notes: "",
-                              },
-                            ],
-                          }));
-                        }
-                      }}
-                      className="inline-flex items-center gap-1 text-xs px-2 py-1 bg-white border border-gray-300 text-red-600 rounded hover:bg-red-50 focus:outline-none ml-1"
-                    >
-                      <Trash2 size={14} />
-                      {t("Xóa tất cả")}
-                    </button>
-                  )}
-                </div>
-              )}
-              {activeFilterCount > 0 && (
-                <div className="flex items-center gap-2 order-1 sm:order-2 flex-shrink-0">
+                )}
+
+                {activeFilterCount > 0 && (
                   <FilterButton
                     onClick={() => {}}
                     activeCount={activeFilterCount}
                     onClear={clearAllFilters}
                   />
-                </div>
-              )}
+                )}
+              </div>
+            }
+          >
+            <div className="flex-1 min-h-0 flex flex-col mt-1">
+              <DataTable
+                variant="spreadsheet"
+                containerClassName="flex-1 min-h-[420px] max-h-[calc(100vh-270px)] overflow-auto"
+                enableColumnResizing={true}
+                items={sortedAndFilteredLines}
+                getRowKey={(item) => String(form.lines.indexOf(item))}
+                emptyLabel={t("Không có dữ liệu")}
+                columns={tableColumns}
+                page={page}
+                pageSize={pageSize}
+                total={total}
+                totalPages={totalPages}
+                onPage={setPage}
+                onPageSize={(val) => {
+                  setPageSize(val);
+                  setPage(1);
+                }}
+                tableMeta={{
+                  viewOnly,
+                  editing,
+                  isEditing,
+                  isLockedByProduction,
+                  form,
+                  updateLine,
+                  removeLine,
+                  mergedItemOptions,
+                  itemUomMap,
+                  uomOptions,
+                  setItemSearch,
+                  fetchNextItems,
+                  loadingItems,
+                }}
+                actionsColumn={actionColumnDef}
+              />
             </div>
-          }
-        >
-          <DataTable
-            variant="spreadsheet"
-            containerClassName="max-h-[480px] overflow-auto"
-            enableColumnResizing={true}
-            items={sortedAndFilteredLines}
-            getRowKey={(item) => String(form.lines.indexOf(item))}
-            emptyLabel={t("Không có dữ liệu")}
-            columns={tableColumns}
-            page={page}
-            pageSize={pageSize}
-            total={total}
-            totalPages={totalPages}
-            onPage={setPage}
-            onPageSize={(val) => {
-              setPageSize(val);
-              setPage(1);
-            }}
-            tableMeta={{
-              viewOnly,
-              editing,
-              isEditing,
-              form,
-              updateLine,
-              removeLine,
-              mergedItemOptions,
-              itemUomMap,
-              uomOptions,
-              setItemSearch,
-              fetchNextItems,
-              loadingItems,
-            }}
-            actionsColumn={actionColumnDef}
-          />
-          {!(viewOnly || isEditing) && (
-            <div className="mt-4 flex justify-center gap-3">
-              <Button variant="outline" onClick={addLine}>
-                + {t("Thêm dòng")}
-              </Button>
-            </div>
-          )}
-        </DrawerSection>
+          </DrawerSection>
+        </div>
       }
       rightPanel={
         <div className="flex flex-col gap-4">
+          {/* Cảnh báo khi BOM đã có sản xuất */}
+          {isLockedByProduction && (
+            <div className="p-2.5 rounded-lg border border-amber-500/30 bg-amber-500/10 text-xs text-amber-800 dark:text-amber-300 flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <span>
+                {t(
+                  "bom.lockedByProductionNotice",
+                  "BOM đã phát sinh sản xuất: Chỉ có thể chỉnh sửa Hiệu lực đến và Ghi chú.",
+                )}
+              </span>
+            </div>
+          )}
+
+          {/* Section: Thông tin chung */}
           <DrawerSection title={t("Thông tin chung")}>
             <div className="flex flex-col gap-3">
               <DrawerField label={t("Mã BOM")} required>
-                <input
+                <Input
                   value={form.bomCode}
-                  readOnly={viewOnly || !!editing}
+                  readOnly={viewOnly || !!editing || isLockedByProduction}
                   onChange={(e) =>
                     setForm((prev) => ({ ...prev, bomCode: e.target.value }))
                   }
-                  className={inputCls}
-                />
-              </DrawerField>
-              <DrawerField label={t("Version")} required>
-                <input
-                  value={form.version}
-                  readOnly={viewOnly || !!editing}
-                  onChange={(e) =>
-                    setForm((prev) => ({ ...prev, version: e.target.value }))
-                  }
-                  className={inputCls}
+                  placeholder={t("Mã BOM...")}
                 />
               </DrawerField>
               <DrawerField label={t("Tên BOM")} required>
-                <input
+                <Input
                   value={form.bomName}
-                  readOnly={viewOnly || !!editing}
+                  readOnly={viewOnly || !!editing || isLockedByProduction}
                   onChange={(e) =>
                     setForm((prev) => ({ ...prev, bomName: e.target.value }))
                   }
-                  className={inputCls}
+                  placeholder={t("Tên BOM...")}
                 />
               </DrawerField>
               <DrawerField label={t("Thành phẩm")}>
                 <Combobox
                   value={form.finishedGoodItemId}
-                  readOnly={viewOnly || !!editing}
+                  readOnly={viewOnly || !!editing || isLockedByProduction}
                   onChange={(value) =>
                     setForm((prev) => ({ ...prev, finishedGoodItemId: value }))
                   }
@@ -1082,7 +1245,7 @@ export function BomFormDrawer({
               <DrawerField label={t("Hiệu lực từ")}>
                 <DatePicker
                   value={form.effectiveFrom}
-                  disabled={viewOnly}
+                  disabled={viewOnly || isLockedByProduction}
                   onChange={(value) =>
                     setForm((prev) => ({ ...prev, effectiveFrom: value }))
                   }
@@ -1104,15 +1267,155 @@ export function BomFormDrawer({
             </div>
           </DrawerSection>
 
+          {/* Section: Danh mục & Thuộc tính */}
+          <DrawerSection
+            title={t(
+              "bomConfig.categoryAndAttributes",
+              "Danh mục & Thuộc tính",
+            )}
+          >
+            <div className="flex flex-col gap-3">
+              <DrawerField label={t("bomConfig.category", "Danh mục BOM")}>
+                <Combobox
+                  value={form.categoryId}
+                  readOnly={viewOnly || isLockedByProduction}
+                  onChange={handleCategoryChange}
+                  options={categoryOptions}
+                  placeholder={t(
+                    "bomConfig.selectCategory",
+                    "— Chọn danh mục BOM —",
+                  )}
+                  searchPlaceholder={t("common.search", "Tìm kiếm danh mục...")}
+                  allowClear
+                />
+              </DrawerField>
+
+              {/* Dynamic Attributes Grid */}
+              {selectedCategory && (
+                <div className="pt-2 border-t border-border mt-1 flex flex-col gap-3">
+                  {activeAttributeDefs.length > 0 ? (
+                    activeAttributeDefs.map((attr: BomAttributeDef) => {
+                      const val = form.attributes?.[attr.id] || "";
+                      return (
+                        <div key={attr.id}>
+                          {attr.fieldType === "CHECKBOX" ? (
+                            <div className="flex items-center gap-2 pt-1">
+                              <Checkbox
+                                id={`attr-${attr.id}`}
+                                checked={val === "true"}
+                                disabled={viewOnly || isLockedByProduction}
+                                onCheckedChange={(c) =>
+                                  handleAttributeChange(
+                                    attr.id,
+                                    c ? "true" : "false",
+                                  )
+                                }
+                              />
+                              <label
+                                htmlFor={`attr-${attr.id}`}
+                                className="text-xs font-medium cursor-pointer select-none text-foreground"
+                              >
+                                {attr.name}
+                                {attr.isRequired && (
+                                  <span className="text-destructive ml-1">
+                                    *
+                                  </span>
+                                )}
+                              </label>
+                            </div>
+                          ) : attr.fieldType === "SELECT" ? (
+                            <DrawerField
+                              label={attr.name}
+                              required={attr.isRequired}
+                            >
+                              <Combobox
+                                value={val}
+                                readOnly={viewOnly || isLockedByProduction}
+                                onChange={(v) =>
+                                  handleAttributeChange(attr.id, v)
+                                }
+                                options={(attr.options || []).map((opt) => ({
+                                  value: opt.value,
+                                  label: `${opt.label} [${opt.value}]`,
+                                }))}
+                                placeholder={`— Chọn ${attr.name} —`}
+                                allowClear
+                              />
+                            </DrawerField>
+                          ) : attr.fieldType === "DATE" ? (
+                            <DrawerField
+                              label={attr.name}
+                              required={attr.isRequired}
+                            >
+                              <DatePicker
+                                value={val}
+                                disabled={viewOnly || isLockedByProduction}
+                                onChange={(v) =>
+                                  handleAttributeChange(attr.id, v)
+                                }
+                                className="w-full"
+                                placeholder="DD/MM/YYYY"
+                              />
+                            </DrawerField>
+                          ) : attr.fieldType === "NUMBER" ? (
+                            <DrawerField
+                              label={attr.name}
+                              required={attr.isRequired}
+                            >
+                              <Input
+                                type="number"
+                                step="0.1"
+                                value={val}
+                                readOnly={viewOnly || isLockedByProduction}
+                                onChange={(e) =>
+                                  handleAttributeChange(attr.id, e.target.value)
+                                }
+                                placeholder={`Nhập ${attr.name.toLowerCase()}...`}
+                              />
+                            </DrawerField>
+                          ) : (
+                            <DrawerField
+                              label={attr.name}
+                              required={attr.isRequired}
+                            >
+                              <Input
+                                type="text"
+                                value={val}
+                                readOnly={viewOnly || isLockedByProduction}
+                                onChange={(e) =>
+                                  handleAttributeChange(attr.id, e.target.value)
+                                }
+                                placeholder={`Nhập ${attr.name.toLowerCase()}...`}
+                              />
+                            </DrawerField>
+                          )}
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <p className="text-xs text-muted-foreground italic py-1">
+                      {t(
+                        "bomConfig.noAttrsForCategory",
+                        "Danh mục này chưa cấu hình thuộc tính động nào.",
+                      )}
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+          </DrawerSection>
+
+          {/* Section: Ghi chú */}
           <DrawerSection title={t("Ghi chú")}>
             <div className="flex flex-col gap-3">
-              <textarea
+              <Textarea
                 value={form.notes}
                 readOnly={viewOnly}
                 onChange={(e) =>
                   setForm((prev) => ({ ...prev, notes: e.target.value }))
                 }
-                className={`${inputCls} min-h-[88px] resize-y`}
+                placeholder={t("Ghi chú thêm...")}
+                className="min-h-[88px] resize-y"
               />
             </div>
           </DrawerSection>

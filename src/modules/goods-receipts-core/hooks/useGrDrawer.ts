@@ -9,6 +9,7 @@ import {
   goodsReceiptsCoreApi,
   type ErpGoodsReceipt,
   type CreateGrPayload,
+  type ErpGrDeclaredSerial,
 } from "@/modules/goods-receipts-core/api/goodsReceiptsCoreApi";
 import {
   purchaseOrdersCoreApi,
@@ -32,6 +33,7 @@ export interface GrLineForm {
   itemName: string;
   qtyReceived: string;
   unitCost: string;
+  declaredSerials?: ErpGrDeclaredSerial[];
 }
 
 export interface GrForm {
@@ -73,6 +75,7 @@ export function buildGrForm(gr: ErpGoodsReceipt): GrForm {
         itemName: line.itemName ?? "",
         qtyReceived: line.qtyReceived ?? "0",
         unitCost: line.unitCost ?? "",
+        declaredSerials: line.declaredSerials ?? [],
       })) ?? [],
   };
 }
@@ -96,6 +99,7 @@ export function buildGrPayload(form: GrForm): CreateGrPayload {
         itemId: line.itemId || undefined,
         qtyReceived: line.qtyReceived,
         unitCost: line.unitCost || undefined,
+        declaredSerials: line.declaredSerials || undefined,
       })),
   };
 }
@@ -255,6 +259,35 @@ export function useGrDrawer({
       setSaving(true);
       setSaveError(null);
       try {
+        if (statusOverride === "POSTED") {
+          for (let i = 0; i < form.lines.length; i++) {
+            const l = form.lines[i];
+            const qty = Math.round(Number(l.qtyReceived || 0));
+            if (qty > 0) {
+              const item = l.itemId ? itemsDict[l.itemId] : null;
+              const trackingCode = item?.trackingPolicy?.code;
+              if (
+                trackingCode === "SERIAL" ||
+                trackingCode === "VEHICLE" ||
+                trackingCode === "CUSTOM"
+              ) {
+                const declared = l.declaredSerials?.length || 0;
+                if (declared < qty) {
+                  const errorMsg = `Dòng ${i + 1} (${item?.sku || l.itemName || "Item"}): Chưa khai báo đủ số lượng Serial (cần ${qty}, đã có ${declared}). Vui lòng bấm vào cột Serial để khai báo.`;
+                  setSaveError(errorMsg);
+                  showToast({
+                    title: "Chưa khai báo đủ số Serial",
+                    description: errorMsg,
+                    variant: "destructive",
+                  });
+                  setSaving(false);
+                  return;
+                }
+              }
+            }
+          }
+        }
+
         const payload = buildGrPayload(form);
         if (statusOverride) {
           (payload as any).status = statusOverride;
@@ -296,7 +329,15 @@ export function useGrDrawer({
         setSaving(false);
       }
     },
-    [editing, form, invalidateWarehouseQuery, onSaved, queryClient, showToast],
+    [
+      editing,
+      form,
+      itemsDict,
+      invalidateWarehouseQuery,
+      onSaved,
+      queryClient,
+      showToast,
+    ],
   );
 
   // ── Cancel a posted GR

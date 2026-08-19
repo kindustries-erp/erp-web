@@ -1,6 +1,7 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { Layers } from "lucide-react";
 import { Checkbox } from "@/shared/components/ui/checkbox";
+import { Badge } from "@/shared/components/ui/badge";
 import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
 import type { DrawerMode } from "@/shared/stores/useDrawerStore";
 import { Combobox } from "@/shared/components/Combobox";
@@ -8,11 +9,13 @@ import {
   DrawerAction,
   DrawerField,
   DrawerSection,
+  DrawerRow,
   inputCls,
 } from "@/shared/components/DrawerModal";
 import { Skeleton } from "@/shared/components/Skeleton";
 import { useUIStore } from "@/core/config/uiStore";
 import { useT } from "@/core/i18n";
+import { fmtQty } from "@/shared/utils/format";
 import {
   inventoryCoreApi,
   type CreateInventoryItemPayload,
@@ -20,7 +23,7 @@ import {
   type InventoryMasterOption,
   type InventoryMovementsPayload,
 } from "@/modules/inventory-core/api/inventoryCoreApi";
-import { InventoryTimelineBlock } from "@/modules/operational/components/list/InventoryTimelineBlock";
+import { InventoryStockLedgerSection } from "./InventoryStockLedgerSection";
 
 interface ItemForm {
   sku: string;
@@ -156,8 +159,7 @@ export function InventoryItemFormDrawer({
           .filter((p) => p.isActive)
           .map((p) => ({ value: p.id, label: `${p.code} — ${p.name}` })),
       );
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (e) {
+    } catch {
       // Ignore
     }
   }, []);
@@ -200,7 +202,7 @@ export function InventoryItemFormDrawer({
       setMovData(undefined);
       setMovError(null);
     }
-  }, [open, itemId]);
+  }, [open, itemId, initialViewOnly]);
 
   useEffect(() => {
     if (!open || !itemId) return;
@@ -246,19 +248,57 @@ export function InventoryItemFormDrawer({
     }
   }
 
+  // Movements data processing for Right Panel mini tables & KPIs
+  const allMovements = useMemo(() => movData?.movements || [], [movData]);
+
+  const inMovementsAll = useMemo(() => {
+    return allMovements.filter((m) => Number(m.qtyIn || 0) > 0);
+  }, [allMovements]);
+
+  const outMovementsAll = useMemo(() => {
+    return allMovements.filter((m) => Number(m.qtyOut || 0) > 0);
+  }, [allMovements]);
+
+  const totalInQty = useMemo(() => {
+    return inMovementsAll.reduce((sum, m) => sum + Number(m.qtyIn || 0), 0);
+  }, [inMovementsAll]);
+
+  const totalOutQty = useMemo(() => {
+    return outMovementsAll.reduce((sum, m) => sum + Number(m.qtyOut || 0), 0);
+  }, [outMovementsAll]);
+
+  const currentOnHand = movData?.currentOnHand ?? totalInQty - totalOutQty;
+
   const mode: DrawerMode = viewOnly ? "view" : editing ? "edit" : "create";
   const drawerActions: DrawerAction[] = viewOnly
-    ? [{ label: "Đóng", onClick: onClose, variant: "outline" }]
-    : [
-        { label: "Hủy", onClick: onClose, variant: "outline" },
+    ? [
         {
-          label: editing ? "Lưu thay đổi" : "Tạo mới",
+          label: t("common.close", "Đóng"),
+          onClick: onClose,
+          variant: "outline",
+        },
+      ]
+    : [
+        {
+          label: t("common.cancel", "Hủy"),
+          onClick: onClose,
+          variant: "outline",
+        },
+        {
+          label: editing
+            ? t("common.save", "Lưu thay đổi")
+            : t("common.create", "Tạo mới"),
           onClick: handleSave,
           primary: true,
           loading: saving || loading,
           disabled: loading,
         },
       ];
+
+  const uomName =
+    editing?.uom?.name ||
+    uomOptions.find((u) => u.value === form.uomId)?.label?.split(" — ")[1] ||
+    "";
 
   return (
     <StandardFormDrawer
@@ -270,46 +310,66 @@ export function InventoryItemFormDrawer({
       icon={<Layers className="h-4 w-4" />}
       title={
         viewOnly
-          ? "Chi tiết item kho"
+          ? t("inventoryMasters.drawer.viewItem", "Chi tiết item kho")
           : editing
-            ? "Cập nhật item kho"
-            : "Tạo item kho mới"
+            ? t("inventoryMasters.drawer.editItem", "Cập nhật item kho")
+            : t("inventoryMasters.drawer.createItem", "Tạo item kho mới")
       }
-      subtitle={editing ? editing.sku : "Danh mục item kho dùng chung"}
+      subtitle={
+        editing
+          ? `${editing.sku}${editing.itemName ? ` — ${editing.itemName}` : ""}`
+          : t(
+              "inventoryMasters.drawer.subtitleItem",
+              "Danh mục item kho dùng chung",
+            )
+      }
+      titleExtra={
+        editing ? (
+          <Badge
+            variant={editing.status === "ACTIVE" ? "default" : "secondary"}
+          >
+            {editing.status === "ACTIVE"
+              ? t("inventoryMasters.status.active", "ACTIVE")
+              : t("inventoryMasters.status.inactive", "INACTIVE")}
+          </Badge>
+        ) : undefined
+      }
       actions={drawerActions}
       layout="2-columns"
-      size="xl"
+      size="full"
+      panelClassName="w-full lg:w-[calc(100vw-208px)]"
       collapsibleRightPanel={true}
       leftPanel={
-        <div className="flex flex-col h-full rounded-lg overflow-hidden">
-          <InventoryTimelineBlock
+        <div className="flex flex-col gap-6 w-full">
+          <InventoryStockLedgerSection
             itemId={itemId || "new"}
-            loadingId={movLoading && itemId ? itemId : null}
+            loading={movLoading && !!itemId}
             error={movError}
-            data={
-              itemId
-                ? movData
-                : {
-                    item: {} as any,
-                    currentOnHand: 0,
-                    movements: [],
-                  }
-            }
+            movements={movData?.movements || []}
+            itemInfo={{
+              sku: editing?.sku || form.sku || "",
+              itemName: editing?.itemName || form.itemName || "",
+              uom: uomName,
+            }}
             onOpenDocument={onOpenDocument}
-            containerClassName="max-h-[calc(100vh-140px)] overflow-y-auto"
           />
         </div>
       }
       rightPanel={
         <>
           {saveError && (
-            <div className="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+            <div className="mb-3 rounded-lg border border-destructive/20 bg-destructive/10 px-3 py-2 text-xs text-destructive">
               {saveError}
             </div>
           )}
 
           {loading ? (
-            <DrawerSection title="Thông tin item kho">
+            <DrawerSection
+              title={t(
+                "inventoryMasters.drawer.sectionItem",
+                "Thông tin item kho",
+              )}
+            >
               <div className="flex flex-col gap-3">
                 <Skeleton className="h-10 w-full" />
                 <Skeleton className="h-10 w-full" />
@@ -321,11 +381,108 @@ export function InventoryItemFormDrawer({
                 </div>
               </div>
             </DrawerSection>
+          ) : viewOnly ? (
+            <div className="flex flex-col gap-4">
+              {/* 1. Item Master Information */}
+              <DrawerSection
+                title={t(
+                  "inventoryMasters.drawer.sectionItem",
+                  "Thông tin item kho",
+                )}
+              >
+                <DrawerRow
+                  label={t("inventoryMasters.fields.sku", "Mã SKU")}
+                  value={
+                    <span className="font-bold text-foreground">
+                      {editing?.sku || form.sku}
+                    </span>
+                  }
+                />
+                <DrawerRow
+                  label={t("inventoryMasters.fields.uom", "Đơn vị tính (ĐVT)")}
+                  value={uomName || "—"}
+                />
+                <DrawerRow
+                  label={t("inventoryMasters.fields.itemName", "Tên item kho")}
+                  value={editing?.itemName || form.itemName || "—"}
+                />
+                <DrawerRow
+                  label={t("inventoryMasters.fields.itemType", "Loại item")}
+                  value={
+                    editing?.itemType?.name ||
+                    itemTypeOptions
+                      .find((t) => t.value === form.itemTypeId)
+                      ?.label?.split(" — ")[1] ||
+                    "—"
+                  }
+                />
+                <DrawerRow
+                  label={t(
+                    "inventoryMasters.fields.trackingPolicy",
+                    "Tracking policy",
+                  )}
+                  value={
+                    editing?.trackingPolicy?.name ||
+                    trackingPolicyOptions
+                      .find((p) => p.value === form.trackingPolicyId)
+                      ?.label?.split(" — ")[1] ||
+                    "Không"
+                  }
+                />
+
+                {/* 3 Metric Summary Cards */}
+                <div className="mt-4 grid grid-cols-3 gap-2 text-center">
+                  <div className="flex flex-col items-center justify-center p-2.5 bg-orange-500/10 rounded-lg border border-orange-500/20">
+                    <span className="text-[11px] font-semibold text-orange-600 dark:text-orange-400 uppercase tracking-wider mb-1">
+                      {t("inventory.chart.totalIn", "Tổng Nhập")}
+                    </span>
+                    <span className="font-bold text-orange-700 dark:text-orange-300 text-base tabular-nums">
+                      +{fmtQty(totalInQty)}
+                    </span>
+                  </div>
+                  <div className="flex flex-col items-center justify-center p-2.5 bg-emerald-500/10 rounded-lg border border-emerald-500/20">
+                    <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mb-1">
+                      {t("inventory.chart.totalOut", "Tổng Xuất")}
+                    </span>
+                    <span className="font-bold text-emerald-700 dark:text-emerald-300 text-base tabular-nums">
+                      -{fmtQty(totalOutQty)}
+                    </span>
+                  </div>
+                  <div className="flex flex-col items-center justify-center p-2.5 bg-blue-500/10 rounded-lg border border-blue-500/20">
+                    <span className="text-[11px] font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider mb-1">
+                      {t("inventory.chart.balance", "Tồn Cuối")}
+                    </span>
+                    <span className="font-extrabold text-blue-700 dark:text-blue-300 text-lg tabular-nums">
+                      {fmtQty(currentOnHand)}
+                    </span>
+                  </div>
+                </div>
+              </DrawerSection>
+
+              {/* Notes if any */}
+              {form.note && (
+                <DrawerSection
+                  title={t("inventoryMasters.fields.note", "Ghi chú")}
+                >
+                  <p className="text-xs text-foreground whitespace-pre-wrap leading-relaxed">
+                    {form.note}
+                  </p>
+                </DrawerSection>
+              )}
+            </div>
           ) : (
             <>
-              <DrawerSection title="Thông tin item kho">
+              <DrawerSection
+                title={t(
+                  "inventoryMasters.drawer.sectionItem",
+                  "Thông tin item kho",
+                )}
+              >
                 <div className="flex flex-col gap-3">
-                  <DrawerField label="SKU" required>
+                  <DrawerField
+                    label={t("inventoryMasters.fields.sku", "SKU")}
+                    required
+                  >
                     <input
                       value={form.sku}
                       disabled={viewOnly || !!editing}
@@ -333,11 +490,20 @@ export function InventoryItemFormDrawer({
                         setForm((prev) => ({ ...prev, sku: e.target.value }))
                       }
                       className={inputCls}
-                      placeholder="VD: FG-001"
+                      placeholder={t(
+                        "inventoryMasters.fields.skuPlaceholder",
+                        "VD: FG-001",
+                      )}
                     />
                   </DrawerField>
 
-                  <DrawerField label="Tên item kho" required>
+                  <DrawerField
+                    label={t(
+                      "inventoryMasters.fields.itemName",
+                      "Tên item kho",
+                    )}
+                    required
+                  >
                     <input
                       value={form.itemName}
                       disabled={viewOnly}
@@ -348,11 +514,20 @@ export function InventoryItemFormDrawer({
                         }))
                       }
                       className={inputCls}
-                      placeholder="Tên đầy đủ của item kho"
+                      placeholder={t(
+                        "inventoryMasters.fields.itemNamePlaceholder",
+                        "Tên đầy đủ của item kho",
+                      )}
                     />
                   </DrawerField>
 
-                  <DrawerField label="Đơn vị tính (ĐVT)" required>
+                  <DrawerField
+                    label={t(
+                      "inventoryMasters.fields.uom",
+                      "Đơn vị tính (ĐVT)",
+                    )}
+                    required
+                  >
                     <Combobox
                       value={form.uomId}
                       disabled={viewOnly}
@@ -364,11 +539,16 @@ export function InventoryItemFormDrawer({
                         }))
                       }
                       options={uomOptions}
-                      placeholder="Chọn ĐVT"
+                      placeholder={t(
+                        "inventoryMasters.fields.uomPlaceholder",
+                        "Chọn ĐVT",
+                      )}
                     />
                   </DrawerField>
 
-                  <DrawerField label="Loại item">
+                  <DrawerField
+                    label={t("inventoryMasters.fields.itemType", "Loại item")}
+                  >
                     <Combobox
                       value={form.itemTypeId}
                       disabled={viewOnly}
@@ -380,20 +560,27 @@ export function InventoryItemFormDrawer({
                         }))
                       }
                       options={itemTypeOptions}
-                      placeholder="Chọn loại"
+                      placeholder={t(
+                        "inventoryMasters.fields.itemTypePlaceholder",
+                        "Chọn loại",
+                      )}
                     />
                   </DrawerField>
 
-                  <DrawerField label="Tracking policy">
+                  <DrawerField
+                    label={t(
+                      "inventoryMasters.fields.trackingPolicy",
+                      "Tracking policy",
+                    )}
+                  >
                     <Combobox
                       value={form.trackingPolicyId}
-                      disabled={viewOnly}
+                      disabled={viewOnly || !!editing?.hasSerials}
                       allowClear
                       onChange={(value) =>
                         setForm((prev) => ({
                           ...prev,
                           trackingPolicyId: value || "",
-                          // Clear category when policy changes
                           trackingCategoryId: value
                             ? prev.trackingCategoryId
                             : "",
@@ -402,12 +589,25 @@ export function InventoryItemFormDrawer({
                       options={trackingPolicyOptions}
                       placeholder="Chọn chính sách tracking"
                     />
+                    {editing?.hasSerials && !viewOnly && (
+                      <span className="text-[11px] text-amber-600 dark:text-amber-400 mt-1 block">
+                        {t(
+                          "inventoryMasters.warnings.lockedPolicy",
+                          "⚠️ Mặt hàng đã có số Serial trong kho, không thể thay đổi Tracking Policy.",
+                        )}
+                      </span>
+                    )}
                   </DrawerField>
 
-                  <DrawerField label="Tracking category">
+                  <DrawerField
+                    label={t(
+                      "inventoryMasters.fields.trackingCategory",
+                      "Tracking category",
+                    )}
+                  >
                     <Combobox
                       value={form.trackingCategoryId}
-                      disabled={viewOnly}
+                      disabled={viewOnly || !!editing?.hasSerials}
                       allowClear
                       onChange={(value) =>
                         setForm((prev) => ({
@@ -473,33 +673,24 @@ export function InventoryItemFormDrawer({
                 </div>
               </DrawerSection>
 
-              {viewOnly ? (
-                <DrawerSection title="Ghi chú">
-                  {form.note ? (
-                    <p className="text-xs text-foreground whitespace-pre-wrap leading-relaxed">
-                      {form.note}
-                    </p>
-                  ) : (
-                    <p className="text-xs text-muted-foreground">
-                      Không có ghi chú.
-                    </p>
-                  )}
-                </DrawerSection>
-              ) : (
-                <DrawerSection title="Ghi chú">
-                  <div className="mt-1">
-                    <textarea
-                      value={form.note}
-                      disabled={viewOnly}
-                      onChange={(e) =>
-                        setForm((prev) => ({ ...prev, note: e.target.value }))
-                      }
-                      className={`${inputCls} min-h-[80px] resize-y`}
-                      placeholder="Ghi chú thêm về item kho này..."
-                    />
-                  </div>
-                </DrawerSection>
-              )}
+              <DrawerSection
+                title={t("inventoryMasters.fields.note", "Ghi chú")}
+              >
+                <div className="mt-1">
+                  <textarea
+                    value={form.note}
+                    disabled={viewOnly}
+                    onChange={(e) =>
+                      setForm((prev) => ({ ...prev, note: e.target.value }))
+                    }
+                    className={`${inputCls} min-h-[80px] resize-y`}
+                    placeholder={t(
+                      "inventoryMasters.fields.notePlaceholder",
+                      "Ghi chú thêm về item kho này...",
+                    )}
+                  />
+                </div>
+              </DrawerSection>
             </>
           )}
         </>

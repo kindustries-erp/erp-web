@@ -360,4 +360,31 @@ export const bankStatementApi = {
     );
     return res.data;
   },
+  getTraceabilityGraph: async (
+    id: string,
+  ): Promise<import("@/shared/types/traceability").TraceabilityGraphData> => {
+    const res = await axiosInstance.get(
+      `/api/v1/bank-transactions-core/transactions/${id}/traceability-graph`,
+    );
+    return res.data;
+  },
+  linkInvoice: async (
+    id: string,
+    payload: { invoiceId: string; netOffAmount?: number },
+  ): Promise<{ message: string }> => {
+    const res = await axiosInstance.post(
+      `/api/v1/bank-transactions-core/transactions/${id}/net-off-invoices`,
+      payload,
+    );
+    return res.data;
+  },
+  removeInvoice: async (
+    id: string,
+    netOffId: string,
+  ): Promise<{ message: string }> => {
+    const res = await axiosInstance.delete(
+      `/api/v1/bank-transactions-core/transactions/${id}/net-off-invoices/${netOffId}`,
+    );
+    return res.data;
+  },
 };

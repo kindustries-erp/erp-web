@@ -7,6 +7,8 @@ import { usePurchaseOrderDrawer } from "@/modules/purchase-orders-core/hooks/use
 import {} from "@/modules/operational/components/form/FormLoadingSkeleton";
 import { FormLineDetailPanel } from "@/modules/operational/components/form/FormLineDetailPanel";
 import { FormGeneralInfoPanel } from "@/modules/operational/components/form/FormGeneralInfoPanel";
+import { ActionDropdown } from "@/shared/components/ActionDropdown";
+import { FileSpreadsheet, ChevronDown } from "lucide-react";
 
 export interface PurchaseOrderDrawerProps {
   open: boolean;
@@ -17,6 +19,7 @@ export interface PurchaseOrderDrawerProps {
   onClose: () => void;
   onSaved: () => Promise<void> | void;
   onToggleEdit?: () => void;
+  onExportExcel?: () => void;
   /** Pending tag IDs for Option B create flow */
   pendingTagIds?: string[];
   onPendingTagsChange?: (ids: string[]) => void;
@@ -32,6 +35,7 @@ export function PurchaseOrderDrawer({
   onClose,
   onSaved,
   onToggleEdit,
+  onExportExcel,
   pendingTagIds = [],
   onPendingTagsChange,
   isAdminEmail,
@@ -62,6 +66,42 @@ export function PurchaseOrderDrawer({
     pendingDocumentChanges,
     fieldSet,
   } = drawerState;
+
+  const footerLeft =
+    editing && onExportExcel ? (
+      <ActionDropdown
+        align="start"
+        items={[
+          {
+            groupLabel: t("common.exportGroup", "XUẤT DỮ LIỆU"),
+            items: [
+              {
+                label:
+                  status === "DRAFT"
+                    ? t("Xuất phiếu đề xuất mua hàng")
+                    : t("Xuất bảng kê mua hàng"),
+                icon: (
+                  <FileSpreadsheet className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                ),
+                onClick: onExportExcel,
+                disabled: loading || saving,
+              },
+            ],
+          },
+        ]}
+        customTrigger={
+          <button
+            type="button"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium border border-[color:var(--border)] bg-white dark:bg-zinc-800 hover:bg-[color:var(--bg-muted)] text-[color:var(--fg)] shadow-sm transition-colors"
+          >
+            <span className="font-semibold text-[color:var(--fg)]">
+              {t("common.actions", "Thao tác")}
+            </span>
+            <ChevronDown className="w-3.5 h-3.5 text-[color:var(--faint)]" />
+          </button>
+        }
+      />
+    ) : undefined;
 
   const actions =
     viewOnly || loading
@@ -121,6 +161,7 @@ export function PurchaseOrderDrawer({
       collapsibleRightPanel={true}
       onClose={onClose}
       onToggleEdit={onToggleEdit}
+      footerLeft={footerLeft}
       title={
         viewOnly
           ? t("Chi tiết Đơn mua hàng")

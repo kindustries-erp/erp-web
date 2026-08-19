@@ -38,6 +38,31 @@ function emptyForm(direction: Direction = "IN"): CreateErpInvoicePayload {
   };
 }
 
+let cachedPortalConfig: {
+  token?: string;
+  username?: string;
+  hasPassword?: boolean;
+} | null = null;
+let lastPortalConfigFetch = 0;
+
+async function isPortalAuthAvailable(): Promise<boolean> {
+  const now = Date.now();
+  if (cachedPortalConfig && now - lastPortalConfigFetch < 60000) {
+    return Boolean(
+      cachedPortalConfig.token ||
+      (cachedPortalConfig.username && cachedPortalConfig.hasPassword),
+    );
+  }
+  try {
+    const config = await erpInvoicesCoreApi.getPortalConfig();
+    cachedPortalConfig = config;
+    lastPortalConfigFetch = now;
+    return Boolean(config?.token || (config?.username && config?.hasPassword));
+  } catch {
+    return false;
+  }
+}
+
 export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
   const { t } = useTranslation("erpInvoices");
 
@@ -151,12 +176,15 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
 
     try {
       let fullInv = await erpInvoicesCoreApi.get(inv.id);
-      // Auto query detail if items are empty
+      // Auto query detail if items are empty and portal auth is available
       if (!fullInv.items || fullInv.items.length === 0) {
-        try {
-          fullInv = await erpInvoicesCoreApi.syncDetail(inv.id);
-        } catch (syncErr) {
-          console.warn("Auto sync detail failed", syncErr);
+        const canSync = await isPortalAuthAvailable();
+        if (canSync) {
+          try {
+            fullInv = await erpInvoicesCoreApi.syncDetail(inv.id);
+          } catch (syncErr) {
+            console.warn("Auto sync detail failed", syncErr);
+          }
         }
       }
       setDetailInvoice(fullInv);
@@ -216,10 +244,13 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
     try {
       let fullInv = await erpInvoicesCoreApi.get(inv.id);
       if (!fullInv.items || fullInv.items.length === 0) {
-        try {
-          fullInv = await erpInvoicesCoreApi.syncDetail(inv.id);
-        } catch (syncErr) {
-          console.warn("Auto sync detail failed", syncErr);
+        const canSync = await isPortalAuthAvailable();
+        if (canSync) {
+          try {
+            fullInv = await erpInvoicesCoreApi.syncDetail(inv.id);
+          } catch (syncErr) {
+            console.warn("Auto sync detail failed", syncErr);
+          }
         }
       }
       setDetailInvoice(fullInv);
@@ -325,13 +356,6 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
       else if (p.action === "REMOVE") linkedCount--;
     });
 
-    if (linkedCount > 0 && !(form as any).accountingEnabled) {
-      setFormError(
-        "Bắt buộc phải bật Hạch toán kế toán khi có Chứng từ liên kết.",
-      );
-      return;
-    }
-
     setSaving(true);
     setFormError(null);
     try {
@@ -405,24 +429,57 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
                 );
               }
             } else if (change.type === "PO") {
-              const po = await purchaseOrdersCoreApi.get(change.refId);
-              let invNos = (po.supplierInvoiceNo || "")
-                .split(",")
-                .map((s) => s.trim())
-                .filter((s) => s);
-
-              if (
-                change.action === "ADD" &&
-                !invNos.includes(invoiceNoToProcess)
-              ) {
-                invNos.push(invoiceNoToProcess);
-                await purchaseOrdersCoreApi.update(change.refId, {
-                  supplierInvoiceNo: invNos.join(", "),
+              if (change.action === "ADD") {
+                await erpInvoicesCoreApi.update(invoiceIdToProcess, {
+                  purchaseOrderId: change.refId,
                 });
               } else if (change.action === "REMOVE") {
-                invNos = invNos.filter((s) => s !== invoiceNoToProcess);
-                await purchaseOrdersCoreApi.update(change.refId, {
-                  supplierInvoiceNo: invNos.join(", "),
+                await erpInvoicesCoreApi.update(invoiceIdToProcess, {
+                  purchaseOrderId: undefined,
+                });
+              }
+              try {
+                const po = await purchaseOrdersCoreApi.get(change.refId);
+                let invNos = (po.supplierInvoiceNo || "")
+                  .split(",")
+                  .map((s) => s.trim())
+                  .filter((s) => s);
+
+                if (
+                  change.action === "ADD" &&
+                  !invNos.includes(invoiceNoToProcess)
+                ) {
+                  invNos.push(invoiceNoToProcess);
+                  await purchaseOrdersCoreApi.update(change.refId, {
+                    supplierInvoiceNo: invNos.join(", "),
+                  });
+                } else if (change.action === "REMOVE") {
+                  invNos = invNos.filter((s) => s !== invoiceNoToProcess);
+                  await purchaseOrdersCoreApi.update(change.refId, {
+                    supplierInvoiceNo: invNos.join(", "),
+                  });
+                }
+              } catch (poErr) {
+                console.warn("Could not sync PO supplierInvoiceNo", poErr);
+              }
+            } else if (change.type === "SO") {
+              if (change.action === "ADD") {
+                await erpInvoicesCoreApi.update(invoiceIdToProcess, {
+                  salesOrderId: change.refId,
+                });
+              } else if (change.action === "REMOVE") {
+                await erpInvoicesCoreApi.update(invoiceIdToProcess, {
+                  salesOrderId: undefined,
+                });
+              }
+            } else if (change.type === "CASE") {
+              if (change.action === "ADD") {
+                await erpInvoicesCoreApi.update(invoiceIdToProcess, {
+                  settlementOrder: change.refId,
+                });
+              } else if (change.action === "REMOVE") {
+                await erpInvoicesCoreApi.update(invoiceIdToProcess, {
+                  settlementOrder: undefined,
                 });
               }
             }
@@ -474,11 +531,11 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
 
       // Auto-post accounting if there are lines and it should post
       const wasPosted = detailInvoice?.postingStatus === "POSTED";
-      const shouldPost =
+      const shouldPostManual =
         accountingEnabled &&
         (!wasPosted || needsRepost) &&
         postingState.lines.length > 0;
-      if (shouldPost) {
+      if (shouldPostManual) {
         // Validate accountId trước khi submit
         const emptyAccountLine = postingState.lines.find((l) => !l.accountId);
         if (emptyAccountLine) {
@@ -509,6 +566,15 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
               err.message ||
               "Lỗi hạch toán tự động sau khi lưu.",
           );
+        }
+      } else if (
+        !wasPosted &&
+        (linkedCount > 0 || (form.branchId && (form.totalAmount || 0) > 0))
+      ) {
+        try {
+          await erpInvoicesCoreApi.autoPostStandard(invoiceIdToProcess);
+        } catch (autoErr: any) {
+          console.warn("Auto-post standard failed (non-blocking)", autoErr);
         }
       }
 

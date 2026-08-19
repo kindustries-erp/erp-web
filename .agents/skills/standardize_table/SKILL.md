@@ -9,62 +9,142 @@ Khi tạo mới hoặc enhance một `DataTable` trong hệ thống, bạn **B�
 
 ## 1. Cấu trúc cột (Columns Structure)
 
-- **Cột đầu tiên (First Column)**: Thường là cột **Index (STT)**, **Checkbox** hoặc **Action** (nếu có action theo dòng), với `width: 40px`.
-  - Cần set `size: 40`, `headerClassName: "text-center w-[40px] min-w-[40px]"`, `className: "text-center w-[40px] min-w-[40px]"`.
+- **Cột đầu tiên (First Column)**: Thường là cột **Index (STT)** hoặc **Checkbox**, với `width: 40px`.
+  - Cần set `size: 40`, `headerClassName: "text-center w-[40px] min-w-[40px]"`, `className: "text-center w-[40px] min-w-[40px]"`, `enableResizing: false`.
+  - **Căn giữa Header STT**: Header bắt buộc phải căn giữa hoàn toàn bằng cách wrap trong span block: `header: <span className="w-full block text-center">#</span>` kết hợp `headerClassName: "text-center"`.
   - **Lưu ý với cột Index (STT)**: Khi dùng cell renderer mặc định của framework, CHỈ SỬ DỤNG `{idx}` (VD: `cell: (_, idx) => <span>{idx}</span>`), **KHÔNG CỘNG THÊM 1** (`idx + 1`). Lý do: Core `DataTable` đã tự động xử lý pagination offset và trả về `idx` hệ 1-based.
+  - **TUYỆT ĐỐI KHÔNG** định nghĩa cột Action tĩnh thủ công `{ key: "actions", ... }` trong mảng `columns`. Tất cả các thao tác theo dòng phải được quản lý qua prop `rowActions` (Row Hover Floating Actions).
 - **Enable Resizing**: Luôn bật tính năng resize cho các cột dữ liệu bằng cách thêm `enableResizing: true` vào config của từng cột.
 - **Đa ngôn ngữ (i18n)**: Tất cả các text trong table (header, empty state, action tooltip...) phải được bọc trong hàm `t` từ `useTranslation("namespace")`. KHÔNG hardcode tiếng Việt/Anh trực tiếp mà không qua hook translation.
 
 ## 2. Table Header Filter & Sorting Popover
 
-Tất cả các cột dữ liệu (trừ cột Action, Index, Checkbox) **phải sử dụng component `<TableColumnHeaderFilter>`** cho header để tích hợp sẵn Filter và Sorting.
+Tất cả các cột dữ liệu (trừ cột Action, Index, Checkbox) **phải sử dụng component `<TableColumnHeaderFilter>`** (`@/shared/components/DataTable/TableColumnHeaderFilter`) cho header để tích hợp sẵn Filter và Sorting.
 
 - Cần truyền thêm prop `align="center"` cho `<TableColumnHeaderFilter>` để header luôn được canh giữa một cách chuẩn xác.
 - **Cột thường**: TUYỆT ĐỐI KHÔNG set `hideFilter: true` (hoặc `hideFilter={true}`), để đảm bảo user luôn nhìn thấy search box và danh sách checkbox options (column options) trong popover. Kể cả khi hook filter hiện tại chưa hỗ trợ cột đó, bạn phải chủ động update hook (ví dụ: làm cho `useVoucherClientFilter` trở nên dynamic để support mọi trường) chứ **KHÔNG ĐƯỢC LÁCH LUẬT** bằng cách ẩn filter.
-- **Clear All Filters Button**: Khi bảng có sử dụng TableColumnHeaderFilter, bắt buộc phải bổ sung thêm nút xóa lọc (`FilterButton` từ `@/shared/components/FilterPanel`) hiển thị cạnh tiêu đề bảng (title) nếu `activeFilterCount > 0`. Nút này (cùng với nút Thêm dòng) BẮT BUỘC phải được đặt vào prop `titleExtra` của component `DrawerSection` để chúng hiển thị đồng bộ ở góc trên bên phải, ngang hàng với tiêu đề.
-- **Cột Ngày Tháng (Date)**: Phải sử dụng `dateRangeSlot` (sử dụng component `DateRangeColumnSlot` trong `@/shared/components/DataTable/DateRangeColumnSlot`) để hiển thị bộ lọc Date Range, và set `hideFilter={true}` cùng `hideFooter={true}` để ẩn list checkbox mặc định.
-- **Cascading Filter Options (Lọc phụ thuộc)**: Đối với các bảng có filter ở client-side, dữ liệu tùy chọn (filter options) của một cột **BẮT BUỘC** phải được tính toán dựa trên danh sách dữ liệu đã bị filter bởi **TẤT CẢ CÁC CỘT KHÁC**. Nghĩa là khi user chọn filter ở một cột A (ví dụ Mã linh kiện), thì filter options ở cột B (ví dụ Tên linh kiện) chỉ được hiển thị các giá trị tương ứng còn lại trong bảng. Khi update hook filter, hãy đảm bảo loop logic filter hỗ trợ dynamic key thay vì hardcode.
-- **Nút Hành Động (Table Action Buttons)**: Đối với các bảng nằm trong `DrawerSection`, các nút thao tác chung của bảng như "Thêm dòng" (`+ Thêm dòng`), "Bộ lọc", "Nhập từ Excel"... TUYỆT ĐỐI KHÔNG ĐƯỢC đặt ở dưới đáy bảng hay thả rông bên ngoài. Bạn BẮT BUỘC phải truyền cụm nút này vào prop `titleExtra` của `DrawerSection` để hệ thống tự động gióng hàng chúng sang góc trên cùng bên phải, ngang hàng với tiêu đề.
+- **2 Cơ Chế Nạp Filter Options**:
+  1. **Server-Side Infinite Scroll (`fetchOptions`)** (Ưu tiên cho Page): Truyền `columnKey`, `queryKeyPrefix`, `allFilters={listHook.columnFilters}`, và hàm `fetchOptions` gọi API `getColumnOptions` của backend. Popover sẽ tự động phân trang infinite scroll khi cuộn danh sách options và hỗ trợ cascading filter từ server.
+  2. **Client-Side Computed (`filterOptions`)** (Ưu tiên cho Drawer / local table): Truyền mảng `filterOptions={options}` đã được tính toán cascading từ dữ liệu hiện hành.
+- **Định dạng nhãn tùy chọn (`formatOptionLabel`)**: Khi giá trị lưu trữ là ID (vd: `branchId`, `partnerId`) hoặc mã enum, sử dụng prop `formatOptionLabel={(val) => mapLabel(val)}` để hiển thị tên thân thiện trên dropdown checkbox.
+- **Xử lý giá trị Trống / Null (`showBlankOption`)**: Với các cột có thể chứa giá trị null/rỗng (vd: Chi nhánh, Biển số xe, Ghi chú), thêm `showBlankOption={true}` để cho phép người dùng lọc các dòng mang giá trị `(Trống)`.
+- **Cột Ngày Tháng (Date)**: Phải sử dụng `dateRangeSlot` (sử dụng component `<DateRangeColumnSlot>` trong `@/shared/components/DataTable/DateRangeColumnSlot`) để hiển thị bộ chọn khoảng ngày + presets (Hôm nay, Tháng này, Năm nay, Theo quý...), đồng thời set `hideFilter={true}` cùng `hideFooter={true}` để ẩn list checkbox mặc định.
+- **Clear All Filters Button**: Khi bảng có sử dụng TableColumnHeaderFilter, bắt buộc phải bổ sung thêm nút xóa lọc (`FilterButton` từ `@/shared/components/FilterPanel` hoặc Button Reset Filter) hiển thị cạnh tiêu đề bảng nếu `activeFilterCount > 0`. Đối với bảng trong `DrawerSection`, BẮT BUỘC đặt vào prop `titleExtra` của `DrawerSection`.
+- **Cascading Filter Options (Lọc phụ thuộc)**: Đối với các bảng có filter ở client-side, dữ liệu tùy chọn (filter options) của một cột **BẮT BUỘC** phải được tính toán dựa trên danh sách dữ liệu đã bị filter bởi **TẤT CẢ CÁC CỘT KHÁC**.
+- **Nút Hành Động (Table Action Buttons)**: Đối với các bảng nằm trong `DrawerSection`, các nút thao tác chung của bảng như "Thêm dòng" (`+ Thêm dòng`), "Bộ lọc", "Nhập từ Excel"... BẮT BUỘC phải truyền vào prop `titleExtra` của `DrawerSection`.
 
 ### Client-side vs Server-side Logic
 
-- **Trong Page**: Filter và Sorting thường thực hiện ở **Server-side** thông qua query params hoặc hook call API (như `useErpInvoicesList`).
-- **Trong Drawer**: Filter và Sorting thường thực hiện ở **Client-side** (trừ trường hợp dataset quá lớn cần paginate từ server).
+- **Trong Page**: Filter và Sorting thực hiện ở **Server-side** thông qua query params hoặc hook call API (như `useErpInvoicesList`). Dùng `fetchOptions` cho popover options.
+- **Trong Drawer**: Filter và Sorting thực hiện ở **Client-side** (trừ trường hợp dataset quá lớn). Dùng `filterOptions` dạng computed.
   - **Lưu ý quan trọng**: Khi filter/sort ở client-side bằng hook `useMemo`, **bắt buộc** phải truyền đủ các object filter vào array dependencies (VD: `tableState.columnFilters`, `tableState.sorts`, `tableState.columnSearch`), nếu không UI sẽ không update khi user chọn filter.
 
-**Mẫu code cho `<TableColumnHeaderFilter>`**:
+---
 
+### Mẫu code cho `<TableColumnHeaderFilter>`:
+
+#### 1. Cột Server-side dùng `fetchOptions` (Chuẩn cho Page):
 ```tsx
-header: <TableColumnHeaderFilter
-  title={t("Mã linh kiện", "Item Code")}
-  sortState={
-    listHook.sorts.includes("itemCode")
-      ? "asc"
-      : listHook.sorts.includes("-itemCode")
-        ? "desc"
-        : "none"
-  }
-  onSortChange={(state) => listHook.setSort("itemCode", state)}
-  searchValue={listHook.columnSearch["itemCode"] || ""}
-  onSearchChange={(val) => listHook.setColumnSearch("itemCode", val)}
-  selectedFilters={listHook.columnFilters["itemCode"] || []}
-  onFilterChange={(vals) => listHook.setColumnFilter("itemCode", vals)}
-  isActive={!!listHook.columnFilters["itemCode"]?.length}
-  align="center"
-/>;
+header: (
+  <TableColumnHeaderFilter
+    title={t("Mã linh kiện", "Item Code")}
+    columnKey="itemCode"
+    queryKeyPrefix="items-column-options"
+    allFilters={listHook.columnFilters}
+    fetchOptions={({ columnKey, search, pageParam, filtersStr }) =>
+      itemsApi.getColumnOptions(columnKey, search, pageParam, 20, filtersStr)
+    }
+    sortState={
+      listHook.sorts.includes("itemCode")
+        ? "asc"
+        : listHook.sorts.includes("-itemCode")
+          ? "desc"
+          : "none"
+    }
+    onSortChange={(state) => listHook.setSort("itemCode", state)}
+    searchValue={listHook.columnSearch["itemCode"] || ""}
+    onSearchChange={(val) => listHook.setColumnSearch("itemCode", val)}
+    selectedFilters={listHook.columnFilters["itemCode"] || []}
+    onFilterChange={(vals) => listHook.setColumnFilter("itemCode", vals)}
+    isActive={!!listHook.columnFilters["itemCode"]?.length}
+    align="center"
+  />
+)
 ```
 
-## 3. Row Click, View Detail & Action Menu
+#### 2. Cột Ngày Tháng dùng `<DateRangeColumnSlot>`:
+```tsx
+header: (
+  <TableColumnHeaderFilter
+    title={t("Ngày chứng từ", "Voucher Date")}
+    sortState={
+      listHook.sorts.includes("voucherDate")
+        ? "asc"
+        : listHook.sorts.includes("-voucherDate")
+          ? "desc"
+          : "none"
+    }
+    onSortChange={(state) => listHook.setSort("voucherDate", state)}
+    searchValue=""
+    onSearchChange={() => {}}
+    selectedFilters={[]}
+    onFilterChange={() => {}}
+    hideFilter={true}
+    hideFooter={true}
+    isActive={Boolean(listHook.dateFrom || listHook.dateTo)}
+    align="center"
+    dateRangeSlot={({ close }) => (
+      <DateRangeColumnSlot
+        dateFrom={listHook.dateFrom || ""}
+        dateTo={listHook.dateTo || ""}
+        onChange={(from, to) => {
+          listHook.setDateRange(from, to);
+        }}
+        onClose={close}
+      />
+    )}
+  />
+)
+```
+
+#### 3. Cột Client-side dùng `filterOptions` (Chuẩn cho Drawer):
+```tsx
+header: (
+  <TableColumnHeaderFilter
+    title={t("Trạng thái", "Status")}
+    sortState={clientSortState}
+    onSortChange={(s) => setClientSort("status", s)}
+    filterOptions={computedStatusOptions}
+    selectedFilters={clientFilters["status"] || []}
+    onFilterChange={(vals) => setClientFilter("status", vals)}
+    searchValue={clientSearch["status"] || ""}
+    onSearchChange={(val) => setClientSearch("status", val)}
+    isActive={!!clientFilters["status"]?.length}
+    align="center"
+  />
+)
+```
+
+## 3. Row Click, View Detail & Row Hover Action Menu
 
 - **Tuyệt đối KHÔNG sử dụng `onRowClick`** để mở trang / ngăn kéo chi tiết (detail drawer).
 - Chỉ có 2 cách hợp lệ để xem chi tiết một bản ghi (View Detail):
   1. Click vào biểu tượng icon detail nằm trong `<TableText>` (xem phần Mã Code/SKU bên dưới).
-  2. Click vào tùy chọn **"Chi tiết"** trong Action Menu của hàng.
-- **Action Menu (Cột Thao Tác)**: Bắt buộc sử dụng component `<ActionDropdown>` (`@/shared/components/ActionDropdown`).
+  2. Click vào tùy chọn **"Chi tiết"** trong Action Menu hoặc Quick Action button của hàng.
+- **Row Hover Floating Actions (Ô Nổi Thao Tác Khi Hover Hàng)**:
+  - Khi rê chuột (hover) vào bất kỳ dòng nào trong bảng, một ô nổi chứa **2 nút thao tác nhanh (Quick Action Buttons)** (như Chi tiết 👁️, Tải XML 📥, Chỉnh sửa ✏️) và **nút ba chấm `...`** mở Action Menu đầy đủ sẽ xuất hiện nổi tại mép phải của dòng (`sticky right-0` trong suốt, không đè nền/viền lên dữ liệu).
+  - **Button Pill luôn Floating ở mép phải khung nhìn**: Nút nổi luôn xuất hiện ở mép phải của hàng hiển thị trên màn hình (`absolute right-3.5 top-1/2 -translate-y-1/2`) bất kể bạn đang ở đầu, giữa hay cuối bảng. Cell chứa nút nổi hoàn toàn trong suốt (`bg-transparent border-none pointer-events-none`), không tạo bất kỳ dải cột cố định hay viền dọc nào che khuất dữ liệu khi cuộn.
+  - **Cột đệm 116px ở cuối bảng (Không sticky header/footer)**: Header và Footer của cột cuối cuộn tự nhiên theo bảng. Khi cuộn ngang hết cỡ sang phải, cột đệm 116px này đóng vai trò khoảng trống an toàn để ô nổi nằm gọn gàng bên trong với lề 14px đều đặn, không đè lên dữ liệu của cột liền trước.
+  - **Khoảng cách 3 Icon Buttons đều đặn**: Cả 3 nút đều có kích thước chuẩn (`w-6 h-6 rounded-lg`), giãn cách đều `gap-1` (4px), không dùng thanh ngăn cách để đảm bảo đối xứng thị giác hoàn hảo.
+  - **Glassmorphism Styling**: Ô nổi sử dụng hiệu ứng kính mờ cao cấp đồng bộ với Universal Search (`backdrop-filter: blur(20px) saturate(180%)`, nền `var(--popup-bg)`, viền `var(--popup-border)` và viền sáng âm `inset`, đổ bóng mịn).
+  - **Hiệu năng 0ms Lag**: Sử dụng hardware-accelerated CSS hover (`group-hover:opacity-100`), không gây re-render React khi di chuột, hoạt động mượt mà 60fps/120fps.
+  - **Chuẩn Tooltip Bottom**: Toàn bộ tooltip trong bảng và hệ thống mặc định mở xuống dưới (`side="bottom"`) để không bao giờ che khuất các nút thao tác nổi.
+  - **Quy chuẩn Chính thức**: Cột action tĩnh ở đầu bảng đã được loại bỏ hoàn toàn. BẮT BUỘC sử dụng Row Hover Floating Actions thông qua prop `rowActions` trên `<SpreadsheetPageTemplate>` hoặc `actions` trên `<StandardTable>`. TUYỆT ĐỐI KHÔNG thêm cột `{ key: "actions" }` thủ công vào `columns`.
+- **Action Menu (Cấu trúc ActionDropdownItem)**: Bắt buộc sử dụng component `<ActionDropdown>` (`@/shared/components/ActionDropdown`) hoặc truyền qua prop `actions` / `rowActions` / `rowHoverActions`.
   - Các thao tác bên trong phải được **phân nhóm logic (Group)** rõ ràng bằng thuộc tính `groupLabel`.
   - Ví dụ nhóm "TRA CỨU" (Chi tiết, Tải XML, In), nhóm "THAO TÁC" (Sửa, Xóa, Đồng bộ).
 
-**Mẫu code `<ActionDropdown>`**:
+**Mẫu code `<ActionDropdown>` / `rowActions`**:
 
 ```tsx
 <ActionDropdown
@@ -72,10 +152,10 @@ header: <TableColumnHeaderFilter
     {
       groupLabel: "TRA CỨU",
       items: [
-        { label: "Chi tiết", icon: <Eye />, onClick: () => openDetail(row.id) },
+        { label: "Chi tiết", icon: <Eye className="w-3.5 h-3.5" />, onClick: () => openDetail(row.id) },
         {
           label: "Tải XML",
-          icon: <Download />,
+          icon: <Download className="w-3.5 h-3.5" />,
           onClick: () => downloadXML(row.id),
         },
       ],
@@ -85,7 +165,7 @@ header: <TableColumnHeaderFilter
       items: [
         {
           label: "Đồng bộ lại từ XML",
-          icon: <RefreshCw />,
+          icon: <RefreshCw className="w-3.5 h-3.5" />,
           onClick: () => syncXML(row.id),
         },
       ],
@@ -99,7 +179,11 @@ header: <TableColumnHeaderFilter
 Cột liên quan tới mã hệ thống, số phiếu (voucher code, item code) bắt buộc sử dụng component `<TableText>` để có tính năng copy, tooltip khi bị dài (ellipsis) và click để mở detail drawer:
 
 - **Chiều rộng**: Bắt buộc set `size: 200` và `enableResizing: true`.
-- **Quick Status Badge**: Nếu dòng dữ liệu đang ở trạng thái **Nháp (Draft)** hoặc **Hủy (Canceled/Voided)**, phải hiển thị thêm một Badge nhỏ nhắn ngay cạnh mã code để user nhận diện nhanh.
+- **Quick Status Badge**: Nếu dòng dữ liệu đang ở trạng thái **Nháp (Draft)** hoặc **Hủy (Canceled/Voided)**, phải hiển thị thêm một Badge nhỏ nhắn.
+  - **Align Right**: Badge trạng thái **BẮT BUỘC** phải được căn sát mép phải của cell (sử dụng class `ml-auto flex-shrink-0`), trong khi mã code và icon drawer/copy nằm bên trái.
+  - **Fixed Width đồng đều**: Thiết lập chiều rộng cố định cho badge (ví dụ: `w-[50px] inline-flex items-center justify-center text-center truncate`) để badge ở các dòng luôn bằng nhau và thẳng hàng.
+  - **Sử dụng App Badge**: Bắt buộc dùng component `Badge` từ `@/shared/components/ui/badge`.
+  - **Tooltip & Ellipsis**: Bọc Badge trong `<Tooltip>` và có `truncate` phòng trường hợp text trạng thái bị dài hoặc đa ngôn ngữ.
 
 **Mẫu code cho cột Code/SKU**:
 
@@ -110,8 +194,9 @@ Cột liên quan tới mã hệ thống, số phiếu (voucher code, item code) 
   enableResizing: true,
   // ... header config ...
   cell: (row) => (
-    <div className="flex items-center gap-2 w-full">
+    <div className="flex items-center gap-1.5 w-full min-w-0">
       <TableText
+        className="flex-1 min-w-0"
         text={row.code}
         enableCopy={true}
         tooltip={true} // Bật tính năng tooltip & ellipsis (truncate) nếu text quá dài
@@ -121,14 +206,24 @@ Cột liên quan tới mã hệ thống, số phiếu (voucher code, item code) 
         }}
       />
       {row.status === "DRAFT" && (
-        <Badge variant="secondary" className="text-[10px] px-1 py-0 h-4 flex-shrink-0">
-          {t("Nháp", "Draft")}
-        </Badge>
+        <Tooltip content={t("Nháp", "Draft")}>
+          <Badge
+            variant="secondary"
+            className="text-[10px] px-1.5 py-0 h-4 flex-shrink-0 font-medium ml-auto w-[50px] inline-flex items-center justify-center text-center truncate"
+          >
+            {t("Nháp", "Draft")}
+          </Badge>
+        </Tooltip>
       )}
-      {row.status === "CANCELED" && (
-        <Badge variant="destructive" className="text-[10px] px-1 py-0 h-4 flex-shrink-0">
-          {t("Hủy", "Canceled")}
-        </Badge>
+      {(row.status === "CANCELED" || row.status === "CANCELLED") && (
+        <Tooltip content={t("Hủy", "Canceled")}>
+          <Badge
+            variant="destructive"
+            className="text-[10px] px-1.5 py-0 h-4 flex-shrink-0 font-medium ml-auto w-[50px] inline-flex items-center justify-center text-center truncate"
+          >
+            {t("Hủy", "Canceled")}
+          </Badge>
+        </Tooltip>
       )}
     </div>
   )
@@ -161,17 +256,30 @@ import { TableDateCell } from "@/shared/components/DataTable/TableDateCell";
 
 ## 7. Cột Trạng Thái (Status/State)
 
-Bất kỳ cột nào liên quan đến **Status**, **State** thì bắt buộc phải dùng **Badge component** có sẵn trong app (`@/shared/components/ui/badge`).
-Nếu màu sắc / variant chưa có sẵn, hãy thêm các class custom (hoặc tạo variant mới trong theme) thay vì viết thẻ div / span thủ công.
+Bất kỳ cột nào liên quan đến **Status**, **State** thì bắt buộc phải tuân thủ các quy tắc sau:
+- **Dùng App Badge component**: Bắt buộc dùng `<Badge>` (`@/shared/components/ui/badge`) hoặc `<StatusBadge>` (`@/shared/components/badges`).
+- **Fixed Width đồng đều**: Bắt buộc thiết lập chiều rộng cố định cho badge (ví dụ: `w-[88px] inline-flex items-center justify-center text-center truncate`) để các trạng thái trên các dòng luôn thẳng tắp và đồng đều.
+- **Tooltip & Ellipsis**: Bọc `<Tooltip>` cho Badge và thêm class `truncate` để không làm tràn vỡ layout khi text trạng thái dài.
 
-**Mẫu code cho Badge**:
+**Mẫu code cho cột Trạng Thái**:
 
 ```tsx
-cell: (row) => (
-  <Badge variant={row.status === "DONE" ? "default" : "secondary"}>
-    {t(row.status)}
-  </Badge>
-);
+{
+  key: "status",
+  header: renderHeaderFilter("status", t("Trạng thái")),
+  size: 130,
+  className: "text-center",
+  cell: (row) => (
+    <div className="w-full flex justify-center">
+      <Tooltip content={t(row.status)}>
+        <StatusBadge
+          status={row.status || ""}
+          className="w-[88px] inline-flex items-center justify-center text-center truncate"
+        />
+      </Tooltip>
+    </div>
+  ),
+}
 ```
 
 ## 8. Subtotal Row (Dòng tổng cộng)
@@ -215,20 +323,40 @@ cell: (row) => (
 - UI **KHÔNG ĐƯỢC** set state `sortBy` mặc định (vd: `const [sortBy, setSortBy] = useState<string | undefined>(undefined);`) nếu muốn bảng sắp xếp mặc định theo ngày tạo/ngày chứng từ.
 - Backend **PHẢI** tự động apply sort mặc định (thường là `createdAt` DESC hoặc theo ngày chứng từ) khi UI truyền lên `sort` rỗng. Việc này đảm bảo khi vừa vào trang, bảng dữ liệu đã được sort mới nhất lên đầu nhưng trên Header UI không bị khoá cứng icon "đang sort" tại bất kỳ cột nào cho đến khi User click.
 
+## 11. Quản lý Hiển thị, Tùy biến Cột & Khôi phục mặc định (Column Visibility, Ordering & Reset)
+
+- **Trung tâm Tùy chỉnh cột (`ColumnToggle`)**:
+  - Menu popover với icon bánh răng (`Settings2`) trên thanh công cụ bảng là nơi duy nhất quản lý tùy biến giao diện cột:
+    1. **Ẩn / Hiện cột**: Toggle bật/tắt checkbox của từng cột.
+    2. **Kéo thả đổi thứ tự cột**: Dnd Sortable kéo thả để thay đổi vị trí hiển thị các cột.
+    3. **Giới hạn chiều cao & Cuộn dọc**: Danh sách các cột có chiều cao tối đa `max-h-[min(360px,75vh)]` kết hợp cuộn dọc (`overflow-y-auto`), tránh tình trạng tràn màn hình khi bảng có hàng chục cột.
+    4. **Nút Khôi phục mặc định (Reset)**: Nút "Khôi phục" (với icon `RotateCcw`) được gắn **cố định trên header** của popup menu `ColumnToggle`. Khi click, hệ thống sẽ tự động khôi phục toàn bộ:
+       - Độ rộng cột (`columnSizing` → `{}`)
+       - Trạng thái ẩn/hiện cột (`columnVisibility` → `defaultColumnVisibility`)
+       - Thứ tự cột (`columnOrder` → `defaultColumnOrder`)
+       - Xóa cache preference tương ứng trong `localStorage` (`erp_preferences`).
+- **NGHIÊM CẤM ĐẶT NÚT RESET Ở CỘT KHÁC**:
+  - **TUYỆT ĐỐI KHÔNG** đặt nút Reset Column thủ công tại header của cột Action, cột STT hay bất kỳ cột dữ liệu nào. Toàn bộ logic reset đã được tích hợp tự động vào dropdown `ColumnToggle`.
+- **Yêu cầu `tableId` duy nhất**:
+  - Bảng bắt buộc phải được truyền prop `tableId` (dạng chuỗi unique, vd: `"erp-invoices-in"`, `"garage-cases"`, `"bom-list"`) để Core `DataTable` tự động kết nối Portal Target hiển thị nút `ColumnToggle` và lưu trữ trạng thái người dùng.
+
 ## Summary Checklist trước khi hoàn thành:
 
-- [ ] TUYỆT ĐỐI không dùng `onRowClick` mở detail, chỉ mở từ `<TableText>` hoặc `ActionDropdown` chưa?
+- [ ] TUYỆT ĐỐI không dùng `onRowClick` mở detail, chỉ mở từ `<TableText>` hoặc Row Hover Floating Actions (`rowActions`) chưa?
+- [ ] TUYỆT ĐỐI không định nghĩa cột action tĩnh thủ công `{ key: "actions" }` trong `columns`, đã truyền prop `rowActions` chưa?
+- [ ] TUYỆT ĐỐI không đặt nút Reset Column ở header cột Action hay cột dữ liệu, đã dựa vào nút Khôi phục trong dropdown `ColumnToggle` (`Settings2`) chưa?
+- [ ] Bảng đã có `tableId` duy nhất để tự động lưu & khôi phục column sizing, visibility, order chưa?
 - [ ] `<ActionDropdown>` đã phân nhóm menu bằng `groupLabel` (TRA CỨU, THAO TÁC, ...) chưa?
 - [ ] Các cột dữ liệu đã có `enableResizing: true` chưa?
-- [ ] Cột đầu tiên (STT/Checkbox/Action) rộng đúng `40px` chưa? (STT dùng `{idx}` thay vì `idx + 1` chưa?)
+- [ ] Cột đầu tiên (STT/Checkbox) rộng đúng `40px`, header và cell đã căn giữa chuẩn (`header: <span className="w-full block text-center">#</span>`, `headerClassName: "text-center"`) chưa? (STT dùng `{idx}` thay vì `idx + 1` chưa?)
 - [ ] Header có `<TableColumnHeaderFilter align="center">` và truyền prop `isActive` chưa?
 - [ ] Các cột thường KHÔNG set `hideFilter={true}` để hiện search box & options chưa?
 - [ ] Cột ngày tháng (Date) đã dùng `dateRangeSlot` và `hideFilter={true}` chưa?
 - [ ] Drawer thì client-side filter, Page thì server-side chưa? Nếu client-side filter thì `useMemo` đã có đủ dependency chưa?
-- [ ] Các cột mã/code (size: 200px) đã dùng `<TableText>` bật `enableCopy`, `tooltip`, `onDrawerClick` và Badge status (nếu Nháp/Hủy) chưa?
+- [ ] Các cột mã/code (size: 200px) đã dùng `<TableText>` bật `enableCopy`, `tooltip`, `onDrawerClick` và Quick Status Badge (align right `ml-auto`, fixed width, bọc Tooltip & ellipsis) chưa?
 - [ ] Cột thời gian có format 2 dòng (Ngày to, Giờ nhỏ xám) chưa?
 - [ ] Cột số lượng có class `tabular-nums`, cột tiền tệ có class `font-semibold` chưa?
-- [ ] Cột trạng thái (status/state) độc lập có dùng `<Badge>` không?
+- [ ] Cột trạng thái (status/state) độc lập có dùng App `<Badge>`/`<StatusBadge>`, fixed width đều nhau, bọc `<Tooltip>` & `truncate` chưa?
 - [ ] Các cột số tiền / số lượng có `summaryRow` tổng không?
 - [ ] Text đã có namespace i18n (`t(...)`) chưa?
 - [ ] Đã bỏ default state `sortBy` ở UI và dùng default sort ở Backend chưa?

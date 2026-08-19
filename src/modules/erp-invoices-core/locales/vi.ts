@@ -177,4 +177,24 @@ export const erpInvoicesVi = {
   "sinvoiceDraft.notifyTitle": "Đồng bộ hóa đơn nháp thành công",
   "sinvoiceDraft.notifyMessage":
     "Danh sách hóa đơn nháp Viettel đã cập nhật: +{{added}} mới, -{{removed}} đã xoá. Tổng hiện tại: {{syncedCount}} nháp.",
+
+  // Smart Net-Off & Settlement Suggestions
+  "smartSuggestion.title": "Gợi ý Đối soát Thông minh",
+  "smartSuggestion.searching": "Đang tìm kiếm...",
+  "smartSuggestion.noMatch":
+    "Chưa tìm thấy giao dịch khớp chính xác với hóa đơn này. Bạn có thể tìm kiếm thủ công trong danh sách bên dưới.",
+  "smartSuggestion.accept": "Nhận gợi ý",
+  "smartSuggestion.viewDetail": "Nhấn để xem chi tiết sao kê",
+  "smartSuggestion.deleteTxn": "Xóa giao dịch này",
+  "smartSuggestion.partner": "Đối tác:",
+  "smartSuggestion.netOffLabel": "Cấn trừ:",
+  "smartSuggestion.badge.perfect": "Tiền + Số HĐ/CT + Đối tác",
+  "smartSuggestion.badge.high": "Tiền + Số HĐ/CT",
+  "smartSuggestion.badge.likely": "Tiền + Tên đối tác",
+  "smartSuggestion.badge.possible": "Chỉ khớp số tiền",
+  "smartSuggestion.badge.noticeStrong": "Số HĐ/CT + Đối tác (khác tiền)",
+  "smartSuggestion.badge.notice": "Khớp Số HĐ/CT (khác tiền)",
+  "smartSuggestion.warning.possible": "Chỉ khớp số tiền, vui lòng kiểm tra kỹ",
+  "smartSuggestion.warning.overRemaining":
+    "Cảnh báo: Tổng tiền cấn trừ ({{current}}) đang vượt quá số tiền cần thanh toán của hóa đơn ({{target}}). Vui lòng điều chỉnh lại số tiền trước khi xác nhận.",
 };

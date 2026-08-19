@@ -159,23 +159,23 @@ export const SECTION_ROOTS: Partial<Record<PageKey, SectionRoot>> = {
   },
   "vinfast-parts": {
     labelKey: "nav.items.vinfastParts",
-    group: "accounting",
+    group: "vinfast",
   },
   "vinfast-invoice-settlement": {
-    labelKey: "Lệnh quyết toán xưởng Vinfast",
-    group: "manufacturing",
+    labelKey: "nav.items.vinfastSettlement",
+    group: "vinfast",
   },
   "vinfast-parts-dashboard": {
-    labelKey: "Tổng quan phụ tùng",
-    group: "inventory",
+    labelKey: "nav.items.vinfastPartsDashboard",
+    group: "vinfast",
   },
   "vinfast-parts-oto-stock": {
     labelKey: "nav.items.vinfastPartsOtoStock",
-    group: "inventory",
+    group: "vinfast",
   },
   "vinfast-parts-xemay-stock": {
     labelKey: "nav.items.vinfastPartsXemayStock",
-    group: "inventory",
+    group: "vinfast",
   },
   "settings-branch": {
     labelKey: "thietlap.tabs.chi-nhanh",
@@ -203,23 +203,23 @@ export const SECTION_ROOTS: Partial<Record<PageKey, SectionRoot>> = {
     group: "accounting",
   },
   "garage-dashboard": {
-    labelKey: "nav.items.garageDashboard",
+    labelKey: "breadcrumb.garageDashboard",
     group: "garage",
   },
   "garage-cases": {
-    labelKey: "nav.items.garageCases",
-    group: "garage",
-  },
-  "garage-gross-profit": {
-    labelKey: "Báo cáo lợi nhuận gộp",
+    labelKey: "breadcrumb.garageCases",
     group: "garage",
   },
   "garage-receivables": {
-    labelKey: "nav.items.garageReceivables",
+    labelKey: "breadcrumb.garageReceivables",
     group: "garage",
   },
   "garage-payables": {
-    labelKey: "nav.items.garagePayables",
+    labelKey: "breadcrumb.garagePayables",
+    group: "garage",
+  },
+  "garage-customers": {
+    labelKey: "breadcrumb.garageCustomers",
     group: "garage",
   },
   budget: {
@@ -318,21 +318,26 @@ export const BREADCRUMBS: Partial<Record<PageKey, Array<[string, string?]>>> = {
   "erp-invoices-in": [["breadcrumb.accounting"], ["breadcrumb.inbound"]],
   "erp-invoices-out": [["breadcrumb.accounting"], ["breadcrumb.outbound"]],
   "erp-invoices-draft": [["breadcrumb.accounting"], ["Hóa đơn nháp"]],
-  "vinfast-parts": [["breadcrumb.accounting"], ["nav.items.vinfastParts"]],
-  "vinfast-parts-dashboard": [["breadcrumb.inventory"], ["Tổng quan phụ tùng"]],
+  "vinfast-parts": [["breadcrumb.vinfast"], ["nav.items.vinfastParts"]],
+  "vinfast-parts-dashboard": [
+    ["breadcrumb.vinfast"],
+    ["nav.items.vinfastPartsGroup"],
+    ["nav.items.vinfastPartsDashboard"],
+  ],
   "vinfast-parts-oto-stock": [
-    ["breadcrumb.inventory"],
-    ["nav.items.vinfastParts"],
+    ["breadcrumb.vinfast"],
+    ["nav.items.vinfastPartsGroup"],
     ["nav.items.vinfastPartsOtoStock"],
   ],
   "vinfast-parts-xemay-stock": [
-    ["breadcrumb.inventory"],
-    ["nav.items.vinfastParts"],
+    ["breadcrumb.vinfast"],
+    ["nav.items.vinfastPartsGroup"],
     ["nav.items.vinfastPartsXemayStock"],
   ],
   "vinfast-invoice-settlement": [
-    ["breadcrumb.manufacturing"],
-    ["Lệnh quyết toán xưởng Vinfast"],
+    ["breadcrumb.vinfast"],
+    ["nav.items.vinfastWorkshopGroup"],
+    ["nav.items.vinfastSettlement"],
   ],
   "journal-entry": [["breadcrumb.accounting"], ["nav.items.reportJournal"]],
   "settings-accounts": [
@@ -357,12 +362,19 @@ export const BREADCRUMBS: Partial<Record<PageKey, Array<[string, string?]>>> = {
   ],
   "settings-branch": [["breadcrumb.settings"], ["thietlap.tabs.chi-nhanh"]],
   "settings-bank": [["breadcrumb.settings"], ["thietlap.tabs.ngan-hang"]],
-  "settings-cash-fund": [["breadcrumb.settings"], ["thietlap.tabs.quy"]],
-  "garage-dashboard": [["nav.items.garage"], ["nav.items.garageDashboard"]],
-  "garage-cases": [["nav.items.garage"], ["nav.items.garageCases"]],
-  "garage-gross-profit": [["nav.items.garage"], ["Báo cáo lợi nhuận gộp"]],
-  "garage-receivables": [["nav.items.garage"], ["nav.items.garageReceivables"]],
-  "garage-payables": [["nav.items.garage"], ["nav.items.garagePayables"]],
+  "garage-dashboard": [["breadcrumb.garage"], ["breadcrumb.garageDashboard"]],
+  "garage-cases": [["breadcrumb.garage"], ["breadcrumb.garageCases"]],
+  "garage-customers": [["breadcrumb.garage"], ["breadcrumb.garageCustomers"]],
+  "garage-receivables": [
+    ["breadcrumb.garage"],
+    ["breadcrumb.garagePartnersGroup", "garage-receivables"],
+    ["breadcrumb.garageReceivables"],
+  ],
+  "garage-payables": [
+    ["breadcrumb.garage"],
+    ["breadcrumb.garagePartnersGroup", "garage-payables"],
+    ["breadcrumb.garagePayables"],
+  ],
 };
 
 interface AppState {
@@ -396,8 +408,6 @@ interface AppState {
   logout: () => void;
   setCustomBreadcrumbs: (crumbs: Array<[string, string?]> | null) => void;
   preloadTab: (page: PageKey) => void;
-  sidebarSearchQuery: string;
-  setSidebarSearchQuery: (q: string) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -414,12 +424,10 @@ export const useAppStore = create<AppState>()(
       companyProfileOpen: false,
       currentBranchId: null,
       customBreadcrumbs: null,
-      sidebarSearchQuery: "",
 
       setForbidden: (value) => set({ forbidden: value }),
       setCurrentBranchId: (id) => set({ currentBranchId: id }),
       setCustomBreadcrumbs: (crumbs) => set({ customBreadcrumbs: crumbs }),
-      setSidebarSearchQuery: (q) => set({ sidebarSearchQuery: q }),
 
       navigate: (page) => {
         const { openTabs } = get();
