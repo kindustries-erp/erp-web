@@ -337,7 +337,7 @@ export function AfterSalesListPage() {
           text={row.serialNo || "—"}
           tooltip={row.serialNo || false}
           enableCopy={Boolean(row.serialNo)}
-          onDrawerClick={row.serialNo ? () => handleRowClick(row) : undefined}
+          onDetailClick={row.serialNo ? () => handleRowClick(row) : undefined}
         />
       ),
     },

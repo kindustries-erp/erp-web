@@ -1071,7 +1071,7 @@ export function ErpBomPage() {
             text={item.bomCode}
             enableCopy={true}
             tooltip={true}
-            onDrawerClick={(e) => {
+            onDetailClick={(e) => {
               e?.stopPropagation();
               void openView(item);
             }}

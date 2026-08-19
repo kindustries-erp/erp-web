@@ -320,7 +320,7 @@ export function GarageCases() {
               textClassName="font-medium text-primary text-left"
               enableCopy={true}
               tooltip={true}
-              onDrawerClick={() => setSelectedCaseId(item.soChungTu)}
+              onDetailClick={() => setSelectedCaseId(item.soChungTu)}
             />
             {isCanceled && (
               <Tooltip content={item.tenTinhTrangDichVu}>

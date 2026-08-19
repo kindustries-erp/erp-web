@@ -174,18 +174,21 @@ header: (
 />
 ```
 
-## 4. Cột Text đặc thù (Mã Code / Số Phiếu)
+## 4. Cột Text đặc thù (Mã Code / Số Phiếu / Dữ liệu liên kết)
 
-Cột liên quan tới mã hệ thống, số phiếu (voucher code, item code) bắt buộc sử dụng component `<TableText>` để có tính năng copy, tooltip khi bị dài (ellipsis) và click để mở detail drawer:
+Cột liên quan tới mã hệ thống, số phiếu (voucher code, item code, invoice no, so no...) bắt buộc sử dụng component `<TableText>` để có tính năng copy, tooltip khi bị dài (ellipsis) và click để xem chi tiết hoặc mở drawer liên kết:
 
+- **Phân tách rõ 2 loại tương tác**:
+  1. **Nội dung chính (Main Content / Primary Record)**: Sử dụng `onDetailClick` (sẽ tự động hiển thị icon con mắt `Eye` 👁️). Áp dụng cho: Số hóa đơn (`invoiceNo`), Số phiếu kho (`voucherNo`), Số đơn hàng (`soNo`), Mã lệnh sản xuất (`referenceNo`), Mã vụ việc (`soChungTu`), Mã định danh (`serialNo`), Mã đối tác (`code`), SKU...
+  2. **Dữ liệu phụ / liên kết (Secondary / Related Data Drawer)**: Sử dụng `onDrawerClick` (sẽ tự động hiển thị icon ngăn kéo `PanelRightOpen` 📑). Áp dụng cho: Tên/MST đối tác trong hóa đơn, Tài khoản đối ứng trong sao kê, Đơn hàng liên kết trong hồ sơ bảo hành, Chứng từ tham chiếu...
 - **Chiều rộng**: Bắt buộc set `size: 200` và `enableResizing: true`.
 - **Quick Status Badge**: Nếu dòng dữ liệu đang ở trạng thái **Nháp (Draft)** hoặc **Hủy (Canceled/Voided)**, phải hiển thị thêm một Badge nhỏ nhắn.
-  - **Align Right**: Badge trạng thái **BẮT BUỘC** phải được căn sát mép phải của cell (sử dụng class `ml-auto flex-shrink-0`), trong khi mã code và icon drawer/copy nằm bên trái.
+  - **Align Right**: Badge trạng thái **BẮT BUỘC** phải được căn sát mép phải của cell (sử dụng class `ml-auto flex-shrink-0`), trong khi mã code và icon detail/drawer/copy nằm bên trái.
   - **Fixed Width đồng đều**: Thiết lập chiều rộng cố định cho badge (ví dụ: `w-[50px] inline-flex items-center justify-center text-center truncate`) để badge ở các dòng luôn bằng nhau và thẳng hàng.
   - **Sử dụng App Badge**: Bắt buộc dùng component `Badge` từ `@/shared/components/ui/badge`.
   - **Tooltip & Ellipsis**: Bọc Badge trong `<Tooltip>` và có `truncate` phòng trường hợp text trạng thái bị dài hoặc đa ngôn ngữ.
 
-**Mẫu code cho cột Code/SKU**:
+**Mẫu code cho cột Code/SKU chính (Main Record)**:
 
 ```tsx
 {
@@ -200,9 +203,9 @@ Cột liên quan tới mã hệ thống, số phiếu (voucher code, item code) 
         text={row.code}
         enableCopy={true}
         tooltip={true} // Bật tính năng tooltip & ellipsis (truncate) nếu text quá dài
-        onDrawerClick={(e) => {
+        onDetailClick={(e) => {
           e.stopPropagation();
-          openDetailDrawer(row.id); // Cách 1 mở Detail
+          openDetail(row.id); // Icon con mắt (Eye) mở chi tiết bản ghi chính
         }}
       />
       {row.status === "DRAFT" && (
@@ -353,7 +356,7 @@ Bất kỳ cột nào liên quan đến **Status**, **State** thì bắt buộc 
 - [ ] Các cột thường KHÔNG set `hideFilter={true}` để hiện search box & options chưa?
 - [ ] Cột ngày tháng (Date) đã dùng `dateRangeSlot` và `hideFilter={true}` chưa?
 - [ ] Drawer thì client-side filter, Page thì server-side chưa? Nếu client-side filter thì `useMemo` đã có đủ dependency chưa?
-- [ ] Các cột mã/code (size: 200px) đã dùng `<TableText>` bật `enableCopy`, `tooltip`, `onDrawerClick` và Quick Status Badge (align right `ml-auto`, fixed width, bọc Tooltip & ellipsis) chưa?
+- [ ] Các cột mã/code (size: 200px) đã dùng `<TableText>` bật `enableCopy`, `tooltip`, dùng `onDetailClick` (Icon con mắt 👁️) cho bản ghi chính hoặc `onDrawerClick` (Icon ngăn kéo 📑) cho dữ liệu phụ và Quick Status Badge (align right `ml-auto`, fixed width, bọc Tooltip & ellipsis) chưa?
 - [ ] Cột thời gian có format 2 dòng (Ngày to, Giờ nhỏ xám) chưa?
 - [ ] Cột số lượng có class `tabular-nums`, cột tiền tệ có class `font-semibold` chưa?
 - [ ] Cột trạng thái (status/state) độc lập có dùng App `<Badge>`/`<StatusBadge>`, fixed width đều nhau, bọc `<Tooltip>` & `truncate` chưa?

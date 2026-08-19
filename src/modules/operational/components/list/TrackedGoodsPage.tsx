@@ -292,7 +292,7 @@ export function TrackedGoodsPage({
             text={row.serialNo || "—"}
             enableCopy
             tooltip={true}
-            onDrawerClick={() => {
+            onDetailClick={() => {
               setSelectedItem(row);
               setDrawerOpen(true);
             }}

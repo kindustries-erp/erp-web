@@ -77,7 +77,7 @@ export function useStockColumns({
         cell: (row) => (
           <TableText
             text={row.item_code || ""}
-            onDrawerClick={(e) => {
+            onDetailClick={(e) => {
               e.stopPropagation();
               onViewItem(row.inventory_item_id);
             }}

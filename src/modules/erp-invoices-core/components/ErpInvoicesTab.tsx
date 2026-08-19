@@ -860,7 +860,7 @@ export function ErpInvoicesTab({
         cell: (inv) => (
           <TableText
             text={inv.invoiceNo || ""}
-            onDrawerClick={(e) => {
+            onDetailClick={(e) => {
               e.stopPropagation();
               formHook.openInternal(inv);
             }}

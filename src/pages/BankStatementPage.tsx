@@ -427,7 +427,7 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
         return (
           <TableText
             text={row.referenceNumber}
-            onDrawerClick={(e) => {
+            onDetailClick={(e) => {
               e.stopPropagation();
               setDetailTransactionId(row.id);
             }}

@@ -9,7 +9,6 @@ import {
   FileText,
   CheckCircle,
   FileSpreadsheet,
-  PanelRightOpen,
   MoreHorizontal,
 } from "lucide-react";
 import { Popover } from "@/core/components/ui/Popover";
@@ -745,10 +744,7 @@ export function ErpSalesOrdersPage() {
           text={item.soNo || "—"}
           tooltip={item.soNo || false}
           enableCopy={Boolean(item.soNo)}
-          onDrawerClick={item.soNo ? () => void openView(item) : undefined}
-          drawerIcon={
-            <PanelRightOpen className="w-3.5 h-3.5 opacity-60 hover:opacity-100 transition-opacity flex-shrink-0" />
-          }
+          onDetailClick={item.soNo ? () => void openView(item) : undefined}
         />
       ),
       skeletonClassName: "w-24",
