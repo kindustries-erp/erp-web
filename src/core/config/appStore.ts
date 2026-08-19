@@ -116,7 +116,7 @@ export const SECTION_ROOTS: Partial<Record<PageKey, SectionRoot>> = {
   },
   "settings-accounts": {
     labelKey: "nav.items.catalogAccounts",
-    group: "settings",
+    group: "accounting",
   },
   "erp-activity-logs": {
     labelKey: "nav.items.activitylog",
