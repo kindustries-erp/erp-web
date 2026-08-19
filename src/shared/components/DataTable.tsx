@@ -7,7 +7,7 @@ import React, {
 } from "react";
 import { createPortal } from "react-dom";
 import * as Popover from "@radix-ui/react-popover";
-import { Settings2, GripVertical } from "lucide-react";
+import { Settings2, GripVertical, RotateCcw } from "lucide-react";
 import { Button } from "@/shared/components/ui/Button";
 import {
   DndContext,
@@ -226,10 +226,12 @@ function SortableColumnItem<T>({ id, column }: SortableItemProps<T>) {
 
 function ColumnToggle<T>({
   table,
+  onReset,
 }: {
   table: TanstackTable<T>;
   _visibility?: VisibilityState;
   _order?: string[];
+  onReset?: () => void;
 }) {
   const t = useT();
   const [open, setOpen] = useState(false);
@@ -271,7 +273,7 @@ function ColumnToggle<T>({
           variant="secondary"
           size="icon"
           className="h-8 w-8 px-0"
-          title={t("Hiển thị cột")}
+          title={t("table.columnVisibility", "Tùy chỉnh cột")}
           onClick={(e) => {
             e.stopPropagation();
             setOpen(true);
@@ -285,26 +287,48 @@ function ColumnToggle<T>({
         <Popover.Content
           align="end"
           sideOffset={6}
-          className="z-[9999] min-w-[180px] rounded-lg p-1 popup-content border border-border shadow-md"
+          className="z-[9999] min-w-[210px] max-w-[280px] rounded-lg p-1.5 popup-content border border-border shadow-md"
         >
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragEnd={handleDragEnd}
-          >
-            <SortableContext
-              items={hideableColumns.map((col) => col.id)}
-              strategy={verticalListSortingStrategy}
+          <div className="flex items-center justify-between px-2 py-1.5 border-b border-border/60 mb-1">
+            <span className="text-xs font-semibold text-muted-foreground select-none">
+              {t("table.columnVisibility", "Tùy chỉnh cột")}
+            </span>
+            {onReset && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-6 px-1.5 text-[11px] text-muted-foreground hover:text-foreground gap-1 -mr-1"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onReset();
+                }}
+                title={t("table.resetColumns", "Khôi phục mặc định")}
+              >
+                <RotateCcw className="h-3 w-3" />
+                <span>{t("table.reset", "Khôi phục")}</span>
+              </Button>
+            )}
+          </div>
+          <div className="max-h-[min(360px,75vh)] overflow-y-auto overflow-x-hidden space-y-0.5 pr-0.5">
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
             >
-              {hideableColumns.map((column) => (
-                <SortableColumnItem<T>
-                  key={column.id}
-                  id={column.id}
-                  column={column}
-                />
-              ))}
-            </SortableContext>
-          </DndContext>
+              <SortableContext
+                items={hideableColumns.map((col) => col.id)}
+                strategy={verticalListSortingStrategy}
+              >
+                {hideableColumns.map((column) => (
+                  <SortableColumnItem<T>
+                    key={column.id}
+                    id={column.id}
+                    column={column}
+                  />
+                ))}
+              </SortableContext>
+            </DndContext>
+          </div>
         </Popover.Content>
       </Popover.Portal>
     </Popover.Root>
@@ -470,28 +494,6 @@ export function DataTable<T>({
       });
     }
   };
-
-  React.useEffect(() => {
-    if (!tableId) return;
-    const handleResetSizing = () => {
-      setInternalColumnSizing({});
-      setTablePreferences(tableId, {
-        columnOrder: internalColumnOrder,
-        columnVisibility: internalVisibility,
-        columnSizing: undefined,
-      });
-    };
-    window.addEventListener(
-      `reset-column-sizing-${tableId}`,
-      handleResetSizing,
-    );
-    return () => {
-      window.removeEventListener(
-        `reset-column-sizing-${tableId}`,
-        handleResetSizing,
-      );
-    };
-  }, [tableId, internalColumnOrder, internalVisibility, setTablePreferences]);
 
   const scrollContainerRef = React.useRef<HTMLDivElement>(null);
   const [isScrolledTop, setIsScrolledTop] = useState(false);
@@ -776,6 +778,54 @@ export function DataTable<T>({
     onColumnSizingChange: handleColumnSizingChange,
   });
 
+  const handleResetTableLayout = useCallback(() => {
+    // 1. Reset sizing state
+    setInternalColumnSizing({});
+
+    // 2. Reset visibility to default
+    const defaultVis = defaultColumnVisibility || {};
+    setInternalVisibility(defaultVis);
+    table.setColumnVisibility(defaultVis);
+
+    // 3. Reset order to default
+    const defaultOrder = defaultColumnOrder || [];
+    setInternalColumnOrder(defaultOrder);
+    if (defaultOrder.length > 0) {
+      table.setColumnOrder(defaultOrder);
+    } else {
+      table.resetColumnOrder();
+    }
+
+    // 4. Update user preferences
+    if (tableId) {
+      setTablePreferences(tableId, {
+        columnOrder: defaultOrder,
+        columnVisibility: defaultVis,
+        columnSizing: undefined,
+      });
+    }
+  }, [
+    tableId,
+    defaultColumnVisibility,
+    defaultColumnOrder,
+    table,
+    setTablePreferences,
+  ]);
+
+  React.useEffect(() => {
+    if (!tableId) return;
+    const handleResetEvent = () => {
+      handleResetTableLayout();
+    };
+    window.addEventListener(`reset-column-sizing-${tableId}`, handleResetEvent);
+    return () => {
+      window.removeEventListener(
+        `reset-column-sizing-${tableId}`,
+        handleResetEvent,
+      );
+    };
+  }, [tableId, handleResetTableLayout]);
+
   const [portalTarget, setPortalTarget] = useState<Element | null>(null);
 
   useEffect(() => {
@@ -791,6 +841,7 @@ export function DataTable<T>({
               table={table}
               _visibility={internalVisibility}
               _order={internalColumnOrder}
+              onReset={handleResetTableLayout}
             />,
             portalTarget,
           )

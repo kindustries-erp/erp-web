@@ -203,23 +203,23 @@ export const SECTION_ROOTS: Partial<Record<PageKey, SectionRoot>> = {
     group: "accounting",
   },
   "garage-dashboard": {
-    labelKey: "nav.items.garageDashboard",
+    labelKey: "breadcrumb.garageDashboard",
     group: "garage",
   },
   "garage-cases": {
-    labelKey: "nav.items.garageCases",
+    labelKey: "breadcrumb.garageCases",
     group: "garage",
   },
   "garage-receivables": {
-    labelKey: "nav.items.garageReceivables",
+    labelKey: "breadcrumb.garageReceivables",
     group: "garage",
   },
   "garage-payables": {
-    labelKey: "nav.items.garagePayables",
+    labelKey: "breadcrumb.garagePayables",
     group: "garage",
   },
   "garage-customers": {
-    labelKey: "nav.items.garageCustomers",
+    labelKey: "breadcrumb.garageCustomers",
     group: "garage",
   },
   budget: {
@@ -362,10 +362,19 @@ export const BREADCRUMBS: Partial<Record<PageKey, Array<[string, string?]>>> = {
   ],
   "settings-branch": [["breadcrumb.settings"], ["thietlap.tabs.chi-nhanh"]],
   "settings-bank": [["breadcrumb.settings"], ["thietlap.tabs.ngan-hang"]],
-  "settings-cash-fund": [["breadcrumb.settings"], ["thietlap.tabs.quy"]],
-  "garage-dashboard": [["nav.items.garage"], ["nav.items.garageDashboard"]],
-  "garage-cases": [["nav.items.garage"], ["nav.items.garageCases"]],
-  "garage-customers": [["nav.items.garage"], ["nav.items.garageCustomers"]],
+  "garage-dashboard": [["breadcrumb.garage"], ["breadcrumb.garageDashboard"]],
+  "garage-cases": [["breadcrumb.garage"], ["breadcrumb.garageCases"]],
+  "garage-customers": [["breadcrumb.garage"], ["breadcrumb.garageCustomers"]],
+  "garage-receivables": [
+    ["breadcrumb.garage"],
+    ["breadcrumb.garagePartnersGroup", "garage-receivables"],
+    ["breadcrumb.garageReceivables"],
+  ],
+  "garage-payables": [
+    ["breadcrumb.garage"],
+    ["breadcrumb.garagePartnersGroup", "garage-payables"],
+    ["breadcrumb.garagePayables"],
+  ],
 };
 
 interface AppState {

@@ -10,4 +10,7 @@ export const tableVi = {
   ],
   thu: "Thu",
   chi: "Chi",
+  columnVisibility: "Tùy chỉnh cột",
+  resetColumns: "Khôi phục mặc định",
+  reset: "Khôi phục",
 };

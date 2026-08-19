@@ -7,6 +7,7 @@ import { TableText } from "@/shared/components/DataTable/TableText";
 import { TableDateCell } from "@/shared/components/DataTable/TableDateCell";
 import { Badge } from "@/shared/components/ui/badge";
 import { Progress } from "@/shared/components/ui/progress";
+import { Tooltip } from "@/core/components/ui/Tooltip";
 import { useGarageStore } from "../store/garageStore";
 import {
   useGarageCustomersList,
@@ -16,6 +17,7 @@ import { useGarageBranches } from "../hooks/useGarage";
 import { GarageCustomerDetailDrawer } from "../components/GarageCustomerDetailDrawer";
 import { garageApi } from "../api/garageApi";
 import { money } from "@/shared/utils/format";
+import { cn } from "@/shared/utils";
 import { Users, Eye } from "lucide-react";
 import type { DataTableColumn } from "@/shared/components/DataTable";
 
@@ -42,11 +44,11 @@ export function GarageCustomers() {
       // 1. STT
       {
         key: "index",
-        header: <div className="text-center w-[40px] min-w-[40px]">#</div>,
-        size: 40,
+        header: <span className="w-full block text-center">#</span>,
+        size: 50,
         enableResizing: false,
-        headerClassName: "text-center w-[40px] min-w-[40px]",
-        className: "text-center w-[40px] min-w-[40px]",
+        headerClassName: "text-center",
+        className: "text-center font-mono text-xs text-muted-foreground",
         cell: (_: CustomerDebtItem, idx: number) => <span>{idx}</span>,
       },
       // 2. Mã Khách Hàng (Mở Drawer chi tiết khi click icon trên TableText)
@@ -144,15 +146,17 @@ export function GarageCustomers() {
               listHook.columnFilters["customerName"]?.length ||
               listHook.columnSearch["customerName"],
             )}
-            align="left"
+            align="center"
           />
         ),
-        size: 220,
+        size: 250,
         enableResizing: true,
         cell: (row: CustomerDebtItem) => (
-          <div className="font-medium text-foreground truncate select-text">
-            {row.customerName || "—"}
-          </div>
+          <Tooltip content={row.customerName || "—"}>
+            <div className="font-medium text-foreground truncate select-text">
+              {row.customerName || "—"}
+            </div>
+          </Tooltip>
         ),
       },
       // 4. SL Phiếu DV (Width 120px)
@@ -193,7 +197,7 @@ export function GarageCustomers() {
             selectedFilters={[]}
             onFilterChange={() => {}}
             hideFilter={true}
-            align="right"
+            align="center"
           />
         ),
         size: 140,
@@ -204,24 +208,56 @@ export function GarageCustomers() {
           </span>
         ),
       },
-      // 6. Tiến Độ Thanh Toán (Gom gọn chuẩn xác trong 2 hàng, phong cách Neutral Business)
+      // 6. Tiến Độ Thanh Toán (Fintech Neutral Progress Bar)
       {
         key: "paymentProgress",
         className: "text-left",
         header: (
           <TableColumnHeaderFilter
             title={t("customers.columns.paymentProgress", "Tiến độ thanh toán")}
+            columnKey="paymentProgress"
             sortState={getSortState("paidAmount")}
             onSortChange={(s) => listHook.setSort("paidAmount", s)}
             searchValue=""
             onSearchChange={() => {}}
-            selectedFilters={[]}
-            onFilterChange={() => {}}
-            hideFilter={true}
+            selectedFilters={listHook.columnFilters["paymentProgress"] || []}
+            onFilterChange={(v) =>
+              listHook.setColumnFilter("paymentProgress", v)
+            }
+            isActive={Boolean(
+              listHook.columnFilters["paymentProgress"]?.length,
+            )}
             align="center"
+            formatOptionLabel={(val: string) => {
+              if (val === "PAID")
+                return t("customers.filter.paid", "Đã thu đủ");
+              if (val === "PARTIAL")
+                return t("customers.filter.partial", "Thu một phần");
+              if (val === "UNPAID")
+                return t("customers.filter.unpaid", "Chưa thu");
+              return val;
+            }}
+            fetchOptions={async () => ({
+              items: [
+                {
+                  label: t("customers.filter.paid", "Đã thu đủ"),
+                  value: "PAID",
+                },
+                {
+                  label: t("customers.filter.partial", "Thu một phần"),
+                  value: "PARTIAL",
+                },
+                {
+                  label: t("customers.filter.unpaid", "Chưa thu"),
+                  value: "UNPAID",
+                },
+              ],
+              total: 3,
+              next: null,
+            })}
           />
         ),
-        size: 210,
+        size: 200,
         enableResizing: true,
         cell: (row: CustomerDebtItem) => {
           const total = Number(row.totalAmount) || 0;
@@ -230,54 +266,55 @@ export function GarageCustomers() {
 
           if (total <= 0 && bal <= 0 && paid <= 0) {
             return (
-              <span className="text-muted-foreground/60 font-normal select-none">
+              <span className="text-muted-foreground/40 font-normal select-none">
                 —
               </span>
             );
           }
 
+          const isAllPaid = bal <= 0 && paid > 0;
+          const isUnpaid = paid <= 0 && bal > 0;
           const rate =
             total > 0
               ? Math.min(100, Math.round((paid / total) * 100))
-              : bal <= 0 && paid > 0
+              : isAllPaid
                 ? 100
                 : 0;
 
-          const isAllPaid = bal <= 0 && paid > 0;
-          const isUnpaid = paid <= 0 && bal > 0;
-
           return (
-            <div className="flex flex-col gap-1 w-full py-0.5 justify-center">
-              {/* Hàng 1: Badge / % bên trái + Đã thu / Còn nợ bên phải */}
+            <div className="flex flex-col gap-1.5 w-full py-1 justify-center">
+              {/* Row 1: Left badge + Right amount */}
               <div className="flex items-center justify-between text-xs tabular-nums leading-none">
-                <div className="flex items-center gap-1.5 flex-shrink-0">
-                  {isAllPaid ? (
-                    <Badge
-                      variant="outline"
-                      className="text-[10px] px-1.5 py-0 h-4 font-medium border-slate-300 dark:border-slate-700 text-foreground"
-                    >
-                      Đã thu đủ
-                    </Badge>
-                  ) : isUnpaid ? (
-                    <Badge
-                      variant="outline"
-                      className="text-[10px] px-1.5 py-0 h-4 font-normal text-muted-foreground border-muted-foreground/30"
-                    >
-                      Chưa thu
-                    </Badge>
-                  ) : (
-                    <span className="text-foreground font-semibold text-[11px]">
-                      {rate}%
-                    </span>
-                  )}
-                </div>
+                {isAllPaid ? (
+                  <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded font-medium bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/50">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                    Đã thu đủ
+                  </span>
+                ) : isUnpaid ? (
+                  <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded font-medium bg-slate-100 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 border border-slate-200/80 dark:border-slate-700/60">
+                    <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+                    Chưa thu
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center text-[10px] px-1.5 py-0.5 rounded font-bold font-mono bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/50">
+                    {rate}%
+                  </span>
+                )}
 
                 <div className="flex items-center gap-1 font-mono text-[11px] truncate">
-                  <span className="text-foreground font-medium">
-                    {money(paid)}
-                  </span>
-                  {bal > 0 && (
+                  {isAllPaid ? (
+                    <span className="text-emerald-700 dark:text-emerald-400 font-medium">
+                      {money(paid)}
+                    </span>
+                  ) : isUnpaid ? (
+                    <span className="text-muted-foreground font-normal">
+                      {money(bal)}
+                    </span>
+                  ) : (
                     <>
+                      <span className="text-foreground font-medium">
+                        {money(paid)}
+                      </span>
                       <span className="text-muted-foreground/40">/</span>
                       <span className="text-muted-foreground font-normal">
                         {money(bal)}
@@ -287,34 +324,91 @@ export function GarageCustomers() {
                 </div>
               </div>
 
-              {/* Hàng 2: Progress bar Neutral */}
-              <Progress
-                value={rate}
-                className="h-1.5 bg-muted"
-                indicatorClassName="bg-slate-700 dark:bg-slate-300"
-              />
+              {/* Row 2: Progress bar */}
+              <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                <div
+                  className={cn(
+                    "h-full rounded-full transition-all duration-300",
+                    isAllPaid
+                      ? "bg-emerald-500 dark:bg-emerald-400"
+                      : isUnpaid
+                        ? "bg-transparent"
+                        : "bg-emerald-600 dark:bg-emerald-500",
+                  )}
+                  style={{ width: `${rate}%` }}
+                />
+              </div>
             </div>
           );
         },
       },
-      // 7. Tuổi Nợ (Aging - Thể hiện số ngày và nhóm tuổi nợ rõ ràng)
+      // 7. Tuổi Nợ (Aging - Fintech Progress Bar)
       {
         key: "maxAgingDays",
         className: "text-left",
         header: (
           <TableColumnHeaderFilter
             title={t("customers.columns.maxAgingDays", "Tuổi nợ")}
+            columnKey="maxAgingDays"
             sortState={getSortState("maxAgingDays")}
             onSortChange={(s) => listHook.setSort("maxAgingDays", s)}
             searchValue=""
             onSearchChange={() => {}}
-            selectedFilters={[]}
-            onFilterChange={() => {}}
-            hideFilter={true}
+            selectedFilters={listHook.columnFilters["maxAgingDays"] || []}
+            onFilterChange={(v) => listHook.setColumnFilter("maxAgingDays", v)}
+            isActive={Boolean(listHook.columnFilters["maxAgingDays"]?.length)}
             align="center"
+            formatOptionLabel={(val: string) => {
+              if (val === "0-30")
+                return t("customers.filter.aging0_30", "0-30 ngày (Trong hạn)");
+              if (val === "31-60")
+                return t(
+                  "customers.filter.aging31_60",
+                  "31-60 ngày (Cần theo dõi)",
+                );
+              if (val === "61-90")
+                return t("customers.filter.aging61_90", "61-90 ngày (Quá hạn)");
+              if (val === ">90")
+                return t("customers.filter.agingOver90", ">90 ngày (Quá hạn)");
+              return val;
+            }}
+            fetchOptions={async () => ({
+              items: [
+                {
+                  label: t(
+                    "customers.filter.aging0_30",
+                    "0-30 ngày (Trong hạn)",
+                  ),
+                  value: "0-30",
+                },
+                {
+                  label: t(
+                    "customers.filter.aging31_60",
+                    "31-60 ngày (Cần theo dõi)",
+                  ),
+                  value: "31-60",
+                },
+                {
+                  label: t(
+                    "customers.filter.aging61_90",
+                    "61-90 ngày (Quá hạn)",
+                  ),
+                  value: "61-90",
+                },
+                {
+                  label: t(
+                    "customers.filter.agingOver90",
+                    ">90 ngày (Quá hạn)",
+                  ),
+                  value: ">90",
+                },
+              ],
+              total: 4,
+              next: null,
+            })}
           />
         ),
-        size: 140,
+        size: 200,
         enableResizing: true,
         cell: (row: CustomerDebtItem) => {
           const bal = Number(row.balanceAmount) || 0;
@@ -322,46 +416,81 @@ export function GarageCustomers() {
 
           if (bal <= 0) {
             return (
-              <div className="flex flex-col gap-1 w-full py-0.5 justify-center">
+              <div className="flex flex-col gap-1.5 w-full py-1 justify-center">
                 <div className="flex items-center justify-between text-xs tabular-nums leading-none">
-                  <span className="text-[11px] text-muted-foreground font-mono">
+                  <span className="font-mono text-xs text-muted-foreground/60">
                     0 ngày
                   </span>
+                  <span className="text-[10px] px-1.5 py-0.5 rounded font-sans border font-normal bg-slate-50 dark:bg-slate-800/40 text-muted-foreground/70 border-slate-200/60 dark:border-slate-700/40">
+                    Đã tất toán
+                  </span>
                 </div>
-                <Progress value={0} className="h-1.5 bg-muted" />
+                <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden" />
               </div>
             );
           }
 
           const agingPercent = Math.min(100, Math.round((aging / 90) * 100));
-          const bracket =
-            aging <= 30
-              ? "0-30 ngày"
-              : aging <= 60
+          const isOver90 = aging > 90;
+          const is61to90 = aging > 60 && aging <= 90;
+          const is31to60 = aging > 30 && aging <= 60;
+
+          const bracketLabel = isOver90
+            ? ">90 ngày"
+            : is61to90
+              ? "61-90 ngày"
+              : is31to60
                 ? "31-60 ngày"
-                : aging <= 90
-                  ? "61-90 ngày"
-                  : ">90 ngày";
+                : "0-30 ngày";
+
+          const tagCls = isOver90
+            ? "bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 border-rose-200/80 dark:border-rose-800/50"
+            : is61to90
+              ? "bg-orange-50 dark:bg-orange-950/40 text-orange-700 dark:text-orange-400 border-orange-200/80 dark:border-orange-800/50"
+              : is31to60
+                ? "bg-amber-50/90 dark:bg-amber-950/30 text-amber-800 dark:text-amber-300 border-amber-200/70 dark:border-amber-800/40"
+                : "bg-emerald-50/90 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border-emerald-200/70 dark:border-emerald-800/40";
+
+          const dayTextCls = isOver90
+            ? "text-rose-700 dark:text-rose-400 font-bold"
+            : is61to90
+              ? "text-orange-700 dark:text-orange-400 font-semibold"
+              : is31to60
+                ? "text-amber-800 dark:text-amber-300 font-semibold"
+                : "text-emerald-700 dark:text-emerald-400 font-medium";
+
+          const barColorCls = isOver90
+            ? "bg-rose-500 dark:bg-rose-400"
+            : is61to90
+              ? "bg-orange-500 dark:bg-orange-400"
+              : is31to60
+                ? "bg-amber-500 dark:bg-amber-400"
+                : "bg-emerald-500 dark:bg-emerald-400";
 
           return (
-            <div className="flex flex-col gap-1 w-full py-0.5 justify-center">
+            <div className="flex flex-col gap-1.5 w-full py-1 justify-center">
               <div className="flex items-center justify-between text-xs tabular-nums leading-none">
-                <span className="text-[11px] font-semibold text-foreground font-mono">
+                <span className={cn("font-mono text-xs", dayTextCls)}>
                   {aging} ngày
                 </span>
-                <span className="text-[10px] text-muted-foreground font-sans">
-                  {bracket}
+                <span
+                  className={cn(
+                    "text-[10px] px-1.5 py-0.5 rounded font-sans shrink-0 border leading-none font-medium",
+                    tagCls,
+                  )}
+                >
+                  {bracketLabel}
                 </span>
               </div>
-              <Progress
-                value={agingPercent}
-                className="h-1.5 bg-muted"
-                indicatorClassName={
-                  aging > 90
-                    ? "bg-rose-500/80"
-                    : "bg-slate-700 dark:bg-slate-300"
-                }
-              />
+              <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                <div
+                  className={cn(
+                    "h-full rounded-full transition-all duration-300",
+                    barColorCls,
+                  )}
+                  style={{ width: `${agingPercent}%` }}
+                />
+              </div>
             </div>
           );
         },
@@ -446,7 +575,7 @@ export function GarageCustomers() {
               listHook.columnFilters["branchName"]?.length ||
               listHook.columnSearch["branchName"],
             )}
-            align="left"
+            align="center"
           />
         ),
         size: 180,

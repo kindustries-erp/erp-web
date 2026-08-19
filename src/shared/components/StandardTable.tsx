@@ -1,7 +1,4 @@
 import React from "react";
-import { RotateCcw } from "lucide-react";
-import { Tooltip } from "@/core/components/ui/Tooltip";
-import { Button } from "@/shared/components/ui/Button";
 import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
 import {
   ActionDropdown,
@@ -113,28 +110,7 @@ export function StandardTable<T>({
       actionsColumn={
         actions && !hideLegacyActionColumn
           ? {
-              header: tableId ? (
-                <Tooltip content="Khôi phục độ rộng">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (tableId) {
-                        const event = new CustomEvent(
-                          `reset-column-sizing-${tableId}`,
-                        );
-                        window.dispatchEvent(event);
-                      }
-                    }}
-                  >
-                    <RotateCcw className="h-3.5 w-3.5 text-muted-foreground" />
-                  </Button>
-                </Tooltip>
-              ) : (
-                ""
-              ),
+              header: "",
               cell: (row) => <ActionDropdown items={actions(row)} />,
               size: actionColumnSize,
               minSize: actionColumnSize,

@@ -322,10 +322,29 @@ Bất kỳ cột nào liên quan đến **Status**, **State** thì bắt buộc 
 - UI **KHÔNG ĐƯỢC** set state `sortBy` mặc định (vd: `const [sortBy, setSortBy] = useState<string | undefined>(undefined);`) nếu muốn bảng sắp xếp mặc định theo ngày tạo/ngày chứng từ.
 - Backend **PHẢI** tự động apply sort mặc định (thường là `createdAt` DESC hoặc theo ngày chứng từ) khi UI truyền lên `sort` rỗng. Việc này đảm bảo khi vừa vào trang, bảng dữ liệu đã được sort mới nhất lên đầu nhưng trên Header UI không bị khoá cứng icon "đang sort" tại bất kỳ cột nào cho đến khi User click.
 
+## 11. Quản lý Hiển thị, Tùy biến Cột & Khôi phục mặc định (Column Visibility, Ordering & Reset)
+
+- **Trung tâm Tùy chỉnh cột (`ColumnToggle`)**:
+  - Menu popover với icon bánh răng (`Settings2`) trên thanh công cụ bảng là nơi duy nhất quản lý tùy biến giao diện cột:
+    1. **Ẩn / Hiện cột**: Toggle bật/tắt checkbox của từng cột.
+    2. **Kéo thả đổi thứ tự cột**: Dnd Sortable kéo thả để thay đổi vị trí hiển thị các cột.
+    3. **Giới hạn chiều cao & Cuộn dọc**: Danh sách các cột có chiều cao tối đa `max-h-[min(360px,75vh)]` kết hợp cuộn dọc (`overflow-y-auto`), tránh tình trạng tràn màn hình khi bảng có hàng chục cột.
+    4. **Nút Khôi phục mặc định (Reset)**: Nút "Khôi phục" (với icon `RotateCcw`) được gắn **cố định trên header** của popup menu `ColumnToggle`. Khi click, hệ thống sẽ tự động khôi phục toàn bộ:
+       - Độ rộng cột (`columnSizing` → `{}`)
+       - Trạng thái ẩn/hiện cột (`columnVisibility` → `defaultColumnVisibility`)
+       - Thứ tự cột (`columnOrder` → `defaultColumnOrder`)
+       - Xóa cache preference tương ứng trong `localStorage` (`erp_preferences`).
+- **NGHIÊM CẤM ĐẶT NÚT RESET Ở CỘT KHÁC**:
+  - **TUYỆT ĐỐI KHÔNG** đặt nút Reset Column thủ công tại header của cột Action, cột STT hay bất kỳ cột dữ liệu nào. Toàn bộ logic reset đã được tích hợp tự động vào dropdown `ColumnToggle`.
+- **Yêu cầu `tableId` duy nhất**:
+  - Bảng bắt buộc phải được truyền prop `tableId` (dạng chuỗi unique, vd: `"erp-invoices-in"`, `"garage-cases"`, `"bom-list"`) để Core `DataTable` tự động kết nối Portal Target hiển thị nút `ColumnToggle` và lưu trữ trạng thái người dùng.
+
 ## Summary Checklist trước khi hoàn thành:
 
 - [ ] TUYỆT ĐỐI không dùng `onRowClick` mở detail, chỉ mở từ `<TableText>` hoặc Row Hover Floating Actions (`rowActions`) chưa?
 - [ ] TUYỆT ĐỐI không định nghĩa cột action tĩnh thủ công `{ key: "actions" }` trong `columns`, đã truyền prop `rowActions` chưa?
+- [ ] TUYỆT ĐỐI không đặt nút Reset Column ở header cột Action hay cột dữ liệu, đã dựa vào nút Khôi phục trong dropdown `ColumnToggle` (`Settings2`) chưa?
+- [ ] Bảng đã có `tableId` duy nhất để tự động lưu & khôi phục column sizing, visibility, order chưa?
 - [ ] `<ActionDropdown>` đã phân nhóm menu bằng `groupLabel` (TRA CỨU, THAO TÁC, ...) chưa?
 - [ ] Các cột dữ liệu đã có `enableResizing: true` chưa?
 - [ ] Cột đầu tiên (STT/Checkbox) rộng đúng `40px` chưa? (STT dùng `{idx}` thay vì `idx + 1` chưa?)

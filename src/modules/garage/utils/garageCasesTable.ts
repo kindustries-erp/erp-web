@@ -55,6 +55,23 @@ function getCellValue(item: Record<string, any>, key: string) {
       const profit = Number(item.loiNhuan ?? item.rawData?.LoiNhuan ?? 0);
       return rev > 0 ? (profit / rev) * 100 : 0;
     }
+    case "collectionProgress": {
+      const paid = Number(item.tienDaThanhToan) || 0;
+      const bal = Number(item.tienConPhaiThanhToan) || 0;
+      if (bal <= 0 && paid > 0) return "PAID";
+      if (paid > 0 && bal > 0) return "PARTIAL";
+      if (paid <= 0 && bal > 0) return "UNPAID";
+      return "";
+    }
+    case "costProgress": {
+      const cost = Number(item.chiPhi ?? item.rawData?.ChiPhi ?? 0);
+      const paidCost = Number(item.tienDaChi ?? item.rawData?.TienDaChi ?? 0);
+      const balCost = Math.max(0, cost - paidCost);
+      if (balCost <= 0 && paidCost > 0) return "PAID";
+      if (paidCost > 0 && balCost > 0) return "PARTIAL";
+      if (paidCost <= 0 && cost > 0) return "UNPAID";
+      return "";
+    }
     default:
       return item[key] ?? "";
   }

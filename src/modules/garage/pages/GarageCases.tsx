@@ -9,6 +9,7 @@ import { Badge } from "@/shared/components/ui/badge";
 import { Progress } from "@/shared/components/ui/progress";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import { money } from "@/shared/utils/format";
+import { cn } from "@/shared/utils";
 import { useGarageStore } from "../store/garageStore";
 import { garageApi } from "../api/garageApi";
 import { GarageCaseSyncDrawer } from "../components/GarageCaseSyncDrawer";
@@ -266,6 +267,18 @@ export function GarageCases() {
   );
 
   const columns = [
+    // 0. STT
+    {
+      key: "index",
+      label: "#",
+      header: <span className="w-full block text-center">#</span>,
+      size: 50,
+      enableResizing: false,
+      hideable: false,
+      headerClassName: "text-center",
+      className: "text-center font-mono text-xs text-muted-foreground",
+      cell: (_: any, idx: number) => <span>{idx}</span>,
+    },
     // 1. Mã vụ việc (Số chứng từ)
     {
       key: "caseCode",
@@ -419,15 +432,15 @@ export function GarageCases() {
       className: "text-left",
       cell: (item: any) => item.khachHangName || "-",
     },
-    // 6. Bảo hiểm
+    // 6. Bảo hiểm (BH)
     {
       key: "isInsuranceClaim",
-      label: t("cases.columns.insurance", "Bảo hiểm"),
+      label: t("cases.columns.insurance", "BH"),
       header: (
         <TableColumnHeaderFilter
           {...createHeaderProps(
             "isInsuranceClaim",
-            t("cases.columns.insurance", "Bảo hiểm"),
+            t("cases.columns.insurance", "BH"),
             "center",
             false,
             (val: string) =>
@@ -753,9 +766,28 @@ export function GarageCases() {
             "collectionProgress",
             t("cases.columns.collectionProgress", "Tiến độ thu"),
             "center",
-            true,
+            false,
+            (val: string) => {
+              if (val === "PAID") return t("cases.filter.paid", "Đã thu đủ");
+              if (val === "PARTIAL")
+                return t("cases.filter.partial", "Thu một phần");
+              if (val === "UNPAID") return t("cases.filter.unpaid", "Chưa thu");
+              return val;
+            },
           )}
-          hideFooter={true}
+          fetchOptions={async () => ({
+            items: [
+              { label: t("cases.filter.paid", "Đã thu đủ"), value: "PAID" },
+              {
+                label: t("cases.filter.partial", "Thu một phần"),
+                value: "PARTIAL",
+              },
+              { label: t("cases.filter.unpaid", "Chưa thu"), value: "UNPAID" },
+            ],
+            total: 3,
+            next: null,
+          })}
+          allFilters={tableState.columnFilters}
         />
       ),
       sortable: false,
@@ -769,53 +801,55 @@ export function GarageCases() {
 
         if (total <= 0 && bal <= 0 && paid <= 0) {
           return (
-            <span className="text-muted-foreground/60 font-normal select-none">
+            <span className="text-muted-foreground/40 font-normal select-none">
               —
             </span>
           );
         }
 
+        const isAllPaid = bal <= 0 && paid > 0;
+        const isUnpaid = paid <= 0 && bal > 0;
         const rate =
           total > 0
             ? Math.min(100, Math.round((paid / total) * 100))
-            : bal <= 0 && paid > 0
+            : isAllPaid
               ? 100
               : 0;
 
-        const isAllPaid = bal <= 0 && paid > 0;
-        const isUnpaid = paid <= 0 && bal > 0;
-
         return (
-          <div className="flex flex-col gap-1 w-full py-0.5 justify-center">
+          <div className="flex flex-col gap-1.5 w-full py-1 justify-center">
+            {/* Row 1: Left badge + Right amount */}
             <div className="flex items-center justify-between text-xs tabular-nums leading-none">
-              <div className="flex items-center gap-1.5 flex-shrink-0">
-                {isAllPaid ? (
-                  <Badge
-                    variant="outline"
-                    className="text-[10px] px-1.5 py-0 h-4 font-medium border-slate-300 dark:border-slate-700 text-foreground"
-                  >
-                    Đã thu đủ
-                  </Badge>
-                ) : isUnpaid ? (
-                  <Badge
-                    variant="outline"
-                    className="text-[10px] px-1.5 py-0 h-4 font-normal text-muted-foreground border-muted-foreground/30"
-                  >
-                    Chưa thu
-                  </Badge>
-                ) : (
-                  <span className="text-foreground font-semibold text-[11px]">
-                    {rate}%
-                  </span>
-                )}
-              </div>
+              {isAllPaid ? (
+                <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded font-medium bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/50">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                  Đã thu đủ
+                </span>
+              ) : isUnpaid ? (
+                <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded font-medium bg-slate-100 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 border border-slate-200/80 dark:border-slate-700/60">
+                  <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+                  Chưa thu
+                </span>
+              ) : (
+                <span className="inline-flex items-center text-[10px] px-1.5 py-0.5 rounded font-bold font-mono bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/50">
+                  {rate}%
+                </span>
+              )}
 
               <div className="flex items-center gap-1 font-mono text-[11px] truncate">
-                <span className="text-foreground font-medium">
-                  {money(paid)}
-                </span>
-                {bal > 0 && (
+                {isAllPaid ? (
+                  <span className="text-emerald-700 dark:text-emerald-400 font-medium">
+                    {money(paid)}
+                  </span>
+                ) : isUnpaid ? (
+                  <span className="text-muted-foreground font-normal">
+                    {money(bal)}
+                  </span>
+                ) : (
                   <>
+                    <span className="text-foreground font-medium">
+                      {money(paid)}
+                    </span>
                     <span className="text-muted-foreground/40">/</span>
                     <span className="text-muted-foreground font-normal">
                       {money(bal)}
@@ -825,11 +859,20 @@ export function GarageCases() {
               </div>
             </div>
 
-            <Progress
-              value={rate}
-              className="h-1.5 bg-muted"
-              indicatorClassName="bg-slate-700 dark:bg-slate-300"
-            />
+            {/* Row 2: Progress bar */}
+            <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
+              <div
+                className={cn(
+                  "h-full rounded-full transition-all duration-300",
+                  isAllPaid
+                    ? "bg-emerald-500 dark:bg-emerald-400"
+                    : isUnpaid
+                      ? "bg-transparent"
+                      : "bg-emerald-600 dark:bg-emerald-500",
+                )}
+                style={{ width: `${rate}%` }}
+              />
+            </div>
           </div>
         );
       },
@@ -844,9 +887,33 @@ export function GarageCases() {
             "costProgress",
             t("cases.columns.costProgress", "Tiến độ chi"),
             "center",
-            true,
+            false,
+            (val: string) => {
+              if (val === "PAID")
+                return t("cases.filter.costPaid", "Đã chi đủ");
+              if (val === "PARTIAL")
+                return t("cases.filter.costPartial", "Chi một phần");
+              if (val === "UNPAID")
+                return t("cases.filter.costUnpaid", "Chưa chi");
+              return val;
+            },
           )}
-          hideFooter={true}
+          fetchOptions={async () => ({
+            items: [
+              { label: t("cases.filter.costPaid", "Đã chi đủ"), value: "PAID" },
+              {
+                label: t("cases.filter.costPartial", "Chi một phần"),
+                value: "PARTIAL",
+              },
+              {
+                label: t("cases.filter.costUnpaid", "Chưa chi"),
+                value: "UNPAID",
+              },
+            ],
+            total: 3,
+            next: null,
+          })}
+          allFilters={tableState.columnFilters}
         />
       ),
       sortable: false,
@@ -865,48 +932,51 @@ export function GarageCases() {
 
         if (cost <= 0) {
           return (
-            <span className="text-muted-foreground/60 font-normal select-none">
+            <span className="text-muted-foreground/40 font-normal select-none">
               —
             </span>
           );
         }
 
-        const costRate =
-          cost > 0 ? Math.min(100, Math.round((paidCost / cost) * 100)) : 0;
         const isAllPaidCost = balCost <= 0 && paidCost > 0;
         const isUnpaidCost = paidCost <= 0 && cost > 0;
+        const costRate =
+          cost > 0 ? Math.min(100, Math.round((paidCost / cost) * 100)) : 0;
 
         return (
-          <div className="flex flex-col gap-1 w-full py-0.5 justify-center">
+          <div className="flex flex-col gap-1.5 w-full py-1 justify-center">
+            {/* Row 1: Left badge + Right amount */}
             <div className="flex items-center justify-between text-xs tabular-nums leading-none">
-              <div className="flex items-center gap-1.5 flex-shrink-0">
-                {isAllPaidCost ? (
-                  <Badge
-                    variant="outline"
-                    className="text-[10px] px-1.5 py-0 h-4 font-medium border-slate-300 dark:border-slate-700 text-foreground"
-                  >
-                    Đã chi đủ
-                  </Badge>
-                ) : isUnpaidCost ? (
-                  <Badge
-                    variant="outline"
-                    className="text-[10px] px-1.5 py-0 h-4 font-normal text-muted-foreground border-muted-foreground/30"
-                  >
-                    Chưa chi
-                  </Badge>
-                ) : (
-                  <span className="text-foreground font-semibold text-[11px]">
-                    {costRate}%
-                  </span>
-                )}
-              </div>
+              {isAllPaidCost ? (
+                <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded font-medium bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/50">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                  Đã chi đủ
+                </span>
+              ) : isUnpaidCost ? (
+                <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded font-medium bg-slate-100 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 border border-slate-200/80 dark:border-slate-700/60">
+                  <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+                  Chưa chi
+                </span>
+              ) : (
+                <span className="inline-flex items-center text-[10px] px-1.5 py-0.5 rounded font-bold font-mono bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                  {costRate}%
+                </span>
+              )}
 
               <div className="flex items-center gap-1 font-mono text-[11px] truncate">
-                <span className="text-foreground font-medium">
-                  {money(paidCost)}
-                </span>
-                {balCost > 0 && (
+                {isAllPaidCost ? (
+                  <span className="text-emerald-700 dark:text-emerald-400 font-medium">
+                    {money(paidCost)}
+                  </span>
+                ) : isUnpaidCost ? (
+                  <span className="text-muted-foreground font-normal">
+                    {money(balCost)}
+                  </span>
+                ) : (
                   <>
+                    <span className="text-foreground font-medium">
+                      {money(paidCost)}
+                    </span>
                     <span className="text-muted-foreground/40">/</span>
                     <span className="text-muted-foreground font-normal">
                       {money(balCost)}
@@ -916,11 +986,20 @@ export function GarageCases() {
               </div>
             </div>
 
-            <Progress
-              value={costRate}
-              className="h-1.5 bg-muted"
-              indicatorClassName="bg-slate-600 dark:bg-slate-400"
-            />
+            {/* Row 2: Progress bar */}
+            <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
+              <div
+                className={cn(
+                  "h-full rounded-full transition-all duration-300",
+                  isAllPaidCost
+                    ? "bg-emerald-500 dark:bg-emerald-400"
+                    : isUnpaidCost
+                      ? "bg-transparent"
+                      : "bg-slate-700 dark:bg-slate-300",
+                )}
+                style={{ width: `${costRate}%` }}
+              />
+            </div>
           </div>
         );
       },
