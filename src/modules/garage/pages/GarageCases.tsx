@@ -5,8 +5,6 @@ import { DateRangeColumnSlot } from "@/shared/components/DataTable/DateRangeColu
 import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
 import { TableText } from "@/shared/components/DataTable/TableText";
 import { TableDateCell } from "@/shared/components/DataTable/TableDateCell";
-import { Badge } from "@/shared/components/ui/badge";
-import { Progress } from "@/shared/components/ui/progress";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import { money } from "@/shared/utils/format";
 import { cn } from "@/shared/utils";
@@ -1149,7 +1147,6 @@ export function GarageCases() {
     let totalRev = 0;
     let totalCost = 0;
     let totalProfit = 0;
-    let totalAmountVal = 0;
     let totalPaidVal = 0;
     let totalBalanceVal = 0;
 
@@ -1163,14 +1160,12 @@ export function GarageCases() {
         Number(item.chiPhi ?? pItem?.ChiPhi ?? item.rawData?.ChiPhi) || 0;
       const profit =
         Number(item.loiNhuan ?? pItem?.LoiNhuan ?? item.rawData?.LoiNhuan) || 0;
-      const totalAmt = Number(item.tienCoThue) || 0;
       const paidAmt = Number(item.tienDaThanhToan) || 0;
       const balAmt = Number(item.tienConPhaiThanhToan) || 0;
 
       totalRev += rev;
       totalCost += cost;
       totalProfit += profit;
-      totalAmountVal += totalAmt;
       totalPaidVal += paidAmt;
       totalBalanceVal += balAmt;
     }

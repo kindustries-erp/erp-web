@@ -6,7 +6,6 @@ import { DateRangeColumnSlot } from "@/shared/components/DataTable/DateRangeColu
 import { TableText } from "@/shared/components/DataTable/TableText";
 import { TableDateCell } from "@/shared/components/DataTable/TableDateCell";
 import { Badge } from "@/shared/components/ui/badge";
-import { Progress } from "@/shared/components/ui/progress";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import { useGarageStore } from "../store/garageStore";
 import {
