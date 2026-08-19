@@ -14,6 +14,7 @@ import { DocumentDependencyModal } from "@/core/components/DocumentDependencyMod
 import { ReloadPrompt } from "@/ReloadPrompt";
 import { pathToPage } from "@/shared/utils/pageUrl";
 import { EnvStamp } from "@/core/components/EnvStamp";
+import { useEnvStore } from "@/core/store/useEnvStore";
 import { GlobalErpDocumentOpener } from "@/core/components/GlobalErpDocumentOpener";
 import { Login } from "@/pages/Login";
 import { NotFound } from "@/pages/NotFound";
@@ -374,6 +375,7 @@ export default function App() {
   useSerialGenerationProgress();
 
   useEffect(() => {
+    useEnvStore.getState().fetchAppConfig();
     bootstrapAction();
   }, []);
 

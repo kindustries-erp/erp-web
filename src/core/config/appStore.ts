@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { PageKey, TabInfo, SectionRoot } from "@/shared/types";
 import { pageToPath } from "@/shared/utils/pageUrl";
+import { updateUserPreferencesApi } from "@/core/api/appConfigApi";
 
 export type AppTheme = "shell" | "classic" | "orcaq" | "midnight";
 
@@ -570,15 +571,31 @@ export const useAppStore = create<AppState>()(
         const appTheme = order[(idx + 1) % order.length];
         set({ appTheme });
         applyDocumentTheme(appTheme);
+        if (get().isLoggedIn) {
+          updateUserPreferencesApi({ theme: appTheme }).catch(() => {});
+        }
       },
       setAppTheme: (theme) => {
         set({ appTheme: theme });
         applyDocumentTheme(theme);
+        if (get().isLoggedIn) {
+          updateUserPreferencesApi({ theme }).catch(() => {});
+        }
       },
 
-      toggleLocale: () =>
-        set((s) => ({ locale: s.locale === "vi" ? "en" : "vi" })),
-      setLocale: (locale) => set({ locale }),
+      toggleLocale: () => {
+        const newLocale = get().locale === "vi" ? "en" : "vi";
+        set({ locale: newLocale });
+        if (get().isLoggedIn) {
+          updateUserPreferencesApi({ language: newLocale }).catch(() => {});
+        }
+      },
+      setLocale: (locale) => {
+        set({ locale });
+        if (get().isLoggedIn) {
+          updateUserPreferencesApi({ language: locale }).catch(() => {});
+        }
+      },
 
       login: () => set({ isLoggedIn: true }),
       logout: () =>
