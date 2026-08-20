@@ -117,6 +117,25 @@ function formatTaxInvoiceStatus(val?: number | null) {
   }
 }
 
+function getInvoiceRowClassName(inv: ErpInvoice): string | undefined {
+  if (
+    inv.status === "CANCELLED" ||
+    inv.taxInvoiceStatus === 4 ||
+    inv.taxInvoiceStatus === 6
+  ) {
+    return "opacity-40 text-muted-foreground";
+  }
+
+  switch (inv.taxInvoiceStatus) {
+    case 2: // Thay thế
+    case 3: // Điều chỉnh
+    case 5: // Bị điều chỉnh
+      return "bg-amber-50/40 dark:bg-amber-950/15 hover:bg-amber-100/40 dark:hover:bg-amber-900/15";
+    default:
+      return undefined;
+  }
+}
+
 function formatTaxProcessStatus(val?: number | null) {
   switch (val) {
     case 0:
@@ -1975,6 +1994,7 @@ export function ErpInvoicesTab({
         items={listHook.invoices}
         columns={columns}
         getRowKey={(r) => r.id}
+        getRowClassName={getInvoiceRowClassName}
         summaryRow={summaryRow}
         loading={listHook.loading}
         emptyLabel={t("emptyData", "Chưa có hóa đơn nào.")}

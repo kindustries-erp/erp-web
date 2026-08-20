@@ -53,6 +53,9 @@ export function SpreadsheetPageTemplate<T>({
   summaryRow,
   children,
   onRowClick,
+  getRowClassName,
+  enableRowContextMenu,
+  onRowContextMenu,
   loadingRows,
   topNode,
   hideHeader,
@@ -193,6 +196,9 @@ export function SpreadsheetPageTemplate<T>({
             onPage={onPage}
             onPageSize={onPageSize}
             onRowClick={onRowClick}
+            getRowClassName={getRowClassName}
+            enableRowContextMenu={enableRowContextMenu}
+            onRowContextMenu={onRowContextMenu}
             loadingRows={loadingRows}
             sidePanel={
               filterConfig && filter ? (

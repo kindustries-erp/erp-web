@@ -231,6 +231,19 @@ export const garageEn = {
       retailCustomer: "Retail Customer",
       selectPrompt: "Please select 1 invoice to link",
       linkSuccess: "Successfully linked Invoice {{invoiceNo}} to the case!",
+      selectedSectionTitle: "Selected Invoices",
+      selectedCount: "Selected Invoices ({{count}})",
+      unselectAll: "Unselect All",
+      unselect: "Unselect",
+      selected: "Selected",
+      allSuggestionsSelected: "Selected all {{count}} suggested invoices",
+      noSelectedInvoices:
+        "No invoices selected. You can check invoices in the table or choose from suggestions below.",
+      noSuggestions:
+        "No exact match found. You can search from the table on the left.",
+      suggestedOut: "Suggested Outbound Invoices",
+      suggestedIn: "Suggested Inbound Invoices",
+      selectAllSuggestions: "Select All ({{count}})",
     },
     settlementSection: {
       cashflowOverview: "Cashflow & Reconciliation Overview",

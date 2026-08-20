@@ -664,6 +664,8 @@ export function ProductionOrderListPage() {
       }
       filterConfig={filterConfig}
       filter={filter}
+      activeFilterCount={filter.activeFilterCount}
+      onClearAllFilters={filter.resetAll}
       sortArray={
         sortBy ? [`${sortOrder === "desc" ? "-" : ""}${sortBy}`] : undefined
       }

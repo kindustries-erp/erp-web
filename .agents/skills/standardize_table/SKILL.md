@@ -125,12 +125,69 @@ header: (
 )
 ```
 
-## 3. Row Click, View Detail & Row Hover Action Menu
+#### 4. Mẫu code Nút Clear All Filters (Chuẩn Page & Drawer):
+
+- **Pattern 1: Page-level (`SpreadsheetPageTemplate`)** (Chuẩn như `erp-invoices` / `ErpInvoicesTab.tsx` và `garage-cases` / `GarageCases.tsx`):
+```tsx
+// 1. Tính activeFilterCount tổng hợp (kết hợp FilterPanel, tableState.columnFilters và Date Ranges)
+const activeFilterCount = useMemo(() => {
+  const activeDateCount = Object.values(dateRanges).filter((range) =>
+    Boolean(range?.from || range?.to),
+  ).length;
+  return (
+    (listHook.filterPanel?.activeFilterCount || 0) +
+    (listHook.tableState?.activeFilterCount || 0) +
+    activeDateCount
+  );
+}, [listHook.filterPanel?.activeFilterCount, listHook.tableState?.activeFilterCount, dateRanges]);
+
+// 2. Handler reset toàn bộ filter
+const handleClearAllFilters = useCallback(() => {
+  listHook.filterPanel?.resetAll?.();
+  listHook.tableState?.resetFilters?.();
+  setDateRanges({});
+  setPage(1);
+}, [listHook]);
+
+// 3. Truyền vào SpreadsheetPageTemplate
+<SpreadsheetPageTemplate
+  activeFilterCount={activeFilterCount}
+  onClearAllFilters={handleClearAllFilters}
+  {/* ...các props khác */}
+/>
+```
+
+- **Pattern 2: Drawer-level (`DrawerSection` + `FilterButton`)** (Chuẩn như `InvoiceSelectionDrawer.tsx`, `IaFormDrawer.tsx`, `GrFormDrawer.tsx`, `GiFormDrawer.tsx`):
+```tsx
+import { FilterButton } from "@/shared/components/FilterPanel";
+
+// Truyền nút xóa lọc trực tiếp vào prop titleExtra của DrawerSection khi có filter active
+<DrawerSection
+  title="Danh sách chứng từ / hóa đơn"
+  titleExtra={
+    tableState.activeFilterCount > 0 ? (
+      <FilterButton
+        activeCount={tableState.activeFilterCount}
+        onClear={() => {
+          tableState.resetFilters();
+          setDateFrom("");
+          setDateTo("");
+          setPage(1);
+        }}
+      />
+    ) : undefined
+  }
+>
+  <StandardTable ... />
+</DrawerSection>
+```
+
+## 3. Row Click, View Detail, Row Hover Action Menu & Right-Click Context Menu
 
 - **Tuyệt đối KHÔNG sử dụng `onRowClick`** để mở trang / ngăn kéo chi tiết (detail drawer).
 - Chỉ có 2 cách hợp lệ để xem chi tiết một bản ghi (View Detail):
   1. Click vào biểu tượng icon detail nằm trong `<TableText>` (xem phần Mã Code/SKU bên dưới).
-  2. Click vào tùy chọn **"Chi tiết"** trong Action Menu hoặc Quick Action button của hàng.
+  2. Click vào tùy chọn **"Chi tiết"** trong Action Menu, Quick Action button của hàng, hoặc qua **Right-Click Context Menu**.
 - **Row Hover Floating Actions (Ô Nổi Thao Tác Khi Hover Hàng)**:
   - Khi rê chuột (hover) vào bất kỳ dòng nào trong bảng, một ô nổi chứa **2 nút thao tác nhanh (Quick Action Buttons)** (như Chi tiết 👁️, Tải XML 📥, Chỉnh sửa ✏️) và **nút ba chấm `...`** mở Action Menu đầy đủ sẽ xuất hiện nổi tại mép phải của dòng (`sticky right-0` trong suốt, không đè nền/viền lên dữ liệu).
   - **Button Pill luôn Floating ở mép phải khung nhìn**: Nút nổi luôn xuất hiện ở mép phải của hàng hiển thị trên màn hình (`absolute right-3.5 top-1/2 -translate-y-1/2`) bất kể bạn đang ở đầu, giữa hay cuối bảng. Cell chứa nút nổi hoàn toàn trong suốt (`bg-transparent border-none pointer-events-none`), không tạo bất kỳ dải cột cố định hay viền dọc nào che khuất dữ liệu khi cuộn.
@@ -140,6 +197,15 @@ header: (
   - **Hiệu năng 0ms Lag**: Sử dụng hardware-accelerated CSS hover (`group-hover:opacity-100`), không gây re-render React khi di chuột, hoạt động mượt mà 60fps/120fps.
   - **Chuẩn Tooltip Bottom**: Toàn bộ tooltip trong bảng và hệ thống mặc định mở xuống dưới (`side="bottom"`) để không bao giờ che khuất các nút thao tác nổi.
   - **Quy chuẩn Chính thức**: Cột action tĩnh ở đầu bảng đã được loại bỏ hoàn toàn. BẮT BUỘC sử dụng Row Hover Floating Actions thông qua prop `rowActions` trên `<SpreadsheetPageTemplate>` hoặc `actions` trên `<StandardTable>`. TUYỆT ĐỐI KHÔNG thêm cột `{ key: "actions" }` thủ công vào `columns`.
+
+- **Right-Click Context Menu (Menu Thao Tác Khi Chuột Phải Vào Hàng Dữ Liệu)**:
+  - **Tự động kích hoạt toàn hệ thống**: Khi khai báo `rowActions` trên `<SpreadsheetPageTemplate>` hoặc `actions` / `rowHoverActions` trên `<StandardTable>` / `<DataTable>`, tính năng **Right-Click Context Menu** (`TableRowContextMenu`) sẽ **tự động được kích hoạt** trên mọi hàng của bảng (cả ở màn hình Page lẫn trong Drawer).
+  - **Trải nghiệm tức thì**: Người dùng click chuột phải vào bất kỳ ô/cột nào trên dòng dữ liệu sẽ mở ngay Context Menu tại đúng tọa độ con trỏ chuột `(e.clientX, e.clientY)`.
+  - **Smart Viewport Collision Avoidance**: Menu render bằng React Portal vào `document.body` và tích hợp thuật toán đo đạc kích thước khung nhìn (`window.innerWidth`, `window.innerHeight`). Khi click gần mép phải hoặc đáy màn hình, menu tự động nắn chỉnh lùi lại với khoảng đệm `GAP = 8px`, đảm bảo không bao giờ bị che khuất hoặc tràn khỏi màn hình.
+  - **Visual Feedback Active Row**: Khi Context Menu đang mở, hàng dữ liệu tương ứng được highlight nền nhẹ nhàng (`data-context-menu-active="true"`, `bg-primary/[0.04]`), giúp người dùng nhận biết tức thời dòng đang thao tác.
+  - **Tự động đóng an toàn**: Menu tự động đóng khi click ra ngoài, cuộn trang/bảng (`scroll` capture), nhấn phím `Escape`, hoặc click chuột phải sang hàng khác.
+  - **Tùy biến linh hoạt**: Hỗ trợ prop `enableRowContextMenu={true | false}` (mặc định `true`) và prop `onRowContextMenu={(item, index, event) => ...}` khi cần xử lý nâng cao.
+
 - **Action Menu (Cấu trúc ActionDropdownItem)**: Bắt buộc sử dụng component `<ActionDropdown>` (`@/shared/components/ActionDropdown`) hoặc truyền qua prop `actions` / `rowActions` / `rowHoverActions`.
   - Các thao tác bên trong phải được **phân nhóm logic (Group)** rõ ràng bằng thuộc tính `groupLabel`.
   - Ví dụ nhóm "TRA CỨU" (Chi tiết, Tải XML, In), nhóm "THAO TÁC" (Sửa, Xóa, Đồng bộ).
@@ -173,6 +239,23 @@ header: (
   ]}
 />
 ```
+
+- **Tô Màu & Highlight Dòng Dữ Liệu (`getRowClassName`)**:
+  - Khi cần đổi màu nền, làm mờ font chữ hoặc highlight một dòng dữ liệu dựa theo trạng thái / điều kiện nghiệp vụ (ví dụ: Hóa đơn điều chỉnh/thay thế, Phiếu bị hủy, v.v.), sử dụng prop `getRowClassName={(row, index) => string | undefined}` trên `<SpreadsheetPageTemplate>`, `<StandardTable>` hoặc `<DataTable>`.
+  - **Quy chuẩn màu sắc**:
+    - **Hóa đơn Thay thế / Điều chỉnh / Bị điều chỉnh**: Nền vàng nhạt dịu (`bg-amber-50/40 dark:bg-amber-950/15 hover:bg-amber-100/40 dark:hover:bg-amber-900/15`).
+    - **Hóa đơn Bị thay thế / Bị hủy**: Không đổi nền, làm mờ font (`opacity-40 text-muted-foreground`).
+    - **Phiếu / Chứng từ bị Hủy (Garage Cases, etc.)**: Làm mờ font (`opacity-40 text-muted-foreground`), không đổi màu nền.
+  - **Mẫu code**:
+    ```tsx
+    <SpreadsheetPageTemplate
+      // ...
+      getRowClassName={(item) => {
+        if (item.status === "CANCELLED") return "opacity-40 text-muted-foreground";
+        return undefined;
+      }}
+    />
+    ```
 
 ## 4. Cột Text đặc thù (Mã Code / Số Phiếu / Dữ liệu liên kết)
 
@@ -347,6 +430,7 @@ Bất kỳ cột nào liên quan đến **Status**, **State** thì bắt buộc 
 
 - [ ] TUYỆT ĐỐI không dùng `onRowClick` mở detail, chỉ mở từ `<TableText>` hoặc Row Hover Floating Actions (`rowActions`) chưa?
 - [ ] TUYỆT ĐỐI không định nghĩa cột action tĩnh thủ công `{ key: "actions" }` trong `columns`, đã truyền prop `rowActions` chưa?
+- [ ] Bảng đã tự động kích hoạt **Right-Click Context Menu** (`TableRowContextMenu`) qua `rowActions` / `actions` và highlight dòng active chưa?
 - [ ] TUYỆT ĐỐI không đặt nút Reset Column ở header cột Action hay cột dữ liệu, đã dựa vào nút Khôi phục trong dropdown `ColumnToggle` (`Settings2`) chưa?
 - [ ] Bảng đã có `tableId` duy nhất để tự động lưu & khôi phục column sizing, visibility, order chưa?
 - [ ] `<ActionDropdown>` đã phân nhóm menu bằng `groupLabel` (TRA CỨU, THAO TÁC, ...) chưa?
@@ -363,3 +447,4 @@ Bất kỳ cột nào liên quan đến **Status**, **State** thì bắt buộc 
 - [ ] Các cột số tiền / số lượng có `summaryRow` tổng không?
 - [ ] Text đã có namespace i18n (`t(...)`) chưa?
 - [ ] Đã bỏ default state `sortBy` ở UI và dùng default sort ở Backend chưa?
+- [ ] Bảng có sử dụng TableColumnHeaderFilter đã có nút Clear All Filter hiển thị khi có active filter chưa? (Page: `activeFilterCount` + `onClearAllFilters` trên `SpreadsheetPageTemplate`; Drawer: `FilterButton` với `onClear` trong `titleExtra` của `DrawerSection`?)

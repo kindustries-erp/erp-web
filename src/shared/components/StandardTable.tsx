@@ -32,6 +32,9 @@ export interface StandardTableProps<T> {
   hideLegacyActionColumn?: boolean;
   renderSubRow?: (row: T) => React.ReactNode;
   onRowClick?: (row: T) => void;
+  getRowClassName?: (item: T, index: number) => string | undefined;
+  enableRowContextMenu?: boolean;
+  onRowContextMenu?: (item: T, index: number, event: React.MouseEvent) => void;
   enableColumnVisibility?: boolean;
   defaultColumnVisibility?: VisibilityState;
   tableId?: string;
@@ -71,6 +74,9 @@ export function StandardTable<T>({
   hideLegacyActionColumn = false,
   renderSubRow,
   onRowClick,
+  getRowClassName,
+  enableRowContextMenu,
+  onRowContextMenu,
   enableColumnVisibility = true,
   defaultColumnVisibility,
   tableId,
@@ -95,6 +101,9 @@ export function StandardTable<T>({
       onPage={onPage}
       onPageSize={onPageSize}
       onRowClick={onRowClick}
+      getRowClassName={getRowClassName}
+      enableRowContextMenu={enableRowContextMenu}
+      onRowContextMenu={onRowContextMenu}
       sortBy={
         sortArray?.[0]?.startsWith("-") ? sortArray[0].slice(1) : sortArray?.[0]
       }

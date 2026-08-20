@@ -14,7 +14,7 @@ import type {
 // ── FilterButton (trigger) ───────────────────────────────────────────────────
 
 interface FilterButtonProps {
-  onClick: () => void;
+  onClick?: () => void;
   activeCount: number;
   onClear?: () => void;
   className?: string;

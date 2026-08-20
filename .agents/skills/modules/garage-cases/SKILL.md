@@ -90,3 +90,12 @@ src/modules/garage/
 - **Khách hàng**: Cột trái thông tin khách hàng & bảng phiếu dịch vụ phát sinh kèm tuổi nợ; cột phải phân bổ tuổi nợ (Aging: 0-30, 31-60, 61-90, >90 ngày) và tiến độ thu hồi. Bấm "Cấn trừ" hoặc mã phiếu sẽ mở tiếp `GarageCaseStandaloneDrawer`.
 - **Nhà cung cấp**: Cột trái thông tin nhà cung cấp & danh sách vụ việc/chứng từ liên đới; cột phải thẻ tổng hợp cân đối phát sinh Nợ/Có TK 331 và phân tích tuổi nợ.
 
+### 4.3. Liên Kết Hóa Đơn VAT (`InvoiceSelectionDrawer`)
+- Sử dụng `<StandardFormDrawer layout="2-columns" size="xl" collapsibleRightPanel={true}>`.
+- **Cột trái (`leftPanel`)**: Bọc trong `<DrawerSection title="Danh sách hóa đơn điện tử">`, bảng hóa đơn chuẩn font monospace, nút xóa nhanh bộ lọc `FilterButton`, thanh phân trang cố định ở đáy.
+- **Cột phải (`rightPanel`)**:
+  - `DrawerSection` **Tiến độ & Mục tiêu liên kết**: Hiển thị Doanh thu/Chi phí mục tiêu, Đã chọn và Chênh lệch.
+  - `DrawerSection` **Hóa đơn đã chọn**: Danh sách card hóa đơn đã chọn kèm nút gỡ bỏ nhanh. Hóa đơn đã chọn sẽ không nằm trong section gợi ý và ngược lại (mutual exclusion).
+  - `DrawerSection` **Gợi ý hóa đơn thông minh**: Danh sách gợi ý AI dựa trên số tiền, biển số xe và mã lệnh quyết toán.
+
+
