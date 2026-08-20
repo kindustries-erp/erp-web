@@ -21,7 +21,6 @@ import {
   ArrowDownLeft,
   ArrowUpRight,
   CheckCircle2,
-  Scale,
 } from "lucide-react";
 import { cn } from "@/shared/utils";
 import { PillTabs } from "@/shared/components/PillTabs";
@@ -1271,11 +1270,6 @@ export function VoucherNetoffSelectionModal({
   const currentRemaining =
     targetRemaining !== undefined ? targetRemaining : suggestedAmount || 0;
   const amountEntered = Number(manualAmount) || 0;
-  const remainingAfter = Math.max(0, currentRemaining - amountEntered);
-  const percentCompleted =
-    currentRemaining > 0
-      ? Math.min(100, Math.round((amountEntered / currentRemaining) * 100))
-      : 100;
 
   return (
     <>
