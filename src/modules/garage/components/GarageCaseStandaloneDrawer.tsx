@@ -1090,16 +1090,28 @@ export function GarageCaseStandaloneDrawer({
             caseId={selectedCase.id}
             caseCode={selectedCase.soChungTu}
             defaultLinkType="OUT"
-            onSubmit={async (payload) => {
+            onSubmit={async (payloads) => {
+              const items = Array.isArray(payloads) ? payloads : [payloads];
               if (editMode) {
-                addLinkedInvoice(payload);
+                addLinkedInvoice(items);
               } else {
-                await garageApi.addCaseLinkedInvoice(
-                  selectedCase.id,
-                  payload.invoiceId,
-                  payload.linkType,
-                  payload.note,
-                );
+                if (items.length === 1) {
+                  await garageApi.addCaseLinkedInvoice(
+                    selectedCase.id,
+                    items[0].invoiceId,
+                    items[0].linkType,
+                    items[0].note,
+                  );
+                } else if (items.length > 1) {
+                  await garageApi.addCaseLinkedInvoices(
+                    selectedCase.id,
+                    items.map((i) => ({
+                      invoiceId: i.invoiceId,
+                      linkType: i.linkType,
+                      note: i.note,
+                    })),
+                  );
+                }
                 queryClient.invalidateQueries({
                   queryKey: ["garage-case-financial-summary", selectedCase.id],
                 });
@@ -1109,7 +1121,11 @@ export function GarageCaseStandaloneDrawer({
                 queryClient.invalidateQueries({
                   queryKey: ["garage-case-traceability-graph", selectedCase.id],
                 });
-                toast.success("Đã liên kết hóa đơn thành công");
+                toast.success(
+                  items.length > 1
+                    ? `Đã liên kết thành công ${items.length} hóa đơn`
+                    : "Đã liên kết hóa đơn thành công",
+                );
               }
             }}
           />

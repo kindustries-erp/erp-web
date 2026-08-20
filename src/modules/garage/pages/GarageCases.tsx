@@ -1502,16 +1502,33 @@ export function GarageCases() {
             invoiceLinkingCase.soChungTu || invoiceLinkingCase.hdPhieuDichVuId
           }
           defaultLinkType="OUT"
-          onSubmit={async (payload) => {
+          onSubmit={async (payloads) => {
+            const items = Array.isArray(payloads) ? payloads : [payloads];
             try {
-              await garageApi.addCaseLinkedInvoice(
-                invoiceLinkingCase.id,
-                payload.invoiceId,
-                payload.linkType,
-                payload.note,
-              );
+              if (items.length === 1) {
+                await garageApi.addCaseLinkedInvoice(
+                  invoiceLinkingCase.id,
+                  items[0].invoiceId,
+                  items[0].linkType,
+                  items[0].note,
+                );
+              } else if (items.length > 1) {
+                await garageApi.addCaseLinkedInvoices(
+                  invoiceLinkingCase.id,
+                  items.map((i) => ({
+                    invoiceId: i.invoiceId,
+                    linkType: i.linkType,
+                    note: i.note,
+                  })),
+                );
+              }
               toast.success(
-                t("cases.linkInvoiceSuccess", "Đã liên kết hóa đơn thành công"),
+                items.length > 1
+                  ? `Đã liên kết thành công ${items.length} hóa đơn`
+                  : t(
+                      "cases.linkInvoiceSuccess",
+                      "Đã liên kết hóa đơn thành công",
+                    ),
               );
               setInvoiceLinkingCase(null);
               refetch();

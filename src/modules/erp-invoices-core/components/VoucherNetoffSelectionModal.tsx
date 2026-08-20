@@ -10,6 +10,7 @@ import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColu
 import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
 import { Input } from "@/shared/components/ui/input";
 import { Textarea } from "@/shared/components/ui/textarea";
+import { Button } from "@/shared/components/ui/Button";
 import { FilterButton } from "@/shared/components/FilterPanel";
 import {
   Sparkles,
@@ -687,6 +688,96 @@ export function VoucherNetoffSelectionModal({
     );
   };
 
+  const handleToggleSuggestion = (s: any) => {
+    const txn = s.txn;
+    const isAlreadySelected = selectedIds.includes(txn.id);
+    if (isAlreadySelected) {
+      setSelectedIds((prev) => prev.filter((id) => id !== txn.id));
+      setNetOffAmounts((prev) => {
+        const next = { ...prev };
+        delete next[txn.id];
+        return next;
+      });
+      setMaxAmounts((prev) => {
+        const next = { ...prev };
+        delete next[txn.id];
+        return next;
+      });
+      setSelectedTxns((prev) => {
+        const next = { ...prev };
+        delete next[txn.id];
+        return next;
+      });
+      toast.success(
+        `Đã bỏ chọn gợi ý giao dịch ${txn.referenceNumber || txn.seqNo || ""}`,
+      );
+    } else {
+      handleQuickAcceptSuggestion(s);
+    }
+  };
+
+  const handleSelectAllSuggestions = () => {
+    const allSelected = suggestions.every((s: any) =>
+      selectedIds.includes(s.txn.id),
+    );
+    if (allSelected) {
+      const suggestionTxnIds = suggestions.map((s: any) => s.txn.id);
+      setSelectedIds((prev) =>
+        prev.filter((id) => !suggestionTxnIds.includes(id)),
+      );
+      setNetOffAmounts((prev) => {
+        const next = { ...prev };
+        suggestionTxnIds.forEach((id) => delete next[id]);
+        return next;
+      });
+      setSelectedTxns((prev) => {
+        const next = { ...prev };
+        suggestionTxnIds.forEach((id) => delete next[id]);
+        return next;
+      });
+      toast.success("Đã bỏ chọn tất cả gợi ý");
+    } else {
+      let currentRunningSum = selectedIds
+        .filter((id) => !suggestions.some((s: any) => s.txn.id === id))
+        .reduce((sum, id) => sum + (Number(netOffAmounts[id]) || 0), 0);
+
+      const newSelectedIds = [...selectedIds];
+      const newAmounts = { ...netOffAmounts };
+      const newMaxAmounts = { ...maxAmounts };
+      const newSelectedTxns = { ...selectedTxns };
+
+      for (const s of suggestions) {
+        const txn = s.txn;
+        const credit = Number(txn.creditAmount) || 0;
+        const debit = Number(txn.debitAmount) || 0;
+        const amount = credit > 0 ? credit : debit;
+        const remaining = Number(txn.remainingAmount) || amount;
+
+        let autoFill = remaining;
+        if (targetRemaining !== undefined && targetRemaining > 0) {
+          const needed = Math.max(0, targetRemaining - currentRunningSum);
+          if (needed > 0) {
+            autoFill = Math.min(remaining, needed);
+            currentRunningSum += autoFill;
+          }
+        }
+
+        if (!newSelectedIds.includes(txn.id)) {
+          newSelectedIds.push(txn.id);
+        }
+        newAmounts[txn.id] = autoFill > 0 ? autoFill : remaining;
+        newMaxAmounts[txn.id] = remaining;
+        newSelectedTxns[txn.id] = txn;
+      }
+
+      setSelectedIds(newSelectedIds);
+      setNetOffAmounts(newAmounts);
+      setMaxAmounts(newMaxAmounts);
+      setSelectedTxns(newSelectedTxns);
+      toast.success(`Đã chọn tất cả ${suggestions.length} gợi ý`);
+    }
+  };
+
   const handleSubmit = async () => {
     try {
       setIsSubmitting(true);
@@ -1230,210 +1321,38 @@ export function VoucherNetoffSelectionModal({
           },
         ]}
       >
-        <div className="flex flex-col h-full min-h-0 flex-1 gap-2.5">
-          {/* Target Document Info Badge */}
-          {resolvedTarget && (
-            <div className="flex flex-wrap items-center justify-between gap-3 px-3.5 py-2 rounded-lg bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-xs shrink-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-slate-500 font-medium">
-                  {resolvedTarget.label || "Chứng từ"}:
-                </span>
-                <span className="font-semibold text-slate-800 dark:text-slate-200">
-                  {resolvedTarget.code || "---"}
-                </span>
-                {resolvedTarget.totalAmount !== undefined && (
-                  <>
-                    <span className="text-slate-300 dark:text-slate-600">
-                      |
-                    </span>
-                    <span className="text-slate-500 font-medium">
-                      {settlementType === "RECEIPT"
-                        ? "Doanh thu:"
-                        : "Tổng chi phí:"}
-                    </span>
-                    <span className="font-mono font-medium text-slate-800 dark:text-slate-200">
-                      {money(resolvedTarget.totalAmount)}
-                    </span>
-                  </>
-                )}
-                <span className="text-slate-300 dark:text-slate-600">|</span>
-                <span className="text-slate-500 font-medium">
-                  {resolvedTarget.remainingLabel || "Cần thanh toán:"}
-                </span>
-                <span
-                  className={cn(
-                    "font-mono font-bold",
-                    settlementType === "RECEIPT"
-                      ? "text-emerald-600 dark:text-emerald-400"
-                      : "text-amber-600 dark:text-amber-400",
-                  )}
-                >
-                  {money(resolvedTarget.remainingAmount)}
-                </span>
+        <div className="flex flex-col lg:flex-row h-full min-h-0 flex-1 gap-3 overflow-hidden">
+          {/* ── LEFT COLUMN: TABS & MAIN TABLE / MANUAL FORM ── */}
+          <div className="flex-1 min-w-0 flex flex-col h-full gap-2.5 overflow-hidden">
+            {/* Flagship Animated Pill Tabs (Image 1 Style) */}
+            {isTabsMode && (
+              <div className="shrink-0">
+                <PillTabs
+                  value={activeTab}
+                  onValueChange={(val) =>
+                    setActiveTab(val as "ON_SYSTEM" | "OFF_SYSTEM_MANUAL")
+                  }
+                  items={[
+                    {
+                      value: "ON_SYSTEM",
+                      label: t("erpTab", "1. Cấn trừ Sao kê / Sổ quỹ ERP"),
+                      icon: Landmark,
+                    },
+                    {
+                      value: "OFF_SYSTEM_MANUAL",
+                      label: t(
+                        "manualTab",
+                        "2. Ghi nhận Dòng tiền Ngoài sổ sách",
+                      ),
+                      icon: DollarSign,
+                    },
+                  ]}
+                />
               </div>
+            )}
 
-              {activeTab === "ON_SYSTEM" ? (
-                <div className="flex items-center gap-2">
-                  <span className="text-slate-500 font-medium">
-                    Đã chọn cấn trừ:
-                  </span>
-                  <span
-                    className={cn(
-                      "font-mono font-bold text-sm",
-                      isOverRemaining
-                        ? "text-rose-600 dark:text-rose-400 animate-pulse"
-                        : "text-primary",
-                    )}
-                  >
-                    {money(totalCurrentNetOff)}
-                  </span>
-                </div>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <span className="text-slate-500 font-medium">
-                    Ghi nhận ngoài:
-                  </span>
-                  <span
-                    className={cn(
-                      "font-mono font-bold text-sm",
-                      settlementType === "RECEIPT"
-                        ? "text-emerald-600 dark:text-emerald-400"
-                        : "text-amber-600 dark:text-amber-400",
-                    )}
-                  >
-                    {money(amountEntered)}
-                  </span>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Validation Warning Alert */}
-          {isOverRemaining && (
-            <div className="flex items-center gap-2 p-2.5 rounded-lg bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs animate-in fade-in shrink-0">
-              <AlertCircle className="w-4 h-4 shrink-0 text-rose-600 dark:text-rose-400" />
-              <span>
-                <strong>Cảnh báo:</strong> Tổng tiền cấn trừ (
-                {money(totalCurrentNetOff)}) đang vượt quá số tiền cần thanh
-                toán ({money(targetRemaining!)}). Vui lòng điều chỉnh lại số
-                tiền trước khi xác nhận.
-              </span>
-            </div>
-          )}
-
-          {/* Flagship Animated Pill Tabs (Image 1 Style) */}
-          {isTabsMode && (
-            <PillTabs
-              value={activeTab}
-              onValueChange={(val) =>
-                setActiveTab(val as "ON_SYSTEM" | "OFF_SYSTEM_MANUAL")
-              }
-              items={[
-                {
-                  value: "ON_SYSTEM",
-                  label: t("erpTab", "1. Cấn trừ Sao kê / Sổ quỹ ERP"),
-                  icon: Landmark,
-                },
-                {
-                  value: "OFF_SYSTEM_MANUAL",
-                  label: t("manualTab", "2. Ghi nhận Dòng tiền Ngoài sổ sách"),
-                  icon: DollarSign,
-                },
-              ]}
-              rightExtra={
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => handleSwitchSettlementType("RECEIPT")}
-                    className={cn(
-                      "px-3.5 py-1.5 rounded-full text-xs font-semibold border flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs",
-                      settlementType === "RECEIPT"
-                        ? "bg-emerald-600 border-emerald-600 text-white shadow-emerald-500/20 shadow-sm ring-2 ring-emerald-500/30"
-                        : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400",
-                    )}
-                  >
-                    <ArrowDownLeft className="w-3.5 h-3.5" />
-                    {t("typeReceipt", "Ghi nhận Thu tiền")}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleSwitchSettlementType("PAYMENT")}
-                    className={cn(
-                      "px-3.5 py-1.5 rounded-full text-xs font-semibold border flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs",
-                      settlementType === "PAYMENT"
-                        ? "bg-amber-600 border-amber-600 text-white shadow-amber-500/20 shadow-sm ring-2 ring-amber-500/30"
-                        : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400",
-                    )}
-                  >
-                    <ArrowUpRight className="w-3.5 h-3.5" />
-                    {t("typePayment", "Ghi nhận Chi tiền")}
-                  </button>
-                </div>
-              }
-            />
-          )}
-
-          {/* TAB 1: ON_SYSTEM (Sao kê ERP) */}
-          {activeTab === "ON_SYSTEM" ? (
-            <div className="flex-1 flex flex-col min-h-0 gap-2.5">
-              {/* Smart Suggestions Section */}
-              {(invoice?.id || caseId) && (
-                <div className="p-3 rounded-xl bg-gradient-to-r from-indigo-50/70 to-blue-50/50 dark:from-indigo-950/40 dark:to-blue-950/30 border border-indigo-200/80 dark:border-indigo-800/60 shadow-2xs shrink-0">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <Sparkles className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-                      <h4 className="text-xs font-bold uppercase tracking-wider text-indigo-950 dark:text-indigo-200">
-                        {settlementType === "RECEIPT"
-                          ? "Gợi ý Đối soát Thu tiền (Tiền vào)"
-                          : "Gợi ý Đối soát Chi tiền (Chi phí vụ việc)"}
-                      </h4>
-                    </div>
-                    {isLoadingSuggestions && (
-                      <span className="text-[10px] text-indigo-600 dark:text-indigo-400 flex items-center gap-1 font-medium">
-                        <Loader2 className="w-3 h-3 animate-spin" />
-                        Đang tìm kiếm...
-                      </span>
-                    )}
-                  </div>
-
-                  {suggestions.length > 0 ? (
-                    <div className="flex items-center gap-2.5 overflow-x-auto pb-1.5 scrollbar-thin">
-                      {suggestions.map((s: any) => {
-                        const isAlreadySelected = selectedIds.includes(
-                          s.txn.id,
-                        );
-                        return (
-                          <div
-                            key={s.txn.id}
-                            className="min-w-[320px] max-w-[360px] shrink-0"
-                          >
-                            <SmartSuggestionCard
-                              txn={s.txn}
-                              amount={
-                                s.txn.debitAmount > 0
-                                  ? s.txn.debitAmount
-                                  : s.txn.creditAmount
-                              }
-                              isSuggestion={!isAlreadySelected}
-                              badgeType={s.score?.badge || "exact"}
-                              matchedKeywords={s.matchedKeywords || []}
-                              onAccept={() => handleQuickAcceptSuggestion(s)}
-                              onViewDetail={(id) => setDetailTxnId(id)}
-                            />
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ) : !isLoadingSuggestions ? (
-                    <div className="text-[11px] text-slate-500 italic">
-                      Chưa tìm thấy giao dịch khớp chính xác với chứng từ này.
-                      Bạn có thể tìm kiếm thủ công trong danh sách bên dưới.
-                    </div>
-                  ) : null}
-                </div>
-              )}
-
-              {/* Main Content: DrawerSection containing StandardTable */}
+            {/* TAB 1: ON_SYSTEM (Sao kê ERP Table) */}
+            {activeTab === "ON_SYSTEM" ? (
               <DrawerSection
                 title={
                   <div className="flex items-center gap-2 flex-wrap">
@@ -1454,32 +1373,6 @@ export function VoucherNetoffSelectionModal({
                 }
                 titleExtra={
                   <div className="flex items-center gap-2">
-                    {/* Split Payment Helper Button: If remaining needed > current netoff */}
-                    {isTabsMode &&
-                      targetRemaining !== undefined &&
-                      targetRemaining > totalCurrentNetOff && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const remainingNeeded = Math.max(
-                              0,
-                              targetRemaining - totalCurrentNetOff,
-                            );
-                            setManualAmount(remainingNeeded);
-                            setActiveTab("OFF_SYSTEM_MANUAL");
-                          }}
-                          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 hover:bg-indigo-100 transition-colors dark:bg-indigo-950/60 dark:border-indigo-800 dark:text-indigo-300 cursor-pointer"
-                          title="Ghi nhận số tiền còn thiếu ngoài sổ sách"
-                        >
-                          <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
-                          <span>
-                            Ghi nhận phần thiếu (
-                            {money(targetRemaining - totalCurrentNetOff)}) ngoài
-                            sổ ➔
-                          </span>
-                        </button>
-                      )}
-
                     {tableState.activeFilterCount > 0 && (
                       <FilterButton
                         activeCount={tableState.activeFilterCount}
@@ -1511,17 +1404,21 @@ export function VoucherNetoffSelectionModal({
                     onPage={setPage}
                     onPageSize={setPageSize}
                     summaryRow={summaryRow}
-                    minWidth={1440}
+                    minWidth={1150}
                     containerClassName="flex-1 min-h-0"
                   />
                 </div>
               </DrawerSection>
-            </div>
-          ) : (
-            /* TAB 2: OFF_SYSTEM_MANUAL (Bố cục 2 cột chuyên nghiệp) */
-            <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-4 overflow-y-auto pr-1">
-              {/* CỘT TRÁI: Nhập liệu & Thiết lập dòng tiền (7 cols = ~58%) */}
-              <div className="lg:col-span-7 space-y-3.5 flex flex-col">
+            ) : (
+              /* TAB 2: OFF_SYSTEM_MANUAL (Form Nhập liệu Tiền ngoài sổ sách) */
+              <DrawerSection
+                title={t(
+                  "manualFormTitle",
+                  "Nhập liệu Dòng tiền Ngoài sổ sách",
+                )}
+                className="flex-1 flex flex-col min-h-0 mb-0 p-3 overflow-y-auto scrollbar-thin"
+                bodyClassName="p-0 space-y-3.5"
+              >
                 {/* Nút Chọn Số Tiền Nhanh */}
                 {currentRemaining > 0 && (
                   <div className="p-3 rounded-xl bg-slate-50/80 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800">
@@ -1759,179 +1656,274 @@ export function VoucherNetoffSelectionModal({
                     />
                   </div>
                 </div>
+              </DrawerSection>
+            )}
+          </div>
+
+          {/* ── RIGHT COLUMN: TARGET CONTEXT, SWITCHER, SMART SUGGESTIONS & PAST SETTLEMENTS ── */}
+          <div className="w-full lg:w-[380px] xl:w-[410px] shrink-0 flex flex-col gap-2.5 overflow-y-auto max-h-[calc(100vh-140px)] pr-1 scrollbar-thin">
+            {/* Section 1: Tiến độ & Mục tiêu Dòng tiền */}
+            <DrawerSection
+              title={t("settlementTargetTitle", "Tiến độ & Mục tiêu Dòng tiền")}
+              collapsible={true}
+              defaultCollapsed={false}
+            >
+              {/* Type Switcher Thu / Chi */}
+              <div className="grid grid-cols-2 gap-2 mb-3">
+                <button
+                  type="button"
+                  onClick={() => handleSwitchSettlementType("RECEIPT")}
+                  className={cn(
+                    "px-3 py-2 rounded-xl text-xs font-bold border flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-2xs",
+                    settlementType === "RECEIPT"
+                      ? "bg-emerald-600 border-emerald-600 text-white shadow-emerald-500/20 shadow-sm ring-2 ring-emerald-500/30"
+                      : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400",
+                  )}
+                >
+                  <ArrowDownLeft className="w-3.5 h-3.5" />
+                  <span>Thu tiền (Vào)</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleSwitchSettlementType("PAYMENT")}
+                  className={cn(
+                    "px-3 py-2 rounded-xl text-xs font-bold border flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-2xs",
+                    settlementType === "PAYMENT"
+                      ? "bg-amber-600 border-amber-600 text-white shadow-amber-500/20 shadow-sm ring-2 ring-amber-500/30"
+                      : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400",
+                  )}
+                >
+                  <ArrowUpRight className="w-3.5 h-3.5" />
+                  <span>Chi tiền (Ra)</span>
+                </button>
               </div>
 
-              {/* CỘT PHẢI: Trung tâm Đối soát & Mô phỏng dòng tiền (5 cols = ~42%) */}
-              <div className="lg:col-span-5 space-y-3.5 flex flex-col">
-                {/* Thẻ Mô Phỏng Dòng Tiền Realtime */}
-                <div className="p-4 rounded-xl border border-indigo-200/70 dark:border-indigo-800/60 bg-gradient-to-br from-indigo-50/60 via-slate-50/50 to-blue-50/40 dark:from-indigo-950/40 dark:via-slate-900/40 dark:to-blue-950/30 space-y-3 shadow-2xs">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-indigo-950 dark:text-indigo-200 flex items-center gap-1.5">
-                      <Scale className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
-                      <span>
-                        {settlementType === "RECEIPT"
-                          ? "Mô phỏng Thu tiền Vụ việc"
-                          : "Mô phỏng Chi phí Vụ việc"}
-                      </span>
-                    </h4>
-                    {percentCompleted === 100 && (
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 dark:bg-emerald-950 dark:text-emerald-300">
-                        Đủ 100%
-                      </span>
-                    )}
+              {/* Target Details */}
+              {resolvedTarget && (
+                <div className="space-y-2 text-xs">
+                  <div className="flex items-center justify-between py-1 border-b border-slate-100 dark:border-slate-800">
+                    <span className="text-slate-500 font-medium">
+                      {resolvedTarget.label || "Vụ việc"}:
+                    </span>
+                    <span className="font-semibold text-slate-800 dark:text-slate-200 font-mono">
+                      {resolvedTarget.code || "---"}
+                    </span>
                   </div>
 
-                  <div className="space-y-2 text-xs">
-                    <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
-                      <span>
+                  {resolvedTarget.totalAmount !== undefined && (
+                    <div className="flex items-center justify-between py-1 border-b border-slate-100 dark:border-slate-800">
+                      <span className="text-slate-500 font-medium">
                         {settlementType === "RECEIPT"
-                          ? "Tổng cần thu còn lại:"
-                          : "Tổng chi phí cần chi còn lại:"}
+                          ? "Mục tiêu Doanh thu:"
+                          : "Mục tiêu Chi phí:"}
                       </span>
-                      <span className="font-mono font-semibold text-slate-800 dark:text-slate-200">
-                        {money(currentRemaining)}
+                      <span className="font-mono font-bold text-slate-900 dark:text-slate-100">
+                        {money(resolvedTarget.totalAmount)}
                       </span>
-                    </div>
-                    <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
-                      <span>
-                        {settlementType === "RECEIPT"
-                          ? "Số tiền thu đợt này:"
-                          : "Số tiền chi đợt này:"}
-                      </span>
-                      <span
-                        className={cn(
-                          "font-mono font-bold",
-                          settlementType === "RECEIPT"
-                            ? "text-emerald-600 dark:text-emerald-400"
-                            : "text-amber-600 dark:text-amber-400",
-                        )}
-                      >
-                        +{money(amountEntered)}
-                      </span>
-                    </div>
-                    <div className="h-px bg-slate-200/80 dark:bg-slate-700 my-1" />
-                    <div className="flex justify-between items-center font-bold">
-                      <span className="text-slate-800 dark:text-slate-200">
-                        Còn lại sau khi ghi nhận:
-                      </span>
-                      <span
-                        className={cn(
-                          "font-mono text-sm",
-                          remainingAfter === 0
-                            ? "text-emerald-600 dark:text-emerald-400"
-                            : "text-amber-600 dark:text-amber-400",
-                        )}
-                      >
-                        {money(remainingAfter)}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Progress Bar */}
-                  <div className="space-y-1 pt-1">
-                    <div className="flex justify-between text-[10px] text-slate-500 font-medium">
-                      <span>
-                        {settlementType === "RECEIPT"
-                          ? "Tiến độ thu tiền"
-                          : "Tiến độ thanh toán chi phí"}
-                      </span>
-                      <span className="font-mono font-bold">
-                        {percentCompleted}%
-                      </span>
-                    </div>
-                    <div className="h-2 w-full bg-slate-200/80 dark:bg-slate-800 rounded-full overflow-hidden">
-                      <div
-                        className={cn(
-                          "h-full transition-all duration-300 rounded-full",
-                          percentCompleted >= 100
-                            ? "bg-emerald-500"
-                            : settlementType === "RECEIPT"
-                              ? "bg-indigo-500"
-                              : "bg-amber-500",
-                        )}
-                        style={{
-                          width: `${Math.min(100, percentCompleted)}%`,
-                        }}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Bảng Mini Lịch Sử Dòng Tiền Đã Ghi Nhận */}
-                <div className="p-3.5 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 flex-1 flex flex-col min-h-0 space-y-2 shadow-2xs">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                      <Landmark className="w-3.5 h-3.5 text-slate-500" />
-                      <span>Dòng tiền đã ghi nhận trước đó</span>
-                    </h4>
-                    {existingCaseSettlements &&
-                      existingCaseSettlements.length > 0 && (
-                        <span className="text-[10px] font-semibold text-slate-500">
-                          {existingCaseSettlements.length} khoản
-                        </span>
-                      )}
-                  </div>
-
-                  {existingCaseSettlements &&
-                  existingCaseSettlements.length > 0 ? (
-                    <div className="flex-1 overflow-y-auto space-y-1.5 max-h-[160px] pr-1">
-                      {existingCaseSettlements.map((item: any, idx: number) => (
-                        <div
-                          key={item.id || idx}
-                          className="p-2 rounded-lg bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700 text-xs flex items-center justify-between"
-                        >
-                          <div className="flex flex-col min-w-0 pr-2">
-                            <span className="font-semibold text-slate-800 dark:text-slate-200 truncate">
-                              {item.sourceChannel === "ON_SYSTEM"
-                                ? item.bankName || "Sao kê ERP"
-                                : item.category === "TIEN_MAT_NGOAI"
-                                  ? "Tiền mặt ngoài"
-                                  : item.category === "CHUYEN_KHOAN_CA_NHAN"
-                                    ? "CK cá nhân"
-                                    : "Cấn trừ khác"}
-                            </span>
-                            <span className="text-[10px] text-slate-400 font-mono">
-                              {formatGMT7(
-                                item.transDate || item.createdAt,
-                                "date",
-                              )}
-                            </span>
-                          </div>
-                          <span
-                            className={cn(
-                              "font-mono font-bold shrink-0",
-                              item.settlementType === "RECEIPT"
-                                ? "text-emerald-600"
-                                : "text-amber-600",
-                            )}
-                          >
-                            {item.settlementType === "RECEIPT" ? "+" : "-"}
-                            {money(item.amount)}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/40 border border-dashed border-slate-200 dark:border-slate-700 text-center text-xs text-slate-500 space-y-2">
-                      <p className="text-[11px] leading-relaxed">
-                        Chưa có dòng tiền nào được ghi nhận cho vụ việc này.
-                      </p>
-                      <button
-                        type="button"
-                        onClick={() => setActiveTab("ON_SYSTEM")}
-                        className="inline-flex items-center gap-1 text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer"
-                      >
-                        <Landmark className="w-3 h-3" />
-                        <span>
-                          Khách đã chuyển khoản STK công ty? Chọn Tab 1
-                        </span>
-                      </button>
                     </div>
                   )}
+
+                  <div className="flex items-center justify-between py-1 border-b border-slate-100 dark:border-slate-800">
+                    <span className="text-slate-500 font-medium">
+                      {resolvedTarget.remainingLabel || "Cần thanh toán:"}
+                    </span>
+                    <span
+                      className={cn(
+                        "font-mono font-bold",
+                        settlementType === "RECEIPT"
+                          ? "text-emerald-600 dark:text-emerald-400"
+                          : "text-amber-600 dark:text-amber-400",
+                      )}
+                    >
+                      {money(resolvedTarget.remainingAmount)}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between py-1 border-b border-slate-100 dark:border-slate-800">
+                    <span className="text-slate-500 font-medium">
+                      {activeTab === "ON_SYSTEM"
+                        ? "Đã chọn cấn trừ:"
+                        : "Ghi nhận đợt này:"}
+                    </span>
+                    <span
+                      className={cn(
+                        "font-mono font-bold text-sm",
+                        isOverRemaining
+                          ? "text-rose-600 dark:text-rose-400 animate-pulse"
+                          : "text-primary",
+                      )}
+                    >
+                      {money(
+                        activeTab === "ON_SYSTEM"
+                          ? totalCurrentNetOff
+                          : amountEntered,
+                      )}
+                    </span>
+                  </div>
+
+                  {/* Over Remaining Warning */}
+                  {isOverRemaining && (
+                    <div className="flex items-center gap-1.5 p-2 rounded-lg bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-[11px]">
+                      <AlertCircle className="w-3.5 h-3.5 shrink-0 text-rose-600" />
+                      <span>
+                        Vượt quá số tiền cần thanh toán (
+                        {money(targetRemaining!)}).
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Split Payment Helper Button */}
+                  {isTabsMode &&
+                    targetRemaining !== undefined &&
+                    targetRemaining > totalCurrentNetOff &&
+                    activeTab === "ON_SYSTEM" && (
+                      <div className="pt-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const remainingNeeded = Math.max(
+                              0,
+                              targetRemaining - totalCurrentNetOff,
+                            );
+                            setManualAmount(remainingNeeded);
+                            setActiveTab("OFF_SYSTEM_MANUAL");
+                          }}
+                          className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 hover:bg-indigo-100 transition-colors dark:bg-indigo-950/60 dark:border-indigo-800 dark:text-indigo-300 cursor-pointer"
+                        >
+                          <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
+                          <span>
+                            Ghi nhận thiếu (
+                            {money(targetRemaining - totalCurrentNetOff)}) ngoài
+                            sổ ➔
+                          </span>
+                        </button>
+                      </div>
+                    )}
                 </div>
-              </div>
-            </div>
-          )}
+              )}
+            </DrawerSection>
+
+            {/* Section 2: Gợi ý Đối soát Thông minh (AI) */}
+            {(invoice?.id || caseId) && (
+              <DrawerSection
+                title={
+                  <div className="flex items-center gap-1.5 text-indigo-950 dark:text-indigo-200">
+                    <Sparkles className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+                    <span>
+                      {settlementType === "RECEIPT"
+                        ? "Gợi ý Thu tiền (Vào)"
+                        : "Gợi ý Chi tiền (Ra)"}
+                    </span>
+                  </div>
+                }
+                titleExtra={
+                  suggestions.length >= 2 ? (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={handleSelectAllSuggestions}
+                      className="h-5 text-[10px] px-1.5 py-0 border-indigo-300 dark:border-indigo-700 bg-white/80 dark:bg-slate-900/80 hover:bg-indigo-50 dark:hover:bg-indigo-950/60 text-indigo-900 dark:text-indigo-200 font-medium cursor-pointer"
+                    >
+                      <CheckCircle2 className="w-2.5 h-2.5 mr-1 text-indigo-600 dark:text-indigo-400" />
+                      {suggestions.every((s: any) =>
+                        selectedIds.includes(s.txn.id),
+                      )
+                        ? "Bỏ chọn hết"
+                        : `Chọn tất cả (${suggestions.length})`}
+                    </Button>
+                  ) : undefined
+                }
+                collapsible={true}
+                defaultCollapsed={false}
+              >
+                {isLoadingSuggestions ? (
+                  <div className="py-4 text-center text-xs text-indigo-600 dark:text-indigo-400 flex items-center justify-center gap-1.5 font-medium">
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    Đang tìm kiếm gợi ý...
+                  </div>
+                ) : suggestions.length > 0 ? (
+                  <div className="space-y-2 max-h-[380px] overflow-y-auto pr-1 scrollbar-thin">
+                    {suggestions.map((s: any) => {
+                      const isAlreadySelected = selectedIds.includes(s.txn.id);
+                      return (
+                        <SmartSuggestionCard
+                          key={s.txn.id}
+                          txn={s.txn}
+                          amount={
+                            s.txn.debitAmount > 0
+                              ? s.txn.debitAmount
+                              : s.txn.creditAmount
+                          }
+                          isSuggestion={!isAlreadySelected}
+                          badgeType={s.score?.badge || "exact"}
+                          matchedKeywords={s.matchedKeywords || []}
+                          onAccept={() => handleToggleSuggestion(s)}
+                          onViewDetail={(id) => setDetailTxnId(id)}
+                        />
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="py-3 text-center text-[11px] text-slate-400 italic">
+                    Chưa tìm thấy giao dịch khớp chính xác. Bạn có thể tìm trong
+                    danh sách bảng bên trái.
+                  </div>
+                )}
+              </DrawerSection>
+            )}
+
+            {/* Section 3: Lịch sử Dòng tiền Đã Ghi Nhận Trước Đó */}
+            {existingCaseSettlements && existingCaseSettlements.length > 0 && (
+              <DrawerSection
+                title={t(
+                  "pastSettlementsTitle",
+                  "Dòng tiền đã ghi nhận trước đó",
+                )}
+                titleExtra={
+                  <span className="text-[10px] font-semibold text-slate-500">
+                    {existingCaseSettlements.length} khoản
+                  </span>
+                }
+                collapsible={true}
+                defaultCollapsed={true}
+              >
+                <div className="space-y-1.5 max-h-[220px] overflow-y-auto pr-1 scrollbar-thin">
+                  {existingCaseSettlements.map((item: any, idx: number) => (
+                    <div
+                      key={item.id || idx}
+                      className="p-2 rounded-lg bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700 text-xs flex items-center justify-between"
+                    >
+                      <div className="flex flex-col min-w-0 pr-2">
+                        <span className="font-semibold text-slate-800 dark:text-slate-200 truncate">
+                          {item.sourceChannel === "ON_SYSTEM"
+                            ? item.bankName || "Sao kê ERP"
+                            : item.category === "TIEN_MAT_NGOAI"
+                              ? "Tiền mặt ngoài"
+                              : item.category === "CHUYEN_KHOAN_CA_NHAN"
+                                ? "CK cá nhân"
+                                : "Cấn trừ khác"}
+                        </span>
+                        <span className="text-[10px] text-slate-400 font-mono">
+                          {formatGMT7(item.transDate || item.createdAt, "date")}
+                        </span>
+                      </div>
+                      <span
+                        className={cn(
+                          "font-mono font-bold shrink-0",
+                          item.settlementType === "RECEIPT"
+                            ? "text-emerald-600"
+                            : "text-amber-600",
+                        )}
+                      >
+                        {item.settlementType === "RECEIPT" ? "+" : "-"}
+                        {money(item.amount)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </DrawerSection>
+            )}
+          </div>
         </div>
       </DrawerModal>
 
