@@ -6,14 +6,46 @@ export interface GarageTrendItem {
   cost: number;
   profit: number;
   margin: number;
+  paid: number;
+  receivable: number;
+  collectionRate: number;
+  paidCost: number;
+  payableCost: number;
+  costPaymentRate: number;
+  collectionRateDiff: number;
+  costPaymentRateDiff: number;
   caseCount: number;
-  servicesRevenue: number;
-  partsRevenue: number;
-  partsCost: number;
+}
+
+export interface GarageCollectionSummary {
+  totalBilled: number;
+  totalRevenue: number;
+  totalPaid: number;
+  totalReceivable: number;
+  collectionRate: number;
+}
+
+export interface GarageCostPaymentSummary {
+  totalCost: number;
+  totalPaidCost: number;
+  totalPayableCost: number;
+  paymentRate: number;
+}
+
+export interface GarageStatusDistributionItem {
+  statusCode: number;
+  statusName: string;
+  count: number;
+  percentage: number;
 }
 
 export interface GarageDashboardStatsResponse {
   trend: GarageTrendItem[];
+  collectionSummary: GarageCollectionSummary;
+  costPaymentSummary: GarageCostPaymentSummary;
+  statusDistribution: GarageStatusDistributionItem[];
+  statusDistributionByMonth?: Record<string, GarageStatusDistributionItem[]>;
+  availableMonths?: string[];
 }
 
 export interface GarageKpiPeriod {
@@ -45,6 +77,7 @@ export interface GarageCheckpointCaseItem {
   loiNhuan: number;
   tienDaThanhToan: number;
   tienConPhaiThanhToan: number;
+  ngayHoanThanhCongViec?: string;
   ngayPhatSinh: string;
 }
 

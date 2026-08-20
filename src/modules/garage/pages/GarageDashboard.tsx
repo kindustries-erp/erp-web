@@ -9,10 +9,10 @@ import { format } from "date-fns";
 import toast from "react-hot-toast";
 
 import { garageDashboardApi } from "../api/garageDashboardApi";
-import { garageApi } from "../api/garageApi";
 import { GarageStatsCards } from "../components/GarageStatsCards";
 import { GarageTrendChart } from "../components/GarageTrendChart";
 import { GarageStatusDistributionChart } from "../components/GarageStatusDistributionChart";
+import { GaragePaymentProgressCard } from "../components/GaragePaymentProgressCard";
 
 export function GarageDashboard() {
   const { t } = useTranslation("garage");
@@ -37,39 +37,19 @@ export function GarageDashboard() {
   });
   const isRefreshing = isFetchingStats > 0 || isFetchingKpis > 0;
 
-  // Query status distribution across all branches
-  const { data: casesResponse, isLoading: isLoadingCases } = useQuery({
+  // Query unified dashboard stats (trend, collectionSummary, statusDistribution)
+  const { data: statsData, isLoading: isLoadingStats } = useQuery({
     queryKey: [
-      "garage",
-      "status-cases",
+      "garage-dashboard-stats",
       filter.state.dateFrom,
       filter.state.dateTo,
     ],
     queryFn: () =>
-      garageApi.getCases(
-        "",
-        1,
-        100,
-        "",
-        filter.state.dateFrom || undefined,
-        filter.state.dateTo || undefined,
-      ),
+      garageDashboardApi.getStats({
+        date_from: filter.state.dateFrom || undefined,
+        date_to: filter.state.dateTo || undefined,
+      }),
   });
-
-  const casesData = casesResponse?.data || [];
-
-  // Compute status distribution from casesData
-  const statusDistribution = React.useMemo(() => {
-    const statusMap = new Map<string, number>();
-    for (const c of casesData) {
-      const st = c.tenTinhTrangDichVu || "Khác";
-      statusMap.set(st, (statusMap.get(st) || 0) + 1);
-    }
-    return Array.from(statusMap.entries()).map(([name, value]) => ({
-      name,
-      value,
-    }));
-  }, [casesData]);
 
   const handleExportExcel = async () => {
     try {
@@ -101,7 +81,6 @@ export function GarageDashboard() {
   const handleRefresh = () => {
     queryClient.invalidateQueries({ queryKey: ["garage-checkpoint-kpis"] });
     queryClient.invalidateQueries({ queryKey: ["garage-dashboard-stats"] });
-    queryClient.invalidateQueries({ queryKey: ["garage", "status-cases"] });
   };
 
   return (
@@ -109,7 +88,7 @@ export function GarageDashboard() {
       title={t("dashboard.title", "Tổng quan Garage")}
       desc={t(
         "dashboard.desc",
-        "Báo cáo tổng quan hiệu quả hoạt động xưởng dịch vụ, doanh thu, chi phí và lợi nhuận gộp",
+        "Báo cáo tổng quan hiệu quả hoạt động xưởng dịch vụ, doanh thu, chi phí, lợi nhuận gộp theo ngày hoàn thành và tiến độ thu tiền",
       )}
       icon={<LayoutDashboard className="h-4 w-4 text-emerald-600" />}
       filterConfig={filterConfig}
@@ -129,24 +108,37 @@ export function GarageDashboard() {
       }
     >
       <div className="flex flex-col gap-6 mb-8">
-        {/* Section 1: KPI Doanh thu Dịch vụ Cards */}
+        {/* Section 1: KPI Doanh thu Dịch vụ Cards (Tính theo ngày hoàn thành) */}
         <GarageStatsCards
           type="REVENUE"
-          title="Doanh thu Dịch vụ (Tiếp nhận & Hoàn thành)"
+          title="Doanh thu Dịch vụ (Đã hoàn thành công việc)"
         />
 
         {/* Section 2: KPI Giá vốn & Chi phí Cards */}
-        <GarageStatsCards type="COST" title="Giá vốn & Chi phí Dịch vụ" />
+        <GarageStatsCards
+          type="COST"
+          title="Giá vốn & Chi phí Dịch vụ (Đã hoàn thành)"
+        />
 
-        {/* Section 3: Trend & Status Distribution Charts */}
+        {/* Section 3: Tiến độ Dòng tiền & Công nợ (Thu tiền KH & Trả tiền NCC) */}
+        <GaragePaymentProgressCard
+          collectionSummary={statsData?.collectionSummary}
+          costPaymentSummary={statsData?.costPaymentSummary}
+          trend={statsData?.trend}
+          loading={isLoadingStats}
+        />
+
+        {/* Section 4: Trend & Status Distribution Charts */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           <div className="lg:col-span-2">
             <GarageTrendChart filterState={filter.state} />
           </div>
           <div className="lg:col-span-1">
             <GarageStatusDistributionChart
-              data={statusDistribution}
-              loading={isLoadingCases}
+              data={statsData?.statusDistribution}
+              byMonth={statsData?.statusDistributionByMonth}
+              availableMonths={statsData?.availableMonths}
+              loading={isLoadingStats}
             />
           </div>
         </div>
