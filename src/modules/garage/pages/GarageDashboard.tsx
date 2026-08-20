@@ -1,24 +1,23 @@
 import React, { useState } from "react";
-import { LayoutDashboard } from "lucide-react";
+import { LayoutDashboard, Download } from "lucide-react";
 import { DashboardTemplate } from "@/shared/components/DashboardTemplate";
-import { KpiCard } from "@/shared/components/KpiCard";
+import { Button } from "@/shared/components/ui/Button";
 import { useFilterPanel } from "@/shared/hooks/useFilterPanel";
-import { money } from "@/shared/utils/format";
 import { useTranslation } from "react-i18next";
-import { useGarageStore } from "../store/garageStore";
-import { useGarageDashboardStats } from "../hooks/useGarageDashboardStats";
-import { GarageBranchSelector } from "../components/GarageBranchSelector";
-import { GarageRevenueProfitChart } from "../components/GarageRevenueProfitChart";
+import { useQuery, useQueryClient, useIsFetching } from "@tanstack/react-query";
+import { format } from "date-fns";
+import toast from "react-hot-toast";
+
+import { garageDashboardApi } from "../api/garageDashboardApi";
+import { garageApi } from "../api/garageApi";
+import { GarageStatsCards } from "../components/GarageStatsCards";
+import { GarageTrendChart } from "../components/GarageTrendChart";
 import { GarageStatusDistributionChart } from "../components/GarageStatusDistributionChart";
-import { GarageRecentCasesTable } from "../components/GarageRecentCasesTable";
-import { GarageCaseStandaloneDrawer } from "../components/GarageCaseStandaloneDrawer";
-import { useAppStore } from "@/core/config/appStore";
 
 export function GarageDashboard() {
   const { t } = useTranslation("garage");
-  const { selectedBranchId } = useGarageStore();
-  const { navigate } = useAppStore();
-  const [selectedCaseCode, setSelectedCaseCode] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+  const [isExporting, setIsExporting] = useState(false);
 
   const filterConfig = React.useMemo(() => {
     return {
@@ -30,117 +29,128 @@ export function GarageDashboard() {
 
   const filter = useFilterPanel(filterConfig, () => {});
 
-  const { stats, isLoading, isFetching, refetch } = useGarageDashboardStats({
-    branchId: selectedBranchId,
-    dateFrom: filter.state.dateFrom || undefined,
-    dateTo: filter.state.dateTo || undefined,
+  const isFetchingStats = useIsFetching({
+    queryKey: ["garage-dashboard-stats"],
+  });
+  const isFetchingKpis = useIsFetching({
+    queryKey: ["garage-checkpoint-kpis"],
+  });
+  const isRefreshing = isFetchingStats > 0 || isFetchingKpis > 0;
+
+  // Query status distribution across all branches
+  const { data: casesResponse, isLoading: isLoadingCases } = useQuery({
+    queryKey: [
+      "garage",
+      "status-cases",
+      filter.state.dateFrom,
+      filter.state.dateTo,
+    ],
+    queryFn: () =>
+      garageApi.getCases(
+        "",
+        1,
+        100,
+        "",
+        filter.state.dateFrom || undefined,
+        filter.state.dateTo || undefined,
+      ),
   });
 
+  const casesData = casesResponse?.data || [];
+
+  // Compute status distribution from casesData
+  const statusDistribution = React.useMemo(() => {
+    const statusMap = new Map<string, number>();
+    for (const c of casesData) {
+      const st = c.tenTinhTrangDichVu || "Khác";
+      statusMap.set(st, (statusMap.get(st) || 0) + 1);
+    }
+    return Array.from(statusMap.entries()).map(([name, value]) => ({
+      name,
+      value,
+    }));
+  }, [casesData]);
+
+  const handleExportExcel = async () => {
+    try {
+      setIsExporting(true);
+      const params = {
+        date_from: filter.state.dateFrom || undefined,
+        date_to: filter.state.dateTo || undefined,
+      };
+
+      const blob = await garageDashboardApi.exportExcel(params);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      const timestamp = format(new Date(), "yyyyMMdd_HHmmss");
+      a.download = `Bao_cao_Tong_quan_Garage_${timestamp}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success("Đã tải xuống file báo cáo Garage");
+    } catch (error) {
+      console.error(error);
+      toast.error("Lỗi khi xuất báo cáo Garage");
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleRefresh = () => {
+    queryClient.invalidateQueries({ queryKey: ["garage-checkpoint-kpis"] });
+    queryClient.invalidateQueries({ queryKey: ["garage-dashboard-stats"] });
+    queryClient.invalidateQueries({ queryKey: ["garage", "status-cases"] });
+  };
+
   return (
-    <>
-      <DashboardTemplate
-        title={t("dashboard.title", "Tổng quan Garage")}
-        desc={t(
-          "dashboard.desc",
-          "Báo cáo tổng quan hiệu quả hoạt động xưởng dịch vụ, doanh thu, chi phí và tình trạng phiếu sửa chữa",
-        )}
-        icon={<LayoutDashboard className="h-4 w-4 text-emerald-600" />}
-        filterConfig={filterConfig}
-        filter={filter}
-        loading={isLoading || isFetching}
-        onRefresh={() => refetch()}
-      >
-        <div className="flex flex-col gap-6 mb-8">
-          {/* Branch Selector Bar */}
-          <div className="flex items-center gap-3 p-3 bg-white dark:bg-slate-900 rounded-lg border shadow-sm">
-            <GarageBranchSelector />
-          </div>
+    <DashboardTemplate
+      title={t("dashboard.title", "Tổng quan Garage")}
+      desc={t(
+        "dashboard.desc",
+        "Báo cáo tổng quan hiệu quả hoạt động xưởng dịch vụ, doanh thu, chi phí và lợi nhuận gộp",
+      )}
+      icon={<LayoutDashboard className="h-4 w-4 text-emerald-600" />}
+      filterConfig={filterConfig}
+      filter={filter}
+      loading={isRefreshing}
+      onRefresh={handleRefresh}
+      extraActions={
+        <Button
+          onClick={handleExportExcel}
+          disabled={isExporting}
+          variant="outline"
+          className="h-8 gap-1"
+        >
+          <Download className="h-4 w-4" />
+          Xuất Excel
+        </Button>
+      }
+    >
+      <div className="flex flex-col gap-6 mb-8">
+        {/* Section 1: KPI Doanh thu Dịch vụ Cards */}
+        <GarageStatsCards
+          type="REVENUE"
+          title="Doanh thu Dịch vụ (Tiếp nhận & Hoàn thành)"
+        />
 
-          {/* Section 1: KPI Cards */}
-          <div>
-            <h3 className="text-sm font-semibold text-foreground mb-3 uppercase tracking-wider text-muted-foreground">
-              {t("dashboard.kpis.overview", "Chỉ số tài chính & hiệu suất")}
-            </h3>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-              <KpiCard
-                compact
-                loading={isLoading}
-                label={t("dashboard.kpis.totalRevenue", "Tổng doanh thu")}
-                value={money(stats.totalRevenue)}
-              />
-              <KpiCard
-                compact
-                loading={isLoading}
-                label={t("dashboard.kpis.totalCost", "Tổng giá vốn")}
-                value={money(stats.totalCost)}
-              />
-              <KpiCard
-                compact
-                loading={isLoading}
-                label={t("dashboard.kpis.grossProfit", "Lợi nhuận gộp")}
-                value={money(stats.totalGrossProfit)}
-              />
-              <KpiCard
-                compact
-                loading={isLoading}
-                label={t("dashboard.kpis.avgMargin", "Biên LN trung bình")}
-                value={
-                  stats.totalRevenue > 0
-                    ? `${stats.averageMargin.toFixed(1)}%`
-                    : "0%"
-                }
-              />
-              <KpiCard
-                compact
-                loading={isLoading}
-                label={t("dashboard.kpis.totalCases", "Tổng tiếp nhận")}
-                value={stats.totalCases.toString()}
-              />
-              <KpiCard
-                compact
-                loading={isLoading}
-                label={t("dashboard.kpis.completedCases", "Đã hoàn thành")}
-                value={stats.completedCases.toString()}
-              />
-            </div>
-          </div>
+        {/* Section 2: KPI Giá vốn & Chi phí Cards */}
+        <GarageStatsCards type="COST" title="Giá vốn & Chi phí Dịch vụ" />
 
-          {/* Section 2: Charts */}
-          <div>
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-              <div className="lg:col-span-2">
-                <GarageRevenueProfitChart
-                  data={stats.trendData}
-                  loading={isLoading}
-                />
-              </div>
-              <div className="lg:col-span-1">
-                <GarageStatusDistributionChart
-                  data={stats.statusDistribution}
-                  loading={isLoading}
-                />
-              </div>
-            </div>
+        {/* Section 3: Trend & Status Distribution Charts */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="lg:col-span-2">
+            <GarageTrendChart filterState={filter.state} />
           </div>
-
-          {/* Section 3: Recent Cases Table */}
-          <div>
-            <GarageRecentCasesTable
-              cases={stats.recentCases}
-              onSelectCase={(code) => setSelectedCaseCode(code)}
-              onViewAll={() => navigate("garage-cases")}
-              loading={isLoading}
+          <div className="lg:col-span-1">
+            <GarageStatusDistributionChart
+              data={statusDistribution}
+              loading={isLoadingCases}
             />
           </div>
         </div>
-      </DashboardTemplate>
-
-      <GarageCaseStandaloneDrawer
-        isOpen={!!selectedCaseCode}
-        caseCode={selectedCaseCode}
-        onClose={() => setSelectedCaseCode(null)}
-        onSuccess={() => refetch()}
-      />
-    </>
+      </div>
+    </DashboardTemplate>
   );
 }

@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
 import { DrawerSection, DrawerField } from "@/shared/components/DrawerModal";
 import { Badge } from "@/shared/components/ui/badge";
@@ -8,20 +8,26 @@ import { money } from "@/shared/utils/format";
 import { cn } from "@/shared/utils";
 import { garageApi } from "../api/garageApi";
 import { GarageCaseStandaloneDrawer } from "./GarageCaseStandaloneDrawer";
+import { GarageCaseSettlementDrawerModal } from "./GarageCaseSettlementDrawerModal";
+import { InvoiceSelectionDrawer } from "./InvoiceSelectionDrawer";
+import { useSyncGarageCaseDetail } from "../hooks/useGarage";
 import { KgaraCaseStatusBadge } from "./KgaraCaseStatusBadge";
 import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
 import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
 import { TableDateCell } from "@/shared/components/DataTable/TableDateCell";
 import { TableText } from "@/shared/components/DataTable/TableText";
+import { toast } from "react-hot-toast";
 import {
   User,
   Car,
   Clock,
-  Receipt,
   CheckCircle2,
   AlertCircle,
   Eye,
   Pencil,
+  Scale,
+  Link2,
+  RefreshCw,
 } from "lucide-react";
 
 interface GarageCustomerDetailDrawerProps {
@@ -40,8 +46,14 @@ export function GarageCustomerDetailDrawer({
   branchId,
 }: GarageCustomerDetailDrawerProps) {
   const { t } = useTranslation(["garage", "common"]);
+  const queryClient = useQueryClient();
+  const { mutate: syncCaseDetail } = useSyncGarageCaseDetail();
   const [selectedCaseCode, setSelectedCaseCode] = useState<string | null>(null);
   const [drawerEditMode, setDrawerEditMode] = useState<boolean>(false);
+  const [settlementCase, setSettlementCase] = useState<any | null>(null);
+  const [invoiceLinkingCase, setInvoiceLinkingCase] = useState<any | null>(
+    null,
+  );
 
   // Table client state
   const [columnFilters, setColumnFilters] = useState<Record<string, string[]>>(
@@ -686,14 +698,11 @@ export function GarageCustomerDetailDrawer({
                       groupLabel: "TRA CỨU",
                       items: [
                         {
-                          label: t(
-                            "customers.drawer.viewDetail",
-                            "Xem chi tiết",
-                          ),
+                          label: t("cases.actions.viewDetail", "Xem chi tiết"),
                           icon: <Eye className="w-3.5 h-3.5" />,
                           onClick: () => {
                             setDrawerEditMode(false);
-                            setSelectedCaseCode(row.soChungTu);
+                            setSelectedCaseCode(row.soChungTu || row.id);
                           },
                           quickAction: true,
                         },
@@ -703,23 +712,56 @@ export function GarageCustomerDetailDrawer({
                       groupLabel: "THAO TÁC",
                       items: [
                         {
-                          label: t("customers.drawer.editCase", "Chỉnh sửa"),
+                          label: t("cases.actions.editCase", "Chỉnh sửa"),
                           icon: <Pencil className="w-3.5 h-3.5" />,
                           onClick: () => {
                             setDrawerEditMode(true);
-                            setSelectedCaseCode(row.soChungTu);
+                            setSelectedCaseCode(row.soChungTu || row.id);
                           },
                           quickAction: true,
                         },
                         {
                           label: t(
-                            "customers.drawer.openCaseDetail",
-                            "Chi tiết / Cấn trừ",
+                            "cases.actions.syncDetails",
+                            "Đồng bộ từ KGara",
                           ),
-                          icon: <Receipt className="w-3.5 h-3.5" />,
+                          icon: <RefreshCw className="w-3.5 h-3.5" />,
                           onClick: () => {
-                            setDrawerEditMode(false);
-                            setSelectedCaseCode(row.soChungTu);
+                            const targetBranch =
+                              branchId || row.branchExternalId;
+                            if (targetBranch && row.hdPhieuDichVuId) {
+                              syncCaseDetail({
+                                branchId: targetBranch,
+                                caseId: row.hdPhieuDichVuId,
+                              });
+                            } else {
+                              toast.error(
+                                t(
+                                  "cases.missingBranch",
+                                  "Không xác định được chi nhánh để đồng bộ",
+                                ),
+                              );
+                            }
+                          },
+                        },
+                        {
+                          label: t(
+                            "cases.actions.netOffSettlement",
+                            "Cấn trừ sao kê",
+                          ),
+                          icon: <Scale className="w-3.5 h-3.5" />,
+                          onClick: () => {
+                            setSettlementCase(row);
+                          },
+                        },
+                        {
+                          label: t(
+                            "cases.actions.linkInvoice",
+                            "Liên kết hóa đơn",
+                          ),
+                          icon: <Link2 className="w-3.5 h-3.5" />,
+                          onClick: () => {
+                            setInvoiceLinkingCase(row);
                           },
                         },
                       ],
@@ -890,6 +932,114 @@ export function GarageCustomerDetailDrawer({
           onClose={() => {
             setSelectedCaseCode(null);
             setDrawerEditMode(false);
+          }}
+          onSuccess={() => {
+            queryClient.invalidateQueries({
+              queryKey: ["garage-cases-by-customer", branchId, customerCode],
+            });
+            queryClient.invalidateQueries({
+              queryKey: ["garage-customers-debt"],
+            });
+          }}
+        />
+      )}
+
+      {/* Cấn trừ sao kê modal */}
+      {settlementCase && (
+        <GarageCaseSettlementDrawerModal
+          open={!!settlementCase}
+          onClose={() => setSettlementCase(null)}
+          caseId={settlementCase.id}
+          caseCode={settlementCase.soChungTu || settlementCase.hdPhieuDichVuId}
+          defaultType="RECEIPT"
+          suggestedAmount={Number(
+            settlementCase.tienConPhaiThanhToan ||
+              settlementCase.tienCoThue ||
+              0,
+          )}
+          onSubmit={async (items) => {
+            try {
+              for (const item of items) {
+                await garageApi.addCaseSettlement(settlementCase.id, item);
+              }
+              toast.success(
+                t(
+                  "cases.settlementSuccess",
+                  "Đã ghi nhận cấn trừ sao kê thành công",
+                ),
+              );
+              setSettlementCase(null);
+              queryClient.invalidateQueries({
+                queryKey: ["garage-cases-by-customer", branchId, customerCode],
+              });
+              queryClient.invalidateQueries({
+                queryKey: ["garage-customers-debt"],
+              });
+              queryClient.invalidateQueries({
+                queryKey: ["garage-case-financial-summary", settlementCase.id],
+              });
+              queryClient.invalidateQueries({
+                queryKey: ["garage-case-settlements", settlementCase.id],
+              });
+              queryClient.invalidateQueries({
+                queryKey: ["garage-case-traceability-graph", settlementCase.id],
+              });
+            } catch (err: any) {
+              toast.error(
+                err.response?.data?.message ||
+                  t("cases.settlementError", "Lỗi ghi nhận cấn trừ sao kê"),
+              );
+            }
+          }}
+        />
+      )}
+
+      {/* Liên kết hóa đơn modal */}
+      {invoiceLinkingCase && (
+        <InvoiceSelectionDrawer
+          open={!!invoiceLinkingCase}
+          onClose={() => setInvoiceLinkingCase(null)}
+          caseId={invoiceLinkingCase.id}
+          caseCode={
+            invoiceLinkingCase.soChungTu || invoiceLinkingCase.hdPhieuDichVuId
+          }
+          defaultLinkType="OUT"
+          onSubmit={async (payload) => {
+            try {
+              await garageApi.addCaseLinkedInvoice(
+                invoiceLinkingCase.id,
+                payload.invoiceId,
+                payload.linkType,
+                payload.note,
+              );
+              toast.success(
+                t("cases.linkInvoiceSuccess", "Đã liên kết hóa đơn thành công"),
+              );
+              setInvoiceLinkingCase(null);
+              queryClient.invalidateQueries({
+                queryKey: ["garage-cases-by-customer", branchId, customerCode],
+              });
+              queryClient.invalidateQueries({
+                queryKey: ["garage-customers-debt"],
+              });
+              queryClient.invalidateQueries({
+                queryKey: [
+                  "garage-case-financial-summary",
+                  invoiceLinkingCase.id,
+                ],
+              });
+              queryClient.invalidateQueries({
+                queryKey: [
+                  "garage-case-traceability-graph",
+                  invoiceLinkingCase.id,
+                ],
+              });
+            } catch (err: any) {
+              toast.error(
+                err?.response?.data?.message ||
+                  t("cases.linkInvoiceError", "Lỗi liên kết hóa đơn"),
+              );
+            }
           }}
         />
       )}
