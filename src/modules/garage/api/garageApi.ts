@@ -355,6 +355,19 @@ export const garageApi = {
     return res.data;
   },
 
+  getSmartInvoiceSuggestions: async (
+    caseId: string,
+    direction: "IN" | "OUT" = "OUT",
+  ): Promise<GarageSmartInvoiceSuggestionItem[]> => {
+    const res = await axiosInstance.get(
+      `${BASE}/cases/${caseId}/smart-invoice-suggestions`,
+      {
+        params: { direction },
+      },
+    );
+    return res.data;
+  },
+
   addCaseSettlement: async (
     caseId: string,
     payload: {
@@ -554,6 +567,45 @@ export interface GarageSmartSettlementSuggestionItem {
     amountMatch: boolean;
     codeMatch: boolean;
     plateMatch: boolean;
+    customerMatch: boolean;
+    badge:
+      | "PERFECT"
+      | "HIGH"
+      | "LIKELY"
+      | "POSSIBLE"
+      | "NOTICE_STRONG"
+      | "NOTICE";
+  };
+  matchedKeywords: string[];
+}
+
+export interface GarageSmartInvoiceSuggestionItem {
+  invoice: {
+    id: string;
+    invoiceNo: string;
+    serialNo?: string;
+    invoiceDate: string;
+    direction: "IN" | "OUT";
+    sellerName?: string;
+    buyerName?: string;
+    sellerTaxCode?: string;
+    buyerTaxCode?: string;
+    totalAmount: number;
+    preVatAmount: number;
+    vatAmount: number;
+    vatRate?: number;
+    licensePlate?: string;
+    settlementOrder?: string;
+    description?: string;
+    status?: string;
+    xmlFileKey?: string;
+    pdfFileKey?: string;
+  };
+  score: {
+    score: number;
+    amountMatch: boolean;
+    plateMatch: boolean;
+    orderMatch: boolean;
     customerMatch: boolean;
     badge:
       | "PERFECT"

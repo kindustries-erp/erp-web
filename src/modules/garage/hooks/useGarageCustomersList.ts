@@ -33,7 +33,7 @@ export function useGarageCustomersList(branchId?: string) {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const [searchQ, setSearchQ] = useState("");
-  const [sorts, setSorts] = useState<string[]>(["-balanceAmount"]);
+  const [sorts, setSorts] = useState<string[]>([]);
   const [dateFrom, setDateFrom] = useState<string>("");
   const [dateTo, setDateTo] = useState<string>("");
   const [columnFilters, setColumnFilters] = useState<Record<string, string[]>>(
@@ -75,11 +75,10 @@ export function useGarageCustomersList(branchId?: string) {
   });
 
   const setSort = (key: string, state: "asc" | "desc" | "none") => {
-    setSorts((prev) => {
-      const filtered = prev.filter((s) => s !== key && s !== `-${key}`);
-      if (state === "asc") return [...filtered, key];
-      if (state === "desc") return [...filtered, `-${key}`];
-      return filtered;
+    setSorts(() => {
+      if (state === "none") return [];
+      const isDesc = state === "desc";
+      return [isDesc ? `-${key}` : key];
     });
     setPage(1);
   };
@@ -119,7 +118,7 @@ export function useGarageCustomersList(branchId?: string) {
     setDateFrom("");
     setDateTo("");
     setSearchQ("");
-    setSorts(["-balanceAmount"]);
+    setSorts([]);
     setPage(1);
   };
 

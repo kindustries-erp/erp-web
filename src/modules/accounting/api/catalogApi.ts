@@ -39,27 +39,50 @@ export type UpdateCompanyBankAccountDto = Partial<CreateCompanyBankAccountDto>;
 export interface ChartOfAccount {
   id: string;
   account_code: string;
+  accountCode?: string;
   account_name: string;
+  accountName?: string;
   account_type: string;
-  normal_balance: string;
-  parent_account_id: string | null;
-  level: number | null;
+  accountType?: string;
+  normal_balance?: string;
+  parent_account_id?: string | null;
+  parentId?: string | null;
+  parent?:
+    | ChartOfAccount
+    | {
+        id: string;
+        accountCode?: string;
+        accountName?: string;
+        account_code?: string;
+        account_name?: string;
+      }
+    | null;
+  level?: number | null;
   is_cash_account?: boolean;
   is_receivable_account?: boolean;
   is_payable_account?: boolean;
   is_active?: boolean;
-  created_at: string;
-  updated_at: string | null;
+  isActive?: boolean;
+  created_at?: string;
+  createdAt?: string;
+  updated_at?: string | null;
+  updatedAt?: string | null;
 }
 
 export interface CreateChartOfAccountDto {
-  account_code: string;
-  account_name: string;
-  account_type: string;
-  normal_balance: string;
+  account_code?: string;
+  accountCode?: string;
+  account_name?: string;
+  accountName?: string;
+  account_type?: string;
+  accountType?: string;
+  normal_balance?: string;
   parent_account_id?: string | null;
+  parentId?: string | null;
   level?: number | null;
   is_cash_account?: boolean;
+  is_active?: boolean;
+  isActive?: boolean;
 }
 export type UpdateChartOfAccountDto = Partial<CreateChartOfAccountDto>;
 

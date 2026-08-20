@@ -30,13 +30,16 @@ import {
   Wrench,
   ShieldCheck,
   Eye,
+  Pencil,
   Scale,
+  Link2,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { applyGarageCasesTableState } from "../utils/garageCasesTable";
 import { GarageCaseSettlementDrawerModal } from "../components/GarageCaseSettlementDrawerModal";
+import { InvoiceSelectionDrawer } from "../components/InvoiceSelectionDrawer";
 
 export function GarageCases() {
   const { t } = useTranslation("garage");
@@ -174,6 +177,7 @@ export function GarageCases() {
     align: "left" | "center" | "right" = "center",
     hideFilter = false,
     formatOptionLabel?: (label: string) => string,
+    showBlankOption = false,
   ) => ({
     title,
     columnKey: key,
@@ -187,6 +191,7 @@ export function GarageCases() {
     align,
     hideFilter,
     formatOptionLabel,
+    showBlankOption,
   });
 
   const { data: profitData } = useGarageGrossProfit(selectedBranchId);
@@ -234,7 +239,11 @@ export function GarageCases() {
   const [syncMode, setSyncMode] = useState<"cases" | "gross-profit">("cases");
 
   const [selectedCaseId, setSelectedCaseId] = useState<string | null>(null);
+  const [drawerEditMode, setDrawerEditMode] = useState<boolean>(false);
   const [settlementCase, setSettlementCase] = useState<any | null>(null);
+  const [invoiceLinkingCase, setInvoiceLinkingCase] = useState<any | null>(
+    null,
+  );
 
   const canCreateGarage = useHasPermission("garage", "create");
   const canUpdateGarage = useHasPermission("garage", "update");
@@ -355,6 +364,9 @@ export function GarageCases() {
             "licensePlate",
             t("cases.columns.licensePlate", "Biển số xe"),
             "center",
+            false,
+            undefined,
+            true,
           )}
           {...commonOptionProps}
         />
@@ -375,6 +387,9 @@ export function GarageCases() {
             "statusName",
             t("cases.columns.status", "Trạng thái"),
             "center",
+            false,
+            undefined,
+            true,
           )}
           {...commonOptionProps}
         />
@@ -404,6 +419,9 @@ export function GarageCases() {
             "customerCode",
             t("cases.columns.customerCode", "Mã KH"),
             "center",
+            false,
+            undefined,
+            true,
           )}
           {...commonOptionProps}
         />
@@ -424,15 +442,25 @@ export function GarageCases() {
             "customerName",
             t("cases.columns.customerName", "Tên khách hàng"),
             "center",
+            false,
+            undefined,
+            true,
           )}
           {...commonOptionProps}
         />
       ),
       sortable: false,
-      size: 200,
+      size: 250,
       enableResizing: true,
       className: "text-left",
-      cell: (item: any) => item.khachHangName || "-",
+      cell: (item: any) => (
+        <TableText
+          text={item.khachHangName || "—"}
+          tooltip={true}
+          enableCopy={true}
+          textClassName="whitespace-normal line-clamp-2 break-words text-foreground font-normal text-xs leading-normal select-text"
+        />
+      ),
     },
     // 6. Bảo hiểm (BH)
     {
@@ -565,6 +593,9 @@ export function GarageCases() {
             "doanhThu",
             t("cases.columns.doanhThu", "Doanh thu"),
             "center",
+            false,
+            undefined,
+            true,
           )}
           {...commonOptionProps}
         />
@@ -606,6 +637,9 @@ export function GarageCases() {
             "chiPhi",
             t("cases.columns.chiPhi", "Chi phí"),
             "center",
+            false,
+            undefined,
+            true,
           )}
           {...commonOptionProps}
         />
@@ -647,6 +681,9 @@ export function GarageCases() {
             "loiNhuan",
             t("cases.columns.loiNhuan", "Lợi nhuận"),
             "center",
+            false,
+            undefined,
+            true,
           )}
           {...commonOptionProps}
         />
@@ -819,28 +856,24 @@ export function GarageCases() {
               : 0;
 
         return (
-          <div className="flex flex-col gap-1.5 w-full py-1 justify-center">
-            {/* Row 1: Left badge + Right amount */}
-            <div className="flex items-center justify-between text-xs tabular-nums leading-none">
+          <div className="flex flex-col gap-1 w-full py-0.5 justify-center">
+            {/* Row 1: Left label/rate + Right amounts */}
+            <div className="flex items-center justify-between text-xs tabular-nums leading-tight">
               {isAllPaid ? (
-                <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded font-medium bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/50">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                <span className="text-emerald-700 dark:text-emerald-400 font-medium text-xs">
                   Đã thu đủ
                 </span>
               ) : isUnpaid ? (
-                <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded font-medium bg-slate-100 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 border border-slate-200/80 dark:border-slate-700/60">
-                  <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
-                  Chưa thu
-                </span>
+                <span />
               ) : (
-                <span className="inline-flex items-center text-[10px] px-1.5 py-0.5 rounded font-bold font-mono bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/50">
+                <span className="font-mono font-bold text-xs text-emerald-800 dark:text-emerald-300">
                   {rate}%
                 </span>
               )}
 
-              <div className="flex items-center gap-1 font-mono text-[11px] truncate">
+              <div className="flex items-center gap-1 font-mono text-xs truncate ml-auto">
                 {isAllPaid ? (
-                  <span className="text-emerald-700 dark:text-emerald-400 font-medium">
+                  <span className="text-emerald-700 dark:text-emerald-400 font-semibold">
                     {money(paid)}
                   </span>
                 ) : isUnpaid ? (
@@ -849,7 +882,7 @@ export function GarageCases() {
                   </span>
                 ) : (
                   <>
-                    <span className="text-foreground font-medium">
+                    <span className="text-emerald-700 dark:text-emerald-400 font-semibold">
                       {money(paid)}
                     </span>
                     <span className="text-muted-foreground/40">/</span>
@@ -946,28 +979,22 @@ export function GarageCases() {
           cost > 0 ? Math.min(100, Math.round((paidCost / cost) * 100)) : 0;
 
         return (
-          <div className="flex flex-col gap-1.5 w-full py-1 justify-center">
-            {/* Row 1: Left badge + Right amount */}
-            <div className="flex items-center justify-between text-xs tabular-nums leading-none">
+          <div className="flex flex-col gap-1 w-full py-0.5 justify-center">
+            <div className="flex items-center justify-between text-xs tabular-nums leading-tight">
               {isAllPaidCost ? (
-                <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded font-medium bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/50">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                <span className="text-emerald-700 dark:text-emerald-400 font-medium text-xs">
                   Đã chi đủ
                 </span>
               ) : isUnpaidCost ? (
-                <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded font-medium bg-slate-100 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 border border-slate-200/80 dark:border-slate-700/60">
-                  <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
-                  Chưa chi
-                </span>
+                <span />
               ) : (
-                <span className="inline-flex items-center text-[10px] px-1.5 py-0.5 rounded font-bold font-mono bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                <span className="font-mono font-bold text-xs text-slate-700 dark:text-slate-300">
                   {costRate}%
                 </span>
               )}
-
-              <div className="flex items-center gap-1 font-mono text-[11px] truncate">
+              <div className="flex items-center gap-1 font-mono text-xs truncate ml-auto">
                 {isAllPaidCost ? (
-                  <span className="text-emerald-700 dark:text-emerald-400 font-medium">
+                  <span className="text-emerald-700 dark:text-emerald-400 font-semibold">
                     {money(paidCost)}
                   </span>
                 ) : isUnpaidCost ? (
@@ -987,8 +1014,6 @@ export function GarageCases() {
                 )}
               </div>
             </div>
-
-            {/* Row 2: Progress bar */}
             <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
               <div
                 className={cn(
@@ -997,7 +1022,7 @@ export function GarageCases() {
                     ? "bg-emerald-500 dark:bg-emerald-400"
                     : isUnpaidCost
                       ? "bg-transparent"
-                      : "bg-slate-700 dark:bg-slate-300",
+                      : "bg-slate-600 dark:bg-slate-400",
                 )}
                 style={{ width: `${costRate}%` }}
               />
@@ -1016,6 +1041,8 @@ export function GarageCases() {
             "branchName",
             t("cases.columns.branchName", "Chi nhánh"),
             "center",
+            true,
+            undefined,
             true,
           )}
           hideFooter={true}
@@ -1257,6 +1284,7 @@ export function GarageCases() {
                 label: t("cases.actions.viewDetail", "Xem chi tiết"),
                 icon: <Eye className="w-4 h-4" />,
                 onClick: () => {
+                  setDrawerEditMode(false);
                   setSelectedCaseId(item.soChungTu || item.id);
                 },
               },
@@ -1266,7 +1294,15 @@ export function GarageCases() {
             groupLabel: "THAO TÁC",
             items: [
               {
-                label: t("cases.actions.syncDetails", "Đồng bộ chi tiết"),
+                label: t("cases.actions.editCase", "Chỉnh sửa"),
+                icon: <Pencil className="w-4 h-4" />,
+                onClick: () => {
+                  setDrawerEditMode(true);
+                  setSelectedCaseId(item.soChungTu || item.id);
+                },
+              },
+              {
+                label: t("cases.actions.syncDetails", "Đồng bộ từ KGara"),
                 icon: <RefreshCw className="w-4 h-4" />,
                 onClick: () => {
                   syncCaseDetail({
@@ -1275,20 +1311,20 @@ export function GarageCases() {
                   });
                 },
               },
-              ...(canUpdateGarage
-                ? [
-                    {
-                      label: t(
-                        "cases.actions.netOffSettlement",
-                        "Cấn trừ sao kê",
-                      ),
-                      icon: <Scale className="w-4 h-4" />,
-                      onClick: () => {
-                        setSettlementCase(item);
-                      },
-                    },
-                  ]
-                : []),
+              {
+                label: t("cases.actions.netOffSettlement", "Cấn trừ sao kê"),
+                icon: <Scale className="w-4 h-4" />,
+                onClick: () => {
+                  setSettlementCase(item);
+                },
+              },
+              {
+                label: t("cases.actions.linkInvoice", "Liên kết hóa đơn"),
+                icon: <Link2 className="w-4 h-4" />,
+                onClick: () => {
+                  setInvoiceLinkingCase(item);
+                },
+              },
             ],
           },
         ]}
@@ -1306,7 +1342,11 @@ export function GarageCases() {
       <GarageCaseStandaloneDrawer
         isOpen={!!selectedCaseId}
         caseCode={selectedCaseId}
-        onClose={() => setSelectedCaseId(null)}
+        initialEditMode={drawerEditMode}
+        onClose={() => {
+          setSelectedCaseId(null);
+          setDrawerEditMode(false);
+        }}
         onSuccess={() => {
           refetch();
           queryClient.invalidateQueries({
@@ -1384,6 +1424,53 @@ export function GarageCases() {
               toast.error(
                 err.response?.data?.message ||
                   t("cases.settlementError", "Lỗi ghi nhận cấn trừ sao kê"),
+              );
+            }
+          }}
+        />
+      )}
+
+      {invoiceLinkingCase && (
+        <InvoiceSelectionDrawer
+          open={!!invoiceLinkingCase}
+          onClose={() => setInvoiceLinkingCase(null)}
+          caseId={invoiceLinkingCase.id}
+          caseCode={
+            invoiceLinkingCase.soChungTu || invoiceLinkingCase.hdPhieuDichVuId
+          }
+          defaultLinkType="OUT"
+          onSubmit={async (payload) => {
+            try {
+              await garageApi.addCaseLinkedInvoice(
+                invoiceLinkingCase.id,
+                payload.invoiceId,
+                payload.linkType,
+                payload.note,
+              );
+              toast.success(
+                t("cases.linkInvoiceSuccess", "Đã liên kết hóa đơn thành công"),
+              );
+              setInvoiceLinkingCase(null);
+              refetch();
+              queryClient.invalidateQueries({
+                queryKey: ["garage", "grossProfitReport"],
+              });
+              queryClient.invalidateQueries({
+                queryKey: [
+                  "garage-case-financial-summary",
+                  invoiceLinkingCase.id,
+                ],
+              });
+              queryClient.invalidateQueries({
+                queryKey: [
+                  "garage-case-traceability-graph",
+                  invoiceLinkingCase.id,
+                ],
+              });
+            } catch (err: any) {
+              toast.error(
+                err?.response?.data?.message ||
+                  t("cases.linkInvoiceError", "Lỗi liên kết hóa đơn"),
               );
             }
           }}

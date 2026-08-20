@@ -20,6 +20,8 @@ import {
   Receipt,
   CheckCircle2,
   AlertCircle,
+  Eye,
+  Pencil,
 } from "lucide-react";
 
 interface GarageCustomerDetailDrawerProps {
@@ -39,6 +41,7 @@ export function GarageCustomerDetailDrawer({
 }: GarageCustomerDetailDrawerProps) {
   const { t } = useTranslation(["garage", "common"]);
   const [selectedCaseCode, setSelectedCaseCode] = useState<string | null>(null);
+  const [drawerEditMode, setDrawerEditMode] = useState<boolean>(false);
 
   // Table client state
   const [columnFilters, setColumnFilters] = useState<Record<string, string[]>>(
@@ -264,7 +267,11 @@ export function GarageCustomerDetailDrawer({
             text={row.soChungTu || "N/A"}
             enableCopy={true}
             tooltip={true}
-            onDrawerClick={() => setSelectedCaseCode(row.soChungTu)}
+            onDetailClick={(e) => {
+              e?.stopPropagation();
+              setDrawerEditMode(false);
+              setSelectedCaseCode(row.soChungTu);
+            }}
           />
         ),
       },
@@ -676,16 +683,44 @@ export function GarageCustomerDetailDrawer({
                   containerClassName="max-h-[380px] md:max-h-[440px] overflow-y-auto overflow-x-auto rounded-lg border border-border/80"
                   rowHoverActions={(row: any) => [
                     {
-                      groupLabel: "TRA CỨU & THAO TÁC",
+                      groupLabel: "TRA CỨU",
                       items: [
+                        {
+                          label: t(
+                            "customers.drawer.viewDetail",
+                            "Xem chi tiết",
+                          ),
+                          icon: <Eye className="w-3.5 h-3.5" />,
+                          onClick: () => {
+                            setDrawerEditMode(false);
+                            setSelectedCaseCode(row.soChungTu);
+                          },
+                          quickAction: true,
+                        },
+                      ],
+                    },
+                    {
+                      groupLabel: "THAO TÁC",
+                      items: [
+                        {
+                          label: t("customers.drawer.editCase", "Chỉnh sửa"),
+                          icon: <Pencil className="w-3.5 h-3.5" />,
+                          onClick: () => {
+                            setDrawerEditMode(true);
+                            setSelectedCaseCode(row.soChungTu);
+                          },
+                          quickAction: true,
+                        },
                         {
                           label: t(
                             "customers.drawer.openCaseDetail",
                             "Chi tiết / Cấn trừ",
                           ),
                           icon: <Receipt className="w-3.5 h-3.5" />,
-                          onClick: () => setSelectedCaseCode(row.soChungTu),
-                          quickAction: true,
+                          onClick: () => {
+                            setDrawerEditMode(false);
+                            setSelectedCaseCode(row.soChungTu);
+                          },
                         },
                       ],
                     },
@@ -851,7 +886,11 @@ export function GarageCustomerDetailDrawer({
         <GarageCaseStandaloneDrawer
           isOpen={!!selectedCaseCode}
           caseCode={selectedCaseCode}
-          onClose={() => setSelectedCaseCode(null)}
+          initialEditMode={drawerEditMode}
+          onClose={() => {
+            setSelectedCaseCode(null);
+            setDrawerEditMode(false);
+          }}
         />
       )}
     </>
