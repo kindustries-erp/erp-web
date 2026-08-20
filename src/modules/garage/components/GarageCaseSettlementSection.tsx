@@ -36,12 +36,21 @@ export interface GarageCaseSettlementSectionProps {
   activeSummary?: any;
   onAddSettlement?: (items: SettlementSubmissionItem[]) => void;
   onRemoveSettlement?: (id: string) => void;
-  onAddInvoice?: (payload: {
-    invoiceId: string;
-    linkType: "IN" | "OUT";
-    note?: string;
-    invoice?: ErpInvoice;
-  }) => void;
+  onAddInvoice?: (
+    payload:
+      | {
+          invoiceId: string;
+          linkType: "IN" | "OUT";
+          note?: string;
+          invoice?: ErpInvoice;
+        }
+      | Array<{
+          invoiceId: string;
+          linkType: "IN" | "OUT";
+          note?: string;
+          invoice?: ErpInvoice;
+        }>,
+  ) => void;
   onRemoveInvoice?: (id: string) => void;
 }
 
@@ -192,18 +201,45 @@ export function GarageCaseSettlementSection({
   });
 
   const directAddInvoiceMutation = useMutation({
-    mutationFn: (payload: {
-      invoiceId: string;
-      linkType: "IN" | "OUT";
-      note?: string;
-    }) =>
-      garageApi.addCaseLinkedInvoice(
-        caseId,
-        payload.invoiceId,
-        payload.linkType,
-        payload.note,
-      ),
-    onSuccess: () => {
+    mutationFn: async (
+      payload:
+        | {
+            invoiceId: string;
+            linkType: "IN" | "OUT";
+            note?: string;
+          }
+        | Array<{
+            invoiceId: string;
+            linkType: "IN" | "OUT";
+            note?: string;
+          }>,
+    ) => {
+      const items = Array.isArray(payload) ? payload : [payload];
+      if (items.length === 1) {
+        return garageApi.addCaseLinkedInvoice(
+          caseId,
+          items[0].invoiceId,
+          items[0].linkType,
+          items[0].note,
+        );
+      } else if (items.length > 1) {
+        return garageApi.addCaseLinkedInvoices(
+          caseId,
+          items.map((i) => ({
+            invoiceId: i.invoiceId,
+            linkType: i.linkType,
+            note: i.note,
+          })),
+        );
+      }
+    },
+    onSuccess: (_, variables) => {
+      const count = Array.isArray(variables) ? variables.length : 1;
+      toast.success(
+        count > 1
+          ? `Đã liên kết thành công ${count} hóa đơn`
+          : "Đã liên kết hóa đơn thành công",
+      );
       refetchAll();
     },
   });
@@ -516,8 +552,13 @@ export function GarageCaseSettlementSection({
                         </span>
                       )}
                     </div>
-                    <div className="text-slate-500 text-[11px] truncate">
-                      {inv.sellerName || inv.buyerName || inv.note || "---"}
+                    <div className="text-slate-500 text-[11px] truncate flex items-center gap-1.5">
+                      <span>{inv.sellerName || inv.buyerName || "---"}</span>
+                      {inv.note && (
+                        <span className="text-slate-500 italic text-[10px] bg-slate-100 dark:bg-slate-800/80 px-1.5 py-0.2 rounded border border-slate-200/60 dark:border-slate-700/60">
+                          {inv.note}
+                        </span>
+                      )}
                     </div>
                   </div>
 

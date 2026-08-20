@@ -37,6 +37,14 @@ import { SmartInvoiceSuggestionCard } from "./SmartInvoiceSuggestionCard";
 import { ErpInvoiceStandaloneDrawer } from "@/modules/erp-invoices-core/components/ErpInvoiceStandaloneDrawer";
 import { getFileViewUrl } from "@/modules/system/api/attachmentsApi";
 import { FilePreviewDrawer } from "@/shared/components/FilePreviewDrawer";
+import { cn } from "@/shared/utils";
+
+export interface InvoiceLinkPayloadItem {
+  invoiceId: string;
+  linkType: "IN" | "OUT";
+  note?: string;
+  invoice?: ErpInvoice;
+}
 
 export interface InvoiceSelectionDrawerProps {
   open: boolean;
@@ -45,12 +53,9 @@ export interface InvoiceSelectionDrawerProps {
   caseCode?: string;
   defaultLinkType?: "IN" | "OUT";
   onSuccess?: () => void;
-  onSubmit: (payload: {
-    invoiceId: string;
-    linkType: "IN" | "OUT";
-    note?: string;
-    invoice?: ErpInvoice;
-  }) => Promise<void> | void;
+  onSubmit: (
+    payloads: InvoiceLinkPayloadItem[] | InvoiceLinkPayloadItem,
+  ) => Promise<void> | void;
 }
 
 function getPdfAttachments(attachments: any[]) {
@@ -70,9 +75,9 @@ export function InvoiceSelectionDrawer({
 }: InvoiceSelectionDrawerProps) {
   const { t } = useTranslation(["garage", "erpInvoices", "common"]);
   const [linkType, setLinkType] = useState<"IN" | "OUT">(defaultLinkType);
-  const [selectedInvoice, setSelectedInvoice] = useState<ErpInvoice | null>(
-    null,
-  );
+  const [selectedInvoicesMap, setSelectedInvoicesMap] = useState<
+    Record<string, ErpInvoice>
+  >({});
   const [viewInvoiceId, setViewInvoiceId] = useState<string | null>(null);
   const [note, setNote] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
@@ -115,12 +120,24 @@ export function InvoiceSelectionDrawer({
   useEffect(() => {
     if (open) {
       setLinkType(defaultLinkType);
-      setSelectedInvoice(null);
+      setSelectedInvoicesMap({});
       setViewInvoiceId(null);
       setNote("");
       setPage(1);
     }
   }, [open, defaultLinkType]);
+
+  const selectedInvoicesList = useMemo(
+    () => Object.values(selectedInvoicesMap),
+    [selectedInvoicesMap],
+  );
+  const selectedCount = selectedInvoicesList.length;
+  const selectedTotalAmount = useMemo(() => {
+    return selectedInvoicesList.reduce(
+      (sum, inv) => sum + Number(inv.totalAmount || 0),
+      0,
+    );
+  }, [selectedInvoicesList]);
 
   // Only pass sort_by and sort_order if user explicitly sorted a column in tableState (BE defaults to invoiceDate DESC)
   const sortBy =
@@ -180,24 +197,85 @@ export function InvoiceSelectionDrawer({
     }
   };
 
-  const handleSelectInvoice = (inv: ErpInvoice) => {
-    setSelectedInvoice((prev) => (prev?.id === inv.id ? null : inv));
+  const handleToggleInvoice = (inv: ErpInvoice) => {
+    setSelectedInvoicesMap((prev) => {
+      const next = { ...prev };
+      if (next[inv.id]) {
+        delete next[inv.id];
+      } else {
+        next[inv.id] = inv;
+      }
+      return next;
+    });
   };
 
-  const handleQuickAcceptSuggestion = (s: any) => {
-    if (!s?.invoice) return;
-    setSelectedInvoice(s.invoice);
-    toast.success(
-      `Đã chọn gợi ý HĐ: ${s.invoice.invoiceNo || "---"} (${money(s.invoice.totalAmount)})`,
+  const handleSelectAllOnPage = () => {
+    const items = invoiceData?.items || [];
+    if (items.length === 0) return;
+    const allSelected = items.every(
+      (inv: ErpInvoice) => !!selectedInvoicesMap[inv.id],
     );
+    setSelectedInvoicesMap((prev) => {
+      const next = { ...prev };
+      if (allSelected) {
+        items.forEach((inv: ErpInvoice) => {
+          delete next[inv.id];
+        });
+      } else {
+        items.forEach((inv: ErpInvoice) => {
+          next[inv.id] = inv;
+        });
+      }
+      return next;
+    });
+  };
+
+  const handleToggleSuggestion = (s: any) => {
+    if (!s?.invoice) return;
+    const inv = s.invoice;
+    setSelectedInvoicesMap((prev) => {
+      const next = { ...prev };
+      if (next[inv.id]) {
+        delete next[inv.id];
+        toast.success(`Đã bỏ chọn HĐ: ${inv.invoiceNo || "---"}`);
+      } else {
+        next[inv.id] = inv;
+        toast.success(
+          `Đã chọn HĐ: ${inv.invoiceNo || "---"} (${money(inv.totalAmount)})`,
+        );
+      }
+      return next;
+    });
+  };
+
+  const handleSelectAllSuggestions = () => {
+    if (!suggestions || suggestions.length === 0) return;
+    const allSuggestedSelected = suggestions.every(
+      (s: any) => !!selectedInvoicesMap[s.invoice.id],
+    );
+    setSelectedInvoicesMap((prev) => {
+      const next = { ...prev };
+      if (allSuggestedSelected) {
+        suggestions.forEach((s: any) => {
+          delete next[s.invoice.id];
+        });
+        toast.success("Đã bỏ chọn toàn bộ gợi ý");
+      } else {
+        suggestions.forEach((s: any) => {
+          next[s.invoice.id] = s.invoice;
+        });
+        toast.success(`Đã chọn toàn bộ ${suggestions.length} hóa đơn gợi ý`);
+      }
+      return next;
+    });
   };
 
   const handleSave = async () => {
-    if (!selectedInvoice) {
+    if (selectedCount === 0) {
       toast.error(
         t(
           "cases.invoiceDrawer.selectPrompt",
-          "Vui lòng chọn 1 hóa đơn để liên kết",
+          "Vui lòng chọn ít nhất 1 hóa đơn để liên kết",
         ),
       );
       return;
@@ -205,12 +283,16 @@ export function InvoiceSelectionDrawer({
 
     try {
       setIsSubmitting(true);
-      await onSubmit({
-        invoiceId: selectedInvoice.id,
-        linkType,
-        note: note || undefined,
-        invoice: selectedInvoice,
-      });
+      const payloads: InvoiceLinkPayloadItem[] = selectedInvoicesList.map(
+        (inv) => ({
+          invoiceId: inv.id,
+          linkType,
+          note: note || undefined,
+          invoice: inv,
+        }),
+      );
+
+      await onSubmit(payloads);
 
       onSuccess?.();
       onClose();
@@ -265,25 +347,60 @@ export function InvoiceSelectionDrawer({
     return "none";
   };
 
+  const isAllCurrentPageSelected = useMemo(() => {
+    const items = invoiceData?.items || [];
+    if (items.length === 0) return false;
+    return items.every((inv: ErpInvoice) => !!selectedInvoicesMap[inv.id]);
+  }, [invoiceData?.items, selectedInvoicesMap]);
+
+  const isSomeCurrentPageSelected = useMemo(() => {
+    const items = invoiceData?.items || [];
+    if (items.length === 0) return false;
+    return (
+      items.some((inv: ErpInvoice) => !!selectedInvoicesMap[inv.id]) &&
+      !isAllCurrentPageSelected
+    );
+  }, [invoiceData?.items, selectedInvoicesMap, isAllCurrentPageSelected]);
+
   const columns = useMemo(() => {
     const isOut = linkType === "OUT";
 
     return [
       {
         key: "select",
-        header: <span className="w-full block text-center">#</span>,
+        header: (
+          <div
+            className="flex items-center justify-center w-full h-full cursor-pointer"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleSelectAllOnPage();
+            }}
+            title="Chọn/Bỏ chọn tất cả trang này"
+          >
+            <Checkbox
+              checked={
+                isAllCurrentPageSelected
+                  ? true
+                  : isSomeCurrentPageSelected
+                    ? "indeterminate"
+                    : false
+              }
+              className="h-4 w-4 pointer-events-none"
+            />
+          </div>
+        ),
         headerClassName: "text-center w-[40px] min-w-[40px]",
         className: "text-center w-[40px] min-w-[40px]",
         enableResizing: false,
         size: 40,
         cell: (row: ErpInvoice) => {
-          const isSelected = selectedInvoice?.id === row.id;
+          const isSelected = !!selectedInvoicesMap[row.id];
           return (
             <div
               className="flex items-center justify-center w-full h-full cursor-pointer py-1"
               onClick={(e) => {
                 e.stopPropagation();
-                handleSelectInvoice(row);
+                handleToggleInvoice(row);
               }}
             >
               <Checkbox
@@ -909,7 +1026,7 @@ export function InvoiceSelectionDrawer({
     ];
   }, [
     linkType,
-    selectedInvoice,
+    selectedInvoicesMap,
     tableState,
     dateFrom,
     dateTo,
@@ -974,6 +1091,8 @@ export function InvoiceSelectionDrawer({
       ? Number(caseFinancialSummary?.targetRevenue || 0)
       : Number(caseFinancialSummary?.targetCost || 0);
 
+  const diffAmount = selectedTotalAmount - targetAmount;
+
   return (
     <>
       <DrawerModal
@@ -994,218 +1113,297 @@ export function InvoiceSelectionDrawer({
           {
             label: isSubmitting
               ? t("cases.invoiceDrawer.linking", "Đang liên kết...")
-              : selectedInvoice
-                ? t(
-                    "cases.invoiceDrawer.confirmWithInvoice",
-                    `Xác nhận liên kết HĐ: ${selectedInvoice.invoiceNo || "---"}`,
-                  )
+              : selectedCount > 0
+                ? `Xác nhận liên kết (${selectedCount} hóa đơn - ${money(selectedTotalAmount)})`
                 : t("cases.invoiceDrawer.confirm", "Xác nhận liên kết"),
             primary: true,
-            disabled: !selectedInvoice || isSubmitting,
+            disabled: selectedCount === 0 || isSubmitting,
             onClick: handleSave,
           },
         ]}
       >
-        <div className="flex flex-col h-full min-h-0 flex-1 gap-2.5">
-          {/* Target Document Context Bar */}
-          <div className="flex flex-wrap items-center justify-between gap-3 px-3.5 py-2 rounded-lg bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-xs shrink-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-slate-500 font-medium">Vụ việc:</span>
-              <span className="font-semibold text-slate-800 dark:text-slate-200">
-                {caseCode || "---"}
-              </span>
-              {targetAmount > 0 && (
-                <>
-                  <span className="text-slate-300 dark:text-slate-600">|</span>
-                  <span className="text-slate-500 font-medium">
-                    {linkType === "OUT" ? "Doanh thu:" : "Tổng chi phí:"}
-                  </span>
-                  <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
-                    {money(targetAmount)}
-                  </span>
-                </>
-              )}
+        <div className="flex flex-col lg:flex-row h-full min-h-0 flex-1 gap-3 overflow-hidden">
+          {/* ── LEFT COLUMN: PILL TABS & MAIN TABLE ── */}
+          <div className="flex-1 min-w-0 flex flex-col h-full gap-2.5 overflow-hidden">
+            {/* Flagship Pill Tabs: OUT vs IN */}
+            <div className="shrink-0">
+              <PillTabs
+                value={linkType}
+                onValueChange={(val) => {
+                  setLinkType(val);
+                  setSelectedInvoicesMap({});
+                  setPage(1);
+                }}
+                items={[
+                  {
+                    value: "OUT",
+                    label: t(
+                      "cases.invoiceDrawer.tabs.out",
+                      "1. Hóa đơn Bán ra (Doanh thu)",
+                    ),
+                    icon: ArrowUpRight,
+                  },
+                  {
+                    value: "IN",
+                    label: t(
+                      "cases.invoiceDrawer.tabs.in",
+                      "2. Hóa đơn Mua vào (Chi phí)",
+                    ),
+                    icon: ArrowDownLeft,
+                  },
+                ]}
+              />
             </div>
 
-            <div className="flex items-center gap-2">
-              <span className="text-slate-500 font-medium">
-                Hóa đơn đã chọn:
-              </span>
-              {selectedInvoice ? (
-                <span className="font-mono font-bold text-sm text-primary flex items-center gap-1.5">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                  Số: {selectedInvoice.invoiceNo || "---"} (
-                  {money(Number(selectedInvoice.totalAmount || 0))})
-                </span>
-              ) : (
-                <span className="text-xs text-slate-400 italic">
-                  Chưa chọn hóa đơn
-                </span>
-              )}
-            </div>
+            {/* Main Table: StandardTable with Spreadsheet variant */}
+            <DrawerSection
+              title={
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span>
+                    {t(
+                      "cases.invoiceDrawer.tableTitle",
+                      "Danh sách Hóa đơn điện tử",
+                    )}
+                  </span>
+                  {invoiceData?.total !== undefined && (
+                    <span className="text-xs font-normal text-muted-foreground lowercase">
+                      ({invoiceData.total} {t("erpInvoices:records", "hóa đơn")}
+                      )
+                    </span>
+                  )}
+                </div>
+              }
+              titleExtra={
+                <div className="flex items-center gap-2">
+                  {tableState.activeFilterCount > 0 && (
+                    <FilterButton
+                      activeCount={tableState.activeFilterCount}
+                      onClick={() => {}}
+                      onClear={() => {
+                        tableState.resetFilters();
+                        setDateFrom("");
+                        setDateTo("");
+                        setPage(1);
+                      }}
+                    />
+                  )}
+                </div>
+              }
+              className="flex-1 flex flex-col min-h-0 mb-0 p-3 [&>div:last-child]:flex-1 [&>div:last-child]:flex [&>div:last-child]:flex-col [&>div:last-child]:min-h-0"
+              bodyClassName="flex-1 flex flex-col min-h-0 p-0"
+            >
+              <div className="flex-1 min-h-0 flex flex-col">
+                <StandardTable
+                  tableId="garage-invoice-selection-table"
+                  items={invoiceData?.items || []}
+                  columns={columns}
+                  getRowKey={(row: ErpInvoice) => row.id}
+                  variant="spreadsheet"
+                  enableColumnResizing={true}
+                  loading={isLoading}
+                  page={page}
+                  pageSize={pageSize}
+                  total={invoiceData?.total || 0}
+                  totalPages={invoiceData?.totalPages || 0}
+                  onPage={setPage}
+                  onPageSize={setPageSize}
+                  onRowClick={(row: ErpInvoice) => handleToggleInvoice(row)}
+                  summaryRow={summaryRow}
+                  minWidth={1150}
+                  containerClassName="flex-1 min-h-0"
+                />
+              </div>
+            </DrawerSection>
           </div>
 
-          {/* Flagship Pill Tabs: OUT vs IN */}
-          <PillTabs
-            value={linkType}
-            onValueChange={(val) => {
-              setLinkType(val);
-              setSelectedInvoice(null);
-              setPage(1);
-            }}
-            items={[
-              {
-                value: "OUT",
-                label: t(
-                  "cases.invoiceDrawer.tabs.out",
-                  "1. Hóa đơn Bán ra (Doanh thu)",
-                ),
-                icon: ArrowUpRight,
-              },
-              {
-                value: "IN",
-                label: t(
-                  "cases.invoiceDrawer.tabs.in",
-                  "2. Hóa đơn Mua vào (Chi phí)",
-                ),
-                icon: ArrowDownLeft,
-              },
-            ]}
-          />
-
-          {/* Smart Invoice Suggestions Section (Horizontal Scrolling) */}
-          {caseId && (
-            <div className="p-3 rounded-xl bg-gradient-to-r from-indigo-50/70 to-blue-50/50 dark:from-indigo-950/40 dark:to-blue-950/30 border border-indigo-200/80 dark:border-indigo-800/60 shadow-2xs shrink-0">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-indigo-950 dark:text-indigo-200">
-                    {linkType === "OUT"
-                      ? "Gợi ý Đối soát Hóa đơn Bán ra (Doanh thu)"
-                      : "Gợi ý Đối soát Hóa đơn Mua vào (Chi phí)"}
-                  </h4>
-                </div>
-                {isLoadingSuggestions && (
-                  <span className="text-[10px] text-indigo-600 dark:text-indigo-400 flex items-center gap-1 font-medium">
-                    <Loader2 className="w-3 h-3 animate-spin" />
-                    Đang tìm kiếm...
+          {/* ── RIGHT COLUMN: TARGET CONTEXT, SMART SUGGESTIONS & NOTE ── */}
+          <div className="w-full lg:w-[380px] xl:w-[410px] shrink-0 flex flex-col gap-2.5 overflow-y-auto max-h-[calc(100vh-140px)] pr-1 scrollbar-thin">
+            {/* Section 1: Thông tin Vụ việc & Tiến độ Đối soát */}
+            <DrawerSection
+              title={t(
+                "cases.invoiceDrawer.targetTitle",
+                "Đối soát & Mục tiêu",
+              )}
+              collapsible={true}
+              defaultCollapsed={false}
+            >
+              <div className="space-y-2.5 text-xs">
+                <div className="flex items-center justify-between py-1 border-b border-slate-100 dark:border-slate-800">
+                  <span className="text-slate-500 font-medium">Vụ việc:</span>
+                  <span className="font-semibold text-slate-800 dark:text-slate-200 font-mono">
+                    {caseCode || "---"}
                   </span>
+                </div>
+
+                {targetAmount > 0 && (
+                  <div className="flex items-center justify-between py-1 border-b border-slate-100 dark:border-slate-800">
+                    <span className="text-slate-500 font-medium">
+                      {linkType === "OUT"
+                        ? "Mục tiêu Doanh thu:"
+                        : "Mục tiêu Chi phí:"}
+                    </span>
+                    <span className="font-mono font-bold text-slate-900 dark:text-slate-100">
+                      {money(targetAmount)}
+                    </span>
+                  </div>
+                )}
+
+                <div className="flex items-center justify-between py-1 border-b border-slate-100 dark:border-slate-800">
+                  <span className="text-slate-500 font-medium">
+                    Hóa đơn đã chọn:
+                  </span>
+                  <span className="font-mono font-bold text-primary">
+                    {selectedCount > 0
+                      ? `${selectedCount} HĐ (${money(selectedTotalAmount)})`
+                      : "Chưa chọn"}
+                  </span>
+                </div>
+
+                {targetAmount > 0 && selectedCount > 0 && (
+                  <div className="flex items-center justify-between pt-1">
+                    <span className="text-slate-500 font-medium">
+                      Chênh lệch:
+                    </span>
+                    <span
+                      className={cn(
+                        "text-[11px] font-mono font-semibold px-2 py-0.5 rounded border",
+                        Math.abs(diffAmount) < 1000
+                          ? "bg-emerald-50 text-emerald-700 border-emerald-300 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800"
+                          : diffAmount > 0
+                            ? "bg-amber-50 text-amber-700 border-amber-300 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800"
+                            : "bg-blue-50 text-blue-700 border-blue-300 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800",
+                      )}
+                    >
+                      {Math.abs(diffAmount) < 1000
+                        ? "✓ Khớp mục tiêu"
+                        : diffAmount > 0
+                          ? `+${money(diffAmount)} (Dư)`
+                          : `${money(diffAmount)} (Thiếu)`}
+                    </span>
+                  </div>
+                )}
+
+                {/* Selected Invoices Mini List */}
+                {selectedInvoicesList.length > 0 && (
+                  <div className="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-1.5">
+                    <div className="text-[11px] text-slate-400 font-medium">
+                      Danh sách hóa đơn đã chọn ({selectedInvoicesList.length}):
+                    </div>
+                    <div className="space-y-1 max-h-36 overflow-y-auto pr-1">
+                      {selectedInvoicesList.map((inv) => (
+                        <div
+                          key={inv.id}
+                          className="flex items-center justify-between p-1.5 rounded-md bg-slate-50 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/60 text-[11px]"
+                        >
+                          <div className="flex flex-col min-w-0">
+                            <span className="font-mono font-semibold text-slate-800 dark:text-slate-200 truncate">
+                              Số: {inv.invoiceNo || "---"}
+                            </span>
+                            <span className="text-[10px] text-slate-400 font-mono">
+                              {money(Number(inv.totalAmount || 0))}
+                            </span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleToggleInvoice(inv)}
+                            className="text-slate-400 hover:text-rose-500 p-0.5 rounded transition-colors"
+                            title="Bỏ chọn"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 )}
               </div>
+            </DrawerSection>
 
-              {suggestions.length > 0 ? (
-                <div className="flex items-center gap-2.5 overflow-x-auto pb-1.5 scrollbar-thin">
-                  {suggestions.map((s: any) => {
-                    const isSelected = selectedInvoice?.id === s.invoice.id;
-                    return (
-                      <div
-                        key={s.invoice.id}
-                        className="min-w-[320px] max-w-[360px] shrink-0"
-                      >
+            {/* Section 2: Gợi ý Đối soát Thông minh (AI) */}
+            {caseId && (
+              <DrawerSection
+                title={
+                  <div className="flex items-center gap-1.5 text-indigo-950 dark:text-indigo-200">
+                    <Sparkles className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+                    <span>
+                      {linkType === "OUT"
+                        ? "Gợi ý HĐ Bán ra"
+                        : "Gợi ý HĐ Mua vào"}
+                    </span>
+                  </div>
+                }
+                titleExtra={
+                  suggestions.length >= 2 ? (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={handleSelectAllSuggestions}
+                      className="h-5 text-[10px] px-1.5 py-0 border-indigo-300 dark:border-indigo-700 bg-white/80 dark:bg-slate-900/80 hover:bg-indigo-50 dark:hover:bg-indigo-950/60 text-indigo-900 dark:text-indigo-200 font-medium cursor-pointer"
+                    >
+                      <CheckCircle2 className="w-2.5 h-2.5 mr-1 text-indigo-600 dark:text-indigo-400" />
+                      {suggestions.every(
+                        (s: any) => !!selectedInvoicesMap[s.invoice.id],
+                      )
+                        ? "Bỏ chọn hết"
+                        : `Chọn tất cả (${suggestions.length})`}
+                    </Button>
+                  ) : undefined
+                }
+                collapsible={true}
+                defaultCollapsed={false}
+              >
+                {isLoadingSuggestions ? (
+                  <div className="py-4 text-center text-xs text-indigo-600 dark:text-indigo-400 flex items-center justify-center gap-1.5 font-medium">
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    Đang tìm kiếm gợi ý...
+                  </div>
+                ) : suggestions.length > 0 ? (
+                  <div className="space-y-2 max-h-[380px] overflow-y-auto pr-1 scrollbar-thin">
+                    {suggestions.map((s: any) => {
+                      const isSelected = !!selectedInvoicesMap[s.invoice.id];
+                      return (
                         <SmartInvoiceSuggestionCard
+                          key={s.invoice.id}
                           suggestion={s}
                           isSelected={isSelected}
-                          onAccept={() => handleQuickAcceptSuggestion(s)}
+                          onAccept={() => handleToggleSuggestion(s)}
                           onViewDetail={(inv) =>
                             setViewInvoiceId(
                               typeof inv === "object" ? inv.id : inv,
                             )
                           }
                         />
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : !isLoadingSuggestions ? (
-                <div className="text-[11px] text-slate-500 italic">
-                  Chưa tìm thấy hóa đơn khớp chính xác với vụ việc này. Bạn có
-                  thể tìm kiếm trong danh sách bảng bên dưới.
-                </div>
-              ) : null}
-            </div>
-          )}
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="py-3 text-center text-[11px] text-slate-400 italic">
+                    Chưa tìm thấy hóa đơn khớp chính xác. Bạn có thể tìm trong
+                    danh sách bảng bên trái.
+                  </div>
+                )}
+              </DrawerSection>
+            )}
 
-          {/* Main Table: StandardTable with Spreadsheet variant */}
-          <DrawerSection
-            title={
-              <div className="flex items-center gap-2 flex-wrap">
-                <span>
-                  {t(
-                    "cases.invoiceDrawer.tableTitle",
-                    "Danh sách Hóa đơn điện tử",
-                  )}
-                </span>
-                {invoiceData?.total !== undefined && (
-                  <span className="text-xs font-normal text-muted-foreground lowercase">
-                    ({invoiceData.total} {t("erpInvoices:records", "hóa đơn")})
-                  </span>
+            {/* Section 3: Ghi chú liên kết */}
+            <DrawerSection
+              title={t("cases.invoiceDrawer.note", "Ghi chú liên kết")}
+              collapsible={true}
+              defaultCollapsed={false}
+            >
+              <Textarea
+                rows={3}
+                value={note}
+                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                  setNote(e.target.value)
+                }
+                placeholder={t(
+                  "cases.invoiceDrawer.notePlaceholder",
+                  "Ghi chú mục đích liên kết hóa đơn này với báo giá vụ việc...",
                 )}
-                {selectedInvoice && (
-                  <span className="text-xs font-semibold text-primary">
-                    (Đã chọn Số: {selectedInvoice.invoiceNo || "---"})
-                  </span>
-                )}
-              </div>
-            }
-            titleExtra={
-              <div className="flex items-center gap-2">
-                {tableState.activeFilterCount > 0 && (
-                  <FilterButton
-                    activeCount={tableState.activeFilterCount}
-                    onClick={() => {}}
-                    onClear={() => {
-                      tableState.resetFilters();
-                      setDateFrom("");
-                      setDateTo("");
-                      setPage(1);
-                    }}
-                  />
-                )}
-              </div>
-            }
-            className="flex-1 flex flex-col min-h-0 mb-0 p-3 [&>div:last-child]:flex-1 [&>div:last-child]:flex [&>div:last-child]:flex-col [&>div:last-child]:min-h-0"
-            bodyClassName="flex-1 flex flex-col min-h-0 p-0"
-          >
-            <div className="flex-1 min-h-0 flex flex-col">
-              <StandardTable
-                tableId="garage-invoice-selection-table"
-                items={invoiceData?.items || []}
-                columns={columns}
-                getRowKey={(row: ErpInvoice) => row.id}
-                variant="spreadsheet"
-                enableColumnResizing={true}
-                loading={isLoading}
-                page={page}
-                pageSize={pageSize}
-                total={invoiceData?.total || 0}
-                totalPages={invoiceData?.totalPages || 0}
-                onPage={setPage}
-                onPageSize={setPageSize}
-                onRowClick={(row: ErpInvoice) => handleSelectInvoice(row)}
-                summaryRow={summaryRow}
-                minWidth={1400}
-                containerClassName="flex-1 min-h-0"
+                className="text-xs resize-none h-20"
               />
-            </div>
-          </DrawerSection>
-
-          {/* Note input */}
-          <div className="shrink-0 space-y-1 pt-1 border-t border-slate-200 dark:border-slate-800">
-            <label className="text-xs font-medium text-slate-700 dark:text-slate-300">
-              {t("cases.invoiceDrawer.note", "Ghi chú liên kết")}
-            </label>
-            <Textarea
-              rows={2}
-              value={note}
-              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
-                setNote(e.target.value)
-              }
-              placeholder={t(
-                "cases.invoiceDrawer.notePlaceholder",
-                "Ghi chú mục đích liên kết hóa đơn này với báo giá vụ việc...",
-              )}
-              className="text-xs resize-none h-14"
-            />
+            </DrawerSection>
           </div>
         </div>
       </DrawerModal>

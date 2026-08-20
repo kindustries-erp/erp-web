@@ -231,6 +231,21 @@ export const garageApi = {
     return res.data;
   },
 
+  addCaseLinkedInvoices: async (
+    caseId: string,
+    items: Array<{
+      invoiceId: string;
+      linkType: "IN" | "OUT";
+      note?: string;
+    }>,
+  ) => {
+    const res = await axiosInstance.post(
+      `${BASE}/cases/${caseId}/linked-invoices`,
+      { items },
+    );
+    return res.data;
+  },
+
   removeCaseLinkedInvoice: async (caseId: string, linkedId: string) => {
     const res = await axiosInstance.delete(
       `${BASE}/cases/${caseId}/linked-invoices/${linkedId}`,
