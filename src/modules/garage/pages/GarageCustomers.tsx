@@ -6,7 +6,6 @@ import { DateRangeColumnSlot } from "@/shared/components/DataTable/DateRangeColu
 import { TableText } from "@/shared/components/DataTable/TableText";
 import { TableDateCell } from "@/shared/components/DataTable/TableDateCell";
 import { Badge } from "@/shared/components/ui/badge";
-import { Tooltip } from "@/core/components/ui/Tooltip";
 import { useGarageStore } from "../store/garageStore";
 import {
   useGarageCustomersList,
@@ -44,10 +43,11 @@ export function GarageCustomers() {
       {
         key: "index",
         header: <span className="w-full block text-center">#</span>,
-        size: 50,
+        size: 40,
         enableResizing: false,
-        headerClassName: "text-center",
-        className: "text-center font-mono text-xs text-muted-foreground",
+        headerClassName: "text-center w-[40px] min-w-[40px]",
+        className:
+          "text-center w-[40px] min-w-[40px] font-mono text-xs text-muted-foreground",
         cell: (_: CustomerDebtItem, idx: number) => <span>{idx}</span>,
       },
       // 2. Mã Khách Hàng (Mở Drawer chi tiết khi click icon trên TableText)
@@ -155,11 +155,12 @@ export function GarageCustomers() {
         size: 250,
         enableResizing: true,
         cell: (row: CustomerDebtItem) => (
-          <Tooltip content={row.customerName || "—"}>
-            <div className="font-medium text-foreground truncate select-text">
-              {row.customerName || "—"}
-            </div>
-          </Tooltip>
+          <TableText
+            text={row.customerName || "—"}
+            tooltip={true}
+            enableCopy={true}
+            textClassName="whitespace-normal line-clamp-2 break-words text-foreground font-normal text-xs leading-normal select-text"
+          />
         ),
       },
       // 4. SL Phiếu DV (Width 120px)
@@ -168,17 +169,43 @@ export function GarageCustomers() {
         header: (
           <TableColumnHeaderFilter
             title={t("customers.columns.caseCount", "SL Phiếu DV")}
+            columnKey="caseCount"
+            queryKeyPrefix="garage-customer-casecount-options"
+            allFilters={listHook.columnFilters}
+            fetchOptions={async ({ search, pageParam, filtersStr }) => {
+              const res = await garageApi.getCustomersDebtColumnOptions(
+                selectedBranchId || undefined,
+                "caseCount",
+                search,
+                pageParam,
+                20,
+                filtersStr,
+              );
+              return {
+                items: res.items.map((it: string) => ({
+                  label: `${it} phiếu`,
+                  value: it,
+                })),
+                total: res.total,
+                next: res.page < res.totalPages ? res.page + 1 : null,
+              };
+            }}
             sortState={getSortState("caseCount")}
             onSortChange={(s) => listHook.setSort("caseCount", s)}
-            searchValue=""
-            onSearchChange={() => {}}
-            selectedFilters={[]}
-            onFilterChange={() => {}}
-            hideFilter={true}
+            searchValue={listHook.columnSearch["caseCount"] || ""}
+            onSearchChange={(v) => listHook.setColumnSearch("caseCount", v)}
+            selectedFilters={listHook.columnFilters["caseCount"] || []}
+            onFilterChange={(v) => listHook.setColumnFilter("caseCount", v)}
+            isActive={Boolean(
+              listHook.columnFilters["caseCount"]?.length ||
+              listHook.columnSearch["caseCount"],
+            )}
+            enableSelectAllMatching={true}
             align="center"
           />
         ),
         size: 120,
+        enableResizing: true,
         className: "text-center",
         cell: (row: CustomerDebtItem) => (
           <Badge variant="secondary" className="tabular-nums font-mono">
@@ -193,14 +220,52 @@ export function GarageCustomers() {
         header: (
           <TableColumnHeaderFilter
             title={t("customers.columns.receivableAmount", "Phải thu")}
+            columnKey="totalAmount"
+            queryKeyPrefix="garage-customer-totalamount-options"
+            allFilters={listHook.columnFilters}
             sortState={getSortState("totalAmount")}
             onSortChange={(s) => listHook.setSort("totalAmount", s)}
-            searchValue=""
-            onSearchChange={() => {}}
-            selectedFilters={[]}
-            onFilterChange={() => {}}
-            hideFilter={true}
+            searchValue={listHook.columnSearch["totalAmount"] || ""}
+            onSearchChange={(v) => listHook.setColumnSearch("totalAmount", v)}
+            selectedFilters={listHook.columnFilters["totalAmount"] || []}
+            onFilterChange={(v) => listHook.setColumnFilter("totalAmount", v)}
+            isActive={Boolean(
+              listHook.columnFilters["totalAmount"]?.length ||
+              listHook.columnSearch["totalAmount"],
+            )}
+            enableSelectAllMatching={true}
             align="center"
+            formatOptionLabel={(val: string) => {
+              if (val === "0-10m") return "< 10.000.000 đ";
+              if (val === "10m-20m") return "10.000.000 - 20.000.000 đ";
+              if (val === "20m-50m") return "20.000.000 - 50.000.000 đ";
+              if (val === ">50m") return "> 50.000.000 đ";
+              return val;
+            }}
+            fetchOptions={async ({ search, pageParam, filtersStr }) => {
+              const res = await garageApi.getCustomersDebtColumnOptions(
+                selectedBranchId || undefined,
+                "totalAmount",
+                search,
+                pageParam,
+                20,
+                filtersStr,
+              );
+              return {
+                items: res.items.map((it: string) => {
+                  let label = it;
+                  if (it === "0-10m") label = "< 10.000.000 đ";
+                  else if (it === "10m-20m")
+                    label = "10.000.000 - 20.000.000 đ";
+                  else if (it === "20m-50m")
+                    label = "20.000.000 - 50.000.000 đ";
+                  else if (it === ">50m") label = "> 50.000.000 đ";
+                  return { label, value: it };
+                }),
+                total: res.total,
+                next: res.page < res.totalPages ? res.page + 1 : null,
+              };
+            }}
           />
         ),
         size: 140,
@@ -221,14 +286,17 @@ export function GarageCustomers() {
             columnKey="paymentProgress"
             sortState={getSortState("paidAmount")}
             onSortChange={(s) => listHook.setSort("paidAmount", s)}
-            searchValue=""
-            onSearchChange={() => {}}
+            searchValue={listHook.columnSearch["paymentProgress"] || ""}
+            onSearchChange={(v) =>
+              listHook.setColumnSearch("paymentProgress", v)
+            }
             selectedFilters={listHook.columnFilters["paymentProgress"] || []}
             onFilterChange={(v) =>
               listHook.setColumnFilter("paymentProgress", v)
             }
             isActive={Boolean(
-              listHook.columnFilters["paymentProgress"]?.length,
+              listHook.columnFilters["paymentProgress"]?.length ||
+              listHook.columnSearch["paymentProgress"],
             )}
             align="center"
             enableSelectAllMatching={true}
@@ -241,8 +309,8 @@ export function GarageCustomers() {
                 return t("customers.filter.unpaid", "Chưa thu");
               return val;
             }}
-            fetchOptions={async () => ({
-              items: [
+            fetchOptions={async ({ search }) => {
+              const allItems = [
                 {
                   label: t("customers.filter.paid", "Đã thu đủ"),
                   value: "PAID",
@@ -255,13 +323,21 @@ export function GarageCustomers() {
                   label: t("customers.filter.unpaid", "Chưa thu"),
                   value: "UNPAID",
                 },
-              ],
-              total: 3,
-              next: null,
-            })}
+              ];
+              const filtered = search
+                ? allItems.filter((i) =>
+                    i.label.toLowerCase().includes(search.toLowerCase()),
+                  )
+                : allItems;
+              return {
+                items: filtered,
+                total: filtered.length,
+                next: null,
+              };
+            }}
           />
         ),
-        size: 200,
+        size: 210,
         enableResizing: true,
         cell: (row: CustomerDebtItem) => {
           const total = Number(row.totalAmount) || 0;
@@ -286,28 +362,24 @@ export function GarageCustomers() {
                 : 0;
 
           return (
-            <div className="flex flex-col gap-1.5 w-full py-1 justify-center">
-              {/* Row 1: Left badge + Right amount */}
-              <div className="flex items-center justify-between text-xs tabular-nums leading-none">
+            <div className="flex flex-col gap-1 w-full py-0.5 justify-center">
+              {/* Row 1: Left label/rate + Right amounts */}
+              <div className="flex items-center justify-between text-xs tabular-nums leading-tight">
                 {isAllPaid ? (
-                  <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded font-medium bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/50">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                  <span className="text-emerald-700 dark:text-emerald-400 font-medium text-xs">
                     Đã thu đủ
                   </span>
                 ) : isUnpaid ? (
-                  <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded font-medium bg-slate-100 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 border border-slate-200/80 dark:border-slate-700/60">
-                    <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
-                    Chưa thu
-                  </span>
+                  <span />
                 ) : (
-                  <span className="inline-flex items-center text-[10px] px-1.5 py-0.5 rounded font-bold font-mono bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/50">
+                  <span className="font-mono font-bold text-xs text-emerald-800 dark:text-emerald-300">
                     {rate}%
                   </span>
                 )}
 
-                <div className="flex items-center gap-1 font-mono text-[11px] truncate">
+                <div className="flex items-center gap-1 font-mono text-xs truncate ml-auto">
                   {isAllPaid ? (
-                    <span className="text-emerald-700 dark:text-emerald-400 font-medium">
+                    <span className="text-emerald-700 dark:text-emerald-400 font-semibold">
                       {money(paid)}
                     </span>
                   ) : isUnpaid ? (
@@ -316,7 +388,7 @@ export function GarageCustomers() {
                     </span>
                   ) : (
                     <>
-                      <span className="text-foreground font-medium">
+                      <span className="text-emerald-700 dark:text-emerald-400 font-semibold">
                         {money(paid)}
                       </span>
                       <span className="text-muted-foreground/40">/</span>
@@ -356,11 +428,14 @@ export function GarageCustomers() {
             columnKey="maxAgingDays"
             sortState={getSortState("maxAgingDays")}
             onSortChange={(s) => listHook.setSort("maxAgingDays", s)}
-            searchValue=""
-            onSearchChange={() => {}}
+            searchValue={listHook.columnSearch["maxAgingDays"] || ""}
+            onSearchChange={(v) => listHook.setColumnSearch("maxAgingDays", v)}
             selectedFilters={listHook.columnFilters["maxAgingDays"] || []}
             onFilterChange={(v) => listHook.setColumnFilter("maxAgingDays", v)}
-            isActive={Boolean(listHook.columnFilters["maxAgingDays"]?.length)}
+            isActive={Boolean(
+              listHook.columnFilters["maxAgingDays"]?.length ||
+              listHook.columnSearch["maxAgingDays"],
+            )}
             enableSelectAllMatching={true}
             align="center"
             formatOptionLabel={(val: string) => {
@@ -377,8 +452,8 @@ export function GarageCustomers() {
                 return t("customers.filter.agingOver90", ">90 ngày (Quá hạn)");
               return val;
             }}
-            fetchOptions={async () => ({
-              items: [
+            fetchOptions={async ({ search }) => {
+              const allItems = [
                 {
                   label: t(
                     "customers.filter.aging0_30",
@@ -407,10 +482,18 @@ export function GarageCustomers() {
                   ),
                   value: ">90",
                 },
-              ],
-              total: 4,
-              next: null,
-            })}
+              ];
+              const filtered = search
+                ? allItems.filter((i) =>
+                    i.label.toLowerCase().includes(search.toLowerCase()),
+                  )
+                : allItems;
+              return {
+                items: filtered,
+                total: filtered.length,
+                next: null,
+              };
+            }}
           />
         ),
         size: 200,
@@ -611,6 +694,44 @@ export function GarageCustomers() {
     ],
   );
 
+  const summaryRow = useMemo(() => {
+    const items = listHook.data;
+    if (!items || items.length === 0) return undefined;
+
+    let subtotalRev = 0;
+    let subtotalPaid = 0;
+    let subtotalBal = 0;
+
+    for (const row of items) {
+      subtotalRev += Number(row.totalAmount) || 0;
+      subtotalPaid += Number(row.paidAmount) || 0;
+      subtotalBal += Number(row.balanceAmount) || 0;
+    }
+
+    return {
+      caseCount: (
+        <div className="text-right w-full font-bold text-xs uppercase text-muted-foreground pr-2">
+          {t("customers.common.total", "Tổng")}:
+        </div>
+      ),
+      totalAmount: (
+        <div className="text-right font-bold tabular-nums text-foreground">
+          {money(subtotalRev)}
+        </div>
+      ),
+      paymentProgress: (
+        <div className="flex flex-col gap-0.5 text-right font-bold tabular-nums">
+          <div className="text-emerald-600 dark:text-emerald-400 text-xs leading-tight">
+            Đã thu: {money(subtotalPaid)}
+          </div>
+          <div className="text-destructive text-[11px] leading-tight">
+            Còn lại: {money(subtotalBal)}
+          </div>
+        </div>
+      ),
+    };
+  }, [listHook.data, t]);
+
   return (
     <>
       <SpreadsheetPageTemplate<CustomerDebtItem>
@@ -656,23 +777,7 @@ export function GarageCustomers() {
             ],
           },
         ]}
-        summaryRow={{
-          totalAmount: (
-            <div className="text-right font-bold tabular-nums text-foreground">
-              {money(listHook.summary.totalRevenue)}
-            </div>
-          ),
-          paymentProgress: (
-            <div className="flex flex-col gap-0.5 text-right font-bold tabular-nums">
-              <div className="text-emerald-600 dark:text-emerald-400 text-xs">
-                Đã thu: {money(listHook.summary.totalPaid)}
-              </div>
-              <div className="text-destructive text-[11px]">
-                Còn lại: {money(listHook.summary.totalBalance)}
-              </div>
-            </div>
-          ),
-        }}
+        summaryRow={summaryRow}
       />
 
       {/* Customer Detail Drawer */}

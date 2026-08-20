@@ -8,17 +8,14 @@ import {
   Trash2,
   Wallet,
   Receipt,
-  AlertTriangle,
   Lock,
   Plus,
   Landmark,
   DollarSign,
   Edit3,
-  TrendingUp,
   Scale,
   Users,
   Building2,
-  CheckCircle2,
 } from "lucide-react";
 import {
   GarageCaseSettlementDrawerModal,
@@ -225,7 +222,6 @@ export function GarageCaseSettlementSection({
   const linkedInvoices = externalLinkedInvoices ?? serverLinkedInvoices ?? [];
 
   const breakdown = summary?.breakdown;
-  const reconciliation = summary?.reconciliation;
 
   // 1. Chỉ số Công nợ Phải Thu (Khách hàng)
   const targetRevenue = Number(summary?.targetRevenue || 0);
@@ -254,9 +250,6 @@ export function GarageCaseSettlementSection({
       : totalPaid > 0
         ? 100
         : 0;
-
-  // 3. Dòng tiền ròng
-  const realizedProfit = Number(breakdown?.realizedCashProfit || 0);
 
   const handleOpenAddSettlement = (type: "RECEIPT" | "PAYMENT" = "RECEIPT") => {
     setEditingSettlementItem(null);
@@ -309,13 +302,13 @@ export function GarageCaseSettlementSection({
           )}
         </div>
 
-        {/* 2 Cột Thẻ Công Nợ Đối Xứng (Khách Hàng vs Nhà Cung Cấp) - Phong cách Neutral */}
+        {/* 2 Cột Thẻ Công Nợ Đối Xứng (Khách Hàng vs Nhà Cung Cấp) - Phong cách Tinh gọn */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {/* ✦ Thẻ 1: CÔNG NỢ PHẢI THU (KHÁCH HÀNG) */}
-          <div className="p-3.5 rounded-lg border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xs space-y-2.5">
-            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
+          <div className="p-3.5 rounded-xl border border-slate-200/80 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/40 space-y-2.5">
+            <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="p-1 rounded-md bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                <div className="p-1 rounded-md bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 shadow-2xs border border-slate-200/60 dark:border-slate-700/60">
                   <Users className="w-3.5 h-3.5" />
                 </div>
                 <div>
@@ -365,7 +358,7 @@ export function GarageCaseSettlementSection({
               </div>
 
               {/* Progress bar */}
-              <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden my-1">
+              <div className="w-full bg-slate-200/60 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden my-1">
                 <div
                   className={cn(
                     "h-full rounded-full transition-all duration-500",
@@ -379,7 +372,7 @@ export function GarageCaseSettlementSection({
             </div>
 
             {/* Chi tiết phụ */}
-            <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px] font-mono">
+            <div className="flex items-center justify-between text-[11px] font-mono">
               <span className="text-slate-500 dark:text-slate-400">
                 {isOverCollected ? t("Khách nộp dư:") : t("Còn phải thu:")}
               </span>
@@ -401,10 +394,10 @@ export function GarageCaseSettlementSection({
           </div>
 
           {/* ✦ Thẻ 2: CÔNG NỢ PHẢI CHI (CHI PHÍ / NHÀ CUNG CẤP) */}
-          <div className="p-3.5 rounded-lg border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xs space-y-2.5">
-            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
+          <div className="p-3.5 rounded-xl border border-slate-200/80 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/40 space-y-2.5">
+            <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="p-1 rounded-md bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                <div className="p-1 rounded-md bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 shadow-2xs border border-slate-200/60 dark:border-slate-700/60">
                   <Building2 className="w-3.5 h-3.5" />
                 </div>
                 <div>
@@ -452,7 +445,7 @@ export function GarageCaseSettlementSection({
               </div>
 
               {/* Progress bar */}
-              <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden my-1">
+              <div className="w-full bg-slate-200/60 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden my-1">
                 <div
                   className="h-full rounded-full bg-slate-600 dark:bg-slate-400 transition-all duration-500"
                   style={{ width: `${Math.min(paymentPercent, 100)}%` }}
@@ -461,7 +454,7 @@ export function GarageCaseSettlementSection({
             </div>
 
             {/* Chi tiết phụ */}
-            <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px] font-mono">
+            <div className="flex items-center justify-between text-[11px] font-mono">
               <span className="text-slate-500 dark:text-slate-400">
                 {t("Còn phải chi trả:")}
               </span>
@@ -471,43 +464,10 @@ export function GarageCaseSettlementSection({
             </div>
           </div>
         </div>
-
-        {/* Dòng tóm tắt: Lợi Nhuận Dòng Tiền Ròng & Cảnh báo Đồng Bộ KGara */}
-        <div className="p-2.5 rounded-lg border border-slate-200/80 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/40 flex flex-wrap items-center justify-between gap-2.5 text-xs">
-          <div className="flex items-center gap-2">
-            <TrendingUp className="w-3.5 h-3.5 text-slate-500 flex-shrink-0" />
-            <span className="text-slate-600 dark:text-slate-400 text-[11px]">
-              {t("Lợi nhuận dòng tiền thực tế:")}
-            </span>
-            <strong className="font-mono text-xs text-slate-900 dark:text-slate-100">
-              {money(realizedProfit)}
-            </strong>
-            <span className="text-[10px] text-slate-400 italic">
-              ({t("Thu")} {money(totalCollected)} - {t("Chi")}{" "}
-              {money(totalPaid)})
-            </span>
-          </div>
-
-          {/* Cảnh báo đồng bộ KGara */}
-          {reconciliation?.hasDiscrepancy ? (
-            <div className="flex items-center gap-1.5 text-amber-700 dark:text-amber-400 font-medium bg-amber-50 dark:bg-amber-950/50 px-2 py-0.5 rounded border border-amber-200 dark:border-amber-900/60 text-[11px]">
-              <AlertTriangle className="w-3 h-3 flex-shrink-0" />
-              <span>
-                {t("Chênh lệch KGara:")} {money(reconciliation.discrepancy)} (
-                {t("KGara:")} {money(reconciliation.kgaraPaidAmount)})
-              </span>
-            </div>
-          ) : reconciliation ? (
-            <div className="flex items-center gap-1 text-emerald-700 dark:text-emerald-400 text-[11px]">
-              <CheckCircle2 className="w-3 h-3" />
-              <span>{t("Khớp với KGara xưởng")}</span>
-            </div>
-          ) : null}
-        </div>
       </div>
 
       {/* ─── 2. DANH SÁCH HÓA ĐƠN VAT LIÊN KẾT ─── */}
-      <div className="space-y-2 pt-2 border-t border-slate-200/70 dark:border-slate-800">
+      <div className="space-y-2 pt-1">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Receipt className="w-3.5 h-3.5 text-slate-500" />
@@ -581,14 +541,14 @@ export function GarageCaseSettlementSection({
             })}
           </div>
         ) : (
-          <div className="p-3 rounded-lg border border-dashed border-slate-200 dark:border-slate-800 text-center text-xs text-slate-400">
+          <div className="py-2.5 text-center text-xs text-slate-400 italic">
             {t("Chưa có hóa đơn VAT nào được liên kết với vụ việc này.")}
           </div>
         )}
       </div>
 
       {/* ─── 3. DANH SÁCH GIAO DỊCH THU / CHI ─── */}
-      <div className="space-y-2 pt-2 border-t border-slate-200/70 dark:border-slate-800">
+      <div className="space-y-2 pt-1">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Wallet className="w-3.5 h-3.5 text-slate-500" />
@@ -722,7 +682,7 @@ export function GarageCaseSettlementSection({
             })}
           </div>
         ) : (
-          <div className="p-3 rounded-lg border border-dashed border-slate-200 dark:border-slate-800 text-center text-xs text-slate-400">
+          <div className="py-2.5 text-center text-xs text-slate-400 italic">
             {t("Chưa có giao dịch thu/chi nào được ghi nhận cho vụ việc này.")}
           </div>
         )}
