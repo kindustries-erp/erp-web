@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from "react";
-import { DrawerModal, DrawerSection } from "@/shared/components/DrawerModal";
+import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
+import { DrawerSection } from "@/shared/components/DrawerModal";
 import { useQuery } from "@tanstack/react-query";
 import {
   erpInvoicesCoreApi,
@@ -7,16 +8,15 @@ import {
 } from "@/modules/erp-invoices-core/api/erpInvoicesCoreApi";
 import { garageApi } from "@/modules/garage/api/garageApi";
 import { toast } from "react-hot-toast";
-import { money } from "@/shared/utils/format";
+import { money, formatGMT7 } from "@/shared/utils/format";
 import {
   Sparkles,
   Loader2,
-  FileCode,
-  FileText,
-  Eye,
   CheckCircle2,
   ArrowUpRight,
   ArrowDownLeft,
+  Link2,
+  X,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { PillTabs } from "@/shared/components/PillTabs";
@@ -28,14 +28,11 @@ import { DateRangeColumnSlot } from "@/shared/components/DataTable/DateRangeColu
 import { FilterButton } from "@/shared/components/FilterPanel";
 import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
 import { Tooltip } from "@/core/components/ui/Tooltip";
-import { Badge } from "@/shared/components/ui/badge";
 import { Checkbox } from "@/shared/components/ui/checkbox";
-import { Popover } from "@/core/components/ui/Popover";
 import { Button } from "@/shared/components/ui/Button";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { SmartInvoiceSuggestionCard } from "./SmartInvoiceSuggestionCard";
 import { ErpInvoiceStandaloneDrawer } from "@/modules/erp-invoices-core/components/ErpInvoiceStandaloneDrawer";
-import { getFileViewUrl } from "@/modules/system/api/attachmentsApi";
 import { FilePreviewDrawer } from "@/shared/components/FilePreviewDrawer";
 import { cn } from "@/shared/utils";
 
@@ -58,9 +55,109 @@ export interface InvoiceSelectionDrawerProps {
   ) => Promise<void> | void;
 }
 
-function getPdfAttachments(attachments: any[]) {
-  return (attachments ?? []).filter(
-    (a) => a.attachment?.mimeType === "application/pdf",
+export interface SelectedInvoiceCardProps {
+  invoice: ErpInvoice;
+  onRemove: () => void;
+  onViewDetail?: (invoice: any) => void;
+}
+
+export function SelectedInvoiceCard({
+  invoice,
+  onRemove,
+  onViewDetail,
+}: SelectedInvoiceCardProps) {
+  const { t } = useTranslation(["garage", "erpInvoices", "common"]);
+  const partner =
+    invoice.direction === "IN"
+      ? invoice.sellerName || "—"
+      : invoice.buyerName || invoice.buyerPersonalName || "—";
+  const desc = invoice.description || "—";
+
+  return (
+    <div className="flex flex-col gap-1.5 p-2.5 rounded-lg border shadow-2xs relative group text-xs transition-all bg-emerald-50/30 border-emerald-300/80 dark:bg-emerald-950/20 dark:border-emerald-800/60">
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex flex-col min-w-0 flex-1">
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="text-[10px] text-slate-400 font-medium font-mono">
+              {invoice.invoiceDate
+                ? formatGMT7(invoice.invoiceDate, "date")
+                : ""}
+            </span>
+            {invoice.serialNo && (
+              <span className="text-[10px] font-mono px-1 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-500">
+                {invoice.serialNo}
+              </span>
+            )}
+          </div>
+          <span
+            className="text-[11px] font-mono font-bold text-slate-800 dark:text-slate-200 cursor-pointer hover:text-primary transition-colors truncate"
+            onClick={() => onViewDetail && onViewDetail(invoice)}
+            title={t(
+              "smartSuggestion.viewDetailInvoice",
+              "Nhấn để xem chi tiết hóa đơn",
+            )}
+          >
+            Số: {invoice.invoiceNo || "---"}
+          </span>
+        </div>
+
+        <div className="flex items-start gap-1.5 shrink-0">
+          <div className="text-right flex flex-col items-end">
+            <div className="font-bold text-xs font-mono text-slate-800 dark:text-slate-100 tabular-nums">
+              {money(invoice.totalAmount)}
+            </div>
+            <div className="mt-0.5 flex items-center px-1.5 py-0.5 rounded text-[9px] font-medium border whitespace-nowrap leading-none bg-emerald-100/80 text-emerald-800 border-emerald-300/80 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-700/60">
+              <CheckCircle2 className="w-2.5 h-2.5 mr-1 text-emerald-600 dark:text-emerald-400" />
+              {t("cases.invoiceDrawer.selected", "Đã chọn")}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Partner Name */}
+      <div className="text-[10px] text-slate-500 font-medium truncate">
+        {invoice.direction === "IN" ? "Bên bán:" : "Bên mua:"}{" "}
+        <span className="text-slate-700 dark:text-slate-300 font-semibold">
+          {partner}
+        </span>
+      </div>
+
+      {/* License plate & Settlement order tags if present */}
+      <div className="flex items-center gap-1.5 flex-wrap">
+        {invoice.settlementOrder && (
+          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-950/40 text-blue-800 dark:text-blue-300 border border-blue-200/60 dark:border-blue-800/60 font-semibold">
+            📋 {invoice.settlementOrder}
+          </span>
+        )}
+        {invoice.licensePlate && (
+          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800/60 font-semibold">
+            🚗 {invoice.licensePlate}
+          </span>
+        )}
+      </div>
+
+      {/* Description */}
+      {desc && desc !== "—" && (
+        <Tooltip content={desc}>
+          <div className="text-[11px] text-slate-600 dark:text-slate-400 whitespace-normal break-words mt-0.5 line-clamp-2">
+            {desc}
+          </div>
+        </Tooltip>
+      )}
+
+      {/* Action button */}
+      <div className="mt-1">
+        <Button
+          size="sm"
+          variant="outline"
+          className="h-6 text-[11px] w-full transition-colors cursor-pointer font-medium text-slate-600 hover:text-rose-600 hover:border-rose-300 hover:bg-rose-50 dark:text-slate-400 dark:hover:text-rose-300 dark:hover:bg-rose-950/50"
+          onClick={onRemove}
+        >
+          <X className="w-3 h-3 mr-1 text-rose-500" />
+          {t("cases.invoiceDrawer.unselect", "Bỏ chọn")}
+        </Button>
+      </div>
+    </div>
   );
 }
 
@@ -85,7 +182,6 @@ export function InvoiceSelectionDrawer({
   const [pageSize, setPageSize] = useState<number>(50);
   const [dateFrom, setDateFrom] = useState<string>("");
   const [dateTo, setDateTo] = useState<string>("");
-  const [openPopoverId, setOpenPopoverId] = useState<string | null>(null);
   const [previewPdf, setPreviewPdf] = useState<{
     url: string;
     filename: string;
@@ -168,6 +264,10 @@ export function InvoiceSelectionDrawer({
             vatAmount: item.vatAmount,
             description: item.description,
             direction: item.direction || item.linkType,
+            licensePlate: item.licensePlate,
+            settlementOrder: item.settlementOrder,
+            serialNo: item.serialNo,
+            invoiceDate: item.invoiceDate,
           } as ErpInvoice;
         }
       });
@@ -201,6 +301,13 @@ export function InvoiceSelectionDrawer({
     }
     return false;
   }, [initialLinkedIdSet, currentSelectedIds]);
+
+  // Mutual exclusion: Suggestions that are NOT in selectedInvoicesMap
+  const filteredSuggestions = useMemo(() => {
+    return (suggestions || []).filter(
+      (s: any) => s?.invoice?.id && !selectedInvoicesMap[s.invoice.id],
+    );
+  }, [suggestions, selectedInvoicesMap]);
 
   // Only pass sort_by and sort_order if user explicitly sorted a column in tableState (BE defaults to invoiceDate DESC)
   const sortBy =
@@ -248,17 +355,6 @@ export function InvoiceSelectionDrawer({
       }),
     enabled: open,
   });
-
-  const handleDownload = async (id: string, type: "xml" | "pdf") => {
-    try {
-      const res = await erpInvoicesCoreApi.getDownloadUrl(id, type);
-      if (res?.url) {
-        window.open(res.url, "_blank");
-      }
-    } catch {
-      toast.error(t("erpInvoices:downloadFailed", "Không thể tải file"));
-    }
-  };
 
   const handleToggleInvoice = (inv: ErpInvoice) => {
     setSelectedInvoicesMap((prev) => {
@@ -311,26 +407,20 @@ export function InvoiceSelectionDrawer({
     });
   };
 
-  const handleSelectAllSuggestions = () => {
-    if (!suggestions || suggestions.length === 0) return;
-    const allSuggestedSelected = suggestions.every(
-      (s: any) => !!selectedInvoicesMap[s.invoice.id],
-    );
+  const handleSelectAllFilteredSuggestions = () => {
+    if (!filteredSuggestions || filteredSuggestions.length === 0) return;
     setSelectedInvoicesMap((prev) => {
       const next = { ...prev };
-      if (allSuggestedSelected) {
-        suggestions.forEach((s: any) => {
-          delete next[s.invoice.id];
-        });
-        toast.success("Đã bỏ chọn toàn bộ gợi ý");
-      } else {
-        suggestions.forEach((s: any) => {
+      filteredSuggestions.forEach((s: any) => {
+        if (s?.invoice) {
           next[s.invoice.id] = s.invoice;
-        });
-        toast.success(`Đã chọn toàn bộ ${suggestions.length} hóa đơn gợi ý`);
-      }
+        }
+      });
       return next;
     });
+    toast.success(
+      `Đã chọn toàn bộ ${filteredSuggestions.length} hóa đơn gợi ý`,
+    );
   };
 
   const handleSave = async () => {
@@ -467,6 +557,7 @@ export function InvoiceSelectionDrawer({
     );
   }, [invoiceData?.items, selectedInvoicesMap, isAllCurrentPageSelected]);
 
+  // Columns: Removed attachments and status; moved settlementOrder & licensePlate right before description
   const columns = useMemo(() => {
     const isOut = linkType === "OUT";
 
@@ -515,140 +606,6 @@ export function InvoiceSelectionDrawer({
             </div>
           );
         },
-      },
-      {
-        key: "attachments",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("erpInvoices:attachments", "Chứng từ")}
-            sortState="none"
-            onSortChange={() => {}}
-            searchValue=""
-            onSearchChange={() => {}}
-            selectedFilters={tableState.columnFilters["attachments"] || []}
-            onFilterChange={(vals) => {
-              tableState.setColumnFilter("attachments", vals);
-              setPage(1);
-            }}
-            align="center"
-            columnKey="attachments"
-            filterOptions={[
-              { value: "has_pdf", label: "Có file PDF" },
-              { value: "has_xml", label: "Có file XML" },
-              { value: "no_pdf", label: "Không có file PDF" },
-              { value: "no_xml", label: "Không có file XML" },
-            ]}
-          />
-        ),
-        size: 110,
-        headerClassName: "text-center",
-        className: "text-center",
-        enableResizing: true,
-        cell: (inv: ErpInvoice) => (
-          <div className="flex items-center justify-center gap-1.5">
-            {inv.xmlFileKey ? (
-              <Tooltip content={t("erpInvoices:downloadXml", "Tải file XML")}>
-                <div
-                  className="cursor-pointer"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDownload(inv.id, "xml");
-                  }}
-                >
-                  <FileCode className="w-4 h-4 text-slate-700 hover:text-primary transition-colors" />
-                </div>
-              </Tooltip>
-            ) : (
-              <Tooltip content={t("erpInvoices:noXml", "Chưa có file XML")}>
-                <FileCode className="w-4 h-4 text-slate-300 dark:text-slate-600" />
-              </Tooltip>
-            )}
-
-            {inv.pdfFileKey ||
-            (inv.pdfFiles && inv.pdfFiles.length > 0) ||
-            (inv.attachments &&
-              getPdfAttachments(inv.attachments).length > 0) ? (
-              <Popover
-                align="start"
-                open={openPopoverId === inv.id}
-                onOpenChange={(open) => setOpenPopoverId(open ? inv.id : null)}
-                content={
-                  <div className="p-3 w-[320px]">
-                    <div className="text-xs font-semibold mb-2 text-slate-800 dark:text-slate-200">
-                      Danh sách file PDF
-                    </div>
-                    <div className="flex flex-col gap-1.5 max-h-[220px] overflow-y-auto">
-                      {inv.pdfFileKey && (
-                        <div className="flex items-center justify-between text-xs py-1.5 px-2.5 border rounded-lg">
-                          <span className="truncate font-medium text-slate-700 dark:text-slate-300 flex-1 mr-2">
-                            {(inv.pdfFileKey as string).split("/").pop() ||
-                              "Hóa đơn PDF (Gốc)"}
-                          </span>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7 text-muted-foreground hover:text-foreground"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setOpenPopoverId(null);
-                              handleDownload(inv.id, "pdf");
-                            }}
-                          >
-                            <Eye className="w-3.5 h-3.5" />
-                          </Button>
-                        </div>
-                      )}
-                      {getPdfAttachments(inv.attachments ?? []).map(
-                        (pdf: any) => (
-                          <div
-                            key={pdf.attachment?.fileKey || pdf.attachment?.id}
-                            className="flex items-center justify-between text-xs py-1.5 px-2.5 border rounded-lg"
-                          >
-                            <span className="truncate font-medium text-slate-700 dark:text-slate-300 flex-1 mr-2">
-                              {pdf.attachment?.fileName || "Hóa đơn đính kèm"}
-                            </span>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-7 w-7 text-muted-foreground hover:text-foreground"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setOpenPopoverId(null);
-                                const url = getFileViewUrl(pdf.attachment?.id);
-                                setPreviewPdf({
-                                  url,
-                                  filename:
-                                    pdf.attachment?.fileName || "document.pdf",
-                                  fileKey: pdf.attachment?.id,
-                                  invoiceId: inv.id,
-                                  isAttachment: true,
-                                });
-                              }}
-                            >
-                              <Eye className="w-3.5 h-3.5" />
-                            </Button>
-                          </div>
-                        ),
-                      )}
-                    </div>
-                  </div>
-                }
-              >
-                <div onClick={(e) => e.stopPropagation()}>
-                  <Tooltip content={t("erpInvoices:pdfList", "File PDF")}>
-                    <div className="cursor-pointer">
-                      <FileText className="w-4 h-4 text-slate-700 hover:text-primary transition-colors" />
-                    </div>
-                  </Tooltip>
-                </div>
-              </Popover>
-            ) : (
-              <Tooltip content={t("erpInvoices:noPdf", "Chưa có file PDF")}>
-                <FileText className="w-4 h-4 text-slate-300 dark:text-slate-600" />
-              </Tooltip>
-            )}
-          </div>
-        ),
       },
       {
         key: "invoiceDate",
@@ -746,15 +703,9 @@ export function InvoiceSelectionDrawer({
                     "Hóa đơn này đã được liên kết với phiếu dịch vụ",
                   )}
                 >
-                  <Badge
-                    variant="outline"
-                    className="text-[9px] px-1 py-0 h-4 shrink-0 font-medium border-emerald-400 text-emerald-700 bg-emerald-50 dark:border-emerald-700/60 dark:text-emerald-300 dark:bg-emerald-950/40 inline-flex items-center gap-0.5 whitespace-nowrap ml-auto"
-                  >
-                    <CheckCircle2 className="w-2.5 h-2.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                    <span>
-                      {t("cases.invoiceDrawer.alreadyLinked", "Đã liên kết")}
-                    </span>
-                  </Badge>
+                  <span className="text-emerald-600 dark:text-emerald-400 shrink-0 ml-auto inline-flex items-center">
+                    <Link2 className="w-3.5 h-3.5" />
+                  </span>
                 </Tooltip>
               )}
             </div>
@@ -886,158 +837,38 @@ export function InvoiceSelectionDrawer({
         },
       },
       {
-        key: "description",
+        key: "settlementOrder",
         header: (
           <TableColumnHeaderFilter
-            title={t("erpInvoices:description", "Diễn giải")}
-            sortState={getSortState("description")}
+            title={t("erpInvoices:settlementOrder", "Lệnh QT")}
+            sortState={getSortState("settlementOrder")}
             onSortChange={(state) => {
-              tableState.setSort("description", state);
+              tableState.setSort("settlementOrder", state);
               setPage(1);
             }}
-            searchValue={tableState.columnSearch["description"] || ""}
+            searchValue={tableState.columnSearch["settlementOrder"] || ""}
             onSearchChange={(val) => {
-              tableState.setColumnSearch("description", val);
+              tableState.setColumnSearch("settlementOrder", val);
               setPage(1);
             }}
-            selectedFilters={tableState.columnFilters["description"] || []}
+            selectedFilters={tableState.columnFilters["settlementOrder"] || []}
             onFilterChange={(vals) => {
-              tableState.setColumnFilter("description", vals);
+              tableState.setColumnFilter("settlementOrder", vals);
               setPage(1);
             }}
             align="center"
-            columnKey="description"
+            columnKey="settlementOrder"
             queryKeyPrefix={`garage-invoice-options-${linkType}`}
             allFilters={tableState.columnFilters}
             fetchOptions={fetchInvoiceOptions}
             showBlankOption={true}
           />
         ),
-        size: 260,
-        headerClassName: "text-center",
-        className: "text-left whitespace-normal",
-        enableResizing: true,
-        cell: (row: ErpInvoice) => (
-          <TableText
-            text={(row.description || "—").replace(/\n/g, " ")}
-            tooltip={true}
-            textClassName="line-clamp-2 break-words whitespace-normal text-slate-700 dark:text-slate-300 text-xs"
-          />
-        ),
-      },
-      {
-        key: "preVatAmount",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("erpInvoices:preVatAmount", "Trước GTGT")}
-            sortState={getSortState("preVatAmount")}
-            onSortChange={(state) => {
-              tableState.setSort("preVatAmount", state);
-              setPage(1);
-            }}
-            searchValue={tableState.columnSearch["preVatAmount"] || ""}
-            onSearchChange={(val) => {
-              tableState.setColumnSearch("preVatAmount", val);
-              setPage(1);
-            }}
-            selectedFilters={tableState.columnFilters["preVatAmount"] || []}
-            onFilterChange={(vals) => {
-              tableState.setColumnFilter("preVatAmount", vals);
-              setPage(1);
-            }}
-            align="center"
-            columnKey="preVatAmount"
-          />
-        ),
-        size: 120,
-        headerClassName: "text-center",
-        className: "text-right font-mono tabular-nums text-xs",
-        enableResizing: true,
-        cell: (inv: ErpInvoice) =>
-          inv.preVatAmount ? money(Number(inv.preVatAmount)) : "—",
-      },
-      {
-        key: "vatRate",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("erpInvoices:vatRate", "Thuế suất")}
-            sortState={getSortState("vatRate")}
-            onSortChange={(state) => {
-              tableState.setSort("vatRate", state);
-              setPage(1);
-            }}
-            searchValue=""
-            onSearchChange={() => {}}
-            selectedFilters={[]}
-            onFilterChange={() => {}}
-            align="center"
-            columnKey="vatRate"
-            hideFilter={true}
-          />
-        ),
-        size: 90,
-        headerClassName: "text-center",
-        className: "text-center font-mono text-xs",
-        enableResizing: true,
-        cell: (inv: ErpInvoice) =>
-          inv.vatRate != null ? `${Number(inv.vatRate) * 100}%` : "—",
-      },
-      {
-        key: "vatAmount",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("erpInvoices:vatAmount", "Tiền thuế")}
-            sortState={getSortState("vatAmount")}
-            onSortChange={(state) => {
-              tableState.setSort("vatAmount", state);
-              setPage(1);
-            }}
-            searchValue=""
-            onSearchChange={() => {}}
-            selectedFilters={[]}
-            onFilterChange={() => {}}
-            align="center"
-            columnKey="vatAmount"
-            hideFilter={true}
-          />
-        ),
-        size: 120,
-        headerClassName: "text-center",
-        className: "text-right font-mono tabular-nums text-xs",
-        enableResizing: true,
-        cell: (inv: ErpInvoice) =>
-          inv.vatAmount ? money(Number(inv.vatAmount)) : "—",
-      },
-      {
-        key: "totalAmount",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("erpInvoices:totalAmount", "Tổng tiền")}
-            sortState={getSortState("totalAmount")}
-            onSortChange={(state) => {
-              tableState.setSort("totalAmount", state);
-              setPage(1);
-            }}
-            searchValue={tableState.columnSearch["totalAmount"] || ""}
-            onSearchChange={(val) => {
-              tableState.setColumnSearch("totalAmount", val);
-              setPage(1);
-            }}
-            selectedFilters={tableState.columnFilters["totalAmount"] || []}
-            onFilterChange={(vals) => {
-              tableState.setColumnFilter("totalAmount", vals);
-              setPage(1);
-            }}
-            align="center"
-            columnKey="totalAmount"
-          />
-        ),
         size: 130,
         headerClassName: "text-center",
-        className:
-          "text-right font-semibold font-mono tabular-nums text-primary text-xs",
+        className: "text-left font-mono text-xs",
         enableResizing: true,
-        cell: (inv: ErpInvoice) => money(Number(inv.totalAmount || 0)),
+        cell: (inv: ErpInvoice) => inv.settlementOrder || "—",
       },
       {
         key: "licensePlate",
@@ -1081,76 +912,75 @@ export function InvoiceSelectionDrawer({
           ),
       },
       {
-        key: "settlementOrder",
+        key: "description",
         header: (
           <TableColumnHeaderFilter
-            title={t("erpInvoices:settlementOrder", "Lệnh QT")}
-            sortState={getSortState("settlementOrder")}
+            title={t("erpInvoices:description", "Diễn giải")}
+            sortState={getSortState("description")}
             onSortChange={(state) => {
-              tableState.setSort("settlementOrder", state);
+              tableState.setSort("description", state);
               setPage(1);
             }}
-            searchValue={tableState.columnSearch["settlementOrder"] || ""}
+            searchValue={tableState.columnSearch["description"] || ""}
             onSearchChange={(val) => {
-              tableState.setColumnSearch("settlementOrder", val);
+              tableState.setColumnSearch("description", val);
               setPage(1);
             }}
-            selectedFilters={tableState.columnFilters["settlementOrder"] || []}
+            selectedFilters={tableState.columnFilters["description"] || []}
             onFilterChange={(vals) => {
-              tableState.setColumnFilter("settlementOrder", vals);
+              tableState.setColumnFilter("description", vals);
               setPage(1);
             }}
             align="center"
-            columnKey="settlementOrder"
+            columnKey="description"
             queryKeyPrefix={`garage-invoice-options-${linkType}`}
             allFilters={tableState.columnFilters}
             fetchOptions={fetchInvoiceOptions}
             showBlankOption={true}
           />
         ),
-        size: 130,
+        size: 260,
         headerClassName: "text-center",
-        className: "text-left font-mono text-xs",
+        className: "text-left whitespace-normal",
         enableResizing: true,
-        cell: (inv: ErpInvoice) => inv.settlementOrder || "—",
+        cell: (row: ErpInvoice) => (
+          <TableText
+            text={(row.description || "—").replace(/\n/g, " ")}
+            tooltip={true}
+            textClassName="line-clamp-2 break-words whitespace-normal text-slate-700 dark:text-slate-300 text-xs"
+          />
+        ),
       },
       {
-        key: "status",
+        key: "totalAmount",
         header: (
           <TableColumnHeaderFilter
-            title={t("erpInvoices:status", "Trạng thái")}
-            sortState={getSortState("status")}
+            title={t("erpInvoices:totalAmount", "Tổng tiền")}
+            sortState={getSortState("totalAmount")}
             onSortChange={(state) => {
-              tableState.setSort("status", state);
+              tableState.setSort("totalAmount", state);
               setPage(1);
             }}
-            searchValue=""
-            onSearchChange={() => {}}
-            selectedFilters={tableState.columnFilters["status"] || []}
+            searchValue={tableState.columnSearch["totalAmount"] || ""}
+            onSearchChange={(val) => {
+              tableState.setColumnSearch("totalAmount", val);
+              setPage(1);
+            }}
+            selectedFilters={tableState.columnFilters["totalAmount"] || []}
             onFilterChange={(vals) => {
-              tableState.setColumnFilter("status", vals);
+              tableState.setColumnFilter("totalAmount", vals);
               setPage(1);
             }}
             align="center"
-            columnKey="status"
-            filterOptions={[
-              { label: "CONFIRMED", value: "CONFIRMED" },
-              { label: "DRAFT", value: "DRAFT" },
-            ]}
+            columnKey="totalAmount"
           />
         ),
-        size: 110,
+        size: 130,
         headerClassName: "text-center",
-        className: "text-center",
+        className:
+          "text-right font-semibold font-mono tabular-nums text-primary text-xs",
         enableResizing: true,
-        cell: (inv: ErpInvoice) => (
-          <Badge
-            variant="outline"
-            className="w-[85px] inline-flex items-center justify-center text-center truncate text-[10px]"
-          >
-            {inv.status || "CONFIRMED"}
-          </Badge>
-        ),
+        cell: (inv: ErpInvoice) => money(Number(inv.totalAmount || 0)),
       },
     ];
   }, [
@@ -1160,23 +990,12 @@ export function InvoiceSelectionDrawer({
     tableState,
     dateFrom,
     dateTo,
-    openPopoverId,
     t,
   ]);
 
   // Subtotal calculations
   const summaryRow = useMemo(() => {
     const items = invoiceData?.items || [];
-    const totalPreVat = items.reduce(
-      (acc: number, curr: ErpInvoice) =>
-        acc + (parseFloat(String(curr.preVatAmount)) || 0),
-      0,
-    );
-    const totalVat = items.reduce(
-      (acc: number, curr: ErpInvoice) =>
-        acc + (parseFloat(String(curr.vatAmount)) || 0),
-      0,
-    );
     const totalAmount = items.reduce(
       (acc: number, curr: ErpInvoice) =>
         acc + (parseFloat(String(curr.totalAmount)) || 0),
@@ -1185,7 +1004,6 @@ export function InvoiceSelectionDrawer({
 
     return {
       select: null,
-      attachments: "",
       invoiceDate: "",
       invoiceNo: (
         <span className="font-semibold text-slate-700 dark:text-slate-300">
@@ -1195,24 +1013,12 @@ export function InvoiceSelectionDrawer({
       serialNo: "",
       partner: "",
       taxCode: "",
+      settlementOrder: "",
+      licensePlate: "",
       description: "",
-      preVatAmount: (
-        <span className="font-medium text-slate-700 dark:text-slate-300">
-          {money(totalPreVat)}
-        </span>
-      ),
-      vatRate: "",
-      vatAmount: (
-        <span className="font-medium text-slate-700 dark:text-slate-300">
-          {money(totalVat)}
-        </span>
-      ),
       totalAmount: (
         <span className="font-bold text-primary">{money(totalAmount)}</span>
       ),
-      licensePlate: "",
-      settlementOrder: "",
-      status: "",
     };
   }, [invoiceData?.items, t]);
 
@@ -1225,13 +1031,25 @@ export function InvoiceSelectionDrawer({
 
   return (
     <>
-      <DrawerModal
+      <StandardFormDrawer
         open={open}
+        mode="edit"
         onClose={onClose}
         title={t("cases.invoiceDrawer.title", {
           defaultValue: `Liên kết Hóa đơn VAT${caseCode ? `: ${caseCode}` : ""}`,
         })}
-        panelClassName="w-full max-w-[96vw] xl:max-w-[1440px] 2xl:max-w-[1550px]"
+        subtitle={
+          caseCode
+            ? t("cases.invoiceDrawer.subtitle", {
+                code: caseCode,
+                defaultValue: `Đối soát 2 chiều với Sổ báo giá ${caseCode}`,
+              })
+            : undefined
+        }
+        layout="2-columns"
+        size="xl"
+        collapsibleRightPanel={true}
+        stickyRightPanel={false}
         bodyClassName="h-full flex flex-col p-3.5 overflow-hidden min-h-0"
         actions={[
           {
@@ -1257,10 +1075,8 @@ export function InvoiceSelectionDrawer({
             onClick: handleSave,
           },
         ]}
-      >
-        <div className="flex flex-col lg:flex-row h-full min-h-0 flex-1 gap-3 overflow-hidden">
-          {/* ── LEFT COLUMN: PILL TABS & MAIN TABLE ── */}
-          <div className="flex-1 min-w-0 flex flex-col h-full gap-2.5 overflow-hidden">
+        leftPanel={
+          <div className="h-[calc(100vh-180px)] flex flex-col gap-2.5 min-h-0 overflow-hidden">
             {/* Flagship Pill Tabs: OUT vs IN */}
             <div className="shrink-0">
               <PillTabs
@@ -1291,7 +1107,7 @@ export function InvoiceSelectionDrawer({
               />
             </div>
 
-            {/* Main Table: StandardTable with Spreadsheet variant */}
+            {/* Main Table: StandardTable with Spreadsheet variant inside DrawerSection */}
             <DrawerSection
               title={
                 <div className="flex items-center gap-2 flex-wrap">
@@ -1305,6 +1121,11 @@ export function InvoiceSelectionDrawer({
                     <span className="text-xs font-normal text-muted-foreground lowercase">
                       ({invoiceData.total} {t("erpInvoices:records", "hóa đơn")}
                       )
+                    </span>
+                  )}
+                  {selectedCount > 0 && (
+                    <span className="text-xs font-semibold text-primary">
+                      ({selectedCount} đã chọn)
                     </span>
                   )}
                 </div>
@@ -1325,6 +1146,8 @@ export function InvoiceSelectionDrawer({
                   )}
                 </div>
               }
+              collapsible={true}
+              defaultCollapsed={false}
               className="flex-1 flex flex-col min-h-0 mb-0 p-3 [&>div:last-child]:flex-1 [&>div:last-child]:flex [&>div:last-child]:flex-col [&>div:last-child]:min-h-0"
               bodyClassName="flex-1 flex flex-col min-h-0 p-0"
             >
@@ -1356,9 +1179,9 @@ export function InvoiceSelectionDrawer({
               </div>
             </DrawerSection>
           </div>
-
-          {/* ── RIGHT COLUMN: TARGET CONTEXT, SMART SUGGESTIONS & NOTE ── */}
-          <div className="w-full lg:w-[380px] xl:w-[410px] shrink-0 flex flex-col gap-2.5 overflow-y-auto max-h-[calc(100vh-140px)] pr-1 scrollbar-thin">
+        }
+        rightPanel={
+          <div className="w-full flex flex-col gap-2.5 overflow-y-auto max-h-[calc(100vh-140px)] pr-1 scrollbar-thin">
             {/* Section 1: Thông tin Vụ việc & Tiến độ Đối soát */}
             <DrawerSection
               title={t(
@@ -1423,44 +1246,66 @@ export function InvoiceSelectionDrawer({
                     </span>
                   </div>
                 )}
-
-                {/* Selected Invoices Mini List */}
-                {selectedInvoicesList.length > 0 && (
-                  <div className="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-1.5">
-                    <div className="text-[11px] text-slate-400 font-medium">
-                      Danh sách hóa đơn đã chọn ({selectedInvoicesList.length}):
-                    </div>
-                    <div className="space-y-1 max-h-36 overflow-y-auto pr-1">
-                      {selectedInvoicesList.map((inv) => (
-                        <div
-                          key={inv.id}
-                          className="flex items-center justify-between p-1.5 rounded-md bg-slate-50 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/60 text-[11px]"
-                        >
-                          <div className="flex flex-col min-w-0">
-                            <span className="font-mono font-semibold text-slate-800 dark:text-slate-200 truncate">
-                              Số: {inv.invoiceNo || "---"}
-                            </span>
-                            <span className="text-[10px] text-slate-400 font-mono">
-                              {money(Number(inv.totalAmount || 0))}
-                            </span>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => handleToggleInvoice(inv)}
-                            className="text-slate-400 hover:text-rose-500 p-0.5 rounded transition-colors"
-                            title="Bỏ chọn"
-                          >
-                            ×
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
               </div>
             </DrawerSection>
 
-            {/* Section 2: Gợi ý Đối soát Thông minh (AI) */}
+            {/* Section 2: Hóa đơn đã chọn (Dedicated Section with Card UI like SmartInvoiceSuggestionCard) */}
+            <DrawerSection
+              title={
+                <div className="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400 font-semibold">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <span>
+                    {t(
+                      "cases.invoiceDrawer.selectedCount",
+                      `Hóa đơn đã chọn (${selectedCount})`,
+                      { count: selectedCount },
+                    )}
+                  </span>
+                </div>
+              }
+              titleExtra={
+                selectedCount >= 2 ? (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      setSelectedInvoicesMap({});
+                      toast.success("Đã bỏ chọn tất cả hóa đơn");
+                    }}
+                    className="h-5 text-[10px] px-1.5 py-0 border-rose-300 dark:border-rose-700 bg-white/80 dark:bg-slate-900/80 hover:bg-rose-50 text-rose-700 dark:text-rose-300 font-medium cursor-pointer"
+                  >
+                    <X className="w-2.5 h-2.5 mr-0.5 text-rose-500" />
+                    {t("cases.invoiceDrawer.unselectAll", "Bỏ chọn tất cả")}
+                  </Button>
+                ) : undefined
+              }
+              collapsible={true}
+              defaultCollapsed={false}
+            >
+              {selectedInvoicesList.length > 0 ? (
+                <div className="space-y-2 max-h-[380px] overflow-y-auto pr-1 scrollbar-thin">
+                  {selectedInvoicesList.map((inv) => (
+                    <SelectedInvoiceCard
+                      key={inv.id}
+                      invoice={inv}
+                      onRemove={() => handleToggleInvoice(inv)}
+                      onViewDetail={(i) =>
+                        setViewInvoiceId(typeof i === "object" ? i.id : i)
+                      }
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="py-3 text-center text-[11px] text-slate-400 italic">
+                  {t(
+                    "cases.invoiceDrawer.noSelectedInvoices",
+                    "Chưa chọn hóa đơn nào. Bạn có thể tick chọn trong bảng hoặc chọn từ gợi ý bên dưới.",
+                  )}
+                </div>
+              )}
+            </DrawerSection>
+
+            {/* Section 3: Gợi ý Đối soát Thông minh (AI) - ONLY unselected suggestions */}
             {caseId && (
               <DrawerSection
                 title={
@@ -1468,25 +1313,34 @@ export function InvoiceSelectionDrawer({
                     <Sparkles className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
                     <span>
                       {linkType === "OUT"
-                        ? "Gợi ý HĐ Bán ra"
-                        : "Gợi ý HĐ Mua vào"}
+                        ? t(
+                            "cases.invoiceDrawer.suggestedOut",
+                            "Gợi ý HĐ Bán ra",
+                          )
+                        : t(
+                            "cases.invoiceDrawer.suggestedIn",
+                            "Gợi ý HĐ Mua vào",
+                          )}
+                      {filteredSuggestions.length > 0
+                        ? ` (${filteredSuggestions.length})`
+                        : ""}
                     </span>
                   </div>
                 }
                 titleExtra={
-                  suggestions.length >= 2 ? (
+                  filteredSuggestions.length >= 2 ? (
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={handleSelectAllSuggestions}
+                      onClick={handleSelectAllFilteredSuggestions}
                       className="h-5 text-[10px] px-1.5 py-0 border-indigo-300 dark:border-indigo-700 bg-white/80 dark:bg-slate-900/80 hover:bg-indigo-50 dark:hover:bg-indigo-950/60 text-indigo-900 dark:text-indigo-200 font-medium cursor-pointer"
                     >
                       <CheckCircle2 className="w-2.5 h-2.5 mr-1 text-indigo-600 dark:text-indigo-400" />
-                      {suggestions.every(
-                        (s: any) => !!selectedInvoicesMap[s.invoice.id],
-                      )
-                        ? "Bỏ chọn hết"
-                        : `Chọn tất cả (${suggestions.length})`}
+                      {t(
+                        "cases.invoiceDrawer.selectAllSuggestions",
+                        `Chọn tất cả (${filteredSuggestions.length})`,
+                        { count: filteredSuggestions.length },
+                      )}
                     </Button>
                   ) : undefined
                 }
@@ -1498,35 +1352,43 @@ export function InvoiceSelectionDrawer({
                     <Loader2 className="w-3.5 h-3.5 animate-spin" />
                     Đang tìm kiếm gợi ý...
                   </div>
-                ) : suggestions.length > 0 ? (
+                ) : filteredSuggestions.length > 0 ? (
                   <div className="space-y-2 max-h-[380px] overflow-y-auto pr-1 scrollbar-thin">
-                    {suggestions.map((s: any) => {
-                      const isSelected = !!selectedInvoicesMap[s.invoice.id];
-                      return (
-                        <SmartInvoiceSuggestionCard
-                          key={s.invoice.id}
-                          suggestion={s}
-                          isSelected={isSelected}
-                          onAccept={() => handleToggleSuggestion(s)}
-                          onViewDetail={(inv) =>
-                            setViewInvoiceId(
-                              typeof inv === "object" ? inv.id : inv,
-                            )
-                          }
-                        />
-                      );
-                    })}
+                    {filteredSuggestions.map((s: any) => (
+                      <SmartInvoiceSuggestionCard
+                        key={s.invoice.id}
+                        suggestion={s}
+                        isSelected={false}
+                        onAccept={() => handleToggleSuggestion(s)}
+                        onViewDetail={(inv) =>
+                          setViewInvoiceId(
+                            typeof inv === "object" ? inv.id : inv,
+                          )
+                        }
+                      />
+                    ))}
+                  </div>
+                ) : suggestions.length > 0 ? (
+                  <div className="py-3 text-center text-[11px] text-emerald-600 dark:text-emerald-400 font-medium flex items-center justify-center gap-1">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                    {t(
+                      "cases.invoiceDrawer.allSuggestionsSelected",
+                      `Đã chọn toàn bộ (${suggestions.length}) hóa đơn gợi ý.`,
+                      { count: suggestions.length },
+                    )}
                   </div>
                 ) : (
                   <div className="py-3 text-center text-[11px] text-slate-400 italic">
-                    Chưa tìm thấy hóa đơn khớp chính xác. Bạn có thể tìm trong
-                    danh sách bảng bên trái.
+                    {t(
+                      "cases.invoiceDrawer.noSuggestions",
+                      "Chưa tìm thấy hóa đơn khớp chính xác. Bạn có thể tìm trong danh sách bảng bên trái.",
+                    )}
                   </div>
                 )}
               </DrawerSection>
             )}
 
-            {/* Section 3: Ghi chú liên kết */}
+            {/* Section 4: Ghi chú liên kết */}
             <DrawerSection
               title={t("cases.invoiceDrawer.note", "Ghi chú liên kết")}
               collapsible={true}
@@ -1546,8 +1408,8 @@ export function InvoiceSelectionDrawer({
               />
             </DrawerSection>
           </div>
-        </div>
-      </DrawerModal>
+        }
+      />
 
       {/* Standalone Full Invoice Details Drawer with preview, sidebar and tabs */}
       <ErpInvoiceStandaloneDrawer

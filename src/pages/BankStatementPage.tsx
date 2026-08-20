@@ -243,8 +243,12 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
               dateFrom={filter.state.dateFrom}
               dateTo={filter.state.dateTo}
               onChange={(from, to) => {
-                filter.setDateFrom(from);
-                filter.setDateTo(to);
+                if (filter.setDateRange) {
+                  filter.setDateRange(from, to);
+                } else {
+                  filter.setDateFrom(from);
+                  filter.setDateTo(to);
+                }
                 setPage(1);
               }}
               onClose={close}

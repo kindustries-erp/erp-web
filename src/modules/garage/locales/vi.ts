@@ -228,6 +228,19 @@ export const garageVi = {
       retailCustomer: "Khách lẻ",
       selectPrompt: "Vui lòng chọn 1 hóa đơn để liên kết",
       linkSuccess: "Đã liên kết thành công HĐ {{invoiceNo}} với vụ việc!",
+      selectedSectionTitle: "Hóa đơn đã chọn",
+      selectedCount: "Hóa đơn đã chọn ({{count}})",
+      unselectAll: "Bỏ chọn tất cả",
+      unselect: "Bỏ chọn",
+      selected: "Đã chọn",
+      allSuggestionsSelected: "Đã chọn toàn bộ {{count}} hóa đơn gợi ý",
+      noSelectedInvoices:
+        "Chưa chọn hóa đơn nào. Bạn có thể tick chọn trong bảng hoặc chọn từ gợi ý bên dưới.",
+      noSuggestions:
+        "Chưa tìm thấy hóa đơn khớp chính xác. Bạn có thể tìm trong danh sách bảng bên trái.",
+      suggestedOut: "Gợi ý HĐ Bán ra",
+      suggestedIn: "Gợi ý HĐ Mua vào",
+      selectAllSuggestions: "Chọn tất cả ({{count}})",
     },
     settlementSection: {
       cashflowOverview: "Tổng quan Dòng tiền & Đối soát thanh toán",

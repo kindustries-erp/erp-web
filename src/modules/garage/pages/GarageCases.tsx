@@ -40,7 +40,6 @@ import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { applyGarageCasesTableState } from "../utils/garageCasesTable";
 import { GarageCaseSettlementDrawerModal } from "../components/GarageCaseSettlementDrawerModal";
 import { InvoiceSelectionDrawer } from "../components/InvoiceSelectionDrawer";
-import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/Button";
 
 export function GarageCases() {
@@ -435,6 +434,9 @@ export function GarageCases() {
 
         const outCount = Number(item.linkedInvoiceOutCount || 0);
         const inCount = Number(item.linkedInvoiceInCount || 0);
+        const totalLinked = Number(
+          item.linkedInvoiceCount || outCount + inCount || 0,
+        );
 
         return (
           <div className="flex items-center gap-1.5 w-full min-w-0">
@@ -447,63 +449,44 @@ export function GarageCases() {
               onDetailClick={() => setSelectedCaseId(item.soChungTu)}
             />
 
-            {outCount > 0 && (
+            {totalLinked > 0 && (
               <Tooltip
-                content={t(
-                  "cases.linkedInvoices.outTooltip",
-                  "{{count}} hóa đơn bán ra (doanh thu)",
-                  { count: outCount },
-                )}
+                content={
+                  outCount > 0 && inCount > 0
+                    ? `${outCount} HĐ bán ra (doanh thu), ${inCount} HĐ mua vào (chi phí)`
+                    : outCount > 0
+                      ? `${outCount} HĐ bán ra (doanh thu)`
+                      : inCount > 0
+                        ? `${inCount} HĐ mua vào (chi phí)`
+                        : t("cases.filter.hasLinked", "Đã liên kết HĐ")
+                }
               >
-                <Badge
-                  variant="outline"
-                  className="text-[9px] px-1 py-0 h-4 font-semibold border-emerald-400/80 text-emerald-700 bg-emerald-50/90 dark:border-emerald-700 dark:text-emerald-300 dark:bg-emerald-950/50 inline-flex items-center gap-0.5 shrink-0 cursor-pointer hover:bg-emerald-100 dark:hover:bg-emerald-900/60 transition-colors"
+                <button
+                  type="button"
                   onClick={(e) => {
                     e.stopPropagation();
                     setInvoiceLinkingCase(item);
                   }}
+                  className="text-emerald-600 dark:text-emerald-400 hover:text-primary transition-colors cursor-pointer shrink-0 inline-flex items-center justify-center p-0.5"
                 >
-                  <Link2 className="w-2.5 h-2.5 shrink-0" />
-                  <span>{outCount} BRA</span>
-                </Badge>
-              </Tooltip>
-            )}
-
-            {inCount > 0 && (
-              <Tooltip
-                content={t(
-                  "cases.linkedInvoices.inTooltip",
-                  "{{count}} hóa đơn mua vào (chi phí)",
-                  { count: inCount },
-                )}
-              >
-                <Badge
-                  variant="outline"
-                  className="text-[9px] px-1 py-0 h-4 font-semibold border-blue-400/80 text-blue-700 bg-blue-50/90 dark:border-blue-700 dark:text-blue-300 dark:bg-blue-950/50 inline-flex items-center gap-0.5 shrink-0 cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/60 transition-colors"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setInvoiceLinkingCase(item);
-                  }}
-                >
-                  <Link2 className="w-2.5 h-2.5 shrink-0" />
-                  <span>{inCount} MVÀ</span>
-                </Badge>
+                  <Link2 className="w-3.5 h-3.5" />
+                </button>
               </Tooltip>
             )}
 
             {isCanceled && (
               <Tooltip content={item.tenTinhTrangDichVu}>
-                <XCircle className="w-3.5 h-3.5 text-rose-500 dark:text-rose-400 shrink-0 ml-auto" />
+                <XCircle className="w-3.5 h-3.5 text-rose-500 dark:text-rose-400 shrink-0" />
               </Tooltip>
             )}
             {isInProgress && (
               <Tooltip content={item.tenTinhTrangDichVu}>
-                <Wrench className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400 shrink-0 ml-auto" />
+                <Wrench className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400 shrink-0" />
               </Tooltip>
             )}
             {isDraft && (
               <Tooltip content={item.tenTinhTrangDichVu}>
-                <FileClock className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 shrink-0 ml-auto" />
+                <FileClock className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 shrink-0" />
               </Tooltip>
             )}
           </div>
@@ -618,85 +601,7 @@ export function GarageCases() {
         />
       ),
     },
-    // 6. Bảo hiểm (BH)
-    {
-      key: "isInsuranceClaim",
-      label: t("cases.columns.insurance", "BH"),
-      header: (
-        <TableColumnHeaderFilter
-          {...createHeaderProps(
-            "isInsuranceClaim",
-            t("cases.columns.insurance", "BH"),
-            "center",
-            false,
-            (val: string) =>
-              val === "yes"
-                ? t("cases.common.yes", "Có")
-                : val === "no"
-                  ? t("cases.common.no", "Không")
-                  : val,
-          )}
-          {...commonOptionProps}
-        />
-      ),
-      sortable: false,
-      size: 90,
-      enableResizing: true,
-      className: "text-center",
-      cell: (item: any) =>
-        item.rawData?.XeLamBaoHiem ? (
-          <div className="w-full flex justify-center">
-            <Tooltip content={t("cases.drawer.insuranceClaim", "Làm bảo hiểm")}>
-              <ShieldCheck className="w-4 h-4 text-slate-600 dark:text-slate-400 hover:text-primary transition-colors" />
-            </Tooltip>
-          </div>
-        ) : (
-          <span className="text-muted-foreground/30 select-none font-normal">
-            —
-          </span>
-        ),
-    },
-    // 7. Ngày tiếp nhận (Ngày chứng từ)
-    {
-      key: "caseDate",
-      label: t("cases.columns.caseDate", "Ngày tiếp nhận"),
-      header: (
-        <TableColumnHeaderFilter
-          {...createHeaderProps(
-            "caseDate",
-            t("cases.columns.caseDate", "Ngày tiếp nhận"),
-            "center",
-            true,
-          )}
-          isActive={
-            !!(getDateRange("caseDate").from || getDateRange("caseDate").to)
-          }
-          hideFooter={true}
-          dateRangeSlot={({ close }) => (
-            <DateRangeColumnSlot
-              dateFrom={getDateRange("caseDate").from}
-              dateTo={getDateRange("caseDate").to}
-              onChange={(from, to) => {
-                handleDateRangeChange("caseDate", from, to);
-                close();
-              }}
-              onClose={close}
-            />
-          )}
-        />
-      ),
-      sortable: false,
-      size: 150,
-      enableResizing: true,
-      className: "text-right",
-      cell: (item: any) => (
-        <TableDateCell
-          date={item.ngayTiepNhan || item.ngayPhatSinh}
-          className="justify-end w-full"
-        />
-      ),
-    },
-    // 8. Ngày hoàn thành
+    // 6. Ngày hoàn thành
     {
       key: "ngayHoanThanhCongViec",
       label: t("cases.columns.completionDate", "Ngày kết thúc"),
@@ -739,7 +644,7 @@ export function GarageCases() {
         />
       ),
     },
-    // 9. Doanh thu
+    // 7. Doanh thu
     {
       key: "doanhThu",
       label: t("cases.columns.doanhThu", "Doanh thu"),
@@ -788,7 +693,7 @@ export function GarageCases() {
         return money(numVal);
       },
     },
-    // 10. Chi phí
+    // 8. Chi phí
     {
       key: "chiPhi",
       label: t("cases.columns.chiPhi", "Chi phí"),
@@ -837,7 +742,7 @@ export function GarageCases() {
         return money(numVal);
       },
     },
-    // 11. Lợi nhuận
+    // 9. Lợi nhuận
     {
       key: "loiNhuan",
       label: t("cases.columns.loiNhuan", "Lợi nhuận"),
@@ -896,7 +801,7 @@ export function GarageCases() {
         );
       },
     },
-    // 12. Biên LN (%)
+    // 10. Biên LN (%)
     {
       key: "margin",
       label: t("cases.columns.margin", "Biên LN"),
@@ -1002,7 +907,7 @@ export function GarageCases() {
         );
       },
     },
-    // 13. Tiến độ thu tiền (Phong cách Neutral Business)
+    // 11. Tiến độ thu tiền (Phong cách Neutral Business)
     {
       key: "collectionProgress",
       label: t("cases.columns.collectionProgress", "Tiến độ thu"),
@@ -1119,7 +1024,7 @@ export function GarageCases() {
         );
       },
     },
-    // 14. Tiến độ chi trả NCC (Dựa trên số tiền đã chi thực tế / tổng chi phí)
+    // 12. Tiến độ chi trả NCC (Dựa trên số tiền đã chi thực tế / tổng chi phí)
     {
       key: "costProgress",
       label: t("cases.columns.costProgress", "Tiến độ chi"),
@@ -1238,106 +1143,7 @@ export function GarageCases() {
         );
       },
     },
-    // 15. HĐ Liên kết
-    {
-      key: "hasLinkedInvoice",
-      label: t("cases.columns.linkedInvoice", "HĐ Liên kết"),
-      header: (
-        <TableColumnHeaderFilter
-          {...createHeaderProps(
-            "hasLinkedInvoice",
-            t("cases.columns.linkedInvoice", "HĐ Liên kết"),
-            "center",
-            false,
-            (val: string) => {
-              if (val === "YES")
-                return t("cases.filter.hasLinked", "Đã liên kết HĐ");
-              if (val === "NO")
-                return t("cases.filter.noLinked", "Chưa liên kết");
-              return val;
-            },
-          )}
-          fetchOptions={async () => ({
-            items: [
-              {
-                label: t("cases.filter.hasLinked", "Đã liên kết HĐ"),
-                value: "YES",
-              },
-              {
-                label: t("cases.filter.noLinked", "Chưa liên kết"),
-                value: "NO",
-              },
-            ],
-            total: 2,
-            next: null,
-          })}
-          allFilters={tableState.columnFilters}
-        />
-      ),
-      sortable: false,
-      size: 140,
-      enableResizing: true,
-      className: "text-center",
-      cell: (item: any) => {
-        const total = Number(item.linkedInvoiceCount || 0);
-        const outCount = Number(item.linkedInvoiceOutCount || 0);
-        const inCount = Number(item.linkedInvoiceInCount || 0);
-        if (total === 0) {
-          return (
-            <span className="text-muted-foreground/40 text-xs font-normal select-none">
-              —
-            </span>
-          );
-        }
-        return (
-          <div className="flex items-center justify-center gap-1 flex-wrap">
-            {outCount > 0 && (
-              <Tooltip
-                content={t(
-                  "cases.linkedInvoices.outTooltip",
-                  "{{count}} hóa đơn bán ra (doanh thu)",
-                  { count: outCount },
-                )}
-              >
-                <Badge
-                  variant="outline"
-                  className="text-[9px] px-1.5 py-0 h-4.5 font-medium border-emerald-300 text-emerald-700 bg-emerald-50/80 dark:border-emerald-700/60 dark:text-emerald-300 dark:bg-emerald-950/40 inline-flex items-center gap-1 cursor-pointer hover:bg-emerald-100/80 transition-colors"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setInvoiceLinkingCase(item);
-                  }}
-                >
-                  <Link2 className="w-2.5 h-2.5 shrink-0" />
-                  <span>{outCount} BRA</span>
-                </Badge>
-              </Tooltip>
-            )}
-            {inCount > 0 && (
-              <Tooltip
-                content={t(
-                  "cases.linkedInvoices.inTooltip",
-                  "{{count}} hóa đơn mua vào (chi phí)",
-                  { count: inCount },
-                )}
-              >
-                <Badge
-                  variant="outline"
-                  className="text-[9px] px-1.5 py-0 h-4.5 font-medium border-blue-300 text-blue-700 bg-blue-50/80 dark:border-blue-700/60 dark:text-blue-300 dark:bg-blue-950/40 inline-flex items-center gap-1 cursor-pointer hover:bg-blue-100/80 transition-colors"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setInvoiceLinkingCase(item);
-                  }}
-                >
-                  <Link2 className="w-2.5 h-2.5 shrink-0" />
-                  <span>{inCount} MVÀ</span>
-                </Badge>
-              </Tooltip>
-            )}
-          </div>
-        );
-      },
-    },
-    // 16. Chi nhánh Kgara
+    // 13. Chi nhánh Kgara
     {
       key: "branchName",
       label: t("cases.columns.branchName", "Chi nhánh"),
@@ -1365,7 +1171,7 @@ export function GarageCases() {
         return b?.name || "-";
       },
     },
-    // 16. Ngày tạo HT
+    // 14. Ngày tạo HT
     {
       key: "createdAt",
       label: t("cases.columns.createdAt", "Ngày tạo"),
@@ -1402,7 +1208,7 @@ export function GarageCases() {
         <TableDateCell date={item.createdAt} className="justify-end w-full" />
       ),
     },
-    // 17. Dữ liệu lúc
+    // 15. Dữ liệu lúc
     {
       key: "dataAsOf",
       label: t("cases.columns.dataAsOf", "Dữ liệu lúc"),
@@ -1437,6 +1243,84 @@ export function GarageCases() {
       className: "text-right",
       cell: (item: any) => (
         <TableDateCell date={item.dataAsOf} className="justify-end w-full" />
+      ),
+    },
+    // 16. Bảo hiểm (BH) - Di chuyển sang bên trái Ngày cập nhật
+    {
+      key: "isInsuranceClaim",
+      label: t("cases.columns.insurance", "BH"),
+      header: (
+        <TableColumnHeaderFilter
+          {...createHeaderProps(
+            "isInsuranceClaim",
+            t("cases.columns.insurance", "BH"),
+            "center",
+            false,
+            (val: string) =>
+              val === "yes"
+                ? t("cases.common.yes", "Có")
+                : val === "no"
+                  ? t("cases.common.no", "Không")
+                  : val,
+          )}
+          {...commonOptionProps}
+        />
+      ),
+      sortable: false,
+      size: 90,
+      enableResizing: true,
+      className: "text-center",
+      cell: (item: any) =>
+        item.rawData?.XeLamBaoHiem ? (
+          <div className="w-full flex justify-center">
+            <Tooltip content={t("cases.drawer.insuranceClaim", "Làm bảo hiểm")}>
+              <ShieldCheck className="w-4 h-4 text-slate-600 dark:text-slate-400 hover:text-primary transition-colors" />
+            </Tooltip>
+          </div>
+        ) : (
+          <span className="text-muted-foreground/30 select-none font-normal">
+            —
+          </span>
+        ),
+    },
+    // 17. Ngày tiếp nhận (Ngày chứng từ) - Di chuyển sang bên trái Ngày cập nhật
+    {
+      key: "caseDate",
+      label: t("cases.columns.caseDate", "Ngày tiếp nhận"),
+      header: (
+        <TableColumnHeaderFilter
+          {...createHeaderProps(
+            "caseDate",
+            t("cases.columns.caseDate", "Ngày tiếp nhận"),
+            "center",
+            true,
+          )}
+          isActive={
+            !!(getDateRange("caseDate").from || getDateRange("caseDate").to)
+          }
+          hideFooter={true}
+          dateRangeSlot={({ close }) => (
+            <DateRangeColumnSlot
+              dateFrom={getDateRange("caseDate").from}
+              dateTo={getDateRange("caseDate").to}
+              onChange={(from, to) => {
+                handleDateRangeChange("caseDate", from, to);
+                close();
+              }}
+              onClose={close}
+            />
+          )}
+        />
+      ),
+      sortable: false,
+      size: 150,
+      enableResizing: true,
+      className: "text-right",
+      cell: (item: any) => (
+        <TableDateCell
+          date={item.ngayTiepNhan || item.ngayPhatSinh}
+          className="justify-end w-full"
+        />
       ),
     },
     // 18. Ngày cập nhật
@@ -1508,7 +1392,7 @@ export function GarageCases() {
     }
 
     return {
-      isInsuranceClaim: (
+      ngayHoanThanhCongViec: (
         <div className="text-right w-full font-bold text-xs uppercase text-muted-foreground pr-2">
           {t("cases.common.total", "Tổng")}:
         </div>
