@@ -59,6 +59,7 @@ import { Tooltip } from "@/core/components/ui/Tooltip";
 import { Badge } from "@/shared/components/ui/badge";
 import { EmptyState } from "@/shared/components/EmptyState";
 import { TableRowHoverActions } from "./DataTable/TableRowHoverActions";
+import { TableRowContextMenu } from "./DataTable/TableRowContextMenu";
 import type { ActionDropdownItem } from "@/shared/components/ActionDropdown";
 
 function getNestedValue(obj: any, path: string | number | symbol) {
@@ -134,6 +135,9 @@ interface DataTableProps<T> {
   onPage?: (page: number) => void;
   onPageSize?: (pageSize: number) => void;
   onRowClick?: (item: T) => void;
+  getRowClassName?: (item: T, index: number) => string | undefined;
+  enableRowContextMenu?: boolean;
+  onRowContextMenu?: (item: T, index: number, event: React.MouseEvent) => void;
   renderSubRow?: (item: T) => ReactNode;
   expandedRowKeys?: string[];
   sortBy?: string;
@@ -370,6 +374,9 @@ export function DataTable<T>({
   onPage,
   onPageSize,
   onRowClick,
+  getRowClassName,
+  enableRowContextMenu = true,
+  onRowContextMenu,
   renderSubRow,
   expandedRowKeys,
   sortBy,
@@ -405,6 +412,13 @@ export function DataTable<T>({
       return defaultColumnVisibility || {};
     },
   );
+
+  const [contextMenu, setContextMenu] = useState<{
+    x: number;
+    y: number;
+    items: ActionDropdownItem[];
+    rowKey: string;
+  } | null>(null);
 
   const [internalColumnOrder, setInternalColumnOrder] = useState<string[]>(
     () => {
@@ -1152,24 +1166,67 @@ export function DataTable<T>({
               {!loading &&
                 !error &&
                 table.getRowModel().rows.map((row) => {
-                  const isExpanded = expandedRowKeys?.includes(
-                    getRowKey ? getRowKey(row.original) : row.id,
-                  );
+                  const rowKey = getRowKey ? getRowKey(row.original) : row.id;
+                  const isExpanded = expandedRowKeys?.includes(rowKey);
+                  const isContextMenuActive = contextMenu?.rowKey === rowKey;
+                  const rowIndex =
+                    page && pageSize
+                      ? (page - 1) * pageSize + row.index
+                      : row.index;
                   return (
                     <React.Fragment key={row.id}>
                       <TableRow
                         data-state={row.getIsSelected() && "selected"}
+                        data-context-menu-active={
+                          isContextMenuActive ? "true" : undefined
+                        }
                         className={cn(
                           "group",
                           onRowClick && "cursor-pointer",
                           isExpanded &&
                             "bg-muted/5 font-medium border-l-2 border-l-primary",
+                          isContextMenuActive &&
+                            "bg-primary/[0.04] dark:bg-primary/[0.08]",
+                          getRowClassName?.(row.original, rowIndex),
                         )}
                         onClick={
                           onRowClick
                             ? () => onRowClick(row.original)
                             : undefined
                         }
+                        onContextMenu={(e) => {
+                          if (onRowContextMenu) {
+                            onRowContextMenu(
+                              row.original,
+                              page && pageSize
+                                ? (page - 1) * pageSize + row.index + 1
+                                : row.index + 1,
+                              e,
+                            );
+                          }
+                          if (enableRowContextMenu !== false) {
+                            let actionItems: ActionDropdownItem[] | undefined;
+                            if (rowHoverActions) {
+                              actionItems = rowHoverActions(
+                                row.original,
+                                page && pageSize
+                                  ? (page - 1) * pageSize + row.index + 1
+                                  : row.index + 1,
+                                table.options.meta,
+                              );
+                            }
+                            if (actionItems && actionItems.length > 0) {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setContextMenu({
+                                x: e.clientX,
+                                y: e.clientY,
+                                items: actionItems,
+                                rowKey,
+                              });
+                            }
+                          }
+                        }}
                       >
                         {row.getVisibleCells().map((cell, index) => {
                           const isHoverActionsCol =
@@ -1333,6 +1390,15 @@ export function DataTable<T>({
           onPageSize={onPageSize}
         />
       )}
+      {contextMenu && (
+        <TableRowContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          items={contextMenu.items}
+          isOpen={Boolean(contextMenu)}
+          onClose={() => setContextMenu(null)}
+        />
+      )}
     </>
   );
 }
@@ -1341,3 +1407,7 @@ export {
   TableRowHoverActions,
   type TableRowHoverActionsProps,
 } from "./DataTable/TableRowHoverActions";
+export {
+  TableRowContextMenu,
+  type TableRowContextMenuProps,
+} from "./DataTable/TableRowContextMenu";

@@ -73,5 +73,8 @@ export interface SpreadsheetPageTemplateProps<T> {
 
   // --- Row Interaction ---
   onRowClick?: (row: T) => void;
+  getRowClassName?: (row: T, index: number) => string | undefined;
+  enableRowContextMenu?: boolean;
+  onRowContextMenu?: (item: T, index: number, event: React.MouseEvent) => void;
   loadingRows?: number;
 }

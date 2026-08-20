@@ -49,7 +49,7 @@ export function extractQuickActions(
   return result;
 }
 
-function resolveActionIcon(action: ActionItem): React.ReactNode {
+export function resolveActionIcon(action: ActionItem): React.ReactNode {
   if (action.icon) {
     return React.isValidElement(action.icon)
       ? React.cloneElement(action.icon as React.ReactElement, {

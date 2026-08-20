@@ -245,6 +245,16 @@ export function GarageCases() {
     [],
   );
 
+  const getGarageCaseRowClassName = useCallback((item: any) => {
+    if (
+      item.tinhTrangDichVu === 9 ||
+      item.tenTinhTrangDichVu?.toLowerCase().includes("hủy")
+    ) {
+      return "opacity-40 text-muted-foreground";
+    }
+    return undefined;
+  }, []);
+
   const { mutate: syncCaseDetail } = useSyncGarageCaseDetail();
 
   const [syncDrawerOpen, setSyncDrawerOpen] = useState(false);
@@ -1318,6 +1328,7 @@ export function GarageCases() {
         columns={columns}
         defaultColumnVisibility={defaultColumnVisibility}
         getRowKey={(item: any) => item.id}
+        getRowClassName={getGarageCaseRowClassName}
         loading={isLoading || isFetching}
         onRefresh={() => {
           refetch();
