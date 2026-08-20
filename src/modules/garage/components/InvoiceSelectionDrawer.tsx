@@ -53,7 +53,7 @@ export interface InvoiceSelectionDrawerProps {
   caseCode?: string;
   defaultLinkType?: "IN" | "OUT";
   onSuccess?: () => void;
-  onSubmit: (
+  onSubmit?: (
     payloads: InvoiceLinkPayloadItem[] | InvoiceLinkPayloadItem,
   ) => Promise<void> | void;
 }
@@ -116,16 +116,66 @@ export function InvoiceSelectionDrawer({
     enabled: open && !!caseId,
   });
 
-  // Reset state when opening
+  // Query currently linked invoices for this case
+  const { data: linkedInvoices = [] } = useQuery({
+    queryKey: ["garage-case-linked-invoices-for-drawer", caseId],
+    queryFn: () =>
+      caseId ? garageApi.getCaseLinkedInvoices(caseId) : Promise.resolve([]),
+    enabled: open && !!caseId,
+  });
+
+  const linkedInvoiceIdSet = useMemo(() => {
+    return new Set(
+      (linkedInvoices || []).map((l: any) => l.invoiceId).filter(Boolean),
+    );
+  }, [linkedInvoices]);
+
+  const initialLinkedInvoicesForType = useMemo(() => {
+    return (linkedInvoices || []).filter(
+      (l: any) => (l.linkType || "OUT") === linkType,
+    );
+  }, [linkedInvoices, linkType]);
+
+  const initialLinkedIdSet = useMemo(() => {
+    return new Set(
+      initialLinkedInvoicesForType.map((l: any) => l.invoiceId).filter(Boolean),
+    );
+  }, [initialLinkedInvoicesForType]);
+
+  // Reset table filters & search when opening drawer
   useEffect(() => {
     if (open) {
-      setLinkType(defaultLinkType);
-      setSelectedInvoicesMap({});
-      setViewInvoiceId(null);
-      setNote("");
+      tableState.resetFilters();
+      setDateFrom("");
+      setDateTo("");
       setPage(1);
     }
-  }, [open, defaultLinkType]);
+  }, [open]);
+
+  // Pre-select already linked invoices for the active linkType
+  useEffect(() => {
+    if (open) {
+      const map: Record<string, ErpInvoice> = {};
+      initialLinkedInvoicesForType.forEach((item: any) => {
+        if (item.invoiceId) {
+          map[item.invoiceId] = {
+            id: item.invoiceId,
+            invoiceNo: item.invoiceNo,
+            sellerName: item.sellerName,
+            buyerName: item.buyerName,
+            totalAmount: item.totalAmount,
+            preVatAmount: item.preVatAmount,
+            vatAmount: item.vatAmount,
+            description: item.description,
+            direction: item.direction || item.linkType,
+          } as ErpInvoice;
+        }
+      });
+      setSelectedInvoicesMap(map);
+      setViewInvoiceId(null);
+      setNote("");
+    }
+  }, [open, linkType, initialLinkedInvoicesForType]);
 
   const selectedInvoicesList = useMemo(
     () => Object.values(selectedInvoicesMap),
@@ -138,6 +188,19 @@ export function InvoiceSelectionDrawer({
       0,
     );
   }, [selectedInvoicesList]);
+
+  const currentSelectedIds = useMemo(
+    () => new Set(Object.keys(selectedInvoicesMap)),
+    [selectedInvoicesMap],
+  );
+
+  const hasChanged = useMemo(() => {
+    if (initialLinkedIdSet.size !== currentSelectedIds.size) return true;
+    for (const id of currentSelectedIds) {
+      if (!initialLinkedIdSet.has(id)) return true;
+    }
+    return false;
+  }, [initialLinkedIdSet, currentSelectedIds]);
 
   // Only pass sort_by and sort_order if user explicitly sorted a column in tableState (BE defaults to invoiceDate DESC)
   const sortBy =
@@ -271,34 +334,76 @@ export function InvoiceSelectionDrawer({
   };
 
   const handleSave = async () => {
-    if (selectedCount === 0) {
-      toast.error(
-        t(
-          "cases.invoiceDrawer.selectPrompt",
-          "Vui lòng chọn ít nhất 1 hóa đơn để liên kết",
-        ),
-      );
-      return;
-    }
+    if (!hasChanged) return;
 
     try {
       setIsSubmitting(true);
-      const payloads: InvoiceLinkPayloadItem[] = selectedInvoicesList.map(
-        (inv) => ({
-          invoiceId: inv.id,
-          linkType,
-          note: note || undefined,
-          invoice: inv,
-        }),
-      );
 
-      await onSubmit(payloads);
+      if (
+        caseId &&
+        !caseId.startsWith("tmp-") &&
+        !caseId.startsWith("manual-tmp-")
+      ) {
+        // 1. Gỡ bỏ các hóa đơn đã bỏ chọn (Removed links)
+        const removedLinks = (linkedInvoices || []).filter(
+          (l: any) =>
+            (l.linkType || "OUT") === linkType &&
+            !selectedInvoicesMap[l.invoiceId],
+        );
+        for (const r of removedLinks) {
+          if (r.id) {
+            await garageApi.removeCaseLinkedInvoice(caseId, r.id);
+          }
+        }
+
+        // 2. Thêm mới các hóa đơn vừa chọn (Newly added invoices)
+        const newlyAddedInvoices = selectedInvoicesList.filter(
+          (inv) => !initialLinkedIdSet.has(inv.id),
+        );
+        if (newlyAddedInvoices.length > 0) {
+          await garageApi.addCaseLinkedInvoices(
+            caseId,
+            newlyAddedInvoices.map((inv) => ({
+              invoiceId: inv.id,
+              linkType,
+              note: note || undefined,
+            })),
+          );
+        }
+      }
+
+      if (onSubmit) {
+        const payloads: InvoiceLinkPayloadItem[] = selectedInvoicesList.map(
+          (inv) => ({
+            invoiceId: inv.id,
+            linkType,
+            note: note || undefined,
+            invoice: inv,
+          }),
+        );
+        await onSubmit(payloads);
+      }
+
+      toast.success(
+        selectedCount === 0
+          ? t(
+              "cases.invoiceDrawer.unlinkedAll",
+              "Đã gỡ bỏ toàn bộ liên kết hóa đơn",
+            )
+          : t(
+              "cases.invoiceDrawer.linkSuccess",
+              "Đã cập nhật liên kết {{count}} hóa đơn thành công",
+              { count: selectedCount },
+            ),
+      );
 
       onSuccess?.();
       onClose();
     } catch (err: any) {
       toast.error(
-        err?.response?.data?.message || err?.message || "Lỗi liên kết hóa đơn",
+        err?.response?.data?.message ||
+          err?.message ||
+          "Lỗi cập nhật liên kết hóa đơn",
       );
     } finally {
       setIsSubmitting(false);
@@ -616,21 +721,45 @@ export function InvoiceSelectionDrawer({
             fetchOptions={fetchInvoiceOptions}
           />
         ),
-        size: 130,
+        size: 145,
         headerClassName: "text-center",
         className: "font-medium text-primary text-left",
         enableResizing: true,
-        cell: (inv: ErpInvoice) => (
-          <TableText
-            text={inv.invoiceNo || "---"}
-            onDetailClick={(e) => {
-              e.stopPropagation();
-              setViewInvoiceId(inv.id);
-            }}
-            tooltip={true}
-            enableCopy={true}
-          />
-        ),
+        cell: (inv: ErpInvoice) => {
+          const isLinked = linkedInvoiceIdSet.has(inv.id);
+          return (
+            <div className="flex items-center gap-1.5 w-full min-w-0">
+              <TableText
+                className="flex-1 min-w-0"
+                text={inv.invoiceNo || "---"}
+                onDetailClick={(e) => {
+                  e.stopPropagation();
+                  setViewInvoiceId(inv.id);
+                }}
+                tooltip={true}
+                enableCopy={true}
+              />
+              {isLinked && (
+                <Tooltip
+                  content={t(
+                    "cases.invoiceDrawer.alreadyLinkedTooltip",
+                    "Hóa đơn này đã được liên kết với phiếu dịch vụ",
+                  )}
+                >
+                  <Badge
+                    variant="outline"
+                    className="text-[9px] px-1 py-0 h-4 shrink-0 font-medium border-emerald-400 text-emerald-700 bg-emerald-50 dark:border-emerald-700/60 dark:text-emerald-300 dark:bg-emerald-950/40 inline-flex items-center gap-0.5 whitespace-nowrap ml-auto"
+                  >
+                    <CheckCircle2 className="w-2.5 h-2.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                    <span>
+                      {t("cases.invoiceDrawer.alreadyLinked", "Đã liên kết")}
+                    </span>
+                  </Badge>
+                </Tooltip>
+              )}
+            </div>
+          );
+        },
       },
       {
         key: "serialNo",
@@ -1027,6 +1156,7 @@ export function InvoiceSelectionDrawer({
   }, [
     linkType,
     selectedInvoicesMap,
+    linkedInvoiceIdSet,
     tableState,
     dateFrom,
     dateTo,
@@ -1112,12 +1242,18 @@ export function InvoiceSelectionDrawer({
           },
           {
             label: isSubmitting
-              ? t("cases.invoiceDrawer.linking", "Đang liên kết...")
-              : selectedCount > 0
-                ? `Xác nhận liên kết (${selectedCount} hóa đơn - ${money(selectedTotalAmount)})`
-                : t("cases.invoiceDrawer.confirm", "Xác nhận liên kết"),
+              ? t("cases.invoiceDrawer.linking", "Đang lưu...")
+              : !hasChanged
+                ? t("cases.invoiceDrawer.noChange", "Chưa có thay đổi")
+                : selectedCount === 0
+                  ? t(
+                      "cases.invoiceDrawer.confirmUnlink",
+                      "Gỡ toàn bộ liên kết",
+                    )
+                  : `Xác nhận liên kết (${selectedCount} hóa đơn - ${money(selectedTotalAmount)})`,
             primary: true,
-            disabled: selectedCount === 0 || isSubmitting,
+            variant: hasChanged && selectedCount === 0 ? "danger" : undefined,
+            disabled: !hasChanged || isSubmitting,
             onClick: handleSave,
           },
         ]}
@@ -1208,6 +1344,11 @@ export function InvoiceSelectionDrawer({
                   onPage={setPage}
                   onPageSize={setPageSize}
                   onRowClick={(row: ErpInvoice) => handleToggleInvoice(row)}
+                  getRowClassName={(row: ErpInvoice) =>
+                    linkedInvoiceIdSet.has(row.id)
+                      ? "bg-emerald-50/30 dark:bg-emerald-950/20"
+                      : undefined
+                  }
                   summaryRow={summaryRow}
                   minWidth={1150}
                   containerClassName="flex-1 min-h-0"

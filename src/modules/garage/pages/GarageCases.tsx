@@ -40,6 +40,8 @@ import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { applyGarageCasesTableState } from "../utils/garageCasesTable";
 import { GarageCaseSettlementDrawerModal } from "../components/GarageCaseSettlementDrawerModal";
 import { InvoiceSelectionDrawer } from "../components/InvoiceSelectionDrawer";
+import { Badge } from "@/shared/components/ui/badge";
+import { Button } from "@/shared/components/ui/Button";
 
 export function GarageCases() {
   const { t } = useTranslation("garage");
@@ -324,6 +326,90 @@ export function GarageCases() {
             "center",
           )}
           {...commonOptionProps}
+          isActive={
+            !!(
+              tableState.columnFilters["caseCode"]?.length ||
+              tableState.columnFilters["hasLinkedInvoice"]?.length
+            )
+          }
+          dateRangeSlot={() => {
+            const currentLinked =
+              tableState.columnFilters["hasLinkedInvoice"]?.[0];
+            return (
+              <div className="p-2 border-b border-border bg-slate-50/70 dark:bg-slate-900/50">
+                <div className="text-[11px] font-medium text-muted-foreground mb-1.5 flex items-center justify-between">
+                  <span>
+                    {t(
+                      "cases.filter.invoiceLinkStatus",
+                      "Trạng thái liên kết HĐ:",
+                    )}
+                  </span>
+                  {currentLinked && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        handleFilterChange("hasLinkedInvoice", []);
+                      }}
+                      className="text-[10px] text-primary hover:underline font-normal cursor-pointer"
+                    >
+                      {t("common.clear", "Bỏ lọc")}
+                    </button>
+                  )}
+                </div>
+                <div className="grid grid-cols-3 gap-1">
+                  <Button
+                    type="button"
+                    variant={!currentLinked ? "secondary" : "outline"}
+                    size="sm"
+                    className={cn(
+                      "h-7 text-[11px] px-1 font-medium justify-center transition-colors cursor-pointer",
+                      !currentLinked
+                        ? "bg-primary text-white hover:bg-primary/90 dark:bg-primary dark:text-white"
+                        : "text-muted-foreground",
+                    )}
+                    onClick={() => {
+                      handleFilterChange("hasLinkedInvoice", []);
+                    }}
+                  >
+                    {t("cases.filter.all", "Tất cả")}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={currentLinked === "YES" ? "secondary" : "outline"}
+                    size="sm"
+                    className={cn(
+                      "h-7 text-[11px] px-1 font-medium justify-center transition-colors cursor-pointer",
+                      currentLinked === "YES"
+                        ? "bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-emerald-600 dark:text-white border-emerald-600"
+                        : "border-emerald-200 dark:border-emerald-800 bg-emerald-50/50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100/50",
+                    )}
+                    onClick={() => {
+                      handleFilterChange("hasLinkedInvoice", ["YES"]);
+                    }}
+                  >
+                    <Link2 className="w-3 h-3 mr-0.5 shrink-0" />
+                    {t("cases.filter.hasLinked", "Có HĐ")}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={currentLinked === "NO" ? "secondary" : "outline"}
+                    size="sm"
+                    className={cn(
+                      "h-7 text-[11px] px-1 font-medium justify-center transition-colors cursor-pointer",
+                      currentLinked === "NO"
+                        ? "bg-slate-700 text-white hover:bg-slate-800 dark:bg-slate-300 dark:text-slate-900"
+                        : "text-muted-foreground",
+                    )}
+                    onClick={() => {
+                      handleFilterChange("hasLinkedInvoice", ["NO"]);
+                    }}
+                  >
+                    {t("cases.filter.noLinked", "Chưa có")}
+                  </Button>
+                </div>
+              </div>
+            );
+          }}
         />
       ),
       sortable: false,
@@ -347,6 +433,9 @@ export function GarageCases() {
         const isDraft =
           s.includes("nháp") || s.includes("báo giá") || s.includes("chờ");
 
+        const outCount = Number(item.linkedInvoiceOutCount || 0);
+        const inCount = Number(item.linkedInvoiceInCount || 0);
+
         return (
           <div className="flex items-center gap-1.5 w-full min-w-0">
             <TableText
@@ -357,6 +446,51 @@ export function GarageCases() {
               tooltip={true}
               onDetailClick={() => setSelectedCaseId(item.soChungTu)}
             />
+
+            {outCount > 0 && (
+              <Tooltip
+                content={t(
+                  "cases.linkedInvoices.outTooltip",
+                  "{{count}} hóa đơn bán ra (doanh thu)",
+                  { count: outCount },
+                )}
+              >
+                <Badge
+                  variant="outline"
+                  className="text-[9px] px-1 py-0 h-4 font-semibold border-emerald-400/80 text-emerald-700 bg-emerald-50/90 dark:border-emerald-700 dark:text-emerald-300 dark:bg-emerald-950/50 inline-flex items-center gap-0.5 shrink-0 cursor-pointer hover:bg-emerald-100 dark:hover:bg-emerald-900/60 transition-colors"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setInvoiceLinkingCase(item);
+                  }}
+                >
+                  <Link2 className="w-2.5 h-2.5 shrink-0" />
+                  <span>{outCount} BRA</span>
+                </Badge>
+              </Tooltip>
+            )}
+
+            {inCount > 0 && (
+              <Tooltip
+                content={t(
+                  "cases.linkedInvoices.inTooltip",
+                  "{{count}} hóa đơn mua vào (chi phí)",
+                  { count: inCount },
+                )}
+              >
+                <Badge
+                  variant="outline"
+                  className="text-[9px] px-1 py-0 h-4 font-semibold border-blue-400/80 text-blue-700 bg-blue-50/90 dark:border-blue-700 dark:text-blue-300 dark:bg-blue-950/50 inline-flex items-center gap-0.5 shrink-0 cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/60 transition-colors"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setInvoiceLinkingCase(item);
+                  }}
+                >
+                  <Link2 className="w-2.5 h-2.5 shrink-0" />
+                  <span>{inCount} MVÀ</span>
+                </Badge>
+              </Tooltip>
+            )}
+
             {isCanceled && (
               <Tooltip content={item.tenTinhTrangDichVu}>
                 <XCircle className="w-3.5 h-3.5 text-rose-500 dark:text-rose-400 shrink-0 ml-auto" />
@@ -1104,7 +1238,106 @@ export function GarageCases() {
         );
       },
     },
-    // 15. Chi nhánh Kgara
+    // 15. HĐ Liên kết
+    {
+      key: "hasLinkedInvoice",
+      label: t("cases.columns.linkedInvoice", "HĐ Liên kết"),
+      header: (
+        <TableColumnHeaderFilter
+          {...createHeaderProps(
+            "hasLinkedInvoice",
+            t("cases.columns.linkedInvoice", "HĐ Liên kết"),
+            "center",
+            false,
+            (val: string) => {
+              if (val === "YES")
+                return t("cases.filter.hasLinked", "Đã liên kết HĐ");
+              if (val === "NO")
+                return t("cases.filter.noLinked", "Chưa liên kết");
+              return val;
+            },
+          )}
+          fetchOptions={async () => ({
+            items: [
+              {
+                label: t("cases.filter.hasLinked", "Đã liên kết HĐ"),
+                value: "YES",
+              },
+              {
+                label: t("cases.filter.noLinked", "Chưa liên kết"),
+                value: "NO",
+              },
+            ],
+            total: 2,
+            next: null,
+          })}
+          allFilters={tableState.columnFilters}
+        />
+      ),
+      sortable: false,
+      size: 140,
+      enableResizing: true,
+      className: "text-center",
+      cell: (item: any) => {
+        const total = Number(item.linkedInvoiceCount || 0);
+        const outCount = Number(item.linkedInvoiceOutCount || 0);
+        const inCount = Number(item.linkedInvoiceInCount || 0);
+        if (total === 0) {
+          return (
+            <span className="text-muted-foreground/40 text-xs font-normal select-none">
+              —
+            </span>
+          );
+        }
+        return (
+          <div className="flex items-center justify-center gap-1 flex-wrap">
+            {outCount > 0 && (
+              <Tooltip
+                content={t(
+                  "cases.linkedInvoices.outTooltip",
+                  "{{count}} hóa đơn bán ra (doanh thu)",
+                  { count: outCount },
+                )}
+              >
+                <Badge
+                  variant="outline"
+                  className="text-[9px] px-1.5 py-0 h-4.5 font-medium border-emerald-300 text-emerald-700 bg-emerald-50/80 dark:border-emerald-700/60 dark:text-emerald-300 dark:bg-emerald-950/40 inline-flex items-center gap-1 cursor-pointer hover:bg-emerald-100/80 transition-colors"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setInvoiceLinkingCase(item);
+                  }}
+                >
+                  <Link2 className="w-2.5 h-2.5 shrink-0" />
+                  <span>{outCount} BRA</span>
+                </Badge>
+              </Tooltip>
+            )}
+            {inCount > 0 && (
+              <Tooltip
+                content={t(
+                  "cases.linkedInvoices.inTooltip",
+                  "{{count}} hóa đơn mua vào (chi phí)",
+                  { count: inCount },
+                )}
+              >
+                <Badge
+                  variant="outline"
+                  className="text-[9px] px-1.5 py-0 h-4.5 font-medium border-blue-300 text-blue-700 bg-blue-50/80 dark:border-blue-700/60 dark:text-blue-300 dark:bg-blue-950/40 inline-flex items-center gap-1 cursor-pointer hover:bg-blue-100/80 transition-colors"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setInvoiceLinkingCase(item);
+                  }}
+                >
+                  <Link2 className="w-2.5 h-2.5 shrink-0" />
+                  <span>{inCount} MVÀ</span>
+                </Badge>
+              </Tooltip>
+            )}
+          </div>
+        );
+      },
+    },
+    // 16. Chi nhánh Kgara
     {
       key: "branchName",
       label: t("cases.columns.branchName", "Chi nhánh"),
@@ -1513,57 +1746,33 @@ export function GarageCases() {
             invoiceLinkingCase.soChungTu || invoiceLinkingCase.hdPhieuDichVuId
           }
           defaultLinkType="OUT"
-          onSubmit={async (payloads) => {
-            const items = Array.isArray(payloads) ? payloads : [payloads];
-            try {
-              if (items.length === 1) {
-                await garageApi.addCaseLinkedInvoice(
-                  invoiceLinkingCase.id,
-                  items[0].invoiceId,
-                  items[0].linkType,
-                  items[0].note,
-                );
-              } else if (items.length > 1) {
-                await garageApi.addCaseLinkedInvoices(
-                  invoiceLinkingCase.id,
-                  items.map((i) => ({
-                    invoiceId: i.invoiceId,
-                    linkType: i.linkType,
-                    note: i.note,
-                  })),
-                );
-              }
-              toast.success(
-                items.length > 1
-                  ? `Đã liên kết thành công ${items.length} hóa đơn`
-                  : t(
-                      "cases.linkInvoiceSuccess",
-                      "Đã liên kết hóa đơn thành công",
-                    ),
-              );
-              setInvoiceLinkingCase(null);
-              refetch();
-              queryClient.invalidateQueries({
-                queryKey: ["garage", "grossProfitReport"],
-              });
-              queryClient.invalidateQueries({
-                queryKey: [
-                  "garage-case-financial-summary",
-                  invoiceLinkingCase.id,
-                ],
-              });
-              queryClient.invalidateQueries({
-                queryKey: [
-                  "garage-case-traceability-graph",
-                  invoiceLinkingCase.id,
-                ],
-              });
-            } catch (err: any) {
-              toast.error(
-                err?.response?.data?.message ||
-                  t("cases.linkInvoiceError", "Lỗi liên kết hóa đơn"),
-              );
-            }
+          onSuccess={() => {
+            setInvoiceLinkingCase(null);
+            refetch();
+            queryClient.invalidateQueries({
+              queryKey: ["garage", "grossProfitReport"],
+            });
+            queryClient.invalidateQueries({
+              queryKey: [
+                "garage-case-financial-summary",
+                invoiceLinkingCase.id,
+              ],
+            });
+            queryClient.invalidateQueries({
+              queryKey: [
+                "garage-case-traceability-graph",
+                invoiceLinkingCase.id,
+              ],
+            });
+            queryClient.invalidateQueries({
+              queryKey: ["garage-case-linked-invoices", invoiceLinkingCase.id],
+            });
+            queryClient.invalidateQueries({
+              queryKey: [
+                "garage-case-linked-invoices-for-drawer",
+                invoiceLinkingCase.id,
+              ],
+            });
           }}
         />
       )}

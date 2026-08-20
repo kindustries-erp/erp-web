@@ -125,6 +125,63 @@ header: (
 )
 ```
 
+#### 4. Mẫu code Nút Clear All Filters (Chuẩn Page & Drawer):
+
+- **Pattern 1: Page-level (`SpreadsheetPageTemplate`)** (Chuẩn như `erp-invoices` / `ErpInvoicesTab.tsx` và `garage-cases` / `GarageCases.tsx`):
+```tsx
+// 1. Tính activeFilterCount tổng hợp (kết hợp FilterPanel, tableState.columnFilters và Date Ranges)
+const activeFilterCount = useMemo(() => {
+  const activeDateCount = Object.values(dateRanges).filter((range) =>
+    Boolean(range?.from || range?.to),
+  ).length;
+  return (
+    (listHook.filterPanel?.activeFilterCount || 0) +
+    (listHook.tableState?.activeFilterCount || 0) +
+    activeDateCount
+  );
+}, [listHook.filterPanel?.activeFilterCount, listHook.tableState?.activeFilterCount, dateRanges]);
+
+// 2. Handler reset toàn bộ filter
+const handleClearAllFilters = useCallback(() => {
+  listHook.filterPanel?.resetAll?.();
+  listHook.tableState?.resetFilters?.();
+  setDateRanges({});
+  setPage(1);
+}, [listHook]);
+
+// 3. Truyền vào SpreadsheetPageTemplate
+<SpreadsheetPageTemplate
+  activeFilterCount={activeFilterCount}
+  onClearAllFilters={handleClearAllFilters}
+  {/* ...các props khác */}
+/>
+```
+
+- **Pattern 2: Drawer-level (`DrawerSection` + `FilterButton`)** (Chuẩn như `InvoiceSelectionDrawer.tsx`, `IaFormDrawer.tsx`, `GrFormDrawer.tsx`, `GiFormDrawer.tsx`):
+```tsx
+import { FilterButton } from "@/shared/components/FilterPanel";
+
+// Truyền nút xóa lọc trực tiếp vào prop titleExtra của DrawerSection khi có filter active
+<DrawerSection
+  title="Danh sách chứng từ / hóa đơn"
+  titleExtra={
+    tableState.activeFilterCount > 0 ? (
+      <FilterButton
+        activeCount={tableState.activeFilterCount}
+        onClear={() => {
+          tableState.resetFilters();
+          setDateFrom("");
+          setDateTo("");
+          setPage(1);
+        }}
+      />
+    ) : undefined
+  }
+>
+  <StandardTable ... />
+</DrawerSection>
+```
+
 ## 3. Row Click, View Detail, Row Hover Action Menu & Right-Click Context Menu
 
 - **Tuyệt đối KHÔNG sử dụng `onRowClick`** để mở trang / ngăn kéo chi tiết (detail drawer).
@@ -390,3 +447,4 @@ Bất kỳ cột nào liên quan đến **Status**, **State** thì bắt buộc 
 - [ ] Các cột số tiền / số lượng có `summaryRow` tổng không?
 - [ ] Text đã có namespace i18n (`t(...)`) chưa?
 - [ ] Đã bỏ default state `sortBy` ở UI và dùng default sort ở Backend chưa?
+- [ ] Bảng có sử dụng TableColumnHeaderFilter đã có nút Clear All Filter hiển thị khi có active filter chưa? (Page: `activeFilterCount` + `onClearAllFilters` trên `SpreadsheetPageTemplate`; Drawer: `FilterButton` với `onClear` trong `titleExtra` của `DrawerSection`?)

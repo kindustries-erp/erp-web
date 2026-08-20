@@ -75,6 +75,8 @@ function getCellValue(item: Record<string, any>, key: string) {
       if (paidCost <= 0 && cost > 0) return "UNPAID";
       return "";
     }
+    case "hasLinkedInvoice":
+      return Number(item.linkedInvoiceCount || 0) > 0 ? "YES" : "NO";
     default:
       return item[key] ?? "";
   }
