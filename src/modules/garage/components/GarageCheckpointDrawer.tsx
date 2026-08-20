@@ -127,6 +127,7 @@ export function GarageCheckpointDrawer({
                     <th className="px-4 py-2.5">Số chứng từ</th>
                     <th className="px-4 py-2.5">Biển số xe</th>
                     <th className="px-4 py-2.5">Khách hàng</th>
+                    <th className="px-4 py-2.5">Ngày hoàn thành</th>
                     <th className="px-4 py-2.5 text-center">Trạng thái</th>
                     <th className="px-4 py-2.5 text-right">Doanh thu</th>
                     <th className="px-4 py-2.5 text-right">Giá vốn</th>
@@ -140,7 +141,7 @@ export function GarageCheckpointDrawer({
                   {isLoading ? (
                     <tr>
                       <td
-                        colSpan={10}
+                        colSpan={11}
                         className="px-4 py-8 text-center text-muted-foreground"
                       >
                         Đang tải dữ liệu...
@@ -149,7 +150,7 @@ export function GarageCheckpointDrawer({
                   ) : cases.length === 0 ? (
                     <tr>
                       <td
-                        colSpan={10}
+                        colSpan={11}
                         className="px-4 py-8 text-center text-muted-foreground"
                       >
                         Không có vụ việc nào trong khoảng thời gian này
@@ -173,6 +174,11 @@ export function GarageCheckpointDrawer({
                         </td>
                         <td className="px-4 py-2.5 text-muted-foreground">
                           {c.khachHangName || "-"}
+                        </td>
+                        <td className="px-4 py-2.5 text-muted-foreground whitespace-nowrap">
+                          {c.ngayHoanThanhCongViec
+                            ? c.ngayHoanThanhCongViec.substring(0, 10)
+                            : "-"}
                         </td>
                         <td className="px-4 py-2.5 text-center">
                           <div className="flex justify-center">

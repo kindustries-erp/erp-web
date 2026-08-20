@@ -101,15 +101,24 @@ export function GarageCases() {
         ...prev,
         [key]: { from: from || "", to: to || "" },
       }));
+      setPage(1);
     },
     [],
   );
 
   const serverFiltersStr = useMemo(() => {
-    return Object.keys(tableState.columnFilters).length > 0
-      ? JSON.stringify(tableState.columnFilters)
+    const combined: Record<string, string[]> = { ...tableState.columnFilters };
+    Object.entries(dateRanges).forEach(([key, range]) => {
+      if (range?.from || range?.to) {
+        if (key !== "caseDate") {
+          combined[key] = [`${range.from || ""}..${range.to || ""}`];
+        }
+      }
+    });
+    return Object.keys(combined).length > 0
+      ? JSON.stringify(combined)
       : undefined;
-  }, [tableState.columnFilters]);
+  }, [tableState.columnFilters, dateRanges]);
 
   const activeFilterCount = useMemo(() => {
     const activeDateCount = Object.values(dateRanges).filter((range) =>
@@ -201,6 +210,9 @@ export function GarageCases() {
     return groups.flatMap((g: any) => g.Items || []);
   }, [profitData]);
 
+  const dateFrom = dateRanges["caseDate"]?.from || undefined;
+  const dateTo = dateRanges["caseDate"]?.to || undefined;
+
   const {
     data: casesData,
     isLoading,
@@ -211,8 +223,8 @@ export function GarageCases() {
     page,
     pageSize,
     "",
-    undefined,
-    undefined,
+    dateFrom,
+    dateTo,
     serverFiltersStr,
   );
 
@@ -535,7 +547,7 @@ export function GarageCases() {
       className: "text-right",
       cell: (item: any) => (
         <TableDateCell
-          date={item.ngayPhatSinh}
+          date={item.ngayTiepNhan || item.ngayPhatSinh}
           className="justify-end w-full"
         />
       ),
@@ -594,7 +606,12 @@ export function GarageCases() {
             t("cases.columns.doanhThu", "Doanh thu"),
             "center",
             false,
-            undefined,
+            (val: string) => {
+              if (val === "__BLANK__")
+                return t("cases.common.blankOption", "(Trống / 0 đ)");
+              const num = Number(val);
+              return !isNaN(num) ? money(num) : val;
+            },
             true,
           )}
           {...commonOptionProps}
@@ -638,7 +655,12 @@ export function GarageCases() {
             t("cases.columns.chiPhi", "Chi phí"),
             "center",
             false,
-            undefined,
+            (val: string) => {
+              if (val === "__BLANK__")
+                return t("cases.common.blankOption", "(Trống / 0 đ)");
+              const num = Number(val);
+              return !isNaN(num) ? money(num) : val;
+            },
             true,
           )}
           {...commonOptionProps}
@@ -682,7 +704,12 @@ export function GarageCases() {
             t("cases.columns.loiNhuan", "Lợi nhuận"),
             "center",
             false,
-            undefined,
+            (val: string) => {
+              if (val === "__BLANK__")
+                return t("cases.common.blankOption", "(Trống / 0 đ)");
+              const num = Number(val);
+              return !isNaN(num) ? money(num) : val;
+            },
             true,
           )}
           {...commonOptionProps}
@@ -735,9 +762,45 @@ export function GarageCases() {
             "margin",
             t("cases.columns.margin", "Biên LN"),
             "center",
+            false,
+            (val: string) => {
+              if (val === "HIGH")
+                return t("cases.filter.marginHigh", "Biên LN cao (≥ 50%)");
+              if (val === "MID")
+                return t("cases.filter.marginMid", "Biên LN khá (20% - 50%)");
+              if (val === "LOW")
+                return t("cases.filter.marginLow", "Biên LN thấp (0% - 20%)");
+              if (val === "NEGATIVE")
+                return t("cases.filter.marginNegative", "Lỗ (< 0%)");
+              if (val === "__BLANK__")
+                return t("cases.filter.marginBlank", "Chưa xác định");
+              return `${val}%`;
+            },
             true,
           )}
-          hideFooter={true}
+          fetchOptions={async () => ({
+            items: [
+              {
+                label: t("cases.filter.marginHigh", "Biên LN cao (≥ 50%)"),
+                value: "HIGH",
+              },
+              {
+                label: t("cases.filter.marginMid", "Biên LN khá (20% - 50%)"),
+                value: "MID",
+              },
+              {
+                label: t("cases.filter.marginLow", "Biên LN thấp (0% - 20%)"),
+                value: "LOW",
+              },
+              {
+                label: t("cases.filter.marginNegative", "Lỗ (< 0%)"),
+                value: "NEGATIVE",
+              },
+            ],
+            total: 4,
+            next: null,
+          })}
+          allFilters={tableState.columnFilters}
         />
       ),
       sortable: false,

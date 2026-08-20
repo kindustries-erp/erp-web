@@ -171,6 +171,49 @@ export function applyGarageCasesTableState(
         continue;
       }
 
+      // Handler riêng cho cột margin (Biên LN)
+      if (columnKey === "margin" || columnKey === "bienLoiNhuan") {
+        const rev = Number(item.doanhThu ?? item.rawData?.DoanhThu ?? 0);
+        const profit = Number(item.loiNhuan ?? item.rawData?.LoiNhuan ?? 0);
+        const hasRev = rev > 0;
+        const marginPct = hasRev ? (profit / rev) * 100 : null;
+
+        const matches = filters.some((f) => {
+          if (f === "__BLANK__") return marginPct == null;
+          if (marginPct == null) return false;
+          if (f === "HIGH") return marginPct >= 50;
+          if (f === "MID") return marginPct >= 20 && marginPct < 50;
+          if (f === "LOW") return marginPct >= 0 && marginPct < 20;
+          if (f === "NEGATIVE") return marginPct < 0;
+          if (isNumericLike(f))
+            return (
+              Math.round(marginPct * 10) / 10 ===
+              Math.round(Number(f) * 10) / 10
+            );
+          return false;
+        });
+        if (!matches) return false;
+        continue;
+      }
+
+      // Handler riêng cho các cột số tiền doanh thu, chi phí, lợi nhuận
+      if (
+        columnKey === "doanhThu" ||
+        columnKey === "chiPhi" ||
+        columnKey === "loiNhuan"
+      ) {
+        const numVal = Number(rawValue) || 0;
+        const isBlankNum = rawValue == null || numVal === 0;
+
+        const matches = filters.some((f) => {
+          if (f === "__BLANK__") return isBlankNum;
+          if (isNumericLike(f)) return numVal === Number(f);
+          return normalizeString(f) === normalizeString(String(numVal));
+        });
+        if (!matches) return false;
+        continue;
+      }
+
       const hasBlank = filters.includes("__BLANK__");
       if (hasBlank && isBlank) {
         continue;
