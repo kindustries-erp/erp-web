@@ -20,7 +20,23 @@ Khi tạo mới hoặc chỉnh sửa Drawer trong hệ thống, bạn **BẮT BU
 - `leftPanel`: Nội dung chính của Drawer.
 - **Đa ngôn ngữ (i18n)**: Tất cả text (title, label, placeholder, button...) **bắt buộc** dùng `t(...)` từ `useTranslation("namespace")`.
 
-## 2. Quy tắc cho 1-Column Drawer (Profile, Cấu hình đơn giản)
+## 2. Quy chuẩn Kích thước Responsive theo Viewport (`vw`) & Min/Max Width trên Desktop ($\ge 1280px$)
+
+Toàn bộ kích thước Drawer trên Desktop được thiết kế co giãn linh hoạt theo tỷ lệ khung nhìn (**`vw`**) kết hợp với **`min-width`** và **`max-width`** chặt chẽ, tối ưu trải nghiệm cho mọi độ phân giải màn hình từ **1280px (Laptop), 1440px (Desktop), 1920px (FHD), 2K đến 4K Ultrawide**:
+
+| Size Preset | Độ rộng Responsive theo `vw` (Desktop $\ge 1280px$) | Min Width | Max Width | Mục đích sử dụng thực tế |
+| :--- | :--- | :--- | :--- | :--- |
+| **`sm`** *(Default 1-col)* | `lg:w-[35vw] xl:w-[32vw] 2xl:w-[28vw]` | `380px` | `560px` | Form đơn giản 1 cột: Profile, Đổi mật khẩu, Gán nhãn tags. |
+| **`md`** | `lg:w-[52vw] xl:w-[46vw] 2xl:w-[40vw]` | `560px` | `820px` | Form 1 cột trung bình: Master data, Cấu hình danh mục kho, Đơn vị tính. |
+| **`lg`** | `lg:w-[70vw] xl:w-[65vw] 2xl:w-[58vw]` | `780px` | `1150px` | Form 2 cột vừa phải: Đối tác, Khách hàng Garage, Chi nhánh. |
+| **`xl`** *(Default 2-col)* | `lg:w-[86vw] xl:w-[80vw] 2xl:w-[75vw]` | `960px` | `1550px` | Chứng từ lớn: Hóa đơn ERP, Phiếu kho (PNK/PXK), PO, Sales Orders, Lệnh SX. |
+| **`full`** | `w-[calc(100vw-208px)]` | `1000px` | `calc(100vw-208px)` | Báo cáo chi tiết, Canvas Graph Traceability toàn màn hình. |
+
+> **Nguyên tắc an toàn**: 
+> 1. Bề rộng tối đa của Drawer trên Desktop luôn được giới hạn bởi `max-width: calc(100vw - 208px)` để **không bao giờ che khuất Sidebar** bên trái hệ thống.
+> 2. Trên Mobile & Tablet (`md:w-[95vw]`), Drawer tự động mở rộng `w-full` hoặc `95vw` để tối ưu diện tích thao tác.
+
+## 3. Quy tắc cho 1-Column Drawer (Profile, Cấu hình đơn giản)
 
 Dành cho các form đơn giản (như Company Profile, User Profile):
 
@@ -85,7 +101,7 @@ export function UserProfileDrawer({ open, onClose, mode, setMode, data }) {
 }
 ```
 
-## 3. Quy tắc cho 2-Columns Drawer (Chứng từ, Phiếu nhập xuất, Hóa đơn)
+## 4. Quy tắc cho 2-Columns Drawer (Chứng từ, Phiếu nhập xuất, Hóa đơn)
 
 Dành cho các màn hình nghiệp vụ phức tạp có chứng từ (như Hóa đơn ERP, Phiếu nhập xuất kho):
 
@@ -160,7 +176,7 @@ export function VoucherDrawer({ open, onClose, mode, setMode, data }) {
 }
 ```
 
-## 4. Quy tắc cho Thông tin liên quan & Phụ trợ (Horizon Divider Bar & Connected Context Deck)
+## 5. Quy tắc cho Thông tin liên quan & Phụ trợ (Horizon Divider Bar & Connected Context Deck)
 
 Đối với các thông tin thứ cấp, bổ trợ như **Lịch sử thao tác / Audit Log**, **Chuỗi chứng từ liên đới**, **Tệp đính kèm**, **Ghi chú nội bộ**:
 - **KHÔNG** nhồi nhét vào `rightPanel` (vì cột phải hẹp, chỉ phù hợp với metadata tóm tắt).
@@ -288,6 +304,7 @@ export function PurchaseOrderDrawer({ open, onClose, mode, setMode, data, auditL
 ## Summary Checklist trước khi hoàn thành:
 
 - [ ] Drawer đã sử dụng `<StandardFormDrawer>` chưa?
+- [ ] Size Drawer đã áp dụng chuẩn responsive `vw` kết hợp `min-width` / `max-width` (tối ưu cho desktop $\ge 1280px$, $\ge 1440px$, $\ge 1920px$ và không vượt quá `calc(100vw-208px)`) chưa?
 - [ ] Nếu Drawer cho phép cập nhật, đã truyền `onToggleEdit` chưa?
 - [ ] Nếu record có trạng thái (status), đã dùng `<Badge>` truyền vào `titleExtra` chưa?
 - [ ] Tất cả text tĩnh đã được dùng hook `useTranslation` (i18n) để wrap bằng `t(...)` chưa?

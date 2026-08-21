@@ -5,12 +5,12 @@ description: Scaffold or refactor a standard DataTable page following the ERP pr
 
 # 📋 Table Page Standards
 
-Khi tạo mới hoặc chỉnh sửa một trang hiển thị bảng dữ liệu trong hệ thống (như các trang `erp-invoice-*`), bạn **BẮT BUỘC** tuân thủ các nguyên tắc sau.
+Khi tạo mới hoặc chỉnh sửa một trang hiển thị bảng dữ liệu trong hệ thống (như các trang `erp-invoice-*`, `garage-cases`), bạn **BẮT BUỘC** tuân thủ các nguyên tắc sau.
 
 ## 1. Cấu trúc trang (Page Structure)
 
-- **Wrapper**: Bọc nội dung trang trong `<SpreadsheetPageTemplate>` từ `@/shared/components/SpreadsheetPageTemplate/SpreadsheetPageTemplate`.
-- **Title & Description**: Trang **PHẢI** có tiêu đề (`<h1>`) và mô tả (`<p>`) rõ ràng, đều dùng i18n.
+- **Wrapper**: Bọc toàn bộ nội dung trang trong `<SpreadsheetPageTemplate>` từ `@/shared/components/SpreadsheetPageTemplate/SpreadsheetPageTemplate`.
+- **Title & Description**: Trang **PHẢI** có tiêu đề (`<h1>`) và mô tả (`<p>`) rõ ràng, đều dùng hook i18n (`t(...)`).
 - **Variant Bảng**: Truyền `variant="spreadsheet"` cho `<DataTable>` để có giao diện dạng lưới Excel.
 
 ## 2. Breadcrumb & TabBar — BẮT BUỘC
@@ -20,164 +20,57 @@ Khi tạo mới hoặc chỉnh sửa một trang hiển thị bảng dữ liệu
 Breadcrumb hiển thị trên Topbar phản ánh cấu trúc menu Sidebar. Trang Table **BẮT BUỘC** đăng ký breadcrumb theo đúng cấp độ (Module Group → Sub-group → Tên trang).
 
 **Cách 1 — Static (ưu tiên)**: Thêm entry vào `BREADCRUMBS` trong `src/core/config/appStore.ts`.
-
 Format: `Array<[i18nKey, pageKey?]>` — nếu có `pageKey` thì breadcrumb đó clickable.
 
 ```ts
 // appStore.ts — trong BREADCRUMBS:
 "[module]-list": [
-  ["breadcrumb.accounting"],              // Level 1: Module Group
+  ["breadcrumb.accounting"],                          // Level 1: Module Group
   ["nav.items.[module]Group", "[module]-dashboard"], // Level 2: Sub-group (có link)
-  ["nav.items.[module]List"],             // Level 3: Tên trang hiện tại (cuối, không link)
+  ["nav.items.[module]List"],                         // Level 3: Tên trang hiện tại (cuối, không link)
 ],
 ```
 
-Ví dụ thực tế (Kế toán > Sao kê > Sao kê ngân hàng):
-
-```ts
-"erp-invoices-in": [
-  ["breadcrumb.accounting"],
-  ["breadcrumb.erpInvoices"],
-  ["breadcrumb.inbound"],
-],
-```
-
-**Cách 2 — Dynamic** (breadcrumb cần động theo state / record): Dùng `setCustomBreadcrumbs` trong `useEffect`:
-
-```tsx
-import { useAppStore } from "@/core/config/appStore";
-
-const { setCustomBreadcrumbs } = useAppStore();
-
-useEffect(() => {
-  setCustomBreadcrumbs([
-    ["breadcrumb.accounting"],
-    ["nav.items.[module]Group", "[module]-dashboard"],
-    ["nav.items.[module]List"],
-  ]);
-  return () => setCustomBreadcrumbs(null); // Cleanup bắt buộc khi unmount
-}, [setCustomBreadcrumbs]);
-```
-
-> **Lưu ý cấp breadcrumb**: Phải tương ứng với cấu trúc mục Sidebar thực tế.
->
-> - `Kế toán > Hóa đơn đầu vào` → `[["breadcrumb.accounting"], ["breadcrumb.inbound"]]`
-> - `Kho > Chứng từ` → `[["breadcrumb.inventory"], ["breadcrumb.inventoryVouchers"]]`
-> - `Hệ thống > Thiết lập kho > Đơn vị tính` → `[["breadcrumb.settings"], ["breadcrumb.erpInventoryMasters"], ["breadcrumb.erpInventoryUom"]]`
+**Cách 2 — Dynamic** (breadcrumb động theo state / record): Dùng `setCustomBreadcrumbs` trong `useEffect` (kèm cleanup khi unmount).
 
 ### 2.2. TabBar — Đăng ký PageKey và Label
 
-Tab hiển thị trên TabBar lấy tên từ `SECTION_ROOTS`. Khi tạo page mới:
+1. **Thêm `PageKey`**: trong `src/shared/types/index.ts`.
+2. **Đăng ký `SECTION_ROOTS`**: trong `src/core/config/appStore.ts` (`labelKey: "nav.items.[module]List"`, `group: "accounting" | "inventory" | ...`).
+3. **Khai báo i18n**: Thêm key tương ứng vào `src/core/locale/system/nav/` và `breadcrumb/` (`vi.ts`, `en.ts`).
 
-**Bước 1**: Thêm `PageKey` mới vào type trong `src/shared/types/index.ts`:
+## 3. Đa ngôn ngữ (i18n) & Empty State — BẮT BUỘC
 
-```ts
-export type PageKey =
-  // ... existing keys
-  "[module]-list" | "[module]-dashboard";
-```
+- Tất cả text hiển thị (title, desc, column label, filter placeholder, button, empty message...) **BẮT BUỘC** bọc trong hàm `t` từ `useTranslation("namespace")`. **TUYỆT ĐỐI KHÔNG** hardcode text trực tiếp.
+- Tạo file locale module đi kèm tại `src/core/locale/[module]/vi.ts` và `en.ts`.
+- Khi bảng không có dữ liệu, hiển thị `<EmptyState>` chuẩn hoặc truyền `emptyLabel={t("noData", "Không có dữ liệu")}`.
 
-**Bước 2**: Đăng ký trong `SECTION_ROOTS` tại `appStore.ts`:
+## 4. Server-side Hook & Responsive PageSize — BẮT BUỘC
 
-```ts
-"[module]-list": {
-  labelKey: "nav.items.[module]List",  // i18n key tên tab
-  group: "accounting",                // phải khớp với section sidebar
-},
-```
-
-> Giá trị hợp lệ cho `group`: `accounting`, `inventory`, `sales`, `purchasing`, `manufacturing`, `hr`, `garage`, `settings`, `system`.
-
-**Bước 3**: Thêm i18n key vào `src/core/locale/system/nav/vi.ts` và `nav/en.ts`:
-
-```ts
-// nav/vi.ts
-items: {
-  "[module]List": "Danh sách [Tên Module]",
-  "[module]Dashboard": "Tổng quan [Tên Module]",
-}
-```
-
-**Bước 4**: Thêm breadcrumb key vào `src/core/locale/system/breadcrumb/vi.ts` và `breadcrumb/en.ts`:
-
-```ts
-// breadcrumb/vi.ts
-"[module]List": "Danh sách [Tên Module]",
-```
-
-## 3. Đa ngôn ngữ (i18n) — BẮT BUỘC
-
-- Tất cả text hiển thị (title, desc, label cột, placeholder filter, button, empty state message...) **BẮT BUỘC** phải được bọc bằng hàm `t` từ `useTranslation("namespace")`.
-- **KHÔNG** hardcode tiếng Việt hay tiếng Anh trực tiếp trong JSX.
-- Tạo file locale đi kèm tại `src/core/locale/[module]/vi.ts` và `src/core/locale/[module]/en.ts`.
-
-**Mẫu đúng:**
-
-```tsx
-const { t } = useTranslation("exampleModule");
-
-// ✅ Đúng
-<h1>{t("pageTitle", "Danh sách")}</h1>
-<EmptyState message={t("noData", "Không có dữ liệu")} />
-header: <TableColumnHeaderFilter title={t("code", "Mã phiếu")} ... />
-
-// ❌ Sai
-<h1>Danh sách</h1>
-emptyLabel="Không có dữ liệu"
-header: <TableColumnHeaderFilter title="Mã phiếu" ... />
-```
-
-## 4. Empty State — BẮT BUỘC
-
-- Khi bảng không có dữ liệu, **BẮT BUỘC** phải hiển thị `<EmptyState>` từ `@/shared/components/EmptyState` thay cho vùng trắng.
-- Truyền `emptyLabel` cho `<DataTable>` **VÀ** nếu cần tùy chỉnh giao diện hơn, sử dụng `emptyContent` prop (nếu DataTable hỗ trợ) để truyền trực tiếp `<EmptyState>`.
-- Nội dung message và description của `<EmptyState>` phải dùng `t(...)`.
-
-```tsx
-import { EmptyState } from "@/shared/components/EmptyState";
-
-<DataTable
-  columns={columns}
-  data={listHook.data ?? []}
-  loading={listHook.isLoading}
-  variant="spreadsheet"
-  emptyLabel={t("noData", "Không có dữ liệu")}
-/>;
-
-{
-  /* Hoặc khi muốn kiểm soát hoàn toàn giao diện empty: */
-}
-{
-  !listHook.isLoading && listHook.data.length === 0 && (
-    <EmptyState
-      message={t("noData", "Không có dữ liệu")}
-      description={t(
-        "noDataDesc",
-        "Thử điều chỉnh bộ lọc hoặc thêm bản ghi mới",
-      )}
-    />
-  );
-}
-```
-
-## 5. Server-side Filter & Sort — BẮT BUỘC
-
-- Filter và Sort trong **Page** bắt buộc phải thực hiện ở **Server-side** (khác Drawer là client-side).
-- Tạo sẵn custom hook `use[Module]List` để quản lý toàn bộ state (`page`, `pageSize`, `sorts`, `dateFrom`, `dateTo`, `columnFilters`, `columnSearch`, `activeFilterCount`) và gọi API qua TanStack Query.
-- Tạo sẵn file API `src/modules/[module]/api/[module]Api.ts` với đầy đủ các hàm CRUD và `getColumnOptions(column, search, page, pageSize, filtersStr)`.
-- `onSortChange`, `onFilterChange`, `onSearchChange`, `dateRangeSlot` của Table Header phải update vào hook state → hook thay đổi sẽ tự động reset `page = 1` và trigger call API.
+- **Mặc định toàn hệ thống**: Filter, Sorting và Pagination **BẮT BUỘC** thực hiện ở **Server-side** thông qua custom hook `use[Module]List` kết nối TanStack Query.
+- **Khởi tạo `defaultPageSize` thích ứng theo Chiều cao màn hình (Screen Height)**:
+  - Khi `window.innerHeight < 900px` (Laptop / màn hình phổ thông): Default `pageSize = 20`.
+  - Khi `window.innerHeight >= 900px` (Desktop / Monitor lớn): Default `pageSize = 50`.
+- **Mốc phân trang**: Bắt buộc hỗ trợ đầy đủ các mốc `pageSizeOptions = [20, 50, 100, 200]`.
+- **File API**: Tạo sẵn `src/modules/[module]/api/[module]Api.ts` với đầy đủ CRUD và API `getColumnOptions(columnKey, search, pageParam, pageSize, filtersStr)`.
 
 **Mẫu Hook Chuẩn (`use[Module]List.ts`):**
 
 ```ts
-// src/modules/[module]/hooks/use[Module]List.ts
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 // import { [module]Api } from "@/modules/[module]/api/[module]Api";
 
+export const getDefaultPageSize = (): number => {
+  if (typeof window !== "undefined" && window.innerHeight >= 900) {
+    return 50;
+  }
+  return 20;
+};
+
 export function use[Module]List() {
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
+  const [pageSize, setPageSize] = useState<number>(getDefaultPageSize);
   const [sorts, setSorts] = useState<string[]>([]);
   const [dateFrom, setDateFrom] = useState<string>("");
   const [dateTo, setDateTo] = useState<string>("");
@@ -185,26 +78,9 @@ export function use[Module]List() {
   const [columnSearch, setColumnSearch] = useState<Record<string, string>>({});
 
   const { data, isLoading, refetch } = useQuery({
-    queryKey: [
-      "[module]-list",
-      page,
-      pageSize,
-      sorts,
-      dateFrom,
-      dateTo,
-      columnFilters,
-      columnSearch,
-    ],
+    queryKey: ["[module]-list", page, pageSize, sorts, dateFrom, dateTo, columnFilters, columnSearch],
     queryFn: () => {
-      // return [module]Api.getList({
-      //   page,
-      //   pageSize,
-      //   sorts,
-      //   date_from: dateFrom || undefined,
-      //   date_to: dateTo || undefined,
-      //   column_filters: Object.keys(columnFilters).length ? JSON.stringify(columnFilters) : undefined,
-      //   column_search: Object.keys(columnSearch).length ? JSON.stringify(columnSearch) : undefined,
-      // });
+      // return [module]Api.getList({ page, pageSize, sorts, date_from: dateFrom || undefined, date_to: dateTo || undefined, column_filters: Object.keys(columnFilters).length ? JSON.stringify(columnFilters) : undefined, column_search: Object.keys(columnSearch).length ? JSON.stringify(columnSearch) : undefined });
       return Promise.resolve({ data: [], total: 0, totalPages: 0 });
     },
   });
@@ -280,31 +156,24 @@ export function use[Module]List() {
 }
 ```
 
-## 6. Tuân thủ `standardize-table`
+## 5. Tích hợp Chuẩn Table & Drawer
 
-Bảng dữ liệu bên trong trang **BẮT BUỘC** tuân thủ nghiêm ngặt kỹ năng `standardize-table`:
+Khi tạo bảng và drawer trong trang, **BẮT BUỘC** tuân thủ các quy chuẩn từ 2 skill cơ sở:
 
-- **Định danh Bảng (`tableId`)**: BẮT BUỘC truyền `tableId="[module]-table"` duy nhất vào `<SpreadsheetPageTemplate>` để kích hoạt tự động Portal Target cho dropdown **Tùy chỉnh cột (`ColumnToggle`)** và lưu trữ preferences (độ rộng, thứ tự, ẩn/hiện) vào `localStorage`.
-- **Tùy chỉnh & Khôi phục cột (Reset Layout)**: Toàn bộ thao tác ẩn/hiện cột, sắp xếp thứ tự, và nút "Khôi phục mặc định" (`RotateCcw`) đã được tích hợp tập trung trong dropdown `ColumnToggle`. TUYỆT ĐỐI KHÔNG đặt nút Reset ở cột Action hay bất kỳ header nào.
-- Cột STT / Checkbox: `size: 40`, `w-[40px] min-w-[40px]`. (STT dùng `{idx}`, không cộng 1).
-- Cột Code/ID/SKU chính: `size: 200`, dùng `<TableText enableCopy tooltip onDetailClick>`. (Dùng `onDrawerClick` nếu là dữ liệu phụ mở drawer tham chiếu).
-- Header tất cả cột filterable: dùng `<TableColumnHeaderFilter align="center">`.
-- Cột Date: dùng `dateRangeSlot` + `hideFilter={true}`.
-- Cột trạng thái: dùng `<Badge>`.
-- Cột số lượng / tiền tệ: class `text-right tabular-nums`, tiền tệ thêm `font-semibold`.
-- Cột tiền tệ/số lượng: cần có `summaryRow` tổng cộng.
-- **Row Actions**: BẮT BUỘC dùng prop `rowActions` của `<SpreadsheetPageTemplate>` (Row Hover Floating Actions). TUYỆT ĐỐI KHÔNG thêm cột `{ key: "actions" }` thủ công vào mảng `columns`.
+1. 👉 **Bảng dữ liệu ([`standardize-table`](../standardize_table/SKILL.md))**:
+   - **`tableId="[module]-table"`**: Duy nhất để đồng bộ cấu hình cột vào App Setting Core (`core_user_preferences`) và LocalStorage cache.
+   - **Reset Layout**: Nằm cố định trong menu dropdown `ColumnToggle` (`Settings2` → `RotateCcw`), không đặt ở header cột.
+   - **Cột STT (Index)**: Rộng đúng `40px`, **bắt đầu từ 1 (1-based)**, căn giữa tuyệt đối cả header và cell (`cell: (_, idx) => <span className="w-full block text-center">{idx}</span>`).
+   - **Cột Mã Code**: Dùng `<TableText enableCopy tooltip onDetailClick={() => openDetail(row.id, "view")}>`.
+   - **Row Actions**: BẮT BUỘC dùng prop `rowActions` trên `<SpreadsheetPageTemplate>`. Không tạo cột action tĩnh. Mảng `rowActions` phải chứa 2 action đầu tiên là **Xem chi tiết** (`openDetail(id, "view")` — 👁️) và **Chỉnh sửa** (`openDetail(id, "edit")` — ✏️) để map vào Floated Action Bar và Right-Click Context Menu.
+   - **TableColumnHeaderFilter**: Dùng `fetchOptions` gọi `getColumnOptions` API; Cột Date dùng `<DateRangeColumnSlot>`.
+2. 👉 **Detail Drawer ([`standardize-drawer`](../standardize_drawer/SKILL.md))**:
+   - Mở component `[Module]DetailDrawer` với prop `mode={drawerMode}` (`"view" | "edit"`) và `setMode={setDrawerMode}`. Không điều hướng URL.
 
-## 7. Detail Drawer — BẮT BUỘC
-
-- Click vào `<TableText>` (cột Code) hoặc chọn "Chi tiết" từ `<ActionDropdown>` phải mở **Drawer**, không điều hướng trang.
-- Tự động tạo component `src/modules/[module]/components/[Module]DetailDrawer.tsx`.
-- Drawer này **BẮT BUỘC** tuân thủ kỹ năng `standardize-drawer` (`<StandardFormDrawer>`, `DrawerSection`, `DrawerField`).
-
-## 8. Mẫu code cơ bản (Table Page Boilerplate)
+## 6. Mẫu code cơ bản (Table Page Boilerplate)
 
 ```tsx
-import React from "react";
+import React, { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate";
 import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
@@ -312,13 +181,13 @@ import { DateRangeColumnSlot } from "@/shared/components/DataTable/DateRangeColu
 import { TableText } from "@/shared/components/DataTable/TableText";
 import { TableDateCell } from "@/shared/components/DataTable/TableDateCell";
 import { Badge } from "@/shared/components/ui/badge";
-import { Eye, FileText, Trash2 } from "lucide-react";
+import { Eye, Pencil, FileText, Trash2, Download } from "lucide-react";
 import type { DataTableColumn } from "@/shared/components/DataTable";
+import type { ActionDropdownItem } from "@/shared/components/ActionDropdown";
 // import { use[Module]List } from "@/modules/[module]/hooks/use[Module]List";
 // import { [Module]DetailDrawer } from "@/modules/[module]/components/[Module]DetailDrawer";
 // import { [module]Api } from "@/modules/[module]/api/[module]Api";
 
-// Kiểu dữ liệu ví dụ
 type ExampleRow = {
   id: string;
   code: string;
@@ -344,16 +213,29 @@ export function ExampleTablePage() {
     setColumnFilter: (_k: string, _v: string[]) => {},
     setColumnSearch: (_k: string, _v: string) => {},
     setPage: (_p: number) => {},
+    pageSize: 20,
+    setPageSize: (_s: number) => {},
+    total: 0,
+    totalPages: 0,
+    page: 1,
     activeFilterCount: 0,
     clearAllFilters: () => {},
+    refetch: () => {},
   };
 
-  const [drawerOpen, setDrawerOpen] = React.useState(false);
-  const [selectedId, setSelectedId] = React.useState<string | null>(null);
+  // Quản lý Drawer & Mode (View / Edit)
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [drawerMode, setDrawerMode] = useState<"view" | "edit">("view");
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  const openDetail = (id: string) => {
+  const openDetail = (id: string, mode: "view" | "edit" = "view") => {
     setSelectedId(id);
+    setDrawerMode(mode);
     setDrawerOpen(true);
+  };
+
+  const handleDelete = (id: string) => {
+    // Xác nhận và xử lý xóa
   };
 
   const getSortState = (key: string) => {
@@ -362,9 +244,9 @@ export function ExampleTablePage() {
     return "none" as const;
   };
 
-  const columns: DataTableColumn<ExampleRow>[] = React.useMemo(
+  const columns: DataTableColumn<ExampleRow>[] = useMemo(
     () => [
-      // Cột STT
+      // Cột STT: Bắt đầu từ 1, Căn giữa cả header và cell
       {
         key: "index",
         header: <span className="w-full block text-center">#</span>,
@@ -372,9 +254,11 @@ export function ExampleTablePage() {
         enableResizing: false,
         headerClassName: "text-center w-[40px] min-w-[40px]",
         className: "text-center w-[40px] min-w-[40px]",
-        cell: (_: ExampleRow, idx: number) => <span>{idx}</span>,
+        cell: (_: ExampleRow, idx: number) => (
+          <span className="w-full block text-center">{idx}</span>
+        ),
       },
-      // Cột Mã (Code) — Hỗ trợ fetchOptions server-side
+      // Cột Mã (Code): TableText + onDetailClick view mode
       {
         key: "code",
         header: (
@@ -383,9 +267,6 @@ export function ExampleTablePage() {
             columnKey="code"
             queryKeyPrefix="example-column-options"
             allFilters={listHook.columnFilters}
-            // fetchOptions={({ columnKey, search, pageParam, filtersStr }) =>
-            //   exampleApi.getColumnOptions(columnKey, search, pageParam, 20, filtersStr)
-            // }
             sortState={getSortState("code")}
             onSortChange={(s) => listHook.setSort("code", s)}
             searchValue={listHook.columnSearch["code"] || ""}
@@ -407,7 +288,7 @@ export function ExampleTablePage() {
               tooltip={true}
               onDetailClick={(e) => {
                 e.stopPropagation();
-                openDetail(row.id);
+                openDetail(row.id, "view");
               }}
             />
             {row.status === "DRAFT" && (
@@ -421,7 +302,7 @@ export function ExampleTablePage() {
           </div>
         ),
       },
-      // Cột Trạng thái
+      // Cột Trạng thái: Badge fixed width
       {
         key: "status",
         header: (
@@ -451,7 +332,7 @@ export function ExampleTablePage() {
           </div>
         ),
       },
-      // Cột Ngày tháng — tích hợp DateRangeColumnSlot
+      // Cột Ngày: DateRangeColumnSlot
       {
         key: "createdAt",
         className: "text-right",
@@ -513,6 +394,41 @@ export function ExampleTablePage() {
     [listHook.sorts, listHook.columnFilters, listHook.columnSearch, listHook.dateFrom, listHook.dateTo, t],
   );
 
+  // Row Actions: 2 Quick Actions đầu tiên là View và Edit mode
+  const getRowActions = (row: ExampleRow): ActionDropdownItem[] => [
+    {
+      groupLabel: "TRA CỨU",
+      items: [
+        {
+          label: t("viewDetail", "Xem chi tiết"),
+          icon: <Eye className="w-4 h-4" />,
+          onClick: () => openDetail(row.id, "view"), // 👁️ Quick Action 1: View Mode
+        },
+        {
+          label: t("download", "Tải xuống"),
+          icon: <Download className="w-4 h-4" />,
+          onClick: () => console.log("Download", row.id),
+        },
+      ],
+    },
+    {
+      groupLabel: "THAO TÁC",
+      items: [
+        {
+          label: t("edit", "Chỉnh sửa"),
+          icon: <Pencil className="w-4 h-4" />,
+          onClick: () => openDetail(row.id, "edit"), // ✏️ Quick Action 2: Edit Mode
+        },
+        {
+          label: t("delete", "Xóa"),
+          icon: <Trash2 className="w-4 h-4 text-destructive" />,
+          variant: "danger",
+          onClick: () => handleDelete(row.id),
+        },
+      ],
+    },
+  ];
+
   return (
     <>
       <SpreadsheetPageTemplate<ExampleRow>
@@ -537,28 +453,7 @@ export function ExampleTablePage() {
         onRefresh={() => listHook.refetch()}
         activeFilterCount={listHook.activeFilterCount}
         onClearAllFilters={listHook.clearAllFilters}
-        rowActions={(row: ExampleRow) => [
-          {
-            groupLabel: "TRA CỨU",
-            items: [
-              {
-                label: t("viewDetail", "Chi tiết"),
-                icon: <Eye className="w-4 h-4" />,
-                onClick: () => openDetail(row.id),
-              },
-            ],
-          },
-          {
-            groupLabel: "THAO TÁC",
-            items: [
-              {
-                label: t("delete", "Xóa"),
-                icon: <Trash2 className="w-4 h-4 text-destructive" />,
-                onClick: () => handleDelete(row.id),
-              },
-            ],
-          },
-        ]}
+        rowActions={getRowActions}
         summaryRow={{
           amount: (
             <div className="text-right font-bold text-primary tabular-nums">
@@ -575,6 +470,8 @@ export function ExampleTablePage() {
       {/* <[Module]DetailDrawer
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
+        mode={drawerMode}
+        setMode={setDrawerMode}
         id={selectedId}
       /> */}
     </>
@@ -585,45 +482,20 @@ export function ExampleTablePage() {
 ## Summary Checklist trước khi hoàn thành
 
 ### Breadcrumb & TabBar
-
 - [ ] Đã thêm `PageKey` mới vào type trong `src/shared/types/index.ts` chưa?
-- [ ] Đã đăng ký `SECTION_ROOTS` với `labelKey` và `group` đúng sidebar section trong `appStore.ts` chưa?
-- [ ] Đã đăng ký `BREADCRUMBS` theo đúng level (Module Group > Sub-group > Tên trang) trong `appStore.ts` chưa?
-- [ ] Breadcrumb level có tương ứng với cấu trúc menu Sidebar thực tế không (vd: Kế toán > Dòng tiền > Sao kê ngân hàng)?
-- [ ] Đã thêm i18n key `nav.items.[module]List` vào `nav/vi.ts` và `nav/en.ts` chưa?
-- [ ] Đã thêm breadcrumb key vào `breadcrumb/vi.ts` và `breadcrumb/en.ts` chưa?
+- [ ] Đã đăng ký `SECTION_ROOTS` (`labelKey`, `group`) và `BREADCRUMBS` (3 cấp chuẩn) trong `appStore.ts` chưa?
+- [ ] Đã thêm i18n key cho `nav/` và `breadcrumb/` (`vi.ts`, `en.ts`) chưa?
 
-### i18n
+### Server-side Hook & Responsive PageSize
+- [ ] Mặc định **100% BẢNG ĐÃ ƯU TIÊN SERVER-SIDE SORTING & FILTERING** (thông qua hook `use[Module]List` + API `getColumnOptions`) chưa?
+- [ ] Hook đã dùng `getDefaultPageSize` để gán default pageSize theo chiều cao màn hình (`< 900px` -> `20`, `>= 900px` -> `50`) và hỗ trợ `pageSizeOptions = [20, 50, 100, 200]` chưa?
 
-- [ ] Tất cả text tĩnh đã dùng `t(...)` từ `useTranslation("namespace")` chưa? **KHÔNG hardcode.**
-- [ ] Đã tạo file locale module `vi.ts` và `en.ts` đi kèm chưa?
+### Page Template & App Settings
+- [ ] Bảng đã có `tableId` duy nhất để tự động lưu & khôi phục column sizing, visibility, order vào App Setting (`core_user_preferences`) & LocalStorage cache chưa?
+- [ ] Nút Reset Column đã nằm gọn trong popup menu `ColumnToggle` (`Settings2` → `RotateCcw`), TUYỆT ĐỐI không đặt ở header cột chưa?
+- [ ] Đã truyền `rowActions` với 2 Quick Actions đầu tiên là **Xem chi tiết** (`openDetail(id, "view")` — 👁️) và **Chỉnh sửa** (`openDetail(id, "edit")` — ✏️) chưa?
 
-### UI & Empty State
-
-- [ ] Page có dùng `<SpreadsheetPageTemplate>` truyền đầy đủ props (`tableId`, `items`, `columns`, `loading`, `page`, `pageSize`, `total`, `onRefresh`, `activeFilterCount`, `onClearAllFilters`) chưa?
-- [ ] Đã truyền `tableId` duy nhất để kích hoạt dropdown Tùy chỉnh cột (`ColumnToggle`) và lưu/khôi phục layout chưa?
-- [ ] Đã truyền `rowActions` vào `<SpreadsheetPageTemplate>` để kích hoạt Row Hover Floating Actions chưa?
-- [ ] Bảng đã có `emptyLabel={t(...)}` khi data rỗng sau khi load xong chưa?
-
-### Server-side Logic & Filter Standard
-
-- [ ] Logic Filter & Sort có được thực hiện **Server-side** thông qua custom hook `use[Module]List` chưa?
-- [ ] Hook `use[Module]List` đã có đủ `dateFrom`, `dateTo`, `columnFilters`, `columnSearch`, `activeFilterCount`, `clearAllFilters` chưa?
-- [ ] Cột Date dùng `<DateRangeColumnSlot>` trong `dateRangeSlot={({ close }) => ...}` với `hideFilter={true}` & `hideFooter={true}` chưa?
-- [ ] Các cột ID / Mã hỗ trợ Server-side phân trang dùng `fetchOptions` gọi API `getColumnOptions` chưa?
-
-### Table Columns (`standardize-table`)
-
-- [ ] Cột STT/Checkbox rộng đúng 40px, header căn giữa chuẩn (`header: <span className="w-full block text-center">#</span>`, `headerClassName: "text-center"`) chưa? (STT dùng `{idx}`, không `idx + 1`)
-- [ ] TUYỆT ĐỐI không khai báo cột action tĩnh `{ key: "actions" }` trong `columns`, đã chuyển sang `rowActions` chưa?
-- [ ] TUYỆT ĐỐI không đặt nút Reset Column ở header cột Action hay dữ liệu, đã sử dụng nút Khôi phục trong dropdown `ColumnToggle` (`Settings2`) chưa?
-- [ ] Cột Code/SKU size 200px, dùng `<TableText>` bật `enableCopy`, `tooltip`, `onDetailClick` (hoặc `onDrawerClick`) và Quick Status Badge chưa?
-- [ ] Cột Status dùng `<Badge>` fixed width `w-[88px]`, bọc `<Tooltip>` & `truncate` chưa?
-- [ ] Cột số/tiền có class `tabular-nums text-right` (tiền tệ có `font-semibold`) chưa?
-- [ ] Header filterable có `<TableColumnHeaderFilter align="center">` với `isActive` chưa?
-
-### Detail Drawer (`standardize-drawer`)
-
-- [ ] Đã tạo sẵn component `[Module]DetailDrawer` tuân thủ `standardize-drawer` chưa?
-- [ ] Click vào `<TableText>` hoặc Row Hover Actions mở Drawer (không điều hướng trang) chưa?
-
+### Table Columns & Detail Drawer
+- [ ] Cột STT rộng đúng 40px, **BẮT ĐẦU TỪ 1 VÀ CĂN GIỮA TUYỆT ĐỐI CẢ HEADER VÀ CELL** (`cell: (_, idx) => <span className="w-full block text-center">{idx}</span>`) chưa?
+- [ ] Cột Code dùng `<TableText>` mở View mode; Cột Status dùng `<Badge>` fixed width `w-[88px]`; Cột Date dùng `<DateRangeColumnSlot>` chưa?
+- [ ] Đã tạo sẵn component `[Module]DetailDrawer` tuân thủ `standardize-drawer`, hỗ trợ nhận `mode` (`"view" | "edit"`) và `setMode` chưa?
