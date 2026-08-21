@@ -15,6 +15,7 @@ vi.mock("@/shared/components/StandardFormDrawer", () => ({
     panelClassName,
     layout,
     relatedTabs,
+    tabs,
   }: any) => (
     <div
       data-testid="drawer"
@@ -30,6 +31,16 @@ vi.mock("@/shared/components/StandardFormDrawer", () => ({
       <div>{leftPanel}</div>
       {rightPanelTitle && <div>{rightPanelTitle}</div>}
       <div>{rightPanel}</div>
+      {tabs && (
+        <div data-testid="top-tabs">
+          {tabs.map((t: any) => (
+            <div key={t.key}>
+              <h3>{t.label}</h3>
+              <div>{t.content}</div>
+            </div>
+          ))}
+        </div>
+      )}
       {relatedTabs && (
         <div data-testid="related-tabs">
           {relatedTabs.map((t: any) => (

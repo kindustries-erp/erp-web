@@ -329,3 +329,41 @@ export function useGarageCaseGrossProfit(caseCode?: string) {
     retry: false,
   });
 }
+
+export function useUpdateGarageCaseConfig() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      caseId,
+      payload,
+    }: {
+      caseId: string;
+      payload: { classification?: string | null; erpNotes?: string | null };
+    }) => garageApi.updateCaseConfig(caseId, payload),
+    onSuccess: (updatedCase) => {
+      queryClient.invalidateQueries({ queryKey: ["garage", "cases"] });
+      queryClient.invalidateQueries({
+        queryKey: ["garage-case-column-options"],
+      });
+      if (updatedCase?.id) {
+        queryClient.invalidateQueries({
+          queryKey: ["garage-case", updatedCase.id],
+        });
+      }
+      if (updatedCase?.soChungTu) {
+        queryClient.invalidateQueries({
+          queryKey: ["garage-case-code", updatedCase.soChungTu],
+        });
+      }
+      toast.success("Đã cập nhật cấu hình phiếu dịch vụ thành công.");
+    },
+    onError: (err: any) => {
+      toast.error(
+        err?.response?.data?.message ||
+          err?.message ||
+          "Lỗi khi cập nhật cấu hình phiếu",
+      );
+    },
+  });
+}

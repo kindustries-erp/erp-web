@@ -63,7 +63,7 @@ export function TableRowContextMenu({
   useEffect(() => {
     if (!isOpen) return;
 
-    const handleOutsideClick = (e: MouseEvent) => {
+    const handleOutsideInteraction = (e: Event) => {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
         onClose();
       }
@@ -91,7 +91,12 @@ export function TableRowContextMenu({
 
     // Use a zero-timeout to prevent the triggering event from immediately closing
     const timer = setTimeout(() => {
-      window.addEventListener("click", handleOutsideClick);
+      window.addEventListener("pointerdown", handleOutsideInteraction, {
+        capture: true,
+      });
+      window.addEventListener("click", handleOutsideInteraction, {
+        capture: true,
+      });
       window.addEventListener("contextmenu", handleContextMenu, {
         capture: true,
       });
@@ -101,7 +106,12 @@ export function TableRowContextMenu({
 
     return () => {
       clearTimeout(timer);
-      window.removeEventListener("click", handleOutsideClick);
+      window.removeEventListener("pointerdown", handleOutsideInteraction, {
+        capture: true,
+      });
+      window.removeEventListener("click", handleOutsideInteraction, {
+        capture: true,
+      });
       window.removeEventListener("contextmenu", handleContextMenu, {
         capture: true,
       });
@@ -153,9 +163,7 @@ export function TableRowContextMenu({
             if (!item.preventClose) {
               onClose();
             }
-            setTimeout(() => {
-              item.onClick();
-            }, 0);
+            item.onClick();
           }
         }}
         className={cn(

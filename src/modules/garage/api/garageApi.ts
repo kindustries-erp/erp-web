@@ -81,6 +81,17 @@ export const garageApi = {
     return res.data;
   },
 
+  updateCaseConfig: async (
+    caseId: string,
+    payload: { classification?: string | null; erpNotes?: string | null },
+  ) => {
+    const res = await axiosInstance.patch(
+      `${BASE}/cases/${caseId}/config`,
+      payload,
+    );
+    return res.data;
+  },
+
   syncBranches: async () => {
     const res = await axiosInstance.post(`${BASE}/sync/branches`);
     return res.data;
