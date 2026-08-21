@@ -15,14 +15,14 @@ export type { DrawerRelatedTabItem };
 export * from "./drawer";
 
 // ── Size presets ──────────────────────────────────────────────────────────────
-// All sizes are bounded by max-width: calc(100vw - 208px) on desktop (panels.css)
-// so the drawer never covers the sidebar.
+// All sizes scale fluidly via `vw` on desktop while bounded by explicit min/max widths
+// and hard bounded by max-width: calc(100vw - 208px) on desktop so drawer never covers sidebar.
 const SIZE_CLASS: Record<string, string> = {
-  sm: "w-full md:w-[95vw] lg:w-[500px] xl:w-[500px] 2xl:w-[550px]",
-  md: "w-full md:w-[95vw] lg:w-[700px] xl:w-[700px] 2xl:w-[750px]",
-  lg: "w-full md:w-[95vw] lg:w-[1000px] xl:w-[1000px] 2xl:w-[1100px]",
-  xl: "w-full md:w-[95vw] lg:w-[90vw] xl:w-[1200px] 2xl:w-[1400px]",
-  full: "w-full md:w-[95vw] lg:w-[90vw] xl:w-full 2xl:w-full",
+  sm: "w-full md:w-[90vw] lg:w-[35vw] xl:w-[32vw] 2xl:w-[28vw] min-w-[380px] max-w-[560px]",
+  md: "w-full md:w-[92vw] lg:w-[52vw] xl:w-[46vw] 2xl:w-[40vw] min-w-[560px] max-w-[820px]",
+  lg: "w-full md:w-[95vw] lg:w-[70vw] xl:w-[65vw] 2xl:w-[58vw] min-w-[780px] max-w-[1150px]",
+  xl: "w-full md:w-[95vw] lg:w-[86vw] xl:w-[80vw] 2xl:w-[75vw] min-w-[960px] max-w-[1550px]",
+  full: "w-full md:w-[95vw] lg:w-[calc(100vw-208px)] xl:w-[calc(100vw-208px)] max-w-[calc(100vw-208px)]",
 };
 
 export interface StandardFormDrawerProps {
