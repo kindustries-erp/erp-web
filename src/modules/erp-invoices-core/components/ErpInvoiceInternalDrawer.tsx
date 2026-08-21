@@ -3,6 +3,7 @@ import {
   StandardFormDrawer,
   DrawerAuditTimeline,
   DrawerDocumentTraceability,
+  type DrawerTopTabItem,
   type DrawerRelatedTabItem,
   type DrawerAuditLogItem,
 } from "@/shared/components/StandardFormDrawer";
@@ -21,6 +22,7 @@ import {
   BookOpen,
   Paperclip,
   Wallet,
+  FileText,
 } from "lucide-react";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/Button";
@@ -67,6 +69,8 @@ interface Props {
   postingState?: any;
   pendingUnpost?: boolean;
   onUnpost?: () => void;
+  tabs?: DrawerTopTabItem[];
+  defaultTabKey?: string;
   relatedTabs?: DrawerRelatedTabItem[];
   defaultRelatedTabKey?: string;
   defaultRelatedCollapsed?: boolean;
@@ -112,6 +116,8 @@ export function ErpInvoiceInternalDrawer({
   postingState,
   pendingUnpost = false,
   onUnpost,
+  tabs: customTabs,
+  defaultTabKey = "invoice_details",
   relatedTabs: customRelatedTabs,
   defaultRelatedTabKey = "financials",
   defaultRelatedCollapsed = false,
@@ -282,9 +288,9 @@ export function ErpInvoiceInternalDrawer({
     );
   }
 
-  // Build default relatedTabs for Invoice if not explicitly passed
-  let resolvedRelatedTabs = customRelatedTabs;
-  if (!resolvedRelatedTabs && detailInvoice) {
+  // Build Top Navigation Tabs for Invoice
+  let resolvedDrawerTabs = customTabs;
+  if (!resolvedDrawerTabs && detailInvoice) {
     const auditItems: DrawerAuditLogItem[] = [];
 
     if (detailInvoice.createdAt) {
@@ -325,11 +331,197 @@ export function ErpInvoiceInternalDrawer({
       (detailInvoice.pdfFiles?.length || (detailInvoice.pdfFileKey ? 1 : 0)) +
       (detailInvoice.attachments?.length || 0);
 
-    resolvedRelatedTabs = [
-      // 1. Tab Tài chính & Công nợ (Nằm ở vị trí đầu tiên, mặc định)
+    resolvedDrawerTabs = [
+      // 1. Tab Chi tiết hóa đơn (Form / Sheet Preview Chính)
+      {
+        key: "invoice_details",
+        label: t("Chi tiết hóa đơn", "Chi tiết hóa đơn"),
+        icon: <FileText className="w-3.5 h-3.5" />,
+        content: <div className="space-y-4">{children}</div>,
+      },
+
+      // 2. Tab Hạch toán kế toán (View & Edit)
+      {
+        key: "accounting",
+        label: t("Hạch toán kế toán", "Hạch toán kế toán"),
+        icon: <BookOpen className="w-3.5 h-3.5" />,
+        badgeCount:
+          detailInvoice.postingStatus === "POSTED" ||
+          (form as any)?.accountingEnabled
+            ? 1
+            : 0,
+        content: (
+          <div className="p-3 bg-surface/50 rounded-xl border border-border/70">
+            {editMode && postingState ? (
+              <div className="py-2 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-foreground">
+                    Định khoản nghiệp vụ kế toán
+                  </span>
+                  {form?.branchId && (
+                    <Button
+                      type="button"
+                      variant={
+                        (form as any).accountingEnabled ? "outline" : "primary"
+                      }
+                      size="sm"
+                      className="h-7 text-xs"
+                      onClick={() => {
+                        fieldSet?.(
+                          "accountingEnabled",
+                          !(form as any).accountingEnabled,
+                        );
+                      }}
+                    >
+                      {(form as any).accountingEnabled
+                        ? "Hủy hạch toán"
+                        : "Bật hạch toán"}
+                    </Button>
+                  )}
+                </div>
+
+                {!form?.branchId ? (
+                  <div className="text-xs text-amber-700 bg-amber-50 p-2.5 rounded-lg border border-amber-200">
+                    Vui lòng chọn chi nhánh ở cột bên phải trước khi nhập hạch
+                    toán kế toán.
+                  </div>
+                ) : null}
+
+                <div
+                  className={`transition-all duration-200 ${
+                    (form as any).accountingEnabled
+                      ? "opacity-100"
+                      : "opacity-40 grayscale pointer-events-none"
+                  }`}
+                >
+                  <PostingSection
+                    postingState={postingState}
+                    editMode={true}
+                    isPosted={
+                      detailInvoice.postingStatus === "POSTED" && !pendingUnpost
+                    }
+                    journalEntryId={detailInvoice.journalEntryId}
+                    defaultDate={form?.invoiceDate || ""}
+                    defaultDescription={
+                      detailInvoice.description ||
+                      form?.description ||
+                      `Hạch toán hóa đơn ${form?.invoiceNo || ""}`
+                    }
+                    onUnpost={() => {
+                      if (onUnpost) {
+                        onUnpost();
+                        postingState?.reset?.();
+                      }
+                    }}
+                    getDefaultLines={(accountOptions) => {
+                      const findAccount = (prefix: string) =>
+                        accountOptions.find((a) =>
+                          a.label.split(" - ")[0]?.startsWith(prefix),
+                        )?.value || "";
+                      const preVat =
+                        Number(
+                          detailInvoice?.preVatAmount || form?.preVatAmount,
+                        ) || 0;
+                      const vat =
+                        Number(detailInvoice?.vatAmount || form?.vatAmount) ||
+                        0;
+                      const total =
+                        Number(
+                          detailInvoice?.totalAmount || form?.totalAmount,
+                        ) || 0;
+                      const baseDesc =
+                        detailInvoice?.description ||
+                        `${t("postingDefaultDesc", "Hạch toán hóa đơn")} ${detailInvoice?.invoiceNo || form?.invoiceNo}`;
+
+                      const newLines = [];
+                      if (direction === "IN") {
+                        const sellerTaxCode =
+                          detailInvoice?.sellerTaxCode ||
+                          form?.sellerTaxCode ||
+                          "";
+                        const debitCode =
+                          resolvePurchaseDebitAccountCode(sellerTaxCode);
+                        const debitAccountId =
+                          debitCode === "642"
+                            ? findAccount("642") || findAccount("632")
+                            : findAccount("632") || findAccount("642");
+
+                        if (preVat > 0)
+                          newLines.push({
+                            id: createClientId(),
+                            accountId:
+                              debitAccountId ||
+                              findAccount("152") ||
+                              findAccount("156"),
+                            debit: preVat,
+                            credit: 0,
+                            description: baseDesc,
+                          });
+                        if (vat > 0)
+                          newLines.push({
+                            id: createClientId(),
+                            accountId: findAccount("133"),
+                            debit: vat,
+                            credit: 0,
+                            description: `Thuế GTGT ${detailInvoice?.invoiceNo || form?.invoiceNo}`,
+                          });
+                        if (total > 0)
+                          newLines.push({
+                            id: createClientId(),
+                            accountId: findAccount("331"),
+                            debit: 0,
+                            credit: total,
+                            description: baseDesc,
+                          });
+                      } else {
+                        if (total > 0)
+                          newLines.push({
+                            id: createClientId(),
+                            accountId: findAccount("131"),
+                            debit: total,
+                            credit: 0,
+                            description: baseDesc,
+                          });
+                        if (preVat > 0)
+                          newLines.push({
+                            id: createClientId(),
+                            accountId: findAccount("511") || findAccount("711"),
+                            debit: 0,
+                            credit: preVat,
+                            description: baseDesc,
+                          });
+                        if (vat > 0)
+                          newLines.push({
+                            id: createClientId(),
+                            accountId:
+                              findAccount("3331") || findAccount("333"),
+                            debit: 0,
+                            credit: vat,
+                            description: `Thuế GTGT ${detailInvoice?.invoiceNo || form?.invoiceNo}`,
+                          });
+                      }
+                      return newLines;
+                    }}
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="py-1">
+                <PostedAccountingSummary
+                  isPosted={detailInvoice.postingStatus === "POSTED"}
+                  journalEntryId={detailInvoice.journalEntryId}
+                  postingDate={detailInvoice.postingDate}
+                />
+              </div>
+            )}
+          </div>
+        ),
+      },
+
+      // 3. Tab Tài chính & Cấn trừ (Settlements & Cashflow)
       {
         key: "financials",
-        label: t("Tài chính & Công nợ"),
+        label: t("Tài chính & Cấn trừ", "Tài chính & Cấn trừ"),
         icon: <Wallet className="w-3.5 h-3.5" />,
         badgeCount:
           (detailInvoice.voucherNetOffs?.length || 0) +
@@ -347,12 +539,13 @@ export function ErpInvoiceInternalDrawer({
         ),
       },
 
-      // 2. Tab Chứng từ liên kết (Canvas Graph & Traceability)
+      // 4. Tab Mạng lưới chứng từ liên kết (Canvas Graph Traceability - Full Width)
       {
         key: "linked_docs",
-        label: t("Chứng từ liên kết"),
+        label: t("Chứng từ liên kết", "Chứng từ liên kết"),
         icon: <Link2 className="w-3.5 h-3.5" />,
         badgeCount: linkedCount,
+        hideRightPanel: true, // Canvas Graph bung 100% full width để trực quan tối đa
         content: (
           <DrawerDocumentTraceability
             rootId={detailInvoice.id}
@@ -441,216 +634,48 @@ export function ErpInvoiceInternalDrawer({
         ),
       },
 
-      // 3. Tab Hạch toán kế toán (View & Edit)
-      {
-        key: "accounting",
-        label: t("Hạch toán kế toán"),
-        icon: <BookOpen className="w-3.5 h-3.5" />,
-        badgeCount:
-          detailInvoice.postingStatus === "POSTED" ||
-          (form as any)?.accountingEnabled
-            ? 1
-            : 0,
-        content:
-          editMode && postingState ? (
-            <div className="py-2 space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-foreground">
-                  Định khoản nghiệp vụ kế toán
-                </span>
-                {form?.branchId && (
-                  <Button
-                    type="button"
-                    variant={
-                      (form as any).accountingEnabled ? "outline" : "primary"
-                    }
-                    size="sm"
-                    className="h-7 text-xs"
-                    onClick={() => {
-                      fieldSet?.(
-                        "accountingEnabled",
-                        !(form as any).accountingEnabled,
-                      );
-                    }}
-                  >
-                    {(form as any).accountingEnabled
-                      ? "Hủy hạch toán"
-                      : "Bật hạch toán"}
-                  </Button>
-                )}
-              </div>
-
-              {!form?.branchId ? (
-                <div className="text-xs text-amber-700 bg-amber-50 p-2.5 rounded-lg border border-amber-200">
-                  Vui lòng chọn chi nhánh ở cột bên phải trước khi nhập hạch
-                  toán kế toán.
-                </div>
-              ) : null}
-
-              <div
-                className={`transition-all duration-200 ${
-                  (form as any).accountingEnabled
-                    ? "opacity-100"
-                    : "opacity-40 grayscale pointer-events-none"
-                }`}
-              >
-                <PostingSection
-                  postingState={postingState}
-                  editMode={true}
-                  isPosted={
-                    detailInvoice.postingStatus === "POSTED" && !pendingUnpost
-                  }
-                  journalEntryId={detailInvoice.journalEntryId}
-                  defaultDate={form?.invoiceDate || ""}
-                  defaultDescription={
-                    detailInvoice.description ||
-                    form?.description ||
-                    `Hạch toán hóa đơn ${form?.invoiceNo || ""}`
-                  }
-                  onUnpost={() => {
-                    if (onUnpost) {
-                      onUnpost();
-                      postingState?.reset?.();
-                    }
-                  }}
-                  getDefaultLines={(accountOptions) => {
-                    const findAccount = (prefix: string) =>
-                      accountOptions.find((a) =>
-                        a.label.split(" - ")[0]?.startsWith(prefix),
-                      )?.value || "";
-                    const preVat =
-                      Number(
-                        detailInvoice?.preVatAmount || form?.preVatAmount,
-                      ) || 0;
-                    const vat =
-                      Number(detailInvoice?.vatAmount || form?.vatAmount) || 0;
-                    const total =
-                      Number(detailInvoice?.totalAmount || form?.totalAmount) ||
-                      0;
-                    const baseDesc =
-                      detailInvoice?.description ||
-                      `${t("postingDefaultDesc", "Hạch toán hóa đơn")} ${detailInvoice?.invoiceNo || form?.invoiceNo}`;
-
-                    const newLines = [];
-                    if (direction === "IN") {
-                      const sellerTaxCode =
-                        detailInvoice?.sellerTaxCode ||
-                        form?.sellerTaxCode ||
-                        "";
-                      const debitCode =
-                        resolvePurchaseDebitAccountCode(sellerTaxCode);
-                      const debitAccountId =
-                        debitCode === "642"
-                          ? findAccount("642") || findAccount("632")
-                          : findAccount("632") || findAccount("642");
-
-                      if (preVat > 0)
-                        newLines.push({
-                          id: createClientId(),
-                          accountId:
-                            debitAccountId ||
-                            findAccount("152") ||
-                            findAccount("156"),
-                          debit: preVat,
-                          credit: 0,
-                          description: baseDesc,
-                        });
-                      if (vat > 0)
-                        newLines.push({
-                          id: createClientId(),
-                          accountId: findAccount("133"),
-                          debit: vat,
-                          credit: 0,
-                          description: `Thuế GTGT ${detailInvoice?.invoiceNo || form?.invoiceNo}`,
-                        });
-                      if (total > 0)
-                        newLines.push({
-                          id: createClientId(),
-                          accountId: findAccount("331"),
-                          debit: 0,
-                          credit: total,
-                          description: baseDesc,
-                        });
-                    } else {
-                      if (total > 0)
-                        newLines.push({
-                          id: createClientId(),
-                          accountId: findAccount("131"),
-                          debit: total,
-                          credit: 0,
-                          description: baseDesc,
-                        });
-                      if (preVat > 0)
-                        newLines.push({
-                          id: createClientId(),
-                          accountId: findAccount("511") || findAccount("711"),
-                          debit: 0,
-                          credit: preVat,
-                          description: baseDesc,
-                        });
-                      if (vat > 0)
-                        newLines.push({
-                          id: createClientId(),
-                          accountId: findAccount("3331") || findAccount("333"),
-                          debit: 0,
-                          credit: vat,
-                          description: `Thuế GTGT ${detailInvoice?.invoiceNo || form?.invoiceNo}`,
-                        });
-                    }
-                    return newLines;
-                  }}
-                />
-              </div>
-            </div>
-          ) : (
-            <div className="py-1">
-              <PostedAccountingSummary
-                isPosted={detailInvoice.postingStatus === "POSTED"}
-                journalEntryId={detailInvoice.journalEntryId}
-                postingDate={detailInvoice.postingDate}
-              />
-            </div>
-          ),
-      },
-
-      // 4. Tab Tài liệu đính kèm
+      // 5. Tab Tài liệu đính kèm (PDF Files & Upload)
       {
         key: "attachments",
-        label: t("Tài liệu đính kèm"),
+        label: t("Tài liệu đính kèm", "Tài liệu đính kèm"),
         icon: <Paperclip className="w-3.5 h-3.5" />,
         badgeCount: attachmentCount,
         content: (
-          <ErpInvoicePdfUpload
-            noCard={true}
-            invoiceId={detailInvoice.id}
-            attachments={detailInvoice.attachments ?? null}
-            pdfFileKey={detailInvoice.pdfFileKey ?? null}
-            pdfFiles={detailInvoice.pdfFiles ?? null}
-            editMode={editMode}
-            pendingDeletedPdfs={form?.pendingDeletedPdfs}
-            onPendingDeletePdf={(key) => {
-              const current = form?.pendingDeletedPdfs || [];
-              fieldSet?.("pendingDeletedPdfs", [...current, key]);
-            }}
-            pendingAddedAttachments={form?.pendingAddedAttachments}
-            onPendingAddedAttachmentsChange={(files) => {
-              fieldSet?.("pendingAddedAttachments", files);
-            }}
-          />
+          <div className="p-3 bg-surface/50 rounded-xl border border-border/70">
+            <ErpInvoicePdfUpload
+              noCard={true}
+              invoiceId={detailInvoice.id}
+              attachments={detailInvoice.attachments ?? null}
+              pdfFileKey={detailInvoice.pdfFileKey ?? null}
+              pdfFiles={detailInvoice.pdfFiles ?? null}
+              editMode={editMode}
+              pendingDeletedPdfs={form?.pendingDeletedPdfs}
+              onPendingDeletePdf={(key) => {
+                const current = form?.pendingDeletedPdfs || [];
+                fieldSet?.("pendingDeletedPdfs", [...current, key]);
+              }}
+              pendingAddedAttachments={form?.pendingAddedAttachments}
+              onPendingAddedAttachmentsChange={(files) => {
+                fieldSet?.("pendingAddedAttachments", files);
+              }}
+            />
+          </div>
         ),
       },
 
-      // 5. Tab Lịch sử & Kiểm duyệt (Nằm cuối cùng)
+      // 6. Tab Lịch sử & Kiểm duyệt (Audit Timeline)
       {
         key: "history",
-        label: t("Lịch sử & Kiểm duyệt"),
+        label: t("Lịch sử & Kiểm duyệt", "Lịch sử & Kiểm duyệt"),
         icon: <History className="w-3.5 h-3.5" />,
         badgeCount: auditItems.length,
         content: (
-          <DrawerAuditTimeline
-            items={auditItems}
-            emptyLabel={t("Chưa có ghi nhận lịch sử.")}
-          />
+          <div className="p-3 bg-surface/50 rounded-xl border border-border/70">
+            <DrawerAuditTimeline
+              items={auditItems}
+              emptyLabel={t("Chưa có ghi nhận lịch sử.")}
+            />
+          </div>
         ),
       },
     ];
@@ -671,9 +696,11 @@ export function ErpInvoiceInternalDrawer({
         confirmOnClose={editMode}
         actions={editMode ? editActions : undefined}
         footerLeft={footerLeft}
-        leftPanel={children}
+        tabs={resolvedDrawerTabs}
+        defaultTabKey={defaultTabKey}
+        leftPanel={!resolvedDrawerTabs ? children : undefined}
         rightPanel={rightPanel}
-        relatedTabs={resolvedRelatedTabs}
+        relatedTabs={customRelatedTabs}
         defaultRelatedTabKey={defaultRelatedTabKey}
         defaultRelatedCollapsed={defaultRelatedCollapsed}
         bottomPanel={bottomPanel}

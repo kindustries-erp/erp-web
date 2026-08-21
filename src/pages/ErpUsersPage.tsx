@@ -8,6 +8,7 @@ import {
   LogIn,
   Ban,
   CheckCircle,
+  User,
 } from "lucide-react";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate/SpreadsheetPageTemplate";
 import { type DataTableColumn } from "@/shared/components/DataTable";
@@ -22,6 +23,7 @@ import {
 import {
   StandardFormDrawer,
   DrawerAuditTimeline,
+  type DrawerTopTabItem,
 } from "@/shared/components/StandardFormDrawer";
 
 import { History } from "lucide-react";
@@ -371,6 +373,57 @@ export function ErpUsersPage() {
         },
       ];
 
+  const userDrawerTabs: DrawerTopTabItem[] | undefined = isViewMode
+    ? [
+        {
+          key: "user_info",
+          label: t("Thông tin người dùng"),
+          icon: <User className="w-3.5 h-3.5" />,
+          content: (
+            <DrawerSection title={t("Thông tin hiện tại")}>
+              <DrawerRow label="Email" value={selectedUser?.email || "—"} />
+              <DrawerRow
+                label={t("Trạng thái")}
+                value={selectedUser?.status || "—"}
+              />
+              <DrawerRow
+                label="Employee"
+                value={
+                  selectedUser?.employee
+                    ? `${selectedUser.employee.fullName} (${selectedUser.employee.employeeCode})`
+                    : "—"
+                }
+              />
+              <DrawerRow
+                label="Last login"
+                value={formatDate(selectedUser?.lastLoginAt ?? null)}
+              />
+            </DrawerSection>
+          ),
+        },
+        {
+          key: "history",
+          label: t("Timeline audit"),
+          icon: <History className="w-3.5 h-3.5" />,
+          badgeCount: timeline.length,
+          content: (
+            <DrawerAuditTimeline
+              items={timeline.map((entry) => ({
+                id: entry.id,
+                actionType: entry.actionType,
+                actorEmail: entry.actorEmail || "system",
+                timestamp: entry.createdAt,
+                status: entry.status,
+                message: entry.message || undefined,
+              }))}
+              loading={timelineLoading}
+              emptyLabel={t("Chưa có log")}
+            />
+          ),
+        },
+      ]
+    : undefined;
+
   if (!canRead) return <Forbidden />;
 
   return (
@@ -480,54 +533,10 @@ export function ErpUsersPage() {
         }
         actions={drawerActions}
         layout="1-column"
-        relatedTabs={
-          isViewMode
-            ? [
-                {
-                  key: "history",
-                  label: t("Timeline audit"),
-                  icon: <History className="w-3.5 h-3.5" />,
-                  badgeCount: timeline.length,
-                  content: (
-                    <DrawerAuditTimeline
-                      items={timeline.map((entry) => ({
-                        id: entry.id,
-                        actionType: entry.actionType,
-                        actorEmail: entry.actorEmail || "system",
-                        timestamp: entry.createdAt,
-                        status: entry.status,
-                        message: entry.message || undefined,
-                      }))}
-                      loading={timelineLoading}
-                      emptyLabel={t("Chưa có log")}
-                    />
-                  ),
-                },
-              ]
-            : undefined
-        }
+        tabs={userDrawerTabs}
+        defaultTabKey="user_info"
         leftPanel={
-          isViewMode ? (
-            <DrawerSection title={t("Thông tin hiện tại")}>
-              <DrawerRow label="Email" value={selectedUser?.email || "—"} />
-              <DrawerRow
-                label={t("Trạng thái")}
-                value={selectedUser?.status || "—"}
-              />
-              <DrawerRow
-                label="Employee"
-                value={
-                  selectedUser?.employee
-                    ? `${selectedUser.employee.fullName} (${selectedUser.employee.employeeCode})`
-                    : "—"
-                }
-              />
-              <DrawerRow
-                label="Last login"
-                value={formatDate(selectedUser?.lastLoginAt ?? null)}
-              />
-            </DrawerSection>
-          ) : (
+          !userDrawerTabs ? (
             <DrawerSection title={t("Thông tin user")}>
               <DrawerField label="Email" required>
                 <input
@@ -614,7 +623,7 @@ export function ErpUsersPage() {
                 />
               </DrawerField>
             </DrawerSection>
-          )
+          ) : undefined
         }
       />
 
