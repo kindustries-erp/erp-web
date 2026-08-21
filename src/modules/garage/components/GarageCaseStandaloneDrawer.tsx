@@ -3,6 +3,7 @@ import {
   StandardFormDrawer,
   DrawerAuditTimeline,
   type DrawerAuditLogItem,
+  type DrawerTopTabItem,
 } from "@/shared/components/StandardFormDrawer";
 import { DrawerSection, DrawerRow } from "@/shared/components/DrawerModal";
 import { useTranslation } from "react-i18next";
@@ -28,7 +29,14 @@ import {
   ActionDropdown,
   type ActionDropdownItem,
 } from "@/shared/components/ActionDropdown";
-import { Link2, History, RefreshCw, ChevronDown, Wallet } from "lucide-react";
+import {
+  Link2,
+  History,
+  RefreshCw,
+  ChevronDown,
+  Wallet,
+  FileText,
+} from "lucide-react";
 import { toast } from "react-hot-toast";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type {
@@ -555,7 +563,7 @@ export function GarageCaseStandaloneDrawer({
     },
   ];
 
-  let resolvedRelatedTabs = undefined;
+  let resolvedDrawerTabs: DrawerTopTabItem[] | undefined = undefined;
 
   if (selectedCase) {
     const auditItems: DrawerAuditLogItem[] = [];
@@ -681,8 +689,23 @@ export function GarageCaseStandaloneDrawer({
       return isNaN(timeB) ? -1 : isNaN(timeA) ? 1 : timeB - timeA;
     });
 
-    resolvedRelatedTabs = [
-      // Tab 1: Tài chính & Công nợ (Nằm ở vị trí đầu tiên, mặc định)
+    resolvedDrawerTabs = [
+      // Tab 1: Chi tiết báo giá (Nội dung chính / Sheet Báo giá & Phụ tùng, Nhân công)
+      {
+        key: "quote_details",
+        label: t("cases.drawer.quoteDetails", "Chi tiết báo giá"),
+        icon: <FileText className="w-3.5 h-3.5" />,
+        content: (
+          <div className="space-y-4">
+            <GarageCasePreview
+              caseData={selectedCase}
+              grossProfit={grossProfit}
+            />
+          </div>
+        ),
+      },
+
+      // Tab 2: Tài chính & Công nợ
       {
         key: "financials",
         label: t("cases.drawer.financials", "Tài chính & Công nợ"),
@@ -690,7 +713,6 @@ export function GarageCaseStandaloneDrawer({
         badgeCount:
           (activeLinkedInvoices?.length || 0) +
           (activeSettlements?.length || 0),
-        flush: true,
         content: (
           <GarageCaseSettlementSection
             caseId={selectedCase.id}
@@ -707,7 +729,7 @@ export function GarageCaseStandaloneDrawer({
         ),
       },
 
-      // Tab 2: Trung tâm Trực quan hóa Mạng lưới Chứng từ (Visualization Hub)
+      // Tab 3: Trung tâm Trực quan hóa Mạng lưới Chứng từ (Visualization Hub)
       {
         key: "linked_docs",
         label: t("cases.drawer.linkedDocs", "Chứng từ liên kết"),
@@ -715,7 +737,7 @@ export function GarageCaseStandaloneDrawer({
         badgeCount:
           (activeLinkedInvoices?.length || 0) +
           (activeSettlements?.length || 0),
-        flush: true,
+        hideRightPanel: true, // Canvas Graph bung 100% full width để nhìn rõ nhất
         content: (
           <DrawerDocumentTraceability
             rootId={selectedCase.id}
@@ -796,15 +818,14 @@ export function GarageCaseStandaloneDrawer({
         ),
       },
 
-      // Tab 3: Lịch sử & Đồng bộ dữ liệu KGara (DrawerAuditTimeline)
+      // Tab 4: Lịch sử & Đồng bộ dữ liệu KGara (DrawerAuditTimeline)
       {
         key: "sync_history",
         label: t("cases.drawer.syncHistory", "Lịch sử & Đồng bộ"),
         icon: <History className="w-3.5 h-3.5" />,
         badgeCount: auditItems.length,
-        cardClassName: "p-3 max-h-[480px] overflow-hidden",
         content: (
-          <div className="max-h-[450px] overflow-y-auto pr-1 py-1">
+          <div className="p-3 bg-surface/50 rounded-xl border border-border/70">
             <DrawerAuditTimeline
               items={auditItems}
               emptyLabel={t(
@@ -833,20 +854,15 @@ export function GarageCaseStandaloneDrawer({
         }
         footerLeft={footerLeft}
         actions={editMode ? editActions : undefined}
+        tabs={resolvedDrawerTabs}
+        defaultTabKey="quote_details"
         leftPanel={
           isLoadingCase || isSyncingDetail ? (
             <div className="space-y-4 animate-pulse px-2 w-full">
               <div className="h-48 bg-slate-100 rounded-lg w-full"></div>
               <div className="h-64 bg-slate-100 rounded-lg w-full"></div>
             </div>
-          ) : selectedCase ? (
-            <div className="space-y-4">
-              <GarageCasePreview
-                caseData={selectedCase}
-                grossProfit={grossProfit}
-              />
-            </div>
-          ) : null
+          ) : undefined
         }
         rightPanel={
           isLoadingCase || isSyncingDetail ? (
@@ -1017,8 +1033,6 @@ export function GarageCaseStandaloneDrawer({
             </div>
           ) : null
         }
-        relatedTabs={resolvedRelatedTabs}
-        defaultRelatedTabKey="financials"
       />
 
       {/* MODALS CHO GHÉP NỐI CHỨNG TỪ TỪ TRACEABILITY GRAPH HOẶC HEADER */}

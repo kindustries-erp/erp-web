@@ -103,6 +103,7 @@ export const garageEn = {
     },
     drawer: {
       caseDetails: "Quotation Sheet:",
+      quoteDetails: "Quote Details",
       quotePreview: "Quotation & Expected Profit Sheet",
       linkedDocs: "Linked Documents",
       cashflowReconciliation: "Cashflow & Reconciliation",

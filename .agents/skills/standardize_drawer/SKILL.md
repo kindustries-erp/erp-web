@@ -301,6 +301,78 @@ export function PurchaseOrderDrawer({ open, onClose, mode, setMode, data, auditL
 }
 ```
 
+## 6. Quy tắc cho Multi-Facet Document Drawer với Top Navigation Tabs (`tabs`)
+
+Đối với các màn hình chứng từ phức tạp có nhiều góc nhìn nghiệp vụ tương đương nhau (ví dụ: Sổ báo giá dịch vụ Garage, Đơn mua hàng PO đa công đoạn, Phiếu sản xuất):
+- Sử dụng prop **`tabs`** (`DrawerTopTabItem[]`) trên `<StandardFormDrawer>` để đưa dải tab điều hướng lên **phía trên (ngay dưới Header)**.
+- **Biến Main Content thành Tab số 1** (ví dụ: *Chi tiết báo giá / Form chính*).
+- Các tab nghiệp vụ tiếp theo (*Tài chính & Công nợ*, *Chứng từ liên kết / Traceability Graph*, *Lịch sử & Đồng bộ*):
+  - Chiếm trọn 100% chiều cao của Drawer Viewport (`calc(100vh - header - footer)`), loại bỏ hoàn toàn hiện tượng *nested scroll*.
+  - Hỗ trợ `badgeCount` đếm số lượng bản ghi kèm icon trực quan.
+  - Hỗ trợ tuỳ chọn **`hideRightPanel: true`** cho các tab cần không gian tối đa (như Canvas Graph `@xyflow/react`).
+
+**Mẫu code Multi-Facet Drawer với Top Navigation Tabs**:
+
+```tsx
+import {
+  StandardFormDrawer,
+  DrawerDocumentTraceability,
+  DrawerAuditTimeline,
+  type DrawerTopTabItem,
+} from "@/shared/components/StandardFormDrawer";
+import { FileText, Wallet, Link2, History } from "lucide-react";
+
+export function GarageCaseDrawer({ open, onClose, mode, setMode, caseData, grossProfit, auditLogs, settlements, invoices }) {
+  const { t } = useTranslation("garage");
+
+  const drawerTabs: DrawerTopTabItem[] = [
+    {
+      key: "quote_details",
+      label: t("Chi tiết báo giá"),
+      icon: <FileText className="w-3.5 h-3.5" />,
+      content: <GarageCasePreview caseData={caseData} grossProfit={grossProfit} />,
+    },
+    {
+      key: "financials",
+      label: t("Tài chính & Công nợ"),
+      icon: <Wallet className="w-3.5 h-3.5" />,
+      badgeCount: settlements.length + invoices.length,
+      content: <GarageCaseSettlementSection caseId={caseData.id} />,
+    },
+    {
+      key: "linked_docs",
+      label: t("Chứng từ liên kết"),
+      icon: <Link2 className="w-3.5 h-3.5" />,
+      badgeCount: invoices.length,
+      hideRightPanel: true, // Bung 100% full width khi xem Graph
+      content: <DrawerDocumentTraceability rootId={caseData.id} rootType="GARAGE_CASE" />,
+    },
+    {
+      key: "history",
+      label: t("Lịch sử & Đồng bộ"),
+      icon: <History className="w-3.5 h-3.5" />,
+      badgeCount: auditLogs.length,
+      content: <DrawerAuditTimeline items={auditLogs} />,
+    },
+  ];
+
+  return (
+    <StandardFormDrawer
+      open={open}
+      mode={mode}
+      onClose={onClose}
+      onToggleEdit={() => setMode("edit")}
+      title={t("Sổ báo giá: {{code}}", { code: caseData.code })}
+      layout="2-columns"
+      size="xl"
+      tabs={drawerTabs}
+      defaultTabKey="quote_details"
+      rightPanel={<GeneralInfoSidebar caseData={caseData} />}
+    />
+  );
+}
+```
+
 ## Summary Checklist trước khi hoàn thành:
 
 - [ ] Drawer đã sử dụng `<StandardFormDrawer>` chưa?
@@ -310,11 +382,13 @@ export function PurchaseOrderDrawer({ open, onClose, mode, setMode, data, auditL
 - [ ] Tất cả text tĩnh đã được dùng hook `useTranslation` (i18n) để wrap bằng `t(...)` chưa?
 - [ ] Drawer đơn giản (1 cột) đã set `layout="1-column"` và `size="sm"`/`"md"` chưa?
 - [ ] Drawer chứng từ (2 cột) đã set `layout="2-columns"` và `size="xl"`/`"lg"` chưa?
+- [ ] Drawer đa góc nhìn (Multi-facet) đã sử dụng prop `tabs` để đưa Top Navigation Tabs lên trên và đặt Main Content là Tab 1 chưa?
 - [ ] Phần nội dung bên trong đã dùng các khối chuẩn như `<DrawerSection>`, `<DrawerField>` để bao bọc các input chưa?
 - [ ] Các action button của một `<DrawerSection>` (như nút Thêm, Xóa, Liên kết cho bảng) đã được đưa lên góc trên bên phải bằng prop `titleExtra` của `DrawerSection` chưa?
-- [ ] Các thông tin phụ trợ (Lịch sử thao tác, Mạng lưới chứng từ, Đính kèm, Ghi chú) đã được tách bạch qua prop `relatedTabs` của `StandardFormDrawer` thay vì nhồi vào `rightPanel` hay cuối form chưa?
+- [ ] Các thông tin phụ trợ (Lịch sử thao tác, Mạng lưới chứng từ, Đính kèm, Ghi chú) đã được tách bạch qua prop `tabs` hoặc `relatedTabs` của `StandardFormDrawer` thay vì nhồi vào `rightPanel` hay cuối form chưa?
 - [ ] Vùng tab thông tin liên quan đã tận dụng cấu trúc chuẩn **Deck Card Container** với `card-shadow` và glassmorphism đồng bộ chưa?
-- [ ] Đã sử dụng các widgets chuẩn hóa (`<DrawerDocumentTraceability>`, `<DrawerAuditTimeline>`, `<DrawerRelatedDocs>`, `<DrawerAttachmentsDeck>`, `<DrawerInternalNotes>`) cho `relatedTabs` chưa?
+- [ ] Đã sử dụng các widgets chuẩn hóa (`<DrawerDocumentTraceability>`, `<DrawerAuditTimeline>`, `<DrawerRelatedDocs>`, `<DrawerAttachmentsDeck>`, `<DrawerInternalNotes>`) cho `relatedTabs` hoặc `tabs` chưa?
 - [ ] Input đã sử dụng CSS class `inputCls` từ `@/shared/components/DrawerModal` (nếu có) chưa?
 - [ ] Chức năng cảnh báo đóng Drawer khi đang Edit (`confirmOnClose={mode === 'edit'}`) đã được cấu hình đúng chưa?
+
 

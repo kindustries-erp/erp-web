@@ -103,6 +103,7 @@ export const garageVi = {
     },
     drawer: {
       caseDetails: "Sổ báo giá:",
+      quoteDetails: "Chi tiết báo giá",
       quotePreview: "Sổ báo giá & Lợi nhuận dự kiến",
       linkedDocs: "Chứng từ liên kết",
       cashflowReconciliation: "Dòng tiền & Hóa đơn đối soát",
