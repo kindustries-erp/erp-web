@@ -14,6 +14,10 @@ import { GarageCaseSyncDrawer } from "../components/GarageCaseSyncDrawer";
 import { GarageCaseStandaloneDrawer } from "../components/GarageCaseStandaloneDrawer";
 import { KgaraCaseStatusBadge } from "../components/KgaraCaseStatusBadge";
 import {
+  GarageCaseClassificationBadge,
+  GARAGE_CASE_CLASSIFICATIONS,
+} from "../components/GarageCaseClassificationBadge";
+import {
   useGarageCases,
   useGarageBranches,
   useSyncGarageCaseDetail,
@@ -33,6 +37,7 @@ import {
   Pencil,
   Scale,
   Link2,
+  SlidersHorizontal,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { useTranslation } from "react-i18next";
@@ -516,7 +521,56 @@ export function GarageCases() {
       className: "font-medium text-left",
       cell: (item: any) => item.bienSoXe || "-",
     },
-    // 3. Trạng thái
+    // 3. Phân loại nghiệp vụ
+    {
+      key: "classification",
+      label: t("cases.columns.classification", "Phân loại"),
+      header: (
+        <TableColumnHeaderFilter
+          {...createHeaderProps(
+            "classification",
+            t("cases.columns.classification", "Phân loại"),
+            "center",
+            false,
+            (val: string) => {
+              if (val === "__BLANK__")
+                return t(
+                  "cases.classification.unclassified",
+                  "(Chưa phân loại)",
+                );
+              const meta = GARAGE_CASE_CLASSIFICATIONS[val];
+              return meta ? meta.label : val;
+            },
+            true,
+          )}
+          {...commonOptionProps}
+        />
+      ),
+      sortable: false,
+      size: 150,
+      enableResizing: true,
+      className: "text-center",
+      cell: (item: any) => (
+        <div className="w-full flex justify-center">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setDrawerEditMode(true);
+              setSelectedCaseId(item.soChungTu || item.id);
+            }}
+            className="group cursor-pointer transition-transform hover:scale-105"
+            title={t("cases.actions.configure", "Cấu hình / Phân loại")}
+          >
+            <GarageCaseClassificationBadge
+              classification={item.classification}
+              interactive={true}
+            />
+          </button>
+        </div>
+      ),
+    },
+    // 4. Trạng thái
     {
       key: "statusName",
       label: t("cases.columns.status", "Trạng thái"),
@@ -1487,6 +1541,14 @@ export function GarageCases() {
               {
                 label: t("cases.actions.editCase", "Chỉnh sửa"),
                 icon: <Pencil className="w-4 h-4" />,
+                onClick: () => {
+                  setDrawerEditMode(true);
+                  setSelectedCaseId(item.soChungTu || item.id);
+                },
+              },
+              {
+                label: t("cases.actions.configure", "Cấu hình / Phân loại"),
+                icon: <SlidersHorizontal className="w-4 h-4 text-purple-600" />,
                 onClick: () => {
                   setDrawerEditMode(true);
                   setSelectedCaseId(item.soChungTu || item.id);

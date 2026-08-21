@@ -19,6 +19,8 @@ function getCellValue(item: Record<string, any>, key: string) {
   switch (key) {
     case "statusName":
       return item.tenTinhTrangDichVu || "";
+    case "classification":
+      return item.classification || "";
     case "caseCode":
       return item.soChungTu || "";
     case "licensePlate":
@@ -111,6 +113,7 @@ export function applyGarageCasesTableState(
         item.bienSoXe,
         item.khachHangCode,
         item.khachHangName,
+        item.classification,
         item.tenTinhTrangDichVu,
         item.rawData?.XeLamBaoHiem ? "yes" : "no",
       ]
