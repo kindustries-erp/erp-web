@@ -1548,7 +1548,7 @@ export function GarageCases() {
               },
               {
                 label: t("cases.actions.configure", "Cấu hình / Phân loại"),
-                icon: <SlidersHorizontal className="w-4 h-4 text-purple-600" />,
+                icon: <SlidersHorizontal className="w-4 h-4" />,
                 onClick: () => {
                   setDrawerEditMode(true);
                   setSelectedCaseId(item.soChungTu || item.id);
