@@ -4,13 +4,14 @@ import { type TFunction } from "i18next";
 import {
   Building2,
   CheckSquare,
+  ChevronDown,
   XSquare,
   X,
   GitMerge,
   Download,
 } from "lucide-react";
 
-import { Button } from "@/shared/components/ui/Button";
+import { Tooltip } from "@/core/components/ui/Tooltip";
 import { ActionDropdown } from "@/shared/components/ActionDropdown";
 import { erpInvoicesCoreApi } from "@/modules/erp-invoices-core/api/erpInvoicesCoreApi";
 
@@ -147,83 +148,92 @@ export function useInvoiceBulkActions({
 
   const bulkActionsNode =
     selectedIds.length > 0 ? (
-      <div className="flex items-center rounded-md shadow-sm animate-in fade-in slide-in-from-top-1 duration-200">
-        <ActionDropdown
-          align="start"
-          customTrigger={
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8 rounded-r-none border-r-0 text-primary border-primary/30 bg-primary/5 hover:bg-primary/10 transition-colors"
-            >
-              <CheckSquare className="w-4 h-4 mr-1.5" />
-              {t("bulkActions", "Thao tác")} ({selectedIds.length})
-            </Button>
-          }
-          items={[
-            {
-              groupLabel: "Nghiệp vụ & Hạch toán",
-              items: [
-                {
-                  label: t("bulkAssignAll", "Gán hàng loạt"),
-                  icon: (
-                    <Building2 className="w-4 h-4 mr-2 text-muted-foreground" />
-                  ),
-                  onClick: () => {
-                    setBulkEditDrawerOpen(true);
-                  },
-                },
-                {
-                  label: "Hạch toán hàng loạt",
-                  icon: (
-                    <CheckSquare className="w-4 h-4 mr-2 text-muted-foreground" />
-                  ),
-                  onClick: () => {
-                    setBulkPostingMode("post");
-                    setBulkPostingModalOpen(true);
-                  },
-                },
-                {
-                  label: "Đề xuất cấn trừ sao kê",
-                  icon: (
-                    <GitMerge className="w-4 h-4 mr-2 text-muted-foreground" />
-                  ),
-                  onClick: () => {
-                    setBulkNetOffDrawerOpen(true);
-                  },
-                },
-                {
-                  label: "Hủy hạch toán hàng loạt",
-                  icon: <XSquare className="w-4 h-4 mr-2 text-red-500" />,
-                  onClick: () => {
-                    setBulkPostingMode("unpost");
-                    setBulkPostingModalOpen(true);
-                  },
-                },
-              ],
-            },
-            {
-              groupLabel: "Tải & Xuất tệp",
-              items: [
-                {
-                  label: "Tải ZIP PDF/XML",
-                  icon: <Download className="w-4 h-4 mr-2 text-blue-500" />,
-                  onClick: () => setBulkSelectedModalOpen(true),
-                },
-              ],
-            },
-          ]}
-        />
-        <div className="w-[1px] h-8 bg-primary/20 z-10" />
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setRowSelection({})}
-          className="h-8 w-8 px-0 rounded-l-none border-l-0 border-primary/30 bg-primary/5 text-muted-foreground hover:bg-red-50 hover:text-red-600 transition-colors focus:z-10"
-          title={t("deselectAll", "Bỏ chọn")}
+      <div className="inline-flex items-stretch h-8 rounded-lg border border-border bg-surface text-foreground shadow-xs hover:border-primary/40 transition-colors animate-in fade-in slide-in-from-top-1 duration-150 overflow-hidden">
+        <Tooltip
+          content={`${t("bulkActions", "Thao tác")} (${selectedIds.length})`}
         >
-          <X className="w-4 h-4" />
-        </Button>
+          <div className="h-full">
+            <ActionDropdown
+              align="start"
+              customTrigger={
+                <button
+                  type="button"
+                  className="flex items-center gap-1 h-full pl-2.5 pr-1.5 text-xs font-semibold text-foreground hover:bg-surface-hover hover:text-primary transition-colors outline-none cursor-pointer"
+                >
+                  <CheckSquare className="h-3.5 w-3.5 text-primary shrink-0" />
+                  <span className="leading-none text-[11px] text-primary font-bold">
+                    ({selectedIds.length})
+                  </span>
+                  <ChevronDown className="h-3 w-3 opacity-60 ml-0.5" />
+                </button>
+              }
+              items={[
+                {
+                  groupLabel: "Nghiệp vụ & Hạch toán",
+                  items: [
+                    {
+                      label: t("bulkAssignAll", "Gán hàng loạt"),
+                      icon: (
+                        <Building2 className="w-4 h-4 mr-2 text-muted-foreground" />
+                      ),
+                      onClick: () => {
+                        setBulkEditDrawerOpen(true);
+                      },
+                    },
+                    {
+                      label: "Hạch toán hàng loạt",
+                      icon: (
+                        <CheckSquare className="w-4 h-4 mr-2 text-muted-foreground" />
+                      ),
+                      onClick: () => {
+                        setBulkPostingMode("post");
+                        setBulkPostingModalOpen(true);
+                      },
+                    },
+                    {
+                      label: "Đề xuất cấn trừ sao kê",
+                      icon: (
+                        <GitMerge className="w-4 h-4 mr-2 text-muted-foreground" />
+                      ),
+                      onClick: () => {
+                        setBulkNetOffDrawerOpen(true);
+                      },
+                    },
+                    {
+                      label: "Hủy hạch toán hàng loạt",
+                      icon: <XSquare className="w-4 h-4 mr-2 text-red-500" />,
+                      onClick: () => {
+                        setBulkPostingMode("unpost");
+                        setBulkPostingModalOpen(true);
+                      },
+                    },
+                  ],
+                },
+                {
+                  groupLabel: "Tải & Xuất tệp",
+                  items: [
+                    {
+                      label: "Tải ZIP PDF/XML",
+                      icon: <Download className="w-4 h-4 mr-2 text-blue-500" />,
+                      onClick: () => setBulkSelectedModalOpen(true),
+                    },
+                  ],
+                },
+              ]}
+            />
+          </div>
+        </Tooltip>
+        <Tooltip
+          content={`${t("deselectAll", "Bỏ chọn")} (${selectedIds.length})`}
+        >
+          <button
+            type="button"
+            onClick={() => setRowSelection({})}
+            className="flex items-center justify-center px-2 text-muted-foreground hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/40 transition-colors outline-none cursor-pointer"
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
+        </Tooltip>
       </div>
     ) : null;
 

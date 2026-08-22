@@ -79,22 +79,26 @@ export function formatTaxInvoiceStatus(val?: number | null) {
 }
 
 export function getInvoiceRowClassName(inv: ErpInvoice): string | undefined {
+  // Trạng thái 'Thay thế' (2): Luôn giữ độ rõ 100%, không bị mờ (kể cả khi status = CANCELLED)
+  if (inv.taxInvoiceStatus === 2) {
+    return "bg-amber-50/40 dark:bg-amber-950/15 hover:bg-amber-100/40 dark:hover:bg-amber-900/15";
+  }
+
+  // Trạng thái 'Điều chỉnh' (3) hoặc 'Bị điều chỉnh' (5): Không mờ, highlight màu amber
+  if (inv.taxInvoiceStatus === 3 || inv.taxInvoiceStatus === 5) {
+    return "bg-amber-50/40 dark:bg-amber-950/15 hover:bg-amber-100/40 dark:hover:bg-amber-900/15";
+  }
+
+  // Chỉ mờ khi 'Bị thay thế' (4), 'Bị hủy' (6) hoặc status CANCELLED (mà không phải Thay thế)
   if (
-    inv.status === "CANCELLED" ||
     inv.taxInvoiceStatus === 4 ||
-    inv.taxInvoiceStatus === 6
+    inv.taxInvoiceStatus === 6 ||
+    inv.status === "CANCELLED"
   ) {
     return "opacity-40 text-muted-foreground";
   }
 
-  switch (inv.taxInvoiceStatus) {
-    case 2: // Thay thế
-    case 3: // Điều chỉnh
-    case 5: // Bị điều chỉnh
-      return "bg-amber-50/40 dark:bg-amber-950/15 hover:bg-amber-100/40 dark:hover:bg-amber-900/15";
-    default:
-      return undefined;
-  }
+  return undefined;
 }
 
 export function formatTaxProcessStatus(val?: number | null) {

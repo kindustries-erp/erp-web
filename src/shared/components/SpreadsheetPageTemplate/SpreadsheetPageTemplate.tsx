@@ -151,8 +151,8 @@ export function SpreadsheetPageTemplate<T>({
           }
           portalId={tableId}
         >
-          {bulkActionsNode}
           {customActionsNode}
+          {bulkActionsNode}
         </TableActionGroup>
       }
     >

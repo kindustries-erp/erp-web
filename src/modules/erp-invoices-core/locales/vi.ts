@@ -25,7 +25,7 @@ export const erpInvoicesVi = {
   importSuccess: "Đã nhập {{imported}} hóa đơn, bỏ qua {{skipped}} trùng",
   selectAll: "Chọn tất cả",
   deselectAll: "Bỏ chọn",
-  syncInvoices: "Đồng bộ hóa đơn",
+  syncInvoices: "Đồng bộ",
   exportExcel: "Xuất Excel",
   loginTaxPortal: "Đăng nhập Cổng Thuế",
   invoiceDesc: "Quản lý danh sách hóa đơn điện tử",

@@ -94,7 +94,12 @@ export function useErpInvoicesTabLogic({
       currentTaxFilter.includes("5")
     )
       return "adjustment";
-    if (currentTaxFilter.length === 0) return "all";
+    if (currentTaxFilter.length === 0) {
+      if (urlSync.activeView && urlSync.activeView !== "all") {
+        return urlSync.activeView;
+      }
+      return "all";
+    }
     return urlSync.activeView || "all";
   }, [currentTaxFilter, urlSync.activeView]);
 

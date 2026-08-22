@@ -11,7 +11,6 @@ import { InvoiceAttachmentsCell } from "../cells/InvoiceAttachmentsCell";
 import { InvoiceNoCell } from "../cells/InvoiceNoCell";
 import {
   InvoicePartnerCell,
-  InvoicePartnerNameCell,
   InvoiceTaxCodeCell,
 } from "../cells/InvoicePartnerCell";
 

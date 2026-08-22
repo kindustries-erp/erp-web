@@ -269,7 +269,7 @@ export function ErpInvoicesTab(props: ErpInvoicesTabProps) {
           ];
         }}
         onCreate={() => setImportModalOpen(true)}
-        createLabel={t("syncInvoices", "Đồng bộ hóa đơn")}
+        createLabel={t("syncInvoices", "Đồng bộ")}
         createIcon={<DownloadCloud className="w-4 h-4 mr-1 text-indigo-100" />}
         createActions={[
           {
