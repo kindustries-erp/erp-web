@@ -82,14 +82,28 @@ export function useTaxColumns({
             onFilterChange={(vals) =>
               handleFilterChange("taxInvoiceStatus", vals)
             }
-            filterOptions={[
-              { label: "Mới", value: "1" },
-              { label: "Thay thế", value: "2" },
-              { label: "Điều chỉnh", value: "3" },
-              { label: "Bị thay thế", value: "4" },
-              { label: "Bị điều chỉnh", value: "5" },
-              { label: "Bị hủy", value: "6" },
-            ]}
+            filterOptions={
+              listHook.activeTaxTab === "new"
+                ? [{ label: "Mới", value: "1" }]
+                : listHook.activeTaxTab === "replacement"
+                  ? [
+                      { label: "Thay thế", value: "2" },
+                      { label: "Bị thay thế", value: "4" },
+                    ]
+                  : listHook.activeTaxTab === "adjustment"
+                    ? [
+                        { label: "Điều chỉnh", value: "3" },
+                        { label: "Bị điều chỉnh", value: "5" },
+                      ]
+                    : [
+                        { label: "Mới", value: "1" },
+                        { label: "Thay thế", value: "2" },
+                        { label: "Điều chỉnh", value: "3" },
+                        { label: "Bị thay thế", value: "4" },
+                        { label: "Bị điều chỉnh", value: "5" },
+                        { label: "Bị hủy", value: "6" },
+                      ]
+            }
             align="center"
             columnKey="taxInvoiceStatus"
           />
@@ -216,6 +230,7 @@ export function useTaxColumns({
     listHook.tableState.columnFilters,
     listHook.tableState.columnSearch,
     listHook.tableState.sorts,
+    listHook.activeTaxTab,
     getSortState,
     handleSortChange,
     handleSearchChange,

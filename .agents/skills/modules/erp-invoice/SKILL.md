@@ -45,6 +45,8 @@ src/
 │   │   └── erpInvoiceDashboardApi.ts          # API Client cho Dashboard KPI & đối tác
 │   ├── components/
 │   │   ├── ErpInvoicesTab.tsx                 # Core Table Page: Bảng dữ liệu, bộ lọc, thanh công cụ, bulk actions
+│   │   ├── InvoiceViewModeCombobox.tsx        # Combobox chọn chế độ xem (Tổng quan / Đối soát / Custom)
+│   │   ├── InvoiceViewConfigDrawer.tsx        # Drawer 1-column cấu hình tên view & tùy chỉnh cột hiển thị
 │   │   ├── ErpInvoiceInternalDrawer.tsx       # Drawer quản lý chi tiết hóa đơn (kế thừa DrawerModal)
 │   │   ├── ErpInvoiceStandaloneDrawer.tsx     # Drawer xem độc lập nhanh hóa đơn từ các trang khác
 │   │   ├── PartnerInvoiceDrawer.tsx           # Drawer danh sách hóa đơn theo từng đối tác/MST
@@ -100,6 +102,16 @@ src/
 
 ### 3.1. Bảng Dữ liệu Hóa đơn (`ErpInvoicesTab.tsx`)
 - **Khung giao diện**: Sử dụng `<SpreadsheetPageTemplate>` với thanh công cụ điều khiển phía trên và thanh tính tổng (Summary footer) cố định bên dưới.
+- **PillTabs Phân loại Thuế (API-driven)**:
+  - Các tab: `Tất cả` (`all`), `Mới` (`new`), `Thay thế` (`replacement`), `Điều chỉnh` (`adjustment`).
+  - Quản lý qua `activeTaxTab` trong `useErpInvoiceListStore`, khởi tạo đồng bộ từ URL `?view=...` trên initial load/F5 reload.
+  - Tách bạch hoàn toàn khỏi `columnFilters` để tránh xung đột khi người dùng xóa filter.
+- **Chế độ xem & Tùy chỉnh cột (View Mode Combobox & Drawer)**:
+  - `InvoiceViewModeCombobox`: Đặt cạnh PillTabs, cho phép chọn giữa các preset chế độ xem (`Tổng quan`, `Kiểm toán / Đối soát`, và custom views). Hỗ trợ icon sửa và xóa view kèm `ConfirmModal` xác nhận an toàn.
+  - `InvoiceViewConfigDrawer`: Drawer cấu hình view mode chuẩn `StandardFormDrawer` layout `1-column`, chia 3 nhóm cột (*Thông tin chung*, *Thuế & Trạng thái*, *Số tiền*), hỗ trợ khởi tạo từ `currentColumnVisibility`.
+- **Tùy chọn lọc cột theo ngữ cảnh Tab (Context-Aware Column Options)**:
+  - `fetchInvoiceOptions`: Tự động truyền `taxInvoiceStatus` tương ứng với `activeTaxTab` khi gọi API lấy danh sách gợi ý lọc cột.
+  - Cột `taxInvoiceStatus`: Danh sách filter options hiển thị tương ứng theo tab (Mới -> Mới; Thay thế -> Thay thế / Bị thay thế; Điều chỉnh -> Điều chỉnh / Bị điều chỉnh; Tất cả -> Đủ 6 trạng thái).
 - **Danh sách cột chuẩn**:
   1. `select`: Checkbox chọn nhiều dòng để thực hiện bulk actions.
   2. `actions`: `ActionDropdown` (Xem chi tiết, Sửa, Hạch toán, In/Xem PDF, Tải XML, Xóa/Hủy).

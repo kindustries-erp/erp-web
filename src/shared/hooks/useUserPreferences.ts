@@ -12,6 +12,7 @@ export interface TableViewPreset {
   filters: Record<string, string>;
   columnFilters?: Record<string, string[]>;
   columnSearch?: Record<string, string>;
+  columnVisibility?: Record<string, boolean>;
   isCustom?: boolean;
 }
 

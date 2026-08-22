@@ -59,16 +59,6 @@ export function getInitialTableState(tableId: string): TableColumnState {
         columnSearch = decoded;
       }
     }
-    const view = params.get("view");
-    if (view && (!columnFilters || Object.keys(columnFilters).length === 0)) {
-      if (view === "new") {
-        columnFilters = { taxInvoiceStatus: ["1"] };
-      } else if (view === "replacement") {
-        columnFilters = { taxInvoiceStatus: ["2", "4"] };
-      } else if (view === "adjustment") {
-        columnFilters = { taxInvoiceStatus: ["3", "5"] };
-      }
-    }
     initialTableStates[tableId] = {
       sorts: [],
       columnSearch,

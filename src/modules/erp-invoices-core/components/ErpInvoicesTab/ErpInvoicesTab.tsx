@@ -23,6 +23,7 @@ import {
 } from "./useErpInvoicesTabLogic";
 import { InvoiceDrawers } from "./components/InvoiceDrawers";
 import { InvoiceBulkModals } from "./components/InvoiceBulkModals";
+import { InvoiceViewConfigDrawer } from "./components/InvoiceViewConfigDrawer";
 
 export type { ErpInvoicesTabProps };
 
@@ -84,6 +85,11 @@ export function ErpInvoicesTab(props: ErpInvoicesTabProps) {
     monthOptions,
     branches,
     showToast,
+    viewConfigDrawerOpen,
+    setViewConfigDrawerOpen,
+    editingViewPreset,
+    handleSaveViewPreset,
+    currentColumnVisibility,
     handleOpenInternal,
     handleCloseInternal,
     handleDownload,
@@ -355,6 +361,14 @@ export function ErpInvoicesTab(props: ErpInvoicesTabProps) {
         bulkPostingMode={bulkPostingMode}
         bulkNetOffDrawerOpen={bulkNetOffDrawerOpen}
         setBulkNetOffDrawerOpen={setBulkNetOffDrawerOpen}
+      />
+
+      <InvoiceViewConfigDrawer
+        open={viewConfigDrawerOpen}
+        onClose={() => setViewConfigDrawerOpen(false)}
+        preset={editingViewPreset}
+        currentColumnVisibility={currentColumnVisibility}
+        onSave={handleSaveViewPreset}
       />
     </>
   );

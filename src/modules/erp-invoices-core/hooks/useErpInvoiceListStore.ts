@@ -25,12 +25,27 @@ export interface ErpInvoiceListState {
   seller_name: string;
   buyer_name: string;
   tag_id: string;
+  activeTaxTab: string;
 
   sortBy: string;
   sortOrder: "asc" | "desc";
 
   filterPanelOpen: boolean;
 }
+
+const getInitialActiveTaxTab = (): string => {
+  if (typeof window === "undefined") return "all";
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const view = params.get("view");
+    if (view && ["all", "new", "replacement", "adjustment"].includes(view)) {
+      return view;
+    }
+  } catch (err) {
+    void err;
+  }
+  return "all";
+};
 
 const defaultState = (pageSize = 50): ErpInvoiceListState => ({
   searchInput: "",
@@ -44,6 +59,7 @@ const defaultState = (pageSize = 50): ErpInvoiceListState => ({
   seller_name: "",
   buyer_name: "",
   tag_id: "",
+  activeTaxTab: getInitialActiveTaxTab(),
   sortBy: "invoiceDate",
   sortOrder: "desc",
   filterPanelOpen: false,
@@ -70,6 +86,7 @@ export interface ErpInvoiceListStore {
   setSellerName: (dir: Direction, v: string) => void;
   setBuyerName: (dir: Direction, v: string) => void;
   setTagId: (dir: Direction, v: string) => void;
+  setActiveTaxTab: (dir: Direction, tab: string) => void;
 
   handleSort: (dir: Direction, key: string) => void;
   setFilterPanelOpen: (
@@ -158,6 +175,8 @@ export const useErpInvoiceListStore = create<ErpInvoiceListStore>(
     setBuyerName: (dir, v) =>
       get().updateState(dir, { buyer_name: v, page: 1 }),
     setTagId: (dir, v) => get().updateState(dir, { tag_id: v, page: 1 }),
+    setActiveTaxTab: (dir, tab) =>
+      get().updateState(dir, { activeTaxTab: tab, page: 1 }),
 
     handleSort: (dir, key) => {
       const currentState = get().states[dir] || defaultState();
@@ -195,6 +214,7 @@ export const useErpInvoiceListStore = create<ErpInvoiceListStore>(
       get().updateState(dir, {
         ...defaultState(),
         pageSize: current.pageSize,
+        activeTaxTab: current.activeTaxTab || "all",
         sortBy: "invoiceDate",
         sortOrder: "desc",
         filterPanelOpen: current.filterPanelOpen,

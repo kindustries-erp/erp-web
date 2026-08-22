@@ -12,6 +12,13 @@ export interface UseInvoiceTableHandlersOptions {
   listHook: ReturnType<typeof useErpInvoicesList>;
 }
 
+const TAX_TAB_TO_STATUS: Record<string, string[]> = {
+  all: [],
+  new: ["1"],
+  replacement: ["2", "4"],
+  adjustment: ["3", "5"],
+};
+
 export function useInvoiceTableHandlers({
   direction,
   branches,
@@ -62,12 +69,33 @@ export function useInvoiceTableHandlers({
       pageParam: number;
       filtersStr?: string;
     }) => {
+      let mergedFilters: Record<string, any> = {};
+      if (filtersStr) {
+        try {
+          mergedFilters = JSON.parse(filtersStr);
+        } catch {
+          mergedFilters = {};
+        }
+      }
+      const taxStatusList = TAX_TAB_TO_STATUS[listHook.activeTaxTab || "all"];
+      if (
+        taxStatusList &&
+        taxStatusList.length > 0 &&
+        !mergedFilters.taxInvoiceStatus
+      ) {
+        mergedFilters.taxInvoiceStatus = taxStatusList;
+      }
+      const effectiveFiltersStr =
+        Object.keys(mergedFilters).length > 0
+          ? JSON.stringify(mergedFilters)
+          : undefined;
+
       const res = await erpInvoicesCoreApi.getInvoiceColumnOptions(
         columnKey,
         search,
         pageParam,
         20,
-        filtersStr,
+        effectiveFiltersStr,
         direction,
       );
       return {
@@ -103,7 +131,7 @@ export function useInvoiceTableHandlers({
         next: res.page < res.totalPages ? res.page + 1 : null,
       };
     },
-    [direction, branches],
+    [direction, branches, listHook.activeTaxTab],
   );
 
   const buildExportBaseQuery =

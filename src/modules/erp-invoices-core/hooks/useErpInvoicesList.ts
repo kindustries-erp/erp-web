@@ -6,6 +6,13 @@ import {
 } from "./useErpInvoiceListStore";
 import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
 
+const TAX_TAB_TO_STATUS: Record<string, string[]> = {
+  all: [],
+  new: ["1"],
+  replacement: ["2", "4"],
+  adjustment: ["3", "5"],
+};
+
 export function useErpInvoicesList(
   initialDirection: Direction | "ALL" = "IN",
   partnerTaxCode?: string,
@@ -71,6 +78,16 @@ export function useErpInvoicesList(
         apiDirection = "OUT";
       }
 
+      const effectiveColumnFilters: Record<string, string[]> = {
+        ...tableState.columnFilters,
+      };
+      const taxStatusList = TAX_TAB_TO_STATUS[state.activeTaxTab || "all"];
+      if (taxStatusList && taxStatusList.length > 0) {
+        effectiveColumnFilters.taxInvoiceStatus = taxStatusList;
+      } else {
+        delete effectiveColumnFilters.taxInvoiceStatus;
+      }
+
       const res = await erpInvoicesCoreApi.list({
         direction: apiDirection,
         partner_tax_code: partnerTaxCode,
@@ -86,7 +103,7 @@ export function useErpInvoicesList(
         sort_by: sortBy || undefined,
         sort_order: sortOrder || undefined,
         column_search: JSON.stringify(tableState.columnSearch),
-        column_filters: JSON.stringify(tableState.columnFilters),
+        column_filters: JSON.stringify(effectiveColumnFilters),
       });
       setInvoices(res.items);
       setTotal(res.total);
@@ -99,6 +116,7 @@ export function useErpInvoicesList(
   }, [
     direction,
     partnerTaxCode,
+    state.activeTaxTab,
     state.search,
     state.seller_name,
     state.buyer_name,
@@ -210,5 +228,7 @@ export function useErpInvoicesList(
     loadInvoices,
     STATUS_OPTIONS,
     tableState,
+    activeTaxTab: state.activeTaxTab || "all",
+    setActiveTaxTab: (tab: string) => store.setActiveTaxTab(safeDir, tab),
   };
 }

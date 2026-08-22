@@ -37,6 +37,13 @@ export interface GeneralColumnsOptions {
   fetchInvoiceOptions: (params: any) => Promise<any>;
 }
 
+const TAX_TAB_TO_STATUS: Record<string, string[]> = {
+  all: [],
+  new: ["1"],
+  replacement: ["2", "4"],
+  adjustment: ["3", "5"],
+};
+
 export function useGeneralColumns({
   direction,
   t,
@@ -55,6 +62,16 @@ export function useGeneralColumns({
   handleFilterChange,
   fetchInvoiceOptions,
 }: GeneralColumnsOptions) {
+  const effectiveAllFilters = useMemo(() => {
+    const filters = { ...listHook.tableState.columnFilters };
+    const taxStatusList = TAX_TAB_TO_STATUS[listHook.activeTaxTab || "all"];
+    if (taxStatusList && taxStatusList.length > 0) {
+      filters._taxTab = [listHook.activeTaxTab];
+      filters.taxInvoiceStatus = taxStatusList;
+    }
+    return filters;
+  }, [listHook.tableState.columnFilters, listHook.activeTaxTab]);
+
   return useMemo(() => {
     return {
       attachments: {
@@ -73,7 +90,7 @@ export function useGeneralColumns({
             align="center"
             columnKey="attachments"
             queryKeyPrefix="erp-invoice-options"
-            allFilters={listHook.tableState.columnFilters}
+            allFilters={effectiveAllFilters}
             fetchOptions={async ({ search }: { search: string }) => {
               const options = [
                 { value: "has_pdf", label: "Có file PDF" },
@@ -163,7 +180,7 @@ export function useGeneralColumns({
             align="center"
             columnKey="invoiceNo"
             queryKeyPrefix="erp-invoice-options"
-            allFilters={listHook.tableState.columnFilters}
+            allFilters={effectiveAllFilters}
             fetchOptions={fetchInvoiceOptions}
             enableSelectAllMatching={true}
           />
@@ -191,7 +208,7 @@ export function useGeneralColumns({
             align="center"
             columnKey="serialNo"
             queryKeyPrefix="erp-invoice-options"
-            allFilters={listHook.tableState.columnFilters}
+            allFilters={effectiveAllFilters}
             fetchOptions={fetchInvoiceOptions}
           />
         ),
@@ -218,7 +235,7 @@ export function useGeneralColumns({
             align="center"
             columnKey="partner"
             queryKeyPrefix="erp-invoice-options"
-            allFilters={listHook.tableState.columnFilters}
+            allFilters={effectiveAllFilters}
             fetchOptions={fetchInvoiceOptions}
             showBlankOption={true}
           />
@@ -248,7 +265,7 @@ export function useGeneralColumns({
             align="center"
             columnKey="taxCode"
             queryKeyPrefix="erp-invoice-options"
-            allFilters={listHook.tableState.columnFilters}
+            allFilters={effectiveAllFilters}
             fetchOptions={fetchInvoiceOptions}
             showBlankOption={true}
           />
@@ -280,7 +297,7 @@ export function useGeneralColumns({
             align="center"
             columnKey="branchId"
             queryKeyPrefix={`erp-invoice-options-branch-${branches.length}`}
-            allFilters={listHook.tableState.columnFilters}
+            allFilters={effectiveAllFilters}
             fetchOptions={fetchInvoiceOptions}
             showBlankOption={true}
           />
@@ -316,7 +333,7 @@ export function useGeneralColumns({
             align="center"
             columnKey="invoiceCategory"
             queryKeyPrefix="erp-invoice-options"
-            allFilters={listHook.tableState.columnFilters}
+            allFilters={effectiveAllFilters}
             fetchOptions={fetchInvoiceOptions}
             showBlankOption={true}
           />
@@ -343,7 +360,7 @@ export function useGeneralColumns({
             align="center"
             columnKey="notes"
             queryKeyPrefix="erp-invoice-options"
-            allFilters={listHook.tableState.columnFilters}
+            allFilters={effectiveAllFilters}
             fetchOptions={fetchInvoiceOptions}
             showBlankOption={true}
           />
@@ -367,6 +384,7 @@ export function useGeneralColumns({
     direction,
     t,
     branches,
+    effectiveAllFilters,
     listHook.tableState.columnFilters,
     listHook.tableState.columnSearch,
     listHook.tableState.sorts,

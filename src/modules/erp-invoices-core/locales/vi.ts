@@ -40,6 +40,34 @@ export const erpInvoicesVi = {
   tabReplacement: "Thay thế",
   tabAdjustment: "Điều chỉnh",
 
+  // View Mode Combobox & Config
+  viewMode: "Chế độ xem",
+  viewModeOverview: "Tổng quan",
+  viewModeAudit: "Kiểm toán / Đối soát",
+  viewModeCreateNew: "Tạo view mới...",
+  viewModeEdit: "Chỉnh sửa view",
+  viewModeDelete: "Xóa view",
+  viewModeDeleteTitle: "Xóa chế độ xem",
+  viewModeDeleteConfirm: 'Bạn có chắc muốn xóa view "{{name}}"?',
+  viewModeSaveSuccess: "Đã lưu chế độ xem thành công",
+  viewModeDeleteSuccess: "Đã xóa chế độ xem thành công",
+
+  // View Config Drawer
+  viewConfigTitle: "Tạo view mới",
+  viewConfigEditTitle: "Chỉnh sửa view",
+  viewConfigNameLabel: "Tên view",
+  viewConfigNamePlaceholder: "VD: Báo cáo kiểm toán thuế",
+  viewConfigNameRequired: "Vui lòng nhập tên view",
+  viewConfigColumnsLabel: "Cột hiển thị",
+  viewConfigColumnsHint: "Chọn các cột bạn muốn hiển thị trong chế độ xem này",
+  viewConfigGroupGeneral: "Thông tin chung",
+  viewConfigGroupTax: "Thuế & Trạng thái",
+  viewConfigGroupAmount: "Số tiền",
+  viewConfigSave: "Lưu view",
+  viewConfigCancel: "Hủy",
+  viewConfigSelectAll: "Chọn tất cả",
+  viewConfigDeselectAll: "Bỏ chọn tất cả",
+
   // Columns & Fields
   attachments: "Chứng từ",
   invoiceDate: "Ngày HĐ",

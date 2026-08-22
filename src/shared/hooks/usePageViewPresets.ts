@@ -20,6 +20,7 @@ export interface UsePageViewPresetsReturn {
     filters: Record<string, string>,
     columnFilters?: Record<string, string[]>,
     columnSearch?: Record<string, string>,
+    columnVisibility?: Record<string, boolean>,
   ) => void;
   deleteView: (key: string) => void;
 }
@@ -77,6 +78,7 @@ export function usePageViewPresets({
       filters: Record<string, string>,
       columnFilters?: Record<string, string[]>,
       columnSearch?: Record<string, string>,
+      columnVisibility?: Record<string, boolean>,
     ) => {
       const key = `custom_${Date.now()}`;
       const newPreset: TableViewPreset = {
@@ -85,6 +87,7 @@ export function usePageViewPresets({
         filters,
         columnFilters,
         columnSearch,
+        columnVisibility,
         isCustom: true,
       };
       saveTableViewPreset(tableId, newPreset);

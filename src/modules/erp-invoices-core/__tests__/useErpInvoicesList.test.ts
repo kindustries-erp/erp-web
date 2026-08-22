@@ -24,6 +24,7 @@ const initialSubState = {
   seller_name: "",
   buyer_name: "",
   tag_id: "",
+  activeTaxTab: "all",
   sortBy: "invoiceDate",
   sortOrder: "desc" as const,
   filterPanelOpen: false,

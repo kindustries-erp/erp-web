@@ -45,7 +45,140 @@ export const DEFAULT_INVOICE_COLUMN_VISIBILITY: Record<string, boolean> = {
   attachments: false,
   isValid: false,
   postingStatus: false,
+  invoiceCategory: false,
+  notes: false,
 };
+
+export const INVOICE_COLUMN_VIEW_PRESETS: TableViewPreset[] = [
+  {
+    key: "overview",
+    label: "Tổng quan",
+    filters: {},
+    columnFilters: {},
+    columnVisibility: {
+      ...DEFAULT_INVOICE_COLUMN_VISIBILITY,
+    },
+    isCustom: false,
+  },
+  {
+    key: "audit",
+    label: "Kiểm toán / Đối soát",
+    filters: {},
+    columnFilters: {},
+    columnVisibility: {
+      preVatAmount: false,
+      vatRate: false,
+      vatAmount: false,
+      discountAmount: false,
+      description: false,
+      invoiceCategory: false,
+      attachments: false,
+      notes: false,
+      taxInvoiceType: true,
+      taxInvoiceStatus: true,
+      taxProcessStatus: true,
+      postingStatus: true,
+      isValid: true,
+      totalAmount: true,
+      netOffAmount: true,
+      remainingAmount: true,
+    },
+    isCustom: false,
+  },
+];
+
+export interface ColumnGroupDef {
+  groupKey: "general" | "tax" | "amount";
+  titleKey: string;
+  columns: Array<{
+    key: string;
+    labelKey: string;
+    defaultVisible?: boolean;
+  }>;
+}
+
+export const INVOICE_COLUMN_GROUPS: ColumnGroupDef[] = [
+  {
+    groupKey: "general",
+    titleKey: "viewConfigGroupGeneral",
+    columns: [
+      { key: "invoiceDate", labelKey: "invoiceDate", defaultVisible: true },
+      { key: "invoiceNo", labelKey: "invoiceNo", defaultVisible: true },
+      { key: "partner", labelKey: "partner", defaultVisible: true },
+      { key: "branchId", labelKey: "branch", defaultVisible: true },
+      { key: "description", labelKey: "description", defaultVisible: true },
+      {
+        key: "invoiceCategory",
+        labelKey: "invoiceCategory",
+        defaultVisible: false,
+      },
+      { key: "attachments", labelKey: "attachments", defaultVisible: false },
+      {
+        key: "notes",
+        labelKey: "invoice.columns.notes",
+        defaultVisible: false,
+      },
+    ],
+  },
+  {
+    groupKey: "tax",
+    titleKey: "viewConfigGroupTax",
+    columns: [
+      {
+        key: "taxInvoiceType",
+        labelKey: "taxInvoiceType",
+        defaultVisible: false,
+      },
+      {
+        key: "taxInvoiceStatus",
+        labelKey: "taxInvoiceStatus",
+        defaultVisible: true,
+      },
+      {
+        key: "taxProcessStatus",
+        labelKey: "taxProcessStatus",
+        defaultVisible: false,
+      },
+      {
+        key: "isValid",
+        labelKey: "invoice.columns.isValid",
+        defaultVisible: false,
+      },
+      { key: "licensePlate", labelKey: "licensePlate", defaultVisible: true },
+      {
+        key: "settlementOrder",
+        labelKey: "settlementOrder",
+        defaultVisible: true,
+      },
+    ],
+  },
+  {
+    groupKey: "amount",
+    titleKey: "viewConfigGroupAmount",
+    columns: [
+      { key: "preVatAmount", labelKey: "preVatAmount", defaultVisible: true },
+      { key: "vatRate", labelKey: "vatRate", defaultVisible: true },
+      { key: "vatAmount", labelKey: "vatAmount", defaultVisible: true },
+      {
+        key: "discountAmount",
+        labelKey: "discountAmount",
+        defaultVisible: true,
+      },
+      { key: "totalAmount", labelKey: "totalAmount", defaultVisible: true },
+      { key: "netOffAmount", labelKey: "netOffAmount", defaultVisible: true },
+      {
+        key: "remainingAmount",
+        labelKey: "invoice.columns.remainingAmount",
+        defaultVisible: true,
+      },
+      {
+        key: "postingStatus",
+        labelKey: "postingStatus",
+        defaultVisible: false,
+      },
+    ],
+  },
+];
 
 export function getPdfAttachments(attachments: any[]) {
   return (attachments ?? []).filter(

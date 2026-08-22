@@ -20,6 +20,13 @@ export interface AmountColumnsOptions {
   fetchInvoiceOptions: (params: any) => Promise<any>;
 }
 
+const TAX_TAB_TO_STATUS: Record<string, string[]> = {
+  all: [],
+  new: ["1"],
+  replacement: ["2", "4"],
+  adjustment: ["3", "5"],
+};
+
 export function useAmountColumns({
   direction,
   t,
@@ -30,6 +37,16 @@ export function useAmountColumns({
   handleFilterChange,
   fetchInvoiceOptions,
 }: AmountColumnsOptions) {
+  const effectiveAllFilters = useMemo(() => {
+    const filters = { ...listHook.tableState.columnFilters };
+    const taxStatusList = TAX_TAB_TO_STATUS[listHook.activeTaxTab || "all"];
+    if (taxStatusList && taxStatusList.length > 0) {
+      filters._taxTab = [listHook.activeTaxTab];
+      filters.taxInvoiceStatus = taxStatusList;
+    }
+    return filters;
+  }, [listHook.tableState.columnFilters, listHook.activeTaxTab]);
+
   return useMemo(() => {
     return {
       description: {
@@ -48,7 +65,7 @@ export function useAmountColumns({
             align="center"
             columnKey="description"
             queryKeyPrefix="erp-invoice-options"
-            allFilters={listHook.tableState.columnFilters}
+            allFilters={effectiveAllFilters}
             fetchOptions={fetchInvoiceOptions}
             showBlankOption={true}
           />
@@ -85,7 +102,7 @@ export function useAmountColumns({
             align="center"
             columnKey="discountAmount"
             queryKeyPrefix="erp-invoice-options"
-            allFilters={listHook.tableState.columnFilters}
+            allFilters={effectiveAllFilters}
             fetchOptions={fetchInvoiceOptions}
             formatOptionLabel={formatAmtOption}
             enableSelectAllMatching={true}
@@ -112,7 +129,7 @@ export function useAmountColumns({
             align="center"
             columnKey="preVatAmount"
             queryKeyPrefix="erp-invoice-options"
-            allFilters={listHook.tableState.columnFilters}
+            allFilters={effectiveAllFilters}
             fetchOptions={fetchInvoiceOptions}
             formatOptionLabel={formatAmtOption}
             enableSelectAllMatching={true}
@@ -137,7 +154,7 @@ export function useAmountColumns({
             align="center"
             columnKey="vatRate"
             queryKeyPrefix="erp-invoice-options"
-            allFilters={listHook.tableState.columnFilters}
+            allFilters={effectiveAllFilters}
             fetchOptions={fetchInvoiceOptions}
           />
         ),
@@ -163,7 +180,7 @@ export function useAmountColumns({
             align="center"
             columnKey="vatAmount"
             queryKeyPrefix="erp-invoice-options"
-            allFilters={listHook.tableState.columnFilters}
+            allFilters={effectiveAllFilters}
             fetchOptions={fetchInvoiceOptions}
             formatOptionLabel={formatAmtOption}
             enableSelectAllMatching={true}
@@ -190,7 +207,7 @@ export function useAmountColumns({
             align="center"
             columnKey="totalAmount"
             queryKeyPrefix="erp-invoice-options"
-            allFilters={listHook.tableState.columnFilters}
+            allFilters={effectiveAllFilters}
             fetchOptions={fetchInvoiceOptions}
             formatOptionLabel={formatAmtOption}
             enableSelectAllMatching={true}
@@ -227,7 +244,7 @@ export function useAmountColumns({
                     }
                     align="center"
                     columnKey="settlementOrder"
-                    allFilters={listHook.tableState.columnFilters}
+                    allFilters={effectiveAllFilters}
                     fetchOptions={fetchInvoiceOptions}
                   />
                 ),
@@ -258,7 +275,7 @@ export function useAmountColumns({
                     }
                     align="center"
                     columnKey="licensePlate"
-                    allFilters={listHook.tableState.columnFilters}
+                    allFilters={effectiveAllFilters}
                     fetchOptions={fetchInvoiceOptions}
                   />
                 ),
@@ -375,6 +392,7 @@ export function useAmountColumns({
   }, [
     direction,
     t,
+    effectiveAllFilters,
     listHook.tableState.columnFilters,
     listHook.tableState.columnSearch,
     listHook.tableState.sorts,
