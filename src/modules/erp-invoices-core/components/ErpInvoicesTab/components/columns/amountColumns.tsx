@@ -53,7 +53,7 @@ export function useAmountColumns({
             showBlankOption={true}
           />
         ),
-        size: 300,
+        size: 250,
         className: "text-left whitespace-normal",
         headerClassName: "text-center",
         cell: (row: ErpInvoice) => (
@@ -61,7 +61,7 @@ export function useAmountColumns({
             text={(row.description || "—").replace(/\\n/g, " ")}
             tooltip={true}
             popoverContent={<InvoiceItemsPopover items={row.items} />}
-            textClassName="line-clamp-2 break-words whitespace-normal text-slate-700"
+            textClassName="line-clamp-2 break-words whitespace-normal text-[11px] leading-[1.4] text-slate-700 dark:text-slate-300 py-0.5"
           />
         ),
       },

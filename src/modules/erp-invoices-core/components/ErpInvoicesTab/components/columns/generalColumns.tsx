@@ -8,7 +8,9 @@ import { type ErpInvoice } from "@/modules/erp-invoices-core/api/erpInvoicesCore
 import { type useErpInvoicesList } from "@/modules/erp-invoices-core/hooks/useErpInvoicesList";
 import { INVOICE_TYPE_MAP } from "../../utils";
 import { InvoiceAttachmentsCell } from "../cells/InvoiceAttachmentsCell";
+import { InvoiceNoCell } from "../cells/InvoiceNoCell";
 import {
+  InvoicePartnerCell,
   InvoicePartnerNameCell,
   InvoiceTaxCodeCell,
 } from "../cells/InvoicePartnerCell";
@@ -150,7 +152,7 @@ export function useGeneralColumns({
         key: "invoiceNo",
         header: (
           <TableColumnHeaderFilter
-            title={t("invoiceNo", "Số HĐ")}
+            title={t("invoiceNo", "Số / Ký hiệu HĐ")}
             sortState={getSortState("invoiceNo")}
             onSortChange={(state) => handleSortChange("invoiceNo", state)}
             searchValue={listHook.tableState.columnSearch["invoiceNo"] || ""}
@@ -169,17 +171,9 @@ export function useGeneralColumns({
         ),
         size: 120,
         headerClassName: "text-center",
-        className: "font-medium text-primary text-left",
+        className: "text-left",
         cell: (inv: ErpInvoice) => (
-          <TableText
-            text={inv.invoiceNo || ""}
-            onDetailClick={(e) => {
-              e.stopPropagation();
-              handleOpenInternal(inv);
-            }}
-            tooltip={true}
-            enableCopy={true}
-          />
+          <InvoiceNoCell inv={inv} handleOpenInternal={handleOpenInternal} />
         ),
       },
       serialNo: {
@@ -213,8 +207,8 @@ export function useGeneralColumns({
           <TableColumnHeaderFilter
             title={
               direction === "IN"
-                ? t("seller", "Bên bán")
-                : t("buyer", "Bên mua")
+                ? t("seller", "Bên bán / MST")
+                : t("buyer", "Bên mua / MST")
             }
             sortState={getSortState("partner")}
             onSortChange={(state) => handleSortChange("partner", state)}
@@ -234,7 +228,7 @@ export function useGeneralColumns({
         headerClassName: "text-center",
         className: "text-left",
         cell: (inv: ErpInvoice) => (
-          <InvoicePartnerNameCell
+          <InvoicePartnerCell
             inv={inv}
             direction={direction}
             onSelectPartner={onSelectPartner}
