@@ -6,11 +6,14 @@ const mockBootstrapAction = vi.fn();
 const mockSyncFromUrl = vi.fn();
 
 let appState = {
-  currentPage: "purchasing",
+  currentPage: "purchasing" as any,
+  currentInstanceId: "purchasing",
   isLoggedIn: true,
   syncFromUrl: mockSyncFromUrl,
   forbidden: true,
-  openTabs: ["purchasing"],
+  openTabs: [
+    { instanceId: "purchasing", pageKey: "purchasing", instanceIndex: 1 },
+  ] as any,
 };
 
 vi.mock("@/core/config/appStore", () => ({
@@ -39,20 +42,51 @@ vi.mock("@/shared/components/SlidePanel", () => ({
   SlidePanel: () => <div>slidepanel</div>,
 }));
 
+vi.mock("@/shared/components/SerialGenerationProgress", () => ({
+  SerialGenerationProgress: () => null,
+}));
+
+vi.mock(
+  "@/modules/goods-receipts-core/hooks/useSerialGenerationProgress",
+  () => ({
+    useSerialGenerationProgress: () => {},
+  }),
+);
+
 vi.mock("@/shared/components/Toast", () => ({
-  Toast: () => <div>toast</div>,
+  Toast: () => null,
+}));
+
+vi.mock("@/shared/components/TopProgressBar", () => ({
+  TopProgressBar: () => null,
 }));
 
 vi.mock("@/shared/components/ContextMenu", () => ({
-  AppContextMenu: () => <div>contextmenu</div>,
+  AppContextMenu: () => null,
 }));
 
-vi.mock("@/core/components/GlobalErpDocumentOpener", () => ({
-  GlobalErpDocumentOpener: () => <div>global-opener</div>,
+vi.mock("@/core/components/DocumentDependencyModal", () => ({
+  DocumentDependencyModal: () => null,
 }));
 
 vi.mock("@/ReloadPrompt", () => ({
-  ReloadPrompt: () => <div>reloadprompt</div>,
+  ReloadPrompt: () => null,
+}));
+
+vi.mock("@/core/components/EnvStamp", () => ({
+  EnvStamp: () => null,
+}));
+
+vi.mock("@/core/store/useEnvStore", () => ({
+  useEnvStore: {
+    getState: () => ({
+      fetchAppConfig: vi.fn(),
+    }),
+  },
+}));
+
+vi.mock("@/core/components/GlobalErpDocumentOpener", () => ({
+  GlobalErpDocumentOpener: () => null,
 }));
 
 vi.mock("@/shared/utils/pageUrl", () => ({
@@ -65,6 +99,18 @@ vi.mock("@/pages/Dashboard", () => ({
 
 vi.mock("@/pages/Sales", () => ({
   BanHang: () => <div>sales-page</div>,
+}));
+
+vi.mock("@/pages/Login", () => ({
+  Login: () => <div>login-page</div>,
+}));
+
+vi.mock("@/pages/NotFound", () => ({
+  NotFound: () => <div>not-found-page</div>,
+}));
+
+vi.mock("@/pages/Forbidden", () => ({
+  Forbidden: () => <div>error-page-403</div>,
 }));
 
 vi.mock("@/pages/Purchasing", () => ({
@@ -83,18 +129,6 @@ vi.mock("@/pages/MfgVehicles", () => ({
   MfgVehicles: () => <div>mfg-vehicles-page</div>,
 }));
 
-vi.mock("@/pages/Login", () => ({
-  Login: () => <div>login-page</div>,
-}));
-
-vi.mock("@/pages/NotFound", () => ({
-  NotFound: () => <div>not-found-page</div>,
-}));
-
-vi.mock("@/shared/components/ErrorPage", () => ({
-  ErrorPage: ({ code }: { code: string }) => <div>error-page-{code}</div>,
-}));
-
 vi.mock("@/core/components/ui/Tooltip", () => ({
   TooltipProvider: ({ children }: { children: React.ReactNode }) => (
     <>{children}</>
@@ -106,11 +140,14 @@ describe("App forbidden handling", () => {
     mockBootstrapAction.mockClear();
     mockSyncFromUrl.mockClear();
     appState = {
-      currentPage: "purchasing",
+      currentPage: "purchasing" as any,
+      currentInstanceId: "purchasing",
       isLoggedIn: true,
       syncFromUrl: mockSyncFromUrl,
       forbidden: true,
-      openTabs: ["purchasing"],
+      openTabs: [
+        { instanceId: "purchasing", pageKey: "purchasing", instanceIndex: 1 },
+      ] as any,
     };
   });
 

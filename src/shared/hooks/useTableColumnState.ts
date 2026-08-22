@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { useMemo } from "react";
 import { clearAllDropdownSearchStates } from "@/shared/components/DataTable/TableColumnHeaderFilter";
+import { decodeStateParam } from "@/shared/utils/pageUrl";
 
 interface TableColumnState {
   sorts: string[];
@@ -21,6 +22,7 @@ interface TableColumnStore {
   setColumnSearch: (tableId: string, col: string, val: string) => void;
   setColumnFilter: (tableId: string, col: string, vals: string[]) => void;
   resetFilters: (tableId: string) => void;
+  migrateTableState: (fromTableId: string, toTableId: string) => void;
 }
 
 const defaultTableState: TableColumnState = {
@@ -28,6 +30,46 @@ const defaultTableState: TableColumnState = {
   columnSearch: {},
   columnFilters: {},
 };
+
+const initialTableStates: Record<string, TableColumnState> = {};
+
+export function getInitialTableState(tableId: string): TableColumnState {
+  if (initialTableStates[tableId]) {
+    return initialTableStates[tableId];
+  }
+  if (typeof window === "undefined") {
+    initialTableStates[tableId] = { ...defaultTableState };
+    return initialTableStates[tableId];
+  }
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const cf = params.get("cf");
+    let columnFilters: Record<string, string[]> = {};
+    if (cf) {
+      const decoded = decodeStateParam<Record<string, string[]>>(cf);
+      if (decoded && typeof decoded === "object") {
+        columnFilters = decoded;
+      }
+    }
+    const cs = params.get("cs");
+    let columnSearch: Record<string, string> = {};
+    if (cs) {
+      const decoded = decodeStateParam<Record<string, string>>(cs);
+      if (decoded && typeof decoded === "object") {
+        columnSearch = decoded;
+      }
+    }
+    initialTableStates[tableId] = {
+      sorts: [],
+      columnSearch,
+      columnFilters,
+    };
+    return initialTableStates[tableId];
+  } catch {
+    initialTableStates[tableId] = { ...defaultTableState };
+    return initialTableStates[tableId];
+  }
+}
 
 export const useTableColumnStore = create<TableColumnStore>((set, get) => ({
   tables: {},
@@ -37,7 +79,7 @@ export const useTableColumnStore = create<TableColumnStore>((set, get) => ({
       set((state) => ({
         tables: {
           ...state.tables,
-          [tableId]: { ...defaultTableState },
+          [tableId]: getInitialTableState(tableId),
         },
       }));
     }
@@ -45,7 +87,7 @@ export const useTableColumnStore = create<TableColumnStore>((set, get) => ({
 
   setSort: (tableId, field, sortState) => {
     set((state) => {
-      const table = state.tables[tableId] || { ...defaultTableState };
+      const table = state.tables[tableId] || getInitialTableState(tableId);
       const nextSorts = table.sorts.filter(
         (s) => s !== field && s !== `-${field}`,
       );
@@ -63,7 +105,7 @@ export const useTableColumnStore = create<TableColumnStore>((set, get) => ({
 
   toggleSort: (tableId, field) => {
     set((state) => {
-      const table = state.tables[tableId] || { ...defaultTableState };
+      const table = state.tables[tableId] || getInitialTableState(tableId);
       const nextSorts = [...table.sorts];
       const ascIdx = nextSorts.indexOf(field);
       const descIdx = nextSorts.indexOf(`-${field}`);
@@ -87,7 +129,7 @@ export const useTableColumnStore = create<TableColumnStore>((set, get) => ({
 
   setColumnSearch: (tableId, col, val) => {
     set((state) => {
-      const table = state.tables[tableId] || { ...defaultTableState };
+      const table = state.tables[tableId] || getInitialTableState(tableId);
       return {
         tables: {
           ...state.tables,
@@ -102,7 +144,7 @@ export const useTableColumnStore = create<TableColumnStore>((set, get) => ({
 
   setColumnFilter: (tableId, col, vals) => {
     set((state) => {
-      const table = state.tables[tableId] || { ...defaultTableState };
+      const table = state.tables[tableId] || getInitialTableState(tableId);
       return {
         tables: {
           ...state.tables,
@@ -124,6 +166,19 @@ export const useTableColumnStore = create<TableColumnStore>((set, get) => ({
       },
     }));
   },
+
+  migrateTableState: (fromTableId, toTableId) => {
+    set((state) => {
+      const fromTable = state.tables[fromTableId];
+      if (!fromTable) return state;
+      return {
+        tables: {
+          ...state.tables,
+          [toTableId]: { ...fromTable },
+        },
+      };
+    });
+  },
 }));
 
 /**
@@ -131,7 +186,7 @@ export const useTableColumnStore = create<TableColumnStore>((set, get) => ({
  */
 export function useTableColumnState(tableId: string) {
   const store = useTableColumnStore();
-  const tableState = store.tables[tableId] || defaultTableState;
+  const tableState = store.tables[tableId] || getInitialTableState(tableId);
 
   const activeFilterCount = useMemo(() => {
     const activeCols = new Set<string>();

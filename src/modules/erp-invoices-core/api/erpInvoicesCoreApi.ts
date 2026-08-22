@@ -323,7 +323,7 @@ export const erpInvoicesCoreApi = {
       },
     });
     return res.data as {
-      items: string[];
+      items: Array<string | { label: string; value: string }>;
       total: number;
       page: number;
       totalPages: number;

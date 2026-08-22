@@ -5,6 +5,12 @@ description: Create or enhance a DataTable to follow standard UI rules in the ER
 
 # 📋 DataTable Standards
 
+> ⚡ **FAST-TRACK (PlopJS Generator)**: Để sinh nhanh bảng dữ liệu nhúng cho Drawer / Modal / Section, chạy:
+> ```bash
+> bun plop table-section <moduleName> <componentName> <rowTypeName>
+> ```
+> Hoặc để sinh nguyên Module Table Page, chạy `bun plop table-page`. *(Chi tiết tại skill `plop-generate`)*
+
 Khi tạo mới hoặc enhance một `DataTable` trong hệ thống, bạn **BẮT BUỘC** tuân thủ các nguyên tắc sau để đảm bảo UI/UX đồng nhất và chuẩn chỉnh như `erp-invoice` page và `inventory-voucher` drawer.
 
 ## 1. Cấu trúc cột (Columns Structure)

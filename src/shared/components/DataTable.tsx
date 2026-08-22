@@ -27,7 +27,10 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
-import { useUserPreferences } from "@/shared/hooks/useUserPreferences";
+import {
+  useUserPreferences,
+  useUserPreferencesStore,
+} from "@/shared/hooks/useUserPreferences";
 
 import {
   flexRender,
@@ -456,6 +459,58 @@ export function DataTable<T>({
           )
         : {},
     );
+
+  const storePref = useUserPreferencesStore((s) =>
+    tableId ? s.tables[tableId] : undefined,
+  );
+
+  useEffect(() => {
+    if (!tableId || !storePref) return;
+    if (storePref.columnVisibility) {
+      setInternalVisibility((prev) => {
+        const next = {
+          ...(defaultColumnVisibility || {}),
+          ...storePref.columnVisibility,
+        };
+        const prevKeys = Object.keys(prev);
+        const nextKeys = Object.keys(next);
+        if (
+          prevKeys.length !== nextKeys.length ||
+          prevKeys.some((k) => prev[k] !== next[k])
+        ) {
+          return next;
+        }
+        return prev;
+      });
+    }
+    if (storePref.columnOrder && storePref.columnOrder.length > 0) {
+      setInternalColumnOrder((prev) => {
+        if (
+          prev.length !== storePref.columnOrder!.length ||
+          prev.some((col, i) => col !== storePref.columnOrder![i])
+        ) {
+          return storePref.columnOrder!;
+        }
+        return prev;
+      });
+    }
+    if (storePref.columnSizing) {
+      setInternalColumnSizing((prev) => {
+        const sanitized = sanitizeActionColumnSizing(
+          storePref.columnSizing || {},
+        );
+        const prevKeys = Object.keys(prev);
+        const nextKeys = Object.keys(sanitized);
+        if (
+          prevKeys.length !== nextKeys.length ||
+          prevKeys.some((k) => prev[k] !== sanitized[k])
+        ) {
+          return sanitized;
+        }
+        return prev;
+      });
+    }
+  }, [tableId, storePref, defaultColumnVisibility]);
 
   const handleColumnVisibilityChange = (
     updaterOrValue: Updater<VisibilityState>,

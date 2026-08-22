@@ -1,0 +1,338 @@
+import React, { useState, useMemo } from "react";
+import { useTranslation } from "react-i18next";
+import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate/SpreadsheetPageTemplate";
+import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
+{{#if hasDateColumn}}
+import { DateRangeColumnSlot } from "@/shared/components/DataTable/DateRangeColumnSlot";
+import { TableDateCell } from "@/shared/components/DataTable/TableDateCell";
+{{/if}}
+import { TableText } from "@/shared/components/DataTable/TableText";
+import { Badge } from "@/shared/components/ui/badge";
+import { Tooltip } from "@/core/components/ui/Tooltip";
+import { Eye, Pencil, FileText, Trash2, Download } from "lucide-react";
+import type { DataTableColumn } from "@/shared/components/DataTable";
+import type { ActionDropdownItem } from "@/shared/components/ActionDropdown";
+import { use{{pascalCase componentName}}List } from "../hooks/use{{pascalCase componentName}}List";
+import { {{camelCase componentName}}Api, type {{pascalCase componentName}}Item } from "../api/{{camelCase componentName}}Api";
+import { {{pascalCase componentName}}DetailDrawer } from "./{{pascalCase componentName}}DetailDrawer";
+
+export function {{pascalCase componentName}}Tab() {
+  const { t } = useTranslation("{{camelCase moduleName}}");
+  const listHook = use{{pascalCase componentName}}List();
+
+  // Detail Drawer State
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [drawerMode, setDrawerMode] = useState<"view" | "edit">("view");
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  const openDetail = (id: string, mode: "view" | "edit" = "view") => {
+    setSelectedId(id);
+    setDrawerMode(mode);
+    setDrawerOpen(true);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (window.confirm(t("confirmDelete", "Bạn có chắc chắn muốn xóa bản ghi này?"))) {
+      try {
+        await {{camelCase componentName}}Api.delete(id);
+        listHook.refetch();
+      } catch (error) {
+        console.error("Delete failed", error);
+      }
+    }
+  };
+
+  const getSortState = (key: string): "asc" | "desc" | "none" => {
+    if (listHook.sorts.includes(key)) return "asc";
+    if (listHook.sorts.includes(`-${key}`)) return "desc";
+    return "none";
+  };
+
+  const columns: DataTableColumn<{{pascalCase componentName}}Item>[] = useMemo(
+    () => [
+      // 1. Cột STT: 40px, căn giữa tuyệt đối, 1-based index (hiển thị idx)
+      {
+        key: "index",
+        header: <span className="w-full block text-center">#</span>,
+        size: 40,
+        enableResizing: false,
+        headerClassName: "text-center w-[40px] min-w-[40px]",
+        className: "text-center w-[40px] min-w-[40px]",
+        cell: (_: {{pascalCase componentName}}Item, idx: number) => (
+          <span className="w-full block text-center">{idx}</span>
+        ),
+      },
+      // 2. Cột Mã (Code): TableText + onDetailClick view mode + Quick status badge
+      {
+        key: "code",
+        size: 200,
+        enableResizing: true,
+        header: (
+          <TableColumnHeaderFilter
+            title={t("code", "Mã")}
+            columnKey="code"
+            queryKeyPrefix="{{kebabCase moduleName}}-column-code"
+            allFilters={listHook.columnFilters}
+            fetchOptions={({ columnKey, search, pageParam, filtersStr }) =>
+              {{camelCase componentName}}Api.getColumnOptions(columnKey, search, pageParam, 20, filtersStr)
+            }
+            sortState={getSortState("code")}
+            onSortChange={(s) => listHook.setSort("code", s)}
+            searchValue={listHook.columnSearch["code"] || ""}
+            onSearchChange={(v) => listHook.setColumnSearch("code", v)}
+            selectedFilters={listHook.columnFilters["code"] || []}
+            onFilterChange={(v) => listHook.setColumnFilter("code", v)}
+            isActive={Boolean(listHook.columnFilters["code"]?.length || listHook.columnSearch["code"])}
+            align="center"
+          />
+        ),
+        cell: (row: {{pascalCase componentName}}Item) => (
+          <div className="flex items-center gap-1.5 w-full min-w-0">
+            <TableText
+              className="flex-1 min-w-0"
+              text={row.code}
+              enableCopy={true}
+              tooltip={true}
+              onDetailClick={(e) => {
+                e.stopPropagation();
+                openDetail(row.id, "view");
+              }}
+            />
+            {row.status === "DRAFT" && (
+              <Tooltip content={t("draft", "Nháp")}>
+                <Badge
+                  variant="secondary"
+                  className="text-[10px] px-1.5 py-0 h-4 flex-shrink-0 font-medium ml-auto w-[50px] inline-flex items-center justify-center text-center truncate"
+                >
+                  {t("draft", "Nháp")}
+                </Badge>
+              </Tooltip>
+            )}
+          </div>
+        ),
+      },
+      // 3. Cột Tên / Tiêu đề
+      {
+        key: "name",
+        size: 220,
+        enableResizing: true,
+        header: (
+          <TableColumnHeaderFilter
+            title={t("name", "Tên / Mô tả")}
+            columnKey="name"
+            queryKeyPrefix="{{kebabCase moduleName}}-column-name"
+            allFilters={listHook.columnFilters}
+            fetchOptions={({ columnKey, search, pageParam, filtersStr }) =>
+              {{camelCase componentName}}Api.getColumnOptions(columnKey, search, pageParam, 20, filtersStr)
+            }
+            sortState={getSortState("name")}
+            onSortChange={(s) => listHook.setSort("name", s)}
+            searchValue={listHook.columnSearch["name"] || ""}
+            onSearchChange={(v) => listHook.setColumnSearch("name", v)}
+            selectedFilters={listHook.columnFilters["name"] || []}
+            onFilterChange={(v) => listHook.setColumnFilter("name", v)}
+            isActive={Boolean(listHook.columnFilters["name"]?.length || listHook.columnSearch["name"])}
+            align="center"
+          />
+        ),
+        cell: (row: {{pascalCase componentName}}Item) => (
+          <span className="truncate">{row.name || "—"}</span>
+        ),
+      },
+{{#if hasStatusColumn}}
+      // 4. Cột Trạng thái: Badge fixed width w-[88px], bọc Tooltip & truncate
+      {
+        key: "status",
+        size: 140,
+        enableResizing: true,
+        className: "text-center",
+        header: (
+          <TableColumnHeaderFilter
+            title={t("status", "Trạng thái")}
+            columnKey="status"
+            queryKeyPrefix="{{kebabCase moduleName}}-column-status"
+            allFilters={listHook.columnFilters}
+            fetchOptions={({ columnKey, search, pageParam, filtersStr }) =>
+              {{camelCase componentName}}Api.getColumnOptions(columnKey, search, pageParam, 20, filtersStr)
+            }
+            sortState={getSortState("status")}
+            onSortChange={(s) => listHook.setSort("status", s)}
+            searchValue={listHook.columnSearch["status"] || ""}
+            onSearchChange={(v) => listHook.setColumnSearch("status", v)}
+            selectedFilters={listHook.columnFilters["status"] || []}
+            onFilterChange={(v) => listHook.setColumnFilter("status", v)}
+            isActive={Boolean(listHook.columnFilters["status"]?.length || listHook.columnSearch["status"])}
+            align="center"
+          />
+        ),
+        cell: (row: {{pascalCase componentName}}Item) => (
+          <div className="w-full flex justify-center">
+            <Tooltip content={t(row.status, row.status)}>
+              <Badge
+                variant={row.status === "ACTIVE" || row.status === "COMPLETED" ? "default" : "secondary"}
+                className="w-[88px] inline-flex items-center justify-center text-center truncate"
+              >
+                {t(row.status, row.status)}
+              </Badge>
+            </Tooltip>
+          </div>
+        ),
+      },
+{{/if}}
+{{#if hasDateColumn}}
+      // 5. Cột Ngày tháng: DateRangeColumnSlot + TableDateCell căn phải
+      {
+        key: "createdAt",
+        size: 150,
+        enableResizing: true,
+        className: "text-right",
+        header: (
+          <TableColumnHeaderFilter
+            title={t("createdAt", "Ngày tạo")}
+            sortState={getSortState("createdAt")}
+            onSortChange={(s) => listHook.setSort("createdAt", s)}
+            searchValue=""
+            onSearchChange={() => {}}
+            selectedFilters={[]}
+            onFilterChange={() => {}}
+            hideFilter={true}
+            hideFooter={true}
+            isActive={Boolean(listHook.dateFrom || listHook.dateTo)}
+            align="center"
+            dateRangeSlot={({ close }) => (
+              <DateRangeColumnSlot
+                dateFrom={listHook.dateFrom || ""}
+                dateTo={listHook.dateTo || ""}
+                onChange={(from, to) => listHook.setDateRange(from, to)}
+                onClose={close}
+              />
+            )}
+          />
+        ),
+        cell: (row: {{pascalCase componentName}}Item) => (
+          <TableDateCell date={row.createdAt} className="justify-end w-full" />
+        ),
+      },
+{{/if}}
+{{#if hasAmountColumn}}
+      // 6. Cột Số tiền / Giá trị: căn phải tabular-nums font-semibold
+      {
+        key: "amount",
+        size: 150,
+        enableResizing: true,
+        className: "text-right",
+        header: (
+          <TableColumnHeaderFilter
+            title={t("amount", "Số tiền")}
+            columnKey="amount"
+            queryKeyPrefix="{{kebabCase moduleName}}-column-amount"
+            allFilters={listHook.columnFilters}
+            fetchOptions={({ columnKey, search, pageParam, filtersStr }) =>
+              {{camelCase componentName}}Api.getColumnOptions(columnKey, search, pageParam, 20, filtersStr)
+            }
+            sortState={getSortState("amount")}
+            onSortChange={(s) => listHook.setSort("amount", s)}
+            searchValue={listHook.columnSearch["amount"] || ""}
+            onSearchChange={(v) => listHook.setColumnSearch("amount", v)}
+            selectedFilters={listHook.columnFilters["amount"] || []}
+            onFilterChange={(v) => listHook.setColumnFilter("amount", v)}
+            isActive={Boolean(listHook.columnFilters["amount"]?.length || listHook.columnSearch["amount"])}
+            align="center"
+          />
+        ),
+        cell: (row: {{pascalCase componentName}}Item) => (
+          <span className="tabular-nums font-semibold">
+            {(row.amount || 0).toLocaleString("vi-VN")} đ
+          </span>
+        ),
+      },
+{{/if}}
+    ],
+    [listHook.sorts, listHook.columnFilters, listHook.columnSearch, listHook.dateFrom, listHook.dateTo, t]
+  );
+
+  // Row Actions: 2 Quick Actions đầu tiên là View (Eye) và Edit (Pencil)
+  const getRowActions = (row: {{pascalCase componentName}}Item): ActionDropdownItem[] => [
+    {
+      groupLabel: "TRA CỨU",
+      items: [
+        {
+          label: t("viewDetail", "Xem chi tiết"),
+          icon: <Eye className="w-3.5 h-3.5" />,
+          onClick: () => openDetail(row.id, "view"), // 👁️ Quick Action 1: View Mode
+        },
+        {
+          label: t("download", "Tải xuống"),
+          icon: <Download className="w-3.5 h-3.5" />,
+          onClick: () => console.log("Download", row.id),
+        },
+      ],
+    },
+    {
+      groupLabel: "THAO TÁC",
+      items: [
+        {
+          label: t("edit", "Chỉnh sửa"),
+          icon: <Pencil className="w-3.5 h-3.5" />,
+          onClick: () => openDetail(row.id, "edit"), // ✏️ Quick Action 2: Edit Mode
+        },
+        {
+          label: t("delete", "Xóa"),
+          icon: <Trash2 className="w-3.5 h-3.5 text-destructive" />,
+          variant: "danger",
+          onClick: () => handleDelete(row.id),
+        },
+      ],
+    },
+  ];
+
+  return (
+    <>
+      <SpreadsheetPageTemplate<{{pascalCase componentName}}Item>
+        title={t("pageTitle", "{{pageTitle}}")}
+        desc={t("pageDesc", "Quản lý và tra cứu {{pageTitle}}")}
+        icon={<FileText className="w-5 h-5 text-primary" />}
+        tableId="{{kebabCase tableId}}"
+        items={listHook.data}
+        columns={columns}
+        getRowKey={(row) => row.id}
+        loading={listHook.isLoading}
+        emptyLabel={t("noData", "Không có dữ liệu")}
+        page={listHook.page}
+        pageSize={listHook.pageSize}
+        total={listHook.total}
+        totalPages={listHook.totalPages}
+        onPage={(p) => listHook.setPage(p)}
+        onPageSize={(s) => {
+          listHook.setPageSize(s);
+          listHook.setPage(1);
+        }}
+        onRefresh={() => listHook.refetch()}
+        activeFilterCount={listHook.activeFilterCount}
+        onClearAllFilters={listHook.clearAllFilters}
+        rowActions={getRowActions}
+{{#if hasAmountColumn}}
+        summaryRow=\{{
+          amount: (
+            <div className="text-right font-bold text-primary tabular-nums">
+              {listHook.data
+                .reduce((sum, r) => sum + (r.amount || 0), 0)
+                .toLocaleString("vi-VN")}{" "}
+              đ
+            </div>
+          ),
+        }}
+{{/if}}
+      />
+
+      <{{pascalCase componentName}}DetailDrawer
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        mode={drawerMode}
+        setMode={setDrawerMode}
+        id={selectedId}
+        onSuccess={() => listHook.refetch()}
+      />
+    </>
+  );
+}

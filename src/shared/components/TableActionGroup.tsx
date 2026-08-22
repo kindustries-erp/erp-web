@@ -48,7 +48,7 @@ export function TableActionGroup({
     [portalId],
   );
   return (
-    <div className="flex items-center gap-2 w-full justify-end">
+    <div className="flex items-center gap-2 w-full flex-wrap justify-start sm:justify-end">
       {extraActions}
       {children}
 
@@ -69,7 +69,7 @@ export function TableActionGroup({
         <Button
           variant="secondary"
           size="icon"
-          className="h-8 w-8 px-0"
+          className="h-8 w-8 px-0 shrink-0"
           onClick={onRefresh}
           disabled={loading}
           title={t("Tải lại")}
@@ -83,7 +83,7 @@ export function TableActionGroup({
       )}
 
       {onCreate && (!createActions || createActions.length === 0) && (
-        <Button onClick={onCreate} className="h-8 px-3">
+        <Button onClick={onCreate} className="h-8 px-3 shrink-0">
           {createIcon || <Plus className="h-4 w-4 mr-1" />}
           {t(createLabel)}
         </Button>
@@ -94,7 +94,7 @@ export function TableActionGroup({
           items={createActions}
           align="end"
           customTrigger={
-            <Button className="h-8 px-3">
+            <Button className="h-8 px-3 shrink-0">
               {createIcon}
               {t(createLabel)}
               <ChevronDown className="h-4 w-4 ml-1 opacity-70" />
@@ -104,7 +104,7 @@ export function TableActionGroup({
       )}
 
       {onCreate && createActions && createActions.length > 0 && (
-        <div className="flex items-center">
+        <div className="flex items-center shrink-0">
           <Button
             onClick={onCreate}
             className="h-8 rounded-r-none px-3 border-r-0 focus:z-10"

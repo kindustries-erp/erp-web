@@ -17,6 +17,7 @@
     "docker:build": "docker compose -f /opt/stacks/liouni-erp-web/docker-compose.yml build",
     "docker:up": "docker compose -f /opt/stacks/liouni-erp-web/docker-compose.yml up -d",
     "docker:deploy": "bun run docker:build; bun run docker:up",
+    "plop": "plop",
     "prepare": "husky"
   },
   "dependencies": {
