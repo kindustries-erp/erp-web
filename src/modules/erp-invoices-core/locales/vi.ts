@@ -1,5 +1,5 @@
 export const erpInvoicesVi = {
-  // Page Actions
+  // Page Actions & Header
   reload: "Tải lại",
   importXml: "Import XML",
   createInvoice: "Tạo hóa đơn",
@@ -24,7 +24,13 @@ export const erpInvoicesVi = {
   fetchSuccess: "Đã lấy {{count}} hóa đơn",
   importSuccess: "Đã nhập {{imported}} hóa đơn, bỏ qua {{skipped}} trùng",
   selectAll: "Chọn tất cả",
-  deselectAll: "Bỏ chọn tất cả",
+  deselectAll: "Bỏ chọn",
+  syncInvoices: "Đồng bộ hóa đơn",
+  exportExcel: "Xuất Excel",
+  loginTaxPortal: "Đăng nhập Cổng Thuế",
+  invoiceDesc: "Quản lý danh sách hóa đơn điện tử",
+  tag: "Thẻ nhãn",
+  allTags: "Tất cả thẻ",
 
   // Tabs
   inbound: "Hóa đơn mua vào",
@@ -35,26 +41,52 @@ export const erpInvoicesVi = {
   tabAdjustment: "Điều chỉnh",
 
   // Columns & Fields
+  attachments: "Chứng từ",
   invoiceDate: "Ngày HĐ",
   serialNo: "Ký hiệu",
   invoiceNo: "Số HĐ",
   seller: "Bên bán",
   buyer: "Bên mua",
+  partner: "Đối tác",
   taxCode: "MST",
+  taxInvoiceType: "Loại HĐ",
+  taxInvoiceStatus: "Trạng thái (GDT)",
+  taxProcessStatus: "KQ Kiểm tra",
   preVatAmount: "Trước GTGT",
   vatRate: "Thuế suất",
   vatAmount: "Thuế GTGT",
   discountAmount: "Chiết khấu",
   totalAmount: "Thành tiền",
   description: "Diễn giải",
+  settlementOrder: "Lệnh quyết toán",
+  licensePlate: "Biển số xe",
+  netOffAmount: "Đã cấn trừ",
+  "invoice.columns.remainingAmount": "Còn lại",
+  postingStatus: "Hạch toán",
+  "invoice.columns.isValid": "HĐ hợp lệ",
+  "invoice.isValid.true": "Hợp lệ",
+  "invoice.isValid.false": "Chưa hợp lệ",
+  branch: "Chi nhánh",
+  invoiceCategory: "Phân loại HĐ",
+  "invoice.columns.notes": "Ghi chú",
+
+  // Attachments Popover & Tooltips
+  downloadXml: "Tải file XML",
+  noXml: "Chưa có file XML/ZIP",
+  pdfList: "Danh sách file PDF",
+  noPdf: "Chưa có file PDF",
 
   // Statuses
   statusDraft: "Nháp",
   statusConfirmed: "Đã xác nhận",
   statusCancelled: "Đã hủy",
 
-  // Actions
+  // Actions & Groups
+  groupTraCuu: "Tra cứu",
+  groupThaoTac: "Thao tác",
   actionDetail: "Chi tiết",
+  actionDownloadXml: "Tải XML",
+  actionDownloadPdf: "Tải PDF",
   actionEdit: "Chỉnh sửa",
   actionDelete: "Xóa",
   actionCancel: "Hủy",
