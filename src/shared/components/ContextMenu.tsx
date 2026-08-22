@@ -165,16 +165,15 @@ export function AppContextMenu() {
   ).length;
   const hasReachedMaxDuplicate = instancesCount >= 2;
 
-  const currentInstanceId = useAppStore.getState().currentInstanceId;
-  const currentIndex = openTabs.findIndex(
-    (t) => t.instanceId === currentInstanceId,
+  const targetIndex = openTabs.findIndex(
+    (t) => t.instanceId === targetInstanceId,
   );
-  const hasTabsToRightOfCurrent =
-    currentIndex >= 0 &&
-    openTabs.slice(currentIndex + 1).some((tab) => !STATIC_TABS[tab.pageKey]);
+  const hasTabsToRightOfTarget =
+    targetIndex >= 0 &&
+    openTabs.slice(targetIndex + 1).some((tab) => !STATIC_TABS[tab.pageKey]);
 
   const hasOtherClosableTabs = openTabs.some(
-    (tab) => !STATIC_TABS[tab.pageKey] && tab.instanceId !== currentInstanceId,
+    (tab) => !STATIC_TABS[tab.pageKey] && tab.instanceId !== targetInstanceId,
   );
 
   const handleOpenNewTab = () => {
@@ -196,14 +195,12 @@ export function AppContextMenu() {
 
   const handleCloseTabsToRight = () => {
     setMenu(null);
-    const { currentInstanceId: active, closeTabsToRight } =
-      useAppStore.getState();
-    closeTabsToRight(active);
+    useAppStore.getState().closeTabsToRight(targetInstanceId);
   };
 
-  const handleCloseAllTabs = () => {
+  const handleCloseOtherTabs = () => {
     setMenu(null);
-    useAppStore.getState().closeAllTabs();
+    useAppStore.getState().closeOtherTabs(targetInstanceId);
   };
 
   return createPortal(
@@ -274,7 +271,7 @@ export function AppContextMenu() {
 
           <button
             className="context-menu-item disabled:opacity-40 disabled:cursor-not-allowed"
-            disabled={!hasTabsToRightOfCurrent}
+            disabled={!hasTabsToRightOfTarget}
             onClick={handleCloseTabsToRight}
           >
             <svg
@@ -297,7 +294,7 @@ export function AppContextMenu() {
           <button
             className="context-menu-item disabled:opacity-40 disabled:cursor-not-allowed"
             disabled={!hasOtherClosableTabs}
-            onClick={handleCloseAllTabs}
+            onClick={handleCloseOtherTabs}
           >
             <svg
               width="14"

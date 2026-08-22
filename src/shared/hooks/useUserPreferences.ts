@@ -80,6 +80,7 @@ export const useUserPreferencesStore = create<UserPreferencesStoreState>()(
             ...(state.tables || {}),
             [tableId]: pref,
             ...(baseTableId !== tableId ? { [baseTableId]: pref } : {}),
+            ...(baseTableId === tableId ? { [`${tableId}_2`]: pref } : {}),
           },
         }));
         debouncedSyncToBackend(baseTableId, pref);
@@ -96,10 +97,12 @@ export const useUserPreferencesStore = create<UserPreferencesStoreState>()(
       },
 
       saveTableViewPreset: (tableId: string, view: TableViewPreset) => {
-        const current = get().tables?.[tableId] || {
-          columnOrder: [],
-          columnVisibility: {},
-        };
+        const baseTableId = tableId.replace(/(_2|__\d+)$/, "");
+        const current = get().tables?.[tableId] ||
+          get().tables?.[baseTableId] || {
+            columnOrder: [],
+            columnVisibility: {},
+          };
         const existingViews = current.views || [];
         const index = existingViews.findIndex((v) => v.key === view.key);
         let nextViews: TableViewPreset[];
@@ -120,13 +123,16 @@ export const useUserPreferencesStore = create<UserPreferencesStoreState>()(
           tables: {
             ...(state.tables || {}),
             [tableId]: nextPref,
+            ...(baseTableId !== tableId ? { [baseTableId]: nextPref } : {}),
+            ...(baseTableId === tableId ? { [`${tableId}_2`]: nextPref } : {}),
           },
         }));
-        debouncedSyncToBackend(tableId, nextPref);
+        debouncedSyncToBackend(baseTableId, nextPref);
       },
 
       deleteTableViewPreset: (tableId: string, viewKey: string) => {
-        const current = get().tables?.[tableId];
+        const baseTableId = tableId.replace(/(_2|__\d+)$/, "");
+        const current = get().tables?.[tableId] || get().tables?.[baseTableId];
         if (!current || !current.views) return;
         const nextViews = current.views.filter((v) => v.key !== viewKey);
         const nextPref: TablePreference = {
@@ -139,9 +145,11 @@ export const useUserPreferencesStore = create<UserPreferencesStoreState>()(
           tables: {
             ...(state.tables || {}),
             [tableId]: nextPref,
+            ...(baseTableId !== tableId ? { [baseTableId]: nextPref } : {}),
+            ...(baseTableId === tableId ? { [`${tableId}_2`]: nextPref } : {}),
           },
         }));
-        debouncedSyncToBackend(tableId, nextPref);
+        debouncedSyncToBackend(baseTableId, nextPref);
       },
 
       hydrateFromServer: (tableConfigs) => {

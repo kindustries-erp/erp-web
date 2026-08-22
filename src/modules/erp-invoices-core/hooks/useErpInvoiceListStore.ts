@@ -78,6 +78,7 @@ export interface ErpInvoiceListStore {
   ) => void;
 
   resetAllFilters: (dir: Direction) => void;
+  migrateState: (fromDir: Direction, toDir: Direction) => void;
 }
 
 export const useErpInvoiceListStore = create<ErpInvoiceListStore>(
@@ -110,6 +111,19 @@ export const useErpInvoiceListStore = create<ErpInvoiceListStore>(
           },
         },
       }));
+    },
+
+    migrateState: (fromDir, toDir) => {
+      set((state) => {
+        const fromState = state.states[fromDir];
+        if (!fromState) return state;
+        return {
+          states: {
+            ...state.states,
+            [toDir]: { ...fromState },
+          },
+        };
+      });
     },
 
     setSearchInput: (dir, v) => get().updateState(dir, { searchInput: v }),

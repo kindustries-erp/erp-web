@@ -108,7 +108,7 @@ function TabItem({
       data-tab-label={label}
       draggable={closable && !isMobile}
       className={cn(
-        "tab-item flex items-center gap-[5px] px-[14px] py-[7px] text-[11px] cursor-pointer whitespace-nowrap flex-shrink-0 relative z-10 border-b-2 border-transparent",
+        "tab-item flex items-center gap-[5px] px-[14px] py-[7px] text-[11px] cursor-pointer whitespace-nowrap flex-shrink-0 relative z-10 border-b-2 border-transparent select-none",
         "transition-all duration-150 ease-out",
         active
           ? "text-foreground font-semibold border-b-[color:var(--primary)]"
@@ -139,7 +139,7 @@ function TabItem({
       <Icon className="w-3.5 h-3.5 opacity-70" />
       <span>{label}</span>
       {tab.instanceIndex === 2 && (
-        <span className="px-1 py-0 text-[9px] font-bold bg-primary/10 text-primary rounded border border-primary/20 leading-tight ml-0.5">
+        <span className="text-[9px] font-semibold px-1 py-0.5 rounded bg-muted text-muted-foreground ml-0.5">
           #2
         </span>
       )}
@@ -263,10 +263,7 @@ export function TabBar() {
             <TabItem
               key={tab.instanceId}
               tab={tab}
-              active={
-                tab.pageKey === currentPage ||
-                tab.instanceId === activeInstanceId
-              }
+              active={tab.instanceId === activeInstanceId}
               dragging={draggingTab === tab.instanceId}
               dragOver={
                 dragOverTab === tab.instanceId && draggingTab !== tab.instanceId

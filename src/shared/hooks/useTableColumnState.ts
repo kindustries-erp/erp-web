@@ -21,6 +21,7 @@ interface TableColumnStore {
   setColumnSearch: (tableId: string, col: string, val: string) => void;
   setColumnFilter: (tableId: string, col: string, vals: string[]) => void;
   resetFilters: (tableId: string) => void;
+  migrateTableState: (fromTableId: string, toTableId: string) => void;
 }
 
 const defaultTableState: TableColumnState = {
@@ -123,6 +124,19 @@ export const useTableColumnStore = create<TableColumnStore>((set, get) => ({
         [tableId]: { ...defaultTableState },
       },
     }));
+  },
+
+  migrateTableState: (fromTableId, toTableId) => {
+    set((state) => {
+      const fromTable = state.tables[fromTableId];
+      if (!fromTable) return state;
+      return {
+        tables: {
+          ...state.tables,
+          [toTableId]: { ...fromTable },
+        },
+      };
+    });
   },
 }));
 

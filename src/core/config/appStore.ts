@@ -3,6 +3,8 @@ import { persist } from "zustand/middleware";
 import { PageKey, TabInfo, SectionRoot, TabInstance } from "@/shared/types";
 import { pageToPath } from "@/shared/utils/pageUrl";
 import { updateUserPreferencesApi } from "@/core/api/appConfigApi";
+import { useTableColumnStore } from "@/shared/hooks/useTableColumnState";
+import { useErpInvoiceListStore } from "@/modules/erp-invoices-core/hooks/useErpInvoiceListStore";
 
 export type AppTheme = "shell" | "classic" | "orcaq" | "midnight";
 
@@ -402,6 +404,7 @@ interface AppState {
   duplicateTab: (page: PageKey) => void;
   syncFromUrl: (page: PageKey, tab?: string, instanceIndex?: 1 | 2) => void;
   closeTab: (idOrKey: string) => void;
+  closeOtherTabs: (idOrKey: string) => void;
   closeAllTabs: () => void;
   closeTabsToRight: (idOrKey: string) => void;
   reorderTabs: (sourceId: string, targetId: string) => void;
@@ -416,6 +419,69 @@ interface AppState {
   logout: () => void;
   setCustomBreadcrumbs: (crumbs: Array<[string, string?]> | null) => void;
   preloadTab: (page: PageKey) => void;
+}
+
+function getPathWithPreservedSearch(
+  pageKey: PageKey,
+  instanceIndex: 1 | 2,
+): string {
+  const currentSearch = new URLSearchParams(window.location.search);
+  if (instanceIndex === 1) {
+    currentSearch.delete("_i");
+  } else if (instanceIndex === 2) {
+    currentSearch.set("_i", "2");
+  }
+  const searchStr = currentSearch.toString();
+  const basePath = pageToPath(pageKey);
+  return `${basePath}${searchStr ? `?${searchStr}` : ""}`;
+}
+
+function normalizeTabInstances(
+  tabs: TabInstance[],
+  currentInstanceId: string,
+): { normalizedTabs: TabInstance[]; nextCurrentId: string } {
+  let nextCurrentId = currentInstanceId;
+  const normalizedTabs = tabs.map((tab) => {
+    if (tab.instanceIndex === 2) {
+      const hasInstance1 = tabs.some(
+        (t) => t.pageKey === tab.pageKey && t.instanceIndex === 1,
+      );
+      if (!hasInstance1) {
+        if (nextCurrentId === tab.instanceId) {
+          nextCurrentId = tab.pageKey;
+        }
+        // Migrate table column states & invoice states if any
+        try {
+          useTableColumnStore
+            .getState()
+            .migrateTableState(`${tab.pageKey}__2`, tab.pageKey);
+          useTableColumnStore
+            .getState()
+            .migrateTableState(
+              `erp-invoices-table-IN_2`,
+              `erp-invoices-table-IN`,
+            );
+          useTableColumnStore
+            .getState()
+            .migrateTableState(
+              `erp-invoices-table-OUT_2`,
+              `erp-invoices-table-OUT`,
+            );
+          useErpInvoiceListStore.getState().migrateState("IN_2", "IN");
+          useErpInvoiceListStore.getState().migrateState("OUT_2", "OUT");
+        } catch {
+          // ignore
+        }
+        return {
+          ...tab,
+          instanceId: tab.pageKey,
+          instanceIndex: 1 as const,
+        };
+      }
+    }
+    return tab;
+  });
+  return { normalizedTabs, nextCurrentId };
 }
 
 export const useAppStore = create<AppState>()(
@@ -614,35 +680,108 @@ export const useAppStore = create<AppState>()(
 
       closeTab: (idOrKey) => {
         const { openTabs, currentInstanceId } = get();
-        const idx = openTabs.findIndex(
-          (t) => t.instanceId === idOrKey || t.pageKey === idOrKey,
-        );
+        let idx = openTabs.findIndex((t) => t.instanceId === idOrKey);
+        if (idx === -1) {
+          idx = openTabs.findIndex((t) => t.pageKey === idOrKey);
+        }
         if (idx === -1) return;
         const targetTab = openTabs[idx];
         if (STATIC_TABS[targetTab.pageKey]) return;
 
-        const newTabs = openTabs.filter((_, i) => i !== idx);
+        const rawNewTabs = openTabs.filter((_, i) => i !== idx);
+        const { normalizedTabs, nextCurrentId } = normalizeTabInstances(
+          rawNewTabs,
+          currentInstanceId,
+        );
+
         if (currentInstanceId === targetTab.instanceId) {
-          const nextTab = newTabs[Math.min(idx, newTabs.length - 1)] ?? {
+          const nextTab = normalizedTabs[
+            Math.min(idx, normalizedTabs.length - 1)
+          ] ?? {
             instanceId: "dashboard",
             pageKey: "dashboard" as PageKey,
             instanceIndex: 1 as const,
           };
-          const path = pageToPath(
+          const path = getPathWithPreservedSearch(
             nextTab.pageKey,
-            undefined,
-            nextTab.instanceIndex === 2 ? { _i: "2" } : undefined,
+            nextTab.instanceIndex,
           );
           const current = window.location.pathname + window.location.search;
           if (current !== path) history.pushState(null, "", path);
           set({
             currentPage: nextTab.pageKey,
             currentInstanceId: nextTab.instanceId,
-            openTabs: newTabs,
+            openTabs: normalizedTabs,
             customBreadcrumbs: null,
           });
         } else {
-          set({ openTabs: newTabs });
+          // If closing another tab, ensure current tab URL is preserved or demoted
+          const currentTab = normalizedTabs.find(
+            (t) => t.instanceId === nextCurrentId,
+          );
+          if (currentTab) {
+            const path = getPathWithPreservedSearch(
+              currentTab.pageKey,
+              currentTab.instanceIndex,
+            );
+            const current = window.location.pathname + window.location.search;
+            if (current !== path) history.replaceState(null, "", path);
+            set({
+              currentPage: currentTab.pageKey,
+              currentInstanceId: currentTab.instanceId,
+              openTabs: normalizedTabs,
+            });
+          } else {
+            set({ openTabs: normalizedTabs });
+          }
+        }
+      },
+
+      closeOtherTabs: (idOrKey) => {
+        const { openTabs, currentInstanceId, navigate } = get();
+        let targetId = idOrKey;
+        const exists = openTabs.some((t) => t.instanceId === targetId);
+        if (!exists) {
+          const byPage = openTabs.find((t) => t.pageKey === idOrKey);
+          if (byPage) targetId = byPage.instanceId;
+        }
+        const rawKeepTabs = openTabs.filter(
+          (t) => t.instanceId === targetId || STATIC_TABS[t.pageKey],
+        );
+        const { normalizedTabs, nextCurrentId } = normalizeTabInstances(
+          rawKeepTabs,
+          currentInstanceId,
+        );
+
+        const isCurrentKept = normalizedTabs.some(
+          (t) => t.instanceId === nextCurrentId,
+        );
+        if (!isCurrentKept) {
+          const targetTab =
+            normalizedTabs.find((t) => t.instanceId === targetId) ??
+            normalizedTabs[normalizedTabs.length - 1];
+          if (targetTab) {
+            navigate(targetTab.pageKey, targetTab.instanceIndex);
+          }
+        } else {
+          const currentTab = normalizedTabs.find(
+            (t) => t.instanceId === nextCurrentId,
+          );
+          if (currentTab) {
+            const path = getPathWithPreservedSearch(
+              currentTab.pageKey,
+              currentTab.instanceIndex,
+            );
+            const current = window.location.pathname + window.location.search;
+            if (current !== path) history.replaceState(null, "", path);
+            set({
+              currentPage: currentTab.pageKey,
+              currentInstanceId: currentTab.instanceId,
+              openTabs: normalizedTabs,
+            });
+          } else {
+            set({ openTabs: normalizedTabs });
+          }
         }
       },
 
@@ -662,25 +801,48 @@ export const useAppStore = create<AppState>()(
 
       closeTabsToRight: (idOrKey) => {
         const { openTabs, currentInstanceId, navigate } = get();
-        const index = openTabs.findIndex(
-          (t) => t.instanceId === idOrKey || t.pageKey === idOrKey,
-        );
+        let index = openTabs.findIndex((t) => t.instanceId === idOrKey);
+        if (index < 0) {
+          index = openTabs.findIndex((t) => t.pageKey === idOrKey);
+        }
         if (index < 0) return;
-        const keepTabs = openTabs.filter((tab, tabIndex) => {
+        const rawKeepTabs = openTabs.filter((tab, tabIndex) => {
           if (tabIndex <= index) return true;
           return Boolean(STATIC_TABS[tab.pageKey]);
         });
-        const isCurrentKept = keepTabs.some(
-          (t) => t.instanceId === currentInstanceId,
+        const { normalizedTabs, nextCurrentId } = normalizeTabInstances(
+          rawKeepTabs,
+          currentInstanceId,
+        );
+
+        const isCurrentKept = normalizedTabs.some(
+          (t) => t.instanceId === nextCurrentId,
         );
         if (!isCurrentKept) {
-          const fallbackTab = keepTabs[keepTabs.length - 1];
+          const fallbackTab = normalizedTabs[normalizedTabs.length - 1];
           navigate(
             fallbackTab?.pageKey ?? "dashboard",
             fallbackTab?.instanceIndex ?? 1,
           );
         } else {
-          set({ openTabs: keepTabs });
+          const currentTab = normalizedTabs.find(
+            (t) => t.instanceId === nextCurrentId,
+          );
+          if (currentTab) {
+            const path = getPathWithPreservedSearch(
+              currentTab.pageKey,
+              currentTab.instanceIndex,
+            );
+            const current = window.location.pathname + window.location.search;
+            if (current !== path) history.replaceState(null, "", path);
+            set({
+              currentPage: currentTab.pageKey,
+              currentInstanceId: currentTab.instanceId,
+              openTabs: normalizedTabs,
+            });
+          } else {
+            set({ openTabs: normalizedTabs });
+          }
         }
       },
 

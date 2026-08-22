@@ -18,6 +18,8 @@ describe("pageUrl with report dashboards", () => {
     expect(pathToPage("/sales-report-dashboard", "")).toEqual({
       page: "sales-report-dashboard",
       tab: undefined,
+      instanceIndex: 1,
+      searchParams: expect.any(URLSearchParams),
     });
   });
 
@@ -25,6 +27,8 @@ describe("pageUrl with report dashboards", () => {
     expect(pathToPage("/purchasing-report-dashboard", "")).toEqual({
       page: "purchasing-report-dashboard",
       tab: undefined,
+      instanceIndex: 1,
+      searchParams: expect.any(URLSearchParams),
     });
   });
 });
