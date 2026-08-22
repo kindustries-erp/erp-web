@@ -70,7 +70,29 @@ describe("TabBar", () => {
   it("navigates when a tab is clicked", () => {
     render(<TabBar />);
     fireEvent.click(screen.getByText("Mua hàng"));
-    expect(mockNavigate).toHaveBeenCalledWith("purchasing");
+    expect(mockNavigate).toHaveBeenCalledWith("purchasing", 1);
+  });
+
+  it("renders #2 badge and highlights both duplicate tab instances for active page", () => {
+    mockOpenTabs = [
+      {
+        instanceId: "dashboard",
+        pageKey: "dashboard",
+        instanceIndex: 1,
+      } as any,
+      { instanceId: "sales", pageKey: "sales", instanceIndex: 1 } as any,
+      { instanceId: "sales__2", pageKey: "sales", instanceIndex: 2 } as any,
+    ];
+    mockCurrentPage = "sales";
+    render(<TabBar />);
+    expect(screen.getByText("#2")).toBeInTheDocument();
+
+    const salesTabs = screen.getAllByText("Bán hàng");
+    expect(salesTabs).toHaveLength(2);
+    const salesTab1 = salesTabs[0].closest(".tab-item");
+    const salesTab2 = salesTabs[1].closest(".tab-item");
+    expect(salesTab1?.className).toContain("font-semibold");
+    expect(salesTab2?.className).toContain("font-semibold");
   });
 
   it("does NOT show close button on static tabs (dashboard)", () => {

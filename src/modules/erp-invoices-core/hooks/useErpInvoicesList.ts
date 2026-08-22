@@ -19,7 +19,8 @@ export function useErpInvoicesList(
   const [loading, setLoading] = useState(false);
 
   const store = useErpInvoiceListStore();
-  const state = store.states[direction === "ALL" ? "IN" : direction]; // Use IN state for ALL
+  const state =
+    store.states[direction === "ALL" ? "IN" : direction] || store.states.IN;
 
   const tableState = useTableColumnState(`erp-invoices-table-${direction}`);
 
@@ -56,9 +57,17 @@ export function useErpInvoicesList(
     setLoading(true);
     try {
       let apiDirection: "IN" | "OUT" | undefined = undefined;
-      if (direction === "IN" || direction === "CHECKPOINT_IN") {
+      if (
+        direction === "IN" ||
+        direction === "IN_2" ||
+        direction === "CHECKPOINT_IN"
+      ) {
         apiDirection = "IN";
-      } else if (direction === "OUT" || direction === "CHECKPOINT_OUT") {
+      } else if (
+        direction === "OUT" ||
+        direction === "OUT_2" ||
+        direction === "CHECKPOINT_OUT"
+      ) {
         apiDirection = "OUT";
       }
 

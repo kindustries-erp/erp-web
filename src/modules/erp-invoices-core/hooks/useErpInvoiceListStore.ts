@@ -4,7 +4,13 @@ import {
   periodLastDay,
 } from "@/modules/finance/utils/financeHelpers";
 
-export type Direction = "IN" | "OUT" | "CHECKPOINT_IN" | "CHECKPOINT_OUT";
+export type Direction =
+  | "IN"
+  | "OUT"
+  | "IN_2"
+  | "OUT_2"
+  | "CHECKPOINT_IN"
+  | "CHECKPOINT_OUT";
 
 export interface ErpInvoiceListState {
   searchInput: string;
@@ -47,6 +53,10 @@ export interface ErpInvoiceListStore {
   states: Record<Direction, ErpInvoiceListState>;
 
   updateState: (dir: Direction, updates: Partial<ErpInvoiceListState>) => void;
+  hydrateFromUrl: (
+    dir: Direction,
+    urlState: Partial<ErpInvoiceListState>,
+  ) => void;
 
   setSearchInput: (dir: Direction, v: string) => void;
   setSearch: (dir: Direction, v: string) => void;
@@ -75,6 +85,8 @@ export const useErpInvoiceListStore = create<ErpInvoiceListStore>(
     states: {
       IN: defaultState(50),
       OUT: defaultState(50),
+      IN_2: defaultState(50),
+      OUT_2: defaultState(50),
       CHECKPOINT_IN: defaultState(20),
       CHECKPOINT_OUT: defaultState(20),
     },
@@ -83,7 +95,19 @@ export const useErpInvoiceListStore = create<ErpInvoiceListStore>(
       set((state) => ({
         states: {
           ...state.states,
-          [dir]: { ...state.states[dir], ...updates },
+          [dir]: { ...(state.states[dir] || defaultState()), ...updates },
+        },
+      }));
+    },
+
+    hydrateFromUrl: (dir, urlState) => {
+      set((state) => ({
+        states: {
+          ...state.states,
+          [dir]: {
+            ...(state.states[dir] || defaultState()),
+            ...urlState,
+          },
         },
       }));
     },
@@ -122,7 +146,7 @@ export const useErpInvoiceListStore = create<ErpInvoiceListStore>(
     setTagId: (dir, v) => get().updateState(dir, { tag_id: v, page: 1 }),
 
     handleSort: (dir, key) => {
-      const currentState = get().states[dir];
+      const currentState = get().states[dir] || defaultState();
       if (currentState.sortBy === key) {
         if (currentState.sortOrder === "desc") {
           get().updateState(dir, { sortOrder: "asc", page: 1 });
@@ -140,8 +164,10 @@ export const useErpInvoiceListStore = create<ErpInvoiceListStore>(
           states: {
             ...state.states,
             [dir]: {
-              ...state.states[dir],
-              filterPanelOpen: v(state.states[dir].filterPanelOpen),
+              ...(state.states[dir] || defaultState()),
+              filterPanelOpen: v(
+                (state.states[dir] || defaultState()).filterPanelOpen,
+              ),
             },
           },
         }));
@@ -151,8 +177,7 @@ export const useErpInvoiceListStore = create<ErpInvoiceListStore>(
     },
 
     resetAllFilters: (dir) => {
-      // Keep filter panel open state, reset everything else to default except pageSize and sort
-      const current = get().states[dir];
+      const current = get().states[dir] || defaultState();
       get().updateState(dir, {
         ...defaultState(),
         pageSize: current.pageSize,

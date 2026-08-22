@@ -56,7 +56,7 @@ const TAB_ICONS: Partial<Record<PageKey, React.ElementType>> = {
 };
 
 function TabItem({
-  tabKey,
+  tab,
   active,
   onMount,
   dragging,
@@ -67,31 +67,44 @@ function TabItem({
   onDragOver,
   onDrop,
 }: {
-  tabKey: PageKey;
+  tab: {
+    instanceId: string;
+    pageKey: PageKey;
+    instanceIndex: 1 | 2;
+    customLabel?: string;
+  };
   active: boolean;
   onMount: (el: HTMLDivElement | null) => void;
   dragging: boolean;
   dragOver: boolean;
   isMobile: boolean;
-  onDragStart: (tabKey: PageKey) => void;
+  onDragStart: (instanceId: string) => void;
   onDragEnd: () => void;
-  onDragOver: (tabKey: PageKey) => void;
-  onDrop: (tabKey: PageKey) => void;
+  onDragOver: (instanceId: string) => void;
+  onDrop: (instanceId: string) => void;
 }) {
   const { navigate, closeTab } = useAppStore();
   const t = useT();
   const labelKey =
-    STATIC_TABS[tabKey]?.labelKey ?? SECTION_ROOTS[tabKey]?.labelKey;
-  const label = labelKey ? t(labelKey) : tabKey;
-  const closable = !STATIC_TABS[tabKey];
-  const onContextMenu = usePageContextMenu(tabKey, label, undefined, "tabbar");
+    STATIC_TABS[tab.pageKey]?.labelKey ?? SECTION_ROOTS[tab.pageKey]?.labelKey;
+  const baseLabel = labelKey ? t(labelKey) : tab.pageKey;
+  const label = tab.customLabel || baseLabel;
+  const closable = !STATIC_TABS[tab.pageKey];
+  const onContextMenu = usePageContextMenu(
+    tab.pageKey,
+    label,
+    undefined,
+    "tabbar",
+    tab.instanceId,
+  );
 
-  const Icon = TAB_ICONS[tabKey] || FileText;
+  const Icon = TAB_ICONS[tab.pageKey] || FileText;
 
   return (
     <div
       ref={onMount}
-      data-tab-page={tabKey}
+      data-tab-page={tab.pageKey}
+      data-tab-instance-id={tab.instanceId}
       data-tab-label={label}
       draggable={closable && !isMobile}
       className={cn(
@@ -103,34 +116,39 @@ function TabItem({
         dragging && "opacity-40 scale-95",
         dragOver && "bg-[color:var(--surface-hover)] scale-105",
       )}
-      onClick={() => navigate(tabKey)}
+      onClick={() => navigate(tab.pageKey, tab.instanceIndex)}
       onContextMenu={onContextMenu}
       onDragStart={(e) => {
         if (!closable || isMobile) return;
         e.dataTransfer.effectAllowed = "move";
-        e.dataTransfer.setData("text/plain", tabKey);
-        onDragStart(tabKey);
+        e.dataTransfer.setData("text/plain", tab.instanceId);
+        onDragStart(tab.instanceId);
       }}
       onDragEnd={onDragEnd}
       onDragOver={(e: DragEvent<HTMLDivElement>) => {
         if (!closable || isMobile) return;
         e.preventDefault();
-        onDragOver(tabKey);
+        onDragOver(tab.instanceId);
       }}
       onDrop={(e: DragEvent<HTMLDivElement>) => {
         if (!closable || isMobile) return;
         e.preventDefault();
-        onDrop(tabKey);
+        onDrop(tab.instanceId);
       }}
     >
       <Icon className="w-3.5 h-3.5 opacity-70" />
       <span>{label}</span>
+      {tab.instanceIndex === 2 && (
+        <span className="px-1 py-0 text-[9px] font-bold bg-primary/10 text-primary rounded border border-primary/20 leading-tight ml-0.5">
+          #2
+        </span>
+      )}
       {closable && (
         <span
           className="inline-flex items-center justify-center w-4 h-4 text-[color:var(--faint)] text-sm leading-none cursor-pointer rounded-sm hover:bg-surface-hover hover:text-[color:var(--muted-fg)] ml-1"
           onClick={(e) => {
             e.stopPropagation();
-            closeTab(tabKey);
+            closeTab(tab.instanceId);
           }}
         >
           ×
@@ -141,16 +159,17 @@ function TabItem({
 }
 
 export function TabBar() {
-  const { openTabs, currentPage, reorderTabs } = useAppStore();
+  const { openTabs, currentInstanceId, currentPage, reorderTabs } =
+    useAppStore();
   const containerRef = useRef<HTMLDivElement>(null);
-  const [draggingTab, setDraggingTab] = useState<PageKey | null>(null);
-  const [dragOverTab, setDragOverTab] = useState<PageKey | null>(null);
+  const [draggingTab, setDraggingTab] = useState<string | null>(null);
+  const [dragOverTab, setDragOverTab] = useState<string | null>(null);
   const isMobile = useIsMobile();
   const tabsRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
 
-  const handleDragStart = (tabKey: PageKey) => {
-    setDraggingTab(tabKey);
-    setDragOverTab(tabKey);
+  const handleDragStart = (instanceId: string) => {
+    setDraggingTab(instanceId);
+    setDragOverTab(instanceId);
   };
 
   const handleDragEnd = () => {
@@ -158,18 +177,18 @@ export function TabBar() {
     setDragOverTab(null);
   };
 
-  const handleDragOver = (tabKey: PageKey) => {
-    if (!draggingTab || draggingTab === tabKey) return;
-    setDragOverTab(tabKey);
+  const handleDragOver = (instanceId: string) => {
+    if (!draggingTab || draggingTab === instanceId) return;
+    setDragOverTab(instanceId);
   };
 
-  const handleDrop = (targetKey: PageKey) => {
-    if (!draggingTab || draggingTab === targetKey) {
+  const handleDrop = (targetId: string) => {
+    if (!draggingTab || draggingTab === targetId) {
       handleDragEnd();
       return;
     }
 
-    reorderTabs(draggingTab, targetKey);
+    reorderTabs(draggingTab, targetId);
     handleDragEnd();
   };
 
@@ -188,7 +207,18 @@ export function TabBar() {
     }
   };
 
-  const draggableTabCount = openTabs.filter((tab) => !STATIC_TABS[tab]).length;
+  const normalizedTabs = openTabs.map((tab) =>
+    typeof tab === "string"
+      ? { instanceId: tab, pageKey: tab as PageKey, instanceIndex: 1 as const }
+      : tab,
+  );
+  const activeInstanceId =
+    currentInstanceId ||
+    (typeof currentPage === "string" ? currentPage : "dashboard");
+  const draggableTabCount = normalizedTabs.filter(
+    (tab) => !STATIC_TABS[tab.pageKey],
+  ).length;
+
   return (
     <>
       <style>{`
@@ -229,20 +259,25 @@ export function TabBar() {
           onDragLeave={handleContainerDragLeave}
           title={draggableTabCount > 1 ? "Kéo để đổi vị trí tab" : undefined}
         >
-          {openTabs.map((key) => (
+          {normalizedTabs.map((tab) => (
             <TabItem
-              key={key}
-              tabKey={key as PageKey}
-              active={key === currentPage}
-              dragging={draggingTab === key}
-              dragOver={dragOverTab === key && draggingTab !== key}
+              key={tab.instanceId}
+              tab={tab}
+              active={
+                tab.pageKey === currentPage ||
+                tab.instanceId === activeInstanceId
+              }
+              dragging={draggingTab === tab.instanceId}
+              dragOver={
+                dragOverTab === tab.instanceId && draggingTab !== tab.instanceId
+              }
               isMobile={isMobile}
               onDragStart={handleDragStart}
               onDragEnd={handleDragEnd}
               onDragOver={handleDragOver}
               onDrop={handleDrop}
               onMount={(el) => {
-                tabsRefs.current[key] = el;
+                tabsRefs.current[tab.instanceId] = el;
               }}
             />
           ))}

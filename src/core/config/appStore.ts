@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { PageKey, TabInfo, SectionRoot } from "@/shared/types";
+import { PageKey, TabInfo, SectionRoot, TabInstance } from "@/shared/types";
 import { pageToPath } from "@/shared/utils/pageUrl";
 import { updateUserPreferencesApi } from "@/core/api/appConfigApi";
 
@@ -378,9 +378,15 @@ export const BREADCRUMBS: Partial<Record<PageKey, Array<[string, string?]>>> = {
   ],
 };
 
+export const DUPLICATABLE_PAGES = new Set<PageKey>([
+  "erp-invoices-in",
+  "erp-invoices-out",
+]);
+
 interface AppState {
   currentPage: PageKey;
-  openTabs: PageKey[];
+  currentInstanceId: string;
+  openTabs: TabInstance[];
   sidebarCollapsed: boolean;
   mobileSidebarOpen: boolean;
   appTheme: AppTheme;
@@ -392,12 +398,13 @@ interface AppState {
   customBreadcrumbs: Array<[string, string?]> | null;
   setForbidden: (value: boolean) => void;
   setCurrentBranchId: (id: string | null) => void;
-  navigate: (page: PageKey) => void;
-  syncFromUrl: (page: PageKey) => void;
-  closeTab: (key: PageKey) => void;
+  navigate: (page: PageKey, instanceIndex?: 1 | 2) => void;
+  duplicateTab: (page: PageKey) => void;
+  syncFromUrl: (page: PageKey, tab?: string, instanceIndex?: 1 | 2) => void;
+  closeTab: (idOrKey: string) => void;
   closeAllTabs: () => void;
-  closeTabsToRight: (key: PageKey) => void;
-  reorderTabs: (sourceKey: PageKey, targetKey: PageKey) => void;
+  closeTabsToRight: (idOrKey: string) => void;
+  reorderTabs: (sourceId: string, targetId: string) => void;
   toggleSidebar: () => void;
   setMobileSidebarOpen: (open: boolean) => void;
   setCompanyProfileOpen: (open: boolean) => void;
@@ -415,7 +422,14 @@ export const useAppStore = create<AppState>()(
   persist(
     (set, get) => ({
       currentPage: "dashboard",
-      openTabs: ["dashboard"],
+      currentInstanceId: "dashboard",
+      openTabs: [
+        {
+          instanceId: "dashboard",
+          pageKey: "dashboard",
+          instanceIndex: 1,
+        },
+      ],
       forbidden: false,
       sidebarCollapsed: false,
       mobileSidebarOpen: false,
@@ -430,52 +444,145 @@ export const useAppStore = create<AppState>()(
       setCurrentBranchId: (id) => set({ currentBranchId: id }),
       setCustomBreadcrumbs: (crumbs) => set({ customBreadcrumbs: crumbs }),
 
-      navigate: (page) => {
+      navigate: (page, instanceIndex = 1) => {
         const { openTabs } = get();
+        const instanceId = instanceIndex === 2 ? `${page}__2` : page;
+        const existingIdx = openTabs.findIndex(
+          (t) => t.instanceId === instanceId,
+        );
         const newTabs = [...openTabs];
-        if (!newTabs.includes(page)) {
+
+        if (existingIdx === -1) {
+          const newTab: TabInstance = {
+            instanceId,
+            pageKey: page,
+            instanceIndex,
+          };
           const group = SECTION_ROOTS[page]?.group;
           if (group) {
             let lastIdx = -1;
             newTabs.forEach((t, i) => {
-              if (SECTION_ROOTS[t]?.group === group) lastIdx = i;
+              if (SECTION_ROOTS[t.pageKey]?.group === group) lastIdx = i;
             });
-            if (lastIdx >= 0) newTabs.splice(lastIdx + 1, 0, page);
-            else newTabs.push(page);
+            if (lastIdx >= 0) newTabs.splice(lastIdx + 1, 0, newTab);
+            else newTabs.push(newTab);
           } else {
-            newTabs.push(page);
+            newTabs.push(newTab);
           }
         }
+
         set({
           currentPage: page,
+          currentInstanceId: instanceId,
           openTabs: newTabs,
           forbidden: false,
           mobileSidebarOpen: false,
           customBreadcrumbs: null,
         });
-        const path = pageToPath(page);
+
+        const path = pageToPath(
+          page,
+          undefined,
+          instanceIndex === 2 ? { _i: "2" } : undefined,
+        );
         const current = window.location.pathname + window.location.search;
         if (current !== path) history.pushState(null, "", path);
       },
 
-      syncFromUrl: (page) => {
+      duplicateTab: (page) => {
+        if (!DUPLICATABLE_PAGES.has(page)) return;
         const { openTabs } = get();
+        const instances = openTabs.filter((t) => t.pageKey === page);
+        if (instances.length >= 2) return;
+
+        const instanceId = `${page}__2`;
+        const instance1Idx = openTabs.findIndex(
+          (t) => t.pageKey === page && t.instanceIndex === 1,
+        );
+        const newTab: TabInstance = {
+          instanceId,
+          pageKey: page,
+          instanceIndex: 2,
+        };
+
         const newTabs = [...openTabs];
-        if (!newTabs.includes(page)) {
+        if (instance1Idx >= 0) {
+          newTabs.splice(instance1Idx + 1, 0, newTab);
+        } else {
+          newTabs.push(newTab);
+        }
+
+        set({
+          currentPage: page,
+          currentInstanceId: instanceId,
+          openTabs: newTabs,
+          forbidden: false,
+          mobileSidebarOpen: false,
+          customBreadcrumbs: null,
+        });
+
+        const path = pageToPath(page, undefined, { _i: "2" });
+        const current = window.location.pathname + window.location.search;
+        if (current !== path) history.pushState(null, "", path);
+      },
+
+      syncFromUrl: (page, tab, instanceIndex = 1) => {
+        const { openTabs } = get();
+        let targetIndex: 1 | 2 = instanceIndex;
+        let instanceId = targetIndex === 2 ? `${page}__2` : page;
+
+        // If URL has _i=2, but page is not duplicatable, demote to instance 1
+        if (targetIndex === 2 && !DUPLICATABLE_PAGES.has(page)) {
+          targetIndex = 1;
+          instanceId = page;
+        }
+
+        // If reload happened directly on _i=2 without instance 1 existing
+        const instance1Exists = openTabs.some(
+          (t) => t.pageKey === page && t.instanceIndex === 1,
+        );
+        if (targetIndex === 2 && !instance1Exists && openTabs.length <= 1) {
+          // Demote instance 2 to instance 1 and clean URL
+          targetIndex = 1;
+          instanceId = page;
+          const searchParams = new URLSearchParams(window.location.search);
+          searchParams.delete("_i");
+          const cleanQuery = searchParams.toString();
+          const cleanUrl = pageToPath(
+            page,
+            tab,
+            cleanQuery ? Object.fromEntries(searchParams.entries()) : undefined,
+          );
+          window.history.replaceState(null, "", cleanUrl);
+        }
+
+        const existingIdx = openTabs.findIndex(
+          (t) => t.instanceId === instanceId,
+        );
+        const newTabs = [...openTabs];
+
+        if (existingIdx === -1) {
+          const newTab: TabInstance = {
+            instanceId,
+            pageKey: page,
+            instanceIndex: targetIndex,
+          };
           const group = SECTION_ROOTS[page]?.group;
           if (group) {
             let lastIdx = -1;
             newTabs.forEach((t, i) => {
-              if (SECTION_ROOTS[t]?.group === group) lastIdx = i;
+              if (SECTION_ROOTS[t.pageKey]?.group === group) lastIdx = i;
             });
-            if (lastIdx >= 0) newTabs.splice(lastIdx + 1, 0, page);
-            else newTabs.push(page);
+            if (lastIdx >= 0) newTabs.splice(lastIdx + 1, 0, newTab);
+            else newTabs.push(newTab);
           } else {
-            newTabs.push(page);
+            newTabs.push(newTab);
           }
         }
+
         set({
           currentPage: page,
+          currentInstanceId: instanceId,
           openTabs: newTabs,
           forbidden: false,
           mobileSidebarOpen: false,
@@ -484,34 +591,53 @@ export const useAppStore = create<AppState>()(
 
       preloadTab: (page) => {
         const { openTabs } = get();
-        if (openTabs.includes(page)) return;
+        if (openTabs.some((t) => t.pageKey === page)) return;
         const newTabs = [...openTabs];
+        const newTab: TabInstance = {
+          instanceId: page,
+          pageKey: page,
+          instanceIndex: 1,
+        };
         const group = SECTION_ROOTS[page]?.group;
         if (group) {
           let lastIdx = -1;
           newTabs.forEach((t, i) => {
-            if (SECTION_ROOTS[t]?.group === group) lastIdx = i;
+            if (SECTION_ROOTS[t.pageKey]?.group === group) lastIdx = i;
           });
-          if (lastIdx >= 0) newTabs.splice(lastIdx + 1, 0, page);
-          else newTabs.push(page);
+          if (lastIdx >= 0) newTabs.splice(lastIdx + 1, 0, newTab);
+          else newTabs.push(newTab);
         } else {
-          newTabs.push(page);
+          newTabs.push(newTab);
         }
         set({ openTabs: newTabs });
       },
 
-      closeTab: (key) => {
-        const { openTabs, currentPage } = get();
-        const idx = openTabs.indexOf(key);
-        const newTabs = openTabs.filter((t) => t !== key);
-        if (currentPage === key) {
-          const nextPage =
-            newTabs[Math.min(idx, newTabs.length - 1)] ?? "dashboard";
-          const path = pageToPath(nextPage);
+      closeTab: (idOrKey) => {
+        const { openTabs, currentInstanceId } = get();
+        const idx = openTabs.findIndex(
+          (t) => t.instanceId === idOrKey || t.pageKey === idOrKey,
+        );
+        if (idx === -1) return;
+        const targetTab = openTabs[idx];
+        if (STATIC_TABS[targetTab.pageKey]) return;
+
+        const newTabs = openTabs.filter((_, i) => i !== idx);
+        if (currentInstanceId === targetTab.instanceId) {
+          const nextTab = newTabs[Math.min(idx, newTabs.length - 1)] ?? {
+            instanceId: "dashboard",
+            pageKey: "dashboard" as PageKey,
+            instanceIndex: 1 as const,
+          };
+          const path = pageToPath(
+            nextTab.pageKey,
+            undefined,
+            nextTab.instanceIndex === 2 ? { _i: "2" } : undefined,
+          );
           const current = window.location.pathname + window.location.search;
           if (current !== path) history.pushState(null, "", path);
           set({
-            currentPage: nextPage,
+            currentPage: nextTab.pageKey,
+            currentInstanceId: nextTab.instanceId,
             openTabs: newTabs,
             customBreadcrumbs: null,
           });
@@ -521,37 +647,59 @@ export const useAppStore = create<AppState>()(
       },
 
       closeAllTabs: () => {
-        const { openTabs, currentPage, navigate } = get();
-        const newTabs = openTabs.filter((t) => STATIC_TABS[t]);
-        if (!newTabs.includes(currentPage)) {
-          navigate(newTabs[newTabs.length - 1] ?? "dashboard");
+        const { openTabs, currentInstanceId, navigate } = get();
+        const newTabs = openTabs.filter((t) => STATIC_TABS[t.pageKey]);
+        const isCurrentKept = newTabs.some(
+          (t) => t.instanceId === currentInstanceId,
+        );
+        if (!isCurrentKept) {
+          const fallback = newTabs[newTabs.length - 1]?.pageKey ?? "dashboard";
+          navigate(fallback);
         } else {
           set({ openTabs: newTabs });
         }
       },
 
-      closeTabsToRight: (key) => {
-        const { openTabs, currentPage, navigate } = get();
-        const index = openTabs.indexOf(key);
+      closeTabsToRight: (idOrKey) => {
+        const { openTabs, currentInstanceId, navigate } = get();
+        const index = openTabs.findIndex(
+          (t) => t.instanceId === idOrKey || t.pageKey === idOrKey,
+        );
         if (index < 0) return;
         const keepTabs = openTabs.filter((tab, tabIndex) => {
           if (tabIndex <= index) return true;
-          return Boolean(STATIC_TABS[tab]);
+          return Boolean(STATIC_TABS[tab.pageKey]);
         });
-        if (!keepTabs.includes(currentPage)) {
-          navigate(keepTabs[keepTabs.length - 1] ?? key ?? "dashboard");
+        const isCurrentKept = keepTabs.some(
+          (t) => t.instanceId === currentInstanceId,
+        );
+        if (!isCurrentKept) {
+          const fallbackTab = keepTabs[keepTabs.length - 1];
+          navigate(
+            fallbackTab?.pageKey ?? "dashboard",
+            fallbackTab?.instanceIndex ?? 1,
+          );
         } else {
           set({ openTabs: keepTabs });
         }
       },
 
-      reorderTabs: (sourceKey, targetKey) => {
-        if (sourceKey === targetKey) return;
-        if (STATIC_TABS[sourceKey] || STATIC_TABS[targetKey]) return;
+      reorderTabs: (sourceId, targetId) => {
+        if (sourceId === targetId) return;
         const { openTabs } = get();
-        const sourceIndex = openTabs.indexOf(sourceKey);
-        const targetIndex = openTabs.indexOf(targetKey);
+        const sourceIndex = openTabs.findIndex(
+          (t) => t.instanceId === sourceId || t.pageKey === sourceId,
+        );
+        const targetIndex = openTabs.findIndex(
+          (t) => t.instanceId === targetId || t.pageKey === targetId,
+        );
         if (sourceIndex < 0 || targetIndex < 0) return;
+        if (
+          STATIC_TABS[openTabs[sourceIndex].pageKey] ||
+          STATIC_TABS[openTabs[targetIndex].pageKey]
+        )
+          return;
+
         const newTabs = [...openTabs];
         const [movedTab] = newTabs.splice(sourceIndex, 1);
         newTabs.splice(targetIndex, 0, movedTab);
@@ -602,7 +750,14 @@ export const useAppStore = create<AppState>()(
         set({
           isLoggedIn: false,
           currentPage: "dashboard",
-          openTabs: ["dashboard"],
+          currentInstanceId: "dashboard",
+          openTabs: [
+            {
+              instanceId: "dashboard",
+              pageKey: "dashboard",
+              instanceIndex: 1,
+            },
+          ],
         }),
     }),
     {

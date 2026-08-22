@@ -368,10 +368,11 @@ const PAGE_FALLBACK = (
 );
 
 export default function App() {
-  const { currentPage, isLoggedIn, syncFromUrl, openTabs } = useAppStore();
+  const { currentPage, currentInstanceId, isLoggedIn, syncFromUrl, openTabs } =
+    useAppStore();
   const { bootstrapAction } = useAuthStore();
   const contentRef = useRef<HTMLDivElement | null>(null);
-  const openTabsKey = openTabs.join("|");
+  const openTabsKey = openTabs.map((t) => t.instanceId).join("|");
 
   useSerialGenerationProgress();
 
@@ -384,10 +385,10 @@ export default function App() {
     const sync = () => {
       const parsed = pathToPage(location.pathname, location.search);
       if (parsed) {
-        syncFromUrl(parsed.page);
+        syncFromUrl(parsed.page, parsed.tab, parsed.instanceIndex);
       } else {
         history.replaceState(null, "", "/");
-        syncFromUrl("dashboard");
+        syncFromUrl("dashboard", undefined, 1);
       }
     };
     sync();
@@ -400,7 +401,7 @@ export default function App() {
     if (!el) return;
     el.scrollLeft = 0;
     el.scrollTop = 0;
-  }, [currentPage]);
+  }, [currentInstanceId]);
 
   useEffect(() => {
     if (!isLoggedIn) return;
@@ -415,7 +416,9 @@ export default function App() {
 
   useEffect(() => {
     if (!isLoggedIn || openTabs.length === 0) return;
-    const tabsToWarm = [...new Set(openTabs)] as PageKey[];
+    const tabsToWarm = [
+      ...new Set(openTabs.map((t) => t.pageKey)),
+    ] as PageKey[];
 
     return scheduleOnIdle(() => {
       void Promise.all(tabsToWarm.map((page) => preloadPage(page)));
@@ -443,15 +446,19 @@ export default function App() {
           >
             <>
               {openTabs.map((tab) => {
-                const Component = PAGE_COMPONENTS[tab as PageKey];
+                const Component = PAGE_COMPONENTS[tab.pageKey];
                 if (!Component) return null;
                 return (
                   <div
-                    key={tab}
-                    className={currentPage === tab ? "block h-full" : "hidden"}
+                    key={tab.instanceId}
+                    className={
+                      currentInstanceId === tab.instanceId
+                        ? "block h-full"
+                        : "hidden"
+                    }
                   >
                     <Suspense fallback={PAGE_FALLBACK}>
-                      <Component />
+                      <Component instanceIndex={tab.instanceIndex} />
                     </Suspense>
                   </div>
                 );

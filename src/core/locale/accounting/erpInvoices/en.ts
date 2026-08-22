@@ -4,6 +4,12 @@ import { erpInvoicesVi as legacyErpInvoicesVi } from "@/modules/erp-invoices-cor
 export const erpInvoicesEn = {
   ...legacyErpInvoicesVi,
 
+  // View Tabs
+  tabAll: "All",
+  tabNew: "New",
+  tabReplacement: "Replacement",
+  tabAdjustment: "Adjustment",
+
   // Sinvoice Draft Sync - toasts & notifications
   "sinvoiceDraft.syncSuccess":
     "Updated: +{{added}} new, -{{removed}} deleted. Total: {{synced}}",

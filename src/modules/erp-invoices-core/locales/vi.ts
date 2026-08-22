@@ -29,6 +29,10 @@ export const erpInvoicesVi = {
   // Tabs
   inbound: "Hóa đơn mua vào",
   outbound: "Hóa đơn bán ra",
+  tabAll: "Tất cả",
+  tabNew: "Mới",
+  tabReplacement: "Thay thế",
+  tabAdjustment: "Điều chỉnh",
 
   // Columns & Fields
   invoiceDate: "Ngày HĐ",

@@ -34,6 +34,8 @@ const resetZustand = () => {
     states: {
       IN: { ...initialSubState },
       OUT: { ...initialSubState },
+      IN_2: { ...initialSubState },
+      OUT_2: { ...initialSubState },
       CHECKPOINT_IN: { ...initialSubState },
       CHECKPOINT_OUT: { ...initialSubState },
     },

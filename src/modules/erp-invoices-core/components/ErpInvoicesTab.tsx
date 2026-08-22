@@ -38,6 +38,10 @@ import { Badge } from "@/shared/components/ui/badge";
 import { useErpInvoicesList } from "@/modules/erp-invoices-core/hooks/useErpInvoicesList";
 import { useErpInvoiceForm } from "@/modules/erp-invoices-core/hooks/useErpInvoiceForm";
 import { useInvoiceSyncProgress } from "@/modules/erp-invoices-core/hooks/useInvoiceSyncProgress";
+import { useErpInvoiceUrlSync } from "@/modules/erp-invoices-core/hooks/useErpInvoiceUrlSync";
+import { usePageViewPresets } from "@/shared/hooks/usePageViewPresets";
+import { type TableViewPreset } from "@/shared/hooks/useUserPreferences";
+import { PillTabs } from "@/shared/components/PillTabs";
 import {
   erpInvoicesCoreApi,
   type ErpInvoice,
@@ -161,11 +165,39 @@ function formatTaxProcessStatus(val?: number | null) {
   }
 }
 
+const DEFAULT_INVOICE_PRESETS: TableViewPreset[] = [
+  {
+    key: "all",
+    label: "Tất cả",
+    filters: {},
+    columnFilters: {},
+  },
+  {
+    key: "new",
+    label: "Mới",
+    filters: {},
+    columnFilters: { taxInvoiceStatus: ["1"] },
+  },
+  {
+    key: "replacement",
+    label: "Thay thế",
+    filters: {},
+    columnFilters: { taxInvoiceStatus: ["2", "4"] },
+  },
+  {
+    key: "adjustment",
+    label: "Điều chỉnh",
+    filters: {},
+    columnFilters: { taxInvoiceStatus: ["3", "5"] },
+  },
+];
+
 export interface ErpInvoicesTabProps {
   direction: "IN" | "OUT";
   initialDateFrom?: string;
   initialDateTo?: string;
   isDrawer?: boolean;
+  instanceIndex?: 1 | 2;
 }
 
 export function ErpInvoicesTab({
@@ -173,6 +205,7 @@ export function ErpInvoicesTab({
   initialDateFrom,
   initialDateTo,
   isDrawer = false,
+  instanceIndex = 1,
 }: ErpInvoicesTabProps) {
   const { t } = useTranslation("erpInvoices");
   const canEditInvoice = useHasPermission("invoices", "update");
@@ -180,9 +213,114 @@ export function ErpInvoicesTab({
     ? direction === "IN"
       ? "CHECKPOINT_IN"
       : "CHECKPOINT_OUT"
-    : direction;
+    : instanceIndex === 2
+      ? direction === "IN"
+        ? "IN_2"
+        : "OUT_2"
+      : direction;
   const listHook = useErpInvoicesList(listDir);
   const formHook = useErpInvoiceForm(listHook.loadInvoices);
+
+  const urlSync = useErpInvoiceUrlSync({
+    direction,
+    instanceIndex,
+    openDrawer: (id) => {
+      formHook.openInternal({ id } as ErpInvoice);
+    },
+    closeDrawer: () => {
+      formHook.closeDrawer();
+    },
+    onHydrate: (state) => {
+      let taxVals: string[] | undefined = state.columnFilters?.taxInvoiceStatus;
+      if (!taxVals && state.view) {
+        const preset = DEFAULT_INVOICE_PRESETS.find(
+          (p) => p.key === state.view,
+        );
+        if (preset?.columnFilters?.taxInvoiceStatus) {
+          taxVals = preset.columnFilters.taxInvoiceStatus;
+        }
+      }
+      if (taxVals && taxVals.length > 0) {
+        listHook.tableState.setColumnFilter("taxInvoiceStatus", taxVals);
+      }
+    },
+  });
+
+  const currentTaxFilter =
+    listHook.tableState.columnFilters["taxInvoiceStatus"] || [];
+  const activeTaxPresetKey = useMemo(() => {
+    if (currentTaxFilter.length === 1 && currentTaxFilter[0] === "1")
+      return "new";
+    if (
+      currentTaxFilter.length === 2 &&
+      currentTaxFilter.includes("2") &&
+      currentTaxFilter.includes("4")
+    )
+      return "replacement";
+    if (
+      currentTaxFilter.length === 2 &&
+      currentTaxFilter.includes("3") &&
+      currentTaxFilter.includes("5")
+    )
+      return "adjustment";
+    if (currentTaxFilter.length === 0) return "all";
+    return urlSync.activeView || "all";
+  }, [currentTaxFilter, urlSync.activeView]);
+
+  const viewPresetsHook = usePageViewPresets({
+    tableId: isDrawer
+      ? `erp-invoices-table-checkpoint-${direction}`
+      : `erp-invoices-table-${direction}`,
+    defaultPresets: DEFAULT_INVOICE_PRESETS,
+    activeView: activeTaxPresetKey,
+    onViewChange: (preset) => {
+      urlSync.setView(preset.key);
+      const taxStatusVals = preset.columnFilters?.taxInvoiceStatus || [];
+      if (taxStatusVals.length > 0) {
+        listHook.tableState.setColumnFilter("taxInvoiceStatus", taxStatusVals);
+      } else {
+        listHook.tableState.setColumnFilter("taxInvoiceStatus", []);
+      }
+      if (preset.filters.status !== undefined) {
+        listHook.filterPanel.setStatus(preset.filters.status);
+      }
+      if (preset.filters.dateFrom !== undefined) {
+        listHook.filterPanel.setDateFrom(preset.filters.dateFrom);
+      }
+      if (preset.filters.dateTo !== undefined) {
+        listHook.filterPanel.setDateTo(preset.filters.dateTo);
+      }
+      listHook.setPage(1);
+    },
+  });
+
+  // Sync manual filter panel changes to URL
+  useEffect(() => {
+    if (isDrawer) return;
+    const { status, search, dateFrom, dateTo, period, custom } =
+      listHook.filterPanel.state;
+    urlSync.syncFiltersToUrl({
+      status: status || "",
+      search: search || "",
+      dateFrom: dateFrom || "",
+      dateTo: dateTo || "",
+      period: period || "",
+      seller_name: custom?.seller_name || "",
+      buyer_name: custom?.buyer_name || "",
+      tag_id: (custom?.tag_id as string) || "",
+    });
+  }, [
+    isDrawer,
+    listHook.filterPanel.state.status,
+    listHook.filterPanel.state.search,
+    listHook.filterPanel.state.dateFrom,
+    listHook.filterPanel.state.dateTo,
+    listHook.filterPanel.state.period,
+    listHook.filterPanel.state.custom?.seller_name,
+    listHook.filterPanel.state.custom?.buyer_name,
+    listHook.filterPanel.state.custom?.tag_id,
+  ]);
+
   const showToast = useUIStore((s) => s.showToast);
   const [exportDrawerOpen, setExportDrawerOpen] = useState(false);
   const [portalAuthOpen, setPortalAuthOpen] = useState(false);
@@ -432,18 +570,6 @@ export function ErpInvoicesTab({
   });
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const viewId = params.get("viewId");
-    if (viewId) {
-      // Route to merged internal drawer
-      formHook.openInternal({ id: viewId } as ErpInvoice);
-      params.delete("viewId");
-      const newUrl =
-        window.location.pathname +
-        (params.toString() ? `?${params.toString()}` : "");
-      window.history.replaceState(null, "", newUrl);
-    }
-
     const handleOpenDoc = (e: Event) => {
       const detail = (e as CustomEvent).detail;
       if (detail && detail.type === "bank_transaction" && detail.id) {
@@ -452,7 +578,36 @@ export function ErpInvoicesTab({
     };
     window.addEventListener("open_erp_document", handleOpenDoc);
     return () => window.removeEventListener("open_erp_document", handleOpenDoc);
-  }, [formHook]);
+  }, []);
+
+  const handleOpenInternal = useCallback(
+    (
+      inv: {
+        id: string;
+        invoiceNo?: string | null;
+        serialNo?: string | null;
+      },
+      mode: "view" | "edit" = "view",
+    ) => {
+      formHook.openInternal(inv as ErpInvoice);
+      if (!isDrawer) {
+        const drawerParam = inv.invoiceNo
+          ? inv.serialNo
+            ? `${inv.invoiceNo}_${inv.serialNo}`
+            : inv.invoiceNo
+          : inv.id;
+        urlSync.openDrawerWithUrl(drawerParam, mode);
+      }
+    },
+    [formHook, isDrawer, urlSync],
+  );
+
+  const handleCloseInternal = useCallback(() => {
+    formHook.closeDrawer();
+    if (!isDrawer) {
+      urlSync.closeDrawerWithUrl();
+    }
+  }, [formHook, isDrawer, urlSync]);
 
   async function handleDownload(id: string, type: "pdf" | "xml") {
     try {
@@ -884,7 +1039,7 @@ export function ErpInvoicesTab({
             text={inv.invoiceNo || ""}
             onDetailClick={(e) => {
               e.stopPropagation();
-              formHook.openInternal(inv);
+              handleOpenInternal(inv);
             }}
             tooltip={true}
             enableCopy={true}
@@ -1974,10 +2129,34 @@ export function ErpInvoicesTab({
     };
   }, [listHook.invoices]);
 
+  const viewTabsNode = !isDrawer ? (
+    <div className="flex items-center justify-between gap-2 pb-2">
+      <PillTabs
+        items={viewPresetsHook.presets.map((p) => {
+          let label = p.label;
+          if (p.key === "all") label = t("tabAll", "Tất cả");
+          else if (p.key === "new") label = t("tabNew", "Mới");
+          else if (p.key === "replacement")
+            label = t("tabReplacement", "Thay thế");
+          else if (p.key === "adjustment")
+            label = t("tabAdjustment", "Điều chỉnh");
+          return {
+            value: p.key,
+            label,
+          };
+        })}
+        value={activeTaxPresetKey}
+        onValueChange={(v: string) => viewPresetsHook.selectView(v)}
+        hideBorder
+      />
+    </div>
+  ) : undefined;
+
   return (
     <>
       <SpreadsheetPageTemplate
         hideHeader={isDrawer}
+        topNode={viewTabsNode}
         defaultColumnOrder={["__selection", "__actions", "__expand"]}
         title={
           direction === "IN"
@@ -1989,7 +2168,7 @@ export function ErpInvoicesTab({
         tableId={
           isDrawer
             ? `erp-invoices-table-checkpoint-${direction}`
-            : `erp-invoices-table-${direction}`
+            : `erp-invoices-table-${listDir}`
         }
         items={listHook.invoices}
         columns={columns}
@@ -2037,7 +2216,7 @@ export function ErpInvoicesTab({
           traCuuItems.push({
             label: t("actionDetail", "Chi tiết hóa đơn"),
             icon: <Eye className="w-3.5 h-3.5" />,
-            onClick: () => formHook.openInternal(inv),
+            onClick: () => handleOpenInternal(inv),
           });
           if (inv.xmlFileKey) {
             traCuuItems.push({
@@ -2119,7 +2298,7 @@ export function ErpInvoicesTab({
               icon: <Trash className="w-3.5 h-3.5" />,
               variant: "danger" as const,
               onClick: () => {
-                formHook.openInternal(inv);
+                handleOpenInternal(inv);
                 formHook.setDeleteConfirm(true);
               },
             });
@@ -2168,8 +2347,11 @@ export function ErpInvoicesTab({
       />
 
       <ErpInvoiceInternalDrawer
-        open={formHook.internalDrawerOpen}
-        onClose={formHook.closeDrawer}
+        open={
+          formHook.internalDrawerOpen &&
+          (!isDrawer ? Boolean(urlSync.urlState.drawerId) : true)
+        }
+        onClose={handleCloseInternal}
         editMode={formHook.editMode}
         detailInvoice={formHook.detailInvoice}
         startEdit={formHook.startEdit}
