@@ -3,6 +3,7 @@ import { useAppStore } from "@/core/config/appStore";
 import { useAuthStore } from "@/modules/auth/domain/authStore";
 import { UserProfileModal } from "@/modules/auth/components/UserProfileModal";
 import { GlobalSettingsDrawer } from "@/core/components/layout/GlobalSettingsDrawer";
+import { SystemChangelogDrawer } from "@/core/components/SystemChangelogDrawer";
 import { CompanyProfileDrawer } from "../../CompanyProfileDrawer";
 import { useCompanyProfile } from "../../../api/companyProfileApi";
 import type { PageKey } from "@/shared/types";
@@ -29,6 +30,7 @@ export function Sidebar() {
   const { employee } = useAuthStore();
   const [profileOpen, setProfileOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [changelogOpen, setChangelogOpen] = useState(false);
 
   const { data: companyProfile } = useCompanyProfile();
 
@@ -83,6 +85,7 @@ export function Sidebar() {
             displayName={displayName}
             setProfileOpen={setProfileOpen}
             setSettingsOpen={setSettingsOpen}
+            setChangelogOpen={setChangelogOpen}
           />
         </aside>
       </>
@@ -97,6 +100,10 @@ export function Sidebar() {
       <CompanyProfileDrawer
         open={companyProfileOpen}
         onClose={() => setCompanyProfileOpen(false)}
+      />
+      <SystemChangelogDrawer
+        open={changelogOpen}
+        onClose={() => setChangelogOpen(false)}
       />
     </TooltipProvider>
   );

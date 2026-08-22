@@ -1,4 +1,5 @@
-import { lazy, Suspense, useEffect, useRef } from "react";
+import { Suspense, useEffect, useRef } from "react";
+import { lazyWithRetry as lazy } from "@/shared/utils/lazyWithRetry";
 import { useAppStore } from "@/core/config/appStore";
 import { useAuthStore } from "@/modules/auth/domain/authStore";
 import { Sidebar } from "@/core/components/layout/sidebar";

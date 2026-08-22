@@ -44,3 +44,49 @@ export async function updateUserPreferencesApi(
   });
   return res.data.data;
 }
+
+export interface ChangelogItemDto {
+  type: "feature" | "enhancement" | "fix";
+  textVi: string;
+  textEn: string;
+}
+
+export interface ChangelogReleaseDto {
+  version: string;
+  date: string;
+  tag?: string;
+  isLatest?: boolean;
+  titleVi: string;
+  titleEn: string;
+  items: ChangelogItemDto[];
+}
+
+export interface PaginatedChangelogResponse {
+  items: ChangelogReleaseDto[];
+  meta: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+    hasNextPage: boolean;
+  };
+}
+
+export interface GetChangelogParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+}
+
+export async function getChangelogApi(
+  params: GetChangelogParams = {},
+): Promise<PaginatedChangelogResponse> {
+  const res = await axiosInstance.get<PaginatedChangelogResponse>(
+    "/api/v1/app/changelog",
+    {
+      params,
+      _silentError: true,
+    },
+  );
+  return res.data;
+}

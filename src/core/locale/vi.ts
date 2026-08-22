@@ -47,6 +47,7 @@ import { legacyStringsVi } from "@/core/locale/system/legacyStrings/vi";
 import { inventoryTrackingLotVi } from "@/core/locale/inventory/inventoryTrackingLot/vi";
 import { inventoryTrackingCustomVi } from "@/core/locale/inventory/inventoryTrackingCustom/vi";
 import { bomConfigVi } from "@/core/locale/manufacturing/bomConfig/vi";
+import { changelogVi } from "@/core/locale/system/changelog/vi";
 
 export const vi = {
   nav: navVi,
@@ -227,6 +228,7 @@ export const vi = {
   inventoryTrackingLot: inventoryTrackingLotVi,
   inventoryTrackingCustom: inventoryTrackingCustomVi,
   bomConfig: bomConfigVi,
+  changelog: changelogVi,
 };
 
 export type Dict = typeof vi;
