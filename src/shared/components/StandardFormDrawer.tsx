@@ -22,11 +22,11 @@ export * from "./drawer";
 // All sizes scale fluidly via `vw` on desktop while bounded by explicit min/max widths
 // and hard bounded by max-width: calc(100vw - 208px) on desktop so drawer never covers sidebar.
 const SIZE_CLASS: Record<string, string> = {
-  sm: "w-full md:w-[90vw] lg:w-[35vw] xl:w-[32vw] 2xl:w-[28vw] min-w-[380px] max-w-[560px]",
-  md: "w-full md:w-[92vw] lg:w-[52vw] xl:w-[46vw] 2xl:w-[40vw] min-w-[560px] max-w-[820px]",
-  lg: "w-full md:w-[95vw] lg:w-[70vw] xl:w-[65vw] 2xl:w-[58vw] min-w-[780px] max-w-[1150px]",
-  xl: "w-full md:w-[95vw] lg:w-[86vw] xl:w-[80vw] 2xl:w-[75vw] min-w-[960px] max-w-[1550px]",
-  full: "w-full md:w-[95vw] lg:w-[calc(100vw-208px)] xl:w-[calc(100vw-208px)] max-w-[calc(100vw-208px)]",
+  sm: "w-full md:w-[90vw] lg:w-[42vw] xl:w-[38vw] 2xl:w-[32vw] min-w-[420px] max-w-[660px]",
+  md: "w-full md:w-[92vw] lg:w-[60vw] xl:w-[54vw] 2xl:w-[48vw] min-w-[620px] max-w-[980px]",
+  lg: "w-full md:w-[95vw] lg:w-[78vw] xl:w-[74vw] 2xl:w-[68vw] min-w-[840px] max-w-[1380px]",
+  xl: "w-full md:w-[96vw] lg:w-[93vw] xl:w-[90vw] 2xl:w-[88vw] min-w-[1020px] max-w-[1780px]",
+  full: "w-full md:w-[98vw] lg:w-[calc(100vw-208px)] xl:w-[calc(100vw-208px)] max-w-[calc(100vw-208px)] min-w-[1020px]",
 };
 
 export interface StandardFormDrawerProps {
@@ -54,11 +54,11 @@ export interface StandardFormDrawerProps {
 
   /**
    * Panel width preset. Ignored when `panelClassName` overrides width explicitly.
-   * - sm  : ~500px  — 1-column simple forms (profile, tags)
-   * - md  : ~700px  — medium-complexity forms
-   * - lg  : ~1000px — default 2-column
-   * - xl  : ~1200–1400px — wide 2-column (PO, Sales, Production)
-   * - full: max available within sidebar constraint
+   * - sm  : ~420–660px — 1-column simple forms (profile, tags)
+   * - md  : ~620–980px — medium-complexity forms (master data, categories)
+   * - lg  : ~840–1380px — default 2-column (partners, customers, configs)
+   * - xl  : ~1020–1780px (~90vw on desktop) — wide multi-facet documents (Invoices, PO, Sales, Production, Quotations)
+   * - full: calc(100vw - 208px) — max available within sidebar constraint (traceability graph, large reports)
    * Defaults to "sm" for 1-column, "xl" for 2-columns.
    */
   size?: "sm" | "md" | "lg" | "xl" | "full";

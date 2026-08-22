@@ -26,11 +26,11 @@ Toàn bộ kích thước Drawer trên Desktop được thiết kế co giãn li
 
 | Size Preset | Độ rộng Responsive theo `vw` (Desktop $\ge 1280px$) | Min Width | Max Width | Mục đích sử dụng thực tế |
 | :--- | :--- | :--- | :--- | :--- |
-| **`sm`** *(Default 1-col)* | `lg:w-[35vw] xl:w-[32vw] 2xl:w-[28vw]` | `380px` | `560px` | Form đơn giản 1 cột: Profile, Đổi mật khẩu, Gán nhãn tags. |
-| **`md`** | `lg:w-[52vw] xl:w-[46vw] 2xl:w-[40vw]` | `560px` | `820px` | Form 1 cột trung bình: Master data, Cấu hình danh mục kho, Đơn vị tính. |
-| **`lg`** | `lg:w-[70vw] xl:w-[65vw] 2xl:w-[58vw]` | `780px` | `1150px` | Form 2 cột vừa phải: Đối tác, Khách hàng Garage, Chi nhánh. |
-| **`xl`** *(Default 2-col)* | `lg:w-[86vw] xl:w-[80vw] 2xl:w-[75vw]` | `960px` | `1550px` | Chứng từ lớn: Hóa đơn ERP, Phiếu kho (PNK/PXK), PO, Sales Orders, Lệnh SX, Sổ báo giá. |
-| **`full`** | `w-[calc(100vw-208px)]` | `1000px` | `calc(100vw-208px)` | Báo cáo chi tiết, Canvas Graph Traceability toàn màn hình. |
+| **`sm`** *(Default 1-col)* | `lg:w-[42vw] xl:w-[38vw] 2xl:w-[32vw]` | `420px` | `660px` | Form đơn giản 1 cột: Profile, Đổi mật khẩu, Gán nhãn tags. |
+| **`md`** | `lg:w-[60vw] xl:w-[54vw] 2xl:w-[48vw]` | `620px` | `980px` | Form 1 cột trung bình: Master data, Cấu hình danh mục kho, Đơn vị tính. |
+| **`lg`** | `lg:w-[78vw] xl:w-[74vw] 2xl:w-[68vw]` | `840px` | `1380px` | Form 2 cột vừa phải: Đối tác, Khách hàng Garage, Chi nhánh. |
+| **`xl`** *(Default 2-col)* | `lg:w-[93vw] xl:w-[90vw] 2xl:w-[88vw]` | `1020px` | `1780px` | Chứng từ lớn & Multi-Facet Tabs (~90vw): Hóa đơn ERP, Phiếu kho (PNK/PXK), PO, Sales Orders, Lệnh SX, Sổ báo giá. |
+| **`full`** | `w-[calc(100vw-208px)]` | `1020px` | `calc(100vw-208px)` | Báo cáo chi tiết, Canvas Graph Traceability toàn màn hình. |
 
 > **Nguyên tắc an toàn**: 
 > 1. Bề rộng tối đa của Drawer trên Desktop luôn được giới hạn bởi `max-width: calc(100vw - 208px)` để **không bao giờ che khuất Sidebar** bên trái hệ thống.
