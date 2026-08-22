@@ -21,10 +21,12 @@ export function UserMenuPopover({
   children,
   onOpenProfile,
   onOpenSettings,
+  onOpenChangelog,
 }: {
   children: React.ReactNode;
   onOpenProfile?: () => void;
   onOpenSettings?: () => void;
+  onOpenChangelog?: () => void;
 }) {
   const { appTheme, setAppTheme, locale, setLocale } = useAppStore();
   const { logoutAction, employee } = useAuthStore();
@@ -220,9 +222,29 @@ export function UserMenuPopover({
           <span>{t("nav.bottom.logout")}</span>
         </button>
 
-        <div className="mt-2 text-[9px] font-medium text-[color:var(--faint)] text-center tracking-widest uppercase">
-          {buildVersionLabel}
-        </div>
+        <button
+          type="button"
+          onClick={() => {
+            setOpen(false);
+            onOpenChangelog?.();
+          }}
+          className="w-full mt-2 py-1 px-2 rounded-md hover:bg-black/5 dark:hover:bg-white/10 transition-all flex items-center justify-center gap-1.5 text-[9px] font-semibold text-[color:var(--muted-fg)] hover:text-primary tracking-wider uppercase border-none bg-transparent cursor-pointer group"
+          title={t("changelog.viewReleaseHistory") || "Xem nhật ký phát hành"}
+        >
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+          <span className="truncate">{buildVersionLabel}</span>
+          <svg
+            width="10"
+            height="10"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0 -mr-0.5"
+          >
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
+        </button>
       </div>
 
       {/* Side sub-menu panel */}

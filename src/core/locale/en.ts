@@ -48,6 +48,7 @@ import { legacyStringsEn } from "@/core/locale/system/legacyStrings/en";
 import { inventoryTrackingLotEn } from "@/core/locale/inventory/inventoryTrackingLot/en";
 import { inventoryTrackingCustomEn } from "@/core/locale/inventory/inventoryTrackingCustom/en";
 import { bomConfigEn } from "@/core/locale/manufacturing/bomConfig/en";
+import { changelogEn } from "@/core/locale/system/changelog/en";
 
 export const en: Dict = {
   nav: navEn,
@@ -229,4 +230,5 @@ export const en: Dict = {
   inventoryTrackingLot: inventoryTrackingLotEn,
   inventoryTrackingCustom: inventoryTrackingCustomEn,
   bomConfig: bomConfigEn,
+  changelog: changelogEn,
 };

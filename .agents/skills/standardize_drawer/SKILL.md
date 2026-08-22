@@ -197,28 +197,48 @@ export function StandardDocumentDrawer({ open, onClose, mode, setMode, documentD
 
 ---
 
-## 5. Quy tắc cho 1-Column Drawer (Profile, Cấu hình đơn giản)
+## 5. Quy tắc cho 1-Column Drawer (Profile, Changelog, Cấu hình đơn giản)
 
-Dành cho các form đơn giản không có nhiều phân hệ (như Company Profile, User Profile, Cấu hình danh mục):
+Dành cho các form đơn giản không có nhiều phân hệ (như Company Profile, User Profile, Changelog Timeline, Cấu hình danh mục):
 
 - Bắt buộc set `layout="1-column"`.
-- Bắt buộc set `size="sm"` (hoặc `"md"` nếu form hơi dài/nhiều text).
+- Bắt buộc set `size="sm"` (hoặc `"md"` nếu form hiển thị Timeline / nội dung chi tiết).
 - Toàn bộ nội dung được truyền vào prop `leftPanel`.
 - Không sử dụng `rightPanel`.
 
 ---
 
-## 6. Quy tắc cho Thông tin Phụ trợ đính kèm dưới đáy (`relatedTabs`)
+## 6. Quy chuẩn Bắt buộc về `<DrawerSection>` có Expand/Collapse & Giảm thiểu Border
+
+1. **BẮT BUỘC sử dụng `<DrawerSection>` có `collapsible`**:
+   - Mọi vùng nội dung trong Drawer (cả 1-column lẫn 2-columns) **BẮT BUỘC** phải được bọc trong `<DrawerSection title="..." collapsible defaultCollapsed={false}>`.
+   - Thuộc tính `collapsible` kích hoạt icon mũi tên Expand/Collapse xoay mượt mà, cho phép người dùng chủ động thu gọn hoặc mở rộng từng phân đoạn nội dung.
+
+2. **Quy tắc Giảm thiểu Border & Chuẩn hóa Timeline (No Nested Borders Overload)**:
+   - **Tuyệt đối tránh** lồng quá nhiều border card (`border border-border`) bên trong DrawerSection khiến giao diện bị nặng nề, rối mắt.
+   - Khi hiển thị Dòng thời gian (Timeline / History / Changelog / Audit Logs):
+     - **BẮT BUỘC** sử dụng cấu trúc trục dọc thanh thoát:
+       - Trục dọc (`spine`): `w-[2px] bg-slate-300 dark:bg-slate-700` liên tục.
+       - Node tròn (`w-7 h-7 rounded-full`): Hiển thị icon hành động nổi bật.
+       - Dotted horizontal connector: `border-t-2 border-dotted border-slate-300 dark:border-slate-700` nối từ trục vào nội dung.
+       - Dòng tiêu đề: Tên sự kiện/phiên bản + Badge/Actor ở bên trái, Ngày giờ/Timestamp căn phải thẳng hàng.
+       - Nội dung chi tiết: Danh sách bullet không viền khung cứng, sử dụng soft pill/dot phân loại để giao diện thoáng, tinh tế và cao cấp.
+
+---
+
+## 7. Quy tắc cho Thông tin Phụ trợ đính kèm dưới đáy (`relatedTabs`)
 
 Đối với các form 1 cột hoặc 2 cột **đơn giản** không chia thành nhiều tab nghiệp vụ ngang hàng, nếu chỉ cần đính kèm tệp tóm tắt (`<DrawerAttachmentsDeck>`) hoặc khung ghi chú thảo luận (`<DrawerInternalNotes>`), có thể sử dụng prop `relatedTabs` dưới đáy.
 - **Lưu ý**: Đối với tất cả chứng từ có *Traceability Graph*, *Hạch toán*, *Sao kê cấn trừ*, **BẮT BUỘC sử dụng Top Navigation Tabs (`tabs`)** thay vì nhồi vào `relatedTabs` dưới đáy.
 
 ---
 
-## 7. Summary Checklist trước khi hoàn thành:
+## 8. Summary Checklist trước khi hoàn thành:
 
 - [ ] Drawer đã sử dụng `<StandardFormDrawer>` chưa?
+- [ ] **Toàn bộ nội dung đã được bao bọc trong `<DrawerSection>` có bật `collapsible={true}` chưa?**
 - [ ] Size Drawer đã áp dụng chuẩn responsive `vw` kết hợp `min-width` / `max-width` (tối ưu cho desktop $\ge 1280px$, $\ge 1440px$, $\ge 1920px$ và không vượt quá `calc(100vw-208px)`) chưa?
+- [ ] Giao diện đã loại bỏ các border lồng nhau không cần thiết, Timeline đã áp dụng đúng trục dọc spine + dotted connector chưa?
 - [ ] Nếu Drawer cho phép cập nhật, đã truyền `onToggleEdit` chưa?
 - [ ] Nếu record có trạng thái (status), đã dùng `<Badge>` truyền vào `titleExtra` chưa?
 - [ ] Tất cả text tĩnh đã được dùng hook `useTranslation` (i18n) để wrap bằng `t(...)` chưa?
@@ -227,3 +247,4 @@ Dành cho các form đơn giản không có nhiều phân hệ (như Company Pro
 - [ ] Cột bên phải (Right Panel) đã bao bọc các trường theo `<DrawerSection>`, `<DrawerRow>`, `<DrawerField>` chuẩn chưa?
 - [ ] Icon hành động và icon menu context menu đã được dùng màu neutral, không hardcode màu mè chưa?
 - [ ] Chức năng cảnh báo đóng Drawer khi đang Edit (`confirmOnClose={mode === 'edit'}`) đã được cấu hình đúng chưa?
+
