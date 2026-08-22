@@ -5,6 +5,12 @@ description: Scaffold or refactor a standard DataTable page following the ERP pr
 
 # 📋 Table Page Standards
 
+> ⚡ **FAST-TRACK (PlopJS Generator)**: Để tiết kiệm token và tạo ngay bộ khung chuẩn (API + Hook + Page + Detail Drawer + Locales), chạy:
+> ```bash
+> bun plop table-page <moduleName> <componentName> "<pageTitle>" <tableId> <drawerType> <drawerSize> <hasDateColumn> <hasAmountColumn> <hasStatusColumn>
+> ```
+> *(Xem chi tiết tại skill `plop-generate`)*
+
 Khi tạo mới hoặc chỉnh sửa một trang hiển thị bảng dữ liệu trong hệ thống (như các trang `erp-invoice-*`, `garage-cases`), bạn **BẮT BUỘC** tuân thủ các nguyên tắc sau.
 
 ## 1. Cấu trúc trang (Page Structure)

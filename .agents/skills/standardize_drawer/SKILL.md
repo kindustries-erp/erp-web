@@ -5,6 +5,12 @@ description: Create or enhance a Drawer component using StandardFormDrawer to fo
 
 # 📋 Drawer Standards
 
+> ⚡ **FAST-TRACK (PlopJS Generator)**: Để sinh nhanh component Drawer chuẩn (`1-column`, `2-columns`, hoặc `multi-tab`), chạy:
+> ```bash
+> bun plop drawer <moduleName> <componentName> <drawerType> <drawerSize> <hasStatus>
+> ```
+> *(Chi tiết tại skill `plop-generate`)*
+
 Khi tạo mới hoặc chỉnh sửa Drawer trong hệ thống, bạn **BẮT BUỘC** phải sử dụng component `<StandardFormDrawer>` từ `@/shared/components/StandardFormDrawer` kết hợp với các UI elements chuẩn như `<DrawerSection>`, `<DrawerRow>`, `<DrawerField>`, `<DrawerTopTabItem>`.
 
 ## 1. Các thuộc tính bắt buộc của StandardFormDrawer
