@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
 import {
@@ -15,6 +15,21 @@ import {
   FileText,
   Landmark,
   Network,
+  AlignLeft,
+  Hash,
+  ListFilter,
+  Calendar,
+  ToggleLeft,
+  Factory,
+  ShoppingCart,
+  Receipt,
+  Boxes,
+  ClipboardCheck,
+  Wrench,
+  ShieldCheck,
+  Eye,
+  FolderKanban,
+  RotateCcw,
 } from "lucide-react";
 import {
   StandardFormDrawer,
@@ -29,6 +44,7 @@ import { Button } from "@/shared/components/ui/Button";
 import { Badge } from "@/shared/components/ui/badge";
 import { Checkbox } from "@/shared/components/ui/checkbox";
 import { Combobox, type ComboboxOption } from "@/shared/components/Combobox";
+import { PillTabs } from "@/shared/components/PillTabs";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import { useT } from "@/core/i18n";
@@ -41,36 +57,505 @@ import {
   type ModuleAttributeOption,
 } from "@/core/api/moduleConfigApi";
 
-const FIELD_TYPE_OPTIONS: ComboboxOption[] = [
-  { value: "TEXT", label: "Văn bản (Text Input)" },
-  { value: "NUMBER", label: "Số (Number Input)" },
-  { value: "SELECT", label: "Danh sách chọn (Combobox)" },
-  { value: "DATE", label: "Ngày tháng (Date Picker)" },
-  { value: "CHECKBOX", label: "Đúng / Sai (Checkbox)" },
+// ============================================================================
+// 1. ERP DOMAINS & MODULE REGISTRY (With full i18n support)
+// ============================================================================
+
+export type ErpModuleDomain =
+  | "FINANCE"
+  | "PRODUCTION"
+  | "COMMERCE"
+  | "INVENTORY"
+  | "GARAGE";
+
+export interface ErpDomainDefinition {
+  domain: ErpModuleDomain;
+  titleKey: string;
+  defaultTitle: string;
+  icon: React.ReactNode;
+}
+
+export const ERP_DOMAIN_REGISTRY: Record<ErpModuleDomain, ErpDomainDefinition> =
+  {
+    FINANCE: {
+      domain: "FINANCE",
+      titleKey: "moduleConfig.domains.finance",
+      defaultTitle: "Kế toán & Tài chính",
+      icon: <Landmark className="w-3.5 h-3.5" />,
+    },
+    PRODUCTION: {
+      domain: "PRODUCTION",
+      titleKey: "moduleConfig.domains.production",
+      defaultTitle: "Sản xuất & Kỹ thuật",
+      icon: <Factory className="w-3.5 h-3.5" />,
+    },
+    COMMERCE: {
+      domain: "COMMERCE",
+      titleKey: "moduleConfig.domains.commerce",
+      defaultTitle: "Mua hàng & Bán hàng",
+      icon: <ShoppingCart className="w-3.5 h-3.5" />,
+    },
+    INVENTORY: {
+      domain: "INVENTORY",
+      titleKey: "moduleConfig.domains.inventory",
+      defaultTitle: "Kho vận & Tồn kho",
+      icon: <Boxes className="w-3.5 h-3.5" />,
+    },
+    GARAGE: {
+      domain: "GARAGE",
+      titleKey: "moduleConfig.domains.garage",
+      defaultTitle: "Garage & Dịch vụ",
+      icon: <Wrench className="w-3.5 h-3.5" />,
+    },
+  };
+
+export interface ErpModuleDefinition {
+  key: string;
+  nameKey: string;
+  defaultName: string;
+  domain: ErpModuleDomain;
+  icon: React.ReactNode;
+  descKey: string;
+  defaultDesc: string;
+}
+
+export const ERP_MODULE_REGISTRY: ErpModuleDefinition[] = [
+  // Kế toán & Tài chính
+  {
+    key: "INVOICE",
+    nameKey: "moduleConfig.modules.invoice.name",
+    defaultName: "Hóa đơn & Thuế",
+    domain: "FINANCE",
+    icon: <FileText className="w-3.5 h-3.5" />,
+    descKey: "moduleConfig.modules.invoice.desc",
+    defaultDesc: "Hóa đơn mua vào/bán ra, chi phí thuế & khấu trừ",
+  },
+  {
+    key: "BANK_TXN",
+    nameKey: "moduleConfig.modules.bankTxn.name",
+    defaultName: "Sao kê & Sổ quỹ",
+    domain: "FINANCE",
+    icon: <Landmark className="w-3.5 h-3.5" />,
+    descKey: "moduleConfig.modules.bankTxn.desc",
+    defaultDesc: "Giao dịch ngân hàng, sổ quỹ tiền mặt, định khoản hạch toán",
+  },
+
+  // Sản xuất & Kỹ thuật
+  {
+    key: "BOM",
+    nameKey: "moduleConfig.modules.bom.name",
+    defaultName: "Định mức (BOM)",
+    domain: "PRODUCTION",
+    icon: <Network className="w-3.5 h-3.5" />,
+    descKey: "moduleConfig.modules.bom.desc",
+    defaultDesc: "Định mức vật tư linh kiện, phụ tùng và cụm chi tiết lắp ráp",
+  },
+  {
+    key: "PRODUCTION",
+    nameKey: "moduleConfig.modules.production.name",
+    defaultName: "Lệnh sản xuất",
+    domain: "PRODUCTION",
+    icon: <Factory className="w-3.5 h-3.5" />,
+    descKey: "moduleConfig.modules.production.desc",
+    defaultDesc: "Tiến độ lắp ráp xe, cấp phát linh kiện & bàn giao thành phẩm",
+  },
+
+  // Mua hàng & Bán hàng
+  {
+    key: "PURCHASE_ORDER",
+    nameKey: "moduleConfig.modules.po.name",
+    defaultName: "Mua hàng (PO)",
+    domain: "COMMERCE",
+    icon: <ShoppingCart className="w-3.5 h-3.5" />,
+    descKey: "moduleConfig.modules.po.desc",
+    defaultDesc:
+      "Đơn mua hàng, theo dõi tiến độ nhập và đối chiếu nhà cung cấp",
+  },
+  {
+    key: "SALES_ORDER",
+    nameKey: "moduleConfig.modules.so.name",
+    defaultName: "Bán hàng (SO)",
+    domain: "COMMERCE",
+    icon: <Receipt className="w-3.5 h-3.5" />,
+    descKey: "moduleConfig.modules.so.desc",
+    defaultDesc: "Đơn đặt hàng khách lẻ, đại lý phân phối & giao hàng",
+  },
+
+  // Kho vận & Tồn kho
+  {
+    key: "INVENTORY_ITEM",
+    nameKey: "moduleConfig.modules.item.name",
+    defaultName: "Mặt hàng & SKU",
+    domain: "INVENTORY",
+    icon: <Boxes className="w-3.5 h-3.5" />,
+    descKey: "moduleConfig.modules.item.desc",
+    defaultDesc: "Danh mục master data mặt hàng, quy cách và đơn vị tính",
+  },
+  {
+    key: "INVENTORY_ADJUSTMENT",
+    nameKey: "moduleConfig.modules.adjustment.name",
+    defaultName: "Kiểm kê kho",
+    domain: "INVENTORY",
+    icon: <ClipboardCheck className="w-3.5 h-3.5" />,
+    descKey: "moduleConfig.modules.adjustment.desc",
+    defaultDesc: "Biên bản kiểm kê kho, xử lý chênh lệch thừa/thiếu tồn kho",
+  },
+
+  // Garage & Dịch vụ
+  {
+    key: "GARAGE_CASE",
+    nameKey: "moduleConfig.modules.garageCase.name",
+    defaultName: "Vụ việc Garage",
+    domain: "GARAGE",
+    icon: <Wrench className="w-3.5 h-3.5" />,
+    descKey: "moduleConfig.modules.garageCase.desc",
+    defaultDesc: "Hồ sơ tiếp nhận xe, lệnh dịch vụ sửa chữa & báo giá",
+  },
+  {
+    key: "AFTER_SALES",
+    nameKey: "moduleConfig.modules.afterSales.name",
+    defaultName: "Bảo hành & Bàn giao",
+    domain: "GARAGE",
+    icon: <ShieldCheck className="w-3.5 h-3.5" />,
+    descKey: "moduleConfig.modules.afterSales.desc",
+    defaultDesc:
+      "Vòng đời serial xe/pin, bàn giao xe và kích hoạt bảo hành điện tử",
+  },
 ];
 
+const FIELD_TYPE_OPTIONS: ComboboxOption[] = [
+  {
+    value: "TEXT",
+    label: "Văn bản (Text)",
+    subLabel: "Chuỗi ký tự tự do, ghi chú, mã hiệu",
+  },
+  {
+    value: "NUMBER",
+    label: "Số (Number)",
+    subLabel: "Số lượng, kích thước, thông số kỹ thuật",
+  },
+  {
+    value: "SELECT",
+    label: "Danh sách chọn (Combobox)",
+    subLabel: "Danh sách tùy chọn dropdown cố định",
+  },
+  {
+    value: "DATE",
+    label: "Ngày tháng (Date)",
+    subLabel: "Thời gian, ngày cấp, hạn sử dụng",
+  },
+  {
+    value: "CHECKBOX",
+    label: "Đúng / Sai (Checkbox)",
+    subLabel: "Công tắc bật/tắt (Boolean True/False)",
+  },
+];
+
+const FIELD_TYPE_ICONS: Record<string, React.ReactNode> = {
+  TEXT: <AlignLeft className="w-3.5 h-3.5" />,
+  NUMBER: <Hash className="w-3.5 h-3.5" />,
+  SELECT: <ListFilter className="w-3.5 h-3.5" />,
+  DATE: <Calendar className="w-3.5 h-3.5" />,
+  CHECKBOX: <ToggleLeft className="w-3.5 h-3.5" />,
+};
+
+const FIELD_TYPE_SHORT_LABELS: Record<string, string> = {
+  TEXT: "Văn bản",
+  NUMBER: "Số",
+  SELECT: "Danh sách",
+  DATE: "Ngày",
+  CHECKBOX: "Đúng/Sai",
+};
+
+// ============================================================================
+// 2. LIVE FORM PREVIEW COMPONENT (Cột phải liền mạch, không lồng card)
+// ============================================================================
+
+export interface ModuleLivePreviewPanelProps {
+  categories: ModuleCategory[];
+  moduleKey: string;
+}
+
+export function ModuleLivePreviewPanel({
+  categories,
+  moduleKey,
+}: ModuleLivePreviewPanelProps) {
+  const t = useT();
+  const [selectedCatId, setSelectedCatId] = useState<string>("");
+  const [mockValues, setMockValues] = useState<Record<string, any>>({});
+
+  const activeCategories = useMemo(
+    () => categories.filter((c) => c.isActive !== false),
+    [categories],
+  );
+
+  useEffect(() => {
+    if (activeCategories.length > 0) {
+      if (
+        !selectedCatId ||
+        !activeCategories.some((c) => c.id === selectedCatId)
+      ) {
+        setSelectedCatId(activeCategories[0].id);
+      }
+    } else {
+      setSelectedCatId("");
+    }
+  }, [activeCategories, selectedCatId]);
+
+  const currentCat = useMemo(
+    () => activeCategories.find((c) => c.id === selectedCatId) || null,
+    [activeCategories, selectedCatId],
+  );
+
+  const activeAttrs = useMemo(
+    () => (currentCat?.attributeDefs || []).filter((d) => d.isActive !== false),
+    [currentCat],
+  );
+
+  const currentModMeta = useMemo(
+    () => ERP_MODULE_REGISTRY.find((m) => m.key === moduleKey),
+    [moduleKey],
+  );
+
+  const handleFieldChange = (code: string, val: any) => {
+    setMockValues((prev) => ({ ...prev, [code]: val }));
+  };
+
+  const handleResetPreview = () => {
+    setMockValues({});
+  };
+
+  return (
+    <div className="flex flex-col gap-3.5 text-xs">
+      {/* Header Bar */}
+      <div className="flex items-center justify-between pb-2 border-b border-border/40">
+        <div className="flex items-center gap-1.5 font-medium text-foreground">
+          <Eye className="w-4 h-4 text-primary" />
+          <span className="font-semibold text-xs">
+            {currentModMeta
+              ? t(currentModMeta.nameKey, currentModMeta.defaultName)
+              : moduleKey}
+          </span>
+        </div>
+        <button
+          type="button"
+          onClick={handleResetPreview}
+          className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-primary transition-colors cursor-pointer"
+        >
+          <RotateCcw className="w-3 h-3" />
+          <span>{t("common.reset", "Làm mới")}</span>
+        </button>
+      </div>
+
+      <p className="text-[11px] text-muted-foreground leading-relaxed">
+        {t(
+          "moduleConfig.livePreviewDesc",
+          "Mô phỏng trực tiếp cách các trường tùy chỉnh sẽ hiển thị trên Drawer chứng từ thực tế.",
+        )}
+      </p>
+
+      {/* Category selector for preview */}
+      {activeCategories.length > 0 ? (
+        <div className="flex flex-col gap-1.5">
+          <label className="text-[11px] font-medium text-muted-foreground">
+            {t(
+              "moduleConfig.selectCategoryPreview",
+              "Chọn danh mục thử nghiệm:",
+            )}
+          </label>
+          <Combobox
+            value={selectedCatId}
+            onChange={setSelectedCatId}
+            options={activeCategories.map((c) => ({
+              value: c.id,
+              label: `${c.name} (${c.code})`,
+            }))}
+            placeholder={t(
+              "moduleConfig.selectCatPlaceholder",
+              "Chọn danh mục",
+            )}
+            allowClear={false}
+          />
+        </div>
+      ) : (
+        <div className="py-6 text-center text-muted-foreground text-[11px] bg-surface/30 rounded-lg">
+          {t(
+            "moduleConfig.noActiveCategoriesPreview",
+            "Chưa có danh mục nào được tạo. Hãy thêm danh mục ở cột trái.",
+          )}
+        </div>
+      )}
+
+      {/* Fields list simulator */}
+      {currentCat && (
+        <div className="flex flex-col gap-3 pt-1">
+          <div className="flex items-center justify-between text-[11px] font-medium text-foreground pb-1 border-b border-border/30">
+            <span className="font-semibold">{currentCat.name}</span>
+            <span className="text-[10px] text-muted-foreground font-mono">
+              {activeAttrs.length} {t("moduleConfig.attrsCount", "thuộc tính")}
+            </span>
+          </div>
+
+          {activeAttrs.length === 0 ? (
+            <div className="py-6 text-center text-muted-foreground text-[11px] opacity-70">
+              {t(
+                "moduleConfig.noAttrsToPreview",
+                "Danh mục này chưa có thuộc tính nào.",
+              )}
+            </div>
+          ) : (
+            <div className="flex flex-col gap-3">
+              {activeAttrs.map((attr) => {
+                const val = mockValues[attr.code];
+
+                if (attr.fieldType === "CHECKBOX") {
+                  return (
+                    <div
+                      key={attr.id}
+                      className="flex items-center gap-2 py-1 select-none"
+                    >
+                      <Checkbox
+                        id={`preview-attr-${attr.id}`}
+                        checked={Boolean(val)}
+                        onCheckedChange={(checked) =>
+                          handleFieldChange(attr.code, Boolean(checked))
+                        }
+                      />
+                      <label
+                        htmlFor={`preview-attr-${attr.id}`}
+                        className="text-xs text-foreground cursor-pointer font-medium"
+                      >
+                        {attr.name}
+                        {attr.isRequired && (
+                          <span className="text-destructive ml-1">*</span>
+                        )}
+                      </label>
+                    </div>
+                  );
+                }
+
+                if (attr.fieldType === "SELECT") {
+                  const opts: ComboboxOption[] = (attr.options || []).map(
+                    (o) => ({
+                      value: o.value,
+                      label: `${o.label} (${o.value})`,
+                    }),
+                  );
+                  return (
+                    <DrawerField
+                      key={attr.id}
+                      label={attr.name}
+                      required={attr.isRequired}
+                    >
+                      <Combobox
+                        value={val || ""}
+                        onChange={(v) => handleFieldChange(attr.code, v)}
+                        options={opts}
+                        placeholder={t("common.select", "Chọn giá trị")}
+                      />
+                    </DrawerField>
+                  );
+                }
+
+                return (
+                  <DrawerField
+                    key={attr.id}
+                    label={attr.name}
+                    required={attr.isRequired}
+                  >
+                    <input
+                      type={
+                        attr.fieldType === "NUMBER"
+                          ? "number"
+                          : attr.fieldType === "DATE"
+                            ? "date"
+                            : "text"
+                      }
+                      className={inputCls}
+                      value={val ?? ""}
+                      onChange={(e) =>
+                        handleFieldChange(attr.code, e.target.value)
+                      }
+                      placeholder={
+                        attr.fieldType === "NUMBER"
+                          ? "0"
+                          : `Nhập ${attr.name.toLowerCase()}...`
+                      }
+                    />
+                  </DrawerField>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============================================================================
+// 3. MAIN WORKSPACE CONTENT COMPONENT (Left Panel with Group Sub-PillTabs)
+// ============================================================================
+
 export interface ModuleCustomFieldConfigContentProps {
-  moduleKey: ModuleKey;
+  domainKey: ErpModuleDomain;
+  activeModuleKey: string;
+  onSelectModule: (key: string) => void;
   isOpen?: boolean;
 }
 
 export function ModuleCustomFieldConfigContent({
-  moduleKey,
+  domainKey,
+  activeModuleKey,
+  onSelectModule,
   isOpen = true,
 }: ModuleCustomFieldConfigContentProps) {
   const t = useT();
   const queryClient = useQueryClient();
 
-  // Query categories + attributes scoped by moduleKey
+  // Modules in this domain
+  const domainMods = useMemo(
+    () => ERP_MODULE_REGISTRY.filter((m) => m.domain === domainKey),
+    [domainKey],
+  );
+
+  // Pill tab items for this domain
+  const pillTabItems = useMemo(
+    () =>
+      domainMods.map((m) => ({
+        value: m.key,
+        label: t(m.nameKey, m.defaultName),
+      })),
+    [domainMods, t],
+  );
+
+  // Query categories + attributes scoped by activeModuleKey
   const {
     data: categories = [],
     isLoading,
     isError,
   } = useQuery({
-    queryKey: ["module-config-categories", moduleKey],
-    queryFn: () => moduleConfigApi.getCategories(moduleKey),
-    enabled: isOpen && !!moduleKey,
+    queryKey: ["module-config-categories", activeModuleKey],
+    queryFn: () => moduleConfigApi.getCategories(activeModuleKey),
+    enabled: isOpen && !!activeModuleKey,
   });
+
+  // Find module meta
+  const currentModule = useMemo(
+    () =>
+      ERP_MODULE_REGISTRY.find((m) => m.key === activeModuleKey) || {
+        key: String(activeModuleKey),
+        nameKey: "",
+        defaultName: String(activeModuleKey),
+        domain: domainKey,
+        icon: <FolderKanban className="w-4 h-4" />,
+        descKey: "",
+        defaultDesc: "Cấu hình danh mục và trường mở rộng",
+      },
+    [activeModuleKey, domainKey],
+  );
+
+  const domainMeta = ERP_DOMAIN_REGISTRY[domainKey];
 
   // State: Category Form (Create / Edit)
   const [isCreatingCategory, setIsCreatingCategory] = useState(false);
@@ -110,12 +595,15 @@ export function ModuleCustomFieldConfigContent({
       description?: string;
     }) =>
       moduleConfigApi.createCategory({
-        moduleKey,
+        moduleKey: activeModuleKey,
         ...payload,
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["module-config-categories", moduleKey],
+        queryKey: ["module-config-categories", activeModuleKey],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["module-config-all-categories"],
       });
       queryClient.invalidateQueries({
         queryKey: ["bom-config-categories"],
@@ -136,7 +624,10 @@ export function ModuleCustomFieldConfigContent({
       moduleConfigApi.updateCategory(id, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["module-config-categories", moduleKey],
+        queryKey: ["module-config-categories", activeModuleKey],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["module-config-all-categories"],
       });
       queryClient.invalidateQueries({
         queryKey: ["bom-config-categories"],
@@ -158,7 +649,10 @@ export function ModuleCustomFieldConfigContent({
     mutationFn: moduleConfigApi.deleteCategory,
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["module-config-categories", moduleKey],
+        queryKey: ["module-config-categories", activeModuleKey],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["module-config-all-categories"],
       });
       queryClient.invalidateQueries({
         queryKey: ["bom-config-categories"],
@@ -178,7 +672,10 @@ export function ModuleCustomFieldConfigContent({
     mutationFn: moduleConfigApi.createAttributeDef,
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["module-config-categories", moduleKey],
+        queryKey: ["module-config-categories", activeModuleKey],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["module-config-all-categories"],
       });
       queryClient.invalidateQueries({
         queryKey: ["bom-config-categories"],
@@ -199,7 +696,10 @@ export function ModuleCustomFieldConfigContent({
       moduleConfigApi.updateAttributeDef(id, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["module-config-categories", moduleKey],
+        queryKey: ["module-config-categories", activeModuleKey],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["module-config-all-categories"],
       });
       queryClient.invalidateQueries({
         queryKey: ["bom-config-categories"],
@@ -221,7 +721,10 @@ export function ModuleCustomFieldConfigContent({
     mutationFn: moduleConfigApi.deleteAttributeDef,
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["module-config-categories", moduleKey],
+        queryKey: ["module-config-categories", activeModuleKey],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["module-config-all-categories"],
       });
       queryClient.invalidateQueries({
         queryKey: ["bom-config-categories"],
@@ -462,33 +965,106 @@ export function ModuleCustomFieldConfigContent({
     }
   };
 
+  const totalAttrs = categories.reduce(
+    (sum, c) => sum + (c.attributeDefs?.length || 0),
+    0,
+  );
+
+  const moduleName = currentModule.nameKey
+    ? t(currentModule.nameKey, currentModule.defaultName)
+    : currentModule.defaultName;
+  const moduleDesc = currentModule.descKey
+    ? t(currentModule.descKey, currentModule.defaultDesc)
+    : currentModule.defaultDesc;
+
   return (
     <>
       <div className="flex flex-col gap-4 pb-6">
+        {/* Group Sub-Tabs (PillTabs - Standard ERP Style like Hình 2) */}
+        {domainMods.length > 1 && (
+          <div className="flex items-center justify-start pb-0.5">
+            <PillTabs
+              className="w-full sm:w-auto shrink-0"
+              listClassName="h-8 p-0.5 rounded-full bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/60 shadow-[0_1px_2px_rgba(15,23,42,.03)]"
+              triggerClassName="h-7 px-4 text-xs rounded-full"
+              items={pillTabItems}
+              value={activeModuleKey}
+              onValueChange={onSelectModule}
+              hideBorder
+            />
+          </div>
+        )}
+
         {/* Header Description Section */}
         <DrawerSection
-          title={t("moduleConfig.overviewSection", "Thông tin chung")}
+          title={
+            <div className="flex items-center gap-2">
+              <span className="text-primary">{currentModule.icon}</span>
+              <span>{moduleName}</span>
+              <span className="text-xs font-normal text-muted-foreground font-mono">
+                ({currentModule.key})
+              </span>
+            </div>
+          }
           collapsible
           defaultCollapsed={false}
         >
-          <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <p>
-              {t(
-                "moduleConfig.desc",
-                "Định nghĩa danh mục và các trường thuộc tính mở rộng cho phân hệ này.",
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
+              <div className="flex items-center gap-2 min-w-0">
+                {domainMeta && (
+                  <Badge variant="secondary" className="text-[10px] shrink-0">
+                    {t(domainMeta.titleKey, domainMeta.defaultTitle)}
+                  </Badge>
+                )}
+                <p className="truncate">{moduleDesc}</p>
+              </div>
+
+              {!isCreatingCategory && !editingCategory && (
+                <Button
+                  size="sm"
+                  variant="primary"
+                  onClick={openCreateCategory}
+                  className="flex items-center gap-1 text-xs shrink-0"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  {t("moduleConfig.addCategory", "Thêm danh mục")}
+                </Button>
               )}
-            </p>
-            {!isCreatingCategory && !editingCategory && (
-              <Button
-                size="sm"
-                variant="primary"
-                onClick={openCreateCategory}
-                className="flex items-center gap-1 text-xs shrink-0"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                {t("moduleConfig.addCategory", "Thêm danh mục")}
-              </Button>
-            )}
+            </div>
+
+            <div className="flex items-center justify-between pt-2 border-t border-border/40 text-xs">
+              <div className="flex items-center gap-3 text-muted-foreground">
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="font-semibold text-foreground">
+                    {categories.length}
+                  </span>
+                  <span>{t("moduleConfig.categoriesCount", "danh mục")}</span>
+                </span>
+                <span className="text-border">•</span>
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="font-semibold text-foreground">
+                    {totalAttrs}
+                  </span>
+                  <span>{t("moduleConfig.attrsCount", "thuộc tính")}</span>
+                </span>
+              </div>
+
+              {(isCreatingCategory || editingCategory) && (
+                <span className="text-xs text-primary font-medium italic">
+                  ✎{" "}
+                  {isCreatingCategory
+                    ? t(
+                        "moduleConfig.creatingCategoryHint",
+                        "Đang tạo danh mục mới...",
+                      )
+                    : t(
+                        "moduleConfig.editingCategoryHint",
+                        `Đang sửa: ${editingCategory?.name}`,
+                      )}
+                </span>
+              )}
+            </div>
           </div>
         </DrawerSection>
 
@@ -503,7 +1079,7 @@ export function ModuleCustomFieldConfigContent({
             collapsible
             defaultCollapsed={false}
           >
-            <div className="flex flex-col gap-3 p-3 bg-surface/60 rounded-xl border border-border/70">
+            <div className="flex flex-col gap-3 p-3 bg-surface/40 rounded-xl border border-dashed border-border/60">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <DrawerField
                   label={t("moduleConfig.catCode", "Mã danh mục")}
@@ -594,7 +1170,7 @@ export function ModuleCustomFieldConfigContent({
 
         {/* List Categories & Attributes Section */}
         {!isLoading && categories.length === 0 && !isCreatingCategory && (
-          <div className="flex flex-col items-center justify-center py-10 text-center text-muted-foreground border border-dashed border-border rounded-xl p-6">
+          <div className="flex flex-col items-center justify-center py-10 text-center text-muted-foreground p-6">
             <Layers className="w-8 h-8 opacity-40 mb-2" />
             <p className="text-xs font-medium">
               {t(
@@ -624,7 +1200,7 @@ export function ModuleCustomFieldConfigContent({
             >
               <div className="flex flex-col gap-3">
                 {/* Category Header Controls */}
-                <div className="flex items-center justify-between p-2.5 bg-surface/50 rounded-lg border border-border/50">
+                <div className="flex items-center justify-between px-2.5 py-1.5 bg-surface/40 rounded-lg">
                   <div className="flex items-center gap-2 min-w-0">
                     <Badge
                       variant={cat.isActive ? "default" : "secondary"}
@@ -687,8 +1263,8 @@ export function ModuleCustomFieldConfigContent({
                 {/* Attribute Form (Inside Category) */}
                 {(isAddingAttr ||
                   (editingAttr && editingAttr.categoryId === cat.id)) && (
-                  <div className="p-3 bg-surface/80 rounded-xl border border-primary/30 flex flex-col gap-3 mt-1 shadow-sm">
-                    <div className="flex items-center justify-between pb-1 border-b border-border/50">
+                  <div className="p-3.5 bg-surface/80 rounded-xl border border-border/80 flex flex-col gap-3 mt-1 shadow-xs">
+                    <div className="flex items-center justify-between pb-1.5 border-b border-border/50">
                       <span className="text-xs font-semibold text-foreground flex items-center gap-1.5">
                         <Tag className="w-3.5 h-3.5 text-primary" />
                         {editingAttr
@@ -736,25 +1312,30 @@ export function ModuleCustomFieldConfigContent({
                       </DrawerField>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-end">
+                      {/* Standard Combobox for Field Type */}
                       <DrawerField
                         label={t("moduleConfig.attrFieldType", "Kiểu dữ liệu")}
                         required
                       >
                         <Combobox
-                          value={attrFieldType}
-                          onChange={(val) =>
-                            setAttrFieldType(val as ModuleAttributeFieldType)
-                          }
                           options={FIELD_TYPE_OPTIONS}
-                          placeholder="Chọn kiểu dữ liệu"
+                          value={attrFieldType}
+                          onChange={(v) =>
+                            setAttrFieldType(v as ModuleAttributeFieldType)
+                          }
                           disabled={
                             !!editingAttr && (editingAttr.usageCount || 0) > 0
                           }
+                          placeholder={t(
+                            "moduleConfig.selectTypePlaceholder",
+                            "Chọn kiểu dữ liệu",
+                          )}
+                          allowClear={false}
                         />
                       </DrawerField>
 
-                      <div className="flex items-center gap-2 pt-6">
+                      <div className="flex items-center gap-2 pb-2">
                         <Checkbox
                           id={`attr-req-${cat.id}`}
                           checked={attrRequired}
@@ -824,7 +1405,7 @@ export function ModuleCustomFieldConfigContent({
                                 <button
                                   type="button"
                                   onClick={() => handleRemoveOption(idx)}
-                                  className="text-muted-foreground hover:text-destructive transition-colors ml-0.5"
+                                  className="text-muted-foreground hover:text-destructive transition-colors ml-0.5 cursor-pointer"
                                 >
                                   <X className="w-3 h-3" />
                                 </button>
@@ -835,7 +1416,7 @@ export function ModuleCustomFieldConfigContent({
                       </div>
                     )}
 
-                    <div className="flex items-center justify-end gap-2 mt-1">
+                    <div className="flex items-center justify-end gap-2 mt-1 pt-2 border-t border-border/40">
                       <Button
                         size="sm"
                         variant="secondary"
@@ -871,7 +1452,7 @@ export function ModuleCustomFieldConfigContent({
                 {/* Attribute List */}
                 <div className="flex flex-col gap-1.5 mt-1">
                   {defs.length === 0 && !isAddingAttr && (
-                    <div className="p-3 text-center text-muted-foreground text-xs bg-surface/30 rounded-lg border border-dashed border-border/60">
+                    <div className="py-3 text-center text-muted-foreground text-xs opacity-70">
                       {t(
                         "moduleConfig.noAttrs",
                         "Chưa có thuộc tính nào trong danh mục này.",
@@ -882,14 +1463,18 @@ export function ModuleCustomFieldConfigContent({
                   {defs.map((attr) => (
                     <div
                       key={attr.id}
-                      className="flex items-center justify-between p-2.5 bg-surface rounded-lg border border-border/60 text-xs hover:border-border transition-colors"
+                      className="flex items-center justify-between px-3 py-2 bg-surface/40 hover:bg-surface rounded-lg text-xs transition-colors group"
                     >
                       <div className="flex items-center gap-2 min-w-0">
                         <Badge
                           variant="outline"
-                          className="text-[10px] font-mono shrink-0"
+                          className="text-[10px] gap-1 shrink-0 flex items-center font-medium bg-surface/60 border-border/60"
                         >
-                          {attr.fieldType}
+                          {FIELD_TYPE_ICONS[attr.fieldType]}
+                          <span>
+                            {FIELD_TYPE_SHORT_LABELS[attr.fieldType] ||
+                              attr.fieldType}
+                          </span>
                         </Badge>
                         <span className="font-medium text-foreground truncate">
                           {attr.name}
@@ -939,9 +1524,9 @@ export function ModuleCustomFieldConfigContent({
                             onClick={() => handleToggleAttrActive(attr)}
                           >
                             {attr.isActive ? (
-                              <Power className="w-3 h-3 text-emerald-500" />
+                              <Power className="w-3.5 h-3.5 text-emerald-500" />
                             ) : (
-                              <PowerOff className="w-3 h-3 text-muted-foreground" />
+                              <PowerOff className="w-3.5 h-3.5 text-muted-foreground" />
                             )}
                           </Button>
                         </Tooltip>
@@ -952,7 +1537,7 @@ export function ModuleCustomFieldConfigContent({
                             className="w-6 h-6"
                             onClick={() => openEditAttr(attr)}
                           >
-                            <Edit2 className="w-3 h-3 text-muted-foreground" />
+                            <Edit2 className="w-3.5 h-3.5 text-muted-foreground" />
                           </Button>
                         </Tooltip>
                         <Tooltip content={t("common.delete", "Xóa thuộc tính")}>
@@ -962,7 +1547,7 @@ export function ModuleCustomFieldConfigContent({
                             className="w-6 h-6 text-destructive hover:bg-destructive/10"
                             onClick={() => setDeleteAttrTarget(attr)}
                           >
-                            <Trash2 className="w-3 h-3" />
+                            <Trash2 className="w-3.5 h-3.5" />
                           </Button>
                         </Tooltip>
                       </div>
@@ -977,7 +1562,7 @@ export function ModuleCustomFieldConfigContent({
                         onClick={() => openCreateAttr(cat.id)}
                         className="w-full text-xs text-primary hover:text-primary hover:bg-primary/5 border border-dashed border-primary/30 mt-1 flex items-center justify-center gap-1 h-8"
                       >
-                        <Plus className="w-3 h-3" />
+                        <Plus className="w-3.5 h-3.5" />
                         {t("moduleConfig.addAttr", "Thêm thuộc tính")}
                       </Button>
                     )}
@@ -1023,6 +1608,10 @@ export function ModuleCustomFieldConfigContent({
   );
 }
 
+// ============================================================================
+// 4. MAIN EXPORT: 2-COLUMN DRAWER WITH GROUP TABS + SUB PILL TABS + SEAMLESS PREVIEW
+// ============================================================================
+
 export interface ModuleCustomFieldConfigDrawerProps {
   open: boolean;
   onClose: () => void;
@@ -1035,14 +1624,42 @@ export interface ModuleCustomFieldConfigDrawerProps {
 export function ModuleCustomFieldConfigDrawer({
   open,
   onClose,
-  mode = "single",
-  moduleKey = "BOM",
+  mode = "unified",
+  moduleKey,
   moduleLabel,
   initialTab,
 }: ModuleCustomFieldConfigDrawerProps) {
   const t = useT();
 
-  const [activeTab, setActiveTab] = useState<string>(() => {
+  // Query ALL categories across the ERP ecosystem to compute total attributes count per domain
+  const { data: allCategories = [] } = useQuery({
+    queryKey: ["module-config-all-categories"],
+    queryFn: () => moduleConfigApi.getCategories(),
+    enabled: open,
+  });
+
+  // Calculate total attributes count per domain for top group tab badges
+  const domainAttrCounts = useMemo(() => {
+    const counts: Record<ErpModuleDomain, number> = {
+      FINANCE: 0,
+      PRODUCTION: 0,
+      COMMERCE: 0,
+      INVENTORY: 0,
+      GARAGE: 0,
+    };
+
+    for (const cat of allCategories) {
+      const mod = ERP_MODULE_REGISTRY.find((m) => m.key === cat.moduleKey);
+      if (mod) {
+        const validDefs = (cat.attributeDefs || []).filter((d) => !d.isDeleted);
+        counts[mod.domain] += validDefs.length;
+      }
+    }
+    return counts;
+  }, [allCategories]);
+
+  // Initial active module key
+  const [activeModuleKey, setActiveModuleKey] = useState<string>(() => {
     return (
       (initialTab as string) || (moduleKey ? String(moduleKey) : "INVOICE")
     );
@@ -1051,78 +1668,73 @@ export function ModuleCustomFieldConfigDrawer({
   useEffect(() => {
     if (open) {
       if (initialTab) {
-        setActiveTab(String(initialTab));
+        setActiveModuleKey(String(initialTab));
       } else if (moduleKey) {
-        setActiveTab(String(moduleKey));
+        setActiveModuleKey(String(moduleKey));
       } else {
-        setActiveTab("INVOICE");
+        setActiveModuleKey("INVOICE");
       }
     }
   }, [open, initialTab, moduleKey]);
 
-  if (mode === "unified") {
-    const tabs: DrawerTopTabItem[] = [
-      {
-        key: "INVOICE",
-        label: t("moduleConfig.tabInvoice", "Hóa đơn"),
-        icon: <FileText className="w-3.5 h-3.5" />,
-        content: (
-          <ModuleCustomFieldConfigContent
-            moduleKey="INVOICE"
-            isOpen={open && activeTab === "INVOICE"}
-          />
-        ),
-      },
-      {
-        key: "BANK_TXN",
-        label: t("moduleConfig.tabBankTxn", "Sao kê ngân hàng"),
-        icon: <Landmark className="w-3.5 h-3.5" />,
-        content: (
-          <ModuleCustomFieldConfigContent
-            moduleKey="BANK_TXN"
-            isOpen={open && activeTab === "BANK_TXN"}
-          />
-        ),
-      },
-      {
-        key: "BOM",
-        label: t("moduleConfig.tabBom", "Định mức (BOM)"),
-        icon: <Network className="w-3.5 h-3.5" />,
-        content: (
-          <ModuleCustomFieldConfigContent
-            moduleKey="BOM"
-            isOpen={open && activeTab === "BOM"}
-          />
-        ),
-      },
-    ];
+  // Find active module's domain
+  const activeModuleDef = useMemo(
+    () => ERP_MODULE_REGISTRY.find((m) => m.key === activeModuleKey),
+    [activeModuleKey],
+  );
 
-    return (
-      <StandardFormDrawer
-        open={open}
-        mode="view"
-        onClose={onClose}
-        icon={<Settings className="w-5 h-5 text-primary" />}
-        title={t("moduleConfig.title", "Cấu hình trường tùy chỉnh")}
-        subtitle={t(
-          "moduleConfig.subtitleUnified",
-          "Quản lý danh mục & các thuộc tính động cấu hình theo từng phân hệ",
-        )}
-        layout="1-column"
-        size="lg"
-        zIndex={410}
-        tabs={tabs}
-        activeTabKey={activeTab}
-        onTabChange={setActiveTab}
-      />
+  const activeDomain = activeModuleDef?.domain || "FINANCE";
+
+  // When domain group tab changes, switch to the first module of that domain
+  const handleDomainGroupChange = (domainKey: string) => {
+    const domainMods = ERP_MODULE_REGISTRY.filter(
+      (m) => m.domain === domainKey,
     );
-  }
+    if (domainMods.length > 0) {
+      const alreadyInDomain = domainMods.some((m) => m.key === activeModuleKey);
+      if (!alreadyInDomain) {
+        setActiveModuleKey(domainMods[0].key);
+      }
+    }
+  };
 
-  // Single module mode
-  const effectiveModuleKey: ModuleKey = (moduleKey as ModuleKey) || "BOM";
-  const titleText = moduleLabel
-    ? `${t("moduleConfig.title", "Cấu hình trường tùy chỉnh")} — ${moduleLabel}`
-    : t("moduleConfig.title", "Cấu hình trường tùy chỉnh");
+  // Build Top Group Tabs for the 5 ERP Domains
+  const domainKeys = Object.keys(ERP_DOMAIN_REGISTRY) as ErpModuleDomain[];
+
+  const tabs: DrawerTopTabItem[] = useMemo(() => {
+    return domainKeys.map((dKey) => {
+      const domainMeta = ERP_DOMAIN_REGISTRY[dKey];
+      const domainBadge = domainAttrCounts[dKey] || 0;
+
+      return {
+        key: dKey,
+        label: t(domainMeta.titleKey, domainMeta.defaultTitle),
+        icon: domainMeta.icon,
+        badgeCount: domainBadge,
+        badgeVariant: domainBadge > 0 ? "default" : "secondary",
+        content: (
+          <ModuleCustomFieldConfigContent
+            domainKey={dKey}
+            activeModuleKey={activeModuleKey}
+            onSelectModule={setActiveModuleKey}
+            isOpen={open}
+          />
+        ),
+      };
+    });
+  }, [domainKeys, domainAttrCounts, activeModuleKey, open, t]);
+
+  // Query categories for activeModuleKey (for right panel preview)
+  const { data: currentModuleCategories = [] } = useQuery({
+    queryKey: ["module-config-categories", activeModuleKey],
+    queryFn: () => moduleConfigApi.getCategories(activeModuleKey),
+    enabled: open && !!activeModuleKey,
+  });
+
+  const titleText =
+    mode === "single" && moduleLabel
+      ? `${t("moduleConfig.title", "Cấu hình trường tùy chỉnh")} — ${moduleLabel}`
+      : t("moduleConfig.title", "Cấu hình trường tùy chỉnh");
 
   return (
     <StandardFormDrawer
@@ -1132,16 +1744,26 @@ export function ModuleCustomFieldConfigDrawer({
       icon={<Settings className="w-5 h-5 text-primary" />}
       title={titleText}
       subtitle={t(
-        "moduleConfig.subtitle",
-        "Quản lý danh mục & các thuộc tính động cấu hình",
+        "moduleConfig.subtitleUnified",
+        "Quản lý danh mục & các thuộc tính động cấu hình theo từng phân hệ",
       )}
-      layout="1-column"
-      size="md"
+      layout="2-columns"
+      size="lg"
       zIndex={410}
-      leftPanel={
-        <ModuleCustomFieldConfigContent
-          moduleKey={effectiveModuleKey}
-          isOpen={open}
+      tabs={tabs}
+      activeTabKey={activeDomain}
+      onTabChange={handleDomainGroupChange}
+      collapsibleRightPanel={true}
+      rightPanelTitle={t(
+        "moduleConfig.livePreviewTitle",
+        "Xem trước Form thực tế",
+      )}
+      rightPanelDefaultCollapsed={false}
+      stickyRightPanel={true}
+      rightPanel={
+        <ModuleLivePreviewPanel
+          categories={currentModuleCategories}
+          moduleKey={activeModuleKey}
         />
       }
     />
