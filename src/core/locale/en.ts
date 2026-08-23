@@ -49,8 +49,10 @@ import { inventoryTrackingLotEn } from "@/core/locale/inventory/inventoryTrackin
 import { inventoryTrackingCustomEn } from "@/core/locale/inventory/inventoryTrackingCustom/en";
 import { bomConfigEn } from "@/core/locale/manufacturing/bomConfig/en";
 import { changelogEn } from "@/core/locale/system/changelog/en";
+import { moduleConfigEn } from "@/core/locale/settings/moduleConfig/en";
 
 export const en: Dict = {
+  moduleConfig: moduleConfigEn,
   nav: navEn,
   activityLogs: activityLogsEn,
   breadcrumb: breadcrumbEn,

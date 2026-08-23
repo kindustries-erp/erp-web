@@ -41,6 +41,7 @@ export interface ErpInvoice {
   licensePlate?: string | null;
   settlementOrder?: string | null;
   invoiceCategory?: string | null;
+  categoryId?: string | null;
   invoiceType?: string | null;
   preVatAmount: string;
   vatRate?: string | null;
@@ -106,6 +107,8 @@ export interface CreateErpInvoicePayload {
   licensePlate?: string;
   paymentDocumentNos?: string;
   notes?: string;
+  categoryId?: string | null;
+  customAttributes?: Record<string, any>;
   isValid?: boolean;
   items?: ErpInvoiceItem[];
   pendingDocumentChanges?: {

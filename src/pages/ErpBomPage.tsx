@@ -43,6 +43,7 @@ import { Badge } from "@/shared/components/ui/badge";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const ITEM_LOOKUP_LIMIT = 200;
 
+import { useAppStore } from "@/core/config/appStore";
 import {
   BomFormDrawer,
   type BomForm,
@@ -52,7 +53,6 @@ import {
   emptyLine,
   toPayload,
 } from "@/modules/bom-core/components/BomFormDrawer";
-import { BomConfigDrawer } from "@/modules/bom-core/components/BomConfigDrawer";
 
 function fmtDate(value?: string | null) {
   if (!value) return "—";
@@ -494,6 +494,7 @@ function BomTree({ bomId, fgToBomMap, itemsMap }: BomTreeProps) {
 
 export function ErpBomPage() {
   const t = useT();
+  const { openCustomFieldsDrawer } = useAppStore();
   const canRead = useHasPermission("bom", "read");
   const setGlobalLoading = useUIStore((s) => s.setGlobalLoading);
   const [items, setItems] = useState<ErpBom[]>([]);
@@ -504,7 +505,6 @@ export function ErpBomPage() {
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [bomConfigOpen, setBomConfigOpen] = useState(false);
   const [drawerLoading, setDrawerLoading] = useState(false);
   const [editing, setEditing] = useState<ErpBom | null>(null);
   const [viewOnly, setViewOnly] = useState(false);
@@ -1396,7 +1396,7 @@ export function ErpBomPage() {
             {
               label: t("bomConfig.title", "Cấu hình BOM"),
               icon: <Settings className="w-4 h-4 text-violet-500" />,
-              onClick: () => setBomConfigOpen(true),
+              onClick: () => openCustomFieldsDrawer("BOM", "Định mức (BOM)"),
             },
           ],
         },
@@ -1456,11 +1456,11 @@ export function ErpBomPage() {
               },
               icon: <Ban className="h-[13px] w-[13px]" />,
               variant: "danger",
-              hidden: item.status !== "ACTIVE",
+              hidden: item.status === "ACTIVE",
             },
             {
               label: t("bomConfig.title", "Cấu hình BOM"),
-              onClick: () => setBomConfigOpen(true),
+              onClick: () => openCustomFieldsDrawer("BOM", "Định mức (BOM)"),
               icon: <Settings className="h-[13px] w-[13px]" />,
             },
             {
@@ -1547,11 +1547,6 @@ export function ErpBomPage() {
         itemUomMap={itemUomMap}
         uomOptions={uomOptions}
         onExport={(format) => editing && handleExport(editing, format)}
-      />
-
-      <BomConfigDrawer
-        open={bomConfigOpen}
-        onClose={() => setBomConfigOpen(false)}
       />
     </SpreadsheetPageTemplate>
   );

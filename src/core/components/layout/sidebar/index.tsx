@@ -4,6 +4,7 @@ import { useAuthStore } from "@/modules/auth/domain/authStore";
 import { UserProfileModal } from "@/modules/auth/components/UserProfileModal";
 import { GlobalSettingsDrawer } from "@/core/components/layout/GlobalSettingsDrawer";
 import { SystemChangelogDrawer } from "@/core/components/SystemChangelogDrawer";
+import { ModuleCustomFieldConfigDrawer } from "@/shared/components/ModuleCustomFieldConfigDrawer";
 import { CompanyProfileDrawer } from "../../CompanyProfileDrawer";
 import { useCompanyProfile } from "../../../api/companyProfileApi";
 import type { PageKey } from "@/shared/types";
@@ -26,6 +27,12 @@ export function Sidebar() {
     setMobileSidebarOpen,
     companyProfileOpen,
     setCompanyProfileOpen,
+    customFieldsDrawerOpen,
+    customFieldsDrawerMode,
+    customFieldsDrawerModule,
+    customFieldsDrawerLabel,
+    customFieldsDrawerInitialTab,
+    closeCustomFieldsDrawer,
   } = useAppStore();
   const { employee } = useAuthStore();
   const [profileOpen, setProfileOpen] = useState(false);
@@ -104,6 +111,14 @@ export function Sidebar() {
       <SystemChangelogDrawer
         open={changelogOpen}
         onClose={() => setChangelogOpen(false)}
+      />
+      <ModuleCustomFieldConfigDrawer
+        open={customFieldsDrawerOpen}
+        onClose={closeCustomFieldsDrawer}
+        mode={customFieldsDrawerMode}
+        moduleKey={(customFieldsDrawerModule as any) ?? "BOM"}
+        moduleLabel={customFieldsDrawerLabel}
+        initialTab={customFieldsDrawerInitialTab}
       />
     </TooltipProvider>
   );

@@ -16,6 +16,8 @@ import { PostingSection } from "@/shared/components/accounting/PostingSection";
 import { PostedAccountingSummary } from "@/shared/components/accounting/PostedAccountingSummary";
 import { InvoiceNetoffSelectionModal } from "@/modules/bank-statements/components/InvoiceNetoffSelectionModal";
 import toast from "react-hot-toast";
+import { moduleConfigApi } from "@/core/api/moduleConfigApi";
+import { ModuleEntityCustomFieldsSection } from "@/shared/components/ModuleEntityCustomFieldsSection";
 
 interface Props {
   isOpen: boolean;
@@ -43,6 +45,10 @@ export function BankTransactionDetailDrawer({
   const [editMode, setEditMode] = useState(false);
   const [accountingEnabled, setAccountingEnabled] = useState(true);
   const [formError, setFormError] = useState<string | null>(null);
+  const [categoryId, setCategoryId] = useState<string | null>(null);
+  const [customAttributes, setCustomAttributes] = useState<Record<string, any>>(
+    {},
+  );
 
   const { data: transaction, isLoading } = useQuery({
     queryKey: ["bank-transaction", transactionId],
@@ -248,6 +254,8 @@ export function BankTransactionDetailDrawer({
       setEditMode(false);
       setAccountingEnabled(initialAccountingEnabled);
       setFormError(null);
+      setCategoryId(null);
+      setCustomAttributes({});
       postingState.reset();
       return;
     }
@@ -257,6 +265,13 @@ export function BankTransactionDetailDrawer({
       setAccountingEnabled(initialAccountingEnabled);
       setFormError(null);
       hydratePostingState(transaction);
+      moduleConfigApi
+        .getEntityValues("BANK_TXN", transaction.id)
+        .then((res) => {
+          setCategoryId(res.categoryId || null);
+          setCustomAttributes(res.attributes || {});
+        })
+        .catch(() => {});
     }
   }, [
     isOpen,
@@ -270,11 +285,23 @@ export function BankTransactionDetailDrawer({
     mutationFn: async () => {
       if (!transactionId) throw new Error("Missing transaction ID");
 
+      // Save custom fields if present
+      if (categoryId !== undefined || customAttributes !== undefined) {
+        try {
+          await moduleConfigApi.saveEntityValues("BANK_TXN", transactionId, {
+            categoryId,
+            attributes: customAttributes,
+          });
+        } catch (cfErr: any) {
+          console.warn("Failed to save custom attributes", cfErr);
+        }
+      }
+
       if (!accountingEnabled) {
         if (isPosted) {
           return bankStatementApi.unpostTransaction(transactionId);
         }
-        throw new Error("Vui lòng bật hạch toán trước khi lưu.");
+        return;
       }
 
       if (!postingState.postingDate) {
@@ -316,12 +343,15 @@ export function BankTransactionDetailDrawer({
       toast.success(
         accountingEnabled
           ? "Đã lưu hạch toán giao dịch."
-          : "Đã bỏ hạch toán giao dịch.",
+          : "Đã lưu thông tin giao dịch.",
       );
       setEditMode(false);
       setFormError(null);
       await queryClient.invalidateQueries({
         queryKey: ["bank-transaction", transactionId],
+      });
+      await queryClient.invalidateQueries({
+        queryKey: ["module-entity-values", "BANK_TXN", transactionId],
       });
       await queryClient.invalidateQueries({ queryKey: ["bank-transactions"] });
       onSaved?.();
@@ -714,6 +744,16 @@ export function BankTransactionDetailDrawer({
                   </div>
                 </div>
               </DrawerSection>
+
+              <ModuleEntityCustomFieldsSection
+                moduleKey="BANK_TXN"
+                entityId={transaction.id}
+                editMode={editMode}
+                categoryId={categoryId}
+                onCategoryChange={setCategoryId}
+                attributes={customAttributes}
+                onAttributesChange={setCustomAttributes}
+              />
             </div>
           ) : null
         }

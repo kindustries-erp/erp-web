@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { DrawerModal, DrawerSection, type DrawerAction } from "./DrawerModal";
 import { useT } from "@/core/i18n";
 import { ChevronRight, ChevronLeft } from "lucide-react";
@@ -209,8 +209,9 @@ export function StandardFormDrawer({
 
   const currentTab = activeTabKey !== undefined ? activeTabKey : internalTabKey;
 
+  const prevOpenRef = useRef(open);
   useEffect(() => {
-    if (open) {
+    if (open && !prevOpenRef.current) {
       setRightPanelCollapsed(rightPanelDefaultCollapsed);
       if (activeTabKey) {
         setInternalTabKey(activeTabKey);
@@ -220,7 +221,14 @@ export function StandardFormDrawer({
         setInternalTabKey(tabs[0].key);
       }
     }
+    prevOpenRef.current = open;
   }, [open, rightPanelDefaultCollapsed, activeTabKey, defaultTabKey, tabs]);
+
+  useEffect(() => {
+    if (activeTabKey !== undefined) {
+      setInternalTabKey(activeTabKey);
+    }
+  }, [activeTabKey]);
 
   const handleTabChange = (key: string) => {
     setInternalTabKey(key);

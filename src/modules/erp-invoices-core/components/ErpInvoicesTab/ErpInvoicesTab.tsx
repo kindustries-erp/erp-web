@@ -8,7 +8,9 @@ import {
   Trash,
   KeyRound,
   Scale,
+  Settings,
 } from "lucide-react";
+import { useAppStore } from "@/core/config/appStore";
 
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate/SpreadsheetPageTemplate";
 import { erpInvoicesCoreApi } from "@/modules/erp-invoices-core/api/erpInvoicesCoreApi";
@@ -28,6 +30,7 @@ import { InvoiceViewConfigDrawer } from "./components/InvoiceViewConfigDrawer";
 export type { ErpInvoicesTabProps };
 
 export function ErpInvoicesTab(props: ErpInvoicesTabProps) {
+  const { openCustomFieldsDrawer } = useAppStore();
   const logic = useErpInvoicesTabLogic(props);
   const {
     t,
@@ -272,6 +275,19 @@ export function ErpInvoicesTab(props: ErpInvoicesTabProps) {
               groupLabel: t("groupThaoTac", "Thao tác"),
               items: thaoTacItems,
             },
+            {
+              groupLabel: t("groupCauHinh", "Cấu hình"),
+              items: [
+                {
+                  label: t(
+                    "invoiceConfig.customFields",
+                    "Cấu hình trường tùy chỉnh",
+                  ),
+                  icon: <Settings className="w-3.5 h-3.5 text-violet-500" />,
+                  onClick: () => openCustomFieldsDrawer("INVOICE", "Hóa đơn"),
+                },
+              ],
+            },
           ];
         }}
         onCreate={() => setImportModalOpen(true)}
@@ -302,6 +318,19 @@ export function ErpInvoicesTab(props: ErpInvoicesTabProps) {
                 },
               ]
             : []),
+          {
+            groupLabel: t("groupCauHinh", "Cấu hình"),
+            items: [
+              {
+                label: t(
+                  "invoiceConfig.customFields",
+                  "Cấu hình trường tùy chỉnh",
+                ),
+                icon: <Settings className="w-4 h-4 text-violet-500" />,
+                onClick: () => openCustomFieldsDrawer("INVOICE", "Hóa đơn"),
+              },
+            ],
+          },
         ]}
       />
 
