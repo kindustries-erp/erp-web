@@ -396,6 +396,11 @@ interface AppState {
   isLoggedIn: boolean;
   forbidden: boolean;
   companyProfileOpen: boolean;
+  customFieldsDrawerOpen: boolean;
+  customFieldsDrawerMode: "unified" | "single";
+  customFieldsDrawerModule: string | null;
+  customFieldsDrawerLabel?: string;
+  customFieldsDrawerInitialTab?: string;
   currentBranchId: string | null;
   customBreadcrumbs: Array<[string, string?]> | null;
   setForbidden: (value: boolean) => void;
@@ -411,6 +416,11 @@ interface AppState {
   toggleSidebar: () => void;
   setMobileSidebarOpen: (open: boolean) => void;
   setCompanyProfileOpen: (open: boolean) => void;
+  openCustomFieldsDrawer: (
+    moduleKeyOrAll: string,
+    moduleLabelOrInitialTab?: string,
+  ) => void;
+  closeCustomFieldsDrawer: () => void;
   toggleAppTheme: () => void;
   setAppTheme: (theme: AppTheme) => void;
   toggleLocale: () => void;
@@ -503,6 +513,11 @@ export const useAppStore = create<AppState>()(
       locale: "vi",
       isLoggedIn: false,
       companyProfileOpen: false,
+      customFieldsDrawerOpen: false,
+      customFieldsDrawerMode: "single",
+      customFieldsDrawerModule: null,
+      customFieldsDrawerLabel: undefined,
+      customFieldsDrawerInitialTab: undefined,
       currentBranchId: null,
       customBreadcrumbs: null,
 
@@ -874,6 +889,32 @@ export const useAppStore = create<AppState>()(
       },
       setMobileSidebarOpen: (open) => set({ mobileSidebarOpen: open }),
       setCompanyProfileOpen: (open) => set({ companyProfileOpen: open }),
+      openCustomFieldsDrawer: (moduleKeyOrAll, moduleLabelOrInitialTab) => {
+        if (moduleKeyOrAll === "ALL" || !moduleKeyOrAll) {
+          set({
+            customFieldsDrawerOpen: true,
+            customFieldsDrawerMode: "unified",
+            customFieldsDrawerModule: null,
+            customFieldsDrawerInitialTab: moduleLabelOrInitialTab || "INVOICE",
+            customFieldsDrawerLabel: undefined,
+          });
+        } else {
+          set({
+            customFieldsDrawerOpen: true,
+            customFieldsDrawerMode: "single",
+            customFieldsDrawerModule: moduleKeyOrAll,
+            customFieldsDrawerLabel: moduleLabelOrInitialTab,
+            customFieldsDrawerInitialTab: undefined,
+          });
+        }
+      },
+      closeCustomFieldsDrawer: () =>
+        set({
+          customFieldsDrawerOpen: false,
+          customFieldsDrawerModule: null,
+          customFieldsDrawerLabel: undefined,
+          customFieldsDrawerInitialTab: undefined,
+        }),
 
       toggleAppTheme: () => {
         const order: AppTheme[] = ["classic", "shell", "orcaq", "midnight"];

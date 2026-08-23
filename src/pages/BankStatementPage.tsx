@@ -1,11 +1,18 @@
 import React, { useState, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Building2, Wallet, Plus, Upload } from "lucide-react";
+import {
+  Building2,
+  Wallet,
+  Plus,
+  Upload,
+  FolderArchive,
+  Settings,
+} from "lucide-react";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate";
 import { TableDateCell } from "@/shared/components/DataTable/TableDateCell";
 import { useT } from "@/core/i18n";
+import { useAppStore } from "@/core/config/appStore";
 import { bankStatementApi } from "@/modules/bank-statements/api/bankStatementApi";
-import { FolderArchive } from "lucide-react";
 import { getTags } from "@/modules/tags/api/tagsApi";
 import { ImportStatementDrawer } from "@/pages/finance/components/ImportStatementDrawer";
 import { OriginalStatementFilesDrawer } from "@/pages/finance/components/OriginalStatementFilesDrawer";
@@ -28,6 +35,7 @@ import { DateRangeColumnSlot } from "@/shared/components/DataTable/DateRangeColu
 
 export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
   const t = useT();
+  const { openCustomFieldsDrawer } = useAppStore();
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
   const [isImportOpen, setIsImportOpen] = useState(false);
@@ -691,6 +699,20 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
               },
             ],
           },
+          {
+            groupLabel: t("groupCauHinh", "Cấu hình"),
+            items: [
+              {
+                label: t(
+                  "bankConfig.customFields",
+                  "Cấu hình trường tùy chỉnh",
+                ),
+                icon: <Settings className="w-3.5 h-3.5 text-violet-500" />,
+                onClick: () =>
+                  openCustomFieldsDrawer("BANK_TXN", "Sao kê ngân hàng"),
+              },
+            ],
+          },
         ]}
         createActions={[
           {
@@ -730,6 +752,20 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
                       onClick: () => setIsOriginalFilesOpen(true),
                     },
                   ],
+          },
+          {
+            groupLabel: t("groupCauHinh", "Cấu hình"),
+            items: [
+              {
+                label: t(
+                  "bankConfig.customFields",
+                  "Cấu hình trường tùy chỉnh",
+                ),
+                icon: <Settings className="w-4 h-4 text-violet-500" />,
+                onClick: () =>
+                  openCustomFieldsDrawer("BANK_TXN", "Sao kê ngân hàng"),
+              },
+            ],
           },
         ]}
       />

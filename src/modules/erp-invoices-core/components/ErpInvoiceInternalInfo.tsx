@@ -11,6 +11,7 @@ import { erpInvoicesCoreApi } from "../api/erpInvoicesCoreApi";
 import toast from "react-hot-toast";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { FileText } from "lucide-react";
+import { ModuleEntityCustomFieldsSection } from "@/shared/components/ModuleEntityCustomFieldsSection";
 
 export function ErpInvoiceInternalSidebar({
   form,
@@ -65,21 +66,6 @@ export function ErpInvoiceInternalSidebar({
               <div className="font-medium text-[color:var(--foreground)] text-sm px-3 py-2 bg-gray-50 rounded-lg border border-transparent">
                 {branchOptions.find((o) => o.value === form.branchId)?.label ||
                   "—"}
-              </div>
-            )}
-          </DrawerField>
-          <DrawerField label="Phân loại hóa đơn">
-            {editMode ? (
-              <Combobox
-                options={[]}
-                value={(form as any).invoiceCategory || ""}
-                onChange={(val) => fieldSet("invoiceCategory", val || null)}
-                placeholder="-- Chọn phân loại --"
-                allowClear={true}
-              />
-            ) : (
-              <div className="font-medium text-[color:var(--foreground)] text-sm px-3 py-2 bg-gray-50 rounded-lg border border-transparent">
-                {(form as any).invoiceCategory || "—"}
               </div>
             )}
           </DrawerField>
@@ -174,6 +160,17 @@ export function ErpInvoiceInternalSidebar({
           )}
         </div>
       </DrawerSection>
+
+      {/* Dynamic Custom Fields Section */}
+      <ModuleEntityCustomFieldsSection
+        moduleKey="INVOICE"
+        entityId={detailInvoice?.id || invoiceId}
+        editMode={editMode}
+        categoryId={(form as any).categoryId}
+        onCategoryChange={(catId) => fieldSet("categoryId", catId)}
+        attributes={(form as any).customAttributes}
+        onAttributesChange={(attrs) => fieldSet("customAttributes", attrs)}
+      />
     </div>
   );
 }

@@ -10,6 +10,7 @@ import { useTranslation } from "react-i18next";
 import { updateEntityTags } from "@/modules/tags/api/tagsApi";
 import { purchaseOrdersCoreApi } from "@/modules/purchase-orders-core/api/purchaseOrdersCoreApi";
 import { usePosting } from "@/shared/components/accounting/usePosting";
+import { moduleConfigApi } from "@/core/api/moduleConfigApi";
 
 type Direction = "IN" | "OUT";
 
@@ -117,6 +118,8 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
       salesOrderId: inv.salesOrderId ?? undefined,
       paymentDocumentNos: inv.paymentDocumentNos ?? "",
       notes: inv.notes ?? "",
+      categoryId: (inv as any).categoryId ?? null,
+      customAttributes: (inv as any).attributes ?? {},
       isValid: inv.isValid ?? false,
       accountingEnabled: inv.postingStatus === "POSTED",
       items:
@@ -253,8 +256,21 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
           }
         }
       }
+      const mapped = mapInvoiceToForm(fullInv);
+      try {
+        const customValues = await moduleConfigApi.getEntityValues(
+          "INVOICE",
+          fullInv.id,
+        );
+        if (customValues) {
+          mapped.categoryId = customValues.categoryId || null;
+          mapped.customAttributes = customValues.attributes || {};
+        }
+      } catch {
+        // ignore custom values error
+      }
       setDetailInvoice(fullInv);
-      setForm(mapInvoiceToForm(fullInv));
+      setForm(mapped);
     } catch (err) {
       console.error("Failed to fetch full invoice", err);
     } finally {
@@ -362,11 +378,15 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
       const payload = { ...form };
       if (statusOverride) payload.status = statusOverride;
 
-      // Remove frontend-only field before sending to API
+      const customAttrsToSave = (form as any).customAttributes;
+      const categoryIdToSave = (form as any).categoryId;
+
+      // Remove frontend-only fields before sending to API
       delete payload.pendingDocumentChanges;
       delete (payload as any).accountingEnabled;
       delete payload.pendingDeletedPdfs;
       delete payload.pendingAddedAttachments;
+      delete (payload as any).customAttributes;
 
       let invoiceIdToProcess = "";
       let invoiceNoToProcess = form.invoiceNo;
@@ -403,6 +423,25 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
           } catch {
             // tags are non-critical, don't block UX
           }
+        }
+      }
+
+      // Save custom fields if present
+      if (
+        invoiceIdToProcess &&
+        (categoryIdToSave !== undefined || customAttrsToSave !== undefined)
+      ) {
+        try {
+          await moduleConfigApi.saveEntityValues(
+            "INVOICE",
+            invoiceIdToProcess,
+            {
+              categoryId: categoryIdToSave,
+              attributes: customAttrsToSave,
+            },
+          );
+        } catch (cfErr: any) {
+          console.warn("Failed to save invoice custom fields", cfErr);
         }
       }
 
