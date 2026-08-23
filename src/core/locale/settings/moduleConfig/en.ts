@@ -1,0 +1,149 @@
+export const moduleConfigEn = {
+  title: "Custom Fields Configuration",
+  subtitleUnified:
+    "Manage categories and dynamic custom attributes across modules",
+  livePreviewTitle: "Live Form Preview",
+  livePreviewDesc:
+    "Simulate how custom fields will render on actual voucher drawers.",
+  selectCategoryPreview: "Select category to preview:",
+  selectCatPlaceholder: "Select category",
+  noActiveCategoriesPreview:
+    "No active categories available. Add a category on the left panel.",
+  noAttrsToPreview: "This category has no attributes defined.",
+  attrsCount: "attributes",
+  categoriesCount: "categories",
+  optionsCount: "options",
+  addCategory: "Add Category",
+  newCategory: "Create New Category",
+  editCategory: "Edit Category",
+  catCode: "Category Code",
+  catName: "Category Name",
+  catDescription: "Description",
+  creatingCategoryHint: "Creating new category...",
+  editingCategoryHint: "Editing: {{name}}",
+  noCategories: "No categories defined yet.",
+  noCategoriesHint: "Click 'Add Category' above to get started.",
+  noAttrs: "No attributes in this category yet.",
+  addAttr: "Add Attribute",
+  editAttr: "Edit Attribute",
+  attrCode: "Attribute Code",
+  attrName: "Display Name",
+  attrFieldType: "Field Type",
+  attrConstraint: "Data Constraint",
+  isRequired: "Required field",
+  requiredHint: "Required",
+  requiredBadge: "Required",
+  used: "in use",
+  selectTypePlaceholder: "Select field type",
+  selectOptionsTitle: "Dropdown Options List",
+  noOptionsHint:
+    "No options added yet. Enter Key & Label above and press Add (or Enter).",
+  deleteCatTitle: "Delete Category",
+  deleteCatMsg:
+    'Are you sure you want to delete category "{{name}}"? If in use, please deactivate it instead.',
+  deleteAttrTitle: "Delete Attribute",
+  deleteAttrMsg:
+    'Are you sure you want to delete attribute "{{name}}"? If in use, please deactivate it instead.',
+  catCreated: "Category created successfully",
+  catUpdated: "Category updated successfully",
+  catDeleted: "Category deleted successfully",
+  catCreateError: "Failed to create category",
+  catUpdateError: "Failed to update category",
+  catDeleteDeleteError: "Failed to delete category",
+  catValidation: "Please enter both category code and name",
+  catCodeDuplicate:
+    'Category code "{{code}}" already exists. Please choose a different code.',
+  attrCreated: "Attribute created successfully",
+  attrUpdated: "Attribute updated successfully",
+  attrDeleted: "Attribute deleted successfully",
+  attrCreateError: "Failed to create attribute",
+  attrUpdateError: "Failed to update attribute",
+  attrDeleteError: "Failed to delete attribute",
+  attrValidation: "Please enter both attribute code and name",
+  attrCodeDuplicate:
+    'Attribute code "{{code}}" already exists in this category.',
+  selectOptionsRequired: "Combobox type requires at least one option.",
+  optionRequired: "Please enter both option Key and Label",
+  optionKeyDuplicate:
+    'Option key "{{key}}" already exists. Please choose a different key.',
+  loadError: "Failed to load custom fields configuration.",
+
+  domains: {
+    finance: "Finance & Accounting",
+    production: "Manufacturing & Engineering",
+    commerce: "Commerce & Sales",
+    inventory: "Warehouse & Inventory",
+    garage: "Garage & Aftersales",
+  },
+
+  modules: {
+    invoice: {
+      name: "Invoices & Taxes",
+      desc: "Input/output invoices, VAT & tax deduction",
+    },
+    bankTxn: {
+      name: "Bank Statements & Cash",
+      desc: "Bank transactions, cash books, accounting postings",
+    },
+    bom: {
+      name: "Bill of Materials (BOM)",
+      desc: "Parts & component BOMs, vehicle assembly structures",
+    },
+    production: {
+      name: "Manufacturing Orders",
+      desc: "Assembly progress, parts allocation & finished goods handover",
+    },
+    po: {
+      name: "Purchase Orders (PO)",
+      desc: "Purchase orders, goods receipt tracking & supplier reconciliation",
+    },
+    so: {
+      name: "Sales Orders (SO)",
+      desc: "Retail orders, dealer distribution & delivery",
+    },
+    item: {
+      name: "Items & SKUs",
+      desc: "Item master data, specifications and units of measure",
+    },
+    adjustment: {
+      name: "Inventory Audits",
+      desc: "Physical inventory audits, variance reconciliation",
+    },
+    garageCase: {
+      name: "Garage Repair Cases",
+      desc: "Vehicle reception, repair service orders & estimates",
+    },
+    afterSales: {
+      name: "Warranty & Handover",
+      desc: "Vehicle/battery serial lifecycle, handover & e-warranty",
+    },
+  },
+
+  fieldTypes: {
+    text: {
+      label: "Text",
+      subLabel: "Free text string, notes, code",
+      short: "Text",
+    },
+    number: {
+      label: "Number",
+      subLabel: "Quantities, dimensions, technical specs",
+      short: "Number",
+    },
+    select: {
+      label: "Combobox / Dropdown",
+      subLabel: "Fixed dropdown options list",
+      short: "List",
+    },
+    date: {
+      label: "Date",
+      subLabel: "Time, issue date, expiration date",
+      short: "Date",
+    },
+    checkbox: {
+      label: "Boolean / Toggle",
+      subLabel: "On/off switch (True/False)",
+      short: "Boolean",
+    },
+  },
+};

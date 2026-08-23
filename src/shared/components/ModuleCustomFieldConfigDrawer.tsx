@@ -48,6 +48,7 @@ import { PillTabs } from "@/shared/components/PillTabs";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import { useT } from "@/core/i18n";
+import { cn } from "@/shared/utils";
 import {
   moduleConfigApi,
   type ModuleKey,
@@ -223,31 +224,49 @@ export const ERP_MODULE_REGISTRY: ErpModuleDefinition[] = [
   },
 ];
 
-const FIELD_TYPE_OPTIONS: ComboboxOption[] = [
+const getFieldTypeOptions = (t: any): ComboboxOption[] => [
   {
     value: "TEXT",
-    label: "Văn bản (Text)",
-    subLabel: "Chuỗi ký tự tự do, ghi chú, mã hiệu",
+    label: t("moduleConfig.fieldTypes.text.label", "Văn bản (Text)"),
+    subLabel: t(
+      "moduleConfig.fieldTypes.text.subLabel",
+      "Chuỗi ký tự tự do, ghi chú, mã hiệu",
+    ),
   },
   {
     value: "NUMBER",
-    label: "Số (Number)",
-    subLabel: "Số lượng, kích thước, thông số kỹ thuật",
+    label: t("moduleConfig.fieldTypes.number.label", "Số (Number)"),
+    subLabel: t(
+      "moduleConfig.fieldTypes.number.subLabel",
+      "Số lượng, kích thước, thông số kỹ thuật",
+    ),
   },
   {
     value: "SELECT",
-    label: "Danh sách chọn (Combobox)",
-    subLabel: "Danh sách tùy chọn dropdown cố định",
+    label: t(
+      "moduleConfig.fieldTypes.select.label",
+      "Danh sách chọn (Combobox)",
+    ),
+    subLabel: t(
+      "moduleConfig.fieldTypes.select.subLabel",
+      "Danh sách tùy chọn dropdown cố định",
+    ),
   },
   {
     value: "DATE",
-    label: "Ngày tháng (Date)",
-    subLabel: "Thời gian, ngày cấp, hạn sử dụng",
+    label: t("moduleConfig.fieldTypes.date.label", "Ngày tháng (Date)"),
+    subLabel: t(
+      "moduleConfig.fieldTypes.date.subLabel",
+      "Thời gian, ngày cấp, hạn sử dụng",
+    ),
   },
   {
     value: "CHECKBOX",
-    label: "Đúng / Sai (Checkbox)",
-    subLabel: "Công tắc bật/tắt (Boolean True/False)",
+    label: t("moduleConfig.fieldTypes.checkbox.label", "Đúng / Sai (Boolean)"),
+    subLabel: t(
+      "moduleConfig.fieldTypes.checkbox.subLabel",
+      "Công tắc bật/tắt (True/False)",
+    ),
   },
 ];
 
@@ -259,12 +278,21 @@ const FIELD_TYPE_ICONS: Record<string, React.ReactNode> = {
   CHECKBOX: <ToggleLeft className="w-3.5 h-3.5" />,
 };
 
-const FIELD_TYPE_SHORT_LABELS: Record<string, string> = {
-  TEXT: "Văn bản",
-  NUMBER: "Số",
-  SELECT: "Danh sách",
-  DATE: "Ngày",
-  CHECKBOX: "Đúng/Sai",
+const getFieldTypeShortLabel = (type: string, t: any): string => {
+  switch (type) {
+    case "TEXT":
+      return t("moduleConfig.fieldTypes.text.short", "Văn bản");
+    case "NUMBER":
+      return t("moduleConfig.fieldTypes.number.short", "Số");
+    case "SELECT":
+      return t("moduleConfig.fieldTypes.select.short", "Danh sách");
+    case "DATE":
+      return t("moduleConfig.fieldTypes.date.short", "Ngày");
+    case "CHECKBOX":
+      return t("moduleConfig.fieldTypes.checkbox.short", "Đúng/Sai");
+    default:
+      return type;
+  }
 };
 
 // ============================================================================
@@ -502,6 +530,7 @@ export interface ModuleCustomFieldConfigContentProps {
   activeModuleKey: string;
   onSelectModule: (key: string) => void;
   isOpen?: boolean;
+  onDirtyChange?: (isDirty: boolean) => void;
 }
 
 export function ModuleCustomFieldConfigContent({
@@ -509,6 +538,7 @@ export function ModuleCustomFieldConfigContent({
   activeModuleKey,
   onSelectModule,
   isOpen = true,
+  onDirtyChange,
 }: ModuleCustomFieldConfigContentProps) {
   const t = useT();
   const queryClient = useQueryClient();
@@ -528,6 +558,9 @@ export function ModuleCustomFieldConfigContent({
       })),
     [domainMods, t],
   );
+
+  // Dynamic translated field type options
+  const fieldTypeOptions = useMemo(() => getFieldTypeOptions(t), [t]);
 
   // Query categories + attributes scoped by activeModuleKey
   const {
@@ -586,6 +619,77 @@ export function ModuleCustomFieldConfigContent({
   const [newOptionLabel, setNewOptionLabel] = useState("");
   const [deleteAttrTarget, setDeleteAttrTarget] =
     useState<ModuleAttributeDef | null>(null);
+
+  // State: Discard / Cancel Confirm Modal for subforms or module tab switch
+  const [cancelConfirmTarget, setCancelConfirmTarget] = useState<
+    "category" | "attr" | { type: "module"; nextKey: string } | null
+  >(null);
+
+  // Computed Dirty State
+  const isCategoryDirty = useMemo(() => {
+    if (isCreatingCategory) {
+      return Boolean(
+        catCode.trim() !== "" ||
+        catName.trim() !== "" ||
+        catDescription.trim() !== "",
+      );
+    }
+    if (editingCategory) {
+      return (
+        catCode.trim() !== (editingCategory.code || "") ||
+        catName.trim() !== (editingCategory.name || "") ||
+        catDescription.trim() !== (editingCategory.description || "")
+      );
+    }
+    return false;
+  }, [isCreatingCategory, editingCategory, catCode, catName, catDescription]);
+
+  const isAttrDirty = useMemo(() => {
+    if (addingAttrForCatId !== null) {
+      return Boolean(
+        attrCode.trim() !== "" ||
+        attrName.trim() !== "" ||
+        attrRequired ||
+        attrFieldType !== "TEXT" ||
+        attrOptions.length > 0 ||
+        newOptionKey.trim() !== "" ||
+        newOptionLabel.trim() !== "",
+      );
+    }
+    if (editingAttr) {
+      const origOpts = editingAttr.options || [];
+      const optsChanged =
+        JSON.stringify(attrOptions) !== JSON.stringify(origOpts);
+      return (
+        attrCode.trim() !== (editingAttr.code || "") ||
+        attrName.trim() !== (editingAttr.name || "") ||
+        attrFieldType !== (editingAttr.fieldType || "TEXT") ||
+        attrRequired !== Boolean(editingAttr.isRequired) ||
+        optsChanged ||
+        Boolean(newOptionKey.trim() !== "" || newOptionLabel.trim() !== "")
+      );
+    }
+    return false;
+  }, [
+    addingAttrForCatId,
+    editingAttr,
+    attrCode,
+    attrName,
+    attrFieldType,
+    attrRequired,
+    attrOptions,
+    newOptionKey,
+    newOptionLabel,
+  ]);
+
+  const isDirty = isCategoryDirty || isAttrDirty;
+
+  useEffect(() => {
+    onDirtyChange?.(isDirty);
+    return () => {
+      onDirtyChange?.(false);
+    };
+  }, [isDirty, onDirtyChange]);
 
   // Mutations
   const createCategoryMutation = useMutation({
@@ -765,6 +869,14 @@ export function ModuleCustomFieldConfigContent({
     setCatDescription("");
   };
 
+  const handleRequestCloseCategory = () => {
+    if (isCategoryDirty) {
+      setCancelConfirmTarget("category");
+    } else {
+      resetCatForm();
+    }
+  };
+
   const handleToggleCategoryActive = (cat: ModuleCategory) => {
     const nextActive = !cat.isActive;
     updateCategoryMutation.mutate({
@@ -855,6 +967,23 @@ export function ModuleCustomFieldConfigContent({
     setAttrOptions([]);
     setNewOptionKey("");
     setNewOptionLabel("");
+  };
+
+  const handleRequestCloseAttr = () => {
+    if (isAttrDirty) {
+      setCancelConfirmTarget("attr");
+    } else {
+      resetAttrForm();
+    }
+  };
+
+  const handleSelectModuleWithGuard = (nextKey: string) => {
+    if (nextKey === activeModuleKey) return;
+    if (isDirty) {
+      setCancelConfirmTarget({ type: "module", nextKey });
+    } else {
+      onSelectModule(nextKey);
+    }
   };
 
   const handleAddOption = () => {
@@ -989,7 +1118,7 @@ export function ModuleCustomFieldConfigContent({
               triggerClassName="h-7 px-4 text-xs rounded-full"
               items={pillTabItems}
               value={activeModuleKey}
-              onValueChange={onSelectModule}
+              onValueChange={handleSelectModuleWithGuard}
               hideBorder
             />
           </div>
@@ -1119,7 +1248,7 @@ export function ModuleCustomFieldConfigContent({
                 <Button
                   size="sm"
                   variant="secondary"
-                  onClick={resetCatForm}
+                  onClick={handleRequestCloseCategory}
                   disabled={
                     createCategoryMutation.isPending ||
                     updateCategoryMutation.isPending
@@ -1194,71 +1323,90 @@ export function ModuleCustomFieldConfigContent({
           return (
             <DrawerSection
               key={cat.id}
-              title={`${cat.name} (${cat.code})`}
+              title={
+                <div className="flex items-center gap-2 min-w-0 flex-wrap">
+                  <span className="font-bold text-foreground normal-case text-xs">
+                    {cat.name}
+                  </span>
+                  <span className="text-[11px] font-mono text-muted-foreground font-normal">
+                    ({cat.code})
+                  </span>
+                  <Badge
+                    variant={cat.isActive ? "default" : "secondary"}
+                    className="text-[9px] px-1.5 py-0 font-normal uppercase"
+                  >
+                    {cat.isActive
+                      ? t("common.active", "Đang dùng")
+                      : t("common.inactive", "Ngừng dùng")}
+                  </Badge>
+                  <Badge
+                    variant="outline"
+                    className="text-[9px] font-mono font-normal text-muted-foreground"
+                  >
+                    {defs.length} {t("moduleConfig.attrsCount", "thuộc tính")}
+                  </Badge>
+                </div>
+              }
+              titleExtra={
+                <div className="flex items-center gap-1 shrink-0">
+                  <Tooltip
+                    content={
+                      cat.isActive
+                        ? t("common.deactivate", "Ngừng hoạt động danh mục")
+                        : t("common.activate", "Kích hoạt lại danh mục")
+                    }
+                  >
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="w-6 h-6 hover:bg-surface/80"
+                      onClick={() => handleToggleCategoryActive(cat)}
+                    >
+                      {cat.isActive ? (
+                        <Power className="w-3.5 h-3.5 text-emerald-500" />
+                      ) : (
+                        <PowerOff className="w-3.5 h-3.5 text-muted-foreground" />
+                      )}
+                    </Button>
+                  </Tooltip>
+                  <Tooltip
+                    content={t(
+                      "moduleConfig.editCategory",
+                      "Chỉnh sửa danh mục",
+                    )}
+                  >
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="w-6 h-6 text-muted-foreground hover:text-foreground hover:bg-surface/80"
+                      onClick={() => openEditCategory(cat)}
+                    >
+                      <Edit2 className="w-3.5 h-3.5" />
+                    </Button>
+                  </Tooltip>
+                  <Tooltip
+                    content={t("moduleConfig.deleteCatTitle", "Xóa danh mục")}
+                  >
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="w-6 h-6 text-destructive hover:bg-destructive/10"
+                      onClick={() => setDeleteCatTarget(cat)}
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </Button>
+                  </Tooltip>
+                </div>
+              }
               collapsible
               defaultCollapsed={false}
             >
               <div className="flex flex-col gap-3">
-                {/* Category Header Controls */}
-                <div className="flex items-center justify-between px-2.5 py-1.5 bg-surface/40 rounded-lg">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <Badge
-                      variant={cat.isActive ? "default" : "secondary"}
-                      className="text-[10px]"
-                    >
-                      {cat.isActive
-                        ? t("common.active", "Đang dùng")
-                        : t("common.inactive", "Ngừng dùng")}
-                    </Badge>
-                    {cat.description && (
-                      <span className="text-xs text-muted-foreground truncate">
-                        {cat.description}
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-1 shrink-0">
-                    <Tooltip
-                      content={
-                        cat.isActive
-                          ? t("common.deactivate", "Ngừng hoạt động")
-                          : t("common.activate", "Kích hoạt lại")
-                      }
-                    >
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="w-7 h-7"
-                        onClick={() => handleToggleCategoryActive(cat)}
-                      >
-                        {cat.isActive ? (
-                          <Power className="w-3.5 h-3.5 text-emerald-500" />
-                        ) : (
-                          <PowerOff className="w-3.5 h-3.5 text-muted-foreground" />
-                        )}
-                      </Button>
-                    </Tooltip>
-                    <Tooltip content={t("common.edit", "Chỉnh sửa")}>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="w-7 h-7"
-                        onClick={() => openEditCategory(cat)}
-                      >
-                        <Edit2 className="w-3.5 h-3.5 text-muted-foreground" />
-                      </Button>
-                    </Tooltip>
-                    <Tooltip content={t("common.delete", "Xóa danh mục")}>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="w-7 h-7 text-destructive hover:bg-destructive/10"
-                        onClick={() => setDeleteCatTarget(cat)}
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </Button>
-                    </Tooltip>
-                  </div>
-                </div>
+                {cat.description && (
+                  <p className="text-[11px] text-muted-foreground italic px-1">
+                    {cat.description}
+                  </p>
+                )}
 
                 {/* Attribute Form (Inside Category) */}
                 {(isAddingAttr ||
@@ -1275,7 +1423,7 @@ export function ModuleCustomFieldConfigContent({
                         size="icon"
                         variant="ghost"
                         className="w-6 h-6"
-                        onClick={resetAttrForm}
+                        onClick={handleRequestCloseAttr}
                       >
                         <X className="w-3.5 h-3.5" />
                       </Button>
@@ -1312,14 +1460,14 @@ export function ModuleCustomFieldConfigContent({
                       </DrawerField>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-end">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       {/* Standard Combobox for Field Type */}
                       <DrawerField
                         label={t("moduleConfig.attrFieldType", "Kiểu dữ liệu")}
                         required
                       >
                         <Combobox
-                          options={FIELD_TYPE_OPTIONS}
+                          options={fieldTypeOptions}
                           value={attrFieldType}
                           onChange={(v) =>
                             setAttrFieldType(v as ModuleAttributeFieldType)
@@ -1335,83 +1483,131 @@ export function ModuleCustomFieldConfigContent({
                         />
                       </DrawerField>
 
-                      <div className="flex items-center gap-2 pb-2">
-                        <Checkbox
-                          id={`attr-req-${cat.id}`}
-                          checked={attrRequired}
-                          onCheckedChange={(checked) =>
-                            setAttrRequired(Boolean(checked))
-                          }
-                        />
+                      {/* Aligned Checkbox for Required constraint */}
+                      <DrawerField
+                        label={t(
+                          "moduleConfig.attrConstraint",
+                          "Ràng buộc dữ liệu",
+                        )}
+                      >
                         <label
                           htmlFor={`attr-req-${cat.id}`}
-                          className="text-xs text-foreground cursor-pointer select-none font-medium"
+                          className="flex items-center gap-2.5 h-[38px] px-3 rounded-xl border border-border bg-muted/20 hover:border-border-hover hover:bg-surface cursor-pointer select-none transition-all"
                         >
-                          {t(
-                            "moduleConfig.isRequired",
-                            "Bắt buộc nhập (Required)",
-                          )}
+                          <Checkbox
+                            id={`attr-req-${cat.id}`}
+                            checked={attrRequired}
+                            onCheckedChange={(checked) =>
+                              setAttrRequired(Boolean(checked))
+                            }
+                          />
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <span className="text-xs font-medium text-foreground">
+                              {t("moduleConfig.isRequired", "Bắt buộc nhập")}
+                            </span>
+                            <span className="text-[10px] text-muted-foreground font-normal">
+                              ({t("moduleConfig.requiredHint", "Required")})
+                            </span>
+                          </div>
                         </label>
-                      </div>
+                      </DrawerField>
                     </div>
 
-                    {/* SELECT Options builder */}
+                    {/* SELECT Options builder - Sleek, flat, modern UI */}
                     {attrFieldType === "SELECT" && (
-                      <div className="p-3 bg-surface/50 rounded-lg border border-border/60 flex flex-col gap-2">
-                        <span className="text-xs font-semibold text-foreground">
-                          {t(
-                            "moduleConfig.selectOptionsTitle",
-                            "Danh sách tùy chọn (Options)",
-                          )}
-                        </span>
-                        <div className="flex items-center gap-2">
+                      <div className="pt-3 mt-1 border-t border-border/50 flex flex-col gap-2.5">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                            <ListFilter className="w-3.5 h-3.5 text-primary" />
+                            {t(
+                              "moduleConfig.selectOptionsTitle",
+                              "Danh sách tùy chọn (Dropdown Options)",
+                            )}
+                          </span>
+                          <Badge
+                            variant="outline"
+                            className="text-[10px] font-mono font-medium"
+                          >
+                            {attrOptions.length}{" "}
+                            {t("moduleConfig.optionsCount", "tùy chọn")}
+                          </Badge>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-[140px_1fr_auto] gap-2">
                           <input
                             type="text"
-                            className={inputCls}
+                            className={cn(
+                              inputCls,
+                              "font-mono uppercase text-xs",
+                            )}
                             value={newOptionKey}
-                            onChange={(e) => setNewOptionKey(e.target.value)}
-                            placeholder="Mã (Key, VD: RED)"
+                            onChange={(e) =>
+                              setNewOptionKey(e.target.value.toUpperCase())
+                            }
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                e.preventDefault();
+                                handleAddOption();
+                              }
+                            }}
+                            placeholder="Mã (VD: RED)"
                           />
                           <input
                             type="text"
                             className={inputCls}
                             value={newOptionLabel}
                             onChange={(e) => setNewOptionLabel(e.target.value)}
-                            placeholder="Tên (Label, VD: Màu đỏ)"
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                e.preventDefault();
+                                handleAddOption();
+                              }
+                            }}
+                            placeholder="Tên hiển thị (VD: Màu đỏ)"
                           />
                           <Button
+                            type="button"
                             size="sm"
-                            variant="secondary"
+                            variant="primary"
                             onClick={handleAddOption}
-                            className="shrink-0 text-xs"
+                            className="shrink-0 text-xs flex items-center gap-1 px-3"
                           >
-                            <Plus className="w-3.5 h-3.5 mr-1" />
+                            <Plus className="w-3.5 h-3.5" />
                             {t("common.add", "Thêm")}
                           </Button>
                         </div>
 
-                        {attrOptions.length > 0 && (
-                          <div className="flex flex-wrap gap-1.5 mt-1">
+                        {attrOptions.length > 0 ? (
+                          <div className="flex flex-wrap gap-1.5 pt-1">
                             {attrOptions.map((opt, idx) => (
-                              <Badge
+                              <div
                                 key={opt.value}
-                                variant="secondary"
-                                className="text-xs py-1 px-2 flex items-center gap-1.5"
+                                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-surface border border-border/80 text-xs shadow-2xs group hover:border-border transition-all"
                               >
-                                <span>{opt.label}</span>
-                                <span className="text-[10px] opacity-60">
-                                  ({opt.value})
+                                <span className="font-mono text-[10px] font-semibold px-1 py-0.5 rounded bg-primary/10 text-primary">
+                                  {opt.value}
+                                </span>
+                                <span className="text-foreground font-medium">
+                                  {opt.label}
                                 </span>
                                 <button
                                   type="button"
                                   onClick={() => handleRemoveOption(idx)}
-                                  className="text-muted-foreground hover:text-destructive transition-colors ml-0.5 cursor-pointer"
+                                  className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded p-0.5 transition-colors ml-0.5 cursor-pointer"
+                                  title={t("common.delete", "Xóa")}
                                 >
                                   <X className="w-3 h-3" />
                                 </button>
-                              </Badge>
+                              </div>
                             ))}
                           </div>
+                        ) : (
+                          <p className="text-[11px] text-muted-foreground italic py-1">
+                            {t(
+                              "moduleConfig.noOptionsHint",
+                              "Chưa có tùy chọn nào. Nhập Mã & Tên ở trên rồi bấm Thêm (hoặc nhấn phím Enter).",
+                            )}
+                          </p>
                         )}
                       </div>
                     )}
@@ -1420,7 +1616,7 @@ export function ModuleCustomFieldConfigContent({
                       <Button
                         size="sm"
                         variant="secondary"
-                        onClick={resetAttrForm}
+                        onClick={handleRequestCloseAttr}
                         disabled={
                           createAttrMutation.isPending ||
                           updateAttrMutation.isPending
@@ -1472,8 +1668,7 @@ export function ModuleCustomFieldConfigContent({
                         >
                           {FIELD_TYPE_ICONS[attr.fieldType]}
                           <span>
-                            {FIELD_TYPE_SHORT_LABELS[attr.fieldType] ||
-                              attr.fieldType}
+                            {getFieldTypeShortLabel(attr.fieldType, t)}
                           </span>
                         </Badge>
                         <span className="font-medium text-foreground truncate">
@@ -1573,6 +1768,35 @@ export function ModuleCustomFieldConfigContent({
         })}
       </div>
 
+      {/* Discard / Cancel Confirmation Modal for Subforms / Module Tab Switch */}
+      <ConfirmModal
+        open={cancelConfirmTarget !== null}
+        title={t("common.confirmCancelTitle", "Xác nhận hủy thay đổi")}
+        message={t(
+          "common.confirmCancelDesc",
+          "Bạn có thay đổi chưa được lưu. Nếu thoát bây giờ, các thay đổi sẽ bị mất. Bạn có chắc chắn muốn tiếp tục?",
+        )}
+        confirmLabel={t("common.discardChanges", "Hủy thay đổi")}
+        cancelLabel={t("common.continueEditing", "Tiếp tục sửa")}
+        danger
+        onConfirm={() => {
+          if (cancelConfirmTarget === "category") {
+            resetCatForm();
+          } else if (cancelConfirmTarget === "attr") {
+            resetAttrForm();
+          } else if (
+            typeof cancelConfirmTarget === "object" &&
+            cancelConfirmTarget?.type === "module"
+          ) {
+            resetCatForm();
+            resetAttrForm();
+            onSelectModule(cancelConfirmTarget.nextKey);
+          }
+          setCancelConfirmTarget(null);
+        }}
+        onCancel={() => setCancelConfirmTarget(null)}
+      />
+
       {/* Delete Category Modal */}
       <ConfirmModal
         open={!!deleteCatTarget}
@@ -1631,6 +1855,10 @@ export function ModuleCustomFieldConfigDrawer({
 }: ModuleCustomFieldConfigDrawerProps) {
   const t = useT();
 
+  // Dirty state tracking across the drawer content
+  const [isContentDirty, setIsContentDirty] = useState(false);
+  const [pendingDomainKey, setPendingDomainKey] = useState<string | null>(null);
+
   // Query ALL categories across the ERP ecosystem to compute total attributes count per domain
   const { data: allCategories = [] } = useQuery({
     queryKey: ["module-config-all-categories"],
@@ -1685,8 +1913,7 @@ export function ModuleCustomFieldConfigDrawer({
 
   const activeDomain = activeModuleDef?.domain || "FINANCE";
 
-  // When domain group tab changes, switch to the first module of that domain
-  const handleDomainGroupChange = (domainKey: string) => {
+  const executeDomainGroupChange = (domainKey: string) => {
     const domainMods = ERP_MODULE_REGISTRY.filter(
       (m) => m.domain === domainKey,
     );
@@ -1696,6 +1923,16 @@ export function ModuleCustomFieldConfigDrawer({
         setActiveModuleKey(domainMods[0].key);
       }
     }
+  };
+
+  // When domain group tab changes, check if dirty before switching
+  const handleDomainGroupChange = (domainKey: string) => {
+    if (domainKey === activeDomain) return;
+    if (isContentDirty) {
+      setPendingDomainKey(domainKey);
+      return;
+    }
+    executeDomainGroupChange(domainKey);
   };
 
   // Build Top Group Tabs for the 5 ERP Domains
@@ -1718,6 +1955,7 @@ export function ModuleCustomFieldConfigDrawer({
             activeModuleKey={activeModuleKey}
             onSelectModule={setActiveModuleKey}
             isOpen={open}
+            onDirtyChange={setIsContentDirty}
           />
         ),
       };
@@ -1737,35 +1975,59 @@ export function ModuleCustomFieldConfigDrawer({
       : t("moduleConfig.title", "Cấu hình trường tùy chỉnh");
 
   return (
-    <StandardFormDrawer
-      open={open}
-      mode="view"
-      onClose={onClose}
-      icon={<Settings className="w-5 h-5 text-primary" />}
-      title={titleText}
-      subtitle={t(
-        "moduleConfig.subtitleUnified",
-        "Quản lý danh mục & các thuộc tính động cấu hình theo từng phân hệ",
-      )}
-      layout="2-columns"
-      size="lg"
-      zIndex={410}
-      tabs={tabs}
-      activeTabKey={activeDomain}
-      onTabChange={handleDomainGroupChange}
-      collapsibleRightPanel={true}
-      rightPanelTitle={t(
-        "moduleConfig.livePreviewTitle",
-        "Xem trước Form thực tế",
-      )}
-      rightPanelDefaultCollapsed={false}
-      stickyRightPanel={true}
-      rightPanel={
-        <ModuleLivePreviewPanel
-          categories={currentModuleCategories}
-          moduleKey={activeModuleKey}
-        />
-      }
-    />
+    <>
+      <StandardFormDrawer
+        open={open}
+        mode="view"
+        onClose={onClose}
+        confirmOnClose={isContentDirty}
+        icon={<Settings className="w-5 h-5 text-primary" />}
+        title={titleText}
+        subtitle={t(
+          "moduleConfig.subtitleUnified",
+          "Quản lý danh mục & các thuộc tính động cấu hình theo từng phân hệ",
+        )}
+        layout="2-columns"
+        size="lg"
+        zIndex={410}
+        tabs={tabs}
+        activeTabKey={activeDomain}
+        onTabChange={handleDomainGroupChange}
+        collapsibleRightPanel={true}
+        rightPanelTitle={t(
+          "moduleConfig.livePreviewTitle",
+          "Xem trước Form thực tế",
+        )}
+        rightPanelDefaultCollapsed={false}
+        stickyRightPanel={true}
+        rightPanel={
+          <ModuleLivePreviewPanel
+            categories={currentModuleCategories}
+            moduleKey={activeModuleKey}
+          />
+        }
+      />
+
+      {/* Discard confirmation when switching Top Domain Tab while dirty */}
+      <ConfirmModal
+        open={pendingDomainKey !== null}
+        title={t("common.confirmCancelTitle", "Xác nhận hủy thay đổi")}
+        message={t(
+          "common.confirmCancelDesc",
+          "Bạn có thay đổi chưa được lưu. Nếu chuyển phân hệ khác bây giờ, các thay đổi sẽ bị mất. Bạn có chắc chắn muốn chuyển?",
+        )}
+        confirmLabel={t("common.discardChanges", "Chuyển phân hệ")}
+        cancelLabel={t("common.continueEditing", "Tiếp tục sửa")}
+        danger
+        onConfirm={() => {
+          if (pendingDomainKey) {
+            setIsContentDirty(false);
+            executeDomainGroupChange(pendingDomainKey);
+          }
+          setPendingDomainKey(null);
+        }}
+        onCancel={() => setPendingDomainKey(null)}
+      />
+    </>
   );
 }

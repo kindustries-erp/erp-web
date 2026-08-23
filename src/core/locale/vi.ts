@@ -48,8 +48,10 @@ import { inventoryTrackingLotVi } from "@/core/locale/inventory/inventoryTrackin
 import { inventoryTrackingCustomVi } from "@/core/locale/inventory/inventoryTrackingCustom/vi";
 import { bomConfigVi } from "@/core/locale/manufacturing/bomConfig/vi";
 import { changelogVi } from "@/core/locale/system/changelog/vi";
+import { moduleConfigVi } from "@/core/locale/settings/moduleConfig/vi";
 
 export const vi = {
+  moduleConfig: moduleConfigVi,
   nav: navVi,
   activityLogs: activityLogsVi,
   breadcrumb: breadcrumbVi,
