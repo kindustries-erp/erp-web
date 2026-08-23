@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState, useRef, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   DrawerField,
@@ -16,7 +16,8 @@ import {
   type ModuleAttributeDef,
 } from "@/core/api/moduleConfigApi";
 import { formatGMT7 } from "@/shared/utils/format";
-import { Tag, Layers } from "lucide-react";
+import { Tag, Layers, X } from "lucide-react";
+import { cn } from "@/shared/utils";
 
 export interface ModuleEntityCustomFieldsSectionProps {
   moduleKey: ModuleKey;
@@ -31,6 +32,117 @@ export interface ModuleEntityCustomFieldsSectionProps {
   defaultCollapsed?: boolean;
   readOnly?: boolean;
   className?: string;
+}
+
+function BufferedTextInput({
+  type = "text",
+  value,
+  onChange,
+  placeholder,
+  className = inputCls,
+  debounceMs = 500,
+  allowClear = true,
+}: {
+  type?: "text" | "number";
+  value: any;
+  onChange: (val: string) => void;
+  placeholder?: string;
+  className?: string;
+  debounceMs?: number;
+  allowClear?: boolean;
+}) {
+  const [localValue, setLocalValue] = useState<string>(
+    value !== undefined && value !== null ? String(value) : "",
+  );
+  const inputRef = useRef<HTMLInputElement>(null);
+  const isFocusedRef = useRef(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const latestOnChangeRef = useRef(onChange);
+  latestOnChangeRef.current = onChange;
+
+  useEffect(() => {
+    if (!isFocusedRef.current) {
+      setLocalValue(value !== undefined && value !== null ? String(value) : "");
+    }
+  }, [value]);
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+    };
+  }, []);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setLocalValue(val);
+
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+    }
+    timerRef.current = setTimeout(() => {
+      latestOnChangeRef.current(val);
+    }, debounceMs);
+  };
+
+  const handleFocus = () => {
+    isFocusedRef.current = true;
+  };
+
+  const handleBlur = () => {
+    isFocusedRef.current = false;
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+    latestOnChangeRef.current(localValue);
+  };
+
+  const handleClear = (e: React.MouseEvent | React.TouchEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setLocalValue("");
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+    latestOnChangeRef.current("");
+    inputRef.current?.focus();
+  };
+
+  const hasValue =
+    localValue !== undefined &&
+    localValue !== null &&
+    String(localValue).length > 0;
+
+  return (
+    <div className="relative w-full flex items-center">
+      <input
+        ref={inputRef}
+        type={type}
+        className={cn(className, allowClear && hasValue && "pr-8")}
+        value={localValue}
+        onChange={handleChange}
+        onFocus={handleFocus}
+        onBlur={handleBlur}
+        placeholder={placeholder}
+      />
+      {allowClear && hasValue && (
+        <button
+          type="button"
+          tabIndex={-1}
+          onMouseDown={handleClear}
+          onTouchStart={handleClear}
+          onClick={handleClear}
+          className="absolute right-2 text-muted-foreground/60 hover:text-foreground hover:bg-muted/80 p-0.5 rounded-full transition-colors flex items-center justify-center cursor-pointer select-none"
+          title="Xóa nhanh"
+        >
+          <X className="w-3.5 h-3.5" />
+        </button>
+      )}
+    </div>
+  );
 }
 
 export function ModuleEntityCustomFieldsSection({
@@ -50,14 +162,14 @@ export function ModuleEntityCustomFieldsSection({
   const t = useT();
 
   // 1. Fetch categories for this moduleKey
-  const { data: categories = [], isLoading: loadingCategories } = useQuery({
+  const { data: categories = [] } = useQuery({
     queryKey: ["module-config-categories", moduleKey],
     queryFn: () => moduleConfigApi.getCategories(moduleKey),
     enabled: !!moduleKey,
   });
 
   // 2. Fetch saved values for entity if entityId is present
-  const { data: savedEntityData, isLoading: loadingValues } = useQuery({
+  const { data: savedEntityData } = useQuery({
     queryKey: ["module-entity-values", moduleKey, entityId],
     queryFn: () => moduleConfigApi.getEntityValues(moduleKey, entityId!),
     enabled: !!entityId && !readOnly,
@@ -69,7 +181,7 @@ export function ModuleEntityCustomFieldsSection({
 
   // Attributes resolution (prop takes precedence over query data)
   const effectiveAttributes = useMemo(() => {
-    if (attributes && Object.keys(attributes).length > 0) {
+    if (attributes !== undefined && attributes !== null) {
       return attributes;
     }
     return savedEntityData?.attributes || {};
@@ -245,12 +357,12 @@ export function ModuleEntityCustomFieldsSection({
                         label={attr.name}
                         required={attr.isRequired}
                       >
-                        <input
+                        <BufferedTextInput
                           type="number"
                           className={inputCls}
                           value={val !== undefined && val !== null ? val : ""}
-                          onChange={(e) =>
-                            handleAttributeChange(attr.id, e.target.value)
+                          onChange={(newVal) =>
+                            handleAttributeChange(attr.id, newVal)
                           }
                           placeholder={`Nhập ${attr.name}...`}
                         />
@@ -281,12 +393,12 @@ export function ModuleEntityCustomFieldsSection({
                       label={attr.name}
                       required={attr.isRequired}
                     >
-                      <input
+                      <BufferedTextInput
                         type="text"
                         className={inputCls}
                         value={val !== undefined && val !== null ? val : ""}
-                        onChange={(e) =>
-                          handleAttributeChange(attr.id, e.target.value)
+                        onChange={(newVal) =>
+                          handleAttributeChange(attr.id, newVal)
                         }
                         placeholder={`Nhập ${attr.name}...`}
                       />

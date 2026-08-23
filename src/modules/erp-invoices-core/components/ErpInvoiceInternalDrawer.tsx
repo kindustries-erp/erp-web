@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import {
   StandardFormDrawer,
   DrawerAuditTimeline,
@@ -200,30 +200,34 @@ export function ErpInvoiceInternalDrawer({
     );
   };
 
-  const editActions = [
-    {
-      label: t("actionCancel", "Hủy"),
-      onClick: cancelEdit,
-      variant: "outline" as const,
-      disabled: saving,
-    },
-    {
-      label: saving
-        ? t("actionSaving", "Đang lưu...")
-        : t("actionSaveChange", "Lưu thay đổi"),
-      primary: true,
-      loading: saving,
-      disabled: saving,
-      onClick: () => handleSave("CONFIRMED"),
-    },
-  ];
+  const editActions = useMemo(
+    () => [
+      {
+        label: t("actionCancel", "Hủy"),
+        onClick: cancelEdit,
+        variant: "outline" as const,
+        disabled: saving,
+      },
+      {
+        label: saving
+          ? t("actionSaving", "Đang lưu...")
+          : t("actionSaveChange", "Lưu thay đổi"),
+        primary: true,
+        loading: saving,
+        disabled: saving,
+        onClick: () => handleSave("CONFIRMED"),
+      },
+    ],
+    [cancelEdit, handleSave, saving, t],
+  );
 
   const drawerTitle = detailInvoice
     ? `${t("internalTitle", "Thông tin nội bộ")}: ${detailInvoice.invoiceNo}`
     : t("internalTitle", "Thông tin nội bộ");
 
-  let titleExtra: React.ReactNode = undefined;
-  if (detailInvoice && detailInvoice.taxInvoiceStatus != null) {
+  const titleExtra = useMemo(() => {
+    if (!detailInvoice || detailInvoice.taxInvoiceStatus == null)
+      return undefined;
     const lbl = formatTaxInvoiceStatus(detailInvoice.taxInvoiceStatus);
     let badgeClass = "border-slate-200 bg-slate-50 text-slate-700";
     switch (detailInvoice.taxInvoiceStatus) {
@@ -240,17 +244,17 @@ export function ErpInvoiceInternalDrawer({
         badgeClass = "border-red-200 bg-red-50 text-red-700";
         break;
     }
-    titleExtra = (
+    return (
       <Badge variant="ghost" className={`border ${badgeClass}`}>
         {lbl}
       </Badge>
     );
-  }
+  }, [detailInvoice]);
 
   // Dropdown menu items for the left side of the footer (View mode only)
-  let footerLeft: React.ReactNode = undefined;
+  const footerLeft = useMemo(() => {
+    if (editMode || !onSyncDetail) return undefined;
 
-  if (!editMode && onSyncDetail) {
     const dropdownItems: ActionDropdownItem[] = [
       {
         groupLabel: "ĐỒNG BỘ",
@@ -269,7 +273,7 @@ export function ErpInvoiceInternalDrawer({
       },
     ];
 
-    footerLeft = (
+    return (
       <ActionDropdown
         align="start"
         items={dropdownItems}
@@ -286,11 +290,15 @@ export function ErpInvoiceInternalDrawer({
         }
       />
     );
-  }
+  }, [editMode, onSyncDetail, loadingDetail]);
+
+  const formAccountingEnabled = (form as any)?.accountingEnabled;
 
   // Build Top Navigation Tabs for Invoice
-  let resolvedDrawerTabs = customTabs;
-  if (!resolvedDrawerTabs && detailInvoice) {
+  const resolvedDrawerTabs = useMemo(() => {
+    if (customTabs) return customTabs;
+    if (!detailInvoice) return undefined;
+
     const auditItems: DrawerAuditLogItem[] = [];
 
     if (detailInvoice.createdAt) {
@@ -331,7 +339,7 @@ export function ErpInvoiceInternalDrawer({
       (detailInvoice.pdfFiles?.length || (detailInvoice.pdfFileKey ? 1 : 0)) +
       (detailInvoice.attachments?.length || 0);
 
-    resolvedDrawerTabs = [
+    return [
       // 1. Tab Chi tiết hóa đơn (Form / Sheet Preview Chính)
       {
         key: "invoice_details",
@@ -679,7 +687,32 @@ export function ErpInvoiceInternalDrawer({
         ),
       },
     ];
-  }
+  }, [
+    customTabs,
+    detailInvoice,
+    t,
+    children,
+    editMode,
+    postingState,
+    formAccountingEnabled,
+    form?.branchId,
+    form?.invoiceDate,
+    form?.description,
+    form?.invoiceNo,
+    form?.preVatAmount,
+    form?.vatAmount,
+    form?.totalAmount,
+    form?.sellerTaxCode,
+    form?.pendingDocumentChanges,
+    form?.pendingDeletedPdfs,
+    form?.pendingAddedAttachments,
+    fieldSet,
+    pendingUnpost,
+    direction,
+    onUnpost,
+    onSyncDetail,
+    handleFetchGraph,
+  ]);
 
   return (
     <>

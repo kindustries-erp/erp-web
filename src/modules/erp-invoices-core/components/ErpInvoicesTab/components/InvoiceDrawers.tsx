@@ -103,9 +103,7 @@ export function InvoiceDrawers({
         loadingDetail={formHook.loadingDetail}
         onSyncDetail={formHook.handleSyncDetail}
         form={formHook.form}
-        fieldSet={(key: string, value: any) =>
-          formHook.setForm((prev) => ({ ...prev, [key]: value }))
-        }
+        fieldSet={formHook.fieldSet}
         direction={direction}
         postingState={formHook.postingState}
         pendingUnpost={formHook.pendingUnpost}
@@ -120,9 +118,7 @@ export function InvoiceDrawers({
               <ErpInvoiceInternalSidebar
                 form={formHook.form}
                 editMode={formHook.editMode}
-                fieldSet={(key: string, value: any) =>
-                  formHook.setForm((prev) => ({ ...prev, [key]: value }))
-                }
+                fieldSet={formHook.fieldSet}
                 invoiceId={formHook.detailInvoice?.id ?? null}
                 pendingTagIds={formHook.pendingTagIds}
                 onPendingTagsChange={formHook.setPendingTagIds}

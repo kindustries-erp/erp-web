@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import {
   erpInvoicesCoreApi,
   type ErpInvoice,
@@ -679,12 +679,17 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
     }
   }
 
+  const fieldSet = useCallback((key: string, value: unknown) => {
+    setForm((prev) => ({ ...prev, [key]: value }));
+  }, []);
+
   return {
     infoDrawerOpen,
     internalDrawerOpen,
     detailInvoice,
     editMode,
     form,
+    fieldSet,
     saving,
     formError,
     deleteConfirm,

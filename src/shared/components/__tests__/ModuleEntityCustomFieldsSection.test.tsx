@@ -181,8 +181,17 @@ describe("ModuleEntityCustomFieldsSection", () => {
     expect(textInput).toBeDefined();
 
     fireEvent.change(textInput, { target: { value: "Phòng Marketing" } });
+    fireEvent.blur(textInput);
     expect(onAttributesChange).toHaveBeenCalledWith(
       expect.objectContaining({ "attr-dept": "Phòng Marketing" }),
+    );
+
+    // Test clear button
+    const clearBtn = screen.getByTitle("Xóa nhanh");
+    expect(clearBtn).toBeInTheDocument();
+    fireEvent.click(clearBtn);
+    expect(onAttributesChange).toHaveBeenCalledWith(
+      expect.objectContaining({ "attr-dept": "" }),
     );
   });
 });

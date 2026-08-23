@@ -239,7 +239,23 @@ Dành cho các form đơn giản không có nhiều phân hệ (như Company Pro
 
 ---
 
-## 8. Summary Checklist trước khi hoàn thành:
+## 8. Quy chuẩn Tối ưu Hiệu năng & Trải nghiệm Nhập liệu trong Drawer
+
+1. **Memoize mảng `tabs` với `useMemo`**:
+   - Khi truyền prop `tabs` vào `<StandardFormDrawer>`, **bắt buộc** bọc mảng tabs trong `useMemo`.
+   - **Tuyệt đối tránh** truyền cả object form tổng vào dependency array của `tabs`. Chỉ liệt kê các trường cụ thể mà các tab thực sự phụ thuộc (như `form.accountingEnabled`, `form.pendingChanges`), tránh việc người dùng gõ ghi chú hay custom fields làm re-render toàn bộ 6 tabs.
+
+2. **Cơ chế Local Buffered Input cho Text / Textarea**:
+   - Khi tạo input text hoặc textarea trong Drawer hoặc Custom Config, sử dụng local state với debounce (500ms) kết hợp flush đồng bộ khi `onBlur`.
+   - Người dùng gõ phím/xóa phím phản hồi tức thì 0ms (60fps) mà không làm lag main thread.
+
+3. **Nút Xóa nhanh (Clear Button) chuẩn UI/UX**:
+   - Trên nút `X` clear value, **bắt buộc sử dụng `onMouseDown={(e) => { e.preventDefault(); handleClear(e); }}`** thay vì chỉ dùng `onClick`.
+   - `e.preventDefault()` trong `onMouseDown` ngăn trình duyệt kích hoạt sự kiện `blur` trước khi click, giúp xóa trắng ô input tức thì 0ms và giữ nguyên con trỏ focus cho người dùng.
+
+---
+
+## 9. Summary Checklist trước khi hoàn thành:
 
 - [ ] Drawer đã sử dụng `<StandardFormDrawer>` chưa?
 - [ ] **Toàn bộ nội dung đã được bao bọc trong `<DrawerSection>` có bật `collapsible={true}` chưa?**
@@ -249,6 +265,8 @@ Dành cho các form đơn giản không có nhiều phân hệ (như Company Pro
 - [ ] Nếu record có trạng thái (status), đã dùng `<Badge>` truyền vào `titleExtra` chưa?
 - [ ] Tất cả text tĩnh đã được dùng hook `useTranslation` (i18n) để wrap bằng `t(...)` chưa?
 - [ ] **Mọi chứng từ có nhiều góc nhìn (Hóa đơn, Sổ báo giá, PO, SO, Lệnh SX, Kho, Sao kê) đã chuyển sang dùng Top Navigation Tabs (`tabs`) với Tab 1 là Form / Sheet Preview chính chưa?**
+- [ ] **Mảng `tabs` đã được bọc `useMemo` với dependencies tường minh chưa?**
+- [ ] Các trường text input / textarea đã có local buffer (0ms latency, debounce 500ms, nút `X` onMouseDown) chưa?
 - [ ] Tab Mạng lưới chứng từ liên kết (Traceability Graph) đã được cấu hình `hideRightPanel: true` để bung 100% full width chưa?
 - [ ] Cột bên phải (Right Panel) đã bao bọc các trường theo `<DrawerSection>`, `<DrawerRow>`, `<DrawerField>` chuẩn chưa?
 - [ ] Icon hành động và icon menu context menu đã được dùng màu neutral, không hardcode màu mè chưa?
