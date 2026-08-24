@@ -421,6 +421,24 @@ export const garageApi = {
     return res.data;
   },
 
+  updateCaseSettlement: async (
+    caseId: string,
+    settlementId: string,
+    payload: {
+      amount?: number;
+      category?: string;
+      note?: string;
+      transDate?: string;
+      partnerName?: string;
+    },
+  ) => {
+    const res = await axiosInstance.patch(
+      `${BASE}/cases/${caseId}/settlements/${settlementId}`,
+      payload,
+    );
+    return res.data;
+  },
+
   // ─── Customer Debt & Aging ───────────────────────────────────────────────
   getCustomersDebt: async (params: {
     branchId?: string;
@@ -587,6 +605,7 @@ export interface GarageSmartSettlementSuggestionItem {
       name?: string;
     };
     remainingAmount: number;
+    alreadySettledForThisCase?: boolean;
   };
   score: {
     score: number;

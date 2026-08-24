@@ -23,6 +23,7 @@ import {
 } from "./GarageCaseSettlementDrawerModal";
 import { InvoiceSelectionDrawer } from "./InvoiceSelectionDrawer";
 import { cn } from "@/shared/utils";
+import { Tooltip } from "@/core/components/ui/Tooltip";
 import type { ErpInvoice } from "@/modules/erp-invoices-core/api/erpInvoicesCoreApi";
 import { useTranslation } from "react-i18next";
 
@@ -174,11 +175,29 @@ export function GarageCaseSettlementSection({
 
   const directAddSettlementsMutation = useMutation({
     mutationFn: async (items: SettlementSubmissionItem[]) => {
-      if (editingSettlementItem?.id) {
-        await garageApi.removeCaseSettlement(caseId, editingSettlementItem.id);
-      }
-      for (const item of items) {
-        await garageApi.addCaseSettlement(caseId, item);
+      if (
+        editingSettlementItem?.id &&
+        !editingSettlementItem.id.startsWith("tmp-") &&
+        !editingSettlementItem.id.startsWith("manual-tmp-")
+      ) {
+        const item = items[0];
+        await garageApi.updateCaseSettlement(caseId, editingSettlementItem.id, {
+          amount: item.amount,
+          category: item.category,
+          note: item.note,
+          transDate: item.transDate,
+          partnerName: item.partnerName,
+        });
+      } else {
+        if (editingSettlementItem?.id) {
+          await garageApi.removeCaseSettlement(
+            caseId,
+            editingSettlementItem.id,
+          );
+        }
+        for (const item of items) {
+          await garageApi.addCaseSettlement(caseId, item);
+        }
       }
     },
     onSuccess: () => {
@@ -707,6 +726,14 @@ export function GarageCaseSettlementSection({
                       </button>
                     )}
 
+                    {editMode && isOnSystem && !s.isViaInvoice && (
+                      <Tooltip content="Sao kê ngân hàng chỉ có thể thêm hoặc xóa, không chỉnh sửa trực tiếp">
+                        <div className="p-1 text-slate-300 dark:text-slate-600 cursor-not-allowed">
+                          <Edit3 className="w-3.5 h-3.5 opacity-30" />
+                        </div>
+                      </Tooltip>
+                    )}
+
                     {editMode && !s.isViaInvoice && (
                       <button
                         type="button"
@@ -716,6 +743,14 @@ export function GarageCaseSettlementSection({
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
+                    )}
+
+                    {editMode && s.isViaInvoice && (
+                      <Tooltip content="Cấn trừ tự động từ hóa đơn liên kết. Để gỡ, hãy xóa liên kết hóa đơn tương ứng.">
+                        <div className="p-1 text-slate-300 dark:text-slate-600 cursor-not-allowed">
+                          <Lock className="w-3.5 h-3.5 opacity-40" />
+                        </div>
+                      </Tooltip>
                     )}
                   </div>
                 </div>
