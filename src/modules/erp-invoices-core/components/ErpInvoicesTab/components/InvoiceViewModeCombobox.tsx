@@ -38,10 +38,27 @@ export function InvoiceViewModeCombobox({
   const [open, setOpen] = useState(false);
   const [pendingDeleteKey, setPendingDeleteKey] = useState<string | null>(null);
 
+  const isDefaultPreset = (preset: TableViewPreset) => {
+    return (
+      preset.key === "overview" ||
+      preset.key === "audit" ||
+      preset.isDefault === true
+    );
+  };
+
   const getPresetLabel = (preset: TableViewPreset) => {
-    if (preset.key === "overview") return t("viewModeOverview", "Tổng quan");
-    if (preset.key === "audit")
+    if (
+      preset.key === "overview" &&
+      (!preset.label || preset.label === "Tổng quan")
+    ) {
+      return t("viewModeOverview", "Tổng quan");
+    }
+    if (
+      preset.key === "audit" &&
+      (!preset.label || preset.label === "Kiểm toán / Đối soát")
+    ) {
       return t("viewModeAudit", "Kiểm toán / Đối soát");
+    }
     return preset.label;
   };
 
@@ -96,6 +113,8 @@ export function InvoiceViewModeCombobox({
             <div className="max-h-60 overflow-y-auto space-y-0.5 custom-scrollbar">
               {presets.map((preset) => {
                 const isSelected = preset.key === activePresetKey;
+                const isDefault = isDefaultPreset(preset);
+                const canDelete = !isDefault;
                 const label = getPresetLabel(preset);
 
                 return (
@@ -122,23 +141,23 @@ export function InvoiceViewModeCombobox({
                       <span className="truncate">{label}</span>
                     </div>
 
-                    {preset.isCustom && (
-                      <div
-                        className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity ml-2 shrink-0"
-                        onClick={(e) => e.stopPropagation()}
+                    <div
+                      className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity ml-2 shrink-0"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setOpen(false);
+                          onEditView(preset);
+                        }}
+                        className="p-1 rounded text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-700 transition-colors"
+                        title={t("viewModeEdit", "Chỉnh sửa view")}
                       >
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setOpen(false);
-                            onEditView(preset);
-                          }}
-                          className="p-1 rounded text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-700 transition-colors"
-                          title={t("viewModeEdit", "Chỉnh sửa view")}
-                        >
-                          <Pencil className="w-3 h-3" />
-                        </button>
+                        <Pencil className="w-3 h-3" />
+                      </button>
+                      {canDelete && (
                         <button
                           type="button"
                           onClick={(e) => {
@@ -151,8 +170,8 @@ export function InvoiceViewModeCombobox({
                         >
                           <Trash2 className="w-3 h-3" />
                         </button>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
                 );
               })}
@@ -188,7 +207,13 @@ export function InvoiceViewModeCombobox({
         )}
         confirmLabel={t("viewModeDelete", "Xóa view")}
         onConfirm={() => {
-          if (pendingDeleteKey) onDeleteView(pendingDeleteKey);
+          if (
+            pendingDeleteKey &&
+            pendingDeleteKey !== "overview" &&
+            pendingDeleteKey !== "audit"
+          ) {
+            onDeleteView(pendingDeleteKey);
+          }
           setPendingDeleteKey(null);
         }}
         onCancel={() => setPendingDeleteKey(null)}

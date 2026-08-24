@@ -21,8 +21,10 @@ export interface UsePageViewPresetsReturn {
     columnFilters?: Record<string, string[]>,
     columnSearch?: Record<string, string>,
     columnVisibility?: Record<string, boolean>,
+    key?: string,
   ) => void;
   deleteView: (key: string) => void;
+  resetView: (key: string) => void;
 }
 
 export function usePageViewPresets({
@@ -41,22 +43,47 @@ export function usePageViewPresets({
     (s) => s.deleteTableViewPreset,
   );
 
+  const defaultPresetMap = useMemo(() => {
+    const map = new Map<string, TableViewPreset>();
+    defaultPresets.forEach((p) => map.set(p.key, p));
+    return map;
+  }, [defaultPresets]);
+
   const presets = useMemo(() => {
-    // Map default presets
-    const standard = defaultPresets.map((p) => ({
-      ...p,
-      isCustom: false,
-    }));
+    const customMap = new Map<string, TableViewPreset>();
+    customPresets.forEach((c) => customMap.set(c.key, c));
 
-    // Filter out duplicate keys if custom view overrides a default view
-    const customKeys = new Set(customPresets.map((c) => c.key));
-    const merged = [
-      ...standard.filter((s) => !customKeys.has(s.key)),
-      ...customPresets.map((c) => ({ ...c, isCustom: true })),
-    ];
+    // 1. Process default presets: if customized in customPresets, merge overrides but keep as default
+    const mergedDefaults = defaultPresets.map((def) => {
+      const customOverride = customMap.get(def.key);
+      if (customOverride) {
+        return {
+          ...def,
+          ...customOverride,
+          isDefault: true,
+          isCustom: false,
+          isModified: true,
+        };
+      }
+      return {
+        ...def,
+        isDefault: true,
+        isCustom: false,
+        isModified: false,
+      };
+    });
 
-    return merged;
-  }, [defaultPresets, customPresets]);
+    // 2. Process purely custom presets (not matching any defaultPreset key)
+    const pureCustomPresets = customPresets
+      .filter((c) => !defaultPresetMap.has(c.key))
+      .map((c) => ({
+        ...c,
+        isDefault: false,
+        isCustom: true,
+      }));
+
+    return [...mergedDefaults, ...pureCustomPresets];
+  }, [defaultPresets, customPresets, defaultPresetMap]);
 
   const activePreset = useMemo(() => {
     return presets.find((p) => p.key === activeView) || presets[0];
@@ -79,8 +106,10 @@ export function usePageViewPresets({
       columnFilters?: Record<string, string[]>,
       columnSearch?: Record<string, string>,
       columnVisibility?: Record<string, boolean>,
+      existingKey?: string,
     ) => {
-      const key = `custom_${Date.now()}`;
+      const isDefault = existingKey ? defaultPresetMap.has(existingKey) : false;
+      const key = existingKey || `custom_${Date.now()}`;
       const newPreset: TableViewPreset = {
         key,
         label,
@@ -88,24 +117,59 @@ export function usePageViewPresets({
         columnFilters,
         columnSearch,
         columnVisibility,
-        isCustom: true,
+        isDefault,
+        isCustom: !isDefault,
+        isModified: isDefault,
       };
       saveTableViewPreset(tableId, newPreset);
       if (onViewChange) {
         onViewChange(newPreset);
       }
     },
-    [tableId, saveTableViewPreset, onViewChange],
+    [tableId, saveTableViewPreset, onViewChange, defaultPresetMap],
   );
 
   const deleteView = useCallback(
     (key: string) => {
+      // Guard: Never delete default presets
+      if (defaultPresetMap.has(key)) {
+        return;
+      }
       deleteTableViewPreset(tableId, key);
       if (activeView === key && defaultPresets[0] && onViewChange) {
         onViewChange(defaultPresets[0]);
       }
     },
-    [tableId, deleteTableViewPreset, activeView, defaultPresets, onViewChange],
+    [
+      tableId,
+      deleteTableViewPreset,
+      activeView,
+      defaultPresets,
+      onViewChange,
+      defaultPresetMap,
+    ],
+  );
+
+  const resetView = useCallback(
+    (key: string) => {
+      const defaultOriginal = defaultPresetMap.get(key);
+      if (!defaultOriginal) return;
+
+      // Delete custom override from store
+      deleteTableViewPreset(tableId, key);
+
+      const standardPreset: TableViewPreset = {
+        ...defaultOriginal,
+        isDefault: true,
+        isCustom: false,
+        isModified: false,
+      };
+
+      if (onViewChange) {
+        onViewChange(standardPreset);
+      }
+    },
+    [tableId, deleteTableViewPreset, defaultPresetMap, onViewChange],
   );
 
   return {
@@ -114,5 +178,6 @@ export function usePageViewPresets({
     selectView,
     saveView,
     deleteView,
+    resetView,
   };
 }

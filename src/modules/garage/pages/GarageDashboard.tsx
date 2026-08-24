@@ -13,6 +13,7 @@ import { GarageStatsCards } from "../components/GarageStatsCards";
 import { GarageTrendChart } from "../components/GarageTrendChart";
 import { GarageStatusDistributionChart } from "../components/GarageStatusDistributionChart";
 import { GaragePaymentProgressCard } from "../components/GaragePaymentProgressCard";
+import { GaragePnlSection } from "../components/GaragePnlSection";
 
 export function GarageDashboard() {
   const { t } = useTranslation("garage");
@@ -142,6 +143,9 @@ export function GarageDashboard() {
             />
           </div>
         </div>
+
+        {/* Section 5: Báo cáo Lợi nhuận (P&L) Section */}
+        <GaragePnlSection />
       </div>
     </DashboardTemplate>
   );

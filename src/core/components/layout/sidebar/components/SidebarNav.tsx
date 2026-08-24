@@ -17,6 +17,7 @@ import {
   Factory,
   Shield,
   Receipt,
+  ReceiptText,
   Package,
   LayoutDashboard,
   Wallet,
@@ -326,6 +327,14 @@ export function SidebarNav({
             active={currentPage === "garage-cases"}
             onClick={() => navTo("garage-cases")}
             contextPage="garage-cases"
+          />
+          <NavItem
+            collapsed={c}
+            icon={<ReceiptText className="w-4 h-4 opacity-65 flex-shrink-0" />}
+            label={t("nav.items.garageOpex", "Chi phí vận hành")}
+            active={currentPage === "garage-opex"}
+            onClick={() => navTo("garage-opex")}
+            contextPage="garage-opex"
           />
           <NavItem
             collapsed={c}

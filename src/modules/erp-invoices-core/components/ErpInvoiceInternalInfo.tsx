@@ -277,6 +277,10 @@ export function ErpInvoiceInternalSidebar({
         onCategoryChange={(catId) => fieldSet("categoryId", catId)}
         attributes={(form as any).customAttributes}
         onAttributesChange={(attrs) => fieldSet("customAttributes", attrs)}
+        globalAttributes={(form as any).globalAttributes}
+        onGlobalAttributesChange={(gAttrs) =>
+          fieldSet("globalAttributes", gAttrs)
+        }
       />
     </div>
   );

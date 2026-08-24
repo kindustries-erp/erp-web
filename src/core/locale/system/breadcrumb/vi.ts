@@ -71,6 +71,7 @@ export const breadcrumbVi = {
   garage: "Garage",
   garageDashboard: "Tổng quan",
   garageCases: "Phiếu dịch vụ",
+  garageOpex: "Chi phí vận hành",
   garagePartnersGroup: "Đối tác",
   garageCustomers: "Khách hàng",
   garageSuppliers: "Nhà cung cấp",

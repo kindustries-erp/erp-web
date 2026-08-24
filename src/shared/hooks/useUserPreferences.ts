@@ -14,6 +14,8 @@ export interface TableViewPreset {
   columnSearch?: Record<string, string>;
   columnVisibility?: Record<string, boolean>;
   isCustom?: boolean;
+  isDefault?: boolean;
+  isModified?: boolean;
 }
 
 export interface TablePreference {

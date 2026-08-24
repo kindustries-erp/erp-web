@@ -92,6 +92,7 @@ export function ErpInvoicesTab(props: ErpInvoicesTabProps) {
     setViewConfigDrawerOpen,
     editingViewPreset,
     handleSaveViewPreset,
+    handleResetViewPreset,
     currentColumnVisibility,
     handleOpenInternal,
     handleCloseInternal,
@@ -398,6 +399,7 @@ export function ErpInvoicesTab(props: ErpInvoicesTabProps) {
         preset={editingViewPreset}
         currentColumnVisibility={currentColumnVisibility}
         onSave={handleSaveViewPreset}
+        onResetDefault={handleResetViewPreset}
       />
     </>
   );

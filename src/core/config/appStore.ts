@@ -213,6 +213,10 @@ export const SECTION_ROOTS: Partial<Record<PageKey, SectionRoot>> = {
     labelKey: "breadcrumb.garageCases",
     group: "garage",
   },
+  "garage-opex": {
+    labelKey: "breadcrumb.garageOpex",
+    group: "garage",
+  },
   "garage-receivables": {
     labelKey: "breadcrumb.garageReceivables",
     group: "garage",
@@ -367,6 +371,7 @@ export const BREADCRUMBS: Partial<Record<PageKey, Array<[string, string?]>>> = {
   "settings-bank": [["breadcrumb.settings"], ["thietlap.tabs.ngan-hang"]],
   "garage-dashboard": [["breadcrumb.garage"], ["breadcrumb.garageDashboard"]],
   "garage-cases": [["breadcrumb.garage"], ["breadcrumb.garageCases"]],
+  "garage-opex": [["breadcrumb.garage"], ["breadcrumb.garageOpex"]],
   "garage-customers": [["breadcrumb.garage"], ["breadcrumb.garageCustomers"]],
   "garage-receivables": [
     ["breadcrumb.garage"],

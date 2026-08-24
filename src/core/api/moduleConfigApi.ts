@@ -22,7 +22,9 @@ export interface ModuleAttributeOption {
 
 export interface ModuleAttributeDef {
   id: string;
-  categoryId: string;
+  categoryId?: string | null;
+  isGlobal?: boolean;
+  moduleKeyGlobal?: string | null;
   code: string;
   name: string;
   fieldType: ModuleAttributeFieldType;
@@ -60,7 +62,9 @@ export interface CreateModuleCategoryPayload {
 export type UpdateModuleCategoryPayload = Partial<CreateModuleCategoryPayload>;
 
 export interface CreateModuleAttributeDefPayload {
-  categoryId: string;
+  categoryId?: string | null;
+  isGlobal?: boolean;
+  moduleKeyGlobal?: string | null;
   code: string;
   name: string;
   fieldType: ModuleAttributeFieldType;
@@ -113,11 +117,29 @@ export const moduleConfigApi = {
 
   getAttributeDefs: async (
     categoryId?: string,
+    isGlobal?: boolean,
+    moduleKey?: string,
   ): Promise<ModuleAttributeDef[]> => {
     const { data } = await axiosInstance.get<ModuleAttributeDef[]>(
       `${BASE}/attribute-defs`,
       {
-        params: categoryId ? { categoryId } : undefined,
+        params: {
+          ...(categoryId ? { categoryId } : {}),
+          ...(isGlobal !== undefined ? { isGlobal } : {}),
+          ...(moduleKey ? { moduleKey } : {}),
+        },
+      },
+    );
+    return data;
+  },
+
+  getGlobalAttributeDefs: async (
+    moduleKey: string,
+  ): Promise<ModuleAttributeDef[]> => {
+    const { data } = await axiosInstance.get<ModuleAttributeDef[]>(
+      `${BASE}/global-attribute-defs`,
+      {
+        params: { moduleKey },
       },
     );
     return data;
@@ -179,6 +201,7 @@ export interface ModuleEntityAttributeValueItem {
   attrName?: string;
   fieldType?: ModuleAttributeFieldType;
   valueText?: string | null;
+  isGlobal?: boolean;
 }
 
 export interface ModuleEntityValuesResponse {
@@ -187,10 +210,57 @@ export interface ModuleEntityValuesResponse {
   categoryId?: string | null;
   category?: ModuleCategory | null;
   attributes: Record<string, any>;
+  globalAttributes?: Record<string, any>;
+  globalAttributeDefs?: ModuleAttributeDef[];
   attributeValues: ModuleEntityAttributeValueItem[];
 }
 
 export interface SaveModuleEntityValuesPayload {
   categoryId?: string | null;
   attributes?: Record<string, any>;
+  globalAttributes?: Record<string, any>;
+}
+
+/**
+ * Helper tra cứu i18n cho tên danh mục (DB name làm fallback)
+ */
+export function resolveCategoryName(
+  cat?: { moduleKey?: string; code?: string; name: string } | null,
+  t?: (key: string, fallback: string) => string,
+): string {
+  if (!cat) return "";
+  if (!t || !cat.moduleKey || !cat.code) return cat.name;
+  const key = `moduleConfig.category.${cat.moduleKey.toUpperCase()}.${cat.code.toUpperCase()}.name`;
+  return t(key, cat.name);
+}
+
+/**
+ * Helper tra cứu i18n cho tên thuộc tính (DB name làm fallback)
+ */
+export function resolveAttrName(
+  attr: {
+    code: string;
+    name: string;
+    isGlobal?: boolean;
+    moduleKeyGlobal?: string | null;
+  },
+  moduleKey: string,
+  categoryCode?: string | null,
+  t?: (key: string, fallback: string) => string,
+): string {
+  if (!t) return attr.name;
+  const modKey = (attr.moduleKeyGlobal || moduleKey).toUpperCase();
+  const attrCode = attr.code.toLowerCase();
+
+  if (attr.isGlobal) {
+    const globalKey = `moduleConfig.attr.${modKey}.GLOBAL.${attrCode}.name`;
+    return t(globalKey, attr.name);
+  }
+
+  if (categoryCode) {
+    const catKey = `moduleConfig.attr.${modKey}.${categoryCode.toUpperCase()}.${attrCode}.name`;
+    return t(catKey, attr.name);
+  }
+
+  return t(`moduleConfig.attr.${modKey}.${attrCode}.name`, attr.name);
 }

@@ -17,7 +17,10 @@ import { PostedAccountingSummary } from "@/shared/components/accounting/PostedAc
 import { InvoiceNetoffSelectionModal } from "@/modules/bank-statements/components/InvoiceNetoffSelectionModal";
 import toast from "react-hot-toast";
 import { moduleConfigApi } from "@/core/api/moduleConfigApi";
-import { ModuleEntityCustomFieldsSection } from "@/shared/components/ModuleEntityCustomFieldsSection";
+import {
+  ModuleEntityCustomFieldsSection,
+  validateModuleRequiredFields,
+} from "@/shared/components/ModuleEntityCustomFieldsSection";
 
 interface Props {
   isOpen: boolean;
@@ -47,6 +50,9 @@ export function BankTransactionDetailDrawer({
   const [formError, setFormError] = useState<string | null>(null);
   const [categoryId, setCategoryId] = useState<string | null>(null);
   const [customAttributes, setCustomAttributes] = useState<Record<string, any>>(
+    {},
+  );
+  const [globalAttributes, setGlobalAttributes] = useState<Record<string, any>>(
     {},
   );
 
@@ -285,12 +291,51 @@ export function BankTransactionDetailDrawer({
     mutationFn: async () => {
       if (!transactionId) throw new Error("Missing transaction ID");
 
+      // Validate required custom fields (global & category)
+      try {
+        const globalDefs =
+          await moduleConfigApi.getGlobalAttributeDefs("BANK_TXN");
+        let categoryDefs: any[] = [];
+        let categoryCode: string | null = null;
+        if (categoryId) {
+          const cats = await moduleConfigApi.getCategories("BANK_TXN");
+          const currentCat = cats.find((c) => c.id === categoryId);
+          categoryDefs = currentCat?.attributeDefs || [];
+          categoryCode = currentCat?.code || null;
+        }
+
+        const missingRequired = validateModuleRequiredFields({
+          globalDefs,
+          globalAttributes,
+          categoryDefs,
+          attributes: customAttributes,
+          hasCategory: !!categoryId,
+          moduleKey: "BANK_TXN",
+          categoryCode,
+        });
+
+        if (missingRequired.length > 0) {
+          throw new Error(
+            `Vui lòng nhập các trường bắt buộc: ${missingRequired.join(", ")}`,
+          );
+        }
+      } catch (valErr: any) {
+        if (valErr.message?.startsWith("Vui lòng nhập các trường bắt buộc")) {
+          throw valErr;
+        }
+      }
+
       // Save custom fields if present
-      if (categoryId !== undefined || customAttributes !== undefined) {
+      if (
+        categoryId !== undefined ||
+        customAttributes !== undefined ||
+        globalAttributes !== undefined
+      ) {
         try {
           await moduleConfigApi.saveEntityValues("BANK_TXN", transactionId, {
             categoryId,
             attributes: customAttributes,
+            globalAttributes,
           });
         } catch (cfErr: any) {
           console.warn("Failed to save custom attributes", cfErr);
@@ -753,6 +798,8 @@ export function BankTransactionDetailDrawer({
                 onCategoryChange={setCategoryId}
                 attributes={customAttributes}
                 onAttributesChange={setCustomAttributes}
+                globalAttributes={globalAttributes}
+                onGlobalAttributesChange={setGlobalAttributes}
               />
             </div>
           ) : null

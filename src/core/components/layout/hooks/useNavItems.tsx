@@ -14,6 +14,7 @@ import {
   Factory,
   Shield,
   Receipt,
+  ReceiptText,
   Package,
   LayoutDashboard,
   Wallet,
@@ -268,6 +269,21 @@ export function useNavItems(): NavSearchItem[] {
           "xuong",
         ],
         icon: <Car className="w-4 h-4" />,
+      });
+      items.push({
+        key: "garage-opex",
+        label: t("nav.items.garageOpex", "Chi phí vận hành"),
+        section: garageSection,
+        keywords: [
+          "garage",
+          "chi phi van hanh",
+          "opex",
+          "luong",
+          "mat bang",
+          "hoa hong",
+          "chi phi",
+        ],
+        icon: <ReceiptText className="w-4 h-4" />,
       });
       items.push({
         key: "garage-customers",
