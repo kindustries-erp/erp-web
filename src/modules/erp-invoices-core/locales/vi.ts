@@ -51,10 +51,15 @@ export const erpInvoicesVi = {
   viewModeDeleteConfirm: 'Bạn có chắc muốn xóa view "{{name}}"?',
   viewModeSaveSuccess: "Đã lưu chế độ xem thành công",
   viewModeDeleteSuccess: "Đã xóa chế độ xem thành công",
+  viewModeReset: "Khôi phục mặc định",
+  viewModeResetSuccess: "Đã khôi phục chế độ xem về mặc định thành công",
+  viewModeDefaultNotice:
+    "Chế độ xem mặc định của hệ thống. Bạn có thể tùy chỉnh cột và đổi tên, nhưng không thể xóa.",
 
   // View Config Drawer
   viewConfigTitle: "Tạo view mới",
   viewConfigEditTitle: "Chỉnh sửa view",
+  viewConfigEditDefaultTitle: "Chỉnh sửa chế độ xem: {{name}}",
   viewConfigNameLabel: "Tên view",
   viewConfigNamePlaceholder: "VD: Báo cáo kiểm toán thuế",
   viewConfigNameRequired: "Vui lòng nhập tên view",

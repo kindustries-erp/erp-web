@@ -157,6 +157,7 @@ export function useErpInvoicesTabLogic({
     label: string;
     columnVisibility: Record<string, boolean>;
   }) => {
+    const isDefault = data.key === "overview" || data.key === "audit";
     if (data.key) {
       // Edit existing preset
       const updatedPreset: TableViewPreset = {
@@ -164,7 +165,9 @@ export function useErpInvoicesTabLogic({
         label: data.label,
         filters: {},
         columnVisibility: data.columnVisibility,
-        isCustom: true,
+        isDefault,
+        isCustom: !isDefault,
+        isModified: isDefault,
       };
       useUserPreferencesStore
         .getState()
@@ -179,6 +182,7 @@ export function useErpInvoicesTabLogic({
         label: data.label,
         filters: {},
         columnVisibility: data.columnVisibility,
+        isDefault: false,
         isCustom: true,
       };
       useUserPreferencesStore
@@ -189,7 +193,24 @@ export function useErpInvoicesTabLogic({
     }
   };
 
+  const handleResetViewPreset = (key: string) => {
+    columnViewPresetsHook.resetView(key);
+    const factoryPreset = INVOICE_COLUMN_VIEW_PRESETS.find(
+      (p) => p.key === key,
+    );
+    if (factoryPreset) {
+      handleColumnPresetChange(factoryPreset);
+    }
+    toast.success(
+      t(
+        "viewModeResetSuccess",
+        "Đã khôi phục chế độ xem về mặc định thành công",
+      ),
+    );
+  };
+
   const handleDeleteViewPreset = (key: string) => {
+    if (key === "overview" || key === "audit") return;
     columnViewPresetsHook.deleteView(key);
     if (activeColumnPresetKey === key) {
       const fallbackPreset = INVOICE_COLUMN_VIEW_PRESETS[0];
@@ -353,6 +374,7 @@ export function useErpInvoicesTabLogic({
     setViewConfigDrawerOpen,
     editingViewPreset,
     handleSaveViewPreset,
+    handleResetViewPreset,
     currentColumnVisibility,
     // Modals
     ...modals,

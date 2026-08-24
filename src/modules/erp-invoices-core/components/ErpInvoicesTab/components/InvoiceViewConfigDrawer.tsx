@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-hot-toast";
+import { ShieldCheck } from "lucide-react";
 import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
 import {
   DrawerSection,
@@ -11,6 +12,7 @@ import { Checkbox } from "@/shared/components/ui/checkbox";
 import { type TableViewPreset } from "@/shared/hooks/useUserPreferences";
 import {
   INVOICE_COLUMN_GROUPS,
+  INVOICE_COLUMN_VIEW_PRESETS,
   DEFAULT_INVOICE_COLUMN_VISIBILITY,
 } from "../utils";
 
@@ -24,6 +26,7 @@ export interface InvoiceViewConfigDrawerProps {
     label: string;
     columnVisibility: Record<string, boolean>;
   }) => void;
+  onResetDefault?: (key: string) => void;
 }
 
 export function InvoiceViewConfigDrawer({
@@ -32,15 +35,32 @@ export function InvoiceViewConfigDrawer({
   preset,
   currentColumnVisibility,
   onSave,
+  onResetDefault,
 }: InvoiceViewConfigDrawerProps) {
   const { t } = useTranslation("erpInvoices");
   const [name, setName] = useState("");
   const [visibility, setVisibility] = useState<Record<string, boolean>>({});
 
+  const isDefaultPreset =
+    preset?.key === "overview" ||
+    preset?.key === "audit" ||
+    preset?.isDefault === true;
+
+  const getDefaultPresetLabel = (p?: TableViewPreset | null) => {
+    if (!p) return "";
+    if (p.key === "overview" && (!p.label || p.label === "Tổng quan")) {
+      return t("viewModeOverview", "Tổng quan");
+    }
+    if (p.key === "audit" && (!p.label || p.label === "Kiểm toán / Đối soát")) {
+      return t("viewModeAudit", "Kiểm toán / Đối soát");
+    }
+    return p.label;
+  };
+
   useEffect(() => {
     if (open) {
       if (preset) {
-        setName(preset.label);
+        setName(getDefaultPresetLabel(preset));
         setVisibility(
           preset.columnVisibility ? { ...preset.columnVisibility } : {},
         );
@@ -84,6 +104,27 @@ export function InvoiceViewConfigDrawer({
     setVisibility(nextVis);
   };
 
+  const handleResetToFactory = () => {
+    if (!preset) return;
+    const factoryPreset = INVOICE_COLUMN_VIEW_PRESETS.find(
+      (p) => p.key === preset.key,
+    );
+
+    if (factoryPreset) {
+      setName(getDefaultPresetLabel(factoryPreset));
+      setVisibility(
+        factoryPreset.columnVisibility
+          ? { ...factoryPreset.columnVisibility }
+          : {},
+      );
+    }
+
+    if (onResetDefault) {
+      onResetDefault(preset.key);
+      onClose();
+    }
+  };
+
   const handleSave = () => {
     if (!name.trim()) {
       toast.error(t("viewConfigNameRequired", "Vui lòng nhập tên view"));
@@ -106,6 +147,36 @@ export function InvoiceViewConfigDrawer({
     onClose();
   };
 
+  const drawerTitle = preset
+    ? isDefaultPreset
+      ? t("viewConfigEditDefaultTitle", "Chỉnh sửa chế độ xem: {{name}}", {
+          name: getDefaultPresetLabel(preset),
+        })
+      : t("viewConfigEditTitle", "Chỉnh sửa view")
+    : t("viewConfigTitle", "Tạo view mới");
+
+  const actions = [
+    {
+      label: t("viewConfigSave", "Lưu view"),
+      onClick: handleSave,
+      primary: true,
+    },
+    ...(isDefaultPreset && onResetDefault
+      ? [
+          {
+            label: t("viewModeReset", "Khôi phục mặc định"),
+            onClick: handleResetToFactory,
+            variant: "outline" as const,
+          },
+        ]
+      : []),
+    {
+      label: t("viewConfigCancel", "Hủy"),
+      onClick: onClose,
+      variant: "ghost" as const,
+    },
+  ];
+
   return (
     <StandardFormDrawer
       open={open}
@@ -113,26 +184,23 @@ export function InvoiceViewConfigDrawer({
       onClose={onClose}
       layout="1-column"
       size="sm"
-      title={
-        preset
-          ? t("viewConfigEditTitle", "Chỉnh sửa view")
-          : t("viewConfigTitle", "Tạo view mới")
-      }
+      title={drawerTitle}
       confirmOnClose={true}
-      actions={[
-        {
-          label: t("viewConfigSave", "Lưu view"),
-          onClick: handleSave,
-          primary: true,
-        },
-        {
-          label: t("viewConfigCancel", "Hủy"),
-          onClick: onClose,
-          variant: "ghost",
-        },
-      ]}
+      actions={actions}
       leftPanel={
         <div className="space-y-3 pb-4">
+          {isDefaultPreset && (
+            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200/60 dark:border-indigo-800/40 text-xs text-indigo-700 dark:text-indigo-300">
+              <ShieldCheck className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0" />
+              <span>
+                {t(
+                  "viewModeDefaultNotice",
+                  "Chế độ xem mặc định của hệ thống. Bạn có thể tùy chỉnh cột và đổi tên, nhưng không thể xóa.",
+                )}
+              </span>
+            </div>
+          )}
+
           <DrawerSection
             title={t("viewConfigNameLabel", "Tên view")}
             collapsible

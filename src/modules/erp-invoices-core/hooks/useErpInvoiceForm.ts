@@ -421,7 +421,7 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
           setSaving(false);
           return;
         }
-      } catch (valErr) {
+      } catch {
         // Non-blocking if offline or fetch fails
       }
 

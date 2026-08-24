@@ -107,8 +107,9 @@ src/
   - Quản lý qua `activeTaxTab` trong `useErpInvoiceListStore`, khởi tạo đồng bộ từ URL `?view=...` trên initial load/F5 reload.
   - Tách bạch hoàn toàn khỏi `columnFilters` để tránh xung đột khi người dùng xóa filter.
 - **Chế độ xem & Tùy chỉnh cột (View Mode Combobox & Drawer)**:
-  - `InvoiceViewModeCombobox`: Đặt cạnh PillTabs, cho phép chọn giữa các preset chế độ xem (`Tổng quan`, `Kiểm toán / Đối soát`, và custom views). Hỗ trợ icon sửa và xóa view kèm `ConfirmModal` xác nhận an toàn.
-  - `InvoiceViewConfigDrawer`: Drawer cấu hình view mode chuẩn `StandardFormDrawer` layout `1-column`, chia 3 nhóm cột (*Thông tin chung*, *Thuế & Trạng thái*, *Số tiền*), hỗ trợ khởi tạo từ `currentColumnVisibility`.
+  - `InvoiceViewModeCombobox`: Đặt cạnh PillTabs, cho phép chọn giữa các preset chế độ xem (`Tổng quan`, `Kiểm toán / Đối soát`, và custom views). Hỗ trợ icon Pencil (Sửa) cho tất cả các view, icon Trash (Xóa) chỉ hiển thị cho custom view (2 view mặc định `overview` và `audit` được bảo vệ an toàn, không thể xóa).
+  - `InvoiceViewConfigDrawer`: Drawer cấu hình view mode chuẩn `StandardFormDrawer` layout `1-column`, chia 3 nhóm cột (*Thông tin chung*, *Thuế & Trạng thái*, *Số tiền*), hỗ trợ chỉnh sửa cả view mặc định và view tự tạo, có banner nhận diện chế độ mặc định và nút **"Khôi phục mặc định"** (Reset to factory settings) để đưa các cột về nguyên bản hệ thống (`INVOICE_COLUMN_VIEW_PRESETS`).
+  - `usePageViewPresets` & `useUserPreferencesStore`: Quản lý lưu trữ trạng thái view, tự động merge dữ liệu tùy chỉnh cho default presets (`isDefault: true`, `isCustom: false`, `isModified: boolean`) và đồng bộ ngầm với backend.
 - **Tùy chọn lọc cột theo ngữ cảnh Tab (Context-Aware Column Options)**:
   - `fetchInvoiceOptions`: Tự động truyền `taxInvoiceStatus` tương ứng với `activeTaxTab` khi gọi API lấy danh sách gợi ý lọc cột.
   - Cột `taxInvoiceStatus`: Danh sách filter options hiển thị tương ứng theo tab (Mới -> Mới; Thay thế -> Thay thế / Bị thay thế; Điều chỉnh -> Điều chỉnh / Bị điều chỉnh; Tất cả -> Đủ 6 trạng thái).
