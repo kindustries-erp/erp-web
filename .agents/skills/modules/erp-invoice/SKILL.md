@@ -215,6 +215,9 @@ export interface ErpInvoice {
    - Đồng bộ danh sách chi nhánh qua `getBranchesApi` cho bộ lọc và gán chi nhánh hóa đơn.
 5. **`system / attachments`**:
    - Lưu trữ và tải tệp tin thông qua `attachmentsApi`.
+6. **`module-config` (Thuộc tính động & Thuộc tính chung)**:
+   - Nhúng `ModuleEntityCustomFieldsSection` vào `ErpInvoiceInternalInfo` hiển thị 2 drawer sections: `Thuộc tính chung` (Global) và `Danh mục & Thuộc tính` (Category).
+   - `useErpInvoiceForm` tự động khởi tạo form state từ `customAttributes`/`globalAttributes` trả về bởi API `/api/v1/erp-invoices`, validate các trường `isRequired` trước khi lưu và hiển thị banner lỗi `setFormError` + `toast.error`.
 
 ---
 

@@ -2,7 +2,10 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TooltipProvider } from "@/core/components/ui/Tooltip";
-import { ModuleEntityCustomFieldsSection } from "../ModuleEntityCustomFieldsSection";
+import {
+  ModuleEntityCustomFieldsSection,
+  validateModuleRequiredFields,
+} from "../ModuleEntityCustomFieldsSection";
 import { moduleConfigApi } from "@/core/api/moduleConfigApi";
 
 vi.mock("@/core/i18n", () => ({
@@ -12,9 +15,12 @@ vi.mock("@/core/i18n", () => ({
 vi.mock("@/core/api/moduleConfigApi", () => ({
   moduleConfigApi: {
     getCategories: vi.fn(),
+    getGlobalAttributeDefs: vi.fn(),
     getEntityValues: vi.fn(),
     saveEntityValues: vi.fn(),
   },
+  resolveCategoryName: (cat: any) => cat?.name || "",
+  resolveAttrName: (attr: any) => attr?.name || "",
 }));
 
 vi.mock("@/shared/components/Combobox", () => ({
@@ -55,6 +61,9 @@ describe("ModuleEntityCustomFieldsSection", () => {
       },
     });
     vi.clearAllMocks();
+    (moduleConfigApi.getCategories as any).mockResolvedValue([]);
+    (moduleConfigApi.getGlobalAttributeDefs as any).mockResolvedValue([]);
+    (moduleConfigApi.getEntityValues as any).mockResolvedValue(null);
   });
 
   const sampleCategories = [
@@ -193,5 +202,130 @@ describe("ModuleEntityCustomFieldsSection", () => {
     expect(onAttributesChange).toHaveBeenCalledWith(
       expect.objectContaining({ "attr-dept": "" }),
     );
+  });
+
+  it("renders global attributes automatically without category selection", async () => {
+    const sampleGlobalDefs = [
+      {
+        id: "glob-approval",
+        isGlobal: true,
+        moduleKeyGlobal: "INVOICE",
+        code: "approval_note",
+        name: "Ghi chú phê duyệt",
+        fieldType: "TEXT" as const,
+        isRequired: true,
+        isActive: true,
+        isDeleted: false,
+        sortOrder: 1,
+      },
+    ];
+
+    (moduleConfigApi.getCategories as any).mockResolvedValue([]);
+    (moduleConfigApi.getGlobalAttributeDefs as any).mockResolvedValue(
+      sampleGlobalDefs,
+    );
+
+    const onGlobalAttributesChange = vi.fn();
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <ModuleEntityCustomFieldsSection
+            moduleKey="INVOICE"
+            entityId="inv-1"
+            editMode={true}
+            globalAttributes={{ "glob-approval": "Đã duyệt bởi Giám đốc" }}
+            onGlobalAttributesChange={onGlobalAttributesChange}
+          />
+        </TooltipProvider>
+      </QueryClientProvider>,
+    );
+
+    expect(screen.getByText("Thuộc tính chung")).toBeDefined();
+    expect(
+      await screen.findByPlaceholderText("Nhập Ghi chú phê duyệt..."),
+    ).toBeDefined();
+
+    const input = screen.getByPlaceholderText("Nhập Ghi chú phê duyệt...");
+    fireEvent.change(input, { target: { value: "Phê duyệt bổ sung" } });
+    fireEvent.blur(input);
+
+    expect(onGlobalAttributesChange).toHaveBeenCalledWith(
+      expect.objectContaining({ "glob-approval": "Phê duyệt bổ sung" }),
+    );
+  });
+
+  it("validates missing required global and category fields correctly", () => {
+    const globalDefs = [
+      {
+        id: "g1",
+        name: "Người duyệt",
+        code: "approver",
+        isGlobal: true,
+        isRequired: true,
+        isActive: true,
+        isDeleted: false,
+        fieldType: "TEXT" as const,
+        sortOrder: 1,
+      },
+      {
+        id: "g2",
+        name: "Ghi chú tùy chọn",
+        code: "optional_note",
+        isGlobal: true,
+        isRequired: false,
+        isActive: true,
+        isDeleted: false,
+        fieldType: "TEXT" as const,
+        sortOrder: 2,
+      },
+    ];
+
+    const categoryDefs = [
+      {
+        id: "c1",
+        name: "Phòng ban",
+        code: "dept",
+        isGlobal: false,
+        isRequired: true,
+        isActive: true,
+        isDeleted: false,
+        fieldType: "TEXT" as const,
+        sortOrder: 1,
+      },
+    ];
+
+    // Case 1: Missing both required global and category fields
+    const missing = validateModuleRequiredFields({
+      globalDefs,
+      globalAttributes: {},
+      categoryDefs,
+      attributes: {},
+      hasCategory: true,
+      moduleKey: "INVOICE",
+    });
+    expect(missing).toEqual(["Người duyệt", "Phòng ban"]);
+
+    // Case 2: Global filled, category missing
+    const missing2 = validateModuleRequiredFields({
+      globalDefs,
+      globalAttributes: { g1: "Nguyễn Văn A" },
+      categoryDefs,
+      attributes: {},
+      hasCategory: true,
+      moduleKey: "INVOICE",
+    });
+    expect(missing2).toEqual(["Phòng ban"]);
+
+    // Case 3: Both filled
+    const missing3 = validateModuleRequiredFields({
+      globalDefs,
+      globalAttributes: { g1: "Nguyễn Văn A" },
+      categoryDefs,
+      attributes: { c1: "Kế toán" },
+      hasCategory: true,
+      moduleKey: "INVOICE",
+    });
+    expect(missing3).toEqual([]);
   });
 });

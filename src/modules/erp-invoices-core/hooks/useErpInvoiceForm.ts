@@ -11,6 +11,8 @@ import { updateEntityTags } from "@/modules/tags/api/tagsApi";
 import { purchaseOrdersCoreApi } from "@/modules/purchase-orders-core/api/purchaseOrdersCoreApi";
 import { usePosting } from "@/shared/components/accounting/usePosting";
 import { moduleConfigApi } from "@/core/api/moduleConfigApi";
+import { validateModuleRequiredFields } from "@/shared/components/ModuleEntityCustomFieldsSection";
+import { toast } from "react-hot-toast";
 
 type Direction = "IN" | "OUT";
 
@@ -117,9 +119,9 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
       purchaseOrderId: inv.purchaseOrderId ?? undefined,
       salesOrderId: inv.salesOrderId ?? undefined,
       paymentDocumentNos: inv.paymentDocumentNos ?? "",
-      notes: inv.notes ?? "",
       categoryId: (inv as any).categoryId ?? null,
       customAttributes: (inv as any).attributes ?? {},
+      globalAttributes: (inv as any).globalAttributes ?? {},
       isValid: inv.isValid ?? false,
       accountingEnabled: inv.postingStatus === "POSTED",
       items:
@@ -265,6 +267,7 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
         if (customValues) {
           mapped.categoryId = customValues.categoryId || null;
           mapped.customAttributes = customValues.attributes || {};
+          mapped.globalAttributes = customValues.globalAttributes || {};
         }
       } catch {
         // ignore custom values error
@@ -335,19 +338,24 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
 
   async function handleSave(statusOverride?: string) {
     if (!form.invoiceNo.trim()) {
-      setFormError(t("errorInvoiceNoRequired", "Số hóa đơn là bắt buộc."));
+      const errMsg = t("errorInvoiceNoRequired", "Số hóa đơn là bắt buộc.");
+      setFormError(errMsg);
+      toast.error(errMsg);
       return;
     }
     if (!form.invoiceDate) {
-      setFormError(t("errorInvoiceDateRequired", "Ngày hóa đơn là bắt buộc."));
+      const errMsg = t("errorInvoiceDateRequired", "Ngày hóa đơn là bắt buộc.");
+      setFormError(errMsg);
+      toast.error(errMsg);
       return;
     }
 
     // Validate branch if internal drawer is open and there are accounting amounts
     if (internalDrawerOpen && !form.branchId && (form.totalAmount || 0) > 0) {
-      setFormError(
-        "Vui lòng chọn chi nhánh trước khi lưu thông tin nội bộ và hạch toán.",
-      );
+      const errMsg =
+        "Vui lòng chọn chi nhánh trước khi lưu thông tin nội bộ và hạch toán.";
+      setFormError(errMsg);
+      toast.error(errMsg);
       return;
     }
 
@@ -356,9 +364,10 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
       postingState.lines.length > 0 &&
       !postingState.isBalanced
     ) {
-      setFormError(
-        "Hạch toán kế toán không cân bằng. Vui lòng kiểm tra lại tổng Nợ và Có.",
-      );
+      const errMsg =
+        "Hạch toán kế toán không cân bằng. Vui lòng kiểm tra lại tổng Nợ và Có.";
+      setFormError(errMsg);
+      toast.error(errMsg);
       return;
     }
 
@@ -379,7 +388,42 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
       if (statusOverride) payload.status = statusOverride;
 
       const customAttrsToSave = (form as any).customAttributes;
+      const globalAttrsToSave = (form as any).globalAttributes;
       const categoryIdToSave = (form as any).categoryId;
+
+      // Validate required custom fields (global & category)
+      try {
+        const globalDefs =
+          await moduleConfigApi.getGlobalAttributeDefs("INVOICE");
+        let categoryDefs: any[] = [];
+        let categoryCode: string | null = null;
+        if (categoryIdToSave) {
+          const cats = await moduleConfigApi.getCategories("INVOICE");
+          const currentCat = cats.find((c) => c.id === categoryIdToSave);
+          categoryDefs = currentCat?.attributeDefs || [];
+          categoryCode = currentCat?.code || null;
+        }
+
+        const missingRequired = validateModuleRequiredFields({
+          globalDefs,
+          globalAttributes: globalAttrsToSave,
+          categoryDefs,
+          attributes: customAttrsToSave,
+          hasCategory: !!categoryIdToSave,
+          moduleKey: "INVOICE",
+          categoryCode,
+        });
+
+        if (missingRequired.length > 0) {
+          const errMsg = `Vui lòng nhập các trường bắt buộc: ${missingRequired.join(", ")}`;
+          setFormError(errMsg);
+          toast.error(errMsg, { duration: 5000 });
+          setSaving(false);
+          return;
+        }
+      } catch (valErr) {
+        // Non-blocking if offline or fetch fails
+      }
 
       // Remove frontend-only fields before sending to API
       delete payload.pendingDocumentChanges;
@@ -387,6 +431,7 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
       delete payload.pendingDeletedPdfs;
       delete payload.pendingAddedAttachments;
       delete (payload as any).customAttributes;
+      delete (payload as any).globalAttributes;
 
       let invoiceIdToProcess = "";
       let invoiceNoToProcess = form.invoiceNo;
@@ -429,7 +474,9 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
       // Save custom fields if present
       if (
         invoiceIdToProcess &&
-        (categoryIdToSave !== undefined || customAttrsToSave !== undefined)
+        (categoryIdToSave !== undefined ||
+          customAttrsToSave !== undefined ||
+          globalAttrsToSave !== undefined)
       ) {
         try {
           await moduleConfigApi.saveEntityValues(
@@ -438,6 +485,7 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
             {
               categoryId: categoryIdToSave,
               attributes: customAttrsToSave,
+              globalAttributes: globalAttrsToSave,
             },
           );
         } catch (cfErr: any) {
