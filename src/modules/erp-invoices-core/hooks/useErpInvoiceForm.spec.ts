@@ -8,7 +8,21 @@ vi.mock("../api/erpInvoicesCoreApi", () => ({
     update: vi.fn(),
     deletePdf: vi.fn(),
     get: vi.fn(),
+    linkAttachment: vi.fn(),
   },
+}));
+
+vi.mock("@/core/api/moduleConfigApi", () => ({
+  moduleConfigApi: {
+    saveEntityValues: vi.fn().mockResolvedValue({ success: true }),
+  },
+}));
+
+vi.mock("@/modules/system/api/attachmentsApi", () => ({
+  uploadAttachmentApi: vi.fn().mockResolvedValue({
+    success: true,
+    attachments: [{ id: "att-1" }],
+  }),
 }));
 
 vi.mock("react-i18next", () => ({
