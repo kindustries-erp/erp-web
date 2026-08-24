@@ -16,8 +16,8 @@ export function useGarageOpexList() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState<number>(getDefaultPageSize);
   const [sorts, setSorts] = useState<string[]>([]);
-  const [year, setYear] = useState<number | undefined>(undefined);
-  const [month, setMonth] = useState<number | undefined>(undefined);
+  const [dateFrom, setDateFrom] = useState<string>("");
+  const [dateTo, setDateTo] = useState<string>("");
   const [columnFilters, setColumnFilters] = useState<Record<string, string[]>>(
     {},
   );
@@ -29,8 +29,8 @@ export function useGarageOpexList() {
       page,
       pageSize,
       sorts,
-      year,
-      month,
+      dateFrom,
+      dateTo,
       columnFilters,
       columnSearch,
     ],
@@ -39,8 +39,8 @@ export function useGarageOpexList() {
         page,
         pageSize,
         sorts,
-        year,
-        month,
+        date_from: dateFrom || undefined,
+        date_to: dateTo || undefined,
         column_filters: Object.keys(columnFilters).length
           ? JSON.stringify(columnFilters)
           : undefined,
@@ -70,12 +70,9 @@ export function useGarageOpexList() {
     setPage(1);
   };
 
-  const setPeriodFilter = (
-    newYear: number | undefined,
-    newMonth: number | undefined,
-  ) => {
-    setYear(newYear);
-    setMonth(newMonth);
+  const setDateRange = (from: string, to: string) => {
+    setDateFrom(from);
+    setDateTo(to);
     setPage(1);
   };
 
@@ -87,15 +84,15 @@ export function useGarageOpexList() {
     Object.values(columnSearch).forEach((val) => {
       if (val && val.trim().length > 0) count += 1;
     });
-    if (year !== undefined || month !== undefined) count += 1;
+    if (dateFrom || dateTo) count += 1;
     return count;
-  }, [columnFilters, columnSearch, year, month]);
+  }, [columnFilters, columnSearch, dateFrom, dateTo]);
 
   const clearAllFilters = () => {
     setColumnFilters({});
     setColumnSearch({});
-    setYear(undefined);
-    setMonth(undefined);
+    setDateFrom("");
+    setDateTo("");
     setPage(1);
   };
 
@@ -110,9 +107,9 @@ export function useGarageOpexList() {
     setPageSize,
     sorts,
     setSort,
-    year,
-    month,
-    setPeriodFilter,
+    dateFrom,
+    dateTo,
+    setDateRange,
     columnFilters,
     setColumnFilter,
     columnSearch,

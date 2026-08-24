@@ -20,6 +20,68 @@ import {
   Loader2,
 } from "lucide-react";
 
+interface PairedPnlItem {
+  key: string;
+  categoryKey: string;
+  categoryName: string;
+  note?: string | null;
+  curAmount: number;
+  prevAmount?: number;
+}
+
+function mergePnlItems(
+  curItems: Array<{
+    id?: string;
+    categoryKey: string;
+    categoryName: string;
+    amount: number;
+    note?: string | null;
+  }> = [],
+  prevItems: Array<{
+    id?: string;
+    categoryKey: string;
+    categoryName: string;
+    amount: number;
+    note?: string | null;
+  }> = [],
+): PairedPnlItem[] {
+  const map = new Map<string, PairedPnlItem>();
+
+  for (const item of curItems) {
+    const key = item.categoryKey || item.categoryName;
+    map.set(key, {
+      key,
+      categoryKey: item.categoryKey,
+      categoryName: item.categoryName,
+      note: item.note,
+      curAmount: item.amount,
+      prevAmount: undefined,
+    });
+  }
+
+  for (const prev of prevItems) {
+    const key = prev.categoryKey || prev.categoryName;
+    if (map.has(key)) {
+      const existing = map.get(key)!;
+      existing.prevAmount = prev.amount;
+      if (!existing.note && prev.note) {
+        existing.note = prev.note;
+      }
+    } else {
+      map.set(key, {
+        key,
+        categoryKey: prev.categoryKey,
+        categoryName: prev.categoryName,
+        note: prev.note,
+        curAmount: 0,
+        prevAmount: prev.amount,
+      });
+    }
+  }
+
+  return Array.from(map.values());
+}
+
 export function GaragePnlSection() {
   const { t } = useTranslation("garage");
   const { navigate } = useAppStore();
@@ -34,6 +96,9 @@ export function GaragePnlSection() {
   // Quick Drawer open state
   const [drawerOpen, setDrawerOpen] = useState<boolean>(false);
 
+  const prevMonth = selectedMonth === 1 ? 12 : selectedMonth - 1;
+  const prevYear = selectedMonth === 1 ? selectedYear - 1 : selectedYear;
+
   const {
     data: report,
     isLoading,
@@ -46,6 +111,16 @@ export function GaragePnlSection() {
         month: selectedMonth,
       }),
   });
+
+  const { data: prevReport, isLoading: isLoadingPrev } =
+    useQuery<GaragePnlReportResponse>({
+      queryKey: ["garage-pnl-report", prevYear, prevMonth],
+      queryFn: () =>
+        garageOpexApi.getPnlReport({
+          year: prevYear,
+          month: prevMonth,
+        }),
+    });
 
   const handleExportExcel = async () => {
     setExporting(true);
@@ -90,10 +165,48 @@ export function GaragePnlSection() {
     [currentYear, t],
   );
 
+  const renderPrevVal = (val?: number) => {
+    if (isLoadingPrev)
+      return <span className="text-muted-foreground/60">...</span>;
+    if (val === undefined || val === null)
+      return <span className="text-muted-foreground/40">—</span>;
+    return `${val.toLocaleString("vi-VN")} đ`;
+  };
+
+  const renderDelta = (curVal: number, prevVal?: number, isCost = false) => {
+    if (
+      prevVal === undefined ||
+      prevVal === null ||
+      prevVal === 0 ||
+      isLoadingPrev
+    ) {
+      return null;
+    }
+    const diff = curVal - prevVal;
+    if (diff === 0) return null;
+    const pct = ((curVal - prevVal) / Math.abs(prevVal)) * 100;
+    const isPositive = diff > 0;
+    // For cost/opex, increase is bad (red), decrease is good (green)
+    const isGood = isCost ? !isPositive : isPositive;
+
+    return (
+      <span
+        className={`ml-1.5 inline-flex items-center text-[10px] font-medium px-1 py-0.2 rounded ${
+          isGood
+            ? "text-emerald-700 dark:text-emerald-400 bg-emerald-500/10"
+            : "text-rose-700 dark:text-rose-400 bg-rose-500/10"
+        }`}
+      >
+        {isPositive ? "+" : ""}
+        {pct.toFixed(1)}%
+      </span>
+    );
+  };
+
   return (
-    <div className="rounded-xl border border-border/80 shadow-sm overflow-hidden bg-card/80 backdrop-blur-sm">
+    <div className="bg-surface border border-border rounded-xl p-5 card-shadow overflow-hidden min-w-0">
       {/* Header */}
-      <div className="p-4 border-b border-border/60 bg-muted/20">
+      <div className="pb-4 mb-4 border-b border-border/60">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           {/* Title & Badge */}
           <div className="flex items-center gap-2.5">
@@ -118,7 +231,7 @@ export function GaragePnlSection() {
               <p className="text-xs text-muted-foreground mt-0.5">
                 {t(
                   "pnl.desc",
-                  "Tổng hợp doanh thu, giá vốn, chi phí vận hành và lợi nhuận ròng theo tháng",
+                  "Tổng hợp doanh thu, giá vốn, chi phí vận hành và lợi nhuận ròng theo tháng (so sánh với tháng trước)",
                 )}
               </p>
             </div>
@@ -190,15 +303,20 @@ export function GaragePnlSection() {
             Chưa có dữ liệu báo cáo cho kỳ này
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto rounded-lg border border-border/60">
             <table className="w-full text-xs text-left border-collapse">
               <thead>
                 <tr className="bg-muted/50 border-b border-border/70 text-muted-foreground uppercase font-semibold">
-                  <th className="py-2.5 px-4 w-[65%]">
+                  <th className="py-2.5 px-4 w-[50%]">
                     {t("pnl.tableHeaderCategory", "Danh Mục")}
                   </th>
-                  <th className="py-2.5 px-4 w-[35%] text-right">
-                    {t("pnl.tableHeaderValue", "Giá Trị (VNĐ)")}
+                  <th className="py-2.5 px-4 w-[25%] text-right">
+                    {t("pnl.tableHeaderValue", "Tháng này")} (T{selectedMonth}/
+                    {selectedYear})
+                  </th>
+                  <th className="py-2.5 px-4 w-[25%] text-right text-muted-foreground/80">
+                    {t("pnl.tableHeaderPrev", "Tháng trước")} (T{prevMonth}/
+                    {prevYear})
                   </th>
                 </tr>
               </thead>
@@ -209,7 +327,13 @@ export function GaragePnlSection() {
                     {t("pnl.revenueHeader", "I. Doanh Thu")}
                   </td>
                   <td className="py-2.5 px-4 text-right tabular-nums font-mono text-[13px]">
-                    {report.revenue.toLocaleString("vi-VN")} đ
+                    <div className="flex items-center justify-end">
+                      <span>{report.revenue.toLocaleString("vi-VN")} đ</span>
+                      {renderDelta(report.revenue, prevReport?.revenue)}
+                    </div>
+                  </td>
+                  <td className="py-2.5 px-4 text-right tabular-nums font-mono text-[13px] text-muted-foreground">
+                    {renderPrevVal(prevReport?.revenue)}
                   </td>
                 </tr>
                 <tr className="text-muted-foreground hover:bg-muted/10 transition-colors">
@@ -219,6 +343,9 @@ export function GaragePnlSection() {
                   <td className="py-2 px-4 text-right tabular-nums font-mono">
                     {report.revenue.toLocaleString("vi-VN")} đ
                   </td>
+                  <td className="py-2 px-4 text-right tabular-nums font-mono text-muted-foreground">
+                    {renderPrevVal(prevReport?.revenue)}
+                  </td>
                 </tr>
 
                 {/* II. Chi phí (Giá vốn) */}
@@ -227,17 +354,72 @@ export function GaragePnlSection() {
                     {t("pnl.cogsHeader", "II. Chi phí (Giá vốn)")}
                   </td>
                   <td className="py-2.5 px-4 text-right tabular-nums font-mono text-[13px]">
-                    {report.cogs.toLocaleString("vi-VN")} đ
+                    <div className="flex items-center justify-end">
+                      <span>{report.cogs.toLocaleString("vi-VN")} đ</span>
+                      {renderDelta(report.cogs, prevReport?.cogs, true)}
+                    </div>
+                  </td>
+                  <td className="py-2.5 px-4 text-right tabular-nums font-mono text-[13px] text-muted-foreground">
+                    {renderPrevVal(prevReport?.cogs)}
                   </td>
                 </tr>
                 <tr className="text-muted-foreground hover:bg-muted/10 transition-colors">
                   <td className="py-2 px-8">
-                    {t("pnl.cogsDirect", "Chi phí phụ tùng & Gia công ngoài")}
+                    {t(
+                      "pnl.cogsDirect",
+                      "Chi phí phụ tùng & Gia công ngoài (từ vụ việc)",
+                    )}
                   </td>
                   <td className="py-2 px-4 text-right tabular-nums font-mono">
-                    {report.cogs.toLocaleString("vi-VN")} đ
+                    {(report.cogsDirect ?? report.cogs).toLocaleString("vi-VN")}{" "}
+                    đ
+                  </td>
+                  <td className="py-2 px-4 text-right tabular-nums font-mono text-muted-foreground">
+                    {renderPrevVal(prevReport?.cogsDirect ?? prevReport?.cogs)}
                   </td>
                 </tr>
+
+                {/* Direct Costs / COGS adjustments breakdown */}
+                {(() => {
+                  const cogsAdjustments = mergePnlItems(
+                    report.cogsAdjustment?.items,
+                    prevReport?.cogsAdjustment?.items,
+                  );
+                  if (cogsAdjustments.length === 0) return null;
+                  return cogsAdjustments.map((item) => (
+                    <tr
+                      key={item.key}
+                      className="text-amber-700 dark:text-amber-400/90 bg-amber-500/5 hover:bg-amber-500/10 transition-colors"
+                    >
+                      <td className="py-2 px-8 flex items-center justify-between">
+                        <div className="flex items-center gap-1.5">
+                          <span>{item.categoryName}</span>
+                          <Badge
+                            variant="outline"
+                            className="text-[9px] px-1 py-0 border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-400"
+                          >
+                            Nhập tay
+                          </Badge>
+                        </div>
+                        {item.note && (
+                          <span className="text-[10px] opacity-75 italic max-w-[180px] truncate">
+                            ({item.note})
+                          </span>
+                        )}
+                      </td>
+                      <td className="py-2 px-4 text-right tabular-nums font-mono">
+                        {item.curAmount > 0
+                          ? `${item.curAmount.toLocaleString("vi-VN")} đ`
+                          : "—"}
+                      </td>
+                      <td className="py-2 px-4 text-right tabular-nums font-mono text-muted-foreground">
+                        {item.prevAmount !== undefined && item.prevAmount > 0
+                          ? `${item.prevAmount.toLocaleString("vi-VN")} đ`
+                          : "—"}
+                      </td>
+                    </tr>
+                  ));
+                })()}
 
                 {/* III. Lợi nhuận gộp */}
                 <tr className="bg-blue-500/10 text-blue-900 dark:text-blue-200 font-bold border-y border-blue-200 dark:border-blue-900/50 hover:bg-blue-500/15 transition-colors">
@@ -254,7 +436,15 @@ export function GaragePnlSection() {
                     </Badge>
                   </td>
                   <td className="py-3 px-4 text-right tabular-nums font-mono text-[13px] font-bold text-blue-700 dark:text-blue-300">
-                    {report.grossProfit.toLocaleString("vi-VN")} đ
+                    <div className="flex items-center justify-end">
+                      <span>
+                        {report.grossProfit.toLocaleString("vi-VN")} đ
+                      </span>
+                      {renderDelta(report.grossProfit, prevReport?.grossProfit)}
+                    </div>
+                  </td>
+                  <td className="py-3 px-4 text-right tabular-nums font-mono text-[13px] font-bold text-blue-700/70 dark:text-blue-300/70">
+                    {renderPrevVal(prevReport?.grossProfit)}
                   </td>
                 </tr>
 
@@ -273,26 +463,46 @@ export function GaragePnlSection() {
                     </Button>
                   </td>
                   <td className="py-2.5 px-4 text-right tabular-nums font-mono text-[13px]">
-                    {report.opex.total.toLocaleString("vi-VN")} đ
+                    <div className="flex items-center justify-end">
+                      <span>{report.opex.total.toLocaleString("vi-VN")} đ</span>
+                      {renderDelta(
+                        report.opex.total,
+                        prevReport?.opex.total,
+                        true,
+                      )}
+                    </div>
+                  </td>
+                  <td className="py-2.5 px-4 text-right tabular-nums font-mono text-[13px] text-muted-foreground">
+                    {renderPrevVal(prevReport?.opex.total)}
                   </td>
                 </tr>
 
-                {report.opex.items.length === 0 ? (
-                  <tr className="text-muted-foreground/60 italic hover:bg-muted/10">
-                    <td className="py-2 px-8">
-                      {t(
-                        "pnl.noOpexHint",
-                        "Chưa nhập chi phí vận hành cho tháng này",
-                      )}
-                    </td>
-                    <td className="py-2 px-4 text-right tabular-nums font-mono">
-                      0 đ
-                    </td>
-                  </tr>
-                ) : (
-                  report.opex.items.map((item) => (
+                {(() => {
+                  const opexItems = mergePnlItems(
+                    report.opex?.items,
+                    prevReport?.opex?.items,
+                  );
+                  if (opexItems.length === 0) {
+                    return (
+                      <tr className="text-muted-foreground/60 italic hover:bg-muted/10">
+                        <td className="py-2 px-8">
+                          {t(
+                            "pnl.noOpexHint",
+                            "Chưa nhập chi phí vận hành cho tháng này",
+                          )}
+                        </td>
+                        <td className="py-2 px-4 text-right tabular-nums font-mono">
+                          0 đ
+                        </td>
+                        <td className="py-2 px-4 text-right tabular-nums font-mono text-muted-foreground">
+                          {renderPrevVal(prevReport?.opex.total)}
+                        </td>
+                      </tr>
+                    );
+                  }
+                  return opexItems.map((item) => (
                     <tr
-                      key={item.id || item.categoryName}
+                      key={item.key}
                       className="text-muted-foreground hover:bg-muted/10 transition-colors"
                     >
                       <td className="py-2 px-8 flex items-center justify-between">
@@ -304,11 +514,18 @@ export function GaragePnlSection() {
                         )}
                       </td>
                       <td className="py-2 px-4 text-right tabular-nums font-mono">
-                        {item.amount.toLocaleString("vi-VN")} đ
+                        {item.curAmount > 0
+                          ? `${item.curAmount.toLocaleString("vi-VN")} đ`
+                          : "—"}
+                      </td>
+                      <td className="py-2 px-4 text-right tabular-nums font-mono text-muted-foreground">
+                        {item.prevAmount !== undefined && item.prevAmount > 0
+                          ? `${item.prevAmount.toLocaleString("vi-VN")} đ`
+                          : "—"}
                       </td>
                     </tr>
-                  ))
-                )}
+                  ));
+                })()}
 
                 {/* V. Lợi nhuận ròng (trước hoa hồng) */}
                 <tr className="bg-indigo-500/10 text-indigo-900 dark:text-indigo-200 font-bold border-y border-indigo-200 dark:border-indigo-900/50 hover:bg-indigo-500/15 transition-colors">
@@ -319,7 +536,21 @@ export function GaragePnlSection() {
                     )}
                   </td>
                   <td className="py-2.5 px-4 text-right tabular-nums font-mono text-[13px] font-bold text-indigo-700 dark:text-indigo-300">
-                    {report.netProfitBeforeCommission.toLocaleString("vi-VN")} đ
+                    <div className="flex items-center justify-end">
+                      <span>
+                        {report.netProfitBeforeCommission.toLocaleString(
+                          "vi-VN",
+                        )}{" "}
+                        đ
+                      </span>
+                      {renderDelta(
+                        report.netProfitBeforeCommission,
+                        prevReport?.netProfitBeforeCommission,
+                      )}
+                    </div>
+                  </td>
+                  <td className="py-2.5 px-4 text-right tabular-nums font-mono text-[13px] font-bold text-indigo-700/70 dark:text-indigo-300/70">
+                    {renderPrevVal(prevReport?.netProfitBeforeCommission)}
                   </td>
                 </tr>
 
@@ -329,34 +560,63 @@ export function GaragePnlSection() {
                     {t("pnl.commissionHeader", "VI. Hoa hồng")}
                   </td>
                   <td className="py-2.5 px-4 text-right tabular-nums font-mono text-[13px]">
-                    {report.commission.total.toLocaleString("vi-VN")} đ
+                    <div className="flex items-center justify-end">
+                      <span>
+                        {report.commission.total.toLocaleString("vi-VN")} đ
+                      </span>
+                      {renderDelta(
+                        report.commission.total,
+                        prevReport?.commission.total,
+                        true,
+                      )}
+                    </div>
+                  </td>
+                  <td className="py-2.5 px-4 text-right tabular-nums font-mono text-[13px] text-muted-foreground">
+                    {renderPrevVal(prevReport?.commission.total)}
                   </td>
                 </tr>
 
-                {report.commission.items.length === 0 ? (
-                  <tr className="text-muted-foreground/60 italic hover:bg-muted/10">
-                    <td className="py-2 px-8">
-                      {t("pnl.noCommissionHint", "Chưa có hoa hồng")}
-                    </td>
-                    <td className="py-2 px-4 text-right tabular-nums font-mono">
-                      0 đ
-                    </td>
-                  </tr>
-                ) : (
-                  report.commission.items.map((item) => (
+                {(() => {
+                  const commissionItems = mergePnlItems(
+                    report.commission?.items,
+                    prevReport?.commission?.items,
+                  );
+                  if (commissionItems.length === 0) {
+                    return (
+                      <tr className="text-muted-foreground/60 italic hover:bg-muted/10">
+                        <td className="py-2 px-8">
+                          {t("pnl.noCommissionHint", "Chưa có hoa hồng")}
+                        </td>
+                        <td className="py-2 px-4 text-right tabular-nums font-mono">
+                          0 đ
+                        </td>
+                        <td className="py-2 px-4 text-right tabular-nums font-mono text-muted-foreground">
+                          {renderPrevVal(prevReport?.commission.total)}
+                        </td>
+                      </tr>
+                    );
+                  }
+                  return commissionItems.map((item) => (
                     <tr
-                      key={item.id || item.categoryName}
+                      key={item.key}
                       className="text-muted-foreground hover:bg-muted/10 transition-colors"
                     >
                       <td className="py-2 px-8">
                         <span>{item.categoryName}</span>
                       </td>
                       <td className="py-2 px-4 text-right tabular-nums font-mono">
-                        {item.amount.toLocaleString("vi-VN")} đ
+                        {item.curAmount > 0
+                          ? `${item.curAmount.toLocaleString("vi-VN")} đ`
+                          : "—"}
+                      </td>
+                      <td className="py-2 px-4 text-right tabular-nums font-mono text-muted-foreground">
+                        {item.prevAmount !== undefined && item.prevAmount > 0
+                          ? `${item.prevAmount.toLocaleString("vi-VN")} đ`
+                          : "—"}
                       </td>
                     </tr>
-                  ))
-                )}
+                  ));
+                })()}
 
                 {/* VII. Lợi nhuận ròng (sau hoa hồng) */}
                 <tr className="bg-emerald-500/15 text-emerald-950 dark:text-emerald-100 font-bold border-t-2 border-emerald-400 dark:border-emerald-700 hover:bg-emerald-500/20 transition-colors">
@@ -375,7 +635,21 @@ export function GaragePnlSection() {
                     </Badge>
                   </td>
                   <td className="py-3 px-4 text-right tabular-nums font-mono text-[14px] font-bold text-emerald-700 dark:text-emerald-300">
-                    {report.netProfitAfterCommission.toLocaleString("vi-VN")} đ
+                    <div className="flex items-center justify-end">
+                      <span>
+                        {report.netProfitAfterCommission.toLocaleString(
+                          "vi-VN",
+                        )}{" "}
+                        đ
+                      </span>
+                      {renderDelta(
+                        report.netProfitAfterCommission,
+                        prevReport?.netProfitAfterCommission,
+                      )}
+                    </div>
+                  </td>
+                  <td className="py-3 px-4 text-right tabular-nums font-mono text-[14px] font-bold text-emerald-700/70 dark:text-emerald-300/70">
+                    {renderPrevVal(prevReport?.netProfitAfterCommission)}
                   </td>
                 </tr>
               </tbody>

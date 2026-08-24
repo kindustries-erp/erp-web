@@ -2,15 +2,15 @@ import React, { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate";
 import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
+import { DateRangeColumnSlot } from "@/shared/components/DataTable/DateRangeColumnSlot";
 import { TableText } from "@/shared/components/DataTable/TableText";
 import { Badge } from "@/shared/components/ui/badge";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
-import { Combobox, type ComboboxOption } from "@/shared/components/Combobox";
 import { useGarageOpexList } from "../hooks/useGarageOpexList";
 import { GarageOpexDrawer } from "../components/GarageOpexDrawer";
 import { garageOpexApi, type GarageOpexItem } from "../api/garageOpexApi";
 import toast from "react-hot-toast";
-import { ReceiptText, Eye, Pencil, Trash2 } from "lucide-react";
+import { ReceiptText, Eye, Pencil, Copy, Trash2 } from "lucide-react";
 import type { DataTableColumn } from "@/shared/components/DataTable";
 import type { ActionDropdownItem } from "@/shared/components/ActionDropdown";
 
@@ -27,6 +27,10 @@ const CATEGORY_COLORS: Record<string, string> = {
     "bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-200 dark:border-orange-900/50",
   KHAU_HAO:
     "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-900/50",
+  HOA_HONG_TRUC_TIEP:
+    "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-300 dark:border-amber-800",
+  CHI_PHI_TRUC_TIEP_KHAC:
+    "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-300 dark:border-amber-800",
   HOA_HONG_SALE:
     "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900/50",
   HOA_HONG_DV:
@@ -34,11 +38,37 @@ const CATEGORY_COLORS: Record<string, string> = {
   KHAC: "bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800",
 };
 
+const getCostGroupInfo = (
+  categoryKey: string,
+  t: (key: string, fallback: string) => string,
+): { label: string; badgeClass: string } => {
+  if (
+    categoryKey === "HOA_HONG_TRUC_TIEP" ||
+    categoryKey === "CHI_PHI_TRUC_TIEP_KHAC"
+  ) {
+    return {
+      label: t("opex.costGroups.COGS", "Giá vốn (COGS)"),
+      badgeClass:
+        "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-300 dark:border-amber-700",
+    };
+  }
+  if (categoryKey.startsWith("HOA_HONG_")) {
+    return {
+      label: t("opex.costGroups.COMMISSION", "Hoa hồng"),
+      badgeClass:
+        "bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border-indigo-300 dark:border-indigo-700",
+    };
+  }
+  return {
+    label: t("opex.costGroups.OPEX", "CP Vận hành (OPEX)"),
+    badgeClass:
+      "bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-300 dark:border-blue-700",
+  };
+};
+
 export function GarageOpex() {
   const { t } = useTranslation("garage");
   const listHook = useGarageOpexList();
-
-  const currentYear = new Date().getFullYear();
 
   // Drawer state
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -60,6 +90,13 @@ export function GarageOpex() {
 
   const openCreate = () => {
     setSelectedItem(null);
+    setIsCreate(true);
+    setDrawerMode("edit");
+    setDrawerOpen(true);
+  };
+
+  const handleDuplicate = (item: GarageOpexItem) => {
+    setSelectedItem(item);
     setIsCreate(true);
     setDrawerMode("edit");
     setDrawerOpen(true);
@@ -104,49 +141,39 @@ export function GarageOpex() {
         className:
           "text-center w-[40px] min-w-[40px] font-mono text-xs text-muted-foreground",
         cell: (_: GarageOpexItem, idx: number) => (
-          <span className="w-full block text-center">
-            {(listHook.page - 1) * listHook.pageSize + idx + 1}
-          </span>
+          <span className="w-full block text-center">{idx}</span>
         ),
       },
-      // 2. Kỳ báo cáo (MM/YYYY)
+      // 2. Kỳ báo cáo (MM/YYYY) với DateRangeColumnSlot
       {
         key: "period",
         header: (
           <TableColumnHeaderFilter
             title={t("opex.columns.period", "Kỳ báo cáo")}
             columnKey="period"
-            queryKeyPrefix="garage-opex-period-options"
-            allFilters={listHook.columnFilters}
-            searchValue=""
-            onSearchChange={() => {}}
-            fetchOptions={async ({ search, pageParam, filtersStr }) => {
-              const res = await garageOpexApi.getColumnOptions({
-                column: "period",
-                search,
-                page: pageParam,
-                pageSize: 20,
-                filtersStr,
-              });
-              return {
-                items: res.data.map((it: string) => ({
-                  label: it,
-                  value: it,
-                })),
-                total: res.total,
-                next: res.page < res.totalPages ? res.page + 1 : null,
-              };
-            }}
             sortState={getSortState("period")}
             onSortChange={(s) => listHook.setSort("period", s)}
-            selectedFilters={listHook.columnFilters["period"] || []}
-            onFilterChange={(v) => listHook.setColumnFilter("period", v)}
-            isActive={Boolean(listHook.columnFilters["period"]?.length)}
-            enableSelectAllMatching={false}
+            searchValue=""
+            onSearchChange={() => {}}
+            selectedFilters={[]}
+            onFilterChange={() => {}}
+            hideFilter={true}
+            hideFooter={true}
+            isActive={Boolean(listHook.dateFrom || listHook.dateTo)}
             align="center"
+            dateRangeSlot={({ close }) => (
+              <DateRangeColumnSlot
+                dateFrom={listHook.dateFrom || ""}
+                dateTo={listHook.dateTo || ""}
+                onChange={(from, to) => {
+                  listHook.setDateRange(from, to);
+                }}
+                onClose={close}
+              />
+            )}
           />
         ),
-        size: 130,
+        size: 140,
         enableResizing: true,
         className: "text-center",
         cell: (row: GarageOpexItem) => (
@@ -155,7 +182,31 @@ export function GarageOpex() {
           </span>
         ),
       },
-      // 3. Loại chi phí (Category Badge)
+      // 3. Nhóm chi phí (Cost Group / Phân loại)
+      {
+        key: "costGroup",
+        header: (
+          <span className="w-full block text-center font-medium">
+            {t("opex.columns.costGroup", "Nhóm chi phí")}
+          </span>
+        ),
+        size: 160,
+        enableResizing: true,
+        headerClassName: "text-center",
+        className: "text-center",
+        cell: (row: GarageOpexItem) => {
+          const groupInfo = getCostGroupInfo(row.categoryKey, t);
+          return (
+            <Badge
+              variant="outline"
+              className={`text-xs px-2 py-0.5 font-semibold ${groupInfo.badgeClass}`}
+            >
+              {groupInfo.label}
+            </Badge>
+          );
+        },
+      },
+      // 4. Loại chi phí chi tiết (Category Badge)
       {
         key: "categoryKey",
         header: (
@@ -207,7 +258,7 @@ export function GarageOpex() {
           );
         },
       },
-      // 4. Nội dung / Diễn giải
+      // 5. Nội dung / Diễn giải
       {
         key: "categoryName",
         header: (
@@ -258,7 +309,7 @@ export function GarageOpex() {
           />
         ),
       },
-      // 5. Số tiền (VND)
+      // 6. Số tiền (VND)
       {
         key: "amount",
         header: (
@@ -286,7 +337,7 @@ export function GarageOpex() {
           </span>
         ),
       },
-      // 6. Ghi chú
+      // 7. Ghi chú
       {
         key: "note",
         header: (
@@ -318,6 +369,8 @@ export function GarageOpex() {
       listHook.sorts,
       listHook.columnFilters,
       listHook.columnSearch,
+      listHook.dateFrom,
+      listHook.dateTo,
       listHook.page,
       listHook.pageSize,
       t,
@@ -340,6 +393,11 @@ export function GarageOpex() {
           onClick: () => openDetail(row, "edit"),
         },
         {
+          label: t("opex.actions.duplicateExpense", "Nhân đôi"),
+          icon: <Copy className="w-4 h-4" />,
+          onClick: () => handleDuplicate(row),
+        },
+        {
           label: t("opex.actions.deleteExpense", "Xóa"),
           icon: <Trash2 className="w-4 h-4 text-destructive" />,
           variant: "danger",
@@ -352,28 +410,6 @@ export function GarageOpex() {
   const totalAmountSum = useMemo(() => {
     return listHook.data.reduce((sum, r) => sum + (r.amount || 0), 0);
   }, [listHook.data]);
-
-  const monthFilterOptions: ComboboxOption[] = useMemo(
-    () => [
-      { value: "", label: t("common.allMonths", "Tất cả tháng") },
-      ...Array.from({ length: 12 }, (_, i) => ({
-        value: String(i + 1),
-        label: `${t("pnl.monthLabel", "Tháng")} ${i + 1}`,
-      })),
-    ],
-    [t],
-  );
-
-  const yearFilterOptions: ComboboxOption[] = useMemo(
-    () => [
-      { value: "", label: t("common.allYears", "Tất cả năm") },
-      ...Array.from({ length: 5 }, (_, i) => ({
-        value: String(currentYear - 2 + i),
-        label: `${t("pnl.yearLabel", "Năm")} ${currentYear - 2 + i}`,
-      })),
-    ],
-    [currentYear, t],
-  );
 
   return (
     <>
@@ -412,35 +448,6 @@ export function GarageOpex() {
             </div>
           ),
         }}
-        extraActions={
-          <div className="flex items-center gap-2">
-            {/* Filter Tháng Combobox */}
-            <Combobox
-              options={monthFilterOptions}
-              value={listHook.month !== undefined ? String(listHook.month) : ""}
-              onChange={(val) => {
-                const numVal = val ? Number(val) : undefined;
-                listHook.setPeriodFilter(listHook.year, numVal);
-              }}
-              placeholder={t("common.allMonths", "Tất cả tháng")}
-              className="w-36 h-8 text-xs"
-              allowClear={true}
-            />
-
-            {/* Filter Năm Combobox */}
-            <Combobox
-              options={yearFilterOptions}
-              value={listHook.year !== undefined ? String(listHook.year) : ""}
-              onChange={(val) => {
-                const numVal = val ? Number(val) : undefined;
-                listHook.setPeriodFilter(numVal, listHook.month);
-              }}
-              placeholder={t("common.allYears", "Tất cả năm")}
-              className="w-32 h-8 text-xs"
-              allowClear={true}
-            />
-          </div>
-        }
       />
 
       {/* Drawer Create / View / Edit */}

@@ -9,6 +9,10 @@ export interface GarageOpexItem {
   categoryName: string;
   amount: number;
   note?: string | null;
+  recurrenceType?: string | null;
+  recurrenceUntilYear?: number | null;
+  recurrenceUntilMonth?: number | null;
+  recurrenceAnchorId?: string | null;
   createdBy?: string | null;
   createdAt: string;
   updatedAt: string;
@@ -21,6 +25,10 @@ export interface CreateGarageOpexDto {
   categoryName: string;
   amount: number;
   note?: string;
+  recurrenceType?: string;
+  recurrenceUntilYear?: number;
+  recurrenceUntilMonth?: number;
+  recurrenceAnchorId?: string;
 }
 
 export interface UpdateGarageOpexDto {
@@ -30,6 +38,28 @@ export interface UpdateGarageOpexDto {
   categoryName?: string;
   amount?: number;
   note?: string;
+  recurrenceType?: string;
+  recurrenceUntilYear?: number;
+  recurrenceUntilMonth?: number;
+  recurrenceAnchorId?: string;
+}
+
+export interface ApplyRecurringOpexDto {
+  applyScope: "this" | "this_and_future";
+  amount: number;
+  categoryKey?: string;
+  categoryName?: string;
+  note?: string;
+  recurrenceType?: string;
+  untilYear?: number;
+  untilMonth?: number;
+}
+
+export interface ApplyRecurringOpexResponse {
+  updated: number;
+  created: number;
+  total: number;
+  item: GarageOpexItem;
 }
 
 export interface GarageOpexListResponse {
@@ -62,6 +92,11 @@ export interface GaragePnlReportResponse {
   caseCount: number;
   revenue: number;
   cogs: number;
+  cogsDirect?: number;
+  cogsAdjustment?: {
+    total: number;
+    items: GaragePnlItem[];
+  };
   grossProfit: number;
   grossMarginRate: number;
   opex: {
@@ -83,6 +118,8 @@ export const garageOpexApi = {
   getList: async (params?: {
     year?: number;
     month?: number;
+    date_from?: string;
+    date_to?: string;
     page?: number;
     pageSize?: number;
     sorts?: string[];
@@ -131,6 +168,17 @@ export const garageOpexApi = {
   ): Promise<GarageOpexItem> => {
     const { data } = await axiosInstance.put<GarageOpexItem>(
       `${BASE}/opex/${id}`,
+      dto,
+    );
+    return data;
+  },
+
+  applyRecurring: async (
+    id: string,
+    dto: ApplyRecurringOpexDto,
+  ): Promise<ApplyRecurringOpexResponse> => {
+    const { data } = await axiosInstance.post<ApplyRecurringOpexResponse>(
+      `${BASE}/opex/${id}/apply-recurring`,
       dto,
     );
     return data;
