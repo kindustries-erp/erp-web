@@ -1,16 +1,17 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   Wallet,
-  CheckCircle2,
-  AlertCircle,
-  Percent,
   ArrowUpRight,
   ArrowDownRight,
   Truck,
-  TrendingUp,
+  Table as TableIcon,
 } from "lucide-react";
 import { money } from "@/shared/utils/format";
 import { Badge } from "@/shared/components/ui/badge";
+import { DataTable } from "@/shared/components/DataTable";
+import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
+import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
+import { useTranslation } from "react-i18next";
 import {
   GarageCollectionSummary,
   GarageCostPaymentSummary,
@@ -30,10 +31,13 @@ export function GaragePaymentProgressCard({
   trend = [],
   loading = false,
 }: GaragePaymentProgressCardProps) {
+  const { t } = useTranslation("garage");
   const [activeTab, setActiveTab] = useState<"RECEIPT" | "PAYMENT">("RECEIPT");
+  const isReceipt = activeTab === "RECEIPT";
 
   // Receipt (Collection) stats
   const totalBilled = collectionSummary?.totalBilled || 0;
+  const totalRevenue = collectionSummary?.totalRevenue || 0;
   const totalPaid = collectionSummary?.totalPaid || 0;
   const totalReceivable = collectionSummary?.totalReceivable || 0;
   const collectionRate = collectionSummary?.collectionRate || 0;
@@ -44,13 +48,17 @@ export function GaragePaymentProgressCard({
   const totalPayableCost = costPaymentSummary?.totalPayableCost || 0;
   const costPaymentRate = costPaymentSummary?.paymentRate || 0;
 
-  const isReceipt = activeTab === "RECEIPT";
   const currentRate = isReceipt ? collectionRate : costPaymentRate;
   const currentTotal = isReceipt ? totalBilled : totalCost;
   const currentPaid = isReceipt ? totalPaid : totalPaidCost;
-  const currentRemaining = isReceipt ? totalReceivable : totalPayableCost;
 
-  // Rate badge color
+  // Table Column State Hook (Client-side for trend breakdown table)
+  const tableId = isReceipt
+    ? "garage-payment-progress-receipt"
+    : "garage-payment-progress-payment";
+  const listHook = useTableColumnState(tableId);
+
+  // Rate badge color helper
   const getBadgeVariant = (rate: number) => {
     if (rate >= 90)
       return "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30";
@@ -70,9 +78,677 @@ export function GaragePaymentProgressCard({
 
   const formatMonth = (m: string) => {
     const parts = m.split("-");
-    if (parts.length === 2) return `${parts[1]}/${parts[0]}`;
+    if (parts.length === 2) return `Tháng ${parts[1]}/${parts[0]}`;
     return m;
   };
+
+  // Chỉ hiển thị từ tháng 07/2026 trở đi
+  const effectiveTrend = useMemo(() => {
+    if (!trend || trend.length === 0) return [];
+    return trend.filter((t) => t.label >= "2026-07");
+  }, [trend]);
+
+  // Process and sort trend data
+  const processedItems = useMemo(() => {
+    if (!effectiveTrend || effectiveTrend.length === 0) return [];
+    const items = [...effectiveTrend];
+
+    if (listHook.sorts.length > 0) {
+      const sort = listHook.sorts[0];
+      const isDesc = sort.startsWith("-");
+      const field = sort.replace("-", "");
+
+      items.sort((a: any, b: any) => {
+        let valA = a[field];
+        let valB = b[field];
+
+        if (field === "tienCoThue") {
+          valA = a.tienCoThue || a.totalBilled || 0;
+          valB = b.tienCoThue || b.totalBilled || 0;
+        }
+
+        if (typeof valA === "string") {
+          return isDesc ? valB.localeCompare(valA) : valA.localeCompare(valB);
+        }
+        return isDesc
+          ? Number(valB) - Number(valA)
+          : Number(valA) - Number(valB);
+      });
+    }
+
+    return items;
+  }, [effectiveTrend, listHook.sorts]);
+
+  const totalCases = useMemo(() => {
+    return effectiveTrend.reduce((sum, item) => sum + (item.caseCount || 0), 0);
+  }, [effectiveTrend]);
+
+  // Columns for RECEIPT Tab (Khách hàng)
+  const receiptColumns = useMemo(
+    () => [
+      {
+        key: "index",
+        header: <span className="w-full block text-center">#</span>,
+        size: 40,
+        enableResizing: false,
+        headerClassName: "text-center w-[40px] min-w-[40px]",
+        className: "text-center w-[40px] min-w-[40px]",
+        cell: (_: any, idx: number) => (
+          <span className="w-full block text-center text-muted-foreground font-medium">
+            {idx}
+          </span>
+        ),
+      },
+      {
+        key: "label",
+        header: (
+          <TableColumnHeaderFilter
+            title={t("progress.columns.month", "Tháng")}
+            sortState={
+              listHook.sorts.includes("label")
+                ? "asc"
+                : listHook.sorts.includes("-label")
+                  ? "desc"
+                  : "none"
+            }
+            onSortChange={(state) => listHook.setSort("label", state)}
+            searchValue=""
+            onSearchChange={() => {}}
+            selectedFilters={[]}
+            onFilterChange={() => {}}
+            hideFilter={true}
+            hideFooter={true}
+            align="center"
+          />
+        ),
+        size: 140,
+        enableResizing: true,
+        headerClassName: "text-center",
+        className: "text-center font-medium",
+        cell: (item: GarageTrendItem) => (
+          <div className="flex items-center justify-center gap-1.5">
+            <span className="font-semibold text-foreground">
+              {formatMonth(item.label)}
+            </span>
+          </div>
+        ),
+      },
+      {
+        key: "caseCount",
+        header: (
+          <TableColumnHeaderFilter
+            title={t("progress.columns.caseCount", "Số vụ việc")}
+            sortState={
+              listHook.sorts.includes("caseCount")
+                ? "asc"
+                : listHook.sorts.includes("-caseCount")
+                  ? "desc"
+                  : "none"
+            }
+            onSortChange={(state) => listHook.setSort("caseCount", state)}
+            searchValue=""
+            onSearchChange={() => {}}
+            selectedFilters={[]}
+            onFilterChange={() => {}}
+            hideFilter={true}
+            hideFooter={true}
+            align="center"
+          />
+        ),
+        size: 110,
+        enableResizing: true,
+        headerClassName: "text-center",
+        className: "text-center tabular-nums text-muted-foreground",
+        cell: (item: GarageTrendItem) => (
+          <span className="inline-flex items-center px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300">
+            {item.caseCount} phiếu
+          </span>
+        ),
+      },
+      {
+        key: "revenue",
+        header: (
+          <TableColumnHeaderFilter
+            title={t("progress.columns.revenue", "Doanh thu thuần (P&L)")}
+            sortState={
+              listHook.sorts.includes("revenue")
+                ? "asc"
+                : listHook.sorts.includes("-revenue")
+                  ? "desc"
+                  : "none"
+            }
+            onSortChange={(state) => listHook.setSort("revenue", state)}
+            searchValue=""
+            onSearchChange={() => {}}
+            selectedFilters={[]}
+            onFilterChange={() => {}}
+            hideFilter={true}
+            hideFooter={true}
+            align="center"
+          />
+        ),
+        size: 170,
+        enableResizing: true,
+        headerClassName: "text-center",
+        className:
+          "text-right font-semibold tabular-nums text-slate-700 dark:text-slate-300",
+        cell: (item: GarageTrendItem) => money(item.revenue),
+      },
+      {
+        key: "tienCoThue",
+        header: (
+          <TableColumnHeaderFilter
+            title={t(
+              "progress.columns.totalBilled",
+              "Phải thu (Dịch vụ + VAT)",
+            )}
+            sortState={
+              listHook.sorts.includes("tienCoThue")
+                ? "asc"
+                : listHook.sorts.includes("-tienCoThue")
+                  ? "desc"
+                  : "none"
+            }
+            onSortChange={(state) => listHook.setSort("tienCoThue", state)}
+            searchValue=""
+            onSearchChange={() => {}}
+            selectedFilters={[]}
+            onFilterChange={() => {}}
+            hideFilter={true}
+            hideFooter={true}
+            align="center"
+          />
+        ),
+        size: 180,
+        enableResizing: true,
+        headerClassName: "text-center",
+        className: "text-right font-bold tabular-nums text-foreground",
+        cell: (item: GarageTrendItem) =>
+          money(item.tienCoThue || item.totalBilled || 0),
+      },
+      {
+        key: "paid",
+        header: (
+          <TableColumnHeaderFilter
+            title={t("progress.columns.paid", "Đã thu (Thực thu)")}
+            sortState={
+              listHook.sorts.includes("paid")
+                ? "asc"
+                : listHook.sorts.includes("-paid")
+                  ? "desc"
+                  : "none"
+            }
+            onSortChange={(state) => listHook.setSort("paid", state)}
+            searchValue=""
+            onSearchChange={() => {}}
+            selectedFilters={[]}
+            onFilterChange={() => {}}
+            hideFilter={true}
+            hideFooter={true}
+            align="center"
+          />
+        ),
+        size: 160,
+        enableResizing: true,
+        headerClassName: "text-center",
+        className:
+          "text-right font-semibold tabular-nums text-emerald-600 dark:text-emerald-400",
+        cell: (item: GarageTrendItem) => money(item.paid),
+      },
+      {
+        key: "receivable",
+        header: (
+          <TableColumnHeaderFilter
+            title={t("progress.columns.receivable", "Còn nợ (Phải thu)")}
+            sortState={
+              listHook.sorts.includes("receivable")
+                ? "asc"
+                : listHook.sorts.includes("-receivable")
+                  ? "desc"
+                  : "none"
+            }
+            onSortChange={(state) => listHook.setSort("receivable", state)}
+            searchValue=""
+            onSearchChange={() => {}}
+            selectedFilters={[]}
+            onFilterChange={() => {}}
+            hideFilter={true}
+            hideFooter={true}
+            align="center"
+          />
+        ),
+        size: 160,
+        enableResizing: true,
+        headerClassName: "text-center",
+        className:
+          "text-right font-semibold tabular-nums text-amber-600 dark:text-amber-400",
+        cell: (item: GarageTrendItem) => money(item.receivable),
+      },
+      {
+        key: "collectionRate",
+        header: (
+          <TableColumnHeaderFilter
+            title={t("progress.columns.rate", "Tỷ lệ thu & Tiến độ")}
+            sortState={
+              listHook.sorts.includes("collectionRate")
+                ? "asc"
+                : listHook.sorts.includes("-collectionRate")
+                  ? "desc"
+                  : "none"
+            }
+            onSortChange={(state) => listHook.setSort("collectionRate", state)}
+            searchValue=""
+            onSearchChange={() => {}}
+            selectedFilters={[]}
+            onFilterChange={() => {}}
+            hideFilter={true}
+            hideFooter={true}
+            align="center"
+          />
+        ),
+        size: 190,
+        enableResizing: true,
+        headerClassName: "text-center",
+        className: "text-left",
+        cell: (item: GarageTrendItem) => {
+          const rate = item.collectionRate;
+          const diff = item.collectionRateDiff;
+          const isPositive = diff > 0;
+          const isZero = diff === 0;
+
+          return (
+            <div className="flex flex-col gap-1 w-full max-w-[170px]">
+              <div className="flex items-center justify-between gap-1.5">
+                <Badge
+                  variant="outline"
+                  className={`font-semibold px-1.5 py-0 text-[11px] border tabular-nums ${getBadgeVariant(rate)}`}
+                >
+                  {rate.toFixed(1)}%
+                </Badge>
+
+                {!isZero && (
+                  <span
+                    className={`inline-flex items-center text-[10px] font-bold ${
+                      isPositive
+                        ? "text-emerald-600 dark:text-emerald-400"
+                        : "text-rose-600 dark:text-rose-400"
+                    }`}
+                  >
+                    {isPositive ? (
+                      <ArrowUpRight className="w-3 h-3" />
+                    ) : (
+                      <ArrowDownRight className="w-3 h-3" />
+                    )}
+                    {isPositive ? `+${diff}%` : `${diff}%`}
+                  </span>
+                )}
+              </div>
+              <div className="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden border border-slate-200/60 dark:border-slate-700/60">
+                <div
+                  className={`h-full rounded-full ${getProgressColor(rate)}`}
+                  style={{ width: `${Math.min(100, Math.max(0, rate))}%` }}
+                />
+              </div>
+            </div>
+          );
+        },
+      },
+    ],
+    [listHook, t],
+  );
+
+  // Columns for PAYMENT Tab (Nhà cung cấp / Chi phí)
+  const paymentColumns = useMemo(
+    () => [
+      {
+        key: "index",
+        header: <span className="w-full block text-center">#</span>,
+        size: 40,
+        enableResizing: false,
+        headerClassName: "text-center w-[40px] min-w-[40px]",
+        className: "text-center w-[40px] min-w-[40px]",
+        cell: (_: any, idx: number) => (
+          <span className="w-full block text-center text-muted-foreground font-medium">
+            {idx}
+          </span>
+        ),
+      },
+      {
+        key: "label",
+        header: (
+          <TableColumnHeaderFilter
+            title={t("progress.columns.month", "Tháng")}
+            sortState={
+              listHook.sorts.includes("label")
+                ? "asc"
+                : listHook.sorts.includes("-label")
+                  ? "desc"
+                  : "none"
+            }
+            onSortChange={(state) => listHook.setSort("label", state)}
+            searchValue=""
+            onSearchChange={() => {}}
+            selectedFilters={[]}
+            onFilterChange={() => {}}
+            hideFilter={true}
+            hideFooter={true}
+            align="center"
+          />
+        ),
+        size: 140,
+        enableResizing: true,
+        headerClassName: "text-center",
+        className: "text-center font-medium",
+        cell: (item: GarageTrendItem) => (
+          <span className="font-semibold text-foreground">
+            {formatMonth(item.label)}
+          </span>
+        ),
+      },
+      {
+        key: "caseCount",
+        header: (
+          <TableColumnHeaderFilter
+            title={t("progress.columns.caseCount", "Số vụ việc")}
+            sortState={
+              listHook.sorts.includes("caseCount")
+                ? "asc"
+                : listHook.sorts.includes("-caseCount")
+                  ? "desc"
+                  : "none"
+            }
+            onSortChange={(state) => listHook.setSort("caseCount", state)}
+            searchValue=""
+            onSearchChange={() => {}}
+            selectedFilters={[]}
+            onFilterChange={() => {}}
+            hideFilter={true}
+            hideFooter={true}
+            align="center"
+          />
+        ),
+        size: 110,
+        enableResizing: true,
+        headerClassName: "text-center",
+        className: "text-center tabular-nums text-muted-foreground",
+        cell: (item: GarageTrendItem) => (
+          <span className="inline-flex items-center px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300">
+            {item.caseCount} phiếu
+          </span>
+        ),
+      },
+      {
+        key: "cost",
+        header: (
+          <TableColumnHeaderFilter
+            title={t("progress.columns.cost", "Phải trả (Tổng chi phí NCC)")}
+            sortState={
+              listHook.sorts.includes("cost")
+                ? "asc"
+                : listHook.sorts.includes("-cost")
+                  ? "desc"
+                  : "none"
+            }
+            onSortChange={(state) => listHook.setSort("cost", state)}
+            searchValue=""
+            onSearchChange={() => {}}
+            selectedFilters={[]}
+            onFilterChange={() => {}}
+            hideFilter={true}
+            hideFooter={true}
+            align="center"
+          />
+        ),
+        size: 180,
+        enableResizing: true,
+        headerClassName: "text-center",
+        className: "text-right font-bold tabular-nums text-foreground",
+        cell: (item: GarageTrendItem) => money(item.cost),
+      },
+      {
+        key: "paidCost",
+        header: (
+          <TableColumnHeaderFilter
+            title={t("progress.columns.paidCost", "Đã trả (Thực chi)")}
+            sortState={
+              listHook.sorts.includes("paidCost")
+                ? "asc"
+                : listHook.sorts.includes("-paidCost")
+                  ? "desc"
+                  : "none"
+            }
+            onSortChange={(state) => listHook.setSort("paidCost", state)}
+            searchValue=""
+            onSearchChange={() => {}}
+            selectedFilters={[]}
+            onFilterChange={() => {}}
+            hideFilter={true}
+            hideFooter={true}
+            align="center"
+          />
+        ),
+        size: 160,
+        enableResizing: true,
+        headerClassName: "text-center",
+        className:
+          "text-right font-semibold tabular-nums text-blue-600 dark:text-blue-400",
+        cell: (item: GarageTrendItem) => money(item.paidCost),
+      },
+      {
+        key: "payableCost",
+        header: (
+          <TableColumnHeaderFilter
+            title={t("progress.columns.payableCost", "Còn nợ NCC")}
+            sortState={
+              listHook.sorts.includes("payableCost")
+                ? "asc"
+                : listHook.sorts.includes("-payableCost")
+                  ? "desc"
+                  : "none"
+            }
+            onSortChange={(state) => listHook.setSort("payableCost", state)}
+            searchValue=""
+            onSearchChange={() => {}}
+            selectedFilters={[]}
+            onFilterChange={() => {}}
+            hideFilter={true}
+            hideFooter={true}
+            align="center"
+          />
+        ),
+        size: 160,
+        enableResizing: true,
+        headerClassName: "text-center",
+        className:
+          "text-right font-semibold tabular-nums text-amber-600 dark:text-amber-400",
+        cell: (item: GarageTrendItem) => money(item.payableCost),
+      },
+      {
+        key: "costPaymentRate",
+        header: (
+          <TableColumnHeaderFilter
+            title={t("progress.columns.costRate", "Tỷ lệ trả & Tiến độ")}
+            sortState={
+              listHook.sorts.includes("costPaymentRate")
+                ? "asc"
+                : listHook.sorts.includes("-costPaymentRate")
+                  ? "desc"
+                  : "none"
+            }
+            onSortChange={(state) => listHook.setSort("costPaymentRate", state)}
+            searchValue=""
+            onSearchChange={() => {}}
+            selectedFilters={[]}
+            onFilterChange={() => {}}
+            hideFilter={true}
+            hideFooter={true}
+            align="center"
+          />
+        ),
+        size: 190,
+        enableResizing: true,
+        headerClassName: "text-center",
+        className: "text-left",
+        cell: (item: GarageTrendItem) => {
+          const rate = item.costPaymentRate;
+          const diff = item.costPaymentRateDiff;
+          const isPositive = diff > 0;
+          const isZero = diff === 0;
+
+          return (
+            <div className="flex flex-col gap-1 w-full max-w-[170px]">
+              <div className="flex items-center justify-between gap-1.5">
+                <Badge
+                  variant="outline"
+                  className={`font-semibold px-1.5 py-0 text-[11px] border tabular-nums ${getBadgeVariant(rate)}`}
+                >
+                  {rate.toFixed(1)}%
+                </Badge>
+
+                {!isZero && (
+                  <span
+                    className={`inline-flex items-center text-[10px] font-bold ${
+                      isPositive
+                        ? "text-emerald-600 dark:text-emerald-400"
+                        : "text-rose-600 dark:text-rose-400"
+                    }`}
+                  >
+                    {isPositive ? (
+                      <ArrowUpRight className="w-3 h-3" />
+                    ) : (
+                      <ArrowDownRight className="w-3 h-3" />
+                    )}
+                    {isPositive ? `+${diff}%` : `${diff}%`}
+                  </span>
+                )}
+              </div>
+              <div className="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden border border-slate-200/60 dark:border-slate-700/60">
+                <div
+                  className={`h-full rounded-full ${getProgressColor(rate)}`}
+                  style={{ width: `${Math.min(100, Math.max(0, rate))}%` }}
+                />
+              </div>
+            </div>
+          );
+        },
+      },
+    ],
+    [listHook, t],
+  );
+
+  // Summary row for RECEIPT Tab
+  const receiptSummaryRow = useMemo(
+    () => ({
+      index: (
+        <span className="w-full block text-center font-bold text-muted-foreground">
+          Σ
+        </span>
+      ),
+      label: (
+        <span className="font-bold text-center block uppercase tracking-wider text-xs text-foreground">
+          {t("progress.summary.total", "TỔNG CỘNG")}
+        </span>
+      ),
+      caseCount: (
+        <span className="font-bold text-center block tabular-nums text-foreground">
+          {totalCases} phiếu
+        </span>
+      ),
+      revenue: (
+        <span className="font-bold text-right block tabular-nums text-slate-700 dark:text-slate-300">
+          {money(totalRevenue)}
+        </span>
+      ),
+      tienCoThue: (
+        <span className="font-bold text-right block tabular-nums text-primary text-sm">
+          {money(totalBilled)}
+        </span>
+      ),
+      paid: (
+        <span className="font-bold text-right block tabular-nums text-emerald-600 dark:text-emerald-400 text-sm">
+          {money(totalPaid)}
+        </span>
+      ),
+      receivable: (
+        <span className="font-bold text-right block tabular-nums text-amber-600 dark:text-amber-400 text-sm">
+          {money(totalReceivable)}
+        </span>
+      ),
+      collectionRate: (
+        <div className="flex items-center gap-1.5">
+          <Badge
+            variant="outline"
+            className={`font-bold px-2 py-0.5 text-xs border tabular-nums ${getBadgeVariant(collectionRate)}`}
+          >
+            {collectionRate.toFixed(1)}% Hoàn tất
+          </Badge>
+        </div>
+      ),
+    }),
+    [
+      totalCases,
+      totalRevenue,
+      totalBilled,
+      totalPaid,
+      totalReceivable,
+      collectionRate,
+      t,
+    ],
+  );
+
+  // Summary row for PAYMENT Tab
+  const paymentSummaryRow = useMemo(
+    () => ({
+      index: (
+        <span className="w-full block text-center font-bold text-muted-foreground">
+          Σ
+        </span>
+      ),
+      label: (
+        <span className="font-bold text-center block uppercase tracking-wider text-xs text-foreground">
+          {t("progress.summary.total", "TỔNG CỘNG")}
+        </span>
+      ),
+      caseCount: (
+        <span className="font-bold text-center block tabular-nums text-foreground">
+          {totalCases} phiếu
+        </span>
+      ),
+      cost: (
+        <span className="font-bold text-right block tabular-nums text-primary text-sm">
+          {money(totalCost)}
+        </span>
+      ),
+      paidCost: (
+        <span className="font-bold text-right block tabular-nums text-blue-600 dark:text-blue-400 text-sm">
+          {money(totalPaidCost)}
+        </span>
+      ),
+      payableCost: (
+        <span className="font-bold text-right block tabular-nums text-amber-600 dark:text-amber-400 text-sm">
+          {money(totalPayableCost)}
+        </span>
+      ),
+      costPaymentRate: (
+        <div className="flex items-center gap-1.5">
+          <Badge
+            variant="outline"
+            className={`font-bold px-2 py-0.5 text-xs border tabular-nums ${getBadgeVariant(costPaymentRate)}`}
+          >
+            {costPaymentRate.toFixed(1)}% Hoàn tất
+          </Badge>
+        </div>
+      ),
+    }),
+    [
+      totalCases,
+      totalCost,
+      totalPaidCost,
+      totalPayableCost,
+      costPaymentRate,
+      t,
+    ],
+  );
 
   return (
     <div className="flex flex-col gap-3">
@@ -159,167 +835,47 @@ export function GaragePaymentProgressCard({
           </div>
         </div>
 
-        {/* 4 Metric Sub-Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-1">
-          {/* Card 1: Tổng phát sinh */}
-          <div className="p-3.5 rounded-lg bg-slate-50 dark:bg-slate-800/60 border border-slate-200/70 dark:border-slate-700/70 flex flex-col justify-between">
-            <div className="flex items-center justify-between text-muted-foreground mb-1">
-              <span className="text-xs font-medium">
-                {isReceipt ? "Tổng tiền dịch vụ" : "Tổng chi phí phát sinh"}
-              </span>
-              {isReceipt ? (
-                <Wallet className="w-4 h-4 text-slate-500" />
-              ) : (
-                <Truck className="w-4 h-4 text-slate-500" />
+        {/* Section: Standardized DataTable Breakdown by Month */}
+        <div className="flex flex-col gap-2.5 pt-1">
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+              <TableIcon className="w-3.5 h-3.5 text-primary" />
+              Chi tiết {isReceipt
+                ? "Phải thu & Đã thu"
+                : "Phải trả & Đã trả"}{" "}
+              theo từng tháng
+            </span>
+            <span className="text-[11px] text-muted-foreground">
+              So sánh chi tiết từng tháng (Phải thu = Doanh thu + VAT, Đã thu
+              thực tế và Dư nợ)
+            </span>
+          </div>
+
+          <div className="border rounded-lg overflow-hidden">
+            <DataTable
+              items={processedItems}
+              getRowKey={(item) => item.label}
+              variant="spreadsheet"
+              emptyLabel={t(
+                "progress.empty",
+                "Chưa có dữ liệu giao dịch trong kỳ",
               )}
-            </div>
-            <div>
-              <div className="text-lg font-bold text-foreground">
-                {loading ? "..." : money(currentTotal)}
-              </div>
-              <span className="text-[11px] text-muted-foreground">
-                Từ 07/2026 (Đã hoàn thành)
-              </span>
-            </div>
-          </div>
-
-          {/* Card 2: Đã thanh toán */}
-          <div className="p-3.5 rounded-lg bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-200/60 dark:border-emerald-800/40 flex flex-col justify-between">
-            <div className="flex items-center justify-between text-emerald-700 dark:text-emerald-400 mb-1">
-              <span className="text-xs font-medium">
-                {isReceipt
-                  ? "Đã thanh toán (Thực thu)"
-                  : "Đã chi trả (Thực chi)"}
-              </span>
-              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-            </div>
-            <div>
-              <div className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
-                {loading ? "..." : money(currentPaid)}
-              </div>
-              <span className="text-[11px] text-emerald-600/80 dark:text-emerald-400/80 font-medium">
-                {currentRate.toFixed(1)}% trên tổng phát sinh (từ 07/2026)
-              </span>
-            </div>
-          </div>
-
-          {/* Card 3: Còn nợ */}
-          <div className="p-3.5 rounded-lg bg-amber-50/60 dark:bg-amber-950/20 border border-amber-200/60 dark:border-amber-800/40 flex flex-col justify-between">
-            <div className="flex items-center justify-between text-amber-700 dark:text-amber-400 mb-1">
-              <span className="text-xs font-medium">
-                {isReceipt
-                  ? "Còn nợ (Phải thu khách)"
-                  : "Còn nợ (Phải trả NCC)"}
-              </span>
-              <AlertCircle className="w-4 h-4 text-amber-600" />
-            </div>
-            <div>
-              <div className="text-lg font-bold text-amber-600 dark:text-amber-400">
-                {loading ? "..." : money(currentRemaining)}
-              </div>
-              <span className="text-[11px] text-amber-600/80 dark:text-amber-400/80 font-medium">
-                {(100 - currentRate).toFixed(1)}% công nợ còn lại
-              </span>
-            </div>
-          </div>
-
-          {/* Card 4: Hiệu suất dòng tiền */}
-          <div className="p-3.5 rounded-lg bg-blue-50/60 dark:bg-blue-950/20 border border-blue-200/60 dark:border-blue-800/40 flex flex-col justify-between">
-            <div className="flex items-center justify-between text-blue-700 dark:text-blue-400 mb-1">
-              <span className="text-xs font-medium">
-                {isReceipt ? "Tỷ lệ thu hồi tiền" : "Tỷ lệ chi trả chi phí"}
-              </span>
-              <Percent className="w-4 h-4 text-blue-600" />
-            </div>
-            <div>
-              <div className="text-lg font-bold text-blue-600 dark:text-blue-400">
-                {loading ? "..." : `${currentRate.toFixed(1)}%`}
-              </div>
-              <span className="text-[11px] text-blue-600/80 dark:text-blue-400/80 font-medium">
-                {currentRate >= 80 ? "Dòng tiền tốt" : "Cần theo dõi sát"}
-              </span>
-            </div>
+              loading={loading}
+              columns={isReceipt ? receiptColumns : paymentColumns}
+              summaryRow={isReceipt ? receiptSummaryRow : paymentSummaryRow}
+              enableColumnResizing={true}
+              tableId={tableId}
+            />
           </div>
         </div>
-
-        {/* Section 5: So sánh Tỷ lệ hoàn tất qua từng tháng (Month-over-Month Comparison) */}
-        {trend.length > 0 && (
-          <div className="border-t border-slate-200/80 dark:border-slate-800 pt-3 flex flex-col gap-2">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-foreground flex items-center gap-1.5">
-                <TrendingUp className="w-3.5 h-3.5 text-primary" />
-                So sánh {isReceipt ? "Tỷ lệ Thu tiền" : "Tỷ lệ Trả tiền"} theo
-                từng tháng
-              </span>
-              <span className="text-[11px] text-muted-foreground">
-                So sánh biến động MoM (% chênh lệch so với tháng trước)
-              </span>
-            </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
-              {trend.map((t, idx) => {
-                const monthRate = isReceipt
-                  ? t.collectionRate
-                  : t.costPaymentRate;
-                const monthDiff = isReceipt
-                  ? t.collectionRateDiff
-                  : t.costPaymentRateDiff;
-                const isPositive = monthDiff > 0;
-                const isZero = monthDiff === 0 || idx === 0;
-
-                return (
-                  <div
-                    key={t.label}
-                    className="p-2.5 rounded-md bg-slate-50/80 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-700/60 flex flex-col gap-1 text-xs"
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="font-semibold text-slate-700 dark:text-slate-300">
-                        {formatMonth(t.label)}
-                      </span>
-                      {!isZero ? (
-                        <span
-                          className={`inline-flex items-center text-[10px] font-bold ${
-                            isPositive
-                              ? "text-emerald-600 dark:text-emerald-400"
-                              : "text-rose-600 dark:text-rose-400"
-                          }`}
-                        >
-                          {isPositive ? (
-                            <ArrowUpRight className="w-3 h-3" />
-                          ) : (
-                            <ArrowDownRight className="w-3 h-3" />
-                          )}
-                          {isPositive ? `+${monthDiff}%` : `${monthDiff}%`}
-                        </span>
-                      ) : (
-                        <span className="text-[10px] text-muted-foreground font-mono">
-                          —
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="flex items-baseline justify-between mt-0.5">
-                      <span className="font-mono font-bold text-sm text-foreground">
-                        {monthRate.toFixed(1)}%
-                      </span>
-                      <span className="text-[10px] text-muted-foreground tabular-nums">
-                        {isReceipt ? money(t.paid) : money(t.paidCost)}
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
 
         {/* Footnote Note */}
         <div className="text-[11px] text-muted-foreground/80 flex items-center gap-1.5 italic bg-slate-50 dark:bg-slate-800/40 px-3 py-1.5 rounded-md border border-slate-200/50 dark:border-slate-700/50">
           <span>*</span>
           <span>
             {isReceipt
-              ? "Tỷ lệ hoàn tất thu tiền dịch vụ được tính từ tháng 07/2026 trở đi (đồng bộ với mốc đối soát dòng tiền thực thu của phân hệ Khách hàng & Công nợ)."
-              : "Tỷ lệ hoàn tất chi trả chi phí được tính từ tháng 07/2026 trở đi (dựa trên sao kê ngân hàng và sổ quỹ tiền mặt thực chi)."}
+              ? "Tổng tiền dịch vụ hiển thị theo đúng số tiền thực tế khách hàng phải thanh toán (Doanh thu thuần + Thuế GTGT VAT). Dữ liệu được tính từ mốc đối soát dòng tiền tháng 07/2026 trở đi."
+              : "Tổng chi phí hiển thị theo giá vốn phụ tùng & chi phí gia công thực tế phát sinh. Dữ liệu được tính từ mốc đối soát dòng tiền tháng 07/2026 trở đi."}
           </span>
         </div>
       </div>

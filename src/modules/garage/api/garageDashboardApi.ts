@@ -8,6 +8,8 @@ export interface GarageTrendItem {
   margin: number;
   paid: number;
   receivable: number;
+  tienCoThue?: number;
+  totalBilled?: number;
   collectionRate: number;
   paidCost: number;
   payableCost: number;
@@ -19,6 +21,7 @@ export interface GarageTrendItem {
 
 export interface GarageCollectionSummary {
   totalBilled: number;
+  totalTienCoThue?: number;
   totalRevenue: number;
   totalPaid: number;
   totalReceivable: number;
@@ -52,10 +55,12 @@ export interface GarageKpiPeriod {
   totalRevenue: number;
   totalCost: number;
   totalProfit: number;
+  totalTienCoThue?: number;
   totalCount: number;
   revenueChart: number[];
   costChart: number[];
   profitChart: number[];
+  tienCoThueChart?: number[];
   labels: string[];
 }
 

@@ -121,7 +121,13 @@ export function GarageDashboard() {
           title="Giá vốn & Chi phí Dịch vụ (Đã hoàn thành)"
         />
 
-        {/* Section 3: Tiến độ Dòng tiền & Công nợ (Thu tiền KH & Trả tiền NCC) */}
+        {/* Section 3: Báo cáo Lợi nhuận (P&L) Section */}
+        <GaragePnlSection
+          dateFrom={filter.state.dateFrom || undefined}
+          dateTo={filter.state.dateTo || undefined}
+        />
+
+        {/* Section 4: Tiến độ Dòng tiền & Công nợ (Thu tiền KH & Trả tiền NCC) */}
         <GaragePaymentProgressCard
           collectionSummary={statsData?.collectionSummary}
           costPaymentSummary={statsData?.costPaymentSummary}
@@ -129,7 +135,7 @@ export function GarageDashboard() {
           loading={isLoadingStats}
         />
 
-        {/* Section 4: Trend & Status Distribution Charts */}
+        {/* Section 5: Trend & Status Distribution Charts */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           <div className="lg:col-span-2">
             <GarageTrendChart filterState={filter.state} />
@@ -143,9 +149,6 @@ export function GarageDashboard() {
             />
           </div>
         </div>
-
-        {/* Section 5: Báo cáo Lợi nhuận (P&L) Section */}
-        <GaragePnlSection />
       </div>
     </DashboardTemplate>
   );
