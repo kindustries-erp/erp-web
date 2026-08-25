@@ -39,6 +39,50 @@ export interface GarageTrendItem {
   paidCostNoInvoice?: number;
   payableCostNoInvoice?: number;
   costRateNoInvoice?: number;
+
+  // Classification breakdowns: Sửa chữa chung
+  caseCountSuaChuaChung?: number;
+  billedSuaChuaChung?: number;
+  paidSuaChuaChung?: number;
+  receivableSuaChuaChung?: number;
+  rateSuaChuaChung?: number;
+  costSuaChuaChung?: number;
+  paidCostSuaChuaChung?: number;
+  payableCostSuaChuaChung?: number;
+  costRateSuaChuaChung?: number;
+
+  // Classification breakdowns: Ký gửi / Nội bộ
+  caseCountKyGuiNoiBo?: number;
+  billedKyGuiNoiBo?: number;
+  paidKyGuiNoiBo?: number;
+  receivableKyGuiNoiBo?: number;
+  rateKyGuiNoiBo?: number;
+  costKyGuiNoiBo?: number;
+  paidCostKyGuiNoiBo?: number;
+  payableCostKyGuiNoiBo?: number;
+  costRateKyGuiNoiBo?: number;
+
+  // Classification breakdowns: OJ Ngoài
+  caseCountOj?: number;
+  billedOj?: number;
+  paidOj?: number;
+  receivableOj?: number;
+  rateOj?: number;
+  costOj?: number;
+  paidCostOj?: number;
+  payableCostOj?: number;
+  costRateOj?: number;
+
+  // Classification breakdowns: Khác / Chưa phân loại
+  caseCountOther?: number;
+  billedOther?: number;
+  paidOther?: number;
+  receivableOther?: number;
+  rateOther?: number;
+  costOther?: number;
+  paidCostOther?: number;
+  payableCostOther?: number;
+  costRateOther?: number;
 }
 
 export interface GarageCollectionSummary {

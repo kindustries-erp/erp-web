@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from "react";
-import { Wallet, Truck, Table as TableIcon } from "lucide-react";
-import { money } from "@/shared/utils/format";
+import { Wallet, Truck, Table as TableIcon, ExternalLink } from "lucide-react";
+import { money, shortMoney } from "@/shared/utils/format";
 import { cn } from "@/shared/utils";
 import { Badge } from "@/shared/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/shared/components/ui/tabs";
@@ -8,6 +8,9 @@ import { DataTable } from "@/shared/components/DataTable";
 import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
 import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
 import { useTranslation } from "react-i18next";
+import { Tooltip } from "@/core/components/ui/Tooltip";
+import { TableRowContextMenu } from "@/shared/components/DataTable/TableRowContextMenu";
+import { GarageMonthDetailDrawer } from "./GarageMonthDetailDrawer";
 import {
   GarageCollectionSummary,
   GarageCostPaymentSummary,
@@ -30,6 +33,33 @@ export function GaragePaymentProgressCard({
   const { t } = useTranslation("garage");
   const [activeTab, setActiveTab] = useState<"RECEIPT" | "PAYMENT">("RECEIPT");
   const isReceipt = activeTab === "RECEIPT";
+
+  // Context menu state
+  const [contextMenu, setContextMenu] = useState<{
+    x: number;
+    y: number;
+    item: GarageTrendItem;
+  } | null>(null);
+
+  // Month detail drawer state
+  const [selectedMonth, setSelectedMonth] = useState<GarageTrendItem | null>(
+    null,
+  );
+  const [monthDrawerOpen, setMonthDrawerOpen] = useState(false);
+
+  const handleRowContextMenu = (
+    item: GarageTrendItem,
+    _index: number,
+    event: React.MouseEvent,
+  ) => {
+    event.preventDefault();
+    setContextMenu({ x: event.clientX, y: event.clientY, item });
+  };
+
+  const openMonthDetail = (item: GarageTrendItem) => {
+    setSelectedMonth(item);
+    setMonthDrawerOpen(true);
+  };
 
   // Receipt (Collection) stats
   const totalBilled = collectionSummary?.totalBilled || 0;
@@ -352,19 +382,28 @@ export function GaragePaymentProgressCard({
         size: 140,
         enableResizing: true,
         headerClassName:
-          "text-center bg-emerald-500/15 dark:bg-emerald-500/25 font-semibold",
+          "text-center bg-slate-100 dark:bg-slate-800/60 font-semibold border-r border-border/50",
         className:
-          "text-right font-medium tabular-nums bg-emerald-500/10 dark:bg-emerald-500/20",
+          "text-right font-medium tabular-nums bg-slate-50 dark:bg-slate-800/30 border-r border-border/30",
         cell: (item: GarageTrendItem) => (
-          <span
-            className={
+          <Tooltip
+            content={
               item.receivable > 0
-                ? "font-mono font-bold text-foreground text-[12px] tabular-nums"
-                : "font-mono text-muted-foreground/60 text-[11px]"
+                ? `Còn phải thu: ${money(item.receivable)}`
+                : undefined
             }
+            side="top"
           >
-            {money(item.receivable)}
-          </span>
+            <span
+              className={
+                item.receivable > 0
+                  ? "font-mono font-bold text-foreground text-[12px] tabular-nums cursor-default"
+                  : "font-mono text-muted-foreground/60 text-[11px] cursor-default"
+              }
+            >
+              {item.receivable > 0 ? shortMoney(item.receivable) : "—"}
+            </span>
+          </Tooltip>
         ),
       },
       {
@@ -400,30 +439,39 @@ export function GaragePaymentProgressCard({
             item.collectionRate || (billed > 0 ? (paid / billed) * 100 : 0);
 
           return (
-            <div className="flex flex-col gap-1 w-full max-w-[195px]">
-              <div className="flex items-baseline justify-between text-[11px]">
-                <span className="font-mono font-bold text-foreground text-[11.5px] tracking-tight">
-                  {money(paid)}
+            <Tooltip
+              content={
+                <span className="font-mono text-[11px]">
+                  {money(paid)}&nbsp;/&nbsp;{money(billed)}
                 </span>
-                <span className="text-muted-foreground/75 font-mono text-[10px] font-normal tracking-tight">
-                  / {money(billed)}
-                </span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <Badge
-                  variant="outline"
-                  className={`font-medium px-1 py-0 text-[10px] border tabular-nums ${getBadgeVariant(rate, true)}`}
-                >
-                  {rate.toFixed(1)}%
-                </Badge>
-                <div className="flex-1 bg-slate-100 dark:bg-slate-800/80 h-1.5 rounded-full overflow-hidden border border-slate-200/60 dark:border-slate-700/60">
-                  <div
-                    className={`h-full rounded-full ${getProgressColor(rate, true)}`}
-                    style={{ width: `${Math.min(100, Math.max(0, rate))}%` }}
-                  />
+              }
+              side="top"
+            >
+              <div className="flex flex-col gap-1 w-full max-w-[195px] cursor-default">
+                <div className="flex items-baseline justify-between text-[11px]">
+                  <span className="font-mono font-bold text-foreground text-[11.5px] tracking-tight">
+                    {shortMoney(paid)}
+                  </span>
+                  <span className="text-muted-foreground/75 font-mono text-[10px] font-normal tracking-tight">
+                    / {shortMoney(billed)}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Badge
+                    variant="outline"
+                    className={`font-medium px-1 py-0 text-[10px] border tabular-nums ${getBadgeVariant(rate, true)}`}
+                  >
+                    {rate.toFixed(1)}%
+                  </Badge>
+                  <div className="flex-1 bg-slate-100 dark:bg-slate-800/80 h-1.5 rounded-full overflow-hidden border border-slate-200/60 dark:border-slate-700/60">
+                    <div
+                      className={`h-full rounded-full ${getProgressColor(rate, true)}`}
+                      style={{ width: `${Math.min(100, Math.max(0, rate))}%` }}
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
+            </Tooltip>
           );
         },
       },
@@ -460,30 +508,39 @@ export function GaragePaymentProgressCard({
           const cases = item.caseCountWithInvoice || 0;
 
           return (
-            <div className="flex flex-col gap-1 w-full max-w-[195px]">
-              <div className="flex items-baseline justify-between text-[11px]">
-                <span className="font-mono font-bold text-foreground text-[11.5px] tracking-tight">
-                  {money(paid)}
+            <Tooltip
+              content={
+                <span className="font-mono text-[11px]">
+                  {money(paid)}&nbsp;/&nbsp;{money(billed)}&nbsp;({cases}p)
                 </span>
-                <span className="text-muted-foreground/75 font-mono text-[10px] font-normal tracking-tight">
-                  / {money(billed)} ({cases}p)
-                </span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <Badge
-                  variant="outline"
-                  className={`font-medium px-1 py-0 text-[10px] border tabular-nums ${getBadgeVariant(rate, true)}`}
-                >
-                  {rate.toFixed(1)}%
-                </Badge>
-                <div className="flex-1 bg-slate-100 dark:bg-slate-800/80 h-1.5 rounded-full overflow-hidden border border-slate-200/60 dark:border-slate-700/60">
-                  <div
-                    className={`h-full rounded-full ${getProgressColor(rate, true)}`}
-                    style={{ width: `${Math.min(100, Math.max(0, rate))}%` }}
-                  />
+              }
+              side="top"
+            >
+              <div className="flex flex-col gap-1 w-full max-w-[195px] cursor-default">
+                <div className="flex items-baseline justify-between text-[11px]">
+                  <span className="font-mono font-bold text-foreground text-[11.5px] tracking-tight">
+                    {shortMoney(paid)}
+                  </span>
+                  <span className="text-muted-foreground/75 font-mono text-[10px] font-normal tracking-tight">
+                    / {shortMoney(billed)} ({cases}p)
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Badge
+                    variant="outline"
+                    className={`font-medium px-1 py-0 text-[10px] border tabular-nums ${getBadgeVariant(rate, true)}`}
+                  >
+                    {rate.toFixed(1)}%
+                  </Badge>
+                  <div className="flex-1 bg-slate-100 dark:bg-slate-800/80 h-1.5 rounded-full overflow-hidden border border-slate-200/60 dark:border-slate-700/60">
+                    <div
+                      className={`h-full rounded-full ${getProgressColor(rate, true)}`}
+                      style={{ width: `${Math.min(100, Math.max(0, rate))}%` }}
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
+            </Tooltip>
           );
         },
       },
@@ -520,30 +577,39 @@ export function GaragePaymentProgressCard({
           const cases = item.caseCountNoInvoice || 0;
 
           return (
-            <div className="flex flex-col gap-1 w-full max-w-[195px]">
-              <div className="flex items-baseline justify-between text-[11px]">
-                <span className="font-mono font-bold text-foreground text-[11.5px] tracking-tight">
-                  {money(paid)}
+            <Tooltip
+              content={
+                <span className="font-mono text-[11px]">
+                  {money(paid)}&nbsp;/&nbsp;{money(billed)}&nbsp;({cases}p)
                 </span>
-                <span className="text-muted-foreground/75 font-mono text-[10px] font-normal tracking-tight">
-                  / {money(billed)} ({cases}p)
-                </span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <Badge
-                  variant="outline"
-                  className={`font-medium px-1 py-0 text-[10px] border tabular-nums ${getBadgeVariant(rate, true)}`}
-                >
-                  {rate.toFixed(1)}%
-                </Badge>
-                <div className="flex-1 bg-slate-100 dark:bg-slate-800/80 h-1.5 rounded-full overflow-hidden border border-slate-200/60 dark:border-slate-700/60">
-                  <div
-                    className={`h-full rounded-full ${getProgressColor(rate, true)}`}
-                    style={{ width: `${Math.min(100, Math.max(0, rate))}%` }}
-                  />
+              }
+              side="top"
+            >
+              <div className="flex flex-col gap-1 w-full max-w-[195px] cursor-default">
+                <div className="flex items-baseline justify-between text-[11px]">
+                  <span className="font-mono font-bold text-foreground text-[11.5px] tracking-tight">
+                    {shortMoney(paid)}
+                  </span>
+                  <span className="text-muted-foreground/75 font-mono text-[10px] font-normal tracking-tight">
+                    / {shortMoney(billed)} ({cases}p)
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Badge
+                    variant="outline"
+                    className={`font-medium px-1 py-0 text-[10px] border tabular-nums ${getBadgeVariant(rate, true)}`}
+                  >
+                    {rate.toFixed(1)}%
+                  </Badge>
+                  <div className="flex-1 bg-slate-100 dark:bg-slate-800/80 h-1.5 rounded-full overflow-hidden border border-slate-200/60 dark:border-slate-700/60">
+                    <div
+                      className={`h-full rounded-full ${getProgressColor(rate, true)}`}
+                      style={{ width: `${Math.min(100, Math.max(0, rate))}%` }}
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
+            </Tooltip>
           );
         },
       },
@@ -656,19 +722,28 @@ export function GaragePaymentProgressCard({
         size: 140,
         enableResizing: true,
         headerClassName:
-          "text-center bg-orange-500/15 dark:bg-orange-500/25 font-semibold",
+          "text-center bg-slate-100 dark:bg-slate-800/60 font-semibold border-r border-border/50",
         className:
-          "text-right font-medium tabular-nums bg-orange-500/10 dark:bg-orange-500/20",
+          "text-right font-medium tabular-nums bg-slate-50 dark:bg-slate-800/30 border-r border-border/30",
         cell: (item: GarageTrendItem) => (
-          <span
-            className={
+          <Tooltip
+            content={
               item.payableCost > 0
-                ? "font-mono font-bold text-foreground text-[12px] tabular-nums"
-                : "font-mono text-muted-foreground/60 text-[11px]"
+                ? `Còn phải trả: ${money(item.payableCost)}`
+                : undefined
             }
+            side="top"
           >
-            {money(item.payableCost)}
-          </span>
+            <span
+              className={
+                item.payableCost > 0
+                  ? "font-mono font-bold text-foreground text-[12px] tabular-nums cursor-default"
+                  : "font-mono text-muted-foreground/60 text-[11px] cursor-default"
+              }
+            >
+              {item.payableCost > 0 ? shortMoney(item.payableCost) : "—"}
+            </span>
+          </Tooltip>
         ),
       },
       {
@@ -704,30 +779,39 @@ export function GaragePaymentProgressCard({
             item.costPaymentRate || (cost > 0 ? (paid / cost) * 100 : 0);
 
           return (
-            <div className="flex flex-col gap-1 w-full max-w-[195px]">
-              <div className="flex items-baseline justify-between text-[11px]">
-                <span className="font-mono font-bold text-foreground text-[11.5px] tracking-tight">
-                  {money(paid)}
+            <Tooltip
+              content={
+                <span className="font-mono text-[11px]">
+                  {money(paid)}&nbsp;/&nbsp;{money(cost)}
                 </span>
-                <span className="text-muted-foreground/75 font-mono text-[10px] font-normal tracking-tight">
-                  / {money(cost)}
-                </span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <Badge
-                  variant="outline"
-                  className={`font-medium px-1 py-0 text-[10px] border tabular-nums ${getBadgeVariant(rate, false)}`}
-                >
-                  {rate.toFixed(1)}%
-                </Badge>
-                <div className="flex-1 bg-slate-100 dark:bg-slate-800/80 h-1.5 rounded-full overflow-hidden border border-slate-200/60 dark:border-slate-700/60">
-                  <div
-                    className={`h-full rounded-full ${getProgressColor(rate, false)}`}
-                    style={{ width: `${Math.min(100, Math.max(0, rate))}%` }}
-                  />
+              }
+              side="top"
+            >
+              <div className="flex flex-col gap-1 w-full max-w-[195px] cursor-default">
+                <div className="flex items-baseline justify-between text-[11px]">
+                  <span className="font-mono font-bold text-foreground text-[11.5px] tracking-tight">
+                    {shortMoney(paid)}
+                  </span>
+                  <span className="text-muted-foreground/75 font-mono text-[10px] font-normal tracking-tight">
+                    / {shortMoney(cost)}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Badge
+                    variant="outline"
+                    className={`font-medium px-1 py-0 text-[10px] border tabular-nums ${getBadgeVariant(rate, false)}`}
+                  >
+                    {rate.toFixed(1)}%
+                  </Badge>
+                  <div className="flex-1 bg-slate-100 dark:bg-slate-800/80 h-1.5 rounded-full overflow-hidden border border-slate-200/60 dark:border-slate-700/60">
+                    <div
+                      className={`h-full rounded-full ${getProgressColor(rate, false)}`}
+                      style={{ width: `${Math.min(100, Math.max(0, rate))}%` }}
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
+            </Tooltip>
           );
         },
       },
@@ -763,30 +847,39 @@ export function GaragePaymentProgressCard({
           const rate = item.costRateWithInvoice || 0;
 
           return (
-            <div className="flex flex-col gap-1 w-full max-w-[195px]">
-              <div className="flex items-baseline justify-between text-[11px]">
-                <span className="font-mono font-bold text-foreground text-[11.5px] tracking-tight">
-                  {money(paid)}
+            <Tooltip
+              content={
+                <span className="font-mono text-[11px]">
+                  {money(paid)}&nbsp;/&nbsp;{money(cost)}
                 </span>
-                <span className="text-muted-foreground/75 font-mono text-[10px] font-normal tracking-tight">
-                  / {money(cost)}
-                </span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <Badge
-                  variant="outline"
-                  className={`font-medium px-1 py-0 text-[10px] border tabular-nums ${getBadgeVariant(rate, false)}`}
-                >
-                  {rate.toFixed(1)}%
-                </Badge>
-                <div className="flex-1 bg-slate-100 dark:bg-slate-800/80 h-1.5 rounded-full overflow-hidden border border-slate-200/60 dark:border-slate-700/60">
-                  <div
-                    className={`h-full rounded-full ${getProgressColor(rate, false)}`}
-                    style={{ width: `${Math.min(100, Math.max(0, rate))}%` }}
-                  />
+              }
+              side="top"
+            >
+              <div className="flex flex-col gap-1 w-full max-w-[195px] cursor-default">
+                <div className="flex items-baseline justify-between text-[11px]">
+                  <span className="font-mono font-bold text-foreground text-[11.5px] tracking-tight">
+                    {shortMoney(paid)}
+                  </span>
+                  <span className="text-muted-foreground/75 font-mono text-[10px] font-normal tracking-tight">
+                    / {shortMoney(cost)}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Badge
+                    variant="outline"
+                    className={`font-medium px-1 py-0 text-[10px] border tabular-nums ${getBadgeVariant(rate, false)}`}
+                  >
+                    {rate.toFixed(1)}%
+                  </Badge>
+                  <div className="flex-1 bg-slate-100 dark:bg-slate-800/80 h-1.5 rounded-full overflow-hidden border border-slate-200/60 dark:border-slate-700/60">
+                    <div
+                      className={`h-full rounded-full ${getProgressColor(rate, false)}`}
+                      style={{ width: `${Math.min(100, Math.max(0, rate))}%` }}
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
+            </Tooltip>
           );
         },
       },
@@ -822,30 +915,39 @@ export function GaragePaymentProgressCard({
           const rate = item.costRateNoInvoice || 0;
 
           return (
-            <div className="flex flex-col gap-1 w-full max-w-[195px]">
-              <div className="flex items-baseline justify-between text-[11px]">
-                <span className="font-mono font-bold text-foreground text-[11.5px] tracking-tight">
-                  {money(paid)}
+            <Tooltip
+              content={
+                <span className="font-mono text-[11px]">
+                  {money(paid)}&nbsp;/&nbsp;{money(cost)}
                 </span>
-                <span className="text-muted-foreground/75 font-mono text-[10px] font-normal tracking-tight">
-                  / {money(cost)}
-                </span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <Badge
-                  variant="outline"
-                  className={`font-medium px-1 py-0 text-[10px] border tabular-nums ${getBadgeVariant(rate, false)}`}
-                >
-                  {rate.toFixed(1)}%
-                </Badge>
-                <div className="flex-1 bg-slate-100 dark:bg-slate-800/80 h-1.5 rounded-full overflow-hidden border border-slate-200/60 dark:border-slate-700/60">
-                  <div
-                    className={`h-full rounded-full ${getProgressColor(rate, false)}`}
-                    style={{ width: `${Math.min(100, Math.max(0, rate))}%` }}
-                  />
+              }
+              side="top"
+            >
+              <div className="flex flex-col gap-1 w-full max-w-[195px] cursor-default">
+                <div className="flex items-baseline justify-between text-[11px]">
+                  <span className="font-mono font-bold text-foreground text-[11.5px] tracking-tight">
+                    {shortMoney(paid)}
+                  </span>
+                  <span className="text-muted-foreground/75 font-mono text-[10px] font-normal tracking-tight">
+                    / {shortMoney(cost)}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Badge
+                    variant="outline"
+                    className={`font-medium px-1 py-0 text-[10px] border tabular-nums ${getBadgeVariant(rate, false)}`}
+                  >
+                    {rate.toFixed(1)}%
+                  </Badge>
+                  <div className="flex-1 bg-slate-100 dark:bg-slate-800/80 h-1.5 rounded-full overflow-hidden border border-slate-200/60 dark:border-slate-700/60">
+                    <div
+                      className={`h-full rounded-full ${getProgressColor(rate, false)}`}
+                      style={{ width: `${Math.min(100, Math.max(0, rate))}%` }}
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
+            </Tooltip>
           );
         },
       },
@@ -1064,151 +1166,179 @@ export function GaragePaymentProgressCard({
   );
 
   return (
-    <div className="flex flex-col gap-3">
-      {/* Header & Tabs */}
-      <div className="flex items-center justify-between flex-wrap gap-2">
-        <div className="flex items-center gap-3">
-          <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-md border border-slate-200/80 dark:border-slate-700 shadow-sm flex items-center gap-1.5">
-            {isReceipt ? (
-              <Wallet className="w-3.5 h-3.5 text-slate-600 dark:text-slate-400" />
-            ) : (
-              <Truck className="w-3.5 h-3.5 text-slate-600 dark:text-slate-400" />
-            )}
-            Tiến độ Dòng tiền & Công nợ Dịch vụ
-          </h4>
-        </div>
-
-        {/* Tab Switcher matching Overview Page */}
-        <Tabs
-          value={activeTab}
-          onValueChange={(val) => setActiveTab(val as "RECEIPT" | "PAYMENT")}
-        >
-          <TabsList className="h-10 rounded-full bg-slate-100/80 dark:bg-slate-800/80 shadow-[0_1px_2px_rgba(15,23,42,.03),0_6px_18px_-14px_rgba(15,23,42,.08)] p-1 gap-1.5 border border-slate-200/60 dark:border-slate-700/60">
-            <TabsTrigger
-              value="RECEIPT"
-              className={cn(
-                "group relative shrink-0 rounded-full px-4 h-full gap-0 transition-[color,background-color,box-shadow,transform] duration-150 ease-out",
-                "data-[state=inactive]:text-slate-500 data-[state=inactive]:font-medium hover:text-slate-700 dark:hover:text-slate-300",
-                "data-[state=active]:text-slate-900 dark:data-[state=active]:text-white data-[state=active]:font-semibold whitespace-nowrap",
+    <>
+      <div className="flex flex-col gap-3">
+        {/* Header & Tabs */}
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <div className="flex items-center gap-3">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-md border border-slate-200/80 dark:border-slate-700 shadow-sm flex items-center gap-1.5">
+              {isReceipt ? (
+                <Wallet className="w-3.5 h-3.5 text-slate-600 dark:text-slate-400" />
+              ) : (
+                <Truck className="w-3.5 h-3.5 text-slate-600 dark:text-slate-400" />
               )}
-            >
-              <Wallet
-                className={cn(
-                  "shrink-0 transition-[width,height,opacity,margin] duration-150 ease-out overflow-hidden",
-                  "w-0 h-0 opacity-0 mr-0",
-                  "group-data-[state=active]:w-3.5 group-data-[state=active]:h-3.5 group-data-[state=active]:opacity-100 group-data-[state=active]:mr-2",
-                )}
-              />
-              <span className="text-[13px] tracking-tight">
-                {t("progress.tabs.receivable", "Phải Thu")}
-              </span>
-            </TabsTrigger>
-            <TabsTrigger
-              value="PAYMENT"
-              className={cn(
-                "group relative shrink-0 rounded-full px-4 h-full gap-0 transition-[color,background-color,box-shadow,transform] duration-150 ease-out",
-                "data-[state=inactive]:text-slate-500 data-[state=inactive]:font-medium hover:text-slate-700 dark:hover:text-slate-300",
-                "data-[state=active]:text-slate-900 dark:data-[state=active]:text-white data-[state=active]:font-semibold whitespace-nowrap",
-              )}
-            >
-              <Truck
-                className={cn(
-                  "shrink-0 transition-[width,height,opacity,margin] duration-150 ease-out overflow-hidden",
-                  "w-0 h-0 opacity-0 mr-0",
-                  "group-data-[state=active]:w-3.5 group-data-[state=active]:h-3.5 group-data-[state=active]:opacity-100 group-data-[state=active]:mr-2",
-                )}
-              />
-              <span className="text-[13px] tracking-tight">
-                {t("progress.tabs.payable", "Phải Trả")}
-              </span>
-            </TabsTrigger>
-          </TabsList>
-        </Tabs>
-      </div>
+              Tiến độ Dòng tiền & Công nợ Dịch vụ
+            </h4>
+          </div>
 
-      <div className="bg-surface border border-border rounded-xl card-shadow p-5 flex flex-col gap-4">
-        {/* Progress Bar & Rate Header */}
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center justify-between flex-wrap gap-2">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold text-foreground">
-                {isReceipt
-                  ? "Tỷ lệ hoàn tất thu tiền dịch vụ"
-                  : "Tỷ lệ hoàn tất chi trả chi phí / NCC"}
-              </span>
-              <Badge
-                variant="outline"
-                className={`font-semibold px-2 py-0.5 text-xs border ${getBadgeVariant(currentRate, isReceipt)}`}
+          {/* Tab Switcher matching Overview Page */}
+          <Tabs
+            value={activeTab}
+            onValueChange={(val) => setActiveTab(val as "RECEIPT" | "PAYMENT")}
+          >
+            <TabsList className="h-10 rounded-full bg-slate-100/80 dark:bg-slate-800/80 shadow-[0_1px_2px_rgba(15,23,42,.03),0_6px_18px_-14px_rgba(15,23,42,.08)] p-1 gap-1.5 border border-slate-200/60 dark:border-slate-700/60">
+              <TabsTrigger
+                value="RECEIPT"
+                className={cn(
+                  "group relative shrink-0 rounded-full px-4 h-full gap-0 transition-[color,background-color,box-shadow,transform] duration-150 ease-out",
+                  "data-[state=inactive]:text-slate-500 data-[state=inactive]:font-medium hover:text-slate-700 dark:hover:text-slate-300",
+                  "data-[state=active]:text-slate-900 dark:data-[state=active]:text-white data-[state=active]:font-semibold whitespace-nowrap",
+                )}
               >
-                {currentRate.toFixed(1)}% Hoàn tất
-              </Badge>
+                <Wallet
+                  className={cn(
+                    "shrink-0 transition-[width,height,opacity,margin] duration-150 ease-out overflow-hidden",
+                    "w-0 h-0 opacity-0 mr-0",
+                    "group-data-[state=active]:w-3.5 group-data-[state=active]:h-3.5 group-data-[state=active]:opacity-100 group-data-[state=active]:mr-2",
+                  )}
+                />
+                <span className="text-[13px] tracking-tight">
+                  {t("progress.tabs.receivable", "Phải Thu")}
+                </span>
+              </TabsTrigger>
+              <TabsTrigger
+                value="PAYMENT"
+                className={cn(
+                  "group relative shrink-0 rounded-full px-4 h-full gap-0 transition-[color,background-color,box-shadow,transform] duration-150 ease-out",
+                  "data-[state=inactive]:text-slate-500 data-[state=inactive]:font-medium hover:text-slate-700 dark:hover:text-slate-300",
+                  "data-[state=active]:text-slate-900 dark:data-[state=active]:text-white data-[state=active]:font-semibold whitespace-nowrap",
+                )}
+              >
+                <Truck
+                  className={cn(
+                    "shrink-0 transition-[width,height,opacity,margin] duration-150 ease-out overflow-hidden",
+                    "w-0 h-0 opacity-0 mr-0",
+                    "group-data-[state=active]:w-3.5 group-data-[state=active]:h-3.5 group-data-[state=active]:opacity-100 group-data-[state=active]:mr-2",
+                  )}
+                />
+                <span className="text-[13px] tracking-tight">
+                  {t("progress.tabs.payable", "Phải Trả")}
+                </span>
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
+
+        <div className="bg-surface border border-border rounded-xl card-shadow p-5 flex flex-col gap-4">
+          {/* Progress Bar & Rate Header */}
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold text-foreground">
+                  {isReceipt
+                    ? "Tỷ lệ hoàn tất thu tiền dịch vụ"
+                    : "Tỷ lệ hoàn tất chi trả chi phí / NCC"}
+                </span>
+                <Badge
+                  variant="outline"
+                  className={`font-semibold px-2 py-0.5 text-xs border ${getBadgeVariant(currentRate, isReceipt)}`}
+                >
+                  {currentRate.toFixed(1)}% Hoàn tất
+                </Badge>
+              </div>
+              <div className="text-xs text-muted-foreground">
+                {isReceipt ? "Đã thu" : "Đã trả"}{" "}
+                <strong className="text-foreground font-bold font-mono">
+                  {money(currentPaid)}
+                </strong>{" "}
+                <span className="text-muted-foreground/75 font-normal font-mono">
+                  / Tổng {money(currentTotal)}
+                </span>
+              </div>
             </div>
-            <div className="text-xs text-muted-foreground">
-              {isReceipt ? "Đã thu" : "Đã trả"}{" "}
-              <strong className="text-foreground font-bold font-mono">
-                {money(currentPaid)}
-              </strong>{" "}
-              <span className="text-muted-foreground/75 font-normal font-mono">
-                / Tổng {money(currentTotal)}
+
+            {/* Progress Bar Track */}
+            <div className="w-full bg-slate-100 dark:bg-slate-800 h-2.5 rounded-full overflow-hidden border border-slate-200/60 dark:border-slate-700/60 p-0.5">
+              <div
+                className={`h-full rounded-full transition-all duration-700 ease-out ${getProgressColor(currentRate, isReceipt)}`}
+                style={{
+                  width: `${loading ? 0 : Math.min(100, Math.max(0, currentRate))}%`,
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Section: Standardized DataTable Breakdown by Month */}
+          <div className="flex flex-col gap-2.5 pt-1">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                <TableIcon className="w-3.5 h-3.5 text-primary" />
+                Chi tiết {isReceipt
+                  ? "Phải thu & Đã thu"
+                  : "Phải trả & Đã trả"}{" "}
+                theo từng tháng
+              </span>
+              <span className="text-[11px] text-muted-foreground">
+                So sánh chi tiết từng tháng (Phải thu = Doanh thu + VAT, Đã thu
+                thực tế và Dư nợ)
               </span>
             </div>
+
+            <div className="border rounded-lg overflow-hidden">
+              <DataTable
+                items={processedItems}
+                getRowKey={(item) => item.label}
+                variant="spreadsheet"
+                emptyLabel={t(
+                  "progress.empty",
+                  "Chưa có dữ liệu giao dịch trong kỳ",
+                )}
+                loading={loading}
+                columns={isReceipt ? receiptColumns : paymentColumns}
+                summaryRow={isReceipt ? receiptSummaryRow : paymentSummaryRow}
+                enableColumnResizing={true}
+                tableId={tableId}
+                onRowContextMenu={handleRowContextMenu}
+              />
+            </div>
           </div>
 
-          {/* Progress Bar Track */}
-          <div className="w-full bg-slate-100 dark:bg-slate-800 h-2.5 rounded-full overflow-hidden border border-slate-200/60 dark:border-slate-700/60 p-0.5">
-            <div
-              className={`h-full rounded-full transition-all duration-700 ease-out ${getProgressColor(currentRate, isReceipt)}`}
-              style={{
-                width: `${loading ? 0 : Math.min(100, Math.max(0, currentRate))}%`,
-              }}
-            />
-          </div>
-        </div>
-
-        {/* Section: Standardized DataTable Breakdown by Month */}
-        <div className="flex flex-col gap-2.5 pt-1">
-          <div className="flex items-center justify-between flex-wrap gap-2">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-              <TableIcon className="w-3.5 h-3.5 text-primary" />
-              Chi tiết {isReceipt
-                ? "Phải thu & Đã thu"
-                : "Phải trả & Đã trả"}{" "}
-              theo từng tháng
+          {/* Footnote Note */}
+          <div className="text-[11px] text-muted-foreground/80 flex items-center gap-1.5 italic bg-slate-50 dark:bg-slate-800/40 px-3 py-1.5 rounded-md border border-slate-200/50 dark:border-slate-700/50">
+            <span>*</span>
+            <span>
+              {isReceipt
+                ? "Tổng tiền dịch vụ hiển thị theo đúng số tiền thực tế khách hàng phải thanh toán (Doanh thu thuần + Thuế GTGT VAT). Dữ liệu được tính từ mốc đối soát dòng tiền tháng 07/2026 trở đi."
+                : "Tổng chi phí hiển thị theo giá vốn phụ tùng & chi phí gia công thực tế phát sinh. Dữ liệu được tính từ mốc đối soát dòng tiền tháng 07/2026 trở đi."}
             </span>
-            <span className="text-[11px] text-muted-foreground">
-              So sánh chi tiết từng tháng (Phải thu = Doanh thu + VAT, Đã thu
-              thực tế và Dư nợ)
-            </span>
           </div>
-
-          <div className="border rounded-lg overflow-hidden">
-            <DataTable
-              items={processedItems}
-              getRowKey={(item) => item.label}
-              variant="spreadsheet"
-              emptyLabel={t(
-                "progress.empty",
-                "Chưa có dữ liệu giao dịch trong kỳ",
-              )}
-              loading={loading}
-              columns={isReceipt ? receiptColumns : paymentColumns}
-              summaryRow={isReceipt ? receiptSummaryRow : paymentSummaryRow}
-              enableColumnResizing={true}
-              tableId={tableId}
-            />
-          </div>
-        </div>
-
-        {/* Footnote Note */}
-        <div className="text-[11px] text-muted-foreground/80 flex items-center gap-1.5 italic bg-slate-50 dark:bg-slate-800/40 px-3 py-1.5 rounded-md border border-slate-200/50 dark:border-slate-700/50">
-          <span>*</span>
-          <span>
-            {isReceipt
-              ? "Tổng tiền dịch vụ hiển thị theo đúng số tiền thực tế khách hàng phải thanh toán (Doanh thu thuần + Thuế GTGT VAT). Dữ liệu được tính từ mốc đối soát dòng tiền tháng 07/2026 trở đi."
-              : "Tổng chi phí hiển thị theo giá vốn phụ tùng & chi phí gia công thực tế phát sinh. Dữ liệu được tính từ mốc đối soát dòng tiền tháng 07/2026 trở đi."}
-          </span>
         </div>
       </div>
-    </div>
+
+      {/* Row context menu */}
+      <TableRowContextMenu
+        x={contextMenu?.x ?? 0}
+        y={contextMenu?.y ?? 0}
+        isOpen={!!contextMenu}
+        onClose={() => setContextMenu(null)}
+        items={[
+          {
+            label: "Xem chi tiết tháng",
+            icon: <ExternalLink className="w-3.5 h-3.5" />,
+            onClick: () => {
+              if (contextMenu?.item) openMonthDetail(contextMenu.item);
+            },
+          },
+        ]}
+      />
+
+      {/* Month detail drawer */}
+      <GarageMonthDetailDrawer
+        open={monthDrawerOpen}
+        item={selectedMonth}
+        activeTab={activeTab}
+        onClose={() => setMonthDrawerOpen(false)}
+      />
+    </>
   );
 }
