@@ -25,6 +25,35 @@ export function compactMoney(value: unknown) {
   return money(n);
 }
 
+/**
+ * Ultra-compact currency for dense table cells.
+ * Examples: 25tr | 200tr | 1,2tỷ | 500k
+ * Always show the full value in a <Tooltip> alongside this.
+ */
+export function shortMoney(value: unknown) {
+  const n = Number(value || 0);
+  if (n === 0) return "0";
+  if (Math.abs(n) >= 1_000_000_000) {
+    return (
+      (n / 1_000_000_000).toLocaleString("vi-VN", {
+        maximumFractionDigits: 1,
+      }) + "tỷ"
+    );
+  }
+  if (Math.abs(n) >= 1_000_000) {
+    return (
+      (n / 1_000_000).toLocaleString("vi-VN", { maximumFractionDigits: 0 }) +
+      "tr"
+    );
+  }
+  if (Math.abs(n) >= 1_000) {
+    return (
+      (n / 1_000).toLocaleString("vi-VN", { maximumFractionDigits: 0 }) + "k"
+    );
+  }
+  return n.toLocaleString("vi-VN");
+}
+
 export function normalizeDate(value?: string | null) {
   return value ? String(value).slice(0, 10) : "";
 }
