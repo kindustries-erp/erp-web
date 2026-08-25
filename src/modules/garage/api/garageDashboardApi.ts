@@ -17,6 +17,28 @@ export interface GarageTrendItem {
   collectionRateDiff: number;
   costPaymentRateDiff: number;
   caseCount: number;
+
+  // Invoice breakdowns for Receivables
+  caseCountWithInvoice?: number;
+  caseCountNoInvoice?: number;
+  billedWithInvoice?: number;
+  paidWithInvoice?: number;
+  receivableWithInvoice?: number;
+  rateWithInvoice?: number;
+  billedNoInvoice?: number;
+  paidNoInvoice?: number;
+  receivableNoInvoice?: number;
+  rateNoInvoice?: number;
+
+  // Invoice breakdowns for Payables
+  costWithInvoice?: number;
+  paidCostWithInvoice?: number;
+  payableCostWithInvoice?: number;
+  costRateWithInvoice?: number;
+  costNoInvoice?: number;
+  paidCostNoInvoice?: number;
+  payableCostNoInvoice?: number;
+  costRateNoInvoice?: number;
 }
 
 export interface GarageCollectionSummary {

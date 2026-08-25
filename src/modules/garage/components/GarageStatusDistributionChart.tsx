@@ -108,7 +108,7 @@ export function GarageStatusDistributionChart({
 
   if (!loading && (!activeData || activeData.length === 0)) {
     return (
-      <div className="bg-white dark:bg-slate-900 rounded-lg border shadow-sm p-5 h-full min-h-[340px] flex flex-col justify-center items-center">
+      <div className="bg-surface border border-border rounded-xl card-shadow p-5 h-full min-h-[340px] flex flex-col justify-center items-center">
         <EmptyState
           message={t(
             "dashboard.charts.noChartData",
@@ -121,7 +121,7 @@ export function GarageStatusDistributionChart({
   }
 
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-lg border shadow-sm p-5 flex flex-col h-full min-h-[340px]">
+    <div className="bg-surface border border-border rounded-xl card-shadow p-5 flex flex-col h-full min-h-[340px]">
       <div className="mb-2">
         <div className="flex items-center justify-between flex-wrap gap-2">
           <h4 className="text-sm font-semibold text-foreground">

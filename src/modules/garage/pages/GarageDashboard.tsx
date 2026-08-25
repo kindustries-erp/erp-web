@@ -1,8 +1,7 @@
 import React, { useState } from "react";
-import { LayoutDashboard, Download } from "lucide-react";
+import { Download } from "lucide-react";
 import { DashboardTemplate } from "@/shared/components/DashboardTemplate";
 import { Button } from "@/shared/components/ui/Button";
-import { useFilterPanel } from "@/shared/hooks/useFilterPanel";
 import { useTranslation } from "react-i18next";
 import { useQuery, useQueryClient, useIsFetching } from "@tanstack/react-query";
 import { format } from "date-fns";
@@ -20,16 +19,6 @@ export function GarageDashboard() {
   const queryClient = useQueryClient();
   const [isExporting, setIsExporting] = useState(false);
 
-  const filterConfig = React.useMemo(() => {
-    return {
-      period: true,
-      noDefaultPeriod: true,
-      custom: [],
-    };
-  }, []);
-
-  const filter = useFilterPanel(filterConfig, () => {});
-
   const isFetchingStats = useIsFetching({
     queryKey: ["garage-dashboard-stats"],
   });
@@ -40,27 +29,14 @@ export function GarageDashboard() {
 
   // Query unified dashboard stats (trend, collectionSummary, statusDistribution)
   const { data: statsData, isLoading: isLoadingStats } = useQuery({
-    queryKey: [
-      "garage-dashboard-stats",
-      filter.state.dateFrom,
-      filter.state.dateTo,
-    ],
-    queryFn: () =>
-      garageDashboardApi.getStats({
-        date_from: filter.state.dateFrom || undefined,
-        date_to: filter.state.dateTo || undefined,
-      }),
+    queryKey: ["garage-dashboard-stats"],
+    queryFn: () => garageDashboardApi.getStats(),
   });
 
   const handleExportExcel = async () => {
     try {
       setIsExporting(true);
-      const params = {
-        date_from: filter.state.dateFrom || undefined,
-        date_to: filter.state.dateTo || undefined,
-      };
-
-      const blob = await garageDashboardApi.exportExcel(params);
+      const blob = await garageDashboardApi.exportExcel();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -82,6 +58,10 @@ export function GarageDashboard() {
   const handleRefresh = () => {
     queryClient.invalidateQueries({ queryKey: ["garage-checkpoint-kpis"] });
     queryClient.invalidateQueries({ queryKey: ["garage-dashboard-stats"] });
+    queryClient.invalidateQueries({ queryKey: ["garage-pnl-report"] });
+    queryClient.invalidateQueries({
+      queryKey: ["garage-dashboard-stats-chart"],
+    });
   };
 
   return (
@@ -91,9 +71,6 @@ export function GarageDashboard() {
         "dashboard.desc",
         "Báo cáo tổng quan hiệu quả hoạt động xưởng dịch vụ, doanh thu, chi phí, lợi nhuận gộp theo ngày hoàn thành và tiến độ thu tiền",
       )}
-      icon={<LayoutDashboard className="h-4 w-4 text-emerald-600" />}
-      filterConfig={filterConfig}
-      filter={filter}
       loading={isRefreshing}
       onRefresh={handleRefresh}
       extraActions={
@@ -122,10 +99,7 @@ export function GarageDashboard() {
         />
 
         {/* Section 3: Báo cáo Lợi nhuận (P&L) Section */}
-        <GaragePnlSection
-          dateFrom={filter.state.dateFrom || undefined}
-          dateTo={filter.state.dateTo || undefined}
-        />
+        <GaragePnlSection />
 
         {/* Section 4: Tiến độ Dòng tiền & Công nợ (Thu tiền KH & Trả tiền NCC) */}
         <GaragePaymentProgressCard
@@ -138,7 +112,7 @@ export function GarageDashboard() {
         {/* Section 5: Trend & Status Distribution Charts */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           <div className="lg:col-span-2">
-            <GarageTrendChart filterState={filter.state} />
+            <GarageTrendChart />
           </div>
           <div className="lg:col-span-1">
             <GarageStatusDistributionChart

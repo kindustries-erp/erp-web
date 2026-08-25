@@ -123,6 +123,98 @@ export function GaragePaymentProgressCard({
     return effectiveTrend.reduce((sum, item) => sum + (item.caseCount || 0), 0);
   }, [effectiveTrend]);
 
+  const totalBilledWithInvoice = useMemo(
+    () =>
+      effectiveTrend.reduce(
+        (sum, item) => sum + (item.billedWithInvoice || 0),
+        0,
+      ),
+    [effectiveTrend],
+  );
+  const totalPaidWithInvoice = useMemo(
+    () =>
+      effectiveTrend.reduce(
+        (sum, item) => sum + (item.paidWithInvoice || 0),
+        0,
+      ),
+    [effectiveTrend],
+  );
+  const overallRateWithInvoice =
+    totalBilledWithInvoice > 0
+      ? Math.min(
+          100,
+          Math.round((totalPaidWithInvoice / totalBilledWithInvoice) * 1000) /
+            10,
+        )
+      : 0;
+
+  const totalBilledNoInvoice = useMemo(
+    () =>
+      effectiveTrend.reduce(
+        (sum, item) => sum + (item.billedNoInvoice || 0),
+        0,
+      ),
+    [effectiveTrend],
+  );
+  const totalPaidNoInvoice = useMemo(
+    () =>
+      effectiveTrend.reduce((sum, item) => sum + (item.paidNoInvoice || 0), 0),
+    [effectiveTrend],
+  );
+  const overallRateNoInvoice =
+    totalBilledNoInvoice > 0
+      ? Math.min(
+          100,
+          Math.round((totalPaidNoInvoice / totalBilledNoInvoice) * 1000) / 10,
+        )
+      : 0;
+
+  const totalCostWithInvoice = useMemo(
+    () =>
+      effectiveTrend.reduce(
+        (sum, item) => sum + (item.costWithInvoice || 0),
+        0,
+      ),
+    [effectiveTrend],
+  );
+  const totalPaidCostWithInvoice = useMemo(
+    () =>
+      effectiveTrend.reduce(
+        (sum, item) => sum + (item.paidCostWithInvoice || 0),
+        0,
+      ),
+    [effectiveTrend],
+  );
+  const overallCostRateWithInvoice =
+    totalCostWithInvoice > 0
+      ? Math.min(
+          100,
+          Math.round((totalPaidCostWithInvoice / totalCostWithInvoice) * 1000) /
+            10,
+        )
+      : 100;
+
+  const totalCostNoInvoice = useMemo(
+    () =>
+      effectiveTrend.reduce((sum, item) => sum + (item.costNoInvoice || 0), 0),
+    [effectiveTrend],
+  );
+  const totalPaidCostNoInvoice = useMemo(
+    () =>
+      effectiveTrend.reduce(
+        (sum, item) => sum + (item.paidCostNoInvoice || 0),
+        0,
+      ),
+    [effectiveTrend],
+  );
+  const overallCostRateNoInvoice =
+    totalCostNoInvoice > 0
+      ? Math.min(
+          100,
+          Math.round((totalPaidCostNoInvoice / totalCostNoInvoice) * 1000) / 10,
+        )
+      : 100;
+
   // Columns for RECEIPT Tab (Khách hàng)
   const receiptColumns = useMemo(
     () => [
@@ -161,7 +253,7 @@ export function GaragePaymentProgressCard({
             align="center"
           />
         ),
-        size: 140,
+        size: 130,
         enableResizing: true,
         headerClassName: "text-center",
         className: "text-center font-medium",
@@ -195,7 +287,7 @@ export function GaragePaymentProgressCard({
             align="center"
           />
         ),
-        size: 110,
+        size: 100,
         enableResizing: true,
         headerClassName: "text-center",
         className: "text-center tabular-nums text-muted-foreground",
@@ -227,7 +319,7 @@ export function GaragePaymentProgressCard({
             align="center"
           />
         ),
-        size: 170,
+        size: 160,
         enableResizing: true,
         headerClassName: "text-center",
         className:
@@ -240,7 +332,7 @@ export function GaragePaymentProgressCard({
           <TableColumnHeaderFilter
             title={t(
               "progress.columns.totalBilled",
-              "Phải thu (Dịch vụ + VAT)",
+              "Tổng phải thu (Dịch vụ + VAT)",
             )}
             sortState={
               listHook.sorts.includes("tienCoThue")
@@ -259,7 +351,7 @@ export function GaragePaymentProgressCard({
             align="center"
           />
         ),
-        size: 180,
+        size: 170,
         enableResizing: true,
         headerClassName: "text-center",
         className: "text-right font-bold tabular-nums text-foreground",
@@ -270,7 +362,7 @@ export function GaragePaymentProgressCard({
         key: "paid",
         header: (
           <TableColumnHeaderFilter
-            title={t("progress.columns.paid", "Đã thu (Thực thu)")}
+            title={t("progress.columns.paid", "Tổng đã thu")}
             sortState={
               listHook.sorts.includes("paid")
                 ? "asc"
@@ -288,7 +380,7 @@ export function GaragePaymentProgressCard({
             align="center"
           />
         ),
-        size: 160,
+        size: 150,
         enableResizing: true,
         headerClassName: "text-center",
         className:
@@ -299,7 +391,7 @@ export function GaragePaymentProgressCard({
         key: "receivable",
         header: (
           <TableColumnHeaderFilter
-            title={t("progress.columns.receivable", "Còn nợ (Phải thu)")}
+            title={t("progress.columns.receivable", "Tổng còn nợ")}
             sortState={
               listHook.sorts.includes("receivable")
                 ? "asc"
@@ -317,7 +409,7 @@ export function GaragePaymentProgressCard({
             align="center"
           />
         ),
-        size: 160,
+        size: 150,
         enableResizing: true,
         headerClassName: "text-center",
         className:
@@ -328,7 +420,7 @@ export function GaragePaymentProgressCard({
         key: "collectionRate",
         header: (
           <TableColumnHeaderFilter
-            title={t("progress.columns.rate", "Tỷ lệ thu & Tiến độ")}
+            title={t("progress.columns.rate", "Tổng tiến độ")}
             sortState={
               listHook.sorts.includes("collectionRate")
                 ? "asc"
@@ -346,7 +438,7 @@ export function GaragePaymentProgressCard({
             align="center"
           />
         ),
-        size: 190,
+        size: 170,
         enableResizing: true,
         headerClassName: "text-center",
         className: "text-left",
@@ -357,7 +449,7 @@ export function GaragePaymentProgressCard({
           const isZero = diff === 0;
 
           return (
-            <div className="flex flex-col gap-1 w-full max-w-[170px]">
+            <div className="flex flex-col gap-1 w-full max-w-[155px]">
               <div className="flex items-center justify-between gap-1.5">
                 <Badge
                   variant="outline"
@@ -388,6 +480,102 @@ export function GaragePaymentProgressCard({
                   className={`h-full rounded-full ${getProgressColor(rate)}`}
                   style={{ width: `${Math.min(100, Math.max(0, rate))}%` }}
                 />
+              </div>
+            </div>
+          );
+        },
+      },
+      {
+        key: "withInvoice",
+        header: (
+          <div className="text-center font-semibold text-xs text-foreground flex flex-col items-center">
+            <span>Có xuất hóa đơn</span>
+            <span className="text-[10px] font-normal text-muted-foreground">
+              Phải thu / Đã thu & Tiến độ
+            </span>
+          </div>
+        ),
+        size: 210,
+        enableResizing: true,
+        headerClassName: "text-center bg-emerald-50/50 dark:bg-emerald-950/20",
+        className: "text-left bg-emerald-50/20 dark:bg-emerald-950/10",
+        cell: (item: GarageTrendItem) => {
+          const billed = item.billedWithInvoice || 0;
+          const paid = item.paidWithInvoice || 0;
+          const rate = item.rateWithInvoice || 0;
+          const cases = item.caseCountWithInvoice || 0;
+
+          return (
+            <div className="flex flex-col gap-1 w-full max-w-[195px]">
+              <div className="flex items-center justify-between text-[11px]">
+                <span className="font-mono text-emerald-700 dark:text-emerald-400 font-semibold">
+                  {money(paid)}
+                </span>
+                <span className="text-muted-foreground text-[10px]">
+                  / {money(billed)} ({cases}p)
+                </span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <Badge
+                  variant="outline"
+                  className={`font-semibold px-1 py-0 text-[10px] border tabular-nums ${getBadgeVariant(rate)}`}
+                >
+                  {rate.toFixed(1)}%
+                </Badge>
+                <div className="flex-1 bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden border border-slate-200/60 dark:border-slate-700/60">
+                  <div
+                    className={`h-full rounded-full ${getProgressColor(rate)}`}
+                    style={{ width: `${Math.min(100, Math.max(0, rate))}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+          );
+        },
+      },
+      {
+        key: "noInvoice",
+        header: (
+          <div className="text-center font-semibold text-xs text-foreground flex flex-col items-center">
+            <span>Không xuất hóa đơn</span>
+            <span className="text-[10px] font-normal text-muted-foreground">
+              Phải thu / Đã thu & Tiến độ
+            </span>
+          </div>
+        ),
+        size: 210,
+        enableResizing: true,
+        headerClassName: "text-center bg-slate-50 dark:bg-slate-800/40",
+        className: "text-left",
+        cell: (item: GarageTrendItem) => {
+          const billed = item.billedNoInvoice || 0;
+          const paid = item.paidNoInvoice || 0;
+          const rate = item.rateNoInvoice || 0;
+          const cases = item.caseCountNoInvoice || 0;
+
+          return (
+            <div className="flex flex-col gap-1 w-full max-w-[195px]">
+              <div className="flex items-center justify-between text-[11px]">
+                <span className="font-mono text-slate-700 dark:text-slate-300 font-semibold">
+                  {money(paid)}
+                </span>
+                <span className="text-muted-foreground text-[10px]">
+                  / {money(billed)} ({cases}p)
+                </span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <Badge
+                  variant="outline"
+                  className={`font-semibold px-1 py-0 text-[10px] border tabular-nums ${getBadgeVariant(rate)}`}
+                >
+                  {rate.toFixed(1)}%
+                </Badge>
+                <div className="flex-1 bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden border border-slate-200/60 dark:border-slate-700/60">
+                  <div
+                    className={`h-full rounded-full ${getProgressColor(rate)}`}
+                    style={{ width: `${Math.min(100, Math.max(0, rate))}%` }}
+                  />
+                </div>
               </div>
             </div>
           );
@@ -435,7 +623,7 @@ export function GaragePaymentProgressCard({
             align="center"
           />
         ),
-        size: 140,
+        size: 130,
         enableResizing: true,
         headerClassName: "text-center",
         className: "text-center font-medium",
@@ -467,7 +655,7 @@ export function GaragePaymentProgressCard({
             align="center"
           />
         ),
-        size: 110,
+        size: 100,
         enableResizing: true,
         headerClassName: "text-center",
         className: "text-center tabular-nums text-muted-foreground",
@@ -481,7 +669,7 @@ export function GaragePaymentProgressCard({
         key: "cost",
         header: (
           <TableColumnHeaderFilter
-            title={t("progress.columns.cost", "Phải trả (Tổng chi phí NCC)")}
+            title={t("progress.columns.cost", "Tổng chi phí (Phải trả NCC)")}
             sortState={
               listHook.sorts.includes("cost")
                 ? "asc"
@@ -499,7 +687,7 @@ export function GaragePaymentProgressCard({
             align="center"
           />
         ),
-        size: 180,
+        size: 170,
         enableResizing: true,
         headerClassName: "text-center",
         className: "text-right font-bold tabular-nums text-foreground",
@@ -509,7 +697,7 @@ export function GaragePaymentProgressCard({
         key: "paidCost",
         header: (
           <TableColumnHeaderFilter
-            title={t("progress.columns.paidCost", "Đã trả (Thực chi)")}
+            title={t("progress.columns.paidCost", "Tổng đã trả (Thực chi)")}
             sortState={
               listHook.sorts.includes("paidCost")
                 ? "asc"
@@ -527,7 +715,7 @@ export function GaragePaymentProgressCard({
             align="center"
           />
         ),
-        size: 160,
+        size: 150,
         enableResizing: true,
         headerClassName: "text-center",
         className:
@@ -538,7 +726,7 @@ export function GaragePaymentProgressCard({
         key: "payableCost",
         header: (
           <TableColumnHeaderFilter
-            title={t("progress.columns.payableCost", "Còn nợ NCC")}
+            title={t("progress.columns.payableCost", "Tổng còn nợ NCC")}
             sortState={
               listHook.sorts.includes("payableCost")
                 ? "asc"
@@ -556,7 +744,7 @@ export function GaragePaymentProgressCard({
             align="center"
           />
         ),
-        size: 160,
+        size: 150,
         enableResizing: true,
         headerClassName: "text-center",
         className:
@@ -567,7 +755,7 @@ export function GaragePaymentProgressCard({
         key: "costPaymentRate",
         header: (
           <TableColumnHeaderFilter
-            title={t("progress.columns.costRate", "Tỷ lệ trả & Tiến độ")}
+            title={t("progress.columns.costRate", "Tổng tiến độ trả")}
             sortState={
               listHook.sorts.includes("costPaymentRate")
                 ? "asc"
@@ -585,7 +773,7 @@ export function GaragePaymentProgressCard({
             align="center"
           />
         ),
-        size: 190,
+        size: 170,
         enableResizing: true,
         headerClassName: "text-center",
         className: "text-left",
@@ -596,7 +784,7 @@ export function GaragePaymentProgressCard({
           const isZero = diff === 0;
 
           return (
-            <div className="flex flex-col gap-1 w-full max-w-[170px]">
+            <div className="flex flex-col gap-1 w-full max-w-[155px]">
               <div className="flex items-center justify-between gap-1.5">
                 <Badge
                   variant="outline"
@@ -627,6 +815,100 @@ export function GaragePaymentProgressCard({
                   className={`h-full rounded-full ${getProgressColor(rate)}`}
                   style={{ width: `${Math.min(100, Math.max(0, rate))}%` }}
                 />
+              </div>
+            </div>
+          );
+        },
+      },
+      {
+        key: "withInvoiceCost",
+        header: (
+          <div className="text-center font-semibold text-xs text-foreground flex flex-col items-center">
+            <span>Chi phí có hóa đơn</span>
+            <span className="text-[10px] font-normal text-muted-foreground">
+              Phải trả / Đã trả & Tiến độ
+            </span>
+          </div>
+        ),
+        size: 210,
+        enableResizing: true,
+        headerClassName: "text-center bg-blue-50/50 dark:bg-blue-950/20",
+        className: "text-left bg-blue-50/20 dark:bg-blue-950/10",
+        cell: (item: GarageTrendItem) => {
+          const cost = item.costWithInvoice || 0;
+          const paid = item.paidCostWithInvoice || 0;
+          const rate = item.costRateWithInvoice || 0;
+
+          return (
+            <div className="flex flex-col gap-1 w-full max-w-[195px]">
+              <div className="flex items-center justify-between text-[11px]">
+                <span className="font-mono text-blue-700 dark:text-blue-400 font-semibold">
+                  {money(paid)}
+                </span>
+                <span className="text-muted-foreground text-[10px]">
+                  / {money(cost)}
+                </span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <Badge
+                  variant="outline"
+                  className={`font-semibold px-1 py-0 text-[10px] border tabular-nums ${getBadgeVariant(rate)}`}
+                >
+                  {rate.toFixed(1)}%
+                </Badge>
+                <div className="flex-1 bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden border border-slate-200/60 dark:border-slate-700/60">
+                  <div
+                    className={`h-full rounded-full ${getProgressColor(rate)}`}
+                    style={{ width: `${Math.min(100, Math.max(0, rate))}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+          );
+        },
+      },
+      {
+        key: "noInvoiceCost",
+        header: (
+          <div className="text-center font-semibold text-xs text-foreground flex flex-col items-center">
+            <span>Chi phí không hóa đơn</span>
+            <span className="text-[10px] font-normal text-muted-foreground">
+              Phải trả / Đã trả & Tiến độ
+            </span>
+          </div>
+        ),
+        size: 210,
+        enableResizing: true,
+        headerClassName: "text-center bg-slate-50 dark:bg-slate-800/40",
+        className: "text-left",
+        cell: (item: GarageTrendItem) => {
+          const cost = item.costNoInvoice || 0;
+          const paid = item.paidCostNoInvoice || 0;
+          const rate = item.costRateNoInvoice || 0;
+
+          return (
+            <div className="flex flex-col gap-1 w-full max-w-[195px]">
+              <div className="flex items-center justify-between text-[11px]">
+                <span className="font-mono text-slate-700 dark:text-slate-300 font-semibold">
+                  {money(paid)}
+                </span>
+                <span className="text-muted-foreground text-[10px]">
+                  / {money(cost)}
+                </span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <Badge
+                  variant="outline"
+                  className={`font-semibold px-1 py-0 text-[10px] border tabular-nums ${getBadgeVariant(rate)}`}
+                >
+                  {rate.toFixed(1)}%
+                </Badge>
+                <div className="flex-1 bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden border border-slate-200/60 dark:border-slate-700/60">
+                  <div
+                    className={`h-full rounded-full ${getProgressColor(rate)}`}
+                    style={{ width: `${Math.min(100, Math.max(0, rate))}%` }}
+                  />
+                </div>
               </div>
             </div>
           );
@@ -684,6 +966,32 @@ export function GaragePaymentProgressCard({
           </Badge>
         </div>
       ),
+      withInvoice: (
+        <div className="flex flex-col gap-0.5">
+          <div className="text-[11px] font-mono font-semibold text-emerald-700 dark:text-emerald-400">
+            {money(totalPaidWithInvoice)} / {money(totalBilledWithInvoice)}
+          </div>
+          <Badge
+            variant="outline"
+            className={`font-bold px-1.5 py-0 text-[10px] border tabular-nums ${getBadgeVariant(overallRateWithInvoice)} w-fit`}
+          >
+            {overallRateWithInvoice.toFixed(1)}%
+          </Badge>
+        </div>
+      ),
+      noInvoice: (
+        <div className="flex flex-col gap-0.5">
+          <div className="text-[11px] font-mono font-semibold text-slate-700 dark:text-slate-300">
+            {money(totalPaidNoInvoice)} / {money(totalBilledNoInvoice)}
+          </div>
+          <Badge
+            variant="outline"
+            className={`font-bold px-1.5 py-0 text-[10px] border tabular-nums ${getBadgeVariant(overallRateNoInvoice)} w-fit`}
+          >
+            {overallRateNoInvoice.toFixed(1)}%
+          </Badge>
+        </div>
+      ),
     }),
     [
       totalCases,
@@ -692,6 +1000,12 @@ export function GaragePaymentProgressCard({
       totalPaid,
       totalReceivable,
       collectionRate,
+      totalPaidWithInvoice,
+      totalBilledWithInvoice,
+      overallRateWithInvoice,
+      totalPaidNoInvoice,
+      totalBilledNoInvoice,
+      overallRateNoInvoice,
       t,
     ],
   );
@@ -739,6 +1053,32 @@ export function GaragePaymentProgressCard({
           </Badge>
         </div>
       ),
+      withInvoiceCost: (
+        <div className="flex flex-col gap-0.5">
+          <div className="text-[11px] font-mono font-semibold text-blue-700 dark:text-blue-400">
+            {money(totalPaidCostWithInvoice)} / {money(totalCostWithInvoice)}
+          </div>
+          <Badge
+            variant="outline"
+            className={`font-bold px-1.5 py-0 text-[10px] border tabular-nums ${getBadgeVariant(overallCostRateWithInvoice)} w-fit`}
+          >
+            {overallCostRateWithInvoice.toFixed(1)}%
+          </Badge>
+        </div>
+      ),
+      noInvoiceCost: (
+        <div className="flex flex-col gap-0.5">
+          <div className="text-[11px] font-mono font-semibold text-slate-700 dark:text-slate-300">
+            {money(totalPaidCostNoInvoice)} / {money(totalCostNoInvoice)}
+          </div>
+          <Badge
+            variant="outline"
+            className={`font-bold px-1.5 py-0 text-[10px] border tabular-nums ${getBadgeVariant(overallCostRateNoInvoice)} w-fit`}
+          >
+            {overallCostRateNoInvoice.toFixed(1)}%
+          </Badge>
+        </div>
+      ),
     }),
     [
       totalCases,
@@ -746,6 +1086,12 @@ export function GaragePaymentProgressCard({
       totalPaidCost,
       totalPayableCost,
       costPaymentRate,
+      totalPaidCostWithInvoice,
+      totalCostWithInvoice,
+      overallCostRateWithInvoice,
+      totalPaidCostNoInvoice,
+      totalCostNoInvoice,
+      overallCostRateNoInvoice,
       t,
     ],
   );
@@ -792,7 +1138,7 @@ export function GaragePaymentProgressCard({
         </div>
       </div>
 
-      <div className="bg-white dark:bg-slate-900 rounded-lg border shadow-sm p-5 flex flex-col gap-4">
+      <div className="bg-surface border border-border rounded-xl card-shadow p-5 flex flex-col gap-4">
         {/* Progress Bar & Rate Header */}
         <div className="flex flex-col gap-2">
           <div className="flex items-center justify-between flex-wrap gap-2">

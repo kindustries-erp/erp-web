@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/shared/components/ui/Button";
 import { Badge } from "@/shared/components/ui/badge";
+import { Combobox, type ComboboxOption } from "@/shared/components/Combobox";
 import {
   garageOpexApi,
   type GaragePnlReportResponse,
@@ -81,35 +82,42 @@ function mergePnlItems(
   return Array.from(map.values());
 }
 
-interface GaragePnlSectionProps {
-  dateFrom?: string;
-  dateTo?: string;
-}
-
-export function GaragePnlSection({ dateFrom }: GaragePnlSectionProps) {
+export function GaragePnlSection() {
   const { t } = useTranslation("garage");
   const { navigate } = useAppStore();
 
   const now = new Date();
   const currentYear = now.getFullYear();
   const currentMonth = now.getMonth() + 1;
+  const defaultPeriod = `${currentYear}-${String(currentMonth).padStart(2, "0")}`;
 
-  // Lấy năm và tháng tự động từ filter toàn page
-  const selectedYear = useMemo(() => {
-    if (dateFrom) {
-      const parsed = new Date(dateFrom);
-      if (!isNaN(parsed.getTime())) return parsed.getFullYear();
-    }
-    return currentYear;
-  }, [dateFrom, currentYear]);
+  const [selectedPeriod, setSelectedPeriod] = useState<string>(defaultPeriod);
 
-  const selectedMonth = useMemo(() => {
-    if (dateFrom) {
-      const parsed = new Date(dateFrom);
-      if (!isNaN(parsed.getTime())) return parsed.getMonth() + 1;
+  // Sinh 24 tháng gần nhất cho Combobox kỳ báo cáo
+  const periodOptions = useMemo<ComboboxOption[]>(() => {
+    const options: ComboboxOption[] = [];
+    const d = new Date(currentYear, currentMonth - 1, 1);
+    for (let i = 0; i < 24; i++) {
+      const y = d.getFullYear();
+      const m = d.getMonth() + 1;
+      const val = `${y}-${String(m).padStart(2, "0")}`;
+      options.push({
+        value: val,
+        label: `Tháng ${String(m).padStart(2, "0")}/${y}`,
+        searchText: `Thang ${m} ${y} T${m}/${y}`,
+      });
+      d.setMonth(d.getMonth() - 1);
     }
-    return currentMonth;
-  }, [dateFrom, currentMonth]);
+    return options;
+  }, [currentYear, currentMonth]);
+
+  const [selectedYear, selectedMonth] = useMemo(() => {
+    const parts = (selectedPeriod || defaultPeriod).split("-");
+    return [
+      parseInt(parts[0], 10) || currentYear,
+      parseInt(parts[1], 10) || currentMonth,
+    ];
+  }, [selectedPeriod, defaultPeriod, currentYear, currentMonth]);
 
   const [exporting, setExporting] = useState<boolean>(false);
   const [drawerOpen, setDrawerOpen] = useState<boolean>(false);
@@ -205,20 +213,32 @@ export function GaragePnlSection({ dateFrom }: GaragePnlSectionProps) {
 
   return (
     <div className="flex flex-col gap-3">
-      {/* Header & Styled Badge */}
+      {/* Header & Styled Badge + Combobox Kỳ */}
       <div className="flex items-center justify-between flex-wrap gap-2">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center flex-wrap gap-2.5">
           <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-md border border-slate-200/80 dark:border-slate-700 shadow-sm flex items-center gap-1.5">
-            <FileSpreadsheet className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+            <FileSpreadsheet className="w-3.5 h-3.5 text-primary" />
             {t("pnl.title", "Báo cáo Lợi nhuận (P&L)")}
           </h4>
+
+          {/* Combobox chọn kỳ trực tiếp */}
+          <div className="w-[160px]">
+            <Combobox
+              options={periodOptions}
+              value={selectedPeriod}
+              onChange={(val) => val && setSelectedPeriod(val)}
+              placeholder="Chọn kỳ..."
+              allowClear={false}
+              className="h-8 text-xs font-semibold"
+            />
+          </div>
+
           {report && (
             <Badge
               variant="secondary"
-              className="text-[11px] font-semibold px-2.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300"
+              className="text-[11px] font-semibold px-2.5 py-1 rounded-md bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300"
             >
-              Kỳ T{selectedMonth}/{selectedYear} ({report.caseCount}{" "}
-              {t("pnl.casesCompleted", "vụ việc hoàn tất")})
+              {report.caseCount} {t("pnl.casesCompleted", "vụ việc hoàn tất")}
             </Badge>
           )}
         </div>
@@ -252,7 +272,7 @@ export function GaragePnlSection({ dateFrom }: GaragePnlSectionProps) {
         </div>
       </div>
 
-      <div className="bg-white dark:bg-slate-900 rounded-lg border shadow-sm p-5 flex flex-col gap-4">
+      <div className="bg-surface border border-border rounded-xl card-shadow p-5 flex flex-col gap-4">
         {/* Content Table */}
         {isLoading ? (
           <div className="py-16 flex flex-col items-center justify-center gap-2 text-muted-foreground">
@@ -375,14 +395,14 @@ export function GaragePnlSection({ dateFrom }: GaragePnlSectionProps) {
                   return cogsAdjustments.map((item) => (
                     <tr
                       key={item.key}
-                      className="text-amber-700 dark:text-amber-400/90 bg-amber-500/5 hover:bg-amber-500/10 transition-colors"
+                      className="text-slate-600 dark:text-slate-400 bg-slate-50/50 dark:bg-slate-800/20 hover:bg-muted/10 transition-colors"
                     >
                       <td className="py-2 px-8 flex items-center justify-between">
                         <div className="flex items-center gap-1.5">
                           <span>{item.categoryName}</span>
                           <Badge
                             variant="outline"
-                            className="text-[9px] px-1 py-0 border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-400"
+                            className="text-[9px] px-1 py-0 border-slate-300 dark:border-slate-700 text-muted-foreground"
                           >
                             Nhập tay
                           </Badge>
@@ -408,20 +428,20 @@ export function GaragePnlSection({ dateFrom }: GaragePnlSectionProps) {
                 })()}
 
                 {/* III. Lợi nhuận gộp */}
-                <tr className="bg-blue-500/10 text-blue-900 dark:text-blue-200 font-bold border-y border-blue-200 dark:border-blue-900/50 hover:bg-blue-500/15 transition-colors">
+                <tr className="bg-slate-100/70 dark:bg-slate-800/60 text-foreground font-bold border-y border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
                   <td className="py-3 px-4 flex items-center gap-2">
-                    <TrendingUp className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                    <TrendingUp className="w-4 h-4 text-slate-500 dark:text-slate-400" />
                     <span>
                       {t("pnl.grossProfitHeader", "III. Lợi nhuận gộp")}
                     </span>
                     <Badge
                       variant="outline"
-                      className="ml-2 text-[10px] px-1.5 py-0 border-blue-300 dark:border-blue-700 bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300"
+                      className="ml-2 text-[10px] px-1.5 py-0 border-slate-300 dark:border-slate-700 bg-white/70 dark:bg-slate-900/70 text-foreground font-medium"
                     >
                       {report.grossMarginRate.toFixed(2)}% Doanh thu
                     </Badge>
                   </td>
-                  <td className="py-3 px-4 text-right tabular-nums font-mono text-[13px] font-bold text-blue-700 dark:text-blue-300">
+                  <td className="py-3 px-4 text-right tabular-nums font-mono text-[13px] font-bold text-foreground">
                     <div className="flex items-center justify-end">
                       <span>
                         {report.grossProfit.toLocaleString("vi-VN")} đ
@@ -429,13 +449,13 @@ export function GaragePnlSection({ dateFrom }: GaragePnlSectionProps) {
                       {renderDelta(report.grossProfit, prevReport?.grossProfit)}
                     </div>
                   </td>
-                  <td className="py-3 px-4 text-right tabular-nums font-mono text-[13px] font-bold text-blue-700/70 dark:text-blue-300/70">
+                  <td className="py-3 px-4 text-right tabular-nums font-mono text-[13px] font-semibold text-muted-foreground">
                     <div className="flex items-center justify-end gap-1.5">
                       <span>{renderPrevVal(prevReport?.grossProfit)}</span>
                       {prevReport?.grossMarginRate !== undefined ? (
                         <Badge
                           variant="outline"
-                          className="text-[10px] px-1 py-0 border-blue-300/60 dark:border-blue-800/50 text-blue-700/80 dark:text-blue-300/80 font-normal"
+                          className="text-[10px] px-1 py-0 border-slate-300/80 dark:border-slate-700 text-muted-foreground font-normal"
                         >
                           {prevReport.grossMarginRate.toFixed(2)}% DT
                         </Badge>
@@ -552,7 +572,7 @@ export function GaragePnlSection({ dateFrom }: GaragePnlSectionProps) {
                 })()}
 
                 {/* V. Lợi nhuận ròng (trước hoa hồng) */}
-                <tr className="bg-indigo-500/10 text-indigo-900 dark:text-indigo-200 font-bold border-y border-indigo-200 dark:border-indigo-900/50 hover:bg-indigo-500/15 transition-colors">
+                <tr className="bg-slate-100/70 dark:bg-slate-800/60 text-foreground font-bold border-y border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
                   <td className="py-2.5 px-4 flex items-center gap-1.5">
                     <span>
                       {t(
@@ -562,7 +582,7 @@ export function GaragePnlSection({ dateFrom }: GaragePnlSectionProps) {
                     </span>
                     <Badge
                       variant="outline"
-                      className="text-[10px] px-1.5 py-0 border-indigo-300 dark:border-indigo-700 bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300"
+                      className="text-[10px] px-1.5 py-0 border-slate-300 dark:border-slate-700 bg-white/70 dark:bg-slate-900/70 text-foreground font-medium"
                     >
                       {report.revenue > 0
                         ? (
@@ -574,7 +594,7 @@ export function GaragePnlSection({ dateFrom }: GaragePnlSectionProps) {
                       % DT
                     </Badge>
                   </td>
-                  <td className="py-2.5 px-4 text-right tabular-nums font-mono text-[13px] font-bold text-indigo-700 dark:text-indigo-300">
+                  <td className="py-2.5 px-4 text-right tabular-nums font-mono text-[13px] font-bold text-foreground">
                     <div className="flex items-center justify-end">
                       <span>
                         {report.netProfitBeforeCommission.toLocaleString(
@@ -588,7 +608,7 @@ export function GaragePnlSection({ dateFrom }: GaragePnlSectionProps) {
                       )}
                     </div>
                   </td>
-                  <td className="py-2.5 px-4 text-right tabular-nums font-mono text-[13px] font-bold text-indigo-700/70 dark:text-indigo-300/70">
+                  <td className="py-2.5 px-4 text-right tabular-nums font-mono text-[13px] font-semibold text-muted-foreground">
                     <div className="flex items-center justify-end gap-1.5">
                       <span>
                         {renderPrevVal(prevReport?.netProfitBeforeCommission)}
@@ -596,7 +616,7 @@ export function GaragePnlSection({ dateFrom }: GaragePnlSectionProps) {
                       {prevReport?.revenue && prevReport.revenue > 0 ? (
                         <Badge
                           variant="outline"
-                          className="text-[10px] px-1 py-0 border-indigo-300/60 dark:border-indigo-800/50 text-indigo-700/80 dark:text-indigo-300/80 font-normal"
+                          className="text-[10px] px-1 py-0 border-slate-300/80 dark:border-slate-700 text-muted-foreground font-normal"
                         >
                           {(
                             (prevReport.netProfitBeforeCommission /
@@ -675,9 +695,9 @@ export function GaragePnlSection({ dateFrom }: GaragePnlSectionProps) {
                 })()}
 
                 {/* VII. Lợi nhuận ròng (sau hoa hồng) */}
-                <tr className="bg-emerald-500/15 text-emerald-950 dark:text-emerald-100 font-bold border-t-2 border-emerald-400 dark:border-emerald-700 hover:bg-emerald-500/20 transition-colors">
+                <tr className="bg-emerald-50/70 dark:bg-emerald-950/30 text-foreground font-bold border-t-2 border-emerald-500/40 dark:border-emerald-600/40 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 transition-colors">
                   <td className="py-3 px-4 flex items-center gap-2">
-                    <span className="text-[13px]">
+                    <span className="text-[13px] text-emerald-900 dark:text-emerald-200">
                       {t(
                         "pnl.netProfitAfterCommissionHeader",
                         "VII. Lợi nhuận ròng (sau hoa hồng)",
@@ -685,12 +705,12 @@ export function GaragePnlSection({ dateFrom }: GaragePnlSectionProps) {
                     </span>
                     <Badge
                       variant="outline"
-                      className="ml-2 text-[10px] px-2 py-0.5 border-emerald-300 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300"
+                      className="ml-2 text-[10px] px-2 py-0.5 border-emerald-300 dark:border-emerald-700 bg-emerald-100/60 dark:bg-emerald-900/50 text-emerald-800 dark:text-emerald-300"
                     >
                       {report.netMarginRate.toFixed(2)}% Doanh thu
                     </Badge>
                   </td>
-                  <td className="py-3 px-4 text-right tabular-nums font-mono text-[14px] font-bold text-emerald-700 dark:text-emerald-300">
+                  <td className="py-3 px-4 text-right tabular-nums font-mono text-[14px] font-bold text-emerald-600 dark:text-emerald-400">
                     <div className="flex items-center justify-end">
                       <span>
                         {report.netProfitAfterCommission.toLocaleString(
@@ -704,7 +724,7 @@ export function GaragePnlSection({ dateFrom }: GaragePnlSectionProps) {
                       )}
                     </div>
                   </td>
-                  <td className="py-3 px-4 text-right tabular-nums font-mono text-[14px] font-bold text-emerald-700/70 dark:text-emerald-300/70">
+                  <td className="py-3 px-4 text-right tabular-nums font-mono text-[14px] font-semibold text-emerald-600/70 dark:text-emerald-400/70">
                     <div className="flex items-center justify-end gap-1.5">
                       <span>
                         {renderPrevVal(prevReport?.netProfitAfterCommission)}
