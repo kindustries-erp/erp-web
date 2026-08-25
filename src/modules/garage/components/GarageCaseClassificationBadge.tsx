@@ -42,6 +42,14 @@ export const GARAGE_CASE_CLASSIFICATIONS: Record<string, ClassificationMeta> = {
       "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-800/40",
     icon: <ExternalLink className="w-3 h-3 mr-1 shrink-0" />,
   },
+  OJ_NGOAI: {
+    value: "OJ_NGOAI",
+    label: "OJ Ngoài",
+    subLabel: "Omoda & Jaecoo ghi nhận ngoài hệ thống",
+    colorClass:
+      "bg-teal-50 text-teal-700 border-teal-200 dark:bg-teal-950/50 dark:text-teal-300 dark:border-teal-800/40",
+    icon: <ExternalLink className="w-3 h-3 mr-1 shrink-0" />,
+  },
   KHAC: {
     value: "KHAC",
     label: "Khác",

@@ -332,9 +332,16 @@ export function GarageOpex() {
         headerClassName: "text-right",
         className: "text-right",
         cell: (row: GarageOpexItem) => (
-          <span className="tabular-nums font-semibold text-foreground">
-            {row.amount.toLocaleString("vi-VN")} đ
-          </span>
+          <div className="flex flex-col items-end gap-0.5">
+            <span className="tabular-nums font-semibold text-foreground">
+              {row.amount.toLocaleString("vi-VN")} đ
+            </span>
+            {Boolean(row.ojAmount && row.ojAmount > 0) && (
+              <span className="text-[10px] font-medium font-mono text-muted-foreground bg-muted/60 px-1 py-0.2 rounded border border-border/60">
+                OJ: {row.ojAmount!.toLocaleString("vi-VN")} đ
+              </span>
+            )}
+          </div>
         ),
       },
       // 7. Ghi chú
