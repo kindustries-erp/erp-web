@@ -72,6 +72,7 @@ export const garageEn = {
       KY_GUI_NOI_BO: "Consignment / Internal",
       SUA_CHUA_CHUNG: "General Repair",
       OJ: "OJ",
+      OJ_NGOAI: "OJ External",
       KHAC: "Other",
     },
     configDrawer: {
@@ -80,7 +81,7 @@ export const garageEn = {
       classificationSection: "Business Classification",
       classificationLabel: "Case Classification",
       classificationHint:
-        "Define internal business workflow (Consignment/Internal, General Repair, OJ, Other)",
+        "Define internal business workflow (Consignment/Internal, General Repair, OJ, OJ External, Other)",
       classificationPlaceholder: "— Select Classification —",
       erpSettingsSection: "ERP Settings & Notes",
       erpNotesLabel: "ERP Internal Notes",
@@ -538,6 +539,10 @@ export const garageEn = {
       categoryNameLabel: "Description (*)",
       categoryNamePlaceholder: "Enter detailed description...",
       amountLabel: "Amount (VND) (*)",
+      ojAmountLabel: "Amount allocated for OJ (VND)",
+      ojAmountHint:
+        "Portion of this expense allocated specifically for OJ (Omoda/Jaecoo)",
+      set100Oj: "100% allocated to OJ",
       noteLabel: "Notes",
       notePlaceholder: "Additional notes...",
       save: "Save Changes",
@@ -567,6 +572,9 @@ export const garageEn = {
       confirmApply: "Confirm & Apply",
     },
     invalidAmount: "Amount must be a valid number greater than or equal to 0",
+    invalidOjAmount:
+      "OJ amount must be a valid number greater than or equal to 0",
+    ojAmountExceedsTotal: "OJ amount cannot exceed the total expense amount",
     missingCategoryName: "Please enter category description",
     createSuccess: "Added new operating expense",
     createRecurringSuccess:
@@ -587,6 +595,7 @@ export const garageEn = {
     exportExcel: "Export P&L Excel",
     tableHeaderCategory: "Category",
     tableHeaderValue: "This Month",
+    tableHeaderOj: "OJ Breakdown",
     tableHeaderPrev: "Previous Month",
     revenueHeader: "I. Revenue",
     revenueService: "Service Revenue",
@@ -601,5 +610,29 @@ export const garageEn = {
     noCommissionHint: "No commissions recorded",
     goToOpex: "Go to Operating Expenses →",
     casesCompleted: "completed cases",
+    ojCases: "OJ cases",
+  },
+  progress: {
+    tabs: {
+      receivable: "Receivables",
+      payable: "Payables",
+    },
+    columns: {
+      month: "Month",
+      caseCount: "Cases",
+      revenue: "Revenue",
+      totalBilled: "Total Receivable",
+      receivable: "Remaining Receivable",
+      withInvoice: "With Invoice",
+      noInvoice: "Without Invoice",
+      cost: "Total Payable",
+      payableCost: "Remaining Payable",
+      withInvoiceCost: "With Invoice",
+      noInvoiceCost: "Without Invoice",
+    },
+    summary: {
+      total: "TOTAL",
+    },
+    empty: "No transaction data in this period",
   },
 };

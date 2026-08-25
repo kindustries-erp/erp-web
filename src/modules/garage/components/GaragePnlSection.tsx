@@ -26,6 +26,7 @@ interface PairedPnlItem {
   categoryName: string;
   note?: string | null;
   curAmount: number;
+  curOjAmount?: number;
   prevAmount?: number;
 }
 
@@ -35,6 +36,7 @@ function mergePnlItems(
     categoryKey: string;
     categoryName: string;
     amount: number;
+    ojAmount?: number;
     note?: string | null;
   }> = [],
   prevItems: Array<{
@@ -42,6 +44,7 @@ function mergePnlItems(
     categoryKey: string;
     categoryName: string;
     amount: number;
+    ojAmount?: number;
     note?: string | null;
   }> = [],
 ): PairedPnlItem[] {
@@ -55,6 +58,7 @@ function mergePnlItems(
       categoryName: item.categoryName,
       note: item.note,
       curAmount: item.amount,
+      curOjAmount: item.ojAmount || 0,
       prevAmount: undefined,
     });
   }
@@ -74,6 +78,7 @@ function mergePnlItems(
         categoryName: prev.categoryName,
         note: prev.note,
         curAmount: 0,
+        curOjAmount: 0,
         prevAmount: prev.amount,
       });
     }
@@ -213,7 +218,7 @@ export function GaragePnlSection() {
 
   return (
     <div className="flex flex-col gap-3">
-      {/* Header & Styled Badge + Combobox Kỳ */}
+      {/* Header: Title & Badges on Left, Period Filter on Right */}
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center flex-wrap gap-2.5">
           <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-md border border-slate-200/80 dark:border-slate-700 shadow-sm flex items-center gap-1.5">
@@ -221,45 +226,28 @@ export function GaragePnlSection() {
             {t("pnl.title", "Báo cáo Lợi nhuận (P&L)")}
           </h4>
 
-          {/* Combobox chọn kỳ trực tiếp */}
-          <div className="w-[160px]">
-            <Combobox
-              options={periodOptions}
-              value={selectedPeriod}
-              onChange={(val) => val && setSelectedPeriod(val)}
-              placeholder="Chọn kỳ..."
-              allowClear={false}
-              className="h-8 text-xs font-semibold"
-            />
-          </div>
-
           {report && (
-            <Badge
-              variant="secondary"
-              className="text-[11px] font-semibold px-2.5 py-1 rounded-md bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300"
-            >
-              {report.caseCount} {t("pnl.casesCompleted", "vụ việc hoàn tất")}
-            </Badge>
+            <div className="flex items-center gap-2">
+              <Badge
+                variant="secondary"
+                className="text-[11px] font-medium px-2.5 py-1 rounded-md bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300"
+              >
+                {report.caseCount} {t("pnl.casesCompleted", "vụ việc hoàn tất")}
+              </Badge>
+              {Boolean(report.oj && report.oj.caseCount > 0) && (
+                <Badge
+                  variant="secondary"
+                  className="text-[11px] font-medium px-2.5 py-1 rounded-md bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300"
+                >
+                  {report.oj!.caseCount} {t("pnl.ojCases", "vụ OJ")}
+                </Badge>
+              )}
+            </div>
           )}
         </div>
 
-        {/* Actions: Export Excel & Quản lý CP vận hành */}
-        <div className="flex items-center flex-wrap gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleExportExcel}
-            disabled={exporting || isLoading}
-            className="h-8 gap-1.5 px-3 text-xs"
-          >
-            {exporting ? (
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-            ) : (
-              <Download className="w-3.5 h-3.5" />
-            )}
-            {t("pnl.exportExcel", "Xuất Excel")}
-          </Button>
-
+        {/* Nút chuyển đến trang nhập CP vận hành ở trên bên phải */}
+        <div className="flex items-center gap-2">
           <Button
             variant="primary"
             size="sm"
@@ -273,6 +261,43 @@ export function GaragePnlSection() {
       </div>
 
       <div className="bg-surface border border-border rounded-xl card-shadow p-5 flex flex-col gap-4">
+        {/* Card Actions Header */}
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          {/* Combobox chọn kỳ báo cáo trực tiếp bên trong Card */}
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-semibold text-foreground">
+              Kỳ báo cáo:
+            </span>
+            <div className="w-[160px]">
+              <Combobox
+                options={periodOptions}
+                value={selectedPeriod}
+                onChange={(val) => val && setSelectedPeriod(val)}
+                placeholder="Chọn kỳ..."
+                allowClear={false}
+                className="h-7 text-xs font-semibold"
+              />
+            </div>
+          </div>
+
+          {/* Action: Export Excel */}
+          <div className="flex items-center flex-wrap gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExportExcel}
+              disabled={exporting || isLoading}
+              className="h-7 gap-1.5 px-2.5 text-xs"
+            >
+              {exporting ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Download className="w-3.5 h-3.5" />
+              )}
+              {t("pnl.exportExcel", "Xuất Excel")}
+            </Button>
+          </div>
+        </div>
         {/* Content Table */}
         {isLoading ? (
           <div className="py-16 flex flex-col items-center justify-center gap-2 text-muted-foreground">
@@ -290,14 +315,17 @@ export function GaragePnlSection() {
             <table className="w-full text-xs text-left border-collapse">
               <thead>
                 <tr className="bg-slate-50 dark:bg-slate-800/60 border-b border-border/70 text-muted-foreground uppercase font-semibold text-[11px]">
-                  <th className="py-2.5 px-4 w-[48%]">
+                  <th className="py-2.5 px-4 w-[38%]">
                     {t("pnl.tableHeaderCategory", "Danh Mục")}
                   </th>
-                  <th className="py-2.5 px-4 w-[26%] text-right text-foreground font-bold">
+                  <th className="py-2.5 px-4 w-[20%] text-right font-semibold text-slate-700 dark:text-slate-300 border-r border-border/40">
+                    {t("pnl.tableHeaderOj", "Phát sinh OJ")}
+                  </th>
+                  <th className="py-2.5 px-4 w-[22%] text-right text-foreground font-bold">
                     {t("pnl.tableHeaderValue", "Tháng này")} (T{selectedMonth}/
                     {selectedYear})
                   </th>
-                  <th className="py-2.5 px-4 w-[26%] text-right text-muted-foreground">
+                  <th className="py-2.5 px-4 w-[20%] text-right text-muted-foreground">
                     {t("pnl.tableHeaderPrev", "Tháng trước")} (T{prevMonth}/
                     {prevYear})
                   </th>
@@ -308,6 +336,29 @@ export function GaragePnlSection() {
                 <tr className="bg-slate-50/50 dark:bg-slate-800/30 font-bold text-foreground hover:bg-slate-100/50 dark:hover:bg-slate-800/50 transition-colors">
                   <td className="py-2.5 px-4">
                     {t("pnl.revenueHeader", "I. Doanh Thu")}
+                  </td>
+                  <td className="py-2.5 px-4 text-right tabular-nums font-mono text-[13px] font-semibold text-slate-700 dark:text-slate-300 border-r border-border/40">
+                    <div className="flex items-center justify-end gap-1.5">
+                      <span>
+                        {(report.oj?.revenue || 0).toLocaleString("vi-VN")} đ
+                      </span>
+                      {Boolean(
+                        report.oj &&
+                        report.oj.revenue > 0 &&
+                        report.revenue > 0,
+                      ) && (
+                        <Badge
+                          variant="outline"
+                          className="text-[10px] px-1 py-0 border-slate-300 dark:border-slate-700 text-muted-foreground font-normal"
+                        >
+                          {(
+                            (report.oj!.revenue / report.revenue) *
+                            100
+                          ).toFixed(1)}
+                          % DT
+                        </Badge>
+                      )}
+                    </div>
                   </td>
                   <td className="py-2.5 px-4 text-right tabular-nums font-mono text-[13px]">
                     <div className="flex items-center justify-end">
@@ -322,6 +373,9 @@ export function GaragePnlSection() {
                 <tr className="text-muted-foreground hover:bg-muted/10 transition-colors">
                   <td className="py-2 px-8">
                     {t("pnl.revenueService", "Doanh Thu Dịch Vụ")}
+                  </td>
+                  <td className="py-2 px-4 text-right tabular-nums font-mono text-muted-foreground border-r border-border/40">
+                    {(report.oj?.revenue || 0).toLocaleString("vi-VN")} đ
                   </td>
                   <td className="py-2 px-4 text-right tabular-nums font-mono">
                     {report.revenue.toLocaleString("vi-VN")} đ
@@ -344,6 +398,25 @@ export function GaragePnlSection() {
                         : 0}
                       % DT
                     </Badge>
+                  </td>
+                  <td className="py-2.5 px-4 text-right tabular-nums font-mono text-[13px] font-semibold text-slate-700 dark:text-slate-300 border-r border-border/40">
+                    <div className="flex items-center justify-end gap-1.5">
+                      <span>
+                        {(report.oj?.cogs || 0).toLocaleString("vi-VN")} đ
+                      </span>
+                      {Boolean(report.oj && report.oj.revenue > 0) && (
+                        <Badge
+                          variant="outline"
+                          className="text-[10px] px-1 py-0 border-slate-300 dark:border-slate-700 text-muted-foreground font-normal"
+                        >
+                          {(
+                            ((report.oj!.cogs || 0) / report.oj!.revenue) *
+                            100
+                          ).toFixed(1)}
+                          % DT
+                        </Badge>
+                      )}
+                    </div>
                   </td>
                   <td className="py-2.5 px-4 text-right tabular-nums font-mono text-[13px]">
                     <div className="flex items-center justify-end">
@@ -375,6 +448,9 @@ export function GaragePnlSection() {
                       "pnl.cogsDirect",
                       "Chi phí phụ tùng & Gia công ngoài (từ vụ việc)",
                     )}
+                  </td>
+                  <td className="py-2 px-4 text-right tabular-nums font-mono text-muted-foreground border-r border-border/40">
+                    {(report.oj?.cogsDirect || 0).toLocaleString("vi-VN")} đ
                   </td>
                   <td className="py-2 px-4 text-right tabular-nums font-mono">
                     {(report.cogsDirect ?? report.cogs).toLocaleString("vi-VN")}{" "}
@@ -413,6 +489,11 @@ export function GaragePnlSection() {
                           </span>
                         )}
                       </td>
+                      <td className="py-2 px-4 text-right tabular-nums font-mono text-muted-foreground border-r border-border/40">
+                        {item.curOjAmount !== undefined && item.curOjAmount > 0
+                          ? `${item.curOjAmount.toLocaleString("vi-VN")} đ`
+                          : "—"}
+                      </td>
                       <td className="py-2 px-4 text-right tabular-nums font-mono">
                         {item.curAmount > 0
                           ? `${item.curAmount.toLocaleString("vi-VN")} đ`
@@ -440,6 +521,22 @@ export function GaragePnlSection() {
                     >
                       {report.grossMarginRate.toFixed(2)}% Doanh thu
                     </Badge>
+                  </td>
+                  <td className="py-3 px-4 text-right tabular-nums font-mono text-[13px] font-semibold text-slate-700 dark:text-slate-300 border-r border-border/40">
+                    <div className="flex items-center justify-end gap-1.5">
+                      <span>
+                        {(report.oj?.grossProfit || 0).toLocaleString("vi-VN")}{" "}
+                        đ
+                      </span>
+                      {Boolean(report.oj && report.oj.revenue > 0) && (
+                        <Badge
+                          variant="outline"
+                          className="text-[10px] px-1 py-0 border-slate-300 dark:border-slate-700 text-muted-foreground font-normal"
+                        >
+                          {report.oj!.grossMarginRate.toFixed(2)}% DT
+                        </Badge>
+                      )}
+                    </div>
                   </td>
                   <td className="py-3 px-4 text-right tabular-nums font-mono text-[13px] font-bold text-foreground">
                     <div className="flex items-center justify-end">
@@ -492,6 +589,11 @@ export function GaragePnlSection() {
                       <span>{t("opex.actions.addExpense", "Thêm CP")}</span>
                     </Button>
                   </td>
+                  <td className="py-2.5 px-4 text-right tabular-nums font-mono text-[13px] font-semibold text-slate-700 dark:text-slate-300 border-r border-border/40">
+                    <span>
+                      {(report.oj?.opexTotal || 0).toLocaleString("vi-VN")} đ
+                    </span>
+                  </td>
                   <td className="py-2.5 px-4 text-right tabular-nums font-mono text-[13px]">
                     <div className="flex items-center justify-end">
                       <span>{report.opex.total.toLocaleString("vi-VN")} đ</span>
@@ -535,6 +637,9 @@ export function GaragePnlSection() {
                             "Chưa nhập chi phí vận hành cho tháng này",
                           )}
                         </td>
+                        <td className="py-2 px-4 text-right tabular-nums font-mono text-muted-foreground border-r border-border/40">
+                          0 đ
+                        </td>
                         <td className="py-2 px-4 text-right tabular-nums font-mono">
                           0 đ
                         </td>
@@ -556,6 +661,11 @@ export function GaragePnlSection() {
                             ({item.note})
                           </span>
                         )}
+                      </td>
+                      <td className="py-2 px-4 text-right tabular-nums font-mono text-muted-foreground border-r border-border/40">
+                        {item.curOjAmount !== undefined && item.curOjAmount > 0
+                          ? `${item.curOjAmount.toLocaleString("vi-VN")} đ`
+                          : "—"}
                       </td>
                       <td className="py-2 px-4 text-right tabular-nums font-mono">
                         {item.curAmount > 0
@@ -593,6 +703,14 @@ export function GaragePnlSection() {
                         : 0}
                       % DT
                     </Badge>
+                  </td>
+                  <td className="py-2.5 px-4 text-right tabular-nums font-mono text-[13px] font-semibold text-slate-700 dark:text-slate-300 border-r border-border/40">
+                    <span>
+                      {(
+                        report.oj?.netProfitBeforeCommission || 0
+                      ).toLocaleString("vi-VN")}{" "}
+                      đ
+                    </span>
                   </td>
                   <td className="py-2.5 px-4 text-right tabular-nums font-mono text-[13px] font-bold text-foreground">
                     <div className="flex items-center justify-end">
@@ -635,6 +753,14 @@ export function GaragePnlSection() {
                   <td className="py-2.5 px-4">
                     {t("pnl.commissionHeader", "VI. Hoa hồng")}
                   </td>
+                  <td className="py-2.5 px-4 text-right tabular-nums font-mono text-[13px] font-semibold text-slate-700 dark:text-slate-300 border-r border-border/40">
+                    <span>
+                      {(report.oj?.commissionTotal || 0).toLocaleString(
+                        "vi-VN",
+                      )}{" "}
+                      đ
+                    </span>
+                  </td>
                   <td className="py-2.5 px-4 text-right tabular-nums font-mono text-[13px]">
                     <div className="flex items-center justify-end">
                       <span>
@@ -663,6 +789,9 @@ export function GaragePnlSection() {
                         <td className="py-2 px-8">
                           {t("pnl.noCommissionHint", "Chưa có hoa hồng")}
                         </td>
+                        <td className="py-2 px-4 text-right tabular-nums font-mono text-muted-foreground border-r border-border/40">
+                          0 đ
+                        </td>
                         <td className="py-2 px-4 text-right tabular-nums font-mono">
                           0 đ
                         </td>
@@ -679,6 +808,11 @@ export function GaragePnlSection() {
                     >
                       <td className="py-2 px-8">
                         <span>{item.categoryName}</span>
+                      </td>
+                      <td className="py-2 px-4 text-right tabular-nums font-mono text-muted-foreground border-r border-border/40">
+                        {item.curOjAmount !== undefined && item.curOjAmount > 0
+                          ? `${item.curOjAmount.toLocaleString("vi-VN")} đ`
+                          : "—"}
                       </td>
                       <td className="py-2 px-4 text-right tabular-nums font-mono">
                         {item.curAmount > 0
@@ -709,6 +843,24 @@ export function GaragePnlSection() {
                     >
                       {report.netMarginRate.toFixed(2)}% Doanh thu
                     </Badge>
+                  </td>
+                  <td className="py-3 px-4 text-right tabular-nums font-mono text-[14px] font-bold text-foreground border-r border-border/40">
+                    <div className="flex items-center justify-end gap-1.5">
+                      <span>
+                        {(
+                          report.oj?.netProfitAfterCommission || 0
+                        ).toLocaleString("vi-VN")}{" "}
+                        đ
+                      </span>
+                      {Boolean(report.oj && report.oj.revenue > 0) && (
+                        <Badge
+                          variant="outline"
+                          className="text-[10px] px-1 py-0 border-slate-300 dark:border-slate-700 text-muted-foreground font-normal"
+                        >
+                          {report.oj!.netMarginRate.toFixed(2)}% DT
+                        </Badge>
+                      )}
+                    </div>
                   </td>
                   <td className="py-3 px-4 text-right tabular-nums font-mono text-[14px] font-bold text-emerald-600 dark:text-emerald-400">
                     <div className="flex items-center justify-end">

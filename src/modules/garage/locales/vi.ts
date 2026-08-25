@@ -72,6 +72,7 @@ export const garageVi = {
       KY_GUI_NOI_BO: "Ký gửi / Nội bộ",
       SUA_CHUA_CHUNG: "Sửa chữa chung",
       OJ: "OJ",
+      OJ_NGOAI: "OJ Ngoài",
       KHAC: "Khác",
     },
     configDrawer: {
@@ -80,7 +81,7 @@ export const garageVi = {
       classificationSection: "Phân loại nghiệp vụ",
       classificationLabel: "Phân loại phiếu",
       classificationHint:
-        "Phân định luồng nghiệp vụ nội bộ (Ký gửi/Nội bộ, Sửa chữa chung, OJ, Khác)",
+        "Phân định luồng nghiệp vụ nội bộ (Ký gửi/Nội bộ, Sửa chữa chung, OJ, OJ Ngoài, Khác)",
       classificationPlaceholder: "— Chọn phân loại —",
       erpSettingsSection: "Thiết lập ERP & Ghi chú",
       erpNotesLabel: "Ghi chú ERP",
@@ -538,6 +539,10 @@ export const garageVi = {
       categoryNameLabel: "Nội dung / Diễn giải (*)",
       categoryNamePlaceholder: "Nhập mô tả chi tiết...",
       amountLabel: "Số tiền (VND) (*)",
+      ojAmountLabel: "Số tiền tính cho OJ (VND)",
+      ojAmountHint:
+        "Phần chi phí trong khoản này được ghi nhận riêng cho OJ (Omoda/Jaecoo)",
+      set100Oj: "100% tính cho OJ",
       noteLabel: "Ghi chú",
       notePlaceholder: "Ghi chú bổ sung nếu có...",
       save: "Lưu thay đổi",
@@ -567,6 +572,10 @@ export const garageVi = {
       confirmApply: "Xác nhận áp dụng",
     },
     invalidAmount: "Số tiền phải là số hợp lệ và lớn hơn hoặc bằng 0",
+    invalidOjAmount:
+      "Số tiền tính cho OJ phải là số hợp lệ và lớn hơn hoặc bằng 0",
+    ojAmountExceedsTotal:
+      "Số tiền tính cho OJ không được vượt quá tổng số tiền chi phí",
     missingCategoryName: "Vui lòng nhập nội dung / diễn giải chi phí",
     createSuccess: "Đã thêm chi phí vận hành mới",
     createRecurringSuccess:
@@ -586,6 +595,7 @@ export const garageVi = {
     exportExcel: "Xuất P&L Excel",
     tableHeaderCategory: "Danh Mục",
     tableHeaderValue: "Tháng này",
+    tableHeaderOj: "Phát sinh OJ",
     tableHeaderPrev: "Tháng trước",
     revenueHeader: "I. Doanh Thu",
     revenueService: "Doanh Thu Dịch Vụ",
@@ -600,5 +610,29 @@ export const garageVi = {
     noCommissionHint: "Chưa có hoa hồng",
     goToOpex: "Đến trang Nhập CP vận hành →",
     casesCompleted: "vụ việc hoàn tất",
+    ojCases: "vụ OJ",
+  },
+  progress: {
+    tabs: {
+      receivable: "Phải Thu",
+      payable: "Phải Trả",
+    },
+    columns: {
+      month: "Tháng",
+      caseCount: "Số vụ việc",
+      revenue: "Doanh Thu",
+      totalBilled: "Tổng Phải Thu",
+      receivable: "Còn Phải Thu",
+      withInvoice: "Có HĐ",
+      noInvoice: "Không HĐ",
+      cost: "Tổng Phải Trả",
+      payableCost: "Còn Phải Trả",
+      withInvoiceCost: "Có HĐ",
+      noInvoiceCost: "Không HĐ",
+    },
+    summary: {
+      total: "TỔNG CỘNG",
+    },
+    empty: "Chưa có dữ liệu giao dịch trong kỳ",
   },
 };

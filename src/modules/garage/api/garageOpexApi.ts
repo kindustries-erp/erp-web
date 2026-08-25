@@ -8,6 +8,7 @@ export interface GarageOpexItem {
   categoryKey: string;
   categoryName: string;
   amount: number;
+  ojAmount?: number;
   note?: string | null;
   recurrenceType?: string | null;
   recurrenceUntilYear?: number | null;
@@ -24,6 +25,7 @@ export interface CreateGarageOpexDto {
   categoryKey: string;
   categoryName: string;
   amount: number;
+  ojAmount?: number;
   note?: string;
   recurrenceType?: string;
   recurrenceUntilYear?: number;
@@ -37,6 +39,7 @@ export interface UpdateGarageOpexDto {
   categoryKey?: string;
   categoryName?: string;
   amount?: number;
+  ojAmount?: number;
   note?: string;
   recurrenceType?: string;
   recurrenceUntilYear?: number;
@@ -47,6 +50,7 @@ export interface UpdateGarageOpexDto {
 export interface ApplyRecurringOpexDto {
   applyScope: "this" | "this_and_future";
   amount: number;
+  ojAmount?: number;
   categoryKey?: string;
   categoryName?: string;
   note?: string;
@@ -83,6 +87,7 @@ export interface GaragePnlItem {
   categoryKey: string;
   categoryName: string;
   amount: number;
+  ojAmount?: number;
   note?: string | null;
 }
 
@@ -95,21 +100,39 @@ export interface GaragePnlReportResponse {
   cogsDirect?: number;
   cogsAdjustment?: {
     total: number;
+    ojTotal?: number;
     items: GaragePnlItem[];
   };
   grossProfit: number;
   grossMarginRate: number;
   opex: {
     total: number;
+    ojTotal?: number;
     items: GaragePnlItem[];
   };
   netProfitBeforeCommission: number;
   commission: {
     total: number;
+    ojTotal?: number;
     items: GaragePnlItem[];
   };
   netProfitAfterCommission: number;
   netMarginRate: number;
+  oj?: {
+    caseCount: number;
+    revenue: number;
+    revenueRatio: number;
+    cogs: number;
+    cogsDirect: number;
+    cogsAdjustmentTotal: number;
+    grossProfit: number;
+    grossMarginRate: number;
+    opexTotal: number;
+    netProfitBeforeCommission: number;
+    commissionTotal: number;
+    netProfitAfterCommission: number;
+    netMarginRate: number;
+  };
 }
 
 const BASE = "/api/v1/greenway/dashboard";

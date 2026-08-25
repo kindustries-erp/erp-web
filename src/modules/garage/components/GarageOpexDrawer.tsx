@@ -160,6 +160,7 @@ export function GarageOpexDrawer({
   const [categoryKey, setCategoryKey] = useState<string>("NHAN_SU");
   const [categoryName, setCategoryName] = useState<string>("Nhân sự");
   const [amount, setAmount] = useState<string>("0");
+  const [ojAmount, setOjAmount] = useState<string>("0");
   const [note, setNote] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
 
@@ -196,6 +197,7 @@ export function GarageOpexDrawer({
       setCategoryKey(data.categoryKey);
       setCategoryName(data.categoryName);
       setAmount(String(data.amount || 0));
+      setOjAmount(String(data.ojAmount || 0));
       setNote(data.note || "");
       if (data.recurrenceType === "monthly") {
         setIsRecurring(true);
@@ -226,6 +228,7 @@ export function GarageOpexDrawer({
           setCategoryKey(initialData.categoryKey);
           setCategoryName(initialData.categoryName);
           setAmount(String(initialData.amount || 0));
+          setOjAmount(String(initialData.ojAmount || 0));
           setNote(initialData.note || "");
           if (initialData.recurrenceType === "monthly") {
             setIsRecurring(true);
@@ -244,6 +247,7 @@ export function GarageOpexDrawer({
           setCategoryKey("NHAN_SU");
           setCategoryName(t("opex.categories.NHAN_SU", "Nhân sự"));
           setAmount("0");
+          setOjAmount("0");
           setNote("");
           setIsRecurring(false);
           setRecurrenceType("monthly");
@@ -258,6 +262,7 @@ export function GarageOpexDrawer({
         setCategoryKey(initialData.categoryKey);
         setCategoryName(initialData.categoryName);
         setAmount(String(initialData.amount || 0));
+        setOjAmount(String(initialData.ojAmount || 0));
         setNote(initialData.note || "");
         if (initialData.recurrenceType === "monthly") {
           setIsRecurring(true);
@@ -298,11 +303,33 @@ export function GarageOpexDrawer({
 
   const handleSave = async () => {
     const numAmount = Number(amount.replace(/[^0-9.-]+/g, ""));
+    const numOjAmount = Number(ojAmount.replace(/[^0-9.-]+/g, "")) || 0;
+
     if (isNaN(numAmount) || numAmount < 0) {
       toast.error(
         t(
           "opex.invalidAmount",
           "Số tiền phải là số hợp lệ và lớn hơn hoặc bằng 0",
+        ),
+      );
+      return;
+    }
+
+    if (isNaN(numOjAmount) || numOjAmount < 0) {
+      toast.error(
+        t(
+          "opex.invalidOjAmount",
+          "Số tiền tính cho OJ phải là số hợp lệ và lớn hơn hoặc bằng 0",
+        ),
+      );
+      return;
+    }
+
+    if (numOjAmount > numAmount) {
+      toast.error(
+        t(
+          "opex.ojAmountExceedsTotal",
+          "Số tiền tính cho OJ không được vượt quá tổng số tiền chi phí",
         ),
       );
       return;
@@ -334,6 +361,7 @@ export function GarageOpexDrawer({
           categoryKey,
           categoryName: categoryName.trim(),
           amount: numAmount,
+          ojAmount: numOjAmount,
           note: note.trim() || undefined,
           recurrenceType: isRecurring ? recurrenceType : undefined,
           recurrenceUntilYear: isRecurring ? Number(untilYear) : undefined,
@@ -356,6 +384,7 @@ export function GarageOpexDrawer({
           categoryKey,
           categoryName: categoryName.trim(),
           amount: numAmount,
+          ojAmount: numOjAmount,
           note: note.trim() || undefined,
           recurrenceType: isRecurring ? recurrenceType : undefined,
           recurrenceUntilYear: isRecurring ? Number(untilYear) : undefined,
@@ -374,6 +403,7 @@ export function GarageOpexDrawer({
 
   const handleConfirmRecurringScope = async (scope: RecurringApplyScope) => {
     const numAmount = Number(amount.replace(/[^0-9.-]+/g, ""));
+    const numOjAmount = Number(ojAmount.replace(/[^0-9.-]+/g, "")) || 0;
     const targetId = id || initialData?.id;
     if (!targetId) return;
 
@@ -382,6 +412,7 @@ export function GarageOpexDrawer({
       const res = await garageOpexApi.applyRecurring(targetId, {
         applyScope: scope,
         amount: numAmount,
+        ojAmount: numOjAmount,
         categoryKey,
         categoryName: categoryName.trim(),
         note: note.trim() || undefined,
@@ -475,6 +506,7 @@ export function GarageOpexDrawer({
   );
 
   const numAmount = Number(amount.replace(/[^0-9.-]+/g, "")) || 0;
+  const numOjAmount = Number(ojAmount.replace(/[^0-9.-]+/g, "")) || 0;
 
   return (
     <>
@@ -637,6 +669,50 @@ export function GarageOpexDrawer({
                   </div>
                 )}
               </DrawerField>
+
+              {/* Phân bổ chi phí tính riêng cho OJ */}
+              <div className="my-1 p-3 rounded-lg border border-border/80 bg-muted/30 flex flex-col gap-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                    {t(
+                      "opex.drawer.ojAmountLabel",
+                      "Số tiền tính cho OJ (VND)",
+                    )}
+                  </span>
+                  {!isView && !loading && numAmount > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setOjAmount(String(numAmount))}
+                      className="text-[11px] font-medium text-primary hover:underline"
+                    >
+                      {t("opex.drawer.set100Oj", "100% tính cho OJ")}
+                    </button>
+                  )}
+                </div>
+                <input
+                  type="number"
+                  value={ojAmount}
+                  onChange={(e) => setOjAmount(e.target.value)}
+                  disabled={isView || loading}
+                  className={`${inputCls} tabular-nums text-right font-semibold`}
+                  placeholder="0"
+                  min="0"
+                  step="1000"
+                />
+                <div className="flex justify-between items-center text-[11px] text-muted-foreground">
+                  <span>
+                    {t(
+                      "opex.drawer.ojAmountHint",
+                      "Phần chi phí trong khoản này được ghi nhận riêng cho OJ (Omoda/Jaecoo)",
+                    )}
+                  </span>
+                  {numOjAmount > 0 && numAmount > 0 && (
+                    <span className="font-semibold font-mono text-foreground">
+                      {((numOjAmount / numAmount) * 100).toFixed(1)}% khoản chi
+                    </span>
+                  )}
+                </div>
+              </div>
 
               {/* Ghi chú */}
               <DrawerField label={t("opex.drawer.noteLabel", "Ghi chú")}>
