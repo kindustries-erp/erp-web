@@ -1,29 +1,24 @@
-import React from "react";
+import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Panel, PanelMore } from "@/shared/components/Panel";
+import { Panel } from "@/shared/components/Panel";
 import { ChartSkeleton } from "@/shared/components/Skeleton";
 import { BarChart } from "@/shared/components/charts/BarChart";
 import { money } from "@/shared/utils/format";
+import { DatePicker } from "@/shared/components/DatePicker";
+import { Button } from "@/shared/components/ui/Button";
+import { RotateCcw } from "lucide-react";
 import { garageDashboardApi } from "../api/garageDashboardApi";
 
-interface GarageTrendChartProps {
-  filterState: {
-    dateFrom?: string;
-    dateTo?: string;
-  };
-}
+export function GarageTrendChart() {
+  const [dateFrom, setDateFrom] = useState<string>("");
+  const [dateTo, setDateTo] = useState<string>("");
 
-export function GarageTrendChart({ filterState }: GarageTrendChartProps) {
   const { data: statsData, isLoading } = useQuery({
-    queryKey: [
-      "garage-dashboard-stats",
-      filterState.dateFrom,
-      filterState.dateTo,
-    ],
+    queryKey: ["garage-dashboard-stats-chart", dateFrom, dateTo],
     queryFn: () =>
       garageDashboardApi.getStats({
-        date_from: filterState.dateFrom || undefined,
-        date_to: filterState.dateTo || undefined,
+        date_from: dateFrom || undefined,
+        date_to: dateTo || undefined,
       }),
   });
 
@@ -65,7 +60,37 @@ export function GarageTrendChart({ filterState }: GarageTrendChartProps) {
   return (
     <Panel
       title="Xu hướng Doanh thu, Chi phí & Lợi nhuận gộp"
-      extra={<PanelMore />}
+      extra={
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <DatePicker
+            value={dateFrom}
+            onChange={setDateFrom}
+            placeholder="Từ ngày"
+            className="h-7 w-[115px] text-xs"
+          />
+          <span className="text-xs text-muted-foreground/70">-</span>
+          <DatePicker
+            value={dateTo}
+            onChange={setDateTo}
+            placeholder="Đến ngày"
+            className="h-7 w-[115px] text-xs"
+          />
+          {(dateFrom || dateTo) && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => {
+                setDateFrom("");
+                setDateTo("");
+              }}
+              className="h-7 w-7 text-muted-foreground hover:text-foreground"
+              title="Đặt lại khoảng ngày"
+            >
+              <RotateCcw className="h-3.5 w-3.5" />
+            </Button>
+          )}
+        </div>
+      }
     >
       <div className="relative h-[290px]">
         {!isLoading && labels.length > 0 ? (

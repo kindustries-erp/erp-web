@@ -15,11 +15,18 @@ Khi tạo mới hoặc chỉnh sửa một trang Dashboard/Báo cáo tổng quan
 - **Props chuẩn của `<DashboardTemplate>`**:
   - `title`: Tiêu đề trang (vd: `t("nav.items.[module]Dashboard", "Tổng quan...")`).
   - `desc`: Mô tả ngắn gọn (tùy chọn).
-  - `icon`: Icon đại diện (lucide-react, vd: `<LayoutDashboard className="h-4 w-4" />`).
-  - `filterConfig` & `filter`: Quản lý bộ lọc ngày/tháng/tùy biến qua hook `useFilterPanel`.
+  - `icon`: Icon đại diện (lucide-react, vd: `<LayoutDashboard className="h-4 w-4" />` — **Tùy chọn**, có thể lược bỏ để header gọn gàng, tinh tế).
+  - `filterConfig` & `filter`: Quản lý bộ lọc ngày/tháng/tùy biến qua hook `useFilterPanel` (**Tùy chọn**, nếu các Section hoặc Chart bên trong đã có bộ lọc cục bộ chuyên biệt như Combobox Kỳ hoặc DateRange Picker thì bỏ filter toàn trang ở topbar để tránh trùng lặp).
   - `loading`: Trạng thái loading chung (`isFetching` từ TanStack Query).
   - `onRefresh`: Hàm refetch dữ liệu khi người dùng click icon làm mới.
   - `extraActions`: Nút bấm mở rộng (ví dụ: Nút "Xuất Excel" 📥 / "Tải báo cáo").
+
+### 1.1. Nguyên tắc Bộ Lọc Cục Bộ (Section-Level Filtering)
+- Khi Dashboard chứa nhiều Section báo cáo có ngữ cảnh thời gian khác nhau (ví dụ: P&L theo từng tháng cụ thể với Combobox, Bảng tiến độ theo toàn chu kỳ, Biểu đồ xu hướng có DateRange cục bộ):
+  - **Lược bỏ `filterConfig` & `filter` ở cấp độ trang**, giao quyền lọc trực tiếp cho từng Section/Panel.
+  - Section Báo cáo P&L: Tích hợp Combobox Kỳ (Dropdown chọn tháng) ngay tại header của Section.
+  - Biểu đồ Xu hướng (Charts): Tích hợp `<DatePicker>` (Từ ngày - Đến ngày) ngay trong prop `extra` của `<Panel>`.
+  - Giúp giao diện sạch sẽ, chuyên nghiệp, không gây rối mắt cho người điều hành.
 
 ---
 
@@ -49,9 +56,9 @@ Mỗi trang Dashboard **BẮT BUỘC** đăng ký breadcrumb theo đúng cấu t
 
 ---
 
-## 3. Quản lý Bộ Lọc (Period & FilterPanel)
+## 3. Quản lý Bộ Lọc Toàn Trang (Toàn cục khi không dùng Section Filter)
 
-- Sử dụng hook `useFilterPanel` từ `@/shared/hooks/useFilterPanel`:
+- Khi áp dụng bộ lọc toàn trang, sử dụng hook `useFilterPanel` từ `@/shared/hooks/useFilterPanel`:
   - `period: true`: Kích hoạt bộ lọc khoảng thời gian (Hôm nay, Tuần này, Tháng này, Quý này, Năm nay, Tùy chọn).
   - `noDefaultPeriod: true`: Không ép buộc ngày mặc định nếu muốn xem toàn thời gian hoặc theo tháng hiện tại.
   - `custom`: Danh sách các dropdown filter tùy biến (ví dụ: Chi nhánh, Nhóm hàng, Trạng thái).

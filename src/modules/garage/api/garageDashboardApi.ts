@@ -8,6 +8,8 @@ export interface GarageTrendItem {
   margin: number;
   paid: number;
   receivable: number;
+  tienCoThue?: number;
+  totalBilled?: number;
   collectionRate: number;
   paidCost: number;
   payableCost: number;
@@ -15,10 +17,33 @@ export interface GarageTrendItem {
   collectionRateDiff: number;
   costPaymentRateDiff: number;
   caseCount: number;
+
+  // Invoice breakdowns for Receivables
+  caseCountWithInvoice?: number;
+  caseCountNoInvoice?: number;
+  billedWithInvoice?: number;
+  paidWithInvoice?: number;
+  receivableWithInvoice?: number;
+  rateWithInvoice?: number;
+  billedNoInvoice?: number;
+  paidNoInvoice?: number;
+  receivableNoInvoice?: number;
+  rateNoInvoice?: number;
+
+  // Invoice breakdowns for Payables
+  costWithInvoice?: number;
+  paidCostWithInvoice?: number;
+  payableCostWithInvoice?: number;
+  costRateWithInvoice?: number;
+  costNoInvoice?: number;
+  paidCostNoInvoice?: number;
+  payableCostNoInvoice?: number;
+  costRateNoInvoice?: number;
 }
 
 export interface GarageCollectionSummary {
   totalBilled: number;
+  totalTienCoThue?: number;
   totalRevenue: number;
   totalPaid: number;
   totalReceivable: number;
@@ -52,10 +77,12 @@ export interface GarageKpiPeriod {
   totalRevenue: number;
   totalCost: number;
   totalProfit: number;
+  totalTienCoThue?: number;
   totalCount: number;
   revenueChart: number[];
   costChart: number[];
   profitChart: number[];
+  tienCoThueChart?: number[];
   labels: string[];
 }
 

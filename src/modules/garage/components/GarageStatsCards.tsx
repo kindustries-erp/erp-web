@@ -131,8 +131,28 @@ export function GarageStatsCards({
                   ? month?.revenueChart || [0, 0, 0, 0, 0, 0]
                   : month?.costChart || [0, 0, 0, 0, 0, 0]
               }
-              preVatData={
-                isRevenue ? month?.profitChart || [0, 0, 0, 0, 0, 0] : undefined
+              customTooltipItems={
+                isRevenue
+                  ? [
+                      {
+                        label: "Doanh thu thuần",
+                        data: month?.revenueChart || [],
+                      },
+                      {
+                        label: "Doanh thu có VAT",
+                        data: month?.tienCoThueChart || [],
+                      },
+                    ]
+                  : [
+                      {
+                        label: "Chi phí thuần",
+                        data: month?.costChart || [],
+                      },
+                      {
+                        label: "Chi phí có VAT",
+                        data: month?.costChart || [],
+                      },
+                    ]
               }
               labels={month?.labels || []}
               onClick={handleMonthClick}
@@ -169,8 +189,28 @@ export function GarageStatsCards({
                   ? week?.revenueChart || [0, 0, 0, 0]
                   : week?.costChart || [0, 0, 0, 0]
               }
-              preVatData={
-                isRevenue ? week?.profitChart || [0, 0, 0, 0] : undefined
+              customTooltipItems={
+                isRevenue
+                  ? [
+                      {
+                        label: "Doanh thu thuần",
+                        data: week?.revenueChart || [],
+                      },
+                      {
+                        label: "Doanh thu có VAT",
+                        data: week?.tienCoThueChart || [],
+                      },
+                    ]
+                  : [
+                      {
+                        label: "Chi phí thuần",
+                        data: week?.costChart || [],
+                      },
+                      {
+                        label: "Chi phí có VAT",
+                        data: week?.costChart || [],
+                      },
+                    ]
               }
               labels={week?.labels || []}
               onClick={handleWeekClick}
@@ -207,10 +247,28 @@ export function GarageStatsCards({
                   ? day?.revenueChart || [0, 0, 0, 0, 0, 0, 0]
                   : day?.costChart || [0, 0, 0, 0, 0, 0, 0]
               }
-              preVatData={
+              customTooltipItems={
                 isRevenue
-                  ? day?.profitChart || [0, 0, 0, 0, 0, 0, 0]
-                  : undefined
+                  ? [
+                      {
+                        label: "Doanh thu thuần",
+                        data: day?.revenueChart || [],
+                      },
+                      {
+                        label: "Doanh thu có VAT",
+                        data: day?.tienCoThueChart || [],
+                      },
+                    ]
+                  : [
+                      {
+                        label: "Chi phí thuần",
+                        data: day?.costChart || [],
+                      },
+                      {
+                        label: "Chi phí có VAT",
+                        data: day?.costChart || [],
+                      },
+                    ]
               }
               labels={day?.labels || []}
               onClick={handleDayClick}
