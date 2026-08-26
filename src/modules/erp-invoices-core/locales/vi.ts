@@ -211,6 +211,7 @@ export const erpInvoicesVi = {
   "exportDrawer.partsTitle": "Xuất Excel bảng kê phụ tùng",
   "exportDrawer.subtitle":
     "Tạo file theo kỳ và tải lại file đã tạo trong 24 tiếng",
+  "exportDrawer.filterConditions": "Điều kiện xuất dữ liệu",
   "exportDrawer.customRange": "Tùy chỉnh từ ngày/đến ngày",
   "exportDrawer.period": "Kỳ",
   "exportDrawer.selectPeriod": "Chọn kỳ...",

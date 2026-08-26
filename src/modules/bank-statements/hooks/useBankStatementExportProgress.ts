@@ -3,12 +3,12 @@ import { fetchEventSource } from "@microsoft/fetch-event-source";
 
 import axiosInstance, { API_BASE_URL } from "@/core/api/axiosInstance";
 import { useAuthStore } from "@/modules/auth/domain/authStore";
-import { type InvoiceExportProgressEvent } from "../api/erpInvoicesCoreApi";
-import { useInvoiceExportProgressStore } from "@/shared/stores/useInvoiceExportProgressStore";
+import { type BankStatementExportProgressEvent } from "../api/bankStatementApi";
+import { useBankStatementExportProgressStore } from "@/shared/stores/useBankStatementExportProgressStore";
 
-export function useInvoiceExportProgress() {
+export function useBankStatementExportProgress() {
   const token = useAuthStore((s) => s.accessToken);
-  const setProgress = useInvoiceExportProgressStore((s) => s.setProgress);
+  const setProgress = useBankStatementExportProgressStore((s) => s.setProgress);
   const isConnecting = useRef(false);
   const controller = useRef<AbortController | null>(null);
 
@@ -22,7 +22,7 @@ export function useInvoiceExportProgress() {
     isConnecting.current = true;
     controller.current = new AbortController();
 
-    const url = `${API_BASE_URL}/api/v1/erp-invoices/export/excel/progress/stream`;
+    const url = `${API_BASE_URL}/api/v1/bank-transactions-core/export/excel/progress/stream`;
 
     const connect = async () => {
       try {
@@ -39,14 +39,18 @@ export function useInvoiceExportProgress() {
             }
             setProgress({ sseConnected: false });
             return Promise.reject(
-              new Error(`Failed to open invoice export SSE: ${res.status}`),
+              new Error(
+                `Failed to open bank statement export SSE: ${res.status}`,
+              ),
             );
           },
           onmessage(ev) {
             if (!ev.data) return;
 
             try {
-              const data = JSON.parse(ev.data) as InvoiceExportProgressEvent;
+              const data = JSON.parse(
+                ev.data,
+              ) as BankStatementExportProgressEvent;
               if (data.processId === "ping") {
                 setProgress({ sseConnected: true, lastEventAt: Date.now() });
                 return;
@@ -66,18 +70,18 @@ export function useInvoiceExportProgress() {
                 lastEventAt: Date.now(),
               });
             } catch (err) {
-              console.error("Failed to parse invoice export SSE", err);
+              console.error("Failed to parse bank statement export SSE", err);
             }
           },
           onerror(err) {
             setProgress({ sseConnected: false });
-            console.error("Invoice export SSE error", err);
+            console.error("Bank statement export SSE error", err);
             throw err;
           },
         });
       } catch (err) {
         setProgress({ sseConnected: false });
-        console.error("fetchEventSource error for invoice export", err);
+        console.error("fetchEventSource error for bank statement export", err);
       }
     };
 
@@ -102,7 +106,7 @@ export function useInvoiceExportProgress() {
         throw new Error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
       }
 
-      const url = `/api/v1/erp-invoices/export/excel/background/${encodeURIComponent(jobId)}/download`;
+      const url = `/api/v1/bank-transactions-core/export/excel/background/${encodeURIComponent(jobId)}/download`;
 
       const response = await axiosInstance.get<Blob>(url, {
         responseType: "blob",
@@ -121,11 +125,10 @@ export function useInvoiceExportProgress() {
         ?.match(/filename\*?=(?:UTF-8''|")?([^";]+)/i)?.[1]
         ?.trim();
 
-      const rawFileName = (
-        quotedFileName ||
-        fileName ||
-        "invoices.xlsx"
-      ).replace(/"/g, "");
+      const rawFileName = (quotedFileName || fileName || "sao_ke.xlsx").replace(
+        /"/g,
+        "",
+      );
       const resolvedFileName = (() => {
         try {
           return decodeURIComponent(rawFileName);

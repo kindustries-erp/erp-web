@@ -1,12 +1,17 @@
-import React, { useState, useMemo, useEffect } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { format, isValid, parseISO } from "date-fns";
-import { FileSpreadsheet, Download, Loader2 } from "lucide-react";
-import * as XLSX from "xlsx";
+import { Download, FileSpreadsheet, Play, RotateCcw } from "lucide-react";
 import toast from "react-hot-toast";
 
+import { Tooltip } from "@/core/components/ui/Tooltip";
+import { ActionDropdown } from "@/shared/components/ActionDropdown";
 import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
+import { DrawerSection } from "@/shared/components/DrawerModal";
+import { StandardTable } from "@/shared/components/StandardTable";
 import { Combobox } from "@/shared/components/Combobox";
 import { DatePicker } from "@/shared/components/DatePicker";
+import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/Button";
 import { useT } from "@/core/i18n";
 import {
@@ -16,14 +21,20 @@ import {
   periodFromExactRange,
   initPeriod,
 } from "@/modules/finance/utils/financeHelpers";
-import { bankStatementApi } from "@/modules/bank-statements/api/bankStatementApi";
+import {
+  bankStatementApi,
+  type BankStatementExportHistoryItem,
+} from "@/modules/bank-statements/api/bankStatementApi";
+import { useBankStatementExportProgress } from "@/modules/bank-statements/hooks/useBankStatementExportProgress";
+import { useBankStatementExportProgressStore } from "@/shared/stores/useBankStatementExportProgressStore";
+import type { DataTableColumn } from "@/shared/components/DataTable";
 
 interface BankStatementExportDrawerProps {
   open: boolean;
   onClose: () => void;
   type: "bank" | "cash";
-  branches: Array<{ id: string; name: string }>;
   accountsData: any[];
+  branches?: Array<{ id: string; name: string }>;
 }
 
 function toDisplayDate(iso?: string) {
@@ -33,11 +44,17 @@ function toDisplayDate(iso?: string) {
   return format(date, "dd/MM/yyyy HH:mm");
 }
 
+function toDisplayRange(dateFrom?: string, dateTo?: string) {
+  if (!dateFrom && !dateTo) return "-";
+  const from = dateFrom ? toDisplayDate(dateFrom).slice(0, 10) : "-";
+  const to = dateTo ? toDisplayDate(dateTo).slice(0, 10) : "-";
+  return `${from} - ${to}`;
+}
+
 export function BankStatementExportDrawer({
   open,
   onClose,
   type,
-  branches,
   accountsData,
 }: BankStatementExportDrawerProps) {
   const t = useT();
@@ -45,10 +62,128 @@ export function BankStatementExportDrawer({
   const [period, setPeriod] = useState(initPeriod());
   const [dateFrom, setDateFrom] = useState(periodFirstDay(period));
   const [dateTo, setDateTo] = useState(periodLastDay(period));
-  const [selectedBranchId, setSelectedBranchId] = useState<string>("");
   const [selectedAccountId, setSelectedAccountId] = useState<string>("");
   const [transactionType, setTransactionType] = useState<string>("");
-  const [isExporting, setIsExporting] = useState(false);
+
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [starting, setStarting] = useState(false);
+  const [downloadingJobId, setDownloadingJobId] = useState<string | null>(null);
+  const [trackedJobId, setTrackedJobId] = useState<string | null>(null);
+  const terminalRefreshGuardRef = useRef<string | null>(null);
+  const downloadedJobIdsRef = useRef<Set<string>>(new Set());
+
+  const progress = useBankStatementExportProgressStore();
+  const { downloadReadyFile } = useBankStatementExportProgress();
+
+  const handleDownload = async (
+    jobIdOrRow: string | BankStatementExportHistoryItem,
+    customFileName?: string,
+  ) => {
+    const jobId =
+      typeof jobIdOrRow === "string" ? jobIdOrRow : jobIdOrRow.jobId;
+    const fileName =
+      typeof jobIdOrRow === "string" ? customFileName : jobIdOrRow.fileName;
+
+    if (downloadingJobId) return;
+
+    try {
+      setDownloadingJobId(jobId);
+      await downloadReadyFile(jobId, fileName);
+      toast.success(t("bankStatement.toastDownloading", "Đang tải file XLSX."));
+      void historyQuery.refetch();
+    } catch (error: any) {
+      toast.error(
+        error?.message ||
+          t("bankStatement.downloadFailed", "Không thể tải file XLSX."),
+      );
+    } finally {
+      setDownloadingJobId(null);
+    }
+  };
+
+  const historyQuery = useQuery({
+    queryKey: ["bank-statement-export-history", page, pageSize],
+    queryFn: () => bankStatementApi.listExportExcelHistory(page, pageSize),
+    enabled: open,
+    staleTime: 30_000,
+    refetchOnWindowFocus: false,
+    refetchInterval: (query) => {
+      if (!open) return false;
+
+      const data = query.state.data as
+        | { items?: Array<{ status: string }> }
+        | undefined;
+      const hasRunningFromHistory = Boolean(
+        data?.items?.some((item) => item.status === "RUNNING"),
+      );
+      const hasRunningFromProgress = Boolean(progress.isRunning);
+      const hasRunning = hasRunningFromHistory || hasRunningFromProgress;
+      if (!hasRunning) return false;
+
+      const now = Date.now();
+      const eventAgeMs = progress.lastEventAt
+        ? now - progress.lastEventAt
+        : Infinity;
+      const sseHealthy = progress.sseConnected && eventAgeMs < 20_000;
+
+      if (sseHealthy) return false;
+
+      return 10_000;
+    },
+  });
+
+  useEffect(() => {
+    if (!open) return;
+
+    // 1. Check SSE progress for completed / ready state
+    const activeJobId = progress.jobId;
+    if (
+      activeJobId &&
+      (progress.ready || progress.completed) &&
+      !downloadedJobIdsRef.current.has(activeJobId)
+    ) {
+      downloadedJobIdsRef.current.add(activeJobId);
+      void handleDownload(activeJobId, progress.fileName);
+    }
+
+    // 2. Check historyQuery items for trackedJobId (fallback if SSE missed event)
+    if (trackedJobId && !downloadedJobIdsRef.current.has(trackedJobId)) {
+      const historyItem = historyQuery.data?.items?.find(
+        (it) => it.jobId === trackedJobId && it.status === "COMPLETED",
+      );
+      if (historyItem) {
+        downloadedJobIdsRef.current.add(trackedJobId);
+        void handleDownload(trackedJobId, historyItem.fileName);
+      }
+    }
+
+    // 3. Refresh history table when terminal state reached
+    if (
+      activeJobId &&
+      (progress.ready || progress.failed || progress.completed)
+    ) {
+      if (terminalRefreshGuardRef.current !== activeJobId) {
+        terminalRefreshGuardRef.current = activeJobId;
+        void historyQuery.refetch();
+      }
+    }
+  }, [
+    open,
+    progress.jobId,
+    progress.ready,
+    progress.completed,
+    progress.failed,
+    progress.fileName,
+    trackedJobId,
+    historyQuery.data?.items,
+  ]);
+
+  useEffect(() => {
+    if (!progress.isRunning) {
+      terminalRefreshGuardRef.current = null;
+    }
+  }, [progress.isRunning]);
 
   const periodOptions = useMemo(
     () => [
@@ -64,7 +199,7 @@ export function BankStatementExportDrawer({
   const handlePeriodChange = (next?: string) => {
     const value = next || "";
     if (!value || value === "custom") {
-      setPeriod("");
+      setPeriod("custom");
       return;
     }
 
@@ -79,14 +214,6 @@ export function BankStatementExportDrawer({
     const nextPeriod = periodFromExactRange(dateFrom, dateTo);
     setPeriod((prev) => (prev === nextPeriod ? prev : nextPeriod));
   }, [dateFrom, dateTo]);
-
-  const branchOptions = useMemo(
-    () => [
-      { value: "", label: t("common.allBranches", "Tất cả chi nhánh") },
-      ...branches.map((b) => ({ value: b.id, label: b.name })),
-    ],
-    [branches, t],
-  );
 
   const accountOptions = useMemo(() => {
     const defaultLabel =
@@ -118,7 +245,23 @@ export function BankStatementExportDrawer({
     [t],
   );
 
-  const handleExport = async () => {
+  const renderOverflowText = (text: string, className?: string) => {
+    const value = text?.trim() || "-";
+    const showTooltip = value.length > 36;
+
+    return (
+      <Tooltip content={value} disabled={!showTooltip}>
+        <div
+          className={`truncate ${className || ""}`}
+          title={showTooltip ? undefined : value}
+        >
+          {value}
+        </div>
+      </Tooltip>
+    );
+  };
+
+  const handleStartExport = async () => {
     if (!dateFrom || !dateTo) {
       toast.error(
         t(
@@ -130,165 +273,177 @@ export function BankStatementExportDrawer({
     }
 
     try {
-      setIsExporting(true);
-
-      const params: any = {
-        page: 1,
-        pageSize: 10000,
+      setStarting(true);
+      const payload: any = {
         sourceType: type === "bank" ? "BANK" : "CASH",
         startDate: `${dateFrom} 00:00:00`,
         endDate: `${dateTo} 23:59:59`,
       };
-
-      if (selectedBranchId) params.branchId = selectedBranchId;
       if (selectedAccountId) {
-        if (type === "bank") params.bankAccountId = selectedAccountId;
-        else params.cashBookId = selectedAccountId;
+        if (type === "bank") payload.bankAccountId = selectedAccountId;
+        else payload.cashBookId = selectedAccountId;
       }
-      if (transactionType) params.transactionType = transactionType;
+      if (transactionType) payload.transactionType = transactionType;
 
-      const response = await bankStatementApi.getTransactions(params);
-      const items: any[] = response?.items || [];
-
-      if (items.length === 0) {
-        toast.error(
-          t(
-            "bankStatement.noDataToExport",
-            "Không có giao dịch nào trong khoảng thời gian đã chọn.",
-          ),
+      const result = await bankStatementApi.startExportExcelBackground(payload);
+      setTrackedJobId(result.jobId);
+      if (result.reused) {
+        toast.success(
+          result.message ||
+            t(
+              "bankStatement.toastReused",
+              "Đã tìm thấy file cũ. Đang tự động tải xuống.",
+            ),
         );
-        return;
+        if (!downloadedJobIdsRef.current.has(result.jobId)) {
+          downloadedJobIdsRef.current.add(result.jobId);
+          void handleDownload(result.jobId);
+        }
+      } else {
+        toast.success(
+          result.message ||
+            t(
+              "bankStatement.toastStarted",
+              "Đã bắt đầu tiến trình xuất Excel.",
+            ),
+        );
       }
-
-      // Prepare Excel rows
-      const rows: any[][] = [];
-
-      // Header row
-      rows.push([
-        "STT",
-        type === "bank" ? "Ngân hàng" : "Sổ quỹ",
-        "Ngày GD",
-        "Số tham chiếu",
-        "Diễn giải",
-        "Thu (VND)",
-        "Chi (VND)",
-        "Số dư (VND)",
-        "Đã cấn trừ (VND)",
-        "Còn lại (VND)",
-        "TK đối ứng",
-        "Tên đối tác",
-        "Ngân hàng đối tác",
-        "Chi nhánh",
-      ]);
-
-      let totalCredit = 0;
-      let totalDebit = 0;
-      let totalNetOff = 0;
-      let totalRemaining = 0;
-
-      items.forEach((item, index) => {
-        const credit = parseFloat(item.creditAmount) || 0;
-        const debit = parseFloat(item.debitAmount) || 0;
-        const netOff = parseFloat(item.netOffAmount) || 0;
-        const remaining = Math.max(credit, debit) - netOff;
-
-        totalCredit += credit;
-        totalDebit += debit;
-        totalNetOff += netOff;
-        totalRemaining += Math.max(0, remaining);
-
-        const accountText =
-          type === "bank"
-            ? item.bankAccount
-              ? `${item.bankAccount.bankCode} - ${item.bankAccount.accountNumber}`
-              : ""
-            : item.cashBook?.name || "";
-
-        rows.push([
-          index + 1,
-          accountText,
-          toDisplayDate(item.transDate),
-          item.referenceNumber || "",
-          item.description || "",
-          credit || 0,
-          debit || 0,
-          parseFloat(item.balance) || 0,
-          netOff || 0,
-          remaining || 0,
-          item.correspondentAccount || "",
-          item.correspondentName || "",
-          item.correspondentBank || "",
-          item.branch?.name || "",
-        ]);
-      });
-
-      // Total summary row
-      rows.push([
-        "TỔNG CỘNG",
-        "",
-        "",
-        "",
-        `Tổng ${items.length} giao dịch`,
-        totalCredit,
-        totalDebit,
-        "",
-        totalNetOff,
-        totalRemaining,
-        "",
-        "",
-        "",
-        "",
-      ]);
-
-      // Create sheet and workbook
-      const ws = XLSX.utils.aoa_to_sheet(rows);
-
-      // Set optimal column widths
-      ws["!cols"] = [
-        { wch: 6 }, // STT
-        { wch: 22 }, // Tai khoan / So quy
-        { wch: 18 }, // Ngay GD
-        { wch: 22 }, // So tham chieu
-        { wch: 45 }, // Dien giai
-        { wch: 16 }, // Thu
-        { wch: 16 }, // Chi
-        { wch: 16 }, // So du
-        { wch: 16 }, // Da can tru
-        { wch: 16 }, // Con lai
-        { wch: 18 }, // TK doi ung
-        { wch: 28 }, // Ten doi tac
-        { wch: 20 }, // Ngan hang doi tac
-        { wch: 20 }, // Chi nhanh
-      ];
-
-      const wb = XLSX.utils.book_new();
-      const sheetName =
-        type === "bank" ? "Sao ke Ngan hang" : "So quy Tien mat";
-      XLSX.utils.book_append_sheet(wb, ws, sheetName);
-
-      // Format file name
-      const prefix = type === "bank" ? "Sao_ke_ngan_hang" : "So_quy_tien_mat";
-      const fromStr = dateFrom.replace(/-/g, "");
-      const toStr = dateTo.replace(/-/g, "");
-      const fileName = `${prefix}_${fromStr}_${toStr}.xlsx`;
-
-      XLSX.writeFile(wb, fileName);
-      toast.success(
-        t(
-          "bankStatement.exportSuccess",
-          `Xuất thành công ${items.length} giao dịch ra file Excel!`,
-        ),
-      );
-      onClose();
+      await historyQuery.refetch();
     } catch (error: any) {
       toast.error(
         error?.message ||
-          t("bankStatement.exportFailed", "Xuất file Excel thất bại."),
+          t("bankStatement.startFailed", "Không thể bắt đầu xuất Excel."),
       );
     } finally {
-      setIsExporting(false);
+      setStarting(false);
     }
   };
+
+  const columns = useMemo<DataTableColumn<BankStatementExportHistoryItem>[]>(
+    () => [
+      {
+        key: "action",
+        header: (
+          <Tooltip
+            content={t(
+              "bankStatement.resetColumnWidth",
+              "Khôi phục độ rộng cột",
+            )}
+          >
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6"
+              onClick={(e) => {
+                e.stopPropagation();
+                const event = new CustomEvent(
+                  "reset-column-sizing-bank-statement-export-history",
+                );
+                window.dispatchEvent(event);
+              }}
+            >
+              <RotateCcw className="h-3.5 w-3.5 text-muted-foreground" />
+            </Button>
+          </Tooltip>
+        ),
+        size: 40,
+        minSize: 40,
+        maxSize: 40,
+        enableResizing: false,
+        headerClassName: "w-[40px] min-w-[40px] text-center",
+        className: "w-[40px] min-w-[40px] text-center",
+        cell: (row) => (
+          <ActionDropdown
+            items={[
+              {
+                label:
+                  downloadingJobId === row.jobId
+                    ? t("bankStatement.downloading", "Đang tải...")
+                    : t("bankStatement.downloadAgain", "Tải lại file"),
+                icon: <Download className="w-3.5 h-3.5" />,
+                onClick: () => {
+                  void handleDownload(row);
+                },
+                disabled: !row.canDownload || Boolean(downloadingJobId),
+                loading: downloadingJobId === row.jobId,
+              },
+            ]}
+          />
+        ),
+      },
+      {
+        key: "createdAt",
+        header: t("bankStatement.tableCreatedAt", "Tạo lúc"),
+        size: 160,
+        cell: (row) => toDisplayDate(row.createdAt),
+      },
+      {
+        key: "periodRange",
+        header: t("bankStatement.tablePeriod", "Kỳ / Khoảng ngày"),
+        size: 170,
+        cell: (row) =>
+          row.dateFrom || row.dateTo
+            ? toDisplayRange(row.dateFrom, row.dateTo)
+            : t("bankStatement.allRange", "Tất cả"),
+      },
+      {
+        key: "fileName",
+        header: t("bankStatement.tableFileName", "Tên file"),
+        size: 240,
+        cell: (row) => renderOverflowText(row.fileName),
+      },
+      {
+        key: "status",
+        header: t("bankStatement.tableStatus", "Trạng thái"),
+        size: 140,
+        cell: (row) => {
+          if (row.status === "COMPLETED") {
+            return (
+              <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200">
+                {t("bankStatement.statusReady", "Sẵn sàng tải")}
+              </Badge>
+            );
+          }
+          if (row.status === "FAILED") {
+            return (
+              <Badge variant="destructive">
+                {t("bankStatement.statusFailed", "Thất bại")}
+              </Badge>
+            );
+          }
+
+          const current =
+            progress.jobId === row.jobId && progress.total > 0
+              ? progress.current
+              : row.current;
+          const total =
+            progress.jobId === row.jobId && progress.total > 0
+              ? progress.total
+              : row.total;
+          const percent = total > 0 ? Math.round((current / total) * 100) : 0;
+
+          return (
+            <Badge className="bg-sky-50 text-sky-700 border-sky-200">
+              {t("bankStatement.statusRunning", "Đang tạo")} {percent}%
+            </Badge>
+          );
+        },
+      },
+      {
+        key: "expiresAt",
+        header: t("bankStatement.tableExpiresAt", "Hết hạn"),
+        size: 150,
+        cell: (row) => toDisplayDate(row.expiresAt),
+      },
+      {
+        key: "message",
+        header: t("bankStatement.tableMessage", "Thông tin"),
+        size: 200,
+        cell: (row) => renderOverflowText(row.message),
+      },
+    ],
+    [downloadingJobId, progress.current, progress.jobId, progress.total, t],
+  );
 
   return (
     <StandardFormDrawer
@@ -302,18 +457,48 @@ export function BankStatementExportDrawer({
       }
       subtitle={t(
         "bankStatement.exportSubtitle",
-        "Chọn kỳ, khoảng ngày và các điều kiện lọc để xuất file Excel chi tiết",
+        "Tạo file theo kỳ và tải lại file đã tạo trong 24 tiếng",
       )}
       icon={<FileSpreadsheet className="w-4 h-4" />}
-      layout="1-column"
+      layout="2-columns"
       size="lg"
       leftPanel={
-        <div className="space-y-5">
-          <div className="p-4 bg-muted/40 rounded-xl border border-border/80 space-y-4">
-            <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              {t("bankStatement.timeFilter", "Khoảng thời gian")}
-            </h4>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
+        <div className="space-y-4">
+          <DrawerSection
+            title={t("bankStatement.historyTitle", "Lịch sử xuất file")}
+            collapsible
+            defaultCollapsed={false}
+          >
+            <StandardTable
+              tableId="bank-statement-export-history"
+              variant="spreadsheet"
+              enableColumnResizing={true}
+              items={historyQuery.data?.items || []}
+              columns={columns}
+              getRowKey={(row) => row.jobId}
+              loading={historyQuery.isLoading || historyQuery.isFetching}
+              page={page}
+              pageSize={pageSize}
+              total={historyQuery.data?.total || 0}
+              totalPages={historyQuery.data?.totalPages || 1}
+              onPage={setPage}
+              onPageSize={setPageSize}
+              emptyLabel={t(
+                "bankStatement.emptyHistory",
+                "Chưa có file xuất nào",
+              )}
+            />
+          </DrawerSection>
+        </div>
+      }
+      rightPanel={
+        <div className="space-y-4">
+          <DrawerSection
+            title={t("bankStatement.timeFilter", "Khoảng thời gian")}
+            collapsible
+            defaultCollapsed={false}
+          >
+            <div className="space-y-3">
               <div>
                 <label className="text-xs font-medium text-muted-foreground block mb-1">
                   {t("bankStatement.period", "Kỳ")}
@@ -323,6 +508,7 @@ export function BankStatementExportDrawer({
                   value={period}
                   onChange={(v) => handlePeriodChange(v ?? "")}
                   placeholder={t("bankStatement.selectPeriod", "Chọn kỳ...")}
+                  allowClear={false}
                 />
               </div>
               <div>
@@ -346,27 +532,14 @@ export function BankStatementExportDrawer({
                 />
               </div>
             </div>
-          </div>
+          </DrawerSection>
 
-          <div className="p-4 bg-muted/40 rounded-xl border border-border/80 space-y-4">
-            <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              {t("bankStatement.scopeFilter", "Phạm vi & Đối tượng")}
-            </h4>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <div>
-                <label className="text-xs font-medium text-muted-foreground block mb-1">
-                  {t("bankStatement.branch", "Chi nhánh")}
-                </label>
-                <Combobox
-                  options={branchOptions}
-                  value={selectedBranchId}
-                  onChange={(v) => setSelectedBranchId(v ?? "")}
-                  placeholder={t(
-                    "bankStatement.allBranches",
-                    "Tất cả chi nhánh",
-                  )}
-                />
-              </div>
+          <DrawerSection
+            title={t("bankStatement.scopeFilter", "Phạm vi & Đối tượng")}
+            collapsible
+            defaultCollapsed={false}
+          >
+            <div className="space-y-3">
               <div>
                 <label className="text-xs font-medium text-muted-foreground block mb-1">
                   {type === "bank"
@@ -379,9 +552,13 @@ export function BankStatementExportDrawer({
                   onChange={(v) => setSelectedAccountId(v ?? "")}
                   placeholder={
                     type === "bank"
-                      ? t("bankStatement.allBankAccounts", "Tất cả ngân hàng")
+                      ? t(
+                          "bankStatement.allBankAccounts",
+                          "Tất cả tài khoản ngân hàng",
+                        )
                       : t("bankStatement.allCashBooks", "Tất cả sổ quỹ")
                   }
+                  allowClear={false}
                 />
               </div>
               <div>
@@ -392,31 +569,28 @@ export function BankStatementExportDrawer({
                   options={transactionTypeOptions}
                   value={transactionType}
                   onChange={(v) => setTransactionType(v ?? "")}
-                  placeholder={t("bankStatement.allTypes", "Tất cả")}
+                  placeholder={t(
+                    "bankStatement.allTypes",
+                    "Tất cả loại giao dịch",
+                  )}
+                  allowClear={false}
                 />
               </div>
-            </div>
-          </div>
 
-          <div className="flex justify-end gap-3 pt-2">
-            <Button variant="outline" onClick={onClose} disabled={isExporting}>
-              {t("common.cancel", "Hủy bỏ")}
-            </Button>
-            <Button
-              onClick={handleExport}
-              disabled={isExporting}
-              className="gap-2"
-            >
-              {isExporting ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Download className="w-4 h-4" />
-              )}
-              {isExporting
-                ? t("bankStatement.exporting", "Đang xuất file...")
-                : t("bankStatement.exportNow", "Xuất file Excel (.xlsx)")}
-            </Button>
-          </div>
+              <div className="pt-2">
+                <Button
+                  className="w-full justify-center"
+                  onClick={handleStartExport}
+                  disabled={starting}
+                >
+                  <Play className="w-4 h-4 mr-1.5" />
+                  {starting
+                    ? t("bankStatement.starting", "Đang khởi tạo...")
+                    : t("bankStatement.start", "Xuất Excel")}
+                </Button>
+              </div>
+            </div>
+          </DrawerSection>
         </div>
       }
     />

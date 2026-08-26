@@ -214,13 +214,17 @@ Dành cho các form đơn giản không có nhiều phân hệ (như Company Pro
 
 ---
 
-## 6. Quy chuẩn Bắt buộc về `<DrawerSection>` có Expand/Collapse & Giảm thiểu Border
+## 6. Quy chuẩn Bắt buộc về `<DrawerSection>` & 2-Column Right Panel luôn có Expand/Collapse Mặc định
 
-1. **BẮT BUỘC sử dụng `<DrawerSection>` có `collapsible`**:
-   - Mọi vùng nội dung trong Drawer (cả 1-column lẫn 2-columns) **BẮT BUỘC** phải được bọc trong `<DrawerSection title="..." collapsible defaultCollapsed={false}>`.
-   - Thuộc tính `collapsible` kích hoạt icon mũi tên Expand/Collapse xoay mượt mà, cho phép người dùng chủ động thu gọn hoặc mở rộng từng phân đoạn nội dung.
+1. **Mặc định BẬT Expand/Collapse cho Cột Phải (`layout="2-columns"`)**:
+   - Trong mọi Drawer 2 cột (`layout="2-columns"`), hệ thống **tự động kích hoạt nút Thu gọn / Mở rộng cột phải (`ChevronRight`/`ChevronLeft`)** trên thanh Header (`collapsibleRightPanel` mặc định là `true`).
+   - Người dùng có thể nhấn nút mũi tên trên Header để thu gọn cột phải về cạnh phải màn hình bất cứ lúc nào để mở rộng 100% diện tích cho cột trái (như bảng dữ liệu hoặc form chính).
 
-2. **Quy tắc Giảm thiểu Border & Chuẩn hóa Timeline (No Nested Borders Overload)**:
+2. **Mặc định BẬT Expand/Collapse cho `<DrawerSection>`**:
+   - Mọi vùng nội dung trong Drawer (cả 1-column lẫn 2-columns) **BẮT BUỘC** phải được bọc trong `<DrawerSection title="...">`.
+   - Thuộc tính `collapsible` **mặc định là `true`** (`defaultCollapsed={false}`), tự động kích hoạt icon mũi tên Expand/Collapse xoay mượt mà, cho phép người dùng click vào header section để thu gọn hoặc mở rộng từng phân đoạn nội dung.
+
+3. **Quy tắc Giảm thiểu Border & Chuẩn hóa Timeline (No Nested Borders Overload)**:
    - **Tuyệt đối tránh** lồng quá nhiều border card (`border border-border`) bên trong DrawerSection khiến giao diện bị nặng nề, rối mắt.
    - Khi hiển thị Dòng thời gian (Timeline / History / Changelog / Audit Logs):
      - **BẮT BUỘC** sử dụng cấu trúc trục dọc thanh thoát:
