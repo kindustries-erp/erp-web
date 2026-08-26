@@ -85,7 +85,7 @@ export function StandardTable<T>({
   enableColumnVisibility = true,
   defaultColumnVisibility,
   tableId,
-  enableColumnResizing,
+  enableColumnResizing = true,
   enableRowSelection,
   rowSelection,
   onRowSelectionChange,

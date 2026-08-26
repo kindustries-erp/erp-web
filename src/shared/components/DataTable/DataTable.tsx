@@ -62,10 +62,14 @@ export function DataTable<T>({
   onRowContextMenu,
   renderSubRow,
   expandedRowKeys,
+  sortBy,
+  sortOrder,
+  sortArray,
+  onSort,
   enableColumnVisibility = true,
   defaultColumnVisibility,
   tableId,
-  enableColumnResizing = false,
+  enableColumnResizing = true,
   enableRowSelection = false,
   rowSelection,
   onRowSelectionChange,
@@ -101,11 +105,15 @@ export function DataTable<T>({
       onFullscreenChange,
     });
 
-  const { scrollContainerRef, isScrolledTop, isScrolledBottom } =
-    useDataTableScroll({
-      items,
-      loading,
-    });
+  const {
+    scrollContainerRef,
+    isScrolledTop,
+    isScrolledBottom,
+    handleTableScroll,
+  } = useDataTableScroll({
+    items,
+    loading,
+  });
 
   const tableColumns = useDataTableColumns({
     columns,
@@ -121,19 +129,22 @@ export function DataTable<T>({
     data: items,
     columns: tableColumns,
     getCoreRowModel: getCoreRowModel(),
+    getRowId: getRowKey,
+    manualPagination: true,
+    manualSorting: true,
+    columnResizeMode: "onChange",
+    meta: tableMeta,
     state: {
       columnVisibility: internalVisibility,
       columnOrder: internalColumnOrder,
       rowSelection: rowSelection || {},
       columnSizing: internalColumnSizing,
     },
+    enableRowSelection,
+    onRowSelectionChange,
     onColumnVisibilityChange: handleColumnVisibilityChange,
     onColumnOrderChange: handleColumnOrderChange,
-    onRowSelectionChange: onRowSelectionChange,
     onColumnSizingChange: handleColumnSizingChange,
-    columnResizeMode: "onChange",
-    enableColumnResizing,
-    meta: tableMeta,
   });
 
   // Portal target subscription for toolbar controls
@@ -176,6 +187,7 @@ export function DataTable<T>({
         <div className="flex items-stretch flex-1 min-h-0 w-full relative">
           <div
             ref={!isFsView ? scrollContainerRef : undefined}
+            onScroll={!isFsView ? handleTableScroll : undefined}
             className={cn(
               "bg-surface transition-shadow duration-150 flex-1 min-h-0 flex flex-col relative w-full",
               elevated && "rounded-lg border border-border shadow-xs",
@@ -193,22 +205,21 @@ export function DataTable<T>({
           >
             <Table
               className={cn(
-                "border-collapse border-spacing-0 w-full",
-                variant === "spreadsheet" ? "table-fixed" : "",
+                "table-fixed",
+                variant === "spreadsheet" && "border-collapse border-spacing-0",
               )}
               style={{
-                minWidth: isFsView ? undefined : minWidth,
-                width:
-                  variant === "spreadsheet"
-                    ? `${table.getCenterTotalSize()}px`
-                    : undefined,
+                minWidth: enableColumnResizing
+                  ? table.getTotalSize()
+                  : isFsView
+                    ? undefined
+                    : minWidth,
+                width: "100%",
               }}
             >
               <TableHeader
                 className={cn(
-                  variant === "spreadsheet"
-                    ? "sticky top-0 z-20 bg-muted border-b border-border shadow-[0_1px_0_0_var(--border-light)]"
-                    : "sticky top-0 z-20 bg-muted border-b border-border shadow-[0_1px_0_0_var(--border-light)]",
+                  "sticky top-0 z-20 bg-muted border-b border-border shadow-[0_1px_0_0_var(--border-light)]",
                 )}
               >
                 {table.getHeaderGroups().map((headerGroup) => (
@@ -245,12 +256,13 @@ export function DataTable<T>({
                           key={header.id}
                           className={cn(
                             meta?.headerClassName,
+                            "sticky top-0 bg-transparent z-20 border-r border-border",
                             isFirstCol &&
                               !enableRowSelection &&
                               variant !== "spreadsheet" &&
-                              "sticky left-0 bg-muted shadow-[1px_0_0_0_var(--border-light)] z-30",
+                              "left-0 z-35 bg-muted shadow-[1px_0_0_0_var(--border-light)]",
                             variant === "spreadsheet" &&
-                              "border-r border-border py-1 text-xs select-none relative",
+                              "border-r border-border py-1 h-auto text-[11px]",
                             variant === "spreadsheet" &&
                               ![
                                 "__actions",
@@ -258,32 +270,128 @@ export function DataTable<T>({
                                 "__expand",
                               ].includes(header.column.id) &&
                               "px-2 truncate",
+                            enableColumnResizing && "relative group",
                           )}
                           style={{
-                            width: isActionsCol ? actionsWidth : undefined,
-                            minWidth: isActionsCol ? actionsWidth : undefined,
+                            width: isActionsCol
+                              ? actionsWidth
+                              : enableColumnResizing ||
+                                  header.column.columnDef.size !== undefined
+                                ? header.getSize()
+                                : undefined,
+                            minWidth: isActionsCol
+                              ? actionsWidth
+                              : (header.column.columnDef.minSize ??
+                                (header.column.columnDef.size !== undefined
+                                  ? header.getSize()
+                                  : undefined)),
                             maxWidth: isActionsCol
                               ? actionsWidth
-                              : enableColumnResizing
-                                ? header.column.getSize()
-                                : undefined,
+                              : (header.column.columnDef.maxSize ?? undefined),
                           }}
                         >
-                          {header.isPlaceholder
-                            ? null
-                            : flexRender(
+                          {header.isPlaceholder ? null : meta?.sortable ? (
+                            <div
+                              className={cn(
+                                "flex items-center gap-1 cursor-pointer hover:text-foreground transition-colors",
+                                meta.headerClassName?.includes("text-right") &&
+                                  "justify-end",
+                                meta.headerClassName?.includes("text-center") &&
+                                  "justify-center",
+                              )}
+                              onClick={() => onSort?.(meta.sortKey!)}
+                            >
+                              {flexRender(
                                 header.column.columnDef.header,
                                 header.getContext(),
                               )}
+                              <div className="flex flex-col -space-y-[3px]">
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  width="10"
+                                  height="10"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={
+                                    sortArray
+                                      ? sortArray.includes(meta.sortKey!)
+                                        ? 3.5
+                                        : 1.5
+                                      : sortBy === meta.sortKey &&
+                                          sortOrder === "asc"
+                                        ? 3.5
+                                        : 1.5
+                                  }
+                                  className={cn(
+                                    "transition-all duration-150",
+                                    sortArray
+                                      ? sortArray.includes(meta.sortKey!)
+                                        ? "text-foreground"
+                                        : "text-muted-foreground/35"
+                                      : sortBy === meta.sortKey
+                                        ? sortOrder === "asc"
+                                          ? "text-foreground"
+                                          : "text-muted-foreground/5"
+                                        : "text-muted-foreground/35",
+                                  )}
+                                >
+                                  <path d="m18 15-6-6-6 6" />
+                                </svg>
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  width="10"
+                                  height="10"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={
+                                    sortArray
+                                      ? sortArray.includes(`-${meta.sortKey!}`)
+                                        ? 3.5
+                                        : 1.5
+                                      : sortBy === meta.sortKey &&
+                                          sortOrder === "desc"
+                                        ? 3.5
+                                        : 1.5
+                                  }
+                                  className={cn(
+                                    "transition-all duration-150",
+                                    sortArray
+                                      ? sortArray.includes(`-${meta.sortKey!}`)
+                                        ? "text-foreground"
+                                        : "text-muted-foreground/35"
+                                      : sortBy === meta.sortKey
+                                        ? sortOrder === "desc"
+                                          ? "text-foreground"
+                                          : "text-muted-foreground/5"
+                                        : "text-muted-foreground/35",
+                                  )}
+                                >
+                                  <path d="m6 9 6 6 6-6" />
+                                </svg>
+                              </div>
+                            </div>
+                          ) : (
+                            flexRender(
+                              header.column.columnDef.header,
+                              header.getContext(),
+                            )
+                          )}
                           {enableColumnResizing &&
                             header.column.getCanResize() && (
                               <div
+                                onDoubleClick={() => header.column.resetSize()}
                                 onMouseDown={header.getResizeHandler()}
                                 onTouchStart={header.getResizeHandler()}
                                 className={cn(
-                                  "absolute right-0 top-0 h-full w-1 cursor-col-resize user-select-none touch-none hover:bg-primary/50",
+                                  "absolute right-0 top-0 h-full w-[5px] cursor-col-resize user-select-none touch-none hover:bg-primary/50 transition-colors",
                                   header.column.getIsResizing()
-                                    ? "bg-primary w-1.5"
+                                    ? "bg-primary w-[2px]"
                                     : "bg-transparent",
                                 )}
                               />
@@ -316,6 +424,11 @@ export function DataTable<T>({
                               variant === "spreadsheet" &&
                                 "border-r border-border py-1 px-2",
                             )}
+                            style={{
+                              maxWidth: enableColumnResizing
+                                ? column.getSize()
+                                : undefined,
+                            }}
                           >
                             <Skeleton
                               className={cn(
@@ -384,6 +497,11 @@ export function DataTable<T>({
                             variant === "spreadsheet" &&
                               "border-r border-border py-1.5 px-2 text-xs",
                           )}
+                          style={{
+                            maxWidth: enableColumnResizing
+                              ? column.getSize()
+                              : undefined,
+                          }}
                         >
                           {summaryContent ?? null}
                         </TableCell>
