@@ -446,6 +446,10 @@ Bất kỳ cột nào liên quan đến **Status**, **State** thì bắt buộc 
 ## 9. Empty State và CSS Container
 
 - Luôn truyền `emptyLabel={t("Không có dữ liệu", "No data")}`.
+- **Quy chuẩn Border & Border-Radius cho Container Bảng**:
+  - Container bảng **BẮT BUỘC** luôn duy trì bo góc chuẩn `rounded-xl` (12px) và viền thanh thoát `border border-border/60` trên nền `bg-surface` cho tất cả các variants (cả spreadsheet lẫn default).
+  - **TUYỆT ĐỐI KHÔNG** gán `rounded-none` hoặc đặt viền quá đậm làm mất góc bo và tạo cảm giác viền lồng viền (border wrapper) thô cứng.
+  - Tự động tích hợp hiệu ứng scroll shadows (`isScrolledTop` / `isScrolledBottom`) khi cuộn bảng.
 - Với Table nằm trong **Drawer**, hạn chế chiều cao container để không làm vỡ Drawer, có cuộn dọc bên trong:
   `containerClassName="max-h-[calc(100vh-280px)] overflow-y-auto"`.
 ## 10. Phân trang & Default PageSize theo chiều cao màn hình (Pagination & Responsive PageSize)
@@ -592,5 +596,6 @@ Core DataTable tuân thủ cấu trúc Atomic Refactor chuẩn:
 - [ ] Các cột số tiền / số lượng có `summaryRow` tổng không?
 - [ ] Text đã có namespace i18n (`t(...)`) chưa?
 - [ ] Đã bỏ default state `sortBy` ở UI và dùng default sort ở Backend chưa?
+- [ ] Container bảng đã có bo góc chuẩn `rounded-xl`, viền `border border-border/60` thanh thoát và TUYỆT ĐỐI KHÔNG bị `rounded-none` chưa?
 - [ ] Bảng có sử dụng TableColumnHeaderFilter đã có nút Clear All Filter hiển thị khi có active filter chưa? (Page: `activeFilterCount` + `onClearAllFilters` trên `SpreadsheetPageTemplate`; Drawer: `FilterButton` với `onClear` trong `titleExtra` của `DrawerSection`?)
 - [ ] **Hiệu năng & Fast Selection**: Đã memoize `columns` độc lập, tránh truyền anonymous function cho `rowHoverActions`, và dùng lazy evaluation cho Popover nặng chưa?

@@ -191,14 +191,9 @@ export function DataTable<T>({
             className={cn(
               "bg-surface transition-shadow duration-150 flex-1 min-h-0 flex flex-col relative w-full",
               elevated && "rounded-lg border border-border shadow-xs",
-              variant === "spreadsheet"
-                ? "border border-border/80 rounded-none overflow-x-auto overflow-y-auto"
-                : "border border-border/60 rounded-xl overflow-x-auto overflow-y-auto",
-              isScrolledTop &&
-                variant !== "spreadsheet" &&
-                "shadow-[inset_0_4px_6px_-2px_rgba(0,0,0,0.05)]",
+              "border border-border/60 rounded-xl overflow-x-auto overflow-y-auto",
+              isScrolledTop && "shadow-[inset_0_4px_6px_-2px_rgba(0,0,0,0.05)]",
               isScrolledBottom &&
-                variant !== "spreadsheet" &&
                 "shadow-[inset_0_-4px_6px_-2px_rgba(0,0,0,0.05)]",
               containerClassName,
             )}
