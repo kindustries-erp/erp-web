@@ -57,6 +57,7 @@ export function useInvoiceColumns(
 
   return useMemo(() => {
     return [
+      general.index,
       general.invoiceDate,
       general.invoiceNo,
       general.partner,
