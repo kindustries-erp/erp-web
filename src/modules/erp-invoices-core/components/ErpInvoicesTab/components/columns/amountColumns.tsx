@@ -77,7 +77,11 @@ export function useAmountColumns({
           <TableText
             text={(row.description || "—").replace(/\\n/g, " ")}
             tooltip={true}
-            popoverContent={<InvoiceItemsPopover items={row.items} />}
+            popoverContent={
+              row.items && row.items.length > 0
+                ? () => <InvoiceItemsPopover items={row.items} />
+                : undefined
+            }
             textClassName="line-clamp-2 break-words whitespace-normal text-[11px] leading-[1.4] text-slate-700 dark:text-slate-300 py-0.5"
           />
         ),

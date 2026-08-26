@@ -496,6 +496,18 @@ Bất kỳ cột nào liên quan đến **Status**, **State** thì bắt buộc 
 - **Yêu cầu `tableId` duy nhất**:
   - Bảng bắt buộc phải được truyền prop `tableId` (dạng chuỗi unique, vd: `"erp-invoices-in"`, `"garage-cases"`, `"bom-list"`) để Core `DataTable` tự động kết nối Portal Target hiển thị nút `ColumnToggle` và lưu trữ trạng thái người dùng vào App Setting.
 
+## 13. Hiệu năng & Tối ưu hóa Re-render khi Chọn Dòng (Table Performance & Fast Selection)
+
+Khi phát triển hoặc nâng cấp bảng dữ liệu có hỗ trợ chọn nhiều dòng (`enableRowSelection={true}`), **BẮT BUỘC** tuân thủ các nguyên tắc hiệu năng sau để đảm bảo thao tác click checkbox phản hồi tức thì (< 16ms / 60fps):
+
+1. **Ổn định Tham Chiếu Cột & Handlers (Referential Stability)**:
+   - **TUYỆT ĐỐI KHÔNG** truyền inline anonymous function cho `rowHoverActions` hoặc `actionsColumn` (vd: `(row) => actions(row)`). Phải truyền trực tiếp `actions` đã được bọc bằng `useCallback`.
+   - **Cô lập `columns` khỏi các state thay đổi thường xuyên**: Trong hook tạo cột, TUYỆT ĐỐI KHÔNG đưa toàn bộ object `listHook` vào dependency array của `useMemo`. Chỉ khai báo các dependency con thực sự cần thiết (`tableState.columnFilters`, `tableState.columnSearch`, `tableState.sorts`, `activeTaxTab`, `dateFrom`, `dateTo`).
+2. **Lazy Evaluation cho Popover & Cell Nặng**:
+   - Với các cell có Popover nội dung lớn (như danh sách mặt hàng, tính tổng sub-table nhiều dòng trong `<TableText>`), bắt buộc truyền `popoverContent` dưới dạng hàm lazy render `() => ReactNode` (chỉ tính toán và render DOM khi Popover thực sự mở).
+3. **Bọc `React.memo` cho Custom Cells & Bulk Modals**:
+   - Tất cả các cell renderer độc lập (Badge, Attachments, Info cells) và container `InvoiceBulkModals` phải được bọc bằng `React.memo`.
+
 ## Summary Checklist trước khi hoàn thành:
 
 - [ ] Cột đầu tiên (STT) rộng đúng `40px`, **BẮT ĐẦU TỪ 1 VÀ CĂN GIỮA TUYỆT ĐỐI CẢ HEADER VÀ CELL** (`header: <span className="w-full block text-center">#</span>`, `headerClassName: "text-center"`, `className: "text-center"`, `cell: (_, idx) => <span className="w-full block text-center">{idx}</span>`) chưa?
@@ -520,3 +532,4 @@ Bất kỳ cột nào liên quan đến **Status**, **State** thì bắt buộc 
 - [ ] Text đã có namespace i18n (`t(...)`) chưa?
 - [ ] Đã bỏ default state `sortBy` ở UI và dùng default sort ở Backend chưa?
 - [ ] Bảng có sử dụng TableColumnHeaderFilter đã có nút Clear All Filter hiển thị khi có active filter chưa? (Page: `activeFilterCount` + `onClearAllFilters` trên `SpreadsheetPageTemplate`; Drawer: `FilterButton` với `onClear` trong `titleExtra` của `DrawerSection`?)
+- [ ] **Hiệu năng & Fast Selection**: Đã memoize `columns` độc lập, tránh truyền anonymous function cho `rowHoverActions`, và dùng lazy evaluation cho Popover nặng chưa?

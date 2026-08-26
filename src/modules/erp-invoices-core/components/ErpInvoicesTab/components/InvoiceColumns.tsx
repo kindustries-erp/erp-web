@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useCallback } from "react";
 import { type TFunction } from "i18next";
 import { type DataTableColumn } from "@/shared/components/DataTable";
 import { type ErpInvoice } from "@/modules/erp-invoices-core/api/erpInvoicesCoreApi";
@@ -54,13 +54,13 @@ export function useInvoiceColumns(
 ): DataTableColumn<ErpInvoice>[] {
   const { direction, setSelectedPartner, setPartnerDrawerOpen } = options;
 
-  const onSelectPartner = (partner: {
-    taxCode: string;
-    partnerName: string;
-  }) => {
-    setSelectedPartner(partner);
-    setPartnerDrawerOpen(true);
-  };
+  const onSelectPartner = useCallback(
+    (partner: { taxCode: string; partnerName: string }) => {
+      setSelectedPartner(partner);
+      setPartnerDrawerOpen(true);
+    },
+    [setSelectedPartner, setPartnerDrawerOpen],
+  );
 
   const general = useGeneralColumns({
     ...options,

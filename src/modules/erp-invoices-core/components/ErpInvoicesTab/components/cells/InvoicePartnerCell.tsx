@@ -12,7 +12,7 @@ export interface InvoicePartnerCellProps {
   onSelectPartner: (partner: { taxCode: string; partnerName: string }) => void;
 }
 
-export function InvoicePartnerCell({
+export const InvoicePartnerCell = React.memo(function InvoicePartnerCell({
   inv,
   direction,
   onSelectPartner,
@@ -157,7 +157,7 @@ export function InvoicePartnerCell({
       </div>
     </div>
   );
-}
+});
 
 export interface InvoicePartnerNameCellProps {
   inv: ErpInvoice;
@@ -165,19 +165,21 @@ export interface InvoicePartnerNameCellProps {
   onSelectPartner: (partner: { taxCode: string; partnerName: string }) => void;
 }
 
-export function InvoicePartnerNameCell({
-  inv,
-  direction,
-  onSelectPartner,
-}: InvoicePartnerNameCellProps) {
-  return (
-    <InvoicePartnerCell
-      inv={inv}
-      direction={direction}
-      onSelectPartner={onSelectPartner}
-    />
-  );
-}
+export const InvoicePartnerNameCell = React.memo(
+  function InvoicePartnerNameCell({
+    inv,
+    direction,
+    onSelectPartner,
+  }: InvoicePartnerNameCellProps) {
+    return (
+      <InvoicePartnerCell
+        inv={inv}
+        direction={direction}
+        onSelectPartner={onSelectPartner}
+      />
+    );
+  },
+);
 
 export interface InvoiceTaxCodeCellProps {
   inv: ErpInvoice;
@@ -185,7 +187,7 @@ export interface InvoiceTaxCodeCellProps {
   onSelectPartner: (partner: { taxCode: string; partnerName: string }) => void;
 }
 
-export function InvoiceTaxCodeCell({
+export const InvoiceTaxCodeCell = React.memo(function InvoiceTaxCodeCell({
   inv,
   direction,
   onSelectPartner,
@@ -213,4 +215,4 @@ export function InvoiceTaxCodeCell({
       enableCopy={true}
     />
   );
-}
+});

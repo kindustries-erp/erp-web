@@ -90,6 +90,17 @@ export function StandardTable<T>({
   defaultColumnOrder,
   sidePanel,
 }: StandardTableProps<T>) {
+  const actionsColumnDef = React.useMemo(() => {
+    if (!actions || hideLegacyActionColumn) return undefined;
+    return {
+      header: "",
+      cell: (row: T) => <ActionDropdown items={actions(row)} />,
+      size: actionColumnSize,
+      minSize: actionColumnSize,
+      maxSize: actionColumnSize,
+    };
+  }, [actions, hideLegacyActionColumn, actionColumnSize]);
+
   return (
     <DataTable
       columns={columns}
@@ -116,21 +127,9 @@ export function StandardTable<T>({
       loadingRows={loadingRows}
       loading={loading}
       error={error}
-      actionsColumn={
-        actions && !hideLegacyActionColumn
-          ? {
-              header: "",
-              cell: (row) => <ActionDropdown items={actions(row)} />,
-              size: actionColumnSize,
-              minSize: actionColumnSize,
-              maxSize: actionColumnSize,
-            }
-          : undefined
-      }
+      actionsColumn={actionsColumnDef}
       rowHoverActions={
-        actions && enableRowHoverActions !== false
-          ? (row) => actions(row)
-          : undefined
+        actions && enableRowHoverActions !== false ? actions : undefined
       }
       expandedRowKeys={
         expandedRowKeys ||

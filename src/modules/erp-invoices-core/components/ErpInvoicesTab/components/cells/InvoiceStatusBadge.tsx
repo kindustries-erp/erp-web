@@ -7,7 +7,9 @@ export interface TaxInvoiceStatusBadgeProps {
   status?: number | null;
 }
 
-export function TaxInvoiceStatusBadge({ status }: TaxInvoiceStatusBadgeProps) {
+export const TaxInvoiceStatusBadge = React.memo(function TaxInvoiceStatusBadge({
+  status,
+}: TaxInvoiceStatusBadgeProps) {
   if (status == null) return <>—</>;
 
   const lbl = formatTaxInvoiceStatus(status);
@@ -38,13 +40,15 @@ export function TaxInvoiceStatusBadge({ status }: TaxInvoiceStatusBadgeProps) {
       </Badge>
     </Tooltip>
   );
-}
+});
 
 export interface TaxProcessStatusBadgeProps {
   status?: number | null;
 }
 
-export function TaxProcessStatusBadge({ status }: TaxProcessStatusBadgeProps) {
+export const TaxProcessStatusBadge = React.memo(function TaxProcessStatusBadge({
+  status,
+}: TaxProcessStatusBadgeProps) {
   const lbl = formatTaxProcessStatus(status);
   if (lbl === "—") return <>—</>;
 
@@ -58,13 +62,15 @@ export function TaxProcessStatusBadge({ status }: TaxProcessStatusBadgeProps) {
       </Badge>
     </Tooltip>
   );
-}
+});
 
 export interface PostingStatusBadgeProps {
   status?: string | null;
 }
 
-export function PostingStatusBadge({ status }: PostingStatusBadgeProps) {
+export const PostingStatusBadge = React.memo(function PostingStatusBadge({
+  status,
+}: PostingStatusBadgeProps) {
   const isPosted = status === "POSTED";
   const lbl = isPosted ? "Hạch toán" : "Chưa hạch toán";
 
@@ -82,7 +88,7 @@ export function PostingStatusBadge({ status }: PostingStatusBadgeProps) {
       </Badge>
     </Tooltip>
   );
-}
+});
 
 export interface InvoiceValidBadgeProps {
   isValid?: boolean;
@@ -90,7 +96,7 @@ export interface InvoiceValidBadgeProps {
   invalidLabel?: string;
 }
 
-export function InvoiceValidBadge({
+export const InvoiceValidBadge = React.memo(function InvoiceValidBadge({
   isValid,
   validLabel = "Hợp lệ",
   invalidLabel = "Chưa hợp lệ",
@@ -114,4 +120,4 @@ export function InvoiceValidBadge({
       <span className="truncate block max-w-full">{invalidLabel}</span>
     </Badge>
   );
-}
+});

@@ -103,6 +103,193 @@ export function ErpInvoicesTab(props: ErpInvoicesTabProps) {
     handleBulkDownloadSelected,
   } = logic;
 
+  const rowActions = React.useCallback(
+    (inv: any) => {
+      const traCuuItems = [];
+      const thaoTacItems = [];
+
+      traCuuItems.push({
+        label: t("actionDetail", "Chi tiết hóa đơn"),
+        icon: <Eye className="w-3.5 h-3.5" />,
+        onClick: () => handleOpenInternal(inv, "view"),
+      });
+
+      if (canEditInvoice && inv.status !== "CANCELLED") {
+        thaoTacItems.push({
+          label: t("actionEdit", "Chỉnh sửa"),
+          icon: <Pencil className="w-3.5 h-3.5" />,
+          onClick: () => handleOpenInternal(inv, "edit"),
+        });
+      }
+
+      if (inv.xmlFileKey) {
+        thaoTacItems.push({
+          label: t("actionDownloadXml", "Tải XML"),
+          icon: <Download className="w-3.5 h-3.5" />,
+          onClick: () => void handleDownload(inv.id, "xml"),
+        });
+      }
+      const hasPdf =
+        Boolean(inv.pdfFileKey) ||
+        Boolean(inv.pdfFiles && inv.pdfFiles.length > 0) ||
+        Boolean(
+          inv.attachments && getPdfAttachments(inv.attachments).length > 0,
+        );
+      if (hasPdf) {
+        thaoTacItems.push({
+          label: t("actionDownloadPdf", "Tải PDF"),
+          icon: <Download className="w-3.5 h-3.5" />,
+          onClick: async () => {
+            if (inv.attachments && inv.attachments.length > 1) {
+              try {
+                showToast({
+                  title: "Đang nén file PDF...",
+                  variant: "default",
+                });
+                const blob = await erpInvoicesCoreApi.downloadPdfsZip(inv.id);
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `hoadon_${inv.id}_pdfs.zip`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+              } catch {
+                showToast({
+                  title: "Không thể tải file PDF",
+                  variant: "destructive",
+                });
+              }
+            } else if (inv.attachments && inv.attachments.length === 1) {
+              const f = inv.attachments[0];
+              try {
+                const { url } = await erpInvoicesCoreApi.getPdfDownloadUrl(
+                  inv.id,
+                  f.attachment?.fileKey,
+                  false,
+                );
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = f.attachment?.fileName || "document.pdf";
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+              } catch {
+                showToast({
+                  title: "Không thể tải file PDF",
+                  variant: "destructive",
+                });
+              }
+            } else if (inv.pdfFileKey) {
+              void handleDownload(inv.id, "pdf");
+            }
+          },
+        });
+      }
+
+      if (canEditInvoice && inv.status !== "CANCELLED") {
+        thaoTacItems.push({
+          label: t("actionNetOff", "Cấn trừ sao kê"),
+          icon: <Scale className="w-3.5 h-3.5" />,
+          onClick: () => setNetOffInvoice(inv),
+        });
+      }
+
+      if (inv.status === "DRAFT") {
+        thaoTacItems.push({
+          label: t("actionDelete", "Xóa"),
+          icon: <Trash className="w-3.5 h-3.5" />,
+          variant: "danger" as const,
+          onClick: () => {
+            handleOpenInternal(inv);
+            formHook.setDeleteConfirm(true);
+          },
+        });
+      }
+
+      return [
+        {
+          groupLabel: t("groupTraCuu", "Tra cứu"),
+          items: traCuuItems,
+        },
+        {
+          groupLabel: t("groupThaoTac", "Thao tác"),
+          items: thaoTacItems,
+        },
+        {
+          groupLabel: t("groupCauHinh", "Cấu hình"),
+          items: [
+            {
+              label: t(
+                "invoiceConfig.customFields",
+                "Cấu hình trường tùy chỉnh",
+              ),
+              icon: <Settings className="w-3.5 h-3.5 text-violet-500" />,
+              onClick: () => openCustomFieldsDrawer("INVOICE", "Hóa đơn"),
+            },
+          ],
+        },
+      ];
+    },
+    [
+      t,
+      canEditInvoice,
+      handleOpenInternal,
+      handleDownload,
+      showToast,
+      setNetOffInvoice,
+      formHook,
+      openCustomFieldsDrawer,
+    ],
+  );
+
+  const createActions = React.useMemo(
+    () => [
+      {
+        groupLabel: t("groupTraCuu", "Tra cứu"),
+        items: [
+          {
+            label: t("exportExcel", "Xuất Excel"),
+            icon: <Download className="w-4 h-4 text-green-600" />,
+            onClick: () => handleExportExcel(),
+          },
+        ],
+      },
+      ...(canEditInvoice
+        ? [
+            {
+              groupLabel: t("groupThaoTac", "Thao tác"),
+              items: [
+                {
+                  label: t("loginTaxPortal", "Đăng nhập Cổng Thuế"),
+                  icon: <KeyRound className="w-4 h-4 text-primary" />,
+                  onClick: () => setPortalAuthOpen(true),
+                },
+              ],
+            },
+          ]
+        : []),
+      {
+        groupLabel: t("groupCauHinh", "Cấu hình"),
+        items: [
+          {
+            label: t("invoiceConfig.customFields", "Cấu hình trường tùy chỉnh"),
+            icon: <Settings className="w-4 h-4 text-violet-500" />,
+            onClick: () => openCustomFieldsDrawer("INVOICE", "Hóa đơn"),
+          },
+        ],
+      },
+    ],
+    [
+      t,
+      canEditInvoice,
+      handleExportExcel,
+      setPortalAuthOpen,
+      openCustomFieldsDrawer,
+    ],
+  );
+
   return (
     <>
       <SpreadsheetPageTemplate
@@ -151,188 +338,17 @@ export function ErpInvoicesTab(props: ErpInvoicesTabProps) {
         onRefresh={() => void listHook.loadInvoices()}
         enableRowSelection={true}
         rowSelection={rowSelection}
-        onRowSelectionChange={(updater) =>
-          setRowSelection((prev) =>
-            typeof updater === "function" ? updater(prev) : updater,
-          )
-        }
+        onRowSelectionChange={setRowSelection}
         defaultColumnVisibility={DEFAULT_INVOICE_COLUMN_VISIBILITY}
         bulkActionsNode={bulkActionsNode}
         customActionsNode={viewTabsNode}
         filterConfig={filterConfig}
         filter={listHook.filterPanel}
-        rowActions={(inv) => {
-          const traCuuItems = [];
-          const thaoTacItems = [];
-
-          traCuuItems.push({
-            label: t("actionDetail", "Chi tiết hóa đơn"),
-            icon: <Eye className="w-3.5 h-3.5" />,
-            onClick: () => handleOpenInternal(inv, "view"),
-          });
-
-          if (canEditInvoice && inv.status !== "CANCELLED") {
-            thaoTacItems.push({
-              label: t("actionEdit", "Chỉnh sửa"),
-              icon: <Pencil className="w-3.5 h-3.5" />,
-              onClick: () => handleOpenInternal(inv, "edit"),
-            });
-          }
-
-          if (inv.xmlFileKey) {
-            thaoTacItems.push({
-              label: t("actionDownloadXml", "Tải XML"),
-              icon: <Download className="w-3.5 h-3.5" />,
-              onClick: () => void handleDownload(inv.id, "xml"),
-            });
-          }
-          const hasPdf =
-            Boolean(inv.pdfFileKey) ||
-            Boolean(inv.pdfFiles && inv.pdfFiles.length > 0) ||
-            Boolean(
-              inv.attachments && getPdfAttachments(inv.attachments).length > 0,
-            );
-          if (hasPdf) {
-            thaoTacItems.push({
-              label: t("actionDownloadPdf", "Tải PDF"),
-              icon: <Download className="w-3.5 h-3.5" />,
-              onClick: async () => {
-                if (inv.attachments && inv.attachments.length > 1) {
-                  try {
-                    showToast({
-                      title: "Đang nén file PDF...",
-                      variant: "default",
-                    });
-                    const blob = await erpInvoicesCoreApi.downloadPdfsZip(
-                      inv.id,
-                    );
-                    const url = window.URL.createObjectURL(blob);
-                    const a = document.createElement("a");
-                    a.href = url;
-                    a.download = `hoadon_${inv.id}_pdfs.zip`;
-                    document.body.appendChild(a);
-                    a.click();
-                    window.URL.revokeObjectURL(url);
-                    document.body.removeChild(a);
-                  } catch {
-                    showToast({
-                      title: "Không thể tải file PDF",
-                      variant: "destructive",
-                    });
-                  }
-                } else if (inv.attachments && inv.attachments.length === 1) {
-                  const f = inv.attachments[0];
-                  try {
-                    const { url } = await erpInvoicesCoreApi.getPdfDownloadUrl(
-                      inv.id,
-                      f.attachment?.fileKey,
-                      false,
-                    );
-                    const a = document.createElement("a");
-                    a.href = url;
-                    a.download = f.attachment?.fileName || "document.pdf";
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                  } catch {
-                    showToast({
-                      title: "Không thể tải file PDF",
-                      variant: "destructive",
-                    });
-                  }
-                } else if (inv.pdfFileKey) {
-                  void handleDownload(inv.id, "pdf");
-                }
-              },
-            });
-          }
-
-          if (canEditInvoice && inv.status !== "CANCELLED") {
-            thaoTacItems.push({
-              label: t("actionNetOff", "Cấn trừ sao kê"),
-              icon: <Scale className="w-3.5 h-3.5" />,
-              onClick: () => setNetOffInvoice(inv),
-            });
-          }
-
-          if (inv.status === "DRAFT") {
-            thaoTacItems.push({
-              label: t("actionDelete", "Xóa"),
-              icon: <Trash className="w-3.5 h-3.5" />,
-              variant: "danger" as const,
-              onClick: () => {
-                handleOpenInternal(inv);
-                formHook.setDeleteConfirm(true);
-              },
-            });
-          }
-
-          return [
-            {
-              groupLabel: t("groupTraCuu", "Tra cứu"),
-              items: traCuuItems,
-            },
-            {
-              groupLabel: t("groupThaoTac", "Thao tác"),
-              items: thaoTacItems,
-            },
-            {
-              groupLabel: t("groupCauHinh", "Cấu hình"),
-              items: [
-                {
-                  label: t(
-                    "invoiceConfig.customFields",
-                    "Cấu hình trường tùy chỉnh",
-                  ),
-                  icon: <Settings className="w-3.5 h-3.5 text-violet-500" />,
-                  onClick: () => openCustomFieldsDrawer("INVOICE", "Hóa đơn"),
-                },
-              ],
-            },
-          ];
-        }}
+        rowActions={rowActions}
         onCreate={() => setImportModalOpen(true)}
         createLabel={t("syncInvoices", "Đồng bộ")}
         createIcon={<DownloadCloud className="w-4 h-4 mr-1 text-indigo-100" />}
-        createActions={[
-          {
-            groupLabel: t("groupTraCuu", "Tra cứu"),
-            items: [
-              {
-                label: t("exportExcel", "Xuất Excel"),
-                icon: <Download className="w-4 h-4 text-green-600" />,
-                onClick: () => handleExportExcel(),
-              },
-            ],
-          },
-          ...(canEditInvoice
-            ? [
-                {
-                  groupLabel: t("groupThaoTac", "Thao tác"),
-                  items: [
-                    {
-                      label: t("loginTaxPortal", "Đăng nhập Cổng Thuế"),
-                      icon: <KeyRound className="w-4 h-4 text-primary" />,
-                      onClick: () => setPortalAuthOpen(true),
-                    },
-                  ],
-                },
-              ]
-            : []),
-          {
-            groupLabel: t("groupCauHinh", "Cấu hình"),
-            items: [
-              {
-                label: t(
-                  "invoiceConfig.customFields",
-                  "Cấu hình trường tùy chỉnh",
-                ),
-                icon: <Settings className="w-4 h-4 text-violet-500" />,
-                onClick: () => openCustomFieldsDrawer("INVOICE", "Hóa đơn"),
-              },
-            ],
-          },
-        ]}
+        createActions={createActions}
       />
 
       <InvoiceDrawers

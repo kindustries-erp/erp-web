@@ -24,6 +24,9 @@ export function useInvoiceTableHandlers({
   branches,
   listHook,
 }: UseInvoiceTableHandlersOptions) {
+  const { setSort, setColumnSearch, setColumnFilter } = listHook.tableState;
+  const { setPage } = listHook;
+
   const getSortState = useCallback(
     (key: string) => {
       if (listHook.tableState.sorts.includes(key)) return "asc";
@@ -35,26 +38,26 @@ export function useInvoiceTableHandlers({
 
   const handleSortChange = useCallback(
     (key: string, state: "asc" | "desc" | "none") => {
-      listHook.tableState.setSort(key, state);
-      listHook.setPage(1);
+      setSort(key, state);
+      setPage(1);
     },
-    [listHook],
+    [setSort, setPage],
   );
 
   const handleSearchChange = useCallback(
     (key: string, val: string) => {
-      listHook.tableState.setColumnSearch(key, val);
-      listHook.setPage(1);
+      setColumnSearch(key, val);
+      setPage(1);
     },
-    [listHook],
+    [setColumnSearch, setPage],
   );
 
   const handleFilterChange = useCallback(
     (key: string, vals: string[]) => {
-      listHook.tableState.setColumnFilter(key, vals);
-      listHook.setPage(1);
+      setColumnFilter(key, vals);
+      setPage(1);
     },
-    [listHook],
+    [setColumnFilter, setPage],
   );
 
   const fetchInvoiceOptions = useCallback(

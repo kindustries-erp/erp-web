@@ -285,25 +285,53 @@ export function useErpInvoicesTabLogic({
     t,
   });
 
-  const columns = useInvoiceColumns({
-    direction,
-    t,
-    branches,
-    listHook,
-    openPopoverId: modals.openPopoverId,
-    setOpenPopoverId: modals.setOpenPopoverId,
-    setPreviewPdf: modals.setPreviewPdf,
-    setSelectedPartner: modals.setSelectedPartner,
-    setPartnerDrawerOpen: modals.setPartnerDrawerOpen,
-    handleOpenInternal: modals.handleOpenInternal,
-    handleDownload: modals.handleDownload,
-    handlePreviewPdf: modals.handlePreviewPdf,
-    getSortState: tableHandlers.getSortState,
-    handleSortChange: tableHandlers.handleSortChange,
-    handleSearchChange: tableHandlers.handleSearchChange,
-    handleFilterChange: tableHandlers.handleFilterChange,
-    fetchInvoiceOptions: tableHandlers.fetchInvoiceOptions,
-  });
+  const invoiceColumnsOptions = useMemo(
+    () => ({
+      direction,
+      t,
+      branches,
+      listHook,
+      openPopoverId: modals.openPopoverId,
+      setOpenPopoverId: modals.setOpenPopoverId,
+      setPreviewPdf: modals.setPreviewPdf,
+      setSelectedPartner: modals.setSelectedPartner,
+      setPartnerDrawerOpen: modals.setPartnerDrawerOpen,
+      handleOpenInternal: modals.handleOpenInternal,
+      handleDownload: modals.handleDownload,
+      handlePreviewPdf: modals.handlePreviewPdf,
+      getSortState: tableHandlers.getSortState,
+      handleSortChange: tableHandlers.handleSortChange,
+      handleSearchChange: tableHandlers.handleSearchChange,
+      handleFilterChange: tableHandlers.handleFilterChange,
+      fetchInvoiceOptions: tableHandlers.fetchInvoiceOptions,
+    }),
+    [
+      direction,
+      t,
+      branches,
+      listHook.tableState.columnFilters,
+      listHook.tableState.columnSearch,
+      listHook.tableState.sorts,
+      listHook.activeTaxTab,
+      listHook.filterPanel.state.dateFrom,
+      listHook.filterPanel.state.dateTo,
+      modals.openPopoverId,
+      modals.setOpenPopoverId,
+      modals.setPreviewPdf,
+      modals.setSelectedPartner,
+      modals.setPartnerDrawerOpen,
+      modals.handleOpenInternal,
+      modals.handleDownload,
+      modals.handlePreviewPdf,
+      tableHandlers.getSortState,
+      tableHandlers.handleSortChange,
+      tableHandlers.handleSearchChange,
+      tableHandlers.handleFilterChange,
+      tableHandlers.fetchInvoiceOptions,
+    ],
+  );
+
+  const columns = useInvoiceColumns(invoiceColumnsOptions);
 
   const summaryRow = useInvoiceSummary(listHook.invoices);
 

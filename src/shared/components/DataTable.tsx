@@ -42,6 +42,7 @@ import {
   type Column,
   type Updater,
   type ColumnSizingState,
+  type Row,
 } from "@tanstack/react-table";
 import { Skeleton } from "@/shared/components/Skeleton";
 import { TablePagination } from "@/shared/components/TablePagination";
@@ -341,6 +342,235 @@ function ColumnToggle<T>({
     </Popover.Root>
   );
 }
+
+const SelectionHeaderCheckbox = React.memo(function SelectionHeaderCheckbox({
+  table,
+}: {
+  table: TanstackTable<any>;
+}) {
+  const checked =
+    table.getIsAllPageRowsSelected() ||
+    (table.getIsSomePageRowsSelected() && "indeterminate");
+  const onCheckedChange = useCallback(
+    (value: any) => {
+      table.toggleAllPageRowsSelected(!!value);
+    },
+    [table],
+  );
+
+  return (
+    <Checkbox
+      checked={checked}
+      onCheckedChange={onCheckedChange}
+      aria-label="Select all"
+      className="translate-y-[2px]"
+    />
+  );
+});
+
+const SelectionCellCheckbox = React.memo(function SelectionCellCheckbox({
+  row,
+}: {
+  row: Row<any>;
+}) {
+  const isSelected = row.getIsSelected();
+  const onCheckedChange = useCallback(
+    (value: any) => {
+      row.toggleSelected(!!value);
+    },
+    [row],
+  );
+
+  return (
+    <Checkbox
+      checked={isSelected}
+      onCheckedChange={onCheckedChange}
+      aria-label="Select row"
+      className="translate-y-[2px]"
+      onClick={(e) => e.stopPropagation()}
+    />
+  );
+});
+
+interface DataTableRowMemoProps<T> {
+  row: Row<T>;
+  rowKey: string;
+  isExpanded?: boolean;
+  isContextMenuActive?: boolean;
+  rowIndex: number;
+  isSelected: boolean;
+  getRowClassName?: (record: T, index: number) => string | undefined;
+  onRowClick?: (record: T) => void;
+  onRowContextMenu?: (
+    record: T,
+    index: number,
+    event: React.MouseEvent,
+  ) => void;
+  enableRowContextMenu?: boolean;
+  rowHoverActions?: (
+    record: T,
+    index: number,
+    meta?: any,
+  ) => ActionDropdownItem[] | undefined;
+  setContextMenu: React.Dispatch<
+    React.SetStateAction<{
+      x: number;
+      y: number;
+      items: ActionDropdownItem[];
+      rowKey: string;
+    } | null>
+  >;
+  variant?: "default" | "compact" | "cards" | "spreadsheet";
+  enableRowSelection?: boolean;
+  enableColumnResizing?: boolean;
+  renderSubRow?: (record: T) => React.ReactNode;
+}
+
+function DataTableRowInner<T>({
+  row,
+  rowKey,
+  isExpanded,
+  isContextMenuActive,
+  rowIndex,
+  isSelected,
+  getRowClassName,
+  onRowClick,
+  onRowContextMenu,
+  enableRowContextMenu,
+  rowHoverActions,
+  setContextMenu,
+  variant,
+  enableRowSelection,
+  enableColumnResizing,
+  renderSubRow,
+}: DataTableRowMemoProps<T>) {
+  return (
+    <React.Fragment key={row.id}>
+      <TableRow
+        data-state={isSelected && "selected"}
+        data-context-menu-active={isContextMenuActive ? "true" : undefined}
+        className={cn(
+          "group",
+          onRowClick && "cursor-pointer",
+          isExpanded && "bg-muted/5 font-medium border-l-2 border-l-primary",
+          isContextMenuActive && "bg-primary/[0.04] dark:bg-primary/[0.08]",
+          getRowClassName?.(row.original, rowIndex),
+        )}
+        onClick={onRowClick ? () => onRowClick(row.original) : undefined}
+        onContextMenu={(e) => {
+          if (onRowContextMenu) {
+            onRowContextMenu(row.original, rowIndex + 1, e);
+          }
+          if (enableRowContextMenu !== false) {
+            let actionItems: ActionDropdownItem[] | undefined;
+            if (rowHoverActions) {
+              actionItems = rowHoverActions(
+                row.original,
+                rowIndex + 1,
+                (row as any).table?.options?.meta,
+              );
+            }
+            if (actionItems && actionItems.length > 0) {
+              e.preventDefault();
+              e.stopPropagation();
+              setContextMenu({
+                x: e.clientX,
+                y: e.clientY,
+                items: actionItems,
+                rowKey,
+              });
+            }
+          }
+        }}
+      >
+        {row.getVisibleCells().map((cell, index) => {
+          const isHoverActionsCol = cell.column.id === "__hover_actions";
+          if (isHoverActionsCol) {
+            return (
+              <TableCell
+                key={cell.id}
+                className="w-[116px] min-w-[116px] max-w-[116px] p-0 m-0 border-none bg-transparent sticky right-0 z-20 overflow-visible pointer-events-none"
+                style={{
+                  width: 116,
+                  minWidth: 116,
+                  maxWidth: 116,
+                }}
+              >
+                {flexRender(cell.column.columnDef.cell, cell.getContext())}
+              </TableCell>
+            );
+          }
+          const meta = cell.column.columnDef.meta as DataTableRowMeta;
+          const isFirstCol = index === 0;
+          const isActionsCol = cell.column.id === "__actions";
+          const actionsWidth = cell.column.getSize();
+          return (
+            <TableCell
+              key={cell.id}
+              className={cn(
+                meta?.className,
+                isFirstCol &&
+                  !enableRowSelection &&
+                  variant !== "spreadsheet" &&
+                  "sticky left-0 bg-surface group-hover:bg-surface-hover shadow-[1px_0_0_0_var(--border-light)] z-10",
+                variant === "spreadsheet" &&
+                  "border-r border-border py-1 text-xs",
+                variant === "spreadsheet" &&
+                  !["__actions", "__selection", "__expand"].includes(
+                    cell.column.id,
+                  ) &&
+                  "px-2 truncate",
+              )}
+              style={{
+                width: isActionsCol ? actionsWidth : undefined,
+                minWidth: isActionsCol ? actionsWidth : undefined,
+                maxWidth: isActionsCol
+                  ? actionsWidth
+                  : enableColumnResizing
+                    ? cell.column.getSize()
+                    : undefined,
+              }}
+            >
+              {flexRender(cell.column.columnDef.cell, cell.getContext())}
+            </TableCell>
+          );
+        })}
+        <TableCell
+          className="w-auto p-0 m-0 border-none"
+          style={{ width: "auto" }}
+        />
+      </TableRow>
+      {renderSubRow && isExpanded && (
+        <TableRow className="bg-muted/5 hover:bg-muted/5 border-b border-border/60">
+          <TableCell
+            colSpan={row.getVisibleCells().length + 1}
+            className="p-4 bg-muted/20"
+          >
+            {renderSubRow(row.original)}
+          </TableCell>
+        </TableRow>
+      )}
+    </React.Fragment>
+  );
+}
+
+const DataTableRowMemo = React.memo(
+  DataTableRowInner,
+  (prev: any, next: any) => {
+    return (
+      prev.isSelected === next.isSelected &&
+      prev.isExpanded === next.isExpanded &&
+      prev.isContextMenuActive === next.isContextMenuActive &&
+      prev.rowIndex === next.rowIndex &&
+      prev.row.original === next.row.original &&
+      prev.variant === next.variant &&
+      prev.enableRowSelection === next.enableRowSelection &&
+      prev.enableColumnResizing === next.enableColumnResizing &&
+      prev.onRowClick === next.onRowClick &&
+      prev.getRowClassName === next.getRowClassName
+    );
+  },
+) as typeof DataTableRowInner;
 
 import { subscribePortalTarget } from "./portalStore";
 
@@ -772,28 +1002,8 @@ export function DataTable<T>({
     if (enableRowSelection) {
       cols.unshift({
         id: "__selection",
-        header: ({ table }) => (
-          <Checkbox
-            checked={
-              table.getIsAllPageRowsSelected() ||
-              (table.getIsSomePageRowsSelected() && "indeterminate")
-            }
-            onCheckedChange={(value) =>
-              table.toggleAllPageRowsSelected(!!value)
-            }
-            aria-label="Select all"
-            className="translate-y-[2px]"
-          />
-        ),
-        cell: ({ row }) => (
-          <Checkbox
-            checked={row.getIsSelected()}
-            onCheckedChange={(value) => row.toggleSelected(!!value)}
-            aria-label="Select row"
-            className="translate-y-[2px]"
-            onClick={(e) => e.stopPropagation()}
-          />
-        ),
+        header: ({ table }) => <SelectionHeaderCheckbox table={table} />,
+        cell: ({ row }) => <SelectionCellCheckbox row={row} />,
         enableResizing: false,
         size: 40,
         meta: {
@@ -1229,140 +1439,25 @@ export function DataTable<T>({
                       ? (page - 1) * pageSize + row.index
                       : row.index;
                   return (
-                    <React.Fragment key={row.id}>
-                      <TableRow
-                        data-state={row.getIsSelected() && "selected"}
-                        data-context-menu-active={
-                          isContextMenuActive ? "true" : undefined
-                        }
-                        className={cn(
-                          "group",
-                          onRowClick && "cursor-pointer",
-                          isExpanded &&
-                            "bg-muted/5 font-medium border-l-2 border-l-primary",
-                          isContextMenuActive &&
-                            "bg-primary/[0.04] dark:bg-primary/[0.08]",
-                          getRowClassName?.(row.original, rowIndex),
-                        )}
-                        onClick={
-                          onRowClick
-                            ? () => onRowClick(row.original)
-                            : undefined
-                        }
-                        onContextMenu={(e) => {
-                          if (onRowContextMenu) {
-                            onRowContextMenu(
-                              row.original,
-                              page && pageSize
-                                ? (page - 1) * pageSize + row.index + 1
-                                : row.index + 1,
-                              e,
-                            );
-                          }
-                          if (enableRowContextMenu !== false) {
-                            let actionItems: ActionDropdownItem[] | undefined;
-                            if (rowHoverActions) {
-                              actionItems = rowHoverActions(
-                                row.original,
-                                page && pageSize
-                                  ? (page - 1) * pageSize + row.index + 1
-                                  : row.index + 1,
-                                table.options.meta,
-                              );
-                            }
-                            if (actionItems && actionItems.length > 0) {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              setContextMenu({
-                                x: e.clientX,
-                                y: e.clientY,
-                                items: actionItems,
-                                rowKey,
-                              });
-                            }
-                          }
-                        }}
-                      >
-                        {row.getVisibleCells().map((cell, index) => {
-                          const isHoverActionsCol =
-                            cell.column.id === "__hover_actions";
-                          if (isHoverActionsCol) {
-                            return (
-                              <TableCell
-                                key={cell.id}
-                                className="w-[116px] min-w-[116px] max-w-[116px] p-0 m-0 border-none bg-transparent sticky right-0 z-20 overflow-visible pointer-events-none"
-                                style={{
-                                  width: 116,
-                                  minWidth: 116,
-                                  maxWidth: 116,
-                                }}
-                              >
-                                {flexRender(
-                                  cell.column.columnDef.cell,
-                                  cell.getContext(),
-                                )}
-                              </TableCell>
-                            );
-                          }
-                          const meta = cell.column.columnDef
-                            .meta as DataTableRowMeta;
-                          const isFirstCol = index === 0;
-                          const isActionsCol = cell.column.id === "__actions";
-                          const actionsWidth = cell.column.getSize();
-                          return (
-                            <TableCell
-                              key={cell.id}
-                              className={cn(
-                                meta.className,
-                                isFirstCol &&
-                                  !enableRowSelection &&
-                                  variant !== "spreadsheet" &&
-                                  "sticky left-0 bg-surface group-hover:bg-surface-hover shadow-[1px_0_0_0_var(--border-light)] z-10",
-                                variant === "spreadsheet" &&
-                                  "border-r border-border py-1 text-xs",
-                                variant === "spreadsheet" &&
-                                  ![
-                                    "__actions",
-                                    "__selection",
-                                    "__expand",
-                                  ].includes(cell.column.id) &&
-                                  "px-2 truncate",
-                              )}
-                              style={{
-                                width: isActionsCol ? actionsWidth : undefined,
-                                minWidth: isActionsCol
-                                  ? actionsWidth
-                                  : undefined,
-                                maxWidth: isActionsCol
-                                  ? actionsWidth
-                                  : enableColumnResizing
-                                    ? cell.column.getSize()
-                                    : undefined,
-                              }}
-                            >
-                              {flexRender(
-                                cell.column.columnDef.cell,
-                                cell.getContext(),
-                              )}
-                            </TableCell>
-                          );
-                        })}
-                        <TableCell
-                          className="w-auto p-0 m-0 border-none"
-                          style={{ width: "auto" }}
-                        />
-                      </TableRow>
-                      {renderSubRow && isExpanded && (
-                        <TableRow className="bg-muted/5 hover:bg-muted/5 border-b border-border/60">
-                          <TableCell
-                            colSpan={row.getVisibleCells().length + 1}
-                            className="p-4 bg-muted/20"
-                          >
-                            {renderSubRow(row.original)}
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </React.Fragment>
+                    <DataTableRowMemo
+                      key={row.id}
+                      row={row}
+                      rowKey={rowKey}
+                      isExpanded={isExpanded}
+                      isContextMenuActive={isContextMenuActive}
+                      rowIndex={rowIndex}
+                      isSelected={row.getIsSelected()}
+                      getRowClassName={getRowClassName}
+                      onRowClick={onRowClick}
+                      onRowContextMenu={onRowContextMenu}
+                      enableRowContextMenu={enableRowContextMenu}
+                      rowHoverActions={rowHoverActions}
+                      setContextMenu={setContextMenu}
+                      variant={variant}
+                      enableRowSelection={enableRowSelection}
+                      enableColumnResizing={enableColumnResizing}
+                      renderSubRow={renderSubRow}
+                    />
                   );
                 })}
             </TableBody>
