@@ -80,15 +80,15 @@ graph TD
 
 ### Mẫu cấu trúc Tab chuẩn cho các phân hệ ERP:
 
-| Phân hệ / Module | Tab 1 (Main Content) | Tab 2 (Financials / Execution) | Tab 3 (Network Graph) | Tab 4 (Audit & Sync) |
-| :--- | :--- | :--- | :--- | :--- |
-| **Sổ báo giá Garage** (`GarageCaseStandaloneDrawer`) | Chi tiết báo giá (Preview Sheet) | Tài chính & Công nợ (Settlements + Invoices) | Chứng từ liên kết (Traceability Graph - full width) | Lịch sử & Đồng bộ (Audit Timeline) |
-| **Hóa đơn ERP** (`ErpInvoiceInternalDrawer`) | Chi tiết hóa đơn (XML/PDF + Lines) | Hạch toán & Cấn trừ (Posting + Settlements) | Mạng lưới chứng từ (Traceability Graph - full width) | Lịch sử & Thuế GDT (Audit Timeline) |
-| **Đơn mua hàng PO** (`PurchaseOrderDrawer`) | Chi tiết đơn PO (Items & Pricing) | Tiến độ nhập & Thanh toán (GR Timeline + Payments) | Chuỗi chứng từ PO (Traceability Graph - full width) | Lịch sử đơn hàng (Audit Timeline) |
-| **Phiếu kho NK/XK/KK** (`InventoryVoucherFormDrawer`) | Chi tiết phiếu kho (Lines & Quantities) | Định danh Serial / Lots (Serials Lifecycle) | Chứng từ gốc liên kết (Traceability Graph - full width) | Lịch sử xuất nhập (Audit Timeline) |
-| **Đơn bán hàng SO** (`SoFormDrawer`) | Chi tiết đơn bán (SO Lines) | Bàn giao Serial & Thu tiền (Serials + Receipts) | Mạng lưới phân phối (Traceability Graph - full width) | Lịch sử đơn SO (Audit Timeline) |
-| **Lệnh sản xuất** (`ProductionOrderDrawer`) | Lệnh SX & Định mức BOM | As-Built BOM & Xuất nhập NVL | Luồng chuỗi cung ứng (Traceability Graph - full width) | Nhật ký công đoạn (Audit Timeline) |
-| **Sao kê ngân hàng** (`BankTransactionDetailDrawer`) | Chi tiết giao dịch (Txn Meta) | Đối soát & Cấn trừ (Matched Vouchers/Invoices) | Mạng lưới dòng tiền (Traceability Graph - full width) | Lịch sử hạch toán (Audit Timeline) |
+| Phân hệ / Module | Tab 1 (Main Content) | Tab 2 (Transactions / Execution) | Tab 3 (Financials / NetOff) | Tab 4 (Network Graph) | Tab 5+ (Attachments / Accounting / History) |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **Hóa đơn ERP** (`ErpInvoiceInternalDrawer`) | **Chi tiết** (XML/PDF + Form) | **Giao dịch** (Hồ sơ đối tác & Hóa đơn liên quan 2 cột) | **Tài chính** (Cấn trừ sao kê) | **Chứng từ liên kết** (Traceability Graph - full width) | **Đính kèm** $\to$ **Hạch toán** $\to$ **Lịch sử** |
+| **Sổ báo giá Garage** (`GarageCaseStandaloneDrawer`) | Chi tiết báo giá (Preview Sheet) | Dịch vụ & Phụ tùng thi công | Tài chính & Công nợ (Settlements) | Chứng từ liên kết (Traceability Graph - full width) | Lịch sử & Đồng bộ (Audit Timeline) |
+| **Đơn mua hàng PO** (`PurchaseOrderDrawer`) | Chi tiết đơn PO (Items & Pricing) | Tiến độ nhập & Thanh toán (GR Timeline) | Công nợ & Hóa đơn VAT | Chuỗi chứng từ PO (Traceability Graph - full width) | Lịch sử đơn hàng (Audit Timeline) |
+| **Phiếu kho NK/XK/KK** (`InventoryVoucherFormDrawer`) | Chi tiết phiếu kho (Lines & Quantities) | Định danh Serial / Lots (Lifecycles) | Định giá vốn & Phí phát sinh | Chứng từ gốc liên kết (Traceability Graph - full width) | Lịch sử xuất nhập (Audit Timeline) |
+| **Đơn bán hàng SO** (`SoFormDrawer`) | Chi tiết đơn bán (SO Lines) | Bàn giao Serial & Thu tiền | Hạch toán doanh thu | Mạng lưới phân phối (Traceability Graph - full width) | Lịch sử đơn SO (Audit Timeline) |
+| **Lệnh sản xuất** (`ProductionOrderDrawer`) | Lệnh SX & Định mức BOM | As-Built BOM & Xuất nhập NVL | Nhật ký công đoạn | Luồng chuỗi cung ứng (Traceability Graph - full width) | Lịch sử sản xuất (Audit Timeline) |
+| **Sao kê ngân hàng** (`BankTransactionDetailDrawer`) | Chi tiết giao dịch (Txn Meta) | Đối soát & Cấn trừ hóa đơn | Định khoản kế toán sổ quỹ | Mạng lưới dòng tiền (Traceability Graph - full width) | Lịch sử đối soát (Audit Timeline) |
 
 ---
 
