@@ -133,20 +133,4 @@ export function DataTableRowInner<T>({
   );
 }
 
-export const DataTableRowMemo = React.memo(
-  DataTableRowInner,
-  (prev: any, next: any) => {
-    return (
-      prev.isSelected === next.isSelected &&
-      prev.isExpanded === next.isExpanded &&
-      prev.isContextMenuActive === next.isContextMenuActive &&
-      prev.rowIndex === next.rowIndex &&
-      prev.row.original === next.row.original &&
-      prev.variant === next.variant &&
-      prev.enableRowSelection === next.enableRowSelection &&
-      prev.enableColumnResizing === next.enableColumnResizing &&
-      prev.onRowClick === next.onRowClick &&
-      prev.getRowClassName === next.getRowClassName
-    );
-  },
-) as typeof DataTableRowInner;
+export const DataTableRowMemo = DataTableRowInner;
