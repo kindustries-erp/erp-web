@@ -22,7 +22,6 @@ export interface GeneralColumnsOptions {
   openPopoverId: string | null;
   setOpenPopoverId: (id: string | null) => void;
   setPreviewPdf: (pdf: any) => void;
-  onSelectPartner: (partner: { taxCode: string; partnerName: string }) => void;
   handleOpenInternal: (inv: any, mode?: "view" | "edit") => void;
   handleDownload: (id: string, type: "pdf" | "xml") => Promise<void>;
   handlePreviewPdf: (
@@ -52,7 +51,6 @@ export function useGeneralColumns({
   openPopoverId,
   setOpenPopoverId,
   setPreviewPdf,
-  onSelectPartner,
   handleOpenInternal,
   handleDownload,
   handlePreviewPdf,
@@ -244,11 +242,7 @@ export function useGeneralColumns({
         headerClassName: "text-center",
         className: "text-left",
         cell: (inv: ErpInvoice) => (
-          <InvoicePartnerCell
-            inv={inv}
-            direction={direction}
-            onSelectPartner={onSelectPartner}
-          />
+          <InvoicePartnerCell inv={inv} direction={direction} />
         ),
       },
       taxCode: {
@@ -274,11 +268,7 @@ export function useGeneralColumns({
         headerClassName: "text-center",
         className: "text-muted-foreground text-xs text-left",
         cell: (inv: ErpInvoice) => (
-          <InvoiceTaxCodeCell
-            inv={inv}
-            direction={direction}
-            onSelectPartner={onSelectPartner}
-          />
+          <InvoiceTaxCodeCell inv={inv} direction={direction} />
         ),
       },
       branchId: {
@@ -394,7 +384,6 @@ export function useGeneralColumns({
     openPopoverId,
     setOpenPopoverId,
     setPreviewPdf,
-    onSelectPartner,
     handleOpenInternal,
     handleDownload,
     handlePreviewPdf,

@@ -118,6 +118,7 @@ export const erpInvoicesVi = {
   groupTraCuu: "Tra cứu",
   groupThaoTac: "Thao tác",
   actionDetail: "Chi tiết",
+  actionPartnerTransactions: "Giao dịch đối tác",
   actionDownloadXml: "Tải XML",
   actionDownloadPdf: "Tải PDF",
   actionEdit: "Chỉnh sửa",

@@ -90,6 +90,7 @@ export const erpInvoicesEn = {
   groupTraCuu: "Lookup",
   groupThaoTac: "Actions",
   actionDetail: "Detail",
+  actionPartnerTransactions: "Partner Transactions",
   actionDownloadXml: "Download XML",
   actionDownloadPdf: "Download PDF",
   actionEdit: "Edit",

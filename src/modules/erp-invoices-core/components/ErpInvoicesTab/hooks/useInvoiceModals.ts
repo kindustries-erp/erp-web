@@ -34,11 +34,6 @@ export function useInvoiceModals({
     isAttachment?: boolean;
   } | null>(null);
   const [netOffInvoice, setNetOffInvoice] = useState<any | null>(null);
-  const [selectedPartner, setSelectedPartner] = useState<{
-    taxCode: string;
-    partnerName: string;
-  } | null>(null);
-  const [partnerDrawerOpen, setPartnerDrawerOpen] = useState(false);
 
   useEffect(() => {
     const handleOpenDoc = (e: Event) => {
@@ -59,8 +54,9 @@ export function useInvoiceModals({
         serialNo?: string | null;
       },
       mode: "view" | "edit" = "view",
+      initialTab = "invoice_details",
     ) => {
-      formHook.openInternal(inv as ErpInvoice);
+      formHook.openInternal(inv as ErpInvoice, false, initialTab);
       if (mode === "edit") {
         formHook.setEditMode(true);
       }
@@ -151,10 +147,6 @@ export function useInvoiceModals({
     setPreviewPdf,
     netOffInvoice,
     setNetOffInvoice,
-    selectedPartner,
-    setSelectedPartner,
-    partnerDrawerOpen,
-    setPartnerDrawerOpen,
     handleOpenInternal,
     handleCloseInternal,
     handleDownload,

@@ -23,6 +23,7 @@ import {
   Paperclip,
   Wallet,
   FileText,
+  Building2,
 } from "lucide-react";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/Button";
@@ -35,6 +36,7 @@ import { PurchaseOrderSelectionModal } from "./PurchaseOrderSelectionModal";
 import { SalesOrderSelectionModal } from "./SalesOrderSelectionModal";
 import { GarageCaseSelectionModal } from "./GarageCaseSelectionModal";
 import { ErpInvoiceSettlementTab } from "./ErpInvoiceSettlementTab";
+import { ErpInvoicePartnerTab } from "./ErpInvoicePartnerTab";
 import { PostedAccountingSummary } from "@/shared/components/accounting/PostedAccountingSummary";
 import { PostingSection } from "@/shared/components/accounting/PostingSection";
 import { ErpInvoicePdfUpload } from "./ErpInvoicePdfUpload";
@@ -71,6 +73,8 @@ interface Props {
   onUnpost?: () => void;
   tabs?: DrawerTopTabItem[];
   defaultTabKey?: string;
+  activeTabKey?: string;
+  onTabChange?: (tabKey: string) => void;
   relatedTabs?: DrawerRelatedTabItem[];
   defaultRelatedTabKey?: string;
   defaultRelatedCollapsed?: boolean;
@@ -118,6 +122,8 @@ export function ErpInvoiceInternalDrawer({
   onUnpost,
   tabs: customTabs,
   defaultTabKey = "invoice_details",
+  activeTabKey,
+  onTabChange,
   relatedTabs: customRelatedTabs,
   defaultRelatedTabKey = "financials",
   defaultRelatedCollapsed = false,
@@ -547,7 +553,21 @@ export function ErpInvoiceInternalDrawer({
         ),
       },
 
-      // 4. Tab Mạng lưới chứng từ liên kết (Canvas Graph Traceability - Full Width)
+      // 4. Tab Đối tác & Lịch sử giao dịch liên quan
+      {
+        key: "partner",
+        label: t("Đối tác & Giao dịch", "Đối tác & Giao dịch"),
+        icon: <Building2 className="w-3.5 h-3.5" />,
+        hideRightPanel: true,
+        content: (
+          <ErpInvoicePartnerTab
+            detailInvoice={detailInvoice}
+            direction={direction}
+          />
+        ),
+      },
+
+      // 5. Tab Mạng lưới chứng từ liên kết (Canvas Graph Traceability - Full Width)
       {
         key: "linked_docs",
         label: t("Chứng từ liên kết", "Chứng từ liên kết"),
@@ -731,6 +751,8 @@ export function ErpInvoiceInternalDrawer({
         footerLeft={footerLeft}
         tabs={resolvedDrawerTabs}
         defaultTabKey={defaultTabKey}
+        activeTabKey={activeTabKey}
+        onTabChange={onTabChange}
         leftPanel={!resolvedDrawerTabs ? children : undefined}
         rightPanel={rightPanel}
         relatedTabs={customRelatedTabs}

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { PanelRightOpen, Copy, Check } from "lucide-react";
+import { Copy, Check } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import { Button } from "@/shared/components/ui/Button";
@@ -9,13 +9,11 @@ import { type ErpInvoice } from "@/modules/erp-invoices-core/api/erpInvoicesCore
 export interface InvoicePartnerCellProps {
   inv: ErpInvoice;
   direction: "IN" | "OUT";
-  onSelectPartner: (partner: { taxCode: string; partnerName: string }) => void;
 }
 
 export const InvoicePartnerCell = React.memo(function InvoicePartnerCell({
   inv,
   direction,
-  onSelectPartner,
 }: InvoicePartnerCellProps) {
   const [copiedName, setCopiedName] = useState(false);
   const [copiedTax, setCopiedTax] = useState(false);
@@ -63,45 +61,16 @@ export const InvoicePartnerCell = React.memo(function InvoicePartnerCell({
     }
   };
 
-  const handleOpenDrawer = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (taxCode) {
-      onSelectPartner({
-        taxCode,
-        partnerName: partnerName || "",
-      });
-    }
-  };
-
   const taxPrefix = taxCode ? "MST: " : "CCCD: ";
 
   return (
     <div className="flex items-center gap-1.5 w-full min-w-0 py-0.5 leading-none">
-      {/* Left Drawer Icon: Vertically centered across both rows */}
-      {taxCode && (
-        <Tooltip content="Xem thông tin liên quan">
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="h-6 w-6 p-0 flex-shrink-0 opacity-60 hover:opacity-100 hover:bg-transparent hover:text-primary transition-all focus:ring-0 focus-visible:ring-0 focus:outline-none"
-            onClick={handleOpenDrawer}
-            aria-label="Xem thông tin liên quan"
-          >
-            <PanelRightOpen className="w-3.5 h-3.5" />
-          </Button>
-        </Tooltip>
-      )}
-
       {/* Right Column: 2 tightly packed single lines */}
       <div className="flex flex-col justify-center min-w-0 flex-1 gap-0.5">
         {/* Row 1: Partner Name with independent copy */}
         <div className="flex items-center gap-1 min-w-0 group/pname">
           <Tooltip content={partnerName || "—"}>
-            <span
-              className="truncate text-[11px] font-semibold text-slate-800 dark:text-slate-200 leading-tight select-text cursor-pointer hover:text-primary transition-colors"
-              onClick={taxCode ? handleOpenDrawer : undefined}
-            >
+            <span className="truncate text-[11px] font-semibold text-slate-800 dark:text-slate-200 leading-tight select-text">
               {partnerName || "—"}
             </span>
           </Tooltip>
@@ -162,57 +131,30 @@ export const InvoicePartnerCell = React.memo(function InvoicePartnerCell({
 export interface InvoicePartnerNameCellProps {
   inv: ErpInvoice;
   direction: "IN" | "OUT";
-  onSelectPartner: (partner: { taxCode: string; partnerName: string }) => void;
 }
 
 export const InvoicePartnerNameCell = React.memo(
   function InvoicePartnerNameCell({
     inv,
     direction,
-    onSelectPartner,
   }: InvoicePartnerNameCellProps) {
-    return (
-      <InvoicePartnerCell
-        inv={inv}
-        direction={direction}
-        onSelectPartner={onSelectPartner}
-      />
-    );
+    return <InvoicePartnerCell inv={inv} direction={direction} />;
   },
 );
 
 export interface InvoiceTaxCodeCellProps {
   inv: ErpInvoice;
   direction: "IN" | "OUT";
-  onSelectPartner: (partner: { taxCode: string; partnerName: string }) => void;
 }
 
 export const InvoiceTaxCodeCell = React.memo(function InvoiceTaxCodeCell({
   inv,
   direction,
-  onSelectPartner,
 }: InvoiceTaxCodeCellProps) {
   const taxCode =
     direction === "IN" ? inv.sellerTaxCode || "—" : inv.buyerTaxCode || "—";
-  const buyerDisplayName =
-    inv.buyerName?.trim() || inv.buyerPersonalName?.trim() || "";
-  const partnerName =
-    direction === "IN" ? inv.sellerName || "" : buyerDisplayName;
 
   if (!taxCode || taxCode === "—") return <>—</>;
 
-  return (
-    <TableText
-      text={taxCode}
-      onDrawerClick={(e) => {
-        e.stopPropagation();
-        onSelectPartner({
-          taxCode,
-          partnerName,
-        });
-      }}
-      tooltip={true}
-      enableCopy={true}
-    />
-  );
+  return <TableText text={taxCode} tooltip={true} enableCopy={true} />;
 });

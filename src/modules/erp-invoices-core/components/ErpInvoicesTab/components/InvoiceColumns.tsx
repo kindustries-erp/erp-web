@@ -1,4 +1,4 @@
-import { useMemo, useCallback } from "react";
+import { useMemo } from "react";
 import { type TFunction } from "i18next";
 import { type DataTableColumn } from "@/shared/components/DataTable";
 import { type ErpInvoice } from "@/modules/erp-invoices-core/api/erpInvoicesCoreApi";
@@ -23,13 +23,10 @@ export interface UseInvoiceColumnsOptions {
       isAttachment?: boolean;
     } | null,
   ) => void;
-  setSelectedPartner: (
-    partner: { taxCode: string; partnerName: string } | null,
-  ) => void;
-  setPartnerDrawerOpen: (open: boolean) => void;
   handleOpenInternal: (
     inv: { id: string; invoiceNo?: string | null; serialNo?: string | null },
     mode?: "view" | "edit",
+    initialTab?: string,
   ) => void;
   handleDownload: (id: string, type: "pdf" | "xml") => Promise<void>;
   handlePreviewPdf: (
@@ -52,21 +49,9 @@ export interface UseInvoiceColumnsOptions {
 export function useInvoiceColumns(
   options: UseInvoiceColumnsOptions,
 ): DataTableColumn<ErpInvoice>[] {
-  const { direction, setSelectedPartner, setPartnerDrawerOpen } = options;
+  const { direction } = options;
 
-  const onSelectPartner = useCallback(
-    (partner: { taxCode: string; partnerName: string }) => {
-      setSelectedPartner(partner);
-      setPartnerDrawerOpen(true);
-    },
-    [setSelectedPartner, setPartnerDrawerOpen],
-  );
-
-  const general = useGeneralColumns({
-    ...options,
-    onSelectPartner,
-  });
-
+  const general = useGeneralColumns(options);
   const tax = useTaxColumns(options);
   const amount = useAmountColumns(options);
 

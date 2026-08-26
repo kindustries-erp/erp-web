@@ -9,6 +9,7 @@ import {
   KeyRound,
   Scale,
   Settings,
+  Building2,
 } from "lucide-react";
 import { useAppStore } from "@/core/config/appStore";
 
@@ -82,9 +83,6 @@ export function ErpInvoicesTab(props: ErpInvoicesTabProps) {
     bulkNetOffDrawerOpen,
     setBulkNetOffDrawerOpen,
     bulkPostingMode,
-    selectedPartner,
-    partnerDrawerOpen,
-    setPartnerDrawerOpen,
     monthOptions,
     branches,
     showToast,
@@ -112,6 +110,12 @@ export function ErpInvoicesTab(props: ErpInvoicesTabProps) {
         label: t("actionDetail", "Chi tiết hóa đơn"),
         icon: <Eye className="w-3.5 h-3.5" />,
         onClick: () => handleOpenInternal(inv, "view"),
+      });
+
+      traCuuItems.push({
+        label: t("actionPartnerTransactions", "Giao dịch đối tác"),
+        icon: <Building2 className="w-3.5 h-3.5" />,
+        onClick: () => handleOpenInternal(inv, "view", "partner"),
       });
 
       if (canEditInvoice && inv.status !== "CANCELLED") {
@@ -373,9 +377,6 @@ export function ErpInvoicesTab(props: ErpInvoicesTabProps) {
         setPreviewPdf={setPreviewPdf}
         netOffInvoice={netOffInvoice}
         setNetOffInvoice={setNetOffInvoice}
-        selectedPartner={selectedPartner}
-        partnerDrawerOpen={partnerDrawerOpen}
-        setPartnerDrawerOpen={setPartnerDrawerOpen}
       />
 
       <InvoiceBulkModals
