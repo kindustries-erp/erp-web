@@ -104,7 +104,7 @@ export function InvoiceViewModeCombobox({
           <Popover.Content
             align="start"
             sideOffset={6}
-            className="z-50 w-64 rounded-xl border border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md p-1.5 shadow-xl text-xs space-y-1 animate-in fade-in-0 zoom-in-95"
+            className="z-[9999] w-64 rounded-xl border border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md p-1.5 shadow-xl text-xs space-y-1 animate-in fade-in-0 zoom-in-95"
           >
             <div className="px-2 py-1 text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
               {t("viewMode", "Chế độ xem")}

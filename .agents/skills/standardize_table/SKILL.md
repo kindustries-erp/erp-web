@@ -508,6 +508,66 @@ Khi phát triển hoặc nâng cấp bảng dữ liệu có hỗ trợ chọn nh
 3. **Bọc `React.memo` cho Custom Cells & Bulk Modals**:
    - Tất cả các cell renderer độc lập (Badge, Attachments, Info cells) và container `InvoiceBulkModals` phải được bọc bằng `React.memo`.
 
+## 14. Chế độ Toàn Màn Hình cho Bảng Dữ Liệu (Table Full Screen Mode)
+
+Nhằm tối ưu hóa trải nghiệm tra cứu, đối soát dữ liệu lớn (bảng có nhiều cột hoặc hàng trăm dòng) và đồng bộ với trải nghiệm của `<DrawerDocumentTraceability>`, Core `DataTable` và `StandardTable` hỗ trợ tính năng **Toàn màn hình (Full Screen Mode)**:
+
+- **Nút Chuyển Đổi (Fullscreen Toggle Button)**:
+  - Tự động portal vào thanh công cụ bảng (nằm ngay cạnh nút Tùy chỉnh cột `Settings2` và nút Tải lại `RefreshCcw` trên `TableActionGroup`).
+  - **Trạng thái bình thường**: Hiển thị icon `Maximize2` (`<Maximize2 className="h-4 w-4" />`), tooltip `t("table.fullscreen", "Toàn màn hình")`.
+  - **Trạng thái toàn màn hình**: Hiển thị icon `Minimize2` (`<Minimize2 className="h-4 w-4 text-primary" />`), tooltip `t("table.exitFullscreen", "Thu nhỏ lại (Esc)")`.
+- **Phím tắt `Escape` (`Esc`)**:
+  - Khi đang ở chế độ toàn màn hình, người dùng có thể nhấn phím `Esc` bất kỳ lúc nào để ngay lập tức thu nhỏ bảng trở lại layout ban đầu.
+- **In-place Placeholder (Khung giữ chỗ tại vị trí cũ)**:
+  - Khi bảng được phóng to, tại vị trí ban đầu của trang/drawer sẽ hiển thị một Card giữ chỗ viền nét đứt thanh lịch (`border border-dashed border-border rounded-xl p-6 text-center`) kèm icon `<TableIcon className="w-8 h-8 text-primary animate-pulse" />`, thông báo *"Bảng đang được mở ở chế độ Toàn màn hình."* và nút bấm *"Thu nhỏ lại (Esc)"*.
+- **Portal Tràn Viền Full Viewport (`createPortal` ra `document.body`)**:
+  - Bảng phóng to tràn viền màn hình (`fixed inset-0 z-[450] bg-surface dark:bg-slate-950 shadow-2xl flex flex-col p-4 sm:p-5 gap-3 animate-in fade-in duration-200`).
+  - **Top Fullscreen Header Bar**: Hiển thị icon bảng, tiêu đề chứng từ/bảng (`tableTitle`), Badge tổng số dòng (`total`), và toàn bộ hàng nút hành động/tabs (`fullscreenHeaderExtra` chứa toàn bộ `TableActionGroup`: tabs trạng thái/thuế, dropdown kiểm toán, filter, search, ColumnToggle, Minimize2, Refresh, Sync/Create).
+  - Toàn bộ chiều cao màn hình được tận dụng 100% (`flex-1 min-h-0`), sticky header và pagination cuộn mượt mà không bị giới hạn bởi layout cha.
+
+### Kiến trúc Atomic Component (`src/shared/components/DataTable/`):
+
+Core DataTable tuân thủ cấu trúc Atomic Refactor chuẩn:
+- `DataTable/types.ts`: Toàn bộ TypeScript interfaces & types.
+- `DataTable/utils.ts`: Pure helper functions (`getNestedValue`, `sanitizeActionColumnSizing`).
+- `DataTable/hooks/`:
+  - `useDataTablePreferences.ts`: Quản lý column visibility, order, sizing, reset layout và đồng bộ store.
+  - `useDataTableColumns.tsx`: Xây dựng TanStack ColumnDef, valueType formatters, selection, hover actions.
+  - `useDataTableScroll.ts`: Quản lý scroll shadow (isScrolledTop, isScrolledBottom).
+  - `useDataTableFullscreen.ts`: Quản lý Fullscreen state, Escape listener, callbacks.
+- `DataTable/components/`:
+  - `ColumnToggle.tsx`: Popover tùy biến cột với dnd-kit kéo thả & nút Reset.
+  - `FullscreenToggle.tsx`: Nút icon Maximize2 / Minimize2.
+  - `SelectionCheckboxes.tsx`: Memoized Header & Row selection checkbox.
+  - `DataTableRow.tsx`: Memoized DataTableRowMemo & DataTableRowInner.
+  - `FullscreenModal.tsx`: Fullscreen Portal Container & in-place placeholder.
+- `DataTable/DataTable.tsx`: Main Component gọn gàng kết nối hooks và UI layout.
+- `DataTable/index.ts`: Barrel export cho toàn bộ module.
+- `src/shared/components/DataTable.tsx`: Re-export wrapper tương thích ngược 100%.
+
+### Hướng dẫn sử dụng:
+
+1. **Trên màn hình Page (`SpreadsheetPageTemplate`)**:
+   - Tính năng Toàn màn hình **mặc định đã được bật sẵn (`enableFullscreen = true`)** cho 100% trang sử dụng `SpreadsheetPageTemplate` trên toàn hệ thống.
+   - Tiêu đề của trang (`title`) được tự động gắn vào `tableTitle` trên thanh header fullscreen.
+   - Toàn bộ thanh công cụ (`TableActionGroup`) tự động đồng bộ lên Top Header Bar khi ở Fullscreen mode và ẩn khỏi layout nền.
+   - Nếu có nhu cầu tắt tính năng này cho một trang đặc biệt, chỉ cần truyền `enableFullscreen={false}`.
+
+2. **Trên bảng nhúng trong Drawer / Modal (`DrawerSection` + `StandardTable`)**:
+   - Khi nhúng bảng dữ liệu có nhiều cột vào Drawer (ví dụ danh sách dòng hóa đơn, bảng kiểm kê, danh sách phiếu nhập kho), truyền thêm `enableFullscreen={true}`, `tableTitle={t("Danh sách mặt hàng...")}` và `tableId="unique-table-id"` vào `<StandardTable />` để người dùng có thể phóng to toàn màn hình thao tác dễ dàng:
+   ```tsx
+   <StandardTable
+     tableId="drawer-inventory-lines"
+     tableTitle={t("Danh sách mặt hàng kiểm kê")}
+     enableFullscreen={true}
+     columns={columns}
+     items={items}
+     getRowKey={(r) => r.id}
+   />
+   ```
+
+---
+
 ## Summary Checklist trước khi hoàn thành:
 
 - [ ] Cột đầu tiên (STT) rộng đúng `40px`, **BẮT ĐẦU TỪ 1 VÀ CĂN GIỮA TUYỆT ĐỐI CẢ HEADER VÀ CELL** (`header: <span className="w-full block text-center">#</span>`, `headerClassName: "text-center"`, `className: "text-center"`, `cell: (_, idx) => <span className="w-full block text-center">{idx}</span>`) chưa?
@@ -519,6 +579,7 @@ Khi phát triển hoặc nâng cấp bảng dữ liệu có hỗ trợ chọn nh
 - [ ] Bảng đã tự động kích hoạt **Right-Click Context Menu** (`TableRowContextMenu`) qua `rowActions` / `actions` và highlight dòng active chưa?
 - [ ] Nút Reset Column đã nằm gọn trong popup menu `ColumnToggle` (`Settings2` → `RotateCcw`), và TUYỆT ĐỐI không đặt ở header cột dữ liệu/Action chưa?
 - [ ] Bảng đã có `tableId` duy nhất để tự động lưu & khôi phục column sizing, visibility, order vào App Setting (`core_user_preferences`) & LocalStorage cache chưa?
+- [ ] Bảng đã hỗ trợ tính năng **Toàn màn hình (Table Full Screen Mode)** (mặc định bật trên `SpreadsheetPageTemplate` và truyền `enableFullscreen={true}`, `tableTitle` trên các bảng lớn trong Drawer) chưa?
 - [ ] `<ActionDropdown>` đã phân nhóm menu bằng `groupLabel` (TRA CỨU, THAO TÁC, ...) chưa?
 - [ ] Các cột dữ liệu đã có `enableResizing: true` chưa?
 - [ ] Header có `<TableColumnHeaderFilter align="center">` và truyền prop `isActive` chưa?

@@ -47,6 +47,11 @@ export interface StandardTableProps<T> {
   containerClassName?: string;
   defaultColumnOrder?: string[];
   sidePanel?: React.ReactNode;
+  enableFullscreen?: boolean;
+  tableTitle?: React.ReactNode;
+  fullscreenClassName?: string;
+  fullscreenHeaderExtra?: React.ReactNode;
+  onFullscreenChange?: (isFullscreen: boolean) => void;
 }
 
 export function StandardTable<T>({
@@ -89,6 +94,11 @@ export function StandardTable<T>({
   containerClassName,
   defaultColumnOrder,
   sidePanel,
+  enableFullscreen,
+  tableTitle,
+  fullscreenClassName,
+  fullscreenHeaderExtra,
+  onFullscreenChange,
 }: StandardTableProps<T>) {
   const actionsColumnDef = React.useMemo(() => {
     if (!actions || hideLegacyActionColumn) return undefined;
@@ -150,6 +160,11 @@ export function StandardTable<T>({
       containerClassName={containerClassName}
       defaultColumnOrder={defaultColumnOrder}
       sidePanel={sidePanel}
+      enableFullscreen={enableFullscreen}
+      tableTitle={tableTitle}
+      fullscreenClassName={fullscreenClassName}
+      fullscreenHeaderExtra={fullscreenHeaderExtra}
+      onFullscreenChange={onFullscreenChange}
     />
   );
 }
