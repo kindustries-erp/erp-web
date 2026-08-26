@@ -28,7 +28,7 @@ import { Tooltip } from "@/core/components/ui/Tooltip";
 import { Badge } from "@/shared/components/ui/badge";
 import { money } from "@/shared/utils/format";
 import { VietnamInvoiceTemplate } from "./VietnamInvoiceTemplate";
-import { DrawerModal } from "@/shared/components/DrawerModal";
+import { DrawerModal, DrawerSection } from "@/shared/components/DrawerModal";
 
 export interface ErpInvoicePartnerTabProps {
   detailInvoice: ErpInvoice | null;
@@ -432,182 +432,222 @@ export const ErpInvoicePartnerTab = React.memo(function ErpInvoicePartnerTab({
   }
 
   return (
-    <div className="space-y-4">
-      {/* 1. Header Card: Partner Summary Profile */}
-      <div className="p-4 bg-surface rounded-xl border border-border shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="space-y-1.5 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <Building2 className="w-4 h-4 text-primary flex-shrink-0" />
-            <h3 className="text-base font-bold text-foreground truncate">
-              {partnerName || t("unnamedPartner", "Đối tác chưa đặt tên")}
-            </h3>
-            {partnerName && (
-              <button
-                type="button"
-                onClick={(e) => copyToClipboard(partnerName, false, e)}
-                className="p-0.5 text-muted-foreground hover:text-primary transition-colors"
-                title={t("copyName", "Copy tên")}
-              >
-                {copiedName ? (
-                  <Check className="w-3.5 h-3.5 text-emerald-500" />
-                ) : (
-                  <Copy className="w-3.5 h-3.5" />
-                )}
-              </button>
-            )}
-            <Badge
-              variant="outline"
-              className="text-[11px] font-semibold bg-primary/5 text-primary border-primary/20"
-            >
-              {isDirectionIn
-                ? t("roleSeller", "Bên bán (Nhà cung cấp)")
-                : t("roleBuyer", "Bên mua (Khách hàng)")}
-            </Badge>
+    <div className="flex flex-col lg:flex-row items-start w-full gap-5">
+      {/* ── Cột Trái (Main Content): Bảng danh sách hóa đơn liên quan ── */}
+      <div className="flex-1 min-w-0 w-full order-2 lg:order-1">
+        <DrawerSection
+          title={
+            <div className="flex items-center gap-2">
+              <FileText className="w-3.5 h-3.5 text-primary" />
+              <span>{t("partnerInvoicesList", "Danh sách hóa đơn")}</span>
+            </div>
+          }
+          titleExtra={
+            listHook.total > 0 ? (
+              <span className="text-xs font-normal text-muted-foreground">
+                {listHook.total} {t("invoicesCount", "hóa đơn")}
+              </span>
+            ) : undefined
+          }
+          collapsible={true}
+          className="mb-0 max-h-[calc(100vh-210px)] flex flex-col"
+          bodyClassName="flex-1 flex flex-col min-h-0 overflow-hidden"
+        >
+          <div className="flex-1 min-h-[300px] overflow-y-auto pr-0.5">
+            <StandardTable
+              items={listHook.invoices}
+              columns={columns}
+              getRowKey={(r) => r.id}
+              loading={listHook.loading}
+              variant="spreadsheet"
+              minWidth={750}
+              enableColumnResizing={true}
+              page={listHook.page}
+              pageSize={listHook.pageSize}
+              total={listHook.total}
+              totalPages={listHook.totalPages}
+              onPage={listHook.setPage}
+              onPageSize={listHook.setPageSize}
+            />
           </div>
-
-          <div className="flex items-center gap-3 flex-wrap text-xs text-muted-foreground">
-            {taxCode && (
-              <div className="flex items-center gap-1.5 font-mono">
-                <span className="font-semibold text-foreground/80">MST:</span>
-                <span>{taxCode}</span>
-                <button
-                  type="button"
-                  onClick={(e) => copyToClipboard(taxCode, true, e)}
-                  className="p-0.5 text-muted-foreground hover:text-primary transition-colors"
-                  title={t("copyTax", "Copy MST")}
-                >
-                  {copiedTax ? (
-                    <Check className="w-3.5 h-3.5 text-emerald-500" />
-                  ) : (
-                    <Copy className="w-3.5 h-3.5" />
-                  )}
-                </button>
-              </div>
-            )}
-
-            {address && (
-              <div
-                className="flex items-center gap-1 max-w-[450px] truncate"
-                title={address}
-              >
-                <MapPin className="w-3.5 h-3.5 flex-shrink-0 text-muted-foreground/70" />
-                <span className="truncate">{address}</span>
-              </div>
-            )}
-
-            {bank && (
-              <div
-                className="flex items-center gap-1 max-w-[300px] truncate"
-                title={bank}
-              >
-                <CreditCard className="w-3.5 h-3.5 flex-shrink-0 text-muted-foreground/70" />
-                <span className="truncate">{bank}</span>
-              </div>
-            )}
-          </div>
-        </div>
+        </DrawerSection>
       </div>
 
-      {/* 2. Stats & Cash Trend Overview */}
-      {taxCode && (
-        <div className="p-4 bg-surface rounded-xl border border-border shadow-sm space-y-3">
-          <div className="flex items-center justify-between">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-              <TrendingUp className="w-3.5 h-3.5 text-primary" />
-              {t("cashTrendOverview", "Tổng quan Dòng tiền & Giao dịch")}
-            </h4>
-
-            {cashTrendLabels.length > 0 && (
-              <div className="flex items-center gap-4 text-xs">
-                <div className="flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-orange-500" />
-                  <span className="text-muted-foreground">
-                    {t("totalIn", "Đầu vào:")}
-                  </span>
-                  <span className="font-semibold tabular-nums text-foreground">
-                    {money(
-                      cashTrendIn.reduce((sum, v) => sum + (Number(v) || 0), 0),
+      {/* ── Cột Phải (Sidebar): Hồ sơ đối tác & Tổng quan dòng tiền ── */}
+      <div className="w-full lg:w-[330px] xl:w-[350px] shrink-0 order-1 lg:order-2 space-y-4 lg:sticky lg:top-0">
+        {/* 1. Hồ sơ đối tác */}
+        <DrawerSection
+          title={
+            <div className="flex items-center gap-1.5">
+              <Building2 className="w-3.5 h-3.5 text-primary" />
+              <span>{t("partnerProfile", "Hồ sơ đối tác")}</span>
+            </div>
+          }
+          collapsible={true}
+        >
+          <div className="space-y-3">
+            {/* Tên đối tác & Role Badge */}
+            <div className="space-y-1.5">
+              <div className="flex items-start justify-between gap-2">
+                <span className="text-xs font-bold text-foreground leading-snug break-words">
+                  {partnerName || t("unnamedPartner", "Đối tác chưa đặt tên")}
+                </span>
+                {partnerName && (
+                  <button
+                    type="button"
+                    onClick={(e) => copyToClipboard(partnerName, false, e)}
+                    className="p-1 text-muted-foreground hover:text-primary transition-colors shrink-0"
+                    title={t("copyName", "Copy tên")}
+                  >
+                    {copiedName ? (
+                      <Check className="w-3.5 h-3.5 text-emerald-500" />
+                    ) : (
+                      <Copy className="w-3.5 h-3.5" />
                     )}
+                  </button>
+                )}
+              </div>
+              <Badge
+                variant="outline"
+                className="text-[10px] font-semibold bg-primary/5 text-primary border-primary/20"
+              >
+                {isDirectionIn
+                  ? t("roleSeller", "Bên bán (Nhà cung cấp)")
+                  : t("roleBuyer", "Bên mua (Khách hàng)")}
+              </Badge>
+            </div>
+
+            {/* Thông tin chi tiết: MST, Địa chỉ, Ngân hàng */}
+            <div className="space-y-2 pt-2 border-t border-border/70 text-xs">
+              {taxCode && (
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-muted-foreground shrink-0 font-medium">
+                    MST:
+                  </span>
+                  <div className="flex items-center gap-1 min-w-0 font-mono">
+                    <span className="font-semibold text-foreground truncate">
+                      {taxCode}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={(e) => copyToClipboard(taxCode, true, e)}
+                      className="p-0.5 text-muted-foreground hover:text-primary transition-colors shrink-0"
+                      title={t("copyTax", "Copy MST")}
+                    >
+                      {copiedTax ? (
+                        <Check className="w-3 h-3 text-emerald-500" />
+                      ) : (
+                        <Copy className="w-3 h-3" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {address && (
+                <div className="flex items-start gap-1.5 text-muted-foreground">
+                  <MapPin className="w-3.5 h-3.5 mt-0.5 shrink-0 text-muted-foreground/70" />
+                  <span
+                    className="text-[11px] leading-relaxed line-clamp-2"
+                    title={address}
+                  >
+                    {address}
                   </span>
                 </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                  <span className="text-muted-foreground">
-                    {t("totalOut", "Đầu ra:")}
-                  </span>
-                  <span className="font-semibold tabular-nums text-foreground">
-                    {money(
-                      cashTrendOut.reduce(
-                        (sum, v) => sum + (Number(v) || 0),
-                        0,
-                      ),
-                    )}
+              )}
+
+              {bank && (
+                <div className="flex items-start gap-1.5 text-muted-foreground">
+                  <CreditCard className="w-3.5 h-3.5 mt-0.5 shrink-0 text-muted-foreground/70" />
+                  <span
+                    className="text-[11px] leading-relaxed line-clamp-2"
+                    title={bank}
+                  >
+                    {bank}
                   </span>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
+        </DrawerSection>
 
-          <div className="relative h-[190px] pt-1">
-            {!isLoadingStats && cashTrendLabels.length > 0 ? (
-              <BarChart
-                labels={cashTrendLabels}
-                yCallback={(v) => money(Number(v))}
-                datasets={[
-                  {
-                    data: cashTrendIn,
-                    color: barIn,
-                    label: t("invoicesIn", "HĐ Đầu vào"),
-                  },
-                  {
-                    data: cashTrendOut,
-                    color: barOut,
-                    label: t("invoicesOut", "HĐ Đầu ra"),
-                  },
-                ]}
-              />
-            ) : isLoadingStats ? (
-              <ChartSkeleton type="bar" />
-            ) : (
-              <div className="flex items-center justify-center h-full text-xs text-muted-foreground">
-                {t("noChartData", "Chưa có dữ liệu giao dịch đối soát")}
+        {/* 2. Tổng quan Dòng tiền & Biểu đồ compact */}
+        {taxCode && (
+          <DrawerSection
+            title={
+              <div className="flex items-center gap-1.5">
+                <TrendingUp className="w-3.5 h-3.5 text-primary" />
+                <span>{t("cashTrendOverview", "Tổng quan Dòng tiền")}</span>
               </div>
-            )}
-          </div>
-        </div>
-      )}
+            }
+            collapsible={true}
+          >
+            <div className="space-y-3">
+              {/* Compact KPI Badges */}
+              {cashTrendLabels.length > 0 && (
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="p-2 rounded-lg bg-orange-500/10 border border-orange-500/20 space-y-0.5">
+                    <div className="flex items-center gap-1 text-[10px] text-muted-foreground font-medium">
+                      <span className="w-1.5 h-1.5 rounded-full bg-orange-500" />
+                      {t("totalIn", "Đầu vào")}
+                    </div>
+                    <div className="font-bold text-foreground tabular-nums truncate text-[11px]">
+                      {money(
+                        cashTrendIn.reduce(
+                          (sum, v) => sum + (Number(v) || 0),
+                          0,
+                        ),
+                      )}
+                    </div>
+                  </div>
 
-      {/* 3. Related Invoices Table */}
-      <div className="p-4 bg-surface rounded-xl border border-border shadow-sm space-y-3">
-        <div className="flex items-center justify-between">
-          <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-            <FileText className="w-3.5 h-3.5 text-primary" />
-            {t("partnerInvoicesList", "Danh sách Hóa đơn liên quan")}
-            {listHook.total > 0 && (
-              <span className="text-[11px] font-normal normal-case text-muted-foreground">
-                ({listHook.total} {t("invoicesCount", "hóa đơn")})
-              </span>
-            )}
-          </h4>
-        </div>
+                  <div className="p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 space-y-0.5">
+                    <div className="flex items-center gap-1 text-[10px] text-muted-foreground font-medium">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                      {t("totalOut", "Đầu ra")}
+                    </div>
+                    <div className="font-bold text-foreground tabular-nums truncate text-[11px]">
+                      {money(
+                        cashTrendOut.reduce(
+                          (sum, v) => sum + (Number(v) || 0),
+                          0,
+                        ),
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
 
-        <div className="min-h-[280px]">
-          <StandardTable
-            items={listHook.invoices}
-            columns={columns}
-            getRowKey={(r) => r.id}
-            loading={listHook.loading}
-            variant="spreadsheet"
-            minWidth={800}
-            enableColumnResizing={true}
-            page={listHook.page}
-            pageSize={listHook.pageSize}
-            total={listHook.total}
-            totalPages={listHook.totalPages}
-            onPage={listHook.setPage}
-            onPageSize={listHook.setPageSize}
-          />
-        </div>
+              {/* Compact BarChart */}
+              <div className="relative h-[140px] pt-1">
+                {!isLoadingStats && cashTrendLabels.length > 0 ? (
+                  <BarChart
+                    labels={cashTrendLabels}
+                    yCallback={(v) => money(Number(v))}
+                    datasets={[
+                      {
+                        data: cashTrendIn,
+                        color: barIn,
+                        label: t("invoicesIn", "HĐ Đầu vào"),
+                      },
+                      {
+                        data: cashTrendOut,
+                        color: barOut,
+                        label: t("invoicesOut", "HĐ Đầu ra"),
+                      },
+                    ]}
+                  />
+                ) : isLoadingStats ? (
+                  <ChartSkeleton type="bar" />
+                ) : (
+                  <div className="flex items-center justify-center h-full text-xs text-muted-foreground">
+                    {t("noChartData", "Chưa có dữ liệu giao dịch đối soát")}
+                  </div>
+                )}
+              </div>
+            </div>
+          </DrawerSection>
+        )}
       </div>
 
       {/* Sub-drawer for previewing another invoice from partner's list */}

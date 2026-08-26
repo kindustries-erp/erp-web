@@ -39,6 +39,14 @@ export const erpInvoicesVi = {
   tabNew: "Mới",
   tabReplacement: "Thay thế",
   tabAdjustment: "Điều chỉnh",
+  tabDetails: "Chi tiết",
+  tabTransactions: "Giao dịch",
+  tabFinancials: "Tài chính",
+  tabLinkedDocs: "Chứng từ liên kết",
+  tabAttachments: "Tài liệu đính kèm",
+  tabAccounting: "Hạch toán kế toán",
+  tabHistory: "Lịch sử & Kiểm duyệt",
+  partnerProfile: "Hồ sơ đối tác",
 
   // View Mode Combobox & Config
   viewMode: "Chế độ xem",
