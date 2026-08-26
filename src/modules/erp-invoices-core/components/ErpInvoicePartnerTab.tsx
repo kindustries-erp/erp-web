@@ -20,7 +20,6 @@ import { erpInvoicesCoreApi } from "../api/erpInvoicesCoreApi";
 import { useErpInvoicesList } from "../hooks/useErpInvoicesList";
 import { StandardTable } from "@/shared/components/StandardTable";
 import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
-import { TableText } from "@/shared/components/DataTable/TableText";
 import { DateRangeColumnSlot } from "@/shared/components/DataTable/DateRangeColumnSlot";
 import { BarChart } from "@/shared/components/charts/BarChart";
 import { ChartSkeleton } from "@/shared/components/Skeleton";
@@ -29,6 +28,7 @@ import { Badge } from "@/shared/components/ui/badge";
 import { money } from "@/shared/utils/format";
 import { VietnamInvoiceTemplate } from "./VietnamInvoiceTemplate";
 import { DrawerModal, DrawerSection } from "@/shared/components/DrawerModal";
+import { InvoiceNoCell } from "./ErpInvoicesTab/components/cells/InvoiceNoCell";
 
 export interface ErpInvoicePartnerTabProps {
   detailInvoice: ErpInvoice | null;
@@ -197,25 +197,6 @@ export const ErpInvoicePartnerTab = React.memo(function ErpInvoicePartnerTab({
   const columns = useMemo(() => {
     return [
       {
-        key: "direction",
-        header: t("type", "Loại HĐ"),
-        size: 85,
-        className: "text-center",
-        cell: (inv: ErpInvoice) => (
-          <span
-            className={`inline-block px-2 py-0.5 rounded text-[11px] font-semibold ${
-              inv.direction === "IN"
-                ? "bg-orange-100/80 text-orange-800 dark:bg-orange-950/40 dark:text-orange-300"
-                : "bg-emerald-100/80 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300"
-            }`}
-          >
-            {inv.direction === "IN"
-              ? t("dirIn", "Đầu vào")
-              : t("dirOut", "Đầu ra")}
-          </span>
-        ),
-      },
-      {
         key: "invoiceDate",
         header: (
           <TableColumnHeaderFilter
@@ -257,30 +238,6 @@ export const ErpInvoicePartnerTab = React.memo(function ErpInvoicePartnerTab({
             : "—",
       },
       {
-        key: "serialNo",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("serialNo", "Ký hiệu")}
-            sortState={getSortState("serialNo")}
-            onSortChange={(state) => handleSortChange("serialNo", state)}
-            searchValue={listHook.tableState.columnSearch["serialNo"] || ""}
-            onSearchChange={(val) => handleSearchChange("serialNo", val)}
-            selectedFilters={
-              listHook.tableState.columnFilters["serialNo"] || []
-            }
-            onFilterChange={(vals) => handleFilterChange("serialNo", vals)}
-            align="center"
-            columnKey="serialNo"
-            queryKeyPrefix={`partner-invoice-options-serial-${taxCode}`}
-            allFilters={listHook.tableState.columnFilters}
-            fetchOptions={fetchInvoiceOptions}
-          />
-        ),
-        size: 100,
-        className: "text-left text-muted-foreground",
-        cell: (inv: ErpInvoice) => inv.serialNo || "—",
-      },
-      {
         key: "invoiceNo",
         header: (
           <TableColumnHeaderFilter
@@ -293,19 +250,18 @@ export const ErpInvoicePartnerTab = React.memo(function ErpInvoicePartnerTab({
               listHook.tableState.columnFilters["invoiceNo"] || []
             }
             onFilterChange={(vals) => handleFilterChange("invoiceNo", vals)}
-            align="center"
+            align="left"
             columnKey="invoiceNo"
             queryKeyPrefix={`partner-invoice-options-invno-${taxCode}`}
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={fetchInvoiceOptions}
           />
         ),
-        size: 140,
+        size: 155,
         cell: (inv: ErpInvoice) => (
-          <TableText
-            text={inv.invoiceNo || "—"}
-            enableCopy={Boolean(inv.invoiceNo)}
-            onDetailClick={() => setPreviewSubInvoice(inv)}
+          <InvoiceNoCell
+            inv={inv}
+            handleOpenInternal={(targetInv) => setPreviewSubInvoice(targetInv)}
           />
         ),
       },
@@ -334,55 +290,6 @@ export const ErpInvoicePartnerTab = React.memo(function ErpInvoicePartnerTab({
         cell: (inv: ErpInvoice) => money(inv.totalAmount || 0),
       },
       {
-        key: "status",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("status", "Trạng thái")}
-            sortState={getSortState("status")}
-            onSortChange={(state) => handleSortChange("status", state)}
-            searchValue={listHook.tableState.columnSearch["status"] || ""}
-            onSearchChange={(val) => handleSearchChange("status", val)}
-            selectedFilters={listHook.tableState.columnFilters["status"] || []}
-            onFilterChange={(vals) => handleFilterChange("status", vals)}
-            align="center"
-            columnKey="status"
-            queryKeyPrefix={`partner-invoice-options-status-${taxCode}`}
-            allFilters={listHook.tableState.columnFilters}
-            fetchOptions={async () => ({
-              items: [
-                { value: "DRAFT", label: t("statusDraft", "Nháp") },
-                {
-                  value: "CONFIRMED",
-                  label: t("statusConfirmed", "Đã xác nhận"),
-                },
-                { value: "CANCELLED", label: t("statusCancelled", "Đã hủy") },
-              ],
-              total: 3,
-              next: null,
-            })}
-          />
-        ),
-        size: 110,
-        className: "text-center",
-        cell: (inv: ErpInvoice) => (
-          <span
-            className={`inline-block px-2 py-0.5 rounded text-[10px] font-medium leading-tight ${
-              inv.status === "CANCELLED"
-                ? "bg-red-100 text-red-800 dark:bg-red-950/50 dark:text-red-300"
-                : inv.status === "DRAFT"
-                  ? "bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300"
-                  : "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300"
-            }`}
-          >
-            {inv.status === "CANCELLED"
-              ? t("statusCancelled", "Đã hủy")
-              : inv.status === "DRAFT"
-                ? t("statusDraft", "Nháp")
-                : t("statusConfirmed", "Đã xác nhận")}
-          </span>
-        ),
-      },
-      {
         key: "description",
         header: (
           <TableColumnHeaderFilter
@@ -402,10 +309,10 @@ export const ErpInvoicePartnerTab = React.memo(function ErpInvoicePartnerTab({
             fetchOptions={fetchInvoiceOptions}
           />
         ),
-        size: 260,
+        size: 240,
         cell: (inv: ErpInvoice) => (
           <Tooltip content={inv.description || ""}>
-            <div className="truncate max-w-[260px] text-xs text-muted-foreground">
+            <div className="truncate max-w-[240px] text-xs text-muted-foreground">
               {inv.description || "—"}
             </div>
           </Tooltip>
@@ -434,7 +341,7 @@ export const ErpInvoicePartnerTab = React.memo(function ErpInvoicePartnerTab({
   return (
     <div className="flex flex-col lg:flex-row items-start w-full gap-5">
       {/* ── Cột Trái (Main Content): Bảng danh sách hóa đơn liên quan ── */}
-      <div className="flex-1 min-w-0 w-full order-2 lg:order-1">
+      <div className="flex-1 min-w-0 w-full order-2 lg:order-1 flex flex-col h-[calc(100vh-210px)]">
         <DrawerSection
           title={
             <div className="flex items-center gap-2">
@@ -450,17 +357,18 @@ export const ErpInvoicePartnerTab = React.memo(function ErpInvoicePartnerTab({
             ) : undefined
           }
           collapsible={true}
-          className="mb-0 max-h-[calc(100vh-210px)] flex flex-col"
+          fitViewportHeight={true}
+          className="mb-0 h-full flex flex-col"
           bodyClassName="flex-1 flex flex-col min-h-0 overflow-hidden"
         >
-          <div className="flex-1 min-h-[300px] overflow-y-auto pr-0.5">
+          <div className="flex-1 min-h-0 w-full flex flex-col overflow-hidden">
             <StandardTable
               items={listHook.invoices}
               columns={columns}
               getRowKey={(r) => r.id}
               loading={listHook.loading}
               variant="spreadsheet"
-              minWidth={750}
+              minWidth={550}
               enableColumnResizing={true}
               page={listHook.page}
               pageSize={listHook.pageSize}
