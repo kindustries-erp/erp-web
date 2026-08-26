@@ -18,6 +18,8 @@ import {
   Printer,
   Eye,
   FileSpreadsheet,
+  FileText,
+  Pencil,
 } from "lucide-react";
 
 import { Tooltip } from "@/core/components/ui/Tooltip";
@@ -60,6 +62,7 @@ import { inventoryCoreApi } from "@/modules/inventory-core/api/inventoryCoreApi"
 import { StatusBadge } from "@/shared/components/badges";
 import { Badge } from "@/shared/components/ui/badge";
 import { TableDateCell } from "@/shared/components/DataTable/TableDateCell";
+import { fmtQty } from "@/shared/utils/format";
 
 // ─── Main page ────────────────────────────────────────────────────────────────
 
@@ -510,6 +513,19 @@ export function ErpWarehouseTab() {
   const columns: DataTableColumn<WarehouseRow>[] = useMemo(
     () => [
       {
+        key: "index",
+        header: <span className="w-full block text-center">#</span>,
+        size: 40,
+        enableResizing: false,
+        hideable: false,
+        sortable: false,
+        headerClassName: "text-center",
+        className: "text-center font-mono text-xs text-muted-foreground",
+        cell: (_, idx) => (
+          <span className="w-full block text-center">{idx}</span>
+        ),
+      },
+      {
         key: "date",
         header: renderHeaderFilter("date", t("Ngày")),
         size: 130,
@@ -686,28 +702,6 @@ export function ErpWarehouseTab() {
               text={row.poNo}
               tooltip={row.poNo}
               enableCopy={true}
-              onDrawerClick={(e) => {
-                e.stopPropagation();
-                if (row.purchaseOrderId || row.type === "receipt") {
-                  window.dispatchEvent(
-                    new CustomEvent("open_erp_document", {
-                      detail: {
-                        type: "erp_purchase_order",
-                        id: row.purchaseOrderId || row.poNo,
-                      },
-                    }),
-                  );
-                } else if (row.salesOrderId || row.type === "issue") {
-                  window.dispatchEvent(
-                    new CustomEvent("open_erp_document", {
-                      detail: {
-                        type: "erp_sales_order",
-                        id: row.salesOrderId || row.poNo,
-                      },
-                    }),
-                  );
-                }
-              }}
               textClassName="font-medium text-primary"
             />
           );
@@ -768,6 +762,52 @@ export function ErpWarehouseTab() {
 
   // Actions are now passed to SpreadsheetPageTemplate
 
+  const summaryRow = useMemo(() => {
+    if (!rows || rows.length === 0) return undefined;
+    const totalReceipt = rows
+      .filter((r) => r.type === "receipt")
+      .reduce((sum, r) => sum + Number(r.totalQty || 0), 0);
+    const totalIssue = rows
+      .filter((r) => r.type === "issue")
+      .reduce((sum, r) => sum + Number(r.totalQty || 0), 0);
+    const totalAdjustment = rows
+      .filter((r) => r.type === "adjustment")
+      .reduce((sum, r) => sum + Number(r.totalQty || 0), 0);
+
+    return {
+      voucherNo: (
+        <div className="text-right w-full font-bold text-xs uppercase text-muted-foreground pr-2">
+          {t("common.total", "Tổng cộng")}:
+        </div>
+      ),
+      qtyReceipt: (
+        <div className="text-right font-bold text-emerald-600 tabular-nums">
+          {fmtQty(totalReceipt)}
+        </div>
+      ),
+      qtyIssue: (
+        <div className="text-right font-bold text-orange-600 tabular-nums">
+          {fmtQty(totalIssue)}
+        </div>
+      ),
+      qtyAdjustment: (
+        <div
+          className={cn(
+            "text-right font-bold tabular-nums",
+            totalAdjustment > 0
+              ? "text-emerald-600"
+              : totalAdjustment < 0
+                ? "text-red-600"
+                : "text-blue-600",
+          )}
+        >
+          {totalAdjustment > 0 ? "+" : ""}
+          {fmtQty(totalAdjustment)}
+        </div>
+      ),
+    };
+  }, [rows, t]);
+
   if (!canReadReceipts && !canReadIssues && !canReadAdjustments)
     return <Forbidden />;
 
@@ -781,6 +821,19 @@ export function ErpWarehouseTab() {
         items={rows}
         columns={columns}
         getRowKey={(r) => `${r.type}-${r.id}`}
+        getRowClassName={(row: WarehouseRow) => {
+          const s = (row.status || "").toUpperCase();
+          if (
+            s === "CANCELLED" ||
+            s === "CANCELED" ||
+            s === "VOID" ||
+            s.includes("HỦY")
+          ) {
+            return "opacity-40 text-muted-foreground";
+          }
+          return undefined;
+        }}
+        summaryRow={summaryRow}
         loading={loading}
         error={loadError}
         emptyLabel={t("Chưa có chứng từ kho.")}
@@ -834,6 +887,38 @@ export function ErpWarehouseTab() {
                   }
                 },
               },
+              ...(row.poNo || row.purchaseOrderId || row.salesOrderId
+                ? [
+                    {
+                      label:
+                        row.type === "receipt" || row.purchaseOrderId
+                          ? t("Xem đơn mua hàng", "Xem đơn mua hàng")
+                          : t("Xem đơn bán hàng", "Xem đơn bán hàng"),
+                      icon: <FileText className="h-3.5 w-3.5" />,
+                      onClick: () => {
+                        if (row.purchaseOrderId || row.type === "receipt") {
+                          window.dispatchEvent(
+                            new CustomEvent("open_erp_document", {
+                              detail: {
+                                type: "erp_purchase_order",
+                                id: row.purchaseOrderId || row.poNo,
+                              },
+                            }),
+                          );
+                        } else if (row.salesOrderId || row.type === "issue") {
+                          window.dispatchEvent(
+                            new CustomEvent("open_erp_document", {
+                              detail: {
+                                type: "erp_sales_order",
+                                id: row.salesOrderId || row.poNo,
+                              },
+                            }),
+                          );
+                        }
+                      },
+                    },
+                  ]
+                : []),
             ],
           },
           {
@@ -858,6 +943,24 @@ export function ErpWarehouseTab() {
           {
             groupLabel: t("groupThaoTac", "Thao tác"),
             items: [
+              {
+                label: t("Chỉnh sửa"),
+                icon: <Pencil className="h-3.5 w-3.5" />,
+                hidden:
+                  row.status === "CANCELLED" ||
+                  (row.type === "receipt" && !canUpdateReceipt) ||
+                  (row.type === "issue" && !canUpdateIssue) ||
+                  (row.type === "adjustment" && !canUpdateAdjustment),
+                onClick: () => {
+                  if (row.type === "receipt") {
+                    grDrawer.openDetail(row.id, false);
+                  } else if (row.type === "issue") {
+                    giDrawer.openDetail(row.id, false);
+                  } else if (row.type === "adjustment") {
+                    iaDrawer.openDetail(row.id, false);
+                  }
+                },
+              },
               {
                 label: t("Xóa"),
                 icon: <Trash2 className="h-3.5 w-3.5" />,

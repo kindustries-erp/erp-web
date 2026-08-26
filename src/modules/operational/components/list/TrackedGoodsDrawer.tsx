@@ -55,6 +55,7 @@ function entriesToAttributes(
 export interface TrackedGoodsDrawerProps {
   open: boolean;
   item: InventorySerialRow | null;
+  initialMode?: DrawerMode;
   onClose: () => void;
   onSaved: () => void;
 }
@@ -64,6 +65,7 @@ export interface TrackedGoodsDrawerProps {
 export function TrackedGoodsDrawer({
   open,
   item,
+  initialMode = "view",
   onClose,
   onSaved,
 }: TrackedGoodsDrawerProps) {
@@ -71,7 +73,7 @@ export function TrackedGoodsDrawer({
   const showToast = useUIStore((s) => s.showToast);
   const canUpdate = useHasPermission("inventory_items", "update");
 
-  const [mode, setMode] = useState<DrawerMode>("view");
+  const [mode, setMode] = useState<DrawerMode>(initialMode);
   const [saving, setSaving] = useState(false);
   const [previewSoNo, setPreviewSoNo] = useState<string | null>(null);
 
@@ -162,10 +164,14 @@ export function TrackedGoodsDrawer({
     };
   }, [open, detailItem?.vinId]);
 
-  // Reset mode when drawer closes
+  // Reset or set initial mode when drawer opens/closes
   useEffect(() => {
-    if (!open) setMode("view");
-  }, [open]);
+    if (open) {
+      setMode(initialMode || "view");
+    } else {
+      setMode("view");
+    }
+  }, [open, initialMode]);
 
   const handleToggleEdit = useCallback(() => {
     if (mode === "view") {
