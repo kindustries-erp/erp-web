@@ -13,13 +13,28 @@ import {
   useGiDrawer,
   type GiLineForm,
 } from "@/modules/goods-issues-core/hooks/useGiDrawer";
+import {
+  type ProductionIdentifier,
+  type TrackingPolicy,
+  emptyIdentifier,
+  makeIdentifierRows,
+  identifiersAllValid,
+  findVehicleDuplicate,
+  parseVehicleBulkInput,
+} from "../components/drawer/ProductionOrderExecutionTab";
 
-type ProductionDrawerForm = ReturnType<typeof emptyForm>;
+const COLOR_NAMES: Record<string, string> = {
+  DEN: "ĐEN",
+  TRANG: "TRẮNG",
+  DO: "ĐỎ",
+  XANH: "XANH",
+  XAM: "XÁM",
+  BAC: "BẠC",
+};
 
 export interface BomLikeLine {
   id?: string;
   path?: string;
-  /** Effective item id (may be alternativeItemId when override is set) */
   itemId?: string;
   itemName?: string | null;
   itemCode?: string | null;
@@ -27,7 +42,6 @@ export interface BomLikeLine {
   qtyRequired?: string | null;
   qtyIssued?: string | null;
   uom?: string | null;
-  /** Original BOM component item id (before any override) */
   originalItemId?: string | null;
   alternativeItemId?: string | null;
   alternativeItemName?: string | null;
@@ -96,7 +110,13 @@ export function useProductionOrderDrawer({
   const showToast = useUIStore((s) => s.showToast);
   const navigate = useAppStore((s) => s.navigate);
 
-  const [form, setForm] = useState<ProductionDrawerForm>(emptyForm());
+  const [activeTab, setActiveTab] = useState<string>("details");
+  const [form, setForm] = useState(emptyForm());
+  const [notes, setNotes] = useState("");
+  const [localOrder, setLocalOrder] = useState<ErpProductionOrder | null>(
+    editing,
+  );
+
   const [itemOptions, setItemOptions] = useState<
     Array<{ value: string; label: string }>
   >([]);
@@ -116,7 +136,7 @@ export function useProductionOrderDrawer({
   const issueDrawer = useGiDrawer({ invalidateWarehouseQuery: true });
   const [startQty, setStartQty] = useState("1");
 
-  // BOM selection: list of BOMs available for the selected finished good
+  // BOM selection
   const [availableBoms, setAvailableBoms] = useState<ErpBom[]>([]);
   const [completeQty, setCompleteQty] = useState("1");
   const [completeUnitCost, setCompleteUnitCost] = useState("0");
@@ -124,7 +144,16 @@ export function useProductionOrderDrawer({
   const [showCompleteDialog, setShowCompleteDialog] = useState(false);
   const [showLackingOnly, setShowLackingOnly] = useState(false);
 
-  // ── Alternative item overrides: bomLineId (or componentItemId) → alternativeItemId
+  // Execution states
+  const [batchCompleteQty, setBatchCompleteQty] = useState("1");
+  const [showBatchDialog, setShowBatchDialog] = useState(false);
+  const [vehicleBulkInput, setVehicleBulkInput] = useState("");
+  const [identifiers, setIdentifiers] = useState<ProductionIdentifier[]>([
+    emptyIdentifier(),
+  ]);
+  const prevBatchQtyRef = useRef<string>("");
+
+  // Alternative item overrides
   const [alternativeItems, setAlternativeItems] = useState<
     Record<string, string>
   >({});
@@ -141,8 +170,6 @@ export function useProductionOrderDrawer({
     entities: "inventoryItems",
   });
 
-  // Persistent cache: id -> label, survives search-term changes so selected
-  // items never lose their labels when the API page no longer includes them.
   const cachedAltItems = useRef<Record<string, string>>({});
 
   useEffect(() => {
@@ -154,7 +181,6 @@ export function useProductionOrderDrawer({
     });
   }, [altItemsData]);
 
-  // Populate cache from editing BOM when it loads (edit/view mode)
   useEffect(() => {
     if (!editing) return;
     const sourceLines = editing.lines || editing.materials || [];
@@ -175,7 +201,6 @@ export function useProductionOrderDrawer({
       ) || [],
     );
 
-    // Ensure currently selected alternative items are always present
     Object.values(alternativeItems).forEach((altId) => {
       if (altId && !map.has(altId)) {
         map.set(altId, cachedAltItems.current[altId] || "NVL Thay Thế");
@@ -216,6 +241,95 @@ export function useProductionOrderDrawer({
     [],
   );
 
+  const trackingPolicy: TrackingPolicy =
+    (
+      localOrder?.finishedGoodItem as
+        | { trackingPolicy?: TrackingPolicy }
+        | undefined
+    )?.trackingPolicy ?? "NONE";
+  const needsIdentifiers = ["SERIAL", "LOT", "VEHICLE"].includes(
+    trackingPolicy,
+  );
+
+  // Sync localOrder and form when editing changes
+  useEffect(() => {
+    setLocalOrder(editing);
+    if (editing) {
+      setNotes(
+        editing.notes || (editing.outputMetadata?.notes as string) || "",
+      );
+    }
+  }, [editing]);
+
+  // Resize identifier rows when batchCompleteQty changes
+  useEffect(() => {
+    if (!needsIdentifiers) return;
+    const qty = Math.max(1, Math.floor(Number(batchCompleteQty) || 1));
+    if (String(qty) === prevBatchQtyRef.current) return;
+    prevBatchQtyRef.current = String(qty);
+    setIdentifiers((prev) => {
+      if (prev.length === qty) return prev;
+      if (prev.length < qty) {
+        return [
+          ...prev,
+          ...Array.from({ length: qty - prev.length }, emptyIdentifier),
+        ];
+      }
+      return prev.slice(0, qty);
+    });
+  }, [batchCompleteQty, needsIdentifiers]);
+
+  const handleIdentifierChange = useCallback(
+    (index: number, val: ProductionIdentifier) => {
+      setIdentifiers((prev) => prev.map((row, i) => (i === index ? val : row)));
+    },
+    [],
+  );
+
+  const resetVehicleEntry = useCallback(() => {
+    setIdentifiers(makeIdentifierRows(1));
+    prevBatchQtyRef.current = "1";
+    setBatchCompleteQty("1");
+    setVehicleBulkInput("");
+  }, []);
+
+  const refreshLocalOrder = useCallback(async () => {
+    if (!editing?.id) return;
+    try {
+      const updated = await productionCoreApi.get(editing.id);
+      setLocalOrder(updated);
+      await onSaved();
+    } catch {
+      // ignore
+    }
+  }, [editing, onSaved]);
+
+  const applyVehicleBulkInput = useCallback(() => {
+    try {
+      const rows = parseVehicleBulkInput(vehicleBulkInput);
+      const qty = Math.max(1, Math.floor(Number(batchCompleteQty) || 1));
+      if (rows.length !== qty) {
+        showToast({
+          title: `Số dòng bulk (${rows.length}) phải bằng số lượng hoàn thành (${qty})`,
+          variant: "destructive",
+        });
+        return;
+      }
+      const duplicateMessage = findVehicleDuplicate(rows);
+      if (duplicateMessage) {
+        showToast({ title: duplicateMessage, variant: "destructive" });
+        return;
+      }
+      setIdentifiers(rows);
+      showToast({
+        title: "Đã trích xuất danh sách VIN / số máy thành công",
+        variant: "success",
+      });
+    } catch (e: any) {
+      showToast({ title: e.message, variant: "destructive" });
+    }
+  }, [batchCompleteQty, showToast, vehicleBulkInput]);
+
   const loadItems = useCallback(async () => {
     try {
       const res = await bomCoreApi.list({ pageSize: 500 });
@@ -234,6 +348,7 @@ export function useProductionOrderDrawer({
     }
   }, []);
 
+  // Explode BOM effect
   useEffect(() => {
     const requestId = ++bomLoadRequestRef.current;
 
@@ -285,13 +400,9 @@ export function useProductionOrderDrawer({
               if (bomLoadRequestRef.current !== requestId) return;
 
               const sourceLineMap = new Map(
-                sourceLines.map((line) => [
-                  line.itemId, // Map by effective item id to distinguish overridden and non-overridden identical original items
-                  line,
-                ]),
+                sourceLines.map((line) => [line.itemId, line]),
               );
 
-              // Helper to flatten the tree
               const flattenTree = (
                 nodes: ExplosionNode[],
                 level = 0,
@@ -305,7 +416,7 @@ export function useProductionOrderDrawer({
                   const effectiveItemId = selectedAltItemId || n.itemId;
                   const matched = sourceLineMap.get(effectiveItemId);
                   result.push({
-                    id: matched?.id, // Keep original ID if it exists
+                    id: matched?.id,
                     path: n.path,
                     itemId: n.itemId,
                     originalItemId: n.itemId,
@@ -333,13 +444,11 @@ export function useProductionOrderDrawer({
                 editing?.outputMetadata?.explosionTree &&
                 editing.outputMetadata.bomId === bomId
               ) {
-                // If we are editing an MO and the bomId matches its original bom, use the saved tree
                 lines = flattenTree(
                   editing.outputMetadata
                     .explosionTree as unknown as ExplosionNode[],
                 );
               } else {
-                // Otherwise use the preview tree from API
                 lines = flattenTree(
                   previewRes.explosionTree as unknown as ExplosionNode[],
                 );
@@ -387,7 +496,6 @@ export function useProductionOrderDrawer({
     }
 
     setBomLoading(true);
-    // Use the user-selected bomId if available; otherwise fall back to first
     const resolveAndLoad = form.bomId
       ? Promise.resolve(form.bomId)
       : bomCoreApi
@@ -465,7 +573,7 @@ export function useProductionOrderDrawer({
       });
   }, [form.finishedGoodItemId, form.bomId, editing]);
 
-  // Auto-fill referenceNo when opening create drawer
+  // Auto-fill referenceNo for create
   useEffect(() => {
     if (open && !editing) {
       productionCoreApi
@@ -478,13 +586,11 @@ export function useProductionOrderDrawer({
             }));
           }
         })
-        .catch(() => {
-          // Non-blocking: user can still enter referenceNo manually
-        });
+        .catch(() => {});
     }
   }, [open, editing]);
 
-  // Fetch all BOMs for selected finished good; auto-select latest ACTIVE (create only)
+  // Available BOMs effect
   useEffect(() => {
     if (!form.finishedGoodItemId) {
       setAvailableBoms([]);
@@ -497,7 +603,6 @@ export function useProductionOrderDrawer({
         const boms = res.items;
         setAvailableBoms(boms);
         if (!editing && boms.length > 0) {
-          // Only auto-select in create mode; edit mode keeps the saved bomId
           const activeBom = boms.find((b) => b.status === "ACTIVE") ?? boms[0];
           setForm((prev) =>
             boms.some((b) => b.id === prev.bomId)
@@ -511,16 +616,16 @@ export function useProductionOrderDrawer({
       });
   }, [form.finishedGoodItemId, editing]);
 
-  // When alternativeItems change, reload balances to include alt item qtys
+  // Alternative items balance reload
   useEffect(() => {
     const altIds = Object.values(alternativeItems).filter(Boolean);
     if (!altIds.length) return;
-    // Merge alt item ids with base item ids
     const baseIds = bomLines.map((l) => l.itemId).filter(Boolean) as string[];
     const allIds = Array.from(new Set([...baseIds, ...altIds]));
     inventoryCoreApi.getBalances(allIds).then(setBalances);
   }, [alternativeItems, bomLines]);
 
+  // Modal open reset/populate
   useEffect(() => {
     if (open) {
       bomLoadRequestRef.current += 1;
@@ -539,23 +644,27 @@ export function useProductionOrderDrawer({
             : "",
           bomId: (editing.outputMetadata?.bomId as string) || "",
         });
+        setNotes(
+          editing.notes || (editing.outputMetadata?.notes as string) || "",
+        );
         const existingNotes =
           (editing.outputMetadata?.lineNotes as Record<string, string>) || {};
         setLineNotes(existingNotes);
       } else {
         setForm(emptyForm());
+        setNotes("");
         setBomLines([]);
         setBalances({});
         setLineNotes({});
-        setBomLoading(false);
-      }
-      if (!editing) {
         setAlternativeItems({});
+        setBomLoading(false);
       }
       setLocalSearch("");
       setError(null);
+      resetVehicleEntry();
     } else {
       setForm(emptyForm());
+      setNotes("");
       setBomLines([]);
       setBalances({});
       setLineNotes({});
@@ -564,7 +673,7 @@ export function useProductionOrderDrawer({
       setError(null);
       setBomLoading(false);
     }
-  }, [open, editing, loadItems]);
+  }, [open, editing, loadItems, resetVehicleEntry]);
 
   const getPayload = (status: string) => {
     const materialOverrides = Object.entries(alternativeItems)
@@ -595,11 +704,13 @@ export function useProductionOrderDrawer({
         : {}),
       ...(form.plannedEndDate ? { plannedEndDate: form.plannedEndDate } : {}),
       ...(form.bomId ? { bomId: form.bomId } : {}),
+      notes: notes.trim() || undefined,
       status,
       ...(materialOverrides.length > 0 ? { materialOverrides } : {}),
       outputMetadata: {
         ...(editing?.outputMetadata || {}),
         lineNotes,
+        notes: notes.trim() || undefined,
       },
     };
   };
@@ -674,7 +785,7 @@ export function useProductionOrderDrawer({
         variant: "success",
       });
       await onSaved();
-      onClose();
+      await refreshLocalOrder();
     } catch (e: unknown) {
       setError(getErrorMessage(e, "Không thể xác nhận lệnh sản xuất"));
     } finally {
@@ -682,9 +793,216 @@ export function useProductionOrderDrawer({
     }
   };
 
+  // Execution actions
+  const handleStartAll = useCallback(async () => {
+    const orderId = localOrder?.id || editing?.id;
+    if (!orderId) return;
+    setSaving(true);
+    try {
+      await productionCoreApi.start(orderId, {
+        qtyToManufacture: Number(
+          localOrder?.qtyToProduce ?? form.qtyToProduce ?? 1,
+        ),
+      });
+      showToast({
+        title: "Bắt đầu sản xuất và xuất kho NVL thành công",
+        variant: "success",
+      });
+      await refreshLocalOrder();
+    } catch (e) {
+      showToast({
+        title: getErrorMessage(e, "Không thể bắt đầu sản xuất"),
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(false);
+    }
+  }, [localOrder, editing, form.qtyToProduce, refreshLocalOrder, showToast]);
+
+  const handleCompleteOne = useCallback(async () => {
+    const orderId = localOrder?.id || editing?.id;
+    if (!orderId) return;
+    if (
+      needsIdentifiers &&
+      !identifiersAllValid(identifiers.slice(0, 1), trackingPolicy)
+    ) {
+      showToast({
+        title: "Vui lòng nhập đầy đủ thông tin định danh trước khi hoàn thành",
+        variant: "destructive",
+      });
+      return;
+    }
+    setSaving(true);
+    try {
+      const identifiersPayload = identifiers.slice(0, 1).map((id) => {
+        const mergedAttrs = {
+          ...id.attributes.reduce(
+            (acc, curr) => {
+              if (curr.key.trim()) acc[curr.key.trim()] = curr.value.trim();
+              return acc;
+            },
+            {} as Record<string, string>,
+          ),
+        };
+        if (id.colorCode) {
+          mergedAttrs["color"] = COLOR_NAMES[id.colorCode] || id.colorCode;
+        }
+
+        return {
+          vinNo: id.vinNo,
+          engineNo: id.engineNo,
+          serialNo: id.serialNo,
+          lotNo: id.lotNo,
+          notes: id.notes,
+          attributes:
+            Object.keys(mergedAttrs).length > 0 ? mergedAttrs : undefined,
+        };
+      });
+      await productionCoreApi.complete(orderId, {
+        qtyFinished: 1,
+        ...(needsIdentifiers ? { identifiers: identifiersPayload } : {}),
+      });
+      showToast({
+        title: "Đã hoàn thành 1 đơn vị thành phẩm",
+        variant: "success",
+      });
+      resetVehicleEntry();
+      await refreshLocalOrder();
+    } catch (e) {
+      showToast({
+        title: getErrorMessage(e, "Không thể hoàn thành đơn vị sản xuất"),
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(false);
+    }
+  }, [
+    localOrder,
+    editing,
+    identifiers,
+    needsIdentifiers,
+    trackingPolicy,
+    refreshLocalOrder,
+    resetVehicleEntry,
+    showToast,
+  ]);
+
+  const handleBatchComplete = useCallback(async () => {
+    const orderId = localOrder?.id || editing?.id;
+    if (!orderId) return;
+    const qty = Number(batchCompleteQty);
+    if (!qty || qty <= 0) {
+      showToast({ title: "Số lượng không hợp lệ", variant: "destructive" });
+      return;
+    }
+    const remainingQty =
+      Number(localOrder?.qtyToProduce || 0) -
+      Number(localOrder?.qtyProduced || 0);
+    if (qty > remainingQty) {
+      showToast({
+        title: `Số lượng hoàn thành không được vượt quá số lượng còn lại (${remainingQty})`,
+        variant: "destructive",
+      });
+      return;
+    }
+    if (needsIdentifiers && !identifiersAllValid(identifiers, trackingPolicy)) {
+      showToast({
+        title: "Vui lòng nhập đầy đủ thông tin định danh cho tất cả đơn vị",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (trackingPolicy === "VEHICLE") {
+      const duplicateMessage = findVehicleDuplicate(identifiers);
+      if (duplicateMessage) {
+        showToast({ title: duplicateMessage, variant: "destructive" });
+        return;
+      }
+    }
+    setSaving(true);
+    try {
+      const identifiersPayload = identifiers.map((id) => {
+        const mergedAttrs = {
+          ...id.attributes.reduce(
+            (acc, curr) => {
+              if (curr.key.trim()) acc[curr.key.trim()] = curr.value.trim();
+              return acc;
+            },
+            {} as Record<string, string>,
+          ),
+        };
+        if (id.colorCode) {
+          mergedAttrs["color"] = COLOR_NAMES[id.colorCode] || id.colorCode;
+        }
+
+        return {
+          vinNo: id.vinNo,
+          engineNo: id.engineNo,
+          serialNo: id.serialNo,
+          lotNo: id.lotNo,
+          notes: id.notes,
+          attributes:
+            Object.keys(mergedAttrs).length > 0 ? mergedAttrs : undefined,
+        };
+      });
+      await productionCoreApi.complete(orderId, {
+        qtyFinished: qty,
+        unitCost: 0,
+        ...(needsIdentifiers ? { identifiers: identifiersPayload } : {}),
+      });
+      showToast({
+        title: `Đã hoàn thành ${qty} đơn vị sản xuất`,
+        variant: "success",
+      });
+      setShowBatchDialog(false);
+      resetVehicleEntry();
+      await refreshLocalOrder();
+    } catch (e) {
+      showToast({
+        title: getErrorMessage(e, "Không thể hoàn thành sản xuất hàng loạt"),
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(false);
+    }
+  }, [
+    localOrder,
+    editing,
+    batchCompleteQty,
+    identifiers,
+    needsIdentifiers,
+    trackingPolicy,
+    refreshLocalOrder,
+    resetVehicleEntry,
+    showToast,
+  ]);
+
+  const handleExportXlsx = useCallback(async () => {
+    if (!editing?.id) return;
+    try {
+      setSaving(true);
+      const blob = await productionCoreApi.exportXlsx(editing.id);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `Lenh_San_Xuat_${editing.referenceNo || editing.id}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      showToast({ title: "Xuất file Excel thành công", variant: "success" });
+    } catch (e) {
+      showToast({
+        title: getErrorMessage(e, "Không thể xuất file Excel"),
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(false);
+    }
+  }, [editing, showToast]);
+
   const onIssueMaterial = () => {
     if (!editing?.id) return;
-
     issueDrawer.openCreate(editing.id);
 
     const exportLines: GiLineForm[] = bomLines.map((line) => {
@@ -722,66 +1040,8 @@ export function useProductionOrderDrawer({
 
   const onReceiveFinishedGood = () => {
     if (!editing?.id) return;
-    // Set query params or session storage so the GR page knows to prefill for this MO
     window.sessionStorage.setItem("gr_prefill_mo", editing.id);
     navigate("erp-inventory-stock");
-  };
-
-  const handleStartProduction = async () => {
-    if (!editing?.id) return;
-    const qty = Number(startQty);
-    if (!qty || qty <= 0) return;
-    setSaving(true);
-    setError(null);
-    try {
-      await productionCoreApi.start(editing.id, {
-        qtyToManufacture: qty,
-        ...(form.warehouseCode?.trim()
-          ? { warehouseCode: form.warehouseCode.trim() }
-          : {}),
-      });
-      showToast({
-        title: "Bắt đầu sản xuất thành công",
-        variant: "success",
-      });
-      setShowStartDialog(false);
-      await onSaved();
-      onClose();
-    } catch (e: unknown) {
-      setError(getErrorMessage(e, "Không thể bắt đầu sản xuất"));
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleCompleteProduction = async () => {
-    if (!editing?.id) return;
-    const qty = Number(completeQty);
-    if (!qty || qty <= 0) return;
-    setSaving(true);
-    setError(null);
-    try {
-      await productionCoreApi.complete(editing.id, {
-        qtyFinished: qty,
-        ...(form.warehouseCode?.trim()
-          ? { warehouseCode: form.warehouseCode.trim() }
-          : {}),
-        ...(Number(completeUnitCost) > 0
-          ? { unitCost: Number(completeUnitCost) }
-          : {}),
-      });
-      showToast({
-        title: "Hoàn thành sản xuất thành công",
-        variant: "success",
-      });
-      setShowCompleteDialog(false);
-      await onSaved();
-      onClose();
-    } catch (e: unknown) {
-      setError(getErrorMessage(e, "Không thể ghi nhận hoàn thành sản xuất"));
-    } finally {
-      setSaving(false);
-    }
   };
 
   const bomOptions = useMemo(
@@ -796,8 +1056,14 @@ export function useProductionOrderDrawer({
   );
 
   return {
+    activeTab,
+    setActiveTab,
     form,
     setForm,
+    notes,
+    setNotes,
+    localOrder: localOrder || editing,
+    refreshLocalOrder,
     itemOptions,
     availableBoms,
     bomOptions,
@@ -808,8 +1074,6 @@ export function useProductionOrderDrawer({
     onIssueMaterial,
     issueDrawer,
     onReceiveFinishedGood,
-    handleStartProduction,
-    handleCompleteProduction,
     startQty,
     setStartQty,
     completeQty,
@@ -839,6 +1103,24 @@ export function useProductionOrderDrawer({
     fetchNextAltItems,
     loadingAltItems,
     bomLoading,
+    // Execution
+    batchCompleteQty,
+    setBatchCompleteQty,
+    showBatchDialog,
+    setShowBatchDialog,
+    vehicleBulkInput,
+    setVehicleBulkInput,
+    applyVehicleBulkInput,
+    identifiers,
+    setIdentifiers,
+    handleIdentifierChange,
+    trackingPolicy,
+    needsIdentifiers,
+    handleStartAll,
+    handleCompleteOne,
+    handleBatchComplete,
+    handleExportXlsx,
+    resetVehicleEntry,
   };
 }
 

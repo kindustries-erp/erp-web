@@ -9,6 +9,7 @@ import {
   CheckCircle2,
   FileSpreadsheet,
   Plus,
+  Pencil,
 } from "lucide-react";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
@@ -31,7 +32,6 @@ import {
 import { bomCoreApi } from "@/modules/bom-core/api/bomCoreApi";
 import { ProductionOrderDrawer } from "./ProductionOrderDrawer";
 import { useProductionOrderDrawer } from "../hooks/useProductionOrderDrawer";
-import { ProductionRunDrawer } from "./ProductionRunDrawer";
 function fmtDate(value?: string | null) {
   if (!value) return "—";
   return value.slice(0, 10);
@@ -88,7 +88,7 @@ export function ProductionOrderListPage() {
   const filterConfig = useMemo(
     () => ({
       period: false,
-      search: true,
+      search: false,
       status: {
         options: [
           { value: "DRAFT", label: "DRAFT" },
@@ -134,11 +134,9 @@ export function ProductionOrderListPage() {
   );
   const [deleting, setDeleting] = useState(false);
 
-  // Production run drawer state
-  const [productionRunOpen, setProductionRunOpen] = useState(false);
-  const [productionRunLoading, setProductionRunLoading] = useState(false);
-  const [productionRunOrder, setProductionRunOrder] =
-    useState<ErpProductionOrder | null>(null);
+  const [drawerInitialTab, setDrawerInitialTab] = useState<
+    "details" | "execution" | "traceability" | "history"
+  >("details");
 
   const filterSearch = filter.state.search;
   const filterStatus = filter.state.status;
@@ -206,32 +204,39 @@ export function ProductionOrderListPage() {
     setPage(1);
   };
 
+  const getRowClassName = useCallback((item: ErpProductionOrder) => {
+    if (item.status === "CANCELLED") {
+      return "opacity-40 text-muted-foreground";
+    }
+    return undefined;
+  }, []);
+
   const handleCreate = () => {
     setDrawerMode("create");
-    setTimeout(() => setEditingOrder(null), 300);
+    setDrawerInitialTab("details");
+    setEditingOrder(null);
     setDrawerOpen(true);
   };
 
   const handleOpenProductionRun = async (item: ErpProductionOrder) => {
-    // Open immediately with skeleton; fetch detail after open.
-    setDrawerOpen(false);
-    setTimeout(() => setEditingOrder(null), 300);
-    setProductionRunOrder(null);
-    setProductionRunLoading(true);
-    setProductionRunOpen(true);
+    setDrawerMode("view");
+    setDrawerInitialTab("execution");
+    setEditingOrder(item);
+    setDrawerOpen(true);
+    setDrawerLoading(true);
     try {
       const data = await productionCoreApi.get(item.id);
-      setProductionRunOrder(data);
+      setEditingOrder(data);
     } catch {
       showToast({ title: t("Lỗi tải chi tiết lệnh"), variant: "destructive" });
-      setProductionRunOpen(false);
     } finally {
-      setProductionRunLoading(false);
+      setDrawerLoading(false);
     }
   };
 
   const handleEdit = async (id: string, viewOnly = false) => {
     setDrawerMode(viewOnly ? "view" : "edit");
+    setDrawerInitialTab("details");
     setDrawerOpen(true);
     setDrawerLoading(true);
     try {
@@ -340,6 +345,17 @@ export function ProductionOrderListPage() {
 
   const columns = useMemo(
     () => [
+      {
+        key: "index",
+        header: <span className="w-full block text-center">#</span>,
+        headerClassName: "text-center w-[40px] min-w-[40px]",
+        className: "text-center w-[40px] min-w-[40px] text-muted-foreground",
+        size: 40,
+        enableResizing: false,
+        cell: (_: ErpProductionOrder, idx?: number) => (
+          <span className="w-full block text-center">{idx}</span>
+        ),
+      },
       {
         key: "referenceNo",
         header: (
@@ -636,6 +652,7 @@ export function ProductionOrderListPage() {
       items={orders}
       columns={columns}
       getRowKey={(i) => i.id}
+      getRowClassName={getRowClassName}
       loading={loading}
       error={error}
       emptyLabel={t("Chưa có lệnh sản xuất nào")}
@@ -678,6 +695,12 @@ export function ProductionOrderListPage() {
               label: t("Chi tiết"),
               onClick: () => handleEdit(item.id, true),
               icon: <Eye className="h-[13px] w-[13px]" />,
+            },
+            {
+              label: t("Chỉnh sửa"),
+              onClick: () => handleEdit(item.id, false),
+              icon: <Pencil className="h-[13px] w-[13px]" />,
+              hidden: !canUpdate || item.status === "CANCELLED",
             },
             {
               label: t("Xuất XLSX"),
@@ -738,6 +761,7 @@ export function ProductionOrderListPage() {
         loading={drawerLoading}
         editing={editingOrder}
         viewOnly={drawerMode === "view"}
+        initialTab={drawerInitialTab}
         onClose={() => {
           setDrawerOpen(false);
           setTimeout(() => setEditingOrder(null), 300);
@@ -751,19 +775,6 @@ export function ProductionOrderListPage() {
         }
         onSaved={loadData}
         drawerState={drawerState}
-        productionRunOpen={
-          productionRunOpen &&
-          !!productionRunOrder &&
-          !!editingOrder &&
-          productionRunOrder.id === editingOrder.id
-        }
-        onOpenProductionRun={() => {
-          if (editingOrder) {
-            setProductionRunOrder(editingOrder);
-            setProductionRunOpen(true);
-          }
-        }}
-        onCloseProductionRun={() => setProductionRunOpen(false)}
       />
 
       {deleteTarget && (
@@ -793,21 +804,6 @@ export function ProductionOrderListPage() {
           onConfirm={handleCancelOrder}
           onCancel={() => setCancelTarget(null)}
           loading={canceling}
-        />
-      )}
-
-      {/* Standalone production run drawer — opened directly from list quick action */}
-      {productionRunOpen && !drawerOpen && (
-        <ProductionRunDrawer
-          open={true}
-          loading={productionRunLoading}
-          order={productionRunOrder}
-          onClose={() => {
-            setProductionRunOpen(false);
-            setProductionRunOrder(null);
-            setProductionRunLoading(false);
-          }}
-          onRefresh={loadData}
         />
       )}
     </SpreadsheetPageTemplate>
