@@ -26,6 +26,13 @@ export function useDataTableFullscreen({
     if (!isFullscreen) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
+        // Don't close fullscreen if an open drawer, dialog, or popover is currently active
+        const hasActiveOverlay = Boolean(
+          document.querySelector(
+            ".slide-panel-overlay.open, [role='dialog'], [data-radix-popper-content-wrapper]",
+          ),
+        );
+        if (hasActiveOverlay) return;
         closeFullscreen();
       }
     };

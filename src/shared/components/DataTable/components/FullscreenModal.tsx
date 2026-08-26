@@ -85,7 +85,7 @@ export function FullscreenModal<T>({
   return createPortal(
     <div
       className={cn(
-        "fixed inset-0 z-[450] bg-surface dark:bg-slate-950 shadow-2xl overflow-hidden animate-in fade-in duration-200 flex flex-col p-4 sm:p-5 gap-3",
+        "fixed inset-0 z-[200] bg-surface dark:bg-slate-950 shadow-2xl overflow-hidden animate-in fade-in duration-200 flex flex-col p-4 sm:p-5 gap-3",
         fullscreenClassName,
       )}
     >
