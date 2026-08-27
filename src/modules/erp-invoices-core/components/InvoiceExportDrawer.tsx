@@ -8,6 +8,7 @@ import { useTranslation } from "react-i18next";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import { ActionDropdown } from "@/shared/components/ActionDropdown";
 import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
+import { DrawerSection } from "@/shared/components/DrawerModal";
 import { StandardTable } from "@/shared/components/StandardTable";
 import { Combobox } from "@/shared/components/Combobox";
 import { DatePicker } from "@/shared/components/DatePicker";
@@ -64,10 +65,43 @@ export function InvoiceExportDrawer({
   const [pageSize, setPageSize] = useState(10);
   const [starting, setStarting] = useState(false);
   const [downloadingJobId, setDownloadingJobId] = useState<string | null>(null);
+  const [trackedJobId, setTrackedJobId] = useState<string | null>(null);
   const terminalRefreshGuardRef = useRef<string | null>(null);
+  const downloadedJobIdsRef = useRef<Set<string>>(new Set());
 
   const progress = useInvoiceExportProgressStore();
   const { downloadReadyFile } = useInvoiceExportProgress();
+
+  const handleDownload = async (
+    jobIdOrRow: string | InvoiceExportHistoryItem,
+    customFileName?: string,
+  ) => {
+    const jobId =
+      typeof jobIdOrRow === "string" ? jobIdOrRow : jobIdOrRow.jobId;
+    const fileName =
+      typeof jobIdOrRow === "string" ? customFileName : jobIdOrRow.fileName;
+
+    if (downloadingJobId) return;
+
+    try {
+      setDownloadingJobId(jobId);
+      await downloadReadyFile(jobId, fileName);
+      toast.success(
+        t("erpInvoices:exportDrawer.toast.downloading", "Đang tải file XLSX."),
+      );
+      void historyQuery.refetch();
+    } catch (error: any) {
+      toast.error(
+        error?.message ||
+          t(
+            "erpInvoices:exportDrawer.error.downloadFailed",
+            "Không thể tải lại file XLSX.",
+          ),
+      );
+    } finally {
+      setDownloadingJobId(null);
+    }
+  };
 
   const historyQuery = useQuery({
     queryKey: ["invoice-export-history", page, pageSize, direction],
@@ -104,22 +138,48 @@ export function InvoiceExportDrawer({
 
   useEffect(() => {
     if (!open) return;
-    if (!progress.jobId) return;
 
-    const isTerminalState =
-      progress.ready || progress.failed || progress.completed;
-    if (!isTerminalState) return;
+    // 1. Check SSE progress for completed / ready state
+    const activeJobId = progress.jobId;
+    if (
+      activeJobId &&
+      (progress.ready || progress.completed) &&
+      !downloadedJobIdsRef.current.has(activeJobId)
+    ) {
+      downloadedJobIdsRef.current.add(activeJobId);
+      void handleDownload(activeJobId, progress.fileName);
+    }
 
-    if (terminalRefreshGuardRef.current === progress.jobId) return;
-    terminalRefreshGuardRef.current = progress.jobId;
-    void historyQuery.refetch();
+    // 2. Check historyQuery items for trackedJobId (fallback if SSE missed event)
+    if (trackedJobId && !downloadedJobIdsRef.current.has(trackedJobId)) {
+      const historyItem = historyQuery.data?.items?.find(
+        (it) => it.jobId === trackedJobId && it.status === "COMPLETED",
+      );
+      if (historyItem) {
+        downloadedJobIdsRef.current.add(trackedJobId);
+        void handleDownload(trackedJobId, historyItem.fileName);
+      }
+    }
+
+    // 3. Refresh history table when terminal state reached
+    if (
+      activeJobId &&
+      (progress.ready || progress.failed || progress.completed)
+    ) {
+      if (terminalRefreshGuardRef.current !== activeJobId) {
+        terminalRefreshGuardRef.current = activeJobId;
+        void historyQuery.refetch();
+      }
+    }
   }, [
-    historyQuery,
     open,
-    progress.completed,
-    progress.failed,
     progress.jobId,
     progress.ready,
+    progress.completed,
+    progress.failed,
+    progress.fileName,
+    trackedJobId,
+    historyQuery.data?.items,
   ]);
 
   useEffect(() => {
@@ -198,20 +258,25 @@ export function InvoiceExportDrawer({
       };
       const result =
         await erpInvoicesCoreApi.startExportExcelBackground(payload);
+      setTrackedJobId(result.jobId);
       if (result.reused) {
         toast.success(
           result.message ||
             t(
               "erpInvoices:exportDrawer.toast.reused",
-              "Da tim thay file cu. Ban co the tai lai ngay.",
+              "Đã tìm thấy file cũ. Đang tự động tải xuống.",
             ),
         );
+        if (!downloadedJobIdsRef.current.has(result.jobId)) {
+          downloadedJobIdsRef.current.add(result.jobId);
+          void handleDownload(result.jobId);
+        }
       } else {
         toast.success(
           result.message ||
             t(
               "erpInvoices:exportDrawer.toast.started",
-              "Da bat dau tien trinh xuat Excel.",
+              "Đã bắt đầu tiến trình xuất Excel.",
             ),
         );
       }
@@ -221,34 +286,11 @@ export function InvoiceExportDrawer({
         error?.message ||
           t(
             "erpInvoices:exportDrawer.error.startFailed",
-            "Khong the bat dau xuat Excel.",
+            "Không thể bắt đầu xuất Excel.",
           ),
       );
     } finally {
       setStarting(false);
-    }
-  };
-
-  const handleDownload = async (row: InvoiceExportHistoryItem) => {
-    if (!row.canDownload || downloadingJobId) return;
-
-    try {
-      setDownloadingJobId(row.jobId);
-      await downloadReadyFile(row.jobId, row.fileName);
-      toast.success(
-        t("erpInvoices:exportDrawer.toast.downloading", "Dang tai file XLSX."),
-      );
-      await historyQuery.refetch();
-    } catch (error: any) {
-      toast.error(
-        error?.message ||
-          t(
-            "erpInvoices:exportDrawer.error.downloadFailed",
-            "Khong the tai lai file XLSX.",
-          ),
-      );
-    } finally {
-      setDownloadingJobId(null);
     }
   };
 
@@ -388,83 +430,105 @@ export function InvoiceExportDrawer({
         "Tạo file theo kỳ và tải lại file đã tạo trong 24 tiếng",
       )}
       icon={<FileSpreadsheet className="w-4 h-4" />}
-      layout="1-column"
-      size="xl"
+      layout="2-columns"
+      size="lg"
       leftPanel={
         <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
-            <div>
-              <label className="text-xs font-medium text-muted-foreground block mb-1">
-                {t("erpInvoices:exportDrawer.period", "Kỳ")}
-              </label>
-              <Combobox
-                options={periodOptions}
-                value={period}
-                onChange={(v) => handlePeriodChange(v ?? "")}
-                placeholder={t(
-                  "erpInvoices:exportDrawer.selectPeriod",
-                  "Chọn kỳ...",
-                )}
-              />
-            </div>
-            <div>
-              <label className="text-xs font-medium text-muted-foreground block mb-1">
-                {t("erpInvoices:exportDrawer.dateFrom", "Từ ngày")}
-              </label>
-              <DatePicker
-                value={dateFrom}
-                onChange={(v) => {
-                  setDateFrom(v);
-                }}
-                placeholder="dd/mm/yyyy"
-              />
-            </div>
-            <div>
-              <label className="text-xs font-medium text-muted-foreground block mb-1">
-                {t("erpInvoices:exportDrawer.dateTo", "Đến ngày")}
-              </label>
-              <DatePicker
-                value={dateTo}
-                onChange={(v) => {
-                  setDateTo(v);
-                }}
-                placeholder="dd/mm/yyyy"
-              />
-            </div>
-          </div>
-
-          <div className="flex justify-end">
-            <Button onClick={handleStartExport} disabled={starting}>
-              <Play className="w-4 h-4" />
-              {starting
-                ? t("erpInvoices:exportDrawer.starting", "Đang khởi tạo...")
-                : t("erpInvoices:exportDrawer.start", "Xuất Excel")}
-            </Button>
-          </div>
-
-          <div className="text-sm font-semibold">
-            {t("erpInvoices:exportDrawer.historyTitle", "Lịch sử xuất file")}
-          </div>
-
-          <StandardTable
-            tableId="invoice-export-history"
-            variant="spreadsheet"
-            enableColumnResizing={true}
-            items={historyQuery.data?.items || []}
-            columns={columns}
-            getRowKey={(row) => row.jobId}
-            loading={historyQuery.isLoading || historyQuery.isFetching}
-            page={page}
-            pageSize={pageSize}
-            total={historyQuery.data?.total || 0}
-            totalPages={historyQuery.data?.totalPages || 1}
-            onPage={setPage}
-            onPageSize={setPageSize}
-            emptyLabel={t(
-              "erpInvoices:exportDrawer.emptyHistory",
-              "Chưa có file xuất nào",
+          <DrawerSection
+            title={t(
+              "erpInvoices:exportDrawer.historyTitle",
+              "Lịch sử xuất file",
             )}
-          />
+            collapsible
+            defaultCollapsed={false}
+          >
+            <StandardTable
+              tableId="invoice-export-history"
+              variant="spreadsheet"
+              enableColumnResizing={true}
+              items={historyQuery.data?.items || []}
+              columns={columns}
+              getRowKey={(row) => row.jobId}
+              loading={historyQuery.isLoading || historyQuery.isFetching}
+              page={page}
+              pageSize={pageSize}
+              total={historyQuery.data?.total || 0}
+              totalPages={historyQuery.data?.totalPages || 1}
+              onPage={setPage}
+              onPageSize={setPageSize}
+              emptyLabel={t(
+                "erpInvoices:exportDrawer.emptyHistory",
+                "Chưa có file xuất nào",
+              )}
+            />
+          </DrawerSection>
+        </div>
+      }
+      rightPanel={
+        <div className="space-y-4">
+          <DrawerSection
+            title={t(
+              "erpInvoices:exportDrawer.filterConditions",
+              "Điều kiện xuất dữ liệu",
+            )}
+            collapsible
+            defaultCollapsed={false}
+          >
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs font-medium text-muted-foreground block mb-1">
+                  {t("erpInvoices:exportDrawer.period", "Kỳ")}
+                </label>
+                <Combobox
+                  options={periodOptions}
+                  value={period}
+                  onChange={(v) => handlePeriodChange(v ?? "")}
+                  placeholder={t(
+                    "erpInvoices:exportDrawer.selectPeriod",
+                    "Chọn kỳ...",
+                  )}
+                  allowClear={false}
+                />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground block mb-1">
+                  {t("erpInvoices:exportDrawer.dateFrom", "Từ ngày")}
+                </label>
+                <DatePicker
+                  value={dateFrom}
+                  onChange={(v) => {
+                    setDateFrom(v);
+                  }}
+                  placeholder="dd/mm/yyyy"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground block mb-1">
+                  {t("erpInvoices:exportDrawer.dateTo", "Đến ngày")}
+                </label>
+                <DatePicker
+                  value={dateTo}
+                  onChange={(v) => {
+                    setDateTo(v);
+                  }}
+                  placeholder="dd/mm/yyyy"
+                />
+              </div>
+
+              <div className="pt-2">
+                <Button
+                  className="w-full justify-center"
+                  onClick={handleStartExport}
+                  disabled={starting}
+                >
+                  <Play className="w-4 h-4 mr-1.5" />
+                  {starting
+                    ? t("erpInvoices:exportDrawer.starting", "Đang khởi tạo...")
+                    : t("erpInvoices:exportDrawer.start", "Xuất Excel")}
+                </Button>
+              </div>
+            </div>
+          </DrawerSection>
         </div>
       }
     />

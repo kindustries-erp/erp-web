@@ -23,6 +23,7 @@ import {
   Paperclip,
   Wallet,
   FileText,
+  Building2,
 } from "lucide-react";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/Button";
@@ -35,6 +36,7 @@ import { PurchaseOrderSelectionModal } from "./PurchaseOrderSelectionModal";
 import { SalesOrderSelectionModal } from "./SalesOrderSelectionModal";
 import { GarageCaseSelectionModal } from "./GarageCaseSelectionModal";
 import { ErpInvoiceSettlementTab } from "./ErpInvoiceSettlementTab";
+import { ErpInvoicePartnerTab } from "./ErpInvoicePartnerTab";
 import { PostedAccountingSummary } from "@/shared/components/accounting/PostedAccountingSummary";
 import { PostingSection } from "@/shared/components/accounting/PostingSection";
 import { ErpInvoicePdfUpload } from "./ErpInvoicePdfUpload";
@@ -71,6 +73,8 @@ interface Props {
   onUnpost?: () => void;
   tabs?: DrawerTopTabItem[];
   defaultTabKey?: string;
+  activeTabKey?: string;
+  onTabChange?: (tabKey: string) => void;
   relatedTabs?: DrawerRelatedTabItem[];
   defaultRelatedTabKey?: string;
   defaultRelatedCollapsed?: boolean;
@@ -118,6 +122,8 @@ export function ErpInvoiceInternalDrawer({
   onUnpost,
   tabs: customTabs,
   defaultTabKey = "invoice_details",
+  activeTabKey,
+  onTabChange,
   relatedTabs: customRelatedTabs,
   defaultRelatedTabKey = "financials",
   defaultRelatedCollapsed = false,
@@ -340,18 +346,177 @@ export function ErpInvoiceInternalDrawer({
       (detailInvoice.attachments?.length || 0);
 
     return [
-      // 1. Tab Chi tiết hóa đơn (Form / Sheet Preview Chính)
+      // 1. Tab Chi tiết (Form / Sheet Preview Chính)
       {
         key: "invoice_details",
-        label: t("Chi tiết hóa đơn", "Chi tiết hóa đơn"),
+        label: t("tabDetails", "Chi tiết"),
         icon: <FileText className="w-3.5 h-3.5" />,
         content: <div className="space-y-4">{children}</div>,
       },
 
-      // 2. Tab Hạch toán kế toán (View & Edit)
+      // 2. Tab Giao dịch (Thông tin đối tác & Lịch sử giao dịch liên quan)
+      {
+        key: "partner",
+        label: t("tabTransactions", "Giao dịch"),
+        icon: <Building2 className="w-3.5 h-3.5" />,
+        hideRightPanel: true,
+        content: (
+          <ErpInvoicePartnerTab
+            detailInvoice={detailInvoice}
+            direction={direction}
+          />
+        ),
+      },
+
+      // 3. Tab Tài chính (Settlements & Cashflow)
+      {
+        key: "financials",
+        label: t("tabFinancials", "Tài chính"),
+        icon: <Wallet className="w-3.5 h-3.5" />,
+        badgeCount:
+          (detailInvoice.voucherNetOffs?.length || 0) +
+          (form?.pendingDocumentChanges?.filter((p) => p.type === "BANK")
+            ?.length || 0),
+        content: (
+          <ErpInvoiceSettlementTab
+            invoice={detailInvoice}
+            form={form}
+            editMode={editMode}
+            fieldSet={fieldSet}
+            direction={direction}
+            onRefresh={onSyncDetail}
+          />
+        ),
+      },
+
+      // 4. Tab Mạng lưới chứng từ liên kết (Canvas Graph Traceability - Full Width)
+      {
+        key: "linked_docs",
+        label: t("tabLinkedDocs", "Chứng từ liên kết"),
+        icon: <Link2 className="w-3.5 h-3.5" />,
+        badgeCount: linkedCount,
+        hideRightPanel: true, // Canvas Graph bung 100% full width để trực quan tối đa
+        content: (
+          <DrawerDocumentTraceability
+            rootId={detailInvoice.id}
+            rootType="INVOICE"
+            fetchGraph={handleFetchGraph}
+            editMode={editMode}
+            allowedDocTypes={[
+              "BANK_TXN",
+              "PURCHASE_ORDER",
+              "SALES_ORDER",
+              "GARAGE_CASE",
+            ]}
+            onAddLink={(stageKey, docType) => {
+              if (docType === "BANK_TXN" || stageKey === "PAYMENT") {
+                setShowNetOffModal(true);
+              } else if (
+                docType === "PURCHASE_ORDER" ||
+                stageKey === "ORDER_STOCK"
+              ) {
+                setShowPoModal(true);
+              } else if (docType === "SALES_ORDER") {
+                setShowSoModal(true);
+              } else if (docType === "GARAGE_CASE") {
+                setShowGarageCaseModal(true);
+              } else {
+                setShowNetOffModal(true);
+              }
+            }}
+            onUnlinkNode={async (node) => {
+              try {
+                if (editMode) {
+                  const currentChanges = form?.pendingDocumentChanges || [];
+                  if (node.docType === "BANK_TXN") {
+                    fieldSet?.("pendingDocumentChanges", [
+                      ...currentChanges,
+                      { type: "BANK", action: "REMOVE", refId: node.id },
+                    ]);
+                    toast.success(
+                      t(
+                        "Đã đánh dấu gỡ liên kết giao dịch ngân hàng (chờ Lưu thay đổi).",
+                      ),
+                    );
+                  } else if (node.docType === "PURCHASE_ORDER") {
+                    fieldSet?.("pendingDocumentChanges", [
+                      ...currentChanges,
+                      { type: "PO", action: "REMOVE", refId: node.id },
+                    ]);
+                    toast.success(
+                      t(
+                        "Đã đánh dấu gỡ liên kết đơn mua hàng (chờ Lưu thay đổi).",
+                      ),
+                    );
+                  } else if (node.docType === "GARAGE_CASE") {
+                    fieldSet?.("pendingDocumentChanges", [
+                      ...currentChanges,
+                      { type: "CASE", action: "REMOVE", refId: node.id },
+                    ]);
+                    toast.success(
+                      t(
+                        "Đã đánh dấu gỡ liên kết phiếu dịch vụ (chờ Lưu thay đổi).",
+                      ),
+                    );
+                  } else if (node.docType === "SALES_ORDER") {
+                    fieldSet?.("pendingDocumentChanges", [
+                      ...currentChanges,
+                      { type: "SO", action: "REMOVE", refId: node.id },
+                    ]);
+                    toast.success(
+                      t(
+                        "Đã đánh dấu gỡ liên kết đơn bán hàng (chờ Lưu thay đổi).",
+                      ),
+                    );
+                  }
+                } else {
+                  toast.error(
+                    t(
+                      "Vui lòng bấm 'Chỉnh sửa' trước khi gỡ liên kết chứng từ.",
+                    ),
+                  );
+                }
+              } catch (err: any) {
+                toast.error(err?.message || t("Lỗi gỡ liên kết chứng từ"));
+              }
+            }}
+          />
+        ),
+      },
+
+      // 5. Tab Tài liệu đính kèm (PDF Files & Upload)
+      {
+        key: "attachments",
+        label: t("tabAttachments", "Tài liệu đính kèm"),
+        icon: <Paperclip className="w-3.5 h-3.5" />,
+        badgeCount: attachmentCount,
+        content: (
+          <div className="p-3 bg-surface/50 rounded-xl border border-border/70">
+            <ErpInvoicePdfUpload
+              noCard={true}
+              invoiceId={detailInvoice.id}
+              attachments={detailInvoice.attachments ?? null}
+              pdfFileKey={detailInvoice.pdfFileKey ?? null}
+              pdfFiles={detailInvoice.pdfFiles ?? null}
+              editMode={editMode}
+              pendingDeletedPdfs={form?.pendingDeletedPdfs}
+              onPendingDeletePdf={(key) => {
+                const current = form?.pendingDeletedPdfs || [];
+                fieldSet?.("pendingDeletedPdfs", [...current, key]);
+              }}
+              pendingAddedAttachments={form?.pendingAddedAttachments}
+              onPendingAddedAttachmentsChange={(files) => {
+                fieldSet?.("pendingAddedAttachments", files);
+              }}
+            />
+          </div>
+        ),
+      },
+
+      // 6. Tab Hạch toán kế toán (View & Edit)
       {
         key: "accounting",
-        label: t("Hạch toán kế toán", "Hạch toán kế toán"),
+        label: t("tabAccounting", "Hạch toán kế toán"),
         icon: <BookOpen className="w-3.5 h-3.5" />,
         badgeCount:
           detailInvoice.postingStatus === "POSTED" ||
@@ -526,155 +691,10 @@ export function ErpInvoiceInternalDrawer({
         ),
       },
 
-      // 3. Tab Tài chính & Cấn trừ (Settlements & Cashflow)
-      {
-        key: "financials",
-        label: t("Tài chính & Cấn trừ", "Tài chính & Cấn trừ"),
-        icon: <Wallet className="w-3.5 h-3.5" />,
-        badgeCount:
-          (detailInvoice.voucherNetOffs?.length || 0) +
-          (form?.pendingDocumentChanges?.filter((p) => p.type === "BANK")
-            ?.length || 0),
-        content: (
-          <ErpInvoiceSettlementTab
-            invoice={detailInvoice}
-            form={form}
-            editMode={editMode}
-            fieldSet={fieldSet}
-            direction={direction}
-            onRefresh={onSyncDetail}
-          />
-        ),
-      },
-
-      // 4. Tab Mạng lưới chứng từ liên kết (Canvas Graph Traceability - Full Width)
-      {
-        key: "linked_docs",
-        label: t("Chứng từ liên kết", "Chứng từ liên kết"),
-        icon: <Link2 className="w-3.5 h-3.5" />,
-        badgeCount: linkedCount,
-        hideRightPanel: true, // Canvas Graph bung 100% full width để trực quan tối đa
-        content: (
-          <DrawerDocumentTraceability
-            rootId={detailInvoice.id}
-            rootType="INVOICE"
-            fetchGraph={handleFetchGraph}
-            editMode={editMode}
-            allowedDocTypes={[
-              "BANK_TXN",
-              "PURCHASE_ORDER",
-              "SALES_ORDER",
-              "GARAGE_CASE",
-            ]}
-            onAddLink={(stageKey, docType) => {
-              if (docType === "BANK_TXN" || stageKey === "PAYMENT") {
-                setShowNetOffModal(true);
-              } else if (
-                docType === "PURCHASE_ORDER" ||
-                stageKey === "ORDER_STOCK"
-              ) {
-                setShowPoModal(true);
-              } else if (docType === "SALES_ORDER") {
-                setShowSoModal(true);
-              } else if (docType === "GARAGE_CASE") {
-                setShowGarageCaseModal(true);
-              } else {
-                setShowNetOffModal(true);
-              }
-            }}
-            onUnlinkNode={async (node) => {
-              try {
-                if (editMode) {
-                  const currentChanges = form?.pendingDocumentChanges || [];
-                  if (node.docType === "BANK_TXN") {
-                    fieldSet?.("pendingDocumentChanges", [
-                      ...currentChanges,
-                      { type: "BANK", action: "REMOVE", refId: node.id },
-                    ]);
-                    toast.success(
-                      t(
-                        "Đã đánh dấu gỡ liên kết giao dịch ngân hàng (chờ Lưu thay đổi).",
-                      ),
-                    );
-                  } else if (node.docType === "PURCHASE_ORDER") {
-                    fieldSet?.("pendingDocumentChanges", [
-                      ...currentChanges,
-                      { type: "PO", action: "REMOVE", refId: node.id },
-                    ]);
-                    toast.success(
-                      t(
-                        "Đã đánh dấu gỡ liên kết đơn mua hàng (chờ Lưu thay đổi).",
-                      ),
-                    );
-                  } else if (node.docType === "GARAGE_CASE") {
-                    fieldSet?.("pendingDocumentChanges", [
-                      ...currentChanges,
-                      { type: "CASE", action: "REMOVE", refId: node.id },
-                    ]);
-                    toast.success(
-                      t(
-                        "Đã đánh dấu gỡ liên kết phiếu dịch vụ (chờ Lưu thay đổi).",
-                      ),
-                    );
-                  } else if (node.docType === "SALES_ORDER") {
-                    fieldSet?.("pendingDocumentChanges", [
-                      ...currentChanges,
-                      { type: "SO", action: "REMOVE", refId: node.id },
-                    ]);
-                    toast.success(
-                      t(
-                        "Đã đánh dấu gỡ liên kết đơn bán hàng (chờ Lưu thay đổi).",
-                      ),
-                    );
-                  }
-                } else {
-                  toast.error(
-                    t(
-                      "Vui lòng bấm 'Chỉnh sửa' trước khi gỡ liên kết chứng từ.",
-                    ),
-                  );
-                }
-              } catch (err: any) {
-                toast.error(err?.message || t("Lỗi gỡ liên kết chứng từ"));
-              }
-            }}
-          />
-        ),
-      },
-
-      // 5. Tab Tài liệu đính kèm (PDF Files & Upload)
-      {
-        key: "attachments",
-        label: t("Tài liệu đính kèm", "Tài liệu đính kèm"),
-        icon: <Paperclip className="w-3.5 h-3.5" />,
-        badgeCount: attachmentCount,
-        content: (
-          <div className="p-3 bg-surface/50 rounded-xl border border-border/70">
-            <ErpInvoicePdfUpload
-              noCard={true}
-              invoiceId={detailInvoice.id}
-              attachments={detailInvoice.attachments ?? null}
-              pdfFileKey={detailInvoice.pdfFileKey ?? null}
-              pdfFiles={detailInvoice.pdfFiles ?? null}
-              editMode={editMode}
-              pendingDeletedPdfs={form?.pendingDeletedPdfs}
-              onPendingDeletePdf={(key) => {
-                const current = form?.pendingDeletedPdfs || [];
-                fieldSet?.("pendingDeletedPdfs", [...current, key]);
-              }}
-              pendingAddedAttachments={form?.pendingAddedAttachments}
-              onPendingAddedAttachmentsChange={(files) => {
-                fieldSet?.("pendingAddedAttachments", files);
-              }}
-            />
-          </div>
-        ),
-      },
-
-      // 6. Tab Lịch sử & Kiểm duyệt (Audit Timeline)
+      // 7. Tab Lịch sử & Kiểm duyệt (Audit Timeline)
       {
         key: "history",
-        label: t("Lịch sử & Kiểm duyệt", "Lịch sử & Kiểm duyệt"),
+        label: t("tabHistory", "Lịch sử & Kiểm duyệt"),
         icon: <History className="w-3.5 h-3.5" />,
         badgeCount: auditItems.length,
         content: (
@@ -731,6 +751,8 @@ export function ErpInvoiceInternalDrawer({
         footerLeft={footerLeft}
         tabs={resolvedDrawerTabs}
         defaultTabKey={defaultTabKey}
+        activeTabKey={activeTabKey}
+        onTabChange={onTabChange}
         leftPanel={!resolvedDrawerTabs ? children : undefined}
         rightPanel={rightPanel}
         relatedTabs={customRelatedTabs}

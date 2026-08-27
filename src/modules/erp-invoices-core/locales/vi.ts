@@ -39,6 +39,14 @@ export const erpInvoicesVi = {
   tabNew: "Mới",
   tabReplacement: "Thay thế",
   tabAdjustment: "Điều chỉnh",
+  tabDetails: "Chi tiết",
+  tabTransactions: "Giao dịch",
+  tabFinancials: "Tài chính",
+  tabLinkedDocs: "Chứng từ liên kết",
+  tabAttachments: "Tài liệu đính kèm",
+  tabAccounting: "Hạch toán kế toán",
+  tabHistory: "Lịch sử & Kiểm duyệt",
+  partnerProfile: "Hồ sơ đối tác",
 
   // View Mode Combobox & Config
   viewMode: "Chế độ xem",
@@ -118,6 +126,7 @@ export const erpInvoicesVi = {
   groupTraCuu: "Tra cứu",
   groupThaoTac: "Thao tác",
   actionDetail: "Chi tiết",
+  actionPartnerTransactions: "Giao dịch đối tác",
   actionDownloadXml: "Tải XML",
   actionDownloadPdf: "Tải PDF",
   actionEdit: "Chỉnh sửa",
@@ -202,6 +211,7 @@ export const erpInvoicesVi = {
   "exportDrawer.partsTitle": "Xuất Excel bảng kê phụ tùng",
   "exportDrawer.subtitle":
     "Tạo file theo kỳ và tải lại file đã tạo trong 24 tiếng",
+  "exportDrawer.filterConditions": "Điều kiện xuất dữ liệu",
   "exportDrawer.customRange": "Tùy chỉnh từ ngày/đến ngày",
   "exportDrawer.period": "Kỳ",
   "exportDrawer.selectPeriod": "Chọn kỳ...",

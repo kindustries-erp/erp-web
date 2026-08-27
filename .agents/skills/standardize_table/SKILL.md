@@ -446,6 +446,10 @@ Bất kỳ cột nào liên quan đến **Status**, **State** thì bắt buộc 
 ## 9. Empty State và CSS Container
 
 - Luôn truyền `emptyLabel={t("Không có dữ liệu", "No data")}`.
+- **Quy chuẩn Border & Border-Radius cho Container Bảng**:
+  - Container bảng **BẮT BUỘC** luôn duy trì bo góc chuẩn `rounded-xl` (12px) và viền thanh thoát `border border-border/60` trên nền `bg-surface` cho tất cả các variants (cả spreadsheet lẫn default).
+  - **TUYỆT ĐỐI KHÔNG** gán `rounded-none` hoặc đặt viền quá đậm làm mất góc bo và tạo cảm giác viền lồng viền (border wrapper) thô cứng.
+  - Tự động tích hợp hiệu ứng scroll shadows (`isScrolledTop` / `isScrolledBottom`) khi cuộn bảng.
 - Với Table nằm trong **Drawer**, hạn chế chiều cao container để không làm vỡ Drawer, có cuộn dọc bên trong:
   `containerClassName="max-h-[calc(100vh-280px)] overflow-y-auto"`.
 ## 10. Phân trang & Default PageSize theo chiều cao màn hình (Pagination & Responsive PageSize)
@@ -496,6 +500,90 @@ Bất kỳ cột nào liên quan đến **Status**, **State** thì bắt buộc 
 - **Yêu cầu `tableId` duy nhất**:
   - Bảng bắt buộc phải được truyền prop `tableId` (dạng chuỗi unique, vd: `"erp-invoices-in"`, `"garage-cases"`, `"bom-list"`) để Core `DataTable` tự động kết nối Portal Target hiển thị nút `ColumnToggle` và lưu trữ trạng thái người dùng vào App Setting.
 
+## 13. Hiệu năng & Tối ưu hóa Re-render khi Chọn Dòng (Table Performance & Fast Selection)
+
+Khi phát triển hoặc nâng cấp bảng dữ liệu có hỗ trợ chọn nhiều dòng (`enableRowSelection={true}`), **BẮT BUỘC** tuân thủ các nguyên tắc hiệu năng sau để đảm bảo thao tác click checkbox phản hồi tức thì (< 16ms / 60fps):
+
+1. **Ổn định Tham Chiếu Cột & Handlers (Referential Stability)**:
+   - **TUYỆT ĐỐI KHÔNG** truyền inline anonymous function cho `rowHoverActions` hoặc `actionsColumn` (vd: `(row) => actions(row)`). Phải truyền trực tiếp `actions` đã được bọc bằng `useCallback`.
+   - **Cô lập `columns` khỏi các state thay đổi thường xuyên**: Trong hook tạo cột, TUYỆT ĐỐI KHÔNG đưa toàn bộ object `listHook` vào dependency array của `useMemo`. Chỉ khai báo các dependency con thực sự cần thiết (`tableState.columnFilters`, `tableState.columnSearch`, `tableState.sorts`, `activeTaxTab`, `dateFrom`, `dateTo`).
+2. **Lazy Evaluation cho Popover & Cell Nặng**:
+   - Với các cell có Popover nội dung lớn (như danh sách mặt hàng, tính tổng sub-table nhiều dòng trong `<TableText>`), bắt buộc truyền `popoverContent` dưới dạng hàm lazy render `() => ReactNode` (chỉ tính toán và render DOM khi Popover thực sự mở).
+3. **Bọc `React.memo` cho Custom Cells & Bulk Modals**:
+   - Tất cả các cell renderer độc lập (Badge, Attachments, Info cells) và container `InvoiceBulkModals` phải được bọc bằng `React.memo`.
+
+## 14. Chế độ Toàn Màn Hình cho Bảng Dữ Liệu (Table Full Screen Mode)
+
+Nhằm tối ưu hóa trải nghiệm tra cứu, đối soát dữ liệu lớn (bảng có nhiều cột hoặc hàng trăm dòng) và đồng bộ với trải nghiệm của `<DrawerDocumentTraceability>`, Core `DataTable` và `StandardTable` hỗ trợ tính năng **Toàn màn hình (Full Screen Mode)**:
+
+- **Nút Chuyển Đổi (Fullscreen Toggle Button)**:
+  - Tự động portal vào thanh công cụ bảng (nằm ngay cạnh nút Tùy chỉnh cột `Settings2` và nút Tải lại `RefreshCcw` trên `TableActionGroup`).
+  - **Trạng thái bình thường**: Hiển thị icon `Maximize2` (`<Maximize2 className="h-4 w-4" />`), tooltip `t("table.fullscreen", "Toàn màn hình")`.
+  - **Trạng thái toàn màn hình**: Hiển thị icon `Minimize2` (`<Minimize2 className="h-4 w-4 text-primary" />`), tooltip `t("table.exitFullscreen", "Thu nhỏ lại (Esc)")`.
+- **Phím tắt `Escape` (`Esc`)**:
+  - Khi đang ở chế độ toàn màn hình, người dùng có thể nhấn phím `Esc` bất kỳ lúc nào để ngay lập tức thu nhỏ bảng trở lại layout ban đầu.
+- **In-place Placeholder (Khung giữ chỗ tại vị trí cũ)**:
+  - Khi bảng được phóng to, tại vị trí ban đầu của trang/drawer sẽ hiển thị một Card giữ chỗ viền nét đứt thanh lịch (`border border-dashed border-border rounded-xl p-6 text-center`) kèm icon `<TableIcon className="w-8 h-8 text-primary animate-pulse" />`, thông báo *"Bảng đang được mở ở chế độ Toàn màn hình."* và nút bấm *"Thu nhỏ lại (Esc)"*.
+- **Portal Tràn Viền Full Viewport (`createPortal` ra `document.body`)**:
+  - Bảng phóng to tràn viền màn hình (`fixed inset-0 z-[450] bg-surface dark:bg-slate-950 shadow-2xl flex flex-col p-4 sm:p-5 gap-3 animate-in fade-in duration-200`).
+  - **Top Fullscreen Header Bar**: Hiển thị icon bảng, tiêu đề chứng từ/bảng (`tableTitle`), Badge tổng số dòng (`total`), và toàn bộ hàng nút hành động/tabs (`fullscreenHeaderExtra` chứa toàn bộ `TableActionGroup`: tabs trạng thái/thuế, dropdown kiểm toán, filter, search, ColumnToggle, Minimize2, Refresh, Sync/Create).
+  - Toàn bộ chiều cao màn hình được tận dụng 100% (`flex-1 min-h-0`), sticky header và pagination cuộn mượt mà không bị giới hạn bởi layout cha.
+
+### Kiến trúc Atomic Component (`src/shared/components/DataTable/`):
+
+Core DataTable tuân thủ cấu trúc Atomic Refactor chuẩn:
+- `DataTable/types.ts`: Toàn bộ TypeScript interfaces & types.
+- `DataTable/utils.ts`: Pure helper functions (`getNestedValue`, `sanitizeActionColumnSizing`).
+- `DataTable/hooks/`:
+  - `useDataTablePreferences.ts`: Quản lý column visibility, order, sizing, reset layout và đồng bộ store.
+  - `useDataTableColumns.tsx`: Xây dựng TanStack ColumnDef, valueType formatters, selection, hover actions.
+  - `useDataTableScroll.ts`: Quản lý scroll shadow (isScrolledTop, isScrolledBottom).
+  - `useDataTableFullscreen.ts`: Quản lý Fullscreen state, Escape listener, callbacks.
+- `DataTable/components/`:
+  - `ColumnToggle.tsx`: Popover tùy biến cột với dnd-kit kéo thả & nút Reset.
+  - `FullscreenToggle.tsx`: Nút icon Maximize2 / Minimize2.
+  - `SelectionCheckboxes.tsx`: Memoized Header & Row selection checkbox.
+  - `DataTableRow.tsx`: Memoized DataTableRowMemo & DataTableRowInner.
+  - `FullscreenModal.tsx`: Fullscreen Portal Container & in-place placeholder.
+- `DataTable/DataTable.tsx`: Main Component gọn gàng kết nối hooks và UI layout.
+- `DataTable/index.ts`: Barrel export cho toàn bộ module.
+- `src/shared/components/DataTable.tsx`: Re-export wrapper tương thích ngược 100%.
+
+### Hướng dẫn sử dụng:
+
+1. **Trên màn hình Page (`SpreadsheetPageTemplate`)**:
+   - Tính năng Toàn màn hình **mặc định đã được bật sẵn (`enableFullscreen = true`)** cho 100% trang sử dụng `SpreadsheetPageTemplate` trên toàn hệ thống.
+   - Tiêu đề của trang (`title`) được tự động gắn vào `tableTitle` trên thanh header fullscreen.
+   - Toàn bộ thanh công cụ (`TableActionGroup`) tự động đồng bộ lên Top Header Bar khi ở Fullscreen mode và ẩn khỏi layout nền.
+   - Nếu có nhu cầu tắt tính năng này cho một trang đặc biệt, chỉ cần truyền `enableFullscreen={false}`.
+
+2. **Trên bảng nhúng trong Drawer / Modal (`DrawerSection` + `StandardTable`)**:
+   - Khi nhúng bảng dữ liệu có nhiều cột vào Drawer (ví dụ danh sách dòng hóa đơn, bảng kiểm kê, danh sách phiếu nhập kho), truyền thêm `enableFullscreen={true}`, `tableTitle={t("Danh sách mặt hàng...")}` và `tableId="unique-table-id"` vào `<StandardTable />` để người dùng có thể phóng to toàn màn hình thao tác dễ dàng:
+   ```tsx
+   <StandardTable
+     tableId="drawer-inventory-lines"
+     tableTitle={t("Danh sách mặt hàng kiểm kê")}
+     enableFullscreen={true}
+     columns={columns}
+     items={items}
+     getRowKey={(r) => r.id}
+   />
+   ```
+
+## 15. Chế độ Xem Bảng Tùy Biến (View Mode Presets & ViewModeCombobox)
+
+Khi một bảng dữ liệu có nhiều góc nhìn tra cứu (như Hóa đơn điện tử, Phiếu dịch vụ Garage), sử dụng component dùng chung `<ViewModeCombobox>` (`@/shared/components/ViewModeCombobox`) kết hợp với `useUserPreferences` để quản lý các chế độ xem:
+
+- **Component chuẩn dùng chung**: `<ViewModeCombobox presets={presets} activePresetKey={activeKey} onSelect={...} onCreateView={...} onEditView={...} onDeleteView={...} />`.
+- **Cơ chế Presets chuẩn**:
+  - `overview`: Chế độ xem Tổng quan (mặc định ban đầu).
+  - `audit` / `financial_progress`: Chế độ xem Đối soát / Kiểm toán / Tiến độ.
+  - Các custom views: Người dùng tự định nghĩa cột hiển thị, thứ tự và độ rộng.
+- **Bảo vệ View Mặc định**: Nút Xóa (Trash) chỉ hiển thị cho custom views; các view mặc định hệ thống (`isDefault === true`, `overview`, `audit`) được bảo vệ an toàn, không thể xóa.
+- **Đồng bộ 2 chiều**: Toàn bộ danh sách presets và active preset key được tự động lưu vào backend qua `updateUserPreferencesApi` và cache LocalStorage.
+
+---
+
 ## Summary Checklist trước khi hoàn thành:
 
 - [ ] Cột đầu tiên (STT) rộng đúng `40px`, **BẮT ĐẦU TỪ 1 VÀ CĂN GIỮA TUYỆT ĐỐI CẢ HEADER VÀ CELL** (`header: <span className="w-full block text-center">#</span>`, `headerClassName: "text-center"`, `className: "text-center"`, `cell: (_, idx) => <span className="w-full block text-center">{idx}</span>`) chưa?
@@ -507,6 +595,7 @@ Bất kỳ cột nào liên quan đến **Status**, **State** thì bắt buộc 
 - [ ] Bảng đã tự động kích hoạt **Right-Click Context Menu** (`TableRowContextMenu`) qua `rowActions` / `actions` và highlight dòng active chưa?
 - [ ] Nút Reset Column đã nằm gọn trong popup menu `ColumnToggle` (`Settings2` → `RotateCcw`), và TUYỆT ĐỐI không đặt ở header cột dữ liệu/Action chưa?
 - [ ] Bảng đã có `tableId` duy nhất để tự động lưu & khôi phục column sizing, visibility, order vào App Setting (`core_user_preferences`) & LocalStorage cache chưa?
+- [ ] Bảng đã hỗ trợ tính năng **Toàn màn hình (Table Full Screen Mode)** (mặc định bật trên `SpreadsheetPageTemplate` và truyền `enableFullscreen={true}`, `tableTitle` trên các bảng lớn trong Drawer) chưa?
 - [ ] `<ActionDropdown>` đã phân nhóm menu bằng `groupLabel` (TRA CỨU, THAO TÁC, ...) chưa?
 - [ ] Các cột dữ liệu đã có `enableResizing: true` chưa?
 - [ ] Header có `<TableColumnHeaderFilter align="center">` và truyền prop `isActive` chưa?
@@ -519,4 +608,6 @@ Bất kỳ cột nào liên quan đến **Status**, **State** thì bắt buộc 
 - [ ] Các cột số tiền / số lượng có `summaryRow` tổng không?
 - [ ] Text đã có namespace i18n (`t(...)`) chưa?
 - [ ] Đã bỏ default state `sortBy` ở UI và dùng default sort ở Backend chưa?
+- [ ] Container bảng đã có bo góc chuẩn `rounded-xl`, viền `border border-border/60` thanh thoát và TUYỆT ĐỐI KHÔNG bị `rounded-none` chưa?
 - [ ] Bảng có sử dụng TableColumnHeaderFilter đã có nút Clear All Filter hiển thị khi có active filter chưa? (Page: `activeFilterCount` + `onClearAllFilters` trên `SpreadsheetPageTemplate`; Drawer: `FilterButton` với `onClear` trong `titleExtra` của `DrawerSection`?)
+- [ ] **Hiệu năng & Fast Selection**: Đã memoize `columns` độc lập, tránh truyền anonymous function cho `rowHoverActions`, và dùng lazy evaluation cho Popover nặng chưa?

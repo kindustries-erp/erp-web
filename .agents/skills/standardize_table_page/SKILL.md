@@ -17,7 +17,7 @@ Khi tạo mới hoặc chỉnh sửa một trang hiển thị bảng dữ liệu
 
 - **Wrapper**: Bọc toàn bộ nội dung trang trong `<SpreadsheetPageTemplate>` từ `@/shared/components/SpreadsheetPageTemplate/SpreadsheetPageTemplate`.
 - **Title & Description**: Trang **PHẢI** có tiêu đề (`<h1>`) và mô tả (`<p>`) rõ ràng, đều dùng hook i18n (`t(...)`).
-- **Variant Bảng**: Truyền `variant="spreadsheet"` cho `<DataTable>` để có giao diện dạng lưới Excel.
+- **Variant Bảng & Container**: Truyền `variant="spreadsheet"` cho `<DataTable>` để có giao diện dạng lưới Excel tinh gọn, đồng thời container bảng tự động giữ bo góc `rounded-xl` (12px) và viền `border border-border/60` đồng bộ toàn hệ thống.
 
 ## 2. Breadcrumb & TabBar — BẮT BUỘC
 
@@ -497,6 +497,7 @@ export function ExampleTablePage() {
 - [ ] Hook đã dùng `getDefaultPageSize` để gán default pageSize theo chiều cao màn hình (`< 900px` -> `20`, `>= 900px` -> `50`) và hỗ trợ `pageSizeOptions = [20, 50, 100, 200]` chưa?
 
 ### Page Template & App Settings
+- [ ] Container bảng đã có bo góc chuẩn `rounded-xl`, viền `border border-border/60` thanh thoát và TUYỆT ĐỐI KHÔNG bị `rounded-none` chưa?
 - [ ] Bảng đã có `tableId` duy nhất để tự động lưu & khôi phục column sizing, visibility, order vào App Setting (`core_user_preferences`) & LocalStorage cache chưa?
 - [ ] Nút Reset Column đã nằm gọn trong popup menu `ColumnToggle` (`Settings2` → `RotateCcw`), TUYỆT ĐỐI không đặt ở header cột chưa?
 - [ ] Đã truyền `rowActions` với 2 Quick Actions đầu tiên là **Xem chi tiết** (`openDetail(id, "view")` — 👁️) và **Chỉnh sửa** (`openDetail(id, "edit")` — ✏️) chưa?

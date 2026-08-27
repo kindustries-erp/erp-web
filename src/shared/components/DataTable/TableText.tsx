@@ -32,13 +32,13 @@ export interface TableTextProps {
   drawerIcon?: React.ReactNode;
   /** Tooltip text for drawer icon, defaults to "Xem thông tin liên quan" */
   drawerTooltip?: string;
-  /** Content to display in the popover */
-  popoverContent?: React.ReactNode;
+  /** Content to display in the popover, or a lazy render function */
+  popoverContent?: React.ReactNode | (() => React.ReactNode);
   /** Custom popover icon, defaults to List */
   popoverIcon?: React.ReactNode;
 }
 
-export function TableText({
+export const TableText = React.memo(function TableText({
   text,
   className,
   textClassName,
@@ -86,12 +86,20 @@ export function TableText({
     textNode
   );
 
+  const resolvedPopoverContent = popoverContent
+    ? typeof popoverContent === "function"
+      ? popoverOpen
+        ? popoverContent()
+        : null
+      : popoverContent
+    : null;
+
   return (
     <div className={cn("flex items-center gap-1.5 w-full group", className)}>
       {/* Popover Icon */}
       {popoverContent && (
         <Popover
-          content={popoverContent}
+          content={resolvedPopoverContent}
           open={popoverOpen}
           onOpenChange={setPopoverOpen}
           side="bottom"
@@ -167,4 +175,4 @@ export function TableText({
       </div>
     </div>
   );
-}
+});

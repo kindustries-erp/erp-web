@@ -98,15 +98,51 @@ function parseDateValue(value: unknown): Date | null {
   return parsed;
 }
 
+import {
+  isQuotationStatus,
+  isInProgressStatus,
+  isCompletedStatus,
+} from "./garageCaseViewPresets";
+
 export function applyGarageCasesTableState(
   items: Record<string, any>[],
   tableState: GarageCasesTableState,
   globalSearch = "",
   dateRanges: GarageCasesDateRanges = {},
+  statusTab = "all",
 ) {
   const searchText = normalizeString(globalSearch);
 
   const filtered = items.filter((item) => {
+    // 0. Filter theo statusTab (PillTabs: all, quotation, in_progress, completed)
+    const effectiveStatusTab =
+      statusTab !== "all"
+        ? statusTab
+        : tableState.columnFilters?.["statusTab"]?.[0] || "all";
+
+    if (effectiveStatusTab && effectiveStatusTab !== "all") {
+      const statusName = item.tenTinhTrangDichVu;
+      const statusCode = item.tinhTrangDichVu;
+      if (
+        effectiveStatusTab === "quotation" &&
+        !isQuotationStatus(statusName, statusCode)
+      ) {
+        return false;
+      }
+      if (
+        effectiveStatusTab === "in_progress" &&
+        !isInProgressStatus(statusName, statusCode)
+      ) {
+        return false;
+      }
+      if (
+        effectiveStatusTab === "completed" &&
+        !isCompletedStatus(statusName, statusCode)
+      ) {
+        return false;
+      }
+    }
+
     if (searchText) {
       const searchable = [
         item.soChungTu,

@@ -42,9 +42,22 @@ import {
 import { toast } from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
+import { PillTabs } from "@/shared/components/PillTabs";
+import { usePageViewPresets } from "@/shared/hooks/usePageViewPresets";
+import {
+  useUserPreferencesStore,
+  type TableViewPreset,
+} from "@/shared/hooks/useUserPreferences";
 import { applyGarageCasesTableState } from "../utils/garageCasesTable";
 import { GarageCaseSettlementDrawerModal } from "../components/GarageCaseSettlementDrawerModal";
 import { InvoiceSelectionDrawer } from "../components/InvoiceSelectionDrawer";
+import { GarageCaseViewModeCombobox } from "../components/GarageCaseViewModeCombobox";
+import { GarageCaseViewConfigDrawer } from "../components/GarageCaseViewConfigDrawer";
+import {
+  GARAGE_CASE_STATUS_TABS,
+  GARAGE_CASE_COLUMN_VIEW_PRESETS,
+  DEFAULT_GARAGE_CASE_COLUMN_VISIBILITY,
+} from "../utils/garageCaseViewPresets";
 import { Button } from "@/shared/components/ui/Button";
 
 export function GarageCases() {
@@ -56,6 +69,142 @@ export function GarageCases() {
   const [dateRanges, setDateRanges] = useState<
     Record<string, { from: string; to: string }>
   >({});
+  const [activeStatusTab, setActiveStatusTab] = useState<string>("all");
+
+  const columnPresetsTableId = "garage-cases-column-views";
+  const actualTableId = "garage-cases-table";
+
+  const columnViewPresetsHook = usePageViewPresets({
+    tableId: columnPresetsTableId,
+    defaultPresets: GARAGE_CASE_COLUMN_VIEW_PRESETS,
+  });
+
+  const currentTablePref = useUserPreferencesStore(
+    (s) => s.tables[actualTableId],
+  );
+  const currentColumnVisibility = currentTablePref?.columnVisibility;
+
+  const [activeColumnPresetKey, setActiveColumnPresetKey] = useState<string>(
+    () => {
+      const stored = useUserPreferencesStore
+        .getState()
+        .getTablePreference(actualTableId);
+      return stored?.activeView || "overview";
+    },
+  );
+
+  const [viewConfigDrawerOpen, setViewConfigDrawerOpen] = useState(false);
+  const [editingViewPreset, setEditingViewPreset] =
+    useState<TableViewPreset | null>(null);
+
+  const handleStatusTabChange = (tab: string) => {
+    setActiveStatusTab(tab);
+    setPage(1);
+  };
+
+  const handleColumnPresetChange = (preset: TableViewPreset) => {
+    setActiveColumnPresetKey(preset.key);
+
+    const currentPref = useUserPreferencesStore
+      .getState()
+      .getTablePreference(actualTableId) || {
+      columnOrder: [],
+      columnVisibility: {},
+    };
+
+    useUserPreferencesStore.getState().setTablePreferences(actualTableId, {
+      ...currentPref,
+      columnVisibility:
+        preset.columnVisibility || DEFAULT_GARAGE_CASE_COLUMN_VISIBILITY,
+      activeView: preset.key,
+    });
+
+    tableState.resetFilters();
+    setDateRanges({});
+    setPage(1);
+  };
+
+  const handleSaveViewPreset = (data: {
+    key?: string;
+    label: string;
+    columnVisibility: Record<string, boolean>;
+  }) => {
+    const isDefault =
+      data.key === "all_columns" ||
+      data.key === "financial_progress" ||
+      data.key === "overview" ||
+      data.key === "audit";
+
+    if (data.key) {
+      const updatedPreset: TableViewPreset = {
+        key: data.key,
+        label: data.label,
+        filters: {},
+        columnVisibility: data.columnVisibility,
+        isDefault,
+        isCustom: !isDefault,
+        isModified: isDefault,
+      };
+      useUserPreferencesStore
+        .getState()
+        .saveTableViewPreset(columnPresetsTableId, updatedPreset);
+      handleColumnPresetChange(updatedPreset);
+      toast.success(
+        t("cases.viewModeSaveSuccess", "Đã lưu chế độ xem thành công"),
+      );
+    } else {
+      const newKey = `custom_${Date.now()}`;
+      const newPreset: TableViewPreset = {
+        key: newKey,
+        label: data.label,
+        filters: {},
+        columnVisibility: data.columnVisibility,
+        isDefault: false,
+        isCustom: true,
+      };
+      useUserPreferencesStore
+        .getState()
+        .saveTableViewPreset(columnPresetsTableId, newPreset);
+      handleColumnPresetChange(newPreset);
+      toast.success(
+        t("cases.viewModeSaveSuccess", "Đã lưu chế độ xem thành công"),
+      );
+    }
+  };
+
+  const handleResetViewPreset = (key: string) => {
+    columnViewPresetsHook.resetView(key);
+    const factoryPreset = GARAGE_CASE_COLUMN_VIEW_PRESETS.find(
+      (p) => p.key === key,
+    );
+    if (factoryPreset) {
+      handleColumnPresetChange(factoryPreset);
+    }
+    toast.success(
+      t(
+        "cases.viewModeResetSuccess",
+        "Đã khôi phục chế độ xem về mặc định thành công",
+      ),
+    );
+  };
+
+  const handleDeleteViewPreset = (key: string) => {
+    if (
+      key === "all_columns" ||
+      key === "financial_progress" ||
+      key === "overview" ||
+      key === "audit"
+    )
+      return;
+    columnViewPresetsHook.deleteView(key);
+    if (activeColumnPresetKey === key) {
+      const fallbackPreset = GARAGE_CASE_COLUMN_VIEW_PRESETS[0];
+      handleColumnPresetChange(fallbackPreset);
+    }
+    toast.success(
+      t("cases.viewModeDeleteSuccess", "Đã xóa chế độ xem thành công"),
+    );
+  };
 
   useEffect(() => {
     if (branches && branches.length > 0 && !selectedBranchId) {
@@ -121,10 +270,17 @@ export function GarageCases() {
         }
       }
     });
+
+    if (activeStatusTab && activeStatusTab !== "all") {
+      if (!combined["statusName"] || combined["statusName"].length === 0) {
+        combined["statusTab"] = [activeStatusTab];
+      }
+    }
+
     return Object.keys(combined).length > 0
       ? JSON.stringify(combined)
       : undefined;
-  }, [tableState.columnFilters, dateRanges]);
+  }, [tableState.columnFilters, dateRanges, activeStatusTab]);
 
   const activeFilterCount = useMemo(() => {
     const activeDateCount = Object.values(dateRanges).filter((range) =>
@@ -236,19 +392,55 @@ export function GarageCases() {
 
   const cases = casesData?.data || [];
   const visibleCases = useMemo(
-    () => applyGarageCasesTableState(cases, tableState, "", dateRanges),
-    [cases, tableState, dateRanges],
+    () =>
+      applyGarageCasesTableState(
+        cases,
+        tableState,
+        "",
+        dateRanges,
+        activeStatusTab,
+      ),
+    [cases, tableState, dateRanges, activeStatusTab],
   );
   const totalCases = casesData?.pagination?.total || 0;
 
   const defaultColumnVisibility = useMemo(
-    () => ({
-      statusName: false,
-      branchName: false,
-      createdAt: false,
-      dataAsOf: false,
-    }),
+    () => DEFAULT_GARAGE_CASE_COLUMN_VISIBILITY,
     [],
+  );
+
+  const viewTabsNode = (
+    <div className="w-full sm:w-auto flex items-center flex-wrap gap-2 py-0.5">
+      <PillTabs
+        className="w-full sm:w-auto shrink-0"
+        listClassName="h-8 p-0.5 rounded-full bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/60 shadow-[0_1px_2px_rgba(15,23,42,.03)]"
+        triggerClassName="h-7 px-3.5 text-xs rounded-full"
+        items={GARAGE_CASE_STATUS_TABS.map((tab) => ({
+          value: tab.value,
+          label: t(tab.labelKey, tab.defaultLabel),
+        }))}
+        value={activeStatusTab}
+        onValueChange={handleStatusTabChange}
+        hideBorder
+      />
+
+      <div className="hidden sm:block h-4 w-px bg-slate-300/80 dark:bg-slate-700/80 shrink-0" />
+
+      <GarageCaseViewModeCombobox
+        presets={columnViewPresetsHook.presets}
+        activePresetKey={activeColumnPresetKey}
+        onSelect={handleColumnPresetChange}
+        onCreateView={() => {
+          setEditingViewPreset(null);
+          setViewConfigDrawerOpen(true);
+        }}
+        onEditView={(preset) => {
+          setEditingViewPreset(preset);
+          setViewConfigDrawerOpen(true);
+        }}
+        onDeleteView={handleDeleteViewPreset}
+      />
+    </div>
   );
 
   const getGarageCaseRowClassName = useCallback((item: any) => {
@@ -1445,8 +1637,14 @@ export function GarageCases() {
       totalBalanceVal += balAmt;
     }
 
+    const isNgayHoanThanhVisible =
+      currentColumnVisibility?.ngayHoanThanhCongViec !== false;
+    const totalLabelCol = isNgayHoanThanhVisible
+      ? "ngayHoanThanhCongViec"
+      : "customerName";
+
     return {
-      ngayHoanThanhCongViec: (
+      [totalLabelCol]: (
         <div className="text-right w-full font-bold text-xs uppercase text-muted-foreground pr-2">
           {t("cases.common.total", "Tổng")}:
         </div>
@@ -1486,7 +1684,7 @@ export function GarageCases() {
         </div>
       ),
     };
-  }, [visibleCases, profitCases, t]);
+  }, [visibleCases, profitCases, t, currentColumnVisibility]);
 
   return (
     <>
@@ -1581,6 +1779,7 @@ export function GarageCases() {
             ],
           },
         ]}
+        customActionsNode={viewTabsNode}
         page={page}
         pageSize={pageSize}
         total={totalCases}
@@ -1634,6 +1833,15 @@ export function GarageCases() {
             queryKey: ["garage", "grossProfitReport"],
           });
         }}
+      />
+
+      <GarageCaseViewConfigDrawer
+        open={viewConfigDrawerOpen}
+        onClose={() => setViewConfigDrawerOpen(false)}
+        preset={editingViewPreset}
+        currentColumnVisibility={currentColumnVisibility}
+        onSave={handleSaveViewPreset}
+        onResetDefault={handleResetViewPreset}
       />
 
       {settlementCase && (

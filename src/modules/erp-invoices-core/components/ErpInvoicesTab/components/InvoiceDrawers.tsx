@@ -12,7 +12,6 @@ import { InvoiceImportSyncDrawer } from "@/modules/erp-invoices-core/components/
 import { GdtPortalAuthDrawer } from "@/modules/erp-invoices-core/components/GdtPortalAuthDrawer";
 import { VietnamInvoiceTemplate } from "@/modules/erp-invoices-core/components/VietnamInvoiceTemplate";
 import { VoucherNetoffSelectionModal } from "@/modules/erp-invoices-core/components/VoucherNetoffSelectionModal";
-import { PartnerInvoiceDrawer } from "@/modules/erp-invoices-core/components/PartnerInvoiceDrawer";
 import { BankTransactionDetailDrawer } from "@/pages/finance/components/BankTransactionDetailDrawer";
 import {
   ErpInvoiceInternalMain,
@@ -55,9 +54,6 @@ export interface InvoiceDrawersProps {
   setPreviewPdf: (pdf: any) => void;
   netOffInvoice: any | null;
   setNetOffInvoice: (inv: any | null) => void;
-  selectedPartner: { taxCode: string; partnerName: string } | null;
-  partnerDrawerOpen: boolean;
-  setPartnerDrawerOpen: (open: boolean) => void;
 }
 
 export function InvoiceDrawers({
@@ -82,9 +78,6 @@ export function InvoiceDrawers({
   setPreviewPdf,
   netOffInvoice,
   setNetOffInvoice,
-  selectedPartner,
-  partnerDrawerOpen,
-  setPartnerDrawerOpen,
 }: InvoiceDrawersProps) {
   return (
     <>
@@ -96,6 +89,8 @@ export function InvoiceDrawers({
         onClose={handleCloseInternal}
         editMode={formHook.editMode}
         detailInvoice={formHook.detailInvoice}
+        activeTabKey={formHook.activeTabKey}
+        onTabChange={formHook.setActiveTabKey}
         startEdit={formHook.startEdit}
         saving={formHook.saving}
         handleSave={formHook.handleSave}
@@ -251,13 +246,6 @@ export function InvoiceDrawers({
         isOpen={Boolean(detailTransactionId)}
         onClose={() => setDetailTransactionId(null)}
         transactionId={detailTransactionId}
-      />
-
-      <PartnerInvoiceDrawer
-        open={partnerDrawerOpen}
-        onClose={() => setPartnerDrawerOpen(false)}
-        taxCode={selectedPartner?.taxCode}
-        partnerName={selectedPartner?.partnerName}
       />
 
       {netOffInvoice && (

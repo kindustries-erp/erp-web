@@ -47,6 +47,11 @@ export interface StandardTableProps<T> {
   containerClassName?: string;
   defaultColumnOrder?: string[];
   sidePanel?: React.ReactNode;
+  enableFullscreen?: boolean;
+  tableTitle?: React.ReactNode;
+  fullscreenClassName?: string;
+  fullscreenHeaderExtra?: React.ReactNode;
+  onFullscreenChange?: (isFullscreen: boolean) => void;
 }
 
 export function StandardTable<T>({
@@ -80,7 +85,7 @@ export function StandardTable<T>({
   enableColumnVisibility = true,
   defaultColumnVisibility,
   tableId,
-  enableColumnResizing,
+  enableColumnResizing = true,
   enableRowSelection,
   rowSelection,
   onRowSelectionChange,
@@ -89,7 +94,23 @@ export function StandardTable<T>({
   containerClassName,
   defaultColumnOrder,
   sidePanel,
+  enableFullscreen,
+  tableTitle,
+  fullscreenClassName,
+  fullscreenHeaderExtra,
+  onFullscreenChange,
 }: StandardTableProps<T>) {
+  const actionsColumnDef = React.useMemo(() => {
+    if (!actions || hideLegacyActionColumn) return undefined;
+    return {
+      header: "",
+      cell: (row: T) => <ActionDropdown items={actions(row)} />,
+      size: actionColumnSize,
+      minSize: actionColumnSize,
+      maxSize: actionColumnSize,
+    };
+  }, [actions, hideLegacyActionColumn, actionColumnSize]);
+
   return (
     <DataTable
       columns={columns}
@@ -116,21 +137,9 @@ export function StandardTable<T>({
       loadingRows={loadingRows}
       loading={loading}
       error={error}
-      actionsColumn={
-        actions && !hideLegacyActionColumn
-          ? {
-              header: "",
-              cell: (row) => <ActionDropdown items={actions(row)} />,
-              size: actionColumnSize,
-              minSize: actionColumnSize,
-              maxSize: actionColumnSize,
-            }
-          : undefined
-      }
+      actionsColumn={actionsColumnDef}
       rowHoverActions={
-        actions && enableRowHoverActions !== false
-          ? (row) => actions(row)
-          : undefined
+        actions && enableRowHoverActions !== false ? actions : undefined
       }
       expandedRowKeys={
         expandedRowKeys ||
@@ -151,6 +160,11 @@ export function StandardTable<T>({
       containerClassName={containerClassName}
       defaultColumnOrder={defaultColumnOrder}
       sidePanel={sidePanel}
+      enableFullscreen={enableFullscreen}
+      tableTitle={tableTitle}
+      fullscreenClassName={fullscreenClassName}
+      fullscreenHeaderExtra={fullscreenHeaderExtra}
+      onFullscreenChange={onFullscreenChange}
     />
   );
 }

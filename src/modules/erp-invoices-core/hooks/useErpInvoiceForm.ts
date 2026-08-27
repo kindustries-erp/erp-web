@@ -81,6 +81,7 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
   const [loadingDetail, setLoadingDetail] = useState(false);
   const [pendingTagIds, setPendingTagIds] = useState<string[]>([]);
   const [pendingUnpost, setPendingUnpost] = useState(false);
+  const [activeTabKey, setActiveTabKey] = useState<string>("invoice_details");
 
   const postingState = usePosting();
 
@@ -92,6 +93,7 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
     setDeleteConfirm(false);
     setCancelConfirm(false);
     setPendingTagIds([]);
+    setActiveTabKey("invoice_details");
     setInfoDrawerOpen(true);
   }
 
@@ -201,7 +203,12 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
     }
   }
 
-  async function openInternal(inv: ErpInvoice | string, skipFetch = false) {
+  async function openInternal(
+    inv: ErpInvoice | string,
+    skipFetch = false,
+    initialTab = "invoice_details",
+  ) {
+    setActiveTabKey(initialTab);
     // Handle string ID — open drawer first then fetch
     if (typeof inv === "string") {
       setInternalDrawerOpen(true);
@@ -334,6 +341,7 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
     setDeleteConfirm(false);
     setCancelConfirm(false);
     setFormError(null);
+    setActiveTabKey("invoice_details");
   }
 
   async function handleSave(statusOverride?: string) {
@@ -764,5 +772,7 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
     loadingDetail,
     handleSyncDetail,
     postingState,
+    activeTabKey,
+    setActiveTabKey,
   };
 }

@@ -140,7 +140,7 @@ export function resolveActionIcon(action: ActionItem): React.ReactNode {
   return <MoreHorizontal className="w-3.5 h-3.5 flex-shrink-0" />;
 }
 
-export function TableRowHoverActions({
+export const TableRowHoverActions = React.memo(function TableRowHoverActions({
   items,
   className,
   maxQuickActions = 2,
@@ -238,4 +238,4 @@ export function TableRowHoverActions({
       </div>
     </div>
   );
-}
+});

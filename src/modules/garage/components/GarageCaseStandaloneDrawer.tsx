@@ -281,7 +281,12 @@ export function GarageCaseStandaloneDrawer({
         date: selectedCase.ngayPhatSinh
           ? new Date(selectedCase.ngayPhatSinh).toISOString().slice(0, 10)
           : null,
-        amount: Number(selectedCase.doanhThu || selectedCase.tienCoThue || 0),
+        amount: Number(
+          selectedCase.tienCoThue ||
+            selectedCase.rawData?.TongTienThanhToan ||
+            selectedCase.doanhThu ||
+            0,
+        ),
         status: selectedCase.tenTinhTrangDichVu || "Đang xử lý",
         statusVariant:
           selectedCase.tinhTrangDichVu === 3 ? "default" : "secondary",
@@ -467,7 +472,10 @@ export function GarageCaseStandaloneDrawer({
     const edges = Array.from(edgesMap.values());
 
     const totalAmount = Number(
-      selectedCase.doanhThu || selectedCase.tienCoThue || 0,
+      selectedCase.tienCoThue ||
+        selectedCase.rawData?.TongTienThanhToan ||
+        selectedCase.doanhThu ||
+        0,
     );
     let directCount = 0;
     let transitiveCount = 0;

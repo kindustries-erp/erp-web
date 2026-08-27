@@ -179,7 +179,7 @@ export function StandardFormDrawer({
   rightPanelTitle,
   rightPanelDefaultCollapsed = false,
   stickyRightPanel = false,
-  collapsibleRightPanel = false,
+  collapsibleRightPanel,
   zIndex,
   asContent = false,
   noAnimation = false,

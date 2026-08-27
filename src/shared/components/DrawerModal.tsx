@@ -378,7 +378,7 @@ export interface DrawerSectionProps {
 export function DrawerSection({
   title,
   titleExtra,
-  collapsible,
+  collapsible = true,
   collapsed: controlledCollapsed,
   defaultCollapsed = false,
   onToggleCollapse,

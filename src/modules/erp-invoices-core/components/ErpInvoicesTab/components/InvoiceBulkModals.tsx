@@ -45,7 +45,7 @@ export interface InvoiceBulkModalsProps {
   setBulkNetOffDrawerOpen: (open: boolean) => void;
 }
 
-export function InvoiceBulkModals({
+export const InvoiceBulkModals = React.memo(function InvoiceBulkModals({
   direction,
   invoices,
   branches,
@@ -98,59 +98,47 @@ export function InvoiceBulkModals({
               ? "Đang nén file..."
               : "Xác nhận tải",
             onClick: handleBulkDownloadSelected,
-            primary: true,
             disabled: bulkSelectedDownloading,
-            loading: bulkSelectedDownloading,
           },
         ]}
       >
-        <div className="space-y-4">
+        <div className="space-y-4 py-2">
           <p className="text-sm text-muted-foreground">
-            Đã chọn <strong>{selectedIds.length}</strong> hóa đơn. Hệ thống sẽ
-            nén PDF/XML của các hóa đơn này thành 1 file ZIP.
+            Hệ thống sẽ tổng hợp toàn bộ các file hóa đơn được chọn thành 1 file
+            nén .zip để tải về. Vui lòng chọn loại file:
           </p>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium">
-              Định dạng file tải về *
+            <label className="flex items-center gap-2 text-sm font-medium cursor-pointer">
+              <Checkbox
+                checked={bulkSelectedTypes.includes("pdf")}
+                onCheckedChange={(checked) => {
+                  if (checked) {
+                    setBulkSelectedTypes([...bulkSelectedTypes, "pdf"]);
+                  } else {
+                    setBulkSelectedTypes(
+                      bulkSelectedTypes.filter((t) => t !== "pdf"),
+                    );
+                  }
+                }}
+              />
+              <span>File PDF (Bản thể hiện hóa đơn)</span>
             </label>
-            <div className="flex flex-col gap-3 mt-2">
-              <label className="flex items-center space-x-2 cursor-pointer">
-                <Checkbox
-                  checked={bulkSelectedTypes.includes("pdf")}
-                  onCheckedChange={(checked) => {
-                    if (checked) {
-                      setBulkSelectedTypes((prev) =>
-                        prev.includes("pdf") ? prev : [...prev, "pdf"],
-                      );
-                    } else {
-                      setBulkSelectedTypes((prev) =>
-                        prev.filter((t) => t !== "pdf"),
-                      );
-                    }
-                  }}
-                />
-                <span className="text-sm">File PDF</span>
-              </label>
-
-              <label className="flex items-center space-x-2 cursor-pointer">
-                <Checkbox
-                  checked={bulkSelectedTypes.includes("xml")}
-                  onCheckedChange={(checked) => {
-                    if (checked) {
-                      setBulkSelectedTypes((prev) =>
-                        prev.includes("xml") ? prev : [...prev, "xml"],
-                      );
-                    } else {
-                      setBulkSelectedTypes((prev) =>
-                        prev.filter((t) => t !== "xml"),
-                      );
-                    }
-                  }}
-                />
-                <span className="text-sm">File XML</span>
-              </label>
-            </div>
+            <label className="flex items-center gap-2 text-sm font-medium cursor-pointer">
+              <Checkbox
+                checked={bulkSelectedTypes.includes("xml")}
+                onCheckedChange={(checked) => {
+                  if (checked) {
+                    setBulkSelectedTypes([...bulkSelectedTypes, "xml"]);
+                  } else {
+                    setBulkSelectedTypes(
+                      bulkSelectedTypes.filter((t) => t !== "xml"),
+                    );
+                  }
+                }}
+              />
+              <span>File XML (Dữ liệu gốc hóa đơn điện tử)</span>
+            </label>
           </div>
         </div>
       </DrawerModal>
@@ -158,7 +146,7 @@ export function InvoiceBulkModals({
       <DrawerModal
         open={bulkDrawerOpen}
         onClose={() => setBulkDrawerOpen(false)}
-        title="Tải hàng loạt hóa đơn"
+        title="Tải hàng loạt hóa đơn theo tháng"
         actions={[
           {
             label: "Hủy",
@@ -167,59 +155,51 @@ export function InvoiceBulkModals({
             disabled: bulkDownloading,
           },
           {
-            label: bulkDownloading ? "Đang nén file..." : "Xác nhận tải",
+            label: bulkDownloading ? "Đang xử lý..." : "Bắt đầu tải",
             onClick: handleBulkDownloadFiles,
-            primary: true,
             disabled: bulkDownloading,
-            loading: bulkDownloading,
           },
         ]}
       >
-        <div className="space-y-6">
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Kỳ tải hóa đơn *</label>
+        <div className="space-y-4 py-2">
+          <div>
+            <label className="block text-sm font-medium mb-1">Chọn tháng</label>
             <Combobox
               options={monthOptions}
               value={bulkMonth}
-              onChange={(v) => setBulkMonth(v ?? "")}
-              placeholder="Chọn kỳ..."
+              onChange={setBulkMonth}
+              placeholder="Chọn tháng..."
             />
-            <p className="text-xs text-muted-foreground mt-1">
-              Hệ thống sẽ tải toàn bộ hóa đơn trong tháng đã chọn để tránh quá
-              tải.
-            </p>
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium">
-              Định dạng file tải về *
-            </label>
-            <div className="flex flex-col gap-3 mt-2">
-              <label className="flex items-center space-x-2 cursor-pointer">
+            <label className="block text-sm font-medium">Loại file tải</label>
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 text-sm font-medium cursor-pointer">
                 <Checkbox
                   checked={bulkTypes.includes("pdf")}
                   onCheckedChange={(checked) => {
                     if (checked) {
-                      setBulkTypes((prev) => [...prev, "pdf"]);
+                      setBulkTypes([...bulkTypes, "pdf"]);
                     } else {
-                      setBulkTypes((prev) => prev.filter((t) => t !== "pdf"));
+                      setBulkTypes(bulkTypes.filter((t) => t !== "pdf"));
                     }
                   }}
                 />
-                <span className="text-sm">File PDF</span>
+                <span>File PDF (Bản thể hiện hóa đơn)</span>
               </label>
-              <label className="flex items-center space-x-2 cursor-pointer">
+              <label className="flex items-center gap-2 text-sm font-medium cursor-pointer">
                 <Checkbox
                   checked={bulkTypes.includes("xml")}
                   onCheckedChange={(checked) => {
                     if (checked) {
-                      setBulkTypes((prev) => [...prev, "xml"]);
+                      setBulkTypes([...bulkTypes, "xml"]);
                     } else {
-                      setBulkTypes((prev) => prev.filter((t) => t !== "xml"));
+                      setBulkTypes(bulkTypes.filter((t) => t !== "xml"));
                     }
                   }}
                 />
-                <span className="text-sm">File XML</span>
+                <span>File XML (Dữ liệu gốc hóa đơn điện tử)</span>
               </label>
             </div>
           </div>
@@ -264,4 +244,4 @@ export function InvoiceBulkModals({
       />
     </>
   );
-}
+});

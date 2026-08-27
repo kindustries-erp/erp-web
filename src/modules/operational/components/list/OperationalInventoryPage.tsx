@@ -1,5 +1,13 @@
 import { useMemo, useState, useEffect } from "react";
-import { Eye, Network, Package, Power, PowerOff, Download } from "lucide-react";
+import {
+  Eye,
+  Pencil,
+  Network,
+  Package,
+  Power,
+  PowerOff,
+  Download,
+} from "lucide-react";
 import { fmtQty } from "@/shared/utils/format";
 
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate";
@@ -90,6 +98,7 @@ export function OperationalInventoryPage({
 
   const tableState = useTableColumnState("inventory-stock-table");
 
+  const [isEditMode, setIsEditMode] = useState(false);
   const [graphOpen, setGraphOpen] = useState(false);
   const [graphItemId, setGraphItemId] = useState<string | null>(null);
   const inventoryGraph = useInventoryGraph();
@@ -253,6 +262,19 @@ export function OperationalInventoryPage({
       getRowKey={(row: InventoryStockRow) =>
         `${row.inventory_item_id}-${row.branch_id || "all"}`
       }
+      getRowClassName={(item: InventoryStockRow) => {
+        const s = (item.status || "").toUpperCase();
+        if (
+          s === "INACTIVE" ||
+          s === "CANCELLED" ||
+          s === "CANCELED" ||
+          s === "VOID" ||
+          s.includes("HỦY")
+        ) {
+          return "opacity-40 text-muted-foreground";
+        }
+        return undefined;
+      }}
       emptyLabel={t("Chưa có tồn kho.")}
       page={page}
       pageSize={pageSize}
@@ -330,9 +352,12 @@ export function OperationalInventoryPage({
           groupLabel: t("groupTraCuu", "Tra cứu"),
           items: [
             {
-              label: t("inventory.action.details"),
+              label: t("inventory.action.details", "Xem chi tiết"),
               icon: <Eye size={14} />,
-              onClick: () => onViewItem(row.inventory_item_id),
+              onClick: () => {
+                setIsEditMode(false);
+                onViewItem(row.inventory_item_id);
+              },
             },
             ...(isGraphAdmin
               ? [
@@ -352,6 +377,14 @@ export function OperationalInventoryPage({
         {
           groupLabel: t("Thao tác"),
           items: [
+            {
+              label: t("inventory.action.edit", "Chỉnh sửa"),
+              icon: <Pencil size={14} />,
+              onClick: () => {
+                setIsEditMode(true);
+                onViewItem(row.inventory_item_id);
+              },
+            },
             ...(row.status === "ACTIVE"
               ? [
                   {
@@ -416,11 +449,12 @@ export function OperationalInventoryPage({
       <InventoryItemFormDrawer
         open={!!viewingItemId || creatingItem}
         onClose={() => {
+          setIsEditMode(false);
           onCloseViewItem();
           onCloseCreateItem();
         }}
         itemId={viewingItemId}
-        viewOnly={!!viewingItemId}
+        viewOnly={!creatingItem && !isEditMode}
         onSuccess={onRefetch}
         onOpenDocument={(docId, docType) => {
           if (docType === "GOODS_RECEIPT") {

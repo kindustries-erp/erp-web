@@ -10,7 +10,10 @@ export interface InvoiceNoCellProps {
   handleOpenInternal: (inv: any, mode?: "view" | "edit") => void;
 }
 
-export function InvoiceNoCell({ inv, handleOpenInternal }: InvoiceNoCellProps) {
+export const InvoiceNoCell = React.memo(function InvoiceNoCell({
+  inv,
+  handleOpenInternal,
+}: InvoiceNoCellProps) {
   const [copiedNo, setCopiedNo] = useState(false);
   const [copiedSerial, setCopiedSerial] = useState(false);
 
@@ -133,4 +136,4 @@ export function InvoiceNoCell({ inv, handleOpenInternal }: InvoiceNoCellProps) {
       </div>
     </div>
   );
-}
+});

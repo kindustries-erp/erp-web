@@ -23,13 +23,10 @@ export interface UseInvoiceColumnsOptions {
       isAttachment?: boolean;
     } | null,
   ) => void;
-  setSelectedPartner: (
-    partner: { taxCode: string; partnerName: string } | null,
-  ) => void;
-  setPartnerDrawerOpen: (open: boolean) => void;
   handleOpenInternal: (
     inv: { id: string; invoiceNo?: string | null; serialNo?: string | null },
     mode?: "view" | "edit",
+    initialTab?: string,
   ) => void;
   handleDownload: (id: string, type: "pdf" | "xml") => Promise<void>;
   handlePreviewPdf: (
@@ -52,26 +49,15 @@ export interface UseInvoiceColumnsOptions {
 export function useInvoiceColumns(
   options: UseInvoiceColumnsOptions,
 ): DataTableColumn<ErpInvoice>[] {
-  const { direction, setSelectedPartner, setPartnerDrawerOpen } = options;
+  const { direction } = options;
 
-  const onSelectPartner = (partner: {
-    taxCode: string;
-    partnerName: string;
-  }) => {
-    setSelectedPartner(partner);
-    setPartnerDrawerOpen(true);
-  };
-
-  const general = useGeneralColumns({
-    ...options,
-    onSelectPartner,
-  });
-
+  const general = useGeneralColumns(options);
   const tax = useTaxColumns(options);
   const amount = useAmountColumns(options);
 
   return useMemo(() => {
     return [
+      general.index,
       general.invoiceDate,
       general.invoiceNo,
       general.partner,

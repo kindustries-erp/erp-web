@@ -146,8 +146,9 @@ export function useInvoiceBulkActions({
     }
   };
 
-  const bulkActionsNode =
-    selectedIds.length > 0 ? (
+  const bulkActionsNode = useMemo(() => {
+    if (selectedIds.length === 0) return null;
+    return (
       <div className="inline-flex items-stretch h-8 rounded-lg border border-border bg-surface text-foreground shadow-xs hover:border-primary/40 transition-colors animate-in fade-in slide-in-from-top-1 duration-150 overflow-hidden">
         <Tooltip
           content={`${t("bulkActions", "Thao tác")} (${selectedIds.length})`}
@@ -235,7 +236,8 @@ export function useInvoiceBulkActions({
           </button>
         </Tooltip>
       </div>
-    ) : null;
+    );
+  }, [selectedIds.length, t]);
 
   return {
     bulkDrawerOpen,

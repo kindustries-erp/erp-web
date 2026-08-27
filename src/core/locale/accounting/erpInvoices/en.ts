@@ -44,6 +44,14 @@ export const erpInvoicesEn = {
   tabNew: "New",
   tabReplacement: "Replacement",
   tabAdjustment: "Adjustment",
+  tabDetails: "Details",
+  tabTransactions: "Transactions",
+  tabFinancials: "Financials",
+  tabLinkedDocs: "Linked Documents",
+  tabAttachments: "Attachments",
+  tabAccounting: "Accounting",
+  tabHistory: "History & Audit",
+  partnerProfile: "Partner Profile",
 
   // Columns & Fields
   attachments: "Docs",
@@ -90,6 +98,7 @@ export const erpInvoicesEn = {
   groupTraCuu: "Lookup",
   groupThaoTac: "Actions",
   actionDetail: "Detail",
+  actionPartnerTransactions: "Partner Transactions",
   actionDownloadXml: "Download XML",
   actionDownloadPdf: "Download PDF",
   actionEdit: "Edit",

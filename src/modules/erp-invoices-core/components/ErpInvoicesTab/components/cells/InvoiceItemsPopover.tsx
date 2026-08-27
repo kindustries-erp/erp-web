@@ -5,7 +5,9 @@ export interface InvoiceItemsPopoverProps {
   items?: any[];
 }
 
-export function InvoiceItemsPopover({ items }: InvoiceItemsPopoverProps) {
+export const InvoiceItemsPopover = React.memo(function InvoiceItemsPopover({
+  items,
+}: InvoiceItemsPopoverProps) {
   if (!items || items.length === 0) {
     return (
       <div className="p-3 max-h-[350px] w-[300px] text-slate-500 text-sm italic">
@@ -146,4 +148,4 @@ export function InvoiceItemsPopover({ items }: InvoiceItemsPopoverProps) {
       </table>
     </div>
   );
-}
+});
