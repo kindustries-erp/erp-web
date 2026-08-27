@@ -25,7 +25,7 @@ export function useErpInvoiceItemsList(
 
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState<number>(getDefaultPageSize);
-  const [sorts, setSorts] = useState<string[]>(["-invoiceDate"]);
+  const [sorts, setSorts] = useState<string[]>([]);
   const [dateFrom, setDateFrom] = useState<string>("");
   const [dateTo, setDateTo] = useState<string>("");
   const [search, setSearch] = useState<string>("");
@@ -65,8 +65,8 @@ export function useErpInvoiceItemsList(
 
   // Parse active sort
   const activeSort = sorts[0] || "";
-  let sortBy = "invoiceDate";
-  let sortOrder: "asc" | "desc" = "desc";
+  let sortBy: string | undefined = undefined;
+  let sortOrder: "asc" | "desc" | undefined = undefined;
   if (activeSort.startsWith("-")) {
     sortBy = activeSort.substring(1);
     sortOrder = "desc";

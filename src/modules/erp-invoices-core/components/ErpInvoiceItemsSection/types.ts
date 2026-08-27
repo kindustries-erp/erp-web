@@ -11,4 +11,6 @@ export interface ErpInvoiceItemsSectionProps {
   onTabChange?: (value: string) => void;
   handleOpenInternal: (inv: any, mode?: "view" | "edit", tab?: string) => void;
   handleDownload?: (id: string, type: "pdf" | "xml") => Promise<void>;
+  onOpenSync?: () => void;
+  onOpenPortalAuth?: () => void;
 }

@@ -1,6 +1,14 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { Eye, Pencil, Building2 } from "lucide-react";
+import {
+  Eye,
+  Pencil,
+  Building2,
+  Download,
+  KeyRound,
+  Settings,
+} from "lucide-react";
+import { useAppStore } from "@/core/config/appStore";
 import type { ActionDropdownItem } from "@/shared/components/ActionDropdown";
 import {
   erpInvoicesCoreApi,
@@ -16,8 +24,10 @@ export function useErpInvoiceItemsSectionLogic({
   canEditInvoice = true,
   partnerTaxCode,
   handleOpenInternal,
+  onOpenPortalAuth,
 }: ErpInvoiceItemsSectionProps) {
   const { t } = useTranslation("erpInvoices");
+  const { openCustomFieldsDrawer } = useAppStore();
   const [isExporting, setIsExporting] = useState(false);
 
   const listHook = useErpInvoiceItemsList({
@@ -167,12 +177,59 @@ export function useErpInvoiceItemsSectionLogic({
     [canEditInvoice, handleOpenInternal, t],
   );
 
+  const createActions = useMemo(
+    () => [
+      {
+        groupLabel: t("groupTraCuu", "Tra cứu"),
+        items: [
+          {
+            label: t("exportExcel", "Xuất Excel"),
+            icon: <Download className="w-4 h-4 text-green-600" />,
+            onClick: () => void handleExportExcel(),
+          },
+        ],
+      },
+      ...(canEditInvoice && onOpenPortalAuth
+        ? [
+            {
+              groupLabel: t("groupThaoTac", "Thao tác"),
+              items: [
+                {
+                  label: t("loginTaxPortal", "Đăng nhập Cổng Thuế"),
+                  icon: <KeyRound className="w-4 h-4 text-primary" />,
+                  onClick: () => onOpenPortalAuth(),
+                },
+              ],
+            },
+          ]
+        : []),
+      {
+        groupLabel: t("groupCauHinh", "Cấu hình"),
+        items: [
+          {
+            label: t("invoiceConfig.customFields", "Cấu hình trường tùy chỉnh"),
+            icon: <Settings className="w-4 h-4 text-violet-500" />,
+            onClick: () => openCustomFieldsDrawer("INVOICE", "Hóa đơn"),
+          },
+        ],
+      },
+    ],
+    [
+      t,
+      canEditInvoice,
+      onOpenPortalAuth,
+      handleExportExcel,
+      openCustomFieldsDrawer,
+    ],
+  );
+
   return {
     t,
     tableId,
     listHook,
     columns,
     rowActions,
+    createActions,
     isExporting,
     handleExportExcel,
   };

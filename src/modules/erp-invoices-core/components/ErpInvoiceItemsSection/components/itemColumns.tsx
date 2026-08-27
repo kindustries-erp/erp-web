@@ -1,13 +1,26 @@
 import React, { useMemo } from "react";
+import { format } from "date-fns";
 import type { TFunction } from "i18next";
 import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
 import { DateRangeColumnSlot } from "@/shared/components/DataTable/DateRangeColumnSlot";
 import { TableText } from "@/shared/components/DataTable/TableText";
-import { TableDateCell } from "@/shared/components/DataTable/TableDateCell";
 import { Badge } from "@/shared/components/ui/badge";
 import type { DataTableColumn } from "@/shared/components/DataTable";
 import type { ErpInvoiceItemRow } from "../../../api/erpInvoicesCoreApi";
 import type { useErpInvoiceItemsList } from "../../../hooks/useErpInvoiceItemsList";
+
+const formatDateCell = (dateStr?: string | null) => {
+  if (!dateStr) return "—";
+  if (/^\d{4}-\d{2}-\d{2}/.test(dateStr)) {
+    const [y, m, d] = dateStr.slice(0, 10).split("-");
+    return `${d}-${m}-${y}`;
+  }
+  try {
+    return format(new Date(dateStr), "dd-MM-yyyy");
+  } catch {
+    return dateStr;
+  }
+};
 
 export interface UseItemColumnsOptions {
   direction: "IN" | "OUT";
@@ -47,7 +60,7 @@ export function useItemColumns({
         className: "text-center w-[40px] min-w-[40px]",
         cell: (_: ErpInvoiceItemRow, idx: number) => (
           <span className="w-full block text-center text-xs text-muted-foreground">
-            {(listHook.page - 1) * listHook.pageSize + idx + 1}
+            {idx}
           </span>
         ),
       },
@@ -149,10 +162,9 @@ export function useItemColumns({
         size: 110,
         enableResizing: true,
         cell: (row: ErpInvoiceItemRow) => (
-          <TableDateCell
-            date={row.invoiceDate}
-            className="justify-center w-full"
-          />
+          <span className="text-center w-full block text-xs">
+            {formatDateCell(row.invoiceDate)}
+          </span>
         ),
       },
 

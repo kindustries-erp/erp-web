@@ -1,24 +1,22 @@
 import React from "react";
-import { Receipt, FileSpreadsheet } from "lucide-react";
+import { Receipt, DownloadCloud } from "lucide-react";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate/SpreadsheetPageTemplate";
-import { Button } from "@/shared/components/ui/Button";
 import { PillTabs } from "@/shared/components/PillTabs";
 import type { ErpInvoiceItemRow } from "../../api/erpInvoicesCoreApi";
 import type { ErpInvoiceItemsSectionProps } from "./types";
 import { useErpInvoiceItemsSectionLogic } from "./useErpInvoiceItemsSectionLogic";
 
 export function ErpInvoiceItemsSection(props: ErpInvoiceItemsSectionProps) {
-  const { direction, isDrawer = false, tabs, activeTab, onTabChange } = props;
-  const logic = useErpInvoiceItemsSectionLogic(props);
   const {
-    t,
-    tableId,
-    listHook,
-    columns,
-    rowActions,
-    isExporting,
-    handleExportExcel,
-  } = logic;
+    direction,
+    isDrawer = false,
+    tabs,
+    activeTab,
+    onTabChange,
+    onOpenSync,
+  } = props;
+  const logic = useErpInvoiceItemsSectionLogic(props);
+  const { t, tableId, listHook, columns, rowActions, createActions } = logic;
 
   const customActionsNode = (
     <div className="w-full sm:w-auto flex items-center flex-wrap gap-2 py-0.5">
@@ -36,17 +34,6 @@ export function ErpInvoiceItemsSection(props: ErpInvoiceItemsSectionProps) {
         onValueChange={(val: string) => listHook.setSubcategoryFilter(val)}
         hideBorder
       />
-
-      <Button
-        variant="outline"
-        size="sm"
-        className="h-8 px-2.5 text-xs gap-1.5 shrink-0"
-        onClick={handleExportExcel}
-        disabled={isExporting}
-      >
-        <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-        <span>{isExporting ? "Đang xuất..." : "Xuất Excel"}</span>
-      </Button>
     </div>
   );
 
@@ -83,6 +70,10 @@ export function ErpInvoiceItemsSection(props: ErpInvoiceItemsSectionProps) {
       onClearAllFilters={listHook.clearAllFilters}
       rowActions={rowActions}
       customActionsNode={customActionsNode}
+      onCreate={onOpenSync}
+      createLabel={t("syncInvoices", "Đồng bộ")}
+      createIcon={<DownloadCloud className="w-4 h-4 mr-1 text-indigo-100" />}
+      createActions={createActions}
       summaryRow={{
         quantity: (
           <div className="text-right font-bold tabular-nums text-xs">

@@ -59,7 +59,7 @@ describe("useErpInvoiceItemsList", () => {
     );
 
     expect(result.current.page).toBe(1);
-    expect(result.current.sorts).toEqual(["-invoiceDate"]);
+    expect(result.current.sorts).toEqual([]);
     expect(result.current.activeFilterCount).toBe(0);
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));

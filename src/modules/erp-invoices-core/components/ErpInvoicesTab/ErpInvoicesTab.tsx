@@ -391,6 +391,8 @@ export function ErpInvoicesTab(props: ErpInvoicesTabProps) {
           onTabChange={(v) => logic.handleViewChange(v as "header" | "lines")}
           handleOpenInternal={handleOpenInternal}
           handleDownload={handleDownload}
+          onOpenSync={() => setImportModalOpen(true)}
+          onOpenPortalAuth={() => setPortalAuthOpen(true)}
         />
       </div>
 

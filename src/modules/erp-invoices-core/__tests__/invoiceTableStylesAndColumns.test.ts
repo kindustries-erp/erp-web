@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from "vitest";
 import { renderHook } from "@testing-library/react";
 import { getInvoiceRowClassName } from "../components/ErpInvoicesTab/utils";
 import { useInvoiceColumns } from "../components/ErpInvoicesTab/components/InvoiceColumns";
+import { useItemColumns } from "../components/ErpInvoiceItemsSection/components/itemColumns";
 import { type ErpInvoice } from "../api/erpInvoicesCoreApi";
 
 describe("Invoice Table Styles & Columns Enhancements", () => {
@@ -153,6 +154,55 @@ describe("Invoice Table Styles & Columns Enhancements", () => {
       expect(discountIdx).toBe(vatRateIdx - 1);
       // totalAmount is immediately before discountAmount
       expect(totalAmountIdx).toBe(discountIdx - 1);
+    });
+  });
+
+  describe("useItemColumns (STT and Date Formatting)", () => {
+    it("should render STT as passed idx directly and format invoiceDate as dd-MM-yyyy without time", () => {
+      const mockListHook: any = {
+        page: 6,
+        pageSize: 200,
+        sorts: ["-invoiceDate"],
+        columnFilters: {},
+        columnSearch: {},
+        dateFrom: "",
+        dateTo: "",
+      };
+
+      const options: any = {
+        direction: "IN",
+        t: (k: string, fallback: string) => fallback || k,
+        listHook: mockListHook,
+        getSortState: vi.fn(() => "desc"),
+        fetchColumnOptions: vi.fn(),
+        handleOpenInternal: vi.fn(),
+      };
+
+      const { result } = renderHook(() => useItemColumns(options));
+      const columns = result.current;
+
+      const indexCol = columns.find((c) => c.key === "index");
+      const dateCol = columns.find((c) => c.key === "invoiceDate");
+
+      expect(indexCol).toBeDefined();
+      expect(dateCol).toBeDefined();
+
+      // Check STT cell rendering
+      const renderedIndex = (indexCol?.cell as any)({}, 1001);
+      expect(renderedIndex.props.children).toBe(1001);
+
+      // Check invoiceDate cell rendering (dd-MM-yyyy without time)
+      const renderedDate = (dateCol?.cell as any)(
+        { invoiceDate: "2026-08-19" },
+        1,
+      );
+      expect(renderedDate.props.children).toBe("19-08-2026");
+
+      const renderedDateIso = (dateCol?.cell as any)(
+        { invoiceDate: "2026-06-01T07:00:00.000Z" },
+        1,
+      );
+      expect(renderedDateIso.props.children).toBe("01-06-2026");
     });
   });
 });
