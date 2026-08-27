@@ -204,5 +204,154 @@ describe("Invoice Table Styles & Columns Enhancements", () => {
       );
       expect(renderedDateIso.props.children).toBe("01-06-2026");
     });
+
+    it("should configure filter headers with search and column options for amount columns and description", () => {
+      const mockListHook: any = {
+        page: 1,
+        pageSize: 20,
+        sorts: [],
+        columnFilters: {
+          description: ["Lốp xe"],
+          totalAmount: ["1000000"],
+        },
+        columnSearch: {
+          discountAmount: "50000",
+        },
+        dateFrom: "",
+        dateTo: "",
+        setSort: vi.fn(),
+        setColumnSearch: vi.fn(),
+        setColumnFilter: vi.fn(),
+      };
+
+      const options: any = {
+        direction: "IN",
+        t: (k: string, fallback: string) => fallback || k,
+        listHook: mockListHook,
+        getSortState: vi.fn(() => "none"),
+        fetchColumnOptions: vi.fn(),
+        handleOpenInternal: vi.fn(),
+      };
+
+      const { result } = renderHook(() => useItemColumns(options));
+      const columns = result.current;
+
+      const descCol = columns.find((c) => c.key === "description");
+      expect(descCol).toBeDefined();
+      const descHeader = descCol?.header as React.ReactElement<any>;
+      expect(descHeader.props.columnKey).toBe("description");
+      expect(descHeader.props.fetchOptions).toBeDefined();
+      expect(descHeader.props.enableSelectAllMatching).toBe(true);
+      expect(descHeader.props.isActive).toBe(true);
+
+      const amountKeys = [
+        "quantity",
+        "unitPrice",
+        "preVatAmount",
+        "vatAmount",
+        "discountAmount",
+        "totalAmount",
+      ];
+
+      for (const key of amountKeys) {
+        const col = columns.find((c) => c.key === key);
+        expect(col).toBeDefined();
+        const header = col?.header as React.ReactElement<any>;
+        expect(header.props.columnKey).toBe(key);
+        expect(header.props.hideFilter).toBeFalsy();
+        expect(header.props.fetchOptions).toBeDefined();
+        expect(header.props.formatOptionLabel).toBeDefined();
+        expect(header.props.enableSelectAllMatching).toBe(true);
+      }
+
+      // Check discountAmount searchValue and onSearchChange are wired
+      const discountCol = columns.find((c) => c.key === "discountAmount");
+      const discountHeader = discountCol?.header as React.ReactElement<any>;
+      expect(discountHeader.props.searchValue).toBe("50000");
+      expect(discountHeader.props.isActive).toBe(true);
+      discountHeader.props.onSearchChange("60000");
+      expect(mockListHook.setColumnSearch).toHaveBeenCalledWith(
+        "discountAmount",
+        "60000",
+      );
+    });
+
+    it("should match column width sizes with header columns and format vatRate as percentage", () => {
+      const mockListHook: any = {
+        page: 1,
+        pageSize: 20,
+        sorts: [],
+        columnFilters: {},
+        columnSearch: {},
+        dateFrom: "",
+        dateTo: "",
+        tableState: {
+          columnFilters: {},
+          columnSearch: {},
+          sorts: [],
+        },
+        filterPanel: {
+          state: { dateFrom: "", dateTo: "" },
+        },
+      };
+
+      const itemOptions: any = {
+        direction: "IN",
+        t: (k: string, fallback: string) => fallback || k,
+        listHook: mockListHook,
+        getSortState: vi.fn(() => "none"),
+        fetchColumnOptions: vi.fn(),
+        handleOpenInternal: vi.fn(),
+      };
+
+      const { result: itemColsResult } = renderHook(() =>
+        useItemColumns(itemOptions),
+      );
+      const itemCols = itemColsResult.current;
+
+      // Check corresponding column sizes
+      const expectedSizes: Record<string, number> = {
+        index: 40,
+        invoiceDate: 100,
+        invoiceNo: 120,
+        serialNo: 120,
+        partner: 250,
+        taxCode: 150,
+        description: 250,
+        preVatAmount: 150,
+        vatAmount: 120,
+        discountAmount: 120,
+        totalAmount: 120,
+        vatRate: 110,
+      };
+
+      for (const [key, size] of Object.entries(expectedSizes)) {
+        const col = itemCols.find((c) => c.key === key);
+        expect(col).toBeDefined();
+        expect(col?.size).toBe(size);
+      }
+
+      // Check vatRate cell formatting
+      const vatRateCol = itemCols.find((c) => c.key === "vatRate");
+      expect(vatRateCol).toBeDefined();
+
+      const rendered8 = (vatRateCol?.cell as any)({ vatRate: 0.08 }, 0);
+      expect(rendered8.props.children).toBe("8%");
+
+      const rendered10 = (vatRateCol?.cell as any)({ vatRate: "0.10" }, 0);
+      expect(rendered10.props.children).toBe("10%");
+
+      const rendered5 = (vatRateCol?.cell as any)({ vatRate: 5 }, 0);
+      expect(rendered5.props.children).toBe("5%");
+
+      const rendered0 = (vatRateCol?.cell as any)({ vatRate: 0 }, 0);
+      expect(rendered0.props.children).toBe("0%");
+
+      const renderedNull = (vatRateCol?.cell as any)({ vatRate: null }, 0);
+      expect(renderedNull.props.children).toBe("—");
+
+      const renderedKct = (vatRateCol?.cell as any)({ vatRate: "KCT" }, 0);
+      expect(renderedKct.props.children).toBe("KCT");
+    });
   });
 });
