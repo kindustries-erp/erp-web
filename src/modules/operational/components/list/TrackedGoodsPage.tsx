@@ -16,7 +16,7 @@ import { Tooltip } from "@/core/components/ui/Tooltip";
 import { formatGMT7 } from "@/shared/utils/format";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate/SpreadsheetPageTemplate";
 import { TableText } from "@/shared/components/DataTable/TableText";
-import { Barcode, Eye, PanelRightOpen } from "lucide-react";
+import { Barcode, Eye, Pencil, FileText, PackageMinus } from "lucide-react";
 import type { ActionDropdownItem } from "@/shared/components/ActionDropdown";
 import { TrackedGoodsDrawer } from "./TrackedGoodsDrawer";
 import { SoPreviewDrawer } from "@/modules/sales-orders-core/components/SoPreviewDrawer";
@@ -48,6 +48,7 @@ export function TrackedGoodsPage({
     null,
   );
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [drawerMode, setDrawerMode] = useState<"view" | "edit">("view");
   const [previewSoNo, setPreviewSoNo] = useState<string | null>(null);
   const giDrawer = useGiDrawer();
 
@@ -153,6 +154,19 @@ export function TrackedGoodsPage({
 
   const columns: DataTableColumn<InventorySerialRow>[] = useMemo(
     () => [
+      {
+        key: "index",
+        header: <span className="w-full block text-center">#</span>,
+        size: 40,
+        enableResizing: false,
+        hideable: false,
+        sortable: false,
+        headerClassName: "text-center",
+        className: "text-center font-mono text-xs text-muted-foreground",
+        cell: (_, idx) => (
+          <span className="w-full block text-center">{idx}</span>
+        ),
+      },
       {
         key: "createdAt",
         header: (
@@ -292,7 +306,7 @@ export function TrackedGoodsPage({
             text={row.serialNo || "—"}
             enableCopy
             tooltip={true}
-            onDrawerClick={() => {
+            onDetailClick={() => {
               setSelectedItem(row);
               setDrawerOpen(true);
             }}
@@ -487,30 +501,17 @@ export function TrackedGoodsPage({
           />
         ),
         size: 200,
-        className: "align-middle text-center",
+        className: "align-middle text-left",
         headerClassName: "text-center",
         cell: (row) => {
           if (!row.lifecycle?.goodsIssueNo) return "—";
           return (
-            <div className="flex flex-col gap-1 w-full pr-1">
-              <div className="flex items-center justify-between gap-2 w-full">
-                <span className="truncate text-primary font-normal">
-                  {row.lifecycle.goodsIssueNo}
-                </span>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (row.lifecycle?.goodsIssueId) {
-                      giDrawer.openDetail(row.lifecycle.goodsIssueId);
-                    }
-                  }}
-                  className="shrink-0 p-1 flex items-center justify-center outline-none"
-                >
-                  <PanelRightOpen className="w-3.5 h-3.5 text-primary opacity-40 hover:opacity-100 transition-opacity" />
-                </button>
-              </div>
-            </div>
+            <TableText
+              text={row.lifecycle.goodsIssueNo}
+              tooltip={row.lifecycle.goodsIssueNo}
+              enableCopy={true}
+              textClassName="font-medium text-primary"
+            />
           );
         },
       },
@@ -582,28 +583,17 @@ export function TrackedGoodsPage({
                 />
               ),
               size: 200,
-              className: "align-middle text-center",
+              className: "align-middle text-left",
               headerClassName: "text-center",
               cell: (row: any) => {
                 if (!row.soNo) return "—";
                 return (
-                  <div className="flex flex-col gap-1 w-full pr-1">
-                    <div className="flex items-center justify-between gap-2 w-full">
-                      <span className="truncate text-primary font-normal">
-                        {row.soNo}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setPreviewSoNo(row.soNo || null);
-                        }}
-                        className="shrink-0 p-1 flex items-center justify-center outline-none"
-                      >
-                        <PanelRightOpen className="w-3.5 h-3.5 text-primary opacity-40 hover:opacity-100 transition-opacity" />
-                      </button>
-                    </div>
-                  </div>
+                  <TableText
+                    text={row.soNo}
+                    tooltip={row.soNo}
+                    enableCopy={true}
+                    textClassName="font-medium text-primary"
+                  />
                 );
               },
             },
@@ -798,17 +788,56 @@ export function TrackedGoodsPage({
         groupLabel: t("TRA CỨU"),
         items: [
           {
-            label: t("Chi tiết"),
-            icon: <Eye className="w-4 h-4" />,
+            label: t("Chi tiết", "Xem chi tiết"),
+            icon: <Eye className="w-3.5 h-3.5" />,
             onClick: () => {
               setSelectedItem(row);
+              setDrawerMode("view");
+              setDrawerOpen(true);
+            },
+          },
+          ...(row.lifecycle?.goodsIssueId || row.lifecycle?.goodsIssueNo
+            ? [
+                {
+                  label: t("Xem phiếu xuất kho", "Xem phiếu xuất kho"),
+                  icon: <PackageMinus className="w-3.5 h-3.5" />,
+                  onClick: () => {
+                    if (row.lifecycle?.goodsIssueId) {
+                      giDrawer.openDetail(row.lifecycle.goodsIssueId);
+                    }
+                  },
+                },
+              ]
+            : []),
+          ...(row.soNo
+            ? [
+                {
+                  label: t("Xem đơn hàng", "Xem đơn hàng"),
+                  icon: <FileText className="w-3.5 h-3.5" />,
+                  onClick: () => {
+                    setPreviewSoNo(row.soNo || null);
+                  },
+                },
+              ]
+            : []),
+        ],
+      },
+      {
+        groupLabel: t("THAO TÁC"),
+        items: [
+          {
+            label: t("Chỉnh sửa", "Chỉnh sửa"),
+            icon: <Pencil className="w-3.5 h-3.5" />,
+            onClick: () => {
+              setSelectedItem(row);
+              setDrawerMode("edit");
               setDrawerOpen(true);
             },
           },
         ],
       },
     ],
-    [t],
+    [t, giDrawer],
   );
 
   return (
@@ -904,6 +933,7 @@ export function TrackedGoodsPage({
       <TrackedGoodsDrawer
         open={drawerOpen}
         item={selectedItem}
+        initialMode={drawerMode}
         onClose={() => setDrawerOpen(false)}
         onSaved={() => {
           query.refetch();

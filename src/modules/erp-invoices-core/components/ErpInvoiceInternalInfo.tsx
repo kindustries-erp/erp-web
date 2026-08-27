@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { DrawerField, DrawerSection } from "@/shared/components/DrawerModal";
 import { Combobox } from "@/shared/components/Combobox";
@@ -10,7 +10,115 @@ import { Checkbox } from "@/shared/components/ui/checkbox";
 import { erpInvoicesCoreApi } from "../api/erpInvoicesCoreApi";
 import toast from "react-hot-toast";
 import { Textarea } from "@/shared/components/ui/textarea";
-import { FileText } from "lucide-react";
+import { FileText, X } from "lucide-react";
+import { ModuleEntityCustomFieldsSection } from "@/shared/components/ModuleEntityCustomFieldsSection";
+import { cn } from "@/shared/utils";
+
+function BufferedTextarea({
+  value,
+  onChange,
+  placeholder,
+  rows = 3,
+  className = "w-full text-sm",
+  debounceMs = 500,
+  allowClear = true,
+}: {
+  value: string;
+  onChange: (val: string) => void;
+  placeholder?: string;
+  rows?: number;
+  className?: string;
+  debounceMs?: number;
+  allowClear?: boolean;
+}) {
+  const [localValue, setLocalValue] = useState<string>(value || "");
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const isFocusedRef = useRef(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const latestOnChangeRef = useRef(onChange);
+  latestOnChangeRef.current = onChange;
+
+  useEffect(() => {
+    if (!isFocusedRef.current) {
+      setLocalValue(value || "");
+    }
+  }, [value]);
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+    };
+  }, []);
+
+  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const val = e.target.value;
+    setLocalValue(val);
+
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+    }
+    timerRef.current = setTimeout(() => {
+      latestOnChangeRef.current(val);
+    }, debounceMs);
+  };
+
+  const handleFocus = () => {
+    isFocusedRef.current = true;
+  };
+
+  const handleBlur = () => {
+    isFocusedRef.current = false;
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+    latestOnChangeRef.current(localValue);
+  };
+
+  const handleClear = (e: React.MouseEvent | React.TouchEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setLocalValue("");
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+    latestOnChangeRef.current("");
+    textareaRef.current?.focus();
+  };
+
+  const hasValue = localValue && localValue.length > 0;
+
+  return (
+    <div className="relative w-full">
+      <Textarea
+        ref={textareaRef}
+        className={cn(className, allowClear && hasValue && "pr-8")}
+        value={localValue}
+        onChange={handleChange}
+        onFocus={handleFocus}
+        onBlur={handleBlur}
+        placeholder={placeholder}
+        rows={rows}
+      />
+      {allowClear && hasValue && (
+        <button
+          type="button"
+          tabIndex={-1}
+          onMouseDown={handleClear}
+          onTouchStart={handleClear}
+          onClick={handleClear}
+          className="absolute top-2 right-2 text-muted-foreground/60 hover:text-foreground hover:bg-muted/80 p-0.5 rounded-full transition-colors flex items-center justify-center cursor-pointer select-none"
+          title="Xóa nhanh"
+        >
+          <X className="w-3.5 h-3.5" />
+        </button>
+      )}
+    </div>
+  );
+}
 
 export function ErpInvoiceInternalSidebar({
   form,
@@ -68,27 +176,12 @@ export function ErpInvoiceInternalSidebar({
               </div>
             )}
           </DrawerField>
-          <DrawerField label="Phân loại hóa đơn">
-            {editMode ? (
-              <Combobox
-                options={[]}
-                value={(form as any).invoiceCategory || ""}
-                onChange={(val) => fieldSet("invoiceCategory", val || null)}
-                placeholder="-- Chọn phân loại --"
-                allowClear={true}
-              />
-            ) : (
-              <div className="font-medium text-[color:var(--foreground)] text-sm px-3 py-2 bg-gray-50 rounded-lg border border-transparent">
-                {(form as any).invoiceCategory || "—"}
-              </div>
-            )}
-          </DrawerField>
           <DrawerField label={t("notes", "Ghi chú")}>
             {editMode ? (
-              <Textarea
+              <BufferedTextarea
                 className="w-full text-sm"
                 value={form.notes || ""}
-                onChange={(e) => fieldSet("notes", e.target.value)}
+                onChange={(val) => fieldSet("notes", val)}
                 placeholder="Nhập ghi chú..."
                 rows={3}
               />
@@ -174,6 +267,21 @@ export function ErpInvoiceInternalSidebar({
           )}
         </div>
       </DrawerSection>
+
+      {/* Dynamic Custom Fields Section */}
+      <ModuleEntityCustomFieldsSection
+        moduleKey="INVOICE"
+        entityId={detailInvoice?.id || invoiceId}
+        editMode={editMode}
+        categoryId={(form as any).categoryId}
+        onCategoryChange={(catId) => fieldSet("categoryId", catId)}
+        attributes={(form as any).customAttributes}
+        onAttributesChange={(attrs) => fieldSet("customAttributes", attrs)}
+        globalAttributes={(form as any).globalAttributes}
+        onGlobalAttributesChange={(gAttrs) =>
+          fieldSet("globalAttributes", gAttrs)
+        }
+      />
     </div>
   );
 }

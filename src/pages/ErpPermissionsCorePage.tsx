@@ -193,7 +193,7 @@ export function ErpPermissionsCorePage() {
         key: "name",
         header: t("rbac.headers.name"),
         cell: (role) => (
-          <TableText text={role.name} onDrawerClick={() => openEdit(role)} />
+          <TableText text={role.name} onDetailClick={() => openEdit(role)} />
         ),
         className: "whitespace-nowrap text-left px-4",
         headerClassName: "text-center",

@@ -1,0 +1,343 @@
+import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
+import {
+  StandardFormDrawer,
+  type DrawerTopTabItem,
+} from "@/shared/components/StandardFormDrawer";
+import {
+  DrawerSection,
+  DrawerRow,
+  DrawerField,
+  inputCls,
+  type DrawerAction,
+} from "@/shared/components/DrawerModal";
+import { Badge } from "@/shared/components/ui/badge";
+import { FileText, History } from "lucide-react";
+import {
+  {{camelCase componentName}}Api,
+  type {{pascalCase componentName}}Item,
+} from "../api/{{camelCase componentName}}Api";
+
+export interface {{pascalCase componentName}}DetailDrawerProps {
+  open: boolean;
+  onClose: () => void;
+  mode: "view" | "edit";
+  setMode: (mode: "view" | "edit") => void;
+  id: string | null;
+  onSuccess?: () => void;
+}
+
+export function {{pascalCase componentName}}DetailDrawer({
+  open,
+  onClose,
+  mode,
+  setMode,
+  id,
+  onSuccess,
+}: {{pascalCase componentName}}DetailDrawerProps) {
+  const { t } = useTranslation("{{camelCase moduleName}}");
+  const [data, setData] = useState<Partial<{{pascalCase componentName}}Item> | null>(null);
+  const [formData, setFormData] = useState<Partial<{{pascalCase componentName}}Item>>({});
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (open && id) {
+      setLoading(true);
+      {{camelCase componentName}}Api.getById(id)
+        .then((res: {{pascalCase componentName}}Item) => {
+          setData(res);
+          setFormData(res);
+        })
+        .catch((err: unknown) => console.error("Fetch detail failed", err))
+        .finally(() => setLoading(false));
+    } else if (open && !id) {
+      setData({});
+      setFormData({
+        code: "",
+        name: "",
+        status: "ACTIVE",
+{{#if hasAmountColumn}}
+        amount: 0,
+{{/if}}
+      });
+    }
+  }, [open, id]);
+
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+      if (id) {
+        await {{camelCase componentName}}Api.update(id, formData);
+      } else {
+        await {{camelCase componentName}}Api.create(formData);
+      }
+      onSuccess?.();
+      onClose();
+    } catch (err) {
+      console.error("Save failed", err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+{{#if (eq drawerType "multi-tab")}}
+  const drawerTabs: DrawerTopTabItem[] = [
+    {
+      key: "details",
+      label: t("tabDetails", "Chi tiết chính"),
+      icon: <FileText className="w-3.5 h-3.5" />,
+      content: (
+        <div className="space-y-4 p-1">
+          <DrawerSection title={t("basicInfo", "Thông tin chung")} collapsible defaultCollapsed={false}>
+            {mode === "view" ? (
+              <>
+                <DrawerRow label={t("code", "Mã")} value={data?.code} />
+                <DrawerRow label={t("name", "Tên / Mô tả")} value={data?.name} />
+{{#if hasAmountColumn}}
+                <DrawerRow
+                  label={t("amount", "Số tiền")}
+                  value={
+                    <span className="tabular-nums font-semibold text-primary">
+                      {(data?.amount || 0).toLocaleString("vi-VN")} đ
+                    </span>
+                  }
+                />
+{{/if}}
+                <DrawerRow label={t("notes", "Ghi chú")} value={data?.notes || "—"} />
+              </>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <DrawerField label={t("code", "Mã")} required>
+                  <input
+                    value={formData.code || ""}
+                    onChange={(e) => setFormData((p: Partial<{{pascalCase componentName}}Item>) => ({ ...p, code: e.target.value }))}
+                    className={inputCls}
+                    placeholder={t("enterCode", "Nhập mã")}
+                  />
+                </DrawerField>
+                <DrawerField label={t("name", "Tên / Mô tả")} required>
+                  <input
+                    value={formData.name || ""}
+                    onChange={(e) => setFormData((p: Partial<{{pascalCase componentName}}Item>) => ({ ...p, name: e.target.value }))}
+                    className={inputCls}
+                    placeholder={t("enterName", "Nhập tên")}
+                  />
+                </DrawerField>
+{{#if hasAmountColumn}}
+                <DrawerField label={t("amount", "Số tiền")}>
+                  <input
+                    type="number"
+                    value={formData.amount ?? 0}
+                    onChange={(e) => setFormData((p: Partial<{{pascalCase componentName}}Item>) => ({ ...p, amount: Number(e.target.value) }))}
+                    className={inputCls}
+                  />
+                </DrawerField>
+{{/if}}
+                <div className="col-span-full">
+                  <DrawerField label={t("notes", "Ghi chú")}>
+                    <textarea
+                      value={formData.notes || ""}
+                      onChange={(e) => setFormData((p: Partial<{{pascalCase componentName}}Item>) => ({ ...p, notes: e.target.value }))}
+                      className={inputCls}
+                      rows={3}
+                    />
+                  </DrawerField>
+                </div>
+              </div>
+            )}
+          </DrawerSection>
+        </div>
+      ),
+    },
+    {
+      key: "history",
+      label: t("tabHistory", "Lịch sử thao tác"),
+      icon: <History className="w-3.5 h-3.5" />,
+      content: (
+        <div className="p-4 text-muted-foreground text-sm">
+          {t("auditLogEmpty", "Chưa có bản ghi lịch sử kiểm toán.")}
+        </div>
+      ),
+    },
+  ];
+{{/if}}
+
+  const actions: DrawerAction[] = mode === "edit"
+    ? [
+        {
+          label: t("cancel", "Hủy"),
+          variant: "secondary",
+          onClick: () => (id ? setMode("view") : onClose()),
+        },
+        {
+          label: t("save", "Lưu thay đổi"),
+          primary: true,
+          loading: saving,
+          onClick: handleSave,
+        },
+      ]
+    : [
+        {
+          label: t("close", "Đóng"),
+          variant: "secondary",
+          onClick: onClose,
+        },
+      ];
+
+  return (
+    <StandardFormDrawer
+      open={open}
+      mode={mode}
+      onClose={onClose}
+      onToggleEdit={mode === "view" ? () => setMode("edit") : undefined}
+      title={id ? `${t("drawerTitle", "Chi tiết:")} ${data?.code || ""}` : t("createTitle", "Tạo mới")}
+      titleExtra={
+        data?.status ? (
+          <Badge variant={data.status === "ACTIVE" ? "default" : "secondary"}>
+            {t(data.status, data.status)}
+          </Badge>
+        ) : undefined
+      }
+      layout="{{#if (eq drawerType "1-column")}}1-column{{else}}2-columns{{/if}}"
+      size="{{drawerSize}}"
+      confirmOnClose={mode === "edit"}
+      loading={loading}
+{{#if (eq drawerType "multi-tab")}}
+      tabs={drawerTabs}
+      defaultTabKey="details"
+{{/if}}
+{{#if (eq drawerType "2-columns")}}
+      leftPanel={
+        <div className="space-y-4">
+          <DrawerSection title={t("generalInfo", "Thông tin chi tiết")} collapsible defaultCollapsed={false}>
+            {mode === "view" ? (
+              <>
+                <DrawerRow label={t("code", "Mã")} value={data?.code} />
+                <DrawerRow label={t("name", "Tên / Mô tả")} value={data?.name} />
+{{#if hasAmountColumn}}
+                <DrawerRow
+                  label={t("amount", "Số tiền")}
+                  value={
+                    <span className="tabular-nums font-semibold text-primary">
+                      {(data?.amount || 0).toLocaleString("vi-VN")} đ
+                    </span>
+                  }
+                />
+{{/if}}
+                <DrawerRow label={t("notes", "Ghi chú")} value={data?.notes || "—"} />
+              </>
+            ) : (
+              <div className="space-y-4">
+                <DrawerField label={t("code", "Mã")} required>
+                  <input
+                    value={formData.code || ""}
+                    onChange={(e) => setFormData((p: Partial<{{pascalCase componentName}}Item>) => ({ ...p, code: e.target.value }))}
+                    className={inputCls}
+                  />
+                </DrawerField>
+                <DrawerField label={t("name", "Tên / Mô tả")} required>
+                  <input
+                    value={formData.name || ""}
+                    onChange={(e) => setFormData((p: Partial<{{pascalCase componentName}}Item>) => ({ ...p, name: e.target.value }))}
+                    className={inputCls}
+                  />
+                </DrawerField>
+{{#if hasAmountColumn}}
+                <DrawerField label={t("amount", "Số tiền")}>
+                  <input
+                    type="number"
+                    value={formData.amount ?? 0}
+                    onChange={(e) => setFormData((p: Partial<{{pascalCase componentName}}Item>) => ({ ...p, amount: Number(e.target.value) }))}
+                    className={inputCls}
+                  />
+                </DrawerField>
+{{/if}}
+                <DrawerField label={t("notes", "Ghi chú")}>
+                  <textarea
+                    value={formData.notes || ""}
+                    onChange={(e) => setFormData((p: Partial<{{pascalCase componentName}}Item>) => ({ ...p, notes: e.target.value }))}
+                    className={inputCls}
+                    rows={3}
+                  />
+                </DrawerField>
+              </div>
+            )}
+          </DrawerSection>
+        </div>
+      }
+      rightPanel={
+        <div className="space-y-3">
+          <DrawerSection title={t("metaInfo", "Thông tin bổ sung")} collapsible defaultCollapsed={false}>
+            <DrawerRow label={t("status", "Trạng thái")} value={data?.status || "—"} />
+{{#if hasDateColumn}}
+            <DrawerRow label={t("createdAt", "Ngày tạo")} value={data?.createdAt || "—"} />
+{{/if}}
+          </DrawerSection>
+        </div>
+      }
+{{/if}}
+{{#if (eq drawerType "1-column")}}
+      leftPanel={
+        <div className="space-y-4">
+          <DrawerSection title={t("generalInfo", "Thông tin chung")} collapsible defaultCollapsed={false}>
+            {mode === "view" ? (
+              <>
+                <DrawerRow label={t("code", "Mã")} value={data?.code} />
+                <DrawerRow label={t("name", "Tên / Mô tả")} value={data?.name} />
+{{#if hasAmountColumn}}
+                <DrawerRow
+                  label={t("amount", "Số tiền")}
+                  value={
+                    <span className="tabular-nums font-semibold text-primary">
+                      {(data?.amount || 0).toLocaleString("vi-VN")} đ
+                    </span>
+                  }
+                />
+{{/if}}
+                <DrawerRow label={t("notes", "Ghi chú")} value={data?.notes || "—"} />
+              </>
+            ) : (
+              <div className="space-y-4">
+                <DrawerField label={t("code", "Mã")} required>
+                  <input
+                    value={formData.code || ""}
+                    onChange={(e) => setFormData((p: Partial<{{pascalCase componentName}}Item>) => ({ ...p, code: e.target.value }))}
+                    className={inputCls}
+                  />
+                </DrawerField>
+                <DrawerField label={t("name", "Tên / Mô tả")} required>
+                  <input
+                    value={formData.name || ""}
+                    onChange={(e) => setFormData((p: Partial<{{pascalCase componentName}}Item>) => ({ ...p, name: e.target.value }))}
+                    className={inputCls}
+                  />
+                </DrawerField>
+{{#if hasAmountColumn}}
+                <DrawerField label={t("amount", "Số tiền")}>
+                  <input
+                    type="number"
+                    value={formData.amount ?? 0}
+                    onChange={(e) => setFormData((p: Partial<{{pascalCase componentName}}Item>) => ({ ...p, amount: Number(e.target.value) }))}
+                    className={inputCls}
+                  />
+                </DrawerField>
+{{/if}}
+                <DrawerField label={t("notes", "Ghi chú")}>
+                  <textarea
+                    value={formData.notes || ""}
+                    onChange={(e) => setFormData((p: Partial<{{pascalCase componentName}}Item>) => ({ ...p, notes: e.target.value }))}
+                    className={inputCls}
+                    rows={3}
+                  />
+                </DrawerField>
+              </div>
+            )}
+          </DrawerSection>
+        </div>
+      }
+{{/if}}
+      actions={actions}
+    />
+  );
+}

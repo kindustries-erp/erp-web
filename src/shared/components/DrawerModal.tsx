@@ -241,7 +241,7 @@ export function DrawerModal({
     >
       <div
         className={cn(
-          "slide-panel min-h-0 min-[1024px]:min-w-[450px] flex flex-col",
+          "slide-panel min-h-0 min-[1024px]:min-w-[380px] flex flex-col",
           panelClassName,
         )}
         style={
@@ -378,7 +378,7 @@ export interface DrawerSectionProps {
 export function DrawerSection({
   title,
   titleExtra,
-  collapsible,
+  collapsible = true,
   collapsed: controlledCollapsed,
   defaultCollapsed = false,
   onToggleCollapse,

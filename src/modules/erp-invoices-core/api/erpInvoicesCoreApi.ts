@@ -41,6 +41,7 @@ export interface ErpInvoice {
   licensePlate?: string | null;
   settlementOrder?: string | null;
   invoiceCategory?: string | null;
+  categoryId?: string | null;
   invoiceType?: string | null;
   preVatAmount: string;
   vatRate?: string | null;
@@ -75,6 +76,19 @@ export interface ErpInvoice {
     attachmentId: string;
     attachment: import("@/modules/system/api/attachmentsApi").ErpAttachment;
   }[];
+  category?: any | null;
+  attributes?: Record<string, any>;
+  globalAttributes?: Record<string, any>;
+  customAttributes?: Record<string, any>;
+  attributeValues?: Array<{
+    id: string;
+    attrDefId: string;
+    attrCode?: string;
+    attrName?: string;
+    fieldType?: string;
+    valueText?: string | null;
+    isGlobal?: boolean;
+  }>;
 }
 
 export interface CreateErpInvoicePayload {
@@ -106,6 +120,9 @@ export interface CreateErpInvoicePayload {
   licensePlate?: string;
   paymentDocumentNos?: string;
   notes?: string;
+  categoryId?: string | null;
+  customAttributes?: Record<string, any>;
+  globalAttributes?: Record<string, any>;
   isValid?: boolean;
   items?: ErpInvoiceItem[];
   pendingDocumentChanges?: {
@@ -323,7 +340,7 @@ export const erpInvoicesCoreApi = {
       },
     });
     return res.data as {
-      items: string[];
+      items: Array<string | { label: string; value: string }>;
       total: number;
       page: number;
       totalPages: number;

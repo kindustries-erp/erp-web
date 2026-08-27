@@ -6,6 +6,13 @@ import {
 } from "./useErpInvoiceListStore";
 import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
 
+const TAX_TAB_TO_STATUS: Record<string, string[]> = {
+  all: [],
+  new: ["1"],
+  replacement: ["2", "4"],
+  adjustment: ["3", "5"],
+};
+
 export function useErpInvoicesList(
   initialDirection: Direction | "ALL" = "IN",
   partnerTaxCode?: string,
@@ -19,7 +26,8 @@ export function useErpInvoicesList(
   const [loading, setLoading] = useState(false);
 
   const store = useErpInvoiceListStore();
-  const state = store.states[direction === "ALL" ? "IN" : direction]; // Use IN state for ALL
+  const state =
+    store.states[direction === "ALL" ? "IN" : direction] || store.states.IN;
 
   const tableState = useTableColumnState(`erp-invoices-table-${direction}`);
 
@@ -56,10 +64,28 @@ export function useErpInvoicesList(
     setLoading(true);
     try {
       let apiDirection: "IN" | "OUT" | undefined = undefined;
-      if (direction === "IN" || direction === "CHECKPOINT_IN") {
+      if (
+        direction === "IN" ||
+        direction === "IN_2" ||
+        direction === "CHECKPOINT_IN"
+      ) {
         apiDirection = "IN";
-      } else if (direction === "OUT" || direction === "CHECKPOINT_OUT") {
+      } else if (
+        direction === "OUT" ||
+        direction === "OUT_2" ||
+        direction === "CHECKPOINT_OUT"
+      ) {
         apiDirection = "OUT";
+      }
+
+      const effectiveColumnFilters: Record<string, string[]> = {
+        ...tableState.columnFilters,
+      };
+      const taxStatusList = TAX_TAB_TO_STATUS[state.activeTaxTab || "all"];
+      if (taxStatusList && taxStatusList.length > 0) {
+        effectiveColumnFilters.taxInvoiceStatus = taxStatusList;
+      } else {
+        delete effectiveColumnFilters.taxInvoiceStatus;
       }
 
       const res = await erpInvoicesCoreApi.list({
@@ -77,7 +103,7 @@ export function useErpInvoicesList(
         sort_by: sortBy || undefined,
         sort_order: sortOrder || undefined,
         column_search: JSON.stringify(tableState.columnSearch),
-        column_filters: JSON.stringify(tableState.columnFilters),
+        column_filters: JSON.stringify(effectiveColumnFilters),
       });
       setInvoices(res.items);
       setTotal(res.total);
@@ -90,6 +116,7 @@ export function useErpInvoicesList(
   }, [
     direction,
     partnerTaxCode,
+    state.activeTaxTab,
     state.search,
     state.seller_name,
     state.buyer_name,
@@ -201,5 +228,7 @@ export function useErpInvoicesList(
     loadInvoices,
     STATUS_OPTIONS,
     tableState,
+    activeTaxTab: state.activeTaxTab || "all",
+    setActiveTaxTab: (tab: string) => store.setActiveTaxTab(safeDir, tab),
   };
 }

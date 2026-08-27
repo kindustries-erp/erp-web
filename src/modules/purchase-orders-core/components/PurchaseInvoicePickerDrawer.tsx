@@ -116,7 +116,11 @@ export function PurchaseInvoicePickerDrawer({
       "IN",
     );
     return {
-      items: res.items.map((i: string) => ({ label: i, value: i })),
+      items: res.items.map((i: any) =>
+        typeof i === "object"
+          ? { label: i.label || i.name || i.value, value: i.value }
+          : { label: String(i), value: String(i) },
+      ),
       total: res.total,
       next: res.page < res.totalPages ? res.page + 1 : null,
     };

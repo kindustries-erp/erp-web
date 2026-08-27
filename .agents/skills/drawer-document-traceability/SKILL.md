@@ -47,10 +47,16 @@ export interface DrawerDocumentTraceabilityProps {
   rootType?: TraceabilityNodeType;
 
   /** Hàm fetch dữ liệu đồ thị từ Backend API */
-  fetchGraph: (id: string) => Promise<TraceabilityGraphData>;
+  fetchGraph?: (id: string) => Promise<TraceabilityGraphData>;
+
+  /** Truyền trực tiếp dữ liệu đồ thị từ component cha (hỗ trợ Controlled state & Optimistic update khi edit) */
+  graphData?: TraceabilityGraphData | null;
 
   /** Bật chế độ cho phép sửa / ghép nối / gỡ liên kết (thường là `mode === "edit"`) */
   editMode?: boolean;
+
+  /** Cho phép chỉnh sửa (tương đương editMode) */
+  allowEdit?: boolean;
 
   /** Danh sách các loại chứng từ được phép chọn khi bấm "Ghép nối chứng từ" */
   allowedDocTypes?: TraceabilityNodeType[];
@@ -74,7 +80,63 @@ export interface DrawerDocumentTraceabilityProps {
 
 ---
 
-## 4. 4 Enterprise Business Stages (`STAGES_CONFIG`)
+## 4. Mẫu tích hợp chuẩn vào `StandardFormDrawer`
+
+Khi gắn `<DrawerDocumentTraceability>` vào `relatedTabs` của `StandardFormDrawer`, **bắt buộc phải bật `flush: true`** để biểu đồ tràn viền tối đa và không bị padding của Card Container làm hẹp diện tích kéo thả node:
+
+```tsx
+import {
+  StandardFormDrawer,
+  DrawerDocumentTraceability,
+  type DrawerRelatedTabItem,
+} from "@/shared/components/drawer";
+import { Network } from "lucide-react";
+import { useTranslation } from "react-i18next";
+
+export function InvoiceDetailDrawer({ open, onClose, mode, setMode, invoice }) {
+  const { t } = useTranslation("invoices");
+
+  const relatedTabs: DrawerRelatedTabItem[] = [
+    {
+      key: "traceability",
+      label: t("Mạng lưới chứng từ", "Traceability Network"),
+      icon: <Network className="w-3.5 h-3.5" />,
+      badgeCount: invoice?.linkedDocsCount,
+      flush: true, // ⚠️ BẮT BUỘC bật flush: true cho Canvas Graph tràn viền
+      content: (
+        <DrawerDocumentTraceability
+          rootId={invoice.id}
+          rootType="INVOICE"
+          fetchGraph={invoiceApi.getTraceabilityGraph}
+          editMode={mode === "edit"}
+          allowedDocTypes={["PURCHASE_ORDER", "BANK_TXN", "GOODS_RECEIPT"]}
+          onAddLink={(stage, docType) => openLinkModal(stage, docType)}
+          onUnlinkNode={(node) => handleStageUnlink(node)}
+        />
+      ),
+    },
+  ];
+
+  return (
+    <StandardFormDrawer
+      open={open}
+      mode={mode}
+      onClose={onClose}
+      onToggleEdit={() => setMode("edit")}
+      title={invoice.invoiceNumber}
+      layout="2-columns"
+      size="xl"
+      relatedTabs={relatedTabs}
+      leftPanel={<div>{/* Main form */}</div>}
+      rightPanel={<div>{/* Metadata */}</div>}
+    />
+  );
+}
+```
+
+---
+
+## 5. 4 Enterprise Business Stages (`STAGES_CONFIG`)
 
 Hệ thống tự động gom nhóm các chứng từ vào 4 Swimlanes giai đoạn nghiệp vụ:
 
@@ -87,7 +149,7 @@ Hệ thống tự động gom nhóm các chứng từ vào 4 Swimlanes giai đo�
 
 ---
 
-## 5. 3 Chế độ hiển thị (View Modes) & Tương tác Nâng cao
+## 6. 3 Chế độ hiển thị (View Modes) & Tương tác Nâng cao
 
 1. **Canvas View (`@xyflow/react`)**:
    - **Multi-hop Flowing Dash Animation**: Khi click vào một chứng từ bất kỳ, hệ thống duyệt BFS toàn bộ chuỗi chứng từ liên quan (cả upstream & downstream) và tự động kích hoạt hiệu ứng nét đứt chuyển động (`animated: true`) trên toàn bộ dây nối trong luồng.
@@ -106,7 +168,7 @@ Hệ thống tự động gom nhóm các chứng từ vào 4 Swimlanes giai đo�
 
 ---
 
-## 6. Bảng Màu Chuẩn Hóa Theo Bản Chất Thu - Chi Tài Chính
+## 7. Bảng Màu Chuẩn Hóa Theo Bản Chất Thu - Chi Tài Chính
 
 | Nhóm Tài Chính | Loại Chứng Từ | Badge Label | Màu sắc Badge | Viền nhận diện Node | Định dạng Tiền |
 |---|---|---|---|---|---|
@@ -121,7 +183,7 @@ Hệ thống tự động gom nhóm các chứng từ vào 4 Swimlanes giai đo�
 
 ---
 
-## 7. Điều hướng Node Chi tiết & Zero-Trust RBAC
+## 8. Điều hướng Node Chi tiết & Zero-Trust RBAC
 
 - **Phân nhánh điều hướng khi click nút chi tiết hoặc Double-click**:
   1. **Sổ cái kế toán (`JOURNAL_ENTRY` / `GL`)**: Ẩn nút icon `[↗]`, không kích hoạt mở drawer.
@@ -132,7 +194,7 @@ Hệ thống tự động gom nhóm các chứng từ vào 4 Swimlanes giai đo�
 
 ---
 
-## 8. Quy tắc Gỡ liên kết Client-side & Lưu theo Batch (Client-side Staging)
+## 9. Quy tắc Gỡ liên kết Client-side & Lưu theo Batch (Client-side Staging)
 
 - **Nguyên tắc cốt lõi**:
   1. Khi ở chế độ Chỉnh sửa (`editMode`), thao tác gỡ liên kết chứng từ (bấm nút thùng rác và xác nhận trong `ConfirmModal`) **phải được xử lý hoàn toàn trên Client-side** (lưu vào mảng pending changes của form/hook).
@@ -140,3 +202,15 @@ Hệ thống tự động gom nhóm các chứng từ vào 4 Swimlanes giai đo�
   3. **Tuyệt đối không gọi API xóa ngay lập tức** trong `onUnlinkNode` khi đang `editMode`.
   4. Chỉ khi người dùng bấm nút **"Lưu thay đổi"** của Drawer thì toàn bộ danh sách chứng từ đã đánh dấu gỡ liên kết mới được gửi xuống Backend API theo batch.
   5. Nếu người dùng bấm **"Hủy"**, toàn bộ thay đổi pending sẽ được reset và đồ thị khôi phục lại trạng thái ban đầu.
+
+---
+
+## Summary Checklist trước khi hoàn thành:
+
+- [ ] Đã bật `flush: true` trên tab item trong `relatedTabs` của `StandardFormDrawer` để canvas tràn viền tối đa chưa?
+- [ ] Đã truyền prop `editMode={mode === "edit"}` để đồng bộ quyền ghép nối/gỡ liên kết với Drawer cha chưa?
+- [ ] Thao tác gỡ liên kết (`onUnlinkNode`) đã được staging trên Client-side và chỉ lưu theo batch khi submit form chưa?
+- [ ] Các loại chứng từ được phép ghép nối (`allowedDocTypes`) đã được khai báo phù hợp với nghiệp vụ của module chưa?
+- [ ] Dữ liệu trả về từ API `fetchGraph` đã tuân thủ đúng 4 Business Stages (`ORDER_STOCK`, `INVOICE`, `PAYMENT`, `GENERAL_LEDGER`) chưa?
+- [ ] Đã kiểm tra Zero-Trust RBAC masking (`***`) đối với các node bị giới hạn quyền truy cập (`restricted: true`) chưa?
+

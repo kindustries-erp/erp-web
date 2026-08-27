@@ -17,7 +17,7 @@ export function PageHeader({
 }: PageHeaderProps) {
   return (
     <div
-      className={`flex items-start justify-between gap-4 flex-wrap ${className}`}
+      className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 ${className}`}
     >
       <div className="flex items-center gap-3 min-w-0">
         <div className="w-9 h-9 -ml-[6px] md:-ml-[10px] rounded-[10px] bg-[color:var(--primary)]/10 flex items-center justify-center text-[color:var(--primary)] shrink-0">
@@ -35,7 +35,9 @@ export function PageHeader({
         </div>
       </div>
       {actions && (
-        <div className="flex items-center gap-2 flex-wrap">{actions}</div>
+        <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto justify-start sm:justify-end">
+          {actions}
+        </div>
       )}
     </div>
   );

@@ -3,8 +3,19 @@ import {
   StandardFormDrawer,
   DrawerAuditTimeline,
   type DrawerAuditLogItem,
+  type DrawerTopTabItem,
 } from "@/shared/components/StandardFormDrawer";
-import { DrawerSection, DrawerRow } from "@/shared/components/DrawerModal";
+import {
+  DrawerSection,
+  DrawerRow,
+  DrawerField,
+  inputCls,
+} from "@/shared/components/DrawerModal";
+import { Combobox, type ComboboxOption } from "@/shared/components/Combobox";
+import {
+  GarageCaseClassificationBadge,
+  GARAGE_CASE_CLASSIFICATIONS,
+} from "./GarageCaseClassificationBadge";
 import { useTranslation } from "react-i18next";
 import { money, formatGMT7 } from "@/shared/utils/format";
 import { useGarageStore } from "../store/garageStore";
@@ -28,7 +39,14 @@ import {
   ActionDropdown,
   type ActionDropdownItem,
 } from "@/shared/components/ActionDropdown";
-import { Link2, History, RefreshCw, ChevronDown, Wallet } from "lucide-react";
+import {
+  Link2,
+  History,
+  RefreshCw,
+  ChevronDown,
+  Wallet,
+  FileText,
+} from "lucide-react";
 import { toast } from "react-hot-toast";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type {
@@ -37,9 +55,17 @@ import type {
   TraceabilityEdge,
 } from "@/shared/types/traceability";
 
+export const GARAGE_CASE_CLASSIFICATION_OPTIONS: ComboboxOption[] =
+  Object.values(GARAGE_CASE_CLASSIFICATIONS).map((c) => ({
+    value: c.value,
+    label: c.label,
+    subLabel: c.subLabel,
+  }));
+
 interface GarageCaseStandaloneDrawerProps {
   isOpen: boolean;
   caseCode?: string | null;
+  initialEditMode?: boolean;
   onClose: () => void;
   onSuccess?: () => void;
 }
@@ -47,7 +73,9 @@ interface GarageCaseStandaloneDrawerProps {
 export function GarageCaseStandaloneDrawer({
   isOpen,
   caseCode,
+  initialEditMode = false,
   onClose,
+  onSuccess,
 }: GarageCaseStandaloneDrawerProps) {
   const { t } = useTranslation(["garage", "common"]);
   const queryClient = useQueryClient();
@@ -62,14 +90,27 @@ export function GarageCaseStandaloneDrawer({
     useState<SettlementSubmissionItem | null>(null);
   const [showInvoiceModal, setShowInvoiceModal] = useState<boolean>(false);
 
-  const { data: selectedCase, isLoading: isLoadingCase } = useGarageCaseByCode(
-    isOpen && caseCode ? caseCode : undefined,
-  );
+  const {
+    data: selectedCase,
+    isLoading: isLoadingCase,
+    refetch: refetchCase,
+  } = useGarageCaseByCode(isOpen && caseCode ? caseCode : undefined);
 
   const { mutate: syncCaseDetail, isPending: isSyncingDetail } =
     useSyncGarageCaseDetail();
 
   const { data: grossProfit } = useGarageCaseGrossProfit(caseCode || undefined);
+
+  // Client-side classification & ERP notes draft state
+  const [draftClassification, setDraftClassification] = useState<string>("");
+  const [draftErpNotes, setDraftErpNotes] = useState<string>("");
+
+  useEffect(() => {
+    if (selectedCase) {
+      setDraftClassification(selectedCase.classification || "");
+      setDraftErpNotes(selectedCase.erpNotes || "");
+    }
+  }, [selectedCase]);
 
   // 1. Fetch Financial Summary
   const { data: serverSummary } = useQuery({
@@ -119,12 +160,61 @@ export function GarageCaseStandaloneDrawer({
   // Reset state when caseId changes or drawer opens
   useEffect(() => {
     if (isOpen) {
-      cancelEdit();
+      if (initialEditMode) {
+        startEdit();
+      } else {
+        cancelEdit();
+      }
       setShowSettlementModal(false);
       setEditingSettlementItem(null);
       setShowInvoiceModal(false);
     }
-  }, [isOpen, caseCode, cancelEdit]);
+  }, [isOpen, caseCode, initialEditMode, cancelEdit, startEdit]);
+
+  const isConfigDirty = useMemo(() => {
+    if (!selectedCase) return false;
+    const origClassification = selectedCase.classification || "";
+    const origErpNotes = selectedCase.erpNotes || "";
+    return (
+      (draftClassification || "") !== origClassification ||
+      (draftErpNotes || "") !== origErpNotes
+    );
+  }, [selectedCase, draftClassification, draftErpNotes]);
+
+  const totalHasPendingChanges = hasPendingChanges || isConfigDirty;
+
+  const handleCancel = () => {
+    if (selectedCase) {
+      setDraftClassification(selectedCase.classification || "");
+      setDraftErpNotes(selectedCase.erpNotes || "");
+    }
+    cancelEdit();
+  };
+
+  const handleSaveAll = async () => {
+    if (!selectedCase?.id) return;
+    try {
+      if (isConfigDirty) {
+        await garageApi.updateCaseConfig(selectedCase.id, {
+          classification: draftClassification || null,
+          erpNotes: draftErpNotes || null,
+        });
+        queryClient.invalidateQueries({ queryKey: ["garage", "cases"] });
+        queryClient.invalidateQueries({
+          queryKey: ["garage-case-column-options"],
+        });
+      }
+      await handleSave(selectedCase.id);
+      refetchCase();
+      if (onSuccess) onSuccess();
+    } catch (err: any) {
+      toast.error(
+        err?.response?.data?.message ||
+          err?.message ||
+          "Lỗi khi lưu thay đổi vụ việc",
+      );
+    }
+  };
 
   const activeSettlements = getActiveSettlements(serverSettlements);
   const activeLinkedInvoices = getActiveLinkedInvoices(serverLinkedInvoices);
@@ -191,7 +281,12 @@ export function GarageCaseStandaloneDrawer({
         date: selectedCase.ngayPhatSinh
           ? new Date(selectedCase.ngayPhatSinh).toISOString().slice(0, 10)
           : null,
-        amount: Number(selectedCase.doanhThu || selectedCase.tienCoThue || 0),
+        amount: Number(
+          selectedCase.tienCoThue ||
+            selectedCase.rawData?.TongTienThanhToan ||
+            selectedCase.doanhThu ||
+            0,
+        ),
         status: selectedCase.tenTinhTrangDichVu || "Đang xử lý",
         statusVariant:
           selectedCase.tinhTrangDichVu === 3 ? "default" : "secondary",
@@ -377,7 +472,10 @@ export function GarageCaseStandaloneDrawer({
     const edges = Array.from(edgesMap.values());
 
     const totalAmount = Number(
-      selectedCase.doanhThu || selectedCase.tienCoThue || 0,
+      selectedCase.tienCoThue ||
+        selectedCase.rawData?.TongTienThanhToan ||
+        selectedCase.doanhThu ||
+        0,
     );
     let directCount = 0;
     let transitiveCount = 0;
@@ -536,7 +634,7 @@ export function GarageCaseStandaloneDrawer({
       label: t("common:cancel", "Hủy"),
       variant: "outline" as const,
       disabled: saving,
-      onClick: cancelEdit,
+      onClick: handleCancel,
     },
     {
       label: saving
@@ -544,12 +642,12 @@ export function GarageCaseStandaloneDrawer({
         : t("common:saveChanges", "Lưu thay đổi"),
       primary: true,
       loading: saving,
-      disabled: saving,
-      onClick: () => handleSave(selectedCase?.id),
+      disabled: saving || !totalHasPendingChanges,
+      onClick: handleSaveAll,
     },
   ];
 
-  let resolvedRelatedTabs = undefined;
+  let resolvedDrawerTabs: DrawerTopTabItem[] | undefined = undefined;
 
   if (selectedCase) {
     const auditItems: DrawerAuditLogItem[] = [];
@@ -675,8 +773,23 @@ export function GarageCaseStandaloneDrawer({
       return isNaN(timeB) ? -1 : isNaN(timeA) ? 1 : timeB - timeA;
     });
 
-    resolvedRelatedTabs = [
-      // Tab 1: Tài chính & Công nợ (Nằm ở vị trí đầu tiên, mặc định)
+    resolvedDrawerTabs = [
+      // Tab 1: Chi tiết báo giá (Nội dung chính / Sheet Báo giá & Phụ tùng, Nhân công)
+      {
+        key: "quote_details",
+        label: t("cases.drawer.quoteDetails", "Chi tiết báo giá"),
+        icon: <FileText className="w-3.5 h-3.5" />,
+        content: (
+          <div className="space-y-4">
+            <GarageCasePreview
+              caseData={selectedCase}
+              grossProfit={grossProfit}
+            />
+          </div>
+        ),
+      },
+
+      // Tab 2: Tài chính & Công nợ
       {
         key: "financials",
         label: t("cases.drawer.financials", "Tài chính & Công nợ"),
@@ -684,7 +797,6 @@ export function GarageCaseStandaloneDrawer({
         badgeCount:
           (activeLinkedInvoices?.length || 0) +
           (activeSettlements?.length || 0),
-        flush: true,
         content: (
           <GarageCaseSettlementSection
             caseId={selectedCase.id}
@@ -701,7 +813,7 @@ export function GarageCaseStandaloneDrawer({
         ),
       },
 
-      // Tab 2: Trung tâm Trực quan hóa Mạng lưới Chứng từ (Visualization Hub)
+      // Tab 3: Trung tâm Trực quan hóa Mạng lưới Chứng từ (Visualization Hub)
       {
         key: "linked_docs",
         label: t("cases.drawer.linkedDocs", "Chứng từ liên kết"),
@@ -709,7 +821,7 @@ export function GarageCaseStandaloneDrawer({
         badgeCount:
           (activeLinkedInvoices?.length || 0) +
           (activeSettlements?.length || 0),
-        flush: true,
+        hideRightPanel: true, // Canvas Graph bung 100% full width để nhìn rõ nhất
         content: (
           <DrawerDocumentTraceability
             rootId={selectedCase.id}
@@ -790,15 +902,14 @@ export function GarageCaseStandaloneDrawer({
         ),
       },
 
-      // Tab 3: Lịch sử & Đồng bộ dữ liệu KGara (DrawerAuditTimeline)
+      // Tab 4: Lịch sử & Đồng bộ dữ liệu KGara (DrawerAuditTimeline)
       {
         key: "sync_history",
         label: t("cases.drawer.syncHistory", "Lịch sử & Đồng bộ"),
         icon: <History className="w-3.5 h-3.5" />,
         badgeCount: auditItems.length,
-        cardClassName: "p-3 max-h-[480px] overflow-hidden",
         content: (
-          <div className="max-h-[450px] overflow-y-auto pr-1 py-1">
+          <div className="p-3 bg-surface/50 rounded-xl border border-border/70">
             <DrawerAuditTimeline
               items={auditItems}
               emptyLabel={t(
@@ -818,29 +929,26 @@ export function GarageCaseStandaloneDrawer({
         open={isOpen}
         mode={editMode ? "edit" : "view"}
         onToggleEdit={!editMode ? startEdit : undefined}
-        confirmOnClose={editMode && hasPendingChanges}
+        confirmOnClose={editMode && totalHasPendingChanges}
         onClose={onClose}
         collapsibleRightPanel={true}
         title={`${t("cases.drawer.caseDetails", "Sổ báo giá:")} ${selectedCase?.soChungTu || ""}`}
         titleExtra={
-          <KgaraCaseStatusBadge status={selectedCase?.tenTinhTrangDichVu} />
+          selectedCase?.tenTinhTrangDichVu ? (
+            <KgaraCaseStatusBadge status={selectedCase.tenTinhTrangDichVu} />
+          ) : undefined
         }
         footerLeft={footerLeft}
         actions={editMode ? editActions : undefined}
+        tabs={resolvedDrawerTabs}
+        defaultTabKey="quote_details"
         leftPanel={
           isLoadingCase || isSyncingDetail ? (
             <div className="space-y-4 animate-pulse px-2 w-full">
               <div className="h-48 bg-slate-100 rounded-lg w-full"></div>
               <div className="h-64 bg-slate-100 rounded-lg w-full"></div>
             </div>
-          ) : selectedCase ? (
-            <div className="space-y-4">
-              <GarageCasePreview
-                caseData={selectedCase}
-                grossProfit={grossProfit}
-              />
-            </div>
-          ) : null
+          ) : undefined
         }
         rightPanel={
           isLoadingCase || isSyncingDetail ? (
@@ -878,7 +986,83 @@ export function GarageCaseStandaloneDrawer({
                 />
               </DrawerSection>
 
-              {/* 2. HIỆU QUẢ KINH DOANH & LỢI NHUẬN GỘP */}
+              {/* 2. PHÂN LOẠI NGHIỆP VỤ & GHI CHÚ ERP */}
+              <DrawerSection
+                title={t(
+                  "cases.drawer.classificationAndNotes",
+                  "Phân loại & Ghi chú ERP",
+                )}
+                collapsible
+                defaultCollapsed={false}
+              >
+                {!editMode ? (
+                  <>
+                    <DrawerRow
+                      label={t("cases.drawer.classification", "Phân loại")}
+                      value={
+                        <button
+                          type="button"
+                          onClick={() => startEdit()}
+                          className="cursor-pointer transition-transform hover:scale-105 inline-flex"
+                          title={t(
+                            "cases.actions.clickToEditClassification",
+                            "Nhấn để chỉnh sửa phân loại",
+                          )}
+                        >
+                          <GarageCaseClassificationBadge
+                            classification={selectedCase.classification}
+                            interactive={true}
+                          />
+                        </button>
+                      }
+                    />
+                    <DrawerRow
+                      label={t("cases.drawer.erpNotes", "Ghi chú ERP")}
+                      value={selectedCase.erpNotes || "—"}
+                    />
+                  </>
+                ) : (
+                  <div className="flex flex-col gap-3">
+                    <DrawerField
+                      label={t(
+                        "cases.configDrawer.classificationLabel",
+                        "Phân loại phiếu",
+                      )}
+                    >
+                      <Combobox
+                        options={GARAGE_CASE_CLASSIFICATION_OPTIONS}
+                        value={draftClassification}
+                        onChange={(val) => setDraftClassification(val)}
+                        allowClear={true}
+                        placeholder={t(
+                          "cases.configDrawer.classificationPlaceholder",
+                          "— Chọn phân loại —",
+                        )}
+                      />
+                    </DrawerField>
+
+                    <DrawerField
+                      label={t(
+                        "cases.configDrawer.erpNotesLabel",
+                        "Ghi chú ERP",
+                      )}
+                    >
+                      <textarea
+                        className={inputCls}
+                        rows={3}
+                        value={draftErpNotes}
+                        onChange={(e) => setDraftErpNotes(e.target.value)}
+                        placeholder={t(
+                          "cases.configDrawer.erpNotesPlaceholder",
+                          "Nhập ghi chú nghiệp vụ nội bộ trên ERP...",
+                        )}
+                      />
+                    </DrawerField>
+                  </div>
+                )}
+              </DrawerSection>
+
+              {/* 3. HIỆU QUẢ KINH DOANH & LỢI NHUẬN GỘP */}
               {(() => {
                 const revenueAmount = Number(
                   grossProfit?.DoanhThu ??
@@ -1011,8 +1195,6 @@ export function GarageCaseStandaloneDrawer({
             </div>
           ) : null
         }
-        relatedTabs={resolvedRelatedTabs}
-        defaultRelatedTabKey="financials"
       />
 
       {/* MODALS CHO GHÉP NỐI CHỨNG TỪ TỪ TRACEABILITY GRAPH HOẶC HEADER */}
@@ -1084,16 +1266,28 @@ export function GarageCaseStandaloneDrawer({
             caseId={selectedCase.id}
             caseCode={selectedCase.soChungTu}
             defaultLinkType="OUT"
-            onSubmit={async (payload) => {
+            onSubmit={async (payloads) => {
+              const items = Array.isArray(payloads) ? payloads : [payloads];
               if (editMode) {
-                addLinkedInvoice(payload);
+                addLinkedInvoice(items);
               } else {
-                await garageApi.addCaseLinkedInvoice(
-                  selectedCase.id,
-                  payload.invoiceId,
-                  payload.linkType,
-                  payload.note,
-                );
+                if (items.length === 1) {
+                  await garageApi.addCaseLinkedInvoice(
+                    selectedCase.id,
+                    items[0].invoiceId,
+                    items[0].linkType,
+                    items[0].note,
+                  );
+                } else if (items.length > 1) {
+                  await garageApi.addCaseLinkedInvoices(
+                    selectedCase.id,
+                    items.map((i) => ({
+                      invoiceId: i.invoiceId,
+                      linkType: i.linkType,
+                      note: i.note,
+                    })),
+                  );
+                }
                 queryClient.invalidateQueries({
                   queryKey: ["garage-case-financial-summary", selectedCase.id],
                 });
@@ -1103,7 +1297,11 @@ export function GarageCaseStandaloneDrawer({
                 queryClient.invalidateQueries({
                   queryKey: ["garage-case-traceability-graph", selectedCase.id],
                 });
-                toast.success("Đã liên kết hóa đơn thành công");
+                toast.success(
+                  items.length > 1
+                    ? `Đã liên kết thành công ${items.length} hóa đơn`
+                    : "Đã liên kết hóa đơn thành công",
+                );
               }
             }}
           />

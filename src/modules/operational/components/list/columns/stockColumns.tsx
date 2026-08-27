@@ -54,6 +54,19 @@ export function useStockColumns({
   return useMemo<DataTableColumn<InventoryStockRow>[]>(
     () => [
       {
+        key: "index",
+        header: <span className="w-full block text-center">#</span>,
+        size: 40,
+        enableResizing: false,
+        hideable: false,
+        sortable: false,
+        headerClassName: "text-center",
+        className: "text-center font-mono text-xs text-muted-foreground",
+        cell: (_, idx) => (
+          <span className="w-full block text-center">{idx}</span>
+        ),
+      },
+      {
         key: "item_code",
         header: (
           <TableColumnHeaderFilter
@@ -77,7 +90,7 @@ export function useStockColumns({
         cell: (row) => (
           <TableText
             text={row.item_code || ""}
-            onDrawerClick={(e) => {
+            onDetailClick={(e) => {
               e.stopPropagation();
               onViewItem(row.inventory_item_id);
             }}

@@ -203,7 +203,7 @@ export function ErpInvoicesDraftPage() {
           text={inv.documentNo || "-"}
           enableCopy={true}
           tooltip={true}
-          onDrawerClick={(e) => {
+          onDetailClick={(e) => {
             e.stopPropagation();
             setDetailDraft(inv);
           }}

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { DrawerModal, DrawerSection, type DrawerAction } from "./DrawerModal";
 import { useT } from "@/core/i18n";
 import { ChevronRight, ChevronLeft } from "lucide-react";
@@ -10,19 +10,23 @@ import {
   DrawerRelatedDeck,
   type DrawerRelatedTabItem,
 } from "./drawer/DrawerRelatedDeck";
+import {
+  DrawerTopTabBar,
+  type DrawerTopTabItem,
+} from "./drawer/DrawerTopTabBar";
 
-export type { DrawerRelatedTabItem };
+export type { DrawerRelatedTabItem, DrawerTopTabItem };
 export * from "./drawer";
 
 // ── Size presets ──────────────────────────────────────────────────────────────
-// All sizes are bounded by max-width: calc(100vw - 208px) on desktop (panels.css)
-// so the drawer never covers the sidebar.
+// All sizes scale fluidly via `vw` on desktop while bounded by explicit min/max widths
+// and hard bounded by max-width: calc(100vw - 208px) on desktop so drawer never covers sidebar.
 const SIZE_CLASS: Record<string, string> = {
-  sm: "w-full md:w-[95vw] lg:w-[500px] xl:w-[500px] 2xl:w-[550px]",
-  md: "w-full md:w-[95vw] lg:w-[700px] xl:w-[700px] 2xl:w-[750px]",
-  lg: "w-full md:w-[95vw] lg:w-[1000px] xl:w-[1000px] 2xl:w-[1100px]",
-  xl: "w-full md:w-[95vw] lg:w-[90vw] xl:w-[1200px] 2xl:w-[1400px]",
-  full: "w-full md:w-[95vw] lg:w-[90vw] xl:w-full 2xl:w-full",
+  sm: "w-full md:w-[90vw] lg:w-[42vw] xl:w-[38vw] 2xl:w-[32vw] min-w-[420px] max-w-[660px]",
+  md: "w-full md:w-[92vw] lg:w-[60vw] xl:w-[54vw] 2xl:w-[48vw] min-w-[620px] max-w-[980px]",
+  lg: "w-full md:w-[95vw] lg:w-[78vw] xl:w-[74vw] 2xl:w-[68vw] min-w-[840px] max-w-[1380px]",
+  xl: "w-full md:w-[96vw] lg:w-[93vw] xl:w-[90vw] 2xl:w-[88vw] min-w-[1020px] max-w-[1780px]",
+  full: "w-full md:w-[98vw] lg:w-[calc(100vw-208px)] xl:w-[calc(100vw-208px)] max-w-[calc(100vw-208px)] min-w-[1020px]",
 };
 
 export interface StandardFormDrawerProps {
@@ -50,11 +54,11 @@ export interface StandardFormDrawerProps {
 
   /**
    * Panel width preset. Ignored when `panelClassName` overrides width explicitly.
-   * - sm  : ~500px  — 1-column simple forms (profile, tags)
-   * - md  : ~700px  — medium-complexity forms
-   * - lg  : ~1000px — default 2-column
-   * - xl  : ~1200–1400px — wide 2-column (PO, Sales, Production)
-   * - full: max available within sidebar constraint
+   * - sm  : ~420–660px — 1-column simple forms (profile, tags)
+   * - md  : ~620–980px — medium-complexity forms (master data, categories)
+   * - lg  : ~840–1380px — default 2-column (partners, customers, configs)
+   * - xl  : ~1020–1780px (~90vw on desktop) — wide multi-facet documents (Invoices, PO, Sales, Production, Quotations)
+   * - full: calc(100vw - 208px) — max available within sidebar constraint (traceability graph, large reports)
    * Defaults to "sm" for 1-column, "xl" for 2-columns.
    */
   size?: "sm" | "md" | "lg" | "xl" | "full";
@@ -65,7 +69,28 @@ export interface StandardFormDrawerProps {
    */
   confirmOnClose?: boolean;
 
-  leftPanel: React.ReactNode;
+  /**
+   * Danh sách các tab điều hướng phía trên (Top Tabs).
+   * Khi truyền prop này, nội dung tab được kích hoạt sẽ hiển thị ở khu vực Left Panel (hoặc Full Width nếu tab có hideRightPanel).
+   */
+  tabs?: DrawerTopTabItem[];
+
+  /** Tab đang hoạt động (controlled) */
+  activeTabKey?: string;
+
+  /** Tab mặc định được kích hoạt trong tabs */
+  defaultTabKey?: string;
+
+  /** Callback khi chuyển tab phía trên */
+  onTabChange?: (tabKey: string) => void;
+
+  /** Phần tử tùy chỉnh hiển thị ở góc phải của thanh Top Tab Bar */
+  tabBarExtra?: React.ReactNode;
+
+  /** ClassName bổ sung cho thanh Top Tab Bar */
+  tabBarClassName?: string;
+
+  leftPanel?: React.ReactNode;
   rightPanel?: React.ReactNode;
 
   /** Allows overriding the default wide panel width class */
@@ -140,6 +165,12 @@ export function StandardFormDrawer({
   layout = "2-columns",
   size,
   confirmOnClose,
+  tabs,
+  activeTabKey,
+  defaultTabKey,
+  onTabChange,
+  tabBarExtra,
+  tabBarClassName,
   leftPanel,
   rightPanel,
   panelClassName,
@@ -148,7 +179,7 @@ export function StandardFormDrawer({
   rightPanelTitle,
   rightPanelDefaultCollapsed = false,
   stickyRightPanel = false,
-  collapsibleRightPanel = false,
+  collapsibleRightPanel,
   zIndex,
   asContent = false,
   noAnimation = false,
@@ -168,16 +199,53 @@ export function StandardFormDrawer({
     rightPanelDefaultCollapsed,
   );
 
-  useEffect(() => {
-    if (open) {
-      setRightPanelCollapsed(rightPanelDefaultCollapsed);
+  const [internalTabKey, setInternalTabKey] = useState<string>(() => {
+    if (activeTabKey) return activeTabKey;
+    if (defaultTabKey && tabs?.some((t) => t.key === defaultTabKey)) {
+      return defaultTabKey;
     }
-  }, [open, rightPanelDefaultCollapsed]);
+    return tabs && tabs.length > 0 ? tabs[0].key : "";
+  });
+
+  const currentTab = activeTabKey !== undefined ? activeTabKey : internalTabKey;
+
+  const prevOpenRef = useRef(open);
+  useEffect(() => {
+    if (open && !prevOpenRef.current) {
+      setRightPanelCollapsed(rightPanelDefaultCollapsed);
+      if (activeTabKey) {
+        setInternalTabKey(activeTabKey);
+      } else if (defaultTabKey && tabs?.some((t) => t.key === defaultTabKey)) {
+        setInternalTabKey(defaultTabKey);
+      } else if (tabs && tabs.length > 0) {
+        setInternalTabKey(tabs[0].key);
+      }
+    }
+    prevOpenRef.current = open;
+  }, [open, rightPanelDefaultCollapsed, activeTabKey, defaultTabKey, tabs]);
+
+  useEffect(() => {
+    if (activeTabKey !== undefined) {
+      setInternalTabKey(activeTabKey);
+    }
+  }, [activeTabKey]);
+
+  const handleTabChange = (key: string) => {
+    setInternalTabKey(key);
+    onTabChange?.(key);
+  };
+
+  const activeTopTab = tabs?.find((t) => t.key === currentTab) || tabs?.[0];
+  const effectiveHideRightPanel =
+    hideRightPanel || (activeTopTab?.hideRightPanel ?? false);
+  const effectiveLeftContent = activeTopTab ? activeTopTab.content : leftPanel;
 
   const isRightPanelCollapsible =
     collapsibleRightPanel !== undefined
       ? collapsibleRightPanel
-      : (layout === "2-columns" && Boolean(rightPanel) && !hideRightPanel) ||
+      : (layout === "2-columns" &&
+          Boolean(rightPanel) &&
+          !effectiveHideRightPanel) ||
         Boolean(rightPanelTitle);
 
   // view mode: border-primary outline, hover fills primary bg
@@ -192,7 +260,7 @@ export function StandardFormDrawer({
           {t("Chỉnh sửa")}
         </button>
       )}
-      {!hideRightPanel && rightPanel && isRightPanelCollapsible && (
+      {!effectiveHideRightPanel && rightPanel && isRightPanelCollapsible && (
         <div
           className={cn(
             "flex items-center",
@@ -234,6 +302,17 @@ export function StandardFormDrawer({
 
   const innerContent = (
     <>
+      {/* ── Top Navigation Tab Bar (nếu có tabs) ── */}
+      {tabs && tabs.length > 0 && (
+        <DrawerTopTabBar
+          tabs={tabs}
+          activeTabKey={currentTab}
+          onTabChange={handleTabChange}
+          extra={tabBarExtra}
+          className={tabBarClassName}
+        />
+      )}
+
       {error && (
         <div className="text-xs text-[color:var(--warn-fg)] bg-[color:var(--warn-bg)] border border-[color:var(--warn-fg)]/30 rounded-lg px-3 py-2 mb-4 flex-shrink-0">
           {error}
@@ -242,9 +321,9 @@ export function StandardFormDrawer({
       {loading ? (
         <FormLoadingSkeleton />
       ) : layout === "1-column" ? (
-        // 1-column: render leftPanel raw — caller uses DrawerSection/DrawerField directly
+        // 1-column: render raw content — caller uses DrawerSection/DrawerField directly
         <div className="w-full h-auto flex flex-col flex-1 min-h-0">
-          {leftPanel}
+          {effectiveLeftContent}
         </div>
       ) : (
         <div
@@ -253,13 +332,13 @@ export function StandardFormDrawer({
             rightPanelCollapsed ? "gap-0" : "gap-6",
           )}
         >
-          {/* Cột trái: Chi tiết / Main Content */}
+          {/* Cột trái: Chi tiết / Main Content / Tab Content */}
           <div className="flex-1 min-w-0 w-full order-2 lg:order-1 space-y-4">
-            {leftPanel}
+            {effectiveLeftContent}
           </div>
 
           {/* Cột phải: Thông tin chung / Metadata */}
-          {!hideRightPanel &&
+          {!effectiveHideRightPanel &&
             rightPanel &&
             (rightPanelTitle !== undefined || isRightPanelCollapsible ? (
               <div

@@ -24,6 +24,7 @@ const initialSubState = {
   seller_name: "",
   buyer_name: "",
   tag_id: "",
+  activeTaxTab: "all",
   sortBy: "invoiceDate",
   sortOrder: "desc" as const,
   filterPanelOpen: false,
@@ -34,6 +35,8 @@ const resetZustand = () => {
     states: {
       IN: { ...initialSubState },
       OUT: { ...initialSubState },
+      IN_2: { ...initialSubState },
+      OUT_2: { ...initialSubState },
       CHECKPOINT_IN: { ...initialSubState },
       CHECKPOINT_OUT: { ...initialSubState },
     },

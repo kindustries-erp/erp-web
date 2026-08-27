@@ -1,0 +1,106 @@
+import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/shared/components/ui/Dialog";
+import { Button } from "@/shared/components/ui/Button";
+import { inputCls } from "@/shared/components/DrawerModal";
+
+export interface {{pascalCase componentName}}ModalProps {
+  open: boolean;
+  onClose: () => void;
+  onConfirm?: (data?: any) => Promise<void> | void;
+  title?: string;
+  description?: string;
+  initialData?: Record<string, any>;
+}
+
+export function {{pascalCase componentName}}Modal({
+  open,
+  onClose,
+  onConfirm,
+  title,
+  description,
+  initialData,
+}: {{pascalCase componentName}}ModalProps) {
+  const { t } = useTranslation("{{camelCase moduleName}}");
+  const [formData, setFormData] = useState<Record<string, any>>(initialData || {});
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async () => {
+    try {
+      setSubmitting(true);
+      await onConfirm?.(formData);
+      onClose();
+    } catch (err) {
+      console.error("Submit modal error", err);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
+      <DialogContent className="{{modalSizeClass}}">
+        <DialogHeader>
+          <DialogTitle>{title || t("modalTitle", "{{pascalCase componentName}}")}</DialogTitle>
+          <DialogDescription>
+            {description || t("modalDesc", "Vui lòng nhập đầy đủ thông tin bên dưới.")}
+          </DialogDescription>
+        </DialogHeader>
+
+{{#if (eq modalType "confirm")}}
+        <div className="py-3 text-sm text-foreground/80">
+          {t("confirmQuestion", "Bạn có chắc chắn muốn thực hiện hành động này không?")}
+        </div>
+{{/if}}
+
+{{#if (eq modalType "form")}}
+        <div className="py-4 space-y-3">
+          <div>
+            <label className="text-xs font-medium text-muted-foreground block mb-1">
+              {t("name", "Tên / Tiêu đề")} <span className="text-destructive">*</span>
+            </label>
+            <input
+              value={formData.name || ""}
+              onChange={(e) => setFormData((p) => ({ ...p, name: e.target.value }))}
+              className={inputCls}
+              placeholder={t("enterName", "Nhập tên")}
+            />
+          </div>
+          <div>
+            <label className="text-xs font-medium text-muted-foreground block mb-1">
+              {t("notes", "Ghi chú")}
+            </label>
+            <textarea
+              value={formData.notes || ""}
+              onChange={(e) => setFormData((p) => ({ ...p, notes: e.target.value }))}
+              className={inputCls}
+              rows={3}
+              placeholder={t("enterNotes", "Nhập ghi chú")}
+            />
+          </div>
+        </div>
+{{/if}}
+
+        <DialogFooter>
+          <Button variant="secondary" onClick={onClose} disabled={submitting}>
+            {t("cancel", "Hủy")}
+          </Button>
+          <Button
+            variant="{{#if (eq modalType "confirm")}}danger{{else}}primary{{/if}}"
+            onClick={handleSubmit}
+            loading={submitting}
+          >
+            {t("confirm", "Xác nhận")}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}

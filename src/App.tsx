@@ -1,4 +1,5 @@
-import { lazy, Suspense, useEffect, useRef } from "react";
+import { Suspense, useEffect, useRef } from "react";
+import { lazyWithRetry as lazy } from "@/shared/utils/lazyWithRetry";
 import { useAppStore } from "@/core/config/appStore";
 import { useAuthStore } from "@/modules/auth/domain/authStore";
 import { Sidebar } from "@/core/components/layout/sidebar";
@@ -14,6 +15,7 @@ import { DocumentDependencyModal } from "@/core/components/DocumentDependencyMod
 import { ReloadPrompt } from "@/ReloadPrompt";
 import { pathToPage } from "@/shared/utils/pageUrl";
 import { EnvStamp } from "@/core/components/EnvStamp";
+import { useEnvStore } from "@/core/store/useEnvStore";
 import { GlobalErpDocumentOpener } from "@/core/components/GlobalErpDocumentOpener";
 import { Login } from "@/pages/Login";
 import { NotFound } from "@/pages/NotFound";
@@ -233,6 +235,11 @@ const GarageCases = lazy(() =>
     default: m.GarageCases,
   })),
 );
+const GarageOpex = lazy(() =>
+  import("@/modules/garage/pages/GarageOpex").then((m) => ({
+    default: m.GarageOpex,
+  })),
+);
 const GarageReceivables = lazy(() =>
   import("@/modules/garage/pages/GarageReceivables").then((m) => ({
     default: m.GarageReceivables,
@@ -303,6 +310,7 @@ const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   "settings-branch": SettingsBranch,
   "garage-dashboard": GarageDashboard,
   "garage-cases": GarageCases,
+  "garage-opex": GarageOpex,
   "garage-receivables": GarageReceivables,
   "garage-payables": GaragePayables,
   "garage-customers": GarageCustomers,
@@ -366,14 +374,16 @@ const PAGE_FALLBACK = (
 );
 
 export default function App() {
-  const { currentPage, isLoggedIn, syncFromUrl, openTabs } = useAppStore();
+  const { currentPage, currentInstanceId, isLoggedIn, syncFromUrl, openTabs } =
+    useAppStore();
   const { bootstrapAction } = useAuthStore();
   const contentRef = useRef<HTMLDivElement | null>(null);
-  const openTabsKey = openTabs.join("|");
+  const openTabsKey = openTabs.map((t) => t.instanceId).join("|");
 
   useSerialGenerationProgress();
 
   useEffect(() => {
+    useEnvStore.getState().fetchAppConfig();
     bootstrapAction();
   }, []);
 
@@ -381,10 +391,10 @@ export default function App() {
     const sync = () => {
       const parsed = pathToPage(location.pathname, location.search);
       if (parsed) {
-        syncFromUrl(parsed.page);
+        syncFromUrl(parsed.page, parsed.tab, parsed.instanceIndex);
       } else {
         history.replaceState(null, "", "/");
-        syncFromUrl("dashboard");
+        syncFromUrl("dashboard", undefined, 1);
       }
     };
     sync();
@@ -397,7 +407,7 @@ export default function App() {
     if (!el) return;
     el.scrollLeft = 0;
     el.scrollTop = 0;
-  }, [currentPage]);
+  }, [currentInstanceId]);
 
   useEffect(() => {
     if (!isLoggedIn) return;
@@ -412,7 +422,9 @@ export default function App() {
 
   useEffect(() => {
     if (!isLoggedIn || openTabs.length === 0) return;
-    const tabsToWarm = [...new Set(openTabs)] as PageKey[];
+    const tabsToWarm = [
+      ...new Set(openTabs.map((t) => t.pageKey)),
+    ] as PageKey[];
 
     return scheduleOnIdle(() => {
       void Promise.all(tabsToWarm.map((page) => preloadPage(page)));
@@ -440,15 +452,19 @@ export default function App() {
           >
             <>
               {openTabs.map((tab) => {
-                const Component = PAGE_COMPONENTS[tab as PageKey];
+                const Component = PAGE_COMPONENTS[tab.pageKey];
                 if (!Component) return null;
                 return (
                   <div
-                    key={tab}
-                    className={currentPage === tab ? "block h-full" : "hidden"}
+                    key={tab.instanceId}
+                    className={
+                      currentInstanceId === tab.instanceId
+                        ? "block h-full"
+                        : "hidden"
+                    }
                   >
                     <Suspense fallback={PAGE_FALLBACK}>
-                      <Component />
+                      <Component instanceIndex={tab.instanceIndex} />
                     </Suspense>
                   </div>
                 );

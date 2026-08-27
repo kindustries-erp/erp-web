@@ -103,4 +103,24 @@ describe("SpreadsheetPageTemplate", () => {
     );
     expect(screen.getByText("MOCKED_BULK_ACTION")).toBeInTheDocument();
   });
+
+  it("applies getRowClassName correctly to rendered rows", () => {
+    const items = [
+      { id: "1", status: "ADJUSTED" },
+      { id: "2", status: "NORMAL" },
+    ];
+    const { container } = render(
+      <SpreadsheetPageTemplate
+        {...defaultProps}
+        items={items}
+        getRowClassName={(row) =>
+          row.status === "ADJUSTED" ? "bg-amber-50/80" : undefined
+        }
+      />,
+    );
+
+    const rows = container.querySelectorAll("tbody tr");
+    expect(rows[0]?.className).toContain("bg-amber-50/80");
+    expect(rows[1]?.className).not.toContain("bg-amber-50/80");
+  });
 });

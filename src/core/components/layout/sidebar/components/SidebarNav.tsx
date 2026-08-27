@@ -17,6 +17,7 @@ import {
   Factory,
   Shield,
   Receipt,
+  ReceiptText,
   Package,
   LayoutDashboard,
   Wallet,
@@ -29,6 +30,7 @@ import {
 } from "lucide-react";
 
 import { useAuthStore } from "@/modules/auth/domain/authStore";
+import { useAppStore } from "@/core/config/appStore";
 
 export function SidebarNav({
   c,
@@ -40,6 +42,7 @@ export function SidebarNav({
   navTo: (p: PageKey) => void;
 }) {
   const t = useT();
+  const { openCustomFieldsDrawer } = useAppStore();
   const { employee } = useAuthStore();
   const isAdminEmail = employee?.email === "admin@liouni.com";
 
@@ -324,6 +327,14 @@ export function SidebarNav({
             active={currentPage === "garage-cases"}
             onClick={() => navTo("garage-cases")}
             contextPage="garage-cases"
+          />
+          <NavItem
+            collapsed={c}
+            icon={<ReceiptText className="w-4 h-4 opacity-65 flex-shrink-0" />}
+            label={t("nav.items.garageOpex", "Chi phí vận hành")}
+            active={currentPage === "garage-opex"}
+            onClick={() => navTo("garage-opex")}
+            contextPage="garage-opex"
           />
           <NavItem
             collapsed={c}
@@ -654,6 +665,12 @@ export function SidebarNav({
                   active={currentPage === "sys-tags"}
                   onClick={() => navTo("sys-tags")}
                   contextPage="sys-tags"
+                />
+              )}
+              {(canReadInvoices || canReadBankStatements || canReadBom) && (
+                <NavGroupItem
+                  label={t("nav.items.customFields", "Trường tùy chỉnh")}
+                  onClick={() => openCustomFieldsDrawer("ALL", "INVOICE")}
                 />
               )}
             </NavGroup>

@@ -9,6 +9,7 @@ import {
   Copy,
   MoreHorizontal,
   Loader2,
+  ExternalLink,
 } from "lucide-react";
 import {
   ActionDropdown,
@@ -49,16 +50,38 @@ export function extractQuickActions(
   return result;
 }
 
-function resolveActionIcon(action: ActionItem): React.ReactNode {
+export function resolveActionIcon(action: ActionItem): React.ReactNode {
   if (action.icon) {
-    return React.isValidElement(action.icon)
-      ? React.cloneElement(action.icon as React.ReactElement, {
-          className: cn(
-            "w-3.5 h-3.5 flex-shrink-0",
-            (action.icon.props as any)?.className,
-          ),
-        })
-      : action.icon;
+    if (React.isValidElement(action.icon)) {
+      return React.cloneElement(action.icon as React.ReactElement, {
+        className: cn(
+          "w-3.5 h-3.5 flex-shrink-0",
+          (action.icon.props as any)?.className,
+        ),
+      });
+    }
+    if (typeof action.icon === "string") {
+      const iconName = action.icon.toLowerCase();
+      if (iconName === "externallink")
+        return <ExternalLink className="w-3.5 h-3.5 flex-shrink-0" />;
+      if (iconName === "eye")
+        return <Eye className="w-3.5 h-3.5 flex-shrink-0" />;
+      if (iconName === "pencil")
+        return <Pencil className="w-3.5 h-3.5 flex-shrink-0" />;
+      if (iconName === "trash2" || iconName === "trash")
+        return (
+          <Trash2 className="w-3.5 h-3.5 flex-shrink-0 text-destructive" />
+        );
+      if (iconName === "download")
+        return <Download className="w-3.5 h-3.5 flex-shrink-0" />;
+      if (iconName === "printer")
+        return <Printer className="w-3.5 h-3.5 flex-shrink-0" />;
+      if (iconName === "refreshcw" || iconName === "refresh")
+        return <RefreshCw className="w-3.5 h-3.5 flex-shrink-0" />;
+      if (iconName === "copy")
+        return <Copy className="w-3.5 h-3.5 flex-shrink-0" />;
+    }
+    return null;
   }
 
   const label = (action.label || "").toLowerCase();
@@ -117,7 +140,7 @@ function resolveActionIcon(action: ActionItem): React.ReactNode {
   return <MoreHorizontal className="w-3.5 h-3.5 flex-shrink-0" />;
 }
 
-export function TableRowHoverActions({
+export const TableRowHoverActions = React.memo(function TableRowHoverActions({
   items,
   className,
   maxQuickActions = 2,
@@ -215,4 +238,4 @@ export function TableRowHoverActions({
       </div>
     </div>
   );
-}
+});

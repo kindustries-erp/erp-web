@@ -45,6 +45,8 @@ src/
 │   │   └── erpInvoiceDashboardApi.ts          # API Client cho Dashboard KPI & đối tác
 │   ├── components/
 │   │   ├── ErpInvoicesTab.tsx                 # Core Table Page: Bảng dữ liệu, bộ lọc, thanh công cụ, bulk actions
+│   │   ├── InvoiceViewModeCombobox.tsx        # Combobox chọn chế độ xem (Tổng quan / Đối soát / Custom)
+│   │   ├── InvoiceViewConfigDrawer.tsx        # Drawer 1-column cấu hình tên view & tùy chỉnh cột hiển thị
 │   │   ├── ErpInvoiceInternalDrawer.tsx       # Drawer quản lý chi tiết hóa đơn (kế thừa DrawerModal)
 │   │   ├── ErpInvoiceStandaloneDrawer.tsx     # Drawer xem độc lập nhanh hóa đơn từ các trang khác
 │   │   ├── PartnerInvoiceDrawer.tsx           # Drawer danh sách hóa đơn theo từng đối tác/MST
@@ -100,6 +102,17 @@ src/
 
 ### 3.1. Bảng Dữ liệu Hóa đơn (`ErpInvoicesTab.tsx`)
 - **Khung giao diện**: Sử dụng `<SpreadsheetPageTemplate>` với thanh công cụ điều khiển phía trên và thanh tính tổng (Summary footer) cố định bên dưới.
+- **PillTabs Phân loại Thuế (API-driven)**:
+  - Các tab: `Tất cả` (`all`), `Mới` (`new`), `Thay thế` (`replacement`), `Điều chỉnh` (`adjustment`).
+  - Quản lý qua `activeTaxTab` trong `useErpInvoiceListStore`, khởi tạo đồng bộ từ URL `?view=...` trên initial load/F5 reload.
+  - Tách bạch hoàn toàn khỏi `columnFilters` để tránh xung đột khi người dùng xóa filter.
+- **Chế độ xem & Tùy chỉnh cột (View Mode Combobox & Drawer)**:
+  - `InvoiceViewModeCombobox`: Đặt cạnh PillTabs, cho phép chọn giữa các preset chế độ xem (`Tổng quan`, `Kiểm toán / Đối soát`, và custom views). Hỗ trợ icon Pencil (Sửa) cho tất cả các view, icon Trash (Xóa) chỉ hiển thị cho custom view (2 view mặc định `overview` và `audit` được bảo vệ an toàn, không thể xóa).
+  - `InvoiceViewConfigDrawer`: Drawer cấu hình view mode chuẩn `StandardFormDrawer` layout `1-column`, chia 3 nhóm cột (*Thông tin chung*, *Thuế & Trạng thái*, *Số tiền*), hỗ trợ chỉnh sửa cả view mặc định và view tự tạo, có banner nhận diện chế độ mặc định và nút **"Khôi phục mặc định"** (Reset to factory settings) để đưa các cột về nguyên bản hệ thống (`INVOICE_COLUMN_VIEW_PRESETS`).
+  - `usePageViewPresets` & `useUserPreferencesStore`: Quản lý lưu trữ trạng thái view, tự động merge dữ liệu tùy chỉnh cho default presets (`isDefault: true`, `isCustom: false`, `isModified: boolean`) và đồng bộ ngầm với backend.
+- **Tùy chọn lọc cột theo ngữ cảnh Tab (Context-Aware Column Options)**:
+  - `fetchInvoiceOptions`: Tự động truyền `taxInvoiceStatus` tương ứng với `activeTaxTab` khi gọi API lấy danh sách gợi ý lọc cột.
+  - Cột `taxInvoiceStatus`: Danh sách filter options hiển thị tương ứng theo tab (Mới -> Mới; Thay thế -> Thay thế / Bị thay thế; Điều chỉnh -> Điều chỉnh / Bị điều chỉnh; Tất cả -> Đủ 6 trạng thái).
 - **Danh sách cột chuẩn**:
   1. `select`: Checkbox chọn nhiều dòng để thực hiện bulk actions.
   2. `actions`: `ActionDropdown` (Xem chi tiết, Sửa, Hạch toán, In/Xem PDF, Tải XML, Xóa/Hủy).
@@ -203,6 +216,9 @@ export interface ErpInvoice {
    - Đồng bộ danh sách chi nhánh qua `getBranchesApi` cho bộ lọc và gán chi nhánh hóa đơn.
 5. **`system / attachments`**:
    - Lưu trữ và tải tệp tin thông qua `attachmentsApi`.
+6. **`module-config` (Thuộc tính động & Thuộc tính chung)**:
+   - Nhúng `ModuleEntityCustomFieldsSection` vào `ErpInvoiceInternalInfo` hiển thị 2 drawer sections: `Thuộc tính chung` (Global) và `Danh mục & Thuộc tính` (Category).
+   - `useErpInvoiceForm` tự động khởi tạo form state từ `customAttributes`/`globalAttributes` trả về bởi API `/api/v1/erp-invoices`, validate các trường `isRequired` trước khi lưu và hiển thị banner lỗi `setFormError` + `toast.error`.
 
 ---
 

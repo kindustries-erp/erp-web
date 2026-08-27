@@ -19,6 +19,8 @@ function getCellValue(item: Record<string, any>, key: string) {
   switch (key) {
     case "statusName":
       return item.tenTinhTrangDichVu || "";
+    case "classification":
+      return item.classification || "";
     case "caseCode":
       return item.soChungTu || "";
     case "licensePlate":
@@ -30,7 +32,10 @@ function getCellValue(item: Record<string, any>, key: string) {
     case "isInsuranceClaim":
       return item.rawData?.XeLamBaoHiem ? "yes" : "no";
     case "caseDate":
-      return item.ngayPhatSinh || "";
+    case "ngayPhatSinh":
+      return item.ngayPhatSinh || item.ngayTiepNhan || "";
+    case "ngayTiepNhan":
+      return item.ngayTiepNhan || item.ngayPhatSinh || "";
     case "updatedAt":
       return item.updatedAt || "";
     case "createdAt":
@@ -72,6 +77,8 @@ function getCellValue(item: Record<string, any>, key: string) {
       if (paidCost <= 0 && cost > 0) return "UNPAID";
       return "";
     }
+    case "hasLinkedInvoice":
+      return Number(item.linkedInvoiceCount || 0) > 0 ? "YES" : "NO";
     default:
       return item[key] ?? "";
   }
@@ -91,21 +98,58 @@ function parseDateValue(value: unknown): Date | null {
   return parsed;
 }
 
+import {
+  isQuotationStatus,
+  isInProgressStatus,
+  isCompletedStatus,
+} from "./garageCaseViewPresets";
+
 export function applyGarageCasesTableState(
   items: Record<string, any>[],
   tableState: GarageCasesTableState,
   globalSearch = "",
   dateRanges: GarageCasesDateRanges = {},
+  statusTab = "all",
 ) {
   const searchText = normalizeString(globalSearch);
 
   const filtered = items.filter((item) => {
+    // 0. Filter theo statusTab (PillTabs: all, quotation, in_progress, completed)
+    const effectiveStatusTab =
+      statusTab !== "all"
+        ? statusTab
+        : tableState.columnFilters?.["statusTab"]?.[0] || "all";
+
+    if (effectiveStatusTab && effectiveStatusTab !== "all") {
+      const statusName = item.tenTinhTrangDichVu;
+      const statusCode = item.tinhTrangDichVu;
+      if (
+        effectiveStatusTab === "quotation" &&
+        !isQuotationStatus(statusName, statusCode)
+      ) {
+        return false;
+      }
+      if (
+        effectiveStatusTab === "in_progress" &&
+        !isInProgressStatus(statusName, statusCode)
+      ) {
+        return false;
+      }
+      if (
+        effectiveStatusTab === "completed" &&
+        !isCompletedStatus(statusName, statusCode)
+      ) {
+        return false;
+      }
+    }
+
     if (searchText) {
       const searchable = [
         item.soChungTu,
         item.bienSoXe,
         item.khachHangCode,
         item.khachHangName,
+        item.classification,
         item.tenTinhTrangDichVu,
         item.rawData?.XeLamBaoHiem ? "yes" : "no",
       ]
@@ -130,9 +174,99 @@ export function applyGarageCasesTableState(
       tableState.columnFilters,
     )) {
       if (!filters || filters.length === 0) continue;
+
       const rawValue = getCellValue(item, columnKey);
+      const isBlank =
+        rawValue == null ||
+        rawValue === "" ||
+        rawValue === undefined ||
+        (typeof rawValue === "number" && isNaN(rawValue));
+
+      if (filters[0] === "__ALL_MATCHING__") {
+        const rawSearch = (filters[1] || "").trim();
+        if (!rawSearch) continue;
+        const val = normalizeString(rawValue);
+        const keywords = rawSearch
+          .split(";")
+          .map((k) => k.trim())
+          .filter(Boolean);
+        if (keywords.length === 0) continue;
+
+        const matchesAnyKw = keywords.some((kw) => {
+          let isExact = false;
+          let cleanKw = kw;
+          if (kw.startsWith('"') && kw.endsWith('"') && kw.length >= 2) {
+            isExact = true;
+            cleanKw = kw.slice(1, -1);
+          }
+          const normKw = normalizeString(cleanKw);
+          if (isExact) {
+            return val === normKw;
+          }
+          return val.includes(normKw);
+        });
+
+        if (!matchesAnyKw) {
+          return false;
+        }
+        continue;
+      }
+
+      // Handler riêng cho cột margin (Biên LN)
+      if (columnKey === "margin" || columnKey === "bienLoiNhuan") {
+        const rev = Number(item.doanhThu ?? item.rawData?.DoanhThu ?? 0);
+        const profit = Number(item.loiNhuan ?? item.rawData?.LoiNhuan ?? 0);
+        const hasRev = rev > 0;
+        const marginPct = hasRev ? (profit / rev) * 100 : null;
+
+        const matches = filters.some((f) => {
+          if (f === "__BLANK__") return marginPct == null;
+          if (marginPct == null) return false;
+          if (f === "HIGH") return marginPct >= 50;
+          if (f === "MID") return marginPct >= 20 && marginPct < 50;
+          if (f === "LOW") return marginPct >= 0 && marginPct < 20;
+          if (f === "NEGATIVE") return marginPct < 0;
+          if (isNumericLike(f))
+            return (
+              Math.round(marginPct * 10) / 10 ===
+              Math.round(Number(f) * 10) / 10
+            );
+          return false;
+        });
+        if (!matches) return false;
+        continue;
+      }
+
+      // Handler riêng cho các cột số tiền doanh thu, chi phí, lợi nhuận
+      if (
+        columnKey === "doanhThu" ||
+        columnKey === "chiPhi" ||
+        columnKey === "loiNhuan"
+      ) {
+        const numVal = Number(rawValue) || 0;
+        const isBlankNum = rawValue == null || numVal === 0;
+
+        const matches = filters.some((f) => {
+          if (f === "__BLANK__") return isBlankNum;
+          if (isNumericLike(f)) return numVal === Number(f);
+          return normalizeString(f) === normalizeString(String(numVal));
+        });
+        if (!matches) return false;
+        continue;
+      }
+
+      const hasBlank = filters.includes("__BLANK__");
+      if (hasBlank && isBlank) {
+        continue;
+      }
+
+      if (isBlank) {
+        return false;
+      }
+
       const value = normalizeString(rawValue);
       const matches = filters.some((filter) => {
+        if (filter === "__BLANK__") return isBlank;
         const normalizedFilter = normalizeString(filter);
         if (isNumericLike(value) && isNumericLike(normalizedFilter)) {
           return Number(value) === Number(normalizedFilter);
@@ -166,10 +300,14 @@ export function applyGarageCasesTableState(
 
   const sorted = [...filtered].sort((a, b) => {
     if (tableState.sorts.length === 0) {
-      return (
-        new Date(b.updatedAt || 0).getTime() -
-        new Date(a.updatedAt || 0).getTime()
-      );
+      const timeB =
+        parseDateValue(b.ngayPhatSinh || b.ngayTiepNhan)?.getTime() ?? 0;
+      const timeA =
+        parseDateValue(a.ngayPhatSinh || a.ngayTiepNhan)?.getTime() ?? 0;
+      if (timeB !== timeA) return timeB - timeA;
+      return (b.soChungTu || "").localeCompare(a.soChungTu || "", undefined, {
+        numeric: true,
+      });
     }
 
     for (const sortExpr of tableState.sorts) {
@@ -195,8 +333,19 @@ export function applyGarageCasesTableState(
           return isDesc ? -result : result;
         }
       } else {
+        // Check if both left and right are parsable date strings
+        const dateLeft = parseDateValue(left);
+        const dateRight = parseDateValue(right);
+        if (dateLeft && dateRight) {
+          const result = dateLeft.getTime() - dateRight.getTime();
+          if (result !== 0) {
+            return isDesc ? -result : result;
+          }
+        }
+
         const result = String(left).localeCompare(String(right), undefined, {
           sensitivity: "base",
+          numeric: true,
         });
         if (result !== 0) {
           return isDesc ? -result : result;
@@ -204,10 +353,14 @@ export function applyGarageCasesTableState(
       }
     }
 
-    return (
-      new Date(b.updatedAt || 0).getTime() -
-      new Date(a.updatedAt || 0).getTime()
-    );
+    const timeB =
+      parseDateValue(b.ngayPhatSinh || b.ngayTiepNhan)?.getTime() ?? 0;
+    const timeA =
+      parseDateValue(a.ngayPhatSinh || a.ngayTiepNhan)?.getTime() ?? 0;
+    if (timeB !== timeA) return timeB - timeA;
+    return (b.soChungTu || "").localeCompare(a.soChungTu || "", undefined, {
+      numeric: true,
+    });
   });
 
   return sorted;

@@ -126,6 +126,6 @@ export const vinfastPartsStockExportApi = {
 
 1. **Spreadsheet Standard**: Bắt buộc dùng `SpreadsheetPageTemplate`, hỗ trợ đầy đủ `useTableColumnState` và phân trang chuẩn.
 2. **Cột STT**: Độ rộng cố định `w-[40px] min-w-[40px]`, căn giữa.
-3. **Cột Mã SKU**: Luôn sử dụng `<TableText>` có hỗ trợ `copyable`, `tooltip` và `onDrawerClick`.
+3. **Cột Mã SKU**: Luôn sử dụng `<TableText>` có hỗ trợ `copyable`, `tooltip` và `onDetailClick` (Icon `Eye` mở chi tiết phụ tùng).
 4. **SSE Clean-up**: Mọi SSE connection trong drawer/store phải được dọn dẹp (unsubscribe / close) khi unmount component để tránh rò rỉ bộ nhớ.
 5. **Typecheck & CI**: Bắt buộc chạy `bun run check:ci` và `bun run test` thành công trước khi hoàn tất.

@@ -71,6 +71,7 @@ export const breadcrumbEn = {
   garage: "Garage",
   garageDashboard: "Dashboard",
   garageCases: "Service Cases",
+  garageOpex: "Operating Expenses",
   garagePartnersGroup: "Partners",
   garageCustomers: "Customers",
   garageSuppliers: "Suppliers",

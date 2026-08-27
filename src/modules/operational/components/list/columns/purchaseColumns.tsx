@@ -191,7 +191,7 @@ export function usePurchaseColumns({
               text={row.purchase_no || "—"}
               tooltip={<PoTooltipContent row={row} />}
               enableCopy={Boolean(row.purchase_no)}
-              onDrawerClick={
+              onDetailClick={
                 row.purchase_no ? () => onOpenDetail?.(row) : undefined
               }
             />

@@ -1,16 +1,25 @@
 import React, { useState, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Building2, Wallet, Plus, Upload } from "lucide-react";
+import {
+  Building2,
+  Wallet,
+  Plus,
+  Upload,
+  FolderArchive,
+  Settings,
+  FileSpreadsheet,
+} from "lucide-react";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate";
 import { TableDateCell } from "@/shared/components/DataTable/TableDateCell";
 import { useT } from "@/core/i18n";
+import { useAppStore } from "@/core/config/appStore";
 import { bankStatementApi } from "@/modules/bank-statements/api/bankStatementApi";
-import { FolderArchive } from "lucide-react";
 import { getTags } from "@/modules/tags/api/tagsApi";
 import { ImportStatementDrawer } from "@/pages/finance/components/ImportStatementDrawer";
 import { OriginalStatementFilesDrawer } from "@/pages/finance/components/OriginalStatementFilesDrawer";
 import { CreateCashTransactionDrawer } from "@/pages/finance/components/CreateCashTransactionDrawer";
 import { BankTransactionDetailDrawer } from "@/pages/finance/components/BankTransactionDetailDrawer";
+import { BankStatementExportDrawer } from "@/pages/finance/components/BankStatementExportDrawer";
 import { money } from "@/shared/utils/format";
 import { useFilterPanel } from "@/shared/hooks/useFilterPanel";
 import { getBranchesApi } from "@/modules/branches/api/branchApi";
@@ -28,9 +37,11 @@ import { DateRangeColumnSlot } from "@/shared/components/DataTable/DateRangeColu
 
 export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
   const t = useT();
+  const { openCustomFieldsDrawer } = useAppStore();
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
   const [isImportOpen, setIsImportOpen] = useState(false);
+  const [isExportOpen, setIsExportOpen] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isOriginalFilesOpen, setIsOriginalFilesOpen] = useState(false);
   const [detailTransactionId, setDetailTransactionId] = useState<string | null>(
@@ -243,8 +254,12 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
               dateFrom={filter.state.dateFrom}
               dateTo={filter.state.dateTo}
               onChange={(from, to) => {
-                filter.setDateFrom(from);
-                filter.setDateTo(to);
+                if (filter.setDateRange) {
+                  filter.setDateRange(from, to);
+                } else {
+                  filter.setDateFrom(from);
+                  filter.setDateTo(to);
+                }
                 setPage(1);
               }}
               onClose={close}
@@ -389,6 +404,19 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
 
   const columns: any[] = [
     {
+      key: "index",
+      header: "#",
+      size: 40,
+      minSize: 40,
+      maxSize: 40,
+      enableResizing: false,
+      headerClassName: "w-[40px] min-w-[40px] text-center",
+      className: "w-[40px] min-w-[40px] text-center",
+      cell: (_: any, idx: number) => (
+        <span className="text-muted-foreground">{idx}</span>
+      ),
+    },
+    {
       key: "account",
       header: renderHeaderFilter(
         "account",
@@ -427,7 +455,7 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
         return (
           <TableText
             text={row.referenceNumber}
-            onDrawerClick={(e) => {
+            onDetailClick={(e) => {
               e.stopPropagation();
               setDetailTransactionId(row.id);
             }}
@@ -687,47 +715,75 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
               },
             ],
           },
+          {
+            groupLabel: t("groupCauHinh", "Cấu hình"),
+            items: [
+              {
+                label: t(
+                  "bankConfig.customFields",
+                  "Cấu hình trường tùy chỉnh",
+                ),
+                icon: <Settings className="w-3.5 h-3.5 text-violet-500" />,
+                onClick: () =>
+                  openCustomFieldsDrawer("BANK_TXN", "Sao kê ngân hàng"),
+              },
+            ],
+          },
         ]}
+        onCreate={() => setIsImportOpen(true)}
+        createLabel={t("bankStatement.importBtn", "Nhập sao kê")}
+        createIcon={<Upload className="w-4 h-4 mr-1" />}
         createActions={[
           {
-            groupLabel: t("groupThemMoi", "Thêm mới"),
-            items:
-              type === "cash"
+            groupLabel: t("groupThaoTac", "Thao tác"),
+            items: [
+              ...(type === "cash"
                 ? [
                     {
-                      label: "Tạo mới",
+                      label: "Tạo mới phiếu thu/chi",
                       icon: <Plus className="w-4 h-4 text-emerald-600" />,
                       onClick: () => setIsCreateOpen(true),
                     },
-                    {
-                      label: t("bankStatement.importBtn", "Nhập sao kê"),
-                      icon: <Upload className="w-4 h-4 text-emerald-600" />,
-                      onClick: () => setIsImportOpen(true),
-                    },
-                    {
-                      label: "Quản lý file gốc",
-                      icon: (
-                        <FolderArchive className="w-4 h-4 text-emerald-600" />
-                      ),
-                      onClick: () => setIsOriginalFilesOpen(true),
-                    },
                   ]
-                : [
-                    {
-                      label: t("bankStatement.importBtn", "Nhập sao kê"),
-                      icon: <Upload className="w-4 h-4 text-emerald-600" />,
-                      onClick: () => setIsImportOpen(true),
-                    },
-                    {
-                      label: "Quản lý file gốc",
-                      icon: (
-                        <FolderArchive className="w-4 h-4 text-emerald-600" />
-                      ),
-                      onClick: () => setIsOriginalFilesOpen(true),
-                    },
-                  ],
+                : []),
+              {
+                label: t("bankStatement.exportExcel", "Xuất Excel"),
+                icon: <FileSpreadsheet className="w-4 h-4 text-emerald-600" />,
+                onClick: () => setIsExportOpen(true),
+              },
+              {
+                label: "Quản lý file gốc",
+                icon: <FolderArchive className="w-4 h-4 text-emerald-600" />,
+                onClick: () => setIsOriginalFilesOpen(true),
+              },
+            ],
+          },
+          {
+            groupLabel: t("groupCauHinh", "Cấu hình"),
+            items: [
+              {
+                label: t(
+                  "bankConfig.customFields",
+                  "Cấu hình trường tùy chỉnh",
+                ),
+                icon: <Settings className="w-4 h-4 text-violet-500" />,
+                onClick: () =>
+                  openCustomFieldsDrawer(
+                    "BANK_TXN",
+                    type === "bank" ? "Sao kê ngân hàng" : "Sổ quỹ tiền mặt",
+                  ),
+              },
+            ],
           },
         ]}
+      />
+
+      <BankStatementExportDrawer
+        open={isExportOpen}
+        onClose={() => setIsExportOpen(false)}
+        type={type}
+        branches={branches}
+        accountsData={accountsData}
       />
 
       <OriginalStatementFilesDrawer

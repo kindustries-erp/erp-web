@@ -4,6 +4,7 @@ import { DatePicker } from "@/shared/components/DatePicker";
 import { Combobox } from "@/shared/components/Combobox";
 import { MultiSelect } from "@/shared/components/MultiSelect";
 import { Button } from "@/shared/components/ui/Button";
+import { Tooltip } from "@/core/components/ui/Tooltip";
 import { PERIOD_OPTS } from "@/modules/finance/utils/financeHelpers";
 import { useT } from "@/core/i18n";
 import type {
@@ -14,7 +15,7 @@ import type {
 // ── FilterButton (trigger) ───────────────────────────────────────────────────
 
 interface FilterButtonProps {
-  onClick: () => void;
+  onClick?: () => void;
   activeCount: number;
   onClear?: () => void;
   className?: string;
@@ -27,52 +28,56 @@ export function FilterButton({
   className,
 }: FilterButtonProps) {
   const t = useT();
+
   if (activeCount > 0 && onClear) {
     return (
-      <div className={cn("flex items-center rounded-md shadow-sm", className)}>
-        <Button
-          variant="secondary"
-          onClick={onClick}
-          className="h-8 rounded-r-none px-3 border-r-0 border-primary/40 text-primary bg-primary/5 hover:bg-primary/10 transition-colors"
-          title={t("Bộ lọc")}
-        >
-          <Filter className="h-4 w-4 mr-1.5" />
-          <span className="text-xs font-semibold">
-            {t("Bộ lọc")} ({activeCount})
-          </span>
-        </Button>
-        <div className="w-[1px] h-8 bg-primary/20 z-10" />
-        <Button
-          variant="secondary"
-          onClick={onClear}
-          className="h-8 w-8 px-0 rounded-l-none border-l-0 border-primary/40 bg-primary/5 text-muted-foreground hover:bg-red-50 hover:text-red-600 transition-colors focus:z-10"
-          title={t("Xóa tất cả bộ lọc")}
-        >
-          <X className="h-4 w-4" />
-        </Button>
+      <div
+        className={cn(
+          "inline-flex items-stretch h-8 rounded-lg border border-border bg-surface text-foreground shadow-xs hover:border-primary/40 transition-colors animate-in fade-in duration-150 overflow-hidden",
+          className,
+        )}
+      >
+        <Tooltip content={`${t("Bộ lọc")} (${activeCount})`}>
+          <button
+            type="button"
+            onClick={onClick}
+            className="flex items-center gap-1 pl-2.5 pr-1.5 text-xs font-semibold text-foreground hover:bg-surface-hover hover:text-primary transition-colors outline-none cursor-pointer"
+          >
+            <Filter className="h-3.5 w-3.5 text-primary shrink-0" />
+            <span className="leading-none text-[11px] text-primary font-bold">
+              ({activeCount})
+            </span>
+          </button>
+        </Tooltip>
+        <Tooltip content={t("Xóa tất cả bộ lọc")}>
+          <button
+            type="button"
+            onClick={onClear}
+            className="flex items-center justify-center px-2 text-muted-foreground hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/40 transition-colors outline-none cursor-pointer"
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
+        </Tooltip>
       </div>
     );
   }
 
   return (
-    <Button
-      variant="secondary"
-      size="icon"
-      onClick={onClick}
-      className={cn(
-        "relative h-8 w-8 shrink-0",
-        activeCount > 0 && "border-primary/50 text-primary",
-        className,
-      )}
-      title={t("Bộ lọc")}
-    >
-      <Filter className="h-4 w-4" />
-      {activeCount > 0 && (
-        <span className="absolute -top-1.5 -right-1.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-white shadow-sm">
-          {activeCount}
-        </span>
-      )}
-    </Button>
+    <Tooltip content={t("Bộ lọc")}>
+      <Button
+        variant="secondary"
+        size="icon"
+        onClick={onClick}
+        className={cn(
+          "relative h-8 w-8 px-0 shrink-0",
+          activeCount > 0 &&
+            "border-primary/40 text-primary bg-primary/10 hover:bg-primary/15",
+          className,
+        )}
+      >
+        <Filter className="h-4 w-4" />
+      </Button>
+    </Tooltip>
   );
 }
 

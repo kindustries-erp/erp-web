@@ -20,7 +20,7 @@ export function TablePagination({
   totalPages,
   onPage,
   onPageSize,
-  pageSizeOptions = [50, 100, 200],
+  pageSizeOptions = [20, 50, 100, 200],
   className,
 }: TablePaginationProps) {
   const from = total === 0 ? 0 : (page - 1) * pageSize + 1;

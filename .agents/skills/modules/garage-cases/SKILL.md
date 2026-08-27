@@ -28,6 +28,8 @@ src/modules/garage/
 │   ├── GarageCaseSettlementSection.tsx # Section quản lý cấn trừ thu/chi dòng tiền vụ việc
 │   ├── GarageCaseStandaloneDrawer.tsx # Drawer chi tiết phiếu dịch vụ 2 cột chuẩn UI
 │   ├── GarageCaseSyncDrawer.tsx     # Drawer cấu hình đồng bộ dữ liệu
+│   ├── GarageCaseViewConfigDrawer.tsx # Drawer cấu hình & tùy biến cột cho Chế độ xem (View Presets)
+│   ├── GarageCaseViewModeCombobox.tsx # Combobox chọn nhanh Chế độ xem (Tổng quan / Đối soát / Tiến độ & Dòng tiền / Custom)
 │   ├── GarageCustomerDetailDrawer.tsx # Drawer 2 cột chi tiết công nợ khách hàng, danh sách phiếu dịch vụ & tuổi nợ
 │   ├── GarageGrossProfitDetailDrawer.tsx # Drawer xem lợi nhuận gộp
 │   ├── GarageRecentCasesTable.tsx   # Bảng 10 phiếu dịch vụ gần nhất cho Dashboard
@@ -50,8 +52,9 @@ src/modules/garage/
 ├── store/
 │   └── garageStore.ts               # Zustand store lưu selectedBranchId
 └── utils/
-    └── garageCasesTable.ts          # Helper lọc và sắp xếp dữ liệu client-side
-```
+    ├── garageCasesTable.ts          # Helper lọc và sắp xếp dữ liệu client-side & width helper
+    ├── garageCasesTable.test.ts     # Unit tests cho helper bảng
+    └── garageCaseViewPresets.ts     # Cấu hình Presets mặc định (Tổng quan, Đối soát, Tiến độ & Dòng tiền)
 
 ---
 
@@ -89,4 +92,26 @@ src/modules/garage/
 - Sử dụng `<StandardFormDrawer layout="2-columns" size="xl">`.
 - **Khách hàng**: Cột trái thông tin khách hàng & bảng phiếu dịch vụ phát sinh kèm tuổi nợ; cột phải phân bổ tuổi nợ (Aging: 0-30, 31-60, 61-90, >90 ngày) và tiến độ thu hồi. Bấm "Cấn trừ" hoặc mã phiếu sẽ mở tiếp `GarageCaseStandaloneDrawer`.
 - **Nhà cung cấp**: Cột trái thông tin nhà cung cấp & danh sách vụ việc/chứng từ liên đới; cột phải thẻ tổng hợp cân đối phát sinh Nợ/Có TK 331 và phân tích tuổi nợ.
+
+### 4.3. Liên Kết Hóa Đơn VAT (`InvoiceSelectionDrawer`)
+- Sử dụng `<StandardFormDrawer layout="2-columns" size="xl" collapsibleRightPanel={true}>`.
+- **Cột trái (`leftPanel`)**: Bọc trong `<DrawerSection title="Danh sách hóa đơn điện tử">`, bảng hóa đơn chuẩn font monospace, nút xóa nhanh bộ lọc `FilterButton`, thanh phân trang cố định ở đáy.
+- **Cột phải (`rightPanel`)**:
+  - `DrawerSection` **Tiến độ & Mục tiêu liên kết**: Hiển thị Doanh thu/Chi phí mục tiêu, Đã chọn và Chênh lệch.
+  - `DrawerSection` **Hóa đơn đã chọn**: Danh sách card hóa đơn đã chọn kèm nút gỡ bỏ nhanh. Hóa đơn đã chọn sẽ không nằm trong section gợi ý và ngược lại (mutual exclusion).
+  - `DrawerSection` **Gợi ý hóa đơn thông minh**: Danh sách gợi ý AI dựa trên số tiền, biển số xe và mã lệnh quyết toán.
+
+---
+
+## 5. Chế độ Xem Bảng Đa Dạng (View Mode Presets & ViewModeCombobox)
+
+### 5.1. Các Presets Chuẩn Hóa (`garageCaseViewPresets.ts`)
+1. **Tổng quan (`overview`)**: Tối ưu tra cứu nhanh tiến độ, xe, khách hàng, doanh thu và hóa đơn liên kết.
+2. **Đối soát / Lợi nhuận gộp (`audit`)**: Tập trung vào các chỉ số tài chính sâu (Doanh thu, Chi phí, Lợi nhuận, Biên LN %, Hóa đơn đầu vào/đầu ra, Phân loại nghiệp vụ).
+3. **Tiến độ & Dòng tiền (`financial_progress`)**: Theo dõi sát sao tiến độ thanh toán thực tế (Đã thu, Còn phải thu, Tiến độ %, Ngày hoàn thành, Cố vấn dịch vụ).
+
+### 5.2. Tùy Biến Chế Độ Xem (`GarageCaseViewConfigDrawer`)
+- Cho phép người dùng tạo chế độ xem cá nhân hóa (Custom View), đổi tên, chọn nhanh bộ cột, sắp xếp thứ tự hiển thị và lưu trữ bền vững vào App Setting (`core_user_preferences`) lẫn LocalStorage cache.
+- Tích hợp `ViewModeCombobox` dùng chung (`src/shared/components/ViewModeCombobox/ViewModeCombobox.tsx`) với đầy đủ các thao tác Chọn nhanh, Chỉnh sửa (Pencil) và Xóa (Trash).
+
 

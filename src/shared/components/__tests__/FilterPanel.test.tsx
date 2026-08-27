@@ -165,24 +165,36 @@ describe("FilterPanel", () => {
   });
 });
 
-describe("FilterButton", () => {
-  it("renders with correct activeCount badge", () => {
-    render(<FilterButton onClick={vi.fn()} activeCount={3} />);
+import { TooltipProvider } from "@/core/components/ui/Tooltip";
 
-    expect(screen.getByTitle("Bộ lọc")).toBeInTheDocument();
-    expect(screen.getByText("3")).toBeInTheDocument();
+describe("FilterButton", () => {
+  it("renders with correct activeCount badge when onClear is provided", () => {
+    render(
+      <TooltipProvider>
+        <FilterButton onClick={vi.fn()} onClear={vi.fn()} activeCount={3} />
+      </TooltipProvider>,
+    );
+
+    expect(screen.getByText("(3)")).toBeInTheDocument();
   });
 
   it("does not render badge when activeCount is 0", () => {
-    render(<FilterButton onClick={vi.fn()} activeCount={0} />);
+    render(
+      <TooltipProvider>
+        <FilterButton onClick={vi.fn()} activeCount={0} />
+      </TooltipProvider>,
+    );
 
-    expect(screen.getByTitle("Bộ lọc")).toBeInTheDocument();
     expect(screen.queryByText("0")).not.toBeInTheDocument();
   });
 
   it("onClick calls the provided handler", () => {
     const onClick = vi.fn();
-    render(<FilterButton onClick={onClick} activeCount={0} />);
+    render(
+      <TooltipProvider>
+        <FilterButton onClick={onClick} activeCount={0} />
+      </TooltipProvider>,
+    );
 
     fireEvent.click(screen.getByRole("button"));
     expect(onClick).toHaveBeenCalledTimes(1);

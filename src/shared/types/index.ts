@@ -63,6 +63,7 @@ export type PageKey =
   | "cash-statement"
   | "garage-dashboard"
   | "garage-cases"
+  | "garage-opex"
   | "garage-receivables"
   | "garage-payables"
   | "garage-customers"
@@ -142,4 +143,11 @@ export interface TabInfo {
 export interface SectionRoot {
   labelKey: string;
   group: string;
+}
+
+export interface TabInstance {
+  instanceId: string; // e.g. "erp-invoices-in" or "erp-invoices-in__2"
+  pageKey: PageKey;
+  instanceIndex: 1 | 2;
+  customLabel?: string;
 }

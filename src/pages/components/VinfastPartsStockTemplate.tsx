@@ -201,7 +201,7 @@ export function VinfastPartsStockTemplate({
           <TableText
             text={row.sku}
             enableCopy={true}
-            onDrawerClick={(e) => {
+            onDetailClick={(e) => {
               e.stopPropagation();
               setCatalogData(row);
               setSelectedSku(row.sku);

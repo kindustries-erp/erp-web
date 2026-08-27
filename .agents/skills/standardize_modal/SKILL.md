@@ -5,6 +5,12 @@ description: Create or implement a Modal component following the ERP standard (s
 
 # 📋 Modal Standards
 
+> ⚡ **FAST-TRACK (PlopJS Generator)**: Để sinh nhanh component Modal / Dialog chuẩn (`form` hoặc `confirm`), chạy:
+> ```bash
+> bun plop modal <moduleName> <componentName> <modalType> <modalSize>
+> ```
+> *(Chi tiết tại skill `plop-generate`)*
+
 Khi tạo mới hoặc chỉnh sửa bất kỳ Modal nào trong hệ thống, bạn **BẮT BUỘC** phải sử dụng component `<Dialog>` từ `@/shared/components/ui/Dialog` (được xây dựng trên nền Radix UI Dialog và shadcn standard) kết hợp với các hiệu ứng **glass / blur** nhất quán.
 
 ---

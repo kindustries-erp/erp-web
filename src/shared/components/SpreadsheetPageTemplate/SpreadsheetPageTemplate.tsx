@@ -53,9 +53,14 @@ export function SpreadsheetPageTemplate<T>({
   summaryRow,
   children,
   onRowClick,
+  getRowClassName,
+  enableRowContextMenu,
+  onRowContextMenu,
   loadingRows,
   topNode,
   hideHeader,
+  enableFullscreen = true,
+  onFullscreenChange,
 }: SpreadsheetPageTemplateProps<T>) {
   const t = useT();
   const finalEmptyLabel = emptyLabel ?? t("common.noData");
@@ -121,37 +126,47 @@ export function SpreadsheetPageTemplate<T>({
       />
     ) : null;
 
+  const [isFullscreen, setIsFullscreen] = React.useState(false);
+
+  const handleFullscreenChange = React.useCallback(
+    (isFs: boolean) => {
+      setIsFullscreen(isFs);
+      onFullscreenChange?.(isFs);
+    },
+    [onFullscreenChange],
+  );
+
+  const actionGroupNode = (
+    <TableActionGroup
+      onRefresh={onRefresh}
+      loading={loading}
+      onFilterToggle={filter?.togglePanel}
+      activeFilterCount={activeFilterCount ?? filter?.activeFilterCount ?? 0}
+      onClearAllFilters={onClearAllFilters}
+      onCreate={onCreate}
+      createLabel={finalCreateLabel}
+      createIcon={createIcon}
+      createActions={createActions}
+      extraActions={
+        <div className="flex items-center gap-2">
+          {searchNode}
+          {extraActions}
+        </div>
+      }
+      portalId={tableId}
+    >
+      {customActionsNode}
+      {bulkActionsNode}
+    </TableActionGroup>
+  );
+
   return (
     <PageLayout
       title={title}
       desc={desc}
       icon={icon}
       hideHeader={hideHeader}
-      actions={
-        <TableActionGroup
-          onRefresh={onRefresh}
-          loading={loading}
-          onFilterToggle={filter?.togglePanel}
-          activeFilterCount={
-            activeFilterCount ?? filter?.activeFilterCount ?? 0
-          }
-          onClearAllFilters={onClearAllFilters}
-          onCreate={onCreate}
-          createLabel={finalCreateLabel}
-          createIcon={createIcon}
-          createActions={createActions}
-          extraActions={
-            <div className="flex items-center gap-2">
-              {searchNode}
-              {extraActions}
-            </div>
-          }
-          portalId={tableId}
-        >
-          {bulkActionsNode}
-          {customActionsNode}
-        </TableActionGroup>
-      }
+      actions={!isFullscreen ? actionGroupNode : undefined}
     >
       {error ? (
         <div className="rounded-lg border border-red-300 bg-red-50 p-3 text-sm text-red-700">
@@ -193,7 +208,14 @@ export function SpreadsheetPageTemplate<T>({
             onPage={onPage}
             onPageSize={onPageSize}
             onRowClick={onRowClick}
+            getRowClassName={getRowClassName}
+            enableRowContextMenu={enableRowContextMenu}
+            onRowContextMenu={onRowContextMenu}
             loadingRows={loadingRows}
+            enableFullscreen={enableFullscreen}
+            tableTitle={title}
+            fullscreenHeaderExtra={actionGroupNode}
+            onFullscreenChange={handleFullscreenChange}
             sidePanel={
               filterConfig && filter ? (
                 <FilterPanel config={filterConfig} filter={filter} />
