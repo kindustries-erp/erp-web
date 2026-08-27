@@ -570,6 +570,18 @@ Core DataTable tuân thủ cấu trúc Atomic Refactor chuẩn:
    />
    ```
 
+## 15. Chế độ Xem Bảng Tùy Biến (View Mode Presets & ViewModeCombobox)
+
+Khi một bảng dữ liệu có nhiều góc nhìn tra cứu (như Hóa đơn điện tử, Phiếu dịch vụ Garage), sử dụng component dùng chung `<ViewModeCombobox>` (`@/shared/components/ViewModeCombobox`) kết hợp với `useUserPreferences` để quản lý các chế độ xem:
+
+- **Component chuẩn dùng chung**: `<ViewModeCombobox presets={presets} activePresetKey={activeKey} onSelect={...} onCreateView={...} onEditView={...} onDeleteView={...} />`.
+- **Cơ chế Presets chuẩn**:
+  - `overview`: Chế độ xem Tổng quan (mặc định ban đầu).
+  - `audit` / `financial_progress`: Chế độ xem Đối soát / Kiểm toán / Tiến độ.
+  - Các custom views: Người dùng tự định nghĩa cột hiển thị, thứ tự và độ rộng.
+- **Bảo vệ View Mặc định**: Nút Xóa (Trash) chỉ hiển thị cho custom views; các view mặc định hệ thống (`isDefault === true`, `overview`, `audit`) được bảo vệ an toàn, không thể xóa.
+- **Đồng bộ 2 chiều**: Toàn bộ danh sách presets và active preset key được tự động lưu vào backend qua `updateUserPreferencesApi` và cache LocalStorage.
+
 ---
 
 ## Summary Checklist trước khi hoàn thành:
