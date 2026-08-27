@@ -82,6 +82,7 @@ export function DataTable<T>({
   tableTitle,
   fullscreenClassName,
   fullscreenHeaderExtra,
+  fullscreenTabs,
   onFullscreenChange,
 }: DataTableProps<T>) {
   const t = useT();
@@ -572,6 +573,7 @@ export function DataTable<T>({
           total={total}
           fullscreenClassName={fullscreenClassName}
           fullscreenHeaderExtra={fullscreenHeaderExtra}
+          fullscreenTabs={fullscreenTabs}
           enableColumnVisibility={enableColumnVisibility}
           internalVisibility={internalVisibility}
           internalColumnOrder={internalColumnOrder}

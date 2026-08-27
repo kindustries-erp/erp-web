@@ -99,6 +99,7 @@ export interface DataTableProps<T> {
   tableTitle?: ReactNode;
   fullscreenClassName?: string;
   fullscreenHeaderExtra?: ReactNode;
+  fullscreenTabs?: ReactNode;
   onFullscreenChange?: (isFullscreen: boolean) => void;
 }
 

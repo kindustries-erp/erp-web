@@ -57,6 +57,7 @@ export interface FullscreenModalProps<T> {
   total?: number;
   fullscreenClassName?: string;
   fullscreenHeaderExtra?: ReactNode;
+  fullscreenTabs?: ReactNode;
   enableColumnVisibility?: boolean;
   internalVisibility?: VisibilityState;
   internalColumnOrder?: string[];
@@ -71,6 +72,7 @@ export function FullscreenModal<T>({
   total,
   fullscreenClassName,
   fullscreenHeaderExtra,
+  fullscreenTabs,
   enableColumnVisibility,
   internalVisibility,
   internalColumnOrder,
@@ -131,8 +133,13 @@ export function FullscreenModal<T>({
         </div>
       </div>
 
+      {/* Tabs bar in fullscreen mode */}
+      {fullscreenTabs && <div className="shrink-0 -mt-1">{fullscreenTabs}</div>}
+
       {/* Main Table Content Body */}
-      <div className="flex-1 flex flex-col min-h-0 relative">{children}</div>
+      <div className="flex-1 flex flex-col min-h-0 relative overflow-hidden">
+        {children}
+      </div>
     </div>,
     document.body,
   );

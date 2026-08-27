@@ -93,12 +93,12 @@ export function PageLayout({
           onValueChange={onTabChange}
           className="w-full z-10 bg-transparent"
         >
-          <TabsList className="bg-transparent border-b border-[color:var(--border)] w-full justify-start rounded-none h-auto p-0 gap-4 mb-2 shadow-[0_4px_4px_-4px_rgba(0,0,0,0.1)] overflow-x-auto scrollbar-none">
+          <TabsList className="bg-transparent border-b border-[color:var(--border)]/60 w-full justify-start rounded-none h-auto p-0 gap-6 mb-2 shadow-none overflow-x-auto scrollbar-none [&>[data-tabs-indicator]]:hidden">
             {tabs.map((tab) => (
               <TabsTrigger
                 key={tab.value}
                 value={tab.value}
-                className="border-b-2 border-transparent rounded-none px-4 py-1.5 data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-foreground whitespace-nowrap flex-shrink-0"
+                className="border-b-2 border-transparent rounded-none px-1 py-1.5 text-xs sm:text-sm font-medium text-muted-foreground hover:text-foreground data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-primary whitespace-nowrap flex-shrink-0 transition-colors"
               >
                 {tab.label}
               </TabsTrigger>

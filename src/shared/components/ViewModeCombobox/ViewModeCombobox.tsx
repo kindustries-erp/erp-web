@@ -105,7 +105,7 @@ export function ViewModeCombobox({
           <button
             type="button"
             className={cn(
-              "h-8 px-2.5 inline-flex items-center gap-1.5 rounded-full text-xs font-medium",
+              "h-8 px-2.5 inline-flex items-center gap-1.5 rounded-full text-xs font-medium shrink-0",
               "bg-slate-100/80 hover:bg-slate-200/70 dark:bg-slate-800/80 dark:hover:bg-slate-700/80",
               "border border-slate-200/60 dark:border-slate-700/60 shadow-[0_1px_2px_rgba(15,23,42,.03)]",
               "text-slate-700 dark:text-slate-200 transition-colors focus:outline-none focus:ring-1 focus:ring-primary/40",

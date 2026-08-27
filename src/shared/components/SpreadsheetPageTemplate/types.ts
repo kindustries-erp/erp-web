@@ -7,12 +7,18 @@ import type {
 import type { DataTableColumn } from "@/shared/components/DataTable";
 import type { ActionDropdownItem } from "@/shared/components/ActionDropdown";
 
+import type { TabItem } from "@/shared/components/PageLayout";
+
 export interface SpreadsheetPageTemplateProps<T> {
   // --- Header ---
   title: string;
   desc?: string;
   icon?: ReactNode;
   hideHeader?: boolean;
+  tabs?: TabItem[];
+  activeTab?: string;
+  onTabChange?: (value: string) => void;
+  hideTabs?: boolean;
 
   // --- Table Data & State ---
   tableId: string;

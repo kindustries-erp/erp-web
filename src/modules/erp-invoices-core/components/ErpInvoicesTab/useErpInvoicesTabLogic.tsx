@@ -35,6 +35,7 @@ export interface ErpInvoicesTabProps {
   initialDateTo?: string;
   isDrawer?: boolean;
   instanceIndex?: 1 | 2;
+  partnerTaxCode?: string;
 }
 
 export function useErpInvoicesTabLogic({
@@ -74,11 +75,19 @@ export function useErpInvoicesTabLogic({
       formHook.closeDrawer();
     },
     onHydrate: (state) => {
-      if (
-        state.view &&
+      const urlParams =
+        typeof window !== "undefined"
+          ? new URLSearchParams(window.location.search)
+          : null;
+      const taxTabFromUrl =
+        urlParams?.get("tax_tab") ||
+        (state.view &&
         ["all", "new", "replacement", "adjustment"].includes(state.view)
-      ) {
-        listHook.setActiveTaxTab(state.view);
+          ? state.view
+          : null);
+
+      if (taxTabFromUrl) {
+        listHook.setActiveTaxTab(taxTabFromUrl);
       }
     },
   });
@@ -88,7 +97,15 @@ export function useErpInvoicesTabLogic({
 
   const handleTaxTabChange = (tab: string) => {
     listHook.setActiveTaxTab(tab);
-    urlSync.setView(tab);
+    if (typeof window !== "undefined") {
+      const url = new URL(window.location.href);
+      if (tab && tab !== "all") {
+        url.searchParams.set("tax_tab", tab);
+      } else {
+        url.searchParams.delete("tax_tab");
+      }
+      window.history.replaceState(null, "", url.toString());
+    }
     listHook.setPage(1);
   };
 
@@ -97,11 +114,6 @@ export function useErpInvoicesTabLogic({
     ? `erp-invoices-column-views-checkpoint-${direction}`
     : `erp-invoices-column-views-${direction}`;
 
-  const columnViewPresetsHook = usePageViewPresets({
-    tableId: columnPresetsTableId,
-    defaultPresets: INVOICE_COLUMN_VIEW_PRESETS,
-  });
-
   const currentTablePref = useUserPreferencesStore((s) =>
     actualTableId ? s.tables[actualTableId] : undefined,
   );
@@ -109,18 +121,39 @@ export function useErpInvoicesTabLogic({
 
   const [activeColumnPresetKey, setActiveColumnPresetKey] = useState<string>(
     () => {
+      if (typeof window !== "undefined") {
+        const urlParams = new URLSearchParams(window.location.search);
+        const vmParam = urlParams.get("view_mode");
+        if (vmParam) return vmParam;
+      }
       const stored = useUserPreferencesStore
         .getState()
         .getTablePreference(actualTableId);
       return stored?.activeView || "overview";
     },
   );
+
+  const columnViewPresetsHook = usePageViewPresets({
+    tableId: columnPresetsTableId,
+    defaultPresets: INVOICE_COLUMN_VIEW_PRESETS,
+    activeView: activeColumnPresetKey,
+  });
   const [viewConfigDrawerOpen, setViewConfigDrawerOpen] = useState(false);
   const [editingViewPreset, setEditingViewPreset] =
     useState<TableViewPreset | null>(null);
 
   const handleColumnPresetChange = (preset: TableViewPreset) => {
     setActiveColumnPresetKey(preset.key);
+
+    if (typeof window !== "undefined") {
+      const url = new URL(window.location.href);
+      if (preset.key && preset.key !== "overview") {
+        url.searchParams.set("view_mode", preset.key);
+      } else {
+        url.searchParams.delete("view_mode");
+      }
+      window.history.replaceState(null, "", url.toString());
+    }
 
     // Apply column visibility to table preferences
     const currentPref = useUserPreferencesStore
@@ -347,12 +380,50 @@ export function useErpInvoicesTabLogic({
     [t, allTags],
   );
 
+  const [activeView, setActiveView] = useState<"header" | "lines">(() => {
+    if (typeof window !== "undefined") {
+      const searchParams = new URLSearchParams(window.location.search);
+      const tabParam = searchParams.get("tab") || searchParams.get("view");
+      if (tabParam === "lines") return "lines";
+    }
+    return "header";
+  });
+
+  const handleViewChange = (newView: "header" | "lines") => {
+    setActiveView(newView);
+    if (!isDrawer && typeof window !== "undefined") {
+      const url = new URL(window.location.href);
+      if (newView === "lines") {
+        url.searchParams.set("tab", "lines");
+        url.searchParams.delete("view");
+      } else {
+        url.searchParams.set("tab", "header");
+        url.searchParams.delete("view");
+      }
+      window.history.replaceState(null, "", url.toString());
+    }
+  };
+
+  const pageTabs = useMemo(
+    () =>
+      !isDrawer
+        ? [
+            { value: "header", label: t("tabs.headerView", "Hóa đơn tổng") },
+            {
+              value: "lines",
+              label: t("tabs.linesView", "Chi tiết dòng hàng"),
+            },
+          ]
+        : undefined,
+    [isDrawer, t],
+  );
+
   const viewTabsNode = !isDrawer ? (
     <div className="w-full sm:w-auto flex items-center flex-wrap gap-2 py-0.5">
       <PillTabs
         className="w-full sm:w-auto shrink-0"
         listClassName="h-8 p-0.5 rounded-full bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/60 shadow-[0_1px_2px_rgba(15,23,42,.03)]"
-        triggerClassName="h-7 px-3.5 text-xs rounded-full"
+        triggerClassName="h-7 px-2.5 sm:px-3.5 text-xs rounded-full"
         items={[
           { value: "all", label: t("tabAll", "Tất cả") },
           { value: "new", label: t("tabNew", "Mới") },
@@ -389,6 +460,10 @@ export function useErpInvoicesTabLogic({
     columns,
     summaryRow,
     viewTabsNode,
+    pageTabs,
+    activeView,
+    setActiveView,
+    handleViewChange,
     filterConfig,
     activeSortKey: listHook.sortBy,
     activeSortOrder: listHook.sortOrder,
