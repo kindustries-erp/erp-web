@@ -46,6 +46,7 @@ import {
   ChevronDown,
   Wallet,
   FileText,
+  Users,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -54,6 +55,7 @@ import type {
   TraceabilityNode,
   TraceabilityEdge,
 } from "@/shared/types/traceability";
+import { GarageCasePartnerTab } from "./GarageCasePartnerTab";
 
 export const GARAGE_CASE_CLASSIFICATION_OPTIONS: ComboboxOption[] =
   Object.values(GARAGE_CASE_CLASSIFICATIONS).map((c) => ({
@@ -66,6 +68,7 @@ interface GarageCaseStandaloneDrawerProps {
   isOpen: boolean;
   caseCode?: string | null;
   initialEditMode?: boolean;
+  initialTabKey?: string;
   onClose: () => void;
   onSuccess?: () => void;
 }
@@ -74,6 +77,7 @@ export function GarageCaseStandaloneDrawer({
   isOpen,
   caseCode,
   initialEditMode = false,
+  initialTabKey,
   onClose,
   onSuccess,
 }: GarageCaseStandaloneDrawerProps) {
@@ -158,8 +162,17 @@ export function GarageCaseStandaloneDrawer({
   } = useGarageCaseEditForm(selectedCase?.id);
 
   // Reset state when caseId changes or drawer opens
+  const [activeTabKey, setActiveTabKey] = useState<string>(
+    initialTabKey || "quote_details",
+  );
+
   useEffect(() => {
     if (isOpen) {
+      if (initialTabKey) {
+        setActiveTabKey(initialTabKey);
+      } else {
+        setActiveTabKey("quote_details");
+      }
       if (initialEditMode) {
         startEdit();
       } else {
@@ -169,7 +182,7 @@ export function GarageCaseStandaloneDrawer({
       setEditingSettlementItem(null);
       setShowInvoiceModal(false);
     }
-  }, [isOpen, caseCode, initialEditMode, cancelEdit, startEdit]);
+  }, [isOpen, caseCode, initialEditMode, initialTabKey, cancelEdit, startEdit]);
 
   const isConfigDirty = useMemo(() => {
     if (!selectedCase) return false;
@@ -789,7 +802,28 @@ export function GarageCaseStandaloneDrawer({
         ),
       },
 
-      // Tab 2: Tài chính & Công nợ
+      // Tab 2: Chi tiết theo đối tác (Công nợ, phân tích tuổi nợ & lịch sử phiếu của KH)
+      {
+        key: "partner_details",
+        label: t("cases.drawer.partnerDetails", "Chi tiết theo đối tác"),
+        icon: <Users className="w-3.5 h-3.5" />,
+        content: (
+          <GarageCasePartnerTab
+            customerCode={selectedCase.khachHangCode}
+            customerName={selectedCase.khachHangName}
+            currentCaseCode={selectedCase.soChungTu}
+            branchId={selectedCase.branchExternalId || selectedBranchId}
+            onSelectCase={(newCaseCode) => {
+              queryClient.invalidateQueries({
+                queryKey: ["garage-case-by-code", newCaseCode],
+              });
+              refetchCase();
+            }}
+          />
+        ),
+      },
+
+      // Tab 3: Tài chính & Công nợ
       {
         key: "financials",
         label: t("cases.drawer.financials", "Tài chính & Công nợ"),
@@ -941,6 +975,8 @@ export function GarageCaseStandaloneDrawer({
         footerLeft={footerLeft}
         actions={editMode ? editActions : undefined}
         tabs={resolvedDrawerTabs}
+        activeTabKey={activeTabKey}
+        onTabChange={setActiveTabKey}
         defaultTabKey="quote_details"
         leftPanel={
           isLoadingCase || isSyncingDetail ? (
