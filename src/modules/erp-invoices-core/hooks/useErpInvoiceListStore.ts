@@ -33,20 +33,6 @@ export interface ErpInvoiceListState {
   filterPanelOpen: boolean;
 }
 
-const getInitialActiveTaxTab = (): string => {
-  if (typeof window === "undefined") return "all";
-  try {
-    const params = new URLSearchParams(window.location.search);
-    const view = params.get("view");
-    if (view && ["all", "new", "replacement", "adjustment"].includes(view)) {
-      return view;
-    }
-  } catch (err) {
-    void err;
-  }
-  return "all";
-};
-
 const defaultState = (pageSize = 50): ErpInvoiceListState => ({
   searchInput: "",
   search: "",
@@ -59,7 +45,7 @@ const defaultState = (pageSize = 50): ErpInvoiceListState => ({
   seller_name: "",
   buyer_name: "",
   tag_id: "",
-  activeTaxTab: getInitialActiveTaxTab(),
+  activeTaxTab: "all",
   sortBy: "invoiceDate",
   sortOrder: "desc",
   filterPanelOpen: false,

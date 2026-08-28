@@ -307,8 +307,8 @@ export function ErpInvoicesTab(props: ErpInvoicesTabProps) {
         <SpreadsheetPageTemplate
           hideHeader={isDrawer}
           tabs={logic.pageTabs}
-          activeTab={logic.activeView}
-          onTabChange={(v) => logic.handleViewChange(v as "header" | "lines")}
+          activeTab={logic.currentTabKey}
+          onTabChange={logic.handleTabChange}
           defaultColumnOrder={["__selection", "__actions", "__expand"]}
           title={
             direction === "IN"
@@ -381,14 +381,15 @@ export function ErpInvoicesTab(props: ErpInvoicesTabProps) {
         }
       >
         <ErpInvoiceItemsSection
-          direction={direction === "OUT" ? "OUT" : "IN"}
+          key={`lines-${logic.direction}-${props.instanceIndex || 1}`}
+          direction={logic.direction}
           instanceIndex={props.instanceIndex}
           isDrawer={isDrawer}
           canEditInvoice={canEditInvoice}
           partnerTaxCode={props.partnerTaxCode}
           tabs={logic.pageTabs}
-          activeTab={logic.activeView}
-          onTabChange={(v) => logic.handleViewChange(v as "header" | "lines")}
+          activeTab={logic.currentTabKey}
+          onTabChange={logic.handleTabChange}
           handleOpenInternal={handleOpenInternal}
           handleDownload={handleDownload}
           onOpenSync={() => setImportModalOpen(true)}

@@ -8,6 +8,8 @@ import {
   type ErpInvoiceItemRow,
 } from "../api/erpInvoicesCoreApi";
 
+import { useErpInvoiceItemsStore } from "../hooks/useErpInvoiceItemsStore";
+
 // Mock the API
 vi.mock("../api/erpInvoicesCoreApi", () => ({
   erpInvoicesCoreApi: {
@@ -33,6 +35,8 @@ function createWrapper() {
 describe("useErpInvoiceItemsList", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    useErpInvoiceItemsStore.getState().resetAllFilters("IN");
+    useErpInvoiceItemsStore.getState().resetAllFilters("OUT");
 
     (erpInvoicesCoreApi.getItemsList as any).mockResolvedValue({
       items: [],

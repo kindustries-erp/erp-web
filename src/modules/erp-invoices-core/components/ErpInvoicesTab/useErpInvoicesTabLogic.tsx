@@ -28,9 +28,14 @@ import { useInvoiceTableHandlers } from "./hooks/useInvoiceTableHandlers";
 import { useInvoiceModals } from "./hooks/useInvoiceModals";
 import { useInvoiceBulkActions } from "./hooks/useInvoiceBulkActions";
 import { InvoiceViewModeCombobox } from "./components/InvoiceViewModeCombobox";
+import {
+  useErpInvoiceListStore,
+  type Direction,
+} from "@/modules/erp-invoices-core/hooks/useErpInvoiceListStore";
+import { useErpInvoiceItemsStore } from "@/modules/erp-invoices-core/hooks/useErpInvoiceItemsStore";
 
 export interface ErpInvoicesTabProps {
-  direction: "IN" | "OUT";
+  direction?: "IN" | "OUT";
   initialDateFrom?: string;
   initialDateTo?: string;
   isDrawer?: boolean;
@@ -39,7 +44,7 @@ export interface ErpInvoicesTabProps {
 }
 
 export function useErpInvoicesTabLogic({
-  direction,
+  direction: propDirection,
   initialDateFrom,
   initialDateTo,
   isDrawer = false,
@@ -47,6 +52,245 @@ export function useErpInvoicesTabLogic({
 }: ErpInvoicesTabProps) {
   const { t } = useTranslation("erpInvoices");
   const canEditInvoice = useHasPermission("invoices", "update");
+
+  const getInitialTabInfo = () => {
+    if (isDrawer) {
+      const dir = propDirection || "IN";
+      return {
+        dir,
+        view: "header" as const,
+        tabKey: dir === "IN" ? "in" : "out",
+      };
+    }
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const tabParam = params.get("tab") || "";
+      const viewParam = params.get("view") || "";
+
+      if (
+        tabParam === "out-lines" ||
+        (tabParam === "out" && viewParam === "lines")
+      ) {
+        return {
+          dir: "OUT" as const,
+          view: "lines" as const,
+          tabKey: "out-lines",
+        };
+      }
+      if (tabParam === "out") {
+        return {
+          dir: "OUT" as const,
+          view: "header" as const,
+          tabKey: "out",
+        };
+      }
+      if (
+        tabParam === "in-lines" ||
+        tabParam === "lines" ||
+        viewParam === "lines"
+      ) {
+        return {
+          dir: "IN" as const,
+          view: "lines" as const,
+          tabKey: "in-lines",
+        };
+      }
+      if (tabParam === "in" || tabParam === "header") {
+        return {
+          dir: "IN" as const,
+          view: "header" as const,
+          tabKey: "in",
+        };
+      }
+    }
+    const dir = propDirection || "IN";
+    return {
+      dir,
+      view: "header" as const,
+      tabKey: dir === "IN" ? "in" : "out",
+    };
+  };
+
+  const initialTabInfo = getInitialTabInfo();
+  const [currentDirection, setCurrentDirection] = useState<"IN" | "OUT">(
+    initialTabInfo.dir,
+  );
+  const [activeView, setActiveView] = useState<"header" | "lines">(
+    initialTabInfo.view,
+  );
+  const [currentTabKey, setCurrentTabKey] = useState<string>(
+    initialTabInfo.tabKey,
+  );
+  const [activeColumnPresetKey, setActiveColumnPresetKey] = useState<string>(
+    () => {
+      if (typeof window !== "undefined") {
+        const urlParams = new URLSearchParams(window.location.search);
+        const vmParam = urlParams.get("view_mode");
+        if (vmParam) return vmParam;
+      }
+      const targetStoreDir =
+        instanceIndex === 2
+          ? initialTabInfo.dir === "IN"
+            ? "IN_2"
+            : "OUT_2"
+          : initialTabInfo.dir;
+      const targetTableId = isDrawer
+        ? `erp-invoices-table-checkpoint-${initialTabInfo.dir}`
+        : `erp-invoices-table-${targetStoreDir}`;
+      const stored = useUserPreferencesStore
+        .getState()
+        .getTablePreference(targetTableId);
+      return stored?.activeView || "overview";
+    },
+  );
+
+  useEffect(() => {
+    if (isDrawer) {
+      if (propDirection && propDirection !== currentDirection) {
+        setCurrentDirection(propDirection);
+      }
+      return;
+    }
+
+    const handlePopState = () => {
+      const info = getInitialTabInfo();
+      setCurrentDirection(info.dir);
+      setActiveView(info.view);
+      setCurrentTabKey(info.tabKey);
+
+      const targetStoreDir: Direction =
+        instanceIndex === 2 ? (info.dir === "IN" ? "IN_2" : "OUT_2") : info.dir;
+      const targetTableId = isDrawer
+        ? `erp-invoices-table-checkpoint-${info.dir}`
+        : `erp-invoices-table-${targetStoreDir}`;
+      const params = new URLSearchParams(window.location.search);
+      const vmParam = params.get("view_mode");
+      const targetViewMode =
+        vmParam ||
+        useUserPreferencesStore.getState().getTablePreference(targetTableId)
+          ?.activeView ||
+        "overview";
+      setActiveColumnPresetKey(targetViewMode);
+
+      const taxTabParam = params.get("tax_tab");
+      if (taxTabParam) {
+        useErpInvoiceListStore
+          .getState()
+          .setActiveTaxTab(targetStoreDir, taxTabParam);
+      }
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [isDrawer, propDirection, instanceIndex]);
+
+  const handleTabChange = (newTab: string) => {
+    let nextDir: "IN" | "OUT";
+    let nextView: "header" | "lines";
+
+    if (newTab === "in-lines") {
+      nextDir = "IN";
+      nextView = "lines";
+    } else if (newTab === "out") {
+      nextDir = "OUT";
+      nextView = "header";
+    } else if (newTab === "out-lines") {
+      nextDir = "OUT";
+      nextView = "lines";
+    } else {
+      nextDir = "IN";
+      nextView = "header";
+    }
+
+    setCurrentDirection(nextDir);
+    setActiveView(nextView);
+    setCurrentTabKey(newTab);
+
+    if (!isDrawer && typeof window !== "undefined") {
+      const url = new URL(window.location.href);
+      const currentDetail = url.searchParams.get("detail");
+      const currentDmode = url.searchParams.get("dmode");
+      const currentI = url.searchParams.get("_i");
+
+      const newParams = new URLSearchParams();
+      if (newTab !== "in") {
+        newParams.set("tab", newTab);
+      }
+      if (currentI) {
+        newParams.set("_i", currentI);
+      }
+      if (currentDetail) {
+        newParams.set("detail", currentDetail);
+      }
+      if (currentDmode) {
+        newParams.set("dmode", currentDmode);
+      }
+
+      const targetStoreDir: Direction =
+        instanceIndex === 2 ? (nextDir === "IN" ? "IN_2" : "OUT_2") : nextDir;
+
+      if (nextView === "header") {
+        const headerState =
+          useErpInvoiceListStore.getState().states[targetStoreDir];
+        if (headerState) {
+          if (headerState.activeTaxTab && headerState.activeTaxTab !== "all") {
+            newParams.set("tax_tab", headerState.activeTaxTab);
+          }
+          if (headerState.status) newParams.set("status", headerState.status);
+          if (headerState.search) newParams.set("search", headerState.search);
+          if (headerState.dateFrom)
+            newParams.set("dateFrom", headerState.dateFrom);
+          if (headerState.dateTo) newParams.set("dateTo", headerState.dateTo);
+          if (headerState.period) newParams.set("period", headerState.period);
+          if (headerState.seller_name)
+            newParams.set("seller_name", headerState.seller_name);
+          if (headerState.buyer_name)
+            newParams.set("buyer_name", headerState.buyer_name);
+          if (headerState.tag_id) newParams.set("tag_id", headerState.tag_id);
+        }
+
+        const targetTableId = isDrawer
+          ? `erp-invoices-table-checkpoint-${nextDir}`
+          : `erp-invoices-table-${targetStoreDir}`;
+        const targetTablePref = useUserPreferencesStore
+          .getState()
+          .getTablePreference(targetTableId);
+        const targetViewMode = targetTablePref?.activeView || "overview";
+        if (targetViewMode && targetViewMode !== "overview") {
+          newParams.set("view_mode", targetViewMode);
+        }
+        setActiveColumnPresetKey(targetViewMode);
+      } else {
+        const linesState =
+          useErpInvoiceItemsStore.getState().states[targetStoreDir];
+        if (linesState) {
+          if (
+            linesState.subcategoryFilter &&
+            linesState.subcategoryFilter !== "ALL"
+          ) {
+            newParams.set("subcat", linesState.subcategoryFilter);
+          }
+          if (linesState.status) newParams.set("status", linesState.status);
+          if (linesState.search) newParams.set("search", linesState.search);
+          if (linesState.dateFrom)
+            newParams.set("dateFrom", linesState.dateFrom);
+          if (linesState.dateTo) newParams.set("dateTo", linesState.dateTo);
+          if (linesState.period) newParams.set("period", linesState.period);
+          if (linesState.sellerName)
+            newParams.set("seller_name", linesState.sellerName);
+          if (linesState.buyerName)
+            newParams.set("buyer_name", linesState.buyerName);
+          if (linesState.tagId) newParams.set("tag_id", linesState.tagId);
+        }
+      }
+
+      const queryString = newParams.toString();
+      const newUrl = `${url.pathname}${queryString ? `?${queryString}` : ""}`;
+      window.history.replaceState(null, "", newUrl);
+    }
+  };
+
+  const direction = currentDirection;
 
   const listDir = isDrawer
     ? direction === "IN"
@@ -79,6 +323,9 @@ export function useErpInvoicesTabLogic({
         typeof window !== "undefined"
           ? new URLSearchParams(window.location.search)
           : null;
+      const tabParam = urlParams?.get("tab") || "in";
+      const isHeaderTab = tabParam === "in" || tabParam === "out";
+
       const taxTabFromUrl =
         urlParams?.get("tax_tab") ||
         (state.view &&
@@ -86,8 +333,13 @@ export function useErpInvoicesTabLogic({
           ? state.view
           : null);
 
-      if (taxTabFromUrl) {
+      if (isHeaderTab && taxTabFromUrl) {
         listHook.setActiveTaxTab(taxTabFromUrl);
+      }
+
+      const vmFromUrl = urlParams?.get("view_mode");
+      if (isHeaderTab && vmFromUrl) {
+        setActiveColumnPresetKey(vmFromUrl);
       }
     },
   });
@@ -119,19 +371,20 @@ export function useErpInvoicesTabLogic({
   );
   const currentColumnVisibility = currentTablePref?.columnVisibility;
 
-  const [activeColumnPresetKey, setActiveColumnPresetKey] = useState<string>(
-    () => {
-      if (typeof window !== "undefined") {
-        const urlParams = new URLSearchParams(window.location.search);
-        const vmParam = urlParams.get("view_mode");
-        if (vmParam) return vmParam;
-      }
-      const stored = useUserPreferencesStore
-        .getState()
-        .getTablePreference(actualTableId);
-      return stored?.activeView || "overview";
-    },
-  );
+  // Sync activeColumnPresetKey whenever actualTableId changes
+  useEffect(() => {
+    if (isDrawer || activeView !== "header") return;
+    const urlParams =
+      typeof window !== "undefined"
+        ? new URLSearchParams(window.location.search)
+        : null;
+    const vmFromUrl = urlParams?.get("view_mode");
+    const stored = useUserPreferencesStore
+      .getState()
+      .getTablePreference(actualTableId);
+    const targetPreset = vmFromUrl || stored?.activeView || "overview";
+    setActiveColumnPresetKey(targetPreset);
+  }, [actualTableId, isDrawer, activeView]);
 
   const columnViewPresetsHook = usePageViewPresets({
     tableId: columnPresetsTableId,
@@ -254,7 +507,7 @@ export function useErpInvoicesTabLogic({
 
   // Sync manual filter panel changes to URL
   useEffect(() => {
-    if (isDrawer) return;
+    if (isDrawer || activeView !== "header") return;
     const { status, search, dateFrom, dateTo, period, custom } =
       listHook.filterPanel.state;
     urlSync.syncFiltersToUrl({
@@ -269,6 +522,7 @@ export function useErpInvoicesTabLogic({
     });
   }, [
     isDrawer,
+    activeView,
     listHook.filterPanel.state.status,
     listHook.filterPanel.state.search,
     listHook.filterPanel.state.dateFrom,
@@ -380,38 +634,19 @@ export function useErpInvoicesTabLogic({
     [t, allTags],
   );
 
-  const [activeView, setActiveView] = useState<"header" | "lines">(() => {
-    if (typeof window !== "undefined") {
-      const searchParams = new URLSearchParams(window.location.search);
-      const tabParam = searchParams.get("tab") || searchParams.get("view");
-      if (tabParam === "lines") return "lines";
-    }
-    return "header";
-  });
-
-  const handleViewChange = (newView: "header" | "lines") => {
-    setActiveView(newView);
-    if (!isDrawer && typeof window !== "undefined") {
-      const url = new URL(window.location.href);
-      if (newView === "lines") {
-        url.searchParams.set("tab", "lines");
-        url.searchParams.delete("view");
-      } else {
-        url.searchParams.set("tab", "header");
-        url.searchParams.delete("view");
-      }
-      window.history.replaceState(null, "", url.toString());
-    }
-  };
-
   const pageTabs = useMemo(
     () =>
       !isDrawer
         ? [
-            { value: "header", label: t("tabs.headerView", "Hóa đơn tổng") },
+            { value: "in", label: t("inbound", "Hóa đơn mua vào") },
             {
-              value: "lines",
-              label: t("tabs.linesView", "Chi tiết dòng hàng"),
+              value: "in-lines",
+              label: t("inboundLines", "Chi tiết mua vào"),
+            },
+            { value: "out", label: t("outbound", "Hóa đơn bán ra") },
+            {
+              value: "out-lines",
+              label: t("outboundLines", "Chi tiết bán ra"),
             },
           ]
         : undefined,
@@ -461,9 +696,10 @@ export function useErpInvoicesTabLogic({
     summaryRow,
     viewTabsNode,
     pageTabs,
+    currentTabKey,
+    handleTabChange,
     activeView,
     setActiveView,
-    handleViewChange,
     filterConfig,
     activeSortKey: listHook.sortBy,
     activeSortOrder: listHook.sortOrder,
@@ -475,6 +711,8 @@ export function useErpInvoicesTabLogic({
     handleSaveViewPreset,
     handleResetViewPreset,
     currentColumnVisibility,
+    activeColumnPresetKey,
+    handleColumnPresetChange,
     // Modals
     ...modals,
     // Bulk Actions

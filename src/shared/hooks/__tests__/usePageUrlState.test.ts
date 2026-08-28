@@ -5,13 +5,13 @@ import { usePageUrlState } from "../usePageUrlState";
 describe("usePageUrlState", () => {
   beforeEach(() => {
     vi.useFakeTimers();
-    window.history.replaceState(null, "", "/erp-invoices-in");
+    window.history.replaceState(null, "", "/erp-invoices");
   });
 
   it("initializes with empty state when URL has no params", () => {
     const { result } = renderHook(() =>
       usePageUrlState({
-        pageKey: "erp-invoices-in",
+        pageKey: "erp-invoices",
         filterKeys: ["status", "dateFrom"],
       }),
     );
@@ -25,12 +25,12 @@ describe("usePageUrlState", () => {
     window.history.replaceState(
       null,
       "",
-      "/erp-invoices-in?status=CONFIRMED&detail=84398_K26TAT&dmode=edit",
+      "/erp-invoices?status=CONFIRMED&detail=84398_K26TAT&dmode=edit",
     );
 
     const { result } = renderHook(() =>
       usePageUrlState({
-        pageKey: "erp-invoices-in",
+        pageKey: "erp-invoices",
         filterKeys: ["status"],
       }),
     );
@@ -44,7 +44,7 @@ describe("usePageUrlState", () => {
   it("updates URL immediately on openDrawer with pushState using detail=", () => {
     const { result } = renderHook(() =>
       usePageUrlState({
-        pageKey: "erp-invoices-in",
+        pageKey: "erp-invoices",
       }),
     );
 
@@ -58,15 +58,11 @@ describe("usePageUrlState", () => {
   });
 
   it("clears detail param on closeDrawer", () => {
-    window.history.replaceState(
-      null,
-      "",
-      "/erp-invoices-in?detail=84398_K26TAT",
-    );
+    window.history.replaceState(null, "", "/erp-invoices?detail=84398_K26TAT");
 
     const { result } = renderHook(() =>
       usePageUrlState({
-        pageKey: "erp-invoices-in",
+        pageKey: "erp-invoices",
       }),
     );
 
@@ -82,7 +78,7 @@ describe("usePageUrlState", () => {
   it("supports instanceIndex 2 by appending _i=2", () => {
     const { result } = renderHook(() =>
       usePageUrlState({
-        pageKey: "erp-invoices-in",
+        pageKey: "erp-invoices",
         instanceIndex: 2,
       }),
     );
@@ -102,7 +98,7 @@ describe("usePageUrlState", () => {
   it("updates URL immediately on setView without debounce lag", () => {
     const { result } = renderHook(() =>
       usePageUrlState({
-        pageKey: "erp-invoices-in",
+        pageKey: "erp-invoices",
       }),
     );
 

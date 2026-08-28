@@ -1,13 +1,14 @@
-import { useState, useMemo, useRef, useCallback } from "react";
+import { useMemo, useRef, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
-import {
-  periodFirstDay,
-  periodLastDay,
-} from "@/modules/finance/utils/financeHelpers";
 import {
   erpInvoicesCoreApi,
   type ErpInvoiceItemListParams,
 } from "../api/erpInvoicesCoreApi";
+import {
+  useErpInvoiceItemsStore,
+  type ErpInvoiceItemsState,
+} from "./useErpInvoiceItemsStore";
+import type { Direction } from "./useErpInvoiceListStore";
 
 export const getDefaultPageSize = (): number => {
   if (typeof window !== "undefined" && window.innerHeight >= 900) {
@@ -27,19 +28,77 @@ export function useErpInvoiceItemsList(
 ) {
   const { direction = "IN", instanceIndex = 1, partnerTaxCode } = options;
 
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState<number>(getDefaultPageSize);
-  const [sorts, setSorts] = useState<string[]>([]);
-  const [period, setPeriodState] = useState<string>("");
-  const [dateFrom, setDateFromState] = useState<string>("");
-  const [dateTo, setDateToState] = useState<string>("");
-  const [search, setSearchState] = useState<string>("");
-  const [searchInput, setSearchInputState] = useState<string>("");
-  const [status, setStatusState] = useState<string>("");
-  const [tagId, setTagIdState] = useState<string>("");
-  const [sellerName, setSellerNameState] = useState<string>("");
-  const [buyerName, setBuyerNameState] = useState<string>("");
-  const [filterPanelOpen, setFilterPanelOpen] = useState(false);
+  const storeDir: Direction =
+    instanceIndex === 2 ? (direction === "IN" ? "IN_2" : "OUT_2") : direction;
+
+  const storeState = useErpInvoiceItemsStore((s) => s.states[storeDir]);
+  const storeSetPage = useErpInvoiceItemsStore((s) => s.setPage);
+  const storeSetPageSize = useErpInvoiceItemsStore((s) => s.setPageSize);
+  const storeSetSort = useErpInvoiceItemsStore((s) => s.setSort);
+  const storeSetPeriod = useErpInvoiceItemsStore((s) => s.setPeriod);
+  const storeSetDateFrom = useErpInvoiceItemsStore((s) => s.setDateFrom);
+  const storeSetDateTo = useErpInvoiceItemsStore((s) => s.setDateTo);
+  const storeSetDateRange = useErpInvoiceItemsStore((s) => s.setDateRange);
+  const storeSetSearch = useErpInvoiceItemsStore((s) => s.setSearch);
+  const storeSetSearchInput = useErpInvoiceItemsStore((s) => s.setSearchInput);
+  const storeSetStatus = useErpInvoiceItemsStore((s) => s.setStatus);
+  const storeSetTagId = useErpInvoiceItemsStore((s) => s.setTagId);
+  const storeSetSellerName = useErpInvoiceItemsStore((s) => s.setSellerName);
+  const storeSetBuyerName = useErpInvoiceItemsStore((s) => s.setBuyerName);
+  const storeSetSubcategoryFilter = useErpInvoiceItemsStore(
+    (s) => s.setSubcategoryFilter,
+  );
+  const storeSetColumnFilter = useErpInvoiceItemsStore(
+    (s) => s.setColumnFilter,
+  );
+  const storeSetColumnSearchValue = useErpInvoiceItemsStore(
+    (s) => s.setColumnSearchValue,
+  );
+  const storeSetFilterPanelOpen = useErpInvoiceItemsStore(
+    (s) => s.setFilterPanelOpen,
+  );
+  const storeResetAllFilters = useErpInvoiceItemsStore(
+    (s) => s.resetAllFilters,
+  );
+
+  const fallbackState: ErpInvoiceItemsState = {
+    page: 1,
+    pageSize: getDefaultPageSize(),
+    sorts: [],
+    period: "",
+    dateFrom: "",
+    dateTo: "",
+    search: "",
+    searchInput: "",
+    status: "",
+    sellerName: "",
+    buyerName: "",
+    tagId: "",
+    subcategoryFilter: "ALL",
+    columnFilters: {},
+    columnSearch: {},
+    filterPanelOpen: false,
+  };
+
+  const state = storeState || fallbackState;
+  const {
+    page,
+    pageSize,
+    sorts,
+    period,
+    dateFrom,
+    dateTo,
+    search,
+    searchInput,
+    status,
+    sellerName,
+    buyerName,
+    tagId,
+    subcategoryFilter,
+    columnFilters,
+    columnSearch,
+    filterPanelOpen,
+  } = state;
 
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
   const debounce = (fn: () => void) => {
@@ -47,39 +106,112 @@ export function useErpInvoiceItemsList(
     debounceRef.current = setTimeout(fn, 400);
   };
 
-  const [subcategoryFilter, setSubcategoryFilterState] = useState<string>(
-    () => {
-      if (typeof window !== "undefined") {
-        const params = new URLSearchParams(window.location.search);
-        const subcatParam = params.get("subcat");
-        if (
-          subcatParam &&
-          ["ALL", "NORMAL", "DISCOUNT"].includes(subcatParam)
-        ) {
-          return subcatParam;
-        }
-      }
-      return "ALL";
-    },
+  const setPage = useCallback(
+    (p: number) => storeSetPage(storeDir, p),
+    [storeDir, storeSetPage],
+  );
+  const setPageSize = useCallback(
+    (s: number) => storeSetPageSize(storeDir, s),
+    [storeDir, storeSetPageSize],
+  );
+  const setSort = useCallback(
+    (key: string, sortState: "asc" | "desc" | "none") =>
+      storeSetSort(storeDir, key, sortState),
+    [storeDir, storeSetSort],
+  );
+  const setPeriod = useCallback(
+    (p: string) => storeSetPeriod(storeDir, p),
+    [storeDir, storeSetPeriod],
+  );
+  const setDateFrom = useCallback(
+    (v: string) => storeSetDateFrom(storeDir, v),
+    [storeDir, storeSetDateFrom],
+  );
+  const setDateTo = useCallback(
+    (v: string) => storeSetDateTo(storeDir, v),
+    [storeDir, storeSetDateTo],
+  );
+  const setDateRange = useCallback(
+    (from: string, to: string) => storeSetDateRange(storeDir, from, to),
+    [storeDir, storeSetDateRange],
+  );
+  const setStatus = useCallback(
+    (v: string) => storeSetStatus(storeDir, v),
+    [storeDir, storeSetStatus],
+  );
+  const setTagId = useCallback(
+    (v: string) => storeSetTagId(storeDir, v),
+    [storeDir, storeSetTagId],
+  );
+  const setSellerName = useCallback(
+    (v: string) => storeSetSellerName(storeDir, v),
+    [storeDir, storeSetSellerName],
+  );
+  const setBuyerName = useCallback(
+    (v: string) => storeSetBuyerName(storeDir, v),
+    [storeDir, storeSetBuyerName],
   );
 
-  const setSubcategoryFilter = (val: string) => {
-    setSubcategoryFilterState(val);
-    setPage(1);
-    if (typeof window !== "undefined") {
-      const url = new URL(window.location.href);
-      if (val && val !== "ALL") {
-        url.searchParams.set("subcat", val);
-      } else {
-        url.searchParams.delete("subcat");
-      }
-      window.history.replaceState(null, "", url.toString());
-    }
-  };
-  const [columnFilters, setColumnFilters] = useState<Record<string, string[]>>(
-    {},
+  const setSearch = useCallback(
+    (v: string) => storeSetSearch(storeDir, v),
+    [storeDir, storeSetSearch],
   );
-  const [columnSearch, setColumnSearch] = useState<Record<string, string>>({});
+
+  const setSearchInput = useCallback(
+    (v: string) => {
+      storeSetSearchInput(storeDir, v);
+      if (!v) {
+        storeSetSearch(storeDir, "");
+        return;
+      }
+      debounce(() => {
+        storeSetSearch(storeDir, v);
+      });
+    },
+    [storeDir, storeSetSearchInput, storeSetSearch],
+  );
+
+  const setSubcategoryFilter = useCallback(
+    (val: string) => {
+      storeSetSubcategoryFilter(storeDir, val);
+      if (typeof window !== "undefined") {
+        const url = new URL(window.location.href);
+        const currentTab = url.searchParams.get("tab") || "in";
+        const isLinesTab =
+          currentTab === "in-lines" || currentTab === "out-lines";
+        if (isLinesTab) {
+          if (val && val !== "ALL") {
+            url.searchParams.set("subcat", val);
+          } else {
+            url.searchParams.delete("subcat");
+          }
+          window.history.replaceState(null, "", url.toString());
+        }
+      }
+    },
+    [storeDir, storeSetSubcategoryFilter],
+  );
+
+  const setColumnFilter = useCallback(
+    (key: string, vals: string[]) => storeSetColumnFilter(storeDir, key, vals),
+    [storeDir, storeSetColumnFilter],
+  );
+
+  const setColumnSearchValue = useCallback(
+    (key: string, val: string) => storeSetColumnSearchValue(storeDir, key, val),
+    [storeDir, storeSetColumnSearchValue],
+  );
+
+  const setFilterPanelOpen = useCallback(
+    (v: boolean | ((prev: boolean) => boolean)) =>
+      storeSetFilterPanelOpen(storeDir, v),
+    [storeDir, storeSetFilterPanelOpen],
+  );
+
+  const clearAllFilters = useCallback(
+    () => storeResetAllFilters(storeDir),
+    [storeDir, storeResetAllFilters],
+  );
 
   // Parse active sort
   const activeSort = sorts[0] || "";
@@ -165,111 +297,6 @@ export function useErpInvoiceItemsList(
     staleTime: 30000,
   });
 
-  const setSort = (key: string, state: "asc" | "desc" | "none") => {
-    setSorts(() => {
-      if (state === "asc") return [key];
-      if (state === "desc") return [`-${key}`];
-      return [];
-    });
-    setPage(1);
-  };
-
-  const setColumnFilter = (key: string, vals: string[]) => {
-    setColumnFilters((prev) => {
-      const next = { ...prev };
-      if (!vals || vals.length === 0) {
-        delete next[key];
-      } else {
-        next[key] = vals;
-      }
-      return next;
-    });
-    setPage(1);
-  };
-
-  const setColumnSearchValue = (key: string, val: string) => {
-    setColumnSearch((prev) => {
-      const next = { ...prev };
-      if (!val || !val.trim()) {
-        delete next[key];
-      } else {
-        next[key] = val;
-      }
-      return next;
-    });
-    setPage(1);
-  };
-
-  const setDateRange = (from: string, to: string) => {
-    setDateFromState(from);
-    setDateToState(to);
-    setPeriodState("");
-    setPage(1);
-  };
-
-  const setPeriod = useCallback((p: string) => {
-    setPeriodState(p);
-    if (p) {
-      setDateFromState(periodFirstDay(p));
-      setDateToState(periodLastDay(p));
-    } else {
-      setDateFromState("");
-      setDateToState("");
-    }
-    setPage(1);
-  }, []);
-
-  const setDateFrom = useCallback((v: string) => {
-    setDateFromState(v);
-    setPeriodState("");
-    setPage(1);
-  }, []);
-
-  const setDateTo = useCallback((v: string) => {
-    setDateToState(v);
-    setPeriodState("");
-    setPage(1);
-  }, []);
-
-  const setSearch = useCallback((v: string) => {
-    setSearchState(v);
-    setSearchInputState(v);
-    setPage(1);
-  }, []);
-
-  const setSearchInput = useCallback((v: string) => {
-    setSearchInputState(v);
-    if (!v) {
-      setSearchState("");
-      setPage(1);
-      return;
-    }
-    debounce(() => {
-      setSearchState(v);
-      setPage(1);
-    });
-  }, []);
-
-  const setStatus = useCallback((v: string) => {
-    setStatusState(v);
-    setPage(1);
-  }, []);
-
-  const setTagId = useCallback((v: string) => {
-    setTagIdState(v);
-    setPage(1);
-  }, []);
-
-  const setSellerName = useCallback((v: string) => {
-    setSellerNameState(v);
-    setPage(1);
-  }, []);
-
-  const setBuyerName = useCallback((v: string) => {
-    setBuyerNameState(v);
-    setPage(1);
-  }, []);
-
   const activeFilterCount = useMemo(() => {
     let count = 0;
     Object.values(columnFilters).forEach((vals) => {
@@ -297,22 +324,6 @@ export function useErpInvoiceItemsList(
     buyerName,
     tagId,
   ]);
-
-  const clearAllFilters = useCallback(() => {
-    setColumnFilters({});
-    setColumnSearch({});
-    setDateFromState("");
-    setDateToState("");
-    setPeriodState("");
-    setSearchState("");
-    setSearchInputState("");
-    setStatusState("");
-    setSellerNameState("");
-    setBuyerNameState("");
-    setTagIdState("");
-    setSubcategoryFilterState("ALL");
-    setPage(1);
-  }, []);
 
   const filterPanel = useMemo(
     () => ({
@@ -385,9 +396,11 @@ export function useErpInvoiceItemsList(
       buyerName,
       tagId,
       filterPanelOpen,
+      setFilterPanelOpen,
       setPeriod,
       setDateFrom,
       setDateTo,
+      setDateRange,
       setSearchInput,
       setStatus,
       setTagId,

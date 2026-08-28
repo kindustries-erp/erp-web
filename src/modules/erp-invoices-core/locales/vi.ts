@@ -34,7 +34,9 @@ export const erpInvoicesVi = {
 
   // Tabs
   inbound: "Hóa đơn mua vào",
+  inboundLines: "Chi tiết mua vào",
   outbound: "Hóa đơn bán ra",
+  outboundLines: "Chi tiết bán ra",
   tabAll: "Tất cả",
   tabNew: "Mới",
   tabReplacement: "Thay thế",

@@ -54,6 +54,7 @@ export type PageKey =
   | "erp-activity-logs"
   | "erp-permissions-core"
   | "sys-tags"
+  | "erp-invoices"
   | "erp-invoices-in"
   | "erp-invoices-out"
   | "erp-invoices-draft"

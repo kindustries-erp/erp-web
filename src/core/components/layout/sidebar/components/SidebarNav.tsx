@@ -464,8 +464,8 @@ export function SidebarNav({
               icon={<Receipt className="w-4 h-4 opacity-65 flex-shrink-0" />}
               label={t("nav.items.erpInvoices")}
               active={
+                currentPage === "erp-invoices" ||
                 currentPage === "erp-invoices-in" ||
-                currentPage === "erp-invoices-out" ||
                 currentPage === "erp-invoices-draft" ||
                 currentPage === "invoice-dashboard"
               }
@@ -477,16 +477,13 @@ export function SidebarNav({
                 contextPage="invoice-dashboard"
               />
               <NavGroupItem
-                label={t("nav.items.inbound")}
-                active={currentPage === "erp-invoices-in"}
-                onClick={() => navTo("erp-invoices-in")}
-                contextPage="erp-invoices-in"
-              />
-              <NavGroupItem
-                label={t("nav.items.outbound")}
-                active={currentPage === "erp-invoices-out"}
-                onClick={() => navTo("erp-invoices-out")}
-                contextPage="erp-invoices-out"
+                label={t("nav.items.erpInvoices")}
+                active={
+                  currentPage === "erp-invoices" ||
+                  currentPage === "erp-invoices-in"
+                }
+                onClick={() => navTo("erp-invoices")}
+                contextPage="erp-invoices"
               />
               <NavGroupItem
                 label="Hóa đơn nháp"
