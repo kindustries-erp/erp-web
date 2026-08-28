@@ -156,4 +156,36 @@ export const erpInvoicesEn = {
     "Exact amount match only, please verify carefully",
   "smartSuggestion.warning.overRemaining":
     "Warning: Total net-off amount ({{current}}) exceeds invoice remaining amount ({{target}}). Please adjust before confirming.",
+
+  // Line items
+  "tabs.headerView": "Invoice Headers",
+  "tabs.linesView": "Line Items Detail",
+  "tabs.allLines": "All Lines",
+  "tabs.normalLines": "Items",
+  "tabs.discountLines": "Discounts",
+  inboundLinesTitle: "Inbound Invoice Line Items",
+  inboundLinesDesc:
+    "Track and reconcile individual line items, descriptions, quantities and VAT rates of inbound invoices",
+  outboundLinesTitle: "Outbound Invoice Line Items",
+  outboundLinesDesc:
+    "Track and reconcile individual line items, descriptions, quantities and VAT rates of outbound invoices",
+  "columns.invoiceNo": "Invoice No",
+  "columns.serialNo": "Serial",
+  "columns.invoiceDate": "Invoice Date",
+  "columns.sellerName": "Seller",
+  "columns.buyerName": "Buyer",
+  "columns.taxCode": "Tax Code",
+  "columns.itemCode": "Item Code",
+  "columns.description": "Description / Items",
+  "columns.unit": "Unit",
+  "columns.quantity": "Quantity",
+  "columns.unitPrice": "Unit Price",
+  "columns.preVatAmount": "Pre-VAT Amount",
+  "columns.vatRate": "VAT Rate",
+  "columns.vatAmount": "VAT Amount",
+  "columns.discountAmount": "Discount",
+  "columns.totalAmount": "Total Amount",
+  "columns.subcategory": "Category",
+  "columns.status": "Status",
+  "columns.postingStatus": "Posting",
 };

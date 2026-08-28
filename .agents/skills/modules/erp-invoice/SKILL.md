@@ -10,24 +10,24 @@ description: Module tri thức Quản lý Hóa đơn Điện tử & Dashboard H�
 Module Hóa đơn Điện tử quản lý tập trung toàn bộ hóa đơn đầu vào (`IN`), hóa đơn đầu ra (`OUT`), hóa đơn nháp (`DRAFT`), và Dashboard phân tích dòng tiền/thuế hóa đơn.
 
 - **PageKeys**:
-  - `erp-invoices-in`: Hóa đơn đầu vào (Mua hàng / Nhà cung cấp).
-  - `erp-invoices-out`: Hóa đơn đầu ra (Bán hàng / Khách hàng).
+  - `erp-invoices`: Quản lý tập trung Hóa đơn điện tử với 4 Tabs (`in`, `in-lines`, `out`, `out-lines`).
+  - `erp-invoices-in`: (Legacy Slug) Tự động redirect sang `erp-invoices?tab=in`.
+  - `erp-invoices-out`: (Legacy Slug) Tự động redirect sang `erp-invoices?tab=out`.
   - `erp-invoices-draft`: Hóa đơn nháp.
   - `invoice-dashboard`: Báo cáo & Phân tích Dashboard Hóa đơn.
   - `e-invoice`: Quản lý phát hành hóa đơn SInvoice Viettel.
 - **Sidebar Group**: `accounting` (Kế toán & Tài chính).
-- **Tên hiển thị tab**:
-  - Hóa đơn đầu vào: `breadcrumb.inbound` (Icon: `Receipt`)
-  - Hóa đơn đầu ra: `breadcrumb.outbound` (Icon: `Receipt`)
-  - Hóa đơn nháp: `Hóa đơn nháp`
-  - Dashboard: `Dashboard Hóa đơn` (Icon: `LayoutDashboard`)
+- **Cấu trúc 4 Tabs trên giao diện chính (`/erp-invoices`)**:
+  1. `tab=in` (mặc định): **Hóa đơn mua vào** (Header Table, chiều `IN`, PillTab: `tax_tab` `[ Tất cả | Mới | Thay thế | Điều chỉnh ]` + `view_mode` Combobox).
+  2. `tab=in-lines`: **Chi tiết mua vào** (Lines Table, chiều `IN`, PillTab: `subcat` `[ Tất cả dòng | Hàng hóa | Chiết khấu ]`).
+  3. `tab=out`: **Hóa đơn bán ra** (Header Table, chiều `OUT`, PillTab: `tax_tab` + `view_mode` Combobox).
+  4. `tab=out-lines`: **Chi tiết bán ra** (Lines Table, chiều `OUT`, PillTab: `subcat`).
 - **Breadcrumbs**:
-  - `erp-invoices-in`: `Kế toán` > `Hóa đơn đầu vào`
-  - `erp-invoices-out`: `Kế toán` > `Hóa đơn đầu ra`
+  - `erp-invoices`: `Kế toán` > `Hóa đơn điện tử`
   - `erp-invoices-draft`: `Kế toán` > `Hóa đơn nháp`
 - **Route Components**:
-  - `src/pages/ErpInvoicesInPage.tsx` (Render `<ErpInvoicesTab direction="IN" />`)
-  - `src/pages/ErpInvoicesOutPage.tsx` (Render `<ErpInvoicesTab direction="OUT" />`)
+  - `src/pages/ErpInvoicesPage.tsx` (Core Container Page cho `/erp-invoices`)
+  - `src/pages/ErpInvoicesInPage.tsx` & `src/pages/ErpInvoicesOutPage.tsx` (Legacy Forwarders)
   - `src/pages/ErpInvoicesDraftPage.tsx`
   - `src/pages/InvoiceDashboard.tsx`
   - `src/pages/EInvoice.tsx`
@@ -44,7 +44,8 @@ src/
 │   │   ├── erpInvoicesCoreApi.spec.ts         # Unit test error handling và blob parsing
 │   │   └── erpInvoiceDashboardApi.ts          # API Client cho Dashboard KPI & đối tác
 │   ├── components/
-│   │   ├── ErpInvoicesTab.tsx                 # Core Table Page: Bảng dữ liệu, bộ lọc, thanh công cụ, bulk actions
+│   │   ├── ErpInvoicesTab/                    # Core Table Page: Quản lý chuyển đổi 4 tab, đồng bộ URL và header actions
+│   │   ├── ErpInvoiceItemsSection/            # Bảng hiển thị phẳng chi tiết dòng hàng hóa đơn (Lines table)
 │   │   ├── InvoiceViewModeCombobox.tsx        # Combobox chọn chế độ xem (Tổng quan / Đối soát / Custom)
 │   │   ├── InvoiceViewConfigDrawer.tsx        # Drawer 1-column cấu hình tên view & tùy chỉnh cột hiển thị
 │   │   ├── ErpInvoiceInternalDrawer.tsx       # Drawer quản lý chi tiết hóa đơn (kế thừa DrawerModal)
@@ -67,33 +68,26 @@ src/
 │   │   ├── BulkEditDrawer.tsx                 # Drawer sửa hàng loạt (gán Chi nhánh, cập nhật Ghi chú)
 │   │   ├── VietnamInvoiceTemplate.tsx         # Template render hóa đơn điện tử trực quan chuẩn mẫu VN
 │   │   └── xml-upload/                        # Phân hệ tải & xem trước XML/PDF/ZIP
-│   │       ├── ImportPreviewModal.tsx         # Modal xem trước danh sách XML/PDF trước khi lưu
-│   │       ├── UploadDropzone.tsx             # Vùng kéo thả file
-│   │       ├── UploadFileList.tsx             # Danh sách file đã chọn kèm trạng thái parse
-│   │       ├── ImportResultSummary.tsx        # Bảng tóm tắt kết quả import (thành công/trùng/lỗi)
-│   │       └── ImportResultTables.tsx         # Bảng chi tiết từng hóa đơn import
 │   ├── hooks/
-│   │   ├── useErpInvoicesList.ts              # TanStack Query hook fetch danh sách hóa đơn + phân trang + lọc
-│   │   ├── useErpInvoiceForm.ts               # Hook quản lý form state và submit tạo/sửa hóa đơn
+│   │   ├── useErpInvoiceListStore.ts          # Zustand store quản lý state header table (IN, OUT, IN_2, OUT_2)
+│   │   ├── useErpInvoiceItemsStore.ts         # Zustand store quản lý state lines table (IN, OUT, IN_2, OUT_2)
+│   │   ├── useErpInvoicesList.ts              # Query & state hook cho header table kèm filterPanel & dynamic direction
+│   │   ├── useErpInvoiceItemsList.ts          # Query & state hook cho lines table kèm subcat & filterPanel
+│   │   ├── useErpInvoiceUrlSync.ts            # Hook đồng bộ URL params và drawer state (/erp-invoices)
 │   │   ├── useInvoiceSyncProgress.ts          # SSE Hook lắng nghe tiến trình đồng bộ GDT thời gian thực
 │   │   ├── useInvoiceExportProgress.ts        # SSE Hook theo dõi tiến độ tác vụ xuất Excel nền
-│   │   ├── useInvoiceXmlUpload.ts             # Hook quản lý tiến trình upload & parse XML hàng loạt
-│   │   ├── usePortalSync.ts                   # Hook kích hoạt sync GDT
-│   │   └── usePortalImport.ts                 # Hook nhập dữ liệu từ GDT portal
+│   │   └── useInvoiceXmlUpload.ts             # Hook quản lý tiến trình upload & parse XML hàng loạt
 │   ├── locales/
 │   │   └── vi.ts                              # Bản dịch tiếng Việt chuyên biệt cho module Hóa đơn
 │   └── utils/
 │       ├── gdtCaptchaSolver.ts                # Thuật toán OCR giải mã Captcha SVG của Cổng Thuế GDT
 │       └── outInvoiceDisplay.ts               # Helper phân loại dòng hóa đơn đầu ra
 └── pages/
-    ├── ErpInvoicesInPage.tsx                  # Page tab hóa đơn đầu vào
-    ├── ErpInvoicesOutPage.tsx                 # Page tab hóa đơn đầu ra
+    ├── ErpInvoicesPage.tsx                    # Page wrapper chính thức cho /erp-invoices
+    ├── ErpInvoicesInPage.tsx                  # Legacy forwarder
+    ├── ErpInvoicesOutPage.tsx                 # Legacy forwarder
     ├── ErpInvoicesDraftPage.tsx               # Page tab hóa đơn nháp
-    ├── InvoiceDashboard.tsx                   # Page Dashboard thống kê hóa đơn & dòng tiền
-    └── components/
-        ├── BranchInvoiceChart.tsx             # Biểu đồ cột/đường hóa đơn theo chi nhánh
-        ├── BranchVatChart.tsx                 # Biểu đồ theo dõi thuế VAT theo chi nhánh
-        └── InvoiceStatsCards.tsx              # Các thẻ KPI tổng tiền, thuế, chiết khấu
+    └── InvoiceDashboard.tsx                   # Page Dashboard thống kê hóa đơn & dòng tiền
 ```
 
 ---
@@ -101,44 +95,21 @@ src/
 ## 3. Thành phần Giao diện & Logic Trọng tâm
 
 ### 3.1. Bảng Dữ liệu Hóa đơn (`ErpInvoicesTab.tsx`)
-- **Khung giao diện**: Sử dụng `<SpreadsheetPageTemplate>` với thanh công cụ điều khiển phía trên và thanh tính tổng (Summary footer) cố định bên dưới.
-- **PillTabs Phân loại Thuế (API-driven)**:
+- **Khung giao diện**: Sử dụng `<SpreadsheetPageTemplate>` với 4 Top-level Tabs và thanh tính tổng (Summary footer) cố định bên dưới.
+- **PillTabs Phân loại Thuế (API-driven & Cô lập)**:
   - Các tab: `Tất cả` (`all`), `Mới` (`new`), `Thay thế` (`replacement`), `Điều chỉnh` (`adjustment`).
-  - Quản lý qua `activeTaxTab` trong `useErpInvoiceListStore`, khởi tạo đồng bộ từ URL `?view=...` trên initial load/F5 reload.
-  - Tách bạch hoàn toàn khỏi `columnFilters` để tránh xung đột khi người dùng xóa filter.
+  - Quản lý qua `activeTaxTab` trong `useErpInvoiceListStore` theo từng chiều `IN` và `OUT` riêng biệt, không bị rò rỉ khi chuyển tab.
 - **Chế độ xem & Tùy chỉnh cột (View Mode Combobox & Drawer)**:
-  - `InvoiceViewModeCombobox`: Đặt cạnh PillTabs, cho phép chọn giữa các preset chế độ xem (`Tổng quan`, `Kiểm toán / Đối soát`, và custom views). Hỗ trợ icon Pencil (Sửa) cho tất cả các view, icon Trash (Xóa) chỉ hiển thị cho custom view (2 view mặc định `overview` và `audit` được bảo vệ an toàn, không thể xóa).
-  - `InvoiceViewConfigDrawer`: Drawer cấu hình view mode chuẩn `StandardFormDrawer` layout `1-column`, chia 3 nhóm cột (*Thông tin chung*, *Thuế & Trạng thái*, *Số tiền*), hỗ trợ chỉnh sửa cả view mặc định và view tự tạo, có banner nhận diện chế độ mặc định và nút **"Khôi phục mặc định"** (Reset to factory settings) để đưa các cột về nguyên bản hệ thống (`INVOICE_COLUMN_VIEW_PRESETS`).
-  - `usePageViewPresets` & `useUserPreferencesStore`: Quản lý lưu trữ trạng thái view, tự động merge dữ liệu tùy chỉnh cho default presets (`isDefault: true`, `isCustom: false`, `isModified: boolean`) và đồng bộ ngầm với backend.
-- **Tùy chọn lọc cột theo ngữ cảnh Tab (Context-Aware Column Options)**:
-  - `fetchInvoiceOptions`: Tự động truyền `taxInvoiceStatus` tương ứng với `activeTaxTab` khi gọi API lấy danh sách gợi ý lọc cột.
-  - Cột `taxInvoiceStatus`: Danh sách filter options hiển thị tương ứng theo tab (Mới -> Mới; Thay thế -> Thay thế / Bị thay thế; Điều chỉnh -> Điều chỉnh / Bị điều chỉnh; Tất cả -> Đủ 6 trạng thái).
-- **Danh sách cột chuẩn**:
-  1. `select`: Checkbox chọn nhiều dòng để thực hiện bulk actions.
-  2. `actions`: `ActionDropdown` (Xem chi tiết, Sửa, Hạch toán, In/Xem PDF, Tải XML, Xóa/Hủy).
-  3. `invoiceDate`: Ngày lập hóa đơn kèm bộ lọc ngày `TableColumnHeaderFilter`.
-  4. `serialNo`: Ký hiệu hóa đơn (`serial_no`).
-  5. `invoiceNo`: Số hóa đơn dạng `TableText` highlight.
-  6. `partner`: Tên người bán (đối với `IN`) hoặc người mua (đối với `OUT`).
-  7. `taxCode`: Mã số thuế đối tác.
-  8. `description`: Trích yếu diễn giải nội dung hóa đơn.
-  9. `preVatAmount`: Tiền trước thuế (`tabular-nums`, căn phải).
-  10. `vatRate` / `vatAmount`: Thuế suất & tiền thuế VAT.
-  11. `totalAmount`: Tổng tiền thanh toán đã gồm VAT.
-  12. `postingStatus`: Trạng thái hạch toán (`POSTED` - xanh, `UNPOSTED` - xám).
-  13. `branchId`: Chi nhánh hạch toán (Badge hiển thị tên chi nhánh).
-  14. `licensePlate`: Biển số xe trích xuất tự động (nếu có).
-  15. `settlementOrder`: Số quyết toán / lệnh sửa chữa.
-  16. `notes`: Ghi chú nội bộ.
-- **Thanh công cụ & Tác vụ Hàng loạt (Batch Operations)**:
-  - **Tải lên XML/PDF**: Mở `InvoiceImportSyncDrawer`.
-  - **Đồng bộ Thuế GDT**: Mở `GdtPortalAuthDrawer` và hiển thị thanh tiến độ SSE.
-  - **Hạch toán hàng loạt**: Mở `InvoiceBulkPostingDrawer` hạch toán nhiều hóa đơn cùng lúc.
-  - **Cấn trừ hàng loạt**: Mở `InvoiceBulkNetOffDrawer` cấn trừ với sao kê ngân hàng.
-  - **Gán chi nhánh / Sửa ghi chú hàng loạt**: Mở `BulkEditDrawer`.
-  - **Xuất Excel / Tải file ZIP**: Xuất dữ liệu đồng bộ hoặc chạy ngầm.
+  - `InvoiceViewModeCombobox`: Cho phép chọn giữa các preset chế độ xem (`Tổng quan`, `Kiểm toán / Đối soát`, và custom views). Quản lý độc lập theo `actualTableId` (`erp-invoices-table-IN` vs `erp-invoices-table-OUT`).
+  - `InvoiceViewConfigDrawer`: Drawer cấu hình view mode chuẩn `StandardFormDrawer` layout `1-column`, chia 3 nhóm cột (*Thông tin chung*, *Thuế & Trạng thái*, *Số tiền*), hỗ trợ chỉnh sửa cả view mặc định và view tự tạo, có nút **"Khôi phục mặc định"** (Reset to factory settings).
+- **Chuyển đổi Tab Sạch sẽ (`handleTabChange`)**:
+  - Khi chuyển qua lại giữa 4 tabs, query params trên URL tự động làm sạch và chỉ phản ánh các bộ lọc / pill tabs của tab đích, đồng thời khôi phục chính xác trạng thái của tab cũ khi quay lại.
 
-### 3.2. Form Drawer Chi Tiết Hóa Đơn (`ErpInvoiceInternalDrawer.tsx`)
+### 3.2. Bảng Chi Tiết Dòng Hàng (`ErpInvoiceItemsSection.tsx` - Tab `in-lines` / `out-lines`)
+- **Khung giao diện**: Hiển thị phẳng toàn bộ các dòng mặt hàng từ các hóa đơn với thanh tính tổng `summaryRow` và `PillTabs` phân loại dòng (`Tất cả dòng`, `Hàng hóa`, `Chiết khấu`).
+- **Store & Bộ lọc Riêng biệt**: Quản lý qua `useErpInvoiceItemsStore` độc lập cho từng chiều `IN` và `OUT`. Tích hợp Right Filter Panel (`useFilterPanel`), bộ lọc ngày, thẻ nhãn `tag_id`, đối tác mà không gây ảnh hưởng tới Header table.
+
+### 3.3. Form Drawer Chi Tiết Hóa Đơn (`ErpInvoiceInternalDrawer.tsx`)
 - Hỗ trợ 2 chế độ: **Xem chi tiết** (Read-only kèm template trực quan `VietnamInvoiceTemplate`) và **Chỉnh sửa/Tạo mới**.
 - **Các phân khu chính**:
   1. `ErpInvoiceFormGeneral`: Số HĐ, ký hiệu, ngày lập, chi nhánh, thông tin người bán, thông tin người mua (MST, tên, địa chỉ, CCCD).
@@ -147,7 +118,7 @@ src/
   4. `ErpInvoiceNetOffSection`: Danh sách các giao dịch ngân hàng đã cấn trừ kèm số tiền và nút gán nhanh.
   5. `ErpInvoicePdfUpload`: Danh sách các file PDF đính kèm, hỗ trợ xem trước inline qua PDF viewer hoặc tải xuống.
 
-### 3.3. Dashboard Hóa Đơn (`InvoiceDashboard.tsx`)
+### 3.4. Dashboard Hóa Đơn (`InvoiceDashboard.tsx`)
 - **Thống kê KPI**: Tổng doanh số mua vào/bán ra, tổng thuế VAT đầu vào được khấu trừ, thuế VAT đầu ra phải nộp, chênh lệch thuế VAT ròng.
 - **Biểu đồ trực quan**:
   - Biểu đồ xu hướng dòng tiền `cashTrend` (12 tháng gần nhất).

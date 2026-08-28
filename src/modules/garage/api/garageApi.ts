@@ -16,6 +16,8 @@ export const garageApi = {
     from?: string,
     to?: string,
     filtersStr?: string,
+    includeDeleted?: string,
+    sorts?: string | string[],
   ) => {
     const params = new URLSearchParams({
       page: page.toString(),
@@ -25,6 +27,14 @@ export const garageApi = {
     if (from) params.append("from", from);
     if (to) params.append("to", to);
     if (filtersStr) params.append("filtersStr", filtersStr);
+    if (includeDeleted) params.append("includeDeleted", includeDeleted);
+    if (sorts) {
+      if (Array.isArray(sorts)) {
+        sorts.forEach((s) => params.append("sorts", s));
+      } else {
+        params.append("sorts", sorts);
+      }
+    }
 
     const res = await axiosInstance.get(`${BASE}/cases?${params.toString()}`, {
       headers: {

@@ -4,6 +4,7 @@ import { TableActionGroup } from "@/shared/components/TableActionGroup";
 import { StandardTable } from "@/shared/components/StandardTable";
 import { FilterPanel } from "@/shared/components/FilterPanel";
 import { SearchInput } from "@/shared/components/SearchInput";
+import { Tabs, TabsList, TabsTrigger } from "@/shared/components/ui/tabs";
 import { useT } from "@/core/i18n";
 import type { SpreadsheetPageTemplateProps } from "./types";
 
@@ -11,6 +12,10 @@ export function SpreadsheetPageTemplate<T>({
   title,
   desc,
   icon,
+  tabs,
+  activeTab,
+  onTabChange,
+  hideTabs,
   tableId,
   items,
   columns,
@@ -160,12 +165,37 @@ export function SpreadsheetPageTemplate<T>({
     </TableActionGroup>
   );
 
+  const tabsNode =
+    tabs && !hideTabs ? (
+      <Tabs
+        value={activeTab}
+        onValueChange={onTabChange}
+        className="w-full z-10 bg-transparent shrink-0"
+      >
+        <TabsList className="bg-transparent border-b border-[color:var(--border)]/60 w-full justify-start rounded-none h-auto p-0 gap-6 shadow-none overflow-x-auto scrollbar-none [&>[data-tabs-indicator]]:hidden">
+          {tabs.map((tab) => (
+            <TabsTrigger
+              key={tab.value}
+              value={tab.value}
+              className="border-b-2 border-transparent rounded-none px-1 py-1.5 text-xs sm:text-sm font-medium text-muted-foreground hover:text-foreground data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-primary whitespace-nowrap flex-shrink-0 transition-colors"
+            >
+              {tab.label}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+      </Tabs>
+    ) : undefined;
+
   return (
     <PageLayout
       title={title}
       desc={desc}
       icon={icon}
       hideHeader={hideHeader}
+      tabs={tabs}
+      activeTab={activeTab}
+      onTabChange={onTabChange}
+      hideTabs={hideTabs}
       actions={!isFullscreen ? actionGroupNode : undefined}
     >
       {error ? (
@@ -215,6 +245,7 @@ export function SpreadsheetPageTemplate<T>({
             enableFullscreen={enableFullscreen}
             tableTitle={title}
             fullscreenHeaderExtra={actionGroupNode}
+            fullscreenTabs={tabsNode}
             onFullscreenChange={handleFullscreenChange}
             sidePanel={
               filterConfig && filter ? (

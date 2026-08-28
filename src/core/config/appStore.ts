@@ -152,8 +152,12 @@ export const SECTION_ROOTS: Partial<Record<PageKey, SectionRoot>> = {
     labelKey: "Hóa đơn nháp",
     group: "accounting",
   },
+  "erp-invoices": {
+    labelKey: "nav.items.erpInvoices",
+    group: "accounting",
+  },
   "erp-invoices-in": {
-    labelKey: "nav.items.erpInvoicesIn",
+    labelKey: "nav.items.erpInvoices",
     group: "accounting",
   },
   "erp-invoices-out": {
@@ -322,6 +326,7 @@ export const BREADCRUMBS: Partial<Record<PageKey, Array<[string, string?]>>> = {
   "erp-permissions-core": [["breadcrumb.settings"], ["breadcrumb.phanquyen"]],
   attachments: [["breadcrumb.settings"], ["nav.items.attachments"]],
   "invoice-dashboard": [["breadcrumb.accounting"], ["Tổng quan hóa đơn"]],
+  "erp-invoices": [["breadcrumb.accounting"], ["nav.items.erpInvoices"]],
   "erp-invoices-in": [["breadcrumb.accounting"], ["breadcrumb.inbound"]],
   "erp-invoices-out": [["breadcrumb.accounting"], ["breadcrumb.outbound"]],
   "erp-invoices-draft": [["breadcrumb.accounting"], ["Hóa đơn nháp"]],
@@ -386,6 +391,7 @@ export const BREADCRUMBS: Partial<Record<PageKey, Array<[string, string?]>>> = {
 };
 
 export const DUPLICATABLE_PAGES = new Set<PageKey>([
+  "erp-invoices",
   "erp-invoices-in",
   "erp-invoices-out",
 ]);

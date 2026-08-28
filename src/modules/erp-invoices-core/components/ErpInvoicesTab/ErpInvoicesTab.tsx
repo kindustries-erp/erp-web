@@ -27,6 +27,7 @@ import {
 import { InvoiceDrawers } from "./components/InvoiceDrawers";
 import { InvoiceBulkModals } from "./components/InvoiceBulkModals";
 import { InvoiceViewConfigDrawer } from "./components/InvoiceViewConfigDrawer";
+import { ErpInvoiceItemsSection } from "../ErpInvoiceItemsSection";
 
 export type { ErpInvoicesTabProps };
 
@@ -295,65 +296,106 @@ export function ErpInvoicesTab(props: ErpInvoicesTabProps) {
   );
 
   return (
-    <>
-      <SpreadsheetPageTemplate
-        hideHeader={isDrawer}
-        defaultColumnOrder={["__selection", "__actions", "__expand"]}
-        title={
-          direction === "IN"
-            ? t("inbound", "Hóa đơn mua vào")
-            : t("outbound", "Hóa đơn bán ra")
+    <div className="flex flex-col h-full flex-1 min-h-0 w-full overflow-hidden">
+      <div
+        className={
+          logic.activeView === "header"
+            ? "flex flex-col h-full flex-1 min-h-0 overflow-hidden"
+            : "hidden"
         }
-        desc={t("invoiceDesc", "Quản lý danh sách hóa đơn điện tử")}
-        icon={<Receipt className="h-5 w-5" />}
-        tableId={
-          isDrawer
-            ? `erp-invoices-table-checkpoint-${direction}`
-            : `erp-invoices-table-${listDir}`
+      >
+        <SpreadsheetPageTemplate
+          hideHeader={isDrawer}
+          tabs={logic.pageTabs}
+          activeTab={logic.currentTabKey}
+          onTabChange={logic.handleTabChange}
+          defaultColumnOrder={["__selection", "__actions", "__expand"]}
+          title={
+            direction === "IN"
+              ? t("inbound", "Hóa đơn mua vào")
+              : t("outbound", "Hóa đơn bán ra")
+          }
+          desc={t("invoiceDesc", "Quản lý danh sách hóa đơn điện tử")}
+          icon={<Receipt className="h-5 w-5" />}
+          tableId={
+            isDrawer
+              ? `erp-invoices-table-checkpoint-${direction}`
+              : `erp-invoices-table-${listDir}`
+          }
+          items={listHook.invoices}
+          columns={columns}
+          getRowKey={(r) => r.id}
+          getRowClassName={getInvoiceRowClassName}
+          summaryRow={summaryRow}
+          loading={listHook.loading}
+          emptyLabel={t("emptyData", "Chưa có hóa đơn nào.")}
+          minWidth={1200}
+          activeFilterCount={
+            listHook.filterPanel.activeFilterCount +
+            (listHook.tableState.activeFilterCount || 0)
+          }
+          onClearAllFilters={() => {
+            listHook.filterPanel.resetAll();
+            listHook.setPage(1);
+          }}
+          sortArray={
+            activeSortKey
+              ? [
+                  activeSortOrder === "desc"
+                    ? `-${activeSortKey}`
+                    : activeSortKey,
+                ]
+              : undefined
+          }
+          onSort={listHook.handleSort}
+          page={listHook.page}
+          pageSize={listHook.pageSize}
+          total={listHook.total}
+          totalPages={listHook.totalPages}
+          onPage={listHook.setPage}
+          onPageSize={listHook.setPageSize}
+          onRefresh={() => void listHook.loadInvoices()}
+          enableRowSelection={true}
+          rowSelection={rowSelection}
+          onRowSelectionChange={setRowSelection}
+          defaultColumnVisibility={DEFAULT_INVOICE_COLUMN_VISIBILITY}
+          bulkActionsNode={bulkActionsNode}
+          customActionsNode={viewTabsNode}
+          filterConfig={filterConfig}
+          filter={listHook.filterPanel}
+          rowActions={rowActions}
+          onCreate={() => setImportModalOpen(true)}
+          createLabel={t("syncInvoices", "Đồng bộ")}
+          createIcon={
+            <DownloadCloud className="w-4 h-4 mr-1 text-indigo-100" />
+          }
+          createActions={createActions}
+        />
+      </div>
+
+      <div
+        className={
+          logic.activeView === "lines"
+            ? "flex flex-col h-full flex-1 min-h-0 overflow-hidden"
+            : "hidden"
         }
-        items={listHook.invoices}
-        columns={columns}
-        getRowKey={(r) => r.id}
-        getRowClassName={getInvoiceRowClassName}
-        summaryRow={summaryRow}
-        loading={listHook.loading}
-        emptyLabel={t("emptyData", "Chưa có hóa đơn nào.")}
-        minWidth={1200}
-        activeFilterCount={
-          listHook.filterPanel.activeFilterCount +
-          (listHook.tableState.activeFilterCount || 0)
-        }
-        onClearAllFilters={() => {
-          listHook.filterPanel.resetAll();
-          listHook.setPage(1);
-        }}
-        sortArray={
-          activeSortKey
-            ? [activeSortOrder === "desc" ? `-${activeSortKey}` : activeSortKey]
-            : undefined
-        }
-        onSort={listHook.handleSort}
-        page={listHook.page}
-        pageSize={listHook.pageSize}
-        total={listHook.total}
-        totalPages={listHook.totalPages}
-        onPage={listHook.setPage}
-        onPageSize={listHook.setPageSize}
-        onRefresh={() => void listHook.loadInvoices()}
-        enableRowSelection={true}
-        rowSelection={rowSelection}
-        onRowSelectionChange={setRowSelection}
-        defaultColumnVisibility={DEFAULT_INVOICE_COLUMN_VISIBILITY}
-        bulkActionsNode={bulkActionsNode}
-        customActionsNode={viewTabsNode}
-        filterConfig={filterConfig}
-        filter={listHook.filterPanel}
-        rowActions={rowActions}
-        onCreate={() => setImportModalOpen(true)}
-        createLabel={t("syncInvoices", "Đồng bộ")}
-        createIcon={<DownloadCloud className="w-4 h-4 mr-1 text-indigo-100" />}
-        createActions={createActions}
-      />
+      >
+        <ErpInvoiceItemsSection
+          key={`lines-${logic.direction}-${props.instanceIndex || 1}`}
+          direction={logic.direction}
+          instanceIndex={props.instanceIndex}
+          isDrawer={isDrawer}
+          canEditInvoice={canEditInvoice}
+          partnerTaxCode={props.partnerTaxCode}
+          tabs={logic.pageTabs}
+          activeTab={logic.currentTabKey}
+          onTabChange={logic.handleTabChange}
+          handleOpenInternal={handleOpenInternal}
+          handleDownload={handleDownload}
+          onOpenSync={() => setImportModalOpen(true)}
+          onOpenPortalAuth={() => setPortalAuthOpen(true)}
+        />
+      </div>
 
       <InvoiceDrawers
         direction={direction}
@@ -418,6 +460,6 @@ export function ErpInvoicesTab(props: ErpInvoicesTabProps) {
         onSave={handleSaveViewPreset}
         onResetDefault={handleResetViewPreset}
       />
-    </>
+    </div>
   );
 }

@@ -408,8 +408,8 @@ export function useNavItems(): NavSearchItem[] {
         icon: <Receipt className="w-4 h-4" />,
       });
       items.push({
-        key: "erp-invoices-in",
-        label: "Hóa đơn đầu vào",
+        key: "erp-invoices",
+        label: t("nav.items.erpInvoices") || "Hóa đơn điện tử",
         group: invoiceGroup,
         section: accountingSection,
         keywords: [
@@ -418,26 +418,18 @@ export function useNavItems(): NavSearchItem[] {
           "invoices",
           "dau vao",
           "đầu vào",
-          "inbound",
-          "hoa don mua vao",
-          "mua hang",
-        ],
-        icon: <Receipt className="w-4 h-4" />,
-      });
-      items.push({
-        key: "erp-invoices-out",
-        label: "Hóa đơn đầu ra",
-        group: invoiceGroup,
-        section: accountingSection,
-        keywords: [
-          "hoa don",
-          "hóa đơn",
-          "invoices",
           "dau ra",
           "đầu ra",
+          "inbound",
           "outbound",
+          "hoa don mua vao",
           "hoa don ban ra",
+          "chi tiet mua vao",
+          "chi tiet ban ra",
+          "mua hang",
           "ban hang",
+          "vat",
+          "gtgt",
         ],
         icon: <Receipt className="w-4 h-4" />,
       });

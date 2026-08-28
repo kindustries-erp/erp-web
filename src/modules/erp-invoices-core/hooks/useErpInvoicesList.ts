@@ -20,6 +20,10 @@ export function useErpInvoicesList(
   const [direction, setDirection] = useState<Direction | "ALL">(
     initialDirection,
   );
+  useEffect(() => {
+    setDirection(initialDirection);
+  }, [initialDirection]);
+
   const [invoices, setInvoices] = useState<ErpInvoice[]>([]);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(0);

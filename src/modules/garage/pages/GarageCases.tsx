@@ -38,6 +38,7 @@ import {
   Scale,
   Link2,
   SlidersHorizontal,
+  Users,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { useTranslation } from "react-i18next";
@@ -96,6 +97,8 @@ export function GarageCases() {
   const [viewConfigDrawerOpen, setViewConfigDrawerOpen] = useState(false);
   const [editingViewPreset, setEditingViewPreset] =
     useState<TableViewPreset | null>(null);
+  const [drawerInitialTab, setDrawerInitialTab] =
+    useState<string>("quote_details");
 
   const handleStatusTabChange = (tab: string) => {
     setActiveStatusTab(tab);
@@ -1728,6 +1731,19 @@ export function GarageCases() {
                 icon: <Eye className="w-4 h-4" />,
                 onClick: () => {
                   setDrawerEditMode(false);
+                  setDrawerInitialTab("quote_details");
+                  setSelectedCaseId(item.soChungTu || item.id);
+                },
+              },
+              {
+                label: t(
+                  "cases.actions.viewPartnerDetail",
+                  "Chi tiết theo đối tượng",
+                ),
+                icon: <Users className="w-4 h-4" />,
+                onClick: () => {
+                  setDrawerEditMode(false);
+                  setDrawerInitialTab("partner_details");
                   setSelectedCaseId(item.soChungTu || item.id);
                 },
               },
@@ -1795,6 +1811,7 @@ export function GarageCases() {
         isOpen={!!selectedCaseId}
         caseCode={selectedCaseId}
         initialEditMode={drawerEditMode}
+        initialTabKey={drawerInitialTab}
         onClose={() => {
           setSelectedCaseId(null);
           setDrawerEditMode(false);

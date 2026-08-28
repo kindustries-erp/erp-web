@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
 import { DrawerSection } from "@/shared/components/DrawerModal";
 import { Badge } from "@/shared/components/ui/badge";
@@ -7,6 +7,7 @@ import { cn } from "@/shared/utils";
 import { DataTable } from "@/shared/components/DataTable";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import type { GarageTrendItem } from "../api/garageDashboardApi";
+import { GarageMonthClassificationCasesDrawer } from "./GarageMonthClassificationCasesDrawer";
 import {
   Wallet,
   Truck,
@@ -18,6 +19,7 @@ import {
   FileX,
   Table as TableIcon,
   PieChart,
+  Eye,
 } from "lucide-react";
 
 interface GarageMonthDetailDrawerProps {
@@ -138,6 +140,18 @@ export function GarageMonthDetailDrawer({
   onClose,
 }: GarageMonthDetailDrawerProps) {
   const isReceipt = activeTab === "RECEIPT";
+
+  const [classificationDrawerState, setClassificationDrawerState] = useState<{
+    open: boolean;
+    filterType: "CLASSIFICATION" | "INVOICE";
+    filterKey: string;
+    filterLabel: string;
+  }>({
+    open: false,
+    filterType: "CLASSIFICATION",
+    filterKey: "",
+    filterLabel: "",
+  });
 
   const safeItem = useMemo<GarageTrendItem>(
     () =>
@@ -357,10 +371,22 @@ export function GarageMonthDetailDrawer({
         headerClassName: "text-left",
         className: "text-left",
         cell: (row: MonthClassificationRow) => (
-          <div className="flex items-center gap-2">
-            <span className="shrink-0">{row.icon}</span>
+          <div
+            className="flex items-center gap-2 cursor-pointer group"
+            onClick={() => {
+              setClassificationDrawerState({
+                open: true,
+                filterType: "CLASSIFICATION",
+                filterKey: row.key,
+                filterLabel: row.name,
+              });
+            }}
+          >
+            <span className="shrink-0 group-hover:scale-110 transition-transform">
+              {row.icon}
+            </span>
             <div className="flex flex-col min-w-0">
-              <span className="font-semibold text-foreground text-xs truncate">
+              <span className="font-semibold text-foreground text-xs truncate group-hover:text-primary group-hover:underline transition-colors">
                 {row.name}
               </span>
               {row.subLabel && (
@@ -372,7 +398,7 @@ export function GarageMonthDetailDrawer({
             {row.caseCount > 0 && (
               <Badge
                 variant="outline"
-                className="ml-auto text-[10px] px-1.5 py-0 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium tabular-nums shrink-0"
+                className="ml-auto text-[10px] px-1.5 py-0 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium tabular-nums shrink-0 group-hover:bg-primary/10 group-hover:text-primary group-hover:border-primary/30 transition-colors"
               >
                 {row.caseCount}p
               </Badge>
@@ -640,15 +666,27 @@ export function GarageMonthDetailDrawer({
         headerClassName: "text-left",
         className: "text-left",
         cell: (row: MonthInvoiceRow) => (
-          <div className="flex items-center gap-2">
-            <span className="shrink-0">{row.icon}</span>
-            <span className="font-semibold text-foreground text-xs">
+          <div
+            className="flex items-center gap-2 cursor-pointer group"
+            onClick={() => {
+              setClassificationDrawerState({
+                open: true,
+                filterType: "INVOICE",
+                filterKey: row.key,
+                filterLabel: row.name,
+              });
+            }}
+          >
+            <span className="shrink-0 group-hover:scale-110 transition-transform">
+              {row.icon}
+            </span>
+            <span className="font-semibold text-foreground text-xs group-hover:text-primary group-hover:underline transition-colors">
               {row.name}
             </span>
             {row.caseCount !== undefined && row.caseCount > 0 && (
               <Badge
                 variant="outline"
-                className="ml-auto text-[10px] px-1.5 py-0 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium tabular-nums shrink-0"
+                className="ml-auto text-[10px] px-1.5 py-0 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium tabular-nums shrink-0 group-hover:bg-primary/10 group-hover:text-primary group-hover:border-primary/30 transition-colors"
               >
                 {row.caseCount}p
               </Badge>
@@ -773,6 +811,26 @@ export function GarageMonthDetailDrawer({
             emptyLabel="Không có dữ liệu phân loại"
             enableColumnResizing={true}
             tableId="garage-month-detail-classification-table"
+            rowHoverActions={(row: MonthClassificationRow) => [
+              {
+                groupLabel: "TRA CỨU",
+                items: [
+                  {
+                    label: "Xem chi tiết danh sách vụ việc",
+                    icon: <Eye className="w-3.5 h-3.5" />,
+                    onClick: () => {
+                      setClassificationDrawerState({
+                        open: true,
+                        filterType: "CLASSIFICATION",
+                        filterKey: row.key,
+                        filterLabel: row.name,
+                      });
+                    },
+                    quickAction: true,
+                  },
+                ],
+              },
+            ]}
           />
         </div>
       </DrawerSection>
@@ -798,6 +856,26 @@ export function GarageMonthDetailDrawer({
             emptyLabel="Không có dữ liệu hóa đơn"
             enableColumnResizing={true}
             tableId="garage-month-detail-invoice-table"
+            rowHoverActions={(row: MonthInvoiceRow) => [
+              {
+                groupLabel: "TRA CỨU",
+                items: [
+                  {
+                    label: "Xem chi tiết danh sách vụ việc",
+                    icon: <Eye className="w-3.5 h-3.5" />,
+                    onClick: () => {
+                      setClassificationDrawerState({
+                        open: true,
+                        filterType: "INVOICE",
+                        filterKey: row.key,
+                        filterLabel: row.name,
+                      });
+                    },
+                    quickAction: true,
+                  },
+                ],
+              },
+            ]}
           />
         </div>
       </DrawerSection>
@@ -966,43 +1044,59 @@ export function GarageMonthDetailDrawer({
   if (!item) return null;
 
   return (
-    <StandardFormDrawer
-      open={open}
-      mode="view"
-      onClose={onClose}
-      title={monthLabel}
-      subtitle={
-        isReceipt
-          ? "Tiến độ Dòng tiền & Phân loại Vụ việc – Phải Thu & Đã Thu"
-          : "Tiến độ Dòng tiền & Phân loại Vụ việc – Phải Trả & Đã Trả"
-      }
-      titleExtra={
-        <Badge
-          variant="outline"
-          className={cn(
-            "text-[11px] font-semibold px-2 py-0.5 border",
-            mainRate >= 100
-              ? isReceipt
-                ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30"
-                : "bg-orange-500/15 text-orange-700 dark:text-orange-300 border-orange-500/30"
-              : "bg-slate-100 dark:bg-slate-800 text-foreground border-border",
-          )}
-        >
-          {isReceipt ? (
-            <Wallet className="w-3 h-3 inline mr-1" />
-          ) : (
-            <Truck className="w-3 h-3 inline mr-1" />
-          )}
-          {mainRate.toFixed(1)}% Hoàn tất
-        </Badge>
-      }
-      size="xl"
-      layout="2-columns"
-      collapsibleRightPanel={true}
-      rightPanelDefaultCollapsed={false}
-      leftPanel={leftPanel}
-      rightPanel={rightPanel}
-      actions={[{ label: "Đóng", variant: "outline", onClick: onClose }]}
-    />
+    <>
+      <StandardFormDrawer
+        open={open}
+        mode="view"
+        onClose={onClose}
+        title={monthLabel}
+        subtitle={
+          isReceipt
+            ? "Tiến độ Dòng tiền & Phân loại Vụ việc – Phải Thu & Đã Thu"
+            : "Tiến độ Dòng tiền & Phân loại Vụ việc – Phải Trả & Đã Trả"
+        }
+        titleExtra={
+          <Badge
+            variant="outline"
+            className={cn(
+              "text-[11px] font-semibold px-2 py-0.5 border",
+              mainRate >= 100
+                ? isReceipt
+                  ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30"
+                  : "bg-orange-500/15 text-orange-700 dark:text-orange-300 border-orange-500/30"
+                : "bg-slate-100 dark:bg-slate-800 text-foreground border-border",
+            )}
+          >
+            {isReceipt ? (
+              <Wallet className="w-3 h-3 inline mr-1" />
+            ) : (
+              <Truck className="w-3 h-3 inline mr-1" />
+            )}
+            {mainRate.toFixed(1)}% Hoàn tất
+          </Badge>
+        }
+        size="xl"
+        layout="2-columns"
+        collapsibleRightPanel={true}
+        rightPanelDefaultCollapsed={false}
+        leftPanel={leftPanel}
+        rightPanel={rightPanel}
+        actions={[{ label: "Đóng", variant: "outline", onClick: onClose }]}
+      />
+
+      {/* Classification Cases 2-Column Drawer */}
+      <GarageMonthClassificationCasesDrawer
+        open={classificationDrawerState.open}
+        month={safeItem.label}
+        monthLabel={monthLabel}
+        filterType={classificationDrawerState.filterType}
+        filterKey={classificationDrawerState.filterKey}
+        filterLabel={classificationDrawerState.filterLabel}
+        activeTab={activeTab}
+        onClose={() =>
+          setClassificationDrawerState((prev) => ({ ...prev, open: false }))
+        }
+      />
+    </>
   );
 }

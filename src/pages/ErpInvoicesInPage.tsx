@@ -1,9 +1,16 @@
-import { ErpInvoicesTab } from "@/modules/erp-invoices-core/components/ErpInvoicesTab";
+import { ErpInvoicesPage } from "./ErpInvoicesPage";
 
 export function ErpInvoicesInPage({
   instanceIndex = 1,
+  initialTab,
 }: {
   instanceIndex?: 1 | 2;
+  initialTab?: "in" | "in-lines" | "out" | "out-lines";
 }) {
-  return <ErpInvoicesTab direction="IN" instanceIndex={instanceIndex} />;
+  return (
+    <ErpInvoicesPage
+      instanceIndex={instanceIndex}
+      initialTab={initialTab || "in"}
+    />
+  );
 }
