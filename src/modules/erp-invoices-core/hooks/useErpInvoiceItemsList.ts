@@ -1,5 +1,9 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
+import {
+  periodFirstDay,
+  periodLastDay,
+} from "@/modules/finance/utils/financeHelpers";
 import {
   erpInvoicesCoreApi,
   type ErpInvoiceItemListParams,
@@ -26,9 +30,23 @@ export function useErpInvoiceItemsList(
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState<number>(getDefaultPageSize);
   const [sorts, setSorts] = useState<string[]>([]);
-  const [dateFrom, setDateFrom] = useState<string>("");
-  const [dateTo, setDateTo] = useState<string>("");
-  const [search, setSearch] = useState<string>("");
+  const [period, setPeriodState] = useState<string>("");
+  const [dateFrom, setDateFromState] = useState<string>("");
+  const [dateTo, setDateToState] = useState<string>("");
+  const [search, setSearchState] = useState<string>("");
+  const [searchInput, setSearchInputState] = useState<string>("");
+  const [status, setStatusState] = useState<string>("");
+  const [tagId, setTagIdState] = useState<string>("");
+  const [sellerName, setSellerNameState] = useState<string>("");
+  const [buyerName, setBuyerNameState] = useState<string>("");
+  const [filterPanelOpen, setFilterPanelOpen] = useState(false);
+
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+  const debounce = (fn: () => void) => {
+    clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(fn, 400);
+  };
+
   const [subcategoryFilter, setSubcategoryFilterState] = useState<string>(
     () => {
       if (typeof window !== "undefined") {
@@ -85,6 +103,10 @@ export function useErpInvoiceItemsList(
       date_from: dateFrom ? `${dateFrom}T00:00:00` : undefined,
       date_to: dateTo ? `${dateTo}T23:59:59` : undefined,
       search: search.trim() || undefined,
+      status: status || undefined,
+      seller_name: sellerName.trim() || undefined,
+      buyer_name: buyerName.trim() || undefined,
+      tag_id: tagId || undefined,
       partner_tax_code: partnerTaxCode || undefined,
     };
 
@@ -109,6 +131,10 @@ export function useErpInvoiceItemsList(
     dateFrom,
     dateTo,
     search,
+    status,
+    sellerName,
+    buyerName,
+    tagId,
     partnerTaxCode,
     subcategoryFilter,
     columnFilters,
@@ -126,6 +152,10 @@ export function useErpInvoiceItemsList(
       dateFrom,
       dateTo,
       search,
+      status,
+      sellerName,
+      buyerName,
+      tagId,
       partnerTaxCode,
       subcategoryFilter,
       columnFilters,
@@ -171,10 +201,74 @@ export function useErpInvoiceItemsList(
   };
 
   const setDateRange = (from: string, to: string) => {
-    setDateFrom(from);
-    setDateTo(to);
+    setDateFromState(from);
+    setDateToState(to);
+    setPeriodState("");
     setPage(1);
   };
+
+  const setPeriod = useCallback((p: string) => {
+    setPeriodState(p);
+    if (p) {
+      setDateFromState(periodFirstDay(p));
+      setDateToState(periodLastDay(p));
+    } else {
+      setDateFromState("");
+      setDateToState("");
+    }
+    setPage(1);
+  }, []);
+
+  const setDateFrom = useCallback((v: string) => {
+    setDateFromState(v);
+    setPeriodState("");
+    setPage(1);
+  }, []);
+
+  const setDateTo = useCallback((v: string) => {
+    setDateToState(v);
+    setPeriodState("");
+    setPage(1);
+  }, []);
+
+  const setSearch = useCallback((v: string) => {
+    setSearchState(v);
+    setSearchInputState(v);
+    setPage(1);
+  }, []);
+
+  const setSearchInput = useCallback((v: string) => {
+    setSearchInputState(v);
+    if (!v) {
+      setSearchState("");
+      setPage(1);
+      return;
+    }
+    debounce(() => {
+      setSearchState(v);
+      setPage(1);
+    });
+  }, []);
+
+  const setStatus = useCallback((v: string) => {
+    setStatusState(v);
+    setPage(1);
+  }, []);
+
+  const setTagId = useCallback((v: string) => {
+    setTagIdState(v);
+    setPage(1);
+  }, []);
+
+  const setSellerName = useCallback((v: string) => {
+    setSellerNameState(v);
+    setPage(1);
+  }, []);
+
+  const setBuyerName = useCallback((v: string) => {
+    setBuyerNameState(v);
+    setPage(1);
+  }, []);
 
   const activeFilterCount = useMemo(() => {
     let count = 0;
@@ -184,28 +278,124 @@ export function useErpInvoiceItemsList(
     Object.values(columnSearch).forEach((val) => {
       if (val && val.trim().length > 0) count += 1;
     });
-    if (dateFrom || dateTo) count += 1;
+    if (dateFrom || dateTo || period) count += 1;
     if (search.trim().length > 0) count += 1;
-    if (subcategoryFilter && subcategoryFilter !== "ALL") count += 1;
+    if (status) count += 1;
+    if (sellerName.trim().length > 0) count += 1;
+    if (buyerName.trim().length > 0) count += 1;
+    if (tagId) count += 1;
     return count;
   }, [
     columnFilters,
     columnSearch,
     dateFrom,
     dateTo,
+    period,
     search,
-    subcategoryFilter,
+    status,
+    sellerName,
+    buyerName,
+    tagId,
   ]);
 
-  const clearAllFilters = () => {
+  const clearAllFilters = useCallback(() => {
     setColumnFilters({});
     setColumnSearch({});
-    setDateFrom("");
-    setDateTo("");
-    setSearch("");
-    setSubcategoryFilter("ALL");
+    setDateFromState("");
+    setDateToState("");
+    setPeriodState("");
+    setSearchState("");
+    setSearchInputState("");
+    setStatusState("");
+    setSellerNameState("");
+    setBuyerNameState("");
+    setTagIdState("");
+    setSubcategoryFilterState("ALL");
     setPage(1);
-  };
+  }, []);
+
+  const filterPanel = useMemo(
+    () => ({
+      state: {
+        period,
+        dateFrom,
+        dateTo,
+        channel: "",
+        search,
+        amountMin: "",
+        amountMax: "",
+        status,
+        counterpartySource: "",
+        custom: {
+          seller_name: sellerName,
+          buyer_name: buyerName,
+          tag_id: tagId,
+        },
+      },
+      inputs: {
+        search: searchInput,
+        amountMin: "",
+        amountMax: "",
+      },
+      panelOpen: filterPanelOpen,
+      openPanel: () => setFilterPanelOpen(true),
+      closePanel: () => setFilterPanelOpen(false),
+      togglePanel: () => setFilterPanelOpen((prev) => !prev),
+      setPeriod,
+      setDateFrom,
+      setDateTo,
+      setDateRange,
+      setChannel: () => {},
+      setSearchInput,
+      setAmountMinInput: () => {},
+      setAmountMaxInput: () => {},
+      setStatus,
+      setCounterpartySource: () => {},
+      setCustom: (key: string, v: string) => {
+        if (key === "tag_id") setTagId(v);
+        if (key === "seller_name") setSellerName(v);
+        if (key === "buyer_name") setBuyerName(v);
+      },
+      resetAll: clearAllFilters,
+      hasActiveFilter: [
+        !!period || !!dateFrom || !!dateTo,
+        !!search,
+        !!status,
+        !!sellerName,
+        !!buyerName,
+        !!tagId,
+      ].some(Boolean),
+      activeFilterCount: [
+        !!period || !!dateFrom || !!dateTo,
+        !!search,
+        !!status,
+        !!sellerName,
+        !!buyerName,
+        !!tagId,
+      ].filter(Boolean).length,
+    }),
+    [
+      period,
+      dateFrom,
+      dateTo,
+      search,
+      searchInput,
+      status,
+      sellerName,
+      buyerName,
+      tagId,
+      filterPanelOpen,
+      setPeriod,
+      setDateFrom,
+      setDateTo,
+      setSearchInput,
+      setStatus,
+      setTagId,
+      setSellerName,
+      setBuyerName,
+      clearAllFilters,
+    ],
+  );
 
   return {
     data: data?.items ?? [],
@@ -225,17 +415,30 @@ export function useErpInvoiceItemsList(
     setPageSize,
     sorts,
     setSort,
+    period,
+    setPeriod,
     dateFrom,
     dateTo,
     setDateRange,
     search,
     setSearch,
+    status,
+    setStatus,
+    tagId,
+    setTagId,
+    sellerName,
+    setSellerName,
+    buyerName,
+    setBuyerName,
     subcategoryFilter,
     setSubcategoryFilter,
     columnFilters,
     setColumnFilter,
     columnSearch,
     setColumnSearch: setColumnSearchValue,
+    filterPanel,
+    filterPanelOpen,
+    setFilterPanelOpen,
     activeFilterCount,
     clearAllFilters,
     refetch,

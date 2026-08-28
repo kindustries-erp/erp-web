@@ -54,7 +54,7 @@ export function TableActionGroup({
 
       {(onFilterToggle || (activeFilterCount > 0 && onClearAllFilters)) && (
         <FilterButton
-          onClick={onFilterToggle || onClearAllFilters}
+          onClick={onFilterToggle}
           activeCount={activeFilterCount}
           onClear={onClearAllFilters}
         />

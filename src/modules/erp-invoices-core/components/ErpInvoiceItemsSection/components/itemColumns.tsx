@@ -4,11 +4,11 @@ import type { TFunction } from "i18next";
 import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
 import { DateRangeColumnSlot } from "@/shared/components/DataTable/DateRangeColumnSlot";
 import { TableText } from "@/shared/components/DataTable/TableText";
-import { Badge } from "@/shared/components/ui/badge";
 import type { DataTableColumn } from "@/shared/components/DataTable";
 import type { ErpInvoiceItemRow } from "../../../api/erpInvoicesCoreApi";
 import type { useErpInvoiceItemsList } from "../../../hooks/useErpInvoiceItemsList";
 import { formatAmtOption } from "../../ErpInvoicesTab/utils";
+import { TaxInvoiceStatusBadge } from "../../ErpInvoicesTab/components/cells/InvoiceStatusBadge";
 
 export const formatQtyOption = (val: string | number) => {
   const n = Number(val || 0);
@@ -53,6 +53,7 @@ export interface UseItemColumnsOptions {
     next: number | null;
   }>;
   handleOpenInternal: (inv: any, mode?: "view" | "edit", tab?: string) => void;
+  branches?: { label: string; value: string }[];
 }
 
 export function useItemColumns({
@@ -62,6 +63,7 @@ export function useItemColumns({
   getSortState,
   fetchColumnOptions,
   handleOpenInternal,
+  branches = [],
 }: UseItemColumnsOptions): DataTableColumn<ErpInvoiceItemRow>[] {
   return useMemo(
     () => [
@@ -596,131 +598,90 @@ export function useItemColumns({
         ),
       },
 
-      // 17. Phân loại dòng
+      // 17. Trạng thái GĐT
       {
-        key: "invoiceSubcategory",
+        key: "taxInvoiceStatus",
         header: (
           <TableColumnHeaderFilter
-            title={t("columns.subcategory", "Phân loại")}
-            columnKey="invoiceSubcategory"
+            title={t("taxInvoiceStatus", "Trạng thái GĐT")}
+            columnKey="taxInvoiceStatus"
             queryKeyPrefix={`invoice-item-options-${direction}`}
             allFilters={listHook.columnFilters}
-            sortState={getSortState("invoiceSubcategory")}
-            onSortChange={(s) => listHook.setSort("invoiceSubcategory", s)}
+            sortState={getSortState("taxInvoiceStatus")}
+            onSortChange={(s) => listHook.setSort("taxInvoiceStatus", s)}
             searchValue=""
             onSearchChange={() => {}}
-            selectedFilters={listHook.columnFilters["invoiceSubcategory"] || []}
+            selectedFilters={listHook.columnFilters["taxInvoiceStatus"] || []}
             onFilterChange={(v) =>
-              listHook.setColumnFilter("invoiceSubcategory", v)
+              listHook.setColumnFilter("taxInvoiceStatus", v)
             }
-            fetchOptions={fetchColumnOptions}
-            isActive={!!listHook.columnFilters["invoiceSubcategory"]?.length}
+            filterOptions={[
+              { label: "Mới", value: "1" },
+              { label: "Thay thế", value: "2" },
+              { label: "Điều chỉnh", value: "3" },
+              { label: "Bị thay thế", value: "4" },
+              { label: "Bị điều chỉnh", value: "5" },
+              { label: "Bị hủy", value: "6" },
+            ]}
+            isActive={!!listHook.columnFilters["taxInvoiceStatus"]?.length}
             align="center"
           />
         ),
-        size: 110,
+        size: 150,
         enableResizing: true,
         className: "text-center",
         cell: (row: ErpInvoiceItemRow) => (
           <div className="w-full flex justify-center">
-            <Badge
-              variant={
-                row.invoiceSubcategory === "DISCOUNT"
-                  ? "destructive"
-                  : row.invoiceSubcategory === "PROMOTION"
-                    ? "secondary"
-                    : "outline"
-              }
-              className="text-[10px] px-1.5 py-0 h-4 font-normal"
-            >
-              {row.invoiceSubcategory === "DISCOUNT"
-                ? "Chiết khấu"
-                : row.invoiceSubcategory === "PROMOTION"
-                  ? "Khuyến mại"
-                  : "Thường"}
-            </Badge>
+            <TaxInvoiceStatusBadge status={row.taxInvoiceStatus} />
           </div>
         ),
       },
 
-      // 18. Trạng thái HĐ
+      // 18. Chi nhánh
       {
-        key: "status",
+        key: "branchId",
         header: (
           <TableColumnHeaderFilter
-            title={t("columns.status", "Trạng thái")}
-            columnKey="status"
-            queryKeyPrefix={`invoice-item-options-${direction}`}
+            title={t("branch", "Chi nhánh")}
+            columnKey="branchId"
+            queryKeyPrefix={`invoice-item-options-branch-${branches.length}`}
             allFilters={listHook.columnFilters}
-            sortState={getSortState("status")}
-            onSortChange={(s) => listHook.setSort("status", s)}
-            searchValue=""
-            onSearchChange={() => {}}
-            selectedFilters={listHook.columnFilters["status"] || []}
-            onFilterChange={(v) => listHook.setColumnFilter("status", v)}
-            fetchOptions={fetchColumnOptions}
-            isActive={!!listHook.columnFilters["status"]?.length}
+            sortState={getSortState("branchId")}
+            onSortChange={(s) => listHook.setSort("branchId", s)}
+            searchValue={listHook.columnSearch["branchId"] || ""}
+            onSearchChange={(v) => listHook.setColumnSearch("branchId", v)}
+            selectedFilters={listHook.columnFilters["branchId"] || []}
+            onFilterChange={(v) => listHook.setColumnFilter("branchId", v)}
+            fetchOptions={async ({ search }: { search: string }) => {
+              const options = branches.map((b) => {
+                const parts = b.label.split(" — ");
+                const label = parts.length > 1 ? parts[1] : b.label;
+                return { label, value: b.value };
+              });
+              const filtered = options.filter((o) =>
+                o.label.toLowerCase().includes(search.toLowerCase()),
+              );
+              return { items: filtered, total: filtered.length, next: null };
+            }}
+            showBlankOption={true}
+            isActive={
+              !!listHook.columnFilters["branchId"]?.length ||
+              !!listHook.columnSearch["branchId"]
+            }
             align="center"
           />
         ),
-        size: 110,
+        size: 140,
         enableResizing: true,
-        className: "text-center",
-        cell: (row: ErpInvoiceItemRow) => (
-          <div className="w-full flex justify-center">
-            <Badge
-              variant={
-                row.status === "CONFIRMED"
-                  ? "default"
-                  : row.status === "DRAFT"
-                    ? "secondary"
-                    : "destructive"
-              }
-              className="text-[10px] px-1.5 py-0 h-4 font-normal"
-            >
-              {row.status === "CONFIRMED"
-                ? "Đã duyệt"
-                : row.status === "DRAFT"
-                  ? "Nháp"
-                  : "Đã hủy"}
-            </Badge>
-          </div>
-        ),
-      },
-
-      // 19. Ghi sổ
-      {
-        key: "postingStatus",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("columns.postingStatus", "Ghi sổ")}
-            columnKey="postingStatus"
-            queryKeyPrefix={`invoice-item-options-${direction}`}
-            allFilters={listHook.columnFilters}
-            sortState={getSortState("postingStatus")}
-            onSortChange={(s) => listHook.setSort("postingStatus", s)}
-            searchValue=""
-            onSearchChange={() => {}}
-            selectedFilters={listHook.columnFilters["postingStatus"] || []}
-            onFilterChange={(v) => listHook.setColumnFilter("postingStatus", v)}
-            fetchOptions={fetchColumnOptions}
-            isActive={!!listHook.columnFilters["postingStatus"]?.length}
-            align="center"
-          />
-        ),
-        size: 100,
-        enableResizing: true,
-        className: "text-center",
-        cell: (row: ErpInvoiceItemRow) => (
-          <div className="w-full flex justify-center">
-            <Badge
-              variant={row.postingStatus === "POSTED" ? "default" : "outline"}
-              className="text-[10px] px-1.5 py-0 h-4 font-normal"
-            >
-              {row.postingStatus === "POSTED" ? "Đã ghi sổ" : "Chưa ghi sổ"}
-            </Badge>
-          </div>
-        ),
+        className: "text-center text-xs",
+        cell: (row: ErpInvoiceItemRow) => {
+          if (row.branchName) return row.branchName;
+          if (!row.branchId) return "—";
+          const branch = branches.find((b) => b.value === row.branchId);
+          if (!branch) return row.branchId;
+          const parts = branch.label.split(" — ");
+          return parts.length > 1 ? parts[1] : branch.label;
+        },
       },
     ],
     [
@@ -733,6 +694,7 @@ export function useItemColumns({
       listHook.dateTo,
       direction,
       t,
+      branches,
       getSortState,
       fetchColumnOptions,
       handleOpenInternal,

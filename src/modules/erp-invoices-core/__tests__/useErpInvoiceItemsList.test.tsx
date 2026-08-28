@@ -178,4 +178,34 @@ describe("useErpInvoiceItemsList", () => {
     expect(result.current.columnFilters).toEqual({});
     expect(result.current.activeFilterCount).toBe(0);
   });
+
+  it("should support filterPanel open/toggle and custom tag filter", async () => {
+    const { result } = renderHook(
+      () => useErpInvoiceItemsList({ direction: "IN" }),
+      {
+        wrapper: createWrapper(),
+      },
+    );
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    expect(result.current.filterPanel.panelOpen).toBe(false);
+
+    act(() => {
+      result.current.filterPanel.togglePanel();
+    });
+    expect(result.current.filterPanel.panelOpen).toBe(true);
+
+    act(() => {
+      result.current.filterPanel.setCustom("tag_id", "tag-123");
+    });
+    expect(result.current.tagId).toBe("tag-123");
+    expect(result.current.filterPanel.state.custom.tag_id).toBe("tag-123");
+    expect(result.current.activeFilterCount).toBe(1);
+
+    act(() => {
+      result.current.filterPanel.closePanel();
+    });
+    expect(result.current.filterPanel.panelOpen).toBe(false);
+  });
 });

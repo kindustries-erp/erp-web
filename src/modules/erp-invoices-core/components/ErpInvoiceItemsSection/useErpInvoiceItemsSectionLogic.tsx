@@ -1,5 +1,6 @@
 import { useState, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { useQuery } from "@tanstack/react-query";
 import {
   Eye,
   Pencil,
@@ -9,6 +10,9 @@ import {
   Settings,
 } from "lucide-react";
 import { useAppStore } from "@/core/config/appStore";
+import { getBranchOptionsApi } from "@/modules/branches/api/branchApi";
+import { getTags } from "@/modules/tags/api/tagsApi";
+import type { FilterPanelConfig } from "@/shared/hooks/useFilterPanel";
 import type { ActionDropdownItem } from "@/shared/components/ActionDropdown";
 import {
   erpInvoicesCoreApi,
@@ -29,6 +33,32 @@ export function useErpInvoiceItemsSectionLogic({
   const { t } = useTranslation("erpInvoices");
   const { openCustomFieldsDrawer } = useAppStore();
   const [isExporting, setIsExporting] = useState(false);
+
+  const { data: branches = [] } = useQuery({
+    queryKey: ["branches-options"],
+    queryFn: getBranchOptionsApi,
+  });
+
+  const { data: allTags = [] } = useQuery({
+    queryKey: ["sys-tags"],
+    queryFn: getTags,
+  });
+
+  const filterConfig: FilterPanelConfig = useMemo(
+    () => ({
+      noDefaultPeriod: true,
+      custom: [
+        {
+          key: "tag_id",
+          label: t("tag", "Thẻ nhãn"),
+          placeholder: t("allTags", "Tất cả thẻ"),
+          options: allTags.map((tag) => ({ value: tag.id, label: tag.name })),
+          type: "combobox" as const,
+        },
+      ],
+    }),
+    [t, allTags],
+  );
 
   const listHook = useErpInvoiceItemsList({
     direction,
@@ -127,6 +157,7 @@ export function useErpInvoiceItemsSectionLogic({
     getSortState,
     fetchColumnOptions,
     handleOpenInternal,
+    branches,
   });
 
   const rowActions = useCallback(
@@ -230,6 +261,7 @@ export function useErpInvoiceItemsSectionLogic({
     columns,
     rowActions,
     createActions,
+    filterConfig,
     isExporting,
     handleExportExcel,
   };

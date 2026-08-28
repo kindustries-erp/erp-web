@@ -16,7 +16,15 @@ export function ErpInvoiceItemsSection(props: ErpInvoiceItemsSectionProps) {
     onOpenSync,
   } = props;
   const logic = useErpInvoiceItemsSectionLogic(props);
-  const { t, tableId, listHook, columns, rowActions, createActions } = logic;
+  const {
+    t,
+    tableId,
+    listHook,
+    columns,
+    rowActions,
+    createActions,
+    filterConfig,
+  } = logic;
 
   const customActionsNode = (
     <div className="w-full sm:w-auto flex items-center flex-wrap gap-2 py-0.5">
@@ -68,6 +76,8 @@ export function ErpInvoiceItemsSection(props: ErpInvoiceItemsSectionProps) {
       onRefresh={() => listHook.refetch()}
       activeFilterCount={listHook.activeFilterCount}
       onClearAllFilters={listHook.clearAllFilters}
+      filterConfig={filterConfig}
+      filter={listHook.filterPanel}
       rowActions={rowActions}
       customActionsNode={customActionsNode}
       onCreate={onOpenSync}

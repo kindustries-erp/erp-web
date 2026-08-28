@@ -138,7 +138,13 @@ src/
   - **Gán chi nhánh / Sửa ghi chú hàng loạt**: Mở `BulkEditDrawer`.
   - **Xuất Excel / Tải file ZIP**: Xuất dữ liệu đồng bộ hoặc chạy ngầm.
 
-### 3.2. Form Drawer Chi Tiết Hóa Đơn (`ErpInvoiceInternalDrawer.tsx`)
+### 3.2. Bảng Chi Tiết Dòng Hàng (`ErpInvoiceItemsSection.tsx` - Tab `lines`)
+- **Khung giao diện**: Kế thừa `<SpreadsheetPageTemplate>` hiển thị phẳng toàn bộ các dòng mặt hàng từ các hóa đơn với thanh tính tổng `summaryRow` và `PillTabs` lọc phân loại dòng (`Tất cả dòng`, `Hàng hóa`, `Chiết khấu`).
+- **Right Filter Panel**: Tích hợp `useFilterPanel` thông qua `listHook.filterPanel` và `filterConfig` (custom filter theo Thẻ nhãn `tag_id`, bộ lọc ngày/kỳ, trạng thái, đối tác). Bấm icon Filter trên `TableActionGroup` sẽ mở right side panel trượt ra tương tự như `tab=header`.
+- **Cấu trúc cột chuẩn**:
+  - Số thứ tự (`stt`), Ngày HĐ (`invoiceDate`), Số HĐ (`invoiceNo`), Ký hiệu (`serialNo`), Tên người bán/mua (`partner`), MST đối tác (`taxCode`), Mã hàng (`itemCode`), Tên hàng hóa dịch vụ (`description`), ĐVT (`unit`), Số lượng (`quantity`), Đơn giá (`unitPrice`), Tiền trước thuế (`preVatAmount`), Thuế suất (`vatRate`), Tiền thuế (`vatAmount`), Tiền chiết khấu (`discountAmount`), Tổng tiền (`totalAmount`), **Trạng thái GĐT** (`taxInvoiceStatus`, 150px kèm `TaxInvoiceStatusBadge`), **Chi nhánh** (`branchId`, badge tên chi nhánh).
+
+### 3.3. Form Drawer Chi Tiết Hóa Đơn (`ErpInvoiceInternalDrawer.tsx`)
 - Hỗ trợ 2 chế độ: **Xem chi tiết** (Read-only kèm template trực quan `VietnamInvoiceTemplate`) và **Chỉnh sửa/Tạo mới**.
 - **Các phân khu chính**:
   1. `ErpInvoiceFormGeneral`: Số HĐ, ký hiệu, ngày lập, chi nhánh, thông tin người bán, thông tin người mua (MST, tên, địa chỉ, CCCD).
@@ -147,7 +153,7 @@ src/
   4. `ErpInvoiceNetOffSection`: Danh sách các giao dịch ngân hàng đã cấn trừ kèm số tiền và nút gán nhanh.
   5. `ErpInvoicePdfUpload`: Danh sách các file PDF đính kèm, hỗ trợ xem trước inline qua PDF viewer hoặc tải xuống.
 
-### 3.3. Dashboard Hóa Đơn (`InvoiceDashboard.tsx`)
+### 3.4. Dashboard Hóa Đơn (`InvoiceDashboard.tsx`)
 - **Thống kê KPI**: Tổng doanh số mua vào/bán ra, tổng thuế VAT đầu vào được khấu trừ, thuế VAT đầu ra phải nộp, chênh lệch thuế VAT ròng.
 - **Biểu đồ trực quan**:
   - Biểu đồ xu hướng dòng tiền `cashTrend` (12 tháng gần nhất).

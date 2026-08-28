@@ -33,6 +33,8 @@ export interface ErpInvoiceItemRow {
   licensePlate?: string | null;
   settlementOrder?: string | null;
   branchId?: string | null;
+  taxInvoiceStatus?: number | null;
+  branchName?: string | null;
   itemCode?: string | null;
   description?: string | null;
   unit?: string | null;
@@ -62,6 +64,7 @@ export interface ErpInvoiceItemListParams {
   date_to?: string;
   status?: string;
   posting_status?: string;
+  tag_id?: string;
   page?: number;
   pageSize?: number;
   sort_by?: string;

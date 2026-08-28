@@ -41,7 +41,12 @@ export function FilterButton({
           <button
             type="button"
             onClick={onClick}
-            className="flex items-center gap-1 pl-2.5 pr-1.5 text-xs font-semibold text-foreground hover:bg-surface-hover hover:text-primary transition-colors outline-none cursor-pointer"
+            className={cn(
+              "flex items-center gap-1 pl-2.5 pr-1.5 text-xs font-semibold text-foreground transition-colors outline-none",
+              onClick
+                ? "hover:bg-surface-hover hover:text-primary cursor-pointer"
+                : "cursor-default",
+            )}
           >
             <Filter className="h-3.5 w-3.5 text-primary shrink-0" />
             <span className="leading-none text-[11px] text-primary font-bold">
