@@ -34,7 +34,9 @@ export const erpInvoicesVi = {
 
   // Tabs
   inbound: "Hóa đơn mua vào",
+  inboundLines: "Chi tiết mua vào",
   outbound: "Hóa đơn bán ra",
+  outboundLines: "Chi tiết bán ra",
   tabAll: "Tất cả",
   tabNew: "Mới",
   tabReplacement: "Thay thế",
@@ -279,4 +281,36 @@ export const erpInvoicesVi = {
   "smartSuggestion.warning.possible": "Chỉ khớp số tiền, vui lòng kiểm tra kỹ",
   "smartSuggestion.warning.overRemaining":
     "Cảnh báo: Tổng tiền cấn trừ ({{current}}) đang vượt quá số tiền cần thanh toán của hóa đơn ({{target}}). Vui lòng điều chỉnh lại số tiền trước khi xác nhận.",
+
+  // Line items (Diễn giải từng dòng HĐ)
+  "tabs.headerView": "Hóa đơn tổng",
+  "tabs.linesView": "Chi tiết dòng hàng",
+  "tabs.allLines": "Tất cả dòng",
+  "tabs.normalLines": "Hàng hóa",
+  "tabs.discountLines": "Chiết khấu",
+  inboundLinesTitle: "Chi tiết dòng hóa đơn đầu vào",
+  inboundLinesDesc:
+    "Theo dõi và đối soát từng dòng diễn giải, mặt hàng, số lượng và thuế suất của hóa đơn đầu vào",
+  outboundLinesTitle: "Chi tiết dòng hóa đơn đầu ra",
+  outboundLinesDesc:
+    "Theo dõi và đối soát từng dòng diễn giải, mặt hàng, số lượng và thuế suất của hóa đơn đầu ra",
+  "columns.invoiceNo": "Số hóa đơn",
+  "columns.serialNo": "Ký hiệu",
+  "columns.invoiceDate": "Ngày HĐ",
+  "columns.sellerName": "Người bán",
+  "columns.buyerName": "Người mua",
+  "columns.taxCode": "Mã số thuế",
+  "columns.itemCode": "Mã hàng",
+  "columns.description": "Diễn giải / Hàng hóa",
+  "columns.unit": "ĐVT",
+  "columns.quantity": "Số lượng",
+  "columns.unitPrice": "Đơn giá",
+  "columns.preVatAmount": "Tiền trước thuế",
+  "columns.vatRate": "Thuế suất",
+  "columns.vatAmount": "Tiền thuế",
+  "columns.discountAmount": "Chiết khấu",
+  "columns.totalAmount": "Tổng tiền",
+  "columns.subcategory": "Phân loại",
+  "columns.status": "Trạng thái",
+  "columns.postingStatus": "Ghi sổ",
 };

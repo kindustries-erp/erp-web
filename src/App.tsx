@@ -154,6 +154,11 @@ const ErpPermissionsCorePage = lazy(() =>
     default: m.ErpPermissionsCorePage,
   })),
 );
+const ErpInvoicesPage = lazy(() =>
+  import("@/pages/ErpInvoicesPage").then((m) => ({
+    default: m.ErpInvoicesPage,
+  })),
+);
 const ErpInvoicesInPage = lazy(() =>
   import("@/pages/ErpInvoicesInPage").then((m) => ({
     default: m.ErpInvoicesInPage,
@@ -295,6 +300,7 @@ const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   "erp-activity-logs": ErpActivityLogsPage,
   "email-inbox": EmailInboxPage,
   "erp-permissions-core": ErpPermissionsCorePage,
+  "erp-invoices": ErpInvoicesPage,
   "erp-invoices-in": ErpInvoicesInPage,
   "erp-invoices-out": ErpInvoicesOutPage,
   "erp-invoices-draft": ErpInvoicesDraftPage,

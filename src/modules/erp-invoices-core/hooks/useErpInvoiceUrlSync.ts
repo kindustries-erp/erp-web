@@ -28,8 +28,7 @@ export function useErpInvoiceUrlSync({
   closeDrawer,
   onHydrate,
 }: UseErpInvoiceUrlSyncOptions) {
-  const pageKey: PageKey =
-    direction === "IN" ? "erp-invoices-in" : "erp-invoices-out";
+  const pageKey: PageKey = "erp-invoices";
   const storeDir: Direction =
     instanceIndex === 2 ? (direction === "IN" ? "IN_2" : "OUT_2") : direction;
 

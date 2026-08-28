@@ -51,6 +51,7 @@ export interface StandardTableProps<T> {
   tableTitle?: React.ReactNode;
   fullscreenClassName?: string;
   fullscreenHeaderExtra?: React.ReactNode;
+  fullscreenTabs?: React.ReactNode;
   onFullscreenChange?: (isFullscreen: boolean) => void;
 }
 
@@ -98,6 +99,7 @@ export function StandardTable<T>({
   tableTitle,
   fullscreenClassName,
   fullscreenHeaderExtra,
+  fullscreenTabs,
   onFullscreenChange,
 }: StandardTableProps<T>) {
   const actionsColumnDef = React.useMemo(() => {
@@ -164,6 +166,7 @@ export function StandardTable<T>({
       tableTitle={tableTitle}
       fullscreenClassName={fullscreenClassName}
       fullscreenHeaderExtra={fullscreenHeaderExtra}
+      fullscreenTabs={fullscreenTabs}
       onFullscreenChange={onFullscreenChange}
     />
   );

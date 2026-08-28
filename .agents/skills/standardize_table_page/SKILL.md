@@ -169,14 +169,82 @@ Khi tạo bảng và drawer trong trang, **BẮT BUỘC** tuân thủ các quy c
 1. 👉 **Bảng dữ liệu ([`standardize-table`](../standardize_table/SKILL.md))**:
    - **`tableId="[module]-table"`**: Duy nhất để đồng bộ cấu hình cột vào App Setting Core (`core_user_preferences`) và LocalStorage cache.
    - **Reset Layout**: Nằm cố định trong menu dropdown `ColumnToggle` (`Settings2` → `RotateCcw`), không đặt ở header cột.
-   - **Cột STT (Index)**: Rộng đúng `40px`, **bắt đầu từ 1 (1-based)**, căn giữa tuyệt đối cả header và cell (`cell: (_, idx) => <span className="w-full block text-center">{idx}</span>`).
+   - **Cột STT (Index)**: Rộng đúng `40px`, **bắt đầu từ 1 (1-based)**, căn giữa tuyệt đối cả header và cell (`cell: (_, idx) => <span className="w-full block text-center">{(page - 1) * pageSize + idx + 1}</span>`).
    - **Cột Mã Code**: Dùng `<TableText enableCopy tooltip onDetailClick={() => openDetail(row.id, "view")}>`.
    - **Row Actions**: BẮT BUỘC dùng prop `rowActions` trên `<SpreadsheetPageTemplate>`. Không tạo cột action tĩnh. Mảng `rowActions` phải chứa 2 action đầu tiên là **Xem chi tiết** (`openDetail(id, "view")` — 👁️) và **Chỉnh sửa** (`openDetail(id, "edit")` — ✏️) để map vào Floated Action Bar và Right-Click Context Menu.
    - **TableColumnHeaderFilter**: Dùng `fetchOptions` gọi `getColumnOptions` API; Cột Date dùng `<DateRangeColumnSlot>`.
 2. 👉 **Detail Drawer ([`standardize-drawer`](../standardize_drawer/SKILL.md))**:
    - Mở component `[Module]DetailDrawer` với prop `mode={drawerMode}` (`"view" | "edit"`) và `setMode={setDrawerMode}`. Không điều hướng URL.
 
-## 6. Mẫu code cơ bản (Table Page Boilerplate)
+## 6. Chế độ xem Cột linh hoạt (`ViewModeCombobox`) & Switch Nhanh (`PillTabs`) — BẮT BUỘC KHI CÓ ĐA GÓC NHÌN / PHÂN LOẠI CHIỀU DỮ LIỆU
+
+Khi một trang dữ liệu có nhiều góc nhìn (ví dụ: góc nhìn thường nhật vs góc nhìn đối soát/kiểm toán) hoặc có các phân loại nghiệp vụ lớn (Thu/Chi, Mua vào/Bán ra, Mới/Thay thế/Điều chỉnh), **BẮT BUỘC** tích hợp vào `customActionsNode` của `<SpreadsheetPageTemplate>`:
+
+### 6.1. Switch Nhanh (`PillTabs`)
+- **Vị trí**: Nằm bên trái trong `customActionsNode`.
+- **CSS Chuẩn**:
+  ```tsx
+  <PillTabs
+    className="w-full sm:w-auto shrink-0"
+    listClassName="h-8 p-0.5 rounded-full bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/60 shadow-[0_1px_2px_rgba(15,23,42,.03)]"
+    triggerClassName="h-7 px-3.5 text-xs rounded-full"
+    items={[
+      { value: "ALL", label: t("tabs.all", "Tất cả") },
+      { value: "IN", label: t("tabs.in", "Thu") },
+      { value: "OUT", label: t("tabs.out", "Chi") },
+    ]}
+    value={activeTab}
+    onValueChange={handleTabChange}
+    hideBorder
+  />
+  ```
+- **Quy tắc**:
+  1. Đồng bộ URL Query Param (ví dụ: `?txnType=IN` hoặc `?tab=IN`) để hỗ trợ bookmark và reload.
+  2. Bắt buộc reset trang về 1 (`setPage(1)`) khi đổi tab.
+
+### 6.2. Hệ thống Chế độ xem Cột linh hoạt (`ViewModeCombobox` & View Presets)
+- **Component**: Dùng `<ViewModeCombobox>` từ `@/shared/components/ViewModeCombobox`.
+- **Hooks & Store**: Kết hợp `usePageViewPresets({ tableId, defaultPresets })` và `useUserPreferencesStore`.
+- **Tối thiểu 2 Presets Chuẩn**:
+  1. **`overview` ("Tổng quan")**: Hiển thị các trường thông tin chung và vận hành thường nhật. Ẩn các trường đối soát sâu.
+  2. **`audit` ("Kiểm toán / Đối soát")**: Hiển thị các trường đối soát hóa đơn VAT, chứng từ gốc, người thụ hưởng, cấn trừ công nợ.
+- **Drawer Cấu hình Cột (`[Module]ViewConfigDrawer`)**:
+  - Dùng `<StandardFormDrawer layout="1-column" size="sm">`.
+  - Phân nhóm cột trực quan (`general`, `amount`, `reconciliation`, `partner`, v.v.).
+  - Cho phép người dùng: Đặt tên view mới, Bật/tắt từng cột, Lưu vào Preferences, Khôi phục cài đặt gốc (`onResetDefault`).
+
+```tsx
+const viewTabsNode = (
+  <div className="w-full sm:w-auto flex items-center flex-wrap gap-2 py-0.5">
+    <PillTabs
+      className="w-full sm:w-auto shrink-0"
+      listClassName="h-8 p-0.5 rounded-full bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/60 shadow-[0_1px_2px_rgba(15,23,42,.03)]"
+      triggerClassName="h-7 px-3.5 text-xs rounded-full"
+      items={[
+        { value: "ALL", label: t("tabs.all", "Tất cả") },
+        { value: "IN", label: t("tabs.in", "Thu") },
+        { value: "OUT", label: t("tabs.out", "Chi") },
+      ]}
+      value={activeTransactionType}
+      onValueChange={handleTransactionTypeChange}
+      hideBorder
+    />
+
+    <div className="hidden sm:block h-4 w-px bg-slate-300/80 dark:bg-slate-700/80 shrink-0" />
+
+    <ViewModeCombobox
+      presets={columnViewPresetsHook.presets}
+      activePresetKey={activeColumnPresetKey}
+      onSelect={handleColumnPresetChange}
+      onCreateView={handleOpenCreateView}
+      onEditView={handleOpenEditView}
+      onDeleteView={handleDeleteViewPreset}
+    />
+  </div>
+);
+```
+
+## 7. Mẫu code cơ bản (Table Page Boilerplate)
 
 ```tsx
 import React, { useState, useMemo } from "react";

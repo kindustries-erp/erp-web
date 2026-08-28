@@ -24,9 +24,9 @@ export const ALL_PAGE_KEYS: PageKey[] = [
   "erp-activity-logs",
   "erp-permissions-core",
   "inventory-dashboard",
+  "inventory-dashboard",
   "invoice-dashboard",
-  "erp-invoices-in",
-  "erp-invoices-out",
+  "erp-invoices",
   "erp-invoices-draft",
   "bank-statement",
   "cash-statement",
@@ -55,6 +55,8 @@ const LEGACY_SLUGS: Record<string, PageKey> = {
   "mua-hang": "purchasing",
   kho: "erp-inventory-stock",
   "email-hop-thu": "email-inbox",
+  "erp-invoices-in": "erp-invoices",
+  "erp-invoices-out": "erp-invoices",
 };
 
 export interface PageUrlParsedState {
@@ -148,6 +150,8 @@ export function pathToPage(
 
   if (slug === "") {
     page = "dashboard";
+  } else if (slug === "erp-invoices-out" || slug === "erp-invoices-in") {
+    page = "erp-invoices";
   } else {
     page = ALL_PAGE_KEYS.includes(slug as PageKey)
       ? (slug as PageKey)
@@ -156,7 +160,24 @@ export function pathToPage(
 
   if (page === undefined) return null;
   const searchParams = new URLSearchParams(search);
-  const tab = searchParams.get("tab") ?? undefined;
+  let tab = searchParams.get("tab") ?? undefined;
+  const viewParam = searchParams.get("view");
+
+  // Normalize tab for erp-invoices / erp-invoices-in / erp-invoices-out
+  if (slug === "erp-invoices-out") {
+    if (tab === "lines" || viewParam === "lines" || tab === "out-lines") {
+      tab = "out-lines";
+    } else {
+      tab = "out";
+    }
+  } else if (slug === "erp-invoices-in" || page === "erp-invoices") {
+    if (tab === "lines" || viewParam === "lines") {
+      tab = "in-lines";
+    } else if (tab === "header") {
+      tab = "in";
+    }
+  }
+
   const instanceParam = searchParams.get("_i");
   const instanceIndex: 1 | 2 = instanceParam === "2" ? 2 : 1;
 
