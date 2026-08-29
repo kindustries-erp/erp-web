@@ -1,11 +1,5 @@
 import React, { useState, useMemo } from "react";
-import {
-  Wallet,
-  Truck,
-  Table as TableIcon,
-  ExternalLink,
-  Eye,
-} from "lucide-react";
+import { Wallet, Truck, Table as TableIcon, Eye } from "lucide-react";
 import { money, shortMoney } from "@/shared/utils/format";
 import { cn } from "@/shared/utils";
 import { Badge } from "@/shared/components/ui/badge";
@@ -21,7 +15,6 @@ import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
 import { useTranslation } from "react-i18next";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import type { ActionDropdownItem } from "@/shared/components/ActionDropdown";
-import { TableRowContextMenu } from "@/shared/components/DataTable/TableRowContextMenu";
 import { GarageMonthDetailDrawer } from "./GarageMonthDetailDrawer";
 
 import {
@@ -47,27 +40,11 @@ export function GaragePaymentProgressCard({
   const [activeTab, setActiveTab] = useState<"RECEIPT" | "PAYMENT">("RECEIPT");
   const isReceipt = activeTab === "RECEIPT";
 
-  // Context menu state
-  const [contextMenu, setContextMenu] = useState<{
-    x: number;
-    y: number;
-    item: GarageTrendItem;
-  } | null>(null);
-
   // Month detail drawer state
   const [selectedMonth, setSelectedMonth] = useState<GarageTrendItem | null>(
     null,
   );
   const [monthDrawerOpen, setMonthDrawerOpen] = useState(false);
-
-  const handleRowContextMenu = (
-    item: GarageTrendItem,
-    _index: number,
-    event: React.MouseEvent,
-  ) => {
-    event.preventDefault();
-    setContextMenu({ x: event.clientX, y: event.clientY, item });
-  };
 
   const openMonthDetail = (item: GarageTrendItem) => {
     setSelectedMonth(item);
@@ -284,8 +261,8 @@ export function GaragePaymentProgressCard({
         headerClassName: "text-center",
         className: "text-center font-medium",
         cell: (item: GarageTrendItem) => (
-          <div className="flex items-center justify-center gap-1.5">
-            <span className="font-semibold text-foreground">
+          <div className="flex items-center justify-center gap-1.5 cursor-pointer group/month">
+            <span className="font-semibold text-foreground group-hover/month:text-primary group-hover/month:underline transition-colors">
               {formatMonth(item.label)}
             </span>
           </div>
@@ -543,9 +520,11 @@ export function GaragePaymentProgressCard({
         headerClassName: "text-center",
         className: "text-center font-medium",
         cell: (item: GarageTrendItem) => (
-          <span className="font-semibold text-foreground">
-            {formatMonth(item.label)}
-          </span>
+          <div className="flex items-center justify-center gap-1.5 cursor-pointer group/month">
+            <span className="font-semibold text-foreground group-hover/month:text-primary group-hover/month:underline transition-colors">
+              {formatMonth(item.label)}
+            </span>
+          </div>
         ),
       },
       {
@@ -970,7 +949,7 @@ export function GaragePaymentProgressCard({
 
   const getRowActions = (item: GarageTrendItem): ActionDropdownItem[] => [
     {
-      groupLabel: "TRA CỨU",
+      groupLabel: t("common.actions", "TRA CỨU"),
       items: [
         {
           label: t("progress.viewMonthDetail", "Xem chi tiết đối soát tháng"),
@@ -1124,7 +1103,7 @@ export function GaragePaymentProgressCard({
               enableColumnResizing={true}
               tableId={tableId}
               rowHoverActions={getRowActions}
-              onRowContextMenu={handleRowContextMenu}
+              onRowClick={openMonthDetail}
             />
           </div>
 
@@ -1139,23 +1118,6 @@ export function GaragePaymentProgressCard({
           </div>
         </div>
       </div>
-
-      {/* Row context menu */}
-      <TableRowContextMenu
-        x={contextMenu?.x ?? 0}
-        y={contextMenu?.y ?? 0}
-        isOpen={!!contextMenu}
-        onClose={() => setContextMenu(null)}
-        items={[
-          {
-            label: "Xem chi tiết tháng",
-            icon: <ExternalLink className="w-3.5 h-3.5" />,
-            onClick: () => {
-              if (contextMenu?.item) openMonthDetail(contextMenu.item);
-            },
-          },
-        ]}
-      />
 
       {/* Month detail drawer */}
       <GarageMonthDetailDrawer

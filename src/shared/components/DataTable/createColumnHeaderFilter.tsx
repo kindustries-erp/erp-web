@@ -245,7 +245,7 @@ export function createColumnHeaderFilter<T = any>(
         hideSort={options.hideSort}
         hideFooter={options.hideFooter}
         showBlankOption={options.showBlankOption}
-        formatOptionLabel={options.formatOptionLabel}
+        formatOptionLabel={isServer ? options.formatOptionLabel : undefined}
         enableSelectAllMatching={options.enableSelectAllMatching}
       />
     );

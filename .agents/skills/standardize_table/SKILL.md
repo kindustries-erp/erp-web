@@ -174,6 +174,38 @@ import { FilterButton } from "@/shared/components/FilterPanel";
 </DrawerSection>
 ```
 
+- **Pattern 3: DrawerSection / Card Section Inline Reset Pill** (Chuẩn như `GaragePaymentProgressCard.tsx`, `GarageMonthDetailDrawer.tsx`):
+```tsx
+// Đặt nút Xóa bộ lọc (N) ở bên TRÁI ngay sau tên tiêu đề bảng, đồng bộ và trực quan
+<DrawerSection
+  title={
+    <div className="flex items-center gap-2">
+      <span>Bảng phân loại dữ liệu</span>
+      {tableHook.activeFilterCount > 0 && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            tableHook.resetFilters();
+          }}
+          className="text-[11px] font-medium text-destructive hover:underline flex items-center gap-1 bg-destructive/10 px-2 py-0.5 rounded-full lowercase first-letter:uppercase tracking-normal font-sans"
+        >
+          <span>Xóa bộ lọc ({tableHook.activeFilterCount})</span>
+        </button>
+      )}
+    </div>
+  }
+  titleExtra={
+    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+      <TableIcon className="w-3.5 h-3.5 text-primary mr-1" />
+      {filteredRows.length} / {rawRows.length} dòng
+    </div>
+  }
+>
+  <DataTable items={filteredRows} ... />
+</DrawerSection>
+```
+
 ## 3. Row Click, View Detail, Row Hover Floating Action Menu & Right-Click Context Menu
 
 - **Tuyệt đối KHÔNG sử dụng `onRowClick`** để mở trang / ngăn kéo chi tiết (detail drawer).
