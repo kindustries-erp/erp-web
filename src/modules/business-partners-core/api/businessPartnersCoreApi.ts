@@ -45,15 +45,38 @@ export interface BusinessPartnerCoreListResult {
   totalPages: number;
 }
 
+export interface ColumnOptionItem {
+  label: string;
+  value: string;
+}
+
+export interface ColumnOptionsResult {
+  items: ColumnOptionItem[];
+  total: number;
+  next: number | null;
+}
+
+export interface ListBusinessPartnersParams {
+  page?: number;
+  pageSize?: number;
+  search?: string;
+  partnerType?: string;
+  sort?: string;
+  sortField?: string;
+  sortOrder?: string;
+  column_filters?: string;
+  column_search?: string;
+  date_from?: string;
+  date_to?: string;
+  status?: string;
+}
+
 const BASE = "/api/v1/business-partners";
 
 export const businessPartnersCoreApi = {
-  list: async (params?: {
-    page?: number;
-    pageSize?: number;
-    search?: string;
-    partnerType?: string;
-  }): Promise<BusinessPartnerCoreListResult> => {
+  list: async (
+    params?: ListBusinessPartnersParams,
+  ): Promise<BusinessPartnerCoreListResult> => {
     const { data } = await axiosInstance.get<BusinessPartnerCoreListResult>(
       BASE,
       {
@@ -62,6 +85,42 @@ export const businessPartnersCoreApi = {
           pageSize: params?.pageSize ?? 50,
           ...(params?.search ? { search: params.search } : {}),
           ...(params?.partnerType ? { partnerType: params.partnerType } : {}),
+          ...(params?.sort ? { sort: params.sort } : {}),
+          ...(params?.sortField ? { sortField: params.sortField } : {}),
+          ...(params?.sortOrder ? { sortOrder: params.sortOrder } : {}),
+          ...(params?.column_filters
+            ? { column_filters: params.column_filters }
+            : {}),
+          ...(params?.column_search
+            ? { column_search: params.column_search }
+            : {}),
+          ...(params?.date_from ? { date_from: params.date_from } : {}),
+          ...(params?.date_to ? { date_to: params.date_to } : {}),
+          ...(params?.status ? { status: params.status } : {}),
+        },
+      },
+    );
+    return data;
+  },
+
+  getColumnOptions: async (params: {
+    column: string;
+    search?: string;
+    page?: number;
+    pageSize?: number;
+    filters?: string;
+    partnerType?: string;
+  }): Promise<ColumnOptionsResult> => {
+    const { data } = await axiosInstance.get<ColumnOptionsResult>(
+      `${BASE}/column-options`,
+      {
+        params: {
+          column: params.column,
+          ...(params.search ? { search: params.search } : {}),
+          page: params.page ?? 1,
+          pageSize: params.pageSize ?? 20,
+          ...(params.filters ? { filters: params.filters } : {}),
+          ...(params.partnerType ? { partnerType: params.partnerType } : {}),
         },
       },
     );
