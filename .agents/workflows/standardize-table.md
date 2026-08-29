@@ -31,6 +31,12 @@ Trước khi cấu hình bảng UI, **BẮT BUỘC** xác nhận API Backend đ�
    - Trả về payload phân trang: `{ items: string[] | { label: string; value: string }[], total: number, page: number, totalPages: number }`.
 2. Endpoint `getList`:
    - Nhận query params: `page`, `pageSize`, `sorts` (mảng string, vd `createdAt` hoặc `-createdAt`), `date_from`, `date_to`, `column_filters` (JSON string), `column_search` (JSON string).
+   - **Xử lý `column_search` (Tìm kiếm nâng cao)**:
+     - Bắt buộc dùng `applyMultiKeywordFilter` hoặc `applyMultiKeywordMultiFieldFilter` (`@/common/utils/query-builder.util.ts`).
+     - **Exact search (`"..."`)**: Tự động nhận diện chuỗi bọc trong cặp ngoặc kép `""` để so sánh chính xác tuyệt đối (bỏ `%...%` hoặc dùng toán tử `=`).
+     - **Multi-search (`;`)**: Tự động phân tách chuỗi bằng dấu chấm phẩy `;` (`split(';')`) để tìm kiếm đồng thời nhiều giá trị với logic `OR`.
+   - **Xử lý `column_filters` (Lọc giá trị rỗng `__BLANK__`)**:
+     - Khi mảng giá trị lọc chứa `"__BLANK__"` (do UI bật `showBlankOption: true`), backend phải bổ sung điều kiện `(field IS NULL OR field = '')`.
 
 ---
 
@@ -249,6 +255,15 @@ const columns: DataTableColumn<RowItem>[] = useMemo(() => [
       </div>
     ),
   },
+
+  // Cột có giá trị Null/Optional (Dùng showBlankOption để hỗ trợ lọc (blank) / (Trống))
+  {
+    key: "referenceNo",
+    size: 160,
+    enableResizing: true,
+    header: headerFilter("referenceNo", t("referenceNo", "Mã tham chiếu"), { showBlankOption: true }),
+    cell: (row) => <span className="text-muted-foreground">{row.referenceNo || "—"}</span>,
+  },
 ], [headerFilter, t]);
 ```
 
@@ -260,8 +275,10 @@ const columns: DataTableColumn<RowItem>[] = useMemo(() => [
 | **Cột Ngày (Date)** | Sử dụng `headerFilter.date(...)` để gắn `DateRangeColumnSlot` với preset range, ẩn checkbox filter mặc định (`hideFilter={true}`). Cell dùng `TableDateCell` căn phải. | [ ] |
 | **Cột Mã Code/SKU** | Size `200px`, dùng `<TableText enableCopy tooltip onDetailClick>`, có badge Nháp/Hủy fixed width `w-[50px]` align right (`ml-auto`). | [ ] |
 | **Cột Trạng Thái** | Dùng `<Badge>` fixed width `w-[88px]`, bọc `<Tooltip>` & `truncate`. | [ ] |
+| **Lọc Giá trị Rỗng (`showBlankOption`)** | Các cột có dữ liệu null/optional được bật `{ showBlankOption: true }` để chèn lựa chọn `(blank)` / `(Trống)` (value: `"__BLANK__"`). | [ ] |
+| **Exact & Multi-search (`""` và `;`)** | Backend API `column_search` đã dùng `applyMultiKeywordFilter` để hỗ trợ tìm chính xác `"..."` và tìm kiếm nhiều từ khóa qua `;` (OR). | [ ] |
 | **Row Hover Actions & Context Menu** | BẮT BUỘC truyền prop `rowActions` trên `<SpreadsheetPageTemplate>`. Không tạo cột `{ key: "actions" }` tĩnh. 2 Quick Actions đầu tiên là **Xem chi tiết** (`openDetail(id, "view")` — 👁️) và **Chỉnh sửa** (`openDetail(id, "edit")` — ✏️). | [ ] |
-| **Reset Filter Button** | Page: truyền `activeFilterCount` và `onClearAllFilters` vào `SpreadsheetPageTemplate`. Drawer: truyền `FilterButton` vào `titleExtra` của `DrawerSection`. | [ ] |
+| **2 Cấp độ Xóa Bộ Lọc** | Cột có nút "Xóa bộ lọc" trong Popover (cục bộ); Bảng có nút Clear All Filters khi `activeFilterCount > 0` (Page: `onClearAllFilters`; Drawer: `FilterButton` trong `titleExtra`). | [ ] |
 | **Pagination Responsive** | Hỗ trợ `pageSizeOptions = [20, 50, 100, 200]`, khởi tạo `defaultPageSize` bằng `getDefaultPageSize()` (`< 900px` -> 20, `>= 900px` -> 50). Reset `setPage(1)` khi đổi filter/sort/tab. | [ ] |
 | **Container & Table ID** | Bo góc `rounded-xl`, viền `border border-border/60`, có `tableId` unique để tự động lưu column sizing/visibility/order vào App Setting. | [ ] |
 | **Summary Row** | Bảng có cột số tiền/số lượng phải có dòng tổng cộng `summaryRow`. | [ ] |

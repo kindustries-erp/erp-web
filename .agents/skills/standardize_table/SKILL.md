@@ -110,7 +110,36 @@ const columns: DataTableColumn<ExampleRow>[] = useMemo(() => [
 - **NGUYÊN TẮC: LUÔN ƯU TIÊN SERVER-SIDE SORTING & FILTERING**:
   - Mọi bảng trong hệ thống (cả màn hình Page lẫn Drawer/Modal) **MẶC ĐỊNH BẮT BUỘC** phải ưu tiên triển khai **Server-side Filter & Sort** qua API backend (hook TanStack Query + API `getColumnOptions`).
   - Khi xử lý bảng thống kê ở Dashboard hoặc Drawer nháp client, dùng cơ chế Client-side Auto Extraction với `filterClientItems`.
-- **Clear All Filters Button**: Khi bảng có sử dụng Header Filter, bắt buộc phải bổ sung thêm nút xóa lọc hiển thị cạnh tiêu đề bảng nếu `activeFilterCount > 0`. (Page: `activeFilterCount` + `onClearAllFilters` trên `SpreadsheetPageTemplate`; Drawer/Card: nút Xóa bộ lọc cạnh tiêu đề).
+- **Cú pháp Tìm kiếm Nâng cao trong Header Filter (Exact Search `""` & Multi-Search `;`)**:
+  - Ô Search Box bên trong Header Filter Popover của mọi cột dữ liệu hỗ trợ sẵn 2 cú pháp tìm kiếm đặc biệt (hiển thị gợi ý tại placeholder và tooltip):
+    1. **Tìm kiếm chính xác nguyên văn (`"..."`)**: Người dùng đặt từ khóa trong cặp ngoặc kép `""` (ví dụ: `"INV-001"`, `"0101234567"`). Hệ thống sẽ tìm khớp chính xác tuyệt đối giá trị thay vì tìm kiếm gần đúng `%...%`.
+    2. **Tìm kiếm nhiều từ khóa đồng thời (Multi-search qua dấu chấm phẩy `;`)**: Người dùng phân tách các từ khóa bằng dấu chấm phẩy `;` (ví dụ: `1001;1005;1010` hoặc `VINFAST;HONDA`). Hệ thống sẽ tìm kiếm theo điều kiện `OR` (khớp bất kỳ từ khóa nào trong danh sách).
+    3. **Kết hợp linh hoạt**: Có thể kết hợp cả 2 cú pháp, ví dụ: `"HD-01";HD-02;HD-03` (khớp chính xác HD-01 HOẶC chứa chuỗi HD-02 HOẶC chứa chuỗi HD-03).
+  - **Quy chuẩn Backend cho `column_search`**:
+    - Backend **BẮT BUỘC** sử dụng helper chuẩn `applyMultiKeywordFilter` hoặc `applyMultiKeywordMultiFieldFilter` (`@/common/utils/query-builder.util.ts`) để phân tách chuỗi `split(';')`, bóc tách dấu ngoặc kép `""` và bind params an toàn chống SQL injection.
+- **Lọc Giá trị Rỗng / Trống (`showBlankOption` / `(blank)`)**:
+  - Đối với các cột dữ liệu có thể chứa giá trị `NULL` hoặc chuỗi rỗng `''` (ví dụ: Số hóa đơn liên kết, Mã đơn PO tham chiếu, Tài khoản đối ứng, Nhân viên phụ trách...), truyền thêm option `{ showBlankOption: true }` vào `headerFilter(...)` hoặc `TableColumnHeaderFilter`:
+    ```tsx
+    {
+      key: "invoiceNo",
+      header: headerFilter("invoiceNo", t("Số hóa đơn"), { showBlankOption: true }),
+      size: 180,
+      cell: ...
+    }
+    ```
+  - Khi bật `showBlankOption: true`, Header Filter Popover sẽ tự động chèn thêm lựa chọn đầu tiên là **`(blank)`** (hiển thị tiếng Việt là `(Trống)` qua `t("blank", "(Trống)")`), với giá trị định danh là `"__BLANK__"`.
+  - **Xử lý Backend**: Khi backend nhận mảng giá trị lọc chứa `"__BLANK__"`, phải áp dụng điều kiện `(field IS NULL OR field = '')`.
+- **Quy chuẩn 2 Cấp độ Xóa Bộ Lọc (Local Column Reset vs Global Clear All Filters)**:
+  - **Cấp độ 1 — Cục bộ trên từng cột (Local Column Reset)**:
+    - Nằm trực tiếp bên trong Popover của mỗi cột:
+      - Nút icon `X` ở mép phải ô Search Box: Xóa nhanh nội dung tìm kiếm đang nhập của cột đó.
+      - Nút **"Xóa bộ lọc"** (`t("clearFilter", "Xóa bộ lọc")`) ở góc trái Footer của Popover: Reset toàn bộ từ khóa tìm kiếm (`columnSearch[col]`) và các mục checkbox đang chọn (`columnFilters[col]`) của **riêng cột đó**, không làm ảnh hưởng đến bộ lọc của các cột khác.
+      - *Lưu ý*: Với cột Date/Month, do dùng slot chuyên dụng `DateRangeColumnSlot` nên bắt buộc set `hideFilter={true}` và `hideFooter={true}`.
+  - **Cấp độ 2 — Toàn cục cho toàn bộ Bảng (Global Clear All Filters)**:
+    - Khi bảng có bất kỳ bộ lọc nào đang active (`activeFilterCount > 0` tính tổng từ FilterPanel, columnFilters, columnSearch và dateRanges), bắt buộc phải có nút xóa lọc tổng thể:
+      - **Page-level**: Truyền `activeFilterCount` và `onClearAllFilters` vào `SpreadsheetPageTemplate`.
+      - **Drawer-level / Card-level**: Gắn `<FilterButton activeCount={...} onClear={...} />` vào `titleExtra` của `DrawerSection` hoặc nút Inline Reset Pill `Xóa bộ lọc (N)`.
+      - Khi click, nút này sẽ reset sạch 100% tất cả các cột, filter panel, khoảng ngày và đưa trang về 1 (`setPage(1)`).
 
 ---
 
@@ -626,5 +655,7 @@ Khi một bảng dữ liệu có nhiều góc nhìn tra cứu (như Hóa đơn �
 - [ ] Đã bỏ default state `sortBy` ở UI và dùng default sort ở Backend chưa?
 - [ ] Container bảng đã có bo góc chuẩn `rounded-xl`, viền `border border-border/60` thanh thoát và TUYỆT ĐỐI KHÔNG bị `rounded-none` chưa?
 - [ ] Bảng có sử dụng TableColumnHeaderFilter đã có nút Clear All Filter hiển thị khi có active filter chưa? (Page: `activeFilterCount` + `onClearAllFilters` trên `SpreadsheetPageTemplate`; Drawer: `FilterButton` với `onClear` trong `titleExtra` của `DrawerSection`?)
+- [ ] **Lọc Giá trị Rỗng (`showBlankOption`)**: Các cột dữ liệu có khả năng null/rỗng (số hóa đơn liên kết, mã tham chiếu...) đã được kích hoạt `{ showBlankOption: true }` để hiển thị option `(blank)` / `(Trống)` chưa?
+- [ ] **Tìm kiếm Nâng cao (`""` và `;`)**: Backend query service đã dùng `applyMultiKeywordFilter` / `applyMultiKeywordMultiFieldFilter` để hỗ trợ tìm chính xác `"..."` và tìm kiếm nhiều từ khóa qua `;` (OR) chưa?
 - [ ] **Hiệu năng & Fast Selection**: Đã memoize `columns` độc lập, tránh truyền anonymous function cho `rowHoverActions`, và dùng lazy evaluation cho Popover nặng chưa?
 
