@@ -513,7 +513,90 @@ export function GarageCases() {
       className: "text-center font-mono text-xs text-muted-foreground",
       cell: (_: any, idx: number) => <span>{idx}</span>,
     },
-    // 1. Mã vụ việc (Số chứng từ)
+    // 1. Ngày tiếp nhận (Ngày chứng từ)
+    {
+      key: "caseDate",
+      label: t("cases.columns.caseDate", "Ngày tiếp nhận"),
+      header: (
+        <TableColumnHeaderFilter
+          {...createHeaderProps(
+            "caseDate",
+            t("cases.columns.caseDate", "Ngày tiếp nhận"),
+            "center",
+            true,
+          )}
+          isActive={
+            !!(getDateRange("caseDate").from || getDateRange("caseDate").to)
+          }
+          hideFooter={true}
+          dateRangeSlot={({ close }) => (
+            <DateRangeColumnSlot
+              dateFrom={getDateRange("caseDate").from}
+              dateTo={getDateRange("caseDate").to}
+              onChange={(from, to) => {
+                handleDateRangeChange("caseDate", from, to);
+                close();
+              }}
+              onClose={close}
+            />
+          )}
+        />
+      ),
+      sortable: false,
+      size: 150,
+      enableResizing: true,
+      className: "text-right",
+      cell: (item: any) => (
+        <TableDateCell
+          date={item.ngayTiepNhan || item.ngayPhatSinh}
+          className="justify-end w-full"
+        />
+      ),
+    },
+    // 2. Ngày hoàn thành (Ngày kết thúc)
+    {
+      key: "ngayHoanThanhCongViec",
+      label: t("cases.columns.completionDate", "Ngày kết thúc"),
+      header: (
+        <TableColumnHeaderFilter
+          {...createHeaderProps(
+            "ngayHoanThanhCongViec",
+            t("cases.columns.completionDate", "Ngày kết thúc"),
+            "center",
+            true,
+          )}
+          isActive={
+            !!(
+              getDateRange("ngayHoanThanhCongViec").from ||
+              getDateRange("ngayHoanThanhCongViec").to
+            )
+          }
+          hideFooter={true}
+          dateRangeSlot={({ close }) => (
+            <DateRangeColumnSlot
+              dateFrom={getDateRange("ngayHoanThanhCongViec").from}
+              dateTo={getDateRange("ngayHoanThanhCongViec").to}
+              onChange={(from, to) => {
+                handleDateRangeChange("ngayHoanThanhCongViec", from, to);
+                close();
+              }}
+              onClose={close}
+            />
+          )}
+        />
+      ),
+      sortable: false,
+      size: 150,
+      enableResizing: true,
+      className: "text-right",
+      cell: (item: any) => (
+        <TableDateCell
+          date={item.ngayHoanThanhCongViec}
+          className="justify-end w-full"
+        />
+      ),
+    },
+    // 2. Mã vụ việc (Số chứng từ)
     {
       key: "caseCode",
       label: t("cases.columns.caseCode", "Số chứng từ"),
@@ -693,7 +776,7 @@ export function GarageCases() {
         );
       },
     },
-    // 2. Biển số xe
+    // 3. Biển số xe
     {
       key: "licensePlate",
       label: t("cases.columns.licensePlate", "Biển số xe"),
@@ -715,87 +798,6 @@ export function GarageCases() {
       enableResizing: true,
       className: "font-medium text-left",
       cell: (item: any) => item.bienSoXe || "-",
-    },
-    // 3. Phân loại nghiệp vụ
-    {
-      key: "classification",
-      label: t("cases.columns.classification", "Phân loại"),
-      header: (
-        <TableColumnHeaderFilter
-          {...createHeaderProps(
-            "classification",
-            t("cases.columns.classification", "Phân loại"),
-            "center",
-            false,
-            (val: string) => {
-              if (val === "__BLANK__")
-                return t(
-                  "cases.classification.unclassified",
-                  "(Chưa phân loại)",
-                );
-              const meta = GARAGE_CASE_CLASSIFICATIONS[val];
-              return meta ? meta.label : val;
-            },
-            true,
-          )}
-          {...commonOptionProps}
-        />
-      ),
-      sortable: false,
-      size: 150,
-      enableResizing: true,
-      className: "text-center",
-      cell: (item: any) => (
-        <div className="w-full flex justify-center">
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              setDrawerEditMode(true);
-              setSelectedCaseId(item.soChungTu || item.id);
-            }}
-            className="group cursor-pointer transition-transform hover:scale-105"
-            title={t("cases.actions.configure", "Cấu hình / Phân loại")}
-          >
-            <GarageCaseClassificationBadge
-              classification={item.classification}
-              interactive={true}
-            />
-          </button>
-        </div>
-      ),
-    },
-    // 4. Trạng thái
-    {
-      key: "statusName",
-      label: t("cases.columns.status", "Trạng thái"),
-      header: (
-        <TableColumnHeaderFilter
-          {...createHeaderProps(
-            "statusName",
-            t("cases.columns.status", "Trạng thái"),
-            "center",
-            false,
-            undefined,
-            true,
-          )}
-          {...commonOptionProps}
-        />
-      ),
-      sortable: false,
-      size: 140,
-      enableResizing: true,
-      className: "text-center",
-      cell: (item: any) => (
-        <div className="w-full flex justify-center">
-          <KgaraCaseStatusBadge
-            status={
-              item.tenTinhTrangDichVu ||
-              t("cases.common.unknown", "Chưa xác định")
-            }
-          />
-        </div>
-      ),
     },
     // 4. Mã khách hàng
     {
@@ -847,49 +849,6 @@ export function GarageCases() {
           tooltip={true}
           enableCopy={true}
           textClassName="whitespace-normal line-clamp-2 break-words text-foreground font-normal text-xs leading-normal select-text"
-        />
-      ),
-    },
-    // 6. Ngày hoàn thành
-    {
-      key: "ngayHoanThanhCongViec",
-      label: t("cases.columns.completionDate", "Ngày kết thúc"),
-      header: (
-        <TableColumnHeaderFilter
-          {...createHeaderProps(
-            "ngayHoanThanhCongViec",
-            t("cases.columns.completionDate", "Ngày kết thúc"),
-            "center",
-            true,
-          )}
-          isActive={
-            !!(
-              getDateRange("ngayHoanThanhCongViec").from ||
-              getDateRange("ngayHoanThanhCongViec").to
-            )
-          }
-          hideFooter={true}
-          dateRangeSlot={({ close }) => (
-            <DateRangeColumnSlot
-              dateFrom={getDateRange("ngayHoanThanhCongViec").from}
-              dateTo={getDateRange("ngayHoanThanhCongViec").to}
-              onChange={(from, to) => {
-                handleDateRangeChange("ngayHoanThanhCongViec", from, to);
-                close();
-              }}
-              onClose={close}
-            />
-          )}
-        />
-      ),
-      sortable: false,
-      size: 150,
-      enableResizing: true,
-      className: "text-right",
-      cell: (item: any) => (
-        <TableDateCell
-          date={item.ngayHoanThanhCongViec}
-          className="justify-end w-full"
         />
       ),
     },
@@ -1155,6 +1114,87 @@ export function GarageCases() {
           </div>
         );
       },
+    },
+    // 11. Phân loại nghiệp vụ
+    {
+      key: "classification",
+      label: t("cases.columns.classification", "Phân loại"),
+      header: (
+        <TableColumnHeaderFilter
+          {...createHeaderProps(
+            "classification",
+            t("cases.columns.classification", "Phân loại"),
+            "center",
+            false,
+            (val: string) => {
+              if (val === "__BLANK__")
+                return t(
+                  "cases.classification.unclassified",
+                  "(Chưa phân loại)",
+                );
+              const meta = GARAGE_CASE_CLASSIFICATIONS[val];
+              return meta ? meta.label : val;
+            },
+            true,
+          )}
+          {...commonOptionProps}
+        />
+      ),
+      sortable: false,
+      size: 150,
+      enableResizing: true,
+      className: "text-center",
+      cell: (item: any) => (
+        <div className="w-full flex justify-center">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setDrawerEditMode(true);
+              setSelectedCaseId(item.soChungTu || item.id);
+            }}
+            className="group cursor-pointer transition-transform hover:scale-105"
+            title={t("cases.actions.configure", "Cấu hình / Phân loại")}
+          >
+            <GarageCaseClassificationBadge
+              classification={item.classification}
+              interactive={true}
+            />
+          </button>
+        </div>
+      ),
+    },
+    // 12. Trạng thái
+    {
+      key: "statusName",
+      label: t("cases.columns.status", "Trạng thái"),
+      header: (
+        <TableColumnHeaderFilter
+          {...createHeaderProps(
+            "statusName",
+            t("cases.columns.status", "Trạng thái"),
+            "center",
+            false,
+            undefined,
+            true,
+          )}
+          {...commonOptionProps}
+        />
+      ),
+      sortable: false,
+      size: 140,
+      enableResizing: true,
+      className: "text-center",
+      cell: (item: any) => (
+        <div className="w-full flex justify-center">
+          <KgaraCaseStatusBadge
+            status={
+              item.tenTinhTrangDichVu ||
+              t("cases.common.unknown", "Chưa xác định")
+            }
+          />
+        </div>
+      ),
     },
     // 11. Tiến độ thu tiền (Phong cách Neutral Business)
     {
@@ -1531,46 +1571,6 @@ export function GarageCases() {
             —
           </span>
         ),
-    },
-    // 17. Ngày tiếp nhận (Ngày chứng từ) - Di chuyển sang bên trái Ngày cập nhật
-    {
-      key: "caseDate",
-      label: t("cases.columns.caseDate", "Ngày tiếp nhận"),
-      header: (
-        <TableColumnHeaderFilter
-          {...createHeaderProps(
-            "caseDate",
-            t("cases.columns.caseDate", "Ngày tiếp nhận"),
-            "center",
-            true,
-          )}
-          isActive={
-            !!(getDateRange("caseDate").from || getDateRange("caseDate").to)
-          }
-          hideFooter={true}
-          dateRangeSlot={({ close }) => (
-            <DateRangeColumnSlot
-              dateFrom={getDateRange("caseDate").from}
-              dateTo={getDateRange("caseDate").to}
-              onChange={(from, to) => {
-                handleDateRangeChange("caseDate", from, to);
-                close();
-              }}
-              onClose={close}
-            />
-          )}
-        />
-      ),
-      sortable: false,
-      size: 150,
-      enableResizing: true,
-      className: "text-right",
-      cell: (item: any) => (
-        <TableDateCell
-          date={item.ngayTiepNhan || item.ngayPhatSinh}
-          className="justify-end w-full"
-        />
-      ),
     },
     // 18. Ngày cập nhật
     {

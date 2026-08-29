@@ -8,11 +8,17 @@ import { GarageCaseSettlementDrawerModal } from "./GarageCaseSettlementDrawerMod
 import { InvoiceSelectionDrawer } from "./InvoiceSelectionDrawer";
 import { useSyncGarageCaseDetail } from "../hooks/useGarage";
 import { KgaraCaseStatusBadge } from "./KgaraCaseStatusBadge";
-import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
-import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
+import {
+  DataTable,
+  type DataTableColumn,
+  createColumnHeaderFilter,
+  filterClientItems,
+} from "@/shared/components/DataTable";
 import { TableDateCell } from "@/shared/components/DataTable/TableDateCell";
 import { TableText } from "@/shared/components/DataTable/TableText";
 import { Badge } from "@/shared/components/ui/badge";
+import { Button } from "@/shared/components/ui/Button";
+import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
 import { toast } from "react-hot-toast";
 import {
   User,
@@ -22,6 +28,7 @@ import {
   Link2,
   RefreshCw,
   TrendingUp,
+  RotateCcw,
 } from "lucide-react";
 
 export interface GarageCasePartnerTabProps {
@@ -48,12 +55,8 @@ export function GarageCasePartnerTab({
     null,
   );
 
-  // Table client state
-  const [columnFilters, setColumnFilters] = useState<Record<string, string[]>>(
-    {},
-  );
-  const [sorts, setSorts] = useState<string[]>([]);
-  const [columnSearch, setColumnSearch] = useState<Record<string, string>>({});
+  // Table state hook following /standardize-table
+  const tableState = useTableColumnState("garage-case-partner-detail-table");
 
   const { data: cases = [], isLoading } = useQuery({
     queryKey: ["garage-cases-by-customer", branchId, customerCode],
@@ -111,122 +114,55 @@ export function GarageCasePartnerTab({
     };
   }, [cases]);
 
-  // Client sort & filter handlers
-  const setSort = (key: string, state: "asc" | "desc" | "none") => {
-    setSorts((prev) => {
-      const filtered = prev.filter((s) => s !== key && s !== `-${key}`);
-      if (state === "asc") return [...filtered, key];
-      if (state === "desc") return [...filtered, `-${key}`];
-      return filtered;
-    });
+  // Aging bracket extractor helper for client-side filter
+  const getAgingBucket = (item: any) => {
+    const bal = Number(item.tienConPhaiThanhToan) || 0;
+    if (bal <= 0) return "PAID";
+    const aging = Number(item.agingDays) || 0;
+    if (aging <= 30) return "0-30";
+    if (aging <= 60) return "31-60";
+    if (aging <= 90) return "61-90";
+    return ">90";
   };
 
-  const getSortState = (key: string): "asc" | "desc" | "none" => {
-    if (sorts.includes(key)) return "asc";
-    if (sorts.includes(`-${key}`)) return "desc";
-    return "none";
-  };
-
-  const setColumnFilter = (key: string, values: string[]) => {
-    setColumnFilters((prev) => {
-      if (!values || values.length === 0) {
-        const next = { ...prev };
-        delete next[key];
-        return next;
-      }
-      return { ...prev, [key]: values };
-    });
-  };
-
-  const setColSearch = (key: string, val: string) => {
-    setColumnSearch((prev) => {
-      if (!val) {
-        const next = { ...prev };
-        delete next[key];
-        return next;
-      }
-      return { ...prev, [key]: val };
-    });
-  };
-
-  // Filtered & Sorted cases
+  // Universal client-side filter and sorter
   const filteredCases = useMemo(() => {
-    let result = [...cases];
-
-    // Column Search
-    for (const [key, search] of Object.entries(columnSearch)) {
-      if (!search || !search.trim()) continue;
-      const term = search.toLowerCase().trim();
-      result = result.filter((item: any) => {
-        const val = String(item[key] || "").toLowerCase();
-        return val.includes(term);
-      });
-    }
-
-    // Column Filters
-    for (const [key, filterVals] of Object.entries(columnFilters)) {
-      if (!filterVals || filterVals.length === 0) continue;
-      result = result.filter((item: any) => {
-        if (key === "agingDays") {
-          const bal = Number(item.tienConPhaiThanhToan) || 0;
-          if (bal <= 0) return filterVals.includes("PAID");
-          const aging = Number(item.agingDays) || 0;
-          if (filterVals.includes("0-30") && aging <= 30) return true;
-          if (filterVals.includes("31-60") && aging > 30 && aging <= 60)
-            return true;
-          if (filterVals.includes("61-90") && aging > 60 && aging <= 90)
-            return true;
-          if (filterVals.includes(">90") && aging > 90) return true;
-          return false;
-        }
-        const val = String(item[key] || "");
-        return filterVals.includes(val);
-      });
-    }
-
-    // Sorts
-    if (sorts.length > 0) {
-      result.sort((a: any, b: any) => {
-        for (const s of sorts) {
-          const desc = s.startsWith("-");
-          const field = desc ? s.slice(1) : s;
-          let valA = a[field];
-          let valB = b[field];
-
-          if (typeof valA === "number" || typeof valB === "number") {
-            valA = Number(valA) || 0;
-            valB = Number(valB) || 0;
-            if (valA !== valB) return desc ? valB - valA : valA - valB;
-          } else {
-            valA = String(valA || "");
-            valB = String(valB || "");
-            const cmp = valA.localeCompare(valB);
-            if (cmp !== 0) return desc ? -cmp : cmp;
-          }
-        }
-        return 0;
-      });
-    }
-
-    return result;
-  }, [cases, columnSearch, columnFilters, sorts]);
-
-  // Computed filter options
-  const computedLicensePlates = useMemo(() => {
-    const set = new Set<string>();
-    cases.forEach((c: any) => {
-      if (c.bienSoXe) set.add(c.bienSoXe);
+    return filterClientItems(cases, tableState, {
+      dateField: "ngayPhatSinh",
+      customExtractors: {
+        agingDays: getAgingBucket,
+      },
     });
-    return Array.from(set).map((v) => ({ label: v, value: v }));
-  }, [cases]);
+  }, [cases, tableState]);
 
-  const computedStatuses = useMemo(() => {
-    const set = new Set<string>();
-    cases.forEach((c: any) => {
-      if (c.tenTinhTrangDichVu) set.add(c.tenTinhTrangDichVu);
+  // Active filter count
+  const activeFilterCount = useMemo(() => {
+    let count = 0;
+    Object.values(tableState.columnFilters).forEach((vals) => {
+      if (vals && vals.length > 0) count += vals.length;
     });
-    return Array.from(set).map((v) => ({ label: v, value: v }));
-  }, [cases]);
+    Object.values(tableState.columnSearch).forEach((val) => {
+      if (val && val.trim().length > 0) count += 1;
+    });
+    if (tableState.dateFrom || tableState.dateTo) count += 1;
+    return count;
+  }, [
+    tableState.columnFilters,
+    tableState.columnSearch,
+    tableState.dateFrom,
+    tableState.dateTo,
+  ]);
+
+  // Column Header Filter Builder
+  const headerFilter = useMemo(
+    () =>
+      createColumnHeaderFilter({
+        listHook: tableState,
+        items: cases,
+        defaultAlign: "center",
+      }),
+    [tableState, cases],
+  );
 
   const columns = useMemo<DataTableColumn<any>[]>(() => {
     return [
@@ -242,20 +178,9 @@ export function GarageCasePartnerTab({
       },
       {
         key: "soChungTu",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("customers.drawer.caseCode", "Số chứng từ")}
-            sortState={getSortState("soChungTu")}
-            onSortChange={(s) => setSort("soChungTu", s)}
-            searchValue={columnSearch["soChungTu"] || ""}
-            onSearchChange={(val) => setColSearch("soChungTu", val)}
-            selectedFilters={columnFilters["soChungTu"] || []}
-            onFilterChange={(vals) => setColumnFilter("soChungTu", vals)}
-            isActive={Boolean(
-              columnFilters["soChungTu"]?.length || columnSearch["soChungTu"],
-            )}
-            align="center"
-          />
+        header: headerFilter(
+          "soChungTu",
+          t("customers.drawer.caseCode", "Số chứng từ"),
         ),
         size: 190,
         minSize: 175,
@@ -293,21 +218,9 @@ export function GarageCasePartnerTab({
       },
       {
         key: "bienSoXe",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("customers.drawer.licensePlate", "Biển số xe")}
-            sortState={getSortState("bienSoXe")}
-            onSortChange={(s) => setSort("bienSoXe", s)}
-            filterOptions={computedLicensePlates}
-            selectedFilters={columnFilters["bienSoXe"] || []}
-            onFilterChange={(vals) => setColumnFilter("bienSoXe", vals)}
-            searchValue={columnSearch["bienSoXe"] || ""}
-            onSearchChange={(val) => setColSearch("bienSoXe", val)}
-            isActive={Boolean(
-              columnFilters["bienSoXe"]?.length || columnSearch["bienSoXe"],
-            )}
-            align="center"
-          />
+        header: headerFilter(
+          "bienSoXe",
+          t("customers.drawer.licensePlate", "Biển số xe"),
         ),
         size: 130,
         minSize: 120,
@@ -322,18 +235,9 @@ export function GarageCasePartnerTab({
       {
         key: "ngayPhatSinh",
         className: "text-right",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("customers.drawer.caseDate", "Ngày tiếp nhận")}
-            sortState={getSortState("ngayPhatSinh")}
-            onSortChange={(s) => setSort("ngayPhatSinh", s)}
-            searchValue=""
-            onSearchChange={() => {}}
-            selectedFilters={[]}
-            onFilterChange={() => {}}
-            hideFilter={true}
-            align="center"
-          />
+        header: headerFilter.date(
+          "ngayPhatSinh",
+          t("customers.drawer.caseDate", "Ngày tiếp nhận"),
         ),
         size: 140,
         minSize: 135,
@@ -348,18 +252,9 @@ export function GarageCasePartnerTab({
       {
         key: "tienCoThue",
         className: "text-right",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("customers.drawer.totalAmount", "Tổng tiền")}
-            sortState={getSortState("tienCoThue")}
-            onSortChange={(s) => setSort("tienCoThue", s)}
-            searchValue=""
-            onSearchChange={() => {}}
-            selectedFilters={[]}
-            onFilterChange={() => {}}
-            hideFilter={true}
-            align="center"
-          />
+        header: headerFilter.amount(
+          "tienCoThue",
+          t("customers.drawer.totalAmount", "Tổng tiền"),
         ),
         size: 130,
         minSize: 120,
@@ -373,18 +268,9 @@ export function GarageCasePartnerTab({
       {
         key: "tienDaThanhToan",
         className: "text-right",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("customers.drawer.paidAmount", "Đã thu")}
-            sortState={getSortState("tienDaThanhToan")}
-            onSortChange={(s) => setSort("tienDaThanhToan", s)}
-            searchValue=""
-            onSearchChange={() => {}}
-            selectedFilters={[]}
-            onFilterChange={() => {}}
-            hideFilter={true}
-            align="center"
-          />
+        header: headerFilter.amount(
+          "tienDaThanhToan",
+          t("customers.drawer.paidAmount", "Đã thu"),
         ),
         size: 130,
         minSize: 120,
@@ -398,18 +284,9 @@ export function GarageCasePartnerTab({
       {
         key: "tienConPhaiThanhToan",
         className: "text-right",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("customers.drawer.balanceAmount", "Còn nợ")}
-            sortState={getSortState("tienConPhaiThanhToan")}
-            onSortChange={(s) => setSort("tienConPhaiThanhToan", s)}
-            searchValue=""
-            onSearchChange={() => {}}
-            selectedFilters={[]}
-            onFilterChange={() => {}}
-            hideFilter={true}
-            align="center"
-          />
+        header: headerFilter.amount(
+          "tienConPhaiThanhToan",
+          t("customers.drawer.balanceAmount", "Còn nợ"),
         ),
         size: 130,
         minSize: 120,
@@ -433,27 +310,18 @@ export function GarageCasePartnerTab({
       {
         key: "agingDays",
         className: "text-center",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("customers.drawer.aging", "Tuổi nợ")}
-            sortState={getSortState("agingDays")}
-            onSortChange={(s) => setSort("agingDays", s)}
-            searchValue={columnSearch["agingDays"] || ""}
-            onSearchChange={(val) => setColSearch("agingDays", val)}
-            filterOptions={[
+        header: headerFilter(
+          "agingDays",
+          t("customers.drawer.aging", "Tuổi nợ"),
+          {
+            filterOptions: [
               { label: "0-30 ngày (Trong hạn)", value: "0-30" },
               { label: "31-60 ngày (Theo dõi)", value: "31-60" },
               { label: "61-90 ngày (Quá hạn)", value: "61-90" },
               { label: ">90 ngày (Quá hạn sâu)", value: ">90" },
               { label: "Đã tất toán (0đ)", value: "PAID" },
-            ]}
-            selectedFilters={columnFilters["agingDays"] || []}
-            onFilterChange={(vals) => setColumnFilter("agingDays", vals)}
-            isActive={Boolean(
-              columnFilters["agingDays"]?.length || columnSearch["agingDays"],
-            )}
-            align="center"
-          />
+            ],
+          },
         ),
         size: 120,
         minSize: 110,
@@ -497,24 +365,9 @@ export function GarageCasePartnerTab({
       {
         key: "tenTinhTrangDichVu",
         className: "text-center",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("customers.drawer.status", "Trạng thái")}
-            sortState={getSortState("tenTinhTrangDichVu")}
-            onSortChange={(s) => setSort("tenTinhTrangDichVu", s)}
-            searchValue={columnSearch["tenTinhTrangDichVu"] || ""}
-            onSearchChange={(val) => setColSearch("tenTinhTrangDichVu", val)}
-            filterOptions={computedStatuses}
-            selectedFilters={columnFilters["tenTinhTrangDichVu"] || []}
-            onFilterChange={(vals) =>
-              setColumnFilter("tenTinhTrangDichVu", vals)
-            }
-            isActive={Boolean(
-              columnFilters["tenTinhTrangDichVu"]?.length ||
-              columnSearch["tenTinhTrangDichVu"],
-            )}
-            align="center"
-          />
+        header: headerFilter(
+          "tenTinhTrangDichVu",
+          t("customers.drawer.status", "Trạng thái"),
         ),
         size: 130,
         minSize: 120,
@@ -524,16 +377,7 @@ export function GarageCasePartnerTab({
         ),
       },
     ];
-  }, [
-    columnSearch,
-    columnFilters,
-    sorts,
-    computedLicensePlates,
-    computedStatuses,
-    currentCaseCode,
-    onSelectCase,
-    t,
-  ]);
+  }, [headerFilter, currentCaseCode, onSelectCase, t]);
 
   const summaryRow = useMemo(() => {
     if (!filteredCases || filteredCases.length === 0) return undefined;
@@ -753,13 +597,34 @@ export function GarageCasePartnerTab({
       {/* 2. Customer Cases DataTable */}
       <div className="rounded-xl border border-border bg-surface p-4 card-shadow space-y-3">
         <div className="flex items-center justify-between">
-          <h5 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-            {t(
-              "cases.drawer.partnerCasesList",
-              "Danh sách phiếu dịch vụ của đối tác",
-            )}{" "}
-            ({filteredCases.length})
-          </h5>
+          <div className="flex items-center gap-2">
+            <h5 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              {t(
+                "cases.drawer.partnerCasesList",
+                "Danh sách phiếu dịch vụ của đối tác",
+              )}{" "}
+              ({filteredCases.length})
+            </h5>
+            {activeFilterCount > 0 && (
+              <Badge
+                variant="secondary"
+                className="text-[10px] h-5 px-1.5 font-normal"
+              >
+                {activeFilterCount} {t("common.filters", "bộ lọc")}
+              </Badge>
+            )}
+          </div>
+          {activeFilterCount > 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => tableState.resetFilters()}
+              className="h-7 text-xs text-muted-foreground hover:text-foreground px-2"
+            >
+              <RotateCcw className="w-3 h-3 mr-1" />
+              {t("common.clearFilters", "Bỏ lọc")}
+            </Button>
+          )}
         </div>
 
         <DataTable

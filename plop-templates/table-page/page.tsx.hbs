@@ -1,16 +1,17 @@
 import React, { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate/SpreadsheetPageTemplate";
-import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
+import {
+  createColumnHeaderFilter,
+  type DataTableColumn,
+} from "@/shared/components/DataTable";
 {{#if hasDateColumn}}
-import { DateRangeColumnSlot } from "@/shared/components/DataTable/DateRangeColumnSlot";
 import { TableDateCell } from "@/shared/components/DataTable/TableDateCell";
 {{/if}}
 import { TableText } from "@/shared/components/DataTable/TableText";
 import { Badge } from "@/shared/components/ui/badge";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import { Eye, Pencil, FileText, Trash2, Download } from "lucide-react";
-import type { DataTableColumn } from "@/shared/components/DataTable";
 import type { ActionDropdownItem } from "@/shared/components/ActionDropdown";
 import { use{{pascalCase componentName}}List } from "../hooks/use{{pascalCase componentName}}List";
 import { {{camelCase componentName}}Api, type {{pascalCase componentName}}Item } from "../api/{{camelCase componentName}}Api";
@@ -42,11 +43,23 @@ export function {{pascalCase componentName}}Tab() {
     }
   };
 
-  const getSortState = (key: string): "asc" | "desc" | "none" => {
-    if (listHook.sorts.includes(key)) return "asc";
-    if (listHook.sorts.includes(`-${key}`)) return "desc";
-    return "none";
-  };
+  // 1-line Column Header Filter Builder (Server-side + Date + Amount + Status)
+  const headerFilter = useMemo(
+    () =>
+      createColumnHeaderFilter({
+        listHook,
+        queryKeyPrefix: "{{kebabCase moduleName}}-column-options",
+        fetchOptions: ({ columnKey, search, pageParam, filtersStr }) =>
+          {{camelCase componentName}}Api.getColumnOptions(
+            columnKey,
+            search,
+            pageParam,
+            20,
+            filtersStr,
+          ),
+      }),
+    [listHook],
+  );
 
   const columns: DataTableColumn<{{pascalCase componentName}}Item>[] = useMemo(
     () => [
@@ -67,25 +80,7 @@ export function {{pascalCase componentName}}Tab() {
         key: "code",
         size: 200,
         enableResizing: true,
-        header: (
-          <TableColumnHeaderFilter
-            title={t("code", "Mã")}
-            columnKey="code"
-            queryKeyPrefix="{{kebabCase moduleName}}-column-code"
-            allFilters={listHook.columnFilters}
-            fetchOptions={({ columnKey, search, pageParam, filtersStr }) =>
-              {{camelCase componentName}}Api.getColumnOptions(columnKey, search, pageParam, 20, filtersStr)
-            }
-            sortState={getSortState("code")}
-            onSortChange={(s) => listHook.setSort("code", s)}
-            searchValue={listHook.columnSearch["code"] || ""}
-            onSearchChange={(v) => listHook.setColumnSearch("code", v)}
-            selectedFilters={listHook.columnFilters["code"] || []}
-            onFilterChange={(v) => listHook.setColumnFilter("code", v)}
-            isActive={Boolean(listHook.columnFilters["code"]?.length || listHook.columnSearch["code"])}
-            align="center"
-          />
-        ),
+        header: headerFilter("code", t("code", "Mã")),
         cell: (row: {{pascalCase componentName}}Item) => (
           <div className="flex items-center gap-1.5 w-full min-w-0">
             <TableText
@@ -116,25 +111,7 @@ export function {{pascalCase componentName}}Tab() {
         key: "name",
         size: 220,
         enableResizing: true,
-        header: (
-          <TableColumnHeaderFilter
-            title={t("name", "Tên / Mô tả")}
-            columnKey="name"
-            queryKeyPrefix="{{kebabCase moduleName}}-column-name"
-            allFilters={listHook.columnFilters}
-            fetchOptions={({ columnKey, search, pageParam, filtersStr }) =>
-              {{camelCase componentName}}Api.getColumnOptions(columnKey, search, pageParam, 20, filtersStr)
-            }
-            sortState={getSortState("name")}
-            onSortChange={(s) => listHook.setSort("name", s)}
-            searchValue={listHook.columnSearch["name"] || ""}
-            onSearchChange={(v) => listHook.setColumnSearch("name", v)}
-            selectedFilters={listHook.columnFilters["name"] || []}
-            onFilterChange={(v) => listHook.setColumnFilter("name", v)}
-            isActive={Boolean(listHook.columnFilters["name"]?.length || listHook.columnSearch["name"])}
-            align="center"
-          />
-        ),
+        header: headerFilter("name", t("name", "Tên / Mô tả")),
         cell: (row: {{pascalCase componentName}}Item) => (
           <span className="truncate">{row.name || "—"}</span>
         ),
@@ -146,25 +123,7 @@ export function {{pascalCase componentName}}Tab() {
         size: 140,
         enableResizing: true,
         className: "text-center",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("status", "Trạng thái")}
-            columnKey="status"
-            queryKeyPrefix="{{kebabCase moduleName}}-column-status"
-            allFilters={listHook.columnFilters}
-            fetchOptions={({ columnKey, search, pageParam, filtersStr }) =>
-              {{camelCase componentName}}Api.getColumnOptions(columnKey, search, pageParam, 20, filtersStr)
-            }
-            sortState={getSortState("status")}
-            onSortChange={(s) => listHook.setSort("status", s)}
-            searchValue={listHook.columnSearch["status"] || ""}
-            onSearchChange={(v) => listHook.setColumnSearch("status", v)}
-            selectedFilters={listHook.columnFilters["status"] || []}
-            onFilterChange={(v) => listHook.setColumnFilter("status", v)}
-            isActive={Boolean(listHook.columnFilters["status"]?.length || listHook.columnSearch["status"])}
-            align="center"
-          />
-        ),
+        header: headerFilter("status", t("status", "Trạng thái")),
         cell: (row: {{pascalCase componentName}}Item) => (
           <div className="w-full flex justify-center">
             <Tooltip content={t(row.status, row.status)}>
@@ -186,60 +145,20 @@ export function {{pascalCase componentName}}Tab() {
         size: 150,
         enableResizing: true,
         className: "text-right",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("createdAt", "Ngày tạo")}
-            sortState={getSortState("createdAt")}
-            onSortChange={(s) => listHook.setSort("createdAt", s)}
-            searchValue=""
-            onSearchChange={() => {}}
-            selectedFilters={[]}
-            onFilterChange={() => {}}
-            hideFilter={true}
-            hideFooter={true}
-            isActive={Boolean(listHook.dateFrom || listHook.dateTo)}
-            align="center"
-            dateRangeSlot={({ close }) => (
-              <DateRangeColumnSlot
-                dateFrom={listHook.dateFrom || ""}
-                dateTo={listHook.dateTo || ""}
-                onChange={(from, to) => listHook.setDateRange(from, to)}
-                onClose={close}
-              />
-            )}
-          />
-        ),
+        header: headerFilter.date("createdAt", t("createdAt", "Ngày tạo")),
         cell: (row: {{pascalCase componentName}}Item) => (
           <TableDateCell date={row.createdAt} className="justify-end w-full" />
         ),
       },
 {{/if}}
 {{#if hasAmountColumn}}
-      // 6. Cột Số tiền / Giá trị: căn phải tabular-nums font-semibold
+      // 6. Cột Số tiền / Giá trị: căn phải tabular-nums font-semibold + tự format tiền tệ trong filter options
       {
         key: "amount",
         size: 150,
         enableResizing: true,
         className: "text-right",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("amount", "Số tiền")}
-            columnKey="amount"
-            queryKeyPrefix="{{kebabCase moduleName}}-column-amount"
-            allFilters={listHook.columnFilters}
-            fetchOptions={({ columnKey, search, pageParam, filtersStr }) =>
-              {{camelCase componentName}}Api.getColumnOptions(columnKey, search, pageParam, 20, filtersStr)
-            }
-            sortState={getSortState("amount")}
-            onSortChange={(s) => listHook.setSort("amount", s)}
-            searchValue={listHook.columnSearch["amount"] || ""}
-            onSearchChange={(v) => listHook.setColumnSearch("amount", v)}
-            selectedFilters={listHook.columnFilters["amount"] || []}
-            onFilterChange={(v) => listHook.setColumnFilter("amount", v)}
-            isActive={Boolean(listHook.columnFilters["amount"]?.length || listHook.columnSearch["amount"])}
-            align="center"
-          />
-        ),
+        header: headerFilter.amount("amount", t("amount", "Số tiền")),
         cell: (row: {{pascalCase componentName}}Item) => (
           <span className="tabular-nums font-semibold">
             {(row.amount || 0).toLocaleString("vi-VN")} đ
@@ -248,7 +167,7 @@ export function {{pascalCase componentName}}Tab() {
       },
 {{/if}}
     ],
-    [listHook.sorts, listHook.columnFilters, listHook.columnSearch, listHook.dateFrom, listHook.dateTo, t]
+    [headerFilter, t]
   );
 
   // Row Actions: 2 Quick Actions đầu tiên là View (Eye) và Edit (Pencil)

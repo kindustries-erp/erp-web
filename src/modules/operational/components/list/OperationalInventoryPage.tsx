@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useCallback } from "react";
 import {
   Eye,
   Pencil,
@@ -180,9 +180,16 @@ export function OperationalInventoryPage({
     }
   };
 
-  const activeFilterCount = [!!searchInput, !!itemTypeFilter].filter(
-    Boolean,
-  ).length;
+  const activeFilterCount = useMemo(() => {
+    const panelCount = [!!searchInput, !!itemTypeFilter].filter(Boolean).length;
+    return panelCount + (tableState.activeFilterCount || 0);
+  }, [searchInput, itemTypeFilter, tableState.activeFilterCount]);
+
+  const handleClearAllFilters = useCallback(() => {
+    resetAllFilters();
+    tableState.resetFilters();
+    setPage(1);
+  }, [resetAllFilters, tableState, setPage]);
 
   const stockColumns = useStockColumns({
     stockItems,
@@ -339,6 +346,8 @@ export function OperationalInventoryPage({
         activeFilterCount,
         panelOpen: filterPanelOpen,
       }}
+      activeFilterCount={activeFilterCount}
+      onClearAllFilters={handleClearAllFilters}
       enableRowSelection={false}
       rowSelection={rowSelection}
       onRowSelectionChange={onRowSelectionChange}
@@ -353,7 +362,7 @@ export function OperationalInventoryPage({
           items: [
             {
               label: t("inventory.action.details", "Xem chi tiết"),
-              icon: <Eye size={14} />,
+              icon: <Eye className="h-3.5 w-3.5" />,
               onClick: () => {
                 setIsEditMode(false);
                 onViewItem(row.inventory_item_id);
@@ -375,11 +384,11 @@ export function OperationalInventoryPage({
           ],
         },
         {
-          groupLabel: t("Thao tác"),
+          groupLabel: t("groupThaoTac", "Thao tác"),
           items: [
             {
               label: t("inventory.action.edit", "Chỉnh sửa"),
-              icon: <Pencil size={14} />,
+              icon: <Pencil className="h-3.5 w-3.5" />,
               onClick: () => {
                 setIsEditMode(true);
                 onViewItem(row.inventory_item_id);

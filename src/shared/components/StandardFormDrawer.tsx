@@ -239,12 +239,16 @@ export function StandardFormDrawer({
   const effectiveHideRightPanel =
     hideRightPanel || (activeTopTab?.hideRightPanel ?? false);
   const effectiveLeftContent = activeTopTab ? activeTopTab.content : leftPanel;
+  const effectiveRightPanel =
+    activeTopTab?.rightPanel !== undefined
+      ? activeTopTab.rightPanel
+      : rightPanel;
 
   const isRightPanelCollapsible =
     collapsibleRightPanel !== undefined
       ? collapsibleRightPanel
       : (layout === "2-columns" &&
-          Boolean(rightPanel) &&
+          Boolean(effectiveRightPanel) &&
           !effectiveHideRightPanel) ||
         Boolean(rightPanelTitle);
 
@@ -260,35 +264,37 @@ export function StandardFormDrawer({
           {t("Chỉnh sửa")}
         </button>
       )}
-      {!effectiveHideRightPanel && rightPanel && isRightPanelCollapsible && (
-        <div
-          className={cn(
-            "flex items-center",
-            mode === "view" &&
-              onToggleEdit &&
-              "border-l pl-2 ml-1 border-border/60",
-          )}
-        >
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-sm"
-            onClick={() => setRightPanelCollapsed((s) => !s)}
-            className="text-[color:var(--faint)] hover:text-foreground"
-            title={
-              rightPanelCollapsed
-                ? t("Mở rộng cột phải")
-                : t("Thu gọn cột phải")
-            }
-          >
-            {rightPanelCollapsed ? (
-              <ChevronLeft className="w-4 h-4" />
-            ) : (
-              <ChevronRight className="w-4 h-4" />
+      {!effectiveHideRightPanel &&
+        effectiveRightPanel &&
+        isRightPanelCollapsible && (
+          <div
+            className={cn(
+              "flex items-center",
+              mode === "view" &&
+                onToggleEdit &&
+                "border-l pl-2 ml-1 border-border/60",
             )}
-          </Button>
-        </div>
-      )}
+          >
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              onClick={() => setRightPanelCollapsed((s) => !s)}
+              className="text-[color:var(--faint)] hover:text-foreground"
+              title={
+                rightPanelCollapsed
+                  ? t("Mở rộng cột phải")
+                  : t("Thu gọn cột phải")
+              }
+            >
+              {rightPanelCollapsed ? (
+                <ChevronLeft className="w-4 h-4" />
+              ) : (
+                <ChevronRight className="w-4 h-4" />
+              )}
+            </Button>
+          </div>
+        )}
     </div>
   );
 
@@ -339,7 +345,7 @@ export function StandardFormDrawer({
 
           {/* Cột phải: Thông tin chung / Metadata */}
           {!effectiveHideRightPanel &&
-            rightPanel &&
+            effectiveRightPanel &&
             (rightPanelTitle !== undefined || isRightPanelCollapsible ? (
               <div
                 className={cn(
@@ -366,7 +372,7 @@ export function StandardFormDrawer({
                       }
                     >
                       <div className="flex flex-col gap-3 pt-1 min-w-[280px]">
-                        {rightPanel}
+                        {effectiveRightPanel}
                       </div>
                     </div>
                   </DrawerSection>
@@ -383,7 +389,7 @@ export function StandardFormDrawer({
                     }
                   >
                     <div className="flex flex-col min-w-[280px]">
-                      {rightPanel}
+                      {effectiveRightPanel}
                     </div>
                   </div>
                 )}
@@ -395,7 +401,7 @@ export function StandardFormDrawer({
                   stickyRightPanel && "lg:sticky lg:top-0",
                 )}
               >
-                {rightPanel}
+                {effectiveRightPanel}
               </div>
             ))}
         </div>

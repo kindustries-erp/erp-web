@@ -24,120 +24,131 @@ Khi tạo mới hoặc enhance một `DataTable` trong hệ thống, bạn **B�
 - **Enable Resizing**: Luôn bật tính năng resize cho các cột dữ liệu bằng cách thêm `enableResizing: true` vào config của từng cột.
 - **Đa ngôn ngữ (i18n)**: Tất cả các text trong table (header, empty state, action tooltip...) phải được bọc trong hàm `t` từ `useTranslation("namespace")`. KHÔNG hardcode tiếng Việt/Anh trực tiếp mà không qua hook translation.
 
-## 2. Table Header Filter & Sorting Popover
+## 2. Table Header Filter & Sorting Popover (Helper Builder `createColumnHeaderFilter`)
 
-Tất cả các cột dữ liệu (trừ cột Action, Index, Checkbox) **phải sử dụng component `<TableColumnHeaderFilter>`** (`@/shared/components/DataTable/TableColumnHeaderFilter`) cho header để tích hợp sẵn Filter và Sorting.
+Tất cả các cột dữ liệu (trừ cột Action, Index, Checkbox) **phải tích hợp sẵn Filter và Sorting** bằng cách sử dụng helper builder chuẩn **`createColumnHeaderFilter`** (`@/shared/components/DataTable`).
 
-- Cần truyền thêm prop `align="center"` cho `<TableColumnHeaderFilter>` để header luôn được canh giữa một cách chuẩn xác.
-- **Cột thường**: TUYỆT ĐỐI KHÔNG set `hideFilter: true` (hoặc `hideFilter={true}`), để đảm bảo user luôn nhìn thấy search box và danh sách checkbox options (column options) trong popover. Kể cả khi hook filter hiện tại chưa hỗ trợ cột đó, bạn phải chủ động update hook/API chứ **KHÔNG ĐƯỢC LÁCH LUẬT** bằng cách ẩn filter.
+- **Ưu tiên số 1: Sử dụng `createColumnHeaderFilter`**:
+  Thay vì viết lặp đi lặp lại 15 dòng props cho từng cột, khởi tạo helper 1 lần duy nhất trong `useMemo` và gọi ngắn gọn 1 dòng cho mỗi cột.
+
+```tsx
+import {
+  createColumnHeaderFilter,
+  type DataTableColumn,
+} from "@/shared/components/DataTable";
+
+// 1. Khởi tạo helper builder trong component/hook:
+const headerFilter = useMemo(
+  () =>
+    createColumnHeaderFilter({
+      listHook,
+      queryKeyPrefix: "module-column-options",
+      fetchOptions: ({ columnKey, search, pageParam, filtersStr }) =>
+        moduleApi.getColumnOptions(columnKey, search, pageParam, 20, filtersStr),
+    }),
+  [listHook],
+);
+
+// 2. Sử dụng 1 dòng cho từng cột:
+const columns: DataTableColumn<ExampleRow>[] = useMemo(() => [
+  // Cột thường (Server-side):
+  { key: "code", header: headerFilter("code", t("Mã phiếu")), size: 200, cell: ... },
+  { key: "customerName", header: headerFilter("customerName", t("Khách hàng")), size: 220, cell: ... },
+
+  // Cột Ngày (tự động gắn DateRangeColumnSlot + presets khoảng ngày):
+  {
+    key: "createdAt",
+    header: headerFilter.date("createdAt", t("Ngày tạo")),
+    size: 150,
+    className: "text-right",
+    cell: (row) => <TableDateCell date={row.createdAt} className="justify-end w-full" />,
+  },
+
+  // Cột Tiền tệ (tự động format phân tách hàng nghìn '10.000.000 đ' trong popover options):
+  {
+    key: "amount",
+    header: headerFilter.amount("amount", t("Số tiền")),
+    size: 150,
+    className: "text-right",
+    cell: (row) => <span className="tabular-nums font-semibold">{row.amount.toLocaleString("vi-VN")} đ</span>,
+  },
+
+  // Cột Số lượng (tự động format số '1,250' trong popover options):
+  {
+    key: "quantity",
+    header: headerFilter.qty("quantity", t("Số lượng")),
+    size: 120,
+    className: "text-right",
+    cell: (row) => <span className="tabular-nums">{row.quantity.toLocaleString("vi-VN")}</span>,
+  },
+
+  // Cột Tháng/Kỳ (dành cho Dashboard Card / Breakdown):
+  {
+    key: "label",
+    header: headerFilter.month("label", t("Tháng")),
+    size: 130,
+    className: "text-center font-medium",
+    cell: (row) => formatMonthLabel(row.label),
+  },
+
+  // Cột Client-side (cho Dashboard / Drawer / Form tạm chưa lưu server):
+  {
+    key: "status",
+    header: headerFilter.client("status", t("Trạng thái"), { filterOptions: computedStatusOptions }),
+    size: 140,
+    className: "text-center",
+    cell: ...
+  },
+], [headerFilter, t]);
+```
+
+- **Quy chuẩn Format Số trên Dropdown Options**: Với các cột số/tiền tệ, KHÔNG ĐƯỢC để dropdown hiển thị số thô (`10000000`). Bắt buộc dùng `headerFilter.amount(...)` hoặc `headerFilter.numeric(...)` (hoặc prop `formatOptionLabel`) để người dùng nhìn thấy số có phân tách hàng nghìn rõ ràng.
+- **Cột Ngày / Tháng (Date / Month)**: Dùng `headerFilter.date(...)` hoặc `headerFilter.month(...)`. Popover **CHỈ** gồm **Sắp xếp** + **DateRange Slot (Chọn nhanh, Từ ngày, Đến ngày)**, BẮT BUỘC `hideFilter={true}` và `hideFooter={true}` để **TUYỆT ĐỐI KHÔNG** hiển thị ô Search Box hoặc Checkbox Options thừa.
+- **Bảng Client-side**: Truyền `items: rawList` vào `createColumnHeaderFilter({ listHook, items: rawList })` và dùng `filterClientItems(rawList, listHook, { dateField: "label" })` để tự động lọc, search, sort 100% không sót tính năng nào.
+- **Khung Viền Table (No Double Border)**: Khi đặt `<DataTable>` trong Card hoặc Container, **KHÔNG ĐƯỢC bọc thêm thẻ `div className="border rounded-lg ..."` bên ngoài**, vì `DataTable` đã có viền và khung chuẩn mực bên trong, tránh lỗi 2 lớp border đè lên nhau.
+- **Cột thường**: TUYỆT ĐỐI KHÔNG set `hideFilter: true` (hoặc `hideFilter={true}`), để đảm bảo user luôn nhìn thấy search box và danh sách checkbox options.
 - **NGUYÊN TẮC: LUÔN ƯU TIÊN SERVER-SIDE SORTING & FILTERING**:
   - Mọi bảng trong hệ thống (cả màn hình Page lẫn Drawer/Modal) **MẶC ĐỊNH BẮT BUỘC** phải ưu tiên triển khai **Server-side Filter & Sort** qua API backend (hook TanStack Query + API `getColumnOptions`).
-  - **CHỈ chuyển sang Client-side khi và chỉ khi có yêu cầu cụ thể từ User** (hoặc khi xử lý bảng dữ liệu nháp/tạm thời ở local client chưa lưu DB).
-- **2 Cơ Chế Nạp Filter Options**:
-  1. **Server-Side Infinite Scroll (`fetchOptions`) — MẶC ĐỊNH ƯU TIÊN**: Truyền `columnKey`, `queryKeyPrefix`, `allFilters={listHook.columnFilters}`, và hàm `fetchOptions` gọi API `getColumnOptions` của backend (`itemsApi.getColumnOptions(columnKey, search, pageParam, 20, filtersStr)`). Popover sẽ tự động phân trang infinite scroll khi cuộn danh sách options và hỗ trợ cascading filter từ server.
-  2. **Client-Side Computed (`filterOptions`) — Chỉ dùng khi có yêu cầu cụ thể**: Truyền mảng `filterOptions={options}` đã được tính toán cascading từ dữ liệu hiện hành.
-- **Định dạng nhãn tùy chọn (`formatOptionLabel`)**: Khi giá trị lưu trữ là ID (vd: `branchId`, `partnerId`) hoặc mã enum, sử dụng prop `formatOptionLabel={(val) => mapLabel(val)}` để hiển thị tên thân thiện trên dropdown checkbox.
-- **Xử lý giá trị Trống / Null (`showBlankOption`)**: Với các cột có thể chứa giá trị null/rỗng (vd: Chi nhánh, Biển số xe, Ghi chú), thêm `showBlankOption={true}` để cho phép người dùng lọc các dòng mang giá trị `(Trống)`.
-- **Cột Ngày Tháng (Date)**: Phải sử dụng `dateRangeSlot` (sử dụng component `<DateRangeColumnSlot>` trong `@/shared/components/DataTable/DateRangeColumnSlot`) để hiển thị bộ chọn khoảng ngày + presets (Hôm nay, Tháng này, Năm nay, Theo quý...), đồng thời set `hideFilter={true}` cùng `hideFooter={true}` để ẩn list checkbox mặc định.
-- **Clear All Filters Button**: Khi bảng có sử dụng TableColumnHeaderFilter, bắt buộc phải bổ sung thêm nút xóa lọc (`FilterButton` từ `@/shared/components/FilterPanel` hoặc Button Reset Filter) hiển thị cạnh tiêu đề bảng nếu `activeFilterCount > 0`. Đối với bảng trong `DrawerSection`, BẮT BUỘC đặt vào prop `titleExtra` của `DrawerSection`.
-- **Cascading Filter Options (Lọc phụ thuộc)**: Dữ liệu tùy chọn (filter options) của một cột **BẮT BUỘC** phải được tính toán dựa trên danh sách dữ liệu đã bị filter bởi **TẤT CẢ CÁC CỘT KHÁC**.
-- **Nút Hành Động (Table Action Buttons)**: Đối với các bảng nằm trong `DrawerSection`, các nút thao tác chung của bảng như "Thêm dòng" (`+ Thêm dòng`), "Bộ lọc", "Nhập từ Excel"... BẮT BUỘC phải truyền vào prop `titleExtra` của `DrawerSection`.
-
-### Nguyên tắc Server-side vs Client-side Logic
-
-- **Mặc định toàn hệ thống**: Filter và Sorting thực hiện ở **Server-side** thông qua query params hoặc hook call API (như `useErpInvoicesList`). Dùng `fetchOptions` cho popover options.
-- **Khi nào dùng Client-side**: Chỉ khi User chỉ định rõ ràng hoặc bảng local form data chưa lưu server.
-  - **Lưu ý quan trọng khi dùng Client-side**: Khi filter/sort ở client-side bằng hook `useMemo`, **bắt buộc** phải truyền đủ các object filter vào array dependencies (VD: `tableState.columnFilters`, `tableState.sorts`, `tableState.columnSearch`), nếu không UI sẽ không update khi user chọn filter.
+  - Khi xử lý bảng thống kê ở Dashboard hoặc Drawer nháp client, dùng cơ chế Client-side Auto Extraction với `filterClientItems`.
+- **Cú pháp Tìm kiếm Nâng cao trong Header Filter (Exact Search `""` & Multi-Search `;`)**:
+  - Ô Search Box bên trong Header Filter Popover của mọi cột dữ liệu hỗ trợ sẵn 2 cú pháp tìm kiếm đặc biệt (hiển thị gợi ý tại placeholder và tooltip):
+    1. **Tìm kiếm chính xác nguyên văn (`"..."`)**: Người dùng đặt từ khóa trong cặp ngoặc kép `""` (ví dụ: `"INV-001"`, `"0101234567"`). Hệ thống sẽ tìm khớp chính xác tuyệt đối giá trị thay vì tìm kiếm gần đúng `%...%`.
+    2. **Tìm kiếm nhiều từ khóa đồng thời (Multi-search qua dấu chấm phẩy `;`)**: Người dùng phân tách các từ khóa bằng dấu chấm phẩy `;` (ví dụ: `1001;1005;1010` hoặc `VINFAST;HONDA`). Hệ thống sẽ tìm kiếm theo điều kiện `OR` (khớp bất kỳ từ khóa nào trong danh sách).
+    3. **Kết hợp linh hoạt**: Có thể kết hợp cả 2 cú pháp, ví dụ: `"HD-01";HD-02;HD-03` (khớp chính xác HD-01 HOẶC chứa chuỗi HD-02 HOẶC chứa chuỗi HD-03).
+  - **Quy chuẩn Backend cho `column_search`**:
+    - Backend **BẮT BUỘC** sử dụng helper chuẩn `applyMultiKeywordFilter` hoặc `applyMultiKeywordMultiFieldFilter` (`@/common/utils/query-builder.util.ts`) để phân tách chuỗi `split(';')`, bóc tách dấu ngoặc kép `""` và bind params an toàn chống SQL injection.
+- **Lọc Giá trị Rỗng / Trống (`showBlankOption` / `(blank)`)**:
+  - Đối với các cột dữ liệu có thể chứa giá trị `NULL` hoặc chuỗi rỗng `''` (ví dụ: Số hóa đơn liên kết, Mã đơn PO tham chiếu, Tài khoản đối ứng, Nhân viên phụ trách...), truyền thêm option `{ showBlankOption: true }` vào `headerFilter(...)` hoặc `TableColumnHeaderFilter`:
+    ```tsx
+    {
+      key: "invoiceNo",
+      header: headerFilter("invoiceNo", t("Số hóa đơn"), { showBlankOption: true }),
+      size: 180,
+      cell: ...
+    }
+    ```
+  - Khi bật `showBlankOption: true`, Header Filter Popover sẽ tự động chèn thêm lựa chọn đầu tiên là **`(blank)`** (hiển thị tiếng Việt là `(Trống)` qua `t("blank", "(Trống)")`), với giá trị định danh là `"__BLANK__"`.
+  - **Xử lý Backend**: Khi backend nhận mảng giá trị lọc chứa `"__BLANK__"`, phải áp dụng điều kiện `(field IS NULL OR field = '')`.
+- **Quy chuẩn 2 Cấp độ Xóa Bộ Lọc (Local Column Reset vs Global Clear All Filters)**:
+  - **Cấp độ 1 — Cục bộ trên từng cột (Local Column Reset)**:
+    - Nằm trực tiếp bên trong Popover của mỗi cột:
+      - Nút icon `X` ở mép phải ô Search Box: Xóa nhanh nội dung tìm kiếm đang nhập của cột đó.
+      - Nút **"Xóa bộ lọc"** (`t("clearFilter", "Xóa bộ lọc")`) ở góc trái Footer của Popover: Reset toàn bộ từ khóa tìm kiếm (`columnSearch[col]`) và các mục checkbox đang chọn (`columnFilters[col]`) của **riêng cột đó**, không làm ảnh hưởng đến bộ lọc của các cột khác.
+      - *Lưu ý*: Với cột Date/Month, do dùng slot chuyên dụng `DateRangeColumnSlot` nên bắt buộc set `hideFilter={true}` và `hideFooter={true}`.
+  - **Cấp độ 2 — Toàn cục cho toàn bộ Bảng (Global Clear All Filters)**:
+    - Khi bảng có bất kỳ bộ lọc nào đang active (`activeFilterCount > 0` tính tổng từ FilterPanel, columnFilters, columnSearch và dateRanges), bắt buộc phải có nút xóa lọc tổng thể:
+      - **Page-level**: Truyền `activeFilterCount` và `onClearAllFilters` vào `SpreadsheetPageTemplate`.
+      - **Drawer-level / Card-level**: Gắn `<FilterButton activeCount={...} onClear={...} />` vào `titleExtra` của `DrawerSection` hoặc nút Inline Reset Pill `Xóa bộ lọc (N)`.
+      - Khi click, nút này sẽ reset sạch 100% tất cả các cột, filter panel, khoảng ngày và đưa trang về 1 (`setPage(1)`).
 
 ---
 
-### Mẫu code cho `<TableColumnHeaderFilter>`:
 
-#### 1. Cột Server-side dùng `fetchOptions` (Chuẩn cho Page):
-```tsx
-header: (
-  <TableColumnHeaderFilter
-    title={t("Mã linh kiện", "Item Code")}
-    columnKey="itemCode"
-    queryKeyPrefix="items-column-options"
-    allFilters={listHook.columnFilters}
-    fetchOptions={({ columnKey, search, pageParam, filtersStr }) =>
-      itemsApi.getColumnOptions(columnKey, search, pageParam, 20, filtersStr)
-    }
-    sortState={
-      listHook.sorts.includes("itemCode")
-        ? "asc"
-        : listHook.sorts.includes("-itemCode")
-          ? "desc"
-          : "none"
-    }
-    onSortChange={(state) => listHook.setSort("itemCode", state)}
-    searchValue={listHook.columnSearch["itemCode"] || ""}
-    onSearchChange={(val) => listHook.setColumnSearch("itemCode", val)}
-    selectedFilters={listHook.columnFilters["itemCode"] || []}
-    onFilterChange={(vals) => listHook.setColumnFilter("itemCode", vals)}
-    isActive={!!listHook.columnFilters["itemCode"]?.length}
-    align="center"
-  />
-)
-```
 
-#### 2. Cột Ngày Tháng dùng `<DateRangeColumnSlot>`:
-```tsx
-header: (
-  <TableColumnHeaderFilter
-    title={t("Ngày chứng từ", "Voucher Date")}
-    sortState={
-      listHook.sorts.includes("voucherDate")
-        ? "asc"
-        : listHook.sorts.includes("-voucherDate")
-          ? "desc"
-          : "none"
-    }
-    onSortChange={(state) => listHook.setSort("voucherDate", state)}
-    searchValue=""
-    onSearchChange={() => {}}
-    selectedFilters={[]}
-    onFilterChange={() => {}}
-    hideFilter={true}
-    hideFooter={true}
-    isActive={Boolean(listHook.dateFrom || listHook.dateTo)}
-    align="center"
-    dateRangeSlot={({ close }) => (
-      <DateRangeColumnSlot
-        dateFrom={listHook.dateFrom || ""}
-        dateTo={listHook.dateTo || ""}
-        onChange={(from, to) => {
-          listHook.setDateRange(from, to);
-        }}
-        onClose={close}
-      />
-    )}
-  />
-)
-```
-
-#### 3. Cột Client-side dùng `filterOptions` (Chuẩn cho Drawer):
-```tsx
-header: (
-  <TableColumnHeaderFilter
-    title={t("Trạng thái", "Status")}
-    sortState={clientSortState}
-    onSortChange={(s) => setClientSort("status", s)}
-    filterOptions={computedStatusOptions}
-    selectedFilters={clientFilters["status"] || []}
-    onFilterChange={(vals) => setClientFilter("status", vals)}
-    searchValue={clientSearch["status"] || ""}
-    onSearchChange={(val) => setClientSearch("status", val)}
-    isActive={!!clientFilters["status"]?.length}
-    align="center"
-  />
-)
-```
-
-#### 4. Mẫu code Nút Clear All Filters (Chuẩn Page & Drawer):
+### Mẫu code Nút Clear All Filters (Chuẩn Page & Drawer):
 
 - **Pattern 1: Page-level (`SpreadsheetPageTemplate`)** (Chuẩn như `erp-invoices` / `ErpInvoicesTab.tsx` và `garage-cases` / `GarageCases.tsx`):
+
 ```tsx
 // 1. Tính activeFilterCount tổng hợp (kết hợp FilterPanel, tableState.columnFilters và Date Ranges)
 const activeFilterCount = useMemo(() => {
@@ -189,6 +200,38 @@ import { FilterButton } from "@/shared/components/FilterPanel";
   }
 >
   <StandardTable ... />
+</DrawerSection>
+```
+
+- **Pattern 3: DrawerSection / Card Section Inline Reset Pill** (Chuẩn như `GaragePaymentProgressCard.tsx`, `GarageMonthDetailDrawer.tsx`):
+```tsx
+// Đặt nút Xóa bộ lọc (N) ở bên TRÁI ngay sau tên tiêu đề bảng, đồng bộ và trực quan
+<DrawerSection
+  title={
+    <div className="flex items-center gap-2">
+      <span>Bảng phân loại dữ liệu</span>
+      {tableHook.activeFilterCount > 0 && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            tableHook.resetFilters();
+          }}
+          className="text-[11px] font-medium text-destructive hover:underline flex items-center gap-1 bg-destructive/10 px-2 py-0.5 rounded-full lowercase first-letter:uppercase tracking-normal font-sans"
+        >
+          <span>Xóa bộ lọc ({tableHook.activeFilterCount})</span>
+        </button>
+      )}
+    </div>
+  }
+  titleExtra={
+    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+      <TableIcon className="w-3.5 h-3.5 text-primary mr-1" />
+      {filteredRows.length} / {rawRows.length} dòng
+    </div>
+  }
+>
+  <DataTable items={filteredRows} ... />
 </DrawerSection>
 ```
 
@@ -586,11 +629,13 @@ Khi một bảng dữ liệu có nhiều góc nhìn tra cứu (như Hóa đơn �
 
 ## Summary Checklist trước khi hoàn thành:
 
+- [ ] **100% Cột đã dùng `createColumnHeaderFilter`** (`headerFilter(...)`, `headerFilter.date(...)`, `headerFilter.amount(...)`, `headerFilter.numeric(...)`) để đảm bảo không bị thiếu sót filter ở bất kỳ cột dữ liệu nào chưa?
+- [ ] **Cột Tiền tệ / Số lượng** đã dùng `headerFilter.amount` / `headerFilter.numeric` (hoặc `formatOptionLabel`) để tự động hiển thị số có phân tách hàng nghìn (`10.000.000 đ`, `1,250`) trên dropdown filter checkbox chưa?
 - [ ] Cột đầu tiên (STT) rộng đúng `40px`, **BẮT ĐẦU TỪ 1 VÀ CĂN GIỮA TUYỆT ĐỐI CẢ HEADER VÀ CELL** (`header: <span className="w-full block text-center">#</span>`, `headerClassName: "text-center"`, `className: "text-center"`, `cell: (_, idx) => <span className="w-full block text-center">{idx}</span>`) chưa?
 - [ ] Phân trang đã hỗ trợ `pageSizeOptions = [20, 50, 100, 200]` và khởi tạo `defaultPageSize` linh hoạt theo chiều cao màn hình (Screen Height `< 900px` -> `20`, `>= 900px` -> `50`) chưa?
 - [ ] Mặc định **100% BẢNG ĐÃ ƯU TIÊN SERVER-SIDE SORTING & FILTERING** (dùng `fetchOptions` gọi API `getColumnOptions` backend và TanStack Query) chưa? (Chỉ dùng client-side khi User chỉ định rõ ràng).
 - [ ] TUYỆT ĐỐI không dùng `onRowClick` mở detail, chỉ mở từ `<TableText>` hoặc Floated Action Menu / Right-Click Context Menu (`rowActions`) chưa?
-- [ ] TUYỆT ĐỐI không định nghĩa cột action tĩnh thủ công `{ key: "actions" }` trong `columns`, đã truyền prop `rowActions` chưa?
+- [ ] TUYỆT ĐỐI không định nghĩa cột action tĩnh thủ công `{ key: "actions" }` trong `columns`, đã truyền prop `rowActions` trên `<SpreadsheetPageTemplate>` hoặc `actions={rowActions}`, `enableRowHoverActions={true}`, `hideLegacyActionColumn={true}` trên `<StandardTable>` chưa?
 - [ ] Mảng `rowActions` đã có 2 actions đầu tiên là **Xem chi tiết** (`openDetail(id, "view")` — Icon `Eye` 👁️) và **Chỉnh sửa** (`openDetail(id, "edit")` — Icon `Pencil` ✏️) để map vào 2 nút Quick Actions trên Floated Bar chưa?
 - [ ] Bảng đã tự động kích hoạt **Right-Click Context Menu** (`TableRowContextMenu`) qua `rowActions` / `actions` và highlight dòng active chưa?
 - [ ] Nút Reset Column đã nằm gọn trong popup menu `ColumnToggle` (`Settings2` → `RotateCcw`), và TUYỆT ĐỐI không đặt ở header cột dữ liệu/Action chưa?
@@ -610,4 +655,7 @@ Khi một bảng dữ liệu có nhiều góc nhìn tra cứu (như Hóa đơn �
 - [ ] Đã bỏ default state `sortBy` ở UI và dùng default sort ở Backend chưa?
 - [ ] Container bảng đã có bo góc chuẩn `rounded-xl`, viền `border border-border/60` thanh thoát và TUYỆT ĐỐI KHÔNG bị `rounded-none` chưa?
 - [ ] Bảng có sử dụng TableColumnHeaderFilter đã có nút Clear All Filter hiển thị khi có active filter chưa? (Page: `activeFilterCount` + `onClearAllFilters` trên `SpreadsheetPageTemplate`; Drawer: `FilterButton` với `onClear` trong `titleExtra` của `DrawerSection`?)
+- [ ] **Lọc Giá trị Rỗng (`showBlankOption`)**: Các cột dữ liệu có khả năng null/rỗng (số hóa đơn liên kết, mã tham chiếu...) đã được kích hoạt `{ showBlankOption: true }` để hiển thị option `(blank)` / `(Trống)` chưa?
+- [ ] **Tìm kiếm Nâng cao (`""` và `;`)**: Backend query service đã dùng `applyMultiKeywordFilter` / `applyMultiKeywordMultiFieldFilter` để hỗ trợ tìm chính xác `"..."` và tìm kiếm nhiều từ khóa qua `;` (OR) chưa?
 - [ ] **Hiệu năng & Fast Selection**: Đã memoize `columns` độc lập, tránh truyền anonymous function cho `rowHoverActions`, và dùng lazy evaluation cho Popover nặng chưa?
+

@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { getDefaultPageSize } from "@/shared/components/DataTable";
 
 // ---------------------------------------------------------------------------
 // State shape
@@ -70,7 +71,7 @@ const defaultState = (): OperationalListState => ({
   searchInput: "",
   search: "",
   page: 1,
-  pageSize: 50,
+  pageSize: getDefaultPageSize(),
   branchFilter: "",
   paymentStatusFilter: "",
   statusFilter: "",
