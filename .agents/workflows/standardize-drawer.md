@@ -167,6 +167,12 @@ export function StandardDocumentDrawer({
 ```
   - Khi cột phải thu gọn (`w-0 opacity-0 overflow-hidden lg:hidden`), cột trái tự động bung rộng 100% `w-full` với transition mượt mà `duration-300`.
 
+#### 3. Quy chuẩn `<DrawerSection>` cho Cột Trái / Main Content:
+- Cột trái (Main Content / Tab 1) **BẮT BUỘC** phân chia nội dung thành các `<DrawerSection>` có tiêu đề rõ ràng:
+  - **Khối 1 (Thông tin phiếu / Form)**: Bọc các `<DrawerField>` / `<DrawerRow>` trong layout grid (`grid grid-cols-1 md:grid-cols-2 gap-3`).
+  - **Khối 2 (Bảng dữ liệu dòng hàng / Items)**: Bọc `<DataTable>` hoặc `<StandardTable>` bên trong `<DrawerSection title="..." titleExtra={...}>` có kèm số lượng dòng `(N)` và action bar phụ.
+  - **Khối 3 (Ghi chú & Điều khoản)**: Bọc ghi chú hoặc custom fields, mặc định có thể `defaultCollapsed={true}` để tối ưu không gian cuộn.
+
 ---
 
 ### 🔹 BƯỚC 4: Tích Hợp Top Tabs, Mạng Lưới Graph & QC Checklist
@@ -174,12 +180,50 @@ export function StandardDocumentDrawer({
 #### 1. Cấu trúc Top Navigation Tabs (`tabs: DrawerTopTabItem[]`):
 ```tsx
 const drawerTabs: DrawerTopTabItem[] = useMemo(() => [
-  // Tab 1: Form / Sheet Preview Chính (Luôn là tab đầu tiên)
+  // Tab 1: Form / Sheet Preview Chính (Được phân chia thành các DrawerSection chuẩn mực)
   {
     key: "details",
     label: t("tabDetails", "Chi tiết"),
     icon: <FileText className="w-3.5 h-3.5" />,
-    content: <DocumentMainDetail data={data} />,
+    content: (
+      <div className="space-y-4 pb-4">
+        {/* Section 1: Thông tin phiếu */}
+        <DrawerSection title={t("Thông tin phiếu")} collapsible defaultCollapsed={false}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <DrawerField label={t("Mã chứng từ")}>
+              <Input value={data?.code || ""} readOnly className={inputCls} />
+            </DrawerField>
+            <DrawerField label={t("Ngày hạch toán")}>
+              <Input value={data?.date || ""} readOnly className={inputCls} />
+            </DrawerField>
+          </div>
+        </DrawerSection>
+
+        {/* Section 2: Bảng dữ liệu nghiệp vụ chính (Embedded DataTable) */}
+        <DrawerSection
+          title={`${t("Danh sách mặt hàng")} (${data?.lines?.length || 0})`}
+          titleExtra={<div className="flex items-center gap-2 text-xs text-muted-foreground">{/* Action buttons */}</div>}
+          collapsible
+          defaultCollapsed={false}
+        >
+          <StandardTable
+            tableId="drawer-detail-lines"
+            enableFullscreen
+            tableTitle={t("Danh sách mặt hàng")}
+            columns={columns}
+            items={data?.lines || []}
+            getRowKey={(r) => r.id}
+          />
+        </DrawerSection>
+
+        {/* Section 3: Ghi chú & Điều khoản */}
+        <DrawerSection title={t("Ghi chú & Điều khoản")} collapsible defaultCollapsed={true}>
+          <DrawerField label={t("Nội dung ghi chú")}>
+            <Textarea value={data?.notes || ""} readOnly className={inputCls} />
+          </DrawerField>
+        </DrawerSection>
+      </div>
+    ),
   },
   // Tab 2: Nghiệp vụ thực thi / Chi tiết đối tượng
   {
@@ -235,6 +279,7 @@ const drawerTabs: DrawerTopTabItem[] = useMemo(() => [
 | **Component Core** | BẮT BUỘC sử dụng `<StandardFormDrawer>`, không tự viết Dialog hay Drawer thô. | [ ] |
 | **Responsive `vw` Size** | Đặt `size="xl"` cho chứng từ lớn (~90vw trên desktop), `lg` cho 2-col vừa, `sm`/`md` cho 1-col. Không bao giờ vượt quá `calc(100vw - 208px)`. | [ ] |
 | **Collapse Section Height** | Thẻ `<DrawerSection>` khi `collapsed={true}` phải tự co lại `h-auto`, không để lại khoảng trắng rỗng lớn. | [ ] |
+| **DrawerSection Main Content & Sidebar** | Cả Cột trái (Main Content / Tab 1) lẫn Cột phải (Right Panel) đều bắt buộc phân chia các khối nội dung theo `<DrawerSection>` có bật `collapsible={true}`. | [ ] |
 | **Collapsible Right Panel** | Cột phải thông tin chung luôn có nút Thu gọn / Mở rộng (`ChevronRight`/`ChevronLeft`). Khi đóng, cột trái chiếm 100% full width. | [ ] |
 | **Top Navigation Tabs** | Chứng từ $\ge 2$ góc nhìn BẮT BUỘC dùng prop `tabs`. Tab 1 luôn là Chi tiết chính. Mảng `tabs` bọc trong `useMemo`. | [ ] |
 | **Traceability Graph Full Width** | Tab mạng lưới chứng từ liên kết phải set `hideRightPanel: true` để bung toàn bộ chiều ngang. | [ ] |

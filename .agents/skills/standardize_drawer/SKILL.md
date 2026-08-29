@@ -112,14 +112,52 @@ export function StandardDocumentDrawer({ open, onClose, mode, setMode, documentD
   const [activeTab, setActiveTab] = useState<string>("details");
 
   const drawerTabs: DrawerTopTabItem[] = [
-    // Tab 1: Nội dung chi tiết chính
+    // Tab 1: Nội dung chi tiết chính (Main Content được phân chia thành các DrawerSection chuẩn mực)
     {
       key: "details",
       label: t("Chi tiết chứng từ"),
       icon: <FileText className="w-3.5 h-3.5" />,
       content: (
-        <div className="space-y-4">
-          <DocumentSheetPreview data={documentData} />
+        <div className="space-y-4 pb-4">
+          {/* Section 1 (Main Content): Thông tin phiếu & Form nhập liệu */}
+          <DrawerSection title={t("Thông tin phiếu")} collapsible defaultCollapsed={false}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <DrawerField label={t("Mã chứng từ")}>
+                <Input value={documentData.code} readOnly className={inputCls} />
+              </DrawerField>
+              <DrawerField label={t("Ngày hạch toán")}>
+                <Input value={documentData.date} readOnly className={inputCls} />
+              </DrawerField>
+            </div>
+          </DrawerSection>
+
+          {/* Section 2 (Main Content): Bảng dữ liệu nhúng (DataTable / StandardTable) */}
+          <DrawerSection
+            title={`${t("Danh sách mặt hàng")} (${documentData.lines?.length || 0})`}
+            titleExtra={
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                {/* Nút hành động, thêm dòng hoặc bộ lọc */}
+              </div>
+            }
+            collapsible
+            defaultCollapsed={false}
+          >
+            <StandardTable
+              tableId="drawer-detail-lines"
+              enableFullscreen
+              tableTitle={t("Danh sách mặt hàng")}
+              columns={itemColumns}
+              items={documentData.lines || []}
+              getRowKey={(r) => r.id}
+            />
+          </DrawerSection>
+
+          {/* Section 3 (Main Content): Ghi chú & Điều khoản */}
+          <DrawerSection title={t("Ghi chú & Điều khoản")} collapsible defaultCollapsed={true}>
+            <DrawerField label={t("Nội dung ghi chú")}>
+              <Textarea value={documentData.notes || ""} readOnly className={inputCls} />
+            </DrawerField>
+          </DrawerSection>
         </div>
       ),
     },
@@ -226,7 +264,14 @@ Dành cho các form đơn giản không có nhiều phân hệ (như Company Pro
    - Thuộc tính `collapsible` **mặc định là `true`** (`defaultCollapsed={false}`), tự động kích hoạt icon mũi tên Expand/Collapse xoay mượt mà.
    - **Xử lý Chiều cao khi Collapsed**: Khi `collapsed={true}`, thẻ `<DrawerSection>` **BẮT BUỘC tự động co về `h-auto`**, không giữ các class ép chiều cao như `h-full` hoặc `h-[calc(100vh-210px)]` để tránh tạo ra khoảng trắng lớn vô nghĩa. Khi bọc bảng với `fitViewportHeight`, luôn truyền `fitViewportHeight={!isCollapsed}` và container ngoài `className={cn("flex flex-col", !isCollapsed ? "h-[calc(100vh-210px)]" : "h-auto")}`.
 
-3. **Quy tắc Giảm thiểu Border & Chuẩn hóa Timeline (No Nested Borders Overload)**:
+3. **Quy chuẩn `<DrawerSection>` cho Cột Trái / Main Content (Left Panel & Tabs Content)**:
+   - **BẮT BUỘC phân nhóm nội dung chính bằng `<DrawerSection>`**: Tuyệt đối không thả các trường input, textarea hay bảng dữ liệu trôi nổi không tiêu đề trong Main Content (`leftPanel` hoặc nội dung các tab).
+   - **Cấu trúc 3 phân vùng chuẩn trong Main Content**:
+     1. **Phân vùng 1 — Thông tin phiếu / Master Data**: Bọc các `<DrawerField>` / `<DrawerRow>` trong layout grid (`grid grid-cols-1 md:grid-cols-2 gap-3`).
+     2. **Phân vùng 2 — Bảng dữ liệu nghiệp vụ chính (Embedded DataTable)**: Bọc `<DataTable>` hoặc `<StandardTable>` bên trong `<DrawerSection title="..." titleExtra={...}>`. Tiêu đề bắt buộc hiển thị số lượng dòng `(N)`, `titleExtra` chứa các nút hành động theo ngữ cảnh (Thêm dòng mới, Nút xóa bộ lọc nếu bảng có filter active, hoặc Fullscreen toggle).
+     3. **Phân vùng 3 — Ghi chú, Điều khoản & Custom Fields**: Bọc các trường bổ sung ở cuối, mặc định có thể để `defaultCollapsed={true}` để tiết kiệm diện tích cuộn dọc.
+
+4. **Quy tắc Giảm thiểu Border & Chuẩn hóa Timeline (No Nested Borders Overload)**:
    - **Tuyệt đối tránh** lồng quá nhiều border card (`border border-border`) bên trong DrawerSection khiến giao diện bị nặng nề, rối mắt.
    - Khi hiển thị Dòng thời gian (Timeline / History / Changelog / Audit Logs):
      - **BẮT BUỘC** sử dụng cấu trúc trục dọc thanh thoát:
@@ -264,7 +309,7 @@ Dành cho các form đơn giản không có nhiều phân hệ (như Company Pro
 ## 9. Summary Checklist trước khi hoàn thành:
 
 - [ ] Drawer đã sử dụng `<StandardFormDrawer>` chưa?
-- [ ] **Toàn bộ nội dung đã được bao bọc trong `<DrawerSection>` có bật `collapsible={true}` chưa?**
+- [ ] **Cả Cột trái (Main Content / Tab 1) lẫn Cột phải (Right Panel) đều đã phân chia các khối nội dung thành `<DrawerSection>` có bật `collapsible={true}` chưa?**
 - [ ] Size Drawer đã áp dụng chuẩn responsive `vw` kết hợp `min-width` / `max-width` (tối ưu cho desktop $\ge 1280px$, $\ge 1440px$, $\ge 1920px$ và không vượt quá `calc(100vw-208px)`) chưa?
 - [ ] Giao diện đã loại bỏ các border lồng nhau không cần thiết, Timeline đã áp dụng đúng trục dọc spine + dotted connector chưa?
 - [ ] Nếu Drawer cho phép cập nhật, đã truyền `onToggleEdit` chưa?
