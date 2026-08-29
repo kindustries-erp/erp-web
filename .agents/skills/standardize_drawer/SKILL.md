@@ -219,10 +219,12 @@ Dành cho các form đơn giản không có nhiều phân hệ (như Company Pro
 1. **Mặc định BẬT Expand/Collapse cho Cột Phải (`layout="2-columns"`)**:
    - Trong mọi Drawer 2 cột (`layout="2-columns"`), hệ thống **tự động kích hoạt nút Thu gọn / Mở rộng cột phải (`ChevronRight`/`ChevronLeft`)** trên thanh Header (`collapsibleRightPanel` mặc định là `true`).
    - Người dùng có thể nhấn nút mũi tên trên Header để thu gọn cột phải về cạnh phải màn hình bất cứ lúc nào để mở rộng 100% diện tích cho cột trái (như bảng dữ liệu hoặc form chính).
+   - Với các tab con tự chia 2 cột nội bộ (như tab Chi tiết theo đối tượng), **BẮT BUỘC** bổ sung nút toggle Thu gọn/Mở rộng cột phải trên thanh toolbar/titleExtra, và khi đóng lại cột trái bung rộng 100% `w-full`.
 
-2. **Mặc định BẬT Expand/Collapse cho `<DrawerSection>`**:
+2. **Mặc định BẬT Expand/Collapse cho `<DrawerSection>` & Co giãn chiều cao tự nhiên**:
    - Mọi vùng nội dung trong Drawer (cả 1-column lẫn 2-columns) **BẮT BUỘC** phải được bọc trong `<DrawerSection title="...">`.
-   - Thuộc tính `collapsible` **mặc định là `true`** (`defaultCollapsed={false}`), tự động kích hoạt icon mũi tên Expand/Collapse xoay mượt mà, cho phép người dùng click vào header section để thu gọn hoặc mở rộng từng phân đoạn nội dung.
+   - Thuộc tính `collapsible` **mặc định là `true`** (`defaultCollapsed={false}`), tự động kích hoạt icon mũi tên Expand/Collapse xoay mượt mà.
+   - **Xử lý Chiều cao khi Collapsed**: Khi `collapsed={true}`, thẻ `<DrawerSection>` **BẮT BUỘC tự động co về `h-auto`**, không giữ các class ép chiều cao như `h-full` hoặc `h-[calc(100vh-210px)]` để tránh tạo ra khoảng trắng lớn vô nghĩa. Khi bọc bảng với `fitViewportHeight`, luôn truyền `fitViewportHeight={!isCollapsed}` và container ngoài `className={cn("flex flex-col", !isCollapsed ? "h-[calc(100vh-210px)]" : "h-auto")}`.
 
 3. **Quy tắc Giảm thiểu Border & Chuẩn hóa Timeline (No Nested Borders Overload)**:
    - **Tuyệt đối tránh** lồng quá nhiều border card (`border border-border`) bên trong DrawerSection khiến giao diện bị nặng nề, rối mắt.

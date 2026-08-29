@@ -36,7 +36,10 @@ import { PurchaseOrderSelectionModal } from "./PurchaseOrderSelectionModal";
 import { SalesOrderSelectionModal } from "./SalesOrderSelectionModal";
 import { GarageCaseSelectionModal } from "./GarageCaseSelectionModal";
 import { ErpInvoiceSettlementTab } from "./ErpInvoiceSettlementTab";
-import { ErpInvoicePartnerTab } from "./ErpInvoicePartnerTab";
+import {
+  ErpInvoicePartnerTab,
+  ErpInvoicePartnerRightPanel,
+} from "./ErpInvoicePartnerTab";
 import { PostedAccountingSummary } from "@/shared/components/accounting/PostedAccountingSummary";
 import { PostingSection } from "@/shared/components/accounting/PostingSection";
 import { ErpInvoicePdfUpload } from "./ErpInvoicePdfUpload";
@@ -79,6 +82,7 @@ interface Props {
   defaultRelatedTabKey?: string;
   defaultRelatedCollapsed?: boolean;
   bottomPanel?: React.ReactNode;
+  partnerViewMode?: "invoices" | "lines";
 }
 
 function formatTaxInvoiceStatus(val?: number | null) {
@@ -90,7 +94,7 @@ function formatTaxInvoiceStatus(val?: number | null) {
     case 3:
       return "Điều chỉnh";
     case 4:
-      return "Bị thay thế";
+      return "Đã bị thay thế";
     case 5:
       return "Bị điều chỉnh";
     case 6:
@@ -128,6 +132,7 @@ export function ErpInvoiceInternalDrawer({
   defaultRelatedTabKey = "financials",
   defaultRelatedCollapsed = false,
   bottomPanel,
+  partnerViewMode,
 }: Props) {
   const { t } = useTranslation("erpInvoices");
   const [showNetOffModal, setShowNetOffModal] = useState(false);
@@ -354,14 +359,20 @@ export function ErpInvoiceInternalDrawer({
         content: <div className="space-y-4">{children}</div>,
       },
 
-      // 2. Tab Giao dịch (Thông tin đối tác & Lịch sử giao dịch liên quan)
+      // 2. Tab Chi tiết theo đối tượng (Thông tin đối tác & Lịch sử giao dịch liên quan)
       {
         key: "partner",
-        label: t("tabTransactions", "Giao dịch"),
+        label: t("tabObjectDetails", "Chi tiết theo đối tượng"),
         icon: <Building2 className="w-3.5 h-3.5" />,
-        hideRightPanel: true,
         content: (
           <ErpInvoicePartnerTab
+            detailInvoice={detailInvoice}
+            direction={direction}
+            defaultViewMode={partnerViewMode}
+          />
+        ),
+        rightPanel: (
+          <ErpInvoicePartnerRightPanel
             detailInvoice={detailInvoice}
             direction={direction}
           />

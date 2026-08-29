@@ -114,7 +114,7 @@ export function ErpInvoicesTab(props: ErpInvoicesTabProps) {
       });
 
       traCuuItems.push({
-        label: t("actionPartnerTransactions", "Giao dịch đối tác"),
+        label: t("actionObjectDetails", "Chi tiết theo đối tượng"),
         icon: <Building2 className="w-3.5 h-3.5" />,
         onClick: () => handleOpenInternal(inv, "view", "partner"),
       });
@@ -419,6 +419,7 @@ export function ErpInvoicesTab(props: ErpInvoicesTabProps) {
         setPreviewPdf={setPreviewPdf}
         netOffInvoice={netOffInvoice}
         setNetOffInvoice={setNetOffInvoice}
+        activeView={logic.activeView}
       />
 
       <InvoiceBulkModals

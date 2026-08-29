@@ -606,7 +606,7 @@ Khi một bảng dữ liệu có nhiều góc nhìn tra cứu (như Hóa đơn �
 - [ ] Phân trang đã hỗ trợ `pageSizeOptions = [20, 50, 100, 200]` và khởi tạo `defaultPageSize` linh hoạt theo chiều cao màn hình (Screen Height `< 900px` -> `20`, `>= 900px` -> `50`) chưa?
 - [ ] Mặc định **100% BẢNG ĐÃ ƯU TIÊN SERVER-SIDE SORTING & FILTERING** (dùng `fetchOptions` gọi API `getColumnOptions` backend và TanStack Query) chưa? (Chỉ dùng client-side khi User chỉ định rõ ràng).
 - [ ] TUYỆT ĐỐI không dùng `onRowClick` mở detail, chỉ mở từ `<TableText>` hoặc Floated Action Menu / Right-Click Context Menu (`rowActions`) chưa?
-- [ ] TUYỆT ĐỐI không định nghĩa cột action tĩnh thủ công `{ key: "actions" }` trong `columns`, đã truyền prop `rowActions` chưa?
+- [ ] TUYỆT ĐỐI không định nghĩa cột action tĩnh thủ công `{ key: "actions" }` trong `columns`, đã truyền prop `rowActions` trên `<SpreadsheetPageTemplate>` hoặc `actions={rowActions}`, `enableRowHoverActions={true}`, `hideLegacyActionColumn={true}` trên `<StandardTable>` chưa?
 - [ ] Mảng `rowActions` đã có 2 actions đầu tiên là **Xem chi tiết** (`openDetail(id, "view")` — Icon `Eye` 👁️) và **Chỉnh sửa** (`openDetail(id, "edit")` — Icon `Pencil` ✏️) để map vào 2 nút Quick Actions trên Floated Bar chưa?
 - [ ] Bảng đã tự động kích hoạt **Right-Click Context Menu** (`TableRowContextMenu`) qua `rowActions` / `actions` và highlight dòng active chưa?
 - [ ] Nút Reset Column đã nằm gọn trong popup menu `ColumnToggle` (`Settings2` → `RotateCcw`), và TUYỆT ĐỐI không đặt ở header cột dữ liệu/Action chưa?

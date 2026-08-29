@@ -14,6 +14,8 @@ export interface DrawerTopTabItem {
   badgeVariant?: "default" | "secondary" | "outline" | "danger" | "warning";
   /** If true, dynamically hides rightPanel when this tab is active */
   hideRightPanel?: boolean;
+  /** Custom right panel node for this tab. If omitted, falls back to drawer-level rightPanel */
+  rightPanel?: React.ReactNode;
   /** Content rendered inside this tab */
   content: React.ReactNode;
   /** Extra element rendered on the right side of the tab bar when this tab is active */

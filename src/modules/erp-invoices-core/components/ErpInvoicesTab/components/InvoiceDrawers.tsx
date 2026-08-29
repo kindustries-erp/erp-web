@@ -54,6 +54,8 @@ export interface InvoiceDrawersProps {
   setPreviewPdf: (pdf: any) => void;
   netOffInvoice: any | null;
   setNetOffInvoice: (inv: any | null) => void;
+  activeView?: "header" | "lines";
+  partnerViewMode?: "invoices" | "lines";
 }
 
 export function InvoiceDrawers({
@@ -78,6 +80,8 @@ export function InvoiceDrawers({
   setPreviewPdf,
   netOffInvoice,
   setNetOffInvoice,
+  activeView,
+  partnerViewMode,
 }: InvoiceDrawersProps) {
   return (
     <>
@@ -91,6 +95,9 @@ export function InvoiceDrawers({
         detailInvoice={formHook.detailInvoice}
         activeTabKey={formHook.activeTabKey}
         onTabChange={formHook.setActiveTabKey}
+        partnerViewMode={
+          partnerViewMode || (activeView === "lines" ? "lines" : "invoices")
+        }
         startEdit={formHook.startEdit}
         saving={formHook.saving}
         handleSave={formHook.handleSave}
