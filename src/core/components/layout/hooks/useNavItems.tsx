@@ -174,13 +174,6 @@ export function useNavItems(): NavSearchItem[] {
         keywords: ["kho", "tong quan kho", "inventory"],
         icon: <LayoutDashboard className="w-4 h-4" />,
       });
-      items.push({
-        key: "erp-inventory-stock",
-        label: t("nav.items.erpInventoryStock"),
-        section: inventorySection,
-        keywords: ["kho", "ton kho", "stock", "hang hoa"],
-        icon: <Package className="w-4 h-4" />,
-      });
     }
     if (canReadInventoryVouchers) {
       items.push({
@@ -189,6 +182,15 @@ export function useNavItems(): NavSearchItem[] {
         section: inventorySection,
         keywords: ["kho", "chung tu kho", "nhap kho", "xuat kho", "vouchers"],
         icon: <FileText className="w-4 h-4" />,
+      });
+    }
+    if (canReadInventoryItems) {
+      items.push({
+        key: "erp-inventory-stock",
+        label: t("nav.items.erpInventoryStock"),
+        section: inventorySection,
+        keywords: ["kho", "ton kho", "stock", "hang hoa"],
+        icon: <Package className="w-4 h-4" />,
       });
     }
     if (canReadInventoryItems) {

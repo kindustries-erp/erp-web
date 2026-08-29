@@ -177,12 +177,33 @@ export function TableColumnHeaderFilter({
       if (!debouncedLocalSearch) {
         opts = filterOptions;
       } else {
-        const searchLower = debouncedLocalSearch.toLowerCase();
-        opts = filterOptions.filter(
-          (opt) =>
-            (opt.label || "").toLowerCase().includes(searchLower) ||
-            (opt.value || "").toLowerCase().includes(searchLower),
-        );
+        const keywords = debouncedLocalSearch
+          .split(";")
+          .map((k) => k.trim())
+          .filter(Boolean);
+        if (keywords.length === 0) {
+          opts = filterOptions;
+        } else {
+          opts = filterOptions.filter((opt) => {
+            const labelLower = (opt.label || "").toLowerCase();
+            const valueLower = (opt.value || "").toLowerCase();
+            return keywords.some((kw) => {
+              let isExact = false;
+              let cleanKw = kw;
+              if (kw.startsWith('"') && kw.endsWith('"') && kw.length >= 2) {
+                isExact = true;
+                cleanKw = kw.slice(1, -1);
+              }
+              const kwLower = cleanKw.toLowerCase();
+              if (isExact) {
+                return labelLower === kwLower || valueLower === kwLower;
+              }
+              return (
+                labelLower.includes(kwLower) || valueLower.includes(kwLower)
+              );
+            });
+          });
+        }
       }
     } else if (columnKey) {
       const apiOptions = optionsData?.pages.flatMap((p: any) => p.items) || [];

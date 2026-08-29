@@ -246,7 +246,7 @@ export function createColumnHeaderFilter<T = any>(
         hideFooter={options.hideFooter}
         showBlankOption={options.showBlankOption}
         formatOptionLabel={isServer ? options.formatOptionLabel : undefined}
-        enableSelectAllMatching={options.enableSelectAllMatching}
+        enableSelectAllMatching={options.enableSelectAllMatching ?? true}
       />
     );
   };
@@ -459,7 +459,12 @@ export function filterClientItems<T extends Record<string, any>>(
   if (listHook.columnSearch) {
     Object.entries(listHook.columnSearch).forEach(([colKey, search]) => {
       if (search && search.trim().length > 0) {
-        const query = search.trim().toLowerCase();
+        const keywords = search
+          .split(";")
+          .map((k) => k.trim())
+          .filter(Boolean);
+        if (keywords.length === 0) return;
+
         result = result.filter((item) => {
           const rawVal = options?.customExtractors?.[colKey]
             ? options.customExtractors[colKey](item)
@@ -468,7 +473,19 @@ export function filterClientItems<T extends Record<string, any>>(
             rawVal !== undefined && rawVal !== null
               ? String(rawVal).toLowerCase()
               : "";
-          return strVal.includes(query);
+          return keywords.some((kw) => {
+            let isExact = false;
+            let cleanKw = kw;
+            if (kw.startsWith('"') && kw.endsWith('"') && kw.length >= 2) {
+              isExact = true;
+              cleanKw = kw.slice(1, -1);
+            }
+            const kwLower = cleanKw.toLowerCase();
+            if (isExact) {
+              return strVal === kwLower;
+            }
+            return strVal.includes(kwLower);
+          });
         });
       }
     });

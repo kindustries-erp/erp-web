@@ -25,11 +25,13 @@ import {
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { Forbidden } from "@/pages/Forbidden";
-import type { DataTableColumn } from "@/shared/components/DataTable";
+import {
+  createColumnHeaderFilter,
+  getDefaultPageSize,
+  type DataTableColumn,
+} from "@/shared/components/DataTable";
 import { TableText } from "@/shared/components/DataTable/TableText";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate/SpreadsheetPageTemplate";
-import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
-import { DateRangeColumnSlot } from "@/shared/components/DataTable/DateRangeColumnSlot";
 import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
 import { ReceiptText } from "lucide-react";
 import {
@@ -101,7 +103,7 @@ export function ErpWarehouseTab() {
   // ── filter state (same pattern as page mua hàng)
   // ── list state
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(50);
+  const [pageSize, setPageSize] = useState<number>(getDefaultPageSize);
   const [loadError, setLoadError] = useState<string | null>(null);
 
   // ── Unified Drawer
@@ -322,103 +324,42 @@ export function ErpWarehouseTab() {
     };
   };
 
-  const getSortState = (columnKey: string) => {
-    const current = tableState.sorts[0];
-    if (!current) return "none";
-    if (current === columnKey) return "asc";
-    if (current === `-${columnKey}`) return "desc";
-    return "none";
-  };
+  const listHookLike = useMemo(
+    () => ({
+      sorts: tableState.sorts,
+      setSort: (key: string, state: "asc" | "desc" | "none") => {
+        tableState.setSort(key, state);
+      },
+      columnFilters: tableState.columnFilters,
+      setColumnFilter: (key: string, vals: string[]) => {
+        tableState.setColumnFilter(key, vals);
+        setPage(1);
+      },
+      columnSearch: tableState.columnSearch,
+      setColumnSearch: (key: string, val: string) => {
+        tableState.setColumnSearch(key, val);
+        setPage(1);
+      },
+      dateFrom,
+      dateTo,
+      setDateRange: (from?: string, to?: string) => {
+        filterPanel.setDateFrom(from || "");
+        filterPanel.setDateTo(to || "");
+        setPage(1);
+      },
+    }),
+    [tableState, dateFrom, dateTo, filterPanel],
+  );
 
-  const handleSortChange = (
-    columnKey: string,
-    state: "asc" | "desc" | "none",
-  ) => {
-    tableState.setSort(columnKey, state);
-  };
-
-  const handleSearchChange = (columnKey: string, value: string) => {
-    tableState.setColumnSearch(columnKey, value);
-    setPage(1);
-  };
-
-  const handleFilterChange = (columnKey: string, values: string[]) => {
-    tableState.setColumnFilter(columnKey, values);
-    setPage(1);
-  };
-
-  const renderHeaderFilter = (key: string, label: string) => {
-    if (key === "date") {
-      return (
-        <TableColumnHeaderFilter
-          title={label}
-          align="center"
-          className="w-full justify-center"
-          sortState={getSortState(key)}
-          onSortChange={(state) => handleSortChange(key, state)}
-          searchValue={tableState.columnSearch[key] || ""}
-          onSearchChange={(val) => handleSearchChange(key, val)}
-          selectedFilters={tableState.columnFilters[key] || []}
-          onFilterChange={(vals) => handleFilterChange(key, vals)}
-          columnKey={key}
-          hideFilter={true}
-          hideFooter={true}
-          isActive={!!tableState.columnSearch[key]}
-          dateRangeSlot={({ close }) => {
-            const val = tableState.columnSearch[key] || "";
-            const [from = "", to = ""] = val.split("|");
-            return (
-              <DateRangeColumnSlot
-                dateFrom={from}
-                dateTo={to}
-                onChange={(f, t) => {
-                  const next = f || t ? `${f}|${t}` : "";
-                  tableState.setColumnSearch(key, next);
-                  setPage(1);
-                }}
-                onClose={close}
-              />
-            );
-          }}
-        />
-      );
-    }
-
-    let formatOptionLabel: ((val: string) => string) | undefined;
-    if (key === "type") {
-      formatOptionLabel = (val: string) => {
-        if (val === "receipt") return t("Nhập kho");
-        if (val === "issue") return t("Xuất kho");
-        if (val === "adjustment") return t("Điều chỉnh");
-        return val;
-      };
-    } else if (["qtyReceipt", "qtyIssue", "qtyAdjustment"].includes(key)) {
-      formatOptionLabel = (val: string | number) => {
-        const n = Number(val || 0);
-        if (isNaN(n)) return String(val);
-        return n.toLocaleString("vi-VN");
-      };
-    }
-
-    return (
-      <TableColumnHeaderFilter
-        title={label}
-        align="center"
-        className="w-full justify-center"
-        sortState={getSortState(key)}
-        onSortChange={(state) => handleSortChange(key, state)}
-        searchValue={tableState.columnSearch[key] || ""}
-        onSearchChange={(val) => handleSearchChange(key, val)}
-        selectedFilters={tableState.columnFilters[key] || []}
-        onFilterChange={(vals) => handleFilterChange(key, vals)}
-        columnKey={key}
-        allFilters={tableState.columnFilters}
-        fetchOptions={fetchColumnOptions}
-        formatOptionLabel={formatOptionLabel}
-        queryKeyPrefix="warehouse-vouchers-col-options"
-      />
-    );
-  };
+  const headerFilter = useMemo(
+    () =>
+      createColumnHeaderFilter({
+        listHook: listHookLike,
+        queryKeyPrefix: "warehouse-vouchers-col-options",
+        fetchOptions: fetchColumnOptions,
+      }),
+    [listHookLike],
+  );
 
   const vouchersQuery = useWarehouseVouchersQuery({
     page,
@@ -519,23 +460,33 @@ export function ErpWarehouseTab() {
         enableResizing: false,
         hideable: false,
         sortable: false,
-        headerClassName: "text-center",
-        className: "text-center font-mono text-xs text-muted-foreground",
+        headerClassName: "text-center w-[40px] min-w-[40px]",
+        className:
+          "text-center w-[40px] min-w-[40px] font-mono text-xs text-muted-foreground",
         cell: (_, idx) => (
           <span className="w-full block text-center">{idx}</span>
         ),
       },
       {
         key: "date",
-        header: renderHeaderFilter("date", t("Ngày")),
+        header: headerFilter.date("date", t("Ngày")),
         size: 130,
         enableResizing: true,
         className: "text-right",
-        cell: (row) => <TableDateCell date={row.createdAt} />,
+        cell: (row) => (
+          <TableDateCell date={row.createdAt} className="justify-end w-full" />
+        ),
       },
       {
         key: "type",
-        header: renderHeaderFilter("type", t("Loại phiếu")),
+        header: headerFilter("type", t("Loại phiếu"), {
+          formatOptionLabel: (val: string) => {
+            if (val === "receipt") return t("Nhập kho");
+            if (val === "issue") return t("Xuất kho");
+            if (val === "adjustment") return t("Điều chỉnh");
+            return val;
+          },
+        }),
         size: 130,
         enableResizing: true,
         className: "text-center",
@@ -577,7 +528,7 @@ export function ErpWarehouseTab() {
       },
       {
         key: "voucherNo",
-        header: renderHeaderFilter("voucherNo", t("Số phiếu")),
+        header: headerFilter("voucherNo", t("Số phiếu")),
         size: 220,
         enableResizing: true,
         className: "font-mono text-sm text-left",
@@ -626,7 +577,7 @@ export function ErpWarehouseTab() {
       },
       {
         key: "qtyReceipt",
-        header: renderHeaderFilter("qtyReceipt", t("SL Nhập")),
+        header: headerFilter.qty("qtyReceipt", t("SL Nhập")),
         size: 150,
         enableResizing: true,
         className: "text-right",
@@ -637,7 +588,7 @@ export function ErpWarehouseTab() {
           return isNaN(qty) ? (
             ""
           ) : (
-            <span className="font-medium text-emerald-600">
+            <span className="font-medium text-emerald-600 tabular-nums">
               {qty.toLocaleString("vi-VN")}
             </span>
           );
@@ -645,7 +596,7 @@ export function ErpWarehouseTab() {
       },
       {
         key: "qtyIssue",
-        header: renderHeaderFilter("qtyIssue", t("SL Xuất")),
+        header: headerFilter.qty("qtyIssue", t("SL Xuất")),
         size: 150,
         enableResizing: true,
         className: "text-right",
@@ -656,7 +607,7 @@ export function ErpWarehouseTab() {
           return isNaN(qty) ? (
             ""
           ) : (
-            <span className="font-medium text-orange-600">
+            <span className="font-medium text-orange-600 tabular-nums">
               {qty.toLocaleString("vi-VN")}
             </span>
           );
@@ -664,7 +615,7 @@ export function ErpWarehouseTab() {
       },
       {
         key: "qtyAdjustment",
-        header: renderHeaderFilter("qtyAdjustment", t("SL Điều chỉnh")),
+        header: headerFilter.qty("qtyAdjustment", t("SL Điều chỉnh")),
         size: 150,
         enableResizing: true,
         className: "text-right",
@@ -681,7 +632,7 @@ export function ErpWarehouseTab() {
                 ? "text-red-600"
                 : "text-blue-600";
           return (
-            <span className={cn("font-medium", colorClass)}>
+            <span className={cn("font-medium tabular-nums", colorClass)}>
               {qty > 0 ? "+" : ""}
               {qty.toLocaleString("vi-VN")}
             </span>
@@ -690,7 +641,9 @@ export function ErpWarehouseTab() {
       },
       {
         key: "poNo",
-        header: renderHeaderFilter("poNo", t("Chứng từ")),
+        header: headerFilter("poNo", t("Chứng từ"), {
+          showBlankOption: true,
+        }),
         size: 200,
         enableResizing: true,
         className: "font-mono text-sm text-left",
@@ -709,7 +662,9 @@ export function ErpWarehouseTab() {
       },
       {
         key: "partnerName",
-        header: renderHeaderFilter("partnerName", t("Đối tác")),
+        header: headerFilter("partnerName", t("Đối tác"), {
+          showBlankOption: true,
+        }),
         size: 200,
         enableResizing: true,
         className: "text-left",
@@ -724,7 +679,9 @@ export function ErpWarehouseTab() {
       },
       {
         key: "remarks",
-        header: renderHeaderFilter("remarks", t("Ghi chú")),
+        header: headerFilter("remarks", t("Ghi chú"), {
+          showBlankOption: true,
+        }),
         size: 300,
         enableResizing: true,
         className: "text-left",
@@ -739,7 +696,7 @@ export function ErpWarehouseTab() {
       },
       {
         key: "status",
-        header: renderHeaderFilter("status", t("Trạng thái")),
+        header: headerFilter("status", t("Trạng thái")),
         size: 150,
         enableResizing: true,
         className: "text-center",
@@ -757,7 +714,7 @@ export function ErpWarehouseTab() {
       },
     ],
 
-    [t, tableState, grDrawer, giDrawer, iaDrawer],
+    [t, headerFilter, grDrawer, giDrawer, iaDrawer],
   );
 
   // Actions are now passed to SpreadsheetPageTemplate
@@ -922,25 +879,6 @@ export function ErpWarehouseTab() {
             ],
           },
           {
-            groupLabel: t("groupDuLieu", "Dữ liệu"),
-            items: [
-              {
-                label: t("common.print"),
-                icon: <Printer className="h-3.5 w-3.5" />,
-                hidden: row.status === "DRAFT" || !isAdmin,
-                disabled: !!printTargetId,
-                onClick: () => handlePrintRow(row),
-              },
-              {
-                label: t("Xuất XLSX"),
-                icon: <FileSpreadsheet className="h-3.5 w-3.5" />,
-                hidden: row.status === "DRAFT" || row.type === "adjustment",
-                disabled: xlsxExportingId === row.id,
-                onClick: () => handleExportXlsx(row),
-              },
-            ],
-          },
-          {
             groupLabel: t("groupThaoTac", "Thao tác"),
             items: [
               {
@@ -960,6 +898,20 @@ export function ErpWarehouseTab() {
                     iaDrawer.openDetail(row.id, false);
                   }
                 },
+              },
+              {
+                label: t("common.print"),
+                icon: <Printer className="h-3.5 w-3.5" />,
+                hidden: row.status === "DRAFT" || !isAdmin,
+                disabled: !!printTargetId,
+                onClick: () => handlePrintRow(row),
+              },
+              {
+                label: t("Xuất XLSX"),
+                icon: <FileSpreadsheet className="h-3.5 w-3.5" />,
+                hidden: row.status === "DRAFT" || row.type === "adjustment",
+                disabled: xlsxExportingId === row.id,
+                onClick: () => handleExportXlsx(row),
               },
               {
                 label: t("Xóa"),

@@ -220,16 +220,6 @@ export function SidebarNav({
               contextPage="inventory-dashboard"
             />
           )}
-          {canReadInventoryItems && (
-            <NavItem
-              collapsed={c}
-              icon={<Package className="w-4 h-4 opacity-65 flex-shrink-0" />}
-              label={t("nav.items.erpInventoryStock")}
-              active={currentPage === "erp-inventory-stock"}
-              onClick={() => navTo("erp-inventory-stock")}
-              contextPage="erp-inventory-stock"
-            />
-          )}
           {canReadInventoryVouchers && (
             <NavItem
               collapsed={c}
@@ -238,6 +228,16 @@ export function SidebarNav({
               active={currentPage === "erp-inventory-vouchers"}
               onClick={() => navTo("erp-inventory-vouchers")}
               contextPage="erp-inventory-vouchers"
+            />
+          )}
+          {canReadInventoryItems && (
+            <NavItem
+              collapsed={c}
+              icon={<Package className="w-4 h-4 opacity-65 flex-shrink-0" />}
+              label={t("nav.items.erpInventoryStock")}
+              active={currentPage === "erp-inventory-stock"}
+              onClick={() => navTo("erp-inventory-stock")}
+              contextPage="erp-inventory-stock"
             />
           )}
           {canReadInventoryItems && (
