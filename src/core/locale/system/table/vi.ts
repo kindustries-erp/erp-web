@@ -13,4 +13,15 @@ export const tableVi = {
   columnVisibility: "Tùy chỉnh cột",
   resetColumns: "Khôi phục mặc định",
   reset: "Khôi phục",
+  sortAsc: "Sắp xếp tăng dần",
+  sortDesc: "Sắp xếp giảm dần",
+  searchPlaceholder: 'Tìm... ("..." chính xác, ; nhiều từ)',
+  searchTooltip:
+    'Mẹo: Dùng "text" để tìm chính xác, dùng a;b để tìm nhiều giá trị (OR)',
+  selectAllMatching: "(Chọn tất cả kết quả tìm kiếm)",
+  selectAllVisible: "(Chọn tất cả đang hiển thị)",
+  blank: "(Trống)",
+  noData: "Không có dữ liệu",
+  clearFilter: "Xóa bộ lọc",
+  apply: "Áp dụng",
 };

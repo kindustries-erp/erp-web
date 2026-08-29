@@ -7,6 +7,8 @@ interface TableColumnState {
   sorts: string[];
   columnSearch: Record<string, string>;
   columnFilters: Record<string, string[]>;
+  dateFrom?: string;
+  dateTo?: string;
 }
 
 interface TableColumnStore {
@@ -21,6 +23,7 @@ interface TableColumnStore {
   toggleSort: (tableId: string, field: string) => void;
   setColumnSearch: (tableId: string, col: string, val: string) => void;
   setColumnFilter: (tableId: string, col: string, vals: string[]) => void;
+  setDateRange: (tableId: string, from?: string, to?: string) => void;
   resetFilters: (tableId: string) => void;
   migrateTableState: (fromTableId: string, toTableId: string) => void;
 }
@@ -29,6 +32,8 @@ const defaultTableState: TableColumnState = {
   sorts: [],
   columnSearch: {},
   columnFilters: {},
+  dateFrom: undefined,
+  dateTo: undefined,
 };
 
 const initialTableStates: Record<string, TableColumnState> = {};
@@ -157,6 +162,22 @@ export const useTableColumnStore = create<TableColumnStore>((set, get) => ({
     });
   },
 
+  setDateRange: (tableId, from, to) => {
+    set((state) => {
+      const table = state.tables[tableId] || getInitialTableState(tableId);
+      return {
+        tables: {
+          ...state.tables,
+          [tableId]: {
+            ...table,
+            dateFrom: from,
+            dateTo: to,
+          },
+        },
+      };
+    });
+  },
+
   resetFilters: (tableId) => {
     clearAllDropdownSearchStates();
     set((state) => ({
@@ -196,8 +217,16 @@ export function useTableColumnState(tableId: string) {
     Object.entries(tableState.columnSearch).forEach(([col, s]) => {
       if (s) activeCols.add(col);
     });
+    if (tableState.dateFrom || tableState.dateTo) {
+      activeCols.add("dateRange");
+    }
     return activeCols.size;
-  }, [tableState.columnFilters, tableState.columnSearch]);
+  }, [
+    tableState.columnFilters,
+    tableState.columnSearch,
+    tableState.dateFrom,
+    tableState.dateTo,
+  ]);
 
   return {
     ...tableState,
@@ -209,6 +238,8 @@ export function useTableColumnState(tableId: string) {
       store.setColumnSearch(tableId, col, val),
     setColumnFilter: (col: string, vals: string[]) =>
       store.setColumnFilter(tableId, col, vals),
+    setDateRange: (from?: string, to?: string) =>
+      store.setDateRange(tableId, from, to),
     resetFilters: () => store.resetFilters(tableId),
   };
 }

@@ -471,8 +471,8 @@ export function GarageMonthClassificationCasesDrawer({
         className: "text-center w-[40px] min-w-[40px]",
         headerClassName: "text-center w-[40px] min-w-[40px]",
         cell: (_, idx) => (
-          <span className="text-muted-foreground font-medium">
-            {(page - 1) * pageSize + idx + 1}
+          <span className="w-full block text-center text-muted-foreground font-medium">
+            {idx}
           </span>
         ),
       },

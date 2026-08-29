@@ -1,55 +1,104 @@
-import { useMemo } from "react";
+import { useMemo, useCallback } from "react";
 import { useT } from "@/core/i18n";
 import { Tooltip } from "@/core/components/ui/Tooltip";
-import type { DataTableColumn } from "@/shared/components/DataTable";
-import type { InventoryStockRow } from "@/modules/operational/api/operationalApi";
-import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
+import {
+  createColumnHeaderFilter,
+  type DataTableColumn,
+} from "@/shared/components/DataTable";
+import {
+  type InventoryStockRow,
+  operationalApi,
+} from "@/modules/operational/api/operationalApi";
 import { useOperationalListStore } from "@/modules/operational/hooks/useOperationalListStore";
 import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
 import { TableText } from "@/shared/components/DataTable/TableText";
+import { TableDateCell } from "@/shared/components/DataTable/TableDateCell";
+import { StatusBadge } from "@/shared/components/badges";
+import { fmtQty } from "@/shared/utils/format";
+import { cn } from "@/shared/utils";
+
 interface UseStockColumnsOptions {
-  stockItems: InventoryStockRow[];
+  stockItems?: InventoryStockRow[];
   onViewItem: (id: string) => void;
 }
 
 /**
- * Hook trả về columns cho bảng tồn kho (variant="inventory").
- * Extracted từ OperationalListPage.tsx (dòng 1576–1688).
+ * Hook trả về columns cho bảng tồn kho (variant="inventory")
+ * Chuẩn hóa theo quy chuẩn /standardize-table
  */
 export function useStockColumns({
-  stockItems,
   onViewItem,
 }: UseStockColumnsOptions): DataTableColumn<InventoryStockRow>[] {
   const t = useT();
   const store = useOperationalListStore();
   const tableState = useTableColumnState("inventory-stock-table");
 
-  const getSortState = (key: string) => {
-    if (tableState.sorts.includes(key)) return "asc";
-    if (tableState.sorts.includes(`-${key}`)) return "desc";
-    return "none";
-  };
+  const fetchStockOptions = useCallback(
+    async ({
+      columnKey,
+      search,
+      pageParam,
+      filtersStr,
+    }: {
+      columnKey: string;
+      search: string;
+      pageParam: number;
+      filtersStr?: string;
+    }) => {
+      const res = await operationalApi.getInventoryStockColumnOptions(
+        columnKey,
+        search,
+        pageParam,
+        20,
+        filtersStr,
+      );
+      return {
+        items: (res.items || []).map((i: string | number) => ({
+          label: String(i),
+          value: String(i),
+        })),
+        total: res.total || 0,
+        next: res.page < res.totalPages ? res.page + 1 : null,
+      };
+    },
+    [],
+  );
 
-  const handleSortChange = (key: string, state: "asc" | "desc" | "none") => {
-    tableState.setSort(key, state);
-    store.setPage(1);
-  };
+  const listHookLike = useMemo(
+    () => ({
+      sorts: tableState.sorts,
+      setSort: (key: string, state: "asc" | "desc" | "none") => {
+        tableState.setSort(key, state);
+      },
+      columnFilters: tableState.columnFilters,
+      setColumnFilter: (key: string, vals: string[]) => {
+        tableState.setColumnFilter(key, vals);
+        store.setPage(1);
+      },
+      columnSearch: tableState.columnSearch,
+      setColumnSearch: (key: string, val: string) => {
+        tableState.setColumnSearch(key, val);
+        store.setPage(1);
+      },
+      dateFrom: tableState.dateFrom,
+      dateTo: tableState.dateTo,
+      setDateRange: (from?: string, to?: string) => {
+        tableState.setDateRange(from, to);
+        store.setPage(1);
+      },
+    }),
+    [tableState, store],
+  );
 
-  const handleSearchChange = (key: string, val: string) => {
-    tableState.setColumnSearch(key, val);
-    store.setPage(1);
-  };
-
-  const handleFilterChange = (key: string, vals: string[]) => {
-    tableState.setColumnFilter(key, vals);
-    store.setPage(1);
-  };
-
-  const formatQty = (val: string | number) =>
-    Number(val || 0).toLocaleString("vi-VN", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    });
+  const headerFilter = useMemo(
+    () =>
+      createColumnHeaderFilter({
+        listHook: listHookLike,
+        queryKeyPrefix: "inventory-stock-col-options",
+        fetchOptions: fetchStockOptions,
+      }),
+    [listHookLike, fetchStockOptions],
+  );
 
   return useMemo<DataTableColumn<InventoryStockRow>[]>(
     () => [
@@ -60,30 +109,17 @@ export function useStockColumns({
         enableResizing: false,
         hideable: false,
         sortable: false,
-        headerClassName: "text-center",
-        className: "text-center font-mono text-xs text-muted-foreground",
+        headerClassName: "text-center w-[40px] min-w-[40px]",
+        className:
+          "text-center w-[40px] min-w-[40px] font-mono text-xs text-muted-foreground",
         cell: (_, idx) => (
           <span className="w-full block text-center">{idx}</span>
         ),
       },
       {
         key: "item_code",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("inventoryMasters.columns.sku")}
-            sortState={getSortState("item_code")}
-            onSortChange={(state) => handleSortChange("item_code", state)}
-            searchValue={tableState.columnSearch["item_code"] || ""}
-            onSearchChange={(val) => handleSearchChange("item_code", val)}
-            selectedFilters={tableState.columnFilters["item_code"] || []}
-            onFilterChange={(vals) => handleFilterChange("item_code", vals)}
-            align="center"
-            columnKey="item_code"
-            allFilters={tableState.columnFilters}
-          />
-        ),
+        header: headerFilter("item_code", t("inventoryMasters.columns.sku")),
         className: "align-middle text-left",
-        headerClassName: "px-2",
         sortable: false,
         size: 200,
         enableResizing: true,
@@ -102,189 +138,125 @@ export function useStockColumns({
       },
       {
         key: "item_name",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("inventoryMasters.columns.itemName")}
-            sortState={getSortState("item_name")}
-            onSortChange={(state) => handleSortChange("item_name", state)}
-            searchValue={tableState.columnSearch["item_name"] || ""}
-            onSearchChange={(val) => handleSearchChange("item_name", val)}
-            selectedFilters={tableState.columnFilters["item_name"] || []}
-            onFilterChange={(vals) => handleFilterChange("item_name", vals)}
-            align="center"
-            columnKey="item_name"
-            allFilters={tableState.columnFilters}
-          />
+        header: headerFilter(
+          "item_name",
+          t("inventoryMasters.columns.itemName"),
         ),
         className: "align-middle text-left",
-        headerClassName: "px-2",
         sortable: false,
-        size: 140,
+        size: 200,
         enableResizing: true,
-        dataIndex: "item_name",
-        valueType: "text",
+        cell: (row) => (
+          <Tooltip content={row.item_name || ""}>
+            <span className="truncate block w-full">
+              {row.item_name || "—"}
+            </span>
+          </Tooltip>
+        ),
       },
-
       {
         key: "received_qty",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("inventory.table.columns.in")}
-            sortState={getSortState("received_qty")}
-            onSortChange={(state) => handleSortChange("received_qty", state)}
-            searchValue={tableState.columnSearch["received_qty"] || ""}
-            onSearchChange={(val) => handleSearchChange("received_qty", val)}
-            selectedFilters={tableState.columnFilters["received_qty"] || []}
-            onFilterChange={(vals) => handleFilterChange("received_qty", vals)}
-            align="right"
-            columnKey="received_qty"
-            allFilters={tableState.columnFilters}
-            formatOptionLabel={formatQty}
-          />
+        header: headerFilter.qty(
+          "received_qty",
+          t("inventory.table.columns.in"),
         ),
         className: "align-middle text-right",
-        headerClassName: "px-2",
         sortable: false,
         size: 140,
         enableResizing: true,
         cell: (row) => (
           <span className="inline-block w-full text-right text-sm tabular-nums">
-            {formatQty(row.received_qty)}
+            {fmtQty(row.received_qty)}
           </span>
         ),
       },
       {
         key: "issued_qty",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("inventory.table.columns.out")}
-            sortState={getSortState("issued_qty")}
-            onSortChange={(state) => handleSortChange("issued_qty", state)}
-            searchValue={tableState.columnSearch["issued_qty"] || ""}
-            onSearchChange={(val) => handleSearchChange("issued_qty", val)}
-            selectedFilters={tableState.columnFilters["issued_qty"] || []}
-            onFilterChange={(vals) => handleFilterChange("issued_qty", vals)}
-            align="right"
-            columnKey="issued_qty"
-            allFilters={tableState.columnFilters}
-            formatOptionLabel={formatQty}
-          />
+        header: headerFilter.qty(
+          "issued_qty",
+          t("inventory.table.columns.out"),
         ),
         className: "align-middle text-right",
-        headerClassName: "px-2",
         sortable: false,
         size: 140,
         enableResizing: true,
         cell: (row) => (
           <span className="inline-block w-full text-right text-sm tabular-nums">
-            {formatQty(row.issued_qty)}
+            {fmtQty(row.issued_qty)}
           </span>
         ),
       },
       {
         key: "adjusted_qty",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("inventory.table.columns.adjusted", "Điều chỉnh")}
-            sortState={getSortState("adjusted_qty")}
-            onSortChange={(state) => handleSortChange("adjusted_qty", state)}
-            searchValue={tableState.columnSearch["adjusted_qty"] || ""}
-            onSearchChange={(val) => handleSearchChange("adjusted_qty", val)}
-            selectedFilters={tableState.columnFilters["adjusted_qty"] || []}
-            onFilterChange={(vals) => handleFilterChange("adjusted_qty", vals)}
-            align="right"
-            columnKey="adjusted_qty"
-            allFilters={tableState.columnFilters}
-            formatOptionLabel={formatQty}
-          />
+        header: headerFilter.qty(
+          "adjusted_qty",
+          t("inventory.table.columns.adjusted", "Điều chỉnh"),
         ),
         className: "align-middle text-right",
-        headerClassName: "px-2",
         sortable: false,
         size: 140,
         enableResizing: true,
-        cell: (row) => (
-          <span className="inline-block w-full text-right text-sm tabular-nums">
-            {formatQty(row.adjusted_qty)}
-          </span>
-        ),
+        cell: (row) => {
+          const qty = Number(row.adjusted_qty || 0);
+          const colorClass =
+            qty > 0
+              ? "text-emerald-600"
+              : qty < 0
+                ? "text-red-600"
+                : "text-muted-foreground";
+          return (
+            <span
+              className={cn(
+                "inline-block w-full text-right text-sm tabular-nums font-medium",
+                colorClass,
+              )}
+            >
+              {qty > 0 ? "+" : ""}
+              {fmtQty(qty)}
+            </span>
+          );
+        },
       },
       {
         key: "on_hand_qty",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("inventory.table.columns.onHand")}
-            sortState={getSortState("on_hand_qty")}
-            onSortChange={(state) => handleSortChange("on_hand_qty", state)}
-            searchValue={tableState.columnSearch["on_hand_qty"] || ""}
-            onSearchChange={(val) => handleSearchChange("on_hand_qty", val)}
-            selectedFilters={tableState.columnFilters["on_hand_qty"] || []}
-            onFilterChange={(vals) => handleFilterChange("on_hand_qty", vals)}
-            align="right"
-            columnKey="on_hand_qty"
-            allFilters={tableState.columnFilters}
-            formatOptionLabel={formatQty}
-          />
+        header: headerFilter.qty(
+          "on_hand_qty",
+          t("inventory.table.columns.onHand"),
         ),
         className: "align-middle text-right",
-        headerClassName: "px-2",
         sortable: false,
         size: 140,
         enableResizing: true,
         cell: (row) => (
           <span className="inline-block w-full text-right text-sm font-medium tabular-nums text-emerald-600">
-            {formatQty(row.on_hand_qty)}
+            {fmtQty(row.on_hand_qty)}
           </span>
         ),
       },
       {
         key: "reserved_qty",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("inventory.table.columns.reserved")}
-            sortState={getSortState("reserved_qty")}
-            onSortChange={(state) => handleSortChange("reserved_qty", state)}
-            searchValue={tableState.columnSearch["reserved_qty"] || ""}
-            onSearchChange={(val) => handleSearchChange("reserved_qty", val)}
-            selectedFilters={tableState.columnFilters["reserved_qty"] || []}
-            onFilterChange={(vals) => handleFilterChange("reserved_qty", vals)}
-            align="right"
-            columnKey="reserved_qty"
-            allFilters={tableState.columnFilters}
-            formatOptionLabel={formatQty}
-          />
+        header: headerFilter.qty(
+          "reserved_qty",
+          t("inventory.table.columns.reserved"),
         ),
         className: "align-middle text-right",
-        headerClassName: "px-2",
         sortable: false,
         size: 140,
         enableResizing: true,
         cell: (row) => (
           <span className="inline-block w-full text-right text-sm font-medium tabular-nums text-amber-600">
-            {formatQty(row.reserved_qty)}
+            {fmtQty(row.reserved_qty)}
           </span>
         ),
       },
       {
         key: "unit",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("inventory.table.columns.unit")}
-            sortState={getSortState("unit")}
-            onSortChange={(state) => handleSortChange("unit", state)}
-            searchValue={tableState.columnSearch["unit"] || ""}
-            onSearchChange={(val) => handleSearchChange("unit", val)}
-            selectedFilters={tableState.columnFilters["unit"] || []}
-            onFilterChange={(vals) => handleFilterChange("unit", vals)}
-            align="center"
-            columnKey="unit"
-            allFilters={tableState.columnFilters}
-          />
-        ),
+        header: headerFilter("unit", t("inventory.table.columns.unit"), {
+          showBlankOption: true,
+        }),
         className: "align-middle text-left",
-        headerClassName: "px-2",
         sortable: false,
-        size: 140,
+        size: 100,
         enableResizing: true,
         cell: (row) => (
           <span className="text-sm block w-full text-left">
@@ -294,47 +266,37 @@ export function useStockColumns({
       },
       {
         key: "last",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("inventory.table.columns.lastTx")}
-            sortState={getSortState("last")}
-            onSortChange={(state) => handleSortChange("last", state)}
-            searchValue={tableState.columnSearch["last"] || ""}
-            onSearchChange={(val) => handleSearchChange("last", val)}
-            selectedFilters={tableState.columnFilters["last"] || []}
-            onFilterChange={(vals) => handleFilterChange("last", vals)}
-            align="right"
-            columnKey="last"
-            allFilters={tableState.columnFilters}
-          />
-        ),
+        header: headerFilter.date("last", t("inventory.table.columns.lastTx")),
         className: "align-middle whitespace-nowrap text-right",
-        headerClassName: "px-2",
         sortable: false,
         size: 140,
         enableResizing: true,
-        dataIndex: "last_transaction_date",
-        valueType: "date",
-        dateFormat: "dd/MM/yyyy",
+        cell: (row) =>
+          row.last_transaction_date ? (
+            <TableDateCell
+              date={row.last_transaction_date}
+              className="justify-end w-full"
+            />
+          ) : (
+            <span className="text-muted-foreground text-sm text-right block w-full">
+              —
+            </span>
+          ),
       },
       {
         key: "item_type",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("inventory.table.columns.type")}
-            sortState={getSortState("item_type")}
-            onSortChange={(state) => handleSortChange("item_type", state)}
-            searchValue={tableState.columnSearch["item_type"] || ""}
-            onSearchChange={(val) => handleSearchChange("item_type", val)}
-            selectedFilters={tableState.columnFilters["item_type"] || []}
-            onFilterChange={(vals) => handleFilterChange("item_type", vals)}
-            align="center"
-            columnKey="item_type"
-            allFilters={tableState.columnFilters}
-          />
-        ),
+        header: headerFilter("item_type", t("inventory.table.columns.type"), {
+          formatOptionLabel: (val: string) => {
+            const v = (val || "").toLowerCase();
+            if (v === "raw")
+              return t("inventory.itemTypes.raw", "Nguyên vật liệu");
+            if (v === "fg") return t("inventory.itemTypes.fg", "Thành phẩm");
+            if (v === "wip")
+              return t("inventory.itemTypes.wip", "Bán thành phẩm");
+            return val;
+          },
+        }),
         className: "align-middle text-center",
-        headerClassName: "px-2",
         sortable: false,
         size: 140,
         enableResizing: true,
@@ -364,29 +326,23 @@ export function useStockColumns({
       },
       {
         key: "status",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("inventory.table.columns.status")}
-            sortState={getSortState("status")}
-            onSortChange={(state) => handleSortChange("status", state)}
-            searchValue={tableState.columnSearch["status"] || ""}
-            onSearchChange={(val) => handleSearchChange("status", val)}
-            selectedFilters={tableState.columnFilters["status"] || []}
-            onFilterChange={(vals) => handleFilterChange("status", vals)}
-            align="center"
-            columnKey="status"
-            allFilters={tableState.columnFilters}
-          />
-        ),
-        className: "align-middle text-center flex justify-center w-full",
-        headerClassName: "px-2",
+        header: headerFilter("status", t("inventory.table.columns.status")),
+        className: "align-middle text-center",
         sortable: false,
         size: 140,
         enableResizing: true,
-        dataIndex: "status",
-        valueType: "status",
+        cell: (row) => (
+          <div className="w-full flex justify-center">
+            <Tooltip content={t(row.status || "")}>
+              <StatusBadge
+                status={row.status || ""}
+                className="w-[88px] inline-flex items-center justify-center text-center truncate"
+              />
+            </Tooltip>
+          </div>
+        ),
       },
     ],
-    [t, store, tableState, stockItems, onViewItem],
+    [t, headerFilter, onViewItem],
   );
 }

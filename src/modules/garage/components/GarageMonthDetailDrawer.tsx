@@ -1,10 +1,17 @@
 import React, { useState, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
 import { DrawerSection } from "@/shared/components/DrawerModal";
 import { Badge } from "@/shared/components/ui/badge";
 import { money } from "@/shared/utils/format";
 import { cn } from "@/shared/utils";
-import { DataTable } from "@/shared/components/DataTable";
+import {
+  DataTable,
+  createColumnHeaderFilter,
+  filterClientItems,
+  type DataTableColumn,
+} from "@/shared/components/DataTable";
+import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import type { GarageTrendItem } from "../api/garageDashboardApi";
 import { GarageMonthClassificationCasesDrawer } from "./GarageMonthClassificationCasesDrawer";
@@ -139,6 +146,7 @@ export function GarageMonthDetailDrawer({
   activeTab,
   onClose,
 }: GarageMonthDetailDrawerProps) {
+  const { t } = useTranslation(["garage", "common"]);
   const isReceipt = activeTab === "RECEIPT";
 
   const [classificationDrawerState, setClassificationDrawerState] = useState<{
@@ -152,6 +160,13 @@ export function GarageMonthDetailDrawer({
     filterKey: "",
     filterLabel: "",
   });
+
+  // Table Column State Hooks for Client-side Filter & Sort
+  const classificationTableId = "garage-month-detail-classification-table";
+  const classificationTableHook = useTableColumnState(classificationTableId);
+
+  const invoiceTableId = "garage-month-detail-invoice-table";
+  const invoiceTableHook = useTableColumnState(invoiceTableId);
 
   const safeItem = useMemo<GarageTrendItem>(
     () =>
@@ -347,237 +362,6 @@ export function GarageMonthDetailDrawer({
     mainBilled,
   ]);
 
-  // ── Table Columns: Classification DataTable ──────────────────────
-  const classificationColumns = useMemo(
-    () => [
-      {
-        key: "index",
-        header: <span className="w-full block text-center">#</span>,
-        size: 40,
-        enableResizing: false,
-        headerClassName: "text-center w-[40px] min-w-[40px]",
-        className: "text-center w-[40px] min-w-[40px]",
-        cell: (_: any, idx: number) => (
-          <span className="w-full block text-center text-muted-foreground font-medium">
-            {idx}
-          </span>
-        ),
-      },
-      {
-        key: "name",
-        header: <span className="w-full block text-left">Loại nghiệp vụ</span>,
-        size: 210,
-        enableResizing: true,
-        headerClassName: "text-left",
-        className: "text-left",
-        cell: (row: MonthClassificationRow) => (
-          <div
-            className="flex items-center gap-2 cursor-pointer group"
-            onClick={() => {
-              setClassificationDrawerState({
-                open: true,
-                filterType: "CLASSIFICATION",
-                filterKey: row.key,
-                filterLabel: row.name,
-              });
-            }}
-          >
-            <span className="shrink-0 group-hover:scale-110 transition-transform">
-              {row.icon}
-            </span>
-            <div className="flex flex-col min-w-0">
-              <span className="font-semibold text-foreground text-xs truncate group-hover:text-primary group-hover:underline transition-colors">
-                {row.name}
-              </span>
-              {row.subLabel && (
-                <span className="text-[10px] text-muted-foreground truncate">
-                  {row.subLabel}
-                </span>
-              )}
-            </div>
-            {row.caseCount > 0 && (
-              <Badge
-                variant="outline"
-                className="ml-auto text-[10px] px-1.5 py-0 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium tabular-nums shrink-0 group-hover:bg-primary/10 group-hover:text-primary group-hover:border-primary/30 transition-colors"
-              >
-                {row.caseCount}p
-              </Badge>
-            )}
-          </div>
-        ),
-      },
-      {
-        key: "billed",
-        header: <span className="w-full block text-right">Tổng phát sinh</span>,
-        size: 140,
-        enableResizing: true,
-        headerClassName: "text-right",
-        className: "text-right font-mono tabular-nums text-foreground",
-        cell: (row: MonthClassificationRow) => (
-          <Tooltip content={money(row.billed)} side="top">
-            <span className="font-medium text-xs cursor-default">
-              {money(row.billed)}
-            </span>
-          </Tooltip>
-        ),
-      },
-      {
-        key: "paid",
-        header: (
-          <span className="w-full block text-right">
-            {isReceipt ? "Đã thu" : "Đã chi"}
-          </span>
-        ),
-        size: 150,
-        enableResizing: true,
-        headerClassName: "text-right",
-        className: "text-right font-mono tabular-nums",
-        cell: (row: MonthClassificationRow) => (
-          <Tooltip
-            content={
-              <div className="text-xs font-mono">
-                <div>Đã thanh toán: {money(row.paid)}</div>
-                <div>Tỷ lệ hoàn tất: {row.rate.toFixed(1)}%</div>
-              </div>
-            }
-            side="top"
-          >
-            <div className="flex flex-col items-end gap-0.5 cursor-default">
-              <span className="font-bold text-foreground text-xs">
-                {money(row.paid)}
-              </span>
-              <div className="flex items-center gap-1">
-                <span className="text-[10px] text-muted-foreground tabular-nums">
-                  {row.rate.toFixed(1)}%
-                </span>
-                <div className="w-12 bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden border border-slate-200/50 dark:border-slate-700/50">
-                  <div
-                    className={cn(
-                      "h-full rounded-full",
-                      isReceipt ? "bg-emerald-500" : "bg-orange-500",
-                    )}
-                    style={{
-                      width: `${Math.min(100, Math.max(0, row.rate))}%`,
-                    }}
-                  />
-                </div>
-              </div>
-            </div>
-          </Tooltip>
-        ),
-      },
-      {
-        key: "remaining",
-        header: (
-          <span className="w-full block text-right">
-            {isReceipt ? "Còn phải thu" : "Còn phải trả"}
-          </span>
-        ),
-        size: 140,
-        enableResizing: true,
-        headerClassName:
-          "text-right bg-slate-100 dark:bg-slate-800/60 font-semibold",
-        className:
-          "text-right font-mono tabular-nums bg-slate-50 dark:bg-slate-800/30",
-        cell: (row: MonthClassificationRow) => (
-          <Tooltip
-            content={
-              row.remaining > 0
-                ? `${isReceipt ? "Còn phải thu" : "Còn phải trả"}: ${money(row.remaining)}`
-                : undefined
-            }
-            side="top"
-          >
-            <span
-              className={cn(
-                "text-xs font-mono tabular-nums cursor-default",
-                row.remaining > 0
-                  ? isReceipt
-                    ? "font-bold text-amber-600 dark:text-amber-400"
-                    : "font-bold text-orange-600 dark:text-orange-400"
-                  : "text-muted-foreground/60",
-              )}
-            >
-              {row.remaining > 0 ? money(row.remaining) : "—"}
-            </span>
-          </Tooltip>
-        ),
-      },
-      {
-        key: "shareRate",
-        header: <span className="w-full block text-center">Tỷ trọng</span>,
-        size: 100,
-        enableResizing: true,
-        headerClassName: "text-center",
-        className: "text-center",
-        cell: (row: MonthClassificationRow) => (
-          <span className="w-full block text-center font-semibold text-xs tabular-nums text-foreground">
-            {row.shareRate.toFixed(1)}%
-          </span>
-        ),
-      },
-    ],
-    [isReceipt],
-  );
-
-  // ── Summary Row for Classification Table ─────────────────────────
-  const classificationSummaryRow = useMemo(
-    () => ({
-      index: (
-        <span className="w-full block text-center font-bold text-muted-foreground">
-          Σ
-        </span>
-      ),
-      name: (
-        <span className="font-bold text-xs uppercase tracking-wider text-foreground">
-          TỔNG CỘNG ({safeItem.caseCount} phiếu)
-        </span>
-      ),
-      billed: (
-        <span className="font-bold text-right block font-mono tabular-nums text-foreground text-xs">
-          {money(mainBilled)}
-        </span>
-      ),
-      paid: (
-        <div className="flex flex-col items-end">
-          <span className="font-bold text-foreground font-mono text-xs">
-            {money(mainPaid)}
-          </span>
-          <span className="text-[10px] text-muted-foreground tabular-nums">
-            {mainRate.toFixed(1)}% Hoàn tất
-          </span>
-        </div>
-      ),
-      remaining: (
-        <span
-          className={cn(
-            "font-mono font-bold text-right block tabular-nums text-xs",
-            mainRemaining > 0
-              ? isReceipt
-                ? "text-amber-600 dark:text-amber-400"
-                : "text-orange-600 dark:text-orange-400"
-              : "text-muted-foreground/60",
-          )}
-        >
-          {mainRemaining > 0 ? money(mainRemaining) : "—"}
-        </span>
-      ),
-      shareRate: (
-        <span className="font-bold text-center block text-xs text-foreground">
-          100.0%
-        </span>
-      ),
-    }),
-    [
-      safeItem.caseCount,
-      mainBilled,
-      mainPaid,
-      mainRate,
-      mainRemaining,
-      isReceipt,
-    ],
-  );
-
   // ── Table Data: Invoice Status Breakdown ──────────────────────────
   const billedWithInv = isReceipt
     ? (safeItem.billedWithInvoice ?? 0)
@@ -641,7 +425,42 @@ export function GarageMonthDetailDrawer({
     ],
   );
 
-  const invoiceColumns = useMemo(
+  // ── Column Header Filter Builders (Client-side auto extraction) ───
+  const classificationHeaderFilter = useMemo(
+    () =>
+      createColumnHeaderFilter({
+        listHook: classificationTableHook,
+        items: classificationRows,
+        defaultAlign: "center",
+      }),
+    [classificationTableHook, classificationRows],
+  );
+
+  const invoiceHeaderFilter = useMemo(
+    () =>
+      createColumnHeaderFilter({
+        listHook: invoiceTableHook,
+        items: invoiceRows,
+        defaultAlign: "center",
+      }),
+    [invoiceTableHook, invoiceRows],
+  );
+
+  // ── Filtered Rows (Universal client filter & sorter) ───────────────
+  const filteredClassificationRows = useMemo(
+    () => filterClientItems(classificationRows, classificationTableHook),
+    [classificationRows, classificationTableHook],
+  );
+
+  const filteredInvoiceRows = useMemo(
+    () => filterClientItems(invoiceRows, invoiceTableHook),
+    [invoiceRows, invoiceTableHook],
+  );
+
+  // ── Table Columns: Classification DataTable ──────────────────────
+  const classificationColumns = useMemo<
+    DataTableColumn<MonthClassificationRow>[]
+  >(
     () => [
       {
         key: "index",
@@ -658,12 +477,272 @@ export function GarageMonthDetailDrawer({
       },
       {
         key: "name",
-        header: (
-          <span className="w-full block text-left">Trạng thái Hóa đơn</span>
+        header: classificationHeaderFilter(
+          "name",
+          t("progress.columns.classification", "Loại nghiệp vụ"),
+          { align: "left" },
         ),
         size: 210,
         enableResizing: true,
-        headerClassName: "text-left",
+        headerClassName: "text-left font-semibold",
+        className: "text-left",
+        cell: (row: MonthClassificationRow) => (
+          <div
+            className="flex items-center gap-2 cursor-pointer group"
+            onClick={() => {
+              setClassificationDrawerState({
+                open: true,
+                filterType: "CLASSIFICATION",
+                filterKey: row.key,
+                filterLabel: row.name,
+              });
+            }}
+          >
+            <span className="shrink-0 group-hover:scale-110 transition-transform">
+              {row.icon}
+            </span>
+            <div className="flex flex-col min-w-0">
+              <span className="font-semibold text-foreground text-xs truncate group-hover:text-primary group-hover:underline transition-colors">
+                {row.name}
+              </span>
+              {row.subLabel && (
+                <span className="text-[10px] text-muted-foreground truncate">
+                  {row.subLabel}
+                </span>
+              )}
+            </div>
+            {row.caseCount > 0 && (
+              <Badge
+                variant="outline"
+                className="ml-auto text-[10px] px-1.5 py-0 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium tabular-nums shrink-0 group-hover:bg-primary/10 group-hover:text-primary group-hover:border-primary/30 transition-colors"
+              >
+                {row.caseCount}p
+              </Badge>
+            )}
+          </div>
+        ),
+      },
+      {
+        key: "billed",
+        header: classificationHeaderFilter.amount(
+          "billed",
+          t("progress.columns.totalBilled", "Tổng phát sinh"),
+          { align: "right" },
+        ),
+        size: 140,
+        enableResizing: true,
+        headerClassName: "text-right font-semibold",
+        className: "text-right font-mono tabular-nums text-foreground",
+        cell: (row: MonthClassificationRow) => (
+          <Tooltip content={money(row.billed)} side="top">
+            <span className="font-medium text-xs cursor-default">
+              {money(row.billed)}
+            </span>
+          </Tooltip>
+        ),
+      },
+      {
+        key: "paid",
+        header: classificationHeaderFilter.amount(
+          "paid",
+          isReceipt
+            ? t("progress.columns.paidReceipt", "Đã thu")
+            : t("progress.columns.paidPayment", "Đã chi"),
+          { align: "right" },
+        ),
+        size: 150,
+        enableResizing: true,
+        headerClassName: "text-right font-semibold",
+        className: "text-right font-mono tabular-nums",
+        cell: (row: MonthClassificationRow) => (
+          <Tooltip
+            content={
+              <div className="text-xs font-mono">
+                <div>Đã thanh toán: {money(row.paid)}</div>
+                <div>Tỷ lệ hoàn tất: {row.rate.toFixed(1)}%</div>
+              </div>
+            }
+            side="top"
+          >
+            <div className="flex flex-col items-end gap-0.5 cursor-default">
+              <span className="font-bold text-foreground text-xs">
+                {money(row.paid)}
+              </span>
+              <div className="flex items-center gap-1">
+                <span className="text-[10px] text-muted-foreground tabular-nums">
+                  {row.rate.toFixed(1)}%
+                </span>
+                <div className="w-12 bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden border border-slate-200/50 dark:border-slate-700/50">
+                  <div
+                    className={cn(
+                      "h-full rounded-full",
+                      isReceipt ? "bg-emerald-500" : "bg-orange-500",
+                    )}
+                    style={{
+                      width: `${Math.min(100, Math.max(0, row.rate))}%`,
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+          </Tooltip>
+        ),
+      },
+      {
+        key: "remaining",
+        header: classificationHeaderFilter.amount(
+          "remaining",
+          isReceipt
+            ? t("progress.columns.receivable", "Còn phải thu")
+            : t("progress.columns.payable", "Còn phải trả"),
+          { align: "right" },
+        ),
+        size: 140,
+        enableResizing: true,
+        headerClassName:
+          "text-right bg-slate-100 dark:bg-slate-800/60 font-semibold",
+        className:
+          "text-right font-mono tabular-nums bg-slate-50 dark:bg-slate-800/30",
+        cell: (row: MonthClassificationRow) => (
+          <Tooltip
+            content={
+              row.remaining > 0
+                ? `${isReceipt ? "Còn phải thu" : "Còn phải trả"}: ${money(row.remaining)}`
+                : undefined
+            }
+            side="top"
+          >
+            <span
+              className={cn(
+                "text-xs font-mono tabular-nums cursor-default",
+                row.remaining > 0
+                  ? isReceipt
+                    ? "font-bold text-amber-600 dark:text-amber-400"
+                    : "font-bold text-orange-600 dark:text-orange-400"
+                  : "text-muted-foreground/60",
+              )}
+            >
+              {row.remaining > 0 ? money(row.remaining) : "—"}
+            </span>
+          </Tooltip>
+        ),
+      },
+      {
+        key: "shareRate",
+        header: classificationHeaderFilter.numeric(
+          "shareRate",
+          t("progress.columns.shareRate", "Tỷ trọng"),
+          {
+            align: "center",
+            formatOptionLabel: (v) => {
+              const num = typeof v === "number" ? v : parseFloat(String(v));
+              return !Number.isNaN(num) ? `${num.toFixed(1)}%` : String(v);
+            },
+          },
+        ),
+        size: 100,
+        enableResizing: true,
+        headerClassName: "text-center font-semibold",
+        className: "text-center",
+        cell: (row: MonthClassificationRow) => (
+          <span className="w-full block text-center font-semibold text-xs tabular-nums text-foreground">
+            {row.shareRate.toFixed(1)}%
+          </span>
+        ),
+      },
+    ],
+    [classificationHeaderFilter, isReceipt, t],
+  );
+
+  // ── Summary Row for Classification Table ─────────────────────────
+  const classificationSummaryRow = useMemo(() => {
+    let billed = 0;
+    let paid = 0;
+    let remaining = 0;
+    let caseCount = 0;
+    filteredClassificationRows.forEach((r) => {
+      billed += r.billed;
+      paid += r.paid;
+      remaining += r.remaining;
+      caseCount += r.caseCount;
+    });
+    const rate = billed > 0 ? (paid / billed) * 100 : 0;
+    const shareRate = mainBilled > 0 ? (billed / mainBilled) * 100 : 0;
+
+    return {
+      index: (
+        <span className="w-full block text-center font-bold text-muted-foreground">
+          Σ
+        </span>
+      ),
+      name: (
+        <span className="font-bold text-xs uppercase tracking-wider text-foreground">
+          TỔNG CỘNG ({caseCount} phiếu)
+        </span>
+      ),
+      billed: (
+        <span className="font-bold text-right block font-mono tabular-nums text-foreground text-xs">
+          {money(billed)}
+        </span>
+      ),
+      paid: (
+        <div className="flex flex-col items-end">
+          <span className="font-bold text-foreground font-mono text-xs">
+            {money(paid)}
+          </span>
+          <span className="text-[10px] text-muted-foreground tabular-nums">
+            {rate.toFixed(1)}% Hoàn tất
+          </span>
+        </div>
+      ),
+      remaining: (
+        <span
+          className={cn(
+            "font-mono font-bold text-right block tabular-nums text-xs",
+            remaining > 0
+              ? isReceipt
+                ? "text-amber-600 dark:text-amber-400"
+                : "text-orange-600 dark:text-orange-400"
+              : "text-muted-foreground/60",
+          )}
+        >
+          {remaining > 0 ? money(remaining) : "—"}
+        </span>
+      ),
+      shareRate: (
+        <span className="font-bold text-center block text-xs text-foreground">
+          {shareRate.toFixed(1)}%
+        </span>
+      ),
+    };
+  }, [filteredClassificationRows, mainBilled, isReceipt]);
+
+  // ── Table Columns: Invoice Status DataTable ───────────────────────
+  const invoiceColumns = useMemo<DataTableColumn<MonthInvoiceRow>[]>(
+    () => [
+      {
+        key: "index",
+        header: <span className="w-full block text-center">#</span>,
+        size: 40,
+        enableResizing: false,
+        headerClassName: "text-center w-[40px] min-w-[40px]",
+        className: "text-center w-[40px] min-w-[40px]",
+        cell: (_: any, idx: number) => (
+          <span className="w-full block text-center text-muted-foreground font-medium">
+            {idx}
+          </span>
+        ),
+      },
+      {
+        key: "name",
+        header: invoiceHeaderFilter(
+          "name",
+          t("progress.columns.invoiceStatus", "Trạng thái Hóa đơn"),
+          { align: "left" },
+        ),
+        size: 210,
+        enableResizing: true,
+        headerClassName: "text-left font-semibold",
         className: "text-left",
         cell: (row: MonthInvoiceRow) => (
           <div
@@ -696,10 +775,14 @@ export function GarageMonthDetailDrawer({
       },
       {
         key: "billed",
-        header: <span className="w-full block text-right">Tổng phát sinh</span>,
+        header: invoiceHeaderFilter.amount(
+          "billed",
+          t("progress.columns.totalBilled", "Tổng phát sinh"),
+          { align: "right" },
+        ),
         size: 140,
         enableResizing: true,
-        headerClassName: "text-right",
+        headerClassName: "text-right font-semibold",
         className: "text-right font-mono tabular-nums text-foreground",
         cell: (row: MonthInvoiceRow) => (
           <Tooltip content={money(row.billed)} side="top">
@@ -711,14 +794,16 @@ export function GarageMonthDetailDrawer({
       },
       {
         key: "paid",
-        header: (
-          <span className="w-full block text-right">
-            {isReceipt ? "Đã thu" : "Đã chi"}
-          </span>
+        header: invoiceHeaderFilter.amount(
+          "paid",
+          isReceipt
+            ? t("progress.columns.paidReceipt", "Đã thu")
+            : t("progress.columns.paidPayment", "Đã chi"),
+          { align: "right" },
         ),
         size: 150,
         enableResizing: true,
-        headerClassName: "text-right",
+        headerClassName: "text-right font-semibold",
         className: "text-right font-mono tabular-nums",
         cell: (row: MonthInvoiceRow) => (
           <Tooltip
@@ -734,19 +819,34 @@ export function GarageMonthDetailDrawer({
               <span className="font-bold text-foreground text-xs">
                 {money(row.paid)}
               </span>
-              <span className="text-[10px] text-muted-foreground tabular-nums">
-                {row.rate.toFixed(1)}%
-              </span>
+              <div className="flex items-center gap-1">
+                <span className="text-[10px] text-muted-foreground tabular-nums">
+                  {row.rate.toFixed(1)}%
+                </span>
+                <div className="w-12 bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden border border-slate-200/50 dark:border-slate-700/50">
+                  <div
+                    className={cn(
+                      "h-full rounded-full",
+                      isReceipt ? "bg-emerald-500" : "bg-orange-500",
+                    )}
+                    style={{
+                      width: `${Math.min(100, Math.max(0, row.rate))}%`,
+                    }}
+                  />
+                </div>
+              </div>
             </div>
           </Tooltip>
         ),
       },
       {
         key: "remaining",
-        header: (
-          <span className="w-full block text-right">
-            {isReceipt ? "Còn phải thu" : "Còn phải trả"}
-          </span>
+        header: invoiceHeaderFilter.amount(
+          "remaining",
+          isReceipt
+            ? t("progress.columns.receivable", "Còn phải thu")
+            : t("progress.columns.payable", "Còn phải trả"),
+          { align: "right" },
         ),
         size: 140,
         enableResizing: true,
@@ -755,26 +855,45 @@ export function GarageMonthDetailDrawer({
         className:
           "text-right font-mono tabular-nums bg-slate-50 dark:bg-slate-800/30",
         cell: (row: MonthInvoiceRow) => (
-          <span
-            className={cn(
-              "text-xs font-mono tabular-nums",
+          <Tooltip
+            content={
               row.remaining > 0
-                ? isReceipt
-                  ? "font-bold text-amber-600 dark:text-amber-400"
-                  : "font-bold text-orange-600 dark:text-orange-400"
-                : "text-muted-foreground/60",
-            )}
+                ? `${isReceipt ? "Còn phải thu" : "Còn phải trả"}: ${money(row.remaining)}`
+                : undefined
+            }
+            side="top"
           >
-            {row.remaining > 0 ? money(row.remaining) : "—"}
-          </span>
+            <span
+              className={cn(
+                "text-xs font-mono tabular-nums cursor-default",
+                row.remaining > 0
+                  ? isReceipt
+                    ? "font-bold text-amber-600 dark:text-amber-400"
+                    : "font-bold text-orange-600 dark:text-orange-400"
+                  : "text-muted-foreground/60",
+              )}
+            >
+              {row.remaining > 0 ? money(row.remaining) : "—"}
+            </span>
+          </Tooltip>
         ),
       },
       {
         key: "shareRate",
-        header: <span className="w-full block text-center">Tỷ trọng</span>,
+        header: invoiceHeaderFilter.numeric(
+          "shareRate",
+          t("progress.columns.shareRate", "Tỷ trọng"),
+          {
+            align: "center",
+            formatOptionLabel: (v) => {
+              const num = typeof v === "number" ? v : parseFloat(String(v));
+              return !Number.isNaN(num) ? `${num.toFixed(1)}%` : String(v);
+            },
+          },
+        ),
         size: 100,
         enableResizing: true,
-        headerClassName: "text-center",
+        headerClassName: "text-center font-semibold",
         className: "text-center font-semibold text-xs text-foreground",
         cell: (row: MonthInvoiceRow) => (
           <span className="w-full block text-center font-semibold text-xs tabular-nums text-foreground">
@@ -783,101 +902,212 @@ export function GarageMonthDetailDrawer({
         ),
       },
     ],
-    [isReceipt],
+    [invoiceHeaderFilter, isReceipt, t],
   );
+
+  // ── Summary Row for Invoice Table ────────────────────────────────
+  const invoiceSummaryRow = useMemo(() => {
+    let billed = 0;
+    let paid = 0;
+    let remaining = 0;
+    let caseCount = 0;
+    filteredInvoiceRows.forEach((r) => {
+      billed += r.billed;
+      paid += r.paid;
+      remaining += r.remaining;
+      caseCount += r.caseCount || 0;
+    });
+    const rate = billed > 0 ? (paid / billed) * 100 : 0;
+    const shareRate = mainBilled > 0 ? (billed / mainBilled) * 100 : 0;
+
+    return {
+      index: (
+        <span className="w-full block text-center font-bold text-muted-foreground">
+          Σ
+        </span>
+      ),
+      name: (
+        <span className="font-bold text-xs uppercase tracking-wider text-foreground">
+          TỔNG CỘNG ({caseCount} phiếu)
+        </span>
+      ),
+      billed: (
+        <span className="font-bold text-right block font-mono tabular-nums text-foreground text-xs">
+          {money(billed)}
+        </span>
+      ),
+      paid: (
+        <div className="flex flex-col items-end">
+          <span className="font-bold text-foreground font-mono text-xs">
+            {money(paid)}
+          </span>
+          <span className="text-[10px] text-muted-foreground tabular-nums">
+            {rate.toFixed(1)}% Hoàn tất
+          </span>
+        </div>
+      ),
+      remaining: (
+        <span
+          className={cn(
+            "font-mono font-bold text-right block tabular-nums text-xs",
+            remaining > 0
+              ? isReceipt
+                ? "text-amber-600 dark:text-amber-400"
+                : "text-orange-600 dark:text-orange-400"
+              : "text-muted-foreground/60",
+          )}
+        >
+          {remaining > 0 ? money(remaining) : "—"}
+        </span>
+      ),
+      shareRate: (
+        <span className="font-bold text-center block text-xs text-foreground">
+          {shareRate.toFixed(1)}%
+        </span>
+      ),
+    };
+  }, [filteredInvoiceRows, mainBilled, isReceipt]);
 
   // ── LEFT PANEL: Standard Table of Classifications & Invoices ──────
   const leftPanel = (
     <div className="flex flex-col gap-4">
       {/* 1. Main Content: Table Phân loại theo Nghiệp vụ */}
       <DrawerSection
-        title="Bảng phân loại theo Nghiệp vụ (Classification)"
+        title={
+          <div className="flex items-center gap-2">
+            <span>Bảng phân loại theo Nghiệp vụ (Classification)</span>
+            {classificationTableHook.activeFilterCount > 0 && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  classificationTableHook.resetFilters();
+                }}
+                className="text-[11px] font-medium text-destructive hover:underline flex items-center gap-1 bg-destructive/10 px-2 py-0.5 rounded-full lowercase first-letter:uppercase tracking-normal font-sans"
+              >
+                <span>
+                  Xóa bộ lọc ({classificationTableHook.activeFilterCount})
+                </span>
+              </button>
+            )}
+          </div>
+        }
         collapsible={true}
         defaultCollapsed={false}
         titleExtra={
           <div className="flex items-center gap-1 text-xs text-muted-foreground">
             <TableIcon className="w-3.5 h-3.5 text-primary mr-1" />
-            {classificationRows.length} phân loại
+            {filteredClassificationRows.length} / {classificationRows.length}{" "}
+            phân loại
           </div>
         }
       >
-        <div className="border rounded-lg overflow-hidden">
-          <DataTable
-            items={classificationRows}
-            getRowKey={(row) => row.key}
-            variant="spreadsheet"
-            columns={classificationColumns}
-            summaryRow={classificationSummaryRow}
-            emptyLabel="Không có dữ liệu phân loại"
-            enableColumnResizing={true}
-            tableId="garage-month-detail-classification-table"
-            rowHoverActions={(row: MonthClassificationRow) => [
-              {
-                groupLabel: "TRA CỨU",
-                items: [
-                  {
-                    label: "Xem chi tiết danh sách vụ việc",
-                    icon: <Eye className="w-3.5 h-3.5" />,
-                    onClick: () => {
-                      setClassificationDrawerState({
-                        open: true,
-                        filterType: "CLASSIFICATION",
-                        filterKey: row.key,
-                        filterLabel: row.name,
-                      });
-                    },
-                    quickAction: true,
+        <DataTable
+          items={filteredClassificationRows}
+          getRowKey={(row) => row.key}
+          variant="spreadsheet"
+          columns={classificationColumns}
+          summaryRow={classificationSummaryRow}
+          emptyLabel="Không tìm thấy phân loại phù hợp bộ lọc"
+          enableColumnResizing={true}
+          tableId={classificationTableId}
+          onRowClick={(row: MonthClassificationRow) => {
+            setClassificationDrawerState({
+              open: true,
+              filterType: "CLASSIFICATION",
+              filterKey: row.key,
+              filterLabel: row.name,
+            });
+          }}
+          rowHoverActions={(row: MonthClassificationRow) => [
+            {
+              groupLabel: "TRA CỨU",
+              items: [
+                {
+                  label: "Xem chi tiết danh sách vụ việc",
+                  icon: <Eye className="w-3.5 h-3.5" />,
+                  onClick: () => {
+                    setClassificationDrawerState({
+                      open: true,
+                      filterType: "CLASSIFICATION",
+                      filterKey: row.key,
+                      filterLabel: row.name,
+                    });
                   },
-                ],
-              },
-            ]}
-          />
-        </div>
+                  quickAction: true,
+                },
+              ],
+            },
+          ]}
+        />
       </DrawerSection>
 
       {/* 2. Secondary Table: Phân loại theo Hóa đơn Thuế */}
       <DrawerSection
-        title="Bảng phân loại theo Hóa đơn Thuế (VAT)"
+        title={
+          <div className="flex items-center gap-2">
+            <span>Bảng phân loại theo Hóa đơn Thuế (VAT)</span>
+            {invoiceTableHook.activeFilterCount > 0 && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  invoiceTableHook.resetFilters();
+                }}
+                className="text-[11px] font-medium text-destructive hover:underline flex items-center gap-1 bg-destructive/10 px-2 py-0.5 rounded-full lowercase first-letter:uppercase tracking-normal font-sans"
+              >
+                <span>Xóa bộ lọc ({invoiceTableHook.activeFilterCount})</span>
+              </button>
+            )}
+          </div>
+        }
         collapsible={true}
         defaultCollapsed={false}
         titleExtra={
           <div className="flex items-center gap-1 text-xs text-muted-foreground">
             <PieChart className="w-3.5 h-3.5 text-emerald-600 mr-1" />
-            Có HĐ / Không HĐ
+            {filteredInvoiceRows.length} / {invoiceRows.length} nhóm
           </div>
         }
       >
-        <div className="border rounded-lg overflow-hidden">
-          <DataTable
-            items={invoiceRows}
-            getRowKey={(row) => row.key}
-            variant="spreadsheet"
-            columns={invoiceColumns}
-            emptyLabel="Không có dữ liệu hóa đơn"
-            enableColumnResizing={true}
-            tableId="garage-month-detail-invoice-table"
-            rowHoverActions={(row: MonthInvoiceRow) => [
-              {
-                groupLabel: "TRA CỨU",
-                items: [
-                  {
-                    label: "Xem chi tiết danh sách vụ việc",
-                    icon: <Eye className="w-3.5 h-3.5" />,
-                    onClick: () => {
-                      setClassificationDrawerState({
-                        open: true,
-                        filterType: "INVOICE",
-                        filterKey: row.key,
-                        filterLabel: row.name,
-                      });
-                    },
-                    quickAction: true,
+        <DataTable
+          items={filteredInvoiceRows}
+          getRowKey={(row) => row.key}
+          variant="spreadsheet"
+          columns={invoiceColumns}
+          summaryRow={invoiceSummaryRow}
+          emptyLabel="Không tìm thấy nhóm hóa đơn phù hợp bộ lọc"
+          enableColumnResizing={true}
+          tableId={invoiceTableId}
+          onRowClick={(row: MonthInvoiceRow) => {
+            setClassificationDrawerState({
+              open: true,
+              filterType: "INVOICE",
+              filterKey: row.key,
+              filterLabel: row.name,
+            });
+          }}
+          rowHoverActions={(row: MonthInvoiceRow) => [
+            {
+              groupLabel: "TRA CỨU",
+              items: [
+                {
+                  label: "Xem chi tiết danh sách vụ việc",
+                  icon: <Eye className="w-3.5 h-3.5" />,
+                  onClick: () => {
+                    setClassificationDrawerState({
+                      open: true,
+                      filterType: "INVOICE",
+                      filterKey: row.key,
+                      filterLabel: row.name,
+                    });
                   },
-                ],
-              },
-            ]}
-          />
-        </div>
+                  quickAction: true,
+                },
+              ],
+            },
+          ]}
+        />
       </DrawerSection>
     </div>
   );

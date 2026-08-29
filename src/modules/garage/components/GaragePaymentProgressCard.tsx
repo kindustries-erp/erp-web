@@ -1,16 +1,22 @@
 import React, { useState, useMemo } from "react";
-import { Wallet, Truck, Table as TableIcon, ExternalLink } from "lucide-react";
+import { Wallet, Truck, Table as TableIcon, Eye } from "lucide-react";
 import { money, shortMoney } from "@/shared/utils/format";
 import { cn } from "@/shared/utils";
 import { Badge } from "@/shared/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/shared/components/ui/tabs";
-import { DataTable } from "@/shared/components/DataTable";
-import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
+import {
+  DataTable,
+  createColumnHeaderFilter,
+  filterClientItems,
+  type DataTableColumn,
+} from "@/shared/components/DataTable";
+
 import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
 import { useTranslation } from "react-i18next";
 import { Tooltip } from "@/core/components/ui/Tooltip";
-import { TableRowContextMenu } from "@/shared/components/DataTable/TableRowContextMenu";
+import type { ActionDropdownItem } from "@/shared/components/ActionDropdown";
 import { GarageMonthDetailDrawer } from "./GarageMonthDetailDrawer";
+
 import {
   GarageCollectionSummary,
   GarageCostPaymentSummary,
@@ -34,27 +40,11 @@ export function GaragePaymentProgressCard({
   const [activeTab, setActiveTab] = useState<"RECEIPT" | "PAYMENT">("RECEIPT");
   const isReceipt = activeTab === "RECEIPT";
 
-  // Context menu state
-  const [contextMenu, setContextMenu] = useState<{
-    x: number;
-    y: number;
-    item: GarageTrendItem;
-  } | null>(null);
-
   // Month detail drawer state
   const [selectedMonth, setSelectedMonth] = useState<GarageTrendItem | null>(
     null,
   );
   const [monthDrawerOpen, setMonthDrawerOpen] = useState(false);
-
-  const handleRowContextMenu = (
-    item: GarageTrendItem,
-    _index: number,
-    event: React.MouseEvent,
-  ) => {
-    event.preventDefault();
-    setContextMenu({ x: event.clientX, y: event.clientY, item });
-  };
 
   const openMonthDetail = (item: GarageTrendItem) => {
     setSelectedMonth(item);
@@ -119,36 +109,23 @@ export function GaragePaymentProgressCard({
     return trend.filter((t) => t.label >= "2026-07");
   }, [trend]);
 
-  // Process and sort trend data
+  // Process and sort trend data using universal client-side filter
   const processedItems = useMemo(() => {
-    if (!effectiveTrend || effectiveTrend.length === 0) return [];
-    const items = [...effectiveTrend];
-
-    if (listHook.sorts.length > 0) {
-      const sort = listHook.sorts[0];
-      const isDesc = sort.startsWith("-");
-      const field = sort.replace("-", "");
-
-      items.sort((a: any, b: any) => {
-        let valA = a[field];
-        let valB = b[field];
-
-        if (field === "tienCoThue") {
-          valA = a.tienCoThue || a.totalBilled || 0;
-          valB = b.tienCoThue || b.totalBilled || 0;
-        }
-
-        if (typeof valA === "string") {
-          return isDesc ? valB.localeCompare(valA) : valA.localeCompare(valB);
-        }
-        return isDesc
-          ? Number(valB) - Number(valA)
-          : Number(valA) - Number(valB);
-      });
-    }
-
-    return items;
-  }, [effectiveTrend, listHook.sorts]);
+    return filterClientItems(effectiveTrend, listHook, {
+      dateField: "label",
+      customExtractors: {
+        tienCoThue: (item) => item.tienCoThue || item.totalBilled || 0,
+        payableCost: (item) => item.payableCost || 0,
+        cost: (item) => item.cost || 0,
+        revenue: (item) => item.revenue || 0,
+        receivable: (item) => item.receivable || 0,
+        withInvoice: (item) => item.billedWithInvoice || 0,
+        noInvoice: (item) => item.billedNoInvoice || 0,
+        withInvoiceCost: (item) => item.costWithInvoice || 0,
+        noInvoiceCost: (item) => item.costNoInvoice || 0,
+      },
+    });
+  }, [effectiveTrend, listHook]);
 
   const totalCases = useMemo(() => {
     return effectiveTrend.reduce((sum, item) => sum + (item.caseCount || 0), 0);
@@ -246,8 +223,19 @@ export function GaragePaymentProgressCard({
         )
       : 100;
 
+  // 1-line Column Header Filter Builder (Client-side auto extract options)
+  const headerFilter = useMemo(
+    () =>
+      createColumnHeaderFilter({
+        listHook,
+        items: effectiveTrend,
+        defaultAlign: "center",
+      }),
+    [listHook, effectiveTrend],
+  );
+
   // Columns for RECEIPT Tab (Khách hàng)
-  const receiptColumns = useMemo(
+  const receiptColumns: DataTableColumn<GarageTrendItem>[] = useMemo(
     () => [
       {
         key: "index",
@@ -264,33 +252,17 @@ export function GaragePaymentProgressCard({
       },
       {
         key: "label",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("progress.columns.month", "Tháng")}
-            sortState={
-              listHook.sorts.includes("label")
-                ? "asc"
-                : listHook.sorts.includes("-label")
-                  ? "desc"
-                  : "none"
-            }
-            onSortChange={(state) => listHook.setSort("label", state)}
-            searchValue=""
-            onSearchChange={() => {}}
-            selectedFilters={[]}
-            onFilterChange={() => {}}
-            hideFilter={true}
-            hideFooter={true}
-            align="center"
-          />
+        header: headerFilter.month(
+          "label",
+          t("progress.columns.month", "Tháng"),
         ),
         size: 130,
         enableResizing: true,
         headerClassName: "text-center",
         className: "text-center font-medium",
         cell: (item: GarageTrendItem) => (
-          <div className="flex items-center justify-center gap-1.5">
-            <span className="font-semibold text-foreground">
+          <div className="flex items-center justify-center gap-1.5 cursor-pointer group/month">
+            <span className="font-semibold text-foreground group-hover/month:text-primary group-hover/month:underline transition-colors">
               {formatMonth(item.label)}
             </span>
           </div>
@@ -298,25 +270,9 @@ export function GaragePaymentProgressCard({
       },
       {
         key: "caseCount",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("progress.columns.caseCount", "Số vụ việc")}
-            sortState={
-              listHook.sorts.includes("caseCount")
-                ? "asc"
-                : listHook.sorts.includes("-caseCount")
-                  ? "desc"
-                  : "none"
-            }
-            onSortChange={(state) => listHook.setSort("caseCount", state)}
-            searchValue=""
-            onSearchChange={() => {}}
-            selectedFilters={[]}
-            onFilterChange={() => {}}
-            hideFilter={true}
-            hideFooter={true}
-            align="center"
-          />
+        header: headerFilter.qty(
+          "caseCount",
+          t("progress.columns.caseCount", "Số vụ việc"),
         ),
         size: 120,
         enableResizing: true,
@@ -330,25 +286,9 @@ export function GaragePaymentProgressCard({
       },
       {
         key: "revenue",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("progress.columns.revenue", "Doanh Thu")}
-            sortState={
-              listHook.sorts.includes("revenue")
-                ? "asc"
-                : listHook.sorts.includes("-revenue")
-                  ? "desc"
-                  : "none"
-            }
-            onSortChange={(state) => listHook.setSort("revenue", state)}
-            searchValue=""
-            onSearchChange={() => {}}
-            selectedFilters={[]}
-            onFilterChange={() => {}}
-            hideFilter={true}
-            hideFooter={true}
-            align="center"
-          />
+        header: headerFilter.amount(
+          "revenue",
+          t("progress.columns.revenue", "Doanh Thu"),
         ),
         size: 140,
         enableResizing: true,
@@ -359,25 +299,9 @@ export function GaragePaymentProgressCard({
       },
       {
         key: "receivable",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("progress.columns.receivable", "Còn Phải Thu")}
-            sortState={
-              listHook.sorts.includes("receivable")
-                ? "asc"
-                : listHook.sorts.includes("-receivable")
-                  ? "desc"
-                  : "none"
-            }
-            onSortChange={(state) => listHook.setSort("receivable", state)}
-            searchValue=""
-            onSearchChange={() => {}}
-            selectedFilters={[]}
-            onFilterChange={() => {}}
-            hideFilter={true}
-            hideFooter={true}
-            align="center"
-          />
+        header: headerFilter.amount(
+          "receivable",
+          t("progress.columns.receivable", "Còn Phải Thu"),
         ),
         size: 140,
         enableResizing: true,
@@ -408,25 +332,9 @@ export function GaragePaymentProgressCard({
       },
       {
         key: "tienCoThue",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("progress.columns.totalBilled", "Tổng Phải Thu")}
-            sortState={
-              listHook.sorts.includes("tienCoThue")
-                ? "asc"
-                : listHook.sorts.includes("-tienCoThue")
-                  ? "desc"
-                  : "none"
-            }
-            onSortChange={(state) => listHook.setSort("tienCoThue", state)}
-            searchValue=""
-            onSearchChange={() => {}}
-            selectedFilters={[]}
-            onFilterChange={() => {}}
-            hideFilter={true}
-            hideFooter={true}
-            align="center"
-          />
+        header: headerFilter.amount(
+          "tienCoThue",
+          t("progress.columns.totalBilled", "Tổng Phải Thu"),
         ),
         size: 195,
         enableResizing: true,
@@ -477,25 +385,9 @@ export function GaragePaymentProgressCard({
       },
       {
         key: "withInvoice",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("progress.columns.withInvoice", "Có HĐ")}
-            sortState={
-              listHook.sorts.includes("withInvoice")
-                ? "asc"
-                : listHook.sorts.includes("-withInvoice")
-                  ? "desc"
-                  : "none"
-            }
-            onSortChange={(state) => listHook.setSort("withInvoice", state)}
-            searchValue=""
-            onSearchChange={() => {}}
-            selectedFilters={[]}
-            onFilterChange={() => {}}
-            hideFilter={true}
-            hideFooter={true}
-            align="center"
-          />
+        header: headerFilter.amount(
+          "billedWithInvoice",
+          t("progress.columns.withInvoice", "Có HĐ"),
         ),
         size: 195,
         enableResizing: true,
@@ -546,25 +438,9 @@ export function GaragePaymentProgressCard({
       },
       {
         key: "noInvoice",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("progress.columns.noInvoice", "Không HĐ")}
-            sortState={
-              listHook.sorts.includes("noInvoice")
-                ? "asc"
-                : listHook.sorts.includes("-noInvoice")
-                  ? "desc"
-                  : "none"
-            }
-            onSortChange={(state) => listHook.setSort("noInvoice", state)}
-            searchValue=""
-            onSearchChange={() => {}}
-            selectedFilters={[]}
-            onFilterChange={() => {}}
-            hideFilter={true}
-            hideFooter={true}
-            align="center"
-          />
+        header: headerFilter.amount(
+          "billedNoInvoice",
+          t("progress.columns.noInvoice", "Không HĐ"),
         ),
         size: 195,
         enableResizing: true,
@@ -614,11 +490,11 @@ export function GaragePaymentProgressCard({
         },
       },
     ],
-    [listHook, t],
+    [headerFilter, t],
   );
 
   // Columns for PAYMENT Tab (Nhà cung cấp / Chi phí)
-  const paymentColumns = useMemo(
+  const paymentColumns: DataTableColumn<GarageTrendItem>[] = useMemo(
     () => [
       {
         key: "index",
@@ -635,57 +511,27 @@ export function GaragePaymentProgressCard({
       },
       {
         key: "label",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("progress.columns.month", "Tháng")}
-            sortState={
-              listHook.sorts.includes("label")
-                ? "asc"
-                : listHook.sorts.includes("-label")
-                  ? "desc"
-                  : "none"
-            }
-            onSortChange={(state) => listHook.setSort("label", state)}
-            searchValue=""
-            onSearchChange={() => {}}
-            selectedFilters={[]}
-            onFilterChange={() => {}}
-            hideFilter={true}
-            hideFooter={true}
-            align="center"
-          />
+        header: headerFilter.month(
+          "label",
+          t("progress.columns.month", "Tháng"),
         ),
         size: 130,
         enableResizing: true,
         headerClassName: "text-center",
         className: "text-center font-medium",
         cell: (item: GarageTrendItem) => (
-          <span className="font-semibold text-foreground">
-            {formatMonth(item.label)}
-          </span>
+          <div className="flex items-center justify-center gap-1.5 cursor-pointer group/month">
+            <span className="font-semibold text-foreground group-hover/month:text-primary group-hover/month:underline transition-colors">
+              {formatMonth(item.label)}
+            </span>
+          </div>
         ),
       },
       {
         key: "caseCount",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("progress.columns.caseCount", "Số vụ việc")}
-            sortState={
-              listHook.sorts.includes("caseCount")
-                ? "asc"
-                : listHook.sorts.includes("-caseCount")
-                  ? "desc"
-                  : "none"
-            }
-            onSortChange={(state) => listHook.setSort("caseCount", state)}
-            searchValue=""
-            onSearchChange={() => {}}
-            selectedFilters={[]}
-            onFilterChange={() => {}}
-            hideFilter={true}
-            hideFooter={true}
-            align="center"
-          />
+        header: headerFilter.qty(
+          "caseCount",
+          t("progress.columns.caseCount", "Số vụ việc"),
         ),
         size: 120,
         enableResizing: true,
@@ -699,25 +545,9 @@ export function GaragePaymentProgressCard({
       },
       {
         key: "payableCost",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("progress.columns.payableCost", "Còn Phải Trả")}
-            sortState={
-              listHook.sorts.includes("payableCost")
-                ? "asc"
-                : listHook.sorts.includes("-payableCost")
-                  ? "desc"
-                  : "none"
-            }
-            onSortChange={(state) => listHook.setSort("payableCost", state)}
-            searchValue=""
-            onSearchChange={() => {}}
-            selectedFilters={[]}
-            onFilterChange={() => {}}
-            hideFilter={true}
-            hideFooter={true}
-            align="center"
-          />
+        header: headerFilter.amount(
+          "payableCost",
+          t("progress.columns.payableCost", "Còn Phải Trả"),
         ),
         size: 140,
         enableResizing: true,
@@ -748,25 +578,9 @@ export function GaragePaymentProgressCard({
       },
       {
         key: "cost",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("progress.columns.cost", "Tổng Phải Trả")}
-            sortState={
-              listHook.sorts.includes("cost")
-                ? "asc"
-                : listHook.sorts.includes("-cost")
-                  ? "desc"
-                  : "none"
-            }
-            onSortChange={(state) => listHook.setSort("cost", state)}
-            searchValue=""
-            onSearchChange={() => {}}
-            selectedFilters={[]}
-            onFilterChange={() => {}}
-            hideFilter={true}
-            hideFooter={true}
-            align="center"
-          />
+        header: headerFilter.amount(
+          "cost",
+          t("progress.columns.cost", "Tổng Phải Trả"),
         ),
         size: 195,
         enableResizing: true,
@@ -817,25 +631,9 @@ export function GaragePaymentProgressCard({
       },
       {
         key: "withInvoiceCost",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("progress.columns.withInvoiceCost", "Có HĐ")}
-            sortState={
-              listHook.sorts.includes("withInvoiceCost")
-                ? "asc"
-                : listHook.sorts.includes("-withInvoiceCost")
-                  ? "desc"
-                  : "none"
-            }
-            onSortChange={(state) => listHook.setSort("withInvoiceCost", state)}
-            searchValue=""
-            onSearchChange={() => {}}
-            selectedFilters={[]}
-            onFilterChange={() => {}}
-            hideFilter={true}
-            hideFooter={true}
-            align="center"
-          />
+        header: headerFilter.amount(
+          "costWithInvoice",
+          t("progress.columns.withInvoiceCost", "Có HĐ"),
         ),
         size: 195,
         enableResizing: true,
@@ -885,25 +683,9 @@ export function GaragePaymentProgressCard({
       },
       {
         key: "noInvoiceCost",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("progress.columns.noInvoiceCost", "Không HĐ")}
-            sortState={
-              listHook.sorts.includes("noInvoiceCost")
-                ? "asc"
-                : listHook.sorts.includes("-noInvoiceCost")
-                  ? "desc"
-                  : "none"
-            }
-            onSortChange={(state) => listHook.setSort("noInvoiceCost", state)}
-            searchValue=""
-            onSearchChange={() => {}}
-            selectedFilters={[]}
-            onFilterChange={() => {}}
-            hideFilter={true}
-            hideFooter={true}
-            align="center"
-          />
+        header: headerFilter.amount(
+          "costNoInvoice",
+          t("progress.columns.noInvoiceCost", "Không HĐ"),
         ),
         size: 195,
         enableResizing: true,
@@ -952,7 +734,7 @@ export function GaragePaymentProgressCard({
         },
       },
     ],
-    [listHook, t],
+    [headerFilter, t],
   );
 
   // Summary row for RECEIPT Tab
@@ -1165,6 +947,19 @@ export function GaragePaymentProgressCard({
     ],
   );
 
+  const getRowActions = (item: GarageTrendItem): ActionDropdownItem[] => [
+    {
+      groupLabel: t("common.actions", "TRA CỨU"),
+      items: [
+        {
+          label: t("progress.viewMonthDetail", "Xem chi tiết đối soát tháng"),
+          icon: <Eye className="w-3.5 h-3.5" />,
+          onClick: () => openMonthDetail(item),
+        },
+      ],
+    },
+  ];
+
   return (
     <>
       <div className="flex flex-col gap-3">
@@ -1271,36 +1066,45 @@ export function GaragePaymentProgressCard({
           {/* Section: Standardized DataTable Breakdown by Month */}
           <div className="flex flex-col gap-2.5 pt-1">
             <div className="flex items-center justify-between flex-wrap gap-2">
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                <TableIcon className="w-3.5 h-3.5 text-primary" />
-                Chi tiết {isReceipt
-                  ? "Phải thu & Đã thu"
-                  : "Phải trả & Đã trả"}{" "}
-                theo từng tháng
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                  <TableIcon className="w-3.5 h-3.5 text-primary" />
+                  Chi tiết{" "}
+                  {isReceipt ? "Phải thu & Đã thu" : "Phải trả & Đã trả"} theo
+                  từng tháng
+                </span>
+                {listHook.activeFilterCount > 0 && (
+                  <button
+                    type="button"
+                    onClick={listHook.resetFilters}
+                    className="text-[11px] font-medium text-destructive hover:underline flex items-center gap-1 bg-destructive/10 px-2 py-0.5 rounded-full"
+                  >
+                    <span>Xóa bộ lọc ({listHook.activeFilterCount})</span>
+                  </button>
+                )}
+              </div>
               <span className="text-[11px] text-muted-foreground">
                 So sánh chi tiết từng tháng (Phải thu = Doanh thu + VAT, Đã thu
                 thực tế và Dư nợ)
               </span>
             </div>
 
-            <div className="border rounded-lg overflow-hidden">
-              <DataTable
-                items={processedItems}
-                getRowKey={(item) => item.label}
-                variant="spreadsheet"
-                emptyLabel={t(
-                  "progress.empty",
-                  "Chưa có dữ liệu giao dịch trong kỳ",
-                )}
-                loading={loading}
-                columns={isReceipt ? receiptColumns : paymentColumns}
-                summaryRow={isReceipt ? receiptSummaryRow : paymentSummaryRow}
-                enableColumnResizing={true}
-                tableId={tableId}
-                onRowContextMenu={handleRowContextMenu}
-              />
-            </div>
+            <DataTable
+              items={processedItems}
+              getRowKey={(item) => item.label}
+              variant="spreadsheet"
+              emptyLabel={t(
+                "progress.empty",
+                "Chưa có dữ liệu giao dịch trong kỳ",
+              )}
+              loading={loading}
+              columns={isReceipt ? receiptColumns : paymentColumns}
+              summaryRow={isReceipt ? receiptSummaryRow : paymentSummaryRow}
+              enableColumnResizing={true}
+              tableId={tableId}
+              rowHoverActions={getRowActions}
+              onRowClick={openMonthDetail}
+            />
           </div>
 
           {/* Footnote Note */}
@@ -1314,23 +1118,6 @@ export function GaragePaymentProgressCard({
           </div>
         </div>
       </div>
-
-      {/* Row context menu */}
-      <TableRowContextMenu
-        x={contextMenu?.x ?? 0}
-        y={contextMenu?.y ?? 0}
-        isOpen={!!contextMenu}
-        onClose={() => setContextMenu(null)}
-        items={[
-          {
-            label: "Xem chi tiết tháng",
-            icon: <ExternalLink className="w-3.5 h-3.5" />,
-            onClick: () => {
-              if (contextMenu?.item) openMonthDetail(contextMenu.item);
-            },
-          },
-        ]}
-      />
 
       {/* Month detail drawer */}
       <GarageMonthDetailDrawer

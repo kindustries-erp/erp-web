@@ -172,7 +172,7 @@ Khi tạo bảng và drawer trong trang, **BẮT BUỘC** tuân thủ các quy c
    - **Cột STT (Index)**: Rộng đúng `40px`, **bắt đầu từ 1 (1-based)**, căn giữa tuyệt đối cả header và cell (`cell: (_, idx) => <span className="w-full block text-center">{(page - 1) * pageSize + idx + 1}</span>`).
    - **Cột Mã Code**: Dùng `<TableText enableCopy tooltip onDetailClick={() => openDetail(row.id, "view")}>`.
    - **Row Actions**: BẮT BUỘC dùng prop `rowActions` trên `<SpreadsheetPageTemplate>`. Không tạo cột action tĩnh. Mảng `rowActions` phải chứa 2 action đầu tiên là **Xem chi tiết** (`openDetail(id, "view")` — 👁️) và **Chỉnh sửa** (`openDetail(id, "edit")` — ✏️) để map vào Floated Action Bar và Right-Click Context Menu.
-   - **TableColumnHeaderFilter**: Dùng `fetchOptions` gọi `getColumnOptions` API; Cột Date dùng `<DateRangeColumnSlot>`.
+   - **TableColumnHeaderFilter**: Dùng `fetchOptions` gọi `getColumnOptions` API; Cột Date dùng `<DateRangeColumnSlot>`; Tự động hỗ trợ tìm kiếm chính xác (`"..."`) và nhiều từ khóa qua dấu chấm phẩy (`;`); Cột có dữ liệu optional/null bật `{ showBlankOption: true }` để chèn option `(blank)` / `(Trống)`.
 2. 👉 **Detail Drawer ([`standardize-drawer`](../standardize_drawer/SKILL.md))**:
    - Mở component `[Module]DetailDrawer` với prop `mode={drawerMode}` (`"view" | "edit"`) và `setMode={setDrawerMode}`. Không điều hướng URL.
 
@@ -312,15 +312,21 @@ export function ExampleTablePage() {
     // Xác nhận và xử lý xóa
   };
 
-  const getSortState = (key: string) => {
-    if (listHook.sorts.includes(key)) return "asc" as const;
-    if (listHook.sorts.includes(`-${key}`)) return "desc" as const;
-    return "none" as const;
-  };
+  // 1-line Column Header Filter Builder (Server-side + Date + Amount + Status)
+  const headerFilter = useMemo(
+    () =>
+      createColumnHeaderFilter({
+        listHook,
+        queryKeyPrefix: "example-column-options",
+        fetchOptions: ({ columnKey, search, pageParam, filtersStr }) =>
+          Promise.resolve({ items: [], total: 0, next: null }),
+      }),
+    [listHook],
+  );
 
   const columns: DataTableColumn<ExampleRow>[] = useMemo(
     () => [
-      // Cột STT: Bắt đầu từ 1, Căn giữa cả header và cell
+      // 1. Cột STT: Bắt đầu từ 1, Căn giữa cả header và cell (40px)
       {
         key: "index",
         header: <span className="w-full block text-center">#</span>,
@@ -332,27 +338,12 @@ export function ExampleTablePage() {
           <span className="w-full block text-center">{idx}</span>
         ),
       },
-      // Cột Mã (Code): TableText + onDetailClick view mode
+      // 2. Cột Mã (Code): TableText + onDetailClick view mode + Quick status badge
       {
         key: "code",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("code", "Mã phiếu")}
-            columnKey="code"
-            queryKeyPrefix="example-column-options"
-            allFilters={listHook.columnFilters}
-            sortState={getSortState("code")}
-            onSortChange={(s) => listHook.setSort("code", s)}
-            searchValue={listHook.columnSearch["code"] || ""}
-            onSearchChange={(v) => listHook.setColumnSearch("code", v)}
-            selectedFilters={listHook.columnFilters["code"] || []}
-            onFilterChange={(v) => listHook.setColumnFilter("code", v)}
-            isActive={!!listHook.columnFilters["code"]?.length}
-            align="center"
-          />
-        ),
         size: 200,
         enableResizing: true,
+        header: headerFilter("code", t("code", "Mã phiếu")),
         cell: (row: ExampleRow) => (
           <div className="flex items-center gap-1.5 w-full min-w-0">
             <TableText
@@ -376,25 +367,13 @@ export function ExampleTablePage() {
           </div>
         ),
       },
-      // Cột Trạng thái: Badge fixed width
+      // 3. Cột Trạng thái: Badge fixed width w-[88px]
       {
         key: "status",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("status", "Trạng thái")}
-            sortState={getSortState("status")}
-            onSortChange={(s) => listHook.setSort("status", s)}
-            searchValue={listHook.columnSearch["status"] || ""}
-            onSearchChange={(v) => listHook.setColumnSearch("status", v)}
-            selectedFilters={listHook.columnFilters["status"] || []}
-            onFilterChange={(v) => listHook.setColumnFilter("status", v)}
-            isActive={!!listHook.columnFilters["status"]?.length}
-            align="center"
-          />
-        ),
         size: 150,
         enableResizing: true,
         className: "text-center",
+        header: headerFilter("status", t("status", "Trạng thái")),
         cell: (row: ExampleRow) => (
           <div className="w-full flex justify-center">
             <Badge
@@ -406,58 +385,24 @@ export function ExampleTablePage() {
           </div>
         ),
       },
-      // Cột Ngày: DateRangeColumnSlot
+      // 4. Cột Ngày: DateRangeColumnSlot + TableDateCell
       {
         key: "createdAt",
-        className: "text-right",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("createdAt", "Ngày tạo")}
-            sortState={getSortState("createdAt")}
-            onSortChange={(s) => listHook.setSort("createdAt", s)}
-            searchValue=""
-            onSearchChange={() => {}}
-            selectedFilters={[]}
-            onFilterChange={() => {}}
-            hideFilter={true}
-            hideFooter={true}
-            isActive={Boolean(listHook.dateFrom || listHook.dateTo)}
-            align="center"
-            dateRangeSlot={({ close }) => (
-              <DateRangeColumnSlot
-                dateFrom={listHook.dateFrom || ""}
-                dateTo={listHook.dateTo || ""}
-                onChange={(from, to) => listHook.setDateRange(from, to)}
-                onClose={close}
-              />
-            )}
-          />
-        ),
         size: 140,
         enableResizing: true,
+        className: "text-right",
+        header: headerFilter.date("createdAt", t("createdAt", "Ngày tạo")),
         cell: (row: ExampleRow) => (
           <TableDateCell date={row.createdAt} className="justify-end w-full" />
         ),
       },
-      // Cột Số tiền
+      // 5. Cột Số tiền: headerFilter.amount tự format tiền tệ trong dropdown
       {
         key: "amount",
-        className: "text-right",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("amount", "Số tiền")}
-            sortState={getSortState("amount")}
-            onSortChange={(s) => listHook.setSort("amount", s)}
-            searchValue={listHook.columnSearch["amount"] || ""}
-            onSearchChange={(v) => listHook.setColumnSearch("amount", v)}
-            selectedFilters={listHook.columnFilters["amount"] || []}
-            onFilterChange={(v) => listHook.setColumnFilter("amount", v)}
-            isActive={!!listHook.columnFilters["amount"]?.length}
-            align="center"
-          />
-        ),
         size: 140,
         enableResizing: true,
+        className: "text-right",
+        header: headerFilter.amount("amount", t("amount", "Số tiền")),
         cell: (row: ExampleRow) => (
           <span className="tabular-nums font-semibold">
             {row.amount.toLocaleString("vi-VN")} đ
@@ -465,8 +410,9 @@ export function ExampleTablePage() {
         ),
       },
     ],
-    [listHook.sorts, listHook.columnFilters, listHook.columnSearch, listHook.dateFrom, listHook.dateTo, t],
+    [headerFilter, t],
   );
+
 
   // Row Actions: 2 Quick Actions đầu tiên là View và Edit mode
   const getRowActions = (row: ExampleRow): ActionDropdownItem[] => [

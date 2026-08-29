@@ -11,21 +11,31 @@ import {
   CreditCard,
   MapPin,
   AlertCircle,
+  Eye,
+  RotateCcw,
+  Boxes,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 
-import { type ErpInvoice } from "../api/erpInvoicesCoreApi";
+import {
+  type ErpInvoice,
+  type ErpInvoiceItemRow,
+} from "../api/erpInvoicesCoreApi";
 import { erpInvoiceDashboardApi } from "../api/erpInvoiceDashboardApi";
 import { erpInvoicesCoreApi } from "../api/erpInvoicesCoreApi";
-import { useErpInvoicesList } from "../hooks/useErpInvoicesList";
 import { StandardTable } from "@/shared/components/StandardTable";
-import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
-import { DateRangeColumnSlot } from "@/shared/components/DataTable/DateRangeColumnSlot";
+import {
+  createColumnHeaderFilter,
+  type DataTableColumn,
+} from "@/shared/components/DataTable";
+import { TableText } from "@/shared/components/DataTable/TableText";
 import { BarChart } from "@/shared/components/charts/BarChart";
 import { ChartSkeleton } from "@/shared/components/Skeleton";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import { Badge } from "@/shared/components/ui/badge";
+import { Button } from "@/shared/components/ui/Button";
 import { money } from "@/shared/utils/format";
+import { cn } from "@/shared/utils";
 import { VietnamInvoiceTemplate } from "./VietnamInvoiceTemplate";
 import { DrawerModal, DrawerSection } from "@/shared/components/DrawerModal";
 import { InvoiceNoCell } from "./ErpInvoicesTab/components/cells/InvoiceNoCell";
@@ -33,18 +43,42 @@ import { InvoiceNoCell } from "./ErpInvoicesTab/components/cells/InvoiceNoCell";
 export interface ErpInvoicePartnerTabProps {
   detailInvoice: ErpInvoice | null;
   direction?: "IN" | "OUT";
+  defaultViewMode?: "invoices" | "lines";
 }
+
+export const getDefaultPageSize = (): number => {
+  if (typeof window !== "undefined" && window.innerHeight >= 900) {
+    return 50;
+  }
+  return 20;
+};
 
 export const ErpInvoicePartnerTab = React.memo(function ErpInvoicePartnerTab({
   detailInvoice,
   direction,
+  defaultViewMode,
 }: ErpInvoicePartnerTabProps) {
   const { t } = useTranslation("erpInvoices");
-  const [copiedTax, setCopiedTax] = useState(false);
-  const [copiedName, setCopiedName] = useState(false);
   const [previewSubInvoice, setPreviewSubInvoice] = useState<ErpInvoice | null>(
     null,
   );
+
+  const [isTableCollapsed, setIsTableCollapsed] = useState(false);
+
+  const isUrlLinesTab = useMemo(() => {
+    if (typeof window === "undefined") return false;
+    const s = window.location.search;
+    return (
+      s.includes("tab=in-lines") ||
+      s.includes("tab=out-lines") ||
+      s.includes("view=lines")
+    );
+  }, []);
+
+  const [viewMode, setViewMode] = useState<"invoices" | "lines">(() => {
+    if (defaultViewMode) return defaultViewMode;
+    return isUrlLinesTab ? "lines" : "invoices";
+  });
 
   const isDirectionIn = (direction || detailInvoice?.direction) === "IN";
   const partnerName =
@@ -59,78 +93,293 @@ export const ErpInvoicePartnerTab = React.memo(function ErpInvoicePartnerTab({
       : detailInvoice?.buyerTaxCode || detailInvoice?.buyerCccd
     )?.trim() || "";
 
-  const address =
-    (isDirectionIn
-      ? detailInvoice?.sellerAddress
-      : detailInvoice?.buyerAddress
-    )?.trim() || "";
+  // ═══════════════════════════════════════════════════════════════════════════
+  // 1. STATE & HOOKS CHO BẢNG DANH SÁCH HÓA ĐƠN (INVOICE HEADERS)
+  // ═══════════════════════════════════════════════════════════════════════════
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState<number>(getDefaultPageSize);
+  const [sorts, setSorts] = useState<string[]>([]);
+  const [dateFrom, setDateFrom] = useState<string>("");
+  const [dateTo, setDateTo] = useState<string>("");
+  const [columnFilters, setColumnFilters] = useState<Record<string, string[]>>(
+    {},
+  );
+  const [columnSearch, setColumnSearchState] = useState<Record<string, string>>(
+    {},
+  );
 
-  const bank = isDirectionIn ? detailInvoice?.sellerBank?.trim() : "";
+  const setSort = useCallback((key: string, state: "asc" | "desc" | "none") => {
+    setSorts((prev) => {
+      const filtered = prev.filter((s) => s !== key && s !== `-${key}`);
+      if (state === "asc") return [...filtered, key];
+      if (state === "desc") return [...filtered, `-${key}`];
+      return filtered;
+    });
+    setPage(1);
+  }, []);
 
-  // Query stats data
-  const { data: statsData, isLoading: isLoadingStats } = useQuery({
-    queryKey: ["partner-invoice-stats", taxCode],
-    queryFn: () => erpInvoiceDashboardApi.getPartnerStats(taxCode),
-    enabled: !!taxCode,
+  const setColumnFilter = useCallback((key: string, vals: string[]) => {
+    setColumnFilters((prev) => {
+      if (!vals || vals.length === 0) {
+        const copy = { ...prev };
+        delete copy[key];
+        return copy;
+      }
+      return { ...prev, [key]: vals };
+    });
+    setPage(1);
+  }, []);
+
+  const setColumnSearch = useCallback((key: string, val: string) => {
+    setColumnSearchState((prev) => {
+      if (!val || val.trim().length === 0) {
+        const copy = { ...prev };
+        delete copy[key];
+        return copy;
+      }
+      return { ...prev, [key]: val };
+    });
+    setPage(1);
+  }, []);
+
+  const setDateRange = useCallback((from?: string, to?: string) => {
+    setDateFrom(from || "");
+    setDateTo(to || "");
+    setPage(1);
+  }, []);
+
+  const activeFilterCount = useMemo(() => {
+    let count = 0;
+    Object.values(columnFilters).forEach((vals) => {
+      if (vals && vals.length > 0) count += vals.length;
+    });
+    Object.values(columnSearch).forEach((val) => {
+      if (val && val.trim().length > 0) count += 1;
+    });
+    if (dateFrom || dateTo) count += 1;
+    return count;
+  }, [columnFilters, columnSearch, dateFrom, dateTo]);
+
+  const clearAllFilters = useCallback(() => {
+    setColumnFilters({});
+    setColumnSearchState({});
+    setDateFrom("");
+    setDateTo("");
+    setPage(1);
+  }, []);
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // 2. STATE & HOOKS CHO BẢNG CHI TIẾT HÀNG HÓA (ITEM LINES)
+  // ═══════════════════════════════════════════════════════════════════════════
+  const [itemPage, setItemPage] = useState(1);
+  const [itemPageSize, setItemPageSize] = useState<number>(getDefaultPageSize);
+  const [itemSorts, setItemSorts] = useState<string[]>([]);
+  const [itemDateFrom, setItemDateFrom] = useState<string>("");
+  const [itemDateTo, setItemDateTo] = useState<string>("");
+  const [itemColumnFilters, setItemColumnFilters] = useState<
+    Record<string, string[]>
+  >({});
+  const [itemColumnSearch, setItemColumnSearchState] = useState<
+    Record<string, string>
+  >({});
+
+  const setItemSort = useCallback(
+    (key: string, state: "asc" | "desc" | "none") => {
+      setItemSorts((prev) => {
+        const filtered = prev.filter((s) => s !== key && s !== `-${key}`);
+        if (state === "asc") return [...filtered, key];
+        if (state === "desc") return [...filtered, `-${key}`];
+        return filtered;
+      });
+      setItemPage(1);
+    },
+    [],
+  );
+
+  const setItemColumnFilter = useCallback((key: string, vals: string[]) => {
+    setItemColumnFilters((prev) => {
+      if (!vals || vals.length === 0) {
+        const copy = { ...prev };
+        delete copy[key];
+        return copy;
+      }
+      return { ...prev, [key]: vals };
+    });
+    setItemPage(1);
+  }, []);
+
+  const setItemColumnSearch = useCallback((key: string, val: string) => {
+    setItemColumnSearchState((prev) => {
+      if (!val || val.trim().length === 0) {
+        const copy = { ...prev };
+        delete copy[key];
+        return copy;
+      }
+      return { ...prev, [key]: val };
+    });
+    setItemPage(1);
+  }, []);
+
+  const setItemDateRange = useCallback((from?: string, to?: string) => {
+    setItemDateFrom(from || "");
+    setItemDateTo(to || "");
+    setItemPage(1);
+  }, []);
+
+  const itemActiveFilterCount = useMemo(() => {
+    let count = 0;
+    Object.values(itemColumnFilters).forEach((vals) => {
+      if (vals && vals.length > 0) count += vals.length;
+    });
+    Object.values(itemColumnSearch).forEach((val) => {
+      if (val && val.trim().length > 0) count += 1;
+    });
+    if (itemDateFrom || itemDateTo) count += 1;
+    return count;
+  }, [itemColumnFilters, itemColumnSearch, itemDateFrom, itemDateTo]);
+
+  const clearItemAllFilters = useCallback(() => {
+    setItemColumnFilters({});
+    setItemColumnSearchState({});
+    setItemDateFrom("");
+    setItemDateTo("");
+    setItemPage(1);
+  }, []);
+
+  // ── Query Invoices List ───
+  const activeSort = sorts[0] || "";
+  let sortBy = "";
+  let sortOrder: "asc" | "desc" = "desc";
+  if (activeSort.startsWith("-")) {
+    sortBy = activeSort.substring(1);
+    sortOrder = "desc";
+  } else if (activeSort) {
+    sortBy = activeSort;
+    sortOrder = "asc";
+  } else {
+    sortBy = "invoiceDate";
+    sortOrder = "desc";
+  }
+
+  const { data: listResponse, isLoading: isLoadingList } = useQuery({
+    queryKey: [
+      "partner-invoices-list",
+      taxCode,
+      page,
+      pageSize,
+      sortBy,
+      sortOrder,
+      dateFrom,
+      dateTo,
+      columnFilters,
+      columnSearch,
+    ],
+    queryFn: () =>
+      erpInvoicesCoreApi.list({
+        partner_tax_code: taxCode,
+        date_from: dateFrom ? `${dateFrom}T00:00:00` : undefined,
+        date_to: dateTo ? `${dateTo}T23:59:59` : undefined,
+        page,
+        pageSize,
+        sort_by: sortBy || undefined,
+        sort_order: sortOrder || undefined,
+        column_search: Object.keys(columnSearch).length
+          ? JSON.stringify(columnSearch)
+          : undefined,
+        column_filters: Object.keys(columnFilters).length
+          ? JSON.stringify(columnFilters)
+          : undefined,
+      }),
+    enabled: !!taxCode && viewMode === "invoices",
   });
 
-  // Query invoice list for this partner
-  const listHook = useErpInvoicesList("ALL", taxCode);
+  const invoices = useMemo(() => listResponse?.items || [], [listResponse]);
+  const total = listResponse?.total || 0;
+  const totalPages = listResponse?.totalPages || 0;
 
-  React.useEffect(() => {
-    if (taxCode) {
-      listHook.setPage(1);
-      void listHook.loadInvoices();
-    }
-  }, [taxCode]);
+  // ── Query Item Lines List ───
+  const activeItemSort = itemSorts[0] || "";
+  let itemSortBy = "";
+  let itemSortOrder: "asc" | "desc" = "desc";
+  if (activeItemSort.startsWith("-")) {
+    itemSortBy = activeItemSort.substring(1);
+    itemSortOrder = "desc";
+  } else if (activeItemSort) {
+    itemSortBy = activeItemSort;
+    itemSortOrder = "asc";
+  } else {
+    itemSortBy = "invoiceDate";
+    itemSortOrder = "desc";
+  }
 
-  const copyToClipboard = (
-    text: string,
-    isTax: boolean,
-    e: React.MouseEvent,
-  ) => {
-    e.stopPropagation();
-    e.preventDefault();
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text);
-    }
-    if (isTax) {
-      setCopiedTax(true);
-      toast.success(t("copiedTax", "Đã copy MST"), { id: "partner-tax-copy" });
-      setTimeout(() => setCopiedTax(false), 1500);
-    } else {
-      setCopiedName(true);
-      toast.success(t("copiedName", "Đã copy tên đối tác"), {
-        id: "partner-name-copy",
-      });
-      setTimeout(() => setCopiedName(false), 1500);
-    }
-  };
+  const { data: itemLinesResponse, isLoading: isLoadingItems } = useQuery({
+    queryKey: [
+      "partner-items-list",
+      taxCode,
+      direction || detailInvoice?.direction,
+      itemPage,
+      itemPageSize,
+      itemSortBy,
+      itemSortOrder,
+      itemDateFrom,
+      itemDateTo,
+      itemColumnFilters,
+      itemColumnSearch,
+    ],
+    queryFn: () =>
+      erpInvoicesCoreApi.getItemsList({
+        partner_tax_code: taxCode,
+        direction: (direction || detailInvoice?.direction) as "IN" | "OUT",
+        date_from: itemDateFrom ? `${itemDateFrom}T00:00:00` : undefined,
+        date_to: itemDateTo ? `${itemDateTo}T23:59:59` : undefined,
+        page: itemPage,
+        pageSize: itemPageSize,
+        sort_by: itemSortBy || undefined,
+        sort_order: itemSortOrder || undefined,
+        column_search: Object.keys(itemColumnSearch).length
+          ? JSON.stringify(itemColumnSearch)
+          : undefined,
+        column_filters: Object.keys(itemColumnFilters).length
+          ? JSON.stringify(itemColumnFilters)
+          : undefined,
+      }),
+    enabled: !!taxCode && viewMode === "lines",
+  });
 
-  const barIn = "#ea580c"; // Orange 600 (Đầu vào - Chi phí)
-  const barOut = "#059669"; // Emerald 600 (Đầu ra - Doanh thu)
+  const itemLines = useMemo(
+    () => itemLinesResponse?.items || [],
+    [itemLinesResponse],
+  );
+  const itemLinesTotal = itemLinesResponse?.total || 0;
+  const itemLinesTotalPages = itemLinesResponse?.totalPages || 0;
 
-  const cashTrendLabels = statsData?.cashTrend?.map((t) => t.label) || [];
-  const cashTrendIn = statsData?.cashTrend?.map((t) => t.cashOut) || [];
-  const cashTrendOut = statsData?.cashTrend?.map((t) => t.cashIn) || [];
-
-  const getSortState = (key: string) => {
-    if (listHook.tableState.sorts.includes(key)) return "asc";
-    if (listHook.tableState.sorts.includes(`-${key}`)) return "desc";
-    return "none";
-  };
-  const handleSortChange = (key: string, state: "asc" | "desc" | "none") => {
-    listHook.tableState.setSort(key, state);
-    listHook.setPage(1);
-  };
-  const handleSearchChange = (key: string, val: string) => {
-    listHook.tableState.setColumnSearch(key, val);
-    listHook.setPage(1);
-  };
-  const handleFilterChange = (key: string, vals: string[]) => {
-    listHook.tableState.setColumnFilter(key, vals);
-    listHook.setPage(1);
-  };
+  // ═══════════════════════════════════════════════════════════════════════════
+  // 3. COLUMNS & FILTERS CHO BẢNG HÓA ĐƠN (INVOICE HEADERS)
+  // ═══════════════════════════════════════════════════════════════════════════
+  const listHookLike = useMemo(
+    () => ({
+      sorts,
+      setSort,
+      columnFilters,
+      setColumnFilter,
+      columnSearch,
+      setColumnSearch,
+      dateFrom,
+      dateTo,
+      setDateRange,
+    }),
+    [
+      sorts,
+      setSort,
+      columnFilters,
+      setColumnFilter,
+      columnSearch,
+      setColumnSearch,
+      dateFrom,
+      dateTo,
+      setDateRange,
+    ],
+  );
 
   const fetchInvoiceOptions = useCallback(
     async ({
@@ -194,70 +443,50 @@ export const ErpInvoicePartnerTab = React.memo(function ErpInvoicePartnerTab({
     [taxCode],
   );
 
-  const columns = useMemo(() => {
+  const headerFilter = useMemo(
+    () =>
+      createColumnHeaderFilter({
+        listHook: listHookLike,
+        queryKeyPrefix: `partner-invoice-options-${taxCode}`,
+        fetchOptions: fetchInvoiceOptions,
+      }),
+    [listHookLike, taxCode, fetchInvoiceOptions],
+  );
+
+  const columns: DataTableColumn<ErpInvoice>[] = useMemo(() => {
     return [
+      // 1. Cột STT: 40px, căn giữa tuyệt đối
+      {
+        key: "index",
+        header: <span className="w-full block text-center">#</span>,
+        size: 40,
+        enableResizing: false,
+        headerClassName: "text-center w-[40px] min-w-[40px]",
+        className: "text-center w-[40px] min-w-[40px]",
+        cell: (_: any, idx: number) => (
+          <span className="w-full block text-center text-muted-foreground font-medium">
+            {idx}
+          </span>
+        ),
+      },
+      // 2. Cột Ngày HĐ
       {
         key: "invoiceDate",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("invoiceDate", "Ngày HĐ")}
-            sortState={getSortState("invoiceDate")}
-            onSortChange={(state) => handleSortChange("invoiceDate", state)}
-            searchValue={listHook.tableState.columnSearch["invoiceDate"] || ""}
-            onSearchChange={(val) => handleSearchChange("invoiceDate", val)}
-            selectedFilters={
-              listHook.tableState.columnFilters["invoiceDate"] || []
-            }
-            onFilterChange={(vals) => handleFilterChange("invoiceDate", vals)}
-            align="center"
-            columnKey="invoiceDate"
-            hideFilter={true}
-            hideFooter={true}
-            dateRangeSlot={({ close }) => {
-              const val = listHook.tableState.columnSearch["invoiceDate"] || "";
-              const [from = "", to = ""] = val.split("|");
-              return (
-                <DateRangeColumnSlot
-                  dateFrom={from}
-                  dateTo={to}
-                  onChange={(f, t) => {
-                    const next = f || t ? `${f}|${t}` : "";
-                    handleSearchChange("invoiceDate", next);
-                  }}
-                  onClose={close}
-                />
-              );
-            }}
-          />
-        ),
-        size: 105,
+        size: 110,
+        enableResizing: true,
+        header: headerFilter.date("invoiceDate", t("invoiceDate", "Ngày HĐ")),
         className: "text-right font-medium",
         cell: (inv: ErpInvoice) =>
           inv.invoiceDate
             ? format(new Date(inv.invoiceDate), "dd/MM/yyyy")
             : "—",
       },
+      // 3. Cột Số HĐ
       {
         key: "invoiceNo",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("invoiceNo", "Số HĐ")}
-            sortState={getSortState("invoiceNo")}
-            onSortChange={(state) => handleSortChange("invoiceNo", state)}
-            searchValue={listHook.tableState.columnSearch["invoiceNo"] || ""}
-            onSearchChange={(val) => handleSearchChange("invoiceNo", val)}
-            selectedFilters={
-              listHook.tableState.columnFilters["invoiceNo"] || []
-            }
-            onFilterChange={(vals) => handleFilterChange("invoiceNo", vals)}
-            align="left"
-            columnKey="invoiceNo"
-            queryKeyPrefix={`partner-invoice-options-invno-${taxCode}`}
-            allFilters={listHook.tableState.columnFilters}
-            fetchOptions={fetchInvoiceOptions}
-          />
-        ),
         size: 155,
+        enableResizing: true,
+        header: headerFilter("invoiceNo", t("invoiceNo", "Số HĐ")),
         cell: (inv: ErpInvoice) => (
           <InvoiceNoCell
             inv={inv}
@@ -265,61 +494,457 @@ export const ErpInvoicePartnerTab = React.memo(function ErpInvoicePartnerTab({
           />
         ),
       },
+      // 4. Cột Trước GTGT
+      {
+        key: "preVatAmount",
+        size: 130,
+        enableResizing: true,
+        className: "text-right tabular-nums",
+        header: headerFilter.amount(
+          "preVatAmount",
+          t("preVatAmount", "Trước GTGT"),
+        ),
+        cell: (inv: ErpInvoice) => money(Number(inv.preVatAmount) || 0),
+      },
+      // 5. Cột Thuế suất
+      {
+        key: "vatRate",
+        size: 90,
+        enableResizing: true,
+        className: "text-center tabular-nums font-medium",
+        header: headerFilter.numeric("vatRate", t("vatRate", "Thuế suất"), {
+          currencySymbol: "%",
+          isCurrency: false,
+        }),
+        cell: (inv: ErpInvoice) => {
+          if (
+            inv.vatRate === null ||
+            inv.vatRate === undefined ||
+            inv.vatRate === ""
+          ) {
+            return "—";
+          }
+          const num = Number(inv.vatRate);
+          if (isNaN(num)) return String(inv.vatRate);
+          if (num === 0) return "0%";
+          const percent =
+            Math.abs(num) <= 1 ? Math.round(num * 100 * 100) / 100 : num;
+          return `${percent}%`;
+        },
+      },
+      // 6. Cột Thuế GTGT
+      {
+        key: "vatAmount",
+        size: 120,
+        enableResizing: true,
+        className: "text-right tabular-nums",
+        header: headerFilter.amount("vatAmount", t("vatAmount", "Thuế GTGT")),
+        cell: (inv: ErpInvoice) => money(Number(inv.vatAmount) || 0),
+      },
+      // 7. Cột Tổng tiền
       {
         key: "totalAmount",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("totalAmount", "Tổng tiền")}
-            sortState={getSortState("totalAmount")}
-            onSortChange={(state) => handleSortChange("totalAmount", state)}
-            searchValue={listHook.tableState.columnSearch["totalAmount"] || ""}
-            onSearchChange={(val) => handleSearchChange("totalAmount", val)}
-            selectedFilters={
-              listHook.tableState.columnFilters["totalAmount"] || []
-            }
-            onFilterChange={(vals) => handleFilterChange("totalAmount", vals)}
-            align="center"
-            columnKey="totalAmount"
-            queryKeyPrefix={`partner-invoice-options-amt-${taxCode}`}
-            allFilters={listHook.tableState.columnFilters}
-            fetchOptions={fetchInvoiceOptions}
-          />
+        size: 135,
+        enableResizing: true,
+        className: "text-right font-semibold tabular-nums text-foreground",
+        header: headerFilter.amount(
+          "totalAmount",
+          t("totalAmount", "Tổng tiền"),
         ),
-        size: 130,
-        className: "text-right font-semibold tabular-nums",
-        cell: (inv: ErpInvoice) => money(inv.totalAmount || 0),
+        cell: (inv: ErpInvoice) => money(Number(inv.totalAmount) || 0),
       },
+      // 8. Cột Diễn giải
       {
         key: "description",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("description", "Diễn giải")}
-            sortState={getSortState("description")}
-            onSortChange={(state) => handleSortChange("description", state)}
-            searchValue={listHook.tableState.columnSearch["description"] || ""}
-            onSearchChange={(val) => handleSearchChange("description", val)}
-            selectedFilters={
-              listHook.tableState.columnFilters["description"] || []
-            }
-            onFilterChange={(vals) => handleFilterChange("description", vals)}
-            align="center"
-            columnKey="description"
-            queryKeyPrefix={`partner-invoice-options-desc-${taxCode}`}
-            allFilters={listHook.tableState.columnFilters}
-            fetchOptions={fetchInvoiceOptions}
-          />
-        ),
-        size: 240,
+        size: 220,
+        enableResizing: true,
+        header: headerFilter("description", t("description", "Diễn giải")),
         cell: (inv: ErpInvoice) => (
           <Tooltip content={inv.description || ""}>
-            <div className="truncate max-w-[240px] text-xs text-muted-foreground">
+            <div className="truncate max-w-[220px] text-xs text-muted-foreground">
               {inv.description || "—"}
             </div>
           </Tooltip>
         ),
       },
     ];
-  }, [taxCode, listHook.tableState, fetchInvoiceOptions, t]);
+  }, [headerFilter, t]);
+
+  const summaryRow = useMemo(() => {
+    if (!invoices || invoices.length === 0) return undefined;
+    const sumPreVat = invoices.reduce(
+      (sum, i) => sum + (Number(i.preVatAmount) || 0),
+      0,
+    );
+    const sumVat = invoices.reduce(
+      (sum, i) => sum + (Number(i.vatAmount) || 0),
+      0,
+    );
+    const sumTotal = invoices.reduce(
+      (sum, i) => sum + (Number(i.totalAmount) || 0),
+      0,
+    );
+    return {
+      invoiceDate: (
+        <span className="font-semibold text-xs text-foreground">
+          {t("total", "Tổng")}
+        </span>
+      ),
+      preVatAmount: (
+        <span className="font-semibold text-xs tabular-nums text-foreground">
+          {money(sumPreVat)}
+        </span>
+      ),
+      vatAmount: (
+        <span className="font-semibold text-xs tabular-nums text-foreground">
+          {money(sumVat)}
+        </span>
+      ),
+      totalAmount: (
+        <span className="font-bold text-xs tabular-nums text-foreground">
+          {money(sumTotal)}
+        </span>
+      ),
+    };
+  }, [invoices, t]);
+
+  const rowActions = useCallback(
+    (inv: ErpInvoice) => [
+      {
+        label: t("actionDetail", "Xem chi tiết"),
+        icon: <Eye className="w-3.5 h-3.5" />,
+        onClick: () => setPreviewSubInvoice(inv),
+      },
+    ],
+    [t],
+  );
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // 4. COLUMNS & FILTERS CHO BẢNG CHI TIẾT HÀNG HÓA (ITEM LINES)
+  // ═══════════════════════════════════════════════════════════════════════════
+  const fetchItemOptions = useCallback(
+    async ({
+      columnKey,
+      search,
+      pageParam,
+      filtersStr,
+    }: {
+      columnKey: string;
+      search: string;
+      pageParam: number;
+      filtersStr?: string;
+    }) => {
+      let mergedFilters: Record<string, any> = {};
+      if (filtersStr) {
+        try {
+          mergedFilters = JSON.parse(filtersStr);
+        } catch {
+          // ignore
+        }
+      }
+      if (taxCode) {
+        mergedFilters["taxCode"] = [taxCode];
+      }
+      const res = await erpInvoicesCoreApi.getItemColumnOptions(
+        columnKey,
+        search,
+        pageParam,
+        20,
+        JSON.stringify(mergedFilters),
+        (direction || detailInvoice?.direction) as "IN" | "OUT",
+      );
+      return {
+        items: res.items.map((it) =>
+          typeof it === "string" ? { label: it, value: it } : it,
+        ),
+        total: res.total,
+        next: res.page < res.totalPages ? res.page + 1 : null,
+      };
+    },
+    [taxCode, direction, detailInvoice?.direction],
+  );
+
+  const itemListHookLike = useMemo(
+    () => ({
+      columnFilters: itemColumnFilters,
+      columnSearch: itemColumnSearch,
+      sorts: itemSorts,
+      dateFrom: itemDateFrom,
+      dateTo: itemDateTo,
+      setSort: setItemSort,
+      setColumnFilter: setItemColumnFilter,
+      setColumnSearch: setItemColumnSearch,
+      setDateRange: setItemDateRange,
+    }),
+    [
+      itemColumnFilters,
+      itemColumnSearch,
+      itemSorts,
+      itemDateFrom,
+      itemDateTo,
+      setItemSort,
+      setItemColumnFilter,
+      setItemColumnSearch,
+      setItemDateRange,
+    ],
+  );
+
+  const itemHeaderFilter = useMemo(
+    () =>
+      createColumnHeaderFilter({
+        listHook: itemListHookLike,
+        queryKeyPrefix: `partner-items-options-${taxCode}`,
+        fetchOptions: fetchItemOptions,
+      }),
+    [itemListHookLike, taxCode, fetchItemOptions],
+  );
+
+  const itemColumns: DataTableColumn<ErpInvoiceItemRow>[] = useMemo(
+    () => [
+      // 1. Cột STT: 40px, căn giữa tuyệt đối
+      {
+        key: "index",
+        header: <span className="w-full block text-center">#</span>,
+        size: 40,
+        enableResizing: false,
+        headerClassName: "text-center w-[40px] min-w-[40px]",
+        className: "text-center w-[40px] min-w-[40px]",
+        cell: (_: any, idx: number) => (
+          <span className="w-full block text-center text-muted-foreground font-medium">
+            {idx}
+          </span>
+        ),
+      },
+      // 2. Cột Ngày HĐ
+      {
+        key: "invoiceDate",
+        size: 105,
+        enableResizing: true,
+        header: itemHeaderFilter.date(
+          "invoiceDate",
+          t("invoiceDate", "Ngày HĐ"),
+        ),
+        className: "text-right font-medium",
+        cell: (row: ErpInvoiceItemRow) =>
+          row.invoiceDate
+            ? format(new Date(row.invoiceDate), "dd/MM/yyyy")
+            : "—",
+      },
+      // 3. Cột Số HĐ
+      {
+        key: "invoiceNo",
+        size: 140,
+        enableResizing: true,
+        header: itemHeaderFilter("invoiceNo", t("invoiceNo", "Số HĐ")),
+        cell: (row: ErpInvoiceItemRow) => (
+          <InvoiceNoCell
+            inv={
+              {
+                id: row.invoiceId,
+                invoiceNo: row.invoiceNo,
+                serialNo: row.serialNo,
+              } as any
+            }
+            handleOpenInternal={(targetInv) => setPreviewSubInvoice(targetInv)}
+          />
+        ),
+      },
+      // 4. Cột Mã hàng
+      {
+        key: "itemCode",
+        size: 110,
+        enableResizing: true,
+        header: itemHeaderFilter("itemCode", t("itemCode", "Mã hàng")),
+        cell: (row: ErpInvoiceItemRow) => (
+          <span className="font-mono text-xs font-medium text-muted-foreground">
+            {row.itemCode || "—"}
+          </span>
+        ),
+      },
+      // 5. Cột Diễn giải / Hàng hóa
+      {
+        key: "description",
+        size: 230,
+        enableResizing: true,
+        header: itemHeaderFilter(
+          "description",
+          t("description", "Diễn giải / Hàng hóa"),
+        ),
+        cell: (row: ErpInvoiceItemRow) => (
+          <TableText text={row.description || "—"} tooltip />
+        ),
+      },
+      // 6. Cột ĐVT
+      {
+        key: "unit",
+        size: 70,
+        enableResizing: true,
+        className: "text-center",
+        header: itemHeaderFilter("unit", t("unit", "ĐVT")),
+        cell: (row: ErpInvoiceItemRow) => (
+          <span className="text-center w-full block text-xs text-muted-foreground">
+            {row.unit || "—"}
+          </span>
+        ),
+      },
+      // 7. Cột Số lượng
+      {
+        key: "quantity",
+        size: 85,
+        enableResizing: true,
+        className: "text-right tabular-nums",
+        header: itemHeaderFilter.qty("quantity", t("quantity", "Số lượng")),
+        cell: (row: ErpInvoiceItemRow) => (
+          <span className="font-medium">
+            {row.quantity != null
+              ? Number(row.quantity).toLocaleString("vi-VN")
+              : "—"}
+          </span>
+        ),
+      },
+      // 8. Cột Đơn giá
+      {
+        key: "unitPrice",
+        size: 110,
+        enableResizing: true,
+        className: "text-right tabular-nums",
+        header: itemHeaderFilter.amount("unitPrice", t("unitPrice", "Đơn giá")),
+        cell: (row: ErpInvoiceItemRow) =>
+          row.unitPrice != null ? money(Number(row.unitPrice)) : "—",
+      },
+      // 9. Cột Trước GTGT
+      {
+        key: "preVatAmount",
+        size: 125,
+        enableResizing: true,
+        className: "text-right tabular-nums",
+        header: itemHeaderFilter.amount(
+          "preVatAmount",
+          t("preVatAmount", "Trước GTGT"),
+        ),
+        cell: (row: ErpInvoiceItemRow) => money(Number(row.preVatAmount) || 0),
+      },
+      // 10. Cột Thuế suất
+      {
+        key: "vatRate",
+        size: 85,
+        enableResizing: true,
+        className: "text-center tabular-nums font-medium",
+        header: itemHeaderFilter.numeric("vatRate", t("vatRate", "Thuế suất"), {
+          currencySymbol: "%",
+          isCurrency: false,
+        }),
+        cell: (row: ErpInvoiceItemRow) => {
+          if (
+            row.vatRate === null ||
+            row.vatRate === undefined ||
+            row.vatRate === ""
+          ) {
+            return "—";
+          }
+          const num = Number(row.vatRate);
+          if (isNaN(num)) return String(row.vatRate);
+          if (num === 0) return "0%";
+          const percent =
+            Math.abs(num) <= 1 ? Math.round(num * 100 * 100) / 100 : num;
+          return `${percent}%`;
+        },
+      },
+      // 11. Cột Thuế GTGT
+      {
+        key: "vatAmount",
+        size: 115,
+        enableResizing: true,
+        className: "text-right tabular-nums",
+        header: itemHeaderFilter.amount(
+          "vatAmount",
+          t("vatAmount", "Thuế GTGT"),
+        ),
+        cell: (row: ErpInvoiceItemRow) => money(Number(row.vatAmount) || 0),
+      },
+      // 12. Cột Thành tiền
+      {
+        key: "totalAmount",
+        size: 130,
+        enableResizing: true,
+        className: "text-right font-semibold tabular-nums text-foreground",
+        header: itemHeaderFilter.amount(
+          "totalAmount",
+          t("totalAmount", "Thành tiền"),
+        ),
+        cell: (row: ErpInvoiceItemRow) => money(Number(row.totalAmount) || 0),
+      },
+      // 13. Cột Phân loại
+      {
+        key: "invoiceSubcategory",
+        size: 120,
+        enableResizing: true,
+        header: itemHeaderFilter(
+          "invoiceSubcategory",
+          t("subcategory", "Phân loại"),
+        ),
+        cell: (row: ErpInvoiceItemRow) => (
+          <span className="text-xs text-muted-foreground truncate block">
+            {row.invoiceSubcategory || "—"}
+          </span>
+        ),
+      },
+    ],
+    [itemHeaderFilter, t],
+  );
+
+  const itemSummaryRow = useMemo(() => {
+    const summary = itemLinesResponse?.summary;
+    if (!summary) return undefined;
+    return {
+      invoiceDate: (
+        <span className="font-semibold text-xs text-foreground block">
+          {t("total", "Tổng")}
+        </span>
+      ),
+      quantity: (
+        <span className="font-semibold text-right block tabular-nums text-xs">
+          {Number(summary.totalQuantity || 0).toLocaleString("vi-VN")}
+        </span>
+      ),
+      preVatAmount: (
+        <span className="font-semibold text-right block tabular-nums text-xs">
+          {money(Number(summary.totalPreVatAmount || 0))}
+        </span>
+      ),
+      vatAmount: (
+        <span className="font-semibold text-right block tabular-nums text-xs">
+          {money(Number(summary.totalVatAmount || 0))}
+        </span>
+      ),
+      totalAmount: (
+        <span className="font-bold text-right block tabular-nums text-xs text-primary">
+          {money(Number(summary.totalAmount || 0))}
+        </span>
+      ),
+    };
+  }, [itemLinesResponse?.summary, t]);
+
+  const itemRowActions = useCallback(
+    (row: ErpInvoiceItemRow) => [
+      {
+        groupLabel: "TRA CỨU",
+        items: [
+          {
+            label: t("viewInvoiceDetail", "Xem chi tiết hóa đơn"),
+            icon: <Eye className="w-3.5 h-3.5" />,
+            onClick: () =>
+              setPreviewSubInvoice({
+                id: row.invoiceId,
+                invoiceNo: row.invoiceNo,
+                serialNo: row.serialNo,
+              } as any),
+          },
+        ],
+      },
+    ],
+    [t],
+  );
 
   if (!taxCode && !partnerName) {
     return (
@@ -339,50 +964,252 @@ export const ErpInvoicePartnerTab = React.memo(function ErpInvoicePartnerTab({
   }
 
   return (
-    <div className="flex flex-col lg:flex-row items-start w-full gap-5">
-      {/* ── Cột Trái (Main Content): Bảng danh sách hóa đơn liên quan ── */}
-      <div className="flex-1 min-w-0 w-full order-2 lg:order-1 flex flex-col h-[calc(100vh-210px)]">
-        <DrawerSection
-          title={
-            <div className="flex items-center gap-2">
-              <FileText className="w-3.5 h-3.5 text-primary" />
-              <span>{t("partnerInvoicesList", "Danh sách hóa đơn")}</span>
+    <div
+      className={cn(
+        "flex-1 min-w-0 w-full flex flex-col transition-all duration-300",
+        !isTableCollapsed ? "h-[calc(100vh-210px)]" : "h-auto",
+      )}
+    >
+      <DrawerSection
+        title={
+          <div className="flex items-center gap-3">
+            <div className="inline-flex items-center bg-muted/60 p-0.5 rounded-lg text-xs border border-border/60">
+              <button
+                type="button"
+                onClick={() => setViewMode("lines")}
+                className={cn(
+                  "px-2.5 py-1 rounded-md font-medium transition-all flex items-center gap-1.5",
+                  viewMode === "lines"
+                    ? "bg-background text-foreground shadow-sm font-semibold"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                <Boxes className="w-3.5 h-3.5 text-primary" />
+                <span>{t("tabGoodsItems", "Chi tiết hàng hóa")}</span>
+                {itemLinesTotal > 0 && (
+                  <span className="text-[10px] px-1.5 py-0 rounded-full bg-primary/10 text-primary font-bold">
+                    {itemLinesTotal}
+                  </span>
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode("invoices")}
+                className={cn(
+                  "px-2.5 py-1 rounded-md font-medium transition-all flex items-center gap-1.5",
+                  viewMode === "invoices"
+                    ? "bg-background text-foreground shadow-sm font-semibold"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                <FileText className="w-3.5 h-3.5 text-primary" />
+                <span>{t("tabInvoicesList", "Danh sách hóa đơn")}</span>
+                {total > 0 && (
+                  <span className="text-[10px] px-1.5 py-0 rounded-full bg-muted text-muted-foreground font-bold">
+                    {total}
+                  </span>
+                )}
+              </button>
             </div>
-          }
-          titleExtra={
-            listHook.total > 0 ? (
-              <span className="text-xs font-normal text-muted-foreground">
-                {listHook.total} {t("invoicesCount", "hóa đơn")}
-              </span>
-            ) : undefined
-          }
-          collapsible={true}
-          fitViewportHeight={true}
-          className="mb-0 h-full flex flex-col"
-          bodyClassName="flex-1 flex flex-col min-h-0 overflow-hidden"
-        >
-          <div className="flex-1 min-h-0 w-full flex flex-col overflow-hidden">
+          </div>
+        }
+        titleExtra={
+          <div className="flex items-center gap-2">
+            {viewMode === "lines" ? (
+              <>
+                {itemActiveFilterCount > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={clearItemAllFilters}
+                    className="h-6 px-2 text-[11px] text-muted-foreground hover:text-foreground"
+                  >
+                    <RotateCcw className="w-3 h-3 mr-1" />
+                    {t("clearFilters", "Đặt lại")} ({itemActiveFilterCount})
+                  </Button>
+                )}
+                {itemLinesTotal > 0 && (
+                  <span className="text-xs font-normal text-muted-foreground">
+                    {itemLinesTotal} {t("itemsCount", "dòng hàng hóa")}
+                  </span>
+                )}
+              </>
+            ) : (
+              <>
+                {activeFilterCount > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={clearAllFilters}
+                    className="h-6 px-2 text-[11px] text-muted-foreground hover:text-foreground"
+                  >
+                    <RotateCcw className="w-3 h-3 mr-1" />
+                    {t("clearFilters", "Đặt lại")} ({activeFilterCount})
+                  </Button>
+                )}
+                {total > 0 && (
+                  <span className="text-xs font-normal text-muted-foreground">
+                    {total} {t("invoicesCount", "hóa đơn")}
+                  </span>
+                )}
+              </>
+            )}
+          </div>
+        }
+        collapsible={true}
+        collapsed={isTableCollapsed}
+        onToggleCollapse={() => setIsTableCollapsed((prev) => !prev)}
+        fitViewportHeight={!isTableCollapsed}
+        className={cn(
+          "mb-0 flex flex-col transition-all duration-300",
+          !isTableCollapsed ? "h-full" : "h-auto",
+        )}
+        bodyClassName="flex-1 flex flex-col min-h-0 overflow-hidden"
+      >
+        <div className="flex-1 min-h-0 w-full flex flex-col overflow-hidden">
+          {viewMode === "lines" ? (
             <StandardTable
-              items={listHook.invoices}
+              items={itemLines}
+              columns={itemColumns}
+              getRowKey={(r) => r.id}
+              loading={isLoadingItems}
+              variant="spreadsheet"
+              minWidth={1100}
+              tableId="erp-invoice-partner-items-table"
+              enableColumnResizing={true}
+              enableRowHoverActions={true}
+              hideLegacyActionColumn={true}
+              actions={itemRowActions}
+              summaryRow={itemSummaryRow}
+              page={itemPage}
+              pageSize={itemPageSize}
+              total={itemLinesTotal}
+              totalPages={itemLinesTotalPages}
+              onPage={setItemPage}
+              onPageSize={setItemPageSize}
+            />
+          ) : (
+            <StandardTable
+              items={invoices}
               columns={columns}
               getRowKey={(r) => r.id}
-              loading={listHook.loading}
+              loading={isLoadingList}
               variant="spreadsheet"
-              minWidth={550}
+              minWidth={750}
+              tableId="erp-invoice-partner-invoices-table"
               enableColumnResizing={true}
-              page={listHook.page}
-              pageSize={listHook.pageSize}
-              total={listHook.total}
-              totalPages={listHook.totalPages}
-              onPage={listHook.setPage}
-              onPageSize={listHook.setPageSize}
+              enableRowHoverActions={true}
+              hideLegacyActionColumn={true}
+              actions={rowActions}
+              summaryRow={summaryRow}
+              page={page}
+              pageSize={pageSize}
+              total={total}
+              totalPages={totalPages}
+              onPage={setPage}
+              onPageSize={setPageSize}
             />
-          </div>
-        </DrawerSection>
-      </div>
+          )}
+        </div>
+      </DrawerSection>
 
-      {/* ── Cột Phải (Sidebar): Hồ sơ đối tác & Tổng quan dòng tiền ── */}
-      <div className="w-full lg:w-[330px] xl:w-[350px] shrink-0 order-1 lg:order-2 space-y-4 lg:sticky lg:top-0">
+      {/* Sub-drawer for previewing another invoice from partner's list */}
+      {previewSubInvoice && (
+        <DrawerModal
+          open={Boolean(previewSubInvoice)}
+          onClose={() => setPreviewSubInvoice(null)}
+          title={`Hóa đơn ${previewSubInvoice.invoiceNo || ""} (Ký hiệu: ${previewSubInvoice.serialNo || "—"})`}
+          panelClassName="min-[1024px]:w-[calc(100vw-350px)] w-full max-w-[85vw]"
+        >
+          <div className="p-4">
+            <VietnamInvoiceTemplate invoice={previewSubInvoice} />
+          </div>
+        </DrawerModal>
+      )}
+    </div>
+  );
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 5. CỘT PHẢI (RIGHT PANEL) CHO TAB ĐỐI TÁC: HỒ SƠ ĐỐI TÁC & TỔNG QUAN DÒNG TIỀN
+// ═══════════════════════════════════════════════════════════════════════════
+export interface ErpInvoicePartnerRightPanelProps {
+  detailInvoice: ErpInvoice | null;
+  direction?: "IN" | "OUT";
+}
+
+export const ErpInvoicePartnerRightPanel = React.memo(
+  function ErpInvoicePartnerRightPanel({
+    detailInvoice,
+    direction,
+  }: ErpInvoicePartnerRightPanelProps) {
+    const { t } = useTranslation("erpInvoices");
+    const [copiedTax, setCopiedTax] = useState(false);
+    const [copiedName, setCopiedName] = useState(false);
+
+    const isDirectionIn = (direction || detailInvoice?.direction) === "IN";
+    const partnerName =
+      (isDirectionIn
+        ? detailInvoice?.sellerName
+        : detailInvoice?.buyerName || detailInvoice?.buyerPersonalName
+      )?.trim() || "";
+
+    const taxCode =
+      (isDirectionIn
+        ? detailInvoice?.sellerTaxCode
+        : detailInvoice?.buyerTaxCode || detailInvoice?.buyerCccd
+      )?.trim() || "";
+
+    const address =
+      (isDirectionIn
+        ? detailInvoice?.sellerAddress
+        : detailInvoice?.buyerAddress
+      )?.trim() || "";
+
+    const bank = isDirectionIn ? detailInvoice?.sellerBank?.trim() : "";
+
+    const { data: statsData, isLoading: isLoadingStats } = useQuery({
+      queryKey: ["partner-invoice-stats", taxCode],
+      queryFn: () => erpInvoiceDashboardApi.getPartnerStats(taxCode),
+      enabled: !!taxCode,
+    });
+
+    const copyToClipboard = (
+      text: string,
+      isTax: boolean,
+      e: React.MouseEvent,
+    ) => {
+      e.stopPropagation();
+      e.preventDefault();
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text);
+      }
+      if (isTax) {
+        setCopiedTax(true);
+        toast.success(t("copiedTax", "Đã copy MST"), {
+          id: "partner-tax-copy",
+        });
+        setTimeout(() => setCopiedTax(false), 1500);
+      } else {
+        setCopiedName(true);
+        toast.success(t("copiedName", "Đã copy tên đối tác"), {
+          id: "partner-name-copy",
+        });
+        setTimeout(() => setCopiedName(false), 1500);
+      }
+    };
+
+    const barIn = "#ea580c"; // Orange 600 (Đầu vào - Chi phí)
+    const barOut = "#059669"; // Emerald 600 (Đầu ra - Doanh thu)
+
+    const cashTrendLabels = statsData?.cashTrend?.map((t) => t.label) || [];
+    const cashTrendIn = statsData?.cashTrend?.map((t) => t.cashOut) || [];
+    const cashTrendOut = statsData?.cashTrend?.map((t) => t.cashIn) || [];
+
+    if (!taxCode && !partnerName) return null;
+
+    return (
+      <div className="space-y-4 pb-3">
         {/* 1. Hồ sơ đối tác */}
         <DrawerSection
           title={
@@ -557,20 +1384,6 @@ export const ErpInvoicePartnerTab = React.memo(function ErpInvoicePartnerTab({
           </DrawerSection>
         )}
       </div>
-
-      {/* Sub-drawer for previewing another invoice from partner's list */}
-      {previewSubInvoice && (
-        <DrawerModal
-          open={Boolean(previewSubInvoice)}
-          onClose={() => setPreviewSubInvoice(null)}
-          title={`Hóa đơn ${previewSubInvoice.invoiceNo || ""} (Ký hiệu: ${previewSubInvoice.serialNo || "—"})`}
-          panelClassName="min-[1024px]:w-[calc(100vw-350px)] w-full max-w-[85vw]"
-        >
-          <div className="p-4">
-            <VietnamInvoiceTemplate invoice={previewSubInvoice} />
-          </div>
-        </DrawerModal>
-      )}
-    </div>
-  );
-});
+    );
+  },
+);

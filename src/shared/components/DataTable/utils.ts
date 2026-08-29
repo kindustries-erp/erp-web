@@ -14,3 +14,10 @@ export function sanitizeActionColumnSizing(
   delete next.__hover_actions;
   return next;
 }
+
+export const getDefaultPageSize = (): number => {
+  if (typeof window !== "undefined" && window.innerHeight >= 900) {
+    return 50;
+  }
+  return 20;
+};

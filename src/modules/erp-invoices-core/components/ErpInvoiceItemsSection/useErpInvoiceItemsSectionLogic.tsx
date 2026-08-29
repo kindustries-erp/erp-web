@@ -175,7 +175,7 @@ export function useErpInvoiceItemsSectionLogic({
               ),
           },
           {
-            label: t("actionPartnerTransactions", "Giao dịch đối tác"),
+            label: t("actionObjectDetails", "Chi tiết theo đối tượng"),
             icon: <Building2 className="w-4 h-4" />,
             onClick: () =>
               handleOpenInternal(
