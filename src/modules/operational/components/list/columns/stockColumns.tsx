@@ -18,7 +18,7 @@ import { fmtQty } from "@/shared/utils/format";
 import { cn } from "@/shared/utils";
 
 interface UseStockColumnsOptions {
-  stockItems: InventoryStockRow[];
+  stockItems?: InventoryStockRow[];
   onViewItem: (id: string) => void;
 }
 
@@ -27,7 +27,6 @@ interface UseStockColumnsOptions {
  * Chuẩn hóa theo quy chuẩn /standardize-table
  */
 export function useStockColumns({
-  stockItems: _stockItems,
   onViewItem,
 }: UseStockColumnsOptions): DataTableColumn<InventoryStockRow>[] {
   const t = useT();
