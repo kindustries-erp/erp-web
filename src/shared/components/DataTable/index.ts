@@ -13,6 +13,7 @@ export * from "./components/FullscreenModal";
 export * from "./TableRowHoverActions";
 export * from "./TableRowContextMenu";
 export * from "./TableColumnHeaderFilter";
+export * from "./createColumnHeaderFilter";
 export * from "./TableDateCell";
 export * from "./TableText";
 export * from "./DateRangeColumnSlot";

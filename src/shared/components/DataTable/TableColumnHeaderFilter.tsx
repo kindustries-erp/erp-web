@@ -22,6 +22,7 @@ import { Button } from "@/shared/components/ui/Button";
 import { Input } from "@/shared/components/ui/input";
 import { Checkbox } from "@/shared/components/ui/checkbox";
 import { cn } from "@/shared/utils";
+import { useTranslation } from "react-i18next";
 
 export interface TableColumnHeaderFilterProps {
   title: React.ReactNode;
@@ -92,6 +93,7 @@ export function TableColumnHeaderFilter({
   showBlankOption = false,
   hideSort = false,
 }: TableColumnHeaderFilterProps) {
+  const { t } = useTranslation("table");
   const [open, setOpen] = useState(false);
   const [localSearch, setLocalSearch] = useState(() => {
     if (columnKey && dropdownSearchState.has(columnKey)) {
@@ -343,7 +345,7 @@ export function TableColumnHeaderFilter({
                 }}
               >
                 <ArrowDownAZ size={14} className="mr-2" />
-                Sắp xếp tăng dần
+                {t("sortAsc", "Sắp xếp tăng dần")}
                 {sortState === "asc" && <Check size={14} className="ml-auto" />}
               </Button>
               <Button
@@ -361,7 +363,7 @@ export function TableColumnHeaderFilter({
                 }}
               >
                 <ArrowUpAZ size={14} className="mr-2" />
-                Sắp xếp giảm dần
+                {t("sortDesc", "Sắp xếp giảm dần")}
                 {sortState === "desc" && (
                   <Check size={14} className="ml-auto" />
                 )}
@@ -381,8 +383,14 @@ export function TableColumnHeaderFilter({
                 <div className="relative flex items-center">
                   <Search className="absolute left-2.5 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder='Tìm... ("..." chính xác, ; nhiều từ)'
-                    title='Mẹo: Dùng "text" để tìm chính xác, dùng a;b để tìm nhiều giá trị (OR)'
+                    placeholder={t(
+                      "searchPlaceholder",
+                      'Tìm... ("..." chính xác, ; nhiều từ)',
+                    )}
+                    title={t(
+                      "searchTooltip",
+                      'Mẹo: Dùng "text" để tìm chính xác, dùng a;b để tìm nhiều giá trị (OR)',
+                    )}
                     className="pl-8 pr-8 h-8 text-xs"
                     value={localSearch}
                     onChange={(e) => {
@@ -430,8 +438,14 @@ export function TableColumnHeaderFilter({
                         />
                         <span className="text-xs font-medium">
                           {enableSelectAllMatching
-                            ? "(Chọn tất cả kết quả tìm kiếm)"
-                            : "(Chọn tất cả đang hiển thị)"}
+                            ? t(
+                                "selectAllMatching",
+                                "(Chọn tất cả kết quả tìm kiếm)",
+                              )
+                            : t(
+                                "selectAllVisible",
+                                "(Chọn tất cả đang hiển thị)",
+                              )}
                         </span>
                       </label>
                       {finalOptions.map((opt) => (
@@ -460,12 +474,16 @@ export function TableColumnHeaderFilter({
                             title={
                               formatOptionLabel
                                 ? formatOptionLabel(opt.label)
-                                : opt.label
+                                : opt.label === "(blank)"
+                                  ? t("blank", "(Trống)")
+                                  : opt.label
                             }
                           >
                             {formatOptionLabel
                               ? formatOptionLabel(opt.label)
-                              : opt.label || "(Trống)"}
+                              : opt.label === "(blank)" || !opt.label
+                                ? t("blank", "(Trống)")
+                                : opt.label}
                           </span>
                         </label>
                       ))}
@@ -477,7 +495,7 @@ export function TableColumnHeaderFilter({
                     </>
                   ) : (
                     <div className="p-2 text-center text-xs text-muted-foreground">
-                      Không có dữ liệu
+                      {t("noData", "Không có dữ liệu")}
                     </div>
                   )}
                 </div>
@@ -501,7 +519,7 @@ export function TableColumnHeaderFilter({
                   setOpen(false);
                 }}
               >
-                Xóa bộ lọc
+                {t("clearFilter", "Xóa bộ lọc")}
               </Button>
               <Button
                 variant="primary"
@@ -517,7 +535,7 @@ export function TableColumnHeaderFilter({
                   setOpen(false);
                 }}
               >
-                Áp dụng
+                {t("apply", "Áp dụng")}
               </Button>
             </div>
           )}
