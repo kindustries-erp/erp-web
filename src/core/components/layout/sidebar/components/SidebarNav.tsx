@@ -330,19 +330,19 @@ export function SidebarNav({
           />
           <NavItem
             collapsed={c}
-            icon={<ReceiptText className="w-4 h-4 opacity-65 flex-shrink-0" />}
-            label={t("nav.items.garageOpex", "Chi phí vận hành")}
-            active={currentPage === "garage-opex"}
-            onClick={() => navTo("garage-opex")}
-            contextPage="garage-opex"
-          />
-          <NavItem
-            collapsed={c}
             icon={<Users className="w-4 h-4 opacity-65 flex-shrink-0" />}
             label={t("nav.items.garageCustomers", "Khách hàng")}
             active={currentPage === "garage-customers"}
             onClick={() => navTo("garage-customers")}
             contextPage="garage-customers"
+          />
+          <NavItem
+            collapsed={c}
+            icon={<ReceiptText className="w-4 h-4 opacity-65 flex-shrink-0" />}
+            label={t("nav.items.garageOpex", "Chi phí vận hành")}
+            active={currentPage === "garage-opex"}
+            onClick={() => navTo("garage-opex")}
+            contextPage="garage-opex"
           />
         </NavSection>
       )}

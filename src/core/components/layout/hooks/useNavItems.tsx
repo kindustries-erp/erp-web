@@ -271,6 +271,20 @@ export function useNavItems(): NavSearchItem[] {
         icon: <Car className="w-4 h-4" />,
       });
       items.push({
+        key: "garage-customers",
+        label: t("nav.items.garageCustomers", "Khách hàng"),
+        section: garageSection,
+        keywords: [
+          "garage",
+          "khach hang",
+          "doi tac",
+          "cong no",
+          "phai thu",
+          "tuoi no",
+        ],
+        icon: <Users className="w-4 h-4" />,
+      });
+      items.push({
         key: "garage-opex",
         label: t("nav.items.garageOpex", "Chi phí vận hành"),
         section: garageSection,
@@ -284,20 +298,6 @@ export function useNavItems(): NavSearchItem[] {
           "chi phi",
         ],
         icon: <ReceiptText className="w-4 h-4" />,
-      });
-      items.push({
-        key: "garage-customers",
-        label: t("nav.items.garageCustomers", "Khách hàng"),
-        section: garageSection,
-        keywords: [
-          "garage",
-          "khach hang",
-          "doi tac",
-          "cong no",
-          "phai thu",
-          "tuoi no",
-        ],
-        icon: <Users className="w-4 h-4" />,
       });
     }
 

@@ -26,21 +26,21 @@ export const GARAGE_CASE_STATUS_TABS: GarageCaseStatusTabDef[] = [
 ];
 
 export const DEFAULT_GARAGE_CASE_COLUMN_VISIBILITY: Record<string, boolean> = {
+  caseDate: true,
+  ngayHoanThanhCongViec: true,
   caseCode: true,
   licensePlate: true,
-  classification: true,
-  statusName: true,
   customerCode: true,
   customerName: true,
-  ngayHoanThanhCongViec: true,
   doanhThu: true,
   chiPhi: true,
   loiNhuan: true,
   margin: true,
+  classification: true,
+  statusName: true,
   collectionProgress: true,
   costProgress: true,
   isInsuranceClaim: true,
-  caseDate: true,
   branchName: false,
   createdAt: false,
   updatedAt: false,
@@ -48,22 +48,22 @@ export const DEFAULT_GARAGE_CASE_COLUMN_VISIBILITY: Record<string, boolean> = {
 };
 
 export const AUDIT_GARAGE_CASE_COLUMN_VISIBILITY: Record<string, boolean> = {
+  caseDate: false,
+  ngayHoanThanhCongViec: false,
   caseCode: true,
   licensePlate: true,
-  statusName: true,
   customerName: true,
   doanhThu: true,
   chiPhi: true,
   loiNhuan: true,
+  statusName: true,
   collectionProgress: true,
   costProgress: true,
   // Ẩn các cột không thuộc đối soát dòng tiền
   classification: false,
   customerCode: false,
-  ngayHoanThanhCongViec: false,
   margin: false,
   isInsuranceClaim: false,
-  caseDate: false,
   branchName: false,
   createdAt: false,
   updatedAt: false,
@@ -115,6 +115,18 @@ export const GARAGE_CASE_COLUMN_GROUPS: ColumnGroupDef[] = [
     defaultTitle: "Thông tin chung",
     columns: [
       {
+        key: "caseDate",
+        labelKey: "cases.columns.caseDate",
+        defaultLabel: "Ngày tiếp nhận",
+        defaultVisible: true,
+      },
+      {
+        key: "ngayHoanThanhCongViec",
+        labelKey: "cases.columns.completionDate",
+        defaultLabel: "Ngày kết thúc",
+        defaultVisible: true,
+      },
+      {
         key: "caseCode",
         labelKey: "cases.columns.caseCode",
         defaultLabel: "Số chứng từ",
@@ -124,18 +136,6 @@ export const GARAGE_CASE_COLUMN_GROUPS: ColumnGroupDef[] = [
         key: "licensePlate",
         labelKey: "cases.columns.licensePlate",
         defaultLabel: "Biển số xe",
-        defaultVisible: true,
-      },
-      {
-        key: "classification",
-        labelKey: "cases.columns.classification",
-        defaultLabel: "Phân loại",
-        defaultVisible: true,
-      },
-      {
-        key: "statusName",
-        labelKey: "cases.columns.status",
-        defaultLabel: "Trạng thái",
         defaultVisible: true,
       },
       {
@@ -154,18 +154,6 @@ export const GARAGE_CASE_COLUMN_GROUPS: ColumnGroupDef[] = [
         key: "isInsuranceClaim",
         labelKey: "cases.columns.insurance",
         defaultLabel: "BH",
-        defaultVisible: true,
-      },
-      {
-        key: "caseDate",
-        labelKey: "cases.columns.caseDate",
-        defaultLabel: "Ngày tiếp nhận",
-        defaultVisible: true,
-      },
-      {
-        key: "ngayHoanThanhCongViec",
-        labelKey: "cases.columns.completionDate",
-        defaultLabel: "Ngày kết thúc",
         defaultVisible: true,
       },
       {
@@ -221,6 +209,18 @@ export const GARAGE_CASE_COLUMN_GROUPS: ColumnGroupDef[] = [
         key: "margin",
         labelKey: "cases.columns.margin",
         defaultLabel: "Biên LN",
+        defaultVisible: true,
+      },
+      {
+        key: "classification",
+        labelKey: "cases.columns.classification",
+        defaultLabel: "Phân loại",
+        defaultVisible: true,
+      },
+      {
+        key: "statusName",
+        labelKey: "cases.columns.status",
+        defaultLabel: "Trạng thái",
         defaultVisible: true,
       },
       {

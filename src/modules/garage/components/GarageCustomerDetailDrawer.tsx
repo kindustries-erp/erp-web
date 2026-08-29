@@ -12,10 +12,16 @@ import { GarageCaseSettlementDrawerModal } from "./GarageCaseSettlementDrawerMod
 import { InvoiceSelectionDrawer } from "./InvoiceSelectionDrawer";
 import { useSyncGarageCaseDetail } from "../hooks/useGarage";
 import { KgaraCaseStatusBadge } from "./KgaraCaseStatusBadge";
-import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
-import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
+import {
+  DataTable,
+  type DataTableColumn,
+  createColumnHeaderFilter,
+  filterClientItems,
+} from "@/shared/components/DataTable";
 import { TableDateCell } from "@/shared/components/DataTable/TableDateCell";
 import { TableText } from "@/shared/components/DataTable/TableText";
+import { Button } from "@/shared/components/ui/Button";
+import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
 import { toast } from "react-hot-toast";
 import {
   User,
@@ -28,6 +34,7 @@ import {
   Scale,
   Link2,
   RefreshCw,
+  RotateCcw,
 } from "lucide-react";
 
 interface GarageCustomerDetailDrawerProps {
@@ -55,12 +62,8 @@ export function GarageCustomerDetailDrawer({
     null,
   );
 
-  // Table client state
-  const [columnFilters, setColumnFilters] = useState<Record<string, string[]>>(
-    {},
-  );
-  const [sorts, setSorts] = useState<string[]>([]);
-  const [columnSearch, setColumnSearch] = useState<Record<string, string>>({});
+  // Table client state hook
+  const tableState = useTableColumnState("garage-customer-cases-detail");
 
   const { data: cases = [], isLoading } = useQuery({
     queryKey: ["garage-cases-by-customer", branchId, customerCode],
@@ -124,124 +127,57 @@ export function GarageCustomerDetailDrawer({
     customerCode ||
     t("customers.drawer.title", "Hồ sơ khách hàng");
 
-  // Client sort & filter handlers
-  const setSort = (key: string, state: "asc" | "desc" | "none") => {
-    setSorts((prev) => {
-      const filtered = prev.filter((s) => s !== key && s !== `-${key}`);
-      if (state === "asc") return [...filtered, key];
-      if (state === "desc") return [...filtered, `-${key}`];
-      return filtered;
-    });
+  // Aging bucket extractor helper
+  const getAgingBucket = (item: any) => {
+    const bal = Number(item.tienConPhaiThanhToan) || 0;
+    if (bal <= 0) return "PAID";
+    const aging = Number(item.agingDays) || 0;
+    if (aging <= 30) return "0-30";
+    if (aging <= 60) return "31-60";
+    if (aging <= 90) return "61-90";
+    return ">90";
   };
 
-  const getSortState = (key: string): "asc" | "desc" | "none" => {
-    if (sorts.includes(key)) return "asc";
-    if (sorts.includes(`-${key}`)) return "desc";
-    return "none";
-  };
-
-  const setColumnFilter = (key: string, values: string[]) => {
-    setColumnFilters((prev) => {
-      if (!values || values.length === 0) {
-        const next = { ...prev };
-        delete next[key];
-        return next;
-      }
-      return { ...prev, [key]: values };
-    });
-  };
-
-  const setColSearch = (key: string, val: string) => {
-    setColumnSearch((prev) => {
-      if (!val) {
-        const next = { ...prev };
-        delete next[key];
-        return next;
-      }
-      return { ...prev, [key]: val };
-    });
-  };
-
-  // Filtered & Sorted cases
+  // Universal client-side filter and sorter
   const filteredCases = useMemo(() => {
-    let result = [...cases];
-
-    // Column Search
-    for (const [key, search] of Object.entries(columnSearch)) {
-      if (!search || !search.trim()) continue;
-      const term = search.toLowerCase().trim();
-      result = result.filter((item: any) => {
-        const val = String(item[key] || "").toLowerCase();
-        return val.includes(term);
-      });
-    }
-
-    // Column Filters
-    for (const [key, filterVals] of Object.entries(columnFilters)) {
-      if (!filterVals || filterVals.length === 0) continue;
-      result = result.filter((item: any) => {
-        if (key === "agingDays") {
-          const bal = Number(item.tienConPhaiThanhToan) || 0;
-          if (bal <= 0) return filterVals.includes("PAID");
-          const aging = Number(item.agingDays) || 0;
-          if (filterVals.includes("0-30") && aging <= 30) return true;
-          if (filterVals.includes("31-60") && aging > 30 && aging <= 60)
-            return true;
-          if (filterVals.includes("61-90") && aging > 60 && aging <= 90)
-            return true;
-          if (filterVals.includes(">90") && aging > 90) return true;
-          return false;
-        }
-        const val = String(item[key] || "");
-        return filterVals.includes(val);
-      });
-    }
-
-    // Sorts
-    if (sorts.length > 0) {
-      result.sort((a: any, b: any) => {
-        for (const s of sorts) {
-          const desc = s.startsWith("-");
-          const field = desc ? s.slice(1) : s;
-          let valA = a[field];
-          let valB = b[field];
-
-          if (typeof valA === "number" || typeof valB === "number") {
-            valA = Number(valA) || 0;
-            valB = Number(valB) || 0;
-            if (valA !== valB) return desc ? valB - valA : valA - valB;
-          } else {
-            valA = String(valA || "");
-            valB = String(valB || "");
-            const cmp = valA.localeCompare(valB);
-            if (cmp !== 0) return desc ? -cmp : cmp;
-          }
-        }
-        return 0;
-      });
-    }
-
-    return result;
-  }, [cases, columnSearch, columnFilters, sorts]);
-
-  // Computed filter options
-  const computedLicensePlates = useMemo(() => {
-    const set = new Set<string>();
-    cases.forEach((c: any) => {
-      if (c.bienSoXe) set.add(c.bienSoXe);
+    return filterClientItems(cases, tableState, {
+      dateField: "ngayPhatSinh",
+      customExtractors: {
+        agingDays: getAgingBucket,
+      },
     });
-    return Array.from(set).map((v) => ({ label: v, value: v }));
-  }, [cases]);
+  }, [cases, tableState]);
 
-  const computedStatuses = useMemo(() => {
-    const set = new Set<string>();
-    cases.forEach((c: any) => {
-      if (c.tenTinhTrangDichVu) set.add(c.tenTinhTrangDichVu);
+  // Active filter count
+  const activeFilterCount = useMemo(() => {
+    let count = 0;
+    Object.values(tableState.columnFilters).forEach((vals) => {
+      if (vals && vals.length > 0) count += vals.length;
     });
-    return Array.from(set).map((v) => ({ label: v, value: v }));
-  }, [cases]);
+    Object.values(tableState.columnSearch).forEach((val) => {
+      if (val && val.trim().length > 0) count += 1;
+    });
+    if (tableState.dateFrom || tableState.dateTo) count += 1;
+    return count;
+  }, [
+    tableState.columnFilters,
+    tableState.columnSearch,
+    tableState.dateFrom,
+    tableState.dateTo,
+  ]);
 
-  // Columns definition following /standardize-table with proportional widths
+  // Column Header Filter Builder
+  const headerFilter = useMemo(
+    () =>
+      createColumnHeaderFilter({
+        listHook: tableState,
+        items: cases,
+        defaultAlign: "center",
+      }),
+    [tableState, cases],
+  );
+
+  // Columns definition following /standardize-table
   const columns = useMemo<DataTableColumn<any>[]>(() => {
     return [
       {
@@ -256,20 +192,9 @@ export function GarageCustomerDetailDrawer({
       },
       {
         key: "soChungTu",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("customers.drawer.caseCode", "Số chứng từ")}
-            sortState={getSortState("soChungTu")}
-            onSortChange={(s) => setSort("soChungTu", s)}
-            searchValue={columnSearch["soChungTu"] || ""}
-            onSearchChange={(val) => setColSearch("soChungTu", val)}
-            selectedFilters={columnFilters["soChungTu"] || []}
-            onFilterChange={(vals) => setColumnFilter("soChungTu", vals)}
-            isActive={Boolean(
-              columnFilters["soChungTu"]?.length || columnSearch["soChungTu"],
-            )}
-            align="center"
-          />
+        header: headerFilter(
+          "soChungTu",
+          t("customers.drawer.caseCode", "Số chứng từ"),
         ),
         size: 190,
         minSize: 175,
@@ -289,21 +214,9 @@ export function GarageCustomerDetailDrawer({
       },
       {
         key: "bienSoXe",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("customers.drawer.licensePlate", "Biển số xe")}
-            sortState={getSortState("bienSoXe")}
-            onSortChange={(s) => setSort("bienSoXe", s)}
-            filterOptions={computedLicensePlates}
-            selectedFilters={columnFilters["bienSoXe"] || []}
-            onFilterChange={(vals) => setColumnFilter("bienSoXe", vals)}
-            searchValue={columnSearch["bienSoXe"] || ""}
-            onSearchChange={(val) => setColSearch("bienSoXe", val)}
-            isActive={Boolean(
-              columnFilters["bienSoXe"]?.length || columnSearch["bienSoXe"],
-            )}
-            align="center"
-          />
+        header: headerFilter(
+          "bienSoXe",
+          t("customers.drawer.licensePlate", "Biển số xe"),
         ),
         size: 130,
         minSize: 120,
@@ -318,18 +231,9 @@ export function GarageCustomerDetailDrawer({
       {
         key: "ngayPhatSinh",
         className: "text-right",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("customers.drawer.caseDate", "Ngày tiếp nhận")}
-            sortState={getSortState("ngayPhatSinh")}
-            onSortChange={(s) => setSort("ngayPhatSinh", s)}
-            searchValue=""
-            onSearchChange={() => {}}
-            selectedFilters={[]}
-            onFilterChange={() => {}}
-            hideFilter={true}
-            align="center"
-          />
+        header: headerFilter.date(
+          "ngayPhatSinh",
+          t("customers.drawer.caseDate", "Ngày tiếp nhận"),
         ),
         size: 140,
         minSize: 135,
@@ -344,18 +248,9 @@ export function GarageCustomerDetailDrawer({
       {
         key: "tienCoThue",
         className: "text-right",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("customers.drawer.totalAmount", "Tổng tiền")}
-            sortState={getSortState("tienCoThue")}
-            onSortChange={(s) => setSort("tienCoThue", s)}
-            searchValue=""
-            onSearchChange={() => {}}
-            selectedFilters={[]}
-            onFilterChange={() => {}}
-            hideFilter={true}
-            align="center"
-          />
+        header: headerFilter.amount(
+          "tienCoThue",
+          t("customers.drawer.totalAmount", "Tổng tiền"),
         ),
         size: 130,
         minSize: 120,
@@ -369,18 +264,9 @@ export function GarageCustomerDetailDrawer({
       {
         key: "tienDaThanhToan",
         className: "text-right",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("customers.drawer.paidAmount", "Đã thu")}
-            sortState={getSortState("tienDaThanhToan")}
-            onSortChange={(s) => setSort("tienDaThanhToan", s)}
-            searchValue=""
-            onSearchChange={() => {}}
-            selectedFilters={[]}
-            onFilterChange={() => {}}
-            hideFilter={true}
-            align="center"
-          />
+        header: headerFilter.amount(
+          "tienDaThanhToan",
+          t("customers.drawer.paidAmount", "Đã thu"),
         ),
         size: 130,
         minSize: 120,
@@ -394,18 +280,9 @@ export function GarageCustomerDetailDrawer({
       {
         key: "tienConPhaiThanhToan",
         className: "text-right",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("customers.drawer.balanceAmount", "Còn nợ")}
-            sortState={getSortState("tienConPhaiThanhToan")}
-            onSortChange={(s) => setSort("tienConPhaiThanhToan", s)}
-            searchValue=""
-            onSearchChange={() => {}}
-            selectedFilters={[]}
-            onFilterChange={() => {}}
-            hideFilter={true}
-            align="center"
-          />
+        header: headerFilter.amount(
+          "tienConPhaiThanhToan",
+          t("customers.drawer.balanceAmount", "Còn nợ"),
         ),
         size: 130,
         minSize: 120,
@@ -419,27 +296,18 @@ export function GarageCustomerDetailDrawer({
       {
         key: "agingDays",
         className: "text-left",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("customers.drawer.agingDays", "Tuổi nợ")}
-            sortState={getSortState("agingDays")}
-            onSortChange={(s) => setSort("agingDays", s)}
-            searchValue={columnSearch["agingDays"] || ""}
-            onSearchChange={(val) => setColSearch("agingDays", val)}
-            filterOptions={[
+        header: headerFilter(
+          "agingDays",
+          t("customers.drawer.agingDays", "Tuổi nợ"),
+          {
+            filterOptions: [
               { label: "0-30 ngày (Trong hạn)", value: "0-30" },
               { label: "31-60 ngày (Cần theo dõi)", value: "31-60" },
               { label: "61-90 ngày (Quá hạn)", value: "61-90" },
               { label: ">90 ngày (Quá hạn sâu)", value: ">90" },
               { label: "Đã tất toán", value: "PAID" },
-            ]}
-            selectedFilters={columnFilters["agingDays"] || []}
-            onFilterChange={(vals) => setColumnFilter("agingDays", vals)}
-            isActive={Boolean(
-              columnFilters["agingDays"]?.length || columnSearch["agingDays"],
-            )}
-            align="center"
-          />
+            ],
+          },
         ),
         size: 210,
         minSize: 200,
@@ -450,25 +318,20 @@ export function GarageCustomerDetailDrawer({
 
           if (bal <= 0) {
             return (
-              <div className="flex flex-col gap-1.5 w-full py-1 justify-center">
-                <div className="flex items-center justify-between text-xs tabular-nums leading-none">
-                  <span className="font-mono text-xs text-muted-foreground/60">
-                    0 ngày
-                  </span>
-                  <span className="text-[10px] px-1.5 py-0.5 rounded font-sans border font-normal bg-slate-50 dark:bg-slate-800/40 text-muted-foreground/70 border-slate-200/60 dark:border-slate-700/40">
-                    Đã tất toán
-                  </span>
-                </div>
-                <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden" />
-              </div>
+              <Badge
+                variant="outline"
+                className="text-[10px] bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-800"
+              >
+                {t("customers.drawer.settled", "Đã tất toán")}
+              </Badge>
             );
           }
 
-          const agingPercent = Math.min(100, Math.round((aging / 90) * 100));
           const isOver90 = aging > 90;
           const is61to90 = aging > 60 && aging <= 90;
           const is31to60 = aging > 30 && aging <= 60;
 
+          const agingPercent = Math.min(100, Math.round((aging / 90) * 100));
           const bracketLabel = isOver90
             ? ">90 ngày"
             : is61to90
@@ -478,20 +341,20 @@ export function GarageCustomerDetailDrawer({
                 : "0-30 ngày";
 
           const tagCls = isOver90
-            ? "bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 border-rose-200/80 dark:border-rose-800/50"
+            ? "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-400 dark:border-rose-900"
             : is61to90
-              ? "bg-orange-50 dark:bg-orange-950/40 text-orange-700 dark:text-orange-400 border-orange-200/80 dark:border-orange-800/50"
+              ? "bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-950/40 dark:text-orange-400 dark:border-orange-900"
               : is31to60
-                ? "bg-amber-50/90 dark:bg-amber-950/30 text-amber-800 dark:text-amber-300 border-amber-200/70 dark:border-amber-800/40"
-                : "bg-emerald-50/90 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border-emerald-200/70 dark:border-emerald-800/40";
+                ? "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-900"
+                : "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-900";
 
           const dayTextCls = isOver90
-            ? "text-rose-700 dark:text-rose-400 font-bold"
+            ? "text-rose-600 font-bold"
             : is61to90
-              ? "text-orange-700 dark:text-orange-400 font-semibold"
+              ? "text-orange-600 font-semibold"
               : is31to60
-                ? "text-amber-800 dark:text-amber-300 font-semibold"
-                : "text-emerald-700 dark:text-emerald-400 font-medium";
+                ? "text-amber-600 font-semibold"
+                : "text-foreground font-medium";
 
           const barColorCls = isOver90
             ? "bg-rose-500 dark:bg-rose-400"
@@ -531,24 +394,9 @@ export function GarageCustomerDetailDrawer({
       },
       {
         key: "tenTinhTrangDichVu",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("customers.drawer.status", "Trạng thái")}
-            sortState={getSortState("tenTinhTrangDichVu")}
-            onSortChange={(s) => setSort("tenTinhTrangDichVu", s)}
-            searchValue={columnSearch["tenTinhTrangDichVu"] || ""}
-            onSearchChange={(val) => setColSearch("tenTinhTrangDichVu", val)}
-            filterOptions={computedStatuses}
-            selectedFilters={columnFilters["tenTinhTrangDichVu"] || []}
-            onFilterChange={(vals) =>
-              setColumnFilter("tenTinhTrangDichVu", vals)
-            }
-            isActive={Boolean(
-              columnFilters["tenTinhTrangDichVu"]?.length ||
-              columnSearch["tenTinhTrangDichVu"],
-            )}
-            align="center"
-          />
+        header: headerFilter(
+          "tenTinhTrangDichVu",
+          t("customers.drawer.status", "Trạng thái"),
         ),
         size: 120,
         minSize: 110,
@@ -561,14 +409,43 @@ export function GarageCustomerDetailDrawer({
         ),
       },
     ];
-  }, [
-    t,
-    sorts,
-    columnSearch,
-    columnFilters,
-    computedLicensePlates,
-    computedStatuses,
-  ]);
+  }, [headerFilter, t]);
+
+  const summaryRow = useMemo(() => {
+    if (!filteredCases || filteredCases.length === 0) return undefined;
+    let rev = 0;
+    let paid = 0;
+    let bal = 0;
+
+    filteredCases.forEach((c: any) => {
+      rev += Number(c.tienCoThue) || 0;
+      paid += Number(c.tienDaThanhToan) || 0;
+      bal += Number(c.tienConPhaiThanhToan) || 0;
+    });
+
+    return {
+      ngayPhatSinh: (
+        <div className="text-right w-full font-bold text-xs uppercase text-muted-foreground pr-2">
+          {t("customers.drawer.total", "Tổng")}:
+        </div>
+      ),
+      tienCoThue: (
+        <div className="text-right font-bold tabular-nums text-foreground">
+          {money(rev)}
+        </div>
+      ),
+      tienDaThanhToan: (
+        <div className="text-right font-bold tabular-nums text-emerald-600 dark:text-emerald-400">
+          {money(paid)}
+        </div>
+      ),
+      tienConPhaiThanhToan: (
+        <div className="text-right font-bold tabular-nums text-destructive">
+          {money(bal)}
+        </div>
+      ),
+    };
+  }, [filteredCases, t]);
 
   return (
     <>
@@ -672,9 +549,23 @@ export function GarageCustomerDetailDrawer({
                 "Danh sách Phiếu dịch vụ liên quan",
               )}
               titleExtra={
-                <span className="text-xs text-muted-foreground font-normal">
-                  {cases.length} {t("cases.title", "phiếu")}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground font-normal">
+                    {filteredCases.length}/{cases.length}{" "}
+                    {t("cases.title", "phiếu")}
+                  </span>
+                  {activeFilterCount > 0 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => tableState.resetFilters()}
+                      className="h-6 text-[11px] text-muted-foreground hover:text-foreground px-1.5"
+                    >
+                      <RotateCcw className="w-3 h-3 mr-1" />
+                      {t("common.clearFilters", "Bỏ lọc")}
+                    </Button>
+                  )}
+                </div>
               }
               collapsible={true}
               defaultCollapsed={false}
@@ -686,6 +577,7 @@ export function GarageCustomerDetailDrawer({
                   items={filteredCases}
                   columns={columns}
                   loading={isLoading}
+                  summaryRow={summaryRow}
                   minWidth={1210}
                   enableColumnResizing={true}
                   emptyLabel={t(
@@ -767,28 +659,6 @@ export function GarageCustomerDetailDrawer({
                       ],
                     },
                   ]}
-                  summaryRow={{
-                    ngayPhatSinh: (
-                      <div className="text-right w-full font-semibold text-xs">
-                        {t("common.total", "Tổng cộng")}:
-                      </div>
-                    ),
-                    tienCoThue: (
-                      <div className="text-right font-bold text-xs tabular-nums text-foreground">
-                        {money(totals.totalRevenue)}
-                      </div>
-                    ),
-                    tienDaThanhToan: (
-                      <div className="text-right font-bold text-xs tabular-nums text-emerald-600 dark:text-emerald-400">
-                        {money(totals.totalPaid)}
-                      </div>
-                    ),
-                    tienConPhaiThanhToan: (
-                      <div className="text-right font-bold text-xs tabular-nums text-destructive">
-                        {money(totals.totalBalance)}
-                      </div>
-                    ),
-                  }}
                 />
               </div>
             </DrawerSection>
