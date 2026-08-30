@@ -244,6 +244,8 @@ export function SpreadsheetPageTemplate<T>({
             loadingRows={loadingRows}
             enableFullscreen={enableFullscreen}
             tableTitle={title}
+            tableDesc={desc}
+            tableIcon={icon}
             fullscreenHeaderExtra={actionGroupNode}
             fullscreenTabs={tabsNode}
             onFullscreenChange={handleFullscreenChange}

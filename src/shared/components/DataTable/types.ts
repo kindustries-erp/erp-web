@@ -97,6 +97,8 @@ export interface DataTableProps<T> {
   sidePanel?: ReactNode;
   enableFullscreen?: boolean;
   tableTitle?: ReactNode;
+  tableDesc?: ReactNode;
+  tableIcon?: ReactNode;
   fullscreenClassName?: string;
   fullscreenHeaderExtra?: ReactNode;
   fullscreenTabs?: ReactNode;

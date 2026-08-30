@@ -80,6 +80,8 @@ export function DataTable<T>({
   tableMeta,
   enableFullscreen,
   tableTitle,
+  tableDesc,
+  tableIcon,
   fullscreenClassName,
   fullscreenHeaderExtra,
   fullscreenTabs,
@@ -101,7 +103,7 @@ export function DataTable<T>({
     defaultColumnOrder,
   });
 
-  const { isFullscreen, toggleFullscreen, closeFullscreen } =
+  const { isFullscreen, isExiting, toggleFullscreen, closeFullscreen } =
     useDataTableFullscreen({
       onFullscreenChange,
     });
@@ -559,6 +561,8 @@ export function DataTable<T>({
       {isFullscreen ? (
         <FullscreenPlaceholder
           tableTitle={tableTitle}
+          tableDesc={tableDesc}
+          tableIcon={tableIcon}
           onExit={closeFullscreen}
         />
       ) : (
@@ -570,7 +574,10 @@ export function DataTable<T>({
         <FullscreenModal
           table={table}
           tableTitle={tableTitle}
+          tableDesc={tableDesc}
+          tableIcon={tableIcon}
           total={total}
+          isExiting={isExiting}
           fullscreenClassName={fullscreenClassName}
           fullscreenHeaderExtra={fullscreenHeaderExtra}
           fullscreenTabs={fullscreenTabs}
