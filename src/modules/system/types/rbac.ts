@@ -5,6 +5,9 @@ export interface Role {
   icon?: string | null;
   admin_access?: boolean;
   app_access?: boolean;
+  is_active?: boolean;
+  isActive?: boolean;
+  createdAt?: string;
   /** May be a count, an array of user IDs, or user objects from RBAC APIs. */
   users?: number | Array<string | RoleUserSummary>;
 }

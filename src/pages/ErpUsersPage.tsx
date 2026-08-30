@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-
 import {
   Shield,
   PlusCircle,
@@ -9,9 +8,18 @@ import {
   Ban,
   CheckCircle,
   User,
+  Pencil,
+  History,
 } from "lucide-react";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate/SpreadsheetPageTemplate";
-import { type DataTableColumn } from "@/shared/components/DataTable";
+import {
+  type DataTableColumn,
+  TableText,
+  TableDateCell,
+  createColumnHeaderFilter,
+} from "@/shared/components/DataTable";
+import { Badge } from "@/shared/components/ui/badge";
+import { Tooltip } from "@/core/components/ui/Tooltip";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import {
   DrawerAction,
@@ -25,8 +33,6 @@ import {
   DrawerAuditTimeline,
   type DrawerTopTabItem,
 } from "@/shared/components/StandardFormDrawer";
-
-import { History } from "lucide-react";
 import { Combobox } from "@/shared/components/Combobox";
 import type { DrawerMode } from "@/shared/stores/useDrawerStore";
 import {
@@ -45,6 +51,7 @@ import {
   type ErpEmployee,
   usersAdminApi,
 } from "@/modules/system/api/usersCoreApi";
+import { useUsersAdminList } from "@/modules/system/hooks/useUsersAdminList";
 import { useT } from "@/core/i18n";
 
 function formatDate(value: string | null) {
@@ -58,13 +65,48 @@ export function ErpUsersPage() {
   const t = useT();
   const canRead = useHasPermission("admin_users", "read");
   const showToast = useUIStore((s) => s.showToast);
-  const [items, setItems] = useState<CoreUserAdmin[]>([]);
+
+  const filterConfig: FilterPanelConfig = useMemo(
+    () => ({
+      status: {
+        options: [
+          { value: "ACTIVE", label: t("Hoạt động (ACTIVE)") },
+          { value: "INACTIVE", label: t("Ngưng (INACTIVE)") },
+        ],
+        placeholder: t("Tất cả trạng thái"),
+      },
+    }),
+    [t],
+  );
+
+  const filter = useFilterPanel(filterConfig);
+  const status = filter.state.status;
+
+  const listHook = useUsersAdminList({ status });
+  const {
+    data: items,
+    total,
+    totalPages,
+    isLoading: loading,
+    page,
+    setPage,
+    pageSize,
+    setPageSize,
+    refetch: loadUsers,
+  } = listHook;
+
+  const totalActiveFilterCount = useMemo(
+    () => filter.activeFilterCount + listHook.activeFilterCount,
+    [filter.activeFilterCount, listHook.activeFilterCount],
+  );
+
+  const handleClearAll = useCallback(() => {
+    filter.resetAll();
+    listHook.clearAllFilters();
+  }, [filter, listHook]);
+
   const [employees, setEmployees] = useState<ErpEmployee[]>([]);
-  const [loading, setLoading] = useState(false);
   const [timelineLoading, setTimelineLoading] = useState(false);
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(50);
-  const [total, setTotal] = useState(0);
   const [userDrawerOpen, setUserDrawerOpen] = useState(false);
   const [drawerMode, setDrawerMode] = useState<DrawerMode>("create");
   const [creating, setCreating] = useState(false);
@@ -128,49 +170,6 @@ export function ErpUsersPage() {
   const impersonateAction = useAuthStore((s) => s.impersonateAction);
   const canImpersonate = useAuthStore((s) => s.canImpersonate);
 
-  const filterConfig: FilterPanelConfig = useMemo(
-    () => ({
-      search: true,
-      status: {
-        options: [
-          { value: "ACTIVE", label: t("Hoạt động (ACTIVE)") },
-          { value: "INACTIVE", label: t("Ngưng (INACTIVE)") },
-        ],
-        placeholder: t("Tất cả trạng thái"),
-      },
-    }),
-    [t],
-  );
-
-  const filter = useFilterPanel(filterConfig, () => setPage(1));
-  const search = filter.state.search;
-  const status = filter.state.status;
-
-  const loadUsers = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await usersAdminApi.list({
-        page,
-        pageSize,
-        search,
-        status: status || undefined,
-      });
-      setItems(res.data);
-      setTotal(res.total);
-    } catch (error: any) {
-      showToast({
-        variant: "destructive",
-        title: t("Không tải được user"),
-        description:
-          error?.response?.data?.message ||
-          error?.message ||
-          t("Lỗi không xác định"),
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [page, pageSize, search, showToast, status]);
-
   const loadEmployees = useCallback(async () => {
     try {
       const rows = await employeeSelectApi.list();
@@ -179,10 +178,6 @@ export function ErpUsersPage() {
       // non-blocking
     }
   }, []);
-
-  useEffect(() => {
-    void loadUsers();
-  }, [loadUsers]);
 
   useEffect(() => {
     void loadEmployees();
@@ -203,6 +198,19 @@ export function ErpUsersPage() {
     }
   }
 
+  async function openEditDrawer(user: CoreUserAdmin) {
+    await loadEmployees();
+    setSelectedUser(user);
+    setDrawerMode("edit");
+    setForm({
+      email: user.email,
+      password: "",
+      confirmPassword: "",
+      employeeId: user.employeeId || "",
+    });
+    setUserDrawerOpen(true);
+  }
+
   async function openCreateDrawer() {
     await loadEmployees();
     setSelectedUser(null);
@@ -218,13 +226,7 @@ export function ErpUsersPage() {
 
   function handleToggleToEdit() {
     if (!selectedUser) return;
-    setDrawerMode("edit");
-    setForm({
-      email: selectedUser.email,
-      password: "",
-      confirmPassword: "",
-      employeeId: selectedUser.employeeId || "",
-    });
+    openEditDrawer(selectedUser);
   }
 
   async function handleSave() {
@@ -297,53 +299,125 @@ export function ErpUsersPage() {
     await loadUsers();
   }
 
+  const headerFilter = useMemo(
+    () =>
+      createColumnHeaderFilter({
+        listHook,
+        queryKeyPrefix: "users-column-options",
+        fetchOptions: ({
+          columnKey,
+          search,
+          pageParam,
+          pageSize: ps,
+          filtersStr,
+        }) =>
+          usersAdminApi.getColumnOptions(
+            columnKey,
+            search,
+            pageParam,
+            ps || 20,
+            filtersStr,
+          ),
+      }),
+    [listHook],
+  );
+
   const columns: DataTableColumn<CoreUserAdmin>[] = useMemo(
     () => [
       {
+        key: "index",
+        header: <span className="w-full block text-center">#</span>,
+        size: 40,
+        enableResizing: false,
+        headerClassName: "text-center w-[40px] min-w-[40px]",
+        className: "text-center w-[40px] min-w-[40px]",
+        cell: (_, idx) => (
+          <span className="w-full block text-center">{idx}</span>
+        ),
+      },
+      {
         key: "email",
-        header: "Email",
+        size: 220,
+        enableResizing: true,
+        header: headerFilter("email", t("Email")),
         className: "text-left",
-        headerClassName: "text-center",
-        cell: (item) => <span className="font-medium">{item.email}</span>,
+        cell: (item) => (
+          <TableText
+            text={item.email}
+            enableCopy
+            tooltip
+            onDetailClick={() => void openViewDrawer(item)}
+          />
+        ),
       },
       {
         key: "employee",
-        header: "Employee linked",
+        size: 220,
+        enableResizing: true,
+        header: headerFilter("employee", t("Nhân viên liên kết"), {
+          showBlankOption: true,
+        }),
         className: "text-left",
-        headerClassName: "text-center",
-        cell: (item) =>
-          item.employee
-            ? `${item.employee.fullName} (${item.employee.employeeCode})`
-            : "—",
+        cell: (item) => (
+          <span
+            className={item.employee ? "font-medium" : "text-muted-foreground"}
+          >
+            {item.employee
+              ? `${item.employee.fullName} (${item.employee.employeeCode})`
+              : "—"}
+          </span>
+        ),
       },
       {
         key: "lastLoginAt",
-        header: t("Lần đăng nhập cuối"),
+        size: 160,
+        enableResizing: true,
         className: "text-right",
-        headerClassName: "text-center",
-        cell: (item) => formatDate(item.lastLoginAt),
+        header: headerFilter.date("lastLoginAt", t("Lần đăng nhập cuối")),
+        cell: (item) => (
+          <TableDateCell
+            date={item.lastLoginAt}
+            className="justify-end w-full"
+          />
+        ),
+      },
+      {
+        key: "createdAt",
+        size: 150,
+        enableResizing: true,
+        className: "text-right",
+        header: headerFilter.date("createdAt", t("Ngày tạo")),
+        cell: (item) => (
+          <TableDateCell date={item.createdAt} className="justify-end w-full" />
+        ),
       },
       {
         key: "status",
-        header: t("Trạng thái"),
+        size: 130,
+        enableResizing: true,
         className: "text-center",
-        headerClassName: "text-center",
+        header: headerFilter("status", t("Trạng thái")),
         cell: (item) => (
           <div className="flex justify-center w-full">
-            <span
-              className={
+            <Tooltip
+              content={
                 item.status === "ACTIVE"
-                  ? "rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-700"
-                  : "rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600"
+                  ? t("Hoạt động (ACTIVE)")
+                  : t("Ngưng (INACTIVE)")
               }
             >
-              {item.status}
-            </span>
+              <Badge
+                variant={item.status === "ACTIVE" ? "default" : "secondary"}
+                className="w-[88px] inline-flex items-center justify-center text-center truncate"
+              >
+                {item.status === "ACTIVE" ? t("ACTIVE") : t("INACTIVE")}
+              </Badge>
+            </Tooltip>
           </div>
         ),
       },
     ],
-    [],
+    [headerFilter, t],
   );
 
   const drawerActions: DrawerAction[] = isViewMode
@@ -398,6 +472,10 @@ export function ErpUsersPage() {
                 label="Last login"
                 value={formatDate(selectedUser?.lastLoginAt ?? null)}
               />
+              <DrawerRow
+                label={t("Ngày tạo")}
+                value={formatDate(selectedUser?.createdAt ?? null)}
+              />
             </DrawerSection>
           ),
         },
@@ -441,11 +519,10 @@ export function ErpUsersPage() {
         loading={loading}
         emptyLabel={t("Chưa có user")}
         minWidth={760}
-        actionColumnSize={40}
         page={page}
         pageSize={pageSize}
         total={total}
-        totalPages={Math.ceil(total / pageSize)}
+        totalPages={totalPages}
         onPage={setPage}
         onPageSize={(value) => {
           setPage(1);
@@ -454,6 +531,8 @@ export function ErpUsersPage() {
         onRefresh={() => void loadUsers()}
         filterConfig={filterConfig}
         filter={filter}
+        activeFilterCount={totalActiveFilterCount}
+        onClearAllFilters={handleClearAll}
         createActions={[
           {
             groupLabel: t("Người dùng"),
@@ -474,6 +553,11 @@ export function ErpUsersPage() {
                 label: t("Chi tiết user"),
                 icon: <Eye className="w-3.5 h-3.5" />,
                 onClick: () => void openViewDrawer(item),
+              },
+              {
+                label: t("Chỉnh sửa"),
+                icon: <Pencil className="w-3.5 h-3.5" />,
+                onClick: () => void openEditDrawer(item),
               },
             ],
           },

@@ -1,16 +1,6 @@
-import { useState, useCallback, useMemo } from "react";
-import {
-  getCoreRolesApi,
-  createCoreRoleApi,
-  updateCoreRoleApi,
-  deleteCoreRoleApi,
-} from "@/modules/system/api/rbacCoreApi";
-import type {
-  Role,
-  CreateRoleDto,
-  UpdateRoleDto,
-} from "@/modules/system/types/rbac";
-import { extractApiError } from "@/shared/utils/apiError";
+import { useState, useMemo, useCallback } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { usersAdminApi, type CoreUserAdmin } from "../api/usersCoreApi";
 
 import { clearAllDropdownSearchStates } from "@/shared/components/DataTable";
 
@@ -21,14 +11,10 @@ export const getDefaultPageSize = (): number => {
   return 20;
 };
 
-export function useCoreRoles(extraParams?: {
+export function useUsersAdminList(extraParams?: {
   search?: string;
   status?: string;
 }) {
-  const [roles, setRoles] = useState<Role[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [total, setTotal] = useState(0);
-  const [totalPages, setTotalPages] = useState(1);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState<number>(getDefaultPageSize);
   const [sorts, setSorts] = useState<string[]>([]);
@@ -40,17 +26,42 @@ export function useCoreRoles(extraParams?: {
   const [columnSearch, setColumnSearchState] = useState<Record<string, string>>(
     {},
   );
-  const [error, setError] = useState<string | null>(null);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await getCoreRolesApi({
+  const queryKey = useMemo(
+    () => [
+      "users-admin-list",
+      page,
+      pageSize,
+      sorts,
+      dateFrom,
+      dateTo,
+      columnFilters,
+      columnSearch,
+      extraParams?.search,
+      extraParams?.status,
+    ],
+    [
+      page,
+      pageSize,
+      sorts,
+      dateFrom,
+      dateTo,
+      columnFilters,
+      columnSearch,
+      extraParams?.search,
+      extraParams?.status,
+    ],
+  );
+
+  const { data, isLoading, isFetching, error, refetch } = useQuery({
+    queryKey,
+    queryFn: () =>
+      usersAdminApi.list({
         page,
         pageSize,
         sorts,
         search: extraParams?.search || undefined,
+        status: extraParams?.status || undefined,
         date_from: dateFrom || undefined,
         date_to: dateTo || undefined,
         column_filters:
@@ -61,32 +72,8 @@ export function useCoreRoles(extraParams?: {
           Object.keys(columnSearch).length > 0
             ? JSON.stringify(columnSearch)
             : undefined,
-      });
-      let items = res.items;
-      if (extraParams?.status) {
-        const isAct = extraParams.status === "true";
-        items = items.filter(
-          (r) => r.is_active === isAct || r.isActive === isAct,
-        );
-      }
-      setRoles(items);
-      setTotal(extraParams?.status ? items.length : res.total);
-      setTotalPages(res.totalPages || Math.ceil(res.total / pageSize) || 1);
-    } catch (e) {
-      setError(extractApiError(e, "Không thể tải danh sách vai trò."));
-    } finally {
-      setLoading(false);
-    }
-  }, [
-    page,
-    pageSize,
-    sorts,
-    dateFrom,
-    dateTo,
-    columnFilters,
-    columnSearch,
-    extraParams,
-  ]);
+      }),
+  });
 
   const setSort = useCallback((key: string, state: "asc" | "desc" | "none") => {
     setSorts((prev) => {
@@ -158,44 +145,12 @@ export function useCoreRoles(extraParams?: {
     clearAllDropdownSearchStates();
   }, []);
 
-  async function createRole(dto: CreateRoleDto): Promise<Role | null> {
-    try {
-      const role = await createCoreRoleApi(dto);
-      await load();
-      return role;
-    } catch (e) {
-      throw new Error(extractApiError(e, "Tạo vai trò thất bại."));
-    }
-  }
-
-  async function updateRole(
-    id: string,
-    dto: UpdateRoleDto,
-  ): Promise<Role | null> {
-    try {
-      const role = await updateCoreRoleApi(id, dto);
-      setRoles((prev) => prev.map((r) => (r.id === id ? role : r)));
-      return role;
-    } catch (e) {
-      throw new Error(extractApiError(e, "Cập nhật vai trò thất bại."));
-    }
-  }
-
-  async function deleteRole(id: string): Promise<void> {
-    try {
-      await deleteCoreRoleApi(id);
-      await load();
-    } catch (e) {
-      throw new Error(extractApiError(e, "Xóa vai trò thất bại."));
-    }
-  }
-
   return {
-    roles,
-    loading,
+    data: (data?.data ?? []) as CoreUserAdmin[],
+    total: data?.total ?? 0,
+    totalPages: Math.ceil((data?.total ?? 0) / pageSize) || 1,
+    isLoading: isLoading || isFetching,
     error,
-    total,
-    totalPages,
     page,
     setPage,
     pageSize,
@@ -211,9 +166,6 @@ export function useCoreRoles(extraParams?: {
     setColumnSearch,
     activeFilterCount,
     clearAllFilters,
-    load,
-    createRole,
-    updateRole,
-    deleteRole,
+    refetch,
   };
 }

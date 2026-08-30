@@ -1,22 +1,27 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Shield, PlusCircle, Settings, Trash } from "lucide-react";
 import { useUIStore } from "@/core/config/uiStore";
 import { useT } from "@/core/i18n";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate/SpreadsheetPageTemplate";
-import { type DataTableColumn } from "@/shared/components/DataTable";
-import { TableText } from "@/shared/components/DataTable/TableText";
+import {
+  type DataTableColumn,
+  TableText,
+  TableDateCell,
+  createColumnHeaderFilter,
+} from "@/shared/components/DataTable";
 import { Badge } from "@/shared/components/ui/badge";
 import { useCoreRoles } from "@/modules/system/hooks/useCoreRoles";
 import { useCorePermissionsEditor } from "@/modules/system/hooks/useCorePermissionsEditor";
 import { useCoreRoleUsers } from "@/modules/system/hooks/useCoreRoleUsers";
 import { CoreRoleDrawer } from "@/modules/system/components/CoreRoleDrawer";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
-import { Forbidden } from "@/pages/Forbidden";
 import {
   useFilterPanel,
   type FilterPanelConfig,
 } from "@/shared/hooks/useFilterPanel";
+import { Forbidden } from "@/pages/Forbidden";
+import { getCoreRolesColumnOptionsApi } from "@/modules/system/api/rbacCoreApi";
 import type {
   Role,
   CreateRoleDto,
@@ -28,6 +33,23 @@ export function ErpPermissionsCorePage() {
   const showToast = useUIStore((s) => s.showToast);
   const t = useT();
 
+  const filterConfig: FilterPanelConfig = useMemo(
+    () => ({
+      status: {
+        options: [
+          { value: "true", label: t("Hoạt động") },
+          { value: "false", label: t("Ngưng") },
+        ],
+        placeholder: t("Tất cả trạng thái"),
+      },
+    }),
+    [t],
+  );
+
+  const filter = useFilterPanel(filterConfig);
+  const status = filter.state.status;
+
+  const listHook = useCoreRoles({ status });
   const {
     roles,
     loading,
@@ -35,15 +57,24 @@ export function ErpPermissionsCorePage() {
     total,
     totalPages,
     page,
+    setPage,
     pageSize,
+    setPageSize,
     load,
-    handleSearch,
-    handlePage,
-    handlePageSize,
     createRole,
     updateRole,
     deleteRole,
-  } = useCoreRoles();
+  } = listHook;
+
+  const totalActiveFilterCount = useMemo(
+    () => filter.activeFilterCount + listHook.activeFilterCount,
+    [filter.activeFilterCount, listHook.activeFilterCount],
+  );
+
+  const handleClearAll = useCallback(() => {
+    filter.resetAll();
+    listHook.clearAllFilters();
+  }, [filter, listHook]);
 
   const {
     initialPermMap,
@@ -84,23 +115,10 @@ export function ErpPermissionsCorePage() {
   const [deleteTarget, setDeleteTarget] = useState<Role | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  const filterConfig: FilterPanelConfig = useMemo(
-    () => ({
-      search: true,
-    }),
-    [],
-  );
-
-  const filterPanel = useFilterPanel(filterConfig, () => handlePage(1));
-
-  useEffect(() => {
-    handleSearch(filterPanel.state.search || "");
-  }, [filterPanel.state.search]);
-
   useEffect(() => {
     load();
     loadResources();
-  }, []);
+  }, [load, loadResources]);
 
   function openNew() {
     setEditingRole(null);
@@ -187,29 +205,67 @@ export function ErpPermissionsCorePage() {
     }
   }
 
+  const headerFilter = useMemo(
+    () =>
+      createColumnHeaderFilter({
+        listHook,
+        queryKeyPrefix: "core-roles-column-options",
+        fetchOptions: ({
+          columnKey,
+          search,
+          pageParam,
+          pageSize: ps,
+          filtersStr,
+        }) =>
+          getCoreRolesColumnOptionsApi(
+            columnKey,
+            search,
+            pageParam,
+            ps || 20,
+            filtersStr,
+          ),
+      }),
+    [listHook],
+  );
+
   const columns: DataTableColumn<Role>[] = useMemo(
     () => [
       {
+        key: "index",
+        header: <span className="w-full block text-center">#</span>,
+        size: 40,
+        enableResizing: false,
+        headerClassName: "text-center w-[40px] min-w-[40px]",
+        className: "text-center w-[40px] min-w-[40px]",
+        cell: (_, idx) => (
+          <span className="w-full block text-center">{idx}</span>
+        ),
+      },
+      {
         key: "name",
-        header: t("rbac.headers.name"),
+        size: 220,
+        enableResizing: true,
+        header: headerFilter("name", t("rbac.headers.name")),
         cell: (role) => (
           <TableText text={role.name} onDetailClick={() => openEdit(role)} />
         ),
         className: "whitespace-nowrap text-left px-4",
-        headerClassName: "text-center",
       },
       {
         key: "description",
-        header: t("rbac.headers.description"),
         size: 250,
+        enableResizing: true,
+        header: headerFilter("description", t("rbac.headers.description"), {
+          showBlankOption: true,
+        }),
         cell: (role) => role.description || "—",
         className: "text-[color:var(--muted-fg)] truncate text-left",
-        headerClassName: "text-center",
       },
       {
         key: "users",
-        header: t("rbac.headers.users"),
         size: 300,
+        enableResizing: true,
+        header: t("rbac.headers.users"),
         cell: (role) => {
           const usersList = Array.isArray(role.users) ? role.users : [];
           return usersList.length > 0 ? (
@@ -230,11 +286,40 @@ export function ErpPermissionsCorePage() {
             <span className="text-[color:var(--faint)]">—</span>
           );
         },
-        headerClassName: "text-center",
         className: "text-foreground text-left",
       },
+      {
+        key: "isActive",
+        size: 130,
+        enableResizing: true,
+        className: "text-center",
+        header: headerFilter("isActive", t("Trạng thái")),
+        cell: (role) => (
+          <div className="flex justify-center w-full">
+            <Badge
+              variant={role.is_active ? "default" : "secondary"}
+              className="w-[88px] inline-flex items-center justify-center text-center truncate"
+            >
+              {role.is_active ? t("Hoạt động") : t("Ngưng")}
+            </Badge>
+          </div>
+        ),
+      },
+      {
+        key: "createdAt",
+        size: 150,
+        enableResizing: true,
+        className: "text-right",
+        header: headerFilter.date("createdAt", t("Ngày tạo")),
+        cell: (role) => (
+          <TableDateCell
+            date={(role as any).createdAt}
+            className="justify-end w-full"
+          />
+        ),
+      },
     ],
-    [t],
+    [headerFilter, t],
   );
 
   if (!canRead) return <Forbidden />;
@@ -257,11 +342,16 @@ export function ErpPermissionsCorePage() {
         pageSize={pageSize}
         total={total}
         totalPages={totalPages}
-        onPage={handlePage}
-        onPageSize={handlePageSize}
+        onPage={setPage}
+        onPageSize={(val) => {
+          setPage(1);
+          setPageSize(val);
+        }}
         onRefresh={load}
         filterConfig={filterConfig}
-        filter={filterPanel}
+        filter={filter}
+        activeFilterCount={totalActiveFilterCount}
+        onClearAllFilters={handleClearAll}
         rowActions={(role) => [
           {
             groupLabel: "Tra cứu / Cấu hình",
