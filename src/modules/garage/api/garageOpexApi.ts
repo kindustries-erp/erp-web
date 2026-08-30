@@ -145,6 +145,7 @@ export const garageOpexApi = {
     date_to?: string;
     page?: number;
     pageSize?: number;
+    cost_group?: string;
     sorts?: string[];
     column_filters?: string;
     column_search?: string;

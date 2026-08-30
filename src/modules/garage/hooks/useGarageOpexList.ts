@@ -12,9 +12,12 @@ export const getDefaultPageSize = (): number => {
   return 20;
 };
 
+export type CostGroupFilter = "ALL" | "OPEX" | "COGS" | "COMMISSION";
+
 export function useGarageOpexList() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState<number>(getDefaultPageSize);
+  const [costGroup, setCostGroupState] = useState<CostGroupFilter>("ALL");
   const [sorts, setSorts] = useState<string[]>([]);
   const [dateFrom, setDateFrom] = useState<string>("");
   const [dateTo, setDateTo] = useState<string>("");
@@ -28,6 +31,7 @@ export function useGarageOpexList() {
       "garage-opex-list",
       page,
       pageSize,
+      costGroup,
       sorts,
       dateFrom,
       dateTo,
@@ -38,6 +42,7 @@ export function useGarageOpexList() {
       garageOpexApi.getList({
         page,
         pageSize,
+        cost_group: costGroup !== "ALL" ? costGroup : undefined,
         sorts,
         date_from: dateFrom || undefined,
         date_to: dateTo || undefined,
@@ -49,6 +54,11 @@ export function useGarageOpexList() {
           : undefined,
       }),
   });
+
+  const setCostGroup = (group: CostGroupFilter) => {
+    setCostGroupState(group);
+    setPage(1);
+  };
 
   const setSort = (key: string, state: "asc" | "desc" | "none") => {
     setSorts((prev) => {
@@ -70,9 +80,9 @@ export function useGarageOpexList() {
     setPage(1);
   };
 
-  const setDateRange = (from: string, to: string) => {
-    setDateFrom(from);
-    setDateTo(to);
+  const setDateRange = (from?: string, to?: string) => {
+    setDateFrom(from || "");
+    setDateTo(to || "");
     setPage(1);
   };
 
@@ -101,6 +111,8 @@ export function useGarageOpexList() {
     total: data?.total ?? 0,
     totalPages: data?.totalPages ?? 0,
     isLoading,
+    costGroup,
+    setCostGroup,
     page,
     setPage,
     pageSize,
