@@ -244,7 +244,71 @@ const viewTabsNode = (
 );
 ```
 
-## 7. Mẫu code cơ bản (Table Page Boilerplate)
+## 7. Header Page Tabs Cấp Trang (Optional — Tùy Chọn Khi Có Nhiều Phân Hệ / Góc Nhìn Độc Lập)
+
+> 💡 **LƯU Ý QUAN TRỌNG**: Tính năng này là **OPTIONAL (TÙY CHỌN)**. Đối với các trang bảng đơn giản chỉ quản lý một danh mục duy nhất, **KHÔNG CẦN** khai báo prop `tabs`. Chỉ sử dụng khi trang nghiệp vụ cần phân rã thành các phân hệ lớn / các view độc lập (ví dụ trang Hóa đơn `erp-invoice` chia `Hóa đơn mua vào` [in], `Chi tiết mua vào` [in-lines], `Hóa đơn bán ra` [out], `Chi tiết bán ra` [out-lines]; hoặc trang Mua hàng chia `Đơn mua hàng` vs `Chi tiết dòng hàng`).
+
+### 7.1. Phân biệt rõ: Header Page Tabs vs Toolbar PillTabs
+
+| Đặc điểm | Header Page Tabs (`tabs` trên Template) | Toolbar PillTabs (`customActionsNode`) |
+| :--- | :--- | :--- |
+| **Vị trí** | Ngay dưới `PageHeader` (dưới Tiêu đề/Mô tả trang) | Nằm trên thanh công cụ của bảng (bên trái `customActionsNode`) |
+| **Mục đích** | Phân chia các **phân hệ / góc nhìn lớn cấp Trang** (có thể đổi schema cột, API endpoint, hoặc render các View/Section khác nhau) | Lọc nhanh các **trạng thái / phân loại nhỏ** trong cùng 1 tập dữ liệu (như Mới/Thay thế/Điều chỉnh, hoặc Thu/Chi) |
+| **Quy chuẩn** | **OPTIONAL (TÙY CHỌN)** — Chỉ dùng khi trang có nhiều phân hệ lớn | Bắt buộc khi trang có phân loại chiều dữ liệu/trạng thái cần switch nhanh |
+| **Cấu hình** | Props `tabs`, `activeTab`, `onTabChange` trên `<SpreadsheetPageTemplate>` | Component `<PillTabs>` bọc trong `customActionsNode` |
+
+### 7.2. Các quy tắc chuẩn bắt buộc khi sử dụng Header Page Tabs
+
+Khi một trang bảng quyết định kích hoạt `Header Page Tabs`, **BẮT BUỘC** tuân thủ 5 nguyên tắc sau:
+
+1. **Định nghĩa danh sách tabs (`TabItem[]`)**:
+   - Sử dụng type `TabItem` từ `@/shared/components/PageLayout`:
+   ```tsx
+   import type { TabItem } from "@/shared/components/PageLayout";
+
+   const pageTabs: TabItem[] = useMemo(() => [
+     { value: "in", label: t("inbound", "Hóa đơn mua vào") },
+     { value: "in-lines", label: t("inboundLines", "Chi tiết mua vào") },
+     { value: "out", label: t("outbound", "Hóa đơn bán ra") },
+     { value: "out-lines", label: t("outboundLines", "Chi tiết bán ra") },
+   ], [t]);
+   ```
+   - 100% `label` phải bọc trong hàm dịch `t(...)`.
+
+2. **Đồng bộ 2 chiều với URL Query Param (`?tab=...`)**:
+   - Tab hiện tại bắt buộc được đọc từ URL khi load trang (để hỗ trợ reload và lưu bookmark/link):
+   ```tsx
+   const [currentTab, setCurrentTab] = useState<string>(() => {
+     const params = new URLSearchParams(window.location.search);
+     return params.get("tab") || "in"; // "in" là default tab
+   });
+
+   const handleTabChange = (newTab: string) => {
+     setCurrentTab(newTab);
+     const url = new URL(window.location.href);
+     if (newTab === "in") {
+       url.searchParams.delete("tab"); // Default tab có thể xóa param cho URL gọn gàng
+     } else {
+       url.searchParams.set("tab", newTab);
+     }
+     window.history.replaceState(null, "", url.toString());
+   };
+   ```
+
+3. **Reset Phân trang & Cách ly Bộ lọc (State & Filter Isolation)**:
+   - **BẮT BUỘC reset trang về 1 (`setPage(1)`)** ngay khi chuyển tab.
+   - **Cách ly bộ lọc (Tránh Filter Bleeding)**: Nếu giữa các tab có tập cột hoặc ý nghĩa dữ liệu khác nhau (như Header vs Lines), cần reset filter (`clearAllFilters()`) hoặc lưu giữ state filter độc lập theo từng tab key, tuyệt đối không để filter cột của tab này áp dụng sai sang tab kia.
+
+4. **Phân tách `tableId` theo từng Tab**:
+   - Hệ thống tự động lưu cấu hình độ rộng cột, thứ tự cột và ẩn/hiện cột vào App Setting (`core_user_preferences`) qua `tableId`.
+   - Nếu mỗi tab có cấu trúc cột khác nhau, **BẮT BUỘC** phân tách `tableId` theo tab (ví dụ: `tableId={`erp-invoices-table-${currentTab}`}`).
+   - Nếu không phân tách, cấu hình cột của tab này sẽ ghi đè và làm lỗi hiển thị cột của tab kia.
+
+5. **Tích hợp linh hoạt với View Switcher hoặc Đổi Column Set**:
+   - **Cách 1 (Cùng 1 Template, đổi Columns & API)**: Truyền `columns` và `items` tương ứng theo `currentTab`.
+   - **Cách 2 (Đa Template / Sub-sections như `ErpInvoicesTab`)**: Render các section con ẩn/hiện (`hidden` hoặc conditional mount) theo `currentTab`, mỗi section truyền cùng bộ `tabs={pageTabs}`, `activeTab={currentTab}` và `onTabChange={handleTabChange}` để giữ thanh tab đồng bộ xuyên suốt.
+
+## 8. Mẫu code cơ bản (Table Page Boilerplate)
 
 ```tsx
 import React, { useState, useMemo } from "react";
@@ -258,6 +322,7 @@ import { Badge } from "@/shared/components/ui/badge";
 import { Eye, Pencil, FileText, Trash2, Download } from "lucide-react";
 import type { DataTableColumn } from "@/shared/components/DataTable";
 import type { ActionDropdownItem } from "@/shared/components/ActionDropdown";
+import type { TabItem } from "@/shared/components/PageLayout";
 // import { use[Module]List } from "@/modules/[module]/hooks/use[Module]List";
 // import { [Module]DetailDrawer } from "@/modules/[module]/components/[Module]DetailDrawer";
 // import { [module]Api } from "@/modules/[module]/api/[module]Api";
@@ -452,6 +517,10 @@ export function ExampleTablePage() {
   return (
     <>
       <SpreadsheetPageTemplate<ExampleRow>
+        // (Tùy chọn) Header Page Tabs: Chỉ truyền khi trang có nhiều phân hệ / góc nhìn lớn
+        // tabs={pageTabs}
+        // activeTab={currentTab}
+        // onTabChange={handleTabChange}
         title={t("pageTitle", "Danh sách dữ liệu")}
         desc={t("pageDesc", "Mô tả danh sách")}
         icon={<FileText className="w-5 h-5 text-primary" />}
@@ -505,6 +574,12 @@ export function ExampleTablePage() {
 - [ ] Đã thêm `PageKey` mới vào type trong `src/shared/types/index.ts` chưa?
 - [ ] Đã đăng ký `SECTION_ROOTS` (`labelKey`, `group`) và `BREADCRUMBS` (3 cấp chuẩn) trong `appStore.ts` chưa?
 - [ ] Đã thêm i18n key cho `nav/` và `breadcrumb/` (`vi.ts`, `en.ts`) chưa?
+
+### Header Page Tabs (Tùy chọn - Khi trang có đa phân hệ / views lớn)
+- [ ] Nếu trang có nhiều phân hệ lớn (ví dụ: Hóa đơn mua vào vs Bán ra vs Lines, Đơn hàng vs Dòng chi tiết), đã truyền `tabs={pageTabs}`, `activeTab` và `onTabChange` vào `<SpreadsheetPageTemplate>` chưa?
+- [ ] Đã đồng bộ URL query param `?tab=...` (hỗ trợ bookmark/reload) và reset `setPage(1)` khi chuyển tab chưa?
+- [ ] Đã phân tách `tableId` theo từng tab (ví dụ: `tableId={`[module]-table-${activeTab}`}`) để tránh ghi đè cấu hình ẩn/hiện và độ rộng cột trong App Settings (`core_user_preferences`) chưa?
+- [ ] Đã kiểm tra cách ly bộ lọc (Filter Isolation), tránh filter của tab này áp dụng sai sang tab kia chưa?
 
 ### Server-side Hook & Responsive PageSize
 - [ ] Mặc định **100% BẢNG ĐÃ ƯU TIÊN SERVER-SIDE SORTING & FILTERING** (thông qua hook `use[Module]List` + API `getColumnOptions`) chưa?

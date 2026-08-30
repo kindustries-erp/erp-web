@@ -241,7 +241,7 @@ export function SidebarNav({
             />
           )}
           {canReadInventoryItems && (
-            <NavGroup
+            <NavItem
               collapsed={c}
               icon={<Layers className="w-4 h-4 opacity-65 flex-shrink-0" />}
               label={t("nav.items.erpInventoryTrackingGroup")}
@@ -251,32 +251,9 @@ export function SidebarNav({
                 currentPage === "erp-inventory-tracking-lot" ||
                 currentPage === "erp-inventory-tracking-custom"
               }
-            >
-              <NavGroupItem
-                label={t("nav.items.erpInventoryTracking")}
-                active={currentPage === "erp-inventory-tracking"}
-                onClick={() => navTo("erp-inventory-tracking")}
-                contextPage="erp-inventory-tracking"
-              />
-              <NavGroupItem
-                label={t("nav.items.erpInventoryTrackingParts")}
-                active={currentPage === "erp-inventory-tracking-parts"}
-                onClick={() => navTo("erp-inventory-tracking-parts")}
-                contextPage="erp-inventory-tracking-parts"
-              />
-              <NavGroupItem
-                label={t("nav.items.erpInventoryTrackingLot")}
-                active={currentPage === "erp-inventory-tracking-lot"}
-                onClick={() => navTo("erp-inventory-tracking-lot")}
-                contextPage="erp-inventory-tracking-lot"
-              />
-              <NavGroupItem
-                label={t("nav.items.erpInventoryTrackingCustom")}
-                active={currentPage === "erp-inventory-tracking-custom"}
-                onClick={() => navTo("erp-inventory-tracking-custom")}
-                contextPage="erp-inventory-tracking-custom"
-              />
-            </NavGroup>
+              onClick={() => navTo("erp-inventory-tracking")}
+              contextPage="erp-inventory-tracking"
+            />
           )}
         </NavSection>
       )}

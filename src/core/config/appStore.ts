@@ -38,19 +38,19 @@ export const SECTION_ROOTS: Partial<Record<PageKey, SectionRoot>> = {
     group: "inventory",
   },
   "erp-inventory-tracking": {
-    labelKey: "nav.items.erpInventoryTracking",
+    labelKey: "nav.items.erpInventoryTrackingGroup",
     group: "inventory",
   },
   "erp-inventory-tracking-parts": {
-    labelKey: "nav.items.erpInventoryTrackingParts",
+    labelKey: "nav.items.erpInventoryTrackingGroup",
     group: "inventory",
   },
   "erp-inventory-tracking-lot": {
-    labelKey: "nav.items.erpInventoryTrackingLot",
+    labelKey: "nav.items.erpInventoryTrackingGroup",
     group: "inventory",
   },
   "erp-inventory-tracking-custom": {
-    labelKey: "nav.items.erpInventoryTrackingCustom",
+    labelKey: "nav.items.erpInventoryTrackingGroup",
     group: "inventory",
   },
   "erp-inventory-vouchers": {
@@ -255,22 +255,18 @@ export const BREADCRUMBS: Partial<Record<PageKey, Array<[string, string?]>>> = {
   "erp-inventory-tracking": [
     ["breadcrumb.inventory"],
     ["nav.items.erpInventoryTrackingGroup"],
-    ["nav.items.erpInventoryTracking"],
   ],
   "erp-inventory-tracking-parts": [
     ["breadcrumb.inventory"],
     ["nav.items.erpInventoryTrackingGroup"],
-    ["nav.items.erpInventoryTrackingParts"],
   ],
   "erp-inventory-tracking-lot": [
     ["breadcrumb.inventory"],
     ["nav.items.erpInventoryTrackingGroup"],
-    ["nav.items.erpInventoryTrackingLot"],
   ],
   "erp-inventory-tracking-custom": [
     ["breadcrumb.inventory"],
     ["nav.items.erpInventoryTrackingGroup"],
-    ["nav.items.erpInventoryTrackingCustom"],
   ],
   "erp-inventory-vouchers": [
     ["breadcrumb.inventory"],

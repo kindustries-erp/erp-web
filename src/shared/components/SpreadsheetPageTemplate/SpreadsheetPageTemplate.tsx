@@ -147,7 +147,7 @@ export function SpreadsheetPageTemplate<T>({
       loading={loading}
       onFilterToggle={filter?.togglePanel}
       activeFilterCount={activeFilterCount ?? filter?.activeFilterCount ?? 0}
-      onClearAllFilters={onClearAllFilters}
+      onClearAllFilters={onClearAllFilters ?? filter?.resetAll}
       onCreate={onCreate}
       createLabel={finalCreateLabel}
       createIcon={createIcon}

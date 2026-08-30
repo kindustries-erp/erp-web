@@ -165,7 +165,6 @@ export function useNavItems(): NavSearchItem[] {
 
     // 4. Inventory (Kho)
     const inventorySection = t("nav.sections.inventory");
-    const trackingGroup = t("nav.items.erpInventoryTrackingGroup");
     if (canReadInventoryItems) {
       items.push({
         key: "inventory-dashboard",
@@ -196,34 +195,20 @@ export function useNavItems(): NavSearchItem[] {
     if (canReadInventoryItems) {
       items.push({
         key: "erp-inventory-tracking",
-        label: t("nav.items.erpInventoryTracking"),
-        group: trackingGroup,
+        label: t("nav.items.erpInventoryTrackingGroup"),
         section: inventorySection,
-        keywords: ["kho", "theo doi hang hoa", "xe", "thanh pham", "vin"],
-        icon: <Layers className="w-4 h-4" />,
-      });
-      items.push({
-        key: "erp-inventory-tracking-parts",
-        label: t("nav.items.erpInventoryTrackingParts"),
-        group: trackingGroup,
-        section: inventorySection,
-        keywords: ["kho", "theo doi hang hoa", "phu tung", "parts"],
-        icon: <Layers className="w-4 h-4" />,
-      });
-      items.push({
-        key: "erp-inventory-tracking-lot",
-        label: t("nav.items.erpInventoryTrackingLot"),
-        group: trackingGroup,
-        section: inventorySection,
-        keywords: ["kho", "theo doi hang hoa", "lo", "lot"],
-        icon: <Layers className="w-4 h-4" />,
-      });
-      items.push({
-        key: "erp-inventory-tracking-custom",
-        label: t("nav.items.erpInventoryTrackingCustom"),
-        group: trackingGroup,
-        section: inventorySection,
-        keywords: ["kho", "theo doi hang hoa", "tuy chinh", "custom"],
+        keywords: [
+          "kho",
+          "theo doi hang hoa",
+          "xe",
+          "thanh pham",
+          "vin",
+          "phu tung",
+          "parts",
+          "lo",
+          "lot",
+          "custom",
+        ],
         icon: <Layers className="w-4 h-4" />,
       });
     }
