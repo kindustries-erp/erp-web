@@ -16,10 +16,12 @@ export function BudgetDrawer({
   open,
   onClose,
   expenseData,
+  initialMode,
 }: {
   open: boolean;
   onClose: () => void;
   expenseData?: any;
+  initialMode?: "create" | "view" | "edit";
 }) {
   const { t } = useTranslation("budget");
   const queryClient = useQueryClient();
@@ -32,14 +34,16 @@ export function BudgetDrawer({
 
   useEffect(() => {
     if (open) {
-      if (expenseData) {
+      if (initialMode) {
+        setMode(initialMode);
+      } else if (expenseData) {
         setMode("view");
       } else {
         setMode("create");
         setActiveTab("suggestions");
       }
     }
-  }, [open, expenseData]);
+  }, [open, expenseData, initialMode]);
 
   // Manual form state
   const [title, setTitle] = useState("");
@@ -96,6 +100,9 @@ export function BudgetDrawer({
     mutationFn: saveExpense,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["cashflow-forecast"] });
+      queryClient.invalidateQueries({
+        queryKey: ["operating-expenses-list"],
+      });
       onClose();
     },
   });

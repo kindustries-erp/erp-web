@@ -315,15 +315,6 @@ export function useNavItems(): NavSearchItem[] {
     const cashflowGroup = t("nav.items.cashflow");
     const invoiceGroup = t("nav.items.erpInvoices");
 
-    if (canReadBankStatements && isAdminEmail) {
-      items.push({
-        key: "budget",
-        label: "Budget",
-        section: accountingSection,
-        keywords: ["budget", "ngan sach", "ke toan"],
-        icon: <Target className="w-4 h-4" />,
-      });
-    }
     if (canReadBankStatements) {
       items.push({
         key: "cashflow-dashboard",
@@ -399,6 +390,24 @@ export function useNavItems(): NavSearchItem[] {
           "hoa don nhap",
         ],
         icon: <Receipt className="w-4 h-4" />,
+      });
+    }
+    if (canReadBankStatements && isAdminEmail) {
+      items.push({
+        key: "budget",
+        label: t("nav.items.operatingExpenses", "Chi phí vận hành"),
+        section: accountingSection,
+        keywords: [
+          "chi phi van hanh",
+          "chi phi",
+          "operating expenses",
+          "opex",
+          "budget",
+          "ngan sach",
+          "dinh ky",
+          "ke toan",
+        ],
+        icon: <Target className="w-4 h-4" />,
       });
     }
     if (showAccounting) {

@@ -349,16 +349,6 @@ export function SidebarNav({
       {/* Kế toán */}
       {showAccounting && (
         <NavSection collapsed={c} label={t("nav.sections.accounting")}>
-          {canReadBankStatements && isAdminEmail && (
-            <NavItem
-              collapsed={c}
-              icon={<Target className="w-4 h-4 opacity-65 flex-shrink-0" />}
-              label="Budget"
-              active={currentPage === "budget"}
-              onClick={() => navTo("budget" as PageKey)}
-              contextPage={"budget" as PageKey}
-            />
-          )}
           {canReadBankStatements && (
             <NavGroup
               collapsed={c}
@@ -424,6 +414,16 @@ export function SidebarNav({
                 contextPage="erp-invoices-draft"
               />
             </NavGroup>
+          )}
+          {canReadBankStatements && isAdminEmail && (
+            <NavItem
+              collapsed={c}
+              icon={<Target className="w-4 h-4 opacity-65 flex-shrink-0" />}
+              label={t("nav.items.operatingExpenses", "Chi phí vận hành")}
+              active={currentPage === "budget"}
+              onClick={() => navTo("budget" as PageKey)}
+              contextPage={"budget" as PageKey}
+            />
           )}
           {/* TODO: Tính sau - tạm ẩn
             canReadGreenwayIntegration && (
