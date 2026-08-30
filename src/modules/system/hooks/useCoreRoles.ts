@@ -25,6 +25,10 @@ export function useCoreRoles(extraParams?: {
   search?: string;
   status?: string;
 }) {
+  // Destructure sang primitives để tránh object reference mới mỗi render gây infinite loop
+  const extraSearch = extraParams?.search;
+  const extraStatus = extraParams?.status;
+
   const [roles, setRoles] = useState<Role[]>([]);
   const [loading, setLoading] = useState(false);
   const [total, setTotal] = useState(0);
@@ -50,7 +54,7 @@ export function useCoreRoles(extraParams?: {
         page,
         pageSize,
         sorts,
-        search: extraParams?.search || undefined,
+        search: extraSearch || undefined,
         date_from: dateFrom || undefined,
         date_to: dateTo || undefined,
         column_filters:
@@ -63,14 +67,14 @@ export function useCoreRoles(extraParams?: {
             : undefined,
       });
       let items = res.items;
-      if (extraParams?.status) {
-        const isAct = extraParams.status === "true";
+      if (extraStatus) {
+        const isAct = extraStatus === "true";
         items = items.filter(
           (r) => r.is_active === isAct || r.isActive === isAct,
         );
       }
       setRoles(items);
-      setTotal(extraParams?.status ? items.length : res.total);
+      setTotal(extraStatus ? items.length : res.total);
       setTotalPages(res.totalPages || Math.ceil(res.total / pageSize) || 1);
     } catch (e) {
       setError(extractApiError(e, "Không thể tải danh sách vai trò."));
@@ -85,7 +89,8 @@ export function useCoreRoles(extraParams?: {
     dateTo,
     columnFilters,
     columnSearch,
-    extraParams,
+    extraSearch,
+    extraStatus,
   ]);
 
   const setSort = useCallback((key: string, state: "asc" | "desc" | "none") => {

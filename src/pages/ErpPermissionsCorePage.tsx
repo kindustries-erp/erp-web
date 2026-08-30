@@ -71,10 +71,13 @@ export function ErpPermissionsCorePage() {
     [filter.activeFilterCount, listHook.activeFilterCount],
   );
 
+  const filterResetAll = filter.resetAll;
+  const listClearAllFilters = listHook.clearAllFilters;
+
   const handleClearAll = useCallback(() => {
-    filter.resetAll();
-    listHook.clearAllFilters();
-  }, [filter, listHook]);
+    filterResetAll();
+    listClearAllFilters();
+  }, [filterResetAll, listClearAllFilters]);
 
   const {
     initialPermMap,
