@@ -291,57 +291,22 @@ export function useNavItems(): NavSearchItem[] {
     // 6. Vinfast
     const vinfastSection = t("nav.sections.vinfast");
     const vinfastPartsGroup = t("nav.items.vinfastPartsGroup");
-    const vinfastWorkshopGroup = t("nav.items.vinfastWorkshopGroup");
     if (canReadVinfast) {
       items.push({
-        key: "vinfast-parts-dashboard",
-        label: t("nav.items.vinfastPartsDashboard"),
+        key: "vinfast-parts-stock",
+        label: t("nav.items.vinfastPartsGroup", "Phụ tùng Vinfast"),
         group: vinfastPartsGroup,
         section: vinfastSection,
-        keywords: ["vinfast", "phu tung", "tong quan"],
+        keywords: [
+          "vinfast",
+          "phu tung",
+          "tong quan",
+          "dashboard",
+          "ton kho",
+          "oto",
+          "xe may",
+        ],
         icon: <Package className="w-4 h-4" />,
-      });
-      items.push({
-        key: "vinfast-parts-oto-stock",
-        label: t("nav.items.vinfastPartsOtoStock"),
-        group: vinfastPartsGroup,
-        section: vinfastSection,
-        keywords: ["vinfast", "phu tung", "oto", "o to", "ton kho"],
-        icon: <Package className="w-4 h-4" />,
-      });
-      items.push({
-        key: "vinfast-parts-xemay-stock",
-        label: t("nav.items.vinfastPartsXemayStock"),
-        group: vinfastPartsGroup,
-        section: vinfastSection,
-        keywords: ["vinfast", "phu tung", "xe may", "xemay", "ton kho"],
-        icon: <Package className="w-4 h-4" />,
-      });
-      if (isAdminEmail) {
-        items.push({
-          key: "vinfast-parts-oto" as PageKey,
-          label: "Phụ tùng ôtô",
-          group: vinfastPartsGroup,
-          section: vinfastSection,
-          keywords: ["vinfast", "phu tung", "oto"],
-          icon: <Package className="w-4 h-4" />,
-        });
-        items.push({
-          key: "vinfast-parts-xemay" as PageKey,
-          label: "Phụ tùng xe máy",
-          group: vinfastPartsGroup,
-          section: vinfastSection,
-          keywords: ["vinfast", "phu tung", "xe may"],
-          icon: <Package className="w-4 h-4" />,
-        });
-      }
-      items.push({
-        key: "vinfast-invoice-settlement",
-        label: t("nav.items.vinfastSettlement"),
-        group: vinfastWorkshopGroup,
-        section: vinfastSection,
-        keywords: ["vinfast", "quyet toan", "hoa don", "settlement"],
-        icon: <Factory className="w-4 h-4" />,
       });
     }
 

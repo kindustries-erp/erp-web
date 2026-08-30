@@ -48,7 +48,6 @@ export const ALL_PAGE_KEYS: PageKey[] = [
   "garage-customers",
   "after-sales",
   "purchasing-report-dashboard",
-  "vinfast-invoice-settlement",
 ];
 
 const LEGACY_SLUGS: Record<string, PageKey> = {

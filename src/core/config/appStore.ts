@@ -168,12 +168,12 @@ export const SECTION_ROOTS: Partial<Record<PageKey, SectionRoot>> = {
     labelKey: "nav.items.vinfastParts",
     group: "vinfast",
   },
-  "vinfast-invoice-settlement": {
-    labelKey: "nav.items.vinfastSettlement",
-    group: "vinfast",
-  },
   "vinfast-parts-dashboard": {
     labelKey: "nav.items.vinfastPartsDashboard",
+    group: "vinfast",
+  },
+  "vinfast-parts-stock": {
+    labelKey: "nav.items.vinfastPartsStock",
     group: "vinfast",
   },
   "vinfast-parts-oto-stock": {
@@ -332,6 +332,11 @@ export const BREADCRUMBS: Partial<Record<PageKey, Array<[string, string?]>>> = {
     ["nav.items.vinfastPartsGroup"],
     ["nav.items.vinfastPartsDashboard"],
   ],
+  "vinfast-parts-stock": [
+    ["breadcrumb.vinfast"],
+    ["nav.items.vinfastPartsGroup"],
+    ["nav.items.vinfastPartsStock"],
+  ],
   "vinfast-parts-oto-stock": [
     ["breadcrumb.vinfast"],
     ["nav.items.vinfastPartsGroup"],
@@ -341,11 +346,6 @@ export const BREADCRUMBS: Partial<Record<PageKey, Array<[string, string?]>>> = {
     ["breadcrumb.vinfast"],
     ["nav.items.vinfastPartsGroup"],
     ["nav.items.vinfastPartsXemayStock"],
-  ],
-  "vinfast-invoice-settlement": [
-    ["breadcrumb.vinfast"],
-    ["nav.items.vinfastWorkshopGroup"],
-    ["nav.items.vinfastSettlement"],
   ],
   "journal-entry": [["breadcrumb.accounting"], ["nav.items.reportJournal"]],
   "settings-accounts": [

@@ -327,11 +327,12 @@ export function SidebarNav({
       {/* VINFAST */}
       {showVinfast && (
         <NavSection collapsed={c} label={t("nav.sections.vinfast")}>
-          <NavGroup
+          <NavItem
             collapsed={c}
             icon={<Package className="w-4 h-4 opacity-65 flex-shrink-0" />}
-            label={t("nav.items.vinfastPartsGroup")}
+            label={t("nav.items.vinfastPartsGroup", "Phụ tùng Vinfast")}
             active={
+              currentPage === "vinfast-parts-stock" ||
               currentPage === "vinfast-parts-dashboard" ||
               currentPage === "vinfast-parts-oto-stock" ||
               currentPage === "vinfast-parts-xemay-stock" ||
@@ -339,55 +340,9 @@ export function SidebarNav({
               currentPage === "vinfast-parts-xemay" ||
               currentPage === "vinfast-parts"
             }
-          >
-            <NavGroupItem
-              label={t("nav.items.vinfastPartsDashboard")}
-              active={currentPage === "vinfast-parts-dashboard"}
-              onClick={() => navTo("vinfast-parts-dashboard")}
-              contextPage="vinfast-parts-dashboard"
-            />
-            <NavGroupItem
-              label={t("nav.items.vinfastPartsOtoStock")}
-              active={currentPage === "vinfast-parts-oto-stock"}
-              onClick={() => navTo("vinfast-parts-oto-stock")}
-              contextPage="vinfast-parts-oto-stock"
-            />
-            <NavGroupItem
-              label={t("nav.items.vinfastPartsXemayStock")}
-              active={currentPage === "vinfast-parts-xemay-stock"}
-              onClick={() => navTo("vinfast-parts-xemay-stock")}
-              contextPage="vinfast-parts-xemay-stock"
-            />
-            {isAdminEmail && (
-              <>
-                <NavGroupItem
-                  label="Phụ tùng ôtô"
-                  active={currentPage === "vinfast-parts-oto"}
-                  onClick={() => navTo("vinfast-parts-oto")}
-                  contextPage="vinfast-parts-oto"
-                />
-                <NavGroupItem
-                  label="Phụ tùng xe máy"
-                  active={currentPage === "vinfast-parts-xemay"}
-                  onClick={() => navTo("vinfast-parts-xemay")}
-                  contextPage="vinfast-parts-xemay"
-                />
-              </>
-            )}
-          </NavGroup>
-          <NavGroup
-            collapsed={c}
-            icon={<Factory className="w-4 h-4 opacity-65 flex-shrink-0" />}
-            label={t("nav.items.vinfastWorkshopGroup")}
-            active={currentPage === "vinfast-invoice-settlement"}
-          >
-            <NavGroupItem
-              label={t("nav.items.vinfastSettlement")}
-              active={currentPage === "vinfast-invoice-settlement"}
-              onClick={() => navTo("vinfast-invoice-settlement")}
-              contextPage="vinfast-invoice-settlement"
-            />
-          </NavGroup>
+            onClick={() => navTo("vinfast-parts-stock")}
+            contextPage="vinfast-parts-stock"
+          />
         </NavSection>
       )}
 

@@ -14,8 +14,19 @@ import { KpiSparkline } from "@/shared/components/KpiSparkline";
 import { format, subMonths, subWeeks, startOfWeek, endOfWeek } from "date-fns";
 import { money } from "@/shared/utils/format";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
+import type { TabItem } from "@/shared/components/PageLayout";
 
-export function VinfastPartsDashboardPage() {
+export interface VinfastPartsDashboardPageProps {
+  tabs?: TabItem[];
+  activeTab?: string;
+  onTabChange?: (val: string) => void;
+}
+
+export function VinfastPartsDashboardPage({
+  tabs,
+  activeTab,
+  onTabChange,
+}: VinfastPartsDashboardPageProps = {}) {
   const hasVinfastPerm = useHasPermission("vinfast", "read");
 
   const queryClient = useQueryClient();
@@ -138,6 +149,9 @@ export function VinfastPartsDashboardPage() {
       title="Tổng quan phụ tùng"
       desc="Báo cáo tổng hợp tình hình mua bán phụ tùng Vinfast"
       icon={<LayoutDashboard className="h-4 w-4" />}
+      tabs={tabs}
+      activeTab={activeTab}
+      onTabChange={onTabChange}
       filterConfig={filterConfig}
       filter={filter}
       loading={isFetchingCount > 0}
