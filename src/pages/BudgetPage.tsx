@@ -1,249 +1,413 @@
-import React, { useState, useMemo, useCallback } from "react";
-import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate/SpreadsheetPageTemplate";
+import React, { useMemo, useState, useCallback } from "react";
+import { useTranslation } from "react-i18next";
+import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate";
 import {
   createColumnHeaderFilter,
   type DataTableColumn,
 } from "@/shared/components/DataTable";
 import { TableText } from "@/shared/components/DataTable/TableText";
-import { TableDateCell } from "@/shared/components/DataTable/TableDateCell";
 import { Badge } from "@/shared/components/ui/badge";
 import { Tooltip } from "@/core/components/ui/Tooltip";
+import { PillTabs, type PillTabItem } from "@/shared/components/PillTabs";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
-import { Target, Eye, Pencil, Trash2, Plus } from "lucide-react";
-import { useTranslation } from "react-i18next";
-import { toast } from "react-hot-toast";
-import { useOperatingExpensesList } from "../modules/budget/hooks/useOperatingExpensesList";
+import {
+  useOperatingExpensesList,
+  type CostGroupFilter,
+} from "../modules/budget/hooks/useOperatingExpensesList";
+import { BudgetDrawer } from "../modules/budget/components/BudgetDrawer";
 import {
   budgetApi,
   type OperatingExpenseItem,
+  type CostGroupType,
 } from "../modules/budget/api/budgetApi";
-import { BudgetDrawer } from "../modules/budget/components/BudgetDrawer";
+import toast from "react-hot-toast";
+import { Target, Eye, Pencil, Copy, Trash2 } from "lucide-react";
+import type { ActionDropdownItem } from "@/shared/components/ActionDropdown";
+import { cn } from "@/shared/utils";
+
+const getCostGroupInfo = (
+  costGroup: CostGroupType | string | null | undefined,
+  categoryKey: string | null | undefined,
+  t: (key: string, fallback: string) => string,
+): { label: string; badgeClass: string; groupKey: CostGroupFilter } => {
+  if (
+    costGroup === "COGS" ||
+    categoryKey === "THAU_PHU_GIA_CONG" ||
+    categoryKey === "VAN_CHUYEN_LOGISTICS" ||
+    categoryKey === "CHI_PHI_TRUC_TIEP_KHAC" ||
+    categoryKey === "HOA_HONG_TRUC_TIEP"
+  ) {
+    return {
+      label: t("costGroups.COGS", "Giá vốn (COGS)"),
+      badgeClass:
+        "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-300 dark:border-amber-700/60 font-normal",
+      groupKey: "COGS",
+    };
+  }
+  if (
+    costGroup === "COMMISSION" ||
+    categoryKey === "HOA_HONG_KINH_DOANH" ||
+    categoryKey === "MARKETING_QC" ||
+    categoryKey === "CHIET_KHAU_TM" ||
+    categoryKey?.startsWith("HOA_HONG_")
+  ) {
+    return {
+      label: t("costGroups.COMMISSION", "Hoa hồng"),
+      badgeClass:
+        "bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border-indigo-300 dark:border-indigo-700/60 font-normal",
+      groupKey: "COMMISSION",
+    };
+  }
+  return {
+    label: t("costGroups.OPEX", "CP Vận hành"),
+    badgeClass:
+      "bg-muted/60 text-muted-foreground border-border/80 font-normal",
+    groupKey: "OPEX",
+  };
+};
 
 export function BudgetPage() {
   const { t } = useTranslation("budget");
   const listHook = useOperatingExpensesList();
 
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [selectedExpense, setSelectedExpense] =
-    useState<OperatingExpenseItem | null>(null);
-  const [drawerMode, setDrawerMode] = useState<"create" | "view" | "edit">(
-    "create",
-  );
-  const [deleteTarget, setDeleteTarget] = useState<OperatingExpenseItem | null>(
+  // Drawer state
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [drawerMode, setDrawerMode] = useState<"view" | "edit">("view");
+  const [isCreate, setIsCreate] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<OperatingExpenseItem | null>(
     null,
   );
-  const [isDeleting, setIsDeleting] = useState(false);
 
-  const openCreate = useCallback(() => {
-    setSelectedExpense(null);
-    setDrawerMode("create");
-    setIsDrawerOpen(true);
-  }, []);
-
-  const openDetail = useCallback(
-    (item: OperatingExpenseItem, mode: "view" | "edit" = "view") => {
-      setSelectedExpense(item);
-      setDrawerMode(mode);
-      setIsDrawerOpen(true);
-    },
-    [],
+  // Delete modal state
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<OperatingExpenseItem | null>(
+    null,
   );
+  const [deleting, setDeleting] = useState(false);
 
-  const handleDelete = async () => {
-    if (!deleteTarget) return;
+  const openDetail = (
+    item: OperatingExpenseItem,
+    mode: "view" | "edit" = "view",
+  ) => {
+    setSelectedItem(item);
+    setIsCreate(false);
+    setDrawerMode(mode);
+    setDrawerOpen(true);
+  };
+
+  const openCreate = () => {
+    setSelectedItem(null);
+    setIsCreate(true);
+    setDrawerMode("edit");
+    setDrawerOpen(true);
+  };
+
+  const handleDuplicate = (item: OperatingExpenseItem) => {
+    setSelectedItem(item);
+    setIsCreate(true);
+    setDrawerMode("edit");
+    setDrawerOpen(true);
+  };
+
+  const handleDelete = (item: OperatingExpenseItem) => {
+    setItemToDelete(item);
+    setDeleteModalOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!itemToDelete) return;
+    setDeleting(true);
     try {
-      setIsDeleting(true);
-      await budgetApi.deleteExpense(deleteTarget.id);
+      await budgetApi.deleteExpense(itemToDelete.id);
       toast.success(t("deleteSuccess", "Đã xóa khoản chi thành công"));
-      setDeleteTarget(null);
+      setDeleteModalOpen(false);
+      setItemToDelete(null);
       listHook.refetch();
     } catch (err: any) {
-      toast.error(
-        err?.response?.data?.message ||
-          t("deleteError", "Xóa khoản chi thất bại"),
-      );
+      toast.error(err?.message || t("deleteError", "Không thể xóa khoản chi"));
     } finally {
-      setIsDeleting(false);
+      setDeleting(false);
     }
   };
 
-  // Helper Header Filter Builder (Server-side)
+  // Standardize Column Header Filter Helper (Default align ALWAYS center)
   const headerFilter = useMemo(
     () =>
       createColumnHeaderFilter({
         listHook,
+        defaultAlign: "center",
         queryKeyPrefix: "operating-expenses-column-options",
-        fetchOptions: budgetApi.getColumnOptions,
+        fetchOptions: async ({ columnKey, search, pageParam, filtersStr }) => {
+          const res = await budgetApi.getColumnOptions({
+            columnKey,
+            search,
+            pageParam,
+            pageSize: 20,
+            filtersStr,
+          });
+          return {
+            items: res.items.map((it) => ({
+              label:
+                columnKey === "categoryKey" || columnKey === "expenseCategory"
+                  ? t(`categories.${it.value}`, it.label)
+                  : columnKey === "recurrenceType" &&
+                      (it.value === "MONTHLY" || it.value === "monthly")
+                    ? t("cycleMonthly", "Hàng tháng")
+                    : columnKey === "paymentStatus"
+                      ? it.value === "PAID"
+                        ? t("paymentPaid", "Đã TT")
+                        : it.value === "PARTIAL"
+                          ? t("paymentPartial", "TT 1 phần")
+                          : t("paymentUnpaid", "Chưa TT")
+                      : it.label,
+              value: it.value,
+            })),
+            total: res.total,
+            next: res.next,
+          };
+        },
       }),
-    [listHook],
+    [listHook, t],
   );
 
-  // DataTable Columns Configuration
+  // Define Columns following /standardize-table rules (100% Header Center Aligned & 100% Columns Filterable)
   const columns: DataTableColumn<OperatingExpenseItem>[] = useMemo(
     () => [
-      // 1. Cột STT: 40px, căn giữa tuyệt đối, 1-based index
+      // 1. Cột STT: 40px, non-resizable, căn giữa tuyệt đối
       {
         key: "index",
         header: <span className="w-full block text-center">#</span>,
         size: 40,
         enableResizing: false,
         headerClassName: "text-center w-[40px] min-w-[40px]",
-        className: "text-center w-[40px] min-w-[40px]",
+        className:
+          "text-center w-[40px] min-w-[40px] font-mono text-xs text-muted-foreground font-normal",
         cell: (_: OperatingExpenseItem, idx: number) => (
-          <span className="w-full block text-center font-medium text-muted-foreground">
-            {idx}
-          </span>
+          <span className="w-full block text-center font-normal">{idx}</span>
         ),
       },
 
-      // 2. Cột Mã chi phí: TableText + onDetailClick view mode + Badge trạng thái nháp
+      // 2. Cột Kỳ báo cáo (MM/YYYY) - Header căn giữa, Text thường căn giữa
       {
-        key: "expenseNo",
-        size: 170,
+        key: "period",
+        size: 120,
         enableResizing: true,
-        header: headerFilter("expenseNo", t("colDocNo", "Mã chi phí")),
-        cell: (row) => (
-          <div className="flex items-center gap-1.5 w-full min-w-0">
-            <TableText
-              className="flex-1 min-w-0 font-medium"
-              text={row.expenseNo}
-              enableCopy
-              tooltip
-              onDetailClick={() => openDetail(row, "view")}
-            />
-            {row.status === "DRAFT" && (
-              <Badge
-                variant="secondary"
-                className="text-[10px] px-1.5 py-0 h-4 flex-shrink-0 ml-auto w-[48px] inline-flex items-center justify-center truncate"
-              >
-                {t("statusDraft", "Nháp")}
-              </Badge>
-            )}
-          </div>
-        ),
-      },
-
-      // 3. Cột Nội dung / Tiêu đề: TableText tooltip
-      {
-        key: "title",
-        size: 220,
-        enableResizing: true,
-        header: headerFilter("title", t("colTitle", "Nội dung")),
-        cell: (row) => (
-          <TableText
-            className="w-full"
-            text={row.title || "—"}
-            tooltip
-            onDetailClick={() => openDetail(row, "view")}
-          />
-        ),
-      },
-
-      // 4. Cột Danh mục: Badge / Text
-      {
-        key: "expenseCategory",
-        size: 160,
-        enableResizing: true,
-        header: headerFilter("expenseCategory", t("colCategory", "Danh mục"), {
-          showBlankOption: true,
-        }),
-        cell: (row) => (
-          <span className="truncate block font-medium text-foreground">
-            {row.expenseCategory || "—"}
-          </span>
-        ),
-      },
-
-      // 5. Cột Chu kỳ: Badge fixed width + formatOptionLabel
-      {
-        key: "recurrenceType",
-        size: 130,
-        enableResizing: true,
-        className: "text-center",
         headerClassName: "text-center",
-        header: headerFilter("recurrenceType", t("colCycle", "Chu kỳ"), {
-          formatOptionLabel: (val) => {
-            if (val === "MONTHLY") return t("cycleMonthly", "Hàng tháng");
-            if (val === "QUARTERLY") return t("cycleQuarterly", "Hàng quý");
-            if (val === "YEARLY") return t("cycleYearly", "Hàng năm");
-            if (val === "ONE_TIME") return t("cycleOneTime", "Một lần");
-            return val;
-          },
+        className: "text-center",
+        header: headerFilter.date("period", t("colPeriod", "Kỳ báo cáo"), {
+          align: "center",
         }),
-        cell: (row) => {
-          const cycleLabel =
-            row.recurrenceType === "MONTHLY"
-              ? t("cycleMonthly", "Hàng tháng")
-              : row.recurrenceType === "QUARTERLY"
-                ? t("cycleQuarterly", "Hàng quý")
-                : row.recurrenceType === "YEARLY"
-                  ? t("cycleYearly", "Hàng năm")
-                  : t("cycleOneTime", "Một lần");
+        cell: (row: OperatingExpenseItem) => (
+          <span className="font-mono text-xs font-normal text-foreground">
+            {row.period ||
+              (row.periodMonth && row.periodYear
+                ? `${String(row.periodMonth).padStart(2, "0")}/${row.periodYear}`
+                : "—")}
+          </span>
+        ),
+      },
+
+      // 3. Nhóm chi phí (Cost Group) - Header căn giữa + Filter Client Options + Tooltip + Ellipsis
+      {
+        key: "costGroup",
+        size: 140,
+        enableResizing: true,
+        headerClassName: "text-center",
+        className: "text-center",
+        header: headerFilter.client(
+          "costGroup",
+          t("colCostGroup", "Nhóm chi phí"),
+          {
+            align: "center",
+            filterOptions: [
+              {
+                label: t("costGroups.OPEX", "CP Vận hành"),
+                value: "OPEX",
+              },
+              {
+                label: t("costGroups.COGS", "Giá vốn (COGS)"),
+                value: "COGS",
+              },
+              {
+                label: t("costGroups.COMMISSION", "Hoa hồng"),
+                value: "COMMISSION",
+              },
+            ],
+          },
+        ),
+        cell: (row: OperatingExpenseItem) => {
+          const groupInfo = getCostGroupInfo(
+            row.costGroup,
+            row.categoryKey || row.expenseCategory,
+            t,
+          );
           return (
             <div className="w-full flex justify-center">
-              <Badge
-                variant="outline"
-                className="text-xs px-2 py-0.5 whitespace-nowrap bg-muted/40"
-              >
-                {row.recurrenceInterval && row.recurrenceInterval > 1
-                  ? `${row.recurrenceInterval} ${cycleLabel}`
-                  : cycleLabel}
-              </Badge>
+              <Tooltip content={groupInfo.label}>
+                <Badge
+                  variant="outline"
+                  className={cn(
+                    "w-[110px] inline-flex items-center justify-center text-center px-2 py-0.5 font-normal",
+                    groupInfo.badgeClass,
+                  )}
+                >
+                  <span className="truncate block w-full text-center">
+                    {groupInfo.label}
+                  </span>
+                </Badge>
+              </Tooltip>
             </div>
           );
         },
       },
 
-      // 6. Cột Ngày phát sinh: TableDateCell căn phải
+      // 4. Loại chi phí (Category Key) - Header căn giữa + Icon Detail Drawer mở View Mode tại đây
       {
-        key: "documentDate",
-        size: 130,
+        key: "categoryKey",
+        size: 210,
         enableResizing: true,
-        className: "text-right",
-        headerClassName: "text-right",
-        header: headerFilter.date(
-          "documentDate",
-          t("colDocDate", "Ngày phát sinh"),
+        headerClassName: "text-center",
+        className: "text-left",
+        header: headerFilter(
+          "categoryKey",
+          t("colCategoryKey", "Loại chi phí"),
+          {
+            align: "center",
+            enableSelectAllMatching: true,
+          },
         ),
-        cell: (row) => (
-          <TableDateCell
-            date={row.documentDate}
-            className="justify-end w-full"
+        cell: (row: OperatingExpenseItem) => {
+          const catKey = row.categoryKey || row.expenseCategory || "KHAC";
+          return (
+            <TableText
+              text={t(`categories.${catKey}`, catKey)}
+              tooltip={true}
+              onDetailClick={() => openDetail(row, "view")}
+              className="font-normal text-xs text-foreground cursor-pointer hover:underline"
+            />
+          );
+        },
+      },
+
+      // 5. Nội dung / Diễn giải chi tiết - Header căn giữa + Text thường căn trái
+      {
+        key: "title",
+        size: 240,
+        enableResizing: true,
+        headerClassName: "text-center",
+        className: "text-left",
+        header: headerFilter("title", t("colTitle", "Nội dung / Diễn giải"), {
+          align: "center",
+          enableSelectAllMatching: true,
+        }),
+        cell: (row: OperatingExpenseItem) => (
+          <TableText
+            text={row.title || row.expenseCategory || "—"}
+            tooltip={true}
+            className="font-normal text-xs text-foreground"
           />
         ),
       },
 
-      // 7. Cột Hạn thanh toán: TableDateCell căn phải
+      // 6. Chu kỳ lặp lại (Recurrence Type) - Header căn giữa + Badge fixed-width w-[88px]
       {
-        key: "nextDueDate",
-        size: 140,
+        key: "recurrenceType",
+        size: 120,
         enableResizing: true,
-        className: "text-right",
-        headerClassName: "text-right",
-        header: headerFilter.date(
-          "nextDueDate",
-          t("colNextDueDate", "Hạn thanh toán"),
-        ),
-        cell: (row) => (
-          <TableDateCell
-            date={row.nextDueDate}
-            className="justify-end w-full"
-          />
+        headerClassName: "text-center",
+        className: "text-center",
+        header: headerFilter("recurrenceType", t("colCycle", "Chu kỳ lặp"), {
+          align: "center",
+          showBlankOption: true,
+        }),
+        cell: (row: OperatingExpenseItem) => (
+          <div className="w-full flex justify-center">
+            {row.recurrenceType === "MONTHLY" ||
+            row.recurrenceType === "monthly" ? (
+              <Badge
+                variant="outline"
+                className="w-[88px] inline-flex items-center justify-center text-center text-[11px] font-normal text-primary border-primary/30 bg-primary/5 truncate"
+              >
+                <span className="truncate block w-full text-center">
+                  {t("cycleMonthly", "Hàng tháng")}
+                </span>
+              </Badge>
+            ) : row.recurrenceType === "QUARTERLY" ? (
+              <Badge
+                variant="outline"
+                className="w-[88px] inline-flex items-center justify-center text-center text-[11px] font-normal text-muted-foreground border-border bg-muted/30 truncate"
+              >
+                <span className="truncate block w-full text-center">
+                  {t("cycleQuarterly", "Hàng quý")}
+                </span>
+              </Badge>
+            ) : row.recurrenceType === "YEARLY" ? (
+              <Badge
+                variant="outline"
+                className="w-[88px] inline-flex items-center justify-center text-center text-[11px] font-normal text-muted-foreground border-border bg-muted/30 truncate"
+              >
+                <span className="truncate block w-full text-center">
+                  {t("cycleYearly", "Hàng năm")}
+                </span>
+              </Badge>
+            ) : (
+              <span className="text-muted-foreground text-xs font-normal">
+                —
+              </span>
+            )}
+          </div>
         ),
       },
 
-      // 8. Cột Số tiền: headerFilter.amount + tabular-nums
+      // 7. Thời hạn kết thúc (Recurrence Until) - Header căn giữa + Căn giữa cell
+      {
+        key: "recurrenceUntil",
+        size: 120,
+        enableResizing: true,
+        headerClassName: "text-center",
+        className: "text-center",
+        header: headerFilter(
+          "recurrenceUntil",
+          t("colRecurrenceUntil", "Hạn kết thúc"),
+          {
+            align: "center",
+            showBlankOption: true,
+          },
+        ),
+        cell: (row: OperatingExpenseItem) => {
+          if (row.recurrenceUntilMonth && row.recurrenceUntilYear) {
+            return (
+              <span className="font-mono text-xs font-normal text-muted-foreground">
+                {String(row.recurrenceUntilMonth).padStart(2, "0")}/
+                {row.recurrenceUntilYear}
+              </span>
+            );
+          }
+          return (
+            <span className="text-muted-foreground text-xs font-normal">—</span>
+          );
+        },
+      },
+
+      // 8. Số tiền (VND) - Header căn giữa + Filter Amount chuẩn + Cell căn phải
       {
         key: "totalAmount",
         size: 160,
         enableResizing: true,
+        headerClassName: "text-center",
         className: "text-right",
-        headerClassName: "text-right",
-        header: headerFilter.amount("totalAmount", t("colAmount", "Số tiền")),
-        cell: (row) => (
-          <span className="tabular-nums font-semibold text-foreground">
-            {(Number(row.totalAmount) || 0).toLocaleString("vi-VN")} đ
-          </span>
+        header: headerFilter.amount("totalAmount", t("colAmount", "Số tiền"), {
+          align: "center",
+        }),
+        cell: (row: OperatingExpenseItem) => (
+          <div className="flex flex-col items-end gap-0.5">
+            <span className="tabular-nums font-mono text-xs font-normal text-foreground">
+              {(Number(row.totalAmount || row.amount) || 0).toLocaleString(
+                "vi-VN",
+              )}{" "}
+              đ
+            </span>
+          </div>
         ),
       },
 
@@ -258,17 +422,11 @@ export function BudgetPage() {
           "paymentStatus",
           t("colPaymentStatus", "Thanh toán"),
           {
-            formatOptionLabel: (val) => {
-              if (val === "PAID") return t("paymentPaid", "Đã thanh toán");
-              if (val === "PARTIAL")
-                return t("paymentPartial", "Thanh toán 1 phần");
-              if (val === "UNPAID")
-                return t("paymentUnpaid", "Chưa thanh toán");
-              return val;
-            },
+            align: "center",
+            showBlankOption: true,
           },
         ),
-        cell: (row) => {
+        cell: (row: OperatingExpenseItem) => {
           const isPaid = row.paymentStatus === "PAID";
           const isPartial = row.paymentStatus === "PARTIAL";
           return (
@@ -276,17 +434,17 @@ export function BudgetPage() {
               <Tooltip
                 content={
                   isPaid
-                    ? t("paymentPaid", "Đã thanh toán")
+                    ? t("paymentPaid", "Đã TT")
                     : isPartial
-                      ? t("paymentPartial", "Thanh toán 1 phần")
-                      : t("paymentUnpaid", "Chưa thanh toán")
+                      ? t("paymentPartial", "TT 1 phần")
+                      : t("paymentUnpaid", "Chưa TT")
                 }
               >
                 <Badge
                   variant={
                     isPaid ? "default" : isPartial ? "outline" : "secondary"
                   }
-                  className="w-[88px] inline-flex items-center justify-center text-center truncate"
+                  className="w-[88px] inline-flex items-center justify-center text-center truncate font-normal text-xs"
                 >
                   {isPaid
                     ? t("paymentPaid", "Đã TT")
@@ -300,124 +458,82 @@ export function BudgetPage() {
         },
       },
 
-      // 10. Cột Trạng thái: Badge fixed width w-[88px] + formatOptionLabel
-      {
-        key: "status",
-        size: 120,
-        enableResizing: true,
-        className: "text-center",
-        headerClassName: "text-center",
-        header: headerFilter("status", t("colStatus", "Trạng thái"), {
-          formatOptionLabel: (val) => {
-            if (val === "CONFIRMED") return t("statusConfirmed", "Đã xác nhận");
-            if (val === "CANCELLED") return t("statusCancelled", "Đã hủy");
-            if (val === "DRAFT") return t("statusDraft", "Nháp");
-            return val;
-          },
-        }),
-        cell: (row) => {
-          const isConfirmed = row.status === "CONFIRMED";
-          const isCancelled = row.status === "CANCELLED";
-          return (
-            <div className="w-full flex justify-center">
-              <Tooltip
-                content={
-                  isConfirmed
-                    ? t("statusConfirmed", "Đã xác nhận")
-                    : isCancelled
-                      ? t("statusCancelled", "Đã hủy")
-                      : t("statusDraft", "Nháp")
-                }
-              >
-                <Badge
-                  variant={
-                    isConfirmed
-                      ? "default"
-                      : isCancelled
-                        ? "destructive"
-                        : "secondary"
-                  }
-                  className="w-[88px] inline-flex items-center justify-center text-center truncate"
-                >
-                  {isConfirmed
-                    ? t("statusConfirmed", "Đã xác nhận")
-                    : isCancelled
-                      ? t("statusCancelled", "Đã hủy")
-                      : t("statusDraft", "Nháp")}
-                </Badge>
-              </Tooltip>
-            </div>
-          );
-        },
-      },
-
-      // 11. Cột Ghi chú: showBlankOption
+      // 10. Ghi chú (Notes) - Header căn giữa + Cell căn trái + showBlankOption
       {
         key: "notes",
-        size: 180,
+        size: 200,
         enableResizing: true,
+        headerClassName: "text-center",
+        className: "text-left",
         header: headerFilter("notes", t("colNotes", "Ghi chú"), {
+          align: "center",
           showBlankOption: true,
         }),
-        cell: (row) => (
-          <span className="text-muted-foreground truncate block">
-            {row.notes || "—"}
-          </span>
+        cell: (row: OperatingExpenseItem) => (
+          <TableText
+            text={row.notes || "—"}
+            tooltip={true}
+            className="text-muted-foreground text-xs font-normal"
+          />
         ),
       },
     ],
-    [headerFilter, openDetail, listHook.page, listHook.pageSize, t],
+    [headerFilter, t],
   );
 
-  // Row Actions (Xem chi tiết, Chỉnh sửa, Xóa)
+  // Row Actions (Standard Context Menu & Row Action items)
   const getRowActions = useCallback(
-    (row: OperatingExpenseItem) => [
+    (row: OperatingExpenseItem): ActionDropdownItem[] => [
       {
-        groupLabel: "TRA CỨU",
+        groupLabel: t("common.actions", "THAO TÁC"),
         items: [
           {
             label: t("actionView", "Xem chi tiết"),
-            icon: <Eye className="w-3.5 h-3.5" />,
+            icon: <Eye className="w-4 h-4" />,
             onClick: () => openDetail(row, "view"),
           },
-        ],
-      },
-      {
-        groupLabel: "THAO TÁC",
-        items: [
           {
             label: t("actionEdit", "Chỉnh sửa"),
-            icon: <Pencil className="w-3.5 h-3.5" />,
+            icon: <Pencil className="w-4 h-4" />,
             onClick: () => openDetail(row, "edit"),
           },
           {
+            label: t("actionDuplicate", "Nhân đôi"),
+            icon: <Copy className="w-4 h-4" />,
+            onClick: () => handleDuplicate(row),
+          },
+          {
             label: t("actionDelete", "Xóa"),
-            icon: <Trash2 className="w-3.5 h-3.5 text-destructive" />,
-            variant: "danger" as const,
-            onClick: () => setDeleteTarget(row),
+            icon: <Trash2 className="w-4 h-4 text-destructive" />,
+            variant: "danger",
+            onClick: () => handleDelete(row),
           },
         ],
       },
     ],
-    [openDetail, t],
+    [t],
   );
 
-  // Summary Row calculation
-  const summaryRow = useMemo(() => {
-    return {
-      index: <span className="font-bold block text-center">Σ</span>,
-      expenseNo: (
-        <span className="font-semibold text-xs">
-          {listHook.total} {t("countSuffix", "khoản chi")}
-        </span>
-      ),
-      totalAmount: (
-        <span className="font-bold tabular-nums text-foreground">
-          {(listHook.totalAmountSum || 0).toLocaleString("vi-VN")} đ
-        </span>
-      ),
-    };
-  }, [listHook.total, listHook.totalAmountSum, t]);
+  // Calculate Subtotals for Summary Row
+  const totalAmountSum = useMemo(() => {
+    if (listHook.totalAmountSum) return listHook.totalAmountSum;
+    let amt = 0;
+    for (const r of listHook.data) {
+      amt += Number(r.totalAmount || r.amount) || 0;
+    }
+    return amt;
+  }, [listHook.data, listHook.totalAmountSum]);
+
+  // Toolbar Quick Filter PillTabs Items
+  const pillTabItems: PillTabItem<CostGroupFilter>[] = useMemo(
+    () => [
+      { value: "ALL", label: t("tabs.all", "Tất cả") },
+      { value: "OPEX", label: t("tabs.opex", "CP Vận hành") },
+      { value: "COGS", label: t("tabs.cogs", "Giá vốn (COGS)") },
+      { value: "COMMISSION", label: t("tabs.commission", "Hoa hồng") },
+    ],
+    [t],
+  );
 
   return (
     <>
@@ -425,16 +541,15 @@ export function BudgetPage() {
         title={t("pageTitle", "Chi phí vận hành")}
         desc={t(
           "pageDesc",
-          "Quản lý các khoản chi phí vận hành, chi phí định kỳ và dự báo dòng tiền",
+          "Quản lý các khoản chi phí vận hành, chi phí định kỳ và dự báo dòng tiền toàn công ty",
         )}
-        icon={<Target className="w-4 h-4 text-primary" />}
+        icon={<Target className="w-5 h-5 text-primary" />}
         tableId="operating-expenses-table"
         items={listHook.data}
         columns={columns}
-        getRowKey={(item) => item.id}
+        getRowKey={(row) => row.id}
         loading={listHook.isLoading}
-        emptyLabel={t("emptyList", "Không có khoản chi phí nào.")}
-        minWidth={1200}
+        emptyLabel={t("emptyList", "Chưa có dữ liệu chi phí vận hành")}
         page={listHook.page}
         pageSize={listHook.pageSize}
         total={listHook.total}
@@ -444,53 +559,69 @@ export function BudgetPage() {
           listHook.setPageSize(s);
           listHook.setPage(1);
         }}
-        onRefresh={() => void listHook.refetch()}
+        onRefresh={() => listHook.refetch()}
+        onCreate={openCreate}
+        createLabel={t("createExpense", "Thêm khoản chi")}
         activeFilterCount={listHook.activeFilterCount}
-        onClearAllFilters={listHook.clearAllFilters}
-        filterConfig={listHook.filterConfig}
-        filter={listHook.filter}
-        createActions={[
-          {
-            groupLabel: t("Thao tác", "Thao tác"),
-            items: [
-              {
-                label: t("createExpense", "Thêm khoản chi"),
-                icon: <Plus className="w-4 h-4 text-emerald-600" />,
-                onClick: openCreate,
-              },
-            ],
-          },
-        ]}
-        rowActions={getRowActions}
-        summaryRow={summaryRow}
-      />
-
-      <BudgetDrawer
-        open={isDrawerOpen}
-        onClose={() => {
-          setIsDrawerOpen(false);
-          setSelectedExpense(null);
+        onClearAllFilters={() => {
+          listHook.clearAllFilters();
+          listHook.setCostGroup("ALL");
         }}
-        expenseData={selectedExpense}
-        initialMode={drawerMode}
+        rowActions={getRowActions}
+        customActionsNode={
+          <PillTabs<CostGroupFilter>
+            value={listHook.costGroup}
+            onValueChange={(val) => listHook.setCostGroup(val)}
+            items={pillTabItems}
+            className="w-full sm:w-auto shrink-0"
+            listClassName="h-8 p-0.5 rounded-full bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/60 shadow-[0_1px_2px_rgba(15,23,42,.03)]"
+            triggerClassName="h-7 px-3.5 text-xs rounded-full"
+            hideBorder
+          />
+        }
+        summaryRow={{
+          totalAmount: (
+            <div className="flex flex-col items-end justify-center">
+              <span className="font-semibold text-primary tabular-nums font-mono text-xs">
+                {totalAmountSum.toLocaleString("vi-VN")} đ
+              </span>
+            </div>
+          ),
+        }}
       />
 
-      {deleteTarget && (
-        <ConfirmModal
-          open={Boolean(deleteTarget)}
-          onCancel={() => setDeleteTarget(null)}
-          onConfirm={handleDelete}
-          title={t("confirmDeleteTitle", "Xác nhận xóa khoản chi")}
-          message={t(
-            "confirmDeleteDesc",
-            "Bạn có chắc chắn muốn xóa khoản chi này không? Thao tác này không thể hoàn tác.",
-          )}
-          confirmLabel={t("actionDelete", "Xóa")}
-          cancelLabel={t("actionCancel", "Hủy")}
-          danger
-          loading={isDeleting}
-        />
-      )}
+      {/* Drawer Create / View / Edit */}
+      <BudgetDrawer
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        mode={drawerMode}
+        setMode={setDrawerMode}
+        isCreate={isCreate}
+        initialData={selectedItem}
+        onSuccess={() => listHook.refetch()}
+      />
+
+      {/* Modal xác nhận xóa */}
+      <ConfirmModal
+        open={deleteModalOpen}
+        title={t("confirmDeleteTitle", "Xác nhận xóa khoản chi")}
+        message={
+          itemToDelete
+            ? `${t("confirmDeleteDesc", "Bạn có chắc chắn muốn xóa:")} ${itemToDelete.title || itemToDelete.expenseCategory} (${itemToDelete.period || `${itemToDelete.periodMonth}/${itemToDelete.periodYear}`} - ${(Number(itemToDelete.totalAmount || itemToDelete.amount) || 0).toLocaleString("vi-VN")} đ)?`
+            : ""
+        }
+        confirmLabel={t("actionDelete", "Xóa")}
+        cancelLabel={t("actionCancel", "Hủy")}
+        danger={true}
+        onConfirm={confirmDelete}
+        onCancel={() => {
+          setDeleteModalOpen(false);
+          setItemToDelete(null);
+        }}
+        loading={deleting}
+      />
     </>
   );
 }
+
+export default BudgetPage;

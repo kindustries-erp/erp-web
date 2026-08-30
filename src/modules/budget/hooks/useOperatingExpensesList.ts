@@ -7,6 +7,8 @@ import {
 } from "@/shared/hooks/useFilterPanel";
 import { useTranslation } from "react-i18next";
 
+export type CostGroupFilter = "ALL" | "OPEX" | "COGS" | "COMMISSION";
+
 export const getDefaultPageSize = (): number => {
   if (typeof window !== "undefined" && window.innerHeight >= 900) {
     return 50;
@@ -18,6 +20,7 @@ export function useOperatingExpensesList() {
   const { t } = useTranslation("budget");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState<number>(getDefaultPageSize);
+  const [costGroup, setCostGroupState] = useState<CostGroupFilter>("ALL");
   const [sorts, setSorts] = useState<string[]>([]);
   const [dateField, setDateField] = useState<string>("documentDate");
   const [columnFilters, setColumnFiltersState] = useState<
@@ -44,7 +47,7 @@ export function useOperatingExpensesList() {
         {
           key: "paymentStatus",
           label: t("colPaymentStatus", "Thanh toán"),
-          placeholder: t("Tất cả thanh toán", "Tất cả thanh toán"),
+          placeholder: t("allPayment", "Tất cả thanh toán"),
           options: [
             { value: "UNPAID", label: t("paymentUnpaid", "Chưa thanh toán") },
             {
@@ -57,7 +60,7 @@ export function useOperatingExpensesList() {
         {
           key: "recurrenceType",
           label: t("colCycle", "Chu kỳ"),
-          placeholder: t("Tất cả chu kỳ", "Tất cả chu kỳ"),
+          placeholder: t("allCycle", "Tất cả chu kỳ"),
           options: [
             { value: "ONE_TIME", label: t("cycleOneTime", "Một lần") },
             { value: "MONTHLY", label: t("cycleMonthly", "Hàng tháng") },
@@ -84,6 +87,7 @@ export function useOperatingExpensesList() {
       "operating-expenses-list",
       page,
       pageSize,
+      costGroup,
       sorts,
       dateFrom,
       dateTo,
@@ -98,6 +102,7 @@ export function useOperatingExpensesList() {
       budgetApi.getList({
         page,
         pageSize,
+        cost_group: costGroup !== "ALL" ? costGroup : undefined,
         sorts: sorts.length > 0 ? sorts : undefined,
         status: panelStatus || undefined,
         paymentStatus: panelPaymentStatus || undefined,
@@ -113,6 +118,11 @@ export function useOperatingExpensesList() {
           : undefined,
       }),
   });
+
+  const setCostGroup = (val: CostGroupFilter) => {
+    setCostGroupState(val);
+    setPage(1);
+  };
 
   const setSort = (key: string, state: "asc" | "desc" | "none") => {
     setSorts((prev) => {
@@ -174,6 +184,7 @@ export function useOperatingExpensesList() {
     setColumnFiltersState({});
     setColumnSearchState({});
     filter.resetAll();
+    setCostGroupState("ALL");
     setPage(1);
   };
 
@@ -187,6 +198,8 @@ export function useOperatingExpensesList() {
     setPage,
     pageSize,
     setPageSize,
+    costGroup,
+    setCostGroup,
     sorts,
     setSort,
     dateFrom,

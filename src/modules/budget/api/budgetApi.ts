@@ -1,5 +1,7 @@
 import axiosInstance from "@/core/api/axiosInstance";
 
+export type CostGroupType = "OPEX" | "COGS" | "COMMISSION";
+
 export interface OperatingExpenseItem {
   id: string;
   expenseNo: string;
@@ -7,23 +9,45 @@ export interface OperatingExpenseItem {
   supplierId?: string | null;
   supplierNameSnapshot?: string | null;
   expenseCategory?: string | null;
+  categoryKey?: string | null;
+  costGroup?: CostGroupType | string | null;
   title?: string | null;
+  periodYear?: number | null;
+  periodMonth?: number | null;
+  period?: string;
   documentDate?: string | null;
   dueDate?: string | null;
   invoiceStatus?: string;
   status: string;
   paymentStatus: string;
   totalAmount: number;
+  amount?: number;
   recurrenceType?: string;
   recurrenceInterval?: number;
   recurrenceStartDate?: string | null;
   recurrenceEndDate?: string | null;
+  recurrenceUntilYear?: number | null;
+  recurrenceUntilMonth?: number | null;
+  recurrenceAnchorId?: string | null;
   nextDueDate?: string | null;
   autoGenerateNext?: boolean;
   parentRecurringId?: string | null;
   notes?: string | null;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface ApplyRecurringExpensePayload {
+  applyScope: "this" | "this_and_future";
+  amount: number;
+  categoryKey?: string;
+  costGroup?: string;
+  title?: string;
+  note?: string;
+  notes?: string;
+  recurrenceType?: string;
+  untilYear?: number;
+  untilMonth?: number;
 }
 
 export const budgetApi = {
@@ -95,7 +119,7 @@ export const budgetApi = {
     const res = await axiosInstance.get<{ data: OperatingExpenseItem }>(
       `/api/v1/operating-expenses/${id}`,
     );
-    return res.data;
+    return res.data?.data || res.data;
   },
 
   create: async (data: any) => {
@@ -111,8 +135,18 @@ export const budgetApi = {
     return res.data;
   },
 
-  deleteExpense: async (id: string) => {
-    const res = await axiosInstance.delete(`/api/v1/operating-expenses/${id}`);
+  applyRecurring: async (id: string, data: ApplyRecurringExpensePayload) => {
+    const res = await axiosInstance.post(
+      `/api/v1/operating-expenses/${id}/apply-recurring`,
+      data,
+    );
+    return res.data;
+  },
+
+  deleteExpense: async (id: string, scope?: string) => {
+    const res = await axiosInstance.delete(`/api/v1/operating-expenses/${id}`, {
+      params: scope ? { scope } : undefined,
+    });
     return res.data;
   },
 
