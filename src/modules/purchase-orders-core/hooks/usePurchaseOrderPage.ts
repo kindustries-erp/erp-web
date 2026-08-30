@@ -67,10 +67,10 @@ export function usePurchaseOrderPage() {
   } = useOperationalFlowStore();
 
   const openDetail = useCallback(
-    async (row: OperationalDocument) => {
+    async (row: OperationalDocument, mode: "view" | "edit" = "view") => {
       setEditingRow(row);
       setPoReceipts([]);
-      setViewOnly(true);
+      setViewOnly(mode === "view");
       setFormOpen(true);
       setFormLoading(true);
       setPageError(null);

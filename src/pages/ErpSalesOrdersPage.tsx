@@ -6,21 +6,13 @@ import {
   XCircle,
   PackagePlus,
   Eye,
+  Pencil,
   FileText,
   CheckCircle,
   FileSpreadsheet,
-  MoreHorizontal,
 } from "lucide-react";
-import { Popover } from "@/core/components/ui/Popover";
-import { useQuery } from "@tanstack/react-query";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate";
-import { useSalesOrdersQuery } from "@/modules/sales-orders-core/hooks/useSalesOrdersQuery";
-import { type DataTableColumn } from "@/shared/components/DataTable";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
-import {
-  useFilterPanel,
-  type FilterPanelConfig,
-} from "@/shared/hooks/useFilterPanel";
 import {
   salesOrdersCoreApi,
   type ErpSalesOrder,
@@ -32,13 +24,9 @@ import { Forbidden } from "@/pages/Forbidden";
 import { updateEntityTags } from "@/modules/tags/api/tagsApi";
 import { useT } from "@/core/i18n";
 import { useUIStore } from "@/core/config/uiStore";
-import { Tooltip } from "@/core/components/ui/Tooltip";
-import { StatusBadge } from "@/shared/components/badges";
 import { DeliveryConfirmModal } from "@/modules/sales-orders-core/components/DeliveryConfirmModal";
-import { TableText } from "@/shared/components/DataTable/TableText";
-import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
-import { DateRangeColumnSlot } from "@/shared/components/DataTable/DateRangeColumnSlot";
-import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
+import { useSalesOrdersList } from "@/modules/sales-orders-core/hooks/useSalesOrdersList";
+import { useSalesOrderColumns } from "@/modules/sales-orders-core/hooks/useSalesOrderColumns";
 
 import {
   SoFormDrawer,
@@ -51,144 +39,6 @@ import {
   calcAmount,
 } from "@/modules/sales-orders-core/components/SoFormDrawer";
 
-function fmtDate(value?: string | null) {
-  if (!value) return "—";
-  return value.slice(0, 10);
-}
-
-function DeliveryDetailPopover({ item }: { item: ErpSalesOrder }) {
-  const { data, isLoading } = useQuery({
-    queryKey: ["sales-order-detail", item.id],
-    queryFn: () => salesOrdersCoreApi.get(item.id),
-    staleTime: 1000 * 60 * 5,
-  });
-
-  const itemAny = item as any;
-  const displayDate = itemAny.deliveredDate;
-  const dateStr = displayDate
-    ? new Date(displayDate).toLocaleDateString("vi-VN")
-    : "—";
-
-  const hasSerialLifecycles = Boolean(data?.serialLifecycles?.length);
-
-  return (
-    <Popover
-      content={
-        <div className="p-3 max-h-[400px] max-w-[800px] max-w-[90vw] overflow-auto">
-          <h4 className="font-semibold text-sm mb-3 text-slate-800">
-            Chi tiết đợt giao hàng
-          </h4>
-          {isLoading ? (
-            <div className="text-sm text-slate-500 py-2">Đang tải...</div>
-          ) : hasSerialLifecycles ? (
-            <table className="w-full text-sm text-left border-collapse min-w-[500px]">
-              <thead className="bg-slate-50 sticky top-0">
-                <tr>
-                  <th className="px-2 py-1.5 border-b text-slate-600 font-medium">
-                    Số Seri
-                  </th>
-                  <th className="px-2 py-1.5 border-b text-slate-600 font-medium">
-                    Số Khung
-                  </th>
-                  <th className="px-2 py-1.5 border-b text-slate-600 font-medium">
-                    Số Máy
-                  </th>
-                  <th className="px-2 py-1.5 border-b text-slate-600 font-medium text-center">
-                    Ngày giao
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {data!.serialLifecycles!.map((sl: any) => {
-                  const deliveryDateStr = sl.deliveryDate
-                    ? new Date(sl.deliveryDate).toLocaleDateString("vi-VN")
-                    : "—";
-                  return (
-                    <tr
-                      key={sl.id}
-                      className="border-b last:border-0 hover:bg-slate-50"
-                    >
-                      <td className="px-2 py-2 whitespace-nowrap">
-                        {sl.serialNo || "—"}
-                      </td>
-                      <td className="px-2 py-2 whitespace-nowrap">
-                        {sl.vinNo || "—"}
-                      </td>
-                      <td className="px-2 py-2 whitespace-nowrap">
-                        {sl.engineNo || "—"}
-                      </td>
-                      <td className="px-2 py-2 whitespace-nowrap text-center">
-                        {deliveryDateStr}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          ) : data?.goodsIssues && data.goodsIssues.length > 0 ? (
-            <table className="w-full text-sm text-left border-collapse min-w-[400px]">
-              <thead className="bg-slate-50 sticky top-0">
-                <tr>
-                  <th className="px-2 py-1.5 border-b text-slate-600 font-medium">
-                    Phiếu xuất
-                  </th>
-                  <th className="px-2 py-1.5 border-b text-slate-600 font-medium text-center">
-                    Ngày giao
-                  </th>
-                  <th className="px-2 py-1.5 border-b text-slate-600 font-medium">
-                    Xe / Biển số
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.goodsIssues.map((gi: any) => {
-                  const firstLine = gi.lines?.[0] || {};
-                  const vehicleInfo =
-                    firstLine.vehicleVin ||
-                    firstLine.vehicleId ||
-                    gi.remarks ||
-                    "—";
-                  const deliveryConfirmDate =
-                    gi.updatedAt || gi.createdAt || gi.issueDate;
-                  return (
-                    <tr
-                      key={gi.id}
-                      className="border-b last:border-0 hover:bg-slate-50"
-                    >
-                      <td className="px-2 py-2 whitespace-nowrap">
-                        {gi.issueNo}
-                      </td>
-                      <td className="px-2 py-2 whitespace-nowrap text-center">
-                        {deliveryConfirmDate
-                          ? new Date(deliveryConfirmDate).toLocaleDateString(
-                              "vi-VN",
-                            )
-                          : "—"}
-                      </td>
-                      <td className="px-2 py-2">{vehicleInfo}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          ) : (
-            <div className="text-slate-500 text-sm italic py-2">
-              Chưa có chi tiết giao hàng.
-            </div>
-          )}
-        </div>
-      }
-    >
-      <div className="group relative flex w-full cursor-pointer hover:text-primary items-center justify-center h-full min-h-[24px]">
-        <span>{dateStr}</span>
-        <div className="absolute right-0 opacity-30 group-hover:opacity-100 transition-opacity flex-shrink-0">
-          <MoreHorizontal className="w-4 h-4 text-slate-400 group-hover:text-primary" />
-        </div>
-      </div>
-    </Popover>
-  );
-}
-
 export function ErpSalesOrdersPage() {
   const t = useT();
   const showToast = useUIStore((s) => s.showToast);
@@ -198,26 +48,7 @@ export function ErpSalesOrdersPage() {
   const canUpdate = useHasPermission("sales_orders", "update");
   const canDelete = useHasPermission("sales_orders", "delete");
 
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(50);
-  const [search, setSearch] = useState("");
-
-  const filterConfig: FilterPanelConfig = useMemo(
-    () => ({
-      search: false,
-    }),
-    [],
-  );
-  const filter = useFilterPanel(filterConfig);
-  const filterSearch = filter.state.search;
-
-  useEffect(() => {
-    const id = setTimeout(() => {
-      setSearch(filterSearch.trim());
-      setPage(1);
-    }, 300);
-    return () => clearTimeout(id);
-  }, [filterSearch]);
+  const list = useSalesOrdersList();
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerLoading, setDrawerLoading] = useState(false);
@@ -287,90 +118,21 @@ export function ErpSalesOrdersPage() {
     );
   }, [itemsData]);
 
-  const columnState = useTableColumnState("sales-orders-table");
-
-  useEffect(() => {
-    setPage(1);
-  }, [columnState.columnFilters, columnState.columnSearch, columnState.sorts]);
-
-  const fetchSalesOrdersColumnOptions = async (params: {
-    columnKey: string;
-    search: string;
-    pageParam: number;
-    filtersStr?: string;
-  }) => {
-    const filtersStr =
-      Object.keys(columnState.columnFilters).length > 0
-        ? JSON.stringify(columnState.columnFilters)
-        : undefined;
-
-    const res = await salesOrdersCoreApi.getColumnOptions(
-      params.columnKey,
-      params.search,
-      params.pageParam || 1,
-      20,
-      filtersStr,
-    );
-    return {
-      items: res.items.map((i: string) => ({ value: i, label: i })),
-      total: res.total,
-      next: res.page < res.totalPages ? res.page + 1 : null,
-    };
-  };
-
-  const getSortState = (key: string) => {
-    if (columnState.sorts.includes(key)) return "asc";
-    if (columnState.sorts.includes(`-${key}`)) return "desc";
-    return "none";
-  };
-
-  const activeSort = columnState.sorts[0];
-  const sortField = activeSort ? activeSort.replace("-", "") : undefined;
-  const sortOrder = activeSort
-    ? activeSort.startsWith("-")
-      ? "desc"
-      : "asc"
-    : undefined;
-
-  const {
-    data: resData,
-    isLoading: loading,
-    refetch: loadOrders,
-  } = useSalesOrdersQuery({
-    page,
-    pageSize,
-    search,
-    column_search:
-      Object.keys(columnState.columnSearch).length > 0
-        ? JSON.stringify(columnState.columnSearch)
-        : undefined,
-    column_filters:
-      Object.keys(columnState.columnFilters).length > 0
-        ? JSON.stringify(columnState.columnFilters)
-        : undefined,
-    sortField,
-    sortOrder,
-  });
-
-  const items = resData?.items || [];
-  const total = resData?.total || 0;
-  const totalPages = resData?.totalPages || 0;
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const handleRefresh = () => {
-      loadOrders();
+      list.loadOrders();
     };
     window.addEventListener("refresh_erp_data", handleRefresh);
     return () => window.removeEventListener("refresh_erp_data", handleRefresh);
-  }, [loadOrders]);
+  }, [list]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const viewId = params.get("viewId");
     if (viewId) {
-      openView({ id: viewId } as ErpSalesOrder);
-      // Clean up the URL
+      openView({ id: viewId } as ErpSalesOrder, "view");
       params.delete("viewId");
       const newUrl =
         window.location.pathname +
@@ -378,25 +140,18 @@ export function ErpSalesOrdersPage() {
       window.history.replaceState(null, "", newUrl);
     }
 
-    // Custom event listener from Tag connections drawer
     const handleOpenDoc = (e: Event) => {
       const detail = (e as CustomEvent).detail;
       if (detail && detail.type === "erp_sales_order" && detail.id) {
-        openView({ id: detail.id } as ErpSalesOrder);
+        openView({ id: detail.id } as ErpSalesOrder, "view");
       }
     };
     window.addEventListener("open_erp_document", handleOpenDoc);
 
-    const handleRefresh = () => {
-      loadOrders();
-    };
-    window.addEventListener("refresh_erp_data", handleRefresh);
-
     return () => {
       window.removeEventListener("open_erp_document", handleOpenDoc);
-      window.removeEventListener("refresh_erp_data", handleRefresh);
     };
-  }, [loadOrders]);
+  }, []);
 
   function resetForm() {
     setForm(emptyForm());
@@ -422,8 +177,8 @@ export function ErpSalesOrdersPage() {
     setDrawerOpen(true);
   }
 
-  async function openView(item: ErpSalesOrder) {
-    setViewOnly(true);
+  async function openView(item: ErpSalesOrder, mode: "view" | "edit" = "view") {
+    setViewOnly(mode === "view");
     setSaveError(null);
     setEditing(item);
     setForm(buildForm(item));
@@ -431,7 +186,6 @@ export function ErpSalesOrdersPage() {
     setDrawerOpen(true);
     try {
       const detail = await salesOrdersCoreApi.get(item.id);
-      // Detail API might not return customerName, fallback to list item's customerName
       const customerName = detail.customerName || item.customerName;
 
       const mergedDetail = { ...detail, customerName };
@@ -550,8 +304,8 @@ export function ErpSalesOrdersPage() {
         }
       }
       closeDrawer();
-      if (!editing && page !== 1) setPage(1);
-      else await loadOrders();
+      if (!editing && list.page !== 1) list.setPage(1);
+      else await list.loadOrders();
     } catch (e: any) {
       setSaveError(
         e?.response?.data?.message || e?.message || "Không thể lưu sales order",
@@ -565,7 +319,7 @@ export function ErpSalesOrdersPage() {
     setError(null);
     try {
       await salesOrdersCoreApi.reserve(item.id);
-      await loadOrders();
+      await list.loadOrders();
     } catch (e: any) {
       setError(
         e?.response?.data?.message || e?.message || "Không thể reserve SO",
@@ -577,7 +331,7 @@ export function ErpSalesOrdersPage() {
     setError(null);
     try {
       await salesOrdersCoreApi.unreserve(item.id);
-      await loadOrders();
+      await list.loadOrders();
     } catch (e: any) {
       setError(
         e?.response?.data?.message || e?.message || "Không thể unreserve SO",
@@ -589,7 +343,7 @@ export function ErpSalesOrdersPage() {
     setError(null);
     try {
       await salesOrdersCoreApi.confirmAllDelivery(item.id);
-      await loadOrders();
+      await list.loadOrders();
       window.dispatchEvent(new CustomEvent("refresh_erp_data"));
     } catch (e: any) {
       setError(
@@ -631,7 +385,7 @@ export function ErpSalesOrdersPage() {
     try {
       await salesOrdersCoreApi.remove(deleteTarget.id);
       setDeleteTarget(null);
-      await loadOrders();
+      await list.loadOrders();
     } catch (e: any) {
       setError(e?.response?.data?.message || e?.message || "Không thể xóa SO");
     } finally {
@@ -645,7 +399,7 @@ export function ErpSalesOrdersPage() {
     try {
       await salesOrdersCoreApi.cancel(cancelTarget.id);
       setCancelTarget(null);
-      await loadOrders();
+      await list.loadOrders();
     } catch (e: any) {
       setError(e?.response?.data?.message || e?.message || "Không thể hủy SO");
     } finally {
@@ -681,282 +435,13 @@ export function ErpSalesOrdersPage() {
     }
   };
 
-  const columns: DataTableColumn<ErpSalesOrder>[] = [
-    {
-      key: "orderDate",
-      header: (
-        <TableColumnHeaderFilter
-          align="center"
-          title={t("Ngày đặt")}
-          columnKey="orderDate"
-          sortState={getSortState("orderDate") || "none"}
-          onSortChange={(s) => columnState.setSort("orderDate", s)}
-          searchValue={columnState.columnSearch["orderDate"] || ""}
-          onSearchChange={(v) => columnState.setColumnSearch("orderDate", v)}
-          selectedFilters={columnState.columnFilters["orderDate"] || []}
-          onFilterChange={(v) => columnState.setColumnFilter("orderDate", v)}
-          fetchOptions={fetchSalesOrdersColumnOptions}
-          hideFilter={true}
-          hideFooter={true}
-          dateRangeSlot={({ close }) => {
-            const val = columnState.columnSearch["orderDate"] || "";
-            const [from = "", to = ""] = val.split("|");
-            return (
-              <DateRangeColumnSlot
-                dateFrom={from}
-                dateTo={to}
-                onChange={(f, t) => {
-                  const next = f || t ? `${f}|${t}` : "";
-                  columnState.setColumnSearch("orderDate", next);
-                }}
-                onClose={close}
-              />
-            );
-          }}
-        />
-      ),
-      size: 150,
-      headerClassName: "text-center",
-      className: "text-center",
-      cell: (item) => fmtDate(item.orderDate),
-      skeletonClassName: "w-20",
-    },
-
-    {
-      key: "soNo",
-      header: (
-        <TableColumnHeaderFilter
-          align="center"
-          title={t("Số SO")}
-          columnKey="soNo"
-          sortState={getSortState("soNo") || "none"}
-          onSortChange={(s) => columnState.setSort("soNo", s)}
-          searchValue={columnState.columnSearch["soNo"] || ""}
-          onSearchChange={(v) => columnState.setColumnSearch("soNo", v)}
-          selectedFilters={columnState.columnFilters["soNo"] || []}
-          onFilterChange={(v) => columnState.setColumnFilter("soNo", v)}
-          fetchOptions={fetchSalesOrdersColumnOptions}
-        />
-      ),
-      size: 200,
-      cell: (item) => (
-        <TableText
-          text={item.soNo || "—"}
-          tooltip={item.soNo || false}
-          enableCopy={Boolean(item.soNo)}
-          onDetailClick={item.soNo ? () => void openView(item) : undefined}
-        />
-      ),
-      skeletonClassName: "w-24",
-    },
-    {
-      key: "customerName",
-      header: (
-        <TableColumnHeaderFilter
-          align="center"
-          title={t("Khách hàng")}
-          columnKey="customerName"
-          sortState={getSortState("customerName") || "none"}
-          onSortChange={(s) => columnState.setSort("customerName", s)}
-          searchValue={columnState.columnSearch["customerName"] || ""}
-          onSearchChange={(v) => columnState.setColumnSearch("customerName", v)}
-          selectedFilters={columnState.columnFilters["customerName"] || []}
-          onFilterChange={(v) => columnState.setColumnFilter("customerName", v)}
-          fetchOptions={fetchSalesOrdersColumnOptions}
-        />
-      ),
-      size: 200,
-      className: "text-left",
-      cell: (item) => {
-        const text = item.customerName || item.customerId || "—";
-        return (
-          <Tooltip content={text !== "—" ? text : ""}>
-            <div className="whitespace-normal break-words w-full cursor-pointer">
-              {text}
-            </div>
-          </Tooltip>
-        );
-      },
-      skeletonClassName: "w-36",
-    },
-    {
-      key: "totalQty",
-      header: (
-        <TableColumnHeaderFilter
-          align="center"
-          title={t("Số lượng")}
-          columnKey="totalQty"
-          sortState={getSortState("totalQty") || "none"}
-          onSortChange={(s) => columnState.setSort("totalQty", s)}
-          searchValue={columnState.columnSearch["totalQty"] || ""}
-          onSearchChange={(v) => columnState.setColumnSearch("totalQty", v)}
-          selectedFilters={columnState.columnFilters["totalQty"] || []}
-          onFilterChange={(v) => columnState.setColumnFilter("totalQty", v)}
-          fetchOptions={fetchSalesOrdersColumnOptions}
-        />
-      ),
-      size: 100,
-      className: "text-right",
-      headerClassName: "text-center",
-      cell: (item) => {
-        const qty =
-          item.lines?.reduce(
-            (sum, line) => sum + Number(line.qtyOrdered || 0),
-            0,
-          ) || 0;
-        return qty.toLocaleString("vi-VN");
-      },
-    },
-    {
-      key: "expectedDeliveryDate",
-      header: (
-        <TableColumnHeaderFilter
-          align="center"
-          title={t("Ngày giao DK")}
-          columnKey="expectedDeliveryDate"
-          sortState={getSortState("expectedDeliveryDate") || "none"}
-          onSortChange={(s) => columnState.setSort("expectedDeliveryDate", s)}
-          searchValue={columnState.columnSearch["expectedDeliveryDate"] || ""}
-          onSearchChange={(v) =>
-            columnState.setColumnSearch("expectedDeliveryDate", v)
-          }
-          selectedFilters={
-            columnState.columnFilters["expectedDeliveryDate"] || []
-          }
-          onFilterChange={(v) =>
-            columnState.setColumnFilter("expectedDeliveryDate", v)
-          }
-          fetchOptions={fetchSalesOrdersColumnOptions}
-          hideFilter={true}
-          hideFooter={true}
-          dateRangeSlot={({ close }) => {
-            const val = columnState.columnSearch["expectedDeliveryDate"] || "";
-            const [from = "", to = ""] = val.split("|");
-            return (
-              <DateRangeColumnSlot
-                dateFrom={from}
-                dateTo={to}
-                onChange={(f, t) => {
-                  const next = f || t ? `${f}|${t}` : "";
-                  columnState.setColumnSearch("expectedDeliveryDate", next);
-                }}
-                onClose={close}
-              />
-            );
-          }}
-        />
-      ),
-      size: 150,
-      headerClassName: "text-center",
-      className: "text-center",
-      cell: (item) => fmtDate(item.expectedDeliveryDate),
-      skeletonClassName: "w-24",
-    },
-    {
-      key: "deliveredDate",
-      header: (
-        <TableColumnHeaderFilter
-          align="center"
-          title={t("Ngày đã giao")}
-          columnKey="deliveredDate"
-          sortState={getSortState("deliveredDate") || "none"}
-          onSortChange={(s) => columnState.setSort("deliveredDate", s)}
-          searchValue={columnState.columnSearch["deliveredDate"] || ""}
-          onSearchChange={(v) =>
-            columnState.setColumnSearch("deliveredDate", v)
-          }
-          selectedFilters={columnState.columnFilters["deliveredDate"] || []}
-          onFilterChange={(v) =>
-            columnState.setColumnFilter("deliveredDate", v)
-          }
-          fetchOptions={fetchSalesOrdersColumnOptions}
-          hideFilter={true}
-          hideFooter={true}
-          dateRangeSlot={({ close }) => {
-            const val = columnState.columnSearch["deliveredDate"] || "";
-            const [from = "", to = ""] = val.split("|");
-            return (
-              <DateRangeColumnSlot
-                dateFrom={from}
-                dateTo={to}
-                onChange={(f, t) => {
-                  const next = f || t ? `${f}|${t}` : "";
-                  columnState.setColumnSearch("deliveredDate", next);
-                }}
-                onClose={close}
-              />
-            );
-          }}
-        />
-      ),
-      size: 150,
-      className: "text-center",
-      headerClassName: "text-center",
-      cell: (item: any) => {
-        if (
-          item.status === "DELIVERED" ||
-          item.status === "PARTIAL_DELIVERED"
-        ) {
-          return <DeliveryDetailPopover item={item} />;
-        }
-        return "—";
-      },
-      skeletonClassName: "w-24",
-    },
-    {
-      key: "status",
-      header: (
-        <TableColumnHeaderFilter
-          align="center"
-          title={t("Trạng thái")}
-          columnKey="status"
-          sortState={getSortState("status") || "none"}
-          onSortChange={(s) => columnState.setSort("status", s)}
-          searchValue={columnState.columnSearch["status"] || ""}
-          onSearchChange={(v) => columnState.setColumnSearch("status", v)}
-          selectedFilters={columnState.columnFilters["status"] || []}
-          onFilterChange={(v) => columnState.setColumnFilter("status", v)}
-          fetchOptions={fetchSalesOrdersColumnOptions}
-        />
-      ),
-      size: 120,
-      cell: (item) => <StatusBadge status={item.status || ""} />,
-      skeletonClassName: "w-20",
-    },
-    {
-      key: "remarks",
-      header: (
-        <TableColumnHeaderFilter
-          align="center"
-          title={t("Ghi chú")}
-          columnKey="remarks"
-          sortState={getSortState("remarks") || "none"}
-          onSortChange={(s) => columnState.setSort("remarks", s)}
-          searchValue={columnState.columnSearch["remarks"] || ""}
-          onSearchChange={(v) => columnState.setColumnSearch("remarks", v)}
-          selectedFilters={columnState.columnFilters["remarks"] || []}
-          onFilterChange={(v) => columnState.setColumnFilter("remarks", v)}
-          fetchOptions={fetchSalesOrdersColumnOptions}
-        />
-      ),
-      size: 200,
-      className: "text-left",
-      cell: (item) => {
-        const text = item.remarks || "—";
-        return (
-          <Tooltip content={text !== "—" ? text : ""}>
-            <div className="whitespace-normal break-words w-full cursor-pointer line-clamp-2">
-              {text}
-            </div>
-          </Tooltip>
-        );
-      },
-      skeletonClassName: "w-36",
-    },
-  ];
+  const columns = useSalesOrderColumns({
+    tableState: list.columnState,
+    onOpenDetail: openView,
+  });
 
   const summaryRow = useMemo(() => {
-    const totalQty = items.reduce(
+    const totalQty = list.items.reduce(
       (acc, curr) =>
         acc +
         (curr.lines?.reduce(
@@ -967,9 +452,13 @@ export function ErpSalesOrdersPage() {
     );
     return {
       customerName: null,
-      totalQty: totalQty.toLocaleString("vi-VN"),
+      totalQty: (
+        <span className="tabular-nums font-semibold text-primary">
+          {totalQty.toLocaleString("vi-VN")}
+        </span>
+      ),
     };
-  }, [items]);
+  }, [list.items]);
 
   if (!canRead) return <Forbidden />;
 
@@ -979,9 +468,30 @@ export function ErpSalesOrdersPage() {
       desc={t("Quản lý đơn bán hàng và reserve tồn kho.")}
       icon={<FileText className="h-4 w-4" />}
       tableId="sales-orders-table"
-      loading={loading}
+      loading={list.loading || list.isFetching}
       summaryRow={summaryRow}
-      onRefresh={loadOrders}
+      onRefresh={list.loadOrders}
+      activeFilterCount={list.activeFilterCount}
+      onClearAllFilters={list.clearAllFilters}
+      filter={list.filter}
+      filterConfig={list.filterConfig}
+      sortArray={list.columnState.sorts}
+      onSort={(field) => {
+        const current = list.columnState.sorts.find(
+          (s) => s === field || s === `-${field}`,
+        );
+        const nextState: "asc" | "desc" | "none" = !current
+          ? "asc"
+          : current.startsWith("-")
+            ? "none"
+            : "desc";
+        list.columnState.setSort(field, nextState);
+      }}
+      getRowClassName={(item) =>
+        item.status === "CANCELLED"
+          ? "opacity-40 text-muted-foreground"
+          : undefined
+      }
       createActions={
         canCreate
           ? [
@@ -999,20 +509,18 @@ export function ErpSalesOrdersPage() {
           : undefined
       }
       error={error}
-      items={items}
+      items={list.items}
       columns={columns}
       getRowKey={(item) => item.id}
-      total={total}
-      totalPages={totalPages}
-      page={page}
-      pageSize={pageSize}
-      onPage={setPage}
+      total={list.total}
+      totalPages={list.totalPages}
+      page={list.page}
+      pageSize={list.pageSize}
+      onPage={list.setPage}
       onPageSize={(size) => {
-        setPageSize(size);
-        setPage(1);
+        list.setPageSize(size);
+        list.setPage(1);
       }}
-      filterConfig={filterConfig}
-      filter={filter}
       rowActions={(item) => [
         {
           groupLabel: t("groupTraCuu", "Tra cứu"),
@@ -1020,7 +528,7 @@ export function ErpSalesOrdersPage() {
             {
               label: t("Chi tiết"),
               icon: <Eye className="h-[13px] w-[13px]" />,
-              onClick: () => void openView(item),
+              onClick: () => void openView(item, "view"),
             },
             {
               label: t("Xuất XLSX"),
@@ -1034,6 +542,12 @@ export function ErpSalesOrdersPage() {
         {
           groupLabel: t("groupThaoTac", "Thao tác"),
           items: [
+            {
+              label: t("Chỉnh sửa"),
+              icon: <Pencil className="h-[13px] w-[13px]" />,
+              onClick: () => void openView(item, "edit"),
+              disabled: !canUpdate || item.status === "CANCELLED",
+            },
             {
               label: t("Reserve"),
               icon: <PackageCheck className="h-[13px] w-[13px]" />,
@@ -1121,7 +635,7 @@ export function ErpSalesOrdersPage() {
         saving={saving}
         saveError={saveError}
         handleSave={handleSave}
-        onRefresh={loadOrders}
+        onRefresh={list.loadOrders}
         customerOptions={customerOptions}
         setCustomerSearch={setCustomerSearch}
         fetchNextCustomers={fetchNextCustomers}
@@ -1151,7 +665,7 @@ export function ErpSalesOrdersPage() {
         serialIds={deliveryConfirmItem?.serialIds || []}
         onConfirmSuccess={() => {
           setDeliveryConfirmItem(null);
-          loadOrders();
+          list.loadOrders();
           window.dispatchEvent(new CustomEvent("refresh_erp_data"));
         }}
       />

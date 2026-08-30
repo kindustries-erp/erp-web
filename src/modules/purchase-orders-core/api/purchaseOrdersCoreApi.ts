@@ -86,6 +86,27 @@ export const purchaseOrdersCoreApi = {
     });
     return data;
   },
+  getColumnOptions: async (
+    column: string,
+    search?: string,
+    page: number = 1,
+    pageSize: number = 20,
+    filtersStr?: string,
+  ): Promise<PaginatedResponse<string>> => {
+    const { data } = await axiosInstance.get<PaginatedResponse<string>>(
+      `${BASE}/column-options`,
+      {
+        params: {
+          column,
+          search,
+          page,
+          pageSize,
+          filters: filtersStr,
+        },
+      },
+    );
+    return data;
+  },
   get: async (id: string): Promise<ErpPurchaseOrder> => {
     const { data } = await axiosInstance.get<PoDetailResponse>(`${BASE}/${id}`);
     return data.data;

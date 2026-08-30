@@ -206,7 +206,11 @@ export function TableColumnHeaderFilter({
         }
       }
     } else if (columnKey) {
-      const apiOptions = optionsData?.pages.flatMap((p: any) => p.items) || [];
+      const apiOptions = (
+        optionsData?.pages.flatMap((p: any) => p.items) || []
+      ).filter(
+        (o: any) => o.value !== "" && o.value !== null && o.value !== undefined,
+      );
       const apiValues = new Set(apiOptions.map((o: any) => o.value));
       const isAllMatchingActive = selectedFilters[0] === "__ALL_MATCHING__";
       const missingSelected = isAllMatchingActive
