@@ -227,3 +227,86 @@ export const CRUD_ACTIONS: { action: CrudAction; label: string }[] = [
 ];
 
 export type PermissionMap = Record<string, Record<CrudAction, boolean>>;
+
+export interface PermissionResourceGroup {
+  groupKey: string;
+  labelKey: string;
+  defaultLabel: string;
+  resources: string[];
+}
+
+export const PERMISSION_RESOURCE_GROUPS: PermissionResourceGroup[] = [
+  {
+    groupKey: "sales",
+    labelKey: "rbac.groups.sales",
+    defaultLabel: "Bán hàng",
+    resources: [ErpResource.SALES_ORDERS, ErpResource.SALES_REPORTS],
+  },
+  {
+    groupKey: "purchasing",
+    labelKey: "rbac.groups.purchasing",
+    defaultLabel: "Mua hàng",
+    resources: [
+      ErpResource.PURCHASE_ORDERS,
+      ErpResource.PURCHASE_REQUESTS,
+      ErpResource.PURCHASING_REPORTS,
+    ],
+  },
+  {
+    groupKey: "inventory",
+    labelKey: "rbac.groups.inventory",
+    defaultLabel: "Kho & Tồn kho",
+    resources: [
+      ErpResource.INVENTORY_ITEMS,
+      ErpResource.INVENTORY_VOUCHERS,
+      ErpResource.GOODS_RECEIPTS,
+      ErpResource.GOODS_ISSUES,
+      ErpResource.INVENTORY_ADJUSTMENTS,
+    ],
+  },
+  {
+    groupKey: "manufacturing",
+    labelKey: "rbac.groups.manufacturing",
+    defaultLabel: "Sản xuất & BOM",
+    resources: [ErpResource.BOM, ErpResource.PRODUCTION],
+  },
+  {
+    groupKey: "garage",
+    labelKey: "rbac.groups.garage",
+    defaultLabel: "Garage & Xưởng dịch vụ",
+    resources: [ErpResource.GARAGE],
+  },
+  {
+    groupKey: "vinfast",
+    labelKey: "rbac.groups.vinfast",
+    defaultLabel: "VinFast & Xe cộ",
+    resources: [ErpResource.VINFAST, ErpResource.VEHICLES],
+  },
+  {
+    groupKey: "accounting",
+    labelKey: "rbac.groups.accounting",
+    defaultLabel: "Kế toán & Dòng tiền",
+    resources: [
+      ErpResource.INVOICES,
+      ErpResource.BANK_STATEMENTS,
+      ErpResource.CASH_STATEMENTS,
+      ErpResource.JOURNAL_ENTRIES,
+      ErpResource.ACCOUNTING_CONFIGS,
+      ErpResource.PAYMENT_VOUCHERS,
+      ErpResource.CASHFLOW_VOUCHERS,
+    ],
+  },
+  {
+    groupKey: "system",
+    labelKey: "rbac.groups.system",
+    defaultLabel: "Quản trị & Hệ thống",
+    resources: [
+      ErpResource.ADMIN_USERS,
+      ErpResource.EMPLOYEES,
+      ErpResource.BUSINESS_PARTNERS,
+      ErpResource.ACTIVITY_LOGS,
+      ErpResource.EMAIL_INGEST,
+      ErpResource.SYS_TAGS,
+    ],
+  },
+];

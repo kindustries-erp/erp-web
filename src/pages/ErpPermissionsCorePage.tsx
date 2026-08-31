@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { Shield, PlusCircle, Settings, Trash } from "lucide-react";
+import { Shield, PlusCircle, Trash, Eye, Pencil } from "lucide-react";
 import { useUIStore } from "@/core/config/uiStore";
 import { useT } from "@/core/i18n";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
@@ -113,6 +113,9 @@ export function ErpPermissionsCorePage() {
   } = useCoreRoleUsers();
 
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [drawerMode, setDrawerMode] = useState<"view" | "edit" | "create">(
+    "view",
+  );
   const [editingRole, setEditingRole] = useState<Role | null>(null);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -126,19 +129,25 @@ export function ErpPermissionsCorePage() {
 
   function openNew() {
     setEditingRole(null);
+    setDrawerMode("create");
     setSaveError(null);
     resetPermissions();
     setDrawerOpen(true);
     prepareNew();
   }
 
-  function openEdit(role: Role) {
+  function openDetail(role: Role, mode: "view" | "edit" = "view") {
     setEditingRole(role);
+    setDrawerMode(mode);
     setSaveError(null);
     resetPermissions();
     setDrawerOpen(true);
     loadPermissions(role.id);
     loadUsers(role.id);
+  }
+
+  function handleToggleEdit() {
+    setDrawerMode("edit");
   }
 
   function handleClose() {
@@ -251,7 +260,10 @@ export function ErpPermissionsCorePage() {
         enableResizing: true,
         header: headerFilter("name", t("rbac.headers.name")),
         cell: (role) => (
-          <TableText text={role.name} onDetailClick={() => openEdit(role)} />
+          <TableText
+            text={role.name}
+            onDetailClick={() => openDetail(role, "view")}
+          />
         ),
         className: "whitespace-nowrap text-left px-4",
       },
@@ -358,20 +370,25 @@ export function ErpPermissionsCorePage() {
         onClearAllFilters={handleClearAll}
         rowActions={(role) => [
           {
-            groupLabel: "Tra cứu / Cấu hình",
+            groupLabel: "TRA CỨU",
             items: [
               {
-                label: "Cấu hình",
-                icon: <Settings className="w-3.5 h-3.5" />,
-                onClick: () => openEdit(role),
+                label: t("rbac.actions.viewDetail", "Chi tiết"),
+                icon: <Eye className="w-3.5 h-3.5" />,
+                onClick: () => openDetail(role, "view"),
               },
             ],
           },
           {
-            groupLabel: "Thao tác",
+            groupLabel: "THAO TÁC",
             items: [
               {
-                label: "Xóa",
+                label: t("rbac.actions.edit", "Chỉnh sửa"),
+                icon: <Pencil className="w-3.5 h-3.5" />,
+                onClick: () => openDetail(role, "edit"),
+              },
+              {
+                label: t("rbac.actions.delete", "Xóa"),
                 icon: <Trash className="w-3.5 h-3.5" />,
                 variant: "danger",
                 onClick: () => setDeleteTarget(role),
@@ -395,6 +412,8 @@ export function ErpPermissionsCorePage() {
 
       <CoreRoleDrawer
         open={drawerOpen}
+        mode={drawerMode}
+        onToggleEdit={handleToggleEdit}
         editing={editingRole}
         saving={saving}
         saveError={saveError}
