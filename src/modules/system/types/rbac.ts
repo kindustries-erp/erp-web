@@ -29,6 +29,45 @@ export interface UpdateRoleDto {
   description?: string;
 }
 
+export enum ErpResource {
+  SUPER_ADMIN = "*",
+  ADMIN_USERS = "admin_users",
+  EMPLOYEES = "employees",
+  BUSINESS_PARTNERS = "business_partners",
+  PURCHASE_ORDERS = "purchase_orders",
+  SALES_ORDERS = "sales_orders",
+  INVENTORY_ITEMS = "inventory_items",
+  INVENTORY_VOUCHERS = "inventory_vouchers",
+  GOODS_RECEIPTS = "goods_receipts",
+  GOODS_ISSUES = "goods_issues",
+  INVENTORY_ADJUSTMENTS = "inventory_adjustments",
+  BOM = "bom",
+  PRODUCTION = "production",
+  ACTIVITY_LOGS = "activity_logs",
+  EMAIL_INGEST = "email_ingest",
+  JOURNAL_ENTRIES = "journal_entries",
+  GARAGE = "garage",
+  ACCOUNTING_CONFIGS = "accounting_configs",
+  INVOICES = "invoices",
+  SALES_REPORTS = "sales_reports",
+  PURCHASING_REPORTS = "purchasing_reports",
+  SYS_TAGS = "sys_tags",
+  BANK_STATEMENTS = "bank_statements",
+  CASH_STATEMENTS = "cash_statements",
+  PURCHASE_REQUESTS = "purchase_requests",
+  VEHICLES = "vehicles",
+  VINFAST = "vinfast",
+}
+
+export enum ErpAction {
+  ALL = "*",
+  READ = "read",
+  CREATE = "create",
+  UPDATE = "update",
+  DELETE = "delete",
+  MANAGE = "manage",
+}
+
 export type CrudAction = "create" | "read" | "update" | "delete";
 
 export interface PermissionFieldDef {
@@ -97,10 +136,14 @@ export const RBAC_COLLECTIONS: CollectionDef[] = [
     label: "Nhật ký duyệt phiếu thu/chi",
     group: "Tài chính",
   },
-  { collection: "cash_funds", label: "Quỹ tiền mặt", group: "Tài chính" },
   {
-    collection: "company_bank_accounts",
-    label: "TK NH công ty",
+    collection: "bank_statements",
+    label: "Ngân hàng (Tài khoản & Sao kê)",
+    group: "Tài chính",
+  },
+  {
+    collection: "cash_statements",
+    label: "Tiền mặt (Sổ quỹ & Thu chi)",
     group: "Tài chính",
   },
   { collection: "erp_branches", label: "Chi nhánh", group: "Tài chính" },

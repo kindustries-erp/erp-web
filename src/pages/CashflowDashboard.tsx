@@ -437,8 +437,6 @@ export function CashflowDashboard() {
       "cash_statements",
       "payment_vouchers",
       "erp_cashflow_vouchers",
-      "bank_accounts",
-      "cash_books",
     ],
     "read",
   );

@@ -65,7 +65,9 @@ export function useNavItems(): NavSearchItem[] {
 
   const canReadInvoices = useHasPermission("invoices", "read");
   const canReadBankStatements = useHasPermission("bank_statements", "read");
-  const showAccounting = canReadInvoices || canReadBankStatements;
+  const canReadCashStatements = useHasPermission("cash_statements", "read");
+  const canReadCashflow = canReadBankStatements || canReadCashStatements;
+  const showAccounting = canReadInvoices || canReadCashflow;
 
   const canReadEmployees = useHasPermission("employees", "read");
   const showHR = canReadEmployees;
@@ -76,7 +78,10 @@ export function useNavItems(): NavSearchItem[] {
   const canReadEmailInbox = useHasPermission("email_ingest", "read");
 
   const showSettingsGeneral =
-    canReadAdminUsers || canReadSysTags || canReadBankStatements;
+    canReadAdminUsers ||
+    canReadSysTags ||
+    canReadBankStatements ||
+    canReadCashStatements;
   const showSettingsInventory = canReadInventoryItems;
 
   return useMemo(() => {
@@ -312,7 +317,7 @@ export function useNavItems(): NavSearchItem[] {
     const cashflowGroup = t("nav.items.cashflow");
     const invoiceGroup = t("nav.items.erpInvoices");
 
-    if (canReadBankStatements) {
+    if (canReadCashflow) {
       items.push({
         key: "cashflow-dashboard",
         label: t("nav.items.cashflowDashboard"),
@@ -321,6 +326,8 @@ export function useNavItems(): NavSearchItem[] {
         keywords: ["dong tien", "cashflow", "tien mat", "ngan hang"],
         icon: <Wallet className="w-4 h-4" />,
       });
+    }
+    if (canReadBankStatements) {
       items.push({
         key: "bank-statement",
         label: t("bankStatement.bankTitle"),
@@ -329,6 +336,8 @@ export function useNavItems(): NavSearchItem[] {
         keywords: ["dong tien", "sao ke", "ngan hang", "bank statement"],
         icon: <Wallet className="w-4 h-4" />,
       });
+    }
+    if (canReadCashStatements) {
       items.push({
         key: "cash-statement",
         label: t("bankStatement.cashTitle"),
@@ -349,43 +358,26 @@ export function useNavItems(): NavSearchItem[] {
       });
       items.push({
         key: "erp-invoices",
-        label: t("nav.items.erpInvoices") || "Hóa đơn điện tử",
+        label: t("nav.items.erpInvoices"),
         group: invoiceGroup,
         section: accountingSection,
         keywords: [
           "hoa don",
           "hóa đơn",
           "invoices",
-          "dau vao",
-          "đầu vào",
-          "dau ra",
-          "đầu ra",
-          "inbound",
-          "outbound",
-          "hoa don mua vao",
-          "hoa don ban ra",
-          "chi tiet mua vao",
-          "chi tiet ban ra",
-          "mua hang",
-          "ban hang",
           "vat",
-          "gtgt",
+          "ban ra",
+          "mua vao",
+          "gdt",
         ],
         icon: <Receipt className="w-4 h-4" />,
       });
       items.push({
         key: "erp-invoices-draft",
-        label: "Hóa đơn nháp",
+        label: t("nav.items.erpInvoicesDraft"),
         group: invoiceGroup,
         section: accountingSection,
-        keywords: [
-          "hoa don",
-          "hóa đơn",
-          "invoices",
-          "nhap",
-          "draft",
-          "hoa don nhap",
-        ],
+        keywords: ["hoa don", "hóa đơn nháp", "nhap", "draft"],
         icon: <Receipt className="w-4 h-4" />,
       });
     }
@@ -443,9 +435,9 @@ export function useNavItems(): NavSearchItem[] {
       icon: <Paperclip className="w-4 h-4" />,
     });
 
-    // 9. Settings (Hệ thống)
+    // 9. Settings (Hệ thống & Cài đặt)
     const settingsSection = t("nav.sections.settings");
-    const accessGroup = t("nav.items.accessControl");
+    const accessGroup = t("nav.items.erpAccessControl");
     const catalogGroup = t("nav.items.catalog");
     const inventoryMastersGroup = t("nav.items.erpInventoryMasters");
 
@@ -505,6 +497,8 @@ export function useNavItems(): NavSearchItem[] {
         keywords: ["ngan hang", "bank", "tai khoan ngan hang", "thiet lap"],
         icon: <Settings className="w-4 h-4" />,
       });
+    }
+    if (showSettingsGeneral && canReadCashStatements) {
       items.push({
         key: "settings-cash-fund",
         label: t("thietlap.tabs.quy"),

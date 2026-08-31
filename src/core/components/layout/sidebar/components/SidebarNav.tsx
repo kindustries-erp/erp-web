@@ -80,7 +80,9 @@ export function SidebarNav({
 
   const canReadInvoices = useHasPermission("invoices", "read");
   const canReadBankStatements = useHasPermission("bank_statements", "read");
-  const showAccounting = canReadInvoices || canReadBankStatements;
+  const canReadCashStatements = useHasPermission("cash_statements", "read");
+  const showCashflow = canReadBankStatements || canReadCashStatements;
+  const showAccounting = canReadInvoices || showCashflow;
 
   const canReadEmployees = useHasPermission("employees", "read");
   const showHR = canReadEmployees;
@@ -92,7 +94,10 @@ export function SidebarNav({
 
   const showSettingsAccess = canReadAdminUsers || canReadActivityLogs;
   const showSettingsGeneral =
-    canReadAdminUsers || canReadSysTags || canReadBankStatements;
+    canReadAdminUsers ||
+    canReadSysTags ||
+    canReadBankStatements ||
+    canReadCashStatements;
   const showSettingsInventory = canReadInventoryItems;
   const showSettings =
     showSettingsAccess ||
@@ -346,7 +351,7 @@ export function SidebarNav({
       {/* Kế toán */}
       {showAccounting && (
         <NavSection collapsed={c} label={t("nav.sections.accounting")}>
-          {canReadBankStatements && (
+          {showCashflow && (
             <NavGroup
               collapsed={c}
               icon={<Wallet className="w-4 h-4 opacity-65 flex-shrink-0" />}
@@ -363,18 +368,22 @@ export function SidebarNav({
                 onClick={() => navTo("cashflow-dashboard")}
                 contextPage="cashflow-dashboard"
               />
-              <NavGroupItem
-                label={t("bankStatement.bankTitle")}
-                active={currentPage === "bank-statement"}
-                onClick={() => navTo("bank-statement")}
-                contextPage="bank-statement"
-              />
-              <NavGroupItem
-                label={t("bankStatement.cashTitle")}
-                active={currentPage === "cash-statement"}
-                onClick={() => navTo("cash-statement")}
-                contextPage="cash-statement"
-              />
+              {canReadBankStatements && (
+                <NavGroupItem
+                  label={t("bankStatement.bankTitle")}
+                  active={currentPage === "bank-statement"}
+                  onClick={() => navTo("bank-statement")}
+                  contextPage="bank-statement"
+                />
+              )}
+              {canReadCashStatements && (
+                <NavGroupItem
+                  label={t("bankStatement.cashTitle")}
+                  active={currentPage === "cash-statement"}
+                  onClick={() => navTo("cash-statement")}
+                  contextPage="cash-statement"
+                />
+              )}
             </NavGroup>
           )}
           {canReadInvoices && (
@@ -543,20 +552,20 @@ export function SidebarNav({
                 />
               )}
               {canReadBankStatements && (
-                <>
-                  <NavGroupItem
-                    label={t("thietlap.tabs.ngan-hang")}
-                    active={currentPage === "settings-bank"}
-                    onClick={() => navTo("settings-bank")}
-                    contextPage="settings-bank"
-                  />
-                  <NavGroupItem
-                    label={t("thietlap.tabs.quy")}
-                    active={currentPage === "settings-cash-fund"}
-                    onClick={() => navTo("settings-cash-fund")}
-                    contextPage="settings-cash-fund"
-                  />
-                </>
+                <NavGroupItem
+                  label={t("thietlap.tabs.ngan-hang")}
+                  active={currentPage === "settings-bank"}
+                  onClick={() => navTo("settings-bank")}
+                  contextPage="settings-bank"
+                />
+              )}
+              {canReadCashStatements && (
+                <NavGroupItem
+                  label={t("thietlap.tabs.quy")}
+                  active={currentPage === "settings-cash-fund"}
+                  onClick={() => navTo("settings-cash-fund")}
+                  contextPage="settings-cash-fund"
+                />
               )}
               {canReadSysTags && (
                 <NavGroupItem
