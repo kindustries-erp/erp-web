@@ -23,17 +23,18 @@ import { Input } from "@/shared/components/ui/input";
 import { Checkbox } from "@/shared/components/ui/checkbox";
 import { cn } from "@/shared/utils";
 import { useTranslation } from "react-i18next";
+import type { TableSortStateType, TableColumnAlignType } from "./types";
 
 export interface TableColumnHeaderFilterProps {
   title: React.ReactNode;
-  sortState: "asc" | "desc" | "none";
+  sortState: TableSortStateType;
   onSortChange: (state: "asc" | "desc" | "none") => void;
   searchValue: string;
   onSearchChange: (value: string) => void;
   filterOptions?: { label: string; value: string }[];
   selectedFilters: string[];
   onFilterChange: (values: string[]) => void;
-  align?: "left" | "center" | "right";
+  align?: TableColumnAlignType;
   className?: string;
   columnKey?: string;
   queryKeyPrefix?: string;

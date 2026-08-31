@@ -7,6 +7,25 @@ import type {
 } from "@tanstack/react-table";
 import type { ActionDropdownItem } from "@/shared/components/ActionDropdown";
 
+export enum TableSortState {
+  ASC = "asc",
+  DESC = "desc",
+  NONE = "none",
+}
+
+export enum TableColumnAlign {
+  LEFT = "left",
+  CENTER = "center",
+  RIGHT = "right",
+}
+
+export type TableSortStateType = "asc" | "desc" | "none" | TableSortState;
+export type TableColumnAlignType =
+  | "left"
+  | "center"
+  | "right"
+  | TableColumnAlign;
+
 export interface DataTableColumn<T> {
   key: string;
   header: ReactNode | ((props: any) => ReactNode);

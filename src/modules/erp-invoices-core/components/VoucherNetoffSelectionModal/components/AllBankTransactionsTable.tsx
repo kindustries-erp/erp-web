@@ -2,8 +2,12 @@ import React, { useMemo } from "react";
 import { format } from "date-fns";
 import { useTranslation } from "react-i18next";
 import { StandardTable } from "@/shared/components/StandardTable";
-import { type DataTableColumn } from "@/shared/components/DataTable";
-import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
+import {
+  type DataTableColumn,
+  TableColumnHeaderFilter,
+  TableSortState,
+  TableColumnAlign,
+} from "@/shared/components/DataTable";
 import { Checkbox } from "@/shared/components/ui/checkbox";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import { money } from "@/shared/utils/format";
@@ -43,19 +47,23 @@ export function AllBankTransactionsTable({
 }: AllBankTransactionsTableProps) {
   const { t } = useTranslation(["erpInvoices", "common"]);
 
-  const renderHeaderFilter = (key: string, label: string) => {
+  const renderHeaderFilter = (
+    key: string,
+    label: string,
+    align: TableColumnAlign = TableColumnAlign.LEFT,
+  ) => {
     const isSortedAsc = tableState.sorts[0] === key;
     const isSortedDesc = tableState.sorts[0] === `-${key}`;
-    const sortState: "asc" | "desc" | "none" = isSortedAsc
-      ? "asc"
+    const sortState: TableSortState = isSortedAsc
+      ? TableSortState.ASC
       : isSortedDesc
-        ? "desc"
-        : "none";
+        ? TableSortState.DESC
+        : TableSortState.NONE;
 
     return (
       <TableColumnHeaderFilter
         title={label}
-        align="left"
+        align={align}
         sortState={sortState}
         onSortChange={(state) => tableState.setSort(key, state)}
         searchValue={tableState.columnSearch[key] || ""}
@@ -97,6 +105,7 @@ export function AllBankTransactionsTable({
         header: renderHeaderFilter(
           "source",
           t("selectedBankTable.colSource", "Nguồn"),
+          TableColumnAlign.LEFT,
         ),
         size: 130,
         cell: (row) => (
@@ -122,14 +131,14 @@ export function AllBankTransactionsTable({
         header: (
           <TableColumnHeaderFilter
             title={t("selectedBankTable.colTransDate", "Ngày GD")}
-            align="center"
+            align={TableColumnAlign.CENTER}
             className="w-full justify-center"
             sortState={
               tableState.sorts[0] === "transDate"
-                ? "asc"
+                ? TableSortState.ASC
                 : tableState.sorts[0] === "-transDate"
-                  ? "desc"
-                  : "none"
+                  ? TableSortState.DESC
+                  : TableSortState.NONE
             }
             onSortChange={(state) => tableState.setSort("transDate", state)}
             searchValue=""
@@ -153,6 +162,7 @@ export function AllBankTransactionsTable({
         header: renderHeaderFilter(
           "referenceNumber",
           t("selectedBankTable.colRef", "Tham chiếu"),
+          TableColumnAlign.LEFT,
         ),
         size: 180,
         cell: (row) =>
@@ -183,6 +193,7 @@ export function AllBankTransactionsTable({
         header: renderHeaderFilter(
           "partnerName",
           t("selectedBankTable.colPartner", "Đối tác"),
+          TableColumnAlign.LEFT,
         ),
         size: 180,
         cell: (row) => {
@@ -203,6 +214,7 @@ export function AllBankTransactionsTable({
         header: renderHeaderFilter(
           "description",
           t("selectedBankTable.colDescription", "Nội dung"),
+          TableColumnAlign.LEFT,
         ),
         size: 300,
         cell: (row) => (
@@ -218,6 +230,7 @@ export function AllBankTransactionsTable({
         header: renderHeaderFilter(
           "creditAmount",
           t("selectedBankTable.natureCredit", "Thu"),
+          TableColumnAlign.RIGHT,
         ),
         size: 130,
         headerClassName: "text-right",
@@ -238,6 +251,7 @@ export function AllBankTransactionsTable({
         header: renderHeaderFilter(
           "debitAmount",
           t("selectedBankTable.natureDebit", "Chi"),
+          TableColumnAlign.RIGHT,
         ),
         size: 130,
         headerClassName: "text-right",
