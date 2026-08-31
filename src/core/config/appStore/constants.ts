@@ -130,7 +130,7 @@ export const SECTION_ROOTS: Partial<Record<PageKey, SectionRoot>> = {
     group: "accounting",
   },
   "erp-invoices-draft": {
-    labelKey: "Hóa đơn nháp",
+    labelKey: "nav.items.erpInvoicesDraft",
     group: "accounting",
   },
   "erp-invoices": {
@@ -310,11 +310,17 @@ export const BREADCRUMBS: Partial<Record<PageKey, Array<[string, string?]>>> = {
   "erp-users": [["breadcrumb.settings"], ["breadcrumb.users"]],
   "erp-permissions-core": [["breadcrumb.settings"], ["breadcrumb.phanquyen"]],
   attachments: [["breadcrumb.settings"], ["nav.items.attachments"]],
-  "invoice-dashboard": [["breadcrumb.accounting"], ["Tổng quan hóa đơn"]],
+  "invoice-dashboard": [
+    ["breadcrumb.accounting"],
+    ["nav.items.invoiceDashboard"],
+  ],
   "erp-invoices": [["breadcrumb.accounting"], ["nav.items.erpInvoices"]],
   "erp-invoices-in": [["breadcrumb.accounting"], ["breadcrumb.inbound"]],
   "erp-invoices-out": [["breadcrumb.accounting"], ["breadcrumb.outbound"]],
-  "erp-invoices-draft": [["breadcrumb.accounting"], ["Hóa đơn nháp"]],
+  "erp-invoices-draft": [
+    ["breadcrumb.accounting"],
+    ["nav.items.erpInvoicesDraft"],
+  ],
   "vinfast-parts": [["breadcrumb.vinfast"], ["nav.items.vinfastParts"]],
   "vinfast-parts-dashboard": [
     ["breadcrumb.vinfast"],

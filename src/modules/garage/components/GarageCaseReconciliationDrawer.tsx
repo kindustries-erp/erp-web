@@ -35,6 +35,7 @@ import {
   SlidersHorizontal,
   Trash2,
   ListChecks,
+  TrendingUp,
 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -77,7 +78,7 @@ function SelectedBankTransactionsTable({
         enableResizing: false,
         cell: (_, idx) => (
           <span className="w-full block text-center font-mono text-xs text-muted-foreground">
-            {idx}
+            {idx + 1}
           </span>
         ),
       },
@@ -112,7 +113,7 @@ function SelectedBankTransactionsTable({
       },
       {
         key: "referenceNumber",
-        header: "Số tham chiếu",
+        header: "Tham chiếu",
         size: 180,
         cell: (row) =>
           row.referenceNumber ? (
@@ -134,7 +135,7 @@ function SelectedBankTransactionsTable({
       },
       {
         key: "description",
-        header: "Nội dung diễn giải",
+        header: "Nội dung",
         size: 380,
         cell: (row) => (
           <Tooltip content={row.description || "—"}>
@@ -1429,7 +1430,7 @@ export function GarageCaseReconciliationDrawer({
       key: "referenceNumber",
       header: renderBankHeaderFilter(
         "referenceNumber",
-        t("cases.reconciliation.refNumber", "Số tham chiếu / Bút toán"),
+        t("cases.reconciliation.refNumber", "Tham chiếu"),
       ),
       size: 150,
       cell: (row: any) => {
@@ -1490,7 +1491,7 @@ export function GarageCaseReconciliationDrawer({
       key: "correspondentName",
       header: renderBankHeaderFilter(
         "correspondentName",
-        t("cases.reconciliation.partner", "Đối tác / Người nộp"),
+        t("cases.reconciliation.partner", "Đối tác"),
       ),
       size: 160,
       cell: (row: any) => (
@@ -1507,7 +1508,7 @@ export function GarageCaseReconciliationDrawer({
       dataIndex: "description",
       header: renderBankHeaderFilter(
         "description",
-        t("cases.reconciliation.description", "Nội dung diễn giải"),
+        t("cases.reconciliation.description", "Nội dung"),
       ),
       size: 240,
       cell: (row: any) => (
@@ -1922,7 +1923,7 @@ export function GarageCaseReconciliationDrawer({
             <DrawerSection
               title={
                 <div className="flex items-center gap-2 flex-wrap">
-                  <ListChecks className="w-3.5 h-3.5 text-primary" />
+                  <ListChecks className="w-3.5 h-3.5 text-muted-foreground" />
                   <span>
                     {t(
                       "cases.reconciliation.selectedBankListTitle",
@@ -2260,7 +2261,7 @@ export function GarageCaseReconciliationDrawer({
           "cases.reconciliation.tabInvoicesOut",
           "3. Hóa đơn Bán ra (Doanh thu)",
         ),
-        icon: <ArrowDownLeft className="w-3.5 h-3.5 text-emerald-600" />,
+        icon: <ArrowDownLeft className="w-3.5 h-3.5 text-muted-foreground" />,
         badgeCount:
           selectedInvoicesCount > 0
             ? selectedInvoicesCount
@@ -2273,7 +2274,7 @@ export function GarageCaseReconciliationDrawer({
             <DrawerSection
               title={
                 <div className="flex items-center gap-2 flex-wrap">
-                  <ListChecks className="w-3.5 h-3.5 text-primary" />
+                  <ListChecks className="w-3.5 h-3.5 text-muted-foreground" />
                   <span>
                     {t(
                       "cases.reconciliation.selectedInvoicesListTitle",
@@ -2283,13 +2284,13 @@ export function GarageCaseReconciliationDrawer({
                   {selectedInvoicesCount > 0 && (
                     <Badge
                       variant="outline"
-                      className="text-[10px] font-semibold bg-primary/10 text-primary border-primary/30"
+                      className="text-[10px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200"
                     >
                       {selectedInvoicesCount} {t("invoices", "hóa đơn")}
                     </Badge>
                   )}
                   {selectedInvoicesCount > 0 && (
-                    <span className="text-xs font-mono font-bold text-primary ml-auto">
+                    <span className="text-xs font-mono font-bold text-slate-900 dark:text-slate-100 ml-auto">
                       Tổng: {money(selectedInvoicesTotal)}
                     </span>
                   )}
@@ -2381,7 +2382,7 @@ export function GarageCaseReconciliationDrawer({
           "cases.reconciliation.tabInvoicesIn",
           "4. Hóa đơn Mua vào (Chi phí)",
         ),
-        icon: <ArrowUpRight className="w-3.5 h-3.5 text-[#ea580c]" />,
+        icon: <ArrowUpRight className="w-3.5 h-3.5 text-muted-foreground" />,
         badgeCount:
           selectedInvoicesCount > 0
             ? selectedInvoicesCount
@@ -2394,7 +2395,7 @@ export function GarageCaseReconciliationDrawer({
             <DrawerSection
               title={
                 <div className="flex items-center gap-2 flex-wrap">
-                  <ListChecks className="w-3.5 h-3.5 text-primary" />
+                  <ListChecks className="w-3.5 h-3.5 text-muted-foreground" />
                   <span>
                     {t(
                       "cases.reconciliation.selectedInvoicesInListTitle",
@@ -2404,13 +2405,13 @@ export function GarageCaseReconciliationDrawer({
                   {selectedInvoicesCount > 0 && (
                     <Badge
                       variant="outline"
-                      className="text-[10px] font-semibold bg-primary/10 text-primary border-primary/30"
+                      className="text-[10px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200"
                     >
                       {selectedInvoicesCount} {t("invoices", "hóa đơn")}
                     </Badge>
                   )}
                   {selectedInvoicesCount > 0 && (
-                    <span className="text-xs font-mono font-bold text-primary ml-auto">
+                    <span className="text-xs font-mono font-bold text-slate-900 dark:text-slate-100 ml-auto">
                       Tổng: {money(selectedInvoicesTotal)}
                     </span>
                   )}
@@ -2566,7 +2567,7 @@ export function GarageCaseReconciliationDrawer({
             <DrawerSection
               title={
                 <div className="flex items-center gap-1.5 font-semibold">
-                  <SlidersHorizontal className="w-3.5 h-3.5 text-primary" />
+                  <SlidersHorizontal className="w-3.5 h-3.5 text-muted-foreground" />
                   <span>
                     {t("cases.reconciliation.directionLabel", "Chiều đối soát")}
                   </span>
@@ -2699,10 +2700,17 @@ export function GarageCaseReconciliationDrawer({
 
             {/* SECTION 3: TIẾN ĐỘ & MỤC TIÊU TÀI CHÍNH */}
             <DrawerSection
-              title={t(
-                "cases.reconciliation.progressTitle",
-                "Tiến độ & Mục tiêu Tài chính",
-              )}
+              title={
+                <div className="flex items-center gap-1.5 font-semibold">
+                  <TrendingUp className="w-3.5 h-3.5 text-muted-foreground" />
+                  <span>
+                    {t(
+                      "cases.reconciliation.progressTitle",
+                      "Tiến độ & Mục tiêu Tài chính",
+                    )}
+                  </span>
+                </div>
+              }
               collapsible={true}
               defaultCollapsed={false}
             >
@@ -2926,7 +2934,7 @@ export function GarageCaseReconciliationDrawer({
               <DrawerSection
                 title={
                   <div className="flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                    <Sparkles className="w-3.5 h-3.5 text-muted-foreground" />
                     <span>
                       {settlementType === "RECEIPT"
                         ? t(
@@ -3021,7 +3029,7 @@ export function GarageCaseReconciliationDrawer({
               <DrawerSection
                 title={
                   <div className="flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                    <Sparkles className="w-3.5 h-3.5 text-muted-foreground" />
                     <span>
                       {activeTab === "invoices_out"
                         ? t(
