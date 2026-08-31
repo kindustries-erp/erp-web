@@ -49,6 +49,8 @@ export interface StandardTableProps<T> {
   sidePanel?: React.ReactNode;
   enableFullscreen?: boolean;
   tableTitle?: React.ReactNode;
+  tableDesc?: React.ReactNode;
+  tableIcon?: React.ReactNode;
   fullscreenClassName?: string;
   fullscreenHeaderExtra?: React.ReactNode;
   fullscreenTabs?: React.ReactNode;
@@ -97,6 +99,8 @@ export function StandardTable<T>({
   sidePanel,
   enableFullscreen,
   tableTitle,
+  tableDesc,
+  tableIcon,
   fullscreenClassName,
   fullscreenHeaderExtra,
   fullscreenTabs,
@@ -164,6 +168,8 @@ export function StandardTable<T>({
       sidePanel={sidePanel}
       enableFullscreen={enableFullscreen}
       tableTitle={tableTitle}
+      tableDesc={tableDesc}
+      tableIcon={tableIcon}
       fullscreenClassName={fullscreenClassName}
       fullscreenHeaderExtra={fullscreenHeaderExtra}
       fullscreenTabs={fullscreenTabs}

@@ -280,7 +280,7 @@ const drawerTabs: DrawerTopTabItem[] = useMemo(() => [
 | **Responsive `vw` Size** | Đặt `size="xl"` cho chứng từ lớn (~90vw trên desktop), `lg` cho 2-col vừa, `sm`/`md` cho 1-col. Không bao giờ vượt quá `calc(100vw - 208px)`. | [ ] |
 | **Collapse Section Height** | Thẻ `<DrawerSection>` khi `collapsed={true}` phải tự co lại `h-auto`, không để lại khoảng trắng rỗng lớn. | [ ] |
 | **DrawerSection Main Content & Sidebar** | Cả Cột trái (Main Content / Tab 1) lẫn Cột phải (Right Panel) đều bắt buộc phân chia các khối nội dung theo `<DrawerSection>` có bật `collapsible={true}`. | [ ] |
-| **Collapsible Right Panel** | Cột phải thông tin chung luôn có nút Thu gọn / Mở rộng (`ChevronRight`/`ChevronLeft`). Khi đóng, cột trái chiếm 100% full width. | [ ] |
+| **Collapsible Right Panel & Fullscreen** | Cột phải thông tin chung có nút Thu gọn / Mở rộng (`ChevronRight`/`ChevronLeft`). Drawer 2 cột tự động có nút Toàn màn hình (`Maximize2`/`Minimize2`) mở rộng tối đa `calc(100vw - 208px)`, phím `Esc` thoát fullscreen. | [ ] |
 | **Top Navigation Tabs** | Chứng từ $\ge 2$ góc nhìn BẮT BUỘC dùng prop `tabs`. Tab 1 luôn là Chi tiết chính. Mảng `tabs` bọc trong `useMemo`. | [ ] |
 | **Traceability Graph Full Width** | Tab mạng lưới chứng từ liên kết phải set `hideRightPanel: true` để bung toàn bộ chiều ngang. | [ ] |
 | **Status Badge & Edit Mode** | Record có trạng thái phải truyền `<Badge>` vào `titleExtra`. Cho phép chỉnh sửa phải truyền `onToggleEdit` và `confirmOnClose={mode === "edit"}`. | [ ] |

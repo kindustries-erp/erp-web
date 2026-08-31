@@ -5,6 +5,7 @@ import {
   type Direction,
 } from "./useErpInvoiceListStore";
 import { PageKey } from "@/shared/types";
+import { ErpUrlQueryParam } from "@/shared/constants/urlParams";
 
 export interface UseErpInvoiceUrlSyncOptions {
   direction: "IN" | "OUT";
@@ -18,6 +19,9 @@ export interface UseErpInvoiceUrlSyncOptions {
     drawerMode?: "view" | "edit";
     columnFilters?: Record<string, string[]>;
     columnSearch?: Record<string, string>;
+    sorts?: string[];
+    page?: number;
+    pageSize?: number;
   }) => void;
 }
 
@@ -44,30 +48,31 @@ export function useErpInvoiceUrlSync({
     pageKey,
     instanceIndex,
     filterKeys: [
-      "status",
-      "seller_name",
-      "buyer_name",
-      "dateFrom",
-      "dateTo",
-      "search",
-      "tag_id",
-      "period",
+      ErpUrlQueryParam.STATUS,
+      ErpUrlQueryParam.SELLER_NAME,
+      ErpUrlQueryParam.BUYER_NAME,
+      ErpUrlQueryParam.DATE_FROM,
+      ErpUrlQueryParam.DATE_TO,
+      ErpUrlQueryParam.SEARCH,
+      ErpUrlQueryParam.TAG_ID,
+      ErpUrlQueryParam.PERIOD,
+      ErpUrlQueryParam.SUBCATEGORY,
     ],
     drawerSync: true,
     onUrlStateHydrate: (state) => {
       // Hydrate Zustand store
       hydrateStore(storeDir, {
-        status: state.filters.status || "",
-        seller_name: state.filters.seller_name || "",
-        buyer_name: state.filters.buyer_name || "",
-        dateFrom: state.filters.dateFrom || "",
-        dateTo: state.filters.dateTo || "",
-        search: state.filters.search || "",
-        tag_id: state.filters.tag_id || "",
-        period: state.filters.period || "",
+        status: state.filters[ErpUrlQueryParam.STATUS] || "",
+        seller_name: state.filters[ErpUrlQueryParam.SELLER_NAME] || "",
+        buyer_name: state.filters[ErpUrlQueryParam.BUYER_NAME] || "",
+        dateFrom: state.filters[ErpUrlQueryParam.DATE_FROM] || "",
+        dateTo: state.filters[ErpUrlQueryParam.DATE_TO] || "",
+        search: state.filters[ErpUrlQueryParam.SEARCH] || "",
+        tag_id: state.filters[ErpUrlQueryParam.TAG_ID] || "",
+        period: state.filters[ErpUrlQueryParam.PERIOD] || "",
       });
 
-      // Custom onHydrate for columnFilters / view presets
+      // Custom onHydrate for columnFilters / view presets / sorts
       if (onHydrateRef.current) {
         onHydrateRef.current(state);
       }
@@ -90,5 +95,7 @@ export function useErpInvoiceUrlSync({
     closeDrawerWithUrl: urlState.closeDrawer,
     syncFiltersToUrl: urlState.setFilters,
     syncColumnFiltersToUrl: urlState.setColumnFilters,
+    syncColumnSearchToUrl: urlState.setColumnSearch,
+    syncSortsToUrl: urlState.setSorts,
   };
 }

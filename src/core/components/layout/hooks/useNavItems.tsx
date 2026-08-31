@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import type { PageKey } from "@/shared/types";
 import { useT } from "@/core/i18n";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
+import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
 import { useAuthStore } from "@/modules/auth/domain/authStore";
 import {
   Boxes,
@@ -24,6 +25,7 @@ import {
   Paperclip,
   Mail,
   Target,
+  PackageCheck,
 } from "lucide-react";
 
 export interface NavSearchItem {
@@ -40,46 +42,90 @@ export function useNavItems(): NavSearchItem[] {
   const { employee } = useAuthStore();
   const isAdminEmail = employee?.email === "admin@liouni.com";
 
-  const canReadSalesOrders = useHasPermission("sales_orders", "read");
-  const canReadCustomers = useHasPermission("business_partners", "read");
-  const canReadSalesReports = useHasPermission("sales_reports", "read");
+  const canReadSalesOrders = useHasPermission(
+    ErpResource.SALES_ORDERS,
+    ErpAction.READ,
+  );
+  const canReadCustomers = useHasPermission(
+    ErpResource.BUSINESS_PARTNERS,
+    ErpAction.READ,
+  );
+  const canReadSalesReports = useHasPermission(
+    ErpResource.SALES_REPORTS,
+    ErpAction.READ,
+  );
 
-  const canReadPurchasing = useHasPermission("purchase_orders", "read");
-  const canReadSuppliers = useHasPermission("business_partners", "read");
+  const canReadPurchasing = useHasPermission(
+    ErpResource.PURCHASE_ORDERS,
+    ErpAction.READ,
+  );
+  const canReadSuppliers = useHasPermission(
+    ErpResource.BUSINESS_PARTNERS,
+    ErpAction.READ,
+  );
   const canReadPurchasingReports = useHasPermission(
-    "purchasing_reports",
-    "read",
+    ErpResource.PURCHASING_REPORTS,
+    ErpAction.READ,
   );
 
-  const canReadInventoryItems = useHasPermission("inventory_items", "read");
+  const canReadInventoryItems = useHasPermission(
+    ErpResource.INVENTORY_ITEMS,
+    ErpAction.READ,
+  );
   const canReadInventoryVouchers = useHasPermission(
-    "inventory_vouchers",
-    "read",
+    ErpResource.INVENTORY_VOUCHERS,
+    ErpAction.READ,
   );
 
-  const canReadVinfast = useHasPermission("vinfast", "read");
+  const canReadVinfast = useHasPermission(ErpResource.VINFAST, ErpAction.READ);
 
-  const canReadBom = useHasPermission("bom", "read");
-  const canReadProduction = useHasPermission("production", "read");
-  const canReadGarageDirect = useHasPermission("garage", "read");
-  const canReadGreenway = useHasPermission("greenway_integration", "read");
-  const canReadKgara = useHasPermission("kgara_integration", "read");
-  const canReadGarage = canReadGarageDirect || canReadGreenway || canReadKgara;
+  const canReadBom = useHasPermission(ErpResource.BOM, ErpAction.READ);
+  const canReadProduction = useHasPermission(
+    ErpResource.PRODUCTION,
+    ErpAction.READ,
+  );
+  const canReadGarage = useHasPermission(ErpResource.GARAGE, ErpAction.READ);
 
-  const canReadInvoices = useHasPermission("invoices", "read");
-  const canReadBankStatements = useHasPermission("bank_statements", "read");
-  const showAccounting = canReadInvoices || canReadBankStatements;
+  const canReadInvoices = useHasPermission(
+    ErpResource.INVOICES,
+    ErpAction.READ,
+  );
+  const canReadBankStatements = useHasPermission(
+    ErpResource.BANK_STATEMENTS,
+    ErpAction.READ,
+  );
+  const canReadCashStatements = useHasPermission(
+    ErpResource.CASH_STATEMENTS,
+    ErpAction.READ,
+  );
+  const canReadCashflow = canReadBankStatements || canReadCashStatements;
+  const showAccounting = canReadInvoices || canReadCashflow;
 
-  const canReadEmployees = useHasPermission("employees", "read");
+  const canReadEmployees = useHasPermission(
+    ErpResource.EMPLOYEES,
+    ErpAction.READ,
+  );
   const showHR = canReadEmployees;
 
-  const canReadAdminUsers = useHasPermission("admin_users", "read");
-  const canReadActivityLogs = useHasPermission("activity_logs", "read");
-  const canReadSysTags = useHasPermission("sys_tags", "read");
-  const canReadEmailInbox = useHasPermission("email_ingest", "read");
+  const canReadAdminUsers = useHasPermission(
+    ErpResource.ADMIN_USERS,
+    ErpAction.READ,
+  );
+  const canReadActivityLogs = useHasPermission(
+    ErpResource.ACTIVITY_LOGS,
+    ErpAction.READ,
+  );
+  const canReadSysTags = useHasPermission(ErpResource.SYS_TAGS, ErpAction.READ);
+  const canReadEmailInbox = useHasPermission(
+    ErpResource.EMAIL_INGEST,
+    ErpAction.READ,
+  );
 
   const showSettingsGeneral =
-    canReadAdminUsers || canReadSysTags || canReadBankStatements;
+    canReadAdminUsers ||
+    canReadSysTags ||
+    canReadBankStatements ||
+    canReadCashStatements;
   const showSettingsInventory = canReadInventoryItems;
 
   return useMemo(() => {
@@ -165,7 +211,6 @@ export function useNavItems(): NavSearchItem[] {
 
     // 4. Inventory (Kho)
     const inventorySection = t("nav.sections.inventory");
-    const trackingGroup = t("nav.items.erpInventoryTrackingGroup");
     if (canReadInventoryItems) {
       items.push({
         key: "inventory-dashboard",
@@ -196,34 +241,18 @@ export function useNavItems(): NavSearchItem[] {
     if (canReadInventoryItems) {
       items.push({
         key: "erp-inventory-tracking",
-        label: t("nav.items.erpInventoryTracking"),
-        group: trackingGroup,
+        label: t("nav.items.erpInventoryTrackingGroup"),
         section: inventorySection,
-        keywords: ["kho", "theo doi hang hoa", "xe", "thanh pham", "vin"],
-        icon: <Layers className="w-4 h-4" />,
-      });
-      items.push({
-        key: "erp-inventory-tracking-parts",
-        label: t("nav.items.erpInventoryTrackingParts"),
-        group: trackingGroup,
-        section: inventorySection,
-        keywords: ["kho", "theo doi hang hoa", "phu tung", "parts"],
-        icon: <Layers className="w-4 h-4" />,
-      });
-      items.push({
-        key: "erp-inventory-tracking-lot",
-        label: t("nav.items.erpInventoryTrackingLot"),
-        group: trackingGroup,
-        section: inventorySection,
-        keywords: ["kho", "theo doi hang hoa", "lo", "lot"],
-        icon: <Layers className="w-4 h-4" />,
-      });
-      items.push({
-        key: "erp-inventory-tracking-custom",
-        label: t("nav.items.erpInventoryTrackingCustom"),
-        group: trackingGroup,
-        section: inventorySection,
-        keywords: ["kho", "theo doi hang hoa", "tuy chinh", "custom"],
+        keywords: [
+          "kho",
+          "theo doi hang hoa",
+          "dinh danh",
+          "phu tung",
+          "parts",
+          "lo",
+          "lot",
+          "custom",
+        ],
         icon: <Layers className="w-4 h-4" />,
       });
     }
@@ -246,6 +275,23 @@ export function useNavItems(): NavSearchItem[] {
         section: manufacturingSection,
         keywords: ["san xuat", "production", "lenh san xuat"],
         icon: <Factory className="w-4 h-4" />,
+      });
+    }
+    if (canReadProduction || canReadInventoryItems) {
+      items.push({
+        key: "erp-finished-goods",
+        label: t("nav.items.erpFinishedGoods", "Thành phẩm"),
+        section: manufacturingSection,
+        keywords: [
+          "san xuat",
+          "thanh pham",
+          "xe",
+          "vin",
+          "khung",
+          "may",
+          "finished goods",
+        ],
+        icon: <PackageCheck className="w-4 h-4" />,
       });
     }
 
@@ -273,8 +319,8 @@ export function useNavItems(): NavSearchItem[] {
         icon: <Car className="w-4 h-4" />,
       });
       items.push({
-        key: "garage-customers",
-        label: t("nav.items.garageCustomers", "Khách hàng"),
+        key: "garage-partners",
+        label: t("nav.items.garagePartners", "Đối tác"),
         section: garageSection,
         keywords: [
           "garage",
@@ -306,57 +352,22 @@ export function useNavItems(): NavSearchItem[] {
     // 6. Vinfast
     const vinfastSection = t("nav.sections.vinfast");
     const vinfastPartsGroup = t("nav.items.vinfastPartsGroup");
-    const vinfastWorkshopGroup = t("nav.items.vinfastWorkshopGroup");
     if (canReadVinfast) {
       items.push({
-        key: "vinfast-parts-dashboard",
-        label: t("nav.items.vinfastPartsDashboard"),
+        key: "vinfast-parts-stock",
+        label: t("nav.items.vinfastPartsGroup", "Phụ tùng Vinfast"),
         group: vinfastPartsGroup,
         section: vinfastSection,
-        keywords: ["vinfast", "phu tung", "tong quan"],
+        keywords: [
+          "vinfast",
+          "phu tung",
+          "tong quan",
+          "dashboard",
+          "ton kho",
+          "oto",
+          "xe may",
+        ],
         icon: <Package className="w-4 h-4" />,
-      });
-      items.push({
-        key: "vinfast-parts-oto-stock",
-        label: t("nav.items.vinfastPartsOtoStock"),
-        group: vinfastPartsGroup,
-        section: vinfastSection,
-        keywords: ["vinfast", "phu tung", "oto", "o to", "ton kho"],
-        icon: <Package className="w-4 h-4" />,
-      });
-      items.push({
-        key: "vinfast-parts-xemay-stock",
-        label: t("nav.items.vinfastPartsXemayStock"),
-        group: vinfastPartsGroup,
-        section: vinfastSection,
-        keywords: ["vinfast", "phu tung", "xe may", "xemay", "ton kho"],
-        icon: <Package className="w-4 h-4" />,
-      });
-      if (isAdminEmail) {
-        items.push({
-          key: "vinfast-parts-oto" as PageKey,
-          label: "Phụ tùng ôtô",
-          group: vinfastPartsGroup,
-          section: vinfastSection,
-          keywords: ["vinfast", "phu tung", "oto"],
-          icon: <Package className="w-4 h-4" />,
-        });
-        items.push({
-          key: "vinfast-parts-xemay" as PageKey,
-          label: "Phụ tùng xe máy",
-          group: vinfastPartsGroup,
-          section: vinfastSection,
-          keywords: ["vinfast", "phu tung", "xe may"],
-          icon: <Package className="w-4 h-4" />,
-        });
-      }
-      items.push({
-        key: "vinfast-invoice-settlement",
-        label: t("nav.items.vinfastSettlement"),
-        group: vinfastWorkshopGroup,
-        section: vinfastSection,
-        keywords: ["vinfast", "quyet toan", "hoa don", "settlement"],
-        icon: <Factory className="w-4 h-4" />,
       });
     }
 
@@ -365,16 +376,7 @@ export function useNavItems(): NavSearchItem[] {
     const cashflowGroup = t("nav.items.cashflow");
     const invoiceGroup = t("nav.items.erpInvoices");
 
-    if (canReadBankStatements && isAdminEmail) {
-      items.push({
-        key: "budget",
-        label: "Budget",
-        section: accountingSection,
-        keywords: ["budget", "ngan sach", "ke toan"],
-        icon: <Target className="w-4 h-4" />,
-      });
-    }
-    if (canReadBankStatements) {
+    if (canReadCashflow) {
       items.push({
         key: "cashflow-dashboard",
         label: t("nav.items.cashflowDashboard"),
@@ -383,6 +385,8 @@ export function useNavItems(): NavSearchItem[] {
         keywords: ["dong tien", "cashflow", "tien mat", "ngan hang"],
         icon: <Wallet className="w-4 h-4" />,
       });
+    }
+    if (canReadBankStatements) {
       items.push({
         key: "bank-statement",
         label: t("bankStatement.bankTitle"),
@@ -391,6 +395,8 @@ export function useNavItems(): NavSearchItem[] {
         keywords: ["dong tien", "sao ke", "ngan hang", "bank statement"],
         icon: <Wallet className="w-4 h-4" />,
       });
+    }
+    if (canReadCashStatements) {
       items.push({
         key: "cash-statement",
         label: t("bankStatement.cashTitle"),
@@ -411,44 +417,45 @@ export function useNavItems(): NavSearchItem[] {
       });
       items.push({
         key: "erp-invoices",
-        label: t("nav.items.erpInvoices") || "Hóa đơn điện tử",
+        label: t("nav.items.erpInvoices"),
         group: invoiceGroup,
         section: accountingSection,
         keywords: [
           "hoa don",
           "hóa đơn",
           "invoices",
-          "dau vao",
-          "đầu vào",
-          "dau ra",
-          "đầu ra",
-          "inbound",
-          "outbound",
-          "hoa don mua vao",
-          "hoa don ban ra",
-          "chi tiet mua vao",
-          "chi tiet ban ra",
-          "mua hang",
-          "ban hang",
           "vat",
-          "gtgt",
+          "ban ra",
+          "mua vao",
+          "gdt",
         ],
         icon: <Receipt className="w-4 h-4" />,
       });
       items.push({
         key: "erp-invoices-draft",
-        label: "Hóa đơn nháp",
+        label: t("nav.items.erpInvoicesDraft"),
         group: invoiceGroup,
         section: accountingSection,
-        keywords: [
-          "hoa don",
-          "hóa đơn",
-          "invoices",
-          "nhap",
-          "draft",
-          "hoa don nhap",
-        ],
+        keywords: ["hoa don", "hóa đơn nháp", "nhap", "draft"],
         icon: <Receipt className="w-4 h-4" />,
+      });
+    }
+    if (canReadBankStatements && isAdminEmail) {
+      items.push({
+        key: "opex",
+        label: t("nav.items.operatingExpenses", "Chi phí vận hành"),
+        section: accountingSection,
+        keywords: [
+          "chi phi van hanh",
+          "chi phi",
+          "operating expenses",
+          "opex",
+          "budget",
+          "ngan sach",
+          "dinh ky",
+          "ke toan",
+        ],
+        icon: <Target className="w-4 h-4" />,
       });
     }
     if (showAccounting) {
@@ -487,9 +494,9 @@ export function useNavItems(): NavSearchItem[] {
       icon: <Paperclip className="w-4 h-4" />,
     });
 
-    // 9. Settings (Hệ thống)
+    // 9. Settings (Hệ thống & Cài đặt)
     const settingsSection = t("nav.sections.settings");
-    const accessGroup = t("nav.items.accessControl");
+    const accessGroup = t("nav.items.erpAccessControl");
     const catalogGroup = t("nav.items.catalog");
     const inventoryMastersGroup = t("nav.items.erpInventoryMasters");
 
@@ -549,6 +556,8 @@ export function useNavItems(): NavSearchItem[] {
         keywords: ["ngan hang", "bank", "tai khoan ngan hang", "thiet lap"],
         icon: <Settings className="w-4 h-4" />,
       });
+    }
+    if (showSettingsGeneral && canReadCashStatements) {
       items.push({
         key: "settings-cash-fund",
         label: t("thietlap.tabs.quy"),

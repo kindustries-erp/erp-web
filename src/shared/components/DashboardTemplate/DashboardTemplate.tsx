@@ -6,6 +6,7 @@ import type {
   FilterPanelConfig,
   FilterPanelReturn,
 } from "@/shared/hooks/useFilterPanel";
+import type { TabItem } from "@/shared/components/PageLayout";
 
 export interface DashboardTemplateProps {
   title: string;
@@ -18,6 +19,10 @@ export interface DashboardTemplateProps {
   children: React.ReactNode;
   portalId?: string;
   extraActions?: React.ReactNode;
+  tabs?: TabItem[];
+  activeTab?: string;
+  onTabChange?: (val: string) => void;
+  hideTabs?: boolean;
 }
 
 export function DashboardTemplate({
@@ -31,12 +36,20 @@ export function DashboardTemplate({
   children,
   portalId = "dashboard",
   extraActions,
+  tabs,
+  activeTab,
+  onTabChange,
+  hideTabs,
 }: DashboardTemplateProps) {
   return (
     <PageLayout
       title={title}
       desc={desc}
       icon={icon}
+      tabs={tabs}
+      activeTab={activeTab}
+      onTabChange={onTabChange}
+      hideTabs={hideTabs}
       actions={
         <TableActionGroup
           onRefresh={onRefresh}

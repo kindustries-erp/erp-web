@@ -178,6 +178,16 @@ describe("FilterButton", () => {
     expect(screen.getByText("(3)")).toBeInTheDocument();
   });
 
+  it("renders with activeCount badge even when onClear is NOT provided", () => {
+    render(
+      <TooltipProvider>
+        <FilterButton onClick={vi.fn()} activeCount={2} />
+      </TooltipProvider>,
+    );
+
+    expect(screen.getByText("(2)")).toBeInTheDocument();
+  });
+
   it("does not render badge when activeCount is 0", () => {
     render(
       <TooltipProvider>

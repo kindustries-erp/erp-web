@@ -88,7 +88,7 @@ describe("usePageUrlState", () => {
     });
 
     act(() => {
-      vi.advanceTimersByTime(350);
+      vi.advanceTimersByTime(550);
     });
 
     expect(window.location.search).toContain("_i=2");
@@ -115,5 +115,25 @@ describe("usePageUrlState", () => {
 
     expect(result.current.view).toBe("");
     expect(window.location.search).not.toContain("view=");
+  });
+
+  it("supports sorts and columnFilters serialization in URL", () => {
+    const { result } = renderHook(() =>
+      usePageUrlState({
+        pageKey: "erp-invoices",
+      }),
+    );
+
+    act(() => {
+      result.current.setSorts(["-invoiceDate", "invoiceNo"]);
+      result.current.setColumnFilters({ status: ["CONFIRMED", "DRAFT"] });
+    });
+
+    act(() => {
+      vi.advanceTimersByTime(550);
+    });
+
+    expect(window.location.search).toContain("sorts=");
+    expect(window.location.search).toContain("cf=");
   });
 });

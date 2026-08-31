@@ -1,7 +1,7 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { DrawerModal, DrawerSection, type DrawerAction } from "./DrawerModal";
 import { useT } from "@/core/i18n";
-import { ChevronRight, ChevronLeft } from "lucide-react";
+import { ChevronRight, ChevronLeft, Maximize2, Minimize2 } from "lucide-react";
 import { Button } from "@/shared/components/ui/Button";
 import { cn } from "@/shared/utils";
 import type { DrawerMode } from "../stores/useDrawerStore";
@@ -51,6 +51,21 @@ export interface StandardFormDrawerProps {
 
   /** Layout variant — defaults to "2-columns" */
   layout?: "1-column" | "2-columns";
+
+  /**
+   * Bật nút phóng to Toàn màn hình (Full Screen Mode) cho Drawer.
+   * Mặc định là true khi layout là "2-columns".
+   */
+  enableFullscreen?: boolean;
+
+  /** Trạng thái toàn màn hình (controlled) */
+  isFullscreen?: boolean;
+
+  /** Trạng thái toàn màn hình mặc định khi mở (mặc định: false) */
+  defaultFullscreen?: boolean;
+
+  /** Callback khi thay đổi trạng thái toàn màn hình */
+  onFullscreenChange?: (isFullscreen: boolean) => void;
 
   /**
    * Panel width preset. Ignored when `panelClassName` overrides width explicitly.
@@ -165,6 +180,10 @@ export function StandardFormDrawer({
   layout = "2-columns",
   size,
   confirmOnClose,
+  enableFullscreen,
+  isFullscreen: controlledFullscreen,
+  defaultFullscreen = false,
+  onFullscreenChange,
   tabs,
   activeTabKey,
   defaultTabKey,
@@ -198,6 +217,37 @@ export function StandardFormDrawer({
   const [rightPanelCollapsed, setRightPanelCollapsed] = useState(
     rightPanelDefaultCollapsed,
   );
+  const [internalFullscreen, setInternalFullscreen] =
+    useState(defaultFullscreen);
+
+  const isFullscreen =
+    controlledFullscreen !== undefined
+      ? controlledFullscreen
+      : internalFullscreen;
+
+  const isFullscreenEnabled =
+    enableFullscreen !== undefined ? enableFullscreen : layout === "2-columns";
+
+  const handleToggleFullscreen = useCallback(() => {
+    const next = !isFullscreen;
+    setInternalFullscreen(next);
+    onFullscreenChange?.(next);
+  }, [isFullscreen, onFullscreenChange]);
+
+  // Intercept Escape key when in fullscreen mode to exit fullscreen first
+  useEffect(() => {
+    if (!open || !isFullscreen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.stopPropagation();
+        e.preventDefault();
+        handleToggleFullscreen();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown, { capture: true });
+    return () =>
+      window.removeEventListener("keydown", handleKeyDown, { capture: true });
+  }, [open, isFullscreen, handleToggleFullscreen]);
 
   const [internalTabKey, setInternalTabKey] = useState<string>(() => {
     if (activeTabKey) return activeTabKey;
@@ -213,6 +263,7 @@ export function StandardFormDrawer({
   useEffect(() => {
     if (open && !prevOpenRef.current) {
       setRightPanelCollapsed(rightPanelDefaultCollapsed);
+      setInternalFullscreen(defaultFullscreen);
       if (activeTabKey) {
         setInternalTabKey(activeTabKey);
       } else if (defaultTabKey && tabs?.some((t) => t.key === defaultTabKey)) {
@@ -222,7 +273,14 @@ export function StandardFormDrawer({
       }
     }
     prevOpenRef.current = open;
-  }, [open, rightPanelDefaultCollapsed, activeTabKey, defaultTabKey, tabs]);
+  }, [
+    open,
+    rightPanelDefaultCollapsed,
+    defaultFullscreen,
+    activeTabKey,
+    defaultTabKey,
+    tabs,
+  ]);
 
   useEffect(() => {
     if (activeTabKey !== undefined) {
@@ -252,6 +310,9 @@ export function StandardFormDrawer({
           !effectiveHideRightPanel) ||
         Boolean(rightPanelTitle);
 
+  const hasRightPanelToggle =
+    !effectiveHideRightPanel && effectiveRightPanel && isRightPanelCollapsible;
+
   // view mode: border-primary outline, hover fills primary bg
   const headerExtra = (
     <div className="flex items-center gap-2">
@@ -264,23 +325,42 @@ export function StandardFormDrawer({
           {t("Chỉnh sửa")}
         </button>
       )}
-      {!effectiveHideRightPanel &&
-        effectiveRightPanel &&
-        isRightPanelCollapsible && (
-          <div
-            className={cn(
-              "flex items-center",
-              mode === "view" &&
-                onToggleEdit &&
-                "border-l pl-2 ml-1 border-border/60",
-            )}
-          >
+      {(isFullscreenEnabled || hasRightPanelToggle) && (
+        <div
+          className={cn(
+            "flex items-center gap-1",
+            mode === "view" &&
+              onToggleEdit &&
+              "border-l pl-2 ml-1 border-border/60",
+          )}
+        >
+          {isFullscreenEnabled && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              onClick={handleToggleFullscreen}
+              className="text-[color:var(--faint)] hover:text-foreground h-7 w-7 p-0 flex items-center justify-center"
+              title={
+                isFullscreen
+                  ? t("Thu nhỏ (Esc)", "Exit Fullscreen (Esc)")
+                  : t("Toàn màn hình", "Fullscreen")
+              }
+            >
+              {isFullscreen ? (
+                <Minimize2 className="w-3.5 h-3.5 text-primary" />
+              ) : (
+                <Maximize2 className="w-3.5 h-3.5" />
+              )}
+            </Button>
+          )}
+          {hasRightPanelToggle && (
             <Button
               type="button"
               variant="ghost"
               size="icon-sm"
               onClick={() => setRightPanelCollapsed((s) => !s)}
-              className="text-[color:var(--faint)] hover:text-foreground"
+              className="text-[color:var(--faint)] hover:text-foreground h-7 w-7 p-0 flex items-center justify-center"
               title={
                 rightPanelCollapsed
                   ? t("Mở rộng cột phải")
@@ -293,13 +373,16 @@ export function StandardFormDrawer({
                 <ChevronRight className="w-4 h-4" />
               )}
             </Button>
-          </div>
-        )}
+          )}
+        </div>
+      )}
     </div>
   );
 
-  // Resolve size → className (layout default: 1-column → sm, 2-columns → xl)
-  const resolvedSize = size ?? (layout === "1-column" ? "sm" : "xl");
+  // Resolve size → className (layout default: 1-column → sm, 2-columns → xl; fullscreen → full)
+  const resolvedSize = isFullscreen
+    ? "full"
+    : (size ?? (layout === "1-column" ? "sm" : "xl"));
   const defaultPanelClassName = SIZE_CLASS[resolvedSize];
 
   const hasRelatedContent = Boolean(
@@ -437,7 +520,11 @@ export function StandardFormDrawer({
       icon={icon}
       confirmOnClose={confirmOnClose}
       headerExtra={headerExtra}
-      panelClassName={cn(defaultPanelClassName, panelClassName)}
+      panelClassName={cn(
+        defaultPanelClassName,
+        isFullscreen && "fullscreen-drawer",
+        panelClassName,
+      )}
       bodyClassName={bodyClassName}
       title={title}
       titleExtra={titleExtra}

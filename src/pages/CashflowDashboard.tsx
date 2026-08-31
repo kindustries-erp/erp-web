@@ -12,6 +12,7 @@ import { ComingSoon } from "@/pages/ComingSoon";
 import { useT } from "@/core/i18n";
 import { useFilterPanel } from "@/shared/hooks/useFilterPanel";
 import { useHasAnyPermission } from "@/shared/hooks/useHasPermission";
+import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
 import { bankStatementApi } from "@/modules/bank-statements/api/bankStatementApi";
 import { getTags } from "@/modules/tags/api/tagsApi";
 import { getBranchesApi } from "@/modules/branches/api/branchApi";
@@ -433,14 +434,12 @@ export function CashflowDashboard() {
 
   const hasCashflowPerm = useHasAnyPermission(
     [
-      "bank_statements",
-      "cash_statements",
-      "payment_vouchers",
-      "erp_cashflow_vouchers",
-      "bank_accounts",
-      "cash_books",
+      ErpResource.BANK_STATEMENTS,
+      ErpResource.CASH_STATEMENTS,
+      ErpResource.PAYMENT_VOUCHERS,
+      ErpResource.CASHFLOW_VOUCHERS,
     ],
-    "read",
+    ErpAction.READ,
   );
 
   const canView = hasCashflowPerm || isAdminEmail;

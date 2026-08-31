@@ -1,20 +1,33 @@
 import { VinfastPartsStockExportDrawer } from "./VinfastPartsStockExportDrawer";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
-import { useState, useMemo, useCallback } from "react";
+import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { ComingSoon } from "@/pages/ComingSoon";
 import { useTranslation } from "react-i18next";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Eye, FileText, RefreshCw, DownloadCloud } from "lucide-react";
 import api from "@/core/api/axiosInstance";
-import { DataTableColumn } from "@/shared/components/DataTable";
+import {
+  createColumnHeaderFilter,
+  type DataTableColumn,
+} from "@/shared/components/DataTable";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate/SpreadsheetPageTemplate";
-import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
 import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
-import { ActionDropdown } from "@/shared/components/ActionDropdown";
-import { FilterButton } from "@/shared/components/FilterPanel";
+import { type ActionDropdownItem } from "@/shared/components/ActionDropdown";
 import { TableText } from "@/shared/components/DataTable/TableText";
+import { ErpUrlQueryParam } from "@/shared/constants/urlParams";
+import { ErpApiEndpoint } from "@/shared/constants/apiEndpoints";
+import { DEFAULT_DEBOUNCE_TIME } from "@/shared/constants/timing";
+import { encodeStateParam } from "@/shared/utils/pageUrl";
 import { VinfastPartsStockDetailDrawer } from "./VinfastPartsStockDetailDrawer";
 import { VinfastPartsSyncDrawer } from "./VinfastPartsSyncDrawer";
+
+export const getDefaultPageSize = (): number => {
+  if (typeof window !== "undefined" && window.innerHeight >= 900) {
+    return 50;
+  }
+  return 20;
+};
 
 interface VinfastPartsStockTemplateProps {
   vehicleType: "oto" | "xemay";
@@ -28,15 +41,37 @@ export function VinfastPartsStockTemplate({
   description,
 }: VinfastPartsStockTemplateProps) {
   const { t } = useTranslation(["vinfastParts", "reports", "common"]);
-  const hasVinfastPerm = useHasPermission("vinfast", "read");
+  const hasVinfastPerm = useHasPermission(ErpResource.VINFAST, ErpAction.READ);
   const queryClient = useQueryClient();
-  const [selectedSku, setSelectedSku] = useState<string | null>(null);
+  const [selectedSku, setSelectedSku] = useState<string | null>(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      return params.get(ErpUrlQueryParam.DETAIL);
+    }
+    return null;
+  });
   const [catalogData, setCatalogData] = useState<any>(null);
   const [syncDrawerOpen, setSyncDrawerOpen] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
 
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(50);
+  const [page, setPage] = useState<number>(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const pageVal = params.get(ErpUrlQueryParam.PAGE);
+      if (pageVal) return Math.max(1, parseInt(pageVal, 10) || 1);
+    }
+    return 1;
+  });
+  const [pageSize, setPageSize] = useState<number>(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const sizeVal =
+        params.get(ErpUrlQueryParam.PAGE_SIZE) ||
+        params.get(ErpUrlQueryParam.LIMIT);
+      if (sizeVal) return parseInt(sizeVal, 10) || getDefaultPageSize();
+    }
+    return getDefaultPageSize();
+  });
 
   const tableState = useTableColumnState(`vinfast-parts-stock-${vehicleType}`);
 
@@ -54,23 +89,104 @@ export function VinfastPartsStockTemplate({
     sortOrder = "desc";
   }
 
-  const getSortState = (key: string) => {
-    if (tableState.sorts.includes(key)) return "asc";
-    if (tableState.sorts.includes(`-${key}`)) return "desc";
-    return "none";
-  };
-  const handleSortChange = (key: string, state: "asc" | "desc" | "none") => {
-    tableState.setSort(key, state);
-    setPage(1);
-  };
-  const handleSearchChange = (key: string, val: string) => {
-    tableState.setColumnSearch(key, val);
-    setPage(1);
-  };
-  const handleFilterChange = (key: string, vals: string[]) => {
-    tableState.setColumnFilter(key, vals);
-    setPage(1);
-  };
+  // ── Two-Way URL Sync Effect ───────────────────────────────────────────────
+  const debounceUrlTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    if (debounceUrlTimerRef.current) {
+      clearTimeout(debounceUrlTimerRef.current);
+    }
+
+    debounceUrlTimerRef.current = setTimeout(() => {
+      const currentUrl = new URL(window.location.href);
+      const newParams = new URLSearchParams(currentUrl.search);
+
+      // Detail drawer
+      if (selectedSku) {
+        newParams.set(ErpUrlQueryParam.DETAIL, selectedSku);
+      } else {
+        newParams.delete(ErpUrlQueryParam.DETAIL);
+      }
+
+      // Pagination
+      if (page > 1) {
+        newParams.set(ErpUrlQueryParam.PAGE, String(page));
+      } else {
+        newParams.delete(ErpUrlQueryParam.PAGE);
+      }
+      if (pageSize !== getDefaultPageSize()) {
+        newParams.set(ErpUrlQueryParam.PAGE_SIZE, String(pageSize));
+      } else {
+        newParams.delete(ErpUrlQueryParam.PAGE_SIZE);
+      }
+
+      // Column filters (cf)
+      if (Object.keys(tableState.columnFilters).length > 0) {
+        const encoded = encodeStateParam(tableState.columnFilters);
+        if (encoded) newParams.set(ErpUrlQueryParam.COLUMN_FILTERS, encoded);
+      } else {
+        newParams.delete(ErpUrlQueryParam.COLUMN_FILTERS);
+      }
+
+      // Column search (cs)
+      if (Object.keys(tableState.columnSearch).length > 0) {
+        const encoded = encodeStateParam(tableState.columnSearch);
+        if (encoded) newParams.set(ErpUrlQueryParam.COLUMN_SEARCH, encoded);
+      } else {
+        newParams.delete(ErpUrlQueryParam.COLUMN_SEARCH);
+      }
+
+      // Sorts
+      if (tableState.sorts.length > 0) {
+        const encoded = encodeStateParam(tableState.sorts);
+        if (encoded) newParams.set(ErpUrlQueryParam.SORTS, encoded);
+      } else {
+        newParams.delete(ErpUrlQueryParam.SORTS);
+      }
+
+      const newSearch = newParams.toString();
+      const newRelativePath = `${window.location.pathname}${newSearch ? `?${newSearch}` : ""}`;
+      if (
+        window.location.pathname + window.location.search !==
+        newRelativePath
+      ) {
+        window.history.replaceState(null, "", newRelativePath);
+      }
+    }, DEFAULT_DEBOUNCE_TIME);
+
+    return () => {
+      if (debounceUrlTimerRef.current)
+        clearTimeout(debounceUrlTimerRef.current);
+    };
+  }, [
+    selectedSku,
+    page,
+    pageSize,
+    tableState.columnFilters,
+    tableState.columnSearch,
+    tableState.sorts,
+  ]);
+
+  // Handle popstate
+  useEffect(() => {
+    const handlePopState = () => {
+      const params = new URLSearchParams(window.location.search);
+      const detailParam = params.get(ErpUrlQueryParam.DETAIL);
+      setSelectedSku(detailParam || null);
+
+      const pageParam = params.get(ErpUrlQueryParam.PAGE);
+      if (pageParam) {
+        const p = parseInt(pageParam, 10);
+        if (!isNaN(p)) setPage(p);
+      }
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
 
   const fetchColumnOptions = useCallback(
     async ({
@@ -85,7 +201,7 @@ export function VinfastPartsStockTemplate({
       filtersStr?: string;
     }) => {
       const parsedFilters = filtersStr ? JSON.parse(filtersStr) : {};
-      const res = await api.get("/api/v1/vinfast-parts/stock/column-options", {
+      const res = await api.get(ErpApiEndpoint.VINFAST_PARTS_STOCK_OPTIONS, {
         params: {
           columnKey,
           search,
@@ -107,14 +223,14 @@ export function VinfastPartsStockTemplate({
     [vehicleType],
   );
 
-  const commonFilterProps = useMemo(
-    () => ({
-      enableSelectAllMatching: true,
-      queryKeyPrefix: `vinfast-parts-stock-options-${vehicleType}`,
-      allFilters: tableState.columnFilters,
-      fetchOptions: fetchColumnOptions,
-    }),
-    [tableState.columnFilters, fetchColumnOptions, vehicleType],
+  const headerFilter = useMemo(
+    () =>
+      createColumnHeaderFilter({
+        listHook: tableState,
+        queryKeyPrefix: `vinfast-parts-stock-options-${vehicleType}`,
+        fetchOptions: fetchColumnOptions,
+      }),
+    [tableState, vehicleType, fetchColumnOptions],
   );
 
   const { data, isLoading, isFetching } = useQuery({
@@ -131,12 +247,12 @@ export function VinfastPartsStockTemplate({
     ],
     queryFn: async () => {
       const params = new URLSearchParams();
-      params.append("vehicleType", vehicleType);
+      params.append(ErpUrlQueryParam.VEHICLE_TYPE, vehicleType);
 
-      if (sortBy) params.append("sortBy", sortBy);
-      if (sortOrder) params.append("sortDir", sortOrder);
+      if (sortBy) params.append(ErpUrlQueryParam.SORT_BY, sortBy);
+      if (sortOrder) params.append(ErpUrlQueryParam.SORT_DIR, sortOrder);
       if (tableState.sorts.length > 0)
-        params.append("sorts", JSON.stringify(tableState.sorts));
+        params.append(ErpUrlQueryParam.SORTS, JSON.stringify(tableState.sorts));
       if (Object.keys(tableState.columnSearch).length > 0)
         params.append("column_search", JSON.stringify(tableState.columnSearch));
       if (Object.keys(tableState.columnFilters).length > 0)
@@ -145,10 +261,12 @@ export function VinfastPartsStockTemplate({
           JSON.stringify(tableState.columnFilters),
         );
 
-      params.append("page", page.toString());
-      params.append("limit", pageSize.toString());
+      params.append(ErpUrlQueryParam.PAGE, page.toString());
+      params.append(ErpUrlQueryParam.LIMIT, pageSize.toString());
 
-      const res = await api.get(`/api/v1/vinfast-parts/stock?${params}`);
+      const res = await api.get(
+        `${ErpApiEndpoint.VINFAST_PARTS_STOCK}?${params}`,
+      );
       return res.data;
     },
   });
@@ -156,51 +274,27 @@ export function VinfastPartsStockTemplate({
   const columns = useMemo<DataTableColumn<any>[]>(
     () => [
       {
-        key: "actions",
-        header: "",
-        size: 48,
-        cell: (row) => (
-          <ActionDropdown
-            items={[
-              {
-                groupLabel: t("vinfastParts:SEARCH", "TRA CỨU"),
-                items: [
-                  {
-                    label: t("vinfastParts:VIEW_DETAILS", "Chi tiết"),
-                    icon: <Eye className="w-3.5 h-3.5" />,
-                    onClick: () => {
-                      setCatalogData(row);
-                      setSelectedSku(row.sku);
-                    },
-                  },
-                ],
-              },
-            ]}
-          />
+        key: "index",
+        header: <span className="w-full block text-center">#</span>,
+        size: 40,
+        enableResizing: false,
+        headerClassName: "text-center w-[40px] min-w-[40px]",
+        className: "text-center w-[40px] min-w-[40px]",
+        cell: (_, idx) => (
+          <span className="w-full block text-center">{idx}</span>
         ),
       },
       {
         key: "sku",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("vinfastParts:PART_SKU", "Mã phụ tùng")}
-            sortState={getSortState("sku")}
-            onSortChange={(state) => handleSortChange("sku", state)}
-            searchValue={tableState.columnSearch["sku"] || ""}
-            onSearchChange={(val) => handleSearchChange("sku", val)}
-            selectedFilters={tableState.columnFilters["sku"] || []}
-            onFilterChange={(vals) => handleFilterChange("sku", vals)}
-            align="center"
-            columnKey="sku"
-            {...commonFilterProps}
-          />
-        ),
+        header: headerFilter("sku", t("vinfastParts:PART_SKU", "Mã phụ tùng")),
         size: 200,
+        enableResizing: true,
         headerClassName: "text-center",
         cell: (row) => (
           <TableText
             text={row.sku}
             enableCopy={true}
+            tooltip={true}
             onDetailClick={(e) => {
               e.stopPropagation();
               setCatalogData(row);
@@ -211,21 +305,12 @@ export function VinfastPartsStockTemplate({
       },
       {
         key: "name",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("vinfastParts:PART_NAME", "Tên phụ tùng")}
-            sortState={getSortState("name")}
-            onSortChange={(state) => handleSortChange("name", state)}
-            searchValue={tableState.columnSearch["name"] || ""}
-            onSearchChange={(val) => handleSearchChange("name", val)}
-            selectedFilters={tableState.columnFilters["name"] || []}
-            onFilterChange={(vals) => handleFilterChange("name", vals)}
-            align="center"
-            columnKey="name"
-            {...commonFilterProps}
-          />
+        header: headerFilter(
+          "name",
+          t("vinfastParts:PART_NAME", "Tên phụ tùng"),
         ),
         size: 300,
+        enableResizing: true,
         headerClassName: "text-center",
         cell: (row) => (
           <div className="truncate w-full max-w-[280px]" title={row.name || ""}>
@@ -235,98 +320,113 @@ export function VinfastPartsStockTemplate({
       },
       {
         key: "uom",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("vinfastParts:UOM", "ĐVT")}
-            sortState={getSortState("uom")}
-            onSortChange={(state) => handleSortChange("uom", state)}
-            searchValue={tableState.columnSearch["uom"] || ""}
-            onSearchChange={(val) => handleSearchChange("uom", val)}
-            selectedFilters={tableState.columnFilters["uom"] || []}
-            onFilterChange={(vals) => handleFilterChange("uom", vals)}
-            align="center"
-            columnKey="uom"
-            {...commonFilterProps}
-          />
-        ),
+        header: headerFilter("uom", t("vinfastParts:UOM", "ĐVT"), {
+          showBlankOption: true,
+        }),
         size: 100,
+        enableResizing: true,
         className: "text-center",
         headerClassName: "text-center",
         cell: (row) => row.uom || "—",
       },
       {
         key: "qtyIn",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("vinfastParts:TOTAL_IN", "Tổng Nhập")}
-            sortState={getSortState("qtyIn")}
-            onSortChange={(state) => handleSortChange("qtyIn", state)}
-            searchValue={tableState.columnSearch["qtyIn"] || ""}
-            onSearchChange={(val) => handleSearchChange("qtyIn", val)}
-            selectedFilters={tableState.columnFilters["qtyIn"] || []}
-            onFilterChange={(vals) => handleFilterChange("qtyIn", vals)}
-            align="center"
-            columnKey="qtyIn"
-            {...commonFilterProps}
-          />
+        header: headerFilter.numeric(
+          "qtyIn",
+          t("vinfastParts:TOTAL_IN", "Tổng Nhập"),
         ),
         size: 120,
-        className: "text-right font-medium text-emerald-700",
+        enableResizing: true,
+        className: "text-right font-medium text-emerald-700 tabular-nums",
         headerClassName: "text-right",
-        cell: (row) => Number(row.qtyIn).toLocaleString(),
+        cell: (row) => Number(row.qtyIn || 0).toLocaleString("vi-VN"),
       },
       {
         key: "qtyOut",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("vinfastParts:TOTAL_OUT", "Tổng Xuất")}
-            sortState={getSortState("qtyOut")}
-            onSortChange={(state) => handleSortChange("qtyOut", state)}
-            searchValue={tableState.columnSearch["qtyOut"] || ""}
-            onSearchChange={(val) => handleSearchChange("qtyOut", val)}
-            selectedFilters={tableState.columnFilters["qtyOut"] || []}
-            onFilterChange={(vals) => handleFilterChange("qtyOut", vals)}
-            align="center"
-            columnKey="qtyOut"
-            {...commonFilterProps}
-          />
+        header: headerFilter.numeric(
+          "qtyOut",
+          t("vinfastParts:TOTAL_OUT", "Tổng Xuất"),
         ),
         size: 120,
-        className: "text-right font-medium text-rose-700",
+        enableResizing: true,
+        className: "text-right font-medium text-rose-700 tabular-nums",
         headerClassName: "text-right",
-        cell: (row) => Number(row.qtyOut).toLocaleString(),
+        cell: (row) => Number(row.qtyOut || 0).toLocaleString("vi-VN"),
       },
       {
         key: "qtyBalance",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("vinfastParts:BALANCE", "Tồn cuối")}
-            sortState={getSortState("qtyBalance")}
-            onSortChange={(state) => handleSortChange("qtyBalance", state)}
-            searchValue={tableState.columnSearch["qtyBalance"] || ""}
-            onSearchChange={(val) => handleSearchChange("qtyBalance", val)}
-            selectedFilters={tableState.columnFilters["qtyBalance"] || []}
-            onFilterChange={(vals) => handleFilterChange("qtyBalance", vals)}
-            align="center"
-            columnKey="qtyBalance"
-            {...commonFilterProps}
-          />
+        header: headerFilter.numeric(
+          "qtyBalance",
+          t("vinfastParts:BALANCE", "Tồn cuối"),
         ),
         size: 120,
-        className: "text-right font-bold text-slate-800",
+        enableResizing: true,
+        className: "text-right font-bold text-slate-800 tabular-nums",
         headerClassName: "text-right",
-        cell: (row) => Number(row.qtyBalance).toLocaleString(),
+        cell: (row) => Number(row.qtyBalance || 0).toLocaleString("vi-VN"),
       },
     ],
-    [
-      t,
-      tableState,
-      commonFilterProps,
-      getSortState,
-      handleSortChange,
-      handleSearchChange,
-      handleFilterChange,
+    [headerFilter, t],
+  );
+
+  const getRowActions = useCallback(
+    (row: any): ActionDropdownItem[] => [
+      {
+        groupLabel: t("vinfastParts:SEARCH", "TRA CỨU"),
+        items: [
+          {
+            label: t("vinfastParts:VIEW_DETAILS", "Xem chi tiết"),
+            icon: <Eye className="w-3.5 h-3.5" />,
+            onClick: () => {
+              setCatalogData(row);
+              setSelectedSku(row.sku);
+            },
+          },
+        ],
+      },
     ],
+    [t],
+  );
+
+  const totals = useMemo(() => {
+    const items = data?.data || [];
+    return items.reduce(
+      (
+        acc: { qtyIn: number; qtyOut: number; qtyBalance: number },
+        row: any,
+      ) => ({
+        qtyIn: acc.qtyIn + Number(row.qtyIn || 0),
+        qtyOut: acc.qtyOut + Number(row.qtyOut || 0),
+        qtyBalance: acc.qtyBalance + Number(row.qtyBalance || 0),
+      }),
+      { qtyIn: 0, qtyOut: 0, qtyBalance: 0 },
+    );
+  }, [data?.data]);
+
+  const summaryRow = useMemo(
+    () => ({
+      name: (
+        <div className="text-right w-full font-semibold">
+          {t("common:total", "Tổng cộng")}:
+        </div>
+      ),
+      qtyIn: (
+        <div className="text-right font-semibold text-emerald-700 tabular-nums">
+          {totals.qtyIn.toLocaleString("vi-VN")}
+        </div>
+      ),
+      qtyOut: (
+        <div className="text-right font-semibold text-rose-700 tabular-nums">
+          {totals.qtyOut.toLocaleString("vi-VN")}
+        </div>
+      ),
+      qtyBalance: (
+        <div className="text-right font-bold text-slate-800 tabular-nums">
+          {totals.qtyBalance.toLocaleString("vi-VN")}
+        </div>
+      ),
+    }),
+    [totals, t],
   );
 
   if (!hasVinfastPerm) {
@@ -374,15 +474,9 @@ export function VinfastPartsStockTemplate({
             ],
           },
         ]}
-        extraActions={
-          tableState.activeFilterCount > 0 ? (
-            <FilterButton
-              onClick={() => {}}
-              activeCount={tableState.activeFilterCount}
-              onClear={() => tableState.resetFilters()}
-            />
-          ) : null
-        }
+        rowActions={getRowActions}
+        summaryRow={summaryRow}
+        emptyLabel={t("common:noData", "Không có dữ liệu")}
         items={data?.data || []}
         columns={columns}
         loading={isLoading || isFetching}

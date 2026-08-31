@@ -20,12 +20,10 @@ import {
 import {
   useGarageCases,
   useGarageBranches,
-  useSyncGarageCaseDetail,
   useGarageGrossProfit,
 } from "../hooks/useGarage";
 import { useQueryClient } from "@tanstack/react-query";
 import {
-  RefreshCw,
   DownloadCloud,
   TrendingUp,
   FileText,
@@ -43,6 +41,7 @@ import {
 import { toast } from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
+import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
 import { PillTabs } from "@/shared/components/PillTabs";
 import { usePageViewPresets } from "@/shared/hooks/usePageViewPresets";
 import {
@@ -50,8 +49,10 @@ import {
   type TableViewPreset,
 } from "@/shared/hooks/useUserPreferences";
 import { applyGarageCasesTableState } from "../utils/garageCasesTable";
-import { GarageCaseSettlementDrawerModal } from "../components/GarageCaseSettlementDrawerModal";
-import { InvoiceSelectionDrawer } from "../components/InvoiceSelectionDrawer";
+import {
+  GarageCaseReconciliationDrawer,
+  type ReconciliationTabKey,
+} from "../components/GarageCaseReconciliationDrawer";
 import { GarageCaseViewModeCombobox } from "../components/GarageCaseViewModeCombobox";
 import { GarageCaseViewConfigDrawer } from "../components/GarageCaseViewConfigDrawer";
 import {
@@ -456,24 +457,26 @@ export function GarageCases() {
     return undefined;
   }, []);
 
-  const { mutate: syncCaseDetail } = useSyncGarageCaseDetail();
-
   const [syncDrawerOpen, setSyncDrawerOpen] = useState(false);
   const [syncMode, setSyncMode] = useState<"cases" | "gross-profit">("cases");
 
   const [selectedCaseId, setSelectedCaseId] = useState<string | null>(null);
   const [drawerEditMode, setDrawerEditMode] = useState<boolean>(false);
-  const [settlementCase, setSettlementCase] = useState<any | null>(null);
-  const [invoiceLinkingCase, setInvoiceLinkingCase] = useState<any | null>(
+  const [reconciliationCase, setReconciliationCase] = useState<any | null>(
     null,
   );
+  const [reconciliationInitialTab, setReconciliationInitialTab] =
+    useState<ReconciliationTabKey>("bank_cash");
 
-  const canCreateGarage = useHasPermission("garage", "create");
-  const canUpdateGarage = useHasPermission("garage", "update");
-  const canCreateGreenway = useHasPermission("greenway_integration", "create");
-  const canCreateKgara = useHasPermission("kgara_integration", "create");
-  const canSyncGarage =
-    canCreateGarage || canUpdateGarage || canCreateGreenway || canCreateKgara;
+  const canCreateGarage = useHasPermission(
+    ErpResource.GARAGE,
+    ErpAction.CREATE,
+  );
+  const canUpdateGarage = useHasPermission(
+    ErpResource.GARAGE,
+    ErpAction.UPDATE,
+  );
+  const canSyncGarage = canCreateGarage || canUpdateGarage;
 
   const createActions = useMemo(
     () =>
@@ -748,7 +751,8 @@ export function GarageCases() {
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
-                    setInvoiceLinkingCase(item);
+                    setReconciliationInitialTab("invoices_out");
+                    setReconciliationCase(item);
                   }}
                   className="text-emerald-600 dark:text-emerald-400 hover:text-primary transition-colors cursor-pointer shrink-0 inline-flex items-center justify-center p-0.5"
                 >
@@ -1154,7 +1158,7 @@ export function GarageCases() {
               setSelectedCaseId(item.soChungTu || item.id);
             }}
             className="group cursor-pointer transition-transform hover:scale-105"
-            title={t("cases.actions.configure", "Cấu hình / Phân loại")}
+            title={t("cases.actions.configure", "Phân loại")}
           >
             <GarageCaseClassificationBadge
               classification={item.classification}
@@ -1761,7 +1765,7 @@ export function GarageCases() {
                 },
               },
               {
-                label: t("cases.actions.configure", "Cấu hình / Phân loại"),
+                label: t("cases.actions.configure", "Phân loại"),
                 icon: <SlidersHorizontal className="w-4 h-4" />,
                 onClick: () => {
                   setDrawerEditMode(true);
@@ -1769,27 +1773,11 @@ export function GarageCases() {
                 },
               },
               {
-                label: t("cases.actions.syncDetails", "Đồng bộ từ KGara"),
-                icon: <RefreshCw className="w-4 h-4" />,
-                onClick: () => {
-                  syncCaseDetail({
-                    branchId: selectedBranchId!,
-                    caseId: item.hdPhieuDichVuId,
-                  });
-                },
-              },
-              {
-                label: t("cases.actions.netOffSettlement", "Cấn trừ sao kê"),
+                label: t("cases.actions.reconcile", "Đối soát"),
                 icon: <Scale className="w-4 h-4" />,
                 onClick: () => {
-                  setSettlementCase(item);
-                },
-              },
-              {
-                label: t("cases.actions.linkInvoice", "Liên kết hóa đơn"),
-                icon: <Link2 className="w-4 h-4" />,
-                onClick: () => {
-                  setInvoiceLinkingCase(item);
+                  setReconciliationInitialTab("bank_cash");
+                  setReconciliationCase(item);
                 },
               },
             ],
@@ -1861,64 +1849,22 @@ export function GarageCases() {
         onResetDefault={handleResetViewPreset}
       />
 
-      {settlementCase && (
-        <GarageCaseSettlementDrawerModal
-          open={!!settlementCase}
-          onClose={() => setSettlementCase(null)}
-          caseId={settlementCase.id}
-          caseCode={settlementCase.soChungTu || settlementCase.hdPhieuDichVuId}
+      {reconciliationCase && (
+        <GarageCaseReconciliationDrawer
+          open={!!reconciliationCase}
+          onClose={() => setReconciliationCase(null)}
+          caseId={reconciliationCase.id}
+          caseCode={
+            reconciliationCase.soChungTu || reconciliationCase.hdPhieuDichVuId
+          }
+          initialTab={reconciliationInitialTab}
           defaultType="RECEIPT"
           suggestedAmount={Number(
-            settlementCase.tienConPhaiThanhToan ||
-              settlementCase.tienCoThue ||
+            reconciliationCase.tienConPhaiThanhToan ||
+              reconciliationCase.tienCoThue ||
               0,
           )}
-          onSubmit={async (items) => {
-            try {
-              for (const item of items) {
-                await garageApi.addCaseSettlement(settlementCase.id, item);
-              }
-              toast.success(
-                t(
-                  "cases.settlementSuccess",
-                  "Đã ghi nhận cấn trừ sao kê thành công",
-                ),
-              );
-              setSettlementCase(null);
-              refetch();
-              queryClient.invalidateQueries({
-                queryKey: ["garage", "grossProfitReport"],
-              });
-              queryClient.invalidateQueries({
-                queryKey: ["garage-case-financial-summary", settlementCase.id],
-              });
-              queryClient.invalidateQueries({
-                queryKey: ["garage-case-settlements", settlementCase.id],
-              });
-              queryClient.invalidateQueries({
-                queryKey: ["garage-case-traceability-graph", settlementCase.id],
-              });
-            } catch (err: any) {
-              toast.error(
-                err.response?.data?.message ||
-                  t("cases.settlementError", "Lỗi ghi nhận cấn trừ sao kê"),
-              );
-            }
-          }}
-        />
-      )}
-
-      {invoiceLinkingCase && (
-        <InvoiceSelectionDrawer
-          open={!!invoiceLinkingCase}
-          onClose={() => setInvoiceLinkingCase(null)}
-          caseId={invoiceLinkingCase.id}
-          caseCode={
-            invoiceLinkingCase.soChungTu || invoiceLinkingCase.hdPhieuDichVuId
-          }
-          defaultLinkType="OUT"
           onSuccess={() => {
-            setInvoiceLinkingCase(null);
             refetch();
             queryClient.invalidateQueries({
               queryKey: ["garage", "grossProfitReport"],
@@ -1926,22 +1872,25 @@ export function GarageCases() {
             queryClient.invalidateQueries({
               queryKey: [
                 "garage-case-financial-summary",
-                invoiceLinkingCase.id,
+                reconciliationCase.id,
               ],
+            });
+            queryClient.invalidateQueries({
+              queryKey: ["garage-case-settlements", reconciliationCase.id],
             });
             queryClient.invalidateQueries({
               queryKey: [
                 "garage-case-traceability-graph",
-                invoiceLinkingCase.id,
+                reconciliationCase.id,
               ],
             });
             queryClient.invalidateQueries({
-              queryKey: ["garage-case-linked-invoices", invoiceLinkingCase.id],
+              queryKey: ["garage-case-linked-invoices", reconciliationCase.id],
             });
             queryClient.invalidateQueries({
               queryKey: [
                 "garage-case-linked-invoices-for-drawer",
-                invoiceLinkingCase.id,
+                reconciliationCase.id,
               ],
             });
           }}

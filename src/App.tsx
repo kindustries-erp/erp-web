@@ -21,7 +21,7 @@ import { Login } from "@/pages/Login";
 import { NotFound } from "@/pages/NotFound";
 import { TooltipProvider } from "@/core/components/ui/Tooltip";
 import { VinfastPartsTrackingPage } from "@/pages/VinfastPartsTrackingPage";
-import { VinfastPartsDashboardPage } from "@/pages/VinfastPartsDashboardPage";
+import { VinfastPartsStockPage } from "@/pages/VinfastPartsStockPage";
 import { VinfastPartsOtoStockPage } from "@/pages/VinfastPartsOtoStockPage";
 import { VinfastPartsMotoStockPage } from "@/pages/VinfastPartsMotoStockPage";
 
@@ -200,11 +200,6 @@ const ChartOfAccountsPage = lazy(() =>
     default: m.ChartOfAccountsPage,
   })),
 );
-const VinfastSettlementPage = lazy(() =>
-  import("@/pages/VinfastSettlementPage").then((m) => ({
-    default: m.VinfastSettlementPage,
-  })),
-);
 const ThietLapNganHang = lazy(() =>
   import("@/pages/SettingsBankAccount").then((m) => ({
     default: m.ThietLapNganHang,
@@ -255,9 +250,14 @@ const GaragePayables = lazy(() =>
     default: m.GaragePayables,
   })),
 );
-const GarageCustomers = lazy(() =>
-  import("@/modules/garage/pages/GarageCustomers").then((m) => ({
-    default: m.GarageCustomers,
+const GaragePartners = lazy(() =>
+  import("@/modules/garage/pages/GaragePartners").then((m) => ({
+    default: m.GaragePartners,
+  })),
+);
+const FinishedGoodsPage = lazy(() =>
+  import("@/pages/manufacturing/FinishedGoodsPage").then((m) => ({
+    default: m.FinishedGoodsPage,
   })),
 );
 const AfterSalesPage = lazy(() =>
@@ -265,15 +265,15 @@ const AfterSalesPage = lazy(() =>
     default: m.AfterSalesPage,
   })),
 );
-const BudgetPage = lazy(() =>
-  import("@/pages/BudgetPage").then((m) => ({
-    default: m.BudgetPage,
+const OpexPage = lazy(() =>
+  import("@/pages/OpexPage").then((m) => ({
+    default: m.OpexPage,
   })),
 );
 
 const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   dashboard: Dashboard,
-  budget: BudgetPage,
+  opex: OpexPage,
   "inventory-dashboard": InventoryDashboard,
   "cashflow-dashboard": CashflowDashboard,
   purchasing: MuaHang,
@@ -287,6 +287,7 @@ const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   "mfg-vehicles": MfgVehicles,
   "erp-bom": ErpBomPage,
   "erp-production": ErpProductionPage,
+  "erp-finished-goods": FinishedGoodsPage,
   "erp-sales-orders": ErpSalesOrdersPage,
   "sales-report-dashboard": SalesReportDashboardPage,
   "erp-goods-issues": ErpGoodsIssuesPage,
@@ -319,17 +320,20 @@ const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   "garage-opex": GarageOpex,
   "garage-receivables": GarageReceivables,
   "garage-payables": GaragePayables,
-  "garage-customers": GarageCustomers,
+  "garage-customers": GaragePartners,
+  "garage-partners": GaragePartners,
   "after-sales": AfterSalesPage,
   "vinfast-parts": VinfastPartsTrackingPage,
-  "vinfast-parts-dashboard": VinfastPartsDashboardPage,
+  "vinfast-parts-dashboard": () => (
+    <VinfastPartsStockPage initialTab="dashboard" />
+  ),
   "vinfast-parts-oto": () => <VinfastPartsTrackingPage vehicleType="CAR" />,
   "vinfast-parts-xemay": () => (
     <VinfastPartsTrackingPage vehicleType="MOTORBIKE" />
   ),
+  "vinfast-parts-stock": VinfastPartsStockPage,
   "vinfast-parts-oto-stock": VinfastPartsOtoStockPage,
   "vinfast-parts-xemay-stock": VinfastPartsMotoStockPage,
-  "vinfast-invoice-settlement": VinfastSettlementPage,
   "purchasing-report-dashboard": PurchasingReportDashboardPage,
 };
 
@@ -342,6 +346,8 @@ const PAGE_PRELOADERS: Partial<Record<PageKey, PageLoader>> = {
     import("@/pages/inventory/InventoryTrackingPage"),
   "erp-inventory-tracking-parts": () =>
     import("@/pages/inventory/InventoryTrackingPartsPage"),
+  "erp-finished-goods": () => import("@/pages/manufacturing/FinishedGoodsPage"),
+  "garage-partners": () => import("@/modules/garage/pages/GaragePartners"),
   "erp-inventory-vouchers": loadInventoryVouchersPage,
   "erp-sales-orders": loadErpSalesOrdersPage,
   "erp-goods-issues": loadErpGoodsIssuesPage,

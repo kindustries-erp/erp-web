@@ -39,6 +39,7 @@ import { InvoiceDetailWrapper } from "./InvoiceDetailWrapper";
 import { GdtPortalAuthDrawer } from "./GdtPortalAuthDrawer";
 import { KeyRound } from "lucide-react";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
+import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
 
 interface Props {
   open: boolean;
@@ -54,7 +55,10 @@ export function InvoiceImportSyncDrawer({
   initialDirection,
 }: Props) {
   const { t } = useTranslation("erpInvoices");
-  const canEditInvoice = useHasPermission("invoices", "update");
+  const canEditInvoice = useHasPermission(
+    ErpResource.INVOICES,
+    ErpAction.UPDATE,
+  );
 
   const presetOptions = useMemo(() => {
     const options = [];

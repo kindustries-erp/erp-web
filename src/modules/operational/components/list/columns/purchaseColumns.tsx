@@ -1,8 +1,10 @@
 import { useMemo } from "react";
-import { PackageCheck, PackageOpen, PackageX } from "lucide-react";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import { useT } from "@/core/i18n";
-import type { DataTableColumn } from "@/shared/components/DataTable";
+import {
+  createColumnHeaderFilter,
+  type DataTableColumn,
+} from "@/shared/components/DataTable";
 import { TableText } from "@/shared/components/DataTable/TableText";
 import { TableDateCell } from "@/shared/components/DataTable/TableDateCell";
 import {
@@ -11,10 +13,9 @@ import {
   type OperationalVariant,
 } from "@/modules/operational/api/operationalApi";
 import { StatusBadge } from "@/shared/components/badges";
+import { Badge } from "@/shared/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
-import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
 import { type useTableColumnState } from "@/shared/hooks/useTableColumnState";
-import { DateRangeColumnSlot } from "@/shared/components/DataTable/DateRangeColumnSlot";
 
 interface UsePurchaseColumnsOptions {
   variant: OperationalVariant;
@@ -63,7 +64,7 @@ function PoTooltipContent({ row }: { row: OperationalDocument }) {
   return (
     <div className="flex flex-col gap-1 min-w-[200px] max-w-[350px] text-xs">
       <div className="font-semibold border-b border-border pb-1 mb-1 shrink-0">
-        Chi tiết PO ({lines.length} dòng)
+        {t("Chi tiết PO")} ({lines.length} {t("dòng")})
       </div>
       <div className="flex flex-col gap-1 max-h-[300px] overflow-y-auto pr-1">
         {lines.map((l: any, idx: number) => (
@@ -75,7 +76,7 @@ function PoTooltipContent({ row }: { row: OperationalDocument }) {
               - {l.item_name || l.description || t("Không có tên")}
             </span>
             <span className="font-medium whitespace-nowrap shrink-0">
-              SL: {Number(l.qty || 0).toLocaleString("vi-VN")}
+              {t("SL")}: {Number(l.qty || 0).toLocaleString("vi-VN")}
             </span>
           </div>
         ))}
@@ -85,109 +86,71 @@ function PoTooltipContent({ row }: { row: OperationalDocument }) {
 }
 
 /**
- * Hook trả về columns cho bảng danh sách đơn mua hàng (variant="purchase").
- * Extracted từ OperationalListPage.tsx (dòng 1365–1477).
+ * Hook trả về columns chuẩn hóa cho bảng danh sách đơn mua hàng (variant="purchase").
  */
 export function usePurchaseColumns({
-  variant,
   onOpenDetail,
   tableState,
   fetchColumnOptions,
 }: UsePurchaseColumnsOptions): DataTableColumn<OperationalDocument>[] {
   const t = useT();
 
-  const getSortState = (key: string) => {
-    if (tableState.sorts.includes(key)) return "asc";
-    if (tableState.sorts.includes(`-${key}`)) return "desc";
-    return "none";
-  };
-  const handleSortChange = (key: string, state: "asc" | "desc" | "none") => {
-    tableState.setSort(key, state);
-  };
-  const handleSearchChange = (key: string, val: string) => {
-    tableState.setColumnSearch(key, val);
-  };
-  const handleFilterChange = (key: string, vals: string[]) => {
-    tableState.setColumnFilter(key, vals);
-  };
+  const headerFilter = useMemo(
+    () =>
+      createColumnHeaderFilter({
+        listHook: tableState,
+        queryKeyPrefix: "po-column-options",
+        fetchOptions: fetchColumnOptions,
+      }),
+    [tableState, fetchColumnOptions],
+  );
 
   return useMemo<DataTableColumn<OperationalDocument>[]>(
     () => [
+      // 1. Cột STT: 40px, căn giữa tuyệt đối cả Header và Cell, 1-based index
+      {
+        key: "index",
+        header: <span className="w-full block text-center">#</span>,
+        size: 40,
+        enableResizing: false,
+        headerClassName: "text-center w-[40px] min-w-[40px]",
+        className: "text-center w-[40px] min-w-[40px]",
+        cell: (_, idx) => (
+          <span className="w-full block text-center">{idx}</span>
+        ),
+      },
+
+      // 2. Cột Ngày đặt: headerFilter.date kèm DateRangeColumnSlot, TableDateCell căn phải
       {
         key: "order_date",
-        header: (
-          <TableColumnHeaderFilter
-            columnKey="orderDate"
-            sortState={getSortState("orderDate")}
-            onSortChange={(state) => handleSortChange("orderDate", state)}
-            searchValue={tableState.columnSearch["orderDate"] || ""}
-            onSearchChange={(val) => handleSearchChange("orderDate", val)}
-            selectedFilters={tableState.columnFilters["orderDate"] || []}
-            onFilterChange={(vals) => handleFilterChange("orderDate", vals)}
-            allFilters={tableState.columnFilters}
-            title={t("Ngày đặt")}
-            fetchOptions={fetchColumnOptions}
-            hideFilter={true}
-            hideFooter={true}
-            dateRangeSlot={({ close }) => {
-              const val = tableState.columnSearch["orderDate"] || "";
-              const [from = "", to = ""] = val.split("|");
-              return (
-                <DateRangeColumnSlot
-                  dateFrom={from}
-                  dateTo={to}
-                  onChange={(f, t) => {
-                    const next = f || t ? `${f}|${t}` : "";
-                    handleSearchChange("orderDate", next);
-                  }}
-                  onClose={close}
-                />
-              );
-            }}
-            align="center"
-          />
-        ),
+        header: headerFilter.date("orderDate", t("Ngày đặt")),
         sortKey: "order_date",
         size: 150,
         enableResizing: true,
         className: "!py-2 align-middle text-right",
         headerClassName: "text-center",
-        cell: (row) => {
-          return (
-            <TableDateCell
-              date={row.document_date}
-              showTooltip={false}
-              className="justify-end w-full"
-            />
-          );
-        },
-      },
-
-      {
-        key: "po_no",
-        header: (
-          <TableColumnHeaderFilter
-            columnKey="poNo"
-            sortState={getSortState("poNo")}
-            onSortChange={(state) => handleSortChange("poNo", state)}
-            searchValue={tableState.columnSearch["poNo"] || ""}
-            onSearchChange={(val) => handleSearchChange("poNo", val)}
-            selectedFilters={tableState.columnFilters["poNo"] || []}
-            onFilterChange={(vals) => handleFilterChange("poNo", vals)}
-            allFilters={tableState.columnFilters}
-            title={t("Số PO")}
-            fetchOptions={fetchColumnOptions}
-            align="center"
+        cell: (row) => (
+          <TableDateCell
+            date={row.document_date}
+            showTooltip={false}
+            className="justify-end w-full"
           />
         ),
+      },
+
+      // 3. Cột Số PO: TableText + onDetailClick view mode + Quick status badge (DRAFT/CANCELLED)
+      {
+        key: "po_no",
+        header: headerFilter("poNo", t("Số PO")),
         sortKey: "purchase_no",
         size: 200,
         enableResizing: true,
         className: "!py-2 align-middle font-medium text-left",
         headerClassName: "text-center",
-        cell: (row) => {
-          return (
+        cell: (row) => (
+          <div className="flex items-center gap-1.5 w-full min-w-0">
             <TableText
+              className="flex-1 min-w-0"
               text={row.purchase_no || "—"}
               tooltip={<PoTooltipContent row={row} />}
               enableCopy={Boolean(row.purchase_no)}
@@ -195,34 +158,34 @@ export function usePurchaseColumns({
                 row.purchase_no ? () => onOpenDetail?.(row) : undefined
               }
             />
-          );
-        },
+            {row.status === "DRAFT" && (
+              <Tooltip content={t("Nháp", "Draft")}>
+                <Badge
+                  variant="secondary"
+                  className="text-[10px] px-1.5 py-0 h-4 flex-shrink-0 font-medium ml-auto w-[50px] inline-flex items-center justify-center text-center truncate"
+                >
+                  {t("Nháp", "Draft")}
+                </Badge>
+              </Tooltip>
+            )}
+            {row.status === "CANCELLED" && (
+              <Tooltip content={t("Hủy", "Canceled")}>
+                <Badge
+                  variant="destructive"
+                  className="text-[10px] px-1.5 py-0 h-4 flex-shrink-0 font-medium ml-auto w-[50px] inline-flex items-center justify-center text-center truncate"
+                >
+                  {t("Hủy", "Canceled")}
+                </Badge>
+              </Tooltip>
+            )}
+          </div>
+        ),
       },
+
+      // 4. Cột Nhà cung cấp: Tooltip + text-left
       {
         key: "supplier",
-        header: (
-          <TableColumnHeaderFilter
-            columnKey="supplierNameSnapshot"
-            sortState={getSortState("supplierNameSnapshot")}
-            onSortChange={(state) =>
-              handleSortChange("supplierNameSnapshot", state)
-            }
-            searchValue={tableState.columnSearch["supplierNameSnapshot"] || ""}
-            onSearchChange={(val) =>
-              handleSearchChange("supplierNameSnapshot", val)
-            }
-            selectedFilters={
-              tableState.columnFilters["supplierNameSnapshot"] || []
-            }
-            onFilterChange={(vals) =>
-              handleFilterChange("supplierNameSnapshot", vals)
-            }
-            allFilters={tableState.columnFilters}
-            title={t("Nhà cung cấp")}
-            fetchOptions={fetchColumnOptions}
-            align="center"
-          />
-        ),
+        header: headerFilter("supplierNameSnapshot", t("Nhà cung cấp")),
         sortKey: "supplier_id",
         size: 250,
         enableResizing: true,
@@ -236,22 +199,11 @@ export function usePurchaseColumns({
           </Tooltip>
         ),
       },
+
+      // 5. Cột Số lượng: headerFilter.qty format có phân tách hàng nghìn
       {
         key: "total_qty",
-        header: (
-          <TableColumnHeaderFilter
-            columnKey="totalQty"
-            sortState={getSortState("totalQty")}
-            onSortChange={(state) => handleSortChange("totalQty", state)}
-            searchValue={tableState.columnSearch["totalQty"] || ""}
-            onSearchChange={(val) => handleSearchChange("totalQty", val)}
-            selectedFilters={tableState.columnFilters["totalQty"] || []}
-            onFilterChange={(vals) => handleFilterChange("totalQty", vals)}
-            allFilters={tableState.columnFilters}
-            title={t("Số lượng")}
-            align="center"
-          />
-        ),
+        header: headerFilter.qty("totalQty", t("Số lượng")),
         size: 120,
         enableResizing: true,
         className: "!py-2 align-middle text-right",
@@ -263,69 +215,61 @@ export function usePurchaseColumns({
                 sum + Number(line.qty || line.qtyOrdered || 0),
               0,
             ) || 0;
-          return qty.toLocaleString("vi-VN");
+          return (
+            <span className="tabular-nums font-medium">
+              {qty.toLocaleString("vi-VN")}
+            </span>
+          );
         },
       },
+
+      // 6. Cột Trạng thái kho: StatusBadge fixed width w-[88px] + Tooltip + i18n filterOptions
       {
         key: "inventory_status",
-        header: (
-          <TableColumnHeaderFilter
-            columnKey="inventoryStatus"
-            sortState={getSortState("inventoryStatus")}
-            onSortChange={(state) => handleSortChange("inventoryStatus", state)}
-            searchValue={tableState.columnSearch["inventoryStatus"] || ""}
-            onSearchChange={(val) => handleSearchChange("inventoryStatus", val)}
-            selectedFilters={tableState.columnFilters["inventoryStatus"] || []}
-            onFilterChange={(vals) =>
-              handleFilterChange("inventoryStatus", vals)
-            }
-            allFilters={tableState.columnFilters}
-            title={t("common.inventoryStatus")}
-            fetchOptions={fetchColumnOptions}
-            align="center"
-          />
-        ),
-        size: 120,
+        header: headerFilter("inventoryStatus", t("common.inventoryStatus"), {
+          filterOptions: [
+            { value: "NOT_RECEIVED", label: t("Chưa nhập") },
+            { value: "PARTIAL_RECEIVED", label: t("Nhập một phần") },
+            { value: "RECEIVED", label: t("Đã nhập") },
+          ],
+        }),
+        sortKey: "status",
+        size: 140,
         enableResizing: true,
         className: "!py-2 align-middle text-center",
         headerClassName: "text-center",
         cell: (row: OperationalDocument) => {
           const st = row.inventory_status || "NOT_RECEIVED";
-          let icon = <PackageX className="h-5 w-5 text-muted-foreground" />;
-          let label = "Chưa nhập";
+          let label = t("Chưa nhập");
           if (st === "RECEIVED" || st === "DONE") {
-            icon = <PackageCheck className="h-5 w-5 text-emerald-500" />;
-            label = "Đã nhập";
+            label = t("Đã nhập");
           } else if (st === "PARTIAL_RECEIVED" || st === "PARTIAL") {
-            icon = <PackageOpen className="h-5 w-5 text-amber-500" />;
-            label = "Nhập một phần";
+            label = t("Nhập một phần");
           }
           return (
             <div className="w-full flex justify-center">
               <Tooltip content={label}>
-                <div className="cursor-pointer">{icon}</div>
+                <StatusBadge
+                  status={st}
+                  className="w-[88px] inline-flex items-center justify-center text-center truncate"
+                />
               </Tooltip>
             </div>
           );
         },
       },
+
+      // 7. Cột Trạng thái PO: StatusBadge fixed width w-[88px] + Tooltip + i18n filterOptions
       {
         key: "status",
-        header: (
-          <TableColumnHeaderFilter
-            columnKey="status"
-            sortState={getSortState("status")}
-            onSortChange={(state) => handleSortChange("status", state)}
-            searchValue={tableState.columnSearch["status"] || ""}
-            onSearchChange={(val) => handleSearchChange("status", val)}
-            selectedFilters={tableState.columnFilters["status"] || []}
-            onFilterChange={(vals) => handleFilterChange("status", vals)}
-            allFilters={tableState.columnFilters}
-            title={t("Trạng thái")}
-            fetchOptions={fetchColumnOptions}
-            align="center"
-          />
-        ),
+        header: headerFilter("status", t("Trạng thái"), {
+          filterOptions: [
+            { value: "DRAFT", label: t("Nháp", "Draft") },
+            { value: "CONFIRMED", label: t("Đã xác nhận", "Confirmed") },
+            { value: "CANCELLED", label: t("Đã hủy", "Cancelled") },
+          ],
+        }),
+        sortKey: "status",
         size: 140,
         enableResizing: true,
         className: "!py-2 align-middle text-center",
@@ -337,82 +281,43 @@ export function usePurchaseColumns({
 
           return (
             <div className="w-full flex justify-center">
-              <StatusBadge
-                status={displayStatus}
-                className="w-[75px] inline-block text-center"
-              />
+              <Tooltip content={t(displayStatus)}>
+                <StatusBadge
+                  status={displayStatus}
+                  className="w-[88px] inline-flex items-center justify-center text-center truncate"
+                />
+              </Tooltip>
             </div>
           );
         },
       },
+
+      // 8. Cột Ngày nhập DK: headerFilter.date
       {
         key: "expected_date",
-        header: (
-          <TableColumnHeaderFilter
-            columnKey="expectedDate"
-            sortState={getSortState("expectedDate")}
-            onSortChange={(state) => handleSortChange("expectedDate", state)}
-            searchValue={tableState.columnSearch["expectedDate"] || ""}
-            onSearchChange={(val) => handleSearchChange("expectedDate", val)}
-            selectedFilters={tableState.columnFilters["expectedDate"] || []}
-            onFilterChange={(vals) => handleFilterChange("expectedDate", vals)}
-            allFilters={tableState.columnFilters}
-            title={t("Ngày nhập DK")}
-            fetchOptions={fetchColumnOptions}
-            hideFilter={true}
-            hideFooter={true}
-            dateRangeSlot={({ close }) => {
-              const val = tableState.columnSearch["expectedDate"] || "";
-              const [from = "", to = ""] = val.split("|");
-              return (
-                <DateRangeColumnSlot
-                  dateFrom={from}
-                  dateTo={to}
-                  onChange={(f, t) => {
-                    const next = f || t ? `${f}|${t}` : "";
-                    handleSearchChange("expectedDate", next);
-                  }}
-                  onClose={close}
-                />
-              );
-            }}
-            align="center"
-          />
-        ),
+        header: headerFilter.date("expectedDate", t("Ngày nhập DK")),
         sortKey: "expected_date",
         size: 150,
         enableResizing: true,
         className: "!py-2 align-middle text-right",
         headerClassName: "text-center",
-        cell: (row) => {
-          return (
-            <TableDateCell
-              date={row.due_date}
-              showTooltip={false}
-              format="date"
-              className="justify-end w-full"
-            />
-          );
-        },
-      },
-      {
-        key: "notes",
-        header: (
-          <TableColumnHeaderFilter
-            columnKey="remarks"
-            sortState={getSortState("remarks")}
-            onSortChange={(state) => handleSortChange("remarks", state)}
-            searchValue={tableState.columnSearch["remarks"] || ""}
-            onSearchChange={(val) => handleSearchChange("remarks", val)}
-            selectedFilters={tableState.columnFilters["remarks"] || []}
-            onFilterChange={(vals) => handleFilterChange("remarks", vals)}
-            allFilters={tableState.columnFilters}
-            title={t("Ghi chú")}
-            fetchOptions={fetchColumnOptions}
-            align="center"
+        cell: (row) => (
+          <TableDateCell
+            date={row.due_date}
+            showTooltip={false}
+            format="date"
+            className="justify-end w-full"
           />
         ),
-        size: 250,
+      },
+
+      // 9. Cột Ghi chú: headerFilter với showBlankOption
+      {
+        key: "notes",
+        header: headerFilter("remarks", t("Ghi chú"), {
+          showBlankOption: true,
+        }),
+        size: 220,
         enableResizing: true,
         className: "!py-2 align-middle text-left w-full",
         headerClassName: "text-center w-full",
@@ -425,6 +330,6 @@ export function usePurchaseColumns({
         ),
       },
     ],
-    [onOpenDetail, t, variant, tableState, fetchColumnOptions],
+    [headerFilter, onOpenDetail, t],
   );
 }

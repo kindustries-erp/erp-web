@@ -1,5 +1,6 @@
 import { Building2, Users } from "lucide-react";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
+import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
 import { Forbidden } from "@/pages/Forbidden";
 import { BusinessPartnersListPage } from "@/modules/business-partners-core/components/BusinessPartnersListPage";
 
@@ -12,7 +13,10 @@ export function ErpBusinessPartnersPage({
   title: string;
   desc: string;
 }) {
-  const canRead = useHasPermission("business_partners", "read");
+  const canRead = useHasPermission(
+    ErpResource.BUSINESS_PARTNERS,
+    ErpAction.READ,
+  );
 
   if (!canRead) return <Forbidden />;
 

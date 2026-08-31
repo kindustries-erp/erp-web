@@ -254,12 +254,17 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
     setLoadingDetail(true);
 
     try {
-      let fullInv = await erpInvoicesCoreApi.get(inv.id);
+      const invoiceIdentifier =
+        inv.id ||
+        (inv.serialNo && inv.invoiceNo
+          ? `${inv.serialNo}_${inv.invoiceNo}`
+          : inv.invoiceNo || "");
+      let fullInv = await erpInvoicesCoreApi.get(invoiceIdentifier);
       if (!fullInv.items || fullInv.items.length === 0) {
         const canSync = await isPortalAuthAvailable();
-        if (canSync) {
+        if (canSync && fullInv.id) {
           try {
-            fullInv = await erpInvoicesCoreApi.syncDetail(inv.id);
+            fullInv = await erpInvoicesCoreApi.syncDetail(fullInv.id);
           } catch (syncErr) {
             console.warn("Auto sync detail failed", syncErr);
           }

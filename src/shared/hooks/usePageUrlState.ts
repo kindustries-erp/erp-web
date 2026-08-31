@@ -5,6 +5,8 @@ import {
   decodeStateParam,
   pageToPath,
 } from "@/shared/utils/pageUrl";
+import { ErpUrlQueryParam } from "@/shared/constants/urlParams";
+import { DEFAULT_DEBOUNCE_TIME } from "@/shared/constants/timing";
 
 export interface PageUrlStateOptions {
   pageKey: PageKey;
@@ -18,6 +20,9 @@ export interface PageUrlStateOptions {
     drawerMode?: "view" | "edit";
     columnFilters?: Record<string, string[]>;
     columnSearch?: Record<string, string>;
+    sorts?: string[];
+    page?: number;
+    pageSize?: number;
   }) => void;
 }
 
@@ -29,6 +34,9 @@ export interface PageUrlStateReturn {
   drawerMode: "view" | "edit";
   columnFilters: Record<string, string[]>;
   columnSearch: Record<string, string>;
+  sorts: string[];
+  page?: number;
+  pageSize?: number;
 
   setFilter: (key: string, value: string) => void;
   setFilters: (patch: Record<string, string>) => void;
@@ -41,6 +49,8 @@ export interface PageUrlStateReturn {
 
   setColumnFilters: (cf: Record<string, string[]>) => void;
   setColumnSearch: (cs: Record<string, string>) => void;
+  setSorts: (sorts: string[]) => void;
+  setPagination: (page: number, pageSize?: number) => void;
 }
 
 function parseUrlParams(
@@ -49,10 +59,9 @@ function parseUrlParams(
   instanceIndex: 1 | 2 = 1,
 ) {
   const params = new URLSearchParams(search);
-  const currentInstanceIndex: 1 | 2 = params.get("_i") === "2" ? 2 : 1;
+  const currentInstanceIndex: 1 | 2 =
+    params.get(ErpUrlQueryParam.INSTANCE_INDEX) === "2" ? 2 : 1;
 
-  // If this hook is for instance 2, but URL doesn't have _i=2, return empty
-  // If this hook is for instance 1, but URL has _i=2, return empty
   if (currentInstanceIndex !== instanceIndex) {
     return {
       filters: {},
@@ -61,17 +70,22 @@ function parseUrlParams(
       drawerMode: "view" as const,
       columnFilters: {},
       columnSearch: {},
+      sorts: [] as string[],
+      page: undefined as number | undefined,
+      pageSize: undefined as number | undefined,
     };
   }
 
-  const view = params.get("view") || "";
+  const view = params.get(ErpUrlQueryParam.VIEW) || "";
   const drawerId =
-    params.get("detail") ||
-    params.get("drawer") ||
-    params.get("viewId") ||
+    params.get(ErpUrlQueryParam.DETAIL) ||
+    params.get(ErpUrlQueryParam.DRAWER) ||
+    params.get(ErpUrlQueryParam.VIEW_ID) ||
     null;
   const drawerMode =
-    params.get("dmode") === "edit" ? ("edit" as const) : ("view" as const);
+    params.get(ErpUrlQueryParam.DRAWER_MODE) === "edit"
+      ? ("edit" as const)
+      : ("view" as const);
 
   const filters: Record<string, string> = {};
   filterKeys.forEach((key) => {
@@ -81,33 +95,76 @@ function parseUrlParams(
     }
   });
 
-  // Also collect any other standard filter params like status, search, dateFrom, dateTo
-  ["status", "search", "dateFrom", "dateTo", "page", "pageSize"].forEach(
-    (k) => {
-      const v = params.get(k);
-      if (v !== null && v !== "") {
-        filters[k] = v;
-      }
-    },
-  );
+  // Standard filter keys
+  [
+    ErpUrlQueryParam.STATUS,
+    ErpUrlQueryParam.SEARCH,
+    ErpUrlQueryParam.DATE_FROM,
+    ErpUrlQueryParam.DATE_TO,
+    ErpUrlQueryParam.PERIOD,
+    ErpUrlQueryParam.SELLER_NAME,
+    ErpUrlQueryParam.BUYER_NAME,
+    ErpUrlQueryParam.TAG_ID,
+    ErpUrlQueryParam.SUBCATEGORY,
+    ErpUrlQueryParam.ITEM_TYPE,
+    ErpUrlQueryParam.TRACKING_POLICY,
+    ErpUrlQueryParam.MISSING_SERIAL,
+    ErpUrlQueryParam.VEHICLE_TYPE,
+    ErpUrlQueryParam.PARTNER_TAX_CODE,
+  ].forEach((k) => {
+    const v = params.get(k);
+    if (v !== null && v !== "") {
+      filters[k] = v;
+    }
+  });
 
-  let columnFilters: Record<string, string[]> = {};
-  const cfParam = params.get("cf");
+  const columnFilters: Record<string, string[]> = {};
+  const cfParam = params.get(ErpUrlQueryParam.COLUMN_FILTERS);
   if (cfParam) {
-    const decoded = decodeStateParam<Record<string, string[]>>(cfParam);
-    if (decoded && typeof decoded === "object") {
-      columnFilters = decoded;
+    const decoded = decodeStateParam<Record<string, unknown>>(cfParam);
+    if (decoded && typeof decoded === "object" && !Array.isArray(decoded)) {
+      Object.entries(decoded).forEach(([k, v]) => {
+        if (Array.isArray(v)) {
+          columnFilters[k] = v.map((item) => String(item));
+        } else if (v !== undefined && v !== null && v !== "") {
+          columnFilters[k] = [String(v)];
+        }
+      });
     }
   }
 
-  let columnSearch: Record<string, string> = {};
-  const csParam = params.get("cs");
+  const columnSearch: Record<string, string> = {};
+  const csParam = params.get(ErpUrlQueryParam.COLUMN_SEARCH);
   if (csParam) {
-    const decoded = decodeStateParam<Record<string, string>>(csParam);
-    if (decoded && typeof decoded === "object") {
-      columnSearch = decoded;
+    const decoded = decodeStateParam<Record<string, unknown>>(csParam);
+    if (decoded && typeof decoded === "object" && !Array.isArray(decoded)) {
+      Object.entries(decoded).forEach(([k, v]) => {
+        if (Array.isArray(v)) {
+          columnSearch[k] = v.join(",");
+        } else if (v !== undefined && v !== null && v !== "") {
+          columnSearch[k] = String(v);
+        }
+      });
     }
   }
+
+  let sorts: string[] = [];
+  const sortsParam = params.get(ErpUrlQueryParam.SORTS);
+  if (sortsParam) {
+    const decoded = decodeStateParam<string[] | string>(sortsParam);
+    if (Array.isArray(decoded)) {
+      sorts = decoded.map((s) => String(s));
+    } else if (typeof decoded === "string" && decoded) {
+      sorts = [decoded];
+    }
+  }
+
+  const pageVal = params.get(ErpUrlQueryParam.PAGE);
+  const page = pageVal ? parseInt(pageVal, 10) : undefined;
+  const pageSizeVal =
+    params.get(ErpUrlQueryParam.PAGE_SIZE) ||
+    params.get(ErpUrlQueryParam.LIMIT);
+  const pageSize = pageSizeVal ? parseInt(pageSizeVal, 10) : undefined;
 
   return {
     filters,
@@ -116,6 +173,9 @@ function parseUrlParams(
     drawerMode,
     columnFilters,
     columnSearch,
+    sorts,
+    page,
+    pageSize,
   };
 }
 
@@ -150,6 +210,13 @@ export function usePageUrlState({
   const [columnSearch, setColumnSearchState] = useState<Record<string, string>>(
     initial.current.columnSearch,
   );
+  const [sorts, setSortsState] = useState<string[]>(initial.current.sorts);
+  const [page, setPageState] = useState<number | undefined>(
+    initial.current.page,
+  );
+  const [pageSize, setPageSizeState] = useState<number | undefined>(
+    initial.current.pageSize,
+  );
 
   const currentRef = useRef({
     filters: initial.current.filters,
@@ -158,6 +225,9 @@ export function usePageUrlState({
     drawerMode: initial.current.drawerMode,
     columnFilters: initial.current.columnFilters,
     columnSearch: initial.current.columnSearch,
+    sorts: initial.current.sorts,
+    page: initial.current.page,
+    pageSize: initial.current.pageSize,
   });
 
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -171,6 +241,9 @@ export function usePageUrlState({
       newDrawerMode: "view" | "edit",
       newCf: Record<string, string[]>,
       newCs: Record<string, string>,
+      newSorts: string[],
+      newPage?: number,
+      newPageSize?: number,
       isNavigational = false,
     ) => {
       if (typeof window === "undefined") return;
@@ -180,18 +253,18 @@ export function usePageUrlState({
 
       // Maintain _i param if instance 2
       if (instanceIndex === 2) {
-        newParams.set("_i", "2");
+        newParams.set(ErpUrlQueryParam.INSTANCE_INDEX, "2");
       }
 
       // Maintain tab param if existing
-      const tabParam = currentSearch.get("tab");
+      const tabParam = currentSearch.get(ErpUrlQueryParam.TAB);
       if (tabParam) {
-        newParams.set("tab", tabParam);
+        newParams.set(ErpUrlQueryParam.TAB, tabParam);
       }
 
       // View param (if not "all")
       if (newView && newView !== "all") {
-        newParams.set("view", newView);
+        newParams.set(ErpUrlQueryParam.VIEW, newView);
       }
 
       // Filters
@@ -204,20 +277,34 @@ export function usePageUrlState({
       // Column filters (clean/compact)
       if (Object.keys(newCf).length > 0) {
         const encoded = encodeStateParam(newCf);
-        if (encoded) newParams.set("cf", encoded);
+        if (encoded) newParams.set(ErpUrlQueryParam.COLUMN_FILTERS, encoded);
       }
 
       // Column search
       if (Object.keys(newCs).length > 0) {
         const encoded = encodeStateParam(newCs);
-        if (encoded) newParams.set("cs", encoded);
+        if (encoded) newParams.set(ErpUrlQueryParam.COLUMN_SEARCH, encoded);
+      }
+
+      // Sorts
+      if (newSorts && newSorts.length > 0) {
+        const encodedSorts = encodeStateParam(newSorts);
+        if (encodedSorts) newParams.set(ErpUrlQueryParam.SORTS, encodedSorts);
+      }
+
+      // Pagination
+      if (newPage && newPage > 1) {
+        newParams.set(ErpUrlQueryParam.PAGE, String(newPage));
+      }
+      if (newPageSize) {
+        newParams.set(ErpUrlQueryParam.PAGE_SIZE, String(newPageSize));
       }
 
       // Drawer params (use detail=...)
       if (drawerSync && newDrawerId) {
-        newParams.set("detail", newDrawerId);
+        newParams.set(ErpUrlQueryParam.DETAIL, newDrawerId);
         if (newDrawerMode === "edit") {
-          newParams.set("dmode", "edit");
+          newParams.set(ErpUrlQueryParam.DRAWER_MODE, "edit");
         }
       }
 
@@ -252,9 +339,12 @@ export function usePageUrlState({
         c.drawerMode,
         c.columnFilters,
         c.columnSearch,
+        c.sorts,
+        c.page,
+        c.pageSize,
         false,
       );
-    }, 300);
+    }, DEFAULT_DEBOUNCE_TIME);
   }, [writeToUrl]);
 
   const onUrlStateHydrateRef = useRef(onUrlStateHydrate);
@@ -272,6 +362,9 @@ export function usePageUrlState({
         drawerMode: initial.current.drawerMode,
         columnFilters: initial.current.columnFilters,
         columnSearch: initial.current.columnSearch,
+        sorts: initial.current.sorts,
+        page: initial.current.page,
+        pageSize: initial.current.pageSize,
       });
     }
   }, []);
@@ -291,6 +384,9 @@ export function usePageUrlState({
         drawerMode: parsed.drawerMode,
         columnFilters: parsed.columnFilters,
         columnSearch: parsed.columnSearch,
+        sorts: parsed.sorts,
+        page: parsed.page,
+        pageSize: parsed.pageSize,
       };
       setFiltersState(parsed.filters);
       setViewState(parsed.view);
@@ -298,6 +394,9 @@ export function usePageUrlState({
       setDrawerModeState(parsed.drawerMode);
       setColumnFiltersState(parsed.columnFilters);
       setColumnSearchState(parsed.columnSearch);
+      setSortsState(parsed.sorts);
+      setPageState(parsed.page);
+      setPageSizeState(parsed.pageSize);
 
       if (onUrlStateHydrateRef.current) {
         onUrlStateHydrateRef.current({
@@ -307,6 +406,9 @@ export function usePageUrlState({
           drawerMode: parsed.drawerMode,
           columnFilters: parsed.columnFilters,
           columnSearch: parsed.columnSearch,
+          sorts: parsed.sorts,
+          page: parsed.page,
+          pageSize: parsed.pageSize,
         });
       }
     };
@@ -362,6 +464,9 @@ export function usePageUrlState({
       c.drawerMode,
       c.columnFilters,
       c.columnSearch,
+      c.sorts,
+      c.page,
+      c.pageSize,
       false,
     );
   }, [writeToUrl]);
@@ -380,6 +485,9 @@ export function usePageUrlState({
         c.drawerMode,
         c.columnFilters,
         c.columnSearch,
+        c.sorts,
+        c.page,
+        c.pageSize,
         false,
       );
     },
@@ -401,6 +509,9 @@ export function usePageUrlState({
         mode,
         c.columnFilters,
         c.columnSearch,
+        c.sorts,
+        c.page,
+        c.pageSize,
         true,
       );
     },
@@ -421,6 +532,9 @@ export function usePageUrlState({
       "view",
       c.columnFilters,
       c.columnSearch,
+      c.sorts,
+      c.page,
+      c.pageSize,
       false,
     );
   }, [writeToUrl]);
@@ -443,6 +557,28 @@ export function usePageUrlState({
     [debouncedWriteToUrl],
   );
 
+  const setSorts = useCallback(
+    (nextSorts: string[]) => {
+      currentRef.current.sorts = nextSorts;
+      setSortsState(nextSorts);
+      debouncedWriteToUrl();
+    },
+    [debouncedWriteToUrl],
+  );
+
+  const setPagination = useCallback(
+    (newPage: number, newPageSize?: number) => {
+      currentRef.current.page = newPage;
+      setPageState(newPage);
+      if (newPageSize) {
+        currentRef.current.pageSize = newPageSize;
+        setPageSizeState(newPageSize);
+      }
+      debouncedWriteToUrl();
+    },
+    [debouncedWriteToUrl],
+  );
+
   return {
     filters,
     view,
@@ -451,6 +587,9 @@ export function usePageUrlState({
     drawerMode,
     columnFilters,
     columnSearch,
+    sorts,
+    page,
+    pageSize,
     setFilter,
     setFilters,
     clearFilters,
@@ -459,5 +598,7 @@ export function usePageUrlState({
     closeDrawer,
     setColumnFilters,
     setColumnSearch,
+    setSorts,
+    setPagination,
   };
 }

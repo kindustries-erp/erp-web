@@ -29,41 +29,61 @@ export function FilterButton({
 }: FilterButtonProps) {
   const t = useT();
 
-  if (activeCount > 0 && onClear) {
+  if (activeCount > 0) {
+    if (onClear) {
+      return (
+        <div
+          className={cn(
+            "inline-flex items-stretch h-8 rounded-lg border border-border bg-surface text-foreground shadow-xs hover:border-primary/40 transition-colors animate-in fade-in duration-150 overflow-hidden",
+            className,
+          )}
+        >
+          <Tooltip content={`${t("Bộ lọc")} (${activeCount})`}>
+            <button
+              type="button"
+              onClick={onClick}
+              className={cn(
+                "flex items-center gap-1 pl-2.5 pr-1.5 text-xs font-semibold text-foreground transition-colors outline-none",
+                onClick
+                  ? "hover:bg-surface-hover hover:text-primary cursor-pointer"
+                  : "cursor-default",
+              )}
+            >
+              <Filter className="h-3.5 w-3.5 text-primary shrink-0" />
+              <span className="leading-none text-[11px] text-primary font-bold">
+                ({activeCount})
+              </span>
+            </button>
+          </Tooltip>
+          <Tooltip content={t("Xóa tất cả bộ lọc")}>
+            <button
+              type="button"
+              onClick={onClear}
+              className="flex items-center justify-center px-2 text-muted-foreground hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/40 transition-colors outline-none cursor-pointer"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </Tooltip>
+        </div>
+      );
+    }
+
     return (
-      <div
-        className={cn(
-          "inline-flex items-stretch h-8 rounded-lg border border-border bg-surface text-foreground shadow-xs hover:border-primary/40 transition-colors animate-in fade-in duration-150 overflow-hidden",
-          className,
-        )}
-      >
-        <Tooltip content={`${t("Bộ lọc")} (${activeCount})`}>
-          <button
-            type="button"
-            onClick={onClick}
-            className={cn(
-              "flex items-center gap-1 pl-2.5 pr-1.5 text-xs font-semibold text-foreground transition-colors outline-none",
-              onClick
-                ? "hover:bg-surface-hover hover:text-primary cursor-pointer"
-                : "cursor-default",
-            )}
-          >
-            <Filter className="h-3.5 w-3.5 text-primary shrink-0" />
-            <span className="leading-none text-[11px] text-primary font-bold">
-              ({activeCount})
-            </span>
-          </button>
-        </Tooltip>
-        <Tooltip content={t("Xóa tất cả bộ lọc")}>
-          <button
-            type="button"
-            onClick={onClear}
-            className="flex items-center justify-center px-2 text-muted-foreground hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/40 transition-colors outline-none cursor-pointer"
-          >
-            <X className="h-3.5 w-3.5" />
-          </button>
-        </Tooltip>
-      </div>
+      <Tooltip content={`${t("Bộ lọc")} (${activeCount})`}>
+        <Button
+          variant="secondary"
+          onClick={onClick}
+          className={cn(
+            "h-8 px-2.5 gap-1.5 shrink-0 border-primary/40 text-primary bg-primary/10 hover:bg-primary/15 font-semibold text-xs",
+            className,
+          )}
+        >
+          <Filter className="h-3.5 w-3.5 text-primary shrink-0" />
+          <span className="leading-none text-[11px] text-primary font-bold">
+            ({activeCount})
+          </span>
+        </Button>
+      </Tooltip>
     );
   }
 
@@ -73,12 +93,7 @@ export function FilterButton({
         variant="secondary"
         size="icon"
         onClick={onClick}
-        className={cn(
-          "relative h-8 w-8 px-0 shrink-0",
-          activeCount > 0 &&
-            "border-primary/40 text-primary bg-primary/10 hover:bg-primary/15",
-          className,
-        )}
+        className={cn("relative h-8 w-8 px-0 shrink-0", className)}
       >
         <Filter className="h-4 w-4" />
       </Button>

@@ -214,13 +214,14 @@ export function createColumnHeaderFilter<T = any>(
     const search = listHook.columnSearch?.[columnKey] || "";
     const isActive = Boolean(selected.length > 0 || search.trim().length > 0);
 
-    const isServer = Boolean(options.fetchOptions || globalFetchOptions);
+    const hasClientOptions = Boolean(options.filterOptions);
+    const isServer =
+      !hasClientOptions && Boolean(options.fetchOptions || globalFetchOptions);
     const clientOptions =
-      !isServer &&
-      (options.filterOptions ||
-        (items
-          ? extractUniqueOptions(items, columnKey, options.formatOptionLabel)
-          : undefined));
+      options.filterOptions ||
+      (!isServer && items
+        ? extractUniqueOptions(items, columnKey, options.formatOptionLabel)
+        : undefined);
 
     return (
       <TableColumnHeaderFilter

@@ -1,6 +1,7 @@
 import type { PageKey } from "@/shared/types";
 import { useT } from "@/core/i18n";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
+import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
 import {
   NavItem,
   NavGroup,
@@ -27,6 +28,7 @@ import {
   Paperclip,
   Mail,
   Target,
+  PackageCheck,
 } from "lucide-react";
 
 import { useAuthStore } from "@/modules/auth/domain/authStore";
@@ -46,56 +48,100 @@ export function SidebarNav({
   const { employee } = useAuthStore();
   const isAdminEmail = employee?.email === "admin@liouni.com";
 
-  const canReadSalesOrders = useHasPermission("sales_orders", "read");
-  const canReadCustomers = useHasPermission("business_partners", "read");
-  const canReadSalesReports = useHasPermission("sales_reports", "read");
+  const canReadSalesOrders = useHasPermission(
+    ErpResource.SALES_ORDERS,
+    ErpAction.READ,
+  );
+  const canReadCustomers = useHasPermission(
+    ErpResource.BUSINESS_PARTNERS,
+    ErpAction.READ,
+  );
+  const canReadSalesReports = useHasPermission(
+    ErpResource.SALES_REPORTS,
+    ErpAction.READ,
+  );
   const showSales =
     canReadSalesOrders || canReadCustomers || canReadSalesReports;
 
-  const canReadPurchasing = useHasPermission("purchase_orders", "read");
-  const canReadSuppliers = useHasPermission("business_partners", "read");
+  const canReadPurchasing = useHasPermission(
+    ErpResource.PURCHASE_ORDERS,
+    ErpAction.READ,
+  );
+  const canReadSuppliers = useHasPermission(
+    ErpResource.BUSINESS_PARTNERS,
+    ErpAction.READ,
+  );
   const canReadPurchasingReports = useHasPermission(
-    "purchasing_reports",
-    "read",
+    ErpResource.PURCHASING_REPORTS,
+    ErpAction.READ,
   );
   const showPurchasing =
     canReadPurchasing || canReadSuppliers || canReadPurchasingReports;
 
-  const canReadInventoryItems = useHasPermission("inventory_items", "read");
+  const canReadInventoryItems = useHasPermission(
+    ErpResource.INVENTORY_ITEMS,
+    ErpAction.READ,
+  );
   const canReadInventoryVouchers = useHasPermission(
-    "inventory_vouchers",
-    "read",
+    ErpResource.INVENTORY_VOUCHERS,
+    ErpAction.READ,
   );
   const showInventory = canReadInventoryItems || canReadInventoryVouchers;
 
-  const canReadVinfast = useHasPermission("vinfast", "read");
+  const canReadVinfast = useHasPermission(ErpResource.VINFAST, ErpAction.READ);
   const showVinfast = canReadVinfast;
 
-  const canReadBom = useHasPermission("bom", "read");
-  const canReadProduction = useHasPermission("production", "read");
+  const canReadBom = useHasPermission(ErpResource.BOM, ErpAction.READ);
+  const canReadProduction = useHasPermission(
+    ErpResource.PRODUCTION,
+    ErpAction.READ,
+  );
   const showManufacturing = canReadBom || canReadProduction;
 
-  const canReadGarageDirect = useHasPermission("garage", "read");
-  const canReadGreenway = useHasPermission("greenway_integration", "read");
-  const canReadKgara = useHasPermission("kgara_integration", "read");
-  const canReadGarage = canReadGarageDirect || canReadGreenway || canReadKgara;
+  const canReadGarage = useHasPermission(ErpResource.GARAGE, ErpAction.READ);
   const showGarage = canReadGarage;
 
-  const canReadInvoices = useHasPermission("invoices", "read");
-  const canReadBankStatements = useHasPermission("bank_statements", "read");
-  const showAccounting = canReadInvoices || canReadBankStatements;
+  const canReadInvoices = useHasPermission(
+    ErpResource.INVOICES,
+    ErpAction.READ,
+  );
+  const canReadBankStatements = useHasPermission(
+    ErpResource.BANK_STATEMENTS,
+    ErpAction.READ,
+  );
+  const canReadCashStatements = useHasPermission(
+    ErpResource.CASH_STATEMENTS,
+    ErpAction.READ,
+  );
+  const showCashflow = canReadBankStatements || canReadCashStatements;
+  const showAccounting = canReadInvoices || showCashflow;
 
-  const canReadEmployees = useHasPermission("employees", "read");
+  const canReadEmployees = useHasPermission(
+    ErpResource.EMPLOYEES,
+    ErpAction.READ,
+  );
   const showHR = canReadEmployees;
 
-  const canReadAdminUsers = useHasPermission("admin_users", "read");
-  const canReadActivityLogs = useHasPermission("activity_logs", "read");
-  const canReadSysTags = useHasPermission("sys_tags", "read");
-  const canReadEmailInbox = useHasPermission("email_ingest", "read");
+  const canReadAdminUsers = useHasPermission(
+    ErpResource.ADMIN_USERS,
+    ErpAction.READ,
+  );
+  const canReadActivityLogs = useHasPermission(
+    ErpResource.ACTIVITY_LOGS,
+    ErpAction.READ,
+  );
+  const canReadSysTags = useHasPermission(ErpResource.SYS_TAGS, ErpAction.READ);
+  const canReadEmailInbox = useHasPermission(
+    ErpResource.EMAIL_INGEST,
+    ErpAction.READ,
+  );
 
   const showSettingsAccess = canReadAdminUsers || canReadActivityLogs;
   const showSettingsGeneral =
-    canReadAdminUsers || canReadSysTags || canReadBankStatements;
+    canReadAdminUsers ||
+    canReadSysTags ||
+    canReadBankStatements ||
+    canReadCashStatements;
   const showSettingsInventory = canReadInventoryItems;
   const showSettings =
     showSettingsAccess ||
@@ -241,7 +287,7 @@ export function SidebarNav({
             />
           )}
           {canReadInventoryItems && (
-            <NavGroup
+            <NavItem
               collapsed={c}
               icon={<Layers className="w-4 h-4 opacity-65 flex-shrink-0" />}
               label={t("nav.items.erpInventoryTrackingGroup")}
@@ -251,32 +297,9 @@ export function SidebarNav({
                 currentPage === "erp-inventory-tracking-lot" ||
                 currentPage === "erp-inventory-tracking-custom"
               }
-            >
-              <NavGroupItem
-                label={t("nav.items.erpInventoryTracking")}
-                active={currentPage === "erp-inventory-tracking"}
-                onClick={() => navTo("erp-inventory-tracking")}
-                contextPage="erp-inventory-tracking"
-              />
-              <NavGroupItem
-                label={t("nav.items.erpInventoryTrackingParts")}
-                active={currentPage === "erp-inventory-tracking-parts"}
-                onClick={() => navTo("erp-inventory-tracking-parts")}
-                contextPage="erp-inventory-tracking-parts"
-              />
-              <NavGroupItem
-                label={t("nav.items.erpInventoryTrackingLot")}
-                active={currentPage === "erp-inventory-tracking-lot"}
-                onClick={() => navTo("erp-inventory-tracking-lot")}
-                contextPage="erp-inventory-tracking-lot"
-              />
-              <NavGroupItem
-                label={t("nav.items.erpInventoryTrackingCustom")}
-                active={currentPage === "erp-inventory-tracking-custom"}
-                onClick={() => navTo("erp-inventory-tracking-custom")}
-                contextPage="erp-inventory-tracking-custom"
-              />
-            </NavGroup>
+              onClick={() => navTo("erp-inventory-tracking")}
+              contextPage="erp-inventory-tracking"
+            />
           )}
         </NavSection>
       )}
@@ -302,6 +325,18 @@ export function SidebarNav({
               active={currentPage === "erp-production"}
               onClick={() => navTo("erp-production")}
               contextPage="erp-production"
+            />
+          )}
+          {(canReadProduction || canReadInventoryItems) && (
+            <NavItem
+              collapsed={c}
+              icon={
+                <PackageCheck className="w-4 h-4 opacity-65 flex-shrink-0" />
+              }
+              label={t("nav.items.erpFinishedGoods", "Thành phẩm")}
+              active={currentPage === "erp-finished-goods"}
+              onClick={() => navTo("erp-finished-goods")}
+              contextPage="erp-finished-goods"
             />
           )}
         </NavSection>
@@ -331,10 +366,13 @@ export function SidebarNav({
           <NavItem
             collapsed={c}
             icon={<Users className="w-4 h-4 opacity-65 flex-shrink-0" />}
-            label={t("nav.items.garageCustomers", "Khách hàng")}
-            active={currentPage === "garage-customers"}
-            onClick={() => navTo("garage-customers")}
-            contextPage="garage-customers"
+            label={t("nav.items.garagePartners", "Đối tác")}
+            active={
+              currentPage === "garage-partners" ||
+              currentPage === "garage-customers"
+            }
+            onClick={() => navTo("garage-partners")}
+            contextPage="garage-partners"
           />
           <NavItem
             collapsed={c}
@@ -350,11 +388,12 @@ export function SidebarNav({
       {/* VINFAST */}
       {showVinfast && (
         <NavSection collapsed={c} label={t("nav.sections.vinfast")}>
-          <NavGroup
+          <NavItem
             collapsed={c}
             icon={<Package className="w-4 h-4 opacity-65 flex-shrink-0" />}
-            label={t("nav.items.vinfastPartsGroup")}
+            label={t("nav.items.vinfastPartsGroup", "Phụ tùng Vinfast")}
             active={
+              currentPage === "vinfast-parts-stock" ||
               currentPage === "vinfast-parts-dashboard" ||
               currentPage === "vinfast-parts-oto-stock" ||
               currentPage === "vinfast-parts-xemay-stock" ||
@@ -362,72 +401,16 @@ export function SidebarNav({
               currentPage === "vinfast-parts-xemay" ||
               currentPage === "vinfast-parts"
             }
-          >
-            <NavGroupItem
-              label={t("nav.items.vinfastPartsDashboard")}
-              active={currentPage === "vinfast-parts-dashboard"}
-              onClick={() => navTo("vinfast-parts-dashboard")}
-              contextPage="vinfast-parts-dashboard"
-            />
-            <NavGroupItem
-              label={t("nav.items.vinfastPartsOtoStock")}
-              active={currentPage === "vinfast-parts-oto-stock"}
-              onClick={() => navTo("vinfast-parts-oto-stock")}
-              contextPage="vinfast-parts-oto-stock"
-            />
-            <NavGroupItem
-              label={t("nav.items.vinfastPartsXemayStock")}
-              active={currentPage === "vinfast-parts-xemay-stock"}
-              onClick={() => navTo("vinfast-parts-xemay-stock")}
-              contextPage="vinfast-parts-xemay-stock"
-            />
-            {isAdminEmail && (
-              <>
-                <NavGroupItem
-                  label="Phụ tùng ôtô"
-                  active={currentPage === "vinfast-parts-oto"}
-                  onClick={() => navTo("vinfast-parts-oto")}
-                  contextPage="vinfast-parts-oto"
-                />
-                <NavGroupItem
-                  label="Phụ tùng xe máy"
-                  active={currentPage === "vinfast-parts-xemay"}
-                  onClick={() => navTo("vinfast-parts-xemay")}
-                  contextPage="vinfast-parts-xemay"
-                />
-              </>
-            )}
-          </NavGroup>
-          <NavGroup
-            collapsed={c}
-            icon={<Factory className="w-4 h-4 opacity-65 flex-shrink-0" />}
-            label={t("nav.items.vinfastWorkshopGroup")}
-            active={currentPage === "vinfast-invoice-settlement"}
-          >
-            <NavGroupItem
-              label={t("nav.items.vinfastSettlement")}
-              active={currentPage === "vinfast-invoice-settlement"}
-              onClick={() => navTo("vinfast-invoice-settlement")}
-              contextPage="vinfast-invoice-settlement"
-            />
-          </NavGroup>
+            onClick={() => navTo("vinfast-parts-stock")}
+            contextPage="vinfast-parts-stock"
+          />
         </NavSection>
       )}
 
       {/* Kế toán */}
       {showAccounting && (
         <NavSection collapsed={c} label={t("nav.sections.accounting")}>
-          {canReadBankStatements && isAdminEmail && (
-            <NavItem
-              collapsed={c}
-              icon={<Target className="w-4 h-4 opacity-65 flex-shrink-0" />}
-              label="Budget"
-              active={currentPage === "budget"}
-              onClick={() => navTo("budget" as PageKey)}
-              contextPage={"budget" as PageKey}
-            />
-          )}
-          {canReadBankStatements && (
+          {showCashflow && (
             <NavGroup
               collapsed={c}
               icon={<Wallet className="w-4 h-4 opacity-65 flex-shrink-0" />}
@@ -444,18 +427,22 @@ export function SidebarNav({
                 onClick={() => navTo("cashflow-dashboard")}
                 contextPage="cashflow-dashboard"
               />
-              <NavGroupItem
-                label={t("bankStatement.bankTitle")}
-                active={currentPage === "bank-statement"}
-                onClick={() => navTo("bank-statement")}
-                contextPage="bank-statement"
-              />
-              <NavGroupItem
-                label={t("bankStatement.cashTitle")}
-                active={currentPage === "cash-statement"}
-                onClick={() => navTo("cash-statement")}
-                contextPage="cash-statement"
-              />
+              {canReadBankStatements && (
+                <NavGroupItem
+                  label={t("bankStatement.bankTitle")}
+                  active={currentPage === "bank-statement"}
+                  onClick={() => navTo("bank-statement")}
+                  contextPage="bank-statement"
+                />
+              )}
+              {canReadCashStatements && (
+                <NavGroupItem
+                  label={t("bankStatement.cashTitle")}
+                  active={currentPage === "cash-statement"}
+                  onClick={() => navTo("cash-statement")}
+                  contextPage="cash-statement"
+                />
+              )}
             </NavGroup>
           )}
           {canReadInvoices && (
@@ -493,34 +480,17 @@ export function SidebarNav({
               />
             </NavGroup>
           )}
-          {/* TODO: Tính sau - tạm ẩn
-            canReadGreenwayIntegration && (
-              <NavGroup
-                collapsed={c}
-                icon={
-                  <WalletCards className="w-4 h-4 opacity-65 flex-shrink-0" />
-                }
-                label={t("nav.items.garage")}
-                active={
-                  currentPage === "garage-receivables" ||
-                  currentPage === "garage-payables"
-                }
-              >
-                <NavGroupItem
-                  label={t("nav.items.garageReceivables")}
-                  active={currentPage === "garage-receivables"}
-                  onClick={() => navTo("garage-receivables")}
-                  contextPage="garage-receivables"
-                />
-                <NavGroupItem
-                  label={t("nav.items.garagePayables")}
-                  active={currentPage === "garage-payables"}
-                  onClick={() => navTo("garage-payables")}
-                  contextPage="garage-payables"
-                />
-              </NavGroup>
-            )
-            */}
+          {canReadBankStatements && isAdminEmail && (
+            <NavItem
+              collapsed={c}
+              icon={<Target className="w-4 h-4 opacity-65 flex-shrink-0" />}
+              label={t("nav.items.operatingExpenses", "Chi phí vận hành")}
+              active={currentPage === "opex"}
+              onClick={() => navTo("opex" as PageKey)}
+              contextPage={"opex" as PageKey}
+            />
+          )}
+
           {showAccounting && (
             <>
               <NavItem
@@ -641,20 +611,20 @@ export function SidebarNav({
                 />
               )}
               {canReadBankStatements && (
-                <>
-                  <NavGroupItem
-                    label={t("thietlap.tabs.ngan-hang")}
-                    active={currentPage === "settings-bank"}
-                    onClick={() => navTo("settings-bank")}
-                    contextPage="settings-bank"
-                  />
-                  <NavGroupItem
-                    label={t("thietlap.tabs.quy")}
-                    active={currentPage === "settings-cash-fund"}
-                    onClick={() => navTo("settings-cash-fund")}
-                    contextPage="settings-cash-fund"
-                  />
-                </>
+                <NavGroupItem
+                  label={t("thietlap.tabs.ngan-hang")}
+                  active={currentPage === "settings-bank"}
+                  onClick={() => navTo("settings-bank")}
+                  contextPage="settings-bank"
+                />
+              )}
+              {canReadCashStatements && (
+                <NavGroupItem
+                  label={t("thietlap.tabs.quy")}
+                  active={currentPage === "settings-cash-fund"}
+                  onClick={() => navTo("settings-cash-fund")}
+                  contextPage="settings-cash-fund"
+                />
               )}
               {canReadSysTags && (
                 <NavGroupItem
