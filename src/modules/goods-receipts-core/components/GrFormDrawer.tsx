@@ -15,6 +15,7 @@ import { DrawerField, inputCls } from "@/shared/components/DrawerModal";
 import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
 import { DatePicker } from "@/shared/components/DatePicker";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
+import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
 import { useReactToPrint } from "react-to-print";
 import { useCompanyProfile } from "@/core/api/companyProfileApi";
 import { useUIStore } from "@/core/config/uiStore";
@@ -74,8 +75,11 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
     setGlobalLoading(saving);
   }, [saving, setGlobalLoading]);
 
-  const canUpdate = useHasPermission("goods_receipts", "update");
-  const isAdmin = useHasPermission("*", "*");
+  const canUpdate = useHasPermission(
+    ErpResource.GOODS_RECEIPTS,
+    ErpAction.UPDATE,
+  );
+  const isAdmin = useHasPermission(ErpResource.SUPER_ADMIN, ErpAction.ALL);
 
   const printRef = useRef<HTMLDivElement>(null);
   const handlePrint = useReactToPrint({

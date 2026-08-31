@@ -10,6 +10,7 @@ import { Badge } from "@/shared/components/ui/badge";
 import { DrawerSection } from "@/shared/components/DrawerModal";
 import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
+import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate/SpreadsheetPageTemplate";
 import { Forbidden } from "@/pages/Forbidden";
 import {
@@ -31,7 +32,7 @@ function formatDate(value: string | null) {
 }
 
 export function ErpActivityLogsPage() {
-  const canRead = useHasPermission("activity_logs", "read");
+  const canRead = useHasPermission(ErpResource.ACTIVITY_LOGS, ErpAction.READ);
   const t = useT();
 
   const filterConfig: FilterPanelConfig = useMemo(

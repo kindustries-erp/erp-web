@@ -16,6 +16,7 @@ import { useCorePermissionsEditor } from "@/modules/system/hooks/useCorePermissi
 import { useCoreRoleUsers } from "@/modules/system/hooks/useCoreRoleUsers";
 import { CoreRoleDrawer } from "@/modules/system/components/CoreRoleDrawer";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
+import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
 import {
   useFilterPanel,
   type FilterPanelConfig,
@@ -29,7 +30,7 @@ import type {
 } from "@/modules/system/types/rbac";
 
 export function ErpPermissionsCorePage() {
-  const canRead = useHasPermission("admin_users", "read");
+  const canRead = useHasPermission(ErpResource.ADMIN_USERS, ErpAction.READ);
   const showToast = useUIStore((s) => s.showToast);
   const t = useT();
 

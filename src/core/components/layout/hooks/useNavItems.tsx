@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import type { PageKey } from "@/shared/types";
 import { useT } from "@/core/i18n";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
+import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
 import { useAuthStore } from "@/modules/auth/domain/authStore";
 import {
   Boxes,
@@ -40,42 +41,84 @@ export function useNavItems(): NavSearchItem[] {
   const { employee } = useAuthStore();
   const isAdminEmail = employee?.email === "admin@liouni.com";
 
-  const canReadSalesOrders = useHasPermission("sales_orders", "read");
-  const canReadCustomers = useHasPermission("business_partners", "read");
-  const canReadSalesReports = useHasPermission("sales_reports", "read");
+  const canReadSalesOrders = useHasPermission(
+    ErpResource.SALES_ORDERS,
+    ErpAction.READ,
+  );
+  const canReadCustomers = useHasPermission(
+    ErpResource.BUSINESS_PARTNERS,
+    ErpAction.READ,
+  );
+  const canReadSalesReports = useHasPermission(
+    ErpResource.SALES_REPORTS,
+    ErpAction.READ,
+  );
 
-  const canReadPurchasing = useHasPermission("purchase_orders", "read");
-  const canReadSuppliers = useHasPermission("business_partners", "read");
+  const canReadPurchasing = useHasPermission(
+    ErpResource.PURCHASE_ORDERS,
+    ErpAction.READ,
+  );
+  const canReadSuppliers = useHasPermission(
+    ErpResource.BUSINESS_PARTNERS,
+    ErpAction.READ,
+  );
   const canReadPurchasingReports = useHasPermission(
-    "purchasing_reports",
-    "read",
+    ErpResource.PURCHASING_REPORTS,
+    ErpAction.READ,
   );
 
-  const canReadInventoryItems = useHasPermission("inventory_items", "read");
+  const canReadInventoryItems = useHasPermission(
+    ErpResource.INVENTORY_ITEMS,
+    ErpAction.READ,
+  );
   const canReadInventoryVouchers = useHasPermission(
-    "inventory_vouchers",
-    "read",
+    ErpResource.INVENTORY_VOUCHERS,
+    ErpAction.READ,
   );
 
-  const canReadVinfast = useHasPermission("vinfast", "read");
+  const canReadVinfast = useHasPermission(ErpResource.VINFAST, ErpAction.READ);
 
-  const canReadBom = useHasPermission("bom", "read");
-  const canReadProduction = useHasPermission("production", "read");
-  const canReadGarage = useHasPermission("garage", "read");
+  const canReadBom = useHasPermission(ErpResource.BOM, ErpAction.READ);
+  const canReadProduction = useHasPermission(
+    ErpResource.PRODUCTION,
+    ErpAction.READ,
+  );
+  const canReadGarage = useHasPermission(ErpResource.GARAGE, ErpAction.READ);
 
-  const canReadInvoices = useHasPermission("invoices", "read");
-  const canReadBankStatements = useHasPermission("bank_statements", "read");
-  const canReadCashStatements = useHasPermission("cash_statements", "read");
+  const canReadInvoices = useHasPermission(
+    ErpResource.INVOICES,
+    ErpAction.READ,
+  );
+  const canReadBankStatements = useHasPermission(
+    ErpResource.BANK_STATEMENTS,
+    ErpAction.READ,
+  );
+  const canReadCashStatements = useHasPermission(
+    ErpResource.CASH_STATEMENTS,
+    ErpAction.READ,
+  );
   const canReadCashflow = canReadBankStatements || canReadCashStatements;
   const showAccounting = canReadInvoices || canReadCashflow;
 
-  const canReadEmployees = useHasPermission("employees", "read");
+  const canReadEmployees = useHasPermission(
+    ErpResource.EMPLOYEES,
+    ErpAction.READ,
+  );
   const showHR = canReadEmployees;
 
-  const canReadAdminUsers = useHasPermission("admin_users", "read");
-  const canReadActivityLogs = useHasPermission("activity_logs", "read");
-  const canReadSysTags = useHasPermission("sys_tags", "read");
-  const canReadEmailInbox = useHasPermission("email_ingest", "read");
+  const canReadAdminUsers = useHasPermission(
+    ErpResource.ADMIN_USERS,
+    ErpAction.READ,
+  );
+  const canReadActivityLogs = useHasPermission(
+    ErpResource.ACTIVITY_LOGS,
+    ErpAction.READ,
+  );
+  const canReadSysTags = useHasPermission(ErpResource.SYS_TAGS, ErpAction.READ);
+  const canReadEmailInbox = useHasPermission(
+    ErpResource.EMAIL_INGEST,
+    ErpAction.READ,
+  );
 
   const showSettingsGeneral =
     canReadAdminUsers ||

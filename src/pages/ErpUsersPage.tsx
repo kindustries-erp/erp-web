@@ -42,6 +42,7 @@ import {
 import { useUIStore } from "@/core/config/uiStore";
 import { useAuthStore } from "@/modules/auth/domain/authStore";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
+import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
 import { Forbidden } from "@/pages/Forbidden";
 import {
   auditCoreApi,
@@ -63,7 +64,7 @@ function formatDate(value: string | null) {
 
 export function ErpUsersPage() {
   const t = useT();
-  const canRead = useHasPermission("admin_users", "read");
+  const canRead = useHasPermission(ErpResource.ADMIN_USERS, ErpAction.READ);
   const showToast = useUIStore((s) => s.showToast);
 
   const filterConfig: FilterPanelConfig = useMemo(

@@ -20,6 +20,7 @@ import {
 import { basicMastersApi } from "@/modules/basic-masters/api/basicMastersApi";
 import { useBasicMasterInfinite } from "@/modules/basic-masters/hooks/useBasicMasterInfinite";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
+import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
 import { Forbidden } from "@/pages/Forbidden";
 import { updateEntityTags } from "@/modules/tags/api/tagsApi";
 import { useT } from "@/core/i18n";
@@ -43,10 +44,19 @@ export function ErpSalesOrdersPage() {
   const t = useT();
   const showToast = useUIStore((s) => s.showToast);
 
-  const canRead = useHasPermission("sales_orders", "read");
-  const canCreate = useHasPermission("sales_orders", "create");
-  const canUpdate = useHasPermission("sales_orders", "update");
-  const canDelete = useHasPermission("sales_orders", "delete");
+  const canRead = useHasPermission(ErpResource.SALES_ORDERS, ErpAction.READ);
+  const canCreate = useHasPermission(
+    ErpResource.SALES_ORDERS,
+    ErpAction.CREATE,
+  );
+  const canUpdate = useHasPermission(
+    ErpResource.SALES_ORDERS,
+    ErpAction.UPDATE,
+  );
+  const canDelete = useHasPermission(
+    ErpResource.SALES_ORDERS,
+    ErpAction.DELETE,
+  );
 
   const list = useSalesOrdersList();
 

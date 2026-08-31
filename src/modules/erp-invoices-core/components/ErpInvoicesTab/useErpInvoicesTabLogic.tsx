@@ -17,6 +17,7 @@ import {
 import { PillTabs } from "@/shared/components/PillTabs";
 import { type ErpInvoice } from "@/modules/erp-invoices-core/api/erpInvoicesCoreApi";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
+import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
 import type { FilterPanelConfig } from "@/shared/hooks/useFilterPanel";
 import {
   INVOICE_COLUMN_VIEW_PRESETS,
@@ -51,7 +52,10 @@ export function useErpInvoicesTabLogic({
   instanceIndex = 1,
 }: ErpInvoicesTabProps) {
   const { t } = useTranslation("erpInvoices");
-  const canEditInvoice = useHasPermission("invoices", "update");
+  const canEditInvoice = useHasPermission(
+    ErpResource.INVOICES,
+    ErpAction.UPDATE,
+  );
 
   const getInitialTabInfo = () => {
     if (isDrawer) {

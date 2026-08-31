@@ -3,6 +3,7 @@ import { Plus, Trash2, Barcode } from "lucide-react";
 import { useT } from "@/core/i18n";
 import { useUIStore } from "@/core/config/uiStore";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
+import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
 import {
   DrawerSection,
   DrawerRow,
@@ -71,7 +72,10 @@ export function TrackedGoodsDrawer({
 }: TrackedGoodsDrawerProps) {
   const t = useT();
   const showToast = useUIStore((s) => s.showToast);
-  const canUpdate = useHasPermission("inventory_items", "update");
+  const canUpdate = useHasPermission(
+    ErpResource.INVENTORY_ITEMS,
+    ErpAction.UPDATE,
+  );
 
   const [mode, setMode] = useState<DrawerMode>(initialMode);
   const [saving, setSaving] = useState(false);

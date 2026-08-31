@@ -41,6 +41,7 @@ import {
 import { toast } from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
+import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
 import { PillTabs } from "@/shared/components/PillTabs";
 import { usePageViewPresets } from "@/shared/hooks/usePageViewPresets";
 import {
@@ -467,8 +468,14 @@ export function GarageCases() {
   const [reconciliationInitialTab, setReconciliationInitialTab] =
     useState<ReconciliationTabKey>("bank_cash");
 
-  const canCreateGarage = useHasPermission("garage", "create");
-  const canUpdateGarage = useHasPermission("garage", "update");
+  const canCreateGarage = useHasPermission(
+    ErpResource.GARAGE,
+    ErpAction.CREATE,
+  );
+  const canUpdateGarage = useHasPermission(
+    ErpResource.GARAGE,
+    ErpAction.UPDATE,
+  );
   const canSyncGarage = canCreateGarage || canUpdateGarage;
 
   const createActions = useMemo(

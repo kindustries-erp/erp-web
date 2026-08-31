@@ -11,6 +11,7 @@ import { erpInvoiceDashboardApi } from "@/modules/erp-invoices-core/api/erpInvoi
 import { useAuthStore } from "@/modules/auth/domain/authStore";
 import { ComingSoon } from "@/pages/ComingSoon";
 import { useHasAnyPermission } from "@/shared/hooks/useHasPermission";
+import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
 import { BranchInvoiceChart } from "./components/BranchInvoiceChart";
 import { BranchVatChart } from "./components/BranchVatChart";
 import { InvoiceStatsCards } from "./components/InvoiceStatsCards";
@@ -22,7 +23,7 @@ export function InvoiceDashboard() {
   const queryClient = useQueryClient();
   const isAdminEmail = employee?.email === "admin@liouni.com";
 
-  const hasPerm = useHasAnyPermission(["invoices"], "read");
+  const hasPerm = useHasAnyPermission([ErpResource.INVOICES], ErpAction.READ);
   const canView = hasPerm || isAdminEmail;
 
   const [isExporting, setIsExporting] = React.useState(false);

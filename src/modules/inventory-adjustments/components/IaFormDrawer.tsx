@@ -20,6 +20,7 @@ import { DrawerField, inputCls } from "@/shared/components/DrawerModal";
 import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
 import { DatePicker } from "@/shared/components/DatePicker";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
+import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
 import { useUIStore } from "@/core/config/uiStore";
 import { ImportExcelModal } from "@/shared/components/ImportExcelModal";
 import {
@@ -76,7 +77,10 @@ export function IaFormDrawer({ drawer }: IaFormDrawerProps) {
     setGlobalLoading(saving);
   }, [saving, setGlobalLoading]);
 
-  const canUpdate = useHasPermission("inventory_adjustments", "update");
+  const canUpdate = useHasPermission(
+    ErpResource.INVENTORY_ADJUSTMENTS,
+    ErpAction.UPDATE,
+  );
 
   // ── Client-side filter / sort ──────────────────────────────────────────────
 

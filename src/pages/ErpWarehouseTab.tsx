@@ -24,6 +24,7 @@ import {
 
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
+import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
 import { Forbidden } from "@/pages/Forbidden";
 import {
   createColumnHeaderFilter,
@@ -70,31 +71,58 @@ import { fmtQty } from "@/shared/utils/format";
 
 export function ErpWarehouseTab() {
   const t = useT();
-  const canReadReceipts = useHasPermission("goods_receipts", "read");
-  const canCreateReceipt = useHasPermission("goods_receipts", "create");
-  const canUpdateReceipt = useHasPermission("goods_receipts", "update");
-  const canDeleteReceipt = useHasPermission("goods_receipts", "delete");
+  const canReadReceipts = useHasPermission(
+    ErpResource.GOODS_RECEIPTS,
+    ErpAction.READ,
+  );
+  const canCreateReceipt = useHasPermission(
+    ErpResource.GOODS_RECEIPTS,
+    ErpAction.CREATE,
+  );
+  const canUpdateReceipt = useHasPermission(
+    ErpResource.GOODS_RECEIPTS,
+    ErpAction.UPDATE,
+  );
+  const canDeleteReceipt = useHasPermission(
+    ErpResource.GOODS_RECEIPTS,
+    ErpAction.DELETE,
+  );
 
-  const canReadIssues = useHasPermission("goods_issues", "read");
-  const canCreateIssue = useHasPermission("goods_issues", "create");
-  const canUpdateIssue = useHasPermission("goods_issues", "update");
-  const canDeleteIssue = useHasPermission("goods_issues", "delete");
+  const canReadIssues = useHasPermission(
+    ErpResource.GOODS_ISSUES,
+    ErpAction.READ,
+  );
+  const canCreateIssue = useHasPermission(
+    ErpResource.GOODS_ISSUES,
+    ErpAction.CREATE,
+  );
+  const canUpdateIssue = useHasPermission(
+    ErpResource.GOODS_ISSUES,
+    ErpAction.UPDATE,
+  );
+  const canDeleteIssue = useHasPermission(
+    ErpResource.GOODS_ISSUES,
+    ErpAction.DELETE,
+  );
 
-  const canReadAdjustments = useHasPermission("inventory_adjustments", "read");
+  const canReadAdjustments = useHasPermission(
+    ErpResource.INVENTORY_ADJUSTMENTS,
+    ErpAction.READ,
+  );
   const canCreateAdjustment = useHasPermission(
-    "inventory_adjustments",
-    "create",
+    ErpResource.INVENTORY_ADJUSTMENTS,
+    ErpAction.CREATE,
   );
   const canUpdateAdjustment = useHasPermission(
-    "inventory_adjustments",
-    "update",
+    ErpResource.INVENTORY_ADJUSTMENTS,
+    ErpAction.UPDATE,
   );
   const canDeleteAdjustment = useHasPermission(
-    "inventory_adjustments",
-    "delete",
+    ErpResource.INVENTORY_ADJUSTMENTS,
+    ErpAction.DELETE,
   );
 
-  const isAdmin = useHasPermission("*", "*");
+  const isAdmin = useHasPermission(ErpResource.SUPER_ADMIN, ErpAction.ALL);
 
   const showToast = useUIStore((s) => s.showToast);
   const setGlobalLoading = useUIStore((s) => s.setGlobalLoading);

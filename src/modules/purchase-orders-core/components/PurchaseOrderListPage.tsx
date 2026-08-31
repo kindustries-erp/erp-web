@@ -21,6 +21,7 @@ import { type OperationalDocument } from "@/modules/operational/api/operationalA
 import { purchaseOrdersCoreApi } from "../api/purchaseOrdersCoreApi";
 
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
+import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
 import { canReceiveInventory } from "@/modules/operational/utils/operationalHelpers";
 import { useAuthStore } from "@/modules/auth/domain/authStore";
 import { useState, useEffect, useMemo } from "react";
@@ -28,11 +29,23 @@ import { useState, useEffect, useMemo } from "react";
 export function PurchaseOrderListPage() {
   const t = useT();
   const pageState = usePurchaseOrderPage();
-  const canCreatePo = useHasPermission("purchase_orders", "create");
-  const canUpdatePo = useHasPermission("purchase_orders", "update");
-  const canDeletePo = useHasPermission("purchase_orders", "delete");
-  const canCreateReceipt = useHasPermission("goods_receipts", "create");
-  const isAdmin = useHasPermission("*", "*");
+  const canCreatePo = useHasPermission(
+    ErpResource.PURCHASE_ORDERS,
+    ErpAction.CREATE,
+  );
+  const canUpdatePo = useHasPermission(
+    ErpResource.PURCHASE_ORDERS,
+    ErpAction.UPDATE,
+  );
+  const canDeletePo = useHasPermission(
+    ErpResource.PURCHASE_ORDERS,
+    ErpAction.DELETE,
+  );
+  const canCreateReceipt = useHasPermission(
+    ErpResource.GOODS_RECEIPTS,
+    ErpAction.CREATE,
+  );
+  const isAdmin = useHasPermission(ErpResource.SUPER_ADMIN, ErpAction.ALL);
 
   const { employee } = useAuthStore();
   const isAdminEmail = employee?.email === "admin@liouni.com";

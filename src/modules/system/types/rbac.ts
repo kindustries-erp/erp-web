@@ -57,6 +57,8 @@ export enum ErpResource {
   PURCHASE_REQUESTS = "purchase_requests",
   VEHICLES = "vehicles",
   VINFAST = "vinfast",
+  PAYMENT_VOUCHERS = "payment_vouchers",
+  CASHFLOW_VOUCHERS = "erp_cashflow_vouchers",
 }
 
 export enum ErpAction {

@@ -1,5 +1,6 @@
 import { VinfastPartsStockExportDrawer } from "./VinfastPartsStockExportDrawer";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
+import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
 import { useState, useMemo, useCallback } from "react";
 import { ComingSoon } from "@/pages/ComingSoon";
 import { useTranslation } from "react-i18next";
@@ -36,7 +37,7 @@ export function VinfastPartsStockTemplate({
   description,
 }: VinfastPartsStockTemplateProps) {
   const { t } = useTranslation(["vinfastParts", "reports", "common"]);
-  const hasVinfastPerm = useHasPermission("vinfast", "read");
+  const hasVinfastPerm = useHasPermission(ErpResource.VINFAST, ErpAction.READ);
   const queryClient = useQueryClient();
   const [selectedSku, setSelectedSku] = useState<string | null>(null);
   const [catalogData, setCatalogData] = useState<any>(null);

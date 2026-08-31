@@ -15,6 +15,7 @@ import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemp
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import { useFilterPanel } from "@/shared/hooks/useFilterPanel";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
+import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
 import { Forbidden } from "@/pages/Forbidden";
 import { useT } from "@/core/i18n";
 import { useUIStore } from "@/core/config/uiStore";
@@ -50,10 +51,10 @@ function fmtQty(value?: string | null) {
 export function ProductionOrderListPage() {
   const t = useT();
   const showToast = useUIStore((s) => s.showToast);
-  const canRead = useHasPermission("production", "read");
-  const canCreate = useHasPermission("production", "create");
-  const canUpdate = useHasPermission("production", "update");
-  const canDelete = useHasPermission("production", "delete");
+  const canRead = useHasPermission(ErpResource.PRODUCTION, ErpAction.READ);
+  const canCreate = useHasPermission(ErpResource.PRODUCTION, ErpAction.CREATE);
+  const canUpdate = useHasPermission(ErpResource.PRODUCTION, ErpAction.UPDATE);
+  const canDelete = useHasPermission(ErpResource.PRODUCTION, ErpAction.DELETE);
 
   const [orders, setOrders] = useState<ErpProductionOrder[]>([]);
   const [loading, setLoading] = useState(true);

@@ -16,6 +16,7 @@ import { DrawerField, inputCls } from "@/shared/components/DrawerModal";
 import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
 import { DatePicker } from "@/shared/components/DatePicker";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
+import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
 import { useReactToPrint } from "react-to-print";
 import { useCompanyProfile } from "@/core/api/companyProfileApi";
 import { useUIStore } from "@/core/config/uiStore";
@@ -73,8 +74,11 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
 
   const isLineViewOnly = viewOnly || form.issueType === "SALE";
   const moLinkedLocked = isMoLinkedGiLocked(editing);
-  const canUpdate = useHasPermission("goods_issues", "update");
-  const isAdmin = useHasPermission("*", "*");
+  const canUpdate = useHasPermission(
+    ErpResource.GOODS_ISSUES,
+    ErpAction.UPDATE,
+  );
+  const isAdmin = useHasPermission(ErpResource.SUPER_ADMIN, ErpAction.ALL);
 
   // ── Serial details ─────────────────────────────────────────────────────────
 

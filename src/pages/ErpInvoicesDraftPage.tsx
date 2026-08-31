@@ -21,11 +21,15 @@ import { SinvoiceDraftDetailWrapper } from "@/modules/accounting/components/Sinv
 import { SinvoiceConfigDrawer } from "@/modules/accounting/components/SinvoiceConfigDrawer";
 import { useSinvoiceDraftsList } from "@/modules/accounting/hooks/useSinvoiceDraftsList";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
+import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
 import { InvoiceDateRangeSlot } from "@/modules/erp-invoices-core/components/InvoiceDateRangeSlot";
 
 export function ErpInvoicesDraftPage() {
   const { t } = useTranslation("erpInvoices");
-  const canEditInvoice = useHasPermission("invoices", "update");
+  const canEditInvoice = useHasPermission(
+    ErpResource.INVOICES,
+    ErpAction.UPDATE,
+  );
   const listHook = useSinvoiceDraftsList();
 
   const [draftOpen, setDraftOpen] = useState(false);

@@ -14,6 +14,7 @@ import { KpiSparkline } from "@/shared/components/KpiSparkline";
 import { format, subMonths, subWeeks, startOfWeek, endOfWeek } from "date-fns";
 import { money } from "@/shared/utils/format";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
+import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
 import type { TabItem } from "@/shared/components/PageLayout";
 
 export interface VinfastPartsDashboardPageProps {
@@ -27,7 +28,7 @@ export function VinfastPartsDashboardPage({
   activeTab,
   onTabChange,
 }: VinfastPartsDashboardPageProps = {}) {
-  const hasVinfastPerm = useHasPermission("vinfast", "read");
+  const hasVinfastPerm = useHasPermission(ErpResource.VINFAST, ErpAction.READ);
 
   const queryClient = useQueryClient();
   const isFetchingCount = useIsFetching({

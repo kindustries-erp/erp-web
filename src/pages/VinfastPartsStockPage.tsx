@@ -12,6 +12,7 @@ import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
 import { type ActionDropdownItem } from "@/shared/components/ActionDropdown";
 import { TableText } from "@/shared/components/DataTable/TableText";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
+import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
 import { ComingSoon } from "@/pages/ComingSoon";
 import { useAppStore } from "@/core/config/appStore";
 import type { TabItem } from "@/shared/components/PageLayout";
@@ -131,7 +132,7 @@ function VinfastPartsStockTableView({
   onTabChange: (nextTab: string) => void;
 }) {
   const { t } = useTranslation(["vinfastParts", "nav", "common"]);
-  const hasVinfastPerm = useHasPermission("vinfast", "read");
+  const hasVinfastPerm = useHasPermission(ErpResource.VINFAST, ErpAction.READ);
   const queryClient = useQueryClient();
 
   const [selectedSku, setSelectedSku] = useState<string | null>(null);
