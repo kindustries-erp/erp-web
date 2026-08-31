@@ -19,6 +19,9 @@ import { TableText } from "@/shared/components/DataTable/TableText";
 import { Barcode, Eye, Pencil, FileText, PackageMinus } from "lucide-react";
 import type { ActionDropdownItem } from "@/shared/components/ActionDropdown";
 import type { TabItem } from "@/shared/components/PageLayout";
+import { ErpUrlQueryParam } from "@/shared/constants/urlParams";
+import { DEFAULT_DEBOUNCE_TIME } from "@/shared/constants/timing";
+import { encodeStateParam } from "@/shared/utils/pageUrl";
 import { TrackedGoodsDrawer } from "./TrackedGoodsDrawer";
 import { SoPreviewDrawer } from "@/modules/sales-orders-core/components/SoPreviewDrawer";
 import { GiFormDrawer } from "@/modules/goods-issues-core/components/GiFormDrawer";
@@ -66,7 +69,7 @@ export function TrackedGoodsPage({
     }
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
-      const tabParam = params.get("tab");
+      const tabParam = params.get(ErpUrlQueryParam.TAB);
       if (
         tabParam &&
         ["parts", "lot", "custom", "vehicle"].includes(tabParam)
@@ -100,21 +103,103 @@ export function TrackedGoodsPage({
     return `inventory-tracked-goods-${currentTab}-table`;
   }, [fixedTrackingPolicy, currentTab]);
 
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(50);
-  const [searchInput, setSearchInput] = useState("");
-  const [search, setSearch] = useState("");
-  const [itemTypeFilter, setItemTypeFilter] = useState("");
-  const [trackingPolicyFilter, setTrackingPolicyFilter] = useState("");
-  const [statusFilter, setStatusFilter] = useState("");
-  const [missingSerialFilter, setMissingSerialFilter] = useState(false);
+  const [page, setPage] = useState<number>(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const p = params.get(ErpUrlQueryParam.PAGE);
+      if (p) return Math.max(1, parseInt(p, 10) || 1);
+    }
+    return 1;
+  });
+  const [pageSize, setPageSize] = useState<number>(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const ps =
+        params.get(ErpUrlQueryParam.PAGE_SIZE) ||
+        params.get(ErpUrlQueryParam.LIMIT);
+      if (ps) return parseInt(ps, 10) || 50;
+    }
+    return 50;
+  });
+  const [searchInput, setSearchInput] = useState<string>(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      return params.get(ErpUrlQueryParam.SEARCH) || "";
+    }
+    return "";
+  });
+  const [search, setSearch] = useState<string>(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      return params.get(ErpUrlQueryParam.SEARCH) || "";
+    }
+    return "";
+  });
+  const [itemTypeFilter, setItemTypeFilter] = useState<string>(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      return params.get(ErpUrlQueryParam.ITEM_TYPE) || "";
+    }
+    return "";
+  });
+  const [trackingPolicyFilter, setTrackingPolicyFilter] = useState<string>(
+    () => {
+      if (typeof window !== "undefined") {
+        const params = new URLSearchParams(window.location.search);
+        return params.get(ErpUrlQueryParam.TRACKING_POLICY) || "";
+      }
+      return "";
+    },
+  );
+  const [statusFilter, setStatusFilter] = useState<string>(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      return params.get(ErpUrlQueryParam.STATUS) || "";
+    }
+    return "";
+  });
+  const [missingSerialFilter, setMissingSerialFilter] = useState<boolean>(
+    () => {
+      if (typeof window !== "undefined") {
+        const params = new URLSearchParams(window.location.search);
+        return params.get(ErpUrlQueryParam.MISSING_SERIAL) === "true";
+      }
+      return false;
+    },
+  );
   const [sortField] = useState("-created_at");
   const [filterPanelOpen, setFilterPanelOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<InventorySerialRow | null>(
-    null,
+    () => {
+      if (typeof window !== "undefined") {
+        const params = new URLSearchParams(window.location.search);
+        const detailParam = params.get(ErpUrlQueryParam.DETAIL);
+        if (detailParam) {
+          return {
+            id: detailParam,
+            serialNo: detailParam,
+          } as unknown as InventorySerialRow;
+        }
+      }
+      return null;
+    },
   );
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const [drawerMode, setDrawerMode] = useState<"view" | "edit">("view");
+  const [drawerOpen, setDrawerOpen] = useState<boolean>(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      return Boolean(params.get(ErpUrlQueryParam.DETAIL));
+    }
+    return false;
+  });
+  const [drawerMode, setDrawerMode] = useState<"view" | "edit">(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      return (
+        (params.get(ErpUrlQueryParam.DRAWER_MODE) as "view" | "edit") || "view"
+      );
+    }
+    return "view";
+  });
   const [previewSoNo, setPreviewSoNo] = useState<string | null>(null);
   const giDrawer = useGiDrawer();
 
@@ -135,6 +220,166 @@ export function TrackedGoodsPage({
       }
     >
   >({});
+
+  // ── Two-Way URL Sync Effect for Tracked Goods ─────────────────────────────
+  const debounceUrlTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    if (debounceUrlTimerRef.current) {
+      clearTimeout(debounceUrlTimerRef.current);
+    }
+
+    debounceUrlTimerRef.current = setTimeout(() => {
+      const currentUrl = new URL(window.location.href);
+      const newParams = new URLSearchParams(currentUrl.search);
+
+      // 1. Tab
+      if (!fixedTrackingPolicy) {
+        if (currentTab !== "parts") {
+          newParams.set(ErpUrlQueryParam.TAB, currentTab);
+        } else {
+          newParams.delete(ErpUrlQueryParam.TAB);
+        }
+      }
+
+      // 2. Filters
+      if (search) newParams.set(ErpUrlQueryParam.SEARCH, search);
+      else newParams.delete(ErpUrlQueryParam.SEARCH);
+
+      if (itemTypeFilter)
+        newParams.set(ErpUrlQueryParam.ITEM_TYPE, itemTypeFilter);
+      else newParams.delete(ErpUrlQueryParam.ITEM_TYPE);
+
+      if (trackingPolicyFilter)
+        newParams.set(ErpUrlQueryParam.TRACKING_POLICY, trackingPolicyFilter);
+      else newParams.delete(ErpUrlQueryParam.TRACKING_POLICY);
+
+      if (statusFilter) newParams.set(ErpUrlQueryParam.STATUS, statusFilter);
+      else newParams.delete(ErpUrlQueryParam.STATUS);
+
+      if (missingSerialFilter)
+        newParams.set(ErpUrlQueryParam.MISSING_SERIAL, "true");
+      else newParams.delete(ErpUrlQueryParam.MISSING_SERIAL);
+
+      // 3. Pagination
+      if (page > 1) newParams.set(ErpUrlQueryParam.PAGE, String(page));
+      else newParams.delete(ErpUrlQueryParam.PAGE);
+
+      if (pageSize !== 50)
+        newParams.set(ErpUrlQueryParam.PAGE_SIZE, String(pageSize));
+      else newParams.delete(ErpUrlQueryParam.PAGE_SIZE);
+
+      // 4. Column filters & Search
+      if (Object.keys(tableState.columnFilters).length > 0) {
+        const encoded = encodeStateParam(tableState.columnFilters);
+        if (encoded) newParams.set(ErpUrlQueryParam.COLUMN_FILTERS, encoded);
+      } else {
+        newParams.delete(ErpUrlQueryParam.COLUMN_FILTERS);
+      }
+
+      if (Object.keys(tableState.columnSearch).length > 0) {
+        const encoded = encodeStateParam(tableState.columnSearch);
+        if (encoded) newParams.set(ErpUrlQueryParam.COLUMN_SEARCH, encoded);
+      } else {
+        newParams.delete(ErpUrlQueryParam.COLUMN_SEARCH);
+      }
+
+      // 5. Sorts
+      if (tableState.sorts.length > 0) {
+        const encoded = encodeStateParam(tableState.sorts);
+        if (encoded) newParams.set(ErpUrlQueryParam.SORTS, encoded);
+      } else {
+        newParams.delete(ErpUrlQueryParam.SORTS);
+      }
+
+      // 6. Detail Drawer
+      const detailKey = selectedItem?.serialNo || selectedItem?.id;
+      if (drawerOpen && detailKey) {
+        newParams.set(ErpUrlQueryParam.DETAIL, detailKey);
+        if (drawerMode === "edit") {
+          newParams.set(ErpUrlQueryParam.DRAWER_MODE, "edit");
+        } else {
+          newParams.delete(ErpUrlQueryParam.DRAWER_MODE);
+        }
+      } else if (!drawerOpen) {
+        newParams.delete(ErpUrlQueryParam.DETAIL);
+        newParams.delete(ErpUrlQueryParam.DRAWER_MODE);
+      }
+
+      const newSearch = newParams.toString();
+      const newRelativePath = `${window.location.pathname}${newSearch ? `?${newSearch}` : ""}`;
+      if (
+        window.location.pathname + window.location.search !==
+        newRelativePath
+      ) {
+        window.history.replaceState(null, "", newRelativePath);
+      }
+    }, DEFAULT_DEBOUNCE_TIME);
+
+    return () => {
+      if (debounceUrlTimerRef.current)
+        clearTimeout(debounceUrlTimerRef.current);
+    };
+  }, [
+    fixedTrackingPolicy,
+    currentTab,
+    search,
+    itemTypeFilter,
+    trackingPolicyFilter,
+    statusFilter,
+    missingSerialFilter,
+    page,
+    pageSize,
+    tableState.columnFilters,
+    tableState.columnSearch,
+    tableState.sorts,
+    drawerOpen,
+    drawerMode,
+    selectedItem?.serialNo,
+    selectedItem?.id,
+  ]);
+
+  // Handle popstate for 2-way sync
+  useEffect(() => {
+    const handlePopState = () => {
+      const params = new URLSearchParams(window.location.search);
+      const detailParam = params.get(ErpUrlQueryParam.DETAIL);
+      if (detailParam) {
+        setSelectedItem((prev) =>
+          prev?.serialNo === detailParam || prev?.id === detailParam
+            ? prev
+            : ({
+                id: detailParam,
+                serialNo: detailParam,
+              } as unknown as InventorySerialRow),
+        );
+        setDrawerOpen(true);
+        setDrawerMode(
+          (params.get(ErpUrlQueryParam.DRAWER_MODE) as "view" | "edit") ||
+            "view",
+        );
+      } else {
+        setDrawerOpen(false);
+      }
+
+      const tabParam = params.get(ErpUrlQueryParam.TAB);
+      if (tabParam && tabParam !== currentTab) {
+        setCurrentTab(tabParam);
+      }
+
+      const pageParam = params.get(ErpUrlQueryParam.PAGE);
+      if (pageParam) {
+        const p = parseInt(pageParam, 10);
+        if (!isNaN(p)) setPage(p);
+      }
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [currentTab]);
 
   const handleTabChange = useCallback(
     (nextTab: string) => {
@@ -176,9 +421,9 @@ export function TrackedGoodsPage({
       if (typeof window !== "undefined") {
         const url = new URL(window.location.href);
         if (nextTab === "parts") {
-          url.searchParams.delete("tab");
+          url.searchParams.delete(ErpUrlQueryParam.TAB);
         } else {
-          url.searchParams.set("tab", nextTab);
+          url.searchParams.set(ErpUrlQueryParam.TAB, nextTab);
         }
         window.history.replaceState(null, "", url.toString());
       }
@@ -200,7 +445,7 @@ export function TrackedGoodsPage({
     const id = setTimeout(() => {
       setSearch(searchInput);
       setPage(1);
-    }, 300);
+    }, DEFAULT_DEBOUNCE_TIME);
     return () => clearTimeout(id);
   }, [searchInput]);
 

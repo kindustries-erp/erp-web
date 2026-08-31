@@ -99,10 +99,11 @@ export function TrackedGoodsDrawer({
   // Fetch detail when open
   useEffect(() => {
     let active = true;
-    if (open && item?.id) {
+    const targetId = item?.id || item?.serialNo;
+    if (open && targetId) {
       setLoading(true);
       inventoryCoreApi
-        .getSerial(item.id)
+        .getSerial(targetId)
         .then((data) => {
           if (active) {
             setDetailItem(data);
@@ -122,7 +123,7 @@ export function TrackedGoodsDrawer({
     return () => {
       active = false;
     };
-  }, [item?.id, open]);
+  }, [item?.id, item?.serialNo, open]);
 
   // Fetch assigned vehicle if ASSEMBLED
   useEffect(() => {

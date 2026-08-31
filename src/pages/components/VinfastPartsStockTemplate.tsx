@@ -1,7 +1,7 @@
 import { VinfastPartsStockExportDrawer } from "./VinfastPartsStockExportDrawer";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { ComingSoon } from "@/pages/ComingSoon";
 import { useTranslation } from "react-i18next";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -15,6 +15,10 @@ import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemp
 import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
 import { type ActionDropdownItem } from "@/shared/components/ActionDropdown";
 import { TableText } from "@/shared/components/DataTable/TableText";
+import { ErpUrlQueryParam } from "@/shared/constants/urlParams";
+import { ErpApiEndpoint } from "@/shared/constants/apiEndpoints";
+import { DEFAULT_DEBOUNCE_TIME } from "@/shared/constants/timing";
+import { encodeStateParam } from "@/shared/utils/pageUrl";
 import { VinfastPartsStockDetailDrawer } from "./VinfastPartsStockDetailDrawer";
 import { VinfastPartsSyncDrawer } from "./VinfastPartsSyncDrawer";
 
@@ -39,13 +43,35 @@ export function VinfastPartsStockTemplate({
   const { t } = useTranslation(["vinfastParts", "reports", "common"]);
   const hasVinfastPerm = useHasPermission(ErpResource.VINFAST, ErpAction.READ);
   const queryClient = useQueryClient();
-  const [selectedSku, setSelectedSku] = useState<string | null>(null);
+  const [selectedSku, setSelectedSku] = useState<string | null>(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      return params.get(ErpUrlQueryParam.DETAIL);
+    }
+    return null;
+  });
   const [catalogData, setCatalogData] = useState<any>(null);
   const [syncDrawerOpen, setSyncDrawerOpen] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
 
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState<number>(getDefaultPageSize);
+  const [page, setPage] = useState<number>(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const pageVal = params.get(ErpUrlQueryParam.PAGE);
+      if (pageVal) return Math.max(1, parseInt(pageVal, 10) || 1);
+    }
+    return 1;
+  });
+  const [pageSize, setPageSize] = useState<number>(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const sizeVal =
+        params.get(ErpUrlQueryParam.PAGE_SIZE) ||
+        params.get(ErpUrlQueryParam.LIMIT);
+      if (sizeVal) return parseInt(sizeVal, 10) || getDefaultPageSize();
+    }
+    return getDefaultPageSize();
+  });
 
   const tableState = useTableColumnState(`vinfast-parts-stock-${vehicleType}`);
 
@@ -63,6 +89,105 @@ export function VinfastPartsStockTemplate({
     sortOrder = "desc";
   }
 
+  // ── Two-Way URL Sync Effect ───────────────────────────────────────────────
+  const debounceUrlTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    if (debounceUrlTimerRef.current) {
+      clearTimeout(debounceUrlTimerRef.current);
+    }
+
+    debounceUrlTimerRef.current = setTimeout(() => {
+      const currentUrl = new URL(window.location.href);
+      const newParams = new URLSearchParams(currentUrl.search);
+
+      // Detail drawer
+      if (selectedSku) {
+        newParams.set(ErpUrlQueryParam.DETAIL, selectedSku);
+      } else {
+        newParams.delete(ErpUrlQueryParam.DETAIL);
+      }
+
+      // Pagination
+      if (page > 1) {
+        newParams.set(ErpUrlQueryParam.PAGE, String(page));
+      } else {
+        newParams.delete(ErpUrlQueryParam.PAGE);
+      }
+      if (pageSize !== getDefaultPageSize()) {
+        newParams.set(ErpUrlQueryParam.PAGE_SIZE, String(pageSize));
+      } else {
+        newParams.delete(ErpUrlQueryParam.PAGE_SIZE);
+      }
+
+      // Column filters (cf)
+      if (Object.keys(tableState.columnFilters).length > 0) {
+        const encoded = encodeStateParam(tableState.columnFilters);
+        if (encoded) newParams.set(ErpUrlQueryParam.COLUMN_FILTERS, encoded);
+      } else {
+        newParams.delete(ErpUrlQueryParam.COLUMN_FILTERS);
+      }
+
+      // Column search (cs)
+      if (Object.keys(tableState.columnSearch).length > 0) {
+        const encoded = encodeStateParam(tableState.columnSearch);
+        if (encoded) newParams.set(ErpUrlQueryParam.COLUMN_SEARCH, encoded);
+      } else {
+        newParams.delete(ErpUrlQueryParam.COLUMN_SEARCH);
+      }
+
+      // Sorts
+      if (tableState.sorts.length > 0) {
+        const encoded = encodeStateParam(tableState.sorts);
+        if (encoded) newParams.set(ErpUrlQueryParam.SORTS, encoded);
+      } else {
+        newParams.delete(ErpUrlQueryParam.SORTS);
+      }
+
+      const newSearch = newParams.toString();
+      const newRelativePath = `${window.location.pathname}${newSearch ? `?${newSearch}` : ""}`;
+      if (
+        window.location.pathname + window.location.search !==
+        newRelativePath
+      ) {
+        window.history.replaceState(null, "", newRelativePath);
+      }
+    }, DEFAULT_DEBOUNCE_TIME);
+
+    return () => {
+      if (debounceUrlTimerRef.current)
+        clearTimeout(debounceUrlTimerRef.current);
+    };
+  }, [
+    selectedSku,
+    page,
+    pageSize,
+    tableState.columnFilters,
+    tableState.columnSearch,
+    tableState.sorts,
+  ]);
+
+  // Handle popstate
+  useEffect(() => {
+    const handlePopState = () => {
+      const params = new URLSearchParams(window.location.search);
+      const detailParam = params.get(ErpUrlQueryParam.DETAIL);
+      setSelectedSku(detailParam || null);
+
+      const pageParam = params.get(ErpUrlQueryParam.PAGE);
+      if (pageParam) {
+        const p = parseInt(pageParam, 10);
+        if (!isNaN(p)) setPage(p);
+      }
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+
   const fetchColumnOptions = useCallback(
     async ({
       columnKey,
@@ -76,7 +201,7 @@ export function VinfastPartsStockTemplate({
       filtersStr?: string;
     }) => {
       const parsedFilters = filtersStr ? JSON.parse(filtersStr) : {};
-      const res = await api.get("/api/v1/vinfast-parts/stock/column-options", {
+      const res = await api.get(ErpApiEndpoint.VINFAST_PARTS_STOCK_OPTIONS, {
         params: {
           columnKey,
           search,
@@ -122,12 +247,12 @@ export function VinfastPartsStockTemplate({
     ],
     queryFn: async () => {
       const params = new URLSearchParams();
-      params.append("vehicleType", vehicleType);
+      params.append(ErpUrlQueryParam.VEHICLE_TYPE, vehicleType);
 
-      if (sortBy) params.append("sortBy", sortBy);
-      if (sortOrder) params.append("sortDir", sortOrder);
+      if (sortBy) params.append(ErpUrlQueryParam.SORT_BY, sortBy);
+      if (sortOrder) params.append(ErpUrlQueryParam.SORT_DIR, sortOrder);
       if (tableState.sorts.length > 0)
-        params.append("sorts", JSON.stringify(tableState.sorts));
+        params.append(ErpUrlQueryParam.SORTS, JSON.stringify(tableState.sorts));
       if (Object.keys(tableState.columnSearch).length > 0)
         params.append("column_search", JSON.stringify(tableState.columnSearch));
       if (Object.keys(tableState.columnFilters).length > 0)
@@ -136,10 +261,12 @@ export function VinfastPartsStockTemplate({
           JSON.stringify(tableState.columnFilters),
         );
 
-      params.append("page", page.toString());
-      params.append("limit", pageSize.toString());
+      params.append(ErpUrlQueryParam.PAGE, page.toString());
+      params.append(ErpUrlQueryParam.LIMIT, pageSize.toString());
 
-      const res = await api.get(`/api/v1/vinfast-parts/stock?${params}`);
+      const res = await api.get(
+        `${ErpApiEndpoint.VINFAST_PARTS_STOCK}?${params}`,
+      );
       return res.data;
     },
   });

@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Eye, FileText, RefreshCw, DownloadCloud } from "lucide-react";
@@ -16,6 +16,10 @@ import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
 import { ComingSoon } from "@/pages/ComingSoon";
 import { useAppStore } from "@/core/config/appStore";
 import type { TabItem } from "@/shared/components/PageLayout";
+import { ErpUrlQueryParam } from "@/shared/constants/urlParams";
+import { ErpApiEndpoint } from "@/shared/constants/apiEndpoints";
+import { DEFAULT_DEBOUNCE_TIME } from "@/shared/constants/timing";
+import { encodeStateParam } from "@/shared/utils/pageUrl";
 import { VinfastPartsDashboardPage } from "./VinfastPartsDashboardPage";
 import { VinfastPartsStockDetailDrawer } from "./components/VinfastPartsStockDetailDrawer";
 import { VinfastPartsSyncDrawer } from "./components/VinfastPartsSyncDrawer";
@@ -44,7 +48,7 @@ export function VinfastPartsStockPage({
     if (initialTab) return initialTab;
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
-      const tabParam = params.get("tab") as VinfastPartsStockTab;
+      const tabParam = params.get(ErpUrlQueryParam.TAB) as VinfastPartsStockTab;
       if (
         tabParam === "dashboard" ||
         tabParam === "oto" ||
@@ -61,7 +65,7 @@ export function VinfastPartsStockPage({
       setActiveTab(nextTab as VinfastPartsStockTab);
       if (typeof window !== "undefined") {
         const url = new URL(window.location.href);
-        url.searchParams.set("tab", nextTab);
+        url.searchParams.set(ErpUrlQueryParam.TAB, nextTab);
         window.history.replaceState(null, "", url.toString());
       }
     }
@@ -100,6 +104,22 @@ export function VinfastPartsStockPage({
     return () => setCustomBreadcrumbs(null);
   }, [activeTab, setCustomBreadcrumbs]);
 
+  // Popstate sync for top-level tab
+  useEffect(() => {
+    const handlePopState = () => {
+      const params = new URLSearchParams(window.location.search);
+      const tabParam = params.get(ErpUrlQueryParam.TAB) as VinfastPartsStockTab;
+      if (
+        tabParam &&
+        (tabParam === "dashboard" || tabParam === "oto" || tabParam === "xemay")
+      ) {
+        setActiveTab(tabParam);
+      }
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+
   if (activeTab === "dashboard") {
     return (
       <VinfastPartsDashboardPage
@@ -135,17 +155,37 @@ function VinfastPartsStockTableView({
   const hasVinfastPerm = useHasPermission(ErpResource.VINFAST, ErpAction.READ);
   const queryClient = useQueryClient();
 
-  const [selectedSku, setSelectedSku] = useState<string | null>(null);
+  const [selectedSku, setSelectedSku] = useState<string | null>(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      return params.get(ErpUrlQueryParam.DETAIL);
+    }
+    return null;
+  });
   const [catalogData, setCatalogData] = useState<any>(null);
   const [syncDrawerOpen, setSyncDrawerOpen] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
 
-  // Tab-isolated pagination state
+  // Tab-isolated pagination state (hydrated from URL if present)
   const [tabPagination, setTabPagination] = useState<
     Record<"oto" | "xemay", { page: number; pageSize: number }>
-  >({
-    oto: { page: 1, pageSize: getDefaultPageSize() },
-    xemay: { page: 1, pageSize: getDefaultPageSize() },
+  >(() => {
+    let initialPage = 1;
+    let initialPageSize = getDefaultPageSize();
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const pageVal = params.get(ErpUrlQueryParam.PAGE);
+      if (pageVal) initialPage = Math.max(1, parseInt(pageVal, 10) || 1);
+      const sizeVal =
+        params.get(ErpUrlQueryParam.PAGE_SIZE) ||
+        params.get(ErpUrlQueryParam.LIMIT);
+      if (sizeVal)
+        initialPageSize = parseInt(sizeVal, 10) || getDefaultPageSize();
+    }
+    return {
+      oto: { page: initialPage, pageSize: initialPageSize },
+      xemay: { page: initialPage, pageSize: initialPageSize },
+    };
   });
 
   const currentPagination = tabPagination[vehicleType] || {
@@ -212,6 +252,112 @@ function VinfastPartsStockTableView({
     sortOrder = "desc";
   }
 
+  // ── Two-Way URL Sync Effect ───────────────────────────────────────────────
+  const debounceUrlTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    if (debounceUrlTimerRef.current) {
+      clearTimeout(debounceUrlTimerRef.current);
+    }
+
+    debounceUrlTimerRef.current = setTimeout(() => {
+      const currentUrl = new URL(window.location.href);
+      const newParams = new URLSearchParams(currentUrl.search);
+
+      // Keep tab
+      newParams.set(ErpUrlQueryParam.TAB, vehicleType);
+
+      // Detail drawer
+      if (selectedSku) {
+        newParams.set(ErpUrlQueryParam.DETAIL, selectedSku);
+      } else {
+        newParams.delete(ErpUrlQueryParam.DETAIL);
+      }
+
+      // Pagination
+      if (currentPagination.page > 1) {
+        newParams.set(ErpUrlQueryParam.PAGE, String(currentPagination.page));
+      } else {
+        newParams.delete(ErpUrlQueryParam.PAGE);
+      }
+      if (currentPagination.pageSize !== getDefaultPageSize()) {
+        newParams.set(
+          ErpUrlQueryParam.PAGE_SIZE,
+          String(currentPagination.pageSize),
+        );
+      } else {
+        newParams.delete(ErpUrlQueryParam.PAGE_SIZE);
+      }
+
+      // Column filters (cf)
+      if (Object.keys(tableState.columnFilters).length > 0) {
+        const encoded = encodeStateParam(tableState.columnFilters);
+        if (encoded) newParams.set(ErpUrlQueryParam.COLUMN_FILTERS, encoded);
+      } else {
+        newParams.delete(ErpUrlQueryParam.COLUMN_FILTERS);
+      }
+
+      // Column search (cs)
+      if (Object.keys(tableState.columnSearch).length > 0) {
+        const encoded = encodeStateParam(tableState.columnSearch);
+        if (encoded) newParams.set(ErpUrlQueryParam.COLUMN_SEARCH, encoded);
+      } else {
+        newParams.delete(ErpUrlQueryParam.COLUMN_SEARCH);
+      }
+
+      // Sorts
+      if (tableState.sorts.length > 0) {
+        const encoded = encodeStateParam(tableState.sorts);
+        if (encoded) newParams.set(ErpUrlQueryParam.SORTS, encoded);
+      } else {
+        newParams.delete(ErpUrlQueryParam.SORTS);
+      }
+
+      const newSearch = newParams.toString();
+      const newRelativePath = `${window.location.pathname}${newSearch ? `?${newSearch}` : ""}`;
+      if (
+        window.location.pathname + window.location.search !==
+        newRelativePath
+      ) {
+        window.history.replaceState(null, "", newRelativePath);
+      }
+    }, DEFAULT_DEBOUNCE_TIME);
+
+    return () => {
+      if (debounceUrlTimerRef.current)
+        clearTimeout(debounceUrlTimerRef.current);
+    };
+  }, [
+    vehicleType,
+    selectedSku,
+    currentPagination.page,
+    currentPagination.pageSize,
+    tableState.columnFilters,
+    tableState.columnSearch,
+    tableState.sorts,
+  ]);
+
+  // Handle popstate for 2-way sync
+  useEffect(() => {
+    const handlePopState = () => {
+      const params = new URLSearchParams(window.location.search);
+      const detailParam = params.get(ErpUrlQueryParam.DETAIL);
+      setSelectedSku(detailParam || null);
+
+      const pageParam = params.get(ErpUrlQueryParam.PAGE);
+      if (pageParam) {
+        const p = parseInt(pageParam, 10);
+        if (!isNaN(p)) setPage(p);
+      }
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [setPage]);
+
   const fetchColumnOptions = useCallback(
     async ({
       columnKey,
@@ -225,7 +371,7 @@ function VinfastPartsStockTableView({
       filtersStr?: string;
     }) => {
       const parsedFilters = filtersStr ? JSON.parse(filtersStr) : {};
-      const res = await api.get("/api/v1/vinfast-parts/stock/column-options", {
+      const res = await api.get(ErpApiEndpoint.VINFAST_PARTS_STOCK_OPTIONS, {
         params: {
           columnKey,
           search,
@@ -271,12 +417,12 @@ function VinfastPartsStockTableView({
     ],
     queryFn: async () => {
       const params = new URLSearchParams();
-      params.append("vehicleType", vehicleType);
+      params.append(ErpUrlQueryParam.VEHICLE_TYPE, vehicleType);
 
-      if (sortBy) params.append("sortBy", sortBy);
-      if (sortOrder) params.append("sortDir", sortOrder);
+      if (sortBy) params.append(ErpUrlQueryParam.SORT_BY, sortBy);
+      if (sortOrder) params.append(ErpUrlQueryParam.SORT_DIR, sortOrder);
       if (tableState.sorts.length > 0)
-        params.append("sorts", JSON.stringify(tableState.sorts));
+        params.append(ErpUrlQueryParam.SORTS, JSON.stringify(tableState.sorts));
       if (Object.keys(tableState.columnSearch).length > 0)
         params.append("column_search", JSON.stringify(tableState.columnSearch));
       if (Object.keys(tableState.columnFilters).length > 0)
@@ -285,10 +431,15 @@ function VinfastPartsStockTableView({
           JSON.stringify(tableState.columnFilters),
         );
 
-      params.append("page", currentPagination.page.toString());
-      params.append("limit", currentPagination.pageSize.toString());
+      params.append(ErpUrlQueryParam.PAGE, currentPagination.page.toString());
+      params.append(
+        ErpUrlQueryParam.LIMIT,
+        currentPagination.pageSize.toString(),
+      );
 
-      const res = await api.get(`/api/v1/vinfast-parts/stock?${params}`);
+      const res = await api.get(
+        `${ErpApiEndpoint.VINFAST_PARTS_STOCK}?${params}`,
+      );
       return res.data;
     },
   });

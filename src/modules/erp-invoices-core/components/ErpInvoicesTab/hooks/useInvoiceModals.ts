@@ -61,11 +61,10 @@ export function useInvoiceModals({
         formHook.setEditMode(true);
       }
       if (!isDrawer) {
-        const drawerParam = inv.invoiceNo
-          ? inv.serialNo
-            ? `${inv.invoiceNo}_${inv.serialNo}`
-            : inv.invoiceNo
-          : inv.id;
+        const drawerParam =
+          inv.serialNo && inv.invoiceNo
+            ? `${inv.serialNo}_${inv.invoiceNo}`
+            : inv.invoiceNo || inv.id;
         urlSync.openDrawerWithUrl(drawerParam, mode);
       }
     },

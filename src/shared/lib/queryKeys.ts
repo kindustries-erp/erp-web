@@ -1,10 +1,10 @@
 import type { ListParams } from "@/shared/types/pagination";
 
 /**
- * Global standard cache duration: 1 phút 30 giây (90,000ms)
+ * Global standard cache duration: 5 phút (300,000ms)
  * Đảm bảo Zero-latency Tab Switching khi người dùng chuyển đổi qua lại giữa các tab dữ liệu.
  */
-export const DEFAULT_STALE_TIME = 90_000;
+export const DEFAULT_STALE_TIME = 300_000;
 
 /**
  * Chuẩn hóa tập trung Enum Query Key cho toàn bộ hệ thống Liouni ERP (erp-web).

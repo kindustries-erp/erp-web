@@ -11,6 +11,8 @@ import {
 } from "./useErpInvoiceItemsStore";
 import type { Direction } from "./useErpInvoiceListStore";
 
+import { DEFAULT_DEBOUNCE_TIME } from "@/shared/constants/timing";
+
 export const getDefaultPageSize = (): number => {
   if (typeof window !== "undefined" && window.innerHeight >= 900) {
     return 50;
@@ -104,7 +106,7 @@ export function useErpInvoiceItemsList(
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
   const debounce = (fn: () => void) => {
     clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(fn, 400);
+    debounceRef.current = setTimeout(fn, DEFAULT_DEBOUNCE_TIME);
   };
 
   const setPage = useCallback(

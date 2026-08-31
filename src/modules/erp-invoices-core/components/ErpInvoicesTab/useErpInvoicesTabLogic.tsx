@@ -15,7 +15,6 @@ import {
   type TableViewPreset,
 } from "@/shared/hooks/useUserPreferences";
 import { PillTabs } from "@/shared/components/PillTabs";
-import { type ErpInvoice } from "@/modules/erp-invoices-core/api/erpInvoicesCoreApi";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
 import type { FilterPanelConfig } from "@/shared/hooks/useFilterPanel";
@@ -34,6 +33,9 @@ import {
   type Direction,
 } from "@/modules/erp-invoices-core/hooks/useErpInvoiceListStore";
 import { useErpInvoiceItemsStore } from "@/modules/erp-invoices-core/hooks/useErpInvoiceItemsStore";
+import { ErpUrlQueryParam } from "@/shared/constants/urlParams";
+import { DEFAULT_DEBOUNCE_TIME } from "@/shared/constants/timing";
+import { encodeStateParam } from "@/shared/utils/pageUrl";
 
 export interface ErpInvoicesTabProps {
   direction?: "IN" | "OUT";
@@ -317,7 +319,7 @@ export function useErpInvoicesTabLogic({
     direction,
     instanceIndex,
     openDrawer: (id) => {
-      formHook.openInternal({ id } as ErpInvoice);
+      formHook.openInternal(id);
     },
     closeDrawer: () => {
       formHook.closeDrawer();
@@ -327,11 +329,11 @@ export function useErpInvoicesTabLogic({
         typeof window !== "undefined"
           ? new URLSearchParams(window.location.search)
           : null;
-      const tabParam = urlParams?.get("tab") || "in";
+      const tabParam = urlParams?.get(ErpUrlQueryParam.TAB) || "in";
       const isHeaderTab = tabParam === "in" || tabParam === "out";
 
       const taxTabFromUrl =
-        urlParams?.get("tax_tab") ||
+        urlParams?.get(ErpUrlQueryParam.TAX_TAB) ||
         (state.view &&
         ["all", "new", "replacement", "adjustment"].includes(state.view)
           ? state.view
@@ -341,12 +343,178 @@ export function useErpInvoicesTabLogic({
         listHook.setActiveTaxTab(taxTabFromUrl);
       }
 
-      const vmFromUrl = urlParams?.get("view_mode");
+      const vmFromUrl = urlParams?.get(ErpUrlQueryParam.VIEW_MODE);
       if (isHeaderTab && vmFromUrl) {
         setActiveColumnPresetKey(vmFromUrl);
       }
+
+      if (state.sorts && state.sorts.length > 0) {
+        listHook.tableState.setSort(
+          state.sorts[0].replace("-", ""),
+          state.sorts[0].startsWith("-") ? "desc" : "asc",
+        );
+      }
     },
   });
+
+  // ── Two-Way URL Sync Effect for ERP Invoices Tab ───────────────────────────
+  const debounceUrlTimerRef = React.useRef<ReturnType<
+    typeof setTimeout
+  > | null>(null);
+
+  useEffect(() => {
+    if (isDrawer || typeof window === "undefined") return;
+
+    if (debounceUrlTimerRef.current) {
+      clearTimeout(debounceUrlTimerRef.current);
+    }
+
+    debounceUrlTimerRef.current = setTimeout(() => {
+      const currentUrl = new URL(window.location.href);
+      const newParams = new URLSearchParams(currentUrl.search);
+
+      // 1. Tab & Instance
+      if (currentTabKey !== "in") {
+        newParams.set(ErpUrlQueryParam.TAB, currentTabKey);
+      } else {
+        newParams.delete(ErpUrlQueryParam.TAB);
+      }
+      if (instanceIndex === 2) {
+        newParams.set(ErpUrlQueryParam.INSTANCE_INDEX, "2");
+      }
+
+      // 2. Header Tab specifics
+      if (activeView === "header") {
+        if (listHook.activeTaxTab && listHook.activeTaxTab !== "all") {
+          newParams.set(ErpUrlQueryParam.TAX_TAB, listHook.activeTaxTab);
+        } else {
+          newParams.delete(ErpUrlQueryParam.TAX_TAB);
+        }
+
+        if (activeColumnPresetKey && activeColumnPresetKey !== "overview") {
+          newParams.set(ErpUrlQueryParam.VIEW_MODE, activeColumnPresetKey);
+        } else {
+          newParams.delete(ErpUrlQueryParam.VIEW_MODE);
+        }
+
+        // Filters
+        const headerState = useErpInvoiceListStore.getState().states[listDir];
+        if (headerState) {
+          if (headerState.status)
+            newParams.set(ErpUrlQueryParam.STATUS, headerState.status);
+          else newParams.delete(ErpUrlQueryParam.STATUS);
+
+          if (headerState.search)
+            newParams.set(ErpUrlQueryParam.SEARCH, headerState.search);
+          else newParams.delete(ErpUrlQueryParam.SEARCH);
+
+          if (headerState.dateFrom)
+            newParams.set(ErpUrlQueryParam.DATE_FROM, headerState.dateFrom);
+          else newParams.delete(ErpUrlQueryParam.DATE_FROM);
+
+          if (headerState.dateTo)
+            newParams.set(ErpUrlQueryParam.DATE_TO, headerState.dateTo);
+          else newParams.delete(ErpUrlQueryParam.DATE_TO);
+
+          if (headerState.period)
+            newParams.set(ErpUrlQueryParam.PERIOD, headerState.period);
+          else newParams.delete(ErpUrlQueryParam.PERIOD);
+
+          if (headerState.seller_name)
+            newParams.set(
+              ErpUrlQueryParam.SELLER_NAME,
+              headerState.seller_name,
+            );
+          else newParams.delete(ErpUrlQueryParam.SELLER_NAME);
+
+          if (headerState.buyer_name)
+            newParams.set(ErpUrlQueryParam.BUYER_NAME, headerState.buyer_name);
+          else newParams.delete(ErpUrlQueryParam.BUYER_NAME);
+
+          if (headerState.tag_id)
+            newParams.set(ErpUrlQueryParam.TAG_ID, headerState.tag_id);
+          else newParams.delete(ErpUrlQueryParam.TAG_ID);
+        }
+
+        // Column filters (cf)
+        if (Object.keys(listHook.tableState.columnFilters).length > 0) {
+          const encoded = encodeStateParam(listHook.tableState.columnFilters);
+          if (encoded) newParams.set(ErpUrlQueryParam.COLUMN_FILTERS, encoded);
+        } else {
+          newParams.delete(ErpUrlQueryParam.COLUMN_FILTERS);
+        }
+
+        // Column search (cs)
+        if (Object.keys(listHook.tableState.columnSearch).length > 0) {
+          const encoded = encodeStateParam(listHook.tableState.columnSearch);
+          if (encoded) newParams.set(ErpUrlQueryParam.COLUMN_SEARCH, encoded);
+        } else {
+          newParams.delete(ErpUrlQueryParam.COLUMN_SEARCH);
+        }
+
+        // Sorts
+        if (listHook.tableState.sorts.length > 0) {
+          const encoded = encodeStateParam(listHook.tableState.sorts);
+          if (encoded) newParams.set(ErpUrlQueryParam.SORTS, encoded);
+        } else {
+          newParams.delete(ErpUrlQueryParam.SORTS);
+        }
+      }
+
+      // 3. Detail Drawer
+      if (
+        formHook.internalDrawerOpen &&
+        (formHook.detailInvoice?.invoiceNo || formHook.detailInvoice?.id)
+      ) {
+        const detailKey =
+          formHook.detailInvoice?.serialNo && formHook.detailInvoice?.invoiceNo
+            ? `${formHook.detailInvoice.serialNo}_${formHook.detailInvoice.invoiceNo}`
+            : formHook.detailInvoice?.invoiceNo || formHook.detailInvoice?.id;
+
+        if (detailKey) {
+          newParams.set(ErpUrlQueryParam.DETAIL, detailKey);
+          if (formHook.editMode) {
+            newParams.set(ErpUrlQueryParam.DRAWER_MODE, "edit");
+          } else {
+            newParams.delete(ErpUrlQueryParam.DRAWER_MODE);
+          }
+        }
+      } else if (!formHook.internalDrawerOpen) {
+        newParams.delete(ErpUrlQueryParam.DETAIL);
+        newParams.delete(ErpUrlQueryParam.DRAWER_MODE);
+      }
+
+      const newSearch = newParams.toString();
+      const newRelativePath = `${window.location.pathname}${newSearch ? `?${newSearch}` : ""}`;
+      if (
+        window.location.pathname + window.location.search !==
+        newRelativePath
+      ) {
+        window.history.replaceState(null, "", newRelativePath);
+      }
+    }, DEFAULT_DEBOUNCE_TIME);
+
+    return () => {
+      if (debounceUrlTimerRef.current)
+        clearTimeout(debounceUrlTimerRef.current);
+    };
+  }, [
+    isDrawer,
+    currentTabKey,
+    activeView,
+    listDir,
+    instanceIndex,
+    listHook.activeTaxTab,
+    activeColumnPresetKey,
+    listHook.tableState.columnFilters,
+    listHook.tableState.columnSearch,
+    listHook.tableState.sorts,
+    formHook.detailInvoice?.serialNo,
+    formHook.detailInvoice?.invoiceNo,
+    formHook.detailInvoice?.id,
+    formHook.internalDrawerOpen,
+    formHook.editMode,
+  ]);
 
   // PillTabs state tab handling (API-driven, not column-filter driven)
   const activeTaxPresetKey = listHook.activeTaxTab || "all";
@@ -356,9 +524,9 @@ export function useErpInvoicesTabLogic({
     if (typeof window !== "undefined") {
       const url = new URL(window.location.href);
       if (tab && tab !== "all") {
-        url.searchParams.set("tax_tab", tab);
+        url.searchParams.set(ErpUrlQueryParam.TAX_TAB, tab);
       } else {
-        url.searchParams.delete("tax_tab");
+        url.searchParams.delete(ErpUrlQueryParam.TAX_TAB);
       }
       window.history.replaceState(null, "", url.toString());
     }
@@ -382,7 +550,7 @@ export function useErpInvoicesTabLogic({
       typeof window !== "undefined"
         ? new URLSearchParams(window.location.search)
         : null;
-    const vmFromUrl = urlParams?.get("view_mode");
+    const vmFromUrl = urlParams?.get(ErpUrlQueryParam.VIEW_MODE);
     const stored = useUserPreferencesStore
       .getState()
       .getTablePreference(actualTableId);
@@ -405,9 +573,9 @@ export function useErpInvoicesTabLogic({
     if (typeof window !== "undefined") {
       const url = new URL(window.location.href);
       if (preset.key && preset.key !== "overview") {
-        url.searchParams.set("view_mode", preset.key);
+        url.searchParams.set(ErpUrlQueryParam.VIEW_MODE, preset.key);
       } else {
-        url.searchParams.delete("view_mode");
+        url.searchParams.delete(ErpUrlQueryParam.VIEW_MODE);
       }
       window.history.replaceState(null, "", url.toString());
     }
