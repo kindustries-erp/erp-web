@@ -61,10 +61,7 @@ export function useNavItems(): NavSearchItem[] {
 
   const canReadBom = useHasPermission("bom", "read");
   const canReadProduction = useHasPermission("production", "read");
-  const canReadGarageDirect = useHasPermission("garage", "read");
-  const canReadGreenway = useHasPermission("greenway_integration", "read");
-  const canReadKgara = useHasPermission("kgara_integration", "read");
-  const canReadGarage = canReadGarageDirect || canReadGreenway || canReadKgara;
+  const canReadGarage = useHasPermission("garage", "read");
 
   const canReadInvoices = useHasPermission("invoices", "read");
   const canReadBankStatements = useHasPermission("bank_statements", "read");

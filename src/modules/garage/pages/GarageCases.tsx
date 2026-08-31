@@ -469,10 +469,7 @@ export function GarageCases() {
 
   const canCreateGarage = useHasPermission("garage", "create");
   const canUpdateGarage = useHasPermission("garage", "update");
-  const canCreateGreenway = useHasPermission("greenway_integration", "create");
-  const canCreateKgara = useHasPermission("kgara_integration", "create");
-  const canSyncGarage =
-    canCreateGarage || canUpdateGarage || canCreateGreenway || canCreateKgara;
+  const canSyncGarage = canCreateGarage || canUpdateGarage;
 
   const createActions = useMemo(
     () =>

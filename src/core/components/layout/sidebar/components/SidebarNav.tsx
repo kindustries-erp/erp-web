@@ -75,10 +75,7 @@ export function SidebarNav({
   const canReadProduction = useHasPermission("production", "read");
   const showManufacturing = canReadBom || canReadProduction;
 
-  const canReadGarageDirect = useHasPermission("garage", "read");
-  const canReadGreenway = useHasPermission("greenway_integration", "read");
-  const canReadKgara = useHasPermission("kgara_integration", "read");
-  const canReadGarage = canReadGarageDirect || canReadGreenway || canReadKgara;
+  const canReadGarage = useHasPermission("garage", "read");
   const showGarage = canReadGarage;
 
   const canReadInvoices = useHasPermission("invoices", "read");
@@ -425,34 +422,7 @@ export function SidebarNav({
               contextPage={"budget" as PageKey}
             />
           )}
-          {/* TODO: Tính sau - tạm ẩn
-            canReadGreenwayIntegration && (
-              <NavGroup
-                collapsed={c}
-                icon={
-                  <WalletCards className="w-4 h-4 opacity-65 flex-shrink-0" />
-                }
-                label={t("nav.items.garage")}
-                active={
-                  currentPage === "garage-receivables" ||
-                  currentPage === "garage-payables"
-                }
-              >
-                <NavGroupItem
-                  label={t("nav.items.garageReceivables")}
-                  active={currentPage === "garage-receivables"}
-                  onClick={() => navTo("garage-receivables")}
-                  contextPage="garage-receivables"
-                />
-                <NavGroupItem
-                  label={t("nav.items.garagePayables")}
-                  active={currentPage === "garage-payables"}
-                  onClick={() => navTo("garage-payables")}
-                  contextPage="garage-payables"
-                />
-              </NavGroup>
-            )
-            */}
+
           {showAccounting && (
             <>
               <NavItem
