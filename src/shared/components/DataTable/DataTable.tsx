@@ -217,7 +217,7 @@ export function DataTable<T>({
             >
               <TableHeader
                 className={cn(
-                  "sticky top-0 z-20 bg-muted border-b border-border shadow-[0_1px_0_0_var(--border-light)]",
+                  "sticky top-0 z-20 table-header-glass bg-muted/80 backdrop-blur-sm border-b border-border shadow-[0_1px_0_0_var(--border-light)]",
                 )}
               >
                 {table.getHeaderGroups().map((headerGroup) => (
@@ -258,7 +258,7 @@ export function DataTable<T>({
                             isFirstCol &&
                               !enableRowSelection &&
                               variant !== "spreadsheet" &&
-                              "left-0 z-35 bg-muted shadow-[1px_0_0_0_var(--border-light)]",
+                              "left-0 z-35 table-header-glass bg-muted/80 backdrop-blur-sm shadow-[1px_0_0_0_var(--border-light)]",
                             variant === "spreadsheet" &&
                               "border-r border-border py-1 h-auto text-[11px]",
                             variant === "spreadsheet" &&

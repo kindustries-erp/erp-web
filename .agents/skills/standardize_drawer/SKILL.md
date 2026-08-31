@@ -252,14 +252,19 @@ Dành cho các form đơn giản không có nhiều phân hệ (như Company Pro
 
 ---
 
-## 6. Quy chuẩn Bắt buộc về `<DrawerSection>` & 2-Column Right Panel luôn có Expand/Collapse Mặc định
+## 6. Quy chuẩn Bắt buộc về `<DrawerSection>`, Expand/Collapse Cột Phải & Toàn Màn Hình (`layout="2-columns"`)
 
-1. **Mặc định BẬT Expand/Collapse cho Cột Phải (`layout="2-columns"`)**:
+1. **Mặc định BẬT Nút Toàn Màn Hình (Fullscreen Mode) trên Header cho Drawer 2 Cột**:
+   - Trong mọi Drawer 2 cột (`layout="2-columns"`), hệ thống **tự động kích hoạt nút Toàn màn hình (`Maximize2` / `Minimize2`)** trên thanh Header ngay bên cạnh nút Thu gọn/Mở rộng cột phải.
+   - Khi click nút Toàn màn hình, Drawer mở rộng sang kích thước tối đa (`w-[calc(100vw-208px)]`), tận dụng 100% diện tích màn hình trên desktop mà không che khuất sidebar.
+   - **Tích hợp phím tắt `Esc`**: Khi Drawer đang ở chế độ Toàn màn hình, nhấn phím `Esc` lần đầu sẽ thu nhỏ Drawer về kích thước ban đầu; nhấn `Esc` lần tiếp theo sẽ đóng Drawer.
+
+2. **Mặc định BẬT Expand/Collapse cho Cột Phải (`layout="2-columns"`)**:
    - Trong mọi Drawer 2 cột (`layout="2-columns"`), hệ thống **tự động kích hoạt nút Thu gọn / Mở rộng cột phải (`ChevronRight`/`ChevronLeft`)** trên thanh Header (`collapsibleRightPanel` mặc định là `true`).
    - Người dùng có thể nhấn nút mũi tên trên Header để thu gọn cột phải về cạnh phải màn hình bất cứ lúc nào để mở rộng 100% diện tích cho cột trái (như bảng dữ liệu hoặc form chính).
    - Với các tab con tự chia 2 cột nội bộ (như tab Chi tiết theo đối tượng), **BẮT BUỘC** bổ sung nút toggle Thu gọn/Mở rộng cột phải trên thanh toolbar/titleExtra, và khi đóng lại cột trái bung rộng 100% `w-full`.
 
-2. **Mặc định BẬT Expand/Collapse cho `<DrawerSection>` & Co giãn chiều cao tự nhiên**:
+3. **Mặc định BẬT Expand/Collapse cho `<DrawerSection>` & Co giãn chiều cao tự nhiên**:
    - Mọi vùng nội dung trong Drawer (cả 1-column lẫn 2-columns) **BẮT BUỘC** phải được bọc trong `<DrawerSection title="...">`.
    - Thuộc tính `collapsible` **mặc định là `true`** (`defaultCollapsed={false}`), tự động kích hoạt icon mũi tên Expand/Collapse xoay mượt mà.
    - **Xử lý Chiều cao khi Collapsed**: Khi `collapsed={true}`, thẻ `<DrawerSection>` **BẮT BUỘC tự động co về `h-auto`**, không giữ các class ép chiều cao như `h-full` hoặc `h-[calc(100vh-210px)]` để tránh tạo ra khoảng trắng lớn vô nghĩa. Khi bọc bảng với `fitViewportHeight`, luôn truyền `fitViewportHeight={!isCollapsed}` và container ngoài `className={cn("flex flex-col", !isCollapsed ? "h-[calc(100vh-210px)]" : "h-auto")}`.

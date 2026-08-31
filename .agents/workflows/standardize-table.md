@@ -306,5 +306,5 @@ Khi lắp ráp bảng vào `<SpreadsheetPageTemplate>`, cần lưu ý sự khác
 | **2 Cấp độ Xóa Bộ Lọc** | Cột có nút "Xóa bộ lọc" trong Popover (cục bộ); Bảng có nút Clear All Filters khi `activeFilterCount > 0` (Page: `onClearAllFilters`; Drawer: `FilterButton` trong `titleExtra`). | [ ] |
 | **Pagination Responsive** | Hỗ trợ `pageSizeOptions = [20, 50, 100, 200]`, khởi tạo `defaultPageSize` bằng `getDefaultPageSize()` (`< 900px` -> 20, `>= 900px` -> 50). Reset `setPage(1)` khi đổi filter/sort/tab. | [ ] |
 | **Container & Table ID** | Bo góc `rounded-xl`, viền `border border-border/60`, có `tableId` unique để tự động lưu column sizing/visibility/order vào App Setting. | [ ] |
-| **Summary Row** | Bảng có cột số tiền/số lượng phải có dòng tổng cộng `summaryRow`. | [ ] |
+| **Summary Row & Header Glass** | Bảng có cột số tiền/số lượng phải có dòng tổng cộng `summaryRow`; Cả TableHeader lẫn TableFooter tự động có hiệu ứng `table-header-glass` / `table-footer-glass` mờ mịn. | [ ] |
 | **i18n** | 100% text bọc trong `t(...)`, bao gồm cả `TableColumnHeaderFilter`. | [ ] |

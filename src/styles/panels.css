@@ -46,7 +46,15 @@
     0 8px 24px -4px rgba(15, 23, 42, 0.08),
     0 0 0 1px rgba(255, 255, 255, 0.6) inset;
   transform: translateX(calc(100% + 16px));
-  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition:
+    transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+    width 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+    max-width 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+    top 0.2s ease,
+    right 0.2s ease,
+    bottom 0.2s ease,
+    left 0.2s ease,
+    border-radius 0.2s ease;
 }
 
 @media (min-width: 1024px) {
@@ -59,6 +67,19 @@
 }
 .slide-panel-overlay.open .slide-panel {
   transform: none;
+}
+
+/* ── Drawer Fullscreen Mode ── */
+.slide-panel.fullscreen-drawer {
+  top: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  max-width: 100vw !important;
+  height: 100vh !important;
+  border-radius: 0 !important;
+  border: none !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
 }
 
 /* Orcaq theme: slide panel from right, inset by tab/bottom bar */

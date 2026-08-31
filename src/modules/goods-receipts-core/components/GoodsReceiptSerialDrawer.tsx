@@ -660,18 +660,18 @@ export function GoodsReceiptSerialDrawer({
               <div className="border rounded-lg overflow-hidden bg-surface shadow-panel">
                 <div className="max-h-[380px] overflow-y-auto relative">
                   <Table className="w-full table-fixed border-collapse text-xs">
-                    <TableHeader className="sticky top-0 z-30 bg-muted border-b border-border shadow-[0_2px_4px_-1px_rgba(0,0,0,0.06),0_1px_2px_-1px_rgba(0,0,0,0.04)]">
-                      <TableRow className="hover:bg-transparent border-b border-border bg-muted">
-                        <TableHead className="sticky top-0 bg-muted z-20 w-[40px] min-w-[40px] text-center border-r border-border py-2 px-3">
+                    <TableHeader className="sticky top-0 z-30 table-header-glass bg-muted/80 backdrop-blur-sm border-b border-border shadow-[0_2px_4px_-1px_rgba(0,0,0,0.06),0_1px_2px_-1px_rgba(0,0,0,0.04)]">
+                      <TableRow className="hover:bg-transparent border-b border-border bg-transparent">
+                        <TableHead className="sticky top-0 bg-transparent z-20 w-[40px] min-w-[40px] text-center border-r border-border py-2 px-3">
                           #
                         </TableHead>
-                        <TableHead className="sticky top-0 bg-muted z-20 min-w-[220px] border-r border-border py-2 px-3">
+                        <TableHead className="sticky top-0 bg-transparent z-20 min-w-[220px] border-r border-border py-2 px-3">
                           {t(
                             "inventory.fields.serialNo",
                             "Số Serial / Mã định danh",
                           )}
                         </TableHead>
-                        <TableHead className="sticky top-0 bg-muted z-20 min-w-[160px] border-r border-border py-2 px-3">
+                        <TableHead className="sticky top-0 bg-transparent z-20 min-w-[160px] border-r border-border py-2 px-3">
                           {t("inventory.fields.notes", "Ghi chú")}
                         </TableHead>
                         {mode === "edit" && (

@@ -245,7 +245,9 @@ export function DrawerModal({
           panelClassName,
         )}
         style={
-          open && computedStackOffset !== 0
+          open &&
+          computedStackOffset !== 0 &&
+          !panelClassName?.includes("fullscreen-drawer")
             ? { transform: `translateX(${computedStackOffset}%)` }
             : undefined
         }
@@ -289,7 +291,7 @@ export function DrawerModal({
             variant="ghost"
             size="icon-sm"
             onClick={requestClose}
-            className="text-[color:var(--faint)] h-7 w-7"
+            className="text-[color:var(--faint)] h-7 w-7 p-0 flex items-center justify-center"
           >
             <X className="w-4 h-4" />
           </Button>

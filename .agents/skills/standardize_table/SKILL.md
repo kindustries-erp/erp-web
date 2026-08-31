@@ -457,9 +457,12 @@ Bất kỳ cột nào liên quan đến **Status**, **State** thì bắt buộc 
 }
 ```
 
-## 8. Subtotal Row (Dòng tổng cộng)
+## 8. Table Header & Subtotal Row Glassmorphism (Hiệu ứng Kính Mờ cho Header & Dòng Tổng Cộng)
 
-Đối với các bảng có cột mang giá trị số, **bắt buộc phải có dòng `summaryRow`** ở cuối để hiển thị tổng.
+Cả thanh tiêu đề bảng (**`TableHeader`**) lẫn dòng tổng cộng (**`summaryRow` / `TableFooter`**) đều được tích hợp sẵn hiệu ứng kính mờ trong suốt (**Glassmorphism**) cao cấp:
+- **`TableHeader`**: Sử dụng `table-header-glass bg-muted/80 backdrop-blur-sm sticky top-0 z-20 border-b border-border shadow-[0_1px_0_0_var(--border-light)]`. Khi cuộn dữ liệu, các hàng nội dung lướt mượt mà bên dưới thanh tiêu đề mà không bị che khuất thô cứng.
+- **Sticky Column Headers (STT / Checkbox / Actions)**: Tự động kế thừa `table-header-glass bg-muted/80 backdrop-blur-sm` khi cuộn ngang.
+- **`summaryRow` (`TableFooter`)**: Đối với các bảng có cột mang giá trị số, **bắt buộc phải có dòng `summaryRow`** ở cuối để hiển thị tổng, sử dụng `table-footer-glass bg-muted/80 backdrop-blur-sm sticky bottom-0 z-20 border-t border-border font-semibold shadow-[0_-1px_0_0_var(--border-light)]`.
 
 **Mẫu code cho `summaryRow`**:
 
