@@ -469,9 +469,9 @@ export function SidebarNav({
               collapsed={c}
               icon={<Target className="w-4 h-4 opacity-65 flex-shrink-0" />}
               label={t("nav.items.operatingExpenses", "Chi phí vận hành")}
-              active={currentPage === "budget"}
-              onClick={() => navTo("budget" as PageKey)}
-              contextPage={"budget" as PageKey}
+              active={currentPage === "opex"}
+              onClick={() => navTo("opex" as PageKey)}
+              contextPage={"opex" as PageKey}
             />
           )}
 

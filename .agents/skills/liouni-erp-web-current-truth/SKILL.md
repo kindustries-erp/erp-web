@@ -46,7 +46,7 @@ Mỗi domain/module frontend đều có tài liệu tri thức chuyên sâu (Rou
   - **Kho & Tồn kho**: `inventory-dashboard`, `erp-inventory-items`, `erp-inventory-stock`, `erp-inventory-tracking`, `erp-inventory-transactions`, `erp-inventory-adjustments`, `erp-inventory-vouchers`
   - **Phụ tùng VinFast**: `vinfast-parts-stock`, `vinfast-parts-dashboard`
   - **Tài chính & Hóa đơn**: `erp-invoice`
-  - **Quản trị & Phân quyền**: `rbac-core`
+  - **Quản trị, Cấu hình & Core Stores**: `rbac-core`, `app-store`
 - Khi cần quét mới hoặc cập nhật tài liệu cho một module: Sử dụng skill `scan-module-knowledge` (`.agents/skills/scan-module-knowledge/SKILL.md`).
 
 ## Team-scale reminders

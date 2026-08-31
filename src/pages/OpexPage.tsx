@@ -11,63 +11,84 @@ import { Tooltip } from "@/core/components/ui/Tooltip";
 import { PillTabs, type PillTabItem } from "@/shared/components/PillTabs";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import {
-  useGarageOpexList,
+  useOperatingExpensesList,
   type CostGroupFilter,
-} from "../hooks/useGarageOpexList";
-import { GarageOpexDrawer } from "../components/GarageOpexDrawer";
-import { garageOpexApi, type GarageOpexItem } from "../api/garageOpexApi";
+} from "../modules/budget/hooks/useOperatingExpensesList";
+import { BudgetDrawer } from "../modules/budget/components/BudgetDrawer";
+import {
+  budgetApi,
+  type OperatingExpenseItem,
+  type CostGroupType,
+} from "../modules/budget/api/budgetApi";
 import toast from "react-hot-toast";
-import { ReceiptText, Eye, Pencil, Copy, Trash2 } from "lucide-react";
+import { Target, Eye, Pencil, Copy, Trash2 } from "lucide-react";
 import type { ActionDropdownItem } from "@/shared/components/ActionDropdown";
 import { cn } from "@/shared/utils";
 
 const getCostGroupInfo = (
-  categoryKey: string,
+  costGroup: CostGroupType | string | null | undefined,
+  categoryKey: string | null | undefined,
   t: (key: string, fallback: string) => string,
 ): { label: string; badgeClass: string; groupKey: CostGroupFilter } => {
   if (
-    categoryKey === "HOA_HONG_TRUC_TIEP" ||
-    categoryKey === "CHI_PHI_TRUC_TIEP_KHAC"
+    costGroup === "COGS" ||
+    categoryKey === "THAU_PHU_GIA_CONG" ||
+    categoryKey === "VAN_CHUYEN_LOGISTICS" ||
+    categoryKey === "CHI_PHI_TRUC_TIEP_KHAC" ||
+    categoryKey === "HOA_HONG_TRUC_TIEP"
   ) {
     return {
-      label: t("opex.costGroups.COGS", "Giá vốn (COGS)"),
+      label: t("costGroups.COGS", "Giá vốn (COGS)"),
       badgeClass:
         "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-300 dark:border-amber-700/60 font-normal",
       groupKey: "COGS",
     };
   }
-  if (categoryKey.startsWith("HOA_HONG_")) {
+  if (
+    costGroup === "COMMISSION" ||
+    categoryKey === "HOA_HONG_KINH_DOANH" ||
+    categoryKey === "MARKETING_QC" ||
+    categoryKey === "CHIET_KHAU_TM" ||
+    categoryKey?.startsWith("HOA_HONG_")
+  ) {
     return {
-      label: t("opex.costGroups.COMMISSION", "Hoa hồng"),
+      label: t("costGroups.COMMISSION", "Hoa hồng"),
       badgeClass:
         "bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border-indigo-300 dark:border-indigo-700/60 font-normal",
       groupKey: "COMMISSION",
     };
   }
   return {
-    label: t("opex.costGroups.OPEX", "CP Vận hành"),
+    label: t("costGroups.OPEX", "CP Vận hành"),
     badgeClass:
       "bg-muted/60 text-muted-foreground border-border/80 font-normal",
     groupKey: "OPEX",
   };
 };
 
-export function GarageOpex() {
-  const { t } = useTranslation("garage");
-  const listHook = useGarageOpexList();
+export function OpexPage() {
+  const { t } = useTranslation("budget");
+  const listHook = useOperatingExpensesList();
 
   // Drawer state
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerMode, setDrawerMode] = useState<"view" | "edit">("view");
   const [isCreate, setIsCreate] = useState(false);
-  const [selectedItem, setSelectedItem] = useState<GarageOpexItem | null>(null);
+  const [selectedItem, setSelectedItem] = useState<OperatingExpenseItem | null>(
+    null,
+  );
 
   // Delete modal state
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [itemToDelete, setItemToDelete] = useState<GarageOpexItem | null>(null);
+  const [itemToDelete, setItemToDelete] = useState<OperatingExpenseItem | null>(
+    null,
+  );
   const [deleting, setDeleting] = useState(false);
 
-  const openDetail = (item: GarageOpexItem, mode: "view" | "edit" = "view") => {
+  const openDetail = (
+    item: OperatingExpenseItem,
+    mode: "view" | "edit" = "view",
+  ) => {
     setSelectedItem(item);
     setIsCreate(false);
     setDrawerMode(mode);
@@ -81,14 +102,14 @@ export function GarageOpex() {
     setDrawerOpen(true);
   };
 
-  const handleDuplicate = (item: GarageOpexItem) => {
+  const handleDuplicate = (item: OperatingExpenseItem) => {
     setSelectedItem(item);
     setIsCreate(true);
     setDrawerMode("edit");
     setDrawerOpen(true);
   };
 
-  const handleDelete = (item: GarageOpexItem) => {
+  const handleDelete = (item: OperatingExpenseItem) => {
     setItemToDelete(item);
     setDeleteModalOpen(true);
   };
@@ -97,13 +118,13 @@ export function GarageOpex() {
     if (!itemToDelete) return;
     setDeleting(true);
     try {
-      await garageOpexApi.delete(itemToDelete.id);
-      toast.success(t("opex.deleteSuccess", "Đã xóa chi phí vận hành"));
+      await budgetApi.deleteExpense(itemToDelete.id);
+      toast.success(t("deleteSuccess", "Đã xóa khoản chi thành công"));
       setDeleteModalOpen(false);
       setItemToDelete(null);
       listHook.refetch();
     } catch (err: any) {
-      toast.error(err?.message || "Không thể xóa chi phí");
+      toast.error(err?.message || t("deleteError", "Không thể xóa khoản chi"));
     } finally {
       setDeleting(false);
     }
@@ -115,27 +136,34 @@ export function GarageOpex() {
       createColumnHeaderFilter({
         listHook,
         defaultAlign: "center",
-        queryKeyPrefix: "garage-opex-column-options",
+        queryKeyPrefix: "operating-expenses-column-options",
         fetchOptions: async ({ columnKey, search, pageParam, filtersStr }) => {
-          const res = await garageOpexApi.getColumnOptions({
-            column: columnKey,
+          const res = await budgetApi.getColumnOptions({
+            columnKey,
             search,
-            page: pageParam,
+            pageParam,
             pageSize: 20,
             filtersStr,
           });
           return {
-            items: res.data.map((it: string) => ({
+            items: res.items.map((it) => ({
               label:
-                columnKey === "categoryKey"
-                  ? t(`opex.categories.${it}`, it)
-                  : columnKey === "recurrenceType" && it === "monthly"
-                    ? t("opex.drawer.monthlyLabel", "Hàng tháng")
-                    : it,
-              value: it,
+                columnKey === "categoryKey" || columnKey === "expenseCategory"
+                  ? t(`categories.${it.value}`, it.label)
+                  : columnKey === "recurrenceType" &&
+                      (it.value === "MONTHLY" || it.value === "monthly")
+                    ? t("cycleMonthly", "Hàng tháng")
+                    : columnKey === "paymentStatus"
+                      ? it.value === "PAID"
+                        ? t("paymentPaid", "Đã TT")
+                        : it.value === "PARTIAL"
+                          ? t("paymentPartial", "TT 1 phần")
+                          : t("paymentUnpaid", "Chưa TT")
+                      : it.label,
+              value: it.value,
             })),
             total: res.total,
-            next: res.page < res.totalPages ? res.page + 1 : null,
+            next: res.next,
           };
         },
       }),
@@ -143,7 +171,7 @@ export function GarageOpex() {
   );
 
   // Define Columns following /standardize-table rules (100% Header Center Aligned & 100% Columns Filterable)
-  const columns: DataTableColumn<GarageOpexItem>[] = useMemo(
+  const columns: DataTableColumn<OperatingExpenseItem>[] = useMemo(
     () => [
       // 1. Cột STT: 40px, non-resizable, căn giữa tuyệt đối
       {
@@ -154,7 +182,7 @@ export function GarageOpex() {
         headerClassName: "text-center w-[40px] min-w-[40px]",
         className:
           "text-center w-[40px] min-w-[40px] font-mono text-xs text-muted-foreground font-normal",
-        cell: (_: GarageOpexItem, idx: number) => (
+        cell: (_: OperatingExpenseItem, idx: number) => (
           <span className="w-full block text-center font-normal">{idx}</span>
         ),
       },
@@ -166,14 +194,15 @@ export function GarageOpex() {
         enableResizing: true,
         headerClassName: "text-center",
         className: "text-center",
-        header: headerFilter.date(
-          "period",
-          t("opex.columns.period", "Kỳ báo cáo"),
-          { align: "center" },
-        ),
-        cell: (row: GarageOpexItem) => (
+        header: headerFilter.date("period", t("colPeriod", "Kỳ báo cáo"), {
+          align: "center",
+        }),
+        cell: (row: OperatingExpenseItem) => (
           <span className="font-mono text-xs font-normal text-foreground">
-            {row.period}
+            {row.period ||
+              (row.periodMonth && row.periodYear
+                ? `${String(row.periodMonth).padStart(2, "0")}/${row.periodYear}`
+                : "—")}
           </span>
         ),
       },
@@ -187,27 +216,31 @@ export function GarageOpex() {
         className: "text-center",
         header: headerFilter.client(
           "costGroup",
-          t("opex.columns.costGroup", "Nhóm chi phí"),
+          t("colCostGroup", "Nhóm chi phí"),
           {
             align: "center",
             filterOptions: [
               {
-                label: t("opex.costGroups.OPEX", "CP Vận hành"),
+                label: t("costGroups.OPEX", "CP Vận hành"),
                 value: "OPEX",
               },
               {
-                label: t("opex.costGroups.COGS", "Giá vốn (COGS)"),
+                label: t("costGroups.COGS", "Giá vốn (COGS)"),
                 value: "COGS",
               },
               {
-                label: t("opex.costGroups.COMMISSION", "Hoa hồng"),
+                label: t("costGroups.COMMISSION", "Hoa hồng"),
                 value: "COMMISSION",
               },
             ],
           },
         ),
-        cell: (row: GarageOpexItem) => {
-          const groupInfo = getCostGroupInfo(row.categoryKey, t);
+        cell: (row: OperatingExpenseItem) => {
+          const groupInfo = getCostGroupInfo(
+            row.costGroup,
+            row.categoryKey || row.expenseCategory,
+            t,
+          );
           return (
             <div className="w-full flex justify-center">
               <Tooltip content={groupInfo.label}>
@@ -237,40 +270,39 @@ export function GarageOpex() {
         className: "text-left",
         header: headerFilter(
           "categoryKey",
-          t("opex.columns.categoryKey", "Loại chi phí"),
+          t("colCategoryKey", "Loại chi phí"),
           {
             align: "center",
             enableSelectAllMatching: true,
           },
         ),
-        cell: (row: GarageOpexItem) => (
-          <TableText
-            text={t(`opex.categories.${row.categoryKey}`, row.categoryKey)}
-            tooltip={true}
-            onDetailClick={() => openDetail(row, "view")}
-            className="font-normal text-xs text-foreground cursor-pointer hover:underline"
-          />
-        ),
+        cell: (row: OperatingExpenseItem) => {
+          const catKey = row.categoryKey || row.expenseCategory || "KHAC";
+          return (
+            <TableText
+              text={t(`categories.${catKey}`, catKey)}
+              tooltip={true}
+              onDetailClick={() => openDetail(row, "view")}
+              className="font-normal text-xs text-foreground cursor-pointer hover:underline"
+            />
+          );
+        },
       },
 
       // 5. Nội dung / Diễn giải chi tiết - Header căn giữa + Text thường căn trái
       {
-        key: "categoryName",
+        key: "title",
         size: 240,
         enableResizing: true,
         headerClassName: "text-center",
         className: "text-left",
-        header: headerFilter(
-          "categoryName",
-          t("opex.columns.categoryName", "Nội dung / Diễn giải"),
-          {
-            align: "center",
-            enableSelectAllMatching: true,
-          },
-        ),
-        cell: (row: GarageOpexItem) => (
+        header: headerFilter("title", t("colTitle", "Nội dung / Diễn giải"), {
+          align: "center",
+          enableSelectAllMatching: true,
+        }),
+        cell: (row: OperatingExpenseItem) => (
           <TableText
-            text={row.categoryName}
+            text={row.title || row.expenseCategory || "—"}
             tooltip={true}
             className="font-normal text-xs text-foreground"
           />
@@ -284,23 +316,38 @@ export function GarageOpex() {
         enableResizing: true,
         headerClassName: "text-center",
         className: "text-center",
-        header: headerFilter(
-          "recurrenceType",
-          t("opex.columns.recurrenceType", "Chu kỳ lặp"),
-          {
-            align: "center",
-            showBlankOption: true,
-          },
-        ),
-        cell: (row: GarageOpexItem) => (
+        header: headerFilter("recurrenceType", t("colCycle", "Chu kỳ lặp"), {
+          align: "center",
+          showBlankOption: true,
+        }),
+        cell: (row: OperatingExpenseItem) => (
           <div className="w-full flex justify-center">
-            {row.recurrenceType === "monthly" ? (
+            {row.recurrenceType === "MONTHLY" ||
+            row.recurrenceType === "monthly" ? (
               <Badge
                 variant="outline"
                 className="w-[88px] inline-flex items-center justify-center text-center text-[11px] font-normal text-primary border-primary/30 bg-primary/5 truncate"
               >
                 <span className="truncate block w-full text-center">
-                  {t("opex.drawer.monthlyLabel", "Hàng tháng")}
+                  {t("cycleMonthly", "Hàng tháng")}
+                </span>
+              </Badge>
+            ) : row.recurrenceType === "QUARTERLY" ? (
+              <Badge
+                variant="outline"
+                className="w-[88px] inline-flex items-center justify-center text-center text-[11px] font-normal text-muted-foreground border-border bg-muted/30 truncate"
+              >
+                <span className="truncate block w-full text-center">
+                  {t("cycleQuarterly", "Hàng quý")}
+                </span>
+              </Badge>
+            ) : row.recurrenceType === "YEARLY" ? (
+              <Badge
+                variant="outline"
+                className="w-[88px] inline-flex items-center justify-center text-center text-[11px] font-normal text-muted-foreground border-border bg-muted/30 truncate"
+              >
+                <span className="truncate block w-full text-center">
+                  {t("cycleYearly", "Hàng năm")}
                 </span>
               </Badge>
             ) : (
@@ -321,13 +368,13 @@ export function GarageOpex() {
         className: "text-center",
         header: headerFilter(
           "recurrenceUntil",
-          t("opex.columns.recurrenceUntil", "Hạn kết thúc"),
+          t("colRecurrenceUntil", "Hạn kết thúc"),
           {
             align: "center",
             showBlankOption: true,
           },
         ),
-        cell: (row: GarageOpexItem) => {
+        cell: (row: OperatingExpenseItem) => {
           if (row.recurrenceUntilMonth && row.recurrenceUntilYear) {
             return (
               <span className="font-mono text-xs font-normal text-muted-foreground">
@@ -344,44 +391,87 @@ export function GarageOpex() {
 
       // 8. Số tiền (VND) - Header căn giữa + Filter Amount chuẩn + Cell căn phải
       {
-        key: "amount",
+        key: "totalAmount",
         size: 160,
         enableResizing: true,
         headerClassName: "text-center",
         className: "text-right",
-        header: headerFilter.amount(
-          "amount",
-          t("opex.columns.amount", "Số tiền"),
-          { align: "center" },
-        ),
-        cell: (row: GarageOpexItem) => (
+        header: headerFilter.amount("totalAmount", t("colAmount", "Số tiền"), {
+          align: "center",
+        }),
+        cell: (row: OperatingExpenseItem) => (
           <div className="flex flex-col items-end gap-0.5">
             <span className="tabular-nums font-mono text-xs font-normal text-foreground">
-              {row.amount.toLocaleString("vi-VN")} đ
+              {(Number(row.totalAmount || row.amount) || 0).toLocaleString(
+                "vi-VN",
+              )}{" "}
+              đ
             </span>
-            {Boolean(row.ojAmount && row.ojAmount > 0) && (
-              <span className="text-[11px] font-mono text-muted-foreground font-normal">
-                OJ: {row.ojAmount!.toLocaleString("vi-VN")} đ
-              </span>
-            )}
           </div>
         ),
       },
 
-      // 9. Ghi chú (Note) - Header căn giữa + Cell căn trái + showBlankOption
+      // 9. Cột Thanh toán: Badge fixed width w-[88px] + formatOptionLabel
       {
-        key: "note",
+        key: "paymentStatus",
+        size: 130,
+        enableResizing: true,
+        className: "text-center",
+        headerClassName: "text-center",
+        header: headerFilter(
+          "paymentStatus",
+          t("colPaymentStatus", "Thanh toán"),
+          {
+            align: "center",
+            showBlankOption: true,
+          },
+        ),
+        cell: (row: OperatingExpenseItem) => {
+          const isPaid = row.paymentStatus === "PAID";
+          const isPartial = row.paymentStatus === "PARTIAL";
+          return (
+            <div className="w-full flex justify-center">
+              <Tooltip
+                content={
+                  isPaid
+                    ? t("paymentPaid", "Đã TT")
+                    : isPartial
+                      ? t("paymentPartial", "TT 1 phần")
+                      : t("paymentUnpaid", "Chưa TT")
+                }
+              >
+                <Badge
+                  variant={
+                    isPaid ? "default" : isPartial ? "outline" : "secondary"
+                  }
+                  className="w-[88px] inline-flex items-center justify-center text-center truncate font-normal text-xs"
+                >
+                  {isPaid
+                    ? t("paymentPaid", "Đã TT")
+                    : isPartial
+                      ? t("paymentPartial", "TT 1 phần")
+                      : t("paymentUnpaid", "Chưa TT")}
+                </Badge>
+              </Tooltip>
+            </div>
+          );
+        },
+      },
+
+      // 10. Ghi chú (Notes) - Header căn giữa + Cell căn trái + showBlankOption
+      {
+        key: "notes",
         size: 200,
         enableResizing: true,
         headerClassName: "text-center",
         className: "text-left",
-        header: headerFilter("note", t("opex.columns.note", "Ghi chú"), {
+        header: headerFilter("notes", t("colNotes", "Ghi chú"), {
           align: "center",
           showBlankOption: true,
         }),
-        cell: (row: GarageOpexItem) => (
+        cell: (row: OperatingExpenseItem) => (
           <TableText
-            text={row.note || "—"}
+            text={row.notes || "—"}
             tooltip={true}
             className="text-muted-foreground text-xs font-normal"
           />
@@ -391,34 +481,34 @@ export function GarageOpex() {
     [headerFilter, t],
   );
 
-  // Row Actions (Standard Context Menu & Row Action items)
+  // Row Actions (Standard Context Menu & Row Action items following /standardize-table)
   const getRowActions = useCallback(
-    (row: GarageOpexItem): ActionDropdownItem[] => [
+    (row: OperatingExpenseItem): ActionDropdownItem[] => [
       {
-        groupLabel: t("opex.actions.groupTraCuu", "TRA CỨU"),
+        groupLabel: t("groupTraCuu", "TRA CỨU"),
         items: [
           {
-            label: t("opex.actions.viewDetail", "Xem chi tiết"),
+            label: t("actionView", "Xem chi tiết"),
             icon: <Eye className="w-4 h-4" />,
             onClick: () => openDetail(row, "view"),
           },
         ],
       },
       {
-        groupLabel: t("opex.actions.groupThaoTac", "THAO TÁC"),
+        groupLabel: t("groupThaoTac", "THAO TÁC"),
         items: [
           {
-            label: t("opex.actions.editExpense", "Chỉnh sửa"),
+            label: t("actionEdit", "Chỉnh sửa"),
             icon: <Pencil className="w-4 h-4" />,
             onClick: () => openDetail(row, "edit"),
           },
           {
-            label: t("opex.actions.duplicateExpense", "Nhân đôi"),
+            label: t("actionDuplicate", "Nhân đôi"),
             icon: <Copy className="w-4 h-4" />,
             onClick: () => handleDuplicate(row),
           },
           {
-            label: t("opex.actions.deleteExpense", "Xóa"),
+            label: t("actionDelete", "Xóa"),
             icon: <Trash2 className="w-4 h-4 text-destructive" />,
             variant: "danger",
             onClick: () => handleDelete(row),
@@ -430,42 +520,41 @@ export function GarageOpex() {
   );
 
   // Calculate Subtotals for Summary Row
-  const { totalAmountSum, totalOjSum } = useMemo(() => {
+  const totalAmountSum = useMemo(() => {
+    if (listHook.totalAmountSum) return listHook.totalAmountSum;
     let amt = 0;
-    let oj = 0;
     for (const r of listHook.data) {
-      amt += r.amount || 0;
-      oj += r.ojAmount || 0;
+      amt += Number(r.totalAmount || r.amount) || 0;
     }
-    return { totalAmountSum: amt, totalOjSum: oj };
-  }, [listHook.data]);
+    return amt;
+  }, [listHook.data, listHook.totalAmountSum]);
 
   // Toolbar Quick Filter PillTabs Items
   const pillTabItems: PillTabItem<CostGroupFilter>[] = useMemo(
     () => [
-      { value: "ALL", label: t("opex.tabs.all", "Tất cả") },
-      { value: "OPEX", label: t("opex.tabs.opex", "CP Vận hành") },
-      { value: "COGS", label: t("opex.tabs.cogs", "Giá vốn (COGS)") },
-      { value: "COMMISSION", label: t("opex.tabs.commission", "Hoa hồng") },
+      { value: "ALL", label: t("tabs.all", "Tất cả") },
+      { value: "OPEX", label: t("tabs.opex", "CP Vận hành") },
+      { value: "COGS", label: t("tabs.cogs", "Giá vốn (COGS)") },
+      { value: "COMMISSION", label: t("tabs.commission", "Hoa hồng") },
     ],
     [t],
   );
 
   return (
     <>
-      <SpreadsheetPageTemplate<GarageOpexItem>
-        title={t("opex.pageTitle", "Chi phí vận hành")}
+      <SpreadsheetPageTemplate<OperatingExpenseItem>
+        title={t("pageTitle", "Chi phí vận hành")}
         desc={t(
-          "opex.pageDesc",
-          "Quản lý các khoản chi phí vận hành hàng tháng tại xưởng Garage",
+          "pageDesc",
+          "Quản lý các khoản chi phí vận hành, chi phí định kỳ và dự báo dòng tiền toàn công ty",
         )}
-        icon={<ReceiptText className="w-5 h-5 text-primary" />}
-        tableId="garage-opex-table"
+        icon={<Target className="w-5 h-5 text-primary" />}
+        tableId="operating-expenses-table"
         items={listHook.data}
         columns={columns}
         getRowKey={(row) => row.id}
         loading={listHook.isLoading}
-        emptyLabel={t("opex.empty", "Chưa có dữ liệu chi phí vận hành")}
+        emptyLabel={t("emptyList", "Chưa có dữ liệu chi phí vận hành")}
         page={listHook.page}
         pageSize={listHook.pageSize}
         total={listHook.total}
@@ -477,7 +566,7 @@ export function GarageOpex() {
         }}
         onRefresh={() => listHook.refetch()}
         onCreate={openCreate}
-        createLabel={t("opex.actions.addExpense", "Thêm chi phí")}
+        createLabel={t("createExpense", "Thêm khoản chi")}
         activeFilterCount={listHook.activeFilterCount}
         onClearAllFilters={() => {
           listHook.clearAllFilters();
@@ -496,23 +585,18 @@ export function GarageOpex() {
           />
         }
         summaryRow={{
-          amount: (
+          totalAmount: (
             <div className="flex flex-col items-end justify-center">
               <span className="font-semibold text-primary tabular-nums font-mono text-xs">
                 {totalAmountSum.toLocaleString("vi-VN")} đ
               </span>
-              {totalOjSum > 0 && (
-                <span className="text-[11px] font-mono text-muted-foreground font-normal">
-                  OJ: {totalOjSum.toLocaleString("vi-VN")} đ
-                </span>
-              )}
             </div>
           ),
         }}
       />
 
       {/* Drawer Create / View / Edit */}
-      <GarageOpexDrawer
+      <BudgetDrawer
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
         mode={drawerMode}
@@ -525,14 +609,14 @@ export function GarageOpex() {
       {/* Modal xác nhận xóa */}
       <ConfirmModal
         open={deleteModalOpen}
-        title={t("opex.actions.deleteConfirmTitle", "Xác nhận xóa chi phí")}
+        title={t("confirmDeleteTitle", "Xác nhận xóa khoản chi")}
         message={
           itemToDelete
-            ? `${t("opex.actions.deleteConfirmDesc", "Bạn có chắc chắn muốn xóa:")} ${itemToDelete.categoryName} (${itemToDelete.period} - ${itemToDelete.amount.toLocaleString("vi-VN")} đ)?`
+            ? `${t("confirmDeleteDesc", "Bạn có chắc chắn muốn xóa:")} ${itemToDelete.title || itemToDelete.expenseCategory} (${itemToDelete.period || `${itemToDelete.periodMonth}/${itemToDelete.periodYear}`} - ${(Number(itemToDelete.totalAmount || itemToDelete.amount) || 0).toLocaleString("vi-VN")} đ)?`
             : ""
         }
-        confirmLabel={t("common.delete", "Xóa")}
-        cancelLabel={t("common.cancel", "Hủy")}
+        confirmLabel={t("actionDelete", "Xóa")}
+        cancelLabel={t("actionCancel", "Hủy")}
         danger={true}
         onConfirm={confirmDelete}
         onCancel={() => {
@@ -545,4 +629,4 @@ export function GarageOpex() {
   );
 }
 
-export default GarageOpex;
+export default OpexPage;

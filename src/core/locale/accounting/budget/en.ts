@@ -150,4 +150,8 @@ export const budgetEn = {
   yearLabel: "Year",
   countSuffix: "expenses",
   summaryTotal: "Total",
+
+  // Action Groups
+  groupTraCuu: "SEARCH",
+  groupThaoTac: "ACTIONS",
 };

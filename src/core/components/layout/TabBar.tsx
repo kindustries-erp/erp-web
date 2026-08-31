@@ -24,10 +24,12 @@ import {
   Barcode,
   ReceiptText,
   Shield,
+  Target,
 } from "lucide-react";
 
 const TAB_ICONS: Partial<Record<PageKey, React.ElementType>> = {
   dashboard: LayoutDashboard,
+  opex: Target,
 
   "erp-sales-orders": Boxes,
   "erp-customers": Users,

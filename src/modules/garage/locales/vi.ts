@@ -589,6 +589,8 @@ export const garageVi = {
         "Bạn có chắc chắn muốn xóa khoản chi phí này không? Thao tác này không thể hoàn tác.",
       exportExcel: "Xuất Excel",
       viewDetail: "Xem chi tiết",
+      groupTraCuu: "TRA CỨU",
+      groupThaoTac: "THAO TÁC",
     },
     drawer: {
       createTitle: "Thêm chi phí vận hành",

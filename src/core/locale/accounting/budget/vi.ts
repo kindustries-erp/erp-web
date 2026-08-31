@@ -150,4 +150,8 @@ export const budgetVi = {
   yearLabel: "Năm",
   countSuffix: "khoản chi",
   summaryTotal: "Tổng cộng",
+
+  // Action Groups
+  groupTraCuu: "TRA CỨU",
+  groupThaoTac: "THAO TÁC",
 };

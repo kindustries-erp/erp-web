@@ -590,6 +590,8 @@ export const garageEn = {
         "Are you sure you want to delete this expense? This action cannot be undone.",
       exportExcel: "Export Excel",
       viewDetail: "View Details",
+      groupTraCuu: "SEARCH",
+      groupThaoTac: "ACTIONS",
     },
     drawer: {
       createTitle: "Add Operating Expense",

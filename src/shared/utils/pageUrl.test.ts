@@ -31,4 +31,18 @@ describe("pageUrl with report dashboards", () => {
       searchParams: expect.any(URLSearchParams),
     });
   });
+
+  it("serializes and parses /opex correctly", () => {
+    expect(pageToPath("opex")).toBe("/opex");
+    expect(pathToPage("/opex", "")).toEqual({
+      page: "opex",
+      tab: undefined,
+      instanceIndex: 1,
+      searchParams: expect.any(URLSearchParams),
+    });
+  });
+
+  it("returns null (404) when accessing deprecated /budget path", () => {
+    expect(pathToPage("/budget", "")).toBeNull();
+  });
 });

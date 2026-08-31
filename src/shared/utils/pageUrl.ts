@@ -2,6 +2,7 @@ import { PageKey } from "@/shared/types";
 
 export const ALL_PAGE_KEYS: PageKey[] = [
   "dashboard",
+  "opex",
 
   "purchasing",
   "erp-inventory-stock",

@@ -426,7 +426,7 @@ export function useNavItems(): NavSearchItem[] {
     }
     if (canReadBankStatements && isAdminEmail) {
       items.push({
-        key: "budget",
+        key: "opex",
         label: t("nav.items.operatingExpenses", "Chi phí vận hành"),
         section: accountingSection,
         keywords: [
