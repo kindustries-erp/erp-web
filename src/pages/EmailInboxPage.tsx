@@ -9,6 +9,7 @@ import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColu
 import { DrawerModal, DrawerRow } from "@/shared/components/DrawerModal";
 import { Button } from "@/shared/components/ui/Button";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
+import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
 import { Forbidden } from "@/pages/Forbidden";
 import {
   useFilterPanel,
@@ -51,8 +52,8 @@ function bodyPreview(message: EmailMessage) {
 }
 
 export function EmailInboxPage() {
-  const canRead = useHasPermission("email_ingest", "read");
-  const canSync = useHasPermission("email_ingest", "create");
+  const canRead = useHasPermission(ErpResource.EMAIL_INGEST, ErpAction.READ);
+  const canSync = useHasPermission(ErpResource.EMAIL_INGEST, ErpAction.CREATE);
   const queryClient = useQueryClient();
   const [sortArray, setSortArray] = useState<string[]>(["-receivedAt"]);
   const [columnSearch, setColumnSearch] = useState<Record<string, string>>({});

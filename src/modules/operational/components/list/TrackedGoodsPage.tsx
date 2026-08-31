@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 
 import { useInventorySerialsQuery } from "@/modules/inventory-core/hooks/useInventorySerialsQuery";
 import type { DataTableColumn } from "@/shared/components/DataTable";
@@ -18,51 +18,434 @@ import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemp
 import { TableText } from "@/shared/components/DataTable/TableText";
 import { Barcode, Eye, Pencil, FileText, PackageMinus } from "lucide-react";
 import type { ActionDropdownItem } from "@/shared/components/ActionDropdown";
+import type { TabItem } from "@/shared/components/PageLayout";
+import { ErpUrlQueryParam } from "@/shared/constants/urlParams";
+import { DEFAULT_DEBOUNCE_TIME } from "@/shared/constants/timing";
+import { encodeStateParam } from "@/shared/utils/pageUrl";
 import { TrackedGoodsDrawer } from "./TrackedGoodsDrawer";
 import { SoPreviewDrawer } from "@/modules/sales-orders-core/components/SoPreviewDrawer";
 import { GiFormDrawer } from "@/modules/goods-issues-core/components/GiFormDrawer";
 import { useGiDrawer } from "@/modules/goods-issues-core/hooks/useGiDrawer";
 
+export interface TrackedGoodsPageProps {
+  fixedTrackingPolicy?: string;
+  title?: string;
+  desc?: string;
+  initialTab?: string;
+}
+
 export function TrackedGoodsPage({
   fixedTrackingPolicy,
   title,
   desc,
-}: {
-  fixedTrackingPolicy?: string;
-  title?: string;
-  desc?: string;
-} = {}) {
+  initialTab,
+}: TrackedGoodsPageProps = {}) {
   const t = useT();
 
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(50);
-  const [searchInput, setSearchInput] = useState("");
-  const [search, setSearch] = useState("");
-  const [itemTypeFilter, setItemTypeFilter] = useState("");
-  const [trackingPolicyFilter, setTrackingPolicyFilter] = useState("");
-  const [statusFilter, setStatusFilter] = useState("");
-  const [missingSerialFilter, setMissingSerialFilter] = useState(false);
-  const [sortField, setSortField] = useState("-created_at");
+  const pageTabs: TabItem[] = useMemo(
+    () => [
+      {
+        value: "parts",
+        label: t("inventoryTracking.tabParts", "Phụ tùng / Serial"),
+      },
+      {
+        value: "lot",
+        label: t("inventoryTracking.tabLot", "Lô (Lot)"),
+      },
+      {
+        value: "custom",
+        label: t("inventoryTracking.tabCustom", "Tùy chỉnh (Custom)"),
+      },
+    ],
+    [t],
+  );
+
+  const [currentTab, setCurrentTab] = useState<string>(() => {
+    if (initialTab) return initialTab;
+    if (fixedTrackingPolicy) {
+      const p = fixedTrackingPolicy.toLowerCase();
+      if (p === "serial") return "parts";
+      return p;
+    }
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const tabParam = params.get(ErpUrlQueryParam.TAB);
+      if (
+        tabParam &&
+        ["parts", "lot", "custom", "vehicle"].includes(tabParam)
+      ) {
+        return tabParam;
+      }
+    }
+    return "parts";
+  });
+
+  const activeTrackingPolicy = useMemo(() => {
+    if (fixedTrackingPolicy) return fixedTrackingPolicy;
+    switch (currentTab) {
+      case "vehicle":
+        return "VEHICLE";
+      case "parts":
+        return "SERIAL";
+      case "lot":
+        return "LOT";
+      case "custom":
+        return "CUSTOM";
+      default:
+        return "SERIAL";
+    }
+  }, [fixedTrackingPolicy, currentTab]);
+
+  const tableId = useMemo(() => {
+    if (fixedTrackingPolicy) {
+      return `inventory-tracked-goods-${fixedTrackingPolicy.toLowerCase()}-table`;
+    }
+    return `inventory-tracked-goods-${currentTab}-table`;
+  }, [fixedTrackingPolicy, currentTab]);
+
+  const [page, setPage] = useState<number>(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const p = params.get(ErpUrlQueryParam.PAGE);
+      if (p) return Math.max(1, parseInt(p, 10) || 1);
+    }
+    return 1;
+  });
+  const [pageSize, setPageSize] = useState<number>(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const ps =
+        params.get(ErpUrlQueryParam.PAGE_SIZE) ||
+        params.get(ErpUrlQueryParam.LIMIT);
+      if (ps) return parseInt(ps, 10) || 50;
+    }
+    return 50;
+  });
+  const [searchInput, setSearchInput] = useState<string>(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      return params.get(ErpUrlQueryParam.SEARCH) || "";
+    }
+    return "";
+  });
+  const [search, setSearch] = useState<string>(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      return params.get(ErpUrlQueryParam.SEARCH) || "";
+    }
+    return "";
+  });
+  const [itemTypeFilter, setItemTypeFilter] = useState<string>(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      return params.get(ErpUrlQueryParam.ITEM_TYPE) || "";
+    }
+    return "";
+  });
+  const [trackingPolicyFilter, setTrackingPolicyFilter] = useState<string>(
+    () => {
+      if (typeof window !== "undefined") {
+        const params = new URLSearchParams(window.location.search);
+        return params.get(ErpUrlQueryParam.TRACKING_POLICY) || "";
+      }
+      return "";
+    },
+  );
+  const [statusFilter, setStatusFilter] = useState<string>(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      return params.get(ErpUrlQueryParam.STATUS) || "";
+    }
+    return "";
+  });
+  const [missingSerialFilter, setMissingSerialFilter] = useState<boolean>(
+    () => {
+      if (typeof window !== "undefined") {
+        const params = new URLSearchParams(window.location.search);
+        return params.get(ErpUrlQueryParam.MISSING_SERIAL) === "true";
+      }
+      return false;
+    },
+  );
+  const [sortField] = useState("-created_at");
   const [filterPanelOpen, setFilterPanelOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<InventorySerialRow | null>(
-    null,
+    () => {
+      if (typeof window !== "undefined") {
+        const params = new URLSearchParams(window.location.search);
+        const detailParam = params.get(ErpUrlQueryParam.DETAIL);
+        if (detailParam) {
+          return {
+            id: detailParam,
+            serialNo: detailParam,
+          } as unknown as InventorySerialRow;
+        }
+      }
+      return null;
+    },
   );
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const [drawerMode, setDrawerMode] = useState<"view" | "edit">("view");
+  const [drawerOpen, setDrawerOpen] = useState<boolean>(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      return Boolean(params.get(ErpUrlQueryParam.DETAIL));
+    }
+    return false;
+  });
+  const [drawerMode, setDrawerMode] = useState<"view" | "edit">(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      return (
+        (params.get(ErpUrlQueryParam.DRAWER_MODE) as "view" | "edit") || "view"
+      );
+    }
+    return "view";
+  });
   const [previewSoNo, setPreviewSoNo] = useState<string | null>(null);
   const giDrawer = useGiDrawer();
 
-  const tableState = useTableColumnState(
-    fixedTrackingPolicy
-      ? `inventory-tracked-goods-${fixedTrackingPolicy.toLowerCase()}-table`
-      : "inventory-tracked-goods-table",
+  const tableState = useTableColumnState(tableId);
+
+  const tabStatesRef = useRef<
+    Record<
+      string,
+      {
+        page: number;
+        pageSize: number;
+        search: string;
+        searchInput: string;
+        itemTypeFilter: string;
+        trackingPolicyFilter: string;
+        statusFilter: string;
+        missingSerialFilter: boolean;
+      }
+    >
+  >({});
+
+  // ── Two-Way URL Sync Effect for Tracked Goods ─────────────────────────────
+  const debounceUrlTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    if (debounceUrlTimerRef.current) {
+      clearTimeout(debounceUrlTimerRef.current);
+    }
+
+    debounceUrlTimerRef.current = setTimeout(() => {
+      const currentUrl = new URL(window.location.href);
+      const newParams = new URLSearchParams(currentUrl.search);
+
+      // 1. Tab
+      if (!fixedTrackingPolicy) {
+        if (currentTab !== "parts") {
+          newParams.set(ErpUrlQueryParam.TAB, currentTab);
+        } else {
+          newParams.delete(ErpUrlQueryParam.TAB);
+        }
+      }
+
+      // 2. Filters
+      if (search) newParams.set(ErpUrlQueryParam.SEARCH, search);
+      else newParams.delete(ErpUrlQueryParam.SEARCH);
+
+      if (itemTypeFilter)
+        newParams.set(ErpUrlQueryParam.ITEM_TYPE, itemTypeFilter);
+      else newParams.delete(ErpUrlQueryParam.ITEM_TYPE);
+
+      if (trackingPolicyFilter)
+        newParams.set(ErpUrlQueryParam.TRACKING_POLICY, trackingPolicyFilter);
+      else newParams.delete(ErpUrlQueryParam.TRACKING_POLICY);
+
+      if (statusFilter) newParams.set(ErpUrlQueryParam.STATUS, statusFilter);
+      else newParams.delete(ErpUrlQueryParam.STATUS);
+
+      if (missingSerialFilter)
+        newParams.set(ErpUrlQueryParam.MISSING_SERIAL, "true");
+      else newParams.delete(ErpUrlQueryParam.MISSING_SERIAL);
+
+      // 3. Pagination
+      if (page > 1) newParams.set(ErpUrlQueryParam.PAGE, String(page));
+      else newParams.delete(ErpUrlQueryParam.PAGE);
+
+      if (pageSize !== 50)
+        newParams.set(ErpUrlQueryParam.PAGE_SIZE, String(pageSize));
+      else newParams.delete(ErpUrlQueryParam.PAGE_SIZE);
+
+      // 4. Column filters & Search
+      if (Object.keys(tableState.columnFilters).length > 0) {
+        const encoded = encodeStateParam(tableState.columnFilters);
+        if (encoded) newParams.set(ErpUrlQueryParam.COLUMN_FILTERS, encoded);
+      } else {
+        newParams.delete(ErpUrlQueryParam.COLUMN_FILTERS);
+      }
+
+      if (Object.keys(tableState.columnSearch).length > 0) {
+        const encoded = encodeStateParam(tableState.columnSearch);
+        if (encoded) newParams.set(ErpUrlQueryParam.COLUMN_SEARCH, encoded);
+      } else {
+        newParams.delete(ErpUrlQueryParam.COLUMN_SEARCH);
+      }
+
+      // 5. Sorts
+      if (tableState.sorts.length > 0) {
+        const encoded = encodeStateParam(tableState.sorts);
+        if (encoded) newParams.set(ErpUrlQueryParam.SORTS, encoded);
+      } else {
+        newParams.delete(ErpUrlQueryParam.SORTS);
+      }
+
+      // 6. Detail Drawer
+      const detailKey = selectedItem?.serialNo || selectedItem?.id;
+      if (drawerOpen && detailKey) {
+        newParams.set(ErpUrlQueryParam.DETAIL, detailKey);
+        if (drawerMode === "edit") {
+          newParams.set(ErpUrlQueryParam.DRAWER_MODE, "edit");
+        } else {
+          newParams.delete(ErpUrlQueryParam.DRAWER_MODE);
+        }
+      } else if (!drawerOpen) {
+        newParams.delete(ErpUrlQueryParam.DETAIL);
+        newParams.delete(ErpUrlQueryParam.DRAWER_MODE);
+      }
+
+      const newSearch = newParams.toString();
+      const newRelativePath = `${window.location.pathname}${newSearch ? `?${newSearch}` : ""}`;
+      if (
+        window.location.pathname + window.location.search !==
+        newRelativePath
+      ) {
+        window.history.replaceState(null, "", newRelativePath);
+      }
+    }, DEFAULT_DEBOUNCE_TIME);
+
+    return () => {
+      if (debounceUrlTimerRef.current)
+        clearTimeout(debounceUrlTimerRef.current);
+    };
+  }, [
+    fixedTrackingPolicy,
+    currentTab,
+    search,
+    itemTypeFilter,
+    trackingPolicyFilter,
+    statusFilter,
+    missingSerialFilter,
+    page,
+    pageSize,
+    tableState.columnFilters,
+    tableState.columnSearch,
+    tableState.sorts,
+    drawerOpen,
+    drawerMode,
+    selectedItem?.serialNo,
+    selectedItem?.id,
+  ]);
+
+  // Handle popstate for 2-way sync
+  useEffect(() => {
+    const handlePopState = () => {
+      const params = new URLSearchParams(window.location.search);
+      const detailParam = params.get(ErpUrlQueryParam.DETAIL);
+      if (detailParam) {
+        setSelectedItem((prev) =>
+          prev?.serialNo === detailParam || prev?.id === detailParam
+            ? prev
+            : ({
+                id: detailParam,
+                serialNo: detailParam,
+              } as unknown as InventorySerialRow),
+        );
+        setDrawerOpen(true);
+        setDrawerMode(
+          (params.get(ErpUrlQueryParam.DRAWER_MODE) as "view" | "edit") ||
+            "view",
+        );
+      } else {
+        setDrawerOpen(false);
+      }
+
+      const tabParam = params.get(ErpUrlQueryParam.TAB);
+      if (tabParam && tabParam !== currentTab) {
+        setCurrentTab(tabParam);
+      }
+
+      const pageParam = params.get(ErpUrlQueryParam.PAGE);
+      if (pageParam) {
+        const p = parseInt(pageParam, 10);
+        if (!isNaN(p)) setPage(p);
+      }
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [currentTab]);
+
+  const handleTabChange = useCallback(
+    (nextTab: string) => {
+      // 1. Lưu lại state của tab hiện tại
+      tabStatesRef.current[currentTab] = {
+        page,
+        pageSize,
+        search,
+        searchInput,
+        itemTypeFilter,
+        trackingPolicyFilter,
+        statusFilter,
+        missingSerialFilter,
+      };
+
+      // 2. Phục hồi state của tab tiếp theo (hoặc khởi tạo mặc định)
+      const nextState = tabStatesRef.current[nextTab] || {
+        page: 1,
+        pageSize: 50,
+        search: "",
+        searchInput: "",
+        itemTypeFilter: "",
+        trackingPolicyFilter: "",
+        statusFilter: "",
+        missingSerialFilter: false,
+      };
+
+      setCurrentTab(nextTab);
+      setPage(nextState.page);
+      setPageSize(nextState.pageSize);
+      setSearch(nextState.search);
+      setSearchInput(nextState.searchInput);
+      setItemTypeFilter(nextState.itemTypeFilter);
+      setTrackingPolicyFilter(nextState.trackingPolicyFilter);
+      setStatusFilter(nextState.statusFilter);
+      setMissingSerialFilter(nextState.missingSerialFilter);
+
+      // KHÔNG gọi tableState.resetFilters() -> Giữ nguyên column filters, column searches, column sorts riêng cho mỗi tableId
+      if (typeof window !== "undefined") {
+        const url = new URL(window.location.href);
+        if (nextTab === "parts") {
+          url.searchParams.delete(ErpUrlQueryParam.TAB);
+        } else {
+          url.searchParams.set(ErpUrlQueryParam.TAB, nextTab);
+        }
+        window.history.replaceState(null, "", url.toString());
+      }
+    },
+    [
+      currentTab,
+      page,
+      pageSize,
+      search,
+      searchInput,
+      itemTypeFilter,
+      trackingPolicyFilter,
+      statusFilter,
+      missingSerialFilter,
+    ],
   );
 
   useEffect(() => {
     const id = setTimeout(() => {
       setSearch(searchInput);
       setPage(1);
-    }, 300);
+    }, DEFAULT_DEBOUNCE_TIME);
     return () => clearTimeout(id);
   }, [searchInput]);
 
@@ -71,10 +454,15 @@ export function TrackedGoodsPage({
     pageSize,
     search: search || undefined,
     itemType: itemTypeFilter || undefined,
-    trackingPolicy: fixedTrackingPolicy || trackingPolicyFilter || undefined,
+    trackingPolicy: activeTrackingPolicy || trackingPolicyFilter || undefined,
     status: statusFilter || undefined,
     missingSerial: missingSerialFilter || undefined,
-    sort: [sortField],
+    sort:
+      tableState.sorts.length > 0
+        ? tableState.sorts
+        : sortField
+          ? [sortField]
+          : undefined,
     column_search: JSON.stringify(tableState.columnSearch),
     column_filters: JSON.stringify(tableState.columnFilters),
   });
@@ -95,13 +483,39 @@ export function TrackedGoodsPage({
   const total = query.data?.total || 0;
   const totalPages = query.data?.totalPages || 0;
 
-  const activeFilterCount = [
-    !!search,
-    !!itemTypeFilter,
-    !!trackingPolicyFilter,
-    !!statusFilter,
+  const activeFilterCount = useMemo(() => {
+    let count = [
+      !!search,
+      !!itemTypeFilter,
+      !!trackingPolicyFilter,
+      !!statusFilter,
+      missingSerialFilter,
+    ].filter(Boolean).length;
+
+    const activeCols = new Set<string>();
+    if (tableState.columnFilters) {
+      Object.entries(tableState.columnFilters).forEach(([col, f]) => {
+        if (f && f.length > 0) activeCols.add(col);
+      });
+    }
+    if (tableState.columnSearch) {
+      Object.entries(tableState.columnSearch).forEach(([col, s]) => {
+        if (s && String(s).trim().length > 0) activeCols.add(col);
+      });
+    }
+    count += Math.max(activeCols.size, tableState.activeFilterCount || 0);
+
+    return count;
+  }, [
+    search,
+    itemTypeFilter,
+    trackingPolicyFilter,
+    statusFilter,
     missingSerialFilter,
-  ].filter(Boolean).length;
+    tableState.columnFilters,
+    tableState.columnSearch,
+    tableState.activeFilterCount,
+  ]);
 
   const fetchSerialOptions = useCallback(
     async ({
@@ -121,6 +535,7 @@ export function TrackedGoodsPage({
         pageParam,
         20,
         filtersStr ? JSON.parse(filtersStr) : undefined,
+        activeTrackingPolicy,
       );
       return {
         items: res.items.map((i: any) => ({
@@ -131,7 +546,7 @@ export function TrackedGoodsPage({
         next: res.page < res.totalPages ? res.page + 1 : null,
       };
     },
-    [],
+    [activeTrackingPolicy],
   );
 
   const getSortState = (key: string) => {
@@ -231,7 +646,7 @@ export function TrackedGoodsPage({
             onFilterChange={(vals) => handleFilterChange("itemCode", vals)}
             align="center"
             columnKey="itemCode"
-            queryKeyPrefix="inventory-serial-options"
+            queryKeyPrefix={`inventory-serial-options-${currentTab}`}
             allFilters={tableState.columnFilters}
             fetchOptions={fetchSerialOptions}
           />
@@ -263,7 +678,7 @@ export function TrackedGoodsPage({
             onFilterChange={(vals) => handleFilterChange("itemName", vals)}
             align="center"
             columnKey="itemName"
-            queryKeyPrefix="inventory-serial-options"
+            queryKeyPrefix={`inventory-serial-options-${currentTab}`}
             allFilters={tableState.columnFilters}
             fetchOptions={fetchSerialOptions}
           />
@@ -280,148 +695,256 @@ export function TrackedGoodsPage({
           );
         },
       },
-      {
-        key: "serialNo",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("Số Seri")}
-            sortState={getSortState("serialNo")}
-            onSortChange={(state) => handleSortChange("serialNo", state)}
-            searchValue={tableState.columnSearch["serialNo"] || ""}
-            onSearchChange={(val) => handleSearchChange("serialNo", val)}
-            selectedFilters={tableState.columnFilters["serialNo"] || []}
-            onFilterChange={(vals) => handleFilterChange("serialNo", vals)}
-            align="center"
-            columnKey="serialNo"
-            queryKeyPrefix="inventory-serial-options"
-            allFilters={tableState.columnFilters}
-            fetchOptions={fetchSerialOptions}
-          />
-        ),
-        size: 200,
-        className: "align-middle text-left text-gray-800",
-        headerClassName: "text-center",
-        cell: (row) => (
-          <TableText
-            text={row.serialNo || "—"}
-            enableCopy
-            tooltip={true}
-            onDetailClick={() => {
-              setSelectedItem(row);
-              setDrawerOpen(true);
-            }}
-          />
-        ),
-      },
-      {
-        key: "vinNo",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("Số VIN")}
-            sortState={getSortState("vinNo")}
-            onSortChange={(state) => handleSortChange("vinNo", state)}
-            searchValue={tableState.columnSearch["vinNo"] || ""}
-            onSearchChange={(val) => handleSearchChange("vinNo", val)}
-            selectedFilters={tableState.columnFilters["vinNo"] || []}
-            onFilterChange={(vals) => handleFilterChange("vinNo", vals)}
-            align="center"
-            columnKey="vinNo"
-            queryKeyPrefix="inventory-serial-options"
-            allFilters={tableState.columnFilters}
-            fetchOptions={fetchSerialOptions}
-          />
-        ),
-        size: 200,
-        className: "align-middle text-left text-gray-800",
-        headerClassName: "text-center",
-        cell: (row) => (
-          <TableText
-            text={row.vinNo || "—"}
-            enableCopy={!!row.vinNo}
-            tooltip={!!row.vinNo}
-          />
-        ),
-      },
-      {
-        key: "engineNo",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("Số máy")}
-            sortState={getSortState("engineNo")}
-            onSortChange={(state) => handleSortChange("engineNo", state)}
-            searchValue={tableState.columnSearch["engineNo"] || ""}
-            onSearchChange={(val) => handleSearchChange("engineNo", val)}
-            selectedFilters={tableState.columnFilters["engineNo"] || []}
-            onFilterChange={(vals) => handleFilterChange("engineNo", vals)}
-            align="center"
-            columnKey="engineNo"
-            queryKeyPrefix="inventory-serial-options"
-            allFilters={tableState.columnFilters}
-            fetchOptions={fetchSerialOptions}
-          />
-        ),
-        size: 200,
-        className: "align-middle text-left text-gray-800",
-        headerClassName: "text-center",
-        cell: (row) => (
-          <TableText
-            text={row.engineNo || "—"}
-            enableCopy={!!row.engineNo}
-            tooltip={!!row.engineNo}
-          />
-        ),
-      },
-      ...(fixedTrackingPolicy
-        ? []
-        : [
+      // Cột Số Lô (Lot): Chỉ hiển thị trên tab 'lot'
+      ...(currentTab === "lot"
+        ? [
             {
-              key: "trackingPolicyName",
+              key: "lotNo",
               header: (
                 <TableColumnHeaderFilter
-                  title={t("Chính sách Tracking")}
-                  sortState={getSortState("trackingPolicyName")}
+                  title={t("inventoryTrackingLot.lotCode", "Số Lô (Lot)")}
+                  sortState={getSortState("lotNo")}
                   onSortChange={(state: any) =>
-                    handleSortChange("trackingPolicyName", state)
+                    handleSortChange("lotNo", state)
                   }
-                  searchValue={
-                    tableState.columnSearch["trackingPolicyName"] || ""
-                  }
+                  searchValue={tableState.columnSearch["lotNo"] || ""}
                   onSearchChange={(val: any) =>
-                    handleSearchChange("trackingPolicyName", val)
+                    handleSearchChange("lotNo", val)
                   }
-                  selectedFilters={
-                    tableState.columnFilters["trackingPolicyName"] || []
-                  }
+                  selectedFilters={tableState.columnFilters["lotNo"] || []}
                   onFilterChange={(vals: any) =>
-                    handleFilterChange("trackingPolicyName", vals)
+                    handleFilterChange("lotNo", vals)
                   }
                   align="center"
-                  columnKey="trackingPolicyName"
-                  queryKeyPrefix="inventory-serial-options"
+                  columnKey="lotNo"
+                  showBlankOption={true}
+                  queryKeyPrefix={`inventory-serial-options-${currentTab}`}
                   allFilters={tableState.columnFilters}
                   fetchOptions={fetchSerialOptions}
                 />
               ),
-              size: 180,
-              className: "align-middle text-left",
+              size: 160,
+              className: "align-middle text-left font-medium text-gray-800",
               headerClassName: "text-center",
-              cell: (row: any) => row.item?.trackingPolicyName || "—",
+              cell: (row: any) => (
+                <TableText
+                  text={row.lotNo || "—"}
+                  enableCopy={!!row.lotNo}
+                  tooltip={!!row.lotNo}
+                  onDetailClick={() => {
+                    setSelectedItem(row);
+                    setDrawerOpen(true);
+                  }}
+                />
+              ),
             },
-          ]),
+          ]
+        : []),
+      // Cột Số Seri: Hiển thị trên vehicle, parts, custom
+      ...(currentTab !== "lot"
+        ? [
+            {
+              key: "serialNo",
+              header: (
+                <TableColumnHeaderFilter
+                  title={
+                    currentTab === "custom"
+                      ? t("inventoryTracking.barcode", "Mã Barcode / QR")
+                      : currentTab === "vehicle"
+                        ? t(
+                            "inventoryTracking.serialVehicle",
+                            "Số Seri xe (COC)",
+                          )
+                        : t("Số Seri")
+                  }
+                  sortState={getSortState("serialNo")}
+                  onSortChange={(state: any) =>
+                    handleSortChange("serialNo", state)
+                  }
+                  searchValue={tableState.columnSearch["serialNo"] || ""}
+                  onSearchChange={(val: any) =>
+                    handleSearchChange("serialNo", val)
+                  }
+                  selectedFilters={tableState.columnFilters["serialNo"] || []}
+                  onFilterChange={(vals: any) =>
+                    handleFilterChange("serialNo", vals)
+                  }
+                  align="center"
+                  columnKey="serialNo"
+                  showBlankOption={true}
+                  queryKeyPrefix={`inventory-serial-options-${currentTab}`}
+                  allFilters={tableState.columnFilters}
+                  fetchOptions={fetchSerialOptions}
+                />
+              ),
+              size: 200,
+              className: "align-middle text-left text-gray-800",
+              headerClassName: "text-center",
+              cell: (row: any) => (
+                <TableText
+                  text={row.serialNo || "—"}
+                  enableCopy
+                  tooltip={true}
+                  onDetailClick={() => {
+                    setSelectedItem(row);
+                    setDrawerOpen(true);
+                  }}
+                />
+              ),
+            },
+          ]
+        : []),
+      // Cột Số VIN & Số máy: Chỉ hiển thị trên tab 'vehicle'
+      ...(currentTab === "vehicle"
+        ? [
+            {
+              key: "vinNo",
+              header: (
+                <TableColumnHeaderFilter
+                  title={t("Số VIN")}
+                  sortState={getSortState("vinNo")}
+                  onSortChange={(state: any) =>
+                    handleSortChange("vinNo", state)
+                  }
+                  searchValue={tableState.columnSearch["vinNo"] || ""}
+                  onSearchChange={(val: any) =>
+                    handleSearchChange("vinNo", val)
+                  }
+                  selectedFilters={tableState.columnFilters["vinNo"] || []}
+                  onFilterChange={(vals: any) =>
+                    handleFilterChange("vinNo", vals)
+                  }
+                  align="center"
+                  columnKey="vinNo"
+                  showBlankOption={true}
+                  queryKeyPrefix={`inventory-serial-options-${currentTab}`}
+                  allFilters={tableState.columnFilters}
+                  fetchOptions={fetchSerialOptions}
+                />
+              ),
+              size: 200,
+              className: "align-middle text-left text-gray-800",
+              headerClassName: "text-center",
+              cell: (row: any) => (
+                <TableText
+                  text={row.vinNo || "—"}
+                  enableCopy={!!row.vinNo}
+                  tooltip={!!row.vinNo}
+                />
+              ),
+            },
+            {
+              key: "engineNo",
+              header: (
+                <TableColumnHeaderFilter
+                  title={t("Số máy")}
+                  sortState={getSortState("engineNo")}
+                  onSortChange={(state: any) =>
+                    handleSortChange("engineNo", state)
+                  }
+                  searchValue={tableState.columnSearch["engineNo"] || ""}
+                  onSearchChange={(val: any) =>
+                    handleSearchChange("engineNo", val)
+                  }
+                  selectedFilters={tableState.columnFilters["engineNo"] || []}
+                  onFilterChange={(vals: any) =>
+                    handleFilterChange("engineNo", vals)
+                  }
+                  align="center"
+                  columnKey="engineNo"
+                  showBlankOption={true}
+                  queryKeyPrefix={`inventory-serial-options-${currentTab}`}
+                  allFilters={tableState.columnFilters}
+                  fetchOptions={fetchSerialOptions}
+                />
+              ),
+              size: 200,
+              className: "align-middle text-left text-gray-800",
+              headerClassName: "text-center",
+              cell: (row: any) => (
+                <TableText
+                  text={row.engineNo || "—"}
+                  enableCopy={!!row.engineNo}
+                  tooltip={!!row.engineNo}
+                />
+              ),
+            },
+          ]
+        : []),
+      // Cột Thuộc tính tùy chỉnh (JSON Attributes): Chỉ hiển thị trên tab 'custom'
+      ...(currentTab === "custom"
+        ? [
+            {
+              key: "attributes",
+              header: (
+                <TableColumnHeaderFilter
+                  title={t(
+                    "inventoryTrackingCustom.customMetadata",
+                    "Thuộc tính tùy chỉnh",
+                  )}
+                  sortState="none"
+                  onSortChange={() => {}}
+                  searchValue={tableState.columnSearch["attributes"] || ""}
+                  onSearchChange={(val: any) =>
+                    handleSearchChange("attributes", val)
+                  }
+                  selectedFilters={tableState.columnFilters["attributes"] || []}
+                  onFilterChange={(vals) =>
+                    handleFilterChange("attributes", vals)
+                  }
+                  hideFilter={true}
+                  align="center"
+                  columnKey="attributes"
+                  queryKeyPrefix={`inventory-serial-options-${currentTab}`}
+                  allFilters={tableState.columnFilters}
+                />
+              ),
+              size: 250,
+              enableResizing: true,
+              className: "align-middle text-left text-xs text-muted-foreground",
+              headerClassName: "text-center",
+              cell: (row: any) => {
+                if (!row.attributes || Object.keys(row.attributes).length === 0)
+                  return "—";
+                return (
+                  <Tooltip content={JSON.stringify(row.attributes, null, 2)}>
+                    <div className="flex flex-wrap gap-1 max-w-[240px] truncate cursor-help">
+                      {Object.entries(row.attributes)
+                        .slice(0, 2)
+                        .map(([k, v]) => (
+                          <span
+                            key={k}
+                            className="inline-flex items-center px-1.5 py-0.5 rounded bg-muted text-[11px] font-mono"
+                          >
+                            {k}: {String(v)}
+                          </span>
+                        ))}
+                      {Object.keys(row.attributes).length > 2 && (
+                        <span className="text-[10px] text-muted-foreground self-center">
+                          +{Object.keys(row.attributes).length - 2}
+                        </span>
+                      )}
+                    </div>
+                  </Tooltip>
+                );
+              },
+            },
+          ]
+        : []),
       {
         key: "status",
         header: (
           <TableColumnHeaderFilter
             title={t("Trạng thái")}
-            sortState="none"
-            onSortChange={() => {}}
+            sortState={getSortState("status")}
+            onSortChange={(state) => handleSortChange("status", state)}
             searchValue=""
             onSearchChange={() => {}}
             selectedFilters={tableState.columnFilters["status"] || []}
             onFilterChange={(vals) => handleFilterChange("status", vals)}
             align="center"
             columnKey="status"
-            queryKeyPrefix="inventory-serial-options"
+            queryKeyPrefix={`inventory-serial-options-${currentTab}`}
             allFilters={tableState.columnFilters}
             fetchOptions={async () => {
               return {
@@ -495,7 +1018,8 @@ export function TrackedGoodsPage({
             onFilterChange={(vals) => handleFilterChange("goodsIssueNo", vals)}
             align="center"
             columnKey="goodsIssueNo"
-            queryKeyPrefix="inventory-serial-options"
+            showBlankOption={true}
+            queryKeyPrefix={`inventory-serial-options-${currentTab}`}
             allFilters={tableState.columnFilters}
             fetchOptions={fetchSerialOptions}
           />
@@ -559,9 +1083,9 @@ export function TrackedGoodsPage({
             ? formatGMT7(row.lifecycle.goodsIssueDate, "date")
             : "—",
       },
-      ...(fixedTrackingPolicy === "SERIAL"
-        ? []
-        : [
+      // Đơn hàng & Ngày giao: Hiển thị trên vehicle và parts
+      ...(currentTab === "vehicle" || currentTab === "parts"
+        ? [
             {
               key: "soNo",
               header: (
@@ -577,7 +1101,8 @@ export function TrackedGoodsPage({
                   }
                   align="center"
                   columnKey="soNo"
-                  queryKeyPrefix="inventory-serial-options"
+                  showBlankOption={true}
+                  queryKeyPrefix={`inventory-serial-options-${currentTab}`}
                   allFilters={tableState.columnFilters}
                   fetchOptions={fetchSerialOptions}
                 />
@@ -646,11 +1171,12 @@ export function TrackedGoodsPage({
                   : "—";
               },
             },
-          ]),
+          ]
+        : []),
 
-      ...(fixedTrackingPolicy === "SERIAL"
-        ? []
-        : [
+      // Màu sắc & Đại lý: Chỉ hiển thị trên vehicle
+      ...(currentTab === "vehicle"
+        ? [
             {
               key: "color",
               header: (
@@ -670,7 +1196,8 @@ export function TrackedGoodsPage({
                   }
                   align="center"
                   columnKey="color"
-                  queryKeyPrefix="inventory-serial-options"
+                  showBlankOption={true}
+                  queryKeyPrefix={`inventory-serial-options-${currentTab}`}
                   allFilters={tableState.columnFilters}
                   fetchOptions={fetchSerialOptions}
                 />
@@ -701,7 +1228,8 @@ export function TrackedGoodsPage({
                   }
                   align="center"
                   columnKey="dealer_code"
-                  queryKeyPrefix="inventory-serial-options"
+                  showBlankOption={true}
+                  queryKeyPrefix={`inventory-serial-options-${currentTab}`}
                   allFilters={tableState.columnFilters}
                   fetchOptions={fetchSerialOptions}
                 />
@@ -732,7 +1260,8 @@ export function TrackedGoodsPage({
                   }
                   align="center"
                   columnKey="dealer_name"
-                  queryKeyPrefix="inventory-serial-options"
+                  showBlankOption={true}
+                  queryKeyPrefix={`inventory-serial-options-${currentTab}`}
                   allFilters={tableState.columnFilters}
                   fetchOptions={fetchSerialOptions}
                 />
@@ -751,9 +1280,45 @@ export function TrackedGoodsPage({
                   "—"
                 ),
             },
-          ]),
+          ]
+        : []),
+      // Cột Ghi chú: Hiển thị trên tab lot và custom
+      ...(currentTab === "lot" || currentTab === "custom"
+        ? [
+            {
+              key: "notes",
+              header: (
+                <TableColumnHeaderFilter
+                  title={t("Ghi chú", "Ghi chú")}
+                  sortState={getSortState("notes")}
+                  onSortChange={(state: any) =>
+                    handleSortChange("notes", state)
+                  }
+                  searchValue={tableState.columnSearch["notes"] || ""}
+                  onSearchChange={(val: any) =>
+                    handleSearchChange("notes", val)
+                  }
+                  selectedFilters={tableState.columnFilters["notes"] || []}
+                  onFilterChange={(vals: any) =>
+                    handleFilterChange("notes", vals)
+                  }
+                  hideFilter={true}
+                  align="center"
+                  columnKey="notes"
+                  queryKeyPrefix={`inventory-serial-options-${currentTab}`}
+                  allFilters={tableState.columnFilters}
+                />
+              ),
+              size: 180,
+              enableResizing: true,
+              className: "align-middle text-left text-muted-foreground text-sm",
+              headerClassName: "text-center",
+              cell: (row: any) => row.notes || "—",
+            },
+          ]
+        : []),
     ],
-    [t, tableState, fetchSerialOptions],
+    [t, tableState, currentTab, fixedTrackingPolicy, fetchSerialOptions],
   );
 
   const filterConfig: FilterPanelConfig = useMemo(
@@ -780,7 +1345,19 @@ export function TrackedGoodsPage({
     setMissingSerialFilter(false);
     tableState.resetFilters();
     setPage(1);
-  }, [tableState]);
+    if (tabStatesRef.current[currentTab]) {
+      tabStatesRef.current[currentTab] = {
+        page: 1,
+        pageSize: 50,
+        search: "",
+        searchInput: "",
+        itemTypeFilter: "",
+        trackingPolicyFilter: "",
+        statusFilter: "",
+        missingSerialFilter: false,
+      };
+    }
+  }, [tableState, currentTab]);
 
   const rowActions = useCallback(
     (row: InventorySerialRow): ActionDropdownItem[] => [
@@ -848,14 +1425,21 @@ export function TrackedGoodsPage({
         </div>
       )}
       <SpreadsheetPageTemplate
-        title={title || t("Serial / Tracking")}
-        desc={desc || t("Danh sách sản phẩm / vật tư có tracking")}
-        icon={<Barcode className="h-5 w-5" />}
-        tableId={
-          fixedTrackingPolicy
-            ? `inventory-tracked-goods-${fixedTrackingPolicy.toLowerCase()}-table`
-            : "inventory-tracked-goods-table"
+        tabs={!fixedTrackingPolicy ? pageTabs : undefined}
+        activeTab={!fixedTrackingPolicy ? currentTab : undefined}
+        onTabChange={!fixedTrackingPolicy ? handleTabChange : undefined}
+        title={
+          title || t("nav.items.erpInventoryTrackingGroup", "Theo dõi hàng hoá")
         }
+        desc={
+          desc ||
+          t(
+            "inventoryTracking.desc",
+            "Quản lý định danh và truy xuất nguồn gốc xe, linh kiện, lô hàng và mã tùy chỉnh",
+          )
+        }
+        icon={<Barcode className="h-5 w-5" />}
+        tableId={tableId}
         items={items}
         columns={columns}
         getRowKey={(row) => row.id}
@@ -864,11 +1448,22 @@ export function TrackedGoodsPage({
         error={error}
         emptyLabel={t("Chưa có dữ liệu.")}
         minWidth={1200}
-        sortArray={[sortField]}
+        sortArray={
+          tableState.sorts.length > 0
+            ? tableState.sorts
+            : sortField
+              ? [sortField]
+              : []
+        }
         onSort={(key) => {
-          if (sortField === key) setSortField(`-${key}`);
-          else if (sortField === `-${key}`) setSortField("");
-          else setSortField(key);
+          const currentState = getSortState(key);
+          const nextState =
+            currentState === "none"
+              ? "asc"
+              : currentState === "asc"
+                ? "desc"
+                : "none";
+          handleSortChange(key, nextState);
         }}
         page={page}
         pageSize={pageSize}
@@ -880,6 +1475,8 @@ export function TrackedGoodsPage({
           setPage(1);
         }}
         onRefresh={() => query.refetch()}
+        activeFilterCount={activeFilterCount}
+        onClearAllFilters={resetAllFilters}
         filterConfig={filterConfig}
         filter={{
           state: {

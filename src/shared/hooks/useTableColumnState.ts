@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { useMemo } from "react";
 import { clearAllDropdownSearchStates } from "@/shared/components/DataTable/TableColumnHeaderFilter";
 import { decodeStateParam } from "@/shared/utils/pageUrl";
+import { ErpUrlQueryParam } from "@/shared/constants/urlParams";
 
 interface TableColumnState {
   sorts: string[];
@@ -48,7 +49,7 @@ export function getInitialTableState(tableId: string): TableColumnState {
   }
   try {
     const params = new URLSearchParams(window.location.search);
-    const cf = params.get("cf");
+    const cf = params.get(ErpUrlQueryParam.COLUMN_FILTERS);
     let columnFilters: Record<string, string[]> = {};
     if (cf) {
       const decoded = decodeStateParam<Record<string, string[]>>(cf);
@@ -56,7 +57,7 @@ export function getInitialTableState(tableId: string): TableColumnState {
         columnFilters = decoded;
       }
     }
-    const cs = params.get("cs");
+    const cs = params.get(ErpUrlQueryParam.COLUMN_SEARCH);
     let columnSearch: Record<string, string> = {};
     if (cs) {
       const decoded = decodeStateParam<Record<string, string>>(cs);
@@ -64,8 +65,20 @@ export function getInitialTableState(tableId: string): TableColumnState {
         columnSearch = decoded;
       }
     }
+    let sorts: string[] = [];
+    const sortsParam = params.get(ErpUrlQueryParam.SORTS);
+    if (sortsParam) {
+      try {
+        const parsed = JSON.parse(sortsParam);
+        if (Array.isArray(parsed)) sorts = parsed;
+      } catch {
+        const decoded = decodeStateParam<string[]>(sortsParam);
+        if (Array.isArray(decoded)) sorts = decoded;
+        else sorts = [sortsParam];
+      }
+    }
     initialTableStates[tableId] = {
-      sorts: [],
+      sorts,
       columnSearch,
       columnFilters,
     };

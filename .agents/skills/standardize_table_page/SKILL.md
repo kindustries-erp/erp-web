@@ -51,9 +51,11 @@ Format: `Array<[i18nKey, pageKey?]>` — nếu có `pageKey` thì breadcrumb đ�
 - Tạo file locale module đi kèm tại `src/core/locale/[module]/vi.ts` và `en.ts`.
 - Khi bảng không có dữ liệu, hiển thị `<EmptyState>` chuẩn hoặc truyền `emptyLabel={t("noData", "Không có dữ liệu")}`.
 
-## 4. Server-side Hook & Responsive PageSize — BẮT BUỘC
+## 4. Server-side Hook, React Query & Responsive PageSize — BẮT BUỘC
 
-- **Mặc định toàn hệ thống**: Filter, Sorting và Pagination **BẮT BUỘC** thực hiện ở **Server-side** thông qua custom hook `use[Module]List` kết nối TanStack Query.
+- **Mặc định toàn hệ thống**: Filter, Sorting và Pagination **BẮT BUỘC** thực hiện ở **Server-side** thông qua custom hook `use[Module]List` kết nối **TanStack React Query (`useQuery`)**.
+- **Enum Query Key Tập Trung**: **BẮT BUỘC** dùng Enum `ErpQueryKey` từ `@/shared/lib/queryKeys` (ví dụ: `ErpQueryKey.INVOICES_LIST`, `ErpQueryKey.VINFAST_PARTS_STOCK`, `ErpQueryKey.INVENTORY_STOCK_LIST`), **TUYỆT ĐỐI KHÔNG** hardcode string query key tự do.
+- **Thời Gian Cache Tiêu Chuẩn (`DEFAULT_STALE_TIME`)**: Sử dụng hằng số chuẩn `DEFAULT_STALE_TIME = 90_000` (1 phút 30 giây) từ `@/shared/lib/queryKeys` (hoặc để mặc định từ `queryClient.ts`).
 - **Khởi tạo `defaultPageSize` thích ứng theo Chiều cao màn hình (Screen Height)**:
   - Khi `window.innerHeight < 900px` (Laptop / màn hình phổ thông): Default `pageSize = 20`.
   - Khi `window.innerHeight >= 900px` (Desktop / Monitor lớn): Default `pageSize = 50`.
@@ -65,6 +67,7 @@ Format: `Array<[i18nKey, pageKey?]>` — nếu có `pageKey` thì breadcrumb đ�
 ```ts
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { ErpQueryKey, DEFAULT_STALE_TIME } from "@/shared/lib/queryKeys";
 // import { [module]Api } from "@/modules/[module]/api/[module]Api";
 
 export const getDefaultPageSize = (): number => {
@@ -74,7 +77,7 @@ export const getDefaultPageSize = (): number => {
   return 20;
 };
 
-export function use[Module]List() {
+export function use[Module]List(activeTab?: string) {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState<number>(getDefaultPageSize);
   const [sorts, setSorts] = useState<string[]>([]);
@@ -83,12 +86,23 @@ export function use[Module]List() {
   const [columnFilters, setColumnFilters] = useState<Record<string, string[]>>({});
   const [columnSearch, setColumnSearch] = useState<Record<string, string>>({});
 
-  const { data, isLoading, refetch } = useQuery({
-    queryKey: ["[module]-list", page, pageSize, sorts, dateFrom, dateTo, columnFilters, columnSearch],
+  const { data, isLoading, isFetching, refetch } = useQuery({
+    queryKey: [
+      ErpQueryKey.[MODULE]_LIST, // 👉 Dùng Enum chuẩn
+      activeTab,                  // 👉 Đưa tab vào queryKey để cache độc lập theo từng tab
+      page,
+      pageSize,
+      sorts,
+      dateFrom,
+      dateTo,
+      columnFilters,
+      columnSearch,
+    ],
     queryFn: () => {
-      // return [module]Api.getList({ page, pageSize, sorts, date_from: dateFrom || undefined, date_to: dateTo || undefined, column_filters: Object.keys(columnFilters).length ? JSON.stringify(columnFilters) : undefined, column_search: Object.keys(columnSearch).length ? JSON.stringify(columnSearch) : undefined });
+      // return [module]Api.getList({ page, pageSize, tab: activeTab, sorts, date_from: dateFrom || undefined, date_to: dateTo || undefined, column_filters: Object.keys(columnFilters).length ? JSON.stringify(columnFilters) : undefined, column_search: Object.keys(columnSearch).length ? JSON.stringify(columnSearch) : undefined });
       return Promise.resolve({ data: [], total: 0, totalPages: 0 });
     },
+    staleTime: DEFAULT_STALE_TIME, // 👉 1 phút 30 giây (90,000ms)
   });
 
   const setSort = (key: string, state: "asc" | "desc" | "none") => {
@@ -141,7 +155,7 @@ export function use[Module]List() {
     data: data?.data ?? [],
     total: data?.total ?? 0,
     totalPages: data?.totalPages ?? 0,
-    isLoading,
+    isLoading: isLoading || isFetching,
     page,
     setPage,
     pageSize,
@@ -244,7 +258,75 @@ const viewTabsNode = (
 );
 ```
 
-## 7. Mẫu code cơ bản (Table Page Boilerplate)
+## 7. Header Page Tabs Cấp Trang (Optional — Tùy Chọn Khi Có Nhiều Phân Hệ / Góc Nhìn Độc Lập)
+
+> 💡 **LƯU Ý QUAN TRỌNG**: Tính năng này là **OPTIONAL (TÙY CHỌN)**. Đối với các trang bảng đơn giản chỉ quản lý một danh mục duy nhất, **KHÔNG CẦN** khai báo prop `tabs`. Chỉ sử dụng khi trang nghiệp vụ cần phân rã thành các phân hệ lớn / các view độc lập (ví dụ trang Hóa đơn `erp-invoice` chia `Hóa đơn mua vào` [in], `Chi tiết mua vào` [in-lines], `Hóa đơn bán ra` [out], `Chi tiết bán ra` [out-lines]; hoặc trang Mua hàng chia `Đơn mua hàng` vs `Chi tiết dòng hàng`).
+
+### 7.1. Phân biệt rõ: Header Page Tabs vs Toolbar PillTabs
+
+| Đặc điểm | Header Page Tabs (`tabs` trên Template) | Toolbar PillTabs (`customActionsNode`) |
+| :--- | :--- | :--- |
+| **Vị trí** | Ngay dưới `PageHeader` (dưới Tiêu đề/Mô tả trang) | Nằm trên thanh công cụ của bảng (bên trái `customActionsNode`) |
+| **Mục đích** | Phân chia các **phân hệ / góc nhìn lớn cấp Trang** (có thể đổi schema cột, API endpoint, hoặc render các View/Section khác nhau) | Lọc nhanh các **trạng thái / phân loại nhỏ** trong cùng 1 tập dữ liệu (như Mới/Thay thế/Điều chỉnh, hoặc Thu/Chi) |
+| **Quy chuẩn** | **OPTIONAL (TÙY CHỌN)** — Chỉ dùng khi trang có nhiều phân hệ lớn | Bắt buộc khi trang có phân loại chiều dữ liệu/trạng thái cần switch nhanh |
+| **Cấu hình** | Props `tabs`, `activeTab`, `onTabChange` trên `<SpreadsheetPageTemplate>` | Component `<PillTabs>` bọc trong `customActionsNode` |
+
+### 7.2. Các quy tắc chuẩn bắt buộc khi sử dụng Header Page Tabs
+
+Khi một trang bảng quyết định kích hoạt `Header Page Tabs`, **BẮT BUỘC** tuân thủ 5 nguyên tắc sau:
+
+1. **Định nghĩa danh sách tabs (`TabItem[]`)**:
+   - Sử dụng type `TabItem` từ `@/shared/components/PageLayout`:
+   ```tsx
+   import type { TabItem } from "@/shared/components/PageLayout";
+
+   const pageTabs: TabItem[] = useMemo(() => [
+     { value: "in", label: t("inbound", "Hóa đơn mua vào") },
+     { value: "in-lines", label: t("inboundLines", "Chi tiết mua vào") },
+     { value: "out", label: t("outbound", "Hóa đơn bán ra") },
+     { value: "out-lines", label: t("outboundLines", "Chi tiết bán ra") },
+   ], [t]);
+   ```
+   - 100% `label` phải bọc trong hàm dịch `t(...)`.
+
+2. **Đồng bộ 2 chiều với URL Query Param (`?tab=...`)**:
+   - Tab hiện tại bắt buộc được đọc từ URL khi load trang (để hỗ trợ reload và lưu bookmark/link):
+   ```tsx
+   const [currentTab, setCurrentTab] = useState<string>(() => {
+     const params = new URLSearchParams(window.location.search);
+     return params.get("tab") || "in"; // "in" là default tab
+   });
+
+   const handleTabChange = (newTab: string) => {
+     setCurrentTab(newTab);
+     const url = new URL(window.location.href);
+     if (newTab === "in") {
+       url.searchParams.delete("tab"); // Default tab có thể xóa param cho URL gọn gàng
+     } else {
+       url.searchParams.set("tab", newTab);
+     }
+     window.history.replaceState(null, "", url.toString());
+   };
+   ```
+
+3. **Reset Phân trang & Cách ly Bộ lọc (State & Filter Isolation)**:
+   - **BẮT BUỘC reset trang về 1 (`setPage(1)`)** ngay khi chuyển tab.
+   - **Cách ly bộ lọc (Tránh Filter Bleeding)**: Nếu giữa các tab có tập cột hoặc ý nghĩa dữ liệu khác nhau (như Header vs Lines), cần reset filter (`clearAllFilters()`) hoặc lưu giữ state filter độc lập theo từng tab key, tuyệt đối không để filter cột của tab này áp dụng sai sang tab kia.
+
+4. **Phân tách `tableId` theo từng Tab**:
+   - Hệ thống tự động lưu cấu hình độ rộng cột, thứ tự cột và ẩn/hiện cột vào App Setting (`core_user_preferences`) qua `tableId`.
+   - Nếu mỗi tab có cấu trúc cột khác nhau, **BẮT BUỘC** phân tách `tableId` theo tab (ví dụ: `tableId={`erp-invoices-table-${currentTab}`}`).
+   - Nếu không phân tách, cấu hình cột của tab này sẽ ghi đè và làm lỗi hiển thị cột của tab kia.
+
+5. **Tích hợp linh hoạt với View Switcher hoặc Đổi Column Set**:
+   - **Cách 1 (Cùng 1 Template, đổi Columns & API)**: Truyền `columns` và `items` tương ứng theo `currentTab`.
+   - **Cách 2 (Đa Template / Sub-sections như `ErpInvoicesTab`)**: Render các section con ẩn/hiện (`hidden` hoặc conditional mount) theo `currentTab`, mỗi section truyền cùng bộ `tabs={pageTabs}`, `activeTab={currentTab}` và `onTabChange={handleTabChange}` để giữ thanh tab đồng bộ xuyên suốt.
+
+6. **Zero-latency Tab Switching qua React Query & `ErpQueryKey`**:
+   - **BẮT BUỘC** đưa `currentTab` / `direction` / `subview` vào `queryKey` (ví dụ `queryKey: [ErpQueryKey.INVOICES_LIST, currentTab, page, ...]`).
+   - Nhờ đó, TanStack Query tự động lưu cache riêng cho từng tab trong `DEFAULT_STALE_TIME` (90s). Khi người dùng chuyển đổi qua lại giữa các tab (`in` $\leftrightarrow$ `out` $\leftrightarrow$ `lines`), dữ liệu được hiển thị **ngay lập tức 0ms** từ cache mà không phải fetch lại API và không hiển thị loading spinner gián đoạn thao tác.
+
+## 8. Mẫu code cơ bản (Table Page Boilerplate)
 
 ```tsx
 import React, { useState, useMemo } from "react";
@@ -258,6 +340,7 @@ import { Badge } from "@/shared/components/ui/badge";
 import { Eye, Pencil, FileText, Trash2, Download } from "lucide-react";
 import type { DataTableColumn } from "@/shared/components/DataTable";
 import type { ActionDropdownItem } from "@/shared/components/ActionDropdown";
+import type { TabItem } from "@/shared/components/PageLayout";
 // import { use[Module]List } from "@/modules/[module]/hooks/use[Module]List";
 // import { [Module]DetailDrawer } from "@/modules/[module]/components/[Module]DetailDrawer";
 // import { [module]Api } from "@/modules/[module]/api/[module]Api";
@@ -452,6 +535,10 @@ export function ExampleTablePage() {
   return (
     <>
       <SpreadsheetPageTemplate<ExampleRow>
+        // (Tùy chọn) Header Page Tabs: Chỉ truyền khi trang có nhiều phân hệ / góc nhìn lớn
+        // tabs={pageTabs}
+        // activeTab={currentTab}
+        // onTabChange={handleTabChange}
         title={t("pageTitle", "Danh sách dữ liệu")}
         desc={t("pageDesc", "Mô tả danh sách")}
         icon={<FileText className="w-5 h-5 text-primary" />}
@@ -506,8 +593,15 @@ export function ExampleTablePage() {
 - [ ] Đã đăng ký `SECTION_ROOTS` (`labelKey`, `group`) và `BREADCRUMBS` (3 cấp chuẩn) trong `appStore.ts` chưa?
 - [ ] Đã thêm i18n key cho `nav/` và `breadcrumb/` (`vi.ts`, `en.ts`) chưa?
 
-### Server-side Hook & Responsive PageSize
+### Header Page Tabs (Tùy chọn - Khi trang có đa phân hệ / views lớn)
+- [ ] Nếu trang có nhiều phân hệ lớn (ví dụ: Hóa đơn mua vào vs Bán ra vs Lines, Đơn hàng vs Dòng chi tiết), đã truyền `tabs={pageTabs}`, `activeTab` và `onTabChange` vào `<SpreadsheetPageTemplate>` chưa?
+- [ ] Đã đồng bộ URL query param `?tab=...` (hỗ trợ bookmark/reload) và reset `setPage(1)` khi chuyển tab chưa?
+- [ ] Đã phân tách `tableId` theo từng tab (ví dụ: `tableId={`[module]-table-${activeTab}`}`) để tránh ghi đè cấu hình ẩn/hiện và độ rộng cột trong App Settings (`core_user_preferences`) chưa?
+- [ ] Đã kiểm tra cách ly bộ lọc (Filter Isolation), tránh filter của tab này áp dụng sai sang tab kia chưa?
+
+### Server-side Hook, React Query & Responsive PageSize
 - [ ] Mặc định **100% BẢNG ĐÃ ƯU TIÊN SERVER-SIDE SORTING & FILTERING** (thông qua hook `use[Module]List` + API `getColumnOptions`) chưa?
+- [ ] **React Query & ErpQueryKey Enum**: Hook đã dùng `useQuery` kết hợp `ErpQueryKey` enum từ `@/shared/lib/queryKeys`, hưởng `staleTime: DEFAULT_STALE_TIME` (90s) và đưa `activeTab` / `direction` vào `queryKey` để hỗ trợ Zero-latency Tab Switching chưa?
 - [ ] Hook đã dùng `getDefaultPageSize` để gán default pageSize theo chiều cao màn hình (`< 900px` -> `20`, `>= 900px` -> `50`) và hỗ trợ `pageSizeOptions = [20, 50, 100, 200]` chưa?
 
 ### Page Template & App Settings

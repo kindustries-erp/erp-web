@@ -1,25 +1,25 @@
 ---
 name: vinfast-parts-stock
-description: Module tri thức Giao diện Kho Phụ tùng VinFast (Ô tô & Xe máy) trong erp-web. Chứa toàn bộ cấu trúc UI, routing (vinfast-parts-oto-stock, vinfast-parts-xemay-stock), SpreadsheetPageTemplate, sổ cái FIFO chi tiết FifoFlatTable, sync drawer, background export và UX tương tác.
+description: Module tri thức Giao diện Kho Phụ tùng VinFast (Tổng quan, Ô tô & Xe máy) trong erp-web. Chứa toàn bộ cấu trúc UI, 3 Header Tabs (dashboard, oto, xemay), SpreadsheetPageTemplate, sổ cái FIFO chi tiết FifoFlatTable, sync drawer, background export và UX tương tác.
 ---
 
-# 🎨 Module Tri Thức: Giao Diện Kho Phụ Tùng VinFast (Ô tô & Xe máy) - Frontend (`erp-web`)
+# 🎨 Module Tri Thức: Giao Diện Kho Phụ Tùng VinFast - Frontend (`erp-web`)
 
 ## 1. Tổng quan & Đăng ký Giao diện
 
-Module Kho Phụ Tùng VinFast cung cấp giao diện quản lý tồn kho và sổ cái chi tiết theo chuẩn bảng tính Spreadsheet Excel cho 2 phân hệ độc lập: **Kho Phụ Tùng Ô tô** và **Kho Phụ Tùng Xe Máy**.
+Module Kho Phụ Tùng VinFast cung cấp giao diện quản lý tồn kho, sổ cái chi tiết và báo cáo tổng quan dạng Header Tabs đồng bộ:
+1. **`dashboard`** ("Tổng quan"): KPI Cards & Trend Charts Mua/Bán theo chu kỳ (Tháng/Tuần).
+2. **`oto`** ("Phụ tùng ôtô"): Quản lý kho phụ tùng Ô tô VinFast.
+3. **`xemay`** ("Phụ tùng xe máy"): Quản lý kho phụ tùng Xe máy điện VinFast.
 
 ### 1.1. Cấu hình Routing & Navigation
-- **PageKeys**:
-  - `vinfast-parts-oto-stock`: Quản lý kho phụ tùng Ô tô VinFast.
-  - `vinfast-parts-xemay-stock`: Quản lý kho phụ tùng Xe máy điện VinFast.
-- **Sidebar Group**: `vinfast` (khai báo trong `src/core/config/appStore.ts` tại `PAGE_DEFINITIONS`).
-- **Tên hiển thị tab / Menu i18n**:
-  - `nav.items.vinfastPartsOtoStock` ("Kho phụ tùng ô tô")
-  - `nav.items.vinfastPartsXemayStock` ("Kho phụ tùng xe máy")
-- **Lazy Routes trong `src/App.tsx`**:
-  - `vinfast-parts-oto-stock` trỏ tới `VinfastPartsOtoStockPage.tsx`.
-  - `vinfast-parts-xemay-stock` trỏ tới `VinfastPartsMotoStockPage.tsx`.
+- **PageKey chính**: `vinfast-parts-stock` (khai báo trong `src/shared/types/index.ts`).
+- **Sidebar**: Single `NavItem` trực tiếp `Phụ tùng Vinfast` (`t("nav.items.vinfastPartsGroup")`), không có sub-menus dropdown.
+- **Header Tabs**:
+  - `dashboard`: `VinfastPartsDashboardPage` tích hợp `DashboardTemplate`.
+  - `oto`: `VinfastPartsStockTableView` với state độc lập `vinfast-parts-stock-oto`.
+  - `xemay`: `VinfastPartsStockTableView` với state độc lập `vinfast-parts-stock-xemay`.
+- **URL Query Param Sync**: `?tab=dashboard`, `?tab=oto`, `?tab=xemay`.
 - **Quyền hạn (RBAC)**: `useHasPermission('vinfast', 'read')`.
 
 ---
@@ -29,14 +29,15 @@ Module Kho Phụ Tùng VinFast cung cấp giao diện quản lý tồn kho và s
 ```text
 src/
 ├── pages/
-│   ├── VinfastPartsOtoStockPage.tsx                       # Entry point trang Kho phụ tùng Ô tô (vehicleType="oto")
-│   ├── VinfastPartsMotoStockPage.tsx                      # Entry point trang Kho phụ tùng Xe máy (vehicleType="xemay")
+│   ├── VinfastPartsStockPage.tsx                          # Unified Entry Point quản lý 3 Header Tabs (dashboard, oto, xemay)
+│   ├── VinfastPartsDashboardPage.tsx                      # Dashboard View (KPI Cards, Sparklines, Bar Charts)
+│   ├── VinfastPartsOtoStockPage.tsx                       # Backward-compatible wrapper (initialTab="oto")
+│   ├── VinfastPartsMotoStockPage.tsx                      # Backward-compatible wrapper (initialTab="xemay")
 │   ├── api/
 │   │   └── vinfastPartsStockExportApi.ts                  # API client cho background export kho phụ tùng
 │   ├── hooks/
 │   │   └── useVinfastPartsStockExportProgress.ts          # Hook kết nối SSE tiến độ export Excel nền
 │   └── components/
-│       ├── VinfastPartsStockTemplate.tsx                  # Template chung dạng Spreadsheet cho cả Ô tô và Xe máy
 │       ├── VinfastPartsStockDetailDrawer.tsx              # Drawer xem chi tiết thông tin phụ tùng và lịch sử sổ cái
 │       ├── VinfastPartsSyncDrawer.tsx                     # Drawer kích hoạt đồng bộ hóa đơn IN/OUT và theo dõi tiến độ SSE
 │       ├── VinfastPartsStockExportDrawer.tsx              # Drawer quản lý job xuất Excel ngầm và lịch sử tải file

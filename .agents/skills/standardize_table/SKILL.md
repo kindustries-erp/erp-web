@@ -107,6 +107,12 @@ const columns: DataTableColumn<ExampleRow>[] = useMemo(() => [
 - **Bảng Client-side**: Truyền `items: rawList` vào `createColumnHeaderFilter({ listHook, items: rawList })` và dùng `filterClientItems(rawList, listHook, { dateField: "label" })` để tự động lọc, search, sort 100% không sót tính năng nào.
 - **Khung Viền Table (No Double Border)**: Khi đặt `<DataTable>` trong Card hoặc Container, **KHÔNG ĐƯỢC bọc thêm thẻ `div className="border rounded-lg ..."` bên ngoài**, vì `DataTable` đã có viền và khung chuẩn mực bên trong, tránh lỗi 2 lớp border đè lên nhau.
 - **Cột thường**: TUYỆT ĐỐI KHÔNG set `hideFilter: true` (hoặc `hideFilter={true}`), để đảm bảo user luôn nhìn thấy search box và danh sách checkbox options.
+- **Data Fetching, React Query & Enum QueryKey Chuẩn Hóa**:
+  - Mọi bảng dữ liệu (màn hình Page, Drawer nhúng, hoặc Table Tabs) **BẮT BUỘC** sử dụng **TanStack React Query (`useQuery` / `useAppQuery`)** để nạp và quản lý dữ liệu.
+  - **BẮT BUỘC dùng Enum `ErpQueryKey`** từ `@/shared/lib/queryKeys` (ví dụ: `ErpQueryKey.INVOICES_LIST`, `ErpQueryKey.VINFAST_PARTS_STOCK`, `ErpQueryKey.INVENTORY_STOCK_LIST`). **TUYỆT ĐỐI KHÔNG** hardcode chuỗi string tự do.
+  - **Thời Gian Cache Tiêu Chuẩn (`DEFAULT_STALE_TIME`)**: Mọi query bảng tuân thủ thời gian cache chuẩn **1 phút 30 giây (`90_000` ms)** kế thừa từ `queryClient.ts` hoặc truyền `staleTime: DEFAULT_STALE_TIME`.
+  - **Zero-latency Tab Switching**: Khi một màn hình có nhiều Tab hoặc Sub-view, `queryKey` **BẮT BUỘC** phải chứa tham số phân biệt tab (`tab`, `direction`, `variant`...). Nhờ đó, dữ liệu của mỗi tab được lưu cache riêng biệt trong 90s, giúp người dùng chuyển đổi qua lại giữa các tab tức thì 0ms mà không bị gọi lại API dư thừa hoặc giật lag layout.
+
 - **NGUYÊN TẮC: LUÔN ƯU TIÊN SERVER-SIDE SORTING & FILTERING**:
   - Mọi bảng trong hệ thống (cả màn hình Page lẫn Drawer/Modal) **MẶC ĐỊNH BẮT BUỘC** phải ưu tiên triển khai **Server-side Filter & Sort** qua API backend (hook TanStack Query + API `getColumnOptions`).
   - Khi xử lý bảng thống kê ở Dashboard hoặc Drawer nháp client, dùng cơ chế Client-side Auto Extraction với `filterClientItems`.
@@ -457,9 +463,12 @@ Bất kỳ cột nào liên quan đến **Status**, **State** thì bắt buộc 
 }
 ```
 
-## 8. Subtotal Row (Dòng tổng cộng)
+## 8. Table Header & Subtotal Row Glassmorphism (Hiệu ứng Kính Mờ cho Header & Dòng Tổng Cộng)
 
-Đối với các bảng có cột mang giá trị số, **bắt buộc phải có dòng `summaryRow`** ở cuối để hiển thị tổng.
+Cả thanh tiêu đề bảng (**`TableHeader`**) lẫn dòng tổng cộng (**`summaryRow` / `TableFooter`**) đều được tích hợp sẵn hiệu ứng kính mờ trong suốt (**Glassmorphism**) cao cấp:
+- **`TableHeader`**: Sử dụng `table-header-glass bg-muted/80 backdrop-blur-sm sticky top-0 z-20 border-b border-border shadow-[0_1px_0_0_var(--border-light)]`. Khi cuộn dữ liệu, các hàng nội dung lướt mượt mà bên dưới thanh tiêu đề mà không bị che khuất thô cứng.
+- **Sticky Column Headers (STT / Checkbox / Actions)**: Tự động kế thừa `table-header-glass bg-muted/80 backdrop-blur-sm` khi cuộn ngang.
+- **`summaryRow` (`TableFooter`)**: Đối với các bảng có cột mang giá trị số, **bắt buộc phải có dòng `summaryRow`** ở cuối để hiển thị tổng, sử dụng `table-footer-glass bg-muted/80 backdrop-blur-sm sticky bottom-0 z-20 border-t border-border font-semibold shadow-[0_-1px_0_0_var(--border-light)]`.
 
 **Mẫu code cho `summaryRow`**:
 
@@ -634,6 +643,7 @@ Khi một bảng dữ liệu có nhiều góc nhìn tra cứu (như Hóa đơn �
 - [ ] Cột đầu tiên (STT) rộng đúng `40px`, **BẮT ĐẦU TỪ 1 VÀ CĂN GIỮA TUYỆT ĐỐI CẢ HEADER VÀ CELL** (`header: <span className="w-full block text-center">#</span>`, `headerClassName: "text-center"`, `className: "text-center"`, `cell: (_, idx) => <span className="w-full block text-center">{idx}</span>`) chưa?
 - [ ] Phân trang đã hỗ trợ `pageSizeOptions = [20, 50, 100, 200]` và khởi tạo `defaultPageSize` linh hoạt theo chiều cao màn hình (Screen Height `< 900px` -> `20`, `>= 900px` -> `50`) chưa?
 - [ ] Mặc định **100% BẢNG ĐÃ ƯU TIÊN SERVER-SIDE SORTING & FILTERING** (dùng `fetchOptions` gọi API `getColumnOptions` backend và TanStack Query) chưa? (Chỉ dùng client-side khi User chỉ định rõ ràng).
+- [ ] **React Query & ErpQueryKey Enum**: Đã dùng `useQuery` / `useAppQuery` kết hợp `ErpQueryKey` enum từ `@/shared/lib/queryKeys`, hưởng `staleTime: DEFAULT_STALE_TIME` (90s) và đưa tab param vào `queryKey` để hỗ trợ Zero-latency Tab Switching chưa?
 - [ ] TUYỆT ĐỐI không dùng `onRowClick` mở detail, chỉ mở từ `<TableText>` hoặc Floated Action Menu / Right-Click Context Menu (`rowActions`) chưa?
 - [ ] TUYỆT ĐỐI không định nghĩa cột action tĩnh thủ công `{ key: "actions" }` trong `columns`, đã truyền prop `rowActions` trên `<SpreadsheetPageTemplate>` hoặc `actions={rowActions}`, `enableRowHoverActions={true}`, `hideLegacyActionColumn={true}` trên `<StandardTable>` chưa?
 - [ ] Mảng `rowActions` đã có 2 actions đầu tiên là **Xem chi tiết** (`openDetail(id, "view")` — Icon `Eye` 👁️) và **Chỉnh sửa** (`openDetail(id, "edit")` — Icon `Pencil` ✏️) để map vào 2 nút Quick Actions trên Floated Bar chưa?

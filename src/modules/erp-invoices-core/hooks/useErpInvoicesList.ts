@@ -1,4 +1,6 @@
 import { useState, useCallback, useEffect, useMemo, useRef } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { ErpQueryKey, DEFAULT_STALE_TIME } from "@/shared/lib/queryKeys";
 import { erpInvoicesCoreApi, type ErpInvoice } from "../api/erpInvoicesCoreApi";
 import {
   useErpInvoiceListStore,
@@ -23,11 +25,6 @@ export function useErpInvoicesList(
   useEffect(() => {
     setDirection(initialDirection);
   }, [initialDirection]);
-
-  const [invoices, setInvoices] = useState<ErpInvoice[]>([]);
-  const [total, setTotal] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
-  const [loading, setLoading] = useState(false);
 
   const store = useErpInvoiceListStore();
   const state =
@@ -64,63 +61,55 @@ export function useErpInvoicesList(
     debounceRef.current = setTimeout(fn, 400);
   };
 
-  const loadInvoices = useCallback(async () => {
-    setLoading(true);
-    try {
-      let apiDirection: "IN" | "OUT" | undefined = undefined;
-      if (
-        direction === "IN" ||
-        direction === "IN_2" ||
-        direction === "CHECKPOINT_IN"
-      ) {
-        apiDirection = "IN";
-      } else if (
-        direction === "OUT" ||
-        direction === "OUT_2" ||
-        direction === "CHECKPOINT_OUT"
-      ) {
-        apiDirection = "OUT";
-      }
+  let apiDirection: "IN" | "OUT" | undefined = undefined;
+  if (
+    direction === "IN" ||
+    direction === "IN_2" ||
+    direction === "CHECKPOINT_IN"
+  ) {
+    apiDirection = "IN";
+  } else if (
+    direction === "OUT" ||
+    direction === "OUT_2" ||
+    direction === "CHECKPOINT_OUT"
+  ) {
+    apiDirection = "OUT";
+  }
 
-      const effectiveColumnFilters: Record<string, string[]> = {
-        ...tableState.columnFilters,
-      };
-      const taxStatusList = TAX_TAB_TO_STATUS[state.activeTaxTab || "all"];
-      if (taxStatusList && taxStatusList.length > 0) {
-        effectiveColumnFilters.taxInvoiceStatus = taxStatusList;
-      } else {
-        delete effectiveColumnFilters.taxInvoiceStatus;
-      }
-
-      const res = await erpInvoicesCoreApi.list({
-        direction: apiDirection,
-        partner_tax_code: partnerTaxCode,
-        search: state.search || undefined,
-        seller_name: state.seller_name || undefined,
-        buyer_name: state.buyer_name || undefined,
-        date_from: state.dateFrom ? `${state.dateFrom}T00:00:00` : undefined,
-        date_to: state.dateTo ? `${state.dateTo}T23:59:59` : undefined,
-        status: state.status || undefined,
-        tag_id: state.tag_id || undefined,
-        page: state.page,
-        pageSize: state.pageSize,
-        sort_by: sortBy || undefined,
-        sort_order: sortOrder || undefined,
-        column_search: JSON.stringify(tableState.columnSearch),
-        column_filters: JSON.stringify(effectiveColumnFilters),
-      });
-      setInvoices(res.items);
-      setTotal(res.total);
-      setTotalPages(res.totalPages);
-    } catch {
-      setInvoices([]);
-    } finally {
-      setLoading(false);
+  const effectiveColumnFilters = useMemo(() => {
+    const filters: Record<string, string[]> = {
+      ...tableState.columnFilters,
+    };
+    const taxStatusList = TAX_TAB_TO_STATUS[state.activeTaxTab || "all"];
+    if (taxStatusList && taxStatusList.length > 0) {
+      filters.taxInvoiceStatus = taxStatusList;
+    } else {
+      delete filters.taxInvoiceStatus;
     }
+    return filters;
+  }, [tableState.columnFilters, state.activeTaxTab]);
+
+  const queryParams = useMemo(() => {
+    return {
+      direction: apiDirection,
+      partner_tax_code: partnerTaxCode || undefined,
+      search: state.search || undefined,
+      seller_name: state.seller_name || undefined,
+      buyer_name: state.buyer_name || undefined,
+      date_from: state.dateFrom ? `${state.dateFrom}T00:00:00` : undefined,
+      date_to: state.dateTo ? `${state.dateTo}T23:59:59` : undefined,
+      status: state.status || undefined,
+      tag_id: state.tag_id || undefined,
+      page: state.page,
+      pageSize: state.pageSize,
+      sort_by: sortBy || undefined,
+      sort_order: sortOrder || undefined,
+      column_search: JSON.stringify(tableState.columnSearch),
+      column_filters: JSON.stringify(effectiveColumnFilters),
+    };
   }, [
-    direction,
+    apiDirection,
     partnerTaxCode,
-    state.activeTaxTab,
     state.search,
     state.seller_name,
     state.buyer_name,
@@ -133,12 +122,41 @@ export function useErpInvoicesList(
     sortBy,
     sortOrder,
     tableState.columnSearch,
-    tableState.columnFilters,
+    effectiveColumnFilters,
   ]);
 
-  useEffect(() => {
-    void loadInvoices();
-  }, [loadInvoices]);
+  const { data, isLoading, isFetching, refetch } = useQuery({
+    queryKey: [
+      ErpQueryKey.INVOICES_LIST,
+      direction,
+      partnerTaxCode,
+      state.activeTaxTab,
+      state.search,
+      state.seller_name,
+      state.buyer_name,
+      state.dateFrom,
+      state.dateTo,
+      state.status,
+      state.tag_id,
+      state.page,
+      state.pageSize,
+      sortBy,
+      sortOrder,
+      tableState.columnSearch,
+      effectiveColumnFilters,
+    ],
+    queryFn: () => erpInvoicesCoreApi.list(queryParams),
+    staleTime: DEFAULT_STALE_TIME,
+  });
+
+  const invoices: ErpInvoice[] = data?.items || [];
+  const total = data?.total || 0;
+  const totalPages = data?.totalPages || 0;
+  const loading = isLoading || isFetching;
+
+  const loadInvoices = useCallback(async () => {
+    await refetch();
+  }, [refetch]);
 
   const activeFilterCount = [
     !!state.period || !!state.dateFrom || !!state.dateTo,
@@ -222,6 +240,8 @@ export function useErpInvoicesList(
     total,
     totalPages,
     loading,
+    isLoading,
+    isFetching,
     sortBy,
     sortOrder,
     handleSort: (key: string) => {
@@ -230,6 +250,7 @@ export function useErpInvoicesList(
     },
     filterPanel,
     loadInvoices,
+    refetch,
     STATUS_OPTIONS,
     tableState,
     activeTaxTab: state.activeTaxTab || "all",

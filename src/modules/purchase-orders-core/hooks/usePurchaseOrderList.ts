@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { useT } from "@/core/i18n";
 import {
   useFilterPanel,
@@ -9,10 +9,17 @@ import { useOperationalListQuery } from "@/modules/operational/hooks/useOperatio
 import { useTags } from "@/modules/tags/hooks/useTags";
 import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
 
+export const getDefaultPageSize = (): number => {
+  if (typeof window !== "undefined" && window.innerHeight >= 900) {
+    return 50;
+  }
+  return 20;
+};
+
 export function usePurchaseOrderList() {
   const t = useT();
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(50);
+  const [pageSize, setPageSize] = useState<number>(getDefaultPageSize);
   const [purchaseSort, setPurchaseSort] = useState<string>("");
   const [expandedRowIds, setExpandedRowIds] = useState<Record<string, boolean>>(
     {},
@@ -147,6 +154,10 @@ export function usePurchaseOrderList() {
         : undefined,
   });
 
+  useEffect(() => {
+    setPage(1);
+  }, [tableState.columnFilters, tableState.columnSearch, tableState.sorts]);
+
   const toggleExpandRow = useCallback((id: string) => {
     setExpandedRowIds((prev) => ({
       ...prev,
@@ -154,16 +165,36 @@ export function usePurchaseOrderList() {
     }));
   }, []);
 
-  const togglePurchaseSort = useCallback((field: string) => {
-    setPurchaseSort((prev) => {
-      let next: string;
-      if (prev === field) next = `-${field}`;
-      else if (prev === `-${field}`) next = "";
-      else next = field;
-      return next;
+  const togglePurchaseSort = useCallback(
+    (field: string) => {
+      const current = tableState.sorts.find(
+        (s) => s === field || s === `-${field}`,
+      );
+      const nextState: "asc" | "desc" | "none" = !current
+        ? "asc"
+        : current.startsWith("-")
+          ? "none"
+          : "desc";
+      tableState.setSort(field, nextState);
+      setPage(1);
+    },
+    [tableState],
+  );
+
+  const activeFilterCount = useMemo(() => {
+    return tableState.activeFilterCount + filter.activeFilterCount;
+  }, [tableState.activeFilterCount, filter.activeFilterCount]);
+
+  const clearAllFilters = useCallback(() => {
+    filter.resetAll();
+    tableState.resetFilters();
+    tableState.sorts.forEach((s) => {
+      const key = s.startsWith("-") ? s.slice(1) : s;
+      tableState.setSort(key, "none");
     });
+    setPurchaseSort("");
     setPage(1);
-  }, []);
+  }, [filter, tableState]);
 
   return {
     page,
@@ -183,5 +214,7 @@ export function usePurchaseOrderList() {
     filter,
     listQuery,
     tableState,
+    activeFilterCount,
+    clearAllFilters,
   };
 }

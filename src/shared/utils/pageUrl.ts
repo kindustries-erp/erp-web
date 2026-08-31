@@ -1,7 +1,9 @@
 import { PageKey } from "@/shared/types";
+import { ErpUrlQueryParam } from "@/shared/constants/urlParams";
 
 export const ALL_PAGE_KEYS: PageKey[] = [
   "dashboard",
+  "opex",
 
   "purchasing",
   "erp-inventory-stock",
@@ -35,6 +37,7 @@ export const ALL_PAGE_KEYS: PageKey[] = [
   "settings-cash-fund",
   "settings-branch",
   "erp-production",
+  "erp-finished-goods",
   "erp-sales-orders",
   "sales-report-dashboard",
   "erp-goods-issues",
@@ -46,9 +49,9 @@ export const ALL_PAGE_KEYS: PageKey[] = [
   "garage-receivables",
   "garage-payables",
   "garage-customers",
+  "garage-partners",
   "after-sales",
   "purchasing-report-dashboard",
-  "vinfast-invoice-settlement",
 ];
 
 const LEGACY_SLUGS: Record<string, PageKey> = {
@@ -57,6 +60,7 @@ const LEGACY_SLUGS: Record<string, PageKey> = {
   "email-hop-thu": "email-inbox",
   "erp-invoices-in": "erp-invoices",
   "erp-invoices-out": "erp-invoices",
+  "garage-customers": "garage-partners",
 };
 
 export interface PageUrlParsedState {
@@ -74,28 +78,116 @@ export interface PageUrlParsedState {
   sorts: string[];
 }
 
+import { escapeParamToken, unescapeParamToken } from "./urlParamHelper";
+
 export function encodeStateParam(obj: unknown): string {
+  if (!obj) return "";
   try {
-    const json = JSON.stringify(obj);
-    if (typeof window !== "undefined" && typeof window.btoa === "function") {
-      return window.btoa(unescape(encodeURIComponent(json)));
+    // 1. Array (e.g. sorts: ['-date', 'name'])
+    if (Array.isArray(obj)) {
+      if (obj.length === 0) return "";
+      return obj.map((item) => escapeParamToken(String(item))).join(",");
     }
-    return "";
+
+    // 2. Object (e.g. columnFilters: { status: ['A', 'B'] } or columnSearch: { name: 'vin' })
+    if (typeof obj === "object" && obj !== null) {
+      const entries = Object.entries(obj as Record<string, unknown>).filter(
+        ([, v]) => {
+          if (v === undefined || v === null || v === "") return false;
+          if (Array.isArray(v) && v.length === 0) return false;
+          return true;
+        },
+      );
+
+      if (entries.length === 0) return "";
+
+      const segments: string[] = [];
+      for (const [key, val] of entries) {
+        const escapedKey = escapeParamToken(key);
+        if (Array.isArray(val)) {
+          const escapedValues = val
+            .map((item) => escapeParamToken(String(item)))
+            .join(",");
+          segments.push(`${escapedKey}:[${escapedValues}]`);
+        } else {
+          segments.push(`${escapedKey}:${escapeParamToken(String(val))}`);
+        }
+      }
+      return segments.join("|");
+    }
+
+    return String(obj);
   } catch {
     return "";
   }
 }
 
 export function decodeStateParam<T = unknown>(str: string): T | null {
+  if (!str) return null;
+  const trimmed = str.trim();
+  if (!trimmed) return null;
+
   try {
-    if (!str) return null;
-    let json = "";
-    if (typeof window !== "undefined" && typeof window.atob === "function") {
-      json = decodeURIComponent(escape(window.atob(str)));
-    } else {
-      return null;
+    // 1. Base64 legacy payload (starts with ey...)
+    if (
+      trimmed.startsWith("ey") &&
+      typeof window !== "undefined" &&
+      typeof window.atob === "function"
+    ) {
+      try {
+        const json = decodeURIComponent(escape(window.atob(trimmed)));
+        return JSON.parse(json) as T;
+      } catch {
+        // Fall through
+      }
     }
-    return JSON.parse(json) as T;
+
+    // 2. Standard JSON payload (starts with { or [)
+    if (
+      (trimmed.startsWith("{") && trimmed.endsWith("}")) ||
+      (trimmed.startsWith("[") && trimmed.endsWith("]"))
+    ) {
+      try {
+        return JSON.parse(trimmed) as T;
+      } catch {
+        // Fall through
+      }
+    }
+
+    // 3. Compact Key-Value pipeline format (contains :)
+    if (trimmed.includes(":")) {
+      const result: Record<string, any> = {};
+      const pairs = trimmed.split("|");
+      for (const pair of pairs) {
+        if (!pair) continue;
+        const colonIdx = pair.indexOf(":");
+        if (colonIdx === -1) continue;
+        const key = unescapeParamToken(pair.slice(0, colonIdx).trim());
+        const rawVal = pair.slice(colonIdx + 1).trim();
+        if (!key) continue;
+
+        if (rawVal.startsWith("[") && rawVal.endsWith("]")) {
+          const inner = rawVal.slice(1, -1);
+          result[key] = inner
+            ? inner.split(",").map((v) => unescapeParamToken(v.trim()))
+            : [];
+        } else if (rawVal.includes(",")) {
+          result[key] = rawVal
+            .split(",")
+            .map((v) => unescapeParamToken(v.trim()));
+        } else {
+          result[key] = unescapeParamToken(rawVal);
+        }
+      }
+      return result as T;
+    }
+
+    // 4. Comma-separated array (e.g. sorts "-invoiceDate,invoiceNo")
+    if (trimmed.includes(",")) {
+      return trimmed.split(",").map((v) => unescapeParamToken(v.trim())) as T;
+    }
+
+    return null;
   } catch {
     return null;
   }
@@ -111,7 +203,7 @@ export function pageToPath(
   const searchParams = new URLSearchParams();
 
   if (tab) {
-    searchParams.set("tab", tab);
+    searchParams.set(ErpUrlQueryParam.TAB, tab);
   }
 
   if (extraParams) {
@@ -160,8 +252,8 @@ export function pathToPage(
 
   if (page === undefined) return null;
   const searchParams = new URLSearchParams(search);
-  let tab = searchParams.get("tab") ?? undefined;
-  const viewParam = searchParams.get("view");
+  let tab = searchParams.get(ErpUrlQueryParam.TAB) ?? undefined;
+  const viewParam = searchParams.get(ErpUrlQueryParam.VIEW);
 
   // Normalize tab for erp-invoices / erp-invoices-in / erp-invoices-out
   if (slug === "erp-invoices-out") {
@@ -178,7 +270,7 @@ export function pathToPage(
     }
   }
 
-  const instanceParam = searchParams.get("_i");
+  const instanceParam = searchParams.get(ErpUrlQueryParam.INSTANCE_INDEX);
   const instanceIndex: 1 | 2 = instanceParam === "2" ? 2 : 1;
 
   return { page, tab, instanceIndex, searchParams };

@@ -1,5 +1,5 @@
 export type PageKey =
-  | "budget"
+  | "opex"
   | "dashboard"
   | "cashflow"
   | "cashflow-dashboard"
@@ -68,14 +68,16 @@ export type PageKey =
   | "garage-receivables"
   | "garage-payables"
   | "garage-customers"
+  | "garage-partners"
+  | "erp-finished-goods"
   | "after-sales"
   | "vinfast-parts"
   | "vinfast-parts-dashboard"
   | "vinfast-parts-oto"
   | "vinfast-parts-xemay"
+  | "vinfast-parts-stock"
   | "vinfast-parts-oto-stock"
   | "vinfast-parts-xemay-stock"
-  | "vinfast-invoice-settlement"
   | "inventory-dashboard";
 export type TxSource = "cash-fund" | "bank-deposit";
 

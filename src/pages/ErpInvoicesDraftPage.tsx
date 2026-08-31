@@ -1,6 +1,6 @@
 import { toast } from "react-hot-toast";
 import { useTranslation } from "react-i18next";
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { FileText, Eye, DownloadCloud, Settings } from "lucide-react";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate/SpreadsheetPageTemplate";
 import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
@@ -21,17 +21,120 @@ import { SinvoiceDraftDetailWrapper } from "@/modules/accounting/components/Sinv
 import { SinvoiceConfigDrawer } from "@/modules/accounting/components/SinvoiceConfigDrawer";
 import { useSinvoiceDraftsList } from "@/modules/accounting/hooks/useSinvoiceDraftsList";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
+import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
 import { InvoiceDateRangeSlot } from "@/modules/erp-invoices-core/components/InvoiceDateRangeSlot";
+import { ErpUrlQueryParam } from "@/shared/constants/urlParams";
+import { DEFAULT_DEBOUNCE_TIME } from "@/shared/constants/timing";
+import { encodeStateParam } from "@/shared/utils/pageUrl";
 
 export function ErpInvoicesDraftPage() {
   const { t } = useTranslation("erpInvoices");
-  const canEditInvoice = useHasPermission("invoices", "update");
+  const canEditInvoice = useHasPermission(
+    ErpResource.INVOICES,
+    ErpAction.UPDATE,
+  );
   const listHook = useSinvoiceDraftsList();
 
   const [draftOpen, setDraftOpen] = useState(false);
   const [configDrawerOpen, setConfigDrawerOpen] = useState(false);
   const [detailDraft, setDetailDraft] = useState<SinvoiceDraft | null>(null);
   const setGlobalLoading = useUIStore((s) => s.setGlobalLoading);
+
+  // ── Two-Way URL Sync for Sinvoice Drafts ───────────────────────────────────
+  const debounceUrlTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    if (debounceUrlTimerRef.current) {
+      clearTimeout(debounceUrlTimerRef.current);
+    }
+
+    debounceUrlTimerRef.current = setTimeout(() => {
+      const currentUrl = new URL(window.location.href);
+      const newParams = new URLSearchParams(currentUrl.search);
+
+      // Detail drawer
+      if (detailDraft?.id) {
+        newParams.set(ErpUrlQueryParam.DETAIL, detailDraft.id);
+      } else {
+        newParams.delete(ErpUrlQueryParam.DETAIL);
+      }
+
+      // Pagination
+      if (listHook.page > 1) {
+        newParams.set(ErpUrlQueryParam.PAGE, String(listHook.page));
+      } else {
+        newParams.delete(ErpUrlQueryParam.PAGE);
+      }
+
+      // Date ranges & search
+      if (listHook.filterPanel.state.dateFrom) {
+        newParams.set(
+          ErpUrlQueryParam.DATE_FROM,
+          listHook.filterPanel.state.dateFrom,
+        );
+      } else {
+        newParams.delete(ErpUrlQueryParam.DATE_FROM);
+      }
+      if (listHook.filterPanel.state.dateTo) {
+        newParams.set(
+          ErpUrlQueryParam.DATE_TO,
+          listHook.filterPanel.state.dateTo,
+        );
+      } else {
+        newParams.delete(ErpUrlQueryParam.DATE_TO);
+      }
+
+      // Column filters (cf)
+      if (Object.keys(listHook.tableState.columnFilters).length > 0) {
+        const encoded = encodeStateParam(listHook.tableState.columnFilters);
+        if (encoded) newParams.set(ErpUrlQueryParam.COLUMN_FILTERS, encoded);
+      } else {
+        newParams.delete(ErpUrlQueryParam.COLUMN_FILTERS);
+      }
+
+      // Column search (cs)
+      if (Object.keys(listHook.tableState.columnSearch).length > 0) {
+        const encoded = encodeStateParam(listHook.tableState.columnSearch);
+        if (encoded) newParams.set(ErpUrlQueryParam.COLUMN_SEARCH, encoded);
+      } else {
+        newParams.delete(ErpUrlQueryParam.COLUMN_SEARCH);
+      }
+
+      // Sorts
+      if (listHook.tableState.sorts.length > 0) {
+        const encoded = encodeStateParam(listHook.tableState.sorts);
+        if (encoded) newParams.set(ErpUrlQueryParam.SORTS, encoded);
+      } else {
+        newParams.delete(ErpUrlQueryParam.SORTS);
+      }
+
+      const newSearch = newParams.toString();
+      const newRelativePath = `${window.location.pathname}${newSearch ? `?${newSearch}` : ""}`;
+      if (
+        window.location.pathname + window.location.search !==
+        newRelativePath
+      ) {
+        window.history.replaceState(null, "", newRelativePath);
+      }
+    }, DEFAULT_DEBOUNCE_TIME);
+
+    return () => {
+      if (debounceUrlTimerRef.current)
+        clearTimeout(debounceUrlTimerRef.current);
+    };
+  }, [
+    detailDraft?.id,
+    listHook.page,
+    listHook.filterPanel.state.dateFrom,
+    listHook.filterPanel.state.dateTo,
+    listHook.tableState.columnFilters,
+    listHook.tableState.columnSearch,
+    listHook.tableState.sorts,
+  ]);
 
   const handleSync = async () => {
     try {

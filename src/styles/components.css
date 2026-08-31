@@ -223,3 +223,53 @@
   backdrop-filter: blur(16px) saturate(200%) !important;
   -webkit-backdrop-filter: blur(16px) saturate(200%) !important;
 }
+
+/* ── Fullscreen Modal Animations ── */
+@keyframes fullscreenModalIn {
+  from {
+    opacity: 0;
+    transform: scale(0.985) translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes fullscreenModalOut {
+  from {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.985) translateY(4px);
+  }
+}
+
+.fullscreen-modal-enter {
+  animation: fullscreenModalIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform, opacity;
+}
+
+.fullscreen-modal-exit {
+  animation: fullscreenModalOut 0.16s cubic-bezier(0.4, 0, 1, 1) forwards;
+  will-change: transform, opacity;
+  pointer-events: none;
+}
+
+@keyframes fullscreenPlaceholderIn {
+  from {
+    opacity: 0;
+    transform: scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.fullscreen-placeholder-enter {
+  animation: fullscreenPlaceholderIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform, opacity;
+}

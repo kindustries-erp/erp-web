@@ -1,29 +1,60 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 
 interface UseDataTableFullscreenParams {
   onFullscreenChange?: (isFullscreen: boolean) => void;
+  exitDurationMs?: number;
 }
 
 export function useDataTableFullscreen({
   onFullscreenChange,
+  exitDurationMs = 160,
 }: UseDataTableFullscreenParams) {
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isExiting, setIsExiting] = useState(false);
+  const exitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const toggleFullscreen = useCallback(() => {
-    setIsFullscreen((prev) => {
-      const next = !prev;
-      onFullscreenChange?.(next);
-      return next;
-    });
+  useEffect(() => {
+    return () => {
+      if (exitTimerRef.current) {
+        clearTimeout(exitTimerRef.current);
+      }
+    };
+  }, []);
+
+  const openFullscreen = useCallback(() => {
+    if (exitTimerRef.current) {
+      clearTimeout(exitTimerRef.current);
+      exitTimerRef.current = null;
+    }
+    setIsExiting(false);
+    setIsFullscreen(true);
+    onFullscreenChange?.(true);
   }, [onFullscreenChange]);
 
   const closeFullscreen = useCallback(() => {
-    setIsFullscreen(false);
-    onFullscreenChange?.(false);
-  }, [onFullscreenChange]);
+    if (isExiting) return;
+    setIsExiting(true);
+    if (exitTimerRef.current) {
+      clearTimeout(exitTimerRef.current);
+    }
+    exitTimerRef.current = setTimeout(() => {
+      setIsFullscreen(false);
+      setIsExiting(false);
+      onFullscreenChange?.(false);
+      exitTimerRef.current = null;
+    }, exitDurationMs);
+  }, [isExiting, exitDurationMs, onFullscreenChange]);
+
+  const toggleFullscreen = useCallback(() => {
+    if (isFullscreen) {
+      closeFullscreen();
+    } else {
+      openFullscreen();
+    }
+  }, [isFullscreen, closeFullscreen, openFullscreen]);
 
   useEffect(() => {
-    if (!isFullscreen) return;
+    if (!isFullscreen || isExiting) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         // Don't close fullscreen if an open drawer, dialog, or popover is currently active
@@ -38,11 +69,13 @@ export function useDataTableFullscreen({
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isFullscreen, closeFullscreen]);
+  }, [isFullscreen, isExiting, closeFullscreen]);
 
   return {
     isFullscreen,
+    isExiting,
     setIsFullscreen,
+    openFullscreen,
     toggleFullscreen,
     closeFullscreen,
   };

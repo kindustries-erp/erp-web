@@ -1,5 +1,6 @@
 import { useMemo, useRef, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { ErpQueryKey, DEFAULT_STALE_TIME } from "@/shared/lib/queryKeys";
 import {
   erpInvoicesCoreApi,
   type ErpInvoiceItemListParams,
@@ -9,6 +10,8 @@ import {
   type ErpInvoiceItemsState,
 } from "./useErpInvoiceItemsStore";
 import type { Direction } from "./useErpInvoiceListStore";
+
+import { DEFAULT_DEBOUNCE_TIME } from "@/shared/constants/timing";
 
 export const getDefaultPageSize = (): number => {
   if (typeof window !== "undefined" && window.innerHeight >= 900) {
@@ -103,7 +106,7 @@ export function useErpInvoiceItemsList(
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
   const debounce = (fn: () => void) => {
     clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(fn, 400);
+    debounceRef.current = setTimeout(fn, DEFAULT_DEBOUNCE_TIME);
   };
 
   const setPage = useCallback(
@@ -275,7 +278,7 @@ export function useErpInvoiceItemsList(
 
   const { data, isLoading, isFetching, refetch } = useQuery({
     queryKey: [
-      "erp-invoice-items-list",
+      ErpQueryKey.INVOICE_ITEMS_LIST,
       direction,
       instanceIndex,
       page,
@@ -294,7 +297,7 @@ export function useErpInvoiceItemsList(
       columnSearch,
     ],
     queryFn: () => erpInvoicesCoreApi.getItemsList(queryParams),
-    staleTime: 30000,
+    staleTime: DEFAULT_STALE_TIME,
   });
 
   const activeFilterCount = useMemo(() => {

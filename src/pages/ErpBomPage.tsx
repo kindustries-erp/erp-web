@@ -30,6 +30,7 @@ import {
   type ErpBomLine,
 } from "@/modules/bom-core/api/bomCoreApi";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
+import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
 import { Forbidden } from "@/pages/Forbidden";
 import { useBasicMasterInfinite } from "@/modules/basic-masters/hooks/useBasicMasterInfinite";
 import { cn } from "@/shared/utils";
@@ -496,10 +497,10 @@ function BomTree({ bomId, fgToBomMap, itemsMap }: BomTreeProps) {
 export function ErpBomPage() {
   const t = useT();
   const { openCustomFieldsDrawer } = useAppStore();
-  const canRead = useHasPermission("bom", "read");
-  const canCreate = useHasPermission("bom", "create");
-  const canUpdate = useHasPermission("bom", "update");
-  const canDelete = useHasPermission("bom", "delete");
+  const canRead = useHasPermission(ErpResource.BOM, ErpAction.READ);
+  const canCreate = useHasPermission(ErpResource.BOM, ErpAction.CREATE);
+  const canUpdate = useHasPermission(ErpResource.BOM, ErpAction.UPDATE);
+  const canDelete = useHasPermission(ErpResource.BOM, ErpAction.DELETE);
   const setGlobalLoading = useUIStore((s) => s.setGlobalLoading);
   const [items, setItems] = useState<ErpBom[]>([]);
   const [loading, setLoading] = useState(true);

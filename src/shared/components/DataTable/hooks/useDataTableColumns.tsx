@@ -174,7 +174,7 @@ export function useDataTableColumns<T>({
           headerClassName: cn(
             "px-0 text-center",
             variant !== "spreadsheet" &&
-              "bg-muted sticky right-0 top-0 shadow-[-1px_1px_0_0_var(--border-light)] z-30",
+              "table-header-glass bg-muted/80 backdrop-blur-sm sticky right-0 top-0 shadow-[-1px_1px_0_0_var(--border-light)] z-30",
             actionsColumn.headerClassName,
           ),
           skeletonClassName: "",
@@ -233,8 +233,8 @@ export function useDataTableColumns<T>({
           headerClassName: cn(
             "w-[40px] min-w-[40px] max-w-[40px] px-2 text-center",
             variant !== "spreadsheet"
-              ? "bg-muted sticky left-0 top-0 z-40 shadow-[1px_1px_0_0_var(--border-light)]"
-              : "bg-muted sticky top-0 z-20 shadow-[0_1px_0_0_var(--border-light)] border-r border-border h-auto",
+              ? "table-header-glass bg-muted/80 backdrop-blur-sm sticky left-0 top-0 z-40 shadow-[1px_1px_0_0_var(--border-light)]"
+              : "table-header-glass bg-muted/80 backdrop-blur-sm sticky top-0 z-20 shadow-[0_1px_0_0_var(--border-light)] border-r border-border h-auto",
           ),
           skeletonClassName: "",
           hideable: false,

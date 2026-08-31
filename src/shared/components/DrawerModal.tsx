@@ -245,7 +245,9 @@ export function DrawerModal({
           panelClassName,
         )}
         style={
-          open && computedStackOffset !== 0
+          open &&
+          computedStackOffset !== 0 &&
+          !panelClassName?.includes("fullscreen-drawer")
             ? { transform: `translateX(${computedStackOffset}%)` }
             : undefined
         }
@@ -253,7 +255,7 @@ export function DrawerModal({
         {/* ── Fixed Header at Top of Panel ── */}
         <div
           className={cn(
-            "z-20 px-5 py-3.5 border-b border-border/80 table-header-glass flex items-center gap-2.5 flex-shrink-0 transition-shadow duration-200",
+            "z-20 px-4 py-2 border-b border-border/80 table-header-glass flex items-center gap-2.5 flex-shrink-0 transition-shadow duration-200",
             isScrolledTop
               ? "shadow-[0_4px_16px_-4px_rgba(15,23,42,0.08),0_2px_4px_-2px_rgba(15,23,42,0.04)]"
               : "shadow-none",
@@ -265,11 +267,11 @@ export function DrawerModal({
           }}
         >
           {icon && (
-            <div className="w-[30px] h-[30px] bg-[color:var(--muted)] rounded-lg flex items-center justify-center flex-shrink-0 text-[color:var(--muted-fg)]">
+            <div className="w-6 h-6 bg-[color:var(--muted)] rounded-md flex items-center justify-center flex-shrink-0 text-[color:var(--muted-fg)]">
               {icon}
             </div>
           )}
-          <div className="flex-1 min-w-0 flex items-center gap-2.5 flex-wrap">
+          <div className="flex-1 min-w-0 flex items-center gap-2 flex-wrap">
             <span className="text-sm font-semibold text-foreground leading-tight">
               {title}
             </span>
@@ -279,7 +281,7 @@ export function DrawerModal({
               </div>
             )}
             {subtitle && (
-              <div className="w-full text-xs text-[color:var(--muted-fg)] truncate mt-[1px]">
+              <div className="w-full text-[11px] text-[color:var(--muted-fg)] truncate leading-tight">
                 {subtitle}
               </div>
             )}
@@ -289,7 +291,7 @@ export function DrawerModal({
             variant="ghost"
             size="icon-sm"
             onClick={requestClose}
-            className="text-[color:var(--faint)]"
+            className="text-[color:var(--faint)] h-7 w-7 p-0 flex items-center justify-center"
           >
             <X className="w-4 h-4" />
           </Button>
@@ -414,8 +416,8 @@ export function DrawerSection({
       className={cn(
         "mb-3 rounded-xl border border-border/80 p-3 shadow-[0_2px_8px_-1px_rgba(0,0,0,0.06),0_1px_4px_-1px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_8px_-1px_rgba(0,0,0,0.3)] transition-all duration-200",
         isFitHeight && !isCollapsed && cn("flex flex-col", heightClass),
-        isCollapsed && "h-auto flex-none",
         className,
+        isCollapsed && "h-auto !flex-none !min-h-0 !flex-initial",
       )}
       style={{
         background: "var(--drawer-section-bg, rgba(255,255,255,0.65))",

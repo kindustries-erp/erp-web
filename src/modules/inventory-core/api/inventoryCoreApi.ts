@@ -464,6 +464,7 @@ export const inventoryCoreApi = {
     page: number = 1,
     pageSize: number = 20,
     columnFilters?: Record<string, string[]>,
+    trackingPolicy?: string,
   ): Promise<{
     items: string[];
     total: number;
@@ -479,6 +480,9 @@ export const inventoryCoreApi = {
     };
     if (columnFilters && Object.keys(columnFilters).length > 0) {
       params.column_filters = JSON.stringify(columnFilters);
+    }
+    if (trackingPolicy) {
+      params.trackingPolicy = trackingPolicy;
     }
     const key = `inventory-serials:column-options:${JSON.stringify(params)}`;
     return dedupeRequest(key, async () => {

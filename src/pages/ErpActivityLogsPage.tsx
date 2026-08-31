@@ -1,22 +1,28 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useMemo, useState, useCallback } from "react";
 import { History, Eye } from "lucide-react";
-import { type DataTableColumn } from "@/shared/components/DataTable";
+import {
+  type DataTableColumn,
+  TableText,
+  TableDateCell,
+  createColumnHeaderFilter,
+} from "@/shared/components/DataTable";
+import { Badge } from "@/shared/components/ui/badge";
 import { DrawerSection } from "@/shared/components/DrawerModal";
 import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
+import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate/SpreadsheetPageTemplate";
 import { Forbidden } from "@/pages/Forbidden";
 import {
   useFilterPanel,
   type FilterPanelConfig,
 } from "@/shared/hooks/useFilterPanel";
-
-import { useUIStore } from "@/core/config/uiStore";
 import { useT } from "@/core/i18n";
 import {
   auditCoreApi,
   type AuditLogEntry,
 } from "@/modules/system/api/usersCoreApi";
+import { useAuditCoreList } from "@/modules/system/hooks/useAuditCoreList";
 
 function formatDate(value: string | null) {
   if (!value) return "—";
@@ -26,19 +32,11 @@ function formatDate(value: string | null) {
 }
 
 export function ErpActivityLogsPage() {
-  const canRead = useHasPermission("activity_logs", "read");
-  const showToast = useUIStore((s) => s.showToast);
+  const canRead = useHasPermission(ErpResource.ACTIVITY_LOGS, ErpAction.READ);
   const t = useT();
-  const [items, setItems] = useState<AuditLogEntry[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(50);
-  const [total, setTotal] = useState(0);
-  const [selected, setSelected] = useState<AuditLogEntry | null>(null);
 
   const filterConfig: FilterPanelConfig = useMemo(
     () => ({
-      search: true,
       period: true,
       noDefaultPeriod: true,
       status: {
@@ -54,7 +52,6 @@ export function ErpActivityLogsPage() {
           label: "Hành động (Method)",
           placeholder: "Tất cả hành động",
           type: "multi-select",
-          initialValue: "POST,PUT,PATCH,DELETE",
           options: [
             { value: "GET", label: "GET" },
             { value: "POST", label: "POST" },
@@ -79,84 +76,138 @@ export function ErpActivityLogsPage() {
     [],
   );
 
-  const filter = useFilterPanel(filterConfig, () => setPage(1));
-
-  const search = filter.state.search;
-  const statusFilter = filter.state.status;
+  const filter = useFilterPanel(filterConfig);
+  const status = filter.state.status;
   const dateFrom = filter.state.dateFrom;
   const dateTo = filter.state.dateTo;
-  const moduleFilter = filter.state.custom.module;
-  const actionTypeFilter = filter.state.custom.actionType;
+  const actionType = filter.state.custom?.actionType;
+  const module = filter.state.custom?.module;
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await auditCoreApi.list({
-        page,
-        pageSize,
-        module: moduleFilter || undefined,
-        actionType: actionTypeFilter || undefined,
-        status: statusFilter || undefined,
-        dateFrom: dateFrom || undefined,
-        dateTo: dateTo || undefined,
-        search: search || undefined,
-      });
-      setItems(res.data);
-      setTotal(res.total);
-    } catch (error: any) {
-      showToast({
-        variant: "destructive",
-        title: "Không tải được audit logs",
-        description:
-          error?.response?.data?.message ||
-          error?.message ||
-          "Lỗi không xác định",
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [
-    moduleFilter,
-    actionTypeFilter,
-    statusFilter,
+  const listHook = useAuditCoreList({
+    status,
+    actionType,
+    module,
     dateFrom,
     dateTo,
-    search,
+  });
+  const {
+    data: items,
+    total,
+    totalPages,
+    isLoading: loading,
     page,
+    setPage,
     pageSize,
-    showToast,
-  ]);
+    setPageSize,
+    refetch: load,
+  } = listHook;
 
-  useEffect(() => {
-    void load();
-  }, [load]);
+  const totalActiveFilterCount = useMemo(
+    () => filter.activeFilterCount + listHook.activeFilterCount,
+    [filter.activeFilterCount, listHook.activeFilterCount],
+  );
+
+  const handleClearAll = useCallback(() => {
+    filter.resetAll();
+    listHook.clearAllFilters();
+  }, [filter, listHook]);
+
+  const [selected, setSelected] = useState<AuditLogEntry | null>(null);
+
+  const headerFilter = useMemo(
+    () =>
+      createColumnHeaderFilter({
+        listHook,
+        queryKeyPrefix: "audit-logs-column-options",
+        fetchOptions: ({
+          columnKey,
+          search,
+          pageParam,
+          pageSize: ps,
+          filtersStr,
+        }) =>
+          auditCoreApi.getColumnOptions(
+            columnKey,
+            search,
+            pageParam,
+            ps || 20,
+            filtersStr,
+          ),
+      }),
+    [listHook],
+  );
 
   const columns: DataTableColumn<AuditLogEntry>[] = useMemo(
     () => [
       {
+        key: "index",
+        header: <span className="w-full block text-center">#</span>,
+        size: 40,
+        enableResizing: false,
+        headerClassName: "text-center w-[40px] min-w-[40px]",
+        className: "text-center w-[40px] min-w-[40px]",
+        cell: (_, idx) => (
+          <span className="w-full block text-center">{idx}</span>
+        ),
+      },
+      {
         key: "actorEmail",
-        header: t("activityLogs.headers.actor") || "Actor",
-        cell: (item) => item.actorEmail || "system",
+        size: 220,
+        enableResizing: true,
+        header: headerFilter(
+          "actorEmail",
+          t("activityLogs.headers.actor") || "Actor",
+          { showBlankOption: true },
+        ),
+        cell: (item) => (
+          <TableText
+            text={item.actorEmail || "system"}
+            enableCopy
+            tooltip
+            onDetailClick={() => setSelected(item)}
+          />
+        ),
         className: "text-left",
-        headerClassName: "text-center",
       },
       {
         key: "actionType",
-        header: t("activityLogs.headers.action") || "Action",
-        cell: (item) => <span className="font-medium">{item.actionType}</span>,
+        size: 180,
+        enableResizing: true,
+        header: headerFilter(
+          "actionType",
+          t("activityLogs.headers.action") || "Action",
+        ),
+        cell: (item) => (
+          <span className="font-semibold text-foreground">
+            {item.actionType}
+          </span>
+        ),
         className: "text-left",
-        headerClassName: "text-center",
       },
       {
         key: "module",
-        header: t("activityLogs.headers.module") || "Module",
-        cell: (item) => item.module,
+        size: 140,
+        enableResizing: true,
+        header: headerFilter(
+          "module",
+          t("activityLogs.headers.module") || "Module",
+        ),
+        cell: (item) => (
+          <Badge variant="outline" className="text-[11px] font-mono">
+            {item.module}
+          </Badge>
+        ),
         className: "text-left",
-        headerClassName: "text-center",
       },
       {
-        key: "entity",
-        header: t("activityLogs.headers.entity") || "Entity",
+        key: "entityType",
+        size: 200,
+        enableResizing: true,
+        header: headerFilter(
+          "entityType",
+          t("activityLogs.headers.entity") || "Entity",
+          { showBlankOption: true },
+        ),
         cell: (item) => {
           if (!item.entityType) return "—";
           const shortId = item.entityId
@@ -164,7 +215,9 @@ export function ErpActivityLogsPage() {
             : "";
           return (
             <div className="flex flex-col" title={item.entityId || ""}>
-              <span>{item.entityType}</span>
+              <span className="font-medium text-foreground">
+                {item.entityType}
+              </span>
               {shortId && (
                 <span className="text-[11px] font-mono text-muted-foreground">
                   {shortId}
@@ -174,36 +227,42 @@ export function ErpActivityLogsPage() {
           );
         },
         className: "text-left",
-        headerClassName: "text-center",
       },
       {
         key: "createdAt",
-        header: t("activityLogs.headers.time") || "Thời gian",
-        cell: (item) => formatDate(item.createdAt),
+        size: 160,
+        enableResizing: true,
         className: "text-right",
-        headerClassName: "text-center",
+        header: headerFilter.date(
+          "createdAt",
+          t("activityLogs.headers.time") || "Thời gian",
+        ),
+        cell: (item) => (
+          <TableDateCell date={item.createdAt} className="justify-end w-full" />
+        ),
       },
       {
         key: "status",
-        header: t("activityLogs.headers.status") || "Status",
+        size: 130,
+        enableResizing: true,
         className: "text-center",
-        headerClassName: "text-center",
+        header: headerFilter(
+          "status",
+          t("activityLogs.headers.status") || "Status",
+        ),
         cell: (item) => (
           <div className="flex justify-center w-full">
-            <span
-              className={
-                item.status === "SUCCESS"
-                  ? "rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-700"
-                  : "rounded-full bg-red-100 px-2 py-1 text-xs font-medium text-red-700"
-              }
+            <Badge
+              variant={item.status === "SUCCESS" ? "default" : "destructive"}
+              className="w-[88px] inline-flex items-center justify-center text-center truncate"
             >
               {item.status}
-            </span>
+            </Badge>
           </div>
         ),
       },
     ],
-    [t],
+    [headerFilter, t],
   );
 
   if (!canRead) return <Forbidden />;
@@ -214,7 +273,7 @@ export function ErpActivityLogsPage() {
         title={t("nav.items.activitylog") || "Nhật ký hoạt động"}
         desc="Audit logs live từ ERP CORE backend"
         icon={<History className="h-4 w-4" />}
-        tableId="activity-logs-table"
+        tableId="activity-logs-table-v2"
         items={items}
         columns={columns}
         getRowKey={(item) => item.id}
@@ -223,7 +282,7 @@ export function ErpActivityLogsPage() {
         page={page}
         pageSize={pageSize}
         total={total}
-        totalPages={Math.ceil(total / pageSize)}
+        totalPages={totalPages}
         onPage={setPage}
         onPageSize={(value) => {
           setPage(1);
@@ -232,9 +291,11 @@ export function ErpActivityLogsPage() {
         onRefresh={() => void load()}
         filterConfig={filterConfig}
         filter={filter}
+        activeFilterCount={totalActiveFilterCount}
+        onClearAllFilters={handleClearAll}
         rowActions={(row) => [
           {
-            groupLabel: "Tra cứu / Cấu hình",
+            groupLabel: "Tra cứu",
             items: [
               {
                 label: "Xem chi tiết",

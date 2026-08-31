@@ -269,6 +269,30 @@ const columns: DataTableColumn<RowItem>[] = useMemo(() => [
 
 ---
 
+### 🔹 BƯỚC 4: Lắp Ráp Giao Diện & Tích Hợp Tabs (`<SpreadsheetPageTemplate>`)
+
+Khi lắp ráp bảng vào `<SpreadsheetPageTemplate>`, cần lưu ý sự khác biệt giữa 2 tầng Tab:
+
+#### 1. Header Page Tabs (`tabs={pageTabs}`) — OPTIONAL (TÙY CHỌN)
+- **Khi nào dùng**: Chỉ sử dụng khi trang nghiệp vụ cần phân rã thành các **phân hệ / góc nhìn lớn cấp Trang** (ví dụ: `erp-invoice` chia `Hóa đơn mua vào`, `Chi tiết mua vào`, `Hóa đơn bán ra`, `Chi tiết bán ra`; hoặc `Đơn mua hàng` vs `Chi tiết dòng hàng`).
+- **Quy chuẩn bắt buộc**:
+  - Dùng `TabItem[]` (`{ value: string, label: string }`) với label bọc `t(...)`.
+  - Truyền `tabs={pageTabs}`, `activeTab={currentTab}`, `onTabChange={handleTabChange}` vào `<SpreadsheetPageTemplate>`.
+  - **Đồng bộ URL**: Lưu param `?tab=...` trên URL và khởi tạo tab từ query param.
+  - **State Isolation**: Bắt buộc reset trang về 1 (`setPage(1)`) khi chuyển tab, và cách ly bộ lọc giữa các tab.
+  - **Tách `tableId`**: Bắt buộc thêm hậu tố tab vào `tableId` (ví dụ: `tableId={`[module]-table-${currentTab}`}`) để App Settings lưu riêng biệt sizing/visibility cột cho từng view.
+  - *Nếu là trang bảng đơn thông thường: Bỏ qua không cần truyền prop `tabs`.*
+
+#### 2. Toolbar Switch Tabs (`PillTabs` trong `customActionsNode`)
+- **Khi nào dùng**: Lọc nhanh các trạng thái hoặc phân loại nhỏ trong cùng 1 view dữ liệu (ví dụ: `Tất cả` / `Mới` / `Thay thế` / `Điều chỉnh`, hoặc `Tất cả` / `Thu` / `Chi`).
+- Xem chi tiết triển khai tại [`standardize-table-page`](../skills/standardize_table_page/SKILL.md).
+
+---
+
+### 🔹 BẢNG KIỂM DUYỆT CHUẨN (QC Verification Checklist)
+
+| Tiêu Chí Kiểm Tra | Yêu Cầu Kỹ Thuật Chi Tiết | Đạt (x) |
+| :--- | :--- | :---: |
 | **Cột STT (Index)** | Rộng đúng `40px`, không resize, căn giữa tuyệt đối cả Header (`header: <span className="w-full block text-center">#</span>`) và Cell (`cell: (_, idx) => <span className="w-full block text-center">{idx}</span>`). | [ ] |
 | **100% Cột có Filter** | Không cột dữ liệu nào bị thiếu header filter (trừ STT & Selection). Dùng `headerFilter(key, title)` hoặc `headerFilter.date(...)` / `headerFilter.amount(...)`. | [ ] |
 | **Numeric Filter Options** | Cột số/tiền tệ dùng `headerFilter.amount(...)` hoặc `headerFilter.numeric(...)` để tự động format số có phân tách hàng nghìn (`10.000.000 đ`) trên dropdown checkbox. | [ ] |
@@ -278,8 +302,9 @@ const columns: DataTableColumn<RowItem>[] = useMemo(() => [
 | **Lọc Giá trị Rỗng (`showBlankOption`)** | Các cột có dữ liệu null/optional được bật `{ showBlankOption: true }` để chèn lựa chọn `(blank)` / `(Trống)` (value: `"__BLANK__"`). | [ ] |
 | **Exact & Multi-search (`""` và `;`)** | Backend API `column_search` đã dùng `applyMultiKeywordFilter` để hỗ trợ tìm chính xác `"..."` và tìm kiếm nhiều từ khóa qua `;` (OR). | [ ] |
 | **Row Hover Actions & Context Menu** | BẮT BUỘC truyền prop `rowActions` trên `<SpreadsheetPageTemplate>`. Không tạo cột `{ key: "actions" }` tĩnh. 2 Quick Actions đầu tiên là **Xem chi tiết** (`openDetail(id, "view")` — 👁️) và **Chỉnh sửa** (`openDetail(id, "edit")` — ✏️). | [ ] |
+| **Header Page Tabs (Tùy chọn)** | Nếu trang có nhiều phân hệ lớn (Header vs Lines, Mua vs Bán), đã truyền `tabs={pageTabs}`, `activeTab`, `onTabChange` vào `<SpreadsheetPageTemplate>`, đồng bộ `?tab=...`, reset `setPage(1)` và tách `tableId` theo tab chưa? | [ ] |
 | **2 Cấp độ Xóa Bộ Lọc** | Cột có nút "Xóa bộ lọc" trong Popover (cục bộ); Bảng có nút Clear All Filters khi `activeFilterCount > 0` (Page: `onClearAllFilters`; Drawer: `FilterButton` trong `titleExtra`). | [ ] |
 | **Pagination Responsive** | Hỗ trợ `pageSizeOptions = [20, 50, 100, 200]`, khởi tạo `defaultPageSize` bằng `getDefaultPageSize()` (`< 900px` -> 20, `>= 900px` -> 50). Reset `setPage(1)` khi đổi filter/sort/tab. | [ ] |
 | **Container & Table ID** | Bo góc `rounded-xl`, viền `border border-border/60`, có `tableId` unique để tự động lưu column sizing/visibility/order vào App Setting. | [ ] |
-| **Summary Row** | Bảng có cột số tiền/số lượng phải có dòng tổng cộng `summaryRow`. | [ ] |
+| **Summary Row & Header Glass** | Bảng có cột số tiền/số lượng phải có dòng tổng cộng `summaryRow`; Cả TableHeader lẫn TableFooter tự động có hiệu ứng `table-header-glass` / `table-footer-glass` mờ mịn. | [ ] |
 | **i18n** | 100% text bọc trong `t(...)`, bao gồm cả `TableColumnHeaderFilter`. | [ ] |
