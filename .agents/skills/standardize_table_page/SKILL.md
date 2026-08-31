@@ -51,9 +51,11 @@ Format: `Array<[i18nKey, pageKey?]>` — nếu có `pageKey` thì breadcrumb đ�
 - Tạo file locale module đi kèm tại `src/core/locale/[module]/vi.ts` và `en.ts`.
 - Khi bảng không có dữ liệu, hiển thị `<EmptyState>` chuẩn hoặc truyền `emptyLabel={t("noData", "Không có dữ liệu")}`.
 
-## 4. Server-side Hook & Responsive PageSize — BẮT BUỘC
+## 4. Server-side Hook, React Query & Responsive PageSize — BẮT BUỘC
 
-- **Mặc định toàn hệ thống**: Filter, Sorting và Pagination **BẮT BUỘC** thực hiện ở **Server-side** thông qua custom hook `use[Module]List` kết nối TanStack Query.
+- **Mặc định toàn hệ thống**: Filter, Sorting và Pagination **BẮT BUỘC** thực hiện ở **Server-side** thông qua custom hook `use[Module]List` kết nối **TanStack React Query (`useQuery`)**.
+- **Enum Query Key Tập Trung**: **BẮT BUỘC** dùng Enum `ErpQueryKey` từ `@/shared/lib/queryKeys` (ví dụ: `ErpQueryKey.INVOICES_LIST`, `ErpQueryKey.VINFAST_PARTS_STOCK`, `ErpQueryKey.INVENTORY_STOCK_LIST`), **TUYỆT ĐỐI KHÔNG** hardcode string query key tự do.
+- **Thời Gian Cache Tiêu Chuẩn (`DEFAULT_STALE_TIME`)**: Sử dụng hằng số chuẩn `DEFAULT_STALE_TIME = 90_000` (1 phút 30 giây) từ `@/shared/lib/queryKeys` (hoặc để mặc định từ `queryClient.ts`).
 - **Khởi tạo `defaultPageSize` thích ứng theo Chiều cao màn hình (Screen Height)**:
   - Khi `window.innerHeight < 900px` (Laptop / màn hình phổ thông): Default `pageSize = 20`.
   - Khi `window.innerHeight >= 900px` (Desktop / Monitor lớn): Default `pageSize = 50`.
@@ -65,6 +67,7 @@ Format: `Array<[i18nKey, pageKey?]>` — nếu có `pageKey` thì breadcrumb đ�
 ```ts
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { ErpQueryKey, DEFAULT_STALE_TIME } from "@/shared/lib/queryKeys";
 // import { [module]Api } from "@/modules/[module]/api/[module]Api";
 
 export const getDefaultPageSize = (): number => {
@@ -74,7 +77,7 @@ export const getDefaultPageSize = (): number => {
   return 20;
 };
 
-export function use[Module]List() {
+export function use[Module]List(activeTab?: string) {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState<number>(getDefaultPageSize);
   const [sorts, setSorts] = useState<string[]>([]);
@@ -83,12 +86,23 @@ export function use[Module]List() {
   const [columnFilters, setColumnFilters] = useState<Record<string, string[]>>({});
   const [columnSearch, setColumnSearch] = useState<Record<string, string>>({});
 
-  const { data, isLoading, refetch } = useQuery({
-    queryKey: ["[module]-list", page, pageSize, sorts, dateFrom, dateTo, columnFilters, columnSearch],
+  const { data, isLoading, isFetching, refetch } = useQuery({
+    queryKey: [
+      ErpQueryKey.[MODULE]_LIST, // 👉 Dùng Enum chuẩn
+      activeTab,                  // 👉 Đưa tab vào queryKey để cache độc lập theo từng tab
+      page,
+      pageSize,
+      sorts,
+      dateFrom,
+      dateTo,
+      columnFilters,
+      columnSearch,
+    ],
     queryFn: () => {
-      // return [module]Api.getList({ page, pageSize, sorts, date_from: dateFrom || undefined, date_to: dateTo || undefined, column_filters: Object.keys(columnFilters).length ? JSON.stringify(columnFilters) : undefined, column_search: Object.keys(columnSearch).length ? JSON.stringify(columnSearch) : undefined });
+      // return [module]Api.getList({ page, pageSize, tab: activeTab, sorts, date_from: dateFrom || undefined, date_to: dateTo || undefined, column_filters: Object.keys(columnFilters).length ? JSON.stringify(columnFilters) : undefined, column_search: Object.keys(columnSearch).length ? JSON.stringify(columnSearch) : undefined });
       return Promise.resolve({ data: [], total: 0, totalPages: 0 });
     },
+    staleTime: DEFAULT_STALE_TIME, // 👉 1 phút 30 giây (90,000ms)
   });
 
   const setSort = (key: string, state: "asc" | "desc" | "none") => {
@@ -141,7 +155,7 @@ export function use[Module]List() {
     data: data?.data ?? [],
     total: data?.total ?? 0,
     totalPages: data?.totalPages ?? 0,
-    isLoading,
+    isLoading: isLoading || isFetching,
     page,
     setPage,
     pageSize,
@@ -307,6 +321,10 @@ Khi một trang bảng quyết định kích hoạt `Header Page Tabs`, **BẮT 
 5. **Tích hợp linh hoạt với View Switcher hoặc Đổi Column Set**:
    - **Cách 1 (Cùng 1 Template, đổi Columns & API)**: Truyền `columns` và `items` tương ứng theo `currentTab`.
    - **Cách 2 (Đa Template / Sub-sections như `ErpInvoicesTab`)**: Render các section con ẩn/hiện (`hidden` hoặc conditional mount) theo `currentTab`, mỗi section truyền cùng bộ `tabs={pageTabs}`, `activeTab={currentTab}` và `onTabChange={handleTabChange}` để giữ thanh tab đồng bộ xuyên suốt.
+
+6. **Zero-latency Tab Switching qua React Query & `ErpQueryKey`**:
+   - **BẮT BUỘC** đưa `currentTab` / `direction` / `subview` vào `queryKey` (ví dụ `queryKey: [ErpQueryKey.INVOICES_LIST, currentTab, page, ...]`).
+   - Nhờ đó, TanStack Query tự động lưu cache riêng cho từng tab trong `DEFAULT_STALE_TIME` (90s). Khi người dùng chuyển đổi qua lại giữa các tab (`in` $\leftrightarrow$ `out` $\leftrightarrow$ `lines`), dữ liệu được hiển thị **ngay lập tức 0ms** từ cache mà không phải fetch lại API và không hiển thị loading spinner gián đoạn thao tác.
 
 ## 8. Mẫu code cơ bản (Table Page Boilerplate)
 
@@ -581,8 +599,9 @@ export function ExampleTablePage() {
 - [ ] Đã phân tách `tableId` theo từng tab (ví dụ: `tableId={`[module]-table-${activeTab}`}`) để tránh ghi đè cấu hình ẩn/hiện và độ rộng cột trong App Settings (`core_user_preferences`) chưa?
 - [ ] Đã kiểm tra cách ly bộ lọc (Filter Isolation), tránh filter của tab này áp dụng sai sang tab kia chưa?
 
-### Server-side Hook & Responsive PageSize
+### Server-side Hook, React Query & Responsive PageSize
 - [ ] Mặc định **100% BẢNG ĐÃ ƯU TIÊN SERVER-SIDE SORTING & FILTERING** (thông qua hook `use[Module]List` + API `getColumnOptions`) chưa?
+- [ ] **React Query & ErpQueryKey Enum**: Hook đã dùng `useQuery` kết hợp `ErpQueryKey` enum từ `@/shared/lib/queryKeys`, hưởng `staleTime: DEFAULT_STALE_TIME` (90s) và đưa `activeTab` / `direction` vào `queryKey` để hỗ trợ Zero-latency Tab Switching chưa?
 - [ ] Hook đã dùng `getDefaultPageSize` để gán default pageSize theo chiều cao màn hình (`< 900px` -> `20`, `>= 900px` -> `50`) và hỗ trợ `pageSizeOptions = [20, 50, 100, 200]` chưa?
 
 ### Page Template & App Settings

@@ -1,5 +1,6 @@
 import { useMemo, useRef, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { ErpQueryKey, DEFAULT_STALE_TIME } from "@/shared/lib/queryKeys";
 import {
   erpInvoicesCoreApi,
   type ErpInvoiceItemListParams,
@@ -275,7 +276,7 @@ export function useErpInvoiceItemsList(
 
   const { data, isLoading, isFetching, refetch } = useQuery({
     queryKey: [
-      "erp-invoice-items-list",
+      ErpQueryKey.INVOICE_ITEMS_LIST,
       direction,
       instanceIndex,
       page,
@@ -294,7 +295,7 @@ export function useErpInvoiceItemsList(
       columnSearch,
     ],
     queryFn: () => erpInvoicesCoreApi.getItemsList(queryParams),
-    staleTime: 30000,
+    staleTime: DEFAULT_STALE_TIME,
   });
 
   const activeFilterCount = useMemo(() => {

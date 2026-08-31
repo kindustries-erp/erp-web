@@ -1,5 +1,7 @@
+import React from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useErpInvoicesList } from "../hooks/useErpInvoicesList";
 import { erpInvoicesCoreApi, type ErpInvoice } from "../api/erpInvoicesCoreApi";
 import { useErpInvoiceListStore } from "../hooks/useErpInvoiceListStore";
@@ -11,6 +13,18 @@ vi.mock("../api/erpInvoicesCoreApi", () => ({
     list: vi.fn(),
   },
 }));
+
+function createWrapper() {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+      },
+    },
+  });
+  return ({ children }: { children: React.ReactNode }) =>
+    React.createElement(QueryClientProvider, { client: queryClient }, children);
+}
 
 const initialSubState = {
   searchInput: "",
@@ -59,7 +73,9 @@ describe("useErpInvoicesList", () => {
   });
 
   it("should initialize with default state", async () => {
-    const { result } = renderHook(() => useErpInvoicesList());
+    const { result } = renderHook(() => useErpInvoicesList(), {
+      wrapper: createWrapper(),
+    });
 
     expect(result.current.direction).toBe("IN");
     expect(result.current.page).toBe(1);
@@ -72,7 +88,9 @@ describe("useErpInvoicesList", () => {
   });
 
   it("should change direction and reset page", async () => {
-    const { result } = renderHook(() => useErpInvoicesList());
+    const { result } = renderHook(() => useErpInvoicesList(), {
+      wrapper: createWrapper(),
+    });
     await waitFor(() => expect(result.current.loading).toBe(false));
 
     act(() => {
@@ -89,25 +107,26 @@ describe("useErpInvoicesList", () => {
   });
 
   it("should toggle sort order when sorting by same key", async () => {
-    const { result } = renderHook(() => useErpInvoicesList());
+    const { result } = renderHook(() => useErpInvoicesList(), {
+      wrapper: createWrapper(),
+    });
     await waitFor(() => expect(result.current.loading).toBe(false));
 
     expect(result.current.sortBy).toBe("invoiceDate");
     expect(result.current.sortOrder).toBe("desc");
 
     act(() => {
-      // First toggle sets to -invoiceDate (desc) because default was none.
-      // Wait, if it wasn't tracked by useTableColumnState yet, it pushes invoiceDate (asc).
       result.current.handleSort("invoiceDate");
     });
 
-    // Let's just check it changed to asc
     expect(result.current.sortOrder).toBe("asc");
     expect(result.current.page).toBe(1);
   });
 
   it("should change sort key and default to desc", async () => {
-    const { result } = renderHook(() => useErpInvoicesList());
+    const { result } = renderHook(() => useErpInvoicesList(), {
+      wrapper: createWrapper(),
+    });
     await waitFor(() => expect(result.current.loading).toBe(false));
 
     act(() => {
@@ -115,8 +134,6 @@ describe("useErpInvoicesList", () => {
     });
 
     expect(result.current.sortBy).toBe("totalAmount");
-    // tableState.toggleSort pushes field first, so it defaults to asc!
-    // Wait, useTableColumnState.ts pushes field first (asc), then -field (desc).
     expect(result.current.sortOrder).toBe("asc");
   });
 
@@ -130,7 +147,9 @@ describe("useErpInvoicesList", () => {
       pageSize: 50,
     });
 
-    const { result } = renderHook(() => useErpInvoicesList());
+    const { result } = renderHook(() => useErpInvoicesList(), {
+      wrapper: createWrapper(),
+    });
     await waitFor(() => expect(result.current.loading).toBe(false));
 
     expect(mockList).toHaveBeenCalledWith(
