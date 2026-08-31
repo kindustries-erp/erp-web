@@ -36,6 +36,7 @@ export const ALL_PAGE_KEYS: PageKey[] = [
   "settings-cash-fund",
   "settings-branch",
   "erp-production",
+  "erp-finished-goods",
   "erp-sales-orders",
   "sales-report-dashboard",
   "erp-goods-issues",
@@ -47,6 +48,7 @@ export const ALL_PAGE_KEYS: PageKey[] = [
   "garage-receivables",
   "garage-payables",
   "garage-customers",
+  "garage-partners",
   "after-sales",
   "purchasing-report-dashboard",
 ];
@@ -57,6 +59,7 @@ const LEGACY_SLUGS: Record<string, PageKey> = {
   "email-hop-thu": "email-inbox",
   "erp-invoices-in": "erp-invoices",
   "erp-invoices-out": "erp-invoices",
+  "garage-customers": "garage-partners",
 };
 
 export interface PageUrlParsedState {

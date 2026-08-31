@@ -438,6 +438,11 @@ export const garageVi = {
       notSynced: "Chưa đồng bộ",
     },
   },
+  partners: {
+    title: "Đối tác",
+    desc: "Theo dõi tổng hợp công nợ phải thu, tuổi nợ và danh sách phiếu dịch vụ theo từng khách hàng (Dữ liệu công nợ ghi nhận từ tháng 07/2026)",
+    tabCustomers: "Khách hàng",
+  },
   customers: {
     title: "Công nợ khách hàng",
     desc: "Theo dõi tổng hợp công nợ phải thu, tuổi nợ và danh sách phiếu dịch vụ theo từng khách hàng (Dữ liệu công nợ ghi nhận từ tháng 07/2026)",

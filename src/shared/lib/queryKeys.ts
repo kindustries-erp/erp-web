@@ -69,10 +69,15 @@ export enum ErpQueryKey {
   // 8. Dịch Vụ Garage (Garage Core)
   GARAGE_CASES = "garage-cases",
   GARAGE_CUSTOMERS = "garage-customers",
+  GARAGE_PARTNERS = "garage-partners",
   GARAGE_DASHBOARD = "garage-dashboard",
   GARAGE_OPEX = "operating-expenses",
 
-  // 9. Hệ Thống & Cấu Hình (System, Branches, RBAC & Tags)
+  // 9. Sản Xuất & Thành Phẩm (Manufacturing & Finished Goods)
+  PRODUCTION_ORDERS = "production-orders",
+  FINISHED_GOODS = "finished-goods",
+
+  // 10. Hệ Thống & Cấu Hình (System, Branches, RBAC & Tags)
   BRANCHES = "branches",
   USERS = "users",
   ROLES = "roles",

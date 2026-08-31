@@ -42,10 +42,6 @@ export function TrackedGoodsPage({
   const pageTabs: TabItem[] = useMemo(
     () => [
       {
-        value: "vehicle",
-        label: t("inventoryTracking.tabVehicle", "Xe / Thành phẩm"),
-      },
-      {
         value: "parts",
         label: t("inventoryTracking.tabParts", "Phụ tùng / Serial"),
       },
@@ -73,12 +69,12 @@ export function TrackedGoodsPage({
       const tabParam = params.get("tab");
       if (
         tabParam &&
-        ["vehicle", "parts", "lot", "custom"].includes(tabParam)
+        ["parts", "lot", "custom", "vehicle"].includes(tabParam)
       ) {
         return tabParam;
       }
     }
-    return "vehicle";
+    return "parts";
   });
 
   const activeTrackingPolicy = useMemo(() => {
@@ -93,7 +89,7 @@ export function TrackedGoodsPage({
       case "custom":
         return "CUSTOM";
       default:
-        return "VEHICLE";
+        return "SERIAL";
     }
   }, [fixedTrackingPolicy, currentTab]);
 
@@ -179,7 +175,7 @@ export function TrackedGoodsPage({
       // KHÔNG gọi tableState.resetFilters() -> Giữ nguyên column filters, column searches, column sorts riêng cho mỗi tableId
       if (typeof window !== "undefined") {
         const url = new URL(window.location.href);
-        if (nextTab === "vehicle") {
+        if (nextTab === "parts") {
           url.searchParams.delete("tab");
         } else {
           url.searchParams.set("tab", nextTab);

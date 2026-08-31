@@ -28,6 +28,7 @@ import {
   Paperclip,
   Mail,
   Target,
+  PackageCheck,
 } from "lucide-react";
 
 import { useAuthStore } from "@/modules/auth/domain/authStore";
@@ -326,6 +327,18 @@ export function SidebarNav({
               contextPage="erp-production"
             />
           )}
+          {(canReadProduction || canReadInventoryItems) && (
+            <NavItem
+              collapsed={c}
+              icon={
+                <PackageCheck className="w-4 h-4 opacity-65 flex-shrink-0" />
+              }
+              label={t("nav.items.erpFinishedGoods", "Thành phẩm")}
+              active={currentPage === "erp-finished-goods"}
+              onClick={() => navTo("erp-finished-goods")}
+              contextPage="erp-finished-goods"
+            />
+          )}
         </NavSection>
       )}
 
@@ -353,10 +366,13 @@ export function SidebarNav({
           <NavItem
             collapsed={c}
             icon={<Users className="w-4 h-4 opacity-65 flex-shrink-0" />}
-            label={t("nav.items.garageCustomers", "Khách hàng")}
-            active={currentPage === "garage-customers"}
-            onClick={() => navTo("garage-customers")}
-            contextPage="garage-customers"
+            label={t("nav.items.garagePartners", "Đối tác")}
+            active={
+              currentPage === "garage-partners" ||
+              currentPage === "garage-customers"
+            }
+            onClick={() => navTo("garage-partners")}
+            contextPage="garage-partners"
           />
           <NavItem
             collapsed={c}

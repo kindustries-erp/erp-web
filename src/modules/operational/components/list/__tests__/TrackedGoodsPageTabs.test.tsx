@@ -148,30 +148,31 @@ describe("TrackedGoodsPage Header Page Tabs", () => {
     window.history.replaceState(null, "", "/inventory/tracking");
   });
 
-  it("renders 4 Header Page Tabs by default with vehicle tab active", () => {
+  it("renders 3 Header Page Tabs by default with parts tab active", () => {
     render(<TrackedGoodsPage />, { wrapper: createWrapper() });
 
-    const vehicleTab = screen.getByRole("tab", { name: /Xe \/ Thành phẩm/i });
     const partsTab = screen.getByRole("tab", { name: /Phụ tùng \/ Serial/i });
     const lotTab = screen.getByRole("tab", { name: /Lô \(Lot\)/i });
     const customTab = screen.getByRole("tab", {
       name: /Tùy chỉnh \(Custom\)/i,
     });
 
-    expect(vehicleTab).toBeInTheDocument();
     expect(partsTab).toBeInTheDocument();
     expect(lotTab).toBeInTheDocument();
     expect(customTab).toBeInTheDocument();
+    expect(
+      screen.queryByRole("tab", { name: /Xe \/ Thành phẩm/i }),
+    ).not.toBeInTheDocument();
 
-    expect(vehicleTab).toHaveAttribute("data-state", "active");
+    expect(partsTab).toHaveAttribute("data-state", "active");
   });
 
-  it("initializes active tab from URL query param ?tab=parts", () => {
-    window.history.replaceState(null, "", "/inventory/tracking?tab=parts");
+  it("initializes active tab from URL query param ?tab=lot", () => {
+    window.history.replaceState(null, "", "/inventory/tracking?tab=lot");
     render(<TrackedGoodsPage />, { wrapper: createWrapper() });
 
-    const partsTab = screen.getByRole("tab", { name: /Phụ tùng \/ Serial/i });
-    expect(partsTab).toHaveAttribute("data-state", "active");
+    const lotTab = screen.getByRole("tab", { name: /Lô \(Lot\)/i });
+    expect(lotTab).toHaveAttribute("data-state", "active");
   });
 
   it("initializes active tab from initialTab prop (e.g. lot)", () => {
@@ -192,11 +193,11 @@ describe("TrackedGoodsPage Header Page Tabs", () => {
     expect(customTab).toHaveAttribute("data-state", "active");
     expect(window.location.search).toContain("tab=custom");
 
-    // Click back to vehicle tab
-    const vehicleTab = screen.getByRole("tab", { name: /Xe \/ Thành phẩm/i });
-    fireEvent.click(vehicleTab);
+    // Click back to parts tab
+    const partsTab = screen.getByRole("tab", { name: /Phụ tùng \/ Serial/i });
+    fireEvent.click(partsTab);
 
-    expect(vehicleTab).toHaveAttribute("data-state", "active");
+    expect(partsTab).toHaveAttribute("data-state", "active");
     expect(window.location.search).not.toContain("tab=");
   });
 
@@ -206,7 +207,7 @@ describe("TrackedGoodsPage Header Page Tabs", () => {
     });
 
     expect(
-      screen.queryByRole("tab", { name: /Xe \/ Thành phẩm/i }),
+      screen.queryByRole("tab", { name: /Phụ tùng \/ Serial/i }),
     ).not.toBeInTheDocument();
   });
 
@@ -246,23 +247,23 @@ describe("TrackedGoodsPage Header Page Tabs", () => {
       wrapper: createWrapper(),
     });
 
+    const lotTab = screen.getByRole("tab", { name: /Lô \(Lot\)/i });
+    fireEvent.click(lotTab);
+
+    expect(lotTab).toHaveAttribute("data-state", "active");
+
     const partsTab = screen.getByRole("tab", { name: /Phụ tùng \/ Serial/i });
     fireEvent.click(partsTab);
 
     expect(partsTab).toHaveAttribute("data-state", "active");
-
-    const vehicleTab = screen.getByRole("tab", { name: /Xe \/ Thành phẩm/i });
-    fireEvent.click(vehicleTab);
-
-    expect(vehicleTab).toHaveAttribute("data-state", "active");
   });
 
   it("displays filter count for table when column search or filter is active", () => {
-    mockColumnSearch["inventory-tracked-goods-vehicle-table"] = {
+    mockColumnSearch["inventory-tracked-goods-parts-table"] = {
       goodsIssueNo: "XK-2026",
     };
 
-    render(<TrackedGoodsPage initialTab="vehicle" />, {
+    render(<TrackedGoodsPage initialTab="parts" />, {
       wrapper: createWrapper(),
     });
 
@@ -270,26 +271,26 @@ describe("TrackedGoodsPage Header Page Tabs", () => {
   });
 
   it("maintains independent filter counts for each table when switching tabs", () => {
-    mockColumnSearch["inventory-tracked-goods-vehicle-table"] = {
+    mockColumnSearch["inventory-tracked-goods-parts-table"] = {
       goodsIssueNo: "XK-2026",
     };
-    mockColumnSearch["inventory-tracked-goods-parts-table"] = {};
+    mockColumnSearch["inventory-tracked-goods-lot-table"] = {};
 
-    render(<TrackedGoodsPage initialTab="vehicle" />, {
+    render(<TrackedGoodsPage initialTab="parts" />, {
       wrapper: createWrapper(),
     });
 
-    // vehicle tab has (1)
+    // parts tab has (1)
     expect(screen.getByText("(1)")).toBeInTheDocument();
 
-    // switch to parts tab (0 filters)
-    const partsTab = screen.getByRole("tab", { name: /Phụ tùng \/ Serial/i });
-    fireEvent.click(partsTab);
+    // switch to lot tab (0 filters)
+    const lotTab = screen.getByRole("tab", { name: /Lô \(Lot\)/i });
+    fireEvent.click(lotTab);
     expect(screen.queryByText("(1)")).not.toBeInTheDocument();
 
-    // switch back to vehicle tab (restores count (1))
-    const vehicleTab = screen.getByRole("tab", { name: /Xe \/ Thành phẩm/i });
-    fireEvent.click(vehicleTab);
+    // switch back to parts tab (restores count (1))
+    const partsTab = screen.getByRole("tab", { name: /Phụ tùng \/ Serial/i });
+    fireEvent.click(partsTab);
     expect(screen.getByText("(1)")).toBeInTheDocument();
   });
 });

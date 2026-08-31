@@ -65,6 +65,10 @@ export const SECTION_ROOTS: Partial<Record<PageKey, SectionRoot>> = {
     labelKey: "nav.items.erpProduction",
     group: "manufacturing",
   },
+  "erp-finished-goods": {
+    labelKey: "breadcrumb.erpFinishedGoods",
+    group: "manufacturing",
+  },
   "erp-sales-orders": {
     labelKey: "nav.items.erpSalesOrders",
     group: "sales",
@@ -210,6 +214,10 @@ export const SECTION_ROOTS: Partial<Record<PageKey, SectionRoot>> = {
     labelKey: "breadcrumb.garageCustomers",
     group: "garage",
   },
+  "garage-partners": {
+    labelKey: "breadcrumb.garagePartners",
+    group: "garage",
+  },
   opex: {
     labelKey: "budget:pageTitle",
     group: "accounting",
@@ -256,6 +264,10 @@ export const BREADCRUMBS: Partial<Record<PageKey, Array<[string, string?]>>> = {
   "erp-production": [
     ["breadcrumb.manufacturing"],
     ["breadcrumb.erpProduction"],
+  ],
+  "erp-finished-goods": [
+    ["breadcrumb.manufacturing"],
+    ["breadcrumb.erpFinishedGoods"],
   ],
   "erp-sales-orders": [["breadcrumb.sales"], ["breadcrumb.erpSalesOrders"]],
   "sales-report-dashboard": [
@@ -351,6 +363,7 @@ export const BREADCRUMBS: Partial<Record<PageKey, Array<[string, string?]>>> = {
   "garage-cases": [["breadcrumb.garage"], ["breadcrumb.garageCases"]],
   "garage-opex": [["breadcrumb.garage"], ["breadcrumb.garageOpex"]],
   "garage-customers": [["breadcrumb.garage"], ["breadcrumb.garageCustomers"]],
+  "garage-partners": [["breadcrumb.garage"], ["breadcrumb.garagePartners"]],
   "garage-receivables": [
     ["breadcrumb.garage"],
     ["breadcrumb.garagePartnersGroup", "garage-receivables"],

@@ -25,6 +25,7 @@ import {
   Paperclip,
   Mail,
   Target,
+  PackageCheck,
 } from "lucide-react";
 
 export interface NavSearchItem {
@@ -245,9 +246,7 @@ export function useNavItems(): NavSearchItem[] {
         keywords: [
           "kho",
           "theo doi hang hoa",
-          "xe",
-          "thanh pham",
-          "vin",
+          "dinh danh",
           "phu tung",
           "parts",
           "lo",
@@ -278,6 +277,23 @@ export function useNavItems(): NavSearchItem[] {
         icon: <Factory className="w-4 h-4" />,
       });
     }
+    if (canReadProduction || canReadInventoryItems) {
+      items.push({
+        key: "erp-finished-goods",
+        label: t("nav.items.erpFinishedGoods", "Thành phẩm"),
+        section: manufacturingSection,
+        keywords: [
+          "san xuat",
+          "thanh pham",
+          "xe",
+          "vin",
+          "khung",
+          "may",
+          "finished goods",
+        ],
+        icon: <PackageCheck className="w-4 h-4" />,
+      });
+    }
 
     // 6. Garage
     const garageSection = t("nav.sections.garage", "GARAGE");
@@ -303,8 +319,8 @@ export function useNavItems(): NavSearchItem[] {
         icon: <Car className="w-4 h-4" />,
       });
       items.push({
-        key: "garage-customers",
-        label: t("nav.items.garageCustomers", "Khách hàng"),
+        key: "garage-partners",
+        label: t("nav.items.garagePartners", "Đối tác"),
         section: garageSection,
         keywords: [
           "garage",

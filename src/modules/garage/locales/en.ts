@@ -439,6 +439,11 @@ export const garageEn = {
       notSynced: "Not synced",
     },
   },
+  partners: {
+    title: "Partners",
+    desc: "Manage garage partners, receivables, aging buckets and service case history by customer (Debt tracking recorded from July 2026)",
+    tabCustomers: "Customers",
+  },
   customers: {
     title: "Customer Receivables",
     desc: "Monitor outstanding receivables, aging analysis, and related service cases by customer (Debt data recorded from July 2026)",

@@ -250,9 +250,14 @@ const GaragePayables = lazy(() =>
     default: m.GaragePayables,
   })),
 );
-const GarageCustomers = lazy(() =>
-  import("@/modules/garage/pages/GarageCustomers").then((m) => ({
-    default: m.GarageCustomers,
+const GaragePartners = lazy(() =>
+  import("@/modules/garage/pages/GaragePartners").then((m) => ({
+    default: m.GaragePartners,
+  })),
+);
+const FinishedGoodsPage = lazy(() =>
+  import("@/pages/manufacturing/FinishedGoodsPage").then((m) => ({
+    default: m.FinishedGoodsPage,
   })),
 );
 const AfterSalesPage = lazy(() =>
@@ -282,6 +287,7 @@ const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   "mfg-vehicles": MfgVehicles,
   "erp-bom": ErpBomPage,
   "erp-production": ErpProductionPage,
+  "erp-finished-goods": FinishedGoodsPage,
   "erp-sales-orders": ErpSalesOrdersPage,
   "sales-report-dashboard": SalesReportDashboardPage,
   "erp-goods-issues": ErpGoodsIssuesPage,
@@ -314,7 +320,8 @@ const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   "garage-opex": GarageOpex,
   "garage-receivables": GarageReceivables,
   "garage-payables": GaragePayables,
-  "garage-customers": GarageCustomers,
+  "garage-customers": GaragePartners,
+  "garage-partners": GaragePartners,
   "after-sales": AfterSalesPage,
   "vinfast-parts": VinfastPartsTrackingPage,
   "vinfast-parts-dashboard": () => (
@@ -339,6 +346,8 @@ const PAGE_PRELOADERS: Partial<Record<PageKey, PageLoader>> = {
     import("@/pages/inventory/InventoryTrackingPage"),
   "erp-inventory-tracking-parts": () =>
     import("@/pages/inventory/InventoryTrackingPartsPage"),
+  "erp-finished-goods": () => import("@/pages/manufacturing/FinishedGoodsPage"),
+  "garage-partners": () => import("@/modules/garage/pages/GaragePartners"),
   "erp-inventory-vouchers": loadInventoryVouchersPage,
   "erp-sales-orders": loadErpSalesOrdersPage,
   "erp-goods-issues": loadErpGoodsIssuesPage,
