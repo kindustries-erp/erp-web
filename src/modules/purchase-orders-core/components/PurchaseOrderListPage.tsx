@@ -92,8 +92,6 @@ export function PurchaseOrderListPage() {
   } = pageState;
 
   const {
-    filter,
-    filterConfig,
     listQuery,
     page,
     pageSize,
@@ -238,8 +236,6 @@ export function PurchaseOrderListPage() {
       }}
       sortArray={tableState.sorts}
       onSort={togglePurchaseSort}
-      filter={filter}
-      filterConfig={filterConfig}
       getRowKey={(row) => `${row.document_type || "purchase"}-${row.id}`}
       rowActions={(row) => [
         {

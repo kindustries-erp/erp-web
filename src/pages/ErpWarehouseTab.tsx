@@ -844,14 +844,8 @@ export function ErpWarehouseTab() {
           setPageSize(v);
         }}
         onRefresh={() => void vouchersQuery.refetch()}
-        filterConfig={filterConfig}
-        filter={filterPanel}
-        activeFilterCount={
-          (filterPanel?.activeFilterCount || 0) +
-          (tableState.activeFilterCount || 0)
-        }
+        activeFilterCount={tableState.activeFilterCount || 0}
         onClearAllFilters={() => {
-          filterPanel.resetAll();
           tableState.resetFilters();
           setPage(1);
         }}

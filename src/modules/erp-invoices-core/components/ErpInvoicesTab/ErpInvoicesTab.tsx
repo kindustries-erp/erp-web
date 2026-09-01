@@ -47,7 +47,6 @@ export function ErpInvoicesTab(props: ErpInvoicesTabProps) {
     summaryRow,
     viewTabsNode,
     bulkActionsNode,
-    filterConfig,
     activeSortKey,
     activeSortOrder,
     rowSelection,
@@ -362,8 +361,6 @@ export function ErpInvoicesTab(props: ErpInvoicesTabProps) {
           defaultColumnVisibility={DEFAULT_INVOICE_COLUMN_VISIBILITY}
           bulkActionsNode={bulkActionsNode}
           customActionsNode={viewTabsNode}
-          filterConfig={filterConfig}
-          filter={listHook.filterPanel}
           rowActions={rowActions}
           onCreate={() => setImportModalOpen(true)}
           createLabel={t("syncInvoices", "Đồng bộ")}

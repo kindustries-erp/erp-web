@@ -1209,13 +1209,8 @@ export function VinfastPartsTrackingPage({
           setPage(1);
         }}
         onRefresh={() => refetch()}
-        filterConfig={filterConfig}
-        filter={filterProps}
-        activeFilterCount={
-          filterProps.activeFilterCount + (tableState.activeFilterCount || 0)
-        }
+        activeFilterCount={tableState.activeFilterCount || 0}
         onClearAllFilters={() => {
-          filterProps.resetAll();
           tableState.resetFilters();
           setPage(1);
         }}

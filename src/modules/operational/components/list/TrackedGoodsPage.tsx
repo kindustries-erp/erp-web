@@ -15,7 +15,6 @@ import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
 import { useAppStore } from "@/core/config/appStore";
 import { extractApiError } from "@/shared/utils/apiError";
 import { useT } from "@/core/i18n";
-import type { FilterPanelConfig } from "@/shared/hooks/useFilterPanel";
 import {
   inventoryCoreApi,
   type InventorySerialRow,
@@ -177,7 +176,6 @@ export function TrackedGoodsPage({
     },
   );
   const [sortField] = useState("-created_at");
-  const [filterPanelOpen, setFilterPanelOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<InventorySerialRow | null>(
     () => {
       if (typeof window !== "undefined") {
@@ -502,40 +500,6 @@ export function TrackedGoodsPage({
   const items = query.data?.items || [];
   const total = query.data?.total || 0;
   const totalPages = query.data?.totalPages || 0;
-
-  const activeFilterCount = useMemo(() => {
-    let count = [
-      !!search,
-      !!itemTypeFilter,
-      !!trackingPolicyFilter,
-      !!statusFilter,
-      missingSerialFilter,
-    ].filter(Boolean).length;
-
-    const activeCols = new Set<string>();
-    if (tableState.columnFilters) {
-      Object.entries(tableState.columnFilters).forEach(([col, f]) => {
-        if (f && f.length > 0) activeCols.add(col);
-      });
-    }
-    if (tableState.columnSearch) {
-      Object.entries(tableState.columnSearch).forEach(([col, s]) => {
-        if (s && String(s).trim().length > 0) activeCols.add(col);
-      });
-    }
-    count += Math.max(activeCols.size, tableState.activeFilterCount || 0);
-
-    return count;
-  }, [
-    search,
-    itemTypeFilter,
-    trackingPolicyFilter,
-    statusFilter,
-    missingSerialFilter,
-    tableState.columnFilters,
-    tableState.columnSearch,
-    tableState.activeFilterCount,
-  ]);
 
   const fetchSerialOptions = useCallback(
     async ({
@@ -1356,21 +1320,6 @@ export function TrackedGoodsPage({
     [t, tableState, currentTab, fixedTrackingPolicy, fetchSerialOptions],
   );
 
-  const filterConfig: FilterPanelConfig = useMemo(
-    () => ({
-      search: false,
-      custom: [
-        {
-          key: "missingSerial",
-          label: "Tình trạng Serial",
-          placeholder: "Tất cả",
-          options: [{ value: "true", label: "Chưa có Serial (Trống)" }],
-        },
-      ],
-    }),
-    [t],
-  );
-
   const resetAllFilters = useCallback(() => {
     setSearchInput("");
     setSearch("");
@@ -1511,57 +1460,8 @@ export function TrackedGoodsPage({
           setPage(1);
         }}
         onRefresh={() => query.refetch()}
-        activeFilterCount={activeFilterCount}
+        activeFilterCount={tableState.activeFilterCount || 0}
         onClearAllFilters={resetAllFilters}
-        filterConfig={filterConfig}
-        filter={{
-          state: {
-            period: "",
-            dateFrom: "",
-            dateTo: "",
-            channel: "",
-            search: search,
-            amountMin: "",
-            amountMax: "",
-            status: "",
-            counterpartySource: "",
-            custom: {
-              itemType: itemTypeFilter,
-              trackingPolicy: trackingPolicyFilter,
-              status: statusFilter,
-              missingSerial: missingSerialFilter ? "true" : "",
-            },
-          },
-          inputs: { search: searchInput, amountMin: "", amountMax: "" },
-          setSearchInput: setSearchInput,
-          openPanel: () => setFilterPanelOpen(true),
-          closePanel: () => setFilterPanelOpen(false),
-          togglePanel: () => setFilterPanelOpen((v) => !v),
-          setPeriod: () => {},
-          setDateFrom: () => {},
-          setDateTo: () => {},
-          setChannel: () => {},
-          setAmountMinInput: () => {},
-          setAmountMaxInput: () => {},
-          setStatus: () => {},
-          setCounterpartySource: () => {},
-          setCustom: (key: string, v: string) => {
-            if (key === "itemType") {
-              setItemTypeFilter(v);
-            } else if (key === "trackingPolicy") {
-              setTrackingPolicyFilter(v);
-            } else if (key === "status") {
-              setStatusFilter(v);
-            } else if (key === "missingSerial") {
-              setMissingSerialFilter(v === "true");
-            }
-            setPage(1);
-          },
-          resetAll: resetAllFilters,
-          hasActiveFilter: activeFilterCount > 0,
-          activeFilterCount,
-          panelOpen: filterPanelOpen,
-        }}
       />
       {drawerOpen && (
         <TrackedGoodsDrawer

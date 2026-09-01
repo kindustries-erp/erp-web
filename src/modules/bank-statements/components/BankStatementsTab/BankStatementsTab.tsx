@@ -48,7 +48,6 @@ export function BankStatementsTab(props: BankStatementsTabProps) {
     currentColumnVisibility,
     branches,
     accountsData,
-    filterConfig,
     filter,
     tableState,
     data,
@@ -248,11 +247,7 @@ export function BankStatementsTab(props: BankStatementsTabProps) {
         onPage={setPage}
         onPageSize={setPageSize}
         onRefresh={handleRefresh}
-        filterConfig={filterConfig}
-        filter={filter}
-        activeFilterCount={
-          filter.activeFilterCount + (tableState.activeFilterCount || 0)
-        }
+        activeFilterCount={tableState.activeFilterCount || 0}
         onClearAllFilters={handleClearAllFilters}
         sortArray={tableState.sorts}
         onSort={(colKey) => {

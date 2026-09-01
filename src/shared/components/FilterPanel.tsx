@@ -218,122 +218,124 @@ export function FilterPanel<T = any>({
     </div>
   );
 
-  const legacySections = config && legacyFilter && (
-    <div className="space-y-3 pt-1">
-      {config.period && (
-        <FilterSection label={t("voucher.filter.period") || "Kỳ báo cáo"}>
-          <Combobox
-            options={PERIOD_OPTS}
-            value={legacyFilter.state.period}
-            onChange={(v) => legacyFilter.setPeriod(v ?? "")}
-            placeholder={t("Chọn kỳ...")}
-            className="w-full h-7 text-xs bg-muted/30 border-border/50"
-          />
-          <div className="mt-1.5 grid grid-cols-2 gap-1.5">
-            <DatePicker
-              value={legacyFilter.state.dateFrom}
-              onChange={legacyFilter.setDateFrom}
-              placeholder={t("Từ ngày")}
-              className="h-7 text-xs"
-            />
-            <DatePicker
-              value={legacyFilter.state.dateTo}
-              onChange={legacyFilter.setDateTo}
-              placeholder={t("Đến ngày")}
-              className="h-7 text-xs"
-            />
-          </div>
-        </FilterSection>
-      )}
-
-      {config.channel && (
-        <FilterSection label={config.channel.label}>
-          <Combobox
-            options={config.channel.options}
-            value={legacyFilter.state.channel}
-            onChange={(v) => legacyFilter.setChannel(v ?? "")}
-            placeholder={config.channel.placeholder || t("Tất cả")}
-            className="w-full h-7 text-xs bg-muted/30 border-border/50"
-          />
-        </FilterSection>
-      )}
-
-      {config.status && (
-        <FilterSection label="Trạng thái">
-          <Combobox
-            options={config.status.options}
-            value={legacyFilter.state.status}
-            onChange={(v) => legacyFilter.setStatus(v ?? "")}
-            placeholder={config.status.placeholder || t("Tất cả")}
-            className="w-full h-8 text-xs"
-          />
-        </FilterSection>
-      )}
-
-      {config.counterpartySource && (
-        <FilterSection label="Đối tượng">
-          <Combobox
-            options={config.counterpartySource.options}
-            value={legacyFilter.state.counterpartySource}
-            onChange={(v) => legacyFilter.setCounterpartySource(v ?? "")}
-            placeholder={config.counterpartySource.placeholder || t("Tất cả")}
-            className="w-full h-7 text-xs bg-muted/30 border-border/50"
-          />
-        </FilterSection>
-      )}
-
-      {config.amountRange && (
-        <FilterSection label="Số tiền">
-          <div className="grid grid-cols-2 gap-1.5">
-            <Input
-              type="text"
-              inputMode="numeric"
-              value={legacyFilter.inputs.amountMin}
-              onChange={(e) => legacyFilter.setAmountMinInput(e.target.value)}
-              placeholder="Từ"
-              className="h-7 text-xs bg-muted/30 border-border/50"
-            />
-            <Input
-              type="text"
-              inputMode="numeric"
-              value={legacyFilter.inputs.amountMax}
-              onChange={(e) => legacyFilter.setAmountMaxInput(e.target.value)}
-              placeholder="Đến"
-              className="h-7 text-xs bg-muted/30 border-border/50"
-            />
-          </div>
-        </FilterSection>
-      )}
-
-      {config.custom?.map((f) => (
-        <FilterSection key={f.key} label={f.label}>
-          {f.type === "multi-select" ? (
-            <MultiSelect
-              options={f.options}
-              value={
-                legacyFilter.state.custom[f.key]
-                  ? legacyFilter.state.custom[f.key].split(",")
-                  : []
-              }
-              onChange={(v) => legacyFilter.setCustom(f.key, v.join(","))}
-              placeholder={f.placeholder}
-            />
-          ) : (
+  const legacySections = config &&
+    legacyFilter &&
+    filter.columnDescriptors.length === 0 && (
+      <div className="space-y-3 pt-1">
+        {config.period && (
+          <FilterSection label={t("voucher.filter.period") || "Kỳ báo cáo"}>
             <Combobox
-              options={f.options}
-              value={legacyFilter.state.custom[f.key] ?? ""}
-              onChange={(v) => legacyFilter.setCustom(f.key, v ?? "")}
-              placeholder={f.placeholder}
+              options={PERIOD_OPTS}
+              value={legacyFilter.state.period}
+              onChange={(v) => legacyFilter.setPeriod(v ?? "")}
+              placeholder={t("Chọn kỳ...")}
               className="w-full h-7 text-xs bg-muted/30 border-border/50"
-              onSearch={f.onSearch}
-              onScrollBottom={f.onLoadMore}
-              loading={f.loading}
             />
-          )}
-        </FilterSection>
-      ))}
-    </div>
-  );
+            <div className="mt-1.5 grid grid-cols-2 gap-1.5">
+              <DatePicker
+                value={legacyFilter.state.dateFrom}
+                onChange={legacyFilter.setDateFrom}
+                placeholder={t("Từ ngày")}
+                className="h-7 text-xs"
+              />
+              <DatePicker
+                value={legacyFilter.state.dateTo}
+                onChange={legacyFilter.setDateTo}
+                placeholder={t("Đến ngày")}
+                className="h-7 text-xs"
+              />
+            </div>
+          </FilterSection>
+        )}
+
+        {config.channel && (
+          <FilterSection label={config.channel.label}>
+            <Combobox
+              options={config.channel.options}
+              value={legacyFilter.state.channel}
+              onChange={(v) => legacyFilter.setChannel(v ?? "")}
+              placeholder={config.channel.placeholder || t("Tất cả")}
+              className="w-full h-7 text-xs bg-muted/30 border-border/50"
+            />
+          </FilterSection>
+        )}
+
+        {config.status && (
+          <FilterSection label="Trạng thái">
+            <Combobox
+              options={config.status.options}
+              value={legacyFilter.state.status}
+              onChange={(v) => legacyFilter.setStatus(v ?? "")}
+              placeholder={config.status.placeholder || t("Tất cả")}
+              className="w-full h-8 text-xs"
+            />
+          </FilterSection>
+        )}
+
+        {config.counterpartySource && (
+          <FilterSection label="Đối tượng">
+            <Combobox
+              options={config.counterpartySource.options}
+              value={legacyFilter.state.counterpartySource}
+              onChange={(v) => legacyFilter.setCounterpartySource(v ?? "")}
+              placeholder={config.counterpartySource.placeholder || t("Tất cả")}
+              className="w-full h-7 text-xs bg-muted/30 border-border/50"
+            />
+          </FilterSection>
+        )}
+
+        {config.amountRange && (
+          <FilterSection label="Số tiền">
+            <div className="grid grid-cols-2 gap-1.5">
+              <Input
+                type="text"
+                inputMode="numeric"
+                value={legacyFilter.inputs.amountMin}
+                onChange={(e) => legacyFilter.setAmountMinInput(e.target.value)}
+                placeholder="Từ"
+                className="h-7 text-xs bg-muted/30 border-border/50"
+              />
+              <Input
+                type="text"
+                inputMode="numeric"
+                value={legacyFilter.inputs.amountMax}
+                onChange={(e) => legacyFilter.setAmountMaxInput(e.target.value)}
+                placeholder="Đến"
+                className="h-7 text-xs bg-muted/30 border-border/50"
+              />
+            </div>
+          </FilterSection>
+        )}
+
+        {config.custom?.map((f) => (
+          <FilterSection key={f.key} label={f.label}>
+            {f.type === "multi-select" ? (
+              <MultiSelect
+                options={f.options}
+                value={
+                  legacyFilter.state.custom[f.key]
+                    ? legacyFilter.state.custom[f.key].split(",")
+                    : []
+                }
+                onChange={(v) => legacyFilter.setCustom(f.key, v.join(","))}
+                placeholder={f.placeholder}
+              />
+            ) : (
+              <Combobox
+                options={f.options}
+                value={legacyFilter.state.custom[f.key] ?? ""}
+                onChange={(v) => legacyFilter.setCustom(f.key, v ?? "")}
+                placeholder={f.placeholder}
+                className="w-full h-7 text-xs bg-muted/30 border-border/50"
+                onSearch={f.onSearch}
+                onScrollBottom={f.onLoadMore}
+                loading={f.loading}
+              />
+            )}
+          </FilterSection>
+        ))}
+      </div>
+    );
 
   const content = (
     <div className="space-y-3">

@@ -320,7 +320,7 @@ export function useGeneralColumns({
         key: "invoiceCategory",
         header: (
           <TableColumnHeaderFilter
-            title="Phân loại HĐ"
+            title={t("invoice.columns.invoiceCategory", "Phân loại HĐ")}
             sortState={getSortState("invoiceCategory")}
             onSortChange={(state) => handleSortChange("invoiceCategory", state)}
             searchValue={

@@ -35,10 +35,6 @@ import {
 } from "@/shared/components/StandardFormDrawer";
 import { Combobox } from "@/shared/components/Combobox";
 import type { DrawerMode } from "@/shared/stores/useDrawerStore";
-import {
-  useFilterPanel,
-  type FilterPanelConfig,
-} from "@/shared/hooks/useFilterPanel";
 import { useUIStore } from "@/core/config/uiStore";
 import { useAuthStore } from "@/modules/auth/domain/authStore";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
@@ -67,23 +63,7 @@ export function ErpUsersPage() {
   const canRead = useHasPermission(ErpResource.ADMIN_USERS, ErpAction.READ);
   const showToast = useUIStore((s) => s.showToast);
 
-  const filterConfig: FilterPanelConfig = useMemo(
-    () => ({
-      status: {
-        options: [
-          { value: "ACTIVE", label: t("Hoạt động (ACTIVE)") },
-          { value: "INACTIVE", label: t("Ngưng (INACTIVE)") },
-        ],
-        placeholder: t("Tất cả trạng thái"),
-      },
-    }),
-    [t],
-  );
-
-  const filter = useFilterPanel(filterConfig);
-  const status = filter.state.status;
-
-  const listHook = useUsersAdminList({ status });
+  const listHook = useUsersAdminList();
   const {
     data: items,
     total,
@@ -95,16 +75,6 @@ export function ErpUsersPage() {
     setPageSize,
     refetch: loadUsers,
   } = listHook;
-
-  const totalActiveFilterCount = useMemo(
-    () => filter.activeFilterCount + listHook.activeFilterCount,
-    [filter.activeFilterCount, listHook.activeFilterCount],
-  );
-
-  const handleClearAll = useCallback(() => {
-    filter.resetAll();
-    listHook.clearAllFilters();
-  }, [filter, listHook]);
 
   const [employees, setEmployees] = useState<ErpEmployee[]>([]);
   const [timelineLoading, setTimelineLoading] = useState(false);
@@ -530,10 +500,8 @@ export function ErpUsersPage() {
           setPageSize(value);
         }}
         onRefresh={() => void loadUsers()}
-        filterConfig={filterConfig}
-        filter={filter}
-        activeFilterCount={totalActiveFilterCount}
-        onClearAllFilters={handleClearAll}
+        activeFilterCount={listHook.activeFilterCount}
+        onClearAllFilters={listHook.clearAllFilters}
         createActions={[
           {
             groupLabel: t("Người dùng"),

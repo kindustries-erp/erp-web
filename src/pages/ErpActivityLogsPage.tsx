@@ -1,4 +1,4 @@
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState } from "react";
 import { History, Eye } from "lucide-react";
 import {
   type DataTableColumn,
@@ -13,10 +13,6 @@ import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate/SpreadsheetPageTemplate";
 import { Forbidden } from "@/pages/Forbidden";
-import {
-  useFilterPanel,
-  type FilterPanelConfig,
-} from "@/shared/hooks/useFilterPanel";
 import { useT } from "@/core/i18n";
 import {
   auditCoreApi,
@@ -35,61 +31,7 @@ export function ErpActivityLogsPage() {
   const canRead = useHasPermission(ErpResource.ACTIVITY_LOGS, ErpAction.READ);
   const t = useT();
 
-  const filterConfig: FilterPanelConfig = useMemo(
-    () => ({
-      period: true,
-      noDefaultPeriod: true,
-      status: {
-        options: [
-          { value: "SUCCESS", label: "Thành công (SUCCESS)" },
-          { value: "FAIL", label: "Thất bại (FAIL)" },
-        ],
-        placeholder: "Tất cả trạng thái",
-      },
-      custom: [
-        {
-          key: "actionType",
-          label: "Hành động (Method)",
-          placeholder: "Tất cả hành động",
-          type: "multi-select",
-          options: [
-            { value: "GET", label: "GET" },
-            { value: "POST", label: "POST" },
-            { value: "PUT", label: "PUT" },
-            { value: "PATCH", label: "PATCH" },
-            { value: "DELETE", label: "DELETE" },
-          ],
-        },
-        {
-          key: "module",
-          label: "Module",
-          placeholder: "Tất cả phân hệ",
-          options: [
-            { value: "auth", label: "auth" },
-            { value: "users", label: "users" },
-            { value: "inventory", label: "inventory" },
-            { value: "purchase", label: "purchase" },
-          ],
-        },
-      ],
-    }),
-    [],
-  );
-
-  const filter = useFilterPanel(filterConfig);
-  const status = filter.state.status;
-  const dateFrom = filter.state.dateFrom;
-  const dateTo = filter.state.dateTo;
-  const actionType = filter.state.custom?.actionType;
-  const module = filter.state.custom?.module;
-
-  const listHook = useAuditCoreList({
-    status,
-    actionType,
-    module,
-    dateFrom,
-    dateTo,
-  });
+  const listHook = useAuditCoreList();
   const {
     data: items,
     total,
@@ -101,16 +43,6 @@ export function ErpActivityLogsPage() {
     setPageSize,
     refetch: load,
   } = listHook;
-
-  const totalActiveFilterCount = useMemo(
-    () => filter.activeFilterCount + listHook.activeFilterCount,
-    [filter.activeFilterCount, listHook.activeFilterCount],
-  );
-
-  const handleClearAll = useCallback(() => {
-    filter.resetAll();
-    listHook.clearAllFilters();
-  }, [filter, listHook]);
 
   const [selected, setSelected] = useState<AuditLogEntry | null>(null);
 
@@ -289,10 +221,8 @@ export function ErpActivityLogsPage() {
           setPageSize(value);
         }}
         onRefresh={() => void load()}
-        filterConfig={filterConfig}
-        filter={filter}
-        activeFilterCount={totalActiveFilterCount}
-        onClearAllFilters={handleClearAll}
+        activeFilterCount={listHook.activeFilterCount}
+        onClearAllFilters={listHook.clearAllFilters}
         rowActions={(row) => [
           {
             groupLabel: "Tra cứu",

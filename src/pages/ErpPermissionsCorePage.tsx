@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Shield, PlusCircle, Trash, Eye, Pencil } from "lucide-react";
 import { useUIStore } from "@/core/config/uiStore";
 import { useT } from "@/core/i18n";
@@ -17,10 +17,6 @@ import { useCoreRoleUsers } from "@/modules/system/hooks/useCoreRoleUsers";
 import { CoreRoleDrawer } from "@/modules/system/components/CoreRoleDrawer";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
-import {
-  useFilterPanel,
-  type FilterPanelConfig,
-} from "@/shared/hooks/useFilterPanel";
 import { Forbidden } from "@/pages/Forbidden";
 import { getCoreRolesColumnOptionsApi } from "@/modules/system/api/rbacCoreApi";
 import type {
@@ -34,23 +30,7 @@ export function ErpPermissionsCorePage() {
   const showToast = useUIStore((s) => s.showToast);
   const t = useT();
 
-  const filterConfig: FilterPanelConfig = useMemo(
-    () => ({
-      status: {
-        options: [
-          { value: "true", label: t("Hoạt động") },
-          { value: "false", label: t("Ngưng") },
-        ],
-        placeholder: t("Tất cả trạng thái"),
-      },
-    }),
-    [t],
-  );
-
-  const filter = useFilterPanel(filterConfig);
-  const status = filter.state.status;
-
-  const listHook = useCoreRoles({ status });
+  const listHook = useCoreRoles();
   const {
     roles,
     loading,
@@ -66,19 +46,6 @@ export function ErpPermissionsCorePage() {
     updateRole,
     deleteRole,
   } = listHook;
-
-  const totalActiveFilterCount = useMemo(
-    () => filter.activeFilterCount + listHook.activeFilterCount,
-    [filter.activeFilterCount, listHook.activeFilterCount],
-  );
-
-  const filterResetAll = filter.resetAll;
-  const listClearAllFilters = listHook.clearAllFilters;
-
-  const handleClearAll = useCallback(() => {
-    filterResetAll();
-    listClearAllFilters();
-  }, [filterResetAll, listClearAllFilters]);
 
   const {
     initialPermMap,
@@ -364,10 +331,8 @@ export function ErpPermissionsCorePage() {
           setPageSize(val);
         }}
         onRefresh={load}
-        filterConfig={filterConfig}
-        filter={filter}
-        activeFilterCount={totalActiveFilterCount}
-        onClearAllFilters={handleClearAll}
+        activeFilterCount={listHook.activeFilterCount}
+        onClearAllFilters={listHook.clearAllFilters}
         rowActions={(role) => [
           {
             groupLabel: "TRA CỨU",

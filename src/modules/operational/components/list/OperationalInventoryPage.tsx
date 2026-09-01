@@ -32,13 +32,11 @@ import { useStockColumns } from "@/modules/operational/components/list/columns/s
 import { useOperationalListStore } from "@/modules/operational/hooks/useOperationalListStore";
 import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
 import { useT } from "@/core/i18n";
-import type { FilterPanelConfig } from "@/shared/hooks/useFilterPanel";
 import {
   type InventoryStockRow,
   operationalApi,
 } from "@/modules/operational/api/operationalApi";
 import { inventoryCoreApi } from "@/modules/inventory-core/api/inventoryCoreApi";
-import { useAppQuery } from "@/shared/hooks/useAppQuery";
 import { useUIStore } from "@/core/config/uiStore";
 import type { Updater } from "@tanstack/react-table";
 
@@ -87,12 +85,8 @@ export function OperationalInventoryPage({
     pageSize,
     setPage,
     setPageSize,
-    filterPanelOpen,
-    setFilterPanelOpen,
     searchInput,
-    setSearchInput,
     itemTypeFilter,
-    setItemTypeFilter,
     resetAllFilters,
   } = useOperationalListStore();
 
@@ -180,11 +174,6 @@ export function OperationalInventoryPage({
     }
   };
 
-  const activeFilterCount = useMemo(() => {
-    const panelCount = [!!searchInput, !!itemTypeFilter].filter(Boolean).length;
-    return panelCount + (tableState.activeFilterCount || 0);
-  }, [searchInput, itemTypeFilter, tableState.activeFilterCount]);
-
   const handleClearAllFilters = useCallback(() => {
     resetAllFilters();
     tableState.resetFilters();
@@ -195,35 +184,6 @@ export function OperationalInventoryPage({
     stockItems,
     onViewItem,
   });
-
-  const { data: itemTypesData } = useAppQuery({
-    queryKey: ["inventory-item-types", "active"],
-    queryFn: () =>
-      inventoryCoreApi.listItemTypes({ pageSize: 100, isActive: true }),
-  });
-
-  const itemTypeOptions = useMemo(() => {
-    const items = itemTypesData?.items || [];
-    return items.map((it) => ({
-      value: it.code,
-      label: it.name,
-    }));
-  }, [itemTypesData]);
-
-  const inventoryFilterConfig: FilterPanelConfig = useMemo(
-    () => ({
-      search: false,
-      custom: [
-        {
-          key: "itemType",
-          label: t("inventory.filter.itemTypeLabel"),
-          placeholder: t("inventory.filter.itemTypePlaceholder"),
-          options: itemTypeOptions,
-        },
-      ],
-    }),
-    [t, itemTypeOptions],
-  );
 
   const summaryRow = useMemo(() => {
     const totalOnHand = stockItems.reduce(
@@ -308,45 +268,7 @@ export function OperationalInventoryPage({
         },
       ]}
       bulkActionsNode={bulkActionsNode}
-      filterConfig={inventoryFilterConfig}
-      filter={{
-        state: {
-          period: "",
-          dateFrom: "",
-          dateTo: "",
-          channel: "",
-          search: searchInput,
-          amountMin: "",
-          amountMax: "",
-          status: "",
-          counterpartySource: "",
-          custom: { itemType: itemTypeFilter },
-        },
-        inputs: { search: searchInput, amountMin: "", amountMax: "" },
-        setPeriod: () => {},
-        setDateFrom: () => {},
-        setDateTo: () => {},
-        setChannel: () => {},
-        setSearchInput: (v: string) => setSearchInput(v),
-        setAmountMinInput: () => {},
-        setAmountMaxInput: () => {},
-        setStatus: () => {},
-        setCounterpartySource: () => {},
-        setCustom: (key: string, v: string) => {
-          if (key === "itemType") {
-            setItemTypeFilter(v);
-            setPage(1);
-          }
-        },
-        resetAll: resetAllFilters,
-        openPanel: () => setFilterPanelOpen(true),
-        closePanel: () => setFilterPanelOpen(false),
-        togglePanel: () => setFilterPanelOpen((v: boolean) => !v),
-        hasActiveFilter: activeFilterCount > 0,
-        activeFilterCount,
-        panelOpen: filterPanelOpen,
-      }}
-      activeFilterCount={activeFilterCount}
+      activeFilterCount={tableState.activeFilterCount || 0}
       onClearAllFilters={handleClearAllFilters}
       enableRowSelection={false}
       rowSelection={rowSelection}

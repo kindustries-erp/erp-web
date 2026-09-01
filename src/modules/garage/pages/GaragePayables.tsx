@@ -88,8 +88,6 @@ export function GaragePayables() {
         getRowKey={(item: any) => item.id}
         loading={isLoading}
         onRefresh={() => refetch()}
-        filterConfig={filterConfig}
-        filter={filter}
         customActionsNode={<GarageBranchSelector />}
         extraActions={
           <Button
