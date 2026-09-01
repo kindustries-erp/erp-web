@@ -628,6 +628,7 @@ export function useErpInvoicesTabLogic({
 
   const handleTaxTabChange = (tab: string) => {
     listHook.setActiveTaxTab(tab);
+    listHook.tableState.setColumnFilter("taxInvoiceStatus", []);
     if (typeof window !== "undefined") {
       const url = new URL(window.location.href);
       if (tab && tab !== "all") {

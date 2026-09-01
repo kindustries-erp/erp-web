@@ -62,10 +62,16 @@ export function useGeneralColumns({
 }: GeneralColumnsOptions) {
   const effectiveAllFilters = useMemo(() => {
     const filters = { ...listHook.tableState.columnFilters };
-    const taxStatusList = TAX_TAB_TO_STATUS[listHook.activeTaxTab || "all"];
-    if (taxStatusList && taxStatusList.length > 0) {
-      filters._taxTab = [listHook.activeTaxTab];
-      filters.taxInvoiceStatus = taxStatusList;
+    const userSelectedStatus =
+      listHook.tableState.columnFilters?.taxInvoiceStatus;
+    if (userSelectedStatus && userSelectedStatus.length > 0) {
+      filters.taxInvoiceStatus = userSelectedStatus;
+    } else {
+      const taxStatusList = TAX_TAB_TO_STATUS[listHook.activeTaxTab || "all"];
+      if (taxStatusList && taxStatusList.length > 0) {
+        filters._taxTab = [listHook.activeTaxTab];
+        filters.taxInvoiceStatus = taxStatusList;
+      }
     }
     return filters;
   }, [listHook.tableState.columnFilters, listHook.activeTaxTab]);

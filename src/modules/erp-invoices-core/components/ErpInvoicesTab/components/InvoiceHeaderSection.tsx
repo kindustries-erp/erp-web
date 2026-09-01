@@ -184,6 +184,7 @@ export function InvoiceHeaderSection({
 
   const handleTaxTabChange = (tab: string) => {
     listHook.setActiveTaxTab(tab);
+    listHook.tableState.setColumnFilter("taxInvoiceStatus", []);
     listHook.setPage(1);
   };
 

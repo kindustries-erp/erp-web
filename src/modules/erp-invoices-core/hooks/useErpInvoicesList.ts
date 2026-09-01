@@ -84,11 +84,16 @@ export function useErpInvoicesList(
     const filters: Record<string, string[]> = {
       ...tableState.columnFilters,
     };
-    const taxStatusList = TAX_TAB_TO_STATUS[state.activeTaxTab || "all"];
-    if (taxStatusList && taxStatusList.length > 0) {
-      filters.taxInvoiceStatus = taxStatusList;
+    const userSelectedStatus = tableState.columnFilters?.taxInvoiceStatus;
+    if (userSelectedStatus && userSelectedStatus.length > 0) {
+      filters.taxInvoiceStatus = userSelectedStatus;
     } else {
-      delete filters.taxInvoiceStatus;
+      const taxStatusList = TAX_TAB_TO_STATUS[state.activeTaxTab || "all"];
+      if (taxStatusList && taxStatusList.length > 0) {
+        filters.taxInvoiceStatus = taxStatusList;
+      } else {
+        delete filters.taxInvoiceStatus;
+      }
     }
     return filters;
   }, [tableState.columnFilters, state.activeTaxTab]);

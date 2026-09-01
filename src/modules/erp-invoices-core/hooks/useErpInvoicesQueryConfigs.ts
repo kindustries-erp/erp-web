@@ -56,14 +56,19 @@ export function getInvoiceHeaderQueryConfig(
     sortOrder = "asc";
   }
 
+  const userSelectedStatus = tableState.columnFilters?.taxInvoiceStatus;
   const effectiveColumnFilters = {
     ...(tableState.columnFilters || {}),
   };
-  const taxStatusList = TAX_TAB_TO_STATUS[state.activeTaxTab || "all"];
-  if (taxStatusList && taxStatusList.length > 0) {
-    effectiveColumnFilters.taxInvoiceStatus = taxStatusList;
+  if (userSelectedStatus && userSelectedStatus.length > 0) {
+    effectiveColumnFilters.taxInvoiceStatus = userSelectedStatus;
   } else {
-    delete effectiveColumnFilters.taxInvoiceStatus;
+    const taxStatusList = TAX_TAB_TO_STATUS[state.activeTaxTab || "all"];
+    if (taxStatusList && taxStatusList.length > 0) {
+      effectiveColumnFilters.taxInvoiceStatus = taxStatusList;
+    } else {
+      delete effectiveColumnFilters.taxInvoiceStatus;
+    }
   }
 
   const queryParams: ErpInvoiceListParams = {
