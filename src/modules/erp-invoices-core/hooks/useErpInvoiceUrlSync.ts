@@ -1,11 +1,10 @@
-import { useRef } from "react";
-import { usePageUrlState } from "@/shared/hooks/usePageUrlState";
+import { useRef, useEffect, useCallback, useState } from "react";
 import {
   useErpInvoiceListStore,
   type Direction,
 } from "./useErpInvoiceListStore";
-import { PageKey } from "@/shared/types";
 import { ErpUrlQueryParam } from "@/shared/constants/urlParams";
+import { useAppStore } from "@/core/config/appStore";
 
 export interface UseErpInvoiceUrlSyncOptions {
   direction: "IN" | "OUT";
@@ -32,7 +31,6 @@ export function useErpInvoiceUrlSync({
   closeDrawer,
   onHydrate,
 }: UseErpInvoiceUrlSyncOptions) {
-  const pageKey: PageKey = "erp-invoices";
   const storeDir: Direction =
     instanceIndex === 2 ? (direction === "IN" ? "IN_2" : "OUT_2") : direction;
 
@@ -44,12 +42,15 @@ export function useErpInvoiceUrlSync({
   const onHydrateRef = useRef(onHydrate);
   onHydrateRef.current = onHydrate;
 
-  const urlState = usePageUrlState({
-    pageKey,
-    instanceIndex,
-    filterKeys: [
-      ErpUrlQueryParam.TAB,
-      ErpUrlQueryParam.VIEW_MODE,
+  // Initial hydrate on mount
+  const hydratedRef = useRef(false);
+  useEffect(() => {
+    if (hydratedRef.current || typeof window === "undefined") return;
+    hydratedRef.current = true;
+
+    const params = new URLSearchParams(window.location.search);
+    const filters: Record<string, string> = {};
+    [
       ErpUrlQueryParam.STATUS,
       ErpUrlQueryParam.SELLER_NAME,
       ErpUrlQueryParam.BUYER_NAME,
@@ -58,46 +59,153 @@ export function useErpInvoiceUrlSync({
       ErpUrlQueryParam.SEARCH,
       ErpUrlQueryParam.TAG_ID,
       ErpUrlQueryParam.PERIOD,
-      ErpUrlQueryParam.SUBCATEGORY,
-    ],
-    drawerSync: true,
-    onUrlStateHydrate: (state) => {
-      // Hydrate Zustand store
-      hydrateStore(storeDir, {
-        status: state.filters[ErpUrlQueryParam.STATUS] || "",
-        seller_name: state.filters[ErpUrlQueryParam.SELLER_NAME] || "",
-        buyer_name: state.filters[ErpUrlQueryParam.BUYER_NAME] || "",
-        dateFrom: state.filters[ErpUrlQueryParam.DATE_FROM] || "",
-        dateTo: state.filters[ErpUrlQueryParam.DATE_TO] || "",
-        search: state.filters[ErpUrlQueryParam.SEARCH] || "",
-        tag_id: state.filters[ErpUrlQueryParam.TAG_ID] || "",
-        period: state.filters[ErpUrlQueryParam.PERIOD] || "",
+    ].forEach((k) => {
+      const val = params.get(k);
+      if (val) filters[k] = val;
+    });
+
+    const drawerId = params.get(ErpUrlQueryParam.DETAIL) || undefined;
+    const drawerMode =
+      (params.get(ErpUrlQueryParam.DRAWER_MODE) as "view" | "edit") ||
+      undefined;
+    const view = params.get(ErpUrlQueryParam.VIEW_MODE) || undefined;
+
+    // Decode column filters
+    let columnFilters: Record<string, string[]> | undefined;
+    const cfRaw = params.get(ErpUrlQueryParam.COLUMN_FILTERS);
+    if (cfRaw) {
+      try {
+        columnFilters = JSON.parse(decodeURIComponent(cfRaw));
+      } catch {
+        /* ignore invalid json */
+      }
+    }
+
+    // Decode column search
+    let columnSearch: Record<string, string> | undefined;
+    const csRaw = params.get(ErpUrlQueryParam.COLUMN_SEARCH);
+    if (csRaw) {
+      try {
+        columnSearch = JSON.parse(decodeURIComponent(csRaw));
+      } catch {
+        /* ignore invalid json */
+      }
+    }
+
+    // Decode sorts
+    let sorts: string[] | undefined;
+    const sRaw = params.get(ErpUrlQueryParam.SORTS);
+    if (sRaw) {
+      try {
+        sorts = JSON.parse(decodeURIComponent(sRaw));
+      } catch {
+        /* ignore invalid json */
+      }
+    }
+
+    // Hydrate store
+    hydrateStore(storeDir, {
+      status: filters[ErpUrlQueryParam.STATUS] || "",
+      seller_name: filters[ErpUrlQueryParam.SELLER_NAME] || "",
+      buyer_name: filters[ErpUrlQueryParam.BUYER_NAME] || "",
+      dateFrom: filters[ErpUrlQueryParam.DATE_FROM] || "",
+      dateTo: filters[ErpUrlQueryParam.DATE_TO] || "",
+      search: filters[ErpUrlQueryParam.SEARCH] || "",
+      tag_id: filters[ErpUrlQueryParam.TAG_ID] || "",
+      period: filters[ErpUrlQueryParam.PERIOD] || "",
+    });
+
+    if (onHydrateRef.current) {
+      onHydrateRef.current({
+        filters,
+        view,
+        drawerId,
+        drawerMode,
+        columnFilters,
+        columnSearch,
+        sorts,
       });
+    }
 
-      // Custom onHydrate for columnFilters / view presets / sorts
-      if (onHydrateRef.current) {
-        onHydrateRef.current(state);
-      }
+    if (drawerId && openDrawerRef.current) {
+      openDrawerRef.current(drawerId, drawerMode || "view");
+    }
+  }, [hydrateStore, storeDir]);
 
-      // Auto-open or auto-close drawer if URL contains/clears drawer id
-      if (state.drawerId && openDrawerRef.current) {
-        openDrawerRef.current(state.drawerId, state.drawerMode || "view");
-      } else if (!state.drawerId && closeDrawerRef.current) {
-        closeDrawerRef.current();
-      }
-    },
+  const [drawerId, setDrawerId] = useState<string | undefined>(() => {
+    if (typeof window === "undefined") return undefined;
+    const params = new URLSearchParams(window.location.search);
+    return params.get(ErpUrlQueryParam.DETAIL) || undefined;
   });
+  const [drawerMode, setDrawerMode] = useState<"view" | "edit" | undefined>(
+    () => {
+      if (typeof window === "undefined") return undefined;
+      const params = new URLSearchParams(window.location.search);
+      return (
+        (params.get(ErpUrlQueryParam.DRAWER_MODE) as "view" | "edit") ||
+        undefined
+      );
+    },
+  );
+
+  const openDrawerWithUrl = useCallback(
+    (id: string, mode: "view" | "edit" = "view") => {
+      setDrawerId(id);
+      setDrawerMode(mode);
+      if (typeof window === "undefined") return;
+      const url = new URL(window.location.href);
+      url.searchParams.set(ErpUrlQueryParam.DETAIL, id);
+      if (mode === "edit") {
+        url.searchParams.set(ErpUrlQueryParam.DRAWER_MODE, "edit");
+      } else {
+        url.searchParams.delete(ErpUrlQueryParam.DRAWER_MODE);
+      }
+      window.history.replaceState(null, "", url.toString());
+      const instanceId =
+        instanceIndex === 2 ? "erp-invoices__2" : "erp-invoices";
+      useAppStore.getState().updateCurrentTabUrl(instanceId, url.toString());
+    },
+    [instanceIndex],
+  );
+
+  const closeDrawerWithUrl = useCallback(() => {
+    setDrawerId(undefined);
+    setDrawerMode(undefined);
+    if (typeof window === "undefined") return;
+    const url = new URL(window.location.href);
+    url.searchParams.delete(ErpUrlQueryParam.DETAIL);
+    url.searchParams.delete(ErpUrlQueryParam.DRAWER_MODE);
+    window.history.replaceState(null, "", url.toString());
+    const instanceId = instanceIndex === 2 ? "erp-invoices__2" : "erp-invoices";
+    useAppStore.getState().updateCurrentTabUrl(instanceId, url.toString());
+  }, [instanceIndex]);
+
+  const noop = useCallback(() => {}, []);
 
   return {
-    urlState,
+    urlState: {
+      view: undefined,
+      drawerId,
+      drawerMode,
+      openDrawer: openDrawerWithUrl,
+      closeDrawer: closeDrawerWithUrl,
+      setView: noop,
+      setFilters: noop,
+      setColumnFilters: noop,
+      setColumnSearch: noop,
+      setSorts: noop,
+      setPage: noop,
+      setPageSize: noop,
+      resetAll: noop,
+    },
     storeDir,
-    activeView: urlState.view || "all",
-    setView: urlState.setView,
-    openDrawerWithUrl: urlState.openDrawer,
-    closeDrawerWithUrl: urlState.closeDrawer,
-    syncFiltersToUrl: urlState.setFilters,
-    syncColumnFiltersToUrl: urlState.setColumnFilters,
-    syncColumnSearchToUrl: urlState.setColumnSearch,
-    syncSortsToUrl: urlState.setSorts,
+    activeView: "all",
+    setView: noop,
+    openDrawerWithUrl,
+    closeDrawerWithUrl,
+    syncFiltersToUrl: noop,
+    syncColumnFiltersToUrl: noop,
+    syncColumnSearchToUrl: noop,
+    syncSortsToUrl: noop,
   };
 }

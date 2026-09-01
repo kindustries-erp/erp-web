@@ -202,8 +202,9 @@ export function pageToPath(
   const base = slug ? `/${slug}` : "/";
   const searchParams = new URLSearchParams();
 
-  if (tab) {
-    searchParams.set(ErpUrlQueryParam.TAB, tab);
+  const effectiveTab = tab || (page === "erp-invoices" ? "in" : undefined);
+  if (effectiveTab) {
+    searchParams.set(ErpUrlQueryParam.TAB, effectiveTab);
   }
 
   if (extraParams) {
@@ -265,7 +266,7 @@ export function pathToPage(
   } else if (slug === "erp-invoices-in" || page === "erp-invoices") {
     if (tab === "lines" || viewParam === "lines") {
       tab = "in-lines";
-    } else if (tab === "header") {
+    } else if (tab === "header" || !tab) {
       tab = "in";
     }
   }

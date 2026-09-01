@@ -109,7 +109,14 @@ export const useAppStore = create<AppState>()(
           undefined,
           instanceIndex === 2 ? { _i: "2" } : undefined,
         );
-        const targetPath = targetSavedUrl || defaultPath;
+        let targetPath = targetSavedUrl || defaultPath;
+        if (page === "erp-invoices" && !targetPath.includes("tab=")) {
+          targetPath = pageToPath(
+            "erp-invoices",
+            "in",
+            instanceIndex === 2 ? { _i: "2" } : undefined,
+          );
+        }
         const current =
           typeof window !== "undefined"
             ? window.location.pathname + window.location.search

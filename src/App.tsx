@@ -13,7 +13,7 @@ import { TopProgressBar } from "@/shared/components/TopProgressBar";
 import { AppContextMenu } from "@/shared/components/ContextMenu";
 import { DocumentDependencyModal } from "@/core/components/DocumentDependencyModal";
 import { ReloadPrompt } from "@/ReloadPrompt";
-import { pathToPage } from "@/shared/utils/pageUrl";
+import { pathToPage, pageToPath } from "@/shared/utils/pageUrl";
 import { EnvStamp } from "@/core/components/EnvStamp";
 import { useEnvStore } from "@/core/store/useEnvStore";
 import { GlobalErpDocumentOpener } from "@/core/components/GlobalErpDocumentOpener";
@@ -403,6 +403,17 @@ export default function App() {
     const sync = () => {
       const parsed = pathToPage(location.pathname, location.search);
       if (parsed) {
+        if (
+          parsed.page === "erp-invoices" &&
+          !location.search.includes("tab=")
+        ) {
+          const canonicalPath = pageToPath(
+            "erp-invoices",
+            parsed.tab || "in",
+            parsed.instanceIndex === 2 ? { _i: "2" } : undefined,
+          );
+          window.history.replaceState(null, "", canonicalPath);
+        }
         syncFromUrl(parsed.page, parsed.tab, parsed.instanceIndex);
       } else {
         history.replaceState(null, "", "/");

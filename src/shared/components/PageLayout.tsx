@@ -68,8 +68,8 @@ export function PageLayout({
   return (
     <div
       className={cn(
-        "flex flex-col h-full overflow-hidden space-y-4 px-5 pt-[18px] pb-4",
-        hideHeader && "px-4 pt-3 pb-3 space-y-3",
+        "flex flex-col h-full overflow-hidden space-y-4 px-5 pt-[18px]",
+        hideHeader && "px-4 pt-3 space-y-3",
         className,
       )}
     >
@@ -107,7 +107,7 @@ export function PageLayout({
         </Tabs>
       )}
 
-      {children}
+      <div className="flex-1 min-h-0 flex flex-col w-full pb-4">{children}</div>
     </div>
   );
 }

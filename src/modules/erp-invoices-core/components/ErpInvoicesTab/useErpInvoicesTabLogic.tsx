@@ -121,7 +121,6 @@ export function useErpInvoicesTabLogic({
   };
 
   const initialTabInfo = getInitialTabInfo();
-  const [isPending, startTransition] = React.useTransition();
   const [currentDirection, setCurrentDirection] = useState<"IN" | "OUT">(
     initialTabInfo.dir,
   );
@@ -235,6 +234,10 @@ export function useErpInvoicesTabLogic({
   }, [isDrawer, propDirection, instanceIndex]);
 
   const handleTabChange = (newTab: string) => {
+    if (debounceUrlTimerRef.current) {
+      clearTimeout(debounceUrlTimerRef.current);
+    }
+
     let nextDir: "IN" | "OUT";
     let nextView: "header" | "lines";
 
@@ -252,14 +255,10 @@ export function useErpInvoicesTabLogic({
       nextView = "header";
     }
 
-    // 1. Cập nhật Tab highlight NGAY LẬP TỨC trên UI (0ms synchronous update)
+    // 1. Cập nhật Tab highlight, Direction & View NGAY LẬP TỨC (0ms synchronous update)
     setCurrentTabKey(newTab);
-
-    // 2. Chuyển Direction & View trong non-blocking Concurrent Transition
-    startTransition(() => {
-      setCurrentDirection(nextDir);
-      setActiveView(nextView);
-    });
+    setCurrentDirection(nextDir);
+    setActiveView(nextView);
 
     if (!isDrawer && typeof window !== "undefined") {
       const url = new URL(window.location.href);
@@ -423,15 +422,10 @@ export function useErpInvoicesTabLogic({
     }
 
     debounceUrlTimerRef.current = setTimeout(() => {
-      const currentUrl = new URL(window.location.href);
-      const newParams = new URLSearchParams(currentUrl.search);
+      const newParams = new URLSearchParams();
 
       // 1. Tab & Instance
-      if (currentTabKey !== "in") {
-        newParams.set(ErpUrlQueryParam.TAB, currentTabKey);
-      } else {
-        newParams.delete(ErpUrlQueryParam.TAB);
-      }
+      newParams.set(ErpUrlQueryParam.TAB, currentTabKey);
       if (instanceIndex === 2) {
         newParams.set(ErpUrlQueryParam.INSTANCE_INDEX, "2");
       }
@@ -583,9 +577,7 @@ export function useErpInvoicesTabLogic({
       }
       window.history.replaceState(null, "", url.toString());
     }
-    startTransition(() => {
-      listHook.setPage(1);
-    });
+    listHook.setPage(1);
   };
 
   // Column View Mode Presets
@@ -738,34 +730,6 @@ export function useErpInvoicesTabLogic({
     }
     toast.success(t("viewModeDeleteSuccess", "Đã xóa chế độ xem thành công"));
   };
-
-  // Sync manual filter panel changes to URL
-  useEffect(() => {
-    if (isDrawer || activeView !== "header") return;
-    const { status, search, dateFrom, dateTo, period, custom } =
-      listHook.filterPanel.state;
-    urlSync.syncFiltersToUrl({
-      status: status || "",
-      search: search || "",
-      dateFrom: dateFrom || "",
-      dateTo: dateTo || "",
-      period: period || "",
-      seller_name: custom?.seller_name || "",
-      buyer_name: custom?.buyer_name || "",
-      tag_id: (custom?.tag_id as string) || "",
-    });
-  }, [
-    isDrawer,
-    activeView,
-    listHook.filterPanel.state.status,
-    listHook.filterPanel.state.search,
-    listHook.filterPanel.state.dateFrom,
-    listHook.filterPanel.state.dateTo,
-    listHook.filterPanel.state.period,
-    listHook.filterPanel.state.custom?.seller_name,
-    listHook.filterPanel.state.custom?.buyer_name,
-    listHook.filterPanel.state.custom?.tag_id,
-  ]);
 
   useEffect(() => {
     if (isDrawer && (initialDateFrom || initialDateTo)) {
@@ -972,7 +936,7 @@ export function useErpInvoicesTabLogic({
     t,
     direction,
     isDrawer,
-    isPending,
+    isPending: false,
     listDir,
     canEditInvoice,
     listHook,

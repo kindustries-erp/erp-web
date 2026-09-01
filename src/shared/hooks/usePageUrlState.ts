@@ -261,6 +261,8 @@ export function usePageUrlState({
       const tabParam = currentSearch.get(ErpUrlQueryParam.TAB);
       if (tabParam) {
         newParams.set(ErpUrlQueryParam.TAB, tabParam);
+      } else if (pageKey === "erp-invoices") {
+        newParams.set(ErpUrlQueryParam.TAB, "in");
       }
 
       // Maintain view_mode param if existing

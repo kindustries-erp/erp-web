@@ -60,11 +60,9 @@ export interface InvoiceDrawersProps {
 
 export function InvoiceDrawers({
   direction,
-  isDrawer,
   t,
   showToast,
   formHook,
-  urlSync,
   loadInvoices,
   handleCloseInternal,
   buildExportBaseQuery,
@@ -83,9 +81,7 @@ export function InvoiceDrawers({
   activeView,
   partnerViewMode,
 }: InvoiceDrawersProps) {
-  const isInternalOpen =
-    formHook.internalDrawerOpen &&
-    (!isDrawer ? Boolean(urlSync.urlState.drawerId) : true);
+  const isInternalOpen = formHook.internalDrawerOpen;
 
   return (
     <>

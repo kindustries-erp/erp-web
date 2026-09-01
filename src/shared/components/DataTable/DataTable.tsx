@@ -191,23 +191,6 @@ export function DataTable<T>({
         <div className="flex items-stretch flex-1 min-h-0 w-full relative">
           {/* Main Area: Table + Pagination */}
           <div className="flex flex-col flex-1 min-h-0 w-full relative min-w-0">
-            {loading && (
-              <div className="absolute top-0 left-0 right-0 h-[2.5px] z-40 overflow-hidden bg-primary/15 pointer-events-none rounded-t-xl">
-                <div
-                  className="h-full bg-primary shadow-[0_0_8px_rgba(var(--primary),0.6)]"
-                  style={{
-                    width: "30%",
-                    animation: "dataTableShimmer 1.1s infinite ease-in-out",
-                  }}
-                />
-                <style>{`
-                  @keyframes dataTableShimmer {
-                    0% { transform: translateX(-100%); }
-                    100% { transform: translateX(350%); }
-                  }
-                `}</style>
-              </div>
-            )}
             <div
               ref={!isFsView ? scrollContainerRef : undefined}
               onScroll={!isFsView ? handleTableScroll : undefined}
