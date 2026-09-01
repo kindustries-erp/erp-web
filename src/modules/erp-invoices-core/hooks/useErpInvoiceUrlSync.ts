@@ -48,6 +48,8 @@ export function useErpInvoiceUrlSync({
     pageKey,
     instanceIndex,
     filterKeys: [
+      ErpUrlQueryParam.TAB,
+      ErpUrlQueryParam.VIEW_MODE,
       ErpUrlQueryParam.STATUS,
       ErpUrlQueryParam.SELLER_NAME,
       ErpUrlQueryParam.BUYER_NAME,

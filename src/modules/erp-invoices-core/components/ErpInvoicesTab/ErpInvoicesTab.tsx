@@ -328,6 +328,7 @@ export function ErpInvoicesTab(props: ErpInvoicesTabProps) {
           getRowClassName={getInvoiceRowClassName}
           summaryRow={summaryRow}
           loading={listHook.loading}
+          isPending={logic.isPending}
           emptyLabel={t("emptyData", "Chưa có hóa đơn nào.")}
           minWidth={1200}
           activeFilterCount={
@@ -363,7 +364,6 @@ export function ErpInvoicesTab(props: ErpInvoicesTabProps) {
           customActionsNode={viewTabsNode}
           filterConfig={filterConfig}
           filter={listHook.filterPanel}
-          listHook={listHook}
           rowActions={rowActions}
           onCreate={() => setImportModalOpen(true)}
           createLabel={t("syncInvoices", "Đồng bộ")}
@@ -374,29 +374,25 @@ export function ErpInvoicesTab(props: ErpInvoicesTabProps) {
         />
       </div>
 
-      <div
-        className={
-          logic.activeView === "lines"
-            ? "flex flex-col h-full flex-1 min-h-0 overflow-hidden"
-            : "hidden"
-        }
-      >
-        <ErpInvoiceItemsSection
-          key={`lines-${logic.direction}-${props.instanceIndex || 1}`}
-          direction={logic.direction}
-          instanceIndex={props.instanceIndex}
-          isDrawer={isDrawer}
-          canEditInvoice={canEditInvoice}
-          partnerTaxCode={props.partnerTaxCode}
-          tabs={logic.pageTabs}
-          activeTab={logic.currentTabKey}
-          onTabChange={logic.handleTabChange}
-          handleOpenInternal={handleOpenInternal}
-          handleDownload={handleDownload}
-          onOpenSync={() => setImportModalOpen(true)}
-          onOpenPortalAuth={() => setPortalAuthOpen(true)}
-        />
-      </div>
+      {logic.activeView === "lines" && (
+        <div className="flex flex-col h-full flex-1 min-h-0 overflow-hidden">
+          <ErpInvoiceItemsSection
+            key={`lines-${logic.direction}-${props.instanceIndex || 1}`}
+            direction={logic.direction}
+            instanceIndex={props.instanceIndex}
+            isDrawer={isDrawer}
+            canEditInvoice={canEditInvoice}
+            partnerTaxCode={props.partnerTaxCode}
+            tabs={logic.pageTabs}
+            activeTab={logic.currentTabKey}
+            onTabChange={logic.handleTabChange}
+            handleOpenInternal={handleOpenInternal}
+            handleDownload={handleDownload}
+            onOpenSync={() => setImportModalOpen(true)}
+            onOpenPortalAuth={() => setPortalAuthOpen(true)}
+          />
+        </div>
+      )}
 
       <InvoiceDrawers
         direction={direction}

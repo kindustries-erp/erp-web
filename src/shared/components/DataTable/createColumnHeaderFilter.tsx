@@ -10,7 +10,6 @@ import {
   ColumnValueType,
   TextFilterOperator,
   NumberFilterOperator,
-  DateFilterOperator,
   type DataTableColumn,
 } from "./types";
 

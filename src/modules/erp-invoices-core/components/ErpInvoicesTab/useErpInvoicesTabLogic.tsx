@@ -1,8 +1,11 @@
 import React, { useMemo, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
 
+import { useAppStore } from "@/core/config/appStore";
+import { erpInvoicesCoreApi } from "@/modules/erp-invoices-core/api/erpInvoicesCoreApi";
+import { ErpQueryKey, DEFAULT_STALE_TIME } from "@/shared/lib/queryKeys";
 import { getTags } from "@/modules/tags/api/tagsApi";
 import { getBranchOptionsApi } from "@/modules/branches/api/branchApi";
 import { useErpInvoicesList } from "@/modules/erp-invoices-core/hooks/useErpInvoicesList";
@@ -118,6 +121,7 @@ export function useErpInvoicesTabLogic({
   };
 
   const initialTabInfo = getInitialTabInfo();
+  const [isPending, startTransition] = React.useTransition();
   const [currentDirection, setCurrentDirection] = useState<"IN" | "OUT">(
     initialTabInfo.dir,
   );
@@ -156,6 +160,46 @@ export function useErpInvoicesTabLogic({
         setCurrentDirection(propDirection);
       }
       return;
+    }
+
+    // Đảm bảo URL luôn có query param tab khi khởi tạo (kể cả tab đầu tiên ?tab=in)
+    if (typeof window !== "undefined") {
+      const url = new URL(window.location.href);
+      let shouldUpdate = false;
+      if (!url.searchParams.has(ErpUrlQueryParam.TAB)) {
+        url.searchParams.set(ErpUrlQueryParam.TAB, initialTabInfo.tabKey);
+        shouldUpdate = true;
+      }
+      const vmFromUrl = url.searchParams.get(ErpUrlQueryParam.VIEW_MODE);
+      if (vmFromUrl) {
+        const targetStoreDir: Direction =
+          instanceIndex === 2
+            ? initialTabInfo.dir === "IN"
+              ? "IN_2"
+              : "OUT_2"
+            : initialTabInfo.dir;
+        const targetTableId = isDrawer
+          ? `erp-invoices-table-checkpoint-${initialTabInfo.dir}`
+          : `erp-invoices-table-${targetStoreDir}`;
+        const currentPref = useUserPreferencesStore
+          .getState()
+          .getTablePreference(targetTableId) || {
+          columnOrder: [],
+          columnVisibility: {},
+        };
+        useUserPreferencesStore.getState().setTablePreferences(targetTableId, {
+          ...currentPref,
+          activeView: vmFromUrl,
+        });
+        setActiveColumnPresetKey(vmFromUrl);
+      }
+      if (shouldUpdate) {
+        const fullUrl = url.toString();
+        window.history.replaceState(null, "", fullUrl);
+        const currentInstanceId =
+          instanceIndex === 2 ? "erp-invoices__2" : "erp-invoices";
+        useAppStore.getState().updateCurrentTabUrl(currentInstanceId, fullUrl);
+      }
     }
 
     const handlePopState = () => {
@@ -208,9 +252,14 @@ export function useErpInvoicesTabLogic({
       nextView = "header";
     }
 
-    setCurrentDirection(nextDir);
-    setActiveView(nextView);
+    // 1. Cập nhật Tab highlight NGAY LẬP TỨC trên UI (0ms synchronous update)
     setCurrentTabKey(newTab);
+
+    // 2. Chuyển Direction & View trong non-blocking Concurrent Transition
+    startTransition(() => {
+      setCurrentDirection(nextDir);
+      setActiveView(nextView);
+    });
 
     if (!isDrawer && typeof window !== "undefined") {
       const url = new URL(window.location.href);
@@ -219,9 +268,7 @@ export function useErpInvoicesTabLogic({
       const currentI = url.searchParams.get("_i");
 
       const newParams = new URLSearchParams();
-      if (newTab !== "in") {
-        newParams.set("tab", newTab);
-      }
+      newParams.set("tab", newTab);
       if (currentI) {
         newParams.set("_i", currentI);
       }
@@ -293,6 +340,12 @@ export function useErpInvoicesTabLogic({
       const queryString = newParams.toString();
       const newUrl = `${url.pathname}${queryString ? `?${queryString}` : ""}`;
       window.history.replaceState(null, "", newUrl);
+      const currentInstanceId = isDrawer
+        ? "erp-invoices"
+        : instanceIndex === 2
+          ? "erp-invoices__2"
+          : "erp-invoices";
+      useAppStore.getState().updateCurrentTabUrl(currentInstanceId, newUrl);
     }
   };
 
@@ -530,7 +583,9 @@ export function useErpInvoicesTabLogic({
       }
       window.history.replaceState(null, "", url.toString());
     }
-    listHook.setPage(1);
+    startTransition(() => {
+      listHook.setPage(1);
+    });
   };
 
   // Column View Mode Presets
@@ -577,7 +632,14 @@ export function useErpInvoicesTabLogic({
       } else {
         url.searchParams.delete(ErpUrlQueryParam.VIEW_MODE);
       }
-      window.history.replaceState(null, "", url.toString());
+      const newUrl = url.toString();
+      window.history.replaceState(null, "", newUrl);
+      const currentInstanceId = isDrawer
+        ? "erp-invoices"
+        : instanceIndex === 2
+          ? "erp-invoices__2"
+          : "erp-invoices";
+      useAppStore.getState().updateCurrentTabUrl(currentInstanceId, newUrl);
     }
 
     // Apply column visibility to table preferences
@@ -715,6 +777,57 @@ export function useErpInvoicesTabLogic({
 
   // Hook theo dõi tiến trình nền SSE
   useInvoiceSyncProgress(listHook.loadInvoices);
+
+  // Background Prefetching: Tải trước ngầm dữ liệu của tab đối diện khi CPU/mạng nhàn rỗi
+  const queryClient = useQueryClient();
+  useEffect(() => {
+    if (isDrawer || activeView !== "header") return;
+    const oppositeDir: "IN" | "OUT" = direction === "IN" ? "OUT" : "IN";
+    const targetStoreDir: Direction =
+      instanceIndex === 2
+        ? oppositeDir === "IN"
+          ? "IN_2"
+          : "OUT_2"
+        : oppositeDir;
+    const targetState =
+      useErpInvoiceListStore.getState().states[targetStoreDir] ||
+      useErpInvoiceListStore.getState().states.IN;
+
+    const timer = setTimeout(() => {
+      void queryClient.prefetchQuery({
+        queryKey: [
+          ErpQueryKey.INVOICES_LIST,
+          targetStoreDir,
+          undefined,
+          targetState.activeTaxTab || "all",
+          targetState.search || undefined,
+          targetState.seller_name || undefined,
+          targetState.buyer_name || undefined,
+          targetState.dateFrom ? `${targetState.dateFrom}T00:00:00` : undefined,
+          targetState.dateTo ? `${targetState.dateTo}T23:59:59` : undefined,
+          targetState.status || undefined,
+          targetState.tag_id || undefined,
+          targetState.page || 1,
+          targetState.pageSize || 50,
+          "invoiceDate",
+          "desc",
+          JSON.stringify({}),
+          JSON.stringify({}),
+        ],
+        queryFn: () =>
+          erpInvoicesCoreApi.list({
+            direction: oppositeDir,
+            page: targetState.page || 1,
+            pageSize: targetState.pageSize || 50,
+            sort_by: "invoiceDate",
+            sort_order: "desc",
+          }),
+        staleTime: DEFAULT_STALE_TIME,
+      });
+    }, 800);
+
+    return () => clearTimeout(timer);
+  }, [direction, activeView, isDrawer, instanceIndex, queryClient]);
 
   const { data: allTags = [] } = useQuery({
     queryKey: ["sys-tags"],
@@ -859,6 +972,7 @@ export function useErpInvoicesTabLogic({
     t,
     direction,
     isDrawer,
+    isPending,
     listDir,
     canEditInvoice,
     listHook,

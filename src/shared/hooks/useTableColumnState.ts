@@ -219,8 +219,9 @@ export const useTableColumnStore = create<TableColumnStore>((set, get) => ({
  * Custom hook to easily consume the table column state per table.
  */
 export function useTableColumnState(tableId: string) {
-  const store = useTableColumnStore();
-  const tableState = store.tables[tableId] || getInitialTableState(tableId);
+  const tableState = useTableColumnStore(
+    (s) => s.tables[tableId] || getInitialTableState(tableId),
+  );
 
   const activeFilterCount = useMemo(() => {
     const activeCols = new Set<string>();
@@ -245,14 +246,15 @@ export function useTableColumnState(tableId: string) {
     ...tableState,
     activeFilterCount,
     setSort: (field: string, state: "asc" | "desc" | "none") =>
-      store.setSort(tableId, field, state),
-    toggleSort: (field: string) => store.toggleSort(tableId, field),
+      useTableColumnStore.getState().setSort(tableId, field, state),
+    toggleSort: (field: string) =>
+      useTableColumnStore.getState().toggleSort(tableId, field),
     setColumnSearch: (col: string, val: string) =>
-      store.setColumnSearch(tableId, col, val),
+      useTableColumnStore.getState().setColumnSearch(tableId, col, val),
     setColumnFilter: (col: string, vals: string[]) =>
-      store.setColumnFilter(tableId, col, vals),
+      useTableColumnStore.getState().setColumnFilter(tableId, col, vals),
     setDateRange: (from?: string, to?: string) =>
-      store.setDateRange(tableId, from, to),
-    resetFilters: () => store.resetFilters(tableId),
+      useTableColumnStore.getState().setDateRange(tableId, from, to),
+    resetFilters: () => useTableColumnStore.getState().resetFilters(tableId),
   };
 }

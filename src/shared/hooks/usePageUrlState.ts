@@ -7,6 +7,7 @@ import {
 } from "@/shared/utils/pageUrl";
 import { ErpUrlQueryParam } from "@/shared/constants/urlParams";
 import { DEFAULT_DEBOUNCE_TIME } from "@/shared/constants/timing";
+import { useAppStore } from "@/core/config/appStore";
 
 export interface PageUrlStateOptions {
   pageKey: PageKey;
@@ -262,6 +263,12 @@ export function usePageUrlState({
         newParams.set(ErpUrlQueryParam.TAB, tabParam);
       }
 
+      // Maintain view_mode param if existing
+      const vmParam = currentSearch.get(ErpUrlQueryParam.VIEW_MODE);
+      if (vmParam) {
+        newParams.set(ErpUrlQueryParam.VIEW_MODE, vmParam);
+      }
+
       // View param (if not "all")
       if (newView && newView !== "all") {
         newParams.set(ErpUrlQueryParam.VIEW, newView);
@@ -321,6 +328,8 @@ export function usePageUrlState({
         } else {
           window.history.replaceState(null, "", newUrl);
         }
+        const instanceId = instanceIndex === 2 ? `${pageKey}__2` : pageKey;
+        useAppStore.getState().updateCurrentTabUrl(instanceId, newUrl);
       }
     },
     [pageKey, instanceIndex, drawerSync],

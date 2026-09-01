@@ -83,13 +83,14 @@ export function InvoiceDrawers({
   activeView,
   partnerViewMode,
 }: InvoiceDrawersProps) {
+  const isInternalOpen =
+    formHook.internalDrawerOpen &&
+    (!isDrawer ? Boolean(urlSync.urlState.drawerId) : true);
+
   return (
     <>
       <ErpInvoiceInternalDrawer
-        open={
-          formHook.internalDrawerOpen &&
-          (!isDrawer ? Boolean(urlSync.urlState.drawerId) : true)
-        }
+        open={isInternalOpen}
         onClose={handleCloseInternal}
         editMode={formHook.editMode}
         detailInvoice={formHook.detailInvoice}
@@ -111,50 +112,56 @@ export function InvoiceDrawers({
         pendingUnpost={formHook.pendingUnpost}
         onUnpost={() => formHook.setPendingUnpost(true)}
         rightPanel={
+          isInternalOpen ? (
+            <div className="flex flex-col gap-4">
+              {formHook.loadingDetail ? (
+                <div className="space-y-4">
+                  <div className="h-[200px] bg-slate-100 animate-pulse rounded-lg border border-slate-200" />
+                </div>
+              ) : (
+                <ErpInvoiceInternalSidebar
+                  form={formHook.form}
+                  editMode={formHook.editMode}
+                  fieldSet={formHook.fieldSet}
+                  invoiceId={formHook.detailInvoice?.id ?? null}
+                  pendingTagIds={formHook.pendingTagIds}
+                  onPendingTagsChange={formHook.setPendingTagIds}
+                  direction={direction}
+                  detailInvoice={formHook.detailInvoice}
+                  onRefreshDetail={formHook.handleSyncDetail}
+                />
+              )}
+            </div>
+          ) : undefined
+        }
+      >
+        {isInternalOpen && (
           <div className="flex flex-col gap-4">
             {formHook.loadingDetail ? (
               <div className="space-y-4">
-                <div className="h-[200px] bg-slate-100 animate-pulse rounded-lg border border-slate-200" />
+                <div className="h-[350px] bg-slate-100 animate-pulse rounded-lg border border-slate-200" />
               </div>
             ) : (
-              <ErpInvoiceInternalSidebar
-                form={formHook.form}
-                editMode={formHook.editMode}
-                fieldSet={formHook.fieldSet}
-                invoiceId={formHook.detailInvoice?.id ?? null}
-                pendingTagIds={formHook.pendingTagIds}
-                onPendingTagsChange={formHook.setPendingTagIds}
-                direction={direction}
-                detailInvoice={formHook.detailInvoice}
-                onRefreshDetail={formHook.handleSyncDetail}
-              />
+              <>
+                {formHook.formError && (
+                  <div className="bg-red-50 border border-red-200 text-red-600 p-3 rounded-md text-sm">
+                    {formHook.formError}
+                  </div>
+                )}
+                <ErpInvoiceInternalMain
+                  detailInvoice={formHook.detailInvoice}
+                  invoicePreview={
+                    formHook.detailInvoice ? (
+                      <VietnamInvoiceTemplate
+                        invoice={formHook.detailInvoice}
+                      />
+                    ) : undefined
+                  }
+                />
+              </>
             )}
           </div>
-        }
-      >
-        <div className="flex flex-col gap-4">
-          {formHook.loadingDetail ? (
-            <div className="space-y-4">
-              <div className="h-[350px] bg-slate-100 animate-pulse rounded-lg border border-slate-200" />
-            </div>
-          ) : (
-            <>
-              {formHook.formError && (
-                <div className="bg-red-50 border border-red-200 text-red-600 p-3 rounded-md text-sm">
-                  {formHook.formError}
-                </div>
-              )}
-              <ErpInvoiceInternalMain
-                detailInvoice={formHook.detailInvoice}
-                invoicePreview={
-                  formHook.detailInvoice ? (
-                    <VietnamInvoiceTemplate invoice={formHook.detailInvoice} />
-                  ) : undefined
-                }
-              />
-            </>
-          )}
-        </div>
+        )}
       </ErpInvoiceInternalDrawer>
 
       <ConfirmModal

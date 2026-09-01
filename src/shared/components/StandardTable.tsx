@@ -25,6 +25,7 @@ export interface StandardTableProps<T> {
   emptyLabel?: string;
   minWidth?: number;
   loading?: boolean;
+  isPending?: boolean;
   error?: string | null;
   actions?: (row: T) => ActionDropdownItem[];
   actionColumnSize?: number;
@@ -75,6 +76,7 @@ export function StandardTable<T>({
   emptyLabel = "Chưa có dữ liệu.",
   minWidth = 1000,
   loading = false,
+  isPending = false,
   error = null,
   actions,
   actionColumnSize,
@@ -142,6 +144,7 @@ export function StandardTable<T>({
       minWidth={minWidth}
       loadingRows={loadingRows}
       loading={loading}
+      isPending={isPending}
       error={error}
       actionsColumn={actionsColumnDef}
       rowHoverActions={

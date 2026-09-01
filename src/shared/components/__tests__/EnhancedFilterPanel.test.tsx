@@ -2,7 +2,6 @@ import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import React from "react";
 import {
-  TableSortState,
   ColumnValueType,
   TextFilterOperator,
   NumberFilterOperator,
@@ -16,7 +15,6 @@ import {
 } from "@/shared/components/DataTable/createColumnHeaderFilter";
 import { ActiveFilterChips } from "@/shared/components/FilterPanel/ActiveFilterChips";
 import { FilterChipCategory } from "@/shared/components/DataTable/types";
-import { FilterPanel } from "@/shared/components/FilterPanel";
 
 // Mock i18n
 vi.mock("@/core/i18n", () => ({

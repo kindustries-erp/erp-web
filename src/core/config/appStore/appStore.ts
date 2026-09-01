@@ -42,15 +42,39 @@ export const useAppStore = create<AppState>()(
       setCurrentBranchId: (id) => set({ currentBranchId: id }),
       setCustomBreadcrumbs: (crumbs) => set({ customBreadcrumbs: crumbs }),
 
-      navigate: (page, instanceIndex = 1) => {
+      updateCurrentTabUrl: (instanceId, url) => {
         const { openTabs } = get();
-        const instanceId = instanceIndex === 2 ? `${page}__2` : page;
-        const existingIdx = openTabs.findIndex(
-          (t) => t.instanceId === instanceId,
-        );
+        const idx = openTabs.findIndex((t) => t.instanceId === instanceId);
+        if (idx === -1) return;
+        const currentTab = openTabs[idx];
+        if (currentTab.url === url) return;
         const newTabs = [...openTabs];
+        newTabs[idx] = {
+          ...currentTab,
+          url,
+        };
+        set({ openTabs: newTabs });
+      },
 
-        if (existingIdx === -1) {
+      navigate: (page, instanceIndex = 1) => {
+        const { openTabs, currentInstanceId } = get();
+        const instanceId = instanceIndex === 2 ? `${page}__2` : page;
+
+        // 1. Lưu URL hiện tại của tab đang active trước khi chuyển đi
+        const currentUrl =
+          typeof window !== "undefined"
+            ? window.location.pathname + window.location.search
+            : undefined;
+        const newTabs = openTabs.map((t) => {
+          if (t.instanceId === currentInstanceId && currentUrl) {
+            return { ...t, url: currentUrl };
+          }
+          return t;
+        });
+
+        const existingTab = newTabs.find((t) => t.instanceId === instanceId);
+
+        if (!existingTab) {
           const newTab: TabInstance = {
             instanceId,
             pageKey: page,
@@ -78,13 +102,21 @@ export const useAppStore = create<AppState>()(
           customBreadcrumbs: null,
         });
 
-        const path = pageToPath(
+        // 2. Khôi phục URL: nếu tab mục tiêu đã có url lưu trước đó thì dùng lại url đó, ngược lại sinh basePath
+        const targetSavedUrl = existingTab?.url;
+        const defaultPath = pageToPath(
           page,
           undefined,
           instanceIndex === 2 ? { _i: "2" } : undefined,
         );
-        const current = window.location.pathname + window.location.search;
-        if (current !== path) history.pushState(null, "", path);
+        const targetPath = targetSavedUrl || defaultPath;
+        const current =
+          typeof window !== "undefined"
+            ? window.location.pathname + window.location.search
+            : "";
+        if (current !== targetPath && typeof window !== "undefined") {
+          window.history.pushState(null, "", targetPath);
+        }
       },
 
       duplicateTab: (page) => {
@@ -154,6 +186,11 @@ export const useAppStore = create<AppState>()(
           window.history.replaceState(null, "", cleanUrl);
         }
 
+        const currentUrl =
+          typeof window !== "undefined"
+            ? window.location.pathname + window.location.search
+            : undefined;
+
         const existingIdx = openTabs.findIndex(
           (t) => t.instanceId === instanceId,
         );
@@ -164,6 +201,7 @@ export const useAppStore = create<AppState>()(
             instanceId,
             pageKey: page,
             instanceIndex: targetIndex,
+            url: currentUrl,
           };
           const group = SECTION_ROOTS[page]?.group;
           if (group) {
@@ -176,6 +214,11 @@ export const useAppStore = create<AppState>()(
           } else {
             newTabs.push(newTab);
           }
+        } else if (currentUrl) {
+          newTabs[existingIdx] = {
+            ...newTabs[existingIdx],
+            url: currentUrl,
+          };
         }
 
         set({

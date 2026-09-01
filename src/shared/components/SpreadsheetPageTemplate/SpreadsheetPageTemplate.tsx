@@ -24,6 +24,7 @@ export function SpreadsheetPageTemplate<T>({
   defaultColumnVisibility,
   getRowKey,
   loading,
+  isPending,
   error,
   emptyLabel,
   minWidth = 1300,
@@ -236,6 +237,7 @@ export function SpreadsheetPageTemplate<T>({
             columns={processedColumns}
             getRowKey={getRowKey}
             loading={loading}
+            isPending={isPending}
             emptyLabel={finalEmptyLabel}
             minWidth={minWidth}
             enableRowSelection={enableRowSelection}

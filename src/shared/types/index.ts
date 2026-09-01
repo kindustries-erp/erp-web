@@ -153,4 +153,6 @@ export interface TabInstance {
   pageKey: PageKey;
   instanceIndex: 1 | 2;
   customLabel?: string;
+  url?: string;
+  search?: string;
 }

@@ -1,10 +1,18 @@
-import { useState, useMemo, useEffect, useCallback, useRef } from "react";
+import {
+  useState,
+  useMemo,
+  useEffect,
+  useCallback,
+  useRef,
+  useTransition,
+} from "react";
 
 import { useInventorySerialsQuery } from "@/modules/inventory-core/hooks/useInventorySerialsQuery";
 import type { DataTableColumn } from "@/shared/components/DataTable";
 import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
 import { DateRangeColumnSlot } from "@/shared/components/DataTable/DateRangeColumnSlot";
 import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
+import { useAppStore } from "@/core/config/appStore";
 import { extractApiError } from "@/shared/utils/apiError";
 import { useT } from "@/core/i18n";
 import type { FilterPanelConfig } from "@/shared/hooks/useFilterPanel";
@@ -36,11 +44,12 @@ export interface TrackedGoodsPageProps {
 
 export function TrackedGoodsPage({
   fixedTrackingPolicy,
+  initialTab,
   title,
   desc,
-  initialTab,
 }: TrackedGoodsPageProps = {}) {
   const t = useT();
+  const [isPending, startTransition] = useTransition();
 
   const pageTabs: TabItem[] = useMemo(
     () => [
@@ -239,11 +248,7 @@ export function TrackedGoodsPage({
 
       // 1. Tab
       if (!fixedTrackingPolicy) {
-        if (currentTab !== "parts") {
-          newParams.set(ErpUrlQueryParam.TAB, currentTab);
-        } else {
-          newParams.delete(ErpUrlQueryParam.TAB);
-        }
+        newParams.set(ErpUrlQueryParam.TAB, currentTab);
       }
 
       // 2. Filters
@@ -317,6 +322,10 @@ export function TrackedGoodsPage({
         newRelativePath
       ) {
         window.history.replaceState(null, "", newRelativePath);
+        const instanceId = fixedTrackingPolicy
+          ? `erp-inventory-tracking-${fixedTrackingPolicy.toLowerCase()}`
+          : "erp-inventory-tracking";
+        useAppStore.getState().updateCurrentTabUrl(instanceId, newRelativePath);
       }
     }, DEFAULT_DEBOUNCE_TIME);
 
@@ -407,25 +416,33 @@ export function TrackedGoodsPage({
         missingSerialFilter: false,
       };
 
+      // 3. Cập nhật Tab highlight NGAY LẬP TỨC trên UI (0ms synchronous update)
       setCurrentTab(nextTab);
-      setPage(nextState.page);
-      setPageSize(nextState.pageSize);
-      setSearch(nextState.search);
-      setSearchInput(nextState.searchInput);
-      setItemTypeFilter(nextState.itemTypeFilter);
-      setTrackingPolicyFilter(nextState.trackingPolicyFilter);
-      setStatusFilter(nextState.statusFilter);
-      setMissingSerialFilter(nextState.missingSerialFilter);
+
+      // 4. Khôi phục bộ lọc & query trong non-blocking Concurrent Transition
+      startTransition(() => {
+        setPage(nextState.page);
+        setPageSize(nextState.pageSize);
+        setSearch(nextState.search);
+        setSearchInput(nextState.searchInput);
+        setItemTypeFilter(nextState.itemTypeFilter);
+        setTrackingPolicyFilter(nextState.trackingPolicyFilter);
+        setStatusFilter(nextState.statusFilter);
+        setMissingSerialFilter(nextState.missingSerialFilter);
+      });
 
       // KHÔNG gọi tableState.resetFilters() -> Giữ nguyên column filters, column searches, column sorts riêng cho mỗi tableId
       if (typeof window !== "undefined") {
         const url = new URL(window.location.href);
-        if (nextTab === "parts") {
-          url.searchParams.delete(ErpUrlQueryParam.TAB);
-        } else {
+        if (!fixedTrackingPolicy) {
           url.searchParams.set(ErpUrlQueryParam.TAB, nextTab);
         }
-        window.history.replaceState(null, "", url.toString());
+        const fullUrl = url.toString();
+        window.history.replaceState(null, "", fullUrl);
+        const instanceId = fixedTrackingPolicy
+          ? `erp-inventory-tracking-${fixedTrackingPolicy.toLowerCase()}`
+          : "erp-inventory-tracking";
+        useAppStore.getState().updateCurrentTabUrl(instanceId, fullUrl);
       }
     },
     [
@@ -467,13 +484,16 @@ export function TrackedGoodsPage({
     column_filters: JSON.stringify(tableState.columnFilters),
   });
 
+  const refetchRef = useRef(query.refetch);
+  refetchRef.current = query.refetch;
+
   useEffect(() => {
     const handleRefresh = () => {
-      query.refetch();
+      refetchRef.current();
     };
     window.addEventListener("refresh_erp_data", handleRefresh);
     return () => window.removeEventListener("refresh_erp_data", handleRefresh);
-  }, [query]);
+  }, []);
 
   const loading = query.isLoading || query.isFetching;
   const error = query.error
@@ -549,23 +569,38 @@ export function TrackedGoodsPage({
     [activeTrackingPolicy],
   );
 
-  const getSortState = (key: string) => {
-    if (tableState.sorts.includes(key)) return "asc";
-    if (tableState.sorts.includes(`-${key}`)) return "desc";
-    return "none";
-  };
-  const handleSortChange = (key: string, state: "asc" | "desc" | "none") => {
-    tableState.setSort(key, state);
-    setPage(1);
-  };
-  const handleSearchChange = (key: string, val: string) => {
-    tableState.setColumnSearch(key, val);
-    setPage(1);
-  };
-  const handleFilterChange = (key: string, vals: string[]) => {
-    tableState.setColumnFilter(key, vals);
-    setPage(1);
-  };
+  const getSortState = useCallback(
+    (key: string) => {
+      if (tableState.sorts.includes(key)) return "asc";
+      if (tableState.sorts.includes(`-${key}`)) return "desc";
+      return "none";
+    },
+    [tableState.sorts],
+  );
+
+  const handleSortChange = useCallback(
+    (key: string, state: "asc" | "desc" | "none") => {
+      tableState.setSort(key, state);
+      setPage(1);
+    },
+    [tableState],
+  );
+
+  const handleSearchChange = useCallback(
+    (key: string, val: string) => {
+      tableState.setColumnSearch(key, val);
+      setPage(1);
+    },
+    [tableState],
+  );
+
+  const handleFilterChange = useCallback(
+    (key: string, vals: string[]) => {
+      tableState.setColumnFilter(key, vals);
+      setPage(1);
+    },
+    [tableState],
+  );
 
   const columns: DataTableColumn<InventorySerialRow>[] = useMemo(
     () => [
@@ -1445,6 +1480,7 @@ export function TrackedGoodsPage({
         getRowKey={(row) => row.id}
         rowActions={rowActions}
         loading={loading}
+        isPending={isPending}
         error={error}
         emptyLabel={t("Chưa có dữ liệu.")}
         minWidth={1200}
@@ -1527,22 +1563,26 @@ export function TrackedGoodsPage({
           panelOpen: filterPanelOpen,
         }}
       />
-      <TrackedGoodsDrawer
-        open={drawerOpen}
-        item={selectedItem}
-        initialMode={drawerMode}
-        onClose={() => setDrawerOpen(false)}
-        onSaved={() => {
-          query.refetch();
-          setDrawerOpen(false);
-        }}
-      />
-      <SoPreviewDrawer
-        open={!!previewSoNo}
-        soNo={previewSoNo}
-        onClose={() => setPreviewSoNo(null)}
-      />
-      <GiFormDrawer drawer={giDrawer} />
+      {drawerOpen && (
+        <TrackedGoodsDrawer
+          open={drawerOpen}
+          item={selectedItem}
+          initialMode={drawerMode}
+          onClose={() => setDrawerOpen(false)}
+          onSaved={() => {
+            query.refetch();
+            setDrawerOpen(false);
+          }}
+        />
+      )}
+      {!!previewSoNo && (
+        <SoPreviewDrawer
+          open={!!previewSoNo}
+          soNo={previewSoNo}
+          onClose={() => setPreviewSoNo(null)}
+        />
+      )}
+      {giDrawer.open && <GiFormDrawer drawer={giDrawer} />}
     </>
   );
 }

@@ -126,6 +126,7 @@ export interface DataTableProps<T> {
   getRowKey?: (item: T) => string;
   tableMeta?: any;
   loading?: boolean;
+  isPending?: boolean;
   error?: string | null;
   emptyLabel: string;
   filters?: ReactNode;

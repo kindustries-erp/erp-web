@@ -40,10 +40,11 @@ export function DataTable<T>({
   columns,
   getRowKey,
   loading = false,
+  isPending = false,
   emptyLabel,
   filters,
   minWidth = 800,
-  loadingRows = 5,
+  loadingRows = 8,
   elevated = false,
   containerClassName,
   actionsColumn,
@@ -190,13 +191,29 @@ export function DataTable<T>({
         <div className="flex items-stretch flex-1 min-h-0 w-full relative">
           {/* Main Area: Table + Pagination */}
           <div className="flex flex-col flex-1 min-h-0 w-full relative min-w-0">
+            {loading && (
+              <div className="absolute top-0 left-0 right-0 h-[2.5px] z-40 overflow-hidden bg-primary/15 pointer-events-none rounded-t-xl">
+                <div
+                  className="h-full bg-primary shadow-[0_0_8px_rgba(var(--primary),0.6)]"
+                  style={{
+                    width: "30%",
+                    animation: "dataTableShimmer 1.1s infinite ease-in-out",
+                  }}
+                />
+                <style>{`
+                  @keyframes dataTableShimmer {
+                    0% { transform: translateX(-100%); }
+                    100% { transform: translateX(350%); }
+                  }
+                `}</style>
+              </div>
+            )}
             <div
               ref={!isFsView ? scrollContainerRef : undefined}
               onScroll={!isFsView ? handleTableScroll : undefined}
               className={cn(
                 "bg-surface transition-shadow duration-150 flex-1 min-h-0 flex flex-col relative w-full",
                 elevated && "rounded-lg border border-border shadow-xs",
-                "border border-border/60 rounded-xl overflow-x-auto overflow-y-auto",
                 isScrolledTop &&
                   "shadow-[inset_0_4px_6px_-2px_rgba(0,0,0,0.05)]",
                 isScrolledBottom &&
@@ -418,8 +435,15 @@ export function DataTable<T>({
                   ))}
                 </TableHeader>
 
-                <TableBody>
-                  {loading ? (
+                <TableBody
+                  className={cn(
+                    "transition-opacity duration-150",
+                    (loading || isPending) && items.length > 0
+                      ? "opacity-70 pointer-events-none select-none"
+                      : "opacity-100",
+                  )}
+                >
+                  {loading && items.length === 0 ? (
                     Array.from({ length: loadingRows }).map((_, index) => (
                       <TableRow
                         key={index}

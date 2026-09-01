@@ -28,6 +28,7 @@ export interface SpreadsheetPageTemplateProps<T> {
   defaultColumnVisibility?: VisibilityState;
   getRowKey: (row: T) => string;
   loading?: boolean;
+  isPending?: boolean;
   error?: string | null;
   emptyLabel?: string;
   minWidth?: number;

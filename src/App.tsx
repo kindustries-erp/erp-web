@@ -463,25 +463,21 @@ export default function App() {
             className="app-content flex-1 overflow-x-hidden overflow-y-auto pb-10"
           >
             <>
-              {openTabs.map((tab) => {
-                const Component = PAGE_COMPONENTS[tab.pageKey];
-                if (!Component) return null;
+              {(() => {
+                const activeTab = openTabs.find(
+                  (tab) => tab.instanceId === currentInstanceId,
+                );
+                if (!activeTab) return <NotFound />;
+                const Component = PAGE_COMPONENTS[activeTab.pageKey];
+                if (!Component) return <NotFound />;
                 return (
-                  <div
-                    key={tab.instanceId}
-                    className={
-                      currentInstanceId === tab.instanceId
-                        ? "block h-full"
-                        : "hidden"
-                    }
-                  >
+                  <div key={activeTab.instanceId} className="block h-full">
                     <Suspense fallback={PAGE_FALLBACK}>
-                      <Component instanceIndex={tab.instanceIndex} />
+                      <Component instanceIndex={activeTab.instanceIndex} />
                     </Suspense>
                   </div>
                 );
-              })}
-              {!PAGE_COMPONENTS[currentPage as PageKey] && <NotFound />}
+              })()}
               <SerialGenerationProgress />
             </>
           </div>
