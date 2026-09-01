@@ -24,6 +24,7 @@ import { VinfastPartsDashboardPage } from "./VinfastPartsDashboardPage";
 import { VinfastPartsStockDetailDrawer } from "./components/VinfastPartsStockDetailDrawer";
 import { VinfastPartsSyncDrawer } from "./components/VinfastPartsSyncDrawer";
 import { VinfastPartsStockExportDrawer } from "./components/VinfastPartsStockExportDrawer";
+import { useVinfastPartsParallelPrefetch } from "./hooks/useVinfastPartsParallelPrefetch";
 
 export const getDefaultPageSize = (): number => {
   if (typeof window !== "undefined" && window.innerHeight >= 900) {
@@ -120,23 +121,74 @@ export function VinfastPartsStockPage({
     return () => window.removeEventListener("popstate", handlePopState);
   }, []);
 
-  if (activeTab === "dashboard") {
-    return (
-      <VinfastPartsDashboardPage
-        tabs={tabs}
-        activeTab={activeTab}
-        onTabChange={handleTabChange}
-      />
-    );
+  // 3-View Lazy Mounted Keep-Alive State (Synchronous render-time marking)
+  const mountedViewsRef = useRef<Record<VinfastPartsStockTab, boolean>>({
+    dashboard: activeTab === "dashboard",
+    oto: activeTab === "oto",
+    xemay: activeTab === "xemay",
+  });
+
+  if (activeTab) {
+    mountedViewsRef.current[activeTab] = true;
   }
 
+  // Kích hoạt Micro-Priority Parallel Prefetch cho các tab còn lại sau 50ms
+  useVinfastPartsParallelPrefetch({
+    activeTab,
+  });
+
   return (
-    <VinfastPartsStockTableView
-      vehicleType={activeTab}
-      tabs={tabs}
-      activeTab={activeTab}
-      onTabChange={handleTabChange}
-    />
+    <div className="flex flex-col h-full flex-1 min-h-0 w-full overflow-hidden">
+      {mountedViewsRef.current.dashboard && (
+        <div
+          className={
+            activeTab === "dashboard"
+              ? "flex flex-col h-full flex-1 min-h-0 overflow-hidden"
+              : "hidden"
+          }
+        >
+          <VinfastPartsDashboardPage
+            tabs={tabs}
+            activeTab={activeTab}
+            onTabChange={handleTabChange}
+          />
+        </div>
+      )}
+
+      {mountedViewsRef.current.oto && (
+        <div
+          className={
+            activeTab === "oto"
+              ? "flex flex-col h-full flex-1 min-h-0 overflow-hidden"
+              : "hidden"
+          }
+        >
+          <VinfastPartsStockTableView
+            vehicleType="oto"
+            tabs={tabs}
+            activeTab={activeTab}
+            onTabChange={handleTabChange}
+          />
+        </div>
+      )}
+
+      {mountedViewsRef.current.xemay && (
+        <div
+          className={
+            activeTab === "xemay"
+              ? "flex flex-col h-full flex-1 min-h-0 overflow-hidden"
+              : "hidden"
+          }
+        >
+          <VinfastPartsStockTableView
+            vehicleType="xemay"
+            tabs={tabs}
+            activeTab={activeTab}
+            onTabChange={handleTabChange}
+          />
+        </div>
+      )}
+    </div>
   );
 }
 

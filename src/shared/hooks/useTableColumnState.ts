@@ -39,6 +39,85 @@ const defaultTableState: TableColumnState = {
 
 const initialTableStates: Record<string, TableColumnState> = {};
 
+export function isTableMatchingCurrentUrl(
+  tableId: string,
+  pathname: string,
+  search: string,
+): boolean {
+  // If table is a modal, drawer, checkpoint, or preview table, it should NOT inherit page URL filters
+  if (
+    tableId.includes("checkpoint") ||
+    tableId.includes("drawer") ||
+    tableId.includes("modal") ||
+    tableId.includes("selection") ||
+    tableId.includes("preview") ||
+    tableId.includes("detail")
+  ) {
+    return false;
+  }
+
+  const params = new URLSearchParams(search);
+  const tab = params.get(ErpUrlQueryParam.TAB);
+
+  // 1. ERP Invoices
+  if (
+    tableId.startsWith("erp-invoices-table-") ||
+    tableId.startsWith("erp-invoice-items-table-")
+  ) {
+    if (tab === "in-lines") {
+      return (
+        tableId === "erp-invoice-items-table-IN" ||
+        tableId === "erp-invoice-items-table-IN_2"
+      );
+    }
+    if (tab === "out-lines") {
+      return (
+        tableId === "erp-invoice-items-table-OUT" ||
+        tableId === "erp-invoice-items-table-OUT_2"
+      );
+    }
+    if (tab === "out") {
+      return (
+        tableId === "erp-invoices-table-OUT" ||
+        tableId === "erp-invoices-table-OUT_2"
+      );
+    }
+    // Default tab is 'in' (or ?tab=in)
+    return (
+      tableId === "erp-invoices-table-IN" ||
+      tableId === "erp-invoices-table-IN_2"
+    );
+  }
+
+  // 2. VinFast Parts
+  if (tableId.startsWith("vinfast-parts-stock-")) {
+    if (tab === "xemay") return tableId === "vinfast-parts-stock-xemay";
+    if (tab === "oto") return tableId === "vinfast-parts-stock-oto";
+    return false;
+  }
+
+  // 3. Tracked Goods / Inventory Serials
+  if (tableId.startsWith("inventory-serials-table-")) {
+    if (tab === "lot") return tableId === "inventory-serials-table-lot";
+    if (tab === "custom") return tableId === "inventory-serials-table-custom";
+    if (tab === "vehicle") return tableId === "inventory-serials-table-vehicle";
+    // Default tab is 'parts'
+    return tableId === "inventory-serials-table-parts";
+  }
+
+  // 4. Bank Statements
+  if (tableId.startsWith("bank-transactions-table-")) {
+    if (tab === "bidv") return tableId === "bank-transactions-table-bidv";
+    if (tab === "cashbook")
+      return tableId === "bank-transactions-table-cashbook";
+    // Default tab is 'tcb'
+    return tableId === "bank-transactions-table-tcb";
+  }
+
+  // Other single tables (e.g. inventory-stock-table, garage-cases-table, etc.)
+  return true;
+}
+
 export function getInitialTableState(tableId: string): TableColumnState {
   if (initialTableStates[tableId]) {
     return initialTableStates[tableId];
@@ -48,6 +127,17 @@ export function getInitialTableState(tableId: string): TableColumnState {
     return initialTableStates[tableId];
   }
   try {
+    const isMatch = isTableMatchingCurrentUrl(
+      tableId,
+      window.location.pathname,
+      window.location.search,
+    );
+
+    if (!isMatch) {
+      initialTableStates[tableId] = { ...defaultTableState };
+      return initialTableStates[tableId];
+    }
+
     const params = new URLSearchParams(window.location.search);
     const cf = params.get(ErpUrlQueryParam.COLUMN_FILTERS);
     let columnFilters: Record<string, string[]> = {};

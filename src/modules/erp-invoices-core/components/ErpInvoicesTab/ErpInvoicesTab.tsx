@@ -76,29 +76,22 @@ export function ErpInvoicesTab(props: ErpInvoicesTabProps) {
     handleBulkDownloadSelected,
   } = logic;
 
-  // 4-View Lazy Mounted Keep-Alive State
-  const [mountedViews, setMountedViews] = React.useState<
-    Record<string, boolean>
-  >(() => ({
+  // 4-View Lazy Mounted Keep-Alive State (Synchronous render-time marking to prevent blank-frame flicker)
+  const mountedViewsRef = React.useRef<Record<string, boolean>>({
     in: logic.currentTabKey === "in",
     "in-lines": logic.currentTabKey === "in-lines",
     out: logic.currentTabKey === "out",
     "out-lines": logic.currentTabKey === "out-lines",
-  }));
+  });
 
-  React.useEffect(() => {
-    if (logic.currentTabKey && !mountedViews[logic.currentTabKey]) {
-      setMountedViews((prev) => ({
-        ...prev,
-        [logic.currentTabKey]: true,
-      }));
-    }
-  }, [logic.currentTabKey, mountedViews]);
+  if (logic.currentTabKey) {
+    mountedViewsRef.current[logic.currentTabKey] = true;
+  }
 
   return (
     <div className="flex flex-col h-full flex-1 min-h-0 w-full overflow-hidden">
       {/* ── View 1: Header IN (Hóa đơn mua vào) ────────────────────────── */}
-      {mountedViews["in"] && (
+      {mountedViewsRef.current["in"] && (
         <div
           className={
             logic.currentTabKey === "in"
@@ -143,7 +136,7 @@ export function ErpInvoicesTab(props: ErpInvoicesTabProps) {
       )}
 
       {/* ── View 2: Lines IN (Chi tiết mua vào) ────────────────────────── */}
-      {mountedViews["in-lines"] && (
+      {mountedViewsRef.current["in-lines"] && (
         <div
           className={
             logic.currentTabKey === "in-lines"
@@ -169,7 +162,7 @@ export function ErpInvoicesTab(props: ErpInvoicesTabProps) {
       )}
 
       {/* ── View 3: Header OUT (Hóa đơn bán ra) ────────────────────────── */}
-      {mountedViews["out"] && (
+      {mountedViewsRef.current["out"] && (
         <div
           className={
             logic.currentTabKey === "out"
@@ -214,7 +207,7 @@ export function ErpInvoicesTab(props: ErpInvoicesTabProps) {
       )}
 
       {/* ── View 4: Lines OUT (Chi tiết bán ra) ────────────────────────── */}
-      {mountedViews["out-lines"] && (
+      {mountedViewsRef.current["out-lines"] && (
         <div
           className={
             logic.currentTabKey === "out-lines"

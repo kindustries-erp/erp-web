@@ -17,6 +17,7 @@ import {
   useUserPreferencesStore,
   type TableViewPreset,
 } from "@/shared/hooks/useUserPreferences";
+import { useTableColumnStore } from "@/shared/hooks/useTableColumnState";
 import { PillTabs } from "@/shared/components/PillTabs";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
@@ -39,6 +40,7 @@ import { useErpInvoiceItemsStore } from "@/modules/erp-invoices-core/hooks/useEr
 import { ErpUrlQueryParam } from "@/shared/constants/urlParams";
 import { DEFAULT_DEBOUNCE_TIME } from "@/shared/constants/timing";
 import { encodeStateParam } from "@/shared/utils/pageUrl";
+import { useErpInvoicesParallelPrefetch } from "@/modules/erp-invoices-core/hooks/useErpInvoicesParallelPrefetch";
 
 export interface ErpInvoicesTabProps {
   direction?: "IN" | "OUT";
@@ -55,6 +57,7 @@ export function useErpInvoicesTabLogic({
   initialDateTo,
   isDrawer = false,
   instanceIndex = 1,
+  partnerTaxCode,
 }: ErpInvoicesTabProps) {
   const { t } = useTranslation("erpInvoices");
   const canEditInvoice = useHasPermission(
@@ -153,18 +156,13 @@ export function useErpInvoicesTabLogic({
     },
   );
 
-  const [isTabSwitching, setIsTabSwitching] = useState(false);
-  const tabSwitchTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(
-    null,
-  );
-
-  useEffect(() => {
-    return () => {
-      if (tabSwitchTimerRef.current) {
-        clearTimeout(tabSwitchTimerRef.current);
-      }
-    };
-  }, []);
+  // Kích hoạt Micro-Priority Parallel Prefetch cho các tab còn lại sau 50ms
+  useErpInvoicesParallelPrefetch({
+    activeTabKey: currentTabKey,
+    instanceIndex,
+    partnerTaxCode,
+    isDrawer,
+  });
 
   useEffect(() => {
     if (isDrawer) {
@@ -273,15 +271,6 @@ export function useErpInvoicesTabLogic({
     setCurrentDirection(nextDir);
     setActiveView(nextView);
 
-    // 2. Kích hoạt State trung gian cho UI mượt mà (chuyển cảnh nhẹ nhàng, chống giật)
-    setIsTabSwitching(true);
-    if (tabSwitchTimerRef.current) {
-      clearTimeout(tabSwitchTimerRef.current);
-    }
-    tabSwitchTimerRef.current = setTimeout(() => {
-      setIsTabSwitching(false);
-    }, 200);
-
     if (!isDrawer && typeof window !== "undefined") {
       const url = new URL(window.location.href);
       const currentDetail = url.searchParams.get("detail");
@@ -334,6 +323,27 @@ export function useErpInvoicesTabLogic({
           newParams.set("view_mode", targetViewMode);
         }
         setActiveColumnPresetKey(targetViewMode);
+
+        const targetTableState =
+          useTableColumnStore.getState().tables[targetTableId];
+        if (
+          targetTableState &&
+          Object.keys(targetTableState.columnFilters).length > 0
+        ) {
+          const encoded = encodeStateParam(targetTableState.columnFilters);
+          if (encoded) newParams.set(ErpUrlQueryParam.COLUMN_FILTERS, encoded);
+        }
+        if (
+          targetTableState &&
+          Object.keys(targetTableState.columnSearch).length > 0
+        ) {
+          const encoded = encodeStateParam(targetTableState.columnSearch);
+          if (encoded) newParams.set(ErpUrlQueryParam.COLUMN_SEARCH, encoded);
+        }
+        if (targetTableState && targetTableState.sorts.length > 0) {
+          const encoded = encodeStateParam(targetTableState.sorts);
+          if (encoded) newParams.set(ErpUrlQueryParam.SORTS, encoded);
+        }
       } else {
         const linesState =
           useErpInvoiceItemsStore.getState().states[targetStoreDir];
@@ -355,6 +365,30 @@ export function useErpInvoicesTabLogic({
           if (linesState.buyerName)
             newParams.set("buyer_name", linesState.buyerName);
           if (linesState.tagId) newParams.set("tag_id", linesState.tagId);
+        }
+
+        const targetLinesTableId = isDrawer
+          ? `erp-invoice-items-table-checkpoint-${nextDir}`
+          : `erp-invoice-items-table-${targetStoreDir}`;
+        const targetLinesTableState =
+          useTableColumnStore.getState().tables[targetLinesTableId];
+        if (
+          targetLinesTableState &&
+          Object.keys(targetLinesTableState.columnFilters).length > 0
+        ) {
+          const encoded = encodeStateParam(targetLinesTableState.columnFilters);
+          if (encoded) newParams.set(ErpUrlQueryParam.COLUMN_FILTERS, encoded);
+        }
+        if (
+          targetLinesTableState &&
+          Object.keys(targetLinesTableState.columnSearch).length > 0
+        ) {
+          const encoded = encodeStateParam(targetLinesTableState.columnSearch);
+          if (encoded) newParams.set(ErpUrlQueryParam.COLUMN_SEARCH, encoded);
+        }
+        if (targetLinesTableState && targetLinesTableState.sorts.length > 0) {
+          const encoded = encodeStateParam(targetLinesTableState.sorts);
+          if (encoded) newParams.set(ErpUrlQueryParam.SORTS, encoded);
         }
       }
 
@@ -962,7 +996,6 @@ export function useErpInvoicesTabLogic({
     t,
     direction,
     isDrawer,
-    isTabSwitching,
     listDir,
     canEditInvoice,
     listHook,

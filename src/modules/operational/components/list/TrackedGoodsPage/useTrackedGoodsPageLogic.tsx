@@ -24,6 +24,7 @@ import { useGiDrawer } from "@/modules/goods-issues-core/hooks/useGiDrawer";
 import type { TrackedGoodsPageProps, TabStateRecord } from "./types";
 import { useTrackedGoodsUrlSync } from "./hooks/useTrackedGoodsUrlSync";
 import { useTrackedGoodsColumns } from "./hooks/useTrackedGoodsColumns";
+import { useTrackedGoodsParallelPrefetch } from "./hooks/useTrackedGoodsParallelPrefetch";
 
 export function useTrackedGoodsPageLogic({
   fixedTrackingPolicy,
@@ -216,6 +217,13 @@ export function useTrackedGoodsPageLogic({
     setDrawerMode,
     selectedItem,
     setSelectedItem,
+  });
+
+  // Kích hoạt Micro-Priority Parallel Prefetch cho các tab còn lại sau 50ms
+  useTrackedGoodsParallelPrefetch({
+    currentTab,
+    fixedTrackingPolicy,
+    tabStatesRef,
   });
 
   const handleTabChange = useCallback(
