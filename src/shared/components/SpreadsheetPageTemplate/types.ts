@@ -51,9 +51,11 @@ export interface SpreadsheetPageTemplateProps<T> {
   bulkActionsNode?: ReactNode;
   customActionsNode?: ReactNode;
 
-  // --- Filter Panel ---
+  // --- Filter Panel & Unified State ---
   filterConfig?: FilterPanelConfig;
   filter?: FilterPanelReturn;
+  listHook?: any;
+  unifiedFilter?: any;
   activeFilterCount?: number;
   onClearAllFilters?: () => void;
 

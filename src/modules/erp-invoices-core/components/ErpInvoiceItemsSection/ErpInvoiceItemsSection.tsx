@@ -78,6 +78,7 @@ export function ErpInvoiceItemsSection(props: ErpInvoiceItemsSectionProps) {
       onClearAllFilters={listHook.clearAllFilters}
       filterConfig={filterConfig}
       filter={listHook.filterPanel}
+      listHook={listHook}
       rowActions={rowActions}
       customActionsNode={customActionsNode}
       onCreate={onOpenSync}

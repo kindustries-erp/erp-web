@@ -11,7 +11,19 @@ description: Create or enhance a DataTable to follow standard UI rules in the ER
 > ```
 > Hoặc để sinh nguyên Module Table Page, chạy `bun plop table-page`. *(Chi tiết tại skill `plop-generate`)*
 
-Khi tạo mới hoặc enhance một `DataTable` trong hệ thống, bạn **BẮT BUỘC** tuân thủ các nguyên tắc sau để đảm bảo UI/UX đồng nhất và chuẩn chỉnh như `erp-invoice` page và `inventory-voucher` drawer.
+Khi tạo mới hoặc enhance một `DataTable` trong hệ thống, bạn **BẮT BUỘC** tuân thủ các nguyên tắc sau để đảm bảo UI/UX đồng nhất và chuẩn chỉnh:
+
+## 0. Quy Chuẩn Thành Phần Giao Diện & Enums (shadcn/ui & TypeScript Enums)
+
+- **100% shadcn/ui Components**: Tất cả các thành phần bảng và bộ lọc bắt buộc sử dụng component từ design system (`Button`, `Input`, `Checkbox`, `Badge`, `Tabs`, `Tooltip`, `DatePicker`, `Combobox`, `MultiSelect`, `Card`, `Popover`). **Tuyệt đối không dùng HTML thuần** (`<button>`, `<input>`, `<select>`).
+- **Bắt buộc dùng Enums**:
+  - `TableSortState`: `ASC = "asc"`, `DESC = "desc"`, `NONE = "none"`
+  - `TableColumnAlign`: `LEFT = "left"`, `CENTER = "center"`, `RIGHT = "right"`
+  - `ColumnValueType`: `TEXT = "text"`, `NUMBER = "number"`, `DATE = "date"`, `STATUS = "status"`, `SELECT = "select"`
+  - `TextFilterOperator`: `CONTAINS`, `NOT_CONTAINS`, `STARTS_WITH`, `ENDS_WITH`, `EQUALS`, `NOT_EQUALS`, `IS_EMPTY`, `IS_NOT_EMPTY`
+  - `NumberFilterOperator`: `EQUALS`, `NOT_EQUALS`, `GREATER_THAN`, `GREATER_THAN_OR_EQUAL`, `LESS_THAN`, `LESS_THAN_OR_EQUAL`, `BETWEEN`
+  - `DateFilterOperator`: `BETWEEN`, `EQUALS`, `BEFORE`, `AFTER`
+  - `FilterChipCategory`: `TEXT`, `MULTI_SELECT`, `NUMERIC`, `DATE`, `SORT`, `CUSTOM`
 
 ## 1. Cấu trúc cột (Columns Structure)
 
@@ -24,9 +36,16 @@ Khi tạo mới hoặc enhance một `DataTable` trong hệ thống, bạn **B�
 - **Enable Resizing**: Luôn bật tính năng resize cho các cột dữ liệu bằng cách thêm `enableResizing: true` vào config của từng cột.
 - **Đa ngôn ngữ (i18n)**: Tất cả các text trong table (header, empty state, action tooltip...) phải được bọc trong hàm `t` từ `useTranslation("namespace")`. KHÔNG hardcode tiếng Việt/Anh trực tiếp mà không qua hook translation.
 
-## 2. Table Header Filter & Sorting Popover (Helper Builder `createColumnHeaderFilter`)
+## 2. Table Header Filter & Two-Way Interactive Right Filter Panel
 
 Tất cả các cột dữ liệu (trừ cột Action, Index, Checkbox) **phải tích hợp sẵn Filter và Sorting** bằng cách sử dụng helper builder chuẩn **`createColumnHeaderFilter`** (`@/shared/components/DataTable`).
+
+- **Cơ chế Đồng Bộ 2 Chiều (Bidirectional Synchronization)**:
+  - Header Table ➔ Right Filter Panel: Khi user lọc trên header popover, dải **Active Filter Chips** và các card cột trên Right Filter Panel cập nhật ngay lập tức.
+  - Right Filter Panel ➔ Header Table: Khi user đổi toán tử (`>=`, `Chứa`, `Bắt đầu bằng`), nhập từ khóa, chỉnh checkbox hoặc đổi ngày trên Right Filter Panel, bảng và header indicator cập nhật tức thì.
+- **Toán Tử Tìm Kiếm Nâng Cao (Advanced Operators)**:
+  - Cột Số (`NUMBER`): Hỗ trợ `=`, `!=`, `>`, `>=`, `<`, `<=`, `BETWEEN (Từ ... Đến ...)`.
+  - Cột Văn bản (`TEXT`): Hỗ trợ `Chứa`, `Không chứa`, `Bắt đầu bằng`, `Kết thúc bằng`, `Chính xác (=)`, `Khác (≠)`, `Trống`, `Không trống`.
 
 - **Ưu tiên số 1: Sử dụng `createColumnHeaderFilter`**:
   Thay vì viết lặp đi lặp lại 15 dòng props cho từng cột, khởi tạo helper 1 lần duy nhất trong `useMemo` và gọi ngắn gọn 1 dòng cho mỗi cột.
@@ -35,6 +54,7 @@ Tất cả các cột dữ liệu (trừ cột Action, Index, Checkbox) **phải
 import {
   createColumnHeaderFilter,
   type DataTableColumn,
+  ColumnValueType,
 } from "@/shared/components/DataTable";
 
 // 1. Khởi tạo helper builder trong component/hook:

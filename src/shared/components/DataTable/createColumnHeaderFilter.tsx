@@ -4,14 +4,73 @@ import {
   type TableColumnHeaderFilterProps,
 } from "./TableColumnHeaderFilter";
 import { DateRangeColumnSlot } from "./DateRangeColumnSlot";
+import {
+  TableSortState,
+  TableColumnAlign,
+  ColumnValueType,
+  TextFilterOperator,
+  NumberFilterOperator,
+  DateFilterOperator,
+  type DataTableColumn,
+} from "./types";
+
+export interface ColumnFilterDescriptor {
+  key: string;
+  title: React.ReactNode;
+  titleText: string;
+  type: ColumnValueType;
+  align?: TableColumnAlign | "left" | "center" | "right";
+  currencySymbol?: string;
+  decimals?: number;
+  fetchOptions?: (params: {
+    columnKey: string;
+    search: string;
+    pageParam: number;
+    pageSize?: number;
+    filtersStr?: string;
+  }) => Promise<{
+    items: { label: string; value: string }[];
+    total: number;
+    next: number | null;
+  }>;
+  filterOptions?: { label: string; value: string }[];
+  queryKeyPrefix?: string;
+  formatOptionLabel?: (label: string) => string;
+  hideFilter?: boolean;
+  hideSort?: boolean;
+  showBlankOption?: boolean;
+  enableSelectAllMatching?: boolean;
+  dateRangeSlot?:
+    | React.ReactNode
+    | ((props: { close: () => void }) => React.ReactNode);
+  selectedFilters?: string[];
+  searchValue?: string;
+  sortState?: TableSortState | "asc" | "desc" | "none";
+  onFilterChange?: (vals: string[]) => void;
+  onSearchChange?: (val: string) => void;
+  onSortChange?: (state: TableSortState | "asc" | "desc" | "none") => void;
+  onDateRangeChange?: (from?: string, to?: string) => void;
+  allFilters?: Record<string, string[]>;
+}
 
 export interface TableListHookLike {
   sorts: string[];
-  setSort: (key: string, state: "asc" | "desc" | "none") => void;
+  setSort: (
+    key: string,
+    state: "asc" | "desc" | "none" | TableSortState,
+  ) => void;
   columnFilters: Record<string, string[]>;
   setColumnFilter: (key: string, vals: string[]) => void;
   columnSearch: Record<string, string>;
   setColumnSearch: (key: string, val: string) => void;
+  columnOperators?: Record<
+    string,
+    TextFilterOperator | NumberFilterOperator | string
+  >;
+  setColumnOperator?: (
+    key: string,
+    op: TextFilterOperator | NumberFilterOperator | string,
+  ) => void;
   dateFrom?: string;
   dateTo?: string;
   setDateRange?: (from?: string, to?: string) => void;
@@ -33,11 +92,11 @@ export interface CreateColumnHeaderFilterConfig<T = any> {
     total: number;
     next: number | null;
   }>;
-  defaultAlign?: "left" | "center" | "right";
+  defaultAlign?: TableColumnAlign | "left" | "center" | "right";
 }
 
 export interface ColumnHeaderOptions {
-  align?: "left" | "center" | "right";
+  align?: TableColumnAlign | "left" | "center" | "right";
   className?: string;
   hideFilter?: boolean;
   hideSort?: boolean;
@@ -48,6 +107,7 @@ export interface ColumnHeaderOptions {
   fetchOptions?: TableColumnHeaderFilterProps["fetchOptions"];
   filterOptions?: { label: string; value: string }[];
   queryKeyPrefix?: string;
+  valueType?: ColumnValueType;
 }
 
 export interface NumericColumnHeaderOptions extends ColumnHeaderOptions {
@@ -421,11 +481,269 @@ export function createColumnHeaderFilter<T = any>(
 }
 
 /**
+ * Helper to extract plain text string from ReactNode (for searching and labeling)
+ */
+export function getTitlePlainText(title: React.ReactNode): string {
+  if (typeof title === "string") return title;
+  if (typeof title === "number") return String(title);
+  if (!title) return "";
+  if (React.isValidElement(title)) {
+    const props = (title as any).props;
+    if (typeof props?.children === "string") return props.children;
+    if (Array.isArray(props?.children)) {
+      return props.children.map(getTitlePlainText).join("");
+    }
+    if (props?.text) return String(props.text);
+  }
+  return "";
+}
+
+/**
+ * Automatically extracts ColumnFilterDescriptor list from DataTableColumn array
+ */
+export function extractColumnFilterDescriptors<T = any>(
+  columns: DataTableColumn<T>[],
+): ColumnFilterDescriptor[] {
+  if (!columns || columns.length === 0) return [];
+
+  const descriptors: ColumnFilterDescriptor[] = [];
+
+  columns.forEach((col) => {
+    // Ignore internal columns like selection, expand, hover actions
+    if (
+      col.key === "__selection" ||
+      col.key === "__expand" ||
+      col.key === "__hover_actions" ||
+      col.key === "__actions" ||
+      col.key === "index"
+    ) {
+      return;
+    }
+
+    let titleNode: React.ReactNode =
+      col.label || (typeof col.header === "function" ? col.key : col.header);
+    let titleText = getTitlePlainText(titleNode) || col.key;
+    let fetchOptions: ColumnFilterDescriptor["fetchOptions"] = undefined;
+    let filterOptions: { label: string; value: string }[] | undefined =
+      col.filterOptions;
+    let dateRangeSlot: ColumnFilterDescriptor["dateRangeSlot"] = undefined;
+    let queryKeyPrefix: string | undefined = undefined;
+    let formatOptionLabel: ((label: string) => string) | undefined = undefined;
+    let hideFilter = false;
+    let hideSort = !col.sortable && !col.sortKey;
+    let align: TableColumnAlign | "left" | "center" | "right" | undefined =
+      undefined;
+
+    let selectedFilters: string[] | undefined = undefined;
+    let searchValue: string | undefined = undefined;
+    let sortState: TableSortState | "asc" | "desc" | "none" | undefined =
+      undefined;
+    let onFilterChange: ((vals: string[]) => void) | undefined = undefined;
+    let onSearchChange: ((val: string) => void) | undefined = undefined;
+    let onSortChange:
+      | ((state: TableSortState | "asc" | "desc" | "none") => void)
+      | undefined = undefined;
+    let onDateRangeChange: ((from?: string, to?: string) => void) | undefined =
+      undefined;
+    let allFilters: Record<string, string[]> | undefined = undefined;
+
+    // Check if header is a TableColumnHeaderFilter element with props
+    if (React.isValidElement(col.header)) {
+      const p = (col.header as any).props || {};
+      if (p.title) {
+        titleNode = p.title;
+        titleText = getTitlePlainText(p.title) || titleText;
+      }
+      if (p.fetchOptions) fetchOptions = p.fetchOptions;
+      if (p.filterOptions) filterOptions = p.filterOptions;
+      if (p.dateRangeSlot) dateRangeSlot = p.dateRangeSlot;
+      if (p.queryKeyPrefix) queryKeyPrefix = p.queryKeyPrefix;
+      if (p.formatOptionLabel) formatOptionLabel = p.formatOptionLabel;
+      if (p.hideFilter !== undefined) hideFilter = p.hideFilter;
+      if (p.hideSort !== undefined) hideSort = p.hideSort;
+      if (p.align) align = p.align;
+
+      if (p.selectedFilters) selectedFilters = p.selectedFilters;
+      if (p.searchValue) searchValue = p.searchValue;
+      if (p.sortState) sortState = p.sortState;
+      if (p.onFilterChange) onFilterChange = p.onFilterChange;
+      if (p.onSearchChange) onSearchChange = p.onSearchChange;
+      if (p.onSortChange) onSortChange = p.onSortChange;
+      if (p.onDateRangeChange) onDateRangeChange = p.onDateRangeChange;
+      if (p.allFilters) allFilters = p.allFilters;
+    }
+
+    // Infer ColumnValueType
+    let type: ColumnValueType = ColumnValueType.TEXT;
+    const keyLower = col.key.toLowerCase();
+    const valTypeStr = String(col.valueType || "").toLowerCase();
+
+    if (
+      valTypeStr === "date" ||
+      dateRangeSlot ||
+      keyLower.includes("date") ||
+      keyLower.includes("createdat") ||
+      keyLower.includes("updatedat") ||
+      keyLower.includes("ngay")
+    ) {
+      type = ColumnValueType.DATE;
+    } else if (
+      valTypeStr === "number" ||
+      keyLower.includes("amount") ||
+      keyLower.includes("price") ||
+      keyLower.includes("total") ||
+      keyLower.includes("cost") ||
+      keyLower.includes("revenue") ||
+      keyLower.includes("qty") ||
+      keyLower.includes("quantity") ||
+      keyLower.includes("balance") ||
+      keyLower.includes("tien")
+    ) {
+      type = ColumnValueType.NUMBER;
+    } else if (
+      valTypeStr === "status" ||
+      valTypeStr === "select" ||
+      filterOptions ||
+      fetchOptions ||
+      keyLower.includes("status") ||
+      keyLower.includes("trangthai") ||
+      keyLower.includes("type")
+    ) {
+      type = ColumnValueType.SELECT;
+    }
+
+    descriptors.push({
+      key: col.key,
+      title: titleNode,
+      titleText,
+      type,
+      align:
+        align ||
+        (col.className?.includes("text-right")
+          ? TableColumnAlign.RIGHT
+          : col.className?.includes("text-center")
+            ? TableColumnAlign.CENTER
+            : TableColumnAlign.LEFT),
+      currencySymbol: col.currencySymbol,
+      decimals: col.decimals,
+      fetchOptions,
+      filterOptions,
+      dateRangeSlot,
+      queryKeyPrefix,
+      formatOptionLabel,
+      hideFilter,
+      hideSort,
+      showBlankOption: (col.header as any)?.props?.showBlankOption ?? false,
+      enableSelectAllMatching:
+        (col.header as any)?.props?.enableSelectAllMatching ?? true,
+      selectedFilters,
+      searchValue,
+      sortState,
+      onFilterChange,
+      onSearchChange,
+      onSortChange,
+      onDateRangeChange,
+      allFilters,
+    });
+  });
+
+  return descriptors;
+}
+
+/**
+ * Evaluate single text filter against an operator
+ */
+export function evaluateTextFilter(
+  val: string,
+  search: string,
+  operator: TextFilterOperator | string = TextFilterOperator.CONTAINS,
+): boolean {
+  if (operator === TextFilterOperator.IS_EMPTY) {
+    return !val || val.trim() === "";
+  }
+  if (operator === TextFilterOperator.IS_NOT_EMPTY) {
+    return Boolean(val && val.trim() !== "");
+  }
+  if (!search) return true;
+
+  const v = (val || "").toLowerCase();
+  const s = (search || "").toLowerCase();
+
+  switch (operator) {
+    case TextFilterOperator.CONTAINS:
+      return v.includes(s);
+    case TextFilterOperator.NOT_CONTAINS:
+      return !v.includes(s);
+    case TextFilterOperator.STARTS_WITH:
+      return v.startsWith(s);
+    case TextFilterOperator.ENDS_WITH:
+      return v.endsWith(s);
+    case TextFilterOperator.EQUALS:
+      return v === s;
+    case TextFilterOperator.NOT_EQUALS:
+      return v !== s;
+    default:
+      return v.includes(s);
+  }
+}
+
+/**
+ * Evaluate single number filter against an operator
+ */
+export function evaluateNumberFilter(
+  rawVal: any,
+  targetVal: string | number,
+  operator: NumberFilterOperator | string = NumberFilterOperator.EQUALS,
+  targetVal2?: string | number,
+): boolean {
+  const num =
+    typeof rawVal === "number"
+      ? rawVal
+      : Number(String(rawVal).replace(/[^0-9.-]+/g, ""));
+  if (Number.isNaN(num)) return false;
+
+  if (operator === NumberFilterOperator.BETWEEN) {
+    const min = Number(targetVal);
+    const max = Number(targetVal2);
+    const hasMin =
+      !Number.isNaN(min) && targetVal !== "" && targetVal !== undefined;
+    const hasMax =
+      !Number.isNaN(max) && targetVal2 !== "" && targetVal2 !== undefined;
+    if (hasMin && hasMax) return num >= min && num <= max;
+    if (hasMin) return num >= min;
+    if (hasMax) return num <= max;
+    return true;
+  }
+
+  const target = Number(targetVal);
+  if (Number.isNaN(target) || targetVal === "" || targetVal === undefined)
+    return true;
+
+  switch (operator) {
+    case NumberFilterOperator.EQUALS:
+      return num === target;
+    case NumberFilterOperator.NOT_EQUALS:
+      return num !== target;
+    case NumberFilterOperator.GREATER_THAN:
+      return num > target;
+    case NumberFilterOperator.GREATER_THAN_OR_EQUAL:
+      return num >= target;
+    case NumberFilterOperator.LESS_THAN:
+      return num < target;
+    case NumberFilterOperator.LESS_THAN_OR_EQUAL:
+      return num <= target;
+    default:
+      return num === target;
+  }
+}
+
+/**
  * Options for client-side items filtering & sorting
  */
 export interface FilterClientItemsOptions<T> {
   dateField?: keyof T | string;
   customExtractors?: Record<string, (item: T) => any>;
+  columnTypes?: Record<string, ColumnValueType>;
 }
 
 /**
@@ -440,7 +758,7 @@ export function filterClientItems<T extends Record<string, any>>(
 
   let result = [...items];
 
-  // 1. Filter by columnFilters
+  // 1. Filter by columnFilters (Categorical / Multi-select)
   if (listHook.columnFilters) {
     Object.entries(listHook.columnFilters).forEach(([colKey, selected]) => {
       if (selected && selected.length > 0) {
@@ -450,16 +768,58 @@ export function filterClientItems<T extends Record<string, any>>(
             : item[colKey];
           const strVal =
             rawVal !== undefined && rawVal !== null ? String(rawVal) : "";
+
+          if (selected.includes("__BLANK__") && (!strVal || strVal === "")) {
+            return true;
+          }
           return selected.includes(strVal);
         });
       }
     });
   }
 
-  // 2. Filter by columnSearch
+  // 2. Filter by columnSearch & columnOperators
   if (listHook.columnSearch) {
     Object.entries(listHook.columnSearch).forEach(([colKey, search]) => {
-      if (search && search.trim().length > 0) {
+      const operator = listHook.columnOperators?.[colKey];
+      const colType = options?.columnTypes?.[colKey];
+
+      if (operator && colType === ColumnValueType.NUMBER) {
+        // Number comparison operator
+        let val1 = search;
+        let val2: string | undefined = undefined;
+        if (search.includes("..")) {
+          const parts = search.split("..");
+          val1 = parts[0];
+          val2 = parts[1];
+        }
+        result = result.filter((item) => {
+          const rawVal = options?.customExtractors?.[colKey]
+            ? options.customExtractors[colKey](item)
+            : item[colKey];
+          return evaluateNumberFilter(
+            rawVal,
+            val1,
+            operator as NumberFilterOperator,
+            val2,
+          );
+        });
+      } else if (operator && (colType === ColumnValueType.TEXT || !colType)) {
+        // Text comparison operator
+        result = result.filter((item) => {
+          const rawVal = options?.customExtractors?.[colKey]
+            ? options.customExtractors[colKey](item)
+            : item[colKey];
+          const strVal =
+            rawVal !== undefined && rawVal !== null ? String(rawVal) : "";
+          return evaluateTextFilter(
+            strVal,
+            search,
+            operator as TextFilterOperator,
+          );
+        });
+      } else if (search && search.trim().length > 0) {
+        // Fallback default: semicolon & quote search
         const keywords = search
           .split(";")
           .map((k) => k.trim())

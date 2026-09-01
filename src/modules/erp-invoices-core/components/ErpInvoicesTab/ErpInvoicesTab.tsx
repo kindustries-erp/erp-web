@@ -363,6 +363,7 @@ export function ErpInvoicesTab(props: ErpInvoicesTabProps) {
           customActionsNode={viewTabsNode}
           filterConfig={filterConfig}
           filter={listHook.filterPanel}
+          listHook={listHook}
           rowActions={rowActions}
           onCreate={() => setImportModalOpen(true)}
           createLabel={t("syncInvoices", "Đồng bộ")}
