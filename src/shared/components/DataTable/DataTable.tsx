@@ -212,7 +212,7 @@ export function DataTable<T>({
               ref={!isFsView ? scrollContainerRef : undefined}
               onScroll={!isFsView ? handleTableScroll : undefined}
               className={cn(
-                "bg-surface transition-shadow duration-150 flex-1 min-h-0 flex flex-col relative w-full",
+                "bg-surface transition-shadow duration-150 flex-1 min-h-0 flex flex-col relative w-full border border-border/60 rounded-xl overflow-x-auto overflow-y-auto",
                 elevated && "rounded-lg border border-border shadow-xs",
                 isScrolledTop &&
                   "shadow-[inset_0_4px_6px_-2px_rgba(0,0,0,0.05)]",

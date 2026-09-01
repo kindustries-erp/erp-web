@@ -451,7 +451,7 @@ export function FilterPanel<T = any>({
         {filter.panelOpen && (
           <div
             className={cn(
-              "w-[320px] rounded-2xl p-3 bg-surface/95 backdrop-blur-sm border border-border/70",
+              "w-[320px] rounded-xl p-3 bg-surface border border-border/60",
               "shadow-[0_8px_30px_rgb(0,0,0,0.06)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.35)]",
               "flex flex-col h-full max-h-full min-h-0",
               "transition-transform duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]",
