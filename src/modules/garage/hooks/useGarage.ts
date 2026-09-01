@@ -77,22 +77,6 @@ export function useGarageDashboard(
   });
 }
 
-export function useGarageReceivables(branchId?: string) {
-  return useQuery({
-    queryKey: ["garage", "receivables", branchId],
-    queryFn: () => garageApi.getReceivables(branchId!),
-    enabled: !!branchId,
-  });
-}
-
-export function useGaragePayables(branchId?: string) {
-  return useQuery({
-    queryKey: ["garage", "payables", branchId],
-    queryFn: () => garageApi.getPayables(branchId!),
-    enabled: !!branchId,
-  });
-}
-
 export function useGarageCaseServices(caseId?: string) {
   return useQuery({
     queryKey: ["garage", "caseServices", caseId],
@@ -187,52 +171,6 @@ export function useSyncGarageCaseDetail() {
     },
     onError: (error: any) => {
       toast.error(error.message || "Failed to sync case detail.");
-    },
-  });
-}
-
-export function useSyncGarageReceivables() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({
-      branchId,
-      from,
-      to,
-    }: {
-      branchId: string;
-      from?: string;
-      to?: string;
-    }) => garageApi.syncReceivables(branchId, from, to),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["garage", "receivables"] });
-      toast.success("Receivables synced successfully.");
-    },
-    onError: (error: any) => {
-      toast.error(error.message || "Failed to sync receivables.");
-    },
-  });
-}
-
-export function useSyncGaragePayables() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({
-      branchId,
-      from,
-      to,
-    }: {
-      branchId: string;
-      from?: string;
-      to?: string;
-    }) => garageApi.syncPayables(branchId, from, to),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["garage", "payables"] });
-      toast.success("Payables synced successfully.");
-    },
-    onError: (error: any) => {
-      toast.error(error.message || "Failed to sync payables.");
     },
   });
 }

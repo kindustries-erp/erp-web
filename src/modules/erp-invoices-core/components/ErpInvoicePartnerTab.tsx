@@ -4,8 +4,6 @@ import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import {
   Building2,
-  Copy,
-  Check,
   FileText,
   TrendingUp,
   CreditCard,
@@ -15,7 +13,7 @@ import {
   RotateCcw,
   Boxes,
 } from "lucide-react";
-import { toast } from "react-hot-toast";
+import { CopyButton } from "@/shared/components/CopyButton";
 
 import {
   type ErpInvoice,
@@ -1144,8 +1142,6 @@ export const ErpInvoicePartnerRightPanel = React.memo(
     direction,
   }: ErpInvoicePartnerRightPanelProps) {
     const { t } = useTranslation("erpInvoices");
-    const [copiedTax, setCopiedTax] = useState(false);
-    const [copiedName, setCopiedName] = useState(false);
 
     const isDirectionIn = (direction || detailInvoice?.direction) === "IN";
     const partnerName =
@@ -1173,31 +1169,6 @@ export const ErpInvoicePartnerRightPanel = React.memo(
       queryFn: () => erpInvoiceDashboardApi.getPartnerStats(taxCode),
       enabled: !!taxCode,
     });
-
-    const copyToClipboard = (
-      text: string,
-      isTax: boolean,
-      e: React.MouseEvent,
-    ) => {
-      e.stopPropagation();
-      e.preventDefault();
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(text);
-      }
-      if (isTax) {
-        setCopiedTax(true);
-        toast.success(t("copiedTax", "Đã copy MST"), {
-          id: "partner-tax-copy",
-        });
-        setTimeout(() => setCopiedTax(false), 1500);
-      } else {
-        setCopiedName(true);
-        toast.success(t("copiedName", "Đã copy tên đối tác"), {
-          id: "partner-name-copy",
-        });
-        setTimeout(() => setCopiedName(false), 1500);
-      }
-    };
 
     const barIn = "#ea580c"; // Orange 600 (Đầu vào - Chi phí)
     const barOut = "#059669"; // Emerald 600 (Đầu ra - Doanh thu)
@@ -1228,18 +1199,14 @@ export const ErpInvoicePartnerRightPanel = React.memo(
                   {partnerName || t("unnamedPartner", "Đối tác chưa đặt tên")}
                 </span>
                 {partnerName && (
-                  <button
-                    type="button"
-                    onClick={(e) => copyToClipboard(partnerName, false, e)}
+                  <CopyButton
+                    value={partnerName}
+                    tooltip={t("copyName", "Copy tên")}
+                    copiedTooltip={t("copied", "Đã copy")}
+                    toastMessage={t("copiedName", "Đã copy tên đối tác")}
+                    toastId="partner-name-copy"
                     className="p-1 text-muted-foreground hover:text-primary transition-colors shrink-0"
-                    title={t("copyName", "Copy tên")}
-                  >
-                    {copiedName ? (
-                      <Check className="w-3.5 h-3.5 text-emerald-500" />
-                    ) : (
-                      <Copy className="w-3.5 h-3.5" />
-                    )}
-                  </button>
+                  />
                 )}
               </div>
               <Badge
@@ -1263,18 +1230,15 @@ export const ErpInvoicePartnerRightPanel = React.memo(
                     <span className="font-semibold text-foreground truncate">
                       {taxCode}
                     </span>
-                    <button
-                      type="button"
-                      onClick={(e) => copyToClipboard(taxCode, true, e)}
+                    <CopyButton
+                      value={taxCode}
+                      tooltip={t("copyTax", "Copy MST")}
+                      copiedTooltip={t("copied", "Đã copy")}
+                      toastMessage={t("copiedTax", "Đã copy MST")}
+                      toastId="partner-tax-copy"
+                      iconClassName="w-3 h-3"
                       className="p-0.5 text-muted-foreground hover:text-primary transition-colors shrink-0"
-                      title={t("copyTax", "Copy MST")}
-                    >
-                      {copiedTax ? (
-                        <Check className="w-3 h-3 text-emerald-500" />
-                      ) : (
-                        <Copy className="w-3 h-3" />
-                      )}
-                    </button>
+                    />
                   </div>
                 </div>
               )}

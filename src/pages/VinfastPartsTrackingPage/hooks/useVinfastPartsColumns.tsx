@@ -13,7 +13,7 @@ import type { useErpInvoiceForm } from "@/modules/erp-invoices-core/hooks/useErp
 
 import type { VinfastPartTrackingRow } from "../types";
 import { getVehicleTypeLabel, getVehicleTypeBadgeClass } from "../utils";
-import { CopyIconBtn } from "../components/CopyIconBtn";
+import { CopyIconBtn } from "@/shared/components/CopyButton";
 import { PriceWithInvoicePopover } from "../components/PriceWithInvoicePopover";
 
 export interface UseVinfastPartsColumnsOptions {

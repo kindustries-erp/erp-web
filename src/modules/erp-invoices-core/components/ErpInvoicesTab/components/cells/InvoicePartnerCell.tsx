@@ -1,8 +1,6 @@
-import React, { useState } from "react";
-import { Copy, Check } from "lucide-react";
-import { toast } from "react-hot-toast";
+import React from "react";
 import { Tooltip } from "@/core/components/ui/Tooltip";
-import { Button } from "@/shared/components/ui/Button";
+import { CopyButton } from "@/shared/components/CopyButton";
 import { TableText } from "@/shared/components/DataTable/TableText";
 import { type ErpInvoice } from "@/modules/erp-invoices-core/api/erpInvoicesCoreApi";
 
@@ -15,9 +13,6 @@ export const InvoicePartnerCell = React.memo(function InvoicePartnerCell({
   inv,
   direction,
 }: InvoicePartnerCellProps) {
-  const [copiedName, setCopiedName] = useState(false);
-  const [copiedTax, setCopiedTax] = useState(false);
-
   const buyerDisplayName =
     inv.buyerName?.trim() || inv.buyerPersonalName?.trim() || "";
   const partnerName =
@@ -30,36 +25,6 @@ export const InvoicePartnerCell = React.memo(function InvoicePartnerCell({
   if (!partnerName && !displayTax) {
     return <span className="text-muted-foreground">—</span>;
   }
-
-  const copyToClipboard = (
-    text: string,
-    isTax: boolean,
-    e: React.MouseEvent,
-  ) => {
-    e.stopPropagation();
-    e.preventDefault();
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text);
-    } else {
-      const el = document.createElement("textarea");
-      el.value = text;
-      el.style.position = "absolute";
-      el.style.left = "-9999px";
-      document.body.appendChild(el);
-      el.select();
-      document.execCommand("copy");
-      document.body.removeChild(el);
-    }
-    if (isTax) {
-      setCopiedTax(true);
-      toast.success("Đã copy MST", { id: "partner-tax-copy" });
-      setTimeout(() => setCopiedTax(false), 1500);
-    } else {
-      setCopiedName(true);
-      toast.success("Đã copy tên đối tác", { id: "partner-name-copy" });
-      setTimeout(() => setCopiedName(false), 1500);
-    }
-  };
 
   const taxPrefix = taxCode ? "MST: " : "CCCD: ";
 
@@ -75,22 +40,15 @@ export const InvoicePartnerCell = React.memo(function InvoicePartnerCell({
             </span>
           </Tooltip>
           {partnerName && partnerName !== "—" && (
-            <Tooltip content={copiedName ? "Đã copy" : "Copy tên"}>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="h-3.5 w-3.5 p-0 opacity-0 group-hover/pname:opacity-100 transition-opacity flex-shrink-0 text-slate-400 hover:text-slate-600 focus:outline-none"
-                onClick={(e) => copyToClipboard(partnerName, false, e)}
-                aria-label="Copy tên"
-              >
-                {copiedName ? (
-                  <Check className="w-2.5 h-2.5 text-emerald-500" />
-                ) : (
-                  <Copy className="w-2.5 h-2.5" />
-                )}
-              </Button>
-            </Tooltip>
+            <CopyButton
+              value={partnerName}
+              tooltip="Copy tên"
+              copiedTooltip="Đã copy"
+              toastMessage="Đã copy tên đối tác"
+              toastId="partner-name-copy"
+              iconClassName="w-2.5 h-2.5"
+              className="h-3.5 w-3.5 p-0 opacity-0 group-hover/pname:opacity-100 transition-opacity flex-shrink-0 text-slate-400 hover:text-slate-600 focus:outline-none"
+            />
           )}
         </div>
 
@@ -105,22 +63,15 @@ export const InvoicePartnerCell = React.memo(function InvoicePartnerCell({
                 {displayTax}
               </span>
             </Tooltip>
-            <Tooltip content={copiedTax ? "Đã copy" : "Copy MST"}>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="h-3 w-3 p-0 opacity-0 group-hover/tax:opacity-100 transition-opacity flex-shrink-0 text-slate-400 hover:text-slate-600 focus:outline-none"
-                onClick={(e) => copyToClipboard(displayTax, true, e)}
-                aria-label="Copy MST"
-              >
-                {copiedTax ? (
-                  <Check className="w-2.5 h-2.5 text-emerald-500" />
-                ) : (
-                  <Copy className="w-2.5 h-2.5" />
-                )}
-              </Button>
-            </Tooltip>
+            <CopyButton
+              value={displayTax}
+              tooltip="Copy MST"
+              copiedTooltip="Đã copy"
+              toastMessage="Đã copy MST"
+              toastId="partner-tax-copy"
+              iconClassName="w-2.5 h-2.5"
+              className="h-3 w-3 p-0 opacity-0 group-hover/tax:opacity-100 transition-opacity flex-shrink-0 text-slate-400 hover:text-slate-600 focus:outline-none"
+            />
           </div>
         )}
       </div>

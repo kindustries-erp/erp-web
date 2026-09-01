@@ -154,40 +154,6 @@ export const garageApi = {
     return res.data;
   },
 
-  syncReceivables: async (branchId: string, from?: string, to?: string) => {
-    const params = new URLSearchParams();
-    if (from) params.append("from", from);
-    if (to) params.append("to", to);
-
-    const res = await axiosInstance.post(
-      `${BASE}/sync/receivables?${params.toString()}`,
-      {},
-      {
-        headers: {
-          "x-greenway-branch-id": branchId,
-        },
-      },
-    );
-    return res.data;
-  },
-
-  syncPayables: async (branchId: string, from?: string, to?: string) => {
-    const params = new URLSearchParams();
-    if (from) params.append("from", from);
-    if (to) params.append("to", to);
-
-    const res = await axiosInstance.post(
-      `${BASE}/sync/payables?${params.toString()}`,
-      {},
-      {
-        headers: {
-          "x-greenway-branch-id": branchId,
-        },
-      },
-    );
-    return res.data;
-  },
-
   getDashboard: async (branchId: string, from?: string, to?: string) => {
     const params = new URLSearchParams();
     if (from) params.append("from", from);
@@ -201,24 +167,6 @@ export const garageApi = {
         },
       },
     );
-    return res.data;
-  },
-
-  getReceivables: async (branchId: string) => {
-    const res = await axiosInstance.get(`${BASE}/receivables`, {
-      headers: {
-        "x-greenway-branch-id": branchId,
-      },
-    });
-    return res.data;
-  },
-
-  getPayables: async (branchId: string) => {
-    const res = await axiosInstance.get(`${BASE}/payables`, {
-      headers: {
-        "x-greenway-branch-id": branchId,
-      },
-    });
     return res.data;
   },
 

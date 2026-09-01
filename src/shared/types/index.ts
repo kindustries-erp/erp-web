@@ -65,8 +65,6 @@ export type PageKey =
   | "garage-dashboard"
   | "garage-cases"
   | "garage-opex"
-  | "garage-receivables"
-  | "garage-payables"
   | "garage-customers"
   | "garage-partners"
   | "erp-finished-goods"

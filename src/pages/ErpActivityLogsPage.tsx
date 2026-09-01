@@ -88,7 +88,7 @@ export function ErpActivityLogsPage() {
         enableResizing: true,
         header: headerFilter(
           "actorEmail",
-          t("activityLogs.headers.actor") || "Actor",
+          t("activityLogs.headers.actor", "Actor"),
           { showBlankOption: true },
         ),
         cell: (item) => (
@@ -107,7 +107,7 @@ export function ErpActivityLogsPage() {
         enableResizing: true,
         header: headerFilter(
           "actionType",
-          t("activityLogs.headers.action") || "Action",
+          t("activityLogs.headers.action", "Action"),
         ),
         cell: (item) => (
           <span className="font-semibold text-foreground">
@@ -122,7 +122,7 @@ export function ErpActivityLogsPage() {
         enableResizing: true,
         header: headerFilter(
           "module",
-          t("activityLogs.headers.module") || "Module",
+          t("activityLogs.headers.module", "Module"),
         ),
         cell: (item) => (
           <Badge variant="outline" className="text-[11px] font-mono">
@@ -137,7 +137,7 @@ export function ErpActivityLogsPage() {
         enableResizing: true,
         header: headerFilter(
           "entityType",
-          t("activityLogs.headers.entity") || "Entity",
+          t("activityLogs.headers.entity", "Entity"),
           { showBlankOption: true },
         ),
         cell: (item) => {
@@ -167,7 +167,7 @@ export function ErpActivityLogsPage() {
         className: "text-right",
         header: headerFilter.date(
           "createdAt",
-          t("activityLogs.headers.time") || "Thời gian",
+          t("activityLogs.headers.time", "Time"),
         ),
         cell: (item) => (
           <TableDateCell date={item.createdAt} className="justify-end w-full" />
@@ -180,7 +180,7 @@ export function ErpActivityLogsPage() {
         className: "text-center",
         header: headerFilter(
           "status",
-          t("activityLogs.headers.status") || "Status",
+          t("activityLogs.headers.status", "Status"),
         ),
         cell: (item) => (
           <div className="flex justify-center w-full">
@@ -202,15 +202,18 @@ export function ErpActivityLogsPage() {
   return (
     <>
       <SpreadsheetPageTemplate<AuditLogEntry>
-        title={t("nav.items.activitylog") || "Nhật ký hoạt động"}
-        desc="Audit logs live từ ERP CORE backend"
+        title={t("activityLogs.title", "Nhật ký hoạt động")}
+        desc={t(
+          "activityLogs.desc",
+          "Audit logs trực tiếp từ ERP CORE backend",
+        )}
         icon={<History className="h-4 w-4" />}
         tableId="activity-logs-table-v2"
         items={items}
         columns={columns}
         getRowKey={(item) => item.id}
         loading={loading}
-        emptyLabel="Chưa có audit logs"
+        emptyLabel={t("activityLogs.empty", "Chưa có audit logs")}
         page={page}
         pageSize={pageSize}
         total={total}
@@ -225,10 +228,10 @@ export function ErpActivityLogsPage() {
         onClearAllFilters={listHook.clearAllFilters}
         rowActions={(row) => [
           {
-            groupLabel: "Tra cứu",
+            groupLabel: t("activityLogs.actions.lookup", "Tra cứu"),
             items: [
               {
-                label: "Xem chi tiết",
+                label: t("activityLogs.actions.viewDetail", "Xem chi tiết"),
                 icon: <Eye className="h-3.5 w-3.5" />,
                 onClick: () => setSelected(row),
               },
@@ -241,44 +244,65 @@ export function ErpActivityLogsPage() {
         open={Boolean(selected)}
         mode="view"
         onClose={() => setSelected(null)}
-        title={selected?.actionType || "Chi tiết log"}
+        title={
+          selected?.actionType || t("activityLogs.drawer.title", "Chi tiết log")
+        }
         subtitle={
           selected
             ? `${selected.module} • ${formatDate(selected.createdAt)}`
             : undefined
         }
         actions={[
-          { label: "Đóng", onClick: () => setSelected(null), primary: true },
+          {
+            label: t("activityLogs.drawer.btnClose", "Đóng"),
+            onClick: () => setSelected(null),
+            primary: true,
+          },
         ]}
         layout="1-column"
         leftPanel={
           selected ? (
             <>
-              <DrawerSection title="Thông tin chính">
+              <DrawerSection
+                title={t("activityLogs.drawer.sectionMain", "Thông tin chính")}
+              >
                 <div className="space-y-2 text-sm">
                   <div>
-                    <span className="font-medium">Actor:</span>{" "}
+                    <span className="font-medium">
+                      {t("activityLogs.drawer.actor", "Actor:")}
+                    </span>{" "}
                     {selected.actorEmail || "system"}
                   </div>
                   <div>
-                    <span className="font-medium">Entity:</span>{" "}
+                    <span className="font-medium">
+                      {t("activityLogs.drawer.entity", "Entity:")}
+                    </span>{" "}
                     {selected.entityType || "—"} / {selected.entityId || "—"}
                   </div>
                   <div>
-                    <span className="font-medium">Route:</span>{" "}
+                    <span className="font-medium">
+                      {t("activityLogs.drawer.route", "Route:")}
+                    </span>{" "}
                     {selected.httpMethod || "—"} {selected.route || "—"}
                   </div>
                   <div>
-                    <span className="font-medium">Message:</span>{" "}
+                    <span className="font-medium">
+                      {t("activityLogs.drawer.message", "Message:")}
+                    </span>{" "}
                     {selected.message || "—"}
                   </div>
                 </div>
               </DrawerSection>
-              <DrawerSection title="Snapshot JSON">
+              <DrawerSection
+                title={t(
+                  "activityLogs.drawer.sectionSnapshot",
+                  "Snapshot JSON",
+                )}
+              >
                 <div className="space-y-3">
                   <div>
                     <div className="mb-1 text-xs font-semibold text-muted-foreground">
-                      Before
+                      {t("activityLogs.drawer.before", "Before")}
                     </div>
                     <pre className="overflow-x-auto rounded-xl bg-muted p-3 text-xs">
                       {JSON.stringify(selected.beforeSnapshot, null, 2)}
@@ -286,7 +310,7 @@ export function ErpActivityLogsPage() {
                   </div>
                   <div>
                     <div className="mb-1 text-xs font-semibold text-muted-foreground">
-                      After
+                      {t("activityLogs.drawer.after", "After")}
                     </div>
                     <pre className="overflow-x-auto rounded-xl bg-muted p-3 text-xs">
                       {JSON.stringify(selected.afterSnapshot, null, 2)}
@@ -294,7 +318,7 @@ export function ErpActivityLogsPage() {
                   </div>
                   <div>
                     <div className="mb-1 text-xs font-semibold text-muted-foreground">
-                      Error
+                      {t("activityLogs.drawer.error", "Error")}
                     </div>
                     <pre className="overflow-x-auto rounded-xl bg-muted p-3 text-xs">
                       {JSON.stringify(selected.errorSnapshot, null, 2)}
