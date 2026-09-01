@@ -151,7 +151,7 @@ export const ErpInvoicePartnerTab = React.memo(function ErpInvoicePartnerTab({
   const activeFilterCount = useMemo(() => {
     let count = 0;
     Object.values(columnFilters).forEach((vals) => {
-      if (vals && vals.length > 0) count += vals.length;
+      if (vals && vals.length > 0) count += 1;
     });
     Object.values(columnSearch).forEach((val) => {
       if (val && val.trim().length > 0) count += 1;
@@ -229,7 +229,7 @@ export const ErpInvoicePartnerTab = React.memo(function ErpInvoicePartnerTab({
   const itemActiveFilterCount = useMemo(() => {
     let count = 0;
     Object.values(itemColumnFilters).forEach((vals) => {
-      if (vals && vals.length > 0) count += vals.length;
+      if (vals && vals.length > 0) count += 1;
     });
     Object.values(itemColumnSearch).forEach((val) => {
       if (val && val.trim().length > 0) count += 1;

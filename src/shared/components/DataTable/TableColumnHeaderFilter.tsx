@@ -300,6 +300,25 @@ export function TableColumnHeaderFilter({
     }
   };
 
+  const handleApply = () => {
+    if (pendingFilters.length > 0) {
+      if (pendingFilters[0] === "__ALL_MATCHING__") {
+        onFilterChange(["__ALL_MATCHING__", localSearch]);
+        onSearchChange("");
+      } else {
+        onFilterChange(pendingFilters);
+        onSearchChange("");
+      }
+    } else if (localSearch.trim()) {
+      onSearchChange(localSearch.trim());
+      onFilterChange([]);
+    } else {
+      onSearchChange("");
+      onFilterChange([]);
+    }
+    setOpen(false);
+  };
+
   return (
     <Popover.Root open={open} onOpenChange={handleOpenChange}>
       <Popover.Trigger asChild>
@@ -423,6 +442,12 @@ export function TableColumnHeaderFilter({
                       setLocalSearch(e.target.value);
                       if (columnKey)
                         dropdownSearchState.set(columnKey, e.target.value);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleApply();
+                      }
                     }}
                   />
                   {localSearch && (
@@ -551,15 +576,7 @@ export function TableColumnHeaderFilter({
                 variant="primary"
                 size="sm"
                 className="text-xs h-7 px-3"
-                onClick={() => {
-                  onSearchChange(localSearch);
-                  let finalFilters = pendingFilters;
-                  if (pendingFilters[0] === "__ALL_MATCHING__") {
-                    finalFilters = ["__ALL_MATCHING__", localSearch];
-                  }
-                  onFilterChange(finalFilters);
-                  setOpen(false);
-                }}
+                onClick={handleApply}
               >
                 {t("apply", "Áp dụng")}
               </Button>

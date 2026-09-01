@@ -55,6 +55,7 @@ export function ErpInvoiceItemsSection(props: ErpInvoiceItemsSectionProps) {
       columns={columns}
       getRowKey={(row) => row.id}
       loading={listHook.isLoading}
+      isPending={props.isPending}
       emptyLabel={t("emptyData", "Chưa có dữ liệu dòng hàng")}
       page={listHook.page}
       pageSize={listHook.pageSize}
@@ -66,7 +67,6 @@ export function ErpInvoiceItemsSection(props: ErpInvoiceItemsSectionProps) {
         listHook.setPage(1);
       }}
       onRefresh={() => listHook.refetch()}
-      activeFilterCount={listHook.activeFilterCount}
       onClearAllFilters={listHook.clearAllFilters}
       listHook={listHook}
       rowActions={rowActions}

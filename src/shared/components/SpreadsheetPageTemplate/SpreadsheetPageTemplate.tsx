@@ -156,10 +156,9 @@ export function SpreadsheetPageTemplate<T>({
   );
 
   const effectiveActiveFilterCount =
-    activeFilterCount ??
-    (unifiedFilter.activeFilterCount > 0
+    unifiedFilter.activeFilterCount > 0
       ? unifiedFilter.activeFilterCount
-      : (filter?.activeFilterCount ?? 0));
+      : (activeFilterCount ?? filter?.activeFilterCount ?? 0);
 
   const actionGroupNode = (
     <TableActionGroup

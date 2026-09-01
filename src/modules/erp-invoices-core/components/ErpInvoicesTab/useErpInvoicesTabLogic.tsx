@@ -153,6 +153,19 @@ export function useErpInvoicesTabLogic({
     },
   );
 
+  const [isTabSwitching, setIsTabSwitching] = useState(false);
+  const tabSwitchTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
+
+  useEffect(() => {
+    return () => {
+      if (tabSwitchTimerRef.current) {
+        clearTimeout(tabSwitchTimerRef.current);
+      }
+    };
+  }, []);
+
   useEffect(() => {
     if (isDrawer) {
       if (propDirection && propDirection !== currentDirection) {
@@ -203,9 +216,9 @@ export function useErpInvoicesTabLogic({
 
     const handlePopState = () => {
       const info = getInitialTabInfo();
+      setCurrentTabKey(info.tabKey);
       setCurrentDirection(info.dir);
       setActiveView(info.view);
-      setCurrentTabKey(info.tabKey);
 
       const targetStoreDir: Direction =
         instanceIndex === 2 ? (info.dir === "IN" ? "IN_2" : "OUT_2") : info.dir;
@@ -255,10 +268,19 @@ export function useErpInvoicesTabLogic({
       nextView = "header";
     }
 
-    // 1. Cập nhật Tab highlight, Direction & View NGAY LẬP TỨC (0ms synchronous update)
+    // 1. Cập nhật Tab highlight, Direction & View NGAY LẬP TỨC (0ms Synchronous update)
     setCurrentTabKey(newTab);
     setCurrentDirection(nextDir);
     setActiveView(nextView);
+
+    // 2. Kích hoạt State trung gian cho UI mượt mà (chuyển cảnh nhẹ nhàng, chống giật)
+    setIsTabSwitching(true);
+    if (tabSwitchTimerRef.current) {
+      clearTimeout(tabSwitchTimerRef.current);
+    }
+    tabSwitchTimerRef.current = setTimeout(() => {
+      setIsTabSwitching(false);
+    }, 200);
 
     if (!isDrawer && typeof window !== "undefined") {
       const url = new URL(window.location.href);
@@ -339,12 +361,16 @@ export function useErpInvoicesTabLogic({
       const queryString = newParams.toString();
       const newUrl = `${url.pathname}${queryString ? `?${queryString}` : ""}`;
       window.history.replaceState(null, "", newUrl);
+
+      // Debounce update lên Root AppStore để không gây lag/re-render Desktop Layout
       const currentInstanceId = isDrawer
         ? "erp-invoices"
         : instanceIndex === 2
           ? "erp-invoices__2"
           : "erp-invoices";
-      useAppStore.getState().updateCurrentTabUrl(currentInstanceId, newUrl);
+      debounceUrlTimerRef.current = setTimeout(() => {
+        useAppStore.getState().updateCurrentTabUrl(currentInstanceId, newUrl);
+      }, 300);
     }
   };
 
@@ -936,7 +962,7 @@ export function useErpInvoicesTabLogic({
     t,
     direction,
     isDrawer,
-    isPending: false,
+    isTabSwitching,
     listDir,
     canEditInvoice,
     listHook,
@@ -960,6 +986,9 @@ export function useErpInvoicesTabLogic({
     editingViewPreset,
     handleSaveViewPreset,
     handleResetViewPreset,
+    handleOpenCreateView,
+    handleOpenEditView,
+    handleDeleteViewPreset,
     currentColumnVisibility,
     activeColumnPresetKey,
     handleColumnPresetChange,
