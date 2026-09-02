@@ -1,14 +1,18 @@
-import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
+import { useMemo } from "react";
+import {
+  StandardFormDrawer,
+  type DrawerTopTabItem,
+} from "@/shared/components/StandardFormDrawer";
 import type { DrawerMode } from "@/shared/stores/useDrawerStore";
 import { useT } from "@/core/i18n";
 import { type OperationalDocument } from "@/modules/operational/api/operationalApi";
 import { type ErpPoReceipt } from "@/modules/purchase-orders-core/api/purchaseOrdersCoreApi";
 import { usePurchaseOrderDrawer } from "@/modules/purchase-orders-core/hooks/usePurchaseOrderDrawer";
-import {} from "@/modules/operational/components/form/FormLoadingSkeleton";
 import { FormLineDetailPanel } from "@/modules/operational/components/form/FormLineDetailPanel";
 import { FormGeneralInfoPanel } from "@/modules/operational/components/form/FormGeneralInfoPanel";
+import { PurchaseLinkedDocuments } from "@/modules/operational/components/PurchaseLinkedDocuments";
 import { ActionDropdown } from "@/shared/components/ActionDropdown";
-import { FileSpreadsheet, ChevronDown } from "lucide-react";
+import { FileSpreadsheet, ChevronDown, FileText, Link2 } from "lucide-react";
 
 export interface PurchaseOrderDrawerProps {
   open: boolean;
@@ -65,7 +69,72 @@ export function PurchaseOrderDrawer({
     handleSubmit,
     pendingDocumentChanges,
     fieldSet,
+    onItemSearch,
+    onScrollBottomItems,
+    loadingItems,
   } = drawerState;
+
+  const linkedCount = useMemo(() => {
+    const receiptsCount = poReceipts?.length || 0;
+    const pendingCount = pendingDocumentChanges?.length || 0;
+    return receiptsCount + pendingCount;
+  }, [poReceipts, pendingDocumentChanges]);
+
+  const drawerTabs: DrawerTopTabItem[] = useMemo(
+    () => [
+      {
+        key: "po_details",
+        label: t("Chi tiết đơn hàng"),
+        icon: <FileText className="w-3.5 h-3.5" />,
+        content: (
+          <FormLineDetailPanel
+            variant="purchase"
+            isPurchaseLocked={isPurchaseLocked}
+            purchaseFieldLocked={purchaseFieldLocked}
+            viewOnly={viewOnly}
+            purchaseInventoryOptions={purchaseInventoryOptions}
+            onItemSearch={onItemSearch}
+            onScrollBottomItems={onScrollBottomItems}
+            loadingItems={loadingItems}
+          />
+        ),
+      },
+      {
+        key: "linked_docs",
+        label: t("Chứng từ liên kết"),
+        icon: <Link2 className="w-3.5 h-3.5" />,
+        badgeCount: linkedCount,
+        content: (
+          <div className="space-y-4">
+            <PurchaseLinkedDocuments
+              receipts={poReceipts || []}
+              editMode={!viewOnly}
+              pendingDocumentChanges={pendingDocumentChanges}
+              fieldSet={fieldSet}
+              purchaseOrderId={editing?.id}
+              open={open}
+            />
+          </div>
+        ),
+      },
+    ],
+    [
+      t,
+      isPurchaseLocked,
+      purchaseFieldLocked,
+      viewOnly,
+      purchaseInventoryOptions,
+      onItemSearch,
+      onScrollBottomItems,
+      loadingItems,
+      linkedCount,
+      poReceipts,
+      pendingDocumentChanges,
+      fieldSet,
+      editing?.id,
+      open,
+    ],
+  );
 
   const footerLeft =
     editing && onExportExcel ? (
@@ -158,10 +227,15 @@ export function PurchaseOrderDrawer({
     <StandardFormDrawer
       open={open}
       mode={mode}
+      layout="2-columns"
+      size="xl"
       collapsibleRightPanel={true}
+      confirmOnClose={!viewOnly}
       onClose={onClose}
       onToggleEdit={onToggleEdit}
       footerLeft={footerLeft}
+      tabs={drawerTabs}
+      defaultTabKey="po_details"
       title={
         viewOnly
           ? t("Chi tiết Đơn mua hàng")
@@ -184,20 +258,6 @@ export function PurchaseOrderDrawer({
       actions={actions}
       loading={loading}
       error={error}
-      leftPanel={
-        <FormLineDetailPanel
-          variant="purchase"
-          isPurchaseLocked={isPurchaseLocked}
-          purchaseFieldLocked={purchaseFieldLocked}
-          viewOnly={viewOnly}
-          purchaseInventoryOptions={purchaseInventoryOptions}
-          poReceipts={poReceipts}
-          pendingDocumentChanges={pendingDocumentChanges}
-          fieldSet={fieldSet}
-          purchaseOrderId={editing?.id}
-          open={open}
-        />
-      }
       rightPanel={
         <FormGeneralInfoPanel
           variant="purchase"

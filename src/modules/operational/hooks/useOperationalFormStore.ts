@@ -112,6 +112,16 @@ interface OperationalFormActions {
     value: LineDraft[K],
   ) => void;
   addLine: (variant: FormVariant) => void;
+  addItemsBulk: (
+    items: Array<{
+      id: string;
+      sku: string;
+      itemName: string;
+      itemType?: string;
+      uom?: string;
+      costPrice?: number;
+    }>,
+  ) => void;
   removeLine: (tempId: string, variant: FormVariant) => void;
   setLines: (lines: LineDraft[]) => void;
 
@@ -231,6 +241,38 @@ export const useOperationalFormStore = create<
 
   addLine: (variant) => {
     set((state) => ({ lines: [...state.lines, emptyLine(variant)] }));
+  },
+
+  addItemsBulk: (items) => {
+    set((state) => {
+      const isSingleEmpty =
+        state.lines.length === 1 &&
+        !state.lines[0].inventory_item_id &&
+        !state.lines[0].item_code &&
+        !state.lines[0].item_name &&
+        !state.lines[0].description;
+
+      const newLines: LineDraft[] = items.map((item) => ({
+        tempId: newTempId(),
+        item_code: item.sku || "",
+        item_name: item.itemName || "",
+        description: "",
+        qty: "1",
+        unit_price: item.costPrice ? String(item.costPrice) : "0",
+        amount: item.costPrice ? String(item.costPrice) : "0",
+        notes: "",
+        line_type:
+          item.itemType === "GOODS"
+            ? "PRODUCT"
+            : item.itemType === "SERVICE"
+              ? "SERVICE"
+              : "PART",
+        inventory_item_id: item.id || "",
+      }));
+
+      const baseLines = isSingleEmpty ? [] : state.lines;
+      return { lines: [...baseLines, ...newLines] };
+    });
   },
 
   removeLine: (tempId, variant) => {

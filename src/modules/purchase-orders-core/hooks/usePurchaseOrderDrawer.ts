@@ -1,13 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import {
   operationalApi,
   type OperationalDocument,
 } from "@/modules/operational/api/operationalApi";
 import { type CreateOperationalPayload } from "@/modules/operational/api/operationalApi";
 import { purchaseOrdersCoreApi } from "@/modules/purchase-orders-core/api/purchaseOrdersCoreApi";
+import { inventoryCoreApi } from "@/modules/inventory-core/api/inventoryCoreApi";
 import { getBranchesApi } from "@/modules/branches/api/branchApi";
 import { getBusinessPartnersPagedApi } from "@/modules/partners/api/partnerApi";
-import { basicMastersApi } from "@/modules/basic-masters/api/basicMastersApi";
+import { useHasPermission } from "@/shared/hooks/useHasPermission";
+import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
 import { extractApiError } from "@/shared/utils/apiError";
 import { useOperationalFormStore } from "@/modules/operational/hooks/useOperationalFormStore";
 import { updateEntityTags } from "@/modules/tags/api/tagsApi";
@@ -43,17 +46,14 @@ export function usePurchaseOrderDrawer({
     submittingStatus,
     branchOptions,
     partnerOptions,
-    inventoryItemOptions,
     lines,
     initNew,
     initFromDoc,
     setBranchOptions,
     setPartnerOptions,
-    setInventoryItemOptions,
     setSaving,
     setError,
     setSubmittingStatus,
-    setSupplierInvoiceOptions,
   } = store;
 
   // -------------------------------------------------------------------------
@@ -147,40 +147,62 @@ export function usePurchaseOrderDrawer({
       .catch(() => setPartnerOptions([]));
   }, [open]);
 
-  useEffect(() => {
-    if (!open) return;
-    if (viewOnly) {
-      setInventoryItemOptions([]);
-      return;
-    }
-    basicMastersApi
-      .list({ limit: 200, entities: "inventoryItems,erpInvoices" })
-      .then((res) => {
-        const options = (res.items.inventoryItems || []).map((item: any) => ({
-          value: item.id,
-          label: item.itemName || "(Chưa có tên)",
-          searchText: `${item.sku} ${item.itemName}`,
-          sku: item.sku,
-          itemName: item.itemName,
-          itemType: item.itemType,
-          note: "",
-        }));
-        setInventoryItemOptions(options);
+  // RBAC Permission Check for Inventory Items
+  const canViewInventoryItems = useHasPermission(
+    ErpResource.INVENTORY_ITEMS,
+    ErpAction.READ,
+  );
 
-        // Map input invoices for PO
-        const invOptions = (res.items.erpInvoices || [])
-          .filter((inv) => inv.direction === "IN")
-          .map((inv) => ({
-            value: inv.invoiceNo,
-            label: `${inv.invoiceNo} ${inv.sellerName ? `(${inv.sellerName})` : ""}`,
-          }));
-        setSupplierInvoiceOptions(invOptions);
-      })
-      .catch(() => {
-        setInventoryItemOptions([]);
-        setSupplierInvoiceOptions([]);
+  const [itemSearch, setItemSearch] = useState("");
+
+  const {
+    data: itemsData,
+    fetchNextPage: fetchNextItems,
+    isFetchingNextPage: loadingMoreItems,
+    isLoading: isLoadingItems,
+  } = useInfiniteQuery({
+    queryKey: [
+      "purchase-order-inventory-items-infinite",
+      { search: itemSearch.trim() },
+    ],
+    queryFn: async ({ pageParam = 1 }) => {
+      return inventoryCoreApi.list({
+        search: itemSearch.trim() || undefined,
+        page: pageParam,
+        pageSize: 50,
       });
-  }, [open, viewOnly, setInventoryItemOptions, setSupplierInvoiceOptions]);
+    },
+    getNextPageParam: (lastPage) => {
+      const page = lastPage.page || 1;
+      const totalPages = lastPage.totalPages || 1;
+      return page < totalPages ? page + 1 : undefined;
+    },
+    initialPageParam: 1,
+    enabled: open && !viewOnly,
+    staleTime: 60_000,
+  });
+
+  const infiniteItemOptions = useMemo(() => {
+    if (!itemsData?.pages) return [];
+    return itemsData.pages.flatMap((page) =>
+      (page.items || []).map((item) => {
+        const sku = item.sku || "";
+        const itemName = item.itemName || "(Chưa có tên)";
+        return {
+          value: item.id,
+          label: sku ? `${sku} — ${itemName}` : itemName,
+          searchText: `${sku} ${itemName}`,
+          sku,
+          itemName,
+          itemType:
+            item.itemType && typeof item.itemType === "object"
+              ? item.itemType?.code || item.itemType?.name || ""
+              : String(item.itemType ?? ""),
+          note: item.note || "",
+        };
+      }),
+    );
+  }, [itemsData]);
 
   // -------------------------------------------------------------------------
   // Init form
@@ -202,14 +224,14 @@ export function usePurchaseOrderDrawer({
   }, [open, editing]);
 
   // -------------------------------------------------------------------------
-  // Inventory options with fallback
+  // Inventory options with fallback from document lines
   // -------------------------------------------------------------------------
   const purchaseInventoryOptions = useMemo(() => {
     const fallbackOptions = (editing?.lines || [])
       .filter((line) => line.inventory_item_id)
       .map((line, idx) => {
         const id = line.inventory_item_id as string;
-        const existing = inventoryItemOptions.find((item) => item.value === id);
+        const existing = infiniteItemOptions.find((item) => item.value === id);
         if (existing) return existing;
         const fallbackName =
           line.item_name?.trim() ||
@@ -219,21 +241,23 @@ export function usePurchaseOrderDrawer({
         const fallbackSku = line.item_code?.trim() || "";
         return {
           value: id,
-          label: fallbackName,
+          label: fallbackSku
+            ? `${fallbackSku} — ${fallbackName}`
+            : fallbackName,
           searchText: `${fallbackSku} ${fallbackName}`,
           sku: fallbackSku,
           itemName: fallbackName,
-          itemType: line.line_type,
+          itemType: line.line_type || "PART",
           note: line.description || "",
         };
       });
     return [
-      ...inventoryItemOptions,
+      ...infiniteItemOptions,
       ...fallbackOptions.filter(
-        (opt) => !inventoryItemOptions.some((item) => item.value === opt.value),
+        (opt) => !infiniteItemOptions.some((item) => item.value === opt.value),
       ),
     ];
-  }, [inventoryItemOptions, editing]);
+  }, [infiniteItemOptions, editing]);
 
   // -------------------------------------------------------------------------
   // Submit
@@ -398,5 +422,13 @@ export function usePurchaseOrderDrawer({
     handleSubmit,
     pendingDocumentChanges,
     fieldSet,
+    onItemSearch: setItemSearch,
+    onScrollBottomItems: () => {
+      if (!loadingMoreItems && !isLoadingItems) {
+        void fetchNextItems();
+      }
+    },
+    loadingItems: loadingMoreItems || isLoadingItems,
+    canViewInventoryItems,
   };
 }
