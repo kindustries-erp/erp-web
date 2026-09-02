@@ -43,6 +43,8 @@ export function ErpWarehouseTab() {
     rowActions,
     createActions,
     vouchersQuery,
+    customActionsNode,
+    handleClearAllFilters,
   } = useErpWarehouseTabLogic();
 
   if (!canReadReceipts && !canReadIssues && !canReadAdjustments)
@@ -97,10 +99,8 @@ export function ErpWarehouseTab() {
         }}
         onRefresh={() => void vouchersQuery.refetch()}
         activeFilterCount={tableState.activeFilterCount || 0}
-        onClearAllFilters={() => {
-          tableState.resetFilters();
-          setPage(1);
-        }}
+        onClearAllFilters={handleClearAllFilters}
+        customActionsNode={customActionsNode}
         rowActions={rowActions}
         onCreate={() => unifiedDrawer.openUnifiedCreate("receipt")}
         createLabel={t("Tạo mới")}

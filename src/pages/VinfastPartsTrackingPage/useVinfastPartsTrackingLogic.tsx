@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { RefreshCw, Download } from "lucide-react";
@@ -9,7 +9,11 @@ import {
   type FilterPanelConfig,
 } from "@/shared/hooks/useFilterPanel";
 import { useUIStore } from "@/core/config/uiStore";
+import { useAppStore } from "@/core/config/appStore";
 import { useErpInvoiceForm } from "@/modules/erp-invoices-core/hooks/useErpInvoiceForm";
+import { ErpUrlQueryParam } from "@/shared/constants/urlParams";
+import { DEFAULT_DEBOUNCE_TIME } from "@/shared/constants/timing";
+import { encodeStateParam } from "@/shared/utils/pageUrl";
 
 import type {
   VinfastPartTrackingRow,
@@ -24,17 +28,35 @@ export function useVinfastPartsTrackingLogic({
   const formHook = useErpInvoiceForm(() => {});
   const showToast = useUIStore((s) => s.showToast);
 
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(50);
+  const [page, setPage] = useState<number>(() => {
+    if (typeof window !== "undefined") {
+      const p = new URLSearchParams(window.location.search).get(
+        ErpUrlQueryParam.PAGE,
+      );
+      const parsed = p ? parseInt(p, 10) : 1;
+      return !isNaN(parsed) && parsed > 0 ? parsed : 1;
+    }
+    return 1;
+  });
+  const [pageSize, setPageSize] = useState<number>(() => {
+    if (typeof window !== "undefined") {
+      const s = new URLSearchParams(window.location.search).get(
+        ErpUrlQueryParam.PAGE_SIZE,
+      );
+      const parsed = s ? parseInt(s, 10) : 50;
+      return !isNaN(parsed) && parsed > 0 ? parsed : 50;
+    }
+    return 50;
+  });
+
   const [exportDrawerOpen, setExportDrawerOpen] = useState(false);
   const [syncDrawerOpen, setSyncDrawerOpen] = useState(false);
   const [detailRow, setDetailRow] = useState<VinfastPartTrackingRow | null>(
     null,
   );
 
-  const tableState = useTableColumnState(
-    `vinfast-parts-table-${vehicleType || "all"}`,
-  );
+  const tableId = `vinfast-parts-table-${vehicleType || "all"}`;
+  const tableState = useTableColumnState(tableId);
 
   const activeSort = tableState.sorts[0] || "";
   let sortBy = "";
@@ -130,6 +152,140 @@ export function useVinfastPartsTrackingLogic({
 
   const filterProps = useFilterPanel(filterConfig, () => setPage(1));
   const { state: filterState } = filterProps;
+
+  // ── Two-Way URL Sync Engine ────────────────────────────────────────────────
+  const debounceUrlTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
+
+  const syncUrlToBrowser = useCallback(() => {
+    if (typeof window === "undefined") return;
+    const currentUrl = new URL(window.location.href);
+    const newParams = new URLSearchParams(currentUrl.search);
+
+    // 1. Tab / vehicleType
+    if (vehicleType) {
+      newParams.set(ErpUrlQueryParam.TAB, vehicleType.toLowerCase());
+    }
+
+    // 2. Pagination
+    if (page > 1) {
+      newParams.set(ErpUrlQueryParam.PAGE, String(page));
+    } else {
+      newParams.delete(ErpUrlQueryParam.PAGE);
+    }
+    if (pageSize) {
+      newParams.set(ErpUrlQueryParam.PAGE_SIZE, String(pageSize));
+    }
+
+    // 3. Filters (search, dateFrom, dateTo)
+    if (filterState.search) {
+      newParams.set(ErpUrlQueryParam.SEARCH, filterState.search);
+    } else {
+      newParams.delete(ErpUrlQueryParam.SEARCH);
+    }
+    if (filterState.dateFrom) {
+      newParams.set(ErpUrlQueryParam.DATE_FROM, filterState.dateFrom);
+    } else {
+      newParams.delete(ErpUrlQueryParam.DATE_FROM);
+    }
+    if (filterState.dateTo) {
+      newParams.set(ErpUrlQueryParam.DATE_TO, filterState.dateTo);
+    } else {
+      newParams.delete(ErpUrlQueryParam.DATE_TO);
+    }
+
+    // 4. Column Filters (cf), Search (cs), Sorts
+    if (Object.keys(tableState.columnFilters).length > 0) {
+      const encoded = encodeStateParam(tableState.columnFilters);
+      if (encoded) newParams.set(ErpUrlQueryParam.COLUMN_FILTERS, encoded);
+    } else {
+      newParams.delete(ErpUrlQueryParam.COLUMN_FILTERS);
+    }
+
+    if (Object.keys(tableState.columnSearch).length > 0) {
+      const encoded = encodeStateParam(tableState.columnSearch);
+      if (encoded) newParams.set(ErpUrlQueryParam.COLUMN_SEARCH, encoded);
+    } else {
+      newParams.delete(ErpUrlQueryParam.COLUMN_SEARCH);
+    }
+
+    if (tableState.sorts.length > 0) {
+      const encoded = encodeStateParam(tableState.sorts);
+      if (encoded) newParams.set(ErpUrlQueryParam.SORTS, encoded);
+    } else {
+      newParams.delete(ErpUrlQueryParam.SORTS);
+    }
+
+    const newSearch = newParams.toString();
+    const newRelativePath = `${window.location.pathname}${newSearch ? `?${newSearch}` : ""}`;
+    if (window.location.pathname + window.location.search !== newRelativePath) {
+      window.history.replaceState(null, "", newRelativePath);
+      const tabId = vehicleType
+        ? `vinfast-parts-${vehicleType.toLowerCase()}`
+        : "vinfast-parts";
+      useAppStore.getState().updateCurrentTabUrl(tabId, newRelativePath);
+    }
+  }, [
+    vehicleType,
+    page,
+    pageSize,
+    filterState.search,
+    filterState.dateFrom,
+    filterState.dateTo,
+    tableState.columnFilters,
+    tableState.columnSearch,
+    tableState.sorts,
+  ]);
+
+  useEffect(() => {
+    if (debounceUrlTimerRef.current) {
+      clearTimeout(debounceUrlTimerRef.current);
+    }
+    debounceUrlTimerRef.current = setTimeout(() => {
+      syncUrlToBrowser();
+    }, DEFAULT_DEBOUNCE_TIME);
+
+    return () => {
+      if (debounceUrlTimerRef.current) {
+        clearTimeout(debounceUrlTimerRef.current);
+      }
+    };
+  }, [syncUrlToBrowser]);
+
+  // Handle popstate for 2-way sync
+  useEffect(() => {
+    const handlePopState = () => {
+      const params = new URLSearchParams(window.location.search);
+
+      const pageParam = params.get(ErpUrlQueryParam.PAGE);
+      if (pageParam) {
+        const p = parseInt(pageParam, 10);
+        if (!isNaN(p) && p > 0) setPage(p);
+      } else {
+        setPage(1);
+      }
+
+      const sizeParam =
+        params.get(ErpUrlQueryParam.PAGE_SIZE) ||
+        params.get(ErpUrlQueryParam.LIMIT);
+      if (sizeParam) {
+        const s = parseInt(sizeParam, 10);
+        if (!isNaN(s) && s > 0) setPageSize(s);
+      }
+
+      const searchParam = params.get(ErpUrlQueryParam.SEARCH);
+      if (searchParam !== null) filterProps.setSearchInput(searchParam);
+
+      const df = params.get(ErpUrlQueryParam.DATE_FROM);
+      const dt = params.get(ErpUrlQueryParam.DATE_TO);
+      if (df !== null) filterProps.setDateFrom(df);
+      if (dt !== null) filterProps.setDateTo(dt);
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [filterProps]);
 
   const commonFilterProps = useMemo(
     () => ({
@@ -276,6 +432,29 @@ export function useVinfastPartsTrackingLogic({
     [refetch, showToast, t],
   );
 
+  const handleClearAllFilters = useCallback(() => {
+    tableState.resetFilters();
+    filterProps.resetAll();
+    setPage(1);
+
+    if (typeof window !== "undefined") {
+      const newParams = new URLSearchParams();
+      if (vehicleType) {
+        newParams.set(ErpUrlQueryParam.TAB, vehicleType.toLowerCase());
+      }
+      if (pageSize) {
+        newParams.set(ErpUrlQueryParam.PAGE_SIZE, String(pageSize));
+      }
+      const newSearch = newParams.toString();
+      const newRelativePath = `${window.location.pathname}${newSearch ? `?${newSearch}` : ""}`;
+      window.history.replaceState(null, "", newRelativePath);
+      const tabId = vehicleType
+        ? `vinfast-parts-${vehicleType.toLowerCase()}`
+        : "vinfast-parts";
+      useAppStore.getState().updateCurrentTabUrl(tabId, newRelativePath);
+    }
+  }, [tableState, filterProps, vehicleType, pageSize]);
+
   return {
     vehicleType,
     page,
@@ -299,5 +478,6 @@ export function useVinfastPartsTrackingLogic({
     columns,
     createActions,
     buildExportBaseQuery,
+    handleClearAllFilters,
   };
 }

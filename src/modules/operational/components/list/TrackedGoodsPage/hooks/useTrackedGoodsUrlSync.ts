@@ -18,6 +18,7 @@ export interface UseTrackedGoodsUrlSyncOptions {
   page: number;
   setPage: (page: number) => void;
   pageSize: number;
+  setPageSize?: (size: number) => void;
   tableState: ReturnType<typeof useTableColumnState>;
   drawerOpen: boolean;
   setDrawerOpen: (open: boolean) => void;
@@ -41,6 +42,7 @@ export function useTrackedGoodsUrlSync({
   page,
   setPage,
   pageSize,
+  setPageSize,
   tableState,
   drawerOpen,
   setDrawerOpen,
@@ -87,9 +89,9 @@ export function useTrackedGoodsUrlSync({
     if (page > 1) newParams.set(ErpUrlQueryParam.PAGE, String(page));
     else newParams.delete(ErpUrlQueryParam.PAGE);
 
-    if (pageSize !== 50)
+    if (pageSize) {
       newParams.set(ErpUrlQueryParam.PAGE_SIZE, String(pageSize));
-    else newParams.delete(ErpUrlQueryParam.PAGE_SIZE);
+    }
 
     // 4. Column filters & Search
     if (Object.keys(tableState.columnFilters).length > 0) {
@@ -215,6 +217,14 @@ export function useTrackedGoodsUrlSync({
       if (pageParam) {
         const p = parseInt(pageParam, 10);
         if (!isNaN(p)) setPage(p);
+      } else {
+        setPage(1);
+      }
+
+      const pageSizeParam = params.get(ErpUrlQueryParam.PAGE_SIZE);
+      if (pageSizeParam && setPageSize) {
+        const s = parseInt(pageSizeParam, 10);
+        if (!isNaN(s) && s > 0) setPageSize(s);
       }
     };
     window.addEventListener("popstate", handlePopState);
@@ -223,6 +233,7 @@ export function useTrackedGoodsUrlSync({
     currentTab,
     setCurrentTab,
     setPage,
+    setPageSize,
     setDrawerOpen,
     setDrawerMode,
     setSelectedItem,

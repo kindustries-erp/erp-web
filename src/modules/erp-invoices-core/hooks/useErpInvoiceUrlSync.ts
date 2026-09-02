@@ -104,6 +104,11 @@ export function useErpInvoiceUrlSync({
     }
 
     // Hydrate store
+    const pageParam = params.get(ErpUrlQueryParam.PAGE);
+    const pageVal = pageParam ? parseInt(pageParam, 10) : 1;
+    const pageSizeParam = params.get(ErpUrlQueryParam.PAGE_SIZE);
+    const pageSizeVal = pageSizeParam ? parseInt(pageSizeParam, 10) : undefined;
+
     hydrateStore(storeDir, {
       status: filters[ErpUrlQueryParam.STATUS] || "",
       seller_name: filters[ErpUrlQueryParam.SELLER_NAME] || "",
@@ -113,6 +118,10 @@ export function useErpInvoiceUrlSync({
       search: filters[ErpUrlQueryParam.SEARCH] || "",
       tag_id: filters[ErpUrlQueryParam.TAG_ID] || "",
       period: filters[ErpUrlQueryParam.PERIOD] || "",
+      page: !isNaN(pageVal) && pageVal > 0 ? pageVal : 1,
+      ...(pageSizeVal && !isNaN(pageSizeVal) && pageSizeVal > 0
+        ? { pageSize: pageSizeVal }
+        : {}),
     });
 
     if (onHydrateRef.current) {
@@ -124,6 +133,8 @@ export function useErpInvoiceUrlSync({
         columnFilters,
         columnSearch,
         sorts,
+        page: !isNaN(pageVal) && pageVal > 0 ? pageVal : 1,
+        pageSize: pageSizeVal,
       });
     }
 

@@ -366,10 +366,8 @@ export const VinfastPartsStockTableView = React.memo(
         } else {
           newParams.delete(ErpUrlQueryParam.PAGE);
         }
-        if (tabState.pageSize !== getDefaultVinfastPageSize()) {
+        if (tabState.pageSize) {
           newParams.set(ErpUrlQueryParam.PAGE_SIZE, String(tabState.pageSize));
-        } else {
-          newParams.delete(ErpUrlQueryParam.PAGE_SIZE);
         }
 
         // Column filters (cf)
@@ -447,14 +445,20 @@ export const VinfastPartsStockTableView = React.memo(
         }
 
         const pageParam = params.get(ErpUrlQueryParam.PAGE);
-        if (pageParam) {
-          const p = parseInt(pageParam, 10);
-          if (!isNaN(p)) setPage(vehicleType, p);
+        const p = pageParam ? parseInt(pageParam, 10) : 1;
+        setPage(vehicleType, !isNaN(p) && p > 0 ? p : 1);
+
+        const pageSizeParam = params.get(ErpUrlQueryParam.PAGE_SIZE);
+        if (pageSizeParam) {
+          const s = parseInt(pageSizeParam, 10);
+          if (!isNaN(s) && s > 0) {
+            setPageSize(vehicleType, s);
+          }
         }
       };
       window.addEventListener("popstate", handlePopState);
       return () => window.removeEventListener("popstate", handlePopState);
-    }, [vehicleType, setSelectedSku, setStockTab, setPage]);
+    }, [vehicleType, setSelectedSku, setStockTab, setPage, setPageSize]);
 
     const fetchColumnOptions = useCallback(
       async ({

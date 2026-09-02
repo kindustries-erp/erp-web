@@ -230,6 +230,22 @@ export function useErpInvoicesTabLogic({
           .getState()
           .setActiveTaxTab(targetStoreDir, taxTabParam);
       }
+
+      const pageParam = params.get(ErpUrlQueryParam.PAGE);
+      const pageVal = pageParam ? parseInt(pageParam, 10) : 1;
+      useErpInvoiceListStore
+        .getState()
+        .setPage(targetStoreDir, isNaN(pageVal) || pageVal < 1 ? 1 : pageVal);
+
+      const pageSizeParam = params.get(ErpUrlQueryParam.PAGE_SIZE);
+      if (pageSizeParam) {
+        const sizeVal = parseInt(pageSizeParam, 10);
+        if (!isNaN(sizeVal) && sizeVal > 0) {
+          useErpInvoiceListStore
+            .getState()
+            .setPageSize(targetStoreDir, sizeVal);
+        }
+      }
     };
 
     window.addEventListener("popstate", handlePopState);
@@ -428,6 +444,19 @@ export function useErpInvoicesTabLogic({
       if (activeView === "header") {
         const headerState = useErpInvoiceListStore.getState().states[listDir];
         if (headerState) {
+          if (headerState.page > 1) {
+            newParams.set(ErpUrlQueryParam.PAGE, String(headerState.page));
+          } else {
+            newParams.delete(ErpUrlQueryParam.PAGE);
+          }
+
+          if (headerState.pageSize) {
+            newParams.set(
+              ErpUrlQueryParam.PAGE_SIZE,
+              String(headerState.pageSize),
+            );
+          }
+
           if (headerState.activeTaxTab && headerState.activeTaxTab !== "all") {
             newParams.set(ErpUrlQueryParam.TAX_TAB, headerState.activeTaxTab);
           } else {

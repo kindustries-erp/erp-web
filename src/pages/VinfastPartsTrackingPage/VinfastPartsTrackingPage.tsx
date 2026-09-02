@@ -40,6 +40,7 @@ export function VinfastPartsTrackingPage(props: VinfastPartsTrackingPageProps) {
     columns,
     createActions,
     buildExportBaseQuery,
+    handleClearAllFilters,
   } = useVinfastPartsTrackingLogic(props);
 
   return (
@@ -90,10 +91,7 @@ export function VinfastPartsTrackingPage(props: VinfastPartsTrackingPageProps) {
         }}
         onRefresh={() => refetch()}
         activeFilterCount={tableState.activeFilterCount || 0}
-        onClearAllFilters={() => {
-          tableState.resetFilters();
-          setPage(1);
-        }}
+        onClearAllFilters={handleClearAllFilters}
       />
 
       <ErpInvoiceInternalDrawer

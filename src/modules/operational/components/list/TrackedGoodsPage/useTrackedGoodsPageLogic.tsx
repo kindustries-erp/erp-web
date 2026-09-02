@@ -210,6 +210,7 @@ export function useTrackedGoodsPageLogic({
     page,
     setPage,
     pageSize,
+    setPageSize,
     tableState,
     drawerOpen,
     setDrawerOpen,

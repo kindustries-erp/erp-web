@@ -69,6 +69,9 @@ export function ErpInvoicesDraftPage() {
       } else {
         newParams.delete(ErpUrlQueryParam.PAGE);
       }
+      if (listHook.pageSize) {
+        newParams.set(ErpUrlQueryParam.PAGE_SIZE, String(listHook.pageSize));
+      }
 
       // Date ranges & search
       if (listHook.filterPanel.state.dateFrom) {
@@ -129,6 +132,7 @@ export function ErpInvoicesDraftPage() {
   }, [
     detailDraft?.id,
     listHook.page,
+    listHook.pageSize,
     listHook.filterPanel.state.dateFrom,
     listHook.filterPanel.state.dateTo,
     listHook.tableState.columnFilters,

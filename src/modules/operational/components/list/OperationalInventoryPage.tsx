@@ -11,6 +11,8 @@ import {
 import { fmtQty } from "@/shared/utils/format";
 
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate";
+import { PillTabs } from "@/shared/components/PillTabs";
+import { ErpUrlQueryParam } from "@/shared/constants/urlParams";
 import { InventoryItemFormDrawer } from "@/modules/inventory-core/components/InventoryItemFormDrawer";
 import { ConnectionGraphDrawer } from "@/modules/purchase-orders-core/components/ConnectionGraphDrawer";
 import { useInventoryGraph } from "@/modules/inventory-core/hooks/useInventoryGraph";
@@ -29,7 +31,10 @@ import {
 import { useAuthStore } from "@/modules/auth/domain/authStore";
 
 import { useStockColumns } from "@/modules/operational/components/list/columns/stockColumns";
-import { useOperationalListStore } from "@/modules/operational/hooks/useOperationalListStore";
+import {
+  useOperationalListStore,
+  type OperationalStockTab,
+} from "@/modules/operational/hooks/useOperationalListStore";
 import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
 import { useT } from "@/core/i18n";
 import {
@@ -38,6 +43,7 @@ import {
 } from "@/modules/operational/api/operationalApi";
 import { inventoryCoreApi } from "@/modules/inventory-core/api/inventoryCoreApi";
 import { useUIStore } from "@/core/config/uiStore";
+import { useAppStore } from "@/core/config/appStore";
 import type { Updater } from "@tanstack/react-table";
 
 interface OperationalInventoryPageProps {
@@ -48,6 +54,8 @@ interface OperationalInventoryPageProps {
   totalPages: number;
   viewingItemId: string | null;
   creatingItem: boolean;
+  isEditMode?: boolean;
+  setIsEditMode?: (edit: boolean) => void;
   onViewItem: (id: string) => void;
   onCloseViewItem: () => void;
   onOpenCreateItem: () => void;
@@ -70,6 +78,8 @@ export function OperationalInventoryPage({
   totalPages,
   viewingItemId,
   creatingItem,
+  isEditMode: controlledEditMode,
+  setIsEditMode: controlledSetIsEditMode,
   onViewItem,
   onCloseViewItem,
   onOpenCreateItem,
@@ -87,12 +97,18 @@ export function OperationalInventoryPage({
     setPageSize,
     searchInput,
     itemTypeFilter,
+    stockTab,
+    setStockTab,
     resetAllFilters,
   } = useOperationalListStore();
 
   const tableState = useTableColumnState("inventory-stock-table");
 
-  const [isEditMode, setIsEditMode] = useState(false);
+  const [internalEditMode, setInternalEditMode] = useState(false);
+  const isEditMode =
+    controlledEditMode !== undefined ? controlledEditMode : internalEditMode;
+  const setIsEditMode = controlledSetIsEditMode || setInternalEditMode;
+
   const [graphOpen, setGraphOpen] = useState(false);
   const [graphItemId, setGraphItemId] = useState<string | null>(null);
   const inventoryGraph = useInventoryGraph();
@@ -149,6 +165,7 @@ export function OperationalInventoryPage({
       showToast({ title: "Đang tạo file Excel...", variant: "default" });
       const blob = await operationalApi.exportInventoryStock({
         search: searchInput || undefined,
+        stock_tab: stockTab === "ALL" ? undefined : stockTab,
         item_type: itemTypeFilter || undefined,
         sort: tableState.sorts.length > 0 ? tableState.sorts : undefined,
         column_search: tableState.columnSearch,
@@ -178,7 +195,64 @@ export function OperationalInventoryPage({
     resetAllFilters();
     tableState.resetFilters();
     setPage(1);
+    if (typeof window !== "undefined") {
+      const url = new URL(window.location.href);
+      const stockTabParam = url.searchParams.get(ErpUrlQueryParam.STOCK_TAB);
+      const newParams = new URLSearchParams();
+      if (stockTabParam && stockTabParam !== "ALL") {
+        newParams.set(ErpUrlQueryParam.STOCK_TAB, stockTabParam);
+      }
+      const newRelativePath = `${window.location.pathname}${newParams.toString() ? `?${newParams.toString()}` : ""}`;
+      window.history.replaceState(null, "", newRelativePath);
+      useAppStore
+        .getState()
+        .updateCurrentTabUrl("erp-inventory-stock", newRelativePath);
+    }
   }, [resetAllFilters, tableState, setPage]);
+
+  const handleStockTabChange = useCallback(
+    (nextTab: OperationalStockTab) => {
+      setStockTab(nextTab);
+      if (typeof window !== "undefined") {
+        const url = new URL(window.location.href);
+        if (nextTab && nextTab !== "ALL") {
+          url.searchParams.set(ErpUrlQueryParam.STOCK_TAB, nextTab);
+        } else {
+          url.searchParams.delete(ErpUrlQueryParam.STOCK_TAB);
+        }
+        window.history.replaceState(null, "", url.toString());
+      }
+    },
+    [setStockTab],
+  );
+
+  const customActionsNode = (
+    <div className="w-full sm:w-auto flex items-center flex-wrap gap-2 py-0.5">
+      <PillTabs<OperationalStockTab>
+        className="w-full sm:w-auto shrink-0"
+        listClassName="h-8 p-0.5 rounded-full bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/60 shadow-[0_1px_2px_rgba(15,23,42,.03)]"
+        triggerClassName="h-7 px-3 text-xs rounded-full"
+        items={[
+          { value: "ALL", label: t("common.all", "Tất cả") },
+          {
+            value: "IN_STOCK",
+            label: t("inventory.stockInStock", "Còn tồn kho"),
+          },
+          {
+            value: "OUT_OF_STOCK",
+            label: t("inventory.stockOutOfStock", "Hết hàng"),
+          },
+          {
+            value: "NEGATIVE",
+            label: t("inventory.stockNegative", "Tồn âm"),
+          },
+        ]}
+        value={stockTab}
+        onValueChange={handleStockTabChange}
+        hideBorder
+      />
+    </div>
+  );
 
   const stockColumns = useStockColumns({
     stockItems,
@@ -267,6 +341,7 @@ export function OperationalInventoryPage({
           ],
         },
       ]}
+      customActionsNode={customActionsNode}
       bulkActionsNode={bulkActionsNode}
       activeFilterCount={tableState.activeFilterCount || 0}
       onClearAllFilters={handleClearAllFilters}
