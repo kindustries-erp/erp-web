@@ -20,7 +20,8 @@ export function ErpInvoicesTab(props: ErpInvoicesTabProps) {
     direction,
     isDrawer,
     canEditInvoice,
-    listHook,
+    loadInvoices,
+    invoices,
     formHook,
     urlSync,
     bulkActionsNode,
@@ -88,6 +89,18 @@ export function ErpInvoicesTab(props: ErpInvoicesTabProps) {
     mountedViewsRef.current[logic.currentTabKey] = true;
   }
 
+  const handleOpenSync = React.useCallback(() => {
+    setImportModalOpen(true);
+  }, [setImportModalOpen]);
+
+  const handleOpenPortalAuth = React.useCallback(() => {
+    setPortalAuthOpen(true);
+  }, [setPortalAuthOpen]);
+
+  const handleExportExcelAction = React.useCallback(() => {
+    void handleExportExcel();
+  }, [handleExportExcel]);
+
   return (
     <div className="flex flex-col h-full flex-1 min-h-0 w-full overflow-hidden">
       {/* ── View 1: Header IN (Hóa đơn mua vào) ────────────────────────── */}
@@ -110,9 +123,9 @@ export function ErpInvoicesTab(props: ErpInvoicesTabProps) {
             onTabChange={logic.handleTabChange}
             handleOpenInternal={handleOpenInternal}
             handleDownload={handleDownload}
-            handleExportExcel={() => void handleExportExcel()}
-            onOpenSync={() => setImportModalOpen(true)}
-            onOpenPortalAuth={() => setPortalAuthOpen(true)}
+            handleExportExcel={handleExportExcelAction}
+            onOpenSync={handleOpenSync}
+            onOpenPortalAuth={handleOpenPortalAuth}
             setNetOffInvoice={setNetOffInvoice}
             formHook={formHook}
             openCustomFieldsDrawer={openCustomFieldsDrawer}
@@ -120,15 +133,9 @@ export function ErpInvoicesTab(props: ErpInvoicesTabProps) {
             rowSelection={rowSelection}
             setRowSelection={setRowSelection}
             bulkActionsNode={bulkActionsNode}
-            onOpenViewConfig={(preset) => {
-              logic.handleOpenEditView(preset);
-            }}
-            onOpenCreateView={() => {
-              logic.handleOpenCreateView();
-            }}
-            onDeleteViewPreset={(key) => {
-              logic.handleDeleteViewPreset(key);
-            }}
+            onOpenViewConfig={logic.handleOpenEditView}
+            onOpenCreateView={logic.handleOpenCreateView}
+            onDeleteViewPreset={logic.handleDeleteViewPreset}
             setPreviewPdf={setPreviewPdf}
             handlePreviewPdf={logic.handlePreviewPdf}
           />
@@ -155,8 +162,8 @@ export function ErpInvoicesTab(props: ErpInvoicesTabProps) {
             onTabChange={logic.handleTabChange}
             handleOpenInternal={handleOpenInternal}
             handleDownload={handleDownload}
-            onOpenSync={() => setImportModalOpen(true)}
-            onOpenPortalAuth={() => setPortalAuthOpen(true)}
+            onOpenSync={handleOpenSync}
+            onOpenPortalAuth={handleOpenPortalAuth}
           />
         </div>
       )}
@@ -181,9 +188,9 @@ export function ErpInvoicesTab(props: ErpInvoicesTabProps) {
             onTabChange={logic.handleTabChange}
             handleOpenInternal={handleOpenInternal}
             handleDownload={handleDownload}
-            handleExportExcel={() => void handleExportExcel()}
-            onOpenSync={() => setImportModalOpen(true)}
-            onOpenPortalAuth={() => setPortalAuthOpen(true)}
+            handleExportExcel={handleExportExcelAction}
+            onOpenSync={handleOpenSync}
+            onOpenPortalAuth={handleOpenPortalAuth}
             setNetOffInvoice={setNetOffInvoice}
             formHook={formHook}
             openCustomFieldsDrawer={openCustomFieldsDrawer}
@@ -191,15 +198,9 @@ export function ErpInvoicesTab(props: ErpInvoicesTabProps) {
             rowSelection={rowSelection}
             setRowSelection={setRowSelection}
             bulkActionsNode={bulkActionsNode}
-            onOpenViewConfig={(preset) => {
-              logic.handleOpenEditView(preset);
-            }}
-            onOpenCreateView={() => {
-              logic.handleOpenCreateView();
-            }}
-            onDeleteViewPreset={(key) => {
-              logic.handleDeleteViewPreset(key);
-            }}
+            onOpenViewConfig={logic.handleOpenEditView}
+            onOpenCreateView={logic.handleOpenCreateView}
+            onDeleteViewPreset={logic.handleDeleteViewPreset}
             setPreviewPdf={setPreviewPdf}
             handlePreviewPdf={logic.handlePreviewPdf}
           />
@@ -226,8 +227,8 @@ export function ErpInvoicesTab(props: ErpInvoicesTabProps) {
             onTabChange={logic.handleTabChange}
             handleOpenInternal={handleOpenInternal}
             handleDownload={handleDownload}
-            onOpenSync={() => setImportModalOpen(true)}
-            onOpenPortalAuth={() => setPortalAuthOpen(true)}
+            onOpenSync={handleOpenSync}
+            onOpenPortalAuth={handleOpenPortalAuth}
           />
         </div>
       )}
@@ -240,7 +241,7 @@ export function ErpInvoicesTab(props: ErpInvoicesTabProps) {
         showToast={showToast}
         formHook={formHook}
         urlSync={urlSync}
-        loadInvoices={listHook.loadInvoices}
+        loadInvoices={loadInvoices}
         handleCloseInternal={handleCloseInternal}
         buildExportBaseQuery={buildExportBaseQuery}
         exportDrawerOpen={exportDrawerOpen}
@@ -260,11 +261,11 @@ export function ErpInvoicesTab(props: ErpInvoicesTabProps) {
 
       <InvoiceBulkModals
         direction={direction}
-        invoices={listHook.invoices || []}
+        invoices={invoices}
         branches={branches}
         selectedIds={selectedIds}
         setRowSelection={setRowSelection}
-        loadInvoices={listHook.loadInvoices}
+        loadInvoices={loadInvoices}
         bulkSelectedModalOpen={bulkSelectedModalOpen}
         setBulkSelectedModalOpen={setBulkSelectedModalOpen}
         bulkSelectedDownloading={bulkSelectedDownloading}

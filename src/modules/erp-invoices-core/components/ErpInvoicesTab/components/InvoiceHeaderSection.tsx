@@ -1,4 +1,4 @@
-import React, { useMemo, useEffect, useState } from "react";
+import React, { useMemo, useEffect, useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Receipt,
@@ -80,7 +80,7 @@ export interface InvoiceHeaderSectionProps {
   ) => Promise<void>;
 }
 
-export function InvoiceHeaderSection({
+export const InvoiceHeaderSection = React.memo(function InvoiceHeaderSection({
   direction,
   instanceIndex = 1,
   isDrawer = false,
@@ -167,26 +167,32 @@ export function InvoiceHeaderSection({
     activeView: activeColumnPresetKey,
   });
 
-  const handleColumnPresetChange = (preset: TableViewPreset) => {
-    const currentPref = useUserPreferencesStore
-      .getState()
-      .getTablePreference(actualTableId) || {
-      columnOrder: [],
-      columnVisibility: {},
-    };
-    useUserPreferencesStore.getState().setTablePreferences(actualTableId, {
-      ...currentPref,
-      columnVisibility:
-        preset.columnVisibility || DEFAULT_INVOICE_COLUMN_VISIBILITY,
-      activeView: preset.key,
-    });
-  };
+  const handleColumnPresetChange = useCallback(
+    (preset: TableViewPreset) => {
+      const currentPref = useUserPreferencesStore
+        .getState()
+        .getTablePreference(actualTableId) || {
+        columnOrder: [],
+        columnVisibility: {},
+      };
+      useUserPreferencesStore.getState().setTablePreferences(actualTableId, {
+        ...currentPref,
+        columnVisibility:
+          preset.columnVisibility || DEFAULT_INVOICE_COLUMN_VISIBILITY,
+        activeView: preset.key,
+      });
+    },
+    [actualTableId],
+  );
 
-  const handleTaxTabChange = (tab: string) => {
-    listHook.setActiveTaxTab(tab);
-    listHook.tableState.setColumnFilter("taxInvoiceStatus", []);
-    listHook.setPage(1);
-  };
+  const handleTaxTabChange = useCallback(
+    (tab: string) => {
+      listHook.setActiveTaxTab(tab);
+      listHook.tableState.setColumnFilter("taxInvoiceStatus", []);
+      listHook.setPage(1);
+    },
+    [listHook],
+  );
 
   const activeTaxPresetKey = listHook.activeTaxTab || "all";
 
@@ -515,4 +521,4 @@ export function InvoiceHeaderSection({
       createActions={createActions}
     />
   );
-}
+});

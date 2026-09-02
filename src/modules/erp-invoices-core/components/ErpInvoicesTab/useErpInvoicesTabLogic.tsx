@@ -1,14 +1,15 @@
-import React, { useMemo, useEffect, useState } from "react";
+import { useMemo, useEffect, useState, useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
 
 import { useAppStore } from "@/core/config/appStore";
-import { erpInvoicesCoreApi } from "@/modules/erp-invoices-core/api/erpInvoicesCoreApi";
+import {
+  erpInvoicesCoreApi,
+  type ErpInvoiceListParams,
+} from "@/modules/erp-invoices-core/api/erpInvoicesCoreApi";
 import { ErpQueryKey, DEFAULT_STALE_TIME } from "@/shared/lib/queryKeys";
-import { getTags } from "@/modules/tags/api/tagsApi";
 import { getBranchOptionsApi } from "@/modules/branches/api/branchApi";
-import { useErpInvoicesList } from "@/modules/erp-invoices-core/hooks/useErpInvoicesList";
 import { useErpInvoiceForm } from "@/modules/erp-invoices-core/hooks/useErpInvoiceForm";
 import { useInvoiceSyncProgress } from "@/modules/erp-invoices-core/hooks/useInvoiceSyncProgress";
 import { useErpInvoiceUrlSync } from "@/modules/erp-invoices-core/hooks/useErpInvoiceUrlSync";
@@ -18,25 +19,18 @@ import {
   type TableViewPreset,
 } from "@/shared/hooks/useUserPreferences";
 import { useTableColumnStore } from "@/shared/hooks/useTableColumnState";
-import { PillTabs } from "@/shared/components/PillTabs";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
-import type { FilterPanelConfig } from "@/shared/hooks/useFilterPanel";
 import {
   INVOICE_COLUMN_VIEW_PRESETS,
   DEFAULT_INVOICE_COLUMN_VISIBILITY,
 } from "./utils";
-import { useInvoiceColumns } from "./components/InvoiceColumns";
-import { useInvoiceSummary } from "./hooks/useInvoiceSummary";
-import { useInvoiceTableHandlers } from "./hooks/useInvoiceTableHandlers";
 import { useInvoiceModals } from "./hooks/useInvoiceModals";
 import { useInvoiceBulkActions } from "./hooks/useInvoiceBulkActions";
-import { InvoiceViewModeCombobox } from "./components/InvoiceViewModeCombobox";
 import {
   useErpInvoiceListStore,
   type Direction,
 } from "@/modules/erp-invoices-core/hooks/useErpInvoiceListStore";
-import { useErpInvoiceItemsStore } from "@/modules/erp-invoices-core/hooks/useErpInvoiceItemsStore";
 import { ErpUrlQueryParam } from "@/shared/constants/urlParams";
 import { DEFAULT_DEBOUNCE_TIME } from "@/shared/constants/timing";
 import { encodeStateParam } from "@/shared/utils/pageUrl";
@@ -53,8 +47,6 @@ export interface ErpInvoicesTabProps {
 
 export function useErpInvoicesTabLogic({
   direction: propDirection,
-  initialDateFrom,
-  initialDateTo,
   isDrawer = false,
   instanceIndex = 1,
   partnerTaxCode,
@@ -244,173 +236,18 @@ export function useErpInvoicesTabLogic({
     return () => window.removeEventListener("popstate", handlePopState);
   }, [isDrawer, propDirection, instanceIndex]);
 
-  const handleTabChange = (newTab: string) => {
-    if (debounceUrlTimerRef.current) {
-      clearTimeout(debounceUrlTimerRef.current);
-    }
+  const queryClient = useQueryClient();
+  const loadInvoices = useCallback(async () => {
+    await queryClient.invalidateQueries({
+      queryKey: [ErpQueryKey.INVOICES_LIST],
+    });
+  }, [queryClient]);
 
-    let nextDir: "IN" | "OUT";
-    let nextView: "header" | "lines";
-
-    if (newTab === "in-lines") {
-      nextDir = "IN";
-      nextView = "lines";
-    } else if (newTab === "out") {
-      nextDir = "OUT";
-      nextView = "header";
-    } else if (newTab === "out-lines") {
-      nextDir = "OUT";
-      nextView = "lines";
-    } else {
-      nextDir = "IN";
-      nextView = "header";
-    }
-
-    // 1. Cập nhật Tab highlight, Direction & View NGAY LẬP TỨC (0ms Synchronous update)
-    setCurrentTabKey(newTab);
-    setCurrentDirection(nextDir);
-    setActiveView(nextView);
-
-    if (!isDrawer && typeof window !== "undefined") {
-      const url = new URL(window.location.href);
-      const currentDetail = url.searchParams.get("detail");
-      const currentDmode = url.searchParams.get("dmode");
-      const currentI = url.searchParams.get("_i");
-
-      const newParams = new URLSearchParams();
-      newParams.set("tab", newTab);
-      if (currentI) {
-        newParams.set("_i", currentI);
-      }
-      if (currentDetail) {
-        newParams.set("detail", currentDetail);
-      }
-      if (currentDmode) {
-        newParams.set("dmode", currentDmode);
-      }
-
-      const targetStoreDir: Direction =
-        instanceIndex === 2 ? (nextDir === "IN" ? "IN_2" : "OUT_2") : nextDir;
-
-      if (nextView === "header") {
-        const headerState =
-          useErpInvoiceListStore.getState().states[targetStoreDir];
-        if (headerState) {
-          if (headerState.activeTaxTab && headerState.activeTaxTab !== "all") {
-            newParams.set("tax_tab", headerState.activeTaxTab);
-          }
-          if (headerState.status) newParams.set("status", headerState.status);
-          if (headerState.search) newParams.set("search", headerState.search);
-          if (headerState.dateFrom)
-            newParams.set("dateFrom", headerState.dateFrom);
-          if (headerState.dateTo) newParams.set("dateTo", headerState.dateTo);
-          if (headerState.period) newParams.set("period", headerState.period);
-          if (headerState.seller_name)
-            newParams.set("seller_name", headerState.seller_name);
-          if (headerState.buyer_name)
-            newParams.set("buyer_name", headerState.buyer_name);
-          if (headerState.tag_id) newParams.set("tag_id", headerState.tag_id);
-        }
-
-        const targetTableId = isDrawer
-          ? `erp-invoices-table-checkpoint-${nextDir}`
-          : `erp-invoices-table-${targetStoreDir}`;
-        const targetTablePref = useUserPreferencesStore
-          .getState()
-          .getTablePreference(targetTableId);
-        const targetViewMode = targetTablePref?.activeView || "overview";
-        if (targetViewMode && targetViewMode !== "overview") {
-          newParams.set("view_mode", targetViewMode);
-        }
-        setActiveColumnPresetKey(targetViewMode);
-
-        const targetTableState =
-          useTableColumnStore.getState().tables[targetTableId];
-        if (
-          targetTableState &&
-          Object.keys(targetTableState.columnFilters).length > 0
-        ) {
-          const encoded = encodeStateParam(targetTableState.columnFilters);
-          if (encoded) newParams.set(ErpUrlQueryParam.COLUMN_FILTERS, encoded);
-        }
-        if (
-          targetTableState &&
-          Object.keys(targetTableState.columnSearch).length > 0
-        ) {
-          const encoded = encodeStateParam(targetTableState.columnSearch);
-          if (encoded) newParams.set(ErpUrlQueryParam.COLUMN_SEARCH, encoded);
-        }
-        if (targetTableState && targetTableState.sorts.length > 0) {
-          const encoded = encodeStateParam(targetTableState.sorts);
-          if (encoded) newParams.set(ErpUrlQueryParam.SORTS, encoded);
-        }
-      } else {
-        const linesState =
-          useErpInvoiceItemsStore.getState().states[targetStoreDir];
-        if (linesState) {
-          if (
-            linesState.subcategoryFilter &&
-            linesState.subcategoryFilter !== "ALL"
-          ) {
-            newParams.set("subcat", linesState.subcategoryFilter);
-          }
-          if (linesState.status) newParams.set("status", linesState.status);
-          if (linesState.search) newParams.set("search", linesState.search);
-          if (linesState.dateFrom)
-            newParams.set("dateFrom", linesState.dateFrom);
-          if (linesState.dateTo) newParams.set("dateTo", linesState.dateTo);
-          if (linesState.period) newParams.set("period", linesState.period);
-          if (linesState.sellerName)
-            newParams.set("seller_name", linesState.sellerName);
-          if (linesState.buyerName)
-            newParams.set("buyer_name", linesState.buyerName);
-          if (linesState.tagId) newParams.set("tag_id", linesState.tagId);
-        }
-
-        const targetLinesTableId = isDrawer
-          ? `erp-invoice-items-table-checkpoint-${nextDir}`
-          : `erp-invoice-items-table-${targetStoreDir}`;
-        const targetLinesTableState =
-          useTableColumnStore.getState().tables[targetLinesTableId];
-        if (
-          targetLinesTableState &&
-          Object.keys(targetLinesTableState.columnFilters).length > 0
-        ) {
-          const encoded = encodeStateParam(targetLinesTableState.columnFilters);
-          if (encoded) newParams.set(ErpUrlQueryParam.COLUMN_FILTERS, encoded);
-        }
-        if (
-          targetLinesTableState &&
-          Object.keys(targetLinesTableState.columnSearch).length > 0
-        ) {
-          const encoded = encodeStateParam(targetLinesTableState.columnSearch);
-          if (encoded) newParams.set(ErpUrlQueryParam.COLUMN_SEARCH, encoded);
-        }
-        if (targetLinesTableState && targetLinesTableState.sorts.length > 0) {
-          const encoded = encodeStateParam(targetLinesTableState.sorts);
-          if (encoded) newParams.set(ErpUrlQueryParam.SORTS, encoded);
-        }
-      }
-
-      const queryString = newParams.toString();
-      const newUrl = `${url.pathname}${queryString ? `?${queryString}` : ""}`;
-      window.history.replaceState(null, "", newUrl);
-
-      // Debounce update lên Root AppStore để không gây lag/re-render Desktop Layout
-      const currentInstanceId = isDrawer
-        ? "erp-invoices"
-        : instanceIndex === 2
-          ? "erp-invoices__2"
-          : "erp-invoices";
-      debounceUrlTimerRef.current = setTimeout(() => {
-        useAppStore.getState().updateCurrentTabUrl(currentInstanceId, newUrl);
-      }, 300);
-    }
-  };
+  const formHook = useErpInvoiceForm(loadInvoices);
 
   const direction = currentDirection;
 
-  const listDir = isDrawer
+  const listDir: Direction = isDrawer
     ? direction === "IN"
       ? "CHECKPOINT_IN"
       : "CHECKPOINT_OUT"
@@ -424,8 +261,17 @@ export function useErpInvoicesTabLogic({
     ? `erp-invoices-table-checkpoint-${direction}`
     : `erp-invoices-table-${listDir}`;
 
-  const listHook = useErpInvoicesList(listDir);
-  const formHook = useErpInvoiceForm(listHook.loadInvoices);
+  const invoices = useMemo(() => {
+    const queries = queryClient.getQueriesData<any>({
+      queryKey: [ErpQueryKey.INVOICES_LIST, listDir],
+    });
+    for (const [, queryData] of queries) {
+      if (queryData?.items && Array.isArray(queryData.items)) {
+        return queryData.items;
+      }
+    }
+    return [];
+  }, [queryClient, listDir]);
 
   const urlSync = useErpInvoiceUrlSync({
     direction,
@@ -452,7 +298,9 @@ export function useErpInvoicesTabLogic({
           : null);
 
       if (isHeaderTab && taxTabFromUrl) {
-        listHook.setActiveTaxTab(taxTabFromUrl);
+        useErpInvoiceListStore
+          .getState()
+          .setActiveTaxTab(listDir, taxTabFromUrl);
       }
 
       const vmFromUrl = urlParams?.get(ErpUrlQueryParam.VIEW_MODE);
@@ -461,19 +309,105 @@ export function useErpInvoicesTabLogic({
       }
 
       if (state.sorts && state.sorts.length > 0) {
-        listHook.tableState.setSort(
-          state.sorts[0].replace("-", ""),
-          state.sorts[0].startsWith("-") ? "desc" : "asc",
-        );
+        const field = state.sorts[0].replace("-", "");
+        const sortOrder = state.sorts[0].startsWith("-") ? "desc" : "asc";
+        useTableColumnStore.getState().setSort(actualTableId, field, sortOrder);
       }
     },
   });
 
-  // ── Two-Way URL Sync Effect for ERP Invoices Tab ───────────────────────────
-  const debounceUrlTimerRef = React.useRef<ReturnType<
-    typeof setTimeout
-  > | null>(null);
+  const debounceUrlTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
 
+  const handleTabChange = useCallback(
+    (newTab: string) => {
+      if (debounceUrlTimerRef.current) {
+        clearTimeout(debounceUrlTimerRef.current);
+      }
+
+      let nextDir: "IN" | "OUT";
+      let nextView: "header" | "lines";
+
+      if (newTab === "in-lines") {
+        nextDir = "IN";
+        nextView = "lines";
+      } else if (newTab === "out") {
+        nextDir = "OUT";
+        nextView = "header";
+      } else if (newTab === "out-lines") {
+        nextDir = "OUT";
+        nextView = "lines";
+      } else {
+        nextDir = "IN";
+        nextView = "header";
+      }
+
+      // 1. Cập nhật Tab highlight, Direction & View NGAY LẬP TỨC (0ms Synchronous update)
+      setCurrentTabKey(newTab);
+      setCurrentDirection(nextDir);
+      setActiveView(nextView);
+
+      if (!isDrawer && typeof window !== "undefined") {
+        const url = new URL(window.location.href);
+        const currentDetail = url.searchParams.get(ErpUrlQueryParam.DETAIL);
+        const currentDmode = url.searchParams.get(ErpUrlQueryParam.DRAWER_MODE);
+        const currentI = url.searchParams.get(ErpUrlQueryParam.INSTANCE_INDEX);
+
+        const newParams = new URLSearchParams();
+        newParams.set(ErpUrlQueryParam.TAB, newTab);
+        if (currentI) {
+          newParams.set(ErpUrlQueryParam.INSTANCE_INDEX, currentI);
+        }
+        if (currentDetail) {
+          newParams.set(ErpUrlQueryParam.DETAIL, currentDetail);
+        }
+        if (currentDmode) {
+          newParams.set(ErpUrlQueryParam.DRAWER_MODE, currentDmode);
+        }
+
+        const targetStoreDir: Direction =
+          instanceIndex === 2 ? (nextDir === "IN" ? "IN_2" : "OUT_2") : nextDir;
+
+        if (nextView === "header") {
+          const headerState =
+            useErpInvoiceListStore.getState().states[targetStoreDir];
+          if (headerState?.activeTaxTab && headerState.activeTaxTab !== "all") {
+            newParams.set(ErpUrlQueryParam.TAX_TAB, headerState.activeTaxTab);
+          }
+
+          const targetTableId = isDrawer
+            ? `erp-invoices-table-checkpoint-${nextDir}`
+            : `erp-invoices-table-${targetStoreDir}`;
+          const targetTablePref = useUserPreferencesStore
+            .getState()
+            .getTablePreference(targetTableId);
+          const targetViewMode = targetTablePref?.activeView || "overview";
+          if (targetViewMode && targetViewMode !== "overview") {
+            newParams.set(ErpUrlQueryParam.VIEW_MODE, targetViewMode);
+          }
+          setActiveColumnPresetKey(targetViewMode);
+        }
+
+        const queryString = newParams.toString();
+        const newUrl = `${url.pathname}${queryString ? `?${queryString}` : ""}`;
+        window.history.replaceState(null, "", newUrl);
+
+        // Debounce update lên Root AppStore để không gây lag/re-render Desktop Layout
+        const currentInstanceId = isDrawer
+          ? "erp-invoices"
+          : instanceIndex === 2
+            ? "erp-invoices__2"
+            : "erp-invoices";
+        debounceUrlTimerRef.current = setTimeout(() => {
+          useAppStore.getState().updateCurrentTabUrl(currentInstanceId, newUrl);
+        }, 300);
+      }
+    },
+    [isDrawer, instanceIndex],
+  );
+
+  // ── Two-Way URL Sync Effect for ERP Invoices Tab ───────────────────────────
   useEffect(() => {
     if (isDrawer || typeof window === "undefined") return;
 
@@ -492,21 +426,14 @@ export function useErpInvoicesTabLogic({
 
       // 2. Header Tab specifics
       if (activeView === "header") {
-        if (listHook.activeTaxTab && listHook.activeTaxTab !== "all") {
-          newParams.set(ErpUrlQueryParam.TAX_TAB, listHook.activeTaxTab);
-        } else {
-          newParams.delete(ErpUrlQueryParam.TAX_TAB);
-        }
-
-        if (activeColumnPresetKey && activeColumnPresetKey !== "overview") {
-          newParams.set(ErpUrlQueryParam.VIEW_MODE, activeColumnPresetKey);
-        } else {
-          newParams.delete(ErpUrlQueryParam.VIEW_MODE);
-        }
-
-        // Filters
         const headerState = useErpInvoiceListStore.getState().states[listDir];
         if (headerState) {
+          if (headerState.activeTaxTab && headerState.activeTaxTab !== "all") {
+            newParams.set(ErpUrlQueryParam.TAX_TAB, headerState.activeTaxTab);
+          } else {
+            newParams.delete(ErpUrlQueryParam.TAX_TAB);
+          }
+
           if (headerState.status)
             newParams.set(ErpUrlQueryParam.STATUS, headerState.status);
           else newParams.delete(ErpUrlQueryParam.STATUS);
@@ -543,25 +470,30 @@ export function useErpInvoicesTabLogic({
           else newParams.delete(ErpUrlQueryParam.TAG_ID);
         }
 
-        // Column filters (cf)
-        if (Object.keys(listHook.tableState.columnFilters).length > 0) {
-          const encoded = encodeStateParam(listHook.tableState.columnFilters);
+        if (activeColumnPresetKey && activeColumnPresetKey !== "overview") {
+          newParams.set(ErpUrlQueryParam.VIEW_MODE, activeColumnPresetKey);
+        } else {
+          newParams.delete(ErpUrlQueryParam.VIEW_MODE);
+        }
+
+        // Column filters (cf), search (cs), sorts
+        const tableState = useTableColumnStore.getState().tables[actualTableId];
+        if (tableState && Object.keys(tableState.columnFilters).length > 0) {
+          const encoded = encodeStateParam(tableState.columnFilters);
           if (encoded) newParams.set(ErpUrlQueryParam.COLUMN_FILTERS, encoded);
         } else {
           newParams.delete(ErpUrlQueryParam.COLUMN_FILTERS);
         }
 
-        // Column search (cs)
-        if (Object.keys(listHook.tableState.columnSearch).length > 0) {
-          const encoded = encodeStateParam(listHook.tableState.columnSearch);
+        if (tableState && Object.keys(tableState.columnSearch).length > 0) {
+          const encoded = encodeStateParam(tableState.columnSearch);
           if (encoded) newParams.set(ErpUrlQueryParam.COLUMN_SEARCH, encoded);
         } else {
           newParams.delete(ErpUrlQueryParam.COLUMN_SEARCH);
         }
 
-        // Sorts
-        if (listHook.tableState.sorts.length > 0) {
-          const encoded = encodeStateParam(listHook.tableState.sorts);
+        if (tableState && tableState.sorts.length > 0) {
+          const encoded = encodeStateParam(tableState.sorts);
           if (encoded) newParams.set(ErpUrlQueryParam.SORTS, encoded);
         } else {
           newParams.delete(ErpUrlQueryParam.SORTS);
@@ -610,36 +542,15 @@ export function useErpInvoicesTabLogic({
     currentTabKey,
     activeView,
     listDir,
+    actualTableId,
     instanceIndex,
-    listHook.activeTaxTab,
     activeColumnPresetKey,
-    listHook.tableState.columnFilters,
-    listHook.tableState.columnSearch,
-    listHook.tableState.sorts,
     formHook.detailInvoice?.serialNo,
     formHook.detailInvoice?.invoiceNo,
     formHook.detailInvoice?.id,
     formHook.internalDrawerOpen,
     formHook.editMode,
   ]);
-
-  // PillTabs state tab handling (API-driven, not column-filter driven)
-  const activeTaxPresetKey = listHook.activeTaxTab || "all";
-
-  const handleTaxTabChange = (tab: string) => {
-    listHook.setActiveTaxTab(tab);
-    listHook.tableState.setColumnFilter("taxInvoiceStatus", []);
-    if (typeof window !== "undefined") {
-      const url = new URL(window.location.href);
-      if (tab && tab !== "all") {
-        url.searchParams.set(ErpUrlQueryParam.TAX_TAB, tab);
-      } else {
-        url.searchParams.delete(ErpUrlQueryParam.TAX_TAB);
-      }
-      window.history.replaceState(null, "", url.toString());
-    }
-    listHook.setPage(1);
-  };
 
   // Column View Mode Presets
   const columnPresetsTableId = isDrawer
@@ -675,136 +586,134 @@ export function useErpInvoicesTabLogic({
   const [editingViewPreset, setEditingViewPreset] =
     useState<TableViewPreset | null>(null);
 
-  const handleColumnPresetChange = (preset: TableViewPreset) => {
-    setActiveColumnPresetKey(preset.key);
+  const handleColumnPresetChange = useCallback(
+    (preset: TableViewPreset) => {
+      setActiveColumnPresetKey(preset.key);
 
-    if (typeof window !== "undefined") {
-      const url = new URL(window.location.href);
-      if (preset.key && preset.key !== "overview") {
-        url.searchParams.set(ErpUrlQueryParam.VIEW_MODE, preset.key);
-      } else {
-        url.searchParams.delete(ErpUrlQueryParam.VIEW_MODE);
+      if (typeof window !== "undefined") {
+        const url = new URL(window.location.href);
+        if (preset.key && preset.key !== "overview") {
+          url.searchParams.set(ErpUrlQueryParam.VIEW_MODE, preset.key);
+        } else {
+          url.searchParams.delete(ErpUrlQueryParam.VIEW_MODE);
+        }
+        const newUrl = url.toString();
+        window.history.replaceState(null, "", newUrl);
+        const currentInstanceId = isDrawer
+          ? "erp-invoices"
+          : instanceIndex === 2
+            ? "erp-invoices__2"
+            : "erp-invoices";
+        useAppStore.getState().updateCurrentTabUrl(currentInstanceId, newUrl);
       }
-      const newUrl = url.toString();
-      window.history.replaceState(null, "", newUrl);
-      const currentInstanceId = isDrawer
-        ? "erp-invoices"
-        : instanceIndex === 2
-          ? "erp-invoices__2"
-          : "erp-invoices";
-      useAppStore.getState().updateCurrentTabUrl(currentInstanceId, newUrl);
-    }
 
-    // Apply column visibility to table preferences
-    const currentPref = useUserPreferencesStore
-      .getState()
-      .getTablePreference(actualTableId) || {
-      columnOrder: [],
-      columnVisibility: {},
-    };
-    useUserPreferencesStore.getState().setTablePreferences(actualTableId, {
-      ...currentPref,
-      columnVisibility:
-        preset.columnVisibility || DEFAULT_INVOICE_COLUMN_VISIBILITY,
-      activeView: preset.key,
-    });
+      // Apply column visibility to table preferences
+      const currentPref = useUserPreferencesStore
+        .getState()
+        .getTablePreference(actualTableId) || {
+        columnOrder: [],
+        columnVisibility: {},
+      };
+      useUserPreferencesStore.getState().setTablePreferences(actualTableId, {
+        ...currentPref,
+        columnVisibility:
+          preset.columnVisibility || DEFAULT_INVOICE_COLUMN_VISIBILITY,
+        activeView: preset.key,
+      });
+    },
+    [actualTableId, isDrawer, instanceIndex],
+  );
 
-    // Reset filters but keep activeTaxTab
-    listHook.filterPanel.resetAll();
-    listHook.tableState.resetFilters();
-    listHook.setPage(1);
-  };
-
-  const handleOpenCreateView = () => {
+  const handleOpenCreateView = useCallback(() => {
     setEditingViewPreset(null);
     setViewConfigDrawerOpen(true);
-  };
+  }, []);
 
-  const handleOpenEditView = (preset: TableViewPreset) => {
+  const handleOpenEditView = useCallback((preset: TableViewPreset) => {
     setEditingViewPreset(preset);
     setViewConfigDrawerOpen(true);
-  };
+  }, []);
 
-  const handleSaveViewPreset = (data: {
-    key?: string;
-    label: string;
-    columnVisibility: Record<string, boolean>;
-  }) => {
-    const isDefault = data.key === "overview" || data.key === "audit";
-    if (data.key) {
-      // Edit existing preset
-      const updatedPreset: TableViewPreset = {
-        key: data.key,
-        label: data.label,
-        filters: {},
-        columnVisibility: data.columnVisibility,
-        isDefault,
-        isCustom: !isDefault,
-        isModified: isDefault,
-      };
-      useUserPreferencesStore
-        .getState()
-        .saveTableViewPreset(columnPresetsTableId, updatedPreset);
-      handleColumnPresetChange(updatedPreset);
-      toast.success(t("viewModeSaveSuccess", "Đã lưu chế độ xem thành công"));
-    } else {
-      // Create new custom preset
-      const newKey = `custom_${Date.now()}`;
-      const newPreset: TableViewPreset = {
-        key: newKey,
-        label: data.label,
-        filters: {},
-        columnVisibility: data.columnVisibility,
-        isDefault: false,
-        isCustom: true,
-      };
-      useUserPreferencesStore
-        .getState()
-        .saveTableViewPreset(columnPresetsTableId, newPreset);
-      handleColumnPresetChange(newPreset);
-      toast.success(t("viewModeSaveSuccess", "Đã lưu chế độ xem thành công"));
-    }
-  };
+  const handleSaveViewPreset = useCallback(
+    (data: {
+      key?: string;
+      label: string;
+      columnVisibility: Record<string, boolean>;
+    }) => {
+      const isDefault = data.key === "overview" || data.key === "audit";
+      if (data.key) {
+        // Edit existing preset
+        const updatedPreset: TableViewPreset = {
+          key: data.key,
+          label: data.label,
+          filters: {},
+          columnVisibility: data.columnVisibility,
+          isDefault,
+          isCustom: !isDefault,
+          isModified: isDefault,
+        };
+        useUserPreferencesStore
+          .getState()
+          .saveTableViewPreset(columnPresetsTableId, updatedPreset);
+        handleColumnPresetChange(updatedPreset);
+        toast.success(t("viewModeSaveSuccess", "Đã lưu chế độ xem thành công"));
+      } else {
+        // Create new custom preset
+        const newKey = `custom_${Date.now()}`;
+        const newPreset: TableViewPreset = {
+          key: newKey,
+          label: data.label,
+          filters: {},
+          columnVisibility: data.columnVisibility,
+          isDefault: false,
+          isCustom: true,
+        };
+        useUserPreferencesStore
+          .getState()
+          .saveTableViewPreset(columnPresetsTableId, newPreset);
+        handleColumnPresetChange(newPreset);
+        toast.success(t("viewModeSaveSuccess", "Đã lưu chế độ xem thành công"));
+      }
+    },
+    [columnPresetsTableId, handleColumnPresetChange, t],
+  );
 
-  const handleResetViewPreset = (key: string) => {
-    columnViewPresetsHook.resetView(key);
-    const factoryPreset = INVOICE_COLUMN_VIEW_PRESETS.find(
-      (p) => p.key === key,
-    );
-    if (factoryPreset) {
-      handleColumnPresetChange(factoryPreset);
-    }
-    toast.success(
-      t(
-        "viewModeResetSuccess",
-        "Đã khôi phục chế độ xem về mặc định thành công",
-      ),
-    );
-  };
+  const handleResetViewPreset = useCallback(
+    (key: string) => {
+      columnViewPresetsHook.resetView(key);
+      const factoryPreset = INVOICE_COLUMN_VIEW_PRESETS.find(
+        (p) => p.key === key,
+      );
+      if (factoryPreset) {
+        handleColumnPresetChange(factoryPreset);
+      }
+      toast.success(
+        t(
+          "viewModeResetSuccess",
+          "Đã khôi phục chế độ xem về mặc định thành công",
+        ),
+      );
+    },
+    [columnViewPresetsHook, handleColumnPresetChange, t],
+  );
 
-  const handleDeleteViewPreset = (key: string) => {
-    if (key === "overview" || key === "audit") return;
-    columnViewPresetsHook.deleteView(key);
-    if (activeColumnPresetKey === key) {
-      const fallbackPreset = INVOICE_COLUMN_VIEW_PRESETS[0];
-      handleColumnPresetChange(fallbackPreset);
-    }
-    toast.success(t("viewModeDeleteSuccess", "Đã xóa chế độ xem thành công"));
-  };
-
-  useEffect(() => {
-    if (isDrawer && (initialDateFrom || initialDateTo)) {
-      if (initialDateFrom) listHook.filterPanel.setDateFrom(initialDateFrom);
-      if (initialDateTo) listHook.filterPanel.setDateTo(initialDateTo);
-      listHook.setPage(1);
-    }
-  }, [isDrawer, initialDateFrom, initialDateTo]);
+  const handleDeleteViewPreset = useCallback(
+    (key: string) => {
+      if (key === "overview" || key === "audit") return;
+      columnViewPresetsHook.deleteView(key);
+      if (activeColumnPresetKey === key) {
+        const fallbackPreset = INVOICE_COLUMN_VIEW_PRESETS[0];
+        handleColumnPresetChange(fallbackPreset);
+      }
+      toast.success(t("viewModeDeleteSuccess", "Đã xóa chế độ xem thành công"));
+    },
+    [activeColumnPresetKey, columnViewPresetsHook, handleColumnPresetChange, t],
+  );
 
   // Hook theo dõi tiến trình nền SSE
-  useInvoiceSyncProgress(listHook.loadInvoices);
+  useInvoiceSyncProgress(loadInvoices);
 
   // Background Prefetching: Tải trước ngầm dữ liệu của tab đối diện khi CPU/mạng nhàn rỗi
-  const queryClient = useQueryClient();
   useEffect(() => {
     if (isDrawer || activeView !== "header") return;
     const oppositeDir: "IN" | "OUT" = direction === "IN" ? "OUT" : "IN";
@@ -854,11 +763,6 @@ export function useErpInvoicesTabLogic({
     return () => clearTimeout(timer);
   }, [direction, activeView, isDrawer, instanceIndex, queryClient]);
 
-  const { data: allTags = [] } = useQuery({
-    queryKey: ["sys-tags"],
-    queryFn: getTags,
-  });
-
   const { data: branches = [] } = useQuery({
     queryKey: ["branches-options"],
     queryFn: getBranchOptionsApi,
@@ -871,78 +775,63 @@ export function useErpInvoicesTabLogic({
     urlSync,
   });
 
-  const tableHandlers = useInvoiceTableHandlers({
-    direction,
-    branches,
-    listHook,
-  });
-
   const bulkActions = useInvoiceBulkActions({
     direction,
     t,
   });
 
-  const invoiceColumnsOptions = useMemo(
-    () => ({
-      direction,
-      t,
-      branches,
-      listHook,
-      openPopoverId: modals.openPopoverId,
-      setOpenPopoverId: modals.setOpenPopoverId,
-      setPreviewPdf: modals.setPreviewPdf,
-      handleOpenInternal: modals.handleOpenInternal,
-      handleDownload: modals.handleDownload,
-      handlePreviewPdf: modals.handlePreviewPdf,
-      getSortState: tableHandlers.getSortState,
-      handleSortChange: tableHandlers.handleSortChange,
-      handleSearchChange: tableHandlers.handleSearchChange,
-      handleFilterChange: tableHandlers.handleFilterChange,
-      fetchInvoiceOptions: tableHandlers.fetchInvoiceOptions,
-    }),
-    [
-      direction,
-      t,
-      branches,
-      listHook.tableState.columnFilters,
-      listHook.tableState.columnSearch,
-      listHook.tableState.sorts,
-      listHook.activeTaxTab,
-      listHook.filterPanel.state.dateFrom,
-      listHook.filterPanel.state.dateTo,
-      modals.openPopoverId,
-      modals.setOpenPopoverId,
-      modals.setPreviewPdf,
-      modals.handleOpenInternal,
-      modals.handleDownload,
-      modals.handlePreviewPdf,
-      tableHandlers.getSortState,
-      tableHandlers.handleSortChange,
-      tableHandlers.handleSearchChange,
-      tableHandlers.handleFilterChange,
-      tableHandlers.fetchInvoiceOptions,
-    ],
-  );
+  const buildExportBaseQuery =
+    useCallback((): Partial<ErpInvoiceListParams> => {
+      const targetStoreDir: Direction =
+        instanceIndex === 2
+          ? direction === "IN"
+            ? "IN_2"
+            : "OUT_2"
+          : direction;
+      const headerState =
+        useErpInvoiceListStore.getState().states[targetStoreDir] ||
+        useErpInvoiceListStore.getState().states.IN;
+      const targetTableId = isDrawer
+        ? `erp-invoices-table-checkpoint-${direction}`
+        : `erp-invoices-table-${targetStoreDir}`;
+      const tableState = useTableColumnStore.getState().tables[
+        targetTableId
+      ] || {
+        columnFilters: {},
+        columnSearch: {},
+        sorts: [],
+      };
 
-  const columns = useInvoiceColumns(invoiceColumnsOptions);
+      const activeSort = tableState.sorts[0] || "";
+      let sortBy: string | undefined = undefined;
+      let sortOrder: "asc" | "desc" | undefined = undefined;
+      if (activeSort.startsWith("-")) {
+        sortBy = activeSort.substring(1);
+        sortOrder = "desc";
+      } else if (activeSort) {
+        sortBy = activeSort;
+        sortOrder = "asc";
+      }
 
-  const summaryRow = useInvoiceSummary(listHook.invoices);
-
-  const filterConfig: FilterPanelConfig = useMemo(
-    () => ({
-      noDefaultPeriod: true,
-      custom: [
-        {
-          key: "tag_id",
-          label: t("tag", "Thẻ nhãn"),
-          placeholder: t("allTags", "Tất cả thẻ"),
-          options: allTags.map((tag) => ({ value: tag.id, label: tag.name })),
-          type: "combobox" as const,
-        },
-      ],
-    }),
-    [t, allTags],
-  );
+      return {
+        direction,
+        search: headerState.search || undefined,
+        seller_name: headerState.seller_name || undefined,
+        buyer_name: headerState.buyer_name || undefined,
+        status: headerState.status || undefined,
+        tag_id: headerState.tag_id || undefined,
+        sort_by: sortBy,
+        sort_order: sortOrder,
+        column_search:
+          Object.keys(tableState.columnSearch).length > 0
+            ? JSON.stringify(tableState.columnSearch)
+            : undefined,
+        column_filters:
+          Object.keys(tableState.columnFilters).length > 0
+            ? JSON.stringify(tableState.columnFilters)
+            : undefined,
+      };
+    }, [direction, instanceIndex, isDrawer]);
 
   const pageTabs = useMemo(
     () =>
@@ -963,56 +852,19 @@ export function useErpInvoicesTabLogic({
     [isDrawer, t],
   );
 
-  const viewTabsNode = !isDrawer ? (
-    <div className="w-full sm:w-auto flex items-center flex-wrap gap-2 py-0.5">
-      <PillTabs
-        className="w-full sm:w-auto shrink-0"
-        listClassName="h-8 p-0.5 rounded-full bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/60 shadow-[0_1px_2px_rgba(15,23,42,.03)]"
-        triggerClassName="h-7 px-2.5 sm:px-3.5 text-xs rounded-full"
-        items={[
-          { value: "all", label: t("tabAll", "Tất cả") },
-          { value: "new", label: t("tabNew", "Mới") },
-          { value: "replacement", label: t("tabReplacement", "Thay thế") },
-          { value: "adjustment", label: t("tabAdjustment", "Điều chỉnh") },
-        ]}
-        value={activeTaxPresetKey}
-        onValueChange={handleTaxTabChange}
-        hideBorder
-      />
-
-      <div className="hidden sm:block h-4 w-px bg-slate-300/80 dark:bg-slate-700/80 shrink-0" />
-
-      <InvoiceViewModeCombobox
-        presets={columnViewPresetsHook.presets}
-        activePresetKey={activeColumnPresetKey}
-        onSelect={handleColumnPresetChange}
-        onCreateView={handleOpenCreateView}
-        onEditView={handleOpenEditView}
-        onDeleteView={handleDeleteViewPreset}
-      />
-    </div>
-  ) : undefined;
-
   return {
     t,
     direction,
     isDrawer,
     listDir,
     canEditInvoice,
-    listHook,
     formHook,
     urlSync,
-    columns,
-    summaryRow,
-    viewTabsNode,
     pageTabs,
     currentTabKey,
     handleTabChange,
     activeView,
     setActiveView,
-    filterConfig,
-    activeSortKey: listHook.sortBy,
-    activeSortOrder: listHook.sortOrder,
     branches,
     // View Config Drawer
     viewConfigDrawerOpen,
@@ -1026,11 +878,12 @@ export function useErpInvoicesTabLogic({
     currentColumnVisibility,
     activeColumnPresetKey,
     handleColumnPresetChange,
+    loadInvoices,
+    invoices,
+    buildExportBaseQuery,
     // Modals
     ...modals,
     // Bulk Actions
     ...bulkActions,
-    // Table Handlers
-    buildExportBaseQuery: tableHandlers.buildExportBaseQuery,
   };
 }
