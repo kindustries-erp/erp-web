@@ -132,19 +132,7 @@ export function useErpInvoicesTabLogic({
         const vmParam = urlParams.get("view_mode");
         if (vmParam) return vmParam;
       }
-      const targetStoreDir =
-        instanceIndex === 2
-          ? initialTabInfo.dir === "IN"
-            ? "IN_2"
-            : "OUT_2"
-          : initialTabInfo.dir;
-      const targetTableId = isDrawer
-        ? `erp-invoices-table-checkpoint-${initialTabInfo.dir}`
-        : `erp-invoices-table-${targetStoreDir}`;
-      const stored = useUserPreferencesStore
-        .getState()
-        .getTablePreference(targetTableId);
-      return stored?.activeView || "overview";
+      return "overview";
     },
   );
 
@@ -212,16 +200,9 @@ export function useErpInvoicesTabLogic({
 
       const targetStoreDir: Direction =
         instanceIndex === 2 ? (info.dir === "IN" ? "IN_2" : "OUT_2") : info.dir;
-      const targetTableId = isDrawer
-        ? `erp-invoices-table-checkpoint-${info.dir}`
-        : `erp-invoices-table-${targetStoreDir}`;
       const params = new URLSearchParams(window.location.search);
       const vmParam = params.get("view_mode");
-      const targetViewMode =
-        vmParam ||
-        useUserPreferencesStore.getState().getTablePreference(targetTableId)
-          ?.activeView ||
-        "overview";
+      const targetViewMode = vmParam || "overview";
       setActiveColumnPresetKey(targetViewMode);
 
       const taxTabParam = params.get("tax_tab");
@@ -401,8 +382,12 @@ export function useErpInvoicesTabLogic({
           const targetViewMode = targetTablePref?.activeView || "overview";
           if (targetViewMode && targetViewMode !== "overview") {
             newParams.set(ErpUrlQueryParam.VIEW_MODE, targetViewMode);
+          } else {
+            newParams.delete(ErpUrlQueryParam.VIEW_MODE);
           }
           setActiveColumnPresetKey(targetViewMode);
+        } else {
+          newParams.delete(ErpUrlQueryParam.VIEW_MODE);
         }
 
         const queryString = newParams.toString();
@@ -906,6 +891,7 @@ export function useErpInvoicesTabLogic({
     handleDeleteViewPreset,
     currentColumnVisibility,
     activeColumnPresetKey,
+    columnViewPresetsHook,
     handleColumnPresetChange,
     loadInvoices,
     invoices,

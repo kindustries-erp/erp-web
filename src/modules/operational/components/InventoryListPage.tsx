@@ -19,6 +19,16 @@ import { useAppStore } from "@/core/config/appStore";
 import { ErpUrlQueryParam } from "@/shared/constants/urlParams";
 import { DEFAULT_DEBOUNCE_TIME } from "@/shared/constants/timing";
 import { encodeStateParam, decodeStateParam } from "@/shared/utils/pageUrl";
+import { usePageViewPresets } from "@/shared/hooks/usePageViewPresets";
+import {
+  useUserPreferencesStore,
+  type TableViewPreset,
+} from "@/shared/hooks/useUserPreferences";
+import {
+  STOCK_COLUMN_VIEW_PRESETS,
+  DEFAULT_STOCK_COLUMN_VISIBILITY,
+} from "./list/utils/stockViewPresets";
+import { toast } from "react-hot-toast";
 
 export function InventoryListPage() {
   const variant = "inventory" as const;
@@ -40,7 +50,136 @@ export function InventoryListPage() {
     setStockTab,
   } = listStore;
 
-  const tableState = useTableColumnState("inventory-stock-table");
+  const tableId = "inventory-stock-table";
+  const tableState = useTableColumnState(tableId);
+
+  const [activeColumnPresetKey, setActiveColumnPresetKey] = useState<string>(
+    () => {
+      if (typeof window !== "undefined") {
+        const params = new URLSearchParams(window.location.search);
+        const vmParam = params.get(ErpUrlQueryParam.VIEW_MODE);
+        if (vmParam) return vmParam;
+      }
+      return "overview";
+    },
+  );
+
+  const [viewConfigDrawerOpen, setViewConfigDrawerOpen] = useState(false);
+  const [editingViewPreset, setEditingViewPreset] =
+    useState<TableViewPreset | null>(null);
+
+  const handleColumnPresetChange = useCallback(
+    (preset: TableViewPreset) => {
+      setActiveColumnPresetKey(preset.key);
+      if (preset.columnVisibility) {
+        const store = useUserPreferencesStore.getState();
+        const current = store.getTablePreference(tableId);
+        store.setTablePreferences(tableId, {
+          columnOrder: current?.columnOrder || [],
+          columnVisibility: preset.columnVisibility as any,
+          columnSizing: current?.columnSizing,
+          activeView: preset.key,
+          views: current?.views,
+        });
+      }
+    },
+    [tableId],
+  );
+
+  const columnViewPresetsHook = usePageViewPresets({
+    tableId,
+    defaultPresets: STOCK_COLUMN_VIEW_PRESETS,
+    activeView: activeColumnPresetKey,
+    onViewChange: handleColumnPresetChange,
+  });
+
+  const currentColumnVisibility =
+    useUserPreferencesStore.getState().getTablePreference(tableId)
+      ?.columnVisibility || DEFAULT_STOCK_COLUMN_VISIBILITY;
+
+  const handleOpenCreateView = useCallback(() => {
+    setEditingViewPreset(null);
+    setViewConfigDrawerOpen(true);
+  }, []);
+
+  const handleOpenEditView = useCallback((preset: TableViewPreset) => {
+    setEditingViewPreset(preset);
+    setViewConfigDrawerOpen(true);
+  }, []);
+
+  const handleSaveViewPreset = useCallback(
+    (data: {
+      key?: string;
+      label: string;
+      columnVisibility: Record<string, boolean>;
+    }) => {
+      const isDefault = data.key === "overview" || data.key === "audit";
+      if (data.key) {
+        const updatedPreset: TableViewPreset = {
+          key: data.key,
+          label: data.label,
+          filters: {},
+          columnVisibility: data.columnVisibility,
+          isDefault,
+          isCustom: !isDefault,
+          isModified: isDefault,
+        };
+        useUserPreferencesStore
+          .getState()
+          .saveTableViewPreset(tableId, updatedPreset);
+        handleColumnPresetChange(updatedPreset);
+        toast.success(t("viewModeSaveSuccess", "Đã lưu chế độ xem thành công"));
+      } else {
+        const newKey = `custom_${Date.now()}`;
+        const newPreset: TableViewPreset = {
+          key: newKey,
+          label: data.label,
+          filters: {},
+          columnVisibility: data.columnVisibility,
+          isDefault: false,
+          isCustom: true,
+        };
+        useUserPreferencesStore
+          .getState()
+          .saveTableViewPreset(tableId, newPreset);
+        handleColumnPresetChange(newPreset);
+        toast.success(t("viewModeSaveSuccess", "Đã lưu chế độ xem thành công"));
+      }
+    },
+    [tableId, handleColumnPresetChange, t],
+  );
+
+  const handleResetViewPreset = useCallback(
+    (key: string) => {
+      columnViewPresetsHook.resetView(key);
+      const factoryPreset = STOCK_COLUMN_VIEW_PRESETS.find(
+        (p) => p.key === key,
+      );
+      if (factoryPreset) {
+        handleColumnPresetChange(factoryPreset);
+      }
+      toast.success(
+        t(
+          "viewModeResetSuccess",
+          "Đã khôi phục chế độ xem về mặc định thành công",
+        ),
+      );
+    },
+    [columnViewPresetsHook, handleColumnPresetChange, t],
+  );
+
+  const handleDeleteViewPreset = useCallback(
+    (key: string) => {
+      if (key === "overview" || key === "audit") return;
+      columnViewPresetsHook.deleteView(key);
+      if (activeColumnPresetKey === key) {
+        const fallbackPreset = STOCK_COLUMN_VIEW_PRESETS[0];
+        handleColumnPresetChange(fallbackPreset);
+      }
+      toast.success(t("viewModeDeleteSuccess", "Đã xóa chế độ xem thành công"));
+    },
+    [activeColumnPresetKey, columnViewPresetsHook, handleColumnPresetChange, t],
+  );
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -100,6 +239,10 @@ export function InventoryListPage() {
       const dmode = params.get(ErpUrlQueryParam.DRAWER_MODE);
       setIsEditMode(dmode === "edit");
     }
+
+    // 6. view_mode
+    const vmParam = params.get(ErpUrlQueryParam.VIEW_MODE);
+    setActiveColumnPresetKey(vmParam || "overview");
   }, [
     setStockTab,
     setSearchInput,
@@ -165,6 +308,11 @@ export function InventoryListPage() {
       }
     }
 
+    // 7. View Mode
+    if (activeColumnPresetKey && activeColumnPresetKey !== "overview") {
+      newParams.set(ErpUrlQueryParam.VIEW_MODE, activeColumnPresetKey);
+    }
+
     const newSearch = newParams.toString();
     const newRelativePath = `${window.location.pathname}${newSearch ? `?${newSearch}` : ""}`;
     if (window.location.pathname + window.location.search !== newRelativePath) {
@@ -184,6 +332,7 @@ export function InventoryListPage() {
     tableState.sorts,
     viewingItemId,
     isEditMode,
+    activeColumnPresetKey,
   ]);
 
   useEffect(() => {
@@ -295,6 +444,15 @@ export function InventoryListPage() {
         setViewingItemId(null);
         setIsEditMode(false);
       }
+
+      // 7. View Mode
+      const vmParam = params.get(ErpUrlQueryParam.VIEW_MODE);
+      const targetViewMode =
+        vmParam ||
+        useUserPreferencesStore.getState().getTablePreference(tableId)
+          ?.activeView ||
+        "overview";
+      setActiveColumnPresetKey(targetViewMode);
     };
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
@@ -305,6 +463,7 @@ export function InventoryListPage() {
     setItemTypeFilter,
     setPage,
     setPageSize,
+    tableId,
   ]);
 
   useEffect(() => {
@@ -383,7 +542,7 @@ export function InventoryListPage() {
         </DropdownMenu.Portal>
       </DropdownMenu.Root>
     ) : null;
-  }, [selectedCount]);
+  }, [selectedCount, t]);
 
   return (
     <>
@@ -407,6 +566,18 @@ export function InventoryListPage() {
         rowSelection={rowSelection}
         onRowSelectionChange={setRowSelection}
         bulkActionsNode={bulkActionsNode}
+        activeColumnPresetKey={activeColumnPresetKey}
+        columnViewPresets={columnViewPresetsHook.presets}
+        onSelectViewPreset={handleColumnPresetChange}
+        onOpenCreateView={handleOpenCreateView}
+        onOpenEditView={handleOpenEditView}
+        onDeleteViewPreset={handleDeleteViewPreset}
+        viewConfigDrawerOpen={viewConfigDrawerOpen}
+        onCloseViewConfigDrawer={() => setViewConfigDrawerOpen(false)}
+        editingViewPreset={editingViewPreset}
+        onSaveViewPreset={handleSaveViewPreset}
+        onResetDefaultViewPreset={handleResetViewPreset}
+        currentColumnVisibility={currentColumnVisibility}
         onRefetch={useCallback(() => {
           setIsReloading(true);
           Promise.all([

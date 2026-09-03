@@ -37,6 +37,17 @@ import type { WarehouseRow } from "@/modules/inventory-core/api/warehouseVoucher
 import { goodsReceiptsCoreApi } from "@/modules/goods-receipts-core/api/goodsReceiptsCoreApi";
 import { goodsIssuesCoreApi } from "@/modules/goods-issues-core/api/goodsIssuesCoreApi";
 import { inventoryAdjustmentsApi } from "@/modules/inventory-adjustments/api/inventoryAdjustmentsApi";
+import { WarehouseViewModeCombobox } from "./components/WarehouseViewModeCombobox";
+import { usePageViewPresets } from "@/shared/hooks/usePageViewPresets";
+import {
+  useUserPreferencesStore,
+  type TableViewPreset,
+} from "@/shared/hooks/useUserPreferences";
+import {
+  WAREHOUSE_COLUMN_VIEW_PRESETS,
+  DEFAULT_WAREHOUSE_COLUMN_VISIBILITY,
+} from "./utils";
+import { toast } from "react-hot-toast";
 
 import { useWarehousePrintExport } from "./hooks/useWarehousePrintExport";
 import { useWarehouseColumns } from "./hooks/useWarehouseColumns";
@@ -209,7 +220,136 @@ export function useErpWarehouseTabLogic() {
     }
   }, []);
 
-  const tableState = useTableColumnState("inventory-vouchers-table");
+  const tableId = "inventory-vouchers-table";
+  const tableState = useTableColumnState(tableId);
+
+  const [activeColumnPresetKey, setActiveColumnPresetKey] = useState<string>(
+    () => {
+      if (typeof window !== "undefined") {
+        const params = new URLSearchParams(window.location.search);
+        const vmParam = params.get(ErpUrlQueryParam.VIEW_MODE);
+        if (vmParam) return vmParam;
+      }
+      return "overview";
+    },
+  );
+
+  const [viewConfigDrawerOpen, setViewConfigDrawerOpen] = useState(false);
+  const [editingViewPreset, setEditingViewPreset] =
+    useState<TableViewPreset | null>(null);
+
+  const handleColumnPresetChange = useCallback(
+    (preset: TableViewPreset) => {
+      setActiveColumnPresetKey(preset.key);
+      if (preset.columnVisibility) {
+        const store = useUserPreferencesStore.getState();
+        const current = store.getTablePreference(tableId);
+        store.setTablePreferences(tableId, {
+          columnOrder: current?.columnOrder || [],
+          columnVisibility: preset.columnVisibility as any,
+          columnSizing: current?.columnSizing,
+          activeView: preset.key,
+          views: current?.views,
+        });
+      }
+    },
+    [tableId],
+  );
+
+  const columnViewPresetsHook = usePageViewPresets({
+    tableId,
+    defaultPresets: WAREHOUSE_COLUMN_VIEW_PRESETS,
+    activeView: activeColumnPresetKey,
+    onViewChange: handleColumnPresetChange,
+  });
+
+  const currentColumnVisibility =
+    useUserPreferencesStore.getState().getTablePreference(tableId)
+      ?.columnVisibility || DEFAULT_WAREHOUSE_COLUMN_VISIBILITY;
+
+  const handleOpenCreateView = useCallback(() => {
+    setEditingViewPreset(null);
+    setViewConfigDrawerOpen(true);
+  }, []);
+
+  const handleOpenEditView = useCallback((preset: TableViewPreset) => {
+    setEditingViewPreset(preset);
+    setViewConfigDrawerOpen(true);
+  }, []);
+
+  const handleSaveViewPreset = useCallback(
+    (data: {
+      key?: string;
+      label: string;
+      columnVisibility: Record<string, boolean>;
+    }) => {
+      const isDefault = data.key === "overview" || data.key === "audit";
+      if (data.key) {
+        const updatedPreset: TableViewPreset = {
+          key: data.key,
+          label: data.label,
+          filters: {},
+          columnVisibility: data.columnVisibility,
+          isDefault,
+          isCustom: !isDefault,
+          isModified: isDefault,
+        };
+        useUserPreferencesStore
+          .getState()
+          .saveTableViewPreset(tableId, updatedPreset);
+        handleColumnPresetChange(updatedPreset);
+        toast.success(t("viewModeSaveSuccess", "Đã lưu chế độ xem thành công"));
+      } else {
+        const newKey = `custom_${Date.now()}`;
+        const newPreset: TableViewPreset = {
+          key: newKey,
+          label: data.label,
+          filters: {},
+          columnVisibility: data.columnVisibility,
+          isDefault: false,
+          isCustom: true,
+        };
+        useUserPreferencesStore
+          .getState()
+          .saveTableViewPreset(tableId, newPreset);
+        handleColumnPresetChange(newPreset);
+        toast.success(t("viewModeSaveSuccess", "Đã lưu chế độ xem thành công"));
+      }
+    },
+    [tableId, handleColumnPresetChange, t],
+  );
+
+  const handleResetViewPreset = useCallback(
+    (key: string) => {
+      columnViewPresetsHook.resetView(key);
+      const factoryPreset = WAREHOUSE_COLUMN_VIEW_PRESETS.find(
+        (p) => p.key === key,
+      );
+      if (factoryPreset) {
+        handleColumnPresetChange(factoryPreset);
+      }
+      toast.success(
+        t(
+          "viewModeResetSuccess",
+          "Đã khôi phục chế độ xem về mặc định thành công",
+        ),
+      );
+    },
+    [columnViewPresetsHook, handleColumnPresetChange, t],
+  );
+
+  const handleDeleteViewPreset = useCallback(
+    (key: string) => {
+      if (key === "overview" || key === "audit") return;
+      columnViewPresetsHook.deleteView(key);
+      if (activeColumnPresetKey === key) {
+        const fallbackPreset = WAREHOUSE_COLUMN_VIEW_PRESETS[0];
+        handleColumnPresetChange(fallbackPreset);
+      }
+      toast.success(t("viewModeDeleteSuccess", "Đã xóa chế độ xem thành công"));
+    },
+    [activeColumnPresetKey, columnViewPresetsHook, handleColumnPresetChange, t],
+  );
 
   const debounceUrlTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
     null,
@@ -272,6 +412,11 @@ export function useErpWarehouseTabLogic() {
       }
     }
 
+    // 7. View Mode
+    if (activeColumnPresetKey && activeColumnPresetKey !== "overview") {
+      newParams.set(ErpUrlQueryParam.VIEW_MODE, activeColumnPresetKey);
+    }
+
     const newSearch = newParams.toString();
     const newRelativePath = `${window.location.pathname}${newSearch ? `?${newSearch}` : ""}`;
     if (window.location.pathname + window.location.search !== newRelativePath) {
@@ -282,6 +427,7 @@ export function useErpWarehouseTabLogic() {
     }
   }, [
     activeTypeTab,
+    activeColumnPresetKey,
     dateFrom,
     dateTo,
     page,
@@ -328,6 +474,11 @@ export function useErpWarehouseTabLogic() {
       } else {
         setActiveTypeTab("all");
       }
+
+      // View Mode
+      const vmParam = params.get(ErpUrlQueryParam.VIEW_MODE);
+      const targetViewMode = vmParam || "overview";
+      setActiveColumnPresetKey(targetViewMode);
 
       // Dates
       const df = params.get(ErpUrlQueryParam.DATE_FROM);
@@ -430,7 +581,7 @@ export function useErpWarehouseTabLogic() {
     };
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
-  }, [filterPanel, grDrawer, giDrawer, iaDrawer]);
+  }, [filterPanel, grDrawer, giDrawer, iaDrawer, tableId]);
 
   const handleTypeTabChange = useCallback(
     (nextTab: WarehouseVoucherTypeTab) => {
@@ -496,6 +647,17 @@ export function useErpWarehouseTabLogic() {
         value={activeTypeTab}
         onValueChange={handleTypeTabChange}
         hideBorder
+      />
+
+      <div className="hidden sm:block h-4 w-px bg-slate-300/80 dark:bg-slate-700/80 shrink-0" />
+
+      <WarehouseViewModeCombobox
+        presets={columnViewPresetsHook.presets}
+        activePresetKey={activeColumnPresetKey}
+        onSelect={handleColumnPresetChange}
+        onCreateView={handleOpenCreateView}
+        onEditView={handleOpenEditView}
+        onDeleteView={handleDeleteViewPreset}
       />
     </div>
   );
@@ -810,5 +972,13 @@ export function useErpWarehouseTabLogic() {
     handleClearAllFilters,
     filterPanel,
     customActionsNode,
+    viewConfigDrawerOpen,
+    setViewConfigDrawerOpen,
+    editingViewPreset,
+    handleSaveViewPreset,
+    handleResetViewPreset,
+    activeColumnPresetKey,
+    columnViewPresetsHook,
+    currentColumnVisibility,
   };
 }

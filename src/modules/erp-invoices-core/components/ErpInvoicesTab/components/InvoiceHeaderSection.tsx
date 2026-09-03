@@ -61,6 +61,9 @@ export interface InvoiceHeaderSectionProps {
     React.SetStateAction<Record<string, boolean>>
   >;
   bulkActionsNode?: React.ReactNode;
+  activePresetKey?: string;
+  presets?: TableViewPreset[];
+  onSelectViewPreset?: (preset: TableViewPreset) => void;
   onOpenViewConfig: (preset: TableViewPreset) => void;
   onOpenCreateView: () => void;
   onDeleteViewPreset: (key: string) => void;
@@ -101,6 +104,9 @@ export const InvoiceHeaderSection = React.memo(function InvoiceHeaderSection({
   rowSelection,
   setRowSelection,
   bulkActionsNode,
+  activePresetKey,
+  presets,
+  onSelectViewPreset,
   onOpenViewConfig,
   onOpenCreateView,
   onDeleteViewPreset,
@@ -159,16 +165,21 @@ export const InvoiceHeaderSection = React.memo(function InvoiceHeaderSection({
   const currentTablePref = useUserPreferencesStore((s) =>
     actualTableId ? s.tables[actualTableId] : undefined,
   );
-  const activeColumnPresetKey = currentTablePref?.activeView || "overview";
+  const fallbackActivePresetKey = currentTablePref?.activeView || "overview";
+  const effectiveActivePresetKey = activePresetKey || fallbackActivePresetKey;
 
   const columnViewPresetsHook = usePageViewPresets({
     tableId: columnPresetsTableId,
     defaultPresets: INVOICE_COLUMN_VIEW_PRESETS,
-    activeView: activeColumnPresetKey,
+    activeView: effectiveActivePresetKey,
   });
 
   const handleColumnPresetChange = useCallback(
     (preset: TableViewPreset) => {
+      if (onSelectViewPreset) {
+        onSelectViewPreset(preset);
+        return;
+      }
       const currentPref = useUserPreferencesStore
         .getState()
         .getTablePreference(actualTableId) || {
@@ -182,7 +193,7 @@ export const InvoiceHeaderSection = React.memo(function InvoiceHeaderSection({
         activeView: preset.key,
       });
     },
-    [actualTableId],
+    [actualTableId, onSelectViewPreset],
   );
 
   const handleTaxTabChange = useCallback(
@@ -216,9 +227,9 @@ export const InvoiceHeaderSection = React.memo(function InvoiceHeaderSection({
       <div className="hidden sm:block h-4 w-px bg-slate-300/80 dark:bg-slate-700/80 shrink-0" />
 
       <InvoiceViewModeCombobox
-        presets={columnViewPresetsHook.presets}
-        activePresetKey={activeColumnPresetKey}
-        onSelect={handleColumnPresetChange}
+        presets={presets || columnViewPresetsHook.presets}
+        activePresetKey={effectiveActivePresetKey}
+        onSelect={onSelectViewPreset || handleColumnPresetChange}
         onCreateView={onOpenCreateView}
         onEditView={onOpenViewConfig}
         onDeleteView={onDeleteViewPreset}

@@ -7,6 +7,7 @@ import type { WarehouseRow } from "@/modules/inventory-core/api/warehouseVoucher
 import { useErpWarehouseTabLogic } from "./useErpWarehouseTabLogic";
 import { WarehouseModals } from "./components/WarehouseModals";
 import { WarehousePrintSlot } from "./components/WarehousePrintSlot";
+import { WarehouseViewConfigDrawer } from "./components/WarehouseViewConfigDrawer";
 
 export function ErpWarehouseTab() {
   const {
@@ -45,6 +46,12 @@ export function ErpWarehouseTab() {
     vouchersQuery,
     customActionsNode,
     handleClearAllFilters,
+    viewConfigDrawerOpen,
+    setViewConfigDrawerOpen,
+    editingViewPreset,
+    handleSaveViewPreset,
+    handleResetViewPreset,
+    currentColumnVisibility,
   } = useErpWarehouseTabLogic();
 
   if (!canReadReceipts && !canReadIssues && !canReadAdjustments)
@@ -131,6 +138,15 @@ export function ErpWarehouseTab() {
         companyProfile={companyProfile}
         printGrData={printGrData}
         printGiData={printGiData}
+      />
+
+      <WarehouseViewConfigDrawer
+        open={viewConfigDrawerOpen}
+        onClose={() => setViewConfigDrawerOpen(false)}
+        preset={editingViewPreset}
+        currentColumnVisibility={currentColumnVisibility}
+        onSave={handleSaveViewPreset}
+        onResetDefault={handleResetViewPreset}
       />
     </>
   );

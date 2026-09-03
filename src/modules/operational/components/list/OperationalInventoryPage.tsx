@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect, useCallback } from "react";
+import { useMemo, useState, useCallback } from "react";
 import {
   Eye,
   Pencil,
@@ -45,6 +45,9 @@ import { inventoryCoreApi } from "@/modules/inventory-core/api/inventoryCoreApi"
 import { useUIStore } from "@/core/config/uiStore";
 import { useAppStore } from "@/core/config/appStore";
 import type { Updater } from "@tanstack/react-table";
+import { InventoryStockViewModeCombobox } from "@/modules/operational/components/list/InventoryStockViewModeCombobox";
+import { InventoryStockViewConfigDrawer } from "@/modules/operational/components/list/InventoryStockViewConfigDrawer";
+import { type TableViewPreset } from "@/shared/hooks/useUserPreferences";
 
 interface OperationalInventoryPageProps {
   loading: boolean;
@@ -64,6 +67,22 @@ interface OperationalInventoryPageProps {
   rowSelection: Record<string, boolean>;
   onRowSelectionChange: (updater: Updater<Record<string, boolean>>) => void;
   bulkActionsNode?: React.ReactNode;
+  activeColumnPresetKey?: string;
+  columnViewPresets?: TableViewPreset[];
+  onSelectViewPreset?: (preset: TableViewPreset) => void;
+  onOpenCreateView?: () => void;
+  onOpenEditView?: (preset: TableViewPreset) => void;
+  onDeleteViewPreset?: (key: string) => void;
+  viewConfigDrawerOpen?: boolean;
+  onCloseViewConfigDrawer?: () => void;
+  editingViewPreset?: TableViewPreset | null;
+  onSaveViewPreset?: (data: {
+    key?: string;
+    label: string;
+    columnVisibility: Record<string, boolean>;
+  }) => void;
+  onResetDefaultViewPreset?: (key: string) => void;
+  currentColumnVisibility?: Record<string, boolean>;
 }
 
 /**
@@ -88,6 +107,18 @@ export function OperationalInventoryPage({
   rowSelection,
   onRowSelectionChange,
   bulkActionsNode,
+  activeColumnPresetKey,
+  columnViewPresets = [],
+  onSelectViewPreset,
+  onOpenCreateView,
+  onOpenEditView,
+  onDeleteViewPreset,
+  viewConfigDrawerOpen = false,
+  onCloseViewConfigDrawer,
+  editingViewPreset,
+  onSaveViewPreset,
+  onResetDefaultViewPreset,
+  currentColumnVisibility,
 }: OperationalInventoryPageProps) {
   const t = useT();
   const {
@@ -112,22 +143,6 @@ export function OperationalInventoryPage({
   const [graphOpen, setGraphOpen] = useState(false);
   const [graphItemId, setGraphItemId] = useState<string | null>(null);
   const inventoryGraph = useInventoryGraph();
-
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem("erp_preferences");
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (parsed?.tables?.["inventory-stock-table"]) {
-          delete parsed.tables["inventory-stock-table"];
-          localStorage.setItem("erp_preferences", JSON.stringify(parsed));
-          window.location.reload();
-        }
-      }
-    } catch (e) {
-      console.error(e);
-    }
-  }, []);
 
   const showToast = useUIStore((s) => s.showToast);
 
@@ -251,6 +266,23 @@ export function OperationalInventoryPage({
         onValueChange={handleStockTabChange}
         hideBorder
       />
+
+      {onSelectViewPreset &&
+        onOpenCreateView &&
+        onOpenEditView &&
+        onDeleteViewPreset && (
+          <>
+            <div className="hidden sm:block h-4 w-px bg-slate-300/80 dark:bg-slate-700/80 shrink-0" />
+            <InventoryStockViewModeCombobox
+              presets={columnViewPresets}
+              activePresetKey={activeColumnPresetKey || "overview"}
+              onSelect={onSelectViewPreset}
+              onCreateView={onOpenCreateView}
+              onEditView={onOpenEditView}
+              onDeleteView={onDeleteViewPreset}
+            />
+          </>
+        )}
     </div>
   );
 
@@ -517,6 +549,17 @@ export function OperationalInventoryPage({
         onSaved={() => {}}
         drawerState={poDrawer}
       />
+
+      {onCloseViewConfigDrawer && onSaveViewPreset && (
+        <InventoryStockViewConfigDrawer
+          open={viewConfigDrawerOpen}
+          onClose={onCloseViewConfigDrawer}
+          preset={editingViewPreset}
+          currentColumnVisibility={currentColumnVisibility}
+          onSave={onSaveViewPreset}
+          onResetDefault={onResetDefaultViewPreset}
+        />
+      )}
     </SpreadsheetPageTemplate>
   );
 }

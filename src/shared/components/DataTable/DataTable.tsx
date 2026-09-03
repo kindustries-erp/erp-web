@@ -471,37 +471,45 @@ export function DataTable<T>({
                       </TableCell>
                     </TableRow>
                   ) : (
-                    table.getRowModel().rows.map((row, index) => {
-                      const rowKey = getRowKey
-                        ? getRowKey(row.original)
-                        : row.id;
-                      const isExpanded = expandedRowKeys?.includes(rowKey);
-                      const isSelected = row.getIsSelected();
-                      const isContextMenuActive =
-                        contextMenu?.rowKey === rowKey;
+                    (() => {
+                      const visibleColumnsKey = table
+                        .getVisibleLeafColumns()
+                        .map((col) => `${col.id}:${col.getSize()}`)
+                        .join("|");
 
-                      return (
-                        <DataTableRowMemo
-                          key={rowKey}
-                          row={row}
-                          rowKey={rowKey}
-                          isExpanded={isExpanded}
-                          isContextMenuActive={isContextMenuActive}
-                          rowIndex={index}
-                          isSelected={isSelected}
-                          getRowClassName={getRowClassName}
-                          onRowClick={onRowClick}
-                          onRowContextMenu={onRowContextMenu}
-                          enableRowContextMenu={enableRowContextMenu}
-                          rowHoverActions={rowHoverActions}
-                          setContextMenu={setContextMenu}
-                          variant={variant}
-                          enableRowSelection={enableRowSelection}
-                          enableColumnResizing={enableColumnResizing}
-                          renderSubRow={renderSubRow}
-                        />
-                      );
-                    })
+                      return table.getRowModel().rows.map((row, index) => {
+                        const rowKey = getRowKey
+                          ? getRowKey(row.original)
+                          : row.id;
+                        const isExpanded = expandedRowKeys?.includes(rowKey);
+                        const isSelected = row.getIsSelected();
+                        const isContextMenuActive =
+                          contextMenu?.rowKey === rowKey;
+
+                        return (
+                          <DataTableRowMemo
+                            key={rowKey}
+                            row={row}
+                            rowKey={rowKey}
+                            visibleColumnsKey={visibleColumnsKey}
+                            isExpanded={isExpanded}
+                            isContextMenuActive={isContextMenuActive}
+                            rowIndex={index}
+                            isSelected={isSelected}
+                            getRowClassName={getRowClassName}
+                            onRowClick={onRowClick}
+                            onRowContextMenu={onRowContextMenu}
+                            enableRowContextMenu={enableRowContextMenu}
+                            rowHoverActions={rowHoverActions}
+                            setContextMenu={setContextMenu}
+                            variant={variant}
+                            enableRowSelection={enableRowSelection}
+                            enableColumnResizing={enableColumnResizing}
+                            renderSubRow={renderSubRow}
+                          />
+                        );
+                      });
+                    })()
                   )}
                 </TableBody>
 

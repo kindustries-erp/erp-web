@@ -133,6 +133,9 @@ export function ErpInvoicesTab(props: ErpInvoicesTabProps) {
             rowSelection={rowSelection}
             setRowSelection={setRowSelection}
             bulkActionsNode={bulkActionsNode}
+            activePresetKey={logic.activeColumnPresetKey}
+            presets={logic.columnViewPresetsHook.presets}
+            onSelectViewPreset={logic.handleColumnPresetChange}
             onOpenViewConfig={logic.handleOpenEditView}
             onOpenCreateView={logic.handleOpenCreateView}
             onDeleteViewPreset={logic.handleDeleteViewPreset}
@@ -198,6 +201,9 @@ export function ErpInvoicesTab(props: ErpInvoicesTabProps) {
             rowSelection={rowSelection}
             setRowSelection={setRowSelection}
             bulkActionsNode={bulkActionsNode}
+            activePresetKey={logic.activeColumnPresetKey}
+            presets={logic.columnViewPresetsHook.presets}
+            onSelectViewPreset={logic.handleColumnPresetChange}
             onOpenViewConfig={logic.handleOpenEditView}
             onOpenCreateView={logic.handleOpenCreateView}
             onDeleteViewPreset={logic.handleDeleteViewPreset}
