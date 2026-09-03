@@ -2,8 +2,7 @@ export const inventoryVi = {
   pageTitle: "Kho",
   tabStock: "Tồn kho",
   tabVouchers: "Chứng từ kho",
-  descStock:
-    "Tổng hợp tồn kho toàn bộ hàng hóa: linh kiện (RAW), thành phẩm (FG), bán thành phẩm (WIP).",
+  descStock: "Tổng hợp và theo dõi số lượng tồn kho.",
   descVouchers: "Quản lý phiếu nhập kho và xuất kho.",
   filter: {
     itemTypeLabel: "Loại item",

@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useMemo, useRef } from "react";
+import { useState, useCallback, useMemo, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ErpQueryKey, DEFAULT_STALE_TIME } from "@/shared/lib/queryKeys";
 import { erpInvoicesCoreApi, type ErpInvoice } from "../api/erpInvoicesCoreApi";
@@ -19,16 +19,20 @@ export function useErpInvoicesList(
   initialDirection: Direction | "ALL" = "IN",
   partnerTaxCode?: string,
 ) {
-  const [direction, setDirection] = useState<Direction | "ALL">(
-    initialDirection,
+  const [overrideDir, setOverrideDir] = useState<Direction | "ALL" | null>(
+    null,
   );
-  useEffect(() => {
-    setDirection(initialDirection);
-  }, [initialDirection]);
+  const prevInitialDirRef = useRef(initialDirection);
+  if (prevInitialDirRef.current !== initialDirection) {
+    prevInitialDirRef.current = initialDirection;
+    if (overrideDir !== null) {
+      setOverrideDir(null);
+    }
+  }
 
-  const store = useErpInvoiceListStore();
-  const state =
-    store.states[direction === "ALL" ? "IN" : direction] || store.states.IN;
+  const direction: Direction | "ALL" = overrideDir ?? initialDirection;
+  const safeDir: Direction = direction === "ALL" ? "IN" : direction;
+  const state = useErpInvoiceListStore((s) => s.states[safeDir] || s.states.IN);
 
   const tableState = useTableColumnState(`erp-invoices-table-${direction}`);
 
@@ -80,11 +84,16 @@ export function useErpInvoicesList(
     const filters: Record<string, string[]> = {
       ...tableState.columnFilters,
     };
-    const taxStatusList = TAX_TAB_TO_STATUS[state.activeTaxTab || "all"];
-    if (taxStatusList && taxStatusList.length > 0) {
-      filters.taxInvoiceStatus = taxStatusList;
+    const userSelectedStatus = tableState.columnFilters?.taxInvoiceStatus;
+    if (userSelectedStatus && userSelectedStatus.length > 0) {
+      filters.taxInvoiceStatus = userSelectedStatus;
     } else {
-      delete filters.taxInvoiceStatus;
+      const taxStatusList = TAX_TAB_TO_STATUS[state.activeTaxTab || "all"];
+      if (taxStatusList && taxStatusList.length > 0) {
+        filters.taxInvoiceStatus = taxStatusList;
+      } else {
+        delete filters.taxInvoiceStatus;
+      }
     }
     return filters;
   }, [tableState.columnFilters, state.activeTaxTab]);
@@ -167,8 +176,6 @@ export function useErpInvoicesList(
     !!state.tag_id,
   ].filter(Boolean).length;
 
-  const safeDir = direction === "ALL" ? "IN" : direction;
-
   const filterPanel = useMemo(
     () => ({
       state: {
@@ -193,49 +200,70 @@ export function useErpInvoicesList(
         amountMax: "",
       },
       panelOpen: state.filterPanelOpen,
-      openPanel: () => store.setFilterPanelOpen(safeDir, true),
-      closePanel: () => store.setFilterPanelOpen(safeDir, false),
-      togglePanel: () => store.setFilterPanelOpen(safeDir, (prev) => !prev),
-      setPeriod: (v: string) => store.setPeriod(safeDir, v),
-      setDateFrom: (v: string) => store.setDateFrom(safeDir, v),
-      setDateTo: (v: string) => store.setDateTo(safeDir, v),
+      openPanel: () =>
+        useErpInvoiceListStore.getState().setFilterPanelOpen(safeDir, true),
+      closePanel: () =>
+        useErpInvoiceListStore.getState().setFilterPanelOpen(safeDir, false),
+      togglePanel: () =>
+        useErpInvoiceListStore
+          .getState()
+          .setFilterPanelOpen(safeDir, (prev: boolean) => !prev),
+      setPeriod: (v: string) =>
+        useErpInvoiceListStore.getState().setPeriod(safeDir, v),
+      setDateFrom: (v: string) =>
+        useErpInvoiceListStore.getState().setDateFrom(safeDir, v),
+      setDateTo: (v: string) =>
+        useErpInvoiceListStore.getState().setDateTo(safeDir, v),
       setChannel: () => {},
       setSearchInput: (v: string) => {
-        store.setSearchInput(safeDir, v);
+        useErpInvoiceListStore.getState().setSearchInput(safeDir, v);
         if (!v) {
-          store.setSearch(safeDir, "");
+          useErpInvoiceListStore.getState().setSearch(safeDir, "");
           return;
         }
         debounce(() => {
-          store.setSearch(safeDir, v);
+          useErpInvoiceListStore.getState().setSearch(safeDir, v);
         });
       },
       setAmountMinInput: () => {},
       setAmountMaxInput: () => {},
-      setStatus: (v: string) => store.setStatus(safeDir, v),
+      setStatus: (v: string) =>
+        useErpInvoiceListStore.getState().setStatus(safeDir, v),
       setCounterpartySource: () => {},
       setCustom: (key: string, v: string) => {
-        if (key === "seller_name") store.setSellerName(safeDir, v);
-        if (key === "buyer_name") store.setBuyerName(safeDir, v);
-        if (key === "tag_id") store.setTagId(safeDir, v);
+        if (key === "seller_name")
+          useErpInvoiceListStore.getState().setSellerName(safeDir, v);
+        if (key === "buyer_name")
+          useErpInvoiceListStore.getState().setBuyerName(safeDir, v);
+        if (key === "tag_id")
+          useErpInvoiceListStore.getState().setTagId(safeDir, v);
       },
       resetAll: () => {
-        store.resetAllFilters(safeDir);
+        useErpInvoiceListStore.getState().resetAllFilters(safeDir);
         tableState.resetFilters();
       },
       hasActiveFilter: activeFilterCount > 0,
       activeFilterCount,
     }),
-    [state, store, safeDir, activeFilterCount, tableState],
+    [state, safeDir, activeFilterCount, tableState],
   );
 
   return {
     direction,
-    setDirection,
+    setDirection: (dir?: Direction | "ALL") => {
+      if (dir) {
+        setOverrideDir(dir);
+        useErpInvoiceListStore
+          .getState()
+          .setPage(dir === "ALL" ? "IN" : dir, 1);
+      }
+    },
     page: state.page,
-    setPage: (p: number) => store.setPage(safeDir, p),
+    setPage: (p: number) =>
+      useErpInvoiceListStore.getState().setPage(safeDir, p),
     pageSize: state.pageSize,
-    setPageSize: (s: number) => store.setPageSize(safeDir, s),
+    setPageSize: (s: number) =>
+      useErpInvoiceListStore.getState().setPageSize(safeDir, s),
     invoices,
     total,
     totalPages,
@@ -246,7 +274,7 @@ export function useErpInvoicesList(
     sortOrder,
     handleSort: (key: string) => {
       tableState.toggleSort(key);
-      store.setPage(safeDir, 1);
+      useErpInvoiceListStore.getState().setPage(safeDir, 1);
     },
     filterPanel,
     loadInvoices,
@@ -254,6 +282,7 @@ export function useErpInvoicesList(
     STATUS_OPTIONS,
     tableState,
     activeTaxTab: state.activeTaxTab || "all",
-    setActiveTaxTab: (tab: string) => store.setActiveTaxTab(safeDir, tab),
+    setActiveTaxTab: (tab: string) =>
+      useErpInvoiceListStore.getState().setActiveTaxTab(safeDir, tab),
   };
 }

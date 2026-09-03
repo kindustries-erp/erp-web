@@ -13,7 +13,7 @@ import { TopProgressBar } from "@/shared/components/TopProgressBar";
 import { AppContextMenu } from "@/shared/components/ContextMenu";
 import { DocumentDependencyModal } from "@/core/components/DocumentDependencyModal";
 import { ReloadPrompt } from "@/ReloadPrompt";
-import { pathToPage } from "@/shared/utils/pageUrl";
+import { pathToPage, pageToPath } from "@/shared/utils/pageUrl";
 import { EnvStamp } from "@/core/components/EnvStamp";
 import { useEnvStore } from "@/core/store/useEnvStore";
 import { GlobalErpDocumentOpener } from "@/core/components/GlobalErpDocumentOpener";
@@ -240,16 +240,6 @@ const GarageOpex = lazy(() =>
     default: m.GarageOpex,
   })),
 );
-const GarageReceivables = lazy(() =>
-  import("@/modules/garage/pages/GarageReceivables").then((m) => ({
-    default: m.GarageReceivables,
-  })),
-);
-const GaragePayables = lazy(() =>
-  import("@/modules/garage/pages/GaragePayables").then((m) => ({
-    default: m.GaragePayables,
-  })),
-);
 const GaragePartners = lazy(() =>
   import("@/modules/garage/pages/GaragePartners").then((m) => ({
     default: m.GaragePartners,
@@ -318,8 +308,6 @@ const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   "garage-dashboard": GarageDashboard,
   "garage-cases": GarageCases,
   "garage-opex": GarageOpex,
-  "garage-receivables": GarageReceivables,
-  "garage-payables": GaragePayables,
   "garage-customers": GaragePartners,
   "garage-partners": GaragePartners,
   "after-sales": AfterSalesPage,
@@ -403,6 +391,17 @@ export default function App() {
     const sync = () => {
       const parsed = pathToPage(location.pathname, location.search);
       if (parsed) {
+        if (
+          parsed.page === "erp-invoices" &&
+          !location.search.includes("tab=")
+        ) {
+          const canonicalPath = pageToPath(
+            "erp-invoices",
+            parsed.tab || "in",
+            parsed.instanceIndex === 2 ? { _i: "2" } : undefined,
+          );
+          window.history.replaceState(null, "", canonicalPath);
+        }
         syncFromUrl(parsed.page, parsed.tab, parsed.instanceIndex);
       } else {
         history.replaceState(null, "", "/");
@@ -463,25 +462,21 @@ export default function App() {
             className="app-content flex-1 overflow-x-hidden overflow-y-auto pb-10"
           >
             <>
-              {openTabs.map((tab) => {
-                const Component = PAGE_COMPONENTS[tab.pageKey];
-                if (!Component) return null;
+              {(() => {
+                const activeTab = openTabs.find(
+                  (tab) => tab.instanceId === currentInstanceId,
+                );
+                if (!activeTab) return <NotFound />;
+                const Component = PAGE_COMPONENTS[activeTab.pageKey];
+                if (!Component) return <NotFound />;
                 return (
-                  <div
-                    key={tab.instanceId}
-                    className={
-                      currentInstanceId === tab.instanceId
-                        ? "block h-full"
-                        : "hidden"
-                    }
-                  >
+                  <div key={activeTab.instanceId} className="block h-full">
                     <Suspense fallback={PAGE_FALLBACK}>
-                      <Component instanceIndex={tab.instanceIndex} />
+                      <Component instanceIndex={activeTab.instanceIndex} />
                     </Suspense>
                   </div>
                 );
-              })}
-              {!PAGE_COMPONENTS[currentPage as PageKey] && <NotFound />}
+              })()}
               <SerialGenerationProgress />
             </>
           </div>

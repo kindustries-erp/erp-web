@@ -39,7 +39,12 @@ export function DrawerTopTabBar({
 }: DrawerTopTabBarProps) {
   if (!tabs || tabs.length === 0) return null;
 
-  const activeTabItem = tabs.find((t) => t.key === activeTabKey) || tabs[0];
+  const effectiveActiveKey =
+    activeTabKey && tabs.some((t) => t.key === activeTabKey)
+      ? activeTabKey
+      : tabs[0]?.key;
+  const activeTabItem =
+    tabs.find((t) => t.key === effectiveActiveKey) || tabs[0];
 
   return (
     <div
@@ -54,7 +59,7 @@ export function DrawerTopTabBar({
       {/* ── Tab List ── */}
       <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-0.5 min-w-0">
         {tabs.map((tab) => {
-          const isActive = tab.key === activeTabKey;
+          const isActive = tab.key === effectiveActiveKey;
           return (
             <button
               key={tab.key}

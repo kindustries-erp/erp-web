@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Shield, PlusCircle, Trash, Eye, Pencil } from "lucide-react";
 import { useUIStore } from "@/core/config/uiStore";
 import { useT } from "@/core/i18n";
@@ -17,10 +17,6 @@ import { useCoreRoleUsers } from "@/modules/system/hooks/useCoreRoleUsers";
 import { CoreRoleDrawer } from "@/modules/system/components/CoreRoleDrawer";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
-import {
-  useFilterPanel,
-  type FilterPanelConfig,
-} from "@/shared/hooks/useFilterPanel";
 import { Forbidden } from "@/pages/Forbidden";
 import { getCoreRolesColumnOptionsApi } from "@/modules/system/api/rbacCoreApi";
 import type {
@@ -34,23 +30,7 @@ export function ErpPermissionsCorePage() {
   const showToast = useUIStore((s) => s.showToast);
   const t = useT();
 
-  const filterConfig: FilterPanelConfig = useMemo(
-    () => ({
-      status: {
-        options: [
-          { value: "true", label: t("Hoạt động") },
-          { value: "false", label: t("Ngưng") },
-        ],
-        placeholder: t("Tất cả trạng thái"),
-      },
-    }),
-    [t],
-  );
-
-  const filter = useFilterPanel(filterConfig);
-  const status = filter.state.status;
-
-  const listHook = useCoreRoles({ status });
+  const listHook = useCoreRoles();
   const {
     roles,
     loading,
@@ -66,19 +46,6 @@ export function ErpPermissionsCorePage() {
     updateRole,
     deleteRole,
   } = listHook;
-
-  const totalActiveFilterCount = useMemo(
-    () => filter.activeFilterCount + listHook.activeFilterCount,
-    [filter.activeFilterCount, listHook.activeFilterCount],
-  );
-
-  const filterResetAll = filter.resetAll;
-  const listClearAllFilters = listHook.clearAllFilters;
-
-  const handleClearAll = useCallback(() => {
-    filterResetAll();
-    listClearAllFilters();
-  }, [filterResetAll, listClearAllFilters]);
 
   const {
     initialPermMap,
@@ -168,8 +135,8 @@ export function ErpPermissionsCorePage() {
         ]);
         await load();
         showToast({
-          title: "Thành công",
-          description: "Đã cập nhật vai trò",
+          title: t("rbac.toast.successTitle", "Thành công"),
+          description: t("rbac.toast.updateSuccess", "Đã cập nhật vai trò"),
           variant: "success",
         });
       } else {
@@ -182,14 +149,18 @@ export function ErpPermissionsCorePage() {
         }
         await load();
         showToast({
-          title: "Thành công",
-          description: "Đã tạo vai trò mới",
+          title: t("rbac.toast.successTitle", "Thành công"),
+          description: t("rbac.toast.createSuccess", "Đã tạo vai trò mới"),
           variant: "success",
         });
       }
       setDrawerOpen(false);
     } catch (e) {
-      setSaveError(e instanceof Error ? e.message : "Có lỗi xảy ra");
+      setSaveError(
+        e instanceof Error
+          ? e.message
+          : t("rbac.toast.genericError", "Có lỗi xảy ra"),
+      );
     } finally {
       setSaving(false);
     }
@@ -201,14 +172,14 @@ export function ErpPermissionsCorePage() {
     try {
       await deleteRole(deleteTarget.id);
       showToast({
-        title: "Đã xóa",
+        title: t("rbac.toast.deleteSuccessTitle", "Đã xóa"),
         description: deleteTarget.name,
         variant: "success",
       });
       setDeleteTarget(null);
     } catch (e) {
       showToast({
-        title: "Xóa thất bại",
+        title: t("rbac.toast.deleteFailTitle", "Xóa thất bại"),
         description: e instanceof Error ? e.message : "",
         variant: "destructive",
       });
@@ -258,7 +229,7 @@ export function ErpPermissionsCorePage() {
         key: "name",
         size: 220,
         enableResizing: true,
-        header: headerFilter("name", t("rbac.headers.name")),
+        header: headerFilter("name", t("rbac.headers.name", "Tên vai trò")),
         cell: (role) => (
           <TableText
             text={role.name}
@@ -271,9 +242,13 @@ export function ErpPermissionsCorePage() {
         key: "description",
         size: 250,
         enableResizing: true,
-        header: headerFilter("description", t("rbac.headers.description"), {
-          showBlankOption: true,
-        }),
+        header: headerFilter(
+          "description",
+          t("rbac.headers.description", "Mô tả"),
+          {
+            showBlankOption: true,
+          },
+        ),
         cell: (role) => role.description || "—",
         className: "text-[color:var(--muted-fg)] truncate text-left",
       },
@@ -281,7 +256,7 @@ export function ErpPermissionsCorePage() {
         key: "users",
         size: 300,
         enableResizing: true,
-        header: t("rbac.headers.users"),
+        header: t("rbac.headers.users", "Người dùng"),
         cell: (role) => {
           const usersList = Array.isArray(role.users) ? role.users : [];
           return usersList.length > 0 ? (
@@ -309,14 +284,19 @@ export function ErpPermissionsCorePage() {
         size: 130,
         enableResizing: true,
         className: "text-center",
-        header: headerFilter("isActive", t("Trạng thái")),
+        header: headerFilter(
+          "isActive",
+          t("rbac.headers.status", "Trạng thái"),
+        ),
         cell: (role) => (
           <div className="flex justify-center w-full">
             <Badge
               variant={role.is_active ? "default" : "secondary"}
               className="w-[88px] inline-flex items-center justify-center text-center truncate"
             >
-              {role.is_active ? t("Hoạt động") : t("Ngưng")}
+              {role.is_active
+                ? t("rbac.status.active", "Hoạt động")
+                : t("rbac.status.inactive", "Ngưng")}
             </Badge>
           </div>
         ),
@@ -326,7 +306,10 @@ export function ErpPermissionsCorePage() {
         size: 150,
         enableResizing: true,
         className: "text-right",
-        header: headerFilter.date("createdAt", t("Ngày tạo")),
+        header: headerFilter.date(
+          "createdAt",
+          t("rbac.headers.createdAt", "Ngày tạo"),
+        ),
         cell: (role) => (
           <TableDateCell
             date={(role as any).createdAt}
@@ -343,8 +326,11 @@ export function ErpPermissionsCorePage() {
   return (
     <>
       <SpreadsheetPageTemplate
-        title={t("nav.items.phanquyen")}
-        desc="Quản lý vai trò và phân quyền hệ thống sử dụng Core DB mới"
+        title={t("rbac.title", "Phân quyền & Vai trò")}
+        desc={t(
+          "rbac.desc",
+          "Quản lý vai trò và phân quyền truy cập trong hệ thống",
+        )}
         icon={<Shield className="h-5 w-5" />}
         tableId="erp-permissions-core-table"
         items={roles}
@@ -352,7 +338,7 @@ export function ErpPermissionsCorePage() {
         getRowKey={(role) => role.id}
         loading={loading}
         error={error}
-        emptyLabel={t("rbac.empty")}
+        emptyLabel={t("rbac.empty", "Chưa có vai trò nào")}
         minWidth={760}
         page={page}
         pageSize={pageSize}
@@ -364,13 +350,11 @@ export function ErpPermissionsCorePage() {
           setPageSize(val);
         }}
         onRefresh={load}
-        filterConfig={filterConfig}
-        filter={filter}
-        activeFilterCount={totalActiveFilterCount}
-        onClearAllFilters={handleClearAll}
+        activeFilterCount={listHook.activeFilterCount}
+        onClearAllFilters={listHook.clearAllFilters}
         rowActions={(role) => [
           {
-            groupLabel: "TRA CỨU",
+            groupLabel: t("rbac.groupLookup", "TRA CỨU"),
             items: [
               {
                 label: t("rbac.actions.viewDetail", "Chi tiết"),
@@ -380,7 +364,7 @@ export function ErpPermissionsCorePage() {
             ],
           },
           {
-            groupLabel: "THAO TÁC",
+            groupLabel: t("rbac.groupActions", "THAO TÁC"),
             items: [
               {
                 label: t("rbac.actions.edit", "Chỉnh sửa"),
@@ -398,10 +382,10 @@ export function ErpPermissionsCorePage() {
         ]}
         createActions={[
           {
-            groupLabel: "Vai trò",
+            groupLabel: t("rbac.groupRole", "Vai trò"),
             items: [
               {
-                label: "Tạo vai trò",
+                label: t("rbac.actions.createRole", "Tạo vai trò"),
                 icon: <PlusCircle className="h-4 w-4 text-emerald-600" />,
                 onClick: openNew,
               },
@@ -441,13 +425,16 @@ export function ErpPermissionsCorePage() {
 
       <ConfirmModal
         open={!!deleteTarget}
-        title="Xóa vai trò"
+        title={t("rbac.actions.deleteRole", "Xóa vai trò")}
         message={
           deleteTarget
-            ? `Bạn có chắc chắn muốn xóa vai trò "${deleteTarget.name}"?`
+            ? t(
+                "rbac.deleteMessage",
+                'Bạn chắc chắn muốn xóa vai trò "{0}"? Hành động này không thể hoàn tác.',
+              ).replace("{0}", deleteTarget.name)
             : ""
         }
-        confirmLabel="Xóa"
+        confirmLabel={t("rbac.actions.delete", "Xóa")}
         loading={deleting}
         onConfirm={handleDelete}
         onCancel={() => setDeleteTarget(null)}

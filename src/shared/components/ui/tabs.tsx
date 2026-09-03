@@ -63,26 +63,36 @@ const TabsList = React.forwardRef<
     const listEl = listRef.current;
     if (!listEl) return;
 
-    const ro = new ResizeObserver(updateIndicator);
-    ro.observe(listEl);
-    Array.from(listEl.querySelectorAll<HTMLElement>('[role="tab"]')).forEach(
-      (el) => ro.observe(el),
-    );
+    const ro =
+      typeof ResizeObserver !== "undefined"
+        ? new ResizeObserver(updateIndicator)
+        : null;
+    if (ro) {
+      ro.observe(listEl);
+      Array.from(listEl.querySelectorAll<HTMLElement>('[role="tab"]')).forEach(
+        (el) => ro.observe(el),
+      );
+    }
 
-    const mo = new MutationObserver(updateIndicator);
-    mo.observe(listEl, {
-      subtree: true,
-      attributes: true,
-      attributeFilter: ["data-state"],
-      childList: true,
-    });
+    const mo =
+      typeof MutationObserver !== "undefined"
+        ? new MutationObserver(updateIndicator)
+        : null;
+    if (mo) {
+      mo.observe(listEl, {
+        subtree: true,
+        attributes: true,
+        attributeFilter: ["data-state"],
+        childList: true,
+      });
+    }
 
     listEl.addEventListener("scroll", updateIndicator, { passive: true });
     window.addEventListener("resize", updateIndicator);
 
     return () => {
-      ro.disconnect();
-      mo.disconnect();
+      ro?.disconnect();
+      mo?.disconnect();
       listEl.removeEventListener("scroll", updateIndicator);
       window.removeEventListener("resize", updateIndicator);
     };

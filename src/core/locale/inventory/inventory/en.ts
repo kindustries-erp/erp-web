@@ -2,8 +2,7 @@ export const inventoryEn = {
   pageTitle: "Warehouse",
   tabStock: "Stock",
   tabVouchers: "Vouchers",
-  descStock:
-    "Consolidated stock of all items: Raw materials (RAW), Finished Goods (FG), Work in Progress (WIP).",
+  descStock: "Overview of inventory stock balances.",
   descVouchers: "Manage goods receipts and goods issues.",
   filter: {
     itemTypeLabel: "Item Type",

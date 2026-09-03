@@ -46,12 +46,17 @@ export const ALL_PAGE_KEYS: PageKey[] = [
   "garage-dashboard",
   "garage-cases",
   "garage-opex",
-  "garage-receivables",
-  "garage-payables",
   "garage-customers",
   "garage-partners",
   "after-sales",
   "purchasing-report-dashboard",
+  "vinfast-parts",
+  "vinfast-parts-dashboard",
+  "vinfast-parts-oto",
+  "vinfast-parts-xemay",
+  "vinfast-parts-stock",
+  "vinfast-parts-oto-stock",
+  "vinfast-parts-xemay-stock",
 ];
 
 const LEGACY_SLUGS: Record<string, PageKey> = {
@@ -202,8 +207,9 @@ export function pageToPath(
   const base = slug ? `/${slug}` : "/";
   const searchParams = new URLSearchParams();
 
-  if (tab) {
-    searchParams.set(ErpUrlQueryParam.TAB, tab);
+  const effectiveTab = tab || (page === "erp-invoices" ? "in" : undefined);
+  if (effectiveTab) {
+    searchParams.set(ErpUrlQueryParam.TAB, effectiveTab);
   }
 
   if (extraParams) {
@@ -265,7 +271,7 @@ export function pathToPage(
   } else if (slug === "erp-invoices-in" || page === "erp-invoices") {
     if (tab === "lines" || viewParam === "lines") {
       tab = "in-lines";
-    } else if (tab === "header") {
+    } else if (tab === "header" || !tab) {
       tab = "in";
     }
   }

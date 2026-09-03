@@ -21,18 +21,20 @@ export function Tooltip({
 }) {
   if (disabled || !content) return <>{children}</>;
   return (
-    <RadixTooltip.Root>
-      <RadixTooltip.Trigger asChild>{children}</RadixTooltip.Trigger>
-      <RadixTooltip.Portal>
-        <RadixTooltip.Content
-          side={side}
-          sideOffset={6}
-          className="tooltip-content"
-        >
-          {content}
-          <RadixTooltip.Arrow className="tooltip-arrow" />
-        </RadixTooltip.Content>
-      </RadixTooltip.Portal>
-    </RadixTooltip.Root>
+    <RadixTooltip.Provider delayDuration={200}>
+      <RadixTooltip.Root>
+        <RadixTooltip.Trigger asChild>{children}</RadixTooltip.Trigger>
+        <RadixTooltip.Portal>
+          <RadixTooltip.Content
+            side={side}
+            sideOffset={6}
+            className="tooltip-content"
+          >
+            {content}
+            <RadixTooltip.Arrow className="tooltip-arrow" />
+          </RadixTooltip.Content>
+        </RadixTooltip.Portal>
+      </RadixTooltip.Root>
+    </RadixTooltip.Provider>
   );
 }

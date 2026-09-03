@@ -680,8 +680,6 @@ export function ProductionOrderListPage() {
             ]
           : undefined
       }
-      filterConfig={filterConfig}
-      filter={filter}
       activeFilterCount={filter.activeFilterCount}
       onClearAllFilters={filter.resetAll}
       sortArray={

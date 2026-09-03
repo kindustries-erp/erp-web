@@ -13,6 +13,7 @@ export interface OperationalListQueryParams {
   page: number;
   pageSize: number;
   search?: string;
+  stock_tab?: string;
   branch_id?: string;
   supplier_id?: string;
   recurring?: boolean;
@@ -56,6 +57,7 @@ export function useOperationalListQuery(params: OperationalListQueryParams) {
       page: params.page,
       pageSize: params.pageSize,
       search: params.search?.trim() || undefined,
+      stock_tab: params.stock_tab || undefined,
       branch_id: params.branch_id || undefined,
       supplier_id: params.supplier_id || undefined,
       recurring: params.recurring,
@@ -75,6 +77,7 @@ export function useOperationalListQuery(params: OperationalListQueryParams) {
       params.page,
       params.pageSize,
       params.search,
+      params.stock_tab,
       params.branch_id,
       params.supplier_id,
       params.recurring,
@@ -82,6 +85,7 @@ export function useOperationalListQuery(params: OperationalListQueryParams) {
       params.status,
       params.date_from,
       params.date_to,
+      params.item_type,
       params.inventory_item_id,
       params.tag_id,
       sortStr,
@@ -100,6 +104,7 @@ export function useOperationalListQuery(params: OperationalListQueryParams) {
           page: normalized.page,
           pageSize: normalized.pageSize,
           search: normalized.search,
+          stock_tab: normalized.stock_tab,
           item_type: normalized.item_type,
           sort: normalized.sort,
           column_search: normalized.column_search,

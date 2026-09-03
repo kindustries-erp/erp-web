@@ -5,6 +5,7 @@ import {
   Trash2,
   XCircle,
   Eye,
+  Building2,
   Pencil,
   FileSpreadsheet,
 } from "lucide-react";
@@ -92,8 +93,6 @@ export function PurchaseOrderListPage() {
   } = pageState;
 
   const {
-    filter,
-    filterConfig,
     listQuery,
     page,
     pageSize,
@@ -238,8 +237,6 @@ export function PurchaseOrderListPage() {
       }}
       sortArray={tableState.sorts}
       onSort={togglePurchaseSort}
-      filter={filter}
-      filterConfig={filterConfig}
       getRowKey={(row) => `${row.document_type || "purchase"}-${row.id}`}
       rowActions={(row) => [
         {
@@ -248,7 +245,14 @@ export function PurchaseOrderListPage() {
             {
               label: t("Chi tiết"),
               icon: <Eye className="h-[13px] w-[13px]" />,
-              onClick: () => openDetail(row, "view"),
+              onClick: () => openDetail(row, "view", "po_details"),
+            },
+            {
+              label: t("Chi tiết theo đối tượng"),
+              icon: (
+                <Building2 className="h-[13px] w-[13px] text-blue-600 dark:text-blue-400" />
+              ),
+              onClick: () => openDetail(row, "view", "partner"),
             },
             {
               label: t("connectionGraph.action"),
@@ -311,6 +315,8 @@ export function PurchaseOrderListPage() {
         loading={formLoading}
         editing={editingRow}
         viewOnly={viewOnly}
+        activeTabKey={pageState.activeDrawerTab}
+        onTabChange={pageState.setActiveDrawerTab}
         poReceipts={poReceipts}
         onClose={() => {
           handleCloseForm();

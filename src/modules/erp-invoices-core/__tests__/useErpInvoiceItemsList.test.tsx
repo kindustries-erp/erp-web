@@ -92,6 +92,11 @@ describe("useErpInvoiceItemsList", () => {
 
     expect(result.current.page).toBe(1);
     expect(result.current.columnFilters.invoiceNo).toEqual(["HD001", "HD002"]);
+    expect(result.current.activeFilterCount).toBe(1);
+
+    act(() => {
+      result.current.setColumnFilter("status", ["CONFIRMED"]);
+    });
     expect(result.current.activeFilterCount).toBe(2);
   });
 

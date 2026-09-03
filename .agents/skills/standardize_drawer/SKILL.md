@@ -77,6 +77,7 @@ graph TD
 3. **Cột phải (Right Panel) cố định thông tin chung & Phân loại**: Hiển thị metadata, trạng thái, phân loại nghiệp vụ và hiệu quả tài chính tóm tắt xuyên suốt các tab.
 4. **Hỗ trợ `hideRightPanel: true`**: Cho các tab cần không gian đồ họa 100% full width như Mạng lưới chứng từ liên kết Canvas Graph (`@xyflow/react`).
 5. **Hỗ trợ `badgeCount` & Icons**: Hiển thị số lượng giao dịch, hóa đơn hoặc logs trên từng tab.
+6. **Bảng nhúng trong DrawerSection (No Border Wrapper & Variant Spreadsheet)**: Đặt trực tiếp `<StandardTable variant="spreadsheet">` bên trong `<DrawerSection>`. **TUYỆT ĐỐI KHÔNG** bọc thêm thẻ `div` có `border`, `rounded-xl`, `bg-background` xung quanh bảng. Cột STT (`#`) dùng `{idx}` trực tiếp (không cộng thêm).
 
 ### Mẫu cấu trúc Tab chuẩn cho các phân hệ ERP:
 
@@ -264,19 +265,20 @@ Dành cho các form đơn giản không có nhiều phân hệ (như Company Pro
    - Người dùng có thể nhấn nút mũi tên trên Header để thu gọn cột phải về cạnh phải màn hình bất cứ lúc nào để mở rộng 100% diện tích cho cột trái (như bảng dữ liệu hoặc form chính).
    - Với các tab con tự chia 2 cột nội bộ (như tab Chi tiết theo đối tượng), **BẮT BUỘC** bổ sung nút toggle Thu gọn/Mở rộng cột phải trên thanh toolbar/titleExtra, và khi đóng lại cột trái bung rộng 100% `w-full`.
 
-3. **Mặc định BẬT Expand/Collapse cho `<DrawerSection>` & Co giãn chiều cao tự nhiên**:
+3. **Mặc định BẬT Expand/Collapse cho `<DrawerSection>` & Chỉ kích hoạt khi click vào icon mũi tên (Arrow Icon Only)**:
    - Mọi vùng nội dung trong Drawer (cả 1-column lẫn 2-columns) **BẮT BUỘC** phải được bọc trong `<DrawerSection title="...">`.
-   - Thuộc tính `collapsible` **mặc định là `true`** (`defaultCollapsed={false}`), tự động kích hoạt icon mũi tên Expand/Collapse xoay mượt mà.
+   - Thuộc tính `collapsible` **mặc định là `true`** (`defaultCollapsed={false}`), tự động hiển thị nút icon mũi tên `ChevronDown` có hỗ trợ hover state và xoay mượt mà.
+   - **Chỉ Expand/Collapse khi click vào Arrow Icon (`ChevronDown`)**: Tuyệt đối **KHÔNG** bắt sự kiện click trên toàn bộ thanh tiêu đề/header của `<DrawerSection>`. Việc tách biệt này giúp tránh vô tình thu gọn section khi người dùng click vào text tiêu đề, copy text, click badge, hoặc thao tác các nút chức năng trong `titleExtra`.
    - **Xử lý Chiều cao khi Collapsed**: Khi `collapsed={true}`, thẻ `<DrawerSection>` **BẮT BUỘC tự động co về `h-auto`**, không giữ các class ép chiều cao như `h-full` hoặc `h-[calc(100vh-210px)]` để tránh tạo ra khoảng trắng lớn vô nghĩa. Khi bọc bảng với `fitViewportHeight`, luôn truyền `fitViewportHeight={!isCollapsed}` và container ngoài `className={cn("flex flex-col", !isCollapsed ? "h-[calc(100vh-210px)]" : "h-auto")}`.
 
-3. **Quy chuẩn `<DrawerSection>` cho Cột Trái / Main Content (Left Panel & Tabs Content)**:
+4. **Quy chuẩn `<DrawerSection>` cho Cột Trái / Main Content (Left Panel & Tabs Content)**:
    - **BẮT BUỘC phân nhóm nội dung chính bằng `<DrawerSection>`**: Tuyệt đối không thả các trường input, textarea hay bảng dữ liệu trôi nổi không tiêu đề trong Main Content (`leftPanel` hoặc nội dung các tab).
    - **Cấu trúc 3 phân vùng chuẩn trong Main Content**:
      1. **Phân vùng 1 — Thông tin phiếu / Master Data**: Bọc các `<DrawerField>` / `<DrawerRow>` trong layout grid (`grid grid-cols-1 md:grid-cols-2 gap-3`).
      2. **Phân vùng 2 — Bảng dữ liệu nghiệp vụ chính (Embedded DataTable)**: Bọc `<DataTable>` hoặc `<StandardTable>` bên trong `<DrawerSection title="..." titleExtra={...}>`. Tiêu đề bắt buộc hiển thị số lượng dòng `(N)`, `titleExtra` chứa các nút hành động theo ngữ cảnh (Thêm dòng mới, Nút xóa bộ lọc nếu bảng có filter active, hoặc Fullscreen toggle).
      3. **Phân vùng 3 — Ghi chú, Điều khoản & Custom Fields**: Bọc các trường bổ sung ở cuối, mặc định có thể để `defaultCollapsed={true}` để tiết kiệm diện tích cuộn dọc.
 
-4. **Quy tắc Giảm thiểu Border & Chuẩn hóa Timeline (No Nested Borders Overload)**:
+5. **Quy tắc Giảm thiểu Border & Chuẩn hóa Timeline (No Nested Borders Overload)**:
    - **Tuyệt đối tránh** lồng quá nhiều border card (`border border-border`) bên trong DrawerSection khiến giao diện bị nặng nề, rối mắt.
    - Khi hiển thị Dòng thời gian (Timeline / History / Changelog / Audit Logs):
      - **BẮT BUỘC** sử dụng cấu trúc trục dọc thanh thoát:

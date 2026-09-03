@@ -6,6 +6,7 @@ export enum ErpUrlQueryParam {
   // 1. Điều hướng, Tab & Giao diện
   TAB = "tab",
   TAX_TAB = "tax_tab",
+  STOCK_TAB = "stock_tab",
   VIEW_MODE = "view_mode",
   VIEW = "view",
   INSTANCE_INDEX = "_i",

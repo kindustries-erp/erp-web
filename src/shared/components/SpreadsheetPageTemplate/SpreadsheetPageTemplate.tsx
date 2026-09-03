@@ -6,6 +6,7 @@ import { FilterPanel } from "@/shared/components/FilterPanel";
 import { SearchInput } from "@/shared/components/SearchInput";
 import { Tabs, TabsList, TabsTrigger } from "@/shared/components/ui/tabs";
 import { useT } from "@/core/i18n";
+import { useUnifiedTableFilter } from "@/shared/hooks/useUnifiedTableFilter";
 import type { SpreadsheetPageTemplateProps } from "./types";
 
 export function SpreadsheetPageTemplate<T>({
@@ -23,6 +24,7 @@ export function SpreadsheetPageTemplate<T>({
   defaultColumnVisibility,
   getRowKey,
   loading,
+  isPending,
   error,
   emptyLabel,
   minWidth = 1300,
@@ -43,6 +45,8 @@ export function SpreadsheetPageTemplate<T>({
   customActionsNode,
   filterConfig,
   filter,
+  listHook,
+  unifiedFilter: directUnifiedFilter,
   activeFilterCount,
   onClearAllFilters,
   enableRowSelection = false,
@@ -115,6 +119,16 @@ export function SpreadsheetPageTemplate<T>({
     });
   }, [columns]);
 
+  const internalUnifiedFilter = useUnifiedTableFilter({
+    columns: processedColumns,
+    tableId,
+    listHook,
+    filterConfig,
+    filter,
+  });
+
+  const unifiedFilter = directUnifiedFilter || internalUnifiedFilter;
+
   const searchConfig = filterConfig?.search;
   const searchPlaceholder =
     typeof searchConfig === "object"
@@ -141,13 +155,18 @@ export function SpreadsheetPageTemplate<T>({
     [onFullscreenChange],
   );
 
+  const effectiveActiveFilterCount =
+    unifiedFilter.activeFilterCount > 0
+      ? unifiedFilter.activeFilterCount
+      : (activeFilterCount ?? filter?.activeFilterCount ?? 0);
+
   const actionGroupNode = (
     <TableActionGroup
       onRefresh={onRefresh}
       loading={loading}
-      onFilterToggle={filter?.togglePanel}
-      activeFilterCount={activeFilterCount ?? filter?.activeFilterCount ?? 0}
-      onClearAllFilters={onClearAllFilters ?? filter?.resetAll}
+      onFilterToggle={unifiedFilter.togglePanel}
+      activeFilterCount={effectiveActiveFilterCount}
+      onClearAllFilters={onClearAllFilters ?? unifiedFilter.resetAll}
       onCreate={onCreate}
       createLabel={finalCreateLabel}
       createIcon={createIcon}
@@ -217,6 +236,7 @@ export function SpreadsheetPageTemplate<T>({
             columns={processedColumns}
             getRowKey={getRowKey}
             loading={loading}
+            isPending={isPending}
             emptyLabel={finalEmptyLabel}
             minWidth={minWidth}
             enableRowSelection={enableRowSelection}
@@ -250,9 +270,14 @@ export function SpreadsheetPageTemplate<T>({
             fullscreenTabs={tabsNode}
             onFullscreenChange={handleFullscreenChange}
             sidePanel={
-              filterConfig && filter ? (
-                <FilterPanel config={filterConfig} filter={filter} />
-              ) : undefined
+              <FilterPanel
+                unifiedFilter={unifiedFilter}
+                columns={processedColumns}
+                tableId={tableId}
+                listHook={listHook}
+                config={filterConfig}
+                filter={filter}
+              />
             }
           />
         </div>

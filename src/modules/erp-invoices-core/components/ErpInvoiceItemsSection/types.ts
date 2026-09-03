@@ -13,4 +13,5 @@ export interface ErpInvoiceItemsSectionProps {
   handleDownload?: (id: string, type: "pdf" | "xml") => Promise<void>;
   onOpenSync?: () => void;
   onOpenPortalAuth?: () => void;
+  isPending?: boolean;
 }

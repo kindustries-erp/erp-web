@@ -9,24 +9,29 @@ import {
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatGMT7, money } from "@/shared/utils/format";
 import { bankStatementApi } from "@/modules/bank-statements/api/bankStatementApi";
-import { Link2, BookOpen, History, FileText } from "lucide-react";
+import { Link2, BookOpen, History, FileText, Building2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { usePosting } from "@/shared/components/accounting/usePosting";
 import { PostingSection } from "@/shared/components/accounting/PostingSection";
 import { PostedAccountingSummary } from "@/shared/components/accounting/PostedAccountingSummary";
 import { InvoiceNetoffSelectionModal } from "@/modules/bank-statements/components/InvoiceNetoffSelectionModal";
+import { BankTransactionPartnerTab } from "@/modules/bank-statements/components/BankTransactionPartnerTab";
+import { BankTransactionPartnerRightPanel } from "@/modules/bank-statements/components/BankTransactionPartnerRightPanel";
 import toast from "react-hot-toast";
 import { moduleConfigApi } from "@/core/api/moduleConfigApi";
 import {
   ModuleEntityCustomFieldsSection,
   validateModuleRequiredFields,
 } from "@/shared/components/ModuleEntityCustomFieldsSection";
+import { BankTransactionGeneralInfoSection } from "@/modules/bank-statements/components/BankTransactionGeneralInfoSection";
 
 interface Props {
   isOpen: boolean;
   onClose: () => void;
   transactionId: string | null;
   onSaved?: () => void;
+  defaultTabKey?: string;
 }
 
 function createClientId() {
@@ -42,7 +47,9 @@ export function BankTransactionDetailDrawer({
   onClose,
   transactionId,
   onSaved,
+  defaultTabKey = "txn_details",
 }: Props) {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const postingState = usePosting();
   const [editMode, setEditMode] = useState(false);
@@ -546,11 +553,24 @@ export function BankTransactionDetailDrawer({
     ? [
         {
           key: "txn_details",
-          label: "Chi tiết giao dịch",
+          label: t("bankStatement.tabDetails", {
+            defaultValue: "Chi tiết giao dịch",
+          }),
           icon: <FileText className="w-3.5 h-3.5" />,
           content: (
-            <div className="flex flex-col gap-5">
-              <div className="rounded-2xl border border-slate-200 bg-slate-100/80 p-3 md:p-5">
+            <div className="flex flex-col gap-4">
+              <DrawerSection
+                title={
+                  <span className="flex items-center gap-1.5 text-xs font-bold text-foreground">
+                    <FileText className="w-3.5 h-3.5 text-primary" />
+                    {t("bankStatement.previewStatementTitle", {
+                      defaultValue: "Xem trước chứng từ",
+                    })}
+                  </span>
+                }
+                collapsible={true}
+                defaultCollapsed={false}
+              >
                 <div
                   className={`mx-auto min-h-[420px] max-w-[960px] rounded-[20px] border border-slate-200 bg-gradient-to-br ${bankTheme.paperTone} p-5 shadow-sm md:p-7`}
                 >
@@ -563,9 +583,6 @@ export function BankTransactionDetailDrawer({
                         className={`text-xl font-extrabold tracking-wide ${bankTheme.titleColor}`}
                       >
                         {bankTheme.bankLabel}
-                      </div>
-                      <div className="text-xs uppercase tracking-[0.18em] text-slate-500">
-                        Statement Preview
                       </div>
                     </div>
                     <div className="text-right">
@@ -631,8 +648,19 @@ export function BankTransactionDetailDrawer({
                     </div>
                   </div>
                 </div>
-              </div>
+              </DrawerSection>
             </div>
+          ),
+        },
+        {
+          key: "partner",
+          label: t("bankStatement.tabObjectDetails", {
+            defaultValue: "Chi tiết theo đối tượng",
+          }),
+          icon: <Building2 className="w-3.5 h-3.5" />,
+          content: <BankTransactionPartnerTab transaction={transaction} />,
+          rightPanel: (
+            <BankTransactionPartnerRightPanel transaction={transaction} />
           ),
         },
         {
@@ -741,54 +769,13 @@ export function BankTransactionDetailDrawer({
         actions={editMode ? editActions : viewActions}
         error={formError}
         loading={isLoading}
-        panelClassName="w-full md:w-[96vw] lg:w-[92vw] xl:w-[1400px] 2xl:w-[1500px]"
         tabs={resolvedDrawerTabs}
-        defaultTabKey="txn_details"
+        defaultTabKey={defaultTabKey || "txn_details"}
+        key={`${transactionId || ""}-${defaultTabKey || "txn_details"}`}
         rightPanel={
           transaction ? (
             <div className="space-y-4">
-              <DrawerSection title="THÔNG TIN CHUNG">
-                <div className="space-y-3 text-sm">
-                  <div>
-                    <div className="text-xs text-gray-500">Chi nhánh</div>
-                    <div className="font-medium break-words">
-                      {transactionInsights?.branchLabel || "—"}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-xs text-gray-500">Tài khoản nguồn</div>
-                    <div className="font-medium break-all">
-                      {transactionInsights?.sourceAccountLabel || "—"}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-xs text-gray-500">
-                      TK kế toán đối ứng
-                    </div>
-                    <div className="font-medium break-all">
-                      {transaction.correspondentAccountingAccountId || "—"}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-xs text-gray-500">Ngày giao dịch</div>
-                    <div className="font-medium">
-                      {formatGMT7(transaction.transDate, "date") || "—"}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-xs text-gray-500">Trạng thái</div>
-                    {isPosted ? (
-                      <span className="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-700">
-                        Đã hạch toán
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-1 text-xs font-semibold text-gray-600">
-                        Chưa hạch toán
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </DrawerSection>
+              <BankTransactionGeneralInfoSection transaction={transaction} />
 
               <ModuleEntityCustomFieldsSection
                 moduleKey="BANK_TXN"

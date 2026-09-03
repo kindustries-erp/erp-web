@@ -1,6 +1,12 @@
 import { create } from "zustand";
 import { getDefaultPageSize } from "@/shared/components/DataTable";
 
+export type OperationalStockTab =
+  | "ALL"
+  | "IN_STOCK"
+  | "OUT_OF_STOCK"
+  | "NEGATIVE";
+
 // ---------------------------------------------------------------------------
 // State shape
 // ---------------------------------------------------------------------------
@@ -11,6 +17,7 @@ interface OperationalListState {
   pageSize: number;
 
   // Filters
+  stockTab: OperationalStockTab;
   branchFilter: string;
   paymentStatusFilter: string;
   statusFilter: string;
@@ -40,6 +47,7 @@ interface OperationalListActions {
   setPage: (v: number) => void;
   setPageSize: (v: number) => void;
 
+  setStockTab: (v: OperationalStockTab) => void;
   setBranchFilter: (v: string) => void;
   setPaymentStatusFilter: (v: string) => void;
   setStatusFilter: (v: string) => void;
@@ -72,6 +80,7 @@ const defaultState = (): OperationalListState => ({
   search: "",
   page: 1,
   pageSize: getDefaultPageSize(),
+  stockTab: "ALL",
   branchFilter: "",
   paymentStatusFilter: "",
   statusFilter: "",
@@ -103,6 +112,7 @@ export const useOperationalListStore = create<
   setPage: (v) => set({ page: v }),
   setPageSize: (v) => set({ pageSize: v }),
 
+  setStockTab: (v) => set({ stockTab: v, page: 1 }),
   setBranchFilter: (v) => set({ branchFilter: v }),
   setPaymentStatusFilter: (v) => set({ paymentStatusFilter: v }),
   setStatusFilter: (v) => set({ statusFilter: v }),
@@ -158,6 +168,7 @@ export const useOperationalListStore = create<
     set({
       searchInput: "",
       search: "",
+      stockTab: "ALL",
       branchFilter: "",
       statusFilter: "",
       paymentStatusFilter: "",

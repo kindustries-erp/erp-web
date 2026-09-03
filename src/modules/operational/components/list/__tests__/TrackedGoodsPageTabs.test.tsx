@@ -198,7 +198,7 @@ describe("TrackedGoodsPage Header Page Tabs", () => {
     fireEvent.click(partsTab);
 
     expect(partsTab).toHaveAttribute("data-state", "active");
-    expect(window.location.search).not.toContain("tab=");
+    expect(window.location.search).toContain("tab=parts");
   });
 
   it("omits tabs when fixedTrackingPolicy is passed (legacy single-view mode)", () => {

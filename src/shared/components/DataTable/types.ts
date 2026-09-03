@@ -19,6 +19,51 @@ export enum TableColumnAlign {
   RIGHT = "right",
 }
 
+export enum ColumnValueType {
+  TEXT = "text",
+  NUMBER = "number",
+  DATE = "date",
+  STATUS = "status",
+  SELECT = "select",
+}
+
+export enum TextFilterOperator {
+  CONTAINS = "contains",
+  NOT_CONTAINS = "not_contains",
+  STARTS_WITH = "starts_with",
+  ENDS_WITH = "ends_with",
+  EQUALS = "equals",
+  NOT_EQUALS = "not_equals",
+  IS_EMPTY = "is_empty",
+  IS_NOT_EMPTY = "is_not_empty",
+}
+
+export enum NumberFilterOperator {
+  EQUALS = "eq",
+  NOT_EQUALS = "neq",
+  GREATER_THAN = "gt",
+  GREATER_THAN_OR_EQUAL = "gte",
+  LESS_THAN = "lt",
+  LESS_THAN_OR_EQUAL = "lte",
+  BETWEEN = "between",
+}
+
+export enum DateFilterOperator {
+  BETWEEN = "between",
+  EQUALS = "eq",
+  BEFORE = "before",
+  AFTER = "after",
+}
+
+export enum FilterChipCategory {
+  TEXT = "text",
+  MULTI_SELECT = "multi_select",
+  NUMERIC = "numeric",
+  DATE = "date",
+  SORT = "sort",
+  CUSTOM = "custom",
+}
+
 export type TableSortStateType = "asc" | "desc" | "none" | TableSortState;
 export type TableColumnAlignType =
   | "left"
@@ -31,7 +76,13 @@ export interface DataTableColumn<T> {
   header: ReactNode | ((props: any) => ReactNode);
   cell?: (item: T, index: number, meta: any) => ReactNode;
   dataIndex?: keyof T | string;
-  valueType?: "text" | "number" | "date" | "status";
+  valueType?:
+    | ColumnValueType
+    | "text"
+    | "number"
+    | "date"
+    | "status"
+    | "select";
   dateFormat?: string;
   className?: string;
   headerClassName?: string;
@@ -44,6 +95,9 @@ export interface DataTableColumn<T> {
   minSize?: number;
   maxSize?: number;
   enableResizing?: boolean;
+  currencySymbol?: string;
+  decimals?: number;
+  filterOptions?: { label: string; value: string }[];
 }
 
 export interface ActionsColumnConfig<T> {
@@ -72,6 +126,7 @@ export interface DataTableProps<T> {
   getRowKey?: (item: T) => string;
   tableMeta?: any;
   loading?: boolean;
+  isPending?: boolean;
   error?: string | null;
   emptyLabel: string;
   filters?: ReactNode;
@@ -157,4 +212,5 @@ export interface DataTableRowMemoProps<T> {
   enableRowSelection?: boolean;
   enableColumnResizing?: boolean;
   renderSubRow?: (record: T) => ReactNode;
+  visibleColumnsKey?: string;
 }

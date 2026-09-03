@@ -24,6 +24,11 @@ import {
   type InventoryMovementsPayload,
 } from "@/modules/inventory-core/api/inventoryCoreApi";
 import { InventoryStockLedgerSection } from "./InventoryStockLedgerSection";
+import { InventoryItemTrendChart } from "./InventoryItemTrendChart";
+import {
+  buildInventoryLedgerRows,
+  buildInventoryTrendData,
+} from "../utils/inventoryLedgerTransform";
 
 interface ItemForm {
   sku: string;
@@ -269,6 +274,16 @@ export function InventoryItemFormDrawer({
 
   const currentOnHand = movData?.currentOnHand ?? totalInQty - totalOutQty;
 
+  const ledgerRows = useMemo(
+    () => buildInventoryLedgerRows(allMovements),
+    [allMovements],
+  );
+
+  const trendData = useMemo(
+    () => buildInventoryTrendData(ledgerRows),
+    [ledgerRows],
+  );
+
   const mode: DrawerMode = viewOnly ? "view" : editing ? "edit" : "create";
   const drawerActions: DrawerAction[] = viewOnly
     ? [
@@ -458,6 +473,13 @@ export function InventoryItemFormDrawer({
                   </div>
                 </div>
               </DrawerSection>
+
+              {/* 2. Trend Chart */}
+              <InventoryItemTrendChart
+                trendData={trendData}
+                chartHeight={180}
+                uomName={uomName}
+              />
 
               {/* Notes if any */}
               {form.note && (

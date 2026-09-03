@@ -1,5 +1,11 @@
 import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent, act } from "@testing-library/react";
+import {
+  render,
+  screen,
+  fireEvent,
+  act,
+  waitFor,
+} from "@testing-library/react";
 import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
 import {
   DrawerAuditTimeline,
@@ -64,7 +70,7 @@ describe("StandardFormDrawer Related Deck & Horizon Divider", () => {
     expect(screen.getByText("Audit Log List Content")).toBeInTheDocument();
   });
 
-  it("switches tab content when clicking another tab pill", () => {
+  it("switches tab content when clicking another tab pill", async () => {
     const onTabChange = vi.fn();
     const mockTabs = [
       {
@@ -97,8 +103,10 @@ describe("StandardFormDrawer Related Deck & Horizon Divider", () => {
     // Click Tab 2
     fireEvent.click(screen.getByText("Tab Hai"));
 
-    expect(screen.queryByText("Content Tab 1")).not.toBeInTheDocument();
-    expect(screen.getByText("Content Tab 2")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.queryByText("Content Tab 1")).not.toBeInTheDocument();
+      expect(screen.getByText("Content Tab 2")).toBeInTheDocument();
+    });
     expect(onTabChange).toHaveBeenCalledWith("tab2");
   });
 

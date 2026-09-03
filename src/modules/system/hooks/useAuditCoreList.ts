@@ -135,11 +135,7 @@ export function useAuditCoreList(extraParams?: {
     let count = 0;
     Object.values(columnFilters).forEach((vals) => {
       if (vals && vals.length > 0) {
-        if (vals[0] === "__ALL_MATCHING__") {
-          count += 1;
-        } else {
-          count += vals.length;
-        }
+        count += 1;
       }
     });
     Object.values(columnSearch).forEach((val) => {

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { DrawerModal, DrawerSection, type DrawerAction } from "./DrawerModal";
 import { useT } from "@/core/i18n";
 import { ChevronRight, ChevronLeft, Maximize2, Minimize2 } from "lucide-react";
@@ -14,6 +14,7 @@ import {
   DrawerTopTabBar,
   type DrawerTopTabItem,
 } from "./drawer/DrawerTopTabBar";
+import { TabSlideTransition } from "./TabSlideTransition";
 
 export type { DrawerRelatedTabItem, DrawerTopTabItem };
 export * from "./drawer";
@@ -155,12 +156,6 @@ export interface StandardFormDrawerProps {
   /** Callback khi người dùng chuyển đổi tab liên quan */
   onRelatedTabChange?: (tabKey: string) => void;
 
-  /** Bật ô tìm kiếm nhanh trên thanh Horizon Divider */
-  enableRelatedSearch?: boolean;
-
-  /** Callback khi thay đổi từ khóa tìm kiếm */
-  onRelatedSearchChange?: (query: string) => void;
-
   /** ClassName bổ sung cho card container của Related Deck */
   deckCardClassName?: string;
 }
@@ -209,8 +204,6 @@ export function StandardFormDrawer({
   bottomPanel,
   bottomPanelTitle,
   onRelatedTabChange,
-  enableRelatedSearch = false,
-  onRelatedSearchChange,
   deckCardClassName,
 }: StandardFormDrawerProps) {
   const t = useT();
@@ -257,7 +250,16 @@ export function StandardFormDrawer({
     return tabs && tabs.length > 0 ? tabs[0].key : "";
   });
 
-  const currentTab = activeTabKey !== undefined ? activeTabKey : internalTabKey;
+  const effectiveTabKey = useMemo(() => {
+    if (activeTabKey !== undefined) return activeTabKey;
+    if (internalTabKey && tabs?.some((t) => t.key === internalTabKey)) {
+      return internalTabKey;
+    }
+    if (defaultTabKey && tabs?.some((t) => t.key === defaultTabKey)) {
+      return defaultTabKey;
+    }
+    return tabs && tabs.length > 0 ? tabs[0].key : "";
+  }, [activeTabKey, internalTabKey, defaultTabKey, tabs]);
 
   const prevOpenRef = useRef(open);
   useEffect(() => {
@@ -283,6 +285,18 @@ export function StandardFormDrawer({
   ]);
 
   useEffect(() => {
+    if (tabs && tabs.length > 0) {
+      if (!internalTabKey || !tabs.some((t) => t.key === internalTabKey)) {
+        const fallback =
+          defaultTabKey && tabs.some((t) => t.key === defaultTabKey)
+            ? defaultTabKey
+            : tabs[0].key;
+        setInternalTabKey(fallback);
+      }
+    }
+  }, [tabs, defaultTabKey, internalTabKey]);
+
+  useEffect(() => {
     if (activeTabKey !== undefined) {
       setInternalTabKey(activeTabKey);
     }
@@ -293,10 +307,23 @@ export function StandardFormDrawer({
     onTabChange?.(key);
   };
 
-  const activeTopTab = tabs?.find((t) => t.key === currentTab) || tabs?.[0];
+  const activeTopTab =
+    tabs?.find((t) => t.key === effectiveTabKey) || tabs?.[0];
   const effectiveHideRightPanel =
     hideRightPanel || (activeTopTab?.hideRightPanel ?? false);
   const effectiveLeftContent = activeTopTab ? activeTopTab.content : leftPanel;
+  const renderedLeftContent =
+    tabs && tabs.length > 0 ? (
+      <TabSlideTransition
+        activeKey={effectiveTabKey}
+        tabKeys={tabs.map((t) => t.key)}
+        className="w-full flex-1 min-h-0"
+      >
+        {effectiveLeftContent}
+      </TabSlideTransition>
+    ) : (
+      effectiveLeftContent
+    );
   const effectiveRightPanel =
     activeTopTab?.rightPanel !== undefined
       ? activeTopTab.rightPanel
@@ -395,7 +422,7 @@ export function StandardFormDrawer({
       {tabs && tabs.length > 0 && (
         <DrawerTopTabBar
           tabs={tabs}
-          activeTabKey={currentTab}
+          activeTabKey={effectiveTabKey}
           onTabChange={handleTabChange}
           extra={tabBarExtra}
           className={tabBarClassName}
@@ -412,7 +439,7 @@ export function StandardFormDrawer({
       ) : layout === "1-column" ? (
         // 1-column: render raw content — caller uses DrawerSection/DrawerField directly
         <div className="w-full h-auto flex flex-col flex-1 min-h-0">
-          {effectiveLeftContent}
+          {renderedLeftContent}
         </div>
       ) : (
         <div
@@ -423,7 +450,7 @@ export function StandardFormDrawer({
         >
           {/* Cột trái: Chi tiết / Main Content / Tab Content */}
           <div className="flex-1 min-w-0 w-full order-2 lg:order-1 space-y-4">
-            {effectiveLeftContent}
+            {renderedLeftContent}
           </div>
 
           {/* Cột phải: Thông tin chung / Metadata */}
@@ -499,8 +526,6 @@ export function StandardFormDrawer({
           customContent={bottomPanel}
           customTitle={bottomPanelTitle}
           onTabChange={onRelatedTabChange}
-          enableSearch={enableRelatedSearch}
-          onSearchChange={onRelatedSearchChange}
           cardClassName={deckCardClassName}
         />
       )}
