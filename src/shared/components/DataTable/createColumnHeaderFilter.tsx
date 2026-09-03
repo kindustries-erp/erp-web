@@ -768,6 +768,13 @@ export function filterClientItems<T extends Record<string, any>>(
           const strVal =
             rawVal !== undefined && rawVal !== null ? String(rawVal) : "";
 
+          if (selected.includes("__ALL_MATCHING__")) {
+            const searchPart = selected[1]
+              ? String(selected[1]).toLowerCase().trim()
+              : "";
+            if (!searchPart) return true;
+            return strVal.toLowerCase().includes(searchPart);
+          }
           if (selected.includes("__BLANK__") && (!strVal || strVal === "")) {
             return true;
           }

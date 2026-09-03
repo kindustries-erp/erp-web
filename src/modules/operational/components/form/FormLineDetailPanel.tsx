@@ -111,6 +111,8 @@ export function FormLineDetailPanel({
           itemName: l.item_name || l.description || "",
           itemType: l.line_type || "PART",
           costPrice: Number(l.unit_price || 0),
+          qty: Number(l.qty || 1),
+          uom: l.uom || (l as any).unit || "",
         })),
     [lines],
   );
@@ -579,6 +581,7 @@ export function FormLineDetailPanel({
                 ? i.uom?.name || i.uom?.code || ""
                 : i.uom || "",
             costPrice: (i as any).costPrice ?? (i as any).avgUnitCost,
+            qty: (i as any).qty,
           }));
           syncItemsFromPicker(mapped, variant);
         }}

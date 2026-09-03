@@ -130,6 +130,7 @@ interface OperationalFormActions {
       itemType?: string;
       uom?: string;
       costPrice?: number;
+      qty?: number;
     }>,
     variant: FormVariant,
   ) => void;
@@ -311,22 +312,39 @@ export const useOperationalFormStore = create<
 
       const syncedInventoryLines: LineDraft[] = items.map((item) => {
         const existingLine = existingInventoryLineMap.get(item.id);
+        const itemQtyStr =
+          item.qty !== undefined &&
+          item.qty !== null &&
+          !isNaN(Number(item.qty)) &&
+          Number(item.qty) > 0
+            ? String(item.qty)
+            : undefined;
+
         if (existingLine) {
+          const finalQty = itemQtyStr ?? existingLine.qty;
+          const unitPrice = Number(existingLine.unit_price || 0);
           return {
             ...existingLine,
             item_code: item.sku || existingLine.item_code || "",
             item_name: item.itemName || existingLine.item_name || "",
+            qty: finalQty,
+            amount: String(Number(finalQty || 0) * unitPrice),
+            uom: item.uom || existingLine.uom || "",
           };
         }
+
+        const initialQty = itemQtyStr ?? "1";
+        const unitPrice = item.costPrice ? String(item.costPrice) : "0";
         return {
           tempId: newTempId(),
           item_code: item.sku || "",
           item_name: item.itemName || "",
           description: "",
-          qty: "1",
-          unit_price: item.costPrice ? String(item.costPrice) : "0",
-          amount: item.costPrice ? String(item.costPrice) : "0",
+          qty: initialQty,
+          unit_price: unitPrice,
+          amount: String(Number(initialQty) * Number(unitPrice)),
           notes: "",
+          uom: item.uom || "",
           line_type:
             item.itemType === "GOODS" || item.itemType === "PRODUCT"
               ? "PRODUCT"

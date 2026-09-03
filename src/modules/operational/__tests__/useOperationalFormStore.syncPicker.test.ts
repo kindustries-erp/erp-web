@@ -149,4 +149,57 @@ describe("useOperationalFormStore - syncItemsFromPicker & clearAllLines", () => 
     expect(lines[0].inventory_item_id).toBe("item-2");
     expect(lines[0].qty).toBe("3");
   });
+
+  it("should update qty and calculate amount when items have custom qty from picker", () => {
+    const store = useOperationalFormStore.getState();
+
+    store.setLines([
+      {
+        tempId: "inv-1",
+        item_code: "PART-1",
+        item_name: "Linh kiện A",
+        description: "",
+        qty: "2",
+        unit_price: "100000",
+        amount: "200000",
+        notes: "",
+        line_type: "PART",
+        inventory_item_id: "item-1",
+      },
+    ]);
+
+    // Picker passes custom qty: 10 for existing item-1, and 4 for new item-2
+    useOperationalFormStore.getState().syncItemsFromPicker(
+      [
+        {
+          id: "item-1",
+          sku: "PART-1",
+          itemName: "Linh kiện A",
+          itemType: "PART",
+          qty: 10,
+        },
+        {
+          id: "item-2",
+          sku: "PART-2",
+          itemName: "Linh kiện B",
+          itemType: "PART",
+          costPrice: 50000,
+          qty: 4,
+        },
+      ],
+      "purchase",
+    );
+
+    const lines = useOperationalFormStore.getState().lines;
+    expect(lines.length).toBe(2);
+
+    const item1 = lines.find((l) => l.inventory_item_id === "item-1");
+    expect(item1?.qty).toBe("10");
+    expect(item1?.amount).toBe("1000000"); // 10 * 100000
+
+    const item2 = lines.find((l) => l.inventory_item_id === "item-2");
+    expect(item2?.qty).toBe("4");
+    expect(item2?.unit_price).toBe("50000");
+    expect(item2?.amount).toBe("200000"); // 4 * 50000
+  });
 });

@@ -479,12 +479,14 @@ export function PurchaseOrderDrawer({
               : t("Tạo mới Đơn mua hàng")
         }
         titleExtra={
-          <Badge
-            variant={statusBadgeMeta.variant}
-            className={`border ${statusBadgeMeta.className} text-[11px]`}
-          >
-            {statusBadgeMeta.label}
-          </Badge>
+          editing ? (
+            <Badge
+              variant={statusBadgeMeta.variant}
+              className={`border ${statusBadgeMeta.className} text-[11px]`}
+            >
+              {statusBadgeMeta.label}
+            </Badge>
+          ) : undefined
         }
         subtitle={
           editing
