@@ -1,7 +1,9 @@
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import {
   StandardFormDrawer,
+  DrawerAuditTimeline,
   type DrawerTopTabItem,
+  type DrawerAuditLogItem,
 } from "@/shared/components/StandardFormDrawer";
 import type { DrawerMode } from "@/shared/stores/useDrawerStore";
 import { useT } from "@/core/i18n";
@@ -12,7 +14,23 @@ import { FormLineDetailPanel } from "@/modules/operational/components/form/FormL
 import { FormGeneralInfoPanel } from "@/modules/operational/components/form/FormGeneralInfoPanel";
 import { PurchaseLinkedDocuments } from "@/modules/operational/components/PurchaseLinkedDocuments";
 import { ActionDropdown } from "@/shared/components/ActionDropdown";
-import { FileSpreadsheet, ChevronDown, FileText, Link2 } from "lucide-react";
+import {
+  FileSpreadsheet,
+  ChevronDown,
+  FileText,
+  Building2,
+  Wallet,
+  Link2,
+  Paperclip,
+  History,
+} from "lucide-react";
+import { Badge } from "@/shared/components/ui/badge";
+import {
+  PurchaseOrderPartnerTab,
+  PurchaseOrderPartnerRightPanel,
+} from "./PurchaseOrderPartnerTab";
+import { PurchaseOrderFinancialsTab } from "./PurchaseOrderFinancialsTab";
+import { PurchaseOrderAttachmentsTab } from "./PurchaseOrderAttachmentsTab";
 
 export interface PurchaseOrderDrawerProps {
   open: boolean;
@@ -28,6 +46,53 @@ export interface PurchaseOrderDrawerProps {
   pendingTagIds?: string[];
   onPendingTagsChange?: (ids: string[]) => void;
   isAdminEmail?: boolean;
+  activeTabKey?: string;
+  defaultTabKey?: string;
+  onTabChange?: (tabKey: string) => void;
+  partnerViewMode?: "orders" | "lines";
+}
+
+function formatPoStatus(status?: string | null) {
+  switch (status) {
+    case "DRAFT":
+      return {
+        label: "Nháp",
+        variant: "secondary" as const,
+        className: "bg-amber-50 text-amber-700 border-amber-200",
+      };
+    case "APPROVED":
+    case "CONFIRMED":
+      return {
+        label: "Đã xác nhận",
+        variant: "default" as const,
+        className: "bg-blue-50 text-blue-700 border-blue-200",
+      };
+    case "PARTIAL_RECEIVED":
+      return {
+        label: "Nhập một phần",
+        variant: "default" as const,
+        className: "bg-indigo-50 text-indigo-700 border-indigo-200",
+      };
+    case "RECEIVED":
+    case "FULLY_RECEIVED":
+      return {
+        label: "Đã nhập đủ",
+        variant: "default" as const,
+        className: "bg-emerald-50 text-emerald-700 border-emerald-200",
+      };
+    case "CANCELLED":
+      return {
+        label: "Đã hủy",
+        variant: "destructive" as const,
+        className: "bg-rose-50 text-rose-700 border-rose-200",
+      };
+    default:
+      return {
+        label: status || "—",
+        variant: "outline" as const,
+        className: "",
+      };
+  }
 }
 
 export function PurchaseOrderDrawer({
@@ -43,8 +108,29 @@ export function PurchaseOrderDrawer({
   pendingTagIds = [],
   onPendingTagsChange,
   isAdminEmail,
+  activeTabKey: controlledActiveTabKey,
+  defaultTabKey = "po_details",
+  onTabChange,
+  partnerViewMode = "orders",
 }: PurchaseOrderDrawerProps) {
   const t = useT();
+  const [internalTabKey, setInternalTabKey] = useState<string>(defaultTabKey);
+
+  const currentTabKey = controlledActiveTabKey || internalTabKey;
+
+  useEffect(() => {
+    if (controlledActiveTabKey) {
+      setInternalTabKey(controlledActiveTabKey);
+    } else if (open) {
+      setInternalTabKey(defaultTabKey);
+    }
+  }, [controlledActiveTabKey, open, defaultTabKey]);
+
+  const handleTabChange = (key: string) => {
+    setInternalTabKey(key);
+    onTabChange?.(key);
+  };
+
   const drawerState = usePurchaseOrderDrawer({
     open,
     editing,
@@ -80,8 +166,70 @@ export function PurchaseOrderDrawer({
     return receiptsCount + pendingCount;
   }, [poReceipts, pendingDocumentChanges]);
 
+  // Build Audit Logs for PO
+  const auditLogs: DrawerAuditLogItem[] = useMemo(() => {
+    if (!editing) return [];
+    const items: DrawerAuditLogItem[] = [];
+
+    const orderDateStr = editing.document_date || (editing as any).orderDate;
+    if (orderDateStr) {
+      items.push({
+        id: "created",
+        actionType: "CREATE",
+        actionLabel: t("Tạo đơn mua hàng"),
+        timestamp: orderDateStr,
+        message: `${t("Đơn mua hàng số")} ${docNo || editing.id}`,
+      });
+    }
+
+    if (status === "CONFIRMED" || status === "APPROVED") {
+      items.push({
+        id: "approved",
+        actionType: "APPROVE",
+        actionLabel: t("Duyệt & Xác nhận đơn hàng"),
+        timestamp: editing.document_date || new Date().toISOString(),
+        message: t("Đơn hàng đã được phê duyệt và gửi tới Nhà cung cấp."),
+      });
+    }
+
+    if (poReceipts && poReceipts.length > 0) {
+      poReceipts.forEach((rc, idx) => {
+        items.push({
+          id: `receipt-${rc.id || idx}`,
+          actionType: "SYNC",
+          actionLabel: `${t("Nhập kho đợt")} #${idx + 1} (${rc.receiptNo || "GR"})`,
+          timestamp: rc.receiptDate || rc.createdAt || new Date().toISOString(),
+          message:
+            rc.remarks ||
+            `${t("Đã nhập kho")} ${rc.lines?.length || 0} ${t("dòng hàng")}`,
+        });
+      });
+    }
+
+    if (status === "CANCELLED") {
+      items.push({
+        id: "cancelled",
+        actionType: "REVERT",
+        actionLabel: t("Hủy đơn mua hàng"),
+        timestamp: new Date().toISOString(),
+        message: t("Đơn hàng đã được đánh dấu hủy."),
+      });
+    }
+
+    return items;
+  }, [editing, docNo, status, poReceipts, t]);
+
+  const supplierId =
+    (editing as any)?.supplierId || (editing as any)?.supplier_id || null;
+
+  const supplierName =
+    (editing as any)?.supplierName ||
+    (editing as any)?.supplier_name_snapshot ||
+    null;
+
   const drawerTabs: DrawerTopTabItem[] = useMemo(
     () => [
+      // 1. Tab Chi tiết đơn hàng
       {
         key: "po_details",
         label: t("Chi tiết đơn hàng"),
@@ -99,11 +247,40 @@ export function PurchaseOrderDrawer({
           />
         ),
       },
+      // 2. Tab Chi tiết theo đối tượng (Nhà cung cấp)
+      {
+        key: "partner",
+        label: t("Chi tiết theo đối tượng"),
+        icon: <Building2 className="w-3.5 h-3.5" />,
+        content: (
+          <PurchaseOrderPartnerTab
+            purchaseOrder={editing}
+            supplierId={supplierId}
+            supplierName={supplierName}
+            defaultViewMode={partnerViewMode}
+          />
+        ),
+        rightPanel: (
+          <PurchaseOrderPartnerRightPanel
+            purchaseOrder={editing}
+            supplierId={supplierId}
+          />
+        ),
+      },
+      // 3. Tab Tài chính & Thanh toán
+      {
+        key: "financials",
+        label: t("Tài chính & Thanh toán"),
+        icon: <Wallet className="w-3.5 h-3.5" />,
+        content: <PurchaseOrderFinancialsTab purchaseOrder={editing} />,
+      },
+      // 4. Tab Chứng từ liên kết (Traceability Graph / Full Width)
       {
         key: "linked_docs",
         label: t("Chứng từ liên kết"),
         icon: <Link2 className="w-3.5 h-3.5" />,
         badgeCount: linkedCount,
+        hideRightPanel: true,
         content: (
           <div className="space-y-4">
             <PurchaseLinkedDocuments
@@ -117,6 +294,26 @@ export function PurchaseOrderDrawer({
           </div>
         ),
       },
+      // 5. Tab Tài liệu đính kèm
+      {
+        key: "attachments",
+        label: t("Tài liệu đính kèm"),
+        icon: <Paperclip className="w-3.5 h-3.5" />,
+        content: (
+          <PurchaseOrderAttachmentsTab
+            purchaseOrder={editing}
+            editMode={!viewOnly}
+          />
+        ),
+      },
+      // 6. Tab Lịch sử & Kiểm duyệt
+      {
+        key: "history",
+        label: t("Lịch sử & Kiểm duyệt"),
+        icon: <History className="w-3.5 h-3.5" />,
+        badgeCount: auditLogs.length,
+        content: <DrawerAuditTimeline items={auditLogs} />,
+      },
     ],
     [
       t,
@@ -127,12 +324,16 @@ export function PurchaseOrderDrawer({
       onItemSearch,
       onScrollBottomItems,
       loadingItems,
+      editing,
+      supplierId,
+      supplierName,
+      partnerViewMode,
       linkedCount,
       poReceipts,
       pendingDocumentChanges,
       fieldSet,
-      editing?.id,
       open,
+      auditLogs,
     ],
   );
 
@@ -223,6 +424,8 @@ export function PurchaseOrderDrawer({
 
   const mode: DrawerMode = viewOnly ? "view" : editing ? "edit" : "create";
 
+  const statusBadgeMeta = formatPoStatus(status);
+
   return (
     <StandardFormDrawer
       open={open}
@@ -235,7 +438,9 @@ export function PurchaseOrderDrawer({
       onToggleEdit={onToggleEdit}
       footerLeft={footerLeft}
       tabs={drawerTabs}
-      defaultTabKey="po_details"
+      activeTabKey={currentTabKey}
+      defaultTabKey={defaultTabKey}
+      onTabChange={handleTabChange}
       title={
         viewOnly
           ? t("Chi tiết Đơn mua hàng")
@@ -244,11 +449,12 @@ export function PurchaseOrderDrawer({
             : t("Tạo mới Đơn mua hàng")
       }
       titleExtra={
-        status === "DRAFT" && (
-          <span className="rounded-md bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-800 border border-amber-200">
-            {t("Nháp")}
-          </span>
-        )
+        <Badge
+          variant={statusBadgeMeta.variant}
+          className={`border ${statusBadgeMeta.className} text-[11px]`}
+        >
+          {statusBadgeMeta.label}
+        </Badge>
       }
       subtitle={
         editing

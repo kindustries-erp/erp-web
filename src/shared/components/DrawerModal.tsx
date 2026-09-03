@@ -417,7 +417,7 @@ export function DrawerSection({
         "mb-3 rounded-xl border border-border/80 p-3 shadow-[0_2px_8px_-1px_rgba(0,0,0,0.06),0_1px_4px_-1px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_8px_-1px_rgba(0,0,0,0.3)] transition-all duration-200",
         isFitHeight && !isCollapsed && cn("flex flex-col", heightClass),
         className,
-        isCollapsed && "h-auto !flex-none !min-h-0 !flex-initial",
+        isCollapsed && "!h-auto !flex-none !min-h-0 !flex-initial",
       )}
       style={{
         background: "var(--drawer-section-bg, rgba(255,255,255,0.65))",
@@ -468,7 +468,7 @@ export function DrawerSection({
           className={cn(
             "overflow-hidden min-h-0",
             isFitHeight && !isCollapsed && "flex-1 overflow-y-auto pr-1",
-            bodyClassName,
+            !isCollapsed && bodyClassName,
           )}
         >
           {children}

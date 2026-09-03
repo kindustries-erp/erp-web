@@ -49,6 +49,48 @@ export interface ErpPurchaseOrder {
   lines?: ErpPoLine[];
 }
 
+export interface ErpPoItemRow {
+  id: string;
+  purchaseOrderId: string;
+  poNo: string;
+  orderDate: string | null;
+  expectedDate: string | null;
+  supplierId: string | null;
+  supplierName: string;
+  itemId: string | null;
+  itemCode: string | null;
+  itemName: string;
+  description: string | null;
+  qtyOrdered: string;
+  qtyReceived: string;
+  unitPrice: string | null;
+  amount: string | null;
+  lineNo: number;
+  status: string;
+}
+
+export interface QueryPurchaseOrderItemsParams extends ListParams {
+  supplier_id?: string;
+  purchase_order_id?: string;
+  status?: string;
+  date_from?: string;
+  date_to?: string;
+  column_filters?: string;
+  column_search?: string;
+  sort_by?: string;
+  sort_order?: "ASC" | "DESC" | "asc" | "desc";
+}
+
+export interface PoSupplierStats {
+  supplierId: string;
+  totalOrders: number;
+  totalSpend: number;
+  totalReceivedAmount: number;
+  pendingAmount: number;
+  completionRate: number;
+  lastOrderDate: string | null;
+}
+
 export interface CreatePoPayload {
   poNo?: string;
   supplierId?: string;
@@ -175,5 +217,51 @@ export const purchaseOrdersCoreApi = {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+  },
+  getItemsList: async (
+    params?: QueryPurchaseOrderItemsParams,
+  ): Promise<PaginatedResponse<ErpPoItemRow>> => {
+    const { page, pageSize, search, ...rest } = params || {};
+    const { data } = await axiosInstance.get<PaginatedResponse<ErpPoItemRow>>(
+      `${BASE}/items`,
+      {
+        params: {
+          page: page ?? 1,
+          pageSize: pageSize ?? 20,
+          ...(search ? { search } : {}),
+          ...rest,
+        },
+      },
+    );
+    return data;
+  },
+  getItemsColumnOptions: async (
+    column: string,
+    search?: string,
+    page: number = 1,
+    pageSize: number = 20,
+    filtersStr?: string,
+    supplierId?: string,
+  ): Promise<PaginatedResponse<string>> => {
+    const { data } = await axiosInstance.get<PaginatedResponse<string>>(
+      `${BASE}/items/column-options`,
+      {
+        params: {
+          column,
+          search: search || undefined,
+          page,
+          pageSize,
+          filters: filtersStr,
+          supplier_id: supplierId || undefined,
+        },
+      },
+    );
+    return data;
+  },
+  getSupplierStats: async (supplierId: string): Promise<PoSupplierStats> => {
+    const { data } = await axiosInstance.get<PoSupplierStats>(
+      `${BASE}/supplier-stats/${supplierId}`,
+    );
+    return data;
   },
 };
