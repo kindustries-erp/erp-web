@@ -491,6 +491,8 @@ export function DataTable<T>({
                             key={rowKey}
                             row={row}
                             rowKey={rowKey}
+                            tableColumns={tableColumns}
+                            tableMeta={tableMeta}
                             visibleColumnsKey={visibleColumnsKey}
                             isExpanded={isExpanded}
                             isContextMenuActive={isContextMenuActive}

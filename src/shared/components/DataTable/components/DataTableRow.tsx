@@ -135,6 +135,8 @@ export function DataTableRowInner<T>({
 
 export const DataTableRowMemo = React.memo(DataTableRowInner, (prev, next) => {
   if (
+    prev.tableColumns !== next.tableColumns ||
+    prev.tableMeta !== next.tableMeta ||
     prev.visibleColumnsKey !== next.visibleColumnsKey ||
     prev.row.original !== next.row.original ||
     prev.isSelected !== next.isSelected ||

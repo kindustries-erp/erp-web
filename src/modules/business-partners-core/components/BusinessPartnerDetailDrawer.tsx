@@ -51,6 +51,8 @@ export interface BusinessPartnerDetailDrawerProps {
   partnerId: string | null;
   partnerType: "CUSTOMER" | "VENDOR" | string;
   onSaved?: () => void;
+  onSuccess?: (partner: ErpBusinessPartner) => void;
+  zIndex?: number;
 }
 
 export function BusinessPartnerDetailDrawer({
@@ -61,6 +63,8 @@ export function BusinessPartnerDetailDrawer({
   partnerId,
   partnerType,
   onSaved,
+  onSuccess,
+  zIndex,
 }: BusinessPartnerDetailDrawerProps) {
   const { t } = useTranslation("doitac");
   const showToast = useUIStore((s) => s.showToast);
@@ -161,20 +165,24 @@ export function BusinessPartnerDetailDrawer({
         ...(form.notes.trim() ? { notes: form.notes.trim() } : {}),
       };
 
+      let savedPartner: ErpBusinessPartner | undefined;
       if (partnerId) {
-        await businessPartnersCoreApi.update(partnerId, payload);
+        savedPartner = await businessPartnersCoreApi.update(partnerId, payload);
         showToast({
           title: t("Đã cập nhật thành công", "Đã cập nhật thành công"),
           variant: "success",
         });
       } else {
-        await businessPartnersCoreApi.create(payload);
+        savedPartner = await businessPartnersCoreApi.create(payload);
         showToast({
           title: t("Đã tạo mới thành công", "Đã tạo mới thành công"),
           variant: "success",
         });
       }
 
+      if (savedPartner) {
+        onSuccess?.(savedPartner);
+      }
       onSaved?.();
       onClose();
     } catch (err) {
@@ -208,6 +216,7 @@ export function BusinessPartnerDetailDrawer({
       onToggleEdit={!isCreating && isView ? () => setMode("edit") : undefined}
       title={title}
       subtitle={subtitle}
+      zIndex={zIndex}
       titleExtra={
         !isCreating ? (
           <StatusBadge

@@ -58,11 +58,12 @@ const LineColumnHeaderFilter = ({
 interface FormLineDetailPanelProps {
   variant: FormVariant;
   isPurchaseLocked: boolean;
+  hasLinkedReceipts?: boolean;
   purchaseFieldLocked: (
     field: "description" | "qty" | "expectedDate" | "status" | "poNo",
   ) => boolean;
   viewOnly?: boolean;
-  purchaseInventoryOptions: Array<{
+  purchaseInventoryOptions?: Array<{
     value: string;
     label: string;
     sku: string;
@@ -79,20 +80,38 @@ interface FormLineDetailPanelProps {
 export function FormLineDetailPanel({
   variant,
   isPurchaseLocked,
+  hasLinkedReceipts = false,
   purchaseFieldLocked,
   viewOnly,
-  purchaseInventoryOptions = [],
-  onItemSearch,
-  onScrollBottomItems,
-  loadingItems,
 }: FormLineDetailPanelProps) {
   const t = useT();
   const [pickerOpen, setPickerOpen] = useState(false);
-  const { lines, setLine, setLines, addLine, addItemsBulk, removeLine } =
-    useOperationalFormStore();
+  const {
+    lines,
+    setLine,
+    setLines,
+    addLine,
+    syncItemsFromPicker,
+    clearAllLines,
+    removeLine,
+  } = useOperationalFormStore();
 
   const existingItemIds = useMemo(
     () => lines.map((l) => l.inventory_item_id).filter(Boolean),
+    [lines],
+  );
+
+  const preSelectedItems = useMemo(
+    () =>
+      lines
+        .filter((l) => Boolean(l.inventory_item_id))
+        .map((l) => ({
+          id: l.inventory_item_id as string,
+          sku: l.item_code,
+          itemName: l.item_name || l.description || "",
+          itemType: l.line_type || "PART",
+          costPrice: Number(l.unit_price || 0),
+        })),
     [lines],
   );
 
@@ -159,7 +178,7 @@ export function FormLineDetailPanel({
         key: "item_name",
         header:
           variant === "purchase"
-            ? makeFilterHeader("itemName", t("Linh kiện / Tên hàng"), {
+            ? makeFilterHeader("itemName", t("Nội dung / Mặt hàng"), {
                 queryPrefix: "item_name",
               })
             : t("Linh kiện / Tên hàng"),
@@ -169,53 +188,27 @@ export function FormLineDetailPanel({
         headerClassName: "w-[220px] min-w-[180px]",
         className: "w-[220px] min-w-[180px] align-middle p-0",
         cell: (line: LineDraft) => {
+          const isItemLocked =
+            isPurchaseLocked ||
+            (Boolean(hasLinkedReceipts) && Boolean(line.inventory_item_id));
           const text = line.item_name || line.description || "—";
+
           return variant === "purchase" ? (
-            viewOnly ? (
+            viewOnly || isItemLocked ? (
               <Tooltip content={text}>
-                <div className="font-medium px-3 py-2 block truncate w-full cursor-pointer">
+                <div className="font-medium px-3 py-2 block truncate w-full cursor-pointer text-foreground/90">
                   {text}
                 </div>
               </Tooltip>
             ) : (
-              <Combobox
-                variant="spreadsheet"
-                options={purchaseInventoryOptions}
-                value={line.inventory_item_id}
-                readOnly={isPurchaseLocked}
-                className="border-0 shadow-none ring-0 focus:ring-0 focus:outline-none rounded-none bg-transparent hover:bg-slate-50/80 focus:bg-white"
-                onSearch={onItemSearch}
-                onScrollBottom={onScrollBottomItems}
-                loading={loadingItems}
-                onChange={(v) => {
-                  const selected = purchaseInventoryOptions.find(
-                    (item) => item.value === (v || ""),
-                  );
-                  setLines(
-                    lines.map((draft) =>
-                      draft.tempId !== line.tempId
-                        ? draft
-                        : {
-                            ...draft,
-                            inventory_item_id: v || "",
-                            item_code: selected?.sku || "",
-                            item_name: selected?.itemName || "",
-                            description: selected
-                              ? selected.note || ""
-                              : draft.description,
-                            line_type: selected
-                              ? selected.itemType === "GOODS"
-                                ? "PRODUCT"
-                                : "PART"
-                              : draft.line_type,
-                          },
-                    ),
-                  );
-                }}
-                placeholder={t("Chọn linh kiện từ danh mục")}
-                searchPlaceholder={t("Tìm SKU / tên linh kiện...")}
-                emptyLabel={t("Không có linh kiện phù hợp")}
-                allowClear={false}
+              <CellInput
+                className={cn(
+                  "w-full h-full min-h-[38px] bg-transparent border-0 focus:ring-1 focus:ring-emerald-500 outline-none hover:bg-slate-50 focus:bg-white px-3 transition-all placeholder:text-muted-foreground/50 font-medium",
+                )}
+                placeholder={t("Nhập tên mặt hàng / chi phí / dịch vụ...")}
+                value={line.item_name}
+                disabled={isItemLocked}
+                onValueChange={(v) => setLine(line.tempId, "item_name", v)}
               />
             )
           ) : viewOnly ? (
@@ -273,14 +266,25 @@ export function FormLineDetailPanel({
               size: 150,
               enableResizing: true,
               headerClassName: "w-[150px] min-w-[140px]",
-              className: "w-[150px] min-w-[140px] align-middle px-3",
-              cell: (line: LineDraft) => (
-                <TableText
-                  text={line.item_code || "—"}
-                  enableCopy={Boolean(line.item_code)}
-                  textClassName="font-mono text-xs text-foreground font-medium"
-                />
-              ),
+              className: "w-[150px] min-w-[140px] align-middle p-0",
+              cell: (line: LineDraft) => {
+                const isInventoryLine = Boolean(line.inventory_item_id);
+
+                return (
+                  <div className="px-3 py-2">
+                    <TableText
+                      text={line.item_code || "—"}
+                      enableCopy={Boolean(line.item_code)}
+                      textClassName={cn(
+                        "font-mono text-xs font-medium",
+                        !isInventoryLine
+                          ? "text-muted-foreground/40"
+                          : "text-foreground/90",
+                      )}
+                    />
+                  </div>
+                );
+              },
             },
           ]
         : []),
@@ -294,9 +298,14 @@ export function FormLineDetailPanel({
         enableResizing: true,
         headerClassName: "text-right w-[140px] min-w-[140px]",
         className: "text-right w-[140px] min-w-[140px] align-middle p-0",
-        cell: (line: LineDraft) =>
-          viewOnly ? (
-            <span className="inline-block w-full text-right text-sm tabular-nums px-3 py-2">
+        cell: (line: LineDraft) => {
+          const isItemLocked =
+            isPurchaseLocked ||
+            (Boolean(hasLinkedReceipts) && Boolean(line.inventory_item_id));
+          const isQtyLocked = isItemLocked || purchaseFieldLocked("qty");
+
+          return viewOnly || isQtyLocked ? (
+            <span className="inline-block w-full text-right text-sm tabular-nums px-3 py-2 font-medium text-foreground/90">
               {Number(line.qty || 0).toLocaleString("vi-VN")}
             </span>
           ) : (
@@ -308,10 +317,11 @@ export function FormLineDetailPanel({
                 "w-full h-full min-h-[38px] text-right bg-transparent border-0 focus:ring-1 focus:ring-emerald-500 outline-none hover:bg-slate-50 focus:bg-white px-3 transition-all font-medium text-emerald-700",
               )}
               value={line.qty}
-              disabled={purchaseFieldLocked("qty")}
+              disabled={isQtyLocked}
               onValueChange={(v) => setLine(line.tempId, "qty", v)}
             />
-          ),
+          );
+        },
       },
       {
         key: "unit_price",
@@ -323,9 +333,13 @@ export function FormLineDetailPanel({
         enableResizing: true,
         headerClassName: "text-right w-[180px] min-w-[180px]",
         className: "text-right w-[180px] min-w-[180px] align-middle p-0",
-        cell: (line: LineDraft) =>
-          viewOnly ? (
-            <span className="inline-block w-full text-right font-semibold tabular-nums px-3 py-2">
+        cell: (line: LineDraft) => {
+          const isItemLocked =
+            isPurchaseLocked ||
+            (Boolean(hasLinkedReceipts) && Boolean(line.inventory_item_id));
+
+          return viewOnly || isItemLocked ? (
+            <span className="inline-block w-full text-right font-semibold tabular-nums px-3 py-2 text-foreground/90">
               {Number(line.unit_price || 0).toLocaleString("vi-VN")}
             </span>
           ) : (
@@ -337,10 +351,11 @@ export function FormLineDetailPanel({
                 "w-full h-full min-h-[38px] text-right bg-transparent border-0 focus:ring-1 focus:ring-emerald-500 outline-none hover:bg-slate-50 focus:bg-white px-3 transition-all font-medium",
               )}
               value={line.unit_price}
-              disabled={isPurchaseLocked}
+              disabled={isItemLocked}
               onValueChange={(v) => setLine(line.tempId, "unit_price", v)}
             />
-          ),
+          );
+        },
       },
       {
         key: "amount",
@@ -352,9 +367,13 @@ export function FormLineDetailPanel({
         enableResizing: true,
         headerClassName: "text-right w-[180px] min-w-[180px]",
         className: "text-right w-[180px] min-w-[180px] align-middle p-0",
-        cell: (line: LineDraft) =>
-          viewOnly ? (
-            <span className="inline-block w-full text-right font-semibold tabular-nums px-3 py-2">
+        cell: (line: LineDraft) => {
+          const isItemLocked =
+            isPurchaseLocked ||
+            (Boolean(hasLinkedReceipts) && Boolean(line.inventory_item_id));
+
+          return viewOnly || isItemLocked ? (
+            <span className="inline-block w-full text-right font-semibold tabular-nums px-3 py-2 text-foreground/90">
               {Number(line.amount || 0).toLocaleString("vi-VN")}
             </span>
           ) : (
@@ -366,10 +385,11 @@ export function FormLineDetailPanel({
                 "w-full h-full min-h-[38px] text-right bg-transparent border-0 focus:ring-1 focus:ring-emerald-500 outline-none hover:bg-slate-50 focus:bg-white px-3 transition-all font-semibold",
               )}
               value={line.amount}
-              disabled={isPurchaseLocked}
+              disabled={isItemLocked}
               onValueChange={(v) => setLine(line.tempId, "amount", v)}
             />
-          ),
+          );
+        },
       },
       {
         key: "description",
@@ -392,7 +412,7 @@ export function FormLineDetailPanel({
                 "w-full h-full min-h-[38px] bg-transparent border-0 focus:ring-1 focus:ring-emerald-500 outline-none hover:bg-slate-50 focus:bg-white px-3 transition-all placeholder:text-muted-foreground/50",
               )}
               value={line.description}
-              disabled={purchaseFieldLocked("description")}
+              disabled={viewOnly || purchaseFieldLocked("description")}
               onValueChange={(v) => setLine(line.tempId, "description", v)}
               placeholder={t("Nhập mô tả")}
             />
@@ -400,11 +420,12 @@ export function FormLineDetailPanel({
       },
     ],
     [
+      indexCol,
       variant,
       t,
       isPurchaseLocked,
+      hasLinkedReceipts,
       viewOnly,
-      purchaseInventoryOptions,
       lineTypeOptions,
       setLine,
       setLines,
@@ -413,21 +434,38 @@ export function FormLineDetailPanel({
   );
 
   const actionsColumn =
-    !viewOnly && displayLines.length > 1 && !isPurchaseLocked
+    !viewOnly && !isPurchaseLocked
       ? {
           header: "" as any,
-          cell: (line: LineDraft) => (
-            <div className="flex justify-center w-full">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 text-red-500"
-                onClick={() => removeLine(line.tempId, variant)}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </div>
-          ),
+          cell: (line: LineDraft) => {
+            const isInventoryLine = Boolean(line.inventory_item_id);
+            const isLocked = Boolean(hasLinkedReceipts) && isInventoryLine;
+            if (isLocked) {
+              return (
+                <div className="flex justify-center w-full">
+                  <span
+                    className="text-xs text-muted-foreground/40"
+                    title={t("Dòng đã gắn phiếu")}
+                  >
+                    —
+                  </span>
+                </div>
+              );
+            }
+            return (
+              <div className="flex justify-center w-full">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
+                  onClick={() => removeLine(line.tempId, variant)}
+                  title={t("Xóa dòng")}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            );
+          },
         }
       : undefined;
 
@@ -454,7 +492,7 @@ export function FormLineDetailPanel({
             {clearFilterBtn}
             {!viewOnly && !isPurchaseLocked && (
               <>
-                {variant === "purchase" && (
+                {variant === "purchase" && !hasLinkedReceipts && (
                   <Button
                     variant="outline"
                     size="sm"
@@ -465,15 +503,28 @@ export function FormLineDetailPanel({
                     {t("Chọn từ kho")}
                   </Button>
                 )}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => addLine(variant)}
-                  className="h-8 text-xs font-medium"
-                >
-                  <Plus className="mr-1.5 h-3.5 w-3.5" />
-                  {t("Thêm dòng")}
-                </Button>
+                {variant !== "purchase" && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => addLine(variant)}
+                    className="h-8 text-xs font-medium"
+                  >
+                    <Plus className="mr-1.5 h-3.5 w-3.5" />
+                    {t("Thêm dòng")}
+                  </Button>
+                )}
+                {!hasLinkedReceipts && lines.length > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => clearAllLines(variant)}
+                    className="h-8 text-xs font-medium text-destructive hover:bg-destructive/10 hover:text-destructive transition-all"
+                  >
+                    <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+                    {t("Xóa tất cả")}
+                  </Button>
+                )}
               </>
             )}
           </div>
@@ -512,6 +563,8 @@ export function FormLineDetailPanel({
       <InventoryItemPickerDrawer
         open={pickerOpen}
         onClose={() => setPickerOpen(false)}
+        preSelectedItems={preSelectedItems}
+        existingItemIds={existingItemIds as string[]}
         onSelectItems={(selected) => {
           const mapped = selected.map((i) => ({
             id: i.id,
@@ -521,11 +574,14 @@ export function FormLineDetailPanel({
               typeof i.itemType === "object"
                 ? i.itemType?.code || i.itemType?.name || "PART"
                 : i.itemType || "PART",
-            uom: i.uom?.name || i.uom?.code || "",
+            uom:
+              typeof i.uom === "object"
+                ? i.uom?.name || i.uom?.code || ""
+                : i.uom || "",
+            costPrice: (i as any).costPrice ?? (i as any).avgUnitCost,
           }));
-          addItemsBulk(mapped);
+          syncItemsFromPicker(mapped, variant);
         }}
-        existingItemIds={existingItemIds}
       />
     </div>
   );

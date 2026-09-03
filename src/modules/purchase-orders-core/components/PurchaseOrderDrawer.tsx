@@ -25,6 +25,8 @@ import {
   History,
 } from "lucide-react";
 import { Badge } from "@/shared/components/ui/badge";
+import { BusinessPartnerDetailDrawer } from "@/modules/business-partners-core/components/BusinessPartnerDetailDrawer";
+import type { ErpBusinessPartner } from "@/modules/business-partners-core/api/businessPartnersCoreApi";
 import {
   PurchaseOrderPartnerTab,
   PurchaseOrderPartnerRightPanel,
@@ -119,12 +121,17 @@ export function PurchaseOrderDrawer({
   const currentTabKey = controlledActiveTabKey || internalTabKey;
 
   useEffect(() => {
-    if (controlledActiveTabKey) {
-      setInternalTabKey(controlledActiveTabKey);
-    } else if (open) {
-      setInternalTabKey(defaultTabKey);
+    if (open) {
+      if (!editing) {
+        setInternalTabKey(defaultTabKey);
+        onTabChange?.(defaultTabKey);
+      } else if (controlledActiveTabKey) {
+        setInternalTabKey(controlledActiveTabKey);
+      } else {
+        setInternalTabKey(defaultTabKey);
+      }
     }
-  }, [controlledActiveTabKey, open, defaultTabKey]);
+  }, [open, editing, controlledActiveTabKey, defaultTabKey, onTabChange]);
 
   const handleTabChange = (key: string) => {
     setInternalTabKey(key);
@@ -149,7 +156,10 @@ export function PurchaseOrderDrawer({
     submittingStatus,
     branchOptions,
     partnerOptions,
+    setPartnerId,
+    setPartnerOptions,
     isPurchaseLocked,
+    hasLinkedReceipts,
     purchaseFieldLocked,
     purchaseInventoryOptions,
     handleSubmit,
@@ -159,6 +169,25 @@ export function PurchaseOrderDrawer({
     onScrollBottomItems,
     loadingItems,
   } = drawerState;
+
+  const [createSupplierOpen, setCreateSupplierOpen] = useState(false);
+  const [supplierDrawerMode, setSupplierDrawerMode] = useState<"view" | "edit">(
+    "edit",
+  );
+
+  const handleSupplierCreated = (partner: ErpBusinessPartner) => {
+    if (partner && partner.id) {
+      const newOption = {
+        value: partner.id,
+        label: partner.code
+          ? `${partner.code} — ${partner.name}`
+          : partner.name,
+      };
+      setPartnerOptions([newOption, ...partnerOptions]);
+      setPartnerId(partner.id);
+    }
+    setCreateSupplierOpen(false);
+  };
 
   const linkedCount = useMemo(() => {
     const receiptsCount = poReceipts?.length || 0;
@@ -238,6 +267,7 @@ export function PurchaseOrderDrawer({
           <FormLineDetailPanel
             variant="purchase"
             isPurchaseLocked={isPurchaseLocked}
+            hasLinkedReceipts={hasLinkedReceipts}
             purchaseFieldLocked={purchaseFieldLocked}
             viewOnly={viewOnly}
             purchaseInventoryOptions={purchaseInventoryOptions}
@@ -318,6 +348,7 @@ export function PurchaseOrderDrawer({
     [
       t,
       isPurchaseLocked,
+      hasLinkedReceipts,
       purchaseFieldLocked,
       viewOnly,
       purchaseInventoryOptions,
@@ -350,9 +381,7 @@ export function PurchaseOrderDrawer({
                   status === "DRAFT"
                     ? t("Xuất phiếu đề xuất mua hàng")
                     : t("Xuất bảng kê mua hàng"),
-                icon: (
-                  <FileSpreadsheet className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                ),
+                icon: <FileSpreadsheet className="w-4 h-4" />,
                 onClick: onExportExcel,
                 disabled: loading || saving,
               },
@@ -427,58 +456,71 @@ export function PurchaseOrderDrawer({
   const statusBadgeMeta = formatPoStatus(status);
 
   return (
-    <StandardFormDrawer
-      open={open}
-      mode={mode}
-      layout="2-columns"
-      size="xl"
-      collapsibleRightPanel={true}
-      confirmOnClose={!viewOnly}
-      onClose={onClose}
-      onToggleEdit={onToggleEdit}
-      footerLeft={footerLeft}
-      tabs={drawerTabs}
-      activeTabKey={currentTabKey}
-      defaultTabKey={defaultTabKey}
-      onTabChange={handleTabChange}
-      title={
-        viewOnly
-          ? t("Chi tiết Đơn mua hàng")
-          : editing
-            ? t("Cập nhật Đơn mua hàng")
-            : t("Tạo mới Đơn mua hàng")
-      }
-      titleExtra={
-        <Badge
-          variant={statusBadgeMeta.variant}
-          className={`border ${statusBadgeMeta.className} text-[11px]`}
-        >
-          {statusBadgeMeta.label}
-        </Badge>
-      }
-      subtitle={
-        editing
-          ? `${t("Mã")}: ${docNo || editing.id}`
-          : t("Nhập thông tin chứng từ")
-      }
-      actions={actions}
-      loading={loading}
-      error={error}
-      rightPanel={
-        <FormGeneralInfoPanel
-          variant="purchase"
-          isPurchaseLocked={isPurchaseLocked}
-          purchaseFieldLocked={purchaseFieldLocked}
-          viewOnly={viewOnly}
-          branchOptions={branchOptions}
-          partnerOptions={partnerOptions}
-          entityId={editing?.id ?? null}
-          entityType="erp_purchase_order"
-          pendingTagIds={pendingTagIds}
-          onPendingTagsChange={onPendingTagsChange}
-          isAdminEmail={isAdminEmail}
-        />
-      }
-    />
+    <>
+      <StandardFormDrawer
+        open={open}
+        mode={mode}
+        layout="2-columns"
+        size="xl"
+        collapsibleRightPanel={true}
+        confirmOnClose={!viewOnly}
+        onClose={onClose}
+        onToggleEdit={onToggleEdit}
+        footerLeft={footerLeft}
+        tabs={drawerTabs}
+        activeTabKey={currentTabKey}
+        defaultTabKey={defaultTabKey}
+        onTabChange={handleTabChange}
+        title={
+          viewOnly
+            ? t("Chi tiết Đơn mua hàng")
+            : editing
+              ? t("Cập nhật Đơn mua hàng")
+              : t("Tạo mới Đơn mua hàng")
+        }
+        titleExtra={
+          <Badge
+            variant={statusBadgeMeta.variant}
+            className={`border ${statusBadgeMeta.className} text-[11px]`}
+          >
+            {statusBadgeMeta.label}
+          </Badge>
+        }
+        subtitle={
+          editing
+            ? `${t("Mã")}: ${docNo || editing.id}`
+            : t("Nhập thông tin chứng từ")
+        }
+        actions={actions}
+        loading={loading}
+        error={error}
+        rightPanel={
+          <FormGeneralInfoPanel
+            variant="purchase"
+            isPurchaseLocked={isPurchaseLocked}
+            purchaseFieldLocked={purchaseFieldLocked}
+            viewOnly={viewOnly}
+            branchOptions={branchOptions}
+            partnerOptions={partnerOptions}
+            onCreatePartner={() => setCreateSupplierOpen(true)}
+            entityId={editing?.id ?? null}
+            entityType="erp_purchase_order"
+            pendingTagIds={pendingTagIds}
+            onPendingTagsChange={onPendingTagsChange}
+            isAdminEmail={isAdminEmail}
+          />
+        }
+      />
+      <BusinessPartnerDetailDrawer
+        open={createSupplierOpen}
+        mode={supplierDrawerMode}
+        setMode={setSupplierDrawerMode}
+        onClose={() => setCreateSupplierOpen(false)}
+        partnerId={null}
+        partnerType="VENDOR"
+        onSuccess={handleSupplierCreated}
+        zIndex={700}
+      />
+    </>
   );
 }

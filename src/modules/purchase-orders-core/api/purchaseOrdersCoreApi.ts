@@ -111,7 +111,43 @@ type PoDetailResponse = {
   data: ErpPurchaseOrder;
 };
 
+export interface ExportPoExcelRangeParams {
+  date_from: string;
+  date_to: string;
+  supplier_id?: string;
+  status?: string;
+  fileName?: string;
+}
+
 export const purchaseOrdersCoreApi = {
+  exportExcelByRange: async (
+    params: ExportPoExcelRangeParams,
+  ): Promise<string> => {
+    const { date_from, date_to, supplier_id, status, fileName } = params;
+    const response = await axiosInstance.get(`${BASE}/export/excel/range`, {
+      params: {
+        date_from,
+        date_to,
+        supplier_id: supplier_id || undefined,
+        status: status && status !== "ALL" ? status : undefined,
+      },
+      responseType: "blob",
+    });
+    const now = new Date();
+    const pad = (n: number) => String(n).padStart(2, "0");
+    const timestamp = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+    const generatedFileName =
+      fileName || `bang-ke-mua-hang-theo-ky_${timestamp}.xlsx`;
+    const url = URL.createObjectURL(response.data);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = generatedFileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    return generatedFileName;
+  },
   list: async (
     params?: ListParams,
   ): Promise<PaginatedResponse<ErpPurchaseOrder>> => {
