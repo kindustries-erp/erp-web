@@ -33,6 +33,7 @@ export interface UseBankStatementColumnsProps {
   };
   setPage: (p: number) => void;
   setDetailTransactionId: (id: string | null) => void;
+  setDetailDefaultTab?: (tab: string) => void;
   setSelectedPartner: (
     partner: { account?: string; name?: string } | null,
   ) => void;
@@ -47,6 +48,7 @@ export function useBankStatementColumns({
   filter,
   setPage,
   setDetailTransactionId,
+  setDetailDefaultTab,
   setSelectedPartner,
   setPartnerDrawerOpen,
 }: UseBankStatementColumnsProps) {
@@ -457,11 +459,16 @@ export function useBankStatementColumns({
               text={row.correspondentName}
               onDrawerClick={(e) => {
                 e.stopPropagation();
-                setSelectedPartner({
-                  account: row.correspondentAccount,
-                  name: row.correspondentName,
-                });
-                setPartnerDrawerOpen(true);
+                if (setDetailDefaultTab && setDetailTransactionId) {
+                  setDetailDefaultTab("partner");
+                  setDetailTransactionId(row.id);
+                } else {
+                  setSelectedPartner({
+                    account: row.correspondentAccount,
+                    name: row.correspondentName,
+                  });
+                  setPartnerDrawerOpen(true);
+                }
               }}
               tooltip={row.correspondentName}
               enableCopy={true}
@@ -486,11 +493,16 @@ export function useBankStatementColumns({
               text={row.correspondentAccount}
               onDrawerClick={(e) => {
                 e.stopPropagation();
-                setSelectedPartner({
-                  account: row.correspondentAccount,
-                  name: row.correspondentName,
-                });
-                setPartnerDrawerOpen(true);
+                if (setDetailDefaultTab && setDetailTransactionId) {
+                  setDetailDefaultTab("partner");
+                  setDetailTransactionId(row.id);
+                } else {
+                  setSelectedPartner({
+                    account: row.correspondentAccount,
+                    name: row.correspondentName,
+                  });
+                  setPartnerDrawerOpen(true);
+                }
               }}
               tooltip={row.correspondentAccount}
               enableCopy={true}

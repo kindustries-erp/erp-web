@@ -15,6 +15,8 @@ Khi tạo mới hoặc enhance một `DataTable` trong hệ thống, bạn **B�
 
 ## 0. Quy Chuẩn Thành Phần Giao Diện & Enums (shadcn/ui & TypeScript Enums)
 
+- **Mặc định dùng Variant Spreadsheet (`variant="spreadsheet"`)**: Bắt buộc sử dụng `variant="spreadsheet"` cho tất cả các bảng (`<StandardTable>` và `<DataTable>`) để có giao diện ô tính kế toán chuẩn mực, compact và đường kẻ ô sắc nét.
+- **TUYỆT ĐỐI KHÔNG bọc wrapper có border xung quanh Table & Pagination**: Khi đặt `<StandardTable>` hoặc `<DataTable>` bên trong Page, Modal hay `DrawerSection`, **TUYỆT ĐỐI KHÔNG** bọc thêm thẻ `div` có `border`, `rounded-xl`, `bg-background` hay `overflow-hidden`. `<StandardTable>` / `<DataTable>` đã tự quản lý viền, container và pagination. Việc bọc thêm border bên ngoài tạo ra giao diện lồng viền (nested border) thừa thãi và xấu.
 - **100% shadcn/ui Components**: Tất cả các thành phần bảng và bộ lọc bắt buộc sử dụng component từ design system (`Button`, `Input`, `Checkbox`, `Badge`, `Tabs`, `Tooltip`, `DatePicker`, `Combobox`, `MultiSelect`, `Card`, `Popover`). **Tuyệt đối không dùng HTML thuần** (`<button>`, `<input>`, `<select>`).
 - **Bắt buộc dùng Enums**:
   - `TableSortState`: `ASC = "asc"`, `DESC = "desc"`, `NONE = "none"`
@@ -31,7 +33,7 @@ Khi tạo mới hoặc enhance một `DataTable` trong hệ thống, bạn **B�
   - Cần set `size: 40`, `headerClassName: "text-center w-[40px] min-w-[40px]"`, `className: "text-center w-[40px] min-w-[40px]"`, `enableResizing: false`.
   - **Căn giữa Header STT**: Header bắt buộc phải căn giữa hoàn toàn bằng cách wrap trong span block: `header: <span className="w-full block text-center">#</span>` kết hợp `headerClassName: "text-center"`.
   - **Căn giữa Cell STT**: Cell bắt buộc căn giữa hoàn toàn: `cell: (_, idx) => <span className="w-full block text-center">{idx}</span>`.
-  - **Lưu ý với cột Index (STT)**: Khi dùng cell renderer mặc định của framework, CHỈ SỬ DỤNG `{idx}`, **KHÔNG CỘNG THÊM 1** (`idx + 1`). Lý do: Core `DataTable` đã tự động xử lý pagination offset và trả về `idx` hệ 1-based.
+  - **Lưu ý với cột Index (STT)**: Khi dùng cell renderer mặc định của framework, CHỈ SỬ DỤNG `{idx}`, **TUYỆT ĐỐI KHÔNG CỘNG THÊM 1** (`idx + 1` hay `(page - 1) * pageSize + idx + 1`). Lý do: Core `DataTable` (`useDataTableColumns`) đã tự động xử lý pagination offset và truyền `idx` hệ 1-based (bắt đầu từ 1). Nếu cộng thêm sẽ khiến STT hiển thị bắt đầu từ 2.
   - **TUYỆT ĐỐI KHÔNG** định nghĩa cột Action tĩnh thủ công `{ key: "actions", ... }` trong mảng `columns`. Tất cả các thao tác theo dòng phải được quản lý qua prop `rowActions` (Floated Action Menu & Right-Click Context Menu).
 - **Enable Resizing**: Luôn bật tính năng resize cho các cột dữ liệu bằng cách thêm `enableResizing: true` vào config của từng cột.
 - **Đa ngôn ngữ (i18n)**: Tất cả các text trong table (header, empty state, action tooltip...) phải được bọc trong hàm `t` từ `useTranslation("namespace")`. KHÔNG hardcode tiếng Việt/Anh trực tiếp mà không qua hook translation.

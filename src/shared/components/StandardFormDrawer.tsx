@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { DrawerModal, DrawerSection, type DrawerAction } from "./DrawerModal";
 import { useT } from "@/core/i18n";
 import { ChevronRight, ChevronLeft, Maximize2, Minimize2 } from "lucide-react";
@@ -250,7 +250,16 @@ export function StandardFormDrawer({
     return tabs && tabs.length > 0 ? tabs[0].key : "";
   });
 
-  const currentTab = activeTabKey !== undefined ? activeTabKey : internalTabKey;
+  const effectiveTabKey = useMemo(() => {
+    if (activeTabKey !== undefined) return activeTabKey;
+    if (internalTabKey && tabs?.some((t) => t.key === internalTabKey)) {
+      return internalTabKey;
+    }
+    if (defaultTabKey && tabs?.some((t) => t.key === defaultTabKey)) {
+      return defaultTabKey;
+    }
+    return tabs && tabs.length > 0 ? tabs[0].key : "";
+  }, [activeTabKey, internalTabKey, defaultTabKey, tabs]);
 
   const prevOpenRef = useRef(open);
   useEffect(() => {
@@ -276,6 +285,18 @@ export function StandardFormDrawer({
   ]);
 
   useEffect(() => {
+    if (tabs && tabs.length > 0) {
+      if (!internalTabKey || !tabs.some((t) => t.key === internalTabKey)) {
+        const fallback =
+          defaultTabKey && tabs.some((t) => t.key === defaultTabKey)
+            ? defaultTabKey
+            : tabs[0].key;
+        setInternalTabKey(fallback);
+      }
+    }
+  }, [tabs, defaultTabKey, internalTabKey]);
+
+  useEffect(() => {
     if (activeTabKey !== undefined) {
       setInternalTabKey(activeTabKey);
     }
@@ -286,14 +307,15 @@ export function StandardFormDrawer({
     onTabChange?.(key);
   };
 
-  const activeTopTab = tabs?.find((t) => t.key === currentTab) || tabs?.[0];
+  const activeTopTab =
+    tabs?.find((t) => t.key === effectiveTabKey) || tabs?.[0];
   const effectiveHideRightPanel =
     hideRightPanel || (activeTopTab?.hideRightPanel ?? false);
   const effectiveLeftContent = activeTopTab ? activeTopTab.content : leftPanel;
   const renderedLeftContent =
     tabs && tabs.length > 0 ? (
       <TabSlideTransition
-        activeKey={currentTab}
+        activeKey={effectiveTabKey}
         tabKeys={tabs.map((t) => t.key)}
         className="w-full flex-1 min-h-0"
       >
@@ -400,7 +422,7 @@ export function StandardFormDrawer({
       {tabs && tabs.length > 0 && (
         <DrawerTopTabBar
           tabs={tabs}
-          activeTabKey={currentTab}
+          activeTabKey={effectiveTabKey}
           onTabChange={handleTabChange}
           extra={tabBarExtra}
           className={tabBarClassName}

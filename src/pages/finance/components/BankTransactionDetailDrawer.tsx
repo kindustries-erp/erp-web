@@ -9,12 +9,15 @@ import {
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatGMT7, money } from "@/shared/utils/format";
 import { bankStatementApi } from "@/modules/bank-statements/api/bankStatementApi";
-import { Link2, BookOpen, History, FileText } from "lucide-react";
+import { Link2, BookOpen, History, FileText, Building2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { usePosting } from "@/shared/components/accounting/usePosting";
 import { PostingSection } from "@/shared/components/accounting/PostingSection";
 import { PostedAccountingSummary } from "@/shared/components/accounting/PostedAccountingSummary";
 import { InvoiceNetoffSelectionModal } from "@/modules/bank-statements/components/InvoiceNetoffSelectionModal";
+import { BankTransactionPartnerTab } from "@/modules/bank-statements/components/BankTransactionPartnerTab";
+import { BankTransactionPartnerRightPanel } from "@/modules/bank-statements/components/BankTransactionPartnerRightPanel";
 import toast from "react-hot-toast";
 import { moduleConfigApi } from "@/core/api/moduleConfigApi";
 import {
@@ -27,6 +30,7 @@ interface Props {
   onClose: () => void;
   transactionId: string | null;
   onSaved?: () => void;
+  defaultTabKey?: string;
 }
 
 function createClientId() {
@@ -42,7 +46,9 @@ export function BankTransactionDetailDrawer({
   onClose,
   transactionId,
   onSaved,
+  defaultTabKey = "txn_details",
 }: Props) {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const postingState = usePosting();
   const [editMode, setEditMode] = useState(false);
@@ -546,7 +552,9 @@ export function BankTransactionDetailDrawer({
     ? [
         {
           key: "txn_details",
-          label: "Chi tiết giao dịch",
+          label: t("bankStatement.tabDetails", {
+            defaultValue: "Chi tiết giao dịch",
+          }),
           icon: <FileText className="w-3.5 h-3.5" />,
           content: (
             <div className="flex flex-col gap-5">
@@ -633,6 +641,17 @@ export function BankTransactionDetailDrawer({
                 </div>
               </div>
             </div>
+          ),
+        },
+        {
+          key: "partner",
+          label: t("bankStatement.tabObjectDetails", {
+            defaultValue: "Chi tiết theo đối tượng",
+          }),
+          icon: <Building2 className="w-3.5 h-3.5" />,
+          content: <BankTransactionPartnerTab transaction={transaction} />,
+          rightPanel: (
+            <BankTransactionPartnerRightPanel transaction={transaction} />
           ),
         },
         {
@@ -743,7 +762,8 @@ export function BankTransactionDetailDrawer({
         loading={isLoading}
         panelClassName="w-full md:w-[96vw] lg:w-[92vw] xl:w-[1400px] 2xl:w-[1500px]"
         tabs={resolvedDrawerTabs}
-        defaultTabKey="txn_details"
+        defaultTabKey={defaultTabKey || "txn_details"}
+        key={`${transactionId || ""}-${defaultTabKey || "txn_details"}`}
         rightPanel={
           transaction ? (
             <div className="space-y-4">

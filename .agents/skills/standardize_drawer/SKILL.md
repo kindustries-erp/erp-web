@@ -77,6 +77,7 @@ graph TD
 3. **Cột phải (Right Panel) cố định thông tin chung & Phân loại**: Hiển thị metadata, trạng thái, phân loại nghiệp vụ và hiệu quả tài chính tóm tắt xuyên suốt các tab.
 4. **Hỗ trợ `hideRightPanel: true`**: Cho các tab cần không gian đồ họa 100% full width như Mạng lưới chứng từ liên kết Canvas Graph (`@xyflow/react`).
 5. **Hỗ trợ `badgeCount` & Icons**: Hiển thị số lượng giao dịch, hóa đơn hoặc logs trên từng tab.
+6. **Bảng nhúng trong DrawerSection (No Border Wrapper & Variant Spreadsheet)**: Đặt trực tiếp `<StandardTable variant="spreadsheet">` bên trong `<DrawerSection>`. **TUYỆT ĐỐI KHÔNG** bọc thêm thẻ `div` có `border`, `rounded-xl`, `bg-background` xung quanh bảng. Cột STT (`#`) dùng `{idx}` trực tiếp (không cộng thêm).
 
 ### Mẫu cấu trúc Tab chuẩn cho các phân hệ ERP:
 

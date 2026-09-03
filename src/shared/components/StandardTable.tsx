@@ -94,7 +94,7 @@ export function StandardTable<T>({
   enableRowSelection,
   rowSelection,
   onRowSelectionChange,
-  variant,
+  variant = "spreadsheet",
   summaryRow,
   containerClassName,
   defaultColumnOrder,
