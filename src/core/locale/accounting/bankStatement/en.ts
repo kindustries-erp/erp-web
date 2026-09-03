@@ -106,6 +106,15 @@ export const bankStatementEn = {
   noPartnerData:
     "No partner/correspondent information available for this transaction",
   noTransactions: "No transactions found for this partner",
+  previewStatementTitle: "Statement Preview",
+  generalInfo: "GENERAL INFORMATION",
+  partner: "Partner",
+  sourceAccount: "Source Account",
+  correspondentAccountingAccountId: "Correspondent Accounting Account",
+  transDate: "Transaction Date",
+  postingStatus: "Status",
+  statusPosted: "Posted",
+  statusUnposted: "Unposted",
   filters: {
     settledFull: "Fully Settled",
     settledPartial: "Partially Settled",

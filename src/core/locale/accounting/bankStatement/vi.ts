@@ -106,6 +106,15 @@ export const bankStatementVi = {
   noPartnerData:
     "Chưa có thông tin đối tác/tài khoản đối ứng cho giao dịch này",
   noTransactions: "Không tìm thấy giao dịch nào của đối tác này",
+  previewStatementTitle: "Xem trước chứng từ",
+  generalInfo: "THÔNG TIN CHUNG",
+  partner: "Đối tác",
+  sourceAccount: "Tài khoản nguồn",
+  correspondentAccountingAccountId: "TK kế toán đối ứng",
+  transDate: "Ngày giao dịch",
+  postingStatus: "Trạng thái",
+  statusPosted: "Đã hạch toán",
+  statusUnposted: "Chưa hạch toán",
   filters: {
     settledFull: "Đã cấn trừ hết",
     settledPartial: "Đã cấn trừ một phần",
