@@ -240,9 +240,7 @@ export function useBankStatementColumns({
         headerClassName: "w-[40px] min-w-[40px] text-center",
         className: "w-[40px] min-w-[40px] text-center",
         cell: (_: any, idx: number) => (
-          <span className="text-muted-foreground">
-            {(page - 1) * pageSize + idx + 1}
-          </span>
+          <span className="text-muted-foreground">{idx}</span>
         ),
       },
       {

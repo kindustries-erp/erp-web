@@ -229,6 +229,15 @@ export const BankTransactionPartnerTab = React.memo(
       return "none";
     };
 
+    const formatAmtOption = (val: string | number) => {
+      const n = Number(val || 0);
+      if (isNaN(n)) return String(val);
+      return n.toLocaleString("vi-VN", {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+      });
+    };
+
     const renderHeaderFilter = (columnKey: string, label: string) => {
       if (columnKey === "transDate") {
         return (
@@ -260,6 +269,13 @@ export const BankTransactionPartnerTab = React.memo(
         );
       }
 
+      let formatOptionLabel: ((val: string) => string) | undefined;
+      if (
+        ["thu", "chi", "netOffAmount", "remainingAmount"].includes(columnKey)
+      ) {
+        formatOptionLabel = formatAmtOption as any;
+      }
+
       return (
         <TableColumnHeaderFilter
           title={label}
@@ -274,6 +290,7 @@ export const BankTransactionPartnerTab = React.memo(
           columnKey={columnKey}
           allFilters={columnFilters}
           fetchOptions={fetchColumnOptions}
+          formatOptionLabel={formatOptionLabel}
           queryKeyPrefix={`bank-partner-options-${columnKey}`}
         />
       );

@@ -260,7 +260,7 @@ describe("BankTransactionDetailDrawer", () => {
       expect(
         screen.getAllByText("Đối tác Công ty TNHH Liouni").length,
       ).toBeGreaterThanOrEqual(2);
-      expect(screen.getByText("Đã hạch toán")).toBeTruthy();
+      expect(screen.getByText("TK BIDV - 12345678")).toBeTruthy();
     });
   });
 });

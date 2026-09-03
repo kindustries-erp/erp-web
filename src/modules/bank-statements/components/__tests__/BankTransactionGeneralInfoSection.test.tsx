@@ -11,7 +11,7 @@ describe("BankTransactionGeneralInfoSection", () => {
     expect(container.firstChild).toBeNull();
   });
 
-  it("renders THÔNG TIN CHUNG with partner name, branch, accounts, date, and status", () => {
+  it("renders THÔNG TIN CHUNG with partner name, branch, source account, and date with icons, but excludes accounting account and posting status", () => {
     const mockTxn = {
       id: "txn-101",
       sourceType: "BANK",
@@ -34,11 +34,14 @@ describe("BankTransactionGeneralInfoSection", () => {
     expect(
       screen.getByText("Techcombank Hoạt động - 19033456789"),
     ).toBeTruthy();
-    expect(screen.getByText("1121")).toBeTruthy();
-    expect(screen.getByText("Đã hạch toán")).toBeTruthy();
+    expect(screen.getByText("15/08/2026")).toBeTruthy();
+
+    // Verify removed fields are NOT rendered
+    expect(screen.queryByText("1121")).toBeNull();
+    expect(screen.queryByText("Đã hạch toán")).toBeNull();
   });
 
-  it("renders unposted badge and fallback dash when partner is missing", () => {
+  it("renders fallback dash when partner is missing", () => {
     const mockTxn = {
       id: "txn-102",
       sourceType: "CASH",
@@ -54,6 +57,7 @@ describe("BankTransactionGeneralInfoSection", () => {
 
     expect(screen.getByText("554 Lê Văn Lương")).toBeTruthy();
     expect(screen.getByText("Sổ quỹ tiền mặt VP")).toBeTruthy();
-    expect(screen.getByText("Chưa hạch toán")).toBeTruthy();
+    expect(screen.getByText("16/08/2026")).toBeTruthy();
+    expect(screen.queryByText("Chưa hạch toán")).toBeNull();
   });
 });
