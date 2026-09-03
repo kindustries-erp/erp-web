@@ -182,6 +182,9 @@ export function FormLineDetailPanel({
                 variant="spreadsheet"
                 options={purchaseInventoryOptions}
                 value={line.inventory_item_id}
+                fallbackLabel={
+                  line.item_name || line.description || line.item_code
+                }
                 readOnly={isPurchaseLocked}
                 className="border-0 shadow-none ring-0 focus:ring-0 focus:outline-none rounded-none bg-transparent hover:bg-slate-50/80 focus:bg-white"
                 onSearch={onItemSearch}
@@ -405,6 +408,9 @@ export function FormLineDetailPanel({
       isPurchaseLocked,
       viewOnly,
       purchaseInventoryOptions,
+      onItemSearch,
+      onScrollBottomItems,
+      loadingItems,
       lineTypeOptions,
       setLine,
       setLines,

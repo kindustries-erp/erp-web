@@ -224,40 +224,60 @@ export function usePurchaseOrderDrawer({
   }, [open, editing]);
 
   // -------------------------------------------------------------------------
-  // Inventory options with fallback from document lines
+  // Inventory options with fallback from document lines & current store lines
   // -------------------------------------------------------------------------
   const purchaseInventoryOptions = useMemo(() => {
-    const fallbackOptions = (editing?.lines || [])
+    const docLines: Array<{
+      inventory_item_id?: string | null;
+      item_name?: string | null;
+      description?: string | null;
+      item_code?: string | null;
+      line_type?: string | null;
+    }> = [...(editing?.lines || []), ...(lines || [])];
+    const uniqueMap = new Map<
+      string,
+      {
+        value: string;
+        label: string;
+        searchText: string;
+        sku: string;
+        itemName: string;
+        itemType: string;
+        note: string;
+      }
+    >();
+
+    // Add infinite options first
+    infiniteItemOptions.forEach((opt) => uniqueMap.set(opt.value, opt));
+
+    // Add fallback options from document / store lines if not already present
+    docLines
       .filter((line) => line.inventory_item_id)
-      .map((line, idx) => {
+      .forEach((line, idx) => {
         const id = line.inventory_item_id as string;
-        const existing = infiniteItemOptions.find((item) => item.value === id);
-        if (existing) return existing;
-        const fallbackName =
-          line.item_name?.trim() ||
-          line.description?.trim() ||
-          line.item_code?.trim() ||
-          `Linh kiện #${idx + 1}`;
-        const fallbackSku = line.item_code?.trim() || "";
-        return {
-          value: id,
-          label: fallbackSku
-            ? `${fallbackSku} — ${fallbackName}`
-            : fallbackName,
-          searchText: `${fallbackSku} ${fallbackName}`,
-          sku: fallbackSku,
-          itemName: fallbackName,
-          itemType: line.line_type || "PART",
-          note: line.description || "",
-        };
+        if (!uniqueMap.has(id)) {
+          const fallbackName =
+            line.item_name?.trim() ||
+            line.description?.trim() ||
+            line.item_code?.trim() ||
+            `Linh kiện #${idx + 1}`;
+          const fallbackSku = line.item_code?.trim() || "";
+          uniqueMap.set(id, {
+            value: id,
+            label: fallbackSku
+              ? `${fallbackSku} — ${fallbackName}`
+              : fallbackName,
+            searchText: `${fallbackSku} ${fallbackName}`,
+            sku: fallbackSku,
+            itemName: fallbackName,
+            itemType: (line as any).line_type || "PART",
+            note: line.description || "",
+          });
+        }
       });
-    return [
-      ...infiniteItemOptions,
-      ...fallbackOptions.filter(
-        (opt) => !infiniteItemOptions.some((item) => item.value === opt.value),
-      ),
-    ];
-  }, [infiniteItemOptions, editing]);
+
+    return Array.from(uniqueMap.values());
+  }, [infiniteItemOptions, editing, lines]);
 
   // -------------------------------------------------------------------------
   // Submit

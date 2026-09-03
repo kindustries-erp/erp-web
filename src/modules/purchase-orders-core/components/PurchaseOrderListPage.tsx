@@ -215,7 +215,7 @@ export function PurchaseOrderListPage() {
                 items: [
                   {
                     label: t("common.create", "Tạo mới"),
-                    icon: <PackagePlus className="w-4 h-4 text-emerald-600" />,
+                    icon: <PackagePlus className="w-4 h-4" />,
                     onClick: handleCreateNew,
                   },
                 ],
@@ -249,9 +249,7 @@ export function PurchaseOrderListPage() {
             },
             {
               label: t("Chi tiết theo đối tượng"),
-              icon: (
-                <Building2 className="h-[13px] w-[13px] text-blue-600 dark:text-blue-400" />
-              ),
+              icon: <Building2 className="h-[13px] w-[13px]" />,
               onClick: () => openDetail(row, "view", "partner"),
             },
             {
@@ -301,9 +299,7 @@ export function PurchaseOrderListPage() {
                 row.status === "DRAFT"
                   ? t("Xuất phiếu đề xuất")
                   : t("Xuất bảng kê mua hàng"),
-              icon: (
-                <FileSpreadsheet className="h-[13px] w-[13px] text-emerald-600 dark:text-emerald-400" />
-              ),
+              icon: <FileSpreadsheet className="h-[13px] w-[13px]" />,
               onClick: () => void handleExportExcel(row),
             },
           ],

@@ -201,7 +201,12 @@ export function Combobox({
               </button>
             )}
 
-            {filtered.length === 0 ? (
+            {loading && filtered.length === 0 ? (
+              <div className="px-3 py-5 text-xs text-center text-[color:var(--muted-fg)] flex items-center justify-center gap-2">
+                <span className="inline-block w-3.5 h-3.5 border-2 border-primary border-r-transparent rounded-full animate-spin" />
+                <span>Đang tải...</span>
+              </div>
+            ) : filtered.length === 0 ? (
               <div className="px-3 py-5 text-xs text-center text-[color:var(--faint)]">
                 {emptyLabel}
               </div>
@@ -240,9 +245,10 @@ export function Combobox({
               ))
             )}
 
-            {loading && (
-              <div className="px-3 py-2 text-xs text-center text-[color:var(--muted-fg)]">
-                Đang tải...
+            {loading && filtered.length > 0 && (
+              <div className="px-3 py-2 text-xs text-center text-[color:var(--muted-fg)] flex items-center justify-center gap-1.5 border-t border-border/40">
+                <span className="inline-block w-3 h-3 border-2 border-primary border-r-transparent rounded-full animate-spin" />
+                <span>Đang tải thêm...</span>
               </div>
             )}
           </div>

@@ -1,13 +1,15 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
-import { type DrawerAction } from "@/shared/components/DrawerModal";
+import {
+  DrawerSection,
+  type DrawerAction,
+} from "@/shared/components/DrawerModal";
 import {
   DataTable,
   createColumnHeaderFilter,
   type DataTableColumn,
 } from "@/shared/components/DataTable";
 import { TableText } from "@/shared/components/DataTable/TableText";
-import { TablePagination } from "@/shared/components/TablePagination";
 import { FilterButton } from "@/shared/components/FilterPanel";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/Button";
@@ -51,51 +53,54 @@ export function InventoryItemPickerDrawer({
   // ---------------------------------------------------------------------------
   // Filters & Selection State
   // ---------------------------------------------------------------------------
-  const [globalSearch, setGlobalSearch] = useState("");
-  const [debouncedGlobalSearch, setDebouncedGlobalSearch] = useState("");
   const [selectedPanelSearch, setSelectedPanelSearch] = useState("");
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(15);
+  const [pageSize, setPageSize] = useState(20);
   const [selectedItemsMap, setSelectedItemsMap] = useState<
     Map<string, ErpInventoryItem>
   >(new Map());
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
-
-  // Debounce global search
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedGlobalSearch(globalSearch);
-      setPage(1);
-    }, 300);
-    return () => clearTimeout(handler);
-  }, [globalSearch]);
 
   // Reset state on open
   useEffect(() => {
     if (open) {
       setSelectedItemsMap(new Map());
       setRowSelection({});
-      setGlobalSearch("");
-      setDebouncedGlobalSearch("");
       setSelectedPanelSearch("");
       setPage(1);
       tableState.resetFilters();
     }
   }, [open]);
 
+  // Reset page on column filter/search change
+  useEffect(() => {
+    setPage(1);
+  }, [tableState.columnSearch, tableState.columnFilters, tableState.sorts]);
+
   // ---------------------------------------------------------------------------
   // Query Items from API
   // ---------------------------------------------------------------------------
+  const activeSearch =
+    tableState.columnSearch.sku?.trim() ||
+    tableState.columnSearch.itemName?.trim() ||
+    undefined;
+
   const { data, isLoading } = useQuery({
     queryKey: [
       "inventory-picker-items",
-      { page, pageSize, search: debouncedGlobalSearch },
+      {
+        page,
+        pageSize,
+        search: activeSearch,
+        columnFilters: tableState.columnFilters,
+        sorts: tableState.sorts,
+      },
     ],
     queryFn: async () => {
       return inventoryCoreApi.list({
         page,
         pageSize,
-        search: debouncedGlobalSearch.trim() || undefined,
+        search: activeSearch,
       });
     },
     enabled: open,
@@ -546,86 +551,62 @@ export function InventoryItemPickerDrawer({
         </div>
       }
       leftPanel={
-        <div className="flex flex-col h-full space-y-3 pb-2">
-          {/* Global Search Bar */}
-          <div className="flex items-center justify-between gap-3 bg-card border border-border/70 rounded-xl p-2.5 shadow-xs">
-            <div className="flex items-center gap-2 flex-1">
-              <div className="relative flex-1 max-w-md">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <input
-                  type="text"
-                  value={globalSearch}
-                  onChange={(e) => setGlobalSearch(e.target.value)}
-                  placeholder={t("Tìm theo mã SKU, tên linh kiện...")}
-                  className="w-full h-8 pl-9 pr-8 text-xs rounded-lg border border-border bg-background hover:border-border-hover focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
-                />
-                {globalSearch && (
-                  <button
-                    type="button"
-                    onClick={() => setGlobalSearch("")}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                  >
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                )}
-              </div>
+        <DrawerSection
+          title={
+            <div className="flex items-center gap-2">
+              <span>{t("Danh mục linh kiện")}</span>
+              <span className="text-xs text-muted-foreground font-normal">
+                ({totalItems.toLocaleString("vi-VN")} {t("mặt hàng")})
+              </span>
             </div>
-
-            {/* Quick Active Filter reset */}
-            <div className="flex items-center gap-2 shrink-0">
+          }
+          titleExtra={
+            <div className="flex items-center gap-2">
               {tableState.activeFilterCount > 0 && (
                 <FilterButton
                   activeCount={tableState.activeFilterCount}
                   onClick={() => {}}
-                  className="h-8 py-1 text-xs"
+                  className="h-7 py-1 text-xs"
                   onClear={tableState.resetFilters}
                 />
               )}
               {selectedCount > 0 && (
-                <div className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-primary/10 text-primary text-xs font-medium">
+                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold">
                   <CheckSquare className="w-3.5 h-3.5" />
                   <span>
-                    {t("Đã chọn")}: <strong>{selectedCount}</strong>
+                    {t("Đã chọn")}: {selectedCount}
                   </span>
                 </div>
               )}
             </div>
-          </div>
-
-          {/* Table Container */}
-          <div className="flex-1 min-h-[380px] bg-card border border-border rounded-xl overflow-hidden shadow-xs flex flex-col">
-            <div className="flex-1 overflow-auto">
-              <DataTable
-                tableId="inventory-item-picker-drawer-table"
-                tableMeta={{ listHook: listHookLike, items: flatItems }}
-                columns={columns as any}
-                items={displayItems}
-                loading={isLoading}
-                variant="spreadsheet"
-                enableRowSelection={true}
-                rowSelection={rowSelection}
-                onRowSelectionChange={handleRowSelectionChange}
-                getRowKey={(item) => item.id}
-                emptyLabel={t("Không tìm thấy linh kiện nào phù hợp")}
-              />
-            </div>
-
-            {/* Pagination footer */}
-            <div className="border-t border-border p-2 bg-muted/20">
-              <TablePagination
-                page={page}
-                totalPages={totalPages}
-                total={totalItems}
-                pageSize={pageSize}
-                onPage={setPage}
-                onPageSize={(newSize: number) => {
-                  setPageSize(newSize);
-                  setPage(1);
-                }}
-              />
-            </div>
-          </div>
-        </div>
+          }
+          collapsible
+          defaultCollapsed={false}
+        >
+          <DataTable
+            tableId="inventory-item-picker-drawer-table"
+            tableMeta={{ listHook: listHookLike, items: flatItems }}
+            columns={columns as any}
+            items={displayItems}
+            loading={isLoading}
+            variant="spreadsheet"
+            enableRowSelection={true}
+            rowSelection={rowSelection}
+            onRowSelectionChange={handleRowSelectionChange}
+            getRowKey={(item) => item.id}
+            emptyLabel={t("Không tìm thấy linh kiện nào phù hợp")}
+            containerClassName="max-h-[calc(100vh-280px)] overflow-y-auto"
+            total={totalItems}
+            page={page}
+            pageSize={pageSize}
+            totalPages={totalPages}
+            onPage={setPage}
+            onPageSize={(newSize: number) => {
+              setPageSize(newSize);
+              setPage(1);
+            }}
+          />
+        </DrawerSection>
       }
     />
   );

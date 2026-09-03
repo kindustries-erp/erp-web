@@ -350,9 +350,7 @@ export function PurchaseOrderDrawer({
                   status === "DRAFT"
                     ? t("Xuất phiếu đề xuất mua hàng")
                     : t("Xuất bảng kê mua hàng"),
-                icon: (
-                  <FileSpreadsheet className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                ),
+                icon: <FileSpreadsheet className="w-4 h-4" />,
                 onClick: onExportExcel,
                 disabled: loading || saving,
               },

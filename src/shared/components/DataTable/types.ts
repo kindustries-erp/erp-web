@@ -213,4 +213,6 @@ export interface DataTableRowMemoProps<T> {
   enableColumnResizing?: boolean;
   renderSubRow?: (record: T) => ReactNode;
   visibleColumnsKey?: string;
+  tableColumns?: any;
+  tableMeta?: any;
 }
