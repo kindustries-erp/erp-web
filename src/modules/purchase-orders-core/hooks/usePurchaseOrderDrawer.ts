@@ -77,32 +77,28 @@ export function usePurchaseOrderDrawer({
   // Lock logic
   // -------------------------------------------------------------------------
   const purchaseStatusValue = (editing?.status || "DRAFT") as string;
-  const isPurchaseStatusOnlyMode =
-    !!editing &&
-    !viewOnly &&
-    ["CONFIRMED", "PARTIAL_RECEIVED"].includes(purchaseStatusValue);
+  const hasLinkedReceipts =
+    (poReceipts && poReceipts.length > 0) ||
+    ["PARTIAL_RECEIVED", "RECEIVED", "FULLY_RECEIVED"].includes(
+      purchaseStatusValue,
+    );
   const isPurchaseFullyLocked =
     !!editing &&
     !viewOnly &&
     ["RECEIVED", "FULLY_RECEIVED", "CANCELLED"].includes(purchaseStatusValue);
-  const isPurchaseLocked =
-    viewOnly || isPurchaseStatusOnlyMode || isPurchaseFullyLocked;
-  const isPurchaseHeaderEditableAfterConfirm =
-    !!editing && !viewOnly && isPurchaseStatusOnlyMode;
+  const isPurchaseLocked = viewOnly || isPurchaseFullyLocked;
 
   const purchaseFieldLocked = (
     field: "description" | "qty" | "expectedDate" | "status" | "poNo",
   ) => {
     if (field === "poNo" && !!editing) return true;
     if (field === "description" && !viewOnly) return false;
-    if (!isPurchaseLocked) return false;
+    if (isPurchaseFullyLocked || viewOnly) return true;
+    if (!hasLinkedReceipts) return false;
 
-    // User enhancement: if there's receipt history, lock qty
-    const hasReceiptHistory = poReceipts && poReceipts.length > 0;
-    if (hasReceiptHistory && field === "qty") return true;
-
-    if (!isPurchaseHeaderEditableAfterConfirm) return true;
-    return !["description", "qty", "expectedDate", "status"].includes(field);
+    // Khi đã có phiếu nhập kho: khóa status, poNo
+    if (field === "status") return true;
+    return false;
   };
 
   // -------------------------------------------------------------------------
@@ -314,7 +310,7 @@ export function usePurchaseOrderDrawer({
       0,
     );
 
-    const payload = isPurchaseStatusOnlyMode
+    const payload = hasLinkedReceipts
       ? {
           status: overrideStatus || store.status,
           payment_status: store.paymentStatus,
@@ -322,6 +318,7 @@ export function usePurchaseOrderDrawer({
           lines: purchaseEditableLines,
           supplier_invoice_no: store.supplierInvoiceNo?.trim() ?? "",
           expected_receipt_date: store.expectedDate || undefined,
+          total_amount: totalAmount,
         }
       : isPurchaseFullyLocked
         ? {
@@ -435,8 +432,11 @@ export function usePurchaseOrderDrawer({
     submittingStatus,
     branchOptions,
     partnerOptions,
+    setPartnerId: store.setPartnerId,
+    setPartnerOptions: store.setPartnerOptions,
     isPurchaseLocked,
     isPurchaseFullyLocked,
+    hasLinkedReceipts,
     purchaseFieldLocked,
     purchaseInventoryOptions,
     handleSubmit,

@@ -181,11 +181,13 @@ export function usePurchaseOrderPage() {
   const handleCreateNew = useCallback(() => {
     setEditingRow(null);
     setViewOnly(false);
+    setActiveDrawerTab("po_details");
     setFormOpen(true);
   }, []);
 
   const handleCloseForm = useCallback(() => {
     setFormOpen(false);
+    setActiveDrawerTab("po_details");
   }, []);
 
   const handleToggleEdit = useCallback(() => {

@@ -122,7 +122,19 @@ interface OperationalFormActions {
       costPrice?: number;
     }>,
   ) => void;
+  syncItemsFromPicker: (
+    items: Array<{
+      id: string;
+      sku: string;
+      itemName: string;
+      itemType?: string;
+      uom?: string;
+      costPrice?: number;
+    }>,
+    variant: FormVariant,
+  ) => void;
   removeLine: (tempId: string, variant: FormVariant) => void;
+  clearAllLines: (variant: FormVariant) => void;
   setLines: (lines: LineDraft[]) => void;
 
   // UI state
@@ -275,11 +287,70 @@ export const useOperationalFormStore = create<
     });
   },
 
+  syncItemsFromPicker: (items, variant) => {
+    set((state) => {
+      // 1. Giữ lại các dòng manual / service (không có inventory_item_id)
+      const manualLines = state.lines.filter(
+        (line) =>
+          !line.inventory_item_id &&
+          (Boolean(line.item_code?.trim()) ||
+            Boolean(line.item_name?.trim()) ||
+            Boolean(line.description?.trim())),
+      );
+
+      // 2. Map existing lines by inventory_item_id để giữ nguyên qty, unit_price, amount, notes nếu đã có trước đó
+      const existingInventoryLineMap = new Map<string, LineDraft>();
+      state.lines.forEach((line) => {
+        if (
+          line.inventory_item_id &&
+          !existingInventoryLineMap.has(line.inventory_item_id)
+        ) {
+          existingInventoryLineMap.set(line.inventory_item_id, line);
+        }
+      });
+
+      const syncedInventoryLines: LineDraft[] = items.map((item) => {
+        const existingLine = existingInventoryLineMap.get(item.id);
+        if (existingLine) {
+          return {
+            ...existingLine,
+            item_code: item.sku || existingLine.item_code || "",
+            item_name: item.itemName || existingLine.item_name || "",
+          };
+        }
+        return {
+          tempId: newTempId(),
+          item_code: item.sku || "",
+          item_name: item.itemName || "",
+          description: "",
+          qty: "1",
+          unit_price: item.costPrice ? String(item.costPrice) : "0",
+          amount: item.costPrice ? String(item.costPrice) : "0",
+          notes: "",
+          line_type:
+            item.itemType === "GOODS" || item.itemType === "PRODUCT"
+              ? "PRODUCT"
+              : item.itemType === "SERVICE"
+                ? "SERVICE"
+                : "PART",
+          inventory_item_id: item.id || "",
+        };
+      });
+
+      const combined = [...manualLines, ...syncedInventoryLines];
+      return { lines: combined.length ? combined : [emptyLine(variant)] };
+    });
+  },
+
   removeLine: (tempId, variant) => {
     set((state) => {
       const next = state.lines.filter((line) => line.tempId !== tempId);
       return { lines: next.length ? next : [emptyLine(variant)] };
     });
+  },
+
+  clearAllLines: (variant) => {
+    set({ lines: [emptyLine(variant)] });
   },
 
   setLines: (lines) => set({ lines }),

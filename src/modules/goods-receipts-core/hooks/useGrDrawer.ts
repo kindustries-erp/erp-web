@@ -200,10 +200,20 @@ export function useGrDrawer({
         only_receivable: true,
       } as any);
       setPoOptions(
-        res.items.map((po) => ({
-          value: po.id,
-          label: `${po.poNo || po.id} — ${po.supplierName ?? ""}`,
-        })),
+        (res.items || [])
+          .filter((po) => {
+            if (Array.isArray(po.lines)) {
+              if (po.lines.length === 0) return false;
+              return po.lines.some((l: any) =>
+                Boolean(l.itemId || l.inventory_item_id),
+              );
+            }
+            return true;
+          })
+          .map((po) => ({
+            value: po.id,
+            label: `${po.poNo || po.id} — ${po.supplierName ?? ""}`,
+          })),
       );
     } catch {
       /* silent */
