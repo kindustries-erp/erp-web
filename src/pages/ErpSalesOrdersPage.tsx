@@ -483,8 +483,6 @@ export function ErpSalesOrdersPage() {
       onRefresh={list.loadOrders}
       activeFilterCount={list.activeFilterCount}
       onClearAllFilters={list.clearAllFilters}
-      filter={list.filter}
-      filterConfig={list.filterConfig}
       sortArray={list.columnState.sorts}
       onSort={(field) => {
         const current = list.columnState.sorts.find(

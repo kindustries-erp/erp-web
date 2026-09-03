@@ -118,10 +118,8 @@ export function VinfastPartsStockTemplate({
       } else {
         newParams.delete(ErpUrlQueryParam.PAGE);
       }
-      if (pageSize !== getDefaultPageSize()) {
+      if (pageSize) {
         newParams.set(ErpUrlQueryParam.PAGE_SIZE, String(pageSize));
-      } else {
-        newParams.delete(ErpUrlQueryParam.PAGE_SIZE);
       }
 
       // Column filters (cf)

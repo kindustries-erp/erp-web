@@ -45,6 +45,7 @@ export function usePurchaseOrderPage() {
   const [formOpen, setFormOpen] = useState(false);
   const [formLoading, setFormLoading] = useState(false);
   const [viewOnly, setViewOnly] = useState(false);
+  const [activeDrawerTab, setActiveDrawerTab] = useState<string>("po_details");
   const [editingRow, setEditingRow] = useState<OperationalDocument | null>(
     null,
   );
@@ -67,10 +68,15 @@ export function usePurchaseOrderPage() {
   } = useOperationalFlowStore();
 
   const openDetail = useCallback(
-    async (row: OperationalDocument, mode: "view" | "edit" = "view") => {
+    async (
+      row: OperationalDocument,
+      mode: "view" | "edit" = "view",
+      initialTab: string = "po_details",
+    ) => {
       setEditingRow(row);
       setPoReceipts([]);
       setViewOnly(mode === "view");
+      setActiveDrawerTab(initialTab);
       setFormOpen(true);
       setFormLoading(true);
       setPageError(null);
@@ -175,11 +181,13 @@ export function usePurchaseOrderPage() {
   const handleCreateNew = useCallback(() => {
     setEditingRow(null);
     setViewOnly(false);
+    setActiveDrawerTab("po_details");
     setFormOpen(true);
   }, []);
 
   const handleCloseForm = useCallback(() => {
     setFormOpen(false);
+    setActiveDrawerTab("po_details");
   }, []);
 
   const handleToggleEdit = useCallback(() => {
@@ -242,6 +250,8 @@ export function usePurchaseOrderPage() {
     formOpen,
     formLoading,
     viewOnly,
+    activeDrawerTab,
+    setActiveDrawerTab,
     editingRow,
     poReceipts,
     pageError,

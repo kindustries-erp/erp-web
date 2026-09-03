@@ -84,11 +84,21 @@ export function useBankStatementsTabLogic({
   const [detailTransactionId, setDetailTransactionId] = useState<string | null>(
     null,
   );
+  const [detailDefaultTab, setDetailDefaultTab] =
+    useState<string>("txn_details");
   const [partnerDrawerOpen, setPartnerDrawerOpen] = useState(false);
   const [selectedPartner, setSelectedPartner] = useState<{
     account?: string;
     name?: string;
   } | null>(null);
+
+  const handleOpenDetail = useCallback(
+    (id: string, tab: string = "txn_details") => {
+      setDetailDefaultTab(tab);
+      setDetailTransactionId(id);
+    },
+    [],
+  );
 
   // 3. View Mode Presets & Column Preferences
   const columnViewPresetsHook = usePageViewPresets({
@@ -329,6 +339,7 @@ export function useBankStatementsTabLogic({
     filter,
     setPage,
     setDetailTransactionId,
+    setDetailDefaultTab,
     setSelectedPartner,
     setPartnerDrawerOpen,
   });
@@ -453,6 +464,9 @@ export function useBankStatementsTabLogic({
     setIsCreateOpen,
     detailTransactionId,
     setDetailTransactionId,
+    detailDefaultTab,
+    setDetailDefaultTab,
+    handleOpenDetail,
     partnerDrawerOpen,
     setPartnerDrawerOpen,
     selectedPartner,

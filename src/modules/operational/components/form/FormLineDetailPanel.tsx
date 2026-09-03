@@ -1,7 +1,8 @@
-import { useMemo } from "react";
-import { Plus, Trash2 } from "lucide-react";
+import { useState, useMemo } from "react";
+import { Plus, Trash2, Package } from "lucide-react";
 import { DrawerSection } from "@/shared/components/DrawerModal";
 import { DataTable } from "@/shared/components/DataTable";
+import { TableText } from "@/shared/components/DataTable/TableText";
 import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import { Button } from "@/shared/components/ui/Button";
@@ -12,16 +13,13 @@ import { cn } from "@/shared/utils";
 import { lineTypeOptions } from "@/modules/operational/utils/operationalHelpers";
 import { useOperationalFormStore } from "@/modules/operational/hooks/useOperationalFormStore";
 import { useVoucherClientFilter } from "@/modules/inventory-core/hooks/useVoucherClientFilter";
+import { InventoryItemPickerDrawer } from "@/modules/inventory-core/components/InventoryItemPickerDrawer";
 import { useT } from "@/core/i18n";
 import type {
   FormVariant,
   LineDraft,
 } from "@/modules/operational/utils/operationalHelpers";
-import type { ErpPoReceipt } from "@/modules/purchase-orders-core/api/purchaseOrdersCoreApi";
-import {
-  PurchaseLinkedDocuments,
-  type PendingDocChange,
-} from "@/modules/operational/components/PurchaseLinkedDocuments";
+
 const LineColumnHeaderFilter = ({
   table,
   columnKey,
@@ -60,11 +58,12 @@ const LineColumnHeaderFilter = ({
 interface FormLineDetailPanelProps {
   variant: FormVariant;
   isPurchaseLocked: boolean;
+  hasLinkedReceipts?: boolean;
   purchaseFieldLocked: (
     field: "description" | "qty" | "expectedDate" | "status" | "poNo",
   ) => boolean;
   viewOnly?: boolean;
-  purchaseInventoryOptions: Array<{
+  purchaseInventoryOptions?: Array<{
     value: string;
     label: string;
     sku: string;
@@ -73,28 +72,48 @@ interface FormLineDetailPanelProps {
     note?: string;
     searchText?: string;
   }>;
-  poReceipts?: ErpPoReceipt[];
-  pendingDocumentChanges?: PendingDocChange[];
-  fieldSet?: (key: string, value: unknown) => void;
-  purchaseOrderId?: string;
-  open?: boolean;
+  onItemSearch?: (query: string) => void;
+  onScrollBottomItems?: () => void;
+  loadingItems?: boolean;
 }
 
 export function FormLineDetailPanel({
   variant,
   isPurchaseLocked,
+  hasLinkedReceipts = false,
   purchaseFieldLocked,
   viewOnly,
-  purchaseInventoryOptions = [],
-  poReceipts,
-  pendingDocumentChanges,
-  fieldSet,
-  purchaseOrderId,
-  open,
 }: FormLineDetailPanelProps) {
   const t = useT();
-  const { lines, setLine, setLines, addLine, removeLine } =
-    useOperationalFormStore();
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const {
+    lines,
+    setLine,
+    setLines,
+    addLine,
+    syncItemsFromPicker,
+    clearAllLines,
+    removeLine,
+  } = useOperationalFormStore();
+
+  const existingItemIds = useMemo(
+    () => lines.map((l) => l.inventory_item_id).filter(Boolean),
+    [lines],
+  );
+
+  const preSelectedItems = useMemo(
+    () =>
+      lines
+        .filter((l) => Boolean(l.inventory_item_id))
+        .map((l) => ({
+          id: l.inventory_item_id as string,
+          sku: l.item_code,
+          itemName: l.item_name || l.description || "",
+          itemType: l.line_type || "PART",
+          costPrice: Number(l.unit_price || 0),
+        })),
+    [lines],
+  );
 
   const { listHook, processedLines, buildFilterOptions } =
     useVoucherClientFilter({
@@ -155,78 +174,41 @@ export function FormLineDetailPanel({
   const columns = useMemo(
     () => [
       indexCol,
-      ...(variant === "purchase"
-        ? [
-            {
-              key: "item_code",
-              header: makeFilterHeader("itemCode", t("Mã linh kiện"), {
-                queryPrefix: "item_code",
-              }),
-              minSize: 140,
-              enableResizing: true,
-              headerClassName: "w-[140px] min-w-[140px]",
-              className: "w-[140px] min-w-[140px] align-middle px-3",
-              cell: (line: LineDraft) => line.item_code || "—",
-            },
-          ]
-        : []),
       {
         key: "item_name",
         header:
           variant === "purchase"
-            ? makeFilterHeader("itemName", t("Linh kiện / Tên hàng"), {
+            ? makeFilterHeader("itemName", t("Nội dung / Mặt hàng"), {
                 queryPrefix: "item_name",
               })
             : t("Linh kiện / Tên hàng"),
-        minSize: 160,
-        size: 180,
+        minSize: 180,
+        size: 220,
         enableResizing: true,
-        headerClassName: "w-[180px] min-w-[180px]",
-        className: "w-[180px] min-w-[180px] align-middle p-0",
+        headerClassName: "w-[220px] min-w-[180px]",
+        className: "w-[220px] min-w-[180px] align-middle p-0",
         cell: (line: LineDraft) => {
+          const isItemLocked =
+            isPurchaseLocked ||
+            (Boolean(hasLinkedReceipts) && Boolean(line.inventory_item_id));
           const text = line.item_name || line.description || "—";
+
           return variant === "purchase" ? (
-            viewOnly ? (
+            viewOnly || isItemLocked ? (
               <Tooltip content={text}>
-                <div className="font-medium px-3 py-2 block truncate w-full cursor-pointer">
+                <div className="font-medium px-3 py-2 block truncate w-full cursor-pointer text-foreground/90">
                   {text}
                 </div>
               </Tooltip>
             ) : (
-              <Combobox
-                variant="spreadsheet"
-                options={purchaseInventoryOptions}
-                value={line.inventory_item_id}
-                readOnly={isPurchaseLocked}
-                onChange={(v) => {
-                  const selected = purchaseInventoryOptions.find(
-                    (item) => item.value === (v || ""),
-                  );
-                  setLines(
-                    lines.map((draft) =>
-                      draft.tempId !== line.tempId
-                        ? draft
-                        : {
-                            ...draft,
-                            inventory_item_id: v || "",
-                            item_code: selected?.sku || "",
-                            item_name: selected?.itemName || "",
-                            description: selected
-                              ? selected.note || ""
-                              : draft.description,
-                            line_type: selected
-                              ? selected.itemType === "GOODS"
-                                ? "PRODUCT"
-                                : "PART"
-                              : draft.line_type,
-                          },
-                    ),
-                  );
-                }}
-                placeholder={t("Chọn linh kiện từ danh mục")}
-                searchPlaceholder={t("Tìm SKU / tên linh kiện...")}
-                emptyLabel={t("Không có linh kiện phù hợp")}
-                allowClear={false}
+              <CellInput
+                className={cn(
+                  "w-full h-full min-h-[38px] bg-transparent border-0 focus:ring-1 focus:ring-emerald-500 outline-none hover:bg-slate-50 focus:bg-white px-3 transition-all placeholder:text-muted-foreground/50 font-medium",
+                )}
+                placeholder={t("Nhập tên mặt hàng / chi phí / dịch vụ...")}
+                value={line.item_name}
+                disabled={isItemLocked}
+                onValueChange={(v) => setLine(line.tempId, "item_name", v)}
               />
             )
           ) : viewOnly ? (
@@ -264,7 +246,7 @@ export function FormLineDetailPanel({
                 className={cn(
                   "w-full h-[38px] bg-transparent border-0 focus:ring-1 focus:ring-emerald-500 outline-none hover:bg-slate-50 focus:bg-white px-3 transition-all placeholder:text-muted-foreground/50 font-medium",
                 )}
-                placeholder={t("Tên hàng/dịch vụ")}
+                placeholder={t("Tên linh kiện/dịch vụ")}
                 value={line.item_name}
                 disabled={isPurchaseLocked}
                 onValueChange={(v) => setLine(line.tempId, "item_name", v)}
@@ -273,6 +255,39 @@ export function FormLineDetailPanel({
           );
         },
       },
+      ...(variant === "purchase"
+        ? [
+            {
+              key: "item_code",
+              header: makeFilterHeader("itemCode", t("Mã linh kiện"), {
+                queryPrefix: "item_code",
+              }),
+              minSize: 140,
+              size: 150,
+              enableResizing: true,
+              headerClassName: "w-[150px] min-w-[140px]",
+              className: "w-[150px] min-w-[140px] align-middle p-0",
+              cell: (line: LineDraft) => {
+                const isInventoryLine = Boolean(line.inventory_item_id);
+
+                return (
+                  <div className="px-3 py-2">
+                    <TableText
+                      text={line.item_code || "—"}
+                      enableCopy={Boolean(line.item_code)}
+                      textClassName={cn(
+                        "font-mono text-xs font-medium",
+                        !isInventoryLine
+                          ? "text-muted-foreground/40"
+                          : "text-foreground/90",
+                      )}
+                    />
+                  </div>
+                );
+              },
+            },
+          ]
+        : []),
       {
         key: "qty",
         header:
@@ -283,9 +298,14 @@ export function FormLineDetailPanel({
         enableResizing: true,
         headerClassName: "text-right w-[140px] min-w-[140px]",
         className: "text-right w-[140px] min-w-[140px] align-middle p-0",
-        cell: (line: LineDraft) =>
-          viewOnly ? (
-            <span className="inline-block w-full text-right text-sm tabular-nums px-3 py-2">
+        cell: (line: LineDraft) => {
+          const isItemLocked =
+            isPurchaseLocked ||
+            (Boolean(hasLinkedReceipts) && Boolean(line.inventory_item_id));
+          const isQtyLocked = isItemLocked || purchaseFieldLocked("qty");
+
+          return viewOnly || isQtyLocked ? (
+            <span className="inline-block w-full text-right text-sm tabular-nums px-3 py-2 font-medium text-foreground/90">
               {Number(line.qty || 0).toLocaleString("vi-VN")}
             </span>
           ) : (
@@ -297,10 +317,11 @@ export function FormLineDetailPanel({
                 "w-full h-full min-h-[38px] text-right bg-transparent border-0 focus:ring-1 focus:ring-emerald-500 outline-none hover:bg-slate-50 focus:bg-white px-3 transition-all font-medium text-emerald-700",
               )}
               value={line.qty}
-              disabled={purchaseFieldLocked("qty")}
+              disabled={isQtyLocked}
               onValueChange={(v) => setLine(line.tempId, "qty", v)}
             />
-          ),
+          );
+        },
       },
       {
         key: "unit_price",
@@ -312,9 +333,13 @@ export function FormLineDetailPanel({
         enableResizing: true,
         headerClassName: "text-right w-[180px] min-w-[180px]",
         className: "text-right w-[180px] min-w-[180px] align-middle p-0",
-        cell: (line: LineDraft) =>
-          viewOnly ? (
-            <span className="inline-block w-full text-right font-semibold tabular-nums px-3 py-2">
+        cell: (line: LineDraft) => {
+          const isItemLocked =
+            isPurchaseLocked ||
+            (Boolean(hasLinkedReceipts) && Boolean(line.inventory_item_id));
+
+          return viewOnly || isItemLocked ? (
+            <span className="inline-block w-full text-right font-semibold tabular-nums px-3 py-2 text-foreground/90">
               {Number(line.unit_price || 0).toLocaleString("vi-VN")}
             </span>
           ) : (
@@ -326,10 +351,11 @@ export function FormLineDetailPanel({
                 "w-full h-full min-h-[38px] text-right bg-transparent border-0 focus:ring-1 focus:ring-emerald-500 outline-none hover:bg-slate-50 focus:bg-white px-3 transition-all font-medium",
               )}
               value={line.unit_price}
-              disabled={isPurchaseLocked}
+              disabled={isItemLocked}
               onValueChange={(v) => setLine(line.tempId, "unit_price", v)}
             />
-          ),
+          );
+        },
       },
       {
         key: "amount",
@@ -341,9 +367,13 @@ export function FormLineDetailPanel({
         enableResizing: true,
         headerClassName: "text-right w-[180px] min-w-[180px]",
         className: "text-right w-[180px] min-w-[180px] align-middle p-0",
-        cell: (line: LineDraft) =>
-          viewOnly ? (
-            <span className="inline-block w-full text-right font-semibold tabular-nums px-3 py-2">
+        cell: (line: LineDraft) => {
+          const isItemLocked =
+            isPurchaseLocked ||
+            (Boolean(hasLinkedReceipts) && Boolean(line.inventory_item_id));
+
+          return viewOnly || isItemLocked ? (
+            <span className="inline-block w-full text-right font-semibold tabular-nums px-3 py-2 text-foreground/90">
               {Number(line.amount || 0).toLocaleString("vi-VN")}
             </span>
           ) : (
@@ -355,10 +385,11 @@ export function FormLineDetailPanel({
                 "w-full h-full min-h-[38px] text-right bg-transparent border-0 focus:ring-1 focus:ring-emerald-500 outline-none hover:bg-slate-50 focus:bg-white px-3 transition-all font-semibold",
               )}
               value={line.amount}
-              disabled={isPurchaseLocked}
+              disabled={isItemLocked}
               onValueChange={(v) => setLine(line.tempId, "amount", v)}
             />
-          ),
+          );
+        },
       },
       {
         key: "description",
@@ -381,7 +412,7 @@ export function FormLineDetailPanel({
                 "w-full h-full min-h-[38px] bg-transparent border-0 focus:ring-1 focus:ring-emerald-500 outline-none hover:bg-slate-50 focus:bg-white px-3 transition-all placeholder:text-muted-foreground/50",
               )}
               value={line.description}
-              disabled={purchaseFieldLocked("description")}
+              disabled={viewOnly || purchaseFieldLocked("description")}
               onValueChange={(v) => setLine(line.tempId, "description", v)}
               placeholder={t("Nhập mô tả")}
             />
@@ -389,11 +420,12 @@ export function FormLineDetailPanel({
       },
     ],
     [
+      indexCol,
       variant,
       t,
       isPurchaseLocked,
+      hasLinkedReceipts,
       viewOnly,
-      purchaseInventoryOptions,
       lineTypeOptions,
       setLine,
       setLines,
@@ -402,21 +434,38 @@ export function FormLineDetailPanel({
   );
 
   const actionsColumn =
-    !viewOnly && displayLines.length > 1 && !isPurchaseLocked
+    !viewOnly && !isPurchaseLocked
       ? {
           header: "" as any,
-          cell: (line: LineDraft) => (
-            <div className="flex justify-center w-full">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 text-red-500"
-                onClick={() => removeLine(line.tempId, variant)}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </div>
-          ),
+          cell: (line: LineDraft) => {
+            const isInventoryLine = Boolean(line.inventory_item_id);
+            const isLocked = Boolean(hasLinkedReceipts) && isInventoryLine;
+            if (isLocked) {
+              return (
+                <div className="flex justify-center w-full">
+                  <span
+                    className="text-xs text-muted-foreground/40"
+                    title={t("Dòng đã gắn phiếu")}
+                  >
+                    —
+                  </span>
+                </div>
+              );
+            }
+            return (
+              <div className="flex justify-center w-full">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
+                  onClick={() => removeLine(line.tempId, variant)}
+                  title={t("Xóa dòng")}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            );
+          },
         }
       : undefined;
 
@@ -432,16 +481,6 @@ export function FormLineDetailPanel({
 
   return (
     <div className="flex flex-col gap-4">
-      {variant === "purchase" && poReceipts !== undefined && (
-        <PurchaseLinkedDocuments
-          receipts={poReceipts}
-          editMode={!viewOnly}
-          pendingDocumentChanges={pendingDocumentChanges}
-          fieldSet={fieldSet}
-          purchaseOrderId={purchaseOrderId}
-          open={open}
-        />
-      )}
       <DrawerSection
         title={
           <span>
@@ -452,14 +491,41 @@ export function FormLineDetailPanel({
           <div className="flex items-center gap-2">
             {clearFilterBtn}
             {!viewOnly && !isPurchaseLocked && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => addLine(variant)}
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                {t("Thêm dòng")}
-              </Button>
+              <>
+                {variant === "purchase" && !hasLinkedReceipts && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPickerOpen(true)}
+                    className="h-8 text-xs font-medium text-primary border-primary/40 hover:bg-primary/5 hover:border-primary transition-all"
+                  >
+                    <Package className="mr-1.5 h-3.5 w-3.5" />
+                    {t("Chọn từ kho")}
+                  </Button>
+                )}
+                {variant !== "purchase" && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => addLine(variant)}
+                    className="h-8 text-xs font-medium"
+                  >
+                    <Plus className="mr-1.5 h-3.5 w-3.5" />
+                    {t("Thêm dòng")}
+                  </Button>
+                )}
+                {!hasLinkedReceipts && lines.length > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => clearAllLines(variant)}
+                    className="h-8 text-xs font-medium text-destructive hover:bg-destructive/10 hover:text-destructive transition-all"
+                  >
+                    <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+                    {t("Xóa tất cả")}
+                  </Button>
+                )}
+              </>
             )}
           </div>
         }
@@ -492,6 +558,31 @@ export function FormLineDetailPanel({
           actionsColumn={actionsColumn}
         />
       </DrawerSection>
+
+      {/* Multi-select Item Picker Drawer */}
+      <InventoryItemPickerDrawer
+        open={pickerOpen}
+        onClose={() => setPickerOpen(false)}
+        preSelectedItems={preSelectedItems}
+        existingItemIds={existingItemIds as string[]}
+        onSelectItems={(selected) => {
+          const mapped = selected.map((i) => ({
+            id: i.id,
+            sku: i.sku,
+            itemName: i.itemName,
+            itemType:
+              typeof i.itemType === "object"
+                ? i.itemType?.code || i.itemType?.name || "PART"
+                : i.itemType || "PART",
+            uom:
+              typeof i.uom === "object"
+                ? i.uom?.name || i.uom?.code || ""
+                : i.uom || "",
+            costPrice: (i as any).costPrice ?? (i as any).avgUnitCost,
+          }));
+          syncItemsFromPicker(mapped, variant);
+        }}
+      />
     </div>
   );
 }

@@ -30,7 +30,7 @@ export interface UsePageViewPresetsReturn {
 export function usePageViewPresets({
   tableId,
   defaultPresets = [],
-  activeView = "all",
+  activeView = "overview",
   onViewChange,
 }: UsePageViewPresetsOptions): UsePageViewPresetsReturn {
   const customPresets = useUserPreferencesStore(
@@ -86,7 +86,11 @@ export function usePageViewPresets({
   }, [defaultPresets, customPresets, defaultPresetMap]);
 
   const activePreset = useMemo(() => {
-    return presets.find((p) => p.key === activeView) || presets[0];
+    return (
+      presets.find((p) => p.key === activeView) ||
+      presets.find((p) => p.key === "overview") ||
+      presets[0]
+    );
   }, [presets, activeView]);
 
   const selectView = useCallback(

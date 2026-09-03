@@ -293,7 +293,9 @@ Khi lắp ráp bảng vào `<SpreadsheetPageTemplate>`, cần lưu ý sự khác
 
 | Tiêu Chí Kiểm Tra | Yêu Cầu Kỹ Thuật Chi Tiết | Đạt (x) |
 | :--- | :--- | :---: |
-| **Cột STT (Index)** | Rộng đúng `40px`, không resize, căn giữa tuyệt đối cả Header (`header: <span className="w-full block text-center">#</span>`) và Cell (`cell: (_, idx) => <span className="w-full block text-center">{idx}</span>`). | [ ] |
+| **Cột STT (Index)** | Rộng đúng `40px`, không resize, căn giữa tuyệt đối cả Header (`header: <span className="w-full block text-center">#</span>`) và Cell (`cell: (_, idx) => <span className="w-full block text-center">{idx}</span>`). Core `DataTable` đã tự tính 1-based, **TUYỆT ĐỐI KHÔNG CỘNG THÊM 1** (`idx + 1` hay `(page - 1) * pageSize + idx + 1`). | [ ] |
+| **Mặc định Variant Spreadsheet** | `<StandardTable>` / `<DataTable>` bắt buộc sử dụng `variant="spreadsheet"` mặc định để có giao diện ô tính sắc nét và compact. | [ ] |
+| **Cấm bọc Wrapper có Border** | **TUYỆT ĐỐI KHÔNG** bọc thêm `div` có `border`, `rounded-xl`, `bg-background` xung quanh `<StandardTable>` / `<DataTable>` và pagination khi nhúng trong Drawer / Modal / Page. | [ ] |
 | **100% Cột có Filter** | Không cột dữ liệu nào bị thiếu header filter (trừ STT & Selection). Dùng `headerFilter(key, title)` hoặc `headerFilter.date(...)` / `headerFilter.amount(...)`. | [ ] |
 | **Numeric Filter Options** | Cột số/tiền tệ dùng `headerFilter.amount(...)` hoặc `headerFilter.numeric(...)` để tự động format số có phân tách hàng nghìn (`10.000.000 đ`) trên dropdown checkbox. | [ ] |
 | **Cột Ngày (Date)** | Sử dụng `headerFilter.date(...)` để gắn `DateRangeColumnSlot` với preset range, ẩn checkbox filter mặc định (`hideFilter={true}`). Cell dùng `TableDateCell` căn phải. | [ ] |
@@ -305,6 +307,6 @@ Khi lắp ráp bảng vào `<SpreadsheetPageTemplate>`, cần lưu ý sự khác
 | **Header Page Tabs (Tùy chọn)** | Nếu trang có nhiều phân hệ lớn (Header vs Lines, Mua vs Bán), đã truyền `tabs={pageTabs}`, `activeTab`, `onTabChange` vào `<SpreadsheetPageTemplate>`, đồng bộ `?tab=...`, reset `setPage(1)` và tách `tableId` theo tab chưa? | [ ] |
 | **2 Cấp độ Xóa Bộ Lọc** | Cột có nút "Xóa bộ lọc" trong Popover (cục bộ); Bảng có nút Clear All Filters khi `activeFilterCount > 0` (Page: `onClearAllFilters`; Drawer: `FilterButton` trong `titleExtra`). | [ ] |
 | **Pagination Responsive** | Hỗ trợ `pageSizeOptions = [20, 50, 100, 200]`, khởi tạo `defaultPageSize` bằng `getDefaultPageSize()` (`< 900px` -> 20, `>= 900px` -> 50). Reset `setPage(1)` khi đổi filter/sort/tab. | [ ] |
-| **Container & Table ID** | Bo góc `rounded-xl`, viền `border border-border/60`, có `tableId` unique để tự động lưu column sizing/visibility/order vào App Setting. | [ ] |
+| **Container & Table ID** | Có `tableId` unique để tự động lưu column sizing/visibility/order vào App Setting. | [ ] |
 | **Summary Row & Header Glass** | Bảng có cột số tiền/số lượng phải có dòng tổng cộng `summaryRow`; Cả TableHeader lẫn TableFooter tự động có hiệu ứng `table-header-glass` / `table-footer-glass` mờ mịn. | [ ] |
 | **i18n** | 100% text bọc trong `t(...)`, bao gồm cả `TableColumnHeaderFilter`. | [ ] |

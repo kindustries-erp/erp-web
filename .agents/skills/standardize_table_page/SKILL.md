@@ -18,6 +18,7 @@ Khi tạo mới hoặc chỉnh sửa một trang hiển thị bảng dữ liệu
 - **Wrapper**: Bọc toàn bộ nội dung trang trong `<SpreadsheetPageTemplate>` từ `@/shared/components/SpreadsheetPageTemplate/SpreadsheetPageTemplate`.
 - **Title & Description**: Trang **PHẢI** có tiêu đề (`<h1>`) và mô tả (`<p>`) rõ ràng, đều dùng hook i18n (`t(...)`).
 - **Variant Bảng & Container**: Truyền `variant="spreadsheet"` cho `<DataTable>` để có giao diện dạng lưới Excel tinh gọn, đồng thời container bảng tự động giữ bo góc `rounded-xl` (12px) và viền `border border-border/60` đồng bộ toàn hệ thống.
+- **Tự động kích hoạt Right Filter Panel 2 Chiều**: Khi truyền `columns`, `tableId` và `listHook` vào `<SpreadsheetPageTemplate>`, hệ thống **tự động khởi tạo Right Filter Panel thông minh** (chiều rộng 320px, dải Active Filter Chips, tìm kiếm cột nhanh, hỗ trợ toán tử nâng cao cho Số và Text, tự động đếm tổng số active filter count và nút "Xóa tất cả" tập trung). Không cần tự viết code quản lý side panel thủ công!
 
 ## 2. Breadcrumb & TabBar — BẮT BUỘC
 

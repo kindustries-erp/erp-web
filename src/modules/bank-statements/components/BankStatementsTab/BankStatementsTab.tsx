@@ -48,7 +48,6 @@ export function BankStatementsTab(props: BankStatementsTabProps) {
     currentColumnVisibility,
     branches,
     accountsData,
-    filterConfig,
     filter,
     tableState,
     data,
@@ -67,6 +66,8 @@ export function BankStatementsTab(props: BankStatementsTabProps) {
     setIsCreateOpen,
     detailTransactionId,
     setDetailTransactionId,
+    detailDefaultTab,
+    handleOpenDetail,
     partnerDrawerOpen,
     setPartnerDrawerOpen,
     selectedPartner,
@@ -118,9 +119,18 @@ export function BankStatementsTab(props: BankStatementsTabProps) {
         groupLabel: t("groupTraCuu", { defaultValue: "Tra cứu" }),
         items: [
           {
-            label: t("actionDetail", { defaultValue: "Chi tiết" }),
+            label: t("bankStatement.actionDetail", {
+              defaultValue: "Chi tiết giao dịch",
+            }),
             icon: <Eye className="w-3.5 h-3.5" />,
-            onClick: () => setDetailTransactionId(row.id),
+            onClick: () => handleOpenDetail(row.id, "txn_details"),
+          },
+          {
+            label: t("bankStatement.actionObjectDetails", {
+              defaultValue: "Chi tiết theo đối tượng",
+            }),
+            icon: <Building2 className="w-3.5 h-3.5" />,
+            onClick: () => handleOpenDetail(row.id, "partner"),
           },
         ],
       },
@@ -138,7 +148,7 @@ export function BankStatementsTab(props: BankStatementsTabProps) {
         ],
       },
     ],
-    [t, setDetailTransactionId, openCustomFieldsDrawer],
+    [t, handleOpenDetail, openCustomFieldsDrawer],
   );
 
   const createActions = useMemo(
@@ -248,11 +258,7 @@ export function BankStatementsTab(props: BankStatementsTabProps) {
         onPage={setPage}
         onPageSize={setPageSize}
         onRefresh={handleRefresh}
-        filterConfig={filterConfig}
-        filter={filter}
-        activeFilterCount={
-          filter.activeFilterCount + (tableState.activeFilterCount || 0)
-        }
+        activeFilterCount={tableState.activeFilterCount || 0}
         onClearAllFilters={handleClearAllFilters}
         sortArray={tableState.sorts}
         onSort={(colKey) => {
@@ -291,6 +297,7 @@ export function BankStatementsTab(props: BankStatementsTabProps) {
         setIsCreateOpen={setIsCreateOpen}
         detailTransactionId={detailTransactionId}
         setDetailTransactionId={setDetailTransactionId}
+        detailDefaultTab={detailDefaultTab}
         partnerDrawerOpen={partnerDrawerOpen}
         setPartnerDrawerOpen={setPartnerDrawerOpen}
         selectedPartner={selectedPartner}

@@ -80,13 +80,15 @@ export function useInvoiceTableHandlers({
           mergedFilters = {};
         }
       }
-      const taxStatusList = TAX_TAB_TO_STATUS[listHook.activeTaxTab || "all"];
-      if (
-        taxStatusList &&
-        taxStatusList.length > 0 &&
-        !mergedFilters.taxInvoiceStatus
-      ) {
-        mergedFilters.taxInvoiceStatus = taxStatusList;
+      const userSelectedStatus =
+        listHook.tableState.columnFilters?.taxInvoiceStatus;
+      if (userSelectedStatus && userSelectedStatus.length > 0) {
+        mergedFilters.taxInvoiceStatus = userSelectedStatus;
+      } else if (!mergedFilters.taxInvoiceStatus) {
+        const taxStatusList = TAX_TAB_TO_STATUS[listHook.activeTaxTab || "all"];
+        if (taxStatusList && taxStatusList.length > 0) {
+          mergedFilters.taxInvoiceStatus = taxStatusList;
+        }
       }
       const effectiveFiltersStr =
         Object.keys(mergedFilters).length > 0

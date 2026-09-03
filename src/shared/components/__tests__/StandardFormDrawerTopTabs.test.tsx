@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import React from "react";
 import {
   StandardFormDrawer,
@@ -37,7 +37,7 @@ describe("StandardFormDrawer Top Navigation Tabs", () => {
     expect(screen.getByText("3")).toBeInTheDocument();
   });
 
-  it("switches tab content when clicking different top tabs in StandardFormDrawer", () => {
+  it("switches tab content when clicking different top tabs in StandardFormDrawer", async () => {
     const onTabChange = vi.fn();
     const tabs: DrawerTopTabItem[] = [
       {
@@ -70,8 +70,10 @@ describe("StandardFormDrawer Top Navigation Tabs", () => {
     // Click Tab 2
     fireEvent.click(screen.getByText("Tab 2: Tài chính"));
     expect(onTabChange).toHaveBeenCalledWith("tab2");
-    expect(screen.getByTestId("tab2-content")).toBeInTheDocument();
-    expect(screen.queryByTestId("tab1-content")).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByTestId("tab2-content")).toBeInTheDocument();
+      expect(screen.queryByTestId("tab1-content")).not.toBeInTheDocument();
+    });
   });
 
   it("dynamically hides rightPanel when active tab has hideRightPanel: true", () => {

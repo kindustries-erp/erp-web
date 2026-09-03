@@ -417,7 +417,7 @@ export function DrawerSection({
         "mb-3 rounded-xl border border-border/80 p-3 shadow-[0_2px_8px_-1px_rgba(0,0,0,0.06),0_1px_4px_-1px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_8px_-1px_rgba(0,0,0,0.3)] transition-all duration-200",
         isFitHeight && !isCollapsed && cn("flex flex-col", heightClass),
         className,
-        isCollapsed && "h-auto !flex-none !min-h-0 !flex-initial",
+        isCollapsed && "!h-auto !flex-none !min-h-0 !flex-initial",
       )}
       style={{
         background: "var(--drawer-section-bg, rgba(255,255,255,0.65))",
@@ -429,26 +429,28 @@ export function DrawerSection({
         className={cn(
           "text-[11px] font-bold text-foreground/80 uppercase tracking-[0.06em] pb-[6px] border-b border-[color:var(--border)] flex justify-between items-center flex-shrink-0",
           !isCollapsed && "mb-[10px]",
-          collapsible && "cursor-pointer select-none group",
         )}
-        onClick={handleToggle}
       >
         <div className="flex items-center gap-2">
           {collapsible && (
-            <ChevronDown
-              className={cn(
-                "w-3.5 h-3.5 text-muted-foreground transition-transform duration-200 group-hover:text-foreground",
-                isCollapsed ? "-rotate-90" : "rotate-0",
-              )}
-            />
+            <button
+              type="button"
+              aria-label={isCollapsed ? "Mở rộng" : "Thu gọn"}
+              onClick={handleToggle}
+              className="p-0.5 -ml-0.5 rounded hover:bg-surface-hover text-muted-foreground hover:text-foreground transition-colors cursor-pointer inline-flex items-center justify-center focus-visible:outline-none"
+            >
+              <ChevronDown
+                className={cn(
+                  "w-3.5 h-3.5 transition-transform duration-200",
+                  isCollapsed ? "-rotate-90" : "rotate-0",
+                )}
+              />
+            </button>
           )}
           <span>{title}</span>
         </div>
         {titleExtra && (
-          <div
-            className="text-foreground normal-case font-semibold text-sm"
-            onClick={(e) => e.stopPropagation()}
-          >
+          <div className="text-foreground normal-case font-semibold text-sm">
             {titleExtra}
           </div>
         )}
@@ -466,7 +468,7 @@ export function DrawerSection({
           className={cn(
             "overflow-hidden min-h-0",
             isFitHeight && !isCollapsed && "flex-1 overflow-y-auto pr-1",
-            bodyClassName,
+            !isCollapsed && bodyClassName,
           )}
         >
           {children}

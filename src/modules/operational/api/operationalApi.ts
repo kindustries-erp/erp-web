@@ -292,6 +292,7 @@ export const operationalApi = {
   listInventoryStock: async (
     input?: ListParams & {
       item_type?: string;
+      stock_tab?: string;
       column_search?: Record<string, string>;
       column_filters?: Record<string, string[]>;
     },
@@ -302,6 +303,9 @@ export const operationalApi = {
       params: {
         ...params(input),
         ...(input?.item_type ? { item_type: input.item_type } : {}),
+        ...(input?.stock_tab && input.stock_tab !== "ALL"
+          ? { stock_tab: input.stock_tab }
+          : {}),
         ...(input?.column_search && Object.keys(input.column_search).length > 0
           ? { searches: JSON.stringify(input.column_search) }
           : {}),
@@ -316,6 +320,7 @@ export const operationalApi = {
   exportInventoryStock: async (
     input?: ListParams & {
       item_type?: string;
+      stock_tab?: string;
       column_search?: Record<string, string>;
       column_filters?: Record<string, string[]>;
     },
@@ -323,6 +328,9 @@ export const operationalApi = {
     const requestParams = {
       ...params(input),
       ...(input?.item_type ? { item_type: input.item_type } : {}),
+      ...(input?.stock_tab && input.stock_tab !== "ALL"
+        ? { stock_tab: input.stock_tab }
+        : {}),
       ...(input?.column_search && Object.keys(input.column_search).length > 0
         ? { searches: JSON.stringify(input.column_search) }
         : {}),
@@ -345,6 +353,7 @@ export const operationalApi = {
     page: number = 1,
     pageSize: number = 20,
     filters?: string,
+    stock_tab?: string,
   ) => {
     const { data } = await axiosInstance.get<{
       items: string[];
@@ -353,7 +362,14 @@ export const operationalApi = {
       pageSize: number;
       totalPages: number;
     }>("/api/v1/inventory/stock/column-options", {
-      params: { column, search, page, pageSize, filters },
+      params: {
+        column,
+        search,
+        page,
+        pageSize,
+        filters,
+        ...(stock_tab && stock_tab !== "ALL" ? { stock_tab } : {}),
+      },
     });
     return data;
   },

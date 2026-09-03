@@ -1,4 +1,7 @@
 export const activityLogsVi = {
+  title: "Nhật ký hoạt động",
+  desc: "Audit logs trực tiếp từ ERP CORE backend",
+  empty: "Chưa có audit logs",
   headers: {
     actor: "Người thực hiện",
     action: "Hành động",
@@ -6,5 +9,22 @@ export const activityLogsVi = {
     entity: "Thực thể",
     status: "Trạng thái",
     time: "Thời gian",
+  },
+  actions: {
+    lookup: "Tra cứu",
+    viewDetail: "Xem chi tiết",
+  },
+  drawer: {
+    title: "Chi tiết log",
+    sectionMain: "Thông tin chính",
+    sectionSnapshot: "Snapshot JSON",
+    actor: "Người thực hiện:",
+    entity: "Thực thể:",
+    route: "Đường dẫn (Route):",
+    message: "Thông điệp:",
+    before: "Trước thay đổi (Before)",
+    after: "Sau thay đổi (After)",
+    error: "Lỗi phát sinh (Error)",
+    btnClose: "Đóng",
   },
 };

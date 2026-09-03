@@ -1,33 +1,14 @@
 import React from "react";
-import {
-  Receipt,
-  DownloadCloud,
-  Eye,
-  Pencil,
-  Download,
-  Trash,
-  KeyRound,
-  Scale,
-  Settings,
-  Building2,
-} from "lucide-react";
 import { useAppStore } from "@/core/config/appStore";
-
-import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate/SpreadsheetPageTemplate";
-import { erpInvoicesCoreApi } from "@/modules/erp-invoices-core/api/erpInvoicesCoreApi";
-import {
-  getPdfAttachments,
-  getInvoiceRowClassName,
-  DEFAULT_INVOICE_COLUMN_VISIBILITY,
-} from "./utils";
 import {
   useErpInvoicesTabLogic,
   type ErpInvoicesTabProps,
 } from "./useErpInvoicesTabLogic";
+import { InvoiceHeaderSection } from "./components/InvoiceHeaderSection";
+import { ErpInvoiceItemsSection } from "../ErpInvoiceItemsSection";
 import { InvoiceDrawers } from "./components/InvoiceDrawers";
 import { InvoiceBulkModals } from "./components/InvoiceBulkModals";
 import { InvoiceViewConfigDrawer } from "./components/InvoiceViewConfigDrawer";
-import { ErpInvoiceItemsSection } from "../ErpInvoiceItemsSection";
 
 export type { ErpInvoicesTabProps };
 
@@ -38,18 +19,12 @@ export function ErpInvoicesTab(props: ErpInvoicesTabProps) {
     t,
     direction,
     isDrawer,
-    listDir,
     canEditInvoice,
-    listHook,
+    loadInvoices,
+    invoices,
     formHook,
     urlSync,
-    columns,
-    summaryRow,
-    viewTabsNode,
     bulkActionsNode,
-    filterConfig,
-    activeSortKey,
-    activeSortOrder,
     rowSelection,
     setRowSelection,
     selectedIds,
@@ -102,301 +77,169 @@ export function ErpInvoicesTab(props: ErpInvoicesTabProps) {
     handleBulkDownloadSelected,
   } = logic;
 
-  const rowActions = React.useCallback(
-    (inv: any) => {
-      const traCuuItems = [];
-      const thaoTacItems = [];
+  // 4-View Lazy Mounted Keep-Alive State (Synchronous render-time marking to prevent blank-frame flicker)
+  const mountedViewsRef = React.useRef<Record<string, boolean>>({
+    in: logic.currentTabKey === "in",
+    "in-lines": logic.currentTabKey === "in-lines",
+    out: logic.currentTabKey === "out",
+    "out-lines": logic.currentTabKey === "out-lines",
+  });
 
-      traCuuItems.push({
-        label: t("actionDetail", "Chi tiết hóa đơn"),
-        icon: <Eye className="w-3.5 h-3.5" />,
-        onClick: () => handleOpenInternal(inv, "view"),
-      });
+  if (logic.currentTabKey) {
+    mountedViewsRef.current[logic.currentTabKey] = true;
+  }
 
-      traCuuItems.push({
-        label: t("actionObjectDetails", "Chi tiết theo đối tượng"),
-        icon: <Building2 className="w-3.5 h-3.5" />,
-        onClick: () => handleOpenInternal(inv, "view", "partner"),
-      });
+  const handleOpenSync = React.useCallback(() => {
+    setImportModalOpen(true);
+  }, [setImportModalOpen]);
 
-      if (canEditInvoice && inv.status !== "CANCELLED") {
-        thaoTacItems.push({
-          label: t("actionEdit", "Chỉnh sửa"),
-          icon: <Pencil className="w-3.5 h-3.5" />,
-          onClick: () => handleOpenInternal(inv, "edit"),
-        });
-      }
+  const handleOpenPortalAuth = React.useCallback(() => {
+    setPortalAuthOpen(true);
+  }, [setPortalAuthOpen]);
 
-      if (inv.xmlFileKey) {
-        thaoTacItems.push({
-          label: t("actionDownloadXml", "Tải XML"),
-          icon: <Download className="w-3.5 h-3.5" />,
-          onClick: () => void handleDownload(inv.id, "xml"),
-        });
-      }
-      const hasPdf =
-        Boolean(inv.pdfFileKey) ||
-        Boolean(inv.pdfFiles && inv.pdfFiles.length > 0) ||
-        Boolean(
-          inv.attachments && getPdfAttachments(inv.attachments).length > 0,
-        );
-      if (hasPdf) {
-        thaoTacItems.push({
-          label: t("actionDownloadPdf", "Tải PDF"),
-          icon: <Download className="w-3.5 h-3.5" />,
-          onClick: async () => {
-            if (inv.attachments && inv.attachments.length > 1) {
-              try {
-                showToast({
-                  title: "Đang nén file PDF...",
-                  variant: "default",
-                });
-                const blob = await erpInvoicesCoreApi.downloadPdfsZip(inv.id);
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement("a");
-                a.href = url;
-                a.download = `hoadon_${inv.id}_pdfs.zip`;
-                document.body.appendChild(a);
-                a.click();
-                window.URL.revokeObjectURL(url);
-                document.body.removeChild(a);
-              } catch {
-                showToast({
-                  title: "Không thể tải file PDF",
-                  variant: "destructive",
-                });
-              }
-            } else if (inv.attachments && inv.attachments.length === 1) {
-              const f = inv.attachments[0];
-              try {
-                const { url } = await erpInvoicesCoreApi.getPdfDownloadUrl(
-                  inv.id,
-                  f.attachment?.fileKey,
-                  false,
-                );
-                const a = document.createElement("a");
-                a.href = url;
-                a.download = f.attachment?.fileName || "document.pdf";
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-              } catch {
-                showToast({
-                  title: "Không thể tải file PDF",
-                  variant: "destructive",
-                });
-              }
-            } else if (inv.pdfFileKey) {
-              void handleDownload(inv.id, "pdf");
-            }
-          },
-        });
-      }
-
-      if (canEditInvoice && inv.status !== "CANCELLED") {
-        thaoTacItems.push({
-          label: t("actionNetOff", "Cấn trừ sao kê"),
-          icon: <Scale className="w-3.5 h-3.5" />,
-          onClick: () => setNetOffInvoice(inv),
-        });
-      }
-
-      if (inv.status === "DRAFT") {
-        thaoTacItems.push({
-          label: t("actionDelete", "Xóa"),
-          icon: <Trash className="w-3.5 h-3.5" />,
-          variant: "danger" as const,
-          onClick: () => {
-            handleOpenInternal(inv);
-            formHook.setDeleteConfirm(true);
-          },
-        });
-      }
-
-      return [
-        {
-          groupLabel: t("groupTraCuu", "Tra cứu"),
-          items: traCuuItems,
-        },
-        {
-          groupLabel: t("groupThaoTac", "Thao tác"),
-          items: thaoTacItems,
-        },
-        {
-          groupLabel: t("groupCauHinh", "Cấu hình"),
-          items: [
-            {
-              label: t(
-                "invoiceConfig.customFields",
-                "Cấu hình trường tùy chỉnh",
-              ),
-              icon: <Settings className="w-3.5 h-3.5 text-violet-500" />,
-              onClick: () => openCustomFieldsDrawer("INVOICE", "Hóa đơn"),
-            },
-          ],
-        },
-      ];
-    },
-    [
-      t,
-      canEditInvoice,
-      handleOpenInternal,
-      handleDownload,
-      showToast,
-      setNetOffInvoice,
-      formHook,
-      openCustomFieldsDrawer,
-    ],
-  );
-
-  const createActions = React.useMemo(
-    () => [
-      {
-        groupLabel: t("groupTraCuu", "Tra cứu"),
-        items: [
-          {
-            label: t("exportExcel", "Xuất Excel"),
-            icon: <Download className="w-4 h-4 text-green-600" />,
-            onClick: () => handleExportExcel(),
-          },
-        ],
-      },
-      ...(canEditInvoice
-        ? [
-            {
-              groupLabel: t("groupThaoTac", "Thao tác"),
-              items: [
-                {
-                  label: t("loginTaxPortal", "Đăng nhập Cổng Thuế"),
-                  icon: <KeyRound className="w-4 h-4 text-primary" />,
-                  onClick: () => setPortalAuthOpen(true),
-                },
-              ],
-            },
-          ]
-        : []),
-      {
-        groupLabel: t("groupCauHinh", "Cấu hình"),
-        items: [
-          {
-            label: t("invoiceConfig.customFields", "Cấu hình trường tùy chỉnh"),
-            icon: <Settings className="w-4 h-4 text-violet-500" />,
-            onClick: () => openCustomFieldsDrawer("INVOICE", "Hóa đơn"),
-          },
-        ],
-      },
-    ],
-    [
-      t,
-      canEditInvoice,
-      handleExportExcel,
-      setPortalAuthOpen,
-      openCustomFieldsDrawer,
-    ],
-  );
+  const handleExportExcelAction = React.useCallback(() => {
+    void handleExportExcel();
+  }, [handleExportExcel]);
 
   return (
     <div className="flex flex-col h-full flex-1 min-h-0 w-full overflow-hidden">
-      <div
-        className={
-          logic.activeView === "header"
-            ? "flex flex-col h-full flex-1 min-h-0 overflow-hidden"
-            : "hidden"
-        }
-      >
-        <SpreadsheetPageTemplate
-          hideHeader={isDrawer}
-          tabs={logic.pageTabs}
-          activeTab={logic.currentTabKey}
-          onTabChange={logic.handleTabChange}
-          defaultColumnOrder={["__selection", "__actions", "__expand"]}
-          title={
-            direction === "IN"
-              ? t("inbound", "Hóa đơn mua vào")
-              : t("outbound", "Hóa đơn bán ra")
+      {/* ── View 1: Header IN (Hóa đơn mua vào) ────────────────────────── */}
+      {mountedViewsRef.current["in"] && (
+        <div
+          className={
+            logic.currentTabKey === "in"
+              ? "flex flex-col h-full flex-1 min-h-0 overflow-hidden"
+              : "hidden"
           }
-          desc={t("invoiceDesc", "Quản lý danh sách hóa đơn điện tử")}
-          icon={<Receipt className="h-5 w-5" />}
-          tableId={
-            isDrawer
-              ? `erp-invoices-table-checkpoint-${direction}`
-              : `erp-invoices-table-${listDir}`
-          }
-          items={listHook.invoices}
-          columns={columns}
-          getRowKey={(r) => r.id}
-          getRowClassName={getInvoiceRowClassName}
-          summaryRow={summaryRow}
-          loading={listHook.loading}
-          emptyLabel={t("emptyData", "Chưa có hóa đơn nào.")}
-          minWidth={1200}
-          activeFilterCount={
-            listHook.filterPanel.activeFilterCount +
-            (listHook.tableState.activeFilterCount || 0)
-          }
-          onClearAllFilters={() => {
-            listHook.filterPanel.resetAll();
-            listHook.setPage(1);
-          }}
-          sortArray={
-            activeSortKey
-              ? [
-                  activeSortOrder === "desc"
-                    ? `-${activeSortKey}`
-                    : activeSortKey,
-                ]
-              : undefined
-          }
-          onSort={listHook.handleSort}
-          page={listHook.page}
-          pageSize={listHook.pageSize}
-          total={listHook.total}
-          totalPages={listHook.totalPages}
-          onPage={listHook.setPage}
-          onPageSize={listHook.setPageSize}
-          onRefresh={() => void listHook.loadInvoices()}
-          enableRowSelection={true}
-          rowSelection={rowSelection}
-          onRowSelectionChange={setRowSelection}
-          defaultColumnVisibility={DEFAULT_INVOICE_COLUMN_VISIBILITY}
-          bulkActionsNode={bulkActionsNode}
-          customActionsNode={viewTabsNode}
-          filterConfig={filterConfig}
-          filter={listHook.filterPanel}
-          rowActions={rowActions}
-          onCreate={() => setImportModalOpen(true)}
-          createLabel={t("syncInvoices", "Đồng bộ")}
-          createIcon={
-            <DownloadCloud className="w-4 h-4 mr-1 text-indigo-100" />
-          }
-          createActions={createActions}
-        />
-      </div>
+        >
+          <InvoiceHeaderSection
+            direction="IN"
+            instanceIndex={props.instanceIndex}
+            isDrawer={isDrawer}
+            partnerTaxCode={props.partnerTaxCode}
+            canEditInvoice={canEditInvoice}
+            tabs={logic.pageTabs}
+            activeTab={logic.currentTabKey}
+            onTabChange={logic.handleTabChange}
+            handleOpenInternal={handleOpenInternal}
+            handleDownload={handleDownload}
+            handleExportExcel={handleExportExcelAction}
+            onOpenSync={handleOpenSync}
+            onOpenPortalAuth={handleOpenPortalAuth}
+            setNetOffInvoice={setNetOffInvoice}
+            formHook={formHook}
+            openCustomFieldsDrawer={openCustomFieldsDrawer}
+            showToast={showToast}
+            rowSelection={rowSelection}
+            setRowSelection={setRowSelection}
+            bulkActionsNode={bulkActionsNode}
+            activePresetKey={logic.activeColumnPresetKey}
+            presets={logic.columnViewPresetsHook.presets}
+            onSelectViewPreset={logic.handleColumnPresetChange}
+            onOpenViewConfig={logic.handleOpenEditView}
+            onOpenCreateView={logic.handleOpenCreateView}
+            onDeleteViewPreset={logic.handleDeleteViewPreset}
+            setPreviewPdf={setPreviewPdf}
+            handlePreviewPdf={logic.handlePreviewPdf}
+          />
+        </div>
+      )}
 
-      <div
-        className={
-          logic.activeView === "lines"
-            ? "flex flex-col h-full flex-1 min-h-0 overflow-hidden"
-            : "hidden"
-        }
-      >
-        <ErpInvoiceItemsSection
-          key={`lines-${logic.direction}-${props.instanceIndex || 1}`}
-          direction={logic.direction}
-          instanceIndex={props.instanceIndex}
-          isDrawer={isDrawer}
-          canEditInvoice={canEditInvoice}
-          partnerTaxCode={props.partnerTaxCode}
-          tabs={logic.pageTabs}
-          activeTab={logic.currentTabKey}
-          onTabChange={logic.handleTabChange}
-          handleOpenInternal={handleOpenInternal}
-          handleDownload={handleDownload}
-          onOpenSync={() => setImportModalOpen(true)}
-          onOpenPortalAuth={() => setPortalAuthOpen(true)}
-        />
-      </div>
+      {/* ── View 2: Lines IN (Chi tiết mua vào) ────────────────────────── */}
+      {mountedViewsRef.current["in-lines"] && (
+        <div
+          className={
+            logic.currentTabKey === "in-lines"
+              ? "flex flex-col h-full flex-1 min-h-0 overflow-hidden"
+              : "hidden"
+          }
+        >
+          <ErpInvoiceItemsSection
+            direction="IN"
+            instanceIndex={props.instanceIndex}
+            isDrawer={isDrawer}
+            canEditInvoice={canEditInvoice}
+            partnerTaxCode={props.partnerTaxCode}
+            tabs={logic.pageTabs}
+            activeTab={logic.currentTabKey}
+            onTabChange={logic.handleTabChange}
+            handleOpenInternal={handleOpenInternal}
+            handleDownload={handleDownload}
+            onOpenSync={handleOpenSync}
+            onOpenPortalAuth={handleOpenPortalAuth}
+          />
+        </div>
+      )}
 
+      {/* ── View 3: Header OUT (Hóa đơn bán ra) ────────────────────────── */}
+      {mountedViewsRef.current["out"] && (
+        <div
+          className={
+            logic.currentTabKey === "out"
+              ? "flex flex-col h-full flex-1 min-h-0 overflow-hidden"
+              : "hidden"
+          }
+        >
+          <InvoiceHeaderSection
+            direction="OUT"
+            instanceIndex={props.instanceIndex}
+            isDrawer={isDrawer}
+            partnerTaxCode={props.partnerTaxCode}
+            canEditInvoice={canEditInvoice}
+            tabs={logic.pageTabs}
+            activeTab={logic.currentTabKey}
+            onTabChange={logic.handleTabChange}
+            handleOpenInternal={handleOpenInternal}
+            handleDownload={handleDownload}
+            handleExportExcel={handleExportExcelAction}
+            onOpenSync={handleOpenSync}
+            onOpenPortalAuth={handleOpenPortalAuth}
+            setNetOffInvoice={setNetOffInvoice}
+            formHook={formHook}
+            openCustomFieldsDrawer={openCustomFieldsDrawer}
+            showToast={showToast}
+            rowSelection={rowSelection}
+            setRowSelection={setRowSelection}
+            bulkActionsNode={bulkActionsNode}
+            activePresetKey={logic.activeColumnPresetKey}
+            presets={logic.columnViewPresetsHook.presets}
+            onSelectViewPreset={logic.handleColumnPresetChange}
+            onOpenViewConfig={logic.handleOpenEditView}
+            onOpenCreateView={logic.handleOpenCreateView}
+            onDeleteViewPreset={logic.handleDeleteViewPreset}
+            setPreviewPdf={setPreviewPdf}
+            handlePreviewPdf={logic.handlePreviewPdf}
+          />
+        </div>
+      )}
+
+      {/* ── View 4: Lines OUT (Chi tiết bán ra) ────────────────────────── */}
+      {mountedViewsRef.current["out-lines"] && (
+        <div
+          className={
+            logic.currentTabKey === "out-lines"
+              ? "flex flex-col h-full flex-1 min-h-0 overflow-hidden"
+              : "hidden"
+          }
+        >
+          <ErpInvoiceItemsSection
+            direction="OUT"
+            instanceIndex={props.instanceIndex}
+            isDrawer={isDrawer}
+            canEditInvoice={canEditInvoice}
+            partnerTaxCode={props.partnerTaxCode}
+            tabs={logic.pageTabs}
+            activeTab={logic.currentTabKey}
+            onTabChange={logic.handleTabChange}
+            handleOpenInternal={handleOpenInternal}
+            handleDownload={handleDownload}
+            onOpenSync={handleOpenSync}
+            onOpenPortalAuth={handleOpenPortalAuth}
+          />
+        </div>
+      )}
+
+      {/* ── Common Drawers & Modals (Shared across views) ──────────────── */}
       <InvoiceDrawers
         direction={direction}
         isDrawer={isDrawer}
@@ -404,7 +247,7 @@ export function ErpInvoicesTab(props: ErpInvoicesTabProps) {
         showToast={showToast}
         formHook={formHook}
         urlSync={urlSync}
-        loadInvoices={listHook.loadInvoices}
+        loadInvoices={loadInvoices}
         handleCloseInternal={handleCloseInternal}
         buildExportBaseQuery={buildExportBaseQuery}
         exportDrawerOpen={exportDrawerOpen}
@@ -424,11 +267,11 @@ export function ErpInvoicesTab(props: ErpInvoicesTabProps) {
 
       <InvoiceBulkModals
         direction={direction}
-        invoices={listHook.invoices || []}
+        invoices={invoices}
         branches={branches}
         selectedIds={selectedIds}
         setRowSelection={setRowSelection}
-        loadInvoices={listHook.loadInvoices}
+        loadInvoices={loadInvoices}
         bulkSelectedModalOpen={bulkSelectedModalOpen}
         setBulkSelectedModalOpen={setBulkSelectedModalOpen}
         bulkSelectedDownloading={bulkSelectedDownloading}

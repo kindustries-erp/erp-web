@@ -165,4 +165,73 @@ describe("useErpInvoicesList", () => {
     expect(result.current.invoices).toHaveLength(1);
     expect(result.current.total).toBe(1);
   });
+
+  describe("GDT status (taxInvoiceStatus) filtering", () => {
+    it("should send taxInvoiceStatus when user sets column filter on tab 'all'", async () => {
+      const mockList = erpInvoicesCoreApi.list as any;
+      const { result } = renderHook(() => useErpInvoicesList(), {
+        wrapper: createWrapper(),
+      });
+      await waitFor(() => expect(result.current.loading).toBe(false));
+
+      act(() => {
+        result.current.tableState.setColumnFilter("taxInvoiceStatus", ["1"]);
+      });
+
+      await waitFor(() => {
+        const lastCall = mockList.mock.calls[mockList.mock.calls.length - 1][0];
+        const colFilters = JSON.parse(lastCall.column_filters);
+        expect(colFilters.taxInvoiceStatus).toEqual(["1"]);
+      });
+    });
+
+    it("should omit taxInvoiceStatus on tab 'all' when column filter is empty", async () => {
+      const mockList = erpInvoicesCoreApi.list as any;
+      const { result } = renderHook(() => useErpInvoicesList(), {
+        wrapper: createWrapper(),
+      });
+      await waitFor(() => expect(result.current.loading).toBe(false));
+
+      const lastCall = mockList.mock.calls[mockList.mock.calls.length - 1][0];
+      const colFilters = JSON.parse(lastCall.column_filters);
+      expect(colFilters.taxInvoiceStatus).toBeUndefined();
+    });
+
+    it("should fallback to tab statuses on tab 'replacement' when column filter is empty", async () => {
+      const mockList = erpInvoicesCoreApi.list as any;
+      const { result } = renderHook(() => useErpInvoicesList(), {
+        wrapper: createWrapper(),
+      });
+      await waitFor(() => expect(result.current.loading).toBe(false));
+
+      act(() => {
+        result.current.setActiveTaxTab("replacement");
+      });
+
+      await waitFor(() => {
+        const lastCall = mockList.mock.calls[mockList.mock.calls.length - 1][0];
+        const colFilters = JSON.parse(lastCall.column_filters);
+        expect(colFilters.taxInvoiceStatus).toEqual(["2", "4"]);
+      });
+    });
+
+    it("should prioritize user column filter over tab default on tab 'replacement'", async () => {
+      const mockList = erpInvoicesCoreApi.list as any;
+      const { result } = renderHook(() => useErpInvoicesList(), {
+        wrapper: createWrapper(),
+      });
+      await waitFor(() => expect(result.current.loading).toBe(false));
+
+      act(() => {
+        result.current.setActiveTaxTab("replacement");
+        result.current.tableState.setColumnFilter("taxInvoiceStatus", ["2"]);
+      });
+
+      await waitFor(() => {
+        const lastCall = mockList.mock.calls[mockList.mock.calls.length - 1][0];
+        const colFilters = JSON.parse(lastCall.column_filters);
+        expect(colFilters.taxInvoiceStatus).toEqual(["2"]);
+      });
+    });
+  });
 });

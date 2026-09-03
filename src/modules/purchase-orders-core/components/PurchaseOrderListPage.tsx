@@ -5,11 +5,13 @@ import {
   Trash2,
   XCircle,
   Eye,
+  Building2,
   Pencil,
   FileSpreadsheet,
 } from "lucide-react";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate";
 import { PurchaseOrderDrawer } from "./PurchaseOrderDrawer";
+import { PurchaseOrderExportDrawer } from "./PurchaseOrderExportDrawer";
 import { ConnectionGraphDrawer } from "./ConnectionGraphDrawer";
 import { usePurchaseColumns } from "@/modules/operational/components/list/columns/purchaseColumns";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
@@ -51,6 +53,7 @@ export function PurchaseOrderListPage() {
   const isAdminEmail = employee?.email === "admin@liouni.com";
 
   const [pendingTagIds, setPendingTagIds] = useState<string[]>([]);
+  const [isExportOpen, setIsExportOpen] = useState(false);
 
   // GR drawer — reuses the same form as ErpWarehousePage
   const grDrawer = useGrDrawer({
@@ -92,8 +95,6 @@ export function PurchaseOrderListPage() {
   } = pageState;
 
   const {
-    filter,
-    filterConfig,
     listQuery,
     page,
     pageSize,
@@ -208,22 +209,23 @@ export function PurchaseOrderListPage() {
           ? "opacity-40 text-muted-foreground"
           : undefined
       }
-      createActions={
-        canCreatePo
-          ? [
-              {
-                groupLabel: t("groupThemMoi", "Thêm mới"),
-                items: [
-                  {
-                    label: t("common.create", "Tạo mới"),
-                    icon: <PackagePlus className="w-4 h-4 text-emerald-600" />,
-                    onClick: handleCreateNew,
-                  },
-                ],
-              },
-            ]
-          : undefined
+      onCreate={canCreatePo ? handleCreateNew : undefined}
+      createLabel={t("common.create", "Tạo mới")}
+      createIcon={
+        <PackagePlus className="w-4 h-4 mr-1 text-primary-foreground" />
       }
+      createActions={[
+        {
+          groupLabel: t("groupThaoTac", "Thao tác"),
+          items: [
+            {
+              label: t("Xuất Excel theo kỳ", "Xuất Excel theo kỳ"),
+              icon: <FileSpreadsheet className="w-4 h-4 text-emerald-600" />,
+              onClick: () => setIsExportOpen(true),
+            },
+          ],
+        },
+      ]}
       error={pageError}
       items={items}
       columns={columns}
@@ -238,8 +240,6 @@ export function PurchaseOrderListPage() {
       }}
       sortArray={tableState.sorts}
       onSort={togglePurchaseSort}
-      filter={filter}
-      filterConfig={filterConfig}
       getRowKey={(row) => `${row.document_type || "purchase"}-${row.id}`}
       rowActions={(row) => [
         {
@@ -248,7 +248,12 @@ export function PurchaseOrderListPage() {
             {
               label: t("Chi tiết"),
               icon: <Eye className="h-[13px] w-[13px]" />,
-              onClick: () => openDetail(row, "view"),
+              onClick: () => openDetail(row, "view", "po_details"),
+            },
+            {
+              label: t("Chi tiết theo đối tượng"),
+              icon: <Building2 className="h-[13px] w-[13px]" />,
+              onClick: () => openDetail(row, "view", "partner"),
             },
             {
               label: t("connectionGraph.action"),
@@ -297,9 +302,7 @@ export function PurchaseOrderListPage() {
                 row.status === "DRAFT"
                   ? t("Xuất phiếu đề xuất")
                   : t("Xuất bảng kê mua hàng"),
-              icon: (
-                <FileSpreadsheet className="h-[13px] w-[13px] text-emerald-600 dark:text-emerald-400" />
-              ),
+              icon: <FileSpreadsheet className="h-[13px] w-[13px]" />,
               onClick: () => void handleExportExcel(row),
             },
           ],
@@ -311,6 +314,8 @@ export function PurchaseOrderListPage() {
         loading={formLoading}
         editing={editingRow}
         viewOnly={viewOnly}
+        activeTabKey={pageState.activeDrawerTab}
+        onTabChange={pageState.setActiveDrawerTab}
         poReceipts={poReceipts}
         onClose={() => {
           handleCloseForm();
@@ -359,6 +364,11 @@ export function PurchaseOrderListPage() {
               break;
           }
         }}
+      />
+
+      <PurchaseOrderExportDrawer
+        open={isExportOpen}
+        onClose={() => setIsExportOpen(false)}
       />
 
       <ConfirmModal

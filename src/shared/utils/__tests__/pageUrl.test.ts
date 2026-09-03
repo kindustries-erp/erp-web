@@ -97,5 +97,16 @@ describe("pageUrl utilities", () => {
       expect(legacyLines?.page).toBe("erp-invoices");
       expect(legacyLines?.tab).toBe("in-lines");
     });
+
+    it("parses vinfast-parts-stock page with tab and stock_tab query params", () => {
+      const res = pathToPage(
+        "/vinfast-parts-stock",
+        "?tab=oto&stock_tab=OUT_OF_STOCK",
+      );
+      expect(res).not.toBeNull();
+      expect(res?.page).toBe("vinfast-parts-stock");
+      expect(res?.tab).toBe("oto");
+      expect(res?.searchParams.get("stock_tab")).toBe("OUT_OF_STOCK");
+    });
   });
 });

@@ -150,6 +150,6 @@ describe("ErpInvoices4TabsRouting", () => {
     expect(result.current.currentTabKey).toBe("in");
     expect(result.current.direction).toBe("IN");
     expect(result.current.activeView).toBe("header");
-    expect(window.location.search).not.toContain("tab=");
+    expect(window.location.search).toContain("tab=in");
   });
 });

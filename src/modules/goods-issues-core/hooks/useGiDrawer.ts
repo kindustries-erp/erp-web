@@ -67,7 +67,7 @@ export const emptyGiForm = (): GiForm => ({
   productionOrderId: "",
   status: "DRAFT",
   remarks: "",
-  lines: [emptyGiLine()],
+  lines: [],
 });
 
 export function buildGiForm(gi: ErpGoodsIssue): GiForm {

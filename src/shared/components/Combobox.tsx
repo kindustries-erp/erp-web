@@ -106,15 +106,15 @@ export function Combobox({
             className={cn(
               "flex items-center justify-between w-full outline-none transition-all",
               variant === "default" && "px-3 py-2 text-xs border rounded-xl",
+              variant === "default" &&
+                (open
+                  ? "border-primary ring-2 ring-primary/10 bg-surface"
+                  : "border-border bg-muted/20 hover:border-border-hover hover:bg-surface"),
               variant === "spreadsheet" &&
-                "h-full min-h-[38px] px-3 border-0 rounded-none bg-transparent hover:bg-slate-50 focus:bg-white text-xs",
-              variant === "default" && open
-                ? "border-primary ring-2 ring-primary/10 bg-surface"
-                : variant === "default" &&
-                    "border-border bg-muted/20 hover:border-border-hover hover:bg-surface",
-              variant === "spreadsheet" && open
-                ? "bg-white ring-1 ring-primary"
-                : "",
+                "h-full min-h-[38px] px-3 border-0 rounded-none shadow-none ring-0 outline-none bg-transparent hover:bg-slate-50/80 focus:bg-white text-xs",
+              variant === "spreadsheet" &&
+                open &&
+                "bg-white border-0 rounded-none shadow-none ring-0 outline-none",
               disabled
                 ? "opacity-60 cursor-not-allowed"
                 : readOnly
@@ -201,7 +201,12 @@ export function Combobox({
               </button>
             )}
 
-            {filtered.length === 0 ? (
+            {loading && filtered.length === 0 ? (
+              <div className="px-3 py-5 text-xs text-center text-[color:var(--muted-fg)] flex items-center justify-center gap-2">
+                <span className="inline-block w-3.5 h-3.5 border-2 border-primary border-r-transparent rounded-full animate-spin" />
+                <span>Đang tải...</span>
+              </div>
+            ) : filtered.length === 0 ? (
               <div className="px-3 py-5 text-xs text-center text-[color:var(--faint)]">
                 {emptyLabel}
               </div>
@@ -240,9 +245,10 @@ export function Combobox({
               ))
             )}
 
-            {loading && (
-              <div className="px-3 py-2 text-xs text-center text-[color:var(--muted-fg)]">
-                Đang tải...
+            {loading && filtered.length > 0 && (
+              <div className="px-3 py-2 text-xs text-center text-[color:var(--muted-fg)] flex items-center justify-center gap-1.5 border-t border-border/40">
+                <span className="inline-block w-3 h-3 border-2 border-primary border-r-transparent rounded-full animate-spin" />
+                <span>Đang tải thêm...</span>
               </div>
             )}
           </div>

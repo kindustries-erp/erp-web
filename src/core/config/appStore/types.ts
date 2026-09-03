@@ -30,6 +30,7 @@ export interface AppState {
   setForbidden: (value: boolean) => void;
   setCurrentBranchId: (id: string | null) => void;
   navigate: (page: PageKey, instanceIndex?: 1 | 2) => void;
+  updateCurrentTabUrl: (instanceId: string, url: string) => void;
   duplicateTab: (page: PageKey) => void;
   syncFromUrl: (page: PageKey, tab?: string, instanceIndex?: 1 | 2) => void;
   closeTab: (idOrKey: string) => void;

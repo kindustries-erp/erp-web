@@ -14,6 +14,7 @@ vi.mock("@/shared/components/StandardFormDrawer", () => ({
     onToggleEdit,
     panelClassName,
     layout,
+    size,
     relatedTabs,
     tabs,
   }: any) => (
@@ -21,6 +22,7 @@ vi.mock("@/shared/components/StandardFormDrawer", () => ({
       data-testid="drawer"
       data-panel-class={panelClassName || ""}
       data-layout={layout || ""}
+      data-size={size || ""}
     >
       <h1>{title}</h1>
       {onToggleEdit && (
@@ -127,7 +129,7 @@ describe("BankTransactionDetailDrawer", () => {
     renderDrawer();
 
     await waitFor(() => {
-      expect(screen.getByText("Statement Preview")).toBeTruthy();
+      expect(screen.getByText("Xem trước chứng từ")).toBeTruthy();
       expect(screen.getByText("THÔNG TIN CHUNG")).toBeTruthy();
       expect(screen.getByText("Chỉnh sửa")).toBeTruthy();
     });
@@ -151,9 +153,7 @@ describe("BankTransactionDetailDrawer", () => {
     });
 
     expect(resolveDrawer().getAttribute("data-layout")).toBe("2-columns");
-    expect(resolveDrawer().getAttribute("data-panel-class")).toContain(
-      "1400px",
-    );
+    expect(resolveDrawer().getAttribute("data-size")).toBe("xl");
   });
 
   it("auto tạo dòng đối ứng cho giao dịch tiền ra, để trống tài khoản đối ứng", async () => {
@@ -197,9 +197,7 @@ describe("BankTransactionDetailDrawer", () => {
       expect(lines[1].description).toBe("Chi tien nha cung cap");
     });
 
-    expect(resolveDrawer().getAttribute("data-panel-class")).toContain(
-      "1400px",
-    );
+    expect(resolveDrawer().getAttribute("data-size")).toBe("xl");
   });
 
   it("hiển thị nút bật/tắt hạch toán khi vào chế độ chỉnh sửa", async () => {
@@ -229,6 +227,40 @@ describe("BankTransactionDetailDrawer", () => {
 
     await waitFor(() => {
       expect(screen.getByText("Bật hạch toán")).toBeTruthy();
+    });
+  });
+
+  it("hiển thị DrawerSection Xem trước chứng từ và Thông tin chung", async () => {
+    (bankStatementApi.getTransaction as any).mockResolvedValue({
+      id: "txn-1",
+      sourceType: "BANK",
+      transDate: "2026-06-30T00:00:00.000Z",
+      referenceNumber: "REF-004",
+      description: "Thanh toan hop dong",
+      creditAmount: 5000000,
+      debitAmount: 0,
+      postingStatus: "POSTED",
+      bankAccount: {
+        accountName: "TK BIDV",
+        accountNumber: "12345678",
+        bankName: "BIDV",
+      },
+      branch: { name: "Chi nhánh Lê Văn Lương" },
+      correspondentName: "Đối tác Công ty TNHH Liouni",
+      correspondentAccountingAccountId: "131",
+      invoiceNetOffs: [],
+    });
+
+    renderDrawer();
+
+    await waitFor(() => {
+      expect(screen.getByText("Xem trước chứng từ")).toBeTruthy();
+      expect(screen.getByText("THÔNG TIN CHUNG")).toBeTruthy();
+      expect(screen.getByText("Chi nhánh Lê Văn Lương")).toBeTruthy();
+      expect(
+        screen.getAllByText("Đối tác Công ty TNHH Liouni").length,
+      ).toBeGreaterThanOrEqual(2);
+      expect(screen.getByText("TK BIDV - 12345678")).toBeTruthy();
     });
   });
 });

@@ -89,7 +89,7 @@ export function useGarageOpexList() {
   const activeFilterCount = useMemo(() => {
     let count = 0;
     Object.values(columnFilters).forEach((vals) => {
-      if (vals && vals.length > 0) count += vals.length;
+      if (vals && vals.length > 0) count += 1;
     });
     Object.values(columnSearch).forEach((val) => {
       if (val && val.trim().length > 0) count += 1;

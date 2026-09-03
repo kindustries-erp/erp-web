@@ -542,7 +542,22 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
           disabled={viewOnly || editing !== null}
           placeholder={t("— Chọn —")}
           allowClear={false}
-          onChange={(v) => setForm((f) => ({ ...f, issueType: v || "" }))}
+          onChange={(v) => {
+            const nextType = v || "";
+            setForm((f) => ({
+              ...f,
+              issueType: nextType,
+              salesOrderId: nextType === "SALE" ? f.salesOrderId : "",
+              productionOrderId:
+                nextType === "PRODUCTION" ? f.productionOrderId : "",
+              lines:
+                nextType === "OTHER"
+                  ? f.lines.length
+                    ? f.lines
+                    : [emptyGiLine()]
+                  : [],
+            }));
+          }}
         />
       </DrawerField>
       {form.issueType === "SALE" && (
@@ -636,7 +651,7 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
     <div className="flex items-center gap-2">
       {clearFilterBtn}
       {!viewOnly &&
-        form.issueType !== "SALE" &&
+        form.issueType === "OTHER" &&
         editing?.status !== "POSTED" && (
           <>
             <Button
@@ -707,9 +722,13 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
       summaryRow={summaryRow}
       actionsColumn={actionsColumn}
       emptyLabel={
-        showEmptySOMessage
-          ? t("Vui lòng chọn Đơn bán hàng để xem chi tiết xuất kho.")
-          : t("Không có dữ liệu")
+        !form.issueType
+          ? t("Vui lòng chọn loại xuất để tiếp tục.")
+          : showEmptySOMessage
+            ? t("Vui lòng chọn Đơn bán hàng để xem chi tiết xuất kho.")
+            : form.issueType === "PRODUCTION" && !form.productionOrderId
+              ? t("Vui lòng chọn Lệnh sản xuất để xem chi tiết xuất kho.")
+              : t("Không có dữ liệu")
       }
       tableFooter={tableFooter}
       // Right panel

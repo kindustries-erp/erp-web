@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { Copy, Check } from "lucide-react";
 import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
 import {
   DrawerSection,
@@ -9,6 +8,7 @@ import {
 } from "@/shared/components/DrawerModal";
 import { StatusBadge } from "@/shared/components/badges";
 import { Combobox } from "@/shared/components/Combobox";
+import { CopyButton } from "@/shared/components/CopyButton";
 import { useUIStore } from "@/core/config/uiStore";
 import { extractApiError } from "@/shared/utils/apiError";
 import {
@@ -16,29 +16,6 @@ import {
   type CreateBusinessPartnerCoreDto,
   type ErpBusinessPartner,
 } from "../api/businessPartnersCoreApi";
-
-function CopyBtn({ value, tooltip }: { value: string; tooltip?: string }) {
-  const [copied, setCopied] = useState(false);
-  return (
-    <button
-      type="button"
-      onClick={(e) => {
-        e.stopPropagation();
-        void navigator.clipboard.writeText(value);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 1500);
-      }}
-      className="p-1 hover:bg-surface-hover rounded text-muted-foreground hover:text-foreground transition-colors"
-      title={copied ? "Đã sao chép" : tooltip || "Sao chép"}
-    >
-      {copied ? (
-        <Check className="w-3.5 h-3.5 text-emerald-600" />
-      ) : (
-        <Copy className="w-3.5 h-3.5" />
-      )}
-    </button>
-  );
-}
 
 interface PartnerFormState {
   code: string;
@@ -74,6 +51,8 @@ export interface BusinessPartnerDetailDrawerProps {
   partnerId: string | null;
   partnerType: "CUSTOMER" | "VENDOR" | string;
   onSaved?: () => void;
+  onSuccess?: (partner: ErpBusinessPartner) => void;
+  zIndex?: number;
 }
 
 export function BusinessPartnerDetailDrawer({
@@ -84,6 +63,8 @@ export function BusinessPartnerDetailDrawer({
   partnerId,
   partnerType,
   onSaved,
+  onSuccess,
+  zIndex,
 }: BusinessPartnerDetailDrawerProps) {
   const { t } = useTranslation("doitac");
   const showToast = useUIStore((s) => s.showToast);
@@ -184,20 +165,24 @@ export function BusinessPartnerDetailDrawer({
         ...(form.notes.trim() ? { notes: form.notes.trim() } : {}),
       };
 
+      let savedPartner: ErpBusinessPartner | undefined;
       if (partnerId) {
-        await businessPartnersCoreApi.update(partnerId, payload);
+        savedPartner = await businessPartnersCoreApi.update(partnerId, payload);
         showToast({
           title: t("Đã cập nhật thành công", "Đã cập nhật thành công"),
           variant: "success",
         });
       } else {
-        await businessPartnersCoreApi.create(payload);
+        savedPartner = await businessPartnersCoreApi.create(payload);
         showToast({
           title: t("Đã tạo mới thành công", "Đã tạo mới thành công"),
           variant: "success",
         });
       }
 
+      if (savedPartner) {
+        onSuccess?.(savedPartner);
+      }
       onSaved?.();
       onClose();
     } catch (err) {
@@ -231,6 +216,7 @@ export function BusinessPartnerDetailDrawer({
       onToggleEdit={!isCreating && isView ? () => setMode("edit") : undefined}
       title={title}
       subtitle={subtitle}
+      zIndex={zIndex}
       titleExtra={
         !isCreating ? (
           <StatusBadge
@@ -281,7 +267,7 @@ export function BusinessPartnerDetailDrawer({
                 {isView ? (
                   <div className="flex items-center justify-between p-2.5 rounded-lg bg-surface-muted/50 border border-border/40 font-mono text-sm font-semibold">
                     <span>{form.code || "—"}</span>
-                    {form.code && <CopyBtn value={form.code} />}
+                    {form.code && <CopyButton value={form.code} />}
                   </div>
                 ) : (
                   <input
@@ -347,7 +333,7 @@ export function BusinessPartnerDetailDrawer({
                 {isView ? (
                   <div className="flex items-center justify-between p-2.5 rounded-lg bg-surface-muted/50 border border-border/40 font-mono text-sm">
                     <span>{form.taxCode || "—"}</span>
-                    {form.taxCode && <CopyBtn value={form.taxCode} />}
+                    {form.taxCode && <CopyButton value={form.taxCode} />}
                   </div>
                 ) : (
                   <input
@@ -396,7 +382,7 @@ export function BusinessPartnerDetailDrawer({
                 {isView ? (
                   <div className="flex items-center justify-between p-2.5 rounded-lg bg-surface-muted/50 border border-border/40 font-mono text-sm">
                     <span>{form.phone || "—"}</span>
-                    {form.phone && <CopyBtn value={form.phone} />}
+                    {form.phone && <CopyButton value={form.phone} />}
                   </div>
                 ) : (
                   <input
@@ -416,7 +402,7 @@ export function BusinessPartnerDetailDrawer({
                   {isView ? (
                     <div className="flex items-center justify-between p-2.5 rounded-lg bg-surface-muted/50 border border-border/40 text-sm">
                       <span>{form.email || "—"}</span>
-                      {form.email && <CopyBtn value={form.email} />}
+                      {form.email && <CopyButton value={form.email} />}
                     </div>
                   ) : (
                     <input

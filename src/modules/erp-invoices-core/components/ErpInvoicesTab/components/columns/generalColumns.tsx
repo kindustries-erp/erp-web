@@ -62,10 +62,16 @@ export function useGeneralColumns({
 }: GeneralColumnsOptions) {
   const effectiveAllFilters = useMemo(() => {
     const filters = { ...listHook.tableState.columnFilters };
-    const taxStatusList = TAX_TAB_TO_STATUS[listHook.activeTaxTab || "all"];
-    if (taxStatusList && taxStatusList.length > 0) {
-      filters._taxTab = [listHook.activeTaxTab];
-      filters.taxInvoiceStatus = taxStatusList;
+    const userSelectedStatus =
+      listHook.tableState.columnFilters?.taxInvoiceStatus;
+    if (userSelectedStatus && userSelectedStatus.length > 0) {
+      filters.taxInvoiceStatus = userSelectedStatus;
+    } else {
+      const taxStatusList = TAX_TAB_TO_STATUS[listHook.activeTaxTab || "all"];
+      if (taxStatusList && taxStatusList.length > 0) {
+        filters._taxTab = [listHook.activeTaxTab];
+        filters.taxInvoiceStatus = taxStatusList;
+      }
     }
     return filters;
   }, [listHook.tableState.columnFilters, listHook.activeTaxTab]);
@@ -320,7 +326,7 @@ export function useGeneralColumns({
         key: "invoiceCategory",
         header: (
           <TableColumnHeaderFilter
-            title="Phân loại HĐ"
+            title={t("invoice.columns.invoiceCategory", "Phân loại HĐ")}
             sortState={getSortState("invoiceCategory")}
             onSortChange={(state) => handleSortChange("invoiceCategory", state)}
             searchValue={

@@ -88,12 +88,12 @@ describe("FilterPanel", () => {
       <FilterPanel config={config} filter={filter} />,
     );
 
-    // Desktop div (hidden md:block) should have w-0 class
-    const desktopDiv = container.querySelector(".md\\:block");
+    // Desktop div (hidden md:flex) should have w-0 class
+    const desktopDiv = container.querySelector(".md\\:flex");
     expect(desktopDiv).toHaveClass("w-0");
   });
 
-  it("renders with w-[210px] when panelOpen is true (desktop)", () => {
+  it("renders with w-[320px] when panelOpen is true (desktop)", () => {
     const config: FilterPanelConfig = { search: true, period: true };
     const filter = makeFilter({ panelOpen: true });
 
@@ -101,9 +101,9 @@ describe("FilterPanel", () => {
       <FilterPanel config={config} filter={filter} />,
     );
 
-    // Desktop div (hidden md:block) should have w-[210px] class
-    const desktopDiv = container.querySelector(".md\\:block");
-    expect(desktopDiv).toHaveClass("w-[210px]");
+    // Desktop div (hidden md:flex) should have w-[320px] class
+    const desktopDiv = container.querySelector(".md\\:flex");
+    expect(desktopDiv).toHaveClass("w-[320px]");
   });
 
   it("renders active filter count badge inside header when hasActiveFilter is true", () => {
@@ -116,8 +116,8 @@ describe("FilterPanel", () => {
 
     render(<FilterPanel config={config} filter={filter} />);
 
-    // Active filter count badge (5) should be present in the panel header (rendered twice: mobile and desktop)
-    const badges = screen.getAllByText("Bộ lọc (5)");
+    // Active filter count badge (5) should be present in the panel header
+    const badges = screen.getAllByText("(5)");
     expect(badges.length).toBeGreaterThan(0);
     expect(badges[0]).toBeInTheDocument();
   });
