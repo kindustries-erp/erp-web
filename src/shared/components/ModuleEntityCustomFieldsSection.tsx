@@ -70,7 +70,12 @@ export function validateModuleRequiredFields({
 
   // 1. Validate global required fields
   const requiredGlobalDefs = globalDefs.filter(
-    (d) => !d.isDeleted && d.isActive !== false && d.isGlobal && d.isRequired,
+    (d) =>
+      !d.isDeleted &&
+      d.isActive !== false &&
+      d.isGlobal &&
+      !d.isSystem &&
+      d.isRequired,
   );
   for (const def of requiredGlobalDefs) {
     const val = globalAttributes[def.id];
@@ -435,14 +440,17 @@ export function ModuleEntityCustomFieldsSection({
       .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
   }, [selectedCategory]);
 
-  // Active global attribute definitions
+  // Active global attribute definitions (excluding system attributes handled elsewhere)
   const activeGlobalAttributeDefs: ModuleAttributeDef[] = useMemo(() => {
     const list =
       globalDefs.length > 0
         ? globalDefs
         : savedEntityData?.globalAttributeDefs || [];
     return list
-      .filter((d) => !d.isDeleted && d.isActive !== false && d.isGlobal)
+      .filter(
+        (d) =>
+          !d.isDeleted && d.isActive !== false && d.isGlobal && !d.isSystem,
+      )
       .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
   }, [globalDefs, savedEntityData?.globalAttributeDefs]);
 

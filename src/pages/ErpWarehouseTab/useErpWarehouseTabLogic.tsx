@@ -11,6 +11,7 @@ import {
   FileSpreadsheet,
   FileText,
   Pencil,
+  Settings,
 } from "lucide-react";
 
 import { useT } from "@/core/i18n";
@@ -132,6 +133,29 @@ export function useErpWarehouseTabLogic() {
       }
       return "all";
     },
+  );
+
+  // Custom Fields Config Drawer state (ModuleCustomFieldConfigDrawer)
+  const [customFieldsDrawerOpen, setCustomFieldsDrawerOpen] = useState(false);
+  const [customFieldsInitialTab, setCustomFieldsInitialTab] =
+    useState<string>("GOODS_RECEIPT");
+
+  const handleOpenCustomFieldsDrawer = useCallback(
+    (type?: string) => {
+      const normalized = (type || activeTypeTab || "").toLowerCase();
+      let targetModule = "GOODS_RECEIPT";
+      if (normalized === "issue" || normalized === "goods_issue") {
+        targetModule = "GOODS_ISSUE";
+      } else if (
+        normalized === "adjustment" ||
+        normalized === "inventory_adjustment"
+      ) {
+        targetModule = "INVENTORY_ADJUSTMENT";
+      }
+      setCustomFieldsInitialTab(targetModule);
+      setCustomFieldsDrawerOpen(true);
+    },
+    [activeTypeTab],
   );
 
   const [page, setPage] = useState<number>(() => {
@@ -871,6 +895,13 @@ export function useErpWarehouseTabLogic() {
           onClick: () => handlePrintRow(row),
         },
         {
+          label: t("moduleConfig.title", "Cấu hình trường tùy chỉnh"),
+          icon: <Settings className="h-3.5 w-3.5 text-violet-500" />,
+          onClick: () => {
+            handleOpenCustomFieldsDrawer(row.type);
+          },
+        },
+        {
           label: t("common.exportXlsx", "Xuất XLSX"),
           icon: <FileSpreadsheet className="h-3.5 w-3.5" />,
           hidden: row.status === "DRAFT" || row.type === "adjustment",
@@ -931,6 +962,16 @@ export function useErpWarehouseTabLogic() {
         },
       ],
     },
+    {
+      groupLabel: t("common.groupConfig", "Cấu hình"),
+      items: [
+        {
+          label: t("moduleConfig.title", "Cấu hình trường tùy chỉnh"),
+          icon: <Settings className="h-4 w-4 text-violet-500" />,
+          onClick: () => handleOpenCustomFieldsDrawer(),
+        },
+      ],
+    },
   ];
 
   return {
@@ -980,5 +1021,9 @@ export function useErpWarehouseTabLogic() {
     activeColumnPresetKey,
     columnViewPresetsHook,
     currentColumnVisibility,
+    customFieldsDrawerOpen,
+    setCustomFieldsDrawerOpen,
+    customFieldsInitialTab,
+    handleOpenCustomFieldsDrawer,
   };
 }

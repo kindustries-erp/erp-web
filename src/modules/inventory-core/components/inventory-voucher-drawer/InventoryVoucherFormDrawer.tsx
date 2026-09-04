@@ -48,6 +48,10 @@ export interface InventoryVoucherFormDrawerProps {
    * Content for DrawerSection "Ghi chú" — separate section below Thông tin chung.
    */
   remarksContent: ReactNode;
+  /**
+   * Optional custom fields section slot
+   */
+  customFieldsSlot?: ReactNode;
   /** Number of skeleton rows shown while loading. Default: 5 */
   rightPanelSkeletonCount?: number;
 
@@ -168,6 +172,9 @@ export function InventoryVoucherFormDrawer(
                 )}
                 {props.rightPanelContent}
               </DrawerSection>
+
+              {/* ── Trường tùy chỉnh / Thuộc tính động ───────────── */}
+              {props.customFieldsSlot}
 
               {/* ── Ghi chú (section riêng bên dưới) ────────────── */}
               <DrawerSection title={t("Ghi chú")}>

@@ -11,7 +11,9 @@
  * - Ghi chú in separate DrawerSection below Thông tin chung
  */
 import { useState, useMemo, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/shared/utils";
+import { moduleConfigApi } from "@/core/api/moduleConfigApi";
 import { Button } from "@/shared/components/ui/Button";
 import { Combobox } from "@/shared/components/Combobox";
 import { CellInput } from "@/shared/components/CellInput";
@@ -34,6 +36,7 @@ import { FilterButton } from "@/shared/components/FilterPanel";
 import type { UseIaDrawerReturn } from "@/modules/inventory-adjustments/hooks/useIaDrawer";
 import { InventoryVoucherFormDrawer } from "@/modules/inventory-core/components/inventory-voucher-drawer/InventoryVoucherFormDrawer";
 import { useVoucherClientFilter } from "@/modules/inventory-core/hooks/useVoucherClientFilter";
+import { ModuleEntityCustomFieldsSection } from "@/shared/components/ModuleEntityCustomFieldsSection";
 
 function fmtQty(value?: string | number | null) {
   if (!value && value !== 0) return "0";
@@ -462,6 +465,37 @@ export function IaFormDrawer({ drawer }: IaFormDrawerProps) {
 
   // ── Right panel content (Thông tin chung) ─────────────────────────────────
 
+  // Lấy danh sách thuộc tính động cho INVENTORY_ADJUSTMENT để nạp options cho Lý do điều chỉnh (code: adjustment_reason)
+  const { data: iaAttrDefs = [] } = useQuery({
+    queryKey: ["module-config-global-defs", "INVENTORY_ADJUSTMENT"],
+    queryFn: () =>
+      moduleConfigApi.getGlobalAttributeDefs("INVENTORY_ADJUSTMENT"),
+    staleTime: 60000,
+  });
+
+  const adjustmentReasonOptions = useMemo(() => {
+    const reasonDef = Array.isArray(iaAttrDefs)
+      ? iaAttrDefs.find((d) => d?.code === "adjustment_reason" && !d?.isDeleted)
+      : undefined;
+    if (reasonDef?.options && reasonDef.options.length > 0) {
+      return [
+        { value: "", label: t("— Chọn —") },
+        ...reasonDef.options.map((opt) => ({
+          value: opt.value,
+          label: t(opt.label || opt.value),
+        })),
+      ];
+    }
+    return [
+      { value: "", label: t("— Chọn —") },
+      { value: "PERIODIC_AUDIT", label: t("Kiểm kê định kỳ") },
+      { value: "DAMAGE_LOSS", label: t("Hàng hỏng hóc / hao hụt") },
+      { value: "COUNT_DISCREPANCY", label: t("Sai lệch kiểm đếm") },
+      { value: "SPEC_CLASSIFICATION", label: t("Phân loại quy cách") },
+      { value: "OTHER", label: t("Lý do khác") },
+    ];
+  }, [iaAttrDefs, t]);
+
   const rightPanelContent = (
     <>
       <DrawerField label={t("Số phiếu")}>
@@ -480,6 +514,24 @@ export function IaFormDrawer({ drawer }: IaFormDrawerProps) {
           value={form.adjustmentDate ? form.adjustmentDate.slice(0, 10) : ""}
           disabled={viewOnly || editing?.status === "POSTED"}
           onChange={(v) => setForm((f) => ({ ...f, adjustmentDate: v }))}
+        />
+      </DrawerField>
+      <DrawerField label={t("Lý do điều chỉnh")}>
+        <Combobox
+          options={adjustmentReasonOptions}
+          value={form.globalAttributes?.adjustment_reason || ""}
+          disabled={viewOnly || editing?.status === "POSTED"}
+          placeholder={t("— Chọn —")}
+          allowClear={true}
+          onChange={(v) =>
+            setForm((f) => ({
+              ...f,
+              globalAttributes: {
+                ...f.globalAttributes,
+                adjustment_reason: v || "",
+              },
+            }))
+          }
         />
       </DrawerField>
     </>
@@ -598,6 +650,21 @@ export function IaFormDrawer({ drawer }: IaFormDrawerProps) {
       // Right panel
       rightPanelContent={rightPanelContent}
       remarksContent={remarksContent}
+      customFieldsSlot={
+        <ModuleEntityCustomFieldsSection
+          moduleKey="INVENTORY_ADJUSTMENT"
+          entityId={editing?.id}
+          editMode={!viewOnly}
+          globalAttributes={form.globalAttributes}
+          onGlobalAttributesChange={(attrs) =>
+            setForm((f) => ({ ...f, globalAttributes: attrs }))
+          }
+          hideCategorySection={true}
+          globalTitle={t("moduleConfig.customFields", "Trường tùy chỉnh")}
+          globalCollapsible={true}
+          globalDefaultCollapsed={false}
+        />
+      }
       // No print slot for IA
       importModalSlot={
         <ImportExcelModal

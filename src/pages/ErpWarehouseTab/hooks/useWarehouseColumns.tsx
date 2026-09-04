@@ -179,6 +179,36 @@ export function useWarehouseColumns({
         },
       },
       {
+        key: "categoryName",
+        header: headerFilter(
+          "categoryName",
+          t("inventory.category", "Phân loại / Lý do"),
+        ),
+        size: 160,
+        enableResizing: true,
+        className: "text-left",
+        headerClassName: "p-0 h-full",
+        cell: (row) => {
+          if (!row.categoryName) {
+            return (
+              <span className="text-muted-foreground/50 text-xs italic px-1">
+                -
+              </span>
+            );
+          }
+          return (
+            <div className="flex items-center gap-1.5 truncate px-1">
+              <span
+                className="text-xs font-medium text-foreground truncate"
+                title={row.categoryName}
+              >
+                {row.categoryName}
+              </span>
+            </div>
+          );
+        },
+      },
+      {
         key: "voucherNo",
         header: headerFilter("voucherNo", t("inventory.voucherNo", "Số phiếu")),
         size: 220,

@@ -1,8 +1,11 @@
+import { useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { ExternalLink } from "lucide-react";
 import { Tooltip, TooltipProvider } from "@/core/components/ui/Tooltip";
 import { Combobox } from "@/shared/components/Combobox";
 import { DatePicker } from "@/shared/components/DatePicker";
 import { DrawerField, inputCls } from "@/shared/components/DrawerModal";
+import { moduleConfigApi } from "@/core/api/moduleConfigApi";
 import type { UseGrDrawerReturn } from "@/modules/goods-receipts-core/hooks/useGrDrawer";
 
 interface GrFormRightPanelProps {
@@ -12,6 +15,36 @@ interface GrFormRightPanelProps {
 
 export function GrFormRightPanel({ drawer, t }: GrFormRightPanelProps) {
   const { form, setForm, viewOnly, editing, poOptions } = drawer;
+
+  // Lấy danh sách thuộc tính động cho GOODS_RECEIPT để nạp options cho Loại nhập kho (code: type)
+  const { data: grAttrDefs = [] } = useQuery({
+    queryKey: ["module-config-global-defs", "GOODS_RECEIPT"],
+    queryFn: () => moduleConfigApi.getGlobalAttributeDefs("GOODS_RECEIPT"),
+    staleTime: 60000,
+  });
+
+  const receiptTypeOptions = useMemo(() => {
+    const typeDef = Array.isArray(grAttrDefs)
+      ? grAttrDefs.find((d) => d?.code === "type" && !d?.isDeleted)
+      : undefined;
+    if (typeDef?.options && typeDef.options.length > 0) {
+      return [
+        { label: t("— Chọn —"), value: "" },
+        ...typeDef.options.map((opt) => ({
+          label: t(opt.label || opt.value),
+          value: opt.value,
+        })),
+      ];
+    }
+    return [
+      { label: t("— Chọn —"), value: "" },
+      { label: t("Đơn mua hàng (PO)"), value: "PO" },
+      { label: t("Nhập sản xuất"), value: "MANUFACTURING" },
+      { label: t("Nhập trả hàng"), value: "RETURN" },
+      { label: t("Nhập bảo hành"), value: "WARRANTY" },
+      { label: t("Nhập khác"), value: "OTHER" },
+    ];
+  }, [grAttrDefs, t]);
 
   return (
     <>
@@ -35,19 +68,15 @@ export function GrFormRightPanel({ drawer, t }: GrFormRightPanelProps) {
       </DrawerField>
       <DrawerField label={t("Loại nhập")}>
         <Combobox
-          options={[
-            { label: t("— Chọn —"), value: "" },
-            { label: t("Đơn mua hàng"), value: "PO" },
-            { label: t("Nhập khác"), value: "OTHER" },
-          ]}
+          options={receiptTypeOptions}
           value={form.receiptType}
           onChange={(val) => {
             if (val === "PO") {
               setForm((f) => ({ ...f, receiptType: "PO", lines: [] }));
-            } else if (val === "OTHER") {
+            } else {
               setForm((f) => ({
                 ...f,
-                receiptType: "OTHER",
+                receiptType: val || "OTHER",
                 purchaseOrderId: "",
                 lines: [],
               }));

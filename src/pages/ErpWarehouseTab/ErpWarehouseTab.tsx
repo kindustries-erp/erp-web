@@ -8,6 +8,7 @@ import { useErpWarehouseTabLogic } from "./useErpWarehouseTabLogic";
 import { WarehouseModals } from "./components/WarehouseModals";
 import { WarehousePrintSlot } from "./components/WarehousePrintSlot";
 import { WarehouseViewConfigDrawer } from "./components/WarehouseViewConfigDrawer";
+import { ModuleCustomFieldConfigDrawer } from "@/shared/components/ModuleCustomFieldConfigDrawer";
 
 export function ErpWarehouseTab() {
   const {
@@ -52,6 +53,9 @@ export function ErpWarehouseTab() {
     handleSaveViewPreset,
     handleResetViewPreset,
     currentColumnVisibility,
+    customFieldsDrawerOpen,
+    setCustomFieldsDrawerOpen,
+    customFieldsInitialTab,
   } = useErpWarehouseTabLogic();
 
   if (!canReadReceipts && !canReadIssues && !canReadAdjustments)
@@ -147,6 +151,12 @@ export function ErpWarehouseTab() {
         currentColumnVisibility={currentColumnVisibility}
         onSave={handleSaveViewPreset}
         onResetDefault={handleResetViewPreset}
+      />
+
+      <ModuleCustomFieldConfigDrawer
+        open={customFieldsDrawerOpen}
+        onClose={() => setCustomFieldsDrawerOpen(false)}
+        initialTab={customFieldsInitialTab}
       />
     </>
   );

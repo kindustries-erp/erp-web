@@ -5,14 +5,11 @@ import {
   Plus,
   Trash2,
   Edit2,
-  Settings,
   Tag,
   X,
-  Layers,
   Power,
   PowerOff,
   Loader2,
-  FileText,
   Landmark,
   Network,
   AlignLeft,
@@ -24,13 +21,14 @@ import {
   ShoppingCart,
   Receipt,
   Boxes,
+  PackagePlus,
+  PackageMinus,
   ClipboardCheck,
   Wrench,
   ShieldCheck,
   Eye,
-  FolderKanban,
   RotateCcw,
-  Globe,
+  Settings,
 } from "lucide-react";
 import {
   StandardFormDrawer,
@@ -50,13 +48,10 @@ import { PillTabs } from "@/shared/components/PillTabs";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import { useT } from "@/core/i18n";
-import { cn } from "@/shared/utils";
 import {
   moduleConfigApi,
   resolveAttrName,
-  resolveCategoryName,
   type ModuleKey,
-  type ModuleCategory,
   type ModuleAttributeDef,
   type ModuleAttributeFieldType,
   type ModuleAttributeOption,
@@ -129,20 +124,20 @@ export const ERP_MODULE_REGISTRY: ErpModuleDefinition[] = [
   {
     key: "INVOICE",
     nameKey: "moduleConfig.modules.invoice.name",
-    defaultName: "Hóa đơn & Thuế",
+    defaultName: "Hóa đơn điện tử",
     domain: "FINANCE",
-    icon: <FileText className="w-3.5 h-3.5" />,
+    icon: <Receipt className="w-3.5 h-3.5" />,
     descKey: "moduleConfig.modules.invoice.desc",
-    defaultDesc: "Hóa đơn mua vào/bán ra, chi phí thuế & khấu trừ",
+    defaultDesc: "Quản lý trường tùy chỉnh cho hóa đơn mua vào và bán ra",
   },
   {
     key: "BANK_TXN",
     nameKey: "moduleConfig.modules.bankTxn.name",
-    defaultName: "Sao kê & Sổ quỹ",
+    defaultName: "Giao dịch ngân hàng",
     domain: "FINANCE",
     icon: <Landmark className="w-3.5 h-3.5" />,
     descKey: "moduleConfig.modules.bankTxn.desc",
-    defaultDesc: "Giao dịch ngân hàng, sổ quỹ tiền mặt, định khoản hạch toán",
+    defaultDesc: "Sao kê tài khoản ngân hàng & giao dịch sổ quỹ tiền mặt",
   },
 
   // Sản xuất & Kỹ thuật
@@ -188,6 +183,33 @@ export const ERP_MODULE_REGISTRY: ErpModuleDefinition[] = [
 
   // Kho vận & Tồn kho
   {
+    key: "GOODS_RECEIPT",
+    nameKey: "moduleConfig.modules.receipt.name",
+    defaultName: "Phiếu nhập kho",
+    domain: "INVENTORY",
+    icon: <PackagePlus className="w-3.5 h-3.5" />,
+    descKey: "moduleConfig.modules.receipt.desc",
+    defaultDesc: "Phiếu nhập mua hàng, nhập sản xuất & nhập trả hàng",
+  },
+  {
+    key: "GOODS_ISSUE",
+    nameKey: "moduleConfig.modules.issue.name",
+    defaultName: "Phiếu xuất kho",
+    domain: "INVENTORY",
+    icon: <PackageMinus className="w-3.5 h-3.5" />,
+    descKey: "moduleConfig.modules.issue.desc",
+    defaultDesc: "Phiếu xuất bán hàng, xuất NVL sản xuất & xuất hủy",
+  },
+  {
+    key: "INVENTORY_ADJUSTMENT",
+    nameKey: "moduleConfig.modules.adjustment.name",
+    defaultName: "Phiếu điều chỉnh",
+    domain: "INVENTORY",
+    icon: <ClipboardCheck className="w-3.5 h-3.5" />,
+    descKey: "moduleConfig.modules.adjustment.desc",
+    defaultDesc: "Biên bản kiểm kê kho, xử lý chênh lệch thừa/thiếu tồn kho",
+  },
+  {
     key: "INVENTORY_ITEM",
     nameKey: "moduleConfig.modules.item.name",
     defaultName: "Mặt hàng & SKU",
@@ -195,15 +217,6 @@ export const ERP_MODULE_REGISTRY: ErpModuleDefinition[] = [
     icon: <Boxes className="w-3.5 h-3.5" />,
     descKey: "moduleConfig.modules.item.desc",
     defaultDesc: "Danh mục master data mặt hàng, quy cách và đơn vị tính",
-  },
-  {
-    key: "INVENTORY_ADJUSTMENT",
-    nameKey: "moduleConfig.modules.adjustment.name",
-    defaultName: "Kiểm kê kho",
-    domain: "INVENTORY",
-    icon: <ClipboardCheck className="w-3.5 h-3.5" />,
-    descKey: "moduleConfig.modules.adjustment.desc",
-    defaultDesc: "Biên bản kiểm kê kho, xử lý chênh lệch thừa/thiếu tồn kho",
   },
 
   // Garage & Dịch vụ
@@ -228,53 +241,7 @@ export const ERP_MODULE_REGISTRY: ErpModuleDefinition[] = [
   },
 ];
 
-const getFieldTypeOptions = (t: any): ComboboxOption[] => [
-  {
-    value: "TEXT",
-    label: t("moduleConfig.fieldTypes.text.label", "Văn bản (Text)"),
-    subLabel: t(
-      "moduleConfig.fieldTypes.text.subLabel",
-      "Chuỗi ký tự tự do, ghi chú, mã hiệu",
-    ),
-  },
-  {
-    value: "NUMBER",
-    label: t("moduleConfig.fieldTypes.number.label", "Số (Number)"),
-    subLabel: t(
-      "moduleConfig.fieldTypes.number.subLabel",
-      "Số lượng, kích thước, thông số kỹ thuật",
-    ),
-  },
-  {
-    value: "SELECT",
-    label: t(
-      "moduleConfig.fieldTypes.select.label",
-      "Danh sách chọn (Combobox)",
-    ),
-    subLabel: t(
-      "moduleConfig.fieldTypes.select.subLabel",
-      "Danh sách tùy chọn dropdown cố định",
-    ),
-  },
-  {
-    value: "DATE",
-    label: t("moduleConfig.fieldTypes.date.label", "Ngày tháng (Date)"),
-    subLabel: t(
-      "moduleConfig.fieldTypes.date.subLabel",
-      "Thời gian, ngày cấp, hạn sử dụng",
-    ),
-  },
-  {
-    value: "CHECKBOX",
-    label: t("moduleConfig.fieldTypes.checkbox.label", "Đúng / Sai (Boolean)"),
-    subLabel: t(
-      "moduleConfig.fieldTypes.checkbox.subLabel",
-      "Công tắc bật/tắt (True/False)",
-    ),
-  },
-];
-
-const FIELD_TYPE_ICONS: Record<string, React.ReactNode> = {
+const FIELD_TYPE_ICONS: Record<ModuleAttributeFieldType, React.ReactNode> = {
   TEXT: <AlignLeft className="w-3.5 h-3.5" />,
   NUMBER: <Hash className="w-3.5 h-3.5" />,
   SELECT: <ListFilter className="w-3.5 h-3.5" />,
@@ -282,76 +249,78 @@ const FIELD_TYPE_ICONS: Record<string, React.ReactNode> = {
   CHECKBOX: <ToggleLeft className="w-3.5 h-3.5" />,
 };
 
-const getFieldTypeShortLabel = (type: string, t: any): string => {
+function getFieldTypeOptions(
+  t: (key: string, fallback: string) => string,
+): ComboboxOption[] {
+  return [
+    {
+      value: "TEXT",
+      label: t("moduleConfig.fieldTypes.text", "Văn bản ngắn (Text)"),
+    },
+    {
+      value: "NUMBER",
+      label: t("moduleConfig.fieldTypes.number", "Số (Number)"),
+    },
+    {
+      value: "SELECT",
+      label: t("moduleConfig.fieldTypes.select", "Lựa chọn (Dropdown Select)"),
+    },
+    {
+      value: "DATE",
+      label: t("moduleConfig.fieldTypes.date", "Ngày tháng (Date)"),
+    },
+    {
+      value: "CHECKBOX",
+      label: t("moduleConfig.fieldTypes.checkbox", "Hộp kiểm (Checkbox)"),
+    },
+  ];
+}
+
+function getFieldTypeShortLabel(
+  type: ModuleAttributeFieldType,
+  t: (key: string, fallback: string) => string,
+): string {
   switch (type) {
     case "TEXT":
-      return t("moduleConfig.fieldTypes.text.short", "Văn bản");
+      return t("moduleConfig.fieldTypes.shortText", "Văn bản");
     case "NUMBER":
-      return t("moduleConfig.fieldTypes.number.short", "Số");
+      return t("moduleConfig.fieldTypes.shortNumber", "Số");
     case "SELECT":
-      return t("moduleConfig.fieldTypes.select.short", "Danh sách");
+      return t("moduleConfig.fieldTypes.shortSelect", "Lựa chọn");
     case "DATE":
-      return t("moduleConfig.fieldTypes.date.short", "Ngày");
+      return t("moduleConfig.fieldTypes.shortDate", "Ngày");
     case "CHECKBOX":
-      return t("moduleConfig.fieldTypes.checkbox.short", "Đúng/Sai");
+      return t("moduleConfig.fieldTypes.shortCheckbox", "Hộp kiểm");
     default:
       return type;
   }
-};
+}
 
 // ============================================================================
-// 2. LIVE FORM PREVIEW COMPONENT (Cột phải liền mạch, không lồng card)
+// 2. LIVE PREVIEW PANEL (Interactive Form Simulator)
 // ============================================================================
 
 export interface ModuleLivePreviewPanelProps {
-  categories: ModuleCategory[];
+  attributes?: ModuleAttributeDef[];
   globalDefs?: ModuleAttributeDef[];
-  moduleKey: string;
+  moduleKey?: string;
 }
 
 export function ModuleLivePreviewPanel({
-  categories,
+  attributes,
   globalDefs = [],
   moduleKey,
 }: ModuleLivePreviewPanelProps) {
   const t = useT();
-  const [selectedCatId, setSelectedCatId] = useState<string>("");
   const [mockValues, setMockValues] = useState<Record<string, any>>({});
 
-  const activeCategories = useMemo(
-    () => categories.filter((c) => c.isActive !== false),
-    [categories],
+  const allDefs = useMemo(
+    () => attributes || globalDefs || [],
+    [attributes, globalDefs],
   );
-
-  const activeGlobalAttrs = useMemo(
-    () => globalDefs.filter((d) => !d.isDeleted && d.isActive !== false),
-    [globalDefs],
-  );
-
-  useEffect(() => {
-    if (activeCategories.length > 0) {
-      if (
-        !selectedCatId ||
-        !activeCategories.some((c) => c.id === selectedCatId)
-      ) {
-        setSelectedCatId(activeCategories[0].id);
-      }
-    } else {
-      setSelectedCatId("");
-    }
-  }, [activeCategories, selectedCatId]);
-
-  const currentCat = useMemo(
-    () => activeCategories.find((c) => c.id === selectedCatId) || null,
-    [activeCategories, selectedCatId],
-  );
-
   const activeAttrs = useMemo(
-    () =>
-      (currentCat?.attributeDefs || []).filter(
-        (d) => !d.isDeleted && d.isActive !== false && !d.isGlobal,
-      ),
-    [currentCat],
+    () => allDefs.filter((d) => !d.isDeleted && d.isActive !== false),
+    [allDefs],
   );
 
   const currentModMeta = useMemo(
@@ -396,35 +365,34 @@ export function ModuleLivePreviewPanel({
         )}
       </p>
 
-      {/* 1. Global Attributes Section Preview */}
+      {/* Attributes Section Preview */}
       <div className="flex flex-col gap-2 p-3 bg-surface/60 rounded-xl border border-border/60">
         <div className="flex items-center justify-between pb-1 border-b border-border/30">
           <div className="flex items-center gap-1.5 font-semibold text-[11px] text-foreground">
-            <Globe className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+            <Tag className="w-3.5 h-3.5 text-primary shrink-0" />
             <span>
-              {t("moduleConfig.globalAttributesSection", "Thuộc tính chung")}
+              {t("moduleConfig.customFieldsSection", "Trường tùy chỉnh")}
             </span>
           </div>
           <Badge variant="outline" className="text-[9px] font-mono">
-            {activeGlobalAttrs.length}{" "}
-            {t("moduleConfig.attrsCount", "thuộc tính")}
+            {activeAttrs.length} {t("moduleConfig.attrsCount", "thuộc tính")}
           </Badge>
         </div>
 
-        {activeGlobalAttrs.length === 0 ? (
-          <div className="py-2 text-center text-muted-foreground text-[11px] opacity-70">
+        {activeAttrs.length === 0 ? (
+          <div className="py-4 text-center text-muted-foreground text-[11px] opacity-70">
             {t(
-              "moduleConfig.noGlobalAttributes",
-              "Chưa có thuộc tính chung nào.",
+              "moduleConfig.noCustomAttributes",
+              "Chưa có trường tùy chỉnh nào cho phân hệ này.",
             )}
           </div>
         ) : (
           <div className="flex flex-col gap-2.5 pt-1">
-            {activeGlobalAttrs.map((attr) => {
+            {activeAttrs.map((attr) => {
               const val = mockValues[attr.code];
               const displayName = resolveAttrName(
                 attr,
-                moduleKey,
+                moduleKey || "",
                 undefined,
                 t,
               );
@@ -436,14 +404,14 @@ export function ModuleLivePreviewPanel({
                     className="flex items-center gap-2 py-0.5 select-none"
                   >
                     <Checkbox
-                      id={`preview-glob-${attr.id}`}
+                      id={`preview-attr-${attr.id}`}
                       checked={Boolean(val)}
                       onCheckedChange={(checked) =>
                         handleFieldChange(attr.code, Boolean(checked))
                       }
                     />
                     <label
-                      htmlFor={`preview-glob-${attr.id}`}
+                      htmlFor={`preview-attr-${attr.id}`}
                       className="text-xs text-foreground cursor-pointer font-medium flex items-center gap-0.5"
                     >
                       {displayName}
@@ -515,184 +483,30 @@ export function ModuleLivePreviewPanel({
           </div>
         )}
       </div>
-
-      {/* 2. Category & Category Attributes Section Preview */}
-      <div className="flex flex-col gap-2 p-3 bg-surface/60 rounded-xl border border-border/50">
-        <div className="flex items-center justify-between pb-1 border-b border-border/30">
-          <div className="flex items-center gap-1.5 font-semibold text-[11px] text-foreground">
-            <Layers className="w-3.5 h-3.5 text-primary shrink-0" />
-            <span>
-              {t("moduleConfig.customFieldsSection", "Danh mục & Thuộc tính")}
-            </span>
-          </div>
-          {currentCat && (
-            <Badge variant="outline" className="text-[9px] font-mono">
-              {activeAttrs.length} {t("moduleConfig.attrsCount", "thuộc tính")}
-            </Badge>
-          )}
-        </div>
-
-        {/* Category selector for preview */}
-        {activeCategories.length > 0 ? (
-          <div className="flex flex-col gap-1.5 pt-1">
-            <label className="text-[11px] font-medium text-muted-foreground">
-              {t(
-                "moduleConfig.selectCategoryPreview",
-                "Chọn danh mục thử nghiệm:",
-              )}
-            </label>
-            <Combobox
-              value={selectedCatId}
-              onChange={setSelectedCatId}
-              options={activeCategories.map((c) => ({
-                value: c.id,
-                label: `${resolveCategoryName(c, t)} (${c.code})`,
-              }))}
-              placeholder={t(
-                "moduleConfig.selectCatPlaceholder",
-                "Chọn danh mục",
-              )}
-              allowClear={false}
-            />
-          </div>
-        ) : (
-          <div className="py-4 text-center text-muted-foreground text-[11px] bg-surface/30 rounded-lg">
-            {t(
-              "moduleConfig.noActiveCategoriesPreview",
-              "Chưa có danh mục nào được tạo. Hãy thêm danh mục ở cột trái.",
-            )}
-          </div>
-        )}
-
-        {/* Category Attributes List simulator */}
-        {currentCat && (
-          <div className="flex flex-col gap-2.5 pt-1">
-            {activeAttrs.length === 0 ? (
-              <div className="py-3 text-center text-muted-foreground text-[11px] opacity-70">
-                {t(
-                  "moduleConfig.noAttrsToPreview",
-                  "Danh mục này chưa có thuộc tính nào.",
-                )}
-              </div>
-            ) : (
-              activeAttrs.map((attr) => {
-                const val = mockValues[attr.code];
-                const displayName = resolveAttrName(
-                  attr,
-                  moduleKey,
-                  currentCat?.code,
-                  t,
-                );
-
-                if (attr.fieldType === "CHECKBOX") {
-                  return (
-                    <div
-                      key={attr.id}
-                      className="flex items-center gap-2 py-0.5 select-none"
-                    >
-                      <Checkbox
-                        id={`preview-attr-${attr.id}`}
-                        checked={Boolean(val)}
-                        onCheckedChange={(checked) =>
-                          handleFieldChange(attr.code, Boolean(checked))
-                        }
-                      />
-                      <label
-                        htmlFor={`preview-attr-${attr.id}`}
-                        className="text-xs text-foreground cursor-pointer font-medium flex items-center gap-0.5"
-                      >
-                        {displayName}
-                        {attr.isRequired && (
-                          <span className="text-destructive ml-0.5">*</span>
-                        )}
-                      </label>
-                    </div>
-                  );
-                }
-
-                if (attr.fieldType === "SELECT") {
-                  const opts: ComboboxOption[] = (attr.options || []).map(
-                    (o) => ({
-                      value: o.value,
-                      label: `${o.label} (${o.value})`,
-                    }),
-                  );
-                  return (
-                    <DrawerField
-                      key={attr.id}
-                      label={displayName}
-                      required={attr.isRequired}
-                    >
-                      <Combobox
-                        value={val || ""}
-                        onChange={(v) => handleFieldChange(attr.code, v)}
-                        options={opts}
-                        placeholder={t("common.select", "Chọn giá trị")}
-                      />
-                    </DrawerField>
-                  );
-                }
-
-                if (attr.fieldType === "DATE") {
-                  return (
-                    <DrawerField
-                      key={attr.id}
-                      label={displayName}
-                      required={attr.isRequired}
-                    >
-                      <DatePicker
-                        value={val || ""}
-                        onChange={(v) => handleFieldChange(attr.code, v)}
-                        placeholder={t("common.dateFormat", "DD/MM/YYYY")}
-                      />
-                    </DrawerField>
-                  );
-                }
-
-                return (
-                  <DrawerField
-                    key={attr.id}
-                    label={displayName}
-                    required={attr.isRequired}
-                  >
-                    <input
-                      type={attr.fieldType === "NUMBER" ? "number" : "text"}
-                      className={inputCls}
-                      value={val || ""}
-                      onChange={(e) =>
-                        handleFieldChange(attr.code, e.target.value)
-                      }
-                      placeholder={`${t("common.enter", "Nhập")} ${displayName}...`}
-                    />
-                  </DrawerField>
-                );
-              })
-            )}
-          </div>
-        )}
-      </div>
     </div>
   );
 }
 
 // ============================================================================
-// 3. INTERNAL MODULE CONTENT COMPONENT (Manage Categories + Global Attrs)
+// 3. INTERNAL MODULE CONTENT COMPONENT (Direct Attribute Management)
 // ============================================================================
 
-interface ModuleCustomFieldConfigContentProps {
-  domainKey: ErpModuleDomain;
+export interface ModuleCustomFieldConfigContentProps {
+  domainKey?: ErpModuleDomain;
   activeModuleKey: string;
   onSelectModule: (moduleKey: string) => void;
   isOpen: boolean;
   onDirtyChange?: (isDirty: boolean) => void;
+  hidePillTabs?: boolean;
 }
 
-function ModuleCustomFieldConfigContent({
+export function ModuleCustomFieldConfigContent({
   domainKey,
   activeModuleKey,
   onSelectModule,
   isOpen,
   onDirtyChange,
+  hidePillTabs = false,
 }: ModuleCustomFieldConfigContentProps) {
   const t = useT();
   const queryClient = useQueryClient();
@@ -715,58 +529,28 @@ function ModuleCustomFieldConfigContent({
   // Dynamic translated field type options
   const fieldTypeOptions = useMemo(() => getFieldTypeOptions(t), [t]);
 
-  // Query categories + attributes scoped by activeModuleKey
+  // Query global attribute defs scoped by activeModuleKey
   const {
-    data: categories = [],
+    data: globalDefs = [],
     isLoading,
     isError,
   } = useQuery({
-    queryKey: ["module-config-categories", activeModuleKey],
-    queryFn: () => moduleConfigApi.getCategories(activeModuleKey),
-    enabled: isOpen && !!activeModuleKey,
-  });
-
-  // Query global attribute defs scoped by activeModuleKey
-  const { data: globalDefs = [], isLoading: isGlobalLoading } = useQuery({
     queryKey: ["module-config-global-defs", activeModuleKey],
     queryFn: () => moduleConfigApi.getGlobalAttributeDefs(activeModuleKey),
     enabled: isOpen && !!activeModuleKey,
   });
 
-  // Find module meta
-  const currentModule = useMemo(
-    () =>
-      ERP_MODULE_REGISTRY.find((m) => m.key === activeModuleKey) || {
-        key: String(activeModuleKey),
-        nameKey: "",
-        defaultName: String(activeModuleKey),
-        domain: domainKey,
-        icon: <FolderKanban className="w-4 h-4" />,
-        descKey: "",
-        defaultDesc: "Cấu hình danh mục và trường mở rộng",
-      },
-    [activeModuleKey, domainKey],
+  const systemDefs = useMemo(
+    () => globalDefs.filter((d) => Boolean(d.isSystem)),
+    [globalDefs],
+  );
+  const customDefs = useMemo(
+    () => globalDefs.filter((d) => !d.isSystem),
+    [globalDefs],
   );
 
-  const domainMeta = ERP_DOMAIN_REGISTRY[domainKey];
-
-  // State: Category Form (Create / Edit)
-  const [isCreatingCategory, setIsCreatingCategory] = useState(false);
-  const [editingCategory, setEditingCategory] = useState<ModuleCategory | null>(
-    null,
-  );
-  const [catCode, setCatCode] = useState("");
-  const [catName, setCatName] = useState("");
-  const [catDescription, setCatDescription] = useState("");
-  const [deleteCatTarget, setDeleteCatTarget] = useState<ModuleCategory | null>(
-    null,
-  );
-
-  // State: Attribute Form (Create / Edit - both Category and Global)
-  const [addingAttrForCatId, setAddingAttrForCatId] = useState<string | null>(
-    null,
-  );
-  const [isAddingGlobalAttr, setIsAddingGlobalAttr] = useState(false);
+  // State: Attribute Form (Create / Edit)
+  const [isAddingAttr, setIsAddingAttr] = useState(false);
   const [editingAttr, setEditingAttr] = useState<ModuleAttributeDef | null>(
     null,
   );
@@ -781,32 +565,14 @@ function ModuleCustomFieldConfigContent({
   const [deleteAttrTarget, setDeleteAttrTarget] =
     useState<ModuleAttributeDef | null>(null);
 
-  // State: Discard / Cancel Confirm Modal for subforms or module tab switch
+  // State: Discard / Cancel Confirm Modal
   const [cancelConfirmTarget, setCancelConfirmTarget] = useState<
-    "category" | "attr" | { type: "module"; nextKey: string } | null
+    "attr" | { type: "module"; nextKey: string } | null
   >(null);
 
   // Computed Dirty State
-  const isCategoryDirty = useMemo(() => {
-    if (isCreatingCategory) {
-      return Boolean(
-        catCode.trim() !== "" ||
-        catName.trim() !== "" ||
-        catDescription.trim() !== "",
-      );
-    }
-    if (editingCategory) {
-      return (
-        catCode.trim() !== (editingCategory.code || "") ||
-        catName.trim() !== (editingCategory.name || "") ||
-        catDescription.trim() !== (editingCategory.description || "")
-      );
-    }
-    return false;
-  }, [isCreatingCategory, editingCategory, catCode, catName, catDescription]);
-
   const isAttrDirty = useMemo(() => {
-    if (addingAttrForCatId !== null || isAddingGlobalAttr) {
+    if (isAddingAttr) {
       return Boolean(
         attrCode.trim() !== "" ||
         attrName.trim() !== "" ||
@@ -832,8 +598,7 @@ function ModuleCustomFieldConfigContent({
     }
     return false;
   }, [
-    addingAttrForCatId,
-    isAddingGlobalAttr,
+    isAddingAttr,
     editingAttr,
     attrCode,
     attrName,
@@ -844,281 +609,13 @@ function ModuleCustomFieldConfigContent({
     newOptionLabel,
   ]);
 
-  const isDirty = isCategoryDirty || isAttrDirty;
-
   useEffect(() => {
-    onDirtyChange?.(isDirty);
-    return () => {
-      onDirtyChange?.(false);
-    };
-  }, [isDirty, onDirtyChange]);
+    onDirtyChange?.(isAttrDirty);
+  }, [isAttrDirty, onDirtyChange]);
 
-  // Mutations
-  const createCategoryMutation = useMutation({
-    mutationFn: (payload: {
-      code: string;
-      name: string;
-      description?: string;
-    }) =>
-      moduleConfigApi.createCategory({
-        moduleKey: activeModuleKey,
-        ...payload,
-      }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["module-config-categories", activeModuleKey],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["module-config-all-categories"],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["bom-config-categories"],
-      });
-      toast.success(t("moduleConfig.catCreated", "Tạo danh mục thành công"));
-      resetCatForm();
-    },
-    onError: (err: any) => {
-      toast.error(
-        err?.response?.data?.message ||
-          t("moduleConfig.catCreateError", "Lỗi tạo danh mục"),
-      );
-    },
-  });
-
-  const updateCategoryMutation = useMutation({
-    mutationFn: ({ id, payload }: { id: string; payload: any }) =>
-      moduleConfigApi.updateCategory(id, payload),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["module-config-categories", activeModuleKey],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["module-config-all-categories"],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["bom-config-categories"],
-      });
-      toast.success(
-        t("moduleConfig.catUpdated", "Cập nhật danh mục thành công"),
-      );
-      resetCatForm();
-    },
-    onError: (err: any) => {
-      toast.error(
-        err?.response?.data?.message ||
-          t("moduleConfig.catUpdateError", "Lỗi cập nhật danh mục"),
-      );
-    },
-  });
-
-  const deleteCategoryMutation = useMutation({
-    mutationFn: moduleConfigApi.deleteCategory,
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["module-config-categories", activeModuleKey],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["module-config-all-categories"],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["bom-config-categories"],
-      });
-      toast.success(t("moduleConfig.catDeleted", "Xóa danh mục thành công"));
-      setDeleteCatTarget(null);
-    },
-    onError: (err: any) => {
-      toast.error(
-        err?.response?.data?.message ||
-          t("moduleConfig.catDeleteDeleteError", "Lỗi xóa danh mục"),
-      );
-    },
-  });
-
-  const createAttrMutation = useMutation({
-    mutationFn: moduleConfigApi.createAttributeDef,
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["module-config-categories", activeModuleKey],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["module-config-global-defs", activeModuleKey],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["module-config-all-categories"],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["module-config-all-global-defs"],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["bom-config-categories"],
-      });
-      toast.success(t("moduleConfig.attrCreated", "Tạo thuộc tính thành công"));
-      resetAttrForm();
-    },
-    onError: (err: any) => {
-      toast.error(
-        err?.response?.data?.message ||
-          t("moduleConfig.attrCreateError", "Lỗi tạo thuộc tính"),
-      );
-    },
-  });
-
-  const updateAttrMutation = useMutation({
-    mutationFn: ({ id, payload }: { id: string; payload: any }) =>
-      moduleConfigApi.updateAttributeDef(id, payload),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["module-config-categories", activeModuleKey],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["module-config-global-defs", activeModuleKey],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["module-config-all-categories"],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["module-config-all-global-defs"],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["bom-config-categories"],
-      });
-      toast.success(
-        t("moduleConfig.attrUpdated", "Cập nhật thuộc tính thành công"),
-      );
-      resetAttrForm();
-    },
-    onError: (err: any) => {
-      toast.error(
-        err?.response?.data?.message ||
-          t("moduleConfig.attrUpdateError", "Lỗi cập nhật thuộc tính"),
-      );
-    },
-  });
-
-  const deleteAttrMutation = useMutation({
-    mutationFn: moduleConfigApi.deleteAttributeDef,
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["module-config-categories", activeModuleKey],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["module-config-global-defs", activeModuleKey],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["module-config-all-categories"],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["module-config-all-global-defs"],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["bom-config-categories"],
-      });
-      toast.success(t("moduleConfig.attrDeleted", "Xóa thuộc tính thành công"));
-      setDeleteAttrTarget(null);
-    },
-    onError: (err: any) => {
-      toast.error(
-        err?.response?.data?.message ||
-          t("moduleConfig.attrDeleteError", "Lỗi xóa thuộc tính"),
-      );
-    },
-  });
-
-  // Handlers for Category
-  const openCreateCategory = () => {
-    resetAttrForm();
-    setEditingCategory(null);
-    setCatCode("");
-    setCatName("");
-    setCatDescription("");
-    setIsCreatingCategory(true);
-  };
-
-  const openEditCategory = (cat: ModuleCategory) => {
-    resetAttrForm();
-    setIsCreatingCategory(false);
-    setEditingCategory(cat);
-    setCatCode(cat.code);
-    setCatName(cat.name);
-    setCatDescription(cat.description || "");
-  };
-
-  const resetCatForm = () => {
-    setIsCreatingCategory(false);
-    setEditingCategory(null);
-    setCatCode("");
-    setCatName("");
-    setCatDescription("");
-  };
-
-  const handleRequestCloseCategory = () => {
-    if (isCategoryDirty) {
-      setCancelConfirmTarget("category");
-    } else {
-      resetCatForm();
-    }
-  };
-
-  const handleToggleCategoryActive = (cat: ModuleCategory) => {
-    const nextActive = !cat.isActive;
-    updateCategoryMutation.mutate({
-      id: cat.id,
-      payload: { isActive: nextActive },
-    });
-  };
-
-  const handleSaveCategory = () => {
-    const trimmedCode = catCode.trim().toUpperCase();
-    const trimmedName = catName.trim();
-
-    if (!trimmedCode || !trimmedName) {
-      toast.error(
-        t(
-          "moduleConfig.catValidation",
-          "Vui lòng nhập đầy đủ mã và tên danh mục",
-        ),
-      );
-      return;
-    }
-
-    const isDuplicate = categories.some(
-      (c) =>
-        c.code.toUpperCase() === trimmedCode &&
-        (!editingCategory || c.id !== editingCategory.id),
-    );
-    if (isDuplicate) {
-      toast.error(
-        t(
-          "moduleConfig.catCodeDuplicate",
-          `Mã danh mục "${trimmedCode}" đã tồn tại trong module "${activeModuleKey}".`,
-        ),
-      );
-      return;
-    }
-
-    if (editingCategory) {
-      updateCategoryMutation.mutate({
-        id: editingCategory.id,
-        payload: {
-          code: trimmedCode,
-          name: trimmedName,
-          description: catDescription.trim() || null,
-        },
-      });
-    } else {
-      createCategoryMutation.mutate({
-        code: trimmedCode,
-        name: trimmedName,
-        description: catDescription.trim() || undefined,
-      });
-    }
-  };
-
-  // Handlers for Attribute (both Category and Global)
-  const openCreateAttr = (categoryId: string) => {
-    resetCatForm();
-    setIsAddingGlobalAttr(false);
-    setAddingAttrForCatId(categoryId);
+  // Open Create Attribute form
+  const openCreateAttr = () => {
+    setIsAddingAttr(true);
     setEditingAttr(null);
     setAttrCode("");
     setAttrName("");
@@ -1129,37 +626,21 @@ function ModuleCustomFieldConfigContent({
     setNewOptionLabel("");
   };
 
-  const openCreateGlobalAttr = () => {
-    resetCatForm();
-    setAddingAttrForCatId(null);
-    setIsAddingGlobalAttr(true);
-    setEditingAttr(null);
-    setAttrCode("");
-    setAttrName("");
-    setAttrFieldType("TEXT");
-    setAttrRequired(false);
-    setAttrOptions([]);
-    setNewOptionKey("");
-    setNewOptionLabel("");
-  };
-
+  // Open Edit Attribute form
   const openEditAttr = (attr: ModuleAttributeDef) => {
-    resetCatForm();
-    setAddingAttrForCatId(null);
-    setIsAddingGlobalAttr(Boolean(attr.isGlobal));
     setEditingAttr(attr);
+    setIsAddingAttr(false);
     setAttrCode(attr.code);
     setAttrName(attr.name);
     setAttrFieldType(attr.fieldType);
     setAttrRequired(Boolean(attr.isRequired));
-    setAttrOptions(attr.options ? [...attr.options] : []);
+    setAttrOptions(attr.options || []);
     setNewOptionKey("");
     setNewOptionLabel("");
   };
 
-  const resetAttrForm = () => {
-    setAddingAttrForCatId(null);
-    setIsAddingGlobalAttr(false);
+  const closeAttrForm = () => {
+    setIsAddingAttr(false);
     setEditingAttr(null);
     setAttrCode("");
     setAttrName("");
@@ -1174,136 +655,164 @@ function ModuleCustomFieldConfigContent({
     if (isAttrDirty) {
       setCancelConfirmTarget("attr");
     } else {
-      resetAttrForm();
+      closeAttrForm();
     }
   };
 
   const handleSelectModuleWithGuard = (nextKey: string) => {
     if (nextKey === activeModuleKey) return;
-    if (isDirty) {
+    if (isAttrDirty) {
       setCancelConfirmTarget({ type: "module", nextKey });
     } else {
       onSelectModule(nextKey);
     }
   };
 
+  // Option builder helpers
   const handleAddOption = () => {
-    const key = newOptionKey.trim().toUpperCase();
-    const label = newOptionLabel.trim();
-
-    if (!key || !label) {
+    const rawK = newOptionKey.trim();
+    const rawL = newOptionLabel.trim();
+    if (!rawK && !rawL) return;
+    const finalK = (rawK || rawL).toUpperCase().replace(/\s+/g, "_");
+    const finalL = rawL || rawK;
+    if (attrOptions.some((o) => o.value === finalK)) {
       toast.error(
-        t(
-          "moduleConfig.optionRequired",
-          "Vui lòng nhập cả Mã (Key) và Tên hiển thị (Label)",
-        ),
+        t("moduleConfig.duplicateOptionKey", "Mã tùy chọn đã tồn tại"),
       );
       return;
     }
-
-    if (attrOptions.some((o) => o.value === key)) {
-      toast.error(
-        t(
-          "moduleConfig.optionKeyDuplicate",
-          `Mã option "${key}" đã tồn tại. Vui lòng chọn mã khác.`,
-        ),
-      );
-      return;
-    }
-
-    setAttrOptions([...attrOptions, { value: key, label }]);
+    setAttrOptions((prev) => [...prev, { value: finalK, label: finalL }]);
     setNewOptionKey("");
     setNewOptionLabel("");
   };
 
   const handleRemoveOption = (index: number) => {
-    setAttrOptions(attrOptions.filter((_, i) => i !== index));
+    setAttrOptions((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const handleToggleAttrActive = (attr: ModuleAttributeDef) => {
-    const nextActive = !attr.isActive;
-    updateAttrMutation.mutate({
-      id: attr.id,
-      payload: { isActive: nextActive },
-    });
-  };
+  // Mutations
+  const createAttrMutation = useMutation({
+    mutationFn: (dto: {
+      isGlobal: boolean;
+      moduleKeyGlobal: string;
+      code: string;
+      name: string;
+      fieldType: ModuleAttributeFieldType;
+      options?: ModuleAttributeOption[];
+      isRequired?: boolean;
+      isActive?: boolean;
+    }) => moduleConfigApi.createAttributeDef(dto),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["module-config-global-defs", activeModuleKey],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["module-config-all-global-defs"],
+      });
+      toast.success(
+        t("moduleConfig.createAttrSuccess", "Thêm thuộc tính thành công"),
+      );
+      closeAttrForm();
+    },
+    onError: (err: any) => {
+      toast.error(
+        err.response?.data?.message ||
+          t("moduleConfig.createAttrError", "Không thể thêm thuộc tính"),
+      );
+    },
+  });
 
-  const handleSaveAttribute = () => {
-    const isGlobal = isAddingGlobalAttr || Boolean(editingAttr?.isGlobal);
-    const targetCatId = addingAttrForCatId || editingAttr?.categoryId;
+  const updateAttrMutation = useMutation({
+    mutationFn: ({ id, dto }: { id: string; dto: any }) =>
+      moduleConfigApi.updateAttributeDef(id, dto),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["module-config-global-defs", activeModuleKey],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["module-config-all-global-defs"],
+      });
+      toast.success(
+        t("moduleConfig.updateAttrSuccess", "Cập nhật thuộc tính thành công"),
+      );
+      closeAttrForm();
+    },
+    onError: (err: any) => {
+      toast.error(
+        err.response?.data?.message ||
+          t("moduleConfig.updateAttrError", "Không thể cập nhật thuộc tính"),
+      );
+    },
+  });
 
-    if (!isGlobal && !targetCatId) return;
+  const deleteAttrMutation = useMutation({
+    mutationFn: (id: string) => moduleConfigApi.deleteAttributeDef(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["module-config-global-defs", activeModuleKey],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["module-config-all-global-defs"],
+      });
+      toast.success(
+        t("moduleConfig.deleteAttrSuccess", "Xóa thuộc tính thành công"),
+      );
+      setDeleteAttrTarget(null);
+    },
+    onError: (err: any) => {
+      toast.error(
+        err.response?.data?.message ||
+          t("moduleConfig.deleteAttrError", "Không thể xóa thuộc tính"),
+      );
+      setDeleteAttrTarget(null);
+    },
+  });
 
+  const handleSaveAttribute = async () => {
     const trimmedCode = attrCode.trim().toLowerCase();
     const trimmedName = attrName.trim();
-
-    if (!trimmedCode || !trimmedName) {
+    if (!trimmedCode) {
       toast.error(
-        t(
-          "moduleConfig.attrValidation",
-          "Vui lòng nhập đầy đủ mã và tên thuộc tính",
-        ),
+        t("moduleConfig.attrCodeRequired", "Vui lòng nhập mã thuộc tính"),
       );
       return;
     }
-
-    if (isGlobal) {
-      const isDuplicate = globalDefs.some(
-        (d) =>
-          d.code.toLowerCase() === trimmedCode &&
-          (!editingAttr || d.id !== editingAttr.id),
+    if (!trimmedName) {
+      toast.error(
+        t("moduleConfig.attrNameRequired", "Vui lòng nhập tên hiển thị"),
       );
-      if (isDuplicate) {
-        toast.error(
-          t(
-            "moduleConfig.globalAttrCodeDuplicate",
-            `Mã thuộc tính chung "${trimmedCode}" đã tồn tại trong phân hệ "${activeModuleKey}".`,
-          ),
-        );
-        return;
-      }
-    } else {
-      const currentCat = categories.find((c) => c.id === targetCatId);
-      const existingDefs = currentCat?.attributeDefs || [];
-      const isDuplicate = existingDefs.some(
-        (d) =>
-          d.code.toLowerCase() === trimmedCode &&
-          (!editingAttr || d.id !== editingAttr.id),
-      );
-      if (isDuplicate) {
-        toast.error(
-          t(
-            "moduleConfig.attrCodeDuplicate",
-            `Mã thuộc tính "${trimmedCode}" đã tồn tại trong danh mục này.`,
-          ),
-        );
-        return;
-      }
+      return;
     }
 
     if (attrFieldType === "SELECT" && attrOptions.length === 0) {
       toast.error(
         t(
           "moduleConfig.selectOptionsRequired",
-          "Kiểu Combobox yêu cầu ít nhất 1 option lựa chọn.",
+          "Kiểu SELECT cần ít nhất 1 tùy chọn",
         ),
       );
       return;
     }
 
     if (editingAttr) {
-      updateAttrMutation.mutate({
+      await updateAttrMutation.mutateAsync({
         id: editingAttr.id,
-        payload: {
-          code: trimmedCode,
+        dto: {
+          code: editingAttr.isSystem ? editingAttr.code : trimmedCode,
           name: trimmedName,
-          fieldType: attrFieldType,
+          fieldType: editingAttr.isSystem
+            ? editingAttr.fieldType
+            : attrFieldType,
           isRequired: attrRequired,
-          options: attrFieldType === "SELECT" ? attrOptions : null,
+          options:
+            (editingAttr.isSystem ? editingAttr.fieldType : attrFieldType) ===
+            "SELECT"
+              ? attrOptions
+              : undefined,
         },
       });
-    } else if (isGlobal) {
-      createAttrMutation.mutate({
+    } else {
+      await createAttrMutation.mutateAsync({
         isGlobal: true,
         moduleKeyGlobal: activeModuleKey,
         code: trimmedCode,
@@ -1311,54 +820,49 @@ function ModuleCustomFieldConfigContent({
         fieldType: attrFieldType,
         isRequired: attrRequired,
         options: attrFieldType === "SELECT" ? attrOptions : undefined,
-      });
-    } else {
-      createAttrMutation.mutate({
-        categoryId: targetCatId!,
-        code: trimmedCode,
-        name: trimmedName,
-        fieldType: attrFieldType,
-        isRequired: attrRequired,
-        options: attrFieldType === "SELECT" ? attrOptions : undefined,
+        isActive: true,
       });
     }
   };
 
-  const totalCategoryAttrs = categories.reduce(
-    (sum, c) =>
-      sum +
-      (c.attributeDefs || []).filter((d) => !d.isDeleted && !d.isGlobal).length,
-    0,
-  );
-  const totalGlobalAttrs = globalDefs.filter((d) => !d.isDeleted).length;
-
-  const moduleName = currentModule.nameKey
-    ? t(currentModule.nameKey, currentModule.defaultName)
-    : currentModule.defaultName;
-  const moduleDesc = currentModule.descKey
-    ? t(currentModule.descKey, currentModule.defaultDesc)
-    : currentModule.defaultDesc;
+  const handleToggleAttrActive = async (attr: ModuleAttributeDef) => {
+    try {
+      await moduleConfigApi.updateAttributeDef(attr.id, {
+        isActive: !attr.isActive,
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["module-config-global-defs", activeModuleKey],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["module-config-all-global-defs"],
+      });
+      toast.success(
+        attr.isActive
+          ? t("common.deactivated", "Đã ngừng hoạt động")
+          : t("common.activated", "Đã kích hoạt lại"),
+      );
+    } catch (err: any) {
+      toast.error(
+        err.response?.data?.message ||
+          t("common.updateFailed", "Cập nhật thất bại"),
+      );
+    }
+  };
 
   // Render attribute form subcomponent
-  const renderAttributeForm = (isGlobal: boolean) => (
+  const renderAttributeForm = () => (
     <div className="p-3.5 bg-surface/80 rounded-xl border border-border/80 flex flex-col gap-3 mt-1 shadow-xs">
       <div className="flex items-center justify-between pb-1.5 border-b border-border/50">
         <span className="text-xs font-semibold text-foreground flex items-center gap-1.5">
-          {isGlobal ? (
-            <Globe className="w-3.5 h-3.5 text-muted-foreground" />
-          ) : (
-            <Tag className="w-3.5 h-3.5 text-primary" />
-          )}
+          <Tag className="w-3.5 h-3.5 text-primary" />
           {editingAttr
-            ? isGlobal
-              ? t("moduleConfig.editGlobalAttr", "Chỉnh sửa thuộc tính chung")
-              : t("moduleConfig.editAttr", "Chỉnh sửa thuộc tính danh mục")
-            : isGlobal
+            ? editingAttr.isSystem
               ? t(
-                  "moduleConfig.addGlobalAttr",
-                  "Thêm thuộc tính chung (Toàn phân hệ)",
+                  "moduleConfig.editSystemAttr",
+                  "Chỉnh sửa thuộc tính mặc định",
                 )
-              : t("moduleConfig.addAttr", "Thêm thuộc tính danh mục")}
+              : t("moduleConfig.editAttr", "Chỉnh sửa thuộc tính")
+            : t("moduleConfig.addAttr", "Thêm thuộc tính tùy chỉnh")}
         </span>
         <Button
           size="icon"
@@ -1369,6 +873,18 @@ function ModuleCustomFieldConfigContent({
           <X className="w-3.5 h-3.5" />
         </Button>
       </div>
+
+      {editingAttr?.isSystem && (
+        <div className="p-2.5 rounded-lg bg-indigo-50/80 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 text-[11px] text-indigo-700 dark:text-indigo-300 flex items-center gap-2">
+          <ShieldCheck className="w-4 h-4 shrink-0 text-indigo-500" />
+          <span>
+            {t(
+              "moduleConfig.systemAttrNotice",
+              "Thuộc tính mặc định của hệ thống: Mã và Kiểu dữ liệu được cố định để bảo vệ tính toàn vẹn dữ liệu. Bạn có thể tùy chỉnh Tên hiển thị, Ràng buộc bắt buộc và Danh sách các lựa chọn (Options).",
+            )}
+          </span>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <DrawerField
@@ -1384,7 +900,10 @@ function ModuleCustomFieldConfigContent({
               "moduleConfig.attrCodePlaceholder",
               "VD: color, payment_status, approval_note",
             )}
-            disabled={!!editingAttr && (editingAttr.usageCount || 0) > 0}
+            disabled={Boolean(
+              editingAttr?.isSystem ||
+              (editingAttr && (editingAttr.usageCount || 0) > 0),
+            )}
           />
         </DrawerField>
 
@@ -1406,7 +925,6 @@ function ModuleCustomFieldConfigContent({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        {/* Combobox for Field Type */}
         <DrawerField
           label={t("moduleConfig.attrFieldType", "Kiểu dữ liệu")}
           required
@@ -1415,7 +933,10 @@ function ModuleCustomFieldConfigContent({
             options={fieldTypeOptions}
             value={attrFieldType}
             onChange={(v) => setAttrFieldType(v as ModuleAttributeFieldType)}
-            disabled={!!editingAttr && (editingAttr.usageCount || 0) > 0}
+            disabled={Boolean(
+              editingAttr?.isSystem ||
+              (editingAttr && (editingAttr.usageCount || 0) > 0),
+            )}
             placeholder={t(
               "moduleConfig.selectTypePlaceholder",
               "Chọn kiểu dữ liệu",
@@ -1424,56 +945,42 @@ function ModuleCustomFieldConfigContent({
           />
         </DrawerField>
 
-        {/* Checkbox for Required constraint */}
-        <DrawerField
-          label={t("moduleConfig.attrConstraint", "Ràng buộc dữ liệu")}
-        >
-          <label
-            htmlFor={`attr-req-toggle-${isGlobal ? "global" : "cat"}`}
-            className="flex items-center gap-2.5 h-[38px] px-3 rounded-xl border border-border bg-muted/20 hover:border-border-hover hover:bg-surface cursor-pointer select-none transition-all"
-          >
-            <Checkbox
-              id={`attr-req-toggle-${isGlobal ? "global" : "cat"}`}
-              checked={attrRequired}
-              onCheckedChange={(checked) => setAttrRequired(Boolean(checked))}
-            />
-            <div className="flex items-center gap-1.5 min-w-0">
-              <span className="text-xs font-medium text-foreground">
-                {t("moduleConfig.isRequired", "Bắt buộc nhập")}
-              </span>
-              <span className="text-[10px] text-destructive font-bold">
-                (*)
-              </span>
+        <DrawerField label={t("moduleConfig.constraints", "Ràng buộc dữ liệu")}>
+          <div className="flex items-center gap-4 h-10 px-3 bg-surface rounded-lg border border-border/60">
+            <div className="flex items-center gap-2 select-none">
+              <Checkbox
+                id="attr-required-cb"
+                checked={attrRequired}
+                onCheckedChange={(c) => setAttrRequired(Boolean(c))}
+              />
+              <label
+                htmlFor="attr-required-cb"
+                className="text-xs text-foreground cursor-pointer font-medium"
+              >
+                {t("moduleConfig.isRequired", "Bắt buộc nhập dữ liệu")}
+              </label>
             </div>
-          </label>
+          </div>
         </DrawerField>
       </div>
 
-      {/* SELECT Options builder */}
       {attrFieldType === "SELECT" && (
-        <div className="pt-3 mt-1 border-t border-border/50 flex flex-col gap-2.5">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-foreground flex items-center gap-1.5">
-              <ListFilter className="w-3.5 h-3.5 text-primary" />
-              {t(
-                "moduleConfig.selectOptionsTitle",
-                "Danh sách tùy chọn (Dropdown Options)",
-              )}
+        <div className="flex flex-col gap-2 p-3 bg-surface/50 rounded-lg border border-border/60 mt-1">
+          <label className="text-xs font-semibold text-foreground flex items-center justify-between">
+            <span>
+              {t("moduleConfig.selectOptionsList", "Danh sách tùy chọn")}
             </span>
-            <Badge
-              variant="outline"
-              className="text-[10px] font-mono font-medium"
-            >
+            <span className="text-[11px] font-normal text-muted-foreground">
               {attrOptions.length} {t("moduleConfig.optionsCount", "tùy chọn")}
-            </Badge>
-          </div>
+            </span>
+          </label>
 
-          <div className="grid grid-cols-1 sm:grid-cols-[140px_1fr_auto] gap-2">
+          <div className="flex items-center gap-2">
             <input
               type="text"
-              className={cn(inputCls, "font-mono uppercase text-xs")}
+              className={inputCls}
               value={newOptionKey}
-              onChange={(e) => setNewOptionKey(e.target.value.toUpperCase())}
+              onChange={(e) => setNewOptionKey(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
                   e.preventDefault();
@@ -1582,7 +1089,7 @@ function ModuleCustomFieldConfigContent({
     <>
       <div className="flex flex-col gap-4 pb-6">
         {/* Group Sub-Tabs (PillTabs) */}
-        {domainMods.length > 1 && (
+        {!hidePillTabs && domainMods.length > 1 && (
           <div className="flex items-center justify-start pb-0.5">
             <PillTabs
               className="w-full sm:w-auto shrink-0"
@@ -1596,199 +1103,164 @@ function ModuleCustomFieldConfigContent({
           </div>
         )}
 
-        {/* Header Description Section */}
-        <DrawerSection
-          title={
-            <div className="flex items-center gap-2">
-              <span className="text-primary">{currentModule.icon}</span>
-              <span>{moduleName}</span>
-              <span className="text-xs font-normal text-muted-foreground font-mono">
-                ({currentModule.key})
-              </span>
-            </div>
-          }
-          collapsible
-          defaultCollapsed={false}
-        >
-          <div className="flex flex-col gap-3">
-            <div className="flex items-center justify-between text-xs text-muted-foreground">
-              <div className="flex items-center gap-2 min-w-0">
-                {domainMeta && (
-                  <Badge variant="secondary" className="text-[10px] shrink-0">
-                    {t(domainMeta.titleKey, domainMeta.defaultTitle)}
-                  </Badge>
-                )}
-                <p className="truncate">{moduleDesc}</p>
-              </div>
+        {/* Form Create / Edit Attribute */}
+        {(isAddingAttr || editingAttr) && renderAttributeForm()}
 
-              <div className="flex items-center gap-2 shrink-0">
-                {!isAddingGlobalAttr &&
-                  (!editingAttr || !editingAttr.isGlobal) && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={openCreateGlobalAttr}
-                      className="flex items-center gap-1 text-xs"
-                    >
-                      <Globe className="w-3.5 h-3.5" />
-                      {t("moduleConfig.addGlobalAttrBtn", "+ Thuộc tính chung")}
-                    </Button>
-                  )}
-
-                {!isCreatingCategory && !editingCategory && (
-                  <Button
-                    size="sm"
-                    variant="primary"
-                    onClick={openCreateCategory}
-                    className="flex items-center gap-1 text-xs"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                    {t("moduleConfig.addCategory", "Thêm danh mục")}
-                  </Button>
-                )}
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between pt-2 border-t border-border/40 text-xs">
-              <div className="flex items-center gap-3 text-muted-foreground">
-                <span className="inline-flex items-center gap-1.5">
-                  <span className="font-semibold text-foreground">
-                    {totalGlobalAttrs}
-                  </span>
-                  <span>
-                    {t("moduleConfig.globalAttrsCount", "thuộc tính chung")}
-                  </span>
-                </span>
-                <span className="text-border">•</span>
-                <span className="inline-flex items-center gap-1.5">
-                  <span className="font-semibold text-foreground">
-                    {categories.length}
-                  </span>
-                  <span>{t("moduleConfig.categoriesCount", "danh mục")}</span>
-                </span>
-                <span className="text-border">•</span>
-                <span className="inline-flex items-center gap-1.5">
-                  <span className="font-semibold text-foreground">
-                    {totalCategoryAttrs}
-                  </span>
-                  <span>
-                    {t("moduleConfig.catAttrsCount", "thuộc tính danh mục")}
-                  </span>
-                </span>
-              </div>
-
-              {(isCreatingCategory || editingCategory) && (
-                <span className="text-xs text-primary font-medium italic">
-                  ✎{" "}
-                  {isCreatingCategory
-                    ? t(
-                        "moduleConfig.creatingCategoryHint",
-                        "Đang tạo danh mục mới...",
-                      )
-                    : t(
-                        "moduleConfig.editingCategoryHint",
-                        `Đang sửa: ${editingCategory?.name}`,
-                      )}
-                </span>
-              )}
-            </div>
+        {/* Loading & Error states */}
+        {isLoading && (
+          <div className="flex items-center justify-center py-12 text-muted-foreground gap-2">
+            <Loader2 className="w-5 h-5 animate-spin" />
+            <span className="text-xs">
+              {t("common.loading", "Đang tải cấu hình...")}
+            </span>
           </div>
-        </DrawerSection>
+        )}
 
-        {/* 1. GLOBAL ATTRIBUTES SECTION (Top Card - Neutral styling) */}
-        <DrawerSection
-          title={
-            <div className="flex items-center gap-2 min-w-0 flex-wrap">
-              <Globe className="w-4 h-4 text-muted-foreground shrink-0" />
-              <span className="font-bold text-foreground normal-case text-xs">
-                {t(
-                  "moduleConfig.globalAttributesTitle",
-                  "Thuộc tính chung (Toàn phân hệ)",
-                )}
-              </span>
-              <Badge
-                variant="secondary"
-                className="text-[9px] px-1.5 py-0 font-normal uppercase"
-              >
-                {t("moduleConfig.globalBadge", "Toàn phân hệ")}
-              </Badge>
-              <Badge
-                variant="outline"
-                className="text-[9px] font-mono font-normal text-muted-foreground"
-              >
-                {globalDefs.length} {t("moduleConfig.attrsCount", "thuộc tính")}
-              </Badge>
-            </div>
-          }
-          titleExtra={
-            !isAddingGlobalAttr &&
-            (!editingAttr || !editingAttr.isGlobal) && (
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={openCreateGlobalAttr}
-                className="h-7 text-xs flex items-center gap-1 px-2.5"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                {t("moduleConfig.addGlobalAttr", "Thêm thuộc tính chung")}
-              </Button>
-            )
-          }
-          collapsible
-          defaultCollapsed={false}
-        >
-          <div className="flex flex-col gap-3">
-            <p className="text-[11px] text-muted-foreground italic px-1">
-              {t(
-                "moduleConfig.globalAttributesSubtitle",
-                "Các thuộc tính dưới đây sẽ tự động hiển thị trên Drawer chứng từ của phân hệ này mà không cần người dùng chọn danh mục.",
-              )}
-            </p>
+        {isError && (
+          <div className="p-4 rounded-xl border border-destructive/30 bg-destructive/10 text-destructive text-xs">
+            {t(
+              "moduleConfig.loadError",
+              "Không thể tải danh sách cấu hình thuộc tính.",
+            )}
+          </div>
+        )}
 
-            {/* Global Attribute Form */}
-            {(isAddingGlobalAttr || (editingAttr && editingAttr.isGlobal)) &&
-              renderAttributeForm(true)}
-
-            {/* Global Attribute List */}
-            <div className="flex flex-col gap-1.5 mt-1">
-              {globalDefs.length === 0 && !isAddingGlobalAttr && (
-                <div className="py-4 text-center text-muted-foreground text-xs bg-muted/15 rounded-lg border border-dashed border-border/50">
-                  <Globe className="w-5 h-5 opacity-40 mx-auto mb-1 text-muted-foreground" />
-                  <p>
-                    {t(
-                      "moduleConfig.noGlobalAttrsYet",
-                      "Chưa có thuộc tính chung nào cho phân hệ này.",
-                    )}
-                  </p>
-                  <Button
-                    size="sm"
-                    variant="link"
-                    onClick={openCreateGlobalAttr}
-                    className="text-xs text-primary mt-0.5"
-                  >
-                    +{" "}
-                    {t(
-                      "moduleConfig.createFirstGlobalAttr",
-                      "Tạo thuộc tính chung đầu tiên",
-                    )}
-                  </Button>
-                </div>
-              )}
-
-              {globalDefs.map((attr) => (
+        {/* 1. System Default Attributes Section (Read-only / Edit options, Cannot delete) */}
+        {!isLoading && !isError && systemDefs.length > 0 && (
+          <DrawerSection
+            title={
+              <div className="flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-indigo-500" />
+                <span>
+                  {t(
+                    "moduleConfig.systemAttributesTitle",
+                    "Thuộc tính mặc định (Hệ thống)",
+                  )}
+                </span>
+                <Badge
+                  variant="outline"
+                  className="text-[9px] font-mono border-indigo-200 text-indigo-700 bg-indigo-50/50 dark:border-indigo-800 dark:text-indigo-300 dark:bg-indigo-950/40"
+                >
+                  {systemDefs.length}
+                </Badge>
+              </div>
+            }
+            collapsible
+            defaultCollapsed={false}
+          >
+            <div className="flex flex-col gap-2">
+              {systemDefs.map((attr) => (
                 <div
                   key={attr.id}
-                  className="flex items-center justify-between px-3 py-2 bg-surface/50 hover:bg-surface rounded-lg text-xs transition-colors group border border-border/40"
+                  className="flex items-center justify-between px-3.5 py-2.5 bg-indigo-50/20 dark:bg-indigo-950/20 hover:bg-indigo-50/40 dark:hover:bg-indigo-950/30 rounded-xl text-xs transition-all group border border-indigo-200/50 dark:border-indigo-800/50 hover:border-indigo-300 dark:hover:border-indigo-700 shadow-2xs"
                 >
-                  <div className="flex items-center gap-2 min-w-0">
+                  <div className="flex items-center gap-2 min-w-0 flex-wrap">
                     <Badge
                       variant="outline"
-                      className="text-[10px] gap-1 shrink-0 flex items-center font-medium bg-surface/60 border-border/60"
+                      className="text-[10px] gap-1 shrink-0 flex items-center font-medium bg-surface border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300"
+                    >
+                      <ShieldCheck className="w-3 h-3 text-indigo-500" />
+                      <span>
+                        {t("moduleConfig.systemBadge", "Mặc định hệ thống")}
+                      </span>
+                    </Badge>
+                    <Badge
+                      variant="outline"
+                      className="text-[10px] gap-1 shrink-0 flex items-center font-medium bg-surface border-border/80"
                     >
                       {FIELD_TYPE_ICONS[attr.fieldType]}
                       <span>{getFieldTypeShortLabel(attr.fieldType, t)}</span>
                     </Badge>
-                    <span className="font-medium text-foreground truncate">
+                    <span className="font-semibold text-foreground truncate">
+                      {resolveAttrName(attr, activeModuleKey, undefined, t)}
+                    </span>
+                    <span className="text-[11px] text-muted-foreground font-mono shrink-0">
+                      ({attr.code})
+                    </span>
+                    {attr.fieldType === "SELECT" && attr.options && (
+                      <Badge
+                        variant="secondary"
+                        className="text-[9px] px-1.5 py-0 text-muted-foreground"
+                      >
+                        {attr.options.length}{" "}
+                        {t("moduleConfig.optionsCount", "tùy chọn")}
+                      </Badge>
+                    )}
+                    {attr.isRequired && (
+                      <Badge
+                        variant="destructive"
+                        className="text-[9px] px-1.5 py-0"
+                      >
+                        {t("moduleConfig.requiredBadge", "Bắt buộc *")}
+                      </Badge>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-1 shrink-0">
+                    <Tooltip content={t("common.edit", "Chỉnh sửa tùy chọn")}>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="w-7 h-7 text-muted-foreground hover:text-foreground hover:bg-surface/80"
+                        onClick={() => openEditAttr(attr)}
+                      >
+                        <Edit2 className="w-3.5 h-3.5" />
+                      </Button>
+                    </Tooltip>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </DrawerSection>
+        )}
+
+        {/* 2. Custom Attributes Section */}
+        {!isLoading && !isError && (
+          <DrawerSection
+            title={
+              <div className="flex items-center gap-2">
+                <Tag className="w-4 h-4 text-primary" />
+                <span>
+                  {t(
+                    "moduleConfig.customAttributesTitle",
+                    "Thuộc tính tùy chỉnh",
+                  )}
+                </span>
+                <Badge variant="outline" className="text-[9px] font-mono">
+                  {customDefs.length}
+                </Badge>
+              </div>
+            }
+            collapsible
+            defaultCollapsed={false}
+          >
+            <div className="flex flex-col gap-2">
+              {customDefs.length === 0 && !isAddingAttr && (
+                <div className="py-6 text-center text-muted-foreground text-xs bg-muted/15 rounded-xl border border-dashed border-border/60 flex flex-col items-center gap-1.5">
+                  <Tag className="w-5 h-5 opacity-40 text-muted-foreground" />
+                  <p>
+                    {t(
+                      "moduleConfig.noCustomAttrsYet",
+                      "Chưa có thuộc tính tùy chỉnh nào cho phân hệ này.",
+                    )}
+                  </p>
+                </div>
+              )}
+
+              {customDefs.map((attr) => (
+                <div
+                  key={attr.id}
+                  className="flex items-center justify-between px-3.5 py-2.5 bg-surface/60 hover:bg-surface rounded-xl text-xs transition-all group border border-border/50 hover:border-border shadow-2xs"
+                >
+                  <div className="flex items-center gap-2.5 min-w-0 flex-wrap">
+                    <Badge
+                      variant="outline"
+                      className="text-[10px] gap-1 shrink-0 flex items-center font-medium bg-surface border-border/80"
+                    >
+                      {FIELD_TYPE_ICONS[attr.fieldType]}
+                      <span>{getFieldTypeShortLabel(attr.fieldType, t)}</span>
+                    </Badge>
+                    <span className="font-semibold text-foreground truncate">
                       {resolveAttrName(attr, activeModuleKey, undefined, t)}
                     </span>
                     <span className="text-[11px] text-muted-foreground font-mono shrink-0">
@@ -1797,7 +1269,7 @@ function ModuleCustomFieldConfigContent({
                     {attr.isRequired && (
                       <Badge
                         variant="destructive"
-                        className="text-[9px] px-1 py-0"
+                        className="text-[9px] px-1.5 py-0"
                       >
                         {t("moduleConfig.requiredBadge", "Bắt buộc *")}
                       </Badge>
@@ -1805,7 +1277,7 @@ function ModuleCustomFieldConfigContent({
                     {!attr.isActive && (
                       <Badge
                         variant="secondary"
-                        className="text-[9px] px-1 py-0"
+                        className="text-[9px] px-1.5 py-0 text-muted-foreground"
                       >
                         {t("common.inactive", "Ngừng dùng")}
                       </Badge>
@@ -1813,7 +1285,7 @@ function ModuleCustomFieldConfigContent({
                     {(attr.usageCount || 0) > 0 && (
                       <Badge
                         variant="secondary"
-                        className="text-[9px] px-1 py-0 text-muted-foreground"
+                        className="text-[9px] px-1.5 py-0 text-muted-foreground"
                       >
                         {attr.usageCount} {t("moduleConfig.used", "đang dùng")}
                       </Badge>
@@ -1831,7 +1303,7 @@ function ModuleCustomFieldConfigContent({
                       <Button
                         size="icon"
                         variant="ghost"
-                        className="w-6 h-6"
+                        className="w-7 h-7"
                         onClick={() => handleToggleAttrActive(attr)}
                       >
                         {attr.isActive ? (
@@ -1845,7 +1317,7 @@ function ModuleCustomFieldConfigContent({
                       <Button
                         size="icon"
                         variant="ghost"
-                        className="w-6 h-6 text-muted-foreground hover:text-foreground hover:bg-surface/80"
+                        className="w-7 h-7 text-muted-foreground hover:text-foreground hover:bg-surface/80"
                         onClick={() => openEditAttr(attr)}
                       >
                         <Edit2 className="w-3.5 h-3.5" />
@@ -1855,7 +1327,7 @@ function ModuleCustomFieldConfigContent({
                       <Button
                         size="icon"
                         variant="ghost"
-                        className="w-6 h-6 text-destructive hover:bg-destructive/10"
+                        className="w-7 h-7 text-destructive hover:bg-destructive/10"
                         onClick={() => setDeleteAttrTarget(attr)}
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -1864,382 +1336,49 @@ function ModuleCustomFieldConfigContent({
                   </div>
                 </div>
               ))}
-            </div>
-          </div>
-        </DrawerSection>
 
-        {/* 2. CATEGORY FORM SECTION (Create / Edit Category) */}
-        {(isCreatingCategory || editingCategory) && (
-          <DrawerSection
-            title={
-              editingCategory
-                ? t("moduleConfig.editCategory", "Chỉnh sửa danh mục")
-                : t("moduleConfig.newCategory", "Tạo danh mục mới")
-            }
-            collapsible
-            defaultCollapsed={false}
-          >
-            <div className="flex flex-col gap-3 p-3 bg-surface/40 rounded-xl border border-dashed border-border/60">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <DrawerField
-                  label={t("moduleConfig.catCode", "Mã danh mục")}
-                  required
-                >
-                  <input
-                    type="text"
-                    className={inputCls}
-                    value={catCode}
-                    onChange={(e) => setCatCode(e.target.value)}
-                    placeholder={t(
-                      "moduleConfig.catCodePlaceholder",
-                      "VD: CAR, ACC, GENERAL",
-                    )}
-                  />
-                </DrawerField>
-                <DrawerField
-                  label={t("moduleConfig.catName", "Tên danh mục (Fallback)")}
-                  required
-                >
-                  <input
-                    type="text"
-                    className={inputCls}
-                    value={catName}
-                    onChange={(e) => setCatName(e.target.value)}
-                    placeholder={t(
-                      "moduleConfig.catNamePlaceholder",
-                      "VD: Xe điện, Phụ kiện...",
-                    )}
-                  />
-                </DrawerField>
-              </div>
-              <DrawerField label={t("moduleConfig.catDescription", "Mô tả")}>
-                <textarea
-                  rows={2}
-                  className={inputCls}
-                  value={catDescription}
-                  onChange={(e) => setCatDescription(e.target.value)}
-                  placeholder={t(
-                    "moduleConfig.catDescPlaceholder",
-                    "Mô tả chi tiết về danh mục...",
-                  )}
-                />
-              </DrawerField>
-              <div className="flex items-center justify-end gap-2 mt-1">
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  onClick={handleRequestCloseCategory}
-                  disabled={
-                    createCategoryMutation.isPending ||
-                    updateCategoryMutation.isPending
-                  }
-                >
-                  {t("common.cancel", "Hủy")}
-                </Button>
-                <Button
-                  size="sm"
-                  variant="primary"
-                  onClick={handleSaveCategory}
-                  disabled={
-                    createCategoryMutation.isPending ||
-                    updateCategoryMutation.isPending
-                  }
-                >
-                  {createCategoryMutation.isPending ||
-                  updateCategoryMutation.isPending ? (
-                    <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" />
-                  ) : null}
-                  {editingCategory
-                    ? t("common.save", "Lưu")
-                    : t("common.create", "Tạo mới")}
-                </Button>
-              </div>
+              {/* Button Thêm thuộc tính nằm ngay bên dưới giữa hàng (bottom-center) */}
+              {!isAddingAttr && !editingAttr && (
+                <div className="flex justify-center pt-2 pb-0.5">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={openCreateAttr}
+                    className="h-8 px-4 text-xs font-medium border-dashed border-primary/50 hover:border-primary text-primary bg-primary/5 hover:bg-primary/10 rounded-lg flex items-center gap-1.5 transition-all shadow-2xs hover:shadow-xs cursor-pointer"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>
+                      {t("moduleConfig.addAttrBtn", "Thêm thuộc tính")}
+                    </span>
+                  </Button>
+                </div>
+              )}
             </div>
           </DrawerSection>
         )}
-
-        {/* Loading & Error states */}
-        {(isLoading || isGlobalLoading) && (
-          <div className="flex items-center justify-center py-12 text-muted-foreground gap-2">
-            <Loader2 className="w-5 h-5 animate-spin" />
-            <span className="text-xs">
-              {t("common.loading", "Đang tải cấu hình...")}
-            </span>
-          </div>
-        )}
-
-        {isError && (
-          <div className="p-4 rounded-xl border border-destructive/30 bg-destructive/10 text-destructive text-xs">
-            {t(
-              "moduleConfig.loadError",
-              "Không thể tải danh sách cấu hình danh mục & thuộc tính.",
-            )}
-          </div>
-        )}
-
-        {/* 3. CATEGORIES & CATEGORY ATTRIBUTES SECTION */}
-        {!isLoading && categories.length === 0 && !isCreatingCategory && (
-          <div className="flex flex-col items-center justify-center py-8 text-center text-muted-foreground p-6 bg-surface/30 rounded-xl border border-border/40">
-            <Layers className="w-7 h-7 opacity-40 mb-2" />
-            <p className="text-xs font-medium">
-              {t(
-                "moduleConfig.noCategories",
-                "Chưa có danh mục theo nhóm nào được định nghĩa.",
-              )}
-            </p>
-            <p className="text-[11px] opacity-70 mt-1">
-              {t(
-                "moduleConfig.noCategoriesHint",
-                "Bấm 'Thêm danh mục' ở trên để phân loại thuộc tính chuyên sâu theo từng nhóm.",
-              )}
-            </p>
-          </div>
-        )}
-
-        {categories.map((cat) => {
-          const defs = (cat.attributeDefs || []).filter((d) => !d.isGlobal);
-          const isAddingAttr = addingAttrForCatId === cat.id;
-
-          return (
-            <DrawerSection
-              key={cat.id}
-              title={
-                <div className="flex items-center gap-2 min-w-0 flex-wrap">
-                  <span className="font-bold text-foreground normal-case text-xs">
-                    {resolveCategoryName(cat, t)}
-                  </span>
-                  <span className="text-[11px] font-mono text-muted-foreground font-normal">
-                    ({cat.code})
-                  </span>
-                  <Badge
-                    variant={cat.isActive ? "default" : "secondary"}
-                    className="text-[9px] px-1.5 py-0 font-normal uppercase"
-                  >
-                    {cat.isActive
-                      ? t("common.active", "Đang dùng")
-                      : t("common.inactive", "Ngừng dùng")}
-                  </Badge>
-                  <Badge
-                    variant="outline"
-                    className="text-[9px] font-mono font-normal text-muted-foreground"
-                  >
-                    {defs.length} {t("moduleConfig.attrsCount", "thuộc tính")}
-                  </Badge>
-                </div>
-              }
-              titleExtra={
-                <div className="flex items-center gap-1 shrink-0">
-                  <Tooltip
-                    content={
-                      cat.isActive
-                        ? t("common.deactivate", "Ngừng hoạt động danh mục")
-                        : t("common.activate", "Kích hoạt lại danh mục")
-                    }
-                  >
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="w-6 h-6 hover:bg-surface/80"
-                      onClick={() => handleToggleCategoryActive(cat)}
-                    >
-                      {cat.isActive ? (
-                        <Power className="w-3.5 h-3.5 text-emerald-500" />
-                      ) : (
-                        <PowerOff className="w-3.5 h-3.5 text-muted-foreground" />
-                      )}
-                    </Button>
-                  </Tooltip>
-                  <Tooltip
-                    content={t(
-                      "moduleConfig.editCategory",
-                      "Chỉnh sửa danh mục",
-                    )}
-                  >
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="w-6 h-6 text-muted-foreground hover:text-foreground hover:bg-surface/80"
-                      onClick={() => openEditCategory(cat)}
-                    >
-                      <Edit2 className="w-3.5 h-3.5" />
-                    </Button>
-                  </Tooltip>
-                  <Tooltip
-                    content={t("moduleConfig.deleteCatTitle", "Xóa danh mục")}
-                  >
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="w-6 h-6 text-destructive hover:bg-destructive/10"
-                      onClick={() => setDeleteCatTarget(cat)}
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </Button>
-                  </Tooltip>
-                </div>
-              }
-              collapsible
-              defaultCollapsed={false}
-            >
-              <div className="flex flex-col gap-3">
-                {cat.description && (
-                  <p className="text-[11px] text-muted-foreground italic px-1">
-                    {cat.description}
-                  </p>
-                )}
-
-                {/* Attribute Form (Inside Category) */}
-                {(isAddingAttr ||
-                  (editingAttr &&
-                    !editingAttr.isGlobal &&
-                    editingAttr.categoryId === cat.id)) &&
-                  renderAttributeForm(false)}
-
-                {/* Attribute List */}
-                <div className="flex flex-col gap-1.5 mt-1">
-                  {defs.length === 0 && !isAddingAttr && (
-                    <div className="py-3 text-center text-muted-foreground text-xs opacity-70">
-                      {t(
-                        "moduleConfig.noAttrs",
-                        "Chưa có thuộc tính nào trong danh mục này.",
-                      )}
-                    </div>
-                  )}
-
-                  {defs.map((attr) => (
-                    <div
-                      key={attr.id}
-                      className="flex items-center justify-between px-3 py-2 bg-surface/40 hover:bg-surface rounded-lg text-xs transition-colors group"
-                    >
-                      <div className="flex items-center gap-2 min-w-0">
-                        <Badge
-                          variant="outline"
-                          className="text-[10px] gap-1 shrink-0 flex items-center font-medium bg-surface/60 border-border/60"
-                        >
-                          {FIELD_TYPE_ICONS[attr.fieldType]}
-                          <span>
-                            {getFieldTypeShortLabel(attr.fieldType, t)}
-                          </span>
-                        </Badge>
-                        <span className="font-medium text-foreground truncate">
-                          {resolveAttrName(attr, activeModuleKey, cat.code, t)}
-                        </span>
-                        <span className="text-[11px] text-muted-foreground font-mono shrink-0">
-                          ({attr.code})
-                        </span>
-                        {attr.isRequired && (
-                          <Badge
-                            variant="destructive"
-                            className="text-[9px] px-1 py-0"
-                          >
-                            {t("moduleConfig.requiredBadge", "Bắt buộc *")}
-                          </Badge>
-                        )}
-                        {!attr.isActive && (
-                          <Badge
-                            variant="secondary"
-                            className="text-[9px] px-1 py-0"
-                          >
-                            {t("common.inactive", "Ngừng dùng")}
-                          </Badge>
-                        )}
-                        {(attr.usageCount || 0) > 0 && (
-                          <Badge
-                            variant="secondary"
-                            className="text-[9px] px-1 py-0 text-muted-foreground"
-                          >
-                            {attr.usageCount}{" "}
-                            {t("moduleConfig.used", "đang dùng")}
-                          </Badge>
-                        )}
-                      </div>
-
-                      <div className="flex items-center gap-1 shrink-0">
-                        <Tooltip
-                          content={
-                            attr.isActive
-                              ? t("common.deactivate", "Ngừng hoạt động")
-                              : t("common.activate", "Kích hoạt lại")
-                          }
-                        >
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="w-6 h-6"
-                            onClick={() => handleToggleAttrActive(attr)}
-                          >
-                            {attr.isActive ? (
-                              <Power className="w-3.5 h-3.5 text-emerald-500" />
-                            ) : (
-                              <PowerOff className="w-3.5 h-3.5 text-muted-foreground" />
-                            )}
-                          </Button>
-                        </Tooltip>
-                        <Tooltip content={t("common.edit", "Chỉnh sửa")}>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="w-6 h-6 text-muted-foreground hover:text-foreground hover:bg-surface/80"
-                            onClick={() => openEditAttr(attr)}
-                          >
-                            <Edit2 className="w-3.5 h-3.5" />
-                          </Button>
-                        </Tooltip>
-                        <Tooltip content={t("common.delete", "Xóa thuộc tính")}>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="w-6 h-6 text-destructive hover:bg-destructive/10"
-                            onClick={() => setDeleteAttrTarget(attr)}
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </Button>
-                        </Tooltip>
-                      </div>
-                    </div>
-                  ))}
-
-                  {!isAddingAttr &&
-                    (!editingAttr || editingAttr.categoryId !== cat.id) && (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => openCreateAttr(cat.id)}
-                        className="w-full text-xs text-primary hover:text-primary hover:bg-primary/5 border border-dashed border-primary/30 mt-1 flex items-center justify-center gap-1 h-8"
-                      >
-                        <Plus className="w-3.5 h-3.5" />
-                        {t("moduleConfig.addAttr", "Thêm thuộc tính danh mục")}
-                      </Button>
-                    )}
-                </div>
-              </div>
-            </DrawerSection>
-          );
-        })}
       </div>
 
-      {/* Discard / Cancel Confirmation Modal for Subforms / Module Tab Switch */}
+      {/* Discard confirmation modal */}
       <ConfirmModal
         open={cancelConfirmTarget !== null}
         title={t("common.confirmCancelTitle", "Xác nhận hủy thay đổi")}
         message={t(
           "common.confirmCancelDesc",
-          "Bạn có thay đổi chưa được lưu. Nếu thoát bây giờ, các thay đổi sẽ bị mất. Bạn có chắc chắn muốn tiếp tục?",
+          "Bạn có thay đổi chưa được lưu. Bạn có chắc chắn muốn hủy?",
         )}
         confirmLabel={t("common.discardChanges", "Hủy thay đổi")}
         cancelLabel={t("common.continueEditing", "Tiếp tục sửa")}
         danger
         onConfirm={() => {
-          if (cancelConfirmTarget === "category") {
-            resetCatForm();
-          } else if (cancelConfirmTarget === "attr") {
-            resetAttrForm();
+          if (!cancelConfirmTarget) return;
+          if (cancelConfirmTarget === "attr") {
+            closeAttrForm();
           } else if (
             typeof cancelConfirmTarget === "object" &&
-            cancelConfirmTarget?.type === "module"
+            cancelConfirmTarget.type === "module"
           ) {
-            resetCatForm();
-            resetAttrForm();
+            closeAttrForm();
             onSelectModule(cancelConfirmTarget.nextKey);
           }
           setCancelConfirmTarget(null);
@@ -2247,30 +1386,24 @@ function ModuleCustomFieldConfigContent({
         onCancel={() => setCancelConfirmTarget(null)}
       />
 
-      {/* Delete Category Modal */}
+      {/* Delete Attribute confirm modal */}
       <ConfirmModal
-        open={!!deleteCatTarget}
-        title={t("moduleConfig.deleteCatTitle", "Xóa danh mục")}
-        message={t(
-          "moduleConfig.deleteCatMsg",
-          `Bạn có chắc chắn muốn xóa danh mục "${deleteCatTarget?.name}"? Nếu có dữ liệu đang sử dụng, hệ thống sẽ yêu cầu chuyển sang Ngừng hoạt động.`,
-        )}
-        onConfirm={() => {
-          if (deleteCatTarget) {
-            deleteCategoryMutation.mutate(deleteCatTarget.id);
-          }
-        }}
-        onCancel={() => setDeleteCatTarget(null)}
-      />
-
-      {/* Delete Attribute Modal */}
-      <ConfirmModal
-        open={!!deleteAttrTarget}
-        title={t("moduleConfig.deleteAttrTitle", "Xóa thuộc tính")}
-        message={t(
-          "moduleConfig.deleteAttrMsg",
-          `Bạn có chắc chắn muốn xóa thuộc tính "${deleteAttrTarget?.name}"? Nếu đã có dữ liệu sử dụng, vui lòng chuyển sang trạng thái Ngừng hoạt động.`,
-        )}
+        open={deleteAttrTarget !== null}
+        title={t("moduleConfig.deleteAttrTitle", "Xác nhận xóa thuộc tính")}
+        message={
+          deleteAttrTarget && (deleteAttrTarget.usageCount || 0) > 0
+            ? t(
+                "moduleConfig.deleteAttrWarningInUse",
+                `Thuộc tính "${deleteAttrTarget.name}" đang được sử dụng (${deleteAttrTarget.usageCount} bản ghi). Nếu không muốn dùng nữa, hãy chuyển sang trạng thái Ngừng hoạt động (Deactivate).`,
+              )
+            : t(
+                "moduleConfig.deleteAttrConfirmMsg",
+                `Bạn có chắc chắn muốn xóa thuộc tính "${deleteAttrTarget?.name}"? Hành động này không thể hoàn tác.`,
+              )
+        }
+        confirmLabel={t("common.delete", "Xóa")}
+        cancelLabel={t("common.cancel", "Hủy")}
+        danger
         onConfirm={() => {
           if (deleteAttrTarget) {
             deleteAttrMutation.mutate(deleteAttrTarget.id);
@@ -2283,7 +1416,7 @@ function ModuleCustomFieldConfigContent({
 }
 
 // ============================================================================
-// 4. MAIN EXPORT: 2-COLUMN DRAWER WITH GROUP TABS + SUB PILL TABS + SEAMLESS PREVIEW
+// 4. MAIN EXPORT: 2-COLUMN DRAWER WITH DOMAIN TABS + DIRECT ATTRIBUTES + PREVIEW
 // ============================================================================
 
 export interface ModuleCustomFieldConfigDrawerProps {
@@ -2309,13 +1442,6 @@ export function ModuleCustomFieldConfigDrawer({
   const [isContentDirty, setIsContentDirty] = useState(false);
   const [pendingDomainKey, setPendingDomainKey] = useState<string | null>(null);
 
-  // Query ALL categories across the ERP ecosystem
-  const { data: allCategories = [] } = useQuery({
-    queryKey: ["module-config-all-categories"],
-    queryFn: () => moduleConfigApi.getCategories(),
-    enabled: open,
-  });
-
   // Query ALL global attributes across the ERP ecosystem
   const { data: allGlobalDefs = [] } = useQuery({
     queryKey: ["module-config-all-global-defs"],
@@ -2333,16 +1459,6 @@ export function ModuleCustomFieldConfigDrawer({
       GARAGE: 0,
     };
 
-    for (const cat of allCategories) {
-      const mod = ERP_MODULE_REGISTRY.find((m) => m.key === cat.moduleKey);
-      if (mod) {
-        const validDefs = (cat.attributeDefs || []).filter(
-          (d) => !d.isDeleted && !d.isGlobal,
-        );
-        counts[mod.domain] += validDefs.length;
-      }
-    }
-
     for (const gDef of allGlobalDefs) {
       if (gDef.isDeleted) continue;
       const mod = ERP_MODULE_REGISTRY.find(
@@ -2354,7 +1470,7 @@ export function ModuleCustomFieldConfigDrawer({
     }
 
     return counts;
-  }, [allCategories, allGlobalDefs]);
+  }, [allGlobalDefs]);
 
   // Initial active module key
   const [activeModuleKey, setActiveModuleKey] = useState<string>(() => {
@@ -2432,13 +1548,6 @@ export function ModuleCustomFieldConfigDrawer({
     });
   }, [domainKeys, domainAttrCounts, activeModuleKey, open, t]);
 
-  // Query categories for activeModuleKey (for right panel preview)
-  const { data: currentModuleCategories = [] } = useQuery({
-    queryKey: ["module-config-categories", activeModuleKey],
-    queryFn: () => moduleConfigApi.getCategories(activeModuleKey),
-    enabled: open && !!activeModuleKey,
-  });
-
   // Query global attribute defs for activeModuleKey (for right panel preview)
   const { data: currentModuleGlobalDefs = [] } = useQuery({
     queryKey: ["module-config-global-defs", activeModuleKey],
@@ -2461,12 +1570,12 @@ export function ModuleCustomFieldConfigDrawer({
         icon={<Settings className="w-5 h-5 text-primary" />}
         title={titleText}
         subtitle={t(
-          "moduleConfig.subtitleUnified",
-          "Quản lý danh mục & các thuộc tính động cấu hình theo từng phân hệ",
+          "moduleConfig.subtitle",
+          "Quản lý các thuộc tính động cấu hình theo từng phân hệ",
         )}
         layout="2-columns"
-        size="lg"
-        zIndex={410}
+        size="xl"
+        zIndex={400}
         tabs={tabs}
         activeTabKey={activeDomain}
         onTabChange={handleDomainGroupChange}
@@ -2479,22 +1588,21 @@ export function ModuleCustomFieldConfigDrawer({
         stickyRightPanel={true}
         rightPanel={
           <ModuleLivePreviewPanel
-            categories={currentModuleCategories}
-            globalDefs={currentModuleGlobalDefs}
+            attributes={currentModuleGlobalDefs}
             moduleKey={activeModuleKey}
           />
         }
       />
 
-      {/* Discard confirmation when switching Top Domain Tab while dirty */}
+      {/* Discard confirmation modal when switching domain with unsaved changes */}
       <ConfirmModal
         open={pendingDomainKey !== null}
         title={t("common.confirmCancelTitle", "Xác nhận hủy thay đổi")}
         message={t(
           "common.confirmCancelDesc",
-          "Bạn có thay đổi chưa được lưu. Nếu chuyển phân hệ khác bây giờ, các thay đổi sẽ bị mất. Bạn có chắc chắn muốn chuyển?",
+          "Bạn có thay đổi chưa được lưu. Nếu chuyển nhóm phân hệ khác bây giờ, các thay đổi sẽ bị mất. Bạn có chắc chắn muốn chuyển?",
         )}
-        confirmLabel={t("common.discardChanges", "Chuyển phân hệ")}
+        confirmLabel={t("common.discardChanges", "Chuyển nhóm")}
         cancelLabel={t("common.continueEditing", "Tiếp tục sửa")}
         danger
         onConfirm={() => {

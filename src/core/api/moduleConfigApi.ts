@@ -4,6 +4,9 @@ export const MODULE_KEYS = {
   BOM: "BOM",
   INVOICE: "INVOICE",
   BANK_TXN: "BANK_TXN",
+  GOODS_RECEIPT: "GOODS_RECEIPT",
+  GOODS_ISSUE: "GOODS_ISSUE",
+  INVENTORY_ADJUSTMENT: "INVENTORY_ADJUSTMENT",
 } as const;
 
 export type ModuleKey = (typeof MODULE_KEYS)[keyof typeof MODULE_KEYS] | string;
@@ -32,6 +35,7 @@ export interface ModuleAttributeDef {
   sortOrder: number;
   isRequired: boolean;
   isActive?: boolean;
+  isSystem?: boolean;
   isDeleted?: boolean;
   usageCount?: number;
   createdAt?: string;
@@ -72,6 +76,7 @@ export interface CreateModuleAttributeDefPayload {
   sortOrder?: number;
   isRequired?: boolean;
   isActive?: boolean;
+  isSystem?: boolean;
 }
 
 export type UpdateModuleAttributeDefPayload =

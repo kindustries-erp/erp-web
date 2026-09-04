@@ -57,4 +57,13 @@ export const inventoryVi = {
     purchase_orders: "Đơn mua hàng",
     sales_service_orders: "Đơn bán hàng",
   },
+  receiptVoucher: "Nhập kho",
+  issueVoucher: "Xuất kho",
+  adjustmentVoucher: "Điều chỉnh",
+  category: "Phân loại / Lý do",
+  configVoucherTypes: "Cấu hình loại phiếu & thuộc tính",
+  configThisVoucherType: "Cấu hình loại chứng từ này",
+  voucherTypesConfigTitle: "Cấu hình Loại chứng từ & Thuộc tính Kho",
+  voucherTypesConfigSubtitle:
+    "Quản lý danh mục loại nhập, xuất, điều chỉnh và các thuộc tính động",
 };

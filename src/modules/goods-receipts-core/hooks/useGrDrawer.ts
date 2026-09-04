@@ -19,11 +19,18 @@ import {
   inventoryCoreApi,
   type ErpInventoryItem,
 } from "@/modules/inventory-core/api/inventoryCoreApi";
+import { moduleConfigApi } from "@/core/api/moduleConfigApi";
 import { useUIStore } from "@/core/config/uiStore";
 
 // ─── Form types ───────────────────────────────────────────────────────────────
 
-export type GrReceiptType = "PO" | "OTHER";
+export type GrReceiptType =
+  | "PO"
+  | "MANUFACTURING"
+  | "RETURN"
+  | "WARRANTY"
+  | "OTHER"
+  | (string & {});
 
 export interface GrLineForm {
   purchaseOrderLineId: string;
@@ -44,6 +51,8 @@ export interface GrForm {
   receiptDate: string;
   remarks: string;
   lines: GrLineForm[];
+  globalAttributes?: Record<string, any>;
+  customAttributes?: Record<string, any>;
 }
 
 export function emptyGrForm(): GrForm {
@@ -55,6 +64,8 @@ export function emptyGrForm(): GrForm {
     receiptDate: new Date().toISOString().slice(0, 10),
     remarks: "",
     lines: [],
+    globalAttributes: {},
+    customAttributes: {},
   };
 }
 
@@ -77,6 +88,8 @@ export function buildGrForm(gr: ErpGoodsReceipt): GrForm {
         unitCost: line.unitCost ?? "",
         declaredSerials: line.declaredSerials ?? [],
       })) ?? [],
+    globalAttributes: {},
+    customAttributes: {},
   };
 }
 
@@ -246,12 +259,22 @@ export function useGrDrawer({
       setOpen(true);
       void loadPoOptions();
       try {
-        const detail = await goodsReceiptsCoreApi.get(id);
+        const [detail, customValues] = await Promise.all([
+          goodsReceiptsCoreApi.get(id),
+          moduleConfigApi
+            .getEntityValues("GOODS_RECEIPT", id)
+            .catch(() => null),
+        ]);
         if (detail.lines) {
           void fetchItemsDict(detail.lines.map((l) => l.itemId || ""));
         }
         setEditing(detail);
-        setForm(buildGrForm(detail));
+        const mappedForm = buildGrForm(detail);
+        if (customValues) {
+          mappedForm.globalAttributes = customValues.globalAttributes || {};
+          mappedForm.customAttributes = customValues.attributes || {};
+        }
+        setForm(mappedForm);
       } finally {
         setLoading(false);
       }
@@ -302,11 +325,13 @@ export function useGrDrawer({
         if (statusOverride) {
           (payload as any).status = statusOverride;
         }
+        let targetId = "";
         if (editing) {
           await goodsReceiptsCoreApi.update(editing.id, payload);
           if (statusOverride === "POSTED" && editing.status !== "POSTED") {
             await goodsReceiptsCoreApi.post(editing.id);
           }
+          targetId = editing.id;
           showToast({
             title: "Đã cập nhật phiếu nhập kho",
             variant: "success",
@@ -321,11 +346,25 @@ export function useGrDrawer({
           if (statusOverride === "POSTED") {
             await goodsReceiptsCoreApi.post(created.id);
           }
+          targetId = created.id;
           showToast({
             title: "Tạo phiếu nhập kho thành công",
             variant: "success",
           });
         }
+
+        // Lưu thuộc tính tùy chỉnh nếu có
+        if (targetId && (form.globalAttributes || form.customAttributes)) {
+          try {
+            await moduleConfigApi.saveEntityValues("GOODS_RECEIPT", targetId, {
+              globalAttributes: form.globalAttributes || {},
+              attributes: form.customAttributes || {},
+            });
+          } catch (cfErr) {
+            console.warn("Failed to save GR custom fields", cfErr);
+          }
+        }
+
         setOpen(false);
         if (invalidateWarehouseQuery) {
           await queryClient.invalidateQueries({

@@ -57,4 +57,13 @@ export const inventoryEn = {
     purchase_orders: "Purchase Order",
     sales_service_orders: "Sales Order",
   },
+  receiptVoucher: "Goods Receipt",
+  issueVoucher: "Goods Issue",
+  adjustmentVoucher: "Inventory Adjustment",
+  category: "Category / Reason",
+  configVoucherTypes: "Configure voucher types & custom fields",
+  configThisVoucherType: "Configure this voucher type",
+  voucherTypesConfigTitle: "Warehouse Voucher Types & Custom Fields",
+  voucherTypesConfigSubtitle:
+    "Manage receipt, issue, adjustment categories and custom dynamic fields",
 };
