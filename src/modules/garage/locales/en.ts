@@ -41,7 +41,7 @@ export const garageEn = {
   },
   cases: {
     title: "Service Cases",
-    desc: "Manage service cases and quotation logs from the Garage system",
+    desc: "Manage service cases & quotation logs",
     tabs: {
       all: "All",
       quotation: "Quotation",
@@ -136,7 +136,7 @@ export const garageEn = {
       costUnpaid: "Unpaid",
     },
     actions: {
-      syncCases: "Sync Quotations",
+      syncCases: "Sync",
       syncGrossProfit: "Sync Gross Profit",
       syncOptions: "Sync Options",
       syncDetails: "Sync from KGara",

@@ -1715,7 +1715,7 @@ export function GarageCases() {
         activeFilterCount={activeFilterCount}
         onClearAllFilters={handleClearAllFilters}
         summaryRow={summaryRow}
-        createLabel={t("cases.actions.syncCases", "Đồng bộ Sổ báo giá")}
+        createLabel={t("cases.actions.syncCases", "Đồng bộ")}
         createIcon={<DownloadCloud className="w-4 h-4 mr-1.5" />}
         onCreate={
           canSyncGarage
