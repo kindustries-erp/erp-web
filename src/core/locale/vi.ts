@@ -51,6 +51,7 @@ import { changelogVi } from "@/core/locale/system/changelog/vi";
 import { moduleConfigVi } from "@/core/locale/settings/moduleConfig/vi";
 
 export const vi = {
+  ...legacyStringsVi,
   moduleConfig: moduleConfigVi,
   nav: navVi,
   activityLogs: activityLogsVi,

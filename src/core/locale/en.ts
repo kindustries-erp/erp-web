@@ -52,6 +52,7 @@ import { changelogEn } from "@/core/locale/system/changelog/en";
 import { moduleConfigEn } from "@/core/locale/settings/moduleConfig/en";
 
 export const en: Dict = {
+  ...legacyStringsEn,
   moduleConfig: moduleConfigEn,
   nav: navEn,
   activityLogs: activityLogsEn,

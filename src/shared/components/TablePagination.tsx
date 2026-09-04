@@ -1,6 +1,7 @@
 import { useState } from "react";
 import * as Popover from "@radix-ui/react-popover";
 import { cn } from "@/shared/utils";
+import { useT } from "@/core/i18n";
 
 interface TablePaginationProps {
   page: number;
@@ -23,6 +24,7 @@ export function TablePagination({
   pageSizeOptions = [20, 50, 100, 200],
   className,
 }: TablePaginationProps) {
+  const t = useT();
   const from = total === 0 ? 0 : (page - 1) * pageSize + 1;
   const to = Math.min(page * pageSize, total);
 
@@ -50,13 +52,13 @@ export function TablePagination({
     >
       {/* Page size selector */}
       <div className="flex items-center gap-2 text-xs text-[color:var(--muted-fg)]">
-        Hiển thị{" "}
+        {t("Hiển thị")}{" "}
         <PageSizeSelect
           value={pageSize}
           options={pageSizeOptions}
           onChange={onPageSize}
         />{" "}
-        hàng/trang
+        {t("hàng/trang")}
       </div>
 
       {/* Count info */}

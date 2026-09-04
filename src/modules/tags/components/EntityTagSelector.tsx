@@ -5,6 +5,7 @@ import { SysTag } from "../api/tagsApi";
 import * as Popover from "@radix-ui/react-popover";
 import { Badge } from "@/shared/components/ui/badge";
 import { TagConnectionsDrawer } from "./TagConnectionsDrawer";
+import { useT } from "@/core/i18n";
 
 interface EntityTagSelectorProps {
   entityType: string;
@@ -26,6 +27,7 @@ export function EntityTagSelector({
   pendingTagIds = [],
   onPendingChange,
 }: EntityTagSelectorProps) {
+  const t = useT();
   const { data: allTags = [], isLoading: isLoadingTags } = useTags();
   const { data: entityTagsFromApi = [], isLoading: isLoadingEntityTags } =
     useEntityTags(entityType, pendingMode ? "" : entityId);
@@ -156,7 +158,7 @@ export function EntityTagSelector({
               className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border border-dashed border-[color:var(--color-border)] text-[color:var(--color-secondary-text)] hover:text-[color:var(--color-primary-text)] hover:border-[color:var(--color-primary-text)] transition-colors"
             >
               <Plus className="w-3 h-3" />
-              Thêm
+              {t("Thêm")}
             </button>
           </Popover.Trigger>
           <Popover.Portal>
@@ -168,7 +170,7 @@ export function EntityTagSelector({
               <div className="flex flex-col gap-2">
                 <input
                   autoFocus
-                  placeholder="Tìm thẻ..."
+                  placeholder={t("Tìm thẻ...")}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full text-sm px-2 py-1.5 border border-slate-300 dark:border-slate-700 rounded-md bg-transparent text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
@@ -200,8 +202,8 @@ export function EntityTagSelector({
                     <div className="flex flex-col items-center justify-center text-sm py-4 text-slate-500 dark:text-slate-400">
                       <span>
                         {isSelected
-                          ? "Thẻ này đã được thêm"
-                          : "Không tìm thấy thẻ nào"}
+                          ? t("Thẻ này đã được thêm")
+                          : t("Không tìm thấy thẻ nào")}
                       </span>
                     </div>
                   )}
@@ -213,7 +215,7 @@ export function EntityTagSelector({
                       onClick={() => handleCreateNewTag(searchTerm)}
                       className="mt-1 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/50 px-3 py-1.5 rounded-md transition-colors w-full text-center"
                     >
-                      Tạo mới "{searchTerm}"
+                      {t("Tạo mới")} "{searchTerm}"
                     </button>
                   )}
                 </div>

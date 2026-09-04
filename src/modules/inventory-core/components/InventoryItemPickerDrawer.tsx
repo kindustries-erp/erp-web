@@ -13,6 +13,7 @@ import { TableText } from "@/shared/components/DataTable/TableText";
 import { FilterButton } from "@/shared/components/FilterPanel";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/Button";
+import { Tooltip } from "@/core/components/ui/Tooltip";
 import {
   inventoryCoreApi,
   type ErpInventoryItem,
@@ -21,6 +22,7 @@ import { InventoryItemFormDrawer } from "@/modules/inventory-core/components/Inv
 import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  Check,
   CheckSquare,
   Trash2,
   PackagePlus,
@@ -127,12 +129,25 @@ export function InventoryItemPickerDrawer({
   ]);
 
   // ---------------------------------------------------------------------------
-  // Query Items from API
+  // Query Items from API (Full Server-Side Search, Filters, Sorting & Pagination)
   // ---------------------------------------------------------------------------
-  const activeSearch =
-    tableState.columnSearch.sku?.trim() ||
-    tableState.columnSearch.itemName?.trim() ||
-    undefined;
+  const columnSearchStr = useMemo(() => {
+    const validEntries = Object.entries(tableState.columnSearch).filter(
+      ([, v]) => typeof v === "string" && v.trim().length > 0,
+    );
+    return validEntries.length > 0
+      ? JSON.stringify(Object.fromEntries(validEntries))
+      : undefined;
+  }, [tableState.columnSearch]);
+
+  const columnFiltersStr = useMemo(() => {
+    const validEntries = Object.entries(tableState.columnFilters).filter(
+      ([, v]) => Array.isArray(v) && v.length > 0,
+    );
+    return validEntries.length > 0
+      ? JSON.stringify(Object.fromEntries(validEntries))
+      : undefined;
+  }, [tableState.columnFilters]);
 
   const { data, isLoading } = useQuery({
     queryKey: [
@@ -140,8 +155,8 @@ export function InventoryItemPickerDrawer({
       {
         page,
         pageSize,
-        search: activeSearch,
-        columnFilters: tableState.columnFilters,
+        column_search: columnSearchStr,
+        column_filters: columnFiltersStr,
         sorts: tableState.sorts,
       },
     ],
@@ -149,7 +164,9 @@ export function InventoryItemPickerDrawer({
       return inventoryCoreApi.list({
         page,
         pageSize,
-        search: activeSearch,
+        column_search: columnSearchStr,
+        column_filters: columnFiltersStr,
+        sort: tableState.sorts,
       });
     },
     enabled: open && !showSelectedOnly,
@@ -353,55 +370,8 @@ export function InventoryItemPickerDrawer({
       const start = (page - 1) * pageSize;
       return filteredSelectedItems.slice(start, start + pageSize);
     }
-
-    let result = flatApiItems;
-
-    for (const [col, filterVals] of Object.entries(tableState.columnFilters)) {
-      if (filterVals && filterVals.length > 0) {
-        result = result.filter((item: any) =>
-          matchColumnFilter(item, col, filterVals),
-        );
-      }
-    }
-
-    for (const [col, searchVal] of Object.entries(tableState.columnSearch)) {
-      if (searchVal && searchVal.trim().length > 0) {
-        const query = searchVal.trim().toLowerCase();
-        result = result.filter((item: any) => {
-          const val = String(item[col] ?? "").toLowerCase();
-          return val.includes(query);
-        });
-      }
-    }
-
-    if (tableState.sorts.length > 0) {
-      const sortKey = tableState.sorts[0];
-      const isDesc = sortKey.startsWith("-");
-      const cleanKey = isDesc ? sortKey.slice(1) : sortKey;
-
-      result = [...result].sort((a: any, b: any) => {
-        if (cleanKey === "qty") {
-          const numA = Number(a.qty || 0);
-          const numB = Number(b.qty || 0);
-          return isDesc ? numB - numA : numA - numB;
-        }
-        const valA = String(a[cleanKey] ?? "");
-        const valB = String(b[cleanKey] ?? "");
-        return isDesc ? valB.localeCompare(valA) : valA.localeCompare(valB);
-      });
-    }
-
-    return result;
-  }, [
-    showSelectedOnly,
-    filteredSelectedItems,
-    flatApiItems,
-    page,
-    pageSize,
-    tableState.columnFilters,
-    tableState.columnSearch,
-    tableState.sorts,
-  ]);
+    return flatApiItems;
+  }, [showSelectedOnly, filteredSelectedItems, flatApiItems, page, pageSize]);
 
   const activeTotal = showSelectedOnly
     ? filteredSelectedItems.length
@@ -462,6 +432,31 @@ export function InventoryItemPickerDrawer({
     });
   };
 
+  // ---------------------------------------------------------------------------
+  // Calculations for Selection, Right Panel & Subtotal Row
+  // ---------------------------------------------------------------------------
+  const selectedItemsList = useMemo(
+    () => Array.from(selectedItemsMap.values()),
+    [selectedItemsMap],
+  );
+
+  const selectedCount = selectedItemsList.length;
+
+  const totalSelectedQty = useMemo(() => {
+    return selectedItemsList.reduce(
+      (sum, item) => sum + Number(item.qty || 1),
+      0,
+    );
+  }, [selectedItemsList]);
+
+  const totalEstimatedAmount = useMemo(() => {
+    return selectedItemsList.reduce((sum, item) => {
+      const price = Number((item as any).costPrice || 0);
+      const qty = Number(item.qty || 1);
+      return sum + qty * price;
+    }, 0);
+  }, [selectedItemsList]);
+
   const handleApplyBulkQty = () => {
     const val = parseFloat(bulkQty);
     if (isNaN(val) || val <= 0) return;
@@ -509,17 +504,21 @@ export function InventoryItemPickerDrawer({
     [tableState],
   );
 
-  const headerFilterItems = showSelectedOnly
-    ? allSelectedFlatItems
-    : flatApiItems;
-
   const headerFilter = useMemo(
     () =>
       createColumnHeaderFilter({
         listHook: listHookLike,
-        items: headerFilterItems,
+        queryKeyPrefix: "inventory-items-column-options",
+        fetchOptions: ({ columnKey, search, pageParam, filtersStr }) =>
+          inventoryCoreApi.getColumnOptions(
+            columnKey,
+            search,
+            pageParam,
+            20,
+            filtersStr,
+          ),
       }),
-    [listHookLike, headerFilterItems],
+    [listHookLike],
   );
 
   // ---------------------------------------------------------------------------
@@ -585,9 +584,6 @@ export function InventoryItemPickerDrawer({
                   className="text-[10px] px-1.5 py-0 h-4 bg-muted text-foreground border-border shrink-0 font-medium"
                 >
                   {t("Đã chọn")}
-                  {selectedItem?.qty && selectedItem.qty > 1
-                    ? ` (x${selectedItem.qty})`
-                    : ""}
                 </Badge>
               ) : isAlreadyInPo ? (
                 <Badge
@@ -750,31 +746,6 @@ export function InventoryItemPickerDrawer({
   );
 
   // ---------------------------------------------------------------------------
-  // Calculations for Right Panel & Subtotal Row
-  // ---------------------------------------------------------------------------
-  const selectedItemsList = useMemo(
-    () => Array.from(selectedItemsMap.values()),
-    [selectedItemsMap],
-  );
-
-  const selectedCount = selectedItemsList.length;
-
-  const totalSelectedQty = useMemo(() => {
-    return selectedItemsList.reduce(
-      (sum, item) => sum + Number(item.qty || 1),
-      0,
-    );
-  }, [selectedItemsList]);
-
-  const totalEstimatedAmount = useMemo(() => {
-    return selectedItemsList.reduce((sum, item) => {
-      const price = Number((item as any).costPrice || 0);
-      const qty = Number(item.qty || 1);
-      return sum + qty * price;
-    }, 0);
-  }, [selectedItemsList]);
-
-  // ---------------------------------------------------------------------------
   // Grouped Breakdowns for Right Panel Overview (ĐVT, Loại hàng, Quy cách)
   // ---------------------------------------------------------------------------
   const uomBreakdown = useMemo(() => {
@@ -910,7 +881,7 @@ export function InventoryItemPickerDrawer({
       {
         label:
           selectedCount > 0
-            ? `${t("Xác nhận")} (${selectedCount} ${t("mặt hàng")} • ${totalSelectedQty} ${t("SL")})`
+            ? `${t("Xác nhận")} (${selectedCount} • ${totalSelectedQty.toLocaleString("vi-VN")})`
             : t("Xác nhận"),
         primary: true,
         onClick: handleConfirm,
@@ -975,12 +946,9 @@ export function InventoryItemPickerDrawer({
                           {t("Theo Đơn vị tính (ĐVT)")}
                         </span>
                       </div>
-                      <Badge
-                        variant="outline"
-                        className="text-[10px] px-1.5 py-0 h-4 bg-muted/40 text-muted-foreground"
-                      >
-                        {uomBreakdown.length} {t("ĐVT")}
-                      </Badge>
+                      <div className="text-xs px-2 py-0.5 h-5 bg-muted text-foreground font-bold border border-border/70 tabular-nums rounded-md shadow-2xs inline-flex items-center justify-center">
+                        {uomBreakdown.length}
+                      </div>
                     </div>
                     <div className="space-y-1">
                       {uomBreakdown.map((item) => (
@@ -990,8 +958,8 @@ export function InventoryItemPickerDrawer({
                         >
                           <div className="flex items-center gap-1.5 font-medium text-foreground">
                             <span className="font-semibold">{item.uom}</span>
-                            <span className="text-[11px] text-muted-foreground">
-                              ({item.skuCount} {t("mặt hàng")})
+                            <span className="text-[11px] text-muted-foreground tabular-nums">
+                              ({item.skuCount} {t("loại")})
                             </span>
                           </div>
                           <span className="font-bold tabular-nums text-foreground">
@@ -1011,12 +979,9 @@ export function InventoryItemPickerDrawer({
                           {t("Theo Loại hàng")}
                         </span>
                       </div>
-                      <Badge
-                        variant="outline"
-                        className="text-[10px] px-1.5 py-0 h-4 bg-muted/40 text-muted-foreground"
-                      >
-                        {itemTypeBreakdown.length} {t("nhóm")}
-                      </Badge>
+                      <div className="text-xs px-2 py-0.5 h-5 bg-muted text-foreground font-bold border border-border/70 tabular-nums rounded-md shadow-2xs inline-flex items-center justify-center">
+                        {itemTypeBreakdown.length}
+                      </div>
                     </div>
                     <div className="space-y-1">
                       {itemTypeBreakdown.map((item) => (
@@ -1026,8 +991,8 @@ export function InventoryItemPickerDrawer({
                         >
                           <div className="flex items-center gap-1.5 font-medium text-foreground">
                             <span>{item.typeName}</span>
-                            <span className="text-[11px] text-muted-foreground">
-                              ({item.skuCount} {t("mặt hàng")})
+                            <span className="text-[11px] text-muted-foreground tabular-nums">
+                              ({item.skuCount} {t("loại")})
                             </span>
                           </div>
                           <span className="font-bold tabular-nums text-foreground">
@@ -1047,12 +1012,9 @@ export function InventoryItemPickerDrawer({
                           {t("Theo Quy cách theo dõi")}
                         </span>
                       </div>
-                      <Badge
-                        variant="outline"
-                        className="text-[10px] px-1.5 py-0 h-4 bg-muted/40 text-muted-foreground"
-                      >
-                        {trackingPolicyBreakdown.length} {t("quy cách")}
-                      </Badge>
+                      <div className="text-xs px-2 py-0.5 h-5 bg-muted text-foreground font-bold border border-border/70 tabular-nums rounded-md shadow-2xs inline-flex items-center justify-center">
+                        {trackingPolicyBreakdown.length}
+                      </div>
                     </div>
                     <div className="space-y-1">
                       {trackingPolicyBreakdown.map((item) => (
@@ -1062,8 +1024,8 @@ export function InventoryItemPickerDrawer({
                         >
                           <div className="flex items-center gap-1.5 font-medium text-foreground">
                             <span>{item.policyName}</span>
-                            <span className="text-[11px] text-muted-foreground">
-                              ({item.skuCount} {t("mặt hàng")})
+                            <span className="text-[11px] text-muted-foreground tabular-nums">
+                              ({item.skuCount} {t("loại")})
                             </span>
                           </div>
                           <span className="font-bold tabular-nums text-foreground">
@@ -1075,41 +1037,35 @@ export function InventoryItemPickerDrawer({
                   </div>
                 </div>
 
-                {/* 3. Bottom stats: Enhanced Order KPI Stat Cards */}
-                <div className="p-3 rounded-xl border border-border/90 bg-muted/40 space-y-2.5 shadow-2xs">
+                {/* 3. Bottom stats: Order KPI Stat Cards (Clean Single Border) */}
+                <div className="space-y-2">
                   <div className="grid grid-cols-2 gap-2">
                     {/* Box 1: Số mặt hàng */}
-                    <div className="p-2.5 rounded-lg bg-background border border-border/70 shadow-2xs">
+                    <div className="p-2.5 rounded-lg bg-card border border-border/80 shadow-2xs">
                       <div className="flex items-center gap-1.5 text-muted-foreground mb-1">
                         <Layers3 className="w-3.5 h-3.5 text-foreground/70" />
                         <span className="text-[10px] font-bold uppercase tracking-wider">
                           {t("Mặt hàng")}
                         </span>
                       </div>
-                      <div className="flex items-baseline gap-1">
+                      <div className="flex items-baseline">
                         <span className="text-2xl font-black tabular-nums text-foreground tracking-tight">
                           {selectedCount}
-                        </span>
-                        <span className="text-xs text-muted-foreground font-medium">
-                          {t("mã")}
                         </span>
                       </div>
                     </div>
 
                     {/* Box 2: Tổng số lượng */}
-                    <div className="p-2.5 rounded-lg bg-background border border-border/70 shadow-2xs">
+                    <div className="p-2.5 rounded-lg bg-card border border-border/80 shadow-2xs">
                       <div className="flex items-center gap-1.5 text-muted-foreground mb-1">
                         <Box className="w-3.5 h-3.5 text-foreground/70" />
                         <span className="text-[10px] font-bold uppercase tracking-wider">
                           {t("Tổng SL đặt")}
                         </span>
                       </div>
-                      <div className="flex items-baseline gap-1">
+                      <div className="flex items-baseline">
                         <span className="text-2xl font-black tabular-nums text-foreground tracking-tight">
                           {totalSelectedQty.toLocaleString("vi-VN")}
-                        </span>
-                        <span className="text-xs text-muted-foreground font-medium">
-                          {t("SL")}
                         </span>
                       </div>
                     </div>
@@ -1117,7 +1073,7 @@ export function InventoryItemPickerDrawer({
 
                   {/* Dòng tạm tính (nếu có giá) */}
                   {totalEstimatedAmount > 0 && (
-                    <div className="flex items-center justify-between pt-1 px-1 border-t border-dashed border-border/70 text-xs">
+                    <div className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-card border border-border/80 text-xs">
                       <span className="text-muted-foreground font-medium">
                         {t("Tạm tính dự kiến")}:
                       </span>
@@ -1154,8 +1110,8 @@ export function InventoryItemPickerDrawer({
                     ? t("Linh kiện đã chọn")
                     : t("Danh mục linh kiện")}
                 </span>
-                <span className="text-xs text-muted-foreground font-normal">
-                  ({activeTotal.toLocaleString("vi-VN")} {t("mặt hàng")})
+                <span className="text-xs text-muted-foreground font-normal tabular-nums">
+                  ({activeTotal.toLocaleString("vi-VN")})
                 </span>
                 {showSelectedOnly && (
                   <Badge
@@ -1169,68 +1125,11 @@ export function InventoryItemPickerDrawer({
             }
             titleExtra={
               <div className="flex items-center gap-2">
-                {/* Nút lọc nhanh linh kiện đã chọn (Neutral Style) */}
-                <Button
-                  variant={showSelectedOnly ? "secondary" : "outline"}
-                  size="sm"
-                  onClick={() => {
-                    setShowSelectedOnly((prev) => !prev);
-                    setPage(1);
-                  }}
-                  className={cn(
-                    "h-7 px-2.5 text-xs font-medium transition-all",
-                    showSelectedOnly
-                      ? "bg-foreground text-background font-semibold hover:bg-foreground/90"
-                      : "text-foreground border-border hover:bg-muted",
-                  )}
-                  title={
-                    showSelectedOnly
-                      ? t(
-                          "Đang xem linh kiện đã chọn. Bấm để xem toàn bộ danh mục",
-                        )
-                      : t("Lọc hiển thị những linh kiện đã chọn")
-                  }
-                >
-                  {showSelectedOnly ? (
-                    <Eye className="w-3.5 h-3.5 mr-1.5 shrink-0" />
-                  ) : (
-                    <CheckSquare className="w-3.5 h-3.5 mr-1.5 shrink-0" />
-                  )}
-                  <span>
-                    {showSelectedOnly ? t("Xem tất cả") : t("Lọc đã chọn")}
-                  </span>
-                  {selectedCount > 0 && (
-                    <Badge
-                      variant="secondary"
-                      className={cn(
-                        "ml-1.5 px-1.5 py-0 h-4 text-[10px] font-bold rounded-full",
-                        showSelectedOnly
-                          ? "bg-background text-foreground"
-                          : "bg-muted text-foreground border border-border/50",
-                      )}
-                    >
-                      {selectedCount}
-                    </Badge>
-                  )}
-                </Button>
-
-                {!showSelectedOnly && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCreateItemOpen(true)}
-                    className="h-7 px-2.5 text-xs font-medium text-foreground border-border hover:bg-muted transition-all shrink-0"
-                  >
-                    <Plus className="w-3.5 h-3.5 mr-1" />
-                    {t("Tạo mới mặt hàng")}
-                  </Button>
-                )}
-
-                {/* Đặt SL hàng loạt ngay trên toolbar bảng danh mục linh kiện */}
-                <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-lg border border-border bg-muted/30 shrink-0">
+                {/* 1. Đặt SL hàng loạt ngay trên toolbar bảng danh mục linh kiện (Enhanced Clean Single Border) */}
+                <div className="flex items-center rounded-lg border border-border/80 bg-muted/20 hover:border-border transition-colors h-8 overflow-hidden shadow-2xs pl-2 pr-1 gap-1.5 shrink-0">
                   <Layers className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
                   <span className="text-xs text-muted-foreground font-medium whitespace-nowrap">
-                    {t("Đặt SL hàng loạt")}:
+                    {t("Đặt SL hàng loạt:")}
                   </span>
                   <input
                     type="number"
@@ -1238,26 +1137,34 @@ export function InventoryItemPickerDrawer({
                     step="any"
                     value={bulkQty}
                     onChange={(e) => setBulkQty(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleApplyBulkQty();
+                      }
+                    }}
                     placeholder="1"
-                    className="w-12 h-6 text-center text-xs font-bold rounded border border-border bg-background focus:border-foreground focus:ring-1 focus:ring-foreground/20 outline-none tabular-nums text-foreground"
+                    className="w-[72px] h-6 text-center text-xs font-bold bg-muted/50 hover:bg-muted focus:bg-background rounded border-none outline-none focus:ring-1 focus:ring-primary/40 tabular-nums text-foreground transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   />
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleApplyBulkQty}
-                    disabled={
-                      selectedCount === 0 || !bulkQty || Number(bulkQty) <= 0
-                    }
-                    className="h-6 px-2 text-xs font-medium border-border text-foreground hover:bg-muted"
+                  <Tooltip
+                    content={t("Áp dụng số lượng cho các linh kiện đã chọn")}
                   >
-                    {t("Áp dụng")}
-                  </Button>
+                    <Button
+                      variant="primary"
+                      size="icon"
+                      onClick={handleApplyBulkQty}
+                      className="h-6 w-6 p-0 shrink-0 transition-all rounded bg-primary text-primary-fg hover:bg-primary/90 shadow-2xs cursor-pointer flex items-center justify-center"
+                    >
+                      <Check className="h-3.5 w-3.5 text-primary-fg" />
+                    </Button>
+                  </Tooltip>
                 </div>
 
+                {/* 2. Nút Reset Filters khi có Active Filter (Nằm ngay bên trái button column visibility) */}
                 {tableState.activeFilterCount > 0 && (
                   <FilterButton
                     activeCount={tableState.activeFilterCount}
-                    className="h-7 text-xs"
+                    className="h-8 text-xs"
                     onClear={() => {
                       tableState.resetFilters();
                       setPage(1);
@@ -1265,13 +1172,69 @@ export function InventoryItemPickerDrawer({
                   />
                 )}
 
-                {/* Portal Target cho ColumnToggle (Settings2) và FullscreenToggle từ DataTable */}
+                {/* 3. Portal Target cho ColumnToggle (Settings2) và FullscreenToggle từ DataTable */}
                 <div
                   ref={(el) =>
                     setPortalTarget("inventory-item-picker-drawer-table", el)
                   }
                   className="empty:hidden flex items-center justify-center"
                 />
+
+                {/* 4. Nút Lọc hiển thị linh kiện đã chọn (Compact Icon Button kèm Count & Tooltip) */}
+                <Tooltip
+                  content={
+                    showSelectedOnly
+                      ? t(
+                          "Đang xem linh kiện đã chọn. Bấm để xem toàn bộ danh mục",
+                        )
+                      : selectedCount > 0
+                        ? `${t("Lọc hiển thị linh kiện đã chọn")} (${selectedCount})`
+                        : t("Lọc hiển thị linh kiện đã chọn")
+                  }
+                >
+                  <Button
+                    variant={showSelectedOnly ? "primary" : "secondary"}
+                    size={selectedCount > 0 ? "sm" : "icon"}
+                    onClick={() => {
+                      setShowSelectedOnly((prev) => !prev);
+                      setPage(1);
+                    }}
+                    className={cn(
+                      "h-8 shrink-0 transition-all",
+                      selectedCount > 0 ? "px-2.5 gap-1.5" : "w-8 px-0",
+                      showSelectedOnly
+                        ? "bg-foreground text-background font-semibold hover:bg-foreground/90"
+                        : selectedCount > 0
+                          ? "border-primary/40 text-primary bg-primary/10 hover:bg-primary/15 font-semibold text-xs"
+                          : "text-foreground",
+                    )}
+                  >
+                    {showSelectedOnly ? (
+                      <Eye className="h-4 w-4 shrink-0" />
+                    ) : (
+                      <CheckSquare className="h-4 w-4 shrink-0" />
+                    )}
+                    {selectedCount > 0 && (
+                      <span className="leading-none text-[11px] font-bold tabular-nums">
+                        ({selectedCount})
+                      </span>
+                    )}
+                  </Button>
+                </Tooltip>
+
+                {/* 5. Nút Tạo mới mặt hàng (Primary Icon Button ngoài cùng bên phải) */}
+                {!showSelectedOnly && (
+                  <Tooltip content={t("Tạo mới mặt hàng")}>
+                    <Button
+                      variant="primary"
+                      size="icon"
+                      onClick={() => setCreateItemOpen(true)}
+                      className="h-8 w-8 px-0 shrink-0 shadow-2xs"
+                    >
+                      <Plus className="h-4 w-4 text-primary-fg" />
+                    </Button>
+                  </Tooltip>
+                )}
               </div>
             }
             collapsible
@@ -1303,7 +1266,6 @@ export function InventoryItemPickerDrawer({
               tableId="inventory-item-picker-drawer-table"
               tableMeta={{
                 listHook: listHookLike,
-                items: headerFilterItems,
               }}
               columns={columns as any}
               items={displayItems}
