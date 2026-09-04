@@ -62,7 +62,21 @@ export const moduleConfigVi = {
   attrCodeDuplicate: 'Mã thuộc tính "{{code}}" đã tồn tại trong danh mục này.',
   selectOptionsRequired: "Kiểu Combobox yêu cầu ít nhất 1 option lựa chọn.",
   optionRequired: "Vui lòng nhập cả Mã (Key) và Tên hiển thị (Label)",
+  optionLabelRequired: "Tên hiển thị không được để trống",
   optionKeyDuplicate: 'Mã option "{{key}}" đã tồn tại. Vui lòng chọn mã khác.',
+  optionInUseTooltip:
+    "Đang có {{count}} bản ghi sử dụng tùy chọn này, không thể xóa",
+  optionInUseBadge: "{{count}} bản ghi",
+  confirmDeleteOptionTitle: "Xóa tùy chọn",
+  confirmDeleteOptionMsg:
+    'Bạn có chắc chắn muốn xóa tùy chọn "{{label}}" ({{value}})?',
+  systemAttributesTitle: "THUỘC TÍNH MẶC ĐỊNH",
+  systemAttributes: "Thuộc tính mặc định",
+  editSystemAttr: "Chỉnh sửa thuộc tính mặc định",
+  systemAttrNotice:
+    "Thuộc tính mặc định: Mã và Kiểu dữ liệu được cố định để bảo vệ tính toàn vẹn dữ liệu. Bạn có thể tùy chỉnh Tên hiển thị, Ràng buộc bắt buộc và Danh sách các lựa chọn (Options).",
+  systemFieldsPreviewTitle: "Thuộc tính mặc định",
+  customFieldsPreviewTitle: "Thuộc tính tùy chỉnh",
   loadError: "Không thể tải danh sách cấu hình danh mục & thuộc tính.",
 
   domains: {

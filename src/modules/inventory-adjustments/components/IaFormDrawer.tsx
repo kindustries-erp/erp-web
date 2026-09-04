@@ -475,7 +475,13 @@ export function IaFormDrawer({ drawer }: IaFormDrawerProps) {
 
   const adjustmentReasonOptions = useMemo(() => {
     const reasonDef = Array.isArray(iaAttrDefs)
-      ? iaAttrDefs.find((d) => d?.code === "adjustment_reason" && !d?.isDeleted)
+      ? iaAttrDefs.find(
+          (d) =>
+            (d?.code === "type_inventory_adjustment" ||
+              d?.code === "adjustment_reason" ||
+              d?.code === "reason") &&
+            !d?.isDeleted,
+        )
       : undefined;
     if (reasonDef?.options && reasonDef.options.length > 0) {
       return [

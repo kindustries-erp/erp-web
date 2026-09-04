@@ -25,7 +25,13 @@ export function GrFormRightPanel({ drawer, t }: GrFormRightPanelProps) {
 
   const receiptTypeOptions = useMemo(() => {
     const typeDef = Array.isArray(grAttrDefs)
-      ? grAttrDefs.find((d) => d?.code === "type" && !d?.isDeleted)
+      ? grAttrDefs.find(
+          (d) =>
+            (d?.code === "type_inventory_receipt" ||
+              d?.code === "type" ||
+              d?.code === "receipt_type") &&
+            !d?.isDeleted,
+        )
       : undefined;
     if (typeDef?.options && typeDef.options.length > 0) {
       return [

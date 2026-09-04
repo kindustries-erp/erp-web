@@ -175,6 +175,15 @@ export const moduleConfigApi = {
     await axiosInstance.delete(`${BASE}/attribute-defs/${id}`);
   },
 
+  getAttributeOptionsUsage: async (
+    id: string,
+  ): Promise<Record<string, number>> => {
+    const { data } = await axiosInstance.get<Record<string, number>>(
+      `${BASE}/attribute-defs/${id}/options-usage`,
+    );
+    return data;
+  },
+
   // ================= Entity Values =================
 
   getEntityValues: async (

@@ -118,6 +118,9 @@ export interface StandardFormDrawerProps {
   /** Title for the standard right panel. If provided, the right panel will be wrapped in a collapsible DrawerSection */
   rightPanelTitle?: React.ReactNode;
 
+  /** Extra element rendered on the right side of the right panel section header */
+  rightPanelTitleExtra?: React.ReactNode;
+
   /** Default collapsed state for the right panel */
   rightPanelDefaultCollapsed?: boolean;
 
@@ -191,6 +194,7 @@ export function StandardFormDrawer({
   bodyClassName,
   hideRightPanel = false,
   rightPanelTitle,
+  rightPanelTitleExtra,
   rightPanelDefaultCollapsed = false,
   stickyRightPanel = false,
   collapsibleRightPanel,
@@ -467,7 +471,10 @@ export function StandardFormDrawer({
                 )}
               >
                 {rightPanelTitle !== undefined ? (
-                  <DrawerSection title={rightPanelTitle}>
+                  <DrawerSection
+                    title={rightPanelTitle}
+                    titleExtra={rightPanelTitleExtra}
+                  >
                     <div
                       className={cn(
                         "w-full",

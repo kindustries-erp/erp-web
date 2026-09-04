@@ -64,8 +64,21 @@ export const moduleConfigEn = {
     'Attribute code "{{code}}" already exists in this category.',
   selectOptionsRequired: "Combobox type requires at least one option.",
   optionRequired: "Please enter both option Key and Label",
+  optionLabelRequired: "Option label cannot be empty",
   optionKeyDuplicate:
     'Option key "{{key}}" already exists. Please choose a different key.',
+  optionInUseTooltip: "{{count}} records are using this option, cannot delete",
+  optionInUseBadge: "{{count}} records",
+  confirmDeleteOptionTitle: "Delete Option",
+  confirmDeleteOptionMsg:
+    'Are you sure you want to delete option "{{label}}" ({{value}})?',
+  systemAttributesTitle: "DEFAULT ATTRIBUTES",
+  systemAttributes: "Default Attributes",
+  editSystemAttr: "Edit Default Attribute",
+  systemAttrNotice:
+    "Default attribute: Code and Data Type are fixed to protect data integrity. You can customize Display Name, Required constraint, and Dropdown Options.",
+  systemFieldsPreviewTitle: "Default Attributes",
+  customFieldsPreviewTitle: "Custom Attributes",
   loadError: "Failed to load custom fields configuration.",
 
   domains: {

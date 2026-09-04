@@ -458,7 +458,13 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
 
   const ISSUE_TYPE_OPTIONS = useMemo(() => {
     const typeDef = Array.isArray(giAttrDefs)
-      ? giAttrDefs.find((d) => d?.code === "issue_type" && !d?.isDeleted)
+      ? giAttrDefs.find(
+          (d) =>
+            (d?.code === "type_inventory_issue" ||
+              d?.code === "issue_type" ||
+              d?.code === "type") &&
+            !d?.isDeleted,
+        )
       : undefined;
     if (typeDef?.options && typeDef.options.length > 0) {
       return [

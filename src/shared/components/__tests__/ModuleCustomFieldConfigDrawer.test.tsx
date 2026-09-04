@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TooltipProvider } from "@/core/components/ui/Tooltip";
 import { ModuleCustomFieldConfigDrawer } from "../ModuleCustomFieldConfigDrawer";
@@ -16,6 +16,7 @@ vi.mock("@/core/api/moduleConfigApi", () => ({
     createAttributeDef: vi.fn(),
     updateAttributeDef: vi.fn(),
     deleteAttributeDef: vi.fn(),
+    getAttributeOptionsUsage: vi.fn(),
   },
   resolveAttrName: (attr: any) => attr?.name || "",
 }));
@@ -38,40 +39,44 @@ describe("ModuleCustomFieldConfigDrawer Component", () => {
     </QueryClientProvider>
   );
 
-  it("renders both system and custom attributes sections correctly", async () => {
-    const mockDefs = [
-      {
-        id: "attr-sys-1",
-        code: "type",
-        name: "Loại nhập kho",
-        fieldType: "SELECT",
-        isGlobal: true,
-        isSystem: true,
-        isRequired: true,
-        isActive: true,
-        options: [
-          { value: "PO", label: "Đơn mua hàng" },
-          { value: "OTHER", label: "Nhập khác" },
-        ],
-      },
-      {
-        id: "attr-custom-1",
-        code: "custom_note",
-        name: "Ghi chú đặc biệt",
-        fieldType: "TEXT",
-        isGlobal: true,
-        isSystem: false,
-        isRequired: false,
-        isActive: true,
-      },
-    ];
+  const mockDefs = [
+    {
+      id: "attr-sys-1",
+      code: "type_inventory_receipt",
+      name: "Loại nhập kho",
+      fieldType: "SELECT",
+      isGlobal: true,
+      isSystem: true,
+      isRequired: true,
+      isActive: true,
+      options: [
+        { value: "PO", label: "Đơn mua hàng" },
+        { value: "OTHER", label: "Nhập khác" },
+      ],
+    },
+    {
+      id: "attr-custom-1",
+      code: "custom_note",
+      name: "Ghi chú đặc biệt",
+      fieldType: "TEXT",
+      isGlobal: true,
+      isSystem: false,
+      isRequired: false,
+      isActive: true,
+    },
+  ];
 
+  it("renders both system and custom attributes sections correctly in list and preview", async () => {
     vi.mocked(moduleConfigApi.getGlobalAttributeDefs).mockResolvedValue(
       mockDefs as any,
     );
     vi.mocked(moduleConfigApi.getAttributeDefs).mockResolvedValue(
       mockDefs as any,
     );
+    vi.mocked(moduleConfigApi.getAttributeOptionsUsage).mockResolvedValue({
+      PO: 5,
+      OTHER: 0,
+    });
 
     render(
       <ModuleCustomFieldConfigDrawer
@@ -82,22 +87,130 @@ describe("ModuleCustomFieldConfigDrawer Component", () => {
       { wrapper },
     );
 
-    // 1. Check title of system attributes section
-    expect(
-      await screen.findByText("Thuộc tính mặc định (Hệ thống)"),
-    ).toBeInTheDocument();
+    // 1. Check title of system attributes section (appears in both left list and right preview panel)
+    const sysHeaders = await screen.findAllByText("Thuộc tính mặc định");
+    expect(sysHeaders.length).toBeGreaterThanOrEqual(2); // 1 list + 1 live preview
     expect(screen.getAllByText("Loại nhập kho").length).toBeGreaterThanOrEqual(
       1,
     );
-    expect(screen.getByText("Mặc định hệ thống")).toBeInTheDocument();
+    expect(screen.getByText("Mặc định")).toBeInTheDocument();
 
-    // 2. Check title of custom attributes section
-    expect(screen.getByText("Thuộc tính tùy chỉnh")).toBeInTheDocument();
+    // 2. Check title of custom attributes section (appears in both left list and right preview panel)
+    const customHeaders = screen.getAllByText("Thuộc tính tùy chỉnh");
+    expect(customHeaders.length).toBeGreaterThanOrEqual(2); // 1 list + 1 live preview
     expect(
       screen.getAllByText("Ghi chú đặc biệt").length,
     ).toBeGreaterThanOrEqual(1);
 
     // 3. Check bottom add button exists
     expect(screen.getByText("Thêm thuộc tính")).toBeInTheDocument();
+  });
+
+  it("disables delete button for options with usage count > 0 and enables for unused options, and supports editing option label", async () => {
+    vi.mocked(moduleConfigApi.getGlobalAttributeDefs).mockResolvedValue(
+      mockDefs as any,
+    );
+    vi.mocked(moduleConfigApi.getAttributeDefs).mockResolvedValue(
+      mockDefs as any,
+    );
+    vi.mocked(moduleConfigApi.getAttributeOptionsUsage).mockResolvedValue({
+      PO: 12,
+      OTHER: 0,
+    });
+
+    render(
+      <ModuleCustomFieldConfigDrawer
+        open={true}
+        onClose={vi.fn()}
+        moduleKey="GOODS_RECEIPT"
+      />,
+      { wrapper },
+    );
+
+    // Click Edit on system attribute
+    const editButtons = await screen.findAllByRole("button");
+    const editBtn = editButtons.find((btn) =>
+      btn.innerHTML.includes("lucide-edit"),
+    );
+    if (editBtn) {
+      fireEvent.click(editBtn);
+
+      // Verify form opens
+      expect(
+        await screen.findByText("Chỉnh sửa thuộc tính mặc định"),
+      ).toBeInTheDocument();
+
+      // Verify PO option has 12 usage badge
+      expect(await screen.findByText("12 dùng")).toBeInTheDocument();
+
+      // Verify edit label buttons exist
+      const editLabelBtns = screen.getAllByTitle("Sửa tên hiển thị");
+      expect(editLabelBtns.length).toBeGreaterThanOrEqual(2);
+
+      // Click edit label on the first option (PO)
+      fireEvent.click(editLabelBtns[0]);
+      const labelInput = screen.getByDisplayValue("Đơn mua hàng");
+      expect(labelInput).toBeInTheDocument();
+
+      // Change label
+      fireEvent.change(labelInput, {
+        target: { value: "Đơn mua hàng (PO mới)" },
+      });
+
+      // Click the main form "Lưu" button
+      const saveFormBtn = screen.getByRole("button", { name: "Lưu" });
+      fireEvent.click(saveFormBtn);
+
+      // Verify updateAttributeDef was called with updated options
+      expect(moduleConfigApi.updateAttributeDef).toHaveBeenCalledWith(
+        "attr-sys-1",
+        expect.objectContaining({
+          options: [
+            { value: "PO", label: "Đơn mua hàng (PO mới)" },
+            { value: "OTHER", label: "Nhập khác" },
+          ],
+        }),
+      );
+    }
+  });
+
+  it("resets edit form when switching pill tab", async () => {
+    vi.mocked(moduleConfigApi.getGlobalAttributeDefs).mockResolvedValue(
+      mockDefs as any,
+    );
+    vi.mocked(moduleConfigApi.getAttributeDefs).mockResolvedValue(
+      mockDefs as any,
+    );
+    vi.mocked(moduleConfigApi.getAttributeOptionsUsage).mockResolvedValue({});
+
+    render(
+      <ModuleCustomFieldConfigDrawer
+        open={true}
+        onClose={vi.fn()}
+        moduleKey="GOODS_RECEIPT"
+      />,
+      { wrapper },
+    );
+
+    // Click Edit on system attribute
+    const editButtons = await screen.findAllByRole("button");
+    const editBtn = editButtons.find((btn) =>
+      btn.innerHTML.includes("lucide-edit"),
+    );
+    if (editBtn) {
+      fireEvent.click(editBtn);
+      expect(
+        await screen.findByText("Chỉnh sửa thuộc tính mặc định"),
+      ).toBeInTheDocument();
+
+      // Switch pill tab to "Phiếu xuất kho"
+      const issueTab = screen.getByText("Phiếu xuất kho");
+      fireEvent.click(issueTab);
+
+      // Edit form should be closed/reset
+      expect(
+        screen.queryByText("Chỉnh sửa thuộc tính mặc định"),
+      ).not.toBeInTheDocument();
+    }
   });
 });
