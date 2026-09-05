@@ -42,6 +42,7 @@ export interface ModuleEntityCustomFieldsSectionProps {
   readOnly?: boolean;
   hideGlobalSection?: boolean;
   hideCategorySection?: boolean;
+  includeSystemAttributes?: boolean;
   className?: string;
 }
 
@@ -57,6 +58,7 @@ export function validateModuleRequiredFields({
   hasCategory = false,
   moduleKey = "",
   categoryCode = null,
+  includeSystemAttributes = false,
   t,
 }: {
   globalDefs?: ModuleAttributeDef[];
@@ -66,6 +68,7 @@ export function validateModuleRequiredFields({
   hasCategory?: boolean;
   moduleKey?: string;
   categoryCode?: string | null;
+  includeSystemAttributes?: boolean;
   t?: (key: string, fallback: string) => string;
 }): string[] {
   const missingNames: string[] = [];
@@ -76,7 +79,7 @@ export function validateModuleRequiredFields({
       !d.isDeleted &&
       d.isActive !== false &&
       d.isGlobal &&
-      !d.isSystem &&
+      (includeSystemAttributes || !d.isSystem) &&
       d.isRequired,
   );
   for (const def of requiredGlobalDefs) {
@@ -384,6 +387,7 @@ export function ModuleEntityCustomFieldsSection({
   readOnly = false,
   hideGlobalSection = false,
   hideCategorySection = false,
+  includeSystemAttributes = false,
   className,
 }: ModuleEntityCustomFieldsSectionProps) {
   const t = useT();
@@ -443,7 +447,7 @@ export function ModuleEntityCustomFieldsSection({
       .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
   }, [selectedCategory]);
 
-  // Active global attribute definitions (excluding system attributes handled elsewhere)
+  // Active global attribute definitions (excluding system attributes handled elsewhere unless includeSystemAttributes is true)
   const activeGlobalAttributeDefs: ModuleAttributeDef[] = useMemo(() => {
     const list =
       globalDefs.length > 0
@@ -452,10 +456,17 @@ export function ModuleEntityCustomFieldsSection({
     return list
       .filter(
         (d) =>
-          !d.isDeleted && d.isActive !== false && d.isGlobal && !d.isSystem,
+          !d.isDeleted &&
+          d.isActive !== false &&
+          d.isGlobal &&
+          (includeSystemAttributes || !d.isSystem),
       )
       .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
-  }, [globalDefs, savedEntityData?.globalAttributeDefs]);
+  }, [
+    globalDefs,
+    savedEntityData?.globalAttributeDefs,
+    includeSystemAttributes,
+  ]);
 
   // Category dropdown options (with i18n resolution)
   const categoryOptions: ComboboxOption[] = useMemo(() => {

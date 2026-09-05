@@ -320,4 +320,10 @@ export const legacyStringsEn = {
     "No custom attributes configured for this module.",
   "Nhập ghi chú chung nếu có...": "Enter general notes if any...",
   "Cấu hình kho": "Warehouse Configuration",
+  "Nhập ghi chú cho lệnh sản xuất...": "Enter notes for production order...",
+  "Ghi chú thêm...": "Additional notes...",
+  "Cấu hình sản xuất": "Production Configuration",
+  "productionConfig.title": "Production Configuration",
+  "production.customFields": "Production Configuration",
+  "production.productionConfig": "Production Configuration",
 };

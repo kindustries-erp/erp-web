@@ -321,4 +321,10 @@ export const legacyStringsVi = {
     "Phân hệ này chưa cấu hình thuộc tính chung nào.",
   "Nhập ghi chú chung nếu có...": "Nhập ghi chú chung nếu có...",
   "Cấu hình kho": "Cấu hình kho",
+  "Nhập ghi chú cho lệnh sản xuất...": "Nhập ghi chú cho lệnh sản xuất...",
+  "Ghi chú thêm...": "Ghi chú thêm...",
+  "Cấu hình sản xuất": "Cấu hình sản xuất",
+  "productionConfig.title": "Cấu hình sản xuất",
+  "production.customFields": "Cấu hình sản xuất",
+  "production.productionConfig": "Cấu hình sản xuất",
 };

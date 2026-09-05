@@ -255,4 +255,10 @@ export const legacyStringsVi = {
   "Không tìm thấy thẻ nào": "Không tìm thấy thẻ nào",
   "Hiển thị": "Hiển thị",
   "hàng/trang": "hàng/trang",
+  "Nhập ghi chú cho lệnh sản xuất...": "Nhập ghi chú cho lệnh sản xuất...",
+  "Ghi chú thêm...": "Ghi chú thêm...",
+  "Cấu hình sản xuất": "Cấu hình sản xuất",
+  "productionConfig.title": "Cấu hình sản xuất",
+  "production.customFields": "Cấu hình sản xuất",
+  "production.productionConfig": "Cấu hình sản xuất",
 };

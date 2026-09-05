@@ -21,6 +21,7 @@ vi.mock("@/core/api/moduleConfigApi", () => ({
   },
   resolveCategoryName: (cat: any) => cat?.name || "",
   resolveAttrName: (attr: any) => attr?.name || "",
+  resolveOptionLabel: (opt: any) => opt?.label || opt?.value || "",
 }));
 
 vi.mock("@/shared/components/Combobox", () => ({
@@ -327,5 +328,61 @@ describe("ModuleEntityCustomFieldsSection", () => {
       moduleKey: "INVOICE",
     });
     expect(missing3).toEqual([]);
+  });
+
+  it("renders and validates system attributes when includeSystemAttributes is true", async () => {
+    const sampleDefs = [
+      {
+        id: "sys-color",
+        isGlobal: true,
+        isSystem: true,
+        moduleKeyGlobal: "BOM" as const,
+        code: "color",
+        name: "Màu sắc",
+        fieldType: "SELECT" as const,
+        options: [{ value: "blue", label: "Xanh" }],
+        isRequired: true,
+        isActive: true,
+        isDeleted: false,
+        sortOrder: 1,
+      },
+    ];
+
+    (moduleConfigApi.getCategories as any).mockResolvedValue([]);
+    (moduleConfigApi.getGlobalAttributeDefs as any).mockResolvedValue(
+      sampleDefs,
+    );
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <ModuleEntityCustomFieldsSection
+            moduleKey="BOM"
+            editMode={true}
+            includeSystemAttributes={true}
+            hideCategorySection={true}
+          />
+        </TooltipProvider>
+      </QueryClientProvider>,
+    );
+
+    expect(await screen.findByText("Màu sắc")).toBeDefined();
+
+    // Test validator with includeSystemAttributes
+    const missing = validateModuleRequiredFields({
+      globalDefs: sampleDefs,
+      globalAttributes: {},
+      includeSystemAttributes: true,
+      moduleKey: "BOM",
+    });
+    expect(missing).toEqual(["Màu sắc"]);
+
+    const notMissingWhenFalse = validateModuleRequiredFields({
+      globalDefs: sampleDefs,
+      globalAttributes: {},
+      includeSystemAttributes: false,
+      moduleKey: "BOM",
+    });
+    expect(notMissingWhenFalse).toEqual([]);
   });
 });

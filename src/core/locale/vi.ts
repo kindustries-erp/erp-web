@@ -47,11 +47,13 @@ import { legacyStringsVi } from "@/core/locale/system/legacyStrings/vi";
 import { inventoryTrackingLotVi } from "@/core/locale/inventory/inventoryTrackingLot/vi";
 import { inventoryTrackingCustomVi } from "@/core/locale/inventory/inventoryTrackingCustom/vi";
 import { bomConfigVi } from "@/core/locale/manufacturing/bomConfig/vi";
+import { productionConfigVi } from "@/core/locale/manufacturing/productionConfig/vi";
 import { changelogVi } from "@/core/locale/system/changelog/vi";
 import { moduleConfigVi } from "@/core/locale/settings/moduleConfig/vi";
 
 export const vi = {
   ...legacyStringsVi,
+  productionConfig: productionConfigVi,
   moduleConfig: moduleConfigVi,
   nav: navVi,
   activityLogs: activityLogsVi,
@@ -231,6 +233,13 @@ export const vi = {
   inventoryTrackingLot: inventoryTrackingLotVi,
   inventoryTrackingCustom: inventoryTrackingCustomVi,
   bomConfig: bomConfigVi,
+  "Nhập ghi chú cho lệnh sản xuất...":
+    legacyStringsVi["Nhập ghi chú cho lệnh sản xuất..."],
+  "Ghi chú thêm...": legacyStringsVi["Ghi chú thêm..."],
+  "Cấu hình sản xuất": legacyStringsVi["Cấu hình sản xuất"],
+  "productionConfig.title": legacyStringsVi["productionConfig.title"],
+  "production.customFields": legacyStringsVi["production.customFields"],
+  "production.productionConfig": legacyStringsVi["production.productionConfig"],
   changelog: changelogVi,
 };
 
