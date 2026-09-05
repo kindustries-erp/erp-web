@@ -173,4 +173,13 @@ export const moduleConfigEn = {
       short: "Boolean",
     },
   },
+
+  customFields: "Custom Fields",
+  noGlobalAttributes: "No custom attributes configured for this module.",
+  globalAttributesSection: "Common Attributes",
+  customFieldsSection: "Category & Attributes",
+  categoryLabel: "Category",
+  selectCategoryPlaceholder: "-- Select category --",
+  searchCategory: "Search category...",
+  noCategorySelected: "— No category selected —",
 };

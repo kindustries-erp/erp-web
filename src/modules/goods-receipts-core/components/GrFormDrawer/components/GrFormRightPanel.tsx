@@ -39,16 +39,12 @@ export function GrFormRightPanel({ drawer, t }: GrFormRightPanelProps) {
         )
       : undefined;
     if (typeDef?.options && typeDef.options.length > 0) {
-      return [
-        { label: t("— Chọn —"), value: "" },
-        ...typeDef.options.map((opt) => ({
-          label: resolveOptionLabel(opt, locale, t),
-          value: opt.value,
-        })),
-      ];
+      return typeDef.options.map((opt) => ({
+        label: resolveOptionLabel(opt, locale, t),
+        value: opt.value,
+      }));
     }
     return [
-      { label: t("— Chọn —"), value: "" },
       { label: t("Đơn mua hàng (PO)"), value: "PO" },
       { label: t("Nhập sản xuất"), value: "PRODUCTION" },
       { label: t("Nhập trả hàng"), value: "RETURN" },
@@ -95,7 +91,7 @@ export function GrFormRightPanel({ drawer, t }: GrFormRightPanelProps) {
           }}
           disabled={viewOnly || editing !== null}
           placeholder={t("— Chọn —")}
-          allowClear={false}
+          allowClear={true}
         />
       </DrawerField>
       {form.receiptType === "PO" && (

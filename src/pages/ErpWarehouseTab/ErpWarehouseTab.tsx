@@ -86,7 +86,7 @@ export function ErpWarehouseTab() {
         summaryRow={summaryRow}
         loading={loading}
         error={loadError}
-        emptyLabel={t("Chưa có chứng từ kho.")}
+        emptyLabel={t("inventory.emptyVouchers", "Chưa có chứng từ kho.")}
         minWidth={1000}
         sortArray={tableState.sorts}
         onSort={(key) => {
@@ -114,7 +114,7 @@ export function ErpWarehouseTab() {
         customActionsNode={customActionsNode}
         rowActions={rowActions}
         onCreate={() => unifiedDrawer.openUnifiedCreate("receipt")}
-        createLabel={t("Tạo mới")}
+        createLabel={t("common.addNew", "Tạo mới")}
         createActions={createActions}
       />
 

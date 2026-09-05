@@ -473,16 +473,12 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
         )
       : undefined;
     if (typeDef?.options && typeDef.options.length > 0) {
-      return [
-        { value: "", label: t("— Chọn —") },
-        ...typeDef.options.map((opt) => ({
-          value: opt.value,
-          label: resolveOptionLabel(opt, locale, t),
-        })),
-      ];
+      return typeDef.options.map((opt) => ({
+        value: opt.value,
+        label: resolveOptionLabel(opt, locale, t),
+      }));
     }
     return [
-      { value: "", label: t("— Chọn —") },
       { value: "SALE", label: t("Xuất bán (SO)") },
       { value: "PRODUCTION", label: t("Xuất sản xuất") },
       { value: "WARRANTY", label: t("Xuất bảo hành") },
@@ -736,7 +732,7 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
             : t("Sửa xuất kho")
           : t("Tạo phiếu xuất kho")
       }
-      subtitle={editing?.issueNo ?? t("Xuất kho")}
+      subtitle={editing?.issueNo ?? t("inventory.issue", "Xuất kho")}
       statusBadge={statusBadge}
       onClose={close}
       onToggleEdit={

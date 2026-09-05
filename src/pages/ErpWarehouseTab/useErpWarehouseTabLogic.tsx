@@ -895,15 +895,17 @@ export function useErpWarehouseTabLogic() {
           onClick: () => handlePrintRow(row),
         },
         {
-          label: t("moduleConfig.title", "Cấu hình trường tùy chỉnh"),
-          icon: <Settings className="h-3.5 w-3.5 text-violet-500" />,
+          label: t("inventory.warehouseConfig", "Cấu hình kho"),
+          icon: <Settings className="h-3.5 w-3.5 text-muted-foreground" />,
           onClick: () => {
             handleOpenCustomFieldsDrawer(row.type);
           },
         },
         {
           label: t("common.exportXlsx", "Xuất XLSX"),
-          icon: <FileSpreadsheet className="h-3.5 w-3.5" />,
+          icon: (
+            <FileSpreadsheet className="h-3.5 w-3.5 text-muted-foreground" />
+          ),
           hidden: row.status === "DRAFT" || row.type === "adjustment",
           disabled: xlsxExportingId === row.id,
           onClick: () => handleExportXlsx(row),
@@ -944,19 +946,19 @@ export function useErpWarehouseTabLogic() {
       items: [
         {
           label: t("inventory.receipt", "Nhập kho"),
-          icon: <PackagePlus className="h-4 w-4 text-emerald-600" />,
+          icon: <PackagePlus className="h-4 w-4 text-muted-foreground" />,
           onClick: () => grDrawer.openCreate(),
           hidden: !canCreateReceipt,
         },
         {
           label: t("inventory.issue", "Xuất kho"),
-          icon: <PackageMinus className="h-4 w-4 text-orange-600" />,
+          icon: <PackageMinus className="h-4 w-4 text-muted-foreground" />,
           onClick: () => giDrawer.openCreate(),
           hidden: !canCreateIssue,
         },
         {
           label: t("inventory.adjustment", "Điều chỉnh kho"),
-          icon: <SlidersHorizontal className="h-4 w-4 text-blue-600" />,
+          icon: <SlidersHorizontal className="h-4 w-4 text-muted-foreground" />,
           onClick: () => iaDrawer.openCreate(),
           hidden: !canCreateAdjustment,
         },
@@ -966,8 +968,8 @@ export function useErpWarehouseTabLogic() {
       groupLabel: t("common.groupConfig", "Cấu hình"),
       items: [
         {
-          label: t("moduleConfig.title", "Cấu hình trường tùy chỉnh"),
-          icon: <Settings className="h-4 w-4 text-violet-500" />,
+          label: t("inventory.warehouseConfig", "Cấu hình kho"),
+          icon: <Settings className="h-4 w-4 text-muted-foreground" />,
           onClick: () => handleOpenCustomFieldsDrawer(),
         },
       ],

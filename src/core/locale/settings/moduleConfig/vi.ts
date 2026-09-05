@@ -171,4 +171,13 @@ export const moduleConfigVi = {
       short: "Đúng/Sai",
     },
   },
+
+  customFields: "Trường tùy chỉnh",
+  noGlobalAttributes: "Phân hệ này chưa cấu hình thuộc tính chung nào.",
+  globalAttributesSection: "Thuộc tính chung",
+  customFieldsSection: "Danh mục & Thuộc tính",
+  categoryLabel: "Danh mục",
+  selectCategoryPlaceholder: "-- Chọn danh mục --",
+  searchCategory: "Tìm kiếm danh mục...",
+  noCategorySelected: "— Chưa chọn danh mục —",
 };

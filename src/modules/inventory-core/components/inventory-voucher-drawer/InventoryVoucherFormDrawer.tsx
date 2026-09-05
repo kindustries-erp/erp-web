@@ -153,12 +153,29 @@ export function InventoryVoucherFormDrawer(
               <DrawerSection title={t("Thông tin chung")}>
                 {/* Unified type switcher — chỉ hiển thị khi tạo mới */}
                 {props.unifiedContext?.mode === "create" && (
-                  <DrawerField label={t("Loại chứng từ")}>
+                  <DrawerField
+                    label={t("inventory.voucherType", "Loại chứng từ")}
+                  >
                     <Combobox
                       options={[
-                        { value: "receipt", label: t("Phiếu nhập kho") },
-                        { value: "issue", label: t("Phiếu xuất kho") },
-                        { value: "adjustment", label: t("Điều chỉnh kho") },
+                        {
+                          value: "receipt",
+                          label: t(
+                            "inventory.receiptVoucher",
+                            "Phiếu nhập kho",
+                          ),
+                        },
+                        {
+                          value: "issue",
+                          label: t("inventory.issueVoucher", "Phiếu xuất kho"),
+                        },
+                        {
+                          value: "adjustment",
+                          label: t(
+                            "inventory.adjustmentVoucher",
+                            "Điều chỉnh kho",
+                          ),
+                        },
                       ]}
                       value={props.unifiedContext.type}
                       onChange={(v) =>
@@ -177,7 +194,7 @@ export function InventoryVoucherFormDrawer(
               {props.customFieldsSlot}
 
               {/* ── Ghi chú (section riêng bên dưới) ────────────── */}
-              <DrawerSection title={t("Ghi chú")}>
+              <DrawerSection title={t("common.remarks", "Ghi chú")}>
                 {props.remarksContent}
               </DrawerSection>
             </>

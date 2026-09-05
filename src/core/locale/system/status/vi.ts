@@ -4,6 +4,8 @@ export const statusVi = {
   active: "Hoạt động",
   inactive: "Tắt",
   default: "Mặc định",
+  draft: "Nháp",
+  cancelled: "Hủy",
   // Chung
   DRAFT: "Nháp",
   CONFIRMED: "Đã chốt",

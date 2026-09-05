@@ -291,7 +291,7 @@ export function IaFormDrawer({ drawer }: IaFormDrawerProps) {
             className={cn(
               "w-full h-full min-h-[38px] text-right bg-transparent border-0 focus:ring-1 focus:ring-emerald-500 outline-none hover:bg-slate-50 focus:bg-white px-3 transition-all",
             )}
-            placeholder="SL thực"
+            placeholder={t("SL thực")}
             value={line.qtyAdjusted ?? ""}
             disabled={viewOnly || editing?.status === "POSTED"}
             onValueChange={(v) => {
@@ -490,16 +490,12 @@ export function IaFormDrawer({ drawer }: IaFormDrawerProps) {
         )
       : undefined;
     if (reasonDef?.options && reasonDef.options.length > 0) {
-      return [
-        { value: "", label: t("— Chọn —") },
-        ...reasonDef.options.map((opt) => ({
-          value: opt.value,
-          label: resolveOptionLabel(opt, locale, t),
-        })),
-      ];
+      return reasonDef.options.map((opt) => ({
+        value: opt.value,
+        label: resolveOptionLabel(opt, locale, t),
+      }));
     }
     return [
-      { value: "", label: t("— Chọn —") },
       { value: "PERIODIC", label: t("Kiểm kê định kỳ") },
       { value: "DAMAGED", label: t("Hàng hỏng hóc / hao hụt") },
       { value: "COUNT_ERROR", label: t("Sai lệch kiểm đếm") },
@@ -569,7 +565,7 @@ export function IaFormDrawer({ drawer }: IaFormDrawerProps) {
   // ── Section info ───────────────────────────────────────────────────────────
 
   const sectionTitle =
-    t("CHI TIẾT") +
+    t("Chi tiết") +
     " (" +
     (processedLines.length < form.lines.length
       ? `${processedLines.length}/${form.lines.length}`
@@ -639,7 +635,9 @@ export function IaFormDrawer({ drawer }: IaFormDrawerProps) {
             : t("Sửa điều chỉnh")
           : t("Tạo phiếu điều chỉnh")
       }
-      subtitle={editing?.adjustmentNo ?? t("Điều chỉnh kho")}
+      subtitle={
+        editing?.adjustmentNo ?? t("inventory.adjustment", "Điều chỉnh kho")
+      }
       statusBadge={statusBadge}
       onClose={close}
       onToggleEdit={
