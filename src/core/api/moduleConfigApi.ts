@@ -19,8 +19,14 @@ export type ModuleAttributeFieldType =
   | "CHECKBOX";
 
 export interface ModuleAttributeOption {
-  label: string;
   value: string;
+  label: string;
+  labelEn?: string;
+  labels?: {
+    vi?: string;
+    en?: string;
+    [key: string]: string | undefined;
+  };
 }
 
 export interface ModuleAttributeDef {
@@ -30,6 +36,7 @@ export interface ModuleAttributeDef {
   moduleKeyGlobal?: string | null;
   code: string;
   name: string;
+  nameEn?: string | null;
   fieldType: ModuleAttributeFieldType;
   options?: ModuleAttributeOption[] | null;
   sortOrder: number;
@@ -47,6 +54,7 @@ export interface ModuleCategory {
   moduleKey: string;
   code: string;
   name: string;
+  nameEn?: string | null;
   description?: string | null;
   isActive?: boolean;
   isDeleted?: boolean;
@@ -59,6 +67,7 @@ export interface CreateModuleCategoryPayload {
   moduleKey: string;
   code: string;
   name: string;
+  nameEn?: string;
   description?: string;
   isActive?: boolean;
 }
@@ -71,6 +80,7 @@ export interface CreateModuleAttributeDefPayload {
   moduleKeyGlobal?: string | null;
   code: string;
   name: string;
+  nameEn?: string;
   fieldType: ModuleAttributeFieldType;
   options?: ModuleAttributeOption[];
   sortOrder?: number;
@@ -213,6 +223,7 @@ export interface ModuleEntityAttributeValueItem {
   attrDefId: string;
   attrCode?: string;
   attrName?: string;
+  nameEn?: string | null;
   fieldType?: ModuleAttributeFieldType;
   valueText?: string | null;
   isGlobal?: boolean;
@@ -236,45 +247,97 @@ export interface SaveModuleEntityValuesPayload {
 }
 
 /**
- * Helper tra cứu i18n cho tên danh mục (DB name làm fallback)
+ * Helper tra cứu i18n cho tên danh mục (Hỗ trợ nameEn & locale)
  */
 export function resolveCategoryName(
-  cat?: { moduleKey?: string; code?: string; name: string } | null,
+  cat?: {
+    moduleKey?: string;
+    code?: string;
+    name: string;
+    nameEn?: string | null;
+  } | null,
   t?: (key: string, fallback: string) => string,
+  locale: string = "vi",
 ): string {
   if (!cat) return "";
+  if (locale === "en" && cat.nameEn) {
+    return cat.nameEn;
+  }
   if (!t || !cat.moduleKey || !cat.code) return cat.name;
   const key = `moduleConfig.category.${cat.moduleKey.toUpperCase()}.${cat.code.toUpperCase()}.name`;
-  return t(key, cat.name);
+  const translated = t(key, cat.name);
+  if (locale === "en" && cat.nameEn && translated === cat.name) {
+    return cat.nameEn;
+  }
+  return translated;
 }
 
 /**
- * Helper tra cứu i18n cho tên thuộc tính (DB name làm fallback)
+ * Helper tra cứu i18n cho tên thuộc tính (Hỗ trợ nameEn & locale)
  */
 export function resolveAttrName(
   attr: {
     code: string;
     name: string;
+    nameEn?: string | null;
     isGlobal?: boolean;
     moduleKeyGlobal?: string | null;
   },
   moduleKey: string,
   categoryCode?: string | null,
-  t?: (key: string, fallback: string) => string,
+  t?: (key: string, fallback?: any) => string,
+  locale: string = "vi",
 ): string {
+  if (locale === "en" && attr.nameEn) {
+    return attr.nameEn;
+  }
   if (!t) return attr.name;
   const modKey = (attr.moduleKeyGlobal || moduleKey).toUpperCase();
   const attrCode = attr.code.toLowerCase();
 
+  let key = `moduleConfig.attr.${modKey}.${attrCode}.name`;
   if (attr.isGlobal) {
-    const globalKey = `moduleConfig.attr.${modKey}.GLOBAL.${attrCode}.name`;
-    return t(globalKey, attr.name);
+    key = `moduleConfig.attr.${modKey}.GLOBAL.${attrCode}.name`;
+  } else if (categoryCode) {
+    key = `moduleConfig.attr.${modKey}.${categoryCode.toUpperCase()}.${attrCode}.name`;
   }
 
-  if (categoryCode) {
-    const catKey = `moduleConfig.attr.${modKey}.${categoryCode.toUpperCase()}.${attrCode}.name`;
-    return t(catKey, attr.name);
+  const translated = t(key, attr.name);
+  if (locale === "en" && attr.nameEn && translated === attr.name) {
+    return attr.nameEn;
   }
+  return translated;
+}
 
-  return t(`moduleConfig.attr.${modKey}.${attrCode}.name`, attr.name);
+/**
+ * Helper tra cứu nhãn đa ngôn ngữ cho Option (Hỗ trợ labels, labelEn, label & locale)
+ */
+export function resolveOptionLabel(
+  opt?: ModuleAttributeOption | null,
+  locale: string = "vi",
+  t?: (key: string, fallback?: any) => string,
+): string {
+  if (!opt) return "";
+  // 1. Lấy theo object labels cho đúng locale
+  if (opt.labels && typeof opt.labels === "object" && opt.labels[locale]) {
+    return opt.labels[locale]!;
+  }
+  // 2. Nếu locale = en và có labelEn
+  if (locale === "en" && opt.labelEn) {
+    return opt.labelEn;
+  }
+  // 3. Tra cứu từ hệ thống i18n dictionary nếu có key
+  if (t) {
+    const key = `moduleConfig.options.${opt.value}`;
+    const translated = t(key, "");
+    if (translated && translated !== key) {
+      return translated;
+    }
+  }
+  // 4. Fallback về nhãn tiếng Việt trong labels nếu có
+  if (opt.labels?.vi) {
+    return opt.labels.vi;
+  }
+  // 5. Fallback về label mặc định hoặc value
+  return opt.label || opt.value;
 }

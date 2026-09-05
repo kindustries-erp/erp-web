@@ -8,7 +8,11 @@ import { useQuery } from "@tanstack/react-query";
 import { ExternalLink } from "lucide-react";
 import { Tooltip, TooltipProvider } from "@/core/components/ui/Tooltip";
 import { cn } from "@/shared/utils";
-import { moduleConfigApi } from "@/core/api/moduleConfigApi";
+import {
+  moduleConfigApi,
+  resolveOptionLabel,
+} from "@/core/api/moduleConfigApi";
+import { useAppStore } from "@/core/config/appStore";
 import { fmtQty } from "@/shared/utils/format";
 import { Button } from "@/shared/components/ui/Button";
 import { Combobox } from "@/shared/components/Combobox";
@@ -449,7 +453,9 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
 
   // ── Actions ────────────────────────────────────────────────────────────────
 
-  // Lấy danh sách thuộc tính động cho GOODS_ISSUE để nạp options cho Loại xuất kho (code: issue_type)
+  const locale = useAppStore((s) => s.locale);
+
+  // Lấy danh sách thuộc tính động cho GOODS_ISSUE để nạp options cho Loại xuất kho (code: type_inventory_issue)
   const { data: giAttrDefs = [] } = useQuery({
     queryKey: ["module-config-global-defs", "GOODS_ISSUE"],
     queryFn: () => moduleConfigApi.getGlobalAttributeDefs("GOODS_ISSUE"),
@@ -471,7 +477,7 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
         { value: "", label: t("— Chọn —") },
         ...typeDef.options.map((opt) => ({
           value: opt.value,
-          label: t(opt.label || opt.value),
+          label: resolveOptionLabel(opt, locale, t),
         })),
       ];
     }
@@ -480,10 +486,10 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
       { value: "SALE", label: t("Xuất bán (SO)") },
       { value: "PRODUCTION", label: t("Xuất sản xuất") },
       { value: "WARRANTY", label: t("Xuất bảo hành") },
-      { value: "LOSS", label: t("Xuất hủy / hao hụt") },
+      { value: "SCRAP", label: t("Xuất hủy / hao hụt") },
       { value: "OTHER", label: t("Xuất khác") },
     ];
-  }, [giAttrDefs, t]);
+  }, [giAttrDefs, locale, t]);
 
   const actions =
     viewOnly || loading

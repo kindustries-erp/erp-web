@@ -318,6 +318,10 @@ export function useGiDrawer({
         if (customValues) {
           mappedForm.globalAttributes = customValues.globalAttributes || {};
           mappedForm.customAttributes = customValues.attributes || {};
+          if (customValues.globalAttributes?.type_inventory_issue) {
+            mappedForm.issueType =
+              customValues.globalAttributes.type_inventory_issue;
+          }
         }
         setForm(mappedForm);
 
@@ -381,11 +385,15 @@ export function useGiDrawer({
           });
         }
 
-        // Lưu thuộc tính tùy chỉnh nếu có
-        if (targetId && (form.globalAttributes || form.customAttributes)) {
+        // Lưu thuộc tính tùy chỉnh & đồng bộ loại xuất kho vào globalAttributes
+        if (targetId) {
           try {
+            const globalAttrs = {
+              ...(form.globalAttributes || {}),
+              type_inventory_issue: form.issueType || "OTHER",
+            };
             await moduleConfigApi.saveEntityValues("GOODS_ISSUE", targetId, {
-              globalAttributes: form.globalAttributes || {},
+              globalAttributes: globalAttrs,
               attributes: form.customAttributes || {},
             });
           } catch (cfErr) {

@@ -5,16 +5,16 @@ import { useT } from "@/core/i18n";
 import { Popover } from "@/core/components/ui/Popover";
 import { cn, getBuildVersionLabel } from "@/shared/utils";
 
+import {
+  getActiveSystemLanguages,
+  getSystemLanguage,
+} from "@/core/config/languages";
+
 const THEME_OPTIONS: { value: AppTheme; labelKey: string }[] = [
   { value: "classic", labelKey: "nav.bottom.themeClassic" },
   { value: "shell", labelKey: "nav.bottom.themeShell" },
   { value: "orcaq", labelKey: "nav.bottom.themeOrca" },
   { value: "midnight", labelKey: "nav.bottom.themeMidnight" },
-];
-
-const LOCALE_OPTIONS: { value: "vi" | "en"; label: string }[] = [
-  { value: "vi", label: "Tiếng Việt" },
-  { value: "en", label: "English" },
 ];
 
 export function UserMenuPopover({
@@ -41,8 +41,10 @@ export function UserMenuPopover({
 
   const currentThemeLabel =
     THEME_OPTIONS.find((o) => o.value === appTheme)?.labelKey ?? "";
-  const currentLocaleLabel =
-    LOCALE_OPTIONS.find((o) => o.value === locale)?.label ?? "";
+  const currentLanguageObj = getSystemLanguage(locale);
+  const currentLocaleLabel = currentLanguageObj
+    ? `${currentLanguageObj.flag} ${currentLanguageObj.nativeName}`
+    : locale.toUpperCase();
 
   const buildVersionLabel = getBuildVersionLabel();
 
@@ -284,19 +286,22 @@ export function UserMenuPopover({
               </button>
             ))}
           {subMenu === "language" &&
-            LOCALE_OPTIONS.map((opt) => (
+            getActiveSystemLanguages().map((opt) => (
               <button
-                key={opt.value}
-                onClick={() => setLocale(opt.value)}
+                key={opt.code}
+                onClick={() => setLocale(opt.code as "vi" | "en")}
                 className={cn(
                   "w-full flex items-center justify-between px-2.5 py-1.5 text-xs rounded-lg border-none cursor-pointer bg-transparent text-left",
-                  locale === opt.value
+                  locale === opt.code
                     ? "bg-black/5 text-foreground font-medium"
                     : "text-[color:var(--muted-fg)] hover:bg-black/5 hover:text-foreground",
                 )}
               >
-                <span>{opt.label}</span>
-                {locale === opt.value && (
+                <span className="flex items-center gap-1.5">
+                  <span>{opt.flag}</span>
+                  <span>{opt.nativeName}</span>
+                </span>
+                {locale === opt.code && (
                   <svg
                     width="12"
                     height="12"

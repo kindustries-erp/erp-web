@@ -13,7 +13,11 @@
 import { useState, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/shared/utils";
-import { moduleConfigApi } from "@/core/api/moduleConfigApi";
+import {
+  moduleConfigApi,
+  resolveOptionLabel,
+} from "@/core/api/moduleConfigApi";
+import { useAppStore } from "@/core/config/appStore";
 import { Button } from "@/shared/components/ui/Button";
 import { Combobox } from "@/shared/components/Combobox";
 import { CellInput } from "@/shared/components/CellInput";
@@ -465,7 +469,9 @@ export function IaFormDrawer({ drawer }: IaFormDrawerProps) {
 
   // ── Right panel content (Thông tin chung) ─────────────────────────────────
 
-  // Lấy danh sách thuộc tính động cho INVENTORY_ADJUSTMENT để nạp options cho Lý do điều chỉnh (code: adjustment_reason)
+  const locale = useAppStore((s) => s.locale);
+
+  // Lấy danh sách thuộc tính động cho INVENTORY_ADJUSTMENT để nạp options cho Lý do điều chỉnh (code: type_inventory_adjustment)
   const { data: iaAttrDefs = [] } = useQuery({
     queryKey: ["module-config-global-defs", "INVENTORY_ADJUSTMENT"],
     queryFn: () =>
@@ -488,19 +494,19 @@ export function IaFormDrawer({ drawer }: IaFormDrawerProps) {
         { value: "", label: t("— Chọn —") },
         ...reasonDef.options.map((opt) => ({
           value: opt.value,
-          label: t(opt.label || opt.value),
+          label: resolveOptionLabel(opt, locale, t),
         })),
       ];
     }
     return [
       { value: "", label: t("— Chọn —") },
-      { value: "PERIODIC_AUDIT", label: t("Kiểm kê định kỳ") },
-      { value: "DAMAGE_LOSS", label: t("Hàng hỏng hóc / hao hụt") },
-      { value: "COUNT_DISCREPANCY", label: t("Sai lệch kiểm đếm") },
-      { value: "SPEC_CLASSIFICATION", label: t("Phân loại quy cách") },
+      { value: "PERIODIC", label: t("Kiểm kê định kỳ") },
+      { value: "DAMAGED", label: t("Hàng hỏng hóc / hao hụt") },
+      { value: "COUNT_ERROR", label: t("Sai lệch kiểm đếm") },
+      { value: "RECLASSIFY", label: t("Phân loại quy cách") },
       { value: "OTHER", label: t("Lý do khác") },
     ];
-  }, [iaAttrDefs, t]);
+  }, [iaAttrDefs, locale, t]);
 
   const rightPanelContent = (
     <>
@@ -525,7 +531,11 @@ export function IaFormDrawer({ drawer }: IaFormDrawerProps) {
       <DrawerField label={t("Lý do điều chỉnh")}>
         <Combobox
           options={adjustmentReasonOptions}
-          value={form.globalAttributes?.adjustment_reason || ""}
+          value={
+            form.globalAttributes?.type_inventory_adjustment ||
+            form.globalAttributes?.adjustment_reason ||
+            ""
+          }
           disabled={viewOnly || editing?.status === "POSTED"}
           placeholder={t("— Chọn —")}
           allowClear={true}
@@ -534,6 +544,7 @@ export function IaFormDrawer({ drawer }: IaFormDrawerProps) {
               ...f,
               globalAttributes: {
                 ...f.globalAttributes,
+                type_inventory_adjustment: v || "",
                 adjustment_reason: v || "",
               },
             }))

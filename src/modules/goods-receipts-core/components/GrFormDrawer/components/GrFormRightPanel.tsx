@@ -5,7 +5,11 @@ import { Tooltip, TooltipProvider } from "@/core/components/ui/Tooltip";
 import { Combobox } from "@/shared/components/Combobox";
 import { DatePicker } from "@/shared/components/DatePicker";
 import { DrawerField, inputCls } from "@/shared/components/DrawerModal";
-import { moduleConfigApi } from "@/core/api/moduleConfigApi";
+import {
+  moduleConfigApi,
+  resolveOptionLabel,
+} from "@/core/api/moduleConfigApi";
+import { useAppStore } from "@/core/config/appStore";
 import type { UseGrDrawerReturn } from "@/modules/goods-receipts-core/hooks/useGrDrawer";
 
 interface GrFormRightPanelProps {
@@ -15,8 +19,9 @@ interface GrFormRightPanelProps {
 
 export function GrFormRightPanel({ drawer, t }: GrFormRightPanelProps) {
   const { form, setForm, viewOnly, editing, poOptions } = drawer;
+  const locale = useAppStore((s) => s.locale);
 
-  // Lấy danh sách thuộc tính động cho GOODS_RECEIPT để nạp options cho Loại nhập kho (code: type)
+  // Lấy danh sách thuộc tính động cho GOODS_RECEIPT để nạp options cho Loại nhập kho (code: type_inventory_receipt)
   const { data: grAttrDefs = [] } = useQuery({
     queryKey: ["module-config-global-defs", "GOODS_RECEIPT"],
     queryFn: () => moduleConfigApi.getGlobalAttributeDefs("GOODS_RECEIPT"),
@@ -37,7 +42,7 @@ export function GrFormRightPanel({ drawer, t }: GrFormRightPanelProps) {
       return [
         { label: t("— Chọn —"), value: "" },
         ...typeDef.options.map((opt) => ({
-          label: t(opt.label || opt.value),
+          label: resolveOptionLabel(opt, locale, t),
           value: opt.value,
         })),
       ];
@@ -45,12 +50,12 @@ export function GrFormRightPanel({ drawer, t }: GrFormRightPanelProps) {
     return [
       { label: t("— Chọn —"), value: "" },
       { label: t("Đơn mua hàng (PO)"), value: "PO" },
-      { label: t("Nhập sản xuất"), value: "MANUFACTURING" },
+      { label: t("Nhập sản xuất"), value: "PRODUCTION" },
       { label: t("Nhập trả hàng"), value: "RETURN" },
       { label: t("Nhập bảo hành"), value: "WARRANTY" },
       { label: t("Nhập khác"), value: "OTHER" },
     ];
-  }, [grAttrDefs, t]);
+  }, [grAttrDefs, locale, t]);
 
   return (
     <>

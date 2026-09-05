@@ -10,10 +10,12 @@ import { Checkbox } from "@/shared/components/ui/checkbox";
 import { Badge } from "@/shared/components/ui/badge";
 import { DatePicker } from "@/shared/components/DatePicker";
 import { useT } from "@/core/i18n";
+import { useAppStore } from "@/core/config/appStore";
 import {
   moduleConfigApi,
   resolveAttrName,
   resolveCategoryName,
+  resolveOptionLabel,
   type ModuleKey,
   type ModuleAttributeDef,
 } from "@/core/api/moduleConfigApi";
@@ -241,6 +243,7 @@ function AttributeFieldRenderer({
   onChange,
   t,
 }: AttributeFieldRendererProps) {
+  const { locale } = useAppStore();
   const displayName = resolveAttrName(attr, moduleKey, categoryCode, t);
 
   if (isEditable) {
@@ -268,7 +271,7 @@ function AttributeFieldRenderer({
     if (attr.fieldType === "SELECT") {
       const optList: ComboboxOption[] = (attr.options || []).map((opt) => ({
         value: opt.value,
-        label: `${opt.label} [${opt.value}]`,
+        label: `${resolveOptionLabel(opt, locale, t)} [${opt.value}]`,
       }));
 
       return (
@@ -340,7 +343,7 @@ function AttributeFieldRenderer({
   } else if (attr.fieldType === "SELECT") {
     const matchedOpt = (attr.options || []).find((o) => o.value === value);
     if (matchedOpt) {
-      displayVal = `${matchedOpt.label} [${matchedOpt.value}]`;
+      displayVal = `${resolveOptionLabel(matchedOpt, locale, t)} [${matchedOpt.value}]`;
     }
   } else if (attr.fieldType === "DATE" && value) {
     displayVal = formatGMT7(value, "date") || value;

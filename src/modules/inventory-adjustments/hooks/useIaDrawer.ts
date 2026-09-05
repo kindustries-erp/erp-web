@@ -184,6 +184,13 @@ export function useIaDrawer({
         if (customValues) {
           mappedForm.globalAttributes = customValues.globalAttributes || {};
           mappedForm.customAttributes = customValues.attributes || {};
+          if (
+            customValues.globalAttributes?.adjustment_reason &&
+            !customValues.globalAttributes?.type_inventory_adjustment
+          ) {
+            mappedForm.globalAttributes.type_inventory_adjustment =
+              customValues.globalAttributes.adjustment_reason;
+          }
         }
         setForm(mappedForm);
       } finally {
@@ -233,14 +240,23 @@ export function useIaDrawer({
           });
         }
 
-        // Lưu thuộc tính tùy chỉnh nếu có
+        // Lưu thuộc tính tùy chỉnh & đồng bộ loại điều chỉnh vào globalAttributes
         if (targetId && (form.globalAttributes || form.customAttributes)) {
           try {
+            const reasonVal =
+              form.globalAttributes?.type_inventory_adjustment ||
+              form.globalAttributes?.adjustment_reason ||
+              "";
+            const globalAttrs = {
+              ...(form.globalAttributes || {}),
+              type_inventory_adjustment: reasonVal,
+              adjustment_reason: reasonVal,
+            };
             await moduleConfigApi.saveEntityValues(
               "INVENTORY_ADJUSTMENT",
               targetId,
               {
-                globalAttributes: form.globalAttributes || {},
+                globalAttributes: globalAttrs,
                 attributes: form.customAttributes || {},
               },
             );

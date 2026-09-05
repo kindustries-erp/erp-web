@@ -31,6 +31,7 @@ import {
   AlertCircle,
   Check,
   Pencil,
+  Database,
 } from "lucide-react";
 import {
   StandardFormDrawer,
@@ -49,11 +50,15 @@ import { DatePicker } from "@/shared/components/DatePicker";
 import { PillTabs } from "@/shared/components/PillTabs";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import { Tooltip } from "@/core/components/ui/Tooltip";
+import { MultilingualInput } from "@/shared/components/MultilingualInput";
+import { MultilingualBadge } from "@/shared/components/MultilingualBadge";
 import { useT } from "@/core/i18n";
+import { useAppStore } from "@/core/config/appStore";
 import { cn } from "@/shared/utils";
 import {
   moduleConfigApi,
   resolveAttrName,
+  resolveOptionLabel,
   type ModuleKey,
   type ModuleAttributeDef,
   type ModuleAttributeFieldType,
@@ -340,6 +345,7 @@ export function ModuleLivePreviewPanel({
   resetKey,
 }: ModuleLivePreviewPanelProps) {
   const t = useT();
+  const locale = useAppStore((s) => s.locale);
   const [mockValues, setMockValues] = useState<Record<string, any>>({});
 
   useEffect(() => {
@@ -372,12 +378,7 @@ export function ModuleLivePreviewPanel({
     <div className="flex flex-col gap-2.5 pt-1">
       {attrs.map((attr) => {
         const val = mockValues[attr.code];
-        const displayName = resolveAttrName(
-          attr,
-          moduleKey || "",
-          undefined,
-          t,
-        );
+        const displayName = resolveAttrName(attr, moduleKey || "", locale, t);
 
         if (attr.fieldType === "CHECKBOX") {
           return (
@@ -408,7 +409,7 @@ export function ModuleLivePreviewPanel({
         if (attr.fieldType === "SELECT") {
           const opts: ComboboxOption[] = (attr.options || []).map((o) => ({
             value: o.value,
-            label: `${o.label} (${o.value})`,
+            label: `${resolveOptionLabel(o, locale, t)} (${o.value})`,
           }));
           return (
             <DrawerField
@@ -542,6 +543,7 @@ export function ModuleCustomFieldConfigContent({
   hidePillTabs = false,
 }: ModuleCustomFieldConfigContentProps) {
   const t = useT();
+  const locale = useAppStore((s) => s.locale);
   const queryClient = useQueryClient();
 
   const domainMods = useMemo(
@@ -589,19 +591,36 @@ export function ModuleCustomFieldConfigContent({
   );
   const [attrCode, setAttrCode] = useState("");
   const [attrName, setAttrName] = useState("");
+  const [attrNameEn, setAttrNameEn] = useState("");
+  const [attrNames, setAttrNames] = useState<Record<string, string>>({
+    vi: "",
+    en: "",
+  });
   const [attrFieldType, setAttrFieldType] =
     useState<ModuleAttributeFieldType>("TEXT");
   const [attrRequired, setAttrRequired] = useState(false);
   const [attrOptions, setAttrOptions] = useState<ModuleAttributeOption[]>([]);
   const [newOptionKey, setNewOptionKey] = useState("");
   const [newOptionLabel, setNewOptionLabel] = useState("");
+  const [newOptionLabelEn, setNewOptionLabelEn] = useState("");
+  const [newOptionLabels, setNewOptionLabels] = useState<
+    Record<string, string>
+  >({ vi: "", en: "" });
   const [deleteAttrTarget, setDeleteAttrTarget] =
     useState<ModuleAttributeDef | null>(null);
 
   // State: Option display name inline editing (value/key is immutable)
   const [editingOptionIdx, setEditingOptionIdx] = useState<number | null>(null);
   const [editingOptionLabel, setEditingOptionLabel] = useState("");
+  const [editingOptionLabelEn, setEditingOptionLabelEn] = useState("");
+  const [editingOptionLabels, setEditingOptionLabels] = useState<
+    Record<string, string>
+  >({});
+  const [editingOptionOriginalLabels, setEditingOptionOriginalLabels] =
+    useState<Record<string, string>>({});
   const [editingOptionOriginalLabel, setEditingOptionOriginalLabel] =
+    useState("");
+  const [editingOptionOriginalLabelEn, setEditingOptionOriginalLabelEn] =
     useState("");
 
   // State: Discard / Cancel Confirm Modal
@@ -612,28 +631,49 @@ export function ModuleCustomFieldConfigContent({
   // Computed Dirty State
   const isAttrDirty = useMemo(() => {
     if (isAddingAttr) {
+      const hasAnyAttrName = Object.values(attrNames).some(
+        (v) => v.trim() !== "",
+      );
+      const hasAnyNewOptLabel = Object.values(newOptionLabels).some(
+        (v) => v.trim() !== "",
+      );
       return Boolean(
         attrCode.trim() !== "" ||
         attrName.trim() !== "" ||
+        attrNameEn.trim() !== "" ||
+        hasAnyAttrName ||
         attrRequired ||
         attrFieldType !== "TEXT" ||
         attrOptions.length > 0 ||
         newOptionKey.trim() !== "" ||
-        newOptionLabel.trim() !== "",
+        newOptionLabel.trim() !== "" ||
+        newOptionLabelEn.trim() !== "" ||
+        hasAnyNewOptLabel,
       );
     }
     if (editingAttr) {
       const origOpts = editingAttr.options || [];
       const optsChanged =
         JSON.stringify(attrOptions) !== JSON.stringify(origOpts);
+      const hasAnyNewOptLabel = Object.values(newOptionLabels).some(
+        (v) => v.trim() !== "",
+      );
       return (
         attrCode.trim() !== (editingAttr.code || "") ||
         attrName.trim() !== (editingAttr.name || "") ||
+        attrNameEn.trim() !== (editingAttr.nameEn || "") ||
+        attrNames.vi?.trim() !== (editingAttr.name || "") ||
+        (attrNames.en?.trim() || "") !== (editingAttr.nameEn || "") ||
         attrFieldType !== (editingAttr.fieldType || "TEXT") ||
         attrRequired !== Boolean(editingAttr.isRequired) ||
         optsChanged ||
         editingOptionIdx !== null ||
-        Boolean(newOptionKey.trim() !== "" || newOptionLabel.trim() !== "")
+        Boolean(
+          newOptionKey.trim() !== "" ||
+          newOptionLabel.trim() !== "" ||
+          newOptionLabelEn.trim() !== "" ||
+          hasAnyNewOptLabel,
+        )
       );
     }
     return false;
@@ -642,12 +682,16 @@ export function ModuleCustomFieldConfigContent({
     editingAttr,
     attrCode,
     attrName,
+    attrNameEn,
+    attrNames,
     attrFieldType,
     attrRequired,
     attrOptions,
     editingOptionIdx,
     newOptionKey,
     newOptionLabel,
+    newOptionLabelEn,
+    newOptionLabels,
   ]);
 
   useEffect(() => {
@@ -655,15 +699,30 @@ export function ModuleCustomFieldConfigContent({
   }, [isAttrDirty, onDirtyChange]);
 
   // Option inline edit helpers
-  const handleStartEditOption = (index: number, currentLabel: string) => {
+  const handleStartEditOption = (index: number, opt: ModuleAttributeOption) => {
     setEditingOptionIdx(index);
-    setEditingOptionLabel(currentLabel);
-    setEditingOptionOriginalLabel(currentLabel);
+    const curLabelVi = opt.label || opt.labels?.vi || "";
+    const curLabelEn = opt.labelEn || opt.labels?.en || "";
+    const currentLabels: Record<string, string> = {
+      ...(opt.labels || {}),
+      vi: curLabelVi,
+      en: curLabelEn,
+    };
+    setEditingOptionLabel(curLabelVi);
+    setEditingOptionLabelEn(curLabelEn);
+    setEditingOptionLabels(currentLabels);
+    setEditingOptionOriginalLabels(currentLabels);
+    setEditingOptionOriginalLabel(curLabelVi);
+    setEditingOptionOriginalLabelEn(curLabelEn);
   };
 
   const handleSaveOptionLabel = (index: number) => {
-    const trimmed = editingOptionLabel.trim();
-    if (!trimmed) {
+    const trimmedVi = (editingOptionLabels.vi || editingOptionLabel).trim();
+    const trimmedEn = (editingOptionLabels.en || editingOptionLabelEn).trim();
+    const anyFilledVal = Object.values(editingOptionLabels).find(
+      (v) => v && v.trim(),
+    );
+    if (!trimmedVi && !trimmedEn && !anyFilledVal) {
       toast.error(
         t(
           "moduleConfig.optionLabelRequired",
@@ -672,27 +731,71 @@ export function ModuleCustomFieldConfigContent({
       );
       return;
     }
+    const finalVi = trimmedVi || anyFilledVal || trimmedEn;
+    const finalEn = trimmedEn || finalVi;
+    const nextLabels: Record<string, string> = {
+      ...editingOptionLabels,
+      vi: finalVi,
+      en: finalEn,
+    };
     setAttrOptions((prev) =>
-      prev.map((item, i) => (i === index ? { ...item, label: trimmed } : item)),
+      prev.map((item, i) =>
+        i === index
+          ? {
+              ...item,
+              label: finalVi,
+              labelEn: finalEn,
+              labels: nextLabels,
+            }
+          : item,
+      ),
     );
     setEditingOptionIdx(null);
     setEditingOptionLabel("");
+    setEditingOptionLabelEn("");
+    setEditingOptionLabels({});
+    setEditingOptionOriginalLabels({});
     setEditingOptionOriginalLabel("");
+    setEditingOptionOriginalLabelEn("");
   };
 
   const handleCancelEditOption = () => {
-    if (editingOptionIdx !== null && editingOptionOriginalLabel) {
-      setAttrOptions((prev) =>
-        prev.map((item, i) =>
-          i === editingOptionIdx
-            ? { ...item, label: editingOptionOriginalLabel }
-            : item,
-        ),
-      );
+    if (editingOptionIdx !== null) {
+      if (
+        Object.keys(editingOptionOriginalLabels).length > 0 ||
+        editingOptionOriginalLabel ||
+        editingOptionOriginalLabelEn
+      ) {
+        setAttrOptions((prev) =>
+          prev.map((item, i) =>
+            i === editingOptionIdx
+              ? {
+                  ...item,
+                  label:
+                    editingOptionOriginalLabels.vi ||
+                    editingOptionOriginalLabel ||
+                    item.label,
+                  labelEn:
+                    editingOptionOriginalLabels.en ||
+                    editingOptionOriginalLabelEn ||
+                    item.labelEn,
+                  labels: {
+                    ...(item.labels || {}),
+                    ...editingOptionOriginalLabels,
+                  },
+                }
+              : item,
+          ),
+        );
+      }
     }
     setEditingOptionIdx(null);
     setEditingOptionLabel("");
+    setEditingOptionLabelEn("");
+    setEditingOptionLabels({});
+    setEditingOptionOriginalLabels({});
     setEditingOptionOriginalLabel("");
+    setEditingOptionOriginalLabelEn("");
   };
 
   // Open Create Attribute form
@@ -701,11 +804,15 @@ export function ModuleCustomFieldConfigContent({
     setEditingAttr(null);
     setAttrCode("");
     setAttrName("");
+    setAttrNameEn("");
+    setAttrNames({ vi: "", en: "" });
     setAttrFieldType("TEXT");
     setAttrRequired(false);
     setAttrOptions([]);
     setNewOptionKey("");
     setNewOptionLabel("");
+    setNewOptionLabelEn("");
+    setNewOptionLabels({ vi: "", en: "" });
     handleCancelEditOption();
   };
 
@@ -715,11 +822,18 @@ export function ModuleCustomFieldConfigContent({
     setIsAddingAttr(false);
     setAttrCode(attr.code);
     setAttrName(attr.name);
+    setAttrNameEn(attr.nameEn || "");
+    setAttrNames({
+      vi: attr.name || "",
+      en: attr.nameEn || "",
+    });
     setAttrFieldType(attr.fieldType);
     setAttrRequired(Boolean(attr.isRequired));
     setAttrOptions(attr.options || []);
     setNewOptionKey("");
     setNewOptionLabel("");
+    setNewOptionLabelEn("");
+    setNewOptionLabels({ vi: "", en: "" });
     handleCancelEditOption();
   };
 
@@ -728,11 +842,15 @@ export function ModuleCustomFieldConfigContent({
     setEditingAttr(null);
     setAttrCode("");
     setAttrName("");
+    setAttrNameEn("");
+    setAttrNames({ vi: "", en: "" });
     setAttrFieldType("TEXT");
     setAttrRequired(false);
     setAttrOptions([]);
     setNewOptionKey("");
     setNewOptionLabel("");
+    setNewOptionLabelEn("");
+    setNewOptionLabels({ vi: "", en: "" });
     handleCancelEditOption();
   };
 
@@ -773,19 +891,41 @@ export function ModuleCustomFieldConfigContent({
   // Option builder helpers
   const handleAddOption = () => {
     const rawK = newOptionKey.trim();
-    const rawL = newOptionLabel.trim();
-    if (!rawK && !rawL) return;
-    const finalK = (rawK || rawL).toUpperCase().replace(/\s+/g, "_");
-    const finalL = rawL || rawK;
+    const rawLVi = (newOptionLabels.vi || newOptionLabel).trim();
+    const rawLEn = (newOptionLabels.en || newOptionLabelEn).trim();
+    const anyFilledVal = Object.values(newOptionLabels).find(
+      (v) => v && v.trim(),
+    );
+    if (!rawK && !rawLVi && !rawLEn && !anyFilledVal) return;
+    const finalK = (rawK || rawLVi || rawLEn || anyFilledVal || "")
+      .toUpperCase()
+      .replace(/\s+/g, "_");
+    const finalLVi = rawLVi || anyFilledVal || rawLEn || rawK;
+    const finalLEn = rawLEn || finalLVi;
     if (attrOptions.some((o) => o.value === finalK)) {
       toast.error(
         t("moduleConfig.duplicateOptionKey", "Mã tùy chọn đã tồn tại"),
       );
       return;
     }
-    setAttrOptions((prev) => [...prev, { value: finalK, label: finalL }]);
+    const nextLabels: Record<string, string> = {
+      ...newOptionLabels,
+      vi: finalLVi,
+      en: finalLEn,
+    };
+    setAttrOptions((prev) => [
+      ...prev,
+      {
+        value: finalK,
+        label: finalLVi,
+        labelEn: finalLEn,
+        labels: nextLabels,
+      },
+    ]);
     setNewOptionKey("");
     setNewOptionLabel("");
+    setNewOptionLabelEn("");
+    setNewOptionLabels({ vi: "", en: "" });
   };
 
   const handleRemoveOption = (index: number) => {
@@ -799,6 +939,7 @@ export function ModuleCustomFieldConfigContent({
       moduleKeyGlobal: string;
       code: string;
       name: string;
+      nameEn?: string;
       fieldType: ModuleAttributeFieldType;
       options?: ModuleAttributeOption[];
       isRequired?: boolean;
@@ -857,7 +998,6 @@ export function ModuleCustomFieldConfigContent({
       );
     },
   });
-
   const deleteAttrMutation = useMutation({
     mutationFn: (id: string) => moduleConfigApi.deleteAttributeDef(id),
     onSuccess: () => {
@@ -883,7 +1023,11 @@ export function ModuleCustomFieldConfigContent({
 
   const handleSaveAttribute = async () => {
     const trimmedCode = attrCode.trim().toLowerCase();
-    const trimmedName = attrName.trim();
+    const trimmedName =
+      (attrNames.vi || attrName).trim() ||
+      Object.values(attrNames).find((v) => v.trim()) ||
+      "";
+    const trimmedNameEn = (attrNames.en || attrNameEn).trim();
     if (!trimmedCode) {
       toast.error(
         t("moduleConfig.attrCodeRequired", "Vui lòng nhập mã thuộc tính"),
@@ -904,23 +1048,55 @@ export function ModuleCustomFieldConfigContent({
       editingOptionIdx >= 0 &&
       editingOptionIdx < finalOptions.length
     ) {
-      const trimmedOpt = editingOptionLabel.trim();
-      if (trimmedOpt) {
+      const trimmedOptVi = (
+        editingOptionLabels.vi || editingOptionLabel
+      ).trim();
+      const trimmedOptEn = (
+        editingOptionLabels.en || editingOptionLabelEn
+      ).trim();
+      const anyFilledOpt = Object.values(editingOptionLabels).find(
+        (v) => v && v.trim(),
+      );
+      if (trimmedOptVi || trimmedOptEn || anyFilledOpt) {
+        const finalOptVi = trimmedOptVi || anyFilledOpt || trimmedOptEn;
+        const finalOptEn = trimmedOptEn || finalOptVi;
         finalOptions[editingOptionIdx] = {
           ...finalOptions[editingOptionIdx],
-          label: trimmedOpt,
+          label: finalOptVi,
+          labelEn: finalOptEn,
+          labels: {
+            ...editingOptionLabels,
+            vi: finalOptVi,
+            en: finalOptEn,
+          },
         };
       }
     }
 
     // Auto-commit top pending new option if user typed it
     const rawK = newOptionKey.trim();
-    const rawL = newOptionLabel.trim();
-    if (rawK || rawL) {
-      const finalK = (rawK || rawL).toUpperCase().replace(/\s+/g, "_");
-      const finalL = rawL || rawK;
+    const rawLVi = (newOptionLabels.vi || newOptionLabel).trim();
+    const rawLEn = (newOptionLabels.en || newOptionLabelEn).trim();
+    const anyFilledNewOpt = Object.values(newOptionLabels).find(
+      (v) => v && v.trim(),
+    );
+    if (rawK || rawLVi || rawLEn || anyFilledNewOpt) {
+      const finalK = (rawK || rawLVi || rawLEn || anyFilledNewOpt || "")
+        .toUpperCase()
+        .replace(/\s+/g, "_");
+      const finalLVi = rawLVi || anyFilledNewOpt || rawLEn || rawK;
+      const finalLEn = rawLEn || finalLVi;
       if (!finalOptions.some((o) => o.value === finalK)) {
-        finalOptions.push({ value: finalK, label: finalL });
+        finalOptions.push({
+          value: finalK,
+          label: finalLVi,
+          labelEn: finalLEn,
+          labels: {
+            ...newOptionLabels,
+            vi: finalLVi,
+            en: finalLEn,
+          },
+        });
       }
     }
 
@@ -940,6 +1116,7 @@ export function ModuleCustomFieldConfigContent({
         dto: {
           code: editingAttr.isSystem ? editingAttr.code : trimmedCode,
           name: trimmedName,
+          nameEn: trimmedNameEn || undefined,
           fieldType: editingAttr.isSystem
             ? editingAttr.fieldType
             : attrFieldType,
@@ -957,6 +1134,7 @@ export function ModuleCustomFieldConfigContent({
         moduleKeyGlobal: activeModuleKey,
         code: trimmedCode,
         name: trimmedName,
+        nameEn: trimmedNameEn || undefined,
         fieldType: attrFieldType,
         isRequired: attrRequired,
         options: attrFieldType === "SELECT" ? finalOptions : undefined,
@@ -1057,25 +1235,27 @@ export function ModuleCustomFieldConfigContent({
           </DrawerField>
         </div>
 
-        <div className="sm:col-span-4">
+        <div className="sm:col-span-5">
           <DrawerField
             label={t("moduleConfig.attrName", "Tên hiển thị")}
             required
           >
-            <input
-              type="text"
-              className="w-full text-xs text-foreground bg-background border border-border/60 rounded-lg px-3 py-2 outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all"
-              value={attrName}
-              onChange={(e) => setAttrName(e.target.value)}
+            <MultilingualInput
+              values={attrNames}
+              onChange={(newValues) => {
+                setAttrNames(newValues);
+                setAttrName(newValues.vi || "");
+                setAttrNameEn(newValues.en || "");
+              }}
               placeholder={t(
                 "moduleConfig.attrNamePlaceholder",
-                "VD: Màu sắc, Ghi chú phê duyệt...",
+                "VD: Màu sắc, Loại nhập...",
               )}
             />
           </DrawerField>
         </div>
 
-        <div className="sm:col-span-3">
+        <div className="sm:col-span-2">
           <DrawerField
             label={t("moduleConfig.attrFieldType", "Kiểu dữ liệu")}
             required
@@ -1099,7 +1279,7 @@ export function ModuleCustomFieldConfigContent({
 
         <div className="sm:col-span-2">
           <DrawerField label={t("moduleConfig.attrConstraint", "Ràng buộc")}>
-            <div className="flex items-center gap-2 h-9 select-none">
+            <div className="flex items-center gap-1.5 h-9 select-none">
               <Checkbox
                 id="attr-required-cb"
                 checked={attrRequired}
@@ -1117,7 +1297,7 @@ export function ModuleCustomFieldConfigContent({
       </div>
 
       {attrFieldType === "SELECT" && (
-        <div className="flex flex-col gap-2 pt-1">
+        <div className="flex flex-col gap-2 pt-1 border-t border-border/30 mt-1">
           <div className="flex items-center justify-between">
             <label className="text-[11px] font-medium text-muted-foreground flex items-center gap-1.5">
               <ListFilter className="w-3.5 h-3.5 text-muted-foreground" />
@@ -1131,45 +1311,57 @@ export function ModuleCustomFieldConfigContent({
             <NeutralCountBadge count={attrOptions.length} />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_auto] gap-2 items-center">
-            <input
-              type="text"
-              className="w-full text-xs text-foreground bg-background border border-border/60 rounded-lg px-3 py-1.5 outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all font-mono placeholder:font-sans"
-              value={newOptionKey}
-              onChange={(e) => setNewOptionKey(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  handleAddOption();
-                }
-              }}
-              placeholder={t(
-                "moduleConfig.optionKeyPlaceholder",
-                "Mã (VD: RED)",
-              )}
-            />
-            <input
-              type="text"
-              className="w-full text-xs text-foreground bg-background border border-border/60 rounded-lg px-3 py-1.5 outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all"
-              value={newOptionLabel}
-              onChange={(e) => setNewOptionLabel(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  handleAddOption();
-                }
-              }}
-              placeholder={t(
-                "moduleConfig.optionLabelPlaceholder",
-                "Tên hiển thị (VD: Màu đỏ)",
-              )}
-            />
+          <div className="grid grid-cols-1 sm:grid-cols-[1fr_2fr_auto] gap-2 items-end bg-background/60 dark:bg-background/40 p-2.5 rounded-lg border border-border/40">
+            <div>
+              <DrawerField
+                label={t("moduleConfig.optionKey", "Mã tùy chọn (Key)")}
+                required
+              >
+                <input
+                  type="text"
+                  className="w-full text-xs text-foreground bg-background border border-border/60 rounded-lg px-3 py-2 outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all font-mono placeholder:font-sans"
+                  value={newOptionKey}
+                  onChange={(e) => setNewOptionKey(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleAddOption();
+                    }
+                  }}
+                  placeholder={t(
+                    "moduleConfig.optionKeyPlaceholder",
+                    "Mã (VD: PO, SALE)",
+                  )}
+                />
+              </DrawerField>
+            </div>
+
+            <div>
+              <DrawerField
+                label={t("moduleConfig.optionLabel", "Tên tùy chọn")}
+                required
+              >
+                <MultilingualInput
+                  values={newOptionLabels}
+                  onChange={(newValues) => {
+                    setNewOptionLabels(newValues);
+                    setNewOptionLabel(newValues.vi || "");
+                    setNewOptionLabelEn(newValues.en || "");
+                  }}
+                  placeholder={t(
+                    "moduleConfig.optionLabelViPlaceholder",
+                    "Tên tùy chọn (VD: Nhập từ PO)...",
+                  )}
+                />
+              </DrawerField>
+            </div>
+
             <Button
               type="button"
               size="sm"
               variant="secondary"
               onClick={handleAddOption}
-              className="h-8.5 px-3 text-xs shrink-0 flex items-center gap-1"
+              className="h-9 px-3 text-xs shrink-0 flex items-center gap-1 mb-0.5"
             >
               <Plus className="w-3.5 h-3.5" />
               {t("common.add", "Thêm")}
@@ -1177,75 +1369,57 @@ export function ModuleCustomFieldConfigContent({
           </div>
 
           {attrOptions.length > 0 ? (
-            <div className="flex flex-wrap gap-1.5 pt-0.5">
+            <div className="flex flex-wrap gap-2 pt-1">
               {attrOptions.map((opt, idx) => {
                 const usedCount = optionsUsage[opt.value] || 0;
                 const isOptionInUse = Boolean(editingAttr && usedCount > 0);
                 const isEditingThisOption = editingOptionIdx === idx;
+                const optionLabelCurrent = resolveOptionLabel(opt, locale, t);
 
                 if (isEditingThisOption) {
                   return (
-                    <Badge
+                    <div
                       key={opt.value}
-                      variant="secondary"
-                      className="inline-flex items-center gap-1.5 px-2 py-1 text-xs font-normal bg-background text-foreground border border-primary/60 shadow-xs ring-1 ring-primary/20"
+                      className="inline-flex flex-col sm:flex-row items-stretch sm:items-center gap-2 p-1.5 sm:p-2 text-xs bg-muted/40 text-foreground border border-border/70 shadow-2xs rounded-lg w-full sm:w-auto"
                     >
-                      <span className="font-mono text-[10px] font-semibold text-muted-foreground">
+                      <span className="font-mono text-[10px] font-semibold text-muted-foreground self-start sm:self-center px-1">
                         {opt.value}
                       </span>
-                      <span className="text-muted-foreground text-[10px]">
-                        •
-                      </span>
-                      <input
-                        type="text"
-                        className="h-5 px-1.5 py-0 text-xs bg-muted/40 border border-border/80 focus:border-primary focus:bg-background rounded outline-none w-28 text-foreground"
-                        value={editingOptionLabel}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          setEditingOptionLabel(val);
-                          if (val.trim()) {
-                            setAttrOptions((prev) =>
-                              prev.map((item, i) =>
-                                i === idx ? { ...item, label: val } : item,
-                              ),
-                            );
-                          }
-                        }}
-                        onBlur={() => {
-                          handleSaveOptionLabel(idx);
-                        }}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            e.preventDefault();
-                            handleSaveOptionLabel(idx);
-                          } else if (e.key === "Escape") {
-                            e.preventDefault();
-                            handleCancelEditOption();
-                          }
-                        }}
-                        autoFocus
-                        placeholder={t(
-                          "moduleConfig.optionLabelPlaceholder",
-                          "Tên hiển thị",
-                        )}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => handleSaveOptionLabel(idx)}
-                        className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-100 dark:hover:bg-emerald-950/60 p-0.5 rounded cursor-pointer transition-colors"
-                        title={t("common.save", "Lưu")}
-                      >
-                        <Check className="w-3 h-3" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleCancelEditOption}
-                        className="text-muted-foreground hover:text-foreground hover:bg-muted p-0.5 rounded cursor-pointer transition-colors"
-                        title={t("common.cancel", "Hủy")}
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
-                    </Badge>
+                      <div className="min-w-[220px] sm:min-w-[260px] flex-1">
+                        <MultilingualInput
+                          mode="popover"
+                          values={editingOptionLabels}
+                          onChange={(newValues) => {
+                            setEditingOptionLabels(newValues);
+                            setEditingOptionLabel(newValues.vi || "");
+                            setEditingOptionLabelEn(newValues.en || "");
+                          }}
+                          placeholder={t(
+                            "moduleConfig.optionLabel",
+                            "Tên tùy chọn...",
+                          )}
+                          inputClassName="py-1.5 text-xs"
+                        />
+                      </div>
+                      <div className="flex items-center gap-1 self-end sm:self-center">
+                        <button
+                          type="button"
+                          onClick={() => handleSaveOptionLabel(idx)}
+                          className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-100 dark:hover:bg-emerald-950/60 p-1 rounded cursor-pointer transition-colors"
+                          title={t("common.save", "Lưu")}
+                        >
+                          <Check className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleCancelEditOption}
+                          className="text-muted-foreground hover:text-foreground hover:bg-muted p-1 rounded cursor-pointer transition-colors"
+                          title={t("common.cancel", "Hủy")}
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
                   );
                 }
 
@@ -1253,34 +1427,52 @@ export function ModuleCustomFieldConfigContent({
                   <Badge
                     key={opt.value}
                     variant="secondary"
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-normal bg-muted/60 hover:bg-muted text-foreground border border-border/40 shadow-2xs group/opt"
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-normal bg-muted/60 hover:bg-muted text-foreground border border-border/40 shadow-2xs group/opt transition-all"
                   >
                     <span className="font-mono text-[10px] font-semibold text-foreground">
                       {opt.value}
                     </span>
                     <span className="text-muted-foreground text-[10px]">•</span>
                     <span className="text-foreground font-medium">
-                      {opt.label}
+                      {optionLabelCurrent}
                     </span>
+
+                    {/* Reusable Multilingual Translation Preview Badge */}
+                    <MultilingualBadge
+                      labels={opt.labels}
+                      fallbackText={opt.label}
+                      fallbackEnText={opt.labelEn}
+                      itemKey={opt.value}
+                      title={t(
+                        "moduleConfig.previewAllTranslations",
+                        "Bản dịch tùy chọn",
+                      )}
+                    />
+
+                    {/* In-Use Badge with Neutral Style & App Tooltip */}
                     {isOptionInUse && (
-                      <span
-                        className="text-[9px] px-1 py-0.2 rounded font-mono font-medium text-amber-800 dark:text-amber-300 bg-amber-100/80 dark:bg-amber-950/60"
-                        title={t(
+                      <Tooltip
+                        content={t(
                           "moduleConfig.optionInUseTooltip",
                           "Đang có {{count}} bản ghi sử dụng tùy chọn này, không thể xóa",
                         ).replace("{{count}}", String(usedCount))}
                       >
-                        {usedCount} {t("moduleConfig.used", "dùng")}
-                      </span>
+                        <span className="inline-flex items-center gap-1 text-[10px] font-mono px-1.5 py-0.5 rounded font-normal text-muted-foreground bg-black/5 dark:bg-white/5 border border-border/40 cursor-help hover:text-foreground transition-colors">
+                          <Database className="w-2.5 h-2.5 text-muted-foreground/80 shrink-0" />
+                          <span>{usedCount}</span>
+                        </span>
+                      </Tooltip>
                     )}
+
                     <button
                       type="button"
-                      onClick={() => handleStartEditOption(idx, opt.label)}
+                      onClick={() => handleStartEditOption(idx, opt)}
                       className="text-muted-foreground/60 group-hover/opt:text-muted-foreground hover:!text-foreground hover:bg-muted rounded p-0.5 transition-colors ml-0.5 cursor-pointer"
                       title={t("common.edit", "Sửa tên hiển thị")}
                     >
                       <Pencil className="w-2.5 h-2.5" />
                     </button>
+
                     {isOptionInUse ? (
                       <Tooltip
                         content={t(
@@ -1307,24 +1499,23 @@ export function ModuleCustomFieldConfigContent({
               })}
             </div>
           ) : (
-            <p className="text-[11px] text-muted-foreground italic">
+            <span className="text-[11px] text-muted-foreground italic px-1">
               {t(
                 "moduleConfig.noOptionsHint",
                 "Chưa có tùy chọn nào. Nhập Mã & Tên ở trên rồi bấm Thêm.",
               )}
-            </p>
+            </span>
           )}
         </div>
       )}
 
-      <div className="flex items-center justify-end gap-2 pt-2 border-t border-border/30">
+      <div className="flex items-center justify-end gap-2 pt-2 border-t border-border/30 mt-1">
         <Button
+          type="button"
+          variant="outline"
           size="sm"
-          variant="secondary"
           onClick={handleRequestCloseAttr}
-          disabled={
-            createAttrMutation.isPending || updateAttrMutation.isPending
-          }
+          className="text-xs h-8"
         >
           {t("common.cancel", "Hủy")}
         </Button>
@@ -1429,7 +1620,7 @@ export function ModuleCustomFieldConfigContent({
                         <span>{getFieldTypeShortLabel(attr.fieldType, t)}</span>
                       </Badge>
                       <span className="font-semibold text-foreground truncate">
-                        {resolveAttrName(attr, activeModuleKey, undefined, t)}
+                        {resolveAttrName(attr, activeModuleKey, locale, t)}
                       </span>
                       <span className="text-[11px] text-muted-foreground font-mono shrink-0">
                         ({attr.code})
@@ -1519,7 +1710,7 @@ export function ModuleCustomFieldConfigContent({
                         <span>{getFieldTypeShortLabel(attr.fieldType, t)}</span>
                       </Badge>
                       <span className="font-semibold text-foreground truncate">
-                        {resolveAttrName(attr, activeModuleKey, undefined, t)}
+                        {resolveAttrName(attr, activeModuleKey, locale, t)}
                       </span>
                       <span className="text-[11px] text-muted-foreground font-mono shrink-0">
                         ({attr.code})

@@ -273,6 +273,10 @@ export function useGrDrawer({
         if (customValues) {
           mappedForm.globalAttributes = customValues.globalAttributes || {};
           mappedForm.customAttributes = customValues.attributes || {};
+          if (customValues.globalAttributes?.type_inventory_receipt) {
+            mappedForm.receiptType =
+              customValues.globalAttributes.type_inventory_receipt;
+          }
         }
         setForm(mappedForm);
       } finally {
@@ -353,11 +357,16 @@ export function useGrDrawer({
           });
         }
 
-        // Lưu thuộc tính tùy chỉnh nếu có
-        if (targetId && (form.globalAttributes || form.customAttributes)) {
+        // Lưu thuộc tính tùy chỉnh & đồng bộ loại phiếu nhập vào globalAttributes
+        if (targetId) {
           try {
+            const globalAttrs = {
+              ...(form.globalAttributes || {}),
+              type_inventory_receipt:
+                form.receiptType || (form.purchaseOrderId ? "PO" : "OTHER"),
+            };
             await moduleConfigApi.saveEntityValues("GOODS_RECEIPT", targetId, {
-              globalAttributes: form.globalAttributes || {},
+              globalAttributes: globalAttrs,
               attributes: form.customAttributes || {},
             });
           } catch (cfErr) {

@@ -9,6 +9,10 @@ vi.mock("@/core/i18n", () => ({
   useT: () => (key: string, defaultText: string) => defaultText || key,
 }));
 
+vi.mock("@/core/config/appStore", () => ({
+  useAppStore: (selector: any) => selector({ locale: "vi" }),
+}));
+
 vi.mock("@/core/api/moduleConfigApi", () => ({
   moduleConfigApi: {
     getGlobalAttributeDefs: vi.fn(),
@@ -19,6 +23,8 @@ vi.mock("@/core/api/moduleConfigApi", () => ({
     getAttributeOptionsUsage: vi.fn(),
   },
   resolveAttrName: (attr: any) => attr?.name || "",
+  resolveOptionLabel: (opt: any) =>
+    opt?.label || opt?.labels?.vi || opt?.value || "",
 }));
 
 describe("ModuleCustomFieldConfigDrawer Component", () => {
@@ -152,21 +158,41 @@ describe("ModuleCustomFieldConfigDrawer Component", () => {
       const labelInput = screen.getByDisplayValue("Đơn mua hàng");
       expect(labelInput).toBeInTheDocument();
 
-      // Change label
+      // Change VI label directly on input
       fireEvent.change(labelInput, {
         target: { value: "Đơn mua hàng (PO mới)" },
+      });
+
+      // Open Multilingual Popover on inline option editor to set English translation
+      const inlineConfigBtns = screen.getAllByTitle(
+        "Cấu hình tên đa ngôn ngữ (VI, EN...)",
+      );
+      expect(inlineConfigBtns.length).toBeGreaterThanOrEqual(1);
+      fireEvent.click(inlineConfigBtns[inlineConfigBtns.length - 1]);
+
+      const enOptionInput = await screen.findByPlaceholderText(/English/i);
+      fireEvent.change(enOptionInput, {
+        target: { value: "Purchase Order (New PO)" },
       });
 
       // Click the main form "Lưu" button
       const saveFormBtn = screen.getByRole("button", { name: "Lưu" });
       fireEvent.click(saveFormBtn);
 
-      // Verify updateAttributeDef was called with updated options
+      // Verify updateAttributeDef was called with updated multilingual options
       expect(moduleConfigApi.updateAttributeDef).toHaveBeenCalledWith(
         "attr-sys-1",
         expect.objectContaining({
           options: [
-            { value: "PO", label: "Đơn mua hàng (PO mới)" },
+            {
+              value: "PO",
+              label: "Đơn mua hàng (PO mới)",
+              labelEn: "Purchase Order (New PO)",
+              labels: expect.objectContaining({
+                vi: "Đơn mua hàng (PO mới)",
+                en: "Purchase Order (New PO)",
+              }),
+            },
             { value: "OTHER", label: "Nhập khác" },
           ],
         }),
@@ -212,5 +238,60 @@ describe("ModuleCustomFieldConfigDrawer Component", () => {
         screen.queryByText("Chỉnh sửa thuộc tính mặc định"),
       ).not.toBeInTheDocument();
     }
+  });
+
+  it("creates a new attribute with bilingual nameEn and multilingual options", async () => {
+    vi.mocked(moduleConfigApi.getGlobalAttributeDefs).mockResolvedValue([]);
+    vi.mocked(moduleConfigApi.getAttributeDefs).mockResolvedValue([]);
+    vi.mocked(moduleConfigApi.createAttributeDef).mockResolvedValue({
+      id: "new-attr",
+    } as any);
+
+    render(
+      <ModuleCustomFieldConfigDrawer
+        open={true}
+        onClose={vi.fn()}
+        moduleKey="GOODS_RECEIPT"
+      />,
+      { wrapper },
+    );
+
+    // Click "Thêm thuộc tính"
+    const addBtn = await screen.findByText("Thêm thuộc tính");
+    fireEvent.click(addBtn);
+
+    // Fill in Code
+    const codeInput = await screen.findByPlaceholderText(
+      "VD: color, payment_status",
+    );
+    fireEvent.change(codeInput, { target: { value: "package_type" } });
+
+    // Fill in Name VI
+    const nameViInput = screen.getByPlaceholderText(
+      "VD: Màu sắc, Loại nhập...",
+    );
+    fireEvent.change(nameViInput, { target: { value: "Loại kiện hàng" } });
+
+    // Open Multilingual Popover to fill Name EN
+    const configBtn = screen.getByTitle("Cấu hình tên đa ngôn ngữ (VI, EN...)");
+    fireEvent.click(configBtn);
+    const nameEnInput = await screen.findByPlaceholderText(/English/i);
+    fireEvent.change(nameEnInput, { target: { value: "Package Type" } });
+
+    // Click "Tạo mới"
+    const saveBtn = screen.getByRole("button", { name: "Tạo mới" });
+    fireEvent.click(saveBtn);
+
+    await vi.waitFor(() => {
+      expect(moduleConfigApi.createAttributeDef).toHaveBeenCalledWith(
+        expect.objectContaining({
+          code: "package_type",
+          name: "Loại kiện hàng",
+          nameEn: "Package Type",
+          isGlobal: true,
+          moduleKeyGlobal: "GOODS_RECEIPT",
+        }),
+      );
+    });
   });
 });
