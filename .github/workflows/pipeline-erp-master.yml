@@ -84,13 +84,10 @@ jobs:
           cache-to: type=gha,mode=max
 
   deploy:
-    name: Deploy erp-master-demo Web through Komodo MAIN
+    name: Deploy Web SHA through Komodo
     runs-on: ubuntu-latest
     needs: build-and-push
     if: github.event_name == 'push'
-    concurrency:
-      group: erp-master-demo-komodo-deploy
-      cancel-in-progress: false
     permissions:
       contents: read
       packages: read
@@ -103,23 +100,36 @@ jobs:
           oauth-secret: ${{ secrets.TS_OAUTH_CLIENT_SECRET }}
           tags: tag:ci
 
-      - name: Guard Komodo secrets
+      - name: Guard Komodo deployment settings
         env:
           KOMODO_API_KEY: ${{ secrets.KOMODO_API_KEY }}
           KOMODO_API_SECRET: ${{ secrets.KOMODO_API_SECRET }}
           KOMODO_URL: ${{ vars.KOMODO_URL }}
-          TS_OAUTH_CLIENT_ID: ${{ secrets.TS_OAUTH_CLIENT_ID }}
-          TS_OAUTH_CLIENT_SECRET: ${{ secrets.TS_OAUTH_CLIENT_SECRET }}
         run: |
           set -euo pipefail
           test -n "$KOMODO_API_KEY" || (echo "KOMODO_API_KEY missing" && exit 1)
           test -n "$KOMODO_API_SECRET" || (echo "KOMODO_API_SECRET missing" && exit 1)
           test -n "$KOMODO_URL" || (echo "KOMODO_URL missing" && exit 1)
-          test -n "$TS_OAUTH_CLIENT_ID" || (echo "TS_OAUTH_CLIENT_ID missing" && exit 1)
-          test -n "$TS_OAUTH_CLIENT_SECRET" || (echo "TS_OAUTH_CLIENT_SECRET missing" && exit 1)
-          timeout 10 bash -c 'cat < /dev/null > /dev/tcp/100.72.115.106/9120'
 
-      - name: Pull images through Komodo
+      - name: Update Web immutable image reference
+        env:
+          KOMODO_API_KEY: ${{ secrets.KOMODO_API_KEY }}
+          KOMODO_API_SECRET: ${{ secrets.KOMODO_API_SECRET }}
+          KOMODO_URL: ${{ vars.KOMODO_URL }}
+          IMAGE_SHA: ${{ needs.build-and-push.outputs.sha }}
+        run: |
+          set -euo pipefail
+          image="${{ env.IMAGE_NAME }}:${IMAGE_SHA}"
+          payload="$(jq -n --arg stack "erp-master-demo-web" --arg image "$image" '{stack:$stack,file_path:".env",contents:("ERP_WEB_IMAGE=" + $image + "\n")}')"
+          curl --fail-with-body --silent --show-error \
+            -X POST "${KOMODO_URL}/write/WriteStackFileContents" \
+            -H "$(printf 'X-Api-%s: %s' Key "$KOMODO_API_KEY")" \
+            -H "X-Api-Secret: $KOMODO_API_SECRET" \
+            -H "Content-Type: application/json" \
+            --data "$payload" > komodo-write.json
+          jq -e . komodo-write.json >/dev/null
+
+      - name: Pull Web image through Komodo
         env:
           KOMODO_API_KEY: ${{ secrets.KOMODO_API_KEY }}
           KOMODO_API_SECRET: ${{ secrets.KOMODO_API_SECRET }}
@@ -131,11 +141,11 @@ jobs:
             -H "$(printf 'X-Api-%s: %s' Key "$KOMODO_API_KEY")" \
             -H "X-Api-Secret: $KOMODO_API_SECRET" \
             -H "Content-Type: application/json" \
-            --data '{"stack":"erp-master-demo"}' > komodo-pull.json
+            --data '{"stack":"erp-master-demo-web"}' > komodo-pull.json
           jq -e . komodo-pull.json >/dev/null
           jq '{id,success,error,result}' komodo-pull.json
 
-      - name: Deploy stack through Komodo
+      - name: Deploy Web through Komodo
         env:
           KOMODO_API_KEY: ${{ secrets.KOMODO_API_KEY }}
           KOMODO_API_SECRET: ${{ secrets.KOMODO_API_SECRET }}
@@ -147,20 +157,16 @@ jobs:
             -H "$(printf 'X-Api-%s: %s' Key "$KOMODO_API_KEY")" \
             -H "X-Api-Secret: $KOMODO_API_SECRET" \
             -H "Content-Type: application/json" \
-            --data '{"stack":"erp-master-demo"}' > komodo-deploy.json
+            --data '{"stack":"erp-master-demo-web"}' > komodo-deploy.json
           jq -e . komodo-deploy.json >/dev/null
           jq '{id,success,error,result}' komodo-deploy.json
 
-      - name: Verify erp-master-demo Web runtime
+      - name: Verify Web runtime
         run: |
           set -euo pipefail
           for i in $(seq 1 30); do
             code="$(curl --silent --output /dev/null --write-out '%{http_code}' http://100.69.94.117:8810/ || true)"
-            if [ "$code" = "200" ]; then
-              echo "Web runtime healthy: HTTP $code (attempt $i)"
-              exit 0
-            fi
-            echo "Web attempt $i/30: HTTP $code"
-            sleep 5
+            if [ "$code" = "200" ]; then echo "Web healthy: HTTP $code"; exit 0; fi
+            echo "Web attempt $i/30: HTTP $code"; sleep 5
           done
           exit 1
