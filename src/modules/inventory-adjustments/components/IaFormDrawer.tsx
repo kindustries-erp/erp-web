@@ -11,7 +11,13 @@
  * - Ghi chú in separate DrawerSection below Thông tin chung
  */
 import { useState, useMemo, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/shared/utils";
+import {
+  moduleConfigApi,
+  resolveOptionLabel,
+} from "@/core/api/moduleConfigApi";
+import { useAppStore } from "@/core/config/appStore";
 import { Button } from "@/shared/components/ui/Button";
 import { Combobox } from "@/shared/components/Combobox";
 import { CellInput } from "@/shared/components/CellInput";
@@ -34,6 +40,7 @@ import { FilterButton } from "@/shared/components/FilterPanel";
 import type { UseIaDrawerReturn } from "@/modules/inventory-adjustments/hooks/useIaDrawer";
 import { InventoryVoucherFormDrawer } from "@/modules/inventory-core/components/inventory-voucher-drawer/InventoryVoucherFormDrawer";
 import { useVoucherClientFilter } from "@/modules/inventory-core/hooks/useVoucherClientFilter";
+import { ModuleEntityCustomFieldsSection } from "@/shared/components/ModuleEntityCustomFieldsSection";
 
 function fmtQty(value?: string | number | null) {
   if (!value && value !== 0) return "0";
@@ -284,7 +291,7 @@ export function IaFormDrawer({ drawer }: IaFormDrawerProps) {
             className={cn(
               "w-full h-full min-h-[38px] text-right bg-transparent border-0 focus:ring-1 focus:ring-emerald-500 outline-none hover:bg-slate-50 focus:bg-white px-3 transition-all",
             )}
-            placeholder="SL thực"
+            placeholder={t("SL thực")}
             value={line.qtyAdjusted ?? ""}
             disabled={viewOnly || editing?.status === "POSTED"}
             onValueChange={(v) => {
@@ -462,6 +469,41 @@ export function IaFormDrawer({ drawer }: IaFormDrawerProps) {
 
   // ── Right panel content (Thông tin chung) ─────────────────────────────────
 
+  const locale = useAppStore((s) => s.locale);
+
+  // Lấy danh sách thuộc tính động cho INVENTORY_ADJUSTMENT để nạp options cho Lý do điều chỉnh (code: type_inventory_adjustment)
+  const { data: iaAttrDefs = [] } = useQuery({
+    queryKey: ["module-config-global-defs", "INVENTORY_ADJUSTMENT"],
+    queryFn: () =>
+      moduleConfigApi.getGlobalAttributeDefs("INVENTORY_ADJUSTMENT"),
+    staleTime: 60000,
+  });
+
+  const adjustmentReasonOptions = useMemo(() => {
+    const reasonDef = Array.isArray(iaAttrDefs)
+      ? iaAttrDefs.find(
+          (d) =>
+            (d?.code === "type_inventory_adjustment" ||
+              d?.code === "adjustment_reason" ||
+              d?.code === "reason") &&
+            !d?.isDeleted,
+        )
+      : undefined;
+    if (reasonDef?.options && reasonDef.options.length > 0) {
+      return reasonDef.options.map((opt) => ({
+        value: opt.value,
+        label: resolveOptionLabel(opt, locale, t),
+      }));
+    }
+    return [
+      { value: "PERIODIC", label: t("Kiểm kê định kỳ") },
+      { value: "DAMAGED", label: t("Hàng hỏng hóc / hao hụt") },
+      { value: "COUNT_ERROR", label: t("Sai lệch kiểm đếm") },
+      { value: "RECLASSIFY", label: t("Phân loại quy cách") },
+      { value: "OTHER", label: t("Lý do khác") },
+    ];
+  }, [iaAttrDefs, locale, t]);
+
   const rightPanelContent = (
     <>
       <DrawerField label={t("Số phiếu")}>
@@ -482,6 +524,29 @@ export function IaFormDrawer({ drawer }: IaFormDrawerProps) {
           onChange={(v) => setForm((f) => ({ ...f, adjustmentDate: v }))}
         />
       </DrawerField>
+      <DrawerField label={t("Lý do điều chỉnh")}>
+        <Combobox
+          options={adjustmentReasonOptions}
+          value={
+            form.globalAttributes?.type_inventory_adjustment ||
+            form.globalAttributes?.adjustment_reason ||
+            ""
+          }
+          disabled={viewOnly || editing?.status === "POSTED"}
+          placeholder={t("— Chọn —")}
+          allowClear={true}
+          onChange={(v) =>
+            setForm((f) => ({
+              ...f,
+              globalAttributes: {
+                ...f.globalAttributes,
+                type_inventory_adjustment: v || "",
+                adjustment_reason: v || "",
+              },
+            }))
+          }
+        />
+      </DrawerField>
     </>
   );
 
@@ -500,7 +565,7 @@ export function IaFormDrawer({ drawer }: IaFormDrawerProps) {
   // ── Section info ───────────────────────────────────────────────────────────
 
   const sectionTitle =
-    t("CHI TIẾT") +
+    t("Chi tiết") +
     " (" +
     (processedLines.length < form.lines.length
       ? `${processedLines.length}/${form.lines.length}`
@@ -570,7 +635,9 @@ export function IaFormDrawer({ drawer }: IaFormDrawerProps) {
             : t("Sửa điều chỉnh")
           : t("Tạo phiếu điều chỉnh")
       }
-      subtitle={editing?.adjustmentNo ?? t("Điều chỉnh kho")}
+      subtitle={
+        editing?.adjustmentNo ?? t("inventory.adjustment", "Điều chỉnh kho")
+      }
       statusBadge={statusBadge}
       onClose={close}
       onToggleEdit={
@@ -598,6 +665,21 @@ export function IaFormDrawer({ drawer }: IaFormDrawerProps) {
       // Right panel
       rightPanelContent={rightPanelContent}
       remarksContent={remarksContent}
+      customFieldsSlot={
+        <ModuleEntityCustomFieldsSection
+          moduleKey="INVENTORY_ADJUSTMENT"
+          entityId={editing?.id}
+          editMode={!viewOnly}
+          globalAttributes={form.globalAttributes}
+          onGlobalAttributesChange={(attrs) =>
+            setForm((f) => ({ ...f, globalAttributes: attrs }))
+          }
+          hideCategorySection={true}
+          globalTitle={t("moduleConfig.customFields", "Trường tùy chỉnh")}
+          globalCollapsible={true}
+          globalDefaultCollapsed={false}
+        />
+      }
       // No print slot for IA
       importModalSlot={
         <ImportExcelModal

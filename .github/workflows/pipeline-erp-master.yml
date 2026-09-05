@@ -84,73 +84,73 @@ jobs:
           cache-to: type=gha,mode=max
 
   deploy:
-    name: Deploy to Head
+    name: Deploy Web SHA through Komodo
     runs-on: ubuntu-latest
     needs: build-and-push
-    if: false # github.event_name == 'push'
+    if: github.event_name == 'push'
+    permissions:
+      contents: read
+      packages: read
 
     steps:
-      - name: Connect Tailscale
+      - name: Connect Tailscale to Komodo MAIN
         uses: tailscale/github-action@v3
         with:
           oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
           oauth-secret: ${{ secrets.TS_OAUTH_CLIENT_SECRET }}
           tags: tag:ci
 
-      - name: Install sshpass
-        run: sudo apt-get update && sudo apt-get install -y sshpass
-
-      - name: Guard deploy secrets
-        run: |
-          test -n "${{ secrets.GHCR_PAT }}" || (echo "GHCR_PAT missing" && exit 1)
-          test -n "${{ secrets.HEAD_PASSWORD }}" || (echo "HEAD_PASSWORD missing" && exit 1)
-
-      - name: Log in to GHCR
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Transfer Image to Head
+      - name: Guard Komodo deployment settings
         env:
-          SSHPASS: ${{ secrets.HEAD_PASSWORD }}
+          KOMODO_API_KEY: ${{ secrets.KOMODO_API_KEY }}
+          KOMODO_API_SECRET: ${{ secrets.KOMODO_API_SECRET }}
+          KOMODO_URL: ${{ vars.KOMODO_URL }}
         run: |
-          docker pull ${{ env.IMAGE_NAME }}:${{ needs.build-and-push.outputs.sha }}
-          docker save ${{ env.IMAGE_NAME }}:${{ needs.build-and-push.outputs.sha }} | \
-            sshpass -e ssh -o StrictHostKeyChecking=no \
-            -p ${{ vars.HEAD_PORT }} \
-            ${{ vars.HEAD_USER }}@${{ vars.HEAD_HOST }} \
-            "docker load"
+          set -euo pipefail
+          test -n "$KOMODO_API_KEY" || (echo "KOMODO_API_KEY missing" && exit 1)
+          test -n "$KOMODO_API_SECRET" || (echo "KOMODO_API_SECRET missing" && exit 1)
+          test -n "$KOMODO_URL" || (echo "KOMODO_URL missing" && exit 1)
 
-      - name: Run deploy script
+      - name: Update Web immutable image reference
         env:
-          SSHPASS: ${{ secrets.HEAD_PASSWORD }}
+          KOMODO_API_KEY: ${{ secrets.KOMODO_API_KEY }}
+          KOMODO_API_SECRET: ${{ secrets.KOMODO_API_SECRET }}
+          KOMODO_URL: ${{ vars.KOMODO_URL }}
+          IMAGE_SHA: ${{ needs.build-and-push.outputs.sha }}
         run: |
-          sshpass -e ssh -o StrictHostKeyChecking=no \
-            -p ${{ vars.HEAD_PORT }} \
-            ${{ vars.HEAD_USER }}@${{ vars.HEAD_HOST }} \
-            "docker rm -f erp-web-master || true ; \
-             docker run -d --name erp-web-master --restart always --add-host erp-api-master:host-gateway -p 8010:80 ${{ env.IMAGE_NAME }}:${{ needs.build-and-push.outputs.sha }}"
+          set -euo pipefail
+          image="${{ env.IMAGE_NAME }}:${IMAGE_SHA}"
+          payload="$(jq -n --arg stack "erp-master-demo-web" --arg image "$image" '{stack:$stack,file_path:".env",contents:("ERP_WEB_IMAGE=" + $image + "\n")}')"
+          curl --fail-with-body --silent --show-error \
+            -X POST "${KOMODO_URL}/write/WriteStackFileContents" \
+            -H "$(printf 'X-Api-%s: %s' Key "$KOMODO_API_KEY")" \
+            -H "X-Api-Secret: $KOMODO_API_SECRET" \
+            -H "Content-Type: application/json" \
+            --data "$payload" > komodo-write.json
+          jq -e . komodo-write.json >/dev/null
 
-      - name: Health check
+      - name: Run Komodo Web release procedure
         env:
-          SSHPASS: ${{ secrets.HEAD_PASSWORD }}
+          KOMODO_API_KEY: ${{ secrets.KOMODO_API_KEY }}
+          KOMODO_API_SECRET: ${{ secrets.KOMODO_API_SECRET }}
+          KOMODO_URL: ${{ vars.KOMODO_URL }}
         run: |
-          sshpass -e ssh -o StrictHostKeyChecking=no \
-            -p ${{ vars.HEAD_PORT }} \
-            ${{ vars.HEAD_USER }}@${{ vars.HEAD_HOST }} \
-            '
-              for i in $(seq 1 20); do
-                code=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8010/ || true)
-                if [ "$code" = "200" ]; then
-                  echo "✅ Web health OK"
-                  docker image prune -af
-                  exit 0
-                fi
-                echo "Attempt $i: got $code, retrying..."
-                sleep 3
-              done
-              echo "❌ Health check failed"
-              exit 1
-            '
+          set -euo pipefail
+          curl --fail-with-body --silent --show-error \
+            -X POST "${KOMODO_URL}/execute/RunProcedure" \
+            -H "$(printf 'X-Api-%s: %s' Key "$KOMODO_API_KEY")" \
+            -H "X-Api-Secret: $KOMODO_API_SECRET" \
+            -H "Content-Type: application/json" \
+            --data '{"procedure":"erp-demo-web-release"}' > komodo-procedure.json
+          jq -e . komodo-procedure.json >/dev/null
+          jq '{id,success,error,result}' komodo-procedure.json
+
+      - name: Verify Web runtime
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 30); do
+            code="$(curl --silent --output /dev/null --write-out '%{http_code}' http://100.69.94.117:8810/ || true)"
+            if [ "$code" = "200" ]; then echo "Web healthy: HTTP $code"; exit 0; fi
+            echo "Web attempt $i/30: HTTP $code"; sleep 5
+          done
+          exit 1

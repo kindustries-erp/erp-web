@@ -23,6 +23,7 @@ import { GrFormRightPanel } from "./components/GrFormRightPanel";
 import { GrFormSectionTitleExtra } from "./components/GrFormSectionTitleExtra";
 import { buildGrFormActions } from "./components/GrFormActions";
 import { GrFormExcelImport } from "./components/GrFormExcelImport";
+import { ModuleEntityCustomFieldsSection } from "@/shared/components/ModuleEntityCustomFieldsSection";
 
 export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
   const {
@@ -198,7 +199,7 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
               : t("Sửa nhập kho")
             : t("Tạo phiếu nhập kho")
         }
-        subtitle={editing?.receiptNo ?? t("Nhập kho")}
+        subtitle={editing?.receiptNo ?? t("inventory.receipt", "Nhập kho")}
         statusBadge={statusBadge}
         onClose={close}
         onToggleEdit={
@@ -225,6 +226,21 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
         // Right panel
         rightPanelContent={rightPanelContent}
         remarksContent={remarksContent}
+        customFieldsSlot={
+          <ModuleEntityCustomFieldsSection
+            moduleKey="GOODS_RECEIPT"
+            entityId={editing?.id}
+            editMode={!viewOnly}
+            globalAttributes={form.globalAttributes}
+            onGlobalAttributesChange={(attrs) =>
+              setForm((f) => ({ ...f, globalAttributes: attrs }))
+            }
+            hideCategorySection={true}
+            globalTitle={t("moduleConfig.customFields", "Trường tùy chỉnh")}
+            globalCollapsible={true}
+            globalDefaultCollapsed={false}
+          />
+        }
         // Slots
         printSlot={
           <div className="hidden">

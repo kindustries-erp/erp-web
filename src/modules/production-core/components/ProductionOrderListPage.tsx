@@ -8,8 +8,8 @@ import {
   ArrowRight,
   CheckCircle2,
   FileSpreadsheet,
-  Plus,
   Pencil,
+  Settings,
 } from "lucide-react";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
@@ -19,6 +19,7 @@ import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
 import { Forbidden } from "@/pages/Forbidden";
 import { useT } from "@/core/i18n";
 import { useUIStore } from "@/core/config/uiStore";
+import { useAppStore } from "@/core/config/appStore";
 import { Progress } from "@/shared/components/ui/progress";
 import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
 import { DateRangeColumnSlot } from "@/shared/components/DataTable/DateRangeColumnSlot";
@@ -51,6 +52,7 @@ function fmtQty(value?: string | null) {
 export function ProductionOrderListPage() {
   const t = useT();
   const showToast = useUIStore((s) => s.showToast);
+  const { openCustomFieldsDrawer } = useAppStore();
   const canRead = useHasPermission(ErpResource.PRODUCTION, ErpAction.READ);
   const canCreate = useHasPermission(ErpResource.PRODUCTION, ErpAction.CREATE);
   const canUpdate = useHasPermission(ErpResource.PRODUCTION, ErpAction.UPDATE);
@@ -664,22 +666,19 @@ export function ProductionOrderListPage() {
       onPage={setPage}
       onPageSize={setPageSize}
       onRefresh={loadData}
-      createActions={
-        canCreate
-          ? [
-              {
-                groupLabel: t("groupThemMoi", "Thêm mới"),
-                items: [
-                  {
-                    label: t("common.create", "Tạo mới"),
-                    icon: <Plus className="w-4 h-4 text-emerald-600" />,
-                    onClick: handleCreate,
-                  },
-                ],
-              },
-            ]
-          : undefined
-      }
+      onCreate={canCreate ? handleCreate : undefined}
+      createActions={[
+        {
+          groupLabel: t("groupCauHinh", "Cấu hình"),
+          items: [
+            {
+              label: t("productionConfig.title", "Cấu hình sản xuất"),
+              icon: <Settings className="w-4 h-4 text-muted-foreground" />,
+              onClick: () => openCustomFieldsDrawer("PRODUCTION", "Sản xuất"),
+            },
+          ],
+        },
+      ]}
       activeFilterCount={filter.activeFilterCount}
       onClearAllFilters={filter.resetAll}
       sortArray={
@@ -688,18 +687,12 @@ export function ProductionOrderListPage() {
       onSort={handleSort}
       rowActions={(item) => [
         {
-          groupLabel: t("Tra cứu"),
+          groupLabel: t("groupTraCuu", "Tra cứu"),
           items: [
             {
               label: t("Chi tiết"),
               onClick: () => handleEdit(item.id, true),
               icon: <Eye className="h-[13px] w-[13px]" />,
-            },
-            {
-              label: t("Chỉnh sửa"),
-              onClick: () => handleEdit(item.id, false),
-              icon: <Pencil className="h-[13px] w-[13px]" />,
-              hidden: !canUpdate || item.status === "CANCELLED",
             },
             {
               label: t("Xuất XLSX"),
@@ -710,8 +703,14 @@ export function ProductionOrderListPage() {
           ],
         },
         {
-          groupLabel: t("Thao tác"),
+          groupLabel: t("groupThaoTac", "Thao tác"),
           items: [
+            {
+              label: t("Chỉnh sửa"),
+              onClick: () => handleEdit(item.id, false),
+              icon: <Pencil className="h-[13px] w-[13px]" />,
+              hidden: !canUpdate || item.status === "CANCELLED",
+            },
             {
               label:
                 item.status === "IN_PROGRESS"
@@ -722,9 +721,9 @@ export function ProductionOrderListPage() {
               onClick: () => handleOpenProductionRun(item),
               icon:
                 item.status === "IN_PROGRESS" ? (
-                  <ArrowRight className="h-[13px] w-[13px] text-blue-600" />
+                  <ArrowRight className="h-[13px] w-[13px]" />
                 ) : item.status === "COMPLETED" ? (
-                  <CheckCircle2 className="h-[13px] w-[13px] text-emerald-600" />
+                  <CheckCircle2 className="h-[13px] w-[13px]" />
                 ) : (
                   <PlayCircle className="h-[13px] w-[13px]" />
                 ),
@@ -735,21 +734,28 @@ export function ProductionOrderListPage() {
                 ),
             },
             {
-              label: item.status === "DRAFT" ? t("Xóa lệnh") : t("Hủy lệnh"),
-              onClick: () =>
-                item.status === "DRAFT"
-                  ? setDeleteTarget(item)
-                  : setCancelTarget(item),
-              icon:
-                item.status === "DRAFT" ? (
-                  <Trash2 className="h-[13px] w-[13px]" />
-                ) : (
-                  <XCircle className="h-[13px] w-[13px]" />
-                ),
+              label: t("Hủy lệnh"),
+              onClick: () => setCancelTarget(item),
+              icon: <XCircle className="h-[13px] w-[13px]" />,
               variant: "danger",
-              hidden:
-                !canDelete ||
-                (item.status !== "DRAFT" && item.status !== "CONFIRMED"),
+              hidden: !canDelete || item.status !== "CONFIRMED",
+            },
+            {
+              label: t("Xóa lệnh"),
+              onClick: () => setDeleteTarget(item),
+              icon: <Trash2 className="h-[13px] w-[13px]" />,
+              variant: "danger",
+              hidden: !canDelete || item.status !== "DRAFT",
+            },
+          ],
+        },
+        {
+          groupLabel: t("groupCauHinh", "Cấu hình"),
+          items: [
+            {
+              label: t("productionConfig.title", "Cấu hình sản xuất"),
+              onClick: () => openCustomFieldsDrawer("PRODUCTION", "Sản xuất"),
+              icon: <Settings className="h-[13px] w-[13px]" />,
             },
           ],
         },

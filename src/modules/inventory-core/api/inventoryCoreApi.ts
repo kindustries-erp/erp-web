@@ -9,6 +9,8 @@ export type ListParams = BaseListParams & {
   itemTypeId?: string;
   status?: string;
   ids?: string;
+  column_search?: string;
+  column_filters?: string;
 };
 
 import type { InventoryConnectionsData } from "./../hooks/useInventoryGraph";
@@ -173,6 +175,8 @@ function p(params: ListParams = {}) {
     ...(params.itemTypeId ? { itemTypeId: params.itemTypeId } : {}),
     ...(params.status ? { status: params.status } : {}),
     ...(params.ids ? { ids: params.ids } : {}),
+    ...(params.column_search ? { column_search: params.column_search } : {}),
+    ...(params.column_filters ? { column_filters: params.column_filters } : {}),
   };
 }
 
@@ -186,6 +190,34 @@ export const inventoryCoreApi = {
       const { data } = await axiosInstance.get<
         PaginatedResponse<ErpInventoryItem>
       >(BASE, { params: requestParams });
+      return data;
+    });
+  },
+  getColumnOptions: async (
+    column: string,
+    search?: string,
+    page: number = 1,
+    pageSize: number = 20,
+    filtersStr?: string,
+  ): Promise<{
+    items: { label: string; value: string }[];
+    total: number;
+    next: number | null;
+  }> => {
+    const params = {
+      column,
+      search: search || undefined,
+      page,
+      pageSize,
+      filters: filtersStr || undefined,
+    };
+    const key = `inventory-items:column-options:${JSON.stringify(params)}`;
+    return dedupeRequest(key, async () => {
+      const { data } = await axiosInstance.get<{
+        items: { label: string; value: string; count?: number }[];
+        total: number;
+        next: number | null;
+      }>(`${BASE}/column-options`, { params });
       return data;
     });
   },

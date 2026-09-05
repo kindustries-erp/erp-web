@@ -44,7 +44,7 @@ export function FilterButton({
       return (
         <div
           className={cn(
-            "inline-flex items-stretch h-8 rounded-lg border border-border bg-surface text-foreground shadow-xs hover:border-primary/40 transition-colors animate-in fade-in duration-150 overflow-hidden",
+            "inline-flex items-stretch h-8 rounded-lg border border-border bg-surface text-foreground shadow-xs hover:border-border-hover transition-colors animate-in fade-in duration-150 overflow-hidden",
             className,
           )}
         >
@@ -53,14 +53,14 @@ export function FilterButton({
               type="button"
               onClick={onClick}
               className={cn(
-                "flex items-center gap-1 pl-2.5 pr-1.5 text-xs font-semibold text-foreground transition-colors outline-none",
+                "flex items-center gap-1.5 px-2.5 text-xs font-semibold text-foreground transition-colors outline-none",
                 onClick
-                  ? "hover:bg-surface-hover hover:text-primary cursor-pointer"
+                  ? "hover:bg-muted hover:text-foreground cursor-pointer"
                   : "cursor-default",
               )}
             >
-              <Filter className="h-3.5 w-3.5 text-primary shrink-0" />
-              <span className="leading-none text-[11px] text-primary font-bold">
+              <Filter className="h-3.5 w-3.5 text-foreground shrink-0" />
+              <span className="leading-none text-[11px] text-foreground font-bold">
                 ({activeCount})
               </span>
             </button>
@@ -69,7 +69,7 @@ export function FilterButton({
             <button
               type="button"
               onClick={onClear}
-              className="flex items-center justify-center px-2 text-muted-foreground hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/40 transition-colors outline-none cursor-pointer"
+              className="flex items-center justify-center px-2 text-muted-foreground hover:bg-destructive/10 hover:text-destructive border-l border-border/80 transition-colors outline-none cursor-pointer"
             >
               <X className="h-3.5 w-3.5" />
             </button>

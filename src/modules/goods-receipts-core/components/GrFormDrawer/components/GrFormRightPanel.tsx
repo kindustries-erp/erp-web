@@ -1,8 +1,15 @@
+import { useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { ExternalLink } from "lucide-react";
 import { Tooltip, TooltipProvider } from "@/core/components/ui/Tooltip";
 import { Combobox } from "@/shared/components/Combobox";
 import { DatePicker } from "@/shared/components/DatePicker";
 import { DrawerField, inputCls } from "@/shared/components/DrawerModal";
+import {
+  moduleConfigApi,
+  resolveOptionLabel,
+} from "@/core/api/moduleConfigApi";
+import { useAppStore } from "@/core/config/appStore";
 import type { UseGrDrawerReturn } from "@/modules/goods-receipts-core/hooks/useGrDrawer";
 
 interface GrFormRightPanelProps {
@@ -12,6 +19,39 @@ interface GrFormRightPanelProps {
 
 export function GrFormRightPanel({ drawer, t }: GrFormRightPanelProps) {
   const { form, setForm, viewOnly, editing, poOptions } = drawer;
+  const locale = useAppStore((s) => s.locale);
+
+  // Lấy danh sách thuộc tính động cho GOODS_RECEIPT để nạp options cho Loại nhập kho (code: type_inventory_receipt)
+  const { data: grAttrDefs = [] } = useQuery({
+    queryKey: ["module-config-global-defs", "GOODS_RECEIPT"],
+    queryFn: () => moduleConfigApi.getGlobalAttributeDefs("GOODS_RECEIPT"),
+    staleTime: 60000,
+  });
+
+  const receiptTypeOptions = useMemo(() => {
+    const typeDef = Array.isArray(grAttrDefs)
+      ? grAttrDefs.find(
+          (d) =>
+            (d?.code === "type_inventory_receipt" ||
+              d?.code === "type" ||
+              d?.code === "receipt_type") &&
+            !d?.isDeleted,
+        )
+      : undefined;
+    if (typeDef?.options && typeDef.options.length > 0) {
+      return typeDef.options.map((opt) => ({
+        label: resolveOptionLabel(opt, locale, t),
+        value: opt.value,
+      }));
+    }
+    return [
+      { label: t("Đơn mua hàng (PO)"), value: "PO" },
+      { label: t("Nhập sản xuất"), value: "PRODUCTION" },
+      { label: t("Nhập trả hàng"), value: "RETURN" },
+      { label: t("Nhập bảo hành"), value: "WARRANTY" },
+      { label: t("Nhập khác"), value: "OTHER" },
+    ];
+  }, [grAttrDefs, locale, t]);
 
   return (
     <>
@@ -35,19 +75,15 @@ export function GrFormRightPanel({ drawer, t }: GrFormRightPanelProps) {
       </DrawerField>
       <DrawerField label={t("Loại nhập")}>
         <Combobox
-          options={[
-            { label: t("— Chọn —"), value: "" },
-            { label: t("Đơn mua hàng"), value: "PO" },
-            { label: t("Nhập khác"), value: "OTHER" },
-          ]}
+          options={receiptTypeOptions}
           value={form.receiptType}
           onChange={(val) => {
             if (val === "PO") {
               setForm((f) => ({ ...f, receiptType: "PO", lines: [] }));
-            } else if (val === "OTHER") {
+            } else {
               setForm((f) => ({
                 ...f,
-                receiptType: "OTHER",
+                receiptType: val || "OTHER",
                 purchaseOrderId: "",
                 lines: [],
               }));
@@ -55,7 +91,7 @@ export function GrFormRightPanel({ drawer, t }: GrFormRightPanelProps) {
           }}
           disabled={viewOnly || editing !== null}
           placeholder={t("— Chọn —")}
-          allowClear={false}
+          allowClear={true}
         />
       </DrawerField>
       {form.receiptType === "PO" && (

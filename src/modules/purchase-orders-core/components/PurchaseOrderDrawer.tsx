@@ -54,37 +54,38 @@ export interface PurchaseOrderDrawerProps {
   partnerViewMode?: "orders" | "lines";
 }
 
-function formatPoStatus(status?: string | null) {
+function formatPoStatus(status?: string | null, t?: (k: string) => string) {
+  const tr = (k: string) => (t ? t(k) : k);
   switch (status) {
     case "DRAFT":
       return {
-        label: "Nháp",
+        label: tr("Nháp"),
         variant: "secondary" as const,
         className: "bg-amber-50 text-amber-700 border-amber-200",
       };
     case "APPROVED":
     case "CONFIRMED":
       return {
-        label: "Đã xác nhận",
+        label: tr("Đã xác nhận"),
         variant: "default" as const,
         className: "bg-blue-50 text-blue-700 border-blue-200",
       };
     case "PARTIAL_RECEIVED":
       return {
-        label: "Nhập một phần",
+        label: tr("Nhập một phần"),
         variant: "default" as const,
         className: "bg-indigo-50 text-indigo-700 border-indigo-200",
       };
     case "RECEIVED":
     case "FULLY_RECEIVED":
       return {
-        label: "Đã nhập đủ",
+        label: tr("Đã nhập đủ"),
         variant: "default" as const,
         className: "bg-emerald-50 text-emerald-700 border-emerald-200",
       };
     case "CANCELLED":
       return {
-        label: "Đã hủy",
+        label: tr("Đã hủy"),
         variant: "destructive" as const,
         className: "bg-rose-50 text-rose-700 border-rose-200",
       };
@@ -453,7 +454,7 @@ export function PurchaseOrderDrawer({
 
   const mode: DrawerMode = viewOnly ? "view" : editing ? "edit" : "create";
 
-  const statusBadgeMeta = formatPoStatus(status);
+  const statusBadgeMeta = formatPoStatus(status, t);
 
   return (
     <>
@@ -479,12 +480,14 @@ export function PurchaseOrderDrawer({
               : t("Tạo mới Đơn mua hàng")
         }
         titleExtra={
-          <Badge
-            variant={statusBadgeMeta.variant}
-            className={`border ${statusBadgeMeta.className} text-[11px]`}
-          >
-            {statusBadgeMeta.label}
-          </Badge>
+          editing ? (
+            <Badge
+              variant={statusBadgeMeta.variant}
+              className={`border ${statusBadgeMeta.className} text-[11px]`}
+            >
+              {statusBadgeMeta.label}
+            </Badge>
+          ) : undefined
         }
         subtitle={
           editing

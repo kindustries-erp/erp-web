@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import * as Popover from "@radix-ui/react-popover";
 import { Check, ChevronDown, Search, X } from "lucide-react";
 import { cn } from "@/shared/utils";
 import { Tooltip } from "@/core/components/ui/Tooltip";
+import { useT } from "@/core/i18n";
 
 export interface ComboboxOption {
   value: string;
@@ -33,7 +34,7 @@ export function Combobox({
   options,
   value,
   onChange,
-  placeholder = "— Chọn —",
+  placeholder,
   searchPlaceholder = "Tìm kiếm...",
   emptyLabel = "Không tìm thấy.",
   className,
@@ -46,6 +47,10 @@ export function Combobox({
   fallbackLabel,
   variant = "default",
 }: ComboboxProps) {
+  const t = useT();
+  const defaultPlaceholder = t("common.select", "— Chọn —");
+  const effectivePlaceholder = placeholder ?? defaultPlaceholder;
+
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -53,13 +58,18 @@ export function Combobox({
   const onSearchRef = useRef(onSearch);
   onSearchRef.current = onSearch;
 
+  const normalizedOptions = useMemo(() => {
+    if (!allowClear) return options;
+    return options.filter((o) => o.value !== "" && o.value !== undefined);
+  }, [options, allowClear]);
+
   const selected = options.find((o) => o.value === value);
 
   const filtered = query.trim()
-    ? options.filter((o) =>
+    ? normalizedOptions.filter((o) =>
         (o.searchText || o.label).toLowerCase().includes(query.toLowerCase()),
       )
-    : options;
+    : normalizedOptions;
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const target = e.currentTarget;
@@ -129,7 +139,7 @@ export function Combobox({
                   ? selected.label
                   : value && fallbackLabel
                     ? fallbackLabel
-                    : placeholder}
+                    : effectivePlaceholder}
               </span>
               {selected?.subLabel && (
                 <span className="truncate text-[10px] text-[color:var(--muted-fg)] leading-tight mt-0.5">
@@ -197,7 +207,7 @@ export function Combobox({
                       : "opacity-100 text-[color:var(--primary)]",
                   )}
                 />
-                {placeholder}
+                {effectivePlaceholder}
               </button>
             )}
 

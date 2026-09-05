@@ -48,10 +48,13 @@ import { legacyStringsEn } from "@/core/locale/system/legacyStrings/en";
 import { inventoryTrackingLotEn } from "@/core/locale/inventory/inventoryTrackingLot/en";
 import { inventoryTrackingCustomEn } from "@/core/locale/inventory/inventoryTrackingCustom/en";
 import { bomConfigEn } from "@/core/locale/manufacturing/bomConfig/en";
+import { productionConfigEn } from "@/core/locale/manufacturing/productionConfig/en";
 import { changelogEn } from "@/core/locale/system/changelog/en";
 import { moduleConfigEn } from "@/core/locale/settings/moduleConfig/en";
 
 export const en: Dict = {
+  ...legacyStringsEn,
+  productionConfig: productionConfigEn,
   moduleConfig: moduleConfigEn,
   nav: navEn,
   activityLogs: activityLogsEn,
@@ -232,5 +235,12 @@ export const en: Dict = {
   inventoryTrackingLot: inventoryTrackingLotEn,
   inventoryTrackingCustom: inventoryTrackingCustomEn,
   bomConfig: bomConfigEn,
+  "Nhập ghi chú cho lệnh sản xuất...":
+    legacyStringsEn["Nhập ghi chú cho lệnh sản xuất..."],
+  "Ghi chú thêm...": legacyStringsEn["Ghi chú thêm..."],
+  "Cấu hình sản xuất": legacyStringsEn["Cấu hình sản xuất"],
+  "productionConfig.title": legacyStringsEn["productionConfig.title"],
+  "production.customFields": legacyStringsEn["production.customFields"],
+  "production.productionConfig": legacyStringsEn["production.productionConfig"],
   changelog: changelogEn,
 };

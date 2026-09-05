@@ -24,6 +24,7 @@ import type {
   VisibilityState,
 } from "@tanstack/react-table";
 import { useT } from "@/core/i18n";
+import { Tooltip } from "@/core/components/ui/Tooltip";
 import type { SortableItemProps, DataTableRowMeta } from "../types";
 
 export function SortableColumnItem<T>({ id, column }: SortableItemProps<T>) {
@@ -135,21 +136,22 @@ export function ColumnToggle<T>({ table, onReset }: ColumnToggleProps<T>) {
 
   return (
     <Popover.Root modal={false} open={open} onOpenChange={setOpen}>
-      <Popover.Trigger asChild>
-        <Button
-          variant="secondary"
-          size="icon"
-          className="h-8 w-8 px-0"
-          title={t("table.columnVisibility", "Tùy chỉnh cột")}
-          onClick={(e) => {
-            e.stopPropagation();
-            setOpen(true);
-          }}
-          onPointerDown={(e) => e.stopPropagation()}
-        >
-          <Settings2 className="h-4 w-4" />
-        </Button>
-      </Popover.Trigger>
+      <Tooltip content={t("table.columnVisibility", "Tùy chỉnh cột")}>
+        <Popover.Trigger asChild>
+          <Button
+            variant="secondary"
+            size="icon"
+            className="h-8 w-8 px-0"
+            onClick={(e) => {
+              e.stopPropagation();
+              setOpen(true);
+            }}
+            onPointerDown={(e) => e.stopPropagation()}
+          >
+            <Settings2 className="h-4 w-4" />
+          </Button>
+        </Popover.Trigger>
+      </Tooltip>
       <Popover.Portal>
         <Popover.Content
           align="end"

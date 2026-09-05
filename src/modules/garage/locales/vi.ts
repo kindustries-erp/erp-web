@@ -41,7 +41,7 @@ export const garageVi = {
   },
   cases: {
     title: "Phiếu dịch vụ",
-    desc: "Quản lý phiếu dịch vụ và sổ báo giá từ hệ thống xưởng Garage",
+    desc: "Quản lý phiếu dịch vụ & sổ báo giá Garage",
     tabs: {
       all: "Tất cả",
       quotation: "Báo giá",
@@ -136,7 +136,7 @@ export const garageVi = {
       costUnpaid: "Chưa chi",
     },
     actions: {
-      syncCases: "Đồng bộ Sổ báo giá",
+      syncCases: "Đồng bộ",
       syncGrossProfit: "Đồng bộ Lợi nhuận gộp",
       syncOptions: "Tùy chọn đồng bộ",
       syncDetails: "Đồng bộ từ KGara",

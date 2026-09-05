@@ -14,6 +14,7 @@ import {
 } from "@/modules/production-core/api/productionCoreApi";
 import { salesOrdersCoreApi } from "@/modules/sales-orders-core/api/salesOrdersCoreApi";
 import { useBasicMasterInfinite } from "@/modules/basic-masters/hooks/useBasicMasterInfinite";
+import { moduleConfigApi } from "@/core/api/moduleConfigApi";
 import { useT } from "@/core/i18n";
 
 const LOOKUP_LIMIT = 200;
@@ -39,6 +40,8 @@ export interface GiForm {
   status: string;
   remarks: string;
   lines: GiLineForm[];
+  globalAttributes?: Record<string, any>;
+  customAttributes?: Record<string, any>;
 }
 
 export function isMoLinkedGiLocked(
@@ -68,6 +71,8 @@ export const emptyGiForm = (): GiForm => ({
   status: "DRAFT",
   remarks: "",
   lines: [],
+  globalAttributes: {},
+  customAttributes: {},
 });
 
 export function buildGiForm(gi: ErpGoodsIssue): GiForm {
@@ -92,6 +97,8 @@ export function buildGiForm(gi: ErpGoodsIssue): GiForm {
           unitCost: line.unitCost ?? "",
         }))
       : [emptyGiLine()],
+    globalAttributes: {},
+    customAttributes: {},
   };
 }
 
@@ -302,9 +309,21 @@ export function useGiDrawer({
       setOpen(true);
       await loadGiLookups();
       try {
-        const detail = await goodsIssuesCoreApi.get(id);
+        const [detail, customValues] = await Promise.all([
+          goodsIssuesCoreApi.get(id),
+          moduleConfigApi.getEntityValues("GOODS_ISSUE", id).catch(() => null),
+        ]);
         setEditing(detail);
-        setForm(buildGiForm(detail));
+        const mappedForm = buildGiForm(detail);
+        if (customValues) {
+          mappedForm.globalAttributes = customValues.globalAttributes || {};
+          mappedForm.customAttributes = customValues.attributes || {};
+          if (customValues.globalAttributes?.type_inventory_issue) {
+            mappedForm.issueType =
+              customValues.globalAttributes.type_inventory_issue;
+          }
+        }
+        setForm(mappedForm);
 
         if (detail.salesOrderId) {
           salesOrdersCoreApi
@@ -343,11 +362,13 @@ export function useGiDrawer({
         if (statusOverride) {
           (payload as any).status = statusOverride;
         }
+        let targetId = "";
         if (editing) {
           await goodsIssuesCoreApi.update(editing.id, payload);
           if (statusOverride === "POSTED" && editing.status !== "POSTED") {
             await goodsIssuesCoreApi.post(editing.id);
           }
+          targetId = editing.id;
           showToast({
             title: t("Đã cập nhật phiếu xuất kho"),
             variant: "success",
@@ -357,11 +378,29 @@ export function useGiDrawer({
           if (statusOverride === "POSTED") {
             await goodsIssuesCoreApi.post(created.id);
           }
+          targetId = created.id;
           showToast({
             title: t("Tạo phiếu xuất kho thành công"),
             variant: "success",
           });
         }
+
+        // Lưu thuộc tính tùy chỉnh & đồng bộ loại xuất kho vào globalAttributes
+        if (targetId) {
+          try {
+            const globalAttrs = {
+              ...(form.globalAttributes || {}),
+              type_inventory_issue: form.issueType || "OTHER",
+            };
+            await moduleConfigApi.saveEntityValues("GOODS_ISSUE", targetId, {
+              globalAttributes: globalAttrs,
+              attributes: form.customAttributes || {},
+            });
+          } catch (cfErr) {
+            console.warn("Failed to save GI custom fields", cfErr);
+          }
+        }
+
         setOpen(false);
         if (invalidateWarehouseQuery) {
           await queryClient.invalidateQueries({

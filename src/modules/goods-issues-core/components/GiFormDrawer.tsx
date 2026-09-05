@@ -3,10 +3,16 @@
  * Builds type-specific config from useGiDrawer() and delegates rendering
  * to the unified InventoryVoucherFormDrawer shell.
  */
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { ExternalLink } from "lucide-react";
 import { Tooltip, TooltipProvider } from "@/core/components/ui/Tooltip";
 import { cn } from "@/shared/utils";
+import {
+  moduleConfigApi,
+  resolveOptionLabel,
+} from "@/core/api/moduleConfigApi";
+import { useAppStore } from "@/core/config/appStore";
 import { fmtQty } from "@/shared/utils/format";
 import { Button } from "@/shared/components/ui/Button";
 import { Combobox } from "@/shared/components/Combobox";
@@ -39,6 +45,7 @@ import {
   type UseGiDrawerReturn,
 } from "@/modules/goods-issues-core/hooks/useGiDrawer";
 import { InventoryVoucherFormDrawer } from "@/modules/inventory-core/components/inventory-voucher-drawer/InventoryVoucherFormDrawer";
+import { ModuleEntityCustomFieldsSection } from "@/shared/components/ModuleEntityCustomFieldsSection";
 
 interface GiFormDrawerProps {
   drawer: UseGiDrawerReturn;
@@ -446,11 +453,39 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
 
   // ── Actions ────────────────────────────────────────────────────────────────
 
-  const ISSUE_TYPE_OPTIONS = [
-    { value: "", label: t("— Chọn —") },
-    { value: "SALE", label: t("Xuất bán") },
-    { value: "OTHER", label: t("Xuất khác") },
-  ];
+  const locale = useAppStore((s) => s.locale);
+
+  // Lấy danh sách thuộc tính động cho GOODS_ISSUE để nạp options cho Loại xuất kho (code: type_inventory_issue)
+  const { data: giAttrDefs = [] } = useQuery({
+    queryKey: ["module-config-global-defs", "GOODS_ISSUE"],
+    queryFn: () => moduleConfigApi.getGlobalAttributeDefs("GOODS_ISSUE"),
+    staleTime: 60000,
+  });
+
+  const ISSUE_TYPE_OPTIONS = useMemo(() => {
+    const typeDef = Array.isArray(giAttrDefs)
+      ? giAttrDefs.find(
+          (d) =>
+            (d?.code === "type_inventory_issue" ||
+              d?.code === "issue_type" ||
+              d?.code === "type") &&
+            !d?.isDeleted,
+        )
+      : undefined;
+    if (typeDef?.options && typeDef.options.length > 0) {
+      return typeDef.options.map((opt) => ({
+        value: opt.value,
+        label: resolveOptionLabel(opt, locale, t),
+      }));
+    }
+    return [
+      { value: "SALE", label: t("Xuất bán (SO)") },
+      { value: "PRODUCTION", label: t("Xuất sản xuất") },
+      { value: "WARRANTY", label: t("Xuất bảo hành") },
+      { value: "SCRAP", label: t("Xuất hủy / hao hụt") },
+      { value: "OTHER", label: t("Xuất khác") },
+    ];
+  }, [giAttrDefs, locale, t]);
 
   const actions =
     viewOnly || loading
@@ -551,7 +586,7 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
               productionOrderId:
                 nextType === "PRODUCTION" ? f.productionOrderId : "",
               lines:
-                nextType === "OTHER"
+                nextType !== "SALE" && nextType !== "PRODUCTION"
                   ? f.lines.length
                     ? f.lines
                     : [emptyGiLine()]
@@ -697,7 +732,7 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
             : t("Sửa xuất kho")
           : t("Tạo phiếu xuất kho")
       }
-      subtitle={editing?.issueNo ?? t("Xuất kho")}
+      subtitle={editing?.issueNo ?? t("inventory.issue", "Xuất kho")}
       statusBadge={statusBadge}
       onClose={close}
       onToggleEdit={
@@ -734,6 +769,21 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
       // Right panel
       rightPanelContent={rightPanelContent}
       remarksContent={remarksContent}
+      customFieldsSlot={
+        <ModuleEntityCustomFieldsSection
+          moduleKey="GOODS_ISSUE"
+          entityId={editing?.id}
+          editMode={!viewOnly}
+          globalAttributes={form.globalAttributes}
+          onGlobalAttributesChange={(attrs) =>
+            setForm((f) => ({ ...f, globalAttributes: attrs }))
+          }
+          hideCategorySection={true}
+          globalTitle={t("moduleConfig.customFields", "Trường tùy chỉnh")}
+          globalCollapsible={true}
+          globalDefaultCollapsed={false}
+        />
+      }
       // Slots
       printSlot={
         <div className="hidden">

@@ -69,9 +69,9 @@ export function ProductionOrderRightPanel({
 
   return (
     <div className="space-y-3 pb-3">
-      {/* Section 1: Thông tin thành phẩm & Lệnh */}
+      {/* Section 1: Thông tin chung */}
       <DrawerSection
-        title={t("Thông tin thành phẩm & Lệnh")}
+        title={t("Thông tin chung")}
         collapsible
         defaultCollapsed={false}
       >
@@ -117,27 +117,36 @@ export function ProductionOrderRightPanel({
               }
             />
             <DrawerRow
-              label={t("Đã sản xuất")}
-              value={
-                <span className="font-semibold text-emerald-700 dark:text-emerald-400">
-                  {fmtQty(editing.qtyProduced)} / {fmtQty(editing.qtyToProduce)}{" "}
-                  (
-                  {Math.round(
-                    (Number(editing.qtyProduced || 0) /
-                      Math.max(1, Number(editing.qtyToProduce || 1))) *
-                      100,
-                  )}
-                  %)
-                </span>
-              }
-            />
-            <DrawerRow
               label={t("Mã kho")}
               value={editing.warehouseCode || "—"}
             />
+            <DrawerRow
+              label={t("Ghi chú")}
+              value={
+                editing.notes || (editing.outputMetadata as any)?.notes || "—"
+              }
+            />
+            {editing.createdAt && (
+              <DrawerRow
+                label={t("Thời điểm tạo")}
+                value={new Date(editing.createdAt).toLocaleString("vi-VN")}
+              />
+            )}
           </>
         ) : (
           <>
+            <DrawerField label={t("Mã lệnh")}>
+              <input
+                value={form.referenceNo}
+                onChange={(e) =>
+                  setForm((p: any) => ({ ...p, referenceNo: e.target.value }))
+                }
+                disabled={isImmutable}
+                className={inputCls}
+                placeholder={t("Tự động theo tháng (MO-YYYYMMXXXX)")}
+              />
+            </DrawerField>
+
             <DrawerField label={t("Thành phẩm")} required>
               <Combobox
                 value={form.finishedGoodItemId}
@@ -179,30 +188,6 @@ export function ProductionOrderRightPanel({
               />
             </DrawerField>
 
-            {editing && (
-              <DrawerRow
-                label={t("Đã sản xuất")}
-                value={
-                  <span className="font-semibold text-emerald-700 dark:text-emerald-400">
-                    {fmtQty(editing.qtyProduced)} /{" "}
-                    {fmtQty(editing.qtyToProduce)}
-                  </span>
-                }
-              />
-            )}
-
-            <DrawerField label={t("Mã lệnh")}>
-              <input
-                value={form.referenceNo}
-                onChange={(e) =>
-                  setForm((p: any) => ({ ...p, referenceNo: e.target.value }))
-                }
-                disabled={isImmutable}
-                className={inputCls}
-                placeholder={t("Tự động theo tháng (MO-YYYYMMXXXX)")}
-              />
-            </DrawerField>
-
             <DrawerField label={t("Mã kho")}>
               <input
                 value={form.warehouseCode}
@@ -212,6 +197,17 @@ export function ProductionOrderRightPanel({
                 disabled={isImmutable}
                 className={inputCls}
                 placeholder="Ví dụ: WH-01"
+              />
+            </DrawerField>
+
+            <DrawerField label={t("Ghi chú")}>
+              <textarea
+                rows={3}
+                value={notes}
+                onChange={(e) => onNotesChange?.(e.target.value)}
+                className={inputCls}
+                placeholder={t("Nhập ghi chú cho lệnh sản xuất...")}
+                disabled={saving}
               />
             </DrawerField>
           </>
@@ -259,41 +255,6 @@ export function ProductionOrderRightPanel({
               />
             </DrawerField>
           </>
-        )}
-      </DrawerSection>
-
-      {/* Section 3: Ghi chú & Quản lý */}
-      <DrawerSection
-        title={t("Ghi chú & Quản lý")}
-        collapsible
-        defaultCollapsed={false}
-      >
-        {viewOnly ? (
-          <>
-            <DrawerRow
-              label={t("Ghi chú")}
-              value={
-                editing?.notes || (editing?.outputMetadata as any)?.notes || "—"
-              }
-            />
-            {editing?.createdAt && (
-              <DrawerRow
-                label={t("Thời điểm tạo")}
-                value={new Date(editing.createdAt).toLocaleString("vi-VN")}
-              />
-            )}
-          </>
-        ) : (
-          <DrawerField label={t("Ghi chú chung")}>
-            <textarea
-              rows={3}
-              value={notes}
-              onChange={(e) => onNotesChange?.(e.target.value)}
-              className={inputCls}
-              placeholder={t("Nhập ghi chú cho lệnh sản xuất...")}
-              disabled={saving}
-            />
-          </DrawerField>
         )}
       </DrawerSection>
     </div>

@@ -181,7 +181,7 @@ export function TableRowContextMenu({
         {item.loading ? (
           <Loader2 className="w-3.5 h-3.5 animate-spin flex-shrink-0 text-muted-foreground" />
         ) : icon ? (
-          <span className="w-3.5 h-3.5 flex items-center justify-center flex-shrink-0 opacity-70">
+          <span className="w-3.5 h-3.5 flex items-center justify-center flex-shrink-0 text-muted-foreground opacity-80">
             {icon}
           </span>
         ) : null}
