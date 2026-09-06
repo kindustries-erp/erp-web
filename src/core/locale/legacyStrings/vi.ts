@@ -261,4 +261,39 @@ export const legacyStringsVi = {
   "productionConfig.title": "Cấu hình sản xuất",
   "production.customFields": "Cấu hình sản xuất",
   "production.productionConfig": "Cấu hình sản xuất",
+  "Thuộc tính định mức (BOM)": "Thuộc tính định mức (BOM)",
+  "Danh mục BOM": "Danh mục BOM",
+  "BOM này không có thuộc tính tùy chỉnh.":
+    "BOM này không có thuộc tính tùy chỉnh.",
+  "Đang tải thuộc tính BOM...": "Đang tải thuộc tính BOM...",
+  "Vui lòng chọn BOM để xem thuộc tính.":
+    "Vui lòng chọn BOM để xem thuộc tính.",
+  "Thông tin định danh xe xuất xưởng (Số khung / Số máy)":
+    "Thông tin định danh xe xuất xưởng (Số khung / Số máy)",
+  "Số khung (VIN)": "Số khung (VIN)",
+  "Số máy": "Số máy",
+  "Số Serial (tùy chọn)": "Số Serial (tùy chọn)",
+  "Tự động theo số máy": "Tự động theo số máy",
+  "Nhập dữ liệu định danh hàng loạt (Bulk Parser)":
+    "Nhập dữ liệu định danh hàng loạt (Bulk Parser)",
+  "Quy tắc định dạng copy/paste (mỗi dòng 1 xe, cách nhau bởi dấu phẩy hoặc Tab Excel):":
+    "Quy tắc định dạng copy/paste (mỗi dòng 1 xe, cách nhau bởi dấu phẩy hoặc Tab Excel):",
+  "Số khung (VIN), Số máy, [Số Serial], [Ghi chú]":
+    "Số khung (VIN), Số máy, [Số Serial], [Ghi chú]",
+  "Trích xuất dữ liệu vào danh sách bên dưới":
+    "Trích xuất dữ liệu vào danh sách bên dưới",
+  "Ghi chú đơn vị...": "Ghi chú đơn vị...",
+  "Danh sách thành phẩm đã xuất xưởng": "Danh sách thành phẩm đã xuất xưởng",
+  "Thuộc tính mở rộng": "Thuộc tính mở rộng",
+  "Chưa có định danh thành phẩm nào được ghi nhận.":
+    "Chưa có định danh thành phẩm nào được ghi nhận.",
+  "Hoàn thành đơn vị này": "Hoàn thành đơn vị này",
+  "Số lượng còn lại cần nghiệm thu": "Số lượng còn lại cần nghiệm thu",
+  "Hoàn thành hàng loạt": "Hoàn thành hàng loạt",
+  "Số lượng hoàn thành đợt này": "Số lượng hoàn thành đợt này",
+  "Đang ghi nhận nhập kho...": "Đang ghi nhận nhập kho...",
+  "Xác nhận hoàn thành": "Xác nhận hoàn thành",
+  "Lệnh sản xuất đã hoàn thành 100%": "Lệnh sản xuất đã hoàn thành 100%",
+  "Đã nhập kho đủ": "Đã nhập kho đủ",
+  "đơn vị thành phẩm.": "đơn vị thành phẩm.",
 };

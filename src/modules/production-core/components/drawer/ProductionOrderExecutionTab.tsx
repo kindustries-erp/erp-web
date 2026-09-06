@@ -9,28 +9,14 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { DrawerSection, inputCls } from "@/shared/components/DrawerModal";
-import { Combobox } from "@/shared/components/Combobox";
-import { DataTable } from "@/shared/components/DataTable";
-import * as Popover from "@radix-ui/react-popover";
 import { cn } from "@/shared/utils";
 import { useT } from "@/core/i18n";
 import type { ErpProductionOrder } from "../../api/productionCoreApi";
-
-const VALID_COLORS = ["DEN", "TRANG", "DO", "XANH", "XAM", "BAC"];
-const COLOR_NAMES: Record<string, string> = {
-  DEN: "ĐEN",
-  TRANG: "TRẮNG",
-  DO: "ĐỎ",
-  XANH: "XANH",
-  XAM: "XÁM",
-  BAC: "BẠC",
-};
 
 export interface ProductionIdentifier {
   vinNo: string;
   engineNo: string;
   serialNo: string;
-  colorCode: string;
   lotNo: string;
   notes: string;
   attributes: Array<{ key: string; value: string }>;
@@ -43,7 +29,6 @@ export function emptyIdentifier(): ProductionIdentifier {
     vinNo: "",
     engineNo: "",
     serialNo: "",
-    colorCode: "",
     lotNo: "",
     notes: "",
     attributes: [],
@@ -59,13 +44,7 @@ export function isIdentifierValid(
   policy: TrackingPolicy,
 ): boolean {
   if (policy === "VEHICLE") {
-    return (
-      !!id.vinNo.trim() &&
-      !!id.engineNo.trim() &&
-      !!id.serialNo.trim() &&
-      !!id.colorCode.trim() &&
-      VALID_COLORS.includes(id.colorCode.trim())
-    );
+    return !!id.vinNo.trim() && !!id.engineNo.trim();
   }
   if (policy === "SERIAL") return !!id.serialNo.trim();
   if (policy === "LOT") return !!id.lotNo.trim();
@@ -88,17 +67,17 @@ export function findVehicleDuplicate(ids: ProductionIdentifier[]) {
     const vin = row.vinNo.trim().toUpperCase();
     const engine = row.engineNo.trim().toUpperCase();
     const serial = row.serialNo.trim().toUpperCase();
-    if (serial) {
-      if (seenSerial.has(serial)) return "Số Seri bị trùng trong danh sách";
-      seenSerial.add(serial);
-    }
     if (vin) {
-      if (seenVin.has(vin)) return "Số VIN bị trùng trong danh sách";
+      if (seenVin.has(vin)) return "Số khung (VIN) bị trùng trong danh sách";
       seenVin.add(vin);
     }
     if (engine) {
       if (seenEngine.has(engine)) return "Số máy bị trùng trong danh sách";
       seenEngine.add(engine);
+    }
+    if (serial) {
+      if (seenSerial.has(serial)) return "Số Seri bị trùng trong danh sách";
+      seenSerial.add(serial);
     }
   }
   return null;
@@ -111,18 +90,14 @@ export function parseVehicleBulkInput(input: string): ProductionIdentifier[] {
     .filter(Boolean)
     .map((line, index) => {
       const parts = line.includes("\t") ? line.split("\t") : line.split(",");
-      const serialNo = (parts[0] ?? "").trim();
-      const vinNo = (parts[1] ?? "").trim();
-      const engineNo = (parts[2] ?? "").trim();
-      const colorCode = (parts[3] ?? "").trim();
-      const notes = (parts[4] ?? "").trim();
+      const vinNo = (parts[0] ?? "").trim();
+      const engineNo = (parts[1] ?? "").trim();
+      const serialNo = (parts[2] ?? "").trim();
+      const notes = (parts[3] ?? "").trim();
 
-      if (!serialNo || !colorCode) {
-        throw new Error(`Dòng ${index + 1}: Số seri và Mã màu là bắt buộc.`);
-      }
-      if (!VALID_COLORS.includes(colorCode)) {
+      if (!vinNo || !engineNo) {
         throw new Error(
-          `Dòng ${index + 1}: Mã màu '${colorCode}' không hợp lệ.`,
+          `Dòng ${index + 1}: Số khung (VIN) và Số máy là bắt buộc.`,
         );
       }
 
@@ -130,67 +105,11 @@ export function parseVehicleBulkInput(input: string): ProductionIdentifier[] {
         vinNo,
         engineNo,
         serialNo,
-        colorCode,
         lotNo: "",
         notes,
         attributes: [],
       };
     });
-}
-
-function ValidColorsPopover() {
-  const colorData = VALID_COLORS.map((c) => ({
-    code: c,
-    name: COLOR_NAMES[c] || c,
-  }));
-
-  return (
-    <Popover.Root>
-      <Popover.Trigger asChild>
-        <button
-          type="button"
-          className="text-blue-600 dark:text-blue-400 hover:underline cursor-pointer font-medium"
-        >
-          xem mã màu hợp lệ
-        </button>
-      </Popover.Trigger>
-      <Popover.Portal>
-        <Popover.Content
-          side="top"
-          align="start"
-          className="z-[9999] bg-white dark:bg-slate-900 p-3 rounded-xl shadow-xl border border-slate-200 dark:border-slate-800 max-h-[300px] overflow-auto w-[280px]"
-        >
-          <h4 className="font-semibold text-xs mb-2 text-foreground">
-            Bảng Mã Màu Hợp Lệ
-          </h4>
-          <DataTable
-            items={colorData}
-            columns={[
-              {
-                key: "code",
-                header: "Mã",
-                dataIndex: "code",
-                className: "w-[80px] font-mono font-semibold text-primary",
-              },
-              {
-                key: "name",
-                header: "Tên Màu",
-                dataIndex: "name",
-                cell: (item: any) => (
-                  <span className="font-medium text-foreground">
-                    {item.name}
-                  </span>
-                ),
-              },
-            ]}
-            variant="spreadsheet"
-            getRowKey={(r) => r.code}
-            emptyLabel="Không có màu"
-          />
-        </Popover.Content>
-      </Popover.Portal>
-    </Popover.Root>
-  );
 }
 
 function IdentifierTable({
@@ -202,16 +121,17 @@ function IdentifierTable({
   identifiers: ProductionIdentifier[];
   onChange: (index: number, val: ProductionIdentifier) => void;
 }) {
+  const t = useT();
   if (policy === "NONE") return null;
   return (
     <div className="mt-3 space-y-2">
       <h4 className="text-xs font-semibold text-foreground flex items-center gap-1.5">
         <ListChecks className="h-4 w-4 text-primary" />
         {policy === "VEHICLE" &&
-          "Thông tin định danh xe xuất xưởng (VIN / Số máy)"}
-        {policy === "SERIAL" && "Số serial từng đơn vị"}
-        {policy === "LOT" && "Số lô từng đơn vị"}
-        {policy === "CUSTOM" && "Định danh tùy chỉnh"}
+          t("Thông tin định danh xe xuất xưởng (Số khung / Số máy)")}
+        {policy === "SERIAL" && t("Số serial từng đơn vị")}
+        {policy === "LOT" && t("Số lô từng đơn vị")}
+        {policy === "CUSTOM" && t("Định danh tùy chỉnh")}
       </h4>
       <div className="overflow-x-auto rounded-xl border border-border bg-card shadow-sm max-h-[300px] overflow-y-auto">
         <table className="min-w-full text-xs">
@@ -220,31 +140,31 @@ function IdentifierTable({
               <th className="px-2 py-1.5 text-left font-semibold w-8">#</th>
               {policy === "VEHICLE" && (
                 <>
-                  <th className="px-2 py-1.5 text-left font-semibold">
-                    Số Seri <span className="text-red-500">*</span>
+                  <th className="px-2 py-1.5 text-left font-semibold min-w-[140px]">
+                    {t("Số khung (VIN)")}{" "}
+                    <span className="text-red-500">*</span>
                   </th>
-                  <th className="px-2 py-1.5 text-left font-semibold">
-                    Số VIN <span className="text-red-500">*</span>
-                  </th>
-                  <th className="px-2 py-1.5 text-left font-semibold">
-                    Số máy <span className="text-red-500">*</span>
+                  <th className="px-2 py-1.5 text-left font-semibold min-w-[140px]">
+                    {t("Số máy")} <span className="text-red-500">*</span>
                   </th>
                   <th className="px-2 py-1.5 text-left font-semibold min-w-[120px]">
-                    Mã Màu <span className="text-red-500">*</span>
+                    {t("Số Serial (tùy chọn)")}
                   </th>
                 </>
               )}
               {policy === "SERIAL" && (
                 <th className="px-2 py-1.5 text-left font-semibold">
-                  Số Serial <span className="text-red-500">*</span>
+                  {t("Số Serial")} <span className="text-red-500">*</span>
                 </th>
               )}
               {policy === "LOT" && (
                 <th className="px-2 py-1.5 text-left font-semibold">
-                  Số Lô <span className="text-red-500">*</span>
+                  {t("Số Lô")} <span className="text-red-500">*</span>
                 </th>
               )}
-              <th className="px-2 py-1.5 text-left font-semibold">Ghi chú</th>
+              <th className="px-2 py-1.5 text-left font-semibold">
+                {t("Ghi chú")}
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
@@ -255,48 +175,34 @@ function IdentifierTable({
                 </td>
                 {policy === "VEHICLE" && (
                   <>
-                    <td className="px-1 py-1 w-[100px]">
-                      <input
-                        value={item.serialNo}
-                        onChange={(e) =>
-                          onChange(idx, { ...item, serialNo: e.target.value })
-                        }
-                        className={cn(inputCls, "w-full text-xs h-7 font-mono")}
-                        placeholder="Số seri"
-                      />
-                    </td>
-                    <td className="px-1 py-1 w-[100px]">
+                    <td className="px-1 py-1">
                       <input
                         value={item.vinNo}
                         onChange={(e) =>
                           onChange(idx, { ...item, vinNo: e.target.value })
                         }
                         className={cn(inputCls, "w-full text-xs h-7 font-mono")}
-                        placeholder="Số VIN"
+                        placeholder={t("Số khung (VIN)")}
                       />
                     </td>
-                    <td className="px-1 py-1 w-[100px]">
+                    <td className="px-1 py-1">
                       <input
                         value={item.engineNo}
                         onChange={(e) =>
                           onChange(idx, { ...item, engineNo: e.target.value })
                         }
                         className={cn(inputCls, "w-full text-xs h-7 font-mono")}
-                        placeholder="Số máy"
+                        placeholder={t("Số máy")}
                       />
                     </td>
-                    <td className="px-1 py-1 min-w-[120px]">
-                      <Combobox
-                        value={item.colorCode}
-                        onChange={(val) =>
-                          onChange(idx, { ...item, colorCode: val })
+                    <td className="px-1 py-1">
+                      <input
+                        value={item.serialNo}
+                        onChange={(e) =>
+                          onChange(idx, { ...item, serialNo: e.target.value })
                         }
-                        options={VALID_COLORS.map((c) => ({
-                          value: c,
-                          label: `${c} — ${COLOR_NAMES[c] || c}`,
-                        }))}
-                        placeholder="— Chọn màu —"
-                        allowClear
+                        className={cn(inputCls, "w-full text-xs h-7 font-mono")}
+                        placeholder={t("Tự động theo số máy")}
                       />
                     </td>
                   </>
@@ -332,7 +238,7 @@ function IdentifierTable({
                       onChange(idx, { ...item, notes: e.target.value })
                     }
                     className={cn(inputCls, "w-full text-xs h-7")}
-                    placeholder="Ghi chú đơn vị..."
+                    placeholder={t("Ghi chú đơn vị...")}
                   />
                 </td>
               </tr>
@@ -582,7 +488,6 @@ export function ProductionOrderExecutionTab({
                         <Settings2 className="h-3.5 w-3.5 text-slate-500" />
                         {t("Nhập dữ liệu định danh hàng loạt (Bulk Parser)")}
                       </label>
-                      <ValidColorsPopover />
                     </div>
 
                     <div className="text-[11px] text-muted-foreground bg-white/80 dark:bg-slate-900/80 p-2.5 rounded-lg border border-slate-200 dark:border-slate-800 space-y-1">
@@ -592,7 +497,7 @@ export function ProductionOrderExecutionTab({
                         )}
                       </p>
                       <p className="font-mono text-[10px] text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/50 p-1 rounded">
-                        Số Seri, Số VIN, Số máy, Mã màu, Ghi chú
+                        {t("Số khung (VIN), Số máy, [Số Serial], [Ghi chú]")}
                       </p>
                     </div>
 
@@ -606,7 +511,7 @@ export function ProductionOrderExecutionTab({
                         "w-full font-mono text-xs bg-white dark:bg-slate-900 resize-none",
                       )}
                       placeholder={
-                        "SER001,VIN001,ENG001,DEN,Giao khách hàng VIP\nSER002,VIN002,ENG002,DO,Chờ nghiệm thu"
+                        "VIN-001,ENG-001\nVIN-002,ENG-002,SER-002,Ghi chú xe 2"
                       }
                     />
 

@@ -73,6 +73,7 @@ export function ProductionOrderDrawer({
     localOrder,
     itemOptions,
     availableBoms,
+    selectedBomInfo,
     bomOptions,
     saving,
     error,
@@ -417,6 +418,8 @@ export function ProductionOrderDrawer({
               itemOptions={itemOptions}
               availableBoms={availableBoms}
               bomOptions={bomOptions}
+              selectedBomInfo={selectedBomInfo}
+              bomLoading={bomLoading}
               saving={saving}
               notes={notes}
               onNotesChange={setNotes}

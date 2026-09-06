@@ -138,6 +138,45 @@ type ExecuteProductionResponse = {
   data: ExecuteProductionResult;
 };
 
+export interface BomAttributeDetail {
+  id: string;
+  code: string;
+  name: string;
+  nameEn?: string | null;
+  fieldType: string;
+  value: any;
+  label: string;
+  options?: Array<{
+    value: string;
+    label: string;
+    labelEn?: string;
+    labels?: Record<string, string | undefined>;
+  }> | null;
+  isRequired: boolean;
+  isGlobal: boolean;
+  sortOrder: number;
+}
+
+export interface ExplodePreviewBomInfo {
+  id: string;
+  bomCode?: string | null;
+  bomName?: string | null;
+  version?: string | null;
+  status?: string | null;
+  categoryId?: string | null;
+  categoryCode?: string | null;
+  categoryName?: string | null;
+  attributes?: Record<string, string>;
+  globalAttributes?: Record<string, any>;
+  attributeDetails?: BomAttributeDetail[];
+}
+
+export interface ExplodePreviewResult {
+  flatMaterials: ErpProductionOrderMaterial[];
+  explosionTree: Record<string, unknown>[];
+  bom?: ExplodePreviewBomInfo | null;
+}
+
 export const productionCoreApi = {
   execute: async (
     payload: ExecuteProductionPayload,
@@ -182,16 +221,13 @@ export const productionCoreApi = {
   explodePreview: async (
     bomId: string,
     qtyToProduce: number,
-  ): Promise<{
-    flatMaterials: ErpProductionOrderMaterial[];
-    explosionTree: Record<string, unknown>[];
-  }> => {
-    const { data } = await axiosInstance.get<{
-      flatMaterials: ErpProductionOrderMaterial[];
-      explosionTree: Record<string, unknown>[];
-    }>(`/api/v1/production/explode-preview`, {
-      params: { bomId, qtyToProduce },
-    });
+  ): Promise<ExplodePreviewResult> => {
+    const { data } = await axiosInstance.get<ExplodePreviewResult>(
+      `/api/v1/production/explode-preview`,
+      {
+        params: { bomId, qtyToProduce },
+      },
+    );
     return data;
   },
   update: async (

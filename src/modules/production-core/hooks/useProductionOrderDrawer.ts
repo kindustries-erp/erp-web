@@ -4,6 +4,7 @@ import { useUIStore } from "@/core/config/uiStore";
 import {
   productionCoreApi,
   type ErpProductionOrder,
+  type ExplodePreviewBomInfo,
 } from "@/modules/production-core/api/productionCoreApi";
 import { useAppStore } from "@/core/config/appStore";
 import { bomCoreApi, type ErpBom } from "@/modules/bom-core/api/bomCoreApi";
@@ -22,15 +23,6 @@ import {
   findVehicleDuplicate,
   parseVehicleBulkInput,
 } from "../components/drawer/ProductionOrderExecutionTab";
-
-const COLOR_NAMES: Record<string, string> = {
-  DEN: "ĐEN",
-  TRANG: "TRẮNG",
-  DO: "ĐỎ",
-  XANH: "XANH",
-  XAM: "XÁM",
-  BAC: "BẠC",
-};
 
 export interface BomLikeLine {
   id?: string;
@@ -138,6 +130,8 @@ export function useProductionOrderDrawer({
 
   // BOM selection
   const [availableBoms, setAvailableBoms] = useState<ErpBom[]>([]);
+  const [selectedBomInfo, setSelectedBomInfo] =
+    useState<ExplodePreviewBomInfo | null>(null);
   const [completeQty, setCompleteQty] = useState("1");
   const [completeUnitCost, setCompleteUnitCost] = useState("0");
   const [showStartDialog, setShowStartDialog] = useState(false);
@@ -455,6 +449,9 @@ export function useProductionOrderDrawer({
               }
 
               setBomLines(lines);
+              if (previewRes?.bom) {
+                setSelectedBomInfo(previewRes.bom);
+              }
 
               const itemIds = Array.from(
                 new Set(
@@ -549,6 +546,9 @@ export function useProductionOrderDrawer({
               previewRes.explosionTree as unknown as ExplosionNode[],
             );
             setBomLines(lines);
+            if (previewRes?.bom) {
+              setSelectedBomInfo(previewRes.bom);
+            }
 
             const itemIds = lines
               .map((l) => l.itemId)
@@ -650,10 +650,39 @@ export function useProductionOrderDrawer({
         const existingNotes =
           (editing.outputMetadata?.lineNotes as Record<string, string>) || {};
         setLineNotes(existingNotes);
+        if (editing.outputMetadata?.bomId) {
+          setSelectedBomInfo({
+            id: String(editing.outputMetadata.bomId),
+            bomCode: (editing.outputMetadata.bomCode as string) ?? null,
+            bomName: (editing.outputMetadata.bomName as string) ?? null,
+            version: (editing.outputMetadata.bomVersion as string) ?? null,
+            categoryId:
+              (editing.outputMetadata.bomCategoryId as string) ?? null,
+            categoryCode:
+              (editing.outputMetadata.bomCategoryCode as string) ?? null,
+            categoryName:
+              (editing.outputMetadata.bomCategoryName as string) ?? null,
+            attributes:
+              (editing.outputMetadata.bomAttributes as Record<
+                string,
+                string
+              >) ?? {},
+            globalAttributes:
+              (editing.outputMetadata.bomGlobalAttributes as Record<
+                string,
+                any
+              >) ?? {},
+            attributeDetails:
+              (editing.outputMetadata.bomAttributeDetails as any[]) ?? [],
+          });
+        } else {
+          setSelectedBomInfo(null);
+        }
       } else {
         setForm(emptyForm());
         setNotes("");
         setBomLines([]);
+        setSelectedBomInfo(null);
         setBalances({});
         setLineNotes({});
         setAlternativeItems({});
@@ -666,6 +695,7 @@ export function useProductionOrderDrawer({
       setForm(emptyForm());
       setNotes("");
       setBomLines([]);
+      setSelectedBomInfo(null);
       setBalances({});
       setLineNotes({});
       setAlternativeItems({});
@@ -835,25 +865,20 @@ export function useProductionOrderDrawer({
     setSaving(true);
     try {
       const identifiersPayload = identifiers.slice(0, 1).map((id) => {
-        const mergedAttrs = {
-          ...id.attributes.reduce(
-            (acc, curr) => {
-              if (curr.key.trim()) acc[curr.key.trim()] = curr.value.trim();
-              return acc;
-            },
-            {} as Record<string, string>,
-          ),
-        };
-        if (id.colorCode) {
-          mergedAttrs["color"] = COLOR_NAMES[id.colorCode] || id.colorCode;
-        }
+        const mergedAttrs = id.attributes.reduce(
+          (acc, curr) => {
+            if (curr.key.trim()) acc[curr.key.trim()] = curr.value.trim();
+            return acc;
+          },
+          {} as Record<string, string>,
+        );
 
         return {
-          vinNo: id.vinNo,
-          engineNo: id.engineNo,
-          serialNo: id.serialNo,
-          lotNo: id.lotNo,
-          notes: id.notes,
+          vinNo: id.vinNo?.trim() || undefined,
+          engineNo: id.engineNo?.trim() || undefined,
+          serialNo: id.serialNo?.trim() || undefined,
+          lotNo: id.lotNo?.trim() || undefined,
+          notes: id.notes?.trim() || undefined,
           attributes:
             Object.keys(mergedAttrs).length > 0 ? mergedAttrs : undefined,
         };
@@ -922,25 +947,20 @@ export function useProductionOrderDrawer({
     setSaving(true);
     try {
       const identifiersPayload = identifiers.map((id) => {
-        const mergedAttrs = {
-          ...id.attributes.reduce(
-            (acc, curr) => {
-              if (curr.key.trim()) acc[curr.key.trim()] = curr.value.trim();
-              return acc;
-            },
-            {} as Record<string, string>,
-          ),
-        };
-        if (id.colorCode) {
-          mergedAttrs["color"] = COLOR_NAMES[id.colorCode] || id.colorCode;
-        }
+        const mergedAttrs = id.attributes.reduce(
+          (acc, curr) => {
+            if (curr.key.trim()) acc[curr.key.trim()] = curr.value.trim();
+            return acc;
+          },
+          {} as Record<string, string>,
+        );
 
         return {
-          vinNo: id.vinNo,
-          engineNo: id.engineNo,
-          serialNo: id.serialNo,
-          lotNo: id.lotNo,
-          notes: id.notes,
+          vinNo: id.vinNo?.trim() || undefined,
+          engineNo: id.engineNo?.trim() || undefined,
+          serialNo: id.serialNo?.trim() || undefined,
+          lotNo: id.lotNo?.trim() || undefined,
+          notes: id.notes?.trim() || undefined,
           attributes:
             Object.keys(mergedAttrs).length > 0 ? mergedAttrs : undefined,
         };
@@ -1066,6 +1086,7 @@ export function useProductionOrderDrawer({
     refreshLocalOrder,
     itemOptions,
     availableBoms,
+    selectedBomInfo,
     bomOptions,
     saving,
     error,

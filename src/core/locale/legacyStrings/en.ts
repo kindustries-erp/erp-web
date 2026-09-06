@@ -260,4 +260,38 @@ export const legacyStringsEn = {
   "productionConfig.title": "Production Configuration",
   "production.customFields": "Production Configuration",
   "production.productionConfig": "Production Configuration",
+  "Thuộc tính định mức (BOM)": "BOM Attributes",
+  "Danh mục BOM": "BOM Category",
+  "BOM này không có thuộc tính tùy chỉnh.":
+    "This BOM has no custom attributes configured.",
+  "Đang tải thuộc tính BOM...": "Loading BOM attributes...",
+  "Vui lòng chọn BOM để xem thuộc tính.":
+    "Please select a BOM to view attributes.",
+  "Thông tin định danh xe xuất xưởng (Số khung / Số máy)":
+    "Finished Vehicle Tracking Identifiers (VIN / Engine No)",
+  "Số khung (VIN)": "Frame No (VIN)",
+  "Số máy": "Engine No",
+  "Số Serial (tùy chọn)": "Serial No (Optional)",
+  "Tự động theo số máy": "Auto from engine number",
+  "Nhập dữ liệu định danh hàng loạt (Bulk Parser)":
+    "Bulk Vehicle Identifier Parser",
+  "Quy tắc định dạng copy/paste (mỗi dòng 1 xe, cách nhau bởi dấu phẩy hoặc Tab Excel):":
+    "Copy/paste format rule (1 vehicle per line, comma or Excel Tab delimited):",
+  "Số khung (VIN), Số máy, [Số Serial], [Ghi chú]":
+    "Frame No (VIN), Engine No, [Serial No], [Notes]",
+  "Trích xuất dữ liệu vào danh sách bên dưới": "Extract data into list below",
+  "Ghi chú đơn vị...": "Unit notes...",
+  "Danh sách thành phẩm đã xuất xưởng": "Produced Finished Goods List",
+  "Thuộc tính mở rộng": "Extended Attributes",
+  "Chưa có định danh thành phẩm nào được ghi nhận.":
+    "No finished unit identifiers recorded yet.",
+  "Hoàn thành đơn vị này": "Complete this unit",
+  "Số lượng còn lại cần nghiệm thu": "Remaining quantity to accept",
+  "Hoàn thành hàng loạt": "Batch Complete",
+  "Số lượng hoàn thành đợt này": "Batch completion quantity",
+  "Đang ghi nhận nhập kho...": "Recording warehouse receipt...",
+  "Xác nhận hoàn thành": "Confirm Complete",
+  "Lệnh sản xuất đã hoàn thành 100%": "Production order 100% completed",
+  "Đã nhập kho đủ": "Received full",
+  "đơn vị thành phẩm.": "finished units.",
 };
