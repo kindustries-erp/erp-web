@@ -19,6 +19,7 @@ import {
   type TrackingPolicy,
   emptyIdentifier,
   makeIdentifierRows,
+  generateInternalSerial,
   identifiersAllValid,
   findVehicleDuplicate,
   parseVehicleBulkInput,
@@ -85,7 +86,6 @@ const emptyForm = () => {
   return {
     finishedGoodItemId: "",
     qtyToProduce: "1",
-    warehouseCode: "",
     referenceNo: "",
     plannedStartDate: today,
     plannedEndDate: today,
@@ -141,6 +141,7 @@ export function useProductionOrderDrawer({
   // Execution states
   const [batchCompleteQty, setBatchCompleteQty] = useState("1");
   const [showBatchDialog, setShowBatchDialog] = useState(false);
+  const [isIdentifierDrawerOpen, setIsIdentifierDrawerOpen] = useState(false);
   const [vehicleBulkInput, setVehicleBulkInput] = useState("");
   const [identifiers, setIdentifiers] = useState<ProductionIdentifier[]>([
     emptyIdentifier(),
@@ -255,6 +256,12 @@ export function useProductionOrderDrawer({
     }
   }, [editing]);
 
+  const currentFgItem = (localOrder || editing)?.finishedGoodItem as any;
+  const skuPrefix = currentFgItem?.sku || currentFgItem?.itemCode || "FG";
+  const orderRef =
+    (localOrder || editing)?.referenceNo || (localOrder || editing)?.id || "";
+  const orderSuffix = orderRef.slice(-4);
+
   // Resize identifier rows when batchCompleteQty changes
   useEffect(() => {
     if (!needsIdentifiers) return;
@@ -266,12 +273,20 @@ export function useProductionOrderDrawer({
       if (prev.length < qty) {
         return [
           ...prev,
-          ...Array.from({ length: qty - prev.length }, emptyIdentifier),
+          ...Array.from({ length: qty - prev.length }, (_, idx) =>
+            emptyIdentifier(
+              generateInternalSerial(
+                skuPrefix,
+                prev.length + idx + 1,
+                orderSuffix,
+              ),
+            ),
+          ),
         ];
       }
       return prev.slice(0, qty);
     });
-  }, [batchCompleteQty, needsIdentifiers]);
+  }, [batchCompleteQty, needsIdentifiers, skuPrefix, orderSuffix]);
 
   const handleIdentifierChange = useCallback(
     (index: number, val: ProductionIdentifier) => {
@@ -281,11 +296,11 @@ export function useProductionOrderDrawer({
   );
 
   const resetVehicleEntry = useCallback(() => {
-    setIdentifiers(makeIdentifierRows(1));
+    setIdentifiers(makeIdentifierRows(1, skuPrefix, orderSuffix));
     prevBatchQtyRef.current = "1";
     setBatchCompleteQty("1");
     setVehicleBulkInput("");
-  }, []);
+  }, [skuPrefix, orderSuffix]);
 
   const refreshLocalOrder = useCallback(async () => {
     if (!editing?.id) return;
@@ -634,7 +649,6 @@ export function useProductionOrderDrawer({
         setForm({
           finishedGoodItemId: editing.finishedGoodItemId || "",
           qtyToProduce: editing.qtyToProduce || "1",
-          warehouseCode: editing.warehouseCode || "",
           referenceNo: editing.referenceNo || "",
           plannedStartDate: editing.plannedStartDate
             ? editing.plannedStartDate.slice(0, 10)
@@ -723,9 +737,6 @@ export function useProductionOrderDrawer({
     return {
       finishedGoodItemId: form.finishedGoodItemId,
       qtyToProduce: form.qtyToProduce,
-      ...(form.warehouseCode.trim()
-        ? { warehouseCode: form.warehouseCode.trim() }
-        : {}),
       ...(form.referenceNo.trim()
         ? { referenceNo: form.referenceNo.trim() }
         : {}),
@@ -873,10 +884,20 @@ export function useProductionOrderDrawer({
           {} as Record<string, string>,
         );
 
+        if (id.serialNo?.trim()) {
+          mergedAttrs["vehicleSerialNo"] = id.serialNo.trim();
+        }
+        if (id.internalSerialNo?.trim()) {
+          mergedAttrs["internalSerialNo"] = id.internalSerialNo.trim();
+        }
+
+        const effectiveSerial =
+          id.internalSerialNo?.trim() || id.serialNo?.trim() || undefined;
+
         return {
           vinNo: id.vinNo?.trim() || undefined,
           engineNo: id.engineNo?.trim() || undefined,
-          serialNo: id.serialNo?.trim() || undefined,
+          serialNo: effectiveSerial,
           lotNo: id.lotNo?.trim() || undefined,
           notes: id.notes?.trim() || undefined,
           attributes:
@@ -955,10 +976,20 @@ export function useProductionOrderDrawer({
           {} as Record<string, string>,
         );
 
+        if (id.serialNo?.trim()) {
+          mergedAttrs["vehicleSerialNo"] = id.serialNo.trim();
+        }
+        if (id.internalSerialNo?.trim()) {
+          mergedAttrs["internalSerialNo"] = id.internalSerialNo.trim();
+        }
+
+        const effectiveSerial =
+          id.internalSerialNo?.trim() || id.serialNo?.trim() || undefined;
+
         return {
           vinNo: id.vinNo?.trim() || undefined,
           engineNo: id.engineNo?.trim() || undefined,
-          serialNo: id.serialNo?.trim() || undefined,
+          serialNo: effectiveSerial,
           lotNo: id.lotNo?.trim() || undefined,
           notes: id.notes?.trim() || undefined,
           attributes:
@@ -975,6 +1006,7 @@ export function useProductionOrderDrawer({
         variant: "success",
       });
       setShowBatchDialog(false);
+      setIsIdentifierDrawerOpen(false);
       resetVehicleEntry();
       await refreshLocalOrder();
     } catch (e) {
@@ -1129,6 +1161,11 @@ export function useProductionOrderDrawer({
     setBatchCompleteQty,
     showBatchDialog,
     setShowBatchDialog,
+    isIdentifierDrawerOpen,
+    setIsIdentifierDrawerOpen,
+    openIdentifierDrawer: () => setIsIdentifierDrawerOpen(true),
+    closeIdentifierDrawer: () => setIsIdentifierDrawerOpen(false),
+    orderSuffix,
     vehicleBulkInput,
     setVehicleBulkInput,
     applyVehicleBulkInput,

@@ -9,7 +9,6 @@ describe("ProductionOrderRightPanel BOM Attributes", () => {
     bomId: "bom-1",
     qtyToProduce: "2",
     referenceNo: "MO-2026090001",
-    warehouseCode: "WH-01",
     plannedStartDate: "2026-09-01",
     plannedEndDate: "2026-09-05",
   };

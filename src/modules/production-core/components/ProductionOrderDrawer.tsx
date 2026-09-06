@@ -28,6 +28,7 @@ import { ProductionOrderExecutionTab } from "./drawer/ProductionOrderExecutionTa
 import { ProductionOrderTraceabilityTab } from "./drawer/ProductionOrderTraceabilityTab";
 import { ProductionOrderHistoryTab } from "./drawer/ProductionOrderHistoryTab";
 import { ProductionOrderRightPanel } from "./drawer/ProductionOrderRightPanel";
+import { ProductionIdentifierDeclareDrawer } from "./drawer/ProductionIdentifierDeclareDrawer";
 
 export interface ProductionOrderDrawerProps {
   open: boolean;
@@ -102,6 +103,10 @@ export function ProductionOrderDrawer({
     setBatchCompleteQty,
     showBatchDialog,
     setShowBatchDialog,
+    isIdentifierDrawerOpen,
+    closeIdentifierDrawer,
+    openIdentifierDrawer,
+    orderSuffix,
     vehicleBulkInput,
     setVehicleBulkInput,
     applyVehicleBulkInput,
@@ -299,7 +304,7 @@ export function ProductionOrderDrawer({
     if (currentOrder) {
       tabs.push({
         key: "execution",
-        label: t("Tiến trình & Thực thi"),
+        label: t("Tiến trình sản xuất"),
         icon: <PlayCircle className="w-3.5 h-3.5" />,
         content: (
           <ProductionOrderExecutionTab
@@ -320,6 +325,8 @@ export function ProductionOrderDrawer({
             handleIdentifierChange={handleIdentifierChange}
             trackingPolicy={trackingPolicy}
             needsIdentifiers={needsIdentifiers}
+            onOpenIdentifierDrawer={openIdentifierDrawer}
+            orderSuffix={orderSuffix}
           />
         ),
       });
@@ -371,6 +378,8 @@ export function ProductionOrderDrawer({
     setBatchCompleteQty,
     showBatchDialog,
     setShowBatchDialog,
+    openIdentifierDrawer,
+    orderSuffix,
     vehicleBulkInput,
     setVehicleBulkInput,
     applyVehicleBulkInput,
@@ -429,6 +438,20 @@ export function ProductionOrderDrawer({
       />
 
       <GiFormDrawer drawer={issueDrawer} />
+
+      <ProductionIdentifierDeclareDrawer
+        open={isIdentifierDrawerOpen}
+        onClose={closeIdentifierDrawer}
+        order={currentOrder}
+        policy={trackingPolicy}
+        identifiers={identifiers}
+        setIdentifiers={setIdentifiers}
+        batchCompleteQty={batchCompleteQty}
+        setBatchCompleteQty={setBatchCompleteQty}
+        onBatchComplete={handleBatchComplete}
+        saving={saving}
+        disabled={isCompleted}
+      />
     </>
   );
 }

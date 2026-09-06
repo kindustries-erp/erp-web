@@ -17,6 +17,7 @@ import type {
 } from "@/modules/production-core/api/productionCoreApi";
 import type { DrawerMode } from "@/shared/stores/useDrawerStore";
 import { Loader2 } from "lucide-react";
+import { cn } from "@/shared/utils";
 
 export interface ProductionOrderRightPanelProps {
   mode: DrawerMode;
@@ -26,7 +27,6 @@ export interface ProductionOrderRightPanelProps {
     bomId: string;
     qtyToProduce: string;
     referenceNo: string;
-    warehouseCode: string;
     plannedStartDate: string;
     plannedEndDate: string;
   };
@@ -152,8 +152,219 @@ export function ProductionOrderRightPanel({
     });
   }, [selectedBomAttributeDetails]);
 
+  const qtyToProduce = Number(editing?.qtyToProduce || form.qtyToProduce || 1);
+  const qtyProduced = Number(editing?.qtyProduced || 0);
+  const remaining = Math.max(0, qtyToProduce - qtyProduced);
+  const progressPct =
+    qtyToProduce > 0
+      ? Math.min(100, Math.round((qtyProduced / qtyToProduce) * 100))
+      : 0;
+
   return (
     <div className="space-y-3 pb-3">
+      {/* Section 0: Tiến độ sản xuất (Hiển thị khi đã có Lệnh) */}
+      {editing && (
+        <DrawerSection
+          title={t("Tiến độ sản xuất", "Production Progress")}
+          collapsible
+          defaultCollapsed={false}
+        >
+          <div className="space-y-3 pt-1">
+            {/* Progress Header & Percentage */}
+            <div className="rounded-xl border border-border/80 bg-slate-50/80 dark:bg-slate-900/60 p-3 shadow-sm">
+              <div className="flex items-center justify-between text-xs font-semibold mb-2">
+                <span className="text-foreground">
+                  {t("Tiến độ hoàn thành")}
+                </span>
+                <span
+                  className={cn(
+                    "font-bold font-mono text-sm",
+                    isCompleted
+                      ? "text-emerald-700 dark:text-emerald-400"
+                      : editing?.status === "IN_PROGRESS"
+                        ? "text-blue-700 dark:text-blue-400"
+                        : "text-amber-700 dark:text-amber-400",
+                  )}
+                >
+                  {progressPct}%
+                </span>
+              </div>
+
+              <div className="h-2 w-full bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
+                <div
+                  className={cn(
+                    "h-full transition-all duration-500 ease-out rounded-full",
+                    isCompleted
+                      ? "bg-emerald-500"
+                      : editing?.status === "IN_PROGRESS"
+                        ? "bg-blue-600"
+                        : "bg-amber-500",
+                  )}
+                  style={{ width: `${progressPct}%` }}
+                />
+              </div>
+
+              {/* 3 KPI stat badges */}
+              <div className="grid grid-cols-3 gap-1.5 mt-3 pt-2.5 border-t border-border/60 text-center">
+                <div className="rounded-lg bg-white dark:bg-slate-800/80 p-1.5 border border-border/50">
+                  <div className="text-[10px] text-muted-foreground font-medium">
+                    {t("Kế hoạch")}
+                  </div>
+                  <div className="text-xs font-bold text-foreground tabular-nums">
+                    {fmtQty(qtyToProduce)}
+                  </div>
+                </div>
+                <div className="rounded-lg bg-white dark:bg-slate-800/80 p-1.5 border border-border/50">
+                  <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">
+                    {t("Đã sản xuất")}
+                  </div>
+                  <div className="text-xs font-bold text-emerald-700 dark:text-emerald-300 tabular-nums">
+                    {fmtQty(qtyProduced)}
+                  </div>
+                </div>
+                <div className="rounded-lg bg-white dark:bg-slate-800/80 p-1.5 border border-border/50">
+                  <div className="text-[10px] text-amber-600 dark:text-amber-400 font-medium">
+                    {t("Còn lại")}
+                  </div>
+                  <div className="text-xs font-bold text-amber-700 dark:text-amber-300 tabular-nums">
+                    {fmtQty(remaining)}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Workflow Pipeline Steps */}
+            <div className="rounded-xl border border-border/70 bg-card p-3 space-y-2 text-xs">
+              <div className="font-semibold text-[11px] text-muted-foreground uppercase tracking-wider">
+                {t("Quy trình thực thi")}
+              </div>
+              <div className="space-y-1.5">
+                {/* Step 1 */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={cn(
+                        "w-2 h-2 rounded-full",
+                        editing.status !== "DRAFT"
+                          ? "bg-emerald-500 ring-4 ring-emerald-100 dark:ring-emerald-950"
+                          : "bg-slate-300 dark:bg-slate-700",
+                      )}
+                    />
+                    <span
+                      className={
+                        editing.status !== "DRAFT"
+                          ? "font-medium text-foreground"
+                          : "text-muted-foreground"
+                      }
+                    >
+                      1. {t("Duyệt lệnh & Giữ chỗ NVL")}
+                    </span>
+                  </div>
+                  {editing.status !== "DRAFT" && (
+                    <Badge
+                      variant="outline"
+                      className="text-[10px] py-0 bg-emerald-50 text-emerald-700 border-emerald-200"
+                    >
+                      ✓
+                    </Badge>
+                  )}
+                </div>
+
+                {/* Step 2 */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={cn(
+                        "w-2 h-2 rounded-full",
+                        editing.status === "IN_PROGRESS" || isCompleted
+                          ? "bg-emerald-500 ring-4 ring-emerald-100 dark:ring-emerald-950"
+                          : "bg-slate-300 dark:bg-slate-700",
+                      )}
+                    />
+                    <span
+                      className={
+                        editing.status === "IN_PROGRESS" || isCompleted
+                          ? "font-medium text-foreground"
+                          : "text-muted-foreground"
+                      }
+                    >
+                      2. {t("Xuất kho NVL (Phiếu XK)")}
+                    </span>
+                  </div>
+                  {(editing.status === "IN_PROGRESS" || isCompleted) && (
+                    <Badge
+                      variant="outline"
+                      className="text-[10px] py-0 bg-emerald-50 text-emerald-700 border-emerald-200"
+                    >
+                      ✓
+                    </Badge>
+                  )}
+                </div>
+
+                {/* Step 3 */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={cn(
+                        "w-2 h-2 rounded-full",
+                        isCompleted
+                          ? "bg-emerald-500 ring-4 ring-emerald-100 dark:ring-emerald-950"
+                          : editing.status === "IN_PROGRESS"
+                            ? "bg-slate-500 dark:bg-slate-400 animate-pulse ring-4 ring-slate-200 dark:ring-slate-800"
+                            : "bg-slate-300 dark:bg-slate-700",
+                      )}
+                    />
+                    <span
+                      className={
+                        editing.status === "IN_PROGRESS" || isCompleted
+                          ? "font-medium text-foreground"
+                          : "text-muted-foreground"
+                      }
+                    >
+                      3. {t("Lắp ráp & Nghiệm thu")}
+                    </span>
+                  </div>
+                  <span className="font-mono text-[11px] font-semibold text-muted-foreground">
+                    {fmtQty(qtyProduced)} / {fmtQty(qtyToProduce)}
+                  </span>
+                </div>
+
+                {/* Step 4 */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={cn(
+                        "w-2 h-2 rounded-full",
+                        isCompleted
+                          ? "bg-emerald-500 ring-4 ring-emerald-100 dark:ring-emerald-950"
+                          : "bg-slate-300 dark:bg-slate-700",
+                      )}
+                    />
+                    <span
+                      className={
+                        isCompleted
+                          ? "font-medium text-foreground"
+                          : "text-muted-foreground"
+                      }
+                    >
+                      4. {t("Nhập kho & Kích hoạt định danh")}
+                    </span>
+                  </div>
+                  {isCompleted && (
+                    <Badge
+                      variant="outline"
+                      className="text-[10px] py-0 bg-emerald-50 text-emerald-700 border-emerald-200"
+                    >
+                      100%
+                    </Badge>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </DrawerSection>
+      )}
+
       {/* Section 1: Thông tin chung */}
       <DrawerSection
         title={t("Thông tin chung")}
@@ -173,7 +384,7 @@ export function ProductionOrderRightPanel({
             <DrawerRow
               label={t("Thành phẩm")}
               value={
-                <span className="font-medium text-blue-700 dark:text-blue-400">
+                <span className="font-semibold text-foreground">
                   {editing.finishedGoodItemName ||
                     itemOptions.find(
                       (i) => i.value === editing.finishedGoodItemId,
@@ -210,10 +421,6 @@ export function ProductionOrderRightPanel({
                   {fmtQty(editing.qtyToProduce)}
                 </span>
               }
-            />
-            <DrawerRow
-              label={t("Mã kho")}
-              value={editing.warehouseCode || "—"}
             />
             <DrawerRow
               label={t("Ghi chú")}
@@ -280,18 +487,6 @@ export function ProductionOrderRightPanel({
                 disabled={isImmutable}
                 className={inputCls}
                 placeholder="1"
-              />
-            </DrawerField>
-
-            <DrawerField label={t("Mã kho")}>
-              <input
-                value={form.warehouseCode}
-                onChange={(e) =>
-                  setForm((p: any) => ({ ...p, warehouseCode: e.target.value }))
-                }
-                disabled={isImmutable}
-                className={inputCls}
-                placeholder="Ví dụ: WH-01"
               />
             </DrawerField>
 

@@ -294,4 +294,18 @@ export const legacyStringsEn = {
   "Lệnh sản xuất đã hoàn thành 100%": "Production order 100% completed",
   "Đã nhập kho đủ": "Received full",
   "đơn vị thành phẩm.": "finished units.",
+  "Số Serial xe": "Vehicle Serial No",
+  "Số Serial nội bộ": "Internal Serial No",
+  "Số Serial phụ tùng": "Part Serial No",
+  "Sinh Serial nội bộ": "Generate Internal Serials",
+  "Tự động sinh mã": "Auto-generate Serials",
+  "Tải file mẫu Excel xe": "Download Vehicle Template",
+  "Tải file mẫu Excel phụ tùng": "Download Part Serial Template",
+  "Trùng lặp trong danh sách": "Duplicate in list",
+  "Số Serial xe bị trùng trong danh sách": "Duplicate vehicle serial in list",
+  "Số Serial nội bộ bị trùng trong danh sách":
+    "Duplicate internal serial in list",
+  "Số Serial bị trùng trong danh sách": "Duplicate serial in list",
+  "Tiến trình & Thực thi": "Production Progress",
+  "Tiến trình & Thực thi sản xuất": "Production Progress",
 };

@@ -7,17 +7,36 @@ import {
   identifiersAllValid,
   parseVehicleBulkInput,
   findVehicleDuplicate,
+  generateInternalSerial,
   type ProductionIdentifier,
 } from "../components/drawer/ProductionOrderExecutionTab";
 import type { ErpProductionOrder } from "../api/productionCoreApi";
 
 describe("ProductionOrderExecutionTab - Vehicle Identifiers & Validation", () => {
+  describe("generateInternalSerial", () => {
+    it("generates formatted internal serial with SKU prefix, YYMMDD date and index padding", () => {
+      const sn1 = generateInternalSerial("XE-MAY-01", 1);
+      expect(sn1).toMatch(/^SN-XE-MAY-01-\d{6}-001$/);
+
+      const snWithOrder = generateInternalSerial("KLOTUS", 1, "0012");
+      expect(snWithOrder).toMatch(/^SN-KLOTUS-\d{6}-0012-001$/);
+
+      const snOtherOrder = generateInternalSerial("KLOTUS", 1, "0013");
+      expect(snOtherOrder).toMatch(/^SN-KLOTUS-\d{6}-0013-001$/);
+      expect(snWithOrder).not.toBe(snOtherOrder);
+
+      const snDefault = generateInternalSerial("", 5);
+      expect(snDefault).toMatch(/^SN-ITEM-\d{6}-005$/);
+    });
+  });
+
   describe("isIdentifierValid", () => {
-    it("validates VEHICLE policy requiring only vinNo and engineNo", () => {
+    it("validates VEHICLE policy requiring only vinNo and engineNo (vehicle serial is optional)", () => {
       const validId: ProductionIdentifier = {
         vinNo: "VIN1234567890",
         engineNo: "ENG987654321",
         serialNo: "",
+        internalSerialNo: "SN-XE-001",
         lotNo: "",
         notes: "",
         attributes: [],
@@ -38,23 +57,39 @@ describe("ProductionOrderExecutionTab - Vehicle Identifiers & Validation", () =>
     });
 
     it("validates SERIAL and LOT policies", () => {
-      const serialId: ProductionIdentifier = {
+      const serialIdWithInternal: ProductionIdentifier = {
         vinNo: "",
         engineNo: "",
-        serialNo: "SER-001",
+        serialNo: "",
+        internalSerialNo: "SN-PART-001",
         lotNo: "",
         notes: "",
         attributes: [],
       };
-      expect(isIdentifierValid(serialId, "SERIAL")).toBe(true);
-      expect(isIdentifierValid({ ...serialId, serialNo: "" }, "SERIAL")).toBe(
-        false,
-      );
+      expect(isIdentifierValid(serialIdWithInternal, "SERIAL")).toBe(true);
+
+      const serialIdWithExternal: ProductionIdentifier = {
+        vinNo: "",
+        engineNo: "",
+        serialNo: "SER-001",
+        internalSerialNo: "",
+        lotNo: "",
+        notes: "",
+        attributes: [],
+      };
+      expect(isIdentifierValid(serialIdWithExternal, "SERIAL")).toBe(true);
+      expect(
+        isIdentifierValid(
+          { ...serialIdWithExternal, serialNo: "", internalSerialNo: "" },
+          "SERIAL",
+        ),
+      ).toBe(false);
 
       const lotId: ProductionIdentifier = {
         vinNo: "",
         engineNo: "",
         serialNo: "",
+        internalSerialNo: "",
         lotNo: "LOT-2026-01",
         notes: "",
         attributes: [],
@@ -71,6 +106,7 @@ describe("ProductionOrderExecutionTab - Vehicle Identifiers & Validation", () =>
           vinNo: "VIN1",
           engineNo: "ENG1",
           serialNo: "",
+          internalSerialNo: "SN-1",
           lotNo: "",
           notes: "",
           attributes: [],
@@ -79,6 +115,7 @@ describe("ProductionOrderExecutionTab - Vehicle Identifiers & Validation", () =>
           vinNo: "VIN2",
           engineNo: "ENG2",
           serialNo: "SER2",
+          internalSerialNo: "SN-2",
           lotNo: "",
           notes: "",
           attributes: [],
@@ -93,6 +130,7 @@ describe("ProductionOrderExecutionTab - Vehicle Identifiers & Validation", () =>
           vinNo: "VIN1",
           engineNo: "ENG1",
           serialNo: "",
+          internalSerialNo: "SN-1",
           lotNo: "",
           notes: "",
           attributes: [],
@@ -101,6 +139,7 @@ describe("ProductionOrderExecutionTab - Vehicle Identifiers & Validation", () =>
           vinNo: "VIN2",
           engineNo: "",
           serialNo: "",
+          internalSerialNo: "SN-2",
           lotNo: "",
           notes: "",
           attributes: [],
@@ -111,39 +150,33 @@ describe("ProductionOrderExecutionTab - Vehicle Identifiers & Validation", () =>
   });
 
   describe("parseVehicleBulkInput", () => {
-    it("parses 2-column comma separated input (VIN, EngineNo)", () => {
+    it("parses 2-column comma separated input (VIN, EngineNo) with auto-generated internal serial", () => {
       const input = "VIN-001, ENG-001\nVIN-002, ENG-002";
-      const result = parseVehicleBulkInput(input);
+      const result = parseVehicleBulkInput(input, "VEHICLE", "XE-01", "0012");
       expect(result).toHaveLength(2);
-      expect(result[0]).toEqual({
-        vinNo: "VIN-001",
-        engineNo: "ENG-001",
-        serialNo: "",
-        lotNo: "",
-        notes: "",
-        attributes: [],
-      });
+      expect(result[0].vinNo).toBe("VIN-001");
+      expect(result[0].engineNo).toBe("ENG-001");
+      expect(result[0].serialNo).toBe("");
+      expect(result[0].internalSerialNo).toMatch(/^SN-XE-01-\d{6}-0012-001$/);
       expect(result[1].vinNo).toBe("VIN-002");
       expect(result[1].engineNo).toBe("ENG-002");
+      expect(result[1].internalSerialNo).toMatch(/^SN-XE-01-\d{6}-0012-002$/);
     });
 
     it("parses 4-column tab separated input (VIN, EngineNo, SerialNo, Notes)", () => {
-      const input = "VIN-001\tENG-001\tSER-001\tXe màu đỏ bàn giao sớm";
-      const result = parseVehicleBulkInput(input);
+      const input = "VIN-001\tENG-001\tSER-001\t\tXe màu đỏ bàn giao sớm";
+      const result = parseVehicleBulkInput(input, "VEHICLE", "XE-01", "0012");
       expect(result).toHaveLength(1);
-      expect(result[0]).toEqual({
-        vinNo: "VIN-001",
-        engineNo: "ENG-001",
-        serialNo: "SER-001",
-        lotNo: "",
-        notes: "Xe màu đỏ bàn giao sớm",
-        attributes: [],
-      });
+      expect(result[0].vinNo).toBe("VIN-001");
+      expect(result[0].engineNo).toBe("ENG-001");
+      expect(result[0].serialNo).toBe("SER-001");
+      expect(result[0].notes).toBe("Xe màu đỏ bàn giao sớm");
+      expect(result[0].internalSerialNo).toMatch(/^SN-XE-01-\d{6}-0012-001$/);
     });
 
     it("throws error when VIN or EngineNo is missing", () => {
       const input = "VIN-001\n";
-      expect(() => parseVehicleBulkInput(input)).toThrow(
+      expect(() => parseVehicleBulkInput(input, "VEHICLE", "XE-01")).toThrow(
         "Dòng 1: Số khung (VIN) và Số máy là bắt buộc.",
       );
     });
@@ -156,6 +189,7 @@ describe("ProductionOrderExecutionTab - Vehicle Identifiers & Validation", () =>
           vinNo: "VIN-001",
           engineNo: "ENG-001",
           serialNo: "",
+          internalSerialNo: "SN-1",
           lotNo: "",
           notes: "",
           attributes: [],
@@ -164,6 +198,7 @@ describe("ProductionOrderExecutionTab - Vehicle Identifiers & Validation", () =>
           vinNo: "vin-001",
           engineNo: "ENG-002",
           serialNo: "",
+          internalSerialNo: "SN-2",
           lotNo: "",
           notes: "",
           attributes: [],
@@ -180,6 +215,7 @@ describe("ProductionOrderExecutionTab - Vehicle Identifiers & Validation", () =>
           vinNo: "VIN-001",
           engineNo: "ENG-001",
           serialNo: "",
+          internalSerialNo: "SN-1",
           lotNo: "",
           notes: "",
           attributes: [],
@@ -188,6 +224,7 @@ describe("ProductionOrderExecutionTab - Vehicle Identifiers & Validation", () =>
           vinNo: "VIN-002",
           engineNo: "ENG-001",
           serialNo: "",
+          internalSerialNo: "SN-2",
           lotNo: "",
           notes: "",
           attributes: [],
@@ -202,6 +239,7 @@ describe("ProductionOrderExecutionTab - Vehicle Identifiers & Validation", () =>
           vinNo: "VIN-001",
           engineNo: "ENG-001",
           serialNo: "SER-001",
+          internalSerialNo: "SN-1",
           lotNo: "",
           notes: "",
           attributes: [],
@@ -210,6 +248,7 @@ describe("ProductionOrderExecutionTab - Vehicle Identifiers & Validation", () =>
           vinNo: "VIN-002",
           engineNo: "ENG-002",
           serialNo: "SER-002",
+          internalSerialNo: "SN-2",
           lotNo: "",
           notes: "",
           attributes: [],
@@ -223,6 +262,7 @@ describe("ProductionOrderExecutionTab - Vehicle Identifiers & Validation", () =>
     const mockOrder: ErpProductionOrder = {
       id: "po-1",
       orderNumber: "MO-2026090001",
+      referenceNo: "MO-2026090001",
       status: "IN_PROGRESS",
       qtyToProduce: 2,
       qtyProduced: 1,
@@ -244,12 +284,13 @@ describe("ProductionOrderExecutionTab - Vehicle Identifiers & Validation", () =>
       ] as any,
     } as any;
 
-    it("renders execution table with VIN, EngineNo, SerialNo, and Notes columns", () => {
+    it("renders execution action buttons and produced vehicle table for VEHICLE", () => {
       const mockIdentifiers: ProductionIdentifier[] = [
         {
           vinNo: "VIN-002",
           engineNo: "ENG-002",
           serialNo: "",
+          internalSerialNo: "SN-XE-MAY-01-260906-0001-002",
           lotNo: "",
           notes: "",
           attributes: [],
@@ -266,32 +307,38 @@ describe("ProductionOrderExecutionTab - Vehicle Identifiers & Validation", () =>
           setBatchCompleteQty={() => {}}
           showBatchDialog={false}
           setShowBatchDialog={() => {}}
-          vehicleBulkInput=""
-          setVehicleBulkInput={() => {}}
           identifiers={mockIdentifiers}
           setIdentifiers={() => {}}
           handleIdentifierChange={() => {}}
-          applyVehicleBulkInput={() => {}}
+          onOpenIdentifierDrawer={() => {}}
           onStartAll={async () => {}}
           onCompleteOne={async () => {}}
           onBatchComplete={async () => {}}
         />,
       );
 
-      // Verify Column headers for VEHICLE
-      expect(screen.getByText("Số khung (VIN)")).toBeInTheDocument();
-      expect(screen.getAllByText("Số máy").length).toBeGreaterThanOrEqual(1);
-      expect(screen.getByText("Số Serial (tùy chọn)")).toBeInTheDocument();
-      expect(screen.getAllByText("Ghi chú").length).toBeGreaterThanOrEqual(1);
+      // Verify Open Completion & Declaration Drawer button in section header
+      expect(
+        screen.getByText("Nghiệm thu & Khai báo Số khung / Số máy"),
+      ).toBeInTheDocument();
 
-      // Verify Produced Vehicles List with extended attributes
+      // Verify Unified Section Title
       expect(
         screen.getByText("Danh sách thành phẩm đã xuất xưởng"),
       ).toBeInTheDocument();
+
+      // Verify Table Columns
+      expect(screen.getByText("Số khung (VIN)")).toBeInTheDocument();
+      expect(screen.getByText("Số máy")).toBeInTheDocument();
+      expect(screen.getByText("Số Serial xe")).toBeInTheDocument();
+      expect(screen.getByText("Số Serial nội bộ")).toBeInTheDocument();
+      expect(screen.getByText("Ghi chú")).toBeInTheDocument();
+
+      // Verify Produced Vehicle Values
       expect(screen.getByText("VIN-001")).toBeInTheDocument();
       expect(screen.getByText("ENG-001")).toBeInTheDocument();
-      expect(screen.getByText("color:")).toBeInTheDocument();
-      expect(screen.getByText("Đỏ")).toBeInTheDocument();
+      expect(screen.getByText("SER-001")).toBeInTheDocument();
+      expect(screen.getByText("Nghiệm thu đạt chuẩn")).toBeInTheDocument();
     });
   });
 });

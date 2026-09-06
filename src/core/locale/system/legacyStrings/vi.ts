@@ -362,4 +362,18 @@ export const legacyStringsVi = {
   "Lệnh sản xuất đã hoàn thành 100%": "Lệnh sản xuất đã hoàn thành 100%",
   "Đã nhập kho đủ": "Đã nhập kho đủ",
   "đơn vị thành phẩm.": "đơn vị thành phẩm.",
+  "Số Serial xe": "Số Serial xe",
+  "Số Serial nội bộ": "Số Serial nội bộ",
+  "Số Serial phụ tùng": "Số Serial phụ tùng",
+  "Sinh Serial nội bộ": "Sinh Serial nội bộ",
+  "Tự động sinh mã": "Tự động sinh mã",
+  "Tải file mẫu Excel xe": "Tải file mẫu Excel xe",
+  "Tải file mẫu Excel phụ tùng": "Tải file mẫu Excel phụ tùng",
+  "Trùng lặp trong danh sách": "Trùng lặp trong danh sách",
+  "Số Serial xe bị trùng trong danh sách":
+    "Số Serial xe bị trùng trong danh sách",
+  "Số Serial nội bộ bị trùng trong danh sách":
+    "Số Serial nội bộ bị trùng trong danh sách",
+  "Số Serial bị trùng trong danh sách": "Số Serial bị trùng trong danh sách",
+  "Tiến trình & Thực thi sản xuất": "Tiến trình sản xuất",
 };
