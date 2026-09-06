@@ -30,6 +30,22 @@ Khi tạo mới hoặc chỉnh sửa một trang Dashboard/Báo cáo tổng quan
 
 ---
 
+## 1.2. 🎨 Quy Tắc Bảng Màu & Tuyệt Đối Cấm Màu Xanh Dương (No Blue Mandate)
+
+> [!CAUTION]
+> **TUYỆT ĐỐI KHÔNG SỬ DỤNG MÀU XANH DƯƠNG (`blue-*`, `bg-blue-*`, `text-blue-*`, `border-blue-*`, hex `#3b82f6`)** trong toàn bộ Dashboard (KPI Cards, Charts, Donut/Bar Segments, Sub-tables, Badges).
+> 
+> **Thay thế bằng hệ màu chuẩn:**
+> 1. **Neutral Palette (Mặc định)**: Dùng `foreground`, `muted`, `muted-foreground`, `border`, `slate-*`, `zinc-*`, `neutral-*` cho card borders, nhãn KPI, trục biểu đồ, metadata.
+> 2. **Brand Primary**: Dùng `primary`, `bg-primary`, `text-primary` cho doanh số chính, icon tiêu đề, KPI chủ đạo.
+> 3. **Semantic Colors cho Biểu đồ & Chỉ số**:
+>    - **Doanh thu / Tăng trưởng**: Dùng `primary` hoặc `emerald-*` (`#10b981`, `text-emerald-600`).
+>    - **Chi phí / Cảnh báo**: Dùng `amber-*` (`#f59e0b`, `text-amber-600`).
+>    - **Lỗ / Hủy / Nguy hiểm**: Dùng `destructive` / `red-*` (`#ef4444`, `text-destructive`).
+>    - **Biểu đồ Donut đa phần**: Dùng bảng màu hài hòa không chứa màu xanh dương: `["#0f172a", "#10b981", "#f59e0b", "#8b5cf6", "#64748b"]` (Slate-900, Emerald, Amber, Purple, Slate-500).
+
+---
+
 ## 2. Breadcrumb & TabBar — BẮT BUỘC
 
 ### 2.1. Breadcrumb đúng cấp (Topbar)
@@ -199,7 +215,7 @@ export function ExampleDashboardPage() {
   const trendLabels = (data?.trend || []).map((t) => t.month);
   const trendValues = (data?.trend || []).map((t) => t.value);
 
-  const donutColors = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"];
+  const donutColors = ["#0f172a", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"];
   const donutItems = (data?.statusBreakdown || []).map((item, idx) => ({
     id: item.status,
     label: t(`status.${item.status}`, item.status),
@@ -273,7 +289,7 @@ export function ExampleDashboardPage() {
                 datasets={[
                   {
                     data: trendValues,
-                    color: "#3b82f6",
+                    color: "var(--primary, #0f172a)",
                     label: t("amount", "Doanh số"),
                   },
                 ]}

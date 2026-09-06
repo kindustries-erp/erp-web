@@ -27,6 +27,23 @@ Khi tạo mới hoặc enhance một `DataTable` trong hệ thống, bạn **B�
   - `DateFilterOperator`: `BETWEEN`, `EQUALS`, `BEFORE`, `AFTER`
   - `FilterChipCategory`: `TEXT`, `MULTI_SELECT`, `NUMERIC`, `DATE`, `SORT`, `CUSTOM`
 
+---
+
+## 0.1. 🎨 Quy Tắc Bảng Màu & Tuyệt Đối Cấm Màu Xanh Dương (No Blue Mandate)
+
+> [!CAUTION]
+> **TUYỆT ĐỐI KHÔNG SỬ DỤNG MÀU XANH DƯƠNG (`blue-*`, `bg-blue-*`, `text-blue-*`, `border-blue-*`)** trong toàn bộ Bảng Dữ Liệu (Header, Cell Text, Badges, Status Dots, Summary Row, Pagination, Filter Popover, Context Menu).
+> 
+> **Thay thế bằng hệ màu chuẩn:**
+> 1. **Neutral Palette (Mặc định)**: Dùng `foreground`, `muted`, `muted-foreground`, `border`, `slate-*`, `zinc-*`, `neutral-*` cho nội dung text, mã code, số máy, số serial, metadata, badge trạng thái `IN_PROGRESS` / Đang xử lý.
+> 2. **Brand Primary**: Dùng `primary`, `bg-primary`, `text-primary` cho icon chính, thanh tiến độ, số tiền tổng kết, checkbox check state.
+> 3. **Semantic Colors**:
+>    - **Thành công / Hoàn thành (100% / COMPLETED / DONE)**: Dùng `emerald-*` (`bg-emerald-50 text-emerald-700 border-emerald-200`, `text-emerald-600 font-semibold`).
+>    - **Cảnh báo / Tiến trình / Nhắc nhở**: Dùng `amber-*` hoặc `neutral / muted` (`bg-amber-50 text-amber-800 border-amber-200` hoặc `bg-muted text-foreground border-border`).
+>    - **Lỗi / Hủy / Nguy hiểm**: Dùng `destructive` / `red-*` (`bg-destructive/10 text-destructive border-destructive/20`).
+
+---
+
 ## 1. Cấu trúc cột (Columns Structure)
 
 - **Cột đầu tiên (First Column) — Cột Index (STT) hoặc Checkbox**: Bắt buộc rộng `40px` và **CĂN GIỮA TUYỆT ĐỐI (Align Center cả Header lẫn Cell)**.

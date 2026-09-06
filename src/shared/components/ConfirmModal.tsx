@@ -50,9 +50,18 @@ export function ConfirmModal({
           <DialogTitle className="text-sm font-semibold text-foreground">
             {title || t("confirmModal.defaultTitle")}
           </DialogTitle>
-          <DialogDescription className="text-xs text-[color:var(--muted-fg)] leading-relaxed">
-            {message}
-          </DialogDescription>
+          {typeof message === "string" ? (
+            <DialogDescription className="text-xs text-[color:var(--muted-fg)] leading-relaxed">
+              {message}
+            </DialogDescription>
+          ) : (
+            <DialogDescription
+              asChild
+              className="text-xs text-[color:var(--muted-fg)] leading-relaxed"
+            >
+              <div>{message}</div>
+            </DialogDescription>
+          )}
         </DialogHeader>
 
         <DialogFooter className="flex-row justify-end gap-2 mt-4 sm:space-x-0">

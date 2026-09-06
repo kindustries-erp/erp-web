@@ -145,7 +145,7 @@ export function ProductionOrderDrawer({
     if (status === "COMPLETED") {
       badgeCls = "bg-emerald-100 text-emerald-800 border-emerald-200";
     } else if (status === "IN_PROGRESS") {
-      badgeCls = "bg-blue-100 text-blue-800 border-blue-200";
+      badgeCls = "bg-muted text-foreground border-border";
     } else if (status === "CANCELLED") {
       badgeCls = "bg-red-100 text-red-800 border-red-200";
     }
@@ -159,7 +159,7 @@ export function ProductionOrderDrawer({
           {status}
         </Badge>
         {status === "IN_PROGRESS" && (
-          <span className="text-xs font-semibold text-blue-700 dark:text-blue-400">
+          <span className="text-xs font-semibold text-foreground font-mono">
             {fmtQty(qtyProduced)} / {fmtQty(qtyToProduce)} (
             {Math.round((qtyProduced / qtyToProduce) * 100)}%)
           </span>

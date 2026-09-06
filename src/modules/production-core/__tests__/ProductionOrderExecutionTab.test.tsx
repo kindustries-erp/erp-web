@@ -1,15 +1,17 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect } from "vitest";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   ProductionOrderExecutionTab,
   isIdentifierValid,
   identifiersAllValid,
-  parseVehicleBulkInput,
   findVehicleDuplicate,
   generateInternalSerial,
   type ProductionIdentifier,
 } from "../components/drawer/ProductionOrderExecutionTab";
+import { ProductionIdentifierReviewTable } from "../components/drawer/ProductionIdentifierReviewTable";
+import { ProductionIdentifierDeclareDrawer } from "../components/drawer/ProductionIdentifierDeclareDrawer";
 import type { ErpProductionOrder } from "../api/productionCoreApi";
 
 describe("ProductionOrderExecutionTab - Vehicle Identifiers & Validation", () => {
@@ -149,39 +151,6 @@ describe("ProductionOrderExecutionTab - Vehicle Identifiers & Validation", () =>
     });
   });
 
-  describe("parseVehicleBulkInput", () => {
-    it("parses 2-column comma separated input (VIN, EngineNo) with auto-generated internal serial", () => {
-      const input = "VIN-001, ENG-001\nVIN-002, ENG-002";
-      const result = parseVehicleBulkInput(input, "VEHICLE", "XE-01", "0012");
-      expect(result).toHaveLength(2);
-      expect(result[0].vinNo).toBe("VIN-001");
-      expect(result[0].engineNo).toBe("ENG-001");
-      expect(result[0].serialNo).toBe("");
-      expect(result[0].internalSerialNo).toMatch(/^SN-XE-01-\d{6}-0012-001$/);
-      expect(result[1].vinNo).toBe("VIN-002");
-      expect(result[1].engineNo).toBe("ENG-002");
-      expect(result[1].internalSerialNo).toMatch(/^SN-XE-01-\d{6}-0012-002$/);
-    });
-
-    it("parses 4-column tab separated input (VIN, EngineNo, SerialNo, Notes)", () => {
-      const input = "VIN-001\tENG-001\tSER-001\t\tXe màu đỏ bàn giao sớm";
-      const result = parseVehicleBulkInput(input, "VEHICLE", "XE-01", "0012");
-      expect(result).toHaveLength(1);
-      expect(result[0].vinNo).toBe("VIN-001");
-      expect(result[0].engineNo).toBe("ENG-001");
-      expect(result[0].serialNo).toBe("SER-001");
-      expect(result[0].notes).toBe("Xe màu đỏ bàn giao sớm");
-      expect(result[0].internalSerialNo).toMatch(/^SN-XE-01-\d{6}-0012-001$/);
-    });
-
-    it("throws error when VIN or EngineNo is missing", () => {
-      const input = "VIN-001\n";
-      expect(() => parseVehicleBulkInput(input, "VEHICLE", "XE-01")).toThrow(
-        "Dòng 1: Số khung (VIN) và Số máy là bắt buộc.",
-      );
-    });
-  });
-
   describe("findVehicleDuplicate", () => {
     it("detects duplicate VIN", () => {
       const ids: ProductionIdentifier[] = [
@@ -258,32 +227,32 @@ describe("ProductionOrderExecutionTab - Vehicle Identifiers & Validation", () =>
     });
   });
 
-  describe("Component Rendering", () => {
-    const mockOrder: ErpProductionOrder = {
-      id: "po-1",
-      orderNumber: "MO-2026090001",
-      referenceNo: "MO-2026090001",
-      status: "IN_PROGRESS",
-      qtyToProduce: 2,
-      qtyProduced: 1,
-      finishedGoodItem: {
-        id: "fg-1",
-        sku: "XE-MAY-01",
-        name: "Xe máy điện Klotus",
-        trackingPolicy: "VEHICLE",
-      } as any,
-      producedVehicles: [
-        {
-          id: "veh-1",
-          vin: "VIN-001",
-          engineNo: "ENG-001",
-          serialNo: "SER-001",
-          attributes: { color: "Đỏ", version: "1.0" },
-          notes: "Nghiệm thu đạt chuẩn",
-        },
-      ] as any,
-    } as any;
+  const mockOrder: ErpProductionOrder = {
+    id: "po-1",
+    orderNumber: "MO-2026090001",
+    referenceNo: "MO-2026090001",
+    status: "IN_PROGRESS",
+    qtyToProduce: 2,
+    qtyProduced: 1,
+    finishedGoodItem: {
+      id: "fg-1",
+      sku: "XE-MAY-01",
+      name: "Xe máy điện Klotus",
+      trackingPolicy: "VEHICLE",
+    } as any,
+    producedVehicles: [
+      {
+        id: "veh-1",
+        vin: "VIN-001",
+        engineNo: "ENG-001",
+        serialNo: "SER-001",
+        attributes: { color: "Đỏ", version: "1.0" },
+        notes: "Nghiệm thu đạt chuẩn",
+      },
+    ] as any,
+  } as any;
 
+  describe("Component Rendering", () => {
     it("renders execution action buttons and produced vehicle table for VEHICLE", () => {
       const mockIdentifiers: ProductionIdentifier[] = [
         {
@@ -339,6 +308,252 @@ describe("ProductionOrderExecutionTab - Vehicle Identifiers & Validation", () =>
       expect(screen.getByText("ENG-001")).toBeInTheDocument();
       expect(screen.getByText("SER-001")).toBeInTheDocument();
       expect(screen.getByText("Nghiệm thu đạt chuẩn")).toBeInTheDocument();
+    });
+  });
+
+  describe("ProductionIdentifierReviewTable & ProductionIdentifierDeclareDrawer", () => {
+    it("renders ProductionIdentifierReviewTable with DataTable, title progress tooltip, and Split Button actions", () => {
+      const mockIdentifiers: ProductionIdentifier[] = [
+        {
+          vinNo: "VIN-001",
+          engineNo: "ENG-001",
+          serialNo: "SER-001",
+          internalSerialNo: "SN-XE-001",
+          lotNo: "",
+          notes: "Xe mẫu",
+          attributes: [],
+          isExisting: true,
+        },
+        {
+          vinNo: "",
+          engineNo: "",
+          serialNo: "",
+          internalSerialNo: "SN-XE-002",
+          lotNo: "",
+          notes: "",
+          attributes: [],
+          isExisting: false,
+        },
+      ];
+
+      const queryClient = new QueryClient({
+        defaultOptions: { queries: { retry: false } },
+      });
+
+      render(
+        <QueryClientProvider client={queryClient}>
+          <ProductionIdentifierReviewTable
+            policy="VEHICLE"
+            identifiers={mockIdentifiers}
+            onChange={() => {}}
+            onSetIdentifiers={() => {}}
+            requiredQty={2}
+            skuPrefix="XE-MAY"
+            orderSuffix="0001"
+          />
+        </QueryClientProvider>,
+      );
+
+      // Verify Section Title and Progress Count
+      expect(
+        screen.getByText("Thông tin định danh xe xuất xưởng"),
+      ).toBeInTheDocument();
+      expect(screen.getByText("(1 / 2)")).toBeInTheDocument();
+
+      // Verify Split Button Main Action
+      expect(screen.getByText("Nhập từ file Excel")).toBeInTheDocument();
+
+      // Verify Table Column Headers
+      expect(screen.getByText("Số khung (VIN) *")).toBeInTheDocument();
+      expect(screen.getByText("Số máy *")).toBeInTheDocument();
+      expect(screen.getByText("Số Serial xe")).toBeInTheDocument();
+      expect(screen.getByText("Số Serial nội bộ")).toBeInTheDocument();
+      expect(screen.getByText("Ghi chú")).toBeInTheDocument();
+    });
+
+    it("renders ProductionIdentifierDeclareDrawer with standardized collapsible sections, qtyToProduce rows and categorized confirmation modal", async () => {
+      const mockIdentifiers: ProductionIdentifier[] = [];
+
+      const queryClient = new QueryClient({
+        defaultOptions: { queries: { retry: false } },
+      });
+
+      render(
+        <QueryClientProvider client={queryClient}>
+          <ProductionIdentifierDeclareDrawer
+            open={true}
+            onClose={() => {}}
+            order={mockOrder}
+            policy="VEHICLE"
+            identifiers={mockIdentifiers}
+            setIdentifiers={() => {}}
+            batchCompleteQty="1"
+            setBatchCompleteQty={() => {}}
+            onBatchComplete={async () => {}}
+          />
+        </QueryClientProvider>,
+      );
+
+      // Verify Drawer Title
+      expect(
+        screen.getByText("Nghiệm thu & Khai báo Số khung, Số máy Xe"),
+      ).toBeInTheDocument();
+
+      // Verify Table Section in Left Panel
+      expect(
+        screen.getByText("Thông tin định danh xe xuất xưởng"),
+      ).toBeInTheDocument();
+
+      // Verify Right Panel Sections
+      expect(screen.getByText("Thông tin Lệnh sản xuất")).toBeInTheDocument();
+      expect(screen.getByText("Tiến độ sản xuất")).toBeInTheDocument();
+      expect(screen.getByText("Quy tắc định danh")).toBeInTheDocument();
+    });
+
+    it("opens categorized ConfirmModal when clicking confirm button and submits correctly", async () => {
+      let batchCompleteCalled = false;
+      let submittedIdentifiers: ProductionIdentifier[] = [];
+      let submittedQty = "";
+
+      const queryClient = new QueryClient({
+        defaultOptions: { queries: { retry: false } },
+      });
+
+      render(
+        <QueryClientProvider client={queryClient}>
+          <ProductionIdentifierDeclareDrawer
+            open={true}
+            onClose={() => {}}
+            order={mockOrder}
+            policy="VEHICLE"
+            identifiers={[]}
+            setIdentifiers={(val: any) => {
+              submittedIdentifiers = typeof val === "function" ? val([]) : val;
+            }}
+            batchCompleteQty="1"
+            setBatchCompleteQty={(qty) => {
+              submittedQty = qty;
+            }}
+            onBatchComplete={async () => {
+              batchCompleteCalled = true;
+            }}
+          />
+        </QueryClientProvider>,
+      );
+
+      // In mockOrder, qtyToProduce is 2, row 0 is existing vehicle (VIN-001, ENG-001).
+      // Let's enter VIN and Engine for row 1 (the new vehicle)
+      // Find row 1 VIN input (placeholder "Nhập số VIN...")
+      const vinInputs = screen.getAllByPlaceholderText("Nhập số VIN...");
+      if (vinInputs.length > 1) {
+        fireEvent.change(vinInputs[1], { target: { value: "VIN-002" } });
+        fireEvent.blur(vinInputs[1]);
+      }
+
+      const engInputs = screen.getAllByPlaceholderText("Nhập số máy...");
+      if (engInputs.length > 1) {
+        fireEvent.change(engInputs[1], { target: { value: "ENG-002" } });
+        fireEvent.blur(engInputs[1]);
+      }
+
+      const confirmBtn = screen.getByText("Xác nhận hoàn thành & Nhập kho");
+      fireEvent.click(confirmBtn);
+
+      // Verify Modal Title & Categorized Content
+      expect(
+        screen.getByText(
+          /Bạn có chắc chắn muốn xác nhận kết quả sản xuất cho Lệnh sản xuất/,
+        ),
+      ).toBeInTheDocument();
+      expect(
+        screen.getAllByText("MO-2026090001").length,
+      ).toBeGreaterThanOrEqual(1);
+      expect(screen.getByText("Sản xuất mới & Nhập kho:")).toBeInTheDocument();
+
+      // Click "Đồng ý nhập kho"
+      const modalConfirmBtn = screen.getByText("Đồng ý nhập kho");
+      fireEvent.click(modalConfirmBtn);
+
+      expect(batchCompleteCalled).toBe(true);
+      expect(submittedQty).toBe("1");
+      expect(submittedIdentifiers.length).toBe(1);
+      expect(submittedIdentifiers[0].vinNo).toBe("VIN-002");
+    });
+
+    it("disables confirm button and displays error when an existing vehicle VIN or Engine is cleared", async () => {
+      const queryClient = new QueryClient({
+        defaultOptions: { queries: { retry: false } },
+      });
+
+      render(
+        <QueryClientProvider client={queryClient}>
+          <ProductionIdentifierDeclareDrawer
+            open={true}
+            onClose={() => {}}
+            order={mockOrder}
+            policy="VEHICLE"
+            identifiers={[]}
+            setIdentifiers={() => {}}
+            batchCompleteQty="1"
+            setBatchCompleteQty={() => {}}
+            onBatchComplete={async () => {}}
+          />
+        </QueryClientProvider>,
+      );
+
+      // Clear row 0 (existing vehicle) VIN
+      const vinInputs = screen.getAllByPlaceholderText("Nhập số VIN...");
+      fireEvent.change(vinInputs[0], { target: { value: "" } });
+      fireEvent.blur(vinInputs[0]);
+
+      // Verify warning message is shown in right panel
+      expect(
+        screen.getByText(
+          "Xe đã ghi nhận xuất xưởng không được để trống Số khung hoặc Số máy!",
+        ),
+      ).toBeInTheDocument();
+
+      // Verify confirm button is disabled
+      const confirmBtn = screen.getByText("Xác nhận hoàn thành & Nhập kho");
+      expect(confirmBtn).toBeDisabled();
+    });
+
+    it("shows updated vehicle count in ConfirmModal when existing vehicle details are modified", async () => {
+      const queryClient = new QueryClient({
+        defaultOptions: { queries: { retry: false } },
+      });
+
+      render(
+        <QueryClientProvider client={queryClient}>
+          <ProductionIdentifierDeclareDrawer
+            open={true}
+            onClose={() => {}}
+            order={mockOrder}
+            policy="VEHICLE"
+            identifiers={[]}
+            setIdentifiers={() => {}}
+            batchCompleteQty="1"
+            setBatchCompleteQty={() => {}}
+            onBatchComplete={async () => {}}
+          />
+        </QueryClientProvider>,
+      );
+
+      // Edit row 0 (existing vehicle) VIN to fix typo
+      const vinInputs = screen.getAllByPlaceholderText("Nhập số VIN...");
+      fireEvent.change(vinInputs[0], { target: { value: "VIN-001-FIXED" } });
+      fireEvent.blur(vinInputs[0]);
+
+      // Check right panel indicates 1 updated unit
+      expect(screen.getByText("Cập nhật thông tin:")).toBeInTheDocument();
+
+      const confirmBtn = screen.getByText("Xác nhận hoàn thành & Nhập kho");
+      fireEvent.click(confirmBtn);
+
+      // Verify modal shows updated vehicle line
+      expect(
+        screen.getByText("Cập nhật thông tin đã xuất xưởng:"),
+      ).toBeInTheDocument();
     });
   });
 });

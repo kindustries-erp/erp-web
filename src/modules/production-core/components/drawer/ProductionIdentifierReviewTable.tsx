@@ -5,33 +5,26 @@ import React, {
   useEffect,
   useCallback,
 } from "react";
-import {
-  Sparkles,
-  ClipboardList,
-  FileSpreadsheet,
-  Download,
-  ChevronDown,
-  CheckCircle2,
-} from "lucide-react";
+import { Sparkles, FileSpreadsheet, Download, ChevronDown } from "lucide-react";
 import * as XLSX from "xlsx";
-import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/Button";
-import {
-  Table,
-  TableHeader,
-  TableHead,
-  TableBody,
-  TableRow,
-  TableCell,
-} from "@/shared/components/ui/table";
+import { Tooltip } from "@/core/components/ui/Tooltip";
 import { cn } from "@/shared/utils";
 import { DrawerSection, inputCls } from "@/shared/components/DrawerModal";
 import { ActionDropdown } from "@/shared/components/ActionDropdown";
-import { EmptyState } from "@/shared/components/EmptyState";
 import { useT } from "@/core/i18n";
 import { useUIStore } from "@/core/config/uiStore";
+import {
+  DataTable,
+  createColumnHeaderFilter,
+  filterClientItems,
+  getDefaultPageSize,
+  type DataTableColumn,
+} from "@/shared/components/DataTable";
+import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
 
 export interface ProductionIdentifier {
+  id?: string;
   vinNo: string;
   engineNo: string;
   serialNo: string; // Số serial xe (Optional - theo tem xe)
@@ -39,6 +32,27 @@ export interface ProductionIdentifier {
   lotNo: string;
   notes: string;
   attributes: Array<{ key: string; value: string }>;
+  isExisting?: boolean; // Xe đã được ghi nhận xuất xưởng trước đó
+  originalVinNo?: string;
+  originalEngineNo?: string;
+  originalSerialNo?: string;
+  originalInternalSerialNo?: string;
+  originalNotes?: string;
+}
+
+export interface ProductionIdentifierRowItem extends ProductionIdentifier {
+  id: string;
+  originalIndex: number;
+  isValid: boolean;
+  hasDuplicate: boolean;
+  isVinDupe: boolean;
+  isEngDupe: boolean;
+  isSerDupe: boolean;
+  isISerDupe: boolean;
+  isExistingClearedVin?: boolean;
+  isExistingClearedEng?: boolean;
+  isIncompleteNewVin?: boolean;
+  isIncompleteNewEng?: boolean;
 }
 
 export type TrackingPolicy = "NONE" | "SERIAL" | "LOT" | "VEHICLE" | "CUSTOM";
@@ -69,6 +83,7 @@ export function generateInternalSerial(
 
 export function emptyIdentifier(
   defaultInternalSerial: string = "",
+  isExisting: boolean = false,
 ): ProductionIdentifier {
   return {
     vinNo: "",
@@ -78,6 +93,7 @@ export function emptyIdentifier(
     lotNo: "",
     notes: "",
     attributes: [],
+    isExisting,
   };
 }
 
@@ -88,7 +104,10 @@ export function makeIdentifierRows(
 ): ProductionIdentifier[] {
   const length = Math.max(1, Math.floor(qty));
   return Array.from({ length }, (_, i) =>
-    emptyIdentifier(generateInternalSerial(skuPrefix, i + 1, orderSuffix)),
+    emptyIdentifier(
+      generateInternalSerial(skuPrefix, i + 1, orderSuffix),
+      false,
+    ),
   );
 }
 
@@ -97,12 +116,12 @@ export function isIdentifierValid(
   policy: TrackingPolicy,
 ): boolean {
   if (policy === "VEHICLE") {
-    return !!id.vinNo.trim() && !!id.engineNo.trim();
+    return !!id.vinNo?.trim() && !!id.engineNo?.trim();
   }
   if (policy === "SERIAL") {
     return !!(id.internalSerialNo?.trim() || id.serialNo?.trim());
   }
-  if (policy === "LOT") return !!id.lotNo.trim();
+  if (policy === "LOT") return !!id.lotNo?.trim();
   return true;
 }
 
@@ -148,86 +167,6 @@ export function findVehicleDuplicate(ids: ProductionIdentifier[]) {
   return null;
 }
 
-export function parseVehicleBulkInput(
-  input: string,
-  policy: TrackingPolicy = "VEHICLE",
-  skuPrefix: string = "FG",
-  orderSuffix: string = "",
-): ProductionIdentifier[] {
-  return input
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .filter(Boolean)
-    .map((line, index) => {
-      const parts = line.includes("\t") ? line.split("\t") : line.split(",");
-      const cleanParts = parts.map((p) => (p ?? "").trim());
-
-      if (policy === "VEHICLE") {
-        const vinNo = cleanParts[0] ?? "";
-        const engineNo = cleanParts[1] ?? "";
-        const serialNo = cleanParts[2] ?? "";
-        const internalSerialNo =
-          cleanParts[3] ||
-          generateInternalSerial(skuPrefix, index + 1, orderSuffix);
-        const notes = cleanParts[4] ?? "";
-
-        if (!vinNo || !engineNo) {
-          throw new Error(
-            `Dòng ${index + 1}: Số khung (VIN) và Số máy là bắt buộc.`,
-          );
-        }
-
-        return {
-          vinNo,
-          engineNo,
-          serialNo,
-          internalSerialNo,
-          lotNo: "",
-          notes,
-          attributes: [],
-        };
-      }
-
-      if (policy === "SERIAL") {
-        const serialNo = cleanParts[0] ?? "";
-        const notes = cleanParts[1] ?? "";
-        if (!serialNo) {
-          throw new Error(`Dòng ${index + 1}: Số Serial là bắt buộc.`);
-        }
-        return {
-          vinNo: "",
-          engineNo: "",
-          serialNo: "",
-          internalSerialNo: serialNo,
-          lotNo: "",
-          notes,
-          attributes: [],
-        };
-      }
-
-      if (policy === "LOT") {
-        const lotNo = cleanParts[0] ?? "";
-        const notes = cleanParts[1] ?? "";
-        if (!lotNo) {
-          throw new Error(`Dòng ${index + 1}: Số Lô là bắt buộc.`);
-        }
-        return {
-          vinNo: "",
-          engineNo: "",
-          serialNo: "",
-          internalSerialNo: "",
-          lotNo,
-          notes,
-          attributes: [],
-        };
-      }
-
-      return emptyIdentifier(
-        generateInternalSerial(skuPrefix, index + 1, orderSuffix),
-      );
-    });
-}
-
 export interface ProductionIdentifierReviewTableProps {
   policy: TrackingPolicy;
   identifiers: ProductionIdentifier[];
@@ -240,253 +179,78 @@ export interface ProductionIdentifierReviewTableProps {
   disabled?: boolean;
 }
 
-interface IdentifierTableRowProps {
-  originalIndex: number;
-  row: ProductionIdentifier;
-  policy: TrackingPolicy;
+interface EditableCellProps {
+  value: string;
+  hasError?: boolean;
+  errorMessage?: string;
+  placeholder?: string;
+  className?: string;
+  inputClassName?: string;
   disabled?: boolean;
-  onChange: (index: number, val: ProductionIdentifier) => void;
-  isVinDupe?: boolean;
-  isEngDupe?: boolean;
-  isSerDupe?: boolean;
-  isISerDupe?: boolean;
+  onChange: (val: string) => void;
 }
 
-const IdentifierTableRow = React.memo(function IdentifierTableRow({
-  originalIndex,
-  row,
-  policy,
+const EditableCell = React.memo(function EditableCell({
+  value,
+  hasError = false,
+  errorMessage,
+  placeholder,
+  className,
+  inputClassName,
   disabled = false,
   onChange,
-  isVinDupe = false,
-  isEngDupe = false,
-  isSerDupe = false,
-  isISerDupe = false,
-}: IdentifierTableRowProps) {
-  const t = useT();
-  const [localRow, setLocalRow] = useState<ProductionIdentifier>(row);
+}: EditableCellProps) {
+  const [localVal, setLocalVal] = useState(value);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Sync internal state when external prop row changes (bulk paste, Excel import, auto-gen)
   useEffect(() => {
-    setLocalRow(row);
-  }, [row]);
+    setLocalVal(value);
+  }, [value]);
 
-  // Cleanup debounce on unmount
   useEffect(() => {
     return () => {
       if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
     };
   }, []);
 
-  const triggerChange = useCallback(
-    (updated: ProductionIdentifier) => {
-      setLocalRow(updated);
-      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
-      debounceTimerRef.current = setTimeout(() => {
-        onChange(originalIndex, updated);
-      }, 300);
-    },
-    [originalIndex, onChange],
-  );
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setLocalVal(val);
+    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+    debounceTimerRef.current = setTimeout(() => {
+      onChange(val);
+    }, 300);
+  };
 
   const handleBlur = () => {
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current);
-      onChange(originalIndex, localRow);
+      onChange(localVal);
     }
   };
 
-  const hasRowError = isVinDupe || isEngDupe || isSerDupe || isISerDupe;
-
   return (
-    <TableRow
-      className={cn(
-        "hover:bg-muted/30 transition-colors border-b border-border/70",
-        hasRowError && "bg-red-50/40 dark:bg-red-950/20",
+    <div className={cn("w-full py-0.5", className)}>
+      <input
+        value={localVal}
+        onChange={handleChange}
+        onBlur={handleBlur}
+        disabled={disabled}
+        placeholder={placeholder}
+        className={cn(
+          inputCls,
+          "w-full text-xs h-7 font-mono font-medium",
+          inputClassName,
+          hasError &&
+            "border-destructive focus-visible:ring-destructive bg-destructive/5",
+        )}
+      />
+      {hasError && errorMessage && (
+        <span className="text-[10px] text-destructive block mt-0.5 font-medium leading-tight">
+          {errorMessage}
+        </span>
       )}
-    >
-      {/* First Column: STT (Standard 40px, Absolutely Centered) */}
-      <TableCell className="w-[40px] min-w-[40px] p-0 text-center border-r border-border tabular-nums font-mono text-muted-foreground text-xs">
-        <span className="w-full block text-center">{originalIndex + 1}</span>
-      </TableCell>
-
-      {policy === "VEHICLE" && (
-        <>
-          {/* VIN */}
-          <TableCell className="py-1 px-2 border-r border-border">
-            <input
-              value={localRow.vinNo}
-              onChange={(e) =>
-                triggerChange({
-                  ...localRow,
-                  vinNo: e.target.value,
-                })
-              }
-              onBlur={handleBlur}
-              disabled={disabled}
-              className={cn(
-                inputCls,
-                "w-full text-xs h-7 font-mono font-medium",
-                isVinDupe &&
-                  "border-destructive focus-visible:ring-destructive bg-destructive/5",
-              )}
-              placeholder="Nhập số VIN..."
-            />
-            {isVinDupe && (
-              <span className="text-[10px] text-destructive block mt-0.5 font-medium">
-                {t("Trùng lặp trong danh sách")}
-              </span>
-            )}
-          </TableCell>
-
-          {/* Engine No */}
-          <TableCell className="py-1 px-2 border-r border-border">
-            <input
-              value={localRow.engineNo}
-              onChange={(e) =>
-                triggerChange({
-                  ...localRow,
-                  engineNo: e.target.value,
-                })
-              }
-              onBlur={handleBlur}
-              disabled={disabled}
-              className={cn(
-                inputCls,
-                "w-full text-xs h-7 font-mono font-medium",
-                isEngDupe &&
-                  "border-destructive focus-visible:ring-destructive bg-destructive/5",
-              )}
-              placeholder="Nhập số máy..."
-            />
-            {isEngDupe && (
-              <span className="text-[10px] text-destructive block mt-0.5 font-medium">
-                {t("Trùng lặp trong danh sách")}
-              </span>
-            )}
-          </TableCell>
-
-          {/* Vehicle Serial (Optional) */}
-          <TableCell className="py-1 px-2 border-r border-border">
-            <input
-              value={localRow.serialNo}
-              onChange={(e) =>
-                triggerChange({
-                  ...localRow,
-                  serialNo: e.target.value,
-                })
-              }
-              onBlur={handleBlur}
-              disabled={disabled}
-              className={cn(
-                inputCls,
-                "w-full text-xs h-7 font-mono",
-                isSerDupe &&
-                  "border-destructive focus-visible:ring-destructive bg-destructive/5",
-              )}
-              placeholder="Tùy chọn (tem xe)..."
-            />
-            {isSerDupe && (
-              <span className="text-[10px] text-destructive block mt-0.5 font-medium">
-                {t("Trùng lặp trong danh sách")}
-              </span>
-            )}
-          </TableCell>
-
-          {/* Internal Serial (Auto-generated / ERP) */}
-          <TableCell className="py-1 px-2 border-r border-border bg-primary/5">
-            <input
-              value={localRow.internalSerialNo}
-              onChange={(e) =>
-                triggerChange({
-                  ...localRow,
-                  internalSerialNo: e.target.value,
-                })
-              }
-              onBlur={handleBlur}
-              disabled={disabled}
-              className={cn(
-                inputCls,
-                "w-full text-xs h-7 font-mono font-medium text-primary",
-                isISerDupe &&
-                  "border-destructive focus-visible:ring-destructive bg-destructive/5",
-              )}
-              placeholder="Tự sinh theo kho..."
-            />
-            {isISerDupe && (
-              <span className="text-[10px] text-destructive block mt-0.5 font-medium">
-                {t("Trùng lặp trong danh sách")}
-              </span>
-            )}
-          </TableCell>
-        </>
-      )}
-
-      {policy === "SERIAL" && (
-        <TableCell className="py-1 px-2.5 border-r border-border">
-          <input
-            value={localRow.internalSerialNo || localRow.serialNo}
-            onChange={(e) =>
-              triggerChange({
-                ...localRow,
-                internalSerialNo: e.target.value,
-                serialNo: e.target.value,
-              })
-            }
-            onBlur={handleBlur}
-            disabled={disabled}
-            className={cn(
-              inputCls,
-              "w-full text-xs h-7 font-mono font-medium",
-              isISerDupe &&
-                "border-destructive focus-visible:ring-destructive bg-destructive/5",
-            )}
-            placeholder="Nhập hoặc tự sinh Serial..."
-          />
-          {isISerDupe && (
-            <span className="text-[10px] text-destructive block mt-0.5 font-medium">
-              {t("Trùng lặp trong danh sách")}
-            </span>
-          )}
-        </TableCell>
-      )}
-
-      {policy === "LOT" && (
-        <TableCell className="py-1 px-2.5 border-r border-border">
-          <input
-            value={localRow.lotNo}
-            onChange={(e) =>
-              triggerChange({
-                ...localRow,
-                lotNo: e.target.value,
-              })
-            }
-            onBlur={handleBlur}
-            disabled={disabled}
-            className={cn(inputCls, "w-full text-xs h-7 font-mono font-medium")}
-            placeholder="Nhập số Lô..."
-          />
-        </TableCell>
-      )}
-
-      {/* Notes */}
-      <TableCell className="py-1 px-2">
-        <input
-          value={localRow.notes}
-          onChange={(e) =>
-            triggerChange({
-              ...localRow,
-              notes: e.target.value,
-            })
-          }
-          onBlur={handleBlur}
-          disabled={disabled}
-          className={cn(inputCls, "w-full text-xs h-7")}
-          placeholder="Ghi chú đơn vị..."
-        />
-      </TableCell>
-    </TableRow>
+    </div>
   );
 });
 
@@ -495,7 +259,6 @@ export function ProductionIdentifierReviewTable({
   identifiers,
   onChange,
   onSetIdentifiers,
-  requiredQty = 1,
   skuPrefix = "FG",
   orderSuffix = "",
   disabled = false,
@@ -504,15 +267,12 @@ export function ProductionIdentifierReviewTable({
   const showToast = useUIStore((s) => s.showToast);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [isBulkPasteOpen, setIsBulkPasteOpen] = useState(false);
-  const [bulkText, setBulkText] = useState("");
+  const tableId = "production-identifier-declare-table";
+  const tableState = useTableColumnState(tableId);
 
-  // Quick Filter & Pagination State
-  const [filterTab, setFilterTab] = useState<
-    "ALL" | "INCOMPLETE" | "DUPLICATES"
-  >("ALL");
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(50);
+  // Pagination State
+  const [page, setPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(getDefaultPageSize);
 
   // Track internal duplicate sets
   const duplicates = useMemo(() => {
@@ -561,8 +321,8 @@ export function ProductionIdentifierReviewTable({
     };
   }, [identifiers]);
 
-  // Indexed rows for filtering & accurate original indexing
-  const indexedRows = useMemo(() => {
+  // Indexed rows for filtering, validation & accurate original indexing
+  const indexedRows = useMemo<ProductionIdentifierRowItem[]>(() => {
     return identifiers.map((row, originalIndex) => {
       const vinUpper = row.vinNo?.trim().toUpperCase();
       const engUpper = row.engineNo?.trim().toUpperCase();
@@ -579,8 +339,18 @@ export function ProductionIdentifierReviewTable({
 
       const isValid = isIdentifierValid(row, policy);
 
+      const isExisting = !!row.isExisting;
+      const isExistingClearedVin = isExisting && !row.vinNo?.trim();
+      const isExistingClearedEng = isExisting && !row.engineNo?.trim();
+
+      const isIncompleteNewVin =
+        !isExisting && !row.vinNo?.trim() && !!row.engineNo?.trim();
+      const isIncompleteNewEng =
+        !isExisting && !!row.vinNo?.trim() && !row.engineNo?.trim();
+
       return {
-        row,
+        ...row,
+        id: row.id || `row-${originalIndex}`,
         originalIndex,
         isValid,
         hasDuplicate,
@@ -588,6 +358,10 @@ export function ProductionIdentifierReviewTable({
         isEngDupe,
         isSerDupe,
         isISerDupe,
+        isExistingClearedVin,
+        isExistingClearedEng,
+        isIncompleteNewVin,
+        isIncompleteNewEng,
       };
     });
   }, [identifiers, policy, duplicates]);
@@ -596,32 +370,238 @@ export function ProductionIdentifierReviewTable({
     () => indexedRows.filter((r) => r.isValid).length,
     [indexedRows],
   );
-  const incompleteCount = identifiers.length - completedCount;
-  const duplicateRowsCount = useMemo(
-    () => indexedRows.filter((r) => r.hasDuplicate).length,
-    [indexedRows],
+
+  // Universal Client-side Filtering & Sorting via filterClientItems
+  const filteredRows = useMemo(
+    () => filterClientItems(indexedRows, tableState),
+    [indexedRows, tableState],
   );
 
-  // Filtered rows
-  const filteredRows = useMemo(() => {
-    if (filterTab === "INCOMPLETE") {
-      return indexedRows.filter((r) => !r.isValid);
-    }
-    if (filterTab === "DUPLICATES") {
-      return indexedRows.filter((r) => r.hasDuplicate);
-    }
-    return indexedRows;
-  }, [indexedRows, filterTab]);
-
-  const totalPages = Math.max(1, Math.ceil(filteredRows.length / pageSize));
+  const totalItems = filteredRows.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
   const currentPage = Math.min(page, totalPages);
 
-  const displayedRows = useMemo(() => {
+  const paginatedRows = useMemo(() => {
     const start = (currentPage - 1) * pageSize;
     return filteredRows.slice(start, start + pageSize);
   }, [filteredRows, currentPage, pageSize]);
 
-  // Auto-generate Internal Serials (Refresh only internalSerialNo, preserve VIN/Engine/Serial)
+  // Handle individual cell editing
+  const handleCellEdit = useCallback(
+    (
+      originalIndex: number,
+      field: keyof ProductionIdentifier,
+      value: string,
+    ) => {
+      const currentRow = identifiers[originalIndex];
+      if (!currentRow) return;
+      const updated: ProductionIdentifier = {
+        ...currentRow,
+        [field]: value,
+      };
+      if (
+        policy === "SERIAL" &&
+        (field === "internalSerialNo" || field === "serialNo")
+      ) {
+        updated.internalSerialNo = value;
+        updated.serialNo = value;
+      }
+      onChange(originalIndex, updated);
+    },
+    [identifiers, policy, onChange],
+  );
+
+  // 1-line Column Header Filter Builder (Client-side auto extract options)
+  const headerFilter = useMemo(
+    () =>
+      createColumnHeaderFilter({
+        listHook: tableState,
+        items: indexedRows,
+        defaultAlign: "center",
+      }),
+    [tableState, indexedRows],
+  );
+
+  // Columns definition following /standardize-table
+  const columns = useMemo<
+    DataTableColumn<ProductionIdentifierRowItem>[]
+  >(() => {
+    const cols: DataTableColumn<ProductionIdentifierRowItem>[] = [
+      {
+        key: "index",
+        header: <span className="w-full block text-center">#</span>,
+        size: 40,
+        enableResizing: false,
+        headerClassName: "text-center w-[40px] min-w-[40px]",
+        className: "text-center w-[40px] min-w-[40px]",
+        cell: (_: any, idx: number) => (
+          <span className="w-full block text-center font-mono text-muted-foreground text-xs">
+            {idx}
+          </span>
+        ),
+      },
+    ];
+
+    if (policy === "VEHICLE") {
+      cols.push(
+        {
+          key: "vinNo",
+          header: headerFilter("vinNo", t("Số khung (VIN) *")),
+          size: 185,
+          enableResizing: true,
+          cell: (row: ProductionIdentifierRowItem) => {
+            const hasError =
+              row.isVinDupe ||
+              row.isExistingClearedVin ||
+              row.isIncompleteNewVin;
+            const errorMessage = row.isVinDupe
+              ? t("Trùng lặp trong danh sách")
+              : row.isExistingClearedVin
+                ? t("Xe đã ghi nhận không được để trống Số khung")
+                : row.isIncompleteNewVin
+                  ? t("Thiếu Số khung")
+                  : undefined;
+
+            return (
+              <EditableCell
+                value={row.vinNo}
+                hasError={hasError}
+                errorMessage={errorMessage}
+                placeholder={t("Nhập số VIN...")}
+                disabled={disabled}
+                onChange={(val) =>
+                  handleCellEdit(row.originalIndex, "vinNo", val)
+                }
+              />
+            );
+          },
+        },
+        {
+          key: "engineNo",
+          header: headerFilter("engineNo", t("Số máy *")),
+          size: 175,
+          enableResizing: true,
+          cell: (row: ProductionIdentifierRowItem) => {
+            const hasError =
+              row.isEngDupe ||
+              row.isExistingClearedEng ||
+              row.isIncompleteNewEng;
+            const errorMessage = row.isEngDupe
+              ? t("Trùng lặp trong danh sách")
+              : row.isExistingClearedEng
+                ? t("Xe đã ghi nhận không được để trống Số máy")
+                : row.isIncompleteNewEng
+                  ? t("Thiếu Số máy")
+                  : undefined;
+
+            return (
+              <EditableCell
+                value={row.engineNo}
+                hasError={hasError}
+                errorMessage={errorMessage}
+                placeholder={t("Nhập số máy...")}
+                disabled={disabled}
+                onChange={(val) =>
+                  handleCellEdit(row.originalIndex, "engineNo", val)
+                }
+              />
+            );
+          },
+        },
+        {
+          key: "serialNo",
+          header: headerFilter("serialNo", t("Số Serial xe")),
+          size: 150,
+          enableResizing: true,
+          cell: (row: ProductionIdentifierRowItem) => (
+            <EditableCell
+              value={row.serialNo}
+              hasError={row.isSerDupe}
+              errorMessage={t("Trùng lặp trong danh sách")}
+              placeholder={t("Tùy chọn (tem xe)...")}
+              disabled={disabled}
+              onChange={(val) =>
+                handleCellEdit(row.originalIndex, "serialNo", val)
+              }
+            />
+          ),
+        },
+        {
+          key: "internalSerialNo",
+          header: headerFilter("internalSerialNo", t("Số Serial nội bộ")),
+          size: 185,
+          enableResizing: true,
+          className: "bg-primary/5",
+          cell: (row: ProductionIdentifierRowItem) => (
+            <EditableCell
+              value={row.internalSerialNo}
+              hasError={row.isISerDupe}
+              errorMessage={t("Trùng lặp trong danh sách")}
+              placeholder={t("Tự sinh theo kho...")}
+              inputClassName="text-primary font-medium"
+              disabled={disabled}
+              onChange={(val) =>
+                handleCellEdit(row.originalIndex, "internalSerialNo", val)
+              }
+            />
+          ),
+        },
+      );
+    } else if (policy === "SERIAL") {
+      cols.push({
+        key: "internalSerialNo",
+        header: headerFilter("internalSerialNo", t("Số Serial phụ tùng *")),
+        size: 220,
+        enableResizing: true,
+        cell: (row: ProductionIdentifierRowItem) => (
+          <EditableCell
+            value={row.internalSerialNo || row.serialNo}
+            hasError={row.isISerDupe}
+            errorMessage={t("Trùng lặp trong danh sách")}
+            placeholder={t("Nhập hoặc tự sinh Serial...")}
+            disabled={disabled}
+            onChange={(val) =>
+              handleCellEdit(row.originalIndex, "internalSerialNo", val)
+            }
+          />
+        ),
+      });
+    } else if (policy === "LOT") {
+      cols.push({
+        key: "lotNo",
+        header: headerFilter("lotNo", t("Số Lô *")),
+        size: 200,
+        enableResizing: true,
+        cell: (row: ProductionIdentifierRowItem) => (
+          <EditableCell
+            value={row.lotNo}
+            placeholder={t("Nhập số Lô...")}
+            disabled={disabled}
+            onChange={(val) => handleCellEdit(row.originalIndex, "lotNo", val)}
+          />
+        ),
+      });
+    }
+
+    cols.push({
+      key: "notes",
+      header: headerFilter("notes", t("Ghi chú")),
+      size: 180,
+      enableResizing: true,
+      cell: (row: ProductionIdentifierRowItem) => (
+        <EditableCell
+          value={row.notes}
+          placeholder={t("Ghi chú đơn vị...")}
+          disabled={disabled}
+          onChange={(val) => handleCellEdit(row.originalIndex, "notes", val)}
+        />
+      ),
+    });
+
+    return cols;
+  }, [policy, headerFilter, t, disabled, handleCellEdit]);
+
+  // Auto-generate Internal Serials
   const handleAutoGenerateInternalSerials = () => {
     const updated = identifiers.map((row, idx) => ({
       ...row,
@@ -694,40 +674,7 @@ export function ProductionIdentifierReviewTable({
     });
   };
 
-  // Bulk paste submit
-  const handleApplyBulkPaste = () => {
-    if (!bulkText.trim()) {
-      setIsBulkPasteOpen(false);
-      return;
-    }
-
-    try {
-      const parsed = parseVehicleBulkInput(
-        bulkText,
-        policy,
-        skuPrefix,
-        orderSuffix,
-      );
-      if (parsed.length === 0) {
-        setIsBulkPasteOpen(false);
-        return;
-      }
-      onSetIdentifiers(parsed);
-      setBulkText("");
-      setIsBulkPasteOpen(false);
-      showToast({
-        title: `${t("Đã trích xuất thành công")} ${parsed.length} ${t("dòng định danh")}`,
-        variant: "success",
-      });
-    } catch (err: any) {
-      showToast({
-        title: err.message || t("Lỗi định dạng dữ liệu dán nhanh"),
-        variant: "destructive",
-      });
-    }
-  };
-
-  // Import from Excel
+  // Import from Excel into the fixed array length (qtyToProduce)
   const handleImportExcel = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -741,8 +688,10 @@ export function ProductionIdentifierReviewTable({
         const ws = wb.Sheets[wsName];
         const data = XLSX.utils.sheet_to_json<any>(ws);
 
-        const newRows: ProductionIdentifier[] = [];
-        data.forEach((row: any, idx: number) => {
+        const updated = [...identifiers];
+        let importIdx = 0;
+
+        data.forEach((row: any) => {
           const vin =
             row["Số khung (VIN) (*)"] ||
             row["Số khung (VIN)"] ||
@@ -770,48 +719,53 @@ export function ProductionIdentifierReviewTable({
             row["Số Serial phụ tùng (*)"] ||
             row["Số Serial"] ||
             row["Serial"] ||
-            generateInternalSerial(skuPrefix, idx + 1, orderSuffix);
+            "";
 
           const lot = row["Số Lô (*)"] || row["Số Lô"] || row["lotNo"] || "";
           const note = row["Ghi chú"] || row["Notes"] || "";
 
-          if (policy === "VEHICLE" && (vin || engine)) {
-            newRows.push({
-              vinNo: String(vin).trim(),
-              engineNo: String(engine).trim(),
-              serialNo: String(vSerial).trim(),
-              internalSerialNo: String(iSerial).trim(),
-              lotNo: "",
-              notes: String(note).trim(),
-              attributes: [],
-            });
-          } else if (policy === "SERIAL" && iSerial) {
-            newRows.push({
-              vinNo: "",
-              engineNo: "",
-              serialNo: "",
-              internalSerialNo: String(iSerial).trim(),
-              lotNo: "",
-              notes: String(note).trim(),
-              attributes: [],
-            });
-          } else if (policy === "LOT" && lot) {
-            newRows.push({
-              vinNo: "",
-              engineNo: "",
-              serialNo: "",
-              internalSerialNo: "",
-              lotNo: String(lot).trim(),
-              notes: String(note).trim(),
-              attributes: [],
-            });
+          if (importIdx < updated.length) {
+            const current = updated[importIdx];
+            if (policy === "VEHICLE" && (vin || engine)) {
+              updated[importIdx] = {
+                ...current,
+                vinNo: String(vin).trim(),
+                engineNo: String(engine).trim(),
+                serialNo: vSerial ? String(vSerial).trim() : current.serialNo,
+                internalSerialNo: iSerial
+                  ? String(iSerial).trim()
+                  : current.internalSerialNo ||
+                    generateInternalSerial(
+                      skuPrefix,
+                      importIdx + 1,
+                      orderSuffix,
+                    ),
+                notes: note ? String(note).trim() : current.notes,
+              };
+              importIdx++;
+            } else if (policy === "SERIAL" && (iSerial || vSerial)) {
+              updated[importIdx] = {
+                ...current,
+                internalSerialNo: String(iSerial || vSerial).trim(),
+                serialNo: String(vSerial || iSerial).trim(),
+                notes: note ? String(note).trim() : current.notes,
+              };
+              importIdx++;
+            } else if (policy === "LOT" && lot) {
+              updated[importIdx] = {
+                ...current,
+                lotNo: String(lot).trim(),
+                notes: note ? String(note).trim() : current.notes,
+              };
+              importIdx++;
+            }
           }
         });
 
-        if (newRows.length > 0) {
-          onSetIdentifiers(newRows);
+        if (importIdx > 0) {
+          onSetIdentifiers(updated);
           showToast({
-            title: `${t("Đã nhập")} ${newRows.length} ${t("dòng từ file Excel")}`,
+            title: `${t("Đã nhập")} ${importIdx} ${t("dòng từ file Excel")}`,
             variant: "success",
           });
         } else {
@@ -833,6 +787,97 @@ export function ProductionIdentifierReviewTable({
 
   if (policy === "NONE") return null;
 
+  const totalCount = identifiers.length;
+
+  const sectionTitle = (
+    <div className="flex items-center gap-2">
+      <span>
+        {policy === "VEHICLE"
+          ? t("Thông tin định danh xe xuất xưởng")
+          : policy === "SERIAL"
+            ? t("Danh sách mã Serial phụ tùng / kho")
+            : t("Danh sách mã Lô thành phẩm")}
+      </span>
+      <Tooltip
+        content={
+          policy === "VEHICLE"
+            ? `${t("Đã khai báo")} ${completedCount} / ${totalCount} ${t("xe theo kế hoạch sản xuất")}`
+            : `${t("Đã khai báo")} ${completedCount} / ${totalCount} ${t("dòng theo kế hoạch sản xuất")}`
+        }
+      >
+        <span className="font-mono font-semibold text-xs text-muted-foreground hover:text-foreground cursor-help underline decoration-dotted underline-offset-2">
+          ({completedCount} / {totalCount})
+        </span>
+      </Tooltip>
+      {tableState.activeFilterCount > 0 && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            tableState.resetFilters();
+            setPage(1);
+          }}
+          className="text-[11px] font-medium text-destructive hover:underline flex items-center gap-1 bg-destructive/10 px-2 py-0.5 rounded-full lowercase first-letter:uppercase tracking-normal font-sans"
+        >
+          <span>
+            {t("Xóa bộ lọc")} ({tableState.activeFilterCount})
+          </span>
+        </button>
+      )}
+    </div>
+  );
+
+  // Standard Split Button Action Header (Main Action = Import Excel, Dropdown = Auto Gen & Download Template)
+  const titleExtra = (
+    <div className="flex items-center gap-2 flex-wrap justify-end">
+      {!disabled && (
+        <div className="flex items-center shrink-0">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => fileInputRef.current?.click()}
+            className="h-7 rounded-r-none px-2.5 border-r-0 focus:z-10 text-xs font-semibold gap-1.5 text-foreground hover:bg-muted/50"
+            title={t("Nhập dữ liệu từ file Excel")}
+          >
+            <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+            <span>{t("Nhập từ file Excel")}</span>
+          </Button>
+          <div className="w-[1px] h-7 bg-border z-10" />
+          <ActionDropdown
+            items={[
+              {
+                label:
+                  policy === "VEHICLE"
+                    ? t("Sinh Serial nội bộ")
+                    : t("Tự động sinh mã"),
+                icon: <Sparkles className="w-4 h-4 text-primary" />,
+                onClick: handleAutoGenerateInternalSerials,
+              },
+              {
+                label:
+                  policy === "VEHICLE"
+                    ? t("Tải file mẫu Excel xe")
+                    : t("Tải file mẫu Excel phụ tùng"),
+                icon: <Download className="w-4 h-4 text-emerald-600" />,
+                onClick: handleDownloadTemplate,
+              },
+            ]}
+            align="end"
+            customTrigger={
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-7 w-7 p-0 rounded-l-none border-l-0 focus:z-10 hover:bg-muted/50"
+              >
+                <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
+              </Button>
+            }
+          />
+        </div>
+      )}
+    </div>
+  );
+
   return (
     <div className="space-y-3">
       {/* Hidden File Input for Excel Import */}
@@ -844,395 +889,32 @@ export function ProductionIdentifierReviewTable({
         onChange={handleImportExcel}
       />
 
-      {/* Bulk Paste Dialog Section */}
-      {isBulkPasteOpen && (
-        <div className="p-4 bg-muted/40 border rounded-xl space-y-3 shadow-sm animate-in fade-in">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase tracking-wider text-foreground">
-              {policy === "VEHICLE"
-                ? t(
-                    "Dán nhanh danh sách xe (Mỗi dòng 1 xe, cách nhau Tab hoặc dấu phẩy)",
-                  )
-                : t("Dán nhanh danh sách Serial (Mỗi mã 1 dòng)")}
-            </span>
-            <Button
-              size="sm"
-              variant="ghost"
-              className="h-6 text-xs"
-              onClick={() => setIsBulkPasteOpen(false)}
-            >
-              {t("Đóng")}
-            </Button>
-          </div>
-
-          <div className="text-[11px] text-muted-foreground bg-white/80 dark:bg-slate-900/80 p-2.5 rounded-lg border space-y-1">
-            <p className="font-medium text-slate-700 dark:text-slate-300">
-              {policy === "VEHICLE"
-                ? t(
-                    "Thứ tự cột: Số khung (VIN) *, Số máy *, [Serial xe], [Serial nội bộ], [Ghi chú]",
-                  )
-                : t("Thứ tự cột: Số Serial *, [Ghi chú]")}
-            </p>
-          </div>
-
-          <textarea
-            className={`${inputCls} min-h-[110px] font-mono text-xs`}
-            placeholder={
-              policy === "VEHICLE"
-                ? `VIN-001, ENG-001\nVIN-002, ENG-002, SER-002, SN-002, Xe đỏ`
-                : `SN-001\nSN-002, Hàng mới`
-            }
-            value={bulkText}
-            onChange={(e) => setBulkText(e.target.value)}
-          />
-
-          <div className="flex justify-end gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => setIsBulkPasteOpen(false)}
-            >
-              {t("Hủy")}
-            </Button>
-            <Button
-              size="sm"
-              variant="primary"
-              onClick={handleApplyBulkPaste}
-              disabled={!bulkText.trim()}
-            >
-              {t("Áp dụng")}
-            </Button>
-          </div>
-        </div>
-      )}
-
-      {/* Main Review Table Section */}
+      {/* Main Review Table DrawerSection */}
       <DrawerSection
-        title={
-          policy === "VEHICLE"
-            ? t("Thông tin định danh xe xuất xưởng (Số khung / Số máy)")
-            : policy === "SERIAL"
-              ? t("Danh sách mã Serial phụ tùng / kho")
-              : t("Danh sách mã Lô thành phẩm")
-        }
-        titleExtra={
-          !disabled ? (
-            <div className="flex items-center gap-1.5 flex-wrap justify-end">
-              <Button
-                size="sm"
-                variant="outline"
-                className="h-7 text-xs font-semibold gap-1 text-primary border-primary/30 hover:bg-primary/5"
-                onClick={handleAutoGenerateInternalSerials}
-                title={
-                  policy === "VEHICLE"
-                    ? t(
-                        "Tự động sinh/điền lại cột Số Serial nội bộ (giữ nguyên Số khung và Số máy đã nhập)",
-                      )
-                    : t("Tự động sinh mã Serial phụ tùng")
-                }
-              >
-                <Sparkles className="w-3.5 h-3.5" />
-                {policy === "VEHICLE"
-                  ? t("Sinh Serial nội bộ")
-                  : t("Tự động sinh mã")}
-              </Button>
-
-              {/* Action Dropdown */}
-              <ActionDropdown
-                align="end"
-                items={[
-                  {
-                    groupLabel: t("TỰ ĐỘNG & HÀNG LOẠT"),
-                    items: [
-                      {
-                        label:
-                          policy === "VEHICLE"
-                            ? t("Sinh Serial nội bộ")
-                            : t("Tự động sinh mã"),
-                        icon: <Sparkles className="w-4 h-4 text-primary" />,
-                        onClick: handleAutoGenerateInternalSerials,
-                      },
-                      {
-                        label: t("Dán nhanh hàng loạt"),
-                        icon: <ClipboardList className="w-4 h-4" />,
-                        onClick: () => setIsBulkPasteOpen(true),
-                      },
-                    ],
-                  },
-                  {
-                    groupLabel: t("EXCEL"),
-                    items: [
-                      {
-                        label:
-                          policy === "VEHICLE"
-                            ? t("Tải file mẫu Excel xe")
-                            : t("Tải file mẫu Excel phụ tùng"),
-                        icon: <Download className="w-4 h-4 text-emerald-600" />,
-                        onClick: handleDownloadTemplate,
-                      },
-                      {
-                        label: t("Nhập từ file Excel"),
-                        icon: (
-                          <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
-                        ),
-                        onClick: () => fileInputRef.current?.click(),
-                      },
-                    ],
-                  },
-                ]}
-                customTrigger={
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="h-7 text-xs font-semibold gap-1"
-                  >
-                    <span>{t("Thao tác")}</span>
-                    <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
-                  </Button>
-                }
-              />
-            </div>
-          ) : undefined
-        }
+        title={sectionTitle}
+        titleExtra={titleExtra}
+        collapsible={true}
+        defaultCollapsed={false}
       >
-        {identifiers.length === 0 ? (
-          <EmptyState
-            size="sm"
-            message={t("Chưa có dòng định danh nào")}
-            description={t(
-              "Dữ liệu định danh sẽ tự động sinh theo Số lượng hoàn thành đợt này.",
-            )}
-            className="border border-dashed rounded-lg py-8 bg-muted/10 my-1"
-          />
-        ) : (
-          <div className="space-y-2">
-            {/* Quick Filter Bar */}
-            <div className="flex items-center justify-between gap-2 flex-wrap pb-1">
-              <div className="flex items-center gap-1 bg-muted/50 p-0.5 rounded-lg border border-border text-xs">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setFilterTab("ALL");
-                    setPage(1);
-                  }}
-                  className={cn(
-                    "px-2.5 py-1 rounded-md transition-all font-medium",
-                    filterTab === "ALL"
-                      ? "bg-background text-foreground shadow-xs font-semibold"
-                      : "text-muted-foreground hover:text-foreground",
-                  )}
-                >
-                  {t("Tất cả")} ({identifiers.length})
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setFilterTab("INCOMPLETE");
-                    setPage(1);
-                  }}
-                  className={cn(
-                    "px-2.5 py-1 rounded-md transition-all font-medium flex items-center gap-1",
-                    filterTab === "INCOMPLETE"
-                      ? "bg-amber-100 dark:bg-amber-950/60 text-amber-900 dark:text-amber-200 shadow-xs font-semibold"
-                      : "text-muted-foreground hover:text-amber-700 dark:hover:text-amber-300",
-                  )}
-                >
-                  <span>{t("Chưa đủ thông tin")}</span>
-                  {incompleteCount > 0 && (
-                    <span className="px-1.5 py-0.2 rounded-full bg-amber-200 dark:bg-amber-800 text-amber-900 dark:text-amber-100 text-[10px] font-bold font-mono">
-                      {incompleteCount}
-                    </span>
-                  )}
-                </button>
-
-                {duplicateRowsCount > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setFilterTab("DUPLICATES");
-                      setPage(1);
-                    }}
-                    className={cn(
-                      "px-2.5 py-1 rounded-md transition-all font-medium flex items-center gap-1",
-                      filterTab === "DUPLICATES"
-                        ? "bg-red-100 dark:bg-red-950/60 text-red-900 dark:text-red-200 shadow-xs font-semibold"
-                        : "text-muted-foreground hover:text-red-700 dark:hover:text-red-300",
-                    )}
-                  >
-                    <span>{t("Trùng lặp")}</span>
-                    <span className="px-1.5 py-0.2 rounded-full bg-red-200 dark:bg-red-800 text-red-900 dark:text-red-100 text-[10px] font-bold font-mono">
-                      {duplicateRowsCount}
-                    </span>
-                  </button>
-                )}
-              </div>
-
-              {/* Status Indicator */}
-              <div className="flex items-center gap-2 text-xs">
-                <span className="text-muted-foreground font-mono text-[11px]">
-                  {t("Đã điền:")}{" "}
-                  <strong className="text-foreground">{completedCount}</strong>{" "}
-                  / {requiredQty}
-                </span>
-                {completedCount === requiredQty && (
-                  <Badge
-                    variant="outline"
-                    className="gap-1 text-[11px] bg-emerald-50 text-emerald-700 border-emerald-200"
-                  >
-                    <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                    {t("Đã khớp đủ")}
-                  </Badge>
-                )}
-              </div>
-            </div>
-
-            {/* Standardized Spreadsheet Table Container (No Double Border) */}
-            <div className="border border-border/70 rounded-xl overflow-hidden bg-surface shadow-xs">
-              <div className="max-h-[360px] overflow-y-auto relative">
-                <Table className="w-full table-fixed border-collapse text-xs">
-                  <TableHeader className="sticky top-0 z-30 table-header-glass bg-muted/90 backdrop-blur-sm border-b border-border shadow-xs">
-                    <TableRow className="hover:bg-transparent border-b border-border bg-transparent">
-                      {/* First Column: STT 40px Absolutely Centered */}
-                      <TableHead className="sticky top-0 z-20 w-[40px] min-w-[40px] p-0 text-center border-r border-border font-semibold">
-                        <span className="w-full block text-center">#</span>
-                      </TableHead>
-
-                      {policy === "VEHICLE" && (
-                        <>
-                          <TableHead className="sticky top-0 z-20 min-w-[150px] border-r border-border py-2 px-2.5 font-semibold">
-                            {t("Số khung (VIN)")}{" "}
-                            <span className="text-red-500">*</span>
-                          </TableHead>
-                          <TableHead className="sticky top-0 z-20 min-w-[140px] border-r border-border py-2 px-2.5 font-semibold">
-                            {t("Số máy")}{" "}
-                            <span className="text-red-500">*</span>
-                          </TableHead>
-                          <TableHead className="sticky top-0 z-20 min-w-[125px] border-r border-border py-2 px-2 font-semibold">
-                            {t("Số Serial xe")}
-                          </TableHead>
-                          <TableHead className="sticky top-0 z-20 min-w-[140px] border-r border-border py-2 px-2 bg-primary/5 font-semibold">
-                            <span className="flex items-center gap-1 text-primary">
-                              <Sparkles className="w-3 h-3" />
-                              {t("Số Serial nội bộ")}
-                            </span>
-                          </TableHead>
-                        </>
-                      )}
-
-                      {policy === "SERIAL" && (
-                        <TableHead className="sticky top-0 z-20 min-w-[200px] border-r border-border py-2 px-2.5 font-semibold">
-                          {t("Số Serial phụ tùng")}{" "}
-                          <span className="text-red-500">*</span>
-                        </TableHead>
-                      )}
-
-                      {policy === "LOT" && (
-                        <TableHead className="sticky top-0 z-20 min-w-[160px] border-r border-border py-2 px-2.5 font-semibold">
-                          {t("Số Lô")} <span className="text-red-500">*</span>
-                        </TableHead>
-                      )}
-
-                      <TableHead className="sticky top-0 z-20 min-w-[140px] py-2 px-2 font-semibold">
-                        {t("Ghi chú")}
-                      </TableHead>
-                    </TableRow>
-                  </TableHeader>
-
-                  <TableBody>
-                    {displayedRows.length === 0 ? (
-                      <TableRow>
-                        <TableCell
-                          colSpan={policy === "VEHICLE" ? 6 : 3}
-                          className="text-center py-8 text-muted-foreground text-xs"
-                        >
-                          {t("Không có dòng nào phù hợp với bộ lọc")}
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      displayedRows.map((item) => (
-                        <IdentifierTableRow
-                          key={item.originalIndex}
-                          originalIndex={item.originalIndex}
-                          row={item.row}
-                          policy={policy}
-                          disabled={disabled}
-                          onChange={onChange}
-                          isVinDupe={item.isVinDupe}
-                          isEngDupe={item.isEngDupe}
-                          isSerDupe={item.isSerDupe}
-                          isISerDupe={item.isISerDupe}
-                        />
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-
-              {/* Standard Pagination Footer */}
-              <div className="p-2.5 bg-muted/40 border-t border-border flex items-center justify-between text-xs flex-wrap gap-2">
-                <div className="flex items-center gap-2">
-                  <span className="text-muted-foreground">
-                    {t("Hiển thị:")}{" "}
-                    <strong className="font-mono">
-                      {filteredRows.length > 0
-                        ? `${(currentPage - 1) * pageSize + 1} - ${Math.min(
-                            currentPage * pageSize,
-                            filteredRows.length,
-                          )}`
-                        : "0"}
-                    </strong>{" "}
-                    /{" "}
-                    <strong className="font-mono">{filteredRows.length}</strong>{" "}
-                    {t("dòng")}
-                  </span>
-
-                  <select
-                    value={pageSize}
-                    onChange={(e) => {
-                      setPageSize(Number(e.target.value));
-                      setPage(1);
-                    }}
-                    className="h-7 text-xs border border-border rounded-md bg-background px-1.5 py-0 font-medium font-mono shadow-2xs"
-                  >
-                    <option value={20}>20 / {t("trang")}</option>
-                    <option value={50}>50 / {t("trang")}</option>
-                    <option value={100}>100 / {t("trang")}</option>
-                    <option value={500}>500 / {t("trang")}</option>
-                  </select>
-                </div>
-
-                {totalPages > 1 && (
-                  <div className="flex items-center gap-1.5">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="h-7 px-2.5 text-xs font-medium"
-                      disabled={currentPage <= 1}
-                      onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    >
-                      {t("Trước")}
-                    </Button>
-                    <span className="px-2 font-mono text-xs font-semibold">
-                      {currentPage} / {totalPages}
-                    </span>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="h-7 px-2.5 text-xs font-medium"
-                      disabled={currentPage >= totalPages}
-                      onClick={() =>
-                        setPage((p) => Math.min(totalPages, p + 1))
-                      }
-                    >
-                      {t("Sau")}
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
+        <DataTable
+          tableId={tableId}
+          variant="spreadsheet"
+          items={paginatedRows}
+          columns={columns}
+          emptyLabel={t("Không có dòng nào phù hợp với bộ lọc")}
+          enableColumnResizing={true}
+          containerClassName="max-h-[calc(100vh-380px)] overflow-y-auto"
+          page={currentPage}
+          pageSize={pageSize}
+          total={totalItems}
+          totalPages={totalPages}
+          onPage={(p) => setPage(p)}
+          onPageSize={(s) => {
+            setPageSize(s);
+            setPage(1);
+          }}
+          pageSizeOptions={[20, 50, 100, 200]}
+        />
       </DrawerSection>
     </div>
   );

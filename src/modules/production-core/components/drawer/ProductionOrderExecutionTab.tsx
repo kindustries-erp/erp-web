@@ -13,7 +13,6 @@ import {
   isIdentifierValid,
   identifiersAllValid,
   findVehicleDuplicate,
-  parseVehicleBulkInput,
   generateInternalSerial,
 } from "./ProductionIdentifierReviewTable";
 
@@ -25,7 +24,6 @@ export {
   isIdentifierValid,
   identifiersAllValid,
   findVehicleDuplicate,
-  parseVehicleBulkInput,
   generateInternalSerial,
 };
 
@@ -111,7 +109,7 @@ export function ProductionOrderExecutionTab({
     <div className="flex items-center gap-2 flex-wrap justify-end">
       {/* Progress Badge */}
       {isInProgress && (
-        <span className="text-xs font-semibold text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 px-2.5 py-1 rounded-lg font-mono">
+        <span className="text-xs font-semibold text-foreground bg-muted border border-border px-2.5 py-1 rounded-lg font-mono">
           {fmtQty(qtyProduced)} / {fmtQty(qtyToProduce)} ({progressPct}%)
         </span>
       )}
@@ -186,13 +184,13 @@ export function ProductionOrderExecutionTab({
 
       {/* Banner: Status CONFIRMED */}
       {isConfirmed && (
-        <div className="flex items-start gap-3 rounded-xl border border-blue-200 bg-blue-50/70 dark:bg-blue-950/30 p-3.5 text-xs">
-          <PlayCircle className="h-4 w-4 text-blue-600 shrink-0 mt-0.5" />
+        <div className="flex items-start gap-3 rounded-xl border border-border bg-muted/40 p-3.5 text-xs">
+          <PlayCircle className="h-4 w-4 text-foreground/70 shrink-0 mt-0.5" />
           <div>
-            <h5 className="font-semibold text-blue-900 dark:text-blue-300">
+            <h5 className="font-semibold text-foreground">
               {t("Giai đoạn 1: Sẵn sàng sản xuất & Xuất kho NVL")}
             </h5>
-            <p className="text-blue-800/90 dark:text-blue-400 mt-0.5">
+            <p className="text-muted-foreground mt-0.5">
               {t(
                 "Nhấn nút 'Bắt đầu sản xuất & Xuất kho' ở góc phải để hệ thống tự động sinh Phiếu xuất kho NVL (XK-...) và chuyển sang Đang sản xuất.",
               )}
@@ -290,7 +288,7 @@ export function ProductionOrderExecutionTab({
                           <td className="px-3 py-2 font-mono font-medium text-emerald-700 dark:text-emerald-400">
                             {item.vin || item.vinNo || "—"}
                           </td>
-                          <td className="px-3 py-2 font-mono font-medium text-blue-700 dark:text-blue-400">
+                          <td className="px-3 py-2 font-mono font-medium text-foreground">
                             {item.engineNo || "—"}
                           </td>
                           <td className="px-3 py-2 font-mono font-medium text-foreground">
@@ -304,7 +302,7 @@ export function ProductionOrderExecutionTab({
 
                       {trackingPolicy === "SERIAL" && (
                         <>
-                          <td className="px-3 py-2 font-mono font-medium text-blue-600">
+                          <td className="px-3 py-2 font-mono font-medium text-foreground">
                             {vehicleSerial || item.serialNo || "—"}
                           </td>
                           <td className="px-3 py-2 font-mono font-medium text-primary bg-primary/5">
@@ -314,7 +312,7 @@ export function ProductionOrderExecutionTab({
                       )}
 
                       {trackingPolicy === "LOT" && (
-                        <td className="px-3 py-2 font-mono font-medium text-blue-600">
+                        <td className="px-3 py-2 font-mono font-medium text-foreground">
                           {item.lotNo || "—"}
                         </td>
                       )}

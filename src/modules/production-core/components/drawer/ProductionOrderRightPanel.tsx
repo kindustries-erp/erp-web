@@ -182,7 +182,7 @@ export function ProductionOrderRightPanel({
                     isCompleted
                       ? "text-emerald-700 dark:text-emerald-400"
                       : editing?.status === "IN_PROGRESS"
-                        ? "text-blue-700 dark:text-blue-400"
+                        ? "text-foreground font-semibold"
                         : "text-amber-700 dark:text-amber-400",
                   )}
                 >
@@ -197,7 +197,7 @@ export function ProductionOrderRightPanel({
                     isCompleted
                       ? "bg-emerald-500"
                       : editing?.status === "IN_PROGRESS"
-                        ? "bg-blue-600"
+                        ? "bg-primary"
                         : "bg-amber-500",
                   )}
                   style={{ width: `${progressPct}%` }}

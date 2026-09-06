@@ -22,7 +22,6 @@ import {
   generateInternalSerial,
   identifiersAllValid,
   findVehicleDuplicate,
-  parseVehicleBulkInput,
 } from "../components/drawer/ProductionOrderExecutionTab";
 
 export interface BomLikeLine {
@@ -314,30 +313,8 @@ export function useProductionOrderDrawer({
   }, [editing, onSaved]);
 
   const applyVehicleBulkInput = useCallback(() => {
-    try {
-      const rows = parseVehicleBulkInput(vehicleBulkInput);
-      const qty = Math.max(1, Math.floor(Number(batchCompleteQty) || 1));
-      if (rows.length !== qty) {
-        showToast({
-          title: `Số dòng bulk (${rows.length}) phải bằng số lượng hoàn thành (${qty})`,
-          variant: "destructive",
-        });
-        return;
-      }
-      const duplicateMessage = findVehicleDuplicate(rows);
-      if (duplicateMessage) {
-        showToast({ title: duplicateMessage, variant: "destructive" });
-        return;
-      }
-      setIdentifiers(rows);
-      showToast({
-        title: "Đã trích xuất danh sách VIN / số máy thành công",
-        variant: "success",
-      });
-    } catch (e: any) {
-      showToast({ title: e.message, variant: "destructive" });
-    }
-  }, [batchCompleteQty, showToast, vehicleBulkInput]);
+    // Deprecated bulk input - Excel import is used instead
+  }, []);
 
   const loadItems = useCallback(async () => {
     try {

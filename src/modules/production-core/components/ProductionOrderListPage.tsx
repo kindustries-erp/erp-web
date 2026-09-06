@@ -559,7 +559,7 @@ export function ProductionOrderListPage() {
 
           let indicatorColor = "bg-slate-400";
           if (percent === 100) indicatorColor = "bg-emerald-500";
-          else if (percent > 0) indicatorColor = "bg-blue-500";
+          else if (percent > 0) indicatorColor = "bg-primary";
 
           return (
             <div className="flex flex-col gap-1 w-28 mx-auto">
@@ -628,7 +628,7 @@ export function ProductionOrderListPage() {
                   item.status === "COMPLETED"
                     ? "bg-emerald-100 text-emerald-800 hover:bg-emerald-100 border-emerald-200"
                     : item.status === "IN_PROGRESS"
-                      ? "bg-blue-100 text-blue-800 hover:bg-blue-100 border-blue-200"
+                      ? "bg-muted text-foreground hover:bg-muted border-border font-medium"
                       : item.status === "CANCELLED"
                         ? "bg-red-100 text-red-800 hover:bg-red-100 border-red-200"
                         : "bg-amber-100 text-amber-800 hover:bg-amber-100 border-amber-200"
