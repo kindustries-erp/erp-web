@@ -4,6 +4,7 @@ import { DrawerSection, DrawerRow } from "@/shared/components/DrawerModal";
 import { Badge } from "@/shared/components/ui/badge";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import { useT } from "@/core/i18n";
+import { useUIStore } from "@/core/config/uiStore";
 import { CheckCircle2, AlertTriangle } from "lucide-react";
 import type { ErpProductionOrder } from "../../api/productionCoreApi";
 import {
@@ -25,7 +26,11 @@ export interface ProductionIdentifierDeclareDrawerProps {
   setIdentifiers: React.Dispatch<React.SetStateAction<ProductionIdentifier[]>>;
   batchCompleteQty: string;
   setBatchCompleteQty: (qty: string) => void;
-  onBatchComplete: () => Promise<void>;
+  onBatchComplete: (
+    explicitQty?: number,
+    explicitIdentifiers?: ProductionIdentifier[],
+    updatedVehicles?: ProductionIdentifier[],
+  ) => Promise<void>;
   saving?: boolean;
   disabled?: boolean;
 }
@@ -45,13 +50,12 @@ export function ProductionIdentifierDeclareDrawer({
   onClose,
   order,
   policy,
-  setIdentifiers,
-  setBatchCompleteQty,
   onBatchComplete,
   saving = false,
   disabled = false,
 }: ProductionIdentifierDeclareDrawerProps) {
   const t = useT();
+  const showToast = useUIStore((s) => s.showToast);
 
   const fgItem = order?.finishedGoodItem as any;
   const skuPrefix = fgItem?.sku || fgItem?.itemCode || "FG";
@@ -70,6 +74,7 @@ export function ProductionIdentifierDeclareDrawer({
     ProductionIdentifier[]
   >([]);
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
+  const [closeConfirmModalOpen, setCloseConfirmModalOpen] = useState(false);
 
   const needsIdentifiers = ["SERIAL", "LOT", "VEHICLE"].includes(policy);
 
@@ -91,10 +96,11 @@ export function ProductionIdentifierDeclareDrawer({
         if (i < producedList.length) {
           const item: any = producedList[i];
           const attrs = item.attributes || {};
+          // Số serial xe là tem ngoài tùy chọn, KHÔNG fallback sang item.serialNo khi policy là VEHICLE
           const vSerial =
             attrs.vehicleSerialNo ||
             item.vehicleSerialNo ||
-            item.serialNo ||
+            (policy === "SERIAL" ? item.serialNo : "") ||
             "";
           const iSerial =
             attrs.internalSerialNo ||
@@ -160,6 +166,27 @@ export function ProductionIdentifierDeclareDrawer({
   }, [localIdentifiers, policy, needsIdentifiers]);
 
   const updatedCount = updatedRows.length;
+
+  // Track if user has made unsaved changes
+  const isDirty = useMemo(() => {
+    return localIdentifiers.some((r) => {
+      if (!r.isExisting) {
+        return (
+          !!r.vinNo?.trim() ||
+          !!r.engineNo?.trim() ||
+          !!r.serialNo?.trim() ||
+          !!r.notes?.trim()
+        );
+      }
+      return (
+        (r.vinNo || "") !== (r.originalVinNo || "") ||
+        (r.engineNo || "") !== (r.originalEngineNo || "") ||
+        (r.serialNo || "") !== (r.originalSerialNo || "") ||
+        (r.internalSerialNo || "") !== (r.originalInternalSerialNo || "") ||
+        (r.notes || "") !== (r.originalNotes || "")
+      );
+    });
+  }, [localIdentifiers]);
 
   // Count unproduced rows that are not yet filled
   const unproducedCount = useMemo(() => {
@@ -237,13 +264,74 @@ export function ProductionIdentifierDeclareDrawer({
     setLocalIdentifiers(newRows);
   }, []);
 
+  const handleValidateAndSubmit = React.useCallback(() => {
+    if (saving || disabled) return;
+
+    if (newProducedCount === 0 && updatedCount === 0) {
+      showToast({
+        title: t("Không có thông tin mới hoặc thay đổi nào để lưu."),
+        variant: "destructive",
+      });
+      return;
+    }
+    if (hasExistingClearedError) {
+      showToast({
+        title: t(
+          "Xe đã ghi nhận xuất xưởng không được để trống Số khung hoặc Số máy!",
+        ),
+        variant: "destructive",
+      });
+      return;
+    }
+    if (hasIncompleteNewError) {
+      showToast({
+        title: t("Vui lòng điền đủ cả Số khung và Số máy cho xe mới!"),
+        variant: "destructive",
+      });
+      return;
+    }
+    if (isOverRemaining) {
+      showToast({
+        title: `${t("Số lượng khai báo")} (${newProducedCount}) ${t("vượt quá số lượng còn lại")} (${remaining})!`,
+        variant: "destructive",
+      });
+      return;
+    }
+    if (duplicateError) {
+      showToast({
+        title: duplicateError,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setConfirmModalOpen(true);
+  }, [
+    saving,
+    disabled,
+    newProducedCount,
+    updatedCount,
+    hasExistingClearedError,
+    hasIncompleteNewError,
+    isOverRemaining,
+    remaining,
+    duplicateError,
+    showToast,
+    t,
+  ]);
+
+  const handleRequestClose = React.useCallback(() => {
+    if (isDirty) {
+      setCloseConfirmModalOpen(true);
+    } else {
+      onClose();
+    }
+  }, [isDirty, onClose]);
+
   const handleExecuteBatchComplete = async () => {
     if (!canConfirm) return;
-    // Pass valid newly produced rows or updated state
-    setIdentifiers(newProducedRows);
-    setBatchCompleteQty(String(newProducedCount));
     setConfirmModalOpen(false);
-    await onBatchComplete();
+    await onBatchComplete(newProducedCount, newProducedRows, updatedRows);
   };
 
   const titleExtra = useMemo(() => {
@@ -259,29 +347,47 @@ export function ProductionIdentifierDeclareDrawer({
     );
   }, [policy]);
 
+  const primaryButtonLabel = useMemo(() => {
+    if (saving) {
+      return newProducedCount > 0
+        ? t("Đang ghi nhận nhập kho...")
+        : t("Đang lưu cập nhật...");
+    }
+    if (newProducedCount > 0) {
+      return t("Xác nhận hoàn thành & Nhập kho");
+    }
+    return t("Lưu cập nhật thông tin");
+  }, [saving, newProducedCount, t]);
+
   const actions = useMemo(() => {
     return [
       {
         label: t("Đóng"),
-        onClick: onClose,
+        onClick: handleRequestClose,
         variant: "outline" as const,
         disabled: saving,
       },
       ...(!disabled
         ? [
             {
-              label: saving
-                ? t("Đang ghi nhận nhập kho...")
-                : t("Xác nhận hoàn thành & Nhập kho"),
+              label: primaryButtonLabel,
               primary: true,
               loading: saving,
-              disabled: !canConfirm,
-              onClick: () => setConfirmModalOpen(true),
+              disabled: saving || !canConfirm,
+              onClick: handleValidateAndSubmit,
             },
           ]
         : []),
     ];
-  }, [t, onClose, saving, disabled, canConfirm]);
+  }, [
+    t,
+    handleRequestClose,
+    saving,
+    disabled,
+    primaryButtonLabel,
+    canConfirm,
+    handleValidateAndSubmit,
+  ]);
 
   const rightPanel = useMemo(() => {
     return (
@@ -340,62 +446,57 @@ export function ProductionIdentifierDeclareDrawer({
           collapsible
           defaultCollapsed={false}
         >
-          <div className="rounded-xl border border-border/70 bg-card p-3 space-y-2.5 text-xs">
-            <div className="flex items-center justify-between">
-              <span className="text-muted-foreground">
-                {t("Kế hoạch sản xuất")}:
-              </span>
-              <span className="font-bold font-mono text-sm">
+          <DrawerRow
+            label={t("Kế hoạch sản xuất")}
+            value={
+              <span className="font-mono font-bold text-foreground">
                 {fmtQty(qtyToProduce)} {t("đơn vị")}
               </span>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <span className="text-muted-foreground">
-                {t("Đã hoàn thành trước đó")}:
-              </span>
-              <span className="font-bold font-mono text-sm text-emerald-600">
+            }
+          />
+          <DrawerRow
+            label={t("Đã hoàn thành trước đó")}
+            value={
+              <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">
                 {fmtQty(qtyProduced)} {t("đơn vị")}
               </span>
-            </div>
-
-            <div className="flex items-center justify-between pt-1 border-t border-border/50">
-              <span className="text-muted-foreground font-semibold">
-                {t("Còn lại cần sản xuất")}:
-              </span>
-              <span className="font-bold font-mono text-sm text-amber-600">
+            }
+          />
+          <DrawerRow
+            label={t("Còn lại cần sản xuất")}
+            value={
+              <span className="font-mono font-bold text-amber-600 dark:text-amber-400">
                 {fmtQty(remaining)} {t("đơn vị")}
               </span>
-            </div>
+            }
+          />
+          <DrawerRow
+            label={t("Hoàn thành đợt này")}
+            value={
+              <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                {newProducedCount} {t("đơn vị")}
+              </span>
+            }
+          />
+          {updatedCount > 0 && (
+            <DrawerRow
+              label={t("Cập nhật thông tin")}
+              value={
+                <span className="font-mono font-bold text-foreground">
+                  {updatedCount} {t("đơn vị")}
+                </span>
+              }
+            />
+          )}
 
-            <div className="pt-2 border-t border-border/60 space-y-2">
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between p-2 rounded-lg border border-emerald-200 dark:border-emerald-800 bg-emerald-50/80 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 font-semibold">
-                  <span className="flex items-center gap-1.5">
-                    <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
-                    {t("Hoàn thành đợt này")}:
-                  </span>
-                  <span className="font-bold font-mono text-sm">
-                    {newProducedCount} {t("đơn vị")}
-                  </span>
-                </div>
-
-                {updatedCount > 0 && (
-                  <div className="flex items-center justify-between p-2 rounded-lg border border-border/80 bg-muted/60 text-foreground font-semibold text-xs">
-                    <span className="flex items-center gap-1.5">
-                      <span className="w-2 h-2 rounded-full bg-foreground/60 shrink-0" />
-                      {t("Cập nhật thông tin")}:
-                    </span>
-                    <span className="font-bold font-mono text-sm">
-                      {updatedCount} {t("đơn vị")}
-                    </span>
-                  </div>
-                )}
-              </div>
-
+          {(hasExistingClearedError ||
+            hasIncompleteNewError ||
+            isOverRemaining ||
+            duplicateError) && (
+            <div className="pt-2 mt-1 border-t border-border/60 space-y-1.5">
               {hasExistingClearedError && (
-                <div className="flex items-center gap-1.5 text-destructive text-[11px] font-medium bg-destructive/10 p-2 rounded-lg border border-destructive/20">
-                  <AlertTriangle className="w-4 h-4 shrink-0" />
+                <div className="flex items-center gap-1.5 text-destructive text-[11px] font-medium">
+                  <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
                   <span>
                     {t(
                       "Xe đã ghi nhận xuất xưởng không được để trống Số khung hoặc Số máy!",
@@ -403,34 +504,31 @@ export function ProductionIdentifierDeclareDrawer({
                   </span>
                 </div>
               )}
-
               {hasIncompleteNewError && (
-                <div className="flex items-center gap-1.5 text-destructive text-[11px] font-medium bg-destructive/10 p-2 rounded-lg border border-destructive/20">
-                  <AlertTriangle className="w-4 h-4 shrink-0" />
+                <div className="flex items-center gap-1.5 text-destructive text-[11px] font-medium">
+                  <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
                   <span>
                     {t("Vui lòng điền đủ cả Số khung và Số máy cho xe mới!")}
                   </span>
                 </div>
               )}
-
               {isOverRemaining && (
-                <div className="flex items-center gap-1.5 text-destructive text-[11px] font-medium bg-destructive/10 p-2 rounded-lg border border-destructive/20">
-                  <AlertTriangle className="w-4 h-4 shrink-0" />
+                <div className="flex items-center gap-1.5 text-destructive text-[11px] font-medium">
+                  <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
                   <span>
                     {t("Số lượng khai báo")} ({newProducedCount}){" "}
                     {t("vượt quá số lượng còn lại")} ({remaining})!
                   </span>
                 </div>
               )}
-
               {duplicateError && (
-                <div className="flex items-center gap-1.5 text-destructive text-[11px] font-medium bg-destructive/10 p-2 rounded-lg border border-destructive/20">
-                  <AlertTriangle className="w-4 h-4 shrink-0" />
+                <div className="flex items-center gap-1.5 text-destructive text-[11px] font-medium">
+                  <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
                   <span>{duplicateError}</span>
                 </div>
               )}
             </div>
-          </div>
+          )}
         </DrawerSection>
 
         {/* Section: Hướng dẫn nghiệp vụ */}
@@ -439,7 +537,7 @@ export function ProductionIdentifierDeclareDrawer({
           collapsible
           defaultCollapsed={true}
         >
-          <div className="text-xs text-muted-foreground space-y-1.5 leading-relaxed bg-muted/20 p-2.5 rounded-lg border border-border/50">
+          <div className="text-xs text-muted-foreground space-y-1.5 leading-relaxed">
             {policy === "VEHICLE" ? (
               <>
                 <p>
@@ -488,7 +586,7 @@ export function ProductionIdentifierDeclareDrawer({
       <StandardFormDrawer
         open={open}
         mode={disabled ? "view" : "edit"}
-        onClose={onClose}
+        onClose={handleRequestClose}
         title={
           policy === "VEHICLE"
             ? t("Nghiệm thu & Khai báo Số khung, Số máy Xe")
@@ -501,22 +599,19 @@ export function ProductionIdentifierDeclareDrawer({
         collapsibleRightPanel={true}
         actions={actions}
         leftPanel={
-          <div className="space-y-4 pb-4">
-            {/* Review Table (Auto-sync with valid row calculation) */}
-            {needsIdentifiers && (
-              <ProductionIdentifierReviewTable
-                policy={policy}
-                identifiers={localIdentifiers}
-                onChange={handleIdentifierChange}
-                onSetIdentifiers={handleSetRows}
-                requiredQty={qtyToProduce}
-                skuPrefix={skuPrefix}
-                orderSuffix={orderSuffix}
-                itemName={fgName}
-                disabled={disabled || saving}
-              />
-            )}
-          </div>
+          needsIdentifiers ? (
+            <ProductionIdentifierReviewTable
+              policy={policy}
+              identifiers={localIdentifiers}
+              onChange={handleIdentifierChange}
+              onSetIdentifiers={handleSetRows}
+              requiredQty={qtyToProduce}
+              skuPrefix={skuPrefix}
+              orderSuffix={orderSuffix}
+              itemName={fgName}
+              disabled={disabled || saving}
+            />
+          ) : null
         }
         rightPanel={rightPanel}
       />
@@ -524,7 +619,11 @@ export function ProductionIdentifierDeclareDrawer({
       {/* Standard Confirm Modal (Close Confirm Modal UI Style) */}
       <ConfirmModal
         open={confirmModalOpen}
-        title={t("Xác nhận hoàn thành & Nhập kho")}
+        title={
+          newProducedCount > 0
+            ? t("Xác nhận hoàn thành & Nhập kho")
+            : t("Xác nhận lưu cập nhật thông tin")
+        }
         message={
           <div className="space-y-3 text-xs leading-relaxed">
             <p className="font-medium text-foreground">
@@ -579,12 +678,31 @@ export function ProductionIdentifierDeclareDrawer({
             )}
           </div>
         }
-        confirmLabel={t("Đồng ý nhập kho")}
+        confirmLabel={
+          newProducedCount > 0 ? t("Đồng ý nhập kho") : t("Đồng ý lưu cập nhật")
+        }
         cancelLabel={t("Hủy")}
         danger={false}
         loading={saving}
         onConfirm={handleExecuteBatchComplete}
         onCancel={() => setConfirmModalOpen(false)}
+      />
+
+      {/* Close Confirm Modal when user has unsaved edits */}
+      <ConfirmModal
+        open={closeConfirmModalOpen}
+        title={t("Hủy bỏ thay đổi?")}
+        message={t(
+          "Bạn có các thay đổi chưa được lưu trong danh sách khai báo định danh. Bạn có chắc chắn muốn đóng không?",
+        )}
+        confirmLabel={t("Đồng ý đóng")}
+        cancelLabel={t("Tiếp tục chỉnh sửa")}
+        danger={true}
+        onConfirm={() => {
+          setCloseConfirmModalOpen(false);
+          onClose();
+        }}
+        onCancel={() => setCloseConfirmModalOpen(false)}
       />
     </>
   );

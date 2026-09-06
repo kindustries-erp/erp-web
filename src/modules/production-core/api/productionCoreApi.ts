@@ -328,6 +328,38 @@ export const productionCoreApi = {
     return data.data;
   },
 
+  updateProducedVehicles: async (
+    id: string,
+    payload: {
+      vehicles: Array<{
+        id: string;
+        vinNo?: string;
+        engineNo?: string;
+        serialNo?: string;
+        notes?: string;
+      }>;
+    },
+  ): Promise<{
+    message: string;
+    data: Array<{
+      id: string;
+      vinNo: string;
+      engineNo: string;
+      notes: string | null;
+    }>;
+  }> => {
+    const { data } = await axiosInstance.patch<{
+      message: string;
+      data: Array<{
+        id: string;
+        vinNo: string;
+        engineNo: string;
+        notes: string | null;
+      }>;
+    }>(`/api/v1/production/orders/${id}/vehicles`, payload);
+    return data;
+  },
+
   getNextReferenceNo: async (): Promise<string> => {
     const { data } = await axiosInstance.get<string>(
       "/api/v1/production/orders/next-reference-no",

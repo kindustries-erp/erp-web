@@ -374,4 +374,11 @@ export const legacyStringsEn = {
   "Lệnh sản xuất đã hoàn thành 100%": "Production order 100% completed",
   "Đã nhập kho đủ": "Received full",
   "đơn vị thành phẩm.": "finished units.",
+  "Nghiệm thu": "Acceptance",
+  "Lưu cập nhật thông tin": "Save Updated Information",
+  "Đang lưu cập nhật...": "Saving updates...",
+  "Xác nhận lưu cập nhật thông tin": "Confirm Information Update",
+  "Đồng ý lưu cập nhật": "Agree to Save Updates",
+  "Không có thông tin mới hoặc thay đổi nào để lưu.":
+    "No new information or changes to save.",
 };

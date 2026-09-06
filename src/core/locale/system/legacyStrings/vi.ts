@@ -376,4 +376,11 @@ export const legacyStringsVi = {
     "Số Serial nội bộ bị trùng trong danh sách",
   "Số Serial bị trùng trong danh sách": "Số Serial bị trùng trong danh sách",
   "Tiến trình & Thực thi sản xuất": "Tiến trình sản xuất",
+  "Nghiệm thu": "Nghiệm thu",
+  "Lưu cập nhật thông tin": "Lưu cập nhật thông tin",
+  "Đang lưu cập nhật...": "Đang lưu cập nhật...",
+  "Xác nhận lưu cập nhật thông tin": "Xác nhận lưu cập nhật thông tin",
+  "Đồng ý lưu cập nhật": "Đồng ý lưu cập nhật",
+  "Không có thông tin mới hoặc thay đổi nào để lưu.":
+    "Không có thông tin mới hoặc thay đổi nào để lưu.",
 };

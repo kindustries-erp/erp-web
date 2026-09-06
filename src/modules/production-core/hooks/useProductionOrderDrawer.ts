@@ -910,101 +910,162 @@ export function useProductionOrderDrawer({
     showToast,
   ]);
 
-  const handleBatchComplete = useCallback(async () => {
-    const orderId = localOrder?.id || editing?.id;
-    if (!orderId) return;
-    const qty = Number(batchCompleteQty);
-    if (!qty || qty <= 0) {
-      showToast({ title: "Số lượng không hợp lệ", variant: "destructive" });
-      return;
-    }
-    const remainingQty =
-      Number(localOrder?.qtyToProduce || 0) -
-      Number(localOrder?.qtyProduced || 0);
-    if (qty > remainingQty) {
-      showToast({
-        title: `Số lượng hoàn thành không được vượt quá số lượng còn lại (${remainingQty})`,
-        variant: "destructive",
-      });
-      return;
-    }
-    if (needsIdentifiers && !identifiersAllValid(identifiers, trackingPolicy)) {
-      showToast({
-        title: "Vui lòng nhập đầy đủ thông tin định danh cho tất cả đơn vị",
-        variant: "destructive",
-      });
-      return;
-    }
-    if (trackingPolicy === "VEHICLE") {
-      const duplicateMessage = findVehicleDuplicate(identifiers);
-      if (duplicateMessage) {
-        showToast({ title: duplicateMessage, variant: "destructive" });
+  const handleBatchComplete = useCallback(
+    async (
+      explicitQty?: number,
+      explicitIdentifiers?: ProductionIdentifier[],
+      updatedVehicles?: ProductionIdentifier[],
+    ) => {
+      const orderId = localOrder?.id || editing?.id;
+      if (!orderId) return;
+
+      const targetIdentifiers =
+        explicitIdentifiers !== undefined ? explicitIdentifiers : identifiers;
+      const qty =
+        explicitQty !== undefined ? explicitQty : Number(batchCompleteQty);
+
+      const hasUpdates = !!(updatedVehicles && updatedVehicles.length > 0);
+      const hasNewProduction = qty > 0;
+
+      if (!hasUpdates && !hasNewProduction) {
+        showToast({
+          title: "Không có thông tin mới hoặc cập nhật để xử lý",
+          variant: "destructive",
+        });
         return;
       }
-    }
-    setSaving(true);
-    try {
-      const identifiersPayload = identifiers.map((id) => {
-        const mergedAttrs = id.attributes.reduce(
-          (acc, curr) => {
-            if (curr.key.trim()) acc[curr.key.trim()] = curr.value.trim();
-            return acc;
-          },
-          {} as Record<string, string>,
-        );
 
-        if (id.serialNo?.trim()) {
-          mergedAttrs["vehicleSerialNo"] = id.serialNo.trim();
+      setSaving(true);
+      try {
+        let updateMsg = "";
+        let completeMsg = "";
+
+        // 1. Cập nhật thông tin các xe đã xuất xưởng
+        if (hasUpdates) {
+          const updateRes = await productionCoreApi.updateProducedVehicles(
+            orderId,
+            {
+              vehicles: updatedVehicles
+                .filter((v) => !!v.id)
+                .map((v) => ({
+                  id: v.id!,
+                  vinNo: v.vinNo?.trim(),
+                  engineNo: v.engineNo?.trim(),
+                  serialNo: v.serialNo?.trim(),
+                  notes: v.notes?.trim(),
+                })),
+            },
+          );
+          updateMsg =
+            updateRes.message ||
+            `Đã cập nhật thông tin ${updatedVehicles.length} xe`;
         }
-        if (id.internalSerialNo?.trim()) {
-          mergedAttrs["internalSerialNo"] = id.internalSerialNo.trim();
+
+        // 2. Nghiệm thu hoàn thành các xe mới
+        if (hasNewProduction) {
+          const remainingQty =
+            Number(localOrder?.qtyToProduce || 0) -
+            Number(localOrder?.qtyProduced || 0);
+          if (qty > remainingQty) {
+            showToast({
+              title: `Số lượng hoàn thành không được vượt quá số lượng còn lại (${remainingQty})`,
+              variant: "destructive",
+            });
+            setSaving(false);
+            return;
+          }
+          if (
+            needsIdentifiers &&
+            !identifiersAllValid(targetIdentifiers, trackingPolicy)
+          ) {
+            showToast({
+              title:
+                "Vui lòng nhập đầy đủ thông tin định danh cho tất cả đơn vị mới",
+              variant: "destructive",
+            });
+            setSaving(false);
+            return;
+          }
+          if (trackingPolicy === "VEHICLE") {
+            const duplicateMessage = findVehicleDuplicate(targetIdentifiers);
+            if (duplicateMessage) {
+              showToast({ title: duplicateMessage, variant: "destructive" });
+              setSaving(false);
+              return;
+            }
+          }
+
+          const identifiersPayload = targetIdentifiers.map((id) => {
+            const mergedAttrs = id.attributes.reduce(
+              (acc, curr) => {
+                if (curr.key.trim()) acc[curr.key.trim()] = curr.value.trim();
+                return acc;
+              },
+              {} as Record<string, string>,
+            );
+
+            if (id.serialNo?.trim()) {
+              mergedAttrs["vehicleSerialNo"] = id.serialNo.trim();
+            }
+            if (id.internalSerialNo?.trim()) {
+              mergedAttrs["internalSerialNo"] = id.internalSerialNo.trim();
+            }
+
+            const effectiveSerial =
+              id.internalSerialNo?.trim() || id.serialNo?.trim() || undefined;
+
+            return {
+              vinNo: id.vinNo?.trim() || undefined,
+              engineNo: id.engineNo?.trim() || undefined,
+              serialNo: effectiveSerial,
+              lotNo: id.lotNo?.trim() || undefined,
+              notes: id.notes?.trim() || undefined,
+              attributes:
+                Object.keys(mergedAttrs).length > 0 ? mergedAttrs : undefined,
+            };
+          });
+
+          await productionCoreApi.complete(orderId, {
+            qtyFinished: qty,
+            unitCost: 0,
+            ...(needsIdentifiers ? { identifiers: identifiersPayload } : {}),
+          });
+          completeMsg = `Đã hoàn thành ${qty} đơn vị sản xuất`;
         }
 
-        const effectiveSerial =
-          id.internalSerialNo?.trim() || id.serialNo?.trim() || undefined;
+        const successMessages = [updateMsg, completeMsg]
+          .filter(Boolean)
+          .join(" & ");
+        showToast({
+          title: successMessages || "Thao tác thành công",
+          variant: "success",
+        });
 
-        return {
-          vinNo: id.vinNo?.trim() || undefined,
-          engineNo: id.engineNo?.trim() || undefined,
-          serialNo: effectiveSerial,
-          lotNo: id.lotNo?.trim() || undefined,
-          notes: id.notes?.trim() || undefined,
-          attributes:
-            Object.keys(mergedAttrs).length > 0 ? mergedAttrs : undefined,
-        };
-      });
-      await productionCoreApi.complete(orderId, {
-        qtyFinished: qty,
-        unitCost: 0,
-        ...(needsIdentifiers ? { identifiers: identifiersPayload } : {}),
-      });
-      showToast({
-        title: `Đã hoàn thành ${qty} đơn vị sản xuất`,
-        variant: "success",
-      });
-      setShowBatchDialog(false);
-      setIsIdentifierDrawerOpen(false);
-      resetVehicleEntry();
-      await refreshLocalOrder();
-    } catch (e) {
-      showToast({
-        title: getErrorMessage(e, "Không thể hoàn thành sản xuất hàng loạt"),
-        variant: "destructive",
-      });
-    } finally {
-      setSaving(false);
-    }
-  }, [
-    localOrder,
-    editing,
-    batchCompleteQty,
-    identifiers,
-    needsIdentifiers,
-    trackingPolicy,
-    refreshLocalOrder,
-    resetVehicleEntry,
-    showToast,
-  ]);
+        setShowBatchDialog(false);
+        setIsIdentifierDrawerOpen(false);
+        resetVehicleEntry();
+        await refreshLocalOrder();
+      } catch (e) {
+        showToast({
+          title: getErrorMessage(e, "Có lỗi xảy ra khi lưu dữ liệu"),
+          variant: "destructive",
+        });
+      } finally {
+        setSaving(false);
+      }
+    },
+    [
+      localOrder,
+      editing,
+      batchCompleteQty,
+      identifiers,
+      needsIdentifiers,
+      trackingPolicy,
+      refreshLocalOrder,
+      resetVehicleEntry,
+      showToast,
+    ],
+  );
 
   const handleExportXlsx = useCallback(async () => {
     if (!editing?.id) return;

@@ -731,7 +731,11 @@ export function ProductionIdentifierReviewTable({
                 ...current,
                 vinNo: String(vin).trim(),
                 engineNo: String(engine).trim(),
-                serialNo: vSerial ? String(vSerial).trim() : current.serialNo,
+                serialNo: vSerial
+                  ? String(vSerial).trim()
+                  : current.isExisting
+                    ? current.serialNo
+                    : "",
                 internalSerialNo: iSerial
                   ? String(iSerial).trim()
                   : current.internalSerialNo ||
@@ -827,22 +831,22 @@ export function ProductionIdentifierReviewTable({
     </div>
   );
 
-  // Standard Split Button Action Header (Main Action = Import Excel, Dropdown = Auto Gen & Download Template)
+  // Standard App Button Action Header (Main Action = Import Excel, Dropdown = Auto Gen & Download Template)
   const titleExtra = (
     <div className="flex items-center gap-2 flex-wrap justify-end">
       {!disabled && (
-        <div className="flex items-center shrink-0">
+        <div className="inline-flex items-stretch rounded-lg border border-border bg-surface shadow-xs overflow-hidden">
           <Button
             size="sm"
-            variant="outline"
+            variant="ghost"
             onClick={() => fileInputRef.current?.click()}
-            className="h-7 rounded-r-none px-2.5 border-r-0 focus:z-10 text-xs font-semibold gap-1.5 text-foreground hover:bg-muted/50"
+            className="h-7 rounded-none px-2.5 text-xs font-semibold gap-1.5 text-foreground hover:bg-surface-hover transition-colors"
             title={t("Nhập dữ liệu từ file Excel")}
           >
             <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
             <span>{t("Nhập từ file Excel")}</span>
           </Button>
-          <div className="w-[1px] h-7 bg-border z-10" />
+          <div className="w-[1px] bg-border my-1" />
           <ActionDropdown
             items={[
               {
@@ -866,10 +870,10 @@ export function ProductionIdentifierReviewTable({
             customTrigger={
               <Button
                 size="sm"
-                variant="outline"
-                className="h-7 w-7 p-0 rounded-l-none border-l-0 focus:z-10 hover:bg-muted/50"
+                variant="ghost"
+                className="h-7 w-7 p-0 rounded-none text-muted-foreground hover:text-foreground hover:bg-surface-hover transition-colors"
               >
-                <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
+                <ChevronDown className="w-3.5 h-3.5" />
               </Button>
             }
           />
@@ -879,7 +883,13 @@ export function ProductionIdentifierReviewTable({
   );
 
   return (
-    <div className="space-y-3">
+    <DrawerSection
+      title={sectionTitle}
+      titleExtra={titleExtra}
+      collapsible={true}
+      defaultCollapsed={false}
+      className="!mt-0"
+    >
       {/* Hidden File Input for Excel Import */}
       <input
         ref={fileInputRef}
@@ -889,33 +899,25 @@ export function ProductionIdentifierReviewTable({
         onChange={handleImportExcel}
       />
 
-      {/* Main Review Table DrawerSection */}
-      <DrawerSection
-        title={sectionTitle}
-        titleExtra={titleExtra}
-        collapsible={true}
-        defaultCollapsed={false}
-      >
-        <DataTable
-          tableId={tableId}
-          variant="spreadsheet"
-          items={paginatedRows}
-          columns={columns}
-          emptyLabel={t("Không có dòng nào phù hợp với bộ lọc")}
-          enableColumnResizing={true}
-          containerClassName="max-h-[calc(100vh-380px)] overflow-y-auto"
-          page={currentPage}
-          pageSize={pageSize}
-          total={totalItems}
-          totalPages={totalPages}
-          onPage={(p) => setPage(p)}
-          onPageSize={(s) => {
-            setPageSize(s);
-            setPage(1);
-          }}
-          pageSizeOptions={[20, 50, 100, 200]}
-        />
-      </DrawerSection>
-    </div>
+      <DataTable
+        tableId={tableId}
+        variant="spreadsheet"
+        items={paginatedRows}
+        columns={columns}
+        emptyLabel={t("Không có dòng nào phù hợp với bộ lọc")}
+        enableColumnResizing={true}
+        containerClassName="max-h-[calc(100vh-380px)] overflow-y-auto"
+        page={currentPage}
+        pageSize={pageSize}
+        total={totalItems}
+        totalPages={totalPages}
+        onPage={(p) => setPage(p)}
+        onPageSize={(s) => {
+          setPageSize(s);
+          setPage(1);
+        }}
+        pageSizeOptions={[20, 50, 100, 200]}
+      />
+    </DrawerSection>
   );
 }

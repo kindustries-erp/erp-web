@@ -286,15 +286,14 @@ describe("ProductionOrderExecutionTab - Vehicle Identifiers & Validation", () =>
         />,
       );
 
-      // Verify Open Completion & Declaration Drawer button in section header
-      expect(
-        screen.getByText("Nghiệm thu & Khai báo Số khung / Số máy"),
-      ).toBeInTheDocument();
+      // Verify Open Completion button with shortened label "Nghiệm thu"
+      expect(screen.getByText("Nghiệm thu")).toBeInTheDocument();
 
-      // Verify Unified Section Title
+      // Verify Unified Section Title with inline (1 / 2)
       expect(
         screen.getByText("Danh sách thành phẩm đã xuất xưởng"),
       ).toBeInTheDocument();
+      expect(screen.getByText("(1 / 2)")).toBeInTheDocument();
 
       // Verify Table Columns
       expect(screen.getByText("Số khung (VIN)")).toBeInTheDocument();
@@ -427,15 +426,13 @@ describe("ProductionOrderExecutionTab - Vehicle Identifiers & Validation", () =>
             order={mockOrder}
             policy="VEHICLE"
             identifiers={[]}
-            setIdentifiers={(val: any) => {
-              submittedIdentifiers = typeof val === "function" ? val([]) : val;
-            }}
+            setIdentifiers={() => {}}
             batchCompleteQty="1"
-            setBatchCompleteQty={(qty) => {
-              submittedQty = qty;
-            }}
-            onBatchComplete={async () => {
+            setBatchCompleteQty={() => {}}
+            onBatchComplete={async (qty, ids) => {
               batchCompleteCalled = true;
+              submittedQty = String(qty || "");
+              submittedIdentifiers = ids || [];
             }}
           />
         </QueryClientProvider>,
@@ -480,7 +477,7 @@ describe("ProductionOrderExecutionTab - Vehicle Identifiers & Validation", () =>
       expect(submittedIdentifiers[0].vinNo).toBe("VIN-002");
     });
 
-    it("disables confirm button and displays error when an existing vehicle VIN or Engine is cleared", async () => {
+    it("displays error when an existing vehicle VIN or Engine is cleared", async () => {
       const queryClient = new QueryClient({
         defaultOptions: { queries: { retry: false } },
       });
@@ -512,13 +509,9 @@ describe("ProductionOrderExecutionTab - Vehicle Identifiers & Validation", () =>
           "Xe đã ghi nhận xuất xưởng không được để trống Số khung hoặc Số máy!",
         ),
       ).toBeInTheDocument();
-
-      // Verify confirm button is disabled
-      const confirmBtn = screen.getByText("Xác nhận hoàn thành & Nhập kho");
-      expect(confirmBtn).toBeDisabled();
     });
 
-    it("shows updated vehicle count in ConfirmModal when existing vehicle details are modified", async () => {
+    it("shows updated vehicle count in ConfirmModal when existing vehicle details are modified and a new vehicle is completed", async () => {
       const queryClient = new QueryClient({
         defaultOptions: { queries: { retry: false } },
       });
@@ -544,16 +537,134 @@ describe("ProductionOrderExecutionTab - Vehicle Identifiers & Validation", () =>
       fireEvent.change(vinInputs[0], { target: { value: "VIN-001-FIXED" } });
       fireEvent.blur(vinInputs[0]);
 
+      // Enter row 1 (new vehicle)
+      const vinInputsUpdated = screen.getAllByPlaceholderText("Nhập số VIN...");
+      fireEvent.change(vinInputsUpdated[1], { target: { value: "VIN-002" } });
+      fireEvent.blur(vinInputsUpdated[1]);
+
+      const engInputs = screen.getAllByPlaceholderText("Nhập số máy...");
+      fireEvent.change(engInputs[1], { target: { value: "ENG-002" } });
+      fireEvent.blur(engInputs[1]);
+
       // Check right panel indicates 1 updated unit
-      expect(screen.getByText("Cập nhật thông tin:")).toBeInTheDocument();
+      expect(screen.getByText("Cập nhật thông tin")).toBeInTheDocument();
 
       const confirmBtn = screen.getByText("Xác nhận hoàn thành & Nhập kho");
       fireEvent.click(confirmBtn);
 
-      // Verify modal shows updated vehicle line
+      // Verify modal shows updated vehicle line and newly produced vehicle line
       expect(
         screen.getByText("Cập nhật thông tin đã xuất xưởng:"),
       ).toBeInTheDocument();
+      expect(screen.getByText("Sản xuất mới & Nhập kho:")).toBeInTheDocument();
+    });
+
+    it("shows close confirm modal when isDirty is true and user closes drawer", async () => {
+      let closeCalled = false;
+      const queryClient = new QueryClient({
+        defaultOptions: { queries: { retry: false } },
+      });
+
+      render(
+        <QueryClientProvider client={queryClient}>
+          <ProductionIdentifierDeclareDrawer
+            open={true}
+            onClose={() => {
+              closeCalled = true;
+            }}
+            order={mockOrder}
+            policy="VEHICLE"
+            identifiers={[]}
+            setIdentifiers={() => {}}
+            batchCompleteQty="1"
+            setBatchCompleteQty={() => {}}
+            onBatchComplete={async () => {}}
+          />
+        </QueryClientProvider>,
+      );
+
+      // Enter a new VIN in row 1 -> isDirty becomes true
+      const vinInputs = screen.getAllByPlaceholderText("Nhập số VIN...");
+      fireEvent.change(vinInputs[1], { target: { value: "VIN-UNSAVED" } });
+      fireEvent.blur(vinInputs[1]);
+
+      // Click "Đóng" button
+      const closeBtn = screen.getByText("Đóng");
+      fireEvent.click(closeBtn);
+
+      // Verify Close Confirm Modal is shown
+      expect(screen.getByText("Hủy bỏ thay đổi?")).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          "Bạn có các thay đổi chưa được lưu trong danh sách khai báo định danh. Bạn có chắc chắn muốn đóng không?",
+        ),
+      ).toBeInTheDocument();
+
+      // Click "Đồng ý đóng"
+      const confirmCloseBtn = screen.getByText("Đồng ý đóng");
+      fireEvent.click(confirmCloseBtn);
+
+      expect(closeCalled).toBe(true);
+    });
+
+    it("allows saving updates with 'Lưu cập nhật thông tin' button when ONLY editing existing vehicles", async () => {
+      let submitCalled = false;
+      let submittedNewQty = -1;
+      let submittedUpdates: any[] = [];
+
+      const queryClient = new QueryClient({
+        defaultOptions: { queries: { retry: false } },
+      });
+
+      render(
+        <QueryClientProvider client={queryClient}>
+          <ProductionIdentifierDeclareDrawer
+            open={true}
+            onClose={() => {}}
+            order={mockOrder}
+            policy="VEHICLE"
+            identifiers={[]}
+            setIdentifiers={() => {}}
+            batchCompleteQty="0"
+            setBatchCompleteQty={() => {}}
+            onBatchComplete={async (newQty, newIds, updated) => {
+              submitCalled = true;
+              submittedNewQty = newQty ?? 0;
+              submittedUpdates = updated || [];
+            }}
+          />
+        </QueryClientProvider>,
+      );
+
+      // Modify existing vehicle (row 0) - edit notes
+      const notesInputs = screen.getAllByPlaceholderText("Ghi chú đơn vị...");
+      fireEvent.change(notesInputs[0], {
+        target: { value: "Đã sửa số tem serial và bảo dưỡng" },
+      });
+      fireEvent.blur(notesInputs[0]);
+
+      // Button label should now be "Lưu cập nhật thông tin"
+      const saveBtn = screen.getByText("Lưu cập nhật thông tin");
+      expect(saveBtn).toBeInTheDocument();
+      fireEvent.click(saveBtn);
+
+      // Verify modal appears with "Xác nhận lưu cập nhật thông tin" and "Đồng ý lưu cập nhật"
+      expect(
+        screen.getByText("Xác nhận lưu cập nhật thông tin"),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText("Cập nhật thông tin đã xuất xưởng:"),
+      ).toBeInTheDocument();
+
+      const modalConfirmBtn = screen.getByText("Đồng ý lưu cập nhật");
+      fireEvent.click(modalConfirmBtn);
+
+      expect(submitCalled).toBe(true);
+      expect(submittedNewQty).toBe(0);
+      expect(submittedUpdates).toHaveLength(1);
+      expect(submittedUpdates[0].notes).toBe(
+        "Đã sửa số tem serial và bảo dưỡng",
+      );
     });
   });
 });

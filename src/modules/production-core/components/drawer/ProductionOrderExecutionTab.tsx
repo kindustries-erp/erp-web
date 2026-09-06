@@ -1,5 +1,6 @@
 import React from "react";
 import { PlayCircle, Loader2, AlertCircle, Sparkles } from "lucide-react";
+import { Button } from "@/shared/components/ui/Button";
 import { Badge } from "@/shared/components/ui/badge";
 import { DrawerSection } from "@/shared/components/DrawerModal";
 import { EmptyState } from "@/shared/components/EmptyState";
@@ -74,8 +75,6 @@ export function ProductionOrderExecutionTab({
   const qtyToProduce = Number(order?.qtyToProduce ?? 0);
   const qtyProduced = Number(order?.qtyProduced ?? 0);
   const remaining = Math.max(0, qtyToProduce - qtyProduced);
-  const progressPct =
-    qtyToProduce > 0 ? Math.round((qtyProduced / qtyToProduce) * 100) : 0;
 
   const isDraft = order?.status === "DRAFT";
   const isConfirmed = order?.status === "CONFIRMED";
@@ -104,16 +103,19 @@ export function ProductionOrderExecutionTab({
       ? order?.producedVehicles
       : order?.producedSerials) ?? [];
 
+  // Section Title with inline (X / Y) format
+  const sectionTitle = (
+    <div className="flex items-center gap-2">
+      <span>{t("Danh sách thành phẩm đã xuất xưởng")}</span>
+      <span className="font-mono font-semibold text-xs text-muted-foreground">
+        ({fmtQty(qtyProduced)} / {fmtQty(qtyToProduce)})
+      </span>
+    </div>
+  );
+
   // Title Extra Header Action & Progress Info
   const titleExtra = (
     <div className="flex items-center gap-2 flex-wrap justify-end">
-      {/* Progress Badge */}
-      {isInProgress && (
-        <span className="text-xs font-semibold text-foreground bg-muted border border-border px-2.5 py-1 rounded-lg font-mono">
-          {fmtQty(qtyProduced)} / {fmtQty(qtyToProduce)} ({progressPct}%)
-        </span>
-      )}
-
       {isCompleted && (
         <Badge
           variant="outline"
@@ -146,19 +148,16 @@ export function ProductionOrderExecutionTab({
 
       {/* Action Button for IN_PROGRESS -> Open Completion & Declaration Drawer */}
       {isInProgress && (
-        <button
-          type="button"
+        <Button
+          size="sm"
+          variant="primary"
           onClick={handleOpenCompletion}
           disabled={saving || remaining <= 0}
-          className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg border border-emerald-300 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-sm transition-all disabled:opacity-50"
+          className="gap-1.5 font-semibold text-xs shadow-sm"
         >
           <Sparkles className="h-3.5 w-3.5" />
-          <span>
-            {trackingPolicy === "VEHICLE"
-              ? t("Nghiệm thu & Khai báo Số khung / Số máy")
-              : t("Nghiệm thu & Hoàn thành sản xuất")}
-          </span>
-        </button>
+          <span>{t("Nghiệm thu")}</span>
+        </Button>
       )}
     </div>
   );
@@ -216,7 +215,7 @@ export function ProductionOrderExecutionTab({
 
       {/* Single Unified Section: Danh sách thành phẩm đã xuất xưởng */}
       <DrawerSection
-        title={t("Danh sách thành phẩm đã xuất xưởng")}
+        title={sectionTitle}
         titleExtra={titleExtra}
         collapsible
         defaultCollapsed={false}
