@@ -637,7 +637,7 @@ export function SidebarNav({
               {(canReadInvoices || canReadBankStatements || canReadBom) && (
                 <NavGroupItem
                   label={t("nav.items.customFields", "Trường tùy chỉnh")}
-                  onClick={() => openCustomFieldsDrawer("ALL", "INVOICE")}
+                  onClick={() => openCustomFieldsDrawer("ALL", "INVOICE_IN")}
                 />
               )}
             </NavGroup>

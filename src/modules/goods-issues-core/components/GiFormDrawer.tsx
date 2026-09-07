@@ -46,6 +46,7 @@ import {
 } from "@/modules/goods-issues-core/hooks/useGiDrawer";
 import { InventoryVoucherFormDrawer } from "@/modules/inventory-core/components/inventory-voucher-drawer/InventoryVoucherFormDrawer";
 import { ModuleEntityCustomFieldsSection } from "@/shared/components/ModuleEntityCustomFieldsSection";
+import { AttributeTypeBadge } from "@/shared/components/AttributeTypeBadge";
 
 interface GiFormDrawerProps {
   drawer: UseGiDrawerReturn;
@@ -570,7 +571,15 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
           onChange={(v) => setForm((f) => ({ ...f, issueDate: v }))}
         />
       </DrawerField>
-      <DrawerField label={t("Loại xuất")} required>
+      <DrawerField
+        label={
+          <span className="inline-flex items-center gap-1.5 flex-wrap">
+            <span>{t("Loại xuất")}</span>
+            <AttributeTypeBadge type="system" />
+          </span>
+        }
+        required
+      >
         <Combobox
           options={ISSUE_TYPE_OPTIONS}
           value={form.issueType}

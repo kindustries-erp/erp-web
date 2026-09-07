@@ -102,8 +102,16 @@ export const moduleConfigVi = {
   },
 
   modules: {
+    invoiceIn: {
+      name: "Hóa đơn mua vào",
+      desc: "Hóa đơn mua vào, thuế GTGT đầu vào & chi phí nhà cung cấp",
+    },
+    invoiceOut: {
+      name: "Hóa đơn bán ra",
+      desc: "Hóa đơn bán ra, thuế GTGT đầu ra & doanh thu bán hàng",
+    },
     invoice: {
-      name: "Hóa đơn & Thuế",
+      name: "Hóa đơn điện tử",
       desc: "Hóa đơn mua vào/bán ra, chi phí thuế & khấu trừ",
     },
     bankTxn: {

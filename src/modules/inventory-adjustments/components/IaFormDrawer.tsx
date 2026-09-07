@@ -41,6 +41,7 @@ import type { UseIaDrawerReturn } from "@/modules/inventory-adjustments/hooks/us
 import { InventoryVoucherFormDrawer } from "@/modules/inventory-core/components/inventory-voucher-drawer/InventoryVoucherFormDrawer";
 import { useVoucherClientFilter } from "@/modules/inventory-core/hooks/useVoucherClientFilter";
 import { ModuleEntityCustomFieldsSection } from "@/shared/components/ModuleEntityCustomFieldsSection";
+import { AttributeTypeBadge } from "@/shared/components/AttributeTypeBadge";
 
 function fmtQty(value?: string | number | null) {
   if (!value && value !== 0) return "0";
@@ -524,7 +525,14 @@ export function IaFormDrawer({ drawer }: IaFormDrawerProps) {
           onChange={(v) => setForm((f) => ({ ...f, adjustmentDate: v }))}
         />
       </DrawerField>
-      <DrawerField label={t("Lý do điều chỉnh")}>
+      <DrawerField
+        label={
+          <span className="inline-flex items-center gap-1.5 flex-wrap">
+            <span>{t("Lý do điều chỉnh")}</span>
+            <AttributeTypeBadge type="system" />
+          </span>
+        }
+      >
         <Combobox
           options={adjustmentReasonOptions}
           value={

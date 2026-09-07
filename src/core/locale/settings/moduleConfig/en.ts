@@ -104,8 +104,16 @@ export const moduleConfigEn = {
   },
 
   modules: {
+    invoiceIn: {
+      name: "Input Invoices",
+      desc: "Input invoices, deductible VAT & supplier expenses",
+    },
+    invoiceOut: {
+      name: "Output Invoices",
+      desc: "Output invoices, output VAT & sales revenue",
+    },
     invoice: {
-      name: "Invoices & Taxes",
+      name: "Electronic Invoices",
       desc: "Input/output invoices, VAT & tax deduction",
     },
     bankTxn: {

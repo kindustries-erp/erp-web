@@ -455,4 +455,10 @@ export const erpInvoicesVi = {
   "selectedBankTable.colOriginalAmount": "Số tiền gốc",
   "selectedBankTable.colNetOffAmount": "Đã cấn trừ",
   "selectedBankTable.colThisNetOff": "Cấn trừ đợt này",
+
+  // Custom Fields Config Menu
+  customFieldsIn: "Cấu hình hóa đơn mua vào",
+  customFieldsOut: "Cấu hình hóa đơn bán ra",
+  configTitleIn: "Hóa đơn mua vào",
+  configTitleOut: "Hóa đơn bán ra",
 };

@@ -242,7 +242,7 @@ describe("ModuleEntityCustomFieldsSection", () => {
       </QueryClientProvider>,
     );
 
-    expect(screen.getByText("Thuộc tính chung")).toBeDefined();
+    expect(await screen.findByText("Thuộc tính chung")).toBeDefined();
     expect(
       await screen.findByPlaceholderText("Nhập Ghi chú phê duyệt..."),
     ).toBeDefined();

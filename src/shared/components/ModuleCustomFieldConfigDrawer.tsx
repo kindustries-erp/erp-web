@@ -130,13 +130,24 @@ export interface ErpModuleDefinition {
 export const ERP_MODULE_REGISTRY: ErpModuleDefinition[] = [
   // Kế toán & Tài chính
   {
-    key: "INVOICE",
-    nameKey: "moduleConfig.modules.invoice.name",
-    defaultName: "Hóa đơn điện tử",
+    key: "INVOICE_IN",
+    nameKey: "moduleConfig.modules.invoiceIn.name",
+    defaultName: "Hóa đơn mua vào",
     domain: "FINANCE",
-    icon: <Receipt className="w-3.5 h-3.5" />,
-    descKey: "moduleConfig.modules.invoice.desc",
-    defaultDesc: "Quản lý trường tùy chỉnh cho hóa đơn mua vào và bán ra",
+    icon: <PackagePlus className="w-3.5 h-3.5" />,
+    descKey: "moduleConfig.modules.invoiceIn.desc",
+    defaultDesc:
+      "Quản lý trường tùy chỉnh cho hóa đơn mua vào & chi phí nhà cung cấp",
+  },
+  {
+    key: "INVOICE_OUT",
+    nameKey: "moduleConfig.modules.invoiceOut.name",
+    defaultName: "Hóa đơn bán ra",
+    domain: "FINANCE",
+    icon: <PackageMinus className="w-3.5 h-3.5" />,
+    descKey: "moduleConfig.modules.invoiceOut.desc",
+    defaultDesc:
+      "Quản lý trường tùy chỉnh cho hóa đơn bán ra & doanh thu bán hàng",
   },
   {
     key: "BANK_TXN",
@@ -1933,19 +1944,18 @@ export function ModuleCustomFieldConfigDrawer({
 
   // Initial active module key
   const [activeModuleKey, setActiveModuleKey] = useState<string>(() => {
-    return (
-      (initialTab as string) || (moduleKey ? String(moduleKey) : "INVOICE")
-    );
+    const target = initialTab || moduleKey;
+    if (target === "INVOICE" || !target) return "INVOICE_IN";
+    return String(target);
   });
 
   useEffect(() => {
     if (open) {
-      if (initialTab) {
-        setActiveModuleKey(String(initialTab));
-      } else if (moduleKey) {
-        setActiveModuleKey(String(moduleKey));
+      const target = initialTab || moduleKey;
+      if (target === "INVOICE" || !target) {
+        setActiveModuleKey("INVOICE_IN");
       } else {
-        setActiveModuleKey("INVOICE");
+        setActiveModuleKey(String(target));
       }
     }
   }, [open, initialTab, moduleKey]);

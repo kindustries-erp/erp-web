@@ -10,6 +10,7 @@ import {
   resolveOptionLabel,
 } from "@/core/api/moduleConfigApi";
 import { useAppStore } from "@/core/config/appStore";
+import { AttributeTypeBadge } from "@/shared/components/AttributeTypeBadge";
 import type { UseGrDrawerReturn } from "@/modules/goods-receipts-core/hooks/useGrDrawer";
 
 interface GrFormRightPanelProps {
@@ -73,7 +74,14 @@ export function GrFormRightPanel({ drawer, t }: GrFormRightPanelProps) {
           onChange={(v) => setForm((f) => ({ ...f, receiptDate: v }))}
         />
       </DrawerField>
-      <DrawerField label={t("Loại nhập")}>
+      <DrawerField
+        label={
+          <span className="inline-flex items-center gap-1.5 flex-wrap">
+            <span>{t("Loại nhập")}</span>
+            <AttributeTypeBadge type="system" />
+          </span>
+        }
+      >
         <Combobox
           options={receiptTypeOptions}
           value={form.receiptType}

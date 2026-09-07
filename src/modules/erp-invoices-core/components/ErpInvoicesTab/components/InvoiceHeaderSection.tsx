@@ -389,12 +389,18 @@ export const InvoiceHeaderSection = React.memo(function InvoiceHeaderSection({
           groupLabel: t("groupCauHinh", "Cấu hình"),
           items: [
             {
-              label: t(
-                "invoiceConfig.customFields",
-                "Cấu hình trường tùy chỉnh",
-              ),
-              icon: <Settings className="w-3.5 h-3.5 text-violet-500" />,
-              onClick: () => openCustomFieldsDrawer("INVOICE", "Hóa đơn"),
+              label:
+                direction === "IN"
+                  ? t("erpInvoices.customFieldsIn", "Cấu hình hóa đơn mua vào")
+                  : t("erpInvoices.customFieldsOut", "Cấu hình hóa đơn bán ra"),
+              icon: <Settings className="h-[13px] w-[13px]" />,
+              onClick: () =>
+                openCustomFieldsDrawer(
+                  direction === "IN" ? "INVOICE_IN" : "INVOICE_OUT",
+                  direction === "IN"
+                    ? t("erpInvoices.configTitleIn", "Hóa đơn mua vào")
+                    : t("erpInvoices.configTitleOut", "Hóa đơn bán ra"),
+                ),
             },
           ],
         },
@@ -402,6 +408,7 @@ export const InvoiceHeaderSection = React.memo(function InvoiceHeaderSection({
     },
     [
       t,
+      direction,
       canEditInvoice,
       handleOpenInternal,
       handleDownload,
@@ -442,15 +449,25 @@ export const InvoiceHeaderSection = React.memo(function InvoiceHeaderSection({
         groupLabel: t("groupCauHinh", "Cấu hình"),
         items: [
           {
-            label: t("invoiceConfig.customFields", "Cấu hình trường tùy chỉnh"),
-            icon: <Settings className="w-4 h-4 text-violet-500" />,
-            onClick: () => openCustomFieldsDrawer("INVOICE", "Hóa đơn"),
+            label:
+              direction === "IN"
+                ? t("erpInvoices.customFieldsIn", "Cấu hình hóa đơn mua vào")
+                : t("erpInvoices.customFieldsOut", "Cấu hình hóa đơn bán ra"),
+            icon: <Settings className="w-4 h-4 text-muted-foreground" />,
+            onClick: () =>
+              openCustomFieldsDrawer(
+                direction === "IN" ? "INVOICE_IN" : "INVOICE_OUT",
+                direction === "IN"
+                  ? t("erpInvoices.configTitleIn", "Hóa đơn mua vào")
+                  : t("erpInvoices.configTitleOut", "Hóa đơn bán ra"),
+              ),
           },
         ],
       },
     ],
     [
       t,
+      direction,
       canEditInvoice,
       handleExportExcel,
       onOpenPortalAuth,
