@@ -300,14 +300,14 @@ export function useNavItems(): NavSearchItem[] {
     if (canReadGarage) {
       items.push({
         key: "garage-dashboard",
-        label: t("nav.items.garageDashboard"),
+        label: t("nav.items.garageDashboard", "Tổng quan Garage"),
         section: garageSection,
         keywords: ["garage", "tong quan garage", "dashboard", "xuong"],
         icon: <LayoutDashboard className="w-4 h-4" />,
       });
       items.push({
         key: "garage-cases",
-        label: t("nav.items.garageCases"),
+        label: t("nav.items.garageCases", "Phiếu dịch vụ"),
         section: garageSection,
         keywords: [
           "garage",
@@ -334,11 +334,11 @@ export function useNavItems(): NavSearchItem[] {
       });
       items.push({
         key: "garage-opex",
-        label: t("nav.items.garageOpex", "Chi phí vận hành"),
+        label: t("nav.items.garageOpex", "Chi phí vận hành Garage"),
         section: garageSection,
         keywords: [
           "garage",
-          "chi phi van hanh",
+          "chi phi van hanh garage",
           "opex",
           "luong",
           "mat bang",

@@ -672,7 +672,7 @@ export const garageVi = {
     select: "Chọn chi nhánh xưởng",
   },
   opex: {
-    pageTitle: "Chi phí vận hành",
+    pageTitle: "Chi phí vận hành Garage",
     pageDesc: "Quản lý các khoản chi phí vận hành hàng tháng tại xưởng Garage",
     columns: {
       period: "Kỳ báo cáo",
@@ -701,6 +701,7 @@ export const garageVi = {
       CHI_PHI_TRUC_TIEP_KHAC: "Chi phí trực tiếp khác (Tính vào Giá vốn)",
       HOA_HONG_SALE: "Hoa hồng cho Sale",
       HOA_HONG_DV: "Hoa hồng cho DV",
+      HOA_HONG_KHAC: "Hoa hồng khác (Nhập tay)",
       KHAC: "Khác",
     },
     actions: {
@@ -741,6 +742,12 @@ export const garageVi = {
       save: "Lưu thay đổi",
       create: "Tạo chi phí",
       cancel: "Hủy",
+      readOnlyNotice:
+        "Khoản hoa hồng này được tính toán tự động 100% từ Báo cáo P&L và mang tính chất Chỉ Đọc. Không thể chỉnh sửa hoặc xóa trực tiếp.",
+      readOnlyAdjustHint:
+        "Để điều chỉnh tăng/giảm hoa hồng của tháng, vui lòng tạo khoản 'Hoa hồng khác' với số tiền Dương (+) hoặc Âm (-).",
+      amountPositiveNegativeHint:
+        "Nhập số dương (+) để tăng thêm hoặc số âm (-) để giảm trừ hoa hồng",
       sectionRecurring: "Phát sinh chi phí định kỳ",
       enableRecurring: "Lặp lại định kỳ hàng tháng",
       enableRecurringDesc:
@@ -800,15 +807,28 @@ export const garageVi = {
     updateSuccess: "Đã cập nhật chi phí vận hành",
     applyScopeThisSuccess: "Đã cập nhật chi phí cho phiếu tháng này",
     applyScopeFutureSuccess: "Đã cập nhật chuỗi chi phí định kỳ ({{count}} kỳ)",
+    autoCalculatedTooltip:
+      "Khoản hoa hồng này được tính toán tự động 100% từ Báo cáo P&L (Chỉ đọc)",
     empty: "Chưa có dữ liệu chi phí vận hành",
     emptyDesc:
       "Nhấn nút 'Thêm chi phí' để tạo khoản chi phí đầu tiên cho xưởng",
+    autoCalcFromPnl: "⚡ Tính tự động từ P&L",
+    autoCalcTooltip:
+      "Tự động tính số tiền hoa hồng theo công thức P&L của kỳ tháng đang chọn",
+    autoCalculatedSaleSuccess: "Đã tính tự động hoa hồng Sale theo P&L!",
+    autoCalculatedDvSuccess: "Đã tính tự động hoa hồng DV theo P&L!",
+    syncCommissionsBtn: "⚡ Đồng bộ hoa hồng P&L",
+    syncCommissionsSuccess: "Đã đồng bộ hoa hồng vào chi phí vận hành!",
+    syncCommissionsConfirmTitle: "Đồng bộ hoa hồng từ P&L",
+    syncCommissionsConfirmDesc:
+      "Hệ thống sẽ tính toán và lưu hoa hồng Sale (10% tỷ lệ ký gửi) và hoa hồng DV (10%) của kỳ Tháng {{month}}/{{year}} vào bảng chi phí vận hành. Bạn có muốn tiếp tục?",
   },
   pnl: {
     title: "Báo cáo Lợi nhuận (P&L)",
     desc: "Tổng hợp doanh thu, giá vốn, chi phí vận hành và lợi nhuận ròng",
     monthLabel: "Tháng",
     yearLabel: "Năm",
+    monthPrefix: "Tháng",
     exportExcel: "Xuất P&L Excel",
     tableHeaderCategory: "Danh Mục",
     tableHeaderValue: "Tháng này",
@@ -822,10 +842,32 @@ export const garageVi = {
     opexHeader: "IV. Chi phí vận hành",
     netProfitBeforeCommissionHeader: "V. Lợi nhuận ròng (trước hoa hồng)",
     commissionHeader: "VI. Hoa hồng",
+    kyGuiProfitRate: "Tỷ lệ lãi gộp ký gửi / Lãi gộp",
+    kyGuiProfitRateTooltip:
+      "Tỷ lệ % lợi nhuận gộp từ các phiếu dịch vụ có phân loại Ký gửi/Nội bộ trên tổng lợi nhuận gộp toàn xưởng. Dùng làm hệ số phân bổ Lợi nhuận ròng để tính 10% hoa hồng cho bộ phận Sale.",
+    kyGuiAllocationBadge: "Tỷ trọng phân bổ Sale",
+    kyGuiFormulaSubtitle:
+      "Lãi gộp Ký gửi: {{kyGuiGrossProfit}} đ / Tổng: {{totalGrossProfit}} đ",
+    saleCommission: "Hoa hồng cho Sale (10%)",
+    saleCommissionBadge: "10% × LN ròng × {{rate}}% Ký gửi",
+    saleCommissionSubtitle:
+      "Tính trên 10% của Lợi nhuận ròng theo Tỷ lệ lợi nhuận gộp do ký gửi",
+    dvCommission: "Hoa hồng cho DV (10%)",
+    dvCommissionBadge: "10% × (LN ròng - HH Sale)",
+    dvCommissionSubtitle:
+      "Tính trên 10% Lợi nhuận ròng sau khi trừ hoa hồng Sale",
+    manualCommissionBadge: "Nhập tay",
+    autoCalculatedBadge: "Tự động",
+    autoCalculatedTooltip:
+      "Khoản hoa hồng này được tính toán tự động 100% từ Báo cáo P&L (Chỉ đọc)",
+    savedToDbBadge: "Đã lưu vào CP vận hành",
+    autoCalculatedPnlBadge: "Tự động theo P&L",
+    saveToOpexBtn: "⚡ Lưu vào CP vận hành",
+    saveToOpexSuccess: "Đã lưu hoa hồng vào bảng chi phí vận hành!",
     netProfitAfterCommissionHeader: "VII. Lợi nhuận ròng (sau hoa hồng)",
     noOpexHint: "Chưa nhập chi phí vận hành cho tháng này",
     noCommissionHint: "Chưa có hoa hồng",
-    goToOpex: "Đến trang Nhập CP vận hành →",
+    goToOpex: "Chi phí vận hành Garage →",
     casesCompleted: "vụ việc hoàn tất",
     ojCases: "vụ OJ",
   },
