@@ -1,10 +1,20 @@
-import React from "react";
+import React, { useState, useMemo } from "react";
 import { PlayCircle, Loader2, AlertCircle, Sparkles } from "lucide-react";
 import { Button } from "@/shared/components/ui/Button";
 import { Badge } from "@/shared/components/ui/badge";
 import { DrawerSection } from "@/shared/components/DrawerModal";
 import { EmptyState } from "@/shared/components/EmptyState";
 import { useT } from "@/core/i18n";
+import {
+  DataTable,
+  createColumnHeaderFilter,
+  filterClientItems,
+  getDefaultPageSize,
+  type DataTableColumn,
+} from "@/shared/components/DataTable";
+import { TableText } from "@/shared/components/DataTable/TableText";
+import { TableDateCell } from "@/shared/components/DataTable/TableDateCell";
+import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
 import type { ErpProductionOrder } from "../../api/productionCoreApi";
 import {
   type ProductionIdentifier,
@@ -27,6 +37,18 @@ export {
   findVehicleDuplicate,
   generateInternalSerial,
 };
+
+export interface ProducedRowItem {
+  id: string;
+  vinNo: string;
+  engineNo: string;
+  vehicleSerialNo: string;
+  internalSerialNo: string;
+  serialNo: string;
+  lotNo: string;
+  notes: string;
+  createdAt: string;
+}
 
 function fmtQty(value?: string | number | null) {
   if (value === undefined || value === null || value === "") return "0";
@@ -103,13 +125,243 @@ export function ProductionOrderExecutionTab({
       ? order?.producedVehicles
       : order?.producedSerials) ?? [];
 
-  // Section Title with inline (X / Y) format
+  // Table Column State & Pagination
+  const tableId = "production-order-finished-goods-table";
+  const tableState = useTableColumnState(tableId);
+  const [page, setPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(getDefaultPageSize);
+
+  // Normalize produced list rows for robust DataTable representation
+  const normalizedRows = useMemo<ProducedRowItem[]>(() => {
+    return producedList.map((item: any, i: number) => {
+      const attrs = item.attributes || {};
+      const vehicleSerial =
+        attrs.vehicleSerialNo || item.vehicleSerialNo || item.serialNo || "";
+      const internalSerial =
+        attrs.internalSerialNo ||
+        item.internalSerialNo ||
+        (trackingPolicy === "SERIAL" ? item.serialNo : "");
+
+      return {
+        id: item.id || `produced-${i}`,
+        vinNo: item.vin || item.vinNo || "",
+        engineNo: item.engineNo || "",
+        vehicleSerialNo: vehicleSerial,
+        internalSerialNo: internalSerial,
+        serialNo: item.serialNo || vehicleSerial || "",
+        lotNo: item.lotNo || "",
+        notes: item.notes || "",
+        createdAt: item.createdAt || "",
+      };
+    });
+  }, [producedList, trackingPolicy]);
+
+  // Client-side filtering & sorting via filterClientItems
+  const filteredRows = useMemo(
+    () =>
+      filterClientItems(normalizedRows, tableState, {
+        dateField: "createdAt",
+      }),
+    [normalizedRows, tableState],
+  );
+
+  const totalItems = filteredRows.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+  const currentPage = Math.min(page, totalPages);
+
+  const paginatedRows = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filteredRows.slice(start, start + pageSize);
+  }, [filteredRows, currentPage, pageSize]);
+
+  // 1-line Column Header Filter Builder
+  const headerFilter = useMemo(
+    () =>
+      createColumnHeaderFilter({
+        listHook: tableState,
+        items: normalizedRows,
+        defaultAlign: "center",
+      }),
+    [tableState, normalizedRows],
+  );
+
+  // Columns definition following /standardize-table
+  const columns = useMemo<DataTableColumn<ProducedRowItem>[]>(() => {
+    const cols: DataTableColumn<ProducedRowItem>[] = [
+      {
+        key: "index",
+        header: <span className="w-full block text-center">#</span>,
+        size: 40,
+        enableResizing: false,
+        headerClassName: "text-center w-[40px] min-w-[40px]",
+        className: "text-center w-[40px] min-w-[40px]",
+        cell: (_: any, idx: number) => (
+          <span className="w-full block text-center font-mono text-muted-foreground text-xs">
+            {idx}
+          </span>
+        ),
+      },
+    ];
+
+    if (trackingPolicy === "VEHICLE") {
+      cols.push(
+        {
+          key: "vinNo",
+          header: headerFilter("vinNo", t("Số khung (VIN)")),
+          size: 190,
+          enableResizing: true,
+          cell: (row) => (
+            <TableText
+              text={row.vinNo}
+              enableCopy={true}
+              tooltip={true}
+              className="font-mono font-medium text-emerald-700 dark:text-emerald-400"
+            />
+          ),
+        },
+        {
+          key: "engineNo",
+          header: headerFilter("engineNo", t("Số máy")),
+          size: 170,
+          enableResizing: true,
+          cell: (row) => (
+            <TableText
+              text={row.engineNo}
+              enableCopy={true}
+              tooltip={true}
+              className="font-mono font-medium text-foreground"
+            />
+          ),
+        },
+        {
+          key: "vehicleSerialNo",
+          header: headerFilter("vehicleSerialNo", t("Số Serial xe")),
+          size: 160,
+          enableResizing: true,
+          cell: (row) => (
+            <TableText
+              text={row.vehicleSerialNo}
+              enableCopy={true}
+              tooltip={true}
+              className="font-mono font-medium text-foreground"
+            />
+          ),
+        },
+        {
+          key: "internalSerialNo",
+          header: headerFilter("internalSerialNo", t("Số Serial nội bộ")),
+          size: 190,
+          enableResizing: true,
+          className: "bg-primary/5",
+          cell: (row) => (
+            <TableText
+              text={row.internalSerialNo}
+              enableCopy={true}
+              tooltip={true}
+              className="font-mono font-medium text-primary"
+            />
+          ),
+        },
+      );
+    } else if (trackingPolicy === "SERIAL") {
+      cols.push(
+        {
+          key: "serialNo",
+          header: headerFilter("serialNo", t("Số Serial")),
+          size: 200,
+          enableResizing: true,
+          cell: (row) => (
+            <TableText
+              text={row.serialNo}
+              enableCopy={true}
+              tooltip={true}
+              className="font-mono font-medium text-foreground"
+            />
+          ),
+        },
+        {
+          key: "internalSerialNo",
+          header: headerFilter("internalSerialNo", t("Số Serial nội bộ")),
+          size: 200,
+          enableResizing: true,
+          className: "bg-primary/5",
+          cell: (row) => (
+            <TableText
+              text={row.internalSerialNo}
+              enableCopy={true}
+              tooltip={true}
+              className="font-mono font-medium text-primary"
+            />
+          ),
+        },
+      );
+    } else if (trackingPolicy === "LOT") {
+      cols.push({
+        key: "lotNo",
+        header: headerFilter("lotNo", t("Số Lô")),
+        size: 180,
+        enableResizing: true,
+        cell: (row) => (
+          <TableText
+            text={row.lotNo}
+            enableCopy={true}
+            tooltip={true}
+            className="font-mono font-medium text-foreground"
+          />
+        ),
+      });
+    }
+
+    cols.push(
+      {
+        key: "createdAt",
+        header: headerFilter.date("createdAt", t("Ngày xuất xưởng")),
+        size: 150,
+        className: "text-right",
+        cell: (row) => (
+          <TableDateCell date={row.createdAt} className="justify-end w-full" />
+        ),
+      },
+      {
+        key: "notes",
+        header: headerFilter("notes", t("Ghi chú")),
+        size: 180,
+        enableResizing: true,
+        cell: (row) => (
+          <TableText
+            text={row.notes}
+            tooltip={true}
+            className="text-muted-foreground"
+          />
+        ),
+      },
+    );
+
+    return cols;
+  }, [trackingPolicy, headerFilter, t]);
+
+  // Section Title with inline (X / Y) format & active filter reset button
   const sectionTitle = (
     <div className="flex items-center gap-2">
       <span>{t("Danh sách thành phẩm đã xuất xưởng")}</span>
       <span className="font-mono font-semibold text-xs text-muted-foreground">
         ({fmtQty(qtyProduced)} / {fmtQty(qtyToProduce)})
       </span>
+      {tableState.activeFilterCount > 0 && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            tableState.resetFilters();
+            setPage(1);
+          }}
+          className="text-[11px] font-medium text-destructive hover:underline flex items-center gap-1 bg-destructive/10 px-2 py-0.5 rounded-full lowercase first-letter:uppercase tracking-normal font-sans"
+        >
+          <span>
+            {t("Xóa bộ lọc")} ({tableState.activeFilterCount})
+          </span>
+        </button>
+      )}
     </div>
   );
 
@@ -221,110 +473,25 @@ export function ProductionOrderExecutionTab({
         defaultCollapsed={false}
       >
         {producedList.length > 0 ? (
-          <div className="overflow-x-auto rounded-xl border border-border bg-card shadow-sm max-h-[420px] overflow-y-auto">
-            <table className="min-w-full text-xs">
-              <thead className="bg-muted/70 text-muted-foreground border-b border-border sticky top-0 backdrop-blur z-10">
-                <tr>
-                  <th className="px-3 py-2 text-left font-semibold w-10">#</th>
-                  {trackingPolicy === "VEHICLE" && (
-                    <>
-                      <th className="px-3 py-2 text-left font-semibold font-mono">
-                        Số khung (VIN)
-                      </th>
-                      <th className="px-3 py-2 text-left font-semibold font-mono">
-                        {t("Số máy")}
-                      </th>
-                      <th className="px-3 py-2 text-left font-semibold font-mono">
-                        {t("Số Serial xe")}
-                      </th>
-                      <th className="px-3 py-2 text-left font-semibold font-mono text-primary bg-primary/5">
-                        <span className="flex items-center gap-1">
-                          <Sparkles className="w-3 h-3" />
-                          {t("Số Serial nội bộ")}
-                        </span>
-                      </th>
-                    </>
-                  )}
-                  {trackingPolicy === "SERIAL" && (
-                    <>
-                      <th className="px-3 py-2 text-left font-semibold font-mono">
-                        {t("Số Serial")}
-                      </th>
-                      <th className="px-3 py-2 text-left font-semibold font-mono text-primary bg-primary/5">
-                        {t("Số Serial nội bộ")}
-                      </th>
-                    </>
-                  )}
-                  {trackingPolicy === "LOT" && (
-                    <th className="px-3 py-2 text-left font-semibold font-mono">
-                      {t("Số lô")}
-                    </th>
-                  )}
-                  <th className="px-3 py-2 text-left font-semibold">
-                    {t("Ghi chú")}
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {producedList.map((item: any, i: number) => {
-                  const attrs = item.attributes || {};
-                  const vehicleSerial =
-                    attrs.vehicleSerialNo || item.vehicleSerialNo || "";
-                  const internalSerial =
-                    attrs.internalSerialNo ||
-                    item.internalSerialNo ||
-                    item.serialNo ||
-                    "";
-
-                  return (
-                    <tr key={item.id || i} className="hover:bg-muted/30">
-                      <td className="px-3 py-2 text-muted-foreground font-mono">
-                        {i + 1}
-                      </td>
-
-                      {trackingPolicy === "VEHICLE" && (
-                        <>
-                          <td className="px-3 py-2 font-mono font-medium text-emerald-700 dark:text-emerald-400">
-                            {item.vin || item.vinNo || "—"}
-                          </td>
-                          <td className="px-3 py-2 font-mono font-medium text-foreground">
-                            {item.engineNo || "—"}
-                          </td>
-                          <td className="px-3 py-2 font-mono font-medium text-foreground">
-                            {vehicleSerial || "—"}
-                          </td>
-                          <td className="px-3 py-2 font-mono font-medium text-primary bg-primary/5">
-                            {internalSerial || "—"}
-                          </td>
-                        </>
-                      )}
-
-                      {trackingPolicy === "SERIAL" && (
-                        <>
-                          <td className="px-3 py-2 font-mono font-medium text-foreground">
-                            {vehicleSerial || item.serialNo || "—"}
-                          </td>
-                          <td className="px-3 py-2 font-mono font-medium text-primary bg-primary/5">
-                            {internalSerial || "—"}
-                          </td>
-                        </>
-                      )}
-
-                      {trackingPolicy === "LOT" && (
-                        <td className="px-3 py-2 font-mono font-medium text-foreground">
-                          {item.lotNo || "—"}
-                        </td>
-                      )}
-
-                      <td className="px-3 py-2 text-muted-foreground">
-                        {item.notes || "—"}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+          <DataTable
+            tableId={tableId}
+            variant="spreadsheet"
+            items={paginatedRows}
+            columns={columns}
+            emptyLabel={t("Không có dòng nào phù hợp với bộ lọc")}
+            enableColumnResizing={true}
+            containerClassName="max-h-[420px] overflow-y-auto"
+            page={currentPage}
+            pageSize={pageSize}
+            total={totalItems}
+            totalPages={totalPages}
+            onPage={(p) => setPage(p)}
+            onPageSize={(s) => {
+              setPageSize(s);
+              setPage(1);
+            }}
+            pageSizeOptions={[20, 50, 100, 200]}
+          />
         ) : (
           <EmptyState
             size="sm"
@@ -336,7 +503,7 @@ export function ProductionOrderExecutionTab({
             description={
               isInProgress
                 ? t(
-                    "Bấm nút 'Nghiệm thu & Khai báo...' ở góc phải để bắt đầu nghiệm thu thành phẩm nhập kho.",
+                    "Bấm nút 'Nghiệm thu' ở góc phải để bắt đầu nghiệm thu thành phẩm nhập kho.",
                   )
                 : isConfirmed
                   ? t("Bấm 'Bắt đầu sản xuất & Xuất kho' để bắt đầu.")

@@ -77,6 +77,21 @@ export interface ErpProducedSerial {
   createdAt?: string;
 }
 
+export interface ErpSerialAssignment {
+  id: string;
+  vehicleId?: string | null;
+  bomLineId?: string | null;
+  serialId: string;
+  assignedAt?: string | null;
+  assignmentSource?: string | null;
+  vinNo?: string | null;
+  engineNo?: string | null;
+  componentSerialNo?: string | null;
+  componentItemId?: string | null;
+  componentSku?: string | null;
+  componentItemName?: string | null;
+}
+
 export interface ErpProductionOrder {
   id: string;
   referenceNo?: string | null;
@@ -102,6 +117,7 @@ export interface ErpProductionOrder {
   outputMetadata?: Record<string, unknown> | null;
   producedVehicles?: ErpProducedVehicle[];
   producedSerials?: ErpProducedSerial[];
+  serialAssignments?: ErpSerialAssignment[];
   bomVersion?: string | null;
   [key: string]: unknown;
 }

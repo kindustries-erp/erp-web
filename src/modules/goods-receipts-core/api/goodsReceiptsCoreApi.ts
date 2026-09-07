@@ -3,6 +3,9 @@ import type { PaginatedResponse, ListParams } from "@/shared/types/pagination";
 
 export interface ErpGrDeclaredSerial {
   serialNo: string;
+  vinNo?: string | null;
+  engineNo?: string | null;
+  internalSerialNo?: string | null;
   notes?: string | null;
   lotNo?: string | null;
   attributes?: Record<string, string> | null;
