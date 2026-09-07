@@ -113,17 +113,10 @@ const CATEGORY_PRESETS: Array<{
 
   // 3. Nhóm Hoa hồng (Commission)
   {
-    key: "HOA_HONG_SALE",
+    key: "HOA_HONG_KHAC",
     group: "COMMISSION",
-    labelKey: "categories.HOA_HONG_SALE",
-    defaultName: "Hoa hồng cho Sale",
-    badge: "Hoa hồng",
-  },
-  {
-    key: "HOA_HONG_DV",
-    group: "COMMISSION",
-    labelKey: "categories.HOA_HONG_DV",
-    defaultName: "Hoa hồng cho DV",
+    labelKey: "categories.HOA_HONG_KHAC",
+    defaultName: "Hoa hồng khác / Điều chỉnh hoa hồng",
     badge: "Hoa hồng",
   },
 ];
@@ -301,31 +294,39 @@ export function GarageOpexDrawer({
     }
   };
 
+  const isReadOnlyRecord = Boolean(
+    initialData?.isAutoCalculated ||
+    initialData?.isReadOnly ||
+    id?.startsWith("auto-"),
+  );
+
   const handleSave = async () => {
+    if (isReadOnlyRecord) {
+      toast.error(
+        t(
+          "opex.readOnlyCannotEdit",
+          "Khoản hoa hồng tự động từ P&L không thể chỉnh sửa trực tiếp. Vui lòng sử dụng mục 'Hoa hồng khác' để điều chỉnh số tiền.",
+        ),
+      );
+      return;
+    }
+
     const numAmount = Number(amount.replace(/[^0-9.-]+/g, ""));
     const numOjAmount = Number(ojAmount.replace(/[^0-9.-]+/g, "")) || 0;
 
-    if (isNaN(numAmount) || numAmount < 0) {
+    if (isNaN(numAmount)) {
+      toast.error(t("opex.invalidAmount", "Số tiền phải là số hợp lệ"));
+      return;
+    }
+
+    if (isNaN(numOjAmount)) {
       toast.error(
-        t(
-          "opex.invalidAmount",
-          "Số tiền phải là số hợp lệ và lớn hơn hoặc bằng 0",
-        ),
+        t("opex.invalidOjAmount", "Số tiền tính cho OJ phải là số hợp lệ"),
       );
       return;
     }
 
-    if (isNaN(numOjAmount) || numOjAmount < 0) {
-      toast.error(
-        t(
-          "opex.invalidOjAmount",
-          "Số tiền tính cho OJ phải là số hợp lệ và lớn hơn hoặc bằng 0",
-        ),
-      );
-      return;
-    }
-
-    if (numOjAmount > numAmount) {
+    if (numAmount > 0 && numOjAmount > numAmount) {
       toast.error(
         t(
           "opex.ojAmountExceedsTotal",
@@ -514,13 +515,17 @@ export function GarageOpexDrawer({
         open={open}
         mode={mode}
         onClose={onClose}
-        onToggleEdit={!isCreate && isView ? () => setMode("edit") : undefined}
+        onToggleEdit={
+          !isCreate && isView && !isReadOnlyRecord
+            ? () => setMode("edit")
+            : undefined
+        }
         title={drawerTitle}
         layout="1-column"
         size="md"
         confirmOnClose={isEditing}
         actions={
-          isEditing
+          isEditing && !isReadOnlyRecord
             ? [
                 {
                   label: t("opex.drawer.cancel", "Hủy"),
@@ -548,6 +553,17 @@ export function GarageOpexDrawer({
         }
         leftPanel={
           <div className="flex flex-col gap-4">
+            {isReadOnlyRecord && (
+              <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-300 text-xs flex items-start gap-2">
+                <span className="text-base leading-none">⚡</span>
+                <span className="font-medium">
+                  {t(
+                    "opex.autoCalculatedNotice",
+                    "Khoản hoa hồng này được tính toán tự động 100% từ Báo cáo P&L (Chỉ đọc). Nếu muốn điều chỉnh tăng/giảm số tiền hoa hồng trong tháng, vui lòng tạo mục 'Hoa hồng khác' với số tiền (+/-).",
+                  )}
+                </span>
+              </div>
+            )}
             {/* Section 1: Thông tin chi phí */}
             <DrawerSection
               title={t("opex.drawer.sectionInfo", "Thông tin chi phí")}
@@ -631,44 +647,58 @@ export function GarageOpexDrawer({
                     "opex.drawer.categoryNamePlaceholder",
                     "Nhập mô tả chi tiết...",
                   )}
-                  disabled={isView || loading}
+                  disabled={isView || loading || isReadOnlyRecord}
                   className={inputCls}
                 />
               </DrawerField>
 
               {/* Số tiền (VND) kèm Format & Số bằng chữ */}
-              <DrawerField
-                label={t("opex.drawer.amountLabel", "Số tiền (VND) (*)")}
-              >
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-foreground">
+                    {t("opex.drawer.amountLabel", "Số tiền (VND) (*)")}
+                  </span>
+                  {categoryKey === "HOA_HONG_KHAC" && !isView && (
+                    <span className="text-[11px] text-muted-foreground italic">
+                      {t(
+                        "opex.amountPositiveNegativeHint",
+                        "Nhập số âm (-) để giảm trừ, số dương (+) để tăng thêm",
+                      )}
+                    </span>
+                  )}
+                </div>
                 <input
                   type="number"
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
-                  disabled={isView || loading}
+                  disabled={isView || loading || isReadOnlyRecord}
                   className={`${inputCls} tabular-nums text-right font-semibold`}
                   placeholder="0"
-                  min="0"
                   step="1000"
                 />
-                {numAmount > 0 && (
+                {numAmount !== 0 && (
                   <div className="mt-1.5 px-2.5 py-1.5 rounded-md bg-muted/40 border border-border/60 flex flex-col gap-0.5">
                     <div className="flex justify-between items-center text-[11px]">
                       <span className="text-muted-foreground">
                         Định dạng số:
                       </span>
-                      <span className="font-mono font-bold text-foreground">
+                      <span
+                        className={`font-mono font-bold ${numAmount < 0 ? "text-red-500 dark:text-red-400" : "text-foreground"}`}
+                      >
                         {numAmount.toLocaleString("vi-VN")} đ
                       </span>
                     </div>
                     <p className="text-[11px] text-muted-foreground italic font-medium leading-tight pt-0.5">
                       Bằng chữ:{" "}
                       <span className="text-foreground font-semibold">
-                        {readVietnameseCurrency(numAmount)}
+                        {numAmount < 0
+                          ? `(Giảm trừ) ${readVietnameseCurrency(Math.abs(numAmount))}`
+                          : readVietnameseCurrency(numAmount)}
                       </span>
                     </p>
                   </div>
                 )}
-              </DrawerField>
+              </div>
 
               {/* Phân bổ chi phí tính riêng cho OJ */}
               <div className="my-1 p-3 rounded-lg border border-border/80 bg-muted/30 flex flex-col gap-2">

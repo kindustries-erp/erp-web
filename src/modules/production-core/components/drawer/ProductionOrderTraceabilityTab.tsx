@@ -101,10 +101,6 @@ export function ProductionOrderTraceabilityTab({
               }
             />
           )}
-          <DrawerRow
-            label={t("Kho thực hiện")}
-            value={order.warehouseCode || "—"}
-          />
         </div>
       </DrawerSection>
 

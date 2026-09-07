@@ -17,7 +17,7 @@ import {
 import { GarageOpexDrawer } from "../components/GarageOpexDrawer";
 import { garageOpexApi, type GarageOpexItem } from "../api/garageOpexApi";
 import toast from "react-hot-toast";
-import { ReceiptText, Eye, Pencil, Copy, Trash2 } from "lucide-react";
+import { ReceiptText, Eye, Pencil, Copy, Trash2, Sparkles } from "lucide-react";
 import type { ActionDropdownItem } from "@/shared/components/ActionDropdown";
 import { cn } from "@/shared/utils";
 
@@ -244,12 +244,26 @@ export function GarageOpex() {
           },
         ),
         cell: (row: GarageOpexItem) => (
-          <TableText
-            text={t(`opex.categories.${row.categoryKey}`, row.categoryKey)}
-            tooltip={true}
-            onDetailClick={() => openDetail(row, "view")}
-            className="font-normal text-xs text-foreground cursor-pointer hover:underline"
-          />
+          <div className="flex items-center gap-1.5">
+            <TableText
+              text={t(`opex.categories.${row.categoryKey}`, row.categoryKey)}
+              tooltip={true}
+              onDetailClick={() => openDetail(row, "view")}
+              className="font-normal text-xs text-foreground cursor-pointer hover:underline"
+            />
+            {Boolean(row.isAutoCalculated || row.isReadOnly) && (
+              <Tooltip
+                content={t(
+                  "opex.autoCalculatedTooltip",
+                  "Khoản hoa hồng này được tính toán tự động 100% từ Báo cáo P&L (Chỉ đọc)",
+                )}
+              >
+                <span className="inline-flex items-center justify-center h-4 w-4 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-300/80 dark:border-amber-700/60 cursor-help shrink-0 shadow-xs hover:bg-amber-500/20 transition-colors">
+                  <Sparkles className="w-2.5 h-2.5" />
+                </span>
+              </Tooltip>
+            )}
+          </div>
         ),
       },
 
@@ -356,10 +370,17 @@ export function GarageOpex() {
         ),
         cell: (row: GarageOpexItem) => (
           <div className="flex flex-col items-end gap-0.5">
-            <span className="tabular-nums font-mono text-xs font-normal text-foreground">
+            <span
+              className={cn(
+                "tabular-nums font-mono text-xs font-normal",
+                row.amount < 0
+                  ? "text-red-500 dark:text-red-400 font-medium"
+                  : "text-foreground",
+              )}
+            >
               {row.amount.toLocaleString("vi-VN")} đ
             </span>
-            {Boolean(row.ojAmount && row.ojAmount > 0) && (
+            {Boolean(row.ojAmount && row.ojAmount !== 0) && (
               <span className="text-[11px] font-mono text-muted-foreground font-normal">
                 OJ: {row.ojAmount!.toLocaleString("vi-VN")} đ
               </span>
@@ -393,39 +414,60 @@ export function GarageOpex() {
 
   // Row Actions (Standard Context Menu & Row Action items)
   const getRowActions = useCallback(
-    (row: GarageOpexItem): ActionDropdownItem[] => [
-      {
-        groupLabel: t("opex.actions.groupTraCuu", "TRA CỨU"),
-        items: [
+    (row: GarageOpexItem): ActionDropdownItem[] => {
+      const isAuto = Boolean(
+        row.isAutoCalculated || row.isReadOnly || row.id.startsWith("auto-"),
+      );
+
+      if (isAuto) {
+        return [
           {
-            label: t("opex.actions.viewDetail", "Xem chi tiết"),
-            icon: <Eye className="w-4 h-4" />,
-            onClick: () => openDetail(row, "view"),
+            groupLabel: t("opex.actions.groupTraCuu", "TRA CỨU"),
+            items: [
+              {
+                label: t("opex.actions.viewDetail", "Xem chi tiết"),
+                icon: <Eye className="w-4 h-4" />,
+                onClick: () => openDetail(row, "view"),
+              },
+            ],
           },
-        ],
-      },
-      {
-        groupLabel: t("opex.actions.groupThaoTac", "THAO TÁC"),
-        items: [
-          {
-            label: t("opex.actions.editExpense", "Chỉnh sửa"),
-            icon: <Pencil className="w-4 h-4" />,
-            onClick: () => openDetail(row, "edit"),
-          },
-          {
-            label: t("opex.actions.duplicateExpense", "Nhân đôi"),
-            icon: <Copy className="w-4 h-4" />,
-            onClick: () => handleDuplicate(row),
-          },
-          {
-            label: t("opex.actions.deleteExpense", "Xóa"),
-            icon: <Trash2 className="w-4 h-4 text-destructive" />,
-            variant: "danger",
-            onClick: () => handleDelete(row),
-          },
-        ],
-      },
-    ],
+        ];
+      }
+
+      return [
+        {
+          groupLabel: t("opex.actions.groupTraCuu", "TRA CỨU"),
+          items: [
+            {
+              label: t("opex.actions.viewDetail", "Xem chi tiết"),
+              icon: <Eye className="w-4 h-4" />,
+              onClick: () => openDetail(row, "view"),
+            },
+          ],
+        },
+        {
+          groupLabel: t("opex.actions.groupThaoTac", "THAO TÁC"),
+          items: [
+            {
+              label: t("opex.actions.editExpense", "Chỉnh sửa"),
+              icon: <Pencil className="w-4 h-4" />,
+              onClick: () => openDetail(row, "edit"),
+            },
+            {
+              label: t("opex.actions.duplicateExpense", "Nhân đôi"),
+              icon: <Copy className="w-4 h-4" />,
+              onClick: () => handleDuplicate(row),
+            },
+            {
+              label: t("opex.actions.deleteExpense", "Xóa"),
+              icon: <Trash2 className="w-4 h-4 text-destructive" />,
+              variant: "danger",
+              onClick: () => handleDelete(row),
+            },
+          ],
+        },
+      ];
+    },
     [t],
   );
 
@@ -454,7 +496,7 @@ export function GarageOpex() {
   return (
     <>
       <SpreadsheetPageTemplate<GarageOpexItem>
-        title={t("opex.pageTitle", "Chi phí vận hành")}
+        title={t("opex.pageTitle", "Chi phí vận hành Garage")}
         desc={t(
           "opex.pageDesc",
           "Quản lý các khoản chi phí vận hành hàng tháng tại xưởng Garage",
@@ -485,15 +527,17 @@ export function GarageOpex() {
         }}
         rowActions={getRowActions}
         customActionsNode={
-          <PillTabs<CostGroupFilter>
-            value={listHook.costGroup}
-            onValueChange={(val) => listHook.setCostGroup(val)}
-            items={pillTabItems}
-            className="w-full sm:w-auto shrink-0"
-            listClassName="h-8 p-0.5 rounded-full bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/60 shadow-[0_1px_2px_rgba(15,23,42,.03)]"
-            triggerClassName="h-7 px-3.5 text-xs rounded-full"
-            hideBorder
-          />
+          <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+            <PillTabs<CostGroupFilter>
+              value={listHook.costGroup}
+              onValueChange={(val) => listHook.setCostGroup(val)}
+              items={pillTabItems}
+              className="w-full sm:w-auto shrink-0"
+              listClassName="h-8 p-0.5 rounded-full bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/60 shadow-[0_1px_2px_rgba(15,23,42,.03)]"
+              triggerClassName="h-7 px-3.5 text-xs rounded-full"
+              hideBorder
+            />
+          </div>
         }
         summaryRow={{
           amount: (

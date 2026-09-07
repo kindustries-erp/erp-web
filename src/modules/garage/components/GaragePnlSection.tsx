@@ -11,6 +11,7 @@ import {
 import { useAppStore } from "@/core/config/appStore";
 import { GarageOpexDrawer } from "./GarageOpexDrawer";
 import toast from "react-hot-toast";
+import { Tooltip } from "@/core/components/ui/Tooltip";
 import {
   FileSpreadsheet,
   Download,
@@ -18,6 +19,7 @@ import {
   ArrowRight,
   TrendingUp,
   Loader2,
+  Sparkles,
 } from "lucide-react";
 
 interface PairedPnlItem {
@@ -254,7 +256,7 @@ export function GaragePnlSection() {
             onClick={() => navigate("garage-opex")}
             className="h-8 gap-1.5 px-3 text-xs font-semibold"
           >
-            <span>{t("pnl.goToOpex", "Quản lý CP vận hành")}</span>
+            <span>{t("pnl.goToOpex", "Chi phí vận hành Garage →")}</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </Button>
         </div>
@@ -280,7 +282,7 @@ export function GaragePnlSection() {
             </div>
           </div>
 
-          {/* Action: Export Excel */}
+          {/* Action buttons */}
           <div className="flex items-center flex-wrap gap-2">
             <Button
               variant="outline"
@@ -319,15 +321,16 @@ export function GaragePnlSection() {
                     {t("pnl.tableHeaderCategory", "Danh Mục")}
                   </th>
                   <th className="py-2.5 px-4 w-[20%] text-right font-semibold text-slate-700 dark:text-slate-300 border-r border-border/40">
-                    {t("pnl.tableHeaderOj", "Phát sinh OJ")}
+                    {t("pnl.tableHeaderOj", "Phát sinh OJ")} (T
+                    {String(selectedMonth).padStart(2, "0")}/{selectedYear})
                   </th>
                   <th className="py-2.5 px-4 w-[22%] text-right text-foreground font-bold">
-                    {t("pnl.tableHeaderValue", "Tháng này")} (T{selectedMonth}/
-                    {selectedYear})
+                    {t("pnl.monthPrefix", "Tháng")}{" "}
+                    {String(selectedMonth).padStart(2, "0")}/{selectedYear}
                   </th>
                   <th className="py-2.5 px-4 w-[20%] text-right text-muted-foreground">
-                    {t("pnl.tableHeaderPrev", "Tháng trước")} (T{prevMonth}/
-                    {prevYear})
+                    {t("pnl.monthPrefix", "Tháng")}{" "}
+                    {String(prevMonth).padStart(2, "0")}/{prevYear}
                   </th>
                 </tr>
               </thead>
@@ -750,8 +753,22 @@ export function GaragePnlSection() {
 
                 {/* VI. Hoa hồng */}
                 <tr className="bg-slate-50/50 dark:bg-slate-800/30 font-bold text-foreground hover:bg-slate-100/50 dark:hover:bg-slate-800/50 transition-colors">
-                  <td className="py-2.5 px-4">
-                    {t("pnl.commissionHeader", "VI. Hoa hồng")}
+                  <td className="py-2.5 px-4 flex items-center justify-between">
+                    <div className="flex items-center gap-1.5">
+                      <span>{t("pnl.commissionHeader", "VI. Hoa hồng")}</span>
+                      <Badge
+                        variant="outline"
+                        className="text-[10px] px-1.5 py-0 border-slate-300 dark:border-slate-700 text-muted-foreground font-normal"
+                      >
+                        {report.netProfitBeforeCommission > 0
+                          ? `${(
+                              (report.commission.total /
+                                report.netProfitBeforeCommission) *
+                              100
+                            ).toFixed(1)}% LN ròng trước HH`
+                          : "0% LN ròng"}
+                      </Badge>
+                    </div>
                   </td>
                   <td className="py-2.5 px-4 text-right tabular-nums font-mono text-[13px] font-semibold text-slate-700 dark:text-slate-300 border-r border-border/40">
                     <span>
@@ -778,50 +795,312 @@ export function GaragePnlSection() {
                   </td>
                 </tr>
 
+                {/* 1. Dòng Tỷ lệ lãi gộp Ký gửi / Tổng lãi gộp */}
+                <tr className="text-slate-700 dark:text-slate-300 bg-purple-50/30 dark:bg-purple-950/10 hover:bg-purple-50/60 dark:hover:bg-purple-950/20 transition-colors border-b border-border/20">
+                  <td className="py-2.5 px-8">
+                    <div className="flex flex-col gap-0.5">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="font-semibold text-slate-800 dark:text-slate-200">
+                          {t(
+                            "pnl.kyGuiProfitRate",
+                            "Tỷ lệ lãi gộp ký gửi / Lãi gộp",
+                          )}
+                        </span>
+                        <Badge
+                          variant="outline"
+                          className="text-[9px] px-1.5 py-0 bg-purple-100/80 text-purple-800 dark:bg-purple-950/80 dark:text-purple-300 border-purple-300 dark:border-purple-800 font-medium"
+                          title={t(
+                            "pnl.kyGuiProfitRateTooltip",
+                            "Tỷ lệ % lợi nhuận gộp từ các phiếu dịch vụ có phân loại Ký gửi/Nội bộ trên tổng lợi nhuận gộp toàn xưởng. Dùng làm hệ số phân bổ Lợi nhuận ròng để tính 10% hoa hồng cho bộ phận Sale.",
+                          )}
+                        >
+                          {t(
+                            "pnl.kyGuiAllocationBadge",
+                            "Tỷ trọng phân bổ Sale",
+                          )}
+                        </Badge>
+                      </div>
+                      <span className="text-[11px] text-muted-foreground font-normal">
+                        Lãi gộp Ký gửi:{" "}
+                        <strong className="font-semibold text-slate-700 dark:text-slate-300">
+                          {(
+                            report.kyGui?.grossProfit ??
+                            report.commission.auto?.kyGuiGrossProfit ??
+                            0
+                          ).toLocaleString("vi-VN")}{" "}
+                          đ
+                        </strong>{" "}
+                        / Tổng lãi gộp:{" "}
+                        <strong className="font-semibold text-slate-700 dark:text-slate-300">
+                          {report.grossProfit.toLocaleString("vi-VN")} đ
+                        </strong>
+                      </span>
+                    </div>
+                  </td>
+                  <td className="py-2.5 px-4 text-right tabular-nums font-mono font-medium text-muted-foreground border-r border-border/40">
+                    <Badge
+                      variant="outline"
+                      className="text-[11px] font-mono px-2 py-0 border-slate-300 dark:border-slate-700 bg-white/60 dark:bg-slate-900/60"
+                    >
+                      {(
+                        report.oj?.commissionAuto?.kyGuiProfitRate ?? 0
+                      ).toFixed(2)}
+                      %
+                    </Badge>
+                  </td>
+                  <td className="py-2.5 px-4 text-right tabular-nums font-mono font-bold text-purple-700 dark:text-purple-400">
+                    <div className="flex items-center justify-end">
+                      <Badge
+                        variant="outline"
+                        className="text-[11px] font-mono px-2 py-0.5 border-purple-300 dark:border-purple-800 bg-purple-100/70 dark:bg-purple-950/60 text-purple-800 dark:text-purple-300 font-bold"
+                      >
+                        {(report.commission.auto?.kyGuiProfitRate ?? 0).toFixed(
+                          2,
+                        )}
+                        %
+                      </Badge>
+                      {prevReport?.commission?.auto?.kyGuiProfitRate !==
+                        undefined &&
+                        renderDelta(
+                          report.commission.auto?.kyGuiProfitRate ?? 0,
+                          prevReport.commission.auto?.kyGuiProfitRate,
+                        )}
+                    </div>
+                  </td>
+                  <td className="py-2.5 px-4 text-right tabular-nums font-mono text-[12px] text-muted-foreground">
+                    {prevReport?.commission?.auto?.kyGuiProfitRate !== undefined
+                      ? `${prevReport.commission.auto.kyGuiProfitRate.toFixed(2)}%`
+                      : "—"}
+                  </td>
+                </tr>
+
+                {/* 2. Dòng Hoa hồng cho Sale (10%) */}
                 {(() => {
-                  const commissionItems = mergePnlItems(
-                    report.commission?.items,
-                    prevReport?.commission?.items,
+                  const saleItem = (report.commission?.items || []).find(
+                    (i) => i.categoryKey === "HOA_HONG_SALE",
                   );
-                  if (commissionItems.length === 0) {
-                    return (
-                      <tr className="text-muted-foreground/60 italic hover:bg-muted/10">
-                        <td className="py-2 px-8">
-                          {t("pnl.noCommissionHint", "Chưa có hoa hồng")}
-                        </td>
-                        <td className="py-2 px-4 text-right tabular-nums font-mono text-muted-foreground border-r border-border/40">
-                          0 đ
-                        </td>
-                        <td className="py-2 px-4 text-right tabular-nums font-mono">
-                          0 đ
-                        </td>
-                        <td className="py-2 px-4 text-right tabular-nums font-mono text-muted-foreground">
-                          {renderPrevVal(prevReport?.commission.total)}
-                        </td>
-                      </tr>
-                    );
-                  }
-                  return commissionItems.map((item) => (
+                  const saleAmount =
+                    saleItem?.amount ??
+                    report.commission.auto?.saleCommission ??
+                    0;
+
+                  return (
+                    <tr className="text-slate-700 dark:text-slate-300 hover:bg-muted/10 transition-colors border-b border-border/20">
+                      <td className="py-2.5 px-8">
+                        <div className="flex flex-col gap-0.5">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="font-semibold text-slate-800 dark:text-slate-200">
+                              {t(
+                                "pnl.saleCommission",
+                                "Hoa hồng cho Sale (10%)",
+                              )}
+                            </span>
+                            <Badge
+                              variant="outline"
+                              className="text-[9px] px-1.5 py-0 bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 border-blue-200 dark:border-blue-800 font-normal"
+                            >
+                              10% × LN ròng ×{" "}
+                              {(
+                                report.commission.auto?.kyGuiProfitRate ?? 0
+                              ).toFixed(1)}
+                              % Ký gửi
+                            </Badge>
+
+                            <Tooltip
+                              content={t(
+                                "pnl.autoCalculatedTooltip",
+                                "Khoản hoa hồng này được tính toán tự động 100% từ Báo cáo P&L (Chỉ đọc)",
+                              )}
+                            >
+                              <span className="inline-flex items-center justify-center h-4 w-4 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-300/80 dark:border-amber-700/60 cursor-help shrink-0 shadow-xs hover:bg-amber-500/20 transition-colors">
+                                <Sparkles className="w-2.5 h-2.5" />
+                              </span>
+                            </Tooltip>
+                          </div>
+                          <span className="text-[11px] text-muted-foreground font-normal">
+                            {saleItem?.note ||
+                              t(
+                                "pnl.saleCommissionSubtitle",
+                                "Tính trên 10% của Lợi nhuận ròng theo Tỷ lệ lợi nhuận gộp do ký gửi",
+                              )}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="py-2.5 px-4 text-right tabular-nums font-mono text-muted-foreground border-r border-border/40">
+                        {(
+                          saleItem?.ojAmount ??
+                          report.oj?.commissionAuto?.saleCommission ??
+                          0
+                        ).toLocaleString("vi-VN")}{" "}
+                        đ
+                      </td>
+                      <td className="py-2.5 px-4 text-right tabular-nums font-mono font-semibold">
+                        <div className="flex items-center justify-end">
+                          <span>{saleAmount.toLocaleString("vi-VN")} đ</span>
+                          {renderDelta(
+                            saleAmount,
+                            prevReport?.commission?.items?.find(
+                              (i) => i.categoryKey === "HOA_HONG_SALE",
+                            )?.amount ??
+                              prevReport?.commission?.auto?.saleCommission,
+                            true,
+                          )}
+                        </div>
+                      </td>
+                      <td className="py-2.5 px-4 text-right tabular-nums font-mono text-muted-foreground">
+                        {renderPrevVal(
+                          prevReport?.commission?.items?.find(
+                            (i) => i.categoryKey === "HOA_HONG_SALE",
+                          )?.amount ??
+                            prevReport?.commission?.auto?.saleCommission,
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })()}
+
+                {/* 3. Dòng Hoa hồng cho DV (10%) */}
+                {(() => {
+                  const dvItem = (report.commission?.items || []).find(
+                    (i) => i.categoryKey === "HOA_HONG_DV",
+                  );
+                  const dvAmount =
+                    dvItem?.amount ?? report.commission.auto?.dvCommission ?? 0;
+
+                  return (
+                    <tr className="text-slate-700 dark:text-slate-300 hover:bg-muted/10 transition-colors border-b border-border/20">
+                      <td className="py-2.5 px-8">
+                        <div className="flex flex-col gap-0.5">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="font-semibold text-slate-800 dark:text-slate-200">
+                              {t("pnl.dvCommission", "Hoa hồng cho DV (10%)")}
+                            </span>
+                            <Badge
+                              variant="outline"
+                              className="text-[9px] px-1.5 py-0 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800 font-normal"
+                            >
+                              10% × (LN ròng - HH Sale)
+                            </Badge>
+
+                            <Tooltip
+                              content={t(
+                                "pnl.autoCalculatedTooltip",
+                                "Khoản hoa hồng này được tính toán tự động 100% từ Báo cáo P&L (Chỉ đọc)",
+                              )}
+                            >
+                              <span className="inline-flex items-center justify-center h-4 w-4 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-300/80 dark:border-amber-700/60 cursor-help shrink-0 shadow-xs hover:bg-amber-500/20 transition-colors">
+                                <Sparkles className="w-2.5 h-2.5" />
+                              </span>
+                            </Tooltip>
+                          </div>
+                          <span className="text-[11px] text-muted-foreground font-normal">
+                            {dvItem?.note ||
+                              t(
+                                "pnl.dvCommissionSubtitle",
+                                "Tính trên 10% Lợi nhuận ròng sau khi trừ hoa hồng Sale",
+                              )}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="py-2.5 px-4 text-right tabular-nums font-mono text-muted-foreground border-r border-border/40">
+                        {(
+                          dvItem?.ojAmount ??
+                          report.oj?.commissionAuto?.dvCommission ??
+                          0
+                        ).toLocaleString("vi-VN")}{" "}
+                        đ
+                      </td>
+                      <td className="py-2.5 px-4 text-right tabular-nums font-mono font-semibold">
+                        <div className="flex items-center justify-end">
+                          <span>{dvAmount.toLocaleString("vi-VN")} đ</span>
+                          {renderDelta(
+                            dvAmount,
+                            prevReport?.commission?.items?.find(
+                              (i) => i.categoryKey === "HOA_HONG_DV",
+                            )?.amount ??
+                              prevReport?.commission?.auto?.dvCommission,
+                            true,
+                          )}
+                        </div>
+                      </td>
+                      <td className="py-2.5 px-4 text-right tabular-nums font-mono text-muted-foreground">
+                        {renderPrevVal(
+                          prevReport?.commission?.items?.find(
+                            (i) => i.categoryKey === "HOA_HONG_DV",
+                          )?.amount ??
+                            prevReport?.commission?.auto?.dvCommission,
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })()}
+
+                {/* 4. Các khoản Hoa hồng nhập tay khác (nếu có) */}
+                {(() => {
+                  const manualItems = mergePnlItems(
+                    report.commission?.manual?.items ||
+                      (report.commission?.items || []).filter(
+                        (i) =>
+                          i.categoryKey !== "RATE_LAI_GOP_KY_GUI" &&
+                          i.categoryKey !== "HOA_HONG_SALE" &&
+                          i.categoryKey !== "HOA_HONG_DV",
+                      ),
+                    prevReport?.commission?.manual?.items ||
+                      (prevReport?.commission?.items || []).filter(
+                        (i) =>
+                          i.categoryKey !== "RATE_LAI_GOP_KY_GUI" &&
+                          i.categoryKey !== "HOA_HONG_SALE" &&
+                          i.categoryKey !== "HOA_HONG_DV",
+                      ),
+                  );
+                  if (manualItems.length === 0) return null;
+                  return manualItems.map((item) => (
                     <tr
                       key={item.key}
-                      className="text-muted-foreground hover:bg-muted/10 transition-colors"
+                      className="text-muted-foreground bg-slate-50/40 dark:bg-slate-800/10 hover:bg-muted/10 transition-colors border-b border-border/20"
                     >
-                      <td className="py-2 px-8">
-                        <span>{item.categoryName}</span>
+                      <td className="py-2 px-8 flex items-center justify-between">
+                        <div className="flex items-center gap-1.5">
+                          <span>{item.categoryName}</span>
+                          <Badge
+                            variant="outline"
+                            className="text-[9px] px-1 py-0 border-slate-300 dark:border-slate-700 text-muted-foreground"
+                          >
+                            {t("pnl.manualCommissionBadge", "Nhập tay")}
+                          </Badge>
+                        </div>
+                        {item.note && (
+                          <span className="text-[10px] text-muted-foreground/70 italic max-w-[200px] truncate">
+                            ({item.note})
+                          </span>
+                        )}
                       </td>
                       <td className="py-2 px-4 text-right tabular-nums font-mono text-muted-foreground border-r border-border/40">
-                        {item.curOjAmount !== undefined && item.curOjAmount > 0
+                        {item.curOjAmount !== undefined &&
+                        item.curOjAmount !== 0
                           ? `${item.curOjAmount.toLocaleString("vi-VN")} đ`
                           : "—"}
                       </td>
-                      <td className="py-2 px-4 text-right tabular-nums font-mono">
-                        {item.curAmount > 0
-                          ? `${item.curAmount.toLocaleString("vi-VN")} đ`
+                      <td
+                        className={`py-2 px-4 text-right tabular-nums font-mono font-medium ${
+                          item.curAmount < 0
+                            ? "text-rose-600 dark:text-rose-400"
+                            : ""
+                        }`}
+                      >
+                        {item.curAmount !== 0
+                          ? `${item.curAmount < 0 ? `- ${Math.abs(item.curAmount).toLocaleString("vi-VN")} đ` : `${item.curAmount.toLocaleString("vi-VN")} đ`}`
                           : "—"}
                       </td>
-                      <td className="py-2 px-4 text-right tabular-nums font-mono text-muted-foreground">
-                        {item.prevAmount !== undefined && item.prevAmount > 0
-                          ? `${item.prevAmount.toLocaleString("vi-VN")} đ`
+                      <td
+                        className={`py-2 px-4 text-right tabular-nums font-mono text-muted-foreground ${
+                          (item.prevAmount ?? 0) < 0
+                            ? "text-rose-600/80 dark:text-rose-400/80"
+                            : ""
+                        }`}
+                      >
+                        {item.prevAmount !== undefined && item.prevAmount !== 0
+                          ? `${item.prevAmount < 0 ? `- ${Math.abs(item.prevAmount).toLocaleString("vi-VN")} đ` : `${item.prevAmount.toLocaleString("vi-VN")} đ`}`
                           : "—"}
                       </td>
                     </tr>

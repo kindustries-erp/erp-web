@@ -453,7 +453,7 @@ export function StandardFormDrawer({
           )}
         >
           {/* Cột trái: Chi tiết / Main Content / Tab Content */}
-          <div className="flex-1 min-w-0 w-full order-2 lg:order-1 space-y-4">
+          <div className="flex-1 min-w-0 w-full order-2 lg:order-1 space-y-4 pb-3">
             {renderedLeftContent}
           </div>
 
@@ -463,7 +463,7 @@ export function StandardFormDrawer({
             (rightPanelTitle !== undefined || isRightPanelCollapsible ? (
               <div
                 className={cn(
-                  "shrink-0 order-1 lg:order-2 space-y-4 transition-all duration-300 overflow-x-hidden p-0.5 pb-3",
+                  "shrink-0 order-1 lg:order-2 space-y-4 transition-all duration-300 overflow-x-hidden pb-3",
                   stickyRightPanel && "lg:sticky lg:top-0",
                   rightPanelCollapsed
                     ? "w-full lg:w-0 h-0 lg:h-auto opacity-0 overflow-hidden !p-0"
@@ -514,7 +514,7 @@ export function StandardFormDrawer({
             ) : (
               <div
                 className={cn(
-                  "shrink-0 order-1 lg:order-2 w-full lg:w-[300px] xl:w-[320px] 2xl:w-[360px] p-0.5 pb-3",
+                  "shrink-0 order-1 lg:order-2 w-full lg:w-[300px] xl:w-[320px] 2xl:w-[360px] pb-3",
                   stickyRightPanel && "lg:sticky lg:top-0",
                 )}
               >

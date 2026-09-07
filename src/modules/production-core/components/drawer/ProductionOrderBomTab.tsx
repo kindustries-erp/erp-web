@@ -456,7 +456,7 @@ export function ProductionOrderBomTab({
               {selectedAltItemId ? (
                 <div className="flex flex-wrap items-center gap-2 px-2 pb-2 pt-1">
                   <Tooltip content={displayLabel}>
-                    <span className="inline-block truncate max-w-[150px] xl:max-w-[250px] rounded-md bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 font-medium px-2 py-0.5 italic text-xs">
+                    <span className="inline-block truncate max-w-[150px] xl:max-w-[250px] rounded-md bg-muted text-foreground font-medium px-2 py-0.5 italic text-xs border border-border/50">
                       {displayLabel}
                     </span>
                   </Tooltip>

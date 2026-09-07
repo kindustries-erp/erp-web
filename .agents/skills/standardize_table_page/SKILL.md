@@ -20,6 +20,23 @@ Khi tạo mới hoặc chỉnh sửa một trang hiển thị bảng dữ liệu
 - **Variant Bảng & Container**: Truyền `variant="spreadsheet"` cho `<DataTable>` để có giao diện dạng lưới Excel tinh gọn, đồng thời container bảng tự động giữ bo góc `rounded-xl` (12px) và viền `border border-border/60` đồng bộ toàn hệ thống.
 - **Tự động kích hoạt Right Filter Panel 2 Chiều**: Khi truyền `columns`, `tableId` và `listHook` vào `<SpreadsheetPageTemplate>`, hệ thống **tự động khởi tạo Right Filter Panel thông minh** (chiều rộng 320px, dải Active Filter Chips, tìm kiếm cột nhanh, hỗ trợ toán tử nâng cao cho Số và Text, tự động đếm tổng số active filter count và nút "Xóa tất cả" tập trung). Không cần tự viết code quản lý side panel thủ công!
 
+---
+
+## 1.1. 🎨 Quy Tắc Bảng Màu & Tuyệt Đối Cấm Màu Xanh Dương (No Blue Mandate)
+
+> [!CAUTION]
+> **TUYỆT ĐỐI KHÔNG SỬ DỤNG MÀU XANH DƯƠNG (`blue-*`, `bg-blue-*`, `text-blue-*`, `border-blue-*`)** trong toàn bộ màn hình Trang Bảng (Header, Tabs, Toolbar, PillTabs, Filter Panel, Badges, Table Rows, Stat Cards, Action Buttons).
+> 
+> **Thay thế bằng hệ màu chuẩn:**
+> 1. **Neutral Palette (Mặc định)**: Dùng `foreground`, `muted`, `muted-foreground`, `border`, `slate-*`, `zinc-*`, `neutral-*` cho thông tin chung, text, metadata, badge trạng thái `IN_PROGRESS` / Đang xử lý.
+> 2. **Brand Primary**: Dùng `primary`, `bg-primary`, `text-primary` cho nút hành động chính, thanh tiến độ, icon tiêu đề trang.
+> 3. **Semantic Colors**:
+>    - **Thành công / Hoàn thành (100% / COMPLETED / DONE)**: Dùng `emerald-*` (`bg-emerald-50 text-emerald-700 border-emerald-200`, `text-emerald-600 font-semibold`).
+>    - **Cảnh báo / Tiến trình / Nhắc nhở**: Dùng `amber-*` hoặc `neutral / muted` (`bg-amber-50 text-amber-800 border-amber-200` hoặc `bg-muted text-foreground border-border`).
+>    - **Lỗi / Hủy / Nguy hiểm**: Dùng `destructive` / `red-*` (`bg-destructive/10 text-destructive border-destructive/20`).
+
+---
+
 ## 2. Breadcrumb & TabBar — BẮT BUỘC
 
 ### 2.1. Breadcrumb đúng cấp (Topbar)

@@ -44,6 +44,21 @@ Toàn bộ kích thước Drawer trên Desktop được thiết kế co giãn li
 
 ---
 
+## 2.1. 🎨 Quy Tắc Bảng Màu & Tuyệt Đối Cấm Màu Xanh Dương (No Blue Mandate)
+
+> [!CAUTION]
+> **TUYỆT ĐỐI KHÔNG SỬ DỤNG MÀU XANH DƯƠNG (`blue-*`, `bg-blue-*`, `text-blue-*`, `border-blue-*`)** trong toàn bộ Drawer (Header, Tabs, Badges, Banners, Progress Bars, Stat Cards, Right Panel, Icons, Buttons).
+> 
+> **Thay thế bằng hệ màu chuẩn:**
+> 1. **Neutral Palette (Mặc định)**: Dùng `foreground`, `muted`, `muted-foreground`, `border`, `slate-*`, `zinc-*`, `neutral-*` cho thông tin chung, text, metadata, badge trạng thái đang xử lý (`IN_PROGRESS`), đường phân cách.
+> 2. **Brand Primary**: Dùng `primary`, `bg-primary`, `text-primary` cho nút hành động chính, thanh tiến độ đang chạy.
+> 3. **Semantic Colors**:
+>    - **Thành công / Hoàn thành (100% / Completed)**: Dùng `emerald-*` (`bg-emerald-50 text-emerald-700 border-emerald-200`, `bg-emerald-500`).
+>    - **Cảnh báo / Tiến trình / Nhắc nhở**: Dùng `amber-*` hoặc `neutral / muted` (`bg-amber-50 text-amber-800 border-amber-200` hoặc `bg-muted text-foreground border-border`).
+>    - **Lỗi / Hủy / Nguy hiểm**: Dùng `destructive` / `red-*` (`bg-destructive/10 text-destructive border-destructive/20`).
+
+---
+
 ## 3. Phân loại Kiến trúc Drawer trong Toàn hệ thống ERP
 
 Trong hệ thống Liouni ERP, Drawer được chuẩn hóa thành 3 mô hình kiến trúc rõ ràng:
