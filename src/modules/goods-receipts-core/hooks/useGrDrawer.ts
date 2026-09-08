@@ -19,7 +19,6 @@ import {
   inventoryCoreApi,
   type ErpInventoryItem,
 } from "@/modules/inventory-core/api/inventoryCoreApi";
-import { moduleConfigApi } from "@/core/api/moduleConfigApi";
 import { useUIStore } from "@/core/config/uiStore";
 
 // ─── Form types ───────────────────────────────────────────────────────────────
@@ -70,8 +69,11 @@ export function emptyGrForm(): GrForm {
 }
 
 export function buildGrForm(gr: ErpGoodsReceipt): GrForm {
+  const customAttrs = gr.customAttributes || {};
   return {
-    receiptType: gr.purchaseOrderId ? "PO" : "OTHER",
+    receiptType:
+      (customAttrs.type_inventory_receipt as GrReceiptType) ||
+      (gr.purchaseOrderId ? "PO" : "OTHER"),
     receiptNo: gr.receiptNo ?? "",
     purchaseOrderId: gr.purchaseOrderId ?? "",
     productionOrderId: gr.productionOrderId ?? "",
@@ -88,12 +90,19 @@ export function buildGrForm(gr: ErpGoodsReceipt): GrForm {
         unitCost: line.unitCost ?? "",
         declaredSerials: line.declaredSerials ?? [],
       })) ?? [],
-    globalAttributes: {},
-    customAttributes: {},
+    globalAttributes: { ...customAttrs },
+    customAttributes: { ...customAttrs },
   };
 }
 
 export function buildGrPayload(form: GrForm): CreateGrPayload {
+  const customAttributes = {
+    ...(form.globalAttributes || {}),
+    ...(form.customAttributes || {}),
+    type_inventory_receipt:
+      form.receiptType || (form.purchaseOrderId ? "PO" : "OTHER"),
+  };
+
   return {
     receiptNo: form.receiptNo.trim(),
     purchaseOrderId:
@@ -101,6 +110,7 @@ export function buildGrPayload(form: GrForm): CreateGrPayload {
     productionOrderId: undefined,
     receiptDate: form.receiptDate,
     remarks: form.remarks.trim() || undefined,
+    customAttributes,
     lines: form.lines
       .filter((line) => {
         const qty = Number(line.qtyReceived);
@@ -259,26 +269,12 @@ export function useGrDrawer({
       setOpen(true);
       void loadPoOptions();
       try {
-        const [detail, customValues] = await Promise.all([
-          goodsReceiptsCoreApi.get(id),
-          moduleConfigApi
-            .getEntityValues("GOODS_RECEIPT", id)
-            .catch(() => null),
-        ]);
+        const detail = await goodsReceiptsCoreApi.get(id);
         if (detail.lines) {
           void fetchItemsDict(detail.lines.map((l) => l.itemId || ""));
         }
         setEditing(detail);
-        const mappedForm = buildGrForm(detail);
-        if (customValues) {
-          mappedForm.globalAttributes = customValues.globalAttributes || {};
-          mappedForm.customAttributes = customValues.attributes || {};
-          if (customValues.globalAttributes?.type_inventory_receipt) {
-            mappedForm.receiptType =
-              customValues.globalAttributes.type_inventory_receipt;
-          }
-        }
-        setForm(mappedForm);
+        setForm(buildGrForm(detail));
       } finally {
         setLoading(false);
       }
@@ -329,13 +325,11 @@ export function useGrDrawer({
         if (statusOverride) {
           (payload as any).status = statusOverride;
         }
-        let targetId = "";
         if (editing) {
           await goodsReceiptsCoreApi.update(editing.id, payload);
           if (statusOverride === "POSTED" && editing.status !== "POSTED") {
             await goodsReceiptsCoreApi.post(editing.id);
           }
-          targetId = editing.id;
           showToast({
             title: "Đã cập nhật phiếu nhập kho",
             variant: "success",
@@ -350,28 +344,10 @@ export function useGrDrawer({
           if (statusOverride === "POSTED") {
             await goodsReceiptsCoreApi.post(created.id);
           }
-          targetId = created.id;
           showToast({
             title: "Tạo phiếu nhập kho thành công",
             variant: "success",
           });
-        }
-
-        // Lưu thuộc tính tùy chỉnh & đồng bộ loại phiếu nhập vào globalAttributes
-        if (targetId) {
-          try {
-            const globalAttrs = {
-              ...(form.globalAttributes || {}),
-              type_inventory_receipt:
-                form.receiptType || (form.purchaseOrderId ? "PO" : "OTHER"),
-            };
-            await moduleConfigApi.saveEntityValues("GOODS_RECEIPT", targetId, {
-              globalAttributes: globalAttrs,
-              attributes: form.customAttributes || {},
-            });
-          } catch (cfErr) {
-            console.warn("Failed to save GR custom fields", cfErr);
-          }
         }
 
         setOpen(false);

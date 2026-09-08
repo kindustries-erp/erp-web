@@ -895,13 +895,6 @@ export function useErpWarehouseTabLogic() {
           onClick: () => handlePrintRow(row),
         },
         {
-          label: t("inventory.warehouseConfig", "Cấu hình kho"),
-          icon: <Settings className="h-3.5 w-3.5 text-muted-foreground" />,
-          onClick: () => {
-            handleOpenCustomFieldsDrawer(row.type);
-          },
-        },
-        {
           label: t("common.exportXlsx", "Xuất XLSX"),
           icon: (
             <FileSpreadsheet className="h-3.5 w-3.5 text-muted-foreground" />
@@ -909,6 +902,19 @@ export function useErpWarehouseTabLogic() {
           hidden: row.status === "DRAFT" || row.type === "adjustment",
           disabled: xlsxExportingId === row.id,
           onClick: () => handleExportXlsx(row),
+        },
+        {
+          label: t("inventory.cancelVoucher", "Hủy phiếu"),
+          icon: <XCircle className="h-3.5 w-3.5" />,
+          variant: "danger" as const,
+          hidden:
+            row.status !== "POSTED" ||
+            (row.type === "receipt" && !canUpdateReceipt) ||
+            (row.type === "issue" && !canUpdateIssue) ||
+            (row.type === "adjustment" && !canUpdateAdjustment),
+          onClick: () => {
+            setCancelTarget(row);
+          },
         },
         {
           label: t("common.delete", "Xóa"),
@@ -923,17 +929,23 @@ export function useErpWarehouseTabLogic() {
             setDeleteTarget(row);
           },
         },
+      ],
+    },
+    {
+      groupLabel: t("common.groupConfig", "Cấu hình"),
+      items: [
         {
-          label: t("inventory.cancelVoucher", "Hủy phiếu"),
-          icon: <XCircle className="h-3.5 w-3.5" />,
-          variant: "danger" as const,
-          hidden:
-            row.status !== "POSTED" ||
-            (row.type === "receipt" && !canUpdateReceipt) ||
-            (row.type === "issue" && !canUpdateIssue) ||
-            (row.type === "adjustment" && !canUpdateAdjustment),
+          label:
+            row.type === "receipt"
+              ? t("inventory.configReceipt", "Cấu hình phiếu nhập kho")
+              : row.type === "issue"
+                ? t("inventory.configIssue", "Cấu hình phiếu xuất kho")
+                : row.type === "adjustment"
+                  ? t("inventory.configAdjustment", "Cấu hình phiếu kiểm kê")
+                  : t("inventory.warehouseConfig", "Cấu hình chứng từ kho"),
+          icon: <Settings className="h-3.5 w-3.5 text-muted-foreground" />,
           onClick: () => {
-            setCancelTarget(row);
+            handleOpenCustomFieldsDrawer(row.type);
           },
         },
       ],

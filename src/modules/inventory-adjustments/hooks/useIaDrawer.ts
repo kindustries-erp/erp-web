@@ -8,7 +8,6 @@ import {
   inventoryCoreApi,
   type ErpInventoryItem,
 } from "@/modules/inventory-core/api/inventoryCoreApi";
-import { moduleConfigApi } from "@/core/api/moduleConfigApi";
 import { useUIStore } from "@/core/config/uiStore";
 import { useBasicMasterInfinite } from "@/modules/basic-masters/hooks/useBasicMasterInfinite";
 import { useMemo } from "react";
@@ -49,6 +48,7 @@ export function emptyIaForm(): IaForm {
 }
 
 export function buildIaForm(adj: IaHeaderDto): IaForm {
+  const customAttrs = adj.customAttributes || {};
   return {
     adjustmentNo: adj.adjustmentNo ?? "",
     adjustmentDate: adj.adjustmentDate ? adj.adjustmentDate.slice(0, 10) : "",
@@ -61,16 +61,22 @@ export function buildIaForm(adj: IaHeaderDto): IaForm {
         qtyAdjusted: line.qtyAdjusted?.toString() ?? "0",
         unitCost: line.unitCost?.toString() ?? "0",
       })) ?? [],
-    globalAttributes: {},
-    customAttributes: {},
+    globalAttributes: { ...customAttrs },
+    customAttributes: { ...customAttrs },
   };
 }
 
 export function buildIaPayload(form: IaForm): IaHeaderDto {
+  const customAttributes = {
+    ...(form.globalAttributes || {}),
+    ...(form.customAttributes || {}),
+  };
+
   return {
     adjustmentNo: form.adjustmentNo.trim(),
     adjustmentDate: form.adjustmentDate,
     remarks: form.remarks.trim() || undefined,
+    customAttributes,
     lines: form.lines
       .filter((line) => {
         const qty = Number(line.qtyAdjusted);
@@ -169,30 +175,13 @@ export function useIaDrawer({
       setLoading(true);
       setOpen(true);
       try {
-        const [detail, customValues] = await Promise.all([
-          inventoryAdjustmentsApi.getById(id),
-          moduleConfigApi
-            .getEntityValues("INVENTORY_ADJUSTMENT", id)
-            .catch(() => null),
-        ]);
+        const detail = await inventoryAdjustmentsApi.getById(id);
         const data = detail.data;
         if (data.lines) {
           void fetchItemsDict(data.lines.map((l: any) => l.itemId || ""));
         }
         setEditing(data);
-        const mappedForm = buildIaForm(data);
-        if (customValues) {
-          mappedForm.globalAttributes = customValues.globalAttributes || {};
-          mappedForm.customAttributes = customValues.attributes || {};
-          if (
-            customValues.globalAttributes?.adjustment_reason &&
-            !customValues.globalAttributes?.type_inventory_adjustment
-          ) {
-            mappedForm.globalAttributes.type_inventory_adjustment =
-              customValues.globalAttributes.adjustment_reason;
-          }
-        }
-        setForm(mappedForm);
+        setForm(buildIaForm(data));
       } finally {
         setLoading(false);
       }
@@ -210,13 +199,11 @@ export function useIaDrawer({
       setSaveError(null);
       try {
         const payload = buildIaPayload(form);
-        let targetId = "";
         if (editing) {
           await inventoryAdjustmentsApi.update(editing.id!, payload);
           if (statusOverride === "POSTED") {
             await inventoryAdjustmentsApi.postAdjustment(editing.id!);
           }
-          targetId = editing.id!;
           showToast({
             title: "Đã cập nhật phiếu điều chỉnh",
             variant: "success",
@@ -233,36 +220,10 @@ export function useIaDrawer({
           if (statusOverride === "POSTED") {
             await inventoryAdjustmentsApi.postAdjustment(created.id);
           }
-          targetId = created.id;
           showToast({
             title: "Tạo phiếu điều chỉnh thành công",
             variant: "success",
           });
-        }
-
-        // Lưu thuộc tính tùy chỉnh & đồng bộ loại điều chỉnh vào globalAttributes
-        if (targetId && (form.globalAttributes || form.customAttributes)) {
-          try {
-            const reasonVal =
-              form.globalAttributes?.type_inventory_adjustment ||
-              form.globalAttributes?.adjustment_reason ||
-              "";
-            const globalAttrs = {
-              ...(form.globalAttributes || {}),
-              type_inventory_adjustment: reasonVal,
-              adjustment_reason: reasonVal,
-            };
-            await moduleConfigApi.saveEntityValues(
-              "INVENTORY_ADJUSTMENT",
-              targetId,
-              {
-                globalAttributes: globalAttrs,
-                attributes: form.customAttributes || {},
-              },
-            );
-          } catch (cfErr) {
-            console.warn("Failed to save IA custom fields", cfErr);
-          }
         }
 
         setOpen(false);

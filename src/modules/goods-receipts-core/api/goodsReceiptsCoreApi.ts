@@ -35,6 +35,7 @@ export interface ErpGoodsReceipt {
   remarks?: string | null;
   createdAt?: string;
   isDeleted?: boolean;
+  customAttributes?: Record<string, any>;
   lines?: ErpGrLine[];
 }
 
@@ -46,6 +47,7 @@ export interface CreateGrPayload {
   receiptDate: string;
   status?: string;
   remarks?: string;
+  customAttributes?: Record<string, any>;
   lines?: Omit<ErpGrLine, "id">[];
 }
 
