@@ -30,7 +30,6 @@ import {
   inventoryCoreApi,
   type CreateInventoryItemPayload,
   type ErpInventoryItem,
-  type InventoryMasterOption,
   type InventoryMovementsPayload,
 } from "@/modules/inventory-core/api/inventoryCoreApi";
 import { InventoryStockLedgerSection } from "./InventoryStockLedgerSection";
