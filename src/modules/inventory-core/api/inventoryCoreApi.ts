@@ -13,7 +13,7 @@ export type ListParams = BaseListParams & {
   column_filters?: string;
 };
 
-import type { InventoryConnectionsData } from "./../hooks/useInventoryGraph";
+import type { TraceabilityGraphData } from "@/shared/types/traceability";
 
 export type InventorySerialListParams = BaseListParams & {
   itemTypeId?: string;
@@ -78,7 +78,10 @@ export interface ErpInventoryItem {
   /** FK → erp_tracking_policies */
   trackingPolicyId?: string | null;
   trackingPolicy?: ErpTrackingPolicy | null;
-  attributes?: string[];
+  attributes?: any;
+  customAttributes?: Record<string, any>;
+  attributeValues?: any[];
+  categoryId?: string | null;
   hasSerials?: boolean;
   isDeleted?: boolean;
   createdAt?: string;
@@ -122,10 +125,12 @@ export interface CreateInventoryItemPayload {
   itemName: string;
   uomId: string;
   itemTypeId: string;
+  categoryId?: string | null;
   status?: string;
   note?: string;
   trackingPolicyId?: string;
   attributes?: string[];
+  customAttributes?: Record<string, any>;
 }
 
 export type UpdateInventoryItemPayload = Partial<CreateInventoryItemPayload>;
@@ -255,8 +260,10 @@ export const inventoryCoreApi = {
     );
     return data.data;
   },
-  getConnections: async (id: string): Promise<InventoryConnectionsData> => {
-    const { data } = await axiosInstance.get(`${BASE}/${id}/connections`);
+  getTraceabilityGraph: async (id: string): Promise<TraceabilityGraphData> => {
+    const { data } = await axiosInstance.get<{ data: TraceabilityGraphData }>(
+      `${BASE}/${id}/traceability-graph`,
+    );
     return data.data;
   },
   movements: async (id: string): Promise<InventoryMovementsPayload> => {

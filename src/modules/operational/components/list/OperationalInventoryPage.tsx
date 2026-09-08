@@ -2,7 +2,6 @@ import { useMemo, useState, useCallback } from "react";
 import {
   Eye,
   Pencil,
-  Network,
   Package,
   Power,
   PowerOff,
@@ -17,8 +16,6 @@ import { PillTabs } from "@/shared/components/PillTabs";
 import { ErpUrlQueryParam } from "@/shared/constants/urlParams";
 import { InventoryItemFormDrawer } from "@/modules/inventory-core/components/InventoryItemFormDrawer";
 import { ModuleCustomFieldConfigDrawer } from "@/shared/components/ModuleCustomFieldConfigDrawer";
-import { ConnectionGraphDrawer } from "@/modules/purchase-orders-core/components/ConnectionGraphDrawer";
-import { useInventoryGraph } from "@/modules/inventory-core/hooks/useInventoryGraph";
 import { useGrDrawer } from "@/modules/goods-receipts-core/hooks/useGrDrawer";
 import { GrFormDrawer } from "@/modules/goods-receipts-core/components/GrFormDrawer";
 import { useGiDrawer } from "@/modules/goods-issues-core/hooks/useGiDrawer";
@@ -31,7 +28,6 @@ import {
   productionCoreApi,
   type ErpProductionOrder,
 } from "@/modules/production-core/api/productionCoreApi";
-import { useAuthStore } from "@/modules/auth/domain/authStore";
 
 import { useStockColumns } from "@/modules/operational/components/list/columns/stockColumns";
 import {
@@ -143,14 +139,7 @@ export function OperationalInventoryPage({
     controlledEditMode !== undefined ? controlledEditMode : internalEditMode;
   const setIsEditMode = controlledSetIsEditMode || setInternalEditMode;
 
-  const [graphOpen, setGraphOpen] = useState(false);
-  const [graphItemId, setGraphItemId] = useState<string | null>(null);
-  const inventoryGraph = useInventoryGraph();
-
   const showToast = useUIStore((s) => s.showToast);
-
-  const employee = useAuthStore((s) => s.employee);
-  const isGraphAdmin = employee?.email === "admin@liouni.com";
 
   const grDrawer = useGrDrawer({});
   const giDrawer = useGiDrawer({});
@@ -404,19 +393,6 @@ export function OperationalInventoryPage({
                 onViewItem(row.inventory_item_id);
               },
             },
-            ...(isGraphAdmin
-              ? [
-                  {
-                    label: t("Đồ thị liên kết"),
-                    icon: <Network size={14} />,
-                    onClick: () => {
-                      setGraphItemId(row.inventory_item_id);
-                      setGraphOpen(true);
-                      void inventoryGraph.loadGraph(row.inventory_item_id);
-                    },
-                  },
-                ]
-              : []),
           ],
         },
         {
@@ -522,38 +498,6 @@ export function OperationalInventoryPage({
             void iaDrawer.openDetail(docId, true);
           } else if (docType === "PRODUCTION_ORDER") {
             void openPoDetail(docId);
-          }
-        }}
-      />
-      <ConnectionGraphDrawer
-        open={graphOpen}
-        onClose={() => {
-          setGraphOpen(false);
-          setGraphItemId(null);
-          inventoryGraph.reset();
-        }}
-        title="Đồ thị liên kết Kho"
-        subtitle={
-          graphItemId
-            ? `Vật tư: ${stockItems.find((i) => i.inventory_item_id === graphItemId)?.item_name || graphItemId}`
-            : undefined
-        }
-        loading={inventoryGraph.loading}
-        error={inventoryGraph.error}
-        initialNodes={inventoryGraph.nodes}
-        initialEdges={inventoryGraph.edges}
-        layout={inventoryGraph.layout}
-        toggleLayout={inventoryGraph.toggleLayout}
-        onNodeClick={(node) => {
-          if (!node.docId) return;
-          if (node.nodeType === "inventory_item") {
-            onViewItem(node.docId);
-          } else if (node.nodeType === "goods_receipt") {
-            void grDrawer.openDetail(node.docId, true);
-          } else if (node.nodeType === "goods_issue") {
-            void giDrawer.openDetail(node.docId, true);
-          } else if (node.nodeType === "production_order") {
-            void openPoDetail(node.docId);
           }
         }}
       />
