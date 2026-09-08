@@ -1,10 +1,12 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
-import { Layers } from "lucide-react";
-import { Checkbox } from "@/shared/components/ui/checkbox";
+import { Layers, Check } from "lucide-react";
 import { Badge } from "@/shared/components/ui/badge";
+import { AttributeTypeBadge } from "@/shared/components/AttributeTypeBadge";
 import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
 import type { DrawerMode } from "@/shared/stores/useDrawerStore";
 import { Combobox } from "@/shared/components/Combobox";
+import { cn } from "@/shared/utils";
+import { ModuleEntityCustomFieldsSection } from "@/shared/components/ModuleEntityCustomFieldsSection";
 import {
   DrawerAction,
   DrawerField,
@@ -13,8 +15,13 @@ import {
 } from "@/shared/components/DrawerModal";
 import { Skeleton } from "@/shared/components/Skeleton";
 import { useUIStore } from "@/core/config/uiStore";
+import { useAppStore } from "@/core/config/appStore";
 import { useT } from "@/core/i18n";
 import { fmtQty } from "@/shared/utils/format";
+import {
+  moduleConfigApi,
+  resolveOptionLabel,
+} from "@/core/api/moduleConfigApi";
 import {
   inventoryCoreApi,
   type CreateInventoryItemPayload,
@@ -37,7 +44,6 @@ interface ItemForm {
   status: string;
   note: string;
   trackingPolicyId: string;
-  trackingCategoryId: string;
   attributes: string[];
 }
 
@@ -49,7 +55,6 @@ const emptyForm = (): ItemForm => ({
   status: "ACTIVE",
   note: "",
   trackingPolicyId: "",
-  trackingCategoryId: "",
   attributes: [],
 });
 
@@ -62,7 +67,6 @@ function buildForm(item: ErpInventoryItem): ItemForm {
     status: item.status ?? "ACTIVE",
     note: item.note ?? "",
     trackingPolicyId: item.trackingPolicyId ?? "",
-    trackingCategoryId: item.trackingCategoryId ?? "",
     attributes: item.attributes ?? [],
   };
 }
@@ -76,7 +80,6 @@ function toPayload(form: ItemForm): CreateInventoryItemPayload {
     status: form.status || "ACTIVE",
     note: form.note.trim() || undefined,
     trackingPolicyId: form.trackingPolicyId || undefined,
-    trackingCategoryId: form.trackingCategoryId || undefined,
     attributes: form.attributes.length > 0 ? form.attributes : undefined,
   };
 }
@@ -113,6 +116,7 @@ export function InventoryItemFormDrawer({
   zIndex?: number;
 }) {
   const t = useT();
+  const locale = useAppStore((s) => s.locale);
   const showToast = useUIStore((s) => s.showToast);
 
   const [viewOnly, setViewOnly] = useState(initialViewOnly);
@@ -133,35 +137,47 @@ export function InventoryItemFormDrawer({
   const [itemTypeOptions, setItemTypeOptions] = useState<
     Array<{ value: string; label: string }>
   >([]);
-  const [trackingCategoryOptions, setTrackingCategoryOptions] = useState<
-    Array<{ value: string; label: string }>
-  >([]);
   const [trackingPolicyOptions, setTrackingPolicyOptions] = useState<
     Array<{ value: string; label: string }>
   >([]);
+  const [featureOptions, setFeatureOptions] = useState<
+    Array<{ value: string; label: string }>
+  >([
+    {
+      value: "CAN_BE_SOLD",
+      label: t("inventoryMasters.attributes.CAN_BE_SOLD", "Có thể bán"),
+    },
+    {
+      value: "CAN_BE_PURCHASED",
+      label: t("inventoryMasters.attributes.CAN_BE_PURCHASED", "Có thể mua"),
+    },
+    {
+      value: "CAN_BE_MANUFACTURED",
+      label: t(
+        "inventoryMasters.attributes.CAN_BE_MANUFACTURED",
+        "Có thể sản xuất",
+      ),
+    },
+  ]);
 
   const loadMasters = useCallback(async () => {
     try {
-      const [uoms, itemTypes, trackingCategories, trackingPolicies] =
-        await Promise.all([
+      const [uoms, itemTypes, trackingPolicies, globalDefs] = await Promise.all(
+        [
           inventoryCoreApi.listUoms({ page: 1, pageSize: 500, isActive: true }),
           inventoryCoreApi.listItemTypes({
             page: 1,
             pageSize: 500,
             isActive: true,
           }),
-          inventoryCoreApi.listTrackingCategories({
-            page: 1,
-            pageSize: 500,
-            isActive: true,
-          }),
           inventoryCoreApi.listTrackingPolicies({ page: 1, pageSize: 50 }),
-        ]);
+          moduleConfigApi
+            .getGlobalAttributeDefs("INVENTORY_ITEM")
+            .catch(() => []),
+        ],
+      );
       setUomOptions(buildMasterOptions(uoms.items));
       setItemTypeOptions(buildMasterOptions(itemTypes.items));
-      setTrackingCategoryOptions(
-        buildMasterOptions(trackingCategories.items, true),
-      );
       setTrackingPolicyOptions(
         trackingPolicies.items
           .filter((p) => p.isActive)
@@ -170,10 +186,31 @@ export function InventoryItemFormDrawer({
             label: `${p.code} — ${p.name}`,
           })),
       );
+
+      const featuresDef = globalDefs.find(
+        (d: any) =>
+          !d.isDeleted &&
+          d.isActive !== false &&
+          ["item_features", "item_attributes", "business_features"].includes(
+            d.code.toLowerCase(),
+          ),
+      );
+      if (
+        featuresDef &&
+        featuresDef.options &&
+        featuresDef.options.length > 0
+      ) {
+        setFeatureOptions(
+          featuresDef.options.map((opt: any) => ({
+            value: opt.value,
+            label: resolveOptionLabel(opt, locale, t),
+          })),
+        );
+      }
     } catch {
       // silent
     }
-  }, []);
+  }, [locale, t]);
 
   const loadItem = useCallback(async (id: string) => {
     setLoading(true);
@@ -370,7 +407,14 @@ export function InventoryItemFormDrawer({
               }
             />
             <DrawerRow
-              label={t("inventoryMasters.fields.uom", "Đơn vị tính (ĐVT)")}
+              label={
+                <span className="inline-flex items-center gap-1.5 flex-wrap">
+                  <span>
+                    {t("inventoryMasters.fields.uom", "Đơn vị tính (ĐVT)")}
+                  </span>
+                  <AttributeTypeBadge type="system" />
+                </span>
+              }
               value={uomName || "—"}
             />
             <DrawerRow
@@ -378,7 +422,14 @@ export function InventoryItemFormDrawer({
               value={editing?.itemName || form.itemName || "—"}
             />
             <DrawerRow
-              label={t("inventoryMasters.fields.itemType", "Loại item")}
+              label={
+                <span className="inline-flex items-center gap-1.5 flex-wrap">
+                  <span>
+                    {t("inventoryMasters.fields.itemType", "Loại item")}
+                  </span>
+                  <AttributeTypeBadge type="system" />
+                </span>
+              }
               value={
                 editing?.itemType?.name ||
                 itemTypeOptions
@@ -388,10 +439,17 @@ export function InventoryItemFormDrawer({
               }
             />
             <DrawerRow
-              label={t(
-                "inventoryMasters.fields.trackingPolicy",
-                "Tracking policy",
-              )}
+              label={
+                <span className="inline-flex items-center gap-1.5 flex-wrap">
+                  <span>
+                    {t(
+                      "inventoryMasters.fields.trackingPolicy",
+                      "Tracking policy",
+                    )}
+                  </span>
+                  <AttributeTypeBadge type="system" />
+                </span>
+              }
               value={
                 editing?.trackingPolicy?.name ||
                 trackingPolicyOptions
@@ -400,6 +458,36 @@ export function InventoryItemFormDrawer({
                 "Không"
               }
             />
+            {form.attributes && form.attributes.length > 0 && (
+              <DrawerRow
+                label={
+                  <span className="inline-flex items-center gap-1.5 flex-wrap">
+                    <span>
+                      {t("inventoryMasters.attributes.label", "Thuộc tính")}
+                    </span>
+                    <AttributeTypeBadge type="system" />
+                  </span>
+                }
+                value={
+                  <div className="flex flex-wrap gap-1.5 py-0.5">
+                    {form.attributes.map((attrKey) => {
+                      const opt = featureOptions.find(
+                        (o) => o.value === attrKey,
+                      );
+                      return (
+                        <Badge
+                          key={attrKey}
+                          variant="secondary"
+                          className="text-[11px] font-normal"
+                        >
+                          {opt?.label || attrKey}
+                        </Badge>
+                      );
+                    })}
+                  </div>
+                }
+              />
+            )}
 
             {/* 3 Metric Summary Cards */}
             <div className="mt-4 grid grid-cols-3 gap-2 text-center">
@@ -437,7 +525,18 @@ export function InventoryItemFormDrawer({
             uomName={uomName}
           />
 
-          {/* Notes if any */}
+          {/* 3. Trường tùy chỉnh mở rộng */}
+          <ModuleEntityCustomFieldsSection
+            moduleKey="INVENTORY_ITEM"
+            entityId={editing?.id}
+            editMode={false}
+            hideCategorySection={true}
+            globalTitle={t("moduleConfig.customFields", "Trường tùy chỉnh")}
+            globalCollapsible={true}
+            globalDefaultCollapsed={false}
+          />
+
+          {/* 4. Ghi chú if any */}
           {form.note && (
             <DrawerSection title={t("inventoryMasters.fields.note", "Ghi chú")}>
               <p className="text-xs text-foreground whitespace-pre-wrap leading-relaxed">
@@ -495,7 +594,14 @@ export function InventoryItemFormDrawer({
               </DrawerField>
 
               <DrawerField
-                label={t("inventoryMasters.fields.uom", "Đơn vị tính (ĐVT)")}
+                label={
+                  <span className="inline-flex items-center gap-1.5 flex-wrap">
+                    <span>
+                      {t("inventoryMasters.fields.uom", "Đơn vị tính (ĐVT)")}
+                    </span>
+                    <AttributeTypeBadge type="system" />
+                  </span>
+                }
                 required
               >
                 <Combobox
@@ -517,7 +623,14 @@ export function InventoryItemFormDrawer({
               </DrawerField>
 
               <DrawerField
-                label={t("inventoryMasters.fields.itemType", "Loại item")}
+                label={
+                  <span className="inline-flex items-center gap-1.5 flex-wrap">
+                    <span>
+                      {t("inventoryMasters.fields.itemType", "Loại item")}
+                    </span>
+                    <AttributeTypeBadge type="system" />
+                  </span>
+                }
               >
                 <Combobox
                   value={form.itemTypeId}
@@ -538,10 +651,17 @@ export function InventoryItemFormDrawer({
               </DrawerField>
 
               <DrawerField
-                label={t(
-                  "inventoryMasters.fields.trackingPolicy",
-                  "Tracking policy",
-                )}
+                label={
+                  <span className="inline-flex items-center gap-1.5 flex-wrap">
+                    <span>
+                      {t(
+                        "inventoryMasters.fields.trackingPolicy",
+                        "Tracking policy",
+                      )}
+                    </span>
+                    <AttributeTypeBadge type="system" />
+                  </span>
+                }
               >
                 <Combobox
                   value={form.trackingPolicyId}
@@ -551,7 +671,6 @@ export function InventoryItemFormDrawer({
                     setForm((prev) => ({
                       ...prev,
                       trackingPolicyId: value || "",
-                      trackingCategoryId: value ? prev.trackingCategoryId : "",
                     }))
                   }
                   options={trackingPolicyOptions}
@@ -566,80 +685,69 @@ export function InventoryItemFormDrawer({
                   </span>
                 )}
               </DrawerField>
-
-              <DrawerField
-                label={t(
-                  "inventoryMasters.fields.trackingCategory",
-                  "Tracking category",
-                )}
-              >
-                <Combobox
-                  value={form.trackingCategoryId}
-                  disabled={viewOnly || !!editing?.hasSerials}
-                  allowClear
-                  onChange={(value) =>
-                    setForm((prev) => ({
-                      ...prev,
-                      trackingCategoryId: value || "",
-                    }))
-                  }
-                  options={trackingCategoryOptions}
-                  placeholder="Chọn nhóm tracking"
-                />
-              </DrawerField>
             </div>
           </DrawerSection>
 
           <DrawerSection
-            title={t("inventoryMasters.attributes.label", "Thuộc tính")}
+            title={
+              <span className="inline-flex items-center gap-1.5 flex-wrap">
+                <span>
+                  {t("inventoryMasters.attributes.label", "Thuộc tính")}
+                </span>
+                <AttributeTypeBadge type="system" />
+              </span>
+            }
           >
-            <div className="flex flex-wrap gap-4 mt-2">
-              {[
-                {
-                  value: "CAN_BE_SOLD",
-                  label: t(
-                    "inventoryMasters.attributes.CAN_BE_SOLD",
-                    "Có thể bán",
-                  ),
-                },
-                {
-                  value: "CAN_BE_PURCHASED",
-                  label: t(
-                    "inventoryMasters.attributes.CAN_BE_PURCHASED",
-                    "Có thể mua",
-                  ),
-                },
-                {
-                  value: "CAN_BE_MANUFACTURED",
-                  label: t(
-                    "inventoryMasters.attributes.CAN_BE_MANUFACTURED",
-                    "Có thể sản xuất",
-                  ),
-                },
-              ].map((attr) => (
-                <label
-                  key={attr.value}
-                  className="flex items-center space-x-2 cursor-pointer"
-                >
-                  <Checkbox
-                    checked={form.attributes.includes(attr.value)}
+            <div className="flex flex-wrap gap-2.5 mt-2">
+              {featureOptions.map((attr) => {
+                const isSelected = form.attributes.includes(attr.value);
+                return (
+                  <button
+                    key={attr.value}
+                    type="button"
                     disabled={viewOnly}
-                    onCheckedChange={(checked) => {
+                    onClick={() => {
                       setForm((prev) => ({
                         ...prev,
-                        attributes: checked
-                          ? [...prev.attributes, attr.value]
-                          : prev.attributes.filter((a) => a !== attr.value),
+                        attributes: isSelected
+                          ? prev.attributes.filter((a) => a !== attr.value)
+                          : [...prev.attributes, attr.value],
                       }));
                     }}
-                  />
-                  <span className="text-sm font-medium text-foreground">
-                    {attr.label}
-                  </span>
-                </label>
-              ))}
+                    className={cn(
+                      "inline-flex items-center gap-2 px-3 py-2 rounded-lg border text-xs font-medium transition-all duration-150 select-none shadow-2xs",
+                      isSelected
+                        ? "bg-primary/10 border-primary text-primary dark:bg-primary/20 dark:border-primary/80 dark:text-primary font-bold shadow-xs"
+                        : "bg-background border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-slate-300",
+                      viewOnly && "cursor-default opacity-80",
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        "w-4 h-4 rounded-sm border flex items-center justify-center transition-colors shrink-0",
+                        isSelected
+                          ? "bg-primary border-primary text-white"
+                          : "border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900",
+                      )}
+                    >
+                      {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
+                    </span>
+                    <span className="leading-none">{attr.label}</span>
+                  </button>
+                );
+              })}
             </div>
           </DrawerSection>
+
+          <ModuleEntityCustomFieldsSection
+            moduleKey="INVENTORY_ITEM"
+            entityId={editing?.id}
+            editMode={true}
+            hideCategorySection={true}
+            globalTitle={t("moduleConfig.customFields", "Trường tùy chỉnh")}
+            globalCollapsible={true}
+            globalDefaultCollapsed={false}
+          />
 
           <DrawerSection title={t("inventoryMasters.fields.note", "Ghi chú")}>
             <div className="mt-1">

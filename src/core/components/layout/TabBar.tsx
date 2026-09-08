@@ -45,7 +45,6 @@ const TAB_ICONS: Partial<Record<PageKey, React.ElementType>> = {
   "erp-inventory-items": Layers,
   "erp-inventory-uom": Layers,
   "erp-inventory-item-types": Layers,
-  "erp-inventory-tracking-categories": Layers,
   "mfg-items": Layers,
   "mfg-purchase-orders": FileText,
   "mfg-vehicles": Car,

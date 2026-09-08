@@ -113,6 +113,7 @@ export function ErpWarehouseTab() {
         onClearAllFilters={handleClearAllFilters}
         customActionsNode={customActionsNode}
         rowActions={rowActions}
+        enableRowContextMenu={true}
         onCreate={() => unifiedDrawer.openUnifiedCreate("receipt")}
         createLabel={t("common.addNew", "Tạo mới")}
         createActions={createActions}

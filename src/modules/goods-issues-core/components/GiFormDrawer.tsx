@@ -551,6 +551,19 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
       </span>
     ) : undefined;
 
+  // ── Thống kê tóm tắt ───────────────────────────────────────────────────
+  const totalIssuedQty = useMemo(() => {
+    return form.lines.reduce((sum, l) => sum + Number(l.qtyIssued || 0), 0);
+  }, [form.lines]);
+
+  const customerDisplay = useMemo(() => {
+    const selectedSo = soOptions.find((o) => o.value === form.salesOrderId);
+    if (selectedSo && selectedSo.label.includes(" — ")) {
+      return selectedSo.label.split(" — ")[1];
+    }
+    return "";
+  }, [soOptions, form.salesOrderId]);
+
   // ── Right panel content (Thông tin chung) ─────────────────────────────────
 
   const rightPanelContent = (
@@ -607,7 +620,7 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
       {form.issueType === "SALE" && (
         <DrawerField label={t("Đơn bán hàng")}>
           {(viewOnly || !!editing) && form.salesOrderId ? (
-            <div className="px-3 py-2 bg-slate-50 border border-slate-100 rounded-md w-full overflow-hidden">
+            <div className="px-3 py-2 bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700/60 rounded-md w-full overflow-hidden">
               <TooltipProvider>
                 <Tooltip
                   content={
@@ -650,6 +663,13 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
           )}
         </DrawerField>
       )}
+      {customerDisplay && (
+        <DrawerField label={t("Khách hàng")}>
+          <div className="px-3 py-2 bg-slate-50 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-700/60 rounded-md text-sm font-medium text-foreground truncate">
+            {customerDisplay}
+          </div>
+        </DrawerField>
+      )}
       {form.issueType === "PRODUCTION" && (
         <DrawerField label={t("Lệnh sản xuất")}>
           <Combobox
@@ -663,6 +683,69 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
             }
           />
         </DrawerField>
+      )}
+
+      <DrawerField label={t("Người nhận hàng / Bộ phận nhận")}>
+        <input
+          className={inputCls}
+          placeholder={t("Họ tên người nhận hoặc bộ phận tiếp nhận...")}
+          value={
+            form.globalAttributes?.recipient_name ||
+            form.globalAttributes?.receiver ||
+            ""
+          }
+          disabled={viewOnly || editing?.status === "POSTED"}
+          onChange={(e) =>
+            setForm((f) => ({
+              ...f,
+              globalAttributes: {
+                ...f.globalAttributes,
+                recipient_name: e.target.value,
+                receiver: e.target.value,
+              },
+            }))
+          }
+        />
+      </DrawerField>
+
+      <DrawerField label={t("Số chứng từ / Lệnh tham chiếu")}>
+        <input
+          className={inputCls}
+          placeholder={t("Số phiếu xuất kho bên ngoài / Tham chiếu...")}
+          value={form.globalAttributes?.reference_no || ""}
+          disabled={viewOnly || editing?.status === "POSTED"}
+          onChange={(e) =>
+            setForm((f) => ({
+              ...f,
+              globalAttributes: {
+                ...f.globalAttributes,
+                reference_no: e.target.value,
+              },
+            }))
+          }
+        />
+      </DrawerField>
+
+      {/* Summary Cards khi ở chế độ View hoặc khi có dòng */}
+      {viewOnly && form.lines.length > 0 && (
+        <div className="mt-3 grid grid-cols-2 gap-2 text-center">
+          <div className="flex flex-col items-center justify-center p-2.5 bg-blue-500/10 rounded-lg border border-blue-500/20">
+            <span className="text-[11px] font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider mb-1">
+              {t("Số mặt hàng")}
+            </span>
+            <span className="font-bold text-blue-700 dark:text-blue-300 text-base tabular-nums">
+              {form.lines.length}
+            </span>
+          </div>
+          <div className="flex flex-col items-center justify-center p-2.5 bg-amber-500/10 rounded-lg border border-amber-500/20">
+            <span className="text-[11px] font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wider mb-1">
+              {t("Tổng SL xuất")}
+            </span>
+            <span className="font-bold text-amber-700 dark:text-amber-300 text-base tabular-nums">
+              -{fmtQty(totalIssuedQty)}
+            </span>
+          </div>
+        </div>
       )}
     </>
   );

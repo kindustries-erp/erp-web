@@ -6,7 +6,9 @@ import {
   Package,
   Power,
   PowerOff,
-  Download,
+  Settings,
+  Plus,
+  FileSpreadsheet,
 } from "lucide-react";
 import { fmtQty } from "@/shared/utils/format";
 
@@ -14,6 +16,7 @@ import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemp
 import { PillTabs } from "@/shared/components/PillTabs";
 import { ErpUrlQueryParam } from "@/shared/constants/urlParams";
 import { InventoryItemFormDrawer } from "@/modules/inventory-core/components/InventoryItemFormDrawer";
+import { ModuleCustomFieldConfigDrawer } from "@/shared/components/ModuleCustomFieldConfigDrawer";
 import { ConnectionGraphDrawer } from "@/modules/purchase-orders-core/components/ConnectionGraphDrawer";
 import { useInventoryGraph } from "@/modules/inventory-core/hooks/useInventoryGraph";
 import { useGrDrawer } from "@/modules/goods-receipts-core/hooks/useGrDrawer";
@@ -156,6 +159,7 @@ export function OperationalInventoryPage({
   const [poOpen, setPoOpen] = useState(false);
   const [editingPo, setEditingPo] = useState<ErpProductionOrder | null>(null);
   const [viewOnlyPo, setViewOnlyPo] = useState(false);
+  const [customFieldsDrawerOpen, setCustomFieldsDrawerOpen] = useState(false);
 
   const poDrawer = useProductionOrderDrawer({
     open: poOpen,
@@ -248,19 +252,16 @@ export function OperationalInventoryPage({
         listClassName="h-8 p-0.5 rounded-full bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/60 shadow-[0_1px_2px_rgba(15,23,42,.03)]"
         triggerClassName="h-7 px-3 text-xs rounded-full"
         items={[
-          { value: "ALL", label: t("common.all", "Tất cả") },
+          { value: "ALL", label: t("inventory.tabs.all", "Tất cả") },
           {
             value: "IN_STOCK",
-            label: t("inventory.stockInStock", "Còn tồn kho"),
+            label: t("inventory.tabs.inStock", "Còn tồn kho"),
           },
           {
             value: "OUT_OF_STOCK",
-            label: t("inventory.stockOutOfStock", "Hết hàng"),
+            label: t("inventory.tabs.outOfStock", "Hết hàng"),
           },
-          {
-            value: "NEGATIVE",
-            label: t("inventory.stockNegative", "Tồn âm"),
-          },
+          { value: "NEGATIVE", label: t("inventory.tabs.negative", "Tồn âm") },
         ]}
         value={stockTab}
         onValueChange={handleStockTabChange}
@@ -320,61 +321,67 @@ export function OperationalInventoryPage({
       reserved_qty: fmtQty(totalReserved),
       stock_value: fmtQty(totalStockValue),
     };
-  }, [stockItems, t]);
+  }, [stockItems]);
+
+  const createActions = useMemo(
+    () => [
+      {
+        groupLabel: t("common.groupThaoTac", "Thao tác"),
+        items: [
+          {
+            label: t("inventory.action.create", "Tạo mới mặt hàng"),
+            icon: <Plus className="h-4 w-4 text-emerald-600" />,
+            onClick: onOpenCreateItem,
+          },
+          {
+            label: t("common.exportExcel", "Xuất Excel"),
+            icon: <FileSpreadsheet className="h-4 w-4 text-green-600" />,
+            onClick: handleExportExcel,
+          },
+        ],
+      },
+      {
+        groupLabel: t("common.groupConfig", "Cấu hình"),
+        items: [
+          {
+            label: t("inventory.configItem", "Cấu hình mặt hàng kho"),
+            icon: <Settings className="h-4 w-4 text-muted-foreground" />,
+            onClick: () => setCustomFieldsDrawerOpen(true),
+          },
+        ],
+      },
+    ],
+    [t, onOpenCreateItem, handleExportExcel],
+  );
 
   return (
     <SpreadsheetPageTemplate
-      title={t("inventory.tabStock")}
-      desc={t("inventory.descStock")}
-      icon={<Package className="h-5 w-5" />}
+      title={t("inventory.title", "Tồn kho")}
+      desc={t(
+        "inventory.desc",
+        "Tổng hợp và theo dõi số lượng tồn kho của các mặt hàng.",
+      )}
+      icon={<Package className="h-5 w-5 text-primary" />}
       tableId="inventory-stock-table"
       loading={loading}
       error={error}
       items={stockItems}
       columns={stockColumns}
-      getRowKey={(row: InventoryStockRow) =>
-        `${row.inventory_item_id}-${row.branch_id || "all"}`
-      }
-      getRowClassName={(item: InventoryStockRow) => {
-        const s = (item.status || "").toUpperCase();
-        if (
-          s === "INACTIVE" ||
-          s === "CANCELLED" ||
-          s === "CANCELED" ||
-          s === "VOID" ||
-          s.includes("HỦY")
-        ) {
-          return "opacity-40 text-muted-foreground";
-        }
-        return undefined;
-      }}
-      emptyLabel={t("Chưa có tồn kho.")}
+      getRowKey={(row: InventoryStockRow) => row.inventory_item_id}
+      minWidth={1100}
       page={page}
       pageSize={pageSize}
       total={total}
       totalPages={totalPages}
-      onPage={setPage}
-      onPageSize={(size: number) => {
-        setPageSize(size);
-        setPage(1);
-      }}
+      onPage={(p) => setPage(p)}
+      onPageSize={(s) => setPageSize(s)}
       onRefresh={onRefetch}
       onCreate={onOpenCreateItem}
-      createLabel={t("common.create", "Tạo mới")}
-      createActions={[
-        {
-          groupLabel: t("groupTraCuu", "Tra cứu"),
-          items: [
-            {
-              label: t("inventory.exportExcel", "Xuất Excel Bảng kê"),
-              icon: <Download className="w-4 h-4 text-emerald-600" />,
-              onClick: handleExportExcel,
-            },
-          ],
-        },
-      ]}
-      customActionsNode={customActionsNode}
+      createLabel={t("inventory.btnCreate", "Tạo mới")}
+      createActions={createActions}
       bulkActionsNode={bulkActionsNode}
+      customActionsNode={customActionsNode}
+      enableRowContextMenu={true}
       activeFilterCount={tableState.activeFilterCount || 0}
       onClearAllFilters={handleClearAllFilters}
       enableRowSelection={false}
@@ -481,6 +488,18 @@ export function OperationalInventoryPage({
                 : []),
           ],
         },
+        {
+          groupLabel: t("common.groupConfig", "Cấu hình"),
+          items: [
+            {
+              label: t("inventory.configItem", "Cấu hình mặt hàng kho"),
+              icon: <Settings className="h-3.5 w-3.5 text-muted-foreground" />,
+              onClick: () => {
+                setCustomFieldsDrawerOpen(true);
+              },
+            },
+          ],
+        },
       ]}
       summaryRow={summaryRow}
     >
@@ -560,6 +579,12 @@ export function OperationalInventoryPage({
           onResetDefault={onResetDefaultViewPreset}
         />
       )}
+
+      <ModuleCustomFieldConfigDrawer
+        open={customFieldsDrawerOpen}
+        onClose={() => setCustomFieldsDrawerOpen(false)}
+        initialTab="INVENTORY_ITEM"
+      />
     </SpreadsheetPageTemplate>
   );
 }
