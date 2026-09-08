@@ -317,13 +317,17 @@ export function useAmountColumns({
           />
         ),
         size: 150,
-        headerClassName: "text-right bg-blue-50/50 border-l border-blue-200",
-        className: "text-right bg-blue-50/50 border-l border-blue-200",
+        headerClassName:
+          "text-right border-l border-slate-200 dark:border-zinc-700 bg-slate-50 dark:bg-[color:var(--muted)]",
+        className:
+          "text-right border-l border-slate-200 dark:border-zinc-700 bg-slate-50 dark:bg-[color:var(--muted)]",
         cell: (inv: any) => {
           const netOff = parseFloat(inv.netOffAmount) || 0;
           if (netOff === 0) return "--";
           return (
-            <span className="text-blue-600">{fmtAmt(inv.netOffAmount)}</span>
+            <span className="text-[color:var(--up-fg)] dark:text-[color:var(--up-fg)]">
+              {fmtAmt(inv.netOffAmount)}
+            </span>
           );
         },
       },
@@ -353,16 +357,17 @@ export function useAmountColumns({
           />
         ),
         size: 120,
-        headerClassName: "text-center bg-blue-50/50",
-        className: "text-right font-semibold bg-blue-50/50",
+        headerClassName: "text-center bg-slate-50 dark:bg-[color:var(--muted)]",
+        className:
+          "text-right font-semibold bg-slate-50 dark:bg-[color:var(--muted)]",
         cell: (inv: any) => {
           const total = parseFloat(inv.totalAmount) || 0;
           const netOff = parseFloat(inv.netOffAmount) || 0;
           const remaining = total - netOff;
           if (remaining === 0)
-            return <span className="text-emerald-600">0</span>;
+            return <span className="text-[color:var(--up-fg)]">0</span>;
           return (
-            <span className="text-slate-700">
+            <span className="text-slate-700 dark:text-[color:var(--foreground)]">
               {fmtAmt(remaining.toString())}
             </span>
           );

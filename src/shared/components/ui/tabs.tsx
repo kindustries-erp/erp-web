@@ -113,7 +113,7 @@ const TabsList = React.forwardRef<
         role="presentation"
         aria-hidden="true"
         data-tabs-indicator
-        className="pointer-events-none absolute top-1 bottom-1 left-0 rounded-full bg-white shadow-sm will-change-[left,width] z-0"
+        className="pointer-events-none absolute top-1 bottom-1 left-0 rounded-full bg-white dark:bg-[color:var(--surface)] shadow-[0_1px_2px_rgba(0,0,0,0.08),0_0_0_1px_rgba(0,0,0,0.04)] dark:shadow-[0_1px_2px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,255,255,0.06)_inset] will-change-[left,width] z-0"
         style={{ width: 0, opacity: 0 }}
       />
     </TabsPrimitive.List>

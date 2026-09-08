@@ -53,7 +53,7 @@ export function UserMenuPopover({
       {/* Main menu */}
       <div className="w-56 p-1.5">
         {/* User info header */}
-        <div className="px-2.5 py-2.5 flex items-center gap-2.5 border-b border-black/5 mb-1">
+        <div className="px-2.5 py-2.5 flex items-center gap-2.5 border-b border-[color:var(--border)] mb-1">
           <div className="w-8 h-8 min-w-[32px] bg-primary rounded-full flex items-center justify-center text-primary-fg text-[10px] font-semibold flex-shrink-0">
             {displayName
               .split(" ")
@@ -63,11 +63,11 @@ export function UserMenuPopover({
               .join("")}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-xs font-medium text-foreground truncate">
+            <p className="text-xs font-medium text-foreground dark:text-zinc-100 truncate">
               {displayName}
             </p>
             {email && (
-              <p className="text-[10px] text-[color:var(--muted-fg)] truncate">
+              <p className="text-[10px] text-[color:var(--foreground)] dark:text-zinc-400 dark:opacity-100 opacity-70 truncate">
                 {email}
               </p>
             )}
@@ -81,7 +81,7 @@ export function UserMenuPopover({
               setOpen(false);
               onOpenProfile();
             }}
-            className="w-full flex items-center gap-2.5 px-2.5 py-2 text-xs text-[color:var(--muted-fg)] hover:bg-black/5 hover:text-foreground rounded-lg border-none bg-transparent cursor-pointer text-left"
+            className="w-full flex items-center gap-2.5 px-2.5 py-2 text-xs text-[color:var(--foreground)] dark:text-zinc-200 dark:opacity-100 opacity-75 hover:opacity-100 hover:bg-[color:var(--popup-bg-hover)] hover:text-foreground rounded-lg border-none bg-transparent cursor-pointer text-left"
           >
             <svg
               width="14"
@@ -105,7 +105,7 @@ export function UserMenuPopover({
               setOpen(false);
               onOpenSettings();
             }}
-            className="w-full flex items-center gap-2.5 px-2.5 py-2 text-xs text-[color:var(--muted-fg)] hover:bg-black/5 hover:text-foreground rounded-lg border-none bg-transparent cursor-pointer text-left"
+            className="w-full flex items-center gap-2.5 px-2.5 py-2 text-xs text-[color:var(--foreground)] dark:text-zinc-200 dark:opacity-100 opacity-75 hover:opacity-100 hover:bg-[color:var(--popup-bg-hover)] hover:text-foreground rounded-lg border-none bg-transparent cursor-pointer text-left"
           >
             <svg
               width="14"
@@ -122,7 +122,7 @@ export function UserMenuPopover({
           </button>
         )}
 
-        <div className="my-1 border-t border-black/5" />
+        <div className="my-1 border-t border-[color:var(--border)]" />
 
         {/* Appearance */}
         <button
@@ -132,8 +132,8 @@ export function UserMenuPopover({
           className={cn(
             "w-full flex items-center justify-between px-2.5 py-2 text-xs rounded-lg border-none cursor-pointer bg-transparent text-left",
             subMenu === "appearance"
-              ? "bg-black/5 text-foreground"
-              : "text-[color:var(--muted-fg)] hover:bg-black/5 hover:text-foreground",
+              ? "bg-[color:var(--popup-bg-hover)] text-foreground dark:text-zinc-100"
+              : "text-[color:var(--foreground)] dark:text-zinc-200 dark:opacity-100 opacity-75 hover:opacity-100 hover:bg-[color:var(--popup-bg-hover)] hover:text-foreground",
           )}
         >
           <span className="flex items-center gap-2.5">
@@ -150,7 +150,7 @@ export function UserMenuPopover({
             </svg>
             <span>{t("nav.bottom.themeStyle")}</span>
           </span>
-          <span className="flex items-center gap-1 text-[10px] text-[color:var(--faint)]">
+          <span className="flex items-center gap-1 text-[10px] text-[color:var(--foreground)] dark:text-zinc-400 dark:opacity-100 opacity-75">
             <span>{t(currentThemeLabel)}</span>
             <svg
               width="10"
@@ -171,8 +171,8 @@ export function UserMenuPopover({
           className={cn(
             "w-full flex items-center justify-between px-2.5 py-2 text-xs rounded-lg border-none cursor-pointer bg-transparent text-left",
             subMenu === "language"
-              ? "bg-black/5 text-foreground"
-              : "text-[color:var(--muted-fg)] hover:bg-black/5 hover:text-foreground",
+              ? "bg-[color:var(--popup-bg-hover)] text-foreground dark:text-zinc-100"
+              : "text-[color:var(--foreground)] dark:text-zinc-200 dark:opacity-100 opacity-75 hover:opacity-100 hover:bg-[color:var(--popup-bg-hover)] hover:text-foreground",
           )}
         >
           <span className="flex items-center gap-2.5">
@@ -188,7 +188,7 @@ export function UserMenuPopover({
             </svg>
             <span>{t("nav.bottom.languageLabel")}</span>
           </span>
-          <span className="flex items-center gap-1 text-[10px] text-[color:var(--faint)]">
+          <span className="flex items-center gap-1 text-[10px] text-[color:var(--foreground)] dark:text-zinc-400 dark:opacity-100 opacity-75">
             <span>{currentLocaleLabel}</span>
             <svg
               width="10"
@@ -204,10 +204,10 @@ export function UserMenuPopover({
         </button>
 
         {/* Divider + Sign out */}
-        <div className="my-1 border-t border-black/5" />
+        <div className="my-1 border-t border-[color:var(--border)]" />
         <button
           onClick={logoutAction}
-          className="w-full flex items-center gap-2.5 px-2.5 py-2 text-xs text-[color:var(--muted-fg)] hover:bg-black/5 hover:text-foreground rounded-lg border-none bg-transparent cursor-pointer text-left"
+          className="w-full flex items-center gap-2.5 px-2.5 py-2 text-xs text-[color:var(--foreground)] dark:text-zinc-200 dark:opacity-100 opacity-75 hover:opacity-100 hover:bg-[color:var(--popup-bg-hover)] hover:text-foreground rounded-lg border-none bg-transparent cursor-pointer text-left"
         >
           <svg
             width="14"
@@ -230,7 +230,7 @@ export function UserMenuPopover({
             setOpen(false);
             onOpenChangelog?.();
           }}
-          className="w-full mt-2 py-1 px-2 rounded-md hover:bg-black/5 dark:hover:bg-white/10 transition-all flex items-center justify-center gap-1.5 text-[9px] font-semibold text-[color:var(--muted-fg)] hover:text-primary tracking-wider uppercase border-none bg-transparent cursor-pointer group"
+          className="w-full mt-2 py-1 px-2 rounded-md hover:bg-[color:var(--popup-bg-hover)] dark:hover:bg-[color:var(--popup-bg-hover)] transition-all flex items-center justify-center gap-1.5 text-[9px] font-semibold text-[color:var(--foreground)] dark:text-zinc-300 dark:opacity-100 opacity-75 hover:opacity-100 hover:text-primary tracking-wider uppercase border-none bg-transparent cursor-pointer group"
           title={t("changelog.viewReleaseHistory") || "Xem nhật ký phát hành"}
         >
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
@@ -251,8 +251,8 @@ export function UserMenuPopover({
 
       {/* Side sub-menu panel */}
       {subMenu && (
-        <div className="w-44 p-1.5 border-l border-black/5">
-          <p className="px-2.5 py-1.5 text-[10px] font-medium text-[color:var(--muted-fg)] uppercase tracking-wide">
+        <div className="w-44 p-1.5 border-l border-[color:var(--border)]">
+          <p className="px-2.5 py-1.5 text-[10px] font-medium text-[color:var(--foreground)] dark:text-zinc-400 dark:opacity-100 opacity-70 uppercase tracking-wide">
             {subMenu === "appearance"
               ? t("nav.bottom.themeStyle")
               : t("nav.bottom.languageLabel")}
@@ -265,8 +265,8 @@ export function UserMenuPopover({
                 className={cn(
                   "w-full flex items-center justify-between px-2.5 py-1.5 text-xs rounded-lg border-none cursor-pointer bg-transparent text-left",
                   appTheme === opt.value
-                    ? "bg-black/5 text-foreground font-medium"
-                    : "text-[color:var(--muted-fg)] hover:bg-black/5 hover:text-foreground",
+                    ? "bg-[color:var(--popup-bg-hover)] text-foreground dark:text-zinc-100 font-medium"
+                    : "text-[color:var(--foreground)] dark:text-zinc-200 dark:opacity-100 opacity-75 hover:opacity-100 hover:bg-[color:var(--popup-bg-hover)] hover:text-foreground",
                 )}
               >
                 <span>{t(opt.labelKey)}</span>
@@ -293,8 +293,8 @@ export function UserMenuPopover({
                 className={cn(
                   "w-full flex items-center justify-between px-2.5 py-1.5 text-xs rounded-lg border-none cursor-pointer bg-transparent text-left",
                   locale === opt.code
-                    ? "bg-black/5 text-foreground font-medium"
-                    : "text-[color:var(--muted-fg)] hover:bg-black/5 hover:text-foreground",
+                    ? "bg-[color:var(--popup-bg-hover)] text-foreground dark:text-zinc-100 font-medium"
+                    : "text-[color:var(--foreground)] dark:text-zinc-200 dark:opacity-100 opacity-75 hover:opacity-100 hover:bg-[color:var(--popup-bg-hover)] hover:text-foreground",
                 )}
               >
                 <span className="flex items-center gap-1.5">

@@ -44,14 +44,13 @@ export function PillTabs<T extends string = string>({
       <div
         className={cn(
           "flex flex-wrap items-center justify-between gap-3",
-          !hideBorder &&
-            "border-b border-slate-200/80 dark:border-slate-800 pb-2.5",
+          !hideBorder && "border-b border-[color:var(--border)] pb-2.5",
           headerClassName,
         )}
       >
         <TabsList
           className={cn(
-            "h-10 rounded-full bg-slate-100/80 dark:bg-slate-800/80 shadow-[0_1px_2px_rgba(15,23,42,.03),0_6px_18px_-14px_rgba(15,23,42,.08)] p-1 gap-2 border border-slate-200/60 dark:border-slate-700/60",
+            "h-10 rounded-full bg-[color:var(--muted)] shadow-[0_1px_2px_rgba(15,23,42,.03),0_6px_18px_-14px_rgba(15,23,42,.08)] p-1 gap-2 border border-[color:var(--border)]",
             listClassName,
           )}
         >
@@ -64,8 +63,8 @@ export function PillTabs<T extends string = string>({
                 disabled={tab.disabled}
                 className={cn(
                   "group relative shrink-0 rounded-full px-4 h-full gap-0 transition-[color,background-color,box-shadow,transform] duration-150 ease-out cursor-pointer",
-                  "data-[state=inactive]:text-slate-500 data-[state=inactive]:font-medium hover:text-slate-700 dark:data-[state=inactive]:text-slate-400 dark:hover:text-slate-200",
-                  "data-[state=active]:text-slate-900 data-[state=active]:font-semibold dark:data-[state=active]:text-white whitespace-nowrap",
+                  "data-[state=inactive]:text-[color:var(--muted-fg)] data-[state=inactive]:font-medium hover:text-[color:var(--foreground)]",
+                  "data-[state=active]:text-[color:var(--foreground)] data-[state=active]:font-semibold whitespace-nowrap",
                   triggerClassName,
                 )}
               >

@@ -64,15 +64,15 @@ describe("Button component", () => {
   it("applies danger variant classes", () => {
     render(<Button variant="danger">Delete</Button>);
     const btn = screen.getByRole("button");
-    expect(btn.className).toContain("bg-red-500");
+    expect(btn.className).toContain("bg-[color:var(--down-fg)]");
     expect(btn.className).toContain("text-white");
   });
 
   it("applies danger-outline variant classes", () => {
     render(<Button variant="danger-outline">Remove</Button>);
     const btn = screen.getByRole("button");
-    expect(btn.className).toContain("text-red-600");
-    expect(btn.className).toContain("border-red-200");
+    expect(btn.className).toContain("text-[color:var(--down-fg)]");
+    expect(btn.className).toContain("border-[color:var(--down-fg)]/40");
   });
 
   it("applies link variant classes", () => {

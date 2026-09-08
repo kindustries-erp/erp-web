@@ -54,7 +54,7 @@
 .form-input:focus,
 .form-select:focus,
 .form-textarea:focus {
-  border-color: #94a3b8;
+  border-color: var(--faint, #71717a);
 }
 
 .form-input.readonly {
@@ -158,6 +158,28 @@
   color: var(--muted-fg);
 }
 
+/* ── Midnight: sidebar popup content (neutral frosted glass) ── */
+.theme-midnight .sidebar-popup-content {
+  background: rgba(24, 24, 27, 0.88);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid #3f3f46;
+  color: #f4f4f5;
+}
+.theme-midnight .sidebar-popup-content .hover\:bg-surface-hover:hover,
+.theme-midnight
+  .sidebar-popup-content
+  .data-\[highlighted\]\:bg-\[color\:var\(--popup-bg-hover\)\][data-highlighted],
+.theme-midnight
+  .sidebar-popup-content
+  .data-\[highlighted\]\:bg-\[color\:var\(--muted\)\][data-highlighted] {
+  background: #27272a !important;
+  color: #ffffff !important;
+}
+.theme-midnight .sidebar-popup-content .text-\[color\:var\(--muted-fg\)\] {
+  color: #a1a1aa;
+}
+
 /* ── Context Menu ── */
 .context-menu {
   position: fixed;
@@ -192,6 +214,18 @@
 }
 .context-menu-item:hover {
   background: rgba(0, 0, 0, 0.05);
+}
+.theme-midnight .context-menu-item {
+  color: #e5ebf3;
+}
+.theme-midnight .context-menu-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+.theme-midnight .context-menu {
+  box-shadow:
+    0 16px 40px -8px rgba(0, 0, 0, 0.55),
+    0 4px 12px rgba(0, 0, 0, 0.35),
+    0 0 0 1px rgba(255, 255, 255, 0.06) inset;
 }
 
 @keyframes slideDownAndFadeCustom {
