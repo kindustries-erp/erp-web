@@ -273,8 +273,11 @@ export function useErpInvoicesTabLogic({
   const urlSync = useErpInvoiceUrlSync({
     direction,
     instanceIndex,
-    openDrawer: (id) => {
+    openDrawer: (id, mode) => {
       formHook.openInternal(id);
+      if (mode === "edit") {
+        formHook.setEditMode(true);
+      }
     },
     closeDrawer: () => {
       formHook.closeDrawer();

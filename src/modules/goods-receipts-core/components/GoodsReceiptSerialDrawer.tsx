@@ -78,12 +78,26 @@ export function GoodsReceiptSerialDrawer({
   const [isValidating, setIsValidating] = useState(false);
   const [dbDuplicates, setDbDuplicates] = useState<string[]>([]);
 
+  const isVehicle = trackingPolicyCode === "VEHICLE";
+
   useEffect(() => {
     if (open) {
       setMode(viewOnly ? "view" : "edit");
       setSerials(
         initialSerials && initialSerials.length > 0
-          ? initialSerials.map((s) => ({ ...s }))
+          ? initialSerials.map((s) => ({
+              ...s,
+              vinNo: s.vinNo || s.attributes?.vinNo || "",
+              engineNo: s.engineNo || s.attributes?.engineNo || "",
+              serialNo:
+                s.serialNo ||
+                s.attributes?.serialNo ||
+                s.attributes?.vehicleSerialNo ||
+                "",
+              internalSerialNo:
+                s.internalSerialNo || s.attributes?.internalSerialNo || "",
+              notes: s.notes || "",
+            }))
           : [],
       );
       setDbDuplicates([]);
@@ -92,20 +106,41 @@ export function GoodsReceiptSerialDrawer({
     }
   }, [open, viewOnly, initialSerials]);
 
-  // Internal duplicates detection
+  // Internal duplicates detection for all key fields
   const internalDuplicates = useMemo(() => {
-    const counts = new Map<string, number>();
+    const vinCounts = new Map<string, number>();
+    const engCounts = new Map<string, number>();
+    const serCounts = new Map<string, number>();
+    const iSerCounts = new Map<string, number>();
+
     serials.forEach((s) => {
-      const trimmed = s.serialNo?.trim().toUpperCase();
-      if (trimmed) {
-        counts.set(trimmed, (counts.get(trimmed) || 0) + 1);
-      }
+      const vin = s.vinNo?.trim().toUpperCase();
+      if (vin) vinCounts.set(vin, (vinCounts.get(vin) || 0) + 1);
+
+      const eng = s.engineNo?.trim().toUpperCase();
+      if (eng) engCounts.set(eng, (engCounts.get(eng) || 0) + 1);
+
+      const ser = s.serialNo?.trim().toUpperCase();
+      if (ser) serCounts.set(ser, (serCounts.get(ser) || 0) + 1);
+
+      const iSer = s.internalSerialNo?.trim().toUpperCase();
+      if (iSer) iSerCounts.set(iSer, (iSerCounts.get(iSer) || 0) + 1);
     });
-    const dupes = new Set<string>();
-    counts.forEach((count, key) => {
-      if (count > 1) dupes.add(key);
-    });
-    return dupes;
+
+    const getDupes = (map: Map<string, number>) => {
+      const set = new Set<string>();
+      map.forEach((count, key) => {
+        if (count > 1) set.add(key);
+      });
+      return set;
+    };
+
+    return {
+      vins: getDupes(vinCounts),
+      engines: getDupes(engCounts),
+      serials: getDupes(serCounts),
+      internalSerials: getDupes(iSerCounts),
+    };
   }, [serials]);
 
   // Handle single serial field update
@@ -133,7 +168,30 @@ export function GoodsReceiptSerialDrawer({
       });
       return;
     }
-    setSerials((prev) => [...prev, { serialNo: "", notes: "" }]);
+
+    const nextIdx = serials.length + 1;
+    const cleanSku = (itemSku || "ITEM").replace(/[^a-zA-Z0-9_-]/g, "");
+    const now = new Date();
+    const yy = String(now.getFullYear()).slice(-2);
+    const mm = String(now.getMonth() + 1).padStart(2, "0");
+    const dd = String(now.getDate()).padStart(2, "0");
+    const dateStr = `${yy}${mm}${dd}`;
+    const padIndex = String(nextIdx).padStart(3, "0");
+
+    if (isVehicle) {
+      setSerials((prev) => [
+        ...prev,
+        {
+          vinNo: "",
+          engineNo: "",
+          serialNo: "",
+          internalSerialNo: `SN-${cleanSku}-${dateStr}-${padIndex}`,
+          notes: "",
+        },
+      ]);
+    } else {
+      setSerials((prev) => [...prev, { serialNo: "", notes: "" }]);
+    }
   };
 
   // Remove row
@@ -147,8 +205,48 @@ export function GoodsReceiptSerialDrawer({
     setDbDuplicates([]);
   };
 
-  // Auto generate serials (OVERWRITE current list with exact requiredQty)
+  // Auto generate serials / vehicle attributes (OVERWRITE current list with exact requiredQty)
   const handleAutoGenerate = async () => {
+    const qty = Math.max(1, requiredQty);
+    const cleanSku = (itemSku || "ITEM").replace(/[^a-zA-Z0-9_-]/g, "");
+    const now = new Date();
+    const yy = String(now.getFullYear()).slice(-2);
+    const mm = String(now.getMonth() + 1).padStart(2, "0");
+    const dd = String(now.getDate()).padStart(2, "0");
+    const dateStr = `${yy}${mm}${dd}`;
+
+    if (isVehicle) {
+      const newRows: ErpGrDeclaredSerial[] = Array.from(
+        { length: qty },
+        (_, i) => {
+          const pad = String(i + 1).padStart(3, "0");
+          return {
+            vinNo: `VIN-${cleanSku}-${dateStr}-${pad}`,
+            engineNo: `ENG-${cleanSku}-${dateStr}-${pad}`,
+            serialNo: `SER-${cleanSku}-${dateStr}-${pad}`,
+            internalSerialNo: `SN-${cleanSku}-${dateStr}-${pad}`,
+            notes: "",
+            attributes: {
+              vinNo: `VIN-${cleanSku}-${dateStr}-${pad}`,
+              engineNo: `ENG-${cleanSku}-${dateStr}-${pad}`,
+              vehicleSerialNo: `SER-${cleanSku}-${dateStr}-${pad}`,
+              internalSerialNo: `SN-${cleanSku}-${dateStr}-${pad}`,
+            },
+          };
+        },
+      );
+      setSerials(newRows);
+      setDbDuplicates([]);
+      showToast({
+        title: t(
+          "inventory.serialsGenerated",
+          `Đã tự động sinh ${newRows.length} bộ thông tin xe (Số khung, Số máy, Serial xe, Serial nội bộ)`,
+        ),
+        variant: "success",
+      });
+      return;
+    }
+
     if (!itemId) {
       showToast({
         title: t(
@@ -159,7 +257,6 @@ export function GoodsReceiptSerialDrawer({
       });
       return;
     }
-    const qty = Math.max(1, requiredQty);
 
     try {
       setIsGenerating(true);
@@ -200,19 +297,52 @@ export function GoodsReceiptSerialDrawer({
   // Download Excel template
   const handleDownloadTemplate = () => {
     const prefix = itemSku ? itemSku.replace(/[^a-zA-Z0-9_-]/g, "") : "ITEM";
-    const sampleRows = [
-      ["Số serial (*)", "Ghi chú"],
-      [`SN-${prefix}-00001`, "Hàng mới 100%"],
-      [`SN-${prefix}-00002`, ""],
-      [`SN-${prefix}-00003`, ""],
-    ];
+
+    let headers: string[];
+    let sampleRows: any[][];
+    let fileName: string;
+
+    if (isVehicle) {
+      headers = [
+        "Số khung (VIN) (*)",
+        "Số máy (*)",
+        "Số Serial xe (*)",
+        "Số Serial nội bộ (*)",
+        "Ghi chú",
+      ];
+      sampleRows = [
+        headers,
+        [
+          `VIN-${prefix}-00001`,
+          `ENG-${prefix}-00001`,
+          `SER-${prefix}-00001`,
+          `SN-${prefix}-00001`,
+          "Xe tiêu chuẩn",
+        ],
+        [
+          `VIN-${prefix}-00002`,
+          `ENG-${prefix}-00002`,
+          `SER-${prefix}-00002`,
+          `SN-${prefix}-00002`,
+          "",
+        ],
+      ];
+      fileName = `Mau_Khai_Bao_Xe_${prefix}.xlsx`;
+    } else {
+      headers = ["Số serial (*)", "Ghi chú"];
+      sampleRows = [
+        headers,
+        [`SN-${prefix}-00001`, "Hàng mới 100%"],
+        [`SN-${prefix}-00002`, ""],
+        [`SN-${prefix}-00003`, ""],
+      ];
+      fileName = `Mau_Khai_Bao_Serial_${prefix}.xlsx`;
+    }
 
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.aoa_to_sheet(sampleRows);
-    ws["!cols"] = [{ wch: 30 }, { wch: 30 }];
-    XLSX.utils.book_append_sheet(wb, ws, "Mau_Khai_Bao_Serial");
-
-    const fileName = `Mau_Khai_Bao_Serial_${itemSku || "Items"}.xlsx`;
+    ws["!cols"] = headers.map(() => ({ wch: 25 }));
+    XLSX.utils.book_append_sheet(wb, ws, "Mau_Khai_Bao");
     XLSX.writeFile(wb, fileName);
 
     showToast({
@@ -231,29 +361,72 @@ export function GoodsReceiptSerialDrawer({
       return;
     }
 
-    const tokens = bulkText
-      .split(/[\r\n,;]+/)
+    const lines = bulkText
+      .split(/[\r\n]+/)
       .map((s) => s.trim())
       .filter(Boolean);
 
-    if (tokens.length === 0) {
+    if (lines.length === 0) {
       setIsBulkPasteOpen(false);
       return;
     }
 
+    const newRows: ErpGrDeclaredSerial[] = [];
+    lines.forEach((line) => {
+      const cols = line.includes("\t")
+        ? line.split("\t").map((c) => c.trim())
+        : line.includes(",")
+          ? line.split(",").map((c) => c.trim())
+          : [line];
+
+      if (isVehicle) {
+        if (cols.length >= 4) {
+          newRows.push({
+            vinNo: cols[0],
+            engineNo: cols[1],
+            serialNo: cols[2],
+            internalSerialNo: cols[3],
+            notes: cols[4] || "",
+            attributes: {
+              vinNo: cols[0],
+              engineNo: cols[1],
+              vehicleSerialNo: cols[2],
+              internalSerialNo: cols[3],
+            },
+          });
+        } else if (cols.length === 2) {
+          newRows.push({
+            vinNo: cols[0],
+            engineNo: cols[1],
+            serialNo: "",
+            internalSerialNo: "",
+            notes: "",
+          });
+        } else {
+          newRows.push({
+            vinNo: cols[0],
+            engineNo: "",
+            serialNo: "",
+            internalSerialNo: "",
+            notes: "",
+          });
+        }
+      } else {
+        newRows.push({
+          serialNo: cols[0],
+          notes: cols[1] || "",
+        });
+      }
+    });
+
     const maxAllowed = Math.max(0, requiredQty - serials.length);
-    const validTokens = maxAllowed > 0 ? tokens.slice(0, maxAllowed) : tokens;
+    const validRows = maxAllowed > 0 ? newRows.slice(0, maxAllowed) : newRows;
 
-    const newRows: ErpGrDeclaredSerial[] = validTokens.map((token) => ({
-      serialNo: token,
-      notes: "",
-    }));
-
-    setSerials((prev) => [...prev, ...newRows]);
+    setSerials((prev) => [...prev, ...validRows]);
     setBulkText("");
     setIsBulkPasteOpen(false);
     showToast({
-      title: t("inventory.serialsAdded", `Đã thêm ${newRows.length} mã serial`),
+      title: t("inventory.serialsAdded", `Đã thêm ${validRows.length} dòng`),
       variant: "success",
     });
   };
@@ -274,24 +447,72 @@ export function GoodsReceiptSerialDrawer({
 
         const newRows: ErpGrDeclaredSerial[] = [];
         data.forEach((row: any) => {
-          const serial =
+          const vin =
+            row["Số khung (VIN) (*)"] ||
+            row["Số khung (VIN)"] ||
+            row["Số khung"] ||
+            row["VIN"] ||
+            row["vinNo"] ||
+            "";
+
+          const engine =
+            row["Số máy (*)"] ||
+            row["Số máy"] ||
+            row["Engine No"] ||
+            row["engineNo"] ||
+            "";
+
+          const vSerial =
+            row["Số Serial xe (*)"] ||
+            row["Số Serial xe (tùy chọn)"] ||
+            row["Số Serial xe"] ||
+            row["Serial xe"] ||
+            row["vehicleSerialNo"] ||
+            "";
+
+          const iSerial =
+            row["Số Serial nội bộ (*)"] ||
+            row["Số Serial nội bộ"] ||
+            row["Serial nội bộ"] ||
+            row["internalSerialNo"] ||
+            "";
+
+          const generalSerial =
             row["Số serial (*)"] ||
             row["Số serial"] ||
             row["Serial"] ||
             row["Serial No"] ||
             row["Mã Serial"] ||
-            row["VIN"] ||
-            row["Số khung"] ||
             row["serial_no"] ||
             Object.values(row)[0];
 
           const note = row["Ghi chú"] || row["Notes"] || "";
 
-          if (serial && String(serial).trim()) {
-            newRows.push({
-              serialNo: String(serial).trim(),
-              notes: note ? String(note).trim() : null,
-            });
+          if (isVehicle) {
+            if (vin || engine || vSerial || iSerial) {
+              newRows.push({
+                vinNo: String(vin || "").trim(),
+                engineNo: String(engine || "").trim(),
+                serialNo: String(vSerial || generalSerial || "").trim(),
+                internalSerialNo: String(iSerial || "").trim(),
+                notes: note ? String(note).trim() : null,
+                attributes: {
+                  vinNo: String(vin || "").trim(),
+                  engineNo: String(engine || "").trim(),
+                  vehicleSerialNo: String(
+                    vSerial || generalSerial || "",
+                  ).trim(),
+                  internalSerialNo: String(iSerial || "").trim(),
+                },
+              });
+            }
+          } else {
+            if (generalSerial && String(generalSerial).trim()) {
+              newRows.push({
+                serialNo: String(generalSerial).trim(),
+                notes: note ? String(note).trim() : null,
+              });
+            }
           }
         });
 
@@ -308,7 +529,7 @@ export function GoodsReceiptSerialDrawer({
           showToast({
             title: t(
               "inventory.excelImported",
-              `Đã nhập ${limitedRows.length} mã serial từ file Excel`,
+              `Đã nhập ${limitedRows.length} dòng từ file Excel`,
             ),
             variant: "success",
           });
@@ -316,7 +537,7 @@ export function GoodsReceiptSerialDrawer({
           showToast({
             title: t(
               "inventory.noSerialsInExcel",
-              "Không tìm thấy dữ liệu serial trong file",
+              "Không tìm thấy dữ liệu phù hợp trong file Excel",
             ),
             variant: "default",
           });
@@ -334,6 +555,127 @@ export function GoodsReceiptSerialDrawer({
 
   // Save / Validate
   const handleSave = async () => {
+    if (isVehicle) {
+      if (serials.length === 0 && requiredQty > 0) {
+        showToast({
+          title: t(
+            "inventory.noSerialsEntered",
+            "Chưa có thông tin xe nào được khai báo",
+          ),
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Validate 4 required fields for VEHICLE
+      for (let i = 0; i < serials.length; i++) {
+        const row = serials[i];
+        const missing: string[] = [];
+        if (!row.vinNo?.trim()) missing.push(t("Số khung (VIN)"));
+        if (!row.engineNo?.trim()) missing.push(t("Số máy"));
+        if (!row.serialNo?.trim()) missing.push(t("Số Serial xe"));
+        if (!row.internalSerialNo?.trim()) missing.push(t("Số Serial nội bộ"));
+
+        if (missing.length > 0) {
+          showToast({
+            title: t(
+              `Dòng #${i + 1} còn thiếu: ${missing.join(", ")} (Bắt buộc đủ 4 trường)`,
+            ),
+            variant: "destructive",
+          });
+          return;
+        }
+      }
+
+      // Check duplicates
+      if (
+        internalDuplicates.vins.size > 0 ||
+        internalDuplicates.engines.size > 0 ||
+        internalDuplicates.serials.size > 0 ||
+        internalDuplicates.internalSerials.size > 0
+      ) {
+        const dupMessages: string[] = [];
+        if (internalDuplicates.vins.size > 0)
+          dupMessages.push(t("Số khung (VIN)"));
+        if (internalDuplicates.engines.size > 0) dupMessages.push(t("Số máy"));
+        if (internalDuplicates.serials.size > 0)
+          dupMessages.push(t("Số Serial xe"));
+        if (internalDuplicates.internalSerials.size > 0)
+          dupMessages.push(t("Số Serial nội bộ"));
+
+        showToast({
+          title: t(
+            `Có thông tin bị trùng lặp trong danh sách: ${dupMessages.join(", ")}`,
+          ),
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Check against DB
+      try {
+        setIsValidating(true);
+        const checkList = serials
+          .map((s) => s.serialNo?.trim())
+          .filter(Boolean) as string[];
+
+        if (checkList.length > 0) {
+          const valRes = await goodsReceiptsCoreApi.validateSerials({
+            itemId,
+            serials: checkList,
+          });
+
+          if (!valRes.valid && valRes.dbDuplicates?.length > 0) {
+            setDbDuplicates(valRes.dbDuplicates);
+            showToast({
+              title: t(
+                "inventory.dbDuplicatesFound",
+                `Phát hiện ${valRes.dbDuplicates.length} mã serial xe đã tồn tại trong kho: ${valRes.dbDuplicates.join(", ")}`,
+              ),
+              variant: "destructive",
+            });
+            return;
+          }
+        }
+
+        setDbDuplicates([]);
+        const formattedRows: ErpGrDeclaredSerial[] = serials.map((r) => ({
+          serialNo: r.serialNo.trim(),
+          vinNo: r.vinNo?.trim() || null,
+          engineNo: r.engineNo?.trim() || null,
+          internalSerialNo: r.internalSerialNo?.trim() || null,
+          notes: r.notes?.trim() || null,
+          attributes: {
+            vinNo: r.vinNo?.trim() || "",
+            engineNo: r.engineNo?.trim() || "",
+            vehicleSerialNo: r.serialNo?.trim() || "",
+            internalSerialNo: r.internalSerialNo?.trim() || "",
+          },
+        }));
+
+        onSaveSerials(formattedRows);
+        showToast({
+          title: t(
+            "inventory.serialsSaved",
+            "Đã lưu đầy đủ thông tin định danh xe",
+          ),
+          variant: "success",
+        });
+        onClose();
+      } catch (err: any) {
+        showToast({
+          title:
+            err?.response?.data?.message ||
+            t("inventory.validationError", "Lỗi kiểm tra dữ liệu"),
+          variant: "destructive",
+        });
+      } finally {
+        setIsValidating(false);
+      }
+      return;
+    }
+
+    // Default Non-Vehicle Flow
     const validRows = serials.filter((s) => s.serialNo && s.serialNo.trim());
     if (validRows.length === 0 && requiredQty > 0) {
       showToast({
@@ -346,7 +688,7 @@ export function GoodsReceiptSerialDrawer({
       return;
     }
 
-    if (internalDuplicates.size > 0) {
+    if (internalDuplicates.serials.size > 0) {
       showToast({
         title: t(
           "inventory.internalDuplicatesFound",
@@ -422,10 +764,14 @@ export function GoodsReceiptSerialDrawer({
       mode={mode}
       onClose={onClose}
       onToggleEdit={viewOnly ? undefined : () => setMode("edit")}
-      title={t(
-        "inventory.serialDrawer.title",
-        "Khai báo Serial / Mã định danh",
-      )}
+      title={
+        isVehicle
+          ? t(
+              "Khai báo Định danh Xe (Số khung, Số máy, Serial)",
+              "Khai báo Định danh Xe",
+            )
+          : t("inventory.serialDrawer.title", "Khai báo Serial / Mã định danh")
+      }
       subtitle={`${itemSku} — ${itemName}`}
       titleExtra={
         <Badge
@@ -436,11 +782,12 @@ export function GoodsReceiptSerialDrawer({
         >
           {isComplete && <CheckCircle2 className="w-3 h-3 mr-1" />}
           {!isComplete && <AlertTriangle className="w-3 h-3 mr-1" />}
-          {serials.length}/{requiredQty} {t("inventory.serialsCount", "mã")}
+          {serials.length}/{requiredQty}{" "}
+          {isVehicle ? t("xe") : t("inventory.serialsCount", "mã")}
         </Badge>
       }
       layout="1-column"
-      size="lg"
+      size={isVehicle ? "xl" : "lg"}
       confirmOnClose={mode === "edit"}
       actions={actions}
       leftPanel={
@@ -495,10 +842,14 @@ export function GoodsReceiptSerialDrawer({
             <div className="p-4 bg-muted/40 border rounded-lg space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-semibold uppercase tracking-wider">
-                  {t(
-                    "inventory.bulkPasteTitle",
-                    "Dán nhanh danh sách Serial (Mỗi mã 1 dòng hoặc cách nhau dấu phẩy)",
-                  )}
+                  {isVehicle
+                    ? t(
+                        "Dán nhanh danh sách xe (Mỗi dòng: Số khung [tab/phẩy] Số máy [tab/phẩy] Serial xe [tab/phẩy] Serial nội bộ)",
+                      )
+                    : t(
+                        "inventory.bulkPasteTitle",
+                        "Dán nhanh danh sách Serial (Mỗi mã 1 dòng hoặc cách nhau dấu phẩy)",
+                      )}
                 </span>
                 <Button
                   size="sm"
@@ -511,7 +862,11 @@ export function GoodsReceiptSerialDrawer({
               </div>
               <textarea
                 className={`${inputCls} min-h-[120px] font-mono text-xs`}
-                placeholder={`SN-001\nSN-002\nSN-003`}
+                placeholder={
+                  isVehicle
+                    ? `VIN-001\tENG-001\tSER-001\tSN-001\nVIN-002\tENG-002\tSER-002\tSN-002`
+                    : `SN-001\nSN-002\nSN-003`
+                }
                 value={bulkText}
                 onChange={(e) => setBulkText(e.target.value)}
               />
@@ -536,10 +891,14 @@ export function GoodsReceiptSerialDrawer({
 
           {/* Serials Table Section */}
           <DrawerSection
-            title={t(
-              "inventory.serialListSection",
-              "Danh sách mã Serial / Định danh",
-            )}
+            title={
+              isVehicle
+                ? t("Danh sách định danh xe xuất xưởng")
+                : t(
+                    "inventory.serialListSection",
+                    "Danh sách mã Serial / Định danh",
+                  )
+            }
             titleExtra={
               mode === "edit" ? (
                 <div className="flex items-center gap-1.5 flex-wrap justify-end">
@@ -571,7 +930,9 @@ export function GoodsReceiptSerialDrawer({
                     <Sparkles className="w-3.5 h-3.5" />
                     {isGenerating
                       ? t("common.generating", "Đang sinh...")
-                      : t("inventory.autoGenerateBtn", "Tự động sinh mã")}
+                      : isVehicle
+                        ? t("Tự động sinh mã xe")
+                        : t("inventory.autoGenerateBtn", "Tự động sinh mã")}
                   </Button>
 
                   {/* Grouped Actions Dropdown */}
@@ -582,7 +943,9 @@ export function GoodsReceiptSerialDrawer({
                         groupLabel: t("TỰ ĐỘNG & HÀNG LOẠT"),
                         items: [
                           {
-                            label: t("Tự động sinh mã"),
+                            label: isVehicle
+                              ? t("Tự động sinh mã xe")
+                              : t("Tự động sinh mã"),
                             icon: <Sparkles className="w-4 h-4 text-primary" />,
                             onClick: handleAutoGenerate,
                           },
@@ -597,7 +960,9 @@ export function GoodsReceiptSerialDrawer({
                         groupLabel: t("EXCEL"),
                         items: [
                           {
-                            label: t("Tải file mẫu Excel"),
+                            label: isVehicle
+                              ? t("Tải file mẫu Excel xe")
+                              : t("Tải file mẫu Excel"),
                             icon: (
                               <Download className="w-4 h-4 text-emerald-600" />
                             ),
@@ -646,10 +1011,14 @@ export function GoodsReceiptSerialDrawer({
             {serials.length === 0 ? (
               <EmptyState
                 size="sm"
-                message={t(
-                  "inventory.noSerialsTitle",
-                  "Chưa có mã Serial nào được khai báo",
-                )}
+                message={
+                  isVehicle
+                    ? t("Chưa có thông tin xe nào được khai báo")
+                    : t(
+                        "inventory.noSerialsTitle",
+                        "Chưa có mã Serial nào được khai báo",
+                      )
+                }
                 description={t(
                   "inventory.noSerialsHint",
                   "Hãy bấm 'Thêm dòng', 'Tự động sinh mã' hoặc 'Dán nhanh' để bắt đầu.",
@@ -665,17 +1034,36 @@ export function GoodsReceiptSerialDrawer({
                         <TableHead className="sticky top-0 bg-transparent z-20 w-[40px] min-w-[40px] text-center border-r border-border py-2 px-3">
                           #
                         </TableHead>
-                        <TableHead className="sticky top-0 bg-transparent z-20 min-w-[220px] border-r border-border py-2 px-3">
-                          {t(
-                            "inventory.fields.serialNo",
-                            "Số Serial / Mã định danh",
-                          )}
-                        </TableHead>
-                        <TableHead className="sticky top-0 bg-transparent z-20 min-w-[160px] border-r border-border py-2 px-3">
+
+                        {isVehicle ? (
+                          <>
+                            <TableHead className="sticky top-0 bg-transparent z-20 min-w-[170px] border-r border-border py-2 px-3">
+                              {t("Số khung (VIN) *")}
+                            </TableHead>
+                            <TableHead className="sticky top-0 bg-transparent z-20 min-w-[160px] border-r border-border py-2 px-3">
+                              {t("Số máy *")}
+                            </TableHead>
+                            <TableHead className="sticky top-0 bg-transparent z-20 min-w-[150px] border-r border-border py-2 px-3">
+                              {t("Số Serial xe *")}
+                            </TableHead>
+                            <TableHead className="sticky top-0 bg-transparent z-20 min-w-[180px] border-r border-border py-2 px-3">
+                              {t("Số Serial nội bộ *")}
+                            </TableHead>
+                          </>
+                        ) : (
+                          <TableHead className="sticky top-0 bg-transparent z-20 min-w-[220px] border-r border-border py-2 px-3">
+                            {t(
+                              "inventory.fields.serialNo",
+                              "Số Serial / Mã định danh *",
+                            )}
+                          </TableHead>
+                        )}
+
+                        <TableHead className="sticky top-0 bg-transparent z-20 min-w-[150px] border-r border-border py-2 px-3">
                           {t("inventory.fields.notes", "Ghi chú")}
                         </TableHead>
                         {mode === "edit" && (
-                          <TableHead className="sticky top-0 bg-muted z-20 w-[60px] text-center border-r border-border py-2 px-3">
+                          <TableHead className="sticky top-0 bg-muted z-20 w-[55px] text-center border-r border-border py-2 px-3">
                             {t("common.delete", "Xóa")}
                           </TableHead>
                         )}
@@ -683,72 +1071,244 @@ export function GoodsReceiptSerialDrawer({
                     </TableHeader>
                     <TableBody>
                       {serials.map((row, idx) => {
+                        const trimmedVin = row.vinNo?.trim().toUpperCase();
+                        const trimmedEng = row.engineNo?.trim().toUpperCase();
                         const trimmedSn = row.serialNo?.trim().toUpperCase();
-                        const isInternalDupe =
-                          trimmedSn && internalDuplicates.has(trimmedSn);
+                        const trimmedISn = row.internalSerialNo
+                          ?.trim()
+                          .toUpperCase();
+
+                        const isVinDupe =
+                          trimmedVin && internalDuplicates.vins.has(trimmedVin);
+                        const isEngDupe =
+                          trimmedEng &&
+                          internalDuplicates.engines.has(trimmedEng);
+                        const isSerDupe =
+                          trimmedSn &&
+                          internalDuplicates.serials.has(trimmedSn);
+                        const isISerDupe =
+                          trimmedISn &&
+                          internalDuplicates.internalSerials.has(trimmedISn);
+
                         const isDbDupe =
                           trimmedSn &&
                           dbDuplicates.some(
                             (d) => d.toUpperCase() === trimmedSn,
                           );
 
+                        const hasAnyError =
+                          isVinDupe ||
+                          isEngDupe ||
+                          isSerDupe ||
+                          isISerDupe ||
+                          isDbDupe;
+
                         return (
                           <TableRow
                             key={idx}
                             className={cn(
                               "hover:bg-surface-hover transition-colors",
-                              (isInternalDupe || isDbDupe) &&
-                                "bg-red-50/50 dark:bg-red-950/20",
+                              hasAnyError && "bg-red-50/50 dark:bg-red-950/20",
                             )}
                           >
                             <TableCell className="py-2 px-3 text-center text-muted-foreground border-r border-border tabular-nums">
                               {idx + 1}
                             </TableCell>
-                            <TableCell className="py-1.5 px-3 border-r border-border">
-                              {mode === "edit" ? (
-                                <div>
-                                  <input
-                                    className={`${inputCls} h-8 font-mono text-xs ${
-                                      isInternalDupe || isDbDupe
-                                        ? "border-destructive focus-visible:ring-destructive"
-                                        : ""
-                                    }`}
-                                    placeholder={t(
-                                      "inventory.serialPlaceholder",
-                                      "Nhập số serial...",
+
+                            {isVehicle ? (
+                              <>
+                                {/* VIN */}
+                                <TableCell className="py-1.5 px-3 border-r border-border">
+                                  {mode === "edit" ? (
+                                    <div>
+                                      <input
+                                        className={`${inputCls} h-8 font-mono text-xs ${
+                                          isVinDupe || !row.vinNo?.trim()
+                                            ? "border-destructive/80 focus-visible:ring-destructive"
+                                            : ""
+                                        }`}
+                                        placeholder={t("Nhập số VIN...")}
+                                        value={row.vinNo || ""}
+                                        onChange={(e) =>
+                                          handleUpdateSerial(
+                                            idx,
+                                            "vinNo",
+                                            e.target.value,
+                                          )
+                                        }
+                                      />
+                                      {isVinDupe && (
+                                        <span className="text-[10px] text-destructive block mt-0.5">
+                                          {t("Trùng lặp VIN")}
+                                        </span>
+                                      )}
+                                    </div>
+                                  ) : (
+                                    <span className="font-mono font-medium text-emerald-700 dark:text-emerald-400">
+                                      {row.vinNo || "—"}
+                                    </span>
+                                  )}
+                                </TableCell>
+
+                                {/* Engine No */}
+                                <TableCell className="py-1.5 px-3 border-r border-border">
+                                  {mode === "edit" ? (
+                                    <div>
+                                      <input
+                                        className={`${inputCls} h-8 font-mono text-xs ${
+                                          isEngDupe || !row.engineNo?.trim()
+                                            ? "border-destructive/80 focus-visible:ring-destructive"
+                                            : ""
+                                        }`}
+                                        placeholder={t("Nhập số máy...")}
+                                        value={row.engineNo || ""}
+                                        onChange={(e) =>
+                                          handleUpdateSerial(
+                                            idx,
+                                            "engineNo",
+                                            e.target.value,
+                                          )
+                                        }
+                                      />
+                                      {isEngDupe && (
+                                        <span className="text-[10px] text-destructive block mt-0.5">
+                                          {t("Trùng lặp số máy")}
+                                        </span>
+                                      )}
+                                    </div>
+                                  ) : (
+                                    <span className="font-mono font-medium">
+                                      {row.engineNo || "—"}
+                                    </span>
+                                  )}
+                                </TableCell>
+
+                                {/* Vehicle Serial No */}
+                                <TableCell className="py-1.5 px-3 border-r border-border">
+                                  {mode === "edit" ? (
+                                    <div>
+                                      <input
+                                        className={`${inputCls} h-8 font-mono text-xs ${
+                                          isSerDupe ||
+                                          isDbDupe ||
+                                          !row.serialNo?.trim()
+                                            ? "border-destructive/80 focus-visible:ring-destructive"
+                                            : ""
+                                        }`}
+                                        placeholder={t("Nhập Serial xe...")}
+                                        value={row.serialNo || ""}
+                                        onChange={(e) =>
+                                          handleUpdateSerial(
+                                            idx,
+                                            "serialNo",
+                                            e.target.value,
+                                          )
+                                        }
+                                      />
+                                      {isSerDupe && (
+                                        <span className="text-[10px] text-destructive block mt-0.5">
+                                          {t("Trùng lặp Serial")}
+                                        </span>
+                                      )}
+                                      {isDbDupe && (
+                                        <span className="text-[10px] text-destructive block mt-0.5">
+                                          {t("Đã tồn tại trong kho")}
+                                        </span>
+                                      )}
+                                    </div>
+                                  ) : (
+                                    <span className="font-mono font-medium">
+                                      {row.serialNo || "—"}
+                                    </span>
+                                  )}
+                                </TableCell>
+
+                                {/* Internal Serial No */}
+                                <TableCell className="py-1.5 px-3 border-r border-border bg-primary/5">
+                                  {mode === "edit" ? (
+                                    <div>
+                                      <input
+                                        className={`${inputCls} h-8 font-mono text-xs ${
+                                          isISerDupe ||
+                                          !row.internalSerialNo?.trim()
+                                            ? "border-destructive/80 focus-visible:ring-destructive"
+                                            : ""
+                                        }`}
+                                        placeholder={t("Serial nội bộ...")}
+                                        value={row.internalSerialNo || ""}
+                                        onChange={(e) =>
+                                          handleUpdateSerial(
+                                            idx,
+                                            "internalSerialNo",
+                                            e.target.value,
+                                          )
+                                        }
+                                      />
+                                      {isISerDupe && (
+                                        <span className="text-[10px] text-destructive block mt-0.5">
+                                          {t("Trùng lặp Serial nội bộ")}
+                                        </span>
+                                      )}
+                                    </div>
+                                  ) : (
+                                    <span className="font-mono font-medium text-primary">
+                                      {row.internalSerialNo || "—"}
+                                    </span>
+                                  )}
+                                </TableCell>
+                              </>
+                            ) : (
+                              /* Non-vehicle Single Serial Field */
+                              <TableCell className="py-1.5 px-3 border-r border-border">
+                                {mode === "edit" ? (
+                                  <div>
+                                    <input
+                                      className={`${inputCls} h-8 font-mono text-xs ${
+                                        isSerDupe ||
+                                        isDbDupe ||
+                                        !row.serialNo?.trim()
+                                          ? "border-destructive/80 focus-visible:ring-destructive"
+                                          : ""
+                                      }`}
+                                      placeholder={t(
+                                        "inventory.serialPlaceholder",
+                                        "Nhập số serial...",
+                                      )}
+                                      value={row.serialNo}
+                                      onChange={(e) =>
+                                        handleUpdateSerial(
+                                          idx,
+                                          "serialNo",
+                                          e.target.value,
+                                        )
+                                      }
+                                    />
+                                    {isSerDupe && (
+                                      <span className="text-[10px] text-destructive block mt-0.5">
+                                        {t(
+                                          "inventory.duplicateInList",
+                                          "Trùng lặp trong danh sách",
+                                        )}
+                                      </span>
                                     )}
-                                    value={row.serialNo}
-                                    onChange={(e) =>
-                                      handleUpdateSerial(
-                                        idx,
-                                        "serialNo",
-                                        e.target.value,
-                                      )
-                                    }
-                                  />
-                                  {isInternalDupe && (
-                                    <span className="text-[10px] text-destructive block mt-0.5">
-                                      {t(
-                                        "inventory.duplicateInList",
-                                        "Trùng lặp trong danh sách",
-                                      )}
-                                    </span>
-                                  )}
-                                  {isDbDupe && (
-                                    <span className="text-[10px] text-destructive block mt-0.5">
-                                      {t(
-                                        "inventory.alreadyInStock",
-                                        "Đã tồn tại trong kho (IN_STOCK)",
-                                      )}
-                                    </span>
-                                  )}
-                                </div>
-                              ) : (
-                                <span className="font-mono font-medium">
-                                  {row.serialNo || "—"}
-                                </span>
-                              )}
-                            </TableCell>
+                                    {isDbDupe && (
+                                      <span className="text-[10px] text-destructive block mt-0.5">
+                                        {t(
+                                          "inventory.alreadyInStock",
+                                          "Đã tồn tại trong kho (IN_STOCK)",
+                                        )}
+                                      </span>
+                                    )}
+                                  </div>
+                                ) : (
+                                  <span className="font-mono font-medium">
+                                    {row.serialNo || "—"}
+                                  </span>
+                                )}
+                              </TableCell>
+                            )}
+
+                            {/* Notes */}
                             <TableCell className="py-1.5 px-3 border-r border-border">
                               {mode === "edit" ? (
                                 <input
@@ -772,6 +1332,8 @@ export function GoodsReceiptSerialDrawer({
                                 </span>
                               )}
                             </TableCell>
+
+                            {/* Actions / Delete */}
                             {mode === "edit" && (
                               <TableCell className="py-1.5 px-3 text-center border-r border-border">
                                 <Button
@@ -812,7 +1374,7 @@ export function GoodsReceiptSerialDrawer({
                       <span className="text-amber-600 dark:text-amber-400 font-medium">
                         {t(
                           "inventory.missingSerials",
-                          `Còn thiếu ${requiredQty - serials.length} mã`,
+                          `Còn thiếu ${requiredQty - serials.length} ${isVehicle ? "xe" : "mã"}`,
                         )}
                       </span>
                     )}
@@ -820,7 +1382,7 @@ export function GoodsReceiptSerialDrawer({
                       <span className="text-destructive font-medium">
                         {t(
                           "inventory.exceededSerials",
-                          `Vượt quá ${serials.length - requiredQty} mã so với SL nhận`,
+                          `Vượt quá ${serials.length - requiredQty} so với SL nhận`,
                         )}
                       </span>
                     )}

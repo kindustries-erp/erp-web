@@ -2,6 +2,8 @@ import axiosInstance from "@/core/api/axiosInstance";
 
 export const MODULE_KEYS = {
   BOM: "BOM",
+  INVOICE_IN: "INVOICE_IN",
+  INVOICE_OUT: "INVOICE_OUT",
   INVOICE: "INVOICE",
   BANK_TXN: "BANK_TXN",
   GOODS_RECEIPT: "GOODS_RECEIPT",

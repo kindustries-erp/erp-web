@@ -277,6 +277,20 @@
   --sidebar-label: #c0c0e0;
 }
 
+/* ══════════════════════════════════════════
+   Midnight Theme — Sidebar scoped tokens (Neutral Zinc)
+   ══════════════════════════════════════════ */
+.theme-midnight .sidebar {
+  --surface: #18181b;
+  --surface-hover: #27272a;
+  --border: var(--sidebar-border);
+  --muted: #131316;
+  --foreground: #f4f4f5;
+  --muted-fg: #a1a1aa;
+  --faint: #52525b;
+  --sidebar-label: #c7c7cc;
+}
+
 .theme-orcaq .right-panel {
   margin: 0;
   border-radius: 0;

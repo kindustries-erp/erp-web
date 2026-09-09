@@ -211,8 +211,7 @@ export const InvoiceHeaderSection = React.memo(function InvoiceHeaderSection({
     <div className="w-full sm:w-auto flex items-center flex-wrap gap-2 py-0.5">
       <PillTabs
         className="w-full sm:w-auto shrink-0"
-        listClassName="h-8 p-0.5 rounded-full bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/60 shadow-[0_1px_2px_rgba(15,23,42,.03)]"
-        triggerClassName="h-7 px-2.5 sm:px-3.5 text-xs rounded-full"
+        size="sm"
         items={[
           { value: "all", label: t("tabAll", "Tất cả") },
           { value: "new", label: t("tabNew", "Mới") },
@@ -221,10 +220,9 @@ export const InvoiceHeaderSection = React.memo(function InvoiceHeaderSection({
         ]}
         value={activeTaxPresetKey}
         onValueChange={handleTaxTabChange}
-        hideBorder
       />
 
-      <div className="hidden sm:block h-4 w-px bg-slate-300/80 dark:bg-slate-700/80 shrink-0" />
+      <div className="hidden sm:block h-4 w-px bg-slate-300/80 dark:bg-zinc-700/80 shrink-0" />
 
       <InvoiceViewModeCombobox
         presets={presets || columnViewPresetsHook.presets}
@@ -389,12 +387,18 @@ export const InvoiceHeaderSection = React.memo(function InvoiceHeaderSection({
           groupLabel: t("groupCauHinh", "Cấu hình"),
           items: [
             {
-              label: t(
-                "invoiceConfig.customFields",
-                "Cấu hình trường tùy chỉnh",
-              ),
-              icon: <Settings className="w-3.5 h-3.5 text-violet-500" />,
-              onClick: () => openCustomFieldsDrawer("INVOICE", "Hóa đơn"),
+              label:
+                direction === "IN"
+                  ? t("erpInvoices.customFieldsIn", "Cấu hình hóa đơn mua vào")
+                  : t("erpInvoices.customFieldsOut", "Cấu hình hóa đơn bán ra"),
+              icon: <Settings className="h-[13px] w-[13px]" />,
+              onClick: () =>
+                openCustomFieldsDrawer(
+                  direction === "IN" ? "INVOICE_IN" : "INVOICE_OUT",
+                  direction === "IN"
+                    ? t("erpInvoices.configTitleIn", "Hóa đơn mua vào")
+                    : t("erpInvoices.configTitleOut", "Hóa đơn bán ra"),
+                ),
             },
           ],
         },
@@ -402,6 +406,7 @@ export const InvoiceHeaderSection = React.memo(function InvoiceHeaderSection({
     },
     [
       t,
+      direction,
       canEditInvoice,
       handleOpenInternal,
       handleDownload,
@@ -442,15 +447,25 @@ export const InvoiceHeaderSection = React.memo(function InvoiceHeaderSection({
         groupLabel: t("groupCauHinh", "Cấu hình"),
         items: [
           {
-            label: t("invoiceConfig.customFields", "Cấu hình trường tùy chỉnh"),
-            icon: <Settings className="w-4 h-4 text-violet-500" />,
-            onClick: () => openCustomFieldsDrawer("INVOICE", "Hóa đơn"),
+            label:
+              direction === "IN"
+                ? t("erpInvoices.customFieldsIn", "Cấu hình hóa đơn mua vào")
+                : t("erpInvoices.customFieldsOut", "Cấu hình hóa đơn bán ra"),
+            icon: <Settings className="w-4 h-4 text-muted-foreground" />,
+            onClick: () =>
+              openCustomFieldsDrawer(
+                direction === "IN" ? "INVOICE_IN" : "INVOICE_OUT",
+                direction === "IN"
+                  ? t("erpInvoices.configTitleIn", "Hóa đơn mua vào")
+                  : t("erpInvoices.configTitleOut", "Hóa đơn bán ra"),
+              ),
           },
         ],
       },
     ],
     [
       t,
+      direction,
       canEditInvoice,
       handleExportExcel,
       onOpenPortalAuth,
@@ -528,7 +543,7 @@ export const InvoiceHeaderSection = React.memo(function InvoiceHeaderSection({
       rowActions={rowActions}
       onCreate={onOpenSync}
       createLabel={t("syncInvoices", "Đồng bộ")}
-      createIcon={<DownloadCloud className="w-4 h-4 mr-1 text-indigo-100" />}
+      createIcon={<DownloadCloud className="w-4 h-4 mr-1 text-primary-fg/80" />}
       createActions={createActions}
     />
   );

@@ -738,10 +738,8 @@ export const PurchaseOrderPartnerTab = React.memo(
           <PillTabs<"orders" | "lines">
             value={viewMode}
             onValueChange={setViewMode}
+            size="sm"
             className="w-full sm:w-auto shrink-0"
-            listClassName="h-9 p-1 rounded-full bg-slate-100/90 dark:bg-slate-800/90 border border-slate-200/70 dark:border-slate-700/70 shadow-sm gap-1.5"
-            triggerClassName="h-7 px-3.5 text-xs font-semibold rounded-full data-[state=active]:bg-white dark:data-[state=active]:bg-zinc-800 data-[state=active]:text-foreground data-[state=active]:shadow-sm transition-all"
-            hideBorder
             items={[
               {
                 value: "orders",

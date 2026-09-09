@@ -238,9 +238,13 @@ export function useErpInvoiceItemsSectionLogic({
         groupLabel: t("groupCauHinh", "Cấu hình"),
         items: [
           {
-            label: t("invoiceConfig.customFields", "Cấu hình trường tùy chỉnh"),
-            icon: <Settings className="w-4 h-4 text-violet-500" />,
-            onClick: () => openCustomFieldsDrawer("INVOICE", "Hóa đơn"),
+            label: t("erpInvoices.customFieldsIn", "Cấu hình hóa đơn mua vào"),
+            icon: <Settings className="w-4 h-4 text-muted-foreground" />,
+            onClick: () =>
+              openCustomFieldsDrawer(
+                "INVOICE_IN",
+                t("erpInvoices.configTitleIn", "Hóa đơn mua vào"),
+              ),
           },
         ],
       },

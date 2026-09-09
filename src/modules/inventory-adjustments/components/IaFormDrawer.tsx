@@ -41,6 +41,7 @@ import type { UseIaDrawerReturn } from "@/modules/inventory-adjustments/hooks/us
 import { InventoryVoucherFormDrawer } from "@/modules/inventory-core/components/inventory-voucher-drawer/InventoryVoucherFormDrawer";
 import { useVoucherClientFilter } from "@/modules/inventory-core/hooks/useVoucherClientFilter";
 import { ModuleEntityCustomFieldsSection } from "@/shared/components/ModuleEntityCustomFieldsSection";
+import { AttributeTypeBadge } from "@/shared/components/AttributeTypeBadge";
 
 function fmtQty(value?: string | number | null) {
   if (!value && value !== 0) return "0";
@@ -504,6 +505,18 @@ export function IaFormDrawer({ drawer }: IaFormDrawerProps) {
     ];
   }, [iaAttrDefs, locale, t]);
 
+  // ── Thống kê tóm tắt biến động kiểm kê ──────────────────────────────
+  const { totalPositiveQty, totalNegativeQty } = useMemo(() => {
+    let pos = 0;
+    let neg = 0;
+    for (const line of form.lines) {
+      const q = Number(line.qtyAdjusted || 0);
+      if (q > 0) pos += q;
+      else if (q < 0) neg += Math.abs(q);
+    }
+    return { totalPositiveQty: pos, totalNegativeQty: neg };
+  }, [form.lines]);
+
   const rightPanelContent = (
     <>
       <DrawerField label={t("Số phiếu")}>
@@ -524,7 +537,14 @@ export function IaFormDrawer({ drawer }: IaFormDrawerProps) {
           onChange={(v) => setForm((f) => ({ ...f, adjustmentDate: v }))}
         />
       </DrawerField>
-      <DrawerField label={t("Lý do điều chỉnh")}>
+      <DrawerField
+        label={
+          <span className="inline-flex items-center gap-1.5 flex-wrap">
+            <span>{t("Lý do điều chỉnh")}</span>
+            <AttributeTypeBadge type="system" />
+          </span>
+        }
+      >
         <Combobox
           options={adjustmentReasonOptions}
           value={
@@ -547,6 +567,74 @@ export function IaFormDrawer({ drawer }: IaFormDrawerProps) {
           }
         />
       </DrawerField>
+
+      <DrawerField label={t("Người kiểm kê / Lập phiếu")}>
+        <input
+          className={inputCls}
+          placeholder={t("Họ tên người kiểm kê hoặc phụ trách...")}
+          value={
+            form.globalAttributes?.adjusted_by ||
+            form.globalAttributes?.auditor ||
+            ""
+          }
+          disabled={viewOnly || editing?.status === "POSTED"}
+          onChange={(e) =>
+            setForm((f) => ({
+              ...f,
+              globalAttributes: {
+                ...f.globalAttributes,
+                adjusted_by: e.target.value,
+                auditor: e.target.value,
+              },
+            }))
+          }
+        />
+      </DrawerField>
+
+      <DrawerField label={t("Đợt kiểm kê / Ghi chú đợt")}>
+        <input
+          className={inputCls}
+          placeholder={t("VD: Kiểm kê quý 3/2026, Đợt 1...")}
+          value={
+            form.globalAttributes?.audit_period ||
+            form.globalAttributes?.reference_no ||
+            ""
+          }
+          disabled={viewOnly || editing?.status === "POSTED"}
+          onChange={(e) =>
+            setForm((f) => ({
+              ...f,
+              globalAttributes: {
+                ...f.globalAttributes,
+                audit_period: e.target.value,
+                reference_no: e.target.value,
+              },
+            }))
+          }
+        />
+      </DrawerField>
+
+      {/* Summary Cards khi ở chế độ View hoặc khi có dòng */}
+      {viewOnly && form.lines.length > 0 && (
+        <div className="mt-3 grid grid-cols-2 gap-2 text-center">
+          <div className="flex flex-col items-center justify-center p-2.5 bg-emerald-500/10 rounded-lg border border-emerald-500/20">
+            <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mb-1">
+              {t("Tổng tăng (+)")}
+            </span>
+            <span className="font-bold text-emerald-700 dark:text-emerald-300 text-base tabular-nums">
+              +{fmtQty(totalPositiveQty)}
+            </span>
+          </div>
+          <div className="flex flex-col items-center justify-center p-2.5 bg-rose-500/10 rounded-lg border border-rose-500/20">
+            <span className="text-[11px] font-semibold text-rose-600 dark:text-rose-400 uppercase tracking-wider mb-1">
+              {t("Tổng giảm (-)")}
+            </span>
+            <span className="font-bold text-rose-700 dark:text-rose-300 text-base tabular-nums">
+              -{fmtQty(totalNegativeQty)}
+            </span>
+          </div>
+        </div>
+      )}
     </>
   );
 

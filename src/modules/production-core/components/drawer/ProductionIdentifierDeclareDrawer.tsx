@@ -96,11 +96,10 @@ export function ProductionIdentifierDeclareDrawer({
         if (i < producedList.length) {
           const item: any = producedList[i];
           const attrs = item.attributes || {};
-          // Số serial xe là tem ngoài tùy chọn, KHÔNG fallback sang item.serialNo khi policy là VEHICLE
           const vSerial =
             attrs.vehicleSerialNo ||
             item.vehicleSerialNo ||
-            (policy === "SERIAL" ? item.serialNo : "") ||
+            item.serialNo ||
             "";
           const iSerial =
             attrs.internalSerialNo ||
@@ -175,6 +174,8 @@ export function ProductionIdentifierDeclareDrawer({
           !!r.vinNo?.trim() ||
           !!r.engineNo?.trim() ||
           !!r.serialNo?.trim() ||
+          !!r.internalSerialNo?.trim() ||
+          !!r.lotNo?.trim() ||
           !!r.notes?.trim()
         );
       }
@@ -200,7 +201,12 @@ export function ProductionIdentifierDeclareDrawer({
   const hasExistingClearedError = useMemo(() => {
     if (policy === "VEHICLE") {
       return localIdentifiers.some(
-        (r) => r.isExisting && (!r.vinNo?.trim() || !r.engineNo?.trim()),
+        (r) =>
+          r.isExisting &&
+          (!r.vinNo?.trim() ||
+            !r.engineNo?.trim() ||
+            !r.serialNo?.trim() ||
+            !r.internalSerialNo?.trim()),
       );
     }
     if (policy === "SERIAL") {
@@ -215,15 +221,20 @@ export function ProductionIdentifierDeclareDrawer({
     return false;
   }, [localIdentifiers, policy]);
 
-  // Check error: New row partially filled (e.g. only VIN or only Engine entered)
+  // Check error: New row partially filled (must have all 4 fields for VEHICLE)
   const hasIncompleteNewError = useMemo(() => {
     if (policy === "VEHICLE") {
-      return localIdentifiers.some(
-        (r) =>
-          !r.isExisting &&
-          ((!!r.vinNo?.trim() && !r.engineNo?.trim()) ||
-            (!r.vinNo?.trim() && !!r.engineNo?.trim())),
-      );
+      return localIdentifiers.some((r) => {
+        if (r.isExisting) return false;
+        const userStartedFilling =
+          !!r.vinNo?.trim() || !!r.engineNo?.trim() || !!r.serialNo?.trim();
+        const allFilled =
+          !!r.vinNo?.trim() &&
+          !!r.engineNo?.trim() &&
+          !!r.serialNo?.trim() &&
+          !!r.internalSerialNo?.trim();
+        return userStartedFilling && !allFilled;
+      });
     }
     return false;
   }, [localIdentifiers, policy]);
@@ -277,7 +288,7 @@ export function ProductionIdentifierDeclareDrawer({
     if (hasExistingClearedError) {
       showToast({
         title: t(
-          "Xe đã ghi nhận xuất xưởng không được để trống Số khung hoặc Số máy!",
+          "Xe đã ghi nhận xuất xưởng không được để trống thông tin định danh (Số khung, Số máy, Serial xe, Serial nội bộ)!",
         ),
         variant: "destructive",
       });
@@ -285,7 +296,9 @@ export function ProductionIdentifierDeclareDrawer({
     }
     if (hasIncompleteNewError) {
       showToast({
-        title: t("Vui lòng điền đủ cả Số khung và Số máy cho xe mới!"),
+        title: t(
+          "Vui lòng điền đủ cả 4 trường: Số khung, Số máy, Số Serial xe và Số Serial nội bộ!",
+        ),
         variant: "destructive",
       });
       return;
@@ -499,7 +512,7 @@ export function ProductionIdentifierDeclareDrawer({
                   <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
                   <span>
                     {t(
-                      "Xe đã ghi nhận xuất xưởng không được để trống Số khung hoặc Số máy!",
+                      "Xe đã ghi nhận xuất xưởng không được để trống thông tin định danh!",
                     )}
                   </span>
                 </div>
@@ -508,7 +521,9 @@ export function ProductionIdentifierDeclareDrawer({
                 <div className="flex items-center gap-1.5 text-destructive text-[11px] font-medium">
                   <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
                   <span>
-                    {t("Vui lòng điền đủ cả Số khung và Số máy cho xe mới!")}
+                    {t(
+                      "Vui lòng điền đủ 4 trường: Số khung, Số máy, Serial xe, Serial nội bộ!",
+                    )}
                   </span>
                 </div>
               )}
@@ -545,12 +560,12 @@ export function ProductionIdentifierDeclareDrawer({
                   theo số dập trên xe thực tế.
                 </p>
                 <p>
-                  • <strong>Số Serial xe</strong>: Tùy chọn, điền theo tem xuất
-                  xưởng nếu có.
+                  • <strong>Số Serial xe</strong>: Bắt buộc nhập theo tem xuất
+                  xưởng của xe.
                 </p>
                 <p>
-                  • <strong>Số Serial nội bộ</strong>: Tự động sinh chống trùng
-                  kết hợp mã Lệnh SX & ngày tháng.
+                  • <strong>Số Serial nội bộ</strong>: Bắt buộc tự động sinh
+                  hoặc quản lý nội bộ ERP kết hợp mã Lệnh SX & ngày tháng.
                 </p>
               </>
             ) : (

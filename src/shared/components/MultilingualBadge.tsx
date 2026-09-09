@@ -58,19 +58,19 @@ export function MultilingualBadge({
   }).length;
 
   const tooltipContent = (
-    <div className="flex flex-col gap-1 p-1 text-[11px] min-w-[160px]">
-      <div className="font-semibold text-xs border-b border-border/40 pb-1 flex items-center justify-between gap-2">
-        <span>
+    <div className="flex flex-col gap-1.5 p-1 text-[11px] min-w-[200px] text-white">
+      <div className="font-semibold text-xs border-b border-white/20 pb-1.5 flex items-center justify-between gap-3">
+        <span className="text-white font-medium">
           {title ||
             t("common.multilingual.translationsTitle", "Bản dịch đa ngôn ngữ")}
         </span>
         {itemKey && (
-          <span className="font-mono text-[10px] text-muted-foreground">
-            ({itemKey})
+          <span className="font-mono text-[10px] text-white/80 bg-white/10 px-1.5 py-0.5 rounded">
+            Key: {itemKey}
           </span>
         )}
       </div>
-      <div className="flex flex-col gap-1 pt-0.5">
+      <div className="flex flex-col gap-1.5 pt-0.5">
         {activeLangs.map((lang) => {
           const text =
             labels?.[lang.code] ||
@@ -84,17 +84,15 @@ export function MultilingualBadge({
               key={lang.code}
               className="flex items-center justify-between gap-3 text-xs"
             >
-              <span className="flex items-center gap-1.5 text-muted-foreground">
+              <span className="flex items-center gap-1.5 text-white/75 shrink-0">
                 <span className="text-xs">{lang.flag}</span>
                 <span>{lang.nativeName}:</span>
               </span>
-              <span className="font-medium text-foreground">
+              <span className="font-semibold text-right text-white break-words">
                 {text?.trim() ? (
                   text
                 ) : (
-                  <span className="italic text-muted-foreground/50 font-normal">
-                    —
-                  </span>
+                  <span className="italic text-white/40 font-normal">—</span>
                 )}
               </span>
             </div>

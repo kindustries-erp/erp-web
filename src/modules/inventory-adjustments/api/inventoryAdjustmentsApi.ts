@@ -14,6 +14,7 @@ export interface IaHeaderDto {
   adjustmentDate: string;
   remarks?: string;
   status?: string;
+  customAttributes?: Record<string, any>;
   lines?: IaLineDto[];
 }
 

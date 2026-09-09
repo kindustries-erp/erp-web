@@ -33,11 +33,11 @@ describe("ProductionOrderExecutionTab - Vehicle Identifiers & Validation", () =>
   });
 
   describe("isIdentifierValid", () => {
-    it("validates VEHICLE policy requiring only vinNo and engineNo (vehicle serial is optional)", () => {
+    it("validates VEHICLE policy requiring all 4 fields (vinNo, engineNo, serialNo, internalSerialNo)", () => {
       const validId: ProductionIdentifier = {
         vinNo: "VIN1234567890",
         engineNo: "ENG987654321",
-        serialNo: "",
+        serialNo: "SER-001",
         internalSerialNo: "SN-XE-001",
         lotNo: "",
         notes: "",
@@ -56,6 +56,18 @@ describe("ProductionOrderExecutionTab - Vehicle Identifiers & Validation", () =>
         vinNo: "",
       };
       expect(isIdentifierValid(missingVin, "VEHICLE")).toBe(false);
+
+      const missingSerial: ProductionIdentifier = {
+        ...validId,
+        serialNo: "",
+      };
+      expect(isIdentifierValid(missingSerial, "VEHICLE")).toBe(false);
+
+      const missingInternalSerial: ProductionIdentifier = {
+        ...validId,
+        internalSerialNo: "",
+      };
+      expect(isIdentifierValid(missingInternalSerial, "VEHICLE")).toBe(false);
     });
 
     it("validates SERIAL and LOT policies", () => {
@@ -107,7 +119,7 @@ describe("ProductionOrderExecutionTab - Vehicle Identifiers & Validation", () =>
         {
           vinNo: "VIN1",
           engineNo: "ENG1",
-          serialNo: "",
+          serialNo: "SER1",
           internalSerialNo: "SN-1",
           lotNo: "",
           notes: "",
@@ -266,24 +278,30 @@ describe("ProductionOrderExecutionTab - Vehicle Identifiers & Validation", () =>
         },
       ];
 
+      const queryClient = new QueryClient({
+        defaultOptions: { queries: { retry: false } },
+      });
+
       render(
-        <ProductionOrderExecutionTab
-          order={mockOrder}
-          trackingPolicy="VEHICLE"
-          needsIdentifiers={true}
-          saving={false}
-          batchCompleteQty="1"
-          setBatchCompleteQty={() => {}}
-          showBatchDialog={false}
-          setShowBatchDialog={() => {}}
-          identifiers={mockIdentifiers}
-          setIdentifiers={() => {}}
-          handleIdentifierChange={() => {}}
-          onOpenIdentifierDrawer={() => {}}
-          onStartAll={async () => {}}
-          onCompleteOne={async () => {}}
-          onBatchComplete={async () => {}}
-        />,
+        <QueryClientProvider client={queryClient}>
+          <ProductionOrderExecutionTab
+            order={mockOrder}
+            trackingPolicy="VEHICLE"
+            needsIdentifiers={true}
+            saving={false}
+            batchCompleteQty="1"
+            setBatchCompleteQty={() => {}}
+            showBatchDialog={false}
+            setShowBatchDialog={() => {}}
+            identifiers={mockIdentifiers}
+            setIdentifiers={() => {}}
+            handleIdentifierChange={() => {}}
+            onOpenIdentifierDrawer={() => {}}
+            onStartAll={async () => {}}
+            onCompleteOne={async () => {}}
+            onBatchComplete={async () => {}}
+          />
+        </QueryClientProvider>,
       );
 
       // Verify Open Completion button with shortened label "Nghiệm thu"
@@ -365,8 +383,8 @@ describe("ProductionOrderExecutionTab - Vehicle Identifiers & Validation", () =>
       // Verify Table Column Headers
       expect(screen.getByText("Số khung (VIN) *")).toBeInTheDocument();
       expect(screen.getByText("Số máy *")).toBeInTheDocument();
-      expect(screen.getByText("Số Serial xe")).toBeInTheDocument();
-      expect(screen.getByText("Số Serial nội bộ")).toBeInTheDocument();
+      expect(screen.getByText("Số Serial xe *")).toBeInTheDocument();
+      expect(screen.getByText("Số Serial nội bộ *")).toBeInTheDocument();
       expect(screen.getByText("Ghi chú")).toBeInTheDocument();
     });
 
@@ -439,8 +457,7 @@ describe("ProductionOrderExecutionTab - Vehicle Identifiers & Validation", () =>
       );
 
       // In mockOrder, qtyToProduce is 2, row 0 is existing vehicle (VIN-001, ENG-001).
-      // Let's enter VIN and Engine for row 1 (the new vehicle)
-      // Find row 1 VIN input (placeholder "Nhập số VIN...")
+      // Let's enter VIN, Engine, Serial, and InternalSerial for row 1 (the new vehicle)
       const vinInputs = screen.getAllByPlaceholderText("Nhập số VIN...");
       if (vinInputs.length > 1) {
         fireEvent.change(vinInputs[1], { target: { value: "VIN-002" } });
@@ -451,6 +468,20 @@ describe("ProductionOrderExecutionTab - Vehicle Identifiers & Validation", () =>
       if (engInputs.length > 1) {
         fireEvent.change(engInputs[1], { target: { value: "ENG-002" } });
         fireEvent.blur(engInputs[1]);
+      }
+
+      const serInputs = screen.getAllByPlaceholderText("Theo tem xe...");
+      if (serInputs.length > 1) {
+        fireEvent.change(serInputs[1], { target: { value: "SER-002" } });
+        fireEvent.blur(serInputs[1]);
+      }
+
+      const iSerInputs = screen.getAllByPlaceholderText(
+        "Tự động sinh hoặc nhập...",
+      );
+      if (iSerInputs.length > 1) {
+        fireEvent.change(iSerInputs[1], { target: { value: "SN-XE-002" } });
+        fireEvent.blur(iSerInputs[1]);
       }
 
       const confirmBtn = screen.getByText("Xác nhận hoàn thành & Nhập kho");
@@ -506,7 +537,7 @@ describe("ProductionOrderExecutionTab - Vehicle Identifiers & Validation", () =>
       // Verify warning message is shown in right panel
       expect(
         screen.getByText(
-          "Xe đã ghi nhận xuất xưởng không được để trống Số khung hoặc Số máy!",
+          "Xe đã ghi nhận xuất xưởng không được để trống thông tin định danh!",
         ),
       ).toBeInTheDocument();
     });
@@ -537,7 +568,7 @@ describe("ProductionOrderExecutionTab - Vehicle Identifiers & Validation", () =>
       fireEvent.change(vinInputs[0], { target: { value: "VIN-001-FIXED" } });
       fireEvent.blur(vinInputs[0]);
 
-      // Enter row 1 (new vehicle)
+      // Enter row 1 (new vehicle - all 4 required fields)
       const vinInputsUpdated = screen.getAllByPlaceholderText("Nhập số VIN...");
       fireEvent.change(vinInputsUpdated[1], { target: { value: "VIN-002" } });
       fireEvent.blur(vinInputsUpdated[1]);
@@ -545,6 +576,16 @@ describe("ProductionOrderExecutionTab - Vehicle Identifiers & Validation", () =>
       const engInputs = screen.getAllByPlaceholderText("Nhập số máy...");
       fireEvent.change(engInputs[1], { target: { value: "ENG-002" } });
       fireEvent.blur(engInputs[1]);
+
+      const serInputs = screen.getAllByPlaceholderText("Theo tem xe...");
+      fireEvent.change(serInputs[1], { target: { value: "SER-002" } });
+      fireEvent.blur(serInputs[1]);
+
+      const iSerInputs = screen.getAllByPlaceholderText(
+        "Tự động sinh hoặc nhập...",
+      );
+      fireEvent.change(iSerInputs[1], { target: { value: "SN-XE-002" } });
+      fireEvent.blur(iSerInputs[1]);
 
       // Check right panel indicates 1 updated unit
       expect(screen.getByText("Cập nhật thông tin")).toBeInTheDocument();
@@ -664,6 +705,145 @@ describe("ProductionOrderExecutionTab - Vehicle Identifiers & Validation", () =>
       expect(submittedUpdates).toHaveLength(1);
       expect(submittedUpdates[0].notes).toBe(
         "Đã sửa số tem serial và bảo dưỡng",
+      );
+    });
+
+    it("renders Status column with appropriate badges (Đã xuất xưởng, Sẵn sàng, Chưa khai báo)", () => {
+      const mockIdentifiers: ProductionIdentifier[] = [
+        {
+          vinNo: "VIN-001",
+          engineNo: "ENG-001",
+          serialNo: "SER-001",
+          internalSerialNo: "SN-XE-001",
+          lotNo: "",
+          notes: "Xe cũ",
+          attributes: [],
+          isExisting: true,
+        },
+        {
+          vinNo: "VIN-002",
+          engineNo: "ENG-002",
+          serialNo: "SER-002",
+          internalSerialNo: "SN-XE-002",
+          lotNo: "",
+          notes: "",
+          attributes: [],
+          isExisting: false,
+        },
+        {
+          vinNo: "",
+          engineNo: "",
+          serialNo: "",
+          internalSerialNo: "",
+          lotNo: "",
+          notes: "",
+          attributes: [],
+          isExisting: false,
+        },
+      ];
+
+      const queryClient = new QueryClient({
+        defaultOptions: { queries: { retry: false } },
+      });
+
+      render(
+        <QueryClientProvider client={queryClient}>
+          <ProductionIdentifierReviewTable
+            policy="VEHICLE"
+            identifiers={mockIdentifiers}
+            onChange={() => {}}
+            onSetIdentifiers={() => {}}
+            skuPrefix="XE-MAY"
+            orderSuffix="0001"
+          />
+        </QueryClientProvider>,
+      );
+
+      // Verify Status Column Header
+      expect(screen.getByText("Trạng thái")).toBeInTheDocument();
+
+      // Verify Badges
+      expect(screen.getByText("Đã xuất xưởng")).toBeInTheDocument();
+      expect(screen.getByText("Sẵn sàng")).toBeInTheDocument();
+      expect(screen.getByText("Chưa khai báo")).toBeInTheDocument();
+    });
+
+    it("opens internal serial generation popover and generates serials for chosen quantity", () => {
+      let updatedIds: ProductionIdentifier[] = [];
+      const mockIdentifiers: ProductionIdentifier[] = [
+        {
+          vinNo: "VIN-001",
+          engineNo: "ENG-001",
+          serialNo: "",
+          internalSerialNo: "SN-OLD-001",
+          lotNo: "",
+          notes: "",
+          attributes: [],
+          isExisting: true,
+        },
+        {
+          vinNo: "",
+          engineNo: "",
+          serialNo: "",
+          internalSerialNo: "",
+          lotNo: "",
+          notes: "",
+          attributes: [],
+          isExisting: false,
+        },
+        {
+          vinNo: "",
+          engineNo: "",
+          serialNo: "",
+          internalSerialNo: "",
+          lotNo: "",
+          notes: "",
+          attributes: [],
+          isExisting: false,
+        },
+      ];
+
+      const queryClient = new QueryClient({
+        defaultOptions: { queries: { retry: false } },
+      });
+
+      render(
+        <QueryClientProvider client={queryClient}>
+          <ProductionIdentifierReviewTable
+            policy="VEHICLE"
+            identifiers={mockIdentifiers}
+            onChange={() => {}}
+            onSetIdentifiers={(ids) => {
+              updatedIds = ids;
+            }}
+            skuPrefix="XE-MAY"
+            orderSuffix="0001"
+          />
+        </QueryClientProvider>,
+      );
+
+      // Click "Sinh Serial nội bộ" button to open Popover
+      const genBtn = screen.getByText("Sinh Serial nội bộ");
+      fireEvent.click(genBtn);
+
+      // Verify Popover Title & Remaining Badge
+      expect(
+        screen.getByText("Sinh Serial nội bộ tự động"),
+      ).toBeInTheDocument();
+      expect(screen.getByText("Còn lại: 2")).toBeInTheDocument();
+
+      // Click "Xác nhận sinh"
+      const confirmGenBtn = screen.getByText("Xác nhận sinh");
+      fireEvent.click(confirmGenBtn);
+
+      // Verify onSetIdentifiers called
+      expect(updatedIds.length).toBe(3);
+      expect(updatedIds[0].internalSerialNo).toBe("SN-OLD-001"); // Existing preserved
+      expect(updatedIds[1].internalSerialNo).toMatch(
+        /^SN-XE-MAY-\d{6}-0001-002$/,
+      );
+      expect(updatedIds[2].internalSerialNo).toMatch(
+        /^SN-XE-MAY-\d{6}-0001-003$/,
       );
     });
   });

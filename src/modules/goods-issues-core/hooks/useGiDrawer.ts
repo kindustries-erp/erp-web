@@ -14,7 +14,6 @@ import {
 } from "@/modules/production-core/api/productionCoreApi";
 import { salesOrdersCoreApi } from "@/modules/sales-orders-core/api/salesOrdersCoreApi";
 import { useBasicMasterInfinite } from "@/modules/basic-masters/hooks/useBasicMasterInfinite";
-import { moduleConfigApi } from "@/core/api/moduleConfigApi";
 import { useT } from "@/core/i18n";
 
 const LOOKUP_LIMIT = 200;
@@ -76,10 +75,12 @@ export const emptyGiForm = (): GiForm => ({
 });
 
 export function buildGiForm(gi: ErpGoodsIssue): GiForm {
+  const customAttrs = gi.customAttributes || {};
   return {
     issueNo: gi.issueNo ?? "",
     issueDate: gi.issueDate ? gi.issueDate.slice(0, 10) : "",
-    issueType: gi.issueType ?? "SALE",
+    issueType:
+      (customAttrs.type_inventory_issue as string) || gi.issueType || "SALE",
     salesOrderId: gi.salesOrderId ?? "",
     productionOrderId: gi.productionOrderId ?? "",
     status: gi.status ?? "DRAFT",
@@ -97,12 +98,18 @@ export function buildGiForm(gi: ErpGoodsIssue): GiForm {
           unitCost: line.unitCost ?? "",
         }))
       : [emptyGiLine()],
-    globalAttributes: {},
-    customAttributes: {},
+    globalAttributes: { ...customAttrs },
+    customAttributes: { ...customAttrs },
   };
 }
 
 export function buildGiPayload(form: GiForm): CreateGiPayload {
+  const customAttributes = {
+    ...(form.globalAttributes || {}),
+    ...(form.customAttributes || {}),
+    type_inventory_issue: form.issueType || "OTHER",
+  };
+
   return {
     issueNo: form.issueNo.trim(),
     issueDate: form.issueDate,
@@ -115,6 +122,7 @@ export function buildGiPayload(form: GiForm): CreateGiPayload {
         : undefined,
     status: form.status || "DRAFT",
     remarks: form.remarks.trim() || undefined,
+    customAttributes,
     lines: form.lines
       .filter((line) => {
         const qty = Number(line.qtyIssued);
@@ -309,21 +317,9 @@ export function useGiDrawer({
       setOpen(true);
       await loadGiLookups();
       try {
-        const [detail, customValues] = await Promise.all([
-          goodsIssuesCoreApi.get(id),
-          moduleConfigApi.getEntityValues("GOODS_ISSUE", id).catch(() => null),
-        ]);
+        const detail = await goodsIssuesCoreApi.get(id);
         setEditing(detail);
-        const mappedForm = buildGiForm(detail);
-        if (customValues) {
-          mappedForm.globalAttributes = customValues.globalAttributes || {};
-          mappedForm.customAttributes = customValues.attributes || {};
-          if (customValues.globalAttributes?.type_inventory_issue) {
-            mappedForm.issueType =
-              customValues.globalAttributes.type_inventory_issue;
-          }
-        }
-        setForm(mappedForm);
+        setForm(buildGiForm(detail));
 
         if (detail.salesOrderId) {
           salesOrdersCoreApi
@@ -362,13 +358,11 @@ export function useGiDrawer({
         if (statusOverride) {
           (payload as any).status = statusOverride;
         }
-        let targetId = "";
         if (editing) {
           await goodsIssuesCoreApi.update(editing.id, payload);
           if (statusOverride === "POSTED" && editing.status !== "POSTED") {
             await goodsIssuesCoreApi.post(editing.id);
           }
-          targetId = editing.id;
           showToast({
             title: t("Đã cập nhật phiếu xuất kho"),
             variant: "success",
@@ -378,27 +372,10 @@ export function useGiDrawer({
           if (statusOverride === "POSTED") {
             await goodsIssuesCoreApi.post(created.id);
           }
-          targetId = created.id;
           showToast({
             title: t("Tạo phiếu xuất kho thành công"),
             variant: "success",
           });
-        }
-
-        // Lưu thuộc tính tùy chỉnh & đồng bộ loại xuất kho vào globalAttributes
-        if (targetId) {
-          try {
-            const globalAttrs = {
-              ...(form.globalAttributes || {}),
-              type_inventory_issue: form.issueType || "OTHER",
-            };
-            await moduleConfigApi.saveEntityValues("GOODS_ISSUE", targetId, {
-              globalAttributes: globalAttrs,
-              attributes: form.customAttributes || {},
-            });
-          } catch (cfErr) {
-            console.warn("Failed to save GI custom fields", cfErr);
-          }
         }
 
         setOpen(false);

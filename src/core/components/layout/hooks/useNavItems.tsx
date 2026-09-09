@@ -126,7 +126,6 @@ export function useNavItems(): NavSearchItem[] {
     canReadSysTags ||
     canReadBankStatements ||
     canReadCashStatements;
-  const showSettingsInventory = canReadInventoryItems;
 
   return useMemo(() => {
     const items: NavSearchItem[] = [];
@@ -498,7 +497,6 @@ export function useNavItems(): NavSearchItem[] {
     const settingsSection = t("nav.sections.settings");
     const accessGroup = t("nav.items.erpAccessControl");
     const catalogGroup = t("nav.items.catalog");
-    const inventoryMastersGroup = t("nav.items.erpInventoryMasters");
 
     if (canReadEmailInbox && isAdminEmail) {
       items.push({
@@ -577,30 +575,29 @@ export function useNavItems(): NavSearchItem[] {
         icon: <Settings className="w-4 h-4" />,
       });
     }
-    if (showSettingsInventory) {
+    if (
+      canReadInvoices ||
+      canReadBankStatements ||
+      canReadBom ||
+      canReadInventoryItems ||
+      canReadInventoryVouchers
+    ) {
       items.push({
-        key: "erp-inventory-uom",
-        label: t("nav.items.erpInventoryUom"),
-        group: inventoryMastersGroup,
+        key: "custom-fields" as any,
+        label: t("nav.items.customFields", "Trường tùy chỉnh"),
+        group: catalogGroup,
         section: settingsSection,
-        keywords: ["don vi tinh", "uom", "kho", "thiet lap kho"],
-        icon: <Layers className="w-4 h-4" />,
-      });
-      items.push({
-        key: "erp-inventory-item-types",
-        label: t("nav.items.erpInventoryItemTypes"),
-        group: inventoryMastersGroup,
-        section: settingsSection,
-        keywords: ["loai hang hoa", "item types", "kho", "thiet lap kho"],
-        icon: <Layers className="w-4 h-4" />,
-      });
-      items.push({
-        key: "erp-inventory-tracking-categories",
-        label: t("nav.items.erpInventoryTrackingCategories"),
-        group: inventoryMastersGroup,
-        section: settingsSection,
-        keywords: ["nhom theo doi", "tracking", "kho", "thiet lap kho"],
-        icon: <Layers className="w-4 h-4" />,
+        keywords: [
+          "truong tuy chinh",
+          "custom fields",
+          "cau hinh kho",
+          "uom",
+          "don vi tinh",
+          "loai item",
+          "tracking policy",
+          "thuoc tinh",
+        ],
+        icon: <Settings className="w-4 h-4" />,
       });
     }
 
@@ -629,6 +626,5 @@ export function useNavItems(): NavSearchItem[] {
     canReadSysTags,
     canReadEmailInbox,
     showSettingsGeneral,
-    showSettingsInventory,
   ]);
 }

@@ -116,11 +116,6 @@ const InventoryItemTypesPage = lazy(() =>
     default: m.InventoryItemTypesPage,
   })),
 );
-const InventoryTrackingCategoriesPage = lazy(() =>
-  import("@/pages/inventory/InventoryTrackingCategoriesPage").then((m) => ({
-    default: m.InventoryTrackingCategoriesPage,
-  })),
-);
 const ErpCustomersPage = lazy(() =>
   import("@/pages/ErpBusinessPartnersPage").then((m) => ({
     default: m.ErpCustomersPage,
@@ -283,7 +278,6 @@ const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   "erp-goods-issues": ErpGoodsIssuesPage,
   "erp-inventory-uom": InventoryUomPage,
   "erp-inventory-item-types": InventoryItemTypesPage,
-  "erp-inventory-tracking-categories": InventoryTrackingCategoriesPage,
   "erp-suppliers": ErpSuppliersPage,
   "erp-customers": ErpCustomersPage,
   "erp-employees": ErpEmployeesPage,

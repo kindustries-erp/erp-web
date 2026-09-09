@@ -1086,6 +1086,7 @@ export function InvoiceSelectionDrawer({
                   setSelectedInvoicesMap({});
                   setPage(1);
                 }}
+                size="sm"
                 items={[
                   {
                     value: "OUT",

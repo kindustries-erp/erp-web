@@ -137,23 +137,55 @@ export function useVoucherNetoffSelectionLogic({
     enabled: open,
   });
 
-  const vouchers = data?.data || [];
+  const vouchers = data?.items || data?.data || [];
+
+  // Target Invoice & Auto-fetch Detail if voucherNetOffs is missing
+  const targetInvoiceId = invoiceId || invoice?.id;
+  const { data: fetchedInvoice, isLoading: isLoadingInvoiceDetail } = useQuery({
+    queryKey: ["erp-invoice-detail-for-netoff-modal", targetInvoiceId],
+    queryFn: () =>
+      targetInvoiceId
+        ? erpInvoicesCoreApi.get(targetInvoiceId)
+        : Promise.resolve(null),
+    enabled:
+      open &&
+      !!targetInvoiceId &&
+      (!invoice?.voucherNetOffs || invoice.voucherNetOffs.length === 0),
+  });
+
+  const effectiveInvoice = useMemo(() => {
+    if (fetchedInvoice) {
+      return { ...invoice, ...fetchedInvoice };
+    }
+    return invoice;
+  }, [fetchedInvoice, invoice]);
+
+  // Existing linked vouchers list from invoice
+  const existingInvoiceNetOffs = useMemo(() => {
+    return effectiveInvoice?.voucherNetOffs || [];
+  }, [effectiveInvoice]);
 
   // Target Invoice & Debt Calculations
   const resolvedTarget = useMemo(() => {
-    if (invoiceId || invoice?.id) {
-      const netOffVal = (invoice?.voucherNetOffs || []).reduce(
-        (sum: number, v: any) => sum + Number(v.netOffAmount || 0),
+    if (invoiceId || effectiveInvoice?.id) {
+      const netOffFromList = (effectiveInvoice?.voucherNetOffs || []).reduce(
+        (sum: number, v: any) =>
+          sum + Number(v.netOffAmount || v.net_off_amount || 0),
         0,
       );
+      const fallbackNetOff = Number(effectiveInvoice?.netOffAmount || 0);
+      const netOffVal = netOffFromList > 0 ? netOffFromList : fallbackNetOff;
+
       return {
-        code: invoice?.invoiceNo ? `#${invoice.invoiceNo}` : `HĐ`,
-        totalAmount: Number(invoice?.totalAmount || 0),
+        code: effectiveInvoice?.invoiceNo
+          ? `#${effectiveInvoice.invoiceNo}`
+          : `HĐ`,
+        totalAmount: Number(effectiveInvoice?.totalAmount || 0),
         netOffAmount: netOffVal,
       };
     }
     return undefined;
-  }, [invoiceId, invoice]);
+  }, [invoiceId, effectiveInvoice]);
 
   const currentRemaining = useMemo(() => {
     if (caseRemainingDebt > 0) return caseRemainingDebt;
@@ -167,7 +199,6 @@ export function useVoucherNetoffSelectionLogic({
   }, [caseRemainingDebt, resolvedTarget]);
 
   // Query Smart Suggestions
-  const targetInvoiceId = invoiceId || invoice?.id;
   const { data: suggestionsData, isLoading: isLoadingSuggestions } = useQuery({
     queryKey: [
       "smart-net-off-suggestions",
@@ -184,7 +215,16 @@ export function useVoucherNetoffSelectionLogic({
     enabled: open && !!targetInvoiceId,
   });
 
-  const suggestions = suggestionsData?.suggestions || [];
+  const suggestions = useMemo(() => {
+    if (!suggestionsData) return [];
+    if (targetInvoiceId && Array.isArray(suggestionsData[targetInvoiceId])) {
+      return suggestionsData[targetInvoiceId];
+    }
+    if (Array.isArray((suggestionsData as any)?.suggestions)) {
+      return (suggestionsData as any).suggestions;
+    }
+    return [];
+  }, [suggestionsData, targetInvoiceId]);
 
   // Lọc suggestions theo chiều đối soát
   const filteredSuggestions = useMemo(() => {
@@ -477,6 +517,9 @@ export function useVoucherNetoffSelectionLogic({
 
   return {
     isInvoiceContext,
+    effectiveInvoice,
+    existingInvoiceNetOffs,
+    isLoadingInvoiceDetail,
     activeInvoiceTab,
     setActiveInvoiceTab,
     activeGarageTab,

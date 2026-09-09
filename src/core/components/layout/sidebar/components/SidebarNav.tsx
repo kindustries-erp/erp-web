@@ -142,12 +142,15 @@ export function SidebarNav({
     canReadSysTags ||
     canReadBankStatements ||
     canReadCashStatements;
-  const showSettingsInventory = canReadInventoryItems;
   const showSettings =
     showSettingsAccess ||
     showSettingsGeneral ||
-    showSettingsInventory ||
-    canReadEmailInbox;
+    canReadEmailInbox ||
+    canReadInvoices ||
+    canReadBankStatements ||
+    canReadBom ||
+    canReadInventoryItems ||
+    canReadInventoryVouchers;
 
   return (
     <div className="flex-1 overflow-y-auto overflow-x-hidden">
@@ -634,44 +637,16 @@ export function SidebarNav({
                   contextPage="sys-tags"
                 />
               )}
-              {(canReadInvoices || canReadBankStatements || canReadBom) && (
+              {(canReadInvoices ||
+                canReadBankStatements ||
+                canReadBom ||
+                canReadInventoryItems ||
+                canReadInventoryVouchers) && (
                 <NavGroupItem
                   label={t("nav.items.customFields", "Trường tùy chỉnh")}
-                  onClick={() => openCustomFieldsDrawer("ALL", "INVOICE")}
+                  onClick={() => openCustomFieldsDrawer("ALL", "INVOICE_IN")}
                 />
               )}
-            </NavGroup>
-          )}
-
-          {showSettingsInventory && (
-            <NavGroup
-              collapsed={c}
-              icon={<Layers className="w-4 h-4 opacity-65 flex-shrink-0" />}
-              label={t("nav.items.erpInventoryMasters")}
-              active={
-                currentPage === "erp-inventory-uom" ||
-                currentPage === "erp-inventory-item-types" ||
-                currentPage === "erp-inventory-tracking-categories"
-              }
-            >
-              <NavGroupItem
-                label={t("nav.items.erpInventoryUom")}
-                active={currentPage === "erp-inventory-uom"}
-                onClick={() => navTo("erp-inventory-uom")}
-                contextPage="erp-inventory-uom"
-              />
-              <NavGroupItem
-                label={t("nav.items.erpInventoryItemTypes")}
-                active={currentPage === "erp-inventory-item-types"}
-                onClick={() => navTo("erp-inventory-item-types")}
-                contextPage="erp-inventory-item-types"
-              />
-              <NavGroupItem
-                label={t("nav.items.erpInventoryTrackingCategories")}
-                active={currentPage === "erp-inventory-tracking-categories"}
-                onClick={() => navTo("erp-inventory-tracking-categories")}
-                contextPage="erp-inventory-tracking-categories"
-              />
             </NavGroup>
           )}
         </NavSection>

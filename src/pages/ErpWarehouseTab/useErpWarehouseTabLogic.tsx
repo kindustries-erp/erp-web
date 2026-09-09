@@ -651,8 +651,7 @@ export function useErpWarehouseTabLogic() {
     <div className="w-full sm:w-auto flex items-center flex-wrap gap-2 py-0.5">
       <PillTabs<WarehouseVoucherTypeTab>
         className="w-full sm:w-auto shrink-0"
-        listClassName="h-8 p-0.5 rounded-full bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/60 shadow-[0_1px_2px_rgba(15,23,42,.03)]"
-        triggerClassName="h-7 px-3 text-xs rounded-full"
+        size="sm"
         items={[
           { value: "all", label: t("common.all", "Tất cả") },
           {
@@ -670,10 +669,9 @@ export function useErpWarehouseTabLogic() {
         ]}
         value={activeTypeTab}
         onValueChange={handleTypeTabChange}
-        hideBorder
       />
 
-      <div className="hidden sm:block h-4 w-px bg-slate-300/80 dark:bg-slate-700/80 shrink-0" />
+      <div className="hidden sm:block h-4 w-px bg-slate-300/80 dark:bg-zinc-700/80 shrink-0" />
 
       <WarehouseViewModeCombobox
         presets={columnViewPresetsHook.presets}
@@ -895,13 +893,6 @@ export function useErpWarehouseTabLogic() {
           onClick: () => handlePrintRow(row),
         },
         {
-          label: t("inventory.warehouseConfig", "Cấu hình kho"),
-          icon: <Settings className="h-3.5 w-3.5 text-muted-foreground" />,
-          onClick: () => {
-            handleOpenCustomFieldsDrawer(row.type);
-          },
-        },
-        {
           label: t("common.exportXlsx", "Xuất XLSX"),
           icon: (
             <FileSpreadsheet className="h-3.5 w-3.5 text-muted-foreground" />
@@ -909,6 +900,19 @@ export function useErpWarehouseTabLogic() {
           hidden: row.status === "DRAFT" || row.type === "adjustment",
           disabled: xlsxExportingId === row.id,
           onClick: () => handleExportXlsx(row),
+        },
+        {
+          label: t("inventory.cancelVoucher", "Hủy phiếu"),
+          icon: <XCircle className="h-3.5 w-3.5" />,
+          variant: "danger" as const,
+          hidden:
+            row.status !== "POSTED" ||
+            (row.type === "receipt" && !canUpdateReceipt) ||
+            (row.type === "issue" && !canUpdateIssue) ||
+            (row.type === "adjustment" && !canUpdateAdjustment),
+          onClick: () => {
+            setCancelTarget(row);
+          },
         },
         {
           label: t("common.delete", "Xóa"),
@@ -923,17 +927,23 @@ export function useErpWarehouseTabLogic() {
             setDeleteTarget(row);
           },
         },
+      ],
+    },
+    {
+      groupLabel: t("common.groupConfig", "Cấu hình"),
+      items: [
         {
-          label: t("inventory.cancelVoucher", "Hủy phiếu"),
-          icon: <XCircle className="h-3.5 w-3.5" />,
-          variant: "danger" as const,
-          hidden:
-            row.status !== "POSTED" ||
-            (row.type === "receipt" && !canUpdateReceipt) ||
-            (row.type === "issue" && !canUpdateIssue) ||
-            (row.type === "adjustment" && !canUpdateAdjustment),
+          label:
+            row.type === "receipt"
+              ? t("inventory.configReceipt", "Cấu hình phiếu nhập kho")
+              : row.type === "issue"
+                ? t("inventory.configIssue", "Cấu hình phiếu xuất kho")
+                : row.type === "adjustment"
+                  ? t("inventory.configAdjustment", "Cấu hình phiếu kiểm kê")
+                  : t("inventory.warehouseConfig", "Cấu hình chứng từ kho"),
+          icon: <Settings className="h-3.5 w-3.5 text-muted-foreground" />,
           onClick: () => {
-            setCancelTarget(row);
+            handleOpenCustomFieldsDrawer(row.type);
           },
         },
       ],

@@ -1,14 +1,16 @@
-import React, {
-  useState,
-  useMemo,
-  useRef,
-  useEffect,
-  useCallback,
-} from "react";
-import { Sparkles, FileSpreadsheet, Download, ChevronDown } from "lucide-react";
+import React, { useState, useMemo, useEffect, useCallback } from "react";
+import {
+  Sparkles,
+  FileSpreadsheet,
+  Download,
+  ChevronDown,
+  CheckCircle2,
+} from "lucide-react";
 import * as XLSX from "xlsx";
 import { Button } from "@/shared/components/ui/Button";
+import { Badge } from "@/shared/components/ui/badge";
 import { Tooltip } from "@/core/components/ui/Tooltip";
+import { Popover } from "@/core/components/ui/Popover";
 import { cn } from "@/shared/utils";
 import { DrawerSection, inputCls } from "@/shared/components/DrawerModal";
 import { ActionDropdown } from "@/shared/components/ActionDropdown";
@@ -22,6 +24,7 @@ import {
   type DataTableColumn,
 } from "@/shared/components/DataTable";
 import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
+import { ProductionIdentifierExcelImportModal } from "./ProductionIdentifierExcelImportModal";
 
 export interface ProductionIdentifier {
   id?: string;
@@ -44,6 +47,8 @@ export interface ProductionIdentifierRowItem extends ProductionIdentifier {
   id: string;
   originalIndex: number;
   isValid: boolean;
+  status: "COMPLETED" | "READY" | "PENDING";
+  statusText: string;
   hasDuplicate: boolean;
   isVinDupe: boolean;
   isEngDupe: boolean;
@@ -51,8 +56,12 @@ export interface ProductionIdentifierRowItem extends ProductionIdentifier {
   isISerDupe: boolean;
   isExistingClearedVin?: boolean;
   isExistingClearedEng?: boolean;
+  isExistingClearedSer?: boolean;
+  isExistingClearedISer?: boolean;
   isIncompleteNewVin?: boolean;
   isIncompleteNewEng?: boolean;
+  isIncompleteNewSer?: boolean;
+  isIncompleteNewISer?: boolean;
 }
 
 export type TrackingPolicy = "NONE" | "SERIAL" | "LOT" | "VEHICLE" | "CUSTOM";
@@ -116,12 +125,19 @@ export function isIdentifierValid(
   policy: TrackingPolicy,
 ): boolean {
   if (policy === "VEHICLE") {
-    return !!id.vinNo?.trim() && !!id.engineNo?.trim();
+    return (
+      !!id.vinNo?.trim() &&
+      !!id.engineNo?.trim() &&
+      !!id.serialNo?.trim() &&
+      !!id.internalSerialNo?.trim()
+    );
   }
   if (policy === "SERIAL") {
-    return !!(id.internalSerialNo?.trim() || id.serialNo?.trim());
+    return !!id.serialNo?.trim() || !!id.internalSerialNo?.trim();
   }
-  if (policy === "LOT") return !!id.lotNo?.trim();
+  if (policy === "LOT") {
+    return !!id.lotNo?.trim();
+  }
   return true;
 }
 
@@ -130,53 +146,44 @@ export function identifiersAllValid(
   policy: TrackingPolicy,
 ): boolean {
   if (policy === "NONE") return true;
-  return ids.every((x) => isIdentifierValid(x, policy));
+  return ids.length > 0 && ids.every((id) => isIdentifierValid(id, policy));
 }
 
-export function findVehicleDuplicate(ids: ProductionIdentifier[]) {
-  const seenVin = new Set<string>();
-  const seenEngine = new Set<string>();
-  const seenVehicleSerial = new Set<string>();
-  const seenInternalSerial = new Set<string>();
+export function findVehicleDuplicate(
+  ids: ProductionIdentifier[],
+): string | null {
+  const vins = new Set<string>();
+  const engines = new Set<string>();
+  const serials = new Set<string>();
+  const internalSerials = new Set<string>();
 
-  for (const row of ids) {
-    const vin = row.vinNo?.trim().toUpperCase();
-    const engine = row.engineNo?.trim().toUpperCase();
-    const vSerial = row.serialNo?.trim().toUpperCase();
-    const iSerial = row.internalSerialNo?.trim().toUpperCase();
-
+  for (const id of ids) {
+    const vin = id.vinNo?.trim().toUpperCase();
     if (vin) {
-      if (seenVin.has(vin)) return "Số khung (VIN) bị trùng trong danh sách";
-      seenVin.add(vin);
+      if (vins.has(vin)) return "Số khung (VIN) bị trùng trong danh sách";
+      vins.add(vin);
     }
-    if (engine) {
-      if (seenEngine.has(engine)) return "Số máy bị trùng trong danh sách";
-      seenEngine.add(engine);
+
+    const eng = id.engineNo?.trim().toUpperCase();
+    if (eng) {
+      if (engines.has(eng)) return "Số máy bị trùng trong danh sách";
+      engines.add(eng);
     }
-    if (vSerial) {
-      if (seenVehicleSerial.has(vSerial))
-        return "Số Serial xe bị trùng trong danh sách";
-      seenVehicleSerial.add(vSerial);
+
+    const ser = id.serialNo?.trim().toUpperCase();
+    if (ser) {
+      if (serials.has(ser)) return "Số Serial xe bị trùng trong danh sách";
+      serials.add(ser);
     }
-    if (iSerial) {
-      if (seenInternalSerial.has(iSerial))
+
+    const iser = id.internalSerialNo?.trim().toUpperCase();
+    if (iser) {
+      if (internalSerials.has(iser))
         return "Số Serial nội bộ bị trùng trong danh sách";
-      seenInternalSerial.add(iSerial);
+      internalSerials.add(iser);
     }
   }
   return null;
-}
-
-export interface ProductionIdentifierReviewTableProps {
-  policy: TrackingPolicy;
-  identifiers: ProductionIdentifier[];
-  onChange: (index: number, val: ProductionIdentifier) => void;
-  onSetIdentifiers: (rows: ProductionIdentifier[]) => void;
-  requiredQty?: number;
-  skuPrefix?: string;
-  orderSuffix?: string;
-  itemName?: string;
-  disabled?: boolean;
 }
 
 interface EditableCellProps {
@@ -184,140 +191,152 @@ interface EditableCellProps {
   hasError?: boolean;
   errorMessage?: string;
   placeholder?: string;
-  className?: string;
-  inputClassName?: string;
   disabled?: boolean;
   onChange: (val: string) => void;
+  className?: string;
 }
 
-const EditableCell = React.memo(function EditableCell({
+function EditableCell({
   value,
-  hasError = false,
+  hasError,
   errorMessage,
   placeholder,
-  className,
-  inputClassName,
-  disabled = false,
+  disabled,
   onChange,
+  className,
 }: EditableCellProps) {
-  const [localVal, setLocalVal] = useState(value);
-  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [localVal, setLocalVal] = useState(value || "");
 
   useEffect(() => {
-    setLocalVal(value);
+    setLocalVal(value || "");
   }, [value]);
 
-  useEffect(() => {
-    return () => {
-      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
-    };
-  }, []);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value;
-    setLocalVal(val);
-    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
-    debounceTimerRef.current = setTimeout(() => {
-      onChange(val);
-    }, 300);
-  };
-
   const handleBlur = () => {
-    if (debounceTimerRef.current) {
-      clearTimeout(debounceTimerRef.current);
+    if (localVal !== value) {
       onChange(localVal);
     }
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      (e.target as HTMLInputElement).blur();
+    }
+  };
+
   return (
-    <div className={cn("w-full py-0.5", className)}>
+    <div className="w-full relative group">
       <input
-        value={localVal}
-        onChange={handleChange}
-        onBlur={handleBlur}
+        type="text"
         disabled={disabled}
+        value={localVal}
         placeholder={placeholder}
+        onChange={(e) => setLocalVal(e.target.value)}
+        onBlur={handleBlur}
+        onKeyDown={handleKeyDown}
         className={cn(
           inputCls,
-          "w-full text-xs h-7 font-mono font-medium",
-          inputClassName,
-          hasError &&
-            "border-destructive focus-visible:ring-destructive bg-destructive/5",
+          "h-7 text-xs font-mono font-medium transition-all w-full",
+          "focus:ring-1 focus:ring-primary/40 focus:border-primary/60",
+          hasError
+            ? "border-destructive bg-destructive/5 text-destructive focus:ring-destructive/30"
+            : "border-transparent bg-transparent hover:border-border hover:bg-surface focus:bg-surface focus:border-border",
+          disabled && "opacity-60 cursor-not-allowed bg-muted/40",
+          className,
         )}
       />
       {hasError && errorMessage && (
-        <span className="text-[10px] text-destructive block mt-0.5 font-medium leading-tight">
+        <span className="hidden group-hover:block absolute left-1 -bottom-5 z-30 bg-destructive text-white text-[10px] px-1.5 py-0.5 rounded shadow-sm whitespace-nowrap pointer-events-none">
           {errorMessage}
         </span>
       )}
     </div>
   );
-});
+}
+
+interface ProductionIdentifierReviewTableProps {
+  policy: TrackingPolicy;
+  identifiers: ProductionIdentifier[];
+  onChange: (index: number, updated: ProductionIdentifier) => void;
+  onSetIdentifiers: (updated: ProductionIdentifier[]) => void;
+  disabled?: boolean;
+  skuPrefix?: string;
+  orderSuffix?: string;
+  requiredQty?: number;
+  itemName?: string;
+}
 
 export function ProductionIdentifierReviewTable({
   policy,
   identifiers,
   onChange,
   onSetIdentifiers,
+  disabled = false,
   skuPrefix = "FG",
   orderSuffix = "",
-  disabled = false,
 }: ProductionIdentifierReviewTableProps) {
   const t = useT();
   const showToast = useUIStore((s) => s.showToast);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Table Column State & Pagination
   const tableId = "production-identifier-declare-table";
   const tableState = useTableColumnState(tableId);
-
-  // Pagination State
   const [page, setPage] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(getDefaultPageSize);
 
-  // Track internal duplicate sets
+  // Popover state for internal serial generation
+  const unproducedRows = useMemo(
+    () => identifiers.filter((r) => !r.isExisting),
+    [identifiers],
+  );
+  const remainingUnproducedCount = unproducedRows.length;
+  const [genPopoverOpen, setGenPopoverOpen] = useState(false);
+  const [genCount, setGenCount] = useState<number>(
+    remainingUnproducedCount > 0 ? remainingUnproducedCount : 1,
+  );
+
+  useEffect(() => {
+    if (remainingUnproducedCount > 0) {
+      setGenCount(remainingUnproducedCount);
+    }
+  }, [remainingUnproducedCount]);
+
+  // Excel Modal state
+  const [excelModalOpen, setExcelModalOpen] = useState(false);
+
+  // Pre-calculate duplicate sets for high-performance cell validation
   const duplicates = useMemo(() => {
     const vinCounts = new Map<string, number>();
-    const engineCounts = new Map<string, number>();
-    const serialCounts = new Map<string, number>();
-    const internalSerialCounts = new Map<string, number>();
+    const engCounts = new Map<string, number>();
+    const serCounts = new Map<string, number>();
+    const iSerCounts = new Map<string, number>();
 
-    identifiers.forEach((row) => {
-      const vin = row.vinNo?.trim().toUpperCase();
-      const eng = row.engineNo?.trim().toUpperCase();
-      const ser = row.serialNo?.trim().toUpperCase();
-      const iSer = row.internalSerialNo?.trim().toUpperCase();
-
+    identifiers.forEach((id) => {
+      const vin = id.vinNo?.trim().toUpperCase();
       if (vin) vinCounts.set(vin, (vinCounts.get(vin) || 0) + 1);
-      if (eng) engineCounts.set(eng, (engineCounts.get(eng) || 0) + 1);
-      if (ser) serialCounts.set(ser, (serialCounts.get(ser) || 0) + 1);
-      if (iSer)
-        internalSerialCounts.set(
-          iSer,
-          (internalSerialCounts.get(iSer) || 0) + 1,
-        );
+
+      const eng = id.engineNo?.trim().toUpperCase();
+      if (eng) engCounts.set(eng, (engCounts.get(eng) || 0) + 1);
+
+      const ser = id.serialNo?.trim().toUpperCase();
+      if (ser) serCounts.set(ser, (serCounts.get(ser) || 0) + 1);
+
+      const iSer = id.internalSerialNo?.trim().toUpperCase();
+      if (iSer) iSerCounts.set(iSer, (iSerCounts.get(iSer) || 0) + 1);
     });
 
+    const getDupes = (map: Map<string, number>) => {
+      const s = new Set<string>();
+      map.forEach((count, key) => {
+        if (count > 1) s.add(key);
+      });
+      return s;
+    };
+
     return {
-      vins: new Set(
-        Array.from(vinCounts.entries())
-          .filter(([, count]) => count > 1)
-          .map(([k]) => k),
-      ),
-      engines: new Set(
-        Array.from(engineCounts.entries())
-          .filter(([, count]) => count > 1)
-          .map(([k]) => k),
-      ),
-      serials: new Set(
-        Array.from(serialCounts.entries())
-          .filter(([, count]) => count > 1)
-          .map(([k]) => k),
-      ),
-      internalSerials: new Set(
-        Array.from(internalSerialCounts.entries())
-          .filter(([, count]) => count > 1)
-          .map(([k]) => k),
-      ),
+      vins: getDupes(vinCounts),
+      engines: getDupes(engCounts),
+      serials: getDupes(serCounts),
+      internalSerials: getDupes(iSerCounts),
     };
   }, [identifiers]);
 
@@ -342,17 +361,53 @@ export function ProductionIdentifierReviewTable({
       const isExisting = !!row.isExisting;
       const isExistingClearedVin = isExisting && !row.vinNo?.trim();
       const isExistingClearedEng = isExisting && !row.engineNo?.trim();
+      const isExistingClearedSer = isExisting && !row.serialNo?.trim();
+      const isExistingClearedISer = isExisting && !row.internalSerialNo?.trim();
 
       const isIncompleteNewVin =
-        !isExisting && !row.vinNo?.trim() && !!row.engineNo?.trim();
+        !isExisting &&
+        !row.vinNo?.trim() &&
+        (!!row.engineNo?.trim() ||
+          !!row.serialNo?.trim() ||
+          !!row.internalSerialNo?.trim());
       const isIncompleteNewEng =
-        !isExisting && !!row.vinNo?.trim() && !row.engineNo?.trim();
+        !isExisting &&
+        !row.engineNo?.trim() &&
+        (!!row.vinNo?.trim() ||
+          !!row.serialNo?.trim() ||
+          !!row.internalSerialNo?.trim());
+      const isIncompleteNewSer =
+        !isExisting &&
+        !row.serialNo?.trim() &&
+        (!!row.vinNo?.trim() ||
+          !!row.engineNo?.trim() ||
+          !!row.internalSerialNo?.trim());
+      const isIncompleteNewISer =
+        !isExisting &&
+        !row.internalSerialNo?.trim() &&
+        (!!row.vinNo?.trim() ||
+          !!row.engineNo?.trim() ||
+          !!row.serialNo?.trim());
+
+      const status: "COMPLETED" | "READY" | "PENDING" = isExisting
+        ? "COMPLETED"
+        : isValid
+          ? "READY"
+          : "PENDING";
+
+      const statusText = isExisting
+        ? t("Đã xuất xưởng")
+        : isValid
+          ? t("Sẵn sàng")
+          : t("Chưa khai báo");
 
       return {
         ...row,
         id: row.id || `row-${originalIndex}`,
         originalIndex,
         isValid,
+        status,
+        statusText,
         hasDuplicate,
         isVinDupe,
         isEngDupe,
@@ -360,11 +415,15 @@ export function ProductionIdentifierReviewTable({
         isISerDupe,
         isExistingClearedVin,
         isExistingClearedEng,
+        isExistingClearedSer,
+        isExistingClearedISer,
         isIncompleteNewVin,
         isIncompleteNewEng,
+        isIncompleteNewSer,
+        isIncompleteNewISer,
       };
     });
-  }, [identifiers, policy, duplicates]);
+  }, [identifiers, policy, duplicates, t]);
 
   const completedCount = useMemo(
     () => indexedRows.filter((r) => r.isValid).length,
@@ -440,6 +499,35 @@ export function ProductionIdentifierReviewTable({
           </span>
         ),
       },
+      {
+        key: "status",
+        header: headerFilter("status", t("Trạng thái")),
+        size: 135,
+        enableResizing: true,
+        cell: (row: ProductionIdentifierRowItem) => {
+          if (row.status === "COMPLETED") {
+            return (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 whitespace-nowrap">
+                <CheckCircle2 className="w-3 h-3 text-emerald-600 shrink-0" />
+                <span>{t("Đã xuất xưởng")}</span>
+              </span>
+            );
+          }
+          if (row.status === "READY") {
+            return (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-primary/10 text-primary border border-primary/20 whitespace-nowrap">
+                <Sparkles className="w-3 h-3 text-primary shrink-0" />
+                <span>{t("Sẵn sàng")}</span>
+              </span>
+            );
+          }
+          return (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-muted text-muted-foreground border border-border whitespace-nowrap">
+              <span>{t("Chưa khai báo")}</span>
+            </span>
+          );
+        },
+      },
     ];
 
     if (policy === "VEHICLE") {
@@ -453,12 +541,13 @@ export function ProductionIdentifierReviewTable({
             const hasError =
               row.isVinDupe ||
               row.isExistingClearedVin ||
-              row.isIncompleteNewVin;
+              row.isIncompleteNewVin ||
+              (!row.isExisting && !row.vinNo?.trim());
             const errorMessage = row.isVinDupe
               ? t("Trùng lặp trong danh sách")
               : row.isExistingClearedVin
                 ? t("Xe đã ghi nhận không được để trống Số khung")
-                : row.isIncompleteNewVin
+                : !row.vinNo?.trim()
                   ? t("Thiếu Số khung")
                   : undefined;
 
@@ -485,12 +574,13 @@ export function ProductionIdentifierReviewTable({
             const hasError =
               row.isEngDupe ||
               row.isExistingClearedEng ||
-              row.isIncompleteNewEng;
+              row.isIncompleteNewEng ||
+              (!row.isExisting && !row.engineNo?.trim());
             const errorMessage = row.isEngDupe
               ? t("Trùng lặp trong danh sách")
               : row.isExistingClearedEng
                 ? t("Xe đã ghi nhận không được để trống Số máy")
-                : row.isIncompleteNewEng
+                : !row.engineNo?.trim()
                   ? t("Thiếu Số máy")
                   : undefined;
 
@@ -510,15 +600,82 @@ export function ProductionIdentifierReviewTable({
         },
         {
           key: "serialNo",
-          header: headerFilter("serialNo", t("Số Serial xe")),
-          size: 150,
+          header: headerFilter("serialNo", t("Số Serial xe *")),
+          size: 165,
+          enableResizing: true,
+          cell: (row: ProductionIdentifierRowItem) => {
+            const hasError =
+              row.isSerDupe ||
+              row.isExistingClearedSer ||
+              row.isIncompleteNewSer ||
+              (!row.isExisting && !row.serialNo?.trim());
+            const errorMessage = row.isSerDupe
+              ? t("Trùng lặp số Serial")
+              : !row.serialNo?.trim()
+                ? t("Thiếu Số Serial xe")
+                : undefined;
+
+            return (
+              <EditableCell
+                value={row.serialNo}
+                hasError={hasError}
+                errorMessage={errorMessage}
+                placeholder={t("Theo tem xe...")}
+                disabled={disabled}
+                onChange={(val) =>
+                  handleCellEdit(row.originalIndex, "serialNo", val)
+                }
+              />
+            );
+          },
+        },
+        {
+          key: "internalSerialNo",
+          header: headerFilter("internalSerialNo", t("Số Serial nội bộ *")),
+          size: 215,
+          enableResizing: true,
+          cell: (row: ProductionIdentifierRowItem) => {
+            const hasError =
+              row.isISerDupe ||
+              row.isExistingClearedISer ||
+              row.isIncompleteNewISer ||
+              (!row.isExisting && !row.internalSerialNo?.trim());
+            const errorMessage = row.isISerDupe
+              ? t("Trùng lặp Serial nội bộ")
+              : !row.internalSerialNo?.trim()
+                ? t("Thiếu Serial nội bộ")
+                : undefined;
+
+            return (
+              <EditableCell
+                value={row.internalSerialNo}
+                hasError={hasError}
+                errorMessage={errorMessage}
+                placeholder={t("Tự động sinh hoặc nhập...")}
+                disabled={disabled}
+                onChange={(val) =>
+                  handleCellEdit(row.originalIndex, "internalSerialNo", val)
+                }
+              />
+            );
+          },
+        },
+      );
+    } else if (policy === "SERIAL") {
+      cols.push(
+        {
+          key: "serialNo",
+          header: headerFilter("serialNo", t("Số Serial (*)")),
+          size: 240,
           enableResizing: true,
           cell: (row: ProductionIdentifierRowItem) => (
             <EditableCell
-              value={row.serialNo}
-              hasError={row.isSerDupe}
-              errorMessage={t("Trùng lặp trong danh sách")}
-              placeholder={t("Tùy chọn (tem xe)...")}
+              value={row.serialNo || row.internalSerialNo}
+              hasError={row.isSerDupe || (!row.isExisting && !row.isValid)}
+              errorMessage={
+                row.isSerDupe ? t("Trùng lặp Số Serial") : t("Thiếu Số Serial")
+              }
+              placeholder={t("Nhập số Serial...")}
               disabled={disabled}
               onChange={(val) =>
                 handleCellEdit(row.originalIndex, "serialNo", val)
@@ -529,16 +686,12 @@ export function ProductionIdentifierReviewTable({
         {
           key: "internalSerialNo",
           header: headerFilter("internalSerialNo", t("Số Serial nội bộ")),
-          size: 185,
+          size: 220,
           enableResizing: true,
-          className: "bg-primary/5",
           cell: (row: ProductionIdentifierRowItem) => (
             <EditableCell
               value={row.internalSerialNo}
-              hasError={row.isISerDupe}
-              errorMessage={t("Trùng lặp trong danh sách")}
-              placeholder={t("Tự sinh theo kho...")}
-              inputClassName="text-primary font-medium"
+              placeholder={t("Tự động sinh...")}
               disabled={disabled}
               onChange={(val) =>
                 handleCellEdit(row.originalIndex, "internalSerialNo", val)
@@ -547,34 +700,17 @@ export function ProductionIdentifierReviewTable({
           ),
         },
       );
-    } else if (policy === "SERIAL") {
+    } else if (policy === "LOT") {
       cols.push({
-        key: "internalSerialNo",
-        header: headerFilter("internalSerialNo", t("Số Serial phụ tùng *")),
+        key: "lotNo",
+        header: headerFilter("lotNo", t("Số Lô (*)")),
         size: 220,
         enableResizing: true,
         cell: (row: ProductionIdentifierRowItem) => (
           <EditableCell
-            value={row.internalSerialNo || row.serialNo}
-            hasError={row.isISerDupe}
-            errorMessage={t("Trùng lặp trong danh sách")}
-            placeholder={t("Nhập hoặc tự sinh Serial...")}
-            disabled={disabled}
-            onChange={(val) =>
-              handleCellEdit(row.originalIndex, "internalSerialNo", val)
-            }
-          />
-        ),
-      });
-    } else if (policy === "LOT") {
-      cols.push({
-        key: "lotNo",
-        header: headerFilter("lotNo", t("Số Lô *")),
-        size: 200,
-        enableResizing: true,
-        cell: (row: ProductionIdentifierRowItem) => (
-          <EditableCell
             value={row.lotNo}
+            hasError={!row.isExisting && !row.isValid}
+            errorMessage={t("Thiếu Số Lô")}
             placeholder={t("Nhập số Lô...")}
             disabled={disabled}
             onChange={(val) => handleCellEdit(row.originalIndex, "lotNo", val)}
@@ -586,7 +722,7 @@ export function ProductionIdentifierReviewTable({
     cols.push({
       key: "notes",
       header: headerFilter("notes", t("Ghi chú")),
-      size: 180,
+      size: 190,
       enableResizing: true,
       cell: (row: ProductionIdentifierRowItem) => (
         <EditableCell
@@ -601,15 +737,34 @@ export function ProductionIdentifierReviewTable({
     return cols;
   }, [policy, headerFilter, t, disabled, handleCellEdit]);
 
-  // Auto-generate Internal Serials
-  const handleAutoGenerateInternalSerials = () => {
-    const updated = identifiers.map((row, idx) => ({
-      ...row,
-      internalSerialNo: generateInternalSerial(skuPrefix, idx + 1, orderSuffix),
-    }));
+  // Handle Confirmed Generation of Internal Serials via Popover
+  const handleConfirmGenerateSerials = () => {
+    const targetQty = Math.max(
+      1,
+      Math.min(genCount || 1, remainingUnproducedCount),
+    );
+    let count = 0;
+    const updated = identifiers.map((row, idx) => {
+      if (row.isExisting) return row;
+      if (count < targetQty) {
+        count++;
+        const genSerial = generateInternalSerial(
+          skuPrefix,
+          idx + 1,
+          orderSuffix,
+        );
+        return {
+          ...row,
+          internalSerialNo: genSerial,
+          ...(policy === "SERIAL" ? { serialNo: genSerial } : {}),
+        };
+      }
+      return row;
+    });
     onSetIdentifiers(updated);
+    setGenPopoverOpen(false);
     showToast({
-      title: t("Đã tự động tạo/làm mới Số Serial nội bộ cho tất cả các dòng"),
+      title: t(`Đã tự động tạo Số Serial cho ${count} dòng`),
       variant: "success",
     });
   };
@@ -626,8 +781,8 @@ export function ProductionIdentifierReviewTable({
       headers = [
         "Số khung (VIN) (*)",
         "Số máy (*)",
-        "Số Serial xe (tùy chọn)",
-        "Số Serial nội bộ",
+        "Số Serial xe (*)",
+        "Số Serial nội bộ (*)",
         "Ghi chú",
       ];
       sampleRows = [
@@ -642,7 +797,7 @@ export function ProductionIdentifierReviewTable({
         [
           `VIN-${cleanSku}-0002`,
           `ENG-${cleanSku}-0002`,
-          "",
+          `SER-002`,
           `SN-${cleanSku}-0002`,
           "",
         ],
@@ -674,119 +829,37 @@ export function ProductionIdentifierReviewTable({
     });
   };
 
-  // Import from Excel into the fixed array length (qtyToProduce)
-  const handleImportExcel = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (evt) => {
-      try {
-        const bstr = evt.target?.result;
-        const wb = XLSX.read(bstr, { type: "binary" });
-        const wsName = wb.SheetNames[0];
-        const ws = wb.Sheets[wsName];
-        const data = XLSX.utils.sheet_to_json<any>(ws);
-
-        const updated = [...identifiers];
-        let importIdx = 0;
-
-        data.forEach((row: any) => {
-          const vin =
-            row["Số khung (VIN) (*)"] ||
-            row["Số khung (VIN)"] ||
-            row["Số khung"] ||
-            row["VIN"] ||
-            row["vinNo"] ||
-            "";
-
-          const engine =
-            row["Số máy (*)"] ||
-            row["Số máy"] ||
-            row["Engine No"] ||
-            row["engineNo"] ||
-            "";
-
-          const vSerial =
-            row["Số Serial xe (tùy chọn)"] ||
-            row["Số Serial xe"] ||
-            row["Serial xe"] ||
-            "";
-
-          const iSerial =
-            row["Số Serial nội bộ"] ||
-            row["Serial nội bộ"] ||
-            row["Số Serial phụ tùng (*)"] ||
-            row["Số Serial"] ||
-            row["Serial"] ||
-            "";
-
-          const lot = row["Số Lô (*)"] || row["Số Lô"] || row["lotNo"] || "";
-          const note = row["Ghi chú"] || row["Notes"] || "";
-
-          if (importIdx < updated.length) {
-            const current = updated[importIdx];
-            if (policy === "VEHICLE" && (vin || engine)) {
-              updated[importIdx] = {
-                ...current,
-                vinNo: String(vin).trim(),
-                engineNo: String(engine).trim(),
-                serialNo: vSerial
-                  ? String(vSerial).trim()
-                  : current.isExisting
-                    ? current.serialNo
-                    : "",
-                internalSerialNo: iSerial
-                  ? String(iSerial).trim()
-                  : current.internalSerialNo ||
-                    generateInternalSerial(
-                      skuPrefix,
-                      importIdx + 1,
-                      orderSuffix,
-                    ),
-                notes: note ? String(note).trim() : current.notes,
-              };
-              importIdx++;
-            } else if (policy === "SERIAL" && (iSerial || vSerial)) {
-              updated[importIdx] = {
-                ...current,
-                internalSerialNo: String(iSerial || vSerial).trim(),
-                serialNo: String(vSerial || iSerial).trim(),
-                notes: note ? String(note).trim() : current.notes,
-              };
-              importIdx++;
-            } else if (policy === "LOT" && lot) {
-              updated[importIdx] = {
-                ...current,
-                lotNo: String(lot).trim(),
-                notes: note ? String(note).trim() : current.notes,
-              };
-              importIdx++;
-            }
-          }
-        });
-
-        if (importIdx > 0) {
-          onSetIdentifiers(updated);
-          showToast({
-            title: `${t("Đã nhập")} ${importIdx} ${t("dòng từ file Excel")}`,
-            variant: "success",
-          });
-        } else {
-          showToast({
-            title: t("Không tìm thấy dữ liệu hợp lệ trong file Excel"),
-            variant: "default",
-          });
-        }
-      } catch {
-        showToast({
-          title: t("Lỗi đọc file Excel"),
-          variant: "destructive",
-        });
-      }
-    };
-    reader.readAsBinaryString(file);
-    e.target.value = "";
+  // Handle Confirmed Excel Import from Modal
+  const handleConfirmExcelImport = (
+    importedRows: Partial<ProductionIdentifier>[],
+  ) => {
+    const updated = [...identifiers];
+    let importIdx = 0;
+    for (
+      let i = 0;
+      i < updated.length && importIdx < importedRows.length;
+      i++
+    ) {
+      if (updated[i].isExisting) continue;
+      const item = importedRows[importIdx];
+      updated[i] = {
+        ...updated[i],
+        ...(item.vinNo ? { vinNo: item.vinNo } : {}),
+        ...(item.engineNo ? { engineNo: item.engineNo } : {}),
+        ...(item.serialNo ? { serialNo: item.serialNo } : {}),
+        ...(item.internalSerialNo
+          ? { internalSerialNo: item.internalSerialNo }
+          : {
+              internalSerialNo:
+                updated[i].internalSerialNo ||
+                generateInternalSerial(skuPrefix, i + 1, orderSuffix),
+            }),
+        ...(item.lotNo ? { lotNo: item.lotNo } : {}),
+        ...(item.notes ? { notes: item.notes } : {}),
+      };
+      importIdx++;
+    }
+    onSetIdentifiers(updated);
   };
 
   if (policy === "NONE") return null;
@@ -831,7 +904,100 @@ export function ProductionIdentifierReviewTable({
     </div>
   );
 
-  // Standard App Button Action Header (Main Action = Import Excel, Dropdown = Auto Gen & Download Template)
+  // Popover content for internal serial generation
+  const genPopoverContent = (
+    <div className="p-3.5 space-y-3 w-[290px]">
+      <div className="flex items-center justify-between border-b border-border pb-2">
+        <div className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
+          <Sparkles className="w-3.5 h-3.5 text-primary" />
+          <span>{t("Sinh Serial nội bộ tự động")}</span>
+        </div>
+        <Badge variant="outline" className="text-[10px] font-mono">
+          {t("Còn lại")}: {remainingUnproducedCount}
+        </Badge>
+      </div>
+
+      <div>
+        <label className="text-[11px] font-medium text-muted-foreground block mb-1">
+          {t("Số lượng cần sinh mã:")}
+        </label>
+        <div className="flex items-center gap-1.5">
+          <input
+            type="number"
+            min={1}
+            max={Math.max(1, remainingUnproducedCount)}
+            value={genCount}
+            onChange={(e) => {
+              const val = parseInt(e.target.value, 10);
+              setGenCount(
+                isNaN(val)
+                  ? 1
+                  : Math.max(1, Math.min(val, remainingUnproducedCount)),
+              );
+            }}
+            className={cn(
+              inputCls,
+              "h-7 text-xs font-mono font-semibold text-center w-20",
+            )}
+          />
+          <div className="flex items-center gap-1">
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="h-7 px-2 text-[11px]"
+              onClick={() => setGenCount(1)}
+            >
+              1
+            </Button>
+            {remainingUnproducedCount > 1 && (
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="h-7 px-2 text-[11px]"
+                onClick={() => setGenCount(remainingUnproducedCount)}
+              >
+                {t("Tất cả")} ({remainingUnproducedCount})
+              </Button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="text-[10px] text-muted-foreground bg-muted/50 p-2 rounded border border-border/60">
+        <span className="font-semibold">{t("Mẫu mã")}: </span>
+        <span className="font-mono text-foreground break-all">
+          {generateInternalSerial(skuPrefix, 1, orderSuffix)}
+        </span>
+      </div>
+
+      <div className="flex items-center justify-end gap-1.5 pt-1">
+        <Button
+          type="button"
+          size="sm"
+          variant="ghost"
+          className="h-7 text-xs"
+          onClick={() => setGenPopoverOpen(false)}
+        >
+          {t("Hủy")}
+        </Button>
+        <Button
+          type="button"
+          size="sm"
+          variant="primary"
+          className="h-7 text-xs gap-1"
+          disabled={remainingUnproducedCount <= 0}
+          onClick={handleConfirmGenerateSerials}
+        >
+          <Sparkles className="w-3 h-3" />
+          <span>{t("Xác nhận sinh")}</span>
+        </Button>
+      </div>
+    </div>
+  );
+
+  // Standard App Button Action Header (Main Action = Import Excel, Popover = Auto Gen, Dropdown = Template)
   const titleExtra = (
     <div className="flex items-center gap-2 flex-wrap justify-end">
       {!disabled && (
@@ -839,7 +1005,7 @@ export function ProductionIdentifierReviewTable({
           <Button
             size="sm"
             variant="ghost"
-            onClick={() => fileInputRef.current?.click()}
+            onClick={() => setExcelModalOpen(true)}
             className="h-7 rounded-none px-2.5 text-xs font-semibold gap-1.5 text-foreground hover:bg-surface-hover transition-colors"
             title={t("Nhập dữ liệu từ file Excel")}
           >
@@ -847,16 +1013,34 @@ export function ProductionIdentifierReviewTable({
             <span>{t("Nhập từ file Excel")}</span>
           </Button>
           <div className="w-[1px] bg-border my-1" />
+          <Popover
+            open={genPopoverOpen}
+            onOpenChange={setGenPopoverOpen}
+            content={genPopoverContent}
+            align="end"
+            side="bottom"
+          >
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-7 px-2.5 text-xs font-semibold gap-1.5 text-foreground hover:bg-surface-hover transition-colors"
+              title={
+                policy === "VEHICLE"
+                  ? t("Sinh Serial nội bộ")
+                  : t("Tự động sinh mã")
+              }
+            >
+              <Sparkles className="w-3.5 h-3.5 text-primary shrink-0" />
+              <span>
+                {policy === "VEHICLE"
+                  ? t("Sinh Serial nội bộ")
+                  : t("Tự động sinh mã")}
+              </span>
+            </Button>
+          </Popover>
+          <div className="w-[1px] bg-border my-1" />
           <ActionDropdown
             items={[
-              {
-                label:
-                  policy === "VEHICLE"
-                    ? t("Sinh Serial nội bộ")
-                    : t("Tự động sinh mã"),
-                icon: <Sparkles className="w-4 h-4 text-primary" />,
-                onClick: handleAutoGenerateInternalSerials,
-              },
               {
                 label:
                   policy === "VEHICLE"
@@ -883,41 +1067,45 @@ export function ProductionIdentifierReviewTable({
   );
 
   return (
-    <DrawerSection
-      title={sectionTitle}
-      titleExtra={titleExtra}
-      collapsible={true}
-      defaultCollapsed={false}
-      className="!mt-0"
-    >
-      {/* Hidden File Input for Excel Import */}
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept=".xlsx,.xls,.csv"
-        className="hidden"
-        onChange={handleImportExcel}
-      />
+    <>
+      <DrawerSection
+        title={sectionTitle}
+        titleExtra={titleExtra}
+        collapsible={true}
+        defaultCollapsed={false}
+        className="!mt-0"
+      >
+        <DataTable
+          tableId={tableId}
+          variant="spreadsheet"
+          items={paginatedRows}
+          columns={columns}
+          emptyLabel={t("Không có dòng nào phù hợp với bộ lọc")}
+          enableColumnResizing={true}
+          containerClassName="max-h-[calc(100vh-380px)] overflow-y-auto"
+          page={currentPage}
+          pageSize={pageSize}
+          total={totalItems}
+          totalPages={totalPages}
+          onPage={(p) => setPage(p)}
+          onPageSize={(s) => {
+            setPageSize(s);
+            setPage(1);
+          }}
+          pageSizeOptions={[20, 50, 100, 200]}
+        />
+      </DrawerSection>
 
-      <DataTable
-        tableId={tableId}
-        variant="spreadsheet"
-        items={paginatedRows}
-        columns={columns}
-        emptyLabel={t("Không có dòng nào phù hợp với bộ lọc")}
-        enableColumnResizing={true}
-        containerClassName="max-h-[calc(100vh-380px)] overflow-y-auto"
-        page={currentPage}
-        pageSize={pageSize}
-        total={totalItems}
-        totalPages={totalPages}
-        onPage={(p) => setPage(p)}
-        onPageSize={(s) => {
-          setPageSize(s);
-          setPage(1);
-        }}
-        pageSizeOptions={[20, 50, 100, 200]}
+      {/* Standard Excel Import Modal with Append Notice & Validation */}
+      <ProductionIdentifierExcelImportModal
+        open={excelModalOpen}
+        onClose={() => setExcelModalOpen(false)}
+        policy={policy}
+        skuPrefix={skuPrefix}
+        orderSuffix={orderSuffix}
+        remainingQty={remainingUnproducedCount}
+        onConfirmImport={handleConfirmExcelImport}
       />
-    </DrawerSection>
+    </>
   );
 }

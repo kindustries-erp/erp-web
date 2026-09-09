@@ -114,7 +114,6 @@ export enum ErpQueryScope {
 export enum InventoryMasterKind {
   UOMS = "uoms",
   ITEM_TYPES = "item-types",
-  TRACKING_CATEGORIES = "tracking-categories",
 }
 
 export interface InventoryItemListFilters extends ListParams {
@@ -135,12 +134,7 @@ export function createInventoryItemsListKey(filters: InventoryItemListFilters) {
 }
 
 export function createInventoryMastersKey(
-  kind:
-    | InventoryMasterKind
-    | "uoms"
-    | "item-types"
-    | "tracking-categories"
-    | string,
+  kind: InventoryMasterKind | "uoms" | "item-types" | string,
   params?: ListParams & { isActive?: boolean },
 ) {
   return [
