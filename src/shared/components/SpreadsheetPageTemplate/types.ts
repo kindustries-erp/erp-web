@@ -18,6 +18,7 @@ export interface SpreadsheetPageTemplateProps<T> {
   tabs?: TabItem[];
   activeTab?: string;
   onTabChange?: (value: string) => void;
+  tabVariant?: "underline" | "pill";
   hideTabs?: boolean;
 
   // --- Table Data & State ---

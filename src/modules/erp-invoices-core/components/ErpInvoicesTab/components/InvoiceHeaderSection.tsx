@@ -211,8 +211,7 @@ export const InvoiceHeaderSection = React.memo(function InvoiceHeaderSection({
     <div className="w-full sm:w-auto flex items-center flex-wrap gap-2 py-0.5">
       <PillTabs
         className="w-full sm:w-auto shrink-0"
-        listClassName="h-8 p-0.5 rounded-full bg-[color:var(--muted)] border border-[color:var(--border)] shadow-[0_1px_2px_rgba(15,23,42,.03)]"
-        triggerClassName="h-7 px-2.5 sm:px-3.5 text-xs rounded-full"
+        size="sm"
         items={[
           { value: "all", label: t("tabAll", "Tất cả") },
           { value: "new", label: t("tabNew", "Mới") },
@@ -221,10 +220,9 @@ export const InvoiceHeaderSection = React.memo(function InvoiceHeaderSection({
         ]}
         value={activeTaxPresetKey}
         onValueChange={handleTaxTabChange}
-        hideBorder
       />
 
-      <div className="hidden sm:block h-4 w-px bg-[color:var(--border)] shrink-0" />
+      <div className="hidden sm:block h-4 w-px bg-slate-300/80 dark:bg-zinc-700/80 shrink-0" />
 
       <InvoiceViewModeCombobox
         presets={presets || columnViewPresetsHook.presets}

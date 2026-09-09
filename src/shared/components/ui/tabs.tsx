@@ -45,13 +45,10 @@ const TabsList = React.forwardRef<
       indicatorRef.current.style.setProperty("--i-accent", accent);
       indicatorRef.current.style.border = "";
     } else {
-      const grad =
-        "linear-gradient(135deg, #ffffff 0%, #fafafa 55%, #f5f5f5 100%)";
-      indicatorRef.current.style.background = grad;
-      indicatorRef.current.style.boxShadow =
-        "0 1px 2px rgba(15,23,42,.05), 0 8px 22px -8px rgba(15,23,42,.18)";
-      indicatorRef.current.style.border = "none";
-      indicatorRef.current.style.setProperty("--i-accent", "#ffffff");
+      indicatorRef.current.style.background = "";
+      indicatorRef.current.style.boxShadow = "";
+      indicatorRef.current.style.border = "";
+      indicatorRef.current.style.removeProperty("--i-accent");
     }
   }, []);
 
@@ -113,7 +110,7 @@ const TabsList = React.forwardRef<
         role="presentation"
         aria-hidden="true"
         data-tabs-indicator
-        className="pointer-events-none absolute top-1 bottom-1 left-0 rounded-full bg-white dark:bg-[color:var(--surface)] shadow-[0_1px_2px_rgba(0,0,0,0.08),0_0_0_1px_rgba(0,0,0,0.04)] dark:shadow-[0_1px_2px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,255,255,0.06)_inset] will-change-[left,width] z-0"
+        className="pointer-events-none absolute top-1 bottom-1 left-0 rounded-full bg-white dark:bg-zinc-800 shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-[0_1px_2px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,255,255,0.08)_inset] will-change-[left,width] z-0"
         style={{ width: 0, opacity: 0 }}
       />
     </TabsPrimitive.List>

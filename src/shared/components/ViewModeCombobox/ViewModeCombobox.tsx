@@ -106,9 +106,9 @@ export function ViewModeCombobox({
             type="button"
             className={cn(
               "h-8 px-2.5 inline-flex items-center gap-1.5 rounded-full text-xs font-medium shrink-0",
-              "bg-[color:var(--muted)] hover:bg-[color:var(--surface-hover)]",
-              "border border-[color:var(--border)] shadow-[0_1px_2px_rgba(15,23,42,.03)]",
-              "text-[color:var(--foreground)] transition-colors focus:outline-none focus:ring-1 focus:ring-[color:var(--primary)]/40",
+              "bg-slate-100/80 hover:bg-slate-200/70 dark:bg-zinc-800/80 dark:hover:bg-zinc-700/80",
+              "border border-slate-200/60 dark:border-zinc-700/60 shadow-[0_1px_2px_rgba(15,23,42,.03)]",
+              "text-slate-700 dark:text-zinc-200 transition-colors focus:outline-none focus:ring-1 focus:ring-primary/40",
               disabled && "opacity-50 cursor-not-allowed",
               className,
             )}
@@ -116,13 +116,13 @@ export function ViewModeCombobox({
               defaultValue: t("cases.viewMode", { defaultValue: "Chế độ xem" }),
             })}
           >
-            <SlidersHorizontal className="w-3.5 h-3.5 text-[color:var(--muted-fg)] shrink-0" />
+            <SlidersHorizontal className="w-3.5 h-3.5 text-slate-500 dark:text-zinc-400 shrink-0" />
             <span className={cn("truncate", maxLabelWidthClass)}>
               {activeLabel}
             </span>
             <ChevronDown
               className={cn(
-                "w-3 h-3 text-[color:var(--muted-fg)] transition-transform duration-200 shrink-0",
+                "w-3 h-3 text-slate-400 dark:text-zinc-500 transition-transform duration-200 shrink-0",
                 open && "rotate-180",
               )}
             />
@@ -133,9 +133,9 @@ export function ViewModeCombobox({
           <Popover.Content
             align="start"
             sideOffset={6}
-            className="z-[9999] w-56 rounded-xl border border-[color:var(--popup-border)] bg-[color:var(--popup-bg)] backdrop-blur-md p-1.5 shadow-xl text-xs space-y-1 animate-in fade-in-0 zoom-in-95"
+            className="z-[9999] w-56 rounded-xl border border-slate-200/80 dark:border-zinc-700/80 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md p-1.5 shadow-xl text-xs space-y-1 animate-in fade-in-0 zoom-in-95"
           >
-            <div className="px-2 py-1 text-[11px] font-semibold text-[color:var(--muted-fg)] uppercase tracking-wider">
+            <div className="px-2 py-1 text-[11px] font-semibold text-slate-400 dark:text-zinc-500 uppercase tracking-wider">
               {t("viewMode", {
                 defaultValue: t("cases.viewMode", {
                   defaultValue: "Chế độ xem",
@@ -156,8 +156,8 @@ export function ViewModeCombobox({
                     className={cn(
                       "group flex items-center justify-between px-2 py-1.5 rounded-lg cursor-pointer transition-colors",
                       isSelected
-                        ? "bg-[color:var(--primary)]/10 text-[color:var(--primary)] font-medium dark:bg-[color:var(--primary)]/15"
-                        : "hover:bg-[color:var(--popup-bg-hover)] text-[color:var(--foreground)]",
+                        ? "bg-primary/10 text-primary font-medium dark:bg-primary/20"
+                        : "hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-300",
                     )}
                     onClick={() => {
                       onSelect(preset);
@@ -181,7 +181,7 @@ export function ViewModeCombobox({
                           onEditView(preset);
                           setOpen(false);
                         }}
-                        className="p-1 rounded text-[color:var(--muted-fg)] hover:text-[color:var(--foreground)] hover:bg-[color:var(--popup-bg-hover)] transition-colors"
+                        className="p-1 rounded text-slate-400 hover:text-slate-700 dark:hover:text-zinc-200 hover:bg-slate-200/60 dark:hover:bg-zinc-700/60 transition-colors"
                         title={t("viewModeEdit", {
                           defaultValue: t("cases.viewModeEdit", {
                             defaultValue: "Chỉnh sửa view",
@@ -195,7 +195,7 @@ export function ViewModeCombobox({
                         <button
                           type="button"
                           onClick={() => setPendingDeleteKey(preset.key)}
-                          className="p-1 rounded text-[color:var(--muted-fg)] hover:text-[color:var(--down-fg)] hover:bg-[color:var(--down-bg)] transition-colors"
+                          className="p-1 rounded text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
                           title={t("viewModeDelete", {
                             defaultValue: t("cases.viewModeDelete", {
                               defaultValue: "Xóa view",
@@ -211,14 +211,14 @@ export function ViewModeCombobox({
               })}
             </div>
 
-            <div className="pt-1 mt-1 border-t border-[color:var(--border)]">
+            <div className="pt-1 mt-1 border-t border-slate-200/70 dark:border-zinc-800/70">
               <button
                 type="button"
                 onClick={() => {
                   onCreateView();
                   setOpen(false);
                 }}
-                className="w-full flex items-center gap-2 px-2 py-1.5 text-xs font-medium text-[color:var(--primary)] hover:bg-[color:var(--primary)]/10 rounded-lg transition-colors"
+                className="w-full flex items-center gap-2 px-2 py-1.5 text-xs font-medium text-primary hover:bg-primary/10 dark:hover:bg-primary/20 rounded-lg transition-colors"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>

@@ -16,6 +16,7 @@ export function SpreadsheetPageTemplate<T>({
   tabs,
   activeTab,
   onTabChange,
+  tabVariant,
   hideTabs,
   tableId,
   items,
@@ -214,6 +215,7 @@ export function SpreadsheetPageTemplate<T>({
       tabs={tabs}
       activeTab={activeTab}
       onTabChange={onTabChange}
+      tabVariant={tabVariant}
       hideTabs={hideTabs}
       actions={!isFullscreen ? actionGroupNode : undefined}
     >

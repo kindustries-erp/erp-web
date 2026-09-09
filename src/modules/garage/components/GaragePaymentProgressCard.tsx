@@ -1,9 +1,8 @@
 import React, { useState, useMemo } from "react";
 import { Wallet, Truck, Table as TableIcon, Eye } from "lucide-react";
 import { money, shortMoney } from "@/shared/utils/format";
-import { cn } from "@/shared/utils";
 import { Badge } from "@/shared/components/ui/badge";
-import { Tabs, TabsList, TabsTrigger } from "@/shared/components/ui/tabs";
+import { PillTabs } from "@/shared/components/PillTabs";
 import {
   DataTable,
   createColumnHeaderFilter,
@@ -977,51 +976,24 @@ export function GaragePaymentProgressCard({
           </div>
 
           {/* Tab Switcher matching Overview Page */}
-          <Tabs
+          <PillTabs<"RECEIPT" | "PAYMENT">
             value={activeTab}
-            onValueChange={(val) => setActiveTab(val as "RECEIPT" | "PAYMENT")}
-          >
-            <TabsList className="h-10 rounded-full bg-slate-100/80 dark:bg-slate-800/80 shadow-[0_1px_2px_rgba(15,23,42,.03),0_6px_18px_-14px_rgba(15,23,42,.08)] p-1 gap-1.5 border border-slate-200/60 dark:border-slate-700/60">
-              <TabsTrigger
-                value="RECEIPT"
-                className={cn(
-                  "group relative shrink-0 rounded-full px-4 h-full gap-0 transition-[color,background-color,box-shadow,transform] duration-150 ease-out",
-                  "data-[state=inactive]:text-slate-500 data-[state=inactive]:font-medium hover:text-slate-700 dark:hover:text-slate-300",
-                  "data-[state=active]:text-slate-900 dark:data-[state=active]:text-white data-[state=active]:font-semibold whitespace-nowrap",
-                )}
-              >
-                <Wallet
-                  className={cn(
-                    "shrink-0 transition-[width,height,opacity,margin] duration-150 ease-out overflow-hidden",
-                    "w-0 h-0 opacity-0 mr-0",
-                    "group-data-[state=active]:w-3.5 group-data-[state=active]:h-3.5 group-data-[state=active]:opacity-100 group-data-[state=active]:mr-2",
-                  )}
-                />
-                <span className="text-[13px] tracking-tight">
-                  {t("progress.tabs.receivable", "Phải Thu")}
-                </span>
-              </TabsTrigger>
-              <TabsTrigger
-                value="PAYMENT"
-                className={cn(
-                  "group relative shrink-0 rounded-full px-4 h-full gap-0 transition-[color,background-color,box-shadow,transform] duration-150 ease-out",
-                  "data-[state=inactive]:text-slate-500 data-[state=inactive]:font-medium hover:text-slate-700 dark:hover:text-slate-300",
-                  "data-[state=active]:text-slate-900 dark:data-[state=active]:text-white data-[state=active]:font-semibold whitespace-nowrap",
-                )}
-              >
-                <Truck
-                  className={cn(
-                    "shrink-0 transition-[width,height,opacity,margin] duration-150 ease-out overflow-hidden",
-                    "w-0 h-0 opacity-0 mr-0",
-                    "group-data-[state=active]:w-3.5 group-data-[state=active]:h-3.5 group-data-[state=active]:opacity-100 group-data-[state=active]:mr-2",
-                  )}
-                />
-                <span className="text-[13px] tracking-tight">
-                  {t("progress.tabs.payable", "Phải Trả")}
-                </span>
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
+            onValueChange={setActiveTab}
+            size="sm"
+            items={[
+              {
+                value: "RECEIPT",
+                label: t("progress.tabs.receivable", "Phải Thu"),
+                icon: Wallet,
+              },
+              {
+                value: "PAYMENT",
+                label: t("progress.tabs.payable", "Phải Trả"),
+                icon: Truck,
+              },
+            ]}
+            className="w-auto"
+          />
         </div>
 
         <div className="bg-surface border border-border rounded-xl card-shadow p-5 flex flex-col gap-4">
