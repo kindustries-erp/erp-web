@@ -220,6 +220,10 @@ export const erpInvoicesVi = {
   bulkEditSuccessTitle: "Đã cập nhật {{fields}}",
   bulkEditErrorTitle: "Không thể cập nhật",
 
+  // Bulk Net-Off Drawer
+  bulkNetOffTitle: "Đối soát dòng tiền hàng loạt",
+  bulkNetOffSubtitle: "Đề xuất cấn trừ sao kê cho {{count}} hóa đơn đã chọn",
+
   // Export Drawer
   "exportDrawer.title": "Xuất Excel hóa đơn",
   "exportDrawer.partsTitle": "Xuất Excel bảng kê phụ tùng",

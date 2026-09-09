@@ -309,7 +309,7 @@ export function NetOffRightPanel({
                   s.txn.debitAmount > 0 ? s.txn.debitAmount : s.txn.creditAmount
                 }
                 isSuggestion={true}
-                badgeType={s.confidence || "PERFECT"}
+                badgeType={s.score?.badge || s.confidence || "PERFECT"}
                 matchedKeywords={s.matchedKeywords || []}
                 onAccept={() => handleToggleSuggestion(s.txn)}
                 onViewDetail={(id) => setDetailTxnId(id)}

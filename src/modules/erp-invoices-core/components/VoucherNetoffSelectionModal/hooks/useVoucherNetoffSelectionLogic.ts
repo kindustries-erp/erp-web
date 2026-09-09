@@ -137,7 +137,7 @@ export function useVoucherNetoffSelectionLogic({
     enabled: open,
   });
 
-  const vouchers = data?.data || [];
+  const vouchers = data?.items || data?.data || [];
 
   // Target Invoice & Debt Calculations
   const resolvedTarget = useMemo(() => {
@@ -184,7 +184,16 @@ export function useVoucherNetoffSelectionLogic({
     enabled: open && !!targetInvoiceId,
   });
 
-  const suggestions = suggestionsData?.suggestions || [];
+  const suggestions = useMemo(() => {
+    if (!suggestionsData) return [];
+    if (targetInvoiceId && Array.isArray(suggestionsData[targetInvoiceId])) {
+      return suggestionsData[targetInvoiceId];
+    }
+    if (Array.isArray((suggestionsData as any)?.suggestions)) {
+      return (suggestionsData as any).suggestions;
+    }
+    return [];
+  }, [suggestionsData, targetInvoiceId]);
 
   // Lọc suggestions theo chiều đối soát
   const filteredSuggestions = useMemo(() => {
