@@ -223,6 +223,11 @@ export const erpInvoicesVi = {
   // Bulk Net-Off Drawer
   bulkNetOffTitle: "Đối soát dòng tiền hàng loạt",
   bulkNetOffSubtitle: "Đề xuất cấn trừ sao kê cho {{count}} hóa đơn đã chọn",
+  paidFullShortBadge: "✓ Đã cấn trừ đủ",
+  invoiceFullySettledTitle: "Hóa đơn đã được cấn trừ đủ 100%",
+  invoiceFullySettledDesc:
+    "Hóa đơn này không còn số dư cần cấn trừ thêm. Bạn có thể xem các giao dịch đã cấn trừ ở danh sách bên dưới.",
+  existingInvoiceNetOffsTitle: "Giao dịch đã cấn trừ trước đó",
 
   // Export Drawer
   "exportDrawer.title": "Xuất Excel hóa đơn",

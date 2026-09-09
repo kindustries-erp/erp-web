@@ -38,6 +38,7 @@ interface NetOffRightPanelProps {
   handleToggleSuggestion: (txn: any) => void;
   setDetailTxnId: (id: string | null) => void;
   existingCaseSettlements?: any[];
+  existingInvoiceNetOffs?: any[];
 }
 
 export function NetOffRightPanel({
@@ -62,6 +63,7 @@ export function NetOffRightPanel({
   handleToggleSuggestion,
   setDetailTxnId,
   existingCaseSettlements,
+  existingInvoiceNetOffs,
 }: NetOffRightPanelProps) {
   const { t } = useTranslation(["erpInvoices", "common"]);
 
@@ -211,9 +213,25 @@ export function NetOffRightPanel({
                 ? t("remainingToPayTarget", "Cần chi còn lại:")
                 : t("remainingToCollectTarget", "Cần thu còn lại:")}
             </span>
-            <span className="font-bold text-slate-900 dark:text-slate-100 font-mono">
-              {money(currentRemaining)}
-            </span>
+            <div className="flex items-center gap-1.5">
+              {currentRemaining === 0 &&
+                (resolvedTarget?.totalAmount || invoice?.totalAmount || 0) >
+                  0 && (
+                  <span className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-1.5 py-0.2 rounded border border-emerald-300 dark:border-emerald-800">
+                    {t("paidFullShortBadge", "✓ Đã cấn trừ đủ")}
+                  </span>
+                )}
+              <span
+                className={cn(
+                  "font-bold font-mono",
+                  currentRemaining === 0
+                    ? "text-emerald-600 dark:text-emerald-400"
+                    : "text-slate-900 dark:text-slate-100",
+                )}
+              >
+                {money(currentRemaining)}
+              </span>
+            </div>
           </div>
 
           <div className="flex justify-between items-center border-t border-slate-200/60 dark:border-slate-800 pt-2 font-bold">
@@ -325,6 +343,26 @@ export function NetOffRightPanel({
               />
             ))}
           </div>
+        ) : currentRemaining === 0 &&
+          isInvoiceContext &&
+          selectedIds.length === 0 ? (
+          <div className="text-xs italic text-center py-3 bg-emerald-50/50 dark:bg-emerald-950/20 rounded-lg border border-dashed border-emerald-300/80 dark:border-emerald-800 px-3 space-y-1">
+            <div className="font-semibold text-emerald-800 dark:text-emerald-300 flex items-center justify-center gap-1">
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+              <span>
+                {t(
+                  "invoiceFullySettledTitle",
+                  "Hóa đơn đã được cấn trừ đủ 100%",
+                )}
+              </span>
+            </div>
+            <div className="text-[11px] text-slate-500 dark:text-slate-400">
+              {t(
+                "invoiceFullySettledDesc",
+                "Hóa đơn này không còn số dư cần cấn trừ thêm. Bạn có thể xem các giao dịch đã cấn trừ ở danh sách bên dưới.",
+              )}
+            </div>
+          </div>
         ) : (
           <div className="text-xs text-muted-foreground italic text-center py-3 bg-slate-50/50 dark:bg-slate-900/30 rounded-lg border border-dashed border-border px-3">
             {selectedIds.length > 0
@@ -340,54 +378,131 @@ export function NetOffRightPanel({
         )}
       </DrawerSection>
 
-      {/* SECTION 4: LỊCH SỬ DÒNG TIỀN ĐÃ GHI NHẬN TRƯỚC ĐÓ (CHO CASE) */}
-      {existingCaseSettlements && existingCaseSettlements.length > 0 && (
-        <DrawerSection
-          title={t("pastSettlementsTitle", "Dòng tiền đã ghi nhận trước đó")}
-          titleExtra={
-            <span className="text-[10px] font-semibold text-slate-500">
-              {existingCaseSettlements.length} khoản
-            </span>
-          }
-          collapsible={true}
-          defaultCollapsed={true}
-        >
-          <div className="space-y-1.5 max-h-[220px] overflow-y-auto pr-1 scrollbar-thin">
-            {existingCaseSettlements.map((item: any, idx: number) => (
-              <div
-                key={item.id || idx}
-                className="p-2 rounded-lg bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700 text-xs flex items-center justify-between"
-              >
-                <div className="flex flex-col min-w-0 pr-2">
-                  <span className="font-semibold text-slate-800 dark:text-slate-200 truncate">
-                    {item.sourceChannel === "ON_SYSTEM"
-                      ? item.bankName || "Sao kê ERP"
-                      : item.category === "TIEN_MAT_NGOAI"
-                        ? "Tiền mặt ngoài"
-                        : item.category === "CHUYEN_KHOAN_CA_NHAN"
-                          ? "CK cá nhân"
-                          : "Cấn trừ khác"}
-                  </span>
-                  <span className="text-[10px] text-slate-400 font-mono">
-                    {formatGMT7(item.transDate || item.createdAt, "date")}
-                  </span>
-                </div>
-                <span
-                  className={cn(
-                    "font-mono font-bold shrink-0",
-                    item.settlementType === "RECEIPT"
-                      ? "text-emerald-600"
-                      : "text-amber-600",
+      {/* SECTION 4A: GIAO DỊCH SAO KÊ ĐÃ CẤN TRỪ TRƯỚC ĐÓ (CHO HÓA ĐƠN) */}
+      {isInvoiceContext &&
+        existingInvoiceNetOffs &&
+        existingInvoiceNetOffs.length > 0 && (
+          <DrawerSection
+            title={
+              <div className="flex items-center gap-1.5 font-bold text-xs uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                <span>
+                  {t(
+                    "existingInvoiceNetOffsTitle",
+                    "Giao dịch đã cấn trừ trước đó",
                   )}
-                >
-                  {item.settlementType === "RECEIPT" ? "+" : "-"}
-                  {money(item.amount)}
                 </span>
               </div>
-            ))}
-          </div>
-        </DrawerSection>
-      )}
+            }
+            titleExtra={
+              <span className="text-[10px] font-semibold text-slate-500">
+                {existingInvoiceNetOffs.length} giao dịch
+              </span>
+            }
+            collapsible={true}
+            defaultCollapsed={false}
+          >
+            <div className="space-y-1.5 max-h-[220px] overflow-y-auto pr-1 scrollbar-thin">
+              {existingInvoiceNetOffs.map((item: any, idx: number) => {
+                const bankName =
+                  item.bankTransaction?.bankAccount?.bankName ||
+                  item.bankTransaction?.bankName ||
+                  item.bankTransaction?.cashBook?.name ||
+                  "Sao kê ERP";
+                const refNo =
+                  item.bankTransaction?.referenceNumber ||
+                  `GD #${(item.bankTransactionId || "").slice(0, 8)}`;
+                const transDate = item.bankTransaction?.transDate;
+                const amount = Number(
+                  item.netOffAmount || item.net_off_amount || 0,
+                );
+
+                return (
+                  <div
+                    key={item.id || idx}
+                    className="p-2 rounded-lg bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700 text-xs flex items-center justify-between"
+                  >
+                    <div className="flex flex-col min-w-0 pr-2">
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-semibold text-slate-800 dark:text-slate-200 truncate">
+                          {bankName}
+                        </span>
+                        <span
+                          className="text-[10px] font-mono text-primary hover:underline cursor-pointer"
+                          onClick={() =>
+                            item.bankTransactionId &&
+                            setDetailTxnId(item.bankTransactionId)
+                          }
+                        >
+                          {refNo}
+                        </span>
+                      </div>
+                      {transDate && (
+                        <span className="text-[10px] text-slate-400 font-mono">
+                          {formatGMT7(transDate, "date")}
+                        </span>
+                      )}
+                    </div>
+                    <span className="font-mono font-bold shrink-0 text-emerald-600 dark:text-emerald-400">
+                      {money(amount)}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </DrawerSection>
+        )}
+
+      {/* SECTION 4B: LỊCH SỬ DÒNG TIỀN ĐÃ GHI NHẬN TRƯỚC ĐÓ (CHO CASE) */}
+      {!isInvoiceContext &&
+        existingCaseSettlements &&
+        existingCaseSettlements.length > 0 && (
+          <DrawerSection
+            title={t("pastSettlementsTitle", "Dòng tiền đã ghi nhận trước đó")}
+            titleExtra={
+              <span className="text-[10px] font-semibold text-slate-500">
+                {existingCaseSettlements.length} khoản
+              </span>
+            }
+            collapsible={true}
+            defaultCollapsed={true}
+          >
+            <div className="space-y-1.5 max-h-[220px] overflow-y-auto pr-1 scrollbar-thin">
+              {existingCaseSettlements.map((item: any, idx: number) => (
+                <div
+                  key={item.id || idx}
+                  className="p-2 rounded-lg bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700 text-xs flex items-center justify-between"
+                >
+                  <div className="flex flex-col min-w-0 pr-2">
+                    <span className="font-semibold text-slate-800 dark:text-slate-200 truncate">
+                      {item.sourceChannel === "ON_SYSTEM"
+                        ? item.bankName || "Sao kê ERP"
+                        : item.category === "TIEN_MAT_NGOAI"
+                          ? "Tiền mặt ngoài"
+                          : item.category === "CHUYEN_KHOAN_CA_NHAN"
+                            ? "CK cá nhân"
+                            : "Cấn trừ khác"}
+                    </span>
+                    <span className="text-[10px] text-slate-400 font-mono">
+                      {formatGMT7(item.transDate || item.createdAt, "date")}
+                    </span>
+                  </div>
+                  <span
+                    className={cn(
+                      "font-mono font-bold shrink-0",
+                      item.settlementType === "RECEIPT"
+                        ? "text-emerald-600"
+                        : "text-amber-600",
+                    )}
+                  >
+                    {item.settlementType === "RECEIPT" ? "+" : "-"}
+                    {money(item.amount)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </DrawerSection>
+        )}
     </div>
   );
 }
