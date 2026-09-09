@@ -92,7 +92,10 @@ jobs:
         run: |
           set -euo pipefail
           image="${IMAGE_NAME}:${IMAGE_SHA}"
-          payload="$(jq -n --arg stack "$KOMODO_WEB_STACK" --arg image "$image" '{stack:$stack,file_path:".env",contents:("ERP_GREENWAY_WEB_IMAGE=" + $image + "\n")}')"
+          payload="$(jq -n \
+            --arg stack "$KOMODO_WEB_STACK" \
+            --arg contents "ERP_GREENWAY_WEB_IMAGE=$image"$'\n' \
+            '{stack: $stack, file_path: ".env", contents: $contents}')"
           curl --fail-with-body --silent --show-error \
             -X POST "$KOMODO_URL/write/WriteStackFileContents" \
             -H "X-Api-Key: $KOMODO_API_KEY" \
@@ -107,7 +110,7 @@ jobs:
         run: |
           set -euo pipefail
           for path in PullStack DeployStack; do
-            payload="$(jq -n --arg stack "$KOMODO_WEB_STACK" '{stack:$stack}')"
+            payload="$(jq -n --arg stack "$KOMODO_WEB_STACK" '{stack: $stack}')"
             curl --fail-with-body --silent --show-error \
               -X POST "$KOMODO_URL/execute/$path" \
               -H "X-Api-Key: $KOMODO_API_KEY" \
@@ -119,8 +122,11 @@ jobs:
         run: |
           set -euo pipefail
           for i in $(seq 1 36); do
-            code="$(curl --silent --output /dev/null --write-out '%{http_code}' "$ELITE_WEB_URL/" || true)"
-            if [ "$code" = 200 ]; then echo "Web healthy: HTTP $code"; exit 0; fi
+            code="$(curl --connect-timeout 10 --silent --output /dev/null --write-out '%{http_code}' "$ELITE_WEB_URL/" || true)"
+            if [ "$code" = 200 ]; then
+              echo "Web healthy: HTTP $code"
+              exit 0
+            fi
             echo "Web attempt $i/36: HTTP $code"; sleep 5
           done
           exit 1
