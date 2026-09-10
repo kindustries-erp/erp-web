@@ -9,7 +9,6 @@ RUN bun install --frozen-lockfile
 COPY . .
 ARG VITE_APP_NAME
 ARG VITE_API_BASE_URL
-ARG NGINX_API_UPSTREAM=erp-api-klotus-master:10012
 ARG APP_ENV=production
 ENV VITE_APP_NAME=${VITE_APP_NAME}
 ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
@@ -22,8 +21,9 @@ FROM nginx:stable-alpine AS runner
 ARG NGINX_API_UPSTREAM=erp-api-klotus-master:10012
 
 COPY --from=builder /app/dist /usr/share/nginx/html
-COPY nginx.conf /tmp/default.conf
-RUN sed "s|__API_UPSTREAM__|${NGINX_API_UPSTREAM}|g" /tmp/default.conf > /etc/nginx/conf.d/default.conf
+COPY nginx.conf /etc/nginx/templates/default.conf.template
+
+ENV API_UPSTREAM_URL=${NGINX_API_UPSTREAM}
 
 EXPOSE 80
 
