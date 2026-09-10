@@ -55,8 +55,8 @@ jobs:
           push: true
           build-args: |
             VITE_APP_NAME=${{ vars.KLOTUS_MASTER_WEB_APP_NAME }}
-            VITE_API_BASE_URL=http://100.75.67.115:10016
-            NGINX_API_UPSTREAM=100.75.67.115:10016
+            VITE_API_BASE_URL=
+            NGINX_API_UPSTREAM=erp-klotus-production-elite-api-api-1:3000
             APP_ENV=klotus-production-elite
           tags: |
             ${{ env.IMAGE_NAME }}:latest

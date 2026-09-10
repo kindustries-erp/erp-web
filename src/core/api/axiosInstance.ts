@@ -11,7 +11,9 @@ import { vi } from "@/core/locale/vi";
 import { en } from "@/core/locale/en";
 
 export const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ?? "http://localhost:10000";
+  import.meta.env.VITE_API_BASE_URL !== undefined
+    ? import.meta.env.VITE_API_BASE_URL
+    : "http://localhost:10000";
 
 // ── Custom config flags for opt-out ──────────────────────────────────────────
 declare module "axios" {
