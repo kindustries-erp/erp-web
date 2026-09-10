@@ -9,18 +9,48 @@ export function useT() {
   const dict = locale === "en" ? en : vi;
   return useCallback(
     function t(key: string, fallback?: string): string {
-      if (key.includes(":")) {
-        const value = i18n.t(key, { defaultValue: fallback ?? key });
-        return typeof value === "string" ? value : (fallback ?? key);
+      if (!key) return fallback ?? "";
+
+      // 1. Direct key match in dictionary (flat strings, full sentences with punctuation, labels with colons)
+      if (
+        dict != null &&
+        typeof dict === "object" &&
+        Object.prototype.hasOwnProperty.call(dict, key)
+      ) {
+        const directVal = (dict as Record<string, unknown>)[key];
+        if (typeof directVal === "string") return directVal;
       }
 
+      // 2. Namespaced key via i18next (only if key contains ":" and does not end with ":")
+      if (key.includes(":") && !key.endsWith(":") && !key.startsWith(":")) {
+        const value = i18n.t(key, { defaultValue: fallback ?? key });
+        if (typeof value === "string" && value !== key) return value;
+      }
+
+      // 3. Nested path in dictionary (e.g. "common.save", "nav.dashboard")
       const parts = key.split(".");
       let cur: unknown = dict;
+      let matched = true;
       for (const p of parts) {
-        if (cur == null || typeof cur !== "object") return fallback ?? key;
+        if (
+          cur == null ||
+          typeof cur !== "object" ||
+          !(p in (cur as Record<string, unknown>))
+        ) {
+          matched = false;
+          break;
+        }
         cur = (cur as Record<string, unknown>)[p];
       }
-      return typeof cur === "string" ? cur : (fallback ?? key);
+      if (matched && typeof cur === "string") return cur;
+
+      // 4. Fallback to i18next if available
+      if (i18n.isInitialized && i18n.exists(key)) {
+        const value = i18n.t(key, { defaultValue: fallback ?? key });
+        if (typeof value === "string") return value;
+      }
+
+      return fallback ?? key;
     },
     [dict],
   );

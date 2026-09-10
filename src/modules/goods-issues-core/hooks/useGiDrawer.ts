@@ -39,6 +39,8 @@ export interface GiForm {
   status: string;
   remarks: string;
   lines: GiLineForm[];
+  globalAttributes?: Record<string, any>;
+  customAttributes?: Record<string, any>;
 }
 
 export function isMoLinkedGiLocked(
@@ -68,13 +70,17 @@ export const emptyGiForm = (): GiForm => ({
   status: "DRAFT",
   remarks: "",
   lines: [],
+  globalAttributes: {},
+  customAttributes: {},
 });
 
 export function buildGiForm(gi: ErpGoodsIssue): GiForm {
+  const customAttrs = gi.customAttributes || {};
   return {
     issueNo: gi.issueNo ?? "",
     issueDate: gi.issueDate ? gi.issueDate.slice(0, 10) : "",
-    issueType: gi.issueType ?? "SALE",
+    issueType:
+      (customAttrs.type_inventory_issue as string) || gi.issueType || "SALE",
     salesOrderId: gi.salesOrderId ?? "",
     productionOrderId: gi.productionOrderId ?? "",
     status: gi.status ?? "DRAFT",
@@ -92,10 +98,18 @@ export function buildGiForm(gi: ErpGoodsIssue): GiForm {
           unitCost: line.unitCost ?? "",
         }))
       : [emptyGiLine()],
+    globalAttributes: { ...customAttrs },
+    customAttributes: { ...customAttrs },
   };
 }
 
 export function buildGiPayload(form: GiForm): CreateGiPayload {
+  const customAttributes = {
+    ...(form.globalAttributes || {}),
+    ...(form.customAttributes || {}),
+    type_inventory_issue: form.issueType || "OTHER",
+  };
+
   return {
     issueNo: form.issueNo.trim(),
     issueDate: form.issueDate,
@@ -108,6 +122,7 @@ export function buildGiPayload(form: GiForm): CreateGiPayload {
         : undefined,
     status: form.status || "DRAFT",
     remarks: form.remarks.trim() || undefined,
+    customAttributes,
     lines: form.lines
       .filter((line) => {
         const qty = Number(line.qtyIssued);
@@ -362,6 +377,7 @@ export function useGiDrawer({
             variant: "success",
           });
         }
+
         setOpen(false);
         if (invalidateWarehouseQuery) {
           await queryClient.invalidateQueries({

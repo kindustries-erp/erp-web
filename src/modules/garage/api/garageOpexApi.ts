@@ -15,6 +15,8 @@ export interface GarageOpexItem {
   recurrenceUntilMonth?: number | null;
   recurrenceAnchorId?: string | null;
   createdBy?: string | null;
+  isAutoCalculated?: boolean;
+  isReadOnly?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -89,6 +91,10 @@ export interface GaragePnlItem {
   amount: number;
   ojAmount?: number;
   note?: string | null;
+  isFromDb?: boolean;
+  autoAmount?: number;
+  isAutoCalculated?: boolean;
+  isReadOnly?: boolean;
 }
 
 export interface GaragePnlReportResponse {
@@ -105,6 +111,19 @@ export interface GaragePnlReportResponse {
   };
   grossProfit: number;
   grossMarginRate: number;
+  kyGui?: {
+    caseCount: number;
+    revenue: number;
+    cogs: number;
+    grossProfit: number;
+    grossProfitRatio: number;
+  };
+  suaChuaChung?: {
+    caseCount: number;
+    revenue: number;
+    cogs: number;
+    grossProfit: number;
+  };
   opex: {
     total: number;
     ojTotal?: number;
@@ -114,6 +133,21 @@ export interface GaragePnlReportResponse {
   commission: {
     total: number;
     ojTotal?: number;
+    auto: {
+      kyGuiGrossProfit: number;
+      totalGrossProfit: number;
+      kyGuiProfitRate: number;
+      saleCommissionRate: number;
+      saleCommission: number;
+      dvCommissionRate: number;
+      dvCommission: number;
+      totalAuto: number;
+    };
+    manual?: {
+      total: number;
+      ojTotal?: number;
+      items: GaragePnlItem[];
+    };
     items: GaragePnlItem[];
   };
   netProfitAfterCommission: number;
@@ -130,6 +164,12 @@ export interface GaragePnlReportResponse {
     opexTotal: number;
     netProfitBeforeCommission: number;
     commissionTotal: number;
+    commissionAuto?: {
+      kyGuiProfitRate: number;
+      saleCommission: number;
+      dvCommission: number;
+      totalAuto: number;
+    };
     netProfitAfterCommission: number;
     netMarginRate: number;
   };

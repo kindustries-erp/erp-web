@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { moduleConfigApi } from "@/core/api/moduleConfigApi";
 import {
   Trash2,
   ChevronRight,
@@ -496,6 +498,7 @@ function BomTree({ bomId, fgToBomMap, itemsMap }: BomTreeProps) {
 
 export function ErpBomPage() {
   const t = useT();
+  const queryClient = useQueryClient();
   const { openCustomFieldsDrawer } = useAppStore();
   const canRead = useHasPermission(ErpResource.BOM, ErpAction.READ);
   const canCreate = useHasPermission(ErpResource.BOM, ErpAction.CREATE);
@@ -1016,11 +1019,32 @@ export function ErpBomPage() {
       if (statusTarget) {
         payload.status = statusTarget;
       }
+      let targetId = editing?.id;
       if (editing) {
         await bomCoreApi.update(editing.id, payload);
       } else {
-        await bomCoreApi.create(payload);
+        const res = await bomCoreApi.create(payload);
+        targetId = (res as any)?.data?.id || (res as any)?.id;
       }
+
+      // Save custom fields & global attributes via module-config API
+      if (targetId && form.globalAttributes) {
+        try {
+          await moduleConfigApi.saveEntityValues("BOM", targetId, {
+            globalAttributes: form.globalAttributes,
+            attributes: form.attributes || {},
+          });
+        } catch (cfErr) {
+          console.warn("Failed to save BOM custom fields", cfErr);
+        }
+      }
+
+      if (targetId) {
+        queryClient.invalidateQueries({
+          queryKey: ["module-entity-values", "BOM", targetId],
+        });
+      }
+
       closeDrawer();
       void loadAllBoms();
       if (!editing && page !== 1) setPage(1);
@@ -1435,7 +1459,7 @@ export function ErpBomPage() {
           items: [
             {
               label: t("bomConfig.title", "Cấu hình BOM"),
-              icon: <Settings className="w-4 h-4 text-violet-500" />,
+              icon: <Settings className="w-4 h-4 text-muted-foreground" />,
               onClick: () => openCustomFieldsDrawer("BOM", "Định mức (BOM)"),
             },
           ],
@@ -1452,18 +1476,12 @@ export function ErpBomPage() {
       onSort={handleSort}
       rowActions={(item) => [
         {
-          groupLabel: t("Tra cứu"),
+          groupLabel: t("groupTraCuu", "Tra cứu"),
           items: [
             {
               label: t("Chi tiết"),
               onClick: () => void openView(item),
               icon: <Eye className="h-[13px] w-[13px]" />,
-            },
-            {
-              label: t("Chỉnh sửa"),
-              onClick: () => void openEdit(item),
-              icon: <Pencil className="h-[13px] w-[13px]" />,
-              hidden: !canUpdate,
             },
             {
               label: t("common.exportExcel"),
@@ -1478,8 +1496,14 @@ export function ErpBomPage() {
           ],
         },
         {
-          groupLabel: t("Thao tác"),
+          groupLabel: t("groupThaoTac", "Thao tác"),
           items: [
+            {
+              label: t("Chỉnh sửa"),
+              onClick: () => void openEdit(item),
+              icon: <Pencil className="h-[13px] w-[13px]" />,
+              hidden: !canUpdate,
+            },
             {
               label: t("common.clone"),
               onClick: () => void handleClone(item),
@@ -1506,16 +1530,21 @@ export function ErpBomPage() {
               hidden: !canUpdate || item.status === "ACTIVE",
             },
             {
-              label: t("bomConfig.title", "Cấu hình BOM"),
-              onClick: () => openCustomFieldsDrawer("BOM", "Định mức (BOM)"),
-              icon: <Settings className="h-[13px] w-[13px]" />,
-            },
-            {
               label: t("Xóa"),
               onClick: () => setDeleteTarget(item),
               icon: <Trash2 className="h-[13px] w-[13px]" />,
               variant: "danger",
               hidden: !canDelete || item.status === "ACTIVE",
+            },
+          ],
+        },
+        {
+          groupLabel: t("groupCauHinh", "Cấu hình"),
+          items: [
+            {
+              label: t("bomConfig.title", "Cấu hình BOM"),
+              onClick: () => openCustomFieldsDrawer("BOM", "Định mức (BOM)"),
+              icon: <Settings className="h-[13px] w-[13px]" />,
             },
           ],
         },

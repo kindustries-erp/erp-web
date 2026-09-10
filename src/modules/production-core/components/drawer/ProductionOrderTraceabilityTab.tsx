@@ -101,14 +101,82 @@ export function ProductionOrderTraceabilityTab({
               }
             />
           )}
-          <DrawerRow
-            label={t("Kho thực hiện")}
-            value={order.warehouseCode || "—"}
-          />
         </div>
       </DrawerSection>
 
-      {/* Section 2: Mạng lưới chuỗi cung ứng Traceability */}
+      {/* Section 2: Cấu trúc linh kiện As-Built BOM (Serial phụ tùng gán theo xe) */}
+      {Array.isArray((order as any).serialAssignments) &&
+        (order as any).serialAssignments.length > 0 && (
+          <DrawerSection
+            title={t(
+              "Cấu trúc linh kiện As-Built BOM (Serial phụ tùng theo xe)",
+            )}
+            collapsible
+            defaultCollapsed={false}
+          >
+            <div className="overflow-x-auto rounded-xl border border-border/80 bg-card">
+              <table className="min-w-full text-xs">
+                <thead className="bg-muted/70 text-muted-foreground border-b border-border">
+                  <tr>
+                    <th className="px-3 py-2 text-center w-10 font-semibold">
+                      #
+                    </th>
+                    <th className="px-3 py-2 text-left font-semibold font-mono">
+                      {t("Số khung (VIN)")}
+                    </th>
+                    <th className="px-3 py-2 text-left font-semibold font-mono">
+                      {t("Số máy")}
+                    </th>
+                    <th className="px-3 py-2 text-left font-semibold">
+                      {t("Linh kiện / NVL")}
+                    </th>
+                    <th className="px-3 py-2 text-left font-semibold font-mono text-primary bg-primary/5">
+                      {t("Số Serial linh kiện")}
+                    </th>
+                    <th className="px-3 py-2 text-center font-semibold">
+                      {t("Nguồn gán")}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {(order as any).serialAssignments.map(
+                    (asgn: any, idx: number) => (
+                      <tr key={asgn.id || idx} className="hover:bg-muted/30">
+                        <td className="px-3 py-2 text-center text-muted-foreground font-mono">
+                          {idx + 1}
+                        </td>
+                        <td className="px-3 py-2 font-mono font-medium text-emerald-700 dark:text-emerald-400">
+                          {asgn.vinNo || "—"}
+                        </td>
+                        <td className="px-3 py-2 font-mono text-foreground">
+                          {asgn.engineNo || "—"}
+                        </td>
+                        <td className="px-3 py-2 font-medium text-foreground">
+                          {asgn.componentItemName || asgn.componentSku || "—"}
+                          {asgn.componentSku && asgn.componentItemName && (
+                            <span className="block text-[11px] font-mono text-muted-foreground">
+                              {asgn.componentSku}
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-3 py-2 font-mono font-semibold text-primary bg-primary/5">
+                          {asgn.componentSerialNo || "—"}
+                        </td>
+                        <td className="px-3 py-2 text-center">
+                          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-muted text-muted-foreground border border-border">
+                            {asgn.assignmentSource || "AUTO_FIFO"}
+                          </span>
+                        </td>
+                      </tr>
+                    ),
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </DrawerSection>
+        )}
+
+      {/* Section 3: Mạng lưới chuỗi cung ứng Traceability */}
       <DrawerSection
         title={t("Mạng lưới chuỗi cung ứng (Traceability Graph)")}
         collapsible

@@ -61,12 +61,13 @@ export interface CreateBomAttributeDefPayload {
 export type UpdateBomAttributeDefPayload =
   Partial<CreateBomAttributeDefPayload>;
 
-const BASE = "/api/v1/bom-config";
+const BASE = "/api/v1/module-config";
 
 export const bomConfigApi = {
   getCategories: async (): Promise<BomCategory[]> => {
     const { data } = await axiosInstance.get<BomCategory[]>(
       `${BASE}/categories`,
+      { params: { moduleKey: "BOM" } },
     );
     return data;
   },
@@ -76,7 +77,7 @@ export const bomConfigApi = {
   ): Promise<BomCategory> => {
     const { data } = await axiosInstance.post<BomCategory>(
       `${BASE}/categories`,
-      payload,
+      { ...payload, moduleKey: "BOM" },
     );
     return data;
   },
@@ -100,7 +101,7 @@ export const bomConfigApi = {
     const { data } = await axiosInstance.get<BomAttributeDef[]>(
       `${BASE}/attribute-defs`,
       {
-        params: categoryId ? { categoryId } : undefined,
+        params: categoryId ? { categoryId } : { moduleKey: "BOM" },
       },
     );
     return data;

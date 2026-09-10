@@ -46,6 +46,21 @@ className={cn(
 
 ---
 
+## 2.1. 🎨 Quy Tắc Bảng Màu & Tuyệt Đối Cấm Màu Xanh Dương (No Blue Mandate)
+
+> [!CAUTION]
+> **TUYỆT ĐỐI KHÔNG SỬ DỤNG MÀU XANH DƯƠNG (`blue-*`, `bg-blue-*`, `text-blue-*`, `border-blue-*`)** trong toàn bộ giao diện Modal / Confirm Modal (Text, Badges, Dots, Cards, Buttons).
+> 
+> **Thay thế bằng hệ màu chuẩn:**
+> 1. **Neutral Palette (Mặc định)**: Dùng `foreground`, `muted`, `muted-foreground`, `border`, `slate-*`, `zinc-*`, `neutral-*` cho thông tin chung, nhãn ghi chú, metadata, danh sách cập nhật.
+> 2. **Brand Primary**: Dùng `primary`, `bg-primary`, `text-primary` cho nút hành động chính.
+> 3. **Semantic Colors**:
+>    - **Thành công / Hoàn thành**: Dùng `emerald-*` (`bg-emerald-50 text-emerald-700 border-emerald-200`).
+>    - **Cảnh báo / Tiến trình / Nhắc nhở**: Dùng `amber-*` hoặc `neutral / muted` (`bg-amber-50 text-amber-800 border-amber-200` hoặc `bg-muted text-foreground border-border`).
+>    - **Lỗi / Hủy / Nguy hiểm**: Dùng `destructive` / `red-*` (`bg-destructive/10 text-destructive border-destructive/20`).
+
+---
+
 ## 3. Size Variants & Positioning
 
 | Variant | Class | Dùng khi |
@@ -220,13 +235,84 @@ export function MyModal({ open, onClose, onConfirm }: MyModalProps) {
 
 ---
 
+## 8. Mẫu code chuẩn: Standard Confirm Modal (Close Confirm & Action Confirm Pattern)
+
+Khi cần hiển thị hộp thoại xác nhận (Confirm/Alert như xác nhận xóa, xác nhận đóng Drawer/Form, xác nhận hoàn thành đợt, chuyển trạng thái):
+- **Ưu tiên sử dụng component tái sử dụng `<ConfirmModal>`** từ `@/shared/components/ConfirmModal`.
+- **Nguyên tắc thiết kế**: Tối giản, thanh lịch (`max-w-[380px] p-6`), không lồng các khung card/bảng quá phức tạp bên trong hộp thoại xác nhận.
+- **Tiêu đề & Nội dung**: `DialogTitle` rõ ràng (`text-sm font-semibold`), `DialogDescription` ngắn gọn, súc tích (`text-xs leading-relaxed`).
+- **Cụm nút hành động chuẩn**:
+  - Nút Hủy: `variant="secondary" size="md"`
+  - Nút Xác nhận: `variant="primary"` (hoặc `variant="danger"` cho thao tác hủy/xóa nguy hiểm), `size="md" className="min-w-[100px]"` kèm spinner xoay khi loading.
+
+### Cách sử dụng `<ConfirmModal>`:
+```tsx
+import { useState } from "react";
+import { ConfirmModal } from "@/shared/components/ConfirmModal";
+import { useT } from "@/core/i18n";
+
+export function ExampleConfirmUsage() {
+  const t = useT();
+  const [openConfirm, setOpenConfirm] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const handleConfirm = async () => {
+    setLoading(true);
+    try {
+      await executeAction();
+      setOpenConfirm(false);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <ConfirmModal
+      open={openConfirm}
+      title={t("Xác nhận hoàn thành & Nhập kho")}
+      message={
+        <div className="space-y-2 text-xs leading-relaxed">
+          <p>
+            {t("Bạn có chắc chắn muốn xác nhận hoàn thành và nhập kho")}{" "}
+            <strong className="font-bold text-foreground font-mono">
+              {validCount}
+            </strong>{" "}
+            {t("đơn vị cho Lệnh sản xuất")}{" "}
+            <strong className="font-mono font-semibold text-foreground">
+              {orderRef}
+            </strong>
+            ?
+          </p>
+          {incompleteCount > 0 && (
+            <p className="text-[11px] text-amber-600 dark:text-amber-400 font-medium">
+              {t("Lưu ý: Có")} {incompleteCount}{" "}
+              {t("dòng chưa điền đủ thông tin sẽ được bỏ qua.")}
+            </p>
+          )}
+        </div>
+      }
+      confirmLabel={t("Đồng ý nhập kho")}
+      cancelLabel={t("Hủy")}
+      danger={false}
+      loading={loading}
+      onConfirm={handleConfirm}
+      onCancel={() => setOpenConfirm(false)}
+    />
+  );
+}
+```
+
+---
+
 ## Summary Checklist trước khi hoàn thành:
 
-- [ ] Modal sử dụng `<Dialog>` và `<DialogContent>` từ `@/shared/components/ui/Dialog` chưa?
+- [ ] Modal sử dụng `<Dialog>` và `<DialogContent>` từ `@/shared/components/ui/Dialog` hoặc `<ConfirmModal>` từ `@/shared/components/ConfirmModal`?
 - [ ] Modal content có hiệu ứng glassmorphism (`backdrop-blur-xl`, `bg-surface/80`) chưa?
-- [ ] Size variant (`max-w-[360px]`, `max-w-[480px]`, `max-w-[560px]`, `max-w-[680px]`) phù hợp use-case chưa?
+- [ ] Size variant (`max-w-[380px]` cho confirm/close alert, `max-w-[480px]` cho form, `max-w-[560px]` cho search/command) phù hợp use-case chưa?
+- [ ] Với Confirm Modal: thiết kế tối giản, sạch sẽ, không đóng khung/card lồng phức tạp bên trong hộp thoại?
 - [ ] Có `<DialogTitle>` (hoặc `<DialogTitle className="sr-only">`) để đảm bảo accessibility (ARIA) chưa?
 - [ ] Phím `Esc` và click outside overlay hoạt động bình thường chưa?
 - [ ] Scroll lock tự động hoạt động khi mở modal chưa?
 - [ ] Nếu là Command Palette: sử dụng layout `top-[15vh] translate-y-0`, `hideCloseButton`, và đăng ký global shortcut `⌘K` / `Ctrl+K` ở parent layout chưa?
 - [ ] Tất cả text tĩnh đều được bọc qua `t(...)` đa ngôn ngữ (i18n) chưa?
+

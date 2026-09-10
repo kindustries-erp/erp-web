@@ -417,18 +417,16 @@ export function GarageCases() {
     <div className="w-full sm:w-auto flex items-center flex-wrap gap-2 py-0.5">
       <PillTabs
         className="w-full sm:w-auto shrink-0"
-        listClassName="h-8 p-0.5 rounded-full bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/60 shadow-[0_1px_2px_rgba(15,23,42,.03)]"
-        triggerClassName="h-7 px-3.5 text-xs rounded-full"
+        size="sm"
         items={GARAGE_CASE_STATUS_TABS.map((tab) => ({
           value: tab.value,
           label: t(tab.labelKey, tab.defaultLabel),
         }))}
         value={activeStatusTab}
         onValueChange={handleStatusTabChange}
-        hideBorder
       />
 
-      <div className="hidden sm:block h-4 w-px bg-slate-300/80 dark:bg-slate-700/80 shrink-0" />
+      <div className="hidden sm:block h-4 w-px bg-slate-300/80 dark:bg-zinc-700/80 shrink-0" />
 
       <GarageCaseViewModeCombobox
         presets={columnViewPresetsHook.presets}
@@ -1715,7 +1713,7 @@ export function GarageCases() {
         activeFilterCount={activeFilterCount}
         onClearAllFilters={handleClearAllFilters}
         summaryRow={summaryRow}
-        createLabel={t("cases.actions.syncCases", "Đồng bộ Sổ báo giá")}
+        createLabel={t("cases.actions.syncCases", "Đồng bộ")}
         createIcon={<DownloadCloud className="w-4 h-4 mr-1.5" />}
         onCreate={
           canSyncGarage

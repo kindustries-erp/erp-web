@@ -28,6 +28,8 @@ export interface IaForm {
   adjustmentDate: string;
   remarks: string;
   lines: IaLineForm[];
+  globalAttributes?: Record<string, any>;
+  customAttributes?: Record<string, any>;
 }
 
 export function emptyIaLine(): IaLineForm {
@@ -40,10 +42,13 @@ export function emptyIaForm(): IaForm {
     adjustmentDate: new Date().toISOString().slice(0, 10),
     remarks: "",
     lines: [emptyIaLine()],
+    globalAttributes: {},
+    customAttributes: {},
   };
 }
 
 export function buildIaForm(adj: IaHeaderDto): IaForm {
+  const customAttrs = adj.customAttributes || {};
   return {
     adjustmentNo: adj.adjustmentNo ?? "",
     adjustmentDate: adj.adjustmentDate ? adj.adjustmentDate.slice(0, 10) : "",
@@ -56,14 +61,22 @@ export function buildIaForm(adj: IaHeaderDto): IaForm {
         qtyAdjusted: line.qtyAdjusted?.toString() ?? "0",
         unitCost: line.unitCost?.toString() ?? "0",
       })) ?? [],
+    globalAttributes: { ...customAttrs },
+    customAttributes: { ...customAttrs },
   };
 }
 
 export function buildIaPayload(form: IaForm): IaHeaderDto {
+  const customAttributes = {
+    ...(form.globalAttributes || {}),
+    ...(form.customAttributes || {}),
+  };
+
   return {
     adjustmentNo: form.adjustmentNo.trim(),
     adjustmentDate: form.adjustmentDate,
     remarks: form.remarks.trim() || undefined,
+    customAttributes,
     lines: form.lines
       .filter((line) => {
         const qty = Number(line.qtyAdjusted);
@@ -212,6 +225,7 @@ export function useIaDrawer({
             variant: "success",
           });
         }
+
         setOpen(false);
         if (invalidateWarehouseQuery) {
           await queryClient.invalidateQueries({

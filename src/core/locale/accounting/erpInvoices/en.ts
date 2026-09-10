@@ -202,4 +202,10 @@ export const erpInvoicesEn = {
   "columns.postingStatus": "Posting",
   expandRightPanel: "Expand partner profile & cashflow panel",
   collapseRightPanel: "Collapse partner profile & cashflow panel",
+
+  // Custom Fields Config Menu
+  customFieldsIn: "Input Invoice Configuration",
+  customFieldsOut: "Output Invoice Configuration",
+  configTitleIn: "Input Invoices",
+  configTitleOut: "Output Invoices",
 };

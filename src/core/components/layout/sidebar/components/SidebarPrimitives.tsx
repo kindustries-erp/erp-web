@@ -97,7 +97,7 @@ export function NavItem({
           "flex items-center gap-2 mx-2 px-2 py-[7px] rounded-md cursor-pointer whitespace-nowrap overflow-hidden min-h-[34px] transition-colors",
           "text-[color:var(--muted-fg)] opacity-75 hover:opacity-100 hover:bg-[color:var(--popup-bg-hover)] hover:text-foreground",
           active &&
-            "!text-foreground font-semibold opacity-100 bg-black/[0.03] dark:bg-white/10",
+            "!text-foreground font-semibold opacity-100 bg-[color:var(--sidebar-active-bg)]",
         )}
         onClick={onClick}
         onContextMenu={contextPage ? onContextMenu : undefined}
@@ -152,7 +152,7 @@ export function NavGroup({
         !isMobile &&
           "hover:bg-[color:var(--popup-bg-hover)] hover:text-foreground cursor-pointer outline-none select-none",
         active &&
-          "!text-foreground font-semibold opacity-100 bg-black/[0.03] dark:bg-white/10",
+          "!text-foreground font-semibold opacity-100 bg-[color:var(--sidebar-active-bg)]",
       )}
     >
       <span className="nav-icon flex-shrink-0">{icon}</span>
@@ -183,7 +183,7 @@ export function NavGroup({
             sideOffset={14}
             className="z-[9999] min-w-[220px] rounded-lg p-1.5 popup-content sidebar-popup-content shadow-lg"
           >
-            <DropdownMenu.Label className="px-3 pt-1 pb-2 text-[10px] font-bold text-[color:var(--faint)] uppercase tracking-[0.12em] mb-1 border-b border-black/5 dark:border-white/5">
+            <DropdownMenu.Label className="px-3 pt-1 pb-2 text-[10px] font-bold text-[color:var(--faint)] uppercase tracking-[0.12em] mb-1 border-b border-[color:var(--border)]">
               {label}
             </DropdownMenu.Label>
             {children}
@@ -239,7 +239,7 @@ export function NavGroupItem({
           "flex items-center gap-2.5 px-3 py-2 rounded-md text-sm cursor-pointer outline-none select-none transition-colors",
           "text-[color:var(--muted-fg)] opacity-75 hover:opacity-100 hover:bg-[color:var(--popup-bg-hover)] data-[highlighted]:bg-[color:var(--popup-bg-hover)] hover:text-foreground data-[highlighted]:text-foreground",
           active &&
-            "!text-foreground font-semibold opacity-100 bg-black/5 dark:bg-white/10 data-[highlighted]:bg-black/10 dark:data-[highlighted]:bg-white/15",
+            "!text-foreground font-semibold opacity-100 bg-[color:var(--popup-bg-hover)] data-[highlighted]:bg-[color:var(--popup-bg-hover)]",
         )}
         onClick={onClick}
         onContextMenu={contextPage ? onContextMenu : undefined}
@@ -263,7 +263,7 @@ export function NavGroupItem({
         "py-[6px] mx-2 px-2 cursor-pointer text-[12px] whitespace-nowrap overflow-hidden rounded-md transition-colors",
         "text-[color:var(--muted-fg)] opacity-75 hover:opacity-100 hover:bg-[color:var(--popup-bg-hover)] hover:text-foreground",
         active &&
-          "!text-foreground font-semibold opacity-100 bg-black/[0.03] dark:bg-white/10",
+          "!text-foreground font-semibold opacity-100 bg-[color:var(--sidebar-active-bg)]",
       )}
       onClick={onClick}
       onContextMenu={contextPage ? onContextMenu : undefined}

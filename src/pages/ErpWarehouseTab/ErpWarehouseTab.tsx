@@ -8,6 +8,7 @@ import { useErpWarehouseTabLogic } from "./useErpWarehouseTabLogic";
 import { WarehouseModals } from "./components/WarehouseModals";
 import { WarehousePrintSlot } from "./components/WarehousePrintSlot";
 import { WarehouseViewConfigDrawer } from "./components/WarehouseViewConfigDrawer";
+import { ModuleCustomFieldConfigDrawer } from "@/shared/components/ModuleCustomFieldConfigDrawer";
 
 export function ErpWarehouseTab() {
   const {
@@ -52,6 +53,9 @@ export function ErpWarehouseTab() {
     handleSaveViewPreset,
     handleResetViewPreset,
     currentColumnVisibility,
+    customFieldsDrawerOpen,
+    setCustomFieldsDrawerOpen,
+    customFieldsInitialTab,
   } = useErpWarehouseTabLogic();
 
   if (!canReadReceipts && !canReadIssues && !canReadAdjustments)
@@ -82,7 +86,7 @@ export function ErpWarehouseTab() {
         summaryRow={summaryRow}
         loading={loading}
         error={loadError}
-        emptyLabel={t("Chưa có chứng từ kho.")}
+        emptyLabel={t("inventory.emptyVouchers", "Chưa có chứng từ kho.")}
         minWidth={1000}
         sortArray={tableState.sorts}
         onSort={(key) => {
@@ -109,8 +113,9 @@ export function ErpWarehouseTab() {
         onClearAllFilters={handleClearAllFilters}
         customActionsNode={customActionsNode}
         rowActions={rowActions}
+        enableRowContextMenu={true}
         onCreate={() => unifiedDrawer.openUnifiedCreate("receipt")}
-        createLabel={t("Tạo mới")}
+        createLabel={t("common.addNew", "Tạo mới")}
         createActions={createActions}
       />
 
@@ -147,6 +152,12 @@ export function ErpWarehouseTab() {
         currentColumnVisibility={currentColumnVisibility}
         onSave={handleSaveViewPreset}
         onResetDefault={handleResetViewPreset}
+      />
+
+      <ModuleCustomFieldConfigDrawer
+        open={customFieldsDrawerOpen}
+        onClose={() => setCustomFieldsDrawerOpen(false)}
+        initialTab={customFieldsInitialTab}
       />
     </>
   );

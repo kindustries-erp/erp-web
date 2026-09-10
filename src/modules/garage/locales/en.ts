@@ -41,7 +41,7 @@ export const garageEn = {
   },
   cases: {
     title: "Service Cases",
-    desc: "Manage service cases and quotation logs from the Garage system",
+    desc: "Manage service cases & quotation logs",
     tabs: {
       all: "All",
       quotation: "Quotation",
@@ -136,7 +136,7 @@ export const garageEn = {
       costUnpaid: "Unpaid",
     },
     actions: {
-      syncCases: "Sync Quotations",
+      syncCases: "Sync",
       syncGrossProfit: "Sync Gross Profit",
       syncOptions: "Sync Options",
       syncDetails: "Sync from KGara",
@@ -673,7 +673,7 @@ export const garageEn = {
     select: "Select workshop branch",
   },
   opex: {
-    pageTitle: "Operating Expenses",
+    pageTitle: "Garage Operating Expenses",
     pageDesc: "Manage monthly workshop operating costs and overhead expenses",
     columns: {
       period: "Period",
@@ -702,6 +702,7 @@ export const garageEn = {
       CHI_PHI_TRUC_TIEP_KHAC: "Other Direct Cost (COGS)",
       HOA_HONG_SALE: "Sales Commission",
       HOA_HONG_DV: "Service Commission",
+      HOA_HONG_KHAC: "Other Commission (Manual)",
       KHAC: "Other",
     },
     actions: {
@@ -742,6 +743,12 @@ export const garageEn = {
       save: "Save Changes",
       create: "Create Expense",
       cancel: "Cancel",
+      readOnlyNotice:
+        "This commission is 100% auto-calculated from the P&L Report and is Read-Only. It cannot be directly edited or deleted.",
+      readOnlyAdjustHint:
+        "To increase or decrease commission for this month, please create an 'Other Commission' expense with a positive (+) or negative (-) amount.",
+      amountPositiveNegativeHint:
+        "Enter a positive number (+) to add or negative (-) to deduct commission",
       sectionRecurring: "Recurring Expense",
       enableRecurring: "Repeat monthly",
       enableRecurringDesc:
@@ -801,15 +808,28 @@ export const garageEn = {
     applyScopeThisSuccess: "Updated expense for this month",
     applyScopeFutureSuccess:
       "Updated recurring expense series ({{count}} periods)",
+    autoCalculatedTooltip:
+      "This commission is 100% auto-calculated from the P&L Report (Read-only)",
     empty: "No operating expenses found",
     emptyDesc:
       "Click 'Add Expense' to record the first operating cost for the workshop",
+    autoCalcFromPnl: "⚡ Auto-calc from P&L",
+    autoCalcTooltip:
+      "Automatically compute commission based on P&L formulas for the selected month",
+    autoCalculatedSaleSuccess: "Auto-calculated Sales commission from P&L!",
+    autoCalculatedDvSuccess: "Auto-calculated Service commission from P&L!",
+    syncCommissionsBtn: "⚡ Sync P&L Commissions",
+    syncCommissionsSuccess: "Synced commissions to operating expenses!",
+    syncCommissionsConfirmTitle: "Sync Commissions from P&L",
+    syncCommissionsConfirmDesc:
+      "The system will compute and save Sales commission (10% consignment ratio) and Service commission (10%) for Month {{month}}/{{year}} to operating expenses. Do you want to proceed?",
   },
   pnl: {
     title: "Profit & Loss (P&L) Report",
     desc: "Summary of revenue, cost of goods sold, operating expenses, and net profit",
     monthLabel: "Month",
     yearLabel: "Year",
+    monthPrefix: "Month",
     exportExcel: "Export P&L Excel",
     tableHeaderCategory: "Category",
     tableHeaderValue: "This Month",
@@ -823,10 +843,32 @@ export const garageEn = {
     opexHeader: "IV. Operating Expenses (OPEX)",
     netProfitBeforeCommissionHeader: "V. Net Profit (Before Commission)",
     commissionHeader: "VI. Commissions",
+    kyGuiProfitRate: "Consignment Profit Share / Total Profit",
+    kyGuiProfitRateTooltip:
+      "Percentage of gross profit from Consignment/Internal cases over total workshop gross profit. Used to allocate Net Profit for 10% Sales commission.",
+    kyGuiAllocationBadge: "Sales Allocation",
+    kyGuiFormulaSubtitle:
+      "Consignment GP: {{kyGuiGrossProfit}} đ / Total GP: {{totalGrossProfit}} đ",
+    saleCommission: "Sales Commission (10%)",
+    saleCommissionBadge: "10% × Net Profit × {{rate}}% Consignment",
+    saleCommissionSubtitle:
+      "Calculated on 10% of Net Profit based on Consignment Gross Profit share",
+    dvCommission: "Service Commission (10%)",
+    dvCommissionBadge: "10% × (Net Profit - Sales Comm)",
+    dvCommissionSubtitle:
+      "Calculated on 10% of Net Profit after deducting Sales commission",
+    manualCommissionBadge: "Manual",
+    autoCalculatedBadge: "Auto",
+    autoCalculatedTooltip:
+      "This commission is 100% auto-calculated from the P&L Report (Read-only)",
+    savedToDbBadge: "Saved to OPEX",
+    autoCalculatedPnlBadge: "Auto from P&L",
+    saveToOpexBtn: "⚡ Save to OPEX",
+    saveToOpexSuccess: "Saved commission to operating expenses!",
     netProfitAfterCommissionHeader: "VII. Net Profit (After Commission)",
     noOpexHint: "No operating expenses recorded for this month",
     noCommissionHint: "No commissions recorded",
-    goToOpex: "Go to Operating Expenses →",
+    goToOpex: "Garage Operating Expenses →",
     casesCompleted: "completed cases",
     ojCases: "OJ cases",
   },

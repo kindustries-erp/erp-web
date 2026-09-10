@@ -7,9 +7,46 @@ import {
   STATIC_TABS,
   DUPLICATABLE_PAGES,
 } from "@/core/config/appStore";
-import { Copy } from "lucide-react";
+import { Copy, Settings } from "lucide-react";
 
 type ContextMenuSource = "sidebar" | "tabbar";
+
+function getModuleConfigForPage(
+  page: PageKey,
+): { label: string; initialTab: string } | null {
+  switch (page) {
+    case "erp-inventory-vouchers":
+    case "erp-inventory-items":
+    case "erp-inventory-stock":
+    case "erp-inventory-tracking":
+    case "erp-inventory-tracking-parts":
+    case "erp-inventory-tracking-lot":
+    case "erp-inventory-tracking-custom":
+    case "erp-goods-issues":
+    case "inventory-dashboard":
+      return { label: "Cấu hình kho", initialTab: "GOODS_RECEIPT" };
+    case "mfg-items":
+      return { label: "Cấu hình kho (Mặt hàng)", initialTab: "INVENTORY_ITEM" };
+    case "erp-invoices":
+    case "erp-invoices-in":
+    case "erp-invoices-out":
+    case "invoice-dashboard":
+      return { label: "Cấu hình hóa đơn", initialTab: "INVOICE_IN" };
+    case "erp-bom":
+      return { label: "Cấu hình định mức (BOM)", initialTab: "BOM" };
+    case "erp-production":
+    case "erp-finished-goods":
+      return { label: "Cấu hình sản xuất", initialTab: "PRODUCTION" };
+    case "purchasing":
+    case "purchasing-report-dashboard":
+      return { label: "Cấu hình mua hàng", initialTab: "PURCHASE_ORDER" };
+    case "erp-sales-orders":
+    case "sales-report-dashboard":
+      return { label: "Cấu hình bán hàng", initialTab: "SALES_ORDER" };
+    default:
+      return null;
+  }
+}
 
 // ── Singleton state ──────────────────────────────────────────────────────────
 type ContextMenuState = {
@@ -148,16 +185,17 @@ export function AppContextMenu() {
 
   if (!menu) return null;
 
-  const GAP = 8;
-  const isTabbarMenu = menu.source === "tabbar";
-  const W = 220;
-  const H = isTabbarMenu ? 180 : 44;
-  const x = Math.min(menu.x, window.innerWidth - W - GAP);
-  const y = Math.min(menu.y, window.innerHeight - H - GAP);
-
   const targetPage = menu.page;
   const targetInstanceId = menu.instanceId || targetPage;
   const isStaticTab = Boolean(STATIC_TABS[targetPage]);
+  const configInfo = getModuleConfigForPage(targetPage);
+
+  const GAP = 8;
+  const isTabbarMenu = menu.source === "tabbar";
+  const W = 220;
+  const H = isTabbarMenu ? 220 : configInfo ? 84 : 44;
+  const x = Math.min(menu.x, window.innerWidth - W - GAP);
+  const y = Math.min(menu.y, window.innerHeight - H - GAP);
 
   const canDuplicate = DUPLICATABLE_PAGES.has(targetPage);
   const instancesCount = openTabs.filter(
@@ -179,6 +217,15 @@ export function AppContextMenu() {
   const handleOpenNewTab = () => {
     window.open(pageToUrl(menu.page, menu.tab), "_blank");
     setMenu(null);
+  };
+
+  const handleOpenConfig = () => {
+    setMenu(null);
+    if (configInfo) {
+      useAppStore
+        .getState()
+        .openCustomFieldsDrawer("ALL", configInfo.initialTab);
+    }
   };
 
   const handleDuplicateTab = () => {
@@ -228,6 +275,13 @@ export function AppContextMenu() {
         </svg>
         Mở trong tab mới
       </button>
+
+      {configInfo && (
+        <button className="context-menu-item" onClick={handleOpenConfig}>
+          <Settings className="w-3.5 h-3.5 flex-shrink-0 opacity-60 mr-2" />
+          {configInfo.label}
+        </button>
+      )}
 
       {isTabbarMenu && (
         <>

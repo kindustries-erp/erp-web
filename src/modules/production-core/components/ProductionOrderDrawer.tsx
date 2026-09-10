@@ -28,6 +28,7 @@ import { ProductionOrderExecutionTab } from "./drawer/ProductionOrderExecutionTa
 import { ProductionOrderTraceabilityTab } from "./drawer/ProductionOrderTraceabilityTab";
 import { ProductionOrderHistoryTab } from "./drawer/ProductionOrderHistoryTab";
 import { ProductionOrderRightPanel } from "./drawer/ProductionOrderRightPanel";
+import { ProductionIdentifierDeclareDrawer } from "./drawer/ProductionIdentifierDeclareDrawer";
 
 export interface ProductionOrderDrawerProps {
   open: boolean;
@@ -73,6 +74,7 @@ export function ProductionOrderDrawer({
     localOrder,
     itemOptions,
     availableBoms,
+    selectedBomInfo,
     bomOptions,
     saving,
     error,
@@ -101,6 +103,10 @@ export function ProductionOrderDrawer({
     setBatchCompleteQty,
     showBatchDialog,
     setShowBatchDialog,
+    isIdentifierDrawerOpen,
+    closeIdentifierDrawer,
+    openIdentifierDrawer,
+    orderSuffix,
     vehicleBulkInput,
     setVehicleBulkInput,
     applyVehicleBulkInput,
@@ -139,7 +145,7 @@ export function ProductionOrderDrawer({
     if (status === "COMPLETED") {
       badgeCls = "bg-emerald-100 text-emerald-800 border-emerald-200";
     } else if (status === "IN_PROGRESS") {
-      badgeCls = "bg-blue-100 text-blue-800 border-blue-200";
+      badgeCls = "bg-muted text-foreground border-border";
     } else if (status === "CANCELLED") {
       badgeCls = "bg-red-100 text-red-800 border-red-200";
     }
@@ -153,7 +159,7 @@ export function ProductionOrderDrawer({
           {status}
         </Badge>
         {status === "IN_PROGRESS" && (
-          <span className="text-xs font-semibold text-blue-700 dark:text-blue-400">
+          <span className="text-xs font-semibold text-foreground font-mono">
             {fmtQty(qtyProduced)} / {fmtQty(qtyToProduce)} (
             {Math.round((qtyProduced / qtyToProduce) * 100)}%)
           </span>
@@ -298,7 +304,7 @@ export function ProductionOrderDrawer({
     if (currentOrder) {
       tabs.push({
         key: "execution",
-        label: t("Tiến trình & Thực thi"),
+        label: t("Tiến trình sản xuất"),
         icon: <PlayCircle className="w-3.5 h-3.5" />,
         content: (
           <ProductionOrderExecutionTab
@@ -319,6 +325,8 @@ export function ProductionOrderDrawer({
             handleIdentifierChange={handleIdentifierChange}
             trackingPolicy={trackingPolicy}
             needsIdentifiers={needsIdentifiers}
+            onOpenIdentifierDrawer={openIdentifierDrawer}
+            orderSuffix={orderSuffix}
           />
         ),
       });
@@ -370,6 +378,8 @@ export function ProductionOrderDrawer({
     setBatchCompleteQty,
     showBatchDialog,
     setShowBatchDialog,
+    openIdentifierDrawer,
+    orderSuffix,
     vehicleBulkInput,
     setVehicleBulkInput,
     applyVehicleBulkInput,
@@ -417,6 +427,8 @@ export function ProductionOrderDrawer({
               itemOptions={itemOptions}
               availableBoms={availableBoms}
               bomOptions={bomOptions}
+              selectedBomInfo={selectedBomInfo}
+              bomLoading={bomLoading}
               saving={saving}
               notes={notes}
               onNotesChange={setNotes}
@@ -426,6 +438,20 @@ export function ProductionOrderDrawer({
       />
 
       <GiFormDrawer drawer={issueDrawer} />
+
+      <ProductionIdentifierDeclareDrawer
+        open={isIdentifierDrawerOpen}
+        onClose={closeIdentifierDrawer}
+        order={currentOrder}
+        policy={trackingPolicy}
+        identifiers={identifiers}
+        setIdentifiers={setIdentifiers}
+        batchCompleteQty={batchCompleteQty}
+        setBatchCompleteQty={setBatchCompleteQty}
+        onBatchComplete={handleBatchComplete}
+        saving={saving}
+        disabled={isCompleted}
+      />
     </>
   );
 }

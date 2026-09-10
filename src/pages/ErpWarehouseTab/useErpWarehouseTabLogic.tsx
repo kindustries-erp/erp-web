@@ -11,6 +11,7 @@ import {
   FileSpreadsheet,
   FileText,
   Pencil,
+  Settings,
 } from "lucide-react";
 
 import { useT } from "@/core/i18n";
@@ -132,6 +133,29 @@ export function useErpWarehouseTabLogic() {
       }
       return "all";
     },
+  );
+
+  // Custom Fields Config Drawer state (ModuleCustomFieldConfigDrawer)
+  const [customFieldsDrawerOpen, setCustomFieldsDrawerOpen] = useState(false);
+  const [customFieldsInitialTab, setCustomFieldsInitialTab] =
+    useState<string>("GOODS_RECEIPT");
+
+  const handleOpenCustomFieldsDrawer = useCallback(
+    (type?: string) => {
+      const normalized = (type || activeTypeTab || "").toLowerCase();
+      let targetModule = "GOODS_RECEIPT";
+      if (normalized === "issue" || normalized === "goods_issue") {
+        targetModule = "GOODS_ISSUE";
+      } else if (
+        normalized === "adjustment" ||
+        normalized === "inventory_adjustment"
+      ) {
+        targetModule = "INVENTORY_ADJUSTMENT";
+      }
+      setCustomFieldsInitialTab(targetModule);
+      setCustomFieldsDrawerOpen(true);
+    },
+    [activeTypeTab],
   );
 
   const [page, setPage] = useState<number>(() => {
@@ -627,8 +651,7 @@ export function useErpWarehouseTabLogic() {
     <div className="w-full sm:w-auto flex items-center flex-wrap gap-2 py-0.5">
       <PillTabs<WarehouseVoucherTypeTab>
         className="w-full sm:w-auto shrink-0"
-        listClassName="h-8 p-0.5 rounded-full bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/60 shadow-[0_1px_2px_rgba(15,23,42,.03)]"
-        triggerClassName="h-7 px-3 text-xs rounded-full"
+        size="sm"
         items={[
           { value: "all", label: t("common.all", "Tất cả") },
           {
@@ -646,10 +669,9 @@ export function useErpWarehouseTabLogic() {
         ]}
         value={activeTypeTab}
         onValueChange={handleTypeTabChange}
-        hideBorder
       />
 
-      <div className="hidden sm:block h-4 w-px bg-slate-300/80 dark:bg-slate-700/80 shrink-0" />
+      <div className="hidden sm:block h-4 w-px bg-slate-300/80 dark:bg-zinc-700/80 shrink-0" />
 
       <WarehouseViewModeCombobox
         presets={columnViewPresetsHook.presets}
@@ -872,23 +894,12 @@ export function useErpWarehouseTabLogic() {
         },
         {
           label: t("common.exportXlsx", "Xuất XLSX"),
-          icon: <FileSpreadsheet className="h-3.5 w-3.5" />,
+          icon: (
+            <FileSpreadsheet className="h-3.5 w-3.5 text-muted-foreground" />
+          ),
           hidden: row.status === "DRAFT" || row.type === "adjustment",
           disabled: xlsxExportingId === row.id,
           onClick: () => handleExportXlsx(row),
-        },
-        {
-          label: t("common.delete", "Xóa"),
-          icon: <Trash2 className="h-3.5 w-3.5" />,
-          variant: "danger" as const,
-          hidden:
-            row.status !== "DRAFT" ||
-            (row.type === "receipt" && !canDeleteReceipt) ||
-            (row.type === "issue" && !canDeleteIssue) ||
-            (row.type === "adjustment" && !canDeleteAdjustment),
-          onClick: () => {
-            setDeleteTarget(row);
-          },
         },
         {
           label: t("inventory.cancelVoucher", "Hủy phiếu"),
@@ -903,6 +914,38 @@ export function useErpWarehouseTabLogic() {
             setCancelTarget(row);
           },
         },
+        {
+          label: t("common.delete", "Xóa"),
+          icon: <Trash2 className="h-3.5 w-3.5" />,
+          variant: "danger" as const,
+          hidden:
+            row.status !== "DRAFT" ||
+            (row.type === "receipt" && !canDeleteReceipt) ||
+            (row.type === "issue" && !canDeleteIssue) ||
+            (row.type === "adjustment" && !canDeleteAdjustment),
+          onClick: () => {
+            setDeleteTarget(row);
+          },
+        },
+      ],
+    },
+    {
+      groupLabel: t("common.groupConfig", "Cấu hình"),
+      items: [
+        {
+          label:
+            row.type === "receipt"
+              ? t("inventory.configReceipt", "Cấu hình phiếu nhập kho")
+              : row.type === "issue"
+                ? t("inventory.configIssue", "Cấu hình phiếu xuất kho")
+                : row.type === "adjustment"
+                  ? t("inventory.configAdjustment", "Cấu hình phiếu kiểm kê")
+                  : t("inventory.warehouseConfig", "Cấu hình chứng từ kho"),
+          icon: <Settings className="h-3.5 w-3.5 text-muted-foreground" />,
+          onClick: () => {
+            handleOpenCustomFieldsDrawer(row.type);
+          },
+        },
       ],
     },
   ];
@@ -913,21 +956,31 @@ export function useErpWarehouseTabLogic() {
       items: [
         {
           label: t("inventory.receipt", "Nhập kho"),
-          icon: <PackagePlus className="h-4 w-4 text-emerald-600" />,
+          icon: <PackagePlus className="h-4 w-4 text-muted-foreground" />,
           onClick: () => grDrawer.openCreate(),
           hidden: !canCreateReceipt,
         },
         {
           label: t("inventory.issue", "Xuất kho"),
-          icon: <PackageMinus className="h-4 w-4 text-orange-600" />,
+          icon: <PackageMinus className="h-4 w-4 text-muted-foreground" />,
           onClick: () => giDrawer.openCreate(),
           hidden: !canCreateIssue,
         },
         {
           label: t("inventory.adjustment", "Điều chỉnh kho"),
-          icon: <SlidersHorizontal className="h-4 w-4 text-blue-600" />,
+          icon: <SlidersHorizontal className="h-4 w-4 text-muted-foreground" />,
           onClick: () => iaDrawer.openCreate(),
           hidden: !canCreateAdjustment,
+        },
+      ],
+    },
+    {
+      groupLabel: t("common.groupConfig", "Cấu hình"),
+      items: [
+        {
+          label: t("inventory.warehouseConfig", "Cấu hình kho"),
+          icon: <Settings className="h-4 w-4 text-muted-foreground" />,
+          onClick: () => handleOpenCustomFieldsDrawer(),
         },
       ],
     },
@@ -980,5 +1033,9 @@ export function useErpWarehouseTabLogic() {
     activeColumnPresetKey,
     columnViewPresetsHook,
     currentColumnVisibility,
+    customFieldsDrawerOpen,
+    setCustomFieldsDrawerOpen,
+    customFieldsInitialTab,
+    handleOpenCustomFieldsDrawer,
   };
 }

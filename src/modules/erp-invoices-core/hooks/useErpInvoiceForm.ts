@@ -149,6 +149,19 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
       setFormError(null);
       try {
         const fullInv = await erpInvoicesCoreApi.get(inv);
+        try {
+          const targetModuleKey =
+            fullInv.direction === "OUT" ? "INVOICE_OUT" : "INVOICE_IN";
+          const customValues = await moduleConfigApi.getEntityValues(
+            targetModuleKey,
+            fullInv.id,
+          );
+          if (customValues?.globalAttributes) {
+            (fullInv as any).globalAttributes = customValues.globalAttributes;
+          }
+        } catch {
+          // ignore
+        }
         setDetailInvoice(fullInv);
         setForm(mapInvoiceToForm(fullInv));
         setEditMode(false);
@@ -170,15 +183,6 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
     setInfoDrawerOpen(true);
     setFormError(null);
 
-    if (
-      detailInvoice?.id === inv.id &&
-      detailInvoice?.items &&
-      detailInvoice.items.length > 0
-    ) {
-      setForm(mapInvoiceToForm(detailInvoice));
-      return;
-    }
-
     setLoadingDetail(true);
 
     try {
@@ -193,6 +197,19 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
             console.warn("Auto sync detail failed", syncErr);
           }
         }
+      }
+      try {
+        const targetModuleKey =
+          fullInv.direction === "OUT" ? "INVOICE_OUT" : "INVOICE_IN";
+        const customValues = await moduleConfigApi.getEntityValues(
+          targetModuleKey,
+          fullInv.id,
+        );
+        if (customValues?.globalAttributes) {
+          (fullInv as any).globalAttributes = customValues.globalAttributes;
+        }
+      } catch {
+        // ignore
       }
       setDetailInvoice(fullInv);
       setForm(mapInvoiceToForm(fullInv));
@@ -220,7 +237,31 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
       postingState.reset();
       setLoadingDetail(true);
       try {
-        const fullInv = await erpInvoicesCoreApi.get(inv);
+        let fullInv = await erpInvoicesCoreApi.get(inv);
+        if (!fullInv.items || fullInv.items.length === 0) {
+          const canSync = await isPortalAuthAvailable();
+          if (canSync && fullInv.id) {
+            try {
+              const synced = await erpInvoicesCoreApi.syncDetail(fullInv.id);
+              if (synced) fullInv = synced;
+            } catch (syncErr) {
+              console.warn("Auto sync detail failed", syncErr);
+            }
+          }
+        }
+        try {
+          const targetModuleKey =
+            fullInv.direction === "OUT" ? "INVOICE_OUT" : "INVOICE_IN";
+          const customValues = await moduleConfigApi.getEntityValues(
+            targetModuleKey,
+            fullInv.id,
+          );
+          if (customValues?.globalAttributes) {
+            (fullInv as any).globalAttributes = customValues.globalAttributes;
+          }
+        } catch {
+          // ignore
+        }
         setDetailInvoice(fullInv);
         setForm(mapInvoiceToForm(fullInv));
       } catch (err) {
@@ -245,7 +286,8 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
       skipFetch ||
       (detailInvoice?.id === inv.id &&
         detailInvoice?.items &&
-        detailInvoice.items.length > 0)
+        detailInvoice.items.length > 0 &&
+        (detailInvoice as any).globalAttributes !== undefined)
     ) {
       setForm(mapInvoiceToForm(inv));
       return;
@@ -270,22 +312,21 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
           }
         }
       }
-      const mapped = mapInvoiceToForm(fullInv);
       try {
+        const targetModuleKey =
+          fullInv.direction === "OUT" ? "INVOICE_OUT" : "INVOICE_IN";
         const customValues = await moduleConfigApi.getEntityValues(
-          "INVOICE",
+          targetModuleKey,
           fullInv.id,
         );
-        if (customValues) {
-          mapped.categoryId = customValues.categoryId || null;
-          mapped.customAttributes = customValues.attributes || {};
-          mapped.globalAttributes = customValues.globalAttributes || {};
+        if (customValues?.globalAttributes) {
+          (fullInv as any).globalAttributes = customValues.globalAttributes;
         }
       } catch {
         // ignore custom values error
       }
       setDetailInvoice(fullInv);
-      setForm(mapped);
+      setForm(mapInvoiceToForm(fullInv));
     } catch (err) {
       console.error("Failed to fetch full invoice", err);
     } finally {
@@ -299,6 +340,19 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
     setLoadingDetail(true);
     try {
       const fullInv = await erpInvoicesCoreApi.syncDetail(detailInvoice.id);
+      try {
+        const targetModuleKey =
+          fullInv.direction === "OUT" ? "INVOICE_OUT" : "INVOICE_IN";
+        const customValues = await moduleConfigApi.getEntityValues(
+          targetModuleKey,
+          fullInv.id,
+        );
+        if (customValues?.globalAttributes) {
+          (fullInv as any).globalAttributes = customValues.globalAttributes;
+        }
+      } catch {
+        // ignore
+      }
       setDetailInvoice(fullInv);
       setForm(mapInvoiceToForm(fullInv));
       await onReload();
@@ -311,12 +365,16 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
 
   function startEdit() {
     if (!detailInvoice) return;
-    setForm({
+    setForm((prev) => ({
       ...mapInvoiceToForm(detailInvoice),
+      globalAttributes: {
+        ...((detailInvoice as any).globalAttributes || {}),
+        ...((prev as any).globalAttributes || {}),
+      },
       pendingDocumentChanges: [],
       pendingDeletedPdfs: [],
       pendingAddedAttachments: [],
-    });
+    }));
     setFormError(null);
     setPendingUnpost(false);
     postingState.reset();
@@ -402,29 +460,21 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
 
       const customAttrsToSave = (form as any).customAttributes;
       const globalAttrsToSave = (form as any).globalAttributes;
-      const categoryIdToSave = (form as any).categoryId;
 
-      // Validate required custom fields (global & category)
+      // Validate required custom fields (global & system attributes)
       try {
+        const targetModuleKey =
+          form.direction === "OUT" ? "INVOICE_OUT" : "INVOICE_IN";
         const globalDefs =
-          await moduleConfigApi.getGlobalAttributeDefs("INVOICE");
-        let categoryDefs: any[] = [];
-        let categoryCode: string | null = null;
-        if (categoryIdToSave) {
-          const cats = await moduleConfigApi.getCategories("INVOICE");
-          const currentCat = cats.find((c) => c.id === categoryIdToSave);
-          categoryDefs = currentCat?.attributeDefs || [];
-          categoryCode = currentCat?.code || null;
-        }
+          await moduleConfigApi.getGlobalAttributeDefs(targetModuleKey);
 
         const missingRequired = validateModuleRequiredFields({
           globalDefs,
           globalAttributes: globalAttrsToSave,
-          categoryDefs,
-          attributes: customAttrsToSave,
-          hasCategory: !!categoryIdToSave,
-          moduleKey: "INVOICE",
-          categoryCode,
+          includeSystemAttributes: true,
+          hasCategory: false,
+          moduleKey: targetModuleKey,
+          t,
         });
 
         if (missingRequired.length > 0) {
@@ -487,17 +537,17 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
       // Save custom fields if present
       if (
         invoiceIdToProcess &&
-        (categoryIdToSave !== undefined ||
-          customAttrsToSave !== undefined ||
-          globalAttrsToSave !== undefined)
+        (globalAttrsToSave !== undefined || customAttrsToSave !== undefined)
       ) {
         try {
+          const targetModuleKey =
+            form.direction === "OUT" ? "INVOICE_OUT" : "INVOICE_IN";
           await moduleConfigApi.saveEntityValues(
-            "INVOICE",
+            targetModuleKey,
             invoiceIdToProcess,
             {
-              categoryId: categoryIdToSave,
-              attributes: customAttrsToSave,
+              categoryId: null,
+              attributes: {},
               globalAttributes: globalAttrsToSave,
             },
           );
@@ -686,6 +736,19 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
         // Reload details for current invoice if editing without forcing drawer open
         try {
           const fullInv = await erpInvoicesCoreApi.get(detailInvoice.id);
+          try {
+            const targetModuleKey =
+              fullInv.direction === "OUT" ? "INVOICE_OUT" : "INVOICE_IN";
+            const customValues = await moduleConfigApi.getEntityValues(
+              targetModuleKey,
+              fullInv.id,
+            );
+            if (customValues?.globalAttributes) {
+              (fullInv as any).globalAttributes = customValues.globalAttributes;
+            }
+          } catch {
+            // ignore
+          }
           setDetailInvoice(fullInv);
           setForm(mapInvoiceToForm(fullInv));
         } catch (e) {

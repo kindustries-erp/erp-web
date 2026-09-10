@@ -53,7 +53,6 @@ export enum ErpApiEndpoint {
   INVENTORY_SERIALS_GENERATE = "/api/v1/inventory/serials/generate",
   INVENTORY_UOM = "/api/v1/inventory/uom",
   INVENTORY_ITEM_TYPES = "/api/v1/inventory/item-types",
-  INVENTORY_TRACKING_CATEGORIES = "/api/v1/inventory/tracking-categories",
   WAREHOUSE_VOUCHERS = "/api/v1/warehouse-vouchers",
   WAREHOUSE_RECEIPTS = "/api/v1/warehouse-receipts",
   WAREHOUSE_ISSUES = "/api/v1/warehouse-issues",

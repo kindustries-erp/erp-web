@@ -4,6 +4,8 @@ export const statusEn = {
   active: "Active",
   inactive: "Inactive",
   default: "Default",
+  draft: "Draft",
+  cancelled: "Cancelled",
   // General
   DRAFT: "Draft",
   CONFIRMED: "Confirmed",

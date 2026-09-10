@@ -3,10 +3,16 @@
  * Builds type-specific config from useGiDrawer() and delegates rendering
  * to the unified InventoryVoucherFormDrawer shell.
  */
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { ExternalLink } from "lucide-react";
 import { Tooltip, TooltipProvider } from "@/core/components/ui/Tooltip";
 import { cn } from "@/shared/utils";
+import {
+  moduleConfigApi,
+  resolveOptionLabel,
+} from "@/core/api/moduleConfigApi";
+import { useAppStore } from "@/core/config/appStore";
 import { fmtQty } from "@/shared/utils/format";
 import { Button } from "@/shared/components/ui/Button";
 import { Combobox } from "@/shared/components/Combobox";
@@ -39,6 +45,8 @@ import {
   type UseGiDrawerReturn,
 } from "@/modules/goods-issues-core/hooks/useGiDrawer";
 import { InventoryVoucherFormDrawer } from "@/modules/inventory-core/components/inventory-voucher-drawer/InventoryVoucherFormDrawer";
+import { ModuleEntityCustomFieldsSection } from "@/shared/components/ModuleEntityCustomFieldsSection";
+import { AttributeTypeBadge } from "@/shared/components/AttributeTypeBadge";
 
 interface GiFormDrawerProps {
   drawer: UseGiDrawerReturn;
@@ -446,11 +454,39 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
 
   // ── Actions ────────────────────────────────────────────────────────────────
 
-  const ISSUE_TYPE_OPTIONS = [
-    { value: "", label: t("— Chọn —") },
-    { value: "SALE", label: t("Xuất bán") },
-    { value: "OTHER", label: t("Xuất khác") },
-  ];
+  const locale = useAppStore((s) => s.locale);
+
+  // Lấy danh sách thuộc tính động cho GOODS_ISSUE để nạp options cho Loại xuất kho (code: type_inventory_issue)
+  const { data: giAttrDefs = [] } = useQuery({
+    queryKey: ["module-config-global-defs", "GOODS_ISSUE"],
+    queryFn: () => moduleConfigApi.getGlobalAttributeDefs("GOODS_ISSUE"),
+    staleTime: 60000,
+  });
+
+  const ISSUE_TYPE_OPTIONS = useMemo(() => {
+    const typeDef = Array.isArray(giAttrDefs)
+      ? giAttrDefs.find(
+          (d) =>
+            (d?.code === "type_inventory_issue" ||
+              d?.code === "issue_type" ||
+              d?.code === "type") &&
+            !d?.isDeleted,
+        )
+      : undefined;
+    if (typeDef?.options && typeDef.options.length > 0) {
+      return typeDef.options.map((opt) => ({
+        value: opt.value,
+        label: resolveOptionLabel(opt, locale, t),
+      }));
+    }
+    return [
+      { value: "SALE", label: t("Xuất bán (SO)") },
+      { value: "PRODUCTION", label: t("Xuất sản xuất") },
+      { value: "WARRANTY", label: t("Xuất bảo hành") },
+      { value: "SCRAP", label: t("Xuất hủy / hao hụt") },
+      { value: "OTHER", label: t("Xuất khác") },
+    ];
+  }, [giAttrDefs, locale, t]);
 
   const actions =
     viewOnly || loading
@@ -515,6 +551,19 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
       </span>
     ) : undefined;
 
+  // ── Thống kê tóm tắt ───────────────────────────────────────────────────
+  const totalIssuedQty = useMemo(() => {
+    return form.lines.reduce((sum, l) => sum + Number(l.qtyIssued || 0), 0);
+  }, [form.lines]);
+
+  const customerDisplay = useMemo(() => {
+    const selectedSo = soOptions.find((o) => o.value === form.salesOrderId);
+    if (selectedSo && selectedSo.label.includes(" — ")) {
+      return selectedSo.label.split(" — ")[1];
+    }
+    return "";
+  }, [soOptions, form.salesOrderId]);
+
   // ── Right panel content (Thông tin chung) ─────────────────────────────────
 
   const rightPanelContent = (
@@ -535,7 +584,15 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
           onChange={(v) => setForm((f) => ({ ...f, issueDate: v }))}
         />
       </DrawerField>
-      <DrawerField label={t("Loại xuất")} required>
+      <DrawerField
+        label={
+          <span className="inline-flex items-center gap-1.5 flex-wrap">
+            <span>{t("Loại xuất")}</span>
+            <AttributeTypeBadge type="system" />
+          </span>
+        }
+        required
+      >
         <Combobox
           options={ISSUE_TYPE_OPTIONS}
           value={form.issueType}
@@ -551,7 +608,7 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
               productionOrderId:
                 nextType === "PRODUCTION" ? f.productionOrderId : "",
               lines:
-                nextType === "OTHER"
+                nextType !== "SALE" && nextType !== "PRODUCTION"
                   ? f.lines.length
                     ? f.lines
                     : [emptyGiLine()]
@@ -563,7 +620,7 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
       {form.issueType === "SALE" && (
         <DrawerField label={t("Đơn bán hàng")}>
           {(viewOnly || !!editing) && form.salesOrderId ? (
-            <div className="px-3 py-2 bg-slate-50 border border-slate-100 rounded-md w-full overflow-hidden">
+            <div className="px-3 py-2 bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700/60 rounded-md w-full overflow-hidden">
               <TooltipProvider>
                 <Tooltip
                   content={
@@ -606,6 +663,13 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
           )}
         </DrawerField>
       )}
+      {customerDisplay && (
+        <DrawerField label={t("Khách hàng")}>
+          <div className="px-3 py-2 bg-slate-50 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-700/60 rounded-md text-sm font-medium text-foreground truncate">
+            {customerDisplay}
+          </div>
+        </DrawerField>
+      )}
       {form.issueType === "PRODUCTION" && (
         <DrawerField label={t("Lệnh sản xuất")}>
           <Combobox
@@ -619,6 +683,69 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
             }
           />
         </DrawerField>
+      )}
+
+      <DrawerField label={t("Người nhận hàng / Bộ phận nhận")}>
+        <input
+          className={inputCls}
+          placeholder={t("Họ tên người nhận hoặc bộ phận tiếp nhận...")}
+          value={
+            form.globalAttributes?.recipient_name ||
+            form.globalAttributes?.receiver ||
+            ""
+          }
+          disabled={viewOnly || editing?.status === "POSTED"}
+          onChange={(e) =>
+            setForm((f) => ({
+              ...f,
+              globalAttributes: {
+                ...f.globalAttributes,
+                recipient_name: e.target.value,
+                receiver: e.target.value,
+              },
+            }))
+          }
+        />
+      </DrawerField>
+
+      <DrawerField label={t("Số chứng từ / Lệnh tham chiếu")}>
+        <input
+          className={inputCls}
+          placeholder={t("Số phiếu xuất kho bên ngoài / Tham chiếu...")}
+          value={form.globalAttributes?.reference_no || ""}
+          disabled={viewOnly || editing?.status === "POSTED"}
+          onChange={(e) =>
+            setForm((f) => ({
+              ...f,
+              globalAttributes: {
+                ...f.globalAttributes,
+                reference_no: e.target.value,
+              },
+            }))
+          }
+        />
+      </DrawerField>
+
+      {/* Summary Cards khi ở chế độ View hoặc khi có dòng */}
+      {viewOnly && form.lines.length > 0 && (
+        <div className="mt-3 grid grid-cols-2 gap-2 text-center">
+          <div className="flex flex-col items-center justify-center p-2.5 bg-blue-500/10 rounded-lg border border-blue-500/20">
+            <span className="text-[11px] font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider mb-1">
+              {t("Số mặt hàng")}
+            </span>
+            <span className="font-bold text-blue-700 dark:text-blue-300 text-base tabular-nums">
+              {form.lines.length}
+            </span>
+          </div>
+          <div className="flex flex-col items-center justify-center p-2.5 bg-amber-500/10 rounded-lg border border-amber-500/20">
+            <span className="text-[11px] font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wider mb-1">
+              {t("Tổng SL xuất")}
+            </span>
+            <span className="font-bold text-amber-700 dark:text-amber-300 text-base tabular-nums">
+              -{fmtQty(totalIssuedQty)}
+            </span>
+          </div>
+        </div>
       )}
     </>
   );
@@ -697,7 +824,7 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
             : t("Sửa xuất kho")
           : t("Tạo phiếu xuất kho")
       }
-      subtitle={editing?.issueNo ?? t("Xuất kho")}
+      subtitle={editing?.issueNo ?? t("inventory.issue", "Xuất kho")}
       statusBadge={statusBadge}
       onClose={close}
       onToggleEdit={
@@ -734,6 +861,21 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
       // Right panel
       rightPanelContent={rightPanelContent}
       remarksContent={remarksContent}
+      customFieldsSlot={
+        <ModuleEntityCustomFieldsSection
+          moduleKey="GOODS_ISSUE"
+          entityId={editing?.id}
+          editMode={!viewOnly}
+          globalAttributes={form.globalAttributes}
+          onGlobalAttributesChange={(attrs) =>
+            setForm((f) => ({ ...f, globalAttributes: attrs }))
+          }
+          hideCategorySection={true}
+          globalTitle={t("moduleConfig.customFields", "Trường tùy chỉnh")}
+          globalCollapsible={true}
+          globalDefaultCollapsed={false}
+        />
+      }
       // Slots
       printSlot={
         <div className="hidden">

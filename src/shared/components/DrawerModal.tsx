@@ -483,7 +483,7 @@ export function DrawerRow({
   value,
   cls = "",
 }: {
-  label: string;
+  label: React.ReactNode;
   value: React.ReactNode;
   cls?: string;
 }) {
@@ -505,7 +505,7 @@ export function DrawerField({
   labelExtra,
   children,
 }: {
-  label: string;
+  label: React.ReactNode;
   required?: boolean;
   /** Optional node rendered at the right side of the label row (e.g. action buttons) */
   labelExtra?: React.ReactNode;

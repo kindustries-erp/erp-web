@@ -6,16 +6,16 @@ import { DataTable } from "@/shared/components/DataTable";
 import { Button } from "@/shared/components/ui/Button";
 import { Input } from "@/shared/components/ui/input";
 import { Textarea } from "@/shared/components/ui/textarea";
-import { Checkbox } from "@/shared/components/ui/checkbox";
 import { Combobox } from "@/shared/components/Combobox";
 import { DatePicker } from "@/shared/components/DatePicker";
 import { DrawerField, DrawerSection } from "@/shared/components/DrawerModal";
 import { CellInput } from "@/shared/components/CellInput";
 import { bomCoreApi, type ErpBom } from "@/modules/bom-core/api/bomCoreApi";
 import {
-  bomConfigApi,
-  type BomAttributeDef,
-} from "@/modules/bom-core/api/bomConfigApi";
+  ModuleEntityCustomFieldsSection,
+  validateModuleRequiredFields,
+} from "@/shared/components/ModuleEntityCustomFieldsSection";
+import { moduleConfigApi } from "@/core/api/moduleConfigApi";
 import type { DrawerMode } from "@/shared/stores/useDrawerStore";
 import toast from "react-hot-toast";
 import { ActionDropdown } from "@/shared/components/ActionDropdown";
@@ -43,8 +43,9 @@ export interface BomForm {
   bomCode: string;
   bomName: string;
   finishedGoodItemId: string;
-  categoryId: string;
-  attributes: Record<string, string>;
+  categoryId?: string;
+  attributes?: Record<string, string>;
+  globalAttributes: Record<string, any>;
   version: string;
   status: string;
   effectiveFrom: string;
@@ -67,6 +68,7 @@ export const emptyForm = (): BomForm => ({
   finishedGoodItemId: "",
   categoryId: "",
   attributes: {},
+  globalAttributes: {},
   version: "1.0",
   status: "ACTIVE",
   effectiveFrom: "",
@@ -93,6 +95,7 @@ export function buildForm(bom: ErpBom): BomForm {
     finishedGoodItemId: bom.finishedGoodItemId ?? "",
     categoryId: bom.categoryId ?? "",
     attributes: bom.attributes ?? {},
+    globalAttributes: bom.globalAttributes ?? {},
     version: bom.version ?? "1.0",
     status: bom.status ?? "ACTIVE",
     effectiveFrom: bom.effectiveFrom ? bom.effectiveFrom.slice(0, 10) : "",
@@ -119,6 +122,10 @@ export function toPayload(form: BomForm) {
     attributes:
       form.attributes && Object.keys(form.attributes).length > 0
         ? form.attributes
+        : undefined,
+    globalAttributes:
+      form.globalAttributes && Object.keys(form.globalAttributes).length > 0
+        ? form.globalAttributes
         : undefined,
     version: form.version.trim() || "1.0",
     status: form.status || "ACTIVE",
@@ -195,52 +202,12 @@ export function BomFormDrawer({
   const isEditing = mode === "edit";
   const isLockedByProduction = Boolean(editing?.hasProduction);
 
-  // Query BOM Categories
-  const { data: allCategories = [] } = useQuery({
-    queryKey: ["bom-config-categories"],
-    queryFn: () => bomConfigApi.getCategories(),
+  // Query BOM Global Attribute Defs (bao gồm các thuộc tính mặc định: Màu sắc, Phiên bản)
+  const { data: bomGlobalDefs = [] } = useQuery({
+    queryKey: ["module-config-global-defs", "BOM"],
+    queryFn: () => moduleConfigApi.getGlobalAttributeDefs("BOM"),
     enabled: open,
   });
-
-  const activeCategories = useMemo(() => {
-    return allCategories.filter((c) => c.isActive !== false);
-  }, [allCategories]);
-
-  const categoryOptions = useMemo(() => {
-    return activeCategories.map((c) => ({
-      value: c.id,
-      label: `${c.name} [${c.code}]`,
-    }));
-  }, [activeCategories]);
-
-  const selectedCategory = useMemo(() => {
-    return allCategories.find((c) => c.id === form.categoryId);
-  }, [allCategories, form.categoryId]);
-
-  const activeAttributeDefs = useMemo(() => {
-    if (!selectedCategory?.attributeDefs) return [];
-    return selectedCategory.attributeDefs
-      .filter((d) => d.isActive !== false)
-      .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
-  }, [selectedCategory]);
-
-  const handleCategoryChange = (val: string) => {
-    setForm((prev) => ({
-      ...prev,
-      categoryId: val,
-      attributes: {},
-    }));
-  };
-
-  const handleAttributeChange = (attrDefId: string, val: string) => {
-    setForm((prev) => ({
-      ...prev,
-      attributes: {
-        ...(prev.attributes || {}),
-        [attrDefId]: val,
-      },
-    }));
-  };
 
   const [submittingStatus, setSubmittingStatus] = React.useState<string | null>(
     null,
@@ -487,22 +454,18 @@ export function BomFormDrawer({
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
   const validateForm = () => {
-    if (selectedCategory && activeAttributeDefs.length > 0) {
-      for (const attr of activeAttributeDefs) {
-        if (attr.isRequired) {
-          const val = form.attributes?.[attr.id];
-          if (
-            val === undefined ||
-            val === null ||
-            (typeof val === "string" && val.trim() === "")
-          ) {
-            toast.error(
-              `${t("Vui lòng chọn hoặc điền thuộc tính bắt buộc")}: ${attr.name}`,
-            );
-            return false;
-          }
-        }
-      }
+    const missing = validateModuleRequiredFields({
+      globalDefs: bomGlobalDefs,
+      globalAttributes: form.globalAttributes,
+      includeSystemAttributes: true,
+      moduleKey: "BOM",
+      t,
+    });
+    if (missing.length > 0) {
+      toast.error(
+        `${t("Vui lòng chọn hoặc điền thuộc tính bắt buộc")}: ${missing.join(", ")}`,
+      );
+      return false;
     }
     return true;
   };
@@ -1264,161 +1227,48 @@ export function BomFormDrawer({
                   placeholder="DD/MM/YYYY"
                 />
               </DrawerField>
-            </div>
-          </DrawerSection>
-
-          {/* Section: Danh mục & Thuộc tính */}
-          <DrawerSection
-            title={t(
-              "bomConfig.categoryAndAttributes",
-              "Danh mục & Thuộc tính",
-            )}
-          >
-            <div className="flex flex-col gap-3">
-              <DrawerField label={t("bomConfig.category", "Danh mục BOM")}>
-                <Combobox
-                  value={form.categoryId}
-                  readOnly={viewOnly || isLockedByProduction}
-                  onChange={handleCategoryChange}
-                  options={categoryOptions}
-                  placeholder={t(
-                    "bomConfig.selectCategory",
-                    "— Chọn danh mục BOM —",
-                  )}
-                  searchPlaceholder={t("common.search", "Tìm kiếm danh mục...")}
-                  allowClear
+              <DrawerField label={t("Ghi chú")}>
+                <Textarea
+                  value={form.notes}
+                  readOnly={viewOnly}
+                  onChange={(e) =>
+                    setForm((prev) => ({ ...prev, notes: e.target.value }))
+                  }
+                  placeholder={t("Ghi chú thêm...")}
+                  className="min-h-[80px] resize-y"
                 />
               </DrawerField>
-
-              {/* Dynamic Attributes Grid */}
-              {selectedCategory && (
-                <div className="pt-2 border-t border-border mt-1 flex flex-col gap-3">
-                  {activeAttributeDefs.length > 0 ? (
-                    activeAttributeDefs.map((attr: BomAttributeDef) => {
-                      const val = form.attributes?.[attr.id] || "";
-                      return (
-                        <div key={attr.id}>
-                          {attr.fieldType === "CHECKBOX" ? (
-                            <div className="flex items-center gap-2 pt-1">
-                              <Checkbox
-                                id={`attr-${attr.id}`}
-                                checked={val === "true"}
-                                disabled={viewOnly || isLockedByProduction}
-                                onCheckedChange={(c) =>
-                                  handleAttributeChange(
-                                    attr.id,
-                                    c ? "true" : "false",
-                                  )
-                                }
-                              />
-                              <label
-                                htmlFor={`attr-${attr.id}`}
-                                className="text-xs font-medium cursor-pointer select-none text-foreground"
-                              >
-                                {attr.name}
-                                {attr.isRequired && (
-                                  <span className="text-destructive ml-1">
-                                    *
-                                  </span>
-                                )}
-                              </label>
-                            </div>
-                          ) : attr.fieldType === "SELECT" ? (
-                            <DrawerField
-                              label={attr.name}
-                              required={attr.isRequired}
-                            >
-                              <Combobox
-                                value={val}
-                                readOnly={viewOnly || isLockedByProduction}
-                                onChange={(v) =>
-                                  handleAttributeChange(attr.id, v)
-                                }
-                                options={(attr.options || []).map((opt) => ({
-                                  value: opt.value,
-                                  label: `${opt.label} [${opt.value}]`,
-                                }))}
-                                placeholder={`— Chọn ${attr.name} —`}
-                                allowClear
-                              />
-                            </DrawerField>
-                          ) : attr.fieldType === "DATE" ? (
-                            <DrawerField
-                              label={attr.name}
-                              required={attr.isRequired}
-                            >
-                              <DatePicker
-                                value={val}
-                                disabled={viewOnly || isLockedByProduction}
-                                onChange={(v) =>
-                                  handleAttributeChange(attr.id, v)
-                                }
-                                className="w-full"
-                                placeholder="DD/MM/YYYY"
-                              />
-                            </DrawerField>
-                          ) : attr.fieldType === "NUMBER" ? (
-                            <DrawerField
-                              label={attr.name}
-                              required={attr.isRequired}
-                            >
-                              <Input
-                                type="number"
-                                step="0.1"
-                                value={val}
-                                readOnly={viewOnly || isLockedByProduction}
-                                onChange={(e) =>
-                                  handleAttributeChange(attr.id, e.target.value)
-                                }
-                                placeholder={`Nhập ${attr.name.toLowerCase()}...`}
-                              />
-                            </DrawerField>
-                          ) : (
-                            <DrawerField
-                              label={attr.name}
-                              required={attr.isRequired}
-                            >
-                              <Input
-                                type="text"
-                                value={val}
-                                readOnly={viewOnly || isLockedByProduction}
-                                onChange={(e) =>
-                                  handleAttributeChange(attr.id, e.target.value)
-                                }
-                                placeholder={`Nhập ${attr.name.toLowerCase()}...`}
-                              />
-                            </DrawerField>
-                          )}
-                        </div>
-                      );
-                    })
-                  ) : (
-                    <p className="text-xs text-muted-foreground italic py-1">
-                      {t(
-                        "bomConfig.noAttrsForCategory",
-                        "Danh mục này chưa cấu hình thuộc tính động nào.",
-                      )}
-                    </p>
-                  )}
-                </div>
-              )}
             </div>
           </DrawerSection>
 
-          {/* Section: Ghi chú */}
-          <DrawerSection title={t("Ghi chú")}>
-            <div className="flex flex-col gap-3">
-              <Textarea
-                value={form.notes}
-                readOnly={viewOnly}
-                onChange={(e) =>
-                  setForm((prev) => ({ ...prev, notes: e.target.value }))
-                }
-                placeholder={t("Ghi chú thêm...")}
-                className="min-h-[88px] resize-y"
-              />
-            </div>
-          </DrawerSection>
+          {/* Section: Thuộc tính (ModuleEntityCustomFieldsSection) */}
+          <ModuleEntityCustomFieldsSection
+            moduleKey="BOM"
+            entityId={editing?.id}
+            editMode={!viewOnly && !isLockedByProduction}
+            includeSystemAttributes={true}
+            hideCategorySection={true}
+            globalAttributes={form.globalAttributes}
+            onGlobalAttributesChange={(attrs) => {
+              const versionDefId = bomGlobalDefs.find(
+                (d) => d.code === "version",
+              )?.id;
+              const newVersion =
+                attrs.version ??
+                (versionDefId ? attrs[versionDefId] : undefined);
+              setForm((prev) => ({
+                ...prev,
+                globalAttributes: attrs,
+                version:
+                  newVersion !== undefined && String(newVersion).trim() !== ""
+                    ? String(newVersion).trim()
+                    : prev.version,
+              }));
+            }}
+            globalTitle={t("bomConfig.attributes", "Thuộc tính")}
+            globalCollapsible={true}
+            globalDefaultCollapsed={false}
+          />
         </div>
       }
     />

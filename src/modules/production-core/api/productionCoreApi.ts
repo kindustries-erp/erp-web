@@ -77,6 +77,21 @@ export interface ErpProducedSerial {
   createdAt?: string;
 }
 
+export interface ErpSerialAssignment {
+  id: string;
+  vehicleId?: string | null;
+  bomLineId?: string | null;
+  serialId: string;
+  assignedAt?: string | null;
+  assignmentSource?: string | null;
+  vinNo?: string | null;
+  engineNo?: string | null;
+  componentSerialNo?: string | null;
+  componentItemId?: string | null;
+  componentSku?: string | null;
+  componentItemName?: string | null;
+}
+
 export interface ErpProductionOrder {
   id: string;
   referenceNo?: string | null;
@@ -102,6 +117,7 @@ export interface ErpProductionOrder {
   outputMetadata?: Record<string, unknown> | null;
   producedVehicles?: ErpProducedVehicle[];
   producedSerials?: ErpProducedSerial[];
+  serialAssignments?: ErpSerialAssignment[];
   bomVersion?: string | null;
   [key: string]: unknown;
 }
@@ -137,6 +153,45 @@ type ExecuteProductionResponse = {
   message: string;
   data: ExecuteProductionResult;
 };
+
+export interface BomAttributeDetail {
+  id: string;
+  code: string;
+  name: string;
+  nameEn?: string | null;
+  fieldType: string;
+  value: any;
+  label: string;
+  options?: Array<{
+    value: string;
+    label: string;
+    labelEn?: string;
+    labels?: Record<string, string | undefined>;
+  }> | null;
+  isRequired: boolean;
+  isGlobal: boolean;
+  sortOrder: number;
+}
+
+export interface ExplodePreviewBomInfo {
+  id: string;
+  bomCode?: string | null;
+  bomName?: string | null;
+  version?: string | null;
+  status?: string | null;
+  categoryId?: string | null;
+  categoryCode?: string | null;
+  categoryName?: string | null;
+  attributes?: Record<string, string>;
+  globalAttributes?: Record<string, any>;
+  attributeDetails?: BomAttributeDetail[];
+}
+
+export interface ExplodePreviewResult {
+  flatMaterials: ErpProductionOrderMaterial[];
+  explosionTree: Record<string, unknown>[];
+  bom?: ExplodePreviewBomInfo | null;
+}
 
 export const productionCoreApi = {
   execute: async (
@@ -182,16 +237,13 @@ export const productionCoreApi = {
   explodePreview: async (
     bomId: string,
     qtyToProduce: number,
-  ): Promise<{
-    flatMaterials: ErpProductionOrderMaterial[];
-    explosionTree: Record<string, unknown>[];
-  }> => {
-    const { data } = await axiosInstance.get<{
-      flatMaterials: ErpProductionOrderMaterial[];
-      explosionTree: Record<string, unknown>[];
-    }>(`/api/v1/production/explode-preview`, {
-      params: { bomId, qtyToProduce },
-    });
+  ): Promise<ExplodePreviewResult> => {
+    const { data } = await axiosInstance.get<ExplodePreviewResult>(
+      `/api/v1/production/explode-preview`,
+      {
+        params: { bomId, qtyToProduce },
+      },
+    );
     return data;
   },
   update: async (
@@ -290,6 +342,38 @@ export const productionCoreApi = {
       };
     }>(`/api/v1/production/orders/${id}/complete`, payload);
     return data.data;
+  },
+
+  updateProducedVehicles: async (
+    id: string,
+    payload: {
+      vehicles: Array<{
+        id: string;
+        vinNo?: string;
+        engineNo?: string;
+        serialNo?: string;
+        notes?: string;
+      }>;
+    },
+  ): Promise<{
+    message: string;
+    data: Array<{
+      id: string;
+      vinNo: string;
+      engineNo: string;
+      notes: string | null;
+    }>;
+  }> => {
+    const { data } = await axiosInstance.patch<{
+      message: string;
+      data: Array<{
+        id: string;
+        vinNo: string;
+        engineNo: string;
+        notes: string | null;
+      }>;
+    }>(`/api/v1/production/orders/${id}/vehicles`, payload);
+    return data;
   },
 
   getNextReferenceNo: async (): Promise<string> => {

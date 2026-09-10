@@ -10,16 +10,19 @@ import { Checkbox } from "@/shared/components/ui/checkbox";
 import { Badge } from "@/shared/components/ui/badge";
 import { DatePicker } from "@/shared/components/DatePicker";
 import { useT } from "@/core/i18n";
+import { useAppStore } from "@/core/config/appStore";
 import {
   moduleConfigApi,
   resolveAttrName,
   resolveCategoryName,
+  resolveOptionLabel,
   type ModuleKey,
   type ModuleAttributeDef,
 } from "@/core/api/moduleConfigApi";
 import { formatGMT7 } from "@/shared/utils/format";
 import { Tag, Layers, X, Globe } from "lucide-react";
 import { cn } from "@/shared/utils";
+import { AttributeTypeBadge } from "@/shared/components/AttributeTypeBadge";
 
 export interface ModuleEntityCustomFieldsSectionProps {
   moduleKey: ModuleKey;
@@ -40,6 +43,7 @@ export interface ModuleEntityCustomFieldsSectionProps {
   readOnly?: boolean;
   hideGlobalSection?: boolean;
   hideCategorySection?: boolean;
+  includeSystemAttributes?: boolean;
   className?: string;
 }
 
@@ -55,6 +59,7 @@ export function validateModuleRequiredFields({
   hasCategory = false,
   moduleKey = "",
   categoryCode = null,
+  includeSystemAttributes = false,
   t,
 }: {
   globalDefs?: ModuleAttributeDef[];
@@ -64,13 +69,19 @@ export function validateModuleRequiredFields({
   hasCategory?: boolean;
   moduleKey?: string;
   categoryCode?: string | null;
+  includeSystemAttributes?: boolean;
   t?: (key: string, fallback: string) => string;
 }): string[] {
   const missingNames: string[] = [];
 
   // 1. Validate global required fields
   const requiredGlobalDefs = globalDefs.filter(
-    (d) => !d.isDeleted && d.isActive !== false && d.isGlobal && d.isRequired,
+    (d) =>
+      !d.isDeleted &&
+      d.isActive !== false &&
+      d.isGlobal &&
+      (includeSystemAttributes || !d.isSystem) &&
+      d.isRequired,
   );
   for (const def of requiredGlobalDefs) {
     const val = globalAttributes[def.id];
@@ -236,26 +247,47 @@ function AttributeFieldRenderer({
   onChange,
   t,
 }: AttributeFieldRendererProps) {
+  const { locale } = useAppStore();
   const displayName = resolveAttrName(attr, moduleKey, categoryCode, t);
+
+  const fieldLabel = (
+    <span className="inline-flex items-center gap-1.5 flex-wrap">
+      <span>{displayName}</span>
+      {attr.isSystem ? (
+        <AttributeTypeBadge type="system" />
+      ) : (
+        <AttributeTypeBadge type="custom" />
+      )}
+    </span>
+  );
 
   if (isEditable) {
     if (attr.fieldType === "CHECKBOX") {
       return (
-        <div className="flex items-center gap-2 pt-1">
-          <Checkbox
-            id={`attr-field-${attr.id}`}
-            checked={value === true || value === "true"}
-            onCheckedChange={(checked) => onChange(checked ? "true" : "false")}
-          />
-          <label
-            htmlFor={`attr-field-${attr.id}`}
-            className="text-xs font-medium cursor-pointer select-none text-foreground flex items-center gap-0.5"
-          >
-            {displayName}
-            {attr.isRequired && (
-              <span className="text-destructive ml-0.5">*</span>
-            )}
-          </label>
+        <div className="flex items-center justify-between gap-2 pt-1">
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id={`attr-field-${attr.id}`}
+              checked={value === true || value === "true"}
+              onCheckedChange={(checked) =>
+                onChange(checked ? "true" : "false")
+              }
+            />
+            <label
+              htmlFor={`attr-field-${attr.id}`}
+              className="text-xs font-medium cursor-pointer select-none text-foreground flex items-center gap-1"
+            >
+              <span>{displayName}</span>
+              {attr.isRequired && (
+                <span className="text-destructive ml-0.5">*</span>
+              )}
+            </label>
+          </div>
+          {attr.isSystem ? (
+            <AttributeTypeBadge type="system" />
+          ) : (
+            <AttributeTypeBadge type="custom" />
+          )}
         </div>
       );
     }
@@ -263,11 +295,11 @@ function AttributeFieldRenderer({
     if (attr.fieldType === "SELECT") {
       const optList: ComboboxOption[] = (attr.options || []).map((opt) => ({
         value: opt.value,
-        label: `${opt.label} [${opt.value}]`,
+        label: `${resolveOptionLabel(opt, locale, t)} [${opt.value}]`,
       }));
 
       return (
-        <DrawerField label={displayName} required={attr.isRequired}>
+        <DrawerField label={fieldLabel} required={attr.isRequired}>
           <Combobox
             options={optList}
             value={value || ""}
@@ -281,7 +313,7 @@ function AttributeFieldRenderer({
 
     if (attr.fieldType === "NUMBER") {
       return (
-        <DrawerField label={displayName} required={attr.isRequired}>
+        <DrawerField label={fieldLabel} required={attr.isRequired}>
           <BufferedTextInput
             type="number"
             className={inputCls}
@@ -295,7 +327,7 @@ function AttributeFieldRenderer({
 
     if (attr.fieldType === "DATE") {
       return (
-        <DrawerField label={displayName} required={attr.isRequired}>
+        <DrawerField label={fieldLabel} required={attr.isRequired}>
           <DatePicker
             value={value || ""}
             onChange={onChange}
@@ -307,7 +339,7 @@ function AttributeFieldRenderer({
 
     // Default: TEXT
     return (
-      <DrawerField label={displayName} required={attr.isRequired}>
+      <DrawerField label={fieldLabel} required={attr.isRequired}>
         <BufferedTextInput
           type="text"
           className={inputCls}
@@ -335,7 +367,7 @@ function AttributeFieldRenderer({
   } else if (attr.fieldType === "SELECT") {
     const matchedOpt = (attr.options || []).find((o) => o.value === value);
     if (matchedOpt) {
-      displayVal = `${matchedOpt.label} [${matchedOpt.value}]`;
+      displayVal = `${resolveOptionLabel(matchedOpt, locale, t)} [${matchedOpt.value}]`;
     }
   } else if (attr.fieldType === "DATE" && value) {
     displayVal = formatGMT7(value, "date") || value;
@@ -343,14 +375,21 @@ function AttributeFieldRenderer({
 
   return (
     <div className="flex flex-col gap-0.5 text-xs pb-1.5 border-b border-border/30 last:border-0">
-      <span className="text-[11px] text-muted-foreground font-medium flex items-center gap-1">
-        {attr.isGlobal ? (
-          <Globe className="w-3 h-3 text-muted-foreground opacity-80 shrink-0" />
+      <span className="text-[11px] text-muted-foreground font-medium flex items-center justify-between gap-1">
+        <span className="flex items-center gap-1">
+          {attr.isGlobal ? (
+            <Globe className="w-3 h-3 text-muted-foreground opacity-80 shrink-0" />
+          ) : (
+            <Tag className="w-3 h-3 opacity-60 shrink-0" />
+          )}
+          <span>{displayName}</span>
+          {attr.isRequired && <span className="text-destructive">*</span>}
+        </span>
+        {attr.isSystem ? (
+          <AttributeTypeBadge type="system" />
         ) : (
-          <Tag className="w-3 h-3 opacity-60 shrink-0" />
+          <AttributeTypeBadge type="custom" />
         )}
-        <span>{displayName}</span>
-        {attr.isRequired && <span className="text-destructive">*</span>}
       </span>
       <div className="font-medium text-foreground px-1">{displayVal}</div>
     </div>
@@ -376,6 +415,7 @@ export function ModuleEntityCustomFieldsSection({
   readOnly = false,
   hideGlobalSection = false,
   hideCategorySection = false,
+  includeSystemAttributes = false,
   className,
 }: ModuleEntityCustomFieldsSectionProps) {
   const t = useT();
@@ -407,18 +447,26 @@ export function ModuleEntityCustomFieldsSection({
 
   // Category Attributes resolution (prop takes precedence over query data)
   const effectiveAttributes = useMemo(() => {
-    if (attributes !== undefined && attributes !== null) {
+    if (
+      attributes !== undefined &&
+      attributes !== null &&
+      Object.keys(attributes).length > 0
+    ) {
       return attributes;
     }
-    return savedEntityData?.attributes || {};
+    return savedEntityData?.attributes || attributes || {};
   }, [attributes, savedEntityData?.attributes]);
 
   // Global Attributes resolution (prop takes precedence over query data)
   const effectiveGlobalAttributes = useMemo(() => {
-    if (globalAttributes !== undefined && globalAttributes !== null) {
+    if (
+      globalAttributes !== undefined &&
+      globalAttributes !== null &&
+      Object.keys(globalAttributes).length > 0
+    ) {
       return globalAttributes;
     }
-    return savedEntityData?.globalAttributes || {};
+    return savedEntityData?.globalAttributes || globalAttributes || {};
   }, [globalAttributes, savedEntityData?.globalAttributes]);
 
   // Selected category object
@@ -435,16 +483,26 @@ export function ModuleEntityCustomFieldsSection({
       .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
   }, [selectedCategory]);
 
-  // Active global attribute definitions
+  // Active global attribute definitions (excluding system attributes handled elsewhere unless includeSystemAttributes is true)
   const activeGlobalAttributeDefs: ModuleAttributeDef[] = useMemo(() => {
     const list =
       globalDefs.length > 0
         ? globalDefs
         : savedEntityData?.globalAttributeDefs || [];
     return list
-      .filter((d) => !d.isDeleted && d.isActive !== false && d.isGlobal)
+      .filter(
+        (d) =>
+          !d.isDeleted &&
+          d.isActive !== false &&
+          d.isGlobal &&
+          (includeSystemAttributes || !d.isSystem),
+      )
       .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
-  }, [globalDefs, savedEntityData?.globalAttributeDefs]);
+  }, [
+    globalDefs,
+    savedEntityData?.globalAttributeDefs,
+    includeSystemAttributes,
+  ]);
 
   // Category dropdown options (with i18n resolution)
   const categoryOptions: ComboboxOption[] = useMemo(() => {
@@ -501,7 +559,7 @@ export function ModuleEntityCustomFieldsSection({
     title || t("moduleConfig.customFieldsSection", "Danh mục & Thuộc tính");
 
   const showGlobalSection =
-    !hideGlobalSection && (activeGlobalAttributeDefs.length > 0 || isEditable);
+    !hideGlobalSection && activeGlobalAttributeDefs.length > 0;
 
   const showCategorySection = !hideCategorySection;
 

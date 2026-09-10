@@ -57,10 +57,6 @@ export const SECTION_ROOTS: Partial<Record<PageKey, SectionRoot>> = {
     labelKey: "nav.items.erpInventoryItemTypes",
     group: "settings",
   },
-  "erp-inventory-tracking-categories": {
-    labelKey: "nav.items.erpInventoryTrackingCategories",
-    group: "settings",
-  },
   "erp-production": {
     labelKey: "nav.items.erpProduction",
     group: "manufacturing",
@@ -287,11 +283,6 @@ export const BREADCRUMBS: Partial<Record<PageKey, Array<[string, string?]>>> = {
     ["breadcrumb.settings"],
     ["breadcrumb.erpInventoryMasters"],
     ["breadcrumb.erpInventoryItemTypes"],
-  ],
-  "erp-inventory-tracking-categories": [
-    ["breadcrumb.settings"],
-    ["breadcrumb.erpInventoryMasters"],
-    ["breadcrumb.erpInventoryTrackingCategories"],
   ],
   "erp-activity-logs": [
     ["breadcrumb.settings"],

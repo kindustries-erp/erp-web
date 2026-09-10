@@ -54,6 +54,7 @@ export const bomConfigVi = {
   inUseTooltip:
     "Thuộc tính đang được sử dụng trong {{count}} BOM, không thể xóa. Bạn có thể Ngừng áp dụng.",
   noAttrsInCategory: "Chưa có thuộc tính nào cho danh mục này.",
+  attributes: "Thuộc tính",
   categoryAndAttributes: "Danh mục & Thuộc tính",
   category: "Danh mục BOM",
   selectCategory: "— Chọn danh mục BOM —",

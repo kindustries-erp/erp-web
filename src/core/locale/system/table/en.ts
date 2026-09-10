@@ -10,6 +10,7 @@ export const tableEn = {
   ],
   thu: "Receipt",
   chi: "Payment",
+  date: "Date",
   columnVisibility: "Customize Columns",
   resetColumns: "Reset to Default",
   reset: "Reset",

@@ -111,7 +111,7 @@ export function VoucherNetoffSelectionModal(
             settlementType={logic.settlementType}
             handleSwitchSettlementType={logic.handleSwitchSettlementType}
             resolvedTarget={logic.resolvedTarget}
-            invoice={props.invoice}
+            invoice={logic.effectiveInvoice || props.invoice}
             caseCode={props.caseCode}
             currentRemaining={logic.currentRemaining}
             totalCurrentNetOff={logic.totalCurrentNetOff}
@@ -129,6 +129,7 @@ export function VoucherNetoffSelectionModal(
             handleToggleSuggestion={logic.handleToggleSuggestion}
             setDetailTxnId={logic.setDetailTxnId}
             existingCaseSettlements={props.existingCaseSettlements}
+            existingInvoiceNetOffs={logic.existingInvoiceNetOffs}
           />
         }
       />

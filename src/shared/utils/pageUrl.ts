@@ -19,7 +19,6 @@ export const ALL_PAGE_KEYS: PageKey[] = [
   "erp-inventory-items",
   "erp-inventory-uom",
   "erp-inventory-item-types",
-  "erp-inventory-tracking-categories",
   "erp-suppliers",
   "erp-customers",
   "erp-users",

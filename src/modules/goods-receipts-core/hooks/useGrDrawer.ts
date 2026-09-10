@@ -23,7 +23,13 @@ import { useUIStore } from "@/core/config/uiStore";
 
 // ─── Form types ───────────────────────────────────────────────────────────────
 
-export type GrReceiptType = "PO" | "OTHER";
+export type GrReceiptType =
+  | "PO"
+  | "MANUFACTURING"
+  | "RETURN"
+  | "WARRANTY"
+  | "OTHER"
+  | (string & {});
 
 export interface GrLineForm {
   purchaseOrderLineId: string;
@@ -44,6 +50,8 @@ export interface GrForm {
   receiptDate: string;
   remarks: string;
   lines: GrLineForm[];
+  globalAttributes?: Record<string, any>;
+  customAttributes?: Record<string, any>;
 }
 
 export function emptyGrForm(): GrForm {
@@ -55,12 +63,17 @@ export function emptyGrForm(): GrForm {
     receiptDate: new Date().toISOString().slice(0, 10),
     remarks: "",
     lines: [],
+    globalAttributes: {},
+    customAttributes: {},
   };
 }
 
 export function buildGrForm(gr: ErpGoodsReceipt): GrForm {
+  const customAttrs = gr.customAttributes || {};
   return {
-    receiptType: gr.purchaseOrderId ? "PO" : "OTHER",
+    receiptType:
+      (customAttrs.type_inventory_receipt as GrReceiptType) ||
+      (gr.purchaseOrderId ? "PO" : "OTHER"),
     receiptNo: gr.receiptNo ?? "",
     purchaseOrderId: gr.purchaseOrderId ?? "",
     productionOrderId: gr.productionOrderId ?? "",
@@ -77,10 +90,19 @@ export function buildGrForm(gr: ErpGoodsReceipt): GrForm {
         unitCost: line.unitCost ?? "",
         declaredSerials: line.declaredSerials ?? [],
       })) ?? [],
+    globalAttributes: { ...customAttrs },
+    customAttributes: { ...customAttrs },
   };
 }
 
 export function buildGrPayload(form: GrForm): CreateGrPayload {
+  const customAttributes = {
+    ...(form.globalAttributes || {}),
+    ...(form.customAttributes || {}),
+    type_inventory_receipt:
+      form.receiptType || (form.purchaseOrderId ? "PO" : "OTHER"),
+  };
+
   return {
     receiptNo: form.receiptNo.trim(),
     purchaseOrderId:
@@ -88,6 +110,7 @@ export function buildGrPayload(form: GrForm): CreateGrPayload {
     productionOrderId: undefined,
     receiptDate: form.receiptDate,
     remarks: form.remarks.trim() || undefined,
+    customAttributes,
     lines: form.lines
       .filter((line) => {
         const qty = Number(line.qtyReceived);
@@ -326,6 +349,7 @@ export function useGrDrawer({
             variant: "success",
           });
         }
+
         setOpen(false);
         if (invalidateWarehouseQuery) {
           await queryClient.invalidateQueries({

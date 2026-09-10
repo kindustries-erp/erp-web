@@ -220,6 +220,15 @@ export const erpInvoicesVi = {
   bulkEditSuccessTitle: "Đã cập nhật {{fields}}",
   bulkEditErrorTitle: "Không thể cập nhật",
 
+  // Bulk Net-Off Drawer
+  bulkNetOffTitle: "Đối soát dòng tiền hàng loạt",
+  bulkNetOffSubtitle: "Đề xuất cấn trừ sao kê cho {{count}} hóa đơn đã chọn",
+  paidFullShortBadge: "✓ Đã cấn trừ đủ",
+  invoiceFullySettledTitle: "Hóa đơn đã được cấn trừ đủ 100%",
+  invoiceFullySettledDesc:
+    "Hóa đơn này không còn số dư cần cấn trừ thêm. Bạn có thể xem các giao dịch đã cấn trừ ở danh sách bên dưới.",
+  existingInvoiceNetOffsTitle: "Giao dịch đã cấn trừ trước đó",
+
   // Export Drawer
   "exportDrawer.title": "Xuất Excel hóa đơn",
   "exportDrawer.partsTitle": "Xuất Excel bảng kê phụ tùng",
@@ -455,4 +464,10 @@ export const erpInvoicesVi = {
   "selectedBankTable.colOriginalAmount": "Số tiền gốc",
   "selectedBankTable.colNetOffAmount": "Đã cấn trừ",
   "selectedBankTable.colThisNetOff": "Cấn trừ đợt này",
+
+  // Custom Fields Config Menu
+  customFieldsIn: "Cấu hình hóa đơn mua vào",
+  customFieldsOut: "Cấu hình hóa đơn bán ra",
+  configTitleIn: "Hóa đơn mua vào",
+  configTitleOut: "Hóa đơn bán ra",
 };
