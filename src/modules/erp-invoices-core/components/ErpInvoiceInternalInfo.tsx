@@ -274,6 +274,7 @@ export function ErpInvoiceInternalSidebar({
 
   return (
     <div className="flex flex-col gap-4">
+      {/* 1. THÔNG TIN CHUNG */}
       <DrawerSection
         title={t("generalInfo", "THÔNG TIN CHUNG")}
         collapsible={true}
@@ -293,40 +294,6 @@ export function ErpInvoiceInternalSidebar({
               <div className="font-medium text-[color:var(--foreground)] text-sm px-3 py-2 bg-gray-50 rounded-lg border border-transparent">
                 {branchOptions.find((o) => o.value === form.branchId)?.label ||
                   "—"}
-              </div>
-            )}
-          </DrawerField>
-
-          <DrawerField
-            label={
-              <span className="inline-flex items-center gap-1.5 flex-wrap">
-                <span>
-                  {t(
-                    "invoiceType",
-                    direction === "OUT"
-                      ? "Phân loại hóa đơn bán ra"
-                      : "Phân loại hóa đơn mua vào",
-                  )}
-                </span>
-                <AttributeTypeBadge type="system" />
-              </span>
-            }
-          >
-            {editMode ? (
-              <Combobox
-                options={invoiceTypeOptions}
-                value={currentInvoiceType}
-                onChange={handleInvoiceTypeChange}
-                placeholder={t(
-                  "selectInvoiceType",
-                  "-- Chọn phân loại hóa đơn --",
-                )}
-                allowClear={true}
-              />
-            ) : (
-              <div className="font-medium text-[color:var(--foreground)] text-sm px-3 py-2 bg-gray-50 rounded-lg border border-transparent">
-                {invoiceTypeOptions.find((o) => o.value === currentInvoiceType)
-                  ?.label || "—"}
               </div>
             )}
           </DrawerField>
@@ -368,67 +335,134 @@ export function ErpInvoiceInternalSidebar({
               />
             ) : null}
           </div>
+        </div>
+      </DrawerSection>
 
-          {direction === "IN" && detailInvoice?.id && (
-            <div className="pt-2 border-t border-border/50">
-              <div className="flex items-center justify-between p-2.5 bg-muted/40 rounded-lg border border-border/60">
-                <div className="min-w-0 pr-2">
-                  <div className="text-xs font-semibold text-foreground">
-                    Hóa đơn hợp lý, hợp lệ
-                  </div>
-                  <div className="text-[11px] text-muted-foreground mt-0.5">
-                    {detailInvoice.isValid ? (
-                      <span className="text-emerald-600 font-medium">
-                        Đã kiểm duyệt
-                      </span>
-                    ) : (
-                      <span>Chưa kiểm duyệt</span>
-                    )}
-                    {detailInvoice.validatedAt && (
-                      <span className="ml-1 italic">
-                        (
-                        {new Date(detailInvoice.validatedAt).toLocaleDateString(
-                          "vi-VN",
-                        )}
-                        )
-                      </span>
-                    )}
-                  </div>
-                </div>
+      {/* 2. THUỘC TÍNH MẶC ĐỊNH */}
+      <DrawerSection
+        title={t("defaultAttributes", "THUỘC TÍNH MẶC ĐỊNH")}
+        collapsible={true}
+        defaultCollapsed={false}
+      >
+        <div className="space-y-4">
+          <DrawerField
+            label={
+              <span className="inline-flex items-center gap-1.5 flex-wrap">
+                <span>
+                  {t(
+                    "invoiceType",
+                    direction === "OUT"
+                      ? "Phân loại hóa đơn bán ra"
+                      : "Phân loại hóa đơn mua vào",
+                  )}
+                </span>
+                <AttributeTypeBadge type="system" />
+              </span>
+            }
+          >
+            {editMode ? (
+              <Combobox
+                options={invoiceTypeOptions}
+                value={currentInvoiceType}
+                onChange={handleInvoiceTypeChange}
+                placeholder={t(
+                  "selectInvoiceType",
+                  "-- Chọn phân loại hóa đơn --",
+                )}
+                allowClear={true}
+              />
+            ) : (
+              <div className="font-medium text-[color:var(--foreground)] text-sm px-3 py-2 bg-gray-50 rounded-lg border border-transparent">
+                {invoiceTypeOptions.find((o) => o.value === currentInvoiceType)
+                  ?.label || "—"}
+              </div>
+            )}
+          </DrawerField>
+
+          {(detailInvoice?.id || editMode) && (
+            <DrawerField
+              label={
+                <span className="inline-flex items-center gap-1.5 flex-wrap">
+                  <span>
+                    {t("invoice.columns.isValid", "Hóa đơn hợp lý, hợp lệ")}
+                  </span>
+                  <AttributeTypeBadge type="system" />
+                </span>
+              }
+            >
+              <div className="flex items-center gap-2 pt-0.5">
                 <Checkbox
+                  id="invoice-is-valid-checkbox"
                   checked={
-                    editMode ? !!(form as any).isValid : !!detailInvoice.isValid
+                    editMode
+                      ? !!(form as any).isValid
+                      : !!detailInvoice?.isValid
                   }
-                  disabled={!editMode}
+                  disabled={!editMode && !detailInvoice?.id}
                   onCheckedChange={async (val: boolean) => {
                     if (editMode) {
                       fieldSet("isValid", val);
-                    } else {
+                    } else if (detailInvoice?.id) {
                       try {
                         await erpInvoicesCoreApi.setValid(
                           detailInvoice.id,
                           val,
                         );
-                        toast.success("Đã cập nhật trạng thái kiểm duyệt");
+                        toast.success(
+                          t(
+                            "validatedSuccess",
+                            "Đã cập nhật trạng thái kiểm duyệt",
+                          ),
+                        );
                         if (onRefreshDetail) onRefreshDetail();
                       } catch {
-                        toast.error("Lỗi khi cập nhật trạng thái kiểm duyệt");
+                        toast.error(
+                          t(
+                            "validatedError",
+                            "Lỗi khi cập nhật trạng thái kiểm duyệt",
+                          ),
+                        );
                       }
                     }
                   }}
                 />
+                <label
+                  htmlFor="invoice-is-valid-checkbox"
+                  className="text-xs font-medium cursor-pointer select-none text-foreground flex items-center gap-1.5"
+                >
+                  {(
+                    editMode ? (form as any).isValid : detailInvoice?.isValid
+                  ) ? (
+                    <span className="text-emerald-600 font-medium">
+                      {t("invoice.isValid.true", "Đã kiểm duyệt")}
+                    </span>
+                  ) : (
+                    <span className="text-muted-foreground">
+                      {t("invoice.isValid.false", "Chưa kiểm duyệt")}
+                    </span>
+                  )}
+                  {detailInvoice?.validatedAt && (
+                    <span className="text-muted-foreground font-normal italic text-[11px]">
+                      (
+                      {new Date(detailInvoice.validatedAt).toLocaleDateString(
+                        "vi-VN",
+                      )}
+                      )
+                    </span>
+                  )}
+                </label>
               </div>
-            </div>
+            </DrawerField>
           )}
         </div>
       </DrawerSection>
 
-      {/* Dynamic Custom Fields Section (Auto-hidden when empty) */}
+      {/* 3. THUỘC TÍNH TÙY CHỈNH (Auto-hidden when empty) */}
       <ModuleEntityCustomFieldsSection
         moduleKey={direction === "OUT" ? "INVOICE_OUT" : "INVOICE_IN"}
         entityId={detailInvoice?.id || invoiceId}
         editMode={editMode}
-        globalTitle={t("moduleConfig.customFields", "Trường tùy chỉnh")}
+        globalTitle={t("customAttributes", "THUỘC TÍNH TÙY CHỈNH")}
         includeSystemAttributes={false}
         hideCategorySection={true}
         globalAttributes={(form as any).globalAttributes}
