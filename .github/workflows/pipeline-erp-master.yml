@@ -91,6 +91,10 @@ jobs:
     permissions:
       contents: read
       packages: read
+    env:
+      KOMODO_API_KEY: ${{ secrets.KOMODO_API_KEY }}
+      KOMODO_API_SECRET: ${{ secrets.KOMODO_API_SECRET }}
+      KOMODO_URL: ${{ vars.KOMODO_URL }}
 
     steps:
       - name: Connect Tailscale to Komodo MAIN
@@ -101,10 +105,6 @@ jobs:
           tags: tag:ci
 
       - name: Guard Komodo deployment settings
-        env:
-          KOMODO_API_KEY: ${{ secrets.KOMODO_API_KEY }}
-          KOMODO_API_SECRET: ${{ secrets.KOMODO_API_SECRET }}
-          KOMODO_URL: ${{ vars.KOMODO_URL }}
         run: |
           set -euo pipefail
           test -n "$KOMODO_API_KEY" || (echo "KOMODO_API_KEY missing" && exit 1)
@@ -113,9 +113,6 @@ jobs:
 
       - name: Update Web immutable image reference
         env:
-          KOMODO_API_KEY: ${{ secrets.KOMODO_API_KEY }}
-          KOMODO_API_SECRET: ${{ secrets.KOMODO_API_SECRET }}
-          KOMODO_URL: ${{ vars.KOMODO_URL }}
           IMAGE_SHA: ${{ needs.build-and-push.outputs.sha }}
         run: |
           set -euo pipefail
@@ -123,22 +120,18 @@ jobs:
           payload="$(jq -n --arg stack "erp-master-demo-web" --arg image "$image" '{stack:$stack,file_path:".env",contents:("ERP_WEB_IMAGE=" + $image + "\n")}')"
           curl --fail-with-body --silent --show-error \
             -X POST "${KOMODO_URL}/write/WriteStackFileContents" \
-            -H "$(printf 'X-Api-%s: %s' Key "$KOMODO_API_KEY")" \
+            -H "X-Api-Key: $KOMODO_API_KEY" \
             -H "X-Api-Secret: $KOMODO_API_SECRET" \
             -H "Content-Type: application/json" \
             --data "$payload" > komodo-write.json
           jq -e . komodo-write.json >/dev/null
 
       - name: Run Komodo Web release procedure
-        env:
-          KOMODO_API_KEY: ${{ secrets.KOMODO_API_KEY }}
-          KOMODO_API_SECRET: ${{ secrets.KOMODO_API_SECRET }}
-          KOMODO_URL: ${{ vars.KOMODO_URL }}
         run: |
           set -euo pipefail
           curl --fail-with-body --silent --show-error \
             -X POST "${KOMODO_URL}/execute/RunProcedure" \
-            -H "$(printf 'X-Api-%s: %s' Key "$KOMODO_API_KEY")" \
+            -H "X-Api-Key: $KOMODO_API_KEY" \
             -H "X-Api-Secret: $KOMODO_API_SECRET" \
             -H "Content-Type: application/json" \
             --data '{"procedure":"erp-demo-web-release"}' > komodo-procedure.json
