@@ -1,4 +1,4 @@
-name: Pipeline Web — erp-master
+name: Pipeline Web — erp-master via Komodo Elite
 
 on:
   push:
@@ -9,66 +9,45 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ghcr.io/kindustries-erp/erp-web-master
+  KOMODO_WEB_STACK: erp-master-elite-web
+  ELITE_WEB_URL: http://100.75.67.115:8020
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 jobs:
   ci:
     name: Lint, Type & Test
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout source
-        uses: actions/checkout@v4
-
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.3.14
-
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
-
-      - name: Check (type + lint + prettier)
-        run: bun run check:ci
-
-      - name: Test
-        run: bun run test
-
-      - name: Build
-        run: bun run build
+      - run: bun install --frozen-lockfile
+      - run: bun run check:ci
+      - run: bun run test
+      - run: bun run build
 
   build-and-push:
-    name: Build & Push to GHCR
+    name: Build & Push immutable Web image
     runs-on: ubuntu-latest
     needs: ci
     if: github.event_name == 'push'
     permissions:
       contents: read
       packages: write
-
     outputs:
       sha: ${{ steps.meta.outputs.sha }}
-
     steps:
-      - name: Checkout source
-        uses: actions/checkout@v4
-
-      - name: Log in to GHCR
-        uses: docker/login-action@v3
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Extract short SHA
-        id: meta
-        run: echo "sha=${GITHUB_SHA::8}" >> $GITHUB_OUTPUT
-
-      - name: Build and push image
-        uses: docker/build-push-action@v5
+      - uses: docker/setup-buildx-action@v3
+      - id: meta
+        run: echo "sha=${GITHUB_SHA::8}" >> "$GITHUB_OUTPUT"
+      - uses: docker/build-push-action@v5
         with:
           context: .
           file: ./Dockerfile
@@ -77,6 +56,7 @@ jobs:
             VITE_APP_NAME=${{ vars.MASTER_WEB_APP_NAME }}
             VITE_API_BASE_URL=
             APP_ENV=production
+            NGINX_API_UPSTREAM=erp-master-elite-api-api:3000
           tags: |
             ${{ env.IMAGE_NAME }}:latest
             ${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.sha }}
@@ -84,66 +64,63 @@ jobs:
           cache-to: type=gha,mode=max
 
   deploy:
-    name: Deploy Web SHA through Komodo
+    name: Deploy Web through Komodo to Elite
     runs-on: ubuntu-latest
     needs: build-and-push
     if: github.event_name == 'push'
-    permissions:
-      contents: read
-      packages: read
     env:
       KOMODO_API_KEY: ${{ secrets.KOMODO_API_KEY }}
       KOMODO_API_SECRET: ${{ secrets.KOMODO_API_SECRET }}
       KOMODO_URL: ${{ vars.KOMODO_URL }}
-
     steps:
-      - name: Connect Tailscale to Komodo MAIN
-        uses: tailscale/github-action@v3
+      - uses: tailscale/github-action@v3
         with:
           oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
           oauth-secret: ${{ secrets.TS_OAUTH_CLIENT_SECRET }}
           tags: tag:ci
-
-      - name: Guard Komodo deployment settings
+      - name: Guard Komodo deployment configuration
         run: |
           set -euo pipefail
-          test -n "$KOMODO_API_KEY" || (echo "KOMODO_API_KEY missing" && exit 1)
-          test -n "$KOMODO_API_SECRET" || (echo "KOMODO_API_SECRET missing" && exit 1)
-          test -n "$KOMODO_URL" || (echo "KOMODO_URL missing" && exit 1)
-
-      - name: Update Web immutable image reference
+          test -n "$KOMODO_API_KEY"
+          test -n "$KOMODO_API_SECRET"
+          test -n "$KOMODO_URL"
+      - name: Update immutable Web image reference
         env:
           IMAGE_SHA: ${{ needs.build-and-push.outputs.sha }}
         run: |
           set -euo pipefail
-          image="${{ env.IMAGE_NAME }}:${IMAGE_SHA}"
-          payload="$(jq -n --arg stack "erp-master-demo-web" --arg image "$image" '{stack:$stack,file_path:".env",contents:("ERP_WEB_IMAGE=" + $image + "\n")}')"
+          image="${IMAGE_NAME}:${IMAGE_SHA}"
+          payload="$(jq -n \
+            --arg stack "$KOMODO_WEB_STACK" \
+            --arg contents "ERP_WEB_IMAGE=$image"$'\n' \
+            '{stack: $stack, file_path: ".env", contents: $contents}')"
           curl --fail-with-body --silent --show-error \
-            -X POST "${KOMODO_URL}/write/WriteStackFileContents" \
+            -X POST "$KOMODO_URL/write/WriteStackFileContents" \
             -H "X-Api-Key: $KOMODO_API_KEY" \
             -H "X-Api-Secret: $KOMODO_API_SECRET" \
-            -H "Content-Type: application/json" \
-            --data "$payload" > komodo-write.json
-          jq -e . komodo-write.json >/dev/null
-
-      - name: Run Komodo Web release procedure
+            -H 'Content-Type: application/json' \
+            --data "$payload" >/dev/null
+      - name: Pull and deploy Web through Komodo
         run: |
           set -euo pipefail
-          curl --fail-with-body --silent --show-error \
-            -X POST "${KOMODO_URL}/execute/RunProcedure" \
-            -H "X-Api-Key: $KOMODO_API_KEY" \
-            -H "X-Api-Secret: $KOMODO_API_SECRET" \
-            -H "Content-Type: application/json" \
-            --data '{"procedure":"erp-demo-web-release"}' > komodo-procedure.json
-          jq -e . komodo-procedure.json >/dev/null
-          jq '{id,success,error,result}' komodo-procedure.json
-
-      - name: Verify Web runtime
+          for path in PullStack DeployStack; do
+            payload="$(jq -n --arg stack "$KOMODO_WEB_STACK" '{stack: $stack}')"
+            curl --fail-with-body --silent --show-error \
+              -X POST "$KOMODO_URL/execute/$path" \
+              -H "X-Api-Key: $KOMODO_API_KEY" \
+              -H "X-Api-Secret: $KOMODO_API_SECRET" \
+              -H 'Content-Type: application/json' \
+              --data "$payload" >/dev/null
+          done
+      - name: Verify Web on Elite Tailscale endpoint
         run: |
           set -euo pipefail
-          for i in $(seq 1 30); do
-            code="$(curl --silent --output /dev/null --write-out '%{http_code}' http://100.69.94.117:8810/ || true)"
-            if [ "$code" = "200" ]; then echo "Web healthy: HTTP $code"; exit 0; fi
-            echo "Web attempt $i/30: HTTP $code"; sleep 5
+          for i in $(seq 1 36); do
+            code="$(curl --connect-timeout 10 --silent --output /dev/null --write-out '%{http_code}' "$ELITE_WEB_URL/" || true)"
+            if [ "$code" = 200 ]; then
+              echo "Web healthy: HTTP $code"
+              exit 0
+            fi
+            echo "Web attempt $i/36: HTTP $code"; sleep 5
           done
           exit 1
