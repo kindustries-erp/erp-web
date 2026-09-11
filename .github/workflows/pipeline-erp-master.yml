@@ -79,6 +79,7 @@ jobs:
       KOMODO_URL: ${{ vars.KOMODO_URL }}
       BRANCH: ${{ github.ref_name }}
     steps:
+      - uses: actions/checkout@v4
       - uses: tailscale/github-action@v3
         with:
           oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
@@ -121,29 +122,7 @@ jobs:
           echo "Resolved Server $SERVER_NAME -> $server_id"
 
           # 2. Compose contents
-          web_compose="$(cat <<EOF
-services:
-  web:
-    image: \${ERP_WEB_IMAGE:?ERP_WEB_IMAGE is required}
-    restart: unless-stopped
-    stop_grace_period: 20s
-    environment:
-      API_UPSTREAM_URL: \${API_UPSTREAM_URL:-${upstream_service}}
-    expose: ["80"]
-    ports: ["${TARGET_IP}:${TARGET_PORT}:80"]
-    networks: [npm-network]
-    healthcheck:
-      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1/ >/dev/null"]
-      interval: 10s
-      timeout: 5s
-      retries: 12
-    security_opt: [no-new-privileges:true]
-networks:
-  npm-network:
-    external: true
-    name: npm-network
-EOF
-)"
+          web_compose="$(sed -e "s/__TARGET_IP__/$TARGET_IP/g" -e "s/__TARGET_PORT__/$TARGET_PORT/g" -e "s/__UPSTREAM_SERVICE__/$upstream_service/g" .github/compose/web.compose.yaml)"
 
           # 3. Ensure Stack exists
           stack_info="$(call /read/GetStack "$(jq -nc --arg stack "$web_stack" '{stack:$stack}')" 2>/dev/null || true)"
