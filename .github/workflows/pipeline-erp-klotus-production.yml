@@ -3,11 +3,9 @@ name: Pipeline Web — erp-klotus-production via Komodo
 on:
   push:
     branches: [erp-klotus-production]
-  workflow_dispatch:
   pull_request:
     branches: [erp-klotus-production]
   workflow_dispatch:
-
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ghcr.io/kindustries-erp/erp-web-klotus-production
