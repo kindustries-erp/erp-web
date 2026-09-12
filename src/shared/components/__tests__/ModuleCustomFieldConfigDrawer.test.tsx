@@ -294,4 +294,54 @@ describe("ModuleCustomFieldConfigDrawer Component", () => {
       );
     });
   });
+
+  it("renders both type_invoice_in and is_valid system attributes when opened for INVOICE_IN", async () => {
+    const invoiceInDefs = [
+      {
+        id: "def-type-in",
+        code: "type_invoice_in",
+        name: "Phân loại hóa đơn mua vào",
+        fieldType: "SELECT",
+        isGlobal: true,
+        isSystem: true,
+        isActive: true,
+        options: [{ value: "PURCHASE_GOODS", label: "Mua hàng hóa / NVL" }],
+      },
+      {
+        id: "def-is-valid-in",
+        code: "is_valid",
+        name: "Hóa đơn hợp lý, hợp lệ",
+        fieldType: "CHECKBOX",
+        isGlobal: true,
+        isSystem: true,
+        isActive: true,
+      },
+    ];
+
+    vi.mocked(moduleConfigApi.getGlobalAttributeDefs).mockResolvedValue(
+      invoiceInDefs as any,
+    );
+    vi.mocked(moduleConfigApi.getAttributeDefs).mockResolvedValue(
+      invoiceInDefs as any,
+    );
+    vi.mocked(moduleConfigApi.getAttributeOptionsUsage).mockResolvedValue({});
+
+    render(
+      <ModuleCustomFieldConfigDrawer
+        open={true}
+        onClose={vi.fn()}
+        moduleKey="INVOICE_IN"
+      />,
+      { wrapper },
+    );
+
+    const sysHeaders = await screen.findAllByText("Thuộc tính mặc định");
+    expect(sysHeaders.length).toBeGreaterThanOrEqual(2);
+    expect(
+      screen.getAllByText("Phân loại hóa đơn mua vào").length,
+    ).toBeGreaterThanOrEqual(1);
+    expect(
+      screen.getAllByText("Hóa đơn hợp lý, hợp lệ").length,
+    ).toBeGreaterThanOrEqual(1);
+  });
 });
