@@ -42,6 +42,9 @@ export interface OperationalDocument {
   next_due_date?: string | null;
   notes?: string | null;
   lines?: OperationalLine[];
+  created_at?: string | null;
+  created_by?: string | null;
+  updated_at?: string | null;
 }
 
 export interface OperationalLine {
@@ -173,6 +176,9 @@ function normalizePurchaseRow(row: any): OperationalDocument {
     notes: row.notes ?? row.remarks ?? null,
     document_type: row.document_type ?? "purchase_orders",
     supplier_invoice_no: row.supplier_invoice_no ?? row.supplierInvoiceNo ?? "",
+    created_at: row.created_at ?? row.createdAt ?? null,
+    created_by: row.created_by ?? row.createdBy ?? null,
+    updated_at: row.updated_at ?? row.updatedAt ?? null,
     lines,
   } as OperationalDocument;
 }
