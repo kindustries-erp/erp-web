@@ -120,12 +120,31 @@ export function usePurchaseColumns({
         ),
       },
 
-      // 2. Cột Ngày đặt: headerFilter.date kèm DateRangeColumnSlot, TableDateCell căn phải
+      // 2. Cột Ngày tạo: headerFilter.date kèm DateRangeColumnSlot, TableDateCell datetime căn phải
+      {
+        key: "created_at",
+        header: headerFilter.date("createdAt", t("Ngày tạo")),
+        sortKey: "created_at",
+        size: 150,
+        enableResizing: true,
+        className: "!py-2 align-middle text-right",
+        headerClassName: "text-center",
+        cell: (row) => (
+          <TableDateCell
+            date={row.created_at}
+            showTooltip={false}
+            format="datetime"
+            className="justify-end w-full"
+          />
+        ),
+      },
+
+      // 3. Cột Ngày đặt: headerFilter.date kèm DateRangeColumnSlot, TableDateCell date-only căn phải
       {
         key: "order_date",
         header: headerFilter.date("orderDate", t("Ngày đặt")),
         sortKey: "order_date",
-        size: 150,
+        size: 130,
         enableResizing: true,
         className: "!py-2 align-middle text-right",
         headerClassName: "text-center",
@@ -133,6 +152,7 @@ export function usePurchaseColumns({
           <TableDateCell
             date={row.document_date}
             showTooltip={false}
+            format="date"
             className="justify-end w-full"
           />
         ),

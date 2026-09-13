@@ -21,7 +21,7 @@ export interface ErpBusinessPartner {
 }
 
 export interface CreateBusinessPartnerCoreDto {
-  code: string;
+  code?: string;
   name: string;
   partnerType: "VENDOR" | "CUSTOMER";
   displayName?: string;
@@ -154,6 +154,18 @@ export const businessPartnersCoreApi = {
       data: ErpBusinessPartner;
     }>(`${BASE}/${id}`, dto);
     return data.data;
+  },
+
+  getNextCode: async (partnerType?: string): Promise<{ nextCode: string }> => {
+    const { data } = await axiosInstance.get<{ nextCode: string }>(
+      `${BASE}/next-code`,
+      {
+        params: {
+          ...(partnerType ? { partnerType } : {}),
+        },
+      },
+    );
+    return data;
   },
 
   remove: async (id: string): Promise<ErpBusinessPartner> => {

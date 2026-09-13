@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
+import { RotateCw } from "lucide-react";
 import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
 import {
   DrawerSection,
@@ -73,6 +74,7 @@ export function BusinessPartnerDetailDrawer({
   const [initialForm, setInitialForm] = useState<PartnerFormState>(emptyForm());
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [loadingNextCode, setLoadingNextCode] = useState(false);
 
   const isCreating = !partnerId;
   const isView = mode === "view" && !isCreating;
@@ -81,6 +83,22 @@ export function BusinessPartnerDetailDrawer({
     partnerType === "VENDOR"
       ? t("Nhà cung cấp", "Nhà cung cấp")
       : t("Khách hàng", "Khách hàng");
+
+  // Fetch auto-generated next code for new partner
+  const fetchNextCode = useCallback(async () => {
+    setLoadingNextCode(true);
+    try {
+      const res = await businessPartnersCoreApi.getNextCode(partnerType);
+      if (res?.nextCode) {
+        setForm((p) => ({ ...p, code: res.nextCode }));
+        setInitialForm((p) => ({ ...p, code: res.nextCode }));
+      }
+    } catch {
+      // Ignore background code prefill failure
+    } finally {
+      setLoadingNextCode(false);
+    }
+  }, [partnerType]);
 
   // Load partner details
   const loadPartner = useCallback(
@@ -126,21 +144,19 @@ export function BusinessPartnerDetailDrawer({
         const fresh = emptyForm();
         setForm(fresh);
         setInitialForm(fresh);
+        void fetchNextCode();
       }
     }
-  }, [open, partnerId, loadPartner]);
+  }, [open, partnerId, loadPartner, fetchNextCode]);
 
   const isDirty = JSON.stringify(form) !== JSON.stringify(initialForm);
 
   const handleSave = async () => {
-    if (!form.code.trim() || !form.name.trim()) {
+    if (!form.name.trim()) {
       showToast({
         variant: "destructive",
         title: t("Thiếu thông tin", "Thiếu thông tin"),
-        description: t(
-          "Mã và tên đối tác là bắt buộc",
-          "Mã và tên đối tác là bắt buộc",
-        ),
+        description: t("Tên đối tác là bắt buộc", "Tên đối tác là bắt buộc"),
       });
       return;
     }
@@ -263,25 +279,48 @@ export function BusinessPartnerDetailDrawer({
             title={t("Thông tin định danh", "Thông tin định danh")}
           >
             <div className="grid gap-4 sm:grid-cols-2">
-              <DrawerField label={t("Mã đối tác", "Mã đối tác")} required>
+              <DrawerField label={t("Mã đối tác", "Mã đối tác")}>
                 {isView ? (
                   <div className="flex items-center justify-between p-2.5 rounded-lg bg-surface-muted/50 border border-border/40 font-mono text-sm font-semibold">
                     <span>{form.code || "—"}</span>
                     {form.code && <CopyButton value={form.code} />}
                   </div>
                 ) : (
-                  <input
-                    type="text"
-                    className={inputCls}
-                    value={form.code}
-                    onChange={(e) =>
-                      setForm((p) => ({ ...p, code: e.target.value }))
-                    }
-                    placeholder={
-                      partnerType === "VENDOR" ? "VD: NCC-001" : "VD: KH-001"
-                    }
-                    disabled={!isCreating}
-                  />
+                  <div className="relative flex items-center">
+                    <input
+                      type="text"
+                      className={`${inputCls} font-mono ${isCreating ? "pr-9" : ""}`}
+                      value={form.code}
+                      onChange={(e) =>
+                        setForm((p) => ({
+                          ...p,
+                          code: e.target.value.toUpperCase(),
+                        }))
+                      }
+                      placeholder={
+                        partnerType === "VENDOR" ? "VD: NCC-014" : "VD: KH-001"
+                      }
+                      disabled={!isCreating}
+                    />
+                    {isCreating && (
+                      <button
+                        type="button"
+                        onClick={() => void fetchNextCode()}
+                        disabled={loadingNextCode}
+                        title={t(
+                          "Tự động sinh mã mới nhất",
+                          "Tự động sinh mã mới nhất",
+                        )}
+                        className="absolute right-2 p-1 text-muted-foreground hover:text-foreground rounded transition-colors disabled:opacity-50"
+                      >
+                        <RotateCw
+                          className={`w-3.5 h-3.5 ${
+                            loadingNextCode ? "animate-spin" : ""
+                          }`}
+                        />
+                      </button>
+                    )}
+                  </div>
                 )}
               </DrawerField>
 
