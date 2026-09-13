@@ -234,6 +234,7 @@ export function useErpWarehouseTabLogic() {
         giDrawer.openDetail(detailParam, false);
       } else if (
         drawerParam === "adjustment" ||
+        detailParam.startsWith("DC-") ||
         detailParam.startsWith("KK-") ||
         detailParam.startsWith("IA-")
       ) {
@@ -592,6 +593,7 @@ export function useErpWarehouseTabLogic() {
           giDrawer.openDetail(detailParam, false);
         } else if (
           drawerParam === "adjustment" ||
+          detailParam.startsWith("DC-") ||
           detailParam.startsWith("KK-") ||
           detailParam.startsWith("IA-")
         ) {

@@ -148,7 +148,7 @@ export function GrDefaultAttributesSection({
   const { form, setForm, viewOnly, editing, poOptions, poDetail } = drawer;
   const locale = useAppStore((s) => s.locale);
 
-  // Lấy danh sách thuộc tính động cho GOODS_RECEIPT để nạp options cho Loại nhập kho (code: type_inventory_receipt)
+  // Lấy danh sách thuộc tính động cho GOODS_RECEIPT để nạp options cho Loại nhập kho (code: category)
   const { data: grAttrDefs = [] } = useQuery({
     queryKey: ["module-config-global-defs", "GOODS_RECEIPT"],
     queryFn: () => moduleConfigApi.getGlobalAttributeDefs("GOODS_RECEIPT"),
@@ -157,26 +157,25 @@ export function GrDefaultAttributesSection({
 
   const receiptTypeOptions = useMemo(() => {
     const typeDef = Array.isArray(grAttrDefs)
-      ? grAttrDefs.find(
-          (d) =>
-            (d?.code === "type_inventory_receipt" ||
-              d?.code === "type" ||
-              d?.code === "receipt_type") &&
-            !d?.isDeleted,
-        )
+      ? grAttrDefs.find((d) => d?.code === "category" && !d?.isDeleted)
       : undefined;
     if (typeDef?.options && typeDef.options.length > 0) {
       return typeDef.options.map((opt) => ({
-        label: `${resolveOptionLabel(opt, locale, t)} [${opt.value}]`,
+        label: resolveOptionLabel(opt, locale, t),
         value: opt.value,
+        code: opt.value,
       }));
     }
     return [
-      { label: `${t("Đơn mua hàng (PO)")} [PO]`, value: "PO" },
-      { label: `${t("Nhập sản xuất")} [PRODUCTION]`, value: "PRODUCTION" },
-      { label: `${t("Nhập trả hàng")} [RETURN]`, value: "RETURN" },
-      { label: `${t("Nhập bảo hành")} [WARRANTY]`, value: "WARRANTY" },
-      { label: `${t("Nhập khác")} [OTHER]`, value: "OTHER" },
+      { label: t("Đơn mua hàng (PO)"), value: "PO", code: "PO" },
+      {
+        label: t("Nhập sản xuất (MO)"),
+        value: "PRODUCTION",
+        code: "PRODUCTION",
+      },
+      { label: t("Nhập trả hàng"), value: "RETURN", code: "RETURN" },
+      { label: t("Nhập bảo hành"), value: "WARRANTY", code: "WARRANTY" },
+      { label: t("Nhập khác"), value: "OTHER", code: "OTHER" },
     ];
   }, [grAttrDefs, locale, t]);
 

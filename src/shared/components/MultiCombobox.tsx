@@ -3,11 +3,7 @@ import * as Popover from "@radix-ui/react-popover";
 import { Check, ChevronDown, Search, X } from "lucide-react";
 import { cn } from "@/shared/utils";
 
-export interface ComboboxOption {
-  value: string;
-  label: string;
-  searchText?: string;
-}
+import { ComboboxOption, parseComboboxOptionDisplay } from "./Combobox";
 
 interface MultiComboboxProps {
   options: ComboboxOption[];
@@ -48,9 +44,16 @@ export function MultiCombobox({
   const selectedOptions = options.filter((o) => value.includes(o.value));
 
   const filtered = query.trim()
-    ? options.filter((o) =>
-        (o.searchText || o.label).toLowerCase().includes(query.toLowerCase()),
-      )
+    ? options.filter((o) => {
+        const { label, code } = parseComboboxOptionDisplay(o);
+        const q = query.toLowerCase();
+        return (
+          label.toLowerCase().includes(q) ||
+          (code && code.toLowerCase().includes(q)) ||
+          (o.searchText && o.searchText.toLowerCase().includes(q)) ||
+          (o.value && o.value.toLowerCase().includes(q))
+        );
+      })
     : options;
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
@@ -112,23 +115,26 @@ export function MultiCombobox({
         >
           <div className="flex flex-wrap gap-1 flex-1 text-left">
             {selectedOptions.length > 0 ? (
-              selectedOptions.map((opt) => (
-                <span
-                  key={opt.value}
-                  className="bg-primary/10 text-primary px-1.5 py-0.5 rounded flex items-center gap-1 max-w-[120px]"
-                >
-                  <span className="truncate">{opt.label}</span>
-                  {!readOnly && !disabled && (
-                    <X
-                      className="w-3 h-3 cursor-pointer hover:opacity-70"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        toggleOption(opt.value);
-                      }}
-                    />
-                  )}
-                </span>
-              ))
+              selectedOptions.map((opt) => {
+                const { label: optLabel } = parseComboboxOptionDisplay(opt);
+                return (
+                  <span
+                    key={opt.value}
+                    className="bg-primary/10 text-primary px-1.5 py-0.5 rounded flex items-center gap-1 max-w-[140px]"
+                  >
+                    <span className="truncate">{optLabel}</span>
+                    {!readOnly && !disabled && (
+                      <X
+                        className="w-3 h-3 cursor-pointer hover:opacity-70"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleOption(opt.value);
+                        }}
+                      />
+                    )}
+                  </span>
+                );
+              })
             ) : (
               <span className="text-[color:var(--muted-fg)] px-1">
                 {placeholder}
@@ -141,7 +147,7 @@ export function MultiCombobox({
 
       <Popover.Portal>
         <Popover.Content
-          className="z-[9999] w-[var(--radix-popover-trigger-width)] flex flex-col rounded-lg popup-content overflow-hidden"
+          className="z-[9999] w-[var(--radix-popover-trigger-width)] min-w-[200px] flex flex-col rounded-lg popup-content overflow-hidden shadow-md"
           style={{ maxHeight: "280px" }}
           sideOffset={4}
           align="start"
@@ -176,34 +182,45 @@ export function MultiCombobox({
                 {emptyLabel}
               </div>
             ) : (
-              filtered.map((o) => (
-                <button
-                  key={o.value}
-                  type="button"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    toggleOption(o.value);
-                  }}
-                  className={cn(
-                    "w-full text-left px-3 py-2 text-xs hover:bg-[color:var(--popup-bg-hover)] flex items-center gap-2",
-                    value.includes(o.value)
-                      ? "text-[color:var(--primary)] font-medium bg-[color:var(--primary)]/5"
-                      : "text-foreground",
-                  )}
-                >
-                  <div
+              filtered.map((o) => {
+                const { label: itemLabel, code: itemCode } =
+                  parseComboboxOptionDisplay(o);
+                return (
+                  <button
+                    key={o.value}
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      toggleOption(o.value);
+                    }}
                     className={cn(
-                      "w-4 h-4 shrink-0 rounded flex items-center justify-center border",
+                      "w-full text-left px-3 py-2 text-xs hover:bg-[color:var(--popup-bg-hover)] flex items-center gap-2 transition-colors group/item",
                       value.includes(o.value)
-                        ? "bg-primary border-primary text-primary-foreground"
-                        : "border-border",
+                        ? "text-[color:var(--primary)] font-medium bg-[color:var(--primary)]/5"
+                        : "text-foreground",
                     )}
                   >
-                    {value.includes(o.value) && <Check className="w-3 h-3" />}
-                  </div>
-                  <span className="truncate flex-1">{o.label}</span>
-                </button>
-              ))
+                    <div
+                      className={cn(
+                        "w-4 h-4 shrink-0 rounded flex items-center justify-center border",
+                        value.includes(o.value)
+                          ? "bg-primary border-primary text-primary-foreground"
+                          : "border-border",
+                      )}
+                    >
+                      {value.includes(o.value) && <Check className="w-3 h-3" />}
+                    </div>
+                    <div className="flex-1 min-w-0 flex items-center justify-between gap-2">
+                      <span className="truncate">{itemLabel}</span>
+                      {itemCode && (
+                        <span className="shrink-0 px-1.5 py-0.5 rounded text-[10px] font-mono font-medium text-muted-foreground bg-slate-100 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80 shadow-2xs group-hover/item:text-foreground transition-colors">
+                          {itemCode}
+                        </span>
+                      )}
+                    </div>
+                  </button>
+                );
+              })
             )}
 
             {loading && (

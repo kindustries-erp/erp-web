@@ -295,7 +295,8 @@ function AttributeFieldRenderer({
     if (attr.fieldType === "SELECT") {
       const optList: ComboboxOption[] = (attr.options || []).map((opt) => ({
         value: opt.value,
-        label: `${resolveOptionLabel(opt, locale, t)} [${opt.value}]`,
+        label: resolveOptionLabel(opt, locale, t),
+        code: opt.value,
       }));
 
       return (
