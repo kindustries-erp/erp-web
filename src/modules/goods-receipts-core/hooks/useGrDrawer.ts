@@ -72,7 +72,7 @@ export function buildGrForm(gr: ErpGoodsReceipt): GrForm {
   const customAttrs = gr.customAttributes || {};
   return {
     receiptType:
-      (customAttrs.type_inventory_receipt as GrReceiptType) ||
+      (customAttrs.category as GrReceiptType) ||
       (gr.purchaseOrderId ? "PO" : "OTHER"),
     receiptNo: gr.receiptNo ?? "",
     purchaseOrderId: gr.purchaseOrderId ?? "",
@@ -96,11 +96,11 @@ export function buildGrForm(gr: ErpGoodsReceipt): GrForm {
 }
 
 export function buildGrPayload(form: GrForm): CreateGrPayload {
+  const category = form.receiptType || (form.purchaseOrderId ? "PO" : "OTHER");
   const customAttributes = {
     ...(form.globalAttributes || {}),
     ...(form.customAttributes || {}),
-    type_inventory_receipt:
-      form.receiptType || (form.purchaseOrderId ? "PO" : "OTHER"),
+    category,
   };
 
   return {

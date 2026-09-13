@@ -457,7 +457,7 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
 
   const locale = useAppStore((s) => s.locale);
 
-  // Lấy danh sách thuộc tính động cho GOODS_ISSUE để nạp options cho Loại xuất kho (code: type_inventory_issue)
+  // Lấy danh sách thuộc tính động cho GOODS_ISSUE để nạp options cho Loại xuất kho (code: category)
   const { data: giAttrDefs = [] } = useQuery({
     queryKey: ["module-config-global-defs", "GOODS_ISSUE"],
     queryFn: () => moduleConfigApi.getGlobalAttributeDefs("GOODS_ISSUE"),
@@ -466,26 +466,25 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
 
   const ISSUE_TYPE_OPTIONS = useMemo(() => {
     const typeDef = Array.isArray(giAttrDefs)
-      ? giAttrDefs.find(
-          (d) =>
-            (d?.code === "type_inventory_issue" ||
-              d?.code === "issue_type" ||
-              d?.code === "type") &&
-            !d?.isDeleted,
-        )
+      ? giAttrDefs.find((d) => d?.code === "category" && !d?.isDeleted)
       : undefined;
     if (typeDef?.options && typeDef.options.length > 0) {
       return typeDef.options.map((opt) => ({
         value: opt.value,
-        label: `${resolveOptionLabel(opt, locale, t)} [${opt.value}]`,
+        label: resolveOptionLabel(opt, locale, t),
+        code: opt.value,
       }));
     }
     return [
-      { value: "SALE", label: `${t("Xuất bán (SO)")} [SALE]` },
-      { value: "PRODUCTION", label: `${t("Xuất sản xuất")} [PRODUCTION]` },
-      { value: "WARRANTY", label: `${t("Xuất bảo hành")} [WARRANTY]` },
-      { value: "SCRAP", label: `${t("Xuất hủy / hao hụt")} [SCRAP]` },
-      { value: "OTHER", label: `${t("Xuất khác")} [OTHER]` },
+      { value: "SALE", label: t("Xuất bán hàng (SO)"), code: "SALE" },
+      {
+        value: "PRODUCTION",
+        label: t("Xuất sản xuất (NVL)"),
+        code: "PRODUCTION",
+      },
+      { value: "WARRANTY", label: t("Xuất bảo hành"), code: "WARRANTY" },
+      { value: "SCRAP", label: t("Xuất hủy / Hao hụt"), code: "SCRAP" },
+      { value: "OTHER", label: t("Xuất khác"), code: "OTHER" },
     ];
   }, [giAttrDefs, locale, t]);
 

@@ -184,8 +184,9 @@ export function ErpInvoiceInternalSidebar({
   const invoiceTypeOptions = useMemo(() => {
     if (typeDef?.options && typeDef.options.length > 0) {
       return typeDef.options.map((opt) => ({
-        label: `${resolveOptionLabel(opt, locale, t)} [${opt.value}]`,
+        label: resolveOptionLabel(opt, locale, t),
         value: opt.value,
+        code: opt.value,
       }));
     }
     if (direction === "OUT") {
@@ -196,6 +197,7 @@ export function ErpInvoiceInternalSidebar({
             "Bán hàng hóa / Xe / Phụ tùng",
           ),
           value: "SALE_GOODS",
+          code: "SALE_GOODS",
         },
         {
           label: t(
@@ -203,6 +205,7 @@ export function ErpInvoiceInternalSidebar({
             "Dịch vụ sửa chữa & Garage",
           ),
           value: "SALE_SERVICE",
+          code: "SALE_SERVICE",
         },
         {
           label: t(
@@ -210,10 +213,12 @@ export function ErpInvoiceInternalSidebar({
             "Doanh thu hoạt động tài chính",
           ),
           value: "SALE_FINANCIAL",
+          code: "SALE_FINANCIAL",
         },
         {
           label: t("moduleConfig.options.otherIncome", "Thu nhập khác"),
           value: "OTHER_INCOME",
+          code: "OTHER_INCOME",
         },
       ];
     }
@@ -221,6 +226,7 @@ export function ErpInvoiceInternalSidebar({
       {
         label: t("moduleConfig.options.purchaseGoods", "Mua hàng hóa / NVL"),
         value: "PURCHASE_GOODS",
+        code: "PURCHASE_GOODS",
       },
       {
         label: t(
@@ -228,16 +234,23 @@ export function ErpInvoiceInternalSidebar({
           "Chi phí quản lý & Vận hành (OPEX)",
         ),
         value: "EXPENSE_OPEX",
+        code: "EXPENSE_OPEX",
       },
       {
         label: t("moduleConfig.options.serviceFee", "Dịch vụ & Gia công ngoài"),
         value: "SERVICE_FEE",
+        code: "SERVICE_FEE",
       },
       {
         label: t("moduleConfig.options.fixedAsset", "Tài sản cố định & CCDC"),
         value: "FIXED_ASSET",
+        code: "FIXED_ASSET",
       },
-      { label: t("moduleConfig.options.other", "Khác"), value: "OTHER" },
+      {
+        label: t("moduleConfig.options.other", "Khác"),
+        value: "OTHER",
+        code: "OTHER",
+      },
     ];
   }, [typeDef, direction, locale, t]);
 

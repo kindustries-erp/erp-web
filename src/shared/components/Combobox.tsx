@@ -8,8 +8,24 @@ import { useT } from "@/core/i18n";
 export interface ComboboxOption {
   value: string;
   label: string;
+  code?: string;
   searchText?: string;
   subLabel?: string;
+}
+
+export function parseComboboxOptionDisplay(o?: ComboboxOption | null): {
+  label: string;
+  code?: string;
+} {
+  if (!o) return { label: "", code: undefined };
+  if (o.code) {
+    return { label: o.label, code: o.code };
+  }
+  const match = o.label.match(/^(.*?)\s*\[([^\]]+)\]$/);
+  if (match) {
+    return { label: match[1].trim(), code: match[2].trim() };
+  }
+  return { label: o.label, code: undefined };
 }
 
 interface ComboboxProps {
@@ -64,11 +80,23 @@ export function Combobox({
   }, [options, allowClear]);
 
   const selected = options.find((o) => o.value === value);
+  const selectedDisplay = useMemo(
+    () => parseComboboxOptionDisplay(selected),
+    [selected],
+  );
 
   const filtered = query.trim()
-    ? normalizedOptions.filter((o) =>
-        (o.searchText || o.label).toLowerCase().includes(query.toLowerCase()),
-      )
+    ? normalizedOptions.filter((o) => {
+        const { label, code } = parseComboboxOptionDisplay(o);
+        const q = query.toLowerCase();
+        return (
+          label.toLowerCase().includes(q) ||
+          (code && code.toLowerCase().includes(q)) ||
+          (o.searchText && o.searchText.toLowerCase().includes(q)) ||
+          (o.subLabel && o.subLabel.toLowerCase().includes(q)) ||
+          (o.value && o.value.toLowerCase().includes(q))
+        );
+      })
     : normalizedOptions;
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
@@ -104,7 +132,13 @@ export function Combobox({
   return (
     <Popover.Root open={open} onOpenChange={setOpen}>
       <Tooltip
-        content={selected ? selected.label : fallbackLabel || ""}
+        content={
+          selected
+            ? selectedDisplay.code
+              ? `${selectedDisplay.label} (${selectedDisplay.code})`
+              : selectedDisplay.label
+            : fallbackLabel || ""
+        }
         side="top"
         disabled={!selected || open}
       >
@@ -133,17 +167,24 @@ export function Combobox({
               className,
             )}
           >
-            <span className="truncate flex-1 text-left flex flex-col justify-center">
-              <span className="truncate">
-                {selected
-                  ? selected.label
-                  : value && fallbackLabel
-                    ? fallbackLabel
-                    : effectivePlaceholder}
+            <span className="truncate flex-1 text-left flex items-center justify-between gap-2 min-w-0">
+              <span className="truncate flex flex-col justify-center min-w-0">
+                <span className="truncate">
+                  {selected
+                    ? selectedDisplay.label
+                    : value && fallbackLabel
+                      ? fallbackLabel
+                      : effectivePlaceholder}
+                </span>
+                {selected?.subLabel && (
+                  <span className="truncate text-[10px] text-[color:var(--muted-fg)] leading-tight mt-0.5">
+                    {selected.subLabel}
+                  </span>
+                )}
               </span>
-              {selected?.subLabel && (
-                <span className="truncate text-[10px] text-[color:var(--muted-fg)] leading-tight mt-0.5">
-                  {selected.subLabel}
+              {selected && selectedDisplay.code && (
+                <span className="shrink-0 px-1.5 py-0.5 rounded text-[10px] font-mono font-medium text-muted-foreground bg-slate-100 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80">
+                  {selectedDisplay.code}
                 </span>
               )}
             </span>
@@ -154,7 +195,7 @@ export function Combobox({
 
       <Popover.Portal>
         <Popover.Content
-          className="z-[9999] w-[var(--radix-popover-trigger-width)] flex flex-col rounded-lg popup-content overflow-hidden"
+          className="z-[9999] w-[var(--radix-popover-trigger-width)] min-w-[200px] flex flex-col rounded-lg popup-content overflow-hidden shadow-md"
           style={{ maxHeight: "280px" }}
           sideOffset={4}
           align="start"
@@ -221,38 +262,49 @@ export function Combobox({
                 {emptyLabel}
               </div>
             ) : (
-              filtered.map((o) => (
-                <Tooltip key={o.value} content={o.label} side="right">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      onChange(o.value);
-                      setOpen(false);
-                    }}
-                    className={cn(
-                      "w-full text-left px-3 py-2 text-xs hover:bg-[color:var(--popup-bg-hover)] flex items-center gap-2",
-                      o.value === value
-                        ? "text-[color:var(--primary)] font-medium bg-[color:var(--primary)]/5"
-                        : "text-foreground",
-                    )}
-                  >
-                    <Check
+              filtered.map((o) => {
+                const { label: itemLabel, code: itemCode } =
+                  parseComboboxOptionDisplay(o);
+                return (
+                  <Tooltip key={o.value} content={itemLabel} side="right">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onChange(o.value);
+                        setOpen(false);
+                      }}
                       className={cn(
-                        "w-3 h-3 shrink-0 text-[color:var(--primary)]",
-                        o.value === value ? "opacity-100" : "opacity-0",
+                        "w-full text-left px-3 py-2 text-xs hover:bg-[color:var(--popup-bg-hover)] flex items-center gap-2 transition-colors group/item",
+                        o.value === value
+                          ? "text-[color:var(--primary)] font-medium bg-[color:var(--primary)]/5"
+                          : "text-foreground",
                       )}
-                    />
-                    <div className="flex-1 truncate flex flex-col justify-center">
-                      <span className="truncate">{o.label}</span>
-                      {o.subLabel && (
-                        <span className="truncate text-[10px] text-[color:var(--muted-fg)] leading-tight mt-0.5">
-                          {o.subLabel}
-                        </span>
-                      )}
-                    </div>
-                  </button>
-                </Tooltip>
-              ))
+                    >
+                      <Check
+                        className={cn(
+                          "w-3 h-3 shrink-0 text-[color:var(--primary)]",
+                          o.value === value ? "opacity-100" : "opacity-0",
+                        )}
+                      />
+                      <div className="flex-1 min-w-0 flex items-center justify-between gap-2">
+                        <div className="truncate flex flex-col justify-center min-w-0">
+                          <span className="truncate">{itemLabel}</span>
+                          {o.subLabel && (
+                            <span className="truncate text-[10px] text-[color:var(--muted-fg)] leading-tight mt-0.5">
+                              {o.subLabel}
+                            </span>
+                          )}
+                        </div>
+                        {itemCode && (
+                          <span className="shrink-0 px-1.5 py-0.5 rounded text-[10px] font-mono font-medium text-muted-foreground bg-slate-100 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80 shadow-2xs group-hover/item:text-foreground transition-colors">
+                            {itemCode}
+                          </span>
+                        )}
+                      </div>
+                    </button>
+                  </Tooltip>
+                );
+              })
             )}
 
             {loading && filtered.length > 0 && (

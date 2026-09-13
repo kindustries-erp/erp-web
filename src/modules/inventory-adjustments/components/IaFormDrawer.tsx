@@ -473,7 +473,7 @@ export function IaFormDrawer({ drawer }: IaFormDrawerProps) {
 
   const locale = useAppStore((s) => s.locale);
 
-  // Lấy danh sách thuộc tính động cho INVENTORY_ADJUSTMENT để nạp options cho Lý do điều chỉnh (code: type_inventory_adjustment)
+  // Lấy danh sách thuộc tính động cho INVENTORY_ADJUSTMENT để nạp options cho Lý do điều chỉnh (code: category)
   const { data: iaAttrDefs = [] } = useQuery({
     queryKey: ["module-config-global-defs", "INVENTORY_ADJUSTMENT"],
     queryFn: () =>
@@ -483,36 +483,37 @@ export function IaFormDrawer({ drawer }: IaFormDrawerProps) {
 
   const adjustmentReasonOptions = useMemo(() => {
     const reasonDef = Array.isArray(iaAttrDefs)
-      ? iaAttrDefs.find(
-          (d) =>
-            (d?.code === "type_inventory_adjustment" ||
-              d?.code === "adjustment_reason" ||
-              d?.code === "reason") &&
-            !d?.isDeleted,
-        )
+      ? iaAttrDefs.find((d) => d?.code === "category" && !d?.isDeleted)
       : undefined;
     if (reasonDef?.options && reasonDef.options.length > 0) {
       return reasonDef.options.map((opt) => ({
         value: opt.value,
-        label: `${resolveOptionLabel(opt, locale, t)} [${opt.value}]`,
+        label: resolveOptionLabel(opt, locale, t),
+        code: opt.value,
       }));
     }
     return [
-      { value: "PERIODIC", label: `${t("Kiểm kê định kỳ")} [PERIODIC]` },
-      { value: "DAMAGED", label: `${t("Hàng hỏng hóc / hao hụt")} [DAMAGED]` },
+      { value: "PERIODIC", label: t("Kiểm kê định kỳ"), code: "PERIODIC" },
+      {
+        value: "DAMAGED",
+        label: t("Hàng hỏng hóc / Hao hụt"),
+        code: "DAMAGED",
+      },
       {
         value: "COUNT_ERROR",
-        label: `${t("Sai lệch kiểm đếm")} [COUNT_ERROR]`,
+        label: t("Sai lệch kiểm đếm"),
+        code: "COUNT_ERROR",
       },
-      { value: "RECLASSIFY", label: `${t("Phân loại quy cách")} [RECLASSIFY]` },
-      { value: "OTHER", label: `${t("Lý do khác")} [OTHER]` },
+      {
+        value: "RECLASSIFY",
+        label: t("Phân loại quy cách"),
+        code: "RECLASSIFY",
+      },
+      { value: "OTHER", label: t("Lý do khác"), code: "OTHER" },
     ];
   }, [iaAttrDefs, locale, t]);
 
-  const currentReasonVal =
-    form.globalAttributes?.type_inventory_adjustment ||
-    form.globalAttributes?.adjustment_reason ||
-    "";
+  const currentReasonVal = form.globalAttributes?.category || "";
 
   const currentReasonLabel = useMemo(() => {
     const opt = adjustmentReasonOptions.find(
@@ -673,8 +674,7 @@ export function IaFormDrawer({ drawer }: IaFormDrawerProps) {
                 ...f,
                 globalAttributes: {
                   ...f.globalAttributes,
-                  type_inventory_adjustment: v || "",
-                  adjustment_reason: v || "",
+                  category: v || "",
                 },
               }))
             }
