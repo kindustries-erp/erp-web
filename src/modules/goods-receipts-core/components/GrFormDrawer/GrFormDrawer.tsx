@@ -19,7 +19,10 @@ import { GoodsReceiptSerialDrawer } from "../GoodsReceiptSerialDrawer";
 import type { GrFormDrawerProps, GrTableMode } from "./types";
 import { useGrSerialDrawerState } from "./hooks/useGrSerialDrawerState";
 import { useGrFormColumns } from "./hooks/useGrFormColumns";
-import { GrFormRightPanel } from "./components/GrFormRightPanel";
+import {
+  GrFormRightPanel,
+  GrDefaultAttributesSection,
+} from "./components/GrFormRightPanel";
 import { GrFormSectionTitleExtra } from "./components/GrFormSectionTitleExtra";
 import { buildGrFormActions } from "./components/GrFormActions";
 import { GrFormExcelImport } from "./components/GrFormExcelImport";
@@ -225,6 +228,9 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
         emptyLabel={emptyLabel}
         // Right panel
         rightPanelContent={rightPanelContent}
+        defaultAttributesSlot={
+          <GrDefaultAttributesSection drawer={drawer} t={t} />
+        }
         remarksContent={remarksContent}
         customFieldsSlot={
           <ModuleEntityCustomFieldsSection
@@ -235,8 +241,9 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
             onGlobalAttributesChange={(attrs) =>
               setForm((f) => ({ ...f, globalAttributes: attrs }))
             }
+            includeSystemAttributes={false}
             hideCategorySection={true}
-            globalTitle={t("moduleConfig.customFields", "Trường tùy chỉnh")}
+            globalTitle={t("customAttributes", "THUỘC TÍNH TÙY CHỈNH")}
             globalCollapsible={true}
             globalDefaultCollapsed={false}
           />

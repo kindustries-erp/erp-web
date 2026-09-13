@@ -45,11 +45,15 @@ export interface InventoryVoucherFormDrawerProps {
    */
   rightPanelContent: ReactNode;
   /**
+   * Optional default attributes section slot ("THUỘC TÍNH MẶC ĐỊNH")
+   */
+  defaultAttributesSlot?: ReactNode;
+  /**
    * Content for DrawerSection "Ghi chú" — separate section below Thông tin chung.
    */
   remarksContent: ReactNode;
   /**
-   * Optional custom fields section slot
+   * Optional custom fields section slot ("THUỘC TÍNH TÙY CHỈNH")
    */
   customFieldsSlot?: ReactNode;
   /** Number of skeleton rows shown while loading. Default: 5 */
@@ -149,8 +153,12 @@ export function InventoryVoucherFormDrawer(
             </>
           ) : (
             <>
-              {/* ── Thông tin chung ──────────────────────────────── */}
-              <DrawerSection title={t("Thông tin chung")}>
+              {/* ── 1. THÔNG TIN CHUNG ──────────────────────────────── */}
+              <DrawerSection
+                title={t("generalInfo", "THÔNG TIN CHUNG")}
+                collapsible={true}
+                defaultCollapsed={false}
+              >
                 {/* Unified type switcher — chỉ hiển thị khi tạo mới */}
                 {props.unifiedContext?.mode === "create" && (
                   <DrawerField
@@ -190,13 +198,30 @@ export function InventoryVoucherFormDrawer(
                 {props.rightPanelContent}
               </DrawerSection>
 
-              {/* ── Trường tùy chỉnh / Thuộc tính động ───────────── */}
+              {/* ── 2. THUỘC TÍNH MẶC ĐỊNH ───────────────────────────── */}
+              {props.defaultAttributesSlot && (
+                <DrawerSection
+                  title={t("defaultAttributes", "THUỘC TÍNH MẶC ĐỊNH")}
+                  collapsible={true}
+                  defaultCollapsed={false}
+                >
+                  {props.defaultAttributesSlot}
+                </DrawerSection>
+              )}
+
+              {/* ── 3. THUỘC TÍNH TÙY CHỈNH ──────────────────────────── */}
               {props.customFieldsSlot}
 
-              {/* ── Ghi chú (section riêng bên dưới) ────────────── */}
-              <DrawerSection title={t("common.remarks", "Ghi chú")}>
-                {props.remarksContent}
-              </DrawerSection>
+              {/* ── 4. GHI CHÚ (section riêng bên dưới) ──────────────── */}
+              {props.remarksContent && (
+                <DrawerSection
+                  title={t("common.remarks", "GHI CHÚ")}
+                  collapsible={true}
+                  defaultCollapsed={false}
+                >
+                  {props.remarksContent}
+                </DrawerSection>
+              )}
             </>
           )
         }

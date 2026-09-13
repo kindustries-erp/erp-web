@@ -47,6 +47,7 @@ import {
 import { InventoryVoucherFormDrawer } from "@/modules/inventory-core/components/inventory-voucher-drawer/InventoryVoucherFormDrawer";
 import { ModuleEntityCustomFieldsSection } from "@/shared/components/ModuleEntityCustomFieldsSection";
 import { AttributeTypeBadge } from "@/shared/components/AttributeTypeBadge";
+import { EntityTagSelector } from "@/modules/tags/components/EntityTagSelector";
 
 interface GiFormDrawerProps {
   drawer: UseGiDrawerReturn;
@@ -476,17 +477,22 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
     if (typeDef?.options && typeDef.options.length > 0) {
       return typeDef.options.map((opt) => ({
         value: opt.value,
-        label: resolveOptionLabel(opt, locale, t),
+        label: `${resolveOptionLabel(opt, locale, t)} [${opt.value}]`,
       }));
     }
     return [
-      { value: "SALE", label: t("Xuất bán (SO)") },
-      { value: "PRODUCTION", label: t("Xuất sản xuất") },
-      { value: "WARRANTY", label: t("Xuất bảo hành") },
-      { value: "SCRAP", label: t("Xuất hủy / hao hụt") },
-      { value: "OTHER", label: t("Xuất khác") },
+      { value: "SALE", label: `${t("Xuất bán (SO)")} [SALE]` },
+      { value: "PRODUCTION", label: `${t("Xuất sản xuất")} [PRODUCTION]` },
+      { value: "WARRANTY", label: `${t("Xuất bảo hành")} [WARRANTY]` },
+      { value: "SCRAP", label: `${t("Xuất hủy / hao hụt")} [SCRAP]` },
+      { value: "OTHER", label: `${t("Xuất khác")} [OTHER]` },
     ];
   }, [giAttrDefs, locale, t]);
+
+  const currentIssueTypeLabel = useMemo(() => {
+    const opt = ISSUE_TYPE_OPTIONS.find((o) => o.value === form.issueType);
+    return opt?.label || form.issueType || "—";
+  }, [ISSUE_TYPE_OPTIONS, form.issueType]);
 
   const actions =
     viewOnly || loading
@@ -564,167 +570,96 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
     return "";
   }, [soOptions, form.salesOrderId]);
 
-  // ── Right panel content (Thông tin chung) ─────────────────────────────────
+  // ── Right panel content (1. THÔNG TIN CHUNG) ───────────────────────────────
 
   const rightPanelContent = (
     <>
-      <DrawerField label={t("Số phiếu xuất")} required>
-        <input
-          className={inputCls}
-          value={form.issueNo}
-          disabled={viewOnly || !!editing}
-          onChange={(e) => setForm((f) => ({ ...f, issueNo: e.target.value }))}
-          placeholder="GI-YYYYMMDD-001"
-        />
-      </DrawerField>
-      <DrawerField label={t("Ngày xuất")} required>
-        <DatePicker
-          value={form.issueDate ? form.issueDate.slice(0, 10) : ""}
-          disabled={viewOnly || editing?.status === "POSTED"}
-          onChange={(v) => setForm((f) => ({ ...f, issueDate: v }))}
-        />
-      </DrawerField>
-      <DrawerField
-        label={
-          <span className="inline-flex items-center gap-1.5 flex-wrap">
-            <span>{t("Loại xuất")}</span>
-            <AttributeTypeBadge type="system" />
-          </span>
-        }
-        required
-      >
-        <Combobox
-          options={ISSUE_TYPE_OPTIONS}
-          value={form.issueType}
-          disabled={viewOnly || editing !== null}
-          placeholder={t("— Chọn —")}
-          allowClear={false}
-          onChange={(v) => {
-            const nextType = v || "";
-            setForm((f) => ({
-              ...f,
-              issueType: nextType,
-              salesOrderId: nextType === "SALE" ? f.salesOrderId : "",
-              productionOrderId:
-                nextType === "PRODUCTION" ? f.productionOrderId : "",
-              lines:
-                nextType !== "SALE" && nextType !== "PRODUCTION"
-                  ? f.lines.length
-                    ? f.lines
-                    : [emptyGiLine()]
-                  : [],
-            }));
-          }}
-        />
-      </DrawerField>
-      {form.issueType === "SALE" && (
-        <DrawerField label={t("Đơn bán hàng")}>
-          {(viewOnly || !!editing) && form.salesOrderId ? (
-            <div className="px-3 py-2 bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700/60 rounded-md w-full overflow-hidden">
-              <TooltipProvider>
-                <Tooltip
-                  content={
-                    soOptions.find((o) => o.value === form.salesOrderId)
-                      ?.label || form.salesOrderId
-                  }
-                >
-                  <span
-                    className="text-primary font-medium cursor-pointer flex items-center gap-1.5 transition-opacity hover:opacity-80 group/link w-full"
-                    onClick={() => {
-                      window.dispatchEvent(
-                        new CustomEvent("open_erp_document", {
-                          detail: {
-                            type: "erp_sales_order",
-                            id: form.salesOrderId,
-                          },
-                        }),
-                      );
-                    }}
-                  >
-                    <span className="group-hover/link:underline underline-offset-4 truncate">
-                      {soOptions.find((o) => o.value === form.salesOrderId)
-                        ?.label || form.salesOrderId}
-                    </span>
-                    <ExternalLink className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover/link:opacity-100 transition-all flex-shrink-0" />
-                  </span>
-                </Tooltip>
-              </TooltipProvider>
-            </div>
-          ) : (
-            <Combobox
-              options={soOptions}
-              value={form.salesOrderId}
-              disabled={viewOnly || !!editing}
-              placeholder={t("Chọn đơn bán hàng")}
-              searchPlaceholder={t("Tìm Đơn bán hàng")}
-              allowClear={true}
-              onChange={(v) => handleSoChange(v || "")}
-            />
-          )}
-        </DrawerField>
-      )}
-      {customerDisplay && (
-        <DrawerField label={t("Khách hàng")}>
-          <div className="px-3 py-2 bg-slate-50 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-700/60 rounded-md text-sm font-medium text-foreground truncate">
-            {customerDisplay}
+      <DrawerField label={t("Số phiếu xuất")} required={!viewOnly}>
+        {viewOnly ? (
+          <div className="font-medium text-[color:var(--foreground)] text-sm px-3 py-2 bg-gray-50 dark:bg-muted/40 rounded-lg border border-transparent font-mono">
+            {form.issueNo || "—"}
           </div>
-        </DrawerField>
-      )}
-      {form.issueType === "PRODUCTION" && (
-        <DrawerField label={t("Lệnh sản xuất")}>
-          <Combobox
-            options={moOptions}
-            value={form.productionOrderId}
-            disabled={viewOnly || editing?.status === "POSTED"}
-            placeholder={t("Chọn lệnh sản xuất")}
-            searchPlaceholder={t("Tìm MO")}
-            onChange={(v) =>
-              setForm((f) => ({ ...f, productionOrderId: v || "" }))
+        ) : (
+          <input
+            className={inputCls}
+            value={form.issueNo}
+            disabled={!!editing}
+            onChange={(e) =>
+              setForm((f) => ({ ...f, issueNo: e.target.value }))
             }
+            placeholder="GI-YYYYMMDD-001"
           />
-        </DrawerField>
-      )}
+        )}
+      </DrawerField>
+
+      <DrawerField label={t("Ngày xuất")} required={!viewOnly}>
+        {viewOnly ? (
+          <div className="font-medium text-[color:var(--foreground)] text-sm px-3 py-2 bg-gray-50 dark:bg-muted/40 rounded-lg border border-transparent">
+            {form.issueDate ? form.issueDate.slice(0, 10) : "—"}
+          </div>
+        ) : (
+          <DatePicker
+            value={form.issueDate ? form.issueDate.slice(0, 10) : ""}
+            disabled={editing?.status === "POSTED"}
+            onChange={(v) => setForm((f) => ({ ...f, issueDate: v }))}
+          />
+        )}
+      </DrawerField>
 
       <DrawerField label={t("Người nhận hàng / Bộ phận nhận")}>
-        <input
-          className={inputCls}
-          placeholder={t("Họ tên người nhận hoặc bộ phận tiếp nhận...")}
-          value={
-            form.globalAttributes?.recipient_name ||
-            form.globalAttributes?.receiver ||
-            ""
-          }
-          disabled={viewOnly || editing?.status === "POSTED"}
-          onChange={(e) =>
-            setForm((f) => ({
-              ...f,
-              globalAttributes: {
-                ...f.globalAttributes,
-                recipient_name: e.target.value,
-                receiver: e.target.value,
-              },
-            }))
-          }
-        />
+        {viewOnly ? (
+          <div className="font-medium text-[color:var(--foreground)] text-sm px-3 py-2 bg-gray-50 dark:bg-muted/40 rounded-lg border border-transparent">
+            {form.globalAttributes?.recipient_name ||
+              form.globalAttributes?.receiver ||
+              form.globalAttributes?.delivered_by ||
+              "—"}
+          </div>
+        ) : (
+          <input
+            className={inputCls}
+            placeholder={t("Họ tên người nhận hoặc bộ phận tiếp nhận...")}
+            value={
+              form.globalAttributes?.recipient_name ||
+              form.globalAttributes?.receiver ||
+              form.globalAttributes?.delivered_by ||
+              ""
+            }
+            disabled={editing?.status === "POSTED"}
+            onChange={(e) =>
+              setForm((f) => ({
+                ...f,
+                globalAttributes: {
+                  ...f.globalAttributes,
+                  recipient_name: e.target.value,
+                  receiver: e.target.value,
+                  delivered_by: e.target.value,
+                },
+              }))
+            }
+          />
+        )}
       </DrawerField>
 
-      <DrawerField label={t("Số chứng từ / Lệnh tham chiếu")}>
-        <input
-          className={inputCls}
-          placeholder={t("Số phiếu xuất kho bên ngoài / Tham chiếu...")}
-          value={form.globalAttributes?.reference_no || ""}
-          disabled={viewOnly || editing?.status === "POSTED"}
-          onChange={(e) =>
-            setForm((f) => ({
-              ...f,
-              globalAttributes: {
-                ...f.globalAttributes,
-                reference_no: e.target.value,
-              },
-            }))
-          }
-        />
-      </DrawerField>
+      {/* Thẻ nhãn (Tags) */}
+      <div className="pt-1">
+        <div className="text-sm font-medium mb-1.5 text-gray-700 dark:text-gray-300">
+          {t("tags", "Thẻ nhãn")}
+        </div>
+        {editing?.id ? (
+          <EntityTagSelector
+            entityType="erp_goods_issue"
+            entityId={editing.id}
+            readOnly={viewOnly}
+          />
+        ) : !viewOnly ? (
+          <EntityTagSelector
+            entityType="erp_goods_issue"
+            entityId="__pending__"
+            readOnly={false}
+            pendingMode
+          />
+        ) : null}
+      </div>
 
       {/* Summary Cards khi ở chế độ View hoặc khi có dòng */}
       {viewOnly && form.lines.length > 0 && (
@@ -748,6 +683,137 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
         </div>
       )}
     </>
+  );
+
+  // ── Default attributes slot (2. THUỘC TÍNH MẶC ĐỊNH + Sub-fields) ─────────
+
+  const defaultAttributesSlot = (
+    <div className="space-y-4">
+      <DrawerField
+        label={
+          <span className="inline-flex items-center gap-1.5 flex-wrap">
+            <span>{t("inventory.issueType", "Loại xuất kho")}</span>
+            <AttributeTypeBadge type="system" />
+          </span>
+        }
+        required={!viewOnly}
+      >
+        {viewOnly ? (
+          <div className="font-medium text-[color:var(--foreground)] text-sm px-3 py-2 bg-gray-50 dark:bg-muted/40 rounded-lg border border-transparent">
+            {currentIssueTypeLabel}
+          </div>
+        ) : (
+          <Combobox
+            options={ISSUE_TYPE_OPTIONS}
+            value={form.issueType}
+            disabled={editing !== null}
+            placeholder={t("— Chọn —")}
+            allowClear={false}
+            onChange={(v) => {
+              const nextType = v || "";
+              setForm((f) => ({
+                ...f,
+                issueType: nextType,
+                salesOrderId: nextType === "SALE" ? f.salesOrderId : "",
+                productionOrderId:
+                  nextType === "PRODUCTION" ? f.productionOrderId : "",
+                lines:
+                  nextType !== "SALE" && nextType !== "PRODUCTION"
+                    ? f.lines.length
+                      ? f.lines
+                      : [emptyGiLine()]
+                    : [],
+              }));
+            }}
+          />
+        )}
+      </DrawerField>
+
+      {/* Sub-field: Đơn bán hàng (SO) khi Loại xuất = SALE */}
+      {form.issueType === "SALE" && (
+        <div className="pl-3 border-l-2 border-primary/30 space-y-3 mt-2">
+          <DrawerField label={t("Đơn bán hàng (SO)")} required={!viewOnly}>
+            {(viewOnly || !!editing) && form.salesOrderId ? (
+              <div className="px-3 py-2 bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700/60 rounded-md w-full overflow-hidden">
+                <TooltipProvider>
+                  <Tooltip
+                    content={
+                      soOptions.find((o) => o.value === form.salesOrderId)
+                        ?.label || form.salesOrderId
+                    }
+                  >
+                    <span
+                      className="text-primary font-medium cursor-pointer flex items-center gap-1.5 transition-opacity hover:opacity-80 group/link w-full"
+                      onClick={() => {
+                        window.dispatchEvent(
+                          new CustomEvent("open_erp_document", {
+                            detail: {
+                              type: "erp_sales_order",
+                              id: form.salesOrderId,
+                            },
+                          }),
+                        );
+                      }}
+                    >
+                      <span className="group-hover/link:underline underline-offset-4 truncate">
+                        {soOptions.find((o) => o.value === form.salesOrderId)
+                          ?.label || form.salesOrderId}
+                      </span>
+                      <ExternalLink className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover/link:opacity-100 transition-all flex-shrink-0" />
+                    </span>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+            ) : (
+              <Combobox
+                options={soOptions}
+                value={form.salesOrderId}
+                disabled={viewOnly || !!editing}
+                placeholder={t("Chọn đơn bán hàng")}
+                searchPlaceholder={t("Tìm Đơn bán hàng")}
+                allowClear={true}
+                onChange={(v) => handleSoChange(v || "")}
+              />
+            )}
+          </DrawerField>
+
+          {customerDisplay && (
+            <DrawerField label={t("Khách hàng")}>
+              <div className="px-3 py-2 bg-slate-50 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-700/60 rounded-md text-sm font-medium text-foreground truncate">
+                {customerDisplay}
+              </div>
+            </DrawerField>
+          )}
+        </div>
+      )}
+
+      {/* Sub-field: Lệnh sản xuất (MO) khi Loại xuất = PRODUCTION */}
+      {form.issueType === "PRODUCTION" && (
+        <div className="pl-3 border-l-2 border-primary/30 space-y-3 mt-2">
+          <DrawerField label={t("Lệnh sản xuất (MO)")} required={!viewOnly}>
+            {viewOnly ? (
+              <div className="font-medium text-[color:var(--foreground)] text-sm px-3 py-2 bg-gray-50 dark:bg-muted/40 rounded-lg border border-transparent font-mono">
+                {moOptions.find((o) => o.value === form.productionOrderId)
+                  ?.label ||
+                  form.productionOrderId ||
+                  "—"}
+              </div>
+            ) : (
+              <Combobox
+                options={moOptions}
+                value={form.productionOrderId}
+                disabled={editing?.status === "POSTED"}
+                placeholder={t("Chọn lệnh sản xuất")}
+                searchPlaceholder={t("Tìm MO")}
+                onChange={(v) =>
+                  setForm((f) => ({ ...f, productionOrderId: v || "" }))
+                }
+              />
+            )}
+          </DrawerField>
+        </div>
+      )}
+    </div>
   );
 
   // ── Remarks content (Ghi chú section) ─────────────────────────────────────
@@ -860,6 +926,7 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
       tableFooter={tableFooter}
       // Right panel
       rightPanelContent={rightPanelContent}
+      defaultAttributesSlot={defaultAttributesSlot}
       remarksContent={remarksContent}
       customFieldsSlot={
         <ModuleEntityCustomFieldsSection
@@ -870,8 +937,9 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
           onGlobalAttributesChange={(attrs) =>
             setForm((f) => ({ ...f, globalAttributes: attrs }))
           }
+          includeSystemAttributes={false}
           hideCategorySection={true}
-          globalTitle={t("moduleConfig.customFields", "Trường tùy chỉnh")}
+          globalTitle={t("customAttributes", "THUỘC TÍNH TÙY CHỈNH")}
           globalCollapsible={true}
           globalDefaultCollapsed={false}
         />
