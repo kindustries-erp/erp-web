@@ -241,11 +241,13 @@ export function DrawerModal({
     >
       <div
         className={cn(
-          "slide-panel min-h-0 min-[1024px]:min-w-[450px] flex flex-col",
+          "slide-panel min-h-0 min-[1024px]:min-w-[380px] flex flex-col",
           panelClassName,
         )}
         style={
-          open && computedStackOffset !== 0
+          open &&
+          computedStackOffset !== 0 &&
+          !panelClassName?.includes("fullscreen-drawer")
             ? { transform: `translateX(${computedStackOffset}%)` }
             : undefined
         }
@@ -253,7 +255,7 @@ export function DrawerModal({
         {/* ── Fixed Header at Top of Panel ── */}
         <div
           className={cn(
-            "z-20 px-5 py-3.5 border-b border-border/80 table-header-glass flex items-center gap-2.5 flex-shrink-0 transition-shadow duration-200",
+            "z-20 px-4 py-2 border-b border-border/80 table-header-glass flex items-center gap-2.5 flex-shrink-0 transition-shadow duration-200",
             isScrolledTop
               ? "shadow-[0_4px_16px_-4px_rgba(15,23,42,0.08),0_2px_4px_-2px_rgba(15,23,42,0.04)]"
               : "shadow-none",
@@ -265,11 +267,11 @@ export function DrawerModal({
           }}
         >
           {icon && (
-            <div className="w-[30px] h-[30px] bg-[color:var(--muted)] rounded-lg flex items-center justify-center flex-shrink-0 text-[color:var(--muted-fg)]">
+            <div className="w-6 h-6 bg-[color:var(--muted)] rounded-md flex items-center justify-center flex-shrink-0 text-[color:var(--muted-fg)]">
               {icon}
             </div>
           )}
-          <div className="flex-1 min-w-0 flex items-center gap-2.5 flex-wrap">
+          <div className="flex-1 min-w-0 flex items-center gap-2 flex-wrap">
             <span className="text-sm font-semibold text-foreground leading-tight">
               {title}
             </span>
@@ -279,7 +281,7 @@ export function DrawerModal({
               </div>
             )}
             {subtitle && (
-              <div className="w-full text-xs text-[color:var(--muted-fg)] truncate mt-[1px]">
+              <div className="w-full text-[11px] text-[color:var(--muted-fg)] truncate leading-tight">
                 {subtitle}
               </div>
             )}
@@ -289,7 +291,7 @@ export function DrawerModal({
             variant="ghost"
             size="icon-sm"
             onClick={requestClose}
-            className="text-[color:var(--faint)]"
+            className="text-[color:var(--faint)] h-7 w-7 p-0 flex items-center justify-center"
           >
             <X className="w-4 h-4" />
           </Button>
@@ -378,7 +380,7 @@ export interface DrawerSectionProps {
 export function DrawerSection({
   title,
   titleExtra,
-  collapsible,
+  collapsible = true,
   collapsed: controlledCollapsed,
   defaultCollapsed = false,
   onToggleCollapse,
@@ -413,8 +415,9 @@ export function DrawerSection({
     <div
       className={cn(
         "mb-3 rounded-xl border border-border/80 p-3 shadow-[0_2px_8px_-1px_rgba(0,0,0,0.06),0_1px_4px_-1px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_8px_-1px_rgba(0,0,0,0.3)] transition-all duration-200",
-        isFitHeight && cn("flex flex-col", heightClass),
+        isFitHeight && !isCollapsed && cn("flex flex-col", heightClass),
         className,
+        isCollapsed && "!h-auto !flex-none !min-h-0 !flex-initial",
       )}
       style={{
         background: "var(--drawer-section-bg, rgba(255,255,255,0.65))",
@@ -426,26 +429,28 @@ export function DrawerSection({
         className={cn(
           "text-[11px] font-bold text-foreground/80 uppercase tracking-[0.06em] pb-[6px] border-b border-[color:var(--border)] flex justify-between items-center flex-shrink-0",
           !isCollapsed && "mb-[10px]",
-          collapsible && "cursor-pointer select-none group",
         )}
-        onClick={handleToggle}
       >
         <div className="flex items-center gap-2">
           {collapsible && (
-            <ChevronDown
-              className={cn(
-                "w-3.5 h-3.5 text-muted-foreground transition-transform duration-200 group-hover:text-foreground",
-                isCollapsed ? "-rotate-90" : "rotate-0",
-              )}
-            />
+            <button
+              type="button"
+              aria-label={isCollapsed ? "Mở rộng" : "Thu gọn"}
+              onClick={handleToggle}
+              className="p-0.5 -ml-0.5 rounded hover:bg-surface-hover text-muted-foreground hover:text-foreground transition-colors cursor-pointer inline-flex items-center justify-center focus-visible:outline-none"
+            >
+              <ChevronDown
+                className={cn(
+                  "w-3.5 h-3.5 transition-transform duration-200",
+                  isCollapsed ? "-rotate-90" : "rotate-0",
+                )}
+              />
+            </button>
           )}
           <span>{title}</span>
         </div>
         {titleExtra && (
-          <div
-            className="text-foreground normal-case font-semibold text-sm"
-            onClick={(e) => e.stopPropagation()}
-          >
+          <div className="text-foreground normal-case font-semibold text-sm">
             {titleExtra}
           </div>
         )}
@@ -463,7 +468,7 @@ export function DrawerSection({
           className={cn(
             "overflow-hidden min-h-0",
             isFitHeight && !isCollapsed && "flex-1 overflow-y-auto pr-1",
-            bodyClassName,
+            !isCollapsed && bodyClassName,
           )}
         >
           {children}
@@ -478,7 +483,7 @@ export function DrawerRow({
   value,
   cls = "",
 }: {
-  label: string;
+  label: React.ReactNode;
   value: React.ReactNode;
   cls?: string;
 }) {
@@ -500,7 +505,7 @@ export function DrawerField({
   labelExtra,
   children,
 }: {
-  label: string;
+  label: React.ReactNode;
   required?: boolean;
   /** Optional node rendered at the right side of the label row (e.g. action buttons) */
   labelExtra?: React.ReactNode;

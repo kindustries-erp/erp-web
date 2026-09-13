@@ -29,6 +29,7 @@ import {
 } from "@/modules/system/api/employeesCoreApi";
 import type { ErpEmployee } from "@/modules/system/api/usersCoreApi";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
+import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
 import { Forbidden } from "@/pages/Forbidden";
 import { useT } from "@/core/i18n";
 import { useAppStore } from "@/core/config/appStore";
@@ -42,7 +43,7 @@ function formatDate(value: string | null) {
 }
 
 export function ErpEmployeesPage() {
-  const canRead = useHasPermission("employees", "read");
+  const canRead = useHasPermission(ErpResource.EMPLOYEES, ErpAction.READ);
   const showToast = useUIStore((s) => s.showToast);
   const { setCustomBreadcrumbs } = useAppStore();
   const t = useT();

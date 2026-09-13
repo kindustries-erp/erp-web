@@ -1,0 +1,165 @@
+import React, { useMemo } from "react";
+import { useTranslation } from "react-i18next";
+import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
+import { TableText } from "@/shared/components/DataTable/TableText";
+import { Badge } from "@/shared/components/ui/badge";
+import { Button } from "@/shared/components/ui/Button";
+import { Plus, Trash2, Edit } from "lucide-react";
+import type { ActionDropdownItem } from "@/shared/components/ActionDropdown";
+
+export interface {{pascalCase rowTypeName}} {
+  id: string;
+  itemCode: string;
+  itemName: string;
+  quantity: number;
+  unitPrice: number;
+  amount: number;
+  status?: string;
+}
+
+export interface {{pascalCase componentName}}SectionProps {
+  items: {{pascalCase rowTypeName}}[];
+  loading?: boolean;
+  onAdd?: () => void;
+  onEdit?: (item: {{pascalCase rowTypeName}}) => void;
+  onDelete?: (id: string) => void;
+  readOnly?: boolean;
+}
+
+export function {{pascalCase componentName}}Section({
+  items,
+  loading = false,
+  onAdd,
+  onEdit,
+  onDelete,
+  readOnly = false,
+}: {{pascalCase componentName}}SectionProps) {
+  const { t } = useTranslation("common");
+
+  const columns: DataTableColumn<{{pascalCase rowTypeName}}>[] = useMemo(
+    () => [
+      // 1. Cột STT: 40px căn giữa tuyệt đối
+      {
+        key: "index",
+        header: <span className="w-full block text-center">#</span>,
+        size: 40,
+        enableResizing: false,
+        headerClassName: "text-center w-[40px] min-w-[40px]",
+        className: "text-center w-[40px] min-w-[40px]",
+        cell: (_, idx) => <span className="w-full block text-center">{idx}</span>,
+      },
+      // 2. Cột Mã
+      {
+        key: "itemCode",
+        header: t("itemCode", "Mã hàng"),
+        size: 160,
+        enableResizing: true,
+        cell: (row) => (
+          <TableText
+            text={row.itemCode}
+            enableCopy
+            tooltip
+            onDetailClick={() => onEdit?.(row)}
+          />
+        ),
+      },
+      // 3. Cột Tên
+      {
+        key: "itemName",
+        header: t("itemName", "Tên hàng"),
+        size: 240,
+        enableResizing: true,
+        cell: (row) => <span className="truncate">{row.itemName}</span>,
+      },
+      // 4. Cột Số lượng
+      {
+        key: "quantity",
+        header: t("quantity", "Số lượng"),
+        size: 100,
+        enableResizing: true,
+        className: "text-right tabular-nums",
+        cell: (row) => <span>{row.quantity}</span>,
+      },
+      // 5. Cột Đơn giá
+      {
+        key: "unitPrice",
+        header: t("unitPrice", "Đơn giá"),
+        size: 120,
+        enableResizing: true,
+        className: "text-right tabular-nums",
+        cell: (row) => <span>{row.unitPrice.toLocaleString("vi-VN")} đ</span>,
+      },
+      // 6. Cột Thành tiền
+      {
+        key: "amount",
+        header: t("amount", "Thành tiền"),
+        size: 140,
+        enableResizing: true,
+        className: "text-right tabular-nums font-semibold text-primary",
+        cell: (row) => <span>{row.amount.toLocaleString("vi-VN")} đ</span>,
+      },
+    ],
+    [t, onEdit]
+  );
+
+  const getRowActions = (row: {{pascalCase rowTypeName}}): ActionDropdownItem[] => [
+    {
+      groupLabel: "THAO TÁC",
+      items: [
+        {
+          label: t("edit", "Chỉnh sửa"),
+          icon: <Edit className="w-3.5 h-3.5" />,
+          onClick: () => onEdit?.(row),
+        },
+        {
+          label: t("delete", "Xóa dòng"),
+          icon: <Trash2 className="w-3.5 h-3.5 text-destructive" />,
+          variant: "danger",
+          onClick: () => onDelete?.(row.id),
+        },
+      ],
+    },
+  ];
+
+  const totalQuantity = useMemo(
+    () => items.reduce((sum, item) => sum + (Number(item.quantity) || 0), 0),
+    [items]
+  );
+
+  const totalAmount = useMemo(
+    () => items.reduce((sum, item) => sum + (Number(item.amount) || 0), 0),
+    [items]
+  );
+
+  return (
+    <div className="space-y-2">
+      {!readOnly && onAdd && (
+        <div className="flex justify-end">
+          <Button size="sm" variant="outline" onClick={onAdd} className="gap-1.5 text-xs">
+            <Plus className="w-3.5 h-3.5" />
+            {t("addLine", "+ Thêm dòng")}
+          </Button>
+        </div>
+      )}
+
+      <DataTable<{{pascalCase rowTypeName}}>
+        items={items}
+        columns={columns}
+        getRowKey={(row) => row.id}
+        loading={loading}
+        emptyLabel={t("noData", "Chưa có dòng dữ liệu nào")}
+        rowActions={!readOnly && (onEdit || onDelete) ? getRowActions : undefined}
+        containerClassName="max-h-[380px] overflow-y-auto"
+        summaryRow=\{{
+          itemName: <div className="text-right font-semibold">{t("total", "Tổng cộng")}:</div>,
+          quantity: <div className="text-right font-semibold tabular-nums">{totalQuantity}</div>,
+          amount: (
+            <div className="text-right font-bold text-primary tabular-nums">
+              {totalAmount.toLocaleString("vi-VN")} đ
+            </div>
+          ),
+        }}
+      />
+    </div>
+  );
+}

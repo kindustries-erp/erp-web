@@ -1,4 +1,5 @@
 import React, { useMemo, useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
 import { type DrawerAction } from "@/shared/components/DrawerModal";
@@ -52,6 +53,7 @@ export function InvoiceBulkNetOffDrawer({
   direction = "IN",
   onSuccess,
 }: Props) {
+  const { t } = useTranslation("erpInvoices");
   const selectedInvoices = useMemo(
     () => invoices.filter((inv) => selectedInvoiceIds.includes(inv.id)),
     [invoices, selectedInvoiceIds],
@@ -841,8 +843,12 @@ export function InvoiceBulkNetOffDrawer({
         onClose={onClose}
         mode="create"
         collapsibleRightPanel={true}
-        title="Chỉnh sửa hàng loạt hóa đơn"
-        subtitle={`${selectedInvoices.length} hóa đơn được chọn`}
+        title={t("bulkNetOffTitle", "Đối soát dòng tiền hàng loạt")}
+        subtitle={t(
+          "bulkNetOffSubtitle",
+          "Đề xuất cấn trừ sao kê cho {{count}} hóa đơn đã chọn",
+          { count: selectedInvoices.length },
+        )}
         layout="2-columns"
         size="xl"
         actions={actions}

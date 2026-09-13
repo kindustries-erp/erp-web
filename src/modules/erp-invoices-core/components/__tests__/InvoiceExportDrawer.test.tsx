@@ -52,8 +52,11 @@ vi.mock("@tanstack/react-query", () => ({
 }));
 
 vi.mock("@/shared/components/StandardFormDrawer", () => ({
-  StandardFormDrawer: ({ leftPanel }: any) => (
-    <div data-testid="drawer-content">{leftPanel}</div>
+  StandardFormDrawer: ({ leftPanel, rightPanel }: any) => (
+    <div data-testid="drawer-content">
+      {leftPanel}
+      {rightPanel}
+    </div>
   ),
 }));
 

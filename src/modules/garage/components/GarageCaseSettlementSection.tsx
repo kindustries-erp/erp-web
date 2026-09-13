@@ -8,17 +8,14 @@ import {
   Trash2,
   Wallet,
   Receipt,
-  AlertTriangle,
   Lock,
   Plus,
   Landmark,
   DollarSign,
   Edit3,
-  TrendingUp,
   Scale,
   Users,
   Building2,
-  CheckCircle2,
 } from "lucide-react";
 import {
   GarageCaseSettlementDrawerModal,
@@ -26,6 +23,7 @@ import {
 } from "./GarageCaseSettlementDrawerModal";
 import { InvoiceSelectionDrawer } from "./InvoiceSelectionDrawer";
 import { cn } from "@/shared/utils";
+import { Tooltip } from "@/core/components/ui/Tooltip";
 import type { ErpInvoice } from "@/modules/erp-invoices-core/api/erpInvoicesCoreApi";
 import { useTranslation } from "react-i18next";
 
@@ -39,12 +37,21 @@ export interface GarageCaseSettlementSectionProps {
   activeSummary?: any;
   onAddSettlement?: (items: SettlementSubmissionItem[]) => void;
   onRemoveSettlement?: (id: string) => void;
-  onAddInvoice?: (payload: {
-    invoiceId: string;
-    linkType: "IN" | "OUT";
-    note?: string;
-    invoice?: ErpInvoice;
-  }) => void;
+  onAddInvoice?: (
+    payload:
+      | {
+          invoiceId: string;
+          linkType: "IN" | "OUT";
+          note?: string;
+          invoice?: ErpInvoice;
+        }
+      | Array<{
+          invoiceId: string;
+          linkType: "IN" | "OUT";
+          note?: string;
+          invoice?: ErpInvoice;
+        }>,
+  ) => void;
   onRemoveInvoice?: (id: string) => void;
 }
 
@@ -168,11 +175,29 @@ export function GarageCaseSettlementSection({
 
   const directAddSettlementsMutation = useMutation({
     mutationFn: async (items: SettlementSubmissionItem[]) => {
-      if (editingSettlementItem?.id) {
-        await garageApi.removeCaseSettlement(caseId, editingSettlementItem.id);
-      }
-      for (const item of items) {
-        await garageApi.addCaseSettlement(caseId, item);
+      if (
+        editingSettlementItem?.id &&
+        !editingSettlementItem.id.startsWith("tmp-") &&
+        !editingSettlementItem.id.startsWith("manual-tmp-")
+      ) {
+        const item = items[0];
+        await garageApi.updateCaseSettlement(caseId, editingSettlementItem.id, {
+          amount: item.amount,
+          category: item.category,
+          note: item.note,
+          transDate: item.transDate,
+          partnerName: item.partnerName,
+        });
+      } else {
+        if (editingSettlementItem?.id) {
+          await garageApi.removeCaseSettlement(
+            caseId,
+            editingSettlementItem.id,
+          );
+        }
+        for (const item of items) {
+          await garageApi.addCaseSettlement(caseId, item);
+        }
       }
     },
     onSuccess: () => {
@@ -195,18 +220,45 @@ export function GarageCaseSettlementSection({
   });
 
   const directAddInvoiceMutation = useMutation({
-    mutationFn: (payload: {
-      invoiceId: string;
-      linkType: "IN" | "OUT";
-      note?: string;
-    }) =>
-      garageApi.addCaseLinkedInvoice(
-        caseId,
-        payload.invoiceId,
-        payload.linkType,
-        payload.note,
-      ),
-    onSuccess: () => {
+    mutationFn: async (
+      payload:
+        | {
+            invoiceId: string;
+            linkType: "IN" | "OUT";
+            note?: string;
+          }
+        | Array<{
+            invoiceId: string;
+            linkType: "IN" | "OUT";
+            note?: string;
+          }>,
+    ) => {
+      const items = Array.isArray(payload) ? payload : [payload];
+      if (items.length === 1) {
+        return garageApi.addCaseLinkedInvoice(
+          caseId,
+          items[0].invoiceId,
+          items[0].linkType,
+          items[0].note,
+        );
+      } else if (items.length > 1) {
+        return garageApi.addCaseLinkedInvoices(
+          caseId,
+          items.map((i) => ({
+            invoiceId: i.invoiceId,
+            linkType: i.linkType,
+            note: i.note,
+          })),
+        );
+      }
+    },
+    onSuccess: (_, variables) => {
+      const count = Array.isArray(variables) ? variables.length : 1;
+      toast.success(
+        count > 1
+          ? `Đã liên kết thành công ${count} hóa đơn`
+          : "Đã liên kết hóa đơn thành công",
+      );
       refetchAll();
     },
   });
@@ -225,7 +277,6 @@ export function GarageCaseSettlementSection({
   const linkedInvoices = externalLinkedInvoices ?? serverLinkedInvoices ?? [];
 
   const breakdown = summary?.breakdown;
-  const reconciliation = summary?.reconciliation;
 
   // 1. Chỉ số Công nợ Phải Thu (Khách hàng)
   const targetRevenue = Number(summary?.targetRevenue || 0);
@@ -254,9 +305,6 @@ export function GarageCaseSettlementSection({
       : totalPaid > 0
         ? 100
         : 0;
-
-  // 3. Dòng tiền ròng
-  const realizedProfit = Number(breakdown?.realizedCashProfit || 0);
 
   const handleOpenAddSettlement = (type: "RECEIPT" | "PAYMENT" = "RECEIPT") => {
     setEditingSettlementItem(null);
@@ -309,13 +357,13 @@ export function GarageCaseSettlementSection({
           )}
         </div>
 
-        {/* 2 Cột Thẻ Công Nợ Đối Xứng (Khách Hàng vs Nhà Cung Cấp) - Phong cách Neutral */}
+        {/* 2 Cột Thẻ Công Nợ Đối Xứng (Khách Hàng vs Nhà Cung Cấp) - Phong cách Tinh gọn */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {/* ✦ Thẻ 1: CÔNG NỢ PHẢI THU (KHÁCH HÀNG) */}
-          <div className="p-3.5 rounded-lg border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xs space-y-2.5">
-            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
+          <div className="p-3.5 rounded-xl border border-slate-200/80 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/40 space-y-2.5">
+            <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="p-1 rounded-md bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                <div className="p-1 rounded-md bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 shadow-2xs border border-slate-200/60 dark:border-slate-700/60">
                   <Users className="w-3.5 h-3.5" />
                 </div>
                 <div>
@@ -365,7 +413,7 @@ export function GarageCaseSettlementSection({
               </div>
 
               {/* Progress bar */}
-              <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden my-1">
+              <div className="w-full bg-slate-200/60 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden my-1">
                 <div
                   className={cn(
                     "h-full rounded-full transition-all duration-500",
@@ -379,7 +427,7 @@ export function GarageCaseSettlementSection({
             </div>
 
             {/* Chi tiết phụ */}
-            <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px] font-mono">
+            <div className="flex items-center justify-between text-[11px] font-mono">
               <span className="text-slate-500 dark:text-slate-400">
                 {isOverCollected ? t("Khách nộp dư:") : t("Còn phải thu:")}
               </span>
@@ -401,10 +449,10 @@ export function GarageCaseSettlementSection({
           </div>
 
           {/* ✦ Thẻ 2: CÔNG NỢ PHẢI CHI (CHI PHÍ / NHÀ CUNG CẤP) */}
-          <div className="p-3.5 rounded-lg border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xs space-y-2.5">
-            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
+          <div className="p-3.5 rounded-xl border border-slate-200/80 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/40 space-y-2.5">
+            <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="p-1 rounded-md bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                <div className="p-1 rounded-md bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 shadow-2xs border border-slate-200/60 dark:border-slate-700/60">
                   <Building2 className="w-3.5 h-3.5" />
                 </div>
                 <div>
@@ -452,7 +500,7 @@ export function GarageCaseSettlementSection({
               </div>
 
               {/* Progress bar */}
-              <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden my-1">
+              <div className="w-full bg-slate-200/60 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden my-1">
                 <div
                   className="h-full rounded-full bg-slate-600 dark:bg-slate-400 transition-all duration-500"
                   style={{ width: `${Math.min(paymentPercent, 100)}%` }}
@@ -461,7 +509,7 @@ export function GarageCaseSettlementSection({
             </div>
 
             {/* Chi tiết phụ */}
-            <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px] font-mono">
+            <div className="flex items-center justify-between text-[11px] font-mono">
               <span className="text-slate-500 dark:text-slate-400">
                 {t("Còn phải chi trả:")}
               </span>
@@ -471,43 +519,10 @@ export function GarageCaseSettlementSection({
             </div>
           </div>
         </div>
-
-        {/* Dòng tóm tắt: Lợi Nhuận Dòng Tiền Ròng & Cảnh báo Đồng Bộ KGara */}
-        <div className="p-2.5 rounded-lg border border-slate-200/80 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/40 flex flex-wrap items-center justify-between gap-2.5 text-xs">
-          <div className="flex items-center gap-2">
-            <TrendingUp className="w-3.5 h-3.5 text-slate-500 flex-shrink-0" />
-            <span className="text-slate-600 dark:text-slate-400 text-[11px]">
-              {t("Lợi nhuận dòng tiền thực tế:")}
-            </span>
-            <strong className="font-mono text-xs text-slate-900 dark:text-slate-100">
-              {money(realizedProfit)}
-            </strong>
-            <span className="text-[10px] text-slate-400 italic">
-              ({t("Thu")} {money(totalCollected)} - {t("Chi")}{" "}
-              {money(totalPaid)})
-            </span>
-          </div>
-
-          {/* Cảnh báo đồng bộ KGara */}
-          {reconciliation?.hasDiscrepancy ? (
-            <div className="flex items-center gap-1.5 text-amber-700 dark:text-amber-400 font-medium bg-amber-50 dark:bg-amber-950/50 px-2 py-0.5 rounded border border-amber-200 dark:border-amber-900/60 text-[11px]">
-              <AlertTriangle className="w-3 h-3 flex-shrink-0" />
-              <span>
-                {t("Chênh lệch KGara:")} {money(reconciliation.discrepancy)} (
-                {t("KGara:")} {money(reconciliation.kgaraPaidAmount)})
-              </span>
-            </div>
-          ) : reconciliation ? (
-            <div className="flex items-center gap-1 text-emerald-700 dark:text-emerald-400 text-[11px]">
-              <CheckCircle2 className="w-3 h-3" />
-              <span>{t("Khớp với KGara xưởng")}</span>
-            </div>
-          ) : null}
-        </div>
       </div>
 
       {/* ─── 2. DANH SÁCH HÓA ĐƠN VAT LIÊN KẾT ─── */}
-      <div className="space-y-2 pt-2 border-t border-slate-200/70 dark:border-slate-800">
+      <div className="space-y-2 pt-1">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Receipt className="w-3.5 h-3.5 text-slate-500" />
@@ -556,8 +571,13 @@ export function GarageCaseSettlementSection({
                         </span>
                       )}
                     </div>
-                    <div className="text-slate-500 text-[11px] truncate">
-                      {inv.sellerName || inv.buyerName || inv.note || "---"}
+                    <div className="text-slate-500 text-[11px] truncate flex items-center gap-1.5">
+                      <span>{inv.sellerName || inv.buyerName || "---"}</span>
+                      {inv.note && (
+                        <span className="text-slate-500 italic text-[10px] bg-slate-100 dark:bg-slate-800/80 px-1.5 py-0.2 rounded border border-slate-200/60 dark:border-slate-700/60">
+                          {inv.note}
+                        </span>
+                      )}
                     </div>
                   </div>
 
@@ -581,14 +601,14 @@ export function GarageCaseSettlementSection({
             })}
           </div>
         ) : (
-          <div className="p-3 rounded-lg border border-dashed border-slate-200 dark:border-slate-800 text-center text-xs text-slate-400">
+          <div className="py-2.5 text-center text-xs text-slate-400 italic">
             {t("Chưa có hóa đơn VAT nào được liên kết với vụ việc này.")}
           </div>
         )}
       </div>
 
       {/* ─── 3. DANH SÁCH GIAO DỊCH THU / CHI ─── */}
-      <div className="space-y-2 pt-2 border-t border-slate-200/70 dark:border-slate-800">
+      <div className="space-y-2 pt-1">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Wallet className="w-3.5 h-3.5 text-slate-500" />
@@ -706,6 +726,14 @@ export function GarageCaseSettlementSection({
                       </button>
                     )}
 
+                    {editMode && isOnSystem && !s.isViaInvoice && (
+                      <Tooltip content="Sao kê ngân hàng chỉ có thể thêm hoặc xóa, không chỉnh sửa trực tiếp">
+                        <div className="p-1 text-slate-300 dark:text-slate-600 cursor-not-allowed">
+                          <Edit3 className="w-3.5 h-3.5 opacity-30" />
+                        </div>
+                      </Tooltip>
+                    )}
+
                     {editMode && !s.isViaInvoice && (
                       <button
                         type="button"
@@ -716,13 +744,21 @@ export function GarageCaseSettlementSection({
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     )}
+
+                    {editMode && s.isViaInvoice && (
+                      <Tooltip content="Cấn trừ tự động từ hóa đơn liên kết. Để gỡ, hãy xóa liên kết hóa đơn tương ứng.">
+                        <div className="p-1 text-slate-300 dark:text-slate-600 cursor-not-allowed">
+                          <Lock className="w-3.5 h-3.5 opacity-40" />
+                        </div>
+                      </Tooltip>
+                    )}
                   </div>
                 </div>
               );
             })}
           </div>
         ) : (
-          <div className="p-3 rounded-lg border border-dashed border-slate-200 dark:border-slate-800 text-center text-xs text-slate-400">
+          <div className="py-2.5 text-center text-xs text-slate-400 italic">
             {t("Chưa có giao dịch thu/chi nào được ghi nhận cho vụ việc này.")}
           </div>
         )}

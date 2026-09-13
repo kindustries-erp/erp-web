@@ -6,6 +6,7 @@ import { Attachment } from "@/shared/components/ui/Attachment";
 import { FilePreviewDrawer } from "@/shared/components/FilePreviewDrawer";
 import { Download } from "lucide-react";
 import { Button } from "@/shared/components/ui/Button";
+import { Checkbox } from "@/shared/components/ui/checkbox";
 
 interface ImportExcelModalProps {
   isOpen: boolean;
@@ -102,15 +103,19 @@ export const ImportExcelModal = ({
               </DrawerField>
 
               <DrawerField label={t("Tùy chọn nhập")}>
-                <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                <div className="flex items-center gap-2.5">
+                  <Checkbox
+                    id="import-excel-overwrite"
                     checked={overwrite}
-                    onChange={(e) => setOverwrite(e.target.checked)}
+                    onCheckedChange={(checked) => setOverwrite(!!checked)}
                   />
-                  <span>{t("Ghi đè lên các dòng dữ liệu hiện tại")}</span>
-                </label>
+                  <label
+                    htmlFor="import-excel-overwrite"
+                    className="text-sm font-medium text-foreground cursor-pointer select-none"
+                  >
+                    {t("Ghi đè lên các dòng dữ liệu hiện tại")}
+                  </label>
+                </div>
                 <p className="mt-1 text-xs text-muted-foreground ml-6">
                   {overwrite
                     ? t(

@@ -5,10 +5,13 @@ import {
   Trash2,
   XCircle,
   Eye,
+  Building2,
+  Pencil,
   FileSpreadsheet,
 } from "lucide-react";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate";
 import { PurchaseOrderDrawer } from "./PurchaseOrderDrawer";
+import { PurchaseOrderExportDrawer } from "./PurchaseOrderExportDrawer";
 import { ConnectionGraphDrawer } from "./ConnectionGraphDrawer";
 import { usePurchaseColumns } from "@/modules/operational/components/list/columns/purchaseColumns";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
@@ -16,13 +19,11 @@ import { usePurchaseOrderPage } from "../hooks/usePurchaseOrderPage";
 import { GrFormDrawer } from "@/modules/goods-receipts-core/components/GrFormDrawer";
 import { useGrDrawer } from "@/modules/goods-receipts-core/hooks/useGrDrawer";
 import { useT } from "@/core/i18n";
-import {
-  operationalApi,
-  type OperationalDocument,
-} from "@/modules/operational/api/operationalApi";
+import { type OperationalDocument } from "@/modules/operational/api/operationalApi";
 import { purchaseOrdersCoreApi } from "../api/purchaseOrdersCoreApi";
 
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
+import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
 import { canReceiveInventory } from "@/modules/operational/utils/operationalHelpers";
 import { useAuthStore } from "@/modules/auth/domain/authStore";
 import { useState, useEffect, useMemo } from "react";
@@ -30,16 +31,29 @@ import { useState, useEffect, useMemo } from "react";
 export function PurchaseOrderListPage() {
   const t = useT();
   const pageState = usePurchaseOrderPage();
-  const canCreatePo = useHasPermission("purchase_orders", "create");
-  const canUpdatePo = useHasPermission("purchase_orders", "update");
-  const canDeletePo = useHasPermission("purchase_orders", "delete");
-  const canCreateReceipt = useHasPermission("goods_receipts", "create");
-  const isAdmin = useHasPermission("*", "*");
+  const canCreatePo = useHasPermission(
+    ErpResource.PURCHASE_ORDERS,
+    ErpAction.CREATE,
+  );
+  const canUpdatePo = useHasPermission(
+    ErpResource.PURCHASE_ORDERS,
+    ErpAction.UPDATE,
+  );
+  const canDeletePo = useHasPermission(
+    ErpResource.PURCHASE_ORDERS,
+    ErpAction.DELETE,
+  );
+  const canCreateReceipt = useHasPermission(
+    ErpResource.GOODS_RECEIPTS,
+    ErpAction.CREATE,
+  );
+  const isAdmin = useHasPermission(ErpResource.SUPER_ADMIN, ErpAction.ALL);
 
   const { employee } = useAuthStore();
   const isAdminEmail = employee?.email === "admin@liouni.com";
 
   const [pendingTagIds, setPendingTagIds] = useState<string[]>([]);
+  const [isExportOpen, setIsExportOpen] = useState(false);
 
   // GR drawer — reuses the same form as ErpWarehousePage
   const grDrawer = useGrDrawer({
@@ -81,16 +95,15 @@ export function PurchaseOrderListPage() {
   } = pageState;
 
   const {
-    filter,
-    filterConfig,
     listQuery,
     page,
     pageSize,
     setPage,
     setPageSize,
-    purchaseSort,
     togglePurchaseSort,
     tableState,
+    activeFilterCount,
+    clearAllFilters,
   } = listData;
 
   const loading = listQuery.isLoading || listQuery.isFetching;
@@ -111,7 +124,11 @@ export function PurchaseOrderListPage() {
     );
     return {
       supplier: null,
-      total_qty: totalQty.toLocaleString("vi-VN"),
+      total_qty: (
+        <span className="tabular-nums font-semibold text-primary">
+          {totalQty.toLocaleString("vi-VN")}
+        </span>
+      ),
     };
   }, [items]);
 
@@ -119,7 +136,7 @@ export function PurchaseOrderListPage() {
     const params = new URLSearchParams(window.location.search);
     const viewId = params.get("viewId");
     if (viewId) {
-      openDetail({ id: viewId } as OperationalDocument);
+      openDetail({ id: viewId } as OperationalDocument, "view");
       // Clean up the URL
       params.delete("viewId");
       const newUrl =
@@ -132,7 +149,7 @@ export function PurchaseOrderListPage() {
     const handleOpenDoc = (e: Event) => {
       const detail = (e as CustomEvent).detail;
       if (detail && detail.type === "erp_purchase_order" && detail.id) {
-        openDetail({ id: detail.id } as OperationalDocument);
+        openDetail({ id: detail.id } as OperationalDocument, "view");
       }
     };
     window.addEventListener("open_erp_document", handleOpenDoc);
@@ -153,7 +170,7 @@ export function PurchaseOrderListPage() {
 
   const columns = usePurchaseColumns({
     variant: "purchase",
-    onOpenDetail: openDetail,
+    onOpenDetail: (row) => openDetail(row, "view"),
     tableState,
     fetchColumnOptions: async ({
       columnKey,
@@ -161,7 +178,7 @@ export function PurchaseOrderListPage() {
       pageParam,
       filtersStr,
     }) => {
-      const res = await operationalApi.getPurchaseOrderColumnOptions(
+      const res = await purchaseOrdersCoreApi.getColumnOptions(
         columnKey,
         search,
         pageParam,
@@ -185,22 +202,30 @@ export function PurchaseOrderListPage() {
       loading={loading}
       summaryRow={summaryRow}
       onRefresh={listQuery.refetch}
-      createActions={
-        canCreatePo
-          ? [
-              {
-                groupLabel: t("groupThemMoi", "Thêm mới"),
-                items: [
-                  {
-                    label: t("common.create", "Tạo mới"),
-                    icon: <PackagePlus className="w-4 h-4 text-emerald-600" />,
-                    onClick: handleCreateNew,
-                  },
-                ],
-              },
-            ]
+      activeFilterCount={activeFilterCount}
+      onClearAllFilters={clearAllFilters}
+      getRowClassName={(row) =>
+        row.status === "CANCELLED"
+          ? "opacity-40 text-muted-foreground"
           : undefined
       }
+      onCreate={canCreatePo ? handleCreateNew : undefined}
+      createLabel={t("common.create", "Tạo mới")}
+      createIcon={
+        <PackagePlus className="w-4 h-4 mr-1 text-primary-foreground" />
+      }
+      createActions={[
+        {
+          groupLabel: t("groupThaoTac", "Thao tác"),
+          items: [
+            {
+              label: t("Xuất Excel theo kỳ", "Xuất Excel theo kỳ"),
+              icon: <FileSpreadsheet className="w-4 h-4 text-emerald-600" />,
+              onClick: () => setIsExportOpen(true),
+            },
+          ],
+        },
+      ]}
       error={pageError}
       items={items}
       columns={columns}
@@ -209,11 +234,12 @@ export function PurchaseOrderListPage() {
       page={page}
       pageSize={pageSize}
       onPage={setPage}
-      onPageSize={setPageSize}
-      sortArray={purchaseSort ? [purchaseSort] : undefined}
+      onPageSize={(size) => {
+        setPageSize(size);
+        setPage(1);
+      }}
+      sortArray={tableState.sorts}
       onSort={togglePurchaseSort}
-      filter={filter}
-      filterConfig={filterConfig}
       getRowKey={(row) => `${row.document_type || "purchase"}-${row.id}`}
       rowActions={(row) => [
         {
@@ -222,7 +248,12 @@ export function PurchaseOrderListPage() {
             {
               label: t("Chi tiết"),
               icon: <Eye className="h-[13px] w-[13px]" />,
-              onClick: () => openDetail(row),
+              onClick: () => openDetail(row, "view", "po_details"),
+            },
+            {
+              label: t("Chi tiết theo đối tượng"),
+              icon: <Building2 className="h-[13px] w-[13px]" />,
+              onClick: () => openDetail(row, "view", "partner"),
             },
             {
               label: t("connectionGraph.action"),
@@ -233,23 +264,14 @@ export function PurchaseOrderListPage() {
           ],
         },
         {
-          groupLabel: t("common.exportGroup", "Xuất dữ liệu"),
-          items: [
-            {
-              label:
-                row.status === "DRAFT"
-                  ? t("Xuất phiếu đề xuất")
-                  : t("Xuất bảng kê mua hàng"),
-              icon: (
-                <FileSpreadsheet className="h-[13px] w-[13px] text-emerald-600 dark:text-emerald-400" />
-              ),
-              onClick: () => void handleExportExcel(row),
-            },
-          ],
-        },
-        {
           groupLabel: t("groupThaoTac", "Thao tác"),
           items: [
+            {
+              label: t("Chỉnh sửa"),
+              icon: <Pencil className="h-[13px] w-[13px]" />,
+              onClick: () => openDetail(row, "edit"),
+              disabled: !canUpdatePo || row.status === "CANCELLED",
+            },
             {
               label: t("common.receiveInventory"),
               icon: <PackagePlus className="h-[13px] w-[13px]" />,
@@ -272,6 +294,19 @@ export function PurchaseOrderListPage() {
             },
           ],
         },
+        {
+          groupLabel: t("common.exportGroup", "Xuất dữ liệu"),
+          items: [
+            {
+              label:
+                row.status === "DRAFT"
+                  ? t("Xuất phiếu đề xuất")
+                  : t("Xuất bảng kê mua hàng"),
+              icon: <FileSpreadsheet className="h-[13px] w-[13px]" />,
+              onClick: () => void handleExportExcel(row),
+            },
+          ],
+        },
       ]}
     >
       <PurchaseOrderDrawer
@@ -279,6 +314,8 @@ export function PurchaseOrderListPage() {
         loading={formLoading}
         editing={editingRow}
         viewOnly={viewOnly}
+        activeTabKey={pageState.activeDrawerTab}
+        onTabChange={pageState.setActiveDrawerTab}
         poReceipts={poReceipts}
         onClose={() => {
           handleCloseForm();
@@ -327,6 +364,11 @@ export function PurchaseOrderListPage() {
               break;
           }
         }}
+      />
+
+      <PurchaseOrderExportDrawer
+        open={isExportOpen}
+        onClose={() => setIsExportOpen(false)}
       />
 
       <ConfirmModal

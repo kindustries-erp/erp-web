@@ -1,10 +1,6 @@
-import React from "react";
-import {
-  Tabs,
-  TabsList,
-  TabsTrigger,
-  TabsContent,
-} from "@/shared/components/ui/tabs";
+import React, { useState } from "react";
+import { Tabs, TabsList, TabsTrigger } from "@/shared/components/ui/tabs";
+import { TabSlideTransition } from "@/shared/components/TabSlideTransition";
 import { cn } from "@/shared/utils";
 
 export interface TabItem {
@@ -22,6 +18,7 @@ export interface AppTabsProps {
   listClassName?: string;
   containerClassName?: string;
   variant?: "default" | "line";
+  fadeOnly?: boolean;
 }
 
 export function AppTabs({
@@ -33,14 +30,26 @@ export function AppTabs({
   listClassName,
   containerClassName,
   variant = "default",
+  fadeOnly = false,
 }: AppTabsProps) {
   const isLine = variant === "line";
+  const [internalValue, setInternalValue] = useState(
+    defaultValue || tabs[0]?.key || "",
+  );
+  const activeKey = value !== undefined ? value : internalValue;
+
+  const handleValueChange = (newVal: string) => {
+    setInternalValue(newVal);
+    onValueChange?.(newVal);
+  };
+
+  const activeTabItem = tabs.find((t) => t.key === activeKey) || tabs[0];
 
   return (
     <Tabs
       defaultValue={defaultValue}
-      value={value}
-      onValueChange={onValueChange}
+      value={activeKey}
+      onValueChange={handleValueChange}
       className={cn("w-full", className)}
     >
       <TabsList
@@ -55,6 +64,7 @@ export function AppTabs({
           <TabsTrigger
             key={tab.key}
             value={tab.key}
+            onClick={() => handleValueChange(tab.key)}
             className={cn(
               isLine &&
                 "border-b-2 border-transparent rounded-none px-4 py-2 data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-foreground whitespace-nowrap flex-shrink-0",
@@ -65,11 +75,14 @@ export function AppTabs({
         ))}
       </TabsList>
       <div className={containerClassName}>
-        {tabs.map((tab) => (
-          <TabsContent key={tab.key} value={tab.key} className="mt-0">
-            {tab.content}
-          </TabsContent>
-        ))}
+        <TabSlideTransition
+          activeKey={activeKey}
+          tabKeys={tabs.map((t) => t.key)}
+          fadeOnly={fadeOnly}
+          className="w-full"
+        >
+          {activeTabItem?.content}
+        </TabSlideTransition>
       </div>
     </Tabs>
   );

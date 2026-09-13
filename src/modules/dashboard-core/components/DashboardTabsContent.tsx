@@ -15,14 +15,9 @@ import { KpiSparkline } from "@/shared/components/KpiSparkline";
 import { Panel } from "@/shared/components/Panel";
 import { ChartSkeleton } from "@/shared/components/Skeleton";
 import { BarChart } from "@/shared/components/charts/BarChart";
-import { cn } from "@/shared/utils";
 import { money } from "@/shared/utils/format";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/shared/components/ui/tabs";
+import { Tabs, TabsContent } from "@/shared/components/ui/tabs";
+import { PillTabs } from "@/shared/components/PillTabs";
 import { CashflowForecastDashboardWidget } from "@/modules/budget/components/CashflowForecastDashboardWidget";
 import {
   VinfastPartsSummaryCards,
@@ -155,30 +150,27 @@ export function DashboardTabsContent({
     queryFn: () => erpInvoicesCoreApi.getStats("IN"),
   });
 
+  const [activeTab, setActiveTab] = React.useState("overview");
+
+  const pillItems = React.useMemo(() => {
+    return DASH_TABS.map(({ value, labelKey, Icon }) => ({
+      value,
+      label: t(labelKey),
+      icon: Icon,
+    }));
+  }, [t]);
+
   return (
-    <Tabs defaultValue="overview" className="w-full">
-      <TabsList className="mb-6 h-11 max-w-full rounded-full bg-slate-100/70 shadow-[0_1px_2px_rgba(15,23,42,.03),0_6px_18px_-14px_rgba(15,23,42,.08)] p-1 gap-2 overflow-x-auto overflow-y-clip scrollbar-thin pr-3">
-        {DASH_TABS.map(({ value, labelKey, Icon }) => (
-          <TabsTrigger
-            key={value}
-            value={value}
-            className={cn(
-              "group relative shrink-0 rounded-full px-4 h-full gap-0 transition-[color,background-color,box-shadow,transform] duration-150 ease-out",
-              "data-[state=inactive]:text-slate-500 data-[state=inactive]:font-medium hover:text-slate-700",
-              "data-[state=active]:text-slate-900 data-[state=active]:font-semibold whitespace-nowrap",
-            )}
-          >
-            <Icon
-              className={cn(
-                "shrink-0 transition-[width,height,opacity,margin] duration-150 ease-out overflow-hidden",
-                "w-0 h-0 opacity-0 mr-0",
-                "group-data-[state=active]:w-4 group-data-[state=active]:h-4 group-data-[state=active]:opacity-100 group-data-[state=active]:mr-[10px]",
-              )}
-            />
-            <span className="text-[13px] tracking-tight">{t(labelKey)}</span>
-          </TabsTrigger>
-        ))}
-      </TabsList>
+    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+      <div className="mb-6 flex items-center justify-start">
+        <PillTabs
+          value={activeTab}
+          onValueChange={setActiveTab}
+          items={pillItems}
+          size="md"
+          className="w-auto"
+        />
+      </div>
 
       <TabsContent value="overview" className="space-y-6">
         {/* Kinh doanh & Doanh thu */}

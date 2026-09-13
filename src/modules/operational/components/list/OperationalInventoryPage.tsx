@@ -1,11 +1,21 @@
-import { useMemo, useState, useEffect } from "react";
-import { Eye, Network, Package, Power, PowerOff, Download } from "lucide-react";
+import { useMemo, useState, useCallback } from "react";
+import {
+  Eye,
+  Pencil,
+  Package,
+  Power,
+  PowerOff,
+  Settings,
+  Plus,
+  FileSpreadsheet,
+} from "lucide-react";
 import { fmtQty } from "@/shared/utils/format";
 
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate";
+import { PillTabs } from "@/shared/components/PillTabs";
+import { ErpUrlQueryParam } from "@/shared/constants/urlParams";
 import { InventoryItemFormDrawer } from "@/modules/inventory-core/components/InventoryItemFormDrawer";
-import { ConnectionGraphDrawer } from "@/modules/purchase-orders-core/components/ConnectionGraphDrawer";
-import { useInventoryGraph } from "@/modules/inventory-core/hooks/useInventoryGraph";
+import { ModuleCustomFieldConfigDrawer } from "@/shared/components/ModuleCustomFieldConfigDrawer";
 import { useGrDrawer } from "@/modules/goods-receipts-core/hooks/useGrDrawer";
 import { GrFormDrawer } from "@/modules/goods-receipts-core/components/GrFormDrawer";
 import { useGiDrawer } from "@/modules/goods-issues-core/hooks/useGiDrawer";
@@ -18,21 +28,25 @@ import {
   productionCoreApi,
   type ErpProductionOrder,
 } from "@/modules/production-core/api/productionCoreApi";
-import { useAuthStore } from "@/modules/auth/domain/authStore";
 
 import { useStockColumns } from "@/modules/operational/components/list/columns/stockColumns";
-import { useOperationalListStore } from "@/modules/operational/hooks/useOperationalListStore";
+import {
+  useOperationalListStore,
+  type OperationalStockTab,
+} from "@/modules/operational/hooks/useOperationalListStore";
 import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
 import { useT } from "@/core/i18n";
-import type { FilterPanelConfig } from "@/shared/hooks/useFilterPanel";
 import {
   type InventoryStockRow,
   operationalApi,
 } from "@/modules/operational/api/operationalApi";
 import { inventoryCoreApi } from "@/modules/inventory-core/api/inventoryCoreApi";
-import { useAppQuery } from "@/shared/hooks/useAppQuery";
 import { useUIStore } from "@/core/config/uiStore";
+import { useAppStore } from "@/core/config/appStore";
 import type { Updater } from "@tanstack/react-table";
+import { InventoryStockViewModeCombobox } from "@/modules/operational/components/list/InventoryStockViewModeCombobox";
+import { InventoryStockViewConfigDrawer } from "@/modules/operational/components/list/InventoryStockViewConfigDrawer";
+import { type TableViewPreset } from "@/shared/hooks/useUserPreferences";
 
 interface OperationalInventoryPageProps {
   loading: boolean;
@@ -42,6 +56,8 @@ interface OperationalInventoryPageProps {
   totalPages: number;
   viewingItemId: string | null;
   creatingItem: boolean;
+  isEditMode?: boolean;
+  setIsEditMode?: (edit: boolean) => void;
   onViewItem: (id: string) => void;
   onCloseViewItem: () => void;
   onOpenCreateItem: () => void;
@@ -50,6 +66,22 @@ interface OperationalInventoryPageProps {
   rowSelection: Record<string, boolean>;
   onRowSelectionChange: (updater: Updater<Record<string, boolean>>) => void;
   bulkActionsNode?: React.ReactNode;
+  activeColumnPresetKey?: string;
+  columnViewPresets?: TableViewPreset[];
+  onSelectViewPreset?: (preset: TableViewPreset) => void;
+  onOpenCreateView?: () => void;
+  onOpenEditView?: (preset: TableViewPreset) => void;
+  onDeleteViewPreset?: (key: string) => void;
+  viewConfigDrawerOpen?: boolean;
+  onCloseViewConfigDrawer?: () => void;
+  editingViewPreset?: TableViewPreset | null;
+  onSaveViewPreset?: (data: {
+    key?: string;
+    label: string;
+    columnVisibility: Record<string, boolean>;
+  }) => void;
+  onResetDefaultViewPreset?: (key: string) => void;
+  currentColumnVisibility?: Record<string, boolean>;
 }
 
 /**
@@ -64,6 +96,8 @@ export function OperationalInventoryPage({
   totalPages,
   viewingItemId,
   creatingItem,
+  isEditMode: controlledEditMode,
+  setIsEditMode: controlledSetIsEditMode,
   onViewItem,
   onCloseViewItem,
   onOpenCreateItem,
@@ -72,6 +106,18 @@ export function OperationalInventoryPage({
   rowSelection,
   onRowSelectionChange,
   bulkActionsNode,
+  activeColumnPresetKey,
+  columnViewPresets = [],
+  onSelectViewPreset,
+  onOpenCreateView,
+  onOpenEditView,
+  onDeleteViewPreset,
+  viewConfigDrawerOpen = false,
+  onCloseViewConfigDrawer,
+  editingViewPreset,
+  onSaveViewPreset,
+  onResetDefaultViewPreset,
+  currentColumnVisibility,
 }: OperationalInventoryPageProps) {
   const t = useT();
   const {
@@ -79,41 +125,21 @@ export function OperationalInventoryPage({
     pageSize,
     setPage,
     setPageSize,
-    filterPanelOpen,
-    setFilterPanelOpen,
     searchInput,
-    setSearchInput,
     itemTypeFilter,
-    setItemTypeFilter,
+    stockTab,
+    setStockTab,
     resetAllFilters,
   } = useOperationalListStore();
 
   const tableState = useTableColumnState("inventory-stock-table");
 
-  const [graphOpen, setGraphOpen] = useState(false);
-  const [graphItemId, setGraphItemId] = useState<string | null>(null);
-  const inventoryGraph = useInventoryGraph();
-
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem("erp_preferences");
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (parsed?.tables?.["inventory-stock-table"]) {
-          delete parsed.tables["inventory-stock-table"];
-          localStorage.setItem("erp_preferences", JSON.stringify(parsed));
-          window.location.reload();
-        }
-      }
-    } catch (e) {
-      console.error(e);
-    }
-  }, []);
+  const [internalEditMode, setInternalEditMode] = useState(false);
+  const isEditMode =
+    controlledEditMode !== undefined ? controlledEditMode : internalEditMode;
+  const setIsEditMode = controlledSetIsEditMode || setInternalEditMode;
 
   const showToast = useUIStore((s) => s.showToast);
-
-  const employee = useAuthStore((s) => s.employee);
-  const isGraphAdmin = employee?.email === "admin@liouni.com";
 
   const grDrawer = useGrDrawer({});
   const giDrawer = useGiDrawer({});
@@ -122,6 +148,7 @@ export function OperationalInventoryPage({
   const [poOpen, setPoOpen] = useState(false);
   const [editingPo, setEditingPo] = useState<ErpProductionOrder | null>(null);
   const [viewOnlyPo, setViewOnlyPo] = useState(false);
+  const [customFieldsDrawerOpen, setCustomFieldsDrawerOpen] = useState(false);
 
   const poDrawer = useProductionOrderDrawer({
     open: poOpen,
@@ -146,6 +173,7 @@ export function OperationalInventoryPage({
       showToast({ title: "Đang tạo file Excel...", variant: "default" });
       const blob = await operationalApi.exportInventoryStock({
         search: searchInput || undefined,
+        stock_tab: stockTab === "ALL" ? undefined : stockTab,
         item_type: itemTypeFilter || undefined,
         sort: tableState.sorts.length > 0 ? tableState.sorts : undefined,
         column_search: tableState.columnSearch,
@@ -171,43 +199,85 @@ export function OperationalInventoryPage({
     }
   };
 
-  const activeFilterCount = [!!searchInput, !!itemTypeFilter].filter(
-    Boolean,
-  ).length;
+  const handleClearAllFilters = useCallback(() => {
+    resetAllFilters();
+    tableState.resetFilters();
+    setPage(1);
+    if (typeof window !== "undefined") {
+      const url = new URL(window.location.href);
+      const stockTabParam = url.searchParams.get(ErpUrlQueryParam.STOCK_TAB);
+      const newParams = new URLSearchParams();
+      if (stockTabParam && stockTabParam !== "ALL") {
+        newParams.set(ErpUrlQueryParam.STOCK_TAB, stockTabParam);
+      }
+      const newRelativePath = `${window.location.pathname}${newParams.toString() ? `?${newParams.toString()}` : ""}`;
+      window.history.replaceState(null, "", newRelativePath);
+      useAppStore
+        .getState()
+        .updateCurrentTabUrl("erp-inventory-stock", newRelativePath);
+    }
+  }, [resetAllFilters, tableState, setPage]);
+
+  const handleStockTabChange = useCallback(
+    (nextTab: OperationalStockTab) => {
+      setStockTab(nextTab);
+      if (typeof window !== "undefined") {
+        const url = new URL(window.location.href);
+        if (nextTab && nextTab !== "ALL") {
+          url.searchParams.set(ErpUrlQueryParam.STOCK_TAB, nextTab);
+        } else {
+          url.searchParams.delete(ErpUrlQueryParam.STOCK_TAB);
+        }
+        window.history.replaceState(null, "", url.toString());
+      }
+    },
+    [setStockTab],
+  );
+
+  const customActionsNode = (
+    <div className="w-full sm:w-auto flex items-center flex-wrap gap-2 py-0.5">
+      <PillTabs<OperationalStockTab>
+        className="w-full sm:w-auto shrink-0"
+        size="sm"
+        items={[
+          { value: "ALL", label: t("inventory.tabs.all", "Tất cả") },
+          {
+            value: "IN_STOCK",
+            label: t("inventory.tabs.inStock", "Còn tồn kho"),
+          },
+          {
+            value: "OUT_OF_STOCK",
+            label: t("inventory.tabs.outOfStock", "Hết hàng"),
+          },
+          { value: "NEGATIVE", label: t("inventory.tabs.negative", "Tồn âm") },
+        ]}
+        value={stockTab}
+        onValueChange={handleStockTabChange}
+      />
+
+      {onSelectViewPreset &&
+        onOpenCreateView &&
+        onOpenEditView &&
+        onDeleteViewPreset && (
+          <>
+            <div className="hidden sm:block h-4 w-px bg-slate-300/80 dark:bg-zinc-700/80 shrink-0" />
+            <InventoryStockViewModeCombobox
+              presets={columnViewPresets}
+              activePresetKey={activeColumnPresetKey || "overview"}
+              onSelect={onSelectViewPreset}
+              onCreateView={onOpenCreateView}
+              onEditView={onOpenEditView}
+              onDeleteView={onDeleteViewPreset}
+            />
+          </>
+        )}
+    </div>
+  );
 
   const stockColumns = useStockColumns({
     stockItems,
     onViewItem,
   });
-
-  const { data: itemTypesData } = useAppQuery({
-    queryKey: ["inventory-item-types", "active"],
-    queryFn: () =>
-      inventoryCoreApi.listItemTypes({ pageSize: 100, isActive: true }),
-  });
-
-  const itemTypeOptions = useMemo(() => {
-    const items = itemTypesData?.items || [];
-    return items.map((it) => ({
-      value: it.code,
-      label: it.name,
-    }));
-  }, [itemTypesData]);
-
-  const inventoryFilterConfig: FilterPanelConfig = useMemo(
-    () => ({
-      search: false,
-      custom: [
-        {
-          key: "itemType",
-          label: t("inventory.filter.itemTypeLabel"),
-          placeholder: t("inventory.filter.itemTypePlaceholder"),
-          options: itemTypeOptions,
-        },
-      ],
-    }),
-    [t, itemTypeOptions],
-  );
 
   const summaryRow = useMemo(() => {
     const totalOnHand = stockItems.reduce(
@@ -238,85 +308,69 @@ export function OperationalInventoryPage({
       reserved_qty: fmtQty(totalReserved),
       stock_value: fmtQty(totalStockValue),
     };
-  }, [stockItems, t]);
+  }, [stockItems]);
+
+  const createActions = useMemo(
+    () => [
+      {
+        groupLabel: t("common.groupThaoTac", "Thao tác"),
+        items: [
+          {
+            label: t("inventory.action.create", "Tạo mới mặt hàng"),
+            icon: <Plus className="h-4 w-4 text-emerald-600" />,
+            onClick: onOpenCreateItem,
+          },
+          {
+            label: t("common.exportExcel", "Xuất Excel"),
+            icon: <FileSpreadsheet className="h-4 w-4 text-green-600" />,
+            onClick: handleExportExcel,
+          },
+        ],
+      },
+      {
+        groupLabel: t("common.groupConfig", "Cấu hình"),
+        items: [
+          {
+            label: t("inventory.configItem", "Cấu hình mặt hàng kho"),
+            icon: <Settings className="h-4 w-4 text-muted-foreground" />,
+            onClick: () => setCustomFieldsDrawerOpen(true),
+          },
+        ],
+      },
+    ],
+    [t, onOpenCreateItem, handleExportExcel],
+  );
 
   return (
     <SpreadsheetPageTemplate
-      title={t("inventory.tabStock")}
-      desc={t("inventory.descStock")}
-      icon={<Package className="h-5 w-5" />}
+      title={t("inventory.title", "Tồn kho")}
+      desc={t(
+        "inventory.desc",
+        "Tổng hợp và theo dõi số lượng tồn kho của các mặt hàng.",
+      )}
+      icon={<Package className="h-5 w-5 text-primary" />}
       tableId="inventory-stock-table"
       loading={loading}
       error={error}
       items={stockItems}
       columns={stockColumns}
-      getRowKey={(row: InventoryStockRow) =>
-        `${row.inventory_item_id}-${row.branch_id || "all"}`
-      }
-      emptyLabel={t("Chưa có tồn kho.")}
+      getRowKey={(row: InventoryStockRow) => row.inventory_item_id}
+      minWidth={1100}
       page={page}
       pageSize={pageSize}
       total={total}
       totalPages={totalPages}
-      onPage={setPage}
-      onPageSize={(size: number) => {
-        setPageSize(size);
-        setPage(1);
-      }}
+      onPage={(p) => setPage(p)}
+      onPageSize={(s) => setPageSize(s)}
       onRefresh={onRefetch}
       onCreate={onOpenCreateItem}
-      createLabel={t("common.create", "Tạo mới")}
-      createActions={[
-        {
-          groupLabel: t("groupTraCuu", "Tra cứu"),
-          items: [
-            {
-              label: t("inventory.exportExcel", "Xuất Excel Bảng kê"),
-              icon: <Download className="w-4 h-4 text-emerald-600" />,
-              onClick: handleExportExcel,
-            },
-          ],
-        },
-      ]}
+      createLabel={t("inventory.btnCreate", "Tạo mới")}
+      createActions={createActions}
       bulkActionsNode={bulkActionsNode}
-      filterConfig={inventoryFilterConfig}
-      filter={{
-        state: {
-          period: "",
-          dateFrom: "",
-          dateTo: "",
-          channel: "",
-          search: searchInput,
-          amountMin: "",
-          amountMax: "",
-          status: "",
-          counterpartySource: "",
-          custom: { itemType: itemTypeFilter },
-        },
-        inputs: { search: searchInput, amountMin: "", amountMax: "" },
-        setPeriod: () => {},
-        setDateFrom: () => {},
-        setDateTo: () => {},
-        setChannel: () => {},
-        setSearchInput: (v: string) => setSearchInput(v),
-        setAmountMinInput: () => {},
-        setAmountMaxInput: () => {},
-        setStatus: () => {},
-        setCounterpartySource: () => {},
-        setCustom: (key: string, v: string) => {
-          if (key === "itemType") {
-            setItemTypeFilter(v);
-            setPage(1);
-          }
-        },
-        resetAll: resetAllFilters,
-        openPanel: () => setFilterPanelOpen(true),
-        closePanel: () => setFilterPanelOpen(false),
-        togglePanel: () => setFilterPanelOpen((v: boolean) => !v),
-        hasActiveFilter: activeFilterCount > 0,
-        activeFilterCount,
-        panelOpen: filterPanelOpen,
-      }}
+      customActionsNode={customActionsNode}
+      enableRowContextMenu={true}
+      activeFilterCount={tableState.activeFilterCount || 0}
+      onClearAllFilters={handleClearAllFilters}
       enableRowSelection={false}
       rowSelection={rowSelection}
       onRowSelectionChange={onRowSelectionChange}
@@ -330,28 +384,26 @@ export function OperationalInventoryPage({
           groupLabel: t("groupTraCuu", "Tra cứu"),
           items: [
             {
-              label: t("inventory.action.details"),
-              icon: <Eye size={14} />,
-              onClick: () => onViewItem(row.inventory_item_id),
+              label: t("inventory.action.details", "Xem chi tiết"),
+              icon: <Eye className="h-3.5 w-3.5" />,
+              onClick: () => {
+                setIsEditMode(false);
+                onViewItem(row.inventory_item_id);
+              },
             },
-            ...(isGraphAdmin
-              ? [
-                  {
-                    label: t("Đồ thị liên kết"),
-                    icon: <Network size={14} />,
-                    onClick: () => {
-                      setGraphItemId(row.inventory_item_id);
-                      setGraphOpen(true);
-                      void inventoryGraph.loadGraph(row.inventory_item_id);
-                    },
-                  },
-                ]
-              : []),
           ],
         },
         {
-          groupLabel: t("Thao tác"),
+          groupLabel: t("groupThaoTac", "Thao tác"),
           items: [
+            {
+              label: t("inventory.action.edit", "Chỉnh sửa"),
+              icon: <Pencil className="h-3.5 w-3.5" />,
+              onClick: () => {
+                setIsEditMode(true);
+                onViewItem(row.inventory_item_id);
+              },
+            },
             ...(row.status === "ACTIVE"
               ? [
                   {
@@ -410,17 +462,30 @@ export function OperationalInventoryPage({
                 : []),
           ],
         },
+        {
+          groupLabel: t("common.groupConfig", "Cấu hình"),
+          items: [
+            {
+              label: t("inventory.configItem", "Cấu hình mặt hàng kho"),
+              icon: <Settings className="h-3.5 w-3.5 text-muted-foreground" />,
+              onClick: () => {
+                setCustomFieldsDrawerOpen(true);
+              },
+            },
+          ],
+        },
       ]}
       summaryRow={summaryRow}
     >
       <InventoryItemFormDrawer
         open={!!viewingItemId || creatingItem}
         onClose={() => {
+          setIsEditMode(false);
           onCloseViewItem();
           onCloseCreateItem();
         }}
         itemId={viewingItemId}
-        viewOnly={!!viewingItemId}
+        viewOnly={!creatingItem && !isEditMode}
         onSuccess={onRefetch}
         onOpenDocument={(docId, docType) => {
           if (docType === "GOODS_RECEIPT") {
@@ -434,38 +499,6 @@ export function OperationalInventoryPage({
           }
         }}
       />
-      <ConnectionGraphDrawer
-        open={graphOpen}
-        onClose={() => {
-          setGraphOpen(false);
-          setGraphItemId(null);
-          inventoryGraph.reset();
-        }}
-        title="Đồ thị liên kết Kho"
-        subtitle={
-          graphItemId
-            ? `Vật tư: ${stockItems.find((i) => i.inventory_item_id === graphItemId)?.item_name || graphItemId}`
-            : undefined
-        }
-        loading={inventoryGraph.loading}
-        error={inventoryGraph.error}
-        initialNodes={inventoryGraph.nodes}
-        initialEdges={inventoryGraph.edges}
-        layout={inventoryGraph.layout}
-        toggleLayout={inventoryGraph.toggleLayout}
-        onNodeClick={(node) => {
-          if (!node.docId) return;
-          if (node.nodeType === "inventory_item") {
-            onViewItem(node.docId);
-          } else if (node.nodeType === "goods_receipt") {
-            void grDrawer.openDetail(node.docId, true);
-          } else if (node.nodeType === "goods_issue") {
-            void giDrawer.openDetail(node.docId, true);
-          } else if (node.nodeType === "production_order") {
-            void openPoDetail(node.docId);
-          }
-        }}
-      />
       <GrFormDrawer drawer={grDrawer} />
       <GiFormDrawer drawer={giDrawer} />
       <IaFormDrawer drawer={iaDrawer} />
@@ -476,6 +509,23 @@ export function OperationalInventoryPage({
         onClose={() => setPoOpen(false)}
         onSaved={() => {}}
         drawerState={poDrawer}
+      />
+
+      {onCloseViewConfigDrawer && onSaveViewPreset && (
+        <InventoryStockViewConfigDrawer
+          open={viewConfigDrawerOpen}
+          onClose={onCloseViewConfigDrawer}
+          preset={editingViewPreset}
+          currentColumnVisibility={currentColumnVisibility}
+          onSave={onSaveViewPreset}
+          onResetDefault={onResetDefaultViewPreset}
+        />
+      )}
+
+      <ModuleCustomFieldConfigDrawer
+        open={customFieldsDrawerOpen}
+        onClose={() => setCustomFieldsDrawerOpen(false)}
+        initialTab="INVENTORY_ITEM"
       />
     </SpreadsheetPageTemplate>
   );

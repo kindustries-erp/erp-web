@@ -11,6 +11,7 @@ import { ComingSoon } from "@/pages/ComingSoon";
 import { useT } from "@/core/i18n";
 import { useFilterPanel } from "@/shared/hooks/useFilterPanel";
 import { useHasAnyPermission } from "@/shared/hooks/useHasPermission";
+import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
 import { inventoryCoreApi } from "@/modules/inventory-core/api/inventoryCoreApi";
 import { inventoryDashboardApi } from "@/modules/inventory-core/api/inventoryDashboardApi";
 import { InventoryKpiCard } from "./components/InventoryKpiCard";
@@ -75,8 +76,8 @@ export function InventoryDashboard() {
   });
 
   const hasPerm = useHasAnyPermission(
-    ["goods_receipts", "goods_issues"],
-    "read",
+    [ErpResource.GOODS_RECEIPTS, ErpResource.GOODS_ISSUES],
+    ErpAction.READ,
   );
   const canView = hasPerm || isAdminEmail;
 

@@ -1,8 +1,9 @@
 import React, { useState, useMemo } from "react";
 import { cn } from "@/shared/utils";
 import { useT } from "@/core/i18n";
-import { ChevronDown, ChevronUp, Search, X } from "lucide-react";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/shared/components/ui/Button";
+import { TabSlideTransition } from "@/shared/components/TabSlideTransition";
 
 export interface DrawerRelatedTabItem {
   /** Mã định danh duy nhất của tab */
@@ -40,12 +41,6 @@ export interface DrawerRelatedDeckProps {
   customTitle?: React.ReactNode;
   /** Callback khi chuyển tab */
   onTabChange?: (tabKey: string) => void;
-  /** Cho phép tìm kiếm nhanh trong vùng liên quan */
-  enableSearch?: boolean;
-  /** Placeholder cho ô tìm kiếm */
-  searchPlaceholder?: string;
-  /** Callback khi thay đổi từ khóa tìm kiếm */
-  onSearchChange?: (query: string) => void;
   /** ClassName bổ sung cho toàn deck */
   className?: string;
   /** ClassName bổ sung cho card container */
@@ -59,16 +54,11 @@ export function DrawerRelatedDeck({
   customContent,
   customTitle,
   onTabChange,
-  enableSearch = false,
-  searchPlaceholder,
-  onSearchChange,
   className,
   cardClassName,
 }: DrawerRelatedDeckProps) {
   const t = useT();
   const [collapsed, setCollapsed] = useState(defaultCollapsed);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [showSearchInput, setShowSearchInput] = useState(false);
   const deckRef = React.useRef<HTMLDivElement>(null);
 
   const activeTabKey = useMemo(() => {
@@ -89,7 +79,10 @@ export function DrawerRelatedDeck({
 
   const scrollToDeck = () => {
     setTimeout(() => {
-      if (deckRef.current) {
+      if (
+        deckRef.current &&
+        typeof deckRef.current.scrollIntoView === "function"
+      ) {
         deckRef.current.scrollIntoView({
           behavior: "smooth",
           block: "nearest",
@@ -115,12 +108,6 @@ export function DrawerRelatedDeck({
     }
   };
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value;
-    setSearchQuery(val);
-    onSearchChange?.(val);
-  };
-
   const activeTabItem = tabs.find((item) => item.key === currentTab);
 
   if (!customContent && tabs.length === 0) {
@@ -132,6 +119,18 @@ export function DrawerRelatedDeck({
   const effectiveContent = customContent
     ? customContent
     : activeTabItem?.content;
+  const renderedContent =
+    !customContent && tabs.length > 0 ? (
+      <TabSlideTransition
+        activeKey={currentTab}
+        tabKeys={tabs.map((t) => t.key)}
+        className="w-full"
+      >
+        {effectiveContent}
+      </TabSlideTransition>
+    ) : (
+      effectiveContent
+    );
 
   return (
     <div
@@ -200,60 +199,8 @@ export function DrawerRelatedDeck({
           )}
         </div>
 
-        {/* Right: Controls (Search, HeaderExtra, Collapse Toggle) */}
+        {/* Right: Controls (HeaderExtra, Collapse Toggle) */}
         <div className="flex items-center gap-1 flex-shrink-0">
-          {enableSearch && (
-            <div className="relative flex items-center">
-              {showSearchInput ? (
-                <div className="flex items-center bg-surface border border-border rounded-md px-2 py-0.5 shadow-xs transition-all w-40">
-                  <Search className="w-3.5 h-3.5 text-muted-foreground mr-1.5 flex-shrink-0" />
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={handleSearchChange}
-                    placeholder={searchPlaceholder || t("Tìm nhanh...")}
-                    className="w-full text-xs bg-transparent border-none outline-none text-foreground placeholder:text-muted-foreground/70"
-                    autoFocus
-                  />
-                  {searchQuery && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSearchQuery("");
-                        onSearchChange?.("");
-                      }}
-                      className="text-muted-foreground hover:text-foreground p-0.5"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowSearchInput(false);
-                      setSearchQuery("");
-                      onSearchChange?.("");
-                    }}
-                    className="text-muted-foreground hover:text-foreground ml-1 p-0.5"
-                  >
-                    <X className="w-3 h-3 text-muted-foreground" />
-                  </button>
-                </div>
-              ) : (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon-sm"
-                  onClick={() => setShowSearchInput(true)}
-                  className="text-muted-foreground hover:text-foreground h-7 w-7"
-                  title={t("Tìm kiếm")}
-                >
-                  <Search className="w-3.5 h-3.5" />
-                </Button>
-              )}
-            </div>
-          )}
-
           {activeTabItem?.headerExtra}
 
           <Button
@@ -277,7 +224,7 @@ export function DrawerRelatedDeck({
       {!collapsed &&
         (isNoCard ? (
           <div className="w-full pt-2 pb-1 transition-all">
-            {effectiveContent}
+            {renderedContent}
           </div>
         ) : (
           <div
@@ -294,7 +241,7 @@ export function DrawerRelatedDeck({
               WebkitBackdropFilter: "blur(12px) saturate(180%)",
             }}
           >
-            {effectiveContent}
+            {renderedContent}
           </div>
         ))}
     </div>

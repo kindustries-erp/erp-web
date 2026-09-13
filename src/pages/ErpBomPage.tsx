@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { moduleConfigApi } from "@/core/api/moduleConfigApi";
 import {
   Trash2,
   ChevronRight,
@@ -11,6 +13,7 @@ import {
   FileSpreadsheet,
   FileText,
   Settings,
+  Pencil,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useUIStore } from "@/core/config/uiStore";
@@ -29,6 +32,7 @@ import {
   type ErpBomLine,
 } from "@/modules/bom-core/api/bomCoreApi";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
+import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
 import { Forbidden } from "@/pages/Forbidden";
 import { useBasicMasterInfinite } from "@/modules/basic-masters/hooks/useBasicMasterInfinite";
 import { cn } from "@/shared/utils";
@@ -43,6 +47,7 @@ import { Badge } from "@/shared/components/ui/badge";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const ITEM_LOOKUP_LIMIT = 200;
 
+import { useAppStore } from "@/core/config/appStore";
 import {
   BomFormDrawer,
   type BomForm,
@@ -52,7 +57,6 @@ import {
   emptyLine,
   toPayload,
 } from "@/modules/bom-core/components/BomFormDrawer";
-import { BomConfigDrawer } from "@/modules/bom-core/components/BomConfigDrawer";
 
 function fmtDate(value?: string | null) {
   if (!value) return "—";
@@ -494,7 +498,12 @@ function BomTree({ bomId, fgToBomMap, itemsMap }: BomTreeProps) {
 
 export function ErpBomPage() {
   const t = useT();
-  const canRead = useHasPermission("bom", "read");
+  const queryClient = useQueryClient();
+  const { openCustomFieldsDrawer } = useAppStore();
+  const canRead = useHasPermission(ErpResource.BOM, ErpAction.READ);
+  const canCreate = useHasPermission(ErpResource.BOM, ErpAction.CREATE);
+  const canUpdate = useHasPermission(ErpResource.BOM, ErpAction.UPDATE);
+  const canDelete = useHasPermission(ErpResource.BOM, ErpAction.DELETE);
   const setGlobalLoading = useUIStore((s) => s.setGlobalLoading);
   const [items, setItems] = useState<ErpBom[]>([]);
   const [loading, setLoading] = useState(true);
@@ -504,7 +513,6 @@ export function ErpBomPage() {
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [bomConfigOpen, setBomConfigOpen] = useState(false);
   const [drawerLoading, setDrawerLoading] = useState(false);
   const [editing, setEditing] = useState<ErpBom | null>(null);
   const [viewOnly, setViewOnly] = useState(false);
@@ -729,7 +737,7 @@ export function ErpBomPage() {
 
   const filterConfig: FilterPanelConfig = useMemo(
     () => ({
-      search: true,
+      search: false,
       status: {
         options: BOM_STATUS_OPTIONS,
         placeholder: t("Tất cả trạng thái"),
@@ -918,6 +926,25 @@ export function ErpBomPage() {
     }
   }
 
+  async function openEdit(item: ErpBom) {
+    setSaveError(null);
+    setViewOnly(false);
+    setDrawerLoading(true);
+    setDrawerOpen(true);
+    try {
+      const detail = await bomCoreApi.get(item.id);
+      updateCacheWithBomDetail(detail);
+      setEditing(detail);
+      setForm(buildForm(detail));
+    } catch (e) {
+      setError(
+        e instanceof Error ? e.message : t("Không thể tải chi tiết BOM"),
+      );
+    } finally {
+      setDrawerLoading(false);
+    }
+  }
+
   async function handleClone(item: ErpBom) {
     setSaveError(null);
     setViewOnly(false);
@@ -992,11 +1019,32 @@ export function ErpBomPage() {
       if (statusTarget) {
         payload.status = statusTarget;
       }
+      let targetId = editing?.id;
       if (editing) {
         await bomCoreApi.update(editing.id, payload);
       } else {
-        await bomCoreApi.create(payload);
+        const res = await bomCoreApi.create(payload);
+        targetId = (res as any)?.data?.id || (res as any)?.id;
       }
+
+      // Save custom fields & global attributes via module-config API
+      if (targetId && form.globalAttributes) {
+        try {
+          await moduleConfigApi.saveEntityValues("BOM", targetId, {
+            globalAttributes: form.globalAttributes,
+            attributes: form.attributes || {},
+          });
+        } catch (cfErr) {
+          console.warn("Failed to save BOM custom fields", cfErr);
+        }
+      }
+
+      if (targetId) {
+        queryClient.invalidateQueries({
+          queryKey: ["module-entity-values", "BOM", targetId],
+        });
+      }
+
       closeDrawer();
       void loadAllBoms();
       if (!editing && page !== 1) setPage(1);
@@ -1047,6 +1095,17 @@ export function ErpBomPage() {
 
   const columns: DataTableColumn<ErpBom>[] = [
     {
+      key: "index",
+      header: <span className="w-full block text-center">#</span>,
+      headerClassName: "text-center w-[40px] min-w-[40px]",
+      className: "text-center w-[40px] min-w-[40px] text-muted-foreground",
+      size: 40,
+      enableResizing: false,
+      cell: (_, idx?: number) => (
+        <span className="w-full block text-center">{idx}</span>
+      ),
+    },
+    {
       key: "bomCode",
       header: (
         <TableColumnHeaderFilter
@@ -1071,7 +1130,7 @@ export function ErpBomPage() {
             text={item.bomCode}
             enableCopy={true}
             tooltip={true}
-            onDrawerClick={(e) => {
+            onDetailClick={(e) => {
               e?.stopPropagation();
               void openView(item);
             }}
@@ -1373,6 +1432,11 @@ export function ErpBomPage() {
       items={items}
       columns={columns}
       getRowKey={(item) => item.id}
+      getRowClassName={(item) =>
+        item.status === "INACTIVE"
+          ? "opacity-40 text-muted-foreground"
+          : undefined
+      }
       loading={loading}
       error={error}
       emptyLabel={t("Chưa có BOM")}
@@ -1388,15 +1452,15 @@ export function ErpBomPage() {
         setPageSize(value);
       }}
       onRefresh={() => void loadBoms()}
-      onCreate={openCreate}
+      onCreate={canCreate ? openCreate : undefined}
       createActions={[
         {
           groupLabel: t("groupCauHinh", "Cấu hình"),
           items: [
             {
               label: t("bomConfig.title", "Cấu hình BOM"),
-              icon: <Settings className="w-4 h-4 text-violet-500" />,
-              onClick: () => setBomConfigOpen(true),
+              icon: <Settings className="w-4 h-4 text-muted-foreground" />,
+              onClick: () => openCustomFieldsDrawer("BOM", "Định mức (BOM)"),
             },
           ],
         },
@@ -1412,7 +1476,7 @@ export function ErpBomPage() {
       onSort={handleSort}
       rowActions={(item) => [
         {
-          groupLabel: t("Tra cứu"),
+          groupLabel: t("groupTraCuu", "Tra cứu"),
           items: [
             {
               label: t("Chi tiết"),
@@ -1432,12 +1496,19 @@ export function ErpBomPage() {
           ],
         },
         {
-          groupLabel: t("Thao tác"),
+          groupLabel: t("groupThaoTac", "Thao tác"),
           items: [
+            {
+              label: t("Chỉnh sửa"),
+              onClick: () => void openEdit(item),
+              icon: <Pencil className="h-[13px] w-[13px]" />,
+              hidden: !canUpdate,
+            },
             {
               label: t("common.clone"),
               onClick: () => void handleClone(item),
               icon: <Copy className="h-[13px] w-[13px]" />,
+              hidden: !canCreate,
             },
             {
               label: t("common.activate"),
@@ -1446,7 +1517,7 @@ export function ErpBomPage() {
                 setTargetAction("ACTIVE");
               },
               icon: <CheckCircle className="h-[13px] w-[13px]" />,
-              hidden: item.status !== "INACTIVE",
+              hidden: !canUpdate || item.status !== "INACTIVE",
             },
             {
               label: t("common.inactivate"),
@@ -1456,19 +1527,24 @@ export function ErpBomPage() {
               },
               icon: <Ban className="h-[13px] w-[13px]" />,
               variant: "danger",
-              hidden: item.status !== "ACTIVE",
-            },
-            {
-              label: t("bomConfig.title", "Cấu hình BOM"),
-              onClick: () => setBomConfigOpen(true),
-              icon: <Settings className="h-[13px] w-[13px]" />,
+              hidden: !canUpdate || item.status === "ACTIVE",
             },
             {
               label: t("Xóa"),
               onClick: () => setDeleteTarget(item),
               icon: <Trash2 className="h-[13px] w-[13px]" />,
               variant: "danger",
-              hidden: item.status === "ACTIVE",
+              hidden: !canDelete || item.status === "ACTIVE",
+            },
+          ],
+        },
+        {
+          groupLabel: t("groupCauHinh", "Cấu hình"),
+          items: [
+            {
+              label: t("bomConfig.title", "Cấu hình BOM"),
+              onClick: () => openCustomFieldsDrawer("BOM", "Định mức (BOM)"),
+              icon: <Settings className="h-[13px] w-[13px]" />,
             },
           ],
         },
@@ -1547,11 +1623,6 @@ export function ErpBomPage() {
         itemUomMap={itemUomMap}
         uomOptions={uomOptions}
         onExport={(format) => editing && handleExport(editing, format)}
-      />
-
-      <BomConfigDrawer
-        open={bomConfigOpen}
-        onClose={() => setBomConfigOpen(false)}
       />
     </SpreadsheetPageTemplate>
   );

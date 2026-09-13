@@ -7,12 +7,19 @@ import type {
 import type { DataTableColumn } from "@/shared/components/DataTable";
 import type { ActionDropdownItem } from "@/shared/components/ActionDropdown";
 
+import type { TabItem } from "@/shared/components/PageLayout";
+
 export interface SpreadsheetPageTemplateProps<T> {
   // --- Header ---
   title: string;
   desc?: string;
   icon?: ReactNode;
   hideHeader?: boolean;
+  tabs?: TabItem[];
+  activeTab?: string;
+  onTabChange?: (value: string) => void;
+  tabVariant?: "underline" | "pill";
+  hideTabs?: boolean;
 
   // --- Table Data & State ---
   tableId: string;
@@ -22,6 +29,7 @@ export interface SpreadsheetPageTemplateProps<T> {
   defaultColumnVisibility?: VisibilityState;
   getRowKey: (row: T) => string;
   loading?: boolean;
+  isPending?: boolean;
   error?: string | null;
   emptyLabel?: string;
   minWidth?: number;
@@ -45,9 +53,11 @@ export interface SpreadsheetPageTemplateProps<T> {
   bulkActionsNode?: ReactNode;
   customActionsNode?: ReactNode;
 
-  // --- Filter Panel ---
+  // --- Filter Panel & Unified State ---
   filterConfig?: FilterPanelConfig;
   filter?: FilterPanelReturn;
+  listHook?: any;
+  unifiedFilter?: any;
   activeFilterCount?: number;
   onClearAllFilters?: () => void;
 
@@ -73,5 +83,12 @@ export interface SpreadsheetPageTemplateProps<T> {
 
   // --- Row Interaction ---
   onRowClick?: (row: T) => void;
+  getRowClassName?: (row: T, index: number) => string | undefined;
+  enableRowContextMenu?: boolean;
+  onRowContextMenu?: (item: T, index: number, event: React.MouseEvent) => void;
   loadingRows?: number;
+
+  // --- Fullscreen ---
+  enableFullscreen?: boolean;
+  onFullscreenChange?: (isFullscreen: boolean) => void;
 }

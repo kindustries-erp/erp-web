@@ -24,6 +24,7 @@ export interface ErpBom {
   categoryCode?: string | null;
   categoryName?: string | null;
   attributes?: Record<string, string>;
+  globalAttributes?: Record<string, any>;
   version: string;
   status?: string | null;
   effectiveFrom?: string | null;
@@ -41,6 +42,7 @@ export interface CreateBomPayload {
   finishedGoodItemId?: string;
   categoryId?: string;
   attributes?: Record<string, string>;
+  globalAttributes?: Record<string, any>;
   version: string;
   status?: string;
   effectiveFrom?: string;

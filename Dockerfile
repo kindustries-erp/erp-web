@@ -18,8 +18,12 @@ RUN bun run build
 # ── Stage 2: Serve ────────────────────────────────────────────────────────────
 FROM nginx:stable-alpine AS runner
 
+ARG NGINX_API_UPSTREAM=erp-api-klotus-master:10012
+
 COPY --from=builder /app/dist /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY nginx.conf /etc/nginx/templates/default.conf.template
+
+ENV API_UPSTREAM_URL=${NGINX_API_UPSTREAM}
 
 EXPOSE 80
 

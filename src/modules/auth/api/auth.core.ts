@@ -3,6 +3,13 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import axiosInstance from "@/core/api/axiosInstance";
 
+export interface UserPreferencesPayload {
+  theme?: string;
+  language?: string;
+  tableConfigs?: Record<string, any>;
+  uiConfigs?: Record<string, any>;
+}
+
 export interface CoreLoginResponse {
   accessToken: string;
   refreshToken: string;
@@ -15,6 +22,7 @@ export interface CoreLoginResponse {
     employeeId: string | null;
     legacyDirectusUserId: string | null;
   };
+  preferences?: UserPreferencesPayload;
 }
 
 export interface CoreProfileResponse {
@@ -36,9 +44,9 @@ export interface CoreProfileResponse {
   permissions?: {
     resource: string;
     action: string;
-
     conditions?: any;
   }[];
+  preferences?: UserPreferencesPayload;
   createdAt: string;
   updatedAt: string;
 }

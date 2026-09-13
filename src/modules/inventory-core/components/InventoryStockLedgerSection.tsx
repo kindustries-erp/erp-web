@@ -10,12 +10,10 @@ import { useT } from "@/core/i18n";
 import type { InventoryMovement } from "../api/inventoryCoreApi";
 import {
   buildInventoryLedgerRows,
-  buildInventoryTrendData,
   exportInventoryLedgerToExcel,
   type InventoryLedgerRow,
   type InventoryLedgerTotals,
 } from "../utils/inventoryLedgerTransform";
-import { InventoryItemTrendChart } from "./InventoryItemTrendChart";
 import { InventoryFlatLedgerTable } from "./InventoryFlatLedgerTable";
 
 interface InventoryStockLedgerSectionProps {
@@ -51,12 +49,7 @@ export function InventoryStockLedgerSection({
     return buildInventoryLedgerRows(movements);
   }, [movements]);
 
-  // 2. Build trend chart data
-  const trendData = useMemo(() => {
-    return buildInventoryTrendData(allRows);
-  }, [allRows]);
-
-  // 3. Filter & Sort logic
+  // 2. Filter & Sort logic
   const getFilteredByOthers = (colToSkip: string) => {
     let result = [...allRows];
 
@@ -248,14 +241,7 @@ export function InventoryStockLedgerSection({
 
   return (
     <div className="flex flex-col gap-4">
-      {/* 1. Trend Chart */}
-      <InventoryItemTrendChart
-        trendData={trendData}
-        chartHeight={200}
-        uomName={itemInfo.uom}
-      />
-
-      {/* 2. Flat Multi-tier Ledger Table */}
+      {/* Flat Multi-tier Ledger Table */}
       <DrawerSection
         title={
           <div className="flex items-center gap-2">

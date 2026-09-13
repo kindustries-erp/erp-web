@@ -1,22 +1,24 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { History, Eye } from "lucide-react";
-import { type DataTableColumn } from "@/shared/components/DataTable";
+import {
+  type DataTableColumn,
+  TableText,
+  TableDateCell,
+  createColumnHeaderFilter,
+} from "@/shared/components/DataTable";
+import { Badge } from "@/shared/components/ui/badge";
 import { DrawerSection } from "@/shared/components/DrawerModal";
 import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
+import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate/SpreadsheetPageTemplate";
 import { Forbidden } from "@/pages/Forbidden";
-import {
-  useFilterPanel,
-  type FilterPanelConfig,
-} from "@/shared/hooks/useFilterPanel";
-
-import { useUIStore } from "@/core/config/uiStore";
 import { useT } from "@/core/i18n";
 import {
   auditCoreApi,
   type AuditLogEntry,
 } from "@/modules/system/api/usersCoreApi";
+import { useAuditCoreList } from "@/modules/system/hooks/useAuditCoreList";
 
 function formatDate(value: string | null) {
   if (!value) return "—";
@@ -26,137 +28,118 @@ function formatDate(value: string | null) {
 }
 
 export function ErpActivityLogsPage() {
-  const canRead = useHasPermission("activity_logs", "read");
-  const showToast = useUIStore((s) => s.showToast);
+  const canRead = useHasPermission(ErpResource.ACTIVITY_LOGS, ErpAction.READ);
   const t = useT();
-  const [items, setItems] = useState<AuditLogEntry[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(50);
-  const [total, setTotal] = useState(0);
+
+  const listHook = useAuditCoreList();
+  const {
+    data: items,
+    total,
+    totalPages,
+    isLoading: loading,
+    page,
+    setPage,
+    pageSize,
+    setPageSize,
+    refetch: load,
+  } = listHook;
+
   const [selected, setSelected] = useState<AuditLogEntry | null>(null);
 
-  const filterConfig: FilterPanelConfig = useMemo(
-    () => ({
-      search: true,
-      period: true,
-      noDefaultPeriod: true,
-      status: {
-        options: [
-          { value: "SUCCESS", label: "Thành công (SUCCESS)" },
-          { value: "FAIL", label: "Thất bại (FAIL)" },
-        ],
-        placeholder: "Tất cả trạng thái",
-      },
-      custom: [
-        {
-          key: "actionType",
-          label: "Hành động (Method)",
-          placeholder: "Tất cả hành động",
-          type: "multi-select",
-          initialValue: "POST,PUT,PATCH,DELETE",
-          options: [
-            { value: "GET", label: "GET" },
-            { value: "POST", label: "POST" },
-            { value: "PUT", label: "PUT" },
-            { value: "PATCH", label: "PATCH" },
-            { value: "DELETE", label: "DELETE" },
-          ],
-        },
-        {
-          key: "module",
-          label: "Module",
-          placeholder: "Tất cả phân hệ",
-          options: [
-            { value: "auth", label: "auth" },
-            { value: "users", label: "users" },
-            { value: "inventory", label: "inventory" },
-            { value: "purchase", label: "purchase" },
-          ],
-        },
-      ],
-    }),
-    [],
+  const headerFilter = useMemo(
+    () =>
+      createColumnHeaderFilter({
+        listHook,
+        queryKeyPrefix: "audit-logs-column-options",
+        fetchOptions: ({
+          columnKey,
+          search,
+          pageParam,
+          pageSize: ps,
+          filtersStr,
+        }) =>
+          auditCoreApi.getColumnOptions(
+            columnKey,
+            search,
+            pageParam,
+            ps || 20,
+            filtersStr,
+          ),
+      }),
+    [listHook],
   );
-
-  const filter = useFilterPanel(filterConfig, () => setPage(1));
-
-  const search = filter.state.search;
-  const statusFilter = filter.state.status;
-  const dateFrom = filter.state.dateFrom;
-  const dateTo = filter.state.dateTo;
-  const moduleFilter = filter.state.custom.module;
-  const actionTypeFilter = filter.state.custom.actionType;
-
-  const load = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await auditCoreApi.list({
-        page,
-        pageSize,
-        module: moduleFilter || undefined,
-        actionType: actionTypeFilter || undefined,
-        status: statusFilter || undefined,
-        dateFrom: dateFrom || undefined,
-        dateTo: dateTo || undefined,
-        search: search || undefined,
-      });
-      setItems(res.data);
-      setTotal(res.total);
-    } catch (error: any) {
-      showToast({
-        variant: "destructive",
-        title: "Không tải được audit logs",
-        description:
-          error?.response?.data?.message ||
-          error?.message ||
-          "Lỗi không xác định",
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [
-    moduleFilter,
-    actionTypeFilter,
-    statusFilter,
-    dateFrom,
-    dateTo,
-    search,
-    page,
-    pageSize,
-    showToast,
-  ]);
-
-  useEffect(() => {
-    void load();
-  }, [load]);
 
   const columns: DataTableColumn<AuditLogEntry>[] = useMemo(
     () => [
       {
+        key: "index",
+        header: <span className="w-full block text-center">#</span>,
+        size: 40,
+        enableResizing: false,
+        headerClassName: "text-center w-[40px] min-w-[40px]",
+        className: "text-center w-[40px] min-w-[40px]",
+        cell: (_, idx) => (
+          <span className="w-full block text-center">{idx}</span>
+        ),
+      },
+      {
         key: "actorEmail",
-        header: t("activityLogs.headers.actor") || "Actor",
-        cell: (item) => item.actorEmail || "system",
+        size: 220,
+        enableResizing: true,
+        header: headerFilter(
+          "actorEmail",
+          t("activityLogs.headers.actor", "Actor"),
+          { showBlankOption: true },
+        ),
+        cell: (item) => (
+          <TableText
+            text={item.actorEmail || "system"}
+            enableCopy
+            tooltip
+            onDetailClick={() => setSelected(item)}
+          />
+        ),
         className: "text-left",
-        headerClassName: "text-center",
       },
       {
         key: "actionType",
-        header: t("activityLogs.headers.action") || "Action",
-        cell: (item) => <span className="font-medium">{item.actionType}</span>,
+        size: 180,
+        enableResizing: true,
+        header: headerFilter(
+          "actionType",
+          t("activityLogs.headers.action", "Action"),
+        ),
+        cell: (item) => (
+          <span className="font-semibold text-foreground">
+            {item.actionType}
+          </span>
+        ),
         className: "text-left",
-        headerClassName: "text-center",
       },
       {
         key: "module",
-        header: t("activityLogs.headers.module") || "Module",
-        cell: (item) => item.module,
+        size: 140,
+        enableResizing: true,
+        header: headerFilter(
+          "module",
+          t("activityLogs.headers.module", "Module"),
+        ),
+        cell: (item) => (
+          <Badge variant="outline" className="text-[11px] font-mono">
+            {item.module}
+          </Badge>
+        ),
         className: "text-left",
-        headerClassName: "text-center",
       },
       {
-        key: "entity",
-        header: t("activityLogs.headers.entity") || "Entity",
+        key: "entityType",
+        size: 200,
+        enableResizing: true,
+        header: headerFilter(
+          "entityType",
+          t("activityLogs.headers.entity", "Entity"),
+          { showBlankOption: true },
+        ),
         cell: (item) => {
           if (!item.entityType) return "—";
           const shortId = item.entityId
@@ -164,7 +147,9 @@ export function ErpActivityLogsPage() {
             : "";
           return (
             <div className="flex flex-col" title={item.entityId || ""}>
-              <span>{item.entityType}</span>
+              <span className="font-medium text-foreground">
+                {item.entityType}
+              </span>
               {shortId && (
                 <span className="text-[11px] font-mono text-muted-foreground">
                   {shortId}
@@ -174,36 +159,42 @@ export function ErpActivityLogsPage() {
           );
         },
         className: "text-left",
-        headerClassName: "text-center",
       },
       {
         key: "createdAt",
-        header: t("activityLogs.headers.time") || "Thời gian",
-        cell: (item) => formatDate(item.createdAt),
+        size: 160,
+        enableResizing: true,
         className: "text-right",
-        headerClassName: "text-center",
+        header: headerFilter.date(
+          "createdAt",
+          t("activityLogs.headers.time", "Time"),
+        ),
+        cell: (item) => (
+          <TableDateCell date={item.createdAt} className="justify-end w-full" />
+        ),
       },
       {
         key: "status",
-        header: t("activityLogs.headers.status") || "Status",
+        size: 130,
+        enableResizing: true,
         className: "text-center",
-        headerClassName: "text-center",
+        header: headerFilter(
+          "status",
+          t("activityLogs.headers.status", "Status"),
+        ),
         cell: (item) => (
           <div className="flex justify-center w-full">
-            <span
-              className={
-                item.status === "SUCCESS"
-                  ? "rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-700"
-                  : "rounded-full bg-red-100 px-2 py-1 text-xs font-medium text-red-700"
-              }
+            <Badge
+              variant={item.status === "SUCCESS" ? "default" : "destructive"}
+              className="w-[88px] inline-flex items-center justify-center text-center truncate"
             >
               {item.status}
-            </span>
+            </Badge>
           </div>
         ),
       },
     ],
-    [t],
+    [headerFilter, t],
   );
 
   if (!canRead) return <Forbidden />;
@@ -211,33 +202,36 @@ export function ErpActivityLogsPage() {
   return (
     <>
       <SpreadsheetPageTemplate<AuditLogEntry>
-        title={t("nav.items.activitylog") || "Nhật ký hoạt động"}
-        desc="Audit logs live từ ERP CORE backend"
+        title={t("activityLogs.title", "Nhật ký hoạt động")}
+        desc={t(
+          "activityLogs.desc",
+          "Audit logs trực tiếp từ ERP CORE backend",
+        )}
         icon={<History className="h-4 w-4" />}
-        tableId="activity-logs-table"
+        tableId="activity-logs-table-v2"
         items={items}
         columns={columns}
         getRowKey={(item) => item.id}
         loading={loading}
-        emptyLabel="Chưa có audit logs"
+        emptyLabel={t("activityLogs.empty", "Chưa có audit logs")}
         page={page}
         pageSize={pageSize}
         total={total}
-        totalPages={Math.ceil(total / pageSize)}
+        totalPages={totalPages}
         onPage={setPage}
         onPageSize={(value) => {
           setPage(1);
           setPageSize(value);
         }}
         onRefresh={() => void load()}
-        filterConfig={filterConfig}
-        filter={filter}
+        activeFilterCount={listHook.activeFilterCount}
+        onClearAllFilters={listHook.clearAllFilters}
         rowActions={(row) => [
           {
-            groupLabel: "Tra cứu / Cấu hình",
+            groupLabel: t("activityLogs.actions.lookup", "Tra cứu"),
             items: [
               {
-                label: "Xem chi tiết",
+                label: t("activityLogs.actions.viewDetail", "Xem chi tiết"),
                 icon: <Eye className="h-3.5 w-3.5" />,
                 onClick: () => setSelected(row),
               },
@@ -250,44 +244,65 @@ export function ErpActivityLogsPage() {
         open={Boolean(selected)}
         mode="view"
         onClose={() => setSelected(null)}
-        title={selected?.actionType || "Chi tiết log"}
+        title={
+          selected?.actionType || t("activityLogs.drawer.title", "Chi tiết log")
+        }
         subtitle={
           selected
             ? `${selected.module} • ${formatDate(selected.createdAt)}`
             : undefined
         }
         actions={[
-          { label: "Đóng", onClick: () => setSelected(null), primary: true },
+          {
+            label: t("activityLogs.drawer.btnClose", "Đóng"),
+            onClick: () => setSelected(null),
+            primary: true,
+          },
         ]}
         layout="1-column"
         leftPanel={
           selected ? (
             <>
-              <DrawerSection title="Thông tin chính">
+              <DrawerSection
+                title={t("activityLogs.drawer.sectionMain", "Thông tin chính")}
+              >
                 <div className="space-y-2 text-sm">
                   <div>
-                    <span className="font-medium">Actor:</span>{" "}
+                    <span className="font-medium">
+                      {t("activityLogs.drawer.actor", "Actor:")}
+                    </span>{" "}
                     {selected.actorEmail || "system"}
                   </div>
                   <div>
-                    <span className="font-medium">Entity:</span>{" "}
+                    <span className="font-medium">
+                      {t("activityLogs.drawer.entity", "Entity:")}
+                    </span>{" "}
                     {selected.entityType || "—"} / {selected.entityId || "—"}
                   </div>
                   <div>
-                    <span className="font-medium">Route:</span>{" "}
+                    <span className="font-medium">
+                      {t("activityLogs.drawer.route", "Route:")}
+                    </span>{" "}
                     {selected.httpMethod || "—"} {selected.route || "—"}
                   </div>
                   <div>
-                    <span className="font-medium">Message:</span>{" "}
+                    <span className="font-medium">
+                      {t("activityLogs.drawer.message", "Message:")}
+                    </span>{" "}
                     {selected.message || "—"}
                   </div>
                 </div>
               </DrawerSection>
-              <DrawerSection title="Snapshot JSON">
+              <DrawerSection
+                title={t(
+                  "activityLogs.drawer.sectionSnapshot",
+                  "Snapshot JSON",
+                )}
+              >
                 <div className="space-y-3">
                   <div>
                     <div className="mb-1 text-xs font-semibold text-muted-foreground">
-                      Before
+                      {t("activityLogs.drawer.before", "Before")}
                     </div>
                     <pre className="overflow-x-auto rounded-xl bg-muted p-3 text-xs">
                       {JSON.stringify(selected.beforeSnapshot, null, 2)}
@@ -295,7 +310,7 @@ export function ErpActivityLogsPage() {
                   </div>
                   <div>
                     <div className="mb-1 text-xs font-semibold text-muted-foreground">
-                      After
+                      {t("activityLogs.drawer.after", "After")}
                     </div>
                     <pre className="overflow-x-auto rounded-xl bg-muted p-3 text-xs">
                       {JSON.stringify(selected.afterSnapshot, null, 2)}
@@ -303,7 +318,7 @@ export function ErpActivityLogsPage() {
                   </div>
                   <div>
                     <div className="mb-1 text-xs font-semibold text-muted-foreground">
-                      Error
+                      {t("activityLogs.drawer.error", "Error")}
                     </div>
                     <pre className="overflow-x-auto rounded-xl bg-muted p-3 text-xs">
                       {JSON.stringify(selected.errorSnapshot, null, 2)}

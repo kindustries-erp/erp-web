@@ -179,7 +179,7 @@ export const productionCoreApi = {
 
 1. **Spreadsheet Page Standard**: Bắt buộc dùng `SpreadsheetPageTemplate`, truyền đầy đủ `filter` trả về từ `useFilterPanel`.
 2. **Cột STT**: Dùng `#` size `40px` (w-[40px] min-w-[40px]).
-3. **Cột Mã Lệnh**: Luôn dùng `<TableText>` có copy, tooltip và `onDrawerClick`.
+3. **Cột Mã Lệnh**: Luôn dùng `<TableText>` có copy, tooltip và `onDetailClick` (Icon `Eye` mở chi tiết Lệnh sản xuất).
 4. **Delete / Cancel**: Bắt buộc có modal xác nhận `<ConfirmModal>` với cờ `danger={true}`.
 5. **Thanh tiến độ**: Bắt buộc tính toán đúng tỷ lệ và hiển thị số lượng dạng `(qtyProduced / qtyToProduce)`.
 6. **Typecheck & CI**: Bắt buộc chạy `bun run check:ci` trong `erp-web/` trước khi kết thúc công việc.

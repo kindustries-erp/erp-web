@@ -27,14 +27,21 @@ import { useCashVoucherHandlers } from "@/modules/finance/hooks/useCashVoucherHa
 import { useSearchFilter } from "@/shared/hooks/useFilterState";
 import { useAmountRangeFilter } from "@/shared/hooks/useFilterState";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
+import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
 import { CashFundView } from "@/modules/finance/components/CashFund/CashFundView";
 import { forwardRef, useImperativeHandle } from "react";
 
 export const TienMat = forwardRef(
   (props: { hideHeader?: boolean } = {}, ref) => {
     const t = useT();
-    const canCreateVoucher = useHasPermission("payment_vouchers", "create");
-    const canUpdateVoucher = useHasPermission("payment_vouchers", "update");
+    const canCreateVoucher = useHasPermission(
+      ErpResource.PAYMENT_VOUCHERS,
+      ErpAction.CREATE,
+    );
+    const canUpdateVoucher = useHasPermission(
+      ErpResource.PAYMENT_VOUCHERS,
+      ErpAction.UPDATE,
+    );
 
     // ── Hooks ──────────────────────────────────────────────────────────────────
     const {

@@ -45,12 +45,11 @@ describe("GdtPortalAuthForm", () => {
     await waitFor(() => {
       expect(erpInvoicesCoreApi.getPortalConfig).toHaveBeenCalled();
       expect(erpInvoicesCoreApi.getPortalCaptcha).toHaveBeenCalled();
+      const usernameInput = screen.getByPlaceholderText(
+        "Ví dụ: 0318334886 hoặc 0318334886-003",
+      ) as HTMLInputElement;
+      expect(usernameInput.value).toBe("0318334886-003");
     });
-
-    const usernameInput = screen.getByPlaceholderText(
-      "Ví dụ: 0318334886 hoặc 0318334886-003",
-    ) as HTMLInputElement;
-    expect(usernameInput.value).toBe("0318334886-003");
   });
 
   it("submits login with username, password, captcha and key", async () => {

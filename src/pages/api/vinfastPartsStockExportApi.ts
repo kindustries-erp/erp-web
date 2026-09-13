@@ -8,6 +8,7 @@ export interface VinfastPartsStockExportQuery {
   dateTo?: string;
   search?: string;
   vehicleType?: string;
+  stockTab?: string;
   sortBy?: string;
   sortDir?: "asc" | "desc";
   sorts?: string;

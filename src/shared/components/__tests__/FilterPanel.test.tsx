@@ -88,12 +88,12 @@ describe("FilterPanel", () => {
       <FilterPanel config={config} filter={filter} />,
     );
 
-    // Desktop div (hidden md:block) should have w-0 class
-    const desktopDiv = container.querySelector(".md\\:block");
+    // Desktop div (hidden md:flex) should have w-0 class
+    const desktopDiv = container.querySelector(".md\\:flex");
     expect(desktopDiv).toHaveClass("w-0");
   });
 
-  it("renders with w-[210px] when panelOpen is true (desktop)", () => {
+  it("renders with w-[320px] when panelOpen is true (desktop)", () => {
     const config: FilterPanelConfig = { search: true, period: true };
     const filter = makeFilter({ panelOpen: true });
 
@@ -101,9 +101,9 @@ describe("FilterPanel", () => {
       <FilterPanel config={config} filter={filter} />,
     );
 
-    // Desktop div (hidden md:block) should have w-[210px] class
-    const desktopDiv = container.querySelector(".md\\:block");
-    expect(desktopDiv).toHaveClass("w-[210px]");
+    // Desktop div (hidden md:flex) should have w-[320px] class
+    const desktopDiv = container.querySelector(".md\\:flex");
+    expect(desktopDiv).toHaveClass("w-[320px]");
   });
 
   it("renders active filter count badge inside header when hasActiveFilter is true", () => {
@@ -116,8 +116,8 @@ describe("FilterPanel", () => {
 
     render(<FilterPanel config={config} filter={filter} />);
 
-    // Active filter count badge (5) should be present in the panel header (rendered twice: mobile and desktop)
-    const badges = screen.getAllByText("Bộ lọc (5)");
+    // Active filter count badge (5) should be present in the panel header
+    const badges = screen.getAllByText("(5)");
     expect(badges.length).toBeGreaterThan(0);
     expect(badges[0]).toBeInTheDocument();
   });
@@ -165,24 +165,46 @@ describe("FilterPanel", () => {
   });
 });
 
-describe("FilterButton", () => {
-  it("renders with correct activeCount badge", () => {
-    render(<FilterButton onClick={vi.fn()} activeCount={3} />);
+import { TooltipProvider } from "@/core/components/ui/Tooltip";
 
-    expect(screen.getByTitle("Bộ lọc")).toBeInTheDocument();
-    expect(screen.getByText("3")).toBeInTheDocument();
+describe("FilterButton", () => {
+  it("renders with correct activeCount badge when onClear is provided", () => {
+    render(
+      <TooltipProvider>
+        <FilterButton onClick={vi.fn()} onClear={vi.fn()} activeCount={3} />
+      </TooltipProvider>,
+    );
+
+    expect(screen.getByText("(3)")).toBeInTheDocument();
+  });
+
+  it("renders with activeCount badge even when onClear is NOT provided", () => {
+    render(
+      <TooltipProvider>
+        <FilterButton onClick={vi.fn()} activeCount={2} />
+      </TooltipProvider>,
+    );
+
+    expect(screen.getByText("(2)")).toBeInTheDocument();
   });
 
   it("does not render badge when activeCount is 0", () => {
-    render(<FilterButton onClick={vi.fn()} activeCount={0} />);
+    render(
+      <TooltipProvider>
+        <FilterButton onClick={vi.fn()} activeCount={0} />
+      </TooltipProvider>,
+    );
 
-    expect(screen.getByTitle("Bộ lọc")).toBeInTheDocument();
     expect(screen.queryByText("0")).not.toBeInTheDocument();
   });
 
   it("onClick calls the provided handler", () => {
     const onClick = vi.fn();
-    render(<FilterButton onClick={onClick} activeCount={0} />);
+    render(
+      <TooltipProvider>
+        <FilterButton onClick={onClick} activeCount={0} />
+      </TooltipProvider>,
+    );
 
     fireEvent.click(screen.getByRole("button"));
     expect(onClick).toHaveBeenCalledTimes(1);

@@ -1,16 +1,18 @@
 import React from "react";
 import {
-  VoucherNetoffSelectionModal,
+  GarageCaseReconciliationDrawer,
   type SettlementSubmissionItem,
-} from "@/modules/erp-invoices-core/components/VoucherNetoffSelectionModal";
+  type ReconciliationTabKey,
+} from "./GarageCaseReconciliationDrawer";
 
-export type { SettlementSubmissionItem };
+export type { SettlementSubmissionItem, ReconciliationTabKey };
 
 export interface GarageCaseSettlementDrawerModalProps {
   open: boolean;
   onClose: () => void;
   caseId?: string;
   caseCode?: string;
+  initialTab?: ReconciliationTabKey;
   defaultType?: "RECEIPT" | "PAYMENT";
   suggestedAmount?: number;
   remainingReceivable?: number;
@@ -25,6 +27,7 @@ export function GarageCaseSettlementDrawerModal({
   onClose,
   caseId,
   caseCode,
+  initialTab = "bank_cash",
   defaultType = "RECEIPT",
   suggestedAmount = 0,
   remainingReceivable,
@@ -34,19 +37,19 @@ export function GarageCaseSettlementDrawerModal({
   onSubmit,
 }: GarageCaseSettlementDrawerModalProps) {
   return (
-    <VoucherNetoffSelectionModal
+    <GarageCaseReconciliationDrawer
       open={open}
       onClose={onClose}
       caseId={caseId}
       caseCode={caseCode}
+      initialTab={initialTab}
       defaultType={defaultType}
       suggestedAmount={suggestedAmount}
       remainingReceivable={remainingReceivable}
       remainingPayable={remainingPayable}
+      existingTxnIds={existingTxnIds}
       editingItem={editingItem}
-      existingVoucherIds={existingTxnIds}
-      mode="tabs"
-      onSubmitItems={onSubmit}
+      onSubmitSettlements={onSubmit}
     />
   );
 }

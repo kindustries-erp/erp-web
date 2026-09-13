@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { fetchEventSource } from "@microsoft/fetch-event-source";
 
 import axiosInstance, { API_BASE_URL } from "@/core/api/axiosInstance";
@@ -92,55 +92,70 @@ export function useInvoiceExportProgress() {
     };
   }, [token, setProgress]);
 
-  const downloadReadyFile = async (
-    jobId: string,
-    fileName?: string,
-    onProgress?: (loaded: number, total?: number) => void,
-  ) => {
-    if (!token) {
-      throw new Error("Phien dang nhap da het han. Vui long dang nhap lai.");
-    }
-
-    const url = `/api/v1/erp-invoices/export/excel/background/${encodeURIComponent(jobId)}/download`;
-
-    const response = await axiosInstance.get<Blob>(url, {
-      responseType: "blob",
-      timeout: 300000,
-      onDownloadProgress: (event) => {
-        if (!onProgress) return;
-        onProgress(event.loaded, event.total);
-      },
-    });
-
-    const contentDisposition =
-      response.headers?.["content-disposition"] ||
-      response.headers?.["Content-Disposition"];
-
-    const quotedFileName = contentDisposition
-      ?.match(/filename\*?=(?:UTF-8''|")?([^";]+)/i)?.[1]
-      ?.trim();
-
-    const rawFileName = (quotedFileName || fileName || "invoices.xlsx").replace(
-      /"/g,
-      "",
-    );
-    const resolvedFileName = (() => {
-      try {
-        return decodeURIComponent(rawFileName);
-      } catch {
-        return rawFileName;
+  const downloadReadyFile = useCallback(
+    async (
+      jobId: string,
+      fileName?: string,
+      onProgress?: (loaded: number, total?: number) => void,
+    ) => {
+      if (!token) {
+        throw new Error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
       }
-    })();
 
-    const blobUrl = window.URL.createObjectURL(response.data);
-    const a = document.createElement("a");
-    a.href = blobUrl;
-    a.download = resolvedFileName;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    setTimeout(() => window.URL.revokeObjectURL(blobUrl), 1000);
-  };
+      const url = `/api/v1/erp-invoices/export/excel/background/${encodeURIComponent(jobId)}/download`;
+
+      const response = await axiosInstance.get<Blob>(url, {
+        responseType: "blob",
+        timeout: 300000,
+        onDownloadProgress: (event) => {
+          if (!onProgress) return;
+          onProgress(event.loaded, event.total);
+        },
+      });
+
+      const contentDisposition =
+        response.headers?.["content-disposition"] ||
+        response.headers?.["Content-Disposition"];
+
+      const quotedFileName = contentDisposition
+        ?.match(/filename\*?=(?:UTF-8''|")?([^";]+)/i)?.[1]
+        ?.trim();
+
+      const rawFileName = (
+        quotedFileName ||
+        fileName ||
+        "invoices.xlsx"
+      ).replace(/"/g, "");
+      const resolvedFileName = (() => {
+        try {
+          return decodeURIComponent(rawFileName);
+        } catch {
+          return rawFileName;
+        }
+      })();
+
+      const blob =
+        response.data instanceof Blob
+          ? response.data
+          : new Blob([response.data], {
+              type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            });
+      const blobUrl = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.style.display = "none";
+      a.href = blobUrl;
+      a.download = resolvedFileName;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => {
+        if (document.body.contains(a)) {
+          document.body.removeChild(a);
+        }
+        window.URL.revokeObjectURL(blobUrl);
+      }, 2000);
+    },
+    [token],
+  );
 
   return { downloadReadyFile };
 }

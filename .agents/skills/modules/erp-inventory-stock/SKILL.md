@@ -25,6 +25,10 @@ Phân hệ `erp-inventory-stock` (gồm `inventory-stock-core` và `erp_inventor
   - Endpoint `column-options` hỗ trợ lấy danh sách giá trị lọc duy nhất theo từng cột (SKU, Tên hàng, Loại hàng, Kho, Tình trạng tồn).
 - **Xuất Báo cáo Tồn kho ra Excel (`exportExcel`)**:
   - Hỗ trợ xuất toàn bộ danh sách tồn kho theo bộ lọc hiện hành thành file `.xlsx` định dạng chuẩn kế toán.
+- **Chuẩn hóa UI/UX Bảng Sổ Tồn Kho (`OperationalInventoryPage.tsx` & `stockColumns.tsx`)**:
+  - Cột STT `#` cố định 40px ở đầu bảng, căn giữa tiêu chuẩn.
+  - Làm mờ hàng trạng thái ngừng hoạt động/hủy (`INACTIVE`, `CANCELLED`, `VOID`).
+  - Quick Actions chuẩn: "Xem chi tiết" (Icon `Eye`, view mode) và "Chỉnh sửa" (Icon `Pencil`, edit mode).
 
 ---
 
@@ -109,6 +113,17 @@ Khi xuất kho số lượng $\text{qtyOut}$:
    $$\text{qtyReserved}_{\text{new}} = \max(0, \text{qtyReserved} - \text{qtyOut})$$
 5. Cập nhật lại $\text{inventoryValue} = \text{qtyOnHand}_{\text{new}} \times \text{avgUnitCost}$.
 6. Ghi bản ghi đối ứng vào `erp_inventory_transactions`.
+
+### 5.3. Multi-Keyword Search & Header Filter Engine
+1. **Multi-Keyword Search (`applyMultiKeywordFilter`)**:
+   - Sử dụng helper chuẩn `applyMultiKeywordFilter` phân tách từ khóa qua dấu chấm phẩy `;` (điều kiện `OR`).
+   - Khớp chính xác tuyệt đối khi từ khóa nằm trong cặp ngoặc kép `""` (`isExact`).
+   - Hỗ trợ toàn diện cho tất cả các cột trong `findAll` (`searches`): `item_code`, `item_name`, `item_type`, `status`, `unit`, `on_hand_qty`, `reserved_qty`, `received_qty`, `issued_qty`, `adjusted_qty`, `last`.
+2. **Xử lý Bộ lọc Cột Đặc biệt**:
+   - `__ALL_MATCHING__`: Khi người dùng chọn tất cả kết quả tìm kiếm trong popover, backend tự động áp dụng điều kiện multi-keyword search tương ứng.
+   - `__BLANK__`: Hỗ trợ lọc các dòng có giá trị NULL hoặc chuỗi rỗng.
+3. **Đồng bộ Dropdown Options (`getColumnOptions`)**:
+   - Tìm kiếm options hỗ trợ multi-keyword search động với SQL parameter binding an toàn.
 
 ---
 

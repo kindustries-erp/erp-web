@@ -85,6 +85,7 @@ export interface FilterPanelReturn {
   setPeriod: (v: string) => void;
   setDateFrom: (v: string) => void;
   setDateTo: (v: string) => void;
+  setDateRange?: (from: string, to: string) => void;
   setChannel: (v: string) => void;
   setSearchInput: (v: string) => void;
   setAmountMinInput: (v: string) => void;
@@ -186,6 +187,16 @@ export function useFilterPanel(
       notify();
     },
     [dateFrom, notify],
+  );
+
+  const setDateRange = useCallback(
+    (from: string, to: string) => {
+      setDateFromRaw(from);
+      setDateToRaw(to);
+      setPeriodRaw("");
+      notify();
+    },
+    [notify],
   );
 
   const setChannel = useCallback(
@@ -406,6 +417,7 @@ export function useFilterPanel(
     setPeriod,
     setDateFrom,
     setDateTo,
+    setDateRange,
     setChannel,
     setSearchInput,
     setAmountMinInput,

@@ -125,6 +125,7 @@ export interface SmartSuggestionCardProps {
       name?: string;
     };
     remainingAmount?: number;
+    alreadySettledForThisCase?: boolean;
   };
   amount: number;
   isSuggestion?: boolean;
@@ -212,19 +213,32 @@ export function SmartSuggestionCard({
             <div className="font-bold text-xs font-mono text-slate-800 dark:text-slate-100">
               {money(amount)}
             </div>
-            {isSuggestion && cfg && (
-              <div
-                className={`mt-0.5 flex items-center px-1.5 py-0.5 rounded text-[9px] font-medium border whitespace-nowrap leading-none ${cfg.badgeClasses}`}
-              >
-                <span className="relative flex h-1.5 w-1.5 mr-1 shrink-0">
-                  <span
-                    className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${cfg.glowClasses}`}
-                  ></span>
-                  <span
-                    className={`relative inline-flex rounded-full h-1.5 w-1.5 ${cfg.dotClasses}`}
-                  ></span>
-                </span>
-                {t(cfg.key, cfg.label)}
+            {isSuggestion && (
+              <div className="flex flex-wrap items-center justify-end gap-1 mt-0.5">
+                {txn?.alreadySettledForThisCase && (
+                  <div
+                    className="flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold border whitespace-nowrap leading-none bg-violet-100 text-violet-800 border-violet-300 dark:bg-violet-950/60 dark:text-violet-300 dark:border-violet-800"
+                    title="Giao dịch này đã được cấn trừ vào vụ việc hiện tại"
+                  >
+                    <span className="h-1.5 w-1.5 rounded-full bg-violet-600 mr-1 shrink-0" />
+                    ĐÃ CẤN TRỪ
+                  </div>
+                )}
+                {cfg && (
+                  <div
+                    className={`flex items-center px-1.5 py-0.5 rounded text-[9px] font-medium border whitespace-nowrap leading-none ${cfg.badgeClasses}`}
+                  >
+                    <span className="relative flex h-1.5 w-1.5 mr-1 shrink-0">
+                      <span
+                        className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${cfg.glowClasses}`}
+                      ></span>
+                      <span
+                        className={`relative inline-flex rounded-full h-1.5 w-1.5 ${cfg.dotClasses}`}
+                      ></span>
+                    </span>
+                    {t(cfg.key, cfg.label)}
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -263,7 +277,9 @@ export function SmartSuggestionCard({
             onClick={onAccept}
           >
             <Check className="w-3 h-3 mr-1 text-emerald-600" />
-            {t("smartSuggestion.accept", "Nhận gợi ý")}
+            {txn?.alreadySettledForThisCase
+              ? t("smartSuggestion.reselect", "Chọn lại cấn trừ")
+              : t("smartSuggestion.accept", "Nhận gợi ý")}
           </Button>
           {cfg.warningText && (
             <div className="flex items-center gap-1 text-[10px] text-amber-700 dark:text-amber-400 italic">

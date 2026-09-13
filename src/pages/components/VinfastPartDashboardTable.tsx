@@ -149,7 +149,7 @@ export function VinfastPartDashboardTable({
             text={row.itemCode}
             enableCopy={true}
             tooltip={true}
-            onDrawerClick={(e) => {
+            onDetailClick={(e) => {
               e.stopPropagation();
               onRowClick?.(row);
             }}

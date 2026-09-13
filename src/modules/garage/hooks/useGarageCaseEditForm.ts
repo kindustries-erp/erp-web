@@ -127,37 +127,79 @@ export function useGarageCaseEditForm(caseId?: string) {
   }, []);
 
   // Add linked invoice (client-side only)
-  const addLinkedInvoice = useCallback(
-    (payload: {
-      invoiceId: string;
-      linkType: "IN" | "OUT";
-      note?: string;
-      invoice?: ErpInvoice;
-    }) => {
-      const totalAmt =
-        payload.invoice?.totalAmount != null
-          ? Number(payload.invoice.totalAmount)
-          : undefined;
+  // Add linked invoices (client-side only, supports array or single item)
+  const addLinkedInvoices = useCallback(
+    (
+      payload:
+        | {
+            invoiceId: string;
+            linkType: "IN" | "OUT";
+            note?: string;
+            invoice?: ErpInvoice;
+          }
+        | Array<{
+            invoiceId: string;
+            linkType: "IN" | "OUT";
+            note?: string;
+            invoice?: ErpInvoice;
+          }>,
+    ) => {
+      const items = Array.isArray(payload) ? payload : [payload];
+      if (items.length === 0) return;
 
-      const newPending: PendingAddedInvoice = {
-        tempId: createClientId(),
-        isPending: true,
-        invoiceId: payload.invoiceId,
-        linkType: payload.linkType,
-        note: payload.note,
-        invoice: payload.invoice,
-        invoiceNo: payload.invoice?.invoiceNo || undefined,
-        totalAmount: isNaN(Number(totalAmt)) ? undefined : totalAmt,
-        sellerName: payload.invoice?.sellerName ?? undefined,
-        buyerName: payload.invoice?.buyerName ?? undefined,
-      };
+      const newPending: PendingAddedInvoice[] = items.map((item) => {
+        const totalAmt =
+          item.invoice?.totalAmount != null
+            ? Number(item.invoice.totalAmount)
+            : undefined;
 
-      setPendingAddedInvoices((prev) => [...prev, newPending]);
-      toast.success(
-        `Đã thêm HĐ ${payload.invoice?.invoiceNo || payload.invoiceId} vào liên kết (chờ Lưu thay đổi).`,
-      );
+        return {
+          tempId: createClientId(),
+          isPending: true,
+          invoiceId: item.invoiceId,
+          linkType: item.linkType,
+          note: item.note,
+          invoice: item.invoice,
+          invoiceNo: item.invoice?.invoiceNo || undefined,
+          totalAmount: isNaN(Number(totalAmt)) ? undefined : totalAmt,
+          sellerName: item.invoice?.sellerName ?? undefined,
+          buyerName: item.invoice?.buyerName ?? undefined,
+        };
+      });
+
+      setPendingAddedInvoices((prev) => [...prev, ...newPending]);
+      if (newPending.length === 1) {
+        toast.success(
+          `Đã thêm HĐ ${newPending[0].invoiceNo || newPending[0].invoiceId} vào liên kết (chờ Lưu thay đổi).`,
+        );
+      } else {
+        toast.success(
+          `Đã thêm ${newPending.length} hóa đơn vào liên kết (chờ Lưu thay đổi).`,
+        );
+      }
     },
     [],
+  );
+
+  const addLinkedInvoice = useCallback(
+    (
+      payload:
+        | {
+            invoiceId: string;
+            linkType: "IN" | "OUT";
+            note?: string;
+            invoice?: ErpInvoice;
+          }
+        | Array<{
+            invoiceId: string;
+            linkType: "IN" | "OUT";
+            note?: string;
+            invoice?: ErpInvoice;
+          }>,
+    ) => {
+      addLinkedInvoices(payload);
+    },
+    [addLinkedInvoices],
   );
 
   // Remove linked invoice (client-side only)
@@ -225,12 +267,21 @@ export function useGarageCaseEditForm(caseId?: string) {
         }
 
         // 3. Add pending linked invoices
-        for (const item of pendingAddedInvoices) {
+        if (pendingAddedInvoices.length === 1) {
           await garageApi.addCaseLinkedInvoice(
             activeCaseId,
-            item.invoiceId,
-            item.linkType,
-            item.note,
+            pendingAddedInvoices[0].invoiceId,
+            pendingAddedInvoices[0].linkType,
+            pendingAddedInvoices[0].note,
+          );
+        } else if (pendingAddedInvoices.length > 1) {
+          await garageApi.addCaseLinkedInvoices(
+            activeCaseId,
+            pendingAddedInvoices.map((i) => ({
+              invoiceId: i.invoiceId,
+              linkType: i.linkType,
+              note: i.note,
+            })),
           );
         }
 
@@ -442,6 +493,7 @@ export function useGarageCaseEditForm(caseId?: string) {
     addSettlements,
     removeSettlement,
     addLinkedInvoice,
+    addLinkedInvoices,
     removeLinkedInvoice,
     handleSave,
     getActiveSettlements,

@@ -217,10 +217,11 @@ export function InvoiceNetoffSelectionModal({
       direction,
     );
     return {
-      items: (res?.items || []).map((x: any) => ({
-        label: String(x),
-        value: String(x),
-      })),
+      items: (res?.items || []).map((x: any) =>
+        typeof x === "object"
+          ? { label: x.label || x.name || x.value, value: x.value }
+          : { label: String(x), value: String(x) },
+      ),
       total: res?.total || 0,
       next: pageParam < (res?.totalPages || 0) ? pageParam + 1 : null,
     };

@@ -1,5 +1,5 @@
 export type PageKey =
-  | "budget"
+  | "opex"
   | "dashboard"
   | "cashflow"
   | "cashflow-dashboard"
@@ -46,7 +46,6 @@ export type PageKey =
   | "erp-inventory-items"
   | "erp-inventory-uom"
   | "erp-inventory-item-types"
-  | "erp-inventory-tracking-categories"
   | "erp-suppliers"
   | "erp-customers"
   | "erp-employees"
@@ -54,6 +53,7 @@ export type PageKey =
   | "erp-activity-logs"
   | "erp-permissions-core"
   | "sys-tags"
+  | "erp-invoices"
   | "erp-invoices-in"
   | "erp-invoices-out"
   | "erp-invoices-draft"
@@ -63,17 +63,18 @@ export type PageKey =
   | "cash-statement"
   | "garage-dashboard"
   | "garage-cases"
-  | "garage-receivables"
-  | "garage-payables"
+  | "garage-opex"
   | "garage-customers"
+  | "garage-partners"
+  | "erp-finished-goods"
   | "after-sales"
   | "vinfast-parts"
   | "vinfast-parts-dashboard"
   | "vinfast-parts-oto"
   | "vinfast-parts-xemay"
+  | "vinfast-parts-stock"
   | "vinfast-parts-oto-stock"
   | "vinfast-parts-xemay-stock"
-  | "vinfast-invoice-settlement"
   | "inventory-dashboard";
 export type TxSource = "cash-fund" | "bank-deposit";
 
@@ -142,4 +143,13 @@ export interface TabInfo {
 export interface SectionRoot {
   labelKey: string;
   group: string;
+}
+
+export interface TabInstance {
+  instanceId: string; // e.g. "erp-invoices-in" or "erp-invoices-in__2"
+  pageKey: PageKey;
+  instanceIndex: 1 | 2;
+  customLabel?: string;
+  url?: string;
+  search?: string;
 }

@@ -37,10 +37,6 @@ export function InvoiceDetailWrapper({ invoiceId, onClose }: Props) {
     onClose();
   };
 
-  const fieldSet = (key: string, value: any) => {
-    formHook.setForm((prev) => ({ ...prev, [key]: value }));
-  };
-
   return (
     <ErpInvoiceInternalDrawer
       open={!!invoiceId && formHook.internalDrawerOpen}
@@ -57,7 +53,7 @@ export function InvoiceDetailWrapper({ invoiceId, onClose }: Props) {
           <ErpInvoiceInternalSidebar
             form={formHook.form}
             editMode={formHook.editMode}
-            fieldSet={fieldSet}
+            fieldSet={formHook.fieldSet}
             invoiceId={formHook.detailInvoice?.id ?? null}
             pendingTagIds={formHook.pendingTagIds}
             onPendingTagsChange={formHook.setPendingTagIds}
@@ -95,7 +91,7 @@ export function InvoiceDetailWrapper({ invoiceId, onClose }: Props) {
         <ErpInvoiceInternalMain
           form={formHook.form}
           editMode={formHook.editMode}
-          fieldSet={fieldSet}
+          fieldSet={formHook.fieldSet}
           direction={formHook.detailInvoice?.direction || "IN"}
           detailInvoice={formHook.detailInvoice}
           postingState={formHook.postingState}

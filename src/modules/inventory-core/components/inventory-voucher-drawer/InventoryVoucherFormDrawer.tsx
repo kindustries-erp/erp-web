@@ -45,9 +45,17 @@ export interface InventoryVoucherFormDrawerProps {
    */
   rightPanelContent: ReactNode;
   /**
+   * Optional default attributes section slot ("THUỘC TÍNH MẶC ĐỊNH")
+   */
+  defaultAttributesSlot?: ReactNode;
+  /**
    * Content for DrawerSection "Ghi chú" — separate section below Thông tin chung.
    */
   remarksContent: ReactNode;
+  /**
+   * Optional custom fields section slot ("THUỘC TÍNH TÙY CHỈNH")
+   */
+  customFieldsSlot?: ReactNode;
   /** Number of skeleton rows shown while loading. Default: 5 */
   rightPanelSkeletonCount?: number;
 
@@ -145,16 +153,37 @@ export function InventoryVoucherFormDrawer(
             </>
           ) : (
             <>
-              {/* ── Thông tin chung ──────────────────────────────── */}
-              <DrawerSection title={t("Thông tin chung")}>
+              {/* ── 1. THÔNG TIN CHUNG ──────────────────────────────── */}
+              <DrawerSection
+                title={t("generalInfo", "THÔNG TIN CHUNG")}
+                collapsible={true}
+                defaultCollapsed={false}
+              >
                 {/* Unified type switcher — chỉ hiển thị khi tạo mới */}
                 {props.unifiedContext?.mode === "create" && (
-                  <DrawerField label={t("Loại chứng từ")}>
+                  <DrawerField
+                    label={t("inventory.voucherType", "Loại chứng từ")}
+                  >
                     <Combobox
                       options={[
-                        { value: "receipt", label: t("Phiếu nhập kho") },
-                        { value: "issue", label: t("Phiếu xuất kho") },
-                        { value: "adjustment", label: t("Điều chỉnh kho") },
+                        {
+                          value: "receipt",
+                          label: t(
+                            "inventory.receiptVoucher",
+                            "Phiếu nhập kho",
+                          ),
+                        },
+                        {
+                          value: "issue",
+                          label: t("inventory.issueVoucher", "Phiếu xuất kho"),
+                        },
+                        {
+                          value: "adjustment",
+                          label: t(
+                            "inventory.adjustmentVoucher",
+                            "Điều chỉnh kho",
+                          ),
+                        },
                       ]}
                       value={props.unifiedContext.type}
                       onChange={(v) =>
@@ -169,10 +198,30 @@ export function InventoryVoucherFormDrawer(
                 {props.rightPanelContent}
               </DrawerSection>
 
-              {/* ── Ghi chú (section riêng bên dưới) ────────────── */}
-              <DrawerSection title={t("Ghi chú")}>
-                {props.remarksContent}
-              </DrawerSection>
+              {/* ── 2. THUỘC TÍNH MẶC ĐỊNH ───────────────────────────── */}
+              {props.defaultAttributesSlot && (
+                <DrawerSection
+                  title={t("defaultAttributes", "THUỘC TÍNH MẶC ĐỊNH")}
+                  collapsible={true}
+                  defaultCollapsed={false}
+                >
+                  {props.defaultAttributesSlot}
+                </DrawerSection>
+              )}
+
+              {/* ── 3. THUỘC TÍNH TÙY CHỈNH ──────────────────────────── */}
+              {props.customFieldsSlot}
+
+              {/* ── 4. GHI CHÚ (section riêng bên dưới) ──────────────── */}
+              {props.remarksContent && (
+                <DrawerSection
+                  title={t("common.remarks", "GHI CHÚ")}
+                  collapsible={true}
+                  defaultCollapsed={false}
+                >
+                  {props.remarksContent}
+                </DrawerSection>
+              )}
             </>
           )
         }

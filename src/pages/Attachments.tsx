@@ -234,7 +234,7 @@ export function DinhKemChungTu() {
       cell: (a) => (
         <TableText
           text={a.fileName}
-          onDrawerClick={() => selectAttachment(a)}
+          onDetailClick={() => selectAttachment(a)}
           tooltip={true}
         />
       ),

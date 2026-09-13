@@ -3,6 +3,9 @@ import type { PaginatedResponse, ListParams } from "@/shared/types/pagination";
 
 export interface ErpGrDeclaredSerial {
   serialNo: string;
+  vinNo?: string | null;
+  engineNo?: string | null;
+  internalSerialNo?: string | null;
   notes?: string | null;
   lotNo?: string | null;
   attributes?: Record<string, string> | null;
@@ -32,6 +35,7 @@ export interface ErpGoodsReceipt {
   remarks?: string | null;
   createdAt?: string;
   isDeleted?: boolean;
+  customAttributes?: Record<string, any>;
   lines?: ErpGrLine[];
 }
 
@@ -43,6 +47,7 @@ export interface CreateGrPayload {
   receiptDate: string;
   status?: string;
   remarks?: string;
+  customAttributes?: Record<string, any>;
   lines?: Omit<ErpGrLine, "id">[];
 }
 

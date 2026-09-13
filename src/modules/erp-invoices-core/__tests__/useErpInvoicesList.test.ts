@@ -1,5 +1,7 @@
+import React from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useErpInvoicesList } from "../hooks/useErpInvoicesList";
 import { erpInvoicesCoreApi, type ErpInvoice } from "../api/erpInvoicesCoreApi";
 import { useErpInvoiceListStore } from "../hooks/useErpInvoiceListStore";
@@ -11,6 +13,18 @@ vi.mock("../api/erpInvoicesCoreApi", () => ({
     list: vi.fn(),
   },
 }));
+
+function createWrapper() {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+      },
+    },
+  });
+  return ({ children }: { children: React.ReactNode }) =>
+    React.createElement(QueryClientProvider, { client: queryClient }, children);
+}
 
 const initialSubState = {
   searchInput: "",
@@ -24,6 +38,7 @@ const initialSubState = {
   seller_name: "",
   buyer_name: "",
   tag_id: "",
+  activeTaxTab: "all",
   sortBy: "invoiceDate",
   sortOrder: "desc" as const,
   filterPanelOpen: false,
@@ -34,6 +49,8 @@ const resetZustand = () => {
     states: {
       IN: { ...initialSubState },
       OUT: { ...initialSubState },
+      IN_2: { ...initialSubState },
+      OUT_2: { ...initialSubState },
       CHECKPOINT_IN: { ...initialSubState },
       CHECKPOINT_OUT: { ...initialSubState },
     },
@@ -56,7 +73,9 @@ describe("useErpInvoicesList", () => {
   });
 
   it("should initialize with default state", async () => {
-    const { result } = renderHook(() => useErpInvoicesList());
+    const { result } = renderHook(() => useErpInvoicesList(), {
+      wrapper: createWrapper(),
+    });
 
     expect(result.current.direction).toBe("IN");
     expect(result.current.page).toBe(1);
@@ -69,7 +88,9 @@ describe("useErpInvoicesList", () => {
   });
 
   it("should change direction and reset page", async () => {
-    const { result } = renderHook(() => useErpInvoicesList());
+    const { result } = renderHook(() => useErpInvoicesList(), {
+      wrapper: createWrapper(),
+    });
     await waitFor(() => expect(result.current.loading).toBe(false));
 
     act(() => {
@@ -86,25 +107,26 @@ describe("useErpInvoicesList", () => {
   });
 
   it("should toggle sort order when sorting by same key", async () => {
-    const { result } = renderHook(() => useErpInvoicesList());
+    const { result } = renderHook(() => useErpInvoicesList(), {
+      wrapper: createWrapper(),
+    });
     await waitFor(() => expect(result.current.loading).toBe(false));
 
     expect(result.current.sortBy).toBe("invoiceDate");
     expect(result.current.sortOrder).toBe("desc");
 
     act(() => {
-      // First toggle sets to -invoiceDate (desc) because default was none.
-      // Wait, if it wasn't tracked by useTableColumnState yet, it pushes invoiceDate (asc).
       result.current.handleSort("invoiceDate");
     });
 
-    // Let's just check it changed to asc
     expect(result.current.sortOrder).toBe("asc");
     expect(result.current.page).toBe(1);
   });
 
   it("should change sort key and default to desc", async () => {
-    const { result } = renderHook(() => useErpInvoicesList());
+    const { result } = renderHook(() => useErpInvoicesList(), {
+      wrapper: createWrapper(),
+    });
     await waitFor(() => expect(result.current.loading).toBe(false));
 
     act(() => {
@@ -112,8 +134,6 @@ describe("useErpInvoicesList", () => {
     });
 
     expect(result.current.sortBy).toBe("totalAmount");
-    // tableState.toggleSort pushes field first, so it defaults to asc!
-    // Wait, useTableColumnState.ts pushes field first (asc), then -field (desc).
     expect(result.current.sortOrder).toBe("asc");
   });
 
@@ -127,7 +147,9 @@ describe("useErpInvoicesList", () => {
       pageSize: 50,
     });
 
-    const { result } = renderHook(() => useErpInvoicesList());
+    const { result } = renderHook(() => useErpInvoicesList(), {
+      wrapper: createWrapper(),
+    });
     await waitFor(() => expect(result.current.loading).toBe(false));
 
     expect(mockList).toHaveBeenCalledWith(
@@ -142,5 +164,74 @@ describe("useErpInvoicesList", () => {
 
     expect(result.current.invoices).toHaveLength(1);
     expect(result.current.total).toBe(1);
+  });
+
+  describe("GDT status (taxInvoiceStatus) filtering", () => {
+    it("should send taxInvoiceStatus when user sets column filter on tab 'all'", async () => {
+      const mockList = erpInvoicesCoreApi.list as any;
+      const { result } = renderHook(() => useErpInvoicesList(), {
+        wrapper: createWrapper(),
+      });
+      await waitFor(() => expect(result.current.loading).toBe(false));
+
+      act(() => {
+        result.current.tableState.setColumnFilter("taxInvoiceStatus", ["1"]);
+      });
+
+      await waitFor(() => {
+        const lastCall = mockList.mock.calls[mockList.mock.calls.length - 1][0];
+        const colFilters = JSON.parse(lastCall.column_filters);
+        expect(colFilters.taxInvoiceStatus).toEqual(["1"]);
+      });
+    });
+
+    it("should omit taxInvoiceStatus on tab 'all' when column filter is empty", async () => {
+      const mockList = erpInvoicesCoreApi.list as any;
+      const { result } = renderHook(() => useErpInvoicesList(), {
+        wrapper: createWrapper(),
+      });
+      await waitFor(() => expect(result.current.loading).toBe(false));
+
+      const lastCall = mockList.mock.calls[mockList.mock.calls.length - 1][0];
+      const colFilters = JSON.parse(lastCall.column_filters);
+      expect(colFilters.taxInvoiceStatus).toBeUndefined();
+    });
+
+    it("should fallback to tab statuses on tab 'replacement' when column filter is empty", async () => {
+      const mockList = erpInvoicesCoreApi.list as any;
+      const { result } = renderHook(() => useErpInvoicesList(), {
+        wrapper: createWrapper(),
+      });
+      await waitFor(() => expect(result.current.loading).toBe(false));
+
+      act(() => {
+        result.current.setActiveTaxTab("replacement");
+      });
+
+      await waitFor(() => {
+        const lastCall = mockList.mock.calls[mockList.mock.calls.length - 1][0];
+        const colFilters = JSON.parse(lastCall.column_filters);
+        expect(colFilters.taxInvoiceStatus).toEqual(["2", "4"]);
+      });
+    });
+
+    it("should prioritize user column filter over tab default on tab 'replacement'", async () => {
+      const mockList = erpInvoicesCoreApi.list as any;
+      const { result } = renderHook(() => useErpInvoicesList(), {
+        wrapper: createWrapper(),
+      });
+      await waitFor(() => expect(result.current.loading).toBe(false));
+
+      act(() => {
+        result.current.setActiveTaxTab("replacement");
+        result.current.tableState.setColumnFilter("taxInvoiceStatus", ["2"]);
+      });
+
+      await waitFor(() => {
+        const lastCall = mockList.mock.calls[mockList.mock.calls.length - 1][0];
+        const colFilters = JSON.parse(lastCall.column_filters);
+        expect(colFilters.taxInvoiceStatus).toEqual(["2"]);
+      });
+    });
   });
 });

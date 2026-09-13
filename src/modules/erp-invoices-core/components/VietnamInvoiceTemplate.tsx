@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { format } from "date-fns";
 import { type ErpInvoice } from "../api/erpInvoicesCoreApi";
 import { normalizeOutInvoiceLineDisplay } from "../utils/outInvoiceDisplay";
+import { formatVatRate } from "./ErpInvoiceItemsSection/components/itemColumns";
 
 interface Props {
   invoice: ErpInvoice;
@@ -199,7 +200,7 @@ export function VietnamInvoiceTemplate({ invoice }: Props) {
                     {formatNumber(item.discountAmount)}
                   </td>
                   <td className="border-b border-r border-slate-300 p-2.5 text-center font-mono">
-                    {item.vatRate != null ? `${item.vatRate}%` : "---"}
+                    {formatVatRate(item.vatRate)}
                   </td>
                   <td className="border-b border-r border-slate-300 p-2.5 text-right font-mono font-medium">
                     {formatNumber(item.preVatAmount)}

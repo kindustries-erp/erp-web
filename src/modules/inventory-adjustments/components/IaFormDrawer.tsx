@@ -11,7 +11,13 @@
  * - Ghi chú in separate DrawerSection below Thông tin chung
  */
 import { useState, useMemo, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/shared/utils";
+import {
+  moduleConfigApi,
+  resolveOptionLabel,
+} from "@/core/api/moduleConfigApi";
+import { useAppStore } from "@/core/config/appStore";
 import { Button } from "@/shared/components/ui/Button";
 import { Combobox } from "@/shared/components/Combobox";
 import { CellInput } from "@/shared/components/CellInput";
@@ -20,6 +26,7 @@ import { DrawerField, inputCls } from "@/shared/components/DrawerModal";
 import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
 import { DatePicker } from "@/shared/components/DatePicker";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
+import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
 import { useUIStore } from "@/core/config/uiStore";
 import { ImportExcelModal } from "@/shared/components/ImportExcelModal";
 import {
@@ -33,6 +40,9 @@ import { FilterButton } from "@/shared/components/FilterPanel";
 import type { UseIaDrawerReturn } from "@/modules/inventory-adjustments/hooks/useIaDrawer";
 import { InventoryVoucherFormDrawer } from "@/modules/inventory-core/components/inventory-voucher-drawer/InventoryVoucherFormDrawer";
 import { useVoucherClientFilter } from "@/modules/inventory-core/hooks/useVoucherClientFilter";
+import { ModuleEntityCustomFieldsSection } from "@/shared/components/ModuleEntityCustomFieldsSection";
+import { AttributeTypeBadge } from "@/shared/components/AttributeTypeBadge";
+import { EntityTagSelector } from "@/modules/tags/components/EntityTagSelector";
 
 function fmtQty(value?: string | number | null) {
   if (!value && value !== 0) return "0";
@@ -76,7 +86,10 @@ export function IaFormDrawer({ drawer }: IaFormDrawerProps) {
     setGlobalLoading(saving);
   }, [saving, setGlobalLoading]);
 
-  const canUpdate = useHasPermission("inventory_adjustments", "update");
+  const canUpdate = useHasPermission(
+    ErpResource.INVENTORY_ADJUSTMENTS,
+    ErpAction.UPDATE,
+  );
 
   // ── Client-side filter / sort ──────────────────────────────────────────────
 
@@ -280,7 +293,7 @@ export function IaFormDrawer({ drawer }: IaFormDrawerProps) {
             className={cn(
               "w-full h-full min-h-[38px] text-right bg-transparent border-0 focus:ring-1 focus:ring-emerald-500 outline-none hover:bg-slate-50 focus:bg-white px-3 transition-all",
             )}
-            placeholder="SL thực"
+            placeholder={t("SL thực")}
             value={line.qtyAdjusted ?? ""}
             disabled={viewOnly || editing?.status === "POSTED"}
             onValueChange={(v) => {
@@ -458,27 +471,217 @@ export function IaFormDrawer({ drawer }: IaFormDrawerProps) {
 
   // ── Right panel content (Thông tin chung) ─────────────────────────────────
 
+  const locale = useAppStore((s) => s.locale);
+
+  // Lấy danh sách thuộc tính động cho INVENTORY_ADJUSTMENT để nạp options cho Lý do điều chỉnh (code: type_inventory_adjustment)
+  const { data: iaAttrDefs = [] } = useQuery({
+    queryKey: ["module-config-global-defs", "INVENTORY_ADJUSTMENT"],
+    queryFn: () =>
+      moduleConfigApi.getGlobalAttributeDefs("INVENTORY_ADJUSTMENT"),
+    staleTime: 60000,
+  });
+
+  const adjustmentReasonOptions = useMemo(() => {
+    const reasonDef = Array.isArray(iaAttrDefs)
+      ? iaAttrDefs.find(
+          (d) =>
+            (d?.code === "type_inventory_adjustment" ||
+              d?.code === "adjustment_reason" ||
+              d?.code === "reason") &&
+            !d?.isDeleted,
+        )
+      : undefined;
+    if (reasonDef?.options && reasonDef.options.length > 0) {
+      return reasonDef.options.map((opt) => ({
+        value: opt.value,
+        label: `${resolveOptionLabel(opt, locale, t)} [${opt.value}]`,
+      }));
+    }
+    return [
+      { value: "PERIODIC", label: `${t("Kiểm kê định kỳ")} [PERIODIC]` },
+      { value: "DAMAGED", label: `${t("Hàng hỏng hóc / hao hụt")} [DAMAGED]` },
+      {
+        value: "COUNT_ERROR",
+        label: `${t("Sai lệch kiểm đếm")} [COUNT_ERROR]`,
+      },
+      { value: "RECLASSIFY", label: `${t("Phân loại quy cách")} [RECLASSIFY]` },
+      { value: "OTHER", label: `${t("Lý do khác")} [OTHER]` },
+    ];
+  }, [iaAttrDefs, locale, t]);
+
+  const currentReasonVal =
+    form.globalAttributes?.type_inventory_adjustment ||
+    form.globalAttributes?.adjustment_reason ||
+    "";
+
+  const currentReasonLabel = useMemo(() => {
+    const opt = adjustmentReasonOptions.find(
+      (o) => o.value === currentReasonVal,
+    );
+    return opt?.label || currentReasonVal || "—";
+  }, [adjustmentReasonOptions, currentReasonVal]);
+
+  // ── Thống kê tóm tắt biến động kiểm kê ──────────────────────────────
+  const { totalPositiveQty, totalNegativeQty } = useMemo(() => {
+    let pos = 0;
+    let neg = 0;
+    for (const line of form.lines) {
+      const q = Number(line.qtyAdjusted || 0);
+      if (q > 0) pos += q;
+      else if (q < 0) neg += Math.abs(q);
+    }
+    return { totalPositiveQty: pos, totalNegativeQty: neg };
+  }, [form.lines]);
+
+  // ── Right panel content (1. THÔNG TIN CHUNG) ───────────────────────────────
+
   const rightPanelContent = (
     <>
       <DrawerField label={t("Số phiếu")}>
-        <input
-          className={inputCls}
-          placeholder={t("Tự động nếu để trống")}
-          value={form.adjustmentNo}
-          disabled={viewOnly || editing?.status === "POSTED"}
-          onChange={(e) =>
-            setForm((f) => ({ ...f, adjustmentNo: e.target.value }))
-          }
-        />
+        {viewOnly ? (
+          <div className="font-medium text-[color:var(--foreground)] text-sm px-3 py-2 bg-gray-50 dark:bg-muted/40 rounded-lg border border-transparent font-mono">
+            {form.adjustmentNo || "—"}
+          </div>
+        ) : (
+          <input
+            className={inputCls}
+            placeholder={t("Tự động nếu để trống")}
+            value={form.adjustmentNo}
+            disabled={editing?.status === "POSTED"}
+            onChange={(e) =>
+              setForm((f) => ({ ...f, adjustmentNo: e.target.value }))
+            }
+          />
+        )}
       </DrawerField>
+
       <DrawerField label={t("Ngày điều chỉnh")}>
-        <DatePicker
-          value={form.adjustmentDate ? form.adjustmentDate.slice(0, 10) : ""}
-          disabled={viewOnly || editing?.status === "POSTED"}
-          onChange={(v) => setForm((f) => ({ ...f, adjustmentDate: v }))}
-        />
+        {viewOnly ? (
+          <div className="font-medium text-[color:var(--foreground)] text-sm px-3 py-2 bg-gray-50 dark:bg-muted/40 rounded-lg border border-transparent">
+            {form.adjustmentDate ? form.adjustmentDate.slice(0, 10) : "—"}
+          </div>
+        ) : (
+          <DatePicker
+            value={form.adjustmentDate ? form.adjustmentDate.slice(0, 10) : ""}
+            disabled={editing?.status === "POSTED"}
+            onChange={(v) => setForm((f) => ({ ...f, adjustmentDate: v }))}
+          />
+        )}
       </DrawerField>
+
+      <DrawerField label={t("Người kiểm kê / Lập phiếu")}>
+        {viewOnly ? (
+          <div className="font-medium text-[color:var(--foreground)] text-sm px-3 py-2 bg-gray-50 dark:bg-muted/40 rounded-lg border border-transparent">
+            {form.globalAttributes?.adjusted_by ||
+              form.globalAttributes?.auditor ||
+              "—"}
+          </div>
+        ) : (
+          <input
+            className={inputCls}
+            placeholder={t("Họ tên người kiểm kê hoặc phụ trách...")}
+            value={
+              form.globalAttributes?.adjusted_by ||
+              form.globalAttributes?.auditor ||
+              ""
+            }
+            disabled={editing?.status === "POSTED"}
+            onChange={(e) =>
+              setForm((f) => ({
+                ...f,
+                globalAttributes: {
+                  ...f.globalAttributes,
+                  adjusted_by: e.target.value,
+                  auditor: e.target.value,
+                },
+              }))
+            }
+          />
+        )}
+      </DrawerField>
+
+      {/* Thẻ nhãn (Tags) */}
+      <div className="pt-1">
+        <div className="text-sm font-medium mb-1.5 text-gray-700 dark:text-gray-300">
+          {t("tags", "Thẻ nhãn")}
+        </div>
+        {editing?.id ? (
+          <EntityTagSelector
+            entityType="erp_inventory_adjustment"
+            entityId={editing.id}
+            readOnly={viewOnly}
+          />
+        ) : !viewOnly ? (
+          <EntityTagSelector
+            entityType="erp_inventory_adjustment"
+            entityId="__pending__"
+            readOnly={false}
+            pendingMode
+          />
+        ) : null}
+      </div>
+
+      {/* Summary Cards khi ở chế độ View hoặc khi có dòng */}
+      {viewOnly && form.lines.length > 0 && (
+        <div className="mt-3 grid grid-cols-2 gap-2 text-center">
+          <div className="flex flex-col items-center justify-center p-2.5 bg-emerald-500/10 rounded-lg border border-emerald-500/20">
+            <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mb-1">
+              {t("Tổng tăng (+)")}
+            </span>
+            <span className="font-bold text-emerald-700 dark:text-emerald-300 text-base tabular-nums">
+              +{fmtQty(totalPositiveQty)}
+            </span>
+          </div>
+          <div className="flex flex-col items-center justify-center p-2.5 bg-rose-500/10 rounded-lg border border-rose-500/20">
+            <span className="text-[11px] font-semibold text-rose-600 dark:text-rose-400 uppercase tracking-wider mb-1">
+              {t("Tổng giảm (-)")}
+            </span>
+            <span className="font-bold text-rose-700 dark:text-rose-300 text-base tabular-nums">
+              -{fmtQty(totalNegativeQty)}
+            </span>
+          </div>
+        </div>
+      )}
     </>
+  );
+
+  // ── Default attributes slot (2. THUỘC TÍNH MẶC ĐỊNH) ───────────────────────
+
+  const defaultAttributesSlot = (
+    <div className="space-y-4">
+      <DrawerField
+        label={
+          <span className="inline-flex items-center gap-1.5 flex-wrap">
+            <span>{t("inventory.adjustmentReason", "Lý do điều chỉnh")}</span>
+            <AttributeTypeBadge type="system" />
+          </span>
+        }
+      >
+        {viewOnly ? (
+          <div className="font-medium text-[color:var(--foreground)] text-sm px-3 py-2 bg-gray-50 dark:bg-muted/40 rounded-lg border border-transparent">
+            {currentReasonLabel}
+          </div>
+        ) : (
+          <Combobox
+            options={adjustmentReasonOptions}
+            value={currentReasonVal}
+            disabled={editing?.status === "POSTED"}
+            placeholder={t("— Chọn —")}
+            allowClear={true}
+            onChange={(v) =>
+              setForm((f) => ({
+                ...f,
+                globalAttributes: {
+                  ...f.globalAttributes,
+                  type_inventory_adjustment: v || "",
+                  adjustment_reason: v || "",
+                },
+              }))
+            }
+          />
+        )}
+      </DrawerField>
+    </div>
   );
 
   // ── Remarks content (Ghi chú section) ─────────────────────────────────────
@@ -496,7 +699,7 @@ export function IaFormDrawer({ drawer }: IaFormDrawerProps) {
   // ── Section info ───────────────────────────────────────────────────────────
 
   const sectionTitle =
-    t("CHI TIẾT") +
+    t("Chi tiết") +
     " (" +
     (processedLines.length < form.lines.length
       ? `${processedLines.length}/${form.lines.length}`
@@ -566,7 +769,9 @@ export function IaFormDrawer({ drawer }: IaFormDrawerProps) {
             : t("Sửa điều chỉnh")
           : t("Tạo phiếu điều chỉnh")
       }
-      subtitle={editing?.adjustmentNo ?? t("Điều chỉnh kho")}
+      subtitle={
+        editing?.adjustmentNo ?? t("inventory.adjustment", "Điều chỉnh kho")
+      }
       statusBadge={statusBadge}
       onClose={close}
       onToggleEdit={
@@ -593,7 +798,24 @@ export function IaFormDrawer({ drawer }: IaFormDrawerProps) {
       tableFooter={tableFooter}
       // Right panel
       rightPanelContent={rightPanelContent}
+      defaultAttributesSlot={defaultAttributesSlot}
       remarksContent={remarksContent}
+      customFieldsSlot={
+        <ModuleEntityCustomFieldsSection
+          moduleKey="INVENTORY_ADJUSTMENT"
+          entityId={editing?.id}
+          editMode={!viewOnly}
+          globalAttributes={form.globalAttributes}
+          onGlobalAttributesChange={(attrs) =>
+            setForm((f) => ({ ...f, globalAttributes: attrs }))
+          }
+          includeSystemAttributes={false}
+          hideCategorySection={true}
+          globalTitle={t("customAttributes", "THUỘC TÍNH TÙY CHỈNH")}
+          globalCollapsible={true}
+          globalDefaultCollapsed={false}
+        />
+      }
       // No print slot for IA
       importModalSlot={
         <ImportExcelModal

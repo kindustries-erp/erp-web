@@ -34,6 +34,7 @@ import {
   type CashflowVoucherAttachment,
 } from "@/modules/finance/api/financeApi";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
+import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
 import { Forbidden } from "@/pages/Forbidden";
 
 const BUSINESS_TYPE_OPTIONS = [
@@ -79,10 +80,22 @@ const EMPTY_FORM: FormState = {
 export function CashflowVouchersPage() {
   const t = useT();
   const { setCustomBreadcrumbs } = useAppStore();
-  const canRead = useHasPermission("erp_cashflow_vouchers", "read");
-  const canCreate = useHasPermission("erp_cashflow_vouchers", "create");
-  const canUpdate = useHasPermission("erp_cashflow_vouchers", "update");
-  const canDelete = useHasPermission("erp_cashflow_vouchers", "delete");
+  const canRead = useHasPermission(
+    ErpResource.CASHFLOW_VOUCHERS,
+    ErpAction.READ,
+  );
+  const canCreate = useHasPermission(
+    ErpResource.CASHFLOW_VOUCHERS,
+    ErpAction.CREATE,
+  );
+  const canUpdate = useHasPermission(
+    ErpResource.CASHFLOW_VOUCHERS,
+    ErpAction.UPDATE,
+  );
+  const canDelete = useHasPermission(
+    ErpResource.CASHFLOW_VOUCHERS,
+    ErpAction.DELETE,
+  );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<CashflowVoucher | null>(null);

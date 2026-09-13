@@ -16,6 +16,8 @@ export const garageApi = {
     from?: string,
     to?: string,
     filtersStr?: string,
+    includeDeleted?: string,
+    sorts?: string | string[],
   ) => {
     const params = new URLSearchParams({
       page: page.toString(),
@@ -25,6 +27,14 @@ export const garageApi = {
     if (from) params.append("from", from);
     if (to) params.append("to", to);
     if (filtersStr) params.append("filtersStr", filtersStr);
+    if (includeDeleted) params.append("includeDeleted", includeDeleted);
+    if (sorts) {
+      if (Array.isArray(sorts)) {
+        sorts.forEach((s) => params.append("sorts", s));
+      } else {
+        params.append("sorts", sorts);
+      }
+    }
 
     const res = await axiosInstance.get(`${BASE}/cases?${params.toString()}`, {
       headers: {
@@ -81,6 +91,17 @@ export const garageApi = {
     return res.data;
   },
 
+  updateCaseConfig: async (
+    caseId: string,
+    payload: { classification?: string | null; erpNotes?: string | null },
+  ) => {
+    const res = await axiosInstance.patch(
+      `${BASE}/cases/${caseId}/config`,
+      payload,
+    );
+    return res.data;
+  },
+
   syncBranches: async () => {
     const res = await axiosInstance.post(`${BASE}/sync/branches`);
     return res.data;
@@ -133,40 +154,6 @@ export const garageApi = {
     return res.data;
   },
 
-  syncReceivables: async (branchId: string, from?: string, to?: string) => {
-    const params = new URLSearchParams();
-    if (from) params.append("from", from);
-    if (to) params.append("to", to);
-
-    const res = await axiosInstance.post(
-      `${BASE}/sync/receivables?${params.toString()}`,
-      {},
-      {
-        headers: {
-          "x-greenway-branch-id": branchId,
-        },
-      },
-    );
-    return res.data;
-  },
-
-  syncPayables: async (branchId: string, from?: string, to?: string) => {
-    const params = new URLSearchParams();
-    if (from) params.append("from", from);
-    if (to) params.append("to", to);
-
-    const res = await axiosInstance.post(
-      `${BASE}/sync/payables?${params.toString()}`,
-      {},
-      {
-        headers: {
-          "x-greenway-branch-id": branchId,
-        },
-      },
-    );
-    return res.data;
-  },
-
   getDashboard: async (branchId: string, from?: string, to?: string) => {
     const params = new URLSearchParams();
     if (from) params.append("from", from);
@@ -180,24 +167,6 @@ export const garageApi = {
         },
       },
     );
-    return res.data;
-  },
-
-  getReceivables: async (branchId: string) => {
-    const res = await axiosInstance.get(`${BASE}/receivables`, {
-      headers: {
-        "x-greenway-branch-id": branchId,
-      },
-    });
-    return res.data;
-  },
-
-  getPayables: async (branchId: string) => {
-    const res = await axiosInstance.get(`${BASE}/payables`, {
-      headers: {
-        "x-greenway-branch-id": branchId,
-      },
-    });
     return res.data;
   },
 
@@ -227,6 +196,21 @@ export const garageApi = {
     const res = await axiosInstance.post(
       `${BASE}/cases/${caseId}/linked-invoices`,
       { invoiceId, linkType, note },
+    );
+    return res.data;
+  },
+
+  addCaseLinkedInvoices: async (
+    caseId: string,
+    items: Array<{
+      invoiceId: string;
+      linkType: "IN" | "OUT";
+      note?: string;
+    }>,
+  ) => {
+    const res = await axiosInstance.post(
+      `${BASE}/cases/${caseId}/linked-invoices`,
+      { items },
     );
     return res.data;
   },
@@ -355,6 +339,19 @@ export const garageApi = {
     return res.data;
   },
 
+  getSmartInvoiceSuggestions: async (
+    caseId: string,
+    direction: "IN" | "OUT" = "OUT",
+  ): Promise<GarageSmartInvoiceSuggestionItem[]> => {
+    const res = await axiosInstance.get(
+      `${BASE}/cases/${caseId}/smart-invoice-suggestions`,
+      {
+        params: { direction },
+      },
+    );
+    return res.data;
+  },
+
   addCaseSettlement: async (
     caseId: string,
     payload: {
@@ -378,6 +375,24 @@ export const garageApi = {
   removeCaseSettlement: async (caseId: string, settlementId: string) => {
     const res = await axiosInstance.delete(
       `${BASE}/cases/${caseId}/settlements/${settlementId}`,
+    );
+    return res.data;
+  },
+
+  updateCaseSettlement: async (
+    caseId: string,
+    settlementId: string,
+    payload: {
+      amount?: number;
+      category?: string;
+      note?: string;
+      transDate?: string;
+      partnerName?: string;
+    },
+  ) => {
+    const res = await axiosInstance.patch(
+      `${BASE}/cases/${caseId}/settlements/${settlementId}`,
+      payload,
     );
     return res.data;
   },
@@ -548,12 +563,52 @@ export interface GarageSmartSettlementSuggestionItem {
       name?: string;
     };
     remainingAmount: number;
+    alreadySettledForThisCase?: boolean;
   };
   score: {
     score: number;
     amountMatch: boolean;
     codeMatch: boolean;
     plateMatch: boolean;
+    customerMatch: boolean;
+    badge:
+      | "PERFECT"
+      | "HIGH"
+      | "LIKELY"
+      | "POSSIBLE"
+      | "NOTICE_STRONG"
+      | "NOTICE";
+  };
+  matchedKeywords: string[];
+}
+
+export interface GarageSmartInvoiceSuggestionItem {
+  invoice: {
+    id: string;
+    invoiceNo: string;
+    serialNo?: string;
+    invoiceDate: string;
+    direction: "IN" | "OUT";
+    sellerName?: string;
+    buyerName?: string;
+    sellerTaxCode?: string;
+    buyerTaxCode?: string;
+    totalAmount: number;
+    preVatAmount: number;
+    vatAmount: number;
+    vatRate?: number;
+    licensePlate?: string;
+    settlementOrder?: string;
+    description?: string;
+    status?: string;
+    xmlFileKey?: string;
+    pdfFileKey?: string;
+  };
+  score: {
+    score: number;
+    amountMatch: boolean;
+    plateMatch: boolean;
+    orderMatch: boolean;
     customerMatch: boolean;
     badge:
       | "PERFECT"

@@ -12,6 +12,7 @@ import { Button } from "@/shared/components/ui/Button";
 
 import { useT } from "@/core/i18n";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
+import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
 import type { BusinessPartner } from "@/modules/partners/api/partnerApi";
 import type { Employee } from "@/modules/auth/api/auth";
 import { TODAY } from "@/modules/finance/utils/financeHelpers";
@@ -70,8 +71,14 @@ import {
 export const TienGui = forwardRef(
   (props: { hideHeader?: boolean } = {}, ref) => {
     const t = useT();
-    const canCreateVoucher = useHasPermission("payment_vouchers", "create");
-    const canUpdateVoucher = useHasPermission("payment_vouchers", "update");
+    const canCreateVoucher = useHasPermission(
+      ErpResource.PAYMENT_VOUCHERS,
+      ErpAction.CREATE,
+    );
+    const canUpdateVoucher = useHasPermission(
+      ErpResource.PAYMENT_VOUCHERS,
+      ErpAction.UPDATE,
+    );
     const [companyBankAccounts, setCompanyBankAccounts] = useState<
       CompanyBankAccount[]
     >([]);

@@ -1,17 +1,34 @@
+import React from "react";
 import { cn } from "@/shared/utils";
 import { useT } from "@/core/i18n";
 import type { ActiveTab } from "@/modules/partners/types";
 
-export function StatusBadge({ active }: { active: boolean }) {
-  const t = useT();
-  return (
-    <span
-      className={`text-[10px] px-[7px] py-[2px] rounded-[20px] font-medium ${active ? "bg-approve-bg text-approve-fg" : "bg-[color:var(--muted)] text-[color:var(--muted-fg)]"}`}
-    >
-      {active ? t("status.active") : t("status.inactive")}
-    </span>
-  );
+export interface StatusBadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
+  active: boolean;
+  className?: string;
 }
+
+export const StatusBadge = React.forwardRef<HTMLSpanElement, StatusBadgeProps>(
+  ({ active, className, ...props }, ref) => {
+    const t = useT();
+    return (
+      <span
+        ref={ref}
+        className={cn(
+          "text-[10px] px-[7px] py-[2px] rounded-[20px] font-medium",
+          active
+            ? "bg-approve-bg text-approve-fg"
+            : "bg-[color:var(--muted)] text-[color:var(--muted-fg)]",
+          className,
+        )}
+        {...props}
+      >
+        {active ? t("status.active") : t("status.inactive")}
+      </span>
+    );
+  },
+);
+StatusBadge.displayName = "StatusBadge";
 
 export function PageHeader({
   onAdd,

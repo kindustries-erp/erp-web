@@ -235,6 +235,8 @@ export interface LineDraft {
   unit_price: string;
   amount: string;
   notes: string;
+  uom?: string;
+  unit?: string;
 }
 
 export type FormVariant = Extract<
@@ -254,6 +256,8 @@ export function emptyLine(variant: FormVariant): LineDraft {
     unit_price: "0",
     amount: "0",
     notes: "",
+    uom: "",
+    unit: "",
   };
 }
 
@@ -272,5 +276,7 @@ export function toLineDraft(
     unit_price: String(line.unit_price ?? 0),
     amount: String(line.amount ?? 0),
     notes: line.notes || "",
+    uom: (line as any).uom || (line as any).unit || "",
+    unit: (line as any).unit || (line as any).uom || "",
   };
 }

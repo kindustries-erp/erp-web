@@ -17,6 +17,7 @@ import type {
 } from "@/modules/dashboard-core/types";
 import { DEFAULT_COLORS } from "@/modules/dashboard-core/components/DashboardTabsContent";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
+import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
 import { ComingSoon } from "@/pages/ComingSoon";
 
 function DashboardContent() {
@@ -172,7 +173,10 @@ function DashboardContent() {
 }
 
 export function Dashboard() {
-  const hasAdminPerm = useHasPermission("admin_users", "read");
+  const hasAdminPerm = useHasPermission(
+    ErpResource.ADMIN_USERS,
+    ErpAction.READ,
+  );
 
   if (!hasAdminPerm) {
     return <ComingSoon />;

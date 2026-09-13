@@ -12,6 +12,9 @@ export interface WarehouseRow {
   poNo?: string | null;
   purchaseOrderId?: string | null;
   salesOrderId?: string | null;
+  categoryId?: string | null;
+  categoryName?: string | null;
+  categoryCode?: string | null;
   remarks: string | null;
   createdAt: string;
   totalQty?: number | string;

@@ -13,9 +13,11 @@ import {
   selfUpdateProfileApi,
   type CoreLoginResponse,
   type CoreProfileResponse,
+  type UserPreferencesPayload,
 } from "@/modules/auth/api/auth.core";
-import { useAppStore } from "@/core/config/appStore";
+import { type AppTheme, useAppStore } from "@/core/config/appStore";
 import { useUIStore } from "@/core/config/uiStore";
+import { useUserPreferencesStore } from "@/shared/hooks/useUserPreferences";
 
 // ── Compat types — giữ đủ shape để component cũ không TS-error ───────────────
 
@@ -101,6 +103,19 @@ function mapCorePermissionsToEffective(
   return result;
 }
 
+function applyUserPreferences(prefs?: UserPreferencesPayload) {
+  if (!prefs) return;
+  if (prefs.theme) {
+    useAppStore.getState().setAppTheme(prefs.theme as AppTheme);
+  }
+  if (prefs.language && (prefs.language === "vi" || prefs.language === "en")) {
+    useAppStore.getState().setLocale(prefs.language);
+  }
+  if (prefs.tableConfigs) {
+    useUserPreferencesStore.getState().hydrateFromServer(prefs.tableConfigs);
+  }
+}
+
 // ── State interface — compat với consumers cũ ─────────────────────────────────
 
 interface AuthState {
@@ -176,6 +191,9 @@ export const useAuthStore = create<AuthState>()(
           });
           useUIStore.getState().resetShellState();
           useAppStore.getState().login();
+          if (data.preferences) {
+            applyUserPreferences(data.preferences);
+          }
           // Best-effort: load full profile
           try {
             const raw = await getProfileApi();
@@ -186,6 +204,9 @@ export const useAuthStore = create<AuthState>()(
               ),
               canImpersonate: raw.email === "admin@liouni.com",
             });
+            if (raw.preferences) {
+              applyUserPreferences(raw.preferences);
+            }
           } catch {
             // non-blocking
           }
@@ -302,6 +323,9 @@ export const useAuthStore = create<AuthState>()(
             canImpersonate: raw.email === "admin@liouni.com",
           });
           useAppStore.getState().login();
+          if (raw.preferences) {
+            applyUserPreferences(raw.preferences);
+          }
         } catch {
           useAuthStore.getState().clearAuth();
         }

@@ -3,6 +3,7 @@ import { Plus, Trash2, Barcode } from "lucide-react";
 import { useT } from "@/core/i18n";
 import { useUIStore } from "@/core/config/uiStore";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
+import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
 import {
   DrawerSection,
   DrawerRow,
@@ -55,6 +56,7 @@ function entriesToAttributes(
 export interface TrackedGoodsDrawerProps {
   open: boolean;
   item: InventorySerialRow | null;
+  initialMode?: DrawerMode;
   onClose: () => void;
   onSaved: () => void;
 }
@@ -64,14 +66,18 @@ export interface TrackedGoodsDrawerProps {
 export function TrackedGoodsDrawer({
   open,
   item,
+  initialMode = "view",
   onClose,
   onSaved,
 }: TrackedGoodsDrawerProps) {
   const t = useT();
   const showToast = useUIStore((s) => s.showToast);
-  const canUpdate = useHasPermission("inventory_items", "update");
+  const canUpdate = useHasPermission(
+    ErpResource.INVENTORY_ITEMS,
+    ErpAction.UPDATE,
+  );
 
-  const [mode, setMode] = useState<DrawerMode>("view");
+  const [mode, setMode] = useState<DrawerMode>(initialMode);
   const [saving, setSaving] = useState(false);
   const [previewSoNo, setPreviewSoNo] = useState<string | null>(null);
 
@@ -93,10 +99,11 @@ export function TrackedGoodsDrawer({
   // Fetch detail when open
   useEffect(() => {
     let active = true;
-    if (open && item?.id) {
+    const targetId = item?.id || item?.serialNo;
+    if (open && targetId) {
       setLoading(true);
       inventoryCoreApi
-        .getSerial(item.id)
+        .getSerial(targetId)
         .then((data) => {
           if (active) {
             setDetailItem(data);
@@ -116,7 +123,7 @@ export function TrackedGoodsDrawer({
     return () => {
       active = false;
     };
-  }, [item?.id, open]);
+  }, [item?.id, item?.serialNo, open]);
 
   // Fetch assigned vehicle if ASSEMBLED
   useEffect(() => {
@@ -162,10 +169,14 @@ export function TrackedGoodsDrawer({
     };
   }, [open, detailItem?.vinId]);
 
-  // Reset mode when drawer closes
+  // Reset or set initial mode when drawer opens/closes
   useEffect(() => {
-    if (!open) setMode("view");
-  }, [open]);
+    if (open) {
+      setMode(initialMode || "view");
+    } else {
+      setMode("view");
+    }
+  }, [open, initialMode]);
 
   const handleToggleEdit = useCallback(() => {
     if (mode === "view") {

@@ -101,4 +101,58 @@ describe("applyGarageCasesTableState", () => {
     expect(result).toHaveLength(1);
     expect(result[0].id).toBe("1");
   });
+
+  it("filters correctly by statusTab (quotation, in_progress, completed)", () => {
+    const quotationItem = {
+      id: "3",
+      soChungTu: "C003",
+      tenTinhTrangDichVu: "Báo giá KH",
+      tinhTrangDichVu: 1,
+      ngayPhatSinh: "2024-01-04T00:00:00.000Z",
+    };
+    const allItems = [...items, quotationItem];
+
+    // Quotation
+    const quotationResult = applyGarageCasesTableState(
+      allItems,
+      { sorts: [], columnSearch: {}, columnFilters: {} },
+      "",
+      {},
+      "quotation",
+    );
+    expect(quotationResult).toHaveLength(1);
+    expect(quotationResult[0].id).toBe("3");
+
+    // In Progress
+    const inProgressResult = applyGarageCasesTableState(
+      allItems,
+      { sorts: [], columnSearch: {}, columnFilters: {} },
+      "",
+      {},
+      "in_progress",
+    );
+    expect(inProgressResult).toHaveLength(1);
+    expect(inProgressResult[0].id).toBe("2");
+
+    // Completed
+    const completedResult = applyGarageCasesTableState(
+      allItems,
+      { sorts: [], columnSearch: {}, columnFilters: {} },
+      "",
+      {},
+      "completed",
+    );
+    expect(completedResult).toHaveLength(1);
+    expect(completedResult[0].id).toBe("1");
+
+    // All
+    const allResult = applyGarageCasesTableState(
+      allItems,
+      { sorts: [], columnSearch: {}, columnFilters: {} },
+      "",
+      {},
+      "all",
+    );
+    expect(allResult).toHaveLength(3);
+  });
 });

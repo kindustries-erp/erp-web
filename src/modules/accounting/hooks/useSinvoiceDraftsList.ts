@@ -6,13 +6,33 @@ import {
   type SinvoiceDraft,
 } from "../api/sinvoiceDraftApi";
 
+import { ErpUrlQueryParam } from "@/shared/constants/urlParams";
+
 export function useSinvoiceDraftsList() {
   const [drafts, setDrafts] = useState<SinvoiceDraft[]>([]);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(50);
+  const [page, setPage] = useState(() => {
+    if (typeof window !== "undefined") {
+      const p = new URLSearchParams(window.location.search).get(
+        ErpUrlQueryParam.PAGE,
+      );
+      const parsed = p ? parseInt(p, 10) : 1;
+      return !isNaN(parsed) && parsed > 0 ? parsed : 1;
+    }
+    return 1;
+  });
+  const [pageSize, setPageSize] = useState(() => {
+    if (typeof window !== "undefined") {
+      const s = new URLSearchParams(window.location.search).get(
+        ErpUrlQueryParam.PAGE_SIZE,
+      );
+      const parsed = s ? parseInt(s, 10) : 50;
+      return !isNaN(parsed) && parsed > 0 ? parsed : 50;
+    }
+    return 50;
+  });
 
   const [search, setSearch] = useState("");
 
@@ -88,6 +108,26 @@ export function useSinvoiceDraftsList() {
     sortBy,
     sortOrder,
   ]);
+
+  useEffect(() => {
+    const handlePopState = () => {
+      const params = new URLSearchParams(window.location.search);
+      const p = params.get(ErpUrlQueryParam.PAGE);
+      const parsedPage = p ? parseInt(p, 10) : 1;
+      setPage(!isNaN(parsedPage) && parsedPage > 0 ? parsedPage : 1);
+
+      const s = params.get(ErpUrlQueryParam.PAGE_SIZE);
+      if (s) {
+        const parsedSize = parseInt(s, 10);
+        if (!isNaN(parsedSize) && parsedSize > 0) {
+          setPageSize(parsedSize);
+        }
+      }
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
 
   return {
     drafts,

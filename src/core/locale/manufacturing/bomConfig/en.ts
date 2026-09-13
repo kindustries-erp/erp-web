@@ -56,6 +56,7 @@ export const bomConfigEn = {
   inUseTooltip:
     "Attribute is currently used in {{count}} BOMs and cannot be deleted. You may deactivate it instead.",
   noAttrsInCategory: "No attributes in this category yet.",
+  attributes: "Attributes",
   categoryAndAttributes: "Category & Dynamic Attributes",
   category: "BOM Category",
   selectCategory: "— Select BOM Category —",

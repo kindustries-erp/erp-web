@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import {
   erpInvoicesCoreApi,
   type ErpInvoice,
@@ -10,6 +10,9 @@ import { useTranslation } from "react-i18next";
 import { updateEntityTags } from "@/modules/tags/api/tagsApi";
 import { purchaseOrdersCoreApi } from "@/modules/purchase-orders-core/api/purchaseOrdersCoreApi";
 import { usePosting } from "@/shared/components/accounting/usePosting";
+import { moduleConfigApi } from "@/core/api/moduleConfigApi";
+import { validateModuleRequiredFields } from "@/shared/components/ModuleEntityCustomFieldsSection";
+import { toast } from "react-hot-toast";
 
 type Direction = "IN" | "OUT";
 
@@ -78,6 +81,7 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
   const [loadingDetail, setLoadingDetail] = useState(false);
   const [pendingTagIds, setPendingTagIds] = useState<string[]>([]);
   const [pendingUnpost, setPendingUnpost] = useState(false);
+  const [activeTabKey, setActiveTabKey] = useState<string>("invoice_details");
 
   const postingState = usePosting();
 
@@ -89,6 +93,7 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
     setDeleteConfirm(false);
     setCancelConfirm(false);
     setPendingTagIds([]);
+    setActiveTabKey("invoice_details");
     setInfoDrawerOpen(true);
   }
 
@@ -116,7 +121,9 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
       purchaseOrderId: inv.purchaseOrderId ?? undefined,
       salesOrderId: inv.salesOrderId ?? undefined,
       paymentDocumentNos: inv.paymentDocumentNos ?? "",
-      notes: inv.notes ?? "",
+      categoryId: (inv as any).categoryId ?? null,
+      customAttributes: (inv as any).attributes ?? {},
+      globalAttributes: (inv as any).globalAttributes ?? {},
       isValid: inv.isValid ?? false,
       accountingEnabled: inv.postingStatus === "POSTED",
       items:
@@ -142,6 +149,19 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
       setFormError(null);
       try {
         const fullInv = await erpInvoicesCoreApi.get(inv);
+        try {
+          const targetModuleKey =
+            fullInv.direction === "OUT" ? "INVOICE_OUT" : "INVOICE_IN";
+          const customValues = await moduleConfigApi.getEntityValues(
+            targetModuleKey,
+            fullInv.id,
+          );
+          if (customValues?.globalAttributes) {
+            (fullInv as any).globalAttributes = customValues.globalAttributes;
+          }
+        } catch {
+          // ignore
+        }
         setDetailInvoice(fullInv);
         setForm(mapInvoiceToForm(fullInv));
         setEditMode(false);
@@ -163,15 +183,6 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
     setInfoDrawerOpen(true);
     setFormError(null);
 
-    if (
-      detailInvoice?.id === inv.id &&
-      detailInvoice?.items &&
-      detailInvoice.items.length > 0
-    ) {
-      setForm(mapInvoiceToForm(detailInvoice));
-      return;
-    }
-
     setLoadingDetail(true);
 
     try {
@@ -187,6 +198,19 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
           }
         }
       }
+      try {
+        const targetModuleKey =
+          fullInv.direction === "OUT" ? "INVOICE_OUT" : "INVOICE_IN";
+        const customValues = await moduleConfigApi.getEntityValues(
+          targetModuleKey,
+          fullInv.id,
+        );
+        if (customValues?.globalAttributes) {
+          (fullInv as any).globalAttributes = customValues.globalAttributes;
+        }
+      } catch {
+        // ignore
+      }
       setDetailInvoice(fullInv);
       setForm(mapInvoiceToForm(fullInv));
     } catch (err) {
@@ -196,7 +220,12 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
     }
   }
 
-  async function openInternal(inv: ErpInvoice | string, skipFetch = false) {
+  async function openInternal(
+    inv: ErpInvoice | string,
+    skipFetch = false,
+    initialTab = "invoice_details",
+  ) {
+    setActiveTabKey(initialTab);
     // Handle string ID — open drawer first then fetch
     if (typeof inv === "string") {
       setInternalDrawerOpen(true);
@@ -208,7 +237,31 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
       postingState.reset();
       setLoadingDetail(true);
       try {
-        const fullInv = await erpInvoicesCoreApi.get(inv);
+        let fullInv = await erpInvoicesCoreApi.get(inv);
+        if (!fullInv.items || fullInv.items.length === 0) {
+          const canSync = await isPortalAuthAvailable();
+          if (canSync && fullInv.id) {
+            try {
+              const synced = await erpInvoicesCoreApi.syncDetail(fullInv.id);
+              if (synced) fullInv = synced;
+            } catch (syncErr) {
+              console.warn("Auto sync detail failed", syncErr);
+            }
+          }
+        }
+        try {
+          const targetModuleKey =
+            fullInv.direction === "OUT" ? "INVOICE_OUT" : "INVOICE_IN";
+          const customValues = await moduleConfigApi.getEntityValues(
+            targetModuleKey,
+            fullInv.id,
+          );
+          if (customValues?.globalAttributes) {
+            (fullInv as any).globalAttributes = customValues.globalAttributes;
+          }
+        } catch {
+          // ignore
+        }
         setDetailInvoice(fullInv);
         setForm(mapInvoiceToForm(fullInv));
       } catch (err) {
@@ -233,7 +286,8 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
       skipFetch ||
       (detailInvoice?.id === inv.id &&
         detailInvoice?.items &&
-        detailInvoice.items.length > 0)
+        detailInvoice.items.length > 0 &&
+        (detailInvoice as any).globalAttributes !== undefined)
     ) {
       setForm(mapInvoiceToForm(inv));
       return;
@@ -242,16 +296,34 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
     setLoadingDetail(true);
 
     try {
-      let fullInv = await erpInvoicesCoreApi.get(inv.id);
+      const invoiceIdentifier =
+        inv.id ||
+        (inv.serialNo && inv.invoiceNo
+          ? `${inv.serialNo}_${inv.invoiceNo}`
+          : inv.invoiceNo || "");
+      let fullInv = await erpInvoicesCoreApi.get(invoiceIdentifier);
       if (!fullInv.items || fullInv.items.length === 0) {
         const canSync = await isPortalAuthAvailable();
-        if (canSync) {
+        if (canSync && fullInv.id) {
           try {
-            fullInv = await erpInvoicesCoreApi.syncDetail(inv.id);
+            fullInv = await erpInvoicesCoreApi.syncDetail(fullInv.id);
           } catch (syncErr) {
             console.warn("Auto sync detail failed", syncErr);
           }
         }
+      }
+      try {
+        const targetModuleKey =
+          fullInv.direction === "OUT" ? "INVOICE_OUT" : "INVOICE_IN";
+        const customValues = await moduleConfigApi.getEntityValues(
+          targetModuleKey,
+          fullInv.id,
+        );
+        if (customValues?.globalAttributes) {
+          (fullInv as any).globalAttributes = customValues.globalAttributes;
+        }
+      } catch {
+        // ignore custom values error
       }
       setDetailInvoice(fullInv);
       setForm(mapInvoiceToForm(fullInv));
@@ -268,6 +340,19 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
     setLoadingDetail(true);
     try {
       const fullInv = await erpInvoicesCoreApi.syncDetail(detailInvoice.id);
+      try {
+        const targetModuleKey =
+          fullInv.direction === "OUT" ? "INVOICE_OUT" : "INVOICE_IN";
+        const customValues = await moduleConfigApi.getEntityValues(
+          targetModuleKey,
+          fullInv.id,
+        );
+        if (customValues?.globalAttributes) {
+          (fullInv as any).globalAttributes = customValues.globalAttributes;
+        }
+      } catch {
+        // ignore
+      }
       setDetailInvoice(fullInv);
       setForm(mapInvoiceToForm(fullInv));
       await onReload();
@@ -280,12 +365,16 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
 
   function startEdit() {
     if (!detailInvoice) return;
-    setForm({
+    setForm((prev) => ({
       ...mapInvoiceToForm(detailInvoice),
+      globalAttributes: {
+        ...((detailInvoice as any).globalAttributes || {}),
+        ...((prev as any).globalAttributes || {}),
+      },
       pendingDocumentChanges: [],
       pendingDeletedPdfs: [],
       pendingAddedAttachments: [],
-    });
+    }));
     setFormError(null);
     setPendingUnpost(false);
     postingState.reset();
@@ -315,23 +404,29 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
     setDeleteConfirm(false);
     setCancelConfirm(false);
     setFormError(null);
+    setActiveTabKey("invoice_details");
   }
 
   async function handleSave(statusOverride?: string) {
     if (!form.invoiceNo.trim()) {
-      setFormError(t("errorInvoiceNoRequired", "Số hóa đơn là bắt buộc."));
+      const errMsg = t("errorInvoiceNoRequired", "Số hóa đơn là bắt buộc.");
+      setFormError(errMsg);
+      toast.error(errMsg);
       return;
     }
     if (!form.invoiceDate) {
-      setFormError(t("errorInvoiceDateRequired", "Ngày hóa đơn là bắt buộc."));
+      const errMsg = t("errorInvoiceDateRequired", "Ngày hóa đơn là bắt buộc.");
+      setFormError(errMsg);
+      toast.error(errMsg);
       return;
     }
 
     // Validate branch if internal drawer is open and there are accounting amounts
     if (internalDrawerOpen && !form.branchId && (form.totalAmount || 0) > 0) {
-      setFormError(
-        "Vui lòng chọn chi nhánh trước khi lưu thông tin nội bộ và hạch toán.",
-      );
+      const errMsg =
+        "Vui lòng chọn chi nhánh trước khi lưu thông tin nội bộ và hạch toán.";
+      setFormError(errMsg);
+      toast.error(errMsg);
       return;
     }
 
@@ -340,9 +435,10 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
       postingState.lines.length > 0 &&
       !postingState.isBalanced
     ) {
-      setFormError(
-        "Hạch toán kế toán không cân bằng. Vui lòng kiểm tra lại tổng Nợ và Có.",
-      );
+      const errMsg =
+        "Hạch toán kế toán không cân bằng. Vui lòng kiểm tra lại tổng Nợ và Có.";
+      setFormError(errMsg);
+      toast.error(errMsg);
       return;
     }
 
@@ -362,11 +458,43 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
       const payload = { ...form };
       if (statusOverride) payload.status = statusOverride;
 
-      // Remove frontend-only field before sending to API
+      const customAttrsToSave = (form as any).customAttributes;
+      const globalAttrsToSave = (form as any).globalAttributes;
+
+      // Validate required custom fields (global & system attributes)
+      try {
+        const targetModuleKey =
+          form.direction === "OUT" ? "INVOICE_OUT" : "INVOICE_IN";
+        const globalDefs =
+          await moduleConfigApi.getGlobalAttributeDefs(targetModuleKey);
+
+        const missingRequired = validateModuleRequiredFields({
+          globalDefs,
+          globalAttributes: globalAttrsToSave,
+          includeSystemAttributes: true,
+          hasCategory: false,
+          moduleKey: targetModuleKey,
+          t,
+        });
+
+        if (missingRequired.length > 0) {
+          const errMsg = `Vui lòng nhập các trường bắt buộc: ${missingRequired.join(", ")}`;
+          setFormError(errMsg);
+          toast.error(errMsg, { duration: 5000 });
+          setSaving(false);
+          return;
+        }
+      } catch {
+        // Non-blocking if offline or fetch fails
+      }
+
+      // Remove frontend-only fields before sending to API
       delete payload.pendingDocumentChanges;
       delete (payload as any).accountingEnabled;
       delete payload.pendingDeletedPdfs;
       delete payload.pendingAddedAttachments;
+      delete (payload as any).customAttributes;
+      delete (payload as any).globalAttributes;
 
       let invoiceIdToProcess = "";
       let invoiceNoToProcess = form.invoiceNo;
@@ -403,6 +531,28 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
           } catch {
             // tags are non-critical, don't block UX
           }
+        }
+      }
+
+      // Save custom fields if present
+      if (
+        invoiceIdToProcess &&
+        (globalAttrsToSave !== undefined || customAttrsToSave !== undefined)
+      ) {
+        try {
+          const targetModuleKey =
+            form.direction === "OUT" ? "INVOICE_OUT" : "INVOICE_IN";
+          await moduleConfigApi.saveEntityValues(
+            targetModuleKey,
+            invoiceIdToProcess,
+            {
+              categoryId: null,
+              attributes: {},
+              globalAttributes: globalAttrsToSave,
+            },
+          );
+        } catch (cfErr: any) {
+          console.warn("Failed to save invoice custom fields", cfErr);
         }
       }
 
@@ -586,6 +736,19 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
         // Reload details for current invoice if editing without forcing drawer open
         try {
           const fullInv = await erpInvoicesCoreApi.get(detailInvoice.id);
+          try {
+            const targetModuleKey =
+              fullInv.direction === "OUT" ? "INVOICE_OUT" : "INVOICE_IN";
+            const customValues = await moduleConfigApi.getEntityValues(
+              targetModuleKey,
+              fullInv.id,
+            );
+            if (customValues?.globalAttributes) {
+              (fullInv as any).globalAttributes = customValues.globalAttributes;
+            }
+          } catch {
+            // ignore
+          }
           setDetailInvoice(fullInv);
           setForm(mapInvoiceToForm(fullInv));
         } catch (e) {
@@ -640,12 +803,17 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
     }
   }
 
+  const fieldSet = useCallback((key: string, value: unknown) => {
+    setForm((prev) => ({ ...prev, [key]: value }));
+  }, []);
+
   return {
     infoDrawerOpen,
     internalDrawerOpen,
     detailInvoice,
     editMode,
     form,
+    fieldSet,
     saving,
     formError,
     deleteConfirm,
@@ -672,5 +840,7 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
     loadingDetail,
     handleSyncDetail,
     postingState,
+    activeTabKey,
+    setActiveTabKey,
   };
 }

@@ -16,6 +16,8 @@ import { useOperationalFormStore } from "@/modules/operational/hooks/useOperatio
 import { SalesFields } from "@/modules/operational/components/form/SalesFields";
 import { ExpenseFields } from "@/modules/operational/components/form/ExpenseFields";
 import { EntityTagSelector } from "@/modules/tags/components/EntityTagSelector";
+import { Button } from "@/shared/components/ui/Button";
+import { Plus } from "lucide-react";
 import type { FormVariant } from "@/modules/operational/utils/operationalHelpers";
 
 interface FormGeneralInfoPanelProps {
@@ -27,6 +29,8 @@ interface FormGeneralInfoPanelProps {
   viewOnly?: boolean;
   branchOptions: Array<{ value: string; label: string }>;
   partnerOptions: Array<{ value: string; label: string; searchText?: string }>;
+  /** Callback to trigger create partner drawer */
+  onCreatePartner?: () => void;
   /** ID of the existing document (null when creating) */
   entityId?: string | null;
   /** Entity type string for tags: 'erp_purchase_order' | 'erp_sales_order' | 'erp_expense' */
@@ -47,6 +51,7 @@ export function FormGeneralInfoPanel({
   viewOnly,
   branchOptions,
   partnerOptions,
+  onCreatePartner,
   entityId,
   entityType,
   pendingTagIds = [],
@@ -142,12 +147,32 @@ export function FormGeneralInfoPanel({
             label={variant === "sales" ? t("Khách hàng") : t("Nhà cung cấp")}
             required={variant === "purchase" || variant === "expenses"}
           >
-            <Combobox
-              options={partnerOptions}
-              value={partnerId}
-              disabled={isPurchaseLocked}
-              onChange={(v) => setPartnerId(v || "")}
-            />
+            <div className="flex items-center gap-1.5 w-full">
+              <div className="flex-1 min-w-0">
+                <Combobox
+                  options={partnerOptions}
+                  value={partnerId}
+                  disabled={isPurchaseLocked}
+                  onChange={(v) => setPartnerId(v || "")}
+                />
+              </div>
+              {onCreatePartner && !isPurchaseLocked && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="h-8 w-8 shrink-0 text-primary border-primary/40 hover:bg-primary/5 hover:border-primary transition-all"
+                  onClick={onCreatePartner}
+                  title={
+                    variant === "purchase"
+                      ? t("Tạo mới nhà cung cấp")
+                      : t("Tạo mới đối tác")
+                  }
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
           </DrawerField>
 
           {/* Tên snapshot — chỉ sales & expenses */}

@@ -387,4 +387,75 @@ export const bankStatementApi = {
     );
     return res.data;
   },
+
+  // --- Background Excel Export ---
+  startExportExcelBackground: async (
+    params: any,
+  ): Promise<{ jobId: string; message: string; reused?: boolean }> => {
+    const res = await axiosInstance.post(
+      "/api/v1/bank-transactions-core/export/excel/background",
+      params,
+    );
+    return res.data;
+  },
+
+  listExportExcelHistory: async (
+    page = 1,
+    pageSize = 10,
+  ): Promise<BankStatementExportHistoryResult> => {
+    const res = await axiosInstance.get(
+      "/api/v1/bank-transactions-core/export/excel/background/history",
+      {
+        params: { page, pageSize },
+      },
+    );
+    return res.data;
+  },
+
+  downloadExportExcelFile: async (jobId: string) => {
+    const res = await axiosInstance.get(
+      `/api/v1/bank-transactions-core/export/excel/background/${jobId}/download`,
+      {
+        responseType: "blob",
+      },
+    );
+    return res.data;
+  },
+};
+
+export type BankStatementExportProgressEvent = {
+  processId: "bank-statement-xlsx-export" | "ping";
+  userId?: string;
+  jobId?: string;
+  current: number;
+  total: number;
+  isRunning: boolean;
+  completed: boolean;
+  ready: boolean;
+  failed: boolean;
+  message?: string;
+  fileName?: string;
+};
+
+export type BankStatementExportHistoryItem = {
+  jobId: string;
+  fileName: string;
+  status: "RUNNING" | "COMPLETED" | "FAILED";
+  current: number;
+  total: number;
+  message: string;
+  createdAt: string;
+  finishedAt?: string;
+  expiresAt?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  canDownload: boolean;
+};
+
+export type BankStatementExportHistoryResult = {
+  items: BankStatementExportHistoryItem[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
 };

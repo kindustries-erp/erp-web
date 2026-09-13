@@ -1,22 +1,24 @@
-import React, { useState, useEffect, useMemo } from "react";
-import { Shield, PlusCircle, Settings, Trash } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
+import { Shield, PlusCircle, Trash, Eye, Pencil } from "lucide-react";
 import { useUIStore } from "@/core/config/uiStore";
 import { useT } from "@/core/i18n";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate/SpreadsheetPageTemplate";
-import { type DataTableColumn } from "@/shared/components/DataTable";
-import { TableText } from "@/shared/components/DataTable/TableText";
+import {
+  type DataTableColumn,
+  TableText,
+  TableDateCell,
+  createColumnHeaderFilter,
+} from "@/shared/components/DataTable";
 import { Badge } from "@/shared/components/ui/badge";
 import { useCoreRoles } from "@/modules/system/hooks/useCoreRoles";
 import { useCorePermissionsEditor } from "@/modules/system/hooks/useCorePermissionsEditor";
 import { useCoreRoleUsers } from "@/modules/system/hooks/useCoreRoleUsers";
 import { CoreRoleDrawer } from "@/modules/system/components/CoreRoleDrawer";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
+import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
 import { Forbidden } from "@/pages/Forbidden";
-import {
-  useFilterPanel,
-  type FilterPanelConfig,
-} from "@/shared/hooks/useFilterPanel";
+import { getCoreRolesColumnOptionsApi } from "@/modules/system/api/rbacCoreApi";
 import type {
   Role,
   CreateRoleDto,
@@ -24,10 +26,11 @@ import type {
 } from "@/modules/system/types/rbac";
 
 export function ErpPermissionsCorePage() {
-  const canRead = useHasPermission("admin_users", "read");
+  const canRead = useHasPermission(ErpResource.ADMIN_USERS, ErpAction.READ);
   const showToast = useUIStore((s) => s.showToast);
   const t = useT();
 
+  const listHook = useCoreRoles();
   const {
     roles,
     loading,
@@ -35,15 +38,14 @@ export function ErpPermissionsCorePage() {
     total,
     totalPages,
     page,
+    setPage,
     pageSize,
+    setPageSize,
     load,
-    handleSearch,
-    handlePage,
-    handlePageSize,
     createRole,
     updateRole,
     deleteRole,
-  } = useCoreRoles();
+  } = listHook;
 
   const {
     initialPermMap,
@@ -78,45 +80,41 @@ export function ErpPermissionsCorePage() {
   } = useCoreRoleUsers();
 
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [drawerMode, setDrawerMode] = useState<"view" | "edit" | "create">(
+    "view",
+  );
   const [editingRole, setEditingRole] = useState<Role | null>(null);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Role | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  const filterConfig: FilterPanelConfig = useMemo(
-    () => ({
-      search: true,
-    }),
-    [],
-  );
-
-  const filterPanel = useFilterPanel(filterConfig, () => handlePage(1));
-
-  useEffect(() => {
-    handleSearch(filterPanel.state.search || "");
-  }, [filterPanel.state.search]);
-
   useEffect(() => {
     load();
     loadResources();
-  }, []);
+  }, [load, loadResources]);
 
   function openNew() {
     setEditingRole(null);
+    setDrawerMode("create");
     setSaveError(null);
     resetPermissions();
     setDrawerOpen(true);
     prepareNew();
   }
 
-  function openEdit(role: Role) {
+  function openDetail(role: Role, mode: "view" | "edit" = "view") {
     setEditingRole(role);
+    setDrawerMode(mode);
     setSaveError(null);
     resetPermissions();
     setDrawerOpen(true);
     loadPermissions(role.id);
     loadUsers(role.id);
+  }
+
+  function handleToggleEdit() {
+    setDrawerMode("edit");
   }
 
   function handleClose() {
@@ -137,8 +135,8 @@ export function ErpPermissionsCorePage() {
         ]);
         await load();
         showToast({
-          title: "Thành công",
-          description: "Đã cập nhật vai trò",
+          title: t("rbac.toast.successTitle", "Thành công"),
+          description: t("rbac.toast.updateSuccess", "Đã cập nhật vai trò"),
           variant: "success",
         });
       } else {
@@ -151,14 +149,18 @@ export function ErpPermissionsCorePage() {
         }
         await load();
         showToast({
-          title: "Thành công",
-          description: "Đã tạo vai trò mới",
+          title: t("rbac.toast.successTitle", "Thành công"),
+          description: t("rbac.toast.createSuccess", "Đã tạo vai trò mới"),
           variant: "success",
         });
       }
       setDrawerOpen(false);
     } catch (e) {
-      setSaveError(e instanceof Error ? e.message : "Có lỗi xảy ra");
+      setSaveError(
+        e instanceof Error
+          ? e.message
+          : t("rbac.toast.genericError", "Có lỗi xảy ra"),
+      );
     } finally {
       setSaving(false);
     }
@@ -170,14 +172,14 @@ export function ErpPermissionsCorePage() {
     try {
       await deleteRole(deleteTarget.id);
       showToast({
-        title: "Đã xóa",
+        title: t("rbac.toast.deleteSuccessTitle", "Đã xóa"),
         description: deleteTarget.name,
         variant: "success",
       });
       setDeleteTarget(null);
     } catch (e) {
       showToast({
-        title: "Xóa thất bại",
+        title: t("rbac.toast.deleteFailTitle", "Xóa thất bại"),
         description: e instanceof Error ? e.message : "",
         variant: "destructive",
       });
@@ -187,29 +189,74 @@ export function ErpPermissionsCorePage() {
     }
   }
 
+  const headerFilter = useMemo(
+    () =>
+      createColumnHeaderFilter({
+        listHook,
+        queryKeyPrefix: "core-roles-column-options",
+        fetchOptions: ({
+          columnKey,
+          search,
+          pageParam,
+          pageSize: ps,
+          filtersStr,
+        }) =>
+          getCoreRolesColumnOptionsApi(
+            columnKey,
+            search,
+            pageParam,
+            ps || 20,
+            filtersStr,
+          ),
+      }),
+    [listHook],
+  );
+
   const columns: DataTableColumn<Role>[] = useMemo(
     () => [
       {
+        key: "index",
+        header: <span className="w-full block text-center">#</span>,
+        size: 40,
+        enableResizing: false,
+        headerClassName: "text-center w-[40px] min-w-[40px]",
+        className: "text-center w-[40px] min-w-[40px]",
+        cell: (_, idx) => (
+          <span className="w-full block text-center">{idx}</span>
+        ),
+      },
+      {
         key: "name",
-        header: t("rbac.headers.name"),
+        size: 220,
+        enableResizing: true,
+        header: headerFilter("name", t("rbac.headers.name", "Tên vai trò")),
         cell: (role) => (
-          <TableText text={role.name} onDrawerClick={() => openEdit(role)} />
+          <TableText
+            text={role.name}
+            onDetailClick={() => openDetail(role, "view")}
+          />
         ),
         className: "whitespace-nowrap text-left px-4",
-        headerClassName: "text-center",
       },
       {
         key: "description",
-        header: t("rbac.headers.description"),
         size: 250,
+        enableResizing: true,
+        header: headerFilter(
+          "description",
+          t("rbac.headers.description", "Mô tả"),
+          {
+            showBlankOption: true,
+          },
+        ),
         cell: (role) => role.description || "—",
         className: "text-[color:var(--muted-fg)] truncate text-left",
-        headerClassName: "text-center",
       },
       {
         key: "users",
-        header: t("rbac.headers.users"),
         size: 300,
+        enableResizing: true,
+        header: t("rbac.headers.users", "Người dùng"),
         cell: (role) => {
           const usersList = Array.isArray(role.users) ? role.users : [];
           return usersList.length > 0 ? (
@@ -230,11 +277,48 @@ export function ErpPermissionsCorePage() {
             <span className="text-[color:var(--faint)]">—</span>
           );
         },
-        headerClassName: "text-center",
         className: "text-foreground text-left",
       },
+      {
+        key: "isActive",
+        size: 130,
+        enableResizing: true,
+        className: "text-center",
+        header: headerFilter(
+          "isActive",
+          t("rbac.headers.status", "Trạng thái"),
+        ),
+        cell: (role) => (
+          <div className="flex justify-center w-full">
+            <Badge
+              variant={role.is_active ? "default" : "secondary"}
+              className="w-[88px] inline-flex items-center justify-center text-center truncate"
+            >
+              {role.is_active
+                ? t("rbac.status.active", "Hoạt động")
+                : t("rbac.status.inactive", "Ngưng")}
+            </Badge>
+          </div>
+        ),
+      },
+      {
+        key: "createdAt",
+        size: 150,
+        enableResizing: true,
+        className: "text-right",
+        header: headerFilter.date(
+          "createdAt",
+          t("rbac.headers.createdAt", "Ngày tạo"),
+        ),
+        cell: (role) => (
+          <TableDateCell
+            date={(role as any).createdAt}
+            className="justify-end w-full"
+          />
+        ),
+      },
     ],
-    [t],
+    [headerFilter, t],
   );
 
   if (!canRead) return <Forbidden />;
@@ -242,8 +326,11 @@ export function ErpPermissionsCorePage() {
   return (
     <>
       <SpreadsheetPageTemplate
-        title={t("nav.items.phanquyen")}
-        desc="Quản lý vai trò và phân quyền hệ thống sử dụng Core DB mới"
+        title={t("rbac.title", "Phân quyền & Vai trò")}
+        desc={t(
+          "rbac.desc",
+          "Quản lý vai trò và phân quyền truy cập trong hệ thống",
+        )}
         icon={<Shield className="h-5 w-5" />}
         tableId="erp-permissions-core-table"
         items={roles}
@@ -251,33 +338,41 @@ export function ErpPermissionsCorePage() {
         getRowKey={(role) => role.id}
         loading={loading}
         error={error}
-        emptyLabel={t("rbac.empty")}
+        emptyLabel={t("rbac.empty", "Chưa có vai trò nào")}
         minWidth={760}
         page={page}
         pageSize={pageSize}
         total={total}
         totalPages={totalPages}
-        onPage={handlePage}
-        onPageSize={handlePageSize}
+        onPage={setPage}
+        onPageSize={(val) => {
+          setPage(1);
+          setPageSize(val);
+        }}
         onRefresh={load}
-        filterConfig={filterConfig}
-        filter={filterPanel}
+        activeFilterCount={listHook.activeFilterCount}
+        onClearAllFilters={listHook.clearAllFilters}
         rowActions={(role) => [
           {
-            groupLabel: "Tra cứu / Cấu hình",
+            groupLabel: t("rbac.groupLookup", "TRA CỨU"),
             items: [
               {
-                label: "Cấu hình",
-                icon: <Settings className="w-3.5 h-3.5" />,
-                onClick: () => openEdit(role),
+                label: t("rbac.actions.viewDetail", "Chi tiết"),
+                icon: <Eye className="w-3.5 h-3.5" />,
+                onClick: () => openDetail(role, "view"),
               },
             ],
           },
           {
-            groupLabel: "Thao tác",
+            groupLabel: t("rbac.groupActions", "THAO TÁC"),
             items: [
               {
-                label: "Xóa",
+                label: t("rbac.actions.edit", "Chỉnh sửa"),
+                icon: <Pencil className="w-3.5 h-3.5" />,
+                onClick: () => openDetail(role, "edit"),
+              },
+              {
+                label: t("rbac.actions.delete", "Xóa"),
                 icon: <Trash className="w-3.5 h-3.5" />,
                 variant: "danger",
                 onClick: () => setDeleteTarget(role),
@@ -287,10 +382,10 @@ export function ErpPermissionsCorePage() {
         ]}
         createActions={[
           {
-            groupLabel: "Vai trò",
+            groupLabel: t("rbac.groupRole", "Vai trò"),
             items: [
               {
-                label: "Tạo vai trò",
+                label: t("rbac.actions.createRole", "Tạo vai trò"),
                 icon: <PlusCircle className="h-4 w-4 text-emerald-600" />,
                 onClick: openNew,
               },
@@ -301,6 +396,8 @@ export function ErpPermissionsCorePage() {
 
       <CoreRoleDrawer
         open={drawerOpen}
+        mode={drawerMode}
+        onToggleEdit={handleToggleEdit}
         editing={editingRole}
         saving={saving}
         saveError={saveError}
@@ -328,13 +425,16 @@ export function ErpPermissionsCorePage() {
 
       <ConfirmModal
         open={!!deleteTarget}
-        title="Xóa vai trò"
+        title={t("rbac.actions.deleteRole", "Xóa vai trò")}
         message={
           deleteTarget
-            ? `Bạn có chắc chắn muốn xóa vai trò "${deleteTarget.name}"?`
+            ? t(
+                "rbac.deleteMessage",
+                'Bạn chắc chắn muốn xóa vai trò "{0}"? Hành động này không thể hoàn tác.',
+              ).replace("{0}", deleteTarget.name)
             : ""
         }
-        confirmLabel="Xóa"
+        confirmLabel={t("rbac.actions.delete", "Xóa")}
         loading={deleting}
         onConfirm={handleDelete}
         onCancel={() => setDeleteTarget(null)}

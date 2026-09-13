@@ -25,6 +25,35 @@ export function compactMoney(value: unknown) {
   return money(n);
 }
 
+/**
+ * Ultra-compact currency for dense table cells.
+ * Examples: 25tr | 200tr | 1,2tỷ | 500k
+ * Always show the full value in a <Tooltip> alongside this.
+ */
+export function shortMoney(value: unknown) {
+  const n = Number(value || 0);
+  if (n === 0) return "0";
+  if (Math.abs(n) >= 1_000_000_000) {
+    return (
+      (n / 1_000_000_000).toLocaleString("vi-VN", {
+        maximumFractionDigits: 1,
+      }) + "tỷ"
+    );
+  }
+  if (Math.abs(n) >= 1_000_000) {
+    return (
+      (n / 1_000_000).toLocaleString("vi-VN", { maximumFractionDigits: 0 }) +
+      "tr"
+    );
+  }
+  if (Math.abs(n) >= 1_000) {
+    return (
+      (n / 1_000).toLocaleString("vi-VN", { maximumFractionDigits: 0 }) + "k"
+    );
+  }
+  return n.toLocaleString("vi-VN");
+}
+
 export function normalizeDate(value?: string | null) {
   return value ? String(value).slice(0, 10) : "";
 }
@@ -150,4 +179,68 @@ export function extractItemCodeAndName(
   }
 
   return { code: finalCode, name: finalName };
+}
+
+export function readVietnameseCurrency(num: number): string {
+  if (!num || num <= 0 || isNaN(num)) return "";
+  const digits = [
+    "không",
+    "một",
+    "hai",
+    "ba",
+    "bốn",
+    "năm",
+    "sáu",
+    "bảy",
+    "tám",
+    "chín",
+  ];
+  const units = ["", "nghìn", "triệu", "tỷ", "nghìn tỷ", "triệu tỷ"];
+
+  function readThreeDigits(n: number, isHighest: boolean): string {
+    const hundred = Math.floor(n / 100);
+    const remainder = n % 100;
+    const ten = Math.floor(remainder / 10);
+    const one = remainder % 10;
+    let res = "";
+
+    if (hundred > 0 || !isHighest) {
+      res += digits[hundred] + " trăm ";
+    }
+
+    if (ten > 1) {
+      res += digits[ten] + " mươi ";
+      if (one === 1) res += "mốt ";
+      else if (one === 5) res += "lăm ";
+      else if (one > 0) res += digits[one] + " ";
+    } else if (ten === 1) {
+      res += "mười ";
+      if (one === 5) res += "lăm ";
+      else if (one > 0) res += digits[one] + " ";
+    } else if (ten === 0 && one > 0) {
+      if (hundred > 0 || !isHighest) res += "lẻ ";
+      res += digits[one] + " ";
+    }
+
+    return res.trim();
+  }
+
+  const s = Math.floor(num).toString();
+  const groups: number[] = [];
+  for (let i = s.length; i > 0; i -= 3) {
+    groups.push(parseInt(s.substring(Math.max(0, i - 3), i), 10));
+  }
+
+  let result = "";
+  for (let i = groups.length - 1; i >= 0; i--) {
+    const g = groups[i];
+    if (g > 0) {
+      const isHighest = i === groups.length - 1;
+      const groupText = readThreeDigits(g, isHighest);
+      result += groupText + " " + units[i] + " ";
+    }
+  }
+
+  result = result.trim() + " đồng";
+  return result.charAt(0).toUpperCase() + result.slice(1);
 }

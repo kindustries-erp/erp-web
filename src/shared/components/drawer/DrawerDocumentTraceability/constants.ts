@@ -13,6 +13,9 @@ export const STAGES_CONFIG: StageConfig[] = [
       "GOODS_RECEIPT",
       "GOODS_ISSUE",
       "GARAGE_CASE",
+      "INVENTORY_ITEM",
+      "PRODUCTION_ORDER",
+      "BOM",
     ],
     accentBorder: "border-zinc-300/80 dark:border-zinc-700",
     badgeCls: "bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200",
@@ -110,6 +113,24 @@ export const DOC_TYPE_META: Record<
     fullTitle: "Phiếu dịch vụ Garage (RO)",
     badgeCls:
       "bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700",
+  },
+  INVENTORY_ITEM: {
+    label: "ITEM",
+    fullTitle: "Mặt hàng tồn kho",
+    badgeCls:
+      "bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/50 dark:text-blue-300 dark:border-blue-700",
+  },
+  PRODUCTION_ORDER: {
+    label: "LSX",
+    fullTitle: "Lệnh sản xuất (MO)",
+    badgeCls:
+      "bg-indigo-100 text-indigo-800 border-indigo-200 dark:bg-indigo-900/50 dark:text-indigo-300 dark:border-indigo-700",
+  },
+  BOM: {
+    label: "BOM",
+    fullTitle: "Định mức vật tư (BOM)",
+    badgeCls:
+      "bg-teal-100 text-teal-800 border-teal-200 dark:bg-teal-900/50 dark:text-teal-300 dark:border-teal-700",
   },
 };
 
@@ -295,6 +316,9 @@ export function openGlobalErpDocument(
   else if (docType === "GOODS_RECEIPT" || docType === "GOODS_ISSUE")
     type = "inventory_voucher";
   else if (docType === "GARAGE_CASE") type = "garage_case";
+  else if (docType === "INVENTORY_ITEM") type = "inventory_item";
+  else if (docType === "PRODUCTION_ORDER") type = "production_order";
+  else if (docType === "BOM") type = "bom";
 
   if (type) {
     window.dispatchEvent(

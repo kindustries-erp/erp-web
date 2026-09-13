@@ -22,6 +22,7 @@ ChartJS.register(
 interface KpiSparklineProps {
   data: number[];
   preVatData?: number[];
+  customTooltipItems?: Array<{ label: string; data: number[] }>;
   labels?: string[];
   onClick?: (index: number) => void;
 }
@@ -96,6 +97,7 @@ const externalTooltipHandler = (context: any) => {
 export function KpiSparkline({
   data,
   preVatData,
+  customTooltipItems,
   labels,
   onClick,
 }: KpiSparklineProps) {
@@ -169,6 +171,12 @@ export function KpiSparkline({
                 style: "currency",
                 currency: "VND",
               }).format(n);
+
+            if (customTooltipItems && customTooltipItems.length > 0) {
+              return customTooltipItems.map(
+                (item) => `${item.label}: ${format(item.data[index] ?? 0)}`,
+              );
+            }
 
             if (preVatData) {
               const preVat = preVatData[index];

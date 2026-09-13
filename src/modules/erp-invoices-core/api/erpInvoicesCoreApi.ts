@@ -15,6 +15,79 @@ export interface ErpInvoiceItem {
   totalAmount: number | string;
 }
 
+export interface ErpInvoiceItemRow {
+  id: string;
+  invoiceId: string;
+  invoiceNo: string;
+  serialNo?: string | null;
+  invoiceDate: string;
+  direction: "IN" | "OUT";
+  status: string;
+  postingStatus?: string | null;
+  sellerName?: string | null;
+  sellerTaxCode?: string | null;
+  buyerName?: string | null;
+  buyerPersonalName?: string | null;
+  buyerTaxCode?: string | null;
+  buyerCccd?: string | null;
+  licensePlate?: string | null;
+  settlementOrder?: string | null;
+  branchId?: string | null;
+  taxInvoiceStatus?: number | null;
+  branchName?: string | null;
+  itemCode?: string | null;
+  description?: string | null;
+  unit?: string | null;
+  quantity?: number | null;
+  unitPrice?: number | null;
+  preVatAmount: number;
+  vatRate?: string | number | null;
+  vatAmount: number;
+  discountAmount: number;
+  totalAmount: number;
+  invoiceSubcategory: string;
+  createdAt?: string;
+}
+
+export interface ErpInvoiceItemListParams {
+  direction?: "IN" | "OUT";
+  search?: string;
+  invoice_no?: string;
+  serial_no?: string;
+  seller_name?: string;
+  buyer_name?: string;
+  partner_tax_code?: string;
+  item_code?: string;
+  description?: string;
+  invoice_subcategory?: string;
+  date_from?: string;
+  date_to?: string;
+  status?: string;
+  posting_status?: string;
+  tag_id?: string;
+  page?: number;
+  pageSize?: number;
+  sort_by?: string;
+  sort_order?: "asc" | "desc";
+  column_search?: string;
+  column_filters?: string;
+}
+
+export interface ErpInvoiceItemListResponse {
+  items: ErpInvoiceItemRow[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+  summary: {
+    totalQuantity: number;
+    totalPreVatAmount: number;
+    totalVatAmount: number;
+    totalDiscountAmount: number;
+    totalAmount: number;
+  };
+}
+
 export interface ErpInvoice {
   id: string;
   branchId?: string | null;
@@ -41,6 +114,7 @@ export interface ErpInvoice {
   licensePlate?: string | null;
   settlementOrder?: string | null;
   invoiceCategory?: string | null;
+  categoryId?: string | null;
   invoiceType?: string | null;
   preVatAmount: string;
   vatRate?: string | null;
@@ -75,6 +149,19 @@ export interface ErpInvoice {
     attachmentId: string;
     attachment: import("@/modules/system/api/attachmentsApi").ErpAttachment;
   }[];
+  category?: any | null;
+  attributes?: Record<string, any>;
+  globalAttributes?: Record<string, any>;
+  customAttributes?: Record<string, any>;
+  attributeValues?: Array<{
+    id: string;
+    attrDefId: string;
+    attrCode?: string;
+    attrName?: string;
+    fieldType?: string;
+    valueText?: string | null;
+    isGlobal?: boolean;
+  }>;
 }
 
 export interface CreateErpInvoicePayload {
@@ -106,6 +193,9 @@ export interface CreateErpInvoicePayload {
   licensePlate?: string;
   paymentDocumentNos?: string;
   notes?: string;
+  categoryId?: string | null;
+  customAttributes?: Record<string, any>;
+  globalAttributes?: Record<string, any>;
   isValid?: boolean;
   items?: ErpInvoiceItem[];
   pendingDocumentChanges?: {
@@ -304,6 +394,16 @@ export const erpInvoicesCoreApi = {
     return data;
   },
 
+  getItemsList: async (
+    params?: ErpInvoiceItemListParams,
+  ): Promise<ErpInvoiceItemListResponse> => {
+    const { data } = await axiosInstance.get<ErpInvoiceItemListResponse>(
+      `${BASE}/items`,
+      { params },
+    );
+    return data;
+  },
+
   getInvoiceColumnOptions: async (
     column: string,
     search: string,
@@ -323,11 +423,47 @@ export const erpInvoicesCoreApi = {
       },
     });
     return res.data as {
-      items: string[];
+      items: Array<string | { label: string; value: string }>;
       total: number;
       page: number;
       totalPages: number;
     };
+  },
+
+  getItemColumnOptions: async (
+    column: string,
+    search: string,
+    page: number = 1,
+    pageSize: number = 20,
+    filtersStr?: string,
+    direction?: "IN" | "OUT",
+  ) => {
+    const res = await axiosInstance.get(`${BASE}/items/column-options`, {
+      params: {
+        column,
+        search,
+        page,
+        pageSize,
+        column_filters: filtersStr,
+        direction,
+      },
+    });
+    return res.data as {
+      items: Array<
+        string | { label: string; value: string; secondaryLabel?: string }
+      >;
+      total: number;
+      page: number;
+      totalPages: number;
+    };
+  },
+
+  exportItemsExcel: async (params?: ErpInvoiceItemListParams) => {
+    const res = await axiosInstance.get(`${BASE}/items/export/excel`, {
+      params,
+      responseType: "blob",
+    });
+    return res.data as Blob;
   },
 
   getStats: async (

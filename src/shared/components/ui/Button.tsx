@@ -17,9 +17,9 @@ const buttonVariants = cva(
         ghost:
           "bg-transparent text-[color:var(--muted-fg)] hover:text-foreground hover:bg-[color:var(--muted)] border-none",
         danger:
-          "bg-red-500 text-white border border-red-500 hover:bg-red-600 shadow-sm active:scale-95",
+          "bg-[color:var(--down-fg)] text-white border border-[color:var(--down-fg)] hover:opacity-90 shadow-sm active:scale-95",
         "danger-outline":
-          "bg-transparent text-red-600 border border-red-200 hover:bg-red-50",
+          "bg-transparent text-[color:var(--down-fg)] border border-[color:var(--down-fg)]/40 hover:bg-[color:var(--down-bg)]",
         link: "bg-transparent text-[color:var(--muted-fg)] hover:text-foreground underline underline-offset-2 border-none p-0",
       },
       size: {

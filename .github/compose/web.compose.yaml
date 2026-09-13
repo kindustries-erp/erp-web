@@ -1,0 +1,20 @@
+services:
+  web:
+    image: ${ERP_WEB_IMAGE:?ERP_WEB_IMAGE is required}
+    restart: unless-stopped
+    stop_grace_period: 20s
+    environment:
+      API_UPSTREAM_URL: ${API_UPSTREAM_URL:-__UPSTREAM_SERVICE__}
+    expose: ["80"]
+    ports: ["__TARGET_IP__:__TARGET_PORT__:80"]
+    networks: [npm-network]
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1/ >/dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    security_opt: [no-new-privileges:true]
+networks:
+  npm-network:
+    external: true
+    name: npm-network
