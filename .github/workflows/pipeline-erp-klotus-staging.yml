@@ -1,17 +1,15 @@
-name: Pipeline Web — erp-klotus-production via Komodo
+name: Pipeline Web — erp-klotus-staging via Komodo
 
 on:
   push:
-    branches:
-      - erp-klotus-production
+    branches: [erp-klotus-staging]
   pull_request:
-    branches:
-      - erp-klotus-production
+    branches: [erp-klotus-staging]
   workflow_dispatch:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ghcr.io/kindustries-erp/erp-web-klotus-production
+  IMAGE_NAME: ghcr.io/kindustries-erp/erp-web-klotus-staging
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 jobs:
@@ -54,9 +52,9 @@ jobs:
           file: ./Dockerfile
           push: true
           build-args: |
-            VITE_APP_NAME=${{ vars.KLOTUS_PRODUCTION_WEB_APP_NAME || 'Klotus ERP' }}
+            VITE_APP_NAME=${{ vars.KLOTUS_STAGING_WEB_APP_NAME || 'Klotus ERP Staging' }}
             VITE_API_BASE_URL=
-            APP_ENV=production
+            APP_ENV=staging
           tags: |
             ${{ env.IMAGE_NAME }}:latest
             ${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.sha }}
@@ -75,7 +73,7 @@ jobs:
           - host: elite
             server_name: elite
             ip: 100.75.67.115
-            port: 8016
+            port: 8015
     env:
       KOMODO_API_KEY: ${{ secrets.KOMODO_API_KEY }}
       KOMODO_API_SECRET: ${{ secrets.KOMODO_API_SECRET }}
