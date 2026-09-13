@@ -11,7 +11,9 @@ import { vi } from "@/core/locale/vi";
 import { en } from "@/core/locale/en";
 
 export const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ?? "http://localhost:10000";
+  import.meta.env.VITE_API_BASE_URL !== undefined
+    ? import.meta.env.VITE_API_BASE_URL
+    : "http://localhost:10000";
 
 // ── Custom config flags for opt-out ──────────────────────────────────────────
 declare module "axios" {
@@ -31,6 +33,12 @@ const RETRY_DELAY_MS = 1000;
 const RETRYABLE_STATUS = new Set([502, 503, 504]);
 
 function isRetryable(error: AxiosError): boolean {
+  // Only retry idempotent methods automatically
+  const method = error.config?.method?.toLowerCase();
+  if (method !== "get" && method !== "head" && method !== "options") {
+    return false;
+  }
+
   // Network errors (no response received)
   if (
     !error.response &&
@@ -64,7 +72,7 @@ function tToast(key: keyof typeof vi.apiToast): string {
 
 const axiosInstance = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 15000,
+  timeout: 60000,
   headers: { "Content-Type": "application/json" },
 });
 

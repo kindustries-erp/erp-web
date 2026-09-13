@@ -14,6 +14,7 @@ import { extractApiError } from "@/shared/utils/apiError";
 export function useCorePermissionsEditor() {
   const [roleId, setRoleId] = useState<string | null>(null);
   const [permMap, setPermMap] = useState<PermissionMap>({});
+  const [initialPermMap, setInitialPermMap] = useState<PermissionMap>({});
   const [resources, setResources] = useState<
     { resource: string; label: string }[]
   >([]);
@@ -81,6 +82,7 @@ export function useCorePermissionsEditor() {
       }
 
       setPermMap(map);
+      setInitialPermMap(JSON.parse(JSON.stringify(map)));
     } catch (e) {
       setError(extractApiError(e, "Không thể tải quyền."));
       setPermMap({});
@@ -191,10 +193,12 @@ export function useCorePermissionsEditor() {
   function reset() {
     setRoleId(null);
     setPermMap({});
+    setInitialPermMap({});
     setError(null);
   }
 
   return {
+    initialPermMap,
     permMap,
     resources,
     loading,

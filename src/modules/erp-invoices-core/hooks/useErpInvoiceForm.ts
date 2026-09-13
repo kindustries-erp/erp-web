@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import {
   erpInvoicesCoreApi,
   type ErpInvoice,
@@ -10,6 +10,9 @@ import { useTranslation } from "react-i18next";
 import { updateEntityTags } from "@/modules/tags/api/tagsApi";
 import { purchaseOrdersCoreApi } from "@/modules/purchase-orders-core/api/purchaseOrdersCoreApi";
 import { usePosting } from "@/shared/components/accounting/usePosting";
+import { moduleConfigApi } from "@/core/api/moduleConfigApi";
+import { validateModuleRequiredFields } from "@/shared/components/ModuleEntityCustomFieldsSection";
+import { toast } from "react-hot-toast";
 
 type Direction = "IN" | "OUT";
 
@@ -38,6 +41,31 @@ function emptyForm(direction: Direction = "IN"): CreateErpInvoicePayload {
   };
 }
 
+let cachedPortalConfig: {
+  token?: string;
+  username?: string;
+  hasPassword?: boolean;
+} | null = null;
+let lastPortalConfigFetch = 0;
+
+async function isPortalAuthAvailable(): Promise<boolean> {
+  const now = Date.now();
+  if (cachedPortalConfig && now - lastPortalConfigFetch < 60000) {
+    return Boolean(
+      cachedPortalConfig.token ||
+      (cachedPortalConfig.username && cachedPortalConfig.hasPassword),
+    );
+  }
+  try {
+    const config = await erpInvoicesCoreApi.getPortalConfig();
+    cachedPortalConfig = config;
+    lastPortalConfigFetch = now;
+    return Boolean(config?.token || (config?.username && config?.hasPassword));
+  } catch {
+    return false;
+  }
+}
+
 export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
   const { t } = useTranslation("erpInvoices");
 
@@ -53,6 +81,7 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
   const [loadingDetail, setLoadingDetail] = useState(false);
   const [pendingTagIds, setPendingTagIds] = useState<string[]>([]);
   const [pendingUnpost, setPendingUnpost] = useState(false);
+  const [activeTabKey, setActiveTabKey] = useState<string>("invoice_details");
 
   const postingState = usePosting();
 
@@ -64,6 +93,7 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
     setDeleteConfirm(false);
     setCancelConfirm(false);
     setPendingTagIds([]);
+    setActiveTabKey("invoice_details");
     setInfoDrawerOpen(true);
   }
 
@@ -91,7 +121,9 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
       purchaseOrderId: inv.purchaseOrderId ?? undefined,
       salesOrderId: inv.salesOrderId ?? undefined,
       paymentDocumentNos: inv.paymentDocumentNos ?? "",
-      notes: inv.notes ?? "",
+      categoryId: (inv as any).categoryId ?? null,
+      customAttributes: (inv as any).attributes ?? {},
+      globalAttributes: (inv as any).globalAttributes ?? {},
       isValid: inv.isValid ?? false,
       accountingEnabled: inv.postingStatus === "POSTED",
       items:
@@ -117,6 +149,19 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
       setFormError(null);
       try {
         const fullInv = await erpInvoicesCoreApi.get(inv);
+        try {
+          const targetModuleKey =
+            fullInv.direction === "OUT" ? "INVOICE_OUT" : "INVOICE_IN";
+          const customValues = await moduleConfigApi.getEntityValues(
+            targetModuleKey,
+            fullInv.id,
+          );
+          if (customValues?.globalAttributes) {
+            (fullInv as any).globalAttributes = customValues.globalAttributes;
+          }
+        } catch {
+          // ignore
+        }
         setDetailInvoice(fullInv);
         setForm(mapInvoiceToForm(fullInv));
         setEditMode(false);
@@ -138,29 +183,33 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
     setInfoDrawerOpen(true);
     setFormError(null);
 
-    if (
-      detailInvoice?.id === inv.id &&
-      detailInvoice?.items &&
-      detailInvoice.items.length > 0
-    ) {
-      setForm(mapInvoiceToForm(detailInvoice));
-      return;
-    }
-
     setLoadingDetail(true);
 
     try {
       let fullInv = await erpInvoicesCoreApi.get(inv.id);
-      // Auto query detail if items are empty
+      // Auto query detail if items are empty and portal auth is available
       if (!fullInv.items || fullInv.items.length === 0) {
-        const token = localStorage.getItem("erp_portal_token");
-        if (token) {
+        const canSync = await isPortalAuthAvailable();
+        if (canSync) {
           try {
-            fullInv = await erpInvoicesCoreApi.syncDetail(inv.id, token);
+            fullInv = await erpInvoicesCoreApi.syncDetail(inv.id);
           } catch (syncErr) {
             console.warn("Auto sync detail failed", syncErr);
           }
         }
+      }
+      try {
+        const targetModuleKey =
+          fullInv.direction === "OUT" ? "INVOICE_OUT" : "INVOICE_IN";
+        const customValues = await moduleConfigApi.getEntityValues(
+          targetModuleKey,
+          fullInv.id,
+        );
+        if (customValues?.globalAttributes) {
+          (fullInv as any).globalAttributes = customValues.globalAttributes;
+        }
+      } catch {
+        // ignore
       }
       setDetailInvoice(fullInv);
       setForm(mapInvoiceToForm(fullInv));
@@ -171,7 +220,12 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
     }
   }
 
-  async function openInternal(inv: ErpInvoice | string) {
+  async function openInternal(
+    inv: ErpInvoice | string,
+    skipFetch = false,
+    initialTab = "invoice_details",
+  ) {
+    setActiveTabKey(initialTab);
     // Handle string ID — open drawer first then fetch
     if (typeof inv === "string") {
       setInternalDrawerOpen(true);
@@ -183,7 +237,31 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
       postingState.reset();
       setLoadingDetail(true);
       try {
-        const fullInv = await erpInvoicesCoreApi.get(inv);
+        let fullInv = await erpInvoicesCoreApi.get(inv);
+        if (!fullInv.items || fullInv.items.length === 0) {
+          const canSync = await isPortalAuthAvailable();
+          if (canSync && fullInv.id) {
+            try {
+              const synced = await erpInvoicesCoreApi.syncDetail(fullInv.id);
+              if (synced) fullInv = synced;
+            } catch (syncErr) {
+              console.warn("Auto sync detail failed", syncErr);
+            }
+          }
+        }
+        try {
+          const targetModuleKey =
+            fullInv.direction === "OUT" ? "INVOICE_OUT" : "INVOICE_IN";
+          const customValues = await moduleConfigApi.getEntityValues(
+            targetModuleKey,
+            fullInv.id,
+          );
+          if (customValues?.globalAttributes) {
+            (fullInv as any).globalAttributes = customValues.globalAttributes;
+          }
+        } catch {
+          // ignore
+        }
         setDetailInvoice(fullInv);
         setForm(mapInvoiceToForm(fullInv));
       } catch (err) {
@@ -205,27 +283,47 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
     setInternalDrawerOpen(true);
 
     if (
-      detailInvoice?.id === inv.id &&
-      detailInvoice?.items &&
-      detailInvoice.items.length > 0
+      skipFetch ||
+      (detailInvoice?.id === inv.id &&
+        detailInvoice?.items &&
+        detailInvoice.items.length > 0 &&
+        (detailInvoice as any).globalAttributes !== undefined)
     ) {
-      setForm(mapInvoiceToForm(detailInvoice));
+      setForm(mapInvoiceToForm(inv));
       return;
     }
 
     setLoadingDetail(true);
 
     try {
-      let fullInv = await erpInvoicesCoreApi.get(inv.id);
+      const invoiceIdentifier =
+        inv.id ||
+        (inv.serialNo && inv.invoiceNo
+          ? `${inv.serialNo}_${inv.invoiceNo}`
+          : inv.invoiceNo || "");
+      let fullInv = await erpInvoicesCoreApi.get(invoiceIdentifier);
       if (!fullInv.items || fullInv.items.length === 0) {
-        const token = localStorage.getItem("erp_portal_token");
-        if (token) {
+        const canSync = await isPortalAuthAvailable();
+        if (canSync && fullInv.id) {
           try {
-            fullInv = await erpInvoicesCoreApi.syncDetail(inv.id, token);
+            fullInv = await erpInvoicesCoreApi.syncDetail(fullInv.id);
           } catch (syncErr) {
             console.warn("Auto sync detail failed", syncErr);
           }
         }
+      }
+      try {
+        const targetModuleKey =
+          fullInv.direction === "OUT" ? "INVOICE_OUT" : "INVOICE_IN";
+        const customValues = await moduleConfigApi.getEntityValues(
+          targetModuleKey,
+          fullInv.id,
+        );
+        if (customValues?.globalAttributes) {
+          (fullInv as any).globalAttributes = customValues.globalAttributes;
+        }
+      } catch {
+        // ignore custom values error
       }
       setDetailInvoice(fullInv);
       setForm(mapInvoiceToForm(fullInv));
@@ -238,15 +336,23 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
 
   async function handleSyncDetail() {
     if (!detailInvoice) return;
-    const token = localStorage.getItem("erp_portal_token");
-    if (!token) return;
 
     setLoadingDetail(true);
     try {
-      const fullInv = await erpInvoicesCoreApi.syncDetail(
-        detailInvoice.id,
-        token,
-      );
+      const fullInv = await erpInvoicesCoreApi.syncDetail(detailInvoice.id);
+      try {
+        const targetModuleKey =
+          fullInv.direction === "OUT" ? "INVOICE_OUT" : "INVOICE_IN";
+        const customValues = await moduleConfigApi.getEntityValues(
+          targetModuleKey,
+          fullInv.id,
+        );
+        if (customValues?.globalAttributes) {
+          (fullInv as any).globalAttributes = customValues.globalAttributes;
+        }
+      } catch {
+        // ignore
+      }
       setDetailInvoice(fullInv);
       setForm(mapInvoiceToForm(fullInv));
       await onReload();
@@ -259,12 +365,16 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
 
   function startEdit() {
     if (!detailInvoice) return;
-    setForm({
+    setForm((prev) => ({
       ...mapInvoiceToForm(detailInvoice),
+      globalAttributes: {
+        ...((detailInvoice as any).globalAttributes || {}),
+        ...((prev as any).globalAttributes || {}),
+      },
       pendingDocumentChanges: [],
       pendingDeletedPdfs: [],
-      pendingAddedPdfs: [],
-    });
+      pendingAddedAttachments: [],
+    }));
     setFormError(null);
     setPendingUnpost(false);
     postingState.reset();
@@ -277,7 +387,7 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
         ...mapInvoiceToForm(detailInvoice),
         pendingDocumentChanges: [],
         pendingDeletedPdfs: [],
-        pendingAddedPdfs: [],
+        pendingAddedAttachments: [],
       });
     }
     setFormError(null);
@@ -294,30 +404,41 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
     setDeleteConfirm(false);
     setCancelConfirm(false);
     setFormError(null);
+    setActiveTabKey("invoice_details");
   }
 
   async function handleSave(statusOverride?: string) {
     if (!form.invoiceNo.trim()) {
-      setFormError(t("errorInvoiceNoRequired", "Số hóa đơn là bắt buộc."));
+      const errMsg = t("errorInvoiceNoRequired", "Số hóa đơn là bắt buộc.");
+      setFormError(errMsg);
+      toast.error(errMsg);
       return;
     }
     if (!form.invoiceDate) {
-      setFormError(t("errorInvoiceDateRequired", "Ngày hóa đơn là bắt buộc."));
+      const errMsg = t("errorInvoiceDateRequired", "Ngày hóa đơn là bắt buộc.");
+      setFormError(errMsg);
+      toast.error(errMsg);
       return;
     }
 
     // Validate branch if internal drawer is open and there are accounting amounts
     if (internalDrawerOpen && !form.branchId && (form.totalAmount || 0) > 0) {
-      setFormError(
-        "Vui lòng chọn chi nhánh trước khi lưu thông tin nội bộ và hạch toán.",
-      );
+      const errMsg =
+        "Vui lòng chọn chi nhánh trước khi lưu thông tin nội bộ và hạch toán.";
+      setFormError(errMsg);
+      toast.error(errMsg);
       return;
     }
 
-    if (postingState.lines.length > 0 && !postingState.isBalanced) {
-      setFormError(
-        "Hạch toán kế toán không cân bằng. Vui lòng kiểm tra lại tổng Nợ và Có.",
-      );
+    if (
+      (form as any).accountingEnabled &&
+      postingState.lines.length > 0 &&
+      !postingState.isBalanced
+    ) {
+      const errMsg =
+        "Hạch toán kế toán không cân bằng. Vui lòng kiểm tra lại tổng Nợ và Có.";
+      setFormError(errMsg);
+      toast.error(errMsg);
       return;
     }
 
@@ -331,24 +452,49 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
       else if (p.action === "REMOVE") linkedCount--;
     });
 
-    if (linkedCount > 0 && !(form as any).accountingEnabled) {
-      setFormError(
-        "Bắt buộc phải bật Hạch toán kế toán khi có Chứng từ liên kết.",
-      );
-      return;
-    }
-
     setSaving(true);
     setFormError(null);
     try {
       const payload = { ...form };
       if (statusOverride) payload.status = statusOverride;
 
-      // Remove frontend-only field before sending to API
+      const customAttrsToSave = (form as any).customAttributes;
+      const globalAttrsToSave = (form as any).globalAttributes;
+
+      // Validate required custom fields (global & system attributes)
+      try {
+        const targetModuleKey =
+          form.direction === "OUT" ? "INVOICE_OUT" : "INVOICE_IN";
+        const globalDefs =
+          await moduleConfigApi.getGlobalAttributeDefs(targetModuleKey);
+
+        const missingRequired = validateModuleRequiredFields({
+          globalDefs,
+          globalAttributes: globalAttrsToSave,
+          includeSystemAttributes: true,
+          hasCategory: false,
+          moduleKey: targetModuleKey,
+          t,
+        });
+
+        if (missingRequired.length > 0) {
+          const errMsg = `Vui lòng nhập các trường bắt buộc: ${missingRequired.join(", ")}`;
+          setFormError(errMsg);
+          toast.error(errMsg, { duration: 5000 });
+          setSaving(false);
+          return;
+        }
+      } catch {
+        // Non-blocking if offline or fetch fails
+      }
+
+      // Remove frontend-only fields before sending to API
       delete payload.pendingDocumentChanges;
       delete (payload as any).accountingEnabled;
       delete payload.pendingDeletedPdfs;
-      delete payload.pendingAddedPdfs;
+      delete payload.pendingAddedAttachments;
+      delete (payload as any).customAttributes;
+      delete (payload as any).globalAttributes;
 
       let invoiceIdToProcess = "";
       let invoiceNoToProcess = form.invoiceNo;
@@ -388,6 +534,28 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
         }
       }
 
+      // Save custom fields if present
+      if (
+        invoiceIdToProcess &&
+        (globalAttrsToSave !== undefined || customAttrsToSave !== undefined)
+      ) {
+        try {
+          const targetModuleKey =
+            form.direction === "OUT" ? "INVOICE_OUT" : "INVOICE_IN";
+          await moduleConfigApi.saveEntityValues(
+            targetModuleKey,
+            invoiceIdToProcess,
+            {
+              categoryId: null,
+              attributes: {},
+              globalAttributes: globalAttrsToSave,
+            },
+          );
+        } catch (cfErr: any) {
+          console.warn("Failed to save invoice custom fields", cfErr);
+        }
+      }
+
       // Process pending document changes — capture snapshot first to avoid double-apply
       const pendingChanges = form.pendingDocumentChanges || [];
       if (pendingChanges.length > 0) {
@@ -411,24 +579,57 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
                 );
               }
             } else if (change.type === "PO") {
-              const po = await purchaseOrdersCoreApi.get(change.refId);
-              let invNos = (po.supplierInvoiceNo || "")
-                .split(",")
-                .map((s) => s.trim())
-                .filter((s) => s);
-
-              if (
-                change.action === "ADD" &&
-                !invNos.includes(invoiceNoToProcess)
-              ) {
-                invNos.push(invoiceNoToProcess);
-                await purchaseOrdersCoreApi.update(change.refId, {
-                  supplierInvoiceNo: invNos.join(", "),
+              if (change.action === "ADD") {
+                await erpInvoicesCoreApi.update(invoiceIdToProcess, {
+                  purchaseOrderId: change.refId,
                 });
               } else if (change.action === "REMOVE") {
-                invNos = invNos.filter((s) => s !== invoiceNoToProcess);
-                await purchaseOrdersCoreApi.update(change.refId, {
-                  supplierInvoiceNo: invNos.join(", "),
+                await erpInvoicesCoreApi.update(invoiceIdToProcess, {
+                  purchaseOrderId: undefined,
+                });
+              }
+              try {
+                const po = await purchaseOrdersCoreApi.get(change.refId);
+                let invNos = (po.supplierInvoiceNo || "")
+                  .split(",")
+                  .map((s) => s.trim())
+                  .filter((s) => s);
+
+                if (
+                  change.action === "ADD" &&
+                  !invNos.includes(invoiceNoToProcess)
+                ) {
+                  invNos.push(invoiceNoToProcess);
+                  await purchaseOrdersCoreApi.update(change.refId, {
+                    supplierInvoiceNo: invNos.join(", "),
+                  });
+                } else if (change.action === "REMOVE") {
+                  invNos = invNos.filter((s) => s !== invoiceNoToProcess);
+                  await purchaseOrdersCoreApi.update(change.refId, {
+                    supplierInvoiceNo: invNos.join(", "),
+                  });
+                }
+              } catch (poErr) {
+                console.warn("Could not sync PO supplierInvoiceNo", poErr);
+              }
+            } else if (change.type === "SO") {
+              if (change.action === "ADD") {
+                await erpInvoicesCoreApi.update(invoiceIdToProcess, {
+                  salesOrderId: change.refId,
+                });
+              } else if (change.action === "REMOVE") {
+                await erpInvoicesCoreApi.update(invoiceIdToProcess, {
+                  salesOrderId: undefined,
+                });
+              }
+            } else if (change.type === "CASE") {
+              if (change.action === "ADD") {
+                await erpInvoicesCoreApi.update(invoiceIdToProcess, {
+                  settlementOrder: change.refId,
+                });
+              } else if (change.action === "REMOVE") {
+                await erpInvoicesCoreApi.update(invoiceIdToProcess, {
+                  settlementOrder: undefined,
                 });
               }
             }
@@ -451,26 +652,40 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
         }
       }
 
-      const pendingAddedPdfs = form.pendingAddedPdfs || [];
-      if (pendingAddedPdfs.length > 0) {
-        setForm((prev) => ({ ...prev, pendingAddedPdfs: [] }));
+      const pendingAddedAttachments = form.pendingAddedAttachments || [];
+      if (pendingAddedAttachments.length > 0) {
+        setForm((prev) => ({ ...prev, pendingAddedAttachments: [] }));
         try {
-          await erpInvoicesCoreApi.uploadPdfs(
-            invoiceIdToProcess,
-            pendingAddedPdfs,
-          );
+          // We need to upload each attachment or group by type.
+          // For now, let's just upload them one by one or grouped.
+          // The API uploadPdfs (which I'll rename or keep) accepts a file array, but wait...
+          // I will use `uploadAttachmentApi` from `system` instead!
+          // But wait, they are attached to invoice so we can use `uploadPdfs` in erpInvoicesCoreApi if we change it.
+          // Wait, `postInvoice` is for accounting, attachments are uploaded via `erpInvoicesCoreApi.uploadPdfs`.
+          for (const att of pendingAddedAttachments) {
+            const res =
+              await import("@/modules/system/api/attachmentsApi").then((m) =>
+                m.uploadAttachmentApi([att.file], att.documentType, "Hóa đơn"),
+              );
+            if (res.success && res.attachments.length > 0) {
+              await erpInvoicesCoreApi.linkAttachment(
+                invoiceIdToProcess,
+                res.attachments[0].id,
+              );
+            }
+          }
         } catch (err) {
-          console.error("Failed to upload PDFs", err);
+          console.error("Failed to upload attachments", err);
         }
       }
 
       // Auto-post accounting if there are lines and it should post
       const wasPosted = detailInvoice?.postingStatus === "POSTED";
-      const shouldPost =
+      const shouldPostManual =
         accountingEnabled &&
         (!wasPosted || needsRepost) &&
         postingState.lines.length > 0;
-      if (shouldPost) {
+      if (shouldPostManual) {
         // Validate accountId trước khi submit
         const emptyAccountLine = postingState.lines.find((l) => !l.accountId);
         if (emptyAccountLine) {
@@ -502,6 +717,15 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
               "Lỗi hạch toán tự động sau khi lưu.",
           );
         }
+      } else if (
+        !wasPosted &&
+        (linkedCount > 0 || (form.branchId && (form.totalAmount || 0) > 0))
+      ) {
+        try {
+          await erpInvoicesCoreApi.autoPostStandard(invoiceIdToProcess);
+        } catch (autoErr: any) {
+          console.warn("Auto-post standard failed (non-blocking)", autoErr);
+        }
       }
 
       if (!detailInvoice) {
@@ -512,6 +736,19 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
         // Reload details for current invoice if editing without forcing drawer open
         try {
           const fullInv = await erpInvoicesCoreApi.get(detailInvoice.id);
+          try {
+            const targetModuleKey =
+              fullInv.direction === "OUT" ? "INVOICE_OUT" : "INVOICE_IN";
+            const customValues = await moduleConfigApi.getEntityValues(
+              targetModuleKey,
+              fullInv.id,
+            );
+            if (customValues?.globalAttributes) {
+              (fullInv as any).globalAttributes = customValues.globalAttributes;
+            }
+          } catch {
+            // ignore
+          }
           setDetailInvoice(fullInv);
           setForm(mapInvoiceToForm(fullInv));
         } catch (e) {
@@ -566,12 +803,17 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
     }
   }
 
+  const fieldSet = useCallback((key: string, value: unknown) => {
+    setForm((prev) => ({ ...prev, [key]: value }));
+  }, []);
+
   return {
     infoDrawerOpen,
     internalDrawerOpen,
     detailInvoice,
     editMode,
     form,
+    fieldSet,
     saving,
     formError,
     deleteConfirm,
@@ -598,5 +840,7 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
     loadingDetail,
     handleSyncDetail,
     postingState,
+    activeTabKey,
+    setActiveTabKey,
   };
 }

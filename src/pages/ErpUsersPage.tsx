@@ -1,24 +1,44 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-
-import { Shield, PlusCircle, Eye, EyeOff } from "lucide-react";
+import {
+  Shield,
+  PlusCircle,
+  Eye,
+  EyeOff,
+  LogIn,
+  Ban,
+  CheckCircle,
+  User,
+  Pencil,
+  History,
+} from "lucide-react";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate/SpreadsheetPageTemplate";
-import { type DataTableColumn } from "@/shared/components/DataTable";
+import {
+  type DataTableColumn,
+  TableText,
+  TableDateCell,
+  createColumnHeaderFilter,
+} from "@/shared/components/DataTable";
+import { Badge } from "@/shared/components/ui/badge";
+import { Tooltip } from "@/core/components/ui/Tooltip";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import {
   DrawerAction,
   DrawerField,
+  DrawerRow,
   DrawerSection,
   inputCls,
 } from "@/shared/components/DrawerModal";
-import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
-import { Combobox } from "@/shared/components/Combobox";
 import {
-  useFilterPanel,
-  type FilterPanelConfig,
-} from "@/shared/hooks/useFilterPanel";
+  StandardFormDrawer,
+  DrawerAuditTimeline,
+  type DrawerTopTabItem,
+} from "@/shared/components/StandardFormDrawer";
+import { Combobox } from "@/shared/components/Combobox";
+import type { DrawerMode } from "@/shared/stores/useDrawerStore";
 import { useUIStore } from "@/core/config/uiStore";
 import { useAuthStore } from "@/modules/auth/domain/authStore";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
+import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
 import { Forbidden } from "@/pages/Forbidden";
 import {
   auditCoreApi,
@@ -28,6 +48,7 @@ import {
   type ErpEmployee,
   usersAdminApi,
 } from "@/modules/system/api/usersCoreApi";
+import { useUsersAdminList } from "@/modules/system/hooks/useUsersAdminList";
 import { useT } from "@/core/i18n";
 
 function formatDate(value: string | null) {
@@ -39,19 +60,27 @@ function formatDate(value: string | null) {
 
 export function ErpUsersPage() {
   const t = useT();
-  const canRead = useHasPermission("admin_users", "read");
+  const canRead = useHasPermission(ErpResource.ADMIN_USERS, ErpAction.READ);
   const showToast = useUIStore((s) => s.showToast);
-  const [items, setItems] = useState<CoreUserAdmin[]>([]);
+
+  const listHook = useUsersAdminList();
+  const {
+    data: items,
+    total,
+    totalPages,
+    isLoading: loading,
+    page,
+    setPage,
+    pageSize,
+    setPageSize,
+    refetch: loadUsers,
+  } = listHook;
+
   const [employees, setEmployees] = useState<ErpEmployee[]>([]);
-  const [loading, setLoading] = useState(false);
   const [timelineLoading, setTimelineLoading] = useState(false);
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(50);
-  const [total, setTotal] = useState(0);
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const [detailOpen, setDetailOpen] = useState(false);
+  const [userDrawerOpen, setUserDrawerOpen] = useState(false);
+  const [drawerMode, setDrawerMode] = useState<DrawerMode>("create");
   const [creating, setCreating] = useState(false);
-  const [editingUser, setEditingUser] = useState<CoreUserAdmin | null>(null);
   const [selectedUser, setSelectedUser] = useState<CoreUserAdmin | null>(null);
   const [timeline, setTimeline] = useState<AuditLogEntry[]>([]);
   const [form, setForm] = useState({
@@ -66,80 +95,51 @@ export function ErpUsersPage() {
   const [impersonateTarget, setImpersonateTarget] =
     useState<CoreUserAdmin | null>(null);
 
+  const isEditMode = drawerMode === "edit";
+  const isCreateMode = drawerMode === "create";
+  const isViewMode = drawerMode === "view";
+
   const isFormDirty = useMemo(() => {
-    if (editingUser) {
-      return form.employeeId !== (editingUser.employeeId || "");
+    if (isEditMode && selectedUser) {
+      return form.employeeId !== (selectedUser.employeeId || "");
     }
-    return (
-      form.email !== "" ||
-      form.password !== "" ||
-      form.confirmPassword !== "" ||
-      form.employeeId !== ""
-    );
-  }, [form, editingUser]);
+    if (isCreateMode) {
+      return (
+        form.email !== "" ||
+        form.password !== "" ||
+        form.confirmPassword !== "" ||
+        form.employeeId !== ""
+      );
+    }
+    return false;
+  }, [form, isCreateMode, isEditMode, selectedUser]);
+
+  function resetDrawerState() {
+    setUserDrawerOpen(false);
+    setDrawerMode("create");
+    setSelectedUser(null);
+    setTimeline([]);
+    setTimelineLoading(false);
+    setShowPassword(false);
+    setShowConfirmPassword(false);
+    setForm({ email: "", password: "", confirmPassword: "", employeeId: "" });
+  }
 
   function handleCloseDrawer() {
-    if (isFormDirty) {
+    if (!isViewMode && isFormDirty) {
       setCloseConfirmOpen(true);
     } else {
-      setDrawerOpen(false);
-      setForm({ email: "", password: "", confirmPassword: "", employeeId: "" });
-      setEditingUser(null);
+      resetDrawerState();
     }
   }
 
   function handleConfirmClose() {
     setCloseConfirmOpen(false);
-    setDrawerOpen(false);
-    setForm({ email: "", password: "", confirmPassword: "", employeeId: "" });
-    setEditingUser(null);
+    resetDrawerState();
   }
 
-  const canImpersonate = useAuthStore((s) => s.canImpersonate);
   const impersonateAction = useAuthStore((s) => s.impersonateAction);
-
-  const filterConfig: FilterPanelConfig = useMemo(
-    () => ({
-      search: true,
-      status: {
-        options: [
-          { value: "ACTIVE", label: t("Hoạt động (ACTIVE)") },
-          { value: "INACTIVE", label: t("Ngưng (INACTIVE)") },
-        ],
-        placeholder: t("Tất cả trạng thái"),
-      },
-    }),
-    [t],
-  );
-
-  const filter = useFilterPanel(filterConfig, () => setPage(1));
-  const search = filter.state.search;
-  const status = filter.state.status;
-
-  const loadUsers = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await usersAdminApi.list({
-        page,
-        pageSize,
-        search,
-        status: status || undefined,
-      });
-      setItems(res.data);
-      setTotal(res.total);
-    } catch (error: any) {
-      showToast({
-        variant: "destructive",
-        title: t("Không tải được user"),
-        description:
-          error?.response?.data?.message ||
-          error?.message ||
-          t("Lỗi không xác định"),
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [page, pageSize, search, showToast, status]);
+  const canImpersonate = useAuthStore((s) => s.canImpersonate);
 
   const loadEmployees = useCallback(async () => {
     try {
@@ -151,16 +151,13 @@ export function ErpUsersPage() {
   }, []);
 
   useEffect(() => {
-    void loadUsers();
-  }, [loadUsers]);
-
-  useEffect(() => {
     void loadEmployees();
   }, [loadEmployees]);
 
-  async function openDetail(user: CoreUserAdmin) {
+  async function openViewDrawer(user: CoreUserAdmin) {
     setSelectedUser(user);
-    setDetailOpen(true);
+    setDrawerMode("view");
+    setUserDrawerOpen(true);
     setTimelineLoading(true);
     try {
       const rows = await auditCoreApi.getEntityTimeline("core_user", user.id);
@@ -172,8 +169,39 @@ export function ErpUsersPage() {
     }
   }
 
+  async function openEditDrawer(user: CoreUserAdmin) {
+    await loadEmployees();
+    setSelectedUser(user);
+    setDrawerMode("edit");
+    setForm({
+      email: user.email,
+      password: "",
+      confirmPassword: "",
+      employeeId: user.employeeId || "",
+    });
+    setUserDrawerOpen(true);
+  }
+
+  async function openCreateDrawer() {
+    await loadEmployees();
+    setSelectedUser(null);
+    setDrawerMode("create");
+    setForm({
+      email: "",
+      password: "",
+      confirmPassword: "",
+      employeeId: "",
+    });
+    setUserDrawerOpen(true);
+  }
+
+  function handleToggleToEdit() {
+    if (!selectedUser) return;
+    openEditDrawer(selectedUser);
+  }
+
   async function handleSave() {
-    if (!editingUser) {
+    if (isCreateMode) {
       if (!form.email.trim() || !form.password.trim()) {
         showToast({
           variant: "destructive",
@@ -191,15 +219,18 @@ export function ErpUsersPage() {
         return;
       }
     }
+
+    if (isEditMode && !selectedUser) return;
+
     setCreating(true);
     try {
-      if (editingUser) {
-        await usersAdminApi.update(editingUser.id, {
+      if (isEditMode && selectedUser) {
+        await usersAdminApi.update(selectedUser.id, {
           employeeId: form.employeeId || null,
         });
         showToast({
           title: t("Đã cập nhật user"),
-          description: form.email.trim(),
+          description: selectedUser.email,
         });
       } else {
         await usersAdminApi.create({
@@ -209,14 +240,12 @@ export function ErpUsersPage() {
         });
         showToast({ title: t("Đã tạo user"), description: form.email.trim() });
       }
-      setDrawerOpen(false);
-      setForm({ email: "", password: "", confirmPassword: "", employeeId: "" });
-      setEditingUser(null);
+      resetDrawerState();
       await loadUsers();
     } catch (error: any) {
       showToast({
         variant: "destructive",
-        title: editingUser
+        title: isEditMode
           ? t("Cập nhật user thất bại")
           : t("Tạo user thất bại"),
         description:
@@ -241,82 +270,208 @@ export function ErpUsersPage() {
     await loadUsers();
   }
 
-  async function handleResetPassword(user: CoreUserAdmin) {
-    const nextPassword = window.prompt(
-      `${t("Nhập mật khẩu mới cho")} ${user.email}`,
-    );
-    if (!nextPassword) return;
-    await usersAdminApi.resetPassword(user.id, nextPassword);
-    showToast({ title: t("Đã reset password"), description: user.email });
-  }
+  const headerFilter = useMemo(
+    () =>
+      createColumnHeaderFilter({
+        listHook,
+        queryKeyPrefix: "users-column-options",
+        fetchOptions: ({
+          columnKey,
+          search,
+          pageParam,
+          pageSize: ps,
+          filtersStr,
+        }) =>
+          usersAdminApi.getColumnOptions(
+            columnKey,
+            search,
+            pageParam,
+            ps || 20,
+            filtersStr,
+          ),
+      }),
+    [listHook],
+  );
 
   const columns: DataTableColumn<CoreUserAdmin>[] = useMemo(
     () => [
       {
+        key: "index",
+        header: <span className="w-full block text-center">#</span>,
+        size: 40,
+        enableResizing: false,
+        headerClassName: "text-center w-[40px] min-w-[40px]",
+        className: "text-center w-[40px] min-w-[40px]",
+        cell: (_, idx) => (
+          <span className="w-full block text-center">{idx}</span>
+        ),
+      },
+      {
         key: "email",
-        header: "Email",
+        size: 220,
+        enableResizing: true,
+        header: headerFilter("email", t("Email")),
         className: "text-left",
-        headerClassName: "text-center",
-        cell: (item) => <span className="font-medium">{item.email}</span>,
+        cell: (item) => (
+          <TableText
+            text={item.email}
+            enableCopy
+            tooltip
+            onDetailClick={() => void openViewDrawer(item)}
+          />
+        ),
       },
       {
         key: "employee",
-        header: "Employee linked",
+        size: 220,
+        enableResizing: true,
+        header: headerFilter("employee", t("Nhân viên liên kết"), {
+          showBlankOption: true,
+        }),
         className: "text-left",
-        headerClassName: "text-center",
-        cell: (item) =>
-          item.employee
-            ? `${item.employee.fullName} (${item.employee.employeeCode})`
-            : "—",
+        cell: (item) => (
+          <span
+            className={item.employee ? "font-medium" : "text-muted-foreground"}
+          >
+            {item.employee
+              ? `${item.employee.fullName} (${item.employee.employeeCode})`
+              : "—"}
+          </span>
+        ),
       },
       {
         key: "lastLoginAt",
-        header: t("Lần đăng nhập cuối"),
+        size: 160,
+        enableResizing: true,
         className: "text-right",
-        headerClassName: "text-center",
-        cell: (item) => formatDate(item.lastLoginAt),
+        header: headerFilter.date("lastLoginAt", t("Lần đăng nhập cuối")),
+        cell: (item) => (
+          <TableDateCell
+            date={item.lastLoginAt}
+            className="justify-end w-full"
+          />
+        ),
+      },
+      {
+        key: "createdAt",
+        size: 150,
+        enableResizing: true,
+        className: "text-right",
+        header: headerFilter.date("createdAt", t("Ngày tạo")),
+        cell: (item) => (
+          <TableDateCell date={item.createdAt} className="justify-end w-full" />
+        ),
       },
       {
         key: "status",
-        header: t("Trạng thái"),
+        size: 130,
+        enableResizing: true,
         className: "text-center",
-        headerClassName: "text-center",
+        header: headerFilter("status", t("Trạng thái")),
         cell: (item) => (
           <div className="flex justify-center w-full">
-            <span
-              className={
+            <Tooltip
+              content={
                 item.status === "ACTIVE"
-                  ? "rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-700"
-                  : "rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600"
+                  ? t("Hoạt động (ACTIVE)")
+                  : t("Ngưng (INACTIVE)")
               }
             >
-              {item.status}
-            </span>
+              <Badge
+                variant={item.status === "ACTIVE" ? "default" : "secondary"}
+                className="w-[88px] inline-flex items-center justify-center text-center truncate"
+              >
+                {item.status === "ACTIVE" ? t("ACTIVE") : t("INACTIVE")}
+              </Badge>
+            </Tooltip>
           </div>
         ),
       },
     ],
-    [],
+    [headerFilter, t],
   );
 
-  const drawerActions: DrawerAction[] = [
-    {
-      label: t("Đóng"),
-      onClick: handleCloseDrawer,
-      variant: "outline",
-      disabled: creating,
-    },
-    {
-      label: creating
-        ? t("Đang lưu...")
-        : editingUser
-          ? t("Cập nhật user")
-          : t("Tạo user"),
-      onClick: () => void handleSave(),
-      primary: true,
-      disabled: creating,
-    },
-  ];
+  const drawerActions: DrawerAction[] = isViewMode
+    ? [
+        {
+          label: t("Đóng"),
+          onClick: handleCloseDrawer,
+          primary: true,
+        },
+      ]
+    : [
+        {
+          label: t("Đóng"),
+          onClick: handleCloseDrawer,
+          variant: "outline",
+          disabled: creating,
+        },
+        {
+          label: creating
+            ? t("Đang lưu...")
+            : isEditMode
+              ? t("Cập nhật user")
+              : t("Tạo user"),
+          onClick: () => void handleSave(),
+          primary: true,
+          disabled: creating,
+        },
+      ];
+
+  const userDrawerTabs: DrawerTopTabItem[] | undefined = isViewMode
+    ? [
+        {
+          key: "user_info",
+          label: t("Thông tin người dùng"),
+          icon: <User className="w-3.5 h-3.5" />,
+          content: (
+            <DrawerSection title={t("Thông tin hiện tại")}>
+              <DrawerRow label="Email" value={selectedUser?.email || "—"} />
+              <DrawerRow
+                label={t("Trạng thái")}
+                value={selectedUser?.status || "—"}
+              />
+              <DrawerRow
+                label="Employee"
+                value={
+                  selectedUser?.employee
+                    ? `${selectedUser.employee.fullName} (${selectedUser.employee.employeeCode})`
+                    : "—"
+                }
+              />
+              <DrawerRow
+                label="Last login"
+                value={formatDate(selectedUser?.lastLoginAt ?? null)}
+              />
+              <DrawerRow
+                label={t("Ngày tạo")}
+                value={formatDate(selectedUser?.createdAt ?? null)}
+              />
+            </DrawerSection>
+          ),
+        },
+        {
+          key: "history",
+          label: t("Timeline audit"),
+          icon: <History className="w-3.5 h-3.5" />,
+          badgeCount: timeline.length,
+          content: (
+            <DrawerAuditTimeline
+              items={timeline.map((entry) => ({
+                id: entry.id,
+                actionType: entry.actionType,
+                actorEmail: entry.actorEmail || "system",
+                timestamp: entry.createdAt,
+                status: entry.status,
+                message: entry.message || undefined,
+              }))}
+              loading={timelineLoading}
+              emptyLabel={t("Chưa có log")}
+            />
+          ),
+        },
+      ]
+    : undefined;
 
   if (!canRead) return <Forbidden />;
 
@@ -328,7 +483,7 @@ export function ErpUsersPage() {
           "Tạo user production-grade và xem timeline audit theo từng user",
         )}
         icon={<Shield className="h-4 w-4" />}
-        tableId="erp-users-table"
+        tableId="erp-users-table-v2"
         items={items}
         columns={columns}
         getRowKey={(item) => item.id}
@@ -338,15 +493,15 @@ export function ErpUsersPage() {
         page={page}
         pageSize={pageSize}
         total={total}
-        totalPages={Math.ceil(total / pageSize)}
+        totalPages={totalPages}
         onPage={setPage}
         onPageSize={(value) => {
           setPage(1);
           setPageSize(value);
         }}
         onRefresh={() => void loadUsers()}
-        filterConfig={filterConfig}
-        filter={filter}
+        activeFilterCount={listHook.activeFilterCount}
+        onClearAllFilters={listHook.clearAllFilters}
         createActions={[
           {
             groupLabel: t("Người dùng"),
@@ -354,58 +509,37 @@ export function ErpUsersPage() {
               {
                 label: t("Tạo user"),
                 icon: <PlusCircle className="h-4 w-4 text-emerald-600" />,
-                onClick: () => {
-                  void loadEmployees();
-                  setEditingUser(null);
-                  setForm({
-                    email: "",
-                    password: "",
-                    confirmPassword: "",
-                    employeeId: "",
-                  });
-                  setDrawerOpen(true);
-                },
+                onClick: () => void openCreateDrawer(),
               },
             ],
           },
         ]}
         rowActions={(item) => [
           {
-            groupLabel: t("Tra cứu / Cấu hình"),
+            groupLabel: t("Tra cứu"),
             items: [
               {
-                label: t("Xem chi tiết"),
-                onClick: () => void openDetail(item),
+                label: t("Chi tiết user"),
+                icon: <Eye className="w-3.5 h-3.5" />,
+                onClick: () => void openViewDrawer(item),
               },
               {
                 label: t("Chỉnh sửa"),
-                onClick: () => {
-                  void loadEmployees();
-                  setEditingUser(item);
-                  setForm({
-                    email: item.email,
-                    password: "",
-                    confirmPassword: "",
-                    employeeId: item.employeeId || "",
-                  });
-                  setDrawerOpen(true);
-                },
-              },
-              {
-                label: t("Reset password"),
-                onClick: () => void handleResetPassword(item),
+                icon: <Pencil className="w-3.5 h-3.5" />,
+                onClick: () => void openEditDrawer(item),
               },
             ],
           },
           {
-            groupLabel: t("Thao tác"),
+            groupLabel: t("Hành động"),
             items: [
               ...(canImpersonate &&
               item.email !== "admin@liouni.com" &&
               item.status === "ACTIVE"
                 ? [
                     {
-                      label: t("Login as user"),
+                      label: t("Đăng nhập dưới quyền"),
+                      icon: <LogIn className="w-3.5 h-3.5" />,
                       onClick: () => setImpersonateTarget(item),
                     },
                   ]
@@ -414,14 +548,16 @@ export function ErpUsersPage() {
                 ? [
                     {
                       label: t("Ngưng hoạt động"),
-                      icon: undefined,
-                      variant: "danger" as const,
+                      icon: <Ban className="w-3.5 h-3.5 text-destructive" />,
                       onClick: () => void handleDeactivate(item),
                     },
                   ]
                 : [
                     {
                       label: t("Kích hoạt"),
+                      icon: (
+                        <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
+                      ),
                       onClick: () => void handleActivate(item),
                     },
                   ]),
@@ -431,175 +567,116 @@ export function ErpUsersPage() {
       />
 
       <StandardFormDrawer
-        open={drawerOpen}
-        mode={editingUser ? "edit" : "create"}
+        open={userDrawerOpen}
+        mode={drawerMode}
         onClose={handleCloseDrawer}
-        title={editingUser ? t("Cập nhật user") : t("Tạo user mới")}
-        subtitle={t("Flow production-grade cho ERP CORE")}
+        onToggleEdit={isViewMode ? handleToggleToEdit : undefined}
+        confirmOnClose={!isViewMode && isFormDirty}
+        title={
+          isCreateMode
+            ? t("Tạo user mới")
+            : isEditMode
+              ? t("Cập nhật user")
+              : selectedUser?.email || t("Chi tiết user")
+        }
+        subtitle={
+          isViewMode
+            ? t("Timeline audit theo core_user")
+            : t("Flow production-grade cho ERP CORE")
+        }
         actions={drawerActions}
         layout="1-column"
+        tabs={userDrawerTabs}
+        defaultTabKey="user_info"
         leftPanel={
-          <DrawerSection title={t("Thông tin user")}>
-            <DrawerField label="Email" required>
-              <input
-                className={inputCls}
-                value={form.email}
-                disabled={!!editingUser}
-                onChange={(e) =>
-                  setForm((prev) => ({ ...prev, email: e.target.value }))
-                }
-                placeholder="user@example.com"
-              />
-            </DrawerField>
-            {!editingUser && (
-              <>
-                <DrawerField label={t("Mật khẩu")} required>
-                  <div className="relative">
-                    <input
-                      type={showPassword ? "text" : "password"}
-                      className={inputCls}
-                      value={form.password}
-                      onChange={(e) =>
-                        setForm((prev) => ({
-                          ...prev,
-                          password: e.target.value,
-                        }))
-                      }
-                      placeholder={t("Tối thiểu 8 ký tự")}
-                    />
-                    <button
-                      type="button"
-                      className="absolute inset-y-0 right-0 px-3 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none"
-                      onClick={() => setShowPassword(!showPassword)}
-                    >
-                      {showPassword ? (
-                        <EyeOff className="w-4 h-4" />
-                      ) : (
-                        <Eye className="w-4 h-4" />
-                      )}
-                    </button>
-                  </div>
-                </DrawerField>
-                <DrawerField label={t("Xác nhận mật khẩu")} required>
-                  <div className="relative">
-                    <input
-                      type={showConfirmPassword ? "text" : "password"}
-                      className={inputCls}
-                      value={form.confirmPassword}
-                      onChange={(e) =>
-                        setForm((prev) => ({
-                          ...prev,
-                          confirmPassword: e.target.value,
-                        }))
-                      }
-                      placeholder={t("Nhập lại mật khẩu")}
-                    />
-                    <button
-                      type="button"
-                      className="absolute inset-y-0 right-0 px-3 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none"
-                      onClick={() =>
-                        setShowConfirmPassword(!showConfirmPassword)
-                      }
-                    >
-                      {showConfirmPassword ? (
-                        <EyeOff className="w-4 h-4" />
-                      ) : (
-                        <Eye className="w-4 h-4" />
-                      )}
-                    </button>
-                  </div>
-                </DrawerField>
-              </>
-            )}
-            <DrawerField label={t("Liên kết employee")}>
-              <Combobox
-                options={employees.map((emp) => ({
-                  value: emp.id,
-                  label: `${emp.fullName} (${emp.employeeCode})`,
-                }))}
-                value={form.employeeId}
-                onChange={(val) =>
-                  setForm((prev) => ({ ...prev, employeeId: val }))
-                }
-                placeholder={t("Không liên kết")}
-              />
-            </DrawerField>
-          </DrawerSection>
-        }
-      />
-
-      <StandardFormDrawer
-        open={detailOpen}
-        mode="view"
-        onClose={() => setDetailOpen(false)}
-        title={selectedUser?.email || t("Chi tiết user")}
-        subtitle={t("Timeline audit theo core_user")}
-        actions={[
-          {
-            label: t("Đóng"),
-            onClick: () => setDetailOpen(false),
-            primary: true,
-          },
-        ]}
-        layout="1-column"
-        leftPanel={
-          <>
-            <DrawerSection title={t("Thông tin hiện tại")}>
-              <div className="space-y-2 text-sm">
-                <div>
-                  <span className="font-medium">Email:</span>{" "}
-                  {selectedUser?.email}
-                </div>
-                <div>
-                  <span className="font-medium">{t("Trạng thái:")}</span>{" "}
-                  {selectedUser?.status}
-                </div>
-                <div>
-                  <span className="font-medium">Employee:</span>{" "}
-                  {selectedUser?.employee
-                    ? `${selectedUser.employee.fullName} (${selectedUser.employee.employeeCode})`
-                    : "—"}
-                </div>
-                <div>
-                  <span className="font-medium">Last login:</span>{" "}
-                  {formatDate(selectedUser?.lastLoginAt ?? null)}
-                </div>
-              </div>
-            </DrawerSection>
-            <DrawerSection title={t("Timeline audit")}>
-              {timelineLoading ? (
-                <div className="text-sm text-muted-foreground">
-                  {t("Đang tải timeline...")}
-                </div>
-              ) : timeline.length === 0 ? (
-                <div className="text-sm text-muted-foreground">
-                  {t("Chưa có log")}
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {timeline.map((entry) => (
-                    <div
-                      key={entry.id}
-                      className="rounded-xl border border-border bg-surface p-3 text-sm"
-                    >
-                      <div className="flex items-center justify-between gap-3">
-                        <span className="font-medium">{entry.actionType}</span>
-                        <span className="text-xs text-muted-foreground">
-                          {formatDate(entry.createdAt)}
-                        </span>
-                      </div>
-                      <div className="mt-1 text-xs text-muted-foreground">
-                        {entry.actorEmail || "system"} • {entry.status}
-                      </div>
-                      {entry.message ? (
-                        <div className="mt-2 text-sm">{entry.message}</div>
-                      ) : null}
+          !userDrawerTabs ? (
+            <DrawerSection title={t("Thông tin user")}>
+              <DrawerField label="Email" required>
+                <input
+                  className={inputCls}
+                  value={form.email}
+                  disabled={isEditMode}
+                  onChange={(e) =>
+                    setForm((prev) => ({ ...prev, email: e.target.value }))
+                  }
+                  placeholder="user@example.com"
+                />
+              </DrawerField>
+              {isCreateMode && (
+                <>
+                  <DrawerField label={t("Mật khẩu")} required>
+                    <div className="relative">
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        className={inputCls}
+                        value={form.password}
+                        onChange={(e) =>
+                          setForm((prev) => ({
+                            ...prev,
+                            password: e.target.value,
+                          }))
+                        }
+                        placeholder={t("Tối thiểu 8 ký tự")}
+                      />
+                      <button
+                        type="button"
+                        className="absolute inset-y-0 right-0 px-3 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none"
+                        onClick={() => setShowPassword(!showPassword)}
+                      >
+                        {showPassword ? (
+                          <EyeOff className="w-4 h-4" />
+                        ) : (
+                          <Eye className="w-4 h-4" />
+                        )}
+                      </button>
                     </div>
-                  ))}
-                </div>
+                  </DrawerField>
+                  <DrawerField label={t("Xác nhận mật khẩu")} required>
+                    <div className="relative">
+                      <input
+                        type={showConfirmPassword ? "text" : "password"}
+                        className={inputCls}
+                        value={form.confirmPassword}
+                        onChange={(e) =>
+                          setForm((prev) => ({
+                            ...prev,
+                            confirmPassword: e.target.value,
+                          }))
+                        }
+                        placeholder={t("Nhập lại mật khẩu")}
+                      />
+                      <button
+                        type="button"
+                        className="absolute inset-y-0 right-0 px-3 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none"
+                        onClick={() =>
+                          setShowConfirmPassword(!showConfirmPassword)
+                        }
+                      >
+                        {showConfirmPassword ? (
+                          <EyeOff className="w-4 h-4" />
+                        ) : (
+                          <Eye className="w-4 h-4" />
+                        )}
+                      </button>
+                    </div>
+                  </DrawerField>
+                </>
               )}
+              <DrawerField label={t("Liên kết employee")}>
+                <Combobox
+                  options={employees.map((emp) => ({
+                    value: emp.id,
+                    label: `${emp.fullName} (${emp.employeeCode})`,
+                  }))}
+                  value={form.employeeId}
+                  onChange={(val) =>
+                    setForm((prev) => ({ ...prev, employeeId: val }))
+                  }
+                  placeholder={t("Không liên kết")}
+                />
+              </DrawerField>
             </DrawerSection>
-          </>
+          ) : undefined
         }
       />
 

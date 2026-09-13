@@ -53,6 +53,9 @@ export function DocumentLineTable<T>({
   const tableRef = useRef<HTMLTableElement>(null);
   const [tableWidth, setTableWidth] = useState(0);
 
+  const [isScrolledTop, setIsScrolledTop] = useState(false);
+  const [isScrolledBottom, setIsScrolledBottom] = useState(false);
+
   const handleTopScroll = () => {
     if (topScrollRef.current && bottomScrollRef.current) {
       bottomScrollRef.current.scrollLeft = topScrollRef.current.scrollLeft;
@@ -63,6 +66,12 @@ export function DocumentLineTable<T>({
     if (topScrollRef.current && bottomScrollRef.current) {
       topScrollRef.current.scrollLeft = bottomScrollRef.current.scrollLeft;
     }
+    if (bottomScrollRef.current) {
+      const el = bottomScrollRef.current;
+      setIsScrolledTop(el.scrollTop > 2);
+      const atBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 4;
+      setIsScrolledBottom(!atBottom && el.scrollHeight > el.clientHeight);
+    }
   };
 
   useEffect(() => {
@@ -70,11 +79,15 @@ export function DocumentLineTable<T>({
     const observer = new ResizeObserver(() => {
       if (bottomScrollRef.current) {
         setTableWidth(bottomScrollRef.current.scrollWidth);
+        const el = bottomScrollRef.current;
+        setIsScrolledTop(el.scrollTop > 2);
+        const atBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 4;
+        setIsScrolledBottom(!atBottom && el.scrollHeight > el.clientHeight);
       }
     });
     observer.observe(tableRef.current);
     return () => observer.disconnect();
-  }, []);
+  }, [data]);
 
   const hasActions = !viewOnly && !!onRemoveLine;
   const showAddBtn = !viewOnly && !!onAddLine && !disabled;
@@ -88,7 +101,7 @@ export function DocumentLineTable<T>({
       >
         <div
           style={{
-            width: tableWidth ? `${tableWidth}px` : "100%",
+            width: `${tableWidth}px`,
             height: "1px",
           }}
         />
@@ -96,13 +109,28 @@ export function DocumentLineTable<T>({
       <div
         ref={bottomScrollRef}
         className={cn(
-          "w-full overflow-x-auto rounded-lg border border-[color:var(--border)]",
+          variant === "spreadsheet"
+            ? "bg-surface border border-border rounded-[10px] overflow-auto shadow-panel"
+            : "w-full overflow-x-auto rounded-lg border border-[color:var(--border)]",
           tableContainerClassName,
         )}
         onScroll={handleBottomScroll}
       >
-        <table ref={tableRef} className="w-full text-sm text-left relative">
-          <thead className="bg-muted text-muted-foreground text-xs uppercase sticky top-0 z-10 shadow-sm">
+        <table
+          ref={tableRef}
+          className={cn(
+            "w-full text-sm text-left relative",
+            variant === "spreadsheet" && "border-collapse border-spacing-0",
+          )}
+        >
+          <thead
+            className={cn(
+              "table-header-glass text-muted-foreground text-xs uppercase sticky top-0 z-10 border-b border-border transition-shadow duration-200",
+              isScrolledTop
+                ? "shadow-[0_4px_16px_-2px_rgba(15,23,42,0.10),0_2px_4px_-2px_rgba(15,23,42,0.06)]"
+                : "shadow-none",
+            )}
+          >
             <tr
               className={cn(
                 variant === "spreadsheet" &&
@@ -113,7 +141,10 @@ export function DocumentLineTable<T>({
                 <th
                   key={col.key}
                   className={cn(
-                    "px-3 py-2 font-medium",
+                    "font-medium",
+                    variant === "spreadsheet"
+                      ? "px-2 py-1 h-auto text-[11px]"
+                      : "px-3 py-2",
                     col.align === "center"
                       ? "text-center"
                       : col.align === "right"
@@ -122,9 +153,9 @@ export function DocumentLineTable<T>({
                     col.sortable &&
                       "cursor-pointer hover:bg-muted/80 transition-colors select-none",
                     col.fixed === "left" &&
-                      "sticky left-0 bg-muted z-20 shadow-[1px_0_0_0_var(--border)]",
+                      "sticky left-0 table-header-glass z-20 shadow-[1px_0_0_0_var(--border)]",
                     col.fixed === "right" &&
-                      "sticky right-0 bg-muted z-20 shadow-[-1px_0_0_0_var(--border)]",
+                      "sticky right-0 table-header-glass z-20 shadow-[-1px_0_0_0_var(--border)]",
                   )}
                   style={{ width: col.width, minWidth: col.minWidth }}
                   onClick={() => col.sortable && onSort?.(col.key)}
@@ -254,7 +285,14 @@ export function DocumentLineTable<T>({
             )}
           </tbody>
           {footer && (
-            <tfoot className="bg-muted border-t border-[color:var(--border)] font-medium sticky bottom-0 z-10 shadow-[0_-1px_0_0_var(--border)]">
+            <tfoot
+              className={cn(
+                "table-footer-glass border-t border-[color:var(--border)] font-medium sticky bottom-0 z-10 transition-shadow duration-200",
+                isScrolledBottom
+                  ? "shadow-[0_-4px_16px_-2px_rgba(15,23,42,0.10)]"
+                  : "shadow-none",
+              )}
+            >
               {footer}
             </tfoot>
           )}

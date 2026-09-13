@@ -1,0 +1,15 @@
+export const loginEn = {
+  title: "Sign In",
+  subtitle: "Sign in to your ERP account",
+  email: "Email",
+  emailPlaceholder: "Enter your email",
+  password: "Password",
+  passwordPlaceholder: "Enter your password",
+  submit: "Sign In",
+  loading: "Signing in...",
+  errorInvalid: "Invalid email or password.",
+  errorEmailRequired: "Please enter your email.",
+  errorEmailFormat: "Invalid email address.",
+  errorPasswordRequired: "Please enter your password.",
+  quickLoginAdmin: "Quick Login (Admin)",
+};

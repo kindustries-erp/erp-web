@@ -18,12 +18,20 @@ export interface ErpBom {
   bomCode: string;
   bomName: string;
   finishedGoodItemId?: string | null;
+  finishedGoodItemCode?: string | null;
   finishedGoodItemName?: string | null;
+  categoryId?: string | null;
+  categoryCode?: string | null;
+  categoryName?: string | null;
+  attributes?: Record<string, string>;
+  globalAttributes?: Record<string, any>;
   version: string;
   status?: string | null;
   effectiveFrom?: string | null;
   effectiveTo?: string | null;
   notes?: string | null;
+  hasProduction?: boolean;
+  productionCount?: number;
   createdAt?: string;
   lines?: ErpBomLine[];
 }
@@ -32,6 +40,9 @@ export interface CreateBomPayload {
   bomCode: string;
   bomName: string;
   finishedGoodItemId?: string;
+  categoryId?: string;
+  attributes?: Record<string, string>;
+  globalAttributes?: Record<string, any>;
   version: string;
   status?: string;
   effectiveFrom?: string;
@@ -59,6 +70,33 @@ export const bomCoreApi = {
       },
     });
     return data;
+  },
+  getBomColumnOptions: async (params: {
+    columnKey: string;
+    search: string;
+    pageParam: number;
+    filtersStr?: string;
+  }) => {
+    const { data } = await axiosInstance.get<{
+      items: string[];
+      total: number;
+      page: number;
+      pageSize: number;
+      totalPages: number;
+    }>(`${BASE}/column-options`, {
+      params: {
+        column: params.columnKey,
+        search: params.search,
+        page: params.pageParam,
+        pageSize: 20,
+        filters: params.filtersStr,
+      },
+    });
+    return {
+      items: data.items.map((i) => ({ label: i, value: i })),
+      total: data.total,
+      next: data.page < data.totalPages ? data.page + 1 : null,
+    };
   },
   get: async (id: string): Promise<ErpBom> => {
     const { data } = await axiosInstance.get<BomDetailResponse>(

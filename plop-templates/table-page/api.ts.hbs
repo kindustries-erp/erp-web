@@ -1,0 +1,87 @@
+import axiosInstance from "@/core/api/axiosInstance";
+
+export interface {{pascalCase componentName}}Item {
+  id: string;
+  code: string;
+  name: string;
+  status: string;
+{{#if hasDateColumn}}
+  createdAt: string;
+{{/if}}
+{{#if hasAmountColumn}}
+  amount: number;
+{{/if}}
+  notes?: string;
+}
+
+export interface {{pascalCase componentName}}ListParams {
+  page?: number;
+  pageSize?: number;
+  sorts?: string[];
+  date_from?: string;
+  date_to?: string;
+  column_filters?: string;
+  column_search?: string;
+  search?: string;
+}
+
+export interface {{pascalCase componentName}}ListResponse {
+  data: {{pascalCase componentName}}Item[];
+  total: number;
+  totalPages: number;
+}
+
+export const {{camelCase componentName}}Api = {
+  getList: async (params: {{pascalCase componentName}}ListParams = {}): Promise<{{pascalCase componentName}}ListResponse> => {
+    const res = await axiosInstance.get("/{{kebabCase moduleName}}", { params });
+    return res.data?.data || res.data || { data: [], total: 0, totalPages: 0 };
+  },
+
+  getById: async (id: string): Promise<{{pascalCase componentName}}Item> => {
+    const res = await axiosInstance.get(`/{{kebabCase moduleName}}/${id}`);
+    return res.data?.data || res.data;
+  },
+
+  create: async (payload: Partial<{{pascalCase componentName}}Item>): Promise<{{pascalCase componentName}}Item> => {
+    const res = await axiosInstance.post("/{{kebabCase moduleName}}", payload);
+    return res.data?.data || res.data;
+  },
+
+  update: async (id: string, payload: Partial<{{pascalCase componentName}}Item>): Promise<{{pascalCase componentName}}Item> => {
+    const res = await axiosInstance.patch(`/{{kebabCase moduleName}}/${id}`, payload);
+    return res.data?.data || res.data;
+  },
+
+  delete: async (id: string): Promise<{ success: boolean }> => {
+    const res = await axiosInstance.delete(`/{{kebabCase moduleName}}/${id}`);
+    return res.data;
+  },
+
+  getColumnOptions: async (
+    columnKey: string,
+    search: string,
+    pageParam: number = 1,
+    pageSize: number = 20,
+    filtersStr?: string
+  ): Promise<{ items: Array<{ label: string; value: string }>; total: number; next: number | null }> => {
+    const res = await axiosInstance.get(`/{{kebabCase moduleName}}/column-options`, {
+      params: {
+        column: columnKey,
+        search,
+        page: pageParam,
+        pageSize,
+        filtersStr,
+      },
+    });
+    const resData = res.data?.data || res.data || {};
+    const rawOptions = resData.options || resData.items || [];
+    const items = rawOptions.map((o: any) =>
+      typeof o === "string" ? { label: o, value: o } : { label: String(o.label ?? o.value ?? ""), value: String(o.value ?? "") }
+    );
+    return {
+      items,
+      total: resData.total ?? items.length,
+      next: resData.hasNextPage ? pageParam + 1 : null,
+    };
+  },
+};

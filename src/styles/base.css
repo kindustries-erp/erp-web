@@ -60,12 +60,12 @@ body::before {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #e2e8f0;
+  background: var(--scrollbar-thumb, #e2e8f0);
   border-radius: 99px;
   cursor: pointer;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #cbd5e1;
+  background: var(--scrollbar-thumb-hover, #cbd5e1);
 }
 
 /* ── Keyframes ── */

@@ -15,9 +15,16 @@ interface BarChartProps {
   }>;
   yMax?: number;
   yCallback?: (v: number | string) => string;
+  onClick?: (datasetIndex: number, index: number, label: string) => void;
 }
 
-export function BarChart({ labels, datasets, yMax, yCallback }: BarChartProps) {
+export function BarChart({
+  labels,
+  datasets,
+  yMax,
+  yCallback,
+  onClick,
+}: BarChartProps) {
   const { gridColor, tickColor } = useChartTheme();
   return (
     <Chart
@@ -43,6 +50,18 @@ export function BarChart({ labels, datasets, yMax, yCallback }: BarChartProps) {
       options={{
         responsive: true,
         maintainAspectRatio: false,
+        onClick: onClick
+          ? (event, elements) => {
+              if (elements.length > 0) {
+                const element = elements[0];
+                onClick(
+                  element.datasetIndex,
+                  element.index,
+                  labels[element.index],
+                );
+              }
+            }
+          : undefined,
         plugins: {
           legend: { display: false },
           tooltip: {

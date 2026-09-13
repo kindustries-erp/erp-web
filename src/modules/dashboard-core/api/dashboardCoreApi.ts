@@ -13,4 +13,22 @@ export const dashboardCoreApi = {
     });
     return res.data;
   },
+  getCashflowForecast: async (params?: DashboardOverviewParams) => {
+    const res = await axiosInstance.get(
+      "/api/v1/dashboard-core/cashflow-forecast",
+      {
+        params,
+      },
+    );
+    return res.data;
+  },
+  getBudgetSuggestions: async (params?: DashboardOverviewParams) => {
+    const res = await axiosInstance.get(
+      "/api/v1/dashboard-core/budget-suggestions",
+      {
+        params,
+      },
+    );
+    return res.data;
+  },
 };

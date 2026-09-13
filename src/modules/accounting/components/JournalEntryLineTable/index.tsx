@@ -127,7 +127,7 @@ export function JournalEntryLineTable({ lines, accounts, onChange }: Props) {
               </tr>
             ))}
           </tbody>
-          <tfoot className="bg-surface-hover border-t border-border font-semibold">
+          <tfoot className="table-footer-glass border-t border-border font-semibold sticky bottom-0 z-10 shadow-[0_-2px_6px_rgba(0,0,0,0.04)]">
             <tr>
               <td className="px-3 py-2 text-right">
                 {t("journalEntries.form.total")}

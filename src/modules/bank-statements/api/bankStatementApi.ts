@@ -27,6 +27,25 @@ export interface ErpCashBook {
   createdAt: string;
 }
 
+export interface BankTransactionPostingLine {
+  id: string;
+  accountId: string;
+  debit: number;
+  credit: number;
+  description: string;
+}
+
+export interface BankTransactionPostingDetail {
+  postingStatus: "POSTED" | "UNPOSTED";
+  journalEntryId: string | null;
+  postingDate: string | null;
+  description: string | null;
+  lines: BankTransactionPostingLine[];
+  totalDebit: number;
+  totalCredit: number;
+  isBalanced: boolean;
+}
+
 export const bankStatementApi = {
   getTransactions: async (params: {
     page?: number;
@@ -88,6 +107,44 @@ export const bankStatementApi = {
   getTransaction: async (id: string) => {
     const res = await axiosInstance.get(
       `/api/v1/bank-transactions-core/transactions/${id}`,
+    );
+    return res.data;
+  },
+
+  getTransactionPosting: async (
+    id: string,
+  ): Promise<BankTransactionPostingDetail> => {
+    const res = await axiosInstance.get(
+      `/api/v1/bank-transactions-core/transactions/${id}/posting`,
+    );
+    return res.data;
+  },
+
+  postTransaction: async (
+    id: string,
+    payload: {
+      postingDate: string;
+      description?: string;
+      lines: {
+        accountId: string;
+        debit: number;
+        credit: number;
+        description?: string;
+      }[];
+    },
+  ): Promise<BankTransactionPostingDetail> => {
+    const res = await axiosInstance.post(
+      `/api/v1/bank-transactions-core/transactions/${id}/post`,
+      payload,
+    );
+    return res.data;
+  },
+
+  unpostTransaction: async (
+    id: string,
+  ): Promise<BankTransactionPostingDetail> => {
+    const res = await axiosInstance.post(
+      `/api/v1/bank-transactions-core/transactions/${id}/unpost`,
     );
     return res.data;
   },
@@ -303,4 +360,102 @@ export const bankStatementApi = {
     );
     return res.data;
   },
+  getTraceabilityGraph: async (
+    id: string,
+  ): Promise<import("@/shared/types/traceability").TraceabilityGraphData> => {
+    const res = await axiosInstance.get(
+      `/api/v1/bank-transactions-core/transactions/${id}/traceability-graph`,
+    );
+    return res.data;
+  },
+  linkInvoice: async (
+    id: string,
+    payload: { invoiceId: string; netOffAmount?: number },
+  ): Promise<{ message: string }> => {
+    const res = await axiosInstance.post(
+      `/api/v1/bank-transactions-core/transactions/${id}/net-off-invoices`,
+      payload,
+    );
+    return res.data;
+  },
+  removeInvoice: async (
+    id: string,
+    netOffId: string,
+  ): Promise<{ message: string }> => {
+    const res = await axiosInstance.delete(
+      `/api/v1/bank-transactions-core/transactions/${id}/net-off-invoices/${netOffId}`,
+    );
+    return res.data;
+  },
+
+  // --- Background Excel Export ---
+  startExportExcelBackground: async (
+    params: any,
+  ): Promise<{ jobId: string; message: string; reused?: boolean }> => {
+    const res = await axiosInstance.post(
+      "/api/v1/bank-transactions-core/export/excel/background",
+      params,
+    );
+    return res.data;
+  },
+
+  listExportExcelHistory: async (
+    page = 1,
+    pageSize = 10,
+  ): Promise<BankStatementExportHistoryResult> => {
+    const res = await axiosInstance.get(
+      "/api/v1/bank-transactions-core/export/excel/background/history",
+      {
+        params: { page, pageSize },
+      },
+    );
+    return res.data;
+  },
+
+  downloadExportExcelFile: async (jobId: string) => {
+    const res = await axiosInstance.get(
+      `/api/v1/bank-transactions-core/export/excel/background/${jobId}/download`,
+      {
+        responseType: "blob",
+      },
+    );
+    return res.data;
+  },
+};
+
+export type BankStatementExportProgressEvent = {
+  processId: "bank-statement-xlsx-export" | "ping";
+  userId?: string;
+  jobId?: string;
+  current: number;
+  total: number;
+  isRunning: boolean;
+  completed: boolean;
+  ready: boolean;
+  failed: boolean;
+  message?: string;
+  fileName?: string;
+};
+
+export type BankStatementExportHistoryItem = {
+  jobId: string;
+  fileName: string;
+  status: "RUNNING" | "COMPLETED" | "FAILED";
+  current: number;
+  total: number;
+  message: string;
+  createdAt: string;
+  finishedAt?: string;
+  expiresAt?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  canDownload: boolean;
+};
+
+export type BankStatementExportHistoryResult = {
+  items: BankStatementExportHistoryItem[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
 };

@@ -3,11 +3,17 @@ import {
   manufacturingApi,
   type ErpVehicle,
 } from "@/modules/manufacturing/api/manufacturingApi";
+import { AsBuiltBomDrawer } from "@/modules/manufacturing/components/AsBuiltBomDrawer";
+import { Cpu } from "lucide-react";
 
 export function MfgVehicles() {
   const [rows, setRows] = useState<ErpVehicle[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const [bomDrawerOpen, setBomDrawerOpen] = useState(false);
+  const [bomVehicleId, setBomVehicleId] = useState<string | null>(null);
+  const [bomVehicleLabel, setBomVehicleLabel] = useState("");
 
   useEffect(() => {
     (async () => {
@@ -53,6 +59,7 @@ export function MfgVehicles() {
                 <th className="px-4 py-3">Số máy</th>
                 <th className="px-4 py-3">Ngày lắp</th>
                 <th className="px-4 py-3">Trạng thái</th>
+                <th className="px-4 py-3 text-right">Thao tác</th>
               </tr>
             </thead>
             <tbody>
@@ -64,7 +71,10 @@ export function MfgVehicles() {
                 </tr>
               ) : rows.length === 0 ? (
                 <tr>
-                  <td className="px-4 py-4" colSpan={5}>
+                  <td
+                    className="px-4 py-4 text-center text-muted-foreground"
+                    colSpan={6}
+                  >
                     Chưa có xe nào.
                   </td>
                 </tr>
@@ -78,6 +88,19 @@ export function MfgVehicles() {
                       {row.assembly_date?.slice(0, 10) ?? "-"}
                     </td>
                     <td className="px-4 py-3">{row.status}</td>
+                    <td className="px-4 py-3 text-right">
+                      <button
+                        title="Xem linh kiện As-Built"
+                        onClick={() => {
+                          setBomVehicleId(row.id);
+                          setBomVehicleLabel(row.vin || row.frame_no || row.id);
+                          setBomDrawerOpen(true);
+                        }}
+                        className="p-1.5 text-primary hover:bg-primary/10 rounded transition-colors"
+                      >
+                        <Cpu className="w-4 h-4" />
+                      </button>
+                    </td>
                   </tr>
                 ))
               )}
@@ -85,6 +108,13 @@ export function MfgVehicles() {
           </table>
         </div>
       </div>
+
+      <AsBuiltBomDrawer
+        open={bomDrawerOpen}
+        onClose={() => setBomDrawerOpen(false)}
+        vehicleId={bomVehicleId}
+        vehicleLabel={bomVehicleLabel}
+      />
     </div>
   );
 }

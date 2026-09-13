@@ -1,9 +1,17 @@
 import { useState, useEffect, useRef } from "react";
-import { createPortal } from "react-dom";
 import { cn } from "@/shared/utils";
 import { useT } from "@/core/i18n";
+import { Button } from "@/shared/components/ui/Button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/shared/components/ui/Dialog";
 
-interface ReasonConfirmModalProps {
+export interface ReasonConfirmModalProps {
   open: boolean;
   title?: string;
   message?: string;
@@ -32,7 +40,6 @@ export function ReasonConfirmModal({
   onCancel,
   loading = false,
   danger = true,
-  zIndex = 600,
 }: ReasonConfirmModalProps) {
   const t = useT();
   const [reason, setReason] = useState("");
@@ -45,60 +52,54 @@ export function ReasonConfirmModal({
     }
   }, [open]);
 
-  if (!open) return null;
-
   const canConfirm = reason.trim().length > 0;
 
-  return createPortal(
-    <div
-      className="fixed inset-0 transition-all duration-300"
-      style={{
-        zIndex,
-        backgroundColor: "rgba(0, 0, 0, 0.15)",
-      }}
-      onClick={(e) => {
-        if (e.target === e.currentTarget && !loading) onCancel();
-      }}
-    >
-      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white border border-border/50 rounded-2xl shadow-xl p-6 w-full max-w-[380px]">
-        <h3 className="text-sm font-semibold text-slate-900 mb-1.5">
-          {title || "Xác nhận"}
-        </h3>
-        {message && (
-          <p className="text-xs text-slate-500 mb-3 leading-relaxed">
-            {message}
-          </p>
-        )}
+  return (
+    <Dialog open={open} onOpenChange={(v) => !v && onCancel()}>
+      <DialogContent
+        hideCloseButton
+        hideOverlay
+        className={cn("max-w-[400px] p-6")}
+      >
+        <DialogHeader className="text-left space-y-1.5 mb-2">
+          <DialogTitle className="text-sm font-semibold text-foreground">
+            {title || t("confirmModal.defaultTitle")}
+          </DialogTitle>
+          {message && (
+            <DialogDescription className="text-xs text-[color:var(--muted-fg)] leading-relaxed">
+              {message}
+            </DialogDescription>
+          )}
+        </DialogHeader>
+
         <textarea
           ref={textareaRef}
-          className="w-full text-xs text-foreground bg-muted/20 border border-border rounded-lg px-3 py-2 outline-none focus:border-primary transition-colors resize-none mb-4"
-          rows={3}
           value={reason}
           onChange={(e) => setReason(e.target.value)}
           placeholder={placeholder}
-          disabled={loading}
+          rows={3}
+          className="w-full text-xs p-2.5 rounded-lg border border-[color:var(--popup-border)] bg-black/[0.03] dark:bg-white/[0.05] text-foreground placeholder:text-[color:var(--faint)] resize-none outline-none focus:border-primary transition-colors mb-4"
         />
-        <div className="flex gap-2 justify-end">
-          <button
+
+        <DialogFooter className="flex-row justify-end gap-2 sm:space-x-0">
+          <Button
+            variant="secondary"
+            size="md"
             onClick={onCancel}
             disabled={loading}
-            className="px-4 py-2 rounded-xl border border-border text-xs font-medium bg-surface text-foreground hover:bg-surface-hover transition-colors cursor-pointer disabled:opacity-50"
           >
             {cancelLabel || t("confirmModal.defaultCancel")}
-          </button>
-          <button
+          </Button>
+          <Button
+            variant={danger ? "danger" : "primary"}
+            size="md"
             onClick={() => canConfirm && onConfirm(reason.trim())}
             disabled={loading || !canConfirm}
-            className={cn(
-              "px-4 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer disabled:opacity-50 flex items-center gap-[6px] shadow-sm active:scale-95",
-              danger
-                ? "bg-red-500 text-white hover:bg-red-600 hover:shadow-lg hover:shadow-red-500/20"
-                : "bg-primary text-primary-fg border border-primary hover:opacity-90",
-            )}
+            className="min-w-[100px]"
           >
             {loading && (
               <svg
-                className="animate-spin w-3 h-3"
+                className="animate-spin w-3 h-3 mr-1.5"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -107,11 +108,12 @@ export function ReasonConfirmModal({
                 <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
               </svg>
             )}
-            {loading ? t("common.processing") : confirmLabel || "Xác nhận"}
-          </button>
-        </div>
-      </div>
-    </div>,
-    document.body,
+            {loading
+              ? t("common.processing")
+              : confirmLabel || t("confirmModal.defaultConfirm")}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

@@ -1,0 +1,301 @@
+/* ══════════════════════════════════════════
+   Midnight Theme v2 — Neutral (Zinc) Dark
+   Professional pure-neutral dark theme
+   ══════════════════════════════════════════ */
+.theme-midnight {
+  /* ── Palette (pure neutral zinc — no blue undertone) ── */
+  --background: #09090b;
+  --surface: #18181b;
+  --surface-hover: #27272a;
+  --border: #3f3f46;
+  --border-light: #27272a;
+  --foreground: #f4f4f5;
+  --muted: #131316;
+  --muted-fg: #a1a1aa;
+  --faint: #52525b;
+  --primary: #ffffff;
+  --primary-fg: #09090b;
+  --accent: #fafafa;
+
+  /* ── Scrollbar ── */
+  --scrollbar-thumb: #3f3f46;
+  --scrollbar-thumb-hover: #52525b;
+
+  /* ── Semantic colors (status only — emerald/rose/amber) ── */
+  --up-bg: rgba(16, 185, 129, 0.12);
+  --up-fg: #34d399;
+  --down-bg: rgba(244, 63, 94, 0.14);
+  --down-fg: #fb7185;
+  --warn-bg: rgba(251, 191, 36, 0.14);
+  --warn-fg: #fbbf24;
+  --approve-bg: rgba(16, 185, 129, 0.12);
+  --approve-fg: #34d399;
+
+  --card-shadow: 0 10px 38px rgba(0, 0, 0, 0.5), 0 3px 10px rgba(0, 0, 0, 0.28);
+  --panel-shadow:
+    3px 12px 28px -12px rgba(0, 0, 0, 0.65),
+    1px 4px 12px -8px rgba(0, 0, 0, 0.45);
+
+  /* ── Glass chrome (frosted neutral, blur on) ── */
+  --glass-chrome: rgba(24, 24, 27, 0.72);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-blur: 18px;
+
+  /* ── Popups & dropdowns ── */
+  --popup-bg: rgba(24, 24, 27, 0.72);
+  --popup-bg-hover: rgba(255, 255, 255, 0.06);
+  --popup-border: rgba(63, 63, 70, 0.6);
+  --popup-shadow:
+    0 18px 44px -8px rgba(0, 0, 0, 0.55), 0 5px 14px rgba(0, 0, 0, 0.35);
+
+  /* ── Modals & Tooltips ── */
+  --modal-bg: rgba(9, 9, 11, 0.78);
+  --tooltip-bg: #27272a;
+
+  /* ── Table sticky glass ── */
+  --table-header-bg: rgba(24, 24, 27, 0.72);
+  --table-footer-bg: rgba(24, 24, 27, 0.78);
+
+  /* ── Drawer frosted glass & overlay ── */
+  --drawer-overlay-bg: rgba(0, 0, 0, 0.3);
+  --drawer-bg: rgba(14, 14, 16, 0.86);
+  --drawer-border: rgba(255, 255, 255, 0.08);
+  --drawer-header-bg: rgba(24, 24, 27, 0.84);
+  --drawer-header-scrolled-bg: rgba(24, 24, 27, 0.94);
+  --drawer-footer-bg: rgba(24, 24, 27, 0.84);
+  --drawer-footer-scrolled-bg: rgba(24, 24, 27, 0.94);
+  --drawer-section-bg: rgba(20, 20, 22, 0.62);
+
+  /* ── App shell & Sidebar ── */
+  --app-shell-bg: #070708;
+  --app-shell-border: transparent;
+  --sidebar-bg: #0b0b0d;
+  --sidebar-border: #1f1f22;
+  --sidebar-active-bg: rgba(255, 255, 255, 0.1);
+  --sidebar-active-fg: #fafafa;
+  --main-panel-bg: var(--background);
+  --main-panel-border: #1f1f22;
+
+  /* ── Tab / breadcrumb tokens ── */
+  --orcaq-tab-bg: #0b0b0d;
+  --orcaq-tab-active-bg: #18181b;
+  --orcaq-tab-active-fg: #f4f4f5;
+  --orcaq-tab-inactive-fg: #a1a1aa;
+  --orcaq-breadcrumb-bg: #0b0b0d;
+  --orcaq-breadcrumb-border: #1f1f22;
+  --orcaq-accent: #e4e4e7;
+}
+
+/* ── Midnight: border-radius 8px globally (except tab bar) ── */
+.theme-midnight * {
+  --radius: 8px;
+}
+
+.theme-midnight .rounded-lg,
+.theme-midnight .rounded-xl {
+  border-radius: 8px !important;
+}
+
+.theme-midnight
+  .rounded-full:not(.w-6):not(.w-8):not(.min-w-\[22px\]):not(
+    .min-w-\[18px\]
+  ):not(.min-w-\[32px\]) {
+  border-radius: 8px !important;
+}
+
+.theme-midnight .rounded-md {
+  border-radius: 6px !important;
+}
+
+.theme-midnight .rounded-sm {
+  border-radius: 4px !important;
+}
+
+/* Keep avatar circles round */
+.theme-midnight .rounded-full.bg-primary,
+.theme-midnight .rounded-full.bg-\[color\:var\(--muted\)\] {
+  border-radius: 9999px !important;
+}
+
+/* Cards, panels, inputs */
+.theme-midnight .card-shadow,
+.theme-midnight [class*="rounded-xl"],
+.theme-midnight [class*="rounded-lg"] {
+  border-radius: 8px;
+}
+
+.theme-midnight input,
+.theme-midnight textarea,
+.theme-midnight select,
+.theme-midnight [role="combobox"] {
+  border-radius: 6px !important;
+}
+
+.theme-midnight button {
+  border-radius: 6px;
+}
+
+/* Tab bar: no border-radius */
+.theme-midnight .tab-bar-wrapper,
+.theme-midnight .tab-bar-inner,
+.theme-midnight .tab-bar-inner > div,
+.theme-midnight .tab-bar-inner > div[data-tab-page],
+.theme-midnight .tab-bar-inner .tab-item,
+.theme-midnight [role="tab"] {
+  border-radius: 0 !important;
+}
+
+/* ── Midnight: neutralize hardcoded skeleton/progress classes (too bright in dark) ── */
+.theme-midnight .bg-slate-400,
+.theme-midnight .bg-zinc-400,
+.theme-midnight .bg-neutral-400,
+.theme-midnight .bg-gray-400,
+.theme-midnight .dark\:bg-slate-400,
+.theme-midnight .dark\:bg-zinc-400,
+.theme-midnight .bg-slate-500,
+.theme-midnight .bg-slate-600 {
+  background-color: #3f3f46 !important;
+}
+.theme-midnight .bg-slate-100,
+.theme-midnight .bg-zinc-100,
+.theme-midnight .bg-neutral-100,
+.theme-midnight .bg-gray-200,
+.theme-midnight .bg-slate-200 {
+  background-color: #27272a !important;
+}
+.theme-midnight .border-slate-200 {
+  border-color: #3f3f46 !important;
+}
+.theme-midnight .ring-slate-200,
+.theme-midnight .ring-slate-800,
+.theme-midnight .dark\:ring-slate-800 {
+  --tw-ring-color: #27272a !important;
+}
+.theme-midnight .bg-slate-50,
+.theme-midnight .bg-zinc-50,
+.theme-midnight .bg-neutral-50 {
+  background-color: #18181b !important;
+}
+.theme-midnight .dark\:bg-zinc-800,
+.theme-midnight .dark\:bg-neutral-800,
+.theme-midnight .dark\:bg-zinc-950\/50,
+.theme-midnight .dark\:bg-zinc-950\/40 {
+  background-color: #18181b !important;
+}
+.theme-midnight .dark\:text-zinc-200,
+.theme-midnight .dark\:text-neutral-200 {
+  color: #f4f4f5 !important;
+}
+.theme-midnight .dark\:border-zinc-700,
+.theme-midnight .dark\:border-neutral-700 {
+  border-color: #3f3f46 !important;
+}
+.theme-midnight .dark\:data-\[state\=active\]\:bg-zinc-800 {
+  background-color: #18181b !important;
+}
+/* ── Midnight: catch ALL white/light backgrounds — class-based + inline styles ── */
+.theme-midnight .bg-white,
+.theme-midnight [class*="bg-white"],
+.theme-midnight [class*=":bg-white"],
+.theme-midnight [class*="bg-background"],
+.theme-midnight [class*=":bg-background"],
+.theme-midnight [class*="bg-surface"][class*="50"],
+.theme-midnight [class*="bg-surface"][class*="100"],
+.theme-midnight [style*="background-color: white" i],
+.theme-midnight [style*="background-color: #fff" i],
+.theme-midnight [style*="background-color: rgb(255, 255, 255)" i],
+.theme-midnight [style*="background: white" i],
+.theme-midnight [style*="background: #fff" i],
+.theme-midnight [style*="background-color:#ffffff" i],
+.theme-midnight [style*="background-color:#FFFFFF" i] {
+  background-color: #18181b !important;
+  background: #18181b !important;
+}
+.theme-midnight [class*="bg-slate-50"],
+.theme-midnight [class*="bg-zinc-50"],
+.theme-midnight [class*="bg-neutral-50"],
+.theme-midnight [class*="bg-gray-50"],
+.theme-midnight [class*="bg-slate-100"],
+.theme-midnight [class*="bg-zinc-100"],
+.theme-midnight [class*="bg-neutral-100"],
+.theme-midnight [class*="bg-gray-100"],
+.theme-midnight [class*="bg-gray-200"],
+.theme-midnight [class*="bg-slate-200"] {
+  background-color: #27272a !important;
+}
+
+/* ── Midnight: force dark appearance for ALL form controls (fix "input trắng bóc") ── */
+.theme-midnight
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not(
+    [type="file"]
+  ):not([type="submit"]):not([type="button"]):not([type="reset"]):not(
+    [type="image"]
+  ):not([type="color"]),
+.theme-midnight textarea,
+.theme-midnight select,
+.theme-midnight [role="combobox"],
+.theme-midnight [role="textbox"],
+.theme-midnight [role="searchbox"],
+.theme-midnight [role="spinbutton"],
+.theme-midnight .form-input,
+.theme-midnight .form-select,
+.theme-midnight .form-textarea,
+.theme-midnight [class*="Input__input"],
+.theme-midnight [class*="input"] {
+  background-color: #18181b !important;
+  color: #f4f4f5 !important;
+  border-color: #3f3f46 !important;
+  background-image: none !important;
+}
+.theme-midnight input::placeholder,
+.theme-midnight textarea::placeholder,
+.theme-midnight .form-input::placeholder,
+.theme-midnight .form-textarea::placeholder {
+  color: #52525b !important;
+}
+.theme-midnight input:focus,
+.theme-midnight textarea:focus,
+.theme-midnight select:focus,
+.theme-midnight [role="combobox"]:focus,
+.theme-midnight [role="textbox"]:focus,
+.theme-midnight .form-input:focus,
+.theme-midnight .form-select:focus,
+.theme-midnight .form-textarea:focus {
+  border-color: #71717a !important;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(113, 113, 122, 0.2);
+}
+/* Catch inline-styled text/foreground white-on-white text too */
+.theme-midnight [style*="color: #000" i],
+.theme-midnight [style*="color: black" i],
+.theme-midnight [style*="color: rgb(0, 0, 0)" i],
+.theme-midnight [style*="color: #111827" i],
+.theme-midnight [style*="color: #0f172a" i] {
+  color: #f4f4f5 !important;
+}
+
+/* ── Midnight: dim white inset "tráng" borders on cards/popups → zinc chìm ── */
+.theme-midnight .card-shadow {
+  box-shadow:
+    4px 12px 28px -12px rgba(0, 0, 0, 0.6),
+    0 2px 6px rgba(0, 0, 0, 0.4),
+    0 0 0 1px #3f3f46 inset !important;
+}
+.theme-midnight .popup-content {
+  box-shadow:
+    0 14px 36px -8px rgba(0, 0, 0, 0.55),
+    0 4px 12px rgba(0, 0, 0, 0.35),
+    0 0 0 1px #3f3f46 inset !important;
+}
+.theme-midnight .partner-card {
+  background: rgba(24, 24, 27, 0.88) !important;
+  box-shadow:
+    0 10px 24px -10px rgba(0, 0, 0, 0.6),
+    0 0 0 1px #3f3f46 inset !important;
+}
+.theme-midnight .context-menu {
+  box-shadow:
+    0 16px 40px -8px rgba(0, 0, 0, 0.55),
+    0 4px 12px rgba(0, 0, 0, 0.35),
+    0 0 0 1px #3f3f46 inset !important;
+}

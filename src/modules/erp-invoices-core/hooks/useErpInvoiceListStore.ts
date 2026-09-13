@@ -4,7 +4,13 @@ import {
   periodLastDay,
 } from "@/modules/finance/utils/financeHelpers";
 
-export type Direction = "IN" | "OUT";
+export type Direction =
+  | "IN"
+  | "OUT"
+  | "IN_2"
+  | "OUT_2"
+  | "CHECKPOINT_IN"
+  | "CHECKPOINT_OUT";
 
 export interface ErpInvoiceListState {
   searchInput: string;
@@ -19,6 +25,7 @@ export interface ErpInvoiceListState {
   seller_name: string;
   buyer_name: string;
   tag_id: string;
+  activeTaxTab: string;
 
   sortBy: string;
   sortOrder: "asc" | "desc";
@@ -26,11 +33,11 @@ export interface ErpInvoiceListState {
   filterPanelOpen: boolean;
 }
 
-const defaultState = (): ErpInvoiceListState => ({
+const defaultState = (pageSize = 50): ErpInvoiceListState => ({
   searchInput: "",
   search: "",
   page: 1,
-  pageSize: 50,
+  pageSize,
   period: "",
   dateFrom: "",
   dateTo: "",
@@ -38,6 +45,7 @@ const defaultState = (): ErpInvoiceListState => ({
   seller_name: "",
   buyer_name: "",
   tag_id: "",
+  activeTaxTab: "all",
   sortBy: "invoiceDate",
   sortOrder: "desc",
   filterPanelOpen: false,
@@ -47,6 +55,10 @@ export interface ErpInvoiceListStore {
   states: Record<Direction, ErpInvoiceListState>;
 
   updateState: (dir: Direction, updates: Partial<ErpInvoiceListState>) => void;
+  hydrateFromUrl: (
+    dir: Direction,
+    urlState: Partial<ErpInvoiceListState>,
+  ) => void;
 
   setSearchInput: (dir: Direction, v: string) => void;
   setSearch: (dir: Direction, v: string) => void;
@@ -60,6 +72,7 @@ export interface ErpInvoiceListStore {
   setSellerName: (dir: Direction, v: string) => void;
   setBuyerName: (dir: Direction, v: string) => void;
   setTagId: (dir: Direction, v: string) => void;
+  setActiveTaxTab: (dir: Direction, tab: string) => void;
 
   handleSort: (dir: Direction, key: string) => void;
   setFilterPanelOpen: (
@@ -68,22 +81,52 @@ export interface ErpInvoiceListStore {
   ) => void;
 
   resetAllFilters: (dir: Direction) => void;
+  migrateState: (fromDir: Direction, toDir: Direction) => void;
 }
 
 export const useErpInvoiceListStore = create<ErpInvoiceListStore>(
   (set, get) => ({
     states: {
-      IN: defaultState(),
-      OUT: defaultState(),
+      IN: defaultState(50),
+      OUT: defaultState(50),
+      IN_2: defaultState(50),
+      OUT_2: defaultState(50),
+      CHECKPOINT_IN: defaultState(20),
+      CHECKPOINT_OUT: defaultState(20),
     },
 
     updateState: (dir, updates) => {
       set((state) => ({
         states: {
           ...state.states,
-          [dir]: { ...state.states[dir], ...updates },
+          [dir]: { ...(state.states[dir] || defaultState()), ...updates },
         },
       }));
+    },
+
+    hydrateFromUrl: (dir, urlState) => {
+      set((state) => ({
+        states: {
+          ...state.states,
+          [dir]: {
+            ...(state.states[dir] || defaultState()),
+            ...urlState,
+          },
+        },
+      }));
+    },
+
+    migrateState: (fromDir, toDir) => {
+      set((state) => {
+        const fromState = state.states[fromDir];
+        if (!fromState) return state;
+        return {
+          states: {
+            ...state.states,
+            [toDir]: { ...fromState },
+          },
+        };
+      });
     },
 
     setSearchInput: (dir, v) => get().updateState(dir, { searchInput: v }),
@@ -118,9 +161,11 @@ export const useErpInvoiceListStore = create<ErpInvoiceListStore>(
     setBuyerName: (dir, v) =>
       get().updateState(dir, { buyer_name: v, page: 1 }),
     setTagId: (dir, v) => get().updateState(dir, { tag_id: v, page: 1 }),
+    setActiveTaxTab: (dir, tab) =>
+      get().updateState(dir, { activeTaxTab: tab, page: 1 }),
 
     handleSort: (dir, key) => {
-      const currentState = get().states[dir];
+      const currentState = get().states[dir] || defaultState();
       if (currentState.sortBy === key) {
         if (currentState.sortOrder === "desc") {
           get().updateState(dir, { sortOrder: "asc", page: 1 });
@@ -138,8 +183,10 @@ export const useErpInvoiceListStore = create<ErpInvoiceListStore>(
           states: {
             ...state.states,
             [dir]: {
-              ...state.states[dir],
-              filterPanelOpen: v(state.states[dir].filterPanelOpen),
+              ...(state.states[dir] || defaultState()),
+              filterPanelOpen: v(
+                (state.states[dir] || defaultState()).filterPanelOpen,
+              ),
             },
           },
         }));
@@ -149,11 +196,11 @@ export const useErpInvoiceListStore = create<ErpInvoiceListStore>(
     },
 
     resetAllFilters: (dir) => {
-      // Keep filter panel open state, reset everything else to default except pageSize and sort
-      const current = get().states[dir];
+      const current = get().states[dir] || defaultState();
       get().updateState(dir, {
         ...defaultState(),
         pageSize: current.pageSize,
+        activeTaxTab: current.activeTaxTab || "all",
         sortBy: "invoiceDate",
         sortOrder: "desc",
         filterPanelOpen: current.filterPanelOpen,

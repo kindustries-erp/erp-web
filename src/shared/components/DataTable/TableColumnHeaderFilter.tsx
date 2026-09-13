@@ -22,21 +22,22 @@ import { Button } from "@/shared/components/ui/Button";
 import { Input } from "@/shared/components/ui/input";
 import { Checkbox } from "@/shared/components/ui/checkbox";
 import { cn } from "@/shared/utils";
+import { useTranslation } from "react-i18next";
+import type { TableSortStateType, TableColumnAlignType } from "./types";
 
 export interface TableColumnHeaderFilterProps {
   title: React.ReactNode;
-  sortState: "asc" | "desc" | "none";
+  sortState: TableSortStateType;
   onSortChange: (state: "asc" | "desc" | "none") => void;
   searchValue: string;
   onSearchChange: (value: string) => void;
   filterOptions?: { label: string; value: string }[];
   selectedFilters: string[];
   onFilterChange: (values: string[]) => void;
-  align?: "left" | "center" | "right";
+  align?: TableColumnAlignType;
   className?: string;
   columnKey?: string;
   queryKeyPrefix?: string;
-  requireSearchToFetchOptions?: boolean;
   allFilters?: Record<string, string[]>;
   formatOptionLabel?: (label: string) => string;
   fetchOptions?: (params: {
@@ -50,9 +51,12 @@ export interface TableColumnHeaderFilterProps {
     next: number | null;
   }>;
   hideFilter?: boolean;
+  hideFilterList?: boolean;
   hideFooter?: boolean;
   enableSelectAllMatching?: boolean;
   isActive?: boolean;
+  showBlankOption?: boolean;
+  hideSort?: boolean;
   /** Optional slot rendered between Sort buttons and Search input (e.g. a date range picker). Can be a function that receives a close function. */
   dateRangeSlot?:
     | React.ReactNode
@@ -60,6 +64,10 @@ export interface TableColumnHeaderFilterProps {
 }
 
 const dropdownSearchState = new Map<string, string>();
+
+export function clearAllDropdownSearchStates() {
+  dropdownSearchState.clear();
+}
 
 export function TableColumnHeaderFilter({
   title,
@@ -78,11 +86,15 @@ export function TableColumnHeaderFilter({
   formatOptionLabel,
   fetchOptions,
   hideFilter,
+  hideFilterList,
   hideFooter,
   enableSelectAllMatching,
   isActive,
   dateRangeSlot,
+  showBlankOption = false,
+  hideSort = false,
 }: TableColumnHeaderFilterProps) {
+  const { t } = useTranslation("table");
   const [open, setOpen] = useState(false);
   const [localSearch, setLocalSearch] = useState(() => {
     if (columnKey && dropdownSearchState.has(columnKey)) {
@@ -99,7 +111,7 @@ export function TableColumnHeaderFilter({
 
   useEffect(() => {
     if (isAllMatchingMode) {
-      setPendingFilters([]);
+      setPendingFilters(["__ALL_MATCHING__", debouncedLocalSearch]);
     }
   }, [debouncedLocalSearch]);
 
@@ -161,31 +173,71 @@ export function TableColumnHeaderFilter({
   });
 
   const finalOptions = useMemo(() => {
+    let opts: { label: string; value: string }[];
     if (filterOptions && filterOptions.length > 0) {
-      return filterOptions;
-    }
-    if (columnKey) {
-      const apiOptions = optionsData?.pages.flatMap((p: any) => p.items) || [];
+      if (!debouncedLocalSearch) {
+        opts = filterOptions;
+      } else {
+        const keywords = debouncedLocalSearch
+          .split(";")
+          .map((k) => k.trim())
+          .filter(Boolean);
+        if (keywords.length === 0) {
+          opts = filterOptions;
+        } else {
+          opts = filterOptions.filter((opt) => {
+            const labelLower = (opt.label || "").toLowerCase();
+            const valueLower = (opt.value || "").toLowerCase();
+            return keywords.some((kw) => {
+              let isExact = false;
+              let cleanKw = kw;
+              if (kw.startsWith('"') && kw.endsWith('"') && kw.length >= 2) {
+                isExact = true;
+                cleanKw = kw.slice(1, -1);
+              }
+              const kwLower = cleanKw.toLowerCase();
+              if (isExact) {
+                return labelLower === kwLower || valueLower === kwLower;
+              }
+              return (
+                labelLower.includes(kwLower) || valueLower.includes(kwLower)
+              );
+            });
+          });
+        }
+      }
+    } else if (columnKey) {
+      const apiOptions = (
+        optionsData?.pages.flatMap((p: any) => p.items) || []
+      ).filter(
+        (o: any) => o.value !== "" && o.value !== null && o.value !== undefined,
+      );
       const apiValues = new Set(apiOptions.map((o: any) => o.value));
       const isAllMatchingActive = selectedFilters[0] === "__ALL_MATCHING__";
       const missingSelected = isAllMatchingActive
         ? []
         : selectedFilters
-            .filter((v) => !apiValues.has(v))
+            .filter((v) => !apiValues.has(v) && v !== "__BLANK__")
             .map((v) => ({ label: v, value: v }));
-      return [...missingSelected, ...apiOptions];
+      opts = [...missingSelected, ...apiOptions];
+    } else {
+      opts = filterOptions || [];
     }
-    return filterOptions || [];
-  }, [optionsData, filterOptions, columnKey, selectedFilters]);
 
-  // Sync local search to global map
-  useEffect(() => {
-    if (columnKey) {
-      dropdownSearchState.set(columnKey, localSearch);
+    if (showBlankOption) {
+      opts = [{ label: "(blank)", value: "__BLANK__" }, ...opts];
     }
-  }, [localSearch, columnKey]);
+    return opts;
+  }, [
+    optionsData,
+    filterOptions,
+    columnKey,
+    selectedFilters,
+    debouncedLocalSearch,
+    showBlankOption,
+  ]);
 
-  // Restore local search when popover opens
+  // Restore local search when popover opens, or clear when searchValue is cleared from outside
   useEffect(() => {
     if (open) {
       if (columnKey && dropdownSearchState.has(columnKey)) {
@@ -193,14 +245,16 @@ export function TableColumnHeaderFilter({
       } else {
         setLocalSearch(searchValue);
       }
+    } else if (!searchValue) {
+      setLocalSearch("");
+      if (columnKey) dropdownSearchState.set(columnKey, "");
     }
   }, [open, searchValue, columnKey]);
 
-  const hasActiveFilters =
-    isActive ||
-    searchValue ||
-    selectedFilters.length > 0 ||
-    sortState !== "none";
+  const isFilterActive =
+    isActive || !!searchValue || selectedFilters.length > 0;
+  const isSortActive = sortState !== "none";
+  const hasActiveModifiers = isFilterActive || isSortActive;
 
   const handleToggleFilter = (value: string) => {
     const next = pendingFilters.includes(value)
@@ -214,7 +268,7 @@ export function TableColumnHeaderFilter({
       if (isAllMatchingMode) {
         setPendingFilters([]);
       } else {
-        setPendingFilters(["__ALL_MATCHING__", debouncedLocalSearch]);
+        setPendingFilters(["__ALL_MATCHING__", localSearch]);
       }
     } else {
       if (pendingFilters.length === finalOptions.length) {
@@ -243,14 +297,26 @@ export function TableColumnHeaderFilter({
       setOpen(true);
     } else {
       setOpen(false);
-      const isDifferent =
-        pendingFilters.length !== selectedFilters.length ||
-        !pendingFilters.every((f) => selectedFilters.includes(f));
-      if (isDifferent) {
-        onSearchChange("");
-        onFilterChange(pendingFilters);
-      }
     }
+  };
+
+  const handleApply = () => {
+    if (pendingFilters.length > 0) {
+      if (pendingFilters[0] === "__ALL_MATCHING__") {
+        onFilterChange(["__ALL_MATCHING__", localSearch]);
+        onSearchChange("");
+      } else {
+        onFilterChange(pendingFilters);
+        onSearchChange("");
+      }
+    } else if (localSearch.trim()) {
+      onSearchChange(localSearch.trim());
+      onFilterChange([]);
+    } else {
+      onSearchChange("");
+      onFilterChange([]);
+    }
+    setOpen(false);
   };
 
   return (
@@ -267,17 +333,25 @@ export function TableColumnHeaderFilter({
           {title}
           <div
             className={cn(
-              "flex items-center justify-center w-5 h-5 rounded-md transition-colors relative",
-              hasActiveFilters
+              "flex items-center justify-center rounded-md transition-colors relative gap-0.5 px-0.5 min-w-[20px] h-5",
+              hasActiveModifiers
                 ? "text-primary"
                 : "text-muted-foreground/30 opacity-0 group-hover:opacity-100",
               open && "opacity-100 bg-muted",
             )}
           >
-            <ListFilter size={14} />
-            {(selectedFilters.length > 0 || isActive || !!searchValue) && (
+            {(!hasActiveModifiers || isFilterActive) && (
+              <ListFilter size={14} />
+            )}
+            {isSortActive &&
+              (sortState === "asc" ? (
+                <ArrowDownAZ size={14} />
+              ) : (
+                <ArrowUpAZ size={14} />
+              ))}
+            {hasActiveModifiers && (
               <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 bg-primary"></span>
                 <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary"></span>
               </span>
             )}
@@ -289,42 +363,58 @@ export function TableColumnHeaderFilter({
         <Popover.Content
           align={align === "right" ? "end" : "start"}
           sideOffset={8}
+          style={{
+            background: "var(--popup-bg, rgba(246, 248, 252, 0.65))",
+            backdropFilter: "blur(24px) saturate(200%)",
+            WebkitBackdropFilter: "blur(24px) saturate(200%)",
+          }}
           className={cn(
-            "z-[9999] rounded-xl border border-border bg-surface p-0 shadow-lg outline-none",
+            "z-[9999] rounded-xl border border-border/70 p-0 shadow-[0_16px_40px_-8px_rgba(15,23,42,0.18),0_4px_12px_rgba(15,23,42,0.08),0_0_0_1px_rgba(255,255,255,0.6)_inset] outline-none",
             dateRangeSlot ? "w-72" : "w-64",
           )}
         >
-          {/* Sorting */}
-          <div className="p-2 border-b border-border flex flex-col gap-1">
-            <Button
-              variant="ghost"
-              size="sm"
-              className={cn(
-                "justify-start w-full text-left font-normal",
-                sortState === "asc" && "bg-muted text-primary",
-              )}
-              onClick={() => onSortChange(sortState === "asc" ? "none" : "asc")}
-            >
-              <ArrowDownAZ size={14} className="mr-2" />
-              Sắp xếp tăng dần
-              {sortState === "asc" && <Check size={14} className="ml-auto" />}
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className={cn(
-                "justify-start w-full text-left font-normal",
-                sortState === "desc" && "bg-muted text-primary",
-              )}
-              onClick={() =>
-                onSortChange(sortState === "desc" ? "none" : "desc")
-              }
-            >
-              <ArrowUpAZ size={14} className="mr-2" />
-              Sắp xếp giảm dần
-              {sortState === "desc" && <Check size={14} className="ml-auto" />}
-            </Button>
-          </div>
+          {!hideSort && (
+            <div className="flex flex-col gap-1 border-b border-border p-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                className={cn(
+                  "justify-start font-normal rounded-sm h-8",
+                  sortState === "asc"
+                    ? "bg-primary/10 text-primary font-medium"
+                    : "",
+                )}
+                onClick={() => {
+                  onSortChange(sortState === "asc" ? "none" : "asc");
+                  setOpen(false);
+                }}
+              >
+                <ArrowDownAZ size={14} className="mr-2" />
+                {t("sortAsc", "Sắp xếp tăng dần")}
+                {sortState === "asc" && <Check size={14} className="ml-auto" />}
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className={cn(
+                  "justify-start font-normal rounded-sm h-8",
+                  sortState === "desc"
+                    ? "bg-primary/10 text-primary font-medium"
+                    : "",
+                )}
+                onClick={() => {
+                  onSortChange(sortState === "desc" ? "none" : "desc");
+                  setOpen(false);
+                }}
+              >
+                <ArrowUpAZ size={14} className="mr-2" />
+                {t("sortDesc", "Sắp xếp giảm dần")}
+                {sortState === "desc" && (
+                  <Check size={14} className="ml-auto" />
+                )}
+              </Button>
+            </div>
+          )}
 
           {/* Date range slot (e.g. for invoiceDate column) */}
           {typeof dateRangeSlot === "function"
@@ -338,16 +428,34 @@ export function TableColumnHeaderFilter({
                 <div className="relative flex items-center">
                   <Search className="absolute left-2.5 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder="Tìm trong bảng..."
+                    placeholder={t(
+                      "searchPlaceholder",
+                      'Tìm... ("..." chính xác, ; nhiều từ)',
+                    )}
+                    title={t(
+                      "searchTooltip",
+                      'Mẹo: Dùng "text" để tìm chính xác, dùng a;b để tìm nhiều giá trị (OR)',
+                    )}
                     className="pl-8 pr-8 h-8 text-xs"
                     value={localSearch}
-                    onChange={(e) => setLocalSearch(e.target.value)}
+                    onChange={(e) => {
+                      setLocalSearch(e.target.value);
+                      if (columnKey)
+                        dropdownSearchState.set(columnKey, e.target.value);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleApply();
+                      }
+                    }}
                   />
                   {localSearch && (
                     <button
                       className="absolute right-2 text-muted-foreground hover:text-foreground"
                       onClick={() => {
                         setLocalSearch("");
+                        if (columnKey) dropdownSearchState.set(columnKey, "");
                       }}
                     >
                       <X size={14} />
@@ -357,86 +465,98 @@ export function TableColumnHeaderFilter({
               </div>
 
               {/* Multi-select Filters */}
-              <div
-                className="p-2 max-h-48 overflow-y-auto flex flex-col"
-                ref={scrollRef}
-                onScroll={handleScroll}
-              >
-                {isOptionsLoading && finalOptions.length === 0 ? (
-                  <div className="p-4 flex justify-center text-muted-foreground">
-                    <Loader2 size={16} className="animate-spin" />
-                  </div>
-                ) : finalOptions.length > 0 ? (
-                  <>
-                    <label className="flex items-center gap-2 px-2 py-1.5 hover:bg-muted rounded-md cursor-pointer">
-                      <Checkbox
-                        checked={
-                          enableSelectAllMatching
-                            ? isAllMatchingMode
-                            : pendingFilters.length === finalOptions.length &&
-                              finalOptions.length > 0
-                        }
-                        onCheckedChange={handleSelectAll}
-                      />
-                      <span className="text-xs font-medium">
-                        {enableSelectAllMatching
-                          ? "(Chọn tất cả kết quả tìm kiếm)"
-                          : "(Chọn tất cả đang hiển thị)"}
-                      </span>
-                    </label>
-                    {finalOptions.map((opt) => (
-                      <label
-                        key={opt.value}
-                        className="flex items-center gap-2 px-2 py-1.5 hover:bg-muted rounded-md cursor-pointer"
-                      >
+              {!hideFilterList && (
+                <div
+                  className="p-2 max-h-48 overflow-y-auto flex flex-col"
+                  ref={scrollRef}
+                  onScroll={handleScroll}
+                >
+                  {isOptionsLoading && finalOptions.length === 0 ? (
+                    <div className="p-4 flex justify-center text-muted-foreground">
+                      <Loader2 size={16} className="animate-spin" />
+                    </div>
+                  ) : finalOptions.length > 0 ? (
+                    <>
+                      <label className="flex items-center gap-2 px-2 py-1.5 hover:bg-muted rounded-md cursor-pointer">
                         <Checkbox
                           checked={
-                            isAllMatchingMode ||
-                            pendingFilters.includes(opt.value)
+                            enableSelectAllMatching
+                              ? isAllMatchingMode
+                              : pendingFilters.length === finalOptions.length &&
+                                finalOptions.length > 0
                           }
-                          onCheckedChange={() => {
-                            if (isAllMatchingMode) {
-                              const all = finalOptions.map((o) => o.value);
-                              setPendingFilters(
-                                all.filter((v) => v !== opt.value),
-                              );
-                            } else {
-                              handleToggleFilter(opt.value);
-                            }
-                          }}
+                          onCheckedChange={handleSelectAll}
                         />
-                        <span
-                          className="text-xs truncate"
-                          title={
-                            formatOptionLabel
-                              ? formatOptionLabel(opt.label)
-                              : opt.label
-                          }
-                        >
-                          {formatOptionLabel
-                            ? formatOptionLabel(opt.label)
-                            : opt.label || "(Trống)"}
+                        <span className="text-xs font-medium">
+                          {enableSelectAllMatching
+                            ? t(
+                                "selectAllMatching",
+                                "(Chọn tất cả kết quả tìm kiếm)",
+                              )
+                            : t(
+                                "selectAllVisible",
+                                "(Chọn tất cả đang hiển thị)",
+                              )}
                         </span>
                       </label>
-                    ))}
-                    {isFetchingNextPage && (
-                      <div className="p-2 flex justify-center text-muted-foreground">
-                        <Loader2 size={14} className="animate-spin" />
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <div className="p-2 text-center text-xs text-muted-foreground">
-                    Không có dữ liệu
-                  </div>
-                )}
-              </div>
+                      {finalOptions.map((opt) => (
+                        <label
+                          key={opt.value}
+                          className="flex items-center gap-2 px-2 py-1.5 hover:bg-muted rounded-md cursor-pointer"
+                        >
+                          <Checkbox
+                            checked={
+                              isAllMatchingMode ||
+                              pendingFilters.includes(opt.value)
+                            }
+                            onCheckedChange={() => {
+                              if (isAllMatchingMode) {
+                                const all = finalOptions.map((o) => o.value);
+                                setPendingFilters(
+                                  all.filter((v) => v !== opt.value),
+                                );
+                              } else {
+                                handleToggleFilter(opt.value);
+                              }
+                            }}
+                          />
+                          <span
+                            className="text-xs truncate"
+                            title={
+                              formatOptionLabel
+                                ? formatOptionLabel(opt.label)
+                                : opt.label === "(blank)"
+                                  ? t("blank", "(Trống)")
+                                  : opt.label
+                            }
+                          >
+                            {formatOptionLabel
+                              ? formatOptionLabel(opt.label)
+                              : opt.label === "(blank)" || !opt.label
+                                ? t("blank", "(Trống)")
+                                : opt.label}
+                          </span>
+                        </label>
+                      ))}
+                      {isFetchingNextPage && (
+                        <div className="p-2 flex justify-center text-muted-foreground">
+                          <Loader2 size={14} className="animate-spin" />
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div className="p-2 text-center text-xs text-muted-foreground">
+                      {t("noData", "Không có dữ liệu")}
+                    </div>
+                  )}
+                </div>
+              )}
             </>
           )}
 
           {/* Footer Actions */}
           {!hideFooter && (
-            <div className="p-2 border-t border-border flex justify-between items-center bg-muted/50 rounded-b-xl">
+            <div className="p-2 border-t border-border flex justify-between items-center bg-muted/30 rounded-b-xl">
               <Button
                 variant="ghost"
                 size="sm"
@@ -444,24 +564,21 @@ export function TableColumnHeaderFilter({
                 onClick={() => {
                   setPendingFilters([]);
                   setLocalSearch("");
+                  if (columnKey) dropdownSearchState.set(columnKey, "");
                   onSearchChange("");
                   onFilterChange([]);
                   setOpen(false);
                 }}
               >
-                Xóa bộ lọc
+                {t("clearFilter", "Xóa bộ lọc")}
               </Button>
               <Button
                 variant="primary"
                 size="sm"
                 className="text-xs h-7 px-3"
-                onClick={() => {
-                  onSearchChange(localSearch);
-                  onFilterChange(pendingFilters);
-                  setOpen(false);
-                }}
+                onClick={handleApply}
               >
-                Áp dụng
+                {t("apply", "Áp dụng")}
               </Button>
             </div>
           )}

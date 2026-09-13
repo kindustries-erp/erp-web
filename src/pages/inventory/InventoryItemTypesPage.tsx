@@ -18,6 +18,7 @@ import { Combobox } from "@/shared/components/Combobox";
 import { useUIStore } from "@/core/config/uiStore";
 import { type InventoryMasterOption } from "@/modules/inventory-core/api/inventoryCoreApi";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
+import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
 import { Forbidden } from "@/pages/Forbidden";
 import { useInventoryMasterListQuery } from "@/modules/inventory-core/hooks/useInventoryMasterListQuery";
 import {
@@ -68,7 +69,7 @@ function statusBadge(isActive: boolean, t: (k: string) => string) {
 
 export function InventoryItemTypesPage() {
   const t = useT();
-  const canRead = useHasPermission("inventory_items", "read");
+  const canRead = useHasPermission(ErpResource.INVENTORY_ITEMS, ErpAction.READ);
   const showToast = useUIStore((s) => s.showToast);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);

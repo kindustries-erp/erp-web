@@ -3,3 +3,5 @@ import { TrackedGoodsPage } from "@/modules/operational/components/list/TrackedG
 export function InventoryTrackingPage() {
   return <TrackedGoodsPage />;
 }
+
+export default InventoryTrackingPage;

@@ -3,6 +3,7 @@ import { useGarageBranches, useSyncGarageBranches } from "../hooks/useGarage";
 import { useGarageStore } from "../store/garageStore";
 import { RefreshCw } from "lucide-react";
 import { Button } from "@/shared/components/ui/Button";
+import { Combobox } from "@/shared/components/Combobox";
 
 export function GarageBranchSelector() {
   const { data: branches, isLoading } = useGarageBranches();
@@ -16,22 +17,23 @@ export function GarageBranchSelector() {
     }
   }, [branches, selectedBranchId, setSelectedBranchId]);
 
+  const branchOptions =
+    branches?.map((b: any) => ({
+      value: b.externalId,
+      label: `${b.name} (${b.code})`,
+    })) || [];
+
   return (
-    <div className="flex items-center space-x-2">
-      <span className="text-sm font-medium">Branch:</span>
-      <select
-        className="form-select text-sm rounded-md border-gray-300"
-        value={selectedBranchId}
-        onChange={(e) => setSelectedBranchId(e.target.value)}
+    <div className="flex items-center space-x-2 w-full">
+      <span className="text-sm font-medium whitespace-nowrap">Branch:</span>
+      <Combobox
+        options={branchOptions}
+        value={selectedBranchId || ""}
+        onChange={(val: string) => setSelectedBranchId(val)}
+        placeholder="Select a branch"
+        className="w-64"
         disabled={isLoading}
-      >
-        <option value="">Select a branch</option>
-        {branches?.map((b: any) => (
-          <option key={b.externalId} value={b.externalId}>
-            {b.name} ({b.code})
-          </option>
-        ))}
-      </select>
+      />
       <Button
         type="button"
         variant="outline"

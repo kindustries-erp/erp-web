@@ -26,36 +26,44 @@ export interface ActionDropdownProps {
   items: ActionDropdownItem[];
   customTrigger?: React.ReactNode;
   align?: "start" | "center" | "end";
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 export function ActionDropdown({
   items,
   customTrigger,
   align = "start",
+  open: controlledOpen,
+  onOpenChange: controlledOnOpenChange,
 }: ActionDropdownProps) {
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isControlled = controlledOpen !== undefined;
+  const open = isControlled ? controlledOpen : internalOpen;
+
+  const setOpen = (val: boolean) => {
+    if (!isControlled) {
+      setInternalOpen(val);
+    }
+    controlledOnOpenChange?.(val);
+  };
 
   // Normalize items to easily handle separators
   const renderItem = (item: ActionItem) => {
     return (
       <DropdownMenu.Item
         key={item.label}
+        disabled={item.disabled || item.loading}
         onSelect={(e) => {
-          if (item.preventClose || item.loading) {
+          if (item.preventClose || item.loading || item.disabled) {
             e.preventDefault();
+            return;
           }
+          setOpen(false);
+          item.onClick();
         }}
         onClick={(e) => {
           e.stopPropagation();
-          if (!item.disabled && !item.loading) {
-            if (!item.preventClose) {
-              setOpen(false);
-            }
-            // Delay execution slightly to allow dropdown to unmount before modal/drawer mounts
-            setTimeout(() => {
-              item.onClick();
-            }, 0);
-          }
         }}
         className={cn(
           "flex items-center gap-2 px-3 py-[6px] rounded-md text-xs cursor-pointer outline-none select-none",
@@ -76,7 +84,9 @@ export function ActionDropdown({
             <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
           </svg>
         ) : item.icon ? (
-          <span className="flex-shrink-0 opacity-60">{item.icon}</span>
+          <span className="flex-shrink-0 text-muted-foreground opacity-80">
+            {item.icon}
+          </span>
         ) : null}
         {item.label}
       </DropdownMenu.Item>

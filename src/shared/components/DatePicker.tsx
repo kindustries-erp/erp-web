@@ -38,6 +38,9 @@ interface DatePickerProps {
   placeholder?: string;
   className?: string;
   disabled?: boolean;
+  minDate?: string;
+  maxDate?: string;
+  defaultMonth?: Date;
 }
 
 export function DatePicker({
@@ -46,6 +49,9 @@ export function DatePicker({
   placeholder,
   className,
   disabled,
+  minDate,
+  maxDate,
+  defaultMonth,
 }: DatePickerProps) {
   const t = useT();
   const displayPlaceholder = placeholder || t("Chọn ngày");
@@ -64,6 +70,24 @@ export function DatePicker({
   const selected = value ? parse(value, "yyyy-MM-dd", new Date()) : undefined;
   const displayText =
     selected && isValid(selected) ? format(selected, "dd/MM/yyyy") : "";
+
+  const disabledDays =
+    typeof window !== "undefined"
+      ? (() => {
+          const disabled: any[] = [];
+          if (minDate) {
+            const min = parse(minDate, "yyyy-MM-dd", new Date());
+            if (isValid(min)) disabled.push({ before: min });
+          }
+          if (maxDate) {
+            const max = parse(maxDate, "yyyy-MM-dd", new Date());
+            if (isValid(max)) disabled.push({ after: max });
+          }
+          return disabled;
+        })()
+      : [];
+
+  const initialMonth = selected && isValid(selected) ? selected : defaultMonth;
 
   function handleSelect(day: Date | undefined) {
     if (!day) {
@@ -126,6 +150,8 @@ export function DatePicker({
             onSelect={handleSelect}
             locale={vi}
             showOutsideDays
+            defaultMonth={initialMonth}
+            disabled={disabledDays}
             components={{
               Chevron: ({ orientation }) =>
                 orientation === "left" ? (

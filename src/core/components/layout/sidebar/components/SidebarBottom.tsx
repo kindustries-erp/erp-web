@@ -10,12 +10,14 @@ export function SidebarBottom({
   displayName,
   setProfileOpen,
   setSettingsOpen,
+  setChangelogOpen,
 }: {
   c: boolean;
   av: string;
   displayName: string;
   setProfileOpen: (v: boolean) => void;
   setSettingsOpen: (v: boolean) => void;
+  setChangelogOpen?: (v: boolean) => void;
 }) {
   const { data: notifications = [] } = useQuery({
     queryKey: ["notifications"],
@@ -38,6 +40,7 @@ export function SidebarBottom({
         <UserMenuPopover
           onOpenProfile={() => setProfileOpen(true)}
           onOpenSettings={() => setSettingsOpen(true)}
+          onOpenChangelog={() => setChangelogOpen?.(true)}
         >
           <div
             className={cn(

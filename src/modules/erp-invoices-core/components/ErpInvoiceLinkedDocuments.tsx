@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { DrawerSection } from "@/shared/components/DrawerModal";
 import { Button } from "@/shared/components/ui/Button";
+
 import { Plus, Trash2, ExternalLink } from "lucide-react";
+import { EmptyState } from "@/shared/components/EmptyState";
 import { money } from "@/shared/utils/format";
 import { VoucherNetoffSelectionModal } from "./VoucherNetoffSelectionModal";
 import { purchaseOrdersCoreApi } from "@/modules/purchase-orders-core/api/purchaseOrdersCoreApi";
@@ -9,9 +10,17 @@ import { Combobox } from "@/shared/components/Combobox";
 
 import { type CreateErpInvoicePayload } from "../api/erpInvoicesCoreApi";
 
+function createClientId() {
+  const maybeCrypto = (globalThis as any)?.crypto;
+  if (maybeCrypto && typeof maybeCrypto.randomUUID === "function") {
+    return maybeCrypto.randomUUID();
+  }
+  return `tmp-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
 interface LinkedDocument {
   id: string;
-  type: "PO" | "BANK";
+  type: "PO" | "BANK" | "CASE";
   refId: string;
   refNo: string;
   date?: string;
@@ -37,6 +46,7 @@ const EMPTY_ARRAY: any[] = [];
 export function ErpInvoiceLinkedDocuments({
   form,
   fieldSet,
+  invoiceId,
   direction,
   voucherNetOffs = EMPTY_ARRAY,
   relatedPos = EMPTY_ARRAY,
@@ -48,6 +58,19 @@ export function ErpInvoiceLinkedDocuments({
   const [poOptions, setPoOptions] = useState<
     { value: string; label: string }[]
   >([]);
+
+  const [linkedCases, setLinkedCases] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (invoiceId) {
+      import("../api/erpInvoicesCoreApi").then((m) => {
+        m.erpInvoicesCoreApi
+          .getLinkedCases(invoiceId)
+          .then((cases) => setLinkedCases(cases))
+          .catch(console.error);
+      });
+    }
+  }, [invoiceId]);
 
   // Sync rows from props and pending changes
   useEffect(() => {
@@ -86,6 +109,16 @@ export function ErpInvoiceLinkedDocuments({
       });
     });
 
+    linkedCases.forEach((c) => {
+      combined.push({
+        id: c.id,
+        type: "CASE",
+        refId: c.caseDbId,
+        refNo: `Sổ báo giá ${c.soChungTu || ""} - ${c.bienSoXe || ""}`,
+        date: c.createdAt,
+      });
+    });
+
     // Add pending adds
     pending
       .filter((p) => p.action === "ADD")
@@ -117,6 +150,7 @@ export function ErpInvoiceLinkedDocuments({
   }, [
     relatedPos,
     voucherNetOffs,
+    linkedCases,
     form.pendingDocumentChanges,
     poOptions,
     editMode,
@@ -135,7 +169,7 @@ export function ErpInvoiceLinkedDocuments({
     setRows([
       ...rows,
       {
-        id: crypto.randomUUID(),
+        id: createClientId(),
         type: direction === "IN" ? "PO" : "BANK",
         refId: "",
         refNo: "",
@@ -154,7 +188,7 @@ export function ErpInvoiceLinkedDocuments({
 
   const addPendingChange = (change: {
     action: "ADD" | "REMOVE";
-    type: "PO" | "BANK";
+    type: "PO" | "BANK" | "CASE";
     refId: string;
     amount?: number;
   }) => {
@@ -192,154 +226,168 @@ export function ErpInvoiceLinkedDocuments({
     setRows(rows.filter((r) => r.id !== rowId)); // Remove temp row
   };
 
-  const openDocument = (type: "PO" | "BANK", id: string) => {
-    const event = new CustomEvent("open_erp_document", {
-      detail: {
-        type: type === "PO" ? "purchase_order" : "bank_transaction",
-        id,
-      },
-    });
-    window.dispatchEvent(event);
+  const openDocument = (type: "PO" | "BANK" | "CASE", id: string) => {
+    let eventType = "";
+    if (type === "PO") eventType = "purchase_order";
+    else if (type === "BANK") eventType = "bank_transaction";
+    else if (type === "CASE") eventType = "garage_case";
+
+    if (eventType) {
+      const event = new CustomEvent("open_erp_document", {
+        detail: {
+          type: eventType,
+          id,
+        },
+      });
+      window.dispatchEvent(event);
+    }
   };
 
   return (
-    <div className="flex-1 min-w-0 w-full space-y-4">
-      <DrawerSection title="CHỨNG TỪ LIÊN KẾT">
-        <div className="flex flex-col gap-3">
-          {editMode && (
-            <div className="flex justify-start">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleAddRow}
-                disabled={saving}
-                className="gap-2 text-primary border-primary/20 bg-primary/5 hover:bg-primary/10"
-              >
-                <Plus className="w-4 h-4" />
-                Thêm chứng từ
-              </Button>
-            </div>
-          )}
-
-          {rows.length === 0 ? (
-            <div className="text-sm text-gray-500 py-4 text-center border border-dashed rounded bg-gray-50">
-              Chưa có chứng từ liên kết nào.
-            </div>
-          ) : (
-            <div className="border rounded-md overflow-x-auto bg-white shadow-sm">
-              <table className="w-full text-sm text-left">
-                <thead className="bg-slate-50 border-b">
-                  <tr>
-                    <th className="px-3 py-2.5 font-medium text-slate-700 w-1/4">
-                      Loại chứng từ
-                    </th>
-                    <th className="px-3 py-2.5 font-medium text-slate-700 w-1/3">
-                      Chứng từ
-                    </th>
-                    <th className="px-3 py-2.5 font-medium text-slate-700 w-1/4 text-right">
-                      Chi tiết
-                    </th>
-                    <th className="px-3 py-2.5 font-medium text-slate-700 text-right w-16"></th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y">
-                  {rows.map((row) => (
-                    <tr key={row.id} className="hover:bg-slate-50/50 group">
-                      <td className="px-3 py-2">
-                        {row.isNew ? (
-                          <Combobox
-                            options={[
-                              ...(direction === "IN"
-                                ? [{ value: "PO", label: "Đơn mua hàng (PO)" }]
-                                : []),
-                              { value: "BANK", label: "Giao dịch ngân hàng" },
-                            ]}
-                            value={row.type}
-                            onChange={(val) =>
-                              updateRowType(row.id, val as "PO" | "BANK")
-                            }
-                            allowClear={false}
-                          />
-                        ) : (
-                          <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-slate-100 text-slate-700">
-                            {row.type === "PO"
-                              ? "Đơn mua hàng (PO)"
-                              : "Giao dịch ngân hàng"}
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-3 py-2">
-                        {row.isNew ? (
-                          row.type === "PO" ? (
-                            <Combobox
-                              options={poOptions}
-                              value={row.refId}
-                              onChange={(val) => handleSelectPO(row.id, val)}
-                              placeholder="-- Chọn PO --"
-                            />
-                          ) : (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => setModalOpen(true)}
-                              className="w-full justify-start text-muted-foreground"
-                            >
-                              Nhấn để chọn giao dịch...
-                            </Button>
-                          )
-                        ) : (
-                          <span
-                            className="text-primary font-medium cursor-pointer flex items-center gap-1.5 transition-opacity hover:opacity-80 group/link w-fit"
-                            onClick={() => openDocument(row.type, row.refId)}
-                          >
-                            <span className="group-hover/link:underline underline-offset-4 line-clamp-1">
-                              {row.refNo}
-                            </span>
-                            <ExternalLink className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover/link:opacity-100 transition-all flex-shrink-0" />
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-3 py-2 text-right">
-                        {!row.isNew && (
-                          <div className="flex flex-col items-end">
-                            {row.amount !== undefined ? (
-                              <span className="font-medium text-emerald-600">
-                                {money(row.amount)}
-                              </span>
-                            ) : null}
-                            {row.date ? (
-                              <span className="text-xs text-muted-foreground">
-                                {row.date.slice(0, 10)}
-                              </span>
-                            ) : null}
-                          </div>
-                        )}
-                      </td>
-                      <td className="px-3 py-2 text-right">
-                        {editMode && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-red-500 hover:text-red-700 hover:bg-red-50 h-8 w-8 p-0"
-                            onClick={() => handleRemoveRow(row)}
-                            disabled={saving}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+    <div className="flex-1 min-w-0 w-full space-y-3">
+      {editMode && (
+        <div className="flex justify-start">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleAddRow}
+            disabled={saving}
+            className="gap-1.5 text-primary border-primary/20 bg-primary/5 hover:bg-primary/10 h-7 text-xs"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            Thêm chứng từ
+          </Button>
         </div>
-      </DrawerSection>
+      )}
+
+      {rows.length === 0 ? (
+        <EmptyState size="sm" message="Chưa có chứng từ liên kết nào." />
+      ) : (
+        <div className="border border-border/70 rounded-lg overflow-x-auto bg-surface shadow-2xs">
+          <table className="w-full text-xs text-left">
+            <thead className="bg-muted/40 border-b border-border/60">
+              <tr>
+                <th className="px-3 py-2 font-medium text-muted-foreground w-1/4">
+                  Loại chứng từ
+                </th>
+                <th className="px-3 py-2 font-medium text-muted-foreground w-1/3">
+                  Chứng từ
+                </th>
+                <th className="px-3 py-2 font-medium text-muted-foreground w-1/4 text-right">
+                  Chi tiết
+                </th>
+                <th className="px-3 py-2 font-medium text-muted-foreground text-right w-12"></th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border/40">
+              {rows.map((row) => (
+                <tr
+                  key={row.id}
+                  className="hover:bg-muted/30 group transition-colors"
+                >
+                  <td className="px-3 py-2">
+                    {row.isNew ? (
+                      <Combobox
+                        options={[
+                          ...(direction === "IN"
+                            ? [{ value: "PO", label: "Đơn mua hàng (PO)" }]
+                            : []),
+                          { value: "BANK", label: "Giao dịch ngân hàng" },
+                        ]}
+                        value={row.type}
+                        onChange={(val) =>
+                          updateRowType(row.id, val as "PO" | "BANK")
+                        }
+                        allowClear={false}
+                      />
+                    ) : (
+                      <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-slate-100 text-slate-700">
+                        {row.type === "PO"
+                          ? "Đơn mua hàng (PO)"
+                          : row.type === "CASE"
+                            ? "Sổ báo giá"
+                            : "Giao dịch ngân hàng"}
+                      </span>
+                    )}
+                  </td>
+                  <td className="px-3 py-2">
+                    {row.isNew ? (
+                      row.type === "PO" ? (
+                        <Combobox
+                          options={poOptions}
+                          value={row.refId}
+                          onChange={(val) => handleSelectPO(row.id, val)}
+                          placeholder="-- Chọn PO --"
+                        />
+                      ) : (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setModalOpen(true)}
+                          className="w-full justify-start text-muted-foreground"
+                        >
+                          Nhấn để chọn giao dịch...
+                        </Button>
+                      )
+                    ) : (
+                      <span
+                        className="text-primary font-medium cursor-pointer flex items-center gap-1.5 transition-opacity hover:opacity-80 group/link w-fit"
+                        onClick={() => openDocument(row.type, row.refId)}
+                      >
+                        <span className="group-hover/link:underline underline-offset-4 line-clamp-1">
+                          {row.refNo}
+                        </span>
+                        <ExternalLink className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover/link:opacity-100 transition-all flex-shrink-0" />
+                      </span>
+                    )}
+                  </td>
+                  <td className="px-3 py-2 text-right">
+                    {!row.isNew && (
+                      <div className="flex flex-col items-end">
+                        {row.amount !== undefined ? (
+                          <span className="font-medium text-emerald-600">
+                            {money(row.amount)}
+                          </span>
+                        ) : null}
+                        {row.date ? (
+                          <span className="text-xs text-muted-foreground">
+                            {row.date.slice(0, 10)}
+                          </span>
+                        ) : null}
+                      </div>
+                    )}
+                  </td>
+                  <td className="px-3 py-2 text-right">
+                    {editMode && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-red-500 hover:text-red-700 hover:bg-red-50 h-8 w-8 p-0"
+                        onClick={() => handleRemoveRow(row)}
+                        disabled={saving}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       <VoucherNetoffSelectionModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
+        invoice={{
+          id: invoiceId,
+          invoiceNo: form.invoiceNo,
+          totalAmount: form.totalAmount,
+          sellerName: form.sellerName,
+          buyerName: form.buyerName,
+          direction,
+        }}
         onSelect={handleSelectBank}
         existingVoucherIds={voucherNetOffs.map((v) => v.bankTransactionId)}
       />

@@ -7,11 +7,85 @@ export interface ErpInvoiceItem {
   unit?: string;
   quantity?: number;
   unitPrice?: number;
+  invoiceSubcategory?: string;
   preVatAmount: number | string;
   vatRate?: number | string | null;
   vatAmount: number | string;
   discountAmount: number | string;
   totalAmount: number | string;
+}
+
+export interface ErpInvoiceItemRow {
+  id: string;
+  invoiceId: string;
+  invoiceNo: string;
+  serialNo?: string | null;
+  invoiceDate: string;
+  direction: "IN" | "OUT";
+  status: string;
+  postingStatus?: string | null;
+  sellerName?: string | null;
+  sellerTaxCode?: string | null;
+  buyerName?: string | null;
+  buyerPersonalName?: string | null;
+  buyerTaxCode?: string | null;
+  buyerCccd?: string | null;
+  licensePlate?: string | null;
+  settlementOrder?: string | null;
+  branchId?: string | null;
+  taxInvoiceStatus?: number | null;
+  branchName?: string | null;
+  itemCode?: string | null;
+  description?: string | null;
+  unit?: string | null;
+  quantity?: number | null;
+  unitPrice?: number | null;
+  preVatAmount: number;
+  vatRate?: string | number | null;
+  vatAmount: number;
+  discountAmount: number;
+  totalAmount: number;
+  invoiceSubcategory: string;
+  createdAt?: string;
+}
+
+export interface ErpInvoiceItemListParams {
+  direction?: "IN" | "OUT";
+  search?: string;
+  invoice_no?: string;
+  serial_no?: string;
+  seller_name?: string;
+  buyer_name?: string;
+  partner_tax_code?: string;
+  item_code?: string;
+  description?: string;
+  invoice_subcategory?: string;
+  date_from?: string;
+  date_to?: string;
+  status?: string;
+  posting_status?: string;
+  tag_id?: string;
+  page?: number;
+  pageSize?: number;
+  sort_by?: string;
+  sort_order?: "asc" | "desc";
+  column_search?: string;
+  column_filters?: string;
+}
+
+export interface ErpInvoiceItemListResponse {
+  items: ErpInvoiceItemRow[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+  summary: {
+    totalQuantity: number;
+    totalPreVatAmount: number;
+    totalVatAmount: number;
+    totalDiscountAmount: number;
+    totalAmount: number;
+  };
 }
 
 export interface ErpInvoice {
@@ -39,6 +113,8 @@ export interface ErpInvoice {
   description?: string | null;
   licensePlate?: string | null;
   settlementOrder?: string | null;
+  invoiceCategory?: string | null;
+  categoryId?: string | null;
   invoiceType?: string | null;
   preVatAmount: string;
   vatRate?: string | null;
@@ -55,6 +131,8 @@ export interface ErpInvoice {
   xmlImportId?: string | null;
   taxInvoiceStatus?: number | null;
   taxProcessStatus?: number | null;
+  relatedInvoiceNo?: string | null;
+  relatedSerialNo?: string | null;
   createdAt?: string;
   updatedAt?: string;
   postingStatus?: string | null;
@@ -67,6 +145,23 @@ export interface ErpInvoice {
     netOffAmount: number;
     bankTransaction?: any;
   }[];
+  attachments?: {
+    attachmentId: string;
+    attachment: import("@/modules/system/api/attachmentsApi").ErpAttachment;
+  }[];
+  category?: any | null;
+  attributes?: Record<string, any>;
+  globalAttributes?: Record<string, any>;
+  customAttributes?: Record<string, any>;
+  attributeValues?: Array<{
+    id: string;
+    attrDefId: string;
+    attrCode?: string;
+    attrName?: string;
+    fieldType?: string;
+    valueText?: string | null;
+    isGlobal?: boolean;
+  }>;
 }
 
 export interface CreateErpInvoicePayload {
@@ -94,19 +189,24 @@ export interface CreateErpInvoicePayload {
   totalAmount?: number;
   purchaseOrderId?: string;
   salesOrderId?: string;
+  settlementOrder?: string;
+  licensePlate?: string;
   paymentDocumentNos?: string;
   notes?: string;
+  categoryId?: string | null;
+  customAttributes?: Record<string, any>;
+  globalAttributes?: Record<string, any>;
   isValid?: boolean;
   items?: ErpInvoiceItem[];
   pendingDocumentChanges?: {
     action: "ADD" | "REMOVE";
-    type: "PO" | "BANK";
+    type: "PO" | "BANK" | "SO" | "CASE";
     refId: string;
     amount?: number;
   }[];
   accountingEnabled?: boolean;
   pendingDeletedPdfs?: string[];
-  pendingAddedPdfs?: File[];
+  pendingAddedAttachments?: import("../components/ErpInvoicePdfUpload").PendingAttachment[];
 }
 
 export type UpdateErpInvoicePayload = Partial<CreateErpInvoicePayload>;
@@ -127,6 +227,7 @@ export interface ErpInvoiceListParams {
   sort_order?: "asc" | "desc";
   column_search?: string;
   column_filters?: string;
+  unlinked_po_id?: string;
 }
 
 export interface ErpInvoiceListResponse {
@@ -135,6 +236,33 @@ export interface ErpInvoiceListResponse {
   page: number;
   pageSize: number;
   totalPages: number;
+}
+
+export interface BranchStatEntry {
+  branchId: string | null;
+  branchName: string;
+  monthTotal: number;
+  monthPreVat: number;
+  weekTotal: number;
+  weekPreVat: number;
+  dayTotal: number;
+  dayPreVat: number;
+}
+
+export interface ErpInvoiceStats {
+  monthTotal: number;
+  monthPreVat: number;
+  monthChart: number[];
+  monthPreVatChart: number[];
+  weekTotal: number;
+  weekPreVat: number;
+  weekChart: number[];
+  weekPreVatChart: number[];
+  dayTotal: number;
+  dayPreVat: number;
+  dayChart: number[];
+  dayPreVatChart: number[];
+  byBranch?: BranchStatEntry[];
 }
 
 export interface PortalInvoiceDto {
@@ -151,7 +279,7 @@ export interface PortalInvoiceDto {
 }
 
 export interface PortalSyncPayload {
-  token: string;
+  token?: string;
   cookies?: string;
   dateFrom: string;
   dateTo: string;
@@ -166,6 +294,48 @@ export interface PortalSyncResult {
   errors?: string[];
   xmlDownloadQueued: number;
   note?: string;
+}
+
+export interface InvoiceExportBackgroundStartResult {
+  jobId: string;
+  message: string;
+  reused?: boolean;
+}
+
+export interface InvoiceExportHistoryItem {
+  jobId: string;
+  fileName: string;
+  status: "RUNNING" | "COMPLETED" | "FAILED";
+  current: number;
+  total: number;
+  message: string;
+  createdAt: string;
+  finishedAt?: string;
+  expiresAt?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  canDownload: boolean;
+}
+
+export interface InvoiceExportHistoryResponse {
+  items: InvoiceExportHistoryItem[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+export interface InvoiceExportProgressEvent {
+  processId: "invoice-xlsx-export" | "ping";
+  jobId?: string;
+  current: number;
+  total: number;
+  isRunning: boolean;
+  completed: boolean;
+  ready: boolean;
+  failed: boolean;
+  message?: string;
+  fileName?: string;
 }
 
 const BASE = "/api/v1/erp-invoices";
@@ -224,6 +394,16 @@ export const erpInvoicesCoreApi = {
     return data;
   },
 
+  getItemsList: async (
+    params?: ErpInvoiceItemListParams,
+  ): Promise<ErpInvoiceItemListResponse> => {
+    const { data } = await axiosInstance.get<ErpInvoiceItemListResponse>(
+      `${BASE}/items`,
+      { params },
+    );
+    return data;
+  },
+
   getInvoiceColumnOptions: async (
     column: string,
     search: string,
@@ -243,11 +423,58 @@ export const erpInvoicesCoreApi = {
       },
     });
     return res.data as {
-      items: string[];
+      items: Array<string | { label: string; value: string }>;
       total: number;
       page: number;
       totalPages: number;
     };
+  },
+
+  getItemColumnOptions: async (
+    column: string,
+    search: string,
+    page: number = 1,
+    pageSize: number = 20,
+    filtersStr?: string,
+    direction?: "IN" | "OUT",
+  ) => {
+    const res = await axiosInstance.get(`${BASE}/items/column-options`, {
+      params: {
+        column,
+        search,
+        page,
+        pageSize,
+        column_filters: filtersStr,
+        direction,
+      },
+    });
+    return res.data as {
+      items: Array<
+        string | { label: string; value: string; secondaryLabel?: string }
+      >;
+      total: number;
+      page: number;
+      totalPages: number;
+    };
+  },
+
+  exportItemsExcel: async (params?: ErpInvoiceItemListParams) => {
+    const res = await axiosInstance.get(`${BASE}/items/export/excel`, {
+      params,
+      responseType: "blob",
+    });
+    return res.data as Blob;
+  },
+
+  getStats: async (
+    direction?: "IN" | "OUT",
+    dateFrom?: string,
+    dateTo?: string,
+  ): Promise<ErpInvoiceStats> => {
+    const { data } = await axiosInstance.get<ErpInvoiceStats>(`${BASE}/stats`, {
+      params: { direction, dateFrom, dateTo },
+    });
+    return data;
   },
 
   get: async (id: string): Promise<ErpInvoice> => {
@@ -255,6 +482,24 @@ export const erpInvoicesCoreApi = {
       `${BASE}/${id}`,
     );
     return data.data;
+  },
+
+  getBulkNetOffs: async (ids: string[]): Promise<any[]> => {
+    const { data } = await axiosInstance.post<any[]>(`${BASE}/bulk-net-offs`, {
+      ids,
+    });
+    return data;
+  },
+
+  getSmartNetOffSuggestions: async (
+    invoiceIds: string[],
+  ): Promise<Record<string, SmartNetOffSuggestionItem[]>> => {
+    const { data } = await axiosInstance.post<
+      Record<string, SmartNetOffSuggestionItem[]>
+    >(`${BASE}/smart-net-off-suggestions`, {
+      invoiceIds,
+    });
+    return data;
   },
 
   create: async (payload: CreateErpInvoicePayload): Promise<ErpInvoice> => {
@@ -303,18 +548,17 @@ export const erpInvoicesCoreApi = {
     return data.data;
   },
 
-  reparseXml: async (id: string, token?: string): Promise<ErpInvoice> => {
-    const { data } = await axiosInstance.post<ErpInvoice>(
-      `${BASE}/${id}/reparse-xml`,
-      { token },
+  getLinkedCases: async (invoiceId: string) => {
+    const res = await axiosInstance.get(
+      `/api/v1/greenway/invoices/${invoiceId}/linked-cases`,
     );
-    return data;
+    return res.data;
   },
 
-  syncDetail: async (id: string, token: string): Promise<ErpInvoice> => {
+  syncDetail: async (id: string, token?: string): Promise<ErpInvoice> => {
     const { data } = await axiosInstance.post<ErpInvoice>(
       `${BASE}/${id}/sync-detail`,
-      { token },
+      token ? { token } : {},
     );
     return data;
   },
@@ -350,7 +594,7 @@ export const erpInvoicesCoreApi = {
   },
 
   bulkDownloadXml: async (params: {
-    token: string;
+    token?: string;
     cookies?: string;
     direction: "IN" | "OUT";
   }): Promise<{ message: string; count: number }> => {
@@ -361,10 +605,44 @@ export const erpInvoicesCoreApi = {
     return data;
   },
 
-  getPortalConfig: async (): Promise<{ token: string; cookies: string }> => {
+  getPortalCaptcha: async (): Promise<{
+    content: string;
+    key: string;
+    text?: string;
+  }> => {
+    const { data } = await axiosInstance.get<{
+      content: string;
+      key: string;
+      text?: string;
+    }>(`${BASE}/portal/captcha`);
+    return data;
+  },
+
+  loginPortal: async (payload: {
+    username: string;
+    password?: string;
+    cvalue: string;
+    ckey: string;
+  }): Promise<{ success: boolean; token: string; message: string }> => {
+    const { data } = await axiosInstance.post<{
+      success: boolean;
+      token: string;
+      message: string;
+    }>(`${BASE}/portal/login`, payload);
+    return data;
+  },
+
+  getPortalConfig: async (): Promise<{
+    token: string;
+    cookies: string;
+    username?: string;
+    hasPassword?: boolean;
+  }> => {
     const { data } = await axiosInstance.get<{
       token: string;
       cookies: string;
+      username?: string;
+      hasPassword?: boolean;
     }>(`${BASE}/portal/token`);
     return data;
   },
@@ -372,10 +650,12 @@ export const erpInvoicesCoreApi = {
   savePortalConfig: async (
     token: string,
     cookies?: string,
+    username?: string,
+    password?: string,
   ): Promise<{ message: string }> => {
     const { data } = await axiosInstance.post<{ message: string }>(
       `${BASE}/portal/token`,
-      { token, cookies },
+      { token, cookies, username, password },
     );
     return data;
   },
@@ -460,12 +740,12 @@ export const erpInvoicesCoreApi = {
   uploadPdfs: async (
     id: string,
     files: File[],
-  ): Promise<{ success: boolean; pdfFiles: any[] }> => {
+  ): Promise<{ success: boolean; attachments: any[] }> => {
     const formData = new FormData();
     files.forEach((f) => formData.append("files", f));
     const { data } = await axiosInstance.post<{
       success: boolean;
-      pdfFiles: any[];
+      attachments: any[];
     }>(`${BASE}/${id}/pdfs`, formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
@@ -553,11 +833,28 @@ export const erpInvoicesCoreApi = {
   deletePdf: async (
     id: string,
     key: string,
-  ): Promise<{ success: boolean; pdfFiles: any[] }> => {
+  ): Promise<{ success: boolean; attachments: any[] }> => {
     const { data } = await axiosInstance.delete<{
       success: boolean;
-      pdfFiles: any[];
+      attachments: any[];
     }>(`${BASE}/${id}/pdfs/${encodeURIComponent(key)}`);
+    return data;
+  },
+
+  linkAttachment: async (id: string, attachmentId: string): Promise<any> => {
+    const { data } = await axiosInstance.post(
+      `${BASE}/${id}/attachments/link`,
+      {
+        attachmentId,
+      },
+    );
+    return data;
+  },
+
+  unlinkAttachment: async (id: string, attachmentId: string): Promise<any> => {
+    const { data } = await axiosInstance.delete(
+      `${BASE}/${id}/attachments/${attachmentId}`,
+    );
     return data;
   },
 
@@ -573,6 +870,49 @@ export const erpInvoicesCoreApi = {
         await resolveBlobErrorMessage(error, "Xuất Excel thất bại"),
       );
     }
+  },
+
+  startExportExcelBackground: async (
+    params: ErpInvoiceListParams,
+  ): Promise<InvoiceExportBackgroundStartResult> => {
+    const { data } =
+      await axiosInstance.post<InvoiceExportBackgroundStartResult>(
+        `${BASE}/export/excel/background`,
+        params,
+      );
+    return data;
+  },
+
+  downloadExportExcelBackground: async (jobId: string): Promise<Blob> => {
+    try {
+      const { data } = await axiosInstance.get<Blob>(
+        `${BASE}/export/excel/background/${jobId}/download`,
+        {
+          responseType: "blob",
+        },
+      );
+      return data;
+    } catch (error: any) {
+      throw new Error(
+        await resolveBlobErrorMessage(error, "Tai file Excel that bai"),
+      );
+    }
+  },
+
+  listExportExcelBackgroundHistory: async (
+    page = 1,
+    pageSize = 10,
+  ): Promise<InvoiceExportHistoryResponse> => {
+    const { data } = await axiosInstance.get<InvoiceExportHistoryResponse>(
+      `${BASE}/export/excel/background/history`,
+      {
+        params: {
+          page,
+          pageSize,
+        },
+      },
+    );
+    return data;
   },
 
   postInvoice: async (
@@ -601,6 +941,26 @@ export const erpInvoicesCoreApi = {
       `${BASE}/${id}/unpost`,
     );
     return data;
+  },
+
+  autoPostStandard: async (id: string): Promise<ErpInvoice> => {
+    const { data } = await axiosInstance.post<ErpInvoice>(
+      `${BASE}/${id}/auto-post-standard`,
+    );
+    return data;
+  },
+
+  getTraceabilityGraph: async (
+    id: string,
+  ): Promise<import("@/shared/types/traceability").TraceabilityGraphData> => {
+    const { data } = await axiosInstance.get<{
+      rootId: string;
+      rootType: any;
+      nodes: any[];
+      edges: any[];
+      summary: any;
+    }>(`${BASE}/${id}/traceability-graph`);
+    return data as any;
   },
 };
 
@@ -633,4 +993,40 @@ export interface BulkImportResult {
     totalAmount?: string | null;
   }[];
   pdfOrphans?: { filename: string; reason: string }[];
+}
+
+export interface SmartNetOffSuggestionItem {
+  txn: {
+    id: string;
+    transDate: string;
+    referenceNumber?: string;
+    seqNo?: string;
+    description: string;
+    debitAmount: number;
+    creditAmount: number;
+    sourceType: string;
+    correspondentName?: string;
+    bankAccount?: {
+      bankName?: string;
+      accountNumber?: string;
+    };
+    cashBook?: {
+      name?: string;
+    };
+    remainingAmount: number;
+  };
+  score: {
+    score: number;
+    amountMatch: boolean;
+    invoiceNoMatch: boolean;
+    correspondentMatch: boolean;
+    badge:
+      | "PERFECT"
+      | "HIGH"
+      | "LIKELY"
+      | "POSSIBLE"
+      | "NOTICE_STRONG"
+      | "NOTICE";
+  };
+  matchedKeywords: string[];
 }

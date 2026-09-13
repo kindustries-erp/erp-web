@@ -8,16 +8,24 @@ import {
   ArrowRight,
   CheckCircle2,
   FileSpreadsheet,
-  Plus,
+  Pencil,
+  Settings,
 } from "lucide-react";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import { useFilterPanel } from "@/shared/hooks/useFilterPanel";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
+import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
 import { Forbidden } from "@/pages/Forbidden";
 import { useT } from "@/core/i18n";
 import { useUIStore } from "@/core/config/uiStore";
+import { useAppStore } from "@/core/config/appStore";
 import { Progress } from "@/shared/components/ui/progress";
+import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
+import { DateRangeColumnSlot } from "@/shared/components/DataTable/DateRangeColumnSlot";
+import { TableText } from "@/shared/components/DataTable/TableText";
+import { Badge } from "@/shared/components/ui/badge";
+import { Tooltip } from "@/core/components/ui/Tooltip";
 
 import {
   productionCoreApi,
@@ -26,7 +34,6 @@ import {
 import { bomCoreApi } from "@/modules/bom-core/api/bomCoreApi";
 import { ProductionOrderDrawer } from "./ProductionOrderDrawer";
 import { useProductionOrderDrawer } from "../hooks/useProductionOrderDrawer";
-import { ProductionRunDrawer } from "./ProductionRunDrawer";
 function fmtDate(value?: string | null) {
   if (!value) return "—";
   return value.slice(0, 10);
@@ -45,10 +52,11 @@ function fmtQty(value?: string | null) {
 export function ProductionOrderListPage() {
   const t = useT();
   const showToast = useUIStore((s) => s.showToast);
-  const canRead = useHasPermission("production", "read");
-  const canCreate = useHasPermission("production", "create");
-  const canUpdate = useHasPermission("production", "update");
-  const canDelete = useHasPermission("production", "delete");
+  const { openCustomFieldsDrawer } = useAppStore();
+  const canRead = useHasPermission(ErpResource.PRODUCTION, ErpAction.READ);
+  const canCreate = useHasPermission(ErpResource.PRODUCTION, ErpAction.CREATE);
+  const canUpdate = useHasPermission(ErpResource.PRODUCTION, ErpAction.UPDATE);
+  const canDelete = useHasPermission(ErpResource.PRODUCTION, ErpAction.DELETE);
 
   const [orders, setOrders] = useState<ErpProductionOrder[]>([]);
   const [loading, setLoading] = useState(true);
@@ -83,7 +91,7 @@ export function ProductionOrderListPage() {
   const filterConfig = useMemo(
     () => ({
       period: false,
-      search: true,
+      search: false,
       status: {
         options: [
           { value: "DRAFT", label: "DRAFT" },
@@ -129,11 +137,9 @@ export function ProductionOrderListPage() {
   );
   const [deleting, setDeleting] = useState(false);
 
-  // Production run drawer state
-  const [productionRunOpen, setProductionRunOpen] = useState(false);
-  const [productionRunLoading, setProductionRunLoading] = useState(false);
-  const [productionRunOrder, setProductionRunOrder] =
-    useState<ErpProductionOrder | null>(null);
+  const [drawerInitialTab, setDrawerInitialTab] = useState<
+    "details" | "execution" | "traceability" | "history"
+  >("details");
 
   const filterSearch = filter.state.search;
   const filterStatus = filter.state.status;
@@ -141,9 +147,7 @@ export function ProductionOrderListPage() {
   const filterDateTo = filter.state.dateTo;
   const filterFinishedGood = filter.state.custom.finishedGoodItemId;
 
-  const [sortBy, setSortBy] = useState<string | undefined>(
-    "planned_start_date",
-  );
+  const [sortBy, setSortBy] = useState<string | undefined>(undefined);
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
   const loadData = useCallback(async () => {
@@ -203,32 +207,39 @@ export function ProductionOrderListPage() {
     setPage(1);
   };
 
+  const getRowClassName = useCallback((item: ErpProductionOrder) => {
+    if (item.status === "CANCELLED") {
+      return "opacity-40 text-muted-foreground";
+    }
+    return undefined;
+  }, []);
+
   const handleCreate = () => {
     setDrawerMode("create");
-    setTimeout(() => setEditingOrder(null), 300);
+    setDrawerInitialTab("details");
+    setEditingOrder(null);
     setDrawerOpen(true);
   };
 
   const handleOpenProductionRun = async (item: ErpProductionOrder) => {
-    // Open immediately with skeleton; fetch detail after open.
-    setDrawerOpen(false);
-    setTimeout(() => setEditingOrder(null), 300);
-    setProductionRunOrder(null);
-    setProductionRunLoading(true);
-    setProductionRunOpen(true);
+    setDrawerMode("view");
+    setDrawerInitialTab("execution");
+    setEditingOrder(item);
+    setDrawerOpen(true);
+    setDrawerLoading(true);
     try {
       const data = await productionCoreApi.get(item.id);
-      setProductionRunOrder(data);
+      setEditingOrder(data);
     } catch {
       showToast({ title: t("Lỗi tải chi tiết lệnh"), variant: "destructive" });
-      setProductionRunOpen(false);
     } finally {
-      setProductionRunLoading(false);
+      setDrawerLoading(false);
     }
   };
 
   const handleEdit = async (id: string, viewOnly = false) => {
     setDrawerMode(viewOnly ? "view" : "edit");
+    setDrawerInitialTab("details");
     setDrawerOpen(true);
     setDrawerLoading(true);
     try {
@@ -338,64 +349,208 @@ export function ProductionOrderListPage() {
   const columns = useMemo(
     () => [
       {
+        key: "index",
+        header: <span className="w-full block text-center">#</span>,
+        headerClassName: "text-center w-[40px] min-w-[40px]",
+        className: "text-center w-[40px] min-w-[40px] text-muted-foreground",
+        size: 40,
+        enableResizing: false,
+        cell: (_: ErpProductionOrder, idx?: number) => (
+          <span className="w-full block text-center">{idx}</span>
+        ),
+      },
+      {
+        key: "referenceNo",
+        header: (
+          <TableColumnHeaderFilter
+            title={t("Mã lệnh")}
+            sortState={sortBy === "reference_no" ? sortOrder : "none"}
+            onSortChange={() => handleSort("reference_no")}
+            searchValue=""
+            onSearchChange={() => {}}
+            selectedFilters={[]}
+            onFilterChange={() => {}}
+            fetchOptions={productionCoreApi.getProductionOrderColumnOptions}
+            columnKey="reference_no"
+            align="center"
+          />
+        ),
+        sortable: false,
+        size: 200,
+        enableResizing: true,
+        cell: (item: ErpProductionOrder) => (
+          <div className="flex items-center gap-2 w-full">
+            <TableText
+              text={item.referenceNo || item.id.split("-")[0]}
+              enableCopy={true}
+              tooltip={true}
+              onDetailClick={(e) => {
+                e?.stopPropagation();
+                handleEdit(item.id, !canUpdate);
+              }}
+            />
+            {(item.status === "DRAFT" || item.status === "CANCELLED") && (
+              <Badge
+                variant={
+                  item.status === "CANCELLED" ? "destructive" : "secondary"
+                }
+                className="text-[10px] px-1 py-0 h-4 flex-shrink-0"
+              >
+                {item.status === "CANCELLED" ? t("Hủy") : t("Nháp")}
+              </Badge>
+            )}
+          </div>
+        ),
+      },
+      {
         key: "plannedStartDate",
-        header: t("Ngày bắt đầu"),
-        sortable: true,
-        sortKey: "planned_start_date",
+        header: (
+          <TableColumnHeaderFilter
+            title={t("Ngày bắt đầu")}
+            sortState={sortBy === "planned_start_date" ? sortOrder : "none"}
+            onSortChange={() => handleSort("planned_start_date")}
+            searchValue=""
+            onSearchChange={() => {}}
+            selectedFilters={[]}
+            onFilterChange={() => {}}
+            fetchOptions={productionCoreApi.getProductionOrderColumnOptions}
+            columnKey="planned_start_date"
+            hideFilter={true}
+            hideFooter={true}
+            align="center"
+            dateRangeSlot={({ close }) => (
+              <DateRangeColumnSlot
+                dateFrom={filterDateFrom}
+                dateTo={filterDateTo}
+                onChange={(from, to) => {
+                  filter.setDateFrom(from);
+                  filter.setDateTo(to);
+                  setPage(1);
+                  close();
+                }}
+                onClose={close}
+              />
+            )}
+          />
+        ),
+        sortable: false,
+        enableResizing: true,
         cell: (item: ErpProductionOrder) => (
           <div className="w-full">{fmtDate(item.plannedStartDate)}</div>
         ),
       },
       {
         key: "plannedEndDate",
-        header: t("Ngày kết thúc"),
-        sortable: true,
-        sortKey: "planned_end_date",
+        header: (
+          <TableColumnHeaderFilter
+            title={t("Ngày kết thúc")}
+            sortState={sortBy === "planned_end_date" ? sortOrder : "none"}
+            onSortChange={() => handleSort("planned_end_date")}
+            searchValue=""
+            onSearchChange={() => {}}
+            selectedFilters={[]}
+            onFilterChange={() => {}}
+            fetchOptions={productionCoreApi.getProductionOrderColumnOptions}
+            columnKey="planned_end_date"
+            hideFilter={true}
+            hideFooter={true}
+            align="center"
+            dateRangeSlot={({ close }) => (
+              <DateRangeColumnSlot
+                dateFrom={filterDateFrom}
+                dateTo={filterDateTo}
+                onChange={(from, to) => {
+                  filter.setDateFrom(from);
+                  filter.setDateTo(to);
+                  setPage(1);
+                  close();
+                }}
+                onClose={close}
+              />
+            )}
+          />
+        ),
+        sortable: false,
+        enableResizing: true,
         cell: (item: ErpProductionOrder) => (
           <div className="w-full">{fmtDate(item.plannedEndDate)}</div>
         ),
       },
       {
-        key: "referenceNo",
-        header: t("Mã lệnh"),
-        sortable: true,
-        sortKey: "reference_no",
-        cell: (item: ErpProductionOrder) => (
-          <div className="w-full">
-            <span
-              className="cursor-pointer font-medium text-emerald-600 hover:underline"
-              onClick={() => handleEdit(item.id, !canUpdate)}
-            >
-              {item.referenceNo || item.id.split("-")[0]}
-            </span>
-          </div>
-        ),
-      },
-      {
         key: "finishedGoodItemName",
-        header: t("Thành phẩm"),
-        sortable: true,
-        sortKey: "finished_good_item_name",
+        header: (
+          <TableColumnHeaderFilter
+            title={t("Thành phẩm")}
+            sortState={
+              sortBy === "finished_good_item_name" ? sortOrder : "none"
+            }
+            onSortChange={() => handleSort("finished_good_item_name")}
+            searchValue=""
+            onSearchChange={() => {}}
+            selectedFilters={[]}
+            onFilterChange={() => {}}
+            fetchOptions={productionCoreApi.getProductionOrderColumnOptions}
+            columnKey="finished_good_item_name"
+            align="center"
+          />
+        ),
+        sortable: false,
+        enableResizing: true,
         cell: (item: ErpProductionOrder) => (
           <div className="w-full">
-            {item.finishedGoodItemName || item.finishedGoodItemId || "—"}
+            <Tooltip
+              content={
+                item.finishedGoodItemName || item.finishedGoodItemId || "—"
+              }
+            >
+              <span className="block truncate max-w-[200px]">
+                {item.finishedGoodItemName || item.finishedGoodItemId || "—"}
+              </span>
+            </Tooltip>
           </div>
         ),
       },
       {
         key: "bomVersion",
-        header: t("Phiên bản BOM"),
+        header: (
+          <TableColumnHeaderFilter
+            title={t("Phiên bản BOM")}
+            sortState={sortBy === "bomVersion" ? sortOrder : "none"}
+            onSortChange={() => handleSort("bomVersion")}
+            searchValue=""
+            onSearchChange={() => {}}
+            selectedFilters={[]}
+            onFilterChange={() => {}}
+            fetchOptions={productionCoreApi.getProductionOrderColumnOptions}
+            columnKey="bomVersion"
+            align="center"
+          />
+        ),
         sortable: false,
-        size: 200,
+        size: 150,
+        enableResizing: true,
         cell: (item: ErpProductionOrder) => (
           <div className="w-full">{item.bomVersion || "—"}</div>
         ),
       },
       {
         key: "qtyProduced",
-        header: t("Tiến độ"),
-        sortable: true,
-        sortKey: "qty_produced",
+        header: (
+          <TableColumnHeaderFilter
+            title={t("Tiến độ")}
+            sortState={sortBy === "qty_produced" ? sortOrder : "none"}
+            onSortChange={() => handleSort("qty_produced")}
+            searchValue=""
+            onSearchChange={() => {}}
+            selectedFilters={[]}
+            onFilterChange={() => {}}
+            fetchOptions={productionCoreApi.getProductionOrderColumnOptions}
+            columnKey="qty_produced"
+            align="center"
+          />
+        ),
+        sortable: false,
+        enableResizing: true,
         cell: (item: ErpProductionOrder) => {
           const produced = Number(item.qtyProduced) || 0;
           const target = Number(item.qtyToProduce) || 0;
@@ -404,7 +559,7 @@ export function ProductionOrderListPage() {
 
           let indicatorColor = "bg-slate-400";
           if (percent === 100) indicatorColor = "bg-emerald-500";
-          else if (percent > 0) indicatorColor = "bg-blue-500";
+          else if (percent > 0) indicatorColor = "bg-primary";
 
           return (
             <div className="flex flex-col gap-1 w-28 mx-auto">
@@ -425,29 +580,68 @@ export function ProductionOrderListPage() {
       },
       {
         key: "status",
-        header: t("Trạng thái"),
-        sortable: true,
-        sortKey: "status",
-        cell: (item: ErpProductionOrder) => (
-          <div className="w-full">
-            <span
-              className={`rounded-md px-2 py-0.5 text-[11px] font-semibold border ${
-                item.status === "COMPLETED"
-                  ? "bg-emerald-100 text-emerald-800 border-emerald-200"
-                  : item.status === "IN_PROGRESS"
-                    ? "bg-blue-100 text-blue-800 border-blue-200"
-                    : item.status === "CANCELLED"
-                      ? "bg-red-100 text-red-800 border-red-200"
-                      : "bg-amber-100 text-amber-800 border-amber-200"
-              }`}
-            >
-              {item.status || "—"}
-            </span>
-          </div>
+        header: (
+          <TableColumnHeaderFilter
+            title={t("Trạng thái")}
+            sortState={sortBy === "status" ? sortOrder : "none"}
+            onSortChange={() => handleSort("status")}
+            searchValue=""
+            onSearchChange={() => {}}
+            selectedFilters={[]}
+            onFilterChange={() => {}}
+            fetchOptions={productionCoreApi.getProductionOrderColumnOptions}
+            columnKey="status"
+            filterOptions={[
+              { value: "DRAFT", label: t("Nháp") },
+              { value: "IN_PROGRESS", label: t("Đang thực hiện") },
+              { value: "COMPLETED", label: t("Hoàn thành") },
+              { value: "CANCELLED", label: t("Hủy") },
+            ]}
+            align="center"
+          />
         ),
+        sortable: false,
+        enableResizing: true,
+        cell: (item: ErpProductionOrder) => {
+          let variant:
+            | "default"
+            | "secondary"
+            | "destructive"
+            | "outline"
+            | "ghost";
+          const label = item.status || "—";
+          if (item.status === "COMPLETED") {
+            variant = "default";
+          } else if (item.status === "IN_PROGRESS") {
+            variant = "secondary";
+          } else if (item.status === "CANCELLED") {
+            variant = "destructive";
+          } else {
+            variant = "outline";
+          }
+
+          return (
+            <div className="w-full">
+              <Badge
+                variant={variant}
+                className={
+                  item.status === "COMPLETED"
+                    ? "bg-emerald-100 text-emerald-800 hover:bg-emerald-100 border-emerald-200"
+                    : item.status === "IN_PROGRESS"
+                      ? "bg-muted text-foreground hover:bg-muted border-border font-medium"
+                      : item.status === "CANCELLED"
+                        ? "bg-red-100 text-red-800 hover:bg-red-100 border-red-200"
+                        : "bg-amber-100 text-amber-800 hover:bg-amber-100 border-amber-200"
+                }
+              >
+                {label}
+              </Badge>
+            </div>
+          );
+        },
       },
     ],
-    [t, canUpdate],
+    [t, canUpdate, sortBy, sortOrder],
   );
 
   if (!canRead) return <Forbidden />;
@@ -461,6 +655,7 @@ export function ProductionOrderListPage() {
       items={orders}
       columns={columns}
       getRowKey={(i) => i.id}
+      getRowClassName={getRowClassName}
       loading={loading}
       error={error}
       emptyLabel={t("Chưa có lệnh sản xuất nào")}
@@ -470,33 +665,29 @@ export function ProductionOrderListPage() {
       totalPages={Math.ceil(total / pageSize)}
       onPage={setPage}
       onPageSize={setPageSize}
-      onRowClick={(item) => handleEdit(item.id, true)}
       onRefresh={loadData}
-      createActions={
-        canCreate
-          ? [
-              {
-                groupLabel: t("groupThemMoi", "Thêm mới"),
-                items: [
-                  {
-                    label: t("common.create", "Tạo mới"),
-                    icon: <Plus className="w-4 h-4 text-emerald-600" />,
-                    onClick: handleCreate,
-                  },
-                ],
-              },
-            ]
-          : undefined
-      }
-      filterConfig={filterConfig}
-      filter={filter}
+      onCreate={canCreate ? handleCreate : undefined}
+      createActions={[
+        {
+          groupLabel: t("groupCauHinh", "Cấu hình"),
+          items: [
+            {
+              label: t("productionConfig.title", "Cấu hình sản xuất"),
+              icon: <Settings className="w-4 h-4 text-muted-foreground" />,
+              onClick: () => openCustomFieldsDrawer("PRODUCTION", "Sản xuất"),
+            },
+          ],
+        },
+      ]}
+      activeFilterCount={filter.activeFilterCount}
+      onClearAllFilters={filter.resetAll}
       sortArray={
         sortBy ? [`${sortOrder === "desc" ? "-" : ""}${sortBy}`] : undefined
       }
       onSort={handleSort}
       rowActions={(item) => [
         {
-          groupLabel: t("Tra cứu"),
+          groupLabel: t("groupTraCuu", "Tra cứu"),
           items: [
             {
               label: t("Chi tiết"),
@@ -512,8 +703,14 @@ export function ProductionOrderListPage() {
           ],
         },
         {
-          groupLabel: t("Thao tác"),
+          groupLabel: t("groupThaoTac", "Thao tác"),
           items: [
+            {
+              label: t("Chỉnh sửa"),
+              onClick: () => handleEdit(item.id, false),
+              icon: <Pencil className="h-[13px] w-[13px]" />,
+              hidden: !canUpdate || item.status === "CANCELLED",
+            },
             {
               label:
                 item.status === "IN_PROGRESS"
@@ -524,9 +721,9 @@ export function ProductionOrderListPage() {
               onClick: () => handleOpenProductionRun(item),
               icon:
                 item.status === "IN_PROGRESS" ? (
-                  <ArrowRight className="h-[13px] w-[13px] text-blue-600" />
+                  <ArrowRight className="h-[13px] w-[13px]" />
                 ) : item.status === "COMPLETED" ? (
-                  <CheckCircle2 className="h-[13px] w-[13px] text-emerald-600" />
+                  <CheckCircle2 className="h-[13px] w-[13px]" />
                 ) : (
                   <PlayCircle className="h-[13px] w-[13px]" />
                 ),
@@ -537,21 +734,28 @@ export function ProductionOrderListPage() {
                 ),
             },
             {
-              label: item.status === "DRAFT" ? t("Xóa lệnh") : t("Hủy lệnh"),
-              onClick: () =>
-                item.status === "DRAFT"
-                  ? setDeleteTarget(item)
-                  : setCancelTarget(item),
-              icon:
-                item.status === "DRAFT" ? (
-                  <Trash2 className="h-[13px] w-[13px]" />
-                ) : (
-                  <XCircle className="h-[13px] w-[13px]" />
-                ),
+              label: t("Hủy lệnh"),
+              onClick: () => setCancelTarget(item),
+              icon: <XCircle className="h-[13px] w-[13px]" />,
               variant: "danger",
-              hidden:
-                !canDelete ||
-                (item.status !== "DRAFT" && item.status !== "CONFIRMED"),
+              hidden: !canDelete || item.status !== "CONFIRMED",
+            },
+            {
+              label: t("Xóa lệnh"),
+              onClick: () => setDeleteTarget(item),
+              icon: <Trash2 className="h-[13px] w-[13px]" />,
+              variant: "danger",
+              hidden: !canDelete || item.status !== "DRAFT",
+            },
+          ],
+        },
+        {
+          groupLabel: t("groupCauHinh", "Cấu hình"),
+          items: [
+            {
+              label: t("productionConfig.title", "Cấu hình sản xuất"),
+              onClick: () => openCustomFieldsDrawer("PRODUCTION", "Sản xuất"),
+              icon: <Settings className="h-[13px] w-[13px]" />,
             },
           ],
         },
@@ -562,6 +766,7 @@ export function ProductionOrderListPage() {
         loading={drawerLoading}
         editing={editingOrder}
         viewOnly={drawerMode === "view"}
+        initialTab={drawerInitialTab}
         onClose={() => {
           setDrawerOpen(false);
           setTimeout(() => setEditingOrder(null), 300);
@@ -575,19 +780,6 @@ export function ProductionOrderListPage() {
         }
         onSaved={loadData}
         drawerState={drawerState}
-        productionRunOpen={
-          productionRunOpen &&
-          !!productionRunOrder &&
-          !!editingOrder &&
-          productionRunOrder.id === editingOrder.id
-        }
-        onOpenProductionRun={() => {
-          if (editingOrder) {
-            setProductionRunOrder(editingOrder);
-            setProductionRunOpen(true);
-          }
-        }}
-        onCloseProductionRun={() => setProductionRunOpen(false)}
       />
 
       {deleteTarget && (
@@ -617,21 +809,6 @@ export function ProductionOrderListPage() {
           onConfirm={handleCancelOrder}
           onCancel={() => setCancelTarget(null)}
           loading={canceling}
-        />
-      )}
-
-      {/* Standalone production run drawer — opened directly from list quick action */}
-      {productionRunOpen && !drawerOpen && (
-        <ProductionRunDrawer
-          open={true}
-          loading={productionRunLoading}
-          order={productionRunOrder}
-          onClose={() => {
-            setProductionRunOpen(false);
-            setProductionRunOrder(null);
-            setProductionRunLoading(false);
-          }}
-          onRefresh={loadData}
         />
       )}
     </SpreadsheetPageTemplate>

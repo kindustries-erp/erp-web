@@ -1,8 +1,7 @@
 import { useCallback } from "react";
-import { RefreshCcw, Plus, ChevronDown } from "lucide-react";
+import { RefreshCcw, Plus, ChevronDown, Loader2 } from "lucide-react";
 import { Button } from "@/shared/components/ui/Button";
 import { FilterButton } from "@/shared/components/FilterPanel";
-import { cn } from "@/shared/utils";
 import { useT } from "@/core/i18n";
 
 interface TableActionGroupProps {
@@ -15,6 +14,7 @@ interface TableActionGroupProps {
 
   onCreate?: () => void;
   createLabel?: string;
+  createIcon?: React.ReactNode;
   createActions?: import("@/shared/components/ActionDropdown").ActionDropdownItem[];
 
   extraActions?: React.ReactNode;
@@ -33,6 +33,7 @@ export function TableActionGroup({
   onClearAllFilters,
   onCreate,
   createLabel = "Tạo mới",
+  createIcon,
   createActions,
   extraActions,
   children,
@@ -47,11 +48,11 @@ export function TableActionGroup({
     [portalId],
   );
   return (
-    <div className="flex items-center gap-2 w-full justify-end">
+    <div className="flex items-center gap-2 w-full flex-wrap justify-start sm:justify-end">
       {extraActions}
       {children}
 
-      {onFilterToggle && (
+      {(onFilterToggle || (activeFilterCount > 0 && onClearAllFilters)) && (
         <FilterButton
           onClick={onFilterToggle}
           activeCount={activeFilterCount}
@@ -68,18 +69,22 @@ export function TableActionGroup({
         <Button
           variant="secondary"
           size="icon"
-          className="h-8 w-8 px-0"
+          className="h-8 w-8 px-0 shrink-0"
           onClick={onRefresh}
           disabled={loading}
           title={t("Tải lại")}
         >
-          <RefreshCcw className={cn("h-4 w-4", loading && "animate-spin")} />
+          {loading ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <RefreshCcw className="h-4 w-4" />
+          )}
         </Button>
       )}
 
       {onCreate && (!createActions || createActions.length === 0) && (
-        <Button onClick={onCreate} className="h-8 px-3">
-          <Plus className="h-4 w-4 mr-1" />
+        <Button onClick={onCreate} className="h-8 px-3 shrink-0">
+          {createIcon || <Plus className="h-4 w-4 mr-1" />}
           {t(createLabel)}
         </Button>
       )}
@@ -89,7 +94,8 @@ export function TableActionGroup({
           items={createActions}
           align="end"
           customTrigger={
-            <Button className="h-8 px-3">
+            <Button className="h-8 px-3 shrink-0">
+              {createIcon}
               {t(createLabel)}
               <ChevronDown className="h-4 w-4 ml-1 opacity-70" />
             </Button>
@@ -98,12 +104,12 @@ export function TableActionGroup({
       )}
 
       {onCreate && createActions && createActions.length > 0 && (
-        <div className="flex items-center">
+        <div className="flex items-center shrink-0">
           <Button
             onClick={onCreate}
             className="h-8 rounded-r-none px-3 border-r-0 focus:z-10"
           >
-            <Plus className="h-4 w-4 mr-1" />
+            {createIcon || <Plus className="h-4 w-4 mr-1" />}
             {t(createLabel)}
           </Button>
           <div className="w-[1px] h-8 bg-primary-foreground/20 z-10" />

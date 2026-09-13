@@ -1,0 +1,30 @@
+export const activityLogsEn = {
+  title: "Activity Logs",
+  desc: "Live audit logs from ERP CORE backend",
+  empty: "No audit logs found",
+  headers: {
+    actor: "Actor",
+    action: "Action",
+    module: "Module",
+    entity: "Entity",
+    status: "Status",
+    time: "Time",
+  },
+  actions: {
+    lookup: "Lookup",
+    viewDetail: "View Details",
+  },
+  drawer: {
+    title: "Log Details",
+    sectionMain: "Main Information",
+    sectionSnapshot: "JSON Snapshot",
+    actor: "Actor:",
+    entity: "Entity:",
+    route: "Route:",
+    message: "Message:",
+    before: "Before",
+    after: "After",
+    error: "Error",
+    btnClose: "Close",
+  },
+};

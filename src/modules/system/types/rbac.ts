@@ -5,6 +5,9 @@ export interface Role {
   icon?: string | null;
   admin_access?: boolean;
   app_access?: boolean;
+  is_active?: boolean;
+  isActive?: boolean;
+  createdAt?: string;
   /** May be a count, an array of user IDs, or user objects from RBAC APIs. */
   users?: number | Array<string | RoleUserSummary>;
 }
@@ -24,6 +27,47 @@ export interface CreateRoleDto {
 export interface UpdateRoleDto {
   name?: string;
   description?: string;
+}
+
+export enum ErpResource {
+  SUPER_ADMIN = "*",
+  ADMIN_USERS = "admin_users",
+  EMPLOYEES = "employees",
+  BUSINESS_PARTNERS = "business_partners",
+  PURCHASE_ORDERS = "purchase_orders",
+  SALES_ORDERS = "sales_orders",
+  INVENTORY_ITEMS = "inventory_items",
+  INVENTORY_VOUCHERS = "inventory_vouchers",
+  GOODS_RECEIPTS = "goods_receipts",
+  GOODS_ISSUES = "goods_issues",
+  INVENTORY_ADJUSTMENTS = "inventory_adjustments",
+  BOM = "bom",
+  PRODUCTION = "production",
+  ACTIVITY_LOGS = "activity_logs",
+  EMAIL_INGEST = "email_ingest",
+  JOURNAL_ENTRIES = "journal_entries",
+  GARAGE = "garage",
+  ACCOUNTING_CONFIGS = "accounting_configs",
+  INVOICES = "invoices",
+  SALES_REPORTS = "sales_reports",
+  PURCHASING_REPORTS = "purchasing_reports",
+  SYS_TAGS = "sys_tags",
+  BANK_STATEMENTS = "bank_statements",
+  CASH_STATEMENTS = "cash_statements",
+  PURCHASE_REQUESTS = "purchase_requests",
+  VEHICLES = "vehicles",
+  VINFAST = "vinfast",
+  PAYMENT_VOUCHERS = "payment_vouchers",
+  CASHFLOW_VOUCHERS = "erp_cashflow_vouchers",
+}
+
+export enum ErpAction {
+  ALL = "*",
+  READ = "read",
+  CREATE = "create",
+  UPDATE = "update",
+  DELETE = "delete",
+  MANAGE = "manage",
 }
 
 export type CrudAction = "create" | "read" | "update" | "delete";
@@ -94,10 +138,14 @@ export const RBAC_COLLECTIONS: CollectionDef[] = [
     label: "Nhật ký duyệt phiếu thu/chi",
     group: "Tài chính",
   },
-  { collection: "cash_funds", label: "Quỹ tiền mặt", group: "Tài chính" },
   {
-    collection: "company_bank_accounts",
-    label: "TK NH công ty",
+    collection: "bank_statements",
+    label: "Ngân hàng (Tài khoản & Sao kê)",
+    group: "Tài chính",
+  },
+  {
+    collection: "cash_statements",
+    label: "Tiền mặt (Sổ quỹ & Thu chi)",
     group: "Tài chính",
   },
   { collection: "erp_branches", label: "Chi nhánh", group: "Tài chính" },
@@ -179,3 +227,86 @@ export const CRUD_ACTIONS: { action: CrudAction; label: string }[] = [
 ];
 
 export type PermissionMap = Record<string, Record<CrudAction, boolean>>;
+
+export interface PermissionResourceGroup {
+  groupKey: string;
+  labelKey: string;
+  defaultLabel: string;
+  resources: string[];
+}
+
+export const PERMISSION_RESOURCE_GROUPS: PermissionResourceGroup[] = [
+  {
+    groupKey: "sales",
+    labelKey: "rbac.groups.sales",
+    defaultLabel: "Bán hàng",
+    resources: [ErpResource.SALES_ORDERS, ErpResource.SALES_REPORTS],
+  },
+  {
+    groupKey: "purchasing",
+    labelKey: "rbac.groups.purchasing",
+    defaultLabel: "Mua hàng",
+    resources: [
+      ErpResource.PURCHASE_ORDERS,
+      ErpResource.PURCHASE_REQUESTS,
+      ErpResource.PURCHASING_REPORTS,
+    ],
+  },
+  {
+    groupKey: "inventory",
+    labelKey: "rbac.groups.inventory",
+    defaultLabel: "Kho & Tồn kho",
+    resources: [
+      ErpResource.INVENTORY_ITEMS,
+      ErpResource.INVENTORY_VOUCHERS,
+      ErpResource.GOODS_RECEIPTS,
+      ErpResource.GOODS_ISSUES,
+      ErpResource.INVENTORY_ADJUSTMENTS,
+    ],
+  },
+  {
+    groupKey: "manufacturing",
+    labelKey: "rbac.groups.manufacturing",
+    defaultLabel: "Sản xuất & BOM",
+    resources: [ErpResource.BOM, ErpResource.PRODUCTION],
+  },
+  {
+    groupKey: "garage",
+    labelKey: "rbac.groups.garage",
+    defaultLabel: "Garage & Xưởng dịch vụ",
+    resources: [ErpResource.GARAGE],
+  },
+  {
+    groupKey: "vinfast",
+    labelKey: "rbac.groups.vinfast",
+    defaultLabel: "VinFast & Xe cộ",
+    resources: [ErpResource.VINFAST, ErpResource.VEHICLES],
+  },
+  {
+    groupKey: "accounting",
+    labelKey: "rbac.groups.accounting",
+    defaultLabel: "Kế toán & Dòng tiền",
+    resources: [
+      ErpResource.INVOICES,
+      ErpResource.BANK_STATEMENTS,
+      ErpResource.CASH_STATEMENTS,
+      ErpResource.JOURNAL_ENTRIES,
+      ErpResource.ACCOUNTING_CONFIGS,
+      ErpResource.PAYMENT_VOUCHERS,
+      ErpResource.CASHFLOW_VOUCHERS,
+    ],
+  },
+  {
+    groupKey: "system",
+    labelKey: "rbac.groups.system",
+    defaultLabel: "Quản trị & Hệ thống",
+    resources: [
+      ErpResource.ADMIN_USERS,
+      ErpResource.EMPLOYEES,
+      ErpResource.BUSINESS_PARTNERS,
+      ErpResource.ACTIVITY_LOGS,
+      ErpResource.EMAIL_INGEST,
+      ErpResource.SYS_TAGS,
+    ],
+  },
+];

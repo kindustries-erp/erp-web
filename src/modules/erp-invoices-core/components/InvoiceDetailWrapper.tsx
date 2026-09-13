@@ -37,10 +37,6 @@ export function InvoiceDetailWrapper({ invoiceId, onClose }: Props) {
     onClose();
   };
 
-  const fieldSet = (key: string, value: any) => {
-    formHook.setForm((prev) => ({ ...prev, [key]: value }));
-  };
-
   return (
     <ErpInvoiceInternalDrawer
       open={!!invoiceId && formHook.internalDrawerOpen}
@@ -49,7 +45,6 @@ export function InvoiceDetailWrapper({ invoiceId, onClose }: Props) {
       detailInvoice={formHook.detailInvoice}
       saving={formHook.saving}
       handleSave={formHook.handleSave}
-      onDownload={() => {}}
       loadingDetail={isFetching || formHook.loadingDetail}
       startEdit={formHook.startEdit}
       cancelEdit={formHook.cancelEdit}
@@ -58,7 +53,7 @@ export function InvoiceDetailWrapper({ invoiceId, onClose }: Props) {
           <ErpInvoiceInternalSidebar
             form={formHook.form}
             editMode={formHook.editMode}
-            fieldSet={fieldSet}
+            fieldSet={formHook.fieldSet}
             invoiceId={formHook.detailInvoice?.id ?? null}
             pendingTagIds={formHook.pendingTagIds}
             onPendingTagsChange={formHook.setPendingTagIds}
@@ -67,8 +62,9 @@ export function InvoiceDetailWrapper({ invoiceId, onClose }: Props) {
             pdfSlot={
               <ErpInvoicePdfUpload
                 invoiceId={formHook.detailInvoice?.id ?? null}
-                pdfFiles={formHook.detailInvoice?.pdfFiles ?? null}
+                attachments={formHook.detailInvoice?.attachments ?? null}
                 pdfFileKey={formHook.detailInvoice?.pdfFileKey ?? null}
+                pdfFiles={formHook.detailInvoice?.pdfFiles ?? null}
                 editMode={formHook.editMode}
                 pendingDeletedPdfs={formHook.form.pendingDeletedPdfs}
                 onPendingDeletePdf={(key) => {
@@ -78,11 +74,11 @@ export function InvoiceDetailWrapper({ invoiceId, onClose }: Props) {
                     pendingDeletedPdfs: [...current, key],
                   }));
                 }}
-                pendingAddedPdfs={formHook.form.pendingAddedPdfs}
-                onPendingAddedPdfsChange={(files) => {
+                pendingAddedAttachments={formHook.form.pendingAddedAttachments}
+                onPendingAddedAttachmentsChange={(files) => {
                   formHook.setForm((prev) => ({
                     ...prev,
-                    pendingAddedPdfs: files,
+                    pendingAddedAttachments: files,
                   }));
                 }}
               />
@@ -95,7 +91,7 @@ export function InvoiceDetailWrapper({ invoiceId, onClose }: Props) {
         <ErpInvoiceInternalMain
           form={formHook.form}
           editMode={formHook.editMode}
-          fieldSet={fieldSet}
+          fieldSet={formHook.fieldSet}
           direction={formHook.detailInvoice?.direction || "IN"}
           detailInvoice={formHook.detailInvoice}
           postingState={formHook.postingState}

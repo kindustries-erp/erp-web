@@ -1,80 +1,128 @@
-import React from "react";
-import { useGarageDashboard } from "../hooks/useGarage";
-import { useGarageStore } from "../store/garageStore";
-import { Car } from "lucide-react";
+import React, { useState } from "react";
+import { Download } from "lucide-react";
 import { DashboardTemplate } from "@/shared/components/DashboardTemplate";
-import { KpiCard } from "@/shared/components/KpiCard";
-import { useFilterPanel } from "@/shared/hooks/useFilterPanel";
-import { money } from "@/shared/utils/format";
-import { GarageBranchSelector } from "../components/GarageBranchSelector";
+import { Button } from "@/shared/components/ui/Button";
+import { useTranslation } from "react-i18next";
+import { useQuery, useQueryClient, useIsFetching } from "@tanstack/react-query";
+import { format } from "date-fns";
+import toast from "react-hot-toast";
+
+import { garageDashboardApi } from "../api/garageDashboardApi";
+import { GarageStatsCards } from "../components/GarageStatsCards";
+import { GarageTrendChart } from "../components/GarageTrendChart";
+import { GarageStatusDistributionChart } from "../components/GarageStatusDistributionChart";
+import { GaragePaymentProgressCard } from "../components/GaragePaymentProgressCard";
+import { GaragePnlSection } from "../components/GaragePnlSection";
 
 export function GarageDashboard() {
-  const { selectedBranchId } = useGarageStore();
+  const { t } = useTranslation("garage");
+  const queryClient = useQueryClient();
+  const [isExporting, setIsExporting] = useState(false);
 
-  const filterConfig = React.useMemo(() => {
-    return {
-      period: true,
-      noDefaultPeriod: true,
-      custom: [], // Can add branch selector here if wanted, but it's global for Garage
-    };
-  }, []);
+  const isFetchingStats = useIsFetching({
+    queryKey: ["garage-dashboard-stats"],
+  });
+  const isFetchingKpis = useIsFetching({
+    queryKey: ["garage-checkpoint-kpis"],
+  });
+  const isRefreshing = isFetchingStats > 0 || isFetchingKpis > 0;
 
-  const filter = useFilterPanel(filterConfig, () => {});
+  // Query unified dashboard stats (trend, collectionSummary, statusDistribution)
+  const { data: statsData, isLoading: isLoadingStats } = useQuery({
+    queryKey: ["garage-dashboard-stats"],
+    queryFn: () => garageDashboardApi.getStats(),
+  });
 
-  const {
-    data: dashboard,
-    isLoading,
-    refetch,
-  } = useGarageDashboard(
-    selectedBranchId,
-    filter.state.dateFrom || undefined,
-    filter.state.dateTo || undefined,
-  );
+  const handleExportExcel = async () => {
+    try {
+      setIsExporting(true);
+      const blob = await garageDashboardApi.exportExcel();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      const timestamp = format(new Date(), "yyyyMMdd_HHmmss");
+      a.download = `Bao_cao_Tong_quan_Garage_${timestamp}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success("Đã tải xuống file báo cáo Garage");
+    } catch (error) {
+      console.error(error);
+      toast.error("Lỗi khi xuất báo cáo Garage");
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
-  const revenue = dashboard?.data?.revenue || 0;
-  const newCases = dashboard?.data?.newCases || 0;
-  const completedCases = dashboard?.data?.completedCases || 0;
+  const handleRefresh = () => {
+    queryClient.invalidateQueries({ queryKey: ["garage-checkpoint-kpis"] });
+    queryClient.invalidateQueries({ queryKey: ["garage-dashboard-stats"] });
+    queryClient.invalidateQueries({ queryKey: ["garage-pnl-report"] });
+    queryClient.invalidateQueries({
+      queryKey: ["garage-dashboard-stats-chart"],
+    });
+  };
 
   return (
     <DashboardTemplate
-      title="Garage Dashboard"
-      desc="Overview of Kgara data"
-      icon={<Car className="h-4 w-4 text-blue-600" />}
-      filterConfig={filterConfig}
-      filter={filter}
-      loading={isLoading}
-      onRefresh={() => refetch()}
+      title={t("dashboard.title", "Tổng quan Garage")}
+      desc={t(
+        "dashboard.desc",
+        "Báo cáo tổng quan hiệu quả hoạt động xưởng dịch vụ, doanh thu, chi phí, lợi nhuận gộp theo ngày hoàn thành và tiến độ thu tiền",
+      )}
+      loading={isRefreshing}
+      onRefresh={handleRefresh}
+      extraActions={
+        <Button
+          onClick={handleExportExcel}
+          disabled={isExporting}
+          variant="outline"
+          className="h-8 gap-1"
+        >
+          <Download className="h-4 w-4" />
+          Xuất Excel
+        </Button>
+      }
     >
-      <div className="mb-4">
-        <GarageBranchSelector />
-      </div>
+      <div className="flex flex-col gap-6 mb-8">
+        {/* Section 1: KPI Doanh thu Dịch vụ Cards (Tính theo ngày hoàn thành) */}
+        <GarageStatsCards
+          type="REVENUE"
+          title="Doanh thu Dịch vụ (Đã hoàn thành công việc)"
+        />
 
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 mb-4">
-        <KpiCard
-          compact
-          loading={isLoading}
-          label="Doanh thu"
-          value={money(revenue)}
+        {/* Section 2: KPI Giá vốn & Chi phí Cards */}
+        <GarageStatsCards
+          type="COST"
+          title="Giá vốn & Chi phí Dịch vụ (Đã hoàn thành)"
         />
-        <KpiCard
-          compact
-          loading={isLoading}
-          label="Số lượng xe tiếp nhận"
-          value={newCases.toString()}
-        />
-        <KpiCard
-          compact
-          loading={isLoading}
-          label="Số lượng xe hoàn thành"
-          value={completedCases.toString()}
-        />
-      </div>
 
-      <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-        <h3 className="text-sm font-semibold mb-2">Raw Dashboard Data</h3>
-        <pre className="bg-gray-50 p-4 rounded-md text-xs overflow-auto max-h-96">
-          {JSON.stringify(dashboard, null, 2)}
-        </pre>
+        {/* Section 3: Báo cáo Lợi nhuận (P&L) Section */}
+        <GaragePnlSection />
+
+        {/* Section 4: Tiến độ Dòng tiền & Công nợ (Thu tiền KH & Trả tiền NCC) */}
+        <GaragePaymentProgressCard
+          collectionSummary={statsData?.collectionSummary}
+          costPaymentSummary={statsData?.costPaymentSummary}
+          trend={statsData?.trend}
+          loading={isLoadingStats}
+        />
+
+        {/* Section 5: Trend & Status Distribution Charts */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="lg:col-span-2">
+            <GarageTrendChart />
+          </div>
+          <div className="lg:col-span-1">
+            <GarageStatusDistributionChart
+              data={statsData?.statusDistribution}
+              byMonth={statsData?.statusDistributionByMonth}
+              availableMonths={statsData?.availableMonths}
+              loading={isLoadingStats}
+            />
+          </div>
+        </div>
       </div>
     </DashboardTemplate>
   );

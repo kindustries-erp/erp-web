@@ -1,13 +1,15 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import * as Popover from "@radix-ui/react-popover";
 import { Check, ChevronDown, Search, X } from "lucide-react";
 import { cn } from "@/shared/utils";
 import { Tooltip } from "@/core/components/ui/Tooltip";
+import { useT } from "@/core/i18n";
 
 export interface ComboboxOption {
   value: string;
   label: string;
   searchText?: string;
+  subLabel?: string;
 }
 
 interface ComboboxProps {
@@ -25,13 +27,14 @@ interface ComboboxProps {
   loading?: boolean;
   onSearch?: (query: string) => void;
   fallbackLabel?: string;
+  variant?: "default" | "spreadsheet";
 }
 
 export function Combobox({
   options,
   value,
   onChange,
-  placeholder = "— Chọn —",
+  placeholder,
   searchPlaceholder = "Tìm kiếm...",
   emptyLabel = "Không tìm thấy.",
   className,
@@ -42,7 +45,12 @@ export function Combobox({
   loading,
   onSearch,
   fallbackLabel,
+  variant = "default",
 }: ComboboxProps) {
+  const t = useT();
+  const defaultPlaceholder = t("common.select", "— Chọn —");
+  const effectivePlaceholder = placeholder ?? defaultPlaceholder;
+
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -50,13 +58,18 @@ export function Combobox({
   const onSearchRef = useRef(onSearch);
   onSearchRef.current = onSearch;
 
+  const normalizedOptions = useMemo(() => {
+    if (!allowClear) return options;
+    return options.filter((o) => o.value !== "" && o.value !== undefined);
+  }, [options, allowClear]);
+
   const selected = options.find((o) => o.value === value);
 
   const filtered = query.trim()
-    ? options.filter((o) =>
+    ? normalizedOptions.filter((o) =>
         (o.searchText || o.label).toLowerCase().includes(query.toLowerCase()),
       )
-    : options;
+    : normalizedOptions;
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const target = e.currentTarget;
@@ -101,10 +114,17 @@ export function Combobox({
             disabled={disabled || readOnly}
             onClick={() => !(disabled || readOnly) && setOpen(!open)}
             className={cn(
-              "flex items-center justify-between w-full px-3 py-2 text-xs border rounded-xl transition-all outline-none",
-              open
-                ? "border-primary ring-2 ring-primary/10 bg-surface"
-                : "border-border bg-muted/20 hover:border-border-hover hover:bg-surface",
+              "flex items-center justify-between w-full outline-none transition-all",
+              variant === "default" && "px-3 py-2 text-xs border rounded-xl",
+              variant === "default" &&
+                (open
+                  ? "border-primary ring-2 ring-primary/10 bg-surface"
+                  : "border-border bg-muted/20 hover:border-border-hover hover:bg-surface"),
+              variant === "spreadsheet" &&
+                "h-full min-h-[38px] px-3 border-0 rounded-none shadow-none ring-0 outline-none bg-transparent hover:bg-slate-50/80 focus:bg-white text-xs",
+              variant === "spreadsheet" &&
+                open &&
+                "bg-white border-0 rounded-none shadow-none ring-0 outline-none",
               disabled
                 ? "opacity-60 cursor-not-allowed"
                 : readOnly
@@ -113,12 +133,19 @@ export function Combobox({
               className,
             )}
           >
-            <span className="truncate flex-1 text-left">
-              {selected
-                ? selected.label
-                : value && fallbackLabel
-                  ? fallbackLabel
-                  : placeholder}
+            <span className="truncate flex-1 text-left flex flex-col justify-center">
+              <span className="truncate">
+                {selected
+                  ? selected.label
+                  : value && fallbackLabel
+                    ? fallbackLabel
+                    : effectivePlaceholder}
+              </span>
+              {selected?.subLabel && (
+                <span className="truncate text-[10px] text-[color:var(--muted-fg)] leading-tight mt-0.5">
+                  {selected.subLabel}
+                </span>
+              )}
             </span>
             <ChevronDown className="w-3.5 h-3.5 shrink-0 text-[color:var(--muted-fg)] ml-2" />
           </button>
@@ -180,11 +207,16 @@ export function Combobox({
                       : "opacity-100 text-[color:var(--primary)]",
                   )}
                 />
-                {placeholder}
+                {effectivePlaceholder}
               </button>
             )}
 
-            {filtered.length === 0 ? (
+            {loading && filtered.length === 0 ? (
+              <div className="px-3 py-5 text-xs text-center text-[color:var(--muted-fg)] flex items-center justify-center gap-2">
+                <span className="inline-block w-3.5 h-3.5 border-2 border-primary border-r-transparent rounded-full animate-spin" />
+                <span>Đang tải...</span>
+              </div>
+            ) : filtered.length === 0 ? (
               <div className="px-3 py-5 text-xs text-center text-[color:var(--faint)]">
                 {emptyLabel}
               </div>
@@ -210,15 +242,23 @@ export function Combobox({
                         o.value === value ? "opacity-100" : "opacity-0",
                       )}
                     />
-                    <span className="truncate">{o.label}</span>
+                    <div className="flex-1 truncate flex flex-col justify-center">
+                      <span className="truncate">{o.label}</span>
+                      {o.subLabel && (
+                        <span className="truncate text-[10px] text-[color:var(--muted-fg)] leading-tight mt-0.5">
+                          {o.subLabel}
+                        </span>
+                      )}
+                    </div>
                   </button>
                 </Tooltip>
               ))
             )}
 
-            {loading && (
-              <div className="px-3 py-2 text-xs text-center text-[color:var(--muted-fg)]">
-                Đang tải...
+            {loading && filtered.length > 0 && (
+              <div className="px-3 py-2 text-xs text-center text-[color:var(--muted-fg)] flex items-center justify-center gap-1.5 border-t border-border/40">
+                <span className="inline-block w-3 h-3 border-2 border-primary border-r-transparent rounded-full animate-spin" />
+                <span>Đang tải thêm...</span>
               </div>
             )}
           </div>

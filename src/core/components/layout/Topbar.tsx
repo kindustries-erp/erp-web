@@ -6,12 +6,12 @@ import { Tooltip } from "@/core/components/ui/Tooltip";
 import { useT } from "@/core/i18n";
 import { PageKey } from "@/shared/types";
 import { triggerContextMenu } from "@/shared/components/ContextMenu";
-import { Building2 } from "lucide-react";
+import { Building2, Search } from "lucide-react";
 import { cn } from "@/shared/utils";
 import { Button } from "@/shared/components/ui/Button";
 import { useQuery } from "@tanstack/react-query";
 import { getBranchesApi } from "@/modules/branches/api/branchApi";
-import { SearchInput } from "@/shared/components/SearchInput";
+import { UniversalSearchModal } from "./UniversalSearchModal";
 
 export function Topbar() {
   const {
@@ -38,24 +38,19 @@ export function Topbar() {
     queryFn: getBranchesApi,
   });
 
-  const sidebarSearchQuery = useAppStore((s) => s.sidebarSearchQuery);
-  const setSidebarSearchQuery = useAppStore((s) => s.setSidebarSearchQuery);
-  const [localSearch, setLocalSearch] = React.useState(sidebarSearchQuery);
+  const [searchModalOpen, setSearchModalOpen] = React.useState(false);
 
+  // Global Ctrl/Cmd + K shortcut
   React.useEffect(() => {
-    if (sidebarSearchQuery !== localSearch) {
-      setLocalSearch(sidebarSearchQuery);
-    }
-  }, [sidebarSearchQuery]);
-
-  React.useEffect(() => {
-    const handler = setTimeout(() => {
-      if (localSearch !== sidebarSearchQuery) {
-        setSidebarSearchQuery(localSearch);
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setSearchModalOpen((prev) => !prev);
       }
-    }, 300);
-    return () => clearTimeout(handler);
-  }, [localSearch, setSidebarSearchQuery, sidebarSearchQuery]);
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   React.useEffect(() => {
     if (!currentBranchId && branches.length > 0) {
@@ -126,16 +121,27 @@ export function Topbar() {
         })}
       </div>
 
-      {/* Search input for sidebar */}
+      {/* Search pill button */}
       <div className="hidden md:block">
-        <SearchInput
-          value={localSearch}
-          onChange={setLocalSearch}
-          placeholder={t("nav.searchPlaceholder")}
-          className="w-[125px]"
-          inputClassName="!h-[26px] !text-[11px] !py-0.5"
-        />
+        <button
+          type="button"
+          onClick={() => setSearchModalOpen(true)}
+          className="flex items-center gap-2 px-2.5 h-[26px] rounded-lg border border-border bg-surface text-[11px] text-[color:var(--muted-fg)] hover:bg-surface-hover hover:text-foreground transition-colors cursor-pointer select-none"
+          title={`${t("nav.searchPlaceholder")} (⌘K)`}
+        >
+          <Search className="w-3.5 h-3.5 opacity-70 flex-shrink-0" />
+          <span className="font-normal">{t("nav.searchPlaceholder")}</span>
+          <kbd className="ml-1 text-[9px] font-mono border border-border/80 rounded px-1 py-0.2 bg-black/[0.03] dark:bg-white/[0.05] text-[color:var(--faint)]">
+            ⌘K
+          </kbd>
+        </button>
       </div>
+
+      <UniversalSearchModal
+        open={searchModalOpen}
+        onClose={() => setSearchModalOpen(false)}
+        navTo={navigate}
+      />
 
       {/* Impersonation banner */}
       {impersonation?.active && (

@@ -39,6 +39,20 @@ export function periodLastDay(p: string) {
   return `${p}-${String(new Date(y, m, 0).getDate()).padStart(2, "0")}`;
 }
 
+export function periodFromExactRange(dateFrom?: string, dateTo?: string) {
+  if (!dateFrom || !dateTo) return "";
+  if (dateFrom.length < 10 || dateTo.length < 10) return "";
+
+  const fromPeriod = dateFrom.slice(0, 7);
+  const toPeriod = dateTo.slice(0, 7);
+  if (fromPeriod !== toPeriod) return "";
+
+  if (dateFrom !== periodFirstDay(fromPeriod)) return "";
+  if (dateTo !== periodLastDay(fromPeriod)) return "";
+
+  return fromPeriod;
+}
+
 export function monthFirstDay(date: string) {
   if (!date) return "";
   return `${date.slice(0, 7)}-01`;

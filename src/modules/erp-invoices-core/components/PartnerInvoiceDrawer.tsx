@@ -1,6 +1,7 @@
 import React, { useMemo, useCallback } from "react";
 import { format, isValid } from "date-fns";
 import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
+import { TableText } from "@/shared/components/DataTable/TableText";
 import { DateRangeColumnSlot } from "@/shared/components/DataTable/DateRangeColumnSlot";
 import { useQuery } from "@tanstack/react-query";
 import { DrawerModal } from "@/shared/components/DrawerModal";
@@ -12,7 +13,6 @@ import { money } from "@/shared/utils/format";
 import { BarChart } from "@/shared/components/charts/BarChart";
 import { ChartSkeleton } from "@/shared/components/Skeleton";
 import { Tooltip } from "@/core/components/ui/Tooltip";
-import { Button } from "@/shared/components/ui/Button";
 import { VietnamInvoiceTemplate } from "./VietnamInvoiceTemplate";
 
 import { ErpInvoiceInternalDrawer } from "./ErpInvoiceInternalDrawer";
@@ -20,9 +20,8 @@ import {
   ErpInvoiceInternalMain,
   ErpInvoiceInternalSidebar,
 } from "./ErpInvoiceInternalInfo";
-import { ErpInvoicePdfUpload } from "./ErpInvoicePdfUpload";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
-import { erpInvoicesCoreApi, type ErpInvoice } from "../api/erpInvoicesCoreApi";
+import { erpInvoicesCoreApi } from "../api/erpInvoicesCoreApi";
 
 interface PartnerInvoiceDrawerProps {
   open: boolean;
@@ -64,12 +63,12 @@ export function PartnerInvoiceDrawer({
     }
   }, [open, taxCode]);
 
-  const barIn = "#059669"; // Emerald 600
-  const barOut = "#ea580c"; // Orange 600
+  const barIn = "#ea580c"; // Orange 600 (Đầu vào - Chi phí)
+  const barOut = "#059669"; // Emerald 600 (Đầu ra - Doanh thu)
 
   const cashTrendLabels = statsData?.cashTrend?.map((t) => t.label) || [];
-  const cashTrendIn = statsData?.cashTrend?.map((t) => t.cashIn) || [];
-  const cashTrendOut = statsData?.cashTrend?.map((t) => t.cashOut) || [];
+  const cashTrendIn = statsData?.cashTrend?.map((t) => t.cashOut) || []; // Đầu vào (invoices in)
+  const cashTrendOut = statsData?.cashTrend?.map((t) => t.cashIn) || []; // Đầu ra (invoices out)
 
   const getSortState = (key: string) => {
     if (listHook.tableState.sorts.includes(key)) return "asc";
@@ -171,8 +170,8 @@ export function PartnerInvoiceDrawer({
           <span
             className={`inline-block px-2 py-1 rounded text-xs font-medium ${
               inv.direction === "IN"
-                ? "bg-emerald-100 text-emerald-800"
-                : "bg-orange-100 text-orange-800"
+                ? "bg-orange-100 text-orange-800"
+                : "bg-emerald-100 text-emerald-800"
             }`}
           >
             {inv.direction === "IN" ? "Đầu vào" : "Đầu ra"}
@@ -236,7 +235,6 @@ export function PartnerInvoiceDrawer({
             align="center"
             columnKey="serialNo"
             queryKeyPrefix={`partner-invoice-options-${taxCode}`}
-            requireSearchToFetchOptions={true}
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={fetchInvoiceOptions}
           />
@@ -261,24 +259,23 @@ export function PartnerInvoiceDrawer({
             align="center"
             columnKey="invoiceNo"
             queryKeyPrefix={`partner-invoice-options-${taxCode}`}
-            requireSearchToFetchOptions={true}
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={fetchInvoiceOptions}
+            enableSelectAllMatching={true}
           />
         ),
         size: 100,
-        className: "font-medium text-primary text-left",
+        className: "text-primary text-left",
         cell: (inv: any) => (
-          <Button
-            variant="link"
-            onClick={(e) => {
+          <TableText
+            text={inv.invoiceNo || ""}
+            onDrawerClick={(e) => {
               e.stopPropagation();
               formHook.openInternal(inv);
             }}
-            className="font-medium text-primary hover:underline p-0 h-auto"
-          >
-            {inv.invoiceNo}
-          </Button>
+            tooltip={true}
+            enableCopy={true}
+          />
         ),
       },
       {
@@ -297,7 +294,6 @@ export function PartnerInvoiceDrawer({
             align="center"
             columnKey="preVatAmount"
             queryKeyPrefix={`partner-invoice-options-${taxCode}`}
-            requireSearchToFetchOptions={true}
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={fetchInvoiceOptions}
             formatOptionLabel={formatAmtOption}
@@ -323,7 +319,6 @@ export function PartnerInvoiceDrawer({
             align="center"
             columnKey="vatAmount"
             queryKeyPrefix={`partner-invoice-options-${taxCode}`}
-            requireSearchToFetchOptions={true}
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={fetchInvoiceOptions}
             formatOptionLabel={formatAmtOption}
@@ -349,7 +344,6 @@ export function PartnerInvoiceDrawer({
             align="center"
             columnKey="totalAmount"
             queryKeyPrefix={`partner-invoice-options-${taxCode}`}
-            requireSearchToFetchOptions={true}
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={fetchInvoiceOptions}
             formatOptionLabel={formatAmtOption}
@@ -373,7 +367,6 @@ export function PartnerInvoiceDrawer({
             align="center"
             columnKey="status"
             queryKeyPrefix={`partner-invoice-options-${taxCode}`}
-            requireSearchToFetchOptions={false}
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={async () => ({
               items: [
@@ -422,7 +415,6 @@ export function PartnerInvoiceDrawer({
             align="center"
             columnKey="description"
             queryKeyPrefix={`partner-invoice-options-${taxCode}`}
-            requireSearchToFetchOptions={true}
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={fetchInvoiceOptions}
           />
@@ -460,13 +452,13 @@ export function PartnerInvoiceDrawer({
                   yCallback={(v) => money(Number(v))}
                   datasets={[
                     {
-                      data: cashTrendOut,
-                      color: barIn, // Đầu vào -> Phải trả tiền -> Ghi nhận là chi phí (invoices in)
+                      data: cashTrendIn,
+                      color: barIn, // Đầu vào -> Cam
                       label: "HĐ Đầu vào",
                     },
                     {
-                      data: cashTrendIn,
-                      color: barOut, // Đầu ra -> Thu tiền -> (invoices out)
+                      data: cashTrendOut,
+                      color: barOut, // Đầu ra -> Xanh lục
                       label: "HĐ Đầu ra",
                     },
                   ]}
@@ -531,8 +523,16 @@ export function PartnerInvoiceDrawer({
         saving={formHook.saving}
         handleSave={formHook.handleSave}
         cancelEdit={formHook.cancelEdit}
+        form={formHook.form}
+        fieldSet={(key: string, value: any) =>
+          formHook.setForm((prev) => ({ ...prev, [key]: value }))
+        }
+        direction={formHook.form.direction || "IN"}
+        postingState={formHook.postingState}
+        pendingUnpost={formHook.pendingUnpost}
+        onUnpost={() => formHook.setPendingUnpost(true)}
         rightPanel={
-          <div className="flex flex-col gap-5">
+          <div className="flex flex-col gap-4">
             <ErpInvoiceInternalSidebar
               form={formHook.form}
               editMode={formHook.editMode}
@@ -545,57 +545,16 @@ export function PartnerInvoiceDrawer({
               direction={formHook.form.direction || "IN"}
               detailInvoice={formHook.detailInvoice}
               onRefreshDetail={formHook.handleSyncDetail}
-              pdfSlot={
-                <ErpInvoicePdfUpload
-                  invoiceId={formHook.detailInvoice?.id ?? null}
-                  pdfFiles={formHook.detailInvoice?.pdfFiles ?? null}
-                  pdfFileKey={formHook.detailInvoice?.pdfFileKey ?? null}
-                  editMode={formHook.editMode}
-                  pendingDeletedPdfs={formHook.form.pendingDeletedPdfs}
-                  onPendingDeletePdf={(key) => {
-                    const current = formHook.form.pendingDeletedPdfs || [];
-                    formHook.setForm((prev) => ({
-                      ...prev,
-                      pendingDeletedPdfs: [...current, key],
-                    }));
-                  }}
-                  pendingAddedPdfs={formHook.form.pendingAddedPdfs}
-                  onPendingAddedPdfsChange={(files) => {
-                    formHook.setForm((prev) => ({
-                      ...prev,
-                      pendingAddedPdfs: files,
-                    }));
-                  }}
-                />
-              }
             />
           </div>
         }
       >
-        <div className="flex flex-col gap-5">
+        <div className="flex flex-col gap-4">
           <ErpInvoiceInternalMain
-            form={formHook.form}
-            editMode={formHook.editMode}
-            fieldSet={(key: string, value: any) =>
-              formHook.setForm((prev) => ({ ...prev, [key]: value }))
-            }
-            direction={formHook.form.direction || "IN"}
             detailInvoice={formHook.detailInvoice}
-            postingState={formHook.postingState}
-            pendingUnpost={formHook.pendingUnpost}
-            onUnpost={() => formHook.setPendingUnpost(true)}
-            onRefreshDetail={() => {
-              if (formHook.detailInvoice?.id) {
-                formHook.openInternal({
-                  id: formHook.detailInvoice.id,
-                } as ErpInvoice);
-              }
-            }}
             invoicePreview={
               formHook.detailInvoice ? (
-                <div className="flex justify-center bg-slate-100 p-8 min-h-full">
-                  <VietnamInvoiceTemplate invoice={formHook.detailInvoice} />
-                </div>
+                <VietnamInvoiceTemplate invoice={formHook.detailInvoice} />
               ) : undefined
             }
           />

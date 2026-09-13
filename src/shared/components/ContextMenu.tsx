@@ -2,15 +2,58 @@ import { useState, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { pageToUrl } from "@/shared/utils/pageUrl";
 import { PageKey } from "@/shared/types";
-import { useAppStore, STATIC_TABS } from "@/core/config/appStore";
+import {
+  useAppStore,
+  STATIC_TABS,
+  DUPLICATABLE_PAGES,
+} from "@/core/config/appStore";
+import { Copy, Settings } from "lucide-react";
 
 type ContextMenuSource = "sidebar" | "tabbar";
+
+function getModuleConfigForPage(
+  page: PageKey,
+): { label: string; initialTab: string } | null {
+  switch (page) {
+    case "erp-inventory-vouchers":
+    case "erp-inventory-items":
+    case "erp-inventory-stock":
+    case "erp-inventory-tracking":
+    case "erp-inventory-tracking-parts":
+    case "erp-inventory-tracking-lot":
+    case "erp-inventory-tracking-custom":
+    case "erp-goods-issues":
+    case "inventory-dashboard":
+      return { label: "Cấu hình kho", initialTab: "GOODS_RECEIPT" };
+    case "mfg-items":
+      return { label: "Cấu hình kho (Mặt hàng)", initialTab: "INVENTORY_ITEM" };
+    case "erp-invoices":
+    case "erp-invoices-in":
+    case "erp-invoices-out":
+    case "invoice-dashboard":
+      return { label: "Cấu hình hóa đơn", initialTab: "INVOICE_IN" };
+    case "erp-bom":
+      return { label: "Cấu hình định mức (BOM)", initialTab: "BOM" };
+    case "erp-production":
+    case "erp-finished-goods":
+      return { label: "Cấu hình sản xuất", initialTab: "PRODUCTION" };
+    case "purchasing":
+    case "purchasing-report-dashboard":
+      return { label: "Cấu hình mua hàng", initialTab: "PURCHASE_ORDER" };
+    case "erp-sales-orders":
+    case "sales-report-dashboard":
+      return { label: "Cấu hình bán hàng", initialTab: "SALES_ORDER" };
+    default:
+      return null;
+  }
+}
 
 // ── Singleton state ──────────────────────────────────────────────────────────
 type ContextMenuState = {
   x: number;
   y: number;
   page: PageKey;
+  instanceId?: string;
   tab?: string;
   label: string;
   source: ContextMenuSource;
@@ -25,8 +68,9 @@ export function triggerContextMenu(
   label: string,
   tab?: string,
   source: ContextMenuSource = "sidebar",
+  instanceId?: string,
 ) {
-  _setState?.({ x, y, page, tab, label, source });
+  _setState?.({ x, y, page, tab, label, source, instanceId });
 }
 
 export function openPageContextMenu(
@@ -35,9 +79,18 @@ export function openPageContextMenu(
   anchor: HTMLElement,
   tab?: string,
   source: ContextMenuSource = "sidebar",
+  instanceId?: string,
 ) {
   const rect = anchor.getBoundingClientRect();
-  triggerContextMenu(rect.left, rect.bottom + 8, page, label, tab, source);
+  triggerContextMenu(
+    rect.left,
+    rect.bottom + 8,
+    page,
+    label,
+    tab,
+    source,
+    instanceId,
+  );
 }
 
 export function closePageContextMenu() {
@@ -50,6 +103,7 @@ export function usePageContextMenu(
   label: string,
   tab?: string,
   source: ContextMenuSource = "sidebar",
+  instanceId?: string,
 ) {
   return useCallback(
     (e: React.MouseEvent) => {
@@ -62,6 +116,7 @@ export function usePageContextMenu(
         );
         if (el) {
           const domPage = el.dataset.tabPage as PageKey;
+          const domInstanceId = el.dataset.tabInstanceId || instanceId;
           const domLabel = el.dataset.tabLabel || label;
           triggerContextMenu(
             e.clientX,
@@ -70,13 +125,22 @@ export function usePageContextMenu(
             domLabel,
             tab,
             source,
+            domInstanceId,
           );
           return;
         }
       }
-      triggerContextMenu(e.clientX, e.clientY, page, label, tab, source);
+      triggerContextMenu(
+        e.clientX,
+        e.clientY,
+        page,
+        label,
+        tab,
+        source,
+        instanceId,
+      );
     },
-    [page, label, source, tab],
+    [page, label, source, tab, instanceId],
   );
 }
 
@@ -95,18 +159,15 @@ export function AppContextMenu() {
   useEffect(() => {
     if (!menu) return;
     const closeOnOutsideClick = (e: MouseEvent) => {
-      // Don't close if click is inside the context menu
       const target = e.target as HTMLElement;
       if (target.closest?.(".context-menu")) return;
       setMenu(null);
     };
     const closeOnContextMenu = (e: Event) => {
-      // Don't close if the new right-click is inside the context menu itself
       const target = e.target as HTMLElement;
       if (target.closest?.(".context-menu")) return;
       setMenu(null);
     };
-    // Use setTimeout to avoid the current event from immediately closing the menu
     const timer = setTimeout(() => {
       window.addEventListener("click", closeOnOutsideClick);
       window.addEventListener("contextmenu", closeOnContextMenu, {
@@ -124,30 +185,33 @@ export function AppContextMenu() {
 
   if (!menu) return null;
 
+  const targetPage = menu.page;
+  const targetInstanceId = menu.instanceId || targetPage;
+  const isStaticTab = Boolean(STATIC_TABS[targetPage]);
+  const configInfo = getModuleConfigForPage(targetPage);
+
   const GAP = 8;
   const isTabbarMenu = menu.source === "tabbar";
   const W = 220;
-  const H = isTabbarMenu ? 148 : 44;
+  const H = isTabbarMenu ? 220 : configInfo ? 84 : 44;
   const x = Math.min(menu.x, window.innerWidth - W - GAP);
   const y = Math.min(menu.y, window.innerHeight - H - GAP);
 
-  // Always compute based on menu.page (the right-clicked tab)
-  const targetPage = menu.page;
+  const canDuplicate = DUPLICATABLE_PAGES.has(targetPage);
+  const instancesCount = openTabs.filter(
+    (t) => t.pageKey === targetPage,
+  ).length;
+  const hasReachedMaxDuplicate = instancesCount >= 2;
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const targetIndex = openTabs.indexOf(targetPage);
-  const isStaticTab = Boolean(STATIC_TABS[targetPage]);
+  const targetIndex = openTabs.findIndex(
+    (t) => t.instanceId === targetInstanceId,
+  );
+  const hasTabsToRightOfTarget =
+    targetIndex >= 0 &&
+    openTabs.slice(targetIndex + 1).some((tab) => !STATIC_TABS[tab.pageKey]);
 
-  // "Close tabs to right" is relative to the CURRENT ACTIVE tab (not the right-clicked tab)
-  // This matches user expectation: the action affects tabs to the right of where they are
-  const currentPage = useAppStore.getState().currentPage;
-  const currentIndex = openTabs.indexOf(currentPage);
-  const hasTabsToRightOfCurrent =
-    currentIndex >= 0 &&
-    openTabs.slice(currentIndex + 1).some((tab) => !STATIC_TABS[tab]);
-  // "Close other tabs" — are there any closable tabs besides the current one?
   const hasOtherClosableTabs = openTabs.some(
-    (tab) => !STATIC_TABS[tab] && tab !== currentPage,
+    (tab) => !STATIC_TABS[tab.pageKey] && tab.instanceId !== targetInstanceId,
   );
 
   const handleOpenNewTab = () => {
@@ -155,34 +219,35 @@ export function AppContextMenu() {
     setMenu(null);
   };
 
-  const handleCloseThisTab = () => {
-    const page = menu.page;
+  const handleOpenConfig = () => {
     setMenu(null);
-    if (STATIC_TABS[page]) return;
-    useAppStore.getState().closeTab(page);
+    if (configInfo) {
+      useAppStore
+        .getState()
+        .openCustomFieldsDrawer("ALL", configInfo.initialTab);
+    }
+  };
+
+  const handleDuplicateTab = () => {
+    setMenu(null);
+    if (!canDuplicate || hasReachedMaxDuplicate) return;
+    useAppStore.getState().duplicateTab(targetPage);
+  };
+
+  const handleCloseThisTab = () => {
+    setMenu(null);
+    if (isStaticTab) return;
+    useAppStore.getState().closeTab(targetInstanceId);
   };
 
   const handleCloseTabsToRight = () => {
     setMenu(null);
-    // Close tabs to the right of the CURRENT ACTIVE tab (not the right-clicked tab)
-    const {
-      openTabs: tabs,
-      currentPage: active,
-      closeTabsToRight,
-    } = useAppStore.getState();
-    const idx = tabs.indexOf(active);
-    if (idx < 0) return;
-    const hasTabs = tabs.slice(idx + 1).some((t) => !STATIC_TABS[t]);
-    if (!hasTabs) return;
-    closeTabsToRight(active);
+    useAppStore.getState().closeTabsToRight(targetInstanceId);
   };
 
-  const handleCloseAllTabs = () => {
+  const handleCloseOtherTabs = () => {
     setMenu(null);
-    // Close all tabs except static tabs and the current active tab
-    const { openTabs: tabs, currentPage: active } = useAppStore.getState();
-    const newTabs = tabs.filter((t) => STATIC_TABS[t] || t === active);
-    useAppStore.setState({ openTabs: newTabs });
+    useAppStore.getState().closeOtherTabs(targetInstanceId);
   };
 
   return createPortal(
@@ -211,8 +276,31 @@ export function AppContextMenu() {
         Mở trong tab mới
       </button>
 
+      {configInfo && (
+        <button className="context-menu-item" onClick={handleOpenConfig}>
+          <Settings className="w-3.5 h-3.5 flex-shrink-0 opacity-60 mr-2" />
+          {configInfo.label}
+        </button>
+      )}
+
       {isTabbarMenu && (
         <>
+          {canDuplicate && (
+            <button
+              className="context-menu-item disabled:opacity-40 disabled:cursor-not-allowed"
+              disabled={hasReachedMaxDuplicate}
+              title={
+                hasReachedMaxDuplicate
+                  ? "Đã đạt giới hạn tối đa 2 tab cho module này"
+                  : undefined
+              }
+              onClick={handleDuplicateTab}
+            >
+              <Copy className="w-3.5 h-3.5 flex-shrink-0 opacity-60 mr-2" />
+              Nhân đôi tab {hasReachedMaxDuplicate ? "(Tối đa 2)" : ""}
+            </button>
+          )}
+
           <button
             className="context-menu-item disabled:opacity-40 disabled:cursor-not-allowed"
             disabled={isStaticTab}
@@ -237,7 +325,7 @@ export function AppContextMenu() {
 
           <button
             className="context-menu-item disabled:opacity-40 disabled:cursor-not-allowed"
-            disabled={!hasTabsToRightOfCurrent}
+            disabled={!hasTabsToRightOfTarget}
             onClick={handleCloseTabsToRight}
           >
             <svg
@@ -260,7 +348,7 @@ export function AppContextMenu() {
           <button
             className="context-menu-item disabled:opacity-40 disabled:cursor-not-allowed"
             disabled={!hasOtherClosableTabs}
-            onClick={handleCloseAllTabs}
+            onClick={handleCloseOtherTabs}
           >
             <svg
               width="14"

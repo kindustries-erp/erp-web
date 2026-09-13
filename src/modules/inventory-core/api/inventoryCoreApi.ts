@@ -9,9 +9,11 @@ export type ListParams = BaseListParams & {
   itemTypeId?: string;
   status?: string;
   ids?: string;
+  column_search?: string;
+  column_filters?: string;
 };
 
-import type { InventoryConnectionsData } from "./../hooks/useInventoryGraph";
+import type { TraceabilityGraphData } from "@/shared/types/traceability";
 
 export type InventorySerialListParams = BaseListParams & {
   itemTypeId?: string;
@@ -29,6 +31,7 @@ export interface InventorySerialRow {
   id: string;
   serialNo: string;
   itemId: string;
+  receiptDate?: string | null;
   vinId?: string | null;
   vinNo?: string | null;
   engineNo?: string | null;
@@ -48,7 +51,6 @@ export interface InventorySerialRow {
     itemName: string;
     itemType: string;
     trackingPolicyId?: string | null;
-    trackingCategoryId?: string | null;
     trackingPolicyName?: string | null;
   };
   lifecycle?: any;
@@ -76,10 +78,11 @@ export interface ErpInventoryItem {
   /** FK → erp_tracking_policies */
   trackingPolicyId?: string | null;
   trackingPolicy?: ErpTrackingPolicy | null;
-  /** FK → erp_tracking_categories */
-  trackingCategoryId?: string | null;
-  trackingCategory?: InventoryMasterOption | null;
-  attributes?: string[];
+  attributes?: any;
+  customAttributes?: Record<string, any>;
+  attributeValues?: any[];
+  categoryId?: string | null;
+  hasSerials?: boolean;
   isDeleted?: boolean;
   createdAt?: string;
   updatedAt?: string | null;
@@ -122,11 +125,12 @@ export interface CreateInventoryItemPayload {
   itemName: string;
   uomId: string;
   itemTypeId: string;
+  categoryId?: string | null;
   status?: string;
   note?: string;
   trackingPolicyId?: string;
-  trackingCategoryId?: string;
   attributes?: string[];
+  customAttributes?: Record<string, any>;
 }
 
 export type UpdateInventoryItemPayload = Partial<CreateInventoryItemPayload>;
@@ -144,7 +148,6 @@ export type UpdateInventoryMasterPayload =
 const BASE = "/api/v1/inventory/items";
 const UOM_BASE = "/api/v1/inventory/uoms";
 const ITEM_TYPE_BASE = "/api/v1/inventory/item-types";
-const TRACKING_CATEGORY_BASE = "/api/v1/inventory/tracking-categories";
 const TRACKING_POLICY_BASE = "/api/v1/inventory/tracking-policies";
 
 type InventoryItemDetailResponse = {
@@ -171,6 +174,8 @@ function p(params: ListParams = {}) {
     ...(params.itemTypeId ? { itemTypeId: params.itemTypeId } : {}),
     ...(params.status ? { status: params.status } : {}),
     ...(params.ids ? { ids: params.ids } : {}),
+    ...(params.column_search ? { column_search: params.column_search } : {}),
+    ...(params.column_filters ? { column_filters: params.column_filters } : {}),
   };
 }
 
@@ -184,6 +189,34 @@ export const inventoryCoreApi = {
       const { data } = await axiosInstance.get<
         PaginatedResponse<ErpInventoryItem>
       >(BASE, { params: requestParams });
+      return data;
+    });
+  },
+  getColumnOptions: async (
+    column: string,
+    search?: string,
+    page: number = 1,
+    pageSize: number = 20,
+    filtersStr?: string,
+  ): Promise<{
+    items: { label: string; value: string }[];
+    total: number;
+    next: number | null;
+  }> => {
+    const params = {
+      column,
+      search: search || undefined,
+      page,
+      pageSize,
+      filters: filtersStr || undefined,
+    };
+    const key = `inventory-items:column-options:${JSON.stringify(params)}`;
+    return dedupeRequest(key, async () => {
+      const { data } = await axiosInstance.get<{
+        items: { label: string; value: string; count?: number }[];
+        total: number;
+        next: number | null;
+      }>(`${BASE}/column-options`, { params });
       return data;
     });
   },
@@ -227,8 +260,10 @@ export const inventoryCoreApi = {
     );
     return data.data;
   },
-  getConnections: async (id: string): Promise<InventoryConnectionsData> => {
-    const { data } = await axiosInstance.get(`${BASE}/${id}/connections`);
+  getTraceabilityGraph: async (id: string): Promise<TraceabilityGraphData> => {
+    const { data } = await axiosInstance.get<{ data: TraceabilityGraphData }>(
+      `${BASE}/${id}/traceability-graph`,
+    );
     return data.data;
   },
   movements: async (id: string): Promise<InventoryMovementsPayload> => {
@@ -343,48 +378,11 @@ export const inventoryCoreApi = {
     return data.data;
   },
 
-  listTrackingCategories: async (
-    params?: ListParams & { isActive?: boolean },
-  ): Promise<PaginatedResponse<InventoryMasterOption>> => {
-    const requestParams = {
-      ...p(params),
-      ...(params?.isActive !== undefined ? { isActive: params.isActive } : {}),
-    };
-    const key = `inventory-tracking-categories:list:${JSON.stringify(requestParams)}`;
-    return dedupeRequest(key, async () => {
-      const { data } = await axiosInstance.get<
-        PaginatedResponse<InventoryMasterOption>
-      >(TRACKING_CATEGORY_BASE, { params: requestParams });
-      return data;
-    });
-  },
-  createTrackingCategory: async (
-    payload: CreateInventoryMasterPayload,
-  ): Promise<InventoryMasterOption> => {
-    const { data } = await axiosInstance.post<InventoryMasterDetailResponse>(
-      TRACKING_CATEGORY_BASE,
-      payload,
-    );
-    return data.data;
-  },
-  updateTrackingCategory: async (
-    id: string,
-    payload: UpdateInventoryMasterPayload,
-  ): Promise<InventoryMasterOption> => {
-    const { data } = await axiosInstance.patch<InventoryMasterDetailResponse>(
-      `${TRACKING_CATEGORY_BASE}/${id}`,
-      payload,
-    );
-    return data.data;
-  },
   deleteUom: async (id: string): Promise<void> => {
     await axiosInstance.delete(`${UOM_BASE}/${id}`);
   },
   deleteItemType: async (id: string): Promise<void> => {
     await axiosInstance.delete(`${ITEM_TYPE_BASE}/${id}`);
-  },
-  deleteTrackingCategory: async (id: string): Promise<void> => {
-    await axiosInstance.delete(`${TRACKING_CATEGORY_BASE}/${id}`);
   },
   delete: async (id: string): Promise<void> => {
     await axiosInstance.delete(`${BASE}/${id}`);
@@ -462,6 +460,7 @@ export const inventoryCoreApi = {
     page: number = 1,
     pageSize: number = 20,
     columnFilters?: Record<string, string[]>,
+    trackingPolicy?: string,
   ): Promise<{
     items: string[];
     total: number;
@@ -477,6 +476,9 @@ export const inventoryCoreApi = {
     };
     if (columnFilters && Object.keys(columnFilters).length > 0) {
       params.column_filters = JSON.stringify(columnFilters);
+    }
+    if (trackingPolicy) {
+      params.trackingPolicy = trackingPolicy;
     }
     const key = `inventory-serials:column-options:${JSON.stringify(params)}`;
     return dedupeRequest(key, async () => {

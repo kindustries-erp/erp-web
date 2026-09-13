@@ -3,6 +3,13 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import axiosInstance from "@/core/api/axiosInstance";
 
+export interface UserPreferencesPayload {
+  theme?: string;
+  language?: string;
+  tableConfigs?: Record<string, any>;
+  uiConfigs?: Record<string, any>;
+}
+
 export interface CoreLoginResponse {
   accessToken: string;
   refreshToken: string;
@@ -15,6 +22,7 @@ export interface CoreLoginResponse {
     employeeId: string | null;
     legacyDirectusUserId: string | null;
   };
+  preferences?: UserPreferencesPayload;
 }
 
 export interface CoreProfileResponse {
@@ -23,14 +31,44 @@ export interface CoreProfileResponse {
   status: string;
   employeeId: string | null;
   legacyDirectusUserId: string | null;
+  employee: {
+    id: string;
+    employeeCode: string;
+    fullName: string;
+    email: string | null;
+    phone: string | null;
+    status: string;
+    userId: string | null;
+    notes?: string | null;
+  } | null;
   permissions?: {
     resource: string;
     action: string;
-
     conditions?: any;
   }[];
+  preferences?: UserPreferencesPayload;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface CoreSelfUpdateProfileRequest {
+  email?: string;
+  full_name?: string | null;
+  phone?: string | null;
+  notes?: string | null;
+}
+
+export interface CoreSelfUpdateProfileData {
+  id: string;
+  email: string;
+  full_name: string | null;
+  phone: string | null;
+  notes: string | null;
+}
+
+export interface CoreChangePasswordRequest {
+  oldPassword: string;
+  newPassword: string;
 }
 
 export async function loginApi(payload: {
@@ -71,4 +109,24 @@ export async function logoutApi(refreshToken: string): Promise<void> {
     { refresh_token: refreshToken },
     { _silentSuccess: true, _silentError: true },
   );
+}
+
+export async function selfUpdateProfileApi(
+  payload: CoreSelfUpdateProfileRequest,
+): Promise<CoreSelfUpdateProfileData> {
+  const { data } = await axiosInstance.patch<{
+    message: string;
+    data: CoreSelfUpdateProfileData;
+  }>("/api/v1/auth/profile", payload);
+  return data.data;
+}
+
+export async function changePasswordApi(
+  payload: CoreChangePasswordRequest,
+): Promise<{ message: string }> {
+  const { data } = await axiosInstance.post<{ message: string }>(
+    "/api/v1/auth/change-password",
+    payload,
+  );
+  return data;
 }

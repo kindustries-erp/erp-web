@@ -17,6 +17,7 @@ import { useMemo } from "react";
 export interface IaLineForm {
   id?: string;
   itemId: string;
+  itemCode?: string;
   itemName?: string;
   qtyAdjusted: string;
   unitCost: string;
@@ -27,6 +28,12 @@ export interface IaForm {
   adjustmentDate: string;
   remarks: string;
   lines: IaLineForm[];
+  globalAttributes?: Record<string, any>;
+  customAttributes?: Record<string, any>;
+}
+
+export function emptyIaLine(): IaLineForm {
+  return { itemId: "", qtyAdjusted: "", unitCost: "" };
 }
 
 export function emptyIaForm(): IaForm {
@@ -34,11 +41,14 @@ export function emptyIaForm(): IaForm {
     adjustmentNo: "",
     adjustmentDate: new Date().toISOString().slice(0, 10),
     remarks: "",
-    lines: [],
+    lines: [emptyIaLine()],
+    globalAttributes: {},
+    customAttributes: {},
   };
 }
 
 export function buildIaForm(adj: IaHeaderDto): IaForm {
+  const customAttrs = adj.customAttributes || {};
   return {
     adjustmentNo: adj.adjustmentNo ?? "",
     adjustmentDate: adj.adjustmentDate ? adj.adjustmentDate.slice(0, 10) : "",
@@ -47,17 +57,26 @@ export function buildIaForm(adj: IaHeaderDto): IaForm {
       adj.lines?.map((line) => ({
         id: line.id,
         itemId: line.itemId ?? "",
+        itemCode: "",
         qtyAdjusted: line.qtyAdjusted?.toString() ?? "0",
         unitCost: line.unitCost?.toString() ?? "0",
       })) ?? [],
+    globalAttributes: { ...customAttrs },
+    customAttributes: { ...customAttrs },
   };
 }
 
 export function buildIaPayload(form: IaForm): IaHeaderDto {
+  const customAttributes = {
+    ...(form.globalAttributes || {}),
+    ...(form.customAttributes || {}),
+  };
+
   return {
     adjustmentNo: form.adjustmentNo.trim(),
     adjustmentDate: form.adjustmentDate,
     remarks: form.remarks.trim() || undefined,
+    customAttributes,
     lines: form.lines
       .filter((line) => {
         const qty = Number(line.qtyAdjusted);
@@ -111,7 +130,9 @@ export function useIaDrawer({
       itemsData?.pages.flatMap((p) =>
         (p.items.inventoryItems || []).map((i: any) => ({
           value: i.id,
-          label: `${i.sku} — ${i.itemName}`,
+          label: i.sku,
+          searchText: `${i.sku} ${i.itemName}`,
+          _itemName: i.itemName,
         })),
       ) || []
     );
@@ -204,6 +225,7 @@ export function useIaDrawer({
             variant: "success",
           });
         }
+
         setOpen(false);
         if (invalidateWarehouseQuery) {
           await queryClient.invalidateQueries({
@@ -270,4 +292,10 @@ export function useIaDrawer({
   };
 }
 
-export type UseIaDrawerReturn = ReturnType<typeof useIaDrawer>;
+export type UseIaDrawerReturn = ReturnType<typeof useIaDrawer> & {
+  unifiedContext?: {
+    type: "receipt" | "issue" | "adjustment";
+    setType: (t: "receipt" | "issue" | "adjustment") => void;
+    mode: "create" | "view" | "edit";
+  };
+};

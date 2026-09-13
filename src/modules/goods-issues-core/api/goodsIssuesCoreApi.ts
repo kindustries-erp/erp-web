@@ -31,6 +31,7 @@ export interface ErpGoodsIssue {
   remarks?: string | null;
   createdAt?: string;
   isDeleted?: boolean;
+  customAttributes?: Record<string, any>;
   lines?: ErpGiLine[];
 }
 
@@ -59,6 +60,7 @@ export interface CreateGiPayload {
   productionOrderId?: string;
   status?: string;
   remarks?: string;
+  customAttributes?: Record<string, any>;
   lines?: CreateGiLinePayload[];
 }
 

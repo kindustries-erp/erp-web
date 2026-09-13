@@ -25,10 +25,6 @@ import {
   listLocalDraftEinvoicesApi,
   listLocalEinvoicesApi,
   listLocalIssuedEinvoicesApi,
-  resetConfigApi,
-  resetTaxPortalConfigApi,
-  saveConfigApi,
-  saveTaxPortalConfigApi,
   syncSinvoiceDraftApi,
   syncSinvoiceIssuedApi,
   syncTaxPortalApi,
@@ -247,21 +243,6 @@ const HoaDonDienTu: React.FC = () => {
     }
   }, [bulkMonth, monthOptions]);
 
-  const [sinvoiceForm, setSinvoiceForm] = useState({
-    username: "",
-    password: "",
-    apiUrl: "https://api-vinvoice.viettel.vn",
-  });
-  const [taxPortalForm, setTaxPortalForm] = useState<TaxPortalConfig>({
-    taxCode: "",
-    username: "",
-    password: "",
-    providerName: "VIETTEL_TAX_PORTAL",
-    apiUrl: "",
-    gdtJwt: "",
-    gdtCookie: "",
-    isActive: true,
-  });
   const debouncedDraftSearch = useDebounce(draftFilters.search, 400);
   const debouncedIssuedSearch = useDebounce(issuedFilters.search, 400);
   const debouncedOutputSearch = useDebounce(outputFilters.search, 400);
@@ -275,24 +256,11 @@ const HoaDonDienTu: React.FC = () => {
     ]);
     setConfig(health);
     if (sinvoiceCfg) {
-      setSinvoiceForm({
-        username: sinvoiceCfg.username || "",
-        password: sinvoiceCfg.password || "",
-        apiUrl: sinvoiceCfg.apiUrl || "https://api-vinvoice.viettel.vn",
-      });
+      // Intentionally left blank as sinvoiceForm is removed
     }
     setTaxPortalConfig(taxCfg);
     if (taxCfg) {
-      setTaxPortalForm({
-        taxCode: taxCfg.taxCode || "",
-        username: taxCfg.username || "",
-        password: taxCfg.password || "",
-        providerName: taxCfg.providerName || "VIETTEL_TAX_PORTAL",
-        apiUrl: taxCfg.apiUrl || "",
-        gdtJwt: taxCfg.gdtJwt || "",
-        gdtCookie: taxCfg.gdtCookie || "",
-        isActive: taxCfg.isActive ?? true,
-      });
+      // Intentionally left blank as taxPortalForm is removed
     }
   }, []);
 
@@ -685,94 +653,6 @@ const HoaDonDienTu: React.FC = () => {
     }
   }
 
-  async function handleSaveSinvoiceConfig() {
-    setLoading(true);
-    setMessage("Đang lưu cấu hình Viettel v2.49...");
-    try {
-      const result = await saveConfigApi(sinvoiceForm);
-      const connection = result?.connection;
-      setMessage(
-        connection?.ok
-          ? `Lưu cấu hình Viettel v2.49 thành công. ${connection.message}`
-          : `Lưu cấu hình Viettel v2.49 thành công nhưng kiểm tra kết nối thất bại. ${connection?.message ?? "Không có phản hồi test kết nối."}`,
-      );
-      await loadData();
-    } catch (error: any) {
-      setMessage(
-        error?.response?.data?.message ??
-          error.message ??
-          "Lưu cấu hình Viettel v2.49 thất bại",
-      );
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function handleResetSinvoiceConfig() {
-    if (
-      !window.confirm("Bạn có chắc muốn xóa cấu hình Viettel v2.49 hiện tại?")
-    )
-      return;
-    setLoading(true);
-    setMessage("Đang xóa cấu hình Viettel v2.49...");
-    try {
-      await resetConfigApi();
-      setMessage("Xóa cấu hình Viettel v2.49 thành công.");
-      await loadData();
-    } catch (error: any) {
-      setMessage(
-        error?.response?.data?.message ??
-          error.message ??
-          "Xóa cấu hình Viettel v2.49 thất bại",
-      );
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function handleSaveTaxPortalConfig() {
-    setLoading(true);
-    setMessage("Đang lưu cấu hình cổng thuế...");
-    try {
-      const result = await saveTaxPortalConfigApi(taxPortalForm);
-      const connection = result?.connection;
-      setMessage(
-        connection?.ok
-          ? `Lưu cấu hình cổng thuế thành công. ${connection.message}`
-          : `Lưu cấu hình cổng thuế thành công nhưng kiểm tra kết nối thất bại. ${connection?.message ?? "Không có phản hồi test kết nối."}`,
-      );
-      await loadData();
-    } catch (error: any) {
-      setMessage(
-        error?.response?.data?.message ??
-          error.message ??
-          "Lưu cấu hình cổng thuế thất bại",
-      );
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function handleResetTaxPortalConfig() {
-    if (!window.confirm("Bạn có chắc muốn xóa cấu hình cổng thuế hiện tại?"))
-      return;
-    setLoading(true);
-    setMessage("Đang xóa cấu hình cổng thuế...");
-    try {
-      await resetTaxPortalConfigApi();
-      setMessage("Xóa cấu hình cổng thuế thành công.");
-      await loadData();
-    } catch (error: any) {
-      setMessage(
-        error?.response?.data?.message ??
-          error.message ??
-          "Xóa cấu hình cổng thuế thất bại",
-      );
-    } finally {
-      setLoading(false);
-    }
-  }
-
   function getColumns(
     mode: "draft" | "issued" | "output" | "input",
   ): DataTableColumn<Einvoice>[] {
@@ -1093,12 +973,6 @@ const HoaDonDienTu: React.FC = () => {
             >
               <Download className="mr-2 h-4 w-4" /> Tải hàng loạt
             </button>
-            <BtnPrimary
-              onClick={() => setActiveTab("cau-hinh")}
-              disabled={loading}
-            >
-              <Settings className="mr-2 h-4 w-4" /> Mở cấu hình
-            </BtnPrimary>
           </div>
         }
         middleContent={
@@ -1147,7 +1021,6 @@ const HoaDonDienTu: React.FC = () => {
           },
           { value: "hoa-don-ban-ra", label: t("hoadondientuPage.tabs.output") },
           { value: "hoa-don-mua-vao", label: t("hoadondientuPage.tabs.input") },
-          { value: "cau-hinh", label: t("hoadondientuPage.tabs.config") },
         ]}
         activeTab={activeTab}
         onTabChange={(v) => setActiveTab(v as TaxTabKey)}
@@ -1247,210 +1120,6 @@ const HoaDonDienTu: React.FC = () => {
             </Button>
           </div>
           {renderTable("input")}
-        </div>
-
-        <div
-          className={`${activeTab === "cau-hinh" ? "grid grid-cols-1 xl:grid-cols-2 gap-6" : "hidden"} rounded-xl border border-border bg-surface p-5 card-shadow relative z-0`}
-        >
-          <div className="space-y-4">
-            <div>
-              <h3 className="text-base font-semibold">
-                Cấu hình Viettel v2.49
-              </h3>
-              <p className="text-sm text-muted-foreground">
-                Dùng cho surface xuất hóa đơn nháp Viettel v2.49 đang được map
-                qua route `sinvoice` hiện tại.
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Username</label>
-              <input
-                className="w-full px-3 py-2 bg-background border border-border rounded-md"
-                value={sinvoiceForm.username}
-                onChange={(e) =>
-                  setSinvoiceForm({ ...sinvoiceForm, username: e.target.value })
-                }
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Password</label>
-              <input
-                type="password"
-                className="w-full px-3 py-2 bg-background border border-border rounded-md"
-                value={sinvoiceForm.password}
-                onChange={(e) =>
-                  setSinvoiceForm({ ...sinvoiceForm, password: e.target.value })
-                }
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">API URL</label>
-              <input
-                className="w-full px-3 py-2 bg-background border border-border rounded-md"
-                value={sinvoiceForm.apiUrl}
-                onChange={(e) =>
-                  setSinvoiceForm({ ...sinvoiceForm, apiUrl: e.target.value })
-                }
-              />
-            </div>
-            <div className="flex justify-between gap-2">
-              <button
-                className="px-4 py-2 border border-red-200 text-red-600 rounded-md hover:bg-red-50 text-sm font-medium"
-                onClick={handleResetSinvoiceConfig}
-                disabled={loading}
-              >
-                Xóa / Reset
-              </button>
-              <BtnPrimary onClick={handleSaveSinvoiceConfig} disabled={loading}>
-                Lưu cấu hình Viettel v2.49
-              </BtnPrimary>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <div>
-              <h3 className="text-base font-semibold">Cấu hình cổng thuế</h3>
-              <p className="text-sm text-muted-foreground">
-                Dùng để tra cứu hóa đơn mua vào/đầu ra từ tài khoản Tổng cục
-                Thuế.
-              </p>
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">
-                Mã số thuế đăng nhập
-              </label>
-              <input
-                className="w-full px-3 py-2 bg-background border border-border rounded-md"
-                value={taxPortalForm.taxCode || ""}
-                onChange={(e) =>
-                  setTaxPortalForm({
-                    ...taxPortalForm,
-                    taxCode: e.target.value,
-                  })
-                }
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Username</label>
-              <input
-                className="w-full px-3 py-2 bg-background border border-border rounded-md"
-                value={taxPortalForm.username || ""}
-                onChange={(e) =>
-                  setTaxPortalForm({
-                    ...taxPortalForm,
-                    username: e.target.value,
-                  })
-                }
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Password</label>
-              <input
-                type="password"
-                className="w-full px-3 py-2 bg-background border border-border rounded-md"
-                value={taxPortalForm.password || ""}
-                onChange={(e) =>
-                  setTaxPortalForm({
-                    ...taxPortalForm,
-                    password: e.target.value,
-                  })
-                }
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Provider</label>
-              <input
-                className="w-full px-3 py-2 bg-background border border-border rounded-md"
-                value={taxPortalForm.providerName || "VIETTEL_TAX_PORTAL"}
-                onChange={(e) =>
-                  setTaxPortalForm({
-                    ...taxPortalForm,
-                    providerName: e.target.value,
-                  })
-                }
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">API URL tích hợp</label>
-              <input
-                className="w-full px-3 py-2 bg-background border border-border rounded-md"
-                value={taxPortalForm.apiUrl || ""}
-                onChange={(e) =>
-                  setTaxPortalForm({ ...taxPortalForm, apiUrl: e.target.value })
-                }
-                placeholder="Endpoint tích hợp thực tế nếu có"
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">
-                JWT Token từ Tổng cục Thuế
-              </label>
-              <textarea
-                className="w-full px-3 py-2 bg-background border border-border rounded-md min-h-[80px]"
-                value={taxPortalForm.gdtJwt || ""}
-                onChange={(e) =>
-                  setTaxPortalForm({ ...taxPortalForm, gdtJwt: e.target.value })
-                }
-                placeholder="Bearer ey..."
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">
-                Cookie từ Tổng cục Thuế
-              </label>
-              <textarea
-                className="w-full px-3 py-2 bg-background border border-border rounded-md min-h-[80px]"
-                value={taxPortalForm.gdtCookie || ""}
-                onChange={(e) =>
-                  setTaxPortalForm({
-                    ...taxPortalForm,
-                    gdtCookie: e.target.value,
-                  })
-                }
-                placeholder="_gdt_... "
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <input
-                id="tax-portal-active"
-                type="checkbox"
-                checked={taxPortalForm.isActive ?? true}
-                onChange={(e) =>
-                  setTaxPortalForm({
-                    ...taxPortalForm,
-                    isActive: e.target.checked,
-                  })
-                }
-              />
-              <label
-                htmlFor="tax-portal-active"
-                className="text-sm text-muted-foreground"
-              >
-                Kích hoạt cấu hình cổng thuế
-              </label>
-            </div>
-            <div className="rounded-lg border border-dashed border-border p-3 text-sm text-muted-foreground">
-              {taxPortalConfig?.username
-                ? `Đã có cấu hình cổng thuế cho MST ${taxPortalConfig.taxCode || "-"}.`
-                : "Chưa có cấu hình cổng thuế trong hệ thống."}
-            </div>
-            <div className="flex justify-between gap-2">
-              <button
-                className="px-4 py-2 border border-red-200 text-red-600 rounded-md hover:bg-red-50 text-sm font-medium"
-                onClick={handleResetTaxPortalConfig}
-                disabled={loading}
-              >
-                Xóa / Reset
-              </button>
-              <BtnPrimary
-                onClick={handleSaveTaxPortalConfig}
-                disabled={loading}
-              >
-                Lưu cấu hình cổng thuế
-              </BtnPrimary>
-            </div>
-          </div>
         </div>
       </PageLayout>
 

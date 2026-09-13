@@ -45,10 +45,12 @@ function PasswordInput({
   value,
   onChange,
   placeholder,
+  autoComplete,
 }: {
   value: string;
   onChange: (v: string) => void;
   placeholder?: string;
+  autoComplete?: string;
 }) {
   const [show, setShow] = useState(false);
   return (
@@ -59,7 +61,7 @@ function PasswordInput({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        autoComplete="new-password"
+        autoComplete={autoComplete ?? "new-password"}
       />
       <button
         type="button"
@@ -148,15 +150,18 @@ export function ChangePasswordModal({
   open,
   onClose,
 }: ChangePasswordModalProps) {
-  const { loading, error, changePasswordAction } = useAuthStore();
+  const { loading, error, changePasswordAction, logoutAction } = useAuthStore();
   const t = useT();
 
+  const [oldPwd, setOldPwd] = useState("");
   const [newPwd, setNewPwd] = useState("");
   const [confirmPwd, setConfirmPwd] = useState("");
   const [formError, setFormError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const isDirty = !!oldPwd || !!newPwd || !!confirmPwd;
 
   function reset() {
+    setOldPwd("");
     setNewPwd("");
     setConfirmPwd("");
     setFormError(null);
@@ -171,7 +176,11 @@ export function ChangePasswordModal({
   async function handleSubmit() {
     setFormError(null);
 
-    if (newPwd.length < 6) {
+    if (!oldPwd.trim()) {
+      setFormError(t("passwordModal.oldPasswordRequired"));
+      return;
+    }
+    if (newPwd.length < 8) {
       setFormError(t("passwordModal.tooShort"));
       return;
     }
@@ -181,13 +190,19 @@ export function ChangePasswordModal({
     }
 
     try {
-      await changePasswordAction(newPwd);
+      await changePasswordAction(oldPwd, newPwd);
       setSuccess(true);
+      setOldPwd("");
       setNewPwd("");
       setConfirmPwd("");
     } catch {
       setFormError(error ?? t("passwordModal.fail"));
     }
+  }
+
+  async function handleLogoutNow() {
+    await logoutAction();
+    handleClose();
   }
 
   return (
@@ -197,17 +212,27 @@ export function ChangePasswordModal({
       icon={<IconLock />}
       title={t("passwordModal.title")}
       subtitle={t("passwordModal.subtitle")}
-      confirmOnClose={!!newPwd && !success}
+      confirmOnClose={isDirty && !success}
       zIndex={410}
       actions={
         success
-          ? [{ label: t("common.close"), primary: true, onClick: handleClose }]
+          ? [
+              {
+                label: t("passwordModal.continueSession"),
+                onClick: handleClose,
+              },
+              {
+                label: t("passwordModal.logoutNow"),
+                primary: true,
+                onClick: handleLogoutNow,
+              },
+            ]
           : [
               { label: t("common.cancel"), onClick: handleClose },
               {
                 label: t("passwordModal.submit"),
                 primary: true,
-                disabled: loading || !newPwd || !confirmPwd,
+                disabled: loading || !oldPwd || !newPwd || !confirmPwd,
                 loading,
                 onClick: handleSubmit,
               },
@@ -237,11 +262,23 @@ export function ChangePasswordModal({
             <p className="text-xs text-[color:var(--muted-fg)] mt-1">
               {t("passwordModal.successDesc")}
             </p>
+            <p className="text-xs text-[color:var(--muted-fg)] mt-2">
+              {t("passwordModal.successChoice")}
+            </p>
           </div>
         </div>
       ) : (
         /* ── Form ── */
         <DrawerSection title={t("passwordModal.section")}>
+          <DrawerField label={t("passwordModal.oldPassword")} required>
+            <PasswordInput
+              value={oldPwd}
+              onChange={setOldPwd}
+              placeholder={t("passwordModal.oldPlaceholder")}
+              autoComplete="current-password"
+            />
+          </DrawerField>
+
           <DrawerField label={t("passwordModal.newPassword")} required>
             <PasswordInput
               value={newPwd}
@@ -262,7 +299,7 @@ export function ChangePasswordModal({
                 {t("passwordModal.mismatchInline")}
               </p>
             )}
-            {confirmPwd && newPwd === confirmPwd && newPwd.length >= 6 && (
+            {confirmPwd && newPwd === confirmPwd && newPwd.length >= 8 && (
               <p className="text-[10px] text-approve-fg mt-[5px]">
                 {t("passwordModal.matchInline")}
               </p>

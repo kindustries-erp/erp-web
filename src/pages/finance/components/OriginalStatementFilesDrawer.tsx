@@ -4,7 +4,8 @@ import { Button } from "@/shared/components/ui/Button";
 import { StandardTable } from "@/shared/components/StandardTable";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { bankStatementApi } from "@/modules/bank-statements/api/bankStatementApi";
-import { formatGMT7 } from "@/shared/utils/format";
+import { TableDateCell } from "@/shared/components/DataTable/TableDateCell";
+
 import { getFileViewUrl } from "@/modules/finance/api/financeApi";
 import toast from "react-hot-toast";
 import { Trash2, Download, Upload } from "lucide-react";
@@ -170,7 +171,7 @@ export function OriginalStatementFilesDrawer({
       header: "Ngày tải lên",
       headerClassName: "text-center",
       className: "align-middle text-left",
-      cell: (row: any) => formatGMT7(row.createdAt, "datetime"),
+      cell: (row: any) => <TableDateCell date={row.createdAt} />,
       size: 150,
     },
     {

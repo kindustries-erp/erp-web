@@ -26,6 +26,7 @@ function initials(name: string) {
 
 interface EditForm {
   full_name: string;
+  email: string;
   phone: string;
   notes: string;
 }
@@ -35,6 +36,7 @@ function buildForm(
 ): EditForm {
   return {
     full_name: emp.full_name ?? "",
+    email: emp.email ?? "",
     phone: emp.phone ?? "",
     notes: emp.notes ?? "",
   };
@@ -61,7 +63,9 @@ export function UserProfileModal({ open, onClose }: UserProfileModalProps) {
 
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState<EditForm>(() =>
-    employee ? buildForm(employee) : { full_name: "", phone: "", notes: "" },
+    employee
+      ? buildForm(employee)
+      : { full_name: "", email: "", phone: "", notes: "" },
   );
   const [saveError, setSaveError] = useState<string | null>(null);
 
@@ -74,10 +78,12 @@ export function UserProfileModal({ open, onClose }: UserProfileModalProps) {
 
   async function handleSave() {
     setSaveError(null);
+    const hasLinkedEmployee = employee?.employee_code !== "—";
     const payload: SelfUpdateProfileRequest = {
-      full_name: form.full_name.trim() || undefined,
-      phone: form.phone.trim() || null,
-      notes: form.notes.trim() || null,
+      full_name: hasLinkedEmployee ? form.full_name.trim() || null : undefined,
+      email: form.email.trim() || undefined,
+      phone: hasLinkedEmployee ? form.phone.trim() || null : undefined,
+      notes: hasLinkedEmployee ? form.notes.trim() || null : undefined,
     };
     try {
       await updateProfileAction(payload);
@@ -91,6 +97,7 @@ export function UserProfileModal({ open, onClose }: UserProfileModalProps) {
 
   const dept = employee.department_id;
   const pos = employee.position_id;
+  const hasLinkedEmployee = employee.employee_code !== "—";
   const av = initials(employee.full_name);
   const statusLabel: Record<string, string> = {
     active: t("profile.statusActive"),
@@ -158,9 +165,15 @@ export function UserProfileModal({ open, onClose }: UserProfileModalProps) {
       }
     >
       {editing ? (
-        /* ── Edit mode — only whitelisted fields ── */
+        /* ── Edit mode — editable personal info + read-only work info ── */
         <>
           <DrawerSection title={t("profile.personalInfo")}>
+            <DrawerRow
+              label={t("profile.employeeCode")}
+              value={
+                <code className="font-mono">{employee.employee_code}</code>
+              }
+            />
             <DrawerField label={t("profile.fullName")} required>
               <input
                 type="text"
@@ -168,6 +181,16 @@ export function UserProfileModal({ open, onClose }: UserProfileModalProps) {
                 value={form.full_name}
                 onChange={(e) => setField("full_name", e.target.value)}
                 placeholder={t("profile.fullNamePlaceholder")}
+                disabled={!hasLinkedEmployee}
+              />
+            </DrawerField>
+            <DrawerField label={t("profile.email")} required>
+              <input
+                type="email"
+                className={inputCls}
+                value={form.email}
+                onChange={(e) => setField("email", e.target.value)}
+                placeholder="example@company.com"
               />
             </DrawerField>
             <DrawerField label={t("profile.phone")}>
@@ -177,11 +200,48 @@ export function UserProfileModal({ open, onClose }: UserProfileModalProps) {
                 value={form.phone}
                 onChange={(e) => setField("phone", e.target.value)}
                 placeholder="0912 345 678"
+                disabled={!hasLinkedEmployee}
               />
             </DrawerField>
+            <DrawerRow
+              label={t("profile.status")}
+              value={
+                <span
+                  className={cn(
+                    "inline-flex items-center px-[10px] py-[3px] rounded-[20px] text-[11px] font-medium border",
+                    employee.employment_status === "active"
+                      ? "bg-approve-bg text-approve-fg border-[#a8dbb8]"
+                      : "bg-warn-bg text-warn-fg border-[#f5d580]",
+                  )}
+                >
+                  {statusLabel[currentEmploymentStatus] ??
+                    currentEmploymentStatus}
+                </span>
+              }
+            />
+          </DrawerSection>
+
+          <DrawerSection title={t("profile.workInfo")}>
+            <DrawerRow
+              label={t("profile.department")}
+              value={dept.department_name}
+            />
+            <DrawerRow
+              label={t("profile.position")}
+              value={pos.position_name}
+            />
+            <DrawerRow
+              label={t("profile.systemRole")}
+              value={profile?.role?.name ?? "—"}
+            />
           </DrawerSection>
 
           <DrawerSection title={t("profile.notes")}>
+            {!hasLinkedEmployee && (
+              <div className="text-xs text-[color:var(--warn-fg)] bg-[color:var(--warn-bg)] border border-[color:var(--warn-fg)]/30 rounded-lg px-3 py-2 mb-3">
+                {t("profile.unlinkedEmployeeHint")}
+              </div>
+            )}
             <DrawerField label={t("profile.internalNotes")}>
               <textarea
                 className={cn(inputCls, "min-h-[80px] resize-none")}
@@ -189,6 +249,7 @@ export function UserProfileModal({ open, onClose }: UserProfileModalProps) {
                 onChange={(e) => setField("notes", e.target.value)}
                 placeholder={t("profile.notesPlaceholder")}
                 rows={3}
+                disabled={!hasLinkedEmployee}
               />
             </DrawerField>
           </DrawerSection>

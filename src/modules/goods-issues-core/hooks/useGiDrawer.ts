@@ -22,6 +22,7 @@ export interface GiLineForm {
   salesOrderLineId: string;
   productionOrderMaterialId: string;
   itemId: string;
+  itemCode?: string;
   itemName: string;
   serialId: string;
   vehicleId: string;
@@ -38,6 +39,8 @@ export interface GiForm {
   status: string;
   remarks: string;
   lines: GiLineForm[];
+  globalAttributes?: Record<string, any>;
+  customAttributes?: Record<string, any>;
 }
 
 export function isMoLinkedGiLocked(
@@ -50,6 +53,7 @@ export const emptyGiLine = (): GiLineForm => ({
   salesOrderLineId: "",
   productionOrderMaterialId: "",
   itemId: "",
+  itemCode: "",
   itemName: "",
   serialId: "",
   vehicleId: "",
@@ -60,19 +64,23 @@ export const emptyGiLine = (): GiLineForm => ({
 export const emptyGiForm = (): GiForm => ({
   issueNo: "",
   issueDate: new Date().toISOString().slice(0, 10),
-  issueType: "SALE",
+  issueType: "",
   salesOrderId: "",
   productionOrderId: "",
   status: "DRAFT",
   remarks: "",
-  lines: [emptyGiLine()],
+  lines: [],
+  globalAttributes: {},
+  customAttributes: {},
 });
 
 export function buildGiForm(gi: ErpGoodsIssue): GiForm {
+  const customAttrs = gi.customAttributes || {};
   return {
     issueNo: gi.issueNo ?? "",
     issueDate: gi.issueDate ? gi.issueDate.slice(0, 10) : "",
-    issueType: gi.issueType ?? "SALE",
+    issueType:
+      (customAttrs.type_inventory_issue as string) || gi.issueType || "SALE",
     salesOrderId: gi.salesOrderId ?? "",
     productionOrderId: gi.productionOrderId ?? "",
     status: gi.status ?? "DRAFT",
@@ -82,6 +90,7 @@ export function buildGiForm(gi: ErpGoodsIssue): GiForm {
           salesOrderLineId: line.salesOrderLineId ?? "",
           productionOrderMaterialId: line.productionOrderMaterialId ?? "",
           itemId: line.itemId ?? "",
+          itemCode: "",
           itemName: line.itemName ?? "",
           serialId: line.serialId ?? "",
           vehicleId: line.vehicleId ?? "",
@@ -89,10 +98,18 @@ export function buildGiForm(gi: ErpGoodsIssue): GiForm {
           unitCost: line.unitCost ?? "",
         }))
       : [emptyGiLine()],
+    globalAttributes: { ...customAttrs },
+    customAttributes: { ...customAttrs },
   };
 }
 
 export function buildGiPayload(form: GiForm): CreateGiPayload {
+  const customAttributes = {
+    ...(form.globalAttributes || {}),
+    ...(form.customAttributes || {}),
+    type_inventory_issue: form.issueType || "OTHER",
+  };
+
   return {
     issueNo: form.issueNo.trim(),
     issueDate: form.issueDate,
@@ -105,6 +122,7 @@ export function buildGiPayload(form: GiForm): CreateGiPayload {
         : undefined,
     status: form.status || "DRAFT",
     remarks: form.remarks.trim() || undefined,
+    customAttributes,
     lines: form.lines
       .filter((line) => {
         const qty = Number(line.qtyIssued);
@@ -162,7 +180,9 @@ export function useGiDrawer({
       itemsData?.pages.flatMap((p) =>
         (p.items.inventoryItems || []).map((i) => ({
           value: i.id,
-          label: `${i.sku} — ${i.itemName}`,
+          label: i.sku,
+          searchText: `${i.sku} ${i.itemName}`,
+          _itemName: i.itemName,
         })),
       ) ?? [],
     [itemsData],
@@ -236,6 +256,7 @@ export function useGiDrawer({
                 ...emptyGiLine(),
                 salesOrderLineId: l.id || "",
                 itemId: l.itemId || "",
+                itemCode: "",
                 itemName: l.itemName || "",
                 qtyIssued: "1",
                 unitCost: l.unitPrice || "",
@@ -247,6 +268,7 @@ export function useGiDrawer({
               ...emptyGiLine(),
               salesOrderLineId: l.id || "",
               itemId: l.itemId || "",
+              itemCode: "",
               itemName: l.itemName || "",
               qtyIssued: String(qtyToDeliver),
               unitCost: l.unitPrice || "",
@@ -338,7 +360,7 @@ export function useGiDrawer({
         }
         if (editing) {
           await goodsIssuesCoreApi.update(editing.id, payload);
-          if (statusOverride === "POSTED") {
+          if (statusOverride === "POSTED" && editing.status !== "POSTED") {
             await goodsIssuesCoreApi.post(editing.id);
           }
           showToast({
@@ -355,6 +377,7 @@ export function useGiDrawer({
             variant: "success",
           });
         }
+
         setOpen(false);
         if (invalidateWarehouseQuery) {
           await queryClient.invalidateQueries({
@@ -402,4 +425,10 @@ export function useGiDrawer({
   };
 }
 
-export type UseGiDrawerReturn = ReturnType<typeof useGiDrawer>;
+export type UseGiDrawerReturn = ReturnType<typeof useGiDrawer> & {
+  unifiedContext?: {
+    type: "receipt" | "issue" | "adjustment";
+    setType: (t: "receipt" | "issue" | "adjustment") => void;
+    mode: "create" | "view" | "edit";
+  };
+};

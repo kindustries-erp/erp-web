@@ -360,6 +360,7 @@ export function BulkEditDrawer({
       open={open}
       onClose={onClose}
       mode="edit" // StandardFormDrawer needs mode
+      collapsibleRightPanel={true}
       confirmOnClose={isDirty}
       size="xl"
       layout="2-columns"

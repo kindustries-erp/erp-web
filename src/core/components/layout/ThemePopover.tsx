@@ -64,6 +64,25 @@ const THEME_OPTIONS: {
       </svg>
     ),
   },
+  {
+    value: "midnight",
+    labelKey: "nav.bottom.themeMidnight",
+    icon: (
+      <svg
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+      >
+        <rect x="3" y="3" width="18" height="18" rx="2" />
+        <line x1="9" y1="3" x2="9" y2="21" />
+        <line x1="9" y1="7" x2="21" y2="7" />
+        <circle cx="15" cy="14" r="2" />
+      </svg>
+    ),
+  },
 ];
 
 export function ThemePopover({ children }: { children: React.ReactNode }) {

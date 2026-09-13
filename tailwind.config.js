@@ -41,9 +41,31 @@ export default {
           from: { opacity: 0, transform: "translateY(-8px)" },
           to: { opacity: 1, transform: "translateY(0)" },
         },
+        "fade-in": {
+          from: { opacity: "0" },
+          to: { opacity: "1" },
+        },
+        "fade-out": {
+          from: { opacity: "1" },
+          to: { opacity: "0" },
+        },
+        "slide-in-from-left-2": {
+          from: { transform: "translateX(-8px)", opacity: "0" },
+          to: { transform: "translateX(0)", opacity: "1" },
+        },
+        "slide-in-from-right-2": {
+          from: { transform: "translateX(8px)", opacity: "0" },
+          to: { transform: "translateX(0)", opacity: "1" },
+        },
       },
       animation: {
         slideDownAndFade: "slideDownAndFade 300ms ease-out forwards",
+        "fade-in-0": "fade-in 200ms ease-out forwards",
+        "fade-out-0": "fade-out 100ms ease-in forwards",
+        "slide-in-from-left-2": "slide-in-from-left-2 200ms ease-out both",
+        "slide-in-from-right-2": "slide-in-from-right-2 200ms ease-out both",
+        "animate-in": "fade-in 200ms ease-out both",
+        "animate-out": "fade-out 100ms ease-in both",
       },
     },
   },

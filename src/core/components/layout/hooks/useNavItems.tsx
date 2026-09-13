@@ -1,0 +1,630 @@
+import { useMemo } from "react";
+import type { ReactNode } from "react";
+import type { PageKey } from "@/shared/types";
+import { useT } from "@/core/i18n";
+import { useHasPermission } from "@/shared/hooks/useHasPermission";
+import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
+import { useAuthStore } from "@/modules/auth/domain/authStore";
+import {
+  Boxes,
+  Users,
+  FileText,
+  Building2,
+  Layers,
+  Network,
+  Factory,
+  Shield,
+  Receipt,
+  ReceiptText,
+  Package,
+  LayoutDashboard,
+  Wallet,
+  Settings,
+  UserSquare2,
+  Car,
+  Paperclip,
+  Mail,
+  Target,
+  PackageCheck,
+} from "lucide-react";
+
+export interface NavSearchItem {
+  key: PageKey;
+  label: string;
+  group?: string;
+  section: string;
+  keywords?: string[];
+  icon: ReactNode;
+}
+
+export function useNavItems(): NavSearchItem[] {
+  const t = useT();
+  const { employee } = useAuthStore();
+  const isAdminEmail = employee?.email === "admin@liouni.com";
+
+  const canReadSalesOrders = useHasPermission(
+    ErpResource.SALES_ORDERS,
+    ErpAction.READ,
+  );
+  const canReadCustomers = useHasPermission(
+    ErpResource.BUSINESS_PARTNERS,
+    ErpAction.READ,
+  );
+  const canReadSalesReports = useHasPermission(
+    ErpResource.SALES_REPORTS,
+    ErpAction.READ,
+  );
+
+  const canReadPurchasing = useHasPermission(
+    ErpResource.PURCHASE_ORDERS,
+    ErpAction.READ,
+  );
+  const canReadSuppliers = useHasPermission(
+    ErpResource.BUSINESS_PARTNERS,
+    ErpAction.READ,
+  );
+  const canReadPurchasingReports = useHasPermission(
+    ErpResource.PURCHASING_REPORTS,
+    ErpAction.READ,
+  );
+
+  const canReadInventoryItems = useHasPermission(
+    ErpResource.INVENTORY_ITEMS,
+    ErpAction.READ,
+  );
+  const canReadInventoryVouchers = useHasPermission(
+    ErpResource.INVENTORY_VOUCHERS,
+    ErpAction.READ,
+  );
+
+  const canReadVinfast = useHasPermission(ErpResource.VINFAST, ErpAction.READ);
+
+  const canReadBom = useHasPermission(ErpResource.BOM, ErpAction.READ);
+  const canReadProduction = useHasPermission(
+    ErpResource.PRODUCTION,
+    ErpAction.READ,
+  );
+  const canReadGarage = useHasPermission(ErpResource.GARAGE, ErpAction.READ);
+
+  const canReadInvoices = useHasPermission(
+    ErpResource.INVOICES,
+    ErpAction.READ,
+  );
+  const canReadBankStatements = useHasPermission(
+    ErpResource.BANK_STATEMENTS,
+    ErpAction.READ,
+  );
+  const canReadCashStatements = useHasPermission(
+    ErpResource.CASH_STATEMENTS,
+    ErpAction.READ,
+  );
+  const canReadCashflow = canReadBankStatements || canReadCashStatements;
+  const showAccounting = canReadInvoices || canReadCashflow;
+
+  const canReadEmployees = useHasPermission(
+    ErpResource.EMPLOYEES,
+    ErpAction.READ,
+  );
+  const showHR = canReadEmployees;
+
+  const canReadAdminUsers = useHasPermission(
+    ErpResource.ADMIN_USERS,
+    ErpAction.READ,
+  );
+  const canReadActivityLogs = useHasPermission(
+    ErpResource.ACTIVITY_LOGS,
+    ErpAction.READ,
+  );
+  const canReadSysTags = useHasPermission(ErpResource.SYS_TAGS, ErpAction.READ);
+  const canReadEmailInbox = useHasPermission(
+    ErpResource.EMAIL_INGEST,
+    ErpAction.READ,
+  );
+
+  const showSettingsGeneral =
+    canReadAdminUsers ||
+    canReadSysTags ||
+    canReadBankStatements ||
+    canReadCashStatements;
+
+  return useMemo(() => {
+    const items: NavSearchItem[] = [];
+
+    // 1. Dashboard
+    items.push({
+      key: "dashboard",
+      label: t("nav.items.dashboard"),
+      section: t("nav.items.dashboard"),
+      keywords: ["dashboard", "home", "trang chu", "tong quan"],
+      icon: <LayoutDashboard className="w-4 h-4" />,
+    });
+
+    // 2. Sales
+    const salesSection = t("nav.sections.sales");
+    if (canReadSalesReports) {
+      items.push({
+        key: "sales-report-dashboard",
+        label: t("nav.items.salesReportDashboard"),
+        section: salesSection,
+        keywords: ["sales", "bao cao ban hang", "doanh thu"],
+        icon: <LayoutDashboard className="w-4 h-4" />,
+      });
+    }
+    if (canReadSalesOrders) {
+      items.push({
+        key: "erp-sales-orders",
+        label: t("nav.items.erpSalesOrders"),
+        section: salesSection,
+        keywords: ["sales orders", "don ban hang", "ban hang"],
+        icon: <Boxes className="w-4 h-4" />,
+      });
+    }
+    if (canReadCustomers) {
+      items.push({
+        key: "erp-customers",
+        label: t("nav.items.customers"),
+        section: salesSection,
+        keywords: ["customers", "khach hang", "doi tac", "partner"],
+        icon: <Users className="w-4 h-4" />,
+      });
+    }
+    if (canReadSalesOrders) {
+      items.push({
+        key: "after-sales",
+        label: t("nav.items.afterSales"),
+        section: salesSection,
+        keywords: ["bao hanh", "hau mai", "after sales"],
+        icon: <Shield className="w-4 h-4" />,
+      });
+    }
+
+    // 3. Purchasing
+    const purchasingSection = t("nav.sections.purchasing");
+    if (canReadPurchasingReports) {
+      items.push({
+        key: "purchasing-report-dashboard",
+        label: t("nav.items.purchasingReportDashboard"),
+        section: purchasingSection,
+        keywords: ["purchasing", "bao cao mua hang", "mua hang"],
+        icon: <LayoutDashboard className="w-4 h-4" />,
+      });
+    }
+    if (canReadPurchasing) {
+      items.push({
+        key: "purchasing",
+        label: t("nav.items.purchasing"),
+        section: purchasingSection,
+        keywords: ["purchase orders", "don mua hang", "po"],
+        icon: <FileText className="w-4 h-4" />,
+      });
+    }
+    if (canReadSuppliers) {
+      items.push({
+        key: "erp-suppliers",
+        label: t("nav.items.suppliers"),
+        section: purchasingSection,
+        keywords: ["suppliers", "nha cung cap", "vendor", "doi tac"],
+        icon: <Building2 className="w-4 h-4" />,
+      });
+    }
+
+    // 4. Inventory (Kho)
+    const inventorySection = t("nav.sections.inventory");
+    if (canReadInventoryItems) {
+      items.push({
+        key: "inventory-dashboard",
+        label: t("nav.items.inventoryDashboard"),
+        section: inventorySection,
+        keywords: ["kho", "tong quan kho", "inventory"],
+        icon: <LayoutDashboard className="w-4 h-4" />,
+      });
+    }
+    if (canReadInventoryVouchers) {
+      items.push({
+        key: "erp-inventory-vouchers",
+        label: t("nav.items.erpInventoryVouchers"),
+        section: inventorySection,
+        keywords: ["kho", "chung tu kho", "nhap kho", "xuat kho", "vouchers"],
+        icon: <FileText className="w-4 h-4" />,
+      });
+    }
+    if (canReadInventoryItems) {
+      items.push({
+        key: "erp-inventory-stock",
+        label: t("nav.items.erpInventoryStock"),
+        section: inventorySection,
+        keywords: ["kho", "ton kho", "stock", "hang hoa"],
+        icon: <Package className="w-4 h-4" />,
+      });
+    }
+    if (canReadInventoryItems) {
+      items.push({
+        key: "erp-inventory-tracking",
+        label: t("nav.items.erpInventoryTrackingGroup"),
+        section: inventorySection,
+        keywords: [
+          "kho",
+          "theo doi hang hoa",
+          "dinh danh",
+          "phu tung",
+          "parts",
+          "lo",
+          "lot",
+          "custom",
+        ],
+        icon: <Layers className="w-4 h-4" />,
+      });
+    }
+
+    // 5. Manufacturing (Sản xuất / Xưởng)
+    const manufacturingSection = t("nav.sections.manufacturing");
+    if (canReadBom) {
+      items.push({
+        key: "erp-bom",
+        label: t("nav.items.erpBom"),
+        section: manufacturingSection,
+        keywords: ["bom", "dinh muc", "nguyen vat lieu", "san xuat"],
+        icon: <Network className="w-4 h-4" />,
+      });
+    }
+    if (canReadProduction) {
+      items.push({
+        key: "erp-production",
+        label: t("nav.items.erpProduction"),
+        section: manufacturingSection,
+        keywords: ["san xuat", "production", "lenh san xuat"],
+        icon: <Factory className="w-4 h-4" />,
+      });
+    }
+    if (canReadProduction || canReadInventoryItems) {
+      items.push({
+        key: "erp-finished-goods",
+        label: t("nav.items.erpFinishedGoods", "Thành phẩm"),
+        section: manufacturingSection,
+        keywords: [
+          "san xuat",
+          "thanh pham",
+          "xe",
+          "vin",
+          "khung",
+          "may",
+          "finished goods",
+        ],
+        icon: <PackageCheck className="w-4 h-4" />,
+      });
+    }
+
+    // 6. Garage
+    const garageSection = t("nav.sections.garage", "GARAGE");
+    if (canReadGarage) {
+      items.push({
+        key: "garage-dashboard",
+        label: t("nav.items.garageDashboard", "Tổng quan Garage"),
+        section: garageSection,
+        keywords: ["garage", "tong quan garage", "dashboard", "xuong"],
+        icon: <LayoutDashboard className="w-4 h-4" />,
+      });
+      items.push({
+        key: "garage-cases",
+        label: t("nav.items.garageCases", "Phiếu dịch vụ"),
+        section: garageSection,
+        keywords: [
+          "garage",
+          "phieu dich vu",
+          "so bao gia",
+          "sua chua",
+          "xuong",
+        ],
+        icon: <Car className="w-4 h-4" />,
+      });
+      items.push({
+        key: "garage-partners",
+        label: t("nav.items.garagePartners", "Đối tác"),
+        section: garageSection,
+        keywords: [
+          "garage",
+          "khach hang",
+          "doi tac",
+          "cong no",
+          "phai thu",
+          "tuoi no",
+        ],
+        icon: <Users className="w-4 h-4" />,
+      });
+      items.push({
+        key: "garage-opex",
+        label: t("nav.items.garageOpex", "Chi phí vận hành Garage"),
+        section: garageSection,
+        keywords: [
+          "garage",
+          "chi phi van hanh garage",
+          "opex",
+          "luong",
+          "mat bang",
+          "hoa hong",
+          "chi phi",
+        ],
+        icon: <ReceiptText className="w-4 h-4" />,
+      });
+    }
+
+    // 6. Vinfast
+    const vinfastSection = t("nav.sections.vinfast");
+    const vinfastPartsGroup = t("nav.items.vinfastPartsGroup");
+    if (canReadVinfast) {
+      items.push({
+        key: "vinfast-parts-stock",
+        label: t("nav.items.vinfastPartsGroup", "Phụ tùng Vinfast"),
+        group: vinfastPartsGroup,
+        section: vinfastSection,
+        keywords: [
+          "vinfast",
+          "phu tung",
+          "tong quan",
+          "dashboard",
+          "ton kho",
+          "oto",
+          "xe may",
+        ],
+        icon: <Package className="w-4 h-4" />,
+      });
+    }
+
+    // 7. Accounting (Kế toán)
+    const accountingSection = t("nav.sections.accounting");
+    const cashflowGroup = t("nav.items.cashflow");
+    const invoiceGroup = t("nav.items.erpInvoices");
+
+    if (canReadCashflow) {
+      items.push({
+        key: "cashflow-dashboard",
+        label: t("nav.items.cashflowDashboard"),
+        group: cashflowGroup,
+        section: accountingSection,
+        keywords: ["dong tien", "cashflow", "tien mat", "ngan hang"],
+        icon: <Wallet className="w-4 h-4" />,
+      });
+    }
+    if (canReadBankStatements) {
+      items.push({
+        key: "bank-statement",
+        label: t("bankStatement.bankTitle"),
+        group: cashflowGroup,
+        section: accountingSection,
+        keywords: ["dong tien", "sao ke", "ngan hang", "bank statement"],
+        icon: <Wallet className="w-4 h-4" />,
+      });
+    }
+    if (canReadCashStatements) {
+      items.push({
+        key: "cash-statement",
+        label: t("bankStatement.cashTitle"),
+        group: cashflowGroup,
+        section: accountingSection,
+        keywords: ["dong tien", "sao ke", "tien mat", "cash statement"],
+        icon: <Wallet className="w-4 h-4" />,
+      });
+    }
+    if (canReadInvoices) {
+      items.push({
+        key: "invoice-dashboard",
+        label: t("nav.items.invoiceDashboard") || "Tổng quan hóa đơn",
+        group: invoiceGroup,
+        section: accountingSection,
+        keywords: ["hoa don", "hóa đơn", "invoices", "tong quan", "dashboard"],
+        icon: <Receipt className="w-4 h-4" />,
+      });
+      items.push({
+        key: "erp-invoices",
+        label: t("nav.items.erpInvoices"),
+        group: invoiceGroup,
+        section: accountingSection,
+        keywords: [
+          "hoa don",
+          "hóa đơn",
+          "invoices",
+          "vat",
+          "ban ra",
+          "mua vao",
+          "gdt",
+        ],
+        icon: <Receipt className="w-4 h-4" />,
+      });
+      items.push({
+        key: "erp-invoices-draft",
+        label: t("nav.items.erpInvoicesDraft"),
+        group: invoiceGroup,
+        section: accountingSection,
+        keywords: ["hoa don", "hóa đơn nháp", "nhap", "draft"],
+        icon: <Receipt className="w-4 h-4" />,
+      });
+    }
+    if (canReadBankStatements && isAdminEmail) {
+      items.push({
+        key: "opex",
+        label: t("nav.items.operatingExpenses", "Chi phí vận hành"),
+        section: accountingSection,
+        keywords: [
+          "chi phi van hanh",
+          "chi phi",
+          "operating expenses",
+          "opex",
+          "budget",
+          "ngan sach",
+          "dinh ky",
+          "ke toan",
+        ],
+        icon: <Target className="w-4 h-4" />,
+      });
+    }
+    if (showAccounting) {
+      items.push({
+        key: "journal-entry",
+        label: t("nav.items.reportJournal"),
+        section: accountingSection,
+        keywords: ["nhat ky chung", "so cai", "ke toan", "journal", "ledger"],
+        icon: <FileText className="w-4 h-4" />,
+      });
+      items.push({
+        key: "settings-accounts",
+        label: t("nav.items.catalogAccounts"),
+        section: accountingSection,
+        keywords: ["tai khoan", "he thong tai khoan", "chart of accounts"],
+        icon: <Layers className="w-4 h-4" />,
+      });
+    }
+
+    // 8. Admin (Quản trị)
+    const adminSection = t("nav.sections.admin");
+    if (showHR) {
+      items.push({
+        key: "erp-employees",
+        label: t("nav.items.erpEmployees"),
+        section: adminSection,
+        keywords: ["nhan vien", "nhan su", "employees", "staff", "hr"],
+        icon: <UserSquare2 className="w-4 h-4" />,
+      });
+    }
+    items.push({
+      key: "attachments",
+      label: t("nav.items.attachments"),
+      section: adminSection,
+      keywords: ["tai lieu", "dinh kem", "attachments", "files"],
+      icon: <Paperclip className="w-4 h-4" />,
+    });
+
+    // 9. Settings (Hệ thống & Cài đặt)
+    const settingsSection = t("nav.sections.settings");
+    const accessGroup = t("nav.items.erpAccessControl");
+    const catalogGroup = t("nav.items.catalog");
+
+    if (canReadEmailInbox && isAdminEmail) {
+      items.push({
+        key: "email-inbox",
+        label: t("nav.items.emailInbox"),
+        section: settingsSection,
+        keywords: ["email", "hop thu", "mail", "inbox"],
+        icon: <Mail className="w-4 h-4" />,
+      });
+    }
+    if (canReadAdminUsers) {
+      items.push({
+        key: "erp-users",
+        label: t("nav.items.users"),
+        group: accessGroup,
+        section: settingsSection,
+        keywords: ["nguoi dung", "users", "tai khoan"],
+        icon: <Shield className="w-4 h-4" />,
+      });
+      items.push({
+        key: "erp-permissions-core",
+        label: t("nav.items.phanquyen"),
+        group: accessGroup,
+        section: settingsSection,
+        keywords: ["phan quyen", "vai tro", "permissions", "roles"],
+        icon: <Shield className="w-4 h-4" />,
+      });
+    }
+    if (canReadActivityLogs) {
+      items.push({
+        key: "erp-activity-logs",
+        label: t("nav.items.activitylog"),
+        group: accessGroup,
+        section: settingsSection,
+        keywords: ["nhat ky hoat dong", "activity logs", "audit", "lich su"],
+        icon: <Shield className="w-4 h-4" />,
+      });
+    }
+    if (showSettingsGeneral && canReadAdminUsers) {
+      items.push({
+        key: "settings-branch",
+        label: t("thietlap.tabs.chi-nhanh"),
+        group: catalogGroup,
+        section: settingsSection,
+        keywords: ["chi nhanh", "branch", "thiet lap", "cai dat"],
+        icon: <Settings className="w-4 h-4" />,
+      });
+    }
+    if (showSettingsGeneral && canReadBankStatements) {
+      items.push({
+        key: "settings-bank",
+        label: t("thietlap.tabs.ngan-hang"),
+        group: catalogGroup,
+        section: settingsSection,
+        keywords: ["ngan hang", "bank", "tai khoan ngan hang", "thiet lap"],
+        icon: <Settings className="w-4 h-4" />,
+      });
+    }
+    if (showSettingsGeneral && canReadCashStatements) {
+      items.push({
+        key: "settings-cash-fund",
+        label: t("thietlap.tabs.quy"),
+        group: catalogGroup,
+        section: settingsSection,
+        keywords: ["quy tien mat", "tien mat", "cash fund", "thiet lap"],
+        icon: <Settings className="w-4 h-4" />,
+      });
+    }
+    if (showSettingsGeneral && canReadSysTags) {
+      items.push({
+        key: "sys-tags",
+        label: t("nav.items.sysTags"),
+        group: catalogGroup,
+        section: settingsSection,
+        keywords: ["tags", "the", "quan ly the", "thiet lap"],
+        icon: <Settings className="w-4 h-4" />,
+      });
+    }
+    if (
+      canReadInvoices ||
+      canReadBankStatements ||
+      canReadBom ||
+      canReadInventoryItems ||
+      canReadInventoryVouchers
+    ) {
+      items.push({
+        key: "custom-fields" as any,
+        label: t("nav.items.customFields", "Trường tùy chỉnh"),
+        group: catalogGroup,
+        section: settingsSection,
+        keywords: [
+          "truong tuy chinh",
+          "custom fields",
+          "cau hinh kho",
+          "uom",
+          "don vi tinh",
+          "loai item",
+          "tracking policy",
+          "thuoc tinh",
+        ],
+        icon: <Settings className="w-4 h-4" />,
+      });
+    }
+
+    return items;
+  }, [
+    t,
+    canReadSalesOrders,
+    canReadCustomers,
+    canReadSalesReports,
+    canReadPurchasing,
+    canReadSuppliers,
+    canReadPurchasingReports,
+    canReadInventoryItems,
+    canReadInventoryVouchers,
+    canReadVinfast,
+    isAdminEmail,
+    canReadBom,
+    canReadProduction,
+    canReadGarage,
+    canReadInvoices,
+    canReadBankStatements,
+    showAccounting,
+    showHR,
+    canReadAdminUsers,
+    canReadActivityLogs,
+    canReadSysTags,
+    canReadEmailInbox,
+    showSettingsGeneral,
+  ]);
+}

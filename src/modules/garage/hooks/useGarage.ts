@@ -9,16 +9,59 @@ export const useGarageBranches = () => {
   });
 };
 
-export const useGarageCases = (
+export function useGarageCases(
   branchId?: string,
   page: number = 1,
   pageSize: number = 20,
   q: string = "",
+  from?: string,
+  to?: string,
+  filtersStr?: string,
+) {
+  return useQuery({
+    queryKey: [
+      "garage",
+      "cases",
+      branchId,
+      page,
+      pageSize,
+      q,
+      from,
+      to,
+      filtersStr,
+    ],
+    queryFn: () =>
+      garageApi.getCases(branchId!, page, pageSize, q, from, to, filtersStr),
+    enabled: !!branchId,
+    staleTime: 1000 * 60,
+  });
+}
+
+export const useGarageCaseById = (id?: string) => {
+  return useQuery({
+    queryKey: ["garage-case", id],
+    queryFn: () => garageApi.getCaseById(id!),
+    enabled: !!id,
+  });
+};
+
+export const useGarageCaseByExternalId = (
+  externalId?: string,
+  branchId?: string,
 ) => {
   return useQuery({
-    queryKey: ["garage-cases", branchId, page, pageSize, q],
-    queryFn: () => garageApi.getCases(branchId, page, pageSize, q),
-    enabled: !!branchId,
+    queryKey: ["garage-case-external", externalId, branchId],
+    queryFn: () => garageApi.getCaseByExternalId(externalId!, branchId),
+    enabled: !!externalId,
+    retry: false,
+  });
+};
+
+export const useGarageCaseByCode = (code?: string) => {
+  return useQuery({
+    queryKey: ["garage-case-code", code],
+    queryFn: () => garageApi.getCaseByCode(code!),
+    enabled: !!code,
   });
 };
 
@@ -30,22 +73,6 @@ export function useGarageDashboard(
   return useQuery({
     queryKey: ["garage", "dashboard", branchId, from, to],
     queryFn: () => garageApi.getDashboard(branchId!, from, to),
-    enabled: !!branchId,
-  });
-}
-
-export function useGarageReceivables(branchId?: string) {
-  return useQuery({
-    queryKey: ["garage", "receivables", branchId],
-    queryFn: () => garageApi.getReceivables(branchId!),
-    enabled: !!branchId,
-  });
-}
-
-export function useGaragePayables(branchId?: string) {
-  return useQuery({
-    queryKey: ["garage", "payables", branchId],
-    queryFn: () => garageApi.getPayables(branchId!),
     enabled: !!branchId,
   });
 }
@@ -63,6 +90,30 @@ export function useGarageCasePayments(caseId?: string) {
     queryKey: ["garage", "casePayments", caseId],
     queryFn: () => garageApi.getCasePayments(caseId!),
     enabled: !!caseId,
+  });
+}
+
+export function useGarageGrossProfit(
+  branchId?: string,
+  from?: string,
+  to?: string,
+) {
+  return useQuery({
+    queryKey: ["garage", "grossProfitReport", branchId, from, to],
+    queryFn: () => garageApi.getGrossProfitReport(branchId!, from, to),
+    enabled: !!branchId,
+  });
+}
+
+export function useGarageGrossProfitJournal(
+  branchId?: string,
+  from?: string,
+  to?: string,
+) {
+  return useQuery({
+    queryKey: ["garage", "grossProfitJournal", branchId, from, to],
+    queryFn: () => garageApi.getGrossProfitJournal(branchId!, from, to),
+    enabled: !!branchId,
   });
 }
 
@@ -124,48 +175,133 @@ export function useSyncGarageCaseDetail() {
   });
 }
 
-export function useSyncGarageReceivables() {
+export const useSyncGarageGrossProfit = () => {
   const queryClient = useQueryClient();
-
   return useMutation({
-    mutationFn: ({
-      branchId,
-      from,
-      to,
-    }: {
-      branchId: string;
-      from?: string;
-      to?: string;
-    }) => garageApi.syncReceivables(branchId, from, to),
+    mutationFn: (params: { branchId: string; from?: string; to?: string }) =>
+      garageApi.syncGrossProfit(params.branchId, params.from, params.to),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["garage", "receivables"] });
-      toast.success("Receivables synced successfully.");
+      queryClient.invalidateQueries({ queryKey: ["garage-cases"] });
+      queryClient.invalidateQueries({ queryKey: ["garage-gross-profit"] });
+      toast.success("Đồng bộ lợi nhuận gộp thành công!");
     },
     onError: (error: any) => {
-      toast.error(error.message || "Failed to sync receivables.");
+      toast.error(error.message || "Đồng bộ thất bại");
     },
+  });
+};
+
+export function useGarageGrossProfitLinkedInvoices(grossProfitId?: string) {
+  return useQuery({
+    queryKey: ["garage", "grossProfitLinkedInvoices", grossProfitId],
+    queryFn: () => garageApi.getGrossProfitLinkedInvoices(grossProfitId!),
+    enabled: !!grossProfitId,
   });
 }
 
-export function useSyncGaragePayables() {
+export function useMutateGrossProfitLinkedInvoices() {
+  const queryClient = useQueryClient();
+
+  const addMutation = useMutation({
+    mutationFn: (variables: {
+      grossProfitId: string;
+      invoiceId: string;
+      linkType: "IN" | "OUT";
+      note?: string;
+    }) =>
+      garageApi.addGrossProfitLinkedInvoice(
+        variables.grossProfitId,
+        variables.invoiceId,
+        variables.linkType,
+        variables.note,
+      ),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: [
+          "garage",
+          "grossProfitLinkedInvoices",
+          variables.grossProfitId,
+        ],
+      });
+      toast.success("Đã liên kết chứng từ.");
+    },
+    onError: (err: any) => {
+      toast.error(err.message || "Lỗi khi thêm chứng từ liên kết");
+    },
+  });
+
+  const removeMutation = useMutation({
+    mutationFn: ({
+      grossProfitId,
+      linkedId,
+    }: {
+      grossProfitId: string;
+      linkedId: string;
+    }) => garageApi.removeGrossProfitLinkedInvoice(grossProfitId, linkedId),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: [
+          "garage",
+          "grossProfitLinkedInvoices",
+          variables.grossProfitId,
+        ],
+      });
+      toast.success("Đã hủy liên kết chứng từ.");
+    },
+    onError: (err: any) => {
+      toast.error(err.message || "Lỗi khi xóa chứng từ liên kết");
+    },
+  });
+
+  return { addMutation, removeMutation };
+}
+
+export function useGarageCaseGrossProfit(caseCode?: string) {
+  return useQuery({
+    queryKey: ["garage", "grossProfitDetail", caseCode],
+    queryFn: async () => {
+      const res = await garageApi.getGrossProfitByCode(caseCode!);
+      return res || null;
+    },
+    enabled: !!caseCode,
+    retry: false,
+  });
+}
+
+export function useUpdateGarageCaseConfig() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: ({
-      branchId,
-      from,
-      to,
+      caseId,
+      payload,
     }: {
-      branchId: string;
-      from?: string;
-      to?: string;
-    }) => garageApi.syncPayables(branchId, from, to),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["garage", "payables"] });
-      toast.success("Payables synced successfully.");
+      caseId: string;
+      payload: { classification?: string | null; erpNotes?: string | null };
+    }) => garageApi.updateCaseConfig(caseId, payload),
+    onSuccess: (updatedCase) => {
+      queryClient.invalidateQueries({ queryKey: ["garage", "cases"] });
+      queryClient.invalidateQueries({
+        queryKey: ["garage-case-column-options"],
+      });
+      if (updatedCase?.id) {
+        queryClient.invalidateQueries({
+          queryKey: ["garage-case", updatedCase.id],
+        });
+      }
+      if (updatedCase?.soChungTu) {
+        queryClient.invalidateQueries({
+          queryKey: ["garage-case-code", updatedCase.soChungTu],
+        });
+      }
+      toast.success("Đã cập nhật cấu hình phiếu dịch vụ thành công.");
     },
-    onError: (error: any) => {
-      toast.error(error.message || "Failed to sync payables.");
+    onError: (err: any) => {
+      toast.error(
+        err?.response?.data?.message ||
+          err?.message ||
+          "Lỗi khi cập nhật cấu hình phiếu",
+      );
     },
   });
 }

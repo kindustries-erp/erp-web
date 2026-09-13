@@ -1,20 +1,29 @@
-import { lazy, Suspense, useEffect, useRef } from "react";
+import { Suspense, useEffect, useRef } from "react";
+import { lazyWithRetry as lazy } from "@/shared/utils/lazyWithRetry";
 import { useAppStore } from "@/core/config/appStore";
 import { useAuthStore } from "@/modules/auth/domain/authStore";
 import { Sidebar } from "@/core/components/layout/sidebar";
 import { Topbar } from "@/core/components/layout/Topbar";
 import { TabBar } from "@/core/components/layout/TabBar";
 import { SlidePanel } from "@/shared/components/SlidePanel";
+import { SerialGenerationProgress } from "@/shared/components/SerialGenerationProgress";
+import { useSerialGenerationProgress } from "@/modules/goods-receipts-core/hooks/useSerialGenerationProgress";
 import { Toast } from "@/shared/components/Toast";
 import { TopProgressBar } from "@/shared/components/TopProgressBar";
 import { AppContextMenu } from "@/shared/components/ContextMenu";
 import { DocumentDependencyModal } from "@/core/components/DocumentDependencyModal";
 import { ReloadPrompt } from "@/ReloadPrompt";
-import { pathToPage } from "@/shared/utils/pageUrl";
+import { pathToPage, pageToPath } from "@/shared/utils/pageUrl";
 import { EnvStamp } from "@/core/components/EnvStamp";
+import { useEnvStore } from "@/core/store/useEnvStore";
+import { GlobalErpDocumentOpener } from "@/core/components/GlobalErpDocumentOpener";
 import { Login } from "@/pages/Login";
 import { NotFound } from "@/pages/NotFound";
 import { TooltipProvider } from "@/core/components/ui/Tooltip";
+import { VinfastPartsTrackingPage } from "@/pages/VinfastPartsTrackingPage";
+import { VinfastPartsStockPage } from "@/pages/VinfastPartsStockPage";
+import { VinfastPartsOtoStockPage } from "@/pages/VinfastPartsOtoStockPage";
+import { VinfastPartsMotoStockPage } from "@/pages/VinfastPartsMotoStockPage";
 
 import { PageKey } from "@/shared/types";
 
@@ -46,11 +55,26 @@ const loadInventoryStockPage = () =>
   }));
 const InventoryStockPage = lazy(loadInventoryStockPage);
 
-const loadInventoryTrackingPage = () =>
+const InventoryTrackingPage = lazy(() =>
   import("@/pages/inventory/InventoryTrackingPage").then((m) => ({
     default: m.InventoryTrackingPage,
-  }));
-const InventoryTrackingPage = lazy(loadInventoryTrackingPage);
+  })),
+);
+const InventoryTrackingPartsPage = lazy(() =>
+  import("@/pages/inventory/InventoryTrackingPartsPage").then((m) => ({
+    default: m.InventoryTrackingPartsPage,
+  })),
+);
+const InventoryTrackingLotPage = lazy(() =>
+  import("@/pages/inventory/InventoryTrackingLotPage").then((m) => ({
+    default: m.InventoryTrackingLotPage,
+  })),
+);
+const InventoryTrackingCustomPage = lazy(() =>
+  import("@/pages/inventory/InventoryTrackingCustomPage").then((m) => ({
+    default: m.InventoryTrackingCustomPage,
+  })),
+);
 
 const loadInventoryVouchersPage = () =>
   import("@/pages/inventory/InventoryVouchersPage").then((m) => ({
@@ -92,11 +116,6 @@ const InventoryItemTypesPage = lazy(() =>
     default: m.InventoryItemTypesPage,
   })),
 );
-const InventoryTrackingCategoriesPage = lazy(() =>
-  import("@/pages/inventory/InventoryTrackingCategoriesPage").then((m) => ({
-    default: m.InventoryTrackingCategoriesPage,
-  })),
-);
 const ErpCustomersPage = lazy(() =>
   import("@/pages/ErpBusinessPartnersPage").then((m) => ({
     default: m.ErpCustomersPage,
@@ -120,14 +139,29 @@ const ErpActivityLogsPage = lazy(() =>
     default: m.ErpActivityLogsPage,
   })),
 );
+const EmailInboxPage = lazy(() =>
+  import("@/pages/EmailInboxPage").then((m) => ({
+    default: m.EmailInboxPage,
+  })),
+);
 const ErpPermissionsCorePage = lazy(() =>
   import("@/pages/ErpPermissionsCorePage").then((m) => ({
     default: m.ErpPermissionsCorePage,
   })),
 );
+const ErpInvoicesPage = lazy(() =>
+  import("@/pages/ErpInvoicesPage").then((m) => ({
+    default: m.ErpInvoicesPage,
+  })),
+);
 const ErpInvoicesInPage = lazy(() =>
   import("@/pages/ErpInvoicesInPage").then((m) => ({
     default: m.ErpInvoicesInPage,
+  })),
+);
+const ErpInvoicesDraftPage = lazy(() =>
+  import("@/pages/ErpInvoicesDraftPage").then((m) => ({
+    default: m.ErpInvoicesDraftPage,
   })),
 );
 const ErpInvoicesOutPage = lazy(() =>
@@ -143,6 +177,9 @@ const InvoiceDashboard = lazy(() =>
 const SysTagsPage = lazy(() =>
   import("@/pages/SysTagsPage").then((m) => ({ default: m.SysTagsPage })),
 );
+const AttachmentsPage = lazy(() =>
+  import("@/pages/Attachments").then((m) => ({ default: m.DinhKemChungTu })),
+);
 const BankStatementPage = lazy(() =>
   import("@/pages/BankStatementPage").then((m) => ({
     default: m.BankStatementPage,
@@ -156,11 +193,6 @@ const GeneralJournalPage = lazy(() =>
 const ChartOfAccountsPage = lazy(() =>
   import("@/pages/finance/ChartOfAccountsPage").then((m) => ({
     default: m.ChartOfAccountsPage,
-  })),
-);
-const VinfastPartsTrackingPage = lazy(() =>
-  import("@/pages/VinfastPartsTrackingPage").then((m) => ({
-    default: m.VinfastPartsTrackingPage,
   })),
 );
 const ThietLapNganHang = lazy(() =>
@@ -198,14 +230,19 @@ const GarageCases = lazy(() =>
     default: m.GarageCases,
   })),
 );
-const GarageReceivables = lazy(() =>
-  import("@/modules/garage/pages/GarageReceivables").then((m) => ({
-    default: m.GarageReceivables,
+const GarageOpex = lazy(() =>
+  import("@/modules/garage/pages/GarageOpex").then((m) => ({
+    default: m.GarageOpex,
   })),
 );
-const GaragePayables = lazy(() =>
-  import("@/modules/garage/pages/GaragePayables").then((m) => ({
-    default: m.GaragePayables,
+const GaragePartners = lazy(() =>
+  import("@/modules/garage/pages/GaragePartners").then((m) => ({
+    default: m.GaragePartners,
+  })),
+);
+const FinishedGoodsPage = lazy(() =>
+  import("@/pages/manufacturing/FinishedGoodsPage").then((m) => ({
+    default: m.FinishedGoodsPage,
   })),
 );
 const AfterSalesPage = lazy(() =>
@@ -213,35 +250,48 @@ const AfterSalesPage = lazy(() =>
     default: m.AfterSalesPage,
   })),
 );
+const OpexPage = lazy(() =>
+  import("@/pages/OpexPage").then((m) => ({
+    default: m.OpexPage,
+  })),
+);
 
 const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   dashboard: Dashboard,
+  opex: OpexPage,
   "inventory-dashboard": InventoryDashboard,
   "cashflow-dashboard": CashflowDashboard,
   purchasing: MuaHang,
   "erp-inventory-stock": InventoryStockPage,
   "erp-inventory-tracking": InventoryTrackingPage,
+  "erp-inventory-tracking-parts": InventoryTrackingPartsPage,
+  "erp-inventory-tracking-lot": InventoryTrackingLotPage,
+  "erp-inventory-tracking-custom": InventoryTrackingCustomPage,
   "erp-inventory-vouchers": InventoryVouchersPage,
   "mfg-items": MfgItems,
   "mfg-vehicles": MfgVehicles,
   "erp-bom": ErpBomPage,
   "erp-production": ErpProductionPage,
+  "erp-finished-goods": FinishedGoodsPage,
   "erp-sales-orders": ErpSalesOrdersPage,
   "sales-report-dashboard": SalesReportDashboardPage,
   "erp-goods-issues": ErpGoodsIssuesPage,
   "erp-inventory-uom": InventoryUomPage,
   "erp-inventory-item-types": InventoryItemTypesPage,
-  "erp-inventory-tracking-categories": InventoryTrackingCategoriesPage,
   "erp-suppliers": ErpSuppliersPage,
   "erp-customers": ErpCustomersPage,
   "erp-employees": ErpEmployeesPage,
   "erp-users": ErpUsersPage,
   "erp-activity-logs": ErpActivityLogsPage,
+  "email-inbox": EmailInboxPage,
   "erp-permissions-core": ErpPermissionsCorePage,
+  "erp-invoices": ErpInvoicesPage,
   "erp-invoices-in": ErpInvoicesInPage,
   "erp-invoices-out": ErpInvoicesOutPage,
+  "erp-invoices-draft": ErpInvoicesDraftPage,
   "invoice-dashboard": InvoiceDashboard,
   "sys-tags": SysTagsPage,
+  attachments: AttachmentsPage,
   "bank-statement": () => <BankStatementPage type="bank" />,
   "cash-statement": () => <BankStatementPage type="cash" />,
   "journal-entry": GeneralJournalPage,
@@ -251,10 +301,21 @@ const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   "settings-branch": SettingsBranch,
   "garage-dashboard": GarageDashboard,
   "garage-cases": GarageCases,
-  "garage-receivables": GarageReceivables,
-  "garage-payables": GaragePayables,
+  "garage-opex": GarageOpex,
+  "garage-customers": GaragePartners,
+  "garage-partners": GaragePartners,
   "after-sales": AfterSalesPage,
   "vinfast-parts": VinfastPartsTrackingPage,
+  "vinfast-parts-dashboard": () => (
+    <VinfastPartsStockPage initialTab="dashboard" />
+  ),
+  "vinfast-parts-oto": () => <VinfastPartsTrackingPage vehicleType="CAR" />,
+  "vinfast-parts-xemay": () => (
+    <VinfastPartsTrackingPage vehicleType="MOTORBIKE" />
+  ),
+  "vinfast-parts-stock": VinfastPartsStockPage,
+  "vinfast-parts-oto-stock": VinfastPartsOtoStockPage,
+  "vinfast-parts-xemay-stock": VinfastPartsMotoStockPage,
   "purchasing-report-dashboard": PurchasingReportDashboardPage,
 };
 
@@ -263,7 +324,12 @@ const PAGE_PRELOADERS: Partial<Record<PageKey, PageLoader>> = {
   "inventory-dashboard": loadInventoryDashboard,
   purchasing: loadMuaHang,
   "erp-inventory-stock": loadInventoryStockPage,
-  "erp-inventory-tracking": loadInventoryTrackingPage,
+  "erp-inventory-tracking": () =>
+    import("@/pages/inventory/InventoryTrackingPage"),
+  "erp-inventory-tracking-parts": () =>
+    import("@/pages/inventory/InventoryTrackingPartsPage"),
+  "erp-finished-goods": () => import("@/pages/manufacturing/FinishedGoodsPage"),
+  "garage-partners": () => import("@/modules/garage/pages/GaragePartners"),
   "erp-inventory-vouchers": loadInventoryVouchersPage,
   "erp-sales-orders": loadErpSalesOrdersPage,
   "erp-goods-issues": loadErpGoodsIssuesPage,
@@ -302,12 +368,16 @@ const PAGE_FALLBACK = (
 );
 
 export default function App() {
-  const { currentPage, isLoggedIn, syncFromUrl, openTabs } = useAppStore();
+  const { currentPage, currentInstanceId, isLoggedIn, syncFromUrl, openTabs } =
+    useAppStore();
   const { bootstrapAction } = useAuthStore();
   const contentRef = useRef<HTMLDivElement | null>(null);
-  const openTabsKey = openTabs.join("|");
+  const openTabsKey = openTabs.map((t) => t.instanceId).join("|");
+
+  useSerialGenerationProgress();
 
   useEffect(() => {
+    useEnvStore.getState().fetchAppConfig();
     bootstrapAction();
   }, []);
 
@@ -315,10 +385,21 @@ export default function App() {
     const sync = () => {
       const parsed = pathToPage(location.pathname, location.search);
       if (parsed) {
-        syncFromUrl(parsed.page);
+        if (
+          parsed.page === "erp-invoices" &&
+          !location.search.includes("tab=")
+        ) {
+          const canonicalPath = pageToPath(
+            "erp-invoices",
+            parsed.tab || "in",
+            parsed.instanceIndex === 2 ? { _i: "2" } : undefined,
+          );
+          window.history.replaceState(null, "", canonicalPath);
+        }
+        syncFromUrl(parsed.page, parsed.tab, parsed.instanceIndex);
       } else {
         history.replaceState(null, "", "/");
-        syncFromUrl("dashboard");
+        syncFromUrl("dashboard", undefined, 1);
       }
     };
     sync();
@@ -331,7 +412,7 @@ export default function App() {
     if (!el) return;
     el.scrollLeft = 0;
     el.scrollTop = 0;
-  }, [currentPage]);
+  }, [currentInstanceId]);
 
   useEffect(() => {
     if (!isLoggedIn) return;
@@ -346,7 +427,9 @@ export default function App() {
 
   useEffect(() => {
     if (!isLoggedIn || openTabs.length === 0) return;
-    const tabsToWarm = [...new Set(openTabs)] as PageKey[];
+    const tabsToWarm = [
+      ...new Set(openTabs.map((t) => t.pageKey)),
+    ] as PageKey[];
 
     return scheduleOnIdle(() => {
       void Promise.all(tabsToWarm.map((page) => preloadPage(page)));
@@ -373,21 +456,22 @@ export default function App() {
             className="app-content flex-1 overflow-x-hidden overflow-y-auto pb-10"
           >
             <>
-              {openTabs.map((tab) => {
-                const Component = PAGE_COMPONENTS[tab as PageKey];
-                if (!Component) return null;
+              {(() => {
+                const activeTab = openTabs.find(
+                  (tab) => tab.instanceId === currentInstanceId,
+                );
+                if (!activeTab) return <NotFound />;
+                const Component = PAGE_COMPONENTS[activeTab.pageKey];
+                if (!Component) return <NotFound />;
                 return (
-                  <div
-                    key={tab}
-                    className={currentPage === tab ? "block h-full" : "hidden"}
-                  >
+                  <div key={activeTab.instanceId} className="block h-full">
                     <Suspense fallback={PAGE_FALLBACK}>
-                      <Component />
+                      <Component instanceIndex={activeTab.instanceIndex} />
                     </Suspense>
                   </div>
                 );
-              })}
-              {!PAGE_COMPONENTS[currentPage as PageKey] && <NotFound />}
+              })()}
+              <SerialGenerationProgress />
             </>
           </div>
           <TabBar />
@@ -398,6 +482,7 @@ export default function App() {
         <ReloadPrompt />
         <AppContextMenu />
         <DocumentDependencyModal />
+        <GlobalErpDocumentOpener />
       </div>
     </TooltipProvider>
   );

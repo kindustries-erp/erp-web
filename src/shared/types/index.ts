@@ -1,4 +1,5 @@
 export type PageKey =
+  | "opex"
   | "dashboard"
   | "cashflow"
   | "cashflow-dashboard"
@@ -6,6 +7,7 @@ export type PageKey =
   | "cash-fund"
   | "bank-deposit"
   | "attachments"
+  | "email-inbox"
   | "settings-cash-fund"
   | "settings-bank"
   | "settings-accounts"
@@ -22,6 +24,9 @@ export type PageKey =
   | "operating-expenses"
   | "erp-inventory-stock"
   | "erp-inventory-tracking"
+  | "erp-inventory-tracking-parts"
+  | "erp-inventory-tracking-lot"
+  | "erp-inventory-tracking-custom"
   | "erp-inventory-vouchers"
   | "suppliers"
   | "activity-log"
@@ -41,7 +46,6 @@ export type PageKey =
   | "erp-inventory-items"
   | "erp-inventory-uom"
   | "erp-inventory-item-types"
-  | "erp-inventory-tracking-categories"
   | "erp-suppliers"
   | "erp-customers"
   | "erp-employees"
@@ -49,18 +53,28 @@ export type PageKey =
   | "erp-activity-logs"
   | "erp-permissions-core"
   | "sys-tags"
+  | "erp-invoices"
   | "erp-invoices-in"
   | "erp-invoices-out"
+  | "erp-invoices-draft"
   | "invoice-dashboard"
   | "purchasing-report-dashboard"
   | "bank-statement"
   | "cash-statement"
   | "garage-dashboard"
   | "garage-cases"
-  | "garage-receivables"
-  | "garage-payables"
+  | "garage-opex"
+  | "garage-customers"
+  | "garage-partners"
+  | "erp-finished-goods"
   | "after-sales"
   | "vinfast-parts"
+  | "vinfast-parts-dashboard"
+  | "vinfast-parts-oto"
+  | "vinfast-parts-xemay"
+  | "vinfast-parts-stock"
+  | "vinfast-parts-oto-stock"
+  | "vinfast-parts-xemay-stock"
   | "inventory-dashboard";
 export type TxSource = "cash-fund" | "bank-deposit";
 
@@ -129,4 +143,13 @@ export interface TabInfo {
 export interface SectionRoot {
   labelKey: string;
   group: string;
+}
+
+export interface TabInstance {
+  instanceId: string; // e.g. "erp-invoices-in" or "erp-invoices-in__2"
+  pageKey: PageKey;
+  instanceIndex: 1 | 2;
+  customLabel?: string;
+  url?: string;
+  search?: string;
 }

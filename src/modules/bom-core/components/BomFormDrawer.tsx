@@ -1,19 +1,35 @@
-import React from "react";
+import React, { useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useT } from "@/core/i18n";
 import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
-import { DocumentLineTable } from "@/shared/components/DocumentLineTable";
+import { DataTable } from "@/shared/components/DataTable";
+import { Button } from "@/shared/components/ui/Button";
+import { Input } from "@/shared/components/ui/input";
+import { Textarea } from "@/shared/components/ui/textarea";
 import { Combobox } from "@/shared/components/Combobox";
 import { DatePicker } from "@/shared/components/DatePicker";
-import { SearchInput } from "@/shared/components/SearchInput";
-import {
-  DrawerField,
-  DrawerSection,
-  inputCls,
-} from "@/shared/components/DrawerModal";
+import { DrawerField, DrawerSection } from "@/shared/components/DrawerModal";
+import { CellInput } from "@/shared/components/CellInput";
 import { bomCoreApi, type ErpBom } from "@/modules/bom-core/api/bomCoreApi";
+import {
+  ModuleEntityCustomFieldsSection,
+  validateModuleRequiredFields,
+} from "@/shared/components/ModuleEntityCustomFieldsSection";
+import { moduleConfigApi } from "@/core/api/moduleConfigApi";
 import type { DrawerMode } from "@/shared/stores/useDrawerStore";
 import toast from "react-hot-toast";
-import { Upload, Download, Loader2, Trash2 } from "lucide-react";
+import { ActionDropdown } from "@/shared/components/ActionDropdown";
+import {
+  Download,
+  Loader2,
+  Trash2,
+  ChevronDown,
+  FileSpreadsheet,
+  Plus,
+  AlertCircle,
+} from "lucide-react";
+import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
+import { FilterButton } from "@/shared/components/FilterPanel";
 
 export interface BomLineForm {
   componentItemId: string;
@@ -27,6 +43,9 @@ export interface BomForm {
   bomCode: string;
   bomName: string;
   finishedGoodItemId: string;
+  categoryId?: string;
+  attributes?: Record<string, string>;
+  globalAttributes: Record<string, any>;
   version: string;
   status: string;
   effectiveFrom: string;
@@ -47,6 +66,9 @@ export const emptyForm = (): BomForm => ({
   bomCode: "",
   bomName: "",
   finishedGoodItemId: "",
+  categoryId: "",
+  attributes: {},
+  globalAttributes: {},
   version: "1.0",
   status: "ACTIVE",
   effectiveFrom: "",
@@ -71,6 +93,9 @@ export function buildForm(bom: ErpBom): BomForm {
     bomCode: bom.bomCode ?? "",
     bomName: bom.bomName ?? "",
     finishedGoodItemId: bom.finishedGoodItemId ?? "",
+    categoryId: bom.categoryId ?? "",
+    attributes: bom.attributes ?? {},
+    globalAttributes: bom.globalAttributes ?? {},
     version: bom.version ?? "1.0",
     status: bom.status ?? "ACTIVE",
     effectiveFrom: bom.effectiveFrom ? bom.effectiveFrom.slice(0, 10) : "",
@@ -93,6 +118,15 @@ export function toPayload(form: BomForm) {
     bomCode: form.bomCode.trim(),
     bomName: form.bomName.trim(),
     finishedGoodItemId: form.finishedGoodItemId || undefined,
+    categoryId: form.categoryId || undefined,
+    attributes:
+      form.attributes && Object.keys(form.attributes).length > 0
+        ? form.attributes
+        : undefined,
+    globalAttributes:
+      form.globalAttributes && Object.keys(form.globalAttributes).length > 0
+        ? form.globalAttributes
+        : undefined,
     version: form.version.trim() || "1.0",
     status: form.status || "ACTIVE",
     effectiveFrom: form.effectiveFrom || undefined,
@@ -121,9 +155,13 @@ export interface BomFormDrawerProps {
   saveError: string | null;
   handleSave: (statusTarget?: string) => void;
   itemOptions: Array<{ value: string; label: string }>;
+  fgItemOptions: Array<{ value: string; label: string }>;
   setItemSearch: (search: string) => void;
+  setFgItemSearch: (search: string) => void;
   fetchNextItems: () => void;
+  fetchNextFgItems: () => void;
   loadingItems: boolean;
+  loadingFgItems: boolean;
   addLine: () => void;
   removeLine: (index: number) => void;
   updateLine: (index: number, patch: Partial<BomLineForm>) => void;
@@ -145,9 +183,13 @@ export function BomFormDrawer({
   saveError,
   handleSave,
   itemOptions,
+  fgItemOptions,
   setItemSearch,
+  setFgItemSearch,
   fetchNextItems,
+  fetchNextFgItems,
   loadingItems,
+  loadingFgItems,
   addLine,
   removeLine,
   updateLine,
@@ -158,7 +200,15 @@ export function BomFormDrawer({
   const t = useT();
   const viewOnly = mode === "view";
   const isEditing = mode === "edit";
-  const [lineSearch, setLineSearch] = React.useState("");
+  const isLockedByProduction = Boolean(editing?.hasProduction);
+
+  // Query BOM Global Attribute Defs (bao gồm các thuộc tính mặc định: Màu sắc, Phiên bản)
+  const { data: bomGlobalDefs = [] } = useQuery({
+    queryKey: ["module-config-global-defs", "BOM"],
+    queryFn: () => moduleConfigApi.getGlobalAttributeDefs("BOM"),
+    enabled: open,
+  });
+
   const [submittingStatus, setSubmittingStatus] = React.useState<string | null>(
     null,
   );
@@ -167,6 +217,17 @@ export function BomFormDrawer({
     Array<{ value: string; label: string }>
   >([]);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const [colSortConfig, setColSortConfig] = React.useState<{
+    key: string;
+    direction: "asc" | "desc";
+  } | null>(null);
+  const [colFilters, setColFilters] = React.useState<Record<string, string>>(
+    {},
+  );
+  const [colSelectedFilters, setColSelectedFilters] = React.useState<
+    Record<string, string[]>
+  >({});
 
   const handleDownloadTemplate = async () => {
     try {
@@ -230,13 +291,8 @@ export function BomFormDrawer({
     }
   };
 
-  const filteredLines = form.lines.filter((line) => {
-    if (!lineSearch) return true;
-    const term = lineSearch.toLowerCase();
-    const componentStr = line.componentItemId.toLowerCase();
-    const notesStr = (line.notes || "").toLowerCase();
-    return componentStr.includes(term) || notesStr.includes(term);
-  });
+  const [page, setPage] = React.useState(1);
+  const [pageSize, setPageSize] = React.useState(10);
 
   const mergedItemOptions = React.useMemo(() => {
     const combined = [...extraItemOptions, ...itemOptions];
@@ -245,28 +301,223 @@ export function BomFormDrawer({
     );
   }, [itemOptions, extraItemOptions]);
 
-  const exportActions =
-    editing && onExport
-      ? [
+  const mergedFgItemOptions = React.useMemo(() => {
+    const combined = [...extraItemOptions, ...fgItemOptions];
+    return combined.filter(
+      (v, i, a) => a.findIndex((t) => t.value === v.value) === i,
+    );
+  }, [fgItemOptions, extraItemOptions]);
+
+  const getFilteredLinesForCol = React.useCallback(
+    (excludeCol: string) => {
+      return form.lines.filter((line) => {
+        if (excludeCol !== "component") {
+          if (
+            colFilters.component &&
+            !line.componentItemId
+              .toLowerCase()
+              .includes(colFilters.component.toLowerCase())
+          )
+            return false;
+          if (
+            colSelectedFilters.component?.length &&
+            !colSelectedFilters.component.includes(line.componentItemId)
+          )
+            return false;
+        }
+
+        if (excludeCol !== "componentName") {
+          if (
+            colFilters.componentName ||
+            colSelectedFilters.componentName?.length
+          ) {
+            const opt = mergedItemOptions.find(
+              (o: any) => o.value === line.componentItemId,
+            );
+            const name = opt?.label?.split(" — ")[1] || opt?.label || "";
+            if (
+              colFilters.componentName &&
+              !name
+                .toLowerCase()
+                .includes(colFilters.componentName.toLowerCase())
+            )
+              return false;
+            if (
+              colSelectedFilters.componentName?.length &&
+              !colSelectedFilters.componentName.includes(name)
+            )
+              return false;
+          }
+        }
+
+        if (excludeCol !== "qty") {
+          if (colFilters.qty && !line.qtyRequired.includes(colFilters.qty))
+            return false;
+          if (
+            colSelectedFilters.qty?.length &&
+            !colSelectedFilters.qty.includes(line.qtyRequired)
+          )
+            return false;
+        }
+
+        if (excludeCol !== "uom") {
+          if (
+            colFilters.uom &&
+            !line.uomId.toLowerCase().includes(colFilters.uom.toLowerCase())
+          )
+            return false;
+          if (
+            colSelectedFilters.uom?.length &&
+            !colSelectedFilters.uom.includes(line.uomId)
+          )
+            return false;
+        }
+
+        if (excludeCol !== "scrap") {
+          if (colFilters.scrap && !line.scrapRate.includes(colFilters.scrap))
+            return false;
+          if (
+            colSelectedFilters.scrap?.length &&
+            !colSelectedFilters.scrap.includes(line.scrapRate)
+          )
+            return false;
+        }
+
+        if (excludeCol !== "notes") {
+          if (
+            colFilters.notes &&
+            !line.notes?.toLowerCase().includes(colFilters.notes.toLowerCase())
+          )
+            return false;
+          if (
+            colSelectedFilters.notes?.length &&
+            !colSelectedFilters.notes.includes(line.notes || "")
+          )
+            return false;
+        }
+
+        return true;
+      });
+    },
+    [form.lines, colFilters, colSelectedFilters, mergedItemOptions],
+  );
+
+  const sortedAndFilteredLines = React.useMemo(() => {
+    let arr = getFilteredLinesForCol("none");
+
+    if (colSortConfig) {
+      const { key, direction } = colSortConfig;
+      arr = [...arr].sort((a, b) => {
+        let aVal: any = "";
+        let bVal: any = "";
+
+        if (key === "component") {
+          aVal = a.componentItemId;
+          bVal = b.componentItemId;
+        } else if (key === "componentName") {
+          const aOpt = mergedItemOptions.find(
+            (o: any) => o.value === a.componentItemId,
+          );
+          aVal = aOpt?.label?.split(" — ")[1] || aOpt?.label || "";
+          const bOpt = mergedItemOptions.find(
+            (o: any) => o.value === b.componentItemId,
+          );
+          bVal = bOpt?.label?.split(" — ")[1] || bOpt?.label || "";
+        } else if (key === "qty") {
+          aVal = parseFloat(a.qtyRequired) || 0;
+          bVal = parseFloat(b.qtyRequired) || 0;
+        } else if (key === "uom") {
+          aVal = a.uomId;
+          bVal = b.uomId;
+        } else if (key === "scrap") {
+          aVal = parseFloat(a.scrapRate) || 0;
+          bVal = parseFloat(b.scrapRate) || 0;
+        } else if (key === "notes") {
+          aVal = a.notes || "";
+          bVal = b.notes || "";
+        }
+
+        if (aVal < bVal) return direction === "asc" ? -1 : 1;
+        if (aVal > bVal) return direction === "asc" ? 1 : -1;
+        return 0;
+      });
+    }
+
+    return arr;
+  }, [colSortConfig, getFilteredLinesForCol]);
+
+  React.useEffect(() => {
+    setPage(1);
+  }, [sortedAndFilteredLines.length]);
+
+  const total = sortedAndFilteredLines.length;
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+
+  const validateForm = () => {
+    const missing = validateModuleRequiredFields({
+      globalDefs: bomGlobalDefs,
+      globalAttributes: form.globalAttributes,
+      includeSystemAttributes: true,
+      moduleKey: "BOM",
+      t,
+    });
+    if (missing.length > 0) {
+      toast.error(
+        `${t("Vui lòng chọn hoặc điền thuộc tính bắt buộc")}: ${missing.join(", ")}`,
+      );
+      return false;
+    }
+    return true;
+  };
+
+  const onSaveWithValidation = (statusTarget?: string) => {
+    if (!validateForm()) return;
+    setSubmittingStatus(statusTarget || null);
+    handleSave(statusTarget);
+  };
+
+  const footerLeft =
+    editing && onExport ? (
+      <ActionDropdown
+        align="start"
+        items={[
           {
-            label: t("common.exportExcel"),
-            onClick: () => onExport("xlsx"),
-            variant: "outline" as const,
-            disabled: drawerLoading || saving,
+            groupLabel: t("common.exportGroup", "XUẤT DỮ LIỆU"),
+            items: [
+              {
+                label: t("common.exportExcel", "Tải file Excel"),
+                icon: (
+                  <FileSpreadsheet className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                ),
+                onClick: () => onExport("xlsx"),
+                disabled: drawerLoading || saving,
+              },
+              {
+                label: t("common.exportCsv", "Tải file CSV"),
+                icon: <FileSpreadsheet className="w-4 h-4 text-primary" />,
+                onClick: () => onExport("csv"),
+                disabled: drawerLoading || saving,
+              },
+            ],
           },
-          {
-            label: t("common.exportCsv"),
-            onClick: () => onExport("csv"),
-            variant: "outline" as const,
-            disabled: drawerLoading || saving,
-          },
-        ]
-      : [];
+        ]}
+        customTrigger={
+          <button
+            type="button"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium border border-[color:var(--border)] bg-white dark:bg-zinc-800 hover:bg-[color:var(--bg-muted)] text-[color:var(--fg)] shadow-sm transition-colors"
+          >
+            <span className="font-semibold text-[color:var(--fg)]">
+              {t("common.actions", "Thao tác")}
+            </span>
+            <ChevronDown className="w-3.5 h-3.5 text-[color:var(--faint)]" />
+          </button>
+        }
+      />
+    ) : undefined;
 
   const drawerActions =
     viewOnly || drawerLoading
       ? [
-          ...exportActions,
           {
             label: t("Đóng"),
             onClick: onClose,
@@ -288,8 +539,7 @@ export function BomFormDrawer({
               loading: saving && submittingStatus === "DRAFT",
               disabled: saving,
               onClick: () => {
-                setSubmittingStatus("DRAFT");
-                handleSave("DRAFT");
+                onSaveWithValidation("DRAFT");
               },
             },
             {
@@ -298,13 +548,11 @@ export function BomFormDrawer({
               loading: saving && submittingStatus === "ACTIVE",
               disabled: saving,
               onClick: () => {
-                setSubmittingStatus("ACTIVE");
-                handleSave("ACTIVE");
+                onSaveWithValidation("ACTIVE");
               },
             },
           ]
         : [
-            ...exportActions,
             {
               label: t("Hủy"),
               onClick: onClose,
@@ -317,16 +565,413 @@ export function BomFormDrawer({
               loading: saving && submittingStatus === "ACTIVE",
               disabled: saving,
               onClick: () => {
-                setSubmittingStatus("ACTIVE");
-                handleSave("ACTIVE");
+                onSaveWithValidation("ACTIVE");
               },
             },
           ];
+
+  const handleColSort = (key: string, state: "asc" | "desc" | "none") => {
+    if (state === "none") setColSortConfig(null);
+    else setColSortConfig({ key, direction: state });
+  };
+
+  const handleColSearch = (key: string, val: string) => {
+    setColFilters((prev) => ({ ...prev, [key]: val }));
+  };
+
+  const handleColFilterChange = (key: string, vals: string[]) => {
+    setColSelectedFilters((prev) => ({ ...prev, [key]: vals }));
+  };
+
+  const componentOptions = React.useMemo(() => {
+    const lines = getFilteredLinesForCol("component");
+    const vals = new Set(lines.map((l) => l.componentItemId));
+    return Array.from(vals)
+      .filter(Boolean)
+      .map((v) => {
+        const opt = mergedItemOptions.find((o: any) => o.value === v);
+        const code = opt?.label?.split(" — ")[0] || v;
+        return { label: code, value: v };
+      });
+  }, [getFilteredLinesForCol, mergedItemOptions]);
+
+  const componentNameOptions = React.useMemo(() => {
+    const lines = getFilteredLinesForCol("componentName");
+    const vals = new Set(
+      lines.map((l) => {
+        const opt = mergedItemOptions.find(
+          (o: any) => o.value === l.componentItemId,
+        );
+        return opt?.label?.split(" — ")[1] || opt?.label || "";
+      }),
+    );
+    return Array.from(vals)
+      .filter(Boolean)
+      .map((v) => ({ label: v, value: v }));
+  }, [getFilteredLinesForCol, mergedItemOptions]);
+
+  const qtyOptions = React.useMemo(() => {
+    const lines = getFilteredLinesForCol("qty");
+    const vals = new Set(lines.map((l) => l.qtyRequired));
+    return Array.from(vals)
+      .filter((v) => v !== "0")
+      .map((v) => ({ label: v, value: v }));
+  }, [getFilteredLinesForCol]);
+
+  const uomOptionsForFilter = React.useMemo(() => {
+    const lines = getFilteredLinesForCol("uom");
+    const vals = new Set(lines.map((l) => l.uomId));
+    return Array.from(vals)
+      .filter(Boolean)
+      .map((v) => {
+        const opt = uomOptions?.find((o: any) => o.value === v);
+        return { label: opt?.label || v, value: v };
+      });
+  }, [getFilteredLinesForCol, uomOptions]);
+
+  const scrapOptions = React.useMemo(() => {
+    const lines = getFilteredLinesForCol("scrap");
+    const vals = new Set(lines.map((l) => l.scrapRate));
+    return Array.from(vals)
+      .filter(Boolean)
+      .map((v) => ({ label: v, value: v }));
+  }, [getFilteredLinesForCol]);
+
+  const notesOptions = React.useMemo(() => {
+    const lines = getFilteredLinesForCol("notes");
+    const vals = new Set(lines.map((l) => l.notes || ""));
+    return Array.from(vals)
+      .filter(Boolean)
+      .map((v) => ({ label: v, value: v }));
+  }, [getFilteredLinesForCol]);
+
+  const activeFilterCount = useMemo(() => {
+    let count = 0;
+    Object.values(colFilters).forEach((v) => {
+      if (v) count++;
+    });
+    Object.values(colSelectedFilters).forEach((v) => {
+      count += v?.length || 0;
+    });
+    return count;
+  }, [colFilters, colSelectedFilters]);
+
+  const clearAllFilters = () => {
+    setColFilters({});
+    setColSelectedFilters({});
+  };
+
+  const tableColumns = useMemo(
+    () => [
+      {
+        key: "index",
+        header: "#",
+        size: 40,
+        enableResizing: false,
+        headerClassName: "text-center w-[40px] min-w-[40px]",
+        className: "text-center w-[40px] min-w-[40px]",
+        cell: (_: any, idx: number) => (
+          <span className="text-muted-foreground">{idx}</span>
+        ),
+      },
+      {
+        key: "component",
+        header: (
+          <TableColumnHeaderFilter
+            title={t("Mã linh kiện")}
+            sortState={
+              colSortConfig?.key === "component"
+                ? colSortConfig.direction
+                : "none"
+            }
+            onSortChange={(state) => handleColSort("component", state)}
+            searchValue={colFilters.component || ""}
+            onSearchChange={(val) => handleColSearch("component", val)}
+            selectedFilters={colSelectedFilters.component || []}
+            onFilterChange={(vals) => handleColFilterChange("component", vals)}
+            filterOptions={componentOptions}
+            align="center"
+          />
+        ),
+        minSize: 150,
+        enableResizing: true,
+        headerClassName: "min-w-[150px]",
+        className: "min-w-[150px] p-0 align-middle",
+        cell: (line: BomLineForm, _: number, meta: any) => {
+          const {
+            viewOnly,
+            isLockedByProduction,
+            form,
+            updateLine,
+            mergedItemOptions,
+            itemUomMap,
+            setItemSearch,
+            fetchNextItems,
+            loadingItems,
+          } = meta;
+          const trueIdx = form.lines.indexOf(line);
+          return (
+            <Combobox
+              variant="spreadsheet"
+              value={line.componentItemId}
+              readOnly={viewOnly || isLockedByProduction}
+              onChange={(value) => {
+                const patch: Partial<BomLineForm> = {
+                  componentItemId: value || "",
+                };
+                if (value && itemUomMap && itemUomMap.has(value)) {
+                  patch.uomId = itemUomMap.get(value)!;
+                }
+                updateLine(trueIdx, patch);
+              }}
+              options={mergedItemOptions.map((opt: any) => ({
+                ...opt,
+                label: opt.label.split(" — ")[0],
+                searchText: opt.label,
+              }))}
+              placeholder={t("Chọn linh kiện")}
+              searchPlaceholder={t("Tìm SKU / tên linh kiện")}
+              onSearch={setItemSearch}
+              onScrollBottom={fetchNextItems}
+              loading={loadingItems}
+            />
+          );
+        },
+      },
+      {
+        key: "componentName",
+        header: (
+          <TableColumnHeaderFilter
+            title={t("Tên linh kiện")}
+            sortState={
+              colSortConfig?.key === "componentName"
+                ? colSortConfig.direction
+                : "none"
+            }
+            onSortChange={(state) => handleColSort("componentName", state)}
+            searchValue={colFilters.componentName || ""}
+            onSearchChange={(val) => handleColSearch("componentName", val)}
+            selectedFilters={colSelectedFilters.componentName || []}
+            onFilterChange={(vals) =>
+              handleColFilterChange("componentName", vals)
+            }
+            filterOptions={componentNameOptions}
+            align="center"
+          />
+        ),
+        minSize: 250,
+        enableResizing: true,
+        headerClassName: "min-w-[250px]",
+        className: "min-w-[250px] p-0 align-middle",
+        cell: (line: BomLineForm, _: number, meta: any) => {
+          const { mergedItemOptions } = meta;
+          const opt = mergedItemOptions.find(
+            (o: any) => o.value === line.componentItemId,
+          );
+          return (
+            <div className="px-3 truncate text-sm">
+              {opt?.label?.split(" — ")[1] || opt?.label || "—"}
+            </div>
+          );
+        },
+      },
+      {
+        key: "qty",
+        header: (
+          <TableColumnHeaderFilter
+            title={t("Số lượng")}
+            sortState={
+              colSortConfig?.key === "qty" ? colSortConfig.direction : "none"
+            }
+            onSortChange={(state) => handleColSort("qty", state)}
+            searchValue={colFilters.qty || ""}
+            onSearchChange={(val) => handleColSearch("qty", val)}
+            selectedFilters={colSelectedFilters.qty || []}
+            onFilterChange={(vals) => handleColFilterChange("qty", vals)}
+            filterOptions={qtyOptions}
+            align="center"
+          />
+        ),
+        minSize: 150,
+        enableResizing: true,
+        headerClassName: "min-w-[150px]",
+        className: "min-w-[150px] p-0 align-middle",
+        cell: (line: BomLineForm, _: number, meta: any) => {
+          const { viewOnly, isLockedByProduction, form, updateLine } = meta;
+          const trueIdx = form.lines.indexOf(line);
+          return (
+            <CellInput
+              type="number"
+              step="0.1"
+              value={line.qtyRequired}
+              disabled={viewOnly || isLockedByProduction}
+              onBlur={(e) => {
+                const val = parseFloat(e.target.value);
+                if (!isNaN(val)) {
+                  updateLine(trueIdx, { qtyRequired: val.toFixed(1) });
+                }
+              }}
+              onValueChange={(val) => updateLine(trueIdx, { qtyRequired: val })}
+              className="text-right tabular-nums font-semibold text-primary"
+            />
+          );
+        },
+      },
+      {
+        key: "uom",
+        header: (
+          <TableColumnHeaderFilter
+            title={t("ĐVT")}
+            sortState={
+              colSortConfig?.key === "uom" ? colSortConfig.direction : "none"
+            }
+            onSortChange={(state) => handleColSort("uom", state)}
+            searchValue={colFilters.uom || ""}
+            onSearchChange={(val) => handleColSearch("uom", val)}
+            selectedFilters={colSelectedFilters.uom || []}
+            onFilterChange={(vals) => handleColFilterChange("uom", vals)}
+            filterOptions={uomOptionsForFilter}
+            align="center"
+          />
+        ),
+        minSize: 150,
+        enableResizing: true,
+        headerClassName: "min-w-[150px]",
+        className: "min-w-[150px] p-0 align-middle",
+        cell: (line: BomLineForm, _: number, meta: any) => {
+          const {
+            viewOnly,
+            isLockedByProduction,
+            form,
+            updateLine,
+            uomOptions,
+          } = meta;
+          const trueIdx = form.lines.indexOf(line);
+          return (
+            <Combobox
+              variant="spreadsheet"
+              value={line.uomId}
+              readOnly={viewOnly || isLockedByProduction}
+              onChange={(value) => updateLine(trueIdx, { uomId: value || "" })}
+              options={uomOptions || []}
+              placeholder={t("Chọn ĐVT")}
+              allowClear={false}
+            />
+          );
+        },
+      },
+      {
+        key: "scrap",
+        header: (
+          <TableColumnHeaderFilter
+            title={t("Tỷ lệ hao hụt (%)")}
+            sortState={
+              colSortConfig?.key === "scrap" ? colSortConfig.direction : "none"
+            }
+            onSortChange={(state) => handleColSort("scrap", state)}
+            searchValue={colFilters.scrap || ""}
+            onSearchChange={(val) => handleColSearch("scrap", val)}
+            selectedFilters={colSelectedFilters.scrap || []}
+            onFilterChange={(vals) => handleColFilterChange("scrap", vals)}
+            filterOptions={scrapOptions}
+            align="center"
+          />
+        ),
+        minSize: 150,
+        enableResizing: true,
+        headerClassName: "min-w-[150px]",
+        className: "min-w-[150px] p-0 align-middle",
+        cell: (line: BomLineForm, _: number, meta: any) => {
+          const { viewOnly, isLockedByProduction, form, updateLine } = meta;
+          const trueIdx = form.lines.indexOf(line);
+          return (
+            <CellInput
+              type="number"
+              step="0.01"
+              value={line.scrapRate}
+              disabled={viewOnly || isLockedByProduction}
+              onBlur={(e) => {
+                const val = parseFloat(e.target.value);
+                if (!isNaN(val)) {
+                  updateLine(trueIdx, { scrapRate: val.toFixed(2) });
+                }
+              }}
+              onValueChange={(val) => updateLine(trueIdx, { scrapRate: val })}
+              className="text-right tabular-nums text-amber-700"
+            />
+          );
+        },
+      },
+      {
+        key: "notes",
+        header: (
+          <TableColumnHeaderFilter
+            title={t("Ghi chú dòng")}
+            sortState={
+              colSortConfig?.key === "notes" ? colSortConfig.direction : "none"
+            }
+            onSortChange={(state) => handleColSort("notes", state)}
+            searchValue={colFilters.notes || ""}
+            onSearchChange={(val) => handleColSearch("notes", val)}
+            selectedFilters={colSelectedFilters.notes || []}
+            onFilterChange={(vals) => handleColFilterChange("notes", vals)}
+            filterOptions={notesOptions}
+            align="center"
+          />
+        ),
+        minSize: 150,
+        enableResizing: true,
+        headerClassName: "min-w-[150px]",
+        className: "min-w-[150px] p-0 align-middle",
+        cell: (line: BomLineForm, _: number, meta: any) => {
+          const { viewOnly, isLockedByProduction, form, updateLine } = meta;
+          const trueIdx = form.lines.indexOf(line);
+          return (
+            <CellInput
+              value={line.notes}
+              disabled={viewOnly || isLockedByProduction}
+              onValueChange={(val) => updateLine(trueIdx, { notes: val })}
+            />
+          );
+        },
+      },
+    ],
+    [t, colSortConfig, colFilters, mergedItemOptions],
+  );
+
+  const actionColumnDef = useMemo(() => {
+    if (viewOnly || isLockedByProduction) return undefined;
+    return {
+      header: (
+        <div className="text-center font-bold text-[11px] uppercase tracking-wider text-muted-foreground">
+          {t("XÓA")}
+        </div>
+      ),
+      cell: (line: BomLineForm, _: number, meta: any) => {
+        const { form, removeLine } = meta;
+        const trueIdx = form.lines.indexOf(line);
+        return (
+          <div className="flex items-center justify-center">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+              onClick={() => removeLine(trueIdx)}
+              title={t("common.deleteRow", "Xóa dòng")}
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </Button>
+          </div>
+        );
+      },
+    };
+  }, [viewOnly, isLockedByProduction, t]);
 
   return (
     <StandardFormDrawer
       open={open}
       mode={mode}
+      collapsibleRightPanel={true}
       onClose={onClose}
       onToggleEdit={onToggleEdit}
       title={
@@ -345,287 +990,285 @@ export function BomFormDrawer({
       }
       subtitle={editing ? editing.bomCode : t("Định mức nguyên vật liệu")}
       actions={drawerActions}
+      footerLeft={footerLeft}
       size="xl"
-      rightPanelTitle={t("Thông tin chung")}
       error={saveError}
       loading={drawerLoading}
       leftPanel={
-        <DrawerSection
-          title={
-            <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full justify-between pr-4 mt-2 sm:mt-0">
-              <div className="flex items-center gap-3">
-                <span className="shrink-0 mb-2 sm:mb-0">
-                  {t("Định mức nguyên vật liệu")} (
-                  {lineSearch
-                    ? `${filteredLines.length}/${form.lines.length}`
-                    : form.lines.length}
-                  )
-                </span>
-                {!viewOnly && (
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={handleDownloadTemplate}
-                      className="inline-flex items-center gap-1 text-xs px-2 py-1 bg-white border border-gray-300 text-gray-700 rounded hover:bg-gray-50 focus:outline-none"
-                    >
-                      <Download size={14} />
-                      {t("Template")}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      disabled={importing}
-                      className="inline-flex items-center gap-1 text-xs px-2 py-1 bg-white border border-gray-300 text-gray-700 rounded hover:bg-gray-50 focus:outline-none disabled:opacity-50"
-                    >
-                      {importing ? (
-                        <Loader2 size={14} className="animate-spin" />
-                      ) : (
-                        <Upload size={14} />
-                      )}
-                      {t("Tải lên")}
-                    </button>
-                    <input
-                      type="file"
-                      ref={fileInputRef}
-                      className="hidden"
-                      accept=".xlsx,.csv"
-                      onChange={handleFileUpload}
-                    />
-                    {(!editing || form.status === "DRAFT") && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (
-                            window.confirm(
-                              t("Bạn có chắc chắn muốn xóa tất cả linh kiện?"),
-                            )
-                          ) {
-                            setForm((prev) => ({
-                              ...prev,
-                              lines: [
+        <div className="h-full flex flex-col flex-1 min-h-0">
+          {/* Hidden File Input for Excel Import */}
+          <input
+            type="file"
+            ref={fileInputRef}
+            className="hidden"
+            accept=".xlsx,.csv"
+            onChange={handleFileUpload}
+          />
+
+          {/* Section: Định mức nguyên vật liệu */}
+          <DrawerSection
+            className="h-full flex flex-col flex-1 min-h-0 mb-0"
+            title={
+              <span className="shrink-0">
+                {t("Định mức nguyên vật liệu")} (
+                {sortedAndFilteredLines.length < form.lines.length
+                  ? `${sortedAndFilteredLines.length}/${form.lines.length}`
+                  : form.lines.length}
+                )
+              </span>
+            }
+            titleExtra={
+              <div className="flex items-center gap-2 flex-wrap justify-end">
+                {!viewOnly && !isLockedByProduction && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-7 text-xs font-semibold gap-1"
+                    onClick={addLine}
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    {t("common.addRow", "Thêm dòng")}
+                  </Button>
+                )}
+
+                {!viewOnly && !isLockedByProduction && (
+                  <ActionDropdown
+                    align="end"
+                    customTrigger={
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={importing}
+                        className="h-7 text-xs font-semibold gap-1"
+                      >
+                        {importing && (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        )}
+                        <span>{t("common.actions", "Thao tác")}</span>
+                        <ChevronDown className="w-3.5 h-3.5 opacity-60" />
+                      </Button>
+                    }
+                    items={[
+                      {
+                        groupLabel: t("EXCEL"),
+                        items: [
+                          {
+                            label: t("Tải file mẫu Excel"),
+                            icon: (
+                              <Download className="w-4 h-4 text-emerald-600" />
+                            ),
+                            onClick: handleDownloadTemplate,
+                          },
+                          {
+                            label: t("Nhập từ file Excel"),
+                            icon: (
+                              <FileSpreadsheet className="w-4 h-4 text-primary" />
+                            ),
+                            onClick: () => fileInputRef.current?.click(),
+                          },
+                        ],
+                      },
+                      ...(!editing || form.status === "DRAFT"
+                        ? [
+                            {
+                              groupLabel: t("KHÁC"),
+                              items: [
                                 {
-                                  componentItemId: "",
-                                  qtyRequired: "1",
-                                  uomId: "",
-                                  scrapRate: "0",
-                                  notes: "",
+                                  label: t("Xóa tất cả"),
+                                  icon: (
+                                    <Trash2 className="w-4 h-4 text-destructive" />
+                                  ),
+                                  variant: "danger" as const,
+                                  onClick: () => {
+                                    if (
+                                      window.confirm(
+                                        t(
+                                          "Bạn có chắc chắn muốn xóa tất cả linh kiện?",
+                                        ),
+                                      )
+                                    ) {
+                                      setForm((prev) => ({
+                                        ...prev,
+                                        lines: [emptyLine()],
+                                      }));
+                                    }
+                                  },
                                 },
                               ],
-                            }));
-                          }
-                        }}
-                        className="inline-flex items-center gap-1 text-xs px-2 py-1 bg-white border border-gray-300 text-red-600 rounded hover:bg-red-50 focus:outline-none ml-1"
-                      >
-                        <Trash2 size={14} />
-                        {t("Xóa tất cả")}
-                      </button>
-                    )}
-                  </div>
+                            },
+                          ]
+                        : []),
+                    ]}
+                  />
+                )}
+
+                {activeFilterCount > 0 && (
+                  <FilterButton
+                    onClick={() => {}}
+                    activeCount={activeFilterCount}
+                    onClear={clearAllFilters}
+                  />
                 )}
               </div>
-              <div className="w-full sm:w-64 relative font-normal text-sm">
-                <SearchInput
-                  className="w-full"
-                  placeholder={t("Tìm kiếm...")}
-                  value={lineSearch}
-                  onChange={setLineSearch}
-                />
-              </div>
+            }
+          >
+            <div className="flex-1 min-h-0 flex flex-col mt-1">
+              <DataTable
+                variant="spreadsheet"
+                containerClassName="flex-1 min-h-[420px] max-h-[calc(100vh-270px)] overflow-auto"
+                enableColumnResizing={true}
+                items={sortedAndFilteredLines}
+                getRowKey={(item) => String(form.lines.indexOf(item))}
+                emptyLabel={t("Không có dữ liệu")}
+                columns={tableColumns}
+                page={page}
+                pageSize={pageSize}
+                total={total}
+                totalPages={totalPages}
+                onPage={setPage}
+                onPageSize={(val) => {
+                  setPageSize(val);
+                  setPage(1);
+                }}
+                tableMeta={{
+                  viewOnly,
+                  editing,
+                  isEditing,
+                  isLockedByProduction,
+                  form,
+                  updateLine,
+                  removeLine,
+                  mergedItemOptions,
+                  itemUomMap,
+                  uomOptions,
+                  setItemSearch,
+                  fetchNextItems,
+                  loadingItems,
+                }}
+                actionsColumn={actionColumnDef}
+              />
             </div>
-          }
-        >
-          <DocumentLineTable
-            tableContainerClassName="max-h-[calc(100vh-280px)] overflow-y-auto"
-            data={filteredLines}
-            getRowKey={(_, idx) => String(idx)}
-            viewOnly={viewOnly}
-            onAddLine={isEditing ? undefined : addLine}
-            onRemoveLine={isEditing ? undefined : removeLine}
-            columns={[
-              {
-                key: "component",
-                header: t("Linh kiện"),
-                minWidth: 240,
-                cell: (line, idx) => (
-                  <Combobox
-                    value={line.componentItemId}
-                    readOnly={viewOnly || !!editing}
-                    onChange={(value) => {
-                      const patch: Partial<BomLineForm> = {
-                        componentItemId: value,
-                      };
-                      if (itemUomMap && itemUomMap.has(value)) {
-                        patch.uomId = itemUomMap.get(value)!;
-                      }
-                      updateLine(idx, patch);
-                    }}
-                    options={mergedItemOptions}
-                    placeholder={t("Chọn linh kiện")}
-                    searchPlaceholder={t("Tìm SKU / tên linh kiện")}
-                    onSearch={setItemSearch}
-                    onScrollBottom={fetchNextItems}
-                    loading={loadingItems}
-                  />
-                ),
-              },
-              {
-                key: "qty",
-                header: t("Số lượng"),
-                minWidth: 90,
-                cell: (line, idx) => (
-                  <input
-                    type="number"
-                    step="0.1"
-                    value={line.qtyRequired}
-                    readOnly={viewOnly || !!editing}
-                    onBlur={(e) => {
-                      const val = parseFloat(e.target.value);
-                      if (!isNaN(val)) {
-                        updateLine(idx, { qtyRequired: val.toFixed(1) });
-                      }
-                    }}
-                    onChange={(e) =>
-                      updateLine(idx, { qtyRequired: e.target.value })
-                    }
-                    className={inputCls}
-                  />
-                ),
-              },
-              {
-                key: "uom",
-                header: t("ĐVT"),
-                minWidth: 120,
-                cell: (line, idx) => (
-                  <Combobox
-                    value={line.uomId}
-                    readOnly={viewOnly || !!editing}
-                    onChange={(value) => updateLine(idx, { uomId: value })}
-                    options={uomOptions || []}
-                    placeholder={t("Chọn ĐVT")}
-                    allowClear={false}
-                  />
-                ),
-              },
-              {
-                key: "scrap",
-                header: t("Tỷ lệ hao hụt (%)"),
-                minWidth: 95,
-                cell: (line, idx) => (
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={line.scrapRate}
-                    readOnly={viewOnly || !!editing}
-                    onBlur={(e) => {
-                      const val = parseFloat(e.target.value);
-                      if (!isNaN(val)) {
-                        updateLine(idx, { scrapRate: val.toFixed(2) });
-                      }
-                    }}
-                    onChange={(e) =>
-                      updateLine(idx, { scrapRate: e.target.value })
-                    }
-                    className={inputCls}
-                  />
-                ),
-              },
-              {
-                key: "notes",
-                header: t("Ghi chú dòng"),
-                minWidth: 150,
-                cell: (line, idx) => (
-                  <input
-                    value={line.notes}
-                    readOnly={viewOnly}
-                    onChange={(e) => updateLine(idx, { notes: e.target.value })}
-                    className={inputCls}
-                  />
-                ),
-              },
-            ]}
-          />
-        </DrawerSection>
+          </DrawerSection>
+        </div>
       }
       rightPanel={
-        <div className="flex flex-col gap-3">
-          <DrawerField label={t("Mã BOM")} required>
-            <input
-              value={form.bomCode}
-              readOnly={viewOnly || !!editing}
-              onChange={(e) =>
-                setForm((prev) => ({ ...prev, bomCode: e.target.value }))
-              }
-              className={inputCls}
-            />
-          </DrawerField>
-          <DrawerField label={t("Version")} required>
-            <input
-              value={form.version}
-              readOnly={viewOnly || !!editing}
-              onChange={(e) =>
-                setForm((prev) => ({ ...prev, version: e.target.value }))
-              }
-              className={inputCls}
-            />
-          </DrawerField>
-          <DrawerField label={t("Tên BOM")} required>
-            <input
-              value={form.bomName}
-              readOnly={viewOnly || !!editing}
-              onChange={(e) =>
-                setForm((prev) => ({ ...prev, bomName: e.target.value }))
-              }
-              className={inputCls}
-            />
-          </DrawerField>
-          <DrawerField label={t("Thành phẩm")}>
-            <Combobox
-              value={form.finishedGoodItemId}
-              readOnly={viewOnly || !!editing}
-              onChange={(value) =>
-                setForm((prev) => ({ ...prev, finishedGoodItemId: value }))
-              }
-              options={mergedItemOptions}
-              placeholder={t("Chọn thành phẩm")}
-              searchPlaceholder={t("Tìm SKU / tên thành phẩm")}
-              onSearch={setItemSearch}
-              onScrollBottom={fetchNextItems}
-              loading={loadingItems}
-              allowClear
-            />
-          </DrawerField>
-          <DrawerField label={t("Hiệu lực từ")}>
-            <DatePicker
-              value={form.effectiveFrom}
-              disabled={viewOnly}
-              onChange={(value) =>
-                setForm((prev) => ({ ...prev, effectiveFrom: value }))
-              }
-              className="w-full"
-              placeholder="DD/MM/YYYY"
-            />
-          </DrawerField>
-          <DrawerField label={t("Hiệu lực đến")}>
-            <DatePicker
-              value={form.effectiveTo}
-              disabled={viewOnly}
-              onChange={(value) =>
-                setForm((prev) => ({ ...prev, effectiveTo: value }))
-              }
-              className="w-full"
-              placeholder="DD/MM/YYYY"
-            />
-          </DrawerField>
-          <DrawerField label={t("Ghi chú")}>
-            <textarea
-              value={form.notes}
-              readOnly={viewOnly}
-              onChange={(e) =>
-                setForm((prev) => ({ ...prev, notes: e.target.value }))
-              }
-              className={`${inputCls} min-h-[88px] resize-y`}
-            />
-          </DrawerField>
+        <div className="flex flex-col gap-4">
+          {/* Cảnh báo khi BOM đã có sản xuất */}
+          {isLockedByProduction && (
+            <div className="p-2.5 rounded-lg border border-amber-500/30 bg-amber-500/10 text-xs text-amber-800 dark:text-amber-300 flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <span>
+                {t(
+                  "bom.lockedByProductionNotice",
+                  "BOM đã phát sinh sản xuất: Chỉ có thể chỉnh sửa Hiệu lực đến và Ghi chú.",
+                )}
+              </span>
+            </div>
+          )}
+
+          {/* Section: Thông tin chung */}
+          <DrawerSection title={t("Thông tin chung")}>
+            <div className="flex flex-col gap-3">
+              <DrawerField label={t("Mã BOM")} required>
+                <Input
+                  value={form.bomCode}
+                  readOnly={viewOnly || !!editing || isLockedByProduction}
+                  onChange={(e) =>
+                    setForm((prev) => ({ ...prev, bomCode: e.target.value }))
+                  }
+                  placeholder={t("Mã BOM...")}
+                />
+              </DrawerField>
+              <DrawerField label={t("Tên BOM")} required>
+                <Input
+                  value={form.bomName}
+                  readOnly={viewOnly || !!editing || isLockedByProduction}
+                  onChange={(e) =>
+                    setForm((prev) => ({ ...prev, bomName: e.target.value }))
+                  }
+                  placeholder={t("Tên BOM...")}
+                />
+              </DrawerField>
+              <DrawerField label={t("Thành phẩm")}>
+                <Combobox
+                  value={form.finishedGoodItemId}
+                  readOnly={viewOnly || !!editing || isLockedByProduction}
+                  onChange={(value) =>
+                    setForm((prev) => ({ ...prev, finishedGoodItemId: value }))
+                  }
+                  options={mergedFgItemOptions}
+                  placeholder={t("Chọn thành phẩm")}
+                  searchPlaceholder={t("Tìm SKU / tên thành phẩm")}
+                  onSearch={setFgItemSearch}
+                  onScrollBottom={fetchNextFgItems}
+                  loading={loadingFgItems}
+                  allowClear
+                />
+              </DrawerField>
+              <DrawerField label={t("Hiệu lực từ")}>
+                <DatePicker
+                  value={form.effectiveFrom}
+                  disabled={viewOnly || isLockedByProduction}
+                  onChange={(value) =>
+                    setForm((prev) => ({ ...prev, effectiveFrom: value }))
+                  }
+                  className="w-full"
+                  placeholder="DD/MM/YYYY"
+                />
+              </DrawerField>
+              <DrawerField label={t("Hiệu lực đến")}>
+                <DatePicker
+                  value={form.effectiveTo}
+                  disabled={viewOnly}
+                  onChange={(value) =>
+                    setForm((prev) => ({ ...prev, effectiveTo: value }))
+                  }
+                  className="w-full"
+                  placeholder="DD/MM/YYYY"
+                />
+              </DrawerField>
+              <DrawerField label={t("Ghi chú")}>
+                <Textarea
+                  value={form.notes}
+                  readOnly={viewOnly}
+                  onChange={(e) =>
+                    setForm((prev) => ({ ...prev, notes: e.target.value }))
+                  }
+                  placeholder={t("Ghi chú thêm...")}
+                  className="min-h-[80px] resize-y"
+                />
+              </DrawerField>
+            </div>
+          </DrawerSection>
+
+          {/* Section: Thuộc tính (ModuleEntityCustomFieldsSection) */}
+          <ModuleEntityCustomFieldsSection
+            moduleKey="BOM"
+            entityId={editing?.id}
+            editMode={!viewOnly && !isLockedByProduction}
+            includeSystemAttributes={true}
+            hideCategorySection={true}
+            globalAttributes={form.globalAttributes}
+            onGlobalAttributesChange={(attrs) => {
+              const versionDefId = bomGlobalDefs.find(
+                (d) => d.code === "version",
+              )?.id;
+              const newVersion =
+                attrs.version ??
+                (versionDefId ? attrs[versionDefId] : undefined);
+              setForm((prev) => ({
+                ...prev,
+                globalAttributes: attrs,
+                version:
+                  newVersion !== undefined && String(newVersion).trim() !== ""
+                    ? String(newVersion).trim()
+                    : prev.version,
+              }));
+            }}
+            globalTitle={t("bomConfig.attributes", "Thuộc tính")}
+            globalCollapsible={true}
+            globalDefaultCollapsed={false}
+          />
         </div>
       }
     />

@@ -6,6 +6,14 @@ import {
 } from "../api/erpInvoicesCoreApi";
 import { extractApiError } from "@/shared/utils/apiError";
 
+function createClientId() {
+  const maybeCrypto = (globalThis as any)?.crypto;
+  if (maybeCrypto && typeof maybeCrypto.randomUUID === "function") {
+    return maybeCrypto.randomUUID();
+  }
+  return `tmp-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
 export type Step = "select" | "importing" | "result";
 export type Direction = "IN" | "OUT";
 
@@ -57,7 +65,7 @@ export function useInvoiceXmlUpload(
           const ext = f.name.toLowerCase().split(".").pop() || "";
           return {
             file: f,
-            id: crypto.randomUUID(),
+            id: createClientId(),
             type: ext as "xml" | "pdf" | "zip",
           };
         });
@@ -150,7 +158,7 @@ export function useInvoiceXmlUpload(
       }
 
       let finalResult: BulkImportResult = {
-        importId: crypto.randomUUID(),
+        importId: createClientId(),
         direction,
         total: targetFiles.length,
         created: 0,

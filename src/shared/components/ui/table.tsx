@@ -17,7 +17,7 @@ const TableHeader = React.forwardRef<
   HTMLTableSectionElement,
   React.HTMLAttributes<HTMLTableSectionElement>
 >(({ className, ...props }, ref) => (
-  <thead ref={ref} className={cn(className)} {...props} />
+  <thead ref={ref} className={cn("table-header-glass", className)} {...props} />
 ));
 TableHeader.displayName = "TableHeader";
 
@@ -78,7 +78,7 @@ const TableFooter = React.forwardRef<
   <tfoot
     ref={ref}
     className={cn(
-      "border-t border-[color:var(--border-light)] bg-muted/50 font-medium",
+      "border-t border-border table-footer-glass shadow-[0_-2px_6px_rgba(0,0,0,0.04)] font-medium",
       className,
     )}
     {...props}

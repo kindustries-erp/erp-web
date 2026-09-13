@@ -9,6 +9,7 @@ import {
   goodsReceiptsCoreApi,
   type ErpGoodsReceipt,
   type CreateGrPayload,
+  type ErpGrDeclaredSerial,
 } from "@/modules/goods-receipts-core/api/goodsReceiptsCoreApi";
 import {
   purchaseOrdersCoreApi,
@@ -22,15 +23,23 @@ import { useUIStore } from "@/core/config/uiStore";
 
 // ─── Form types ───────────────────────────────────────────────────────────────
 
-export type GrReceiptType = "PO" | "OTHER";
+export type GrReceiptType =
+  | "PO"
+  | "MANUFACTURING"
+  | "RETURN"
+  | "WARRANTY"
+  | "OTHER"
+  | (string & {});
 
 export interface GrLineForm {
   purchaseOrderLineId: string;
   productionOrderMaterialId: string;
   itemId: string;
+  itemCode?: string;
   itemName: string;
   qtyReceived: string;
   unitCost: string;
+  declaredSerials?: ErpGrDeclaredSerial[];
 }
 
 export interface GrForm {
@@ -41,23 +50,30 @@ export interface GrForm {
   receiptDate: string;
   remarks: string;
   lines: GrLineForm[];
+  globalAttributes?: Record<string, any>;
+  customAttributes?: Record<string, any>;
 }
 
 export function emptyGrForm(): GrForm {
   return {
-    receiptType: "OTHER",
+    receiptType: "" as GrReceiptType,
     receiptNo: "",
     purchaseOrderId: "",
     productionOrderId: "",
     receiptDate: new Date().toISOString().slice(0, 10),
     remarks: "",
     lines: [],
+    globalAttributes: {},
+    customAttributes: {},
   };
 }
 
 export function buildGrForm(gr: ErpGoodsReceipt): GrForm {
+  const customAttrs = gr.customAttributes || {};
   return {
-    receiptType: gr.purchaseOrderId ? "PO" : "OTHER",
+    receiptType:
+      (customAttrs.type_inventory_receipt as GrReceiptType) ||
+      (gr.purchaseOrderId ? "PO" : "OTHER"),
     receiptNo: gr.receiptNo ?? "",
     purchaseOrderId: gr.purchaseOrderId ?? "",
     productionOrderId: gr.productionOrderId ?? "",
@@ -68,14 +84,25 @@ export function buildGrForm(gr: ErpGoodsReceipt): GrForm {
         purchaseOrderLineId: line.purchaseOrderLineId ?? "",
         productionOrderMaterialId: line.productionOrderMaterialId ?? "",
         itemId: line.itemId ?? "",
+        itemCode: "",
         itemName: line.itemName ?? "",
         qtyReceived: line.qtyReceived ?? "0",
         unitCost: line.unitCost ?? "",
+        declaredSerials: line.declaredSerials ?? [],
       })) ?? [],
+    globalAttributes: { ...customAttrs },
+    customAttributes: { ...customAttrs },
   };
 }
 
 export function buildGrPayload(form: GrForm): CreateGrPayload {
+  const customAttributes = {
+    ...(form.globalAttributes || {}),
+    ...(form.customAttributes || {}),
+    type_inventory_receipt:
+      form.receiptType || (form.purchaseOrderId ? "PO" : "OTHER"),
+  };
+
   return {
     receiptNo: form.receiptNo.trim(),
     purchaseOrderId:
@@ -83,6 +110,7 @@ export function buildGrPayload(form: GrForm): CreateGrPayload {
     productionOrderId: undefined,
     receiptDate: form.receiptDate,
     remarks: form.remarks.trim() || undefined,
+    customAttributes,
     lines: form.lines
       .filter((line) => {
         const qty = Number(line.qtyReceived);
@@ -94,6 +122,7 @@ export function buildGrPayload(form: GrForm): CreateGrPayload {
         itemId: line.itemId || undefined,
         qtyReceived: line.qtyReceived,
         unitCost: line.unitCost || undefined,
+        declaredSerials: line.declaredSerials || undefined,
       })),
   };
 }
@@ -165,6 +194,18 @@ export function useGrDrawer({
       .get(form.purchaseOrderId)
       .then((po) => {
         setPoDetail(po);
+        setPoOptions((prev) => {
+          if (!prev.find((p) => p.value === po.id)) {
+            return [
+              ...prev,
+              {
+                value: po.id,
+                label: `${po.poNo || po.id} — ${po.supplierName ?? ""}`,
+              },
+            ];
+          }
+          return prev;
+        });
         if (po.lines) {
           void fetchItemsDict(po.lines.map((l) => l.itemId || ""));
         }
@@ -182,10 +223,20 @@ export function useGrDrawer({
         only_receivable: true,
       } as any);
       setPoOptions(
-        res.items.map((po) => ({
-          value: po.id,
-          label: `${po.poNo || po.id} — ${po.supplierName ?? ""}`,
-        })),
+        (res.items || [])
+          .filter((po) => {
+            if (Array.isArray(po.lines)) {
+              if (po.lines.length === 0) return false;
+              return po.lines.some((l: any) =>
+                Boolean(l.itemId || l.inventory_item_id),
+              );
+            }
+            return true;
+          })
+          .map((po) => ({
+            value: po.id,
+            label: `${po.poNo || po.id} — ${po.supplierName ?? ""}`,
+          })),
       );
     } catch {
       /* silent */
@@ -241,13 +292,42 @@ export function useGrDrawer({
       setSaving(true);
       setSaveError(null);
       try {
+        if (statusOverride === "POSTED") {
+          for (let i = 0; i < form.lines.length; i++) {
+            const l = form.lines[i];
+            const qty = Math.round(Number(l.qtyReceived || 0));
+            if (qty > 0) {
+              const item = l.itemId ? itemsDict[l.itemId] : null;
+              const trackingCode = item?.trackingPolicy?.code;
+              if (
+                trackingCode === "SERIAL" ||
+                trackingCode === "VEHICLE" ||
+                trackingCode === "CUSTOM"
+              ) {
+                const declared = l.declaredSerials?.length || 0;
+                if (declared < qty) {
+                  const errorMsg = `Dòng ${i + 1} (${item?.sku || l.itemName || "Item"}): Chưa khai báo đủ số lượng Serial (cần ${qty}, đã có ${declared}). Vui lòng bấm vào cột Serial để khai báo.`;
+                  setSaveError(errorMsg);
+                  showToast({
+                    title: "Chưa khai báo đủ số Serial",
+                    description: errorMsg,
+                    variant: "destructive",
+                  });
+                  setSaving(false);
+                  return;
+                }
+              }
+            }
+          }
+        }
+
         const payload = buildGrPayload(form);
         if (statusOverride) {
           (payload as any).status = statusOverride;
         }
         if (editing) {
           await goodsReceiptsCoreApi.update(editing.id, payload);
-          if (statusOverride === "POSTED") {
+          if (statusOverride === "POSTED" && editing.status !== "POSTED") {
             await goodsReceiptsCoreApi.post(editing.id);
           }
           showToast({
@@ -269,6 +349,7 @@ export function useGrDrawer({
             variant: "success",
           });
         }
+
         setOpen(false);
         if (invalidateWarehouseQuery) {
           await queryClient.invalidateQueries({
@@ -282,7 +363,15 @@ export function useGrDrawer({
         setSaving(false);
       }
     },
-    [editing, form, invalidateWarehouseQuery, onSaved, queryClient, showToast],
+    [
+      editing,
+      form,
+      itemsDict,
+      invalidateWarehouseQuery,
+      onSaved,
+      queryClient,
+      showToast,
+    ],
   );
 
   // ── Cancel a posted GR
@@ -334,4 +423,10 @@ export function useGrDrawer({
   };
 }
 
-export type UseGrDrawerReturn = ReturnType<typeof useGrDrawer>;
+export type UseGrDrawerReturn = ReturnType<typeof useGrDrawer> & {
+  unifiedContext?: {
+    type: "receipt" | "issue" | "adjustment";
+    setType: (t: "receipt" | "issue" | "adjustment") => void;
+    mode: "create" | "view" | "edit";
+  };
+};
