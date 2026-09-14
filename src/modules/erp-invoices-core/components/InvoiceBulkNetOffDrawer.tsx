@@ -54,9 +54,43 @@ export function InvoiceBulkNetOffDrawer({
   onSuccess,
 }: Props) {
   const { t } = useTranslation("erpInvoices");
+
+  // Find IDs that are not present in the invoices prop
+  const missingIds = useMemo(() => {
+    const presentIds = new Set((invoices || []).map((inv) => inv.id));
+    return selectedInvoiceIds.filter((id) => !presentIds.has(id));
+  }, [invoices, selectedInvoiceIds]);
+
+  // Fetch missing invoices if any (e.g. selected across pages or prop delay)
+  const { data: missingInvoices = [], isLoading: isLoadingMissingInvoices } =
+    useQuery({
+      queryKey: ["erp-invoices-bulk-missing", missingIds],
+      queryFn: async () => {
+        if (missingIds.length === 0) return [];
+        const results = await Promise.allSettled(
+          missingIds.map((id) => erpInvoicesCoreApi.get(id)),
+        );
+        return results
+          .filter(
+            (r): r is PromiseFulfilledResult<ErpInvoice> =>
+              r.status === "fulfilled" && !!r.value,
+          )
+          .map((r) => r.value);
+      },
+      enabled: open && missingIds.length > 0,
+    });
+
+  const allAvailableInvoices = useMemo(() => {
+    const map = new Map<string, ErpInvoice>();
+    (invoices || []).forEach((inv) => map.set(inv.id, inv));
+    missingInvoices.forEach((inv) => map.set(inv.id, inv));
+    return Array.from(map.values());
+  }, [invoices, missingInvoices]);
+
   const selectedInvoices = useMemo(
-    () => invoices.filter((inv) => selectedInvoiceIds.includes(inv.id)),
-    [invoices, selectedInvoiceIds],
+    () =>
+      allAvailableInvoices.filter((inv) => selectedInvoiceIds.includes(inv.id)),
+    [allAvailableInvoices, selectedInvoiceIds],
   );
 
   // { invoiceId: { txnId: amount } }
@@ -876,7 +910,7 @@ export function InvoiceBulkNetOffDrawer({
                   <span className="text-xs text-slate-500">
                     Trạng thái gợi ý
                   </span>
-                  {isLoadingSuggestions ? (
+                  {isLoadingSuggestions || isLoadingMissingInvoices ? (
                     <span className="text-[10px] flex items-center text-blue-600 font-medium">
                       <Loader2 className="w-3 h-3 animate-spin mr-1" />
                       Đang phân tích...

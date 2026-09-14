@@ -79,8 +79,7 @@ export function buildGiForm(gi: ErpGoodsIssue): GiForm {
   return {
     issueNo: gi.issueNo ?? "",
     issueDate: gi.issueDate ? gi.issueDate.slice(0, 10) : "",
-    issueType:
-      (customAttrs.type_inventory_issue as string) || gi.issueType || "SALE",
+    issueType: (customAttrs.category as string) || gi.issueType || "SALE",
     salesOrderId: gi.salesOrderId ?? "",
     productionOrderId: gi.productionOrderId ?? "",
     status: gi.status ?? "DRAFT",
@@ -104,10 +103,11 @@ export function buildGiForm(gi: ErpGoodsIssue): GiForm {
 }
 
 export function buildGiPayload(form: GiForm): CreateGiPayload {
+  const category = form.issueType || "OTHER";
   const customAttributes = {
     ...(form.globalAttributes || {}),
     ...(form.customAttributes || {}),
-    type_inventory_issue: form.issueType || "OTHER",
+    category,
   };
 
   return {
@@ -368,6 +368,9 @@ export function useGiDrawer({
             variant: "success",
           });
         } else {
+          if (!payload.issueNo) {
+            payload.issueNo = await goodsIssuesCoreApi.nextNo(form.issueDate);
+          }
           const created = await goodsIssuesCoreApi.create(payload);
           if (statusOverride === "POSTED") {
             await goodsIssuesCoreApi.post(created.id);

@@ -2,7 +2,63 @@ import axiosInstance from "@/core/api/axiosInstance";
 
 const BASE = "/api/v1/greenway";
 
+export interface ExportCompletedCasesParams {
+  branchId?: string;
+  date_from?: string;
+  date_to?: string;
+  date_type?: "completion_date" | "case_date";
+  classification?: string;
+  status?: string;
+  q?: string;
+  customFileName?: string;
+}
+
 export const garageApi = {
+  exportCompletedCasesExcel: async (
+    params: ExportCompletedCasesParams,
+  ): Promise<string> => {
+    const searchParams = new URLSearchParams();
+    if (params.date_from) searchParams.append("date_from", params.date_from);
+    if (params.date_to) searchParams.append("date_to", params.date_to);
+    if (params.date_type) searchParams.append("date_type", params.date_type);
+    if (params.classification)
+      searchParams.append("classification", params.classification);
+    if (params.status) searchParams.append("status", params.status);
+    if (params.branchId) searchParams.append("branch_id", params.branchId);
+    if (params.q) searchParams.append("q", params.q);
+
+    const res = await axiosInstance.get(
+      `${BASE}/cases/export/excel?${searchParams.toString()}`,
+      {
+        responseType: "blob",
+        headers: {
+          "x-greenway-branch-id": params.branchId || "",
+        },
+      },
+    );
+
+    const now = new Date();
+    const pad = (n: number) => String(n).padStart(2, "0");
+    const timestamp = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+    const fileName =
+      params.customFileName ||
+      `Bang_ke_phieu_dich_vu_ket_thuc_${timestamp}.xlsx`;
+
+    const blob = new Blob([res.data], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+
+    return fileName;
+  },
+
   getBranches: async () => {
     const res = await axiosInstance.get(`${BASE}/branches`);
     return res.data;
