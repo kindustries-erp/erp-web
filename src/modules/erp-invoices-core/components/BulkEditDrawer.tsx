@@ -6,6 +6,7 @@ import React, {
   useRef,
 } from "react";
 import { useTranslation } from "react-i18next";
+import { useQuery } from "@tanstack/react-query";
 import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
 import { Combobox } from "@/shared/components/Combobox";
 import { SearchInput } from "@/shared/components/SearchInput";
@@ -99,6 +100,37 @@ export function BulkEditDrawer({
   const { t } = useTranslation("erpInvoices");
   const showToast = useUIStore((s) => s.showToast);
 
+  // Find IDs that are not present in the invoices prop
+  const missingIds = useMemo(() => {
+    const presentIds = new Set((invoices || []).map((inv) => inv.id));
+    return selectedIds.filter((id) => !presentIds.has(id));
+  }, [invoices, selectedIds]);
+
+  // Fetch missing invoices if any (e.g. selected across pages or prop delay)
+  const { data: missingInvoices = [] } = useQuery({
+    queryKey: ["erp-invoices-bulk-edit-missing", missingIds],
+    queryFn: async () => {
+      if (missingIds.length === 0) return [];
+      const results = await Promise.allSettled(
+        missingIds.map((id) => erpInvoicesCoreApi.get(id)),
+      );
+      return results
+        .filter(
+          (r): r is PromiseFulfilledResult<ErpInvoice> =>
+            r.status === "fulfilled" && !!r.value,
+        )
+        .map((r) => r.value);
+    },
+    enabled: open && missingIds.length > 0,
+  });
+
+  const allAvailableInvoices = useMemo(() => {
+    const map = new Map<string, ErpInvoice>();
+    (invoices || []).forEach((inv) => map.set(inv.id, inv));
+    missingInvoices.forEach((inv) => map.set(inv.id, inv));
+    return Array.from(map.values());
+  }, [invoices, missingInvoices]);
+
   // --- Apply-all fields ---
   const [bulkBranchId, setBulkBranchId] = useState<string | null>(null);
   const [bulkNotesValue, setBulkNotesValue] = useState("");
@@ -122,7 +154,7 @@ export function BulkEditDrawer({
   // Init / reset khi drawer mở
   useEffect(() => {
     if (open && selectedIds.length > 0) {
-      const selectedInvs = invoices.filter((inv) =>
+      const selectedInvs = allAvailableInvoices.filter((inv) =>
         selectedIds.includes(inv.id),
       );
       const snapshotBranch: Record<string, string> = {};
@@ -139,7 +171,7 @@ export function BulkEditDrawer({
       setBulkNotesValue("");
       setInvoiceSearch("");
     }
-  }, [open, selectedIds, invoices]);
+  }, [open, selectedIds, allAvailableInvoices]);
 
   // isDirty: so sánh assignments hiện tại vs snapshot
   const isDirty = useMemo(
@@ -155,7 +187,7 @@ export function BulkEditDrawer({
   // Filtered invoice list (client-side search)
   const filteredInvoices = useMemo(() => {
     const s = invoiceSearch.toLowerCase();
-    return invoices
+    return allAvailableInvoices
       .filter((inv) => selectedIds.includes(inv.id))
       .filter(
         (inv) =>
@@ -165,7 +197,7 @@ export function BulkEditDrawer({
           inv.sellerName?.toLowerCase().includes(s) ||
           inv.buyerName?.toLowerCase().includes(s),
       );
-  }, [invoiceSearch, invoices, selectedIds]);
+  }, [invoiceSearch, allAvailableInvoices, selectedIds]);
 
   const handleBranchChange = useCallback((id: string, value: string) => {
     setBranchAssignments((prev) => ({ ...prev, [id]: value }));
