@@ -155,4 +155,35 @@ export const goodsReceiptsCoreApi = {
     );
     return data;
   },
+  getLineSerials: async (
+    lineId: string,
+  ): Promise<{
+    message: string;
+    total: number;
+    data: ErpTrackingSerialItem[];
+  }> => {
+    const { data } = await axiosInstance.get<{
+      message: string;
+      total: number;
+      data: ErpTrackingSerialItem[];
+    }>(`${BASE}/lines/${lineId}/serials`);
+    return data;
+  },
 };
+
+export interface ErpTrackingSerialItem {
+  id: string;
+  itemId?: string | null;
+  serialNo: string;
+  systemSerialNo?: string | null;
+  trackingType?: "USER_DECLARED" | "SYSTEM_AUTO" | string;
+  status: string;
+  unitCost?: string | null;
+  lotNo?: string | null;
+  notes?: string | null;
+  vinNo?: string | null;
+  engineNo?: string | null;
+  internalSerialNo?: string | null;
+  attributes?: Record<string, any> | null;
+  createdAt: string;
+}

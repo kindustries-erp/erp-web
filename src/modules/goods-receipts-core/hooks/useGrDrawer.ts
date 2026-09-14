@@ -32,6 +32,7 @@ export type GrReceiptType =
   | (string & {});
 
 export interface GrLineForm {
+  id?: string;
   purchaseOrderLineId: string;
   productionOrderMaterialId: string;
   itemId: string;
@@ -81,6 +82,7 @@ export function buildGrForm(gr: ErpGoodsReceipt): GrForm {
     remarks: gr.remarks ?? "",
     lines:
       gr.lines?.map((line) => ({
+        id: line.id,
         purchaseOrderLineId: line.purchaseOrderLineId ?? "",
         productionOrderMaterialId: line.productionOrderMaterialId ?? "",
         itemId: line.itemId ?? "",

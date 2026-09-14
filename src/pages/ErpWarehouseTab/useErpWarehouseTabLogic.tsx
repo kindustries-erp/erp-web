@@ -52,6 +52,7 @@ import { toast } from "react-hot-toast";
 
 import { useWarehousePrintExport } from "./hooks/useWarehousePrintExport";
 import { useWarehouseColumns } from "./hooks/useWarehouseColumns";
+import { useSystemOperationLock } from "@/shared/hooks/useSystemOperationLock";
 
 export type WarehouseVoucherTypeTab =
   | "all"
@@ -115,6 +116,12 @@ export function useErpWarehouseTabLogic() {
   const isAdmin = useHasPermission(ErpResource.SUPER_ADMIN, ErpAction.ALL);
   const showToast = useUIStore((s) => s.showToast);
   const queryClient = useQueryClient();
+
+  const {
+    isBlocked: isInventoryOpsBlocked,
+    blockedReason: inventoryBlockedReason,
+    isActionBlocked,
+  } = useSystemOperationLock({ module: "INVENTORY" });
 
   const [activeTypeTab, setActiveTypeTab] = useState<WarehouseVoucherTypeTab>(
     () => {
@@ -952,6 +959,9 @@ export function useErpWarehouseTabLogic() {
     },
   ];
 
+  const receiptCheck = isActionBlocked("CREATE_RECEIPT");
+  const issueCheck = isActionBlocked("CREATE_ISSUE");
+
   const createActions = [
     {
       groupLabel: t("common.groupAddNew", "Thêm mới"),
@@ -959,20 +969,53 @@ export function useErpWarehouseTabLogic() {
         {
           label: t("inventory.receipt", "Nhập kho"),
           icon: <PackagePlus className="h-4 w-4 text-muted-foreground" />,
-          onClick: () => grDrawer.openCreate(),
+          onClick: () => {
+            if (receiptCheck.isBlocked) {
+              toast.error(
+                receiptCheck.reason ||
+                  "Hệ thống đang xử lý tác vụ kho khác. Vui lòng chờ.",
+              );
+              return;
+            }
+            grDrawer.openCreate();
+          },
           hidden: !canCreateReceipt,
+          disabled: receiptCheck.isBlocked,
+          tooltip: receiptCheck.reason,
         },
         {
           label: t("inventory.issue", "Xuất kho"),
           icon: <PackageMinus className="h-4 w-4 text-muted-foreground" />,
-          onClick: () => giDrawer.openCreate(),
+          onClick: () => {
+            if (issueCheck.isBlocked) {
+              toast.error(
+                issueCheck.reason ||
+                  "Hệ thống đang xử lý tác vụ kho khác. Vui lòng chờ.",
+              );
+              return;
+            }
+            giDrawer.openCreate();
+          },
           hidden: !canCreateIssue,
+          disabled: issueCheck.isBlocked,
+          tooltip: issueCheck.reason,
         },
         {
           label: t("inventory.adjustment", "Điều chỉnh kho"),
           icon: <SlidersHorizontal className="h-4 w-4 text-muted-foreground" />,
-          onClick: () => iaDrawer.openCreate(),
+          onClick: () => {
+            if (isInventoryOpsBlocked) {
+              toast.error(
+                inventoryBlockedReason ||
+                  "Hệ thống đang xử lý tác vụ kho khác. Vui lòng chờ.",
+              );
+              return;
+            }
+            iaDrawer.openCreate();
+          },
           hidden: !canCreateAdjustment,
+          disabled: isInventoryOpsBlocked,
+          tooltip: inventoryBlockedReason || undefined,
         },
       ],
     },

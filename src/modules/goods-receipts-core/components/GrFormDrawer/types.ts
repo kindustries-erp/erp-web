@@ -22,4 +22,6 @@ export interface GrSerialDrawerState {
   receiptDate?: string;
   initialSerials?: any[];
   viewOnly?: boolean;
+  lineId?: string;
+  isSystemAuto?: boolean;
 }

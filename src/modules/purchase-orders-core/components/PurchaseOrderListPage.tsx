@@ -26,11 +26,14 @@ import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
 import { canReceiveInventory } from "@/modules/operational/utils/operationalHelpers";
 import { useAuthStore } from "@/modules/auth/domain/authStore";
+import { useSystemOperationLock } from "@/shared/hooks/useSystemOperationLock";
+import { toast } from "react-hot-toast";
 import { useState, useEffect, useMemo } from "react";
 
 export function PurchaseOrderListPage() {
   const t = useT();
   const pageState = usePurchaseOrderPage();
+  const { isActionBlocked } = useSystemOperationLock({ module: "INVENTORY" });
   const canCreatePo = useHasPermission(
     ErpResource.PURCHASE_ORDERS,
     ErpAction.CREATE,
@@ -275,8 +278,20 @@ export function PurchaseOrderListPage() {
             {
               label: t("common.receiveInventory"),
               icon: <PackagePlus className="h-[13px] w-[13px]" />,
-              onClick: () => grDrawer.openCreate(row.id),
+              onClick: () => {
+                const check = isActionBlocked("CREATE_RECEIPT");
+                if (check.isBlocked) {
+                  toast.error(
+                    check.reason ||
+                      "Hệ thống đang xử lý tác vụ kho khác. Vui lòng chờ.",
+                  );
+                  return;
+                }
+                grDrawer.openCreate(row.id);
+              },
               hidden: !canCreateReceipt || !canReceiveInventory(row),
+              disabled: isActionBlocked("CREATE_RECEIPT").isBlocked,
+              tooltip: isActionBlocked("CREATE_RECEIPT").reason,
             },
             {
               label: t("Xóa"),
