@@ -35,7 +35,11 @@ import { VoucherNetoffSelectionModal } from "./VoucherNetoffSelectionModal";
 import { PurchaseOrderSelectionModal } from "./PurchaseOrderSelectionModal";
 import { SalesOrderSelectionModal } from "./SalesOrderSelectionModal";
 import { GarageCaseSelectionModal } from "./GarageCaseSelectionModal";
-import { ErpInvoiceSettlementTab } from "./ErpInvoiceSettlementTab";
+import {
+  ErpInvoiceSettlementTab,
+  ErpInvoiceSettlementRightPanel,
+  ErpInvoiceSettlementProvider,
+} from "./ErpInvoiceSettlementTab";
 import {
   ErpInvoicePartnerTab,
   ErpInvoicePartnerRightPanel,
@@ -396,6 +400,18 @@ export function ErpInvoiceInternalDrawer({
             fieldSet={fieldSet}
             direction={direction}
             onRefresh={onSyncDetail}
+            onStartEdit={startEdit}
+          />
+        ),
+        rightPanel: (
+          <ErpInvoiceSettlementRightPanel
+            invoice={detailInvoice}
+            form={form}
+            editMode={editMode}
+            fieldSet={fieldSet}
+            direction={direction}
+            onRefresh={onSyncDetail}
+            onStartEdit={startEdit}
           />
         ),
       },
@@ -746,7 +762,15 @@ export function ErpInvoiceInternalDrawer({
   ]);
 
   return (
-    <>
+    <ErpInvoiceSettlementProvider
+      invoice={detailInvoice}
+      form={form}
+      editMode={editMode}
+      fieldSet={fieldSet}
+      direction={direction}
+      onRefresh={onSyncDetail}
+      enabled={open}
+    >
       <StandardFormDrawer
         open={open}
         mode={editMode ? "edit" : "view"}
@@ -805,6 +829,6 @@ export function ErpInvoiceInternalDrawer({
           />
         </>
       )}
-    </>
+    </ErpInvoiceSettlementProvider>
   );
 }

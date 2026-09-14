@@ -22,12 +22,13 @@ export * from "./drawer";
 // ── Size presets ──────────────────────────────────────────────────────────────
 // All sizes scale fluidly via `vw` on desktop while bounded by explicit min/max widths
 // and hard bounded by max-width: calc(100vw - 208px) on desktop so drawer never covers sidebar.
+// On mobile & tablet (< 1024px), widths gracefully scale to w-full with min-w-0 / max-w-full.
 const SIZE_CLASS: Record<string, string> = {
-  sm: "w-full md:w-[90vw] lg:w-[42vw] xl:w-[38vw] 2xl:w-[32vw] min-w-[420px] max-w-[660px]",
-  md: "w-full md:w-[92vw] lg:w-[60vw] xl:w-[54vw] 2xl:w-[48vw] min-w-[620px] max-w-[980px]",
-  lg: "w-full md:w-[95vw] lg:w-[78vw] xl:w-[74vw] 2xl:w-[68vw] min-w-[840px] max-w-[1380px]",
-  xl: "w-full md:w-[96vw] lg:w-[93vw] xl:w-[90vw] 2xl:w-[88vw] min-w-[1020px] max-w-[1780px]",
-  full: "w-full md:w-[98vw] lg:w-[calc(100vw-208px)] xl:w-[calc(100vw-208px)] max-w-[calc(100vw-208px)] min-w-[1020px]",
+  sm: "w-full min-w-0 max-w-full md:w-[90vw] lg:w-[42vw] xl:w-[38vw] 2xl:w-[32vw] lg:min-w-[420px] lg:max-w-[660px]",
+  md: "w-full min-w-0 max-w-full md:w-[92vw] lg:w-[60vw] xl:w-[54vw] 2xl:w-[48vw] lg:min-w-[620px] lg:max-w-[980px]",
+  lg: "w-full min-w-0 max-w-full md:w-[95vw] lg:w-[78vw] xl:w-[74vw] 2xl:w-[68vw] lg:min-w-[840px] lg:max-w-[1380px]",
+  xl: "w-full min-w-0 max-w-full md:w-[96vw] lg:w-[93vw] xl:w-[90vw] 2xl:w-[88vw] lg:min-w-[1020px] lg:max-w-[1780px]",
+  full: "w-full min-w-0 max-w-full md:w-[98vw] lg:w-[calc(100vw-208px)] xl:w-[calc(100vw-208px)] lg:min-w-[1020px] lg:max-w-[calc(100vw-208px)]",
 };
 
 export interface StandardFormDrawerProps {
@@ -371,7 +372,7 @@ export function StandardFormDrawer({
               variant="ghost"
               size="icon-sm"
               onClick={handleToggleFullscreen}
-              className="text-[color:var(--faint)] hover:text-foreground h-7 w-7 p-0 flex items-center justify-center"
+              className="text-[color:var(--faint)] hover:text-foreground h-7 w-7 p-0 hidden lg:inline-flex items-center justify-center"
               title={
                 isFullscreen
                   ? t("Thu nhỏ (Esc)", "Exit Fullscreen (Esc)")
@@ -449,7 +450,7 @@ export function StandardFormDrawer({
         <div
           className={cn(
             "flex flex-col lg:flex-row items-start w-full max-w-full relative h-auto transition-all duration-300",
-            rightPanelCollapsed ? "gap-0" : "gap-6",
+            rightPanelCollapsed ? "gap-0" : "gap-4 lg:gap-6",
           )}
         >
           {/* Cột trái: Chi tiết / Main Content / Tab Content */}
@@ -488,7 +489,7 @@ export function StandardFormDrawer({
                           : undefined
                       }
                     >
-                      <div className="flex flex-col gap-3 pt-1 min-w-[280px]">
+                      <div className="flex flex-col gap-3 pt-1 min-w-0 lg:min-w-[280px]">
                         {effectiveRightPanel}
                       </div>
                     </div>
@@ -505,7 +506,7 @@ export function StandardFormDrawer({
                       stickyRightPanel ? { scrollbarWidth: "none" } : undefined
                     }
                   >
-                    <div className="flex flex-col min-w-[280px]">
+                    <div className="flex flex-col min-w-0 lg:min-w-[280px]">
                       {effectiveRightPanel}
                     </div>
                   </div>
