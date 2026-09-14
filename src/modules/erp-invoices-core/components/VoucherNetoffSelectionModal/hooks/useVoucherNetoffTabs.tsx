@@ -137,6 +137,11 @@ export function useVoucherNetoffTabs({
                 setPageSize={logic.setPageSize}
                 onToggleRow={logic.handleToggleRow}
                 onViewDetail={(id) => logic.setDetailTxnId(id)}
+                setDateRange={(from, to) => {
+                  logic.setDateFrom(from || "");
+                  logic.setDateTo(to || "");
+                  logic.setPage(1);
+                }}
               />
             </DrawerSection>
           </div>
@@ -273,6 +278,11 @@ export function useVoucherNetoffTabs({
                 setPageSize={logic.setPageSize}
                 onToggleRow={logic.handleToggleRow}
                 onViewDetail={(id) => logic.setDetailTxnId(id)}
+                setDateRange={(from, to) => {
+                  logic.setDateFrom(from || "");
+                  logic.setDateTo(to || "");
+                  logic.setPage(1);
+                }}
               />
             </DrawerSection>
           </div>
