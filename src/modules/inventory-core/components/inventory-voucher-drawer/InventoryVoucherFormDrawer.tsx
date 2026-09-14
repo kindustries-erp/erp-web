@@ -68,6 +68,15 @@ export interface InventoryVoucherFormDrawerProps {
   summaryRow?: Record<string, ReactNode>;
   actionsColumn?: { header?: ReactNode; cell: (item: any) => ReactNode };
   emptyLabel?: string;
+  tableId?: string;
+  enableColumnVisibility?: boolean;
+  page?: number;
+  pageSize?: number;
+  total?: number;
+  totalPages?: number;
+  onPage?: (page: number) => void;
+  onPageSize?: (pageSize: number) => void;
+  pageSizeOptions?: number[];
 
   // ── Below-table footer (Add line, Import Excel buttons) ───────────────────
   tableFooter?: ReactNode;
@@ -135,6 +144,15 @@ export function InventoryVoucherFormDrawer(
                 columns={props.tableColumns}
                 summaryRow={props.summaryRow}
                 actionsColumn={props.actionsColumn}
+                tableId={props.tableId ?? "gr-details-table"}
+                enableColumnVisibility={props.enableColumnVisibility ?? true}
+                page={props.page}
+                pageSize={props.pageSize}
+                total={props.total}
+                totalPages={props.totalPages}
+                onPage={props.onPage}
+                onPageSize={props.onPageSize}
+                pageSizeOptions={props.pageSizeOptions ?? [20, 50, 100, 200]}
               />
               {props.tableFooter && (
                 <div className="mt-4 flex justify-center gap-3">
@@ -196,6 +214,13 @@ export function InventoryVoucherFormDrawer(
                   </DrawerField>
                 )}
                 {props.rightPanelContent}
+
+                {/* Ghi chú được tích hợp thẳng vào Thông tin chung */}
+                {props.remarksContent && (
+                  <DrawerField label={t("common.remarks", "Ghi chú")}>
+                    {props.remarksContent}
+                  </DrawerField>
+                )}
               </DrawerSection>
 
               {/* ── 2. THUỘC TÍNH MẶC ĐỊNH ───────────────────────────── */}
@@ -211,17 +236,6 @@ export function InventoryVoucherFormDrawer(
 
               {/* ── 3. THUỘC TÍNH TÙY CHỈNH ──────────────────────────── */}
               {props.customFieldsSlot}
-
-              {/* ── 4. GHI CHÚ (section riêng bên dưới) ──────────────── */}
-              {props.remarksContent && (
-                <DrawerSection
-                  title={t("common.remarks", "GHI CHÚ")}
-                  collapsible={true}
-                  defaultCollapsed={false}
-                >
-                  {props.remarksContent}
-                </DrawerSection>
-              )}
             </>
           )
         }

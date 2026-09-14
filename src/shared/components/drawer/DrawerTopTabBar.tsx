@@ -49,7 +49,7 @@ export function DrawerTopTabBar({
   return (
     <div
       className={cn(
-        "sticky top-0 z-10 -mx-[18px] -mt-[18px] px-5 py-2.5 mb-4 border-b border-border/70 flex items-center justify-between gap-3 flex-shrink-0 transition-all backdrop-blur-md",
+        "sticky top-0 z-10 -mx-3 -mt-3 sm:-mx-4 sm:-mt-4 md:-mx-[18px] md:-mt-[18px] px-3 sm:px-4 md:px-5 py-2 sm:py-2.5 mb-3 sm:mb-4 border-b border-border/70 flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 sm:gap-3 flex-shrink-0 transition-all backdrop-blur-md",
         className,
       )}
       style={{
@@ -57,7 +57,7 @@ export function DrawerTopTabBar({
       }}
     >
       {/* ── Tab List ── */}
-      <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-0.5 min-w-0">
+      <div className="flex items-center gap-1 sm:gap-1.5 overflow-x-auto scrollbar-none touch-pan-x py-0.5 min-w-0 flex-1 pr-2">
         {tabs.map((tab) => {
           const isActive = tab.key === effectiveActiveKey;
           return (
@@ -66,7 +66,7 @@ export function DrawerTopTabBar({
               type="button"
               onClick={() => onTabChange(tab.key)}
               className={cn(
-                "group relative inline-flex items-center gap-2 px-3.5 py-1.5 text-xs rounded-lg transition-all select-none whitespace-nowrap cursor-pointer",
+                "group relative inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-1.5 min-h-[32px] sm:min-h-[34px] text-xs rounded-lg transition-all select-none whitespace-nowrap cursor-pointer",
                 isActive
                   ? "bg-slate-900 text-white dark:bg-primary dark:text-primary-foreground font-semibold shadow-xs"
                   : "text-muted-foreground hover:text-foreground hover:bg-muted/70 font-medium",
@@ -108,7 +108,7 @@ export function DrawerTopTabBar({
 
       {/* ── Right side extra actions / activeTab headerExtra ── */}
       {(extra || activeTabItem?.headerExtra) && (
-        <div className="flex items-center gap-2 flex-shrink-0">
+        <div className="flex items-center gap-2 flex-shrink-0 ml-auto">
           {activeTabItem?.headerExtra}
           {extra}
         </div>

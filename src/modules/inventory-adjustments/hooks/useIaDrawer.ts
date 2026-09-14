@@ -178,7 +178,7 @@ export function useIaDrawer({
         const detail = await inventoryAdjustmentsApi.getById(id);
         const data = detail.data;
         if (data.lines) {
-          void fetchItemsDict(data.lines.map((l: any) => l.itemId || ""));
+          await fetchItemsDict(data.lines.map((l: any) => l.itemId || ""));
         }
         setEditing(data);
         setForm(buildIaForm(data));

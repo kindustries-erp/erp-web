@@ -129,86 +129,6 @@ export function useWarehouseColumns({
         ),
       },
       {
-        key: "type",
-        header: headerFilter("type", t("inventory.voucherType", "Loại phiếu"), {
-          formatOptionLabel: (val: string) => {
-            if (val === "receipt") return t("inventory.receipt", "Nhập kho");
-            if (val === "issue") return t("inventory.issue", "Xuất kho");
-            if (val === "adjustment")
-              return t("inventory.adjustment", "Điều chỉnh");
-            return val;
-          },
-        }),
-        size: 130,
-        enableResizing: true,
-        className: "text-center",
-        headerClassName: "p-0 h-full",
-        cell: (row) => {
-          const typeMap: Record<string, { label: string; cls: string }> = {
-            receipt: {
-              label: t("inventory.receipt", "Nhập kho"),
-              cls: "bg-emerald-100 text-emerald-700",
-            },
-            issue: {
-              label: t("inventory.issue", "Xuất kho"),
-              cls: "bg-orange-100 text-orange-700",
-            },
-            adjustment: {
-              label: t("inventory.adjustment", "Điều chỉnh"),
-              cls: "bg-blue-100 text-blue-700",
-            },
-          };
-          const item = typeMap[row.type] ?? {
-            label: row.type,
-            cls: "bg-slate-100 text-slate-700",
-          };
-          return (
-            <div className="w-full flex justify-center">
-              <Tooltip content={item.label}>
-                <span
-                  className={cn(
-                    "text-[11px] px-2 py-[3px] rounded-md font-semibold whitespace-nowrap w-[80px] inline-flex items-center justify-center text-center truncate",
-                    item.cls,
-                  )}
-                >
-                  {item.label}
-                </span>
-              </Tooltip>
-            </div>
-          );
-        },
-      },
-      {
-        key: "categoryName",
-        header: headerFilter(
-          "categoryName",
-          t("inventory.category", "Phân loại / Lý do"),
-        ),
-        size: 160,
-        enableResizing: true,
-        className: "text-left",
-        headerClassName: "p-0 h-full",
-        cell: (row) => {
-          if (!row.categoryName) {
-            return (
-              <span className="text-muted-foreground/50 text-xs italic px-1">
-                -
-              </span>
-            );
-          }
-          return (
-            <div className="flex items-center gap-1.5 truncate px-1">
-              <span
-                className="text-xs font-medium text-foreground truncate"
-                title={row.categoryName}
-              >
-                {row.categoryName}
-              </span>
-            </div>
-          );
-        },
-      },
-      {
         key: "voucherNo",
         header: headerFilter("voucherNo", t("inventory.voucherNo", "Số phiếu")),
         size: 220,
@@ -321,12 +241,92 @@ export function useWarehouseColumns({
               ? "text-emerald-600"
               : qty < 0
                 ? "text-red-600"
-                : "text-blue-600";
+                : "text-indigo-600";
           return (
             <span className={cn("font-medium tabular-nums", colorClass)}>
               {qty > 0 ? "+" : ""}
               {qty.toLocaleString("vi-VN")}
             </span>
+          );
+        },
+      },
+      {
+        key: "type",
+        header: headerFilter("type", t("inventory.voucherType", "Loại phiếu"), {
+          formatOptionLabel: (val: string) => {
+            if (val === "receipt") return t("inventory.receipt", "Nhập kho");
+            if (val === "issue") return t("inventory.issue", "Xuất kho");
+            if (val === "adjustment")
+              return t("inventory.adjustment", "Điều chỉnh");
+            return val;
+          },
+        }),
+        size: 130,
+        enableResizing: true,
+        className: "text-center",
+        headerClassName: "p-0 h-full",
+        cell: (row) => {
+          const typeMap: Record<string, { label: string; cls: string }> = {
+            receipt: {
+              label: t("inventory.receipt", "Nhập kho"),
+              cls: "bg-emerald-100 text-emerald-700",
+            },
+            issue: {
+              label: t("inventory.issue", "Xuất kho"),
+              cls: "bg-orange-100 text-orange-700",
+            },
+            adjustment: {
+              label: t("inventory.adjustment", "Điều chỉnh"),
+              cls: "bg-indigo-100 text-indigo-700",
+            },
+          };
+          const item = typeMap[row.type] ?? {
+            label: row.type,
+            cls: "bg-slate-100 text-slate-700",
+          };
+          return (
+            <div className="w-full flex justify-center">
+              <Tooltip content={item.label}>
+                <span
+                  className={cn(
+                    "text-[11px] px-2 py-[3px] rounded-md font-semibold whitespace-nowrap w-[80px] inline-flex items-center justify-center text-center truncate",
+                    item.cls,
+                  )}
+                >
+                  {item.label}
+                </span>
+              </Tooltip>
+            </div>
+          );
+        },
+      },
+      {
+        key: "categoryName",
+        header: headerFilter(
+          "categoryName",
+          t("inventory.category", "Phân loại / Lý do"),
+        ),
+        size: 160,
+        enableResizing: true,
+        className: "text-left",
+        headerClassName: "p-0 h-full",
+        cell: (row) => {
+          if (!row.categoryName) {
+            return (
+              <span className="text-muted-foreground/50 text-xs italic px-1">
+                -
+              </span>
+            );
+          }
+          return (
+            <div className="flex items-center gap-1.5 truncate px-1">
+              <span
+                className="text-xs font-medium text-foreground truncate"
+                title={row.categoryName}
+              >
+                {row.categoryName}
+              </span>
+            </div>
           );
         },
       },
@@ -443,7 +443,7 @@ export function useWarehouseColumns({
               ? "text-emerald-600"
               : totalAdjustment < 0
                 ? "text-red-600"
-                : "text-blue-600",
+                : "text-indigo-600",
           )}
         >
           {totalAdjustment > 0 ? "+" : ""}
