@@ -12,6 +12,7 @@ import { Button } from "@/shared/components/ui/Button";
 import { useQuery } from "@tanstack/react-query";
 import { getBranchesApi } from "@/modules/branches/api/branchApi";
 import { UniversalSearchModal } from "./UniversalSearchModal";
+import { GlobalSystemOperationIndicator } from "@/core/components/GlobalSystemOperationIndicator";
 
 export function Topbar() {
   const {
@@ -136,6 +137,9 @@ export function Topbar() {
           </kbd>
         </button>
       </div>
+
+      {/* Global System Operation Indicator */}
+      <GlobalSystemOperationIndicator />
 
       <UniversalSearchModal
         open={searchModalOpen}

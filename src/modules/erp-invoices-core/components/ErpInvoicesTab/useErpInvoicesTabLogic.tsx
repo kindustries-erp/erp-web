@@ -31,6 +31,7 @@ import {
   useErpInvoiceListStore,
   type Direction,
 } from "@/modules/erp-invoices-core/hooks/useErpInvoiceListStore";
+import { useErpInvoicesList } from "@/modules/erp-invoices-core/hooks/useErpInvoicesList";
 import { ErpUrlQueryParam } from "@/shared/constants/urlParams";
 import { DEFAULT_DEBOUNCE_TIME } from "@/shared/constants/timing";
 import { encodeStateParam } from "@/shared/utils/pageUrl";
@@ -258,17 +259,8 @@ export function useErpInvoicesTabLogic({
     ? `erp-invoices-table-checkpoint-${direction}`
     : `erp-invoices-table-${listDir}`;
 
-  const invoices = useMemo(() => {
-    const queries = queryClient.getQueriesData<any>({
-      queryKey: [ErpQueryKey.INVOICES_LIST, listDir],
-    });
-    for (const [, queryData] of queries) {
-      if (queryData?.items && Array.isArray(queryData.items)) {
-        return queryData.items;
-      }
-    }
-    return [];
-  }, [queryClient, listDir]);
+  const listHook = useErpInvoicesList(listDir, partnerTaxCode);
+  const invoices = listHook.invoices;
 
   const urlSync = useErpInvoiceUrlSync({
     direction,

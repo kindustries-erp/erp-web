@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { CheckCircle2, AlertTriangle } from "lucide-react";
+import { CheckCircle2, AlertTriangle, Sparkles } from "lucide-react";
 import { cn } from "@/shared/utils";
 import { Button } from "@/shared/components/ui/Button";
 import { CellInput } from "@/shared/components/CellInput";
@@ -22,6 +22,7 @@ interface UseGrFormColumnsProps {
     item: any,
     qty: number,
     isViewOnly?: boolean,
+    isSystemAuto?: boolean,
   ) => void;
   t: (key: string, ...args: any[]) => string;
 }
@@ -274,7 +275,46 @@ export function useGrFormColumns({
         const qty = Math.round(Number(currentLine?.qtyReceived ?? 0));
         const declaredCount = currentLine?.declaredSerials?.length || 0;
 
+        const grLine = editing?.lines?.find(
+          (l) =>
+            (currentLine?.id && l.id === currentLine.id) ||
+            (poLine.id && l.purchaseOrderLineId === poLine.id) ||
+            (itemId && l.itemId === itemId),
+        );
+        const targetLine = {
+          ...(currentLine || poLine),
+          id: grLine?.id || currentLine?.id,
+          receiptLineId: grLine?.id || currentLine?.id,
+        };
+
         if (!hasTracking) {
+          if ((viewOnly || editing?.status === "POSTED") && qty > 0) {
+            return (
+              <button
+                type="button"
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold border bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100 dark:bg-indigo-950/40 dark:text-indigo-300 dark:border-indigo-800 transition-all shadow-sm cursor-pointer"
+                onClick={() => {
+                  const actualQty = Math.round(
+                    Number(currentLine?.qtyReceived || qty || 0),
+                  );
+                  handleOpenSerialDrawer(
+                    targetLine,
+                    lineIdx,
+                    item,
+                    actualQty,
+                    true,
+                    true,
+                  );
+                }}
+                title={t("Bấm để xem danh sách System Serials ngầm")}
+              >
+                <Sparkles className="w-3.5 h-3.5 text-indigo-500" />
+                <span>
+                  {qty} {t("System Serials")}
+                </span>
+              </button>
+            );
+          }
           return <span className="text-muted-foreground text-xs">—</span>;
         }
         if (qty <= 0) {
@@ -302,7 +342,7 @@ export function useGrFormColumns({
                   Number(currentLine?.qtyReceived || qty || 0),
                 );
                 handleOpenSerialDrawer(
-                  currentLine || poLine,
+                  targetLine,
                   lineIdx,
                   item,
                   actualQty,
@@ -485,7 +525,37 @@ export function useGrFormColumns({
         const qty = Math.round(Number(line.qtyReceived || 0));
         const declaredCount = line.declaredSerials?.length || 0;
 
+        const grLine =
+          editing?.lines?.[i] ||
+          editing?.lines?.find(
+            (l) =>
+              (line.id && l.id === line.id) ||
+              (line.itemId && l.itemId === line.itemId),
+          );
+        const targetLine = {
+          ...line,
+          id: grLine?.id || line.id,
+          receiptLineId: grLine?.id || line.id,
+        };
+
         if (!hasTracking) {
+          if ((viewOnly || editing?.status === "POSTED") && qty > 0) {
+            return (
+              <button
+                type="button"
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold border bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100 dark:bg-indigo-950/40 dark:text-indigo-300 dark:border-indigo-800 transition-all shadow-sm cursor-pointer"
+                onClick={() =>
+                  handleOpenSerialDrawer(targetLine, i, item, qty, true, true)
+                }
+                title={t("Bấm để xem danh sách System Serials ngầm")}
+              >
+                <Sparkles className="w-3.5 h-3.5 text-indigo-500" />
+                <span>
+                  {qty} {t("System Serials")}
+                </span>
+              </button>
+            );
+          }
           return <span className="text-muted-foreground text-xs">—</span>;
         }
         if (qty <= 0) {
@@ -508,7 +578,9 @@ export function useGrFormColumns({
                   ? "bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100 dark:bg-emerald-950/30 dark:text-emerald-300"
                   : "bg-amber-50 text-amber-700 border-amber-300 hover:bg-amber-100 dark:bg-amber-950/30 dark:text-amber-300",
               )}
-              onClick={() => handleOpenSerialDrawer(line, i, item, qty, true)}
+              onClick={() =>
+                handleOpenSerialDrawer(targetLine, i, item, qty, true)
+              }
               title={t("Bấm để xem danh sách số serial")}
             >
               {isComplete ? (
@@ -532,7 +604,7 @@ export function useGrFormColumns({
                 ? "bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100 dark:bg-emerald-950/30 dark:text-emerald-300"
                 : "bg-amber-50 text-amber-700 border-amber-300 hover:bg-amber-100 dark:bg-amber-950/30 dark:text-amber-300",
             )}
-            onClick={() => handleOpenSerialDrawer(line, i, item, qty)}
+            onClick={() => handleOpenSerialDrawer(targetLine, i, item, qty)}
           >
             {isComplete ? (
               <>
@@ -653,8 +725,46 @@ export function useGrFormColumns({
             trackingCode === "CUSTOM");
         const qty = Math.round(Number(line.qtyReceived || 0));
         const declaredCount = line.declaredSerials?.length || 0;
+        const lineIdx = form.lines.indexOf(line);
+
+        const grLine =
+          editing?.lines?.[lineIdx] ||
+          editing?.lines?.find(
+            (l) =>
+              (line.id && l.id === line.id) ||
+              (line.itemId && l.itemId === line.itemId),
+          );
+        const targetLine = {
+          ...line,
+          id: grLine?.id || line.id,
+          receiptLineId: grLine?.id || line.id,
+        };
 
         if (!hasTracking) {
+          if (qty > 0) {
+            return (
+              <button
+                type="button"
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold border bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100 dark:bg-indigo-950/40 dark:text-indigo-300 dark:border-indigo-800 transition-all shadow-sm cursor-pointer"
+                onClick={() =>
+                  handleOpenSerialDrawer(
+                    targetLine,
+                    lineIdx,
+                    item,
+                    qty,
+                    true,
+                    true,
+                  )
+                }
+                title={t("Bấm để xem danh sách System Serials ngầm")}
+              >
+                <Sparkles className="w-3.5 h-3.5 text-indigo-500" />
+                <span>
+                  {qty} {t("System Serials")}
+                </span>
+              </button>
+            );
+          }
           return <span className="text-muted-foreground text-xs">—</span>;
         }
 
@@ -670,13 +780,7 @@ export function useGrFormColumns({
                 : "bg-amber-50 text-amber-700 border-amber-300 hover:bg-amber-100 dark:bg-amber-950/30 dark:text-amber-300",
             )}
             onClick={() =>
-              handleOpenSerialDrawer(
-                line,
-                form.lines.indexOf(line),
-                item,
-                qty,
-                true,
-              )
+              handleOpenSerialDrawer(targetLine, lineIdx, item, qty, true)
             }
             title={t("Bấm để xem danh sách số serial")}
           >

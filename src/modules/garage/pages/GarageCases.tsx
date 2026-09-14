@@ -12,6 +12,7 @@ import { useGarageStore } from "../store/garageStore";
 import { garageApi } from "../api/garageApi";
 import { GarageCaseSyncDrawer } from "../components/GarageCaseSyncDrawer";
 import { GarageCaseStandaloneDrawer } from "../components/GarageCaseStandaloneDrawer";
+import { GarageCaseExportDrawer } from "../components/GarageCaseExportDrawer";
 import { KgaraCaseStatusBadge } from "../components/KgaraCaseStatusBadge";
 import {
   GarageCaseClassificationBadge,
@@ -27,6 +28,7 @@ import {
   DownloadCloud,
   TrendingUp,
   FileText,
+  FileSpreadsheet,
   XCircle,
   FileClock,
   Wrench,
@@ -96,6 +98,7 @@ export function GarageCases() {
   );
 
   const [viewConfigDrawerOpen, setViewConfigDrawerOpen] = useState(false);
+  const [exportDrawerOpen, setExportDrawerOpen] = useState(false);
   const [editingViewPreset, setEditingViewPreset] =
     useState<TableViewPreset | null>(null);
   const [drawerInitialTab, setDrawerInitialTab] =
@@ -477,8 +480,18 @@ export function GarageCases() {
   const canSyncGarage = canCreateGarage || canUpdateGarage;
 
   const createActions = useMemo(
-    () =>
-      canSyncGarage
+    () => [
+      {
+        groupLabel: t("cases.actions.exportGroup", "Báo cáo & Xuất file"),
+        items: [
+          {
+            label: t("cases.actions.exportExcel", "Xuất Excel"),
+            icon: <FileSpreadsheet className="w-4 h-4 text-emerald-600" />,
+            onClick: () => setExportDrawerOpen(true),
+          },
+        ],
+      },
+      ...(canSyncGarage
         ? [
             {
               groupLabel: t("cases.actions.syncOptions", "Tùy chọn đồng bộ"),
@@ -497,7 +510,8 @@ export function GarageCases() {
               ],
             },
           ]
-        : undefined,
+        : []),
+    ],
     [canSyncGarage, t],
   );
 
@@ -1845,6 +1859,12 @@ export function GarageCases() {
         currentColumnVisibility={currentColumnVisibility}
         onSave={handleSaveViewPreset}
         onResetDefault={handleResetViewPreset}
+      />
+
+      <GarageCaseExportDrawer
+        open={exportDrawerOpen}
+        onClose={() => setExportDrawerOpen(false)}
+        initialBranchId={selectedBranchId}
       />
 
       {reconciliationCase && (
