@@ -273,7 +273,7 @@ export function useGrDrawer({
       try {
         const detail = await goodsReceiptsCoreApi.get(id);
         if (detail.lines) {
-          void fetchItemsDict(detail.lines.map((l) => l.itemId || ""));
+          await fetchItemsDict(detail.lines.map((l) => l.itemId || ""));
         }
         setEditing(detail);
         setForm(buildGrForm(detail));

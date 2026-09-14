@@ -14,6 +14,11 @@ import {
 } from "@/modules/production-core/api/productionCoreApi";
 import { salesOrdersCoreApi } from "@/modules/sales-orders-core/api/salesOrdersCoreApi";
 import { useBasicMasterInfinite } from "@/modules/basic-masters/hooks/useBasicMasterInfinite";
+import {
+  inventoryCoreApi,
+  type ErpInventoryItem,
+  type InventorySerialRow,
+} from "@/modules/inventory-core/api/inventoryCoreApi";
 import { useT } from "@/core/i18n";
 
 const LOOKUP_LIMIT = 200;
@@ -158,6 +163,52 @@ export function useGiDrawer({
   const [form, setForm] = useState<GiForm>(emptyGiForm);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+
+  // ── Items dict (id → item) for SKU and name display
+  const [itemsDict, setItemsDict] = useState<Record<string, ErpInventoryItem>>(
+    {},
+  );
+
+  const fetchItemsDict = useCallback(async (itemIds: string[]) => {
+    const ids = [...new Set(itemIds)].filter(Boolean);
+    if (!ids.length) return;
+    try {
+      const res = await inventoryCoreApi.list({
+        ids: ids.join(","),
+        pageSize: 1000,
+      });
+      setItemsDict((prev) => {
+        const next = { ...prev };
+        for (const it of res.items) next[it.id] = it;
+        return next;
+      });
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  // ── Serial details (id → serial row) for tracking display
+  const [serialDetails, setSerialDetails] = useState<
+    Record<string, InventorySerialRow>
+  >({});
+
+  const fetchSerialDetails = useCallback(async (serialIds: string[]) => {
+    const ids = [...new Set(serialIds)].filter(Boolean);
+    if (!ids.length) return;
+    try {
+      const res = await inventoryCoreApi.listSerials({
+        ids,
+        pageSize: 1000,
+      });
+      setSerialDetails((prev) => {
+        const next = { ...prev };
+        for (const s of res.items) next[s.id] = s;
+        return next;
+      });
+    } catch {
+      /* ignore */
+    }
+  }, []);
 
   // SO options
   const [soOptions, setSoOptions] = useState<
@@ -318,6 +369,16 @@ export function useGiDrawer({
       await loadGiLookups();
       try {
         const detail = await goodsIssuesCoreApi.get(id);
+        if (detail.lines) {
+          const itemIds = detail.lines.map((l) => l.itemId || "");
+          const serialIds = detail.lines
+            .map((l) => l.serialId)
+            .filter(Boolean) as string[];
+          await Promise.all([
+            fetchItemsDict(itemIds),
+            fetchSerialDetails(serialIds),
+          ]);
+        }
         setEditing(detail);
         setForm(buildGiForm(detail));
 
@@ -342,7 +403,7 @@ export function useGiDrawer({
         setLoading(false);
       }
     },
-    [loadGiLookups],
+    [loadGiLookups, fetchItemsDict, fetchSerialDetails],
   );
 
   const close = useCallback(() => {
@@ -413,6 +474,12 @@ export function useGiDrawer({
     setCustomerSearch: () => {},
     fetchNextCustomers: () => {},
     handleSoChange,
+    itemsDict,
+    setItemsDict,
+    fetchItemsDict,
+    serialDetails,
+    setSerialDetails,
+    fetchSerialDetails,
     itemOptions,
     itemSearch,
     setItemSearch,

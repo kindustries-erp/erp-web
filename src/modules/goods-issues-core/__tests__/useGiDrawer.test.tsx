@@ -38,6 +38,13 @@ vi.mock("@/modules/sales-orders-core/api/salesOrdersCoreApi", () => ({
   },
 }));
 
+vi.mock("@/modules/inventory-core/api/inventoryCoreApi", () => ({
+  inventoryCoreApi: {
+    list: vi.fn().mockResolvedValue({ items: [] }),
+    listSerials: vi.fn().mockResolvedValue({ items: [] }),
+  },
+}));
+
 vi.mock("@/modules/basic-masters/hooks/useBasicMasterInfinite", () => ({
   useBasicMasterInfinite: () => ({
     data: {

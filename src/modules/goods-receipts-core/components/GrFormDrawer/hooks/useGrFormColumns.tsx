@@ -74,12 +74,14 @@ export function useGrFormColumns({
 
   const indexCol = {
     key: "index",
-    header: "#",
+    header: <span className="w-full block text-center">#</span>,
     size: 40,
+    enableResizing: false,
     headerClassName: "text-center w-[40px] min-w-[40px]",
-    className: "text-center w-[40px] min-w-[40px]",
+    className:
+      "text-center w-[40px] min-w-[40px] font-mono text-xs text-muted-foreground",
     cell: (_: any, idx: number) => (
-      <span className="text-muted-foreground">{idx}</span>
+      <span className="w-full block text-center">{idx}</span>
     ),
   };
 
@@ -130,7 +132,6 @@ export function useGrFormColumns({
             ? itemsDict[poLine.itemId].itemName
             : "") ||
           poLine.description ||
-          poLine.itemId ||
           "—";
         return (
           <div
@@ -144,8 +145,7 @@ export function useGrFormColumns({
     },
     {
       key: "ordered",
-      header: makeFilterHeader("ordered", t("Đã đặt"), [], {
-        hideFilter: true,
+      header: makeFilterHeader("ordered", t("Đã đặt"), poDetail?.lines || [], {
         queryPrefix: "gr-form-po-ordered",
       }),
       minSize: 100,
@@ -165,10 +165,14 @@ export function useGrFormColumns({
       ? [
           {
             key: "remaining",
-            header: makeFilterHeader("remaining", t("Còn lại"), [], {
-              hideFilter: true,
-              queryPrefix: "gr-form-po-remaining",
-            }),
+            header: makeFilterHeader(
+              "remaining",
+              t("Còn lại"),
+              poDetail?.lines || [],
+              {
+                queryPrefix: "gr-form-po-remaining",
+              },
+            ),
             minSize: 100,
             enableResizing: true,
             headerClassName: "text-center w-[100px] min-w-[100px]",
@@ -191,10 +195,14 @@ export function useGrFormColumns({
       : []),
     {
       key: "qtyInput",
-      header: makeFilterHeader("qtyInput", t("SL Nhập"), [], {
-        hideFilter: true,
-        queryPrefix: "gr-form-po-qtyinput",
-      }),
+      header: makeFilterHeader(
+        "qtyInput",
+        t("SL Nhập"),
+        poDetail?.lines || [],
+        {
+          queryPrefix: "gr-form-po-qtyinput",
+        },
+      ),
       minSize: 140,
       enableResizing: true,
       headerClassName: "text-center w-[140px] min-w-[140px]",
@@ -251,10 +259,14 @@ export function useGrFormColumns({
     },
     {
       key: "serials",
-      header: makeFilterHeader("serials", t("Serial / Tracking"), [], {
-        hideFilter: true,
-        queryPrefix: "gr-form-po-serials",
-      }),
+      header: makeFilterHeader(
+        "serials",
+        t("Serial / Tracking"),
+        poDetail?.lines || [],
+        {
+          queryPrefix: "gr-form-po-serials",
+        },
+      ),
       minSize: 170,
       enableResizing: true,
       headerClassName: "text-center w-[170px] min-w-[170px]",
@@ -472,8 +484,7 @@ export function useGrFormColumns({
     },
     {
       key: "qtyInput",
-      header: makeFilterHeader("qtyInput", t("SL Nhập"), [], {
-        hideFilter: true,
+      header: makeFilterHeader("qtyInput", t("SL Nhập"), form.lines, {
         queryPrefix: "gr-form-other-qtyinput",
       }),
       minSize: 140,
@@ -505,8 +516,7 @@ export function useGrFormColumns({
     },
     {
       key: "serials",
-      header: makeFilterHeader("serials", t("Serial / Tracking"), [], {
-        hideFilter: true,
+      header: makeFilterHeader("serials", t("Serial / Tracking"), form.lines, {
         queryPrefix: "gr-form-other-serials",
       }),
       minSize: 170,
@@ -661,7 +671,6 @@ export function useGrFormColumns({
           (line.itemId && itemsDict[line.itemId]
             ? itemsDict[line.itemId].itemName
             : "") ||
-          line.itemId ||
           "—";
         return (
           <div
@@ -677,8 +686,7 @@ export function useGrFormColumns({
       ? [
           {
             key: "ordered",
-            header: makeFilterHeader("ordered", t("Đã đặt"), [], {
-              hideFilter: true,
+            header: makeFilterHeader("ordered", t("Đã đặt"), viewOnlySource, {
               queryPrefix: "gr-form-view-ordered",
             }),
             minSize: 100,
@@ -691,8 +699,7 @@ export function useGrFormColumns({
       : []),
     {
       key: "qtyReceived",
-      header: makeFilterHeader("qtyReceived", t("SL Nhập"), [], {
-        hideFilter: true,
+      header: makeFilterHeader("qtyReceived", t("SL Nhập"), viewOnlySource, {
         queryPrefix: "gr-form-view-qtyreceived",
       }),
       minSize: 140,
@@ -707,10 +714,14 @@ export function useGrFormColumns({
     },
     {
       key: "serials",
-      header: makeFilterHeader("serials", t("Serial / Tracking"), [], {
-        hideFilter: true,
-        queryPrefix: "gr-form-view-serials",
-      }),
+      header: makeFilterHeader(
+        "serials",
+        t("Serial / Tracking"),
+        viewOnlySource,
+        {
+          queryPrefix: "gr-form-view-serials",
+        },
+      ),
       minSize: 170,
       enableResizing: true,
       headerClassName: "text-center w-[170px] min-w-[170px]",

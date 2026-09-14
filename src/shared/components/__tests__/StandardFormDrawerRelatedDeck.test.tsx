@@ -191,7 +191,8 @@ describe("StandardFormDrawer Related Deck & Horizon Divider", () => {
     expect(cardContainer).toHaveClass("card-shadow");
     expect(cardContainer).toHaveClass("rounded-xl");
     expect(cardContainer).toHaveClass("border");
-    expect(cardContainer).toHaveClass("p-3.5");
+    expect(cardContainer).toHaveClass("p-2.5");
+    expect(cardContainer).toHaveClass("sm:p-3.5");
     expect(screen.getByTestId("tab-inner")).toBeInTheDocument();
   });
 

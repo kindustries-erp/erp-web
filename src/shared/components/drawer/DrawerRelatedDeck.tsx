@@ -143,7 +143,7 @@ export function DrawerRelatedDeck({
       {/* ── Horizon Divider Bar (Clean, Minimal, Borderless Dock) ── */}
       <div className="relative flex items-center justify-between gap-2 py-1.5 border-t border-border/60">
         {/* Left: Tab list or Custom Title */}
-        <div className="flex items-center gap-1 overflow-x-auto scrollbar-none py-0.5">
+        <div className="flex items-center gap-1 overflow-x-auto scrollbar-none touch-pan-x py-0.5 min-w-0 flex-1 pr-2">
           {customContent ? (
             <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-primary/70 inline-block" />
@@ -158,7 +158,7 @@ export function DrawerRelatedDeck({
                   type="button"
                   onClick={() => handleTabClick(tab.key)}
                   className={cn(
-                    "group relative inline-flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg transition-all select-none whitespace-nowrap",
+                    "group relative inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 min-h-[30px] sm:min-h-[32px] text-xs rounded-lg transition-all select-none whitespace-nowrap cursor-pointer",
                     isActive
                       ? "bg-slate-900 text-white dark:bg-primary dark:text-primary-foreground font-semibold shadow-xs"
                       : "text-muted-foreground hover:text-foreground hover:bg-muted/70 font-medium",
@@ -200,7 +200,7 @@ export function DrawerRelatedDeck({
         </div>
 
         {/* Right: Controls (HeaderExtra, Collapse Toggle) */}
-        <div className="flex items-center gap-1 flex-shrink-0">
+        <div className="flex items-center gap-1 flex-shrink-0 ml-auto">
           {activeTabItem?.headerExtra}
 
           <Button
@@ -208,7 +208,7 @@ export function DrawerRelatedDeck({
             variant="ghost"
             size="icon-sm"
             onClick={handleToggleCollapse}
-            className="text-muted-foreground hover:text-foreground h-7 w-7"
+            className="text-muted-foreground hover:text-foreground h-7 w-7 min-w-[28px] min-h-[28px]"
             title={collapsed ? t("Mở rộng") : t("Thu gọn")}
           >
             {collapsed ? (
@@ -231,7 +231,7 @@ export function DrawerRelatedDeck({
             data-testid="drawer-deck-card-container"
             className={cn(
               "w-full mt-2 rounded-xl border border-border/80 card-shadow transition-all",
-              isFlush ? "p-0 overflow-hidden" : "p-3.5",
+              isFlush ? "p-0 overflow-hidden" : "p-2.5 sm:p-3.5",
               cardClassName,
               activeTabItem?.cardClassName,
             )}
