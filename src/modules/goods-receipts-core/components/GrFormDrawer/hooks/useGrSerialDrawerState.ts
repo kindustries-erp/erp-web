@@ -21,20 +21,27 @@ export function useGrSerialDrawerState(
     item: any,
     qty: number,
     isViewOnly = false,
+    isSystemAuto = false,
   ) => {
     setSerialDrawerState({
       open: true,
       lineIndex,
       line,
+      lineId: line?.id || line?.receiptLineId || "",
       itemId: line?.itemId || item?.id,
       itemSku: item?.sku || line?.itemCode || "",
       itemName: item?.itemName || line?.itemName || "",
-      trackingPolicyCode: item?.trackingPolicy?.code || "SERIAL",
-      trackingPolicyName: item?.trackingPolicy?.name || "Theo Serial Number",
+      trackingPolicyCode: isSystemAuto
+        ? "SYSTEM_AUTO"
+        : item?.trackingPolicy?.code || "SERIAL",
+      trackingPolicyName: isSystemAuto
+        ? "Mã Định Danh Hệ Thống (System Serial)"
+        : item?.trackingPolicy?.name || "Theo Serial Number",
       requiredQty: qty,
       receiptDate: form.receiptDate,
       initialSerials: line?.declaredSerials || [],
       viewOnly: isViewOnly,
+      isSystemAuto,
     });
   };
 

@@ -301,6 +301,8 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
         requiredQty={serialDrawerState.requiredQty}
         receiptDate={serialDrawerState.receiptDate}
         initialSerials={serialDrawerState.initialSerials}
+        lineId={serialDrawerState.lineId}
+        isSystemAuto={serialDrawerState.isSystemAuto}
         onSaveSerials={handleSaveSerialsForLine}
       />
     </>
