@@ -29,6 +29,7 @@ export interface ModuleAttributeOption {
     en?: string;
     [key: string]: string | undefined;
   };
+  parentValue?: string;
 }
 
 export interface ModuleAttributeDef {
@@ -39,6 +40,7 @@ export interface ModuleAttributeDef {
   code: string;
   name: string;
   nameEn?: string | null;
+  parentAttrCode?: string | null;
   fieldType: ModuleAttributeFieldType;
   options?: ModuleAttributeOption[] | null;
   sortOrder: number;
@@ -83,6 +85,7 @@ export interface CreateModuleAttributeDefPayload {
   code: string;
   name: string;
   nameEn?: string;
+  parentAttrCode?: string | null;
   fieldType: ModuleAttributeFieldType;
   options?: ModuleAttributeOption[];
   sortOrder?: number;

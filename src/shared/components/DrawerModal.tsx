@@ -291,6 +291,7 @@ export function DrawerModal({
             variant="ghost"
             size="icon-sm"
             onClick={requestClose}
+            aria-label={t("common.close", "Đóng")}
             className="text-[color:var(--faint)] h-8 w-8 sm:h-7 sm:w-7 min-w-[32px] min-h-[32px] sm:min-w-0 sm:min-h-0 p-0 flex items-center justify-center"
           >
             <X className="w-4 h-4" />

@@ -261,4 +261,38 @@ describe("useGrDrawer", () => {
       expect(result.current.cancelId).toBeNull();
     });
   });
+
+  it("openCreate with prefillPurchaseOrderId sets receiptType to PO and purchaseOrderId", async () => {
+    const client = makeClient();
+    const { result } = renderHook(() => useGrDrawer(), {
+      wrapper: createWrapper(client),
+    });
+
+    await act(async () => {
+      result.current.openCreate("po-123");
+    });
+
+    await waitFor(() => {
+      expect(result.current.open).toBe(true);
+      expect(result.current.form.receiptType).toBe("PO");
+      expect(result.current.form.purchaseOrderId).toBe("po-123");
+    });
+  });
+
+  it("openCreate with prefillProductionOrderId sets receiptType to PRODUCTION and productionOrderId", async () => {
+    const client = makeClient();
+    const { result } = renderHook(() => useGrDrawer(), {
+      wrapper: createWrapper(client),
+    });
+
+    await act(async () => {
+      result.current.openCreate(undefined, "mo-456");
+    });
+
+    await waitFor(() => {
+      expect(result.current.open).toBe(true);
+      expect(result.current.form.receiptType).toBe("PRODUCTION");
+      expect(result.current.form.productionOrderId).toBe("mo-456");
+    });
+  });
 });
