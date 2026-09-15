@@ -24,11 +24,6 @@ interface GrFormRightPanelProps {
 export function GrFormRightPanel({ drawer, t }: GrFormRightPanelProps) {
   const { form, setForm, viewOnly, editing } = drawer;
 
-  // Thống kê nhanh
-  const totalReceivedQty = useMemo(() => {
-    return form.lines.reduce((sum, l) => sum + Number(l.qtyReceived || 0), 0);
-  }, [form.lines]);
-
   return (
     <>
       <DrawerField label={t("Số phiếu")}>
