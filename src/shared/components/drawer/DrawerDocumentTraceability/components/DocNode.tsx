@@ -205,6 +205,17 @@ export function TraceabilityNodeCard({
             )}
             {visualMeta.label}
           </span>
+          {visualMeta.statusLabel && (
+            <span
+              className={cn(
+                "px-1 py-0.5 rounded text-[9px] font-bold border font-mono tracking-tight",
+                visualMeta.statusBadgeCls ||
+                  "bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-950 dark:text-amber-300",
+              )}
+            >
+              {visualMeta.statusLabel}
+            </span>
+          )}
           <span className="font-mono text-xs font-bold text-slate-900 dark:text-slate-100 truncate">
             {node.docNo}
           </span>

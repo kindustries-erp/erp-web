@@ -139,6 +139,8 @@ export const MODULE_CONFIG = DOC_TYPE_META;
 export interface NodeVisualMeta {
   label: string;
   subLabel?: string;
+  statusLabel?: string;
+  statusBadgeCls?: string;
   fullTitle: string;
   badgeCls: string;
   cardBorderCls?: string;
@@ -191,10 +193,34 @@ export function getNodeVisualMeta(node: {
       node.title?.toLowerCase().includes("đầu ra") ||
       node.title?.toLowerCase().includes("bán");
 
+    const taxStatus = node.metadata?.taxInvoiceStatus;
+    let statusLabel: string | undefined;
+    let statusBadgeCls: string | undefined;
+
+    if (taxStatus === 3) {
+      statusLabel = "ĐIỀU CHỈNH";
+      statusBadgeCls =
+        "bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-950 dark:text-amber-300 dark:border-amber-700";
+    } else if (taxStatus === 2) {
+      statusLabel = "THAY THẾ";
+      statusBadgeCls =
+        "bg-purple-100 text-purple-800 border-purple-300 dark:bg-purple-950 dark:text-purple-300 dark:border-purple-700";
+    } else if (taxStatus === 5) {
+      statusLabel = "BỊ Đ/C";
+      statusBadgeCls =
+        "bg-slate-100 text-slate-700 border-slate-300 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700";
+    } else if (taxStatus === 4) {
+      statusLabel = "BỊ THAY THẾ";
+      statusBadgeCls =
+        "bg-slate-100 text-slate-700 border-slate-300 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700";
+    }
+
     if (isOut) {
       return {
         label: "HĐ BÁN",
         subLabel: "Đầu ra",
+        statusLabel,
+        statusBadgeCls,
         fullTitle: "Hóa đơn bán ra (Đầu ra - Thu tiền)",
         badgeCls:
           "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-400 dark:border-emerald-800",
@@ -206,6 +232,8 @@ export function getNodeVisualMeta(node: {
     return {
       label: "HĐ MUA",
       subLabel: "Đầu vào",
+      statusLabel,
+      statusBadgeCls,
       fullTitle: "Hóa đơn mua vào (Đầu vào - Chi tiền)",
       badgeCls:
         "bg-orange-50 text-[#ea580c] border-orange-200 dark:bg-orange-950/50 dark:text-orange-400 dark:border-orange-800",

@@ -20,7 +20,7 @@ import {
   type ModuleAttributeDef,
 } from "@/core/api/moduleConfigApi";
 import { formatGMT7 } from "@/shared/utils/format";
-import { Tag, Layers, X, Globe, CornerDownRight } from "lucide-react";
+import { Layers, X, CornerDownRight } from "lucide-react";
 import { cn } from "@/shared/utils";
 import { AttributeTypeBadge } from "@/shared/components/AttributeTypeBadge";
 import {
@@ -431,7 +431,7 @@ function AttributeFieldRenderer({
     }
 
     // View Mode
-    let displayVal = value || "—";
+    let displayVal: React.ReactNode = value || "—";
     if (attr.fieldType === "CHECKBOX") {
       const isChecked = value === true || value === "true";
       displayVal = isChecked ? (
@@ -446,52 +446,22 @@ function AttributeFieldRenderer({
     } else if (attr.fieldType === "SELECT") {
       const matchedOpt = (attr.options || []).find((o) => o.value === value);
       if (matchedOpt) {
-        displayVal = `${resolveOptionLabel(matchedOpt, locale, t)} [${matchedOpt.value}]`;
+        displayVal = resolveOptionLabel(matchedOpt, locale, t);
       }
     } else if (attr.fieldType === "DATE" && value) {
       displayVal = formatGMT7(value, "date") || value;
     }
 
     return (
-      <div
-        className={cn(
-          "flex flex-col gap-0.5 text-xs pb-1.5 border-b border-border/30 last:border-0",
-          isChild &&
-            "ml-4 pl-3.5 border-l-2 border-primary/30 border-b-0 py-1 my-0.5 bg-muted/10 rounded-r-md",
-        )}
-      >
-        <span className="text-[11px] text-muted-foreground font-medium flex items-center justify-between gap-1">
-          <span className="flex items-center gap-1">
-            {isChild ? (
-              <CornerDownRight className="w-3 h-3 text-primary/70 shrink-0" />
-            ) : attr.isGlobal ? (
-              <Globe className="w-3 h-3 text-muted-foreground opacity-80 shrink-0" />
-            ) : (
-              <Tag className="w-3 h-3 opacity-60 shrink-0" />
-            )}
-            <span>{displayName}</span>
-            {attr.isRequired && <span className="text-destructive">*</span>}
-          </span>
-          {attr.isSystem ? (
-            <AttributeTypeBadge type="system" />
-          ) : (
-            <AttributeTypeBadge type="custom" />
-          )}
-        </span>
-        {isChild && parentDisplayName && (
-          <span className="text-[10px] text-muted-foreground/80 flex items-center gap-1 font-normal">
-            <span>🔗 {t("moduleConfig.childOf", "Phụ thuộc:")}</span>
-            <span className="font-medium text-foreground/80">
-              {parentDisplayName}
-            </span>
-          </span>
-        )}
-        <div className="font-medium text-foreground px-1">{displayVal}</div>
-      </div>
+      <DrawerField label={fieldLabel} required={attr.isRequired}>
+        <div className="font-medium text-[color:var(--foreground)] text-sm px-3 py-2 bg-gray-50 dark:bg-muted/40 rounded-lg border border-transparent min-h-[38px] flex items-center">
+          {displayVal}
+        </div>
+      </DrawerField>
     );
   };
 
-  if (isEditable && isChild) {
+  if (isChild) {
     return (
       <div className="ml-3.5 pl-3 border-l-2 border-primary/30 py-0.5 space-y-1">
         {renderFieldContent()}

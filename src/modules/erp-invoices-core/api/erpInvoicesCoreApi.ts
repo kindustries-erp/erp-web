@@ -214,6 +214,12 @@ export type UpdateErpInvoicePayload = Partial<CreateErpInvoicePayload>;
 export interface ErpInvoiceListParams {
   direction?: "IN" | "OUT";
   search?: string;
+  invoice_no?: string;
+  serial_no?: string;
+  related_invoice_no?: string;
+  related_serial_no?: string;
+  tax_invoice_status?: number | string;
+  is_valid?: string;
   seller_name?: string;
   buyer_name?: string;
   partner_tax_code?: string;
