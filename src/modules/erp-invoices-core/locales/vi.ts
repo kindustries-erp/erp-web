@@ -473,4 +473,12 @@ export const erpInvoicesVi = {
   customFieldsOut: "Cấu hình hóa đơn bán ra",
   configTitleIn: "Hóa đơn mua vào",
   configTitleOut: "Hóa đơn bán ra",
+
+  // Unified Settlement Table
+  colStatus: "Trạng thái",
+  colCredit: "Thu",
+  colDebit: "Chi",
+  colCreditAmount: "Thu",
+  colDebitAmount: "Chi",
+  colThisNetOff: "Cấn trừ đợt này",
 };

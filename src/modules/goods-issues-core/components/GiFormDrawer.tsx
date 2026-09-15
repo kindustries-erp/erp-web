@@ -537,7 +537,11 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
         code: "PRODUCTION",
       },
       { value: "WARRANTY", label: t("Xuất bảo hành"), code: "WARRANTY" },
-      { value: "SCRAP", label: t("Xuất hủy / Hao hụt"), code: "SCRAP" },
+      {
+        value: "INTERNAL",
+        label: t("Xuất nội bộ / Trưng bày"),
+        code: "INTERNAL",
+      },
       { value: "OTHER", label: t("Xuất khác"), code: "OTHER" },
     ];
   }, [giAttrDefs, locale, t]);

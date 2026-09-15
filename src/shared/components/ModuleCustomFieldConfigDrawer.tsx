@@ -218,7 +218,8 @@ export const ERP_MODULE_REGISTRY: ErpModuleDefinition[] = [
     domain: "INVENTORY",
     icon: <PackageMinus className="w-3.5 h-3.5" />,
     descKey: "moduleConfig.modules.issue.desc",
-    defaultDesc: "Phiếu xuất bán hàng, xuất NVL sản xuất & xuất hủy",
+    defaultDesc:
+      "Phiếu xuất bán hàng, xuất NVL sản xuất & xuất nội bộ / trưng bày",
   },
   {
     key: "INVENTORY_ADJUSTMENT",

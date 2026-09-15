@@ -147,9 +147,22 @@ export function ErpInvoiceUnifiedSettlementTable() {
   );
 
   // ── 3. Columns Definition ──
-  const columns: DataTableColumn<any>[] = useMemo(
+  const statusFilterOptions = useMemo(
     () => [
-      {
+      { value: "LINKED", label: t("linkedBadge", "✓ Đã cấn trừ") },
+      { value: "PENDING", label: t("pendingSaveBadge", "Chờ lưu") },
+      { value: "SUGGESTED", label: t("suggestedBadge", "Gợi ý khớp") },
+      { value: "SELECTED", label: t("selectedBadge", "Đang chọn") },
+    ],
+    [t],
+  );
+
+  const columns: DataTableColumn<any>[] = useMemo(() => {
+    const cols: DataTableColumn<any>[] = [];
+
+    // Chỉ khi ở chế độ Chỉnh sửa (editMode) mới thêm cột Checkbox chọn dòng
+    if (ctx.editMode) {
+      cols.push({
         key: "selection",
         header: "",
         size: 40,
@@ -175,16 +188,16 @@ export function ErpInvoiceUnifiedSettlementTable() {
               <Checkbox
                 checked={ctx.selectedIds.includes(row.id)}
                 onCheckedChange={() => {
-                  if (!ctx.editMode && ctx.onStartEdit) {
-                    ctx.onStartEdit();
-                  }
                   ctx.handleToggleRow(row);
                 }}
               />
             </div>
           );
         },
-      },
+      });
+    }
+
+    cols.push(
       {
         key: "stt",
         header: <span className="w-full block text-center">#</span>,
@@ -200,8 +213,10 @@ export function ErpInvoiceUnifiedSettlementTable() {
       },
       {
         key: "statusTag",
-        header: t("colStatusTag", "Trạng thái / Gợi ý"),
-        size: 155,
+        header: headerFilter.client("statusTag", t("colStatus", "Trạng thái"), {
+          filterOptions: statusFilterOptions,
+        }),
+        size: 145,
         enableResizing: true,
         cell: (row) => {
           const linkedVoucher = ctx.activeVouchers.find(
@@ -268,6 +283,7 @@ export function ErpInvoiceUnifiedSettlementTable() {
         key: "source",
         header: headerFilter("source", t("colSource", "Nguồn / Tài khoản"), {
           align: TableColumnAlign.LEFT,
+          showBlankOption: true,
         }),
         size: 140,
         enableResizing: true,
@@ -360,7 +376,7 @@ export function ErpInvoiceUnifiedSettlementTable() {
           align: TableColumnAlign.LEFT,
           showBlankOption: true,
         }),
-        size: 260,
+        size: 240,
         enableResizing: true,
         cell: (row) => (
           <Tooltip content={row.description || "—"}>
@@ -371,33 +387,48 @@ export function ErpInvoiceUnifiedSettlementTable() {
         ),
       },
       {
-        key: "originalAmount",
-        header: headerFilter.amount(
-          "creditAmount",
-          t("colOriginalAmount", "Số tiền gốc"),
-          {
-            align: TableColumnAlign.RIGHT,
-          },
-        ),
-        size: 135,
+        key: "creditAmount",
+        header: headerFilter.amount("creditAmount", t("colCredit", "Thu"), {
+          align: TableColumnAlign.RIGHT,
+        }),
+        size: 130,
         headerClassName: "text-right",
-        className: "text-right",
+        className: "text-right font-mono text-xs tabular-nums",
+        enableResizing: true,
+        cell: (row) => {
+          const credit = parseFloat(row.creditAmount) || 0;
+          if (credit > 0) {
+            return (
+              <span className="font-mono font-bold text-xs text-emerald-600 dark:text-emerald-400">
+                +{money(credit)}
+              </span>
+            );
+          }
+          return (
+            <span className="text-muted-foreground font-mono text-xs">—</span>
+          );
+        },
+      },
+      {
+        key: "debitAmount",
+        header: headerFilter.amount("debitAmount", t("colDebit", "Chi"), {
+          align: TableColumnAlign.RIGHT,
+        }),
+        size: 130,
+        headerClassName: "text-right",
+        className: "text-right font-mono text-xs tabular-nums",
+        enableResizing: true,
         cell: (row) => {
           const debit = parseFloat(row.debitAmount) || 0;
-          const credit = parseFloat(row.creditAmount) || 0;
-          const isDebit = debit > 0;
-          const amount = isDebit ? debit : credit;
-
-          return (
-            <div className="flex flex-col items-end leading-tight gap-0.5">
+          if (debit > 0) {
+            return (
               <span className="font-mono font-bold text-xs text-slate-800 dark:text-slate-200">
-                {isDebit ? "-" : "+"}
-                {money(amount)}
+                -{money(debit)}
               </span>
-              <span className="inline-block px-1.5 py-0.2 rounded text-[9.5px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 shrink-0">
-                {isDebit ? t("natureDebit", "Chi") : t("natureCredit", "Thu")}
-              </span>
-            </div>
+            );
+          }
+          return (
+            <span className="text-muted-foreground font-mono text-xs">—</span>
           );
         },
       },
@@ -406,7 +437,8 @@ export function ErpInvoiceUnifiedSettlementTable() {
         header: t("colThisNetOff", "Cấn trừ đợt này"),
         size: 155,
         headerClassName: "text-right",
-        className: "text-right",
+        className: "text-right font-mono text-xs tabular-nums",
+        enableResizing: true,
         cell: (row) => {
           const isSelected = ctx.selectedIds.includes(row.id);
           const linkedVoucher = ctx.activeVouchers.find(
@@ -514,8 +546,69 @@ export function ErpInvoiceUnifiedSettlementTable() {
           );
         },
       },
-    ],
-    [ctx, headerFilter, t],
+    );
+
+    return cols;
+  }, [ctx, headerFilter, statusFilterOptions, t]);
+
+  // ── 4. Summary Row Calculation ──
+  const summaryTotals = useMemo(() => {
+    let totalCredit = 0;
+    let totalDebit = 0;
+    let totalNetOff = 0;
+
+    displayItems.forEach((row: any) => {
+      totalCredit += parseFloat(row.creditAmount) || 0;
+      totalDebit += parseFloat(row.debitAmount) || 0;
+
+      if (ctx.selectedIds.includes(row.id)) {
+        totalNetOff +=
+          ctx.netOffAmounts[row.id] !== undefined
+            ? ctx.netOffAmounts[row.id]
+            : 0;
+      } else {
+        const linked = ctx.activeVouchers.find(
+          (v) => v.bankTransactionId === row.id,
+        );
+        if (linked || row.isLinked) {
+          totalNetOff += linked?.amount || row.netOffAmount || 0;
+        }
+      }
+    });
+
+    return { totalCredit, totalDebit, totalNetOff };
+  }, [displayItems, ctx.selectedIds, ctx.netOffAmounts, ctx.activeVouchers]);
+
+  const summaryRow = useMemo(
+    () => ({
+      description: (
+        <div className="text-right w-full font-semibold text-xs text-slate-700 dark:text-slate-300">
+          {t("common:total", "Tổng cộng")}:
+        </div>
+      ),
+      creditAmount: (
+        <div className="text-right font-bold font-mono text-xs text-emerald-600 dark:text-emerald-400">
+          {summaryTotals.totalCredit > 0
+            ? `+${money(summaryTotals.totalCredit)}`
+            : "—"}
+        </div>
+      ),
+      debitAmount: (
+        <div className="text-right font-bold font-mono text-xs text-slate-800 dark:text-slate-200">
+          {summaryTotals.totalDebit > 0
+            ? `-${money(summaryTotals.totalDebit)}`
+            : "—"}
+        </div>
+      ),
+      thisNetOff: (
+        <div className="text-right font-bold font-mono text-xs text-primary">
+          {summaryTotals.totalNetOff > 0
+            ? money(summaryTotals.totalNetOff)
+            : "—"}
+        </div>
+      ),
+    }),
+    [summaryTotals, t],
   );
 
   return (
@@ -573,7 +666,7 @@ export function ErpInvoiceUnifiedSettlementTable() {
       className="p-3 mb-0 border border-slate-200/80 dark:border-slate-800"
       bodyClassName="p-0"
     >
-      <div className="h-[calc(100vh-310px)] min-h-[360px] flex flex-col overflow-hidden bg-white dark:bg-slate-900">
+      <div className="h-[calc(100vh-375px)] min-h-[260px] flex flex-col overflow-hidden bg-white dark:bg-slate-900">
         <StandardTable
           tableId="invoice-unified-settlement-table"
           items={displayItems}
@@ -591,6 +684,7 @@ export function ErpInvoiceUnifiedSettlementTable() {
           onPage={isCurrentPaginated ? ctx.setPage : undefined}
           onPageSize={isCurrentPaginated ? ctx.setPageSize : undefined}
           minWidth={1200}
+          summaryRow={summaryRow}
           containerClassName="flex-1 min-h-0"
         />
       </div>
