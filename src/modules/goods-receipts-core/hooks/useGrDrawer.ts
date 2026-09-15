@@ -252,10 +252,14 @@ export function useGrDrawer({
       setViewOnly(false);
       setSaveError(null);
       const initial = emptyGrForm();
-      if (prefillPurchaseOrderId)
+      if (prefillPurchaseOrderId) {
         initial.purchaseOrderId = prefillPurchaseOrderId;
-      if (prefillProductionOrderId)
+        initial.receiptType = "PO";
+      }
+      if (prefillProductionOrderId) {
         initial.productionOrderId = prefillProductionOrderId;
+        initial.receiptType = "PRODUCTION";
+      }
       setForm(initial);
       void loadPoOptions();
       setOpen(true);

@@ -53,6 +53,10 @@ export interface InventoryVoucherFormDrawerProps {
    */
   remarksContent: ReactNode;
   /**
+   * Optional tags slot ("Thẻ nhãn") — rendered below remarksContent in Thông tin chung.
+   */
+  tagsSlot?: ReactNode;
+  /**
    * Optional custom fields section slot ("THUỘC TÍNH TÙY CHỈNH")
    */
   customFieldsSlot?: ReactNode;
@@ -221,6 +225,9 @@ export function InventoryVoucherFormDrawer(
                     {props.remarksContent}
                   </DrawerField>
                 )}
+
+                {/* Thẻ nhãn được hiển thị bên dưới Ghi chú */}
+                {props.tagsSlot}
               </DrawerSection>
 
               {/* ── 2. THUỘC TÍNH MẶC ĐỊNH ───────────────────────────── */}

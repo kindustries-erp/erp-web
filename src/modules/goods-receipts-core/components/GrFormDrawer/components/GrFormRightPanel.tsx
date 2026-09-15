@@ -93,8 +93,21 @@ export function GrFormRightPanel({ drawer, t }: GrFormRightPanelProps) {
           />
         )}
       </DrawerField>
+    </>
+  );
+}
 
-      {/* Thẻ nhãn (Tags) */}
+/** Thẻ nhãn (Tags) & Summary Cards hiển thị trong tagsSlot bên dưới Ghi chú */
+export function GrFormTagsSection({ drawer, t }: GrFormRightPanelProps) {
+  const { viewOnly, editing, form } = drawer;
+
+  // Thống kê nhanh
+  const totalReceivedQty = useMemo(() => {
+    return form.lines.reduce((sum, l) => sum + Number(l.qtyReceived || 0), 0);
+  }, [form.lines]);
+
+  return (
+    <>
       <div className="pt-1">
         <div className="text-sm font-medium mb-1.5 text-gray-700 dark:text-gray-300">
           {t("tags", "Thẻ nhãn")}

@@ -21,6 +21,7 @@ import { useGrSerialDrawerState } from "./hooks/useGrSerialDrawerState";
 import { useGrFormColumns } from "./hooks/useGrFormColumns";
 import {
   GrFormRightPanel,
+  GrFormTagsSection,
   GrDefaultAttributesSection,
 } from "./components/GrFormRightPanel";
 import { GrFormSectionTitleExtra } from "./components/GrFormSectionTitleExtra";
@@ -317,6 +318,7 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
           <GrDefaultAttributesSection drawer={drawer} t={t} />
         }
         remarksContent={remarksContent}
+        tagsSlot={<GrFormTagsSection drawer={drawer} t={t} />}
         customFieldsSlot={
           <ModuleEntityCustomFieldsSection
             moduleKey="GOODS_RECEIPT"
