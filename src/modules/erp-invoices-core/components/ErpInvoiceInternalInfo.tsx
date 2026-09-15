@@ -173,7 +173,8 @@ export function ErpInvoiceInternalSidebar({
     return Array.isArray(globalDefs)
       ? globalDefs.find(
           (d) =>
-            (d.code === targetCode ||
+            (d.code === "category" ||
+              d.code === targetCode ||
               d.code === "invoice_type" ||
               d.code === "type") &&
             !d.isDeleted,
@@ -257,12 +258,16 @@ export function ErpInvoiceInternalSidebar({
   const currentInvoiceType = useMemo(() => {
     const gAttrs = (form as any).globalAttributes || {};
     if (typeDef) {
-      return gAttrs[typeDef.id] || gAttrs[typeDef.code] || "";
+      return (
+        gAttrs[typeDef.id] || gAttrs[typeDef.code] || gAttrs.category || ""
+      );
     }
     return (
+      gAttrs.category ||
       (direction === "OUT"
         ? gAttrs.type_invoice_out
-        : gAttrs.type_invoice_in) || ""
+        : gAttrs.type_invoice_in) ||
+      ""
     );
   }, [form, typeDef, direction]);
 
@@ -271,16 +276,23 @@ export function ErpInvoiceInternalSidebar({
     if (typeDef) {
       if (val) {
         gAttrs[typeDef.id] = val;
+        gAttrs[typeDef.code] = val;
       } else {
         delete gAttrs[typeDef.id];
+        delete gAttrs[typeDef.code];
       }
     }
-    const targetKey =
+    if (val) {
+      gAttrs.category = val;
+    } else {
+      delete gAttrs.category;
+    }
+    const legacyKey =
       direction === "OUT" ? "type_invoice_out" : "type_invoice_in";
     if (val) {
-      gAttrs[targetKey] = val;
+      gAttrs[legacyKey] = val;
     } else {
-      delete gAttrs[targetKey];
+      delete gAttrs[legacyKey];
     }
     fieldSet("globalAttributes", gAttrs);
   };

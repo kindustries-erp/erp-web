@@ -295,11 +295,11 @@ describe("ModuleCustomFieldConfigDrawer Component", () => {
     });
   });
 
-  it("renders both type_invoice_in and is_valid system attributes when opened for INVOICE_IN", async () => {
+  it("renders both category and is_valid system attributes when opened for INVOICE_IN", async () => {
     const invoiceInDefs = [
       {
         id: "def-type-in",
-        code: "type_invoice_in",
+        code: "category",
         name: "Phân loại hóa đơn mua vào",
         fieldType: "SELECT",
         isGlobal: true,
