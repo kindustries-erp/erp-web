@@ -8,6 +8,7 @@ import { DrawerField, inputCls } from "@/shared/components/DrawerModal";
 import {
   moduleConfigApi,
   resolveOptionLabel,
+  resolveAttrName,
 } from "@/core/api/moduleConfigApi";
 import { useAppStore } from "@/core/config/appStore";
 import { AttributeTypeBadge } from "@/shared/components/AttributeTypeBadge";
@@ -201,6 +202,35 @@ export function GrDefaultAttributesSection({
     return "";
   }, [poDetail, poOptions, form.purchaseOrderId]);
 
+  const subcategoryDef = useMemo(() => {
+    return Array.isArray(grAttrDefs)
+      ? grAttrDefs.find((d) => d?.code === "subcategory" && !d?.isDeleted)
+      : undefined;
+  }, [grAttrDefs]);
+
+  const subcategoryOptions = useMemo(() => {
+    if (!subcategoryDef?.options || subcategoryDef.options.length === 0)
+      return [];
+    const currentCategory =
+      form.receiptType || (form.purchaseOrderId ? "PO" : "OTHER");
+    return subcategoryDef.options
+      .filter((opt) => !opt.parentValue || opt.parentValue === currentCategory)
+      .map((opt) => ({
+        label: resolveOptionLabel(opt, locale, t),
+        value: opt.value,
+        code: opt.value,
+      }));
+  }, [subcategoryDef, form.receiptType, form.purchaseOrderId, locale, t]);
+
+  const currentSubcategoryLabel = useMemo(() => {
+    const rawVal =
+      form.globalAttributes?.subcategory ||
+      form.customAttributes?.subcategory ||
+      "";
+    const opt = (subcategoryDef?.options || []).find((o) => o.value === rawVal);
+    return opt ? resolveOptionLabel(opt, locale, t) : rawVal || "—";
+  }, [subcategoryDef, form.globalAttributes, form.customAttributes, locale, t]);
+
   return (
     <div className="space-y-4">
       <DrawerField
@@ -221,13 +251,25 @@ export function GrDefaultAttributesSection({
             value={form.receiptType}
             onChange={(val) => {
               if (val === "PO") {
-                setForm((f) => ({ ...f, receiptType: "PO", lines: [] }));
+                setForm((f) => ({
+                  ...f,
+                  receiptType: "PO",
+                  lines: [],
+                  globalAttributes: {
+                    ...(f.globalAttributes || {}),
+                    subcategory: undefined,
+                  },
+                }));
               } else {
                 setForm((f) => ({
                   ...f,
                   receiptType: val || "OTHER",
                   purchaseOrderId: "",
                   lines: [],
+                  globalAttributes: {
+                    ...(f.globalAttributes || {}),
+                    subcategory: undefined,
+                  },
                 }));
               }
             }}
@@ -237,6 +279,52 @@ export function GrDefaultAttributesSection({
           />
         )}
       </DrawerField>
+
+      {/* Sub-field: Phân loại chi tiết (Subcategory) khi có cấu hình */}
+      {subcategoryDef && subcategoryOptions.length > 0 && (
+        <DrawerField
+          label={
+            <span className="inline-flex items-center gap-1.5 flex-wrap">
+              <span>
+                {resolveAttrName(subcategoryDef, "GOODS_RECEIPT", locale, t)}
+              </span>
+              <AttributeTypeBadge type="system" />
+            </span>
+          }
+          required={subcategoryDef.isRequired}
+        >
+          {viewOnly ? (
+            <div className="font-medium text-[color:var(--foreground)] text-sm px-3 py-2 bg-gray-50 dark:bg-muted/40 rounded-lg border border-transparent">
+              {currentSubcategoryLabel}
+            </div>
+          ) : (
+            <Combobox
+              options={subcategoryOptions}
+              value={
+                form.globalAttributes?.subcategory ||
+                form.customAttributes?.subcategory ||
+                ""
+              }
+              onChange={(val) => {
+                setForm((f) => ({
+                  ...f,
+                  globalAttributes: {
+                    ...(f.globalAttributes || {}),
+                    subcategory: val || undefined,
+                  },
+                  customAttributes: {
+                    ...(f.customAttributes || {}),
+                    subcategory: val || undefined,
+                  },
+                }));
+              }}
+              disabled={editing?.status === "POSTED"}
+              placeholder={t("— Chọn phân loại chi tiết —")}
+              allowClear={!subcategoryDef.isRequired}
+            />
+          )}
+        </DrawerField>
+      )}
 
       {/* Sub-field: Đơn mua hàng (PO) khi Loại nhập = PO */}
       {form.receiptType === "PO" && (

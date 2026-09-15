@@ -344,4 +344,108 @@ describe("ModuleCustomFieldConfigDrawer Component", () => {
       screen.getAllByText("Hóa đơn hợp lý, hợp lệ").length,
     ).toBeGreaterThanOrEqual(1);
   });
+
+  it("renders subcategory attribute with cascading options correctly", async () => {
+    const customDefsWithSubcategory = [
+      {
+        id: "def-cat",
+        code: "category",
+        name: "Loại nhập kho",
+        fieldType: "SELECT",
+        isGlobal: true,
+        isSystem: true,
+        isActive: true,
+        options: [
+          { value: "PO", label: "Đơn mua hàng (PO)" },
+          { value: "OTHER", label: "Nhập khác" },
+        ],
+      },
+      {
+        id: "def-sub",
+        code: "subcategory",
+        name: "Phân loại chi tiết",
+        fieldType: "SELECT",
+        isGlobal: true,
+        isSystem: true,
+        isActive: true,
+        options: [
+          {
+            value: "REC_PO_REGULAR",
+            label: "Nhập PO định kỳ",
+            parentValue: "PO",
+          },
+          {
+            value: "REC_OTHER_SAMPLE",
+            label: "Nhập hàng mẫu",
+            parentValue: "OTHER",
+          },
+        ],
+      },
+    ];
+
+    vi.mocked(moduleConfigApi.getGlobalAttributeDefs).mockResolvedValue(
+      customDefsWithSubcategory as any,
+    );
+    vi.mocked(moduleConfigApi.getAttributeDefs).mockResolvedValue(
+      customDefsWithSubcategory as any,
+    );
+    vi.mocked(moduleConfigApi.getAttributeOptionsUsage).mockResolvedValue({});
+
+    render(
+      <ModuleCustomFieldConfigDrawer
+        open={true}
+        onClose={vi.fn()}
+        moduleKey="GOODS_RECEIPT"
+      />,
+      { wrapper },
+    );
+
+    expect(
+      (await screen.findAllByText("Loại nhập kho")).length,
+    ).toBeGreaterThanOrEqual(1);
+    expect(
+      (await screen.findAllByText("Phân loại chi tiết")).length,
+    ).toBeGreaterThanOrEqual(1);
+  });
+
+  it("shows confirmation modal when closing drawer while editing an attribute", async () => {
+    vi.mocked(moduleConfigApi.getGlobalAttributeDefs).mockResolvedValue(
+      mockDefs as any,
+    );
+    vi.mocked(moduleConfigApi.getAttributeDefs).mockResolvedValue(
+      mockDefs as any,
+    );
+    vi.mocked(moduleConfigApi.getAttributeOptionsUsage).mockResolvedValue({});
+
+    const onClose = vi.fn();
+    render(
+      <ModuleCustomFieldConfigDrawer
+        open={true}
+        onClose={onClose}
+        moduleKey="GOODS_RECEIPT"
+      />,
+      { wrapper },
+    );
+
+    // Click on Add Attribute
+    const addBtn = await screen.findByText("Thêm thuộc tính");
+    fireEvent.click(addBtn);
+
+    // Expect edit form to be open
+    expect(screen.getByText("Thêm thuộc tính tùy chỉnh")).toBeInTheDocument();
+
+    // Try to trigger drawer close (Click close button on drawer header)
+    const closeDrawerBtn = screen.getByLabelText("Đóng");
+    fireEvent.click(closeDrawerBtn);
+
+    // Modal confirm should appear
+    expect(screen.getByText("Xác nhận thoát cấu hình")).toBeInTheDocument();
+    expect(onClose).not.toHaveBeenCalled();
+
+    // Click confirm discard
+    const discardBtn = screen.getByText("Thoát không lưu");
+    fireEvent.click(discardBtn);
+
+    expect(onClose).toHaveBeenCalled();
+  });
 });
