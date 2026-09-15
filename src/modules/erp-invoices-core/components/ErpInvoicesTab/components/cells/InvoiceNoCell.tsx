@@ -26,6 +26,20 @@ export const InvoiceNoCell = React.memo(function InvoiceNoCell({
     handleOpenInternal(inv);
   };
 
+  let tooltipInvoiceNo = invoiceNo ? `Số HĐ: ${invoiceNo}` : "—";
+  if (inv.relatedInvoiceNo) {
+    const isAdj = inv.taxInvoiceStatus === 3;
+    const isRep = inv.taxInvoiceStatus === 2;
+    const prefix = isAdj
+      ? "Điều chỉnh cho HĐ"
+      : isRep
+        ? "Thay thế cho HĐ"
+        : "Liên quan HĐ";
+    tooltipInvoiceNo += ` (${prefix}: ${inv.relatedInvoiceNo}${
+      inv.relatedSerialNo ? " - " + inv.relatedSerialNo : ""
+    })`;
+  }
+
   return (
     <div className="flex items-center gap-1.5 w-full min-w-0 py-0.5 leading-none">
       {/* Left Eye Icon: Vertically centered across both rows */}
@@ -46,7 +60,7 @@ export const InvoiceNoCell = React.memo(function InvoiceNoCell({
       <div className="flex flex-col justify-center min-w-0 flex-1 gap-0.5">
         {/* Row 1: Invoice No with independent copy */}
         <div className="flex items-center gap-1 min-w-0 group/invno">
-          <Tooltip content={invoiceNo ? `Số HĐ: ${invoiceNo}` : "—"}>
+          <Tooltip content={tooltipInvoiceNo}>
             <span
               className="truncate text-[11px] font-semibold text-primary leading-tight select-text cursor-pointer hover:underline"
               onClick={handleOpenDetail}

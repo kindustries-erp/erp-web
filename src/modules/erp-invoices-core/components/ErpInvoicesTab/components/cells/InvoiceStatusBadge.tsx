@@ -5,10 +5,14 @@ import { formatTaxInvoiceStatus, formatTaxProcessStatus } from "../../utils";
 
 export interface TaxInvoiceStatusBadgeProps {
   status?: number | null;
+  relatedInvoiceNo?: string | null;
+  relatedSerialNo?: string | null;
 }
 
 export const TaxInvoiceStatusBadge = React.memo(function TaxInvoiceStatusBadge({
   status,
+  relatedInvoiceNo,
+  relatedSerialNo,
 }: TaxInvoiceStatusBadgeProps) {
   if (status == null) return <>—</>;
 
@@ -33,11 +37,40 @@ export const TaxInvoiceStatusBadge = React.memo(function TaxInvoiceStatusBadge({
       break;
   }
 
+  let tooltipContent = lbl;
+  if (relatedInvoiceNo) {
+    const relStr = `HĐ số ${relatedInvoiceNo}${
+      relatedSerialNo ? " (" + relatedSerialNo + ")" : ""
+    }`;
+    if (status === 3) {
+      tooltipContent = `Điều chỉnh cho ${relStr}`;
+    } else if (status === 2) {
+      tooltipContent = `Thay thế cho ${relStr}`;
+    } else {
+      tooltipContent = `${lbl} (Liên quan: ${relStr})`;
+    }
+  } else if (status === 5) {
+    tooltipContent = "Bị điều chỉnh (HĐ gốc đã có HĐ điều chỉnh phát sinh)";
+  } else if (status === 4) {
+    tooltipContent = "Bị thay thế (HĐ gốc đã được thay thế bởi HĐ mới)";
+  }
+
+  const subText = relatedInvoiceNo
+    ? `${status === 3 ? "Đ/c: " : status === 2 ? "Thay: " : "HĐ: "}${relatedInvoiceNo}`
+    : null;
+
   return (
-    <Tooltip content={lbl}>
-      <Badge variant="ghost" className={`border ${badgeClass}`}>
-        <span className="truncate block max-w-full">{lbl}</span>
-      </Badge>
+    <Tooltip content={tooltipContent}>
+      <div className="inline-flex flex-col items-center justify-center gap-0.5 max-w-[130px]">
+        <Badge variant="ghost" className={`border ${badgeClass}`}>
+          <span className="truncate block max-w-full">{lbl}</span>
+        </Badge>
+        {subText && (
+          <span className="text-[10px] text-muted-foreground font-mono font-medium truncate max-w-full leading-none">
+            {subText}
+          </span>
+        )}
+      </div>
     </Tooltip>
   );
 });

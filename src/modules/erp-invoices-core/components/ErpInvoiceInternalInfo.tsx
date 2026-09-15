@@ -20,6 +20,7 @@ import {
 } from "@/core/api/moduleConfigApi";
 import { useAppStore } from "@/core/config/appStore";
 import { cn } from "@/shared/utils";
+import { RelatedInvoiceSidebarSection } from "./RelatedInvoiceSidebarSection";
 
 function BufferedTextarea({
   value,
@@ -360,6 +361,12 @@ export function ErpInvoiceInternalSidebar({
               />
             ) : null}
           </div>
+
+          {/* Hóa đơn liên quan (HĐ gốc bị điều chỉnh/thay thế hoặc HĐ điều chỉnh phát sinh) */}
+          <RelatedInvoiceSidebarSection
+            invoice={detailInvoice}
+            direction={direction}
+          />
         </div>
       </DrawerSection>
 
