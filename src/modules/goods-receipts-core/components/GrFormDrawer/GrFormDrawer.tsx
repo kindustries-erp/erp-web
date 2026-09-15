@@ -21,6 +21,7 @@ import { useGrSerialDrawerState } from "./hooks/useGrSerialDrawerState";
 import { useGrFormColumns } from "./hooks/useGrFormColumns";
 import {
   GrFormRightPanel,
+  GrFormTagsSection,
   GrDefaultAttributesSection,
 } from "./components/GrFormRightPanel";
 import { GrFormSectionTitleExtra } from "./components/GrFormSectionTitleExtra";
@@ -65,12 +66,27 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
   const { data: companyProfile } = useCompanyProfile();
   const [isImportOpen, setIsImportOpen] = useState(false);
 
+  const poNo = poDetail?.poNo || form.purchaseOrderId || "";
+  const vendorName =
+    editing?.supplierName ||
+    poDetail?.supplierName ||
+    (editing?.customAttributes?.vendorName as string) ||
+    "";
+  const warehouseName =
+    (editing?.customAttributes?.warehouseName as string) || "";
+  const receiptNo = editing?.receiptNo || form.receiptNo || "";
+
   const {
     serialDrawerState,
     handleOpenSerialDrawer,
     handleCloseSerialDrawer,
     handleSaveSerialsForLine,
-  } = useGrSerialDrawerState(form, setForm);
+  } = useGrSerialDrawerState(form, setForm, {
+    receiptNo,
+    purchaseOrderNo: poNo,
+    vendorName,
+    warehouseName,
+  });
 
   const tableMode: GrTableMode = poDetail
     ? "po"
@@ -317,6 +333,7 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
           <GrDefaultAttributesSection drawer={drawer} t={t} />
         }
         remarksContent={remarksContent}
+        tagsSlot={<GrFormTagsSection drawer={drawer} t={t} />}
         customFieldsSlot={
           <ModuleEntityCustomFieldsSection
             moduleKey="GOODS_RECEIPT"
@@ -385,6 +402,10 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
         trackingPolicyName={serialDrawerState.trackingPolicyName}
         requiredQty={serialDrawerState.requiredQty}
         receiptDate={serialDrawerState.receiptDate}
+        receiptNo={serialDrawerState.receiptNo || receiptNo}
+        purchaseOrderNo={serialDrawerState.purchaseOrderNo || poNo}
+        vendorName={serialDrawerState.vendorName || vendorName}
+        warehouseName={serialDrawerState.warehouseName || warehouseName}
         initialSerials={serialDrawerState.initialSerials}
         lineId={serialDrawerState.lineId}
         isSystemAuto={serialDrawerState.isSystemAuto}

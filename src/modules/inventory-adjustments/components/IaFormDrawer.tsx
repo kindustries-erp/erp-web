@@ -642,7 +642,11 @@ export function IaFormDrawer({ drawer }: IaFormDrawerProps) {
           />
         )}
       </DrawerField>
+    </>
+  );
 
+  const tagsSlot = (
+    <>
       {/* Thẻ nhãn (Tags) */}
       <div className="pt-1">
         <div className="text-sm font-medium mb-1.5 text-gray-700 dark:text-gray-300">
@@ -828,6 +832,7 @@ export function IaFormDrawer({ drawer }: IaFormDrawerProps) {
       rightPanelContent={rightPanelContent}
       defaultAttributesSlot={defaultAttributesSlot}
       remarksContent={remarksContent}
+      tagsSlot={tagsSlot}
       customFieldsSlot={
         <ModuleEntityCustomFieldsSection
           moduleKey="INVENTORY_ADJUSTMENT"

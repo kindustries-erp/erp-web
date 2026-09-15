@@ -5,6 +5,12 @@ import type { GrSerialDrawerState } from "../types";
 export function useGrSerialDrawerState(
   form: GrForm,
   setForm: React.Dispatch<React.SetStateAction<GrForm>>,
+  extraContext?: {
+    receiptNo?: string;
+    purchaseOrderNo?: string;
+    vendorName?: string;
+    warehouseName?: string;
+  },
 ) {
   const [serialDrawerState, setSerialDrawerState] =
     useState<GrSerialDrawerState>({
@@ -39,6 +45,11 @@ export function useGrSerialDrawerState(
         : item?.trackingPolicy?.name || "Theo Serial Number",
       requiredQty: qty,
       receiptDate: form.receiptDate,
+      receiptNo: extraContext?.receiptNo || form.receiptNo || "",
+      purchaseOrderNo:
+        extraContext?.purchaseOrderNo || form.purchaseOrderId || "",
+      vendorName: extraContext?.vendorName || "",
+      warehouseName: extraContext?.warehouseName || "",
       initialSerials: line?.declaredSerials || [],
       viewOnly: isViewOnly,
       isSystemAuto,

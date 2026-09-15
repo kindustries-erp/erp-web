@@ -9,8 +9,8 @@ import {
   ChevronDown,
   AlertTriangle,
   CheckCircle2,
-  Copy,
   Loader2,
+  Copy,
 } from "lucide-react";
 import * as XLSX from "xlsx";
 import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
@@ -27,11 +27,12 @@ import {
 import { cn } from "@/shared/utils";
 import {
   DrawerSection,
-  DrawerField,
+  DrawerRow,
   inputCls,
 } from "@/shared/components/DrawerModal";
 import { ActionDropdown } from "@/shared/components/ActionDropdown";
 import { EmptyState } from "@/shared/components/EmptyState";
+import { CopyButton, copyToClipboard } from "@/shared/components/CopyButton";
 import { useT } from "@/core/i18n";
 import { useUIStore } from "@/core/config/uiStore";
 import { money } from "@/shared/utils/format";
@@ -58,6 +59,10 @@ interface GoodsReceiptSerialDrawerProps {
   trackingPolicyName?: string;
   requiredQty: number;
   receiptDate?: string;
+  receiptNo?: string;
+  purchaseOrderNo?: string;
+  vendorName?: string;
+  warehouseName?: string;
   initialSerials?: ErpGrDeclaredSerial[];
   lineId?: string;
   isSystemAuto?: boolean;
@@ -75,6 +80,10 @@ export function GoodsReceiptSerialDrawer({
   trackingPolicyName = "Theo Serial Number",
   requiredQty,
   receiptDate,
+  receiptNo = "",
+  purchaseOrderNo = "",
+  vendorName = "",
+  warehouseName = "",
   initialSerials = [],
   lineId,
   isSystemAuto = false,
@@ -227,6 +236,39 @@ export function GoodsReceiptSerialDrawer({
       internalSerials: getDupes(iSerCounts),
     };
   }, [serials]);
+
+  // Status statistics for isSystemAuto
+  const systemStatusCounts = useMemo(() => {
+    if (!isSystemAuto) return null;
+    let inStock = 0;
+    let issued = 0;
+    let assembled = 0;
+    let other = 0;
+    serials.forEach((s) => {
+      if (s.status === "IN_STOCK") inStock++;
+      else if (s.status === "ISSUED") issued++;
+      else if (s.status === "ASSEMBLED") assembled++;
+      else other++;
+    });
+    return { inStock, issued, assembled, other };
+  }, [serials, isSystemAuto]);
+
+  // Vehicle complete data counts
+  const vehicleFilledCounts = useMemo(() => {
+    if (!isVehicle) return null;
+    let completeRows = 0;
+    serials.forEach((s) => {
+      if (
+        s.vinNo?.trim() &&
+        s.engineNo?.trim() &&
+        s.serialNo?.trim() &&
+        s.internalSerialNo?.trim()
+      ) {
+        completeRows++;
+      }
+    });
+    return { completeRows, total: serials.length };
+  }, [serials, isVehicle]);
 
   // Handle single serial field update
   const handleUpdateSerial = (
@@ -439,13 +481,14 @@ export function GoodsReceiptSerialDrawer({
     });
   };
 
-  // Copy all serials
-  const handleCopyAllSerials = () => {
+  // Copy all serials with fallback
+  const handleCopyAllSerials = async () => {
     const serialTexts = serials
       .map((s) => s.systemSerialNo || s.serialNo)
       .filter(Boolean);
     if (serialTexts.length === 0) return;
-    navigator.clipboard.writeText(serialTexts.join("\n")).then(() => {
+    const success = await copyToClipboard(serialTexts.join("\n"));
+    if (success) {
       showToast({
         title: t(
           "inventory.copiedAllSerials",
@@ -453,31 +496,58 @@ export function GoodsReceiptSerialDrawer({
         ),
         variant: "success",
       });
-    });
+    } else {
+      showToast({
+        title: t("inventory.copyFailed", "Không thể sao chép vào clipboard"),
+        variant: "destructive",
+      });
+    }
   };
 
-  // Export current serials to Excel
+  // Export current serials to Excel (ERP-Invoice Standard with Freeze Header, Autofilter, PO & GR Linkage)
   const handleExportCurrentSerials = () => {
     if (serials.length === 0) return;
     const prefix = itemSku ? itemSku.replace(/[^a-zA-Z0-9_-]/g, "") : "ITEM";
+    const now = new Date();
+    const pad = (n: number) => String(n).padStart(2, "0");
+    const timestampStr = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}`;
+
+    let mainSheetName: string;
+    let fileBaseName: string;
     let headers: string[];
-    let rows: any[][];
-    let fileName: string;
+    let dataRows: any[][];
+    let colWidths: number[];
 
     if (isSystemAuto) {
+      mainSheetName = "System_Serials";
+      fileBaseName = `Bao_Cao_System_Serial_${prefix}_${timestampStr}.xlsx`;
       headers = [
         "STT",
         "Mã System Serial",
+        "Mã phiếu nhập",
+        "Ngày nhập kho",
+        "Mã đơn mua hàng (PO)",
+        "Nhà cung cấp",
+        "Mã SKU",
+        "Tên hàng hóa",
         "Phân loại",
         "Trạng thái",
-        "Giá vốn (VNĐ)",
+        "Giá vốn đơn vị (VNĐ)",
         "Ghi chú",
       ];
-      rows = [
-        headers,
-        ...serials.map((s, idx) => [
+      colWidths = [8, 28, 20, 16, 22, 28, 18, 30, 24, 16, 22, 30];
+
+      dataRows = serials.map((s, idx) => {
+        const costNum = s.unitCost ? Number(s.unitCost) : "";
+        return [
           idx + 1,
           s.systemSerialNo || s.serialNo || "",
+          receiptNo || "—",
+          receiptDate || "—",
+          purchaseOrderNo || "—",
+          vendorName || "—",
+          itemSku || "—",
+          itemName || "—",
           s.trackingType === "SYSTEM_AUTO"
             ? "Tự động sinh (Hàng thường)"
             : s.trackingType || "Khai báo",
@@ -488,49 +558,125 @@ export function GoodsReceiptSerialDrawer({
               : s.status === "ASSEMBLED"
                 ? "Đã lắp ráp xe"
                 : s.status || "",
-          s.unitCost ? Number(s.unitCost) : "",
+          costNum,
           s.notes || "",
-        ]),
-      ];
-      fileName = `Danh_Sach_System_Serial_${prefix}.xlsx`;
+        ];
+      });
     } else if (isVehicle) {
+      mainSheetName = "Dinh_Danh_Xe";
+      fileBaseName = `Bao_Cao_Dinh_Danh_Xe_${prefix}_${timestampStr}.xlsx`;
       headers = [
         "STT",
         "Số khung (VIN)",
         "Số máy",
         "Số Serial xe",
         "Số Serial nội bộ",
+        "Mã phiếu nhập",
+        "Ngày nhập kho",
+        "Mã đơn mua hàng (PO)",
+        "Nhà cung cấp",
+        "Mã SKU",
+        "Tên hàng hóa",
+        "Trạng thái",
         "Ghi chú",
       ];
-      rows = [
-        headers,
-        ...serials.map((s, idx) => [
-          idx + 1,
-          s.vinNo || "",
-          s.engineNo || "",
-          s.serialNo || "",
-          s.internalSerialNo || "",
-          s.notes || "",
-        ]),
-      ];
-      fileName = `Danh_Sach_Dinh_Danh_Xe_${prefix}.xlsx`;
+      colWidths = [8, 24, 22, 22, 24, 20, 16, 22, 28, 18, 30, 16, 30];
+
+      dataRows = serials.map((s, idx) => [
+        idx + 1,
+        s.vinNo || "",
+        s.engineNo || "",
+        s.serialNo || "",
+        s.internalSerialNo || "",
+        receiptNo || "—",
+        receiptDate || "—",
+        purchaseOrderNo || "—",
+        vendorName || "—",
+        itemSku || "—",
+        itemName || "—",
+        s.status === "IN_STOCK"
+          ? "Tồn kho"
+          : s.status === "ISSUED"
+            ? "Đã xuất kho"
+            : s.status === "ASSEMBLED"
+              ? "Đã lắp ráp xe"
+              : s.status || "—",
+        s.notes || "",
+      ]);
     } else {
-      headers = ["STT", "Mã Serial", "Ghi chú"];
-      rows = [
-        headers,
-        ...serials.map((s, idx) => [idx + 1, s.serialNo || "", s.notes || ""]),
+      mainSheetName = "Danh_Sach_Serials";
+      fileBaseName = `Bao_Cao_Serial_${prefix}_${timestampStr}.xlsx`;
+      headers = [
+        "STT",
+        "Mã Serial / Định danh",
+        "Mã phiếu nhập",
+        "Ngày nhập kho",
+        "Mã đơn mua hàng (PO)",
+        "Nhà cung cấp",
+        "Mã SKU",
+        "Tên hàng hóa",
+        "Trạng thái",
+        "Ghi chú",
       ];
-      fileName = `Danh_Sach_Serial_${prefix}.xlsx`;
+      colWidths = [8, 28, 20, 16, 22, 28, 18, 30, 16, 30];
+
+      dataRows = serials.map((s, idx) => [
+        idx + 1,
+        s.serialNo || "",
+        receiptNo || "—",
+        receiptDate || "—",
+        purchaseOrderNo || "—",
+        vendorName || "—",
+        itemSku || "—",
+        itemName || "—",
+        s.status === "IN_STOCK"
+          ? "Tồn kho"
+          : s.status === "ISSUED"
+            ? "Đã xuất kho"
+            : s.status === "ASSEMBLED"
+              ? "Đã lắp ráp xe"
+              : s.status || "—",
+        s.notes || "",
+      ]);
     }
 
     const wb = XLSX.utils.book_new();
-    const ws = XLSX.utils.aoa_to_sheet(rows);
-    ws["!cols"] = headers.map(() => ({ wch: 25 }));
-    XLSX.utils.book_append_sheet(wb, ws, "Danh_Sach");
-    XLSX.writeFile(wb, fileName);
+    const wsMain = XLSX.utils.aoa_to_sheet([headers, ...dataRows]);
+
+    // Freeze Top Header Row (Row 1)
+    wsMain["!freeze"] = {
+      xSplit: "0",
+      ySplit: "1",
+      topLeftCell: "A2",
+      activePane: "bottomLeft",
+      state: "frozen",
+    };
+    wsMain["!views"] = [
+      { state: "frozen", xSplit: 0, ySplit: 1, activeCell: "A2" },
+    ];
+
+    // Autofilter for all columns from row 1 to last row
+    wsMain["!autofilter"] = {
+      ref: XLSX.utils.encode_range({
+        s: { r: 0, c: 0 },
+        e: { r: dataRows.length, c: headers.length - 1 },
+      }),
+    };
+
+    // Auto Column Widths
+    wsMain["!cols"] = colWidths.map((w) => ({ wch: w }));
+
+    // Append single main sheet (No metadata sheet)
+    XLSX.utils.book_append_sheet(wb, wsMain, mainSheetName);
+
+    // Save Excel file
+    XLSX.writeFile(wb, fileBaseName);
 
     showToast({
-      title: t("inventory.excelExported", "Đã xuất file Excel thành công"),
+      title: t(
+        "inventory.excelExported",
+        "Đã xuất file Excel chuẩn báo cáo thành công",
+      ),
       variant: "success",
     });
   };
@@ -972,12 +1118,13 @@ export function GoodsReceiptSerialDrawer({
           {isVehicle ? t("xe") : t("inventory.serialsCount", "mã")}
         </Badge>
       }
-      layout="1-column"
-      size={isVehicle || isSystemAuto ? "xl" : "lg"}
+      layout="2-columns"
+      size="xl"
+      collapsibleRightPanel={true}
       confirmOnClose={mode === "edit"}
       actions={actions}
       leftPanel={
-        <div className="flex flex-col gap-5">
+        <div className="flex flex-col gap-4">
           {/* Hidden File Input for Excel Import */}
           <input
             ref={fileInputRef}
@@ -986,41 +1133,6 @@ export function GoodsReceiptSerialDrawer({
             className="hidden"
             onChange={handleImportExcel}
           />
-
-          {/* Summary section */}
-          <DrawerSection
-            title={t("inventory.lineInfoSection", "Thông tin dòng hàng")}
-          >
-            <div className="grid grid-cols-2 gap-4">
-              <DrawerField label={t("inventory.fields.sku", "Mã SKU")}>
-                <div className="font-semibold text-sm">{itemSku || "—"}</div>
-              </DrawerField>
-              <DrawerField
-                label={t("inventory.fields.itemName", "Tên hàng hóa")}
-              >
-                <div className="font-medium text-sm">{itemName || "—"}</div>
-              </DrawerField>
-              <DrawerField
-                label={t(
-                  "inventory.fields.trackingPolicy",
-                  "Chính sách theo dõi",
-                )}
-              >
-                <Badge variant="outline" className="font-medium">
-                  {isSystemAuto
-                    ? t("Tự động sinh System Serial (Hàng thường)")
-                    : trackingPolicyName || trackingPolicyCode}
-                </Badge>
-              </DrawerField>
-              <DrawerField
-                label={t("inventory.fields.requiredQty", "Số lượng")}
-              >
-                <div className="text-sm font-bold text-primary">
-                  {requiredQty} {t("inventory.units", "đơn vị")}
-                </div>
-              </DrawerField>
-            </div>
-          </DrawerSection>
 
           {/* Bulk Paste Modal Section */}
           {isBulkPasteOpen && mode === "edit" && (
@@ -1162,6 +1274,13 @@ export function GoodsReceiptSerialDrawer({
                             ),
                             onClick: () => fileInputRef.current?.click(),
                           },
+                          {
+                            label: t("Xuất báo cáo Excel"),
+                            icon: (
+                              <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
+                            ),
+                            onClick: handleExportCurrentSerials,
+                          },
                         ],
                       },
                       ...(serials.length > 0
@@ -1203,7 +1322,7 @@ export function GoodsReceiptSerialDrawer({
                         onClick={handleCopyAllSerials}
                         title={t("Sao chép toàn bộ danh sách mã serial")}
                       >
-                        <Copy className="w-3.5 h-3.5" />
+                        <Copy className="w-3.5 h-3.5 text-muted-foreground" />
                         {t("Sao chép")}
                       </Button>
                       <Button
@@ -1211,9 +1330,9 @@ export function GoodsReceiptSerialDrawer({
                         variant="outline"
                         className="h-7 text-xs font-semibold gap-1 text-emerald-700 border-emerald-300 hover:bg-emerald-50 dark:text-emerald-400 dark:border-emerald-700 dark:hover:bg-emerald-950/30"
                         onClick={handleExportCurrentSerials}
-                        title={t("Xuất danh sách ra file Excel")}
+                        title={t("Xuất danh sách ra file Excel chuẩn báo cáo")}
                       >
-                        <Download className="w-3.5 h-3.5" />
+                        <FileSpreadsheet className="w-3.5 h-3.5" />
                         {t("Xuất Excel")}
                       </Button>
                     </>
@@ -1259,7 +1378,7 @@ export function GoodsReceiptSerialDrawer({
               />
             ) : (
               <div className="border rounded-lg overflow-hidden bg-surface shadow-panel">
-                <div className="max-h-[380px] overflow-y-auto relative">
+                <div className="max-h-[440px] overflow-y-auto relative">
                   <Table className="w-full table-fixed border-collapse text-xs">
                     <TableHeader className="sticky top-0 z-30 table-header-glass bg-muted/80 backdrop-blur-sm border-b border-border shadow-[0_2px_4px_-1px_rgba(0,0,0,0.06),0_1px_2px_-1px_rgba(0,0,0,0.04)]">
                       <TableRow className="hover:bg-transparent border-b border-border bg-transparent">
@@ -1350,6 +1469,9 @@ export function GoodsReceiptSerialDrawer({
                           isISerDupe ||
                           isDbDupe;
 
+                        const rowSerialVal =
+                          row.systemSerialNo || row.serialNo || "";
+
                         return (
                           <TableRow
                             key={idx}
@@ -1364,35 +1486,22 @@ export function GoodsReceiptSerialDrawer({
 
                             {isSystemAuto ? (
                               <>
-                                {/* System Serial No with copy */}
+                                {/* System Serial No with standardized CopyButton */}
                                 <TableCell className="py-1.5 px-3 border-r border-border">
                                   <div className="flex items-center justify-between gap-1.5 font-mono font-semibold text-primary">
-                                    <span>
-                                      {row.systemSerialNo ||
-                                        row.serialNo ||
-                                        "—"}
+                                    <span className="truncate">
+                                      {rowSerialVal || "—"}
                                     </span>
-                                    <Button
-                                      size="icon"
-                                      variant="ghost"
-                                      className="h-5 w-5 opacity-70 hover:opacity-100"
-                                      title={t("Sao chép mã serial")}
-                                      onClick={() => {
-                                        const val =
-                                          row.systemSerialNo ||
-                                          row.serialNo ||
-                                          "";
-                                        if (val) {
-                                          navigator.clipboard.writeText(val);
-                                          showToast({
-                                            title: t(`Đã sao chép: ${val}`),
-                                            variant: "success",
-                                          });
-                                        }
-                                      }}
-                                    >
-                                      <Copy className="w-3 h-3" />
-                                    </Button>
+                                    {rowSerialVal && (
+                                      <CopyButton
+                                        value={rowSerialVal}
+                                        tooltip={t("Sao chép mã")}
+                                        copiedTooltip={t("Đã sao chép")}
+                                        variant="ghost"
+                                        className="h-6 w-6 shrink-0 opacity-70 hover:opacity-100 p-0"
+                                        iconClassName="w-3.5 h-3.5 text-primary"
+                                      />
+                                    )}
                                   </div>
                                 </TableCell>
 
@@ -1408,28 +1517,28 @@ export function GoodsReceiptSerialDrawer({
                                   </Badge>
                                 </TableCell>
 
-                                {/* Status */}
+                                {/* Status - No Blue Mandate: Use neutral/muted for ISSUED instead of blue-* */}
                                 <TableCell className="py-1.5 px-3 border-r border-border">
                                   {row.status === "IN_STOCK" ? (
                                     <Badge
                                       variant="outline"
                                       className="text-emerald-600 border-emerald-300 bg-emerald-50 dark:bg-emerald-950/30 text-[11px]"
                                     >
-                                      Tồn kho
+                                      {t("Tồn kho")}
                                     </Badge>
                                   ) : row.status === "ISSUED" ? (
                                     <Badge
                                       variant="outline"
-                                      className="text-blue-600 border-blue-300 bg-blue-50 dark:bg-blue-950/30 text-[11px]"
+                                      className="text-foreground border-border bg-muted/60 text-[11px]"
                                     >
-                                      Đã xuất kho
+                                      {t("Đã xuất kho")}
                                     </Badge>
                                   ) : row.status === "ASSEMBLED" ? (
                                     <Badge
                                       variant="outline"
                                       className="text-purple-600 border-purple-300 bg-purple-50 dark:bg-purple-950/30 text-[11px]"
                                     >
-                                      Đã lắp ráp
+                                      {t("Đã lắp ráp")}
                                     </Badge>
                                   ) : (
                                     <Badge
@@ -1475,9 +1584,20 @@ export function GoodsReceiptSerialDrawer({
                                       )}
                                     </div>
                                   ) : (
-                                    <span className="font-mono font-medium text-emerald-700 dark:text-emerald-400">
-                                      {row.vinNo || "—"}
-                                    </span>
+                                    <div className="flex items-center justify-between gap-1">
+                                      <span className="font-mono font-medium text-emerald-700 dark:text-emerald-400 truncate">
+                                        {row.vinNo || "—"}
+                                      </span>
+                                      {row.vinNo && (
+                                        <CopyButton
+                                          value={row.vinNo}
+                                          tooltip={t("Sao chép VIN")}
+                                          variant="ghost"
+                                          className="h-5 w-5 shrink-0 opacity-60 hover:opacity-100 p-0"
+                                          iconClassName="w-3 h-3 text-emerald-700 dark:text-emerald-400"
+                                        />
+                                      )}
+                                    </div>
                                   )}
                                 </TableCell>
 
@@ -1508,9 +1628,20 @@ export function GoodsReceiptSerialDrawer({
                                       )}
                                     </div>
                                   ) : (
-                                    <span className="font-mono font-medium">
-                                      {row.engineNo || "—"}
-                                    </span>
+                                    <div className="flex items-center justify-between gap-1">
+                                      <span className="font-mono font-medium truncate">
+                                        {row.engineNo || "—"}
+                                      </span>
+                                      {row.engineNo && (
+                                        <CopyButton
+                                          value={row.engineNo}
+                                          tooltip={t("Sao chép số máy")}
+                                          variant="ghost"
+                                          className="h-5 w-5 shrink-0 opacity-60 hover:opacity-100 p-0"
+                                          iconClassName="w-3 h-3 text-muted-foreground"
+                                        />
+                                      )}
+                                    </div>
                                   )}
                                 </TableCell>
 
@@ -1548,9 +1679,20 @@ export function GoodsReceiptSerialDrawer({
                                       )}
                                     </div>
                                   ) : (
-                                    <span className="font-mono font-medium">
-                                      {row.serialNo || "—"}
-                                    </span>
+                                    <div className="flex items-center justify-between gap-1">
+                                      <span className="font-mono font-medium truncate">
+                                        {row.serialNo || "—"}
+                                      </span>
+                                      {row.serialNo && (
+                                        <CopyButton
+                                          value={row.serialNo}
+                                          tooltip={t("Sao chép Serial xe")}
+                                          variant="ghost"
+                                          className="h-5 w-5 shrink-0 opacity-60 hover:opacity-100 p-0"
+                                          iconClassName="w-3 h-3 text-muted-foreground"
+                                        />
+                                      )}
+                                    </div>
                                   )}
                                 </TableCell>
 
@@ -1582,9 +1724,20 @@ export function GoodsReceiptSerialDrawer({
                                       )}
                                     </div>
                                   ) : (
-                                    <span className="font-mono font-medium text-primary">
-                                      {row.internalSerialNo || "—"}
-                                    </span>
+                                    <div className="flex items-center justify-between gap-1">
+                                      <span className="font-mono font-medium text-primary truncate">
+                                        {row.internalSerialNo || "—"}
+                                      </span>
+                                      {row.internalSerialNo && (
+                                        <CopyButton
+                                          value={row.internalSerialNo}
+                                          tooltip={t("Sao chép Serial nội bộ")}
+                                          variant="ghost"
+                                          className="h-5 w-5 shrink-0 opacity-60 hover:opacity-100 p-0"
+                                          iconClassName="w-3 h-3 text-primary"
+                                        />
+                                      )}
+                                    </div>
                                   )}
                                 </TableCell>
                               </>
@@ -1632,9 +1785,20 @@ export function GoodsReceiptSerialDrawer({
                                     )}
                                   </div>
                                 ) : (
-                                  <span className="font-mono font-medium">
-                                    {row.serialNo || "—"}
-                                  </span>
+                                  <div className="flex items-center justify-between gap-1">
+                                    <span className="font-mono font-medium truncate">
+                                      {row.serialNo || "—"}
+                                    </span>
+                                    {row.serialNo && (
+                                      <CopyButton
+                                        value={row.serialNo}
+                                        tooltip={t("Sao chép mã serial")}
+                                        variant="ghost"
+                                        className="h-5 w-5 shrink-0 opacity-60 hover:opacity-100 p-0"
+                                        iconClassName="w-3 h-3 text-primary"
+                                      />
+                                    )}
+                                  </div>
                                 )}
                               </TableCell>
                             )}
@@ -1726,6 +1890,223 @@ export function GoodsReceiptSerialDrawer({
                 </div>
               </div>
             )}
+          </DrawerSection>
+        </div>
+      }
+      rightPanel={
+        <div className="space-y-3 pb-3">
+          {/* Section 1: Thông tin dòng hàng */}
+          <DrawerSection
+            title={t("inventory.lineInfoSection", "Thông tin dòng hàng")}
+            collapsible
+            defaultCollapsed={false}
+          >
+            <DrawerRow
+              label={t("inventory.fields.sku", "Mã SKU")}
+              value={
+                <span className="font-semibold text-sm">{itemSku || "—"}</span>
+              }
+            />
+            <DrawerRow
+              label={t("inventory.fields.itemName", "Tên hàng hóa")}
+              value={
+                <span className="font-medium text-xs">{itemName || "—"}</span>
+              }
+            />
+            <DrawerRow
+              label={t(
+                "inventory.fields.trackingPolicy",
+                "Chính sách theo dõi",
+              )}
+              value={
+                <Badge variant="outline" className="font-normal text-[11px]">
+                  {isSystemAuto
+                    ? t("Tự động sinh System Serial (Hàng thường)")
+                    : trackingPolicyName || trackingPolicyCode}
+                </Badge>
+              }
+            />
+            <DrawerRow
+              label={t("inventory.fields.requiredQty", "Số lượng yêu cầu")}
+              value={
+                <span className="text-sm font-bold text-primary">
+                  {requiredQty} {t("inventory.units", "đơn vị")}
+                </span>
+              }
+            />
+            {receiptNo && (
+              <DrawerRow
+                label={t("inventory.fields.receiptNo", "Mã phiếu nhập")}
+                value={
+                  <span className="font-mono text-xs font-semibold text-primary">
+                    {receiptNo}
+                  </span>
+                }
+              />
+            )}
+            {purchaseOrderNo && (
+              <DrawerRow
+                label={t("inventory.fields.purchaseOrderNo", "Đơn mua hàng")}
+                value={
+                  <span className="font-mono text-xs">{purchaseOrderNo}</span>
+                }
+              />
+            )}
+            {vendorName && (
+              <DrawerRow
+                label={t("inventory.fields.vendorName", "Nhà cung cấp")}
+                value={<span className="text-xs">{vendorName}</span>}
+              />
+            )}
+            {warehouseName && (
+              <DrawerRow
+                label={t("inventory.fields.warehouseName", "Kho nhập")}
+                value={<span className="text-xs">{warehouseName}</span>}
+              />
+            )}
+            {receiptDate && (
+              <DrawerRow
+                label={t("inventory.fields.receiptDate", "Ngày hạch toán")}
+                value={<span className="text-xs">{receiptDate}</span>}
+              />
+            )}
+          </DrawerSection>
+
+          {/* Section 2: Tiến độ & Đối soát */}
+          <DrawerSection
+            title={t("inventory.summarySection", "Tiến độ & Đối soát")}
+            collapsible
+            defaultCollapsed={false}
+          >
+            <DrawerRow
+              label={
+                isSystemAuto
+                  ? t("Số System Serial")
+                  : isVehicle
+                    ? t("Số lượng xe")
+                    : t("Số lượng mã Serial")
+              }
+              value={
+                <span className="font-bold tabular-nums">
+                  {serials.length} / {requiredQty}
+                </span>
+              }
+            />
+            <DrawerRow
+              label={t("Trạng thái đối soát")}
+              value={
+                isComplete ? (
+                  <Badge
+                    variant="outline"
+                    className="text-emerald-700 bg-emerald-50 border-emerald-300 dark:text-emerald-400 dark:bg-emerald-950/30 text-[11px] gap-1"
+                  >
+                    <CheckCircle2 className="w-3 h-3" />
+                    {t("Đã đủ số lượng")}
+                  </Badge>
+                ) : !isOver ? (
+                  <Badge
+                    variant="outline"
+                    className="text-amber-700 bg-amber-50 border-amber-300 dark:text-amber-400 dark:bg-amber-950/30 text-[11px] gap-1"
+                  >
+                    <AlertTriangle className="w-3 h-3" />
+                    {t(
+                      `Thiếu ${requiredQty - serials.length} ${isVehicle ? "xe" : "mã"}`,
+                    )}
+                  </Badge>
+                ) : (
+                  <Badge variant="destructive" className="text-[11px] gap-1">
+                    <AlertTriangle className="w-3 h-3" />
+                    {t(`Vượt ${serials.length - requiredQty} mã`)}
+                  </Badge>
+                )
+              }
+            />
+
+            {systemStatusCounts && (
+              <>
+                <DrawerRow
+                  label={t("Tồn kho (IN_STOCK)")}
+                  value={
+                    <span className="text-emerald-700 dark:text-emerald-400 font-semibold tabular-nums">
+                      {systemStatusCounts.inStock}
+                    </span>
+                  }
+                />
+                <DrawerRow
+                  label={t("Đã xuất kho (ISSUED)")}
+                  value={
+                    <span className="text-muted-foreground font-semibold tabular-nums">
+                      {systemStatusCounts.issued}
+                    </span>
+                  }
+                />
+                <DrawerRow
+                  label={t("Đã lắp ráp (ASSEMBLED)")}
+                  value={
+                    <span className="text-purple-700 dark:text-purple-400 font-semibold tabular-nums">
+                      {systemStatusCounts.assembled}
+                    </span>
+                  }
+                />
+              </>
+            )}
+
+            {vehicleFilledCounts && (
+              <DrawerRow
+                label={t("Đầy đủ 4 trường định danh")}
+                value={
+                  <span className="font-semibold tabular-nums">
+                    {vehicleFilledCounts.completeRows} /{" "}
+                    {vehicleFilledCounts.total}
+                  </span>
+                }
+              />
+            )}
+          </DrawerSection>
+
+          {/* Section 3: Hướng dẫn & Tiện ích */}
+          <DrawerSection
+            title={t("inventory.guideSection", "Hướng dẫn & Tiện ích")}
+            collapsible
+            defaultCollapsed={true}
+          >
+            <div className="text-xs text-muted-foreground space-y-2 leading-relaxed">
+              {mode === "edit" ? (
+                <>
+                  <p>
+                    • <strong>{t("Tự động sinh mã")}:</strong>{" "}
+                    {t(
+                      "Hệ thống sẽ sinh mã định danh đồng loạt theo quy chuẩn SKU và ngày nhập.",
+                    )}
+                  </p>
+                  <p>
+                    • <strong>{t("Dán nhanh hàng loạt")}:</strong>{" "}
+                    {t(
+                      "Sao chép từ Excel / Google Sheet và dán nhanh vào bảng chỉ với 1 click.",
+                    )}
+                  </p>
+                  <p>
+                    • <strong>{t("File mẫu Excel")}:</strong>{" "}
+                    {t(
+                      "Tải file mẫu Excel chuẩn để nhập dữ liệu số lượng lớn.",
+                    )}
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p>
+                    • <strong>{t("Sao chép")}:</strong>{" "}
+                    {t("Sao chép toàn bộ danh sách mã serial vào Clipboard.")}
+                  </p>
+                  <p>
+                    • <strong>{t("Xuất Excel")}:</strong>{" "}
+                    {t(
+                      "Xuất danh sách mã Serial và thông tin liên quan ra file Excel.",
+                    )}
+                  </p>
+                </>
+              )}
+            </div>
           </DrawerSection>
         </div>
       }

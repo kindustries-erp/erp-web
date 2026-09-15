@@ -385,4 +385,77 @@ describe("ModuleEntityCustomFieldsSection", () => {
     });
     expect(notMissingWhenFalse).toEqual([]);
   });
+
+  it("renders parent and child custom attributes hierarchically with cascading options", async () => {
+    const parentChildDefs = [
+      {
+        id: "attr-category",
+        categoryId: "cat-1",
+        code: "category",
+        name: "Nhóm chính",
+        fieldType: "SELECT" as const,
+        options: [
+          { value: "FOOD", label: "Thực phẩm" },
+          { value: "BEV", label: "Đồ uống" },
+        ],
+        isRequired: true,
+        isActive: true,
+        isDeleted: false,
+        sortOrder: 1,
+      },
+      {
+        id: "attr-subcategory",
+        categoryId: "cat-1",
+        code: "subcategory",
+        name: "Nhóm phụ",
+        parentAttrCode: "category",
+        fieldType: "SELECT" as const,
+        options: [
+          { value: "SNACK", label: "Bánh kẹo", parentValue: "FOOD" },
+          { value: "TEA", label: "Trà", parentValue: "BEV" },
+        ],
+        isRequired: false,
+        isActive: true,
+        isDeleted: false,
+        sortOrder: 2,
+      },
+    ];
+
+    const testCategories = [
+      {
+        id: "cat-1",
+        moduleKey: "INVOICE",
+        code: "TEST_CAT",
+        name: "Danh mục Test",
+        isActive: true,
+        attributeDefs: parentChildDefs,
+      },
+    ];
+
+    (moduleConfigApi.getCategories as any).mockResolvedValue(testCategories);
+    (moduleConfigApi.getGlobalAttributeDefs as any).mockResolvedValue([]);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <ModuleEntityCustomFieldsSection
+            moduleKey="INVOICE"
+            editMode={true}
+            categoryId="cat-1"
+            attributes={{
+              "attr-category": "FOOD",
+            }}
+          />
+        </TooltipProvider>
+      </QueryClientProvider>,
+    );
+
+    expect((await screen.findAllByText("Nhóm chính")).length).toBeGreaterThan(
+      0,
+    );
+    expect(await screen.findByText("Nhóm phụ")).toBeDefined();
+    expect(screen.getByText(/Phụ thuộc/)).toBeDefined();
+    // Verify that cascading option SNACK (parentValue = FOOD) is rendered
+    expect(screen.getByText("Bánh kẹo")).toBeDefined();
+  });
 });
