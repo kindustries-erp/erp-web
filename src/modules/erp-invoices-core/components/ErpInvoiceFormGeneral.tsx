@@ -5,7 +5,13 @@ import {
 } from "@/shared/components/DrawerModal";
 import { DatePicker } from "@/shared/components/DatePicker";
 import { useTranslation } from "react-i18next";
-import { type CreateErpInvoicePayload } from "../api/erpInvoicesCoreApi";
+import {
+  type CreateErpInvoicePayload,
+  erpInvoicesCoreApi,
+} from "../api/erpInvoicesCoreApi";
+import { openGlobalErpDocument } from "@/shared/components/drawer/DrawerDocumentTraceability/constants";
+import { ExternalLink } from "lucide-react";
+import toast from "react-hot-toast";
 
 function formatTaxInvoiceType(type?: string | null) {
   if (type === "CASH_REGISTER") return "HĐ Máy tính tiền";
@@ -163,6 +169,59 @@ export function ErpInvoiceFormGeneral({
                   {formatTaxInvoiceStatus((form as any).taxInvoiceStatus)}
                 </div>
               </DrawerField>
+              {((form as any).relatedInvoiceNo ||
+                (form as any).taxInvoiceStatus === 2 ||
+                (form as any).taxInvoiceStatus === 3) && (
+                <DrawerField label="Hóa đơn gốc liên quan">
+                  {(form as any).relatedInvoiceNo ? (
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        const relNo = (form as any).relatedInvoiceNo;
+                        const relSer = (form as any).relatedSerialNo;
+                        if (!relNo) return;
+                        try {
+                          const res = await erpInvoicesCoreApi.list({
+                            invoice_no: relNo,
+                            serial_no: relSer || undefined,
+                            direction: form.direction,
+                            pageSize: 1,
+                          });
+                          if (res.items?.[0]?.id) {
+                            openGlobalErpDocument("INVOICE", res.items[0].id);
+                          } else {
+                            toast.error(
+                              `Không tìm thấy hóa đơn gốc #${relNo} trong hệ thống.`,
+                            );
+                          }
+                        } catch {
+                          toast.error(`Lỗi khi mở hóa đơn #${relNo}`);
+                        }
+                      }}
+                      className="group flex items-center gap-2 text-sm text-left hover:opacity-85 transition-opacity cursor-pointer"
+                    >
+                      <span className="font-semibold text-primary font-mono group-hover:underline flex items-center gap-1">
+                        #{(form as any).relatedInvoiceNo}
+                        <ExternalLink className="w-3 h-3 opacity-70 group-hover:opacity-100" />
+                      </span>
+                      {(form as any).relatedSerialNo && (
+                        <span className="text-muted-foreground font-mono">
+                          ({(form as any).relatedSerialNo})
+                        </span>
+                      )}
+                      <span className="text-[11px] font-medium px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200">
+                        {(form as any).taxInvoiceStatus === 2
+                          ? "HĐ được thay thế"
+                          : "HĐ được điều chỉnh"}
+                      </span>
+                    </button>
+                  ) : (
+                    <div className="text-muted-foreground italic text-xs">
+                      Chưa có thông tin số HĐ gốc từ XML/GDT
+                    </div>
+                  )}
+                </DrawerField>
+              )}
               <DrawerField label="Kết quả kiểm tra (GDT)">
                 <div className="text-sm text-slate-700">
                   {formatTaxProcessStatus((form as any).taxProcessStatus)}
