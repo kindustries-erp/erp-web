@@ -107,8 +107,15 @@ export function ErpInvoiceSettlementProvider({
       tableState.columnSearch,
     ],
     queryFn: () => {
-      const sortField = tableState.sorts[0]?.replace("-", "") || "transDate";
-      const sortOrder = tableState.sorts[0]?.startsWith("-") ? "DESC" : "ASC";
+      const hasSort = tableState.sorts && tableState.sorts.length > 0;
+      const sortField = hasSort
+        ? tableState.sorts[0].replace("-", "")
+        : "transDate";
+      const sortOrder = hasSort
+        ? tableState.sorts[0].startsWith("-")
+          ? "DESC"
+          : "ASC"
+        : "DESC";
 
       return bankStatementApi.getTransactions({
         page,
