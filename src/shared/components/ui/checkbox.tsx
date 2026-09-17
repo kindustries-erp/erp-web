@@ -18,9 +18,9 @@ const Checkbox = React.forwardRef<
   >
     <CheckboxPrimitive.Indicator className="flex items-center justify-center text-current">
       {checked === "indeterminate" ? (
-        <Minus className="h-3 w-3" />
+        <Minus className="h-3 w-3 stroke-[2.5]" />
       ) : (
-        <Check className="h-3 w-3" />
+        <Check className="h-3 w-3 stroke-[2.5]" />
       )}
     </CheckboxPrimitive.Indicator>
   </CheckboxPrimitive.Root>

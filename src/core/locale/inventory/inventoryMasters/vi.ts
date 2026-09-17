@@ -24,6 +24,12 @@ export const inventoryMastersVi = {
     cancel: "Hủy",
     create: "Tạo mới",
     update: "Cập nhật",
+    tabOverview: "Tổng quan",
+    tabLedger: "Sổ thẻ kho",
+    tabTraceability: "Chứng từ liên kết",
+    generalInfo: "THÔNG TIN CHUNG",
+    defaultAttributes: "THUỘC TÍNH MẶC ĐỊNH",
+    customAttributes: "THUỘC TÍNH TÙY CHỈNH",
   },
   fields: {
     code: "Code",
@@ -43,6 +49,10 @@ export const inventoryMastersVi = {
     status: "Trạng thái",
     note: "Ghi chú",
     notePlaceholder: "Ghi chú thêm về item kho này...",
+    trackingPolicy: "Tracking policy",
+    trackingPolicyPlaceholder: "Chọn tracking policy",
+    trackingPolicyLocked:
+      "⚠️ Mặt hàng đã có số Serial trong kho, không thể thay đổi Tracking Policy.",
   },
   filter: {
     search: "Tìm kiếm...",

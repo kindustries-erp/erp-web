@@ -323,6 +323,10 @@ Dành cho các form đơn giản không có nhiều phân hệ (như Company Pro
        - Dòng tiêu đề: Tên sự kiện/phiên bản + Badge/Actor ở bên trái, Ngày giờ/Timestamp căn phải thẳng hàng.
        - Nội dung chi tiết: Danh sách bullet không viền khung cứng, sử dụng soft pill/dot phân loại để giao diện thoáng, tinh tế và cao cấp.
 
+6. **Prop `hideHeader` / `hideTitle` cho `<DrawerSection>` (Container Kính Mờ Không Tiêu Đề)**:
+   - Khi cần bọc một vùng giao diện (ví dụ: nhóm 4 thẻ KPI summary, banner thông báo, headerless card group) trong phong cách chuẩn mực của Drawer (kính mờ glassmorphism `backdrop-blur`, viền `border-border/80`, shadow mịn và padding đều), sử dụng prop `hideHeader={true}` (hoặc `hideTitle={true}`).
+   - Khi bật prop này, thanh tiêu đề uppercase và nút mũi tên expand/collapse sẽ được ẩn hoàn toàn, render trực tiếp nội dung con trong khung chứa thanh lịch mà không làm vỡ ngôn ngữ thiết kế chung.
+
 ---
 
 ## 7. Quy tắc cho Thông tin Phụ trợ đính kèm dưới đáy (`relatedTabs`)
