@@ -1,9 +1,11 @@
 import type { ReactNode } from "react";
+import { useMemo } from "react";
 import { CheckCircle2, AlertTriangle, Sparkles } from "lucide-react";
 import { cn } from "@/shared/utils";
 import { Button } from "@/shared/components/ui/Button";
 import { CellInput } from "@/shared/components/CellInput";
 import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
+import { SubtotalSummaryCell } from "@/shared/components/DataTable/SubtotalSummaryCell";
 import type {
   UseGrDrawerReturn,
   GrLineForm,
@@ -24,6 +26,11 @@ interface UseGrFormColumnsProps {
     isViewOnly?: boolean,
     isSystemAuto?: boolean,
   ) => void;
+  paginatedLines?: any[];
+  processedLines?: any[];
+  page?: number;
+  totalPages?: number;
+  total?: number;
   t: (key: string, ...args: any[]) => string;
 }
 
@@ -33,6 +40,11 @@ export function useGrFormColumns({
   listHook,
   buildFilterOptions,
   handleOpenSerialDrawer,
+  paginatedLines = [],
+  processedLines = [],
+  page = 1,
+  totalPages = 1,
+  total = 0,
   t,
 }: UseGrFormColumnsProps) {
   const { form, setForm, editing, viewOnly, poDetail, itemsDict } = drawer;
@@ -818,44 +830,108 @@ export function useGrFormColumns({
         ? otherEditColumns
         : viewOnlyColumns;
 
+  // ── Calculate subtotal (current page) vs grand total (all lines) ───────────
+  const {
+    subtotalOrdered,
+    grandTotalOrdered,
+    subtotalReceived,
+    grandTotalReceived,
+  } = useMemo(() => {
+    let sOrd = 0;
+    let gOrd = 0;
+    let sRec = 0;
+    let gRec = 0;
+
+    if (tableMode === "po") {
+      for (const l of paginatedLines) {
+        sOrd += Number(l.qtyOrdered || 0);
+        const curr = form.lines.find(
+          (fl) =>
+            (fl.purchaseOrderLineId && fl.purchaseOrderLineId === l.id) ||
+            (l.itemId && fl.itemId === l.itemId),
+        );
+        sRec += Number(curr?.qtyReceived ?? l.qtyReceived ?? 0);
+      }
+      for (const l of processedLines) {
+        gOrd += Number(l.qtyOrdered || 0);
+        const curr = form.lines.find(
+          (fl) =>
+            (fl.purchaseOrderLineId && fl.purchaseOrderLineId === l.id) ||
+            (l.itemId && fl.itemId === l.itemId),
+        );
+        gRec += Number(curr?.qtyReceived ?? l.qtyReceived ?? 0);
+      }
+    } else {
+      for (const l of paginatedLines) {
+        sRec += Number(l.qtyReceived ?? l.qtyInput ?? 0);
+      }
+      for (const l of processedLines) {
+        gRec += Number(l.qtyReceived ?? l.qtyInput ?? 0);
+      }
+    }
+
+    return {
+      subtotalOrdered: sOrd,
+      grandTotalOrdered: gOrd,
+      subtotalReceived: sRec,
+      grandTotalReceived: gRec,
+    };
+  }, [tableMode, paginatedLines, processedLines, form]);
+
+  const totalItemsCount =
+    tableMode === "po"
+      ? (poDetail?.lines?.length ?? form.lines.length)
+      : form.lines.length;
+
   const summaryRow: Record<string, ReactNode> =
     tableMode === "po"
       ? {
-          itemName: (
-            <div className="text-right w-full font-semibold">{t("Tổng")}:</div>
-          ),
           ordered: (
-            <div className="text-center font-semibold text-foreground">
-              {fmtQty(
-                poDetail?.lines
-                  ?.reduce((sum, l) => sum + Number(l.qtyOrdered || 0), 0)
-                  .toString(),
-              )}
+            <div className="w-full flex justify-center">
+              <SubtotalSummaryCell
+                variantType="qty"
+                subtotalQty={subtotalOrdered}
+                grandTotalQty={grandTotalOrdered}
+                grandTotalOrderedQty={grandTotalOrdered}
+                subtotalOrderedQty={subtotalOrdered}
+                itemCount={totalItemsCount}
+                page={page}
+                totalPages={totalPages}
+                currentPageCount={paginatedLines.length}
+                totalCount={total}
+              />
             </div>
           ),
           qtyInput: (
-            <div className="text-center font-semibold text-emerald-600">
-              {fmtQty(
-                form.lines
-                  .reduce((sum, l) => sum + Number(l.qtyReceived || 0), 0)
-                  .toString(),
-              )}
+            <div className="w-full flex justify-center">
+              <SubtotalSummaryCell
+                variantType="qty"
+                subtotalQty={subtotalReceived}
+                grandTotalQty={grandTotalReceived}
+                grandTotalOrderedQty={grandTotalOrdered}
+                subtotalOrderedQty={subtotalOrdered}
+                itemCount={totalItemsCount}
+                page={page}
+                totalPages={totalPages}
+                currentPageCount={paginatedLines.length}
+                totalCount={total}
+              />
             </div>
           ),
         }
       : {
-          itemName: (
-            <div className="text-right w-full font-semibold">{t("Tổng")}:</div>
-          ),
           [tableMode === "other-edit" ? "qtyInput" : "qtyReceived"]: (
-            <div className="text-center font-semibold text-emerald-600">
-              {viewOnly
-                ? `+${fmtQty(form.lines.reduce((sum, l) => sum + Number(l.qtyReceived || 0), 0).toString())}`
-                : fmtQty(
-                    form.lines
-                      .reduce((sum, l) => sum + Number(l.qtyReceived || 0), 0)
-                      .toString(),
-                  )}
+            <div className="w-full flex justify-center">
+              <SubtotalSummaryCell
+                variantType="qty"
+                subtotalQty={subtotalReceived}
+                grandTotalQty={grandTotalReceived}
+                itemCount={totalItemsCount}
+                page={page}
+                totalPages={totalPages}
+                currentPageCount={paginatedLines.length}
+                totalCount={total}
+              />
             </div>
           ),
         };

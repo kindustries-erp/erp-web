@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { Plus, Trash2, Package } from "lucide-react";
 import { DrawerSection } from "@/shared/components/DrawerModal";
-import { DataTable } from "@/shared/components/DataTable";
+import { DataTable, SubtotalSummaryCell } from "@/shared/components/DataTable";
 import { TableText } from "@/shared/components/DataTable/TableText";
 import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
 import { Tooltip } from "@/core/components/ui/Tooltip";
@@ -117,33 +117,56 @@ export function FormLineDetailPanel({
     [lines],
   );
 
-  const { listHook, processedLines, buildFilterOptions } =
-    useVoucherClientFilter({
-      tableId: `form-line-detail-${variant}`,
-      lines,
-      isOpen: true,
-      getCode: (line) => line.item_code || "",
-      getName: (line) => line.item_name || line.description || "",
-      customSort: (a, b, field, isDesc) => {
-        if (field === "qty" || field === "unit_price" || field === "amount") {
-          const valA = Number(a[field as keyof LineDraft] || 0);
-          const valB = Number(b[field as keyof LineDraft] || 0);
-          return isDesc ? valB - valA : valA - valB;
-        }
-        return null;
-      },
-    });
+  const {
+    listHook,
+    processedLines,
+    paginatedLines,
+    page,
+    pageSize,
+    total,
+    totalPages,
+    setPage,
+    setPageSize,
+    buildFilterOptions,
+  } = useVoucherClientFilter({
+    tableId: `form-line-detail-${variant}`,
+    lines,
+    isOpen: true,
+    getCode: (line) => line.item_code || "",
+    getName: (line) => line.item_name || line.description || "",
+    customSort: (a, b, field, isDesc) => {
+      if (field === "qty" || field === "unit_price" || field === "amount") {
+        const valA = Number(a[field as keyof LineDraft] || 0);
+        const valB = Number(b[field as keyof LineDraft] || 0);
+        return isDesc ? valB - valA : valA - valB;
+      }
+      return null;
+    },
+  });
 
-  const displayLines = variant === "purchase" ? processedLines : lines;
+  const displayLines = paginatedLines;
 
-  const totalQty = useMemo(
+  // Subtotal trang hiện tại
+  const subtotalQty = useMemo(
     () => displayLines.reduce((sum, line) => sum + Number(line.qty || 0), 0),
     [displayLines],
   );
 
-  const totalAmount = useMemo(
+  const subtotalAmount = useMemo(
     () => displayLines.reduce((sum, line) => sum + Number(line.amount || 0), 0),
     [displayLines],
+  );
+
+  // Grand Total toàn bộ các dòng đã lọc
+  const grandTotalQty = useMemo(
+    () => processedLines.reduce((sum, line) => sum + Number(line.qty || 0), 0),
+    [processedLines],
+  );
+
+  const grandTotalAmount = useMemo(
+    () =>
+      processedLines.reduce((sum, line) => sum + Number(line.amount || 0), 0),
+    [processedLines],
   );
 
   const makeFilterHeader = (
@@ -164,12 +187,15 @@ export function FormLineDetailPanel({
 
   const indexCol = {
     key: "index",
-    header: "#",
+    header: <span className="w-full block text-center">#</span>,
     size: 40,
+    enableResizing: false,
     headerClassName: "text-center w-[40px] min-w-[40px]",
     className: "text-center w-[40px] min-w-[40px]",
     cell: (_: any, idx: number) => (
-      <span className="text-muted-foreground">{idx}</span>
+      <span className="w-full block text-center text-muted-foreground font-medium">
+        {idx}
+      </span>
     ),
   };
 
@@ -482,11 +508,11 @@ export function FormLineDetailPanel({
     ) : null;
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col h-full space-y-3">
       <DrawerSection
         title={
           <span>
-            {t("Chi tiết")} ({displayLines.length}/{lines.length})
+            {t("Chi tiết")} ({total}/{lines.length})
           </span>
         }
         titleExtra={
@@ -531,6 +557,8 @@ export function FormLineDetailPanel({
             )}
           </div>
         }
+        className="flex-1 flex flex-col mb-0"
+        bodyClassName="flex-1 flex flex-col min-h-0"
       >
         <DataTable
           tableMeta={{ listHook, lines, buildFilterOptions }}
@@ -538,22 +566,48 @@ export function FormLineDetailPanel({
           getRowKey={(line) => line.tempId}
           variant="spreadsheet"
           emptyLabel={t("Không có dữ liệu")}
-          containerClassName="max-h-[calc(100vh-280px)] overflow-y-auto"
+          containerClassName="max-h-[calc(100vh-420px)] lg:max-h-[calc(100vh-400px)] overflow-y-auto"
+          paginationClassName="mt-2.5"
           columns={columns as any}
+          total={total}
+          totalPages={totalPages}
+          page={page}
+          pageSize={pageSize}
+          onPage={setPage}
+          onPageSize={setPageSize}
           summaryRow={{
-            item_name: (
-              <div className="text-right w-full font-semibold px-3">
-                {t("Tổng cộng")}:
-              </div>
-            ),
             qty: (
-              <div className="text-right font-bold text-primary tabular-nums px-3">
-                {Number(totalQty).toLocaleString("vi-VN")}
+              <div className="w-full flex justify-end px-3">
+                <SubtotalSummaryCell
+                  variantType="qty"
+                  subtotalQty={subtotalQty}
+                  grandTotalQty={grandTotalQty}
+                  grandTotalOrderedQty={grandTotalQty}
+                  subtotalOrderedQty={subtotalQty}
+                  grandTotalAmount={grandTotalAmount}
+                  subtotalAmount={subtotalAmount}
+                  itemCount={lines.length}
+                  page={page}
+                  totalPages={totalPages}
+                  currentPageCount={displayLines.length}
+                  totalCount={total}
+                />
               </div>
             ),
             amount: (
-              <div className="text-right font-bold text-primary tabular-nums px-3">
-                {Number(totalAmount).toLocaleString("vi-VN")}
+              <div className="w-full flex justify-end px-3">
+                <SubtotalSummaryCell
+                  variantType="amount"
+                  subtotalAmount={subtotalAmount}
+                  grandTotalAmount={grandTotalAmount}
+                  subtotalQty={subtotalQty}
+                  grandTotalQty={grandTotalQty}
+                  itemCount={lines.length}
+                  page={page}
+                  totalPages={totalPages}
+                  currentPageCount={displayLines.length}
+                  totalCount={total}
+                />
               </div>
             ),
           }}

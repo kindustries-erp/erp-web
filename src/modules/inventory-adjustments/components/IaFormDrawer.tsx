@@ -24,6 +24,7 @@ import { CellInput } from "@/shared/components/CellInput";
 import { CellTextarea } from "@/shared/components/CellTextarea";
 import { DrawerField, inputCls } from "@/shared/components/DrawerModal";
 import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
+import { SubtotalSummaryCell } from "@/shared/components/DataTable/SubtotalSummaryCell";
 import { DatePicker } from "@/shared/components/DatePicker";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
@@ -158,18 +159,6 @@ export function IaFormDrawer({ drawer }: IaFormDrawerProps) {
       return null;
     },
   });
-
-  // ── Totals ─────────────────────────────────────────────────────────────────
-
-  const filteredTotalAmount = useMemo(
-    () =>
-      processedLines.reduce(
-        (sum, line) =>
-          sum + Number(line.qtyAdjusted) * Number(line.unitCost || 0),
-        0,
-      ),
-    [processedLines],
-  );
 
   // ── Column header helper ───────────────────────────────────────────────────
 
@@ -409,24 +398,80 @@ export function IaFormDrawer({ drawer }: IaFormDrawerProps) {
     },
   ];
 
-  // ── Summary row ────────────────────────────────────────────────────────────
+  // ── Thống kê tóm tắt biến động kiểm kê ──────────────────────────────
+  const { totalPositiveQty, totalNegativeQty } = useMemo(() => {
+    let pos = 0;
+    let neg = 0;
+    for (const line of form.lines) {
+      const q = Number(line.qtyAdjusted || 0);
+      if (q > 0) pos += q;
+      else if (q < 0) neg += Math.abs(q);
+    }
+    return { totalPositiveQty: pos, totalNegativeQty: neg };
+  }, [form.lines]);
+
+  // ── Summary row calculations ───────────────────────────────────────────────
+
+  const subtotalQtyAdjusted = useMemo(() => {
+    return paginatedLines.reduce(
+      (sum, l) => sum + Number(l.qtyAdjusted || 0),
+      0,
+    );
+  }, [paginatedLines]);
+
+  const grandTotalQtyAdjusted = useMemo(() => {
+    return processedLines.reduce(
+      (sum, l) => sum + Number(l.qtyAdjusted || 0),
+      0,
+    );
+  }, [processedLines]);
+
+  const subtotalAmount = useMemo(() => {
+    return paginatedLines.reduce(
+      (sum, l) => sum + Number(l.qtyAdjusted || 0) * Number(l.unitCost || 0),
+      0,
+    );
+  }, [paginatedLines]);
+
+  const grandTotalAmount = useMemo(() => {
+    return processedLines.reduce(
+      (sum, l) => sum + Number(l.qtyAdjusted || 0) * Number(l.unitCost || 0),
+      0,
+    );
+  }, [processedLines]);
 
   const summaryRow = {
-    itemName: (
-      <div className="text-right w-full font-semibold">{t("Tổng")}:</div>
-    ),
     qtyAdjusted: (
-      <div className="text-center font-semibold">
-        {fmtQty(
-          processedLines
-            .reduce((sum, l) => sum + Number(l.qtyAdjusted || 0), 0)
-            .toString(),
-        )}
+      <div className="w-full flex justify-center">
+        <SubtotalSummaryCell
+          variantType="qty"
+          subtotalQty={subtotalQtyAdjusted}
+          grandTotalQty={grandTotalQtyAdjusted}
+          positiveQty={totalPositiveQty}
+          negativeQty={totalNegativeQty}
+          itemCount={form.lines.length}
+          page={page}
+          totalPages={totalPages}
+          currentPageCount={paginatedLines.length}
+          totalCount={total}
+        />
       </div>
     ),
     amount: (
-      <div className="text-center font-semibold text-emerald-600">
-        {Number(filteredTotalAmount).toLocaleString("vi-VN")}
+      <div className="w-full flex justify-center">
+        <SubtotalSummaryCell
+          variantType="amount"
+          subtotalAmount={subtotalAmount}
+          grandTotalAmount={grandTotalAmount}
+          grandTotalQty={grandTotalQtyAdjusted}
+          positiveQty={totalPositiveQty}
+          negativeQty={totalNegativeQty}
+          itemCount={form.lines.length}
+          page={page}
+          totalPages={totalPages}
+          currentPageCount={paginatedLines.length}
+          totalCount={total}
+        />
       </div>
     ),
   };
@@ -564,18 +609,6 @@ export function IaFormDrawer({ drawer }: IaFormDrawerProps) {
     return opt?.label || currentReasonVal || "—";
   }, [adjustmentReasonOptions, currentReasonVal]);
 
-  // ── Thống kê tóm tắt biến động kiểm kê ──────────────────────────────
-  const { totalPositiveQty, totalNegativeQty } = useMemo(() => {
-    let pos = 0;
-    let neg = 0;
-    for (const line of form.lines) {
-      const q = Number(line.qtyAdjusted || 0);
-      if (q > 0) pos += q;
-      else if (q < 0) neg += Math.abs(q);
-    }
-    return { totalPositiveQty: pos, totalNegativeQty: neg };
-  }, [form.lines]);
-
   // ── Right panel content (1. THÔNG TIN CHUNG) ───────────────────────────────
 
   const rightPanelContent = (
@@ -646,50 +679,25 @@ export function IaFormDrawer({ drawer }: IaFormDrawerProps) {
   );
 
   const tagsSlot = (
-    <>
-      {/* Thẻ nhãn (Tags) */}
-      <div className="pt-1">
-        <div className="text-sm font-medium mb-1.5 text-gray-700 dark:text-gray-300">
-          {t("tags", "Thẻ nhãn")}
-        </div>
-        {editing?.id ? (
-          <EntityTagSelector
-            entityType="erp_inventory_adjustment"
-            entityId={editing.id}
-            readOnly={viewOnly}
-          />
-        ) : !viewOnly ? (
-          <EntityTagSelector
-            entityType="erp_inventory_adjustment"
-            entityId="__pending__"
-            readOnly={false}
-            pendingMode
-          />
-        ) : null}
+    <div className="pt-1">
+      <div className="text-sm font-medium mb-1.5 text-gray-700 dark:text-gray-300">
+        {t("tags", "Thẻ nhãn")}
       </div>
-
-      {/* Summary Cards khi ở chế độ View hoặc khi có dòng */}
-      {viewOnly && form.lines.length > 0 && (
-        <div className="mt-3 grid grid-cols-2 gap-2 text-center">
-          <div className="flex flex-col items-center justify-center p-2.5 bg-emerald-500/10 rounded-lg border border-emerald-500/20">
-            <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mb-1">
-              {t("Tổng tăng (+)")}
-            </span>
-            <span className="font-bold text-emerald-700 dark:text-emerald-300 text-base tabular-nums">
-              +{fmtQty(totalPositiveQty)}
-            </span>
-          </div>
-          <div className="flex flex-col items-center justify-center p-2.5 bg-rose-500/10 rounded-lg border border-rose-500/20">
-            <span className="text-[11px] font-semibold text-rose-600 dark:text-rose-400 uppercase tracking-wider mb-1">
-              {t("Tổng giảm (-)")}
-            </span>
-            <span className="font-bold text-rose-700 dark:text-rose-300 text-base tabular-nums">
-              -{fmtQty(totalNegativeQty)}
-            </span>
-          </div>
-        </div>
-      )}
-    </>
+      {editing?.id ? (
+        <EntityTagSelector
+          entityType="erp_inventory_adjustment"
+          entityId={editing.id}
+          readOnly={viewOnly}
+        />
+      ) : !viewOnly ? (
+        <EntityTagSelector
+          entityType="erp_inventory_adjustment"
+          entityId="__pending__"
+          readOnly={false}
+          pendingMode
+        />
+      ) : null}
+    </div>
   );
 
   // ── Default attributes slot (2. THUỘC TÍNH MẶC ĐỊNH) ───────────────────────

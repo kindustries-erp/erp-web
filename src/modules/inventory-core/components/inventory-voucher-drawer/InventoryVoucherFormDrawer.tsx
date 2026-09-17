@@ -138,13 +138,16 @@ export function InventoryVoucherFormDrawer(
             <DrawerSection
               title={props.sectionTitle}
               titleExtra={props.sectionTitleExtra}
+              className="flex-1 flex flex-col mb-0"
+              bodyClassName="flex-1 flex flex-col min-h-0"
             >
               <DataTable
                 items={props.tableItems}
                 getRowKey={props.getRowKey}
                 variant="spreadsheet"
                 emptyLabel={props.emptyLabel ?? t("Không có dữ liệu")}
-                containerClassName="max-h-[calc(100vh-280px)] overflow-y-auto"
+                containerClassName="max-h-[calc(100vh-420px)] lg:max-h-[calc(100vh-400px)] overflow-y-auto"
+                paginationClassName="mt-2.5"
                 columns={props.tableColumns}
                 summaryRow={props.summaryRow}
                 actionsColumn={props.actionsColumn}

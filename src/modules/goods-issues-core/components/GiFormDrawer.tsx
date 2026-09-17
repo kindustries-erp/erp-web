@@ -20,6 +20,7 @@ import { CellInput } from "@/shared/components/CellInput";
 import { CellTextarea } from "@/shared/components/CellTextarea";
 import { DrawerField, inputCls } from "@/shared/components/DrawerModal";
 import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
+import { SubtotalSummaryCell } from "@/shared/components/DataTable/SubtotalSummaryCell";
 import { DatePicker } from "@/shared/components/DatePicker";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
@@ -450,28 +451,35 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
     },
   ];
 
-  // ── Summary row ────────────────────────────────────────────────────────────
+  // ── Summary row calculations ───────────────────────────────────────────────
+
+  const subtotalIssuedQty = useMemo(() => {
+    return paginatedLines.reduce(
+      (sum, line) => sum + (line.itemId ? Number(line.qtyIssued || 0) : 0),
+      0,
+    );
+  }, [paginatedLines]);
+
+  const grandTotalIssuedQty = useMemo(() => {
+    return processedLines.reduce(
+      (sum, line) => sum + (line.itemId ? Number(line.qtyIssued || 0) : 0),
+      0,
+    );
+  }, [processedLines]);
 
   const summaryRow = {
-    tracking: (
-      <div className="text-right w-full font-semibold">{t("Tổng")}:</div>
-    ),
     qtyIssued: (
-      <div
-        className={cn(
-          "text-center font-semibold",
-          viewOnly ? "text-red-600" : "",
-        )}
-      >
-        {fmtQty(
-          form.lines
-            .reduce(
-              (sum, line) =>
-                sum + (line.itemId ? Number(line.qtyIssued || 0) : 0),
-              0,
-            )
-            .toString(),
-        )}
+      <div className="w-full flex justify-center">
+        <SubtotalSummaryCell
+          variantType="qty"
+          subtotalQty={subtotalIssuedQty}
+          grandTotalQty={grandTotalIssuedQty}
+          itemCount={form.lines.length}
+          page={page}
+          totalPages={totalPages}
+          currentPageCount={paginatedLines.length}
+          totalCount={total}
+        />
       </div>
     ),
   };
@@ -615,10 +623,6 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
     ) : undefined;
 
   // ── Thống kê tóm tắt ───────────────────────────────────────────────────
-  const totalIssuedQty = useMemo(() => {
-    return form.lines.reduce((sum, l) => sum + Number(l.qtyIssued || 0), 0);
-  }, [form.lines]);
-
   const customerDisplay = useMemo(() => {
     const selectedSo = soOptions.find((o) => o.value === form.salesOrderId);
     if (selectedSo && selectedSo.label.includes(" — ")) {
@@ -721,28 +725,6 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
           />
         ) : null}
       </div>
-
-      {/* Summary Cards khi ở chế độ View hoặc khi có dòng */}
-      {viewOnly && form.lines.length > 0 && (
-        <div className="mt-3 grid grid-cols-2 gap-2 text-center">
-          <div className="flex flex-col items-center justify-center p-2.5 bg-blue-500/10 rounded-lg border border-blue-500/20">
-            <span className="text-[11px] font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider mb-1">
-              {t("Số mặt hàng")}
-            </span>
-            <span className="font-bold text-blue-700 dark:text-blue-300 text-base tabular-nums">
-              {form.lines.length}
-            </span>
-          </div>
-          <div className="flex flex-col items-center justify-center p-2.5 bg-amber-500/10 rounded-lg border border-amber-500/20">
-            <span className="text-[11px] font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wider mb-1">
-              {t("Tổng SL xuất")}
-            </span>
-            <span className="font-bold text-amber-700 dark:text-amber-300 text-base tabular-nums">
-              -{fmtQty(totalIssuedQty)}
-            </span>
-          </div>
-        </div>
-      )}
     </>
   );
 
