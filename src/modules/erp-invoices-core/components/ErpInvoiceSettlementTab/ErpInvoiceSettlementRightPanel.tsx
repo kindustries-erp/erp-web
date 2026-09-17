@@ -1,7 +1,16 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { ArrowUpRight, ArrowDownLeft, Wallet, Building2 } from "lucide-react";
+import {
+  ArrowUpRight,
+  ArrowDownLeft,
+  Wallet,
+  Building2,
+  CheckCircle2,
+  RotateCcw,
+  Loader2,
+} from "lucide-react";
 import { DrawerSection, DrawerRow } from "@/shared/components/DrawerModal";
+import { Button } from "@/shared/components/ui/Button";
 import { money } from "@/shared/utils/format";
 import { cn } from "@/shared/utils";
 import { useErpInvoiceSettlement } from "./context/ErpInvoiceSettlementContext";
@@ -16,6 +25,7 @@ export function ErpInvoiceSettlementRightPanel(
 
   const invoiceNo = ctx.invoice?.invoiceNo || ctx.form?.invoiceNo;
   const isInvoiceIn = ctx.direction === "IN";
+  const pendingCount = ctx.activeVouchers.filter((v) => v.isPending).length;
 
   return (
     <div className="space-y-2 pb-2">
@@ -220,6 +230,65 @@ export function ErpInvoiceSettlementRightPanel(
                   )}
             </p>
           </div>
+
+          {/* Action Buttons: Xác nhận cấn trừ / Bỏ chọn */}
+          {ctx.selectedIds.length > 0 && (
+            <div className="pt-2 border-t border-slate-200 dark:border-slate-800 space-y-1.5">
+              <Button
+                size="sm"
+                onClick={ctx.handleConfirmNetOff}
+                disabled={ctx.isSubmitting || ctx.isOverRemaining}
+                className="w-full h-8 text-xs font-semibold gap-1.5 cursor-pointer shadow-xs"
+              >
+                {ctx.isSubmitting ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>{t("saving", "Đang xử lý...")}</span>
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <span>
+                      {ctx.editMode
+                        ? t(
+                            "confirmPendingNetOff",
+                            "Cấn trừ đã chọn ({{count}} GD)",
+                            { count: ctx.selectedIds.length },
+                          )
+                        : t("confirmDirectNetOff", "Xác nhận cấn trừ ngay")}
+                    </span>
+                  </>
+                )}
+              </Button>
+
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={ctx.handleUnselectAll}
+                className="w-full h-7 text-[11px] text-slate-600 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 cursor-pointer"
+              >
+                <RotateCcw className="w-3 h-3 mr-1" />
+                <span>
+                  {t("unselectAll", "Bỏ chọn tất cả ({{count}})", {
+                    count: ctx.selectedIds.length,
+                  })}
+                </span>
+              </Button>
+            </div>
+          )}
+
+          {/* Thông báo trạng thái chờ lưu khi ở editMode */}
+          {ctx.editMode && pendingCount > 0 && (
+            <div className="p-2 rounded-lg bg-amber-50/80 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-[11px] text-amber-800 dark:text-amber-300 flex items-center justify-between">
+              <span>
+                ⏳ Có <strong className="font-bold">{pendingCount}</strong> giao
+                dịch chờ lưu.
+              </span>
+              <span className="text-[10px] font-medium text-amber-600 dark:text-amber-400">
+                Nhấn "Lưu thay đổi" bên dưới
+              </span>
+            </div>
+          )}
         </div>
       </DrawerSection>
     </div>

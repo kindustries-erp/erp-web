@@ -224,12 +224,14 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
     inv: ErpInvoice | string,
     skipFetch = false,
     initialTab = "invoice_details",
+    initialMode: "view" | "edit" = "view",
   ) {
     setActiveTabKey(initialTab);
+    const isEdit = initialMode === "edit";
     // Handle string ID — open drawer first then fetch
     if (typeof inv === "string") {
       setInternalDrawerOpen(true);
-      setEditMode(false);
+      setEditMode(isEdit);
       setDeleteConfirm(false);
       setCancelConfirm(false);
       setPendingUnpost(false);
@@ -274,7 +276,7 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
 
     setDetailInvoice(inv);
     setForm(mapInvoiceToForm(inv));
-    setEditMode(false);
+    setEditMode(isEdit);
     setDeleteConfirm(false);
     setCancelConfirm(false);
     setPendingUnpost(false);
