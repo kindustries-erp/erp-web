@@ -1,15 +1,27 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { Sparkles, CheckCircle2 } from "lucide-react";
+import { Sparkles, CheckCircle2, Trash2 } from "lucide-react";
 import { DrawerSection } from "@/shared/components/DrawerModal";
 import { Input } from "@/shared/components/ui/input";
 import { Textarea } from "@/shared/components/ui/textarea";
+import { Button } from "@/shared/components/ui/Button";
 import { money } from "@/shared/utils/format";
 import { cn } from "@/shared/utils";
 import { readVietnameseCurrency } from "../utils";
+import { EmptyState } from "@/shared/components/EmptyState";
+import {
+  DataTable,
+  TableDateCell,
+  TableText,
+  type DataTableColumn,
+} from "@/shared/components/DataTable";
+import type { ActionDropdownItem } from "@/shared/components/ActionDropdown";
 import type { ManualCashflowTabContentProps } from "../types";
 
 export function ManualCashflowTabContent({
+  editMode = false,
+  activeSettlements = [],
+  onRemoveSettlement,
   settlementType,
   baseRemaining,
   manualAmount,
@@ -25,12 +37,260 @@ export function ManualCashflowTabContent({
 }: ManualCashflowTabContentProps) {
   const { t } = useTranslation(["garage", "common"]);
 
+  // Filter recorded manual settlements for the current settlement direction (RECEIPT vs PAYMENT)
+  const domainManualSettlements = useMemo(() => {
+    return (activeSettlements || []).filter((s: any) => {
+      const isReceipt =
+        s.settlement_type === "RECEIPT" || s.settlementType === "RECEIPT";
+      const targetType = settlementType === "RECEIPT";
+      if (isReceipt !== targetType) return false;
+
+      const isManual =
+        (s.source_channel || s.sourceChannel) === "OFF_SYSTEM_MANUAL" ||
+        s.category === "TIEN_MAT_NGOAI" ||
+        s.category === "CHUYEN_KHOAN_CA_NHAN" ||
+        s.category === "KHAC" ||
+        (!s.bank_transaction_id && !s.bankTransactionId);
+
+      return isManual;
+    });
+  }, [activeSettlements, settlementType]);
+
+  const totalRecordedManualAmount = useMemo(() => {
+    return domainManualSettlements.reduce(
+      (sum, s) => sum + Number(s.amount || 0),
+      0,
+    );
+  }, [domainManualSettlements]);
+
+  // Standardized Table Columns following /standardize-table
+  const columns: DataTableColumn<any>[] = useMemo(() => {
+    const baseCols: DataTableColumn<any>[] = [
+      {
+        key: "stt",
+        header: <span className="w-full block text-center">#</span>,
+        size: 40,
+        headerClassName: "text-center w-[40px] min-w-[40px]",
+        className: "text-center w-[40px] min-w-[40px]",
+        enableResizing: false,
+        cell: (_, idx) => (
+          <span className="w-full block text-center">{idx}</span>
+        ),
+      },
+      {
+        key: "transDate",
+        header: t("cases.reconciliation.transDate", "Ngày phát sinh"),
+        size: 130,
+        className: "text-right",
+        enableResizing: true,
+        cell: (row) => (
+          <TableDateCell
+            date={row.transDate || row.trans_date || row.createdAt}
+            className="justify-end w-full"
+          />
+        ),
+      },
+      {
+        key: "category",
+        header: t("cases.reconciliation.channel", "Phương thức"),
+        size: 160,
+        className: "text-center",
+        enableResizing: true,
+        cell: (row) => {
+          const categoryLabel =
+            row.category === "TIEN_MAT_NGOAI"
+              ? t("cases.reconciliation.channelCash", "💵 Tiền mặt ngoài")
+              : row.category === "CHUYEN_KHOAN_CA_NHAN"
+                ? t("cases.reconciliation.channelBankPersonal", "🏦 CK Cá nhân")
+                : t("cases.reconciliation.channelOther", "✨ Hình thức khác");
+
+          return (
+            <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700/60 truncate max-w-[140px]">
+              {categoryLabel}
+            </span>
+          );
+        },
+      },
+      {
+        key: "partnerName",
+        header: t("cases.reconciliation.payerOrReceiver", "Người nộp / nhận"),
+        size: 200,
+        enableResizing: true,
+        cell: (row) => (
+          <TableText
+            text={
+              row.partnerName ||
+              row.partner_name ||
+              row.correspondentName ||
+              "—"
+            }
+            tooltip={true}
+            enableCopy={true}
+          />
+        ),
+      },
+      {
+        key: "amount",
+        header: t("cases.reconciliation.amount", "Số tiền (VNĐ)"),
+        size: 150,
+        className: "text-right",
+        enableResizing: true,
+        cell: (row) => (
+          <span
+            className={cn(
+              "tabular-nums font-semibold",
+              settlementType === "RECEIPT"
+                ? "text-emerald-600 dark:text-emerald-400"
+                : "text-amber-600 dark:text-amber-400",
+            )}
+          >
+            {money(Number(row.amount || 0))}
+          </span>
+        ),
+      },
+      {
+        key: "note",
+        header: t("cases.reconciliation.manualNote", "Ghi chú & Diễn giải"),
+        size: 240,
+        enableResizing: true,
+        cell: (row) => <TableText text={row.note || "—"} tooltip={true} />,
+      },
+    ];
+
+    if (editMode && onRemoveSettlement) {
+      baseCols.push({
+        key: "action",
+        header: "",
+        size: 44,
+        className: "text-center",
+        enableResizing: false,
+        cell: (row) => (
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={() => onRemoveSettlement(row.id || row.tempId)}
+            className="h-6 w-6 text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/50 cursor-pointer"
+            title={t("cases.actions.delete", "Xóa")}
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </Button>
+        ),
+      });
+    }
+
+    return baseCols;
+  }, [editMode, onRemoveSettlement, settlementType, t]);
+
+  const summaryRow = useMemo(() => {
+    if (domainManualSettlements.length === 0) return undefined;
+    return {
+      partnerName: (
+        <div className="text-right w-full font-semibold">
+          {t("cases.reconciliation.total", "Tổng cộng")}:
+        </div>
+      ),
+      amount: (
+        <div
+          className={cn(
+            "text-right font-bold tabular-nums",
+            settlementType === "RECEIPT"
+              ? "text-emerald-600 dark:text-emerald-400"
+              : "text-amber-600 dark:text-amber-400",
+          )}
+        >
+          {money(totalRecordedManualAmount)}
+        </div>
+      ),
+    };
+  }, [
+    domainManualSettlements.length,
+    settlementType,
+    totalRecordedManualAmount,
+    t,
+  ]);
+
+  // Row actions for context menu & quick actions
+  const getRowActions = useMemo(() => {
+    if (!editMode || !onRemoveSettlement) return undefined;
+    return (row: any): ActionDropdownItem[] => [
+      {
+        groupLabel: "THAO TÁC",
+        items: [
+          {
+            label: t("cases.actions.delete", "Xóa"),
+            icon: <Trash2 className="w-3.5 h-3.5 text-destructive" />,
+            variant: "danger",
+            onClick: () => onRemoveSettlement(row.id || row.tempId),
+          },
+        ],
+      },
+    ];
+  }, [editMode, onRemoveSettlement, t]);
+
+  // ─── 1. VIEW MODE: READ-ONLY STANDARDIZED SPREADSHEET TABLE OR SHARED EMPTY STATE ───
+  if (!editMode) {
+    return (
+      <div className="space-y-3 pb-2">
+        <DrawerSection
+          title={t(
+            "cases.reconciliation.manualTitle",
+            "Thông tin chi tiết Dòng tiền Ngoài sổ sách",
+          )}
+          titleExtra={
+            domainManualSettlements.length > 0 ? (
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] font-mono font-bold px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200">
+                  {money(totalRecordedManualAmount)}
+                </span>
+                <span className="text-[10px] text-muted-foreground font-normal">
+                  ({domainManualSettlements.length} GD)
+                </span>
+              </div>
+            ) : undefined
+          }
+          collapsible={true}
+          defaultCollapsed={false}
+          className="mb-0 p-3"
+          bodyClassName="p-0 space-y-3"
+        >
+          {domainManualSettlements.length > 0 ? (
+            <DataTable
+              tableId={`garage-case-manual-cashflow-view-${settlementType}`}
+              items={domainManualSettlements}
+              columns={columns}
+              variant="spreadsheet"
+              enableColumnResizing={true}
+              summaryRow={summaryRow}
+              emptyLabel={t(
+                "cases.reconciliation.noManualSettlements",
+                "Chưa có dòng tiền ngoài sổ sách",
+              )}
+            />
+          ) : (
+            <EmptyState
+              size="md"
+              message={t(
+                "cases.reconciliation.noManualSettlements",
+                "Chưa có dòng tiền ngoài sổ sách",
+              )}
+              description={t(
+                "cases.reconciliation.noManualSettlementsDesc",
+                'Chưa ghi nhận khoản thu/chi tiền mặt hoặc chuyển khoản cá nhân ngoài hệ thống ERP. Bấm nút "Chỉnh sửa" ở góc trên bên phải để ghi nhận thêm.',
+              )}
+            />
+          )}
+        </DrawerSection>
+      </div>
+    );
+  }
+
+  // ─── 2. EDIT MODE: ENTRY FORM + STANDARDIZED SPREADSHEET TABLE WITH DELETE ACTION ───
   return (
     <div className="space-y-3 pb-2">
       <DrawerSection
         title={t(
-          "cases.reconciliation.manualTitle",
-          "Thông tin chi tiết Dòng tiền Ngoài sổ sách",
+          "cases.reconciliation.manualNewTitle",
+          "Ghi nhận Dòng tiền Ngoài sổ sách",
         )}
         collapsible={true}
         defaultCollapsed={false}
@@ -261,6 +521,44 @@ export function ManualCashflowTabContent({
           </div>
         </div>
       </DrawerSection>
+
+      {/* List of previously recorded off-book settlements (with delete action in edit mode) */}
+      {domainManualSettlements.length > 0 && (
+        <DrawerSection
+          title={t(
+            "cases.reconciliation.manualListTitle",
+            "Danh sách Dòng tiền Ngoài sổ sách đã ghi nhận",
+          )}
+          titleExtra={
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] font-mono font-bold px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200">
+                {money(totalRecordedManualAmount)}
+              </span>
+              <span className="text-[10px] text-muted-foreground font-normal">
+                ({domainManualSettlements.length} GD)
+              </span>
+            </div>
+          }
+          collapsible={true}
+          defaultCollapsed={false}
+          className="mb-0 p-3"
+          bodyClassName="p-0 space-y-3"
+        >
+          <DataTable
+            tableId={`garage-case-manual-cashflow-edit-${settlementType}`}
+            items={domainManualSettlements}
+            columns={columns}
+            variant="spreadsheet"
+            enableColumnResizing={true}
+            summaryRow={summaryRow}
+            rowHoverActions={getRowActions}
+            emptyLabel={t(
+              "cases.reconciliation.noManualSettlements",
+              "Chưa có dòng tiền ngoài sổ sách",
+            )}
+          />
+        </DrawerSection>
+      )}
     </div>
   );
 }

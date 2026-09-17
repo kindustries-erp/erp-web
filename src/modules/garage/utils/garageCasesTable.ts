@@ -31,6 +31,16 @@ function getCellValue(item: Record<string, any>, key: string) {
       return item.khachHangName || "";
     case "isInsuranceClaim":
       return item.rawData?.XeLamBaoHiem ? "yes" : "no";
+    case "hasInvoice":
+    case "vatInvoice": {
+      const hasVat = Boolean(
+        (item.rawData?.TienThueKH && Number(item.rawData.TienThueKH) > 0) ||
+        (item.tienThueKh && Number(item.tienThueKh) > 0) ||
+        item.rawData?.DaTaoHoaDonThue === true ||
+        (item.rawData?.TienThue && Number(item.rawData.TienThue) > 0),
+      );
+      return hasVat ? "YES" : "NO";
+    }
     case "caseDate":
     case "ngayPhatSinh":
       return item.ngayPhatSinh || item.ngayTiepNhan || "";

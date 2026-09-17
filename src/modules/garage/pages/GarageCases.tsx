@@ -33,6 +33,7 @@ import {
   FileClock,
   Wrench,
   ShieldCheck,
+  FileCheck,
   Eye,
   Pencil,
   Scale,
@@ -51,10 +52,6 @@ import {
   type TableViewPreset,
 } from "@/shared/hooks/useUserPreferences";
 import { applyGarageCasesTableState } from "../utils/garageCasesTable";
-import {
-  GarageCaseReconciliationDrawer,
-  type ReconciliationTabKey,
-} from "../components/GarageCaseReconciliationDrawer";
 import { GarageCaseViewModeCombobox } from "../components/GarageCaseViewModeCombobox";
 import { GarageCaseViewConfigDrawer } from "../components/GarageCaseViewConfigDrawer";
 import {
@@ -333,6 +330,17 @@ export function GarageCases() {
               value: item,
             };
           }
+          if (columnKey === "hasInvoice" || columnKey === "vatInvoice") {
+            return {
+              label:
+                item === "YES" || item === "yes" || item === "WITH_INVOICE"
+                  ? t("cases.filter.hasVatInvoice", "Có HĐ VAT")
+                  : item === "NO" || item === "no" || item === "NO_INVOICE"
+                    ? t("cases.filter.noVatInvoice", "Không HĐ VAT")
+                    : item,
+              value: item,
+            };
+          }
           return { label: item, value: item };
         }),
         total: res.total,
@@ -463,11 +471,6 @@ export function GarageCases() {
 
   const [selectedCaseId, setSelectedCaseId] = useState<string | null>(null);
   const [drawerEditMode, setDrawerEditMode] = useState<boolean>(false);
-  const [reconciliationCase, setReconciliationCase] = useState<any | null>(
-    null,
-  );
-  const [reconciliationInitialTab, setReconciliationInitialTab] =
-    useState<ReconciliationTabKey>("bank_cash");
 
   const canCreateGarage = useHasPermission(
     ErpResource.GARAGE,
@@ -763,8 +766,9 @@ export function GarageCases() {
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
-                    setReconciliationInitialTab("invoices_out");
-                    setReconciliationCase(item);
+                    setDrawerEditMode(false);
+                    setDrawerInitialTab("financials");
+                    setSelectedCaseId(item.soChungTu || item.id);
                   }}
                   className="text-emerald-600 dark:text-emerald-400 hover:text-primary transition-colors cursor-pointer shrink-0 inline-flex items-center justify-center p-0.5"
                 >
@@ -1588,6 +1592,57 @@ export function GarageCases() {
           </span>
         ),
     },
+    // 17. Hóa đơn VAT (HĐ VAT) - Nằm ngay bên phải cột BH
+    {
+      key: "hasInvoice",
+      label: t("cases.columns.vatInvoice", "HĐ VAT"),
+      header: (
+        <TableColumnHeaderFilter
+          {...createHeaderProps(
+            "hasInvoice",
+            t("cases.columns.vatInvoice", "HĐ VAT"),
+            "center",
+            false,
+            (val: string) =>
+              val === "YES" || val === "yes" || val === "WITH_INVOICE"
+                ? t("cases.filter.hasVatInvoice", "Có HĐ VAT")
+                : val === "NO" || val === "no" || val === "NO_INVOICE"
+                  ? t("cases.filter.noVatInvoice", "Không HĐ VAT")
+                  : val,
+          )}
+          {...commonOptionProps}
+        />
+      ),
+      sortable: false,
+      size: 95,
+      minSize: 85,
+      enableResizing: true,
+      className: "text-center",
+      cell: (item: any) => {
+        const hasVat = Boolean(
+          (item.rawData?.TienThueKH && Number(item.rawData.TienThueKH) > 0) ||
+          (item.tienThueKh && Number(item.tienThueKh) > 0) ||
+          item.rawData?.DaTaoHoaDonThue === true ||
+          (item.rawData?.TienThue && Number(item.rawData.TienThue) > 0),
+        );
+        return hasVat ? (
+          <div className="w-full flex justify-center">
+            <Tooltip
+              content={t(
+                "cases.columns.hasInvoiceTooltip",
+                "Có xuất hóa đơn VAT",
+              )}
+            >
+              <FileCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 hover:text-primary transition-colors" />
+            </Tooltip>
+          </div>
+        ) : (
+          <span className="text-muted-foreground/30 select-none font-normal">
+            —
+          </span>
+        );
+      },
+    },
     // 18. Ngày cập nhật
     {
       key: "updatedAt",
@@ -1788,8 +1843,9 @@ export function GarageCases() {
                 label: t("cases.actions.reconcile", "Đối soát"),
                 icon: <Scale className="w-4 h-4" />,
                 onClick: () => {
-                  setReconciliationInitialTab("bank_cash");
-                  setReconciliationCase(item);
+                  setDrawerEditMode(false);
+                  setDrawerInitialTab("financials");
+                  setSelectedCaseId(item.soChungTu || item.id);
                 },
               },
             ],
@@ -1866,54 +1922,6 @@ export function GarageCases() {
         onClose={() => setExportDrawerOpen(false)}
         initialBranchId={selectedBranchId}
       />
-
-      {reconciliationCase && (
-        <GarageCaseReconciliationDrawer
-          open={!!reconciliationCase}
-          onClose={() => setReconciliationCase(null)}
-          caseId={reconciliationCase.id}
-          caseCode={
-            reconciliationCase.soChungTu || reconciliationCase.hdPhieuDichVuId
-          }
-          initialTab={reconciliationInitialTab}
-          defaultType="RECEIPT"
-          suggestedAmount={Number(
-            reconciliationCase.tienConPhaiThanhToan ||
-              reconciliationCase.tienCoThue ||
-              0,
-          )}
-          onSuccess={() => {
-            refetch();
-            queryClient.invalidateQueries({
-              queryKey: ["garage", "grossProfitReport"],
-            });
-            queryClient.invalidateQueries({
-              queryKey: [
-                "garage-case-financial-summary",
-                reconciliationCase.id,
-              ],
-            });
-            queryClient.invalidateQueries({
-              queryKey: ["garage-case-settlements", reconciliationCase.id],
-            });
-            queryClient.invalidateQueries({
-              queryKey: [
-                "garage-case-traceability-graph",
-                reconciliationCase.id,
-              ],
-            });
-            queryClient.invalidateQueries({
-              queryKey: ["garage-case-linked-invoices", reconciliationCase.id],
-            });
-            queryClient.invalidateQueries({
-              queryKey: [
-                "garage-case-linked-invoices-for-drawer",
-                reconciliationCase.id,
-              ],
-            });
-          }}
-        />
-      )}
     </>
   );
 }

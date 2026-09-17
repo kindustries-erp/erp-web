@@ -155,4 +155,40 @@ describe("applyGarageCasesTableState", () => {
     );
     expect(allResult).toHaveLength(3);
   });
+
+  it("filters correctly by hasInvoice (YES / NO)", () => {
+    const vatItems = [
+      {
+        id: "10",
+        soChungTu: "VAT-01",
+        rawData: { TienThueKH: 500000 },
+      },
+      {
+        id: "20",
+        soChungTu: "VAT-02",
+        rawData: { DaTaoHoaDonThue: true },
+      },
+      {
+        id: "30",
+        soChungTu: "NO-VAT-03",
+        rawData: { TienThueKH: 0, DaTaoHoaDonThue: false },
+      },
+    ];
+
+    const yesResult = applyGarageCasesTableState(
+      vatItems,
+      { sorts: [], columnSearch: {}, columnFilters: { hasInvoice: ["YES"] } },
+      "",
+    );
+    expect(yesResult).toHaveLength(2);
+    expect(yesResult.map((r) => r.id)).toEqual(["20", "10"]);
+
+    const noResult = applyGarageCasesTableState(
+      vatItems,
+      { sorts: [], columnSearch: {}, columnFilters: { hasInvoice: ["NO"] } },
+      "",
+    );
+    expect(noResult).toHaveLength(1);
+    expect(noResult[0].id).toBe("30");
+  });
 });

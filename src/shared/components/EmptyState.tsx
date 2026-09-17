@@ -28,28 +28,39 @@ function DefaultIllustration({ size }: { size: number }) {
         viewBox="0 0 88 88"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
+        className="stroke-slate-400 dark:stroke-slate-500"
         style={{ animation: "emptyFloat 3.5s ease-in-out infinite" }}
       >
-        <g
-          stroke="#94a3b8"
-          strokeWidth="1.5"
-          strokeLinejoin="round"
-          strokeLinecap="round"
-        >
+        <g strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round">
           {/* Inside of the box */}
-          <path d="M44 32 L24 42 L44 52 L64 42 Z" fill="#e2e8f0" />
+          <path
+            d="M44 32 L24 42 L44 52 L64 42 Z"
+            className="fill-slate-200 dark:fill-slate-800"
+          />
 
           {/* Left Face */}
-          <path d="M24 42 L44 52 L44 70 L24 60 Z" fill="#f1f5f9" />
+          <path
+            d="M24 42 L44 52 L44 70 L24 60 Z"
+            className="fill-slate-100 dark:fill-slate-700/70"
+          />
 
           {/* Right Face */}
-          <path d="M44 52 L64 42 L64 60 L44 70 Z" fill="#ffffff" />
+          <path
+            d="M44 52 L64 42 L64 60 L44 70 Z"
+            className="fill-white dark:fill-slate-700"
+          />
 
           {/* Left Flap */}
-          <path d="M24 42 L16 34 L36 24 L44 32 Z" fill="#ffffff" />
+          <path
+            d="M24 42 L16 34 L36 24 L44 32 Z"
+            className="fill-white dark:fill-slate-600/80"
+          />
 
           {/* Right Flap */}
-          <path d="M64 42 L72 34 L52 24 L44 32 Z" fill="#f1f5f9" />
+          <path
+            d="M64 42 L72 34 L52 24 L44 32 Z"
+            className="fill-slate-100 dark:fill-slate-700/60"
+          />
         </g>
 
         {/* Decoration lines on faces to look like a shipping box */}
@@ -58,7 +69,7 @@ function DefaultIllustration({ size }: { size: number }) {
           y1="51"
           x2="44"
           y2="61"
-          stroke="#cbd5e1"
+          className="stroke-slate-300 dark:stroke-slate-600"
           strokeWidth="1.5"
           strokeLinecap="round"
           opacity="0.6"
@@ -68,27 +79,66 @@ function DefaultIllustration({ size }: { size: number }) {
           y1="51"
           x2="44"
           y2="61"
-          stroke="#cbd5e1"
+          className="stroke-slate-300 dark:stroke-slate-600"
           strokeWidth="1.5"
           strokeLinecap="round"
           opacity="0.6"
         />
 
         {/* Subtle floating dots to indicate 'empty space' */}
-        <circle cx="44" cy="40" r="1.5" fill="#94a3b8" opacity="0.4" />
-        <circle cx="36" cy="36" r="1.5" fill="#94a3b8" opacity="0.3" />
-        <circle cx="52" cy="44" r="1.5" fill="#94a3b8" opacity="0.4" />
+        <circle
+          cx="44"
+          cy="40"
+          r="1.5"
+          className="fill-slate-400 dark:fill-slate-500"
+          opacity="0.4"
+        />
+        <circle
+          cx="36"
+          cy="36"
+          r="1.5"
+          className="fill-slate-400 dark:fill-slate-500"
+          opacity="0.3"
+        />
+        <circle
+          cx="52"
+          cy="44"
+          r="1.5"
+          className="fill-slate-400 dark:fill-slate-500"
+          opacity="0.4"
+        />
       </svg>
 
       {/* Ground shadow — separate element so it stays fixed while box floats */}
       <div
+        className="bg-slate-400/25 dark:bg-black/50 blur-[3px]"
         style={{
           width: shadowW,
           height: shadowH,
           borderRadius: "50%",
-          background: "rgba(148,163,184,0.25)",
-          filter: "blur(4px)",
           marginTop: -Math.round(size * 0.06),
+          animation: "emptyShadow 3.5s ease-in-out infinite",
+        }}
+      />
+    </div>
+  );
+}
+
+function AnimatedIconWrapper({ icon }: { icon: React.ReactNode }) {
+  return (
+    <div className="flex flex-col items-center">
+      <div
+        className="flex items-center justify-center p-3 rounded-2xl bg-slate-100/90 dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-700/80 shadow-xs"
+        style={{ animation: "emptyFloat 3.5s ease-in-out infinite" }}
+      >
+        {icon}
+      </div>
+      <div
+        className="bg-slate-400/25 dark:bg-black/50 rounded-full blur-[3px]"
+        style={{
+          width: 36,
+          height: 6,
+          marginTop: 6,
           animation: "emptyShadow 3.5s ease-in-out infinite",
         }}
       />
@@ -114,14 +164,18 @@ export function EmptyState({
       )}
     >
       <div className="mb-4">
-        {icon ?? <DefaultIllustration size={svgSize} />}
+        {icon ? (
+          <AnimatedIconWrapper icon={icon} />
+        ) : (
+          <DefaultIllustration size={svgSize} />
+        )}
       </div>
 
-      <p className="text-[13px] font-medium text-slate-400 text-center max-w-[220px] leading-relaxed">
+      <p className="text-[13px] font-medium text-slate-500 dark:text-slate-400 text-center max-w-[240px] leading-relaxed">
         {message ?? "Không có dữ liệu"}
       </p>
       {description && (
-        <p className="mt-1.5 text-[11px] text-slate-400 text-center max-w-[200px] leading-relaxed opacity-70">
+        <p className="mt-1.5 text-[11px] text-slate-400 dark:text-slate-500 text-center max-w-[220px] leading-relaxed opacity-80">
           {description}
         </p>
       )}

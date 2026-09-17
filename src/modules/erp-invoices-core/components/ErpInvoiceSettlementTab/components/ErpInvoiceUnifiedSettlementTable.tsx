@@ -663,10 +663,10 @@ export function ErpInvoiceUnifiedSettlementTable() {
       }
       collapsible={true}
       defaultCollapsed={false}
-      className="p-3 mb-0 border border-slate-200/80 dark:border-slate-800"
+      className="p-2.5 mb-0 border border-slate-200/80 dark:border-slate-800"
       bodyClassName="p-0"
     >
-      <div className="h-[calc(100vh-375px)] min-h-[260px] flex flex-col overflow-hidden bg-white dark:bg-slate-900">
+      <div className="h-[calc(100vh-395px)] min-h-[260px] max-h-[calc(100vh-395px)] flex flex-col overflow-hidden bg-white dark:bg-slate-900">
         <StandardTable
           tableId="invoice-unified-settlement-table"
           items={displayItems}

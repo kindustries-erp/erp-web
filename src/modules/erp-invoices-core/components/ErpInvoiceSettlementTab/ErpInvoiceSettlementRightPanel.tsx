@@ -1,15 +1,7 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import {
-  TrendingUp,
-  ArrowUpRight,
-  ArrowDownLeft,
-  Wallet,
-  Building2,
-  Pencil,
-} from "lucide-react";
+import { ArrowUpRight, ArrowDownLeft, Wallet, Building2 } from "lucide-react";
 import { DrawerSection, DrawerRow } from "@/shared/components/DrawerModal";
-import { Button } from "@/shared/components/ui/Button";
 import { money } from "@/shared/utils/format";
 import { cn } from "@/shared/utils";
 import { useErpInvoiceSettlement } from "./context/ErpInvoiceSettlementContext";
@@ -26,12 +18,12 @@ export function ErpInvoiceSettlementRightPanel(
   const isInvoiceIn = ctx.direction === "IN";
 
   return (
-    <div className="space-y-3 pb-3">
+    <div className="space-y-2 pb-2">
       {/* ─── SECTION 1: THÔNG TIN CHUNG HÓA ĐƠN (ĐƯA LÊN ĐẦU TIÊN) ─── */}
       <DrawerSection
         title={
-          <div className="flex items-center gap-2 font-bold text-xs uppercase tracking-wider text-slate-800 dark:text-slate-200">
-            <Building2 className="w-4 h-4 text-muted-foreground" />
+          <div className="flex items-center gap-1.5 font-bold text-xs uppercase tracking-wider text-slate-800 dark:text-slate-200">
+            <Building2 className="w-3.5 h-3.5 text-muted-foreground" />
             <span>{t("generalInfo", "Thông tin chung")}</span>
           </div>
         }
@@ -42,6 +34,7 @@ export function ErpInvoiceSettlementRightPanel(
         }
         collapsible={true}
         defaultCollapsed={false}
+        className="p-2.5 mb-0 border border-slate-200/80 dark:border-slate-800"
       >
         <div className="space-y-1 text-xs">
           <DrawerRow
@@ -68,28 +61,23 @@ export function ErpInvoiceSettlementRightPanel(
         </div>
       </DrawerSection>
 
-      {/* ─── SECTION 2: CÔNG NỢ & MỤC TIÊU CẤN TRỪ (KHÔNG CÓ WRAPPER VIỀN CARD BÊN NGOÀI) ─── */}
+      {/* ─── SECTION 2: CÔNG NỢ & MỤC TIÊU CẤN TRỪ ─── */}
       <DrawerSection
         title={
-          <div className="flex items-center gap-2 font-bold text-xs uppercase tracking-wider text-slate-800 dark:text-slate-200">
-            <Wallet className="w-4 h-4 text-muted-foreground" />
+          <div className="flex items-center gap-1.5 font-bold text-xs uppercase tracking-wider text-slate-800 dark:text-slate-200">
+            <Wallet className="w-3.5 h-3.5 text-muted-foreground" />
             <span>
               {isInvoiceIn
-                ? t(
-                    "debtAndCashflowTargetIn",
-                    "Công nợ & Đối soát dòng tiền (Mua vào)",
-                  )
-                : t(
-                    "debtAndCashflowTargetOut",
-                    "Công nợ & Đối soát dòng tiền (Bán ra)",
-                  )}
+                ? t("debtAndCashflowTargetIn", "Công nợ & Dòng tiền (Mua vào)")
+                : t("debtAndCashflowTargetOut", "Công nợ & Dòng tiền (Bán ra)")}
             </span>
           </div>
         }
         collapsible={true}
         defaultCollapsed={false}
+        className="p-2.5 mb-0 border border-slate-200/80 dark:border-slate-800"
       >
-        <div className="space-y-3 pt-0.5">
+        <div className="space-y-2 pt-0.5">
           {/* Header Card: Chiều đối soát & Badge Trạng thái */}
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-1.5 text-xs text-slate-700 dark:text-slate-300 font-medium">
@@ -179,7 +167,7 @@ export function ErpInvoiceSettlementRightPanel(
           </div>
 
           {/* Phân cách & Cấn trừ đợt này */}
-          <div className="border-t border-dashed border-slate-200 dark:border-slate-800 pt-2.5 space-y-2">
+          <div className="border-t border-dashed border-slate-200 dark:border-slate-800 pt-2 space-y-1.5">
             <div className="flex justify-between items-center text-xs text-slate-500">
               <span>{t("currentNetOffLabel", "Cấn trừ ròng đợt này:")}</span>
               <span
@@ -220,7 +208,7 @@ export function ErpInvoiceSettlementRightPanel(
               </div>
             )}
 
-            <p className="text-[10px] text-muted-foreground leading-tight pt-1">
+            <p className="text-[10px] text-muted-foreground leading-tight pt-0.5">
               {isInvoiceIn
                 ? t(
                     "invoiceDirectionInHint",
@@ -232,70 +220,6 @@ export function ErpInvoiceSettlementRightPanel(
                   )}
             </p>
           </div>
-        </div>
-      </DrawerSection>
-
-      {/* ─── SECTION 3: HÀNH ĐỘNG XÁC NHẬN CẤN TRỪ (XỬ LÝ CHUẨN VIEW MODE VS EDIT MODE) ─── */}
-      <DrawerSection
-        title={
-          <div className="flex items-center gap-2 font-bold text-xs uppercase tracking-wider text-slate-800 dark:text-slate-200">
-            <TrendingUp className="w-4 h-4 text-muted-foreground" />
-            <span>{t("netOffActionsTitle", "Thao tác cấn trừ")}</span>
-          </div>
-        }
-        collapsible={true}
-        defaultCollapsed={false}
-      >
-        <div className="space-y-2">
-          {!ctx.editMode ? (
-            <Button
-              type="button"
-              className="w-full h-8 text-xs font-semibold gap-1.5 cursor-pointer"
-              variant="outline"
-              onClick={() => ctx.onStartEdit?.()}
-            >
-              <Pencil className="w-3.5 h-3.5" />
-              {t("editToSettle", "Chỉnh sửa để đối soát")}
-            </Button>
-          ) : (
-            <>
-              <Button
-                type="button"
-                className="w-full h-8 text-xs font-semibold cursor-pointer"
-                variant="primary"
-                disabled={
-                  ctx.isSubmitting ||
-                  ctx.selectedIds.length === 0 ||
-                  ctx.isOverRemaining
-                }
-                onClick={ctx.handleConfirmNetOff}
-              >
-                {ctx.isSubmitting
-                  ? t("common:saving", "Đang lưu...")
-                  : ctx.selectedIds.length > 0
-                    ? t(
-                        "confirmNetOffWithCount",
-                        "Xác nhận cấn trừ ({{count}} GD)",
-                        { count: ctx.selectedIds.length },
-                      )
-                    : t("confirmNetOffBtn", "Xác nhận cấn trừ")}
-              </Button>
-
-              {ctx.selectedIds.length > 0 && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="w-full h-7 text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/40 cursor-pointer"
-                  onClick={ctx.handleUnselectAll}
-                >
-                  {t("unselectAllWithCount", "Bỏ chọn tất cả ({{count}})", {
-                    count: ctx.selectedIds.length,
-                  })}
-                </Button>
-              )}
-            </>
-          )}
         </div>
       </DrawerSection>
     </div>

@@ -151,7 +151,7 @@ export const erpInvoicesVi = {
   actionSaveChange: "Lưu thay đổi",
   actionSaving: "Đang lưu...",
   actionClose: "Đóng",
-  actionNetOff: "Đối soát dòng tiền",
+  actionNetOff: "Đối soát",
   netOffSuccess: "Đã đối soát dòng tiền thành công",
   netOffError: "Lỗi khi đối soát dòng tiền",
 
