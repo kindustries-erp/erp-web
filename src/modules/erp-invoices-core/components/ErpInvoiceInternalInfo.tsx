@@ -1,17 +1,16 @@
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
+import { FileText } from "lucide-react";
 import { DrawerField, DrawerSection } from "@/shared/components/DrawerModal";
 import { Combobox } from "@/shared/components/Combobox";
-import { EntityTagSelector } from "@/modules/tags/components/EntityTagSelector";
-import { getBranchOptionsApi } from "@/modules/branches/api/branchApi";
-import { type CreateErpInvoicePayload } from "../api/erpInvoicesCoreApi";
-import { ErpInvoice } from "../api/erpInvoicesCoreApi";
+import {
+  type CreateErpInvoicePayload,
+  ErpInvoice,
+  erpInvoicesCoreApi,
+} from "../api/erpInvoicesCoreApi";
 import { Checkbox } from "@/shared/components/ui/checkbox";
-import { erpInvoicesCoreApi } from "../api/erpInvoicesCoreApi";
 import toast from "react-hot-toast";
-import { Textarea } from "@/shared/components/ui/textarea";
-import { FileText, X } from "lucide-react";
 import { ModuleEntityCustomFieldsSection } from "@/shared/components/ModuleEntityCustomFieldsSection";
 import { AttributeTypeBadge } from "@/shared/components/AttributeTypeBadge";
 import {
@@ -19,114 +18,7 @@ import {
   resolveOptionLabel,
 } from "@/core/api/moduleConfigApi";
 import { useAppStore } from "@/core/config/appStore";
-import { cn } from "@/shared/utils";
-import { RelatedInvoiceSidebarSection } from "./RelatedInvoiceSidebarSection";
-
-function BufferedTextarea({
-  value,
-  onChange,
-  placeholder,
-  rows = 3,
-  className = "w-full text-sm",
-  debounceMs = 500,
-  allowClear = true,
-}: {
-  value: string;
-  onChange: (val: string) => void;
-  placeholder?: string;
-  rows?: number;
-  className?: string;
-  debounceMs?: number;
-  allowClear?: boolean;
-}) {
-  const [localValue, setLocalValue] = useState<string>(value || "");
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const isFocusedRef = useRef(false);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const latestOnChangeRef = useRef(onChange);
-  latestOnChangeRef.current = onChange;
-
-  useEffect(() => {
-    if (!isFocusedRef.current) {
-      setLocalValue(value || "");
-    }
-  }, [value]);
-
-  useEffect(() => {
-    return () => {
-      if (timerRef.current) {
-        clearTimeout(timerRef.current);
-      }
-    };
-  }, []);
-
-  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const val = e.target.value;
-    setLocalValue(val);
-
-    if (timerRef.current) {
-      clearTimeout(timerRef.current);
-    }
-    timerRef.current = setTimeout(() => {
-      latestOnChangeRef.current(val);
-    }, debounceMs);
-  };
-
-  const handleFocus = () => {
-    isFocusedRef.current = true;
-  };
-
-  const handleBlur = () => {
-    isFocusedRef.current = false;
-    if (timerRef.current) {
-      clearTimeout(timerRef.current);
-      timerRef.current = null;
-    }
-    latestOnChangeRef.current(localValue);
-  };
-
-  const handleClear = (e: React.MouseEvent | React.TouchEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setLocalValue("");
-    if (timerRef.current) {
-      clearTimeout(timerRef.current);
-      timerRef.current = null;
-    }
-    latestOnChangeRef.current("");
-    textareaRef.current?.focus();
-  };
-
-  const hasValue = localValue && localValue.length > 0;
-
-  return (
-    <div className="relative w-full">
-      <Textarea
-        ref={textareaRef}
-        className={cn(className, allowClear && hasValue && "pr-8")}
-        value={localValue}
-        onChange={handleChange}
-        onFocus={handleFocus}
-        onBlur={handleBlur}
-        placeholder={placeholder}
-        rows={rows}
-      />
-      {allowClear && hasValue && (
-        <button
-          type="button"
-          tabIndex={-1}
-          onMouseDown={handleClear}
-          onTouchStart={handleClear}
-          onClick={handleClear}
-          className="absolute top-2 right-2 text-muted-foreground/60 hover:text-foreground hover:bg-muted/80 p-0.5 rounded-full transition-colors flex items-center justify-center cursor-pointer select-none"
-          title="Xóa nhanh"
-        >
-          <X className="w-3.5 h-3.5" />
-        </button>
-      )}
-    </div>
-  );
-}
+import { ErpInvoiceGeneralInfoSection } from "./ErpInvoiceGeneralInfoSection";
 
 export function ErpInvoiceInternalSidebar({
   form,
@@ -153,13 +45,6 @@ export function ErpInvoiceInternalSidebar({
 }) {
   const { t } = useTranslation("erpInvoices");
   const locale = useAppStore((s) => s.locale);
-  const [branchOptions, setBranchOptions] = useState<
-    Array<{ value: string; label: string }>
-  >([]);
-
-  useEffect(() => {
-    getBranchOptionsApi().then(setBranchOptions).catch(console.error);
-  }, []);
 
   const moduleKey = direction === "OUT" ? "INVOICE_OUT" : "INVOICE_IN";
   const { data: globalDefs = [] } = useQuery({
@@ -300,75 +185,17 @@ export function ErpInvoiceInternalSidebar({
 
   return (
     <div className="flex flex-col gap-4">
-      {/* 1. THÔNG TIN CHUNG */}
-      <DrawerSection
-        title={t("generalInfo", "THÔNG TIN CHUNG")}
-        collapsible={true}
-        defaultCollapsed={false}
-      >
-        <div className="space-y-4">
-          <DrawerField label={t("branchId", "Chi nhánh")}>
-            {editMode ? (
-              <Combobox
-                options={branchOptions}
-                value={form.branchId || ""}
-                onChange={(val) => fieldSet("branchId", val)}
-                placeholder="-- Chọn chi nhánh --"
-                allowClear={false}
-              />
-            ) : (
-              <div className="font-medium text-[color:var(--foreground)] text-sm px-3 py-2 bg-gray-50 rounded-lg border border-transparent">
-                {branchOptions.find((o) => o.value === form.branchId)?.label ||
-                  "—"}
-              </div>
-            )}
-          </DrawerField>
-
-          <DrawerField label={t("notes", "Ghi chú")}>
-            {editMode ? (
-              <BufferedTextarea
-                className="w-full text-sm"
-                value={form.notes || ""}
-                onChange={(val) => fieldSet("notes", val)}
-                placeholder="Nhập ghi chú..."
-                rows={3}
-              />
-            ) : (
-              <div className="font-medium text-[color:var(--foreground)] text-sm px-3 py-2 bg-gray-50 rounded-lg border border-transparent whitespace-pre-wrap">
-                {form.notes || "—"}
-              </div>
-            )}
-          </DrawerField>
-
-          <div className="pt-1">
-            <div className="text-sm font-medium mb-1.5 text-gray-700">
-              {t("tags", "Thẻ nhãn")}
-            </div>
-            {invoiceId ? (
-              <EntityTagSelector
-                entityType="erp_invoice"
-                entityId={invoiceId}
-                readOnly={!editMode}
-              />
-            ) : editMode ? (
-              <EntityTagSelector
-                entityType="erp_invoice"
-                entityId="__pending__"
-                readOnly={false}
-                pendingMode
-                pendingTagIds={pendingTagIds}
-                onPendingChange={onPendingTagsChange}
-              />
-            ) : null}
-          </div>
-
-          {/* Hóa đơn liên quan (HĐ gốc bị điều chỉnh/thay thế hoặc HĐ điều chỉnh phát sinh) */}
-          <RelatedInvoiceSidebarSection
-            invoice={detailInvoice}
-            direction={direction}
-          />
-        </div>
-      </DrawerSection>
+      {/* 1. THÔNG TIN CHUNG (SHARED COMPONENT) */}
+      <ErpInvoiceGeneralInfoSection
+        invoice={detailInvoice}
+        form={form}
+        editMode={editMode}
+        fieldSet={fieldSet}
+        direction={direction}
+        invoiceId={invoiceId}
+        pendingTagIds={pendingTagIds}
+        onPendingTagsChange={onPendingTagsChange}
+      />
 
       {/* 2. THUỘC TÍNH MẶC ĐỊNH */}
       <DrawerSection

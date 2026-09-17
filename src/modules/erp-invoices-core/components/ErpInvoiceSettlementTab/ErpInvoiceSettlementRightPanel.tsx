@@ -4,17 +4,17 @@ import {
   ArrowUpRight,
   ArrowDownLeft,
   Wallet,
-  Building2,
   CheckCircle2,
   RotateCcw,
   Loader2,
 } from "lucide-react";
-import { DrawerSection, DrawerRow } from "@/shared/components/DrawerModal";
+import { DrawerSection } from "@/shared/components/DrawerModal";
 import { Button } from "@/shared/components/ui/Button";
 import { money } from "@/shared/utils/format";
 import { cn } from "@/shared/utils";
 import { useErpInvoiceSettlement } from "./context/ErpInvoiceSettlementContext";
 import { type ErpInvoiceSettlementTabProps } from "./types";
+import { ErpInvoiceGeneralInfoSection } from "../ErpInvoiceGeneralInfoSection";
 
 export function ErpInvoiceSettlementRightPanel(
   props?: ErpInvoiceSettlementTabProps,
@@ -23,53 +23,20 @@ export function ErpInvoiceSettlementRightPanel(
   const { t } = useTranslation(["erpInvoices", "common"]);
   const ctx = useErpInvoiceSettlement();
 
-  const invoiceNo = ctx.invoice?.invoiceNo || ctx.form?.invoiceNo;
   const isInvoiceIn = ctx.direction === "IN";
   const pendingCount = ctx.activeVouchers.filter((v) => v.isPending).length;
 
   return (
-    <div className="space-y-2 pb-2">
-      {/* ─── SECTION 1: THÔNG TIN CHUNG HÓA ĐƠN (ĐƯA LÊN ĐẦU TIÊN) ─── */}
-      <DrawerSection
-        title={
-          <div className="flex items-center gap-1.5 font-bold text-xs uppercase tracking-wider text-slate-800 dark:text-slate-200">
-            <Building2 className="w-3.5 h-3.5 text-muted-foreground" />
-            <span>{t("generalInfo", "Thông tin chung")}</span>
-          </div>
-        }
-        titleExtra={
-          <span className="text-[10px] font-mono text-muted-foreground">
-            {invoiceNo ? `#${invoiceNo}` : "—"}
-          </span>
-        }
-        collapsible={true}
-        defaultCollapsed={false}
-        className="p-2.5 mb-0 border border-slate-200/80 dark:border-slate-800"
-      >
-        <div className="space-y-1 text-xs">
-          <DrawerRow
-            label={t(
-              "sellerBuyerPartner",
-              isInvoiceIn ? "Nhà cung cấp" : "Khách hàng",
-            )}
-            value={
-              isInvoiceIn
-                ? ctx.invoice?.sellerName || ctx.form?.sellerName || "—"
-                : ctx.invoice?.buyerName || ctx.form?.buyerName || "—"
-            }
-          />
-          <DrawerRow
-            label={t("branch", "Chi nhánh")}
-            value={
-              (ctx.invoice as any)?.branch?.name || ctx.invoice?.branchId || "—"
-            }
-          />
-          <DrawerRow
-            label={t("notes", "Ghi chú")}
-            value={ctx.invoice?.description || ctx.form?.description || "—"}
-          />
-        </div>
-      </DrawerSection>
+    <div className="space-y-4 pb-2">
+      {/* ─── SECTION 1: THÔNG TIN CHUNG HÓA ĐƠN (SHARED COMPONENT) ─── */}
+      <ErpInvoiceGeneralInfoSection
+        invoice={ctx.invoice}
+        form={ctx.form}
+        editMode={ctx.editMode}
+        fieldSet={ctx.fieldSet}
+        direction={ctx.direction}
+        invoiceId={ctx.invoice?.id}
+      />
 
       {/* ─── SECTION 2: CÔNG NỢ & MỤC TIÊU CẤN TRỪ ─── */}
       <DrawerSection

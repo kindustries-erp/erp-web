@@ -155,6 +155,28 @@ const columns: DataTableColumn<ExampleRow>[] = useMemo(() => [
 - **NGUYÊN TẮC: LUÔN ƯU TIÊN SERVER-SIDE SORTING & FILTERING**:
   - Mọi bảng trong hệ thống (cả màn hình Page lẫn Drawer/Modal) **MẶC ĐỊNH BẮT BUỘC** phải ưu tiên triển khai **Server-side Filter & Sort** qua API backend (hook TanStack Query + API `getColumnOptions`).
   - Khi xử lý bảng thống kê ở Dashboard hoặc Drawer nháp client, dùng cơ chế Client-side Auto Extraction với `filterClientItems`.
+- **Infinite Scrolling trong Dropdown Options (`fetchOptions` & `next` param)**:
+  - Khi triển khai `fetchOptions` cho `TableColumnHeaderFilter` hoặc `createColumnHeaderFilter`, **BẮT BUỘC** phải trả về đối tượng có cấu trúc:
+    ```typescript
+    {
+      items: { label: string; value: string }[];
+      total: number;
+      next: number | null; // Trang kế tiếp hoặc null nếu đã hết
+    }
+    ```
+  - **Quy tắc mapping `next`**:
+    - `useInfiniteQuery` của TanStack React Query bên trong `TableColumnHeaderFilter` phụ thuộc 100% vào giá trị `lastPage.next` để xác định `hasNextPage`.
+    - Khi backend trả về `{ page, totalPages, total, items }`, hàm `fetchOptions` **phải map**:
+      `next: res.page < res.totalPages ? res.page + 1 : null`.
+    - Nếu trả về raw object không có trường `next`, `hasNextPage` sẽ bị `false`, khiến người dùng cuộn danh sách options không tải thêm trang tiếp theo.
+
+- **Chọn tất cả kết quả tìm kiếm ("Áp dụng tất cả" / `__ALL_MATCHING__`)**:
+  - Khi người dùng gõ từ khóa tìm kiếm trong dropdown options của Header Filter và tích chọn **"(Chọn tất cả kết quả tìm kiếm)"**, frontend sẽ gửi mảng:
+    `vals = ['__ALL_MATCHING__', searchKeyword]`.
+  - **Quy chuẩn Backend Query Builder**:
+    - Khi `vals[0] === '__ALL_MATCHING__'`, backend **TUYỆT ĐỐI KHÔNG** coi `'__ALL_MATCHING__'` là một giá trị so khớp `IN (:...vals)` thông thường.
+    - Backend **BẮT BUỘC** bóc tách từ khóa tìm kiếm `searchKeyword = vals[1] || ''` và áp dụng hàm tìm kiếm đa từ khóa `applyMultiKeywordFilter(qb, columnExpr, searchKeyword, paramPrefix)` để lọc toàn bộ các bản ghi khớp với từ khóa đó.
+
 - **Cú pháp Tìm kiếm Nâng cao trong Header Filter (Exact Search `""` & Multi-Search `;`)**:
   - Ô Search Box bên trong Header Filter Popover của mọi cột dữ liệu hỗ trợ sẵn 2 cú pháp tìm kiếm đặc biệt (hiển thị gợi ý tại placeholder và tooltip):
     1. **Tìm kiếm chính xác nguyên văn (`"..."`)**: Người dùng đặt từ khóa trong cặp ngoặc kép `""` (ví dụ: `"INV-001"`, `"0101234567"`). Hệ thống sẽ tìm khớp chính xác tuyệt đối giá trị thay vì tìm kiếm gần đúng `%...%`.

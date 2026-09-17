@@ -62,6 +62,8 @@ export function BankTransactionDetailDrawer({
   const [globalAttributes, setGlobalAttributes] = useState<Record<string, any>>(
     {},
   );
+  const [editBranchId, setEditBranchId] = useState<string>("");
+  const [editDescription, setEditDescription] = useState<string>("");
 
   const { data: transaction, isLoading } = useQuery({
     queryKey: ["bank-transaction", transactionId],
@@ -269,6 +271,9 @@ export function BankTransactionDetailDrawer({
       setFormError(null);
       setCategoryId(null);
       setCustomAttributes({});
+      setGlobalAttributes({});
+      setEditBranchId("");
+      setEditDescription("");
       postingState.reset();
       return;
     }
@@ -277,12 +282,17 @@ export function BankTransactionDetailDrawer({
       setEditMode(false);
       setAccountingEnabled(initialAccountingEnabled);
       setFormError(null);
+      setEditBranchId(transaction.branchId || transaction.branch?.id || "");
+      setEditDescription(
+        transaction.description || transaction.accountingDescription || "",
+      );
       hydratePostingState(transaction);
       moduleConfigApi
         .getEntityValues("BANK_TXN", transaction.id)
         .then((res) => {
           setCategoryId(res.categoryId || null);
           setCustomAttributes(res.attributes || {});
+          setGlobalAttributes(res.globalAttributes || {});
         })
         .catch(() => {});
     }
@@ -332,7 +342,7 @@ export function BankTransactionDetailDrawer({
         }
       }
 
-      // Save custom fields if present
+      // 1. Save custom fields if present
       if (
         categoryId !== undefined ||
         customAttributes !== undefined ||
@@ -347,6 +357,22 @@ export function BankTransactionDetailDrawer({
         } catch (cfErr: any) {
           console.warn("Failed to save custom attributes", cfErr);
         }
+      }
+
+      // 2. Save branchId and description if changed
+      const origBranchId = transaction.branchId || transaction.branch?.id || "";
+      const origDescription =
+        transaction.description || transaction.accountingDescription || "";
+
+      if (
+        editBranchId !== origBranchId ||
+        editDescription !== origDescription
+      ) {
+        await bankStatementApi.updateTransaction(transactionId, {
+          branchId: editBranchId || undefined,
+          description: editDescription,
+          accountingDescription: editDescription,
+        });
       }
 
       if (!accountingEnabled) {
@@ -442,12 +468,22 @@ export function BankTransactionDetailDrawer({
     if (!transaction) return;
     hydratePostingState(transaction);
     setAccountingEnabled(isPosted);
+    setEditBranchId(transaction.branchId || transaction.branch?.id || "");
+    setEditDescription(
+      transaction.description || transaction.accountingDescription || "",
+    );
     setFormError(null);
     setEditMode(true);
   };
 
   const cancelEdit = () => {
-    if (transaction) hydratePostingState(transaction);
+    if (transaction) {
+      hydratePostingState(transaction);
+      setEditBranchId(transaction.branchId || transaction.branch?.id || "");
+      setEditDescription(
+        transaction.description || transaction.accountingDescription || "",
+      );
+    }
     setAccountingEnabled(isPosted);
     setFormError(null);
     setEditMode(false);
@@ -775,7 +811,14 @@ export function BankTransactionDetailDrawer({
         rightPanel={
           transaction ? (
             <div className="space-y-4">
-              <BankTransactionGeneralInfoSection transaction={transaction} />
+              <BankTransactionGeneralInfoSection
+                transaction={transaction}
+                editMode={editMode}
+                branchId={editBranchId}
+                onBranchChange={setEditBranchId}
+                description={editDescription}
+                onDescriptionChange={setEditDescription}
+              />
 
               <ModuleEntityCustomFieldsSection
                 moduleKey="BANK_TXN"
@@ -787,6 +830,8 @@ export function BankTransactionDetailDrawer({
                 onAttributesChange={setCustomAttributes}
                 globalAttributes={globalAttributes}
                 onGlobalAttributesChange={setGlobalAttributes}
+                title="THUỘC TÍNH TÙY CHỈNH"
+                globalTitle="THUỘC TÍNH MẶC ĐỊNH"
               />
             </div>
           ) : null
