@@ -41,6 +41,7 @@ export const DEFAULT_GARAGE_CASE_COLUMN_VISIBILITY: Record<string, boolean> = {
   collectionProgress: true,
   costProgress: true,
   isInsuranceClaim: true,
+  hasInvoice: true,
   branchName: false,
   createdAt: false,
   updatedAt: false,
@@ -64,6 +65,7 @@ export const AUDIT_GARAGE_CASE_COLUMN_VISIBILITY: Record<string, boolean> = {
   customerCode: false,
   margin: false,
   isInsuranceClaim: false,
+  hasInvoice: true,
   branchName: false,
   createdAt: false,
   updatedAt: false,
@@ -154,6 +156,12 @@ export const GARAGE_CASE_COLUMN_GROUPS: ColumnGroupDef[] = [
         key: "isInsuranceClaim",
         labelKey: "cases.columns.insurance",
         defaultLabel: "BH",
+        defaultVisible: true,
+      },
+      {
+        key: "hasInvoice",
+        labelKey: "cases.columns.vatInvoice",
+        defaultLabel: "HĐ VAT",
         defaultVisible: true,
       },
       {

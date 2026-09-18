@@ -108,12 +108,26 @@ export interface GarageStatusDistributionItem {
   percentage: number;
 }
 
+export interface GarageClassificationDistributionItem {
+  classificationKey: string;
+  classificationName: string;
+  count: number;
+  revenue: number;
+  percentage: number;
+  revenuePercentage: number;
+}
+
 export interface GarageDashboardStatsResponse {
   trend: GarageTrendItem[];
   collectionSummary: GarageCollectionSummary;
   costPaymentSummary: GarageCostPaymentSummary;
   statusDistribution: GarageStatusDistributionItem[];
   statusDistributionByMonth?: Record<string, GarageStatusDistributionItem[]>;
+  classificationDistribution?: GarageClassificationDistributionItem[];
+  classificationDistributionByMonth?: Record<
+    string,
+    GarageClassificationDistributionItem[]
+  >;
   availableMonths?: string[];
 }
 

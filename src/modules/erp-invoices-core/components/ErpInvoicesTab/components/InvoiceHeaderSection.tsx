@@ -358,7 +358,7 @@ export const InvoiceHeaderSection = React.memo(function InvoiceHeaderSection({
         thaoTacItems.push({
           label: t("actionNetOff", "Đối soát dòng tiền"),
           icon: <Scale className="w-3.5 h-3.5" />,
-          onClick: () => handleOpenInternal(inv, "view", "financials"),
+          onClick: () => handleOpenInternal(inv, "edit", "financials"),
         });
       }
 

@@ -103,6 +103,7 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
 
   const {
     listHook,
+    processedLines,
     paginatedLines,
     page,
     pageSize,
@@ -218,6 +219,11 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
     listHook,
     buildFilterOptions,
     handleOpenSerialDrawer,
+    paginatedLines,
+    processedLines,
+    page,
+    totalPages,
+    total,
     t,
   });
 
@@ -241,6 +247,7 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
       activeFilterCount={listHook.activeFilterCount}
       onResetFilters={listHook.resetFilters}
       onOpenImport={() => setIsImportOpen(true)}
+      tableId="gr-details-table"
       t={t}
     />
   );

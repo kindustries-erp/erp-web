@@ -1,19 +1,20 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import {
-  TrendingUp,
   ArrowUpRight,
   ArrowDownLeft,
   Wallet,
-  Building2,
-  Pencil,
+  CheckCircle2,
+  RotateCcw,
+  Loader2,
 } from "lucide-react";
-import { DrawerSection, DrawerRow } from "@/shared/components/DrawerModal";
+import { DrawerSection } from "@/shared/components/DrawerModal";
 import { Button } from "@/shared/components/ui/Button";
 import { money } from "@/shared/utils/format";
 import { cn } from "@/shared/utils";
 import { useErpInvoiceSettlement } from "./context/ErpInvoiceSettlementContext";
 import { type ErpInvoiceSettlementTabProps } from "./types";
+import { ErpInvoiceGeneralInfoSection } from "../ErpInvoiceGeneralInfoSection";
 
 export function ErpInvoiceSettlementRightPanel(
   props?: ErpInvoiceSettlementTabProps,
@@ -22,74 +23,38 @@ export function ErpInvoiceSettlementRightPanel(
   const { t } = useTranslation(["erpInvoices", "common"]);
   const ctx = useErpInvoiceSettlement();
 
-  const invoiceNo = ctx.invoice?.invoiceNo || ctx.form?.invoiceNo;
   const isInvoiceIn = ctx.direction === "IN";
+  const pendingCount = ctx.activeVouchers.filter((v) => v.isPending).length;
 
   return (
-    <div className="space-y-3 pb-3">
-      {/* ─── SECTION 1: THÔNG TIN CHUNG HÓA ĐƠN (ĐƯA LÊN ĐẦU TIÊN) ─── */}
-      <DrawerSection
-        title={
-          <div className="flex items-center gap-2 font-bold text-xs uppercase tracking-wider text-slate-800 dark:text-slate-200">
-            <Building2 className="w-4 h-4 text-muted-foreground" />
-            <span>{t("generalInfo", "Thông tin chung")}</span>
-          </div>
-        }
-        titleExtra={
-          <span className="text-[10px] font-mono text-muted-foreground">
-            {invoiceNo ? `#${invoiceNo}` : "—"}
-          </span>
-        }
-        collapsible={true}
-        defaultCollapsed={false}
-      >
-        <div className="space-y-1 text-xs">
-          <DrawerRow
-            label={t(
-              "sellerBuyerPartner",
-              isInvoiceIn ? "Nhà cung cấp" : "Khách hàng",
-            )}
-            value={
-              isInvoiceIn
-                ? ctx.invoice?.sellerName || ctx.form?.sellerName || "—"
-                : ctx.invoice?.buyerName || ctx.form?.buyerName || "—"
-            }
-          />
-          <DrawerRow
-            label={t("branch", "Chi nhánh")}
-            value={
-              (ctx.invoice as any)?.branch?.name || ctx.invoice?.branchId || "—"
-            }
-          />
-          <DrawerRow
-            label={t("notes", "Ghi chú")}
-            value={ctx.invoice?.description || ctx.form?.description || "—"}
-          />
-        </div>
-      </DrawerSection>
+    <div className="space-y-4 pb-2">
+      {/* ─── SECTION 1: THÔNG TIN CHUNG HÓA ĐƠN (SHARED COMPONENT) ─── */}
+      <ErpInvoiceGeneralInfoSection
+        invoice={ctx.invoice}
+        form={ctx.form}
+        editMode={ctx.editMode}
+        fieldSet={ctx.fieldSet}
+        direction={ctx.direction}
+        invoiceId={ctx.invoice?.id}
+      />
 
-      {/* ─── SECTION 2: CÔNG NỢ & MỤC TIÊU CẤN TRỪ (KHÔNG CÓ WRAPPER VIỀN CARD BÊN NGOÀI) ─── */}
+      {/* ─── SECTION 2: CÔNG NỢ & MỤC TIÊU CẤN TRỪ ─── */}
       <DrawerSection
         title={
-          <div className="flex items-center gap-2 font-bold text-xs uppercase tracking-wider text-slate-800 dark:text-slate-200">
-            <Wallet className="w-4 h-4 text-muted-foreground" />
+          <div className="flex items-center gap-1.5 font-bold text-xs uppercase tracking-wider text-slate-800 dark:text-slate-200">
+            <Wallet className="w-3.5 h-3.5 text-muted-foreground" />
             <span>
               {isInvoiceIn
-                ? t(
-                    "debtAndCashflowTargetIn",
-                    "Công nợ & Đối soát dòng tiền (Mua vào)",
-                  )
-                : t(
-                    "debtAndCashflowTargetOut",
-                    "Công nợ & Đối soát dòng tiền (Bán ra)",
-                  )}
+                ? t("debtAndCashflowTargetIn", "Công nợ & Dòng tiền (Mua vào)")
+                : t("debtAndCashflowTargetOut", "Công nợ & Dòng tiền (Bán ra)")}
             </span>
           </div>
         }
         collapsible={true}
         defaultCollapsed={false}
+        className="p-2.5 mb-0 border border-slate-200/80 dark:border-slate-800"
       >
-        <div className="space-y-3 pt-0.5">
+        <div className="space-y-2 pt-0.5">
           {/* Header Card: Chiều đối soát & Badge Trạng thái */}
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-1.5 text-xs text-slate-700 dark:text-slate-300 font-medium">
@@ -179,7 +144,7 @@ export function ErpInvoiceSettlementRightPanel(
           </div>
 
           {/* Phân cách & Cấn trừ đợt này */}
-          <div className="border-t border-dashed border-slate-200 dark:border-slate-800 pt-2.5 space-y-2">
+          <div className="border-t border-dashed border-slate-200 dark:border-slate-800 pt-2 space-y-1.5">
             <div className="flex justify-between items-center text-xs text-slate-500">
               <span>{t("currentNetOffLabel", "Cấn trừ ròng đợt này:")}</span>
               <span
@@ -220,7 +185,7 @@ export function ErpInvoiceSettlementRightPanel(
               </div>
             )}
 
-            <p className="text-[10px] text-muted-foreground leading-tight pt-1">
+            <p className="text-[10px] text-muted-foreground leading-tight pt-0.5">
               {isInvoiceIn
                 ? t(
                     "invoiceDirectionInHint",
@@ -232,69 +197,64 @@ export function ErpInvoiceSettlementRightPanel(
                   )}
             </p>
           </div>
-        </div>
-      </DrawerSection>
 
-      {/* ─── SECTION 3: HÀNH ĐỘNG XÁC NHẬN CẤN TRỪ (XỬ LÝ CHUẨN VIEW MODE VS EDIT MODE) ─── */}
-      <DrawerSection
-        title={
-          <div className="flex items-center gap-2 font-bold text-xs uppercase tracking-wider text-slate-800 dark:text-slate-200">
-            <TrendingUp className="w-4 h-4 text-muted-foreground" />
-            <span>{t("netOffActionsTitle", "Thao tác cấn trừ")}</span>
-          </div>
-        }
-        collapsible={true}
-        defaultCollapsed={false}
-      >
-        <div className="space-y-2">
-          {!ctx.editMode ? (
-            <Button
-              type="button"
-              className="w-full h-8 text-xs font-semibold gap-1.5 cursor-pointer"
-              variant="outline"
-              onClick={() => ctx.onStartEdit?.()}
-            >
-              <Pencil className="w-3.5 h-3.5" />
-              {t("editToSettle", "Chỉnh sửa để đối soát")}
-            </Button>
-          ) : (
-            <>
+          {/* Action Buttons: Xác nhận cấn trừ / Bỏ chọn */}
+          {ctx.selectedIds.length > 0 && (
+            <div className="pt-2 border-t border-slate-200 dark:border-slate-800 space-y-1.5">
               <Button
-                type="button"
-                className="w-full h-8 text-xs font-semibold cursor-pointer"
-                variant="primary"
-                disabled={
-                  ctx.isSubmitting ||
-                  ctx.selectedIds.length === 0 ||
-                  ctx.isOverRemaining
-                }
+                size="sm"
                 onClick={ctx.handleConfirmNetOff}
+                disabled={ctx.isSubmitting || ctx.isOverRemaining}
+                className="w-full h-8 text-xs font-semibold gap-1.5 cursor-pointer shadow-xs"
               >
-                {ctx.isSubmitting
-                  ? t("common:saving", "Đang lưu...")
-                  : ctx.selectedIds.length > 0
-                    ? t(
-                        "confirmNetOffWithCount",
-                        "Xác nhận cấn trừ ({{count}} GD)",
-                        { count: ctx.selectedIds.length },
-                      )
-                    : t("confirmNetOffBtn", "Xác nhận cấn trừ")}
+                {ctx.isSubmitting ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>{t("saving", "Đang xử lý...")}</span>
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <span>
+                      {ctx.editMode
+                        ? t(
+                            "confirmPendingNetOff",
+                            "Cấn trừ đã chọn ({{count}} GD)",
+                            { count: ctx.selectedIds.length },
+                          )
+                        : t("confirmDirectNetOff", "Xác nhận cấn trừ ngay")}
+                    </span>
+                  </>
+                )}
               </Button>
 
-              {ctx.selectedIds.length > 0 && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="w-full h-7 text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/40 cursor-pointer"
-                  onClick={ctx.handleUnselectAll}
-                >
-                  {t("unselectAllWithCount", "Bỏ chọn tất cả ({{count}})", {
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={ctx.handleUnselectAll}
+                className="w-full h-7 text-[11px] text-slate-600 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 cursor-pointer"
+              >
+                <RotateCcw className="w-3 h-3 mr-1" />
+                <span>
+                  {t("unselectAll", "Bỏ chọn tất cả ({{count}})", {
                     count: ctx.selectedIds.length,
                   })}
-                </Button>
-              )}
-            </>
+                </span>
+              </Button>
+            </div>
+          )}
+
+          {/* Thông báo trạng thái chờ lưu khi ở editMode */}
+          {ctx.editMode && pendingCount > 0 && (
+            <div className="p-2 rounded-lg bg-amber-50/80 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-[11px] text-amber-800 dark:text-amber-300 flex items-center justify-between">
+              <span>
+                ⏳ Có <strong className="font-bold">{pendingCount}</strong> giao
+                dịch chờ lưu.
+              </span>
+              <span className="text-[10px] font-medium text-amber-600 dark:text-amber-400">
+                Nhấn "Lưu thay đổi" bên dưới
+              </span>
+            </div>
           )}
         </div>
       </DrawerSection>

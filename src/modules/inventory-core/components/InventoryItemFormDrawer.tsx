@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
-import { Layers, Check, BookOpen, Link2 } from "lucide-react";
+import { Layers, BookOpen, Link2, LayoutDashboard } from "lucide-react";
 import { Badge } from "@/shared/components/ui/badge";
+import { Checkbox } from "@/shared/components/ui/checkbox";
 import { AttributeTypeBadge } from "@/shared/components/AttributeTypeBadge";
 import {
   StandardFormDrawer,
@@ -21,7 +22,6 @@ import { Skeleton } from "@/shared/components/Skeleton";
 import { useUIStore } from "@/core/config/uiStore";
 import { useAppStore } from "@/core/config/appStore";
 import { useT } from "@/core/i18n";
-import { fmtQty } from "@/shared/utils/format";
 import {
   moduleConfigApi,
   resolveOptionLabel,
@@ -33,11 +33,11 @@ import {
   type InventoryMovementsPayload,
 } from "@/modules/inventory-core/api/inventoryCoreApi";
 import { InventoryStockLedgerSection } from "./InventoryStockLedgerSection";
-import { InventoryItemTrendChart } from "./InventoryItemTrendChart";
 import {
-  buildInventoryLedgerRows,
-  buildInventoryTrendData,
-} from "../utils/inventoryLedgerTransform";
+  InventoryItemOverviewSection,
+  InventoryDocTypeBreakdownSection,
+  computeDocTypeStats,
+} from "./InventoryItemOverviewSection";
 
 interface ItemForm {
   sku: string;
@@ -230,6 +230,7 @@ export function InventoryItemFormDrawer({
   const showToast = useUIStore((s) => s.showToast);
 
   const [viewOnly, setViewOnly] = useState(initialViewOnly);
+  const [activeTabKey, setActiveTabKey] = useState("overview");
   const [editing, setEditing] = useState<ErpInventoryItem | null>(null);
   const [form, setForm] = useState<ItemForm>(emptyForm);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -404,6 +405,7 @@ export function InventoryItemFormDrawer({
       return;
     }
     setViewOnly(initialViewOnly);
+    setActiveTabKey("overview");
     void loadMasters();
     if (itemId) {
       void loadItem(itemId);
@@ -446,34 +448,9 @@ export function InventoryItemFormDrawer({
     }
   }
 
-  const allMovements = useMemo(() => movData?.movements || [], [movData]);
-
-  const inMovementsAll = useMemo(() => {
-    return allMovements.filter((m) => Number(m.qtyIn || 0) > 0);
-  }, [allMovements]);
-
-  const outMovementsAll = useMemo(() => {
-    return allMovements.filter((m) => Number(m.qtyOut || 0) > 0);
-  }, [allMovements]);
-
-  const totalInQty = useMemo(() => {
-    return inMovementsAll.reduce((sum, m) => sum + Number(m.qtyIn || 0), 0);
-  }, [inMovementsAll]);
-
-  const totalOutQty = useMemo(() => {
-    return outMovementsAll.reduce((sum, m) => sum + Number(m.qtyOut || 0), 0);
-  }, [outMovementsAll]);
-
-  const currentOnHand = movData?.currentOnHand ?? totalInQty - totalOutQty;
-
-  const ledgerRows = useMemo(
-    () => buildInventoryLedgerRows(allMovements),
-    [allMovements],
-  );
-
-  const trendData = useMemo(
-    () => buildInventoryTrendData(ledgerRows),
-    [ledgerRows],
+  const docTypeStats = useMemo(
+    () => computeDocTypeStats(movData?.movements || []),
+    [movData?.movements],
   );
 
   const uomName =
@@ -523,7 +500,9 @@ export function InventoryItemFormDrawer({
 
       {loading ? (
         <DrawerSection
-          title={t("inventoryMasters.drawer.sectionItem", "Thông tin item kho")}
+          title={t("common.generalInfo", "THÔNG TIN CHUNG")}
+          collapsible={true}
+          defaultCollapsed={false}
         >
           <div className="flex flex-col gap-3">
             <Skeleton className="h-10 w-full" />
@@ -538,12 +517,11 @@ export function InventoryItemFormDrawer({
         </DrawerSection>
       ) : viewOnly ? (
         <div className="flex flex-col gap-4">
-          {/* 1. Item Master Information */}
+          {/* 1. THÔNG TIN CHUNG */}
           <DrawerSection
-            title={t(
-              "inventoryMasters.drawer.sectionItem",
-              "Thông tin item kho",
-            )}
+            title={t("common.generalInfo", "THÔNG TIN CHUNG")}
+            collapsible={true}
+            defaultCollapsed={false}
           >
             <DrawerRow
               label={t("inventoryMasters.fields.sku", "Mã SKU")}
@@ -554,6 +532,31 @@ export function InventoryItemFormDrawer({
               }
             />
             <DrawerRow
+              label={t("inventoryMasters.fields.itemName", "Tên item kho")}
+              value={editing?.itemName || form.itemName || "—"}
+            />
+            {form.note && (
+              <DrawerRow
+                label={t("inventoryMasters.fields.note", "Ghi chú")}
+                value={
+                  <p className="text-xs text-foreground whitespace-pre-wrap leading-relaxed">
+                    {form.note}
+                  </p>
+                }
+              />
+            )}
+          </DrawerSection>
+
+          {/* 2. CƠ CẤU CHỨNG TỪ (RIGHT PANEL) */}
+          <InventoryDocTypeBreakdownSection stats={docTypeStats} />
+
+          {/* 2. THUỘC TÍNH MẶC ĐỊNH */}
+          <DrawerSection
+            title={t("defaultAttributes", "THUỘC TÍNH MẶC ĐỊNH")}
+            collapsible={true}
+            defaultCollapsed={false}
+          >
+            <DrawerRow
               label={
                 <span className="inline-flex items-center gap-1.5 flex-wrap">
                   <span>
@@ -563,10 +566,6 @@ export function InventoryItemFormDrawer({
                 </span>
               }
               value={uomName || "—"}
-            />
-            <DrawerRow
-              label={t("inventoryMasters.fields.itemName", "Tên item kho")}
-              value={editing?.itemName || form.itemName || "—"}
             />
             <DrawerRow
               label={
@@ -635,44 +634,9 @@ export function InventoryItemFormDrawer({
                 }
               />
             )}
-
-            {/* 3 Metric Summary Cards */}
-            <div className="mt-4 grid grid-cols-3 gap-2 text-center">
-              <div className="flex flex-col items-center justify-center p-2.5 bg-orange-500/10 rounded-lg border border-orange-500/20">
-                <span className="text-[11px] font-semibold text-orange-600 dark:text-orange-400 uppercase tracking-wider mb-1">
-                  {t("inventory.chart.totalIn", "Tổng Nhập")}
-                </span>
-                <span className="font-bold text-orange-700 dark:text-orange-300 text-base tabular-nums">
-                  +{fmtQty(totalInQty)}
-                </span>
-              </div>
-              <div className="flex flex-col items-center justify-center p-2.5 bg-emerald-500/10 rounded-lg border border-emerald-500/20">
-                <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mb-1">
-                  {t("inventory.chart.totalOut", "Tổng Xuất")}
-                </span>
-                <span className="font-bold text-emerald-700 dark:text-emerald-300 text-base tabular-nums">
-                  -{fmtQty(totalOutQty)}
-                </span>
-              </div>
-              <div className="flex flex-col items-center justify-center p-2.5 bg-blue-500/10 rounded-lg border border-blue-500/20">
-                <span className="text-[11px] font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider mb-1">
-                  {t("inventory.chart.balance", "Tồn Cuối")}
-                </span>
-                <span className="font-extrabold text-blue-700 dark:text-blue-300 text-lg tabular-nums">
-                  {fmtQty(currentOnHand)}
-                </span>
-              </div>
-            </div>
           </DrawerSection>
 
-          {/* 2. Trend Chart */}
-          <InventoryItemTrendChart
-            trendData={trendData}
-            chartHeight={180}
-            uomName={uomName}
-          />
-
-          {/* 3. Trường tùy chỉnh mở rộng */}
+          {/* 3. THUỘC TÍNH TÙY CHỈNH */}
           <ModuleEntityCustomFieldsSection
             moduleKey="INVENTORY_ITEM"
             entityId={editing?.id}
@@ -680,27 +644,21 @@ export function InventoryItemFormDrawer({
             hideCategorySection={true}
             attributes={form.customAttributes}
             globalAttributes={form.customAttributes}
-            globalTitle={t("moduleConfig.customFields", "Trường tùy chỉnh")}
+            globalTitle={t(
+              "inventoryMasters.drawer.customAttributes",
+              "THUỘC TÍNH TÙY CHỈNH",
+            )}
             globalCollapsible={true}
             globalDefaultCollapsed={false}
           />
-
-          {/* 4. Ghi chú if any */}
-          {form.note && (
-            <DrawerSection title={t("inventoryMasters.fields.note", "Ghi chú")}>
-              <p className="text-xs text-foreground whitespace-pre-wrap leading-relaxed">
-                {form.note}
-              </p>
-            </DrawerSection>
-          )}
         </div>
       ) : (
         <>
+          {/* 1. THÔNG TIN CHUNG */}
           <DrawerSection
-            title={t(
-              "inventoryMasters.drawer.sectionItem",
-              "Thông tin item kho",
-            )}
+            title={t("inventoryMasters.drawer.generalInfo", "THÔNG TIN CHUNG")}
+            collapsible={true}
+            defaultCollapsed={false}
           >
             <div className="flex flex-col gap-3">
               <DrawerField
@@ -742,6 +700,33 @@ export function InventoryItemFormDrawer({
                 />
               </DrawerField>
 
+              <DrawerField label={t("inventoryMasters.fields.note", "Ghi chú")}>
+                <textarea
+                  value={form.note}
+                  disabled={viewOnly}
+                  onChange={(e) =>
+                    setForm((prev) => ({ ...prev, note: e.target.value }))
+                  }
+                  className={`${inputCls} min-h-[80px] resize-y`}
+                  placeholder={t(
+                    "inventoryMasters.fields.notePlaceholder",
+                    "Ghi chú thêm về item kho này...",
+                  )}
+                />
+              </DrawerField>
+            </div>
+          </DrawerSection>
+
+          {/* 2. THUỘC TÍNH MẶC ĐỊNH */}
+          <DrawerSection
+            title={t(
+              "inventoryMasters.drawer.defaultAttributes",
+              "THUỘC TÍNH MẶC ĐỊNH",
+            )}
+            collapsible={true}
+            defaultCollapsed={false}
+          >
+            <div className="flex flex-col gap-3">
               <DrawerField
                 label={
                   <span className="inline-flex items-center gap-1.5 flex-wrap">
@@ -823,78 +808,88 @@ export function InventoryItemFormDrawer({
                     }))
                   }
                   options={trackingPolicyOptions}
-                  placeholder="Chọn chính sách tracking"
+                  placeholder={t(
+                    "inventoryMasters.fields.trackingPolicyPlaceholder",
+                    "Chọn tracking policy",
+                  )}
                 />
-                {editing?.hasSerials && !viewOnly && (
-                  <span className="text-[11px] text-amber-600 dark:text-amber-400 mt-1 block">
+                {editing?.hasSerials && (
+                  <span className="text-[11px] text-amber-600 dark:text-amber-400 font-medium">
                     {t(
-                      "inventoryMasters.warnings.lockedPolicy",
+                      "inventoryMasters.fields.trackingPolicyLocked",
                       "⚠️ Mặt hàng đã có số Serial trong kho, không thể thay đổi Tracking Policy.",
                     )}
                   </span>
                 )}
               </DrawerField>
-            </div>
-          </DrawerSection>
 
-          <DrawerSection
-            title={
-              <span className="inline-flex items-center gap-1.5 flex-wrap">
-                <span>
-                  {t("inventoryMasters.attributes.label", "Thuộc tính")}
-                </span>
-                <AttributeTypeBadge type="system" />
-              </span>
-            }
-          >
-            <div className="flex flex-wrap gap-2.5 mt-2">
-              {featureOptions.map((attr) => {
-                const isSelected = form.attributes.includes(attr.value);
-                return (
-                  <button
-                    key={attr.value}
-                    type="button"
-                    disabled={viewOnly}
-                    onClick={() => {
-                      setForm((prev) => {
-                        const newAttrs = isSelected
-                          ? prev.attributes.filter((a) => a !== attr.value)
-                          : [...prev.attributes, attr.value];
-                        return {
-                          ...prev,
-                          attributes: newAttrs,
-                          customAttributes: {
-                            ...prev.customAttributes,
-                            item_features: newAttrs,
-                          },
-                        };
-                      });
-                    }}
-                    className={cn(
-                      "inline-flex items-center gap-2 px-3 py-2 rounded-lg border text-xs font-medium transition-all duration-150 select-none shadow-2xs",
-                      isSelected
-                        ? "bg-primary/10 border-primary text-primary dark:bg-primary/20 dark:border-primary/80 dark:text-primary font-bold shadow-xs"
-                        : "bg-background border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-slate-300",
-                      viewOnly && "cursor-default opacity-80",
-                    )}
-                  >
-                    <span
-                      className={cn(
-                        "w-4 h-4 rounded-sm border flex items-center justify-center transition-colors shrink-0",
-                        isSelected
-                          ? "bg-primary border-primary text-white"
-                          : "border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900",
-                      )}
-                    >
-                      {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
+              <DrawerField
+                label={
+                  <span className="inline-flex items-center gap-1.5 flex-wrap">
+                    <span>
+                      {t("inventoryMasters.attributes.label", "Thuộc tính")}
                     </span>
-                    <span className="leading-none">{attr.label}</span>
-                  </button>
-                );
-              })}
+                    <AttributeTypeBadge type="system" />
+                  </span>
+                }
+              >
+                <div className="flex flex-wrap items-center gap-x-6 gap-y-2.5 pt-1.5 pb-1">
+                  {featureOptions.map((attr) => {
+                    const isSelected = form.attributes.includes(attr.value);
+                    const checkboxId = `item-attr-${attr.value}`;
+                    return (
+                      <div key={attr.value} className="flex items-center gap-2">
+                        <Checkbox
+                          id={checkboxId}
+                          checked={isSelected}
+                          disabled={viewOnly}
+                          onCheckedChange={(checked) => {
+                            if (viewOnly) return;
+                            setForm((prev) => {
+                              const newAttrs = checked
+                                ? [
+                                    ...prev.attributes.filter(
+                                      (a) => a !== attr.value,
+                                    ),
+                                    attr.value,
+                                  ]
+                                : prev.attributes.filter(
+                                    (a) => a !== attr.value,
+                                  );
+                              return {
+                                ...prev,
+                                attributes: newAttrs,
+                                customAttributes: {
+                                  ...prev.customAttributes,
+                                  item_features: newAttrs,
+                                },
+                              };
+                            });
+                          }}
+                        />
+                        <label
+                          htmlFor={checkboxId}
+                          className={cn(
+                            "text-xs font-medium select-none transition-colors",
+                            viewOnly
+                              ? "cursor-default opacity-80"
+                              : "cursor-pointer hover:text-foreground",
+                            isSelected
+                              ? "text-foreground font-semibold"
+                              : "text-muted-foreground",
+                          )}
+                        >
+                          {attr.label}
+                        </label>
+                      </div>
+                    );
+                  })}
+                </div>
+              </DrawerField>
             </div>
           </DrawerSection>
 
+          {/* 3. THUỘC TÍNH TÙY CHỈNH */}
           <ModuleEntityCustomFieldsSection
             moduleKey="INVENTORY_ITEM"
             entityId={editing?.id}
@@ -918,27 +913,13 @@ export function InventoryItemFormDrawer({
             onCategoryChange={(catId) =>
               setForm((prev) => ({ ...prev, categoryId: catId }))
             }
-            globalTitle={t("moduleConfig.customFields", "Trường tùy chỉnh")}
+            globalTitle={t(
+              "inventoryMasters.drawer.customAttributes",
+              "THUỘC TÍNH TÙY CHỈNH",
+            )}
             globalCollapsible={true}
             globalDefaultCollapsed={false}
           />
-
-          <DrawerSection title={t("inventoryMasters.fields.note", "Ghi chú")}>
-            <div className="mt-1">
-              <textarea
-                value={form.note}
-                disabled={viewOnly}
-                onChange={(e) =>
-                  setForm((prev) => ({ ...prev, note: e.target.value }))
-                }
-                className={`${inputCls} min-h-[80px] resize-y`}
-                placeholder={t(
-                  "inventoryMasters.fields.notePlaceholder",
-                  "Ghi chú thêm về item kho này...",
-                )}
-              />
-            </div>
-          </DrawerSection>
         </>
       )}
     </>
@@ -949,8 +930,31 @@ export function InventoryItemFormDrawer({
 
     return [
       {
+        key: "overview",
+        label: t("inventoryMasters.drawer.tabOverview", "Tổng quan"),
+        icon: <LayoutDashboard className="w-3.5 h-3.5" />,
+        content: (
+          <div className="flex flex-col gap-6 w-full">
+            <InventoryItemOverviewSection
+              itemId={itemId}
+              loading={movLoading && !!itemId}
+              error={movError}
+              movements={movData?.movements || []}
+              itemInfo={{
+                sku: editing?.sku || form.sku || "",
+                itemName: editing?.itemName || form.itemName || "",
+                uom: uomName,
+              }}
+              onOpenDocument={onOpenDocument}
+              onNavigateToLedger={() => setActiveTabKey("stock_ledger")}
+            />
+          </div>
+        ),
+        rightPanel: formContent,
+      },
+      {
         key: "stock_ledger",
-        label: t("inventoryMasters.drawer.tabLedger", "Sổ thẻ kho & Thông tin"),
+        label: t("inventoryMasters.drawer.tabLedger", "Sổ thẻ kho"),
         icon: <BookOpen className="w-3.5 h-3.5" />,
         content: (
           <div className="flex flex-col gap-6 w-full">
@@ -1053,7 +1057,9 @@ export function InventoryItemFormDrawer({
       }
       collapsibleRightPanel={!isCreating}
       tabs={drawerTabs}
-      defaultTabKey="stock_ledger"
+      activeTabKey={activeTabKey}
+      onTabChange={setActiveTabKey}
+      defaultTabKey="overview"
       leftPanel={isCreating ? formContent : undefined}
       rightPanel={undefined}
     />

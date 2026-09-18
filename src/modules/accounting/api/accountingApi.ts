@@ -33,14 +33,45 @@ export interface ChartOfAccountItem {
 export const accountingApi = {
   getJournalEntries: async (params: any) => {
     const cleanParams = Object.fromEntries(
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      Object.entries(params).filter(([_, v]) => v !== undefined && v !== ""),
+      Object.entries(params).filter(
+        ([, v]) => v !== undefined && v !== "" && v !== null,
+      ),
     );
     const res = await axiosInstance.get(
       "/api/v1/accounting-core/journal-entries",
       {
         params: cleanParams,
         paramsSerializer: { indexes: null },
+      },
+    );
+    return res.data;
+  },
+
+  getJournalEntriesColumnOptions: async (
+    column: string,
+    search?: string,
+    page: number = 1,
+    pageSize: number = 20,
+    filtersStr?: string,
+    branchId?: string,
+  ): Promise<{
+    items: { label: string; value: string }[];
+    total: number;
+    page: number;
+    pageSize: number;
+    totalPages: number;
+  }> => {
+    const res = await axiosInstance.get(
+      "/api/v1/accounting-core/journal-entries/column-options",
+      {
+        params: {
+          column,
+          search,
+          page,
+          pageSize,
+          filters: filtersStr,
+          branch_id: branchId,
+        },
       },
     );
     return res.data;

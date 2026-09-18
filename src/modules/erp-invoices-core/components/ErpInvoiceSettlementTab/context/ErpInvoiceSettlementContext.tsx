@@ -383,6 +383,48 @@ export function ErpInvoiceSettlementProvider({
     return Math.max(0, totalCurrentNetOff - remainingDebt);
   }, [totalCurrentNetOff, remainingDebt]);
 
+  // Auto-sync active selections into form.pendingDocumentChanges when in editMode
+  useEffect(() => {
+    if (!editMode || !fieldSet) return;
+    const current = form?.pendingDocumentChanges || [];
+    const nonBankAddChanges = current.filter(
+      (p) => !(p.type === "BANK" && p.action === "ADD"),
+    );
+
+    const bankAddChanges = selectedIds
+      .map((id) => ({
+        action: "ADD" as const,
+        type: "BANK" as const,
+        refId: id,
+        amount: netOffAmounts[id] || 0,
+      }))
+      .filter((i) => i.amount > 0);
+
+    const currentBankAdd = current.filter(
+      (p) => p.type === "BANK" && p.action === "ADD",
+    );
+    const isSame =
+      currentBankAdd.length === bankAddChanges.length &&
+      currentBankAdd.every((c) =>
+        bankAddChanges.some(
+          (b) => b.refId === c.refId && b.amount === c.amount,
+        ),
+      );
+
+    if (!isSame) {
+      fieldSet("pendingDocumentChanges", [
+        ...nonBankAddChanges,
+        ...bankAddChanges,
+      ]);
+    }
+  }, [
+    editMode,
+    selectedIds,
+    netOffAmounts,
+    fieldSet,
+    form?.pendingDocumentChanges,
+  ]);
+
   // Selected Vouchers List for Table
   const selectedVouchersList: SelectedVoucherItem[] = useMemo(() => {
     return selectedIds
@@ -427,7 +469,9 @@ export function ErpInvoiceSettlementProvider({
     }
 
     if (editMode) {
-      const current = form?.pendingDocumentChanges || [];
+      const current = (form?.pendingDocumentChanges || []).filter(
+        (p) => !(p.type === "BANK" && items.some((i) => i.id === p.refId)),
+      );
       const newChanges = items.map((s) => ({
         action: "ADD" as const,
         type: "BANK" as const,
@@ -435,14 +479,11 @@ export function ErpInvoiceSettlementProvider({
         amount: s.amount,
       }));
       fieldSet?.("pendingDocumentChanges", [...current, ...newChanges]);
-      setSelectedIds([]);
-      setNetOffAmounts({});
-      setMaxAmounts({});
-      setSelectedTxns({});
       toast.success(
         t(
           "addBankPendingToast",
-          "Đã thêm giao dịch ngân hàng vào danh sách cấn trừ (chờ Lưu thay đổi).",
+          "Đã thêm {{count}} giao dịch vào danh sách cấn trừ (chờ Lưu thay đổi).",
+          { count: items.length },
         ),
       );
       return;
@@ -492,9 +533,34 @@ export function ErpInvoiceSettlementProvider({
   const handleUnlinkVoucher = useCallback(
     async (item: ActiveVoucherItem) => {
       if (editMode) {
+        if (item.isPending) {
+          handleUnselectItem(item.bankTransactionId);
+          const current = form?.pendingDocumentChanges || [];
+          fieldSet?.(
+            "pendingDocumentChanges",
+            current.filter(
+              (p) =>
+                !(
+                  p.type === "BANK" &&
+                  p.refId === item.bankTransactionId &&
+                  p.action === "ADD"
+                ),
+            ),
+          );
+          toast.success(
+            t(
+              "removeBankPendingToast",
+              "Đã hủy chọn giao dịch ngân hàng khỏi danh sách cấn trừ.",
+            ),
+          );
+          return;
+        }
+
         const current = form?.pendingDocumentChanges || [];
         fieldSet?.("pendingDocumentChanges", [
-          ...current,
+          ...current.filter(
+            (p) => !(p.type === "BANK" && p.refId === item.bankTransactionId),
+          ),
           {
             action: "REMOVE" as const,
             type: "BANK" as const,
@@ -525,7 +591,7 @@ export function ErpInvoiceSettlementProvider({
         }
       }
     },
-    [editMode, form, fieldSet, invoice, onRefresh, t],
+    [editMode, form, fieldSet, invoice, onRefresh, handleUnselectItem, t],
   );
 
   const openBankVoucher = useCallback((id: string) => {
