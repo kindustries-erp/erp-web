@@ -157,7 +157,7 @@ describe("GeneralJournalPage", () => {
     expect(screen.getByText("Khác")).toBeInTheDocument();
   });
 
-  it("render SubtotalSummaryCell trong summaryRow và mở popover đối soát cân đối Nợ - Có", async () => {
+  it("render SubtotalSummaryCell trong summaryRow và mở popover phát sinh Nợ chuẩn", async () => {
     (useQuery as any).mockImplementation((opts: any) => {
       if (opts.queryKey[0] === "journal-entries")
         return { data: mockJournalData, isLoading: false, isFetching: false };
@@ -169,19 +169,51 @@ describe("GeneralJournalPage", () => {
     // Kiểm tra label "Tổng cộng:"
     expect(screen.getByText("Tổng cộng:")).toBeInTheDocument();
 
-    // Click trigger tiền Nợ trong summaryRow (total debit = 200, total credit = 100 -> Lệch +100 đ)
+    // Click trigger tiền Nợ trong summaryRow
     const debitTriggers = screen.getAllByText(/200/);
     expect(debitTriggers.length).toBeGreaterThan(0);
     fireEvent.click(debitTriggers[debitTriggers.length - 1]);
 
-    // Popover hiển thị Đối soát Cân đối Kế toán
-    expect(screen.getByText("Đối soát Cân đối Kế toán")).toBeInTheDocument();
-    expect(
-      screen.getAllByText("Tổng phát sinh Nợ").length,
-    ).toBeGreaterThanOrEqual(1);
-    expect(
-      screen.getAllByText("Tổng phát sinh Có").length,
-    ).toBeGreaterThanOrEqual(1);
-    expect(screen.getByText(/Lệch Nợ - Có/)).toBeInTheDocument();
+    // Popover hiển thị metricTitle và chi tiết số tiền chuẩn
+    expect(screen.getAllByText(/Phát sinh Nợ/).length).toBeGreaterThanOrEqual(
+      2,
+    );
+    expect(screen.getByText(/Phát sinh:/)).toBeInTheDocument();
+  });
+
+  it("render SubtotalSummaryCell với số liệu lũy kế và tổng toàn bộ trong chế độ đa trang", async () => {
+    const multiPageData = {
+      ...mockJournalData,
+      page: 2,
+      totalPages: 5,
+      total: 10,
+      totals: {
+        grandTotalDebit: 5000000,
+        grandTotalCredit: 5000000,
+        cumulativeDebit: 2000000,
+        cumulativeCredit: 2000000,
+        totalLines: 20,
+        cumulativeLines: 8,
+      },
+    };
+
+    (useQuery as any).mockImplementation((opts: any) => {
+      if (opts.queryKey[0] === "journal-entries")
+        return { data: multiPageData, isLoading: false, isFetching: false };
+      return { data: [] };
+    });
+
+    render(<GeneralJournalPage />);
+
+    // Click debit summary cell trigger
+    const debitTriggers = screen.getAllByText(/200/);
+    fireEvent.click(debitTriggers[debitTriggers.length - 1]);
+
+    // Check Header and Cumulative details
+    expect(screen.getByText(/Trang 1\/5/)).toBeInTheDocument();
+    expect(screen.getByText(/Lũy kế \(T1 → T1\):/)).toBeInTheDocument();
+    expect(screen.getByText(/2\.000\.000/)).toBeInTheDocument();
+    expect(screen.getAllByText(/5\.000\.000/).length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText("40%")).toBeInTheDocument();
   });
 });

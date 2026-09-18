@@ -316,24 +316,30 @@ export const GeneralJournalPage: React.FC = () => {
       (sum, item) => sum + (Number(item.credit) || 0),
       0,
     );
+    const totals = listHook.totals;
+    const grandDebit = totals?.grandTotalDebit ?? totalDebit;
+    const grandCredit = totals?.grandTotalCredit ?? totalCredit;
+    const grandLines = totals?.totalLines ?? listHook.total;
+    const cumDebit =
+      totals?.cumulativeDebit ?? (listHook.page === 1 ? totalDebit : undefined);
+    const cumCredit =
+      totals?.cumulativeCredit ??
+      (listHook.page === 1 ? totalCredit : undefined);
+    const cumLines =
+      totals?.cumulativeLines ??
+      (listHook.page === 1 ? listHook.data.length : undefined);
+
     return {
       _opposingAccount: (
         <div className="w-full flex justify-end">
           <SubtotalSummaryCell
             variantType="label"
             label={`${t("common.subtotal", "Tổng cộng")}:`}
-            metricTitle={t("finance.totalDebit", "Tổng phát sinh Nợ")}
-            itemTitle={t("finance.journalEntries", "Bút toán")}
-            itemUnit={t("common.summaryLines", "dòng")}
-            subtotalAmount={totalDebit}
-            grandTotalAmount={totalDebit}
-            balanceDebit={totalDebit}
-            balanceCredit={totalCredit}
-            showAccountingBalance={true}
             page={listHook.page}
             totalPages={listHook.totalPages}
+            totalCount={grandLines}
             currentPageCount={listHook.data.length}
-            totalCount={listHook.total}
+            cumulativeCount={cumLines}
           />
         </div>
       ),
@@ -341,18 +347,12 @@ export const GeneralJournalPage: React.FC = () => {
         <div className="w-full flex justify-end">
           <SubtotalSummaryCell
             variantType="amount"
-            metricTitle={t("finance.totalDebit", "Tổng phát sinh Nợ")}
-            itemTitle={t("finance.journalEntries", "Bút toán")}
-            itemUnit={t("common.summaryLines", "dòng")}
+            metricTitle={t("finance.totalDebit", "Phát sinh Nợ")}
             subtotalAmount={totalDebit}
-            grandTotalAmount={totalDebit}
-            balanceDebit={totalDebit}
-            balanceCredit={totalCredit}
-            showAccountingBalance={true}
+            cumulativeAmount={cumDebit}
+            grandTotalAmount={grandDebit}
             page={listHook.page}
             totalPages={listHook.totalPages}
-            currentPageCount={listHook.data.length}
-            totalCount={listHook.total}
             valueClassName="font-semibold tabular-nums text-slate-900 dark:text-slate-100"
           />
         </div>
@@ -361,24 +361,25 @@ export const GeneralJournalPage: React.FC = () => {
         <div className="w-full flex justify-end">
           <SubtotalSummaryCell
             variantType="amount"
-            metricTitle={t("finance.totalCredit", "Tổng phát sinh Có")}
-            itemTitle={t("finance.journalEntries", "Bút toán")}
-            itemUnit={t("common.summaryLines", "dòng")}
+            metricTitle={t("finance.totalCredit", "Phát sinh Có")}
             subtotalAmount={totalCredit}
-            grandTotalAmount={totalCredit}
-            balanceDebit={totalDebit}
-            balanceCredit={totalCredit}
-            showAccountingBalance={true}
+            cumulativeAmount={cumCredit}
+            grandTotalAmount={grandCredit}
             page={listHook.page}
             totalPages={listHook.totalPages}
-            currentPageCount={listHook.data.length}
-            totalCount={listHook.total}
             valueClassName="font-semibold tabular-nums text-slate-900 dark:text-slate-100"
           />
         </div>
       ),
     };
-  }, [listHook.data, listHook.total, listHook.page, listHook.totalPages, t]);
+  }, [
+    listHook.data,
+    listHook.total,
+    listHook.totals,
+    listHook.page,
+    listHook.totalPages,
+    t,
+  ]);
 
   const customActionsNode = (
     <div className="w-full sm:w-auto flex items-center flex-wrap gap-2 py-0.5">

@@ -336,6 +336,27 @@ export function useBankStatementsTabLogic({
       }),
   });
 
+  const { data: dashboardStats } = useQuery({
+    queryKey: [
+      "bank-transactions-dashboard-stats",
+      type,
+      filter.state,
+      effectiveTransactionType,
+    ],
+    queryFn: () =>
+      bankStatementApi.getDashboardStats({
+        sourceType: type === "bank" ? "BANK" : "CASH",
+        search: filter.state.search || undefined,
+        startDate: filter.state.dateFrom || undefined,
+        endDate: filter.state.dateTo || undefined,
+        branchId: filter.state.custom.branchId || undefined,
+        bankAccountId: filter.state.custom.bankAccountId || undefined,
+        cashBookId: filter.state.custom.cashBookId || undefined,
+        transactionType: effectiveTransactionType,
+        tagIds: filter.state.custom.tagIds as unknown as string[] | undefined,
+      }),
+  });
+
   // 7. Columns Definition
   const { columns } = useBankStatementColumns({
     type,
@@ -397,6 +418,27 @@ export function useBankStatementsTabLogic({
 
     const totalPages = data.totalPages || 1;
     const totalCount = data.total || items.length;
+    const grandCashIn =
+      dashboardStats?.totalCashIn !== undefined
+        ? Number(dashboardStats.totalCashIn)
+        : data?.totals?.grandTotalCredit !== undefined
+          ? Number(data.totals.grandTotalCredit)
+          : totalCredit;
+    const grandCashOut =
+      dashboardStats?.totalCashOut !== undefined
+        ? Number(dashboardStats.totalCashOut)
+        : data?.totals?.grandTotalDebit !== undefined
+          ? Number(data.totals.grandTotalDebit)
+          : totalDebit;
+
+    const cumulativeCashIn =
+      data?.totals?.cumulativeCredit !== undefined
+        ? Number(data.totals.cumulativeCredit)
+        : undefined;
+    const cumulativeCashOut =
+      data?.totals?.cumulativeDebit !== undefined
+        ? Number(data.totals.cumulativeDebit)
+        : undefined;
 
     return {
       transDate: null,
@@ -408,6 +450,7 @@ export function useBankStatementsTabLogic({
           totalPages={totalPages}
           totalCount={totalCount}
           currentPageCount={items.length}
+          cumulativeCount={(page - 1) * pageSize + items.length}
         />
       ),
       thu: (
@@ -416,16 +459,11 @@ export function useBankStatementsTabLogic({
           metricTitle={t("bankStatement.columns.thu", {
             defaultValue: "Tiền vào (Thu)",
           })}
-          itemTitle={t("bankStatement.items.txnIn", {
-            defaultValue: "Giao dịch thu",
-          })}
-          itemUnit={t("common.summaryLines", { defaultValue: "giao dịch" })}
           subtotalAmount={totalCredit}
-          grandTotalAmount={totalCredit}
+          cumulativeAmount={cumulativeCashIn}
+          grandTotalAmount={grandCashIn}
           page={page}
           totalPages={totalPages}
-          currentPageCount={thuItems.length}
-          totalCount={thuItems.length}
           valueClassName="text-emerald-600 font-bold"
         />
       ),
@@ -435,16 +473,11 @@ export function useBankStatementsTabLogic({
           metricTitle={t("bankStatement.columns.chi", {
             defaultValue: "Tiền ra (Chi)",
           })}
-          itemTitle={t("bankStatement.items.txnOut", {
-            defaultValue: "Giao dịch chi",
-          })}
-          itemUnit={t("common.summaryLines", { defaultValue: "giao dịch" })}
           subtotalAmount={totalDebit}
-          grandTotalAmount={totalDebit}
+          cumulativeAmount={cumulativeCashOut}
+          grandTotalAmount={grandCashOut}
           page={page}
           totalPages={totalPages}
-          currentPageCount={chiItems.length}
-          totalCount={chiItems.length}
           valueClassName="text-[#ea580c] font-bold"
         />
       ),
@@ -454,16 +487,10 @@ export function useBankStatementsTabLogic({
           metricTitle={t("bankStatement.columns.netOffAmount", {
             defaultValue: "Đã cấn trừ",
           })}
-          itemTitle={t("bankStatement.items.txnSettled", {
-            defaultValue: "Giao dịch cấn trừ",
-          })}
-          itemUnit={t("common.summaryLines", { defaultValue: "giao dịch" })}
           subtotalAmount={totalNetOff}
           grandTotalAmount={totalNetOff}
           page={page}
           totalPages={totalPages}
-          currentPageCount={netOffItems.length}
-          totalCount={netOffItems.length}
           valueClassName="text-indigo-600 font-bold"
         />
       ),
@@ -473,16 +500,10 @@ export function useBankStatementsTabLogic({
           metricTitle={t("bankStatement.columns.remainingAmount", {
             defaultValue: "Còn lại",
           })}
-          itemTitle={t("bankStatement.items.txnRemaining", {
-            defaultValue: "Giao dịch còn lại",
-          })}
-          itemUnit={t("common.summaryLines", { defaultValue: "giao dịch" })}
           subtotalAmount={totalRemaining}
           grandTotalAmount={totalRemaining}
           page={page}
           totalPages={totalPages}
-          currentPageCount={remainingItems.length}
-          totalCount={remainingItems.length}
           valueClassName={
             totalRemaining === 0
               ? "text-emerald-600 font-bold"
@@ -491,7 +512,7 @@ export function useBankStatementsTabLogic({
         />
       ),
     };
-  }, [data, page, t]);
+  }, [data, dashboardStats, page, t]);
 
   const handleRefresh = useCallback(() => {
     refetch();
