@@ -5,7 +5,6 @@ import { Badge } from "@/shared/components/ui/badge";
 import { cn } from "@/shared/utils";
 import { fmtQty, money } from "@/shared/utils/format";
 import {
-  Sigma,
   Layers,
   Package,
   Coins,

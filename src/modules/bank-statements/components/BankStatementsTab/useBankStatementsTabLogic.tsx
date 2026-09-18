@@ -376,22 +376,6 @@ export function useBankStatementsTabLogic({
     if (!data?.items || data.items.length === 0) return undefined;
 
     const items = data.items;
-    const thuItems = items.filter(
-      (i: any) => (parseFloat(i.creditAmount) || 0) > 0,
-    );
-    const chiItems = items.filter(
-      (i: any) => (parseFloat(i.debitAmount) || 0) > 0,
-    );
-    const netOffItems = items.filter(
-      (i: any) => (parseFloat(i.netOffAmount) || 0) > 0,
-    );
-    const remainingItems = items.filter((i: any) => {
-      const amount = Math.max(
-        parseFloat(i.creditAmount) || 0,
-        parseFloat(i.debitAmount) || 0,
-      );
-      return amount - (parseFloat(i.netOffAmount) || 0) > 0;
-    });
 
     const totalDebit = items.reduce(
       (acc: number, curr: any) => acc + (parseFloat(curr.debitAmount) || 0),
