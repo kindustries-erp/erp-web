@@ -9,7 +9,7 @@ import {
   Plus,
   FileSpreadsheet,
 } from "lucide-react";
-import { fmtQty } from "@/shared/utils/format";
+import { SubtotalSummaryCell } from "@/shared/components/DataTable/SubtotalSummaryCell";
 
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate";
 import { PillTabs } from "@/shared/components/PillTabs";
@@ -38,6 +38,7 @@ import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
 import { useT } from "@/core/i18n";
 import {
   type InventoryStockRow,
+  type InventoryStockSummary,
   operationalApi,
 } from "@/modules/operational/api/operationalApi";
 import { inventoryCoreApi } from "@/modules/inventory-core/api/inventoryCoreApi";
@@ -47,6 +48,7 @@ import type { Updater } from "@tanstack/react-table";
 import { InventoryStockViewModeCombobox } from "@/modules/operational/components/list/InventoryStockViewModeCombobox";
 import { InventoryStockViewConfigDrawer } from "@/modules/operational/components/list/InventoryStockViewConfigDrawer";
 import { type TableViewPreset } from "@/shared/hooks/useUserPreferences";
+import { DEFAULT_STOCK_COLUMN_VISIBILITY } from "@/modules/operational/components/list/utils/stockViewPresets";
 
 interface OperationalInventoryPageProps {
   loading: boolean;
@@ -54,6 +56,7 @@ interface OperationalInventoryPageProps {
   stockItems: InventoryStockRow[];
   total: number;
   totalPages: number;
+  summary?: InventoryStockSummary;
   viewingItemId: string | null;
   creatingItem: boolean;
   isEditMode?: boolean;
@@ -94,6 +97,7 @@ export function OperationalInventoryPage({
   stockItems,
   total,
   totalPages,
+  summary,
   viewingItemId,
   creatingItem,
   isEditMode: controlledEditMode,
@@ -280,35 +284,167 @@ export function OperationalInventoryPage({
   });
 
   const summaryRow = useMemo(() => {
-    const totalOnHand = stockItems.reduce(
-      (acc, curr) => acc + Number(curr.on_hand_qty || 0),
-      0,
-    );
-    const totalIn = stockItems.reduce(
-      (acc, curr) => acc + Number(curr.received_qty || 0),
-      0,
-    );
-    const totalOut = stockItems.reduce(
-      (acc, curr) => acc + Number(curr.issued_qty || 0),
-      0,
-    );
-    const totalReserved = stockItems.reduce(
-      (acc, curr) => acc + Number(curr.reserved_qty || 0),
-      0,
-    );
-    const totalStockValue = stockItems.reduce(
-      (acc, curr) => acc + Number(curr.stock_value || 0),
-      0,
-    );
+    let subtotalIn = 0;
+    let subtotalOut = 0;
+    let subtotalAdj = 0;
+    let positiveAdj = 0;
+    let negativeAdj = 0;
+    let subtotalOnHand = 0;
+    let subtotalReserved = 0;
+    let subtotalStockValue = 0;
+
+    for (const item of stockItems) {
+      subtotalIn += Number(item.received_qty || 0);
+      subtotalOut += Number(item.issued_qty || 0);
+      const adj = Number(item.adjusted_qty || 0);
+      subtotalAdj += adj;
+      if (adj > 0) positiveAdj += adj;
+      else if (adj < 0) negativeAdj += Math.abs(adj);
+      subtotalOnHand += Number(item.on_hand_qty || 0);
+      subtotalReserved += Number(item.reserved_qty || 0);
+      subtotalStockValue += Number(item.stock_value || 0);
+    }
+
+    const grandIn = summary?.total_received_qty ?? subtotalIn;
+    const grandOut = summary?.total_issued_qty ?? subtotalOut;
+    const grandAdj = summary?.total_adjusted_qty ?? subtotalAdj;
+    const grandPosAdj =
+      summary?.total_positive_adjusted_qty !== undefined
+        ? summary.total_positive_adjusted_qty > 0
+          ? summary.total_positive_adjusted_qty
+          : undefined
+        : positiveAdj > 0
+          ? positiveAdj
+          : undefined;
+    const grandNegAdj =
+      summary?.total_negative_adjusted_qty !== undefined
+        ? summary.total_negative_adjusted_qty > 0
+          ? summary.total_negative_adjusted_qty
+          : undefined
+        : negativeAdj > 0
+          ? negativeAdj
+          : undefined;
+    const grandOnHand = summary?.total_on_hand_qty ?? subtotalOnHand;
+    const grandReserved = summary?.total_reserved_qty ?? subtotalReserved;
+    const grandStockValue = summary?.total_stock_value ?? subtotalStockValue;
+
     return {
-      item_name: null,
-      on_hand_qty: fmtQty(totalOnHand),
-      received_qty: fmtQty(totalIn),
-      issued_qty: fmtQty(totalOut),
-      reserved_qty: fmtQty(totalReserved),
-      stock_value: fmtQty(totalStockValue),
+      item_name: (
+        <div className="w-full flex justify-end font-semibold text-muted-foreground pr-2 text-xs">
+          {t("common.subtotal", "Tổng cộng")}:
+        </div>
+      ),
+      received_qty: (
+        <div className="w-full flex justify-end">
+          <SubtotalSummaryCell
+            variantType="qty"
+            metricTitle="SL Nhập kho"
+            itemTitle="Mặt hàng"
+            itemUnit="SKU"
+            subtotalQty={subtotalIn}
+            grandTotalQty={grandIn}
+            itemCount={total}
+            page={page}
+            totalPages={totalPages}
+            currentPageCount={stockItems.length}
+            totalCount={total}
+          />
+        </div>
+      ),
+      issued_qty: (
+        <div className="w-full flex justify-end">
+          <SubtotalSummaryCell
+            variantType="qty"
+            metricTitle="SL Xuất kho"
+            itemTitle="Mặt hàng"
+            itemUnit="SKU"
+            subtotalQty={subtotalOut}
+            grandTotalQty={grandOut}
+            itemCount={total}
+            page={page}
+            totalPages={totalPages}
+            currentPageCount={stockItems.length}
+            totalCount={total}
+          />
+        </div>
+      ),
+      adjusted_qty: (
+        <div className="w-full flex justify-end">
+          <SubtotalSummaryCell
+            variantType="qty"
+            metricTitle="SL Điều chỉnh"
+            itemTitle="Mặt hàng"
+            itemUnit="SKU"
+            subtotalQty={subtotalAdj}
+            grandTotalQty={grandAdj}
+            positiveQty={grandPosAdj}
+            negativeQty={grandNegAdj}
+            itemCount={total}
+            page={page}
+            totalPages={totalPages}
+            currentPageCount={stockItems.length}
+            totalCount={total}
+            showSign={true}
+            valueClassName={
+              subtotalAdj > 0
+                ? "text-emerald-600"
+                : subtotalAdj < 0
+                  ? "text-red-600"
+                  : "text-muted-foreground"
+            }
+          />
+        </div>
+      ),
+      on_hand_qty: (
+        <div className="w-full flex justify-end">
+          <SubtotalSummaryCell
+            variantType="qty"
+            metricTitle="SL Tồn kho"
+            itemTitle="Mặt hàng"
+            itemUnit="SKU"
+            subtotalQty={subtotalOnHand}
+            grandTotalQty={grandOnHand}
+            grandTotalAmount={grandStockValue > 0 ? grandStockValue : undefined}
+            subtotalAmount={
+              subtotalStockValue > 0 ? subtotalStockValue : undefined
+            }
+            itemCount={total}
+            page={page}
+            totalPages={totalPages}
+            currentPageCount={stockItems.length}
+            totalCount={total}
+            valueClassName={
+              subtotalOnHand > 0
+                ? "text-emerald-600"
+                : subtotalOnHand < 0
+                  ? "text-rose-600"
+                  : "text-muted-foreground"
+            }
+          />
+        </div>
+      ),
+      reserved_qty: (
+        <div className="w-full flex justify-end">
+          <SubtotalSummaryCell
+            variantType="qty"
+            metricTitle="SL Giữ chỗ"
+            itemTitle="Mặt hàng"
+            itemUnit="SKU"
+            subtotalQty={subtotalReserved}
+            grandTotalQty={grandReserved}
+            itemCount={total}
+            page={page}
+            totalPages={totalPages}
+            currentPageCount={stockItems.length}
+            totalCount={total}
+            valueClassName={
+              subtotalReserved > 0 ? "text-amber-600" : "text-muted-foreground"
+            }
+          />
+        </div>
+      ),
     };
-  }, [stockItems]);
+  }, [stockItems, total, page, totalPages, summary, t]);
 
   const createActions = useMemo(
     () => [
@@ -355,7 +491,8 @@ export function OperationalInventoryPage({
       items={stockItems}
       columns={stockColumns}
       getRowKey={(row: InventoryStockRow) => row.inventory_item_id}
-      minWidth={1100}
+      minWidth={1350}
+      defaultColumnVisibility={DEFAULT_STOCK_COLUMN_VISIBILITY}
       page={page}
       pageSize={pageSize}
       total={total}

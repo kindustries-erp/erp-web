@@ -369,7 +369,7 @@ export function DrawerModal({
 // ── Section / Row helpers (re-exported for use inside drawers) ─────────────
 
 export interface DrawerSectionProps {
-  title: React.ReactNode;
+  title?: React.ReactNode;
   titleExtra?: React.ReactNode;
   collapsible?: boolean;
   collapsed?: boolean;
@@ -380,6 +380,10 @@ export interface DrawerSectionProps {
   children: React.ReactNode;
   className?: string;
   bodyClassName?: string;
+  /** When true, omits the section header bar (title, collapsible chevron, and titleExtra) */
+  hideHeader?: boolean;
+  /** Alias for hideHeader */
+  hideTitle?: boolean;
 }
 
 export function DrawerSection({
@@ -394,6 +398,8 @@ export function DrawerSection({
   children,
   className,
   bodyClassName,
+  hideHeader = false,
+  hideTitle = false,
 }: DrawerSectionProps) {
   const [internalCollapsed, setInternalCollapsed] = useState(defaultCollapsed);
   const isCollapsed =
@@ -416,6 +422,9 @@ export function DrawerSection({
       ? "max-h-none lg:max-h-[calc(100vh-210px)]"
       : undefined;
 
+  const shouldHideHeader =
+    hideHeader || hideTitle || (!title && !titleExtra && !collapsible);
+
   return (
     <div
       className={cn(
@@ -430,36 +439,38 @@ export function DrawerSection({
         WebkitBackdropFilter: "blur(12px) saturate(180%)",
       }}
     >
-      <div
-        className={cn(
-          "text-[11px] font-bold text-foreground/80 uppercase tracking-[0.06em] pb-[6px] border-b border-[color:var(--border)] flex justify-between items-center flex-shrink-0",
-          !isCollapsed && "mb-[10px]",
-        )}
-      >
-        <div className="flex items-center gap-1.5 sm:gap-2">
-          {collapsible && (
-            <button
-              type="button"
-              aria-label={isCollapsed ? "Mở rộng" : "Thu gọn"}
-              onClick={handleToggle}
-              className="p-1 -ml-1 sm:p-0.5 sm:-ml-0.5 min-w-[28px] min-h-[28px] rounded hover:bg-surface-hover text-muted-foreground hover:text-foreground transition-colors cursor-pointer inline-flex items-center justify-center focus-visible:outline-none"
-            >
-              <ChevronDown
-                className={cn(
-                  "w-3.5 h-3.5 transition-transform duration-200",
-                  isCollapsed ? "-rotate-90" : "rotate-0",
-                )}
-              />
-            </button>
+      {!shouldHideHeader && (
+        <div
+          className={cn(
+            "text-[11px] font-bold text-foreground/80 uppercase tracking-[0.06em] pb-[6px] border-b border-[color:var(--border)] flex justify-between items-center flex-shrink-0",
+            !isCollapsed && "mb-[10px]",
           )}
-          <span>{title}</span>
-        </div>
-        {titleExtra && (
-          <div className="text-foreground normal-case font-semibold text-sm">
-            {titleExtra}
+        >
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            {collapsible && (
+              <button
+                type="button"
+                aria-label={isCollapsed ? "Mở rộng" : "Thu gọn"}
+                onClick={handleToggle}
+                className="p-1 -ml-1 sm:p-0.5 sm:-ml-0.5 min-w-[28px] min-h-[28px] rounded hover:bg-surface-hover text-muted-foreground hover:text-foreground transition-colors cursor-pointer inline-flex items-center justify-center focus-visible:outline-none"
+              >
+                <ChevronDown
+                  className={cn(
+                    "w-3.5 h-3.5 transition-transform duration-200",
+                    isCollapsed ? "-rotate-90" : "rotate-0",
+                  )}
+                />
+              </button>
+            )}
+            <span>{title}</span>
           </div>
-        )}
-      </div>
+          {titleExtra && (
+            <div className="text-foreground normal-case font-semibold text-sm">
+              {titleExtra}
+            </div>
+          )}
+        </div>
+      )}
       <div
         className={cn(
           "grid transition-[grid-template-rows,opacity] duration-300 ease-in-out",

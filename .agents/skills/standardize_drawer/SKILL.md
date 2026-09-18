@@ -323,16 +323,66 @@ Dành cho các form đơn giản không có nhiều phân hệ (như Company Pro
        - Dòng tiêu đề: Tên sự kiện/phiên bản + Badge/Actor ở bên trái, Ngày giờ/Timestamp căn phải thẳng hàng.
        - Nội dung chi tiết: Danh sách bullet không viền khung cứng, sử dụng soft pill/dot phân loại để giao diện thoáng, tinh tế và cao cấp.
 
+6. **Prop `hideHeader` / `hideTitle` cho `<DrawerSection>` (Container Kính Mờ Không Tiêu Đề)**:
+   - Khi cần bọc một vùng giao diện (ví dụ: nhóm 4 thẻ KPI summary, banner thông báo, headerless card group) trong phong cách chuẩn mực của Drawer (kính mờ glassmorphism `backdrop-blur`, viền `border-border/80`, shadow mịn và padding đều), sử dụng prop `hideHeader={true}` (hoặc `hideTitle={true}`).
+   - Khi bật prop này, thanh tiêu đề uppercase và nút mũi tên expand/collapse sẽ được ẩn hoàn toàn, render trực tiếp nội dung con trong khung chứa thanh lịch mà không làm vỡ ngôn ngữ thiết kế chung.
+
 ---
 
-## 7. Quy tắc cho Thông tin Phụ trợ đính kèm dưới đáy (`relatedTabs`)
+## 7. Quy tắc cho Cột Phải (Right Panel) & Kiến Trúc 3 Tầng Chuẩn Hóa (3-Tier Right Panel Architecture)
+
+Đối với các Drawer 2 cột (`layout="2-columns"`), Cột phải (Right Panel) được chuẩn hóa theo **Kiến trúc 3 Tầng (3-Tier Structure)** đồng nhất trên toàn hệ sinh thái ERP (Hóa đơn, Sao kê, Phiếu kho, Đơn hàng, v.v.):
+
+```mermaid
+graph TD
+  A[Right Panel Container] --> B[Tầng 1: THÔNG TIN CHUNG]
+  A --> C[Tầng 2: THUỘC TÍNH MẶC ĐỊNH]
+  A --> D[Tầng 3: THUỘC TÍNH TÙY CHỈNH]
+  
+  B --> B1[View Mode: Icon-based Building2, MapPin, Calendar, FileText + CopyButton]
+  B --> B2[Edit Mode: Combobox Chi nhánh, BufferedTextarea Ghi chú, Tag Selector]
+  
+  C --> C1[System / Global Attributes: is_system = true, Phân loại nghiệp vụ, Trạng thái kiểm duyệt]
+  
+  D --> D1[ModuleEntityCustomFieldsSection: Danh mục & Dynamic Custom Fields]
+```
+
+### 7.1. Tầng 1 — THÔNG TIN CHUNG (`GeneralInfoSection`)
+- **Dùng chung 1 component duy nhất** xuyên suốt tất cả các Tab của Drawer (ví dụ: Tab Chi tiết, Tab Tài chính, Tab Đối tác...).
+- **Chế độ Xem (View Mode)**:
+  - Hiển thị theo phong cách **Icon-based** thanh lịch, dễ đọc:
+    - Đối tác: Icon `<Building2 className="w-3.5 h-3.5 text-muted-foreground/70" />` kèm `<CopyButton />`.
+    - Chi nhánh: Icon `<MapPin className="w-3.5 h-3.5 text-muted-foreground/70" />` (tự động resolve UUID sang tên chi nhánh rõ ràng, vd: "Đào Trí", qua `branchOptions`).
+    - Ngày chứng từ / giao dịch: Icon `<Calendar className="w-3.5 h-3.5 text-muted-foreground/70" />` định dạng qua `formatGMT7(date, "date")`.
+    - Ghi chú / Diễn giải: Icon `<FileText className="w-3.5 h-3.5 text-muted-foreground/70" />` với class `whitespace-pre-wrap break-words`.
+    - Thẻ nhãn (Tags): `<EntityTagSelector readOnly={true} />`.
+- **Chế độ Chỉnh sửa (Edit Mode)**:
+  - Chi nhánh: `<Combobox options={branchOptions} value={branchId} onChange={...} />`.
+  - Ghi chú / Diễn giải: `<BufferedTextarea value={notes} onChange={...} rows={3} />` (hỗ trợ debounce 500ms, nút `X` xóa nhanh tức thì).
+  - Thẻ nhãn (Tags): `<EntityTagSelector readOnly={false} />`.
+
+### 7.2. Tầng 2 — THUỘC TÍNH MẶC ĐỊNH (`DefaultAttributesSection`)
+- Tiêu đề: `THUỘC TÍNH MẶC ĐỊNH` (`DrawerSection collapsible defaultCollapsed={false}`).
+- Hiển thị các trường cốt lõi hệ thống (`is_system = true`), ví dụ:
+  - Phân loại hóa đơn bán ra / mua vào (kèm `<AttributeTypeBadge type="system" />`).
+  - Trạng thái kiểm duyệt hợp lý, hợp lệ (`isValid` checkbox).
+
+### 7.3. Tầng 3 — THUỘC TÍNH TÙY CHỈNH (`ModuleEntityCustomFieldsSection`)
+- Sử dụng component chuẩn `<ModuleEntityCustomFieldsSection>` với:
+  - `moduleKey="<MODULE_KEY>"` (vd: `"INVOICE_IN"`, `"INVOICE_OUT"`, `"BANK_TXN"`, `"BOM"`).
+  - `title={t("customAttributes", "THUỘC TÍNH TÙY CHỈNH")}`.
+  - Tự động ẩn khi không có thuộc tính hoặc danh mục được cấu hình (`empty state`).
+
+---
+
+## 8. Quy tắc cho Thông tin Phụ trợ đính kèm dưới đáy (`relatedTabs`)
 
 Đối với các form 1 cột hoặc 2 cột **đơn giản** không chia thành nhiều tab nghiệp vụ ngang hàng, nếu chỉ cần đính kèm tệp tóm tắt (`<DrawerAttachmentsDeck>`) hoặc khung ghi chú thảo luận (`<DrawerInternalNotes>`), có thể sử dụng prop `relatedTabs` dưới đáy.
 - **Lưu ý**: Đối với tất cả chứng từ có *Traceability Graph*, *Hạch toán*, *Sao kê cấn trừ*, **BẮT BUỘC sử dụng Top Navigation Tabs (`tabs`)** thay vì nhồi vào `relatedTabs` dưới đáy.
 
 ---
 
-## 8. Quy chuẩn Tối ưu Hiệu năng & Trải nghiệm Nhập liệu trong Drawer
+## 9. Quy chuẩn Tối ưu Hiệu năng & Trải nghiệm Nhập liệu trong Drawer
 
 1. **Memoize mảng `tabs` với `useMemo`**:
    - Khi truyền prop `tabs` vào `<StandardFormDrawer>`, **bắt buộc** bọc mảng tabs trong `useMemo`.

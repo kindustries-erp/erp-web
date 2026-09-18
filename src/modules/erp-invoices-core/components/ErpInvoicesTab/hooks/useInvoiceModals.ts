@@ -56,10 +56,7 @@ export function useInvoiceModals({
       mode: "view" | "edit" = "view",
       initialTab = "invoice_details",
     ) => {
-      formHook.openInternal(inv as ErpInvoice, false, initialTab);
-      if (mode === "edit") {
-        formHook.setEditMode(true);
-      }
+      formHook.openInternal(inv as ErpInvoice, false, initialTab, mode);
       if (!isDrawer) {
         const drawerParam =
           inv.serialNo && inv.invoiceNo

@@ -4,7 +4,7 @@ import { ErpUrlQueryParam } from "@/shared/constants/urlParams";
 export const ALL_PAGE_KEYS: PageKey[] = [
   "dashboard",
   "opex",
-
+  "cashflow-dashboard",
   "purchasing",
   "erp-inventory-stock",
   "erp-inventory-tracking",
@@ -25,12 +25,13 @@ export const ALL_PAGE_KEYS: PageKey[] = [
   "erp-activity-logs",
   "erp-permissions-core",
   "inventory-dashboard",
-  "inventory-dashboard",
   "invoice-dashboard",
   "erp-invoices",
   "erp-invoices-draft",
   "bank-statement",
   "cash-statement",
+  "journal-entry",
+  "settings-accounts",
   "email-inbox",
   "settings-bank",
   "settings-cash-fund",
@@ -42,6 +43,7 @@ export const ALL_PAGE_KEYS: PageKey[] = [
   "erp-goods-issues",
   "erp-employees",
   "sys-tags",
+  "attachments",
   "garage-dashboard",
   "garage-cases",
   "garage-opex",
@@ -65,6 +67,10 @@ const LEGACY_SLUGS: Record<string, PageKey> = {
   "erp-invoices-in": "erp-invoices",
   "erp-invoices-out": "erp-invoices",
   "garage-customers": "garage-partners",
+  journal: "journal-entry",
+  "nhat-ky-chung": "journal-entry",
+  "general-journal": "journal-entry",
+  "chart-of-accounts": "settings-accounts",
 };
 
 export interface PageUrlParsedState {

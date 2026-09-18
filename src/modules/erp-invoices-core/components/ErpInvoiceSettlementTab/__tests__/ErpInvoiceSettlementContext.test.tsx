@@ -199,4 +199,93 @@ describe("ErpInvoiceSettlementContext", () => {
     });
     expect(result.current.viewPreset).toBe("linked");
   });
+
+  it("syncs selected bank transactions to form.pendingDocumentChanges when form and fieldSet props are provided", () => {
+    const invoice = {
+      id: "inv-100",
+      invoiceNo: "100",
+      totalAmount: "1000000",
+      voucherNetOffs: [],
+    };
+
+    let pendingChanges: any[] = [];
+    const mockForm = {
+      pendingDocumentChanges: pendingChanges,
+    };
+    const mockFieldSet = vi.fn((key: string, val: any) => {
+      if (key === "pendingDocumentChanges") {
+        pendingChanges = val;
+        mockForm.pendingDocumentChanges = pendingChanges;
+      }
+    });
+
+    const wrapper = ({ children }: { children: React.ReactNode }) => (
+      <QueryClientProvider client={queryClient}>
+        <ErpInvoiceSettlementProvider
+          invoice={invoice as any}
+          form={mockForm as any}
+          fieldSet={mockFieldSet}
+          editMode={true}
+          direction="OUT"
+        >
+          {children}
+        </ErpInvoiceSettlementProvider>
+      </QueryClientProvider>
+    );
+
+    const { result, rerender } = renderHook(() => useErpInvoiceSettlement(), {
+      wrapper,
+    });
+
+    // Toggle a transaction row
+    const mockTxn = {
+      id: "txn-1",
+      creditAmount: "500000",
+      debitAmount: "0",
+      netOffAmount: "0",
+      referenceNumber: "REF-001",
+      bankName: "BIDV",
+      transDate: "2026-09-01",
+    };
+
+    act(() => {
+      result.current.handleToggleRow(mockTxn);
+    });
+
+    expect(result.current.selectedIds).toContain("txn-1");
+    // Verify fieldSet was called with the ADD bank voucher item
+    expect(mockFieldSet).toHaveBeenCalledWith(
+      "pendingDocumentChanges",
+      expect.arrayContaining([
+        expect.objectContaining({
+          action: "ADD",
+          type: "BANK",
+          refId: "txn-1",
+          amount: 500000,
+        }),
+      ]),
+    );
+
+    rerender();
+
+    // Active vouchers should now include the pending voucher with isPending: true
+    expect(
+      result.current.activeVouchers.some(
+        (v) => v.bankTransactionId === "txn-1" && v.isPending,
+      ),
+    ).toBe(true);
+
+    // Unlinking a pending voucher should remove it without calling backend API
+    act(() => {
+      result.current.handleUnlinkVoucher({
+        id: "pending-bank-txn-1",
+        bankTransactionId: "txn-1",
+        amount: 500000,
+        isPending: true,
+      } as any);
+    });
+
+    expect(erpInvoicesCoreApi.removeVoucherLink).not.toHaveBeenCalled();
+    expect(result.current.selectedIds).not.toContain("txn-1");
+  });
 });

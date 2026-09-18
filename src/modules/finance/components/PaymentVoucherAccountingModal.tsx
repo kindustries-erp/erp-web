@@ -141,8 +141,8 @@ export function PaymentVoucherAccountingModal({
         .then((je) => {
           if (je.date) setDate(je.date);
           if (je.description) setDescription(je.description);
-          const debitLine = je.lines?.find((l) => Number(l.debit) > 0);
-          const creditLine = je.lines?.find((l) => Number(l.credit) > 0);
+          const debitLine = je.lines?.find((l: any) => Number(l.debit) > 0);
+          const creditLine = je.lines?.find((l: any) => Number(l.credit) > 0);
           if (debitLine || creditLine) {
             const amount = debitLine
               ? String(Number(debitLine.debit) || 0)

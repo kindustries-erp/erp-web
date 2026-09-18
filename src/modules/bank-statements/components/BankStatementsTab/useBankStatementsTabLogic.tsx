@@ -14,7 +14,7 @@ import {
   useUserPreferencesStore,
   type TableViewPreset,
 } from "@/shared/hooks/useUserPreferences";
-import { money } from "@/shared/utils/format";
+import { SubtotalSummaryCell } from "@/shared/components/DataTable/SubtotalSummaryCell";
 import {
   BANK_STATEMENT_COLUMN_VIEW_PRESETS,
   DEFAULT_BANK_COLUMN_VISIBILITY,
@@ -86,6 +86,7 @@ export function useBankStatementsTabLogic({
   );
   const [detailDefaultTab, setDetailDefaultTab] =
     useState<string>("txn_details");
+  const [detailMode, setDetailMode] = useState<"view" | "edit">("view");
   const [partnerDrawerOpen, setPartnerDrawerOpen] = useState(false);
   const [selectedPartner, setSelectedPartner] = useState<{
     account?: string;
@@ -93,8 +94,13 @@ export function useBankStatementsTabLogic({
   } | null>(null);
 
   const handleOpenDetail = useCallback(
-    (id: string, tab: string = "txn_details") => {
+    (
+      id: string,
+      tab: string = "txn_details",
+      mode: "view" | "edit" = "view",
+    ) => {
       setDetailDefaultTab(tab);
+      setDetailMode(mode);
       setDetailTransactionId(id);
     },
     [],
@@ -348,19 +354,37 @@ export function useBankStatementsTabLogic({
   const summaryRow = useMemo(() => {
     if (!data?.items || data.items.length === 0) return undefined;
 
-    const totalDebit = data.items.reduce(
+    const items = data.items;
+    const thuItems = items.filter(
+      (i: any) => (parseFloat(i.creditAmount) || 0) > 0,
+    );
+    const chiItems = items.filter(
+      (i: any) => (parseFloat(i.debitAmount) || 0) > 0,
+    );
+    const netOffItems = items.filter(
+      (i: any) => (parseFloat(i.netOffAmount) || 0) > 0,
+    );
+    const remainingItems = items.filter((i: any) => {
+      const amount = Math.max(
+        parseFloat(i.creditAmount) || 0,
+        parseFloat(i.debitAmount) || 0,
+      );
+      return amount - (parseFloat(i.netOffAmount) || 0) > 0;
+    });
+
+    const totalDebit = items.reduce(
       (acc: number, curr: any) => acc + (parseFloat(curr.debitAmount) || 0),
       0,
     );
-    const totalCredit = data.items.reduce(
+    const totalCredit = items.reduce(
       (acc: number, curr: any) => acc + (parseFloat(curr.creditAmount) || 0),
       0,
     );
-    const totalNetOff = data.items.reduce(
+    const totalNetOff = items.reduce(
       (acc: number, curr: any) => acc + (parseFloat(curr.netOffAmount) || 0),
       0,
     );
-    const totalRemaining = data.items.reduce(
+    const totalRemaining = items.reduce(
       (acc: number, curr: any) =>
         acc +
         (Math.max(
@@ -371,42 +395,103 @@ export function useBankStatementsTabLogic({
       0,
     );
 
+    const totalPages = data.totalPages || 1;
+    const totalCount = data.total || items.length;
+
     return {
       transDate: null,
-      thu:
-        totalCredit > 0 ? (
-          <span className="text-emerald-600 font-medium">
-            {money(totalCredit)}
-          </span>
-        ) : (
-          money(0)
-        ),
-      chi:
-        totalDebit > 0 ? (
-          <span className="text-[#ea580c] font-medium">
-            {money(totalDebit)}
-          </span>
-        ) : (
-          money(0)
-        ),
-      netOffAmount:
-        totalNetOff === 0 ? (
-          "--"
-        ) : (
-          <span className="text-blue-600 dark:text-blue-400 font-medium">
-            {money(totalNetOff)}
-          </span>
-        ),
-      remainingAmount:
-        totalRemaining === 0 ? (
-          <span className="text-emerald-600 font-medium">0</span>
-        ) : (
-          <span className="text-slate-700 dark:text-slate-300 font-medium">
-            {money(totalRemaining)}
-          </span>
-        ),
+      description: (
+        <SubtotalSummaryCell
+          variantType="label"
+          label={`${t("common.total", { defaultValue: "Tổng cộng" })}:`}
+          page={page}
+          totalPages={totalPages}
+          totalCount={totalCount}
+          currentPageCount={items.length}
+        />
+      ),
+      thu: (
+        <SubtotalSummaryCell
+          variantType="amount"
+          metricTitle={t("bankStatement.columns.thu", {
+            defaultValue: "Tiền vào (Thu)",
+          })}
+          itemTitle={t("bankStatement.items.txnIn", {
+            defaultValue: "Giao dịch thu",
+          })}
+          itemUnit={t("common.summaryLines", { defaultValue: "giao dịch" })}
+          subtotalAmount={totalCredit}
+          grandTotalAmount={totalCredit}
+          page={page}
+          totalPages={totalPages}
+          currentPageCount={thuItems.length}
+          totalCount={thuItems.length}
+          valueClassName="text-emerald-600 font-bold"
+        />
+      ),
+      chi: (
+        <SubtotalSummaryCell
+          variantType="amount"
+          metricTitle={t("bankStatement.columns.chi", {
+            defaultValue: "Tiền ra (Chi)",
+          })}
+          itemTitle={t("bankStatement.items.txnOut", {
+            defaultValue: "Giao dịch chi",
+          })}
+          itemUnit={t("common.summaryLines", { defaultValue: "giao dịch" })}
+          subtotalAmount={totalDebit}
+          grandTotalAmount={totalDebit}
+          page={page}
+          totalPages={totalPages}
+          currentPageCount={chiItems.length}
+          totalCount={chiItems.length}
+          valueClassName="text-[#ea580c] font-bold"
+        />
+      ),
+      netOffAmount: (
+        <SubtotalSummaryCell
+          variantType="amount"
+          metricTitle={t("bankStatement.columns.netOffAmount", {
+            defaultValue: "Đã cấn trừ",
+          })}
+          itemTitle={t("bankStatement.items.txnSettled", {
+            defaultValue: "Giao dịch cấn trừ",
+          })}
+          itemUnit={t("common.summaryLines", { defaultValue: "giao dịch" })}
+          subtotalAmount={totalNetOff}
+          grandTotalAmount={totalNetOff}
+          page={page}
+          totalPages={totalPages}
+          currentPageCount={netOffItems.length}
+          totalCount={netOffItems.length}
+          valueClassName="text-indigo-600 font-bold"
+        />
+      ),
+      remainingAmount: (
+        <SubtotalSummaryCell
+          variantType="amount"
+          metricTitle={t("bankStatement.columns.remainingAmount", {
+            defaultValue: "Còn lại",
+          })}
+          itemTitle={t("bankStatement.items.txnRemaining", {
+            defaultValue: "Giao dịch còn lại",
+          })}
+          itemUnit={t("common.summaryLines", { defaultValue: "giao dịch" })}
+          subtotalAmount={totalRemaining}
+          grandTotalAmount={totalRemaining}
+          page={page}
+          totalPages={totalPages}
+          currentPageCount={remainingItems.length}
+          totalCount={remainingItems.length}
+          valueClassName={
+            totalRemaining === 0
+              ? "text-emerald-600 font-bold"
+              : "text-slate-700 dark:text-slate-300 font-bold"
+          }
+        />
+      ),
     };
-  }, [data]);
+  }, [data, page, t]);
 
   const handleRefresh = useCallback(() => {
     refetch();
@@ -466,6 +551,8 @@ export function useBankStatementsTabLogic({
     setDetailTransactionId,
     detailDefaultTab,
     setDetailDefaultTab,
+    detailMode,
+    setDetailMode,
     handleOpenDetail,
     partnerDrawerOpen,
     setPartnerDrawerOpen,

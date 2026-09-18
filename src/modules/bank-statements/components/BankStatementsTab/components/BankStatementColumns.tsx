@@ -4,8 +4,7 @@ import { toast } from "react-hot-toast";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import { TableDateCell } from "@/shared/components/DataTable/TableDateCell";
 import { TableText } from "@/shared/components/DataTable/TableText";
-import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
-import { DateRangeColumnSlot } from "@/shared/components/DataTable/DateRangeColumnSlot";
+import { createColumnHeaderFilter } from "@/shared/components/DataTable/createColumnHeaderFilter";
 import { money } from "@/shared/utils/format";
 import { bankStatementApi } from "@/modules/bank-statements/api/bankStatementApi";
 
@@ -42,8 +41,6 @@ export interface UseBankStatementColumnsProps {
 
 export function useBankStatementColumns({
   type,
-  page,
-  pageSize,
   tableState,
   filter,
   setPage,
@@ -58,56 +55,98 @@ export function useBankStatementColumns({
     columnKey,
     search,
     pageParam,
+    pageSize = 20,
     filtersStr,
   }: {
     columnKey: string;
     search: string;
     pageParam: number;
+    pageSize?: number;
     filtersStr?: string;
   }) => {
-    return bankStatementApi.getColumnOptions(
+    const res = await bankStatementApi.getColumnOptions(
       columnKey,
       search,
       pageParam,
-      20,
+      pageSize,
       filtersStr,
       type === "bank" ? "BANK" : "CASH",
     );
+    const currentPage = res.page || pageParam || 1;
+    const totalPages =
+      res.totalPages || Math.ceil((res.total || 0) / pageSize) || 1;
+    return {
+      items: res.items || res.data || [],
+      total: res.total || 0,
+      next: currentPage < totalPages ? currentPage + 1 : null,
+    };
   };
 
-  const getSortState = (columnKey: string) => {
-    const current = tableState.sorts[0];
-    if (!current) return "none";
-    if (current === columnKey) return "asc";
-    if (current === `-${columnKey}`) return "desc";
-    return "none";
-  };
+  const listHook = useMemo(
+    () => ({
+      sorts: tableState.sorts,
+      setSort: (key: string, state: any) => {
+        tableState.setSort(key, state);
+      },
+      columnFilters: tableState.columnFilters,
+      setColumnFilter: (key: string, values: string[]) => {
+        tableState.setColumnFilter(key, values);
+        setPage(1);
+      },
+      columnSearch: tableState.columnSearch,
+      setColumnSearch: (key: string, value: string) => {
+        tableState.setColumnSearch(key, value);
+        setPage(1);
+      },
+      dateFrom: filter.state.dateFrom,
+      dateTo: filter.state.dateTo,
+      setDateRange: (from?: string, to?: string) => {
+        if (filter.setDateRange) {
+          filter.setDateRange(from || "", to || "");
+        } else if (filter.setDateFrom && filter.setDateTo) {
+          filter.setDateFrom(from || "");
+          filter.setDateTo(to || "");
+        }
+        setPage(1);
+      },
+    }),
+    [tableState, filter, setPage],
+  );
 
-  const handleSortChange = (
-    columnKey: string,
-    state: "asc" | "desc" | "none",
-  ) => {
-    tableState.setSort(columnKey, state);
-  };
+  const headerFilter = useMemo(
+    () =>
+      createColumnHeaderFilter({
+        listHook,
+        fetchOptions: fetchColumnOptions,
+        queryKeyPrefix: `bank-statement-${type}-column-options`,
+        defaultAlign: "center",
+      }),
+    [listHook, type],
+  );
 
-  const handleSearchChange = (columnKey: string, value: string) => {
-    tableState.setColumnSearch(columnKey, value);
-    setPage(1);
-  };
-
-  const handleFilterChange = (columnKey: string, values: string[]) => {
-    tableState.setColumnFilter(columnKey, values);
-    setPage(1);
-  };
-
-  const formatAmtOption = (val: string | number) => {
-    const n = Number(val || 0);
-    if (isNaN(n)) return String(val);
-    return n.toLocaleString("vi-VN", {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    });
-  };
+  const settledOptions = useMemo(
+    () => [
+      {
+        value: "settled_full",
+        label: t("bankStatement.filters.settledFull", {
+          defaultValue: "Đã cấn trừ hết",
+        }),
+      },
+      {
+        value: "settled_partial",
+        label: t("bankStatement.filters.settledPartial", {
+          defaultValue: "Đã cấn trừ một phần",
+        }),
+      },
+      {
+        value: "unsettled",
+        label: t("bankStatement.filters.unsettled", {
+          defaultValue: "Chưa cấn trừ",
+        }),
+      },
+    ],
+    [t],
+  );
 
   const renderCopyableText = (text: string) => {
     if (!text) return null;
@@ -124,107 +163,6 @@ export function useBankStatementColumns({
           {text}
         </div>
       </Tooltip>
-    );
-  };
-
-  const renderHeaderFilter = (key: string, label: string) => {
-    if (key === "transDate") {
-      return (
-        <TableColumnHeaderFilter
-          title={label}
-          align="center"
-          className="w-full justify-center"
-          sortState={getSortState(key)}
-          onSortChange={(state) => handleSortChange(key, state)}
-          searchValue={tableState.columnSearch[key] || ""}
-          onSearchChange={(val) => handleSearchChange(key, val)}
-          selectedFilters={tableState.columnFilters[key] || []}
-          onFilterChange={(vals) => handleFilterChange(key, vals)}
-          columnKey={key}
-          hideFilter={true}
-          hideFooter={true}
-          isActive={!!(filter.state.dateFrom || filter.state.dateTo)}
-          dateRangeSlot={({ close }) => (
-            <DateRangeColumnSlot
-              dateFrom={filter.state.dateFrom || ""}
-              dateTo={filter.state.dateTo || ""}
-              onChange={(from, to) => {
-                if (filter.setDateRange) {
-                  filter.setDateRange(from, to);
-                } else if (filter.setDateFrom && filter.setDateTo) {
-                  filter.setDateFrom(from);
-                  filter.setDateTo(to);
-                }
-                setPage(1);
-              }}
-              onClose={close}
-            />
-          )}
-        />
-      );
-    }
-
-    let formatOptionLabel: ((val: string) => string) | undefined;
-    if (
-      ["thu", "chi", "balance", "netOffAmount", "remainingAmount"].includes(key)
-    ) {
-      formatOptionLabel = formatAmtOption as any;
-    }
-
-    let filterOptions: any = undefined;
-    if (key === "netOffAmount" || key === "remainingAmount") {
-      filterOptions = [
-        {
-          value: "settled_full",
-          label: t("bankStatement.filters.settledFull", {
-            defaultValue: "Đã cấn trừ hết",
-          }),
-        },
-        {
-          value: "settled_partial",
-          label: t("bankStatement.filters.settledPartial", {
-            defaultValue: "Đã cấn trừ một phần",
-          }),
-        },
-        {
-          value: "unsettled",
-          label: t("bankStatement.filters.unsettled", {
-            defaultValue: "Chưa cấn trừ",
-          }),
-        },
-      ];
-    }
-
-    const showBlank = [
-      "account",
-      "referenceNumber",
-      "description",
-      "correspondentName",
-      "correspondentAccount",
-      "correspondentBank",
-      "invoiceSubject",
-      "branch",
-    ].includes(key);
-
-    return (
-      <TableColumnHeaderFilter
-        title={label}
-        align="center"
-        className="w-full justify-center"
-        sortState={getSortState(key)}
-        onSortChange={(state) => handleSortChange(key, state)}
-        searchValue={tableState.columnSearch[key] || ""}
-        onSearchChange={(val) => handleSearchChange(key, val)}
-        selectedFilters={tableState.columnFilters[key] || []}
-        onFilterChange={(vals) => handleFilterChange(key, vals)}
-        columnKey={key}
-        allFilters={tableState.columnFilters}
-        fetchOptions={fetchColumnOptions}
-        formatOptionLabel={formatOptionLabel}
-        filterOptions={filterOptions}
-        queryKeyPrefix={`bank-statement-${type}-column-options`}
-        showBlankOption={showBlank}
-      />
     );
   };
 
@@ -245,13 +183,14 @@ export function useBankStatementColumns({
       },
       {
         key: "account",
-        header: renderHeaderFilter(
+        header: headerFilter(
           "account",
           type === "bank"
             ? t("bankStatement.columns.bankAccount", {
                 defaultValue: "Ngân hàng",
               })
             : t("bankStatement.columns.cashBook", { defaultValue: "Sổ quỹ" }),
+          { showBlankOption: true },
         ),
         cell: (row: any) => {
           const text =
@@ -267,7 +206,7 @@ export function useBankStatementColumns({
       {
         key: "transDate",
         dataIndex: "transDate",
-        header: renderHeaderFilter(
+        header: headerFilter.date(
           "transDate",
           t("bankStatement.columns.transDate", {
             defaultValue: "Ngày giao dịch",
@@ -278,11 +217,12 @@ export function useBankStatementColumns({
       },
       {
         key: "referenceNumber",
-        header: renderHeaderFilter(
+        header: headerFilter(
           "referenceNumber",
           t("bankStatement.columns.referenceNumber", {
             defaultValue: "Số tham chiếu",
           }),
+          { showBlankOption: true },
         ),
         size: 180,
         cell: (row: any) => {
@@ -304,18 +244,19 @@ export function useBankStatementColumns({
       {
         key: "description",
         dataIndex: "description",
-        header: renderHeaderFilter(
+        header: headerFilter(
           "description",
           t("bankStatement.columns.description", {
             defaultValue: "Nội dung giao dịch",
           }),
+          { showBlankOption: true },
         ),
         size: 360,
         cell: (row: any) => renderCopyableText(row.description),
       },
       {
         key: "thu",
-        header: renderHeaderFilter(
+        header: headerFilter.amount(
           "thu",
           t("bankStatement.columns.thu", { defaultValue: "Tiền vào (Thu)" }),
         ),
@@ -335,7 +276,7 @@ export function useBankStatementColumns({
       },
       {
         key: "chi",
-        header: renderHeaderFilter(
+        header: headerFilter.amount(
           "chi",
           t("bankStatement.columns.chi", { defaultValue: "Tiền ra (Chi)" }),
         ),
@@ -354,7 +295,7 @@ export function useBankStatementColumns({
       {
         key: "balance",
         dataIndex: "balance",
-        header: renderHeaderFilter(
+        header: headerFilter.amount(
           "balance",
           t("bankStatement.columns.balance", { defaultValue: "Số dư" }),
         ),
@@ -365,22 +306,23 @@ export function useBankStatementColumns({
       },
       {
         key: "netOffAmount",
-        header: renderHeaderFilter(
+        header: headerFilter.client(
           "netOffAmount",
           t("bankStatement.columns.netOffAmount", {
             defaultValue: "Đã cấn trừ",
           }),
+          { filterOptions: settledOptions },
         ),
         className:
-          "text-right bg-blue-50/50 dark:bg-blue-950/20 border-l border-blue-200 dark:border-blue-800/40",
+          "text-right bg-indigo-50/40 dark:bg-indigo-950/20 border-l border-indigo-200/60 dark:border-indigo-800/30",
         headerClassName:
-          "text-center bg-blue-50/50 dark:bg-blue-950/20 border-l border-blue-200 dark:border-blue-800/40",
+          "text-center bg-indigo-50/40 dark:bg-indigo-950/20 border-l border-indigo-200/60 dark:border-indigo-800/30",
         size: 140,
         cell: (row: any) => {
           const netOff = parseFloat(row.netOffAmount) || 0;
           if (netOff === 0) return "--";
           return (
-            <span className="text-blue-600 dark:text-blue-400 font-medium">
+            <span className="text-indigo-600 dark:text-indigo-400 font-medium">
               {money(netOff)}
             </span>
           );
@@ -388,14 +330,16 @@ export function useBankStatementColumns({
       },
       {
         key: "remainingAmount",
-        header: renderHeaderFilter(
+        header: headerFilter.client(
           "remainingAmount",
           t("bankStatement.columns.remainingAmount", {
             defaultValue: "Còn lại",
           }),
+          { filterOptions: settledOptions },
         ),
-        className: "text-right font-semibold bg-blue-50/50 dark:bg-blue-950/20",
-        headerClassName: "text-center bg-blue-50/50 dark:bg-blue-950/20",
+        className:
+          "text-right font-semibold bg-indigo-50/40 dark:bg-indigo-950/20",
+        headerClassName: "text-center bg-indigo-50/40 dark:bg-indigo-950/20",
         size: 140,
         cell: (row: any) => {
           const credit = parseFloat(row.creditAmount) || 0;
@@ -414,11 +358,12 @@ export function useBankStatementColumns({
       },
       {
         key: "invoiceSubject",
-        header: renderHeaderFilter(
+        header: headerFilter(
           "invoiceSubject",
           t("bankStatement.columns.invoiceSubject", {
             defaultValue: "Đối tượng HĐ",
           }),
+          { showBlankOption: true },
         ),
         size: 200,
         cell: (row: any) => {
@@ -443,11 +388,12 @@ export function useBankStatementColumns({
       },
       {
         key: "correspondentName",
-        header: renderHeaderFilter(
+        header: headerFilter(
           "correspondentName",
           t("bankStatement.columns.correspondentName", {
             defaultValue: "Đối tác / Thụ hưởng",
           }),
+          { showBlankOption: true },
         ),
         size: 200,
         cell: (row: any) => {
@@ -477,11 +423,12 @@ export function useBankStatementColumns({
       },
       {
         key: "correspondentAccount",
-        header: renderHeaderFilter(
+        header: headerFilter(
           "correspondentAccount",
           t("bankStatement.columns.correspondentAccount", {
             defaultValue: "TK đối ứng",
           }),
+          { showBlankOption: true },
         ),
         size: 160,
         cell: (row: any) => {
@@ -511,20 +458,22 @@ export function useBankStatementColumns({
       },
       {
         key: "correspondentBank",
-        header: renderHeaderFilter(
+        header: headerFilter(
           "correspondentBank",
           t("bankStatement.columns.correspondentBank", {
             defaultValue: "Ngân hàng đối tác",
           }),
+          { showBlankOption: true },
         ),
         size: 160,
         cell: (row: any) => renderCopyableText(row.correspondentBank),
       },
       {
         key: "branch",
-        header: renderHeaderFilter(
+        header: headerFilter(
           "branch",
           t("bankStatement.columns.branch", { defaultValue: "Chi nhánh" }),
+          { showBlankOption: true },
         ),
         size: 140,
         cell: (row: any) => {
@@ -534,15 +483,14 @@ export function useBankStatementColumns({
       },
     ],
     [
-      type,
-      page,
-      pageSize,
-      tableState.sorts,
-      tableState.columnFilters,
-      tableState.columnSearch,
-      filter.state.dateFrom,
-      filter.state.dateTo,
+      headerFilter,
+      setDetailTransactionId,
+      setDetailDefaultTab,
+      setSelectedPartner,
+      setPartnerDrawerOpen,
+      settledOptions,
       t,
+      type,
     ],
   );
 

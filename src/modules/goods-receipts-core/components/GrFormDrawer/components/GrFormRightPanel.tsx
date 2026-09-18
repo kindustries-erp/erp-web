@@ -13,7 +13,6 @@ import {
 import { useAppStore } from "@/core/config/appStore";
 import { AttributeTypeBadge } from "@/shared/components/AttributeTypeBadge";
 import { EntityTagSelector } from "@/modules/tags/components/EntityTagSelector";
-import { fmtQty } from "@/shared/utils/format";
 import type { UseGrDrawerReturn } from "@/modules/goods-receipts-core/hooks/useGrDrawer";
 
 interface GrFormRightPanelProps {
@@ -93,59 +92,30 @@ export function GrFormRightPanel({ drawer, t }: GrFormRightPanelProps) {
   );
 }
 
-/** Thẻ nhãn (Tags) & Summary Cards hiển thị trong tagsSlot bên dưới Ghi chú */
+/** Thẻ nhãn (Tags) hiển thị trong tagsSlot bên dưới Ghi chú */
 export function GrFormTagsSection({ drawer, t }: GrFormRightPanelProps) {
-  const { viewOnly, editing, form } = drawer;
-
-  // Thống kê nhanh
-  const totalReceivedQty = useMemo(() => {
-    return form.lines.reduce((sum, l) => sum + Number(l.qtyReceived || 0), 0);
-  }, [form.lines]);
+  const { viewOnly, editing } = drawer;
 
   return (
-    <>
-      <div className="pt-1">
-        <div className="text-sm font-medium mb-1.5 text-gray-700 dark:text-gray-300">
-          {t("tags", "Thẻ nhãn")}
-        </div>
-        {editing?.id ? (
-          <EntityTagSelector
-            entityType="erp_goods_receipt"
-            entityId={editing.id}
-            readOnly={viewOnly}
-          />
-        ) : !viewOnly ? (
-          <EntityTagSelector
-            entityType="erp_goods_receipt"
-            entityId="__pending__"
-            readOnly={false}
-            pendingMode
-          />
-        ) : null}
+    <div className="pt-1">
+      <div className="text-sm font-medium mb-1.5 text-gray-700 dark:text-gray-300">
+        {t("tags", "Thẻ nhãn")}
       </div>
-
-      {/* Summary Cards khi ở chế độ View hoặc khi có dòng */}
-      {viewOnly && form.lines.length > 0 && (
-        <div className="mt-3 grid grid-cols-2 gap-2 text-center">
-          <div className="flex flex-col items-center justify-center p-2.5 bg-blue-500/10 rounded-lg border border-blue-500/20">
-            <span className="text-[11px] font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider mb-1">
-              {t("Số mặt hàng")}
-            </span>
-            <span className="font-bold text-blue-700 dark:text-blue-300 text-base tabular-nums">
-              {form.lines.length}
-            </span>
-          </div>
-          <div className="flex flex-col items-center justify-center p-2.5 bg-emerald-500/10 rounded-lg border border-emerald-500/20">
-            <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mb-1">
-              {t("Tổng SL nhận")}
-            </span>
-            <span className="font-bold text-emerald-700 dark:text-emerald-300 text-base tabular-nums">
-              +{fmtQty(totalReceivedQty)}
-            </span>
-          </div>
-        </div>
-      )}
-    </>
+      {editing?.id ? (
+        <EntityTagSelector
+          entityType="erp_goods_receipt"
+          entityId={editing.id}
+          readOnly={viewOnly}
+        />
+      ) : !viewOnly ? (
+        <EntityTagSelector
+          entityType="erp_goods_receipt"
+          entityId="__pending__"
+          readOnly={false}
+          pendingMode
+        />
+      ) : null}
+    </div>
   );
 }
 

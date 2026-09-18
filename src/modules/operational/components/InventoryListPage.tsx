@@ -498,6 +498,7 @@ export function InventoryListPage() {
   const stockItems = (listQuery.data?.items || []) as InventoryStockRow[];
   const total = listQuery.data?.total || 0;
   const totalPages = listQuery.data?.totalPages || 0;
+  const summary = (listQuery.data as any)?.summary;
 
   const selectedCount = Object.keys(rowSelection).filter(
     (key) => rowSelection[key],
@@ -552,6 +553,7 @@ export function InventoryListPage() {
         stockItems={stockItems}
         total={total}
         totalPages={totalPages}
+        summary={summary}
         viewingItemId={viewingItemId}
         creatingItem={creatingItem}
         isEditMode={isEditMode}

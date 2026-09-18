@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { ListChecks, Eye } from "lucide-react";
+import { Eye, Sparkles } from "lucide-react";
 import { DrawerSection } from "@/shared/components/DrawerModal";
 import { StandardTable } from "@/shared/components/StandardTable";
 import {
@@ -11,12 +11,11 @@ import {
 import { TableDateCell } from "@/shared/components/DataTable/TableDateCell";
 import { DateRangeColumnSlot } from "@/shared/components/DataTable/DateRangeColumnSlot";
 import { FilterButton } from "@/shared/components/FilterPanel";
-import { Badge } from "@/shared/components/ui/badge";
 import { Checkbox } from "@/shared/components/ui/checkbox";
+import { Button } from "@/shared/components/ui/Button";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import { money } from "@/shared/utils/format";
 import type { ErpInvoice } from "@/modules/erp-invoices-core/api/erpInvoicesCoreApi";
-import { SelectedInvoicesTable } from "./SelectedInvoicesTable";
 import type { InvoiceTabContentProps } from "../types";
 
 export function InvoiceTabContent({
@@ -42,7 +41,14 @@ export function InvoiceTabContent({
   onSetInvoicePageSize,
   onSetInvoiceDateFrom,
   onSetInvoiceDateTo,
+  editMode = false,
+  viewPreset = "all",
+  onSelectAllSuggestions,
+  suggestionsCount = 0,
 }: InvoiceTabContentProps) {
+  void selectedInvoicesList;
+  void selectedInvoicesCount;
+  void selectedInvoicesTotal;
   const { t } = useTranslation(["garage", "erpInvoices", "common"]);
 
   const renderInvoiceHeaderFilter = (
@@ -85,9 +91,12 @@ export function InvoiceTabContent({
     invoiceItems.length > 0 &&
     invoiceItems.every((inv: ErpInvoice) => !!selectedInvoicesMap[inv.id]);
 
-  const invoiceColumns: any[] = useMemo(
-    () => [
-      {
+  const invoiceColumns: any[] = useMemo(() => {
+    const cols: any[] = [];
+
+    // Chỉ khi ở chế độ Chỉnh sửa (editMode) mới thêm cột Checkbox
+    if (editMode) {
+      cols.push({
         key: "selection",
         header: (
           <div
@@ -100,7 +109,10 @@ export function InvoiceTabContent({
             />
           </div>
         ),
-        size: 45,
+        size: 40,
+        className: "text-center w-[40px] min-w-[40px]",
+        headerClassName: "text-center w-[40px] min-w-[40px]",
+        enableResizing: false,
         cell: (inv: ErpInvoice) => {
           const isSelected = !!selectedInvoicesMap[inv.id];
           return (
@@ -116,7 +128,25 @@ export function InvoiceTabContent({
           );
         },
         sortable: false,
-      },
+      });
+    }
+
+    // Cột STT
+    cols.push({
+      key: "stt",
+      header: <span className="w-full block text-center">#</span>,
+      size: 40,
+      className: "text-center w-[40px] min-w-[40px]",
+      headerClassName: "text-center w-[40px] min-w-[40px]",
+      enableResizing: false,
+      cell: (_: any, idx: number) => (
+        <span className="w-full block text-center font-mono text-xs text-muted-foreground">
+          {idx}
+        </span>
+      ),
+    });
+
+    cols.push(
       {
         key: "invoiceDate",
         header: (
@@ -287,10 +317,40 @@ export function InvoiceTabContent({
         ),
       },
       {
+        key: "preVatAmount",
+        header: renderInvoiceHeaderFilter(
+          "preVatAmount",
+          t("cases.reconciliation.preVatAmount", "Trước GTGT"),
+          TableColumnAlign.RIGHT,
+        ),
+        size: 120,
+        cell: (inv: ErpInvoice) => (
+          <span className="text-xs font-mono text-slate-700 dark:text-slate-300 tabular-nums">
+            {money(inv.preVatAmount)}
+          </span>
+        ),
+        className: "text-right",
+      },
+      {
+        key: "vatAmount",
+        header: renderInvoiceHeaderFilter(
+          "vatAmount",
+          t("cases.reconciliation.vatAmount", "Thuế GTGT"),
+          TableColumnAlign.RIGHT,
+        ),
+        size: 110,
+        cell: (inv: ErpInvoice) => (
+          <span className="text-xs font-mono text-slate-600 dark:text-slate-400 tabular-nums">
+            {money(inv.vatAmount)}
+          </span>
+        ),
+        className: "text-right",
+      },
+      {
         key: "totalAmount",
         header: renderInvoiceHeaderFilter(
           "totalAmount",
-          t("cases.reconciliation.totalAmount", "Tổng tiền VAT"),
+          t("cases.reconciliation.totalAmount", "Thành tiền"),
           TableColumnAlign.RIGHT,
         ),
         size: 130,
@@ -301,71 +361,30 @@ export function InvoiceTabContent({
         ),
         className: "text-right",
       },
-    ],
-    [
-      isAllInvoiceSelected,
-      onSelectAllInvoices,
-      selectedInvoicesMap,
-      onToggleInvoice,
-      invoiceTableState,
-      t,
-      invoiceDateFrom,
-      invoiceDateTo,
-      onSetInvoiceDateFrom,
-      onSetInvoiceDateTo,
-      onSetInvoicePage,
-      onViewInvoiceDetail,
-      onPreviewInvoicePdf,
-      invoiceDirection,
-    ],
-  );
+    );
+
+    return cols;
+  }, [
+    editMode,
+    isAllInvoiceSelected,
+    onSelectAllInvoices,
+    selectedInvoicesMap,
+    onToggleInvoice,
+    invoiceTableState,
+    t,
+    invoiceDateFrom,
+    invoiceDateTo,
+    onSetInvoiceDateFrom,
+    onSetInvoiceDateTo,
+    onSetInvoicePage,
+    onViewInvoiceDetail,
+    onPreviewInvoicePdf,
+    invoiceDirection,
+  ]);
 
   return (
     <div className="space-y-3 pb-2">
-      {/* SECTION 1: CÁC HÓA ĐƠN ĐÃ CHỌN */}
-      <DrawerSection
-        title={
-          <div className="flex items-center gap-2 flex-wrap">
-            <ListChecks className="w-3.5 h-3.5 text-muted-foreground" />
-            <span>
-              {invoiceDirection === "OUT"
-                ? t(
-                    "cases.reconciliation.selectedInvoicesListTitle",
-                    "Hóa đơn Bán ra đã chọn",
-                  )
-                : t(
-                    "cases.reconciliation.selectedInvoicesInListTitle",
-                    "Hóa đơn Mua vào đã chọn",
-                  )}
-            </span>
-            {selectedInvoicesCount > 0 && (
-              <Badge
-                variant="outline"
-                className="text-[10px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200"
-              >
-                {selectedInvoicesCount} {t("invoices", "hóa đơn")}
-              </Badge>
-            )}
-            {selectedInvoicesCount > 0 && (
-              <span className="text-xs font-mono font-bold text-slate-900 dark:text-slate-100 ml-auto">
-                Tổng: {money(selectedInvoicesTotal)}
-              </span>
-            )}
-          </div>
-        }
-        collapsible={true}
-        defaultCollapsed={false}
-        className="mb-0 p-3"
-        bodyClassName="p-0"
-      >
-        <SelectedInvoicesTable
-          invoices={selectedInvoicesList}
-          onRemove={onToggleInvoice}
-          onViewDetail={onViewInvoiceDetail}
-        />
-      </DrawerSection>
-
-      {/* SECTION 2: TOÀN BỘ DANH SÁCH HÓA ĐƠN */}
+      {/* DANH SÁCH HÓA ĐƠN */}
       <DrawerSection
         title={
           <div className="flex items-center gap-2 flex-wrap">
@@ -373,11 +392,11 @@ export function InvoiceTabContent({
               {invoiceDirection === "OUT"
                 ? t(
                     "cases.reconciliation.outInvoicesList",
-                    "Danh sách Hóa đơn Bán ra (Doanh thu)",
+                    "Danh sách Hóa đơn Đầu ra",
                   )
                 : t(
                     "cases.reconciliation.inInvoicesList",
-                    "Danh sách Hóa đơn Mua vào (Chi phí)",
+                    "Danh sách Hóa đơn Đầu vào",
                   )}
             </span>
             {invoiceDataTotal !== undefined && (
@@ -389,6 +408,27 @@ export function InvoiceTabContent({
         }
         titleExtra={
           <div className="flex items-center gap-2">
+            {viewPreset === "suggestions" &&
+              suggestionsCount >= 2 &&
+              editMode &&
+              onSelectAllSuggestions && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={onSelectAllSuggestions}
+                  className="h-6 text-[11px] px-2 gap-1 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 font-medium cursor-pointer"
+                >
+                  <Sparkles className="w-2.5 h-2.5 text-slate-600 dark:text-slate-400" />
+                  <span>
+                    {t(
+                      "cases.financials.selectAllSuggestions",
+                      "Chọn tất cả gợi ý ({{count}})",
+                      { count: suggestionsCount },
+                    )}
+                  </span>
+                </Button>
+              )}
+
             {invoiceTableState.activeFilterCount +
               (invoiceDateFrom || invoiceDateTo ? 1 : 0) >
               0 && (
@@ -410,10 +450,10 @@ export function InvoiceTabContent({
         }
         collapsible={true}
         defaultCollapsed={false}
-        className="mb-0 p-3"
+        className="mb-0 p-2.5 border border-slate-200/80 dark:border-slate-800"
         bodyClassName="p-0"
       >
-        <div className="h-[calc(100vh-320px)] min-h-[300px] flex flex-col">
+        <div className="h-[calc(100vh-395px)] min-h-[260px] max-h-[calc(100vh-395px)] flex flex-col overflow-hidden">
           <StandardTable
             tableId={
               invoiceDirection === "OUT"
@@ -432,7 +472,7 @@ export function InvoiceTabContent({
             totalPages={invoiceDataTotalPages || 0}
             onPage={onSetInvoicePage}
             onPageSize={onSetInvoicePageSize}
-            minWidth={980}
+            minWidth={1180}
             containerClassName="flex-1 min-h-0"
           />
         </div>
