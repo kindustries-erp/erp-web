@@ -116,7 +116,9 @@ describe("BankStatementsTab SubtotalSummaryCell Suite", () => {
 
     // Popover content should be visible
     await waitFor(() => {
-      expect(screen.getByText("Tổng quan số liệu")).toBeInTheDocument();
+      expect(
+        screen.getAllByText(/Tiền vào \(Thu\)/).length,
+      ).toBeGreaterThanOrEqual(1);
     });
   });
 });

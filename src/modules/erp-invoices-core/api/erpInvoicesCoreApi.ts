@@ -236,12 +236,28 @@ export interface ErpInvoiceListParams {
   unlinked_po_id?: string;
 }
 
+export interface ErpInvoiceTotals {
+  grandTotalPreVat: number;
+  grandTotalVat: number;
+  grandTotalDiscount: number;
+  grandTotalAmount: number;
+  grandTotalNetOff: number;
+  grandTotalRemaining: number;
+  cumulativePreVat: number;
+  cumulativeVat: number;
+  cumulativeDiscount: number;
+  cumulativeTotal: number;
+  cumulativeNetOff: number;
+  cumulativeRemaining: number;
+}
+
 export interface ErpInvoiceListResponse {
   items: ErpInvoice[];
   total: number;
   page: number;
   pageSize: number;
   totalPages: number;
+  totals?: ErpInvoiceTotals;
 }
 
 export interface BranchStatEntry {

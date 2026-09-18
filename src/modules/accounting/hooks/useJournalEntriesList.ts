@@ -235,6 +235,7 @@ export function useJournalEntriesList() {
     rawItems: (data?.items as JournalEntryItem[]) ?? [],
     total: data?.total ?? 0,
     totalPages: data?.totalPages ?? 0,
+    totals: data?.totals,
     isLoading: isLoading || isFetching,
     page,
     setPage,
