@@ -100,6 +100,8 @@ export interface InventoryStockRow {
   item_name: string;
   item_type: string;
   unit: string;
+  tracking_policy_code?: string | null;
+  tracking_policy_name?: string | null;
   received_qty: number;
   issued_qty: number;
   adjusted_qty: number;
@@ -108,6 +110,17 @@ export interface InventoryStockRow {
   stock_value: number;
   last_transaction_date?: string | null;
   status?: string;
+}
+
+export interface InventoryStockSummary {
+  total_received_qty: number;
+  total_issued_qty: number;
+  total_adjusted_qty: number;
+  total_positive_adjusted_qty: number;
+  total_negative_adjusted_qty: number;
+  total_on_hand_qty: number;
+  total_reserved_qty: number;
+  total_stock_value: number;
 }
 
 export interface CreateOperationalPayload extends Partial<OperationalDocument> {
@@ -304,7 +317,7 @@ export const operationalApi = {
     },
   ) => {
     const { data } = await axiosInstance.get<
-      PaginatedResponse<InventoryStockRow>
+      PaginatedResponse<InventoryStockRow> & { summary?: InventoryStockSummary }
     >("/api/v1/inventory/stock", {
       params: {
         ...params(input),

@@ -2,7 +2,7 @@ import React, { useState, useRef, type ReactNode } from "react";
 import { Popover } from "@/core/components/ui/Popover";
 import { Badge } from "@/shared/components/ui/badge";
 import { cn } from "@/shared/utils";
-import { money } from "@/shared/utils/format";
+import { fmtQty, money } from "@/shared/utils/format";
 import { Sigma, Layers, Package, Info } from "lucide-react";
 
 export function toText(val: any): string {
@@ -50,6 +50,8 @@ export interface SubtotalSummaryCellProps {
   grandTotalQty: number;
   /** Tổng thành tiền toàn bộ (Grand Total) */
   grandTotalAmount?: number;
+  /** Chế độ hiển thị trên cell: 'subtotal' (Trang hiện tại, mặc định) | 'grand' (Tổng toàn bộ các trang) */
+  displayMode?: "grand" | "subtotal";
   /** Tổng số lượng đặt (nếu có, e.g. PO/GR) */
   grandTotalOrderedQty?: number;
   /** Subtotal số lượng đặt trang hiện tại (nếu có) */
@@ -73,8 +75,12 @@ export interface SubtotalSummaryCellProps {
   groupedItems?: any[];
   /** Custom label nếu variantType === 'label' */
   label?: ReactNode;
-  /** ClassName bổ sung */
+  /** ClassName bổ sung cho wrapper */
   className?: string;
+  /** ClassName bổ sung cho giá trị hiển thị */
+  valueClassName?: string;
+  /** Hiển thị dấu '+' cho số dương (ví dụ điều chỉnh kho) */
+  showSign?: boolean;
 }
 
 export const SubtotalSummaryCell = React.memo(function SubtotalSummaryCell({
@@ -82,6 +88,7 @@ export const SubtotalSummaryCell = React.memo(function SubtotalSummaryCell({
   subtotalAmount,
   grandTotalQty,
   grandTotalAmount,
+  displayMode = "subtotal",
   grandTotalOrderedQty,
   subtotalOrderedQty,
   positiveQty,
@@ -94,6 +101,8 @@ export const SubtotalSummaryCell = React.memo(function SubtotalSummaryCell({
   totalCount,
   label,
   className,
+  valueClassName,
+  showSign = false,
 }: SubtotalSummaryCellProps) {
   const [open, setOpen] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -164,13 +173,13 @@ export const SubtotalSummaryCell = React.memo(function SubtotalSummaryCell({
             <Package className="w-3.5 h-3.5 text-primary" />
           </div>
           <div className="text-base font-bold font-mono text-primary mt-0.5 tabular-nums">
-            {Number(grandTotalQty).toLocaleString("vi-VN")}
+            {fmtQty(grandTotalQty)}
           </div>
           {subtotalQty !== undefined && totalPages > 1 && (
             <div className="text-[10px] text-muted-foreground mt-0.5 truncate">
               Trang này:{" "}
               <span className="font-semibold text-foreground font-mono">
-                {Number(subtotalQty).toLocaleString("vi-VN")}
+                {fmtQty(subtotalQty)}
               </span>
             </div>
           )}
@@ -182,14 +191,14 @@ export const SubtotalSummaryCell = React.memo(function SubtotalSummaryCell({
             <div className="flex items-center justify-between text-[11px] text-muted-foreground font-medium">
               <span>Tổng SL đặt</span>
               <span className="font-mono font-bold text-foreground text-xs">
-                {Number(grandTotalOrderedQty).toLocaleString("vi-VN")}
+                {fmtQty(grandTotalOrderedQty)}
               </span>
             </div>
             {subtotalOrderedQty !== undefined && totalPages > 1 && (
               <div className="text-[10px] text-muted-foreground mt-0.5 flex justify-between">
                 <span>Trang hiện tại:</span>
                 <span className="font-semibold text-foreground font-mono">
-                  {Number(subtotalOrderedQty).toLocaleString("vi-VN")}
+                  {fmtQty(subtotalOrderedQty)}
                 </span>
               </div>
             )}
@@ -205,7 +214,7 @@ export const SubtotalSummaryCell = React.memo(function SubtotalSummaryCell({
                   Tổng tăng (+)
                 </span>
                 <span className="font-mono font-bold text-emerald-600">
-                  +{Number(positiveQty).toLocaleString("vi-VN")}
+                  +{fmtQty(positiveQty)}
                 </span>
               </div>
             )}
@@ -213,7 +222,7 @@ export const SubtotalSummaryCell = React.memo(function SubtotalSummaryCell({
               <div className="flex items-center justify-between text-[11px]">
                 <span className="text-rose-600 font-medium">Tổng giảm (-)</span>
                 <span className="font-mono font-bold text-rose-600">
-                  -{Number(negativeQty).toLocaleString("vi-VN")}
+                  -{fmtQty(negativeQty)}
                 </span>
               </div>
             )}
@@ -268,15 +277,41 @@ export const SubtotalSummaryCell = React.memo(function SubtotalSummaryCell({
           </span>
         )}
 
-        {variantType === "qty" && (
-          <span className="font-bold text-primary tabular-nums border-b border-dashed border-primary/40 group-hover:border-primary">
-            {Number(subtotalQty ?? grandTotalQty).toLocaleString("vi-VN")}
-          </span>
-        )}
+        {variantType === "qty" &&
+          (() => {
+            const val = Number(
+              displayMode === "subtotal"
+                ? (subtotalQty ?? grandTotalQty)
+                : (grandTotalQty ?? subtotalQty),
+            );
+            const prefix = showSign && val > 0 ? "+" : "";
+            return (
+              <span
+                className={cn(
+                  "font-bold tabular-nums border-b border-dashed border-current/40 group-hover:border-current",
+                  valueClassName || "text-primary",
+                )}
+              >
+                {prefix}
+                {fmtQty(val)}
+              </span>
+            );
+          })()}
 
         {variantType === "amount" && (
-          <span className="font-bold text-primary tabular-nums border-b border-dashed border-primary/40 group-hover:border-primary">
-            {money(Number(subtotalAmount ?? grandTotalAmount))}
+          <span
+            className={cn(
+              "font-bold tabular-nums border-b border-dashed border-current/40 group-hover:border-current",
+              valueClassName || "text-primary",
+            )}
+          >
+            {money(
+              Number(
+                displayMode === "subtotal"
+                  ? (subtotalAmount ?? grandTotalAmount)
+                  : (grandTotalAmount ?? subtotalAmount),
+              ),
+            )}
           </span>
         )}
 
