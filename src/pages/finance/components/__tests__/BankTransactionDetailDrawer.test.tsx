@@ -32,13 +32,16 @@ vi.mock("@/shared/components/StandardFormDrawer", () => ({
       )}
       <div>{leftPanel}</div>
       {rightPanelTitle && <div>{rightPanelTitle}</div>}
-      <div>{rightPanel}</div>
+      <div data-testid="drawer-right-panel">{rightPanel}</div>
       {tabs && (
         <div data-testid="top-tabs">
           {tabs.map((t: any) => (
-            <div key={t.key}>
+            <div key={t.key} data-testid={`tab-${t.key}`}>
               <h3>{t.label}</h3>
-              <div>{t.content}</div>
+              <div data-testid={`tab-${t.key}-hide-right-panel`}>
+                {String(Boolean(t.hideRightPanel))}
+              </div>
+              <div data-testid={`tab-${t.key}-content`}>{t.content}</div>
             </div>
           ))}
         </div>
@@ -261,6 +264,67 @@ describe("BankTransactionDetailDrawer", () => {
         screen.getAllByText("Đối tác Công ty TNHH Liouni").length,
       ).toBeGreaterThanOrEqual(2);
       expect(screen.getByText("TK BIDV - 12345678")).toBeTruthy();
+    });
+  });
+
+  it("hiển thị DrawerSection cho tab Chứng từ liên kết và không ẩn cột phải", async () => {
+    (bankStatementApi.getTransaction as any).mockResolvedValue({
+      id: "txn-1",
+      sourceType: "BANK",
+      transDate: "2026-06-30T00:00:00.000Z",
+      referenceNumber: "REF-005",
+      description: "Thanh toan hoa don vat",
+      creditAmount: 10000000,
+      debitAmount: 0,
+      postingStatus: "POSTED",
+      bankAccount: { accountingAccountId: "acc-1121" },
+      correspondentName: "Cong ty Thuong Mai X",
+      invoiceNetOffs: [
+        {
+          id: "netoff-1",
+          invoiceId: "inv-1",
+          netOffAmount: 5000000,
+        },
+      ],
+    });
+
+    renderDrawer();
+
+    await waitFor(() => {
+      expect(
+        screen.getByText("Mạng lưới chứng từ liên kết & Cấn trừ"),
+      ).toBeTruthy();
+      expect(
+        screen.getByTestId("tab-traceability-hide-right-panel").textContent,
+      ).toBe("false");
+      expect(screen.getByTestId("traceability-mock")).toBeTruthy();
+    });
+  });
+
+  it("hiển thị DrawerSection cho tab Lịch sử và tab Hạch toán", async () => {
+    (bankStatementApi.getTransaction as any).mockResolvedValue({
+      id: "txn-1",
+      sourceType: "BANK",
+      transDate: "2026-06-30T00:00:00.000Z",
+      createdAt: "2026-06-30T00:00:00.000Z",
+      postingDate: "2026-06-30T00:00:00.000Z",
+      journalEntryId: "JE-101",
+      referenceNumber: "REF-006",
+      description: "Thu tien hang",
+      creditAmount: 2000000,
+      debitAmount: 0,
+      postingStatus: "POSTED",
+      bankAccount: { accountingAccountId: "acc-1121" },
+      correspondentName: "Khach Hang Y",
+      invoiceNetOffs: [],
+    });
+
+    renderDrawer();
+
+    await waitFor(() => {
+      expect(screen.getByText("Lịch sử & Nhật ký thao tác")).toBeTruthy();
+      expect(screen.getByTestId("audit-timeline-mock")).toBeTruthy();
+      expect(screen.getByText("Hạch toán & Định khoản kế toán")).toBeTruthy();
     });
   });
 });

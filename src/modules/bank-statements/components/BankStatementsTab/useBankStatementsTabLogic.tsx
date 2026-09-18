@@ -86,6 +86,7 @@ export function useBankStatementsTabLogic({
   );
   const [detailDefaultTab, setDetailDefaultTab] =
     useState<string>("txn_details");
+  const [detailMode, setDetailMode] = useState<"view" | "edit">("view");
   const [partnerDrawerOpen, setPartnerDrawerOpen] = useState(false);
   const [selectedPartner, setSelectedPartner] = useState<{
     account?: string;
@@ -93,8 +94,13 @@ export function useBankStatementsTabLogic({
   } | null>(null);
 
   const handleOpenDetail = useCallback(
-    (id: string, tab: string = "txn_details") => {
+    (
+      id: string,
+      tab: string = "txn_details",
+      mode: "view" | "edit" = "view",
+    ) => {
       setDetailDefaultTab(tab);
+      setDetailMode(mode);
       setDetailTransactionId(id);
     },
     [],
@@ -545,6 +551,8 @@ export function useBankStatementsTabLogic({
     setDetailTransactionId,
     detailDefaultTab,
     setDetailDefaultTab,
+    detailMode,
+    setDetailMode,
     handleOpenDetail,
     partnerDrawerOpen,
     setPartnerDrawerOpen,

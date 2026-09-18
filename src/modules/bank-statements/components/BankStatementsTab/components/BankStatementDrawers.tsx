@@ -21,6 +21,7 @@ export interface BankStatementDrawersProps {
   detailTransactionId: string | null;
   setDetailTransactionId: (id: string | null) => void;
   detailDefaultTab?: string;
+  detailMode?: "view" | "edit";
   partnerDrawerOpen: boolean;
   setPartnerDrawerOpen: (open: boolean) => void;
   selectedPartner: { account?: string; name?: string } | null;
@@ -45,6 +46,7 @@ export function BankStatementDrawers({
   detailTransactionId,
   setDetailTransactionId,
   detailDefaultTab,
+  detailMode = "view",
   partnerDrawerOpen,
   setPartnerDrawerOpen,
   selectedPartner,
@@ -95,6 +97,7 @@ export function BankStatementDrawers({
         onClose={() => setDetailTransactionId(null)}
         transactionId={detailTransactionId}
         defaultTabKey={detailDefaultTab || "txn_details"}
+        initialMode={detailMode}
         onSaved={() => {
           onRefresh();
         }}
