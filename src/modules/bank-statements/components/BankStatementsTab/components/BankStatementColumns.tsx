@@ -314,15 +314,15 @@ export function useBankStatementColumns({
           { filterOptions: settledOptions },
         ),
         className:
-          "text-right bg-blue-50/50 dark:bg-blue-950/20 border-l border-blue-200 dark:border-blue-800/40",
+          "text-right bg-indigo-50/40 dark:bg-indigo-950/20 border-l border-indigo-200/60 dark:border-indigo-800/30",
         headerClassName:
-          "text-center bg-blue-50/50 dark:bg-blue-950/20 border-l border-blue-200 dark:border-blue-800/40",
+          "text-center bg-indigo-50/40 dark:bg-indigo-950/20 border-l border-indigo-200/60 dark:border-indigo-800/30",
         size: 140,
         cell: (row: any) => {
           const netOff = parseFloat(row.netOffAmount) || 0;
           if (netOff === 0) return "--";
           return (
-            <span className="text-blue-600 dark:text-blue-400 font-medium">
+            <span className="text-indigo-600 dark:text-indigo-400 font-medium">
               {money(netOff)}
             </span>
           );
@@ -337,8 +337,9 @@ export function useBankStatementColumns({
           }),
           { filterOptions: settledOptions },
         ),
-        className: "text-right font-semibold bg-blue-50/50 dark:bg-blue-950/20",
-        headerClassName: "text-center bg-blue-50/50 dark:bg-blue-950/20",
+        className:
+          "text-right font-semibold bg-indigo-50/40 dark:bg-indigo-950/20",
+        headerClassName: "text-center bg-indigo-50/40 dark:bg-indigo-950/20",
         size: 140,
         cell: (row: any) => {
           const credit = parseFloat(row.creditAmount) || 0;

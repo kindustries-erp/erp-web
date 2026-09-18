@@ -580,6 +580,9 @@ export function FormLineDetailPanel({
               <div className="w-full flex justify-end px-3">
                 <SubtotalSummaryCell
                   variantType="qty"
+                  metricTitle="Tổng số lượng"
+                  itemTitle="Dòng mặt hàng"
+                  itemUnit="dòng"
                   subtotalQty={subtotalQty}
                   grandTotalQty={grandTotalQty}
                   grandTotalOrderedQty={grandTotalQty}
@@ -598,6 +601,9 @@ export function FormLineDetailPanel({
               <div className="w-full flex justify-end px-3">
                 <SubtotalSummaryCell
                   variantType="amount"
+                  metricTitle="Tổng thành tiền"
+                  itemTitle="Dòng mặt hàng"
+                  itemUnit="dòng"
                   subtotalAmount={subtotalAmount}
                   grandTotalAmount={grandTotalAmount}
                   subtotalQty={subtotalQty}

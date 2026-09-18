@@ -445,6 +445,9 @@ export function IaFormDrawer({ drawer }: IaFormDrawerProps) {
       <div className="w-full flex justify-center">
         <SubtotalSummaryCell
           variantType="qty"
+          metricTitle="SL Chênh lệch"
+          itemTitle="Dòng điều chỉnh"
+          itemUnit="dòng"
           subtotalQty={subtotalQtyAdjusted}
           grandTotalQty={grandTotalQtyAdjusted}
           positiveQty={totalPositiveQty}
@@ -461,6 +464,9 @@ export function IaFormDrawer({ drawer }: IaFormDrawerProps) {
       <div className="w-full flex justify-center">
         <SubtotalSummaryCell
           variantType="amount"
+          metricTitle="Giá trị điều chỉnh"
+          itemTitle="Dòng điều chỉnh"
+          itemUnit="dòng"
           subtotalAmount={subtotalAmount}
           grandTotalAmount={grandTotalAmount}
           grandTotalQty={grandTotalQtyAdjusted}

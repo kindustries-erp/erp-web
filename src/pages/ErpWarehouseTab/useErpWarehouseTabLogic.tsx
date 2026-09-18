@@ -762,6 +762,9 @@ export function useErpWarehouseTabLogic() {
     setPage,
     unifiedDrawer,
     rows,
+    page,
+    totalPages,
+    total,
   });
 
   async function handleGrCancel(id: string) {

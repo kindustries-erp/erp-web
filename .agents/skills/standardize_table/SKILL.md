@@ -531,30 +531,242 @@ Cả thanh tiêu đề bảng (**`TableHeader`**) lẫn dòng tổng cộng (**`
 - **Sticky Column Headers (STT / Checkbox / Actions)**: Tự động kế thừa `table-header-glass bg-muted/80 backdrop-blur-sm` khi cuộn ngang.
 - **`summaryRow` (`TableFooter`)**: Đối với các bảng có cột mang giá trị số, **bắt buộc phải có dòng `summaryRow`** ở cuối để hiển thị tổng, sử dụng `table-footer-glass bg-muted/80 backdrop-blur-sm sticky bottom-0 z-20 border-t border-border font-semibold shadow-[0_-1px_0_0_var(--border-light)]`.
 
-**Mẫu code cho `summaryRow`**:
+---
 
-```tsx
-<DataTable
-  // ...other props
-  summaryRow={{
-    labelColumnKey: (
-      <div className="text-right w-full font-semibold">
-        {t("Tổng cộng", "Total")}:
-      </div>
-    ),
-    qtyColumnKey: (
-      <div className="text-center font-semibold text-emerald-600">
-        {fmtQty(totalQty)}
-      </div>
-    ),
-    amountColumnKey: (
-      <div className="text-right font-bold text-primary">
-        {money(totalAmount)}
-      </div>
-    ),
-  }}
-/>
+## 8.1. 🌟 Quy Chuẩn Popover Tổng Quan Số Liệu Tại Table Footer (`SubtotalSummaryCell`)
+
+> [!IMPORTANT]
+> **BẮT BUỘC SỬ DỤNG `SubtotalSummaryCell` CHO MỌI Ô TRONG `summaryRow`**:
+> Tất cả các ô tổng số lượng, thành tiền, hoặc nhãn tổng kết tại dòng chân bảng (`summaryRow`) **BẮT BUỘC** phải được bọc trong component chuẩn **[`SubtotalSummaryCell`](@/shared/components/DataTable/SubtotalSummaryCell)** thay vì render thẻ HTML thuần.
+
+### A. 🎯 5 Nguyên Tắc Trải Nghiệm Cốt Lõi (UX Mandates)
+
+1. **Cấu trúc Hero Ratio 2 dòng trực quan (`150 / 10.000`)**:
+   - **Hàng 1**: Giá trị phân trang hiện tại (`50` / `2.905` / `10.000.000 đ`) kèm badge/text `Trang X/Y`.
+   - **Hàng 2**: Tổng toàn bộ kèm đơn vị (`/ 241 SKU`, `/ 281.698 đơn vị`, `/ 950.000.000 đ`).
+   - **Bỏ chữ thừa**: Tuyệt đối **KHÔNG** dùng từ `"toàn bộ"` hoặc `"toàn kho"` ở mẫu số để tiết kiệm diện tích và hiển thị số gọn gàng.
+2. **Đồng nhất 100% Layout & Thanh Progress Bar**:
+   - Cả chế độ **1 trang (Single-Page / Form Drawer)** lẫn **Nhiều trang (Multi-Page / Page List)** đều sử dụng chung 1 cấu trúc 2 dòng + thanh Progress Bar tương phản cao (Single-page thì tỷ trọng hiển thị `100%`).
+3. **Hiển thị Số Lớn Lên Đến 12 Chữ Số**:
+   - Popover được tối ưu kích thước để hiển thị trơn tru các con số lớn (ví dụ: `123.456.789.012 đ` hoặc `987.654.321.098`) kèm phân cách hàng ngàn và 2 số thập phân mà không bị vỡ layout hay tràn dòng.
+4. **Web Responsive Hoàn Hảo**:
+   - Kích thước container: `w-[calc(100vw-32px)] max-w-[440px] sm:w-[440px]` với bo góc `rounded-2xl` và hiệu ứng kính mờ `bg-popover/98 backdrop-blur-md border border-border/80 shadow-2xl`. Tự động co giãn an toàn trên thiết bị di động (< 380px).
+5. **100% Đa Ngôn Ngữ (i18n via `useT()`)**:
+   - Toàn bộ nhãn được dịch tự động qua bộ từ điển `commonVi` và `commonEn` (`summaryOverview`, `summaryPage`, `summaryPageRatio`, `summaryValueRatio`, `summaryUnits`, `summaryPoProgress`, `summaryPoFull`, `summaryPoMissing`, `summaryPoExceeded`, `summaryAdjDiff`, `summaryAdjIncrease`, `summaryAdjDecrease`, `summaryStockValue`, `summaryTotalAmount`).
+
+---
+
+### B. 📦 Props Interface của `SubtotalSummaryCell`
+
+```typescript
+export interface SubtotalSummaryCellProps {
+  /** Loại hiển thị cho cell này: 'qty' | 'amount' | 'label' */
+  variantType: "qty" | "amount" | "label";
+  /** Giá trị subtotal số lượng của trang hiện tại */
+  subtotalQty?: number;
+  /** Tổng số lượng toàn bộ (Grand Total) */
+  grandTotalQty?: number;
+  /** Giá trị subtotal amount của trang hiện tại */
+  subtotalAmount?: number;
+  /** Tổng thành tiền toàn bộ (Grand Total) */
+  grandTotalAmount?: number;
+  /** Trang hiện tại */
+  page?: number;
+  /** Tổng số trang */
+  totalPages?: number;
+  /** Số dòng trên trang hiện tại */
+  currentPageCount?: number;
+  /** Tổng số dòng toàn bộ */
+  totalCount?: number;
+  /** Tiêu đề ngữ cảnh cho chỉ số số lượng (vd: "SL Nhập kho", "SL Tồn kho", "SL Thực nhận") */
+  metricTitle?: string;
+  /** Tiêu đề ngữ cảnh cho chỉ số dòng/mặt hàng (vd: "Mặt hàng", "Dòng chứng từ", "Giao dịch thu") */
+  itemTitle?: string;
+  /** Đơn vị mặt hàng / dòng (vd: "SKU", "dòng", "giao dịch", "phiếu") */
+  itemUnit?: string;
+  /** Custom label nếu variantType === 'label' */
+  label?: ReactNode;
+  /** ClassName bổ sung cho text hiển thị trên cell */
+  valueClassName?: string;
+  /** Hiển thị dấu '+' cho số dương (ví dụ điều chỉnh kho) */
+  showSign?: boolean;
+  /** Bật card đối soát cân đối Kế toán Nợ - Có */
+  showAccountingBalance?: boolean;
+  /** Tổng phát sinh Nợ dùng để đối soát kế toán */
+  balanceDebit?: number;
+  /** Tổng phát sinh Có dùng để đối soát kế toán */
+  balanceCredit?: number;
+  /** Tổng tăng (nếu là điều chỉnh kho) */
+  positiveQty?: number;
+  /** Tổng giảm (nếu là điều chỉnh kho) */
+  negativeQty?: number;
+  /** Tổng số lượng đặt hàng PO (nếu là phiếu nhập so khớp PO) */
+  grandTotalOrderedQty?: number;
+}
 ```
+
+---
+
+### C. 💻 Mẫu Code Chuẩn Cho `summaryRow`
+
+#### 1. Mẫu Page Bảng Dữ Liệu Lớn (Nhiều Trang / Multi-page):
+```tsx
+import { SubtotalSummaryCell } from "@/shared/components/DataTable/SubtotalSummaryCell";
+
+const summaryRow = useMemo(() => {
+  if (!items || items.length === 0) return undefined;
+
+  return {
+    code: (
+      <SubtotalSummaryCell
+        variantType="label"
+        label={`${t("common.total", "Tổng cộng")}:`}
+        page={page}
+        totalPages={totalPages}
+        totalCount={totalCount}
+        currentPageCount={items.length}
+      />
+    ),
+    quantity: (
+      <SubtotalSummaryCell
+        variantType="qty"
+        metricTitle={t("inventory.quantity", "Tổng số lượng")}
+        itemTitle={t("inventory.items", "Mặt hàng")}
+        itemUnit="SKU"
+        subtotalQty={subtotalQty}
+        grandTotalQty={grandTotalQty}
+        page={page}
+        totalPages={totalPages}
+        currentPageCount={items.length}
+        totalCount={totalCount}
+        valueClassName="text-primary font-bold"
+      />
+    ),
+    amount: (
+      <SubtotalSummaryCell
+        variantType="amount"
+        metricTitle={t("inventory.stockValue", "Giá trị tồn kho")}
+        itemTitle={t("inventory.items", "Mặt hàng")}
+        itemUnit="SKU"
+        subtotalAmount={subtotalAmount}
+        grandTotalAmount={grandTotalAmount}
+        page={page}
+        totalPages={totalPages}
+        currentPageCount={items.length}
+        totalCount={totalCount}
+        valueClassName="text-primary font-bold"
+      />
+    ),
+  };
+}, [items, page, totalPages, totalCount, subtotalQty, grandTotalQty, subtotalAmount, grandTotalAmount, t]);
+```
+
+#### 2. Mẫu Bảng Kế Toán Kép / Nhật Ký Chung (Double-Entry Reconciliation):
+```tsx
+import { SubtotalSummaryCell } from "@/shared/components/DataTable/SubtotalSummaryCell";
+
+const summaryRow = useMemo(() => {
+  if (!items.length) return undefined;
+
+  return {
+    _opposingAccount: (
+      <div className="w-full flex justify-end">
+        <SubtotalSummaryCell
+          variantType="label"
+          label={`${t("common.subtotal", "Tổng cộng")}:`}
+          metricTitle={t("finance.totalDebit", "Tổng phát sinh Nợ")}
+          itemTitle={t("finance.journalEntries", "Bút toán")}
+          itemUnit={t("common.summaryLines", "dòng")}
+          subtotalAmount={totalDebit}
+          grandTotalAmount={totalDebit}
+          balanceDebit={totalDebit}
+          balanceCredit={totalCredit}
+          showAccountingBalance={true} // Bật Card Đối soát Cân đối Kế toán Nợ - Có
+          page={page}
+          totalPages={totalPages}
+          currentPageCount={items.length}
+          totalCount={totalCount}
+        />
+      </div>
+    ),
+    debit: (
+      <div className="w-full flex justify-end">
+        <SubtotalSummaryCell
+          variantType="amount"
+          metricTitle={t("finance.totalDebit", "Tổng phát sinh Nợ")}
+          itemTitle={t("finance.journalEntries", "Bút toán")}
+          itemUnit={t("common.summaryLines", "dòng")}
+          subtotalAmount={totalDebit}
+          grandTotalAmount={totalDebit}
+          balanceDebit={totalDebit}
+          balanceCredit={totalCredit}
+          showAccountingBalance={true}
+          page={page}
+          totalPages={totalPages}
+          currentPageCount={items.length}
+          totalCount={totalCount}
+          valueClassName="font-semibold tabular-nums text-slate-900 dark:text-slate-100"
+        />
+      </div>
+    ),
+    credit: (
+      <div className="w-full flex justify-end">
+        <SubtotalSummaryCell
+          variantType="amount"
+          metricTitle={t("finance.totalCredit", "Tổng phát sinh Có")}
+          itemTitle={t("finance.journalEntries", "Bút toán")}
+          itemUnit={t("common.summaryLines", "dòng")}
+          subtotalAmount={totalCredit}
+          grandTotalAmount={totalCredit}
+          balanceDebit={totalDebit}
+          balanceCredit={totalCredit}
+          showAccountingBalance={true}
+          page={page}
+          totalPages={totalPages}
+          currentPageCount={items.length}
+          totalCount={totalCount}
+          valueClassName="font-semibold tabular-nums text-slate-900 dark:text-slate-100"
+        />
+      </div>
+    ),
+  };
+}, [items, totalDebit, totalCredit, page, totalPages, totalCount, t]);
+```
+
+#### 3. Mẫu Drawer Form / Table Section (1 Trang / Single-page):
+```tsx
+import { SubtotalSummaryCell } from "@/shared/components/DataTable/SubtotalSummaryCell";
+
+const summaryRow = useMemo(() => {
+  if (!lines || lines.length === 0) return undefined;
+
+  return {
+    lineNo: (
+      <SubtotalSummaryCell
+        variantType="label"
+        label={`${t("common.total", "Tổng cộng")}:`}
+        currentPageCount={lines.length}
+        totalCount={lines.length}
+      />
+    ),
+    receivedQty: (
+      <SubtotalSummaryCell
+        variantType="qty"
+        metricTitle={t("inventory.receivedQty", "SL Thực nhận")}
+        itemTitle={t("inventory.docLines", "Dòng chứng từ")}
+        itemUnit="dòng"
+        grandTotalQty={totalReceivedQty}
+        grandTotalOrderedQty={totalOrderedQty} // Tự động bật thẻ so khớp PO (Đủ 100%, Thiếu, Vượt)
+        currentPageCount={lines.length}
+        totalCount={lines.length}
+        valueClassName="text-emerald-600 font-bold"
+      />
+    ),
+  };
+}, [lines, totalReceivedQty, totalOrderedQty, t]);
+```
+
+---
 
 ## 9. Empty State và CSS Container
 

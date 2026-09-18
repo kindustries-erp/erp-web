@@ -890,6 +890,9 @@ export function useGrFormColumns({
             <div className="w-full flex justify-center">
               <SubtotalSummaryCell
                 variantType="qty"
+                metricTitle="SL Đặt (PO)"
+                itemTitle="Dòng đặt hàng"
+                itemUnit="dòng"
                 subtotalQty={subtotalOrdered}
                 grandTotalQty={grandTotalOrdered}
                 grandTotalOrderedQty={grandTotalOrdered}
@@ -906,6 +909,9 @@ export function useGrFormColumns({
             <div className="w-full flex justify-center">
               <SubtotalSummaryCell
                 variantType="qty"
+                metricTitle="SL Thực nhận"
+                itemTitle="Dòng nhập kho"
+                itemUnit="dòng"
                 subtotalQty={subtotalReceived}
                 grandTotalQty={grandTotalReceived}
                 grandTotalOrderedQty={grandTotalOrdered}
@@ -924,6 +930,9 @@ export function useGrFormColumns({
             <div className="w-full flex justify-center">
               <SubtotalSummaryCell
                 variantType="qty"
+                metricTitle="SL Nhập kho"
+                itemTitle="Dòng nhập kho"
+                itemUnit="dòng"
                 subtotalQty={subtotalReceived}
                 grandTotalQty={grandTotalReceived}
                 itemCount={totalItemsCount}

@@ -156,4 +156,32 @@ describe("GeneralJournalPage", () => {
     expect(screen.getByText("Hóa đơn")).toBeInTheDocument();
     expect(screen.getByText("Khác")).toBeInTheDocument();
   });
+
+  it("render SubtotalSummaryCell trong summaryRow và mở popover đối soát cân đối Nợ - Có", async () => {
+    (useQuery as any).mockImplementation((opts: any) => {
+      if (opts.queryKey[0] === "journal-entries")
+        return { data: mockJournalData, isLoading: false, isFetching: false };
+      return { data: [] };
+    });
+
+    render(<GeneralJournalPage />);
+
+    // Kiểm tra label "Tổng cộng:"
+    expect(screen.getByText("Tổng cộng:")).toBeInTheDocument();
+
+    // Click trigger tiền Nợ trong summaryRow (total debit = 200, total credit = 100 -> Lệch +100 đ)
+    const debitTriggers = screen.getAllByText(/200/);
+    expect(debitTriggers.length).toBeGreaterThan(0);
+    fireEvent.click(debitTriggers[debitTriggers.length - 1]);
+
+    // Popover hiển thị Đối soát Cân đối Kế toán
+    expect(screen.getByText("Đối soát Cân đối Kế toán")).toBeInTheDocument();
+    expect(
+      screen.getAllByText("Tổng phát sinh Nợ").length,
+    ).toBeGreaterThanOrEqual(1);
+    expect(
+      screen.getAllByText("Tổng phát sinh Có").length,
+    ).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText(/Lệch Nợ - Có/)).toBeInTheDocument();
+  });
 });

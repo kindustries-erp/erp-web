@@ -318,18 +318,37 @@ export const GeneralJournalPage: React.FC = () => {
     );
     return {
       _opposingAccount: (
-        <div className="w-full text-right font-semibold text-muted-foreground pr-1 text-xs">
-          {t("common.subtotal", "Tổng cộng")}:
+        <div className="w-full flex justify-end">
+          <SubtotalSummaryCell
+            variantType="label"
+            label={`${t("common.subtotal", "Tổng cộng")}:`}
+            metricTitle={t("finance.totalDebit", "Tổng phát sinh Nợ")}
+            itemTitle={t("finance.journalEntries", "Bút toán")}
+            itemUnit={t("common.summaryLines", "dòng")}
+            subtotalAmount={totalDebit}
+            grandTotalAmount={totalDebit}
+            balanceDebit={totalDebit}
+            balanceCredit={totalCredit}
+            showAccountingBalance={true}
+            page={listHook.page}
+            totalPages={listHook.totalPages}
+            currentPageCount={listHook.data.length}
+            totalCount={listHook.total}
+          />
         </div>
       ),
       debit: (
         <div className="w-full flex justify-end">
           <SubtotalSummaryCell
             variantType="amount"
+            metricTitle={t("finance.totalDebit", "Tổng phát sinh Nợ")}
+            itemTitle={t("finance.journalEntries", "Bút toán")}
+            itemUnit={t("common.summaryLines", "dòng")}
             subtotalAmount={totalDebit}
             grandTotalAmount={totalDebit}
-            grandTotalQty={0}
-            itemCount={listHook.total}
+            balanceDebit={totalDebit}
+            balanceCredit={totalCredit}
+            showAccountingBalance={true}
             page={listHook.page}
             totalPages={listHook.totalPages}
             currentPageCount={listHook.data.length}
@@ -342,10 +361,14 @@ export const GeneralJournalPage: React.FC = () => {
         <div className="w-full flex justify-end">
           <SubtotalSummaryCell
             variantType="amount"
+            metricTitle={t("finance.totalCredit", "Tổng phát sinh Có")}
+            itemTitle={t("finance.journalEntries", "Bút toán")}
+            itemUnit={t("common.summaryLines", "dòng")}
             subtotalAmount={totalCredit}
             grandTotalAmount={totalCredit}
-            grandTotalQty={0}
-            itemCount={listHook.total}
+            balanceDebit={totalDebit}
+            balanceCredit={totalCredit}
+            showAccountingBalance={true}
             page={listHook.page}
             totalPages={listHook.totalPages}
             currentPageCount={listHook.data.length}

@@ -472,6 +472,9 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
       <div className="w-full flex justify-center">
         <SubtotalSummaryCell
           variantType="qty"
+          metricTitle="SL Xuất kho"
+          itemTitle="Dòng xuất kho"
+          itemUnit="dòng"
           subtotalQty={subtotalIssuedQty}
           grandTotalQty={grandTotalIssuedQty}
           itemCount={form.lines.length}

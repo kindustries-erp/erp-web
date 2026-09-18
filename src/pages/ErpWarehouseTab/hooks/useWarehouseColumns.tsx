@@ -1,11 +1,11 @@
 import React, { useMemo } from "react";
 import { useT } from "@/core/i18n";
 import { cn } from "@/shared/utils";
-import { fmtQty } from "@/shared/utils/format";
 import {
   createColumnHeaderFilter,
   type DataTableColumn,
 } from "@/shared/components/DataTable";
+import { SubtotalSummaryCell } from "@/shared/components/DataTable/SubtotalSummaryCell";
 import { TableText } from "@/shared/components/DataTable/TableText";
 import { StatusBadge } from "@/shared/components/badges";
 import { Badge } from "@/shared/components/ui/badge";
@@ -26,6 +26,9 @@ export interface UseWarehouseColumnsOptions {
   setPage: (page: number) => void;
   unifiedDrawer: ReturnType<typeof useInventoryVoucherDrawer>;
   rows: WarehouseRow[];
+  page?: number;
+  totalPages?: number;
+  total?: number;
 }
 
 export function useWarehouseColumns({
@@ -36,6 +39,9 @@ export function useWarehouseColumns({
   setPage,
   unifiedDrawer,
   rows,
+  page = 1,
+  totalPages = 1,
+  total = 0,
 }: UseWarehouseColumnsOptions) {
   const t = useT();
   const { grDrawer, giDrawer, iaDrawer } = unifiedDrawer;
@@ -409,49 +415,99 @@ export function useWarehouseColumns({
 
   const summaryRow = useMemo(() => {
     if (!rows || rows.length === 0) return undefined;
-    const totalReceipt = rows
-      .filter((r) => r.type === "receipt")
+    const receiptRows = rows.filter((r) => r.type === "receipt");
+    const issueRows = rows.filter((r) => r.type === "issue");
+    const adjustmentRows = rows.filter((r) => r.type === "adjustment");
+
+    const totalReceipt = receiptRows.reduce(
+      (sum, r) => sum + Number(r.totalQty || 0),
+      0,
+    );
+    const totalIssue = issueRows.reduce(
+      (sum, r) => sum + Number(r.totalQty || 0),
+      0,
+    );
+    const totalAdjustment = adjustmentRows.reduce(
+      (sum, r) => sum + Number(r.totalQty || 0),
+      0,
+    );
+
+    const positiveAdj = adjustmentRows
+      .filter((r) => Number(r.totalQty) > 0)
       .reduce((sum, r) => sum + Number(r.totalQty || 0), 0);
-    const totalIssue = rows
-      .filter((r) => r.type === "issue")
-      .reduce((sum, r) => sum + Number(r.totalQty || 0), 0);
-    const totalAdjustment = rows
-      .filter((r) => r.type === "adjustment")
-      .reduce((sum, r) => sum + Number(r.totalQty || 0), 0);
+
+    const negativeAdj = adjustmentRows
+      .filter((r) => Number(r.totalQty) < 0)
+      .reduce((sum, r) => sum + Math.abs(Number(r.totalQty || 0)), 0);
 
     return {
       voucherNo: (
-        <div className="text-right w-full font-bold text-xs uppercase text-muted-foreground pr-2">
-          {t("common.total", "Tổng cộng")}:
-        </div>
+        <SubtotalSummaryCell
+          variantType="label"
+          label={`${t("common.total", "Tổng cộng")}:`}
+          page={page}
+          totalPages={totalPages}
+          totalCount={total || rows.length}
+          currentPageCount={rows.length}
+        />
       ),
       qtyReceipt: (
-        <div className="text-right font-bold text-emerald-600 tabular-nums">
-          {fmtQty(totalReceipt)}
-        </div>
+        <SubtotalSummaryCell
+          variantType="qty"
+          metricTitle={t("inventory.qtyReceipt", "SL Nhập")}
+          itemTitle={t("inventory.voucherReceipt", "Phiếu nhập")}
+          itemUnit={t("common.summaryLines", "phiếu")}
+          subtotalQty={totalReceipt}
+          grandTotalQty={totalReceipt}
+          page={page}
+          totalPages={totalPages}
+          currentPageCount={receiptRows.length}
+          totalCount={receiptRows.length}
+          valueClassName="text-emerald-600 font-bold"
+        />
       ),
       qtyIssue: (
-        <div className="text-right font-bold text-orange-600 tabular-nums">
-          {fmtQty(totalIssue)}
-        </div>
+        <SubtotalSummaryCell
+          variantType="qty"
+          metricTitle={t("inventory.qtyIssue", "SL Xuất")}
+          itemTitle={t("inventory.voucherIssue", "Phiếu xuất")}
+          itemUnit={t("common.summaryLines", "phiếu")}
+          subtotalQty={totalIssue}
+          grandTotalQty={totalIssue}
+          page={page}
+          totalPages={totalPages}
+          currentPageCount={issueRows.length}
+          totalCount={issueRows.length}
+          valueClassName="text-orange-600 font-bold"
+        />
       ),
       qtyAdjustment: (
-        <div
-          className={cn(
-            "text-right font-bold tabular-nums",
+        <SubtotalSummaryCell
+          variantType="qty"
+          metricTitle={t("inventory.qtyAdjustment", "SL Điều chỉnh")}
+          itemTitle={t("inventory.voucherAdjustment", "Phiếu điều chỉnh")}
+          itemUnit={t("common.summaryLines", "phiếu")}
+          subtotalQty={totalAdjustment}
+          grandTotalQty={totalAdjustment}
+          positiveQty={positiveAdj}
+          negativeQty={negativeAdj}
+          showSign={true}
+          page={page}
+          totalPages={totalPages}
+          currentPageCount={adjustmentRows.length}
+          totalCount={adjustmentRows.length}
+          valueClassName={cn(
+            "font-bold",
             totalAdjustment > 0
               ? "text-emerald-600"
               : totalAdjustment < 0
                 ? "text-red-600"
                 : "text-indigo-600",
           )}
-        >
-          {totalAdjustment > 0 ? "+" : ""}
-          {fmtQty(totalAdjustment)}
-        </div>
+        />
       ),
     };
-  }, [rows, t]);
+  }, [rows, page, totalPages, total, t]);
 
   return {
     columns,

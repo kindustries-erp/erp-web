@@ -338,6 +338,9 @@ export function OperationalInventoryPage({
         <div className="w-full flex justify-end">
           <SubtotalSummaryCell
             variantType="qty"
+            metricTitle="SL Nhập kho"
+            itemTitle="Mặt hàng"
+            itemUnit="SKU"
             subtotalQty={subtotalIn}
             grandTotalQty={grandIn}
             itemCount={total}
@@ -352,6 +355,9 @@ export function OperationalInventoryPage({
         <div className="w-full flex justify-end">
           <SubtotalSummaryCell
             variantType="qty"
+            metricTitle="SL Xuất kho"
+            itemTitle="Mặt hàng"
+            itemUnit="SKU"
             subtotalQty={subtotalOut}
             grandTotalQty={grandOut}
             itemCount={total}
@@ -366,6 +372,9 @@ export function OperationalInventoryPage({
         <div className="w-full flex justify-end">
           <SubtotalSummaryCell
             variantType="qty"
+            metricTitle="SL Điều chỉnh"
+            itemTitle="Mặt hàng"
+            itemUnit="SKU"
             subtotalQty={subtotalAdj}
             grandTotalQty={grandAdj}
             positiveQty={grandPosAdj}
@@ -390,6 +399,9 @@ export function OperationalInventoryPage({
         <div className="w-full flex justify-end">
           <SubtotalSummaryCell
             variantType="qty"
+            metricTitle="SL Tồn kho"
+            itemTitle="Mặt hàng"
+            itemUnit="SKU"
             subtotalQty={subtotalOnHand}
             grandTotalQty={grandOnHand}
             grandTotalAmount={grandStockValue > 0 ? grandStockValue : undefined}
@@ -415,6 +427,9 @@ export function OperationalInventoryPage({
         <div className="w-full flex justify-end">
           <SubtotalSummaryCell
             variantType="qty"
+            metricTitle="SL Giữ chỗ"
+            itemTitle="Mặt hàng"
+            itemUnit="SKU"
             subtotalQty={subtotalReserved}
             grandTotalQty={grandReserved}
             itemCount={total}
