@@ -80,7 +80,7 @@ export function PageLayout({
         className,
       )}
     >
-      {!hideHeader && icon ? (
+      {!hideHeader && (icon || title) ? (
         <PageHeader
           title={title}
           desc={desc}

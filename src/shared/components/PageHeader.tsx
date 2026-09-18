@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 interface PageHeaderProps {
   title: ReactNode;
   desc?: ReactNode;
-  icon: ReactNode;
+  icon?: ReactNode;
   actions?: ReactNode;
   className?: string;
 }
@@ -20,9 +20,11 @@ export function PageHeader({
       className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 ${className}`}
     >
       <div className="flex items-center gap-3 min-w-0">
-        <div className="w-9 h-9 -ml-[6px] md:-ml-[10px] rounded-[10px] bg-[color:var(--primary)]/10 flex items-center justify-center text-[color:var(--primary)] shrink-0">
-          {icon}
-        </div>
+        {icon && (
+          <div className="w-9 h-9 -ml-[6px] md:-ml-[10px] rounded-[10px] bg-[color:var(--primary)]/10 flex items-center justify-center text-[color:var(--primary)] shrink-0">
+            {icon}
+          </div>
+        )}
         <div className="min-w-0">
           <h1 className="text-base font-semibold text-foreground leading-tight">
             {title}
