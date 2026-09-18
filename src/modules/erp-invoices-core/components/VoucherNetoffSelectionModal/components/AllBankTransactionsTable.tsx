@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useCallback } from "react";
 import { format } from "date-fns";
 import { useTranslation } from "react-i18next";
 import { StandardTable } from "@/shared/components/StandardTable";
@@ -7,10 +7,12 @@ import {
   createColumnHeaderFilter,
   TableColumnAlign,
 } from "@/shared/components/DataTable";
+import type { ActionDropdownItem } from "@/shared/components/ActionDropdown";
 import { Checkbox } from "@/shared/components/ui/checkbox";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import { money } from "@/shared/utils/format";
 import { bankStatementApi } from "@/modules/bank-statements/api/bankStatementApi";
+import { Eye, RotateCcw, CheckCircle2 } from "lucide-react";
 
 interface AllBankTransactionsTableProps {
   vouchers: any[];
@@ -101,6 +103,19 @@ export function AllBankTransactionsTable({
 
   const columns: DataTableColumn<any>[] = useMemo(
     () => [
+      {
+        key: "stt",
+        header: <span className="w-full block text-center font-bold">#</span>,
+        headerClassName: "text-center w-[40px] min-w-[40px]",
+        className: "text-center w-[40px] min-w-[40px]",
+        size: 40,
+        enableResizing: false,
+        cell: (_row, idx) => (
+          <span className="w-full block text-center font-mono text-xs text-muted-foreground">
+            {idx}
+          </span>
+        ),
+      },
       {
         key: "selection",
         header: "",
@@ -338,6 +353,42 @@ export function AllBankTransactionsTable({
     };
   }, [vouchers]);
 
+  const getRowActions = useCallback(
+    (row: any): ActionDropdownItem[] => {
+      const isSelected = selectedIds.includes(row.id);
+      return [
+        {
+          groupLabel: "TRA CỨU",
+          items: [
+            {
+              label: "Xem chi tiết giao dịch",
+              icon: <Eye className="w-3.5 h-3.5" />,
+              onClick: () => onViewDetail(row.id),
+            },
+          ],
+        },
+        {
+          groupLabel: "THAO TÁC",
+          items: [
+            {
+              label: isSelected
+                ? "Bỏ chọn giao dịch này"
+                : "Chọn giao dịch cấn trừ",
+              icon: isSelected ? (
+                <RotateCcw className="w-3.5 h-3.5 text-destructive" />
+              ) : (
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+              ),
+              variant: isSelected ? ("danger" as const) : undefined,
+              onClick: () => onToggleRow(row),
+            },
+          ],
+        },
+      ];
+    },
+    [onViewDetail, selectedIds, onToggleRow],
+  );
+
   return (
     <div className="h-[calc(100vh-320px)] min-h-[300px] flex flex-col">
       <StandardTable
@@ -354,6 +405,8 @@ export function AllBankTransactionsTable({
         totalPages={totalPages}
         onPage={setPage}
         onPageSize={setPageSize}
+        actions={getRowActions}
+        hideLegacyActionColumn={true}
         summaryRow={summaryRow}
         minWidth={1150}
         containerClassName="flex-1 min-h-0"
