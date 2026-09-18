@@ -137,7 +137,7 @@ describe("ErpWarehouseTab SubtotalSummaryCell Suite", () => {
 
     // Popover content should be visible
     await waitFor(() => {
-      expect(screen.getByText("Tổng quan số liệu")).toBeInTheDocument();
+      expect(screen.getAllByText(/SL Nhập/).length).toBeGreaterThanOrEqual(1);
     });
   });
 });

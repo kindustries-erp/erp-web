@@ -42,34 +42,25 @@ describe("SubtotalSummaryCell component", () => {
     const trigger = screen.getByText("2.905");
     fireEvent.click(trigger);
 
-    // Popover header
-    expect(screen.getByText("Tổng quan số liệu")).toBeInTheDocument();
+    // Popover header with metric title
+    expect(screen.getByText("SL Tồn kho")).toBeInTheDocument();
     expect(screen.getAllByText("Trang 1/5").length).toBeGreaterThan(0);
 
-    // Box 1: Item Ratio
-    expect(screen.getByText("Mặt hàng")).toBeInTheDocument();
-    expect(screen.getByText("50")).toBeInTheDocument();
-    expect(screen.getByText("241")).toBeInTheDocument();
-    expect(screen.getByText("SKU")).toBeInTheDocument();
-
-    // Box 2: Quantity Ratio
-    expect(screen.getByText("SL Tồn kho")).toBeInTheDocument();
-    expect(screen.getByText("281.698")).toBeInTheDocument();
+    // Metric Quantity Ratio (Subtotal / Total)
+    expect(screen.getAllByText(/2\.905/).length).toBeGreaterThan(0);
+    expect(screen.getByText(/281\.698/)).toBeInTheDocument();
+    expect(screen.getByText(/Tổng toàn bộ/)).toBeInTheDocument();
   });
 
-  it("renders clean single-page summary with unified 2-row layout and progress bar", () => {
+  it("renders clean single-page summary with unified layout and progress bar", () => {
     render(
       <SubtotalSummaryCell
         variantType="qty"
         metricTitle="SL Nhập kho"
-        itemTitle="Dòng nhập kho"
-        itemUnit="dòng"
         grandTotalQty={5}
-        itemCount={1}
+        subtotalQty={5}
         page={1}
         totalPages={1}
-        currentPageCount={1}
-        totalCount={1}
       />,
     );
 
@@ -79,14 +70,9 @@ describe("SubtotalSummaryCell component", () => {
     // Header badge
     expect(screen.getAllByText("Trang 1/1").length).toBeGreaterThan(0);
 
-    // Box 1 (Unified 2-row)
-    expect(screen.getByText("Dòng nhập kho")).toBeInTheDocument();
-    expect(screen.getAllByText("1").length).toBeGreaterThan(0);
-    expect(screen.getByText("dòng")).toBeInTheDocument();
-
-    // Box 2 (Unified 2-row)
-    expect(screen.getByText("SL Nhập kho")).toBeInTheDocument();
-    expect(screen.getByText("đơn vị")).toBeInTheDocument();
+    // Unified layout items
+    expect(screen.getByText(/SL Nhập kho/)).toBeInTheDocument();
+    expect(screen.getByText(/đơn vị/)).toBeInTheDocument();
   });
 
   it("renders PO reconciliation progress and status badge in Goods Receipt", () => {
@@ -94,11 +80,8 @@ describe("SubtotalSummaryCell component", () => {
       <SubtotalSummaryCell
         variantType="qty"
         metricTitle="SL Thực nhận"
-        itemTitle="Dòng nhập kho"
-        itemUnit="dòng"
         grandTotalQty={5}
         grandTotalOrderedQty={5}
-        itemCount={1}
         page={1}
         totalPages={1}
       />,
@@ -120,12 +103,9 @@ describe("SubtotalSummaryCell component", () => {
       <SubtotalSummaryCell
         variantType="qty"
         metricTitle="SL Chênh lệch"
-        itemTitle="Dòng điều chỉnh"
-        itemUnit="dòng"
         grandTotalQty={8}
         positiveQty={10}
         negativeQty={2}
-        itemCount={2}
         page={1}
         totalPages={1}
         showSign={true}
@@ -149,17 +129,10 @@ describe("SubtotalSummaryCell component", () => {
       <SubtotalSummaryCell
         variantType="qty"
         metricTitle="SL Tồn kho"
-        itemTitle="Mặt hàng"
-        itemUnit="SKU"
         subtotalQty={123456789012}
         grandTotalQty={987654321098}
-        subtotalAmount={500000000000}
-        grandTotalAmount={999000000000}
-        itemCount={120000}
         page={1}
         totalPages={10}
-        currentPageCount={12000}
-        totalCount={120000}
       />,
     );
 
@@ -168,9 +141,8 @@ describe("SubtotalSummaryCell component", () => {
     fireEvent.click(trigger);
 
     // Verify formatted values in popover
-    expect(screen.getByText("987.654.321.098")).toBeInTheDocument();
-    expect(screen.getByText("12.000")).toBeInTheDocument();
-    expect(screen.getByText("120.000")).toBeInTheDocument();
+    expect(screen.getByText(/987\.654\.321\.098/)).toBeInTheDocument();
+    expect(screen.getByText(/Tổng toàn bộ/)).toBeInTheDocument();
   });
 
   it("renders amount variant cleanly with currency format and no 0 quantity units", () => {
@@ -178,15 +150,10 @@ describe("SubtotalSummaryCell component", () => {
       <SubtotalSummaryCell
         variantType="amount"
         metricTitle="Tổng phát sinh Nợ"
-        itemTitle="Bút toán"
-        itemUnit="dòng"
         subtotalAmount={568750000}
         grandTotalAmount={568750000}
-        itemCount={4}
         page={1}
         totalPages={1}
-        currentPageCount={4}
-        totalCount={4}
       />,
     );
 
@@ -195,15 +162,10 @@ describe("SubtotalSummaryCell component", () => {
     expect(trigger).toBeInTheDocument();
     fireEvent.click(trigger);
 
-    // Box 1: Bút toán
-    expect(screen.getByText("Bút toán")).toBeInTheDocument();
-    expect(screen.getAllByText("4").length).toBeGreaterThan(0);
-    expect(screen.getByText("dòng")).toBeInTheDocument();
-
-    // Box 2: Tổng phát sinh Nợ with currency format, NOT 0 đơn vị
+    // Unified layout content
     expect(screen.getByText("Tổng phát sinh Nợ")).toBeInTheDocument();
     expect(screen.getAllByText(/568\.750\.000/).length).toBeGreaterThan(1);
-    expect(screen.queryByText("0 / 0 đơn vị")).not.toBeInTheDocument();
+    expect(screen.queryByText(/0 đơn vị/)).not.toBeInTheDocument();
   });
 
   it("renders accounting balance reconciliation card when showAccountingBalance is true", () => {
@@ -233,5 +195,54 @@ describe("SubtotalSummaryCell component", () => {
     expect(screen.getByText("Đối soát Cân đối Kế toán")).toBeInTheDocument();
     expect(screen.getByText("Cân đối Nợ - Có")).toBeInTheDocument();
     expect(screen.getAllByText(/568\.750\.000/).length).toBeGreaterThan(2);
+  });
+
+  it("renders cumulative amount row and dual ratio in multi-page mode", () => {
+    render(
+      <SubtotalSummaryCell
+        variantType="amount"
+        metricTitle="Tiền vào (Thu)"
+        subtotalAmount={939237898}
+        cumulativeAmount={1602888071}
+        grandTotalAmount={31000000000}
+        page={2}
+        totalPages={33}
+      />,
+    );
+
+    const trigger = screen.getByText(/939\.237\.898/);
+    expect(trigger).toBeInTheDocument();
+    fireEvent.click(trigger);
+
+    // Popover contains Subtotal (Page 2), Cumulative (T1 -> T2), and Grand Total
+    expect(screen.getByText("Tiền vào (Thu)")).toBeInTheDocument();
+    expect(screen.getAllByText("Trang 2/33").length).toBeGreaterThan(0);
+    expect(screen.getByText(/Lũy kế \(T1 → T2\):/)).toBeInTheDocument();
+    expect(screen.getByText(/1\.602\.888\.071/)).toBeInTheDocument();
+    expect(screen.getByText(/31\.000\.000\.000/)).toBeInTheDocument();
+    expect(screen.getByText("5.2%")).toBeInTheDocument();
+  });
+
+  it("renders cumulative qty row and dual ratio in multi-page mode", () => {
+    render(
+      <SubtotalSummaryCell
+        variantType="qty"
+        metricTitle="SL Tồn kho"
+        subtotalQty={100}
+        cumulativeQty={250}
+        grandTotalQty={1000}
+        page={2}
+        totalPages={10}
+      />,
+    );
+
+    const trigger = screen.getByText("100");
+    expect(trigger).toBeInTheDocument();
+    fireEvent.click(trigger);
+
+    expect(screen.getByText(/Lũy kế \(T1 → T2\):/)).toBeInTheDocument();
+    expect(screen.getByText(/250 đơn vị/)).toBeInTheDocument();
+    expect(screen.getByText(/1\.000 đơn vị/)).toBeInTheDocument();
+    expect(screen.getByText("25%")).toBeInTheDocument();
   });
 });

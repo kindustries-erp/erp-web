@@ -111,12 +111,22 @@ export interface JournalEntriesQueryParams {
 
 export type JournalEntryListParams = JournalEntriesQueryParams;
 
+export interface JournalEntryTotals {
+  grandTotalDebit: number;
+  grandTotalCredit: number;
+  cumulativeDebit: number;
+  cumulativeCredit: number;
+  totalLines: number;
+  cumulativeLines: number;
+}
+
 export interface JournalEntryListResponse {
   items: JournalEntryItem[];
   total: number;
   page: number;
   pageSize: number;
   totalPages: number;
+  totals?: JournalEntryTotals;
 }
 
 export interface JournalEntryFormLine {
