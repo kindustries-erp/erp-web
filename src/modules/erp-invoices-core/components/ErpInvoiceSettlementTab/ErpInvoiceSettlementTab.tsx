@@ -144,7 +144,7 @@ export function ErpInvoiceSettlementTab(props?: ErpInvoiceSettlementTabProps) {
       {ctx.activeSubTab === "bank_statement" ? (
         <ErpInvoiceUnifiedSettlementTable />
       ) : (
-        <div className="h-[calc(100vh-375px)] min-h-[260px] flex flex-col justify-center">
+        <div className="h-[calc(100vh-320px)] min-h-[380px] flex-1 flex flex-col min-h-0 w-full">
           <ComingSoonTabContent
             title={t("comingSoonCashBookTitle", "Sổ quỹ tiền mặt")}
             description={t(
@@ -152,6 +152,7 @@ export function ErpInvoiceSettlementTab(props?: ErpInvoiceSettlementTabProps) {
               "Tính năng đối soát sổ quỹ tiền mặt đang được phát triển.",
             )}
             badge={t("comingSoonBadge", "Sắp ra mắt")}
+            className="flex-1 h-full w-full"
           />
         </div>
       )}

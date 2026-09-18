@@ -2199,7 +2199,7 @@ export function InvoiceBulkNetOffDrawer({
 
             {/* ─── NỘI DUNG CHÍNH (MODE MATRIX vs MODE FOCUSED) ─── */}
             {activeSubTab === "cash_book" ? (
-              <div className="flex-1 flex flex-col justify-center">
+              <div className="flex-1 flex flex-col min-h-0 h-full w-full pb-1">
                 <ComingSoonTabContent
                   title={t("comingSoonCashBookTitle", "Sổ quỹ tiền mặt")}
                   description={t(
@@ -2207,6 +2207,7 @@ export function InvoiceBulkNetOffDrawer({
                     "Tính năng đối soát hàng loạt sổ quỹ tiền mặt đang được phát triển.",
                   )}
                   badge={t("comingSoonBadge", "Sắp ra mắt")}
+                  className="flex-1 h-full w-full"
                 />
               </div>
             ) : focusedInvoiceId && focusedInvoice ? (
