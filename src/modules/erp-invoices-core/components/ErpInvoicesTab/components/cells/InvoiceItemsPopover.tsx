@@ -41,111 +41,116 @@ export const InvoiceItemsPopover = React.memo(function InvoiceItemsPopover({
   }, 0);
 
   return (
-    <div className="p-3 max-h-[350px] w-[850px] max-w-[90vw] overflow-auto">
-      <h4 className="font-semibold text-sm mb-2 text-slate-800">
-        Chi tiết mặt hàng
-      </h4>
-      <table className="w-full text-sm text-left border-collapse min-w-[700px]">
-        <thead className="bg-slate-100/60 sticky top-0 backdrop-blur-sm">
-          <tr>
-            <th className="px-2 py-1 border-b text-slate-600 font-medium">
-              Tên mặt hàng
-            </th>
-            <th className="px-2 py-1 border-b text-slate-600 font-medium text-right">
-              SL
-            </th>
-            <th className="px-2 py-1 border-b text-slate-600 font-medium text-left">
-              ĐVT
-            </th>
-            <th className="px-2 py-1 border-b text-slate-600 font-medium text-right">
-              Đơn giá
-            </th>
-            <th className="px-2 py-1 border-b text-slate-600 font-medium text-right">
-              Thành tiền trước thuế
-            </th>
-            <th className="px-2 py-1 border-b text-slate-600 font-medium text-right">
-              Thuế suất
-            </th>
-            <th className="px-2 py-1 border-b text-slate-600 font-medium text-right">
-              Thuế VAT
-            </th>
-            <th className="px-2 py-1 border-b text-slate-600 font-medium text-right">
-              Thành tiền
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {items.map((item: any, idx: number) => {
-            const compVatAmt =
-              Number(item.vatAmount) ||
-              (Number(item.preVatAmount) || 0) * (Number(item.vatRate) || 0);
-            const compTotalAmt = (Number(item.preVatAmount) || 0) + compVatAmt;
-            return (
-              <tr
-                key={item.id || idx}
-                className="border-b last:border-0 hover:bg-slate-50"
-              >
-                <td className="px-2 py-1 whitespace-normal break-words max-w-[200px]">
-                  {item.description || "—"}
-                </td>
-                <td className="px-2 py-1 text-right whitespace-nowrap">
-                  {item.quantity != null
-                    ? Number(item.quantity).toLocaleString("vi-VN", {
-                        minimumFractionDigits: 1,
-                        maximumFractionDigits: 1,
-                      })
-                    : "—"}
-                </td>
-                <td className="px-2 py-1 text-left whitespace-nowrap">
-                  {item.unit || "—"}
-                </td>
-                <td className="px-2 py-1 text-right whitespace-nowrap">
-                  {fmtAmt(item.unitPrice?.toString())}
-                </td>
-                <td className="px-2 py-1 text-right whitespace-nowrap font-medium">
-                  {fmtAmt(item.preVatAmount?.toString())}
-                </td>
-                <td className="px-2 py-1 text-right whitespace-nowrap">
-                  {item.vatRate != null
-                    ? `${(Number(item.vatRate) * 100).toFixed(0)}%`
-                    : "—"}
-                </td>
-                <td className="px-2 py-1 text-right whitespace-nowrap">
-                  {fmtAmt(compVatAmt.toString())}
-                </td>
-                <td className="px-2 py-1 text-right whitespace-nowrap font-semibold text-slate-800">
-                  {fmtAmt(compTotalAmt.toString())}
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-        <tfoot className="table-footer-glass sticky bottom-0 border-t border-border shadow-[0_-2px_6px_rgba(0,0,0,0.04)]">
-          <tr>
-            <td className="px-2 py-2 font-semibold text-right text-slate-700">
-              Tổng cộng
-            </td>
-            <td className="px-2 py-2 font-semibold text-right text-slate-700">
-              {totalQuantity.toLocaleString("vi-VN", {
-                minimumFractionDigits: 1,
-                maximumFractionDigits: 1,
-              })}
-            </td>
-            <td className="px-2 py-2" />
-            <td className="px-2 py-2" />
-            <td className="px-2 py-2 font-semibold text-right text-slate-700">
-              {fmtAmt(totalPreVatAmount.toString())}
-            </td>
-            <td className="px-2 py-2" />
-            <td className="px-2 py-2 font-semibold text-right text-slate-700">
-              {fmtAmt(totalVatAmount.toString())}
-            </td>
-            <td className="px-2 py-2 font-semibold text-right text-slate-800">
-              {fmtAmt(totalTotalAmount.toString())}
-            </td>
-          </tr>
-        </tfoot>
-      </table>
+    <div className="p-3 max-h-[350px] w-[620px] max-w-[90vw] overflow-auto flex flex-col">
+      <div className="flex items-center justify-between mb-2">
+        <h4 className="font-semibold text-xs text-slate-800 dark:text-slate-200">
+          Chi tiết mặt hàng ({items.length})
+        </h4>
+      </div>
+      <div className="overflow-x-auto border border-slate-200/80 dark:border-zinc-800 rounded-lg">
+        <table className="w-full text-xs text-left border-collapse min-w-[580px]">
+          <thead className="bg-slate-100/90 dark:bg-zinc-800/90 sticky top-0 backdrop-blur-sm z-10">
+            <tr>
+              <th className="px-2 py-1.5 border-b text-slate-600 dark:text-slate-400 font-medium text-left">
+                Tên mặt hàng
+              </th>
+              <th className="px-2 py-1.5 border-b text-slate-600 dark:text-slate-400 font-medium text-right w-[45px]">
+                SL
+              </th>
+              <th className="px-2 py-1.5 border-b text-slate-600 dark:text-slate-400 font-medium text-left w-[45px]">
+                ĐVT
+              </th>
+              <th className="px-2 py-1.5 border-b text-slate-600 dark:text-slate-400 font-medium text-right w-[85px]">
+                Đơn giá
+              </th>
+              <th className="px-2 py-1.5 border-b text-slate-600 dark:text-slate-400 font-medium text-right w-[95px]">
+                Tiền trước thuế
+              </th>
+              <th className="px-2 py-1.5 border-b text-slate-600 dark:text-slate-400 font-medium text-right w-[50px]">
+                VAT
+              </th>
+              <th className="px-2 py-1.5 border-b text-slate-600 dark:text-slate-400 font-medium text-right w-[85px]">
+                Tiền VAT
+              </th>
+              <th className="px-2 py-1.5 border-b text-slate-600 dark:text-slate-400 font-medium text-right w-[100px]">
+                Thành tiền
+              </th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100 dark:divide-zinc-800">
+            {items.map((item: any, idx: number) => {
+              const compVatAmt =
+                Number(item.vatAmount) ||
+                (Number(item.preVatAmount) || 0) * (Number(item.vatRate) || 0);
+              const compTotalAmt =
+                (Number(item.preVatAmount) || 0) + compVatAmt;
+              return (
+                <tr
+                  key={item.id || idx}
+                  className="hover:bg-slate-50 dark:hover:bg-zinc-800/50 transition-colors"
+                >
+                  <td className="px-2 py-1.5 whitespace-normal break-words max-w-[170px] text-slate-800 dark:text-slate-200">
+                    {item.description || "—"}
+                  </td>
+                  <td className="px-2 py-1.5 text-right whitespace-nowrap tabular-nums text-slate-600 dark:text-slate-400">
+                    {item.quantity != null
+                      ? Number(item.quantity).toLocaleString("vi-VN", {
+                          minimumFractionDigits: 0,
+                          maximumFractionDigits: 1,
+                        })
+                      : "—"}
+                  </td>
+                  <td className="px-2 py-1.5 text-left whitespace-nowrap text-slate-500">
+                    {item.unit || "—"}
+                  </td>
+                  <td className="px-2 py-1.5 text-right whitespace-nowrap tabular-nums text-slate-700 dark:text-slate-300">
+                    {fmtAmt(item.unitPrice?.toString())}
+                  </td>
+                  <td className="px-2 py-1.5 text-right whitespace-nowrap font-medium tabular-nums text-slate-800 dark:text-slate-200">
+                    {fmtAmt(item.preVatAmount?.toString())}
+                  </td>
+                  <td className="px-2 py-1.5 text-right whitespace-nowrap tabular-nums text-slate-500">
+                    {item.vatRate != null
+                      ? `${(Number(item.vatRate) * 100).toFixed(0)}%`
+                      : "—"}
+                  </td>
+                  <td className="px-2 py-1.5 text-right whitespace-nowrap tabular-nums text-slate-700 dark:text-slate-300">
+                    {fmtAmt(compVatAmt.toString())}
+                  </td>
+                  <td className="px-2 py-1.5 text-right whitespace-nowrap font-semibold tabular-nums text-slate-900 dark:text-slate-100">
+                    {fmtAmt(compTotalAmt.toString())}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+          <tfoot className="bg-slate-100/90 dark:bg-zinc-800/90 sticky bottom-0 border-t border-slate-200 dark:border-zinc-700 font-semibold z-10">
+            <tr>
+              <td className="px-2 py-1.5 text-right text-slate-700 dark:text-slate-300">
+                Tổng cộng
+              </td>
+              <td className="px-2 py-1.5 text-right text-slate-700 dark:text-slate-300 tabular-nums">
+                {totalQuantity.toLocaleString("vi-VN", {
+                  minimumFractionDigits: 0,
+                  maximumFractionDigits: 1,
+                })}
+              </td>
+              <td className="px-2 py-1.5" />
+              <td className="px-2 py-1.5" />
+              <td className="px-2 py-1.5 text-right text-slate-700 dark:text-slate-300 tabular-nums">
+                {fmtAmt(totalPreVatAmount.toString())}
+              </td>
+              <td className="px-2 py-1.5" />
+              <td className="px-2 py-1.5 text-right text-slate-700 dark:text-slate-300 tabular-nums">
+                {fmtAmt(totalVatAmount.toString())}
+              </td>
+              <td className="px-2 py-1.5 text-right text-slate-900 dark:text-slate-100 tabular-nums font-bold">
+                {fmtAmt(totalTotalAmount.toString())}
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
     </div>
   );
 });

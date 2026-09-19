@@ -106,7 +106,7 @@ export function useGeneralColumns({
             onFilterChange={(vals) => handleFilterChange("attachments", vals)}
             align="center"
             columnKey="attachments"
-            queryKeyPrefix="erp-invoice-options"
+            queryKeyPrefix={`erp-invoice-options-${direction}`}
             allFilters={effectiveAllFilters}
             fetchOptions={async ({ search }: { search: string }) => {
               const options = [
@@ -196,10 +196,11 @@ export function useGeneralColumns({
             onFilterChange={(vals) => handleFilterChange("invoiceNo", vals)}
             align="center"
             columnKey="invoiceNo"
-            queryKeyPrefix="erp-invoice-options"
+            queryKeyPrefix={`erp-invoice-options-${direction}`}
             allFilters={effectiveAllFilters}
             fetchOptions={fetchInvoiceOptions}
             enableSelectAllMatching={true}
+            showBlankOption={true}
           />
         ),
         size: 120,
@@ -224,9 +225,11 @@ export function useGeneralColumns({
             onFilterChange={(vals) => handleFilterChange("serialNo", vals)}
             align="center"
             columnKey="serialNo"
-            queryKeyPrefix="erp-invoice-options"
+            queryKeyPrefix={`erp-invoice-options-${direction}`}
             allFilters={effectiveAllFilters}
             fetchOptions={fetchInvoiceOptions}
+            enableSelectAllMatching={true}
+            showBlankOption={true}
           />
         ),
         size: 120,
@@ -251,9 +254,10 @@ export function useGeneralColumns({
             onFilterChange={(vals) => handleFilterChange("partner", vals)}
             align="center"
             columnKey="partner"
-            queryKeyPrefix="erp-invoice-options"
+            queryKeyPrefix={`erp-invoice-options-${direction}`}
             allFilters={effectiveAllFilters}
             fetchOptions={fetchInvoiceOptions}
+            enableSelectAllMatching={true}
             showBlankOption={true}
           />
         ),
@@ -277,7 +281,7 @@ export function useGeneralColumns({
             onFilterChange={(vals) => handleFilterChange("taxCode", vals)}
             align="center"
             columnKey="taxCode"
-            queryKeyPrefix="erp-invoice-options"
+            queryKeyPrefix={`erp-invoice-options-${direction}`}
             allFilters={effectiveAllFilters}
             fetchOptions={fetchInvoiceOptions}
             showBlankOption={true}
@@ -305,7 +309,7 @@ export function useGeneralColumns({
             onFilterChange={(vals) => handleFilterChange("branchId", vals)}
             align="center"
             columnKey="branchId"
-            queryKeyPrefix={`erp-invoice-options-branch-${branches.length}`}
+            queryKeyPrefix={`erp-invoice-options-branch-${direction}-${branches.length}`}
             allFilters={effectiveAllFilters}
             fetchOptions={fetchInvoiceOptions}
             showBlankOption={true}
@@ -341,7 +345,7 @@ export function useGeneralColumns({
             }
             align="center"
             columnKey="invoiceCategory"
-            queryKeyPrefix="erp-invoice-options"
+            queryKeyPrefix={`erp-invoice-options-${direction}`}
             allFilters={effectiveAllFilters}
             fetchOptions={fetchInvoiceOptions}
             showBlankOption={true}
@@ -368,7 +372,7 @@ export function useGeneralColumns({
             onFilterChange={(vals) => handleFilterChange("notes", vals)}
             align="center"
             columnKey="notes"
-            queryKeyPrefix="erp-invoice-options"
+            queryKeyPrefix={`erp-invoice-options-${direction}`}
             allFilters={effectiveAllFilters}
             fetchOptions={fetchInvoiceOptions}
             showBlankOption={true}
