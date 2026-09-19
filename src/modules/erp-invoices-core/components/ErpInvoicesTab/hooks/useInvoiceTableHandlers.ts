@@ -136,7 +136,12 @@ export function useInvoiceTableHandlers({
         next: res.page < res.totalPages ? res.page + 1 : null,
       };
     },
-    [direction, branches, listHook.activeTaxTab],
+    [
+      direction,
+      branches,
+      listHook.activeTaxTab,
+      listHook.tableState.columnFilters,
+    ],
   );
 
   const buildExportBaseQuery =

@@ -503,21 +503,24 @@ export function InvoiceBulkNetOffDrawer({
           ? String(vals[1]).toLowerCase().trim()
           : "";
         if (searchKeyword) {
-          filtered = filtered.filter(
-            (inv) =>
-              inv.invoiceNo?.toLowerCase().includes(searchKeyword) ||
-              inv.serialNo?.toLowerCase().includes(searchKeyword),
-          );
+          filtered = filtered.filter((inv) => {
+            const no = inv.invoiceNo?.toLowerCase() || "";
+            const ser = inv.serialNo?.toLowerCase() || "";
+            return no.includes(searchKeyword) || ser.includes(searchKeyword);
+          });
         }
       } else {
         filtered = filtered.filter((inv) => {
-          if (
-            vals.includes("__BLANK__") &&
-            (!inv.invoiceNo || inv.invoiceNo === "")
-          ) {
-            return true;
-          }
-          return vals.includes(inv.invoiceNo || "");
+          const invNo = inv.invoiceNo?.trim() || "";
+          const serNo = inv.serialNo?.trim() || "";
+          if (vals.includes("__BLANK__") && !invNo) return true;
+          return vals.some((v) => {
+            if (v.includes(":::")) {
+              const [targetNo, targetSer] = v.split(":::");
+              return invNo === targetNo.trim() && serNo === targetSer.trim();
+            }
+            return invNo === v.trim() || serNo === v.trim();
+          });
         });
       }
     }
@@ -531,21 +534,43 @@ export function InvoiceBulkNetOffDrawer({
         if (searchKeyword) {
           filtered = filtered.filter((inv) => {
             const text =
-              (direction === "IN" ? inv.sellerName : inv.buyerName) || "";
+              (direction === "IN"
+                ? inv.sellerName
+                : inv.buyerName
+              )?.toLowerCase() || "";
             const tax =
-              (direction === "IN" ? inv.sellerTaxCode : inv.buyerTaxCode) || "";
-            return (
-              text.toLowerCase().includes(searchKeyword) ||
-              tax.toLowerCase().includes(searchKeyword)
-            );
+              (direction === "IN"
+                ? inv.sellerTaxCode
+                : inv.buyerTaxCode
+              )?.toLowerCase() || "";
+            return text.includes(searchKeyword) || tax.includes(searchKeyword);
           });
         }
       } else {
         filtered = filtered.filter((inv) => {
           const text =
-            (direction === "IN" ? inv.sellerName : inv.buyerName) || "";
-          if (vals.includes("__BLANK__") && !text) return true;
-          return vals.includes(text);
+            (direction === "IN" ? inv.sellerName : inv.buyerName)?.trim() || "";
+          const tax =
+            (direction === "IN"
+              ? inv.sellerTaxCode
+              : inv.buyerTaxCode
+            )?.trim() || "";
+          if (vals.includes("__BLANK__") && !text && !tax) return true;
+          return vals.some((v) => {
+            if (v.includes(":::")) {
+              const [targetTax, targetName] = v.split(":::");
+              return (
+                (targetTax && tax === targetTax.trim()) ||
+                (targetName &&
+                  text.toLowerCase().includes(targetName.trim().toLowerCase()))
+              );
+            }
+            return (
+              text === v.trim() ||
+              tax === v.trim() ||
+              text.toLowerCase().includes(v.trim().toLowerCase())
+            );
+          });
         });
       }
     }
@@ -581,19 +606,21 @@ export function InvoiceBulkNetOffDrawer({
           ? String(vals[1]).toLowerCase().trim()
           : "";
         if (searchKeyword) {
-          filtered = filtered.filter((inv) =>
-            String(inv.totalAmount).includes(searchKeyword),
+          filtered = filtered.filter(
+            (inv) =>
+              String(inv.totalAmount).includes(searchKeyword) ||
+              money(Number(inv.totalAmount))
+                .toLowerCase()
+                .includes(searchKeyword),
           );
         }
       } else {
-        filtered = filtered.filter((inv) =>
-          vals.some((val) => {
-            if (val === "NETTED") return getAmounts(inv).remaining <= 0;
-            if (val === "UNNETTED") return getAmounts(inv).remaining > 0;
-            if (val === "__BLANK__") return !inv.totalAmount;
-            return String(inv.totalAmount) === val;
-          }),
-        );
+        filtered = filtered.filter((inv) => {
+          const { remaining } = getAmounts(inv);
+          if (vals.includes("NETTED") && remaining <= 0) return true;
+          if (vals.includes("UNNETTED") && remaining > 0) return true;
+          return vals.includes(String(inv.totalAmount));
+        });
       }
     }
 
@@ -661,20 +688,40 @@ export function InvoiceBulkNetOffDrawer({
   );
 
   const invoiceNoOptions = useMemo(() => {
-    const set = new Set<string>();
+    const map = new Map<string, string>();
     selectedInvoices.forEach((inv) => {
-      if (inv.invoiceNo) set.add(inv.invoiceNo);
+      if (inv.invoiceNo) {
+        const invNo = inv.invoiceNo.trim();
+        const serNo = inv.serialNo?.trim() || "";
+        const value = serNo ? `${invNo}:::${serNo}` : invNo;
+        const label = serNo ? `${invNo} (${serNo})` : invNo;
+        map.set(value, label);
+      }
     });
-    return Array.from(set).map((v) => ({ label: v, value: v }));
+    return Array.from(map.entries()).map(([value, label]) => ({
+      label,
+      value,
+    }));
   }, [selectedInvoices]);
 
   const partnerOptions = useMemo(() => {
-    const set = new Set<string>();
+    const map = new Map<string, string>();
     selectedInvoices.forEach((inv) => {
-      const text = direction === "IN" ? inv.sellerName : inv.buyerName;
-      if (text) set.add(text);
+      const name =
+        (direction === "IN" ? inv.sellerName : inv.buyerName)?.trim() || "";
+      const tax =
+        (direction === "IN" ? inv.sellerTaxCode : inv.buyerTaxCode)?.trim() ||
+        "";
+      if (name || tax) {
+        const label = name && tax ? `${name} (${tax})` : name || tax;
+        const value = tax && name ? `${tax}:::${name}` : tax || name;
+        map.set(value, label);
+      }
     });
-    return Array.from(set).map((v) => ({ label: v, value: v }));
+    return Array.from(map.entries()).map(([value, label]) => ({
+      label,
+      value,
+    }));
   }, [selectedInvoices, direction]);
 
   const descriptionOptions = useMemo(() => {

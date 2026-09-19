@@ -1,9 +1,13 @@
 import React, { useMemo } from "react";
 import { format } from "date-fns";
+import { Eye } from "lucide-react";
 import type { TFunction } from "i18next";
 import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
 import { DateRangeColumnSlot } from "@/shared/components/DataTable/DateRangeColumnSlot";
 import { TableText } from "@/shared/components/DataTable/TableText";
+import { Tooltip } from "@/core/components/ui/Tooltip";
+import { Button } from "@/shared/components/ui/Button";
+import { CopyButton } from "@/shared/components/CopyButton";
 import type { DataTableColumn } from "@/shared/components/DataTable";
 import type { ErpInvoiceItemRow } from "../../../api/erpInvoicesCoreApi";
 import type { useErpInvoiceItemsList } from "../../../hooks/useErpInvoiceItemsList";
@@ -82,80 +86,14 @@ export function useItemColumns({
         ),
       },
 
-      // 2. Cột Mã HĐ / Số HĐ (120px giống header)
-      {
-        key: "invoiceNo",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("columns.invoiceNo", "Số hóa đơn")}
-            columnKey="invoiceNo"
-            queryKeyPrefix={`invoice-item-options-${direction}`}
-            allFilters={listHook.columnFilters}
-            sortState={getSortState("invoiceNo")}
-            onSortChange={(s) => listHook.setSort("invoiceNo", s)}
-            searchValue={listHook.columnSearch["invoiceNo"] || ""}
-            onSearchChange={(v) => listHook.setColumnSearch("invoiceNo", v)}
-            selectedFilters={listHook.columnFilters["invoiceNo"] || []}
-            onFilterChange={(v) => listHook.setColumnFilter("invoiceNo", v)}
-            fetchOptions={fetchColumnOptions}
-            isActive={!!listHook.columnFilters["invoiceNo"]?.length}
-            align="center"
-          />
-        ),
-        size: 120,
-        enableResizing: true,
-        cell: (row: ErpInvoiceItemRow) => (
-          <TableText
-            text={row.invoiceNo}
-            enableCopy
-            tooltip
-            onDetailClick={(e) => {
-              e.stopPropagation();
-              handleOpenInternal(
-                { id: row.invoiceId, invoiceNo: row.invoiceNo },
-                "view",
-              );
-            }}
-          />
-        ),
-      },
-
-      // 3. Ký hiệu (120px giống header)
-      {
-        key: "serialNo",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("columns.serialNo", "Ký hiệu")}
-            columnKey="serialNo"
-            queryKeyPrefix={`invoice-item-options-${direction}`}
-            allFilters={listHook.columnFilters}
-            sortState={getSortState("serialNo")}
-            onSortChange={(s) => listHook.setSort("serialNo", s)}
-            searchValue={listHook.columnSearch["serialNo"] || ""}
-            onSearchChange={(v) => listHook.setColumnSearch("serialNo", v)}
-            selectedFilters={listHook.columnFilters["serialNo"] || []}
-            onFilterChange={(v) => listHook.setColumnFilter("serialNo", v)}
-            fetchOptions={fetchColumnOptions}
-            isActive={!!listHook.columnFilters["serialNo"]?.length}
-            align="center"
-          />
-        ),
-        size: 120,
-        enableResizing: true,
-        cell: (row: ErpInvoiceItemRow) => (
-          <span className="font-mono text-xs text-muted-foreground">
-            {row.serialNo || "—"}
-          </span>
-        ),
-      },
-
-      // 4. Ngày HĐ (100px giống header)
+      // 2. Ngày HĐ (100px, nằm bên trái cột Số HĐ giống tab Hóa đơn)
       {
         key: "invoiceDate",
         className: "text-center",
+        headerClassName: "text-center",
         header: (
           <TableColumnHeaderFilter
-            title={t("columns.invoiceDate", "Ngày HĐ")}
+            title={t("invoiceDate", "Ngày HĐ")}
             sortState={getSortState("invoiceDate")}
             onSortChange={(s) => listHook.setSort("invoiceDate", s)}
             searchValue=""
@@ -185,15 +123,124 @@ export function useItemColumns({
         ),
       },
 
-      // 5. Đối tác (Người bán hoặc Người mua - 250px giống header)
+      // 3. Cột Số HĐ + Ký hiệu (120px cho Bán ra, 180px cho Mua vào)
+      {
+        key: "invoiceNo",
+        header: (
+          <TableColumnHeaderFilter
+            title={t("invoiceNo", "Số / Ký hiệu HĐ")}
+            columnKey="invoiceNo"
+            queryKeyPrefix={`invoice-item-options-${direction}`}
+            allFilters={listHook.columnFilters}
+            sortState={getSortState("invoiceNo")}
+            onSortChange={(s) => listHook.setSort("invoiceNo", s)}
+            searchValue={listHook.columnSearch["invoiceNo"] || ""}
+            onSearchChange={(v) => listHook.setColumnSearch("invoiceNo", v)}
+            selectedFilters={listHook.columnFilters["invoiceNo"] || []}
+            onFilterChange={(v) => listHook.setColumnFilter("invoiceNo", v)}
+            fetchOptions={fetchColumnOptions}
+            enableSelectAllMatching={true}
+            showBlankOption={true}
+            isActive={
+              !!listHook.columnFilters["invoiceNo"]?.length ||
+              !!listHook.columnSearch["invoiceNo"]
+            }
+            align="center"
+          />
+        ),
+        size: direction === "OUT" ? 120 : 180,
+        enableResizing: true,
+        cell: (row: ErpInvoiceItemRow) => {
+          const invoiceNo = row.invoiceNo?.trim() || "";
+          const serialNo = row.serialNo?.trim() || "";
+
+          if (!invoiceNo && !serialNo) {
+            return <span className="text-muted-foreground">—</span>;
+          }
+
+          const handleOpenDetail = (e: React.MouseEvent) => {
+            e.stopPropagation();
+            handleOpenInternal(
+              {
+                id: row.invoiceId,
+                invoiceNo: row.invoiceNo,
+                serialNo: row.serialNo,
+              },
+              "view",
+            );
+          };
+
+          return (
+            <div className="flex items-center gap-1.5 w-full min-w-0 py-0.5 leading-none">
+              <Tooltip content="Xem chi tiết hóa đơn">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 w-6 p-0 flex-shrink-0 opacity-60 hover:opacity-100 hover:bg-transparent hover:text-primary transition-all focus:ring-0 focus-visible:ring-0 focus:outline-none"
+                  onClick={handleOpenDetail}
+                  aria-label="Xem chi tiết hóa đơn"
+                >
+                  <Eye className="w-3.5 h-3.5" />
+                </Button>
+              </Tooltip>
+
+              <div className="flex flex-col justify-center min-w-0 flex-1 gap-0.5">
+                <div className="flex items-center gap-1 min-w-0 group/invno">
+                  <Tooltip content={invoiceNo ? `Số HĐ: ${invoiceNo}` : "—"}>
+                    <span
+                      className="truncate text-[11px] font-semibold text-primary leading-tight select-text cursor-pointer hover:underline"
+                      onClick={handleOpenDetail}
+                    >
+                      {invoiceNo || "—"}
+                    </span>
+                  </Tooltip>
+                  {invoiceNo && (
+                    <CopyButton
+                      value={invoiceNo}
+                      tooltip="Copy Số HĐ"
+                      copiedTooltip="Đã copy"
+                      toastMessage="Đã copy Số HĐ"
+                      toastId="item-invoice-no-copy"
+                      iconClassName="w-2.5 h-2.5"
+                      className="h-3.5 w-3.5 p-0 opacity-0 group-hover/invno:opacity-100 transition-opacity flex-shrink-0 text-slate-400 hover:text-slate-600 focus:outline-none"
+                    />
+                  )}
+                </div>
+
+                {serialNo && (
+                  <div className="flex items-center gap-1 min-w-0 group/serial">
+                    <Tooltip content={`Ký hiệu: ${serialNo}`}>
+                      <span className="truncate text-[11px] font-normal font-mono text-muted-foreground leading-tight select-text">
+                        {serialNo}
+                      </span>
+                    </Tooltip>
+                    <CopyButton
+                      value={serialNo}
+                      tooltip="Copy Ký hiệu"
+                      copiedTooltip="Đã copy"
+                      toastMessage="Đã copy Ký hiệu HĐ"
+                      toastId="item-invoice-serial-copy"
+                      iconClassName="w-2.5 h-2.5"
+                      className="h-3 w-3 p-0 opacity-0 group-hover/serial:opacity-100 transition-opacity flex-shrink-0 text-slate-400 hover:text-slate-600 focus:outline-none"
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        },
+      },
+
+      // 4. Đối tác + MST (250px, gom 2 dòng giống tab Hóa đơn)
       {
         key: "partner",
         header: (
           <TableColumnHeaderFilter
             title={
-              direction === "OUT"
-                ? t("columns.buyerName", "Người mua")
-                : t("columns.sellerName", "Người bán")
+              direction === "IN"
+                ? t("seller", "Bên bán / MST")
+                : t("buyer", "Bên mua / MST")
             }
             columnKey="partner"
             queryKeyPrefix={`invoice-item-options-${direction}`}
@@ -205,7 +252,12 @@ export function useItemColumns({
             selectedFilters={listHook.columnFilters["partner"] || []}
             onFilterChange={(v) => listHook.setColumnFilter("partner", v)}
             fetchOptions={fetchColumnOptions}
-            isActive={!!listHook.columnFilters["partner"]?.length}
+            enableSelectAllMatching={true}
+            showBlankOption={true}
+            isActive={
+              !!listHook.columnFilters["partner"]?.length ||
+              !!listHook.columnSearch["partner"]
+            }
             align="center"
           />
         ),
@@ -214,48 +266,68 @@ export function useItemColumns({
         cell: (row: ErpInvoiceItemRow) => {
           const partnerName =
             direction === "OUT"
-              ? row.buyerName || row.buyerPersonalName
-              : row.sellerName;
-          return <TableText text={partnerName || "—"} tooltip />;
-        },
-      },
-
-      // 6. Mã số thuế (150px giống header)
-      {
-        key: "taxCode",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("columns.taxCode", "Mã số thuế")}
-            columnKey="taxCode"
-            queryKeyPrefix={`invoice-item-options-${direction}`}
-            allFilters={listHook.columnFilters}
-            sortState={getSortState("taxCode")}
-            onSortChange={(s) => listHook.setSort("taxCode", s)}
-            searchValue={listHook.columnSearch["taxCode"] || ""}
-            onSearchChange={(v) => listHook.setColumnSearch("taxCode", v)}
-            selectedFilters={listHook.columnFilters["taxCode"] || []}
-            onFilterChange={(v) => listHook.setColumnFilter("taxCode", v)}
-            fetchOptions={fetchColumnOptions}
-            isActive={!!listHook.columnFilters["taxCode"]?.length}
-            align="center"
-          />
-        ),
-        size: 150,
-        enableResizing: true,
-        cell: (row: ErpInvoiceItemRow) => {
+              ? row.buyerName?.trim() || row.buyerPersonalName?.trim() || ""
+              : row.sellerName?.trim() || "";
           const taxCode =
             direction === "OUT"
-              ? row.buyerTaxCode || row.buyerCccd
-              : row.sellerTaxCode;
+              ? row.buyerTaxCode?.trim() || row.buyerCccd?.trim()
+              : row.sellerTaxCode?.trim();
+          const taxPrefix =
+            direction === "OUT" && row.buyerCccd ? "CCCD: " : "MST: ";
+
+          if (!partnerName && !taxCode) {
+            return <span className="text-muted-foreground">—</span>;
+          }
+
           return (
-            <span className="font-mono text-xs text-muted-foreground">
-              {taxCode || "—"}
-            </span>
+            <div className="flex items-center gap-1.5 w-full min-w-0 py-0.5 leading-none">
+              <div className="flex flex-col justify-center min-w-0 flex-1 gap-0.5">
+                <div className="flex items-center gap-1 min-w-0 group/pname">
+                  <Tooltip content={partnerName || "—"}>
+                    <span className="truncate text-[11px] font-semibold text-slate-800 dark:text-slate-200 leading-tight select-text">
+                      {partnerName || "—"}
+                    </span>
+                  </Tooltip>
+                  {partnerName && partnerName !== "—" && (
+                    <CopyButton
+                      value={partnerName}
+                      tooltip="Copy tên"
+                      copiedTooltip="Đã copy"
+                      toastMessage="Đã copy tên đối tác"
+                      toastId="item-partner-name-copy"
+                      iconClassName="w-2.5 h-2.5"
+                      className="h-3.5 w-3.5 p-0 opacity-0 group-hover/pname:opacity-100 transition-opacity flex-shrink-0 text-slate-400 hover:text-slate-600 focus:outline-none"
+                    />
+                  )}
+                </div>
+                {taxCode && (
+                  <div className="flex items-center gap-1 min-w-0 group/tax">
+                    <Tooltip content={`${taxPrefix}${taxCode}`}>
+                      <span className="truncate text-[11px] font-normal font-mono text-muted-foreground leading-tight select-text">
+                        <span className="text-slate-400 font-sans mr-0.5">
+                          {taxPrefix}
+                        </span>
+                        {taxCode}
+                      </span>
+                    </Tooltip>
+                    <CopyButton
+                      value={taxCode}
+                      tooltip="Copy MST"
+                      copiedTooltip="Đã copy"
+                      toastMessage="Đã copy MST"
+                      toastId="item-partner-tax-copy"
+                      iconClassName="w-2.5 h-2.5"
+                      className="h-3 w-3 p-0 opacity-0 group-hover/tax:opacity-100 transition-opacity flex-shrink-0 text-slate-400 hover:text-slate-600 focus:outline-none"
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
           );
         },
       },
 
-      // 7. Mã hàng / SKU (120px)
+      // 5. Mã hàng / SKU (130px)
       {
         key: "itemCode",
         header: (
@@ -271,11 +343,16 @@ export function useItemColumns({
             selectedFilters={listHook.columnFilters["itemCode"] || []}
             onFilterChange={(v) => listHook.setColumnFilter("itemCode", v)}
             fetchOptions={fetchColumnOptions}
-            isActive={!!listHook.columnFilters["itemCode"]?.length}
+            enableSelectAllMatching={true}
+            showBlankOption={true}
+            isActive={
+              !!listHook.columnFilters["itemCode"]?.length ||
+              !!listHook.columnSearch["itemCode"]
+            }
             align="center"
           />
         ),
-        size: 120,
+        size: 130,
         enableResizing: true,
         cell: (row: ErpInvoiceItemRow) => (
           <span className="font-mono text-xs font-medium">
@@ -284,12 +361,12 @@ export function useItemColumns({
         ),
       },
 
-      // 8. Diễn giải / Tên hàng hóa, dịch vụ (250px giống header)
+      // 6. Diễn giải / Tên hàng hóa, dịch vụ (250px)
       {
         key: "description",
         header: (
           <TableColumnHeaderFilter
-            title={t("columns.description", "Diễn giải / Hàng hóa")}
+            title={t("description", "Diễn giải")}
             columnKey="description"
             queryKeyPrefix={`invoice-item-options-${direction}`}
             allFilters={listHook.columnFilters}
@@ -316,7 +393,7 @@ export function useItemColumns({
         ),
       },
 
-      // 9. ĐVT
+      // 7. ĐVT (80px)
       {
         key: "unit",
         header: (
@@ -332,7 +409,12 @@ export function useItemColumns({
             selectedFilters={listHook.columnFilters["unit"] || []}
             onFilterChange={(v) => listHook.setColumnFilter("unit", v)}
             fetchOptions={fetchColumnOptions}
-            isActive={!!listHook.columnFilters["unit"]?.length}
+            enableSelectAllMatching={true}
+            showBlankOption={true}
+            isActive={
+              !!listHook.columnFilters["unit"]?.length ||
+              !!listHook.columnSearch["unit"]
+            }
             align="center"
           />
         ),
@@ -346,7 +428,7 @@ export function useItemColumns({
         ),
       },
 
-      // 10. Số lượng
+      // 8. Số lượng (90px)
       {
         key: "quantity",
         header: (
@@ -383,7 +465,7 @@ export function useItemColumns({
         ),
       },
 
-      // 11. Đơn giá
+      // 9. Đơn giá (110px)
       {
         key: "unitPrice",
         header: (
@@ -420,12 +502,12 @@ export function useItemColumns({
         ),
       },
 
-      // 12. Tiền trước thuế (120px giống header)
+      // 10. Trước GTGT (160px)
       {
         key: "preVatAmount",
         header: (
           <TableColumnHeaderFilter
-            title={t("columns.preVatAmount", "Tiền trước thuế")}
+            title={t("preVatAmount", "Trước GTGT")}
             columnKey="preVatAmount"
             queryKeyPrefix={`invoice-item-options-${direction}`}
             allFilters={listHook.columnFilters}
@@ -445,7 +527,7 @@ export function useItemColumns({
             align="center"
           />
         ),
-        size: 150,
+        size: 160,
         enableResizing: true,
         className: "text-right",
         cell: (row: ErpInvoiceItemRow) => (
@@ -455,44 +537,12 @@ export function useItemColumns({
         ),
       },
 
-      // 13. Thuế suất VAT (110px giống header, formatted xx%)
-      {
-        key: "vatRate",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("columns.vatRate", "Thuế suất GTGT")}
-            columnKey="vatRate"
-            queryKeyPrefix={`invoice-item-options-${direction}`}
-            allFilters={listHook.columnFilters}
-            sortState={getSortState("vatRate")}
-            onSortChange={(s) => listHook.setSort("vatRate", s)}
-            searchValue=""
-            onSearchChange={() => {}}
-            selectedFilters={listHook.columnFilters["vatRate"] || []}
-            onFilterChange={(v) => listHook.setColumnFilter("vatRate", v)}
-            fetchOptions={fetchColumnOptions}
-            formatOptionLabel={formatVatRate}
-            enableSelectAllMatching={true}
-            isActive={!!listHook.columnFilters["vatRate"]?.length}
-            align="center"
-          />
-        ),
-        size: 110,
-        enableResizing: true,
-        className: "text-center",
-        cell: (row: ErpInvoiceItemRow) => (
-          <span className="w-full block text-center font-mono text-xs text-muted-foreground">
-            {formatVatRate(row.vatRate)}
-          </span>
-        ),
-      },
-
-      // 14. Tiền thuế VAT (120px giống header)
+      // 11. Tiền thuế VAT (160px)
       {
         key: "vatAmount",
         header: (
           <TableColumnHeaderFilter
-            title={t("columns.vatAmount", "Tiền thuế")}
+            title={t("vatAmount", "Thuế GTGT")}
             columnKey="vatAmount"
             queryKeyPrefix={`invoice-item-options-${direction}`}
             allFilters={listHook.columnFilters}
@@ -512,7 +562,7 @@ export function useItemColumns({
             align="center"
           />
         ),
-        size: 120,
+        size: 160,
         enableResizing: true,
         className: "text-right",
         cell: (row: ErpInvoiceItemRow) => (
@@ -522,12 +572,12 @@ export function useItemColumns({
         ),
       },
 
-      // 15. Chiết khấu (120px giống header)
+      // 12. Chiết khấu (160px)
       {
         key: "discountAmount",
         header: (
           <TableColumnHeaderFilter
-            title={t("columns.discountAmount", "Chiết khấu")}
+            title={t("discountAmount", "Chiết khấu")}
             columnKey="discountAmount"
             queryKeyPrefix={`invoice-item-options-${direction}`}
             allFilters={listHook.columnFilters}
@@ -544,6 +594,7 @@ export function useItemColumns({
             fetchOptions={fetchColumnOptions}
             formatOptionLabel={formatAmtOption}
             enableSelectAllMatching={true}
+            showBlankOption={true}
             isActive={
               !!listHook.columnFilters["discountAmount"]?.length ||
               !!listHook.columnSearch["discountAmount"]
@@ -551,7 +602,7 @@ export function useItemColumns({
             align="center"
           />
         ),
-        size: 120,
+        size: 160,
         enableResizing: true,
         className: "text-right",
         cell: (row: ErpInvoiceItemRow) => (
@@ -563,12 +614,45 @@ export function useItemColumns({
         ),
       },
 
-      // 16. Tổng tiền thanh toán (120px giống header)
+      // 13. Thuế suất VAT (110px, formatted xx%, nằm bên phải cột Chiết khấu)
+      {
+        key: "vatRate",
+        header: (
+          <TableColumnHeaderFilter
+            title={t("vatRate", "Thuế suất GTGT")}
+            columnKey="vatRate"
+            queryKeyPrefix={`invoice-item-options-${direction}`}
+            allFilters={listHook.columnFilters}
+            sortState={getSortState("vatRate")}
+            onSortChange={(s) => listHook.setSort("vatRate", s)}
+            searchValue=""
+            onSearchChange={() => {}}
+            selectedFilters={listHook.columnFilters["vatRate"] || []}
+            onFilterChange={(v) => listHook.setColumnFilter("vatRate", v)}
+            fetchOptions={fetchColumnOptions}
+            formatOptionLabel={formatVatRate}
+            enableSelectAllMatching={true}
+            showBlankOption={true}
+            isActive={!!listHook.columnFilters["vatRate"]?.length}
+            align="center"
+          />
+        ),
+        size: 110,
+        enableResizing: true,
+        className: "text-center",
+        cell: (row: ErpInvoiceItemRow) => (
+          <span className="w-full block text-center font-mono text-xs text-muted-foreground">
+            {formatVatRate(row.vatRate)}
+          </span>
+        ),
+      },
+
+      // 14. Tổng tiền thanh toán (160px)
       {
         key: "totalAmount",
         header: (
           <TableColumnHeaderFilter
-            title={t("columns.totalAmount", "Tổng tiền")}
+            title={t("totalAmount", "Thành tiền")}
             columnKey="totalAmount"
             queryKeyPrefix={`invoice-item-options-${direction}`}
             allFilters={listHook.columnFilters}
@@ -588,7 +672,7 @@ export function useItemColumns({
             align="center"
           />
         ),
-        size: 120,
+        size: 160,
         enableResizing: true,
         className: "text-right",
         cell: (row: ErpInvoiceItemRow) => (
@@ -598,12 +682,12 @@ export function useItemColumns({
         ),
       },
 
-      // 17. Trạng thái GĐT
+      // 15. Trạng thái (GDT) (150px)
       {
         key: "taxInvoiceStatus",
         header: (
           <TableColumnHeaderFilter
-            title={t("taxInvoiceStatus", "Trạng thái GĐT")}
+            title={t("taxInvoiceStatus", "Trạng thái (GDT)")}
             columnKey="taxInvoiceStatus"
             queryKeyPrefix={`invoice-item-options-${direction}`}
             allFilters={listHook.columnFilters}
@@ -637,7 +721,7 @@ export function useItemColumns({
         ),
       },
 
-      // 18. Chi nhánh
+      // 16. Chi nhánh (120px)
       {
         key: "branchId",
         header: (
@@ -664,6 +748,7 @@ export function useItemColumns({
               return { items: filtered, total: filtered.length, next: null };
             }}
             showBlankOption={true}
+            enableSelectAllMatching={true}
             isActive={
               !!listHook.columnFilters["branchId"]?.length ||
               !!listHook.columnSearch["branchId"]
@@ -671,7 +756,7 @@ export function useItemColumns({
             align="center"
           />
         ),
-        size: 140,
+        size: 120,
         enableResizing: true,
         className: "text-center text-xs",
         cell: (row: ErpInvoiceItemRow) => {
