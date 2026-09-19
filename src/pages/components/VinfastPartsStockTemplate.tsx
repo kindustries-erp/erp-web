@@ -21,6 +21,7 @@ import { DEFAULT_DEBOUNCE_TIME } from "@/shared/constants/timing";
 import { encodeStateParam } from "@/shared/utils/pageUrl";
 import { VinfastPartsStockDetailDrawer } from "./VinfastPartsStockDetailDrawer";
 import { VinfastPartsSyncDrawer } from "./VinfastPartsSyncDrawer";
+import { useVinfastPartsStockSummary } from "../hooks/useVinfastPartsStockSummary";
 
 export const getDefaultPageSize = (): number => {
   if (typeof window !== "undefined" && window.innerHeight >= 900) {
@@ -386,46 +387,14 @@ export function VinfastPartsStockTemplate({
     [t],
   );
 
-  const totals = useMemo(() => {
-    const items = data?.data || [];
-    return items.reduce(
-      (
-        acc: { qtyIn: number; qtyOut: number; qtyBalance: number },
-        row: any,
-      ) => ({
-        qtyIn: acc.qtyIn + Number(row.qtyIn || 0),
-        qtyOut: acc.qtyOut + Number(row.qtyOut || 0),
-        qtyBalance: acc.qtyBalance + Number(row.qtyBalance || 0),
-      }),
-      { qtyIn: 0, qtyOut: 0, qtyBalance: 0 },
-    );
-  }, [data?.data]);
-
-  const summaryRow = useMemo(
-    () => ({
-      name: (
-        <div className="text-right w-full font-semibold">
-          {t("common:total", "Tổng cộng")}:
-        </div>
-      ),
-      qtyIn: (
-        <div className="text-right font-semibold text-emerald-700 tabular-nums">
-          {totals.qtyIn.toLocaleString("vi-VN")}
-        </div>
-      ),
-      qtyOut: (
-        <div className="text-right font-semibold text-rose-700 tabular-nums">
-          {totals.qtyOut.toLocaleString("vi-VN")}
-        </div>
-      ),
-      qtyBalance: (
-        <div className="text-right font-bold text-slate-800 tabular-nums">
-          {totals.qtyBalance.toLocaleString("vi-VN")}
-        </div>
-      ),
-    }),
-    [totals, t],
-  );
+  const summaryRow = useVinfastPartsStockSummary({
+    items: data?.data || [],
+    summary: data?.summary,
+    page,
+    pageSize,
+    totalCount: data?.total || 0,
+    totalPages: data?.totalPages || 1,
+  });
 
   if (!hasVinfastPerm) {
     return <ComingSoon />;
