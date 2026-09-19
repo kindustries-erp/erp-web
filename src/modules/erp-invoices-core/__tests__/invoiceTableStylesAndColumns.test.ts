@@ -276,7 +276,55 @@ describe("Invoice Table Styles & Columns Enhancements", () => {
       );
     });
 
-    it("should match column width sizes with header columns and format vatRate as percentage", () => {
+    it("should position invoiceDate immediately to the left of invoiceNo, and vatRate immediately to the right of discountAmount in useItemColumns", () => {
+      const mockListHook: any = {
+        page: 1,
+        pageSize: 20,
+        sorts: [],
+        columnFilters: {},
+        columnSearch: {},
+        dateFrom: "",
+        dateTo: "",
+      };
+
+      const options: any = {
+        direction: "IN",
+        t: (k: string, fallback: string) => fallback || k,
+        listHook: mockListHook,
+        getSortState: vi.fn(() => "none"),
+        fetchColumnOptions: vi.fn(),
+        handleOpenInternal: vi.fn(),
+      };
+
+      const { result } = renderHook(() => useItemColumns(options));
+      const columnKeys = result.current.map((col) => col.key);
+
+      const dateIdx = columnKeys.indexOf("invoiceDate");
+      const noIdx = columnKeys.indexOf("invoiceNo");
+      const partnerIdx = columnKeys.indexOf("partner");
+      const discountIdx = columnKeys.indexOf("discountAmount");
+      const vatRateIdx = columnKeys.indexOf("vatRate");
+      const totalAmountIdx = columnKeys.indexOf("totalAmount");
+
+      expect(dateIdx).toBeGreaterThan(-1);
+      expect(noIdx).toBeGreaterThan(-1);
+      expect(partnerIdx).toBeGreaterThan(-1);
+      expect(discountIdx).toBeGreaterThan(-1);
+      expect(vatRateIdx).toBeGreaterThan(-1);
+      expect(totalAmountIdx).toBeGreaterThan(-1);
+
+      // invoiceDate is positioned to the left of invoiceNo (immediately before invoiceNo)
+      expect(dateIdx).toBe(1);
+      expect(noIdx).toBe(2);
+      expect(partnerIdx).toBe(3);
+      expect(dateIdx).toBe(noIdx - 1);
+
+      // vatRate is positioned immediately to the right of discountAmount
+      expect(vatRateIdx).toBe(discountIdx + 1);
+      expect(totalAmountIdx).toBe(vatRateIdx + 1);
+    });
+
+    it("should match column width sizes (120px for invoiceNo in OUT, 180px in IN) and titles with Table Hóa đơn and format vatRate as percentage", () => {
       const mockListHook: any = {
         page: 1,
         pageSize: 20,
@@ -295,7 +343,7 @@ describe("Invoice Table Styles & Columns Enhancements", () => {
         },
       };
 
-      const itemOptions: any = {
+      const itemOptionsIn: any = {
         direction: "IN",
         t: (k: string, fallback: string) => fallback || k,
         listHook: mockListHook,
@@ -304,35 +352,87 @@ describe("Invoice Table Styles & Columns Enhancements", () => {
         handleOpenInternal: vi.fn(),
       };
 
-      const { result: itemColsResult } = renderHook(() =>
-        useItemColumns(itemOptions),
-      );
-      const itemCols = itemColsResult.current;
+      const itemOptionsOut: any = {
+        direction: "OUT",
+        t: (k: string, fallback: string) => fallback || k,
+        listHook: mockListHook,
+        getSortState: vi.fn(() => "none"),
+        fetchColumnOptions: vi.fn(),
+        handleOpenInternal: vi.fn(),
+      };
 
-      // Check corresponding column sizes
+      const { result: itemColsInResult } = renderHook(() =>
+        useItemColumns(itemOptionsIn),
+      );
+      const itemColsIn = itemColsInResult.current;
+
+      const { result: itemColsOutResult } = renderHook(() =>
+        useItemColumns(itemOptionsOut),
+      );
+      const itemColsOut = itemColsOutResult.current;
+
+      // Verify invoiceNo size is 120px in OUT direction and 180px in IN direction
+      const invoiceNoColOut = itemColsOut.find((c) => c.key === "invoiceNo");
+      expect(invoiceNoColOut?.size).toBe(120);
+
+      const invoiceNoColIn = itemColsIn.find((c) => c.key === "invoiceNo");
+      expect(invoiceNoColIn?.size).toBe(180);
+
+      // Check corresponding column sizes unified with Table Hóa đơn
       const expectedSizes: Record<string, number> = {
         index: 40,
         invoiceDate: 100,
-        invoiceNo: 120,
-        serialNo: 120,
         partner: 250,
-        taxCode: 150,
+        itemCode: 130,
         description: 250,
-        preVatAmount: 150,
-        vatAmount: 120,
-        discountAmount: 120,
-        totalAmount: 120,
+        unit: 80,
+        quantity: 90,
+        unitPrice: 110,
+        preVatAmount: 160,
         vatRate: 110,
+        vatAmount: 160,
+        discountAmount: 160,
+        totalAmount: 160,
+        taxInvoiceStatus: 150,
+        branchId: 120,
       };
 
       for (const [key, size] of Object.entries(expectedSizes)) {
-        const col = itemCols.find((c) => c.key === key);
+        const col = itemColsIn.find((c) => c.key === key);
         expect(col).toBeDefined();
         expect(col?.size).toBe(size);
       }
 
+      // Check unified header titles
+      expect((invoiceNoColIn?.header as any).props.title).toBe(
+        "Số / Ký hiệu HĐ",
+      );
+
+      const partnerCol = itemColsIn.find((c) => c.key === "partner");
+      expect((partnerCol?.header as any).props.title).toBe("Bên bán / MST");
+
+      const descCol = itemColsIn.find((c) => c.key === "description");
+      expect((descCol?.header as any).props.title).toBe("Diễn giải");
+
+      const preVatCol = itemColsIn.find((c) => c.key === "preVatAmount");
+      expect((preVatCol?.header as any).props.title).toBe("Trước GTGT");
+
+      const vatAmountCol = itemColsIn.find((c) => c.key === "vatAmount");
+      expect((vatAmountCol?.header as any).props.title).toBe("Thuế GTGT");
+
+      const totalAmountCol = itemColsIn.find((c) => c.key === "totalAmount");
+      expect((totalAmountCol?.header as any).props.title).toBe("Thành tiền");
+
+      const taxStatusCol = itemColsIn.find((c) => c.key === "taxInvoiceStatus");
+      expect((taxStatusCol?.header as any).props.title).toBe(
+        "Trạng thái (GDT)",
+      );
+
+      const branchCol = itemColsIn.find((c) => c.key === "branchId");
+      expect((branchCol?.header as any).props.title).toBe("Chi nhánh");
+
       // Check vatRate cell formatting
-      const vatRateCol = itemCols.find((c) => c.key === "vatRate");
+      const vatRateCol = itemColsIn.find((c) => c.key === "vatRate");
       expect(vatRateCol).toBeDefined();
 
       const rendered8 = (vatRateCol?.cell as any)({ vatRate: 0.08 }, 0);

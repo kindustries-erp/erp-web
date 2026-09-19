@@ -118,7 +118,7 @@ export function useAmountColumns({
             enableSelectAllMatching={true}
           />
         ),
-        size: 120,
+        size: 160,
         headerClassName: "text-center",
         className: "text-right",
         cell: (inv: ErpInvoice) => fmtAmt(inv.discountAmount),
@@ -145,7 +145,7 @@ export function useAmountColumns({
             enableSelectAllMatching={true}
           />
         ),
-        size: 120,
+        size: 160,
         headerClassName: "text-center",
         className: "text-right",
         cell: (row: ErpInvoice) => fmtAmt(row.preVatAmount),
@@ -196,7 +196,7 @@ export function useAmountColumns({
             enableSelectAllMatching={true}
           />
         ),
-        size: 120,
+        size: 160,
         headerClassName: "text-center",
         className: "text-right",
         cell: (inv: ErpInvoice) => fmtAmt(inv.vatAmount),
@@ -223,7 +223,7 @@ export function useAmountColumns({
             enableSelectAllMatching={true}
           />
         ),
-        size: 120,
+        size: 160,
         headerClassName: "text-center",
         className: "text-right font-semibold",
         cell: (inv: ErpInvoice) => fmtAmt(inv.totalAmount),
