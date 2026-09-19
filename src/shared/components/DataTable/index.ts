@@ -17,6 +17,7 @@ export * from "./createColumnHeaderFilter";
 export * from "./TableDateCell";
 export * from "./TableText";
 export * from "./DateRangeColumnSlot";
+export * from "./SubtotalSummaryCell";
 
 // Hooks
 export * from "./hooks/useDataTablePreferences";

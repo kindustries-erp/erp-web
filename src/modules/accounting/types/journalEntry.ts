@@ -15,51 +15,118 @@ export interface AccountingPeriod {
   end_date?: string | null;
 }
 
-export interface JournalEntryLine {
+export interface JournalEntryLineItem {
   id?: string;
-  account_id: string | JournalEntryAccount;
+  accountId?: string;
+  account_id?: string | JournalEntryAccount;
+  account?: {
+    id?: string;
+    accountCode?: string;
+    accountName?: string;
+    account_code?: string;
+    account_name?: string;
+  } | null;
   debit: number | string | null;
   credit: number | string | null;
   description?: string | null;
   sort?: number | null;
 }
 
-export interface JournalEntry {
+export type JournalEntryLine = JournalEntryLineItem;
+
+export interface JournalEntryItem {
   id: string;
+  entryNo?: string;
   voucher_no?: string | null;
   date: string;
   documentDate?: string | null;
   period_id?: string | AccountingPeriod | null;
   description?: string | null;
-  status: JournalEntryStatus;
+  subjectName?: string | null;
+  status: JournalEntryStatus | string;
+  reference?: string | null;
   reference_type?: string | null;
   reference_id?: string | null;
-  total_debit: number | string | null;
-  total_credit: number | string | null;
+  sourceId?: string | null;
+  sourceType?: string | null;
+  branchId?: string;
+  branch?: {
+    id: string;
+    name: string;
+  } | null;
+  total_debit?: number | string | null;
+  total_credit?: number | string | null;
   created_by?: string | null;
+  lines?: JournalEntryLineItem[];
+  createdAt?: string;
+  updatedAt?: string;
   created_at?: string | null;
   updated_at?: string | null;
-  lines?: JournalEntryLine[];
 }
 
-export interface JournalEntryListParams {
+export type JournalEntry = JournalEntryItem;
+
+export interface JournalEntrySpreadsheetRow {
+  _id: string;
+  _entryNo: string;
+  _date: string;
+  _documentDate?: string | null;
+  _status: string;
+  _description?: string | null;
+  _reference?: string | null;
+  _branch?: string;
+  _sourceId?: string | null;
+  _sourceType?: string | null;
+  _subjectName?: string | null;
+  _account?: string;
+  _opposingAccount?: string;
+  id: string;
+  debit: number;
+  credit: number;
+  description?: string | null;
+  sort?: number | null;
+  isFirstLine?: boolean;
+  rowSpan?: number;
+}
+
+export interface JournalEntriesQueryParams {
   page?: number;
   pageSize?: number;
   sort?: string;
+  sorts?: string[];
   search?: string;
-  status?: JournalEntryStatus | "";
-  period_id?: string;
-  account_id?: string;
   date_from?: string;
   date_to?: string;
+  doc_date_from?: string;
+  doc_date_to?: string;
+  branch_id?: string;
+  source_type?: string;
+  column_filters?: string;
+  column_search?: string;
+  status?: JournalEntryStatus | string;
+  period_id?: string;
+  account_id?: string;
+  [key: string]: any;
+}
+
+export type JournalEntryListParams = JournalEntriesQueryParams;
+
+export interface JournalEntryTotals {
+  grandTotalDebit: number;
+  grandTotalCredit: number;
+  cumulativeDebit: number;
+  cumulativeCredit: number;
+  totalLines: number;
+  cumulativeLines: number;
 }
 
 export interface JournalEntryListResponse {
-  items: JournalEntry[];
+  items: JournalEntryItem[];
   total: number;
   page: number;
   pageSize: number;
   totalPages: number;
+  totals?: JournalEntryTotals;
 }
 
 export interface JournalEntryFormLine {

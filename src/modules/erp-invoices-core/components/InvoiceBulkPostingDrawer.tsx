@@ -100,25 +100,56 @@ export function InvoiceBulkPostingDrawer({
   mode = "post",
   onSuccess,
 }: Props) {
+  // Find IDs that are not present in the invoices prop
+  const missingIds = useMemo(() => {
+    const presentIds = new Set((invoices || []).map((inv) => inv.id));
+    return selectedInvoiceIds.filter((id) => !presentIds.has(id));
+  }, [invoices, selectedInvoiceIds]);
+
+  // Fetch missing invoices if any (e.g. selected across pages or prop delay)
+  const { data: missingInvoices = [] } = useQuery({
+    queryKey: ["erp-invoices-bulk-posting-missing", missingIds],
+    queryFn: async () => {
+      if (missingIds.length === 0) return [];
+      const results = await Promise.allSettled(
+        missingIds.map((id) => erpInvoicesCoreApi.get(id)),
+      );
+      return results
+        .filter(
+          (r): r is PromiseFulfilledResult<ErpInvoice> =>
+            r.status === "fulfilled" && !!r.value,
+        )
+        .map((r) => r.value);
+    },
+    enabled: open && missingIds.length > 0,
+  });
+
+  const allAvailableInvoices = useMemo(() => {
+    const map = new Map<string, ErpInvoice>();
+    (invoices || []).forEach((inv) => map.set(inv.id, inv));
+    missingInvoices.forEach((inv) => map.set(inv.id, inv));
+    return Array.from(map.values());
+  }, [invoices, missingInvoices]);
+
   const selectedInvoices = useMemo(() => {
-    return invoices.filter(
+    return allAvailableInvoices.filter(
       (inv) =>
         selectedInvoiceIds.includes(inv.id) &&
         (mode === "unpost"
           ? inv.postingStatus === "POSTED"
           : inv.postingStatus !== "POSTED"),
     );
-  }, [invoices, selectedInvoiceIds, mode]);
+  }, [allAvailableInvoices, selectedInvoiceIds, mode]);
 
   const skippedInvoices = useMemo(() => {
-    return invoices.filter(
+    return allAvailableInvoices.filter(
       (inv) =>
         selectedInvoiceIds.includes(inv.id) &&
         (mode === "unpost"
           ? inv.postingStatus !== "POSTED"
           : inv.postingStatus === "POSTED"),
     );
-  }, [invoices, selectedInvoiceIds, mode]);
+  }, [allAvailableInvoices, selectedInvoiceIds, mode]);
 
   const { data: branches = [] } = useQuery({
     queryKey: ["branches-options"],

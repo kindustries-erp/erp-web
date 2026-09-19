@@ -32,6 +32,7 @@ export type GrReceiptType =
   | (string & {});
 
 export interface GrLineForm {
+  id?: string;
   purchaseOrderLineId: string;
   productionOrderMaterialId: string;
   itemId: string;
@@ -72,7 +73,7 @@ export function buildGrForm(gr: ErpGoodsReceipt): GrForm {
   const customAttrs = gr.customAttributes || {};
   return {
     receiptType:
-      (customAttrs.type_inventory_receipt as GrReceiptType) ||
+      (customAttrs.category as GrReceiptType) ||
       (gr.purchaseOrderId ? "PO" : "OTHER"),
     receiptNo: gr.receiptNo ?? "",
     purchaseOrderId: gr.purchaseOrderId ?? "",
@@ -81,6 +82,7 @@ export function buildGrForm(gr: ErpGoodsReceipt): GrForm {
     remarks: gr.remarks ?? "",
     lines:
       gr.lines?.map((line) => ({
+        id: line.id,
         purchaseOrderLineId: line.purchaseOrderLineId ?? "",
         productionOrderMaterialId: line.productionOrderMaterialId ?? "",
         itemId: line.itemId ?? "",
@@ -96,11 +98,11 @@ export function buildGrForm(gr: ErpGoodsReceipt): GrForm {
 }
 
 export function buildGrPayload(form: GrForm): CreateGrPayload {
+  const category = form.receiptType || (form.purchaseOrderId ? "PO" : "OTHER");
   const customAttributes = {
     ...(form.globalAttributes || {}),
     ...(form.customAttributes || {}),
-    type_inventory_receipt:
-      form.receiptType || (form.purchaseOrderId ? "PO" : "OTHER"),
+    category,
   };
 
   return {
@@ -250,10 +252,14 @@ export function useGrDrawer({
       setViewOnly(false);
       setSaveError(null);
       const initial = emptyGrForm();
-      if (prefillPurchaseOrderId)
+      if (prefillPurchaseOrderId) {
         initial.purchaseOrderId = prefillPurchaseOrderId;
-      if (prefillProductionOrderId)
+        initial.receiptType = "PO";
+      }
+      if (prefillProductionOrderId) {
         initial.productionOrderId = prefillProductionOrderId;
+        initial.receiptType = "PRODUCTION";
+      }
       setForm(initial);
       void loadPoOptions();
       setOpen(true);
@@ -271,7 +277,7 @@ export function useGrDrawer({
       try {
         const detail = await goodsReceiptsCoreApi.get(id);
         if (detail.lines) {
-          void fetchItemsDict(detail.lines.map((l) => l.itemId || ""));
+          await fetchItemsDict(detail.lines.map((l) => l.itemId || ""));
         }
         setEditing(detail);
         setForm(buildGrForm(detail));

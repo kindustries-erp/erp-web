@@ -2,10 +2,11 @@ import type { ErpInvoice } from "@/modules/erp-invoices-core/api/erpInvoicesCore
 import type { useTableColumnState } from "@/shared/hooks/useTableColumnState";
 
 export type ReconciliationTabKey =
-  | "bank_cash"
-  | "manual_cashflow"
   | "invoices_out"
-  | "invoices_in";
+  | "invoices_in"
+  | "bank_statement"
+  | "cash_book"
+  | "manual_cashflow";
 
 export interface SettlementSubmissionItem {
   id?: string;
@@ -37,6 +38,7 @@ export interface GarageCaseReconciliationDrawerProps {
   onClose: () => void;
   caseId?: string;
   caseCode?: string;
+  caseData?: any;
   initialTab?: ReconciliationTabKey;
   defaultType?: "RECEIPT" | "PAYMENT";
   suggestedAmount?: number;
@@ -45,12 +47,17 @@ export interface GarageCaseReconciliationDrawerProps {
   existingTxnIds?: string[];
   editingItem?: SettlementSubmissionItem | null;
   onSuccess?: () => void;
+  activeLinkedInvoices?: any[];
+  activeSettlements?: any[];
+  activeSummary?: any;
   onSubmitSettlements?: (
     items: SettlementSubmissionItem[],
   ) => Promise<void> | void;
+  onRemoveSettlement?: (id: string) => void;
   onSubmitInvoices?: (
     payloads: InvoiceLinkPayloadItem[] | InvoiceLinkPayloadItem,
   ) => Promise<void> | void;
+  onRemoveInvoice?: (id: string) => void;
 }
 
 export interface PdfPreviewState {
@@ -58,7 +65,6 @@ export interface PdfPreviewState {
   filename: string;
   fileKey: string;
   invoiceId: string;
-  isAttachment?: boolean;
 }
 
 export interface NetOffInputProps {
@@ -71,8 +77,8 @@ export interface SelectedBankTransactionsTableProps {
   items: any[];
   netOffAmounts: Record<string, number>;
   maxAmounts: Record<string, number>;
-  onAmountChange: (txn: any, val: number) => void;
-  onRemove: (txn: any) => void;
+  onAmountChange: (row: any, val: number) => void;
+  onRemove: (row: any) => void;
   onViewDetail: (id: string) => void;
 }
 
@@ -110,9 +116,17 @@ export interface BankCashTabContentProps {
     invoiceSearchTerm?: string,
   ) => void;
   settlementType: "RECEIPT" | "PAYMENT";
+  editMode?: boolean;
+  viewPreset?: string;
+  onSelectAllSuggestions?: () => void;
+  suggestionsCount?: number;
+  sourceType?: "BANK" | "CASH";
 }
 
 export interface ManualCashflowTabContentProps {
+  editMode?: boolean;
+  activeSettlements?: any[];
+  onRemoveSettlement?: (id: string) => void;
   settlementType: "RECEIPT" | "PAYMENT";
   baseRemaining: number;
   manualAmount: number | string;
@@ -150,34 +164,53 @@ export interface InvoiceTabContentProps {
   onSetInvoicePageSize: (size: number) => void;
   onSetInvoiceDateFrom: (val: string) => void;
   onSetInvoiceDateTo: (val: string) => void;
+  editMode?: boolean;
+  viewPreset?: string;
+  onSelectAllSuggestions?: () => void;
+  suggestionsCount?: number;
 }
+
+export type FinancialsDomainDirection = "REVENUE" | "COST";
 
 export interface ReconciliationRightPanelProps {
   caseId?: string;
   caseCode?: string;
+  caseData?: any;
   caseSummary: any;
   settlementType: "RECEIPT" | "PAYMENT";
   activeTab: ReconciliationTabKey;
+  domainDirection?: FinancialsDomainDirection;
+  onSetDomainDirection?: (domain: FinancialsDomainDirection) => void;
   targetRevenue: number;
   targetCost: number;
   totalCollected: number;
   totalPaid: number;
   activeTabSettlementTotal: number;
-  bankSuggestions: any[];
-  isLoadingBankSuggestions: boolean;
-  selectedIds: string[];
-  invoiceSuggestions: any[];
-  isLoadingInvoiceSuggestions: boolean;
-  selectedInvoicesMap: Record<string, ErpInvoice>;
-  invoiceNote: string;
+  isPaidFull?: boolean;
+  paymentPercent?: number;
+  remainingDebt?: number;
+  remainingAfterNetOff?: number;
+  bankSuggestions?: any[];
+  isLoadingBankSuggestions?: boolean;
+  selectedIds?: string[];
+  selectedInvoicesCount?: number;
+  invoiceSuggestions?: any[];
+  isLoadingInvoiceSuggestions?: boolean;
+  selectedInvoicesMap?: Record<string, ErpInvoice>;
+  invoiceNote?: string;
+  editMode?: boolean;
+  onStartEdit?: () => void;
+  onConfirmNetOff?: () => void;
+  onUnselectAll?: () => void;
+  isSubmitting?: boolean;
   onSetSettlementType: (type: "RECEIPT" | "PAYMENT") => void;
-  onSelectBankTxn: (row: any, checked: boolean) => void;
-  onViewBankDetail: (id: string) => void;
-  onNavigateToInvoiceTab: (
+  onSelectBankTxn?: (row: any, checked: boolean) => void;
+  onViewBankDetail?: (id: string) => void;
+  onNavigateToInvoiceTab?: (
     targetDirection: "IN" | "OUT",
     invoiceSearchTerm?: string,
   ) => void;
-  onToggleInvoice: (inv: ErpInvoice) => void;
-  onViewInvoiceDetail: (id: string) => void;
-  onSetInvoiceNote: (note: string) => void;
+  onToggleInvoice?: (inv: ErpInvoice) => void;
+  onViewInvoiceDetail?: (id: string) => void;
+  onSetInvoiceNote?: (note: string) => void;
 }

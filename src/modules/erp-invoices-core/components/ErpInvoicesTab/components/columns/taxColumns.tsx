@@ -111,7 +111,11 @@ export function useTaxColumns({
         size: 150,
         className: "text-center",
         cell: (inv: ErpInvoice) => (
-          <TaxInvoiceStatusBadge status={inv.taxInvoiceStatus} />
+          <TaxInvoiceStatusBadge
+            status={inv.taxInvoiceStatus}
+            relatedInvoiceNo={inv.relatedInvoiceNo}
+            relatedSerialNo={inv.relatedSerialNo}
+          />
         ),
       },
       taxProcessStatus: {

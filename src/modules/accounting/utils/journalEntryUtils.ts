@@ -34,9 +34,9 @@ export function getPeriodLabel(period: JournalEntry["period_id"]): string {
 
 export function getLineTotals(
   lines: JournalEntryFormLine[] | JournalEntryLine[],
-) {
+): { debit: number; credit: number } {
   return lines.reduce(
-    (acc, line) => {
+    (acc: { debit: number; credit: number }, line) => {
       acc.debit += money(line.debit);
       acc.credit += money(line.credit);
       return acc;
@@ -45,7 +45,9 @@ export function getLineTotals(
   );
 }
 
-export function isBalanced(lines: JournalEntryFormLine[] | JournalEntryLine[]) {
+export function isBalanced(
+  lines: JournalEntryFormLine[] | JournalEntryLine[],
+): boolean {
   const totals = getLineTotals(lines);
   return totals.debit > 0 && Math.abs(totals.debit - totals.credit) < 0.001;
 }

@@ -14,7 +14,7 @@ import {
   useUserPreferencesStore,
   type TableViewPreset,
 } from "@/shared/hooks/useUserPreferences";
-import { money } from "@/shared/utils/format";
+import { SubtotalSummaryCell } from "@/shared/components/DataTable/SubtotalSummaryCell";
 import {
   BANK_STATEMENT_COLUMN_VIEW_PRESETS,
   DEFAULT_BANK_COLUMN_VISIBILITY,
@@ -86,6 +86,7 @@ export function useBankStatementsTabLogic({
   );
   const [detailDefaultTab, setDetailDefaultTab] =
     useState<string>("txn_details");
+  const [detailMode, setDetailMode] = useState<"view" | "edit">("view");
   const [partnerDrawerOpen, setPartnerDrawerOpen] = useState(false);
   const [selectedPartner, setSelectedPartner] = useState<{
     account?: string;
@@ -93,8 +94,13 @@ export function useBankStatementsTabLogic({
   } | null>(null);
 
   const handleOpenDetail = useCallback(
-    (id: string, tab: string = "txn_details") => {
+    (
+      id: string,
+      tab: string = "txn_details",
+      mode: "view" | "edit" = "view",
+    ) => {
       setDetailDefaultTab(tab);
+      setDetailMode(mode);
       setDetailTransactionId(id);
     },
     [],
@@ -330,6 +336,27 @@ export function useBankStatementsTabLogic({
       }),
   });
 
+  const { data: dashboardStats } = useQuery({
+    queryKey: [
+      "bank-transactions-dashboard-stats",
+      type,
+      filter.state,
+      effectiveTransactionType,
+    ],
+    queryFn: () =>
+      bankStatementApi.getDashboardStats({
+        sourceType: type === "bank" ? "BANK" : "CASH",
+        search: filter.state.search || undefined,
+        startDate: filter.state.dateFrom || undefined,
+        endDate: filter.state.dateTo || undefined,
+        branchId: filter.state.custom.branchId || undefined,
+        bankAccountId: filter.state.custom.bankAccountId || undefined,
+        cashBookId: filter.state.custom.cashBookId || undefined,
+        transactionType: effectiveTransactionType,
+        tagIds: filter.state.custom.tagIds as unknown as string[] | undefined,
+      }),
+  });
+
   // 7. Columns Definition
   const { columns } = useBankStatementColumns({
     type,
@@ -348,19 +375,21 @@ export function useBankStatementsTabLogic({
   const summaryRow = useMemo(() => {
     if (!data?.items || data.items.length === 0) return undefined;
 
-    const totalDebit = data.items.reduce(
+    const items = data.items;
+
+    const totalDebit = items.reduce(
       (acc: number, curr: any) => acc + (parseFloat(curr.debitAmount) || 0),
       0,
     );
-    const totalCredit = data.items.reduce(
+    const totalCredit = items.reduce(
       (acc: number, curr: any) => acc + (parseFloat(curr.creditAmount) || 0),
       0,
     );
-    const totalNetOff = data.items.reduce(
+    const totalNetOff = items.reduce(
       (acc: number, curr: any) => acc + (parseFloat(curr.netOffAmount) || 0),
       0,
     );
-    const totalRemaining = data.items.reduce(
+    const totalRemaining = items.reduce(
       (acc: number, curr: any) =>
         acc +
         (Math.max(
@@ -371,42 +400,103 @@ export function useBankStatementsTabLogic({
       0,
     );
 
+    const totalPages = data.totalPages || 1;
+    const totalCount = data.total || items.length;
+    const grandCashIn =
+      dashboardStats?.totalCashIn !== undefined
+        ? Number(dashboardStats.totalCashIn)
+        : data?.totals?.grandTotalCredit !== undefined
+          ? Number(data.totals.grandTotalCredit)
+          : totalCredit;
+    const grandCashOut =
+      dashboardStats?.totalCashOut !== undefined
+        ? Number(dashboardStats.totalCashOut)
+        : data?.totals?.grandTotalDebit !== undefined
+          ? Number(data.totals.grandTotalDebit)
+          : totalDebit;
+
+    const cumulativeCashIn =
+      data?.totals?.cumulativeCredit !== undefined
+        ? Number(data.totals.cumulativeCredit)
+        : undefined;
+    const cumulativeCashOut =
+      data?.totals?.cumulativeDebit !== undefined
+        ? Number(data.totals.cumulativeDebit)
+        : undefined;
+
     return {
       transDate: null,
-      thu:
-        totalCredit > 0 ? (
-          <span className="text-emerald-600 font-medium">
-            {money(totalCredit)}
-          </span>
-        ) : (
-          money(0)
-        ),
-      chi:
-        totalDebit > 0 ? (
-          <span className="text-[#ea580c] font-medium">
-            {money(totalDebit)}
-          </span>
-        ) : (
-          money(0)
-        ),
-      netOffAmount:
-        totalNetOff === 0 ? (
-          "--"
-        ) : (
-          <span className="text-blue-600 dark:text-blue-400 font-medium">
-            {money(totalNetOff)}
-          </span>
-        ),
-      remainingAmount:
-        totalRemaining === 0 ? (
-          <span className="text-emerald-600 font-medium">0</span>
-        ) : (
-          <span className="text-slate-700 dark:text-slate-300 font-medium">
-            {money(totalRemaining)}
-          </span>
-        ),
+      description: (
+        <SubtotalSummaryCell
+          variantType="label"
+          label={`${t("common.total", { defaultValue: "Tổng cộng" })}:`}
+          page={page}
+          totalPages={totalPages}
+          totalCount={totalCount}
+          currentPageCount={items.length}
+          cumulativeCount={(page - 1) * pageSize + items.length}
+        />
+      ),
+      thu: (
+        <SubtotalSummaryCell
+          variantType="amount"
+          metricTitle={t("bankStatement.columns.thu", {
+            defaultValue: "Tiền vào (Thu)",
+          })}
+          subtotalAmount={totalCredit}
+          cumulativeAmount={cumulativeCashIn}
+          grandTotalAmount={grandCashIn}
+          page={page}
+          totalPages={totalPages}
+          valueClassName="text-emerald-600 font-bold"
+        />
+      ),
+      chi: (
+        <SubtotalSummaryCell
+          variantType="amount"
+          metricTitle={t("bankStatement.columns.chi", {
+            defaultValue: "Tiền ra (Chi)",
+          })}
+          subtotalAmount={totalDebit}
+          cumulativeAmount={cumulativeCashOut}
+          grandTotalAmount={grandCashOut}
+          page={page}
+          totalPages={totalPages}
+          valueClassName="text-[#ea580c] font-bold"
+        />
+      ),
+      netOffAmount: (
+        <SubtotalSummaryCell
+          variantType="amount"
+          metricTitle={t("bankStatement.columns.netOffAmount", {
+            defaultValue: "Đã cấn trừ",
+          })}
+          subtotalAmount={totalNetOff}
+          grandTotalAmount={totalNetOff}
+          page={page}
+          totalPages={totalPages}
+          valueClassName="text-indigo-600 font-bold"
+        />
+      ),
+      remainingAmount: (
+        <SubtotalSummaryCell
+          variantType="amount"
+          metricTitle={t("bankStatement.columns.remainingAmount", {
+            defaultValue: "Còn lại",
+          })}
+          subtotalAmount={totalRemaining}
+          grandTotalAmount={totalRemaining}
+          page={page}
+          totalPages={totalPages}
+          valueClassName={
+            totalRemaining === 0
+              ? "text-emerald-600 font-bold"
+              : "text-slate-700 dark:text-slate-300 font-bold"
+          }
+        />
+      ),
     };
-  }, [data]);
+  }, [data, dashboardStats, page, t]);
 
   const handleRefresh = useCallback(() => {
     refetch();
@@ -466,6 +556,8 @@ export function useBankStatementsTabLogic({
     setDetailTransactionId,
     detailDefaultTab,
     setDetailDefaultTab,
+    detailMode,
+    setDetailMode,
     handleOpenDetail,
     partnerDrawerOpen,
     setPartnerDrawerOpen,

@@ -101,6 +101,23 @@ export function VietnamInvoiceTemplate({ invoice }: Props) {
             <p>
               Số: <span className="font-semibold">{invoiceNo || "---"}</span>
             </p>
+            {invoice.relatedInvoiceNo && (
+              <div className="mt-1 text-xs text-amber-900 leading-tight">
+                <span className="text-[11px] text-amber-700">
+                  {invoice.taxInvoiceStatus === 2
+                    ? "Thay thế cho HĐ: "
+                    : "Đ/c cho HĐ: "}
+                </span>
+                <span className="font-mono font-bold text-slate-900">
+                  {invoice.relatedInvoiceNo}
+                </span>
+                {invoice.relatedSerialNo && (
+                  <span className="text-[11px] text-slate-500 font-mono ml-1">
+                    ({invoice.relatedSerialNo})
+                  </span>
+                )}
+              </div>
+            )}
           </div>
         </div>
 

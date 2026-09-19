@@ -42,7 +42,7 @@ export function SelectedBankTransactionsTable({
         enableResizing: false,
         cell: (_, idx) => (
           <span className="w-full block text-center font-mono text-xs text-muted-foreground">
-            {idx + 1}
+            {idx}
           </span>
         ),
       },

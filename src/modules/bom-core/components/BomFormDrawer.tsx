@@ -2,7 +2,7 @@ import React, { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useT } from "@/core/i18n";
 import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
-import { DataTable } from "@/shared/components/DataTable";
+import { DataTable, getDefaultPageSize } from "@/shared/components/DataTable";
 import { Button } from "@/shared/components/ui/Button";
 import { Input } from "@/shared/components/ui/input";
 import { Textarea } from "@/shared/components/ui/textarea";
@@ -10,6 +10,7 @@ import { Combobox } from "@/shared/components/Combobox";
 import { DatePicker } from "@/shared/components/DatePicker";
 import { DrawerField, DrawerSection } from "@/shared/components/DrawerModal";
 import { CellInput } from "@/shared/components/CellInput";
+import { formatGMT7, fmtQty } from "@/shared/utils/format";
 import { bomCoreApi, type ErpBom } from "@/modules/bom-core/api/bomCoreApi";
 import {
   ModuleEntityCustomFieldsSection,
@@ -292,7 +293,7 @@ export function BomFormDrawer({
   };
 
   const [page, setPage] = React.useState(1);
-  const [pageSize, setPageSize] = React.useState(10);
+  const [pageSize, setPageSize] = React.useState<number>(getDefaultPageSize);
 
   const mergedItemOptions = React.useMemo(() => {
     const combined = [...extraItemOptions, ...itemOptions];
@@ -452,6 +453,34 @@ export function BomFormDrawer({
 
   const total = sortedAndFilteredLines.length;
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
+
+  const paginatedLines = React.useMemo(() => {
+    const start = (page - 1) * pageSize;
+    return sortedAndFilteredLines.slice(start, start + pageSize);
+  }, [sortedAndFilteredLines, page, pageSize]);
+
+  const totalQty = React.useMemo(() => {
+    return sortedAndFilteredLines.reduce(
+      (sum, l) => sum + (parseFloat(l.qtyRequired) || 0),
+      0,
+    );
+  }, [sortedAndFilteredLines]);
+
+  const summaryRow = React.useMemo(
+    () => ({
+      componentName: (
+        <div className="text-right w-full font-semibold">
+          {t("common.total", "Tổng:")}
+        </div>
+      ),
+      qty: (
+        <div className="text-right font-bold text-primary tabular-nums">
+          {fmtQty(totalQty)}
+        </div>
+      ),
+    }),
+    [totalQty, t],
+  );
 
   const validateForm = () => {
     const missing = validateModuleRequiredFields({
@@ -665,13 +694,15 @@ export function BomFormDrawer({
     () => [
       {
         key: "index",
-        header: "#",
+        header: <span className="w-full block text-center">#</span>,
         size: 40,
         enableResizing: false,
         headerClassName: "text-center w-[40px] min-w-[40px]",
         className: "text-center w-[40px] min-w-[40px]",
         cell: (_: any, idx: number) => (
-          <span className="text-muted-foreground">{idx}</span>
+          <span className="w-full block text-center text-muted-foreground">
+            {idx}
+          </span>
         ),
       },
       {
@@ -1114,15 +1145,18 @@ export function BomFormDrawer({
           >
             <div className="flex-1 min-h-0 flex flex-col mt-1">
               <DataTable
+                tableId="erp-bom-lines-table"
                 variant="spreadsheet"
                 containerClassName="flex-1 min-h-[420px] max-h-[calc(100vh-270px)] overflow-auto"
                 enableColumnResizing={true}
-                items={sortedAndFilteredLines}
+                items={paginatedLines}
                 getRowKey={(item) => String(form.lines.indexOf(item))}
                 emptyLabel={t("Không có dữ liệu")}
                 columns={tableColumns}
+                summaryRow={summaryRow}
                 page={page}
                 pageSize={pageSize}
+                pageSizeOptions={[20, 50, 100, 200]}
                 total={total}
                 totalPages={totalPages}
                 onPage={setPage}
@@ -1167,81 +1201,125 @@ export function BomFormDrawer({
           )}
 
           {/* Section: Thông tin chung */}
-          <DrawerSection title={t("Thông tin chung")}>
+          <DrawerSection title={t("generalInfo", "THÔNG TIN CHUNG")}>
             <div className="flex flex-col gap-3">
               <DrawerField label={t("Mã BOM")} required>
-                <Input
-                  value={form.bomCode}
-                  readOnly={viewOnly || !!editing || isLockedByProduction}
-                  onChange={(e) =>
-                    setForm((prev) => ({ ...prev, bomCode: e.target.value }))
-                  }
-                  placeholder={t("Mã BOM...")}
-                />
+                {viewOnly ? (
+                  <div className="font-medium text-[color:var(--foreground)] text-sm px-3 py-2 bg-gray-50 dark:bg-muted/40 rounded-lg border border-transparent font-mono">
+                    {form.bomCode || "—"}
+                  </div>
+                ) : (
+                  <Input
+                    value={form.bomCode}
+                    disabled={!!editing || isLockedByProduction}
+                    onChange={(e) =>
+                      setForm((prev) => ({ ...prev, bomCode: e.target.value }))
+                    }
+                    placeholder={t("Mã BOM...")}
+                  />
+                )}
               </DrawerField>
               <DrawerField label={t("Tên BOM")} required>
-                <Input
-                  value={form.bomName}
-                  readOnly={viewOnly || !!editing || isLockedByProduction}
-                  onChange={(e) =>
-                    setForm((prev) => ({ ...prev, bomName: e.target.value }))
-                  }
-                  placeholder={t("Tên BOM...")}
-                />
+                {viewOnly || isLockedByProduction ? (
+                  <div className="font-medium text-[color:var(--foreground)] text-sm px-3 py-2 bg-gray-50 dark:bg-muted/40 rounded-lg border border-transparent">
+                    {form.bomName || "—"}
+                  </div>
+                ) : (
+                  <Input
+                    value={form.bomName}
+                    onChange={(e) =>
+                      setForm((prev) => ({ ...prev, bomName: e.target.value }))
+                    }
+                    placeholder={t("Tên BOM...")}
+                  />
+                )}
               </DrawerField>
               <DrawerField label={t("Thành phẩm")}>
-                <Combobox
-                  value={form.finishedGoodItemId}
-                  readOnly={viewOnly || !!editing || isLockedByProduction}
-                  onChange={(value) =>
-                    setForm((prev) => ({ ...prev, finishedGoodItemId: value }))
-                  }
-                  options={mergedFgItemOptions}
-                  placeholder={t("Chọn thành phẩm")}
-                  searchPlaceholder={t("Tìm SKU / tên thành phẩm")}
-                  onSearch={setFgItemSearch}
-                  onScrollBottom={fetchNextFgItems}
-                  loading={loadingFgItems}
-                  allowClear
-                />
+                {viewOnly || isLockedByProduction ? (
+                  <div className="font-medium text-[color:var(--foreground)] text-sm px-3 py-2 bg-gray-50 dark:bg-muted/40 rounded-lg border border-transparent">
+                    {mergedFgItemOptions.find(
+                      (o: any) => o.value === form.finishedGoodItemId,
+                    )?.label ||
+                      form.finishedGoodItemId ||
+                      "—"}
+                  </div>
+                ) : (
+                  <Combobox
+                    value={form.finishedGoodItemId}
+                    onChange={(value) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        finishedGoodItemId: value,
+                      }))
+                    }
+                    options={mergedFgItemOptions}
+                    placeholder={t("Chọn thành phẩm")}
+                    searchPlaceholder={t("Tìm SKU / tên thành phẩm")}
+                    onSearch={setFgItemSearch}
+                    onScrollBottom={fetchNextFgItems}
+                    loading={loadingFgItems}
+                    allowClear
+                  />
+                )}
               </DrawerField>
               <DrawerField label={t("Hiệu lực từ")}>
-                <DatePicker
-                  value={form.effectiveFrom}
-                  disabled={viewOnly || isLockedByProduction}
-                  onChange={(value) =>
-                    setForm((prev) => ({ ...prev, effectiveFrom: value }))
-                  }
-                  className="w-full"
-                  placeholder="DD/MM/YYYY"
-                />
+                {viewOnly || isLockedByProduction ? (
+                  <div className="font-medium text-[color:var(--foreground)] text-sm px-3 py-2 bg-gray-50 dark:bg-muted/40 rounded-lg border border-transparent">
+                    {form.effectiveFrom
+                      ? formatGMT7(form.effectiveFrom, "date") ||
+                        form.effectiveFrom.slice(0, 10)
+                      : "—"}
+                  </div>
+                ) : (
+                  <DatePicker
+                    value={form.effectiveFrom}
+                    onChange={(value) =>
+                      setForm((prev) => ({ ...prev, effectiveFrom: value }))
+                    }
+                    className="w-full"
+                    placeholder="DD/MM/YYYY"
+                  />
+                )}
               </DrawerField>
               <DrawerField label={t("Hiệu lực đến")}>
-                <DatePicker
-                  value={form.effectiveTo}
-                  disabled={viewOnly}
-                  onChange={(value) =>
-                    setForm((prev) => ({ ...prev, effectiveTo: value }))
-                  }
-                  className="w-full"
-                  placeholder="DD/MM/YYYY"
-                />
+                {viewOnly ? (
+                  <div className="font-medium text-[color:var(--foreground)] text-sm px-3 py-2 bg-gray-50 dark:bg-muted/40 rounded-lg border border-transparent">
+                    {form.effectiveTo
+                      ? formatGMT7(form.effectiveTo, "date") ||
+                        form.effectiveTo.slice(0, 10)
+                      : "—"}
+                  </div>
+                ) : (
+                  <DatePicker
+                    value={form.effectiveTo}
+                    onChange={(value) =>
+                      setForm((prev) => ({ ...prev, effectiveTo: value }))
+                    }
+                    className="w-full"
+                    placeholder="DD/MM/YYYY"
+                  />
+                )}
               </DrawerField>
               <DrawerField label={t("Ghi chú")}>
-                <Textarea
-                  value={form.notes}
-                  readOnly={viewOnly}
-                  onChange={(e) =>
-                    setForm((prev) => ({ ...prev, notes: e.target.value }))
-                  }
-                  placeholder={t("Ghi chú thêm...")}
-                  className="min-h-[80px] resize-y"
-                />
+                {viewOnly ? (
+                  <div className="font-medium text-[color:var(--foreground)] text-sm px-3 py-2 bg-gray-50 dark:bg-muted/40 rounded-lg border border-transparent whitespace-pre-wrap min-h-[60px]">
+                    {form.notes || "—"}
+                  </div>
+                ) : (
+                  <Textarea
+                    value={form.notes}
+                    onChange={(e) =>
+                      setForm((prev) => ({ ...prev, notes: e.target.value }))
+                    }
+                    placeholder={t("Ghi chú thêm...")}
+                    className="min-h-[80px] resize-y"
+                  />
+                )}
               </DrawerField>
             </div>
           </DrawerSection>
 
-          {/* Section: Thuộc tính (ModuleEntityCustomFieldsSection) */}
+          {/* Section: Thuộc tính mặc định (ModuleEntityCustomFieldsSection) */}
           <ModuleEntityCustomFieldsSection
             moduleKey="BOM"
             entityId={editing?.id}
@@ -1265,7 +1343,7 @@ export function BomFormDrawer({
                     : prev.version,
               }));
             }}
-            globalTitle={t("bomConfig.attributes", "Thuộc tính")}
+            globalTitle={t("defaultAttributes", "THUỘC TÍNH MẶC ĐỊNH")}
             globalCollapsible={true}
             globalDefaultCollapsed={false}
           />

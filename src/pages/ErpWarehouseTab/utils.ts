@@ -2,12 +2,12 @@ import { type TableViewPreset } from "@/shared/hooks/useUserPreferences";
 
 export const DEFAULT_WAREHOUSE_COLUMN_VISIBILITY: Record<string, boolean> = {
   date: true,
-  type: true,
-  categoryName: true,
   voucherNo: true,
   qtyReceipt: true,
   qtyIssue: true,
   qtyAdjustment: true,
+  type: true,
+  categoryName: true,
   poNo: true,
   partnerName: true,
   remarks: false,
@@ -16,12 +16,12 @@ export const DEFAULT_WAREHOUSE_COLUMN_VISIBILITY: Record<string, boolean> = {
 
 export const AUDIT_WAREHOUSE_COLUMN_VISIBILITY: Record<string, boolean> = {
   date: true,
-  type: true,
-  categoryName: true,
   voucherNo: true,
   qtyReceipt: true,
   qtyIssue: true,
   qtyAdjustment: true,
+  type: true,
+  categoryName: true,
   poNo: true,
   partnerName: true,
   remarks: true,
@@ -67,15 +67,15 @@ export const WAREHOUSE_COLUMN_GROUPS: ColumnGroupDef[] = [
     titleKey: "viewConfigGroupGeneral",
     columns: [
       { key: "date", labelKey: "table.date", defaultVisible: true },
+      {
+        key: "voucherNo",
+        labelKey: "inventory.voucherNo",
+        defaultVisible: true,
+      },
       { key: "type", labelKey: "inventory.voucherType", defaultVisible: true },
       {
         key: "categoryName",
         labelKey: "inventory.category",
-        defaultVisible: true,
-      },
-      {
-        key: "voucherNo",
-        labelKey: "inventory.voucherNo",
         defaultVisible: true,
       },
       { key: "poNo", labelKey: "inventory.document", defaultVisible: true },

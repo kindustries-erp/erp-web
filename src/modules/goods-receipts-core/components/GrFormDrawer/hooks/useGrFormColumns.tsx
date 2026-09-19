@@ -1,9 +1,11 @@
 import type { ReactNode } from "react";
-import { CheckCircle2, AlertTriangle } from "lucide-react";
+import { useMemo } from "react";
+import { CheckCircle2, AlertTriangle, Sparkles } from "lucide-react";
 import { cn } from "@/shared/utils";
 import { Button } from "@/shared/components/ui/Button";
 import { CellInput } from "@/shared/components/CellInput";
 import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
+import { SubtotalSummaryCell } from "@/shared/components/DataTable/SubtotalSummaryCell";
 import type {
   UseGrDrawerReturn,
   GrLineForm,
@@ -22,7 +24,13 @@ interface UseGrFormColumnsProps {
     item: any,
     qty: number,
     isViewOnly?: boolean,
+    isSystemAuto?: boolean,
   ) => void;
+  paginatedLines?: any[];
+  processedLines?: any[];
+  page?: number;
+  totalPages?: number;
+  total?: number;
   t: (key: string, ...args: any[]) => string;
 }
 
@@ -32,6 +40,11 @@ export function useGrFormColumns({
   listHook,
   buildFilterOptions,
   handleOpenSerialDrawer,
+  paginatedLines = [],
+  processedLines = [],
+  page = 1,
+  totalPages = 1,
+  total = 0,
   t,
 }: UseGrFormColumnsProps) {
   const { form, setForm, editing, viewOnly, poDetail, itemsDict } = drawer;
@@ -73,12 +86,14 @@ export function useGrFormColumns({
 
   const indexCol = {
     key: "index",
-    header: "#",
+    header: <span className="w-full block text-center">#</span>,
     size: 40,
+    enableResizing: false,
     headerClassName: "text-center w-[40px] min-w-[40px]",
-    className: "text-center w-[40px] min-w-[40px]",
+    className:
+      "text-center w-[40px] min-w-[40px] font-mono text-xs text-muted-foreground",
     cell: (_: any, idx: number) => (
-      <span className="text-muted-foreground">{idx}</span>
+      <span className="w-full block text-center">{idx}</span>
     ),
   };
 
@@ -129,7 +144,6 @@ export function useGrFormColumns({
             ? itemsDict[poLine.itemId].itemName
             : "") ||
           poLine.description ||
-          poLine.itemId ||
           "—";
         return (
           <div
@@ -143,8 +157,7 @@ export function useGrFormColumns({
     },
     {
       key: "ordered",
-      header: makeFilterHeader("ordered", t("Đã đặt"), [], {
-        hideFilter: true,
+      header: makeFilterHeader("ordered", t("Đã đặt"), poDetail?.lines || [], {
         queryPrefix: "gr-form-po-ordered",
       }),
       minSize: 100,
@@ -164,10 +177,14 @@ export function useGrFormColumns({
       ? [
           {
             key: "remaining",
-            header: makeFilterHeader("remaining", t("Còn lại"), [], {
-              hideFilter: true,
-              queryPrefix: "gr-form-po-remaining",
-            }),
+            header: makeFilterHeader(
+              "remaining",
+              t("Còn lại"),
+              poDetail?.lines || [],
+              {
+                queryPrefix: "gr-form-po-remaining",
+              },
+            ),
             minSize: 100,
             enableResizing: true,
             headerClassName: "text-center w-[100px] min-w-[100px]",
@@ -190,10 +207,14 @@ export function useGrFormColumns({
       : []),
     {
       key: "qtyInput",
-      header: makeFilterHeader("qtyInput", t("SL Nhập"), [], {
-        hideFilter: true,
-        queryPrefix: "gr-form-po-qtyinput",
-      }),
+      header: makeFilterHeader(
+        "qtyInput",
+        t("SL Nhập"),
+        poDetail?.lines || [],
+        {
+          queryPrefix: "gr-form-po-qtyinput",
+        },
+      ),
       minSize: 140,
       enableResizing: true,
       headerClassName: "text-center w-[140px] min-w-[140px]",
@@ -250,10 +271,14 @@ export function useGrFormColumns({
     },
     {
       key: "serials",
-      header: makeFilterHeader("serials", t("Serial / Tracking"), [], {
-        hideFilter: true,
-        queryPrefix: "gr-form-po-serials",
-      }),
+      header: makeFilterHeader(
+        "serials",
+        t("Serial / Tracking"),
+        poDetail?.lines || [],
+        {
+          queryPrefix: "gr-form-po-serials",
+        },
+      ),
       minSize: 170,
       enableResizing: true,
       headerClassName: "text-center w-[170px] min-w-[170px]",
@@ -274,7 +299,46 @@ export function useGrFormColumns({
         const qty = Math.round(Number(currentLine?.qtyReceived ?? 0));
         const declaredCount = currentLine?.declaredSerials?.length || 0;
 
+        const grLine = editing?.lines?.find(
+          (l) =>
+            (currentLine?.id && l.id === currentLine.id) ||
+            (poLine.id && l.purchaseOrderLineId === poLine.id) ||
+            (itemId && l.itemId === itemId),
+        );
+        const targetLine = {
+          ...(currentLine || poLine),
+          id: grLine?.id || currentLine?.id,
+          receiptLineId: grLine?.id || currentLine?.id,
+        };
+
         if (!hasTracking) {
+          if ((viewOnly || editing?.status === "POSTED") && qty > 0) {
+            return (
+              <button
+                type="button"
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold border bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100 dark:bg-indigo-950/40 dark:text-indigo-300 dark:border-indigo-800 transition-all shadow-sm cursor-pointer"
+                onClick={() => {
+                  const actualQty = Math.round(
+                    Number(currentLine?.qtyReceived || qty || 0),
+                  );
+                  handleOpenSerialDrawer(
+                    targetLine,
+                    lineIdx,
+                    item,
+                    actualQty,
+                    true,
+                    true,
+                  );
+                }}
+                title={t("Bấm để xem danh sách System Serials ngầm")}
+              >
+                <Sparkles className="w-3.5 h-3.5 text-indigo-500" />
+                <span>
+                  {qty} {t("System Serials")}
+                </span>
+              </button>
+            );
+          }
           return <span className="text-muted-foreground text-xs">—</span>;
         }
         if (qty <= 0) {
@@ -302,7 +366,7 @@ export function useGrFormColumns({
                   Number(currentLine?.qtyReceived || qty || 0),
                 );
                 handleOpenSerialDrawer(
-                  currentLine || poLine,
+                  targetLine,
                   lineIdx,
                   item,
                   actualQty,
@@ -432,8 +496,7 @@ export function useGrFormColumns({
     },
     {
       key: "qtyInput",
-      header: makeFilterHeader("qtyInput", t("SL Nhập"), [], {
-        hideFilter: true,
+      header: makeFilterHeader("qtyInput", t("SL Nhập"), form.lines, {
         queryPrefix: "gr-form-other-qtyinput",
       }),
       minSize: 140,
@@ -465,8 +528,7 @@ export function useGrFormColumns({
     },
     {
       key: "serials",
-      header: makeFilterHeader("serials", t("Serial / Tracking"), [], {
-        hideFilter: true,
+      header: makeFilterHeader("serials", t("Serial / Tracking"), form.lines, {
         queryPrefix: "gr-form-other-serials",
       }),
       minSize: 170,
@@ -485,7 +547,37 @@ export function useGrFormColumns({
         const qty = Math.round(Number(line.qtyReceived || 0));
         const declaredCount = line.declaredSerials?.length || 0;
 
+        const grLine =
+          editing?.lines?.[i] ||
+          editing?.lines?.find(
+            (l) =>
+              (line.id && l.id === line.id) ||
+              (line.itemId && l.itemId === line.itemId),
+          );
+        const targetLine = {
+          ...line,
+          id: grLine?.id || line.id,
+          receiptLineId: grLine?.id || line.id,
+        };
+
         if (!hasTracking) {
+          if ((viewOnly || editing?.status === "POSTED") && qty > 0) {
+            return (
+              <button
+                type="button"
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold border bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100 dark:bg-indigo-950/40 dark:text-indigo-300 dark:border-indigo-800 transition-all shadow-sm cursor-pointer"
+                onClick={() =>
+                  handleOpenSerialDrawer(targetLine, i, item, qty, true, true)
+                }
+                title={t("Bấm để xem danh sách System Serials ngầm")}
+              >
+                <Sparkles className="w-3.5 h-3.5 text-indigo-500" />
+                <span>
+                  {qty} {t("System Serials")}
+                </span>
+              </button>
+            );
+          }
           return <span className="text-muted-foreground text-xs">—</span>;
         }
         if (qty <= 0) {
@@ -508,7 +600,9 @@ export function useGrFormColumns({
                   ? "bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100 dark:bg-emerald-950/30 dark:text-emerald-300"
                   : "bg-amber-50 text-amber-700 border-amber-300 hover:bg-amber-100 dark:bg-amber-950/30 dark:text-amber-300",
               )}
-              onClick={() => handleOpenSerialDrawer(line, i, item, qty, true)}
+              onClick={() =>
+                handleOpenSerialDrawer(targetLine, i, item, qty, true)
+              }
               title={t("Bấm để xem danh sách số serial")}
             >
               {isComplete ? (
@@ -532,7 +626,7 @@ export function useGrFormColumns({
                 ? "bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100 dark:bg-emerald-950/30 dark:text-emerald-300"
                 : "bg-amber-50 text-amber-700 border-amber-300 hover:bg-amber-100 dark:bg-amber-950/30 dark:text-amber-300",
             )}
-            onClick={() => handleOpenSerialDrawer(line, i, item, qty)}
+            onClick={() => handleOpenSerialDrawer(targetLine, i, item, qty)}
           >
             {isComplete ? (
               <>
@@ -589,7 +683,6 @@ export function useGrFormColumns({
           (line.itemId && itemsDict[line.itemId]
             ? itemsDict[line.itemId].itemName
             : "") ||
-          line.itemId ||
           "—";
         return (
           <div
@@ -605,8 +698,7 @@ export function useGrFormColumns({
       ? [
           {
             key: "ordered",
-            header: makeFilterHeader("ordered", t("Đã đặt"), [], {
-              hideFilter: true,
+            header: makeFilterHeader("ordered", t("Đã đặt"), viewOnlySource, {
               queryPrefix: "gr-form-view-ordered",
             }),
             minSize: 100,
@@ -619,8 +711,7 @@ export function useGrFormColumns({
       : []),
     {
       key: "qtyReceived",
-      header: makeFilterHeader("qtyReceived", t("SL Nhập"), [], {
-        hideFilter: true,
+      header: makeFilterHeader("qtyReceived", t("SL Nhập"), viewOnlySource, {
         queryPrefix: "gr-form-view-qtyreceived",
       }),
       minSize: 140,
@@ -635,10 +726,14 @@ export function useGrFormColumns({
     },
     {
       key: "serials",
-      header: makeFilterHeader("serials", t("Serial / Tracking"), [], {
-        hideFilter: true,
-        queryPrefix: "gr-form-view-serials",
-      }),
+      header: makeFilterHeader(
+        "serials",
+        t("Serial / Tracking"),
+        viewOnlySource,
+        {
+          queryPrefix: "gr-form-view-serials",
+        },
+      ),
       minSize: 170,
       enableResizing: true,
       headerClassName: "text-center w-[170px] min-w-[170px]",
@@ -653,8 +748,46 @@ export function useGrFormColumns({
             trackingCode === "CUSTOM");
         const qty = Math.round(Number(line.qtyReceived || 0));
         const declaredCount = line.declaredSerials?.length || 0;
+        const lineIdx = form.lines.indexOf(line);
+
+        const grLine =
+          editing?.lines?.[lineIdx] ||
+          editing?.lines?.find(
+            (l) =>
+              (line.id && l.id === line.id) ||
+              (line.itemId && l.itemId === line.itemId),
+          );
+        const targetLine = {
+          ...line,
+          id: grLine?.id || line.id,
+          receiptLineId: grLine?.id || line.id,
+        };
 
         if (!hasTracking) {
+          if (qty > 0) {
+            return (
+              <button
+                type="button"
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold border bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100 dark:bg-indigo-950/40 dark:text-indigo-300 dark:border-indigo-800 transition-all shadow-sm cursor-pointer"
+                onClick={() =>
+                  handleOpenSerialDrawer(
+                    targetLine,
+                    lineIdx,
+                    item,
+                    qty,
+                    true,
+                    true,
+                  )
+                }
+                title={t("Bấm để xem danh sách System Serials ngầm")}
+              >
+                <Sparkles className="w-3.5 h-3.5 text-indigo-500" />
+                <span>
+                  {qty} {t("System Serials")}
+                </span>
+              </button>
+            );
+          }
           return <span className="text-muted-foreground text-xs">—</span>;
         }
 
@@ -670,13 +803,7 @@ export function useGrFormColumns({
                 : "bg-amber-50 text-amber-700 border-amber-300 hover:bg-amber-100 dark:bg-amber-950/30 dark:text-amber-300",
             )}
             onClick={() =>
-              handleOpenSerialDrawer(
-                line,
-                form.lines.indexOf(line),
-                item,
-                qty,
-                true,
-              )
+              handleOpenSerialDrawer(targetLine, lineIdx, item, qty, true)
             }
             title={t("Bấm để xem danh sách số serial")}
           >
@@ -703,44 +830,117 @@ export function useGrFormColumns({
         ? otherEditColumns
         : viewOnlyColumns;
 
+  // ── Calculate subtotal (current page) vs grand total (all lines) ───────────
+  const {
+    subtotalOrdered,
+    grandTotalOrdered,
+    subtotalReceived,
+    grandTotalReceived,
+  } = useMemo(() => {
+    let sOrd = 0;
+    let gOrd = 0;
+    let sRec = 0;
+    let gRec = 0;
+
+    if (tableMode === "po") {
+      for (const l of paginatedLines) {
+        sOrd += Number(l.qtyOrdered || 0);
+        const curr = form.lines.find(
+          (fl) =>
+            (fl.purchaseOrderLineId && fl.purchaseOrderLineId === l.id) ||
+            (l.itemId && fl.itemId === l.itemId),
+        );
+        sRec += Number(curr?.qtyReceived ?? l.qtyReceived ?? 0);
+      }
+      for (const l of processedLines) {
+        gOrd += Number(l.qtyOrdered || 0);
+        const curr = form.lines.find(
+          (fl) =>
+            (fl.purchaseOrderLineId && fl.purchaseOrderLineId === l.id) ||
+            (l.itemId && fl.itemId === l.itemId),
+        );
+        gRec += Number(curr?.qtyReceived ?? l.qtyReceived ?? 0);
+      }
+    } else {
+      for (const l of paginatedLines) {
+        sRec += Number(l.qtyReceived ?? l.qtyInput ?? 0);
+      }
+      for (const l of processedLines) {
+        gRec += Number(l.qtyReceived ?? l.qtyInput ?? 0);
+      }
+    }
+
+    return {
+      subtotalOrdered: sOrd,
+      grandTotalOrdered: gOrd,
+      subtotalReceived: sRec,
+      grandTotalReceived: gRec,
+    };
+  }, [tableMode, paginatedLines, processedLines, form]);
+
+  const totalItemsCount =
+    tableMode === "po"
+      ? (poDetail?.lines?.length ?? form.lines.length)
+      : form.lines.length;
+
   const summaryRow: Record<string, ReactNode> =
     tableMode === "po"
       ? {
-          itemName: (
-            <div className="text-right w-full font-semibold">{t("Tổng")}:</div>
-          ),
           ordered: (
-            <div className="text-center font-semibold text-foreground">
-              {fmtQty(
-                poDetail?.lines
-                  ?.reduce((sum, l) => sum + Number(l.qtyOrdered || 0), 0)
-                  .toString(),
-              )}
+            <div className="w-full flex justify-center">
+              <SubtotalSummaryCell
+                variantType="qty"
+                metricTitle="SL Đặt (PO)"
+                itemTitle="Dòng đặt hàng"
+                itemUnit="dòng"
+                subtotalQty={subtotalOrdered}
+                grandTotalQty={grandTotalOrdered}
+                grandTotalOrderedQty={grandTotalOrdered}
+                subtotalOrderedQty={subtotalOrdered}
+                itemCount={totalItemsCount}
+                page={page}
+                totalPages={totalPages}
+                currentPageCount={paginatedLines.length}
+                totalCount={total}
+              />
             </div>
           ),
           qtyInput: (
-            <div className="text-center font-semibold text-emerald-600">
-              {fmtQty(
-                form.lines
-                  .reduce((sum, l) => sum + Number(l.qtyReceived || 0), 0)
-                  .toString(),
-              )}
+            <div className="w-full flex justify-center">
+              <SubtotalSummaryCell
+                variantType="qty"
+                metricTitle="SL Thực nhận"
+                itemTitle="Dòng nhập kho"
+                itemUnit="dòng"
+                subtotalQty={subtotalReceived}
+                grandTotalQty={grandTotalReceived}
+                grandTotalOrderedQty={grandTotalOrdered}
+                subtotalOrderedQty={subtotalOrdered}
+                itemCount={totalItemsCount}
+                page={page}
+                totalPages={totalPages}
+                currentPageCount={paginatedLines.length}
+                totalCount={total}
+              />
             </div>
           ),
         }
       : {
-          itemName: (
-            <div className="text-right w-full font-semibold">{t("Tổng")}:</div>
-          ),
           [tableMode === "other-edit" ? "qtyInput" : "qtyReceived"]: (
-            <div className="text-center font-semibold text-emerald-600">
-              {viewOnly
-                ? `+${fmtQty(form.lines.reduce((sum, l) => sum + Number(l.qtyReceived || 0), 0).toString())}`
-                : fmtQty(
-                    form.lines
-                      .reduce((sum, l) => sum + Number(l.qtyReceived || 0), 0)
-                      .toString(),
-                  )}
+            <div className="w-full flex justify-center">
+              <SubtotalSummaryCell
+                variantType="qty"
+                metricTitle="SL Nhập kho"
+                itemTitle="Dòng nhập kho"
+                itemUnit="dòng"
+                subtotalQty={subtotalReceived}
+                grandTotalQty={grandTotalReceived}
+                itemCount={totalItemsCount}
+                page={page}
+                totalPages={totalPages}
+                currentPageCount={paginatedLines.length}
+                totalCount={total}
+              />
             </div>
           ),
         };

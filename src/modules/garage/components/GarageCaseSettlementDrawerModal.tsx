@@ -27,7 +27,7 @@ export function GarageCaseSettlementDrawerModal({
   onClose,
   caseId,
   caseCode,
-  initialTab = "bank_cash",
+  initialTab = "bank_statement",
   defaultType = "RECEIPT",
   suggestedAmount = 0,
   remainingReceivable,

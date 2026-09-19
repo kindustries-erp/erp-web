@@ -8,6 +8,7 @@ import {
   FolderArchive,
   Settings,
   Eye,
+  Pencil,
 } from "lucide-react";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate";
 import { PillTabs } from "@/shared/components/PillTabs";
@@ -67,6 +68,7 @@ export function BankStatementsTab(props: BankStatementsTabProps) {
     detailTransactionId,
     setDetailTransactionId,
     detailDefaultTab,
+    detailMode,
     handleOpenDetail,
     partnerDrawerOpen,
     setPartnerDrawerOpen,
@@ -121,14 +123,26 @@ export function BankStatementsTab(props: BankStatementsTabProps) {
               defaultValue: "Chi tiết giao dịch",
             }),
             icon: <Eye className="w-3.5 h-3.5" />,
-            onClick: () => handleOpenDetail(row.id, "txn_details"),
+            onClick: () => handleOpenDetail(row.id, "txn_details", "view"),
           },
           {
             label: t("bankStatement.actionObjectDetails", {
               defaultValue: "Chi tiết theo đối tượng",
             }),
             icon: <Building2 className="w-3.5 h-3.5" />,
-            onClick: () => handleOpenDetail(row.id, "partner"),
+            onClick: () => handleOpenDetail(row.id, "partner", "view"),
+          },
+        ],
+      },
+      {
+        groupLabel: t("groupThaoTac", { defaultValue: "Thao tác" }),
+        items: [
+          {
+            label: t("bankStatement.actionEdit", {
+              defaultValue: "Chỉnh sửa",
+            }),
+            icon: <Pencil className="w-3.5 h-3.5" />,
+            onClick: () => handleOpenDetail(row.id, "txn_details", "edit"),
           },
         ],
       },
@@ -141,12 +155,15 @@ export function BankStatementsTab(props: BankStatementsTabProps) {
             }),
             icon: <Settings className="w-3.5 h-3.5 text-violet-500" />,
             onClick: () =>
-              openCustomFieldsDrawer("BANK_TXN", "Sao kê ngân hàng"),
+              openCustomFieldsDrawer(
+                "BANK_TXN",
+                type === "bank" ? "Sao kê ngân hàng" : "Sổ quỹ tiền mặt",
+              ),
           },
         ],
       },
     ],
-    [t, handleOpenDetail, openCustomFieldsDrawer],
+    [t, type, handleOpenDetail, openCustomFieldsDrawer],
   );
 
   const createActions = useMemo(
@@ -296,6 +313,7 @@ export function BankStatementsTab(props: BankStatementsTabProps) {
         detailTransactionId={detailTransactionId}
         setDetailTransactionId={setDetailTransactionId}
         detailDefaultTab={detailDefaultTab}
+        detailMode={detailMode}
         partnerDrawerOpen={partnerDrawerOpen}
         setPartnerDrawerOpen={setPartnerDrawerOpen}
         selectedPartner={selectedPartner}

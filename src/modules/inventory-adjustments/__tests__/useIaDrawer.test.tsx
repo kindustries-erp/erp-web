@@ -145,7 +145,7 @@ describe("useIaDrawer", () => {
 
     (
       inventoryAdjustmentsApi.getNextNo as ReturnType<typeof vi.fn>
-    ).mockResolvedValue({ nextNo: "DC-20260720-01" });
+    ).mockResolvedValue({ nextNo: "DC-20260720-001" });
     (
       inventoryAdjustmentsApi.create as ReturnType<typeof vi.fn>
     ).mockResolvedValue({
@@ -184,7 +184,7 @@ describe("useIaDrawer", () => {
 
     (
       inventoryAdjustmentsApi.getNextNo as ReturnType<typeof vi.fn>
-    ).mockResolvedValue({ nextNo: "DC-20260720-01" });
+    ).mockResolvedValue({ nextNo: "DC-20260720-001" });
     (
       inventoryAdjustmentsApi.create as ReturnType<typeof vi.fn>
     ).mockResolvedValue({

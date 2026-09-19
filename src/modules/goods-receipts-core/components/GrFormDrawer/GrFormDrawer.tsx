@@ -21,6 +21,7 @@ import { useGrSerialDrawerState } from "./hooks/useGrSerialDrawerState";
 import { useGrFormColumns } from "./hooks/useGrFormColumns";
 import {
   GrFormRightPanel,
+  GrFormTagsSection,
   GrDefaultAttributesSection,
 } from "./components/GrFormRightPanel";
 import { GrFormSectionTitleExtra } from "./components/GrFormSectionTitleExtra";
@@ -65,12 +66,27 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
   const { data: companyProfile } = useCompanyProfile();
   const [isImportOpen, setIsImportOpen] = useState(false);
 
+  const poNo = poDetail?.poNo || form.purchaseOrderId || "";
+  const vendorName =
+    editing?.supplierName ||
+    poDetail?.supplierName ||
+    (editing?.customAttributes?.vendorName as string) ||
+    "";
+  const warehouseName =
+    (editing?.customAttributes?.warehouseName as string) || "";
+  const receiptNo = editing?.receiptNo || form.receiptNo || "";
+
   const {
     serialDrawerState,
     handleOpenSerialDrawer,
     handleCloseSerialDrawer,
     handleSaveSerialsForLine,
-  } = useGrSerialDrawerState(form, setForm);
+  } = useGrSerialDrawerState(form, setForm, {
+    receiptNo,
+    purchaseOrderNo: poNo,
+    vendorName,
+    warehouseName,
+  });
 
   const tableMode: GrTableMode = poDetail
     ? "po"
@@ -78,44 +94,124 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
       ? "other-edit"
       : "view";
 
-  const sourceLines = tableMode === "po" ? poDetail?.lines || [] : form.lines;
+  const sourceLines =
+    tableMode === "po"
+      ? poDetail?.lines || []
+      : tableMode === "view"
+        ? form.lines.filter((l) => Number(l.qtyReceived) > 0)
+        : form.lines;
 
-  const { listHook, processedLines, buildFilterOptions } =
-    useVoucherClientFilter({
-      tableId: "gr-details-table",
-      lines: sourceLines,
-      isOpen: open,
-      getCode: (line: any) =>
-        (line.itemId && itemsDict[line.itemId]
-          ? itemsDict[line.itemId].sku
-          : line.itemCode) || "",
-      getName: (line: any) =>
-        line.itemName ||
-        (line.itemId && itemsDict[line.itemId]
-          ? itemsDict[line.itemId].itemName
-          : "") ||
-        line.description ||
-        "",
-      customSort: (a, b, field, isDesc) => {
-        if (field === "ordered") {
-          return isDesc
-            ? Number(b.qtyOrdered ?? 0) - Number(a.qtyOrdered ?? 0)
-            : Number(a.qtyOrdered ?? 0) - Number(b.qtyOrdered ?? 0);
-        }
-        if (field === "remaining") {
-          const remA = Math.max(
-            0,
-            Number(a.qtyOrdered ?? 0) - Number(a.qtyReceived ?? 0),
-          );
-          const remB = Math.max(
-            0,
-            Number(b.qtyOrdered ?? 0) - Number(b.qtyReceived ?? 0),
-          );
-          return isDesc ? remB - remA : remA - remB;
-        }
-        return null;
+  const {
+    listHook,
+    processedLines,
+    paginatedLines,
+    page,
+    pageSize,
+    total,
+    totalPages,
+    setPage,
+    setPageSize,
+    buildFilterOptions,
+  } = useVoucherClientFilter({
+    tableId: "gr-details-table",
+    lines: sourceLines,
+    isOpen: open,
+    getCode: (line: any) =>
+      (line.itemId && itemsDict[line.itemId]
+        ? itemsDict[line.itemId].sku
+        : line.itemCode) || "",
+    getName: (line: any) =>
+      line.itemName ||
+      (line.itemId && itemsDict[line.itemId]
+        ? itemsDict[line.itemId].itemName
+        : "") ||
+      line.description ||
+      "",
+    customExtractors: {
+      ordered: (line: any) =>
+        line.qtyOrdered !== undefined && line.qtyOrdered !== null
+          ? String(line.qtyOrdered)
+          : (line.ordered ?? ""),
+      remaining: (line: any) => {
+        const ord = Number(line.qtyOrdered ?? line.ordered ?? 0);
+        const rec = Number(line.qtyReceived ?? 0);
+        return String(Math.max(0, ord - rec));
       },
-    });
+      qtyInput: (line: any) => {
+        if (tableMode === "po") {
+          const current = form.lines.find(
+            (l) =>
+              (l.purchaseOrderLineId && l.purchaseOrderLineId === line.id) ||
+              (line.itemId && l.itemId === line.itemId),
+          );
+          return current?.qtyReceived !== undefined &&
+            current?.qtyReceived !== null &&
+            current?.qtyReceived !== ""
+            ? String(current.qtyReceived)
+            : line.qtyReceived !== undefined
+              ? String(line.qtyReceived)
+              : "";
+        }
+        return line.qtyReceived !== undefined
+          ? String(line.qtyReceived)
+          : (line.qtyInput ?? "");
+      },
+      qtyReceived: (line: any) =>
+        line.qtyReceived !== undefined
+          ? String(line.qtyReceived)
+          : (line.qtyInput ?? ""),
+      serials: (line: any) => {
+        if (tableMode === "po") {
+          const current = form.lines.find(
+            (l) =>
+              (l.purchaseOrderLineId && l.purchaseOrderLineId === line.id) ||
+              (line.itemId && l.itemId === line.itemId),
+          );
+          return current?.declaredSerials?.length
+            ? `${current.declaredSerials.length} serial`
+            : "";
+        }
+        return line.declaredSerials?.length
+          ? `${line.declaredSerials.length} serial`
+          : "";
+      },
+    },
+    customSort: (a, b, field, isDesc) => {
+      if (field === "ordered") {
+        const valA = Number(a.qtyOrdered ?? a.ordered ?? 0);
+        const valB = Number(b.qtyOrdered ?? b.ordered ?? 0);
+        return isDesc ? valB - valA : valA - valB;
+      }
+      if (field === "remaining") {
+        const remA = Math.max(
+          0,
+          Number(a.qtyOrdered ?? a.ordered ?? 0) - Number(a.qtyReceived ?? 0),
+        );
+        const remB = Math.max(
+          0,
+          Number(b.qtyOrdered ?? b.ordered ?? 0) - Number(b.qtyReceived ?? 0),
+        );
+        return isDesc ? remB - remA : remA - remB;
+      }
+      if (field === "qtyInput" || field === "qtyReceived") {
+        const getQty = (item: any) => {
+          if (tableMode === "po") {
+            const current = form.lines.find(
+              (l) =>
+                (l.purchaseOrderLineId && l.purchaseOrderLineId === item.id) ||
+                (item.itemId && l.itemId === item.itemId),
+            );
+            return Number(current?.qtyReceived ?? item.qtyReceived ?? 0);
+          }
+          return Number(item.qtyReceived ?? item.qtyInput ?? 0);
+        };
+        const valA = getQty(a);
+        const valB = getQty(b);
+        return isDesc ? valB - valA : valA - valB;
+      }
+      return null;
+    },
+  });
 
   const { tableColumns, summaryRow, actionsColumn } = useGrFormColumns({
     drawer,
@@ -123,13 +219,15 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
     listHook,
     buildFilterOptions,
     handleOpenSerialDrawer,
+    paginatedLines,
+    processedLines,
+    page,
+    totalPages,
+    total,
     t,
   });
 
-  const tableItems =
-    tableMode === "view"
-      ? processedLines.filter((l) => Number(l.qtyReceived) > 0)
-      : processedLines;
+  const tableItems = paginatedLines;
 
   const getRowKey = (line: any) =>
     tableMode === "po"
@@ -149,6 +247,7 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
       activeFilterCount={listHook.activeFilterCount}
       onResetFilters={listHook.resetFilters}
       onOpenImport={() => setIsImportOpen(true)}
+      tableId="gr-details-table"
       t={t}
     />
   );
@@ -218,6 +317,8 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
         error={saveError}
         unifiedContext={drawer.unifiedContext}
         // Table
+        tableId="gr-details-table"
+        enableColumnVisibility={true}
         sectionTitle={sectionTitle}
         sectionTitleExtra={sectionTitleExtra}
         tableItems={tableItems}
@@ -226,12 +327,20 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
         summaryRow={summaryRow}
         actionsColumn={actionsColumn}
         emptyLabel={emptyLabel}
+        page={page}
+        pageSize={pageSize}
+        total={total}
+        totalPages={totalPages}
+        onPage={setPage}
+        onPageSize={setPageSize}
+        pageSizeOptions={[20, 50, 100, 200]}
         // Right panel
         rightPanelContent={rightPanelContent}
         defaultAttributesSlot={
           <GrDefaultAttributesSection drawer={drawer} t={t} />
         }
         remarksContent={remarksContent}
+        tagsSlot={<GrFormTagsSection drawer={drawer} t={t} />}
         customFieldsSlot={
           <ModuleEntityCustomFieldsSection
             moduleKey="GOODS_RECEIPT"
@@ -300,7 +409,13 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
         trackingPolicyName={serialDrawerState.trackingPolicyName}
         requiredQty={serialDrawerState.requiredQty}
         receiptDate={serialDrawerState.receiptDate}
+        receiptNo={serialDrawerState.receiptNo || receiptNo}
+        purchaseOrderNo={serialDrawerState.purchaseOrderNo || poNo}
+        vendorName={serialDrawerState.vendorName || vendorName}
+        warehouseName={serialDrawerState.warehouseName || warehouseName}
         initialSerials={serialDrawerState.initialSerials}
+        lineId={serialDrawerState.lineId}
+        isSystemAuto={serialDrawerState.isSystemAuto}
         onSaveSerials={handleSaveSerialsForLine}
       />
     </>

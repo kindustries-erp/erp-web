@@ -143,6 +143,17 @@ export function GarageCaseSyncDrawer({
         <div className="flex-1 overflow-y-auto">
           <div className="space-y-6">
             <div className="text-sm text-muted-foreground">{modalDesc}</div>
+
+            <div className="rounded-lg bg-sky-500/10 border border-sky-500/20 px-3 py-2.5 text-xs text-sky-700 dark:text-sky-300 flex items-start gap-2">
+              <span className="font-semibold shrink-0">ℹ️ Lưu ý:</span>
+              <span>
+                {t(
+                  "cases.syncDrawer.lookbackNotice",
+                  "Hệ thống tự động quét mở rộng 2 tháng trước mốc bắt đầu để cập nhật trạng thái và ngày hoàn thành cho các phiếu sửa chữa kéo dài qua nhiều tháng.",
+                )}
+              </span>
+            </div>
+
             <div className="flex flex-col gap-4">
               <div className="flex items-center gap-3">
                 <Combobox

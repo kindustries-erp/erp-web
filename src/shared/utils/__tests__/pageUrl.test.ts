@@ -98,15 +98,18 @@ describe("pageUrl utilities", () => {
       expect(legacyLines?.tab).toBe("in-lines");
     });
 
-    it("parses vinfast-parts-stock page with tab and stock_tab query params", () => {
-      const res = pathToPage(
-        "/vinfast-parts-stock",
-        "?tab=oto&stock_tab=OUT_OF_STOCK",
-      );
-      expect(res).not.toBeNull();
-      expect(res?.page).toBe("vinfast-parts-stock");
-      expect(res?.tab).toBe("oto");
-      expect(res?.searchParams.get("stock_tab")).toBe("OUT_OF_STOCK");
+    it("parses journal-entry and settings-accounts paths correctly", () => {
+      const journalRes = pathToPage("/journal-entry", "");
+      expect(journalRes).not.toBeNull();
+      expect(journalRes?.page).toBe("journal-entry");
+
+      const legacyJournalRes = pathToPage("/journal", "");
+      expect(legacyJournalRes).not.toBeNull();
+      expect(legacyJournalRes?.page).toBe("journal-entry");
+
+      const coaRes = pathToPage("/settings-accounts", "");
+      expect(coaRes).not.toBeNull();
+      expect(coaRes?.page).toBe("settings-accounts");
     });
   });
 });

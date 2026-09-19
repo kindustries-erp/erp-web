@@ -267,6 +267,8 @@ export function useErpInvoicesList(
     invoices,
     total,
     totalPages,
+    totals: data?.totals,
+    data,
     loading,
     isLoading,
     isFetching,

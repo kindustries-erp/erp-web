@@ -1,16 +1,18 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useCallback } from "react";
 import { format } from "date-fns";
 import { useTranslation } from "react-i18next";
 import { StandardTable } from "@/shared/components/StandardTable";
 import {
   type DataTableColumn,
-  TableColumnHeaderFilter,
-  TableSortState,
+  createColumnHeaderFilter,
   TableColumnAlign,
 } from "@/shared/components/DataTable";
+import type { ActionDropdownItem } from "@/shared/components/ActionDropdown";
 import { Checkbox } from "@/shared/components/ui/checkbox";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import { money } from "@/shared/utils/format";
+import { bankStatementApi } from "@/modules/bank-statements/api/bankStatementApi";
+import { Eye, RotateCcw, CheckCircle2 } from "lucide-react";
 
 interface AllBankTransactionsTableProps {
   vouchers: any[];
@@ -27,6 +29,7 @@ interface AllBankTransactionsTableProps {
   setPageSize: (ps: number) => void;
   onToggleRow: (row: any) => void;
   onViewDetail: (id: string) => void;
+  setDateRange?: (from?: string, to?: string) => void;
 }
 
 export function AllBankTransactionsTable({
@@ -44,46 +47,75 @@ export function AllBankTransactionsTable({
   setPageSize,
   onToggleRow,
   onViewDetail,
+  setDateRange,
 }: AllBankTransactionsTableProps) {
   const { t } = useTranslation(["erpInvoices", "common"]);
 
-  const renderHeaderFilter = (
-    key: string,
-    label: string,
-    align: TableColumnAlign = TableColumnAlign.LEFT,
-  ) => {
-    const isSortedAsc = tableState.sorts[0] === key;
-    const isSortedDesc = tableState.sorts[0] === `-${key}`;
-    const sortState: TableSortState = isSortedAsc
-      ? TableSortState.ASC
-      : isSortedDesc
-        ? TableSortState.DESC
-        : TableSortState.NONE;
+  const listHook = useMemo(
+    () => ({
+      ...tableState,
+      dateFrom,
+      dateTo,
+      setDateRange: (from?: string, to?: string) => {
+        if (setDateRange) {
+          setDateRange(from, to);
+        }
+        setPage(1);
+      },
+      setSort: (key: string, state: any) => {
+        tableState.setSort(key, state);
+        setPage(1);
+      },
+      setColumnFilter: (key: string, vals: string[]) => {
+        tableState.setColumnFilter(key, vals);
+        setPage(1);
+      },
+      setColumnSearch: (key: string, val: string) => {
+        tableState.setColumnSearch(key, val);
+        setPage(1);
+      },
+    }),
+    [tableState, dateFrom, dateTo, setDateRange, setPage],
+  );
 
-    return (
-      <TableColumnHeaderFilter
-        title={label}
-        align={align}
-        sortState={sortState}
-        onSortChange={(state) => tableState.setSort(key, state)}
-        searchValue={tableState.columnSearch[key] || ""}
-        onSearchChange={(val) => {
-          tableState.setColumnSearch(key, val);
-          setPage(1);
-        }}
-        selectedFilters={tableState.columnFilters[key] || []}
-        onFilterChange={(vals) => {
-          tableState.setColumnFilter(key, vals);
-          setPage(1);
-        }}
-        columnKey={key}
-        allFilters={tableState.columnFilters}
-      />
-    );
-  };
+  const headerFilter = useMemo(
+    () =>
+      createColumnHeaderFilter({
+        listHook,
+        queryKeyPrefix: "voucher-netoff-bank-column-options",
+        fetchOptions: ({
+          columnKey,
+          search,
+          pageParam,
+          pageSize: optPageSize,
+          filtersStr,
+        }) =>
+          bankStatementApi.getColumnOptions(
+            columnKey,
+            search,
+            pageParam,
+            optPageSize || 20,
+            filtersStr,
+          ),
+      }),
+    [listHook],
+  );
 
   const columns: DataTableColumn<any>[] = useMemo(
     () => [
+      {
+        key: "stt",
+        header: <span className="w-full block text-center font-bold">#</span>,
+        headerClassName: "text-center w-[40px] min-w-[40px]",
+        className: "text-center w-[40px] min-w-[40px]",
+        size: 40,
+        enableResizing: false,
+        cell: (_row, idx) => (
+          <span className="w-full block text-center font-mono text-xs text-muted-foreground">
+            {idx}
+          </span>
+        ),
+      },
       {
         key: "selection",
         header: "",
@@ -102,12 +134,15 @@ export function AllBankTransactionsTable({
       },
       {
         key: "source",
-        header: renderHeaderFilter(
+        header: headerFilter(
           "source",
           t("selectedBankTable.colSource", "Nguồn"),
-          TableColumnAlign.LEFT,
+          {
+            align: TableColumnAlign.LEFT,
+          },
         ),
         size: 130,
+        enableResizing: true,
         cell: (row) => (
           <div className="flex flex-col text-xs leading-tight">
             <span className="font-medium text-slate-800 dark:text-slate-200 truncate">
@@ -128,29 +163,16 @@ export function AllBankTransactionsTable({
       },
       {
         key: "transDate",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("selectedBankTable.colTransDate", "Ngày GD")}
-            align={TableColumnAlign.CENTER}
-            className="w-full justify-center"
-            sortState={
-              tableState.sorts[0] === "transDate"
-                ? TableSortState.ASC
-                : tableState.sorts[0] === "-transDate"
-                  ? TableSortState.DESC
-                  : TableSortState.NONE
-            }
-            onSortChange={(state) => tableState.setSort("transDate", state)}
-            searchValue=""
-            onSearchChange={() => {}}
-            selectedFilters={[]}
-            onFilterChange={() => {}}
-            hideFilter={true}
-            hideFooter={true}
-            isActive={Boolean(dateFrom || dateTo)}
-          />
+        header: headerFilter.date(
+          "transDate",
+          t("selectedBankTable.colTransDate", "Ngày GD"),
+          {
+            align: "center",
+            className: "w-full justify-center",
+          },
         ),
-        size: 95,
+        size: 105,
+        enableResizing: true,
         headerClassName: "text-center",
         className:
           "text-center font-mono text-xs text-slate-600 dark:text-slate-400",
@@ -159,12 +181,16 @@ export function AllBankTransactionsTable({
       },
       {
         key: "referenceNumber",
-        header: renderHeaderFilter(
+        header: headerFilter(
           "referenceNumber",
           t("selectedBankTable.colRef", "Tham chiếu"),
-          TableColumnAlign.LEFT,
+          {
+            align: TableColumnAlign.LEFT,
+            showBlankOption: true,
+          },
         ),
         size: 180,
+        enableResizing: true,
         cell: (row) =>
           row.referenceNumber ? (
             <Tooltip
@@ -190,12 +216,16 @@ export function AllBankTransactionsTable({
       },
       {
         key: "partnerName",
-        header: renderHeaderFilter(
+        header: headerFilter(
           "partnerName",
           t("selectedBankTable.colPartner", "Đối tác"),
-          TableColumnAlign.LEFT,
+          {
+            align: TableColumnAlign.LEFT,
+            showBlankOption: true,
+          },
         ),
         size: 180,
+        enableResizing: true,
         cell: (row) => {
           const name = row.partnerName || row.correspondentName;
           return name ? (
@@ -211,12 +241,16 @@ export function AllBankTransactionsTable({
       },
       {
         key: "description",
-        header: renderHeaderFilter(
+        header: headerFilter(
           "description",
           t("selectedBankTable.colDescription", "Nội dung"),
-          TableColumnAlign.LEFT,
+          {
+            align: TableColumnAlign.LEFT,
+            showBlankOption: true,
+          },
         ),
         size: 300,
+        enableResizing: true,
         cell: (row) => (
           <Tooltip content={row.description || "—"}>
             <div className="text-xs text-slate-600 dark:text-slate-300 truncate cursor-default max-w-full">
@@ -227,12 +261,15 @@ export function AllBankTransactionsTable({
       },
       {
         key: "creditAmount",
-        header: renderHeaderFilter(
+        header: headerFilter.amount(
           "creditAmount",
           t("selectedBankTable.natureCredit", "Thu"),
-          TableColumnAlign.RIGHT,
+          {
+            align: TableColumnAlign.RIGHT,
+          },
         ),
         size: 130,
+        enableResizing: true,
         headerClassName: "text-right",
         className: "text-right",
         cell: (row) => {
@@ -248,12 +285,15 @@ export function AllBankTransactionsTable({
       },
       {
         key: "debitAmount",
-        header: renderHeaderFilter(
+        header: headerFilter.amount(
           "debitAmount",
           t("selectedBankTable.natureDebit", "Chi"),
-          TableColumnAlign.RIGHT,
+          {
+            align: TableColumnAlign.RIGHT,
+          },
         ),
         size: 130,
+        enableResizing: true,
         headerClassName: "text-right",
         className: "text-right",
         cell: (row) => {
@@ -269,8 +309,16 @@ export function AllBankTransactionsTable({
       },
       {
         key: "netOffAmount",
-        header: t("selectedBankTable.colNetOffAmount", "Đã cấn trừ"),
-        size: 110,
+        header: headerFilter.amount(
+          "netOffAmount",
+          t("selectedBankTable.colNetOffAmount", "Đã cấn trừ"),
+          {
+            align: TableColumnAlign.RIGHT,
+            showBlankOption: true,
+          },
+        ),
+        size: 120,
+        enableResizing: true,
         headerClassName: "text-right",
         className: "text-right font-mono text-xs text-muted-foreground",
         cell: (row) => {
@@ -279,7 +327,7 @@ export function AllBankTransactionsTable({
         },
       },
     ],
-    [selectedIds, tableState, dateFrom, dateTo, t, onToggleRow, onViewDetail],
+    [selectedIds, headerFilter, t, onToggleRow, onViewDetail],
   );
 
   const summaryRow = useMemo(() => {
@@ -305,6 +353,42 @@ export function AllBankTransactionsTable({
     };
   }, [vouchers]);
 
+  const getRowActions = useCallback(
+    (row: any): ActionDropdownItem[] => {
+      const isSelected = selectedIds.includes(row.id);
+      return [
+        {
+          groupLabel: "TRA CỨU",
+          items: [
+            {
+              label: "Xem chi tiết giao dịch",
+              icon: <Eye className="w-3.5 h-3.5" />,
+              onClick: () => onViewDetail(row.id),
+            },
+          ],
+        },
+        {
+          groupLabel: "THAO TÁC",
+          items: [
+            {
+              label: isSelected
+                ? "Bỏ chọn giao dịch này"
+                : "Chọn giao dịch cấn trừ",
+              icon: isSelected ? (
+                <RotateCcw className="w-3.5 h-3.5 text-destructive" />
+              ) : (
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+              ),
+              variant: isSelected ? ("danger" as const) : undefined,
+              onClick: () => onToggleRow(row),
+            },
+          ],
+        },
+      ];
+    },
+    [onViewDetail, selectedIds, onToggleRow],
+  );
+
   return (
     <div className="h-[calc(100vh-320px)] min-h-[300px] flex flex-col">
       <StandardTable
@@ -321,6 +405,8 @@ export function AllBankTransactionsTable({
         totalPages={totalPages}
         onPage={setPage}
         onPageSize={setPageSize}
+        actions={getRowActions}
+        hideLegacyActionColumn={true}
         summaryRow={summaryRow}
         minWidth={1150}
         containerClassName="flex-1 min-h-0"

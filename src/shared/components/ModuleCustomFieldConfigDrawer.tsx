@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
 import {
@@ -32,6 +32,7 @@ import {
   Check,
   Pencil,
   Database,
+  CornerDownRight,
 } from "lucide-react";
 import {
   StandardFormDrawer,
@@ -217,7 +218,8 @@ export const ERP_MODULE_REGISTRY: ErpModuleDefinition[] = [
     domain: "INVENTORY",
     icon: <PackageMinus className="w-3.5 h-3.5" />,
     descKey: "moduleConfig.modules.issue.desc",
-    defaultDesc: "Phiếu xuất bán hàng, xuất NVL sản xuất & xuất hủy",
+    defaultDesc:
+      "Phiếu xuất bán hàng, xuất NVL sản xuất & xuất nội bộ / trưng bày",
   },
   {
     key: "INVENTORY_ADJUSTMENT",
@@ -349,6 +351,50 @@ export interface ModuleLivePreviewPanelProps {
   resetKey?: number;
 }
 
+export interface AttributeTreeNode {
+  def: ModuleAttributeDef;
+  parentDef?: ModuleAttributeDef;
+  children: AttributeTreeNode[];
+}
+
+export function buildAttributeTree(
+  defs: ModuleAttributeDef[],
+): AttributeTreeNode[] {
+  const defMap = new Map<string, ModuleAttributeDef>();
+  defs.forEach((d) => defMap.set(d.code, d));
+
+  const childMap = new Map<string, ModuleAttributeDef[]>();
+  const rootDefs: ModuleAttributeDef[] = [];
+
+  defs.forEach((d) => {
+    if (
+      d.parentAttrCode &&
+      defMap.has(d.parentAttrCode) &&
+      d.parentAttrCode !== d.code
+    ) {
+      const list = childMap.get(d.parentAttrCode) || [];
+      list.push(d);
+      childMap.set(d.parentAttrCode, list);
+    } else {
+      rootDefs.push(d);
+    }
+  });
+
+  const buildNode = (
+    def: ModuleAttributeDef,
+    parentDef?: ModuleAttributeDef,
+  ): AttributeTreeNode => {
+    const rawChildren = childMap.get(def.code) || [];
+    return {
+      def,
+      parentDef,
+      children: rawChildren.map((child) => buildNode(child, def)),
+    };
+  };
+
+  return rootDefs.map((root) => buildNode(root));
+}
+
 export function ModuleLivePreviewPanel({
   attributes,
   globalDefs = [],
@@ -382,96 +428,183 @@ export function ModuleLivePreviewPanel({
   );
 
   const handleFieldChange = (code: string, val: any) => {
-    setMockValues((prev) => ({ ...prev, [code]: val }));
+    setMockValues((prev) => {
+      const next = { ...prev, [code]: val };
+      // Clear all child fields dependent on this field if value changed
+      const childDefs = activeAttrs.filter((d) => d.parentAttrCode === code);
+      for (const child of childDefs) {
+        if (next[child.code]) {
+          const childOpt = (child.options || []).find(
+            (o) => o.value === next[child.code],
+          );
+          if (childOpt?.parentValue && childOpt.parentValue !== val) {
+            delete next[child.code];
+          }
+        }
+      }
+      return next;
+    });
   };
 
-  const renderAttributeInputs = (attrs: ModuleAttributeDef[]) => (
-    <div className="flex flex-col gap-2.5 pt-1">
-      {attrs.map((attr) => {
-        const val = mockValues[attr.code];
-        const displayName = resolveAttrName(attr, moduleKey || "", locale, t);
+  const renderSingleInput = (
+    attr: ModuleAttributeDef,
+    isChild = false,
+    parentDef?: ModuleAttributeDef,
+  ) => {
+    const val = mockValues[attr.code];
+    const displayName = resolveAttrName(attr, moduleKey || "", locale, t);
+    const parentDisplayName = parentDef
+      ? resolveAttrName(parentDef, moduleKey || "", locale, t)
+      : attr.parentAttrCode;
 
-        if (attr.fieldType === "CHECKBOX") {
-          return (
-            <div
-              key={attr.id}
-              className="flex items-center gap-2 py-0.5 select-none"
+    const childIndicator = isChild && (
+      <span className="inline-flex items-center gap-1 text-[10px] text-primary/80 font-normal">
+        <CornerDownRight className="w-3 h-3 text-primary shrink-0" />
+        <span>
+          {t("moduleConfig.childOf", "Phụ thuộc")}: {parentDisplayName}
+        </span>
+      </span>
+    );
+
+    if (attr.fieldType === "CHECKBOX") {
+      return (
+        <div
+          key={attr.id}
+          className={cn(
+            "flex flex-col gap-0.5 select-none",
+            isChild &&
+              "ml-3 pl-3 border-l-2 border-primary/40 dark:border-primary/30 mt-1 py-1",
+          )}
+        >
+          {childIndicator}
+          <div className="flex items-center gap-2 py-0.5">
+            <Checkbox
+              id={`preview-attr-${attr.id}`}
+              checked={Boolean(val)}
+              onCheckedChange={(checked) =>
+                handleFieldChange(attr.code, Boolean(checked))
+              }
+            />
+            <label
+              htmlFor={`preview-attr-${attr.id}`}
+              className="text-xs text-foreground cursor-pointer font-medium flex items-center gap-0.5"
             >
-              <Checkbox
-                id={`preview-attr-${attr.id}`}
-                checked={Boolean(val)}
-                onCheckedChange={(checked) =>
-                  handleFieldChange(attr.code, Boolean(checked))
-                }
-              />
-              <label
-                htmlFor={`preview-attr-${attr.id}`}
-                className="text-xs text-foreground cursor-pointer font-medium flex items-center gap-0.5"
-              >
-                {displayName}
-                {attr.isRequired && (
-                  <span className="text-destructive ml-0.5">*</span>
-                )}
-              </label>
-            </div>
+              {displayName}
+              {attr.isRequired && (
+                <span className="text-destructive ml-0.5">*</span>
+              )}
+            </label>
+          </div>
+        </div>
+      );
+    }
+
+    if (attr.fieldType === "SELECT") {
+      let rawOptions = attr.options || [];
+      const parentKey =
+        attr.parentAttrCode ||
+        (rawOptions.some((o) => Boolean(o.parentValue)) ? "category" : "");
+      const selectedParentVal = parentKey ? mockValues[parentKey] : "";
+
+      if (parentKey) {
+        if (!selectedParentVal) {
+          rawOptions = rawOptions.filter((o) => !o.parentValue);
+        } else {
+          rawOptions = rawOptions.filter(
+            (o) => !o.parentValue || o.parentValue === selectedParentVal,
           );
         }
+      }
 
-        if (attr.fieldType === "SELECT") {
-          const opts: ComboboxOption[] = (attr.options || []).map((o) => ({
-            value: o.value,
-            label: `${resolveOptionLabel(o, locale, t)} (${o.value})`,
-          }));
-          return (
-            <DrawerField
-              key={attr.id}
-              label={displayName}
-              required={attr.isRequired}
-            >
-              <Combobox
-                value={val || ""}
-                onChange={(v) => handleFieldChange(attr.code, v)}
-                options={opts}
-                placeholder={t("common.select", "Chọn giá trị")}
-              />
-            </DrawerField>
-          );
-        }
+      const opts: ComboboxOption[] = rawOptions.map((o) => ({
+        value: o.value,
+        label: `${resolveOptionLabel(o, locale, t)} (${o.value})`,
+      }));
 
-        if (attr.fieldType === "DATE") {
-          return (
-            <DrawerField
-              key={attr.id}
-              label={displayName}
-              required={attr.isRequired}
-            >
-              <DatePicker
-                value={val || ""}
-                onChange={(v) => handleFieldChange(attr.code, v)}
-                placeholder={t("common.dateFormat", "DD/MM/YYYY")}
-              />
-            </DrawerField>
-          );
-        }
+      const placeholderText =
+        parentKey && !selectedParentVal
+          ? `-- ${t("moduleConfig.selectParentFirst", "Vui lòng chọn")} ${parentDisplayName} ${t("moduleConfig.first", "trước")} --`
+          : t("common.select", "Chọn giá trị");
 
-        return (
-          <DrawerField
-            key={attr.id}
-            label={displayName}
-            required={attr.isRequired}
-          >
-            <input
-              type={attr.fieldType === "NUMBER" ? "number" : "text"}
-              className={inputCls}
+      return (
+        <div
+          key={attr.id}
+          className={cn(
+            isChild &&
+              "ml-3 pl-3 border-l-2 border-primary/40 dark:border-primary/30 mt-1 space-y-1",
+          )}
+        >
+          {childIndicator}
+          <DrawerField label={displayName} required={attr.isRequired}>
+            <Combobox
               value={val || ""}
-              onChange={(e) => handleFieldChange(attr.code, e.target.value)}
-              placeholder={`${t("common.enter", "Nhập")} ${displayName}...`}
+              onChange={(v) => handleFieldChange(attr.code, v)}
+              options={opts}
+              placeholder={placeholderText}
             />
           </DrawerField>
-        );
-      })}
-    </div>
-  );
+        </div>
+      );
+    }
+
+    if (attr.fieldType === "DATE") {
+      return (
+        <div
+          key={attr.id}
+          className={cn(
+            isChild &&
+              "ml-3 pl-3 border-l-2 border-primary/40 dark:border-primary/30 mt-1 space-y-1",
+          )}
+        >
+          {childIndicator}
+          <DrawerField label={displayName} required={attr.isRequired}>
+            <DatePicker
+              value={val || ""}
+              onChange={(v) => handleFieldChange(attr.code, v)}
+              placeholder={t("common.dateFormat", "DD/MM/YYYY")}
+            />
+          </DrawerField>
+        </div>
+      );
+    }
+
+    return (
+      <div
+        key={attr.id}
+        className={cn(
+          isChild &&
+            "ml-3 pl-3 border-l-2 border-primary/40 dark:border-primary/30 mt-1 space-y-1",
+        )}
+      >
+        {childIndicator}
+        <DrawerField label={displayName} required={attr.isRequired}>
+          <input
+            type={attr.fieldType === "NUMBER" ? "number" : "text"}
+            className={inputCls}
+            value={val || ""}
+            onChange={(e) => handleFieldChange(attr.code, e.target.value)}
+            placeholder={`${t("common.enter", "Nhập")} ${displayName}...`}
+          />
+        </DrawerField>
+      </div>
+    );
+  };
+
+  const renderAttributeInputs = (attrs: ModuleAttributeDef[]) => {
+    const trees = buildAttributeTree(attrs);
+    return (
+      <div className="flex flex-col gap-2.5 pt-1">
+        {trees.map((node) => (
+          <div key={node.def.id} className="flex flex-col gap-2">
+            {renderSingleInput(node.def, false)}
+            {node.children.map((child) =>
+              renderSingleInput(child.def, true, node.def),
+            )}
+          </div>
+        ))}
+      </div>
+    );
+  };
 
   return (
     <div className="flex flex-col gap-3.5 text-xs">
@@ -607,6 +740,7 @@ export function ModuleCustomFieldConfigContent({
     vi: "",
     en: "",
   });
+  const [attrParentAttrCode, setAttrParentAttrCode] = useState("");
   const [attrFieldType, setAttrFieldType] =
     useState<ModuleAttributeFieldType>("TEXT");
   const [attrRequired, setAttrRequired] = useState(false);
@@ -617,8 +751,53 @@ export function ModuleCustomFieldConfigContent({
   const [newOptionLabels, setNewOptionLabels] = useState<
     Record<string, string>
   >({ vi: "", en: "" });
+  const [newOptionParentValue, setNewOptionParentValue] = useState("");
   const [deleteAttrTarget, setDeleteAttrTarget] =
     useState<ModuleAttributeDef | null>(null);
+
+  // Available parent SELECT attributes in the same module
+  const parentSelectAttrOptions: ComboboxOption[] = useMemo(() => {
+    const candidateDefs = globalDefs.filter(
+      (d) =>
+        d.fieldType === "SELECT" &&
+        !d.isDeleted &&
+        d.code !== attrCode &&
+        (!editingAttr || d.id !== editingAttr.id) &&
+        !d.parentAttrCode,
+    );
+    return [
+      {
+        value: "",
+        label: t(
+          "moduleConfig.noParentAttr",
+          "— Không phụ thuộc (Thuộc tính độc lập) —",
+        ),
+      },
+      ...candidateDefs.map((d) => ({
+        value: d.code,
+        label: `${resolveAttrName(d, activeModuleKey, locale, t)} (${d.code})`,
+        code: d.code,
+      })),
+    ];
+  }, [globalDefs, attrCode, editingAttr, activeModuleKey, locale, t]);
+
+  // Selected parent attribute definition (if this attribute is configured as dependent)
+  const effectiveParentAttrDef = useMemo(() => {
+    if (!attrParentAttrCode) return null;
+    return globalDefs.find(
+      (d) => d.code === attrParentAttrCode && !d.isDeleted,
+    );
+  }, [globalDefs, attrParentAttrCode]);
+
+  // Options from the selected parent attribute for child option assignment
+  const parentCategoryOptions: ComboboxOption[] = useMemo(() => {
+    if (!effectiveParentAttrDef?.options) return [];
+    return effectiveParentAttrDef.options.map((opt) => ({
+      value: opt.value,
+      label: `${resolveOptionLabel(opt, locale, t)} (${opt.value})`,
+      code: opt.value,
+    }));
+  }, [effectiveParentAttrDef, locale, t]);
 
   // State: Option display name inline editing (value/key is immutable)
   const [editingOptionIdx, setEditingOptionIdx] = useState<number | null>(null);
@@ -633,6 +812,7 @@ export function ModuleCustomFieldConfigContent({
     useState("");
   const [editingOptionOriginalLabelEn, setEditingOptionOriginalLabelEn] =
     useState("");
+  const [editingOptionParentValue, setEditingOptionParentValue] = useState("");
 
   // State: Discard / Cancel Confirm Modal
   const [cancelConfirmTarget, setCancelConfirmTarget] = useState<
@@ -653,12 +833,14 @@ export function ModuleCustomFieldConfigContent({
         attrName.trim() !== "" ||
         attrNameEn.trim() !== "" ||
         hasAnyAttrName ||
+        attrParentAttrCode.trim() !== "" ||
         attrRequired ||
         attrFieldType !== "TEXT" ||
         attrOptions.length > 0 ||
         newOptionKey.trim() !== "" ||
         newOptionLabel.trim() !== "" ||
         newOptionLabelEn.trim() !== "" ||
+        newOptionParentValue.trim() !== "" ||
         hasAnyNewOptLabel,
       );
     }
@@ -675,6 +857,7 @@ export function ModuleCustomFieldConfigContent({
         attrNameEn.trim() !== (editingAttr.nameEn || "") ||
         attrNames.vi?.trim() !== (editingAttr.name || "") ||
         (attrNames.en?.trim() || "") !== (editingAttr.nameEn || "") ||
+        attrParentAttrCode.trim() !== (editingAttr.parentAttrCode || "") ||
         attrFieldType !== (editingAttr.fieldType || "TEXT") ||
         attrRequired !== Boolean(editingAttr.isRequired) ||
         optsChanged ||
@@ -683,6 +866,7 @@ export function ModuleCustomFieldConfigContent({
           newOptionKey.trim() !== "" ||
           newOptionLabel.trim() !== "" ||
           newOptionLabelEn.trim() !== "" ||
+          newOptionParentValue.trim() !== "" ||
           hasAnyNewOptLabel,
         )
       );
@@ -695,6 +879,7 @@ export function ModuleCustomFieldConfigContent({
     attrName,
     attrNameEn,
     attrNames,
+    attrParentAttrCode,
     attrFieldType,
     attrRequired,
     attrOptions,
@@ -703,11 +888,16 @@ export function ModuleCustomFieldConfigContent({
     newOptionLabel,
     newOptionLabelEn,
     newOptionLabels,
+    newOptionParentValue,
   ]);
 
+  const isEditingAny = Boolean(
+    isAddingAttr || editingAttr !== null || isAttrDirty,
+  );
+
   useEffect(() => {
-    onDirtyChange?.(isAttrDirty);
-  }, [isAttrDirty, onDirtyChange]);
+    onDirtyChange?.(isEditingAny);
+  }, [isEditingAny, onDirtyChange]);
 
   // Option inline edit helpers
   const handleStartEditOption = (index: number, opt: ModuleAttributeOption) => {
@@ -725,6 +915,7 @@ export function ModuleCustomFieldConfigContent({
     setEditingOptionOriginalLabels(currentLabels);
     setEditingOptionOriginalLabel(curLabelVi);
     setEditingOptionOriginalLabelEn(curLabelEn);
+    setEditingOptionParentValue(opt.parentValue || "");
   };
 
   const handleSaveOptionLabel = (index: number) => {
@@ -757,6 +948,7 @@ export function ModuleCustomFieldConfigContent({
               label: finalVi,
               labelEn: finalEn,
               labels: nextLabels,
+              parentValue: editingOptionParentValue.trim() || undefined,
             }
           : item,
       ),
@@ -768,6 +960,7 @@ export function ModuleCustomFieldConfigContent({
     setEditingOptionOriginalLabels({});
     setEditingOptionOriginalLabel("");
     setEditingOptionOriginalLabelEn("");
+    setEditingOptionParentValue("");
   };
 
   const handleCancelEditOption = () => {
@@ -807,6 +1000,7 @@ export function ModuleCustomFieldConfigContent({
     setEditingOptionOriginalLabels({});
     setEditingOptionOriginalLabel("");
     setEditingOptionOriginalLabelEn("");
+    setEditingOptionParentValue("");
   };
 
   // Open Create Attribute form
@@ -817,6 +1011,7 @@ export function ModuleCustomFieldConfigContent({
     setAttrName("");
     setAttrNameEn("");
     setAttrNames({ vi: "", en: "" });
+    setAttrParentAttrCode("");
     setAttrFieldType("TEXT");
     setAttrRequired(false);
     setAttrOptions([]);
@@ -824,6 +1019,7 @@ export function ModuleCustomFieldConfigContent({
     setNewOptionLabel("");
     setNewOptionLabelEn("");
     setNewOptionLabels({ vi: "", en: "" });
+    setNewOptionParentValue("");
     handleCancelEditOption();
   };
 
@@ -838,6 +1034,7 @@ export function ModuleCustomFieldConfigContent({
       vi: attr.name || "",
       en: attr.nameEn || "",
     });
+    setAttrParentAttrCode(attr.parentAttrCode || "");
     setAttrFieldType(attr.fieldType);
     setAttrRequired(Boolean(attr.isRequired));
     setAttrOptions(attr.options || []);
@@ -845,6 +1042,7 @@ export function ModuleCustomFieldConfigContent({
     setNewOptionLabel("");
     setNewOptionLabelEn("");
     setNewOptionLabels({ vi: "", en: "" });
+    setNewOptionParentValue("");
     handleCancelEditOption();
   };
 
@@ -855,6 +1053,7 @@ export function ModuleCustomFieldConfigContent({
     setAttrName("");
     setAttrNameEn("");
     setAttrNames({ vi: "", en: "" });
+    setAttrParentAttrCode("");
     setAttrFieldType("TEXT");
     setAttrRequired(false);
     setAttrOptions([]);
@@ -862,6 +1061,7 @@ export function ModuleCustomFieldConfigContent({
     setNewOptionLabel("");
     setNewOptionLabelEn("");
     setNewOptionLabels({ vi: "", en: "" });
+    setNewOptionParentValue("");
     handleCancelEditOption();
   };
 
@@ -931,12 +1131,14 @@ export function ModuleCustomFieldConfigContent({
         label: finalLVi,
         labelEn: finalLEn,
         labels: nextLabels,
+        parentValue: newOptionParentValue.trim() || undefined,
       },
     ]);
     setNewOptionKey("");
     setNewOptionLabel("");
     setNewOptionLabelEn("");
     setNewOptionLabels({ vi: "", en: "" });
+    setNewOptionParentValue("");
   };
 
   const handleRemoveOption = (index: number) => {
@@ -951,6 +1153,7 @@ export function ModuleCustomFieldConfigContent({
       code: string;
       name: string;
       nameEn?: string;
+      parentAttrCode?: string | null;
       fieldType: ModuleAttributeFieldType;
       options?: ModuleAttributeOption[];
       isRequired?: boolean;
@@ -1121,6 +1324,14 @@ export function ModuleCustomFieldConfigContent({
       return;
     }
 
+    const currentFieldType = editingAttr?.isSystem
+      ? editingAttr.fieldType
+      : attrFieldType;
+    const finalParentAttrCode =
+      currentFieldType === "SELECT" && attrParentAttrCode.trim()
+        ? attrParentAttrCode.trim()
+        : null;
+
     if (editingAttr) {
       await updateAttrMutation.mutateAsync({
         id: editingAttr.id,
@@ -1128,15 +1339,10 @@ export function ModuleCustomFieldConfigContent({
           code: editingAttr.isSystem ? editingAttr.code : trimmedCode,
           name: trimmedName,
           nameEn: trimmedNameEn || undefined,
-          fieldType: editingAttr.isSystem
-            ? editingAttr.fieldType
-            : attrFieldType,
+          parentAttrCode: finalParentAttrCode,
+          fieldType: currentFieldType,
           isRequired: attrRequired,
-          options:
-            (editingAttr.isSystem ? editingAttr.fieldType : attrFieldType) ===
-            "SELECT"
-              ? finalOptions
-              : undefined,
+          options: currentFieldType === "SELECT" ? finalOptions : undefined,
         },
       });
     } else {
@@ -1146,6 +1352,7 @@ export function ModuleCustomFieldConfigContent({
         code: trimmedCode,
         name: trimmedName,
         nameEn: trimmedNameEn || undefined,
+        parentAttrCode: finalParentAttrCode,
         fieldType: attrFieldType,
         isRequired: attrRequired,
         options: attrFieldType === "SELECT" ? finalOptions : undefined,
@@ -1305,6 +1512,45 @@ export function ModuleCustomFieldConfigContent({
             </div>
           </DrawerField>
         </div>
+
+        {attrFieldType === "SELECT" && (
+          <div className="sm:col-span-12 pt-1 border-t border-border/20">
+            <DrawerField
+              label={
+                <div className="flex items-center gap-1.5">
+                  <span>
+                    {t(
+                      "moduleConfig.parentAttrLabel",
+                      "Thuộc tính cha (Phụ thuộc vào)",
+                    )}
+                  </span>
+                  <Tooltip
+                    content={t(
+                      "moduleConfig.parentAttrTooltip",
+                      "Nếu thuộc tính này phụ thuộc vào một thuộc tính SELECT khác (ví dụ: subcategory phụ thuộc category), hãy chọn thuộc tính cha tại đây.",
+                    )}
+                  >
+                    <AlertCircle className="w-3 h-3 text-muted-foreground hover:text-foreground cursor-help" />
+                  </Tooltip>
+                </div>
+              }
+            >
+              <Combobox
+                options={parentSelectAttrOptions}
+                value={attrParentAttrCode}
+                onChange={(v) => {
+                  setAttrParentAttrCode(v || "");
+                  setNewOptionParentValue("");
+                }}
+                placeholder={t(
+                  "moduleConfig.noParentAttr",
+                  "— Không phụ thuộc (Thuộc tính độc lập) —",
+                )}
+                allowClear={true}
+              />
+            </DrawerField>
+          </div>
+        )}
       </div>
 
       {attrFieldType === "SELECT" && (
@@ -1322,7 +1568,14 @@ export function ModuleCustomFieldConfigContent({
             <NeutralCountBadge count={attrOptions.length} />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-[1fr_2fr_auto] gap-2 items-end bg-background/60 dark:bg-background/40 p-2.5 rounded-lg border border-border/40">
+          <div
+            className={cn(
+              "grid gap-2 items-end bg-background/60 dark:bg-background/40 p-2.5 rounded-lg border border-border/40",
+              parentCategoryOptions.length > 0
+                ? "grid-cols-1 sm:grid-cols-[1fr_1.5fr_1.5fr_auto]"
+                : "grid-cols-1 sm:grid-cols-[1fr_2fr_auto]",
+            )}
+          >
             <div>
               <DrawerField
                 label={t("moduleConfig.optionKey", "Mã tùy chọn (Key)")}
@@ -1367,6 +1620,25 @@ export function ModuleCustomFieldConfigContent({
               </DrawerField>
             </div>
 
+            {parentCategoryOptions.length > 0 && (
+              <div>
+                <DrawerField
+                  label={t("moduleConfig.parentCategory", "Thuộc tùy chọn cha")}
+                >
+                  <Combobox
+                    options={parentCategoryOptions}
+                    value={newOptionParentValue}
+                    onChange={(v) => setNewOptionParentValue(v || "")}
+                    placeholder={t(
+                      "moduleConfig.parentCategoryAll",
+                      "Tất cả / Chung",
+                    )}
+                    allowClear={true}
+                  />
+                </DrawerField>
+              </div>
+            )}
+
             <Button
               type="button"
               size="sm"
@@ -1391,12 +1663,12 @@ export function ModuleCustomFieldConfigContent({
                   return (
                     <div
                       key={opt.value}
-                      className="inline-flex flex-col sm:flex-row items-stretch sm:items-center gap-2 p-1.5 sm:p-2 text-xs bg-muted/40 text-foreground border border-border/70 shadow-2xs rounded-lg w-full sm:w-auto"
+                      className="inline-flex flex-col sm:flex-row items-stretch sm:items-center gap-2 p-1.5 sm:p-2 text-xs bg-muted/40 text-foreground border border-border/70 shadow-2xs rounded-lg w-full"
                     >
                       <span className="font-mono text-[10px] font-semibold text-muted-foreground self-start sm:self-center px-1">
                         {opt.value}
                       </span>
-                      <div className="min-w-[220px] sm:min-w-[260px] flex-1">
+                      <div className="min-w-[180px] sm:min-w-[220px] flex-1">
                         <MultilingualInput
                           mode="popover"
                           values={editingOptionLabels}
@@ -1412,6 +1684,22 @@ export function ModuleCustomFieldConfigContent({
                           inputClassName="py-1.5 text-xs"
                         />
                       </div>
+                      {parentCategoryOptions.length > 0 && (
+                        <div className="min-w-[140px] sm:min-w-[170px]">
+                          <Combobox
+                            options={parentCategoryOptions}
+                            value={editingOptionParentValue}
+                            onChange={(v) =>
+                              setEditingOptionParentValue(v || "")
+                            }
+                            placeholder={t(
+                              "moduleConfig.parentCategoryAll",
+                              "Tất cả / Chung",
+                            )}
+                            allowClear={true}
+                          />
+                        </div>
+                      )}
                       <div className="flex items-center gap-1 self-end sm:self-center">
                         <button
                           type="button"
@@ -1447,6 +1735,12 @@ export function ModuleCustomFieldConfigContent({
                     <span className="text-foreground font-medium">
                       {optionLabelCurrent}
                     </span>
+
+                    {opt.parentValue && (
+                      <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-semibold bg-primary/10 text-primary border border-primary/20">
+                        {opt.parentValue}
+                      </span>
+                    )}
 
                     {/* Reusable Multilingual Translation Preview Badge */}
                     <MultilingualBadge
@@ -1549,6 +1843,297 @@ export function ModuleCustomFieldConfigContent({
     </div>
   );
 
+  // Helper render hierarchical attribute tree with clean indentation, branch icon and compact parent-child badge
+  const renderAttributeTreeNodes = (
+    nodes: AttributeTreeNode[],
+    isSystem: boolean,
+  ) => {
+    return nodes.map((node) => {
+      const isRootEditing = editingAttr?.id === node.def.id;
+      const rootItem = isRootEditing ? (
+        <div key={node.def.id} className="w-full">
+          {renderAttributeForm()}
+        </div>
+      ) : (
+        <div
+          key={node.def.id}
+          className="flex items-center justify-between px-3.5 py-2.5 bg-surface/80 hover:bg-muted/30 dark:bg-surface/30 dark:hover:bg-muted/15 rounded-lg text-xs transition-colors border border-border/40 group"
+        >
+          <div className="flex items-center gap-2 min-w-0 flex-1 flex-wrap">
+            {isSystem ? (
+              <Badge
+                variant="outline"
+                className="text-[10px] gap-1 shrink-0 flex items-center font-medium bg-muted/40 border-0 text-muted-foreground"
+              >
+                <ShieldCheck className="w-3 h-3 text-muted-foreground" />
+                <span>{t("moduleConfig.systemBadge", "Mặc định")}</span>
+              </Badge>
+            ) : (
+              <Badge
+                variant="outline"
+                className="text-[10px] gap-1 shrink-0 flex items-center font-medium bg-muted/40 border-0 text-foreground"
+              >
+                {FIELD_TYPE_ICONS[node.def.fieldType]}
+                <span>{getFieldTypeShortLabel(node.def.fieldType, t)}</span>
+              </Badge>
+            )}
+            <span className="font-semibold text-foreground truncate">
+              {resolveAttrName(node.def, activeModuleKey, locale, t)}
+            </span>
+            <span className="text-[11px] text-muted-foreground font-mono shrink-0">
+              ({node.def.code})
+            </span>
+            {node.def.fieldType === "SELECT" && node.def.options && (
+              <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-medium text-muted-foreground bg-muted/50 border-0">
+                {node.def.options.length}{" "}
+                {t("moduleConfig.optionsCount", "tùy chọn")}
+              </span>
+            )}
+            {node.def.isRequired && (
+              <Badge
+                variant="destructive"
+                className="text-[9px] px-1.5 py-0 border-0"
+              >
+                {t("moduleConfig.requiredBadge", "Bắt buộc *")}
+              </Badge>
+            )}
+            {!isSystem && !node.def.isActive && (
+              <Badge
+                variant="secondary"
+                className="text-[9px] px-1.5 py-0 text-muted-foreground border-0"
+              >
+                {t("common.inactive", "Ngừng dùng")}
+              </Badge>
+            )}
+            {!isSystem && (node.def.usageCount || 0) > 0 && (
+              <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-medium text-muted-foreground bg-muted/50 border-0">
+                {node.def.usageCount} {t("moduleConfig.used", "đang dùng")}
+              </span>
+            )}
+          </div>
+
+          <div className="flex items-center gap-1 shrink-0">
+            {!isSystem && (
+              <Tooltip
+                content={
+                  node.def.isActive
+                    ? t("common.deactivate", "Ngừng hoạt động")
+                    : t("common.activate", "Kích hoạt lại")
+                }
+              >
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="w-7 h-7"
+                  onClick={() => handleToggleAttrActive(node.def)}
+                >
+                  {node.def.isActive ? (
+                    <Power className="w-3.5 h-3.5 text-emerald-500" />
+                  ) : (
+                    <PowerOff className="w-3.5 h-3.5 text-muted-foreground" />
+                  )}
+                </Button>
+              </Tooltip>
+            )}
+            <Tooltip
+              content={
+                isSystem
+                  ? t("common.edit", "Chỉnh sửa tùy chọn")
+                  : t("common.edit", "Chỉnh sửa")
+              }
+            >
+              <Button
+                size="icon"
+                variant="ghost"
+                className="w-7 h-7 text-muted-foreground hover:text-foreground hover:bg-surface"
+                onClick={() => openEditAttr(node.def)}
+              >
+                <Edit2 className="w-3.5 h-3.5" />
+              </Button>
+            </Tooltip>
+            {!isSystem && (
+              <Tooltip content={t("common.delete", "Xóa thuộc tính")}>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="w-7 h-7 text-destructive hover:bg-destructive/10"
+                  onClick={() => setDeleteAttrTarget(node.def)}
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </Button>
+              </Tooltip>
+            )}
+          </div>
+        </div>
+      );
+
+      return (
+        <div key={node.def.id} className="flex flex-col gap-1.5">
+          {rootItem}
+
+          {/* Children items with subtle tree branch line & compact dependency badge */}
+          {node.children.map((childNode) => {
+            const isChildEditing = editingAttr?.id === childNode.def.id;
+            if (isChildEditing) {
+              return (
+                <div key={childNode.def.id} className="w-full">
+                  {renderAttributeForm()}
+                </div>
+              );
+            }
+
+            const parentName = resolveAttrName(
+              node.def,
+              activeModuleKey,
+              locale,
+              t,
+            );
+
+            return (
+              <div
+                key={childNode.def.id}
+                className="flex items-center justify-between px-3 py-2 ml-4 pl-3.5 bg-transparent hover:bg-muted/25 dark:hover:bg-muted/15 rounded-r-lg text-xs transition-colors border-l-2 border-primary/40 group relative"
+              >
+                <div className="flex items-center gap-2 min-w-0 flex-1 flex-wrap">
+                  <CornerDownRight className="w-3.5 h-3.5 text-primary/70 shrink-0" />
+                  {isSystem ? (
+                    <Badge
+                      variant="outline"
+                      className="text-[10px] gap-1 shrink-0 flex items-center font-medium bg-muted/40 border-0 text-muted-foreground"
+                    >
+                      <ShieldCheck className="w-3 h-3 text-muted-foreground" />
+                      <span>{t("moduleConfig.systemBadge", "Mặc định")}</span>
+                    </Badge>
+                  ) : (
+                    <Badge
+                      variant="outline"
+                      className="text-[10px] gap-1 shrink-0 flex items-center font-medium bg-muted/40 border-0 text-foreground"
+                    >
+                      {FIELD_TYPE_ICONS[childNode.def.fieldType]}
+                      <span>
+                        {getFieldTypeShortLabel(childNode.def.fieldType, t)}
+                      </span>
+                    </Badge>
+                  )}
+                  <span className="font-semibold text-foreground truncate">
+                    {resolveAttrName(childNode.def, activeModuleKey, locale, t)}
+                  </span>
+                  <span className="text-[11px] text-muted-foreground font-mono shrink-0">
+                    ({childNode.def.code})
+                  </span>
+
+                  {/* Compact Dependency Badge with Full Tooltip */}
+                  <Tooltip
+                    content={`${t("moduleConfig.childOf", "Phụ thuộc vào")}: ${parentName} (${node.def.code})`}
+                  >
+                    <span className="inline-flex items-center gap-1 text-[10px] text-primary bg-primary/10 px-1.5 py-0.5 rounded font-mono shrink-0 cursor-help select-none">
+                      <span>🔗</span>
+                      <span className="font-sans font-medium">
+                        {node.def.code}
+                      </span>
+                    </span>
+                  </Tooltip>
+
+                  {childNode.def.fieldType === "SELECT" &&
+                    childNode.def.options && (
+                      <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-medium text-muted-foreground bg-muted/50 border-0">
+                        {childNode.def.options.length}{" "}
+                        {t("moduleConfig.optionsCount", "tùy chọn")}
+                      </span>
+                    )}
+                  {childNode.def.isRequired && (
+                    <Badge
+                      variant="destructive"
+                      className="text-[9px] px-1.5 py-0 border-0"
+                    >
+                      {t("moduleConfig.requiredBadge", "Bắt buộc *")}
+                    </Badge>
+                  )}
+                  {!isSystem && !childNode.def.isActive && (
+                    <Badge
+                      variant="secondary"
+                      className="text-[9px] px-1.5 py-0 text-muted-foreground border-0"
+                    >
+                      {t("common.inactive", "Ngừng dùng")}
+                    </Badge>
+                  )}
+                  {!isSystem && (childNode.def.usageCount || 0) > 0 && (
+                    <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-medium text-muted-foreground bg-muted/50 border-0">
+                      {childNode.def.usageCount}{" "}
+                      {t("moduleConfig.used", "đang dùng")}
+                    </span>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-1 shrink-0">
+                  {!isSystem && (
+                    <Tooltip
+                      content={
+                        childNode.def.isActive
+                          ? t("common.deactivate", "Ngừng hoạt động")
+                          : t("common.activate", "Kích hoạt lại")
+                      }
+                    >
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="w-7 h-7"
+                        onClick={() => handleToggleAttrActive(childNode.def)}
+                      >
+                        {childNode.def.isActive ? (
+                          <Power className="w-3.5 h-3.5 text-emerald-500" />
+                        ) : (
+                          <PowerOff className="w-3.5 h-3.5 text-muted-foreground" />
+                        )}
+                      </Button>
+                    </Tooltip>
+                  )}
+                  <Tooltip
+                    content={
+                      isSystem
+                        ? t("common.edit", "Chỉnh sửa tùy chọn")
+                        : t("common.edit", "Chỉnh sửa")
+                    }
+                  >
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="w-7 h-7 text-muted-foreground hover:text-foreground hover:bg-surface"
+                      onClick={() => openEditAttr(childNode.def)}
+                    >
+                      <Edit2 className="w-3.5 h-3.5" />
+                    </Button>
+                  </Tooltip>
+                  {!isSystem && (
+                    <Tooltip content={t("common.delete", "Xóa thuộc tính")}>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="w-7 h-7 text-destructive hover:bg-destructive/10"
+                        onClick={() => setDeleteAttrTarget(childNode.def)}
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </Button>
+                    </Tooltip>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      );
+    });
+  };
+
+  const systemTrees = useMemo(
+    () => buildAttributeTree(systemDefs),
+    [systemDefs],
+  );
+  const customTrees = useMemo(
+    () => buildAttributeTree(customDefs),
+    [customDefs],
+  );
+
   return (
     <>
       <div className="flex flex-col gap-4 pb-6">
@@ -1603,68 +2188,7 @@ export function ModuleCustomFieldConfigContent({
             defaultCollapsed={false}
           >
             <div className="flex flex-col gap-2">
-              {systemDefs.map((attr) =>
-                editingAttr?.id === attr.id ? (
-                  <div key={attr.id} className="w-full">
-                    {renderAttributeForm()}
-                  </div>
-                ) : (
-                  <div
-                    key={attr.id}
-                    className="flex items-center justify-between px-3.5 py-2.5 bg-muted/20 hover:bg-muted/40 dark:bg-muted/10 dark:hover:bg-muted/20 rounded-xl text-xs transition-all group border border-border/60 hover:border-border shadow-2xs"
-                  >
-                    <div className="flex items-center gap-2 min-w-0 flex-wrap">
-                      <Badge
-                        variant="outline"
-                        className="text-[10px] gap-1 shrink-0 flex items-center font-medium bg-surface border-border/80 text-muted-foreground"
-                      >
-                        <ShieldCheck className="w-3 h-3 text-muted-foreground" />
-                        <span>{t("moduleConfig.systemBadge", "Mặc định")}</span>
-                      </Badge>
-                      <Badge
-                        variant="outline"
-                        className="text-[10px] gap-1 shrink-0 flex items-center font-medium bg-surface border-border/80 text-foreground"
-                      >
-                        {FIELD_TYPE_ICONS[attr.fieldType]}
-                        <span>{getFieldTypeShortLabel(attr.fieldType, t)}</span>
-                      </Badge>
-                      <span className="font-semibold text-foreground truncate">
-                        {resolveAttrName(attr, activeModuleKey, locale, t)}
-                      </span>
-                      <span className="text-[11px] text-muted-foreground font-mono shrink-0">
-                        ({attr.code})
-                      </span>
-                      {attr.fieldType === "SELECT" && attr.options && (
-                        <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-medium text-foreground bg-slate-100 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80">
-                          {attr.options.length}{" "}
-                          {t("moduleConfig.optionsCount", "tùy chọn")}
-                        </span>
-                      )}
-                      {attr.isRequired && (
-                        <Badge
-                          variant="destructive"
-                          className="text-[9px] px-1.5 py-0"
-                        >
-                          {t("moduleConfig.requiredBadge", "Bắt buộc *")}
-                        </Badge>
-                      )}
-                    </div>
-
-                    <div className="flex items-center gap-1 shrink-0">
-                      <Tooltip content={t("common.edit", "Chỉnh sửa tùy chọn")}>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="w-7 h-7 text-muted-foreground hover:text-foreground hover:bg-surface"
-                          onClick={() => openEditAttr(attr)}
-                        >
-                          <Edit2 className="w-3.5 h-3.5" />
-                        </Button>
-                      </Tooltip>
-                    </div>
-                  </div>
-                ),
-              )}
+              {renderAttributeTreeNodes(systemTrees, true)}
             </div>
           </DrawerSection>
         )}
@@ -1700,105 +2224,7 @@ export function ModuleCustomFieldConfigContent({
                 </div>
               )}
 
-              {customDefs.map((attr) =>
-                editingAttr?.id === attr.id ? (
-                  <div key={attr.id} className="w-full">
-                    {renderAttributeForm()}
-                  </div>
-                ) : (
-                  <div
-                    key={attr.id}
-                    className="flex items-center justify-between px-3.5 py-2.5 bg-muted/20 hover:bg-muted/40 dark:bg-muted/10 dark:hover:bg-muted/20 rounded-xl text-xs transition-all group border border-border/60 hover:border-border shadow-2xs"
-                  >
-                    <div className="flex items-center gap-2.5 min-w-0 flex-wrap">
-                      <Badge
-                        variant="outline"
-                        className="text-[10px] gap-1 shrink-0 flex items-center font-medium bg-surface border-border/80 text-foreground"
-                      >
-                        {FIELD_TYPE_ICONS[attr.fieldType]}
-                        <span>{getFieldTypeShortLabel(attr.fieldType, t)}</span>
-                      </Badge>
-                      <span className="font-semibold text-foreground truncate">
-                        {resolveAttrName(attr, activeModuleKey, locale, t)}
-                      </span>
-                      <span className="text-[11px] text-muted-foreground font-mono shrink-0">
-                        ({attr.code})
-                      </span>
-                      {attr.fieldType === "SELECT" && attr.options && (
-                        <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-medium text-foreground bg-slate-100 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80">
-                          {attr.options.length}{" "}
-                          {t("moduleConfig.optionsCount", "tùy chọn")}
-                        </span>
-                      )}
-                      {attr.isRequired && (
-                        <Badge
-                          variant="destructive"
-                          className="text-[9px] px-1.5 py-0"
-                        >
-                          {t("moduleConfig.requiredBadge", "Bắt buộc *")}
-                        </Badge>
-                      )}
-                      {!attr.isActive && (
-                        <Badge
-                          variant="secondary"
-                          className="text-[9px] px-1.5 py-0 text-muted-foreground"
-                        >
-                          {t("common.inactive", "Ngừng dùng")}
-                        </Badge>
-                      )}
-                      {(attr.usageCount || 0) > 0 && (
-                        <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-medium text-foreground bg-slate-100 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80">
-                          {attr.usageCount}{" "}
-                          {t("moduleConfig.used", "đang dùng")}
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="flex items-center gap-1 shrink-0">
-                      <Tooltip
-                        content={
-                          attr.isActive
-                            ? t("common.deactivate", "Ngừng hoạt động")
-                            : t("common.activate", "Kích hoạt lại")
-                        }
-                      >
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="w-7 h-7"
-                          onClick={() => handleToggleAttrActive(attr)}
-                        >
-                          {attr.isActive ? (
-                            <Power className="w-3.5 h-3.5 text-emerald-500" />
-                          ) : (
-                            <PowerOff className="w-3.5 h-3.5 text-muted-foreground" />
-                          )}
-                        </Button>
-                      </Tooltip>
-                      <Tooltip content={t("common.edit", "Chỉnh sửa")}>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="w-7 h-7 text-muted-foreground hover:text-foreground hover:bg-surface"
-                          onClick={() => openEditAttr(attr)}
-                        >
-                          <Edit2 className="w-3.5 h-3.5" />
-                        </Button>
-                      </Tooltip>
-                      <Tooltip content={t("common.delete", "Xóa thuộc tính")}>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="w-7 h-7 text-destructive hover:bg-destructive/10"
-                          onClick={() => setDeleteAttrTarget(attr)}
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </Button>
-                      </Tooltip>
-                    </div>
-                  </div>
-                ),
-              )}
+              {renderAttributeTreeNodes(customTrees, false)}
 
               {/* Form Thêm thuộc tính mới hiển thị inline */}
               {isAddingAttr && (
@@ -2025,6 +2451,17 @@ export function ModuleCustomFieldConfigDrawer({
     enabled: open && !!activeModuleKey,
   });
 
+  // State for close confirmation when dirty
+  const [showCloseConfirmModal, setShowCloseConfirmModal] = useState(false);
+
+  const handleRequestClose = useCallback(() => {
+    if (isContentDirty) {
+      setShowCloseConfirmModal(true);
+    } else {
+      onClose();
+    }
+  }, [isContentDirty, onClose]);
+
   const titleText =
     mode === "single" && moduleLabel
       ? `${t("moduleConfig.title", "Cấu hình trường tùy chỉnh")} — ${moduleLabel}`
@@ -2035,8 +2472,8 @@ export function ModuleCustomFieldConfigDrawer({
       <StandardFormDrawer
         open={open}
         mode="view"
-        onClose={onClose}
-        confirmOnClose={isContentDirty}
+        onClose={handleRequestClose}
+        confirmOnClose={false}
         icon={<Settings className="w-5 h-5 text-primary" />}
         title={titleText}
         subtitle={t(
@@ -2075,6 +2512,25 @@ export function ModuleCustomFieldConfigDrawer({
             resetKey={previewResetKey}
           />
         }
+      />
+
+      {/* Discard confirmation modal when closing drawer with unsaved changes */}
+      <ConfirmModal
+        open={showCloseConfirmModal}
+        title={t("moduleConfig.confirmCloseTitle", "Xác nhận thoát cấu hình")}
+        message={t(
+          "moduleConfig.confirmCloseDesc",
+          "Bạn đang có thông tin cấu hình thuộc tính chưa được lưu. Nếu thoát bây giờ, các thay đổi sẽ bị mất. Bạn có chắc chắn muốn thoát?",
+        )}
+        confirmLabel={t("common.discardChanges", "Thoát không lưu")}
+        cancelLabel={t("common.continueEditing", "Tiếp tục chỉnh sửa")}
+        danger
+        onConfirm={() => {
+          setShowCloseConfirmModal(false);
+          setIsContentDirty(false);
+          onClose();
+        }}
+        onCancel={() => setShowCloseConfirmModal(false)}
       />
 
       {/* Discard confirmation modal when switching domain with unsaved changes */}

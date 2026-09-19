@@ -154,6 +154,10 @@ export const bankStatementApi = {
     endDate?: string;
     sourceType?: "BANK" | "CASH";
     branchId?: string;
+    bankAccountId?: string;
+    cashBookId?: string;
+    search?: string;
+    transactionType?: string;
     tagIds?: string[];
     correspondentAccount?: string;
     correspondentName?: string;

@@ -32,7 +32,11 @@ import {
   type SettlementSubmissionItem,
 } from "./GarageCaseSettlementDrawerModal";
 import { InvoiceSelectionDrawer } from "./InvoiceSelectionDrawer";
-import { GarageCaseSettlementSection } from "./GarageCaseSettlementSection";
+import {
+  GarageCaseFinancialsTab,
+  GarageCaseFinancialsRightPanel,
+  GarageCaseFinancialsProvider,
+} from "./GarageCaseFinancialsTab";
 import { DrawerDocumentTraceability } from "@/shared/components/drawer/DrawerDocumentTraceability";
 import { garageApi } from "../api/garageApi";
 import {
@@ -823,19 +827,21 @@ export function GarageCaseStandaloneDrawer({
         ),
       },
 
-      // Tab 3: Tài chính & Công nợ
+      // Tab 3: Tài chính
       {
         key: "financials",
-        label: t("cases.drawer.financials", "Tài chính & Công nợ"),
+        label: t("cases.drawer.financials", "Tài chính"),
         icon: <Wallet className="w-3.5 h-3.5" />,
         badgeCount:
           (activeLinkedInvoices?.length || 0) +
           (activeSettlements?.length || 0),
         content: (
-          <GarageCaseSettlementSection
+          <GarageCaseFinancialsTab
             caseId={selectedCase.id}
             caseCode={selectedCase.soChungTu}
+            caseData={selectedCase}
             editMode={editMode}
+            onStartEdit={startEdit}
             activeSettlements={activeSettlements}
             activeLinkedInvoices={activeLinkedInvoices}
             activeSummary={activeSummary}
@@ -843,6 +849,13 @@ export function GarageCaseStandaloneDrawer({
             onRemoveSettlement={removeSettlement}
             onAddInvoice={addLinkedInvoice}
             onRemoveInvoice={removeLinkedInvoice}
+          />
+        ),
+        rightPanel: (
+          <GarageCaseFinancialsRightPanel
+            caseId={selectedCase.id}
+            caseCode={selectedCase.soChungTu}
+            caseData={selectedCase}
           />
         ),
       },
@@ -959,390 +972,425 @@ export function GarageCaseStandaloneDrawer({
 
   return (
     <>
-      <StandardFormDrawer
-        open={isOpen}
-        mode={editMode ? "edit" : "view"}
-        onToggleEdit={!editMode ? startEdit : undefined}
-        confirmOnClose={editMode && totalHasPendingChanges}
-        onClose={onClose}
-        collapsibleRightPanel={true}
-        title={`${t("cases.drawer.caseDetails", "Sổ báo giá:")} ${selectedCase?.soChungTu || ""}`}
-        titleExtra={
-          selectedCase?.tenTinhTrangDichVu ? (
-            <KgaraCaseStatusBadge status={selectedCase.tenTinhTrangDichVu} />
-          ) : undefined
-        }
-        footerLeft={footerLeft}
-        actions={editMode ? editActions : undefined}
-        tabs={resolvedDrawerTabs}
-        activeTabKey={activeTabKey}
-        onTabChange={setActiveTabKey}
-        defaultTabKey="quote_details"
-        leftPanel={
-          isLoadingCase || isSyncingDetail ? (
-            <div className="space-y-4 animate-pulse px-2 w-full">
-              <div className="h-48 bg-slate-100 rounded-lg w-full"></div>
-              <div className="h-64 bg-slate-100 rounded-lg w-full"></div>
-            </div>
-          ) : undefined
-        }
-        rightPanel={
-          isLoadingCase || isSyncingDetail ? (
-            <div className="space-y-4 animate-pulse px-2 w-full">
-              <div className="h-20 bg-slate-100 rounded-lg w-full"></div>
-              <div className="h-40 bg-slate-100 rounded-lg w-full"></div>
-            </div>
-          ) : selectedCase ? (
-            <div className="space-y-3 pb-3">
-              {/* 1. THÔNG TIN CHUNG */}
-              <DrawerSection
-                title={t("cases.drawer.generalInfo", "Thông tin chung")}
-                collapsible
-                defaultCollapsed={false}
-              >
-                <DrawerRow
-                  label={t("cases.drawer.caseCode", "Số chứng từ")}
-                  value={selectedCase.soChungTu}
-                />
-                <DrawerRow
-                  label={t("cases.drawer.plate", "Biển số xe")}
-                  value={selectedCase.bienSoXe}
-                />
-                <DrawerRow
-                  label={t("cases.drawer.customer", "Khách hàng")}
-                  value={selectedCase.khachHangName}
-                />
-                <DrawerRow
-                  label={t("cases.drawer.serviceStatus", "Trạng thái")}
-                  value={selectedCase.tenTinhTrangDichVu}
-                />
-                <DrawerRow
-                  label={t("cases.drawer.creationDate", "Ngày phát sinh")}
-                  value={formatGMT7(selectedCase.ngayPhatSinh, "date")}
-                />
-              </DrawerSection>
+      <GarageCaseFinancialsProvider
+        caseId={selectedCase?.id || ""}
+        caseCode={selectedCase?.soChungTu || ""}
+        caseData={selectedCase}
+        editMode={editMode}
+        onStartEdit={startEdit}
+        activeSettlements={activeSettlements}
+        activeLinkedInvoices={activeLinkedInvoices}
+        activeSummary={activeSummary}
+        onAddSettlement={addSettlements}
+        onRemoveSettlement={removeSettlement}
+        onAddInvoice={addLinkedInvoice}
+        onRemoveInvoice={removeLinkedInvoice}
+      >
+        <StandardFormDrawer
+          open={isOpen}
+          mode={editMode ? "edit" : "view"}
+          onToggleEdit={!editMode ? startEdit : undefined}
+          confirmOnClose={editMode}
+          onClose={onClose}
+          collapsibleRightPanel={true}
+          title={`${t("cases.drawer.caseDetails", "Sổ báo giá:")} ${selectedCase?.soChungTu || ""}`}
+          titleExtra={
+            selectedCase?.tenTinhTrangDichVu ? (
+              <KgaraCaseStatusBadge status={selectedCase.tenTinhTrangDichVu} />
+            ) : undefined
+          }
+          footerLeft={footerLeft}
+          actions={editMode ? editActions : undefined}
+          tabs={resolvedDrawerTabs}
+          activeTabKey={activeTabKey}
+          onTabChange={setActiveTabKey}
+          defaultTabKey="quote_details"
+          leftPanel={
+            isLoadingCase || isSyncingDetail ? (
+              <div className="space-y-4 animate-pulse px-2 w-full">
+                <div className="h-48 bg-slate-100 rounded-lg w-full"></div>
+                <div className="h-64 bg-slate-100 rounded-lg w-full"></div>
+              </div>
+            ) : undefined
+          }
+          rightPanel={
+            isLoadingCase || isSyncingDetail ? (
+              <div className="space-y-4 animate-pulse px-2 w-full">
+                <div className="h-20 bg-slate-100 rounded-lg w-full"></div>
+                <div className="h-40 bg-slate-100 rounded-lg w-full"></div>
+              </div>
+            ) : selectedCase ? (
+              <div className="space-y-3 pb-3">
+                {/* 1. THÔNG TIN CHUNG */}
+                <DrawerSection
+                  title={t("cases.drawer.generalInfo", "Thông tin chung")}
+                  collapsible
+                  defaultCollapsed={false}
+                >
+                  <DrawerRow
+                    label={t("cases.drawer.caseCode", "Số chứng từ")}
+                    value={selectedCase.soChungTu}
+                  />
+                  <DrawerRow
+                    label={t("cases.drawer.plate", "Biển số xe")}
+                    value={selectedCase.bienSoXe}
+                  />
+                  <DrawerRow
+                    label={t("cases.drawer.customer", "Khách hàng")}
+                    value={selectedCase.khachHangName}
+                  />
+                  <DrawerRow
+                    label={t("cases.drawer.serviceStatus", "Trạng thái")}
+                    value={selectedCase.tenTinhTrangDichVu}
+                  />
+                  <DrawerRow
+                    label={t("cases.drawer.creationDate", "Ngày phát sinh")}
+                    value={formatGMT7(selectedCase.ngayPhatSinh, "date")}
+                  />
+                </DrawerSection>
 
-              {/* 2. PHÂN LOẠI NGHIỆP VỤ & GHI CHÚ ERP */}
-              <DrawerSection
-                title={t(
-                  "cases.drawer.classificationAndNotes",
-                  "Phân loại & Ghi chú ERP",
-                )}
-                collapsible
-                defaultCollapsed={false}
-              >
-                {!editMode ? (
-                  <>
-                    <DrawerRow
-                      label={t("cases.drawer.classification", "Phân loại")}
-                      value={
-                        <button
-                          type="button"
-                          onClick={() => startEdit()}
-                          className="cursor-pointer transition-transform hover:scale-105 inline-flex"
-                          title={t(
-                            "cases.actions.clickToEditClassification",
-                            "Nhấn để chỉnh sửa phân loại",
-                          )}
-                        >
-                          <GarageCaseClassificationBadge
-                            classification={selectedCase.classification}
-                            interactive={true}
-                          />
-                        </button>
-                      }
-                    />
-                    <DrawerRow
-                      label={t("cases.drawer.erpNotes", "Ghi chú ERP")}
-                      value={selectedCase.erpNotes || "—"}
-                    />
-                  </>
-                ) : (
-                  <div className="flex flex-col gap-3">
-                    <DrawerField
-                      label={t(
-                        "cases.configDrawer.classificationLabel",
-                        "Phân loại phiếu",
-                      )}
-                    >
-                      <Combobox
-                        options={GARAGE_CASE_CLASSIFICATION_OPTIONS}
-                        value={draftClassification}
-                        onChange={(val) => setDraftClassification(val)}
-                        allowClear={true}
-                        placeholder={t(
-                          "cases.configDrawer.classificationPlaceholder",
-                          "— Chọn phân loại —",
-                        )}
-                      />
-                    </DrawerField>
-
-                    <DrawerField
-                      label={t(
-                        "cases.configDrawer.erpNotesLabel",
-                        "Ghi chú ERP",
-                      )}
-                    >
-                      <textarea
-                        className={inputCls}
-                        rows={3}
-                        value={draftErpNotes}
-                        onChange={(e) => setDraftErpNotes(e.target.value)}
-                        placeholder={t(
-                          "cases.configDrawer.erpNotesPlaceholder",
-                          "Nhập ghi chú nghiệp vụ nội bộ trên ERP...",
-                        )}
-                      />
-                    </DrawerField>
-                  </div>
-                )}
-              </DrawerSection>
-
-              {/* 3. HIỆU QUẢ KINH DOANH & LỢI NHUẬN GỘP */}
-              {(() => {
-                const revenueAmount = Number(
-                  grossProfit?.DoanhThu ??
-                    selectedCase.doanhThu ??
-                    selectedCase.rawData?.DoanhThu ??
-                    selectedCase.rawData?.TongTienHang ??
-                    0,
-                );
-                const totalCostAmount = Number(
-                  grossProfit?.ChiPhi ??
-                    selectedCase.chiPhi ??
-                    selectedCase.rawData?.ChiPhi ??
-                    0,
-                );
-                const grossProfitAmount = Number(
-                  grossProfit?.LoiNhuan ??
-                    selectedCase.loiNhuan ??
-                    selectedCase.rawData?.LoiNhuan ??
-                    revenueAmount - totalCostAmount,
-                );
-                const profitMargin =
-                  grossProfit?.BienLoiNhuan != null
-                    ? Number(grossProfit.BienLoiNhuan)
-                    : revenueAmount > 0
-                      ? Number(
-                          ((grossProfitAmount / revenueAmount) * 100).toFixed(
-                            1,
-                          ),
-                        )
-                      : 0;
-
-                if (
-                  revenueAmount === 0 &&
-                  totalCostAmount === 0 &&
-                  !grossProfit
-                ) {
-                  return null;
-                }
-
-                return (
-                  <DrawerSection
-                    title={t(
-                      "cases.drawer.businessPerformance",
-                      "Hiệu quả kinh doanh & Lợi nhuận",
-                    )}
-                    collapsible
-                    defaultCollapsed={false}
-                  >
-                    <DrawerRow
-                      label={t(
-                        "cases.drawer.preTaxRevenue",
-                        "Doanh thu (chưa thuế)",
-                      )}
-                      value={money(revenueAmount)}
-                    />
-                    <DrawerRow
-                      label={t(
-                        "cases.drawer.totalCost",
-                        "Tổng chi phí vụ việc",
-                      )}
-                      cls="text-slate-700 dark:text-slate-300 font-medium"
-                      value={money(totalCostAmount)}
-                    />
-                    {Number(grossProfit?.GiaVonPhuTung || 0) > 0 && (
+                {/* 2. PHÂN LOẠI NGHIỆP VỤ & GHI CHÚ ERP */}
+                <DrawerSection
+                  title={t(
+                    "cases.drawer.classificationAndNotes",
+                    "Phân loại & Ghi chú ERP",
+                  )}
+                  collapsible
+                  defaultCollapsed={false}
+                >
+                  {!editMode ? (
+                    <>
                       <DrawerRow
-                        label={t("cases.drawer.partCost", "↳ Giá vốn phụ tùng")}
-                        cls="text-xs text-slate-500 pl-2"
-                        value={money(Number(grossProfit.GiaVonPhuTung))}
-                      />
-                    )}
-                    {Number(grossProfit?.ChiPhiGiaCongNgoai || 0) > 0 && (
-                      <DrawerRow
-                        label={t(
-                          "cases.drawer.subcontractCost",
-                          "↳ Gia công ngoài",
-                        )}
-                        cls="text-xs text-slate-500 pl-2"
-                        value={money(Number(grossProfit.ChiPhiGiaCongNgoai))}
-                      />
-                    )}
-                    {Number(grossProfit?.ChiPhiHoaHongGDV || 0) > 0 && (
-                      <DrawerRow
-                        label={t(
-                          "cases.drawer.commissionSurveyor",
-                          "↳ Hoa hồng Giám định viên",
-                        )}
-                        cls="text-xs text-slate-500 pl-2"
-                        value={money(Number(grossProfit.ChiPhiHoaHongGDV))}
-                      />
-                    )}
-                    {Number(grossProfit?.ChiPhiHoaHongMG || 0) > 0 && (
-                      <DrawerRow
-                        label={t(
-                          "cases.drawer.commissionBroker",
-                          "↳ Hoa hồng Môi giới",
-                        )}
-                        cls="text-xs text-slate-500 pl-2"
-                        value={money(Number(grossProfit.ChiPhiHoaHongMG))}
-                      />
-                    )}
-                    <DrawerRow
-                      label={t("cases.drawer.grossProfit", "Lợi nhuận gộp")}
-                      cls="text-slate-900 dark:text-slate-100 font-bold"
-                      value={money(grossProfitAmount)}
-                    />
-                    {revenueAmount > 0 && (
-                      <DrawerRow
-                        label={t("cases.drawer.profitMargin", "Biên lợi nhuận")}
-                        cls={
-                          profitMargin >= 0
-                            ? "text-slate-900 dark:text-slate-100 font-bold font-mono"
-                            : "text-rose-600 font-bold font-mono"
+                        label={t("cases.drawer.classification", "Phân loại")}
+                        value={
+                          <button
+                            type="button"
+                            onClick={() => startEdit()}
+                            className="cursor-pointer transition-transform hover:scale-105 inline-flex"
+                            title={t(
+                              "cases.actions.clickToEditClassification",
+                              "Nhấn để chỉnh sửa phân loại",
+                            )}
+                          >
+                            <GarageCaseClassificationBadge
+                              classification={selectedCase.classification}
+                              interactive={true}
+                            />
+                          </button>
                         }
-                        value={`${profitMargin >= 0 ? "+" : ""}${profitMargin}%`}
                       />
-                    )}
-                    {grossProfit?.LoiNhuanCoThue != null && (
+                      <DrawerRow
+                        label={t("cases.drawer.erpNotes", "Ghi chú ERP")}
+                        value={selectedCase.erpNotes || "—"}
+                      />
+                    </>
+                  ) : (
+                    <div className="flex flex-col gap-3">
+                      <DrawerField
+                        label={t(
+                          "cases.configDrawer.classificationLabel",
+                          "Phân loại phiếu",
+                        )}
+                      >
+                        <Combobox
+                          options={GARAGE_CASE_CLASSIFICATION_OPTIONS}
+                          value={draftClassification}
+                          onChange={(val) => setDraftClassification(val)}
+                          allowClear={true}
+                          placeholder={t(
+                            "cases.configDrawer.classificationPlaceholder",
+                            "— Chọn phân loại —",
+                          )}
+                        />
+                      </DrawerField>
+
+                      <DrawerField
+                        label={t(
+                          "cases.configDrawer.erpNotesLabel",
+                          "Ghi chú ERP",
+                        )}
+                      >
+                        <textarea
+                          className={inputCls}
+                          rows={3}
+                          value={draftErpNotes}
+                          onChange={(e) => setDraftErpNotes(e.target.value)}
+                          placeholder={t(
+                            "cases.configDrawer.erpNotesPlaceholder",
+                            "Nhập ghi chú nghiệp vụ nội bộ trên ERP...",
+                          )}
+                        />
+                      </DrawerField>
+                    </div>
+                  )}
+                </DrawerSection>
+
+                {/* 3. HIỆU QUẢ KINH DOANH & LỢI NHUẬN GỘP */}
+                {(() => {
+                  const revenueAmount = Number(
+                    grossProfit?.DoanhThu ??
+                      selectedCase.doanhThu ??
+                      selectedCase.rawData?.DoanhThu ??
+                      selectedCase.rawData?.TongTienHang ??
+                      0,
+                  );
+                  const totalCostAmount = Number(
+                    grossProfit?.ChiPhi ??
+                      selectedCase.chiPhi ??
+                      selectedCase.rawData?.ChiPhi ??
+                      0,
+                  );
+                  const grossProfitAmount = Number(
+                    grossProfit?.LoiNhuan ??
+                      selectedCase.loiNhuan ??
+                      selectedCase.rawData?.LoiNhuan ??
+                      revenueAmount - totalCostAmount,
+                  );
+                  const profitMargin =
+                    grossProfit?.BienLoiNhuan != null
+                      ? Number(grossProfit.BienLoiNhuan)
+                      : revenueAmount > 0
+                        ? Number(
+                            ((grossProfitAmount / revenueAmount) * 100).toFixed(
+                              1,
+                            ),
+                          )
+                        : 0;
+
+                  if (
+                    revenueAmount === 0 &&
+                    totalCostAmount === 0 &&
+                    !grossProfit
+                  ) {
+                    return null;
+                  }
+
+                  return (
+                    <DrawerSection
+                      title={t(
+                        "cases.drawer.businessPerformance",
+                        "Hiệu quả kinh doanh & Lợi nhuận",
+                      )}
+                      collapsible
+                      defaultCollapsed={false}
+                    >
                       <DrawerRow
                         label={t(
-                          "cases.drawer.grossProfitTax",
-                          "Lợi nhuận gộp có thuế",
+                          "cases.drawer.preTaxRevenue",
+                          "Doanh thu (chưa thuế)",
                         )}
-                        cls="text-slate-800 dark:text-slate-200 font-semibold"
-                        value={money(Number(grossProfit.LoiNhuanCoThue || 0))}
+                        value={money(revenueAmount)}
                       />
-                    )}
-                  </DrawerSection>
-                );
-              })()}
-            </div>
-          ) : null
-        }
-      />
+                      <DrawerRow
+                        label={t(
+                          "cases.drawer.totalCost",
+                          "Tổng chi phí vụ việc",
+                        )}
+                        cls="text-slate-700 dark:text-slate-300 font-medium"
+                        value={money(totalCostAmount)}
+                      />
+                      {Number(grossProfit?.GiaVonPhuTung || 0) > 0 && (
+                        <DrawerRow
+                          label={t(
+                            "cases.drawer.partCost",
+                            "↳ Giá vốn phụ tùng",
+                          )}
+                          cls="text-xs text-slate-500 pl-2"
+                          value={money(Number(grossProfit.GiaVonPhuTung))}
+                        />
+                      )}
+                      {Number(grossProfit?.ChiPhiGiaCongNgoai || 0) > 0 && (
+                        <DrawerRow
+                          label={t(
+                            "cases.drawer.subcontractCost",
+                            "↳ Gia công ngoài",
+                          )}
+                          cls="text-xs text-slate-500 pl-2"
+                          value={money(Number(grossProfit.ChiPhiGiaCongNgoai))}
+                        />
+                      )}
+                      {Number(grossProfit?.ChiPhiHoaHongGDV || 0) > 0 && (
+                        <DrawerRow
+                          label={t(
+                            "cases.drawer.commissionSurveyor",
+                            "↳ Hoa hồng Giám định viên",
+                          )}
+                          cls="text-xs text-slate-500 pl-2"
+                          value={money(Number(grossProfit.ChiPhiHoaHongGDV))}
+                        />
+                      )}
+                      {Number(grossProfit?.ChiPhiHoaHongMG || 0) > 0 && (
+                        <DrawerRow
+                          label={t(
+                            "cases.drawer.commissionBroker",
+                            "↳ Hoa hồng Môi giới",
+                          )}
+                          cls="text-xs text-slate-500 pl-2"
+                          value={money(Number(grossProfit.ChiPhiHoaHongMG))}
+                        />
+                      )}
+                      <DrawerRow
+                        label={t("cases.drawer.grossProfit", "Lợi nhuận gộp")}
+                        cls="text-slate-900 dark:text-slate-100 font-bold"
+                        value={money(grossProfitAmount)}
+                      />
+                      {revenueAmount > 0 && (
+                        <DrawerRow
+                          label={t(
+                            "cases.drawer.profitMargin",
+                            "Biên lợi nhuận",
+                          )}
+                          cls={
+                            profitMargin >= 0
+                              ? "text-slate-900 dark:text-slate-100 font-bold font-mono"
+                              : "text-rose-600 font-bold font-mono"
+                          }
+                          value={`${profitMargin >= 0 ? "+" : ""}${profitMargin}%`}
+                        />
+                      )}
+                      {grossProfit?.LoiNhuanCoThue != null && (
+                        <DrawerRow
+                          label={t(
+                            "cases.drawer.grossProfitTax",
+                            "Lợi nhuận gộp có thuế",
+                          )}
+                          cls="text-slate-800 dark:text-slate-200 font-semibold"
+                          value={money(Number(grossProfit.LoiNhuanCoThue || 0))}
+                        />
+                      )}
+                    </DrawerSection>
+                  );
+                })()}
+              </div>
+            ) : null
+          }
+        />
 
-      {/* MODALS CHO GHÉP NỐI CHỨNG TỪ TỪ TRACEABILITY GRAPH HOẶC HEADER */}
-      {selectedCase && (
-        <>
-          <GarageCaseSettlementDrawerModal
-            open={showSettlementModal}
-            onClose={() => {
-              setShowSettlementModal(false);
-              setEditingSettlementItem(null);
-            }}
-            caseId={selectedCase.id}
-            caseCode={selectedCase.soChungTu}
-            defaultType={settlementModalType}
-            editingItem={editingSettlementItem}
-            suggestedAmount={
-              settlementModalType === "RECEIPT"
-                ? activeSummary?.breakdown?.receipts?.remainingReceivable || 0
-                : activeSummary?.breakdown?.payments?.remainingPayable || 0
-            }
-            remainingReceivable={
-              activeSummary?.breakdown?.receipts?.remainingReceivable || 0
-            }
-            remainingPayable={
-              activeSummary?.breakdown?.payments?.remainingPayable || 0
-            }
-            existingTxnIds={
-              activeSettlements
-                ?.map((s: any) => s.bank_transaction_id || s.bankTransactionId)
-                .filter(Boolean) || []
-            }
-            onSubmit={async (items) => {
-              if (editMode) {
-                if (editingSettlementItem?.id) {
-                  removeSettlement(editingSettlementItem.id);
-                }
-                addSettlements(items);
-              } else {
-                if (editingSettlementItem?.id) {
-                  await garageApi.removeCaseSettlement(
-                    selectedCase.id,
-                    editingSettlementItem.id,
+        {/* MODALS CHO GHÉP NỐI CHỨNG TỪ TỪ TRACEABILITY GRAPH HOẶC HEADER */}
+        {selectedCase && (
+          <>
+            <GarageCaseSettlementDrawerModal
+              open={showSettlementModal}
+              onClose={() => {
+                setShowSettlementModal(false);
+                setEditingSettlementItem(null);
+              }}
+              caseId={selectedCase.id}
+              caseCode={selectedCase.soChungTu}
+              defaultType={settlementModalType}
+              editingItem={editingSettlementItem}
+              suggestedAmount={
+                settlementModalType === "RECEIPT"
+                  ? activeSummary?.breakdown?.receipts?.remainingReceivable || 0
+                  : activeSummary?.breakdown?.payments?.remainingPayable || 0
+              }
+              remainingReceivable={
+                activeSummary?.breakdown?.receipts?.remainingReceivable || 0
+              }
+              remainingPayable={
+                activeSummary?.breakdown?.payments?.remainingPayable || 0
+              }
+              existingTxnIds={
+                activeSettlements
+                  ?.map(
+                    (s: any) => s.bank_transaction_id || s.bankTransactionId,
+                  )
+                  .filter(Boolean) || []
+              }
+              onSubmit={async (items) => {
+                if (editMode) {
+                  if (editingSettlementItem?.id) {
+                    removeSettlement(editingSettlementItem.id);
+                  }
+                  addSettlements(items);
+                } else {
+                  if (editingSettlementItem?.id) {
+                    await garageApi.removeCaseSettlement(
+                      selectedCase.id,
+                      editingSettlementItem.id,
+                    );
+                  }
+                  for (const item of items) {
+                    await garageApi.addCaseSettlement(selectedCase.id, item);
+                  }
+                  queryClient.invalidateQueries({
+                    queryKey: [
+                      "garage-case-financial-summary",
+                      selectedCase.id,
+                    ],
+                  });
+                  queryClient.invalidateQueries({
+                    queryKey: ["garage-case-settlements", selectedCase.id],
+                  });
+                  queryClient.invalidateQueries({
+                    queryKey: [
+                      "garage-case-traceability-graph",
+                      selectedCase.id,
+                    ],
+                  });
+                  toast.success(
+                    editingSettlementItem
+                      ? "Đã cập nhật giao dịch thành công"
+                      : "Đã ghi nhận giao dịch thành công",
                   );
                 }
-                for (const item of items) {
-                  await garageApi.addCaseSettlement(selectedCase.id, item);
-                }
-                queryClient.invalidateQueries({
-                  queryKey: ["garage-case-financial-summary", selectedCase.id],
-                });
-                queryClient.invalidateQueries({
-                  queryKey: ["garage-case-settlements", selectedCase.id],
-                });
-                queryClient.invalidateQueries({
-                  queryKey: ["garage-case-traceability-graph", selectedCase.id],
-                });
-                toast.success(
-                  editingSettlementItem
-                    ? "Đã cập nhật giao dịch thành công"
-                    : "Đã ghi nhận giao dịch thành công",
-                );
-              }
-            }}
-          />
+              }}
+            />
 
-          <InvoiceSelectionDrawer
-            open={showInvoiceModal}
-            onClose={() => setShowInvoiceModal(false)}
-            caseId={selectedCase.id}
-            caseCode={selectedCase.soChungTu}
-            defaultLinkType="OUT"
-            onSubmit={async (payloads) => {
-              const items = Array.isArray(payloads) ? payloads : [payloads];
-              if (editMode) {
-                addLinkedInvoice(items);
-              } else {
-                if (items.length === 1) {
-                  await garageApi.addCaseLinkedInvoice(
-                    selectedCase.id,
-                    items[0].invoiceId,
-                    items[0].linkType,
-                    items[0].note,
-                  );
-                } else if (items.length > 1) {
-                  await garageApi.addCaseLinkedInvoices(
-                    selectedCase.id,
-                    items.map((i) => ({
-                      invoiceId: i.invoiceId,
-                      linkType: i.linkType,
-                      note: i.note,
-                    })),
+            <InvoiceSelectionDrawer
+              open={showInvoiceModal}
+              onClose={() => setShowInvoiceModal(false)}
+              caseId={selectedCase.id}
+              caseCode={selectedCase.soChungTu}
+              defaultLinkType="OUT"
+              onSubmit={async (payloads) => {
+                const items = Array.isArray(payloads) ? payloads : [payloads];
+                if (editMode) {
+                  addLinkedInvoice(items);
+                } else {
+                  if (items.length === 1) {
+                    await garageApi.addCaseLinkedInvoice(
+                      selectedCase.id,
+                      items[0].invoiceId,
+                      items[0].linkType,
+                      items[0].note,
+                    );
+                  } else if (items.length > 1) {
+                    await garageApi.addCaseLinkedInvoices(
+                      selectedCase.id,
+                      items.map((i) => ({
+                        invoiceId: i.invoiceId,
+                        linkType: i.linkType,
+                        note: i.note,
+                      })),
+                    );
+                  }
+                  queryClient.invalidateQueries({
+                    queryKey: [
+                      "garage-case-financial-summary",
+                      selectedCase.id,
+                    ],
+                  });
+                  queryClient.invalidateQueries({
+                    queryKey: ["garage-case-linked-invoices", selectedCase.id],
+                  });
+                  queryClient.invalidateQueries({
+                    queryKey: [
+                      "garage-case-traceability-graph",
+                      selectedCase.id,
+                    ],
+                  });
+                  toast.success(
+                    items.length > 1
+                      ? `Đã liên kết thành công ${items.length} hóa đơn`
+                      : "Đã liên kết hóa đơn thành công",
                   );
                 }
-                queryClient.invalidateQueries({
-                  queryKey: ["garage-case-financial-summary", selectedCase.id],
-                });
-                queryClient.invalidateQueries({
-                  queryKey: ["garage-case-linked-invoices", selectedCase.id],
-                });
-                queryClient.invalidateQueries({
-                  queryKey: ["garage-case-traceability-graph", selectedCase.id],
-                });
-                toast.success(
-                  items.length > 1
-                    ? `Đã liên kết thành công ${items.length} hóa đơn`
-                    : "Đã liên kết hóa đơn thành công",
-                );
-              }
-            }}
-          />
-        </>
-      )}
+              }}
+            />
+          </>
+        )}
+      </GarageCaseFinancialsProvider>
     </>
   );
 }

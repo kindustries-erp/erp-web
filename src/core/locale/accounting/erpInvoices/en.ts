@@ -121,7 +121,7 @@ export const erpInvoicesEn = {
   actionSaveChange: "Save Changes",
   actionSaving: "Saving...",
   actionClose: "Close",
-  actionNetOff: "Net-Off Statement",
+  actionNetOff: "Reconciliation",
   netOffSuccess: "Successfully netted off statement",
   netOffError: "Failed to net off statement",
 

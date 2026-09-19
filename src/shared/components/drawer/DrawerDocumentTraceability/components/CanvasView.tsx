@@ -44,7 +44,7 @@ const EDGE_TYPES = {
 const CARD_WIDTH = 290;
 const STAGE_COL_WIDTH = 330;
 const STAGE_HEADER_HEIGHT = 48;
-const CARD_ROW_GAP = 145;
+const CARD_ROW_GAP = 185;
 const STAGE_COL_GAP = 170;
 
 export function computeLayout(
@@ -237,12 +237,56 @@ export function computeLayout(
     const isConnectedToSelection = connectedEdgeIds.has(e.id);
     const isAnimated = isConnectedToSelection;
 
+    const sourceNode = nodes.find((n) => n.id === e.source);
+    const targetNode = nodes.find((n) => n.id === e.target);
+    const isSameParent =
+      Boolean(sourceNode?.parentId) &&
+      Boolean(targetNode?.parentId) &&
+      sourceNode?.parentId === targetNode?.parentId;
+
+    let sourceHandle: string;
+    let targetHandle: string;
+
+    if (direction === "horizontal") {
+      if (isSameParent) {
+        // Cùng nằm trong 1 cột Stage -> Kết nối thẳng đứng từ trên xuống dưới
+        const sY = sourceNode?.position?.y ?? 0;
+        const tY = targetNode?.position?.y ?? 0;
+        if (sY <= tY) {
+          sourceHandle = "bottom";
+          targetHandle = "top";
+        } else {
+          sourceHandle = "top";
+          targetHandle = "bottom";
+        }
+      } else {
+        sourceHandle = "right";
+        targetHandle = "left";
+      }
+    } else {
+      if (isSameParent) {
+        // Cùng nằm trong 1 hàng Stage -> Kết nối thẳng ngang từ trái sang phải
+        const sX = sourceNode?.position?.x ?? 0;
+        const tX = targetNode?.position?.x ?? 0;
+        if (sX <= tX) {
+          sourceHandle = "right";
+          targetHandle = "left";
+        } else {
+          sourceHandle = "left";
+          targetHandle = "right";
+        }
+      } else {
+        sourceHandle = "bottom";
+        targetHandle = "top";
+      }
+    }
+
     edges.push({
       id: e.id,
       source: e.source,
       target: e.target,
-      sourceHandle: direction === "vertical" ? "bottom" : "right",
-      targetHandle: direction === "vertical" ? "top" : "left",
+      sourceHandle,
+      targetHandle,
       type: "labeledSmoothStep",
       label: e.label || undefined,
       animated: isAnimated,

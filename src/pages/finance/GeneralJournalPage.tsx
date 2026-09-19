@@ -1,23 +1,26 @@
-import React, { useState, useMemo, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { BookOpen } from "lucide-react";
+import React, { useState, useMemo } from "react";
+import { BookOpen, Eye, Copy } from "lucide-react";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate";
+import { createColumnHeaderFilter } from "@/shared/components/DataTable/createColumnHeaderFilter";
+import { TableDateCell } from "@/shared/components/DataTable/TableDateCell";
+import { TableText } from "@/shared/components/DataTable/TableText";
+import { SubtotalSummaryCell } from "@/shared/components/DataTable/SubtotalSummaryCell";
+import { PillTabs } from "@/shared/components/PillTabs";
 import { useT } from "@/core/i18n";
 import { accountingApi } from "@/modules/accounting/api/accountingApi";
-import { getBranchesApi } from "@/modules/branches/api/branchApi";
-import { useFilterPanel } from "@/shared/hooks/useFilterPanel";
-import { formatGMT7, money } from "@/shared/utils/format";
-import { useAppStore } from "@/core/config/appStore";
+import { useJournalEntriesList } from "@/modules/accounting/hooks/useJournalEntriesList";
+import type { JournalEntrySpreadsheetRow } from "@/modules/accounting/types/journalEntry";
+import { money } from "@/shared/utils/format";
 import { BankTransactionDetailDrawer } from "@/pages/finance/components/BankTransactionDetailDrawer";
 import { InvoiceDetailWrapper } from "@/modules/erp-invoices-core/components/InvoiceDetailWrapper";
 import { Popover } from "@/core/components/ui/Popover";
+import type { DataTableColumn } from "@/shared/components/DataTable";
+import type { ActionDropdownItem } from "@/shared/components/ActionDropdown";
 
-export const GeneralJournalPage = () => {
+export const GeneralJournalPage: React.FC = () => {
   const t = useT();
-  const { setCustomBreadcrumbs } = useAppStore();
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(50);
-  const [sortArray, setSortArray] = useState<string[]>(["-date"]);
+  const listHook = useJournalEntriesList();
+
   const [selectedBankTxnId, setSelectedBankTxnId] = useState<string | null>(
     null,
   );
@@ -25,171 +28,130 @@ export const GeneralJournalPage = () => {
     null,
   );
 
-  useEffect(() => {
-    setCustomBreadcrumbs([
-      ["breadcrumb.cashflow"],
-      ["nav.items.reportJournal"],
-    ]);
-    return () => setCustomBreadcrumbs(null);
-  }, [setCustomBreadcrumbs]);
-
-  const { data: branches = [] } = useQuery({
-    queryKey: ["branches:list"],
-    queryFn: getBranchesApi,
-  });
-
-  const filterConfig = useMemo(() => {
-    return {
-      search: true,
-      period: true,
-      noDefaultPeriod: true,
-      custom: [
-        {
-          key: "branchId",
-          label: "Chi nhánh",
-          placeholder: "Tất cả chi nhánh",
-          options: branches.map((b) => ({ value: b.id, label: b.name })),
+  const headerFilter = useMemo(
+    () =>
+      createColumnHeaderFilter({
+        listHook,
+        queryKeyPrefix: "journal-entries-column-options",
+        fetchOptions: async ({ columnKey, search, pageParam, filtersStr }) => {
+          const res = await accountingApi.getJournalEntriesColumnOptions(
+            columnKey,
+            search,
+            pageParam,
+            20,
+            filtersStr,
+          );
+          return {
+            items: res.items,
+            total: res.total,
+            next: res.page < res.totalPages ? res.page + 1 : null,
+          };
         },
-      ],
-    };
-  }, [branches]);
+      }),
+    [listHook],
+  );
 
-  const filter = useFilterPanel(filterConfig, () => setPage(1));
-
-  const {
-    data: journalData,
-    isFetching,
-    refetch,
-  } = useQuery({
-    queryKey: ["journal-entries", page, pageSize, filter.state, sortArray],
-    queryFn: async () => {
-      return accountingApi.getJournalEntries({
-        page,
-        pageSize,
-        search: filter.state.search || undefined,
-        startDate: filter.state.dateFrom || undefined,
-        endDate: filter.state.dateTo || undefined,
-        branchId: filter.state.custom?.branchId || undefined,
-        sortBy: sortArray[0]?.replace("-", ""),
-        sortOrder: sortArray[0]?.startsWith("-") ? "DESC" : "ASC",
-      });
-    },
-  });
-
-  // Flatten lines for spreadsheet view
-  const flattenedData = useMemo(() => {
-    if (!journalData?.items) return [];
-    const result: any[] = [];
-    journalData.items.forEach((entry: any) => {
-      if (entry.lines && entry.lines.length > 0) {
-        // Sắp xếp lại lines theo trường sort từ backend để đảm bảo đúng thứ tự cặp (Nợ -> Có)
-        const sortedLines = [...entry.lines].sort(
-          (a: any, b: any) => a.sort - b.sort,
-        );
-
-        sortedLines.forEach((line: any, index: number) => {
-          const isDebit = Number(line.debit) > 0;
-          // Because backend pairs them adjacently (Nợ -> Có), if it's debit, opposing is index + 1; if credit, opposing is index - 1
-          const opposingLine = sortedLines[isDebit ? index + 1 : index - 1];
-          const opposingAccountCode = opposingLine?.account?.accountCode || "";
-
-          result.push({
-            ...line,
-            _id: `${entry.id}-${line.id}`,
-            _entryNo: entry.entryNo,
-            _date: entry.date,
-            _documentDate: entry.documentDate,
-            _status: entry.status,
-            _description: entry.description,
-            _reference: entry.reference,
-            _branch: entry.branch?.name,
-            _sourceId: entry.sourceId,
-            _sourceType: entry.sourceType,
-            _subjectName: entry.subjectName,
-            _account: line.account?.accountCode,
-            _opposingAccount: opposingAccountCode,
-            isFirstLine: index === 0,
-            rowSpan: index === 0 ? entry.lines.length : 0,
-          });
-        });
-      } else {
-        result.push({
-          ...entry,
-          _id: entry.id,
-          _entryNo: entry.entryNo,
-          _date: entry.date,
-          _documentDate: entry.documentDate,
-          _status: entry.status,
-          _description: entry.description,
-          _reference: entry.reference,
-          _branch: entry.branch?.name,
-          _sourceId: entry.sourceId,
-          _sourceType: entry.sourceType,
-          _subjectName: entry.subjectName,
-          isFirstLine: true,
-          rowSpan: 1,
-        });
-      }
-    });
-    return result;
-  }, [journalData]);
-
-  const columns = useMemo(
+  const columns: DataTableColumn<JournalEntrySpreadsheetRow>[] = useMemo(
     () => [
       {
+        key: "index",
+        header: <span className="w-full block text-center">#</span>,
+        size: 40,
+        enableResizing: false,
+        headerClassName: "text-center w-[40px] min-w-[40px]",
+        className: "text-center w-[40px] min-w-[40px]",
+        cell: (_: JournalEntrySpreadsheetRow, idx: number) => (
+          <span className="w-full block text-center">{idx}</span>
+        ),
+      },
+      {
         key: "_date",
-        header: "Ngày hạch toán",
+        header: headerFilter.date(
+          "_date",
+          t("Ngày hạch toán", "Ngày hạch toán"),
+        ),
         size: 130,
-        cell: (row: any) => <span>{formatGMT7(row._date, "date")}</span>,
+        enableResizing: true,
+        className: "text-right",
+        cell: (row: JournalEntrySpreadsheetRow) => (
+          <TableDateCell
+            date={row._date}
+            format="date"
+            className="justify-end w-full"
+          />
+        ),
       },
       {
         key: "_documentDate",
-        header: "Ngày chứng từ",
+        header: headerFilter.date(
+          "_documentDate",
+          t("Ngày chứng từ", "Ngày chứng từ"),
+        ),
         size: 130,
-        cell: (row: any) => (
-          <span>
-            {row._documentDate ? formatGMT7(row._documentDate, "date") : "-"}
-          </span>
+        enableResizing: true,
+        className: "text-right",
+        cell: (row: JournalEntrySpreadsheetRow) => (
+          <TableDateCell
+            date={row._documentDate}
+            format="date"
+            className="justify-end w-full"
+          />
         ),
       },
       {
         key: "_entryNo",
-        header: "Số CT",
-        size: 120,
-        cell: (row: any) => (
-          <span className="font-medium text-blue-600 cursor-pointer hover:underline">
-            {row._entryNo}
+        header: headerFilter("_entryNo", t("Số CT", "Số CT")),
+        size: 140,
+        enableResizing: true,
+        cell: (row: JournalEntrySpreadsheetRow) => (
+          <TableText
+            className="w-full font-medium"
+            text={row._entryNo}
+            enableCopy={true}
+            tooltip={true}
+          />
+        ),
+      },
+      {
+        key: "_account",
+        header: headerFilter("_account", t("TK", "TK")),
+        size: 80,
+        enableResizing: true,
+        className: "text-center",
+        cell: (row: JournalEntrySpreadsheetRow) => (
+          <span className="font-mono text-sm font-medium text-slate-800 dark:text-slate-200">
+            {row._account}
           </span>
         ),
       },
       {
-        key: "account",
-        header: "TK",
-        size: 80,
-        cell: (row: any) => {
-          return <span className="font-mono text-sm">{row._account}</span>;
-        },
-      },
-      {
-        key: "opposingAccount",
-        header: "TK đối ứng",
-        size: 80,
-        cell: (row: any) => {
-          return (
-            <span className="font-mono text-sm">{row._opposingAccount}</span>
-          );
-        },
+        key: "_opposingAccount",
+        header: headerFilter(
+          "_opposingAccount",
+          t("TK đối ứng", "TK đối ứng"),
+          { showBlankOption: true },
+        ),
+        size: 90,
+        enableResizing: true,
+        className: "text-center",
+        cell: (row: JournalEntrySpreadsheetRow) => (
+          <span className="font-mono text-sm text-slate-600 dark:text-slate-400">
+            {row._opposingAccount || "-"}
+          </span>
+        ),
       },
       {
         key: "debit",
-        header: "Phát sinh Nợ",
+        header: headerFilter.amount("debit", t("Phát sinh Nợ", "Phát sinh Nợ")),
         size: 130,
         align: "right" as const,
-        cell: (row: any) => (
+        enableResizing: true,
+        className: "text-right",
+        cell: (row: JournalEntrySpreadsheetRow) => (
           <span
             className={
               Number(row.debit) > 0
-                ? "font-medium text-gray-900 dark:text-gray-100"
+                ? "font-medium text-slate-900 dark:text-slate-100 tabular-nums"
                 : "text-transparent"
             }
           >
@@ -199,14 +161,19 @@ export const GeneralJournalPage = () => {
       },
       {
         key: "credit",
-        header: "Phát sinh Có",
+        header: headerFilter.amount(
+          "credit",
+          t("Phát sinh Có", "Phát sinh Có"),
+        ),
         size: 130,
         align: "right" as const,
-        cell: (row: any) => (
+        enableResizing: true,
+        className: "text-right",
+        cell: (row: JournalEntrySpreadsheetRow) => (
           <span
             className={
               Number(row.credit) > 0
-                ? "font-medium text-gray-900 dark:text-gray-100"
+                ? "font-medium text-slate-900 dark:text-slate-100 tabular-nums"
                 : "text-transparent"
             }
           >
@@ -216,35 +183,41 @@ export const GeneralJournalPage = () => {
       },
       {
         key: "description",
-        header: "Diễn giải",
-        size: 400,
-        cell: (row: any) => (
+        header: headerFilter("description", t("Diễn giải", "Diễn giải"), {
+          showBlankOption: true,
+        }),
+        size: 350,
+        enableResizing: true,
+        cell: (row: JournalEntrySpreadsheetRow) => (
           <Popover
             content={
-              <div className="p-3 text-sm max-w-md break-words whitespace-normal text-slate-800">
+              <div className="p-3 text-sm max-w-md break-words whitespace-normal text-slate-800 dark:text-slate-200">
                 {row.description || row._description || "—"}
               </div>
             }
           >
-            <div className="text-gray-600 dark:text-gray-300 w-full cursor-pointer hover:text-primary underline decoration-dashed underline-offset-4 decoration-slate-300 line-clamp-2">
-              {row.description || row._description}
+            <div className="text-slate-600 dark:text-slate-300 w-full cursor-pointer hover:text-primary underline decoration-dashed underline-offset-4 decoration-slate-300 line-clamp-2">
+              {row.description || row._description || "-"}
             </div>
           </Popover>
         ),
       },
       {
         key: "_subjectName",
-        header: "Đối tượng",
-        size: 200,
-        cell: (row: any) => (
+        header: headerFilter("_subjectName", t("Đối tượng", "Đối tượng"), {
+          showBlankOption: true,
+        }),
+        size: 180,
+        enableResizing: true,
+        cell: (row: JournalEntrySpreadsheetRow) => (
           <Popover
             content={
-              <div className="p-3 text-sm max-w-sm break-words whitespace-normal text-slate-800">
+              <div className="p-3 text-sm max-w-sm break-words whitespace-normal text-slate-800 dark:text-slate-200">
                 {row._subjectName || "—"}
               </div>
             }
           >
-            <span className="text-gray-600 dark:text-gray-400 cursor-pointer hover:text-primary underline decoration-dashed underline-offset-4 decoration-slate-300 truncate block">
+            <span className="text-slate-600 dark:text-slate-400 cursor-pointer hover:text-primary underline decoration-dashed underline-offset-4 decoration-slate-300 truncate block">
               {row._subjectName || "-"}
             </span>
           </Popover>
@@ -252,25 +225,27 @@ export const GeneralJournalPage = () => {
       },
       {
         key: "_branch",
-        header: "Chi nhánh",
+        header: headerFilter("_branch", t("Chi nhánh", "Chi nhánh")),
         size: 150,
-        cell: (row: any) => (
-          <span className="text-gray-600 dark:text-gray-400">
+        enableResizing: true,
+        cell: (row: JournalEntrySpreadsheetRow) => (
+          <span className="text-slate-600 dark:text-slate-400 truncate block">
             {row._branch || "-"}
           </span>
         ),
       },
       {
         key: "_reference",
-        header: "Tham chiếu",
+        header: headerFilter("_reference", t("Tham chiếu", "Tham chiếu")),
         size: 130,
-        cell: (row: any) => {
-          if (!row._reference) return <span className="text-gray-400">-</span>;
+        enableResizing: true,
+        cell: (row: JournalEntrySpreadsheetRow) => {
+          if (!row._reference) return <span className="text-slate-400">-</span>;
           if (row._sourceType === "BANK" && row._sourceId) {
             return (
               <span
-                className="text-blue-600 hover:underline cursor-pointer"
-                onClick={() => setSelectedBankTxnId(row._sourceId)}
+                className="text-primary hover:underline cursor-pointer font-medium"
+                onClick={() => setSelectedBankTxnId(row._sourceId || null)}
               >
                 {row._reference}
               </span>
@@ -279,69 +254,180 @@ export const GeneralJournalPage = () => {
           if (row._sourceType === "INVOICE" && row._sourceId) {
             return (
               <span
-                className="text-blue-600 hover:underline cursor-pointer"
-                onClick={() => setSelectedInvoiceId(row._sourceId)}
+                className="text-primary hover:underline cursor-pointer font-medium"
+                onClick={() => setSelectedInvoiceId(row._sourceId || null)}
               >
                 {row._reference}
               </span>
             );
           }
           return (
-            <span className="text-gray-600 dark:text-gray-400">
+            <span className="text-slate-600 dark:text-slate-400">
               {row._reference}
             </span>
           );
         },
       },
     ],
-    [t],
+    [headerFilter, t],
   );
 
+  const getRowActions = (
+    row: JournalEntrySpreadsheetRow,
+  ): ActionDropdownItem[] => [
+    {
+      groupLabel: t("TRA CỨU", "TRA CỨU"),
+      items: [
+        {
+          label: t("viewSourceDoc", "Xem chứng từ gốc"),
+          icon: <Eye className="w-4 h-4" />,
+          onClick: () => {
+            if (row._sourceType === "BANK" && row._sourceId) {
+              setSelectedBankTxnId(row._sourceId);
+            } else if (row._sourceType === "INVOICE" && row._sourceId) {
+              setSelectedInvoiceId(row._sourceId);
+            }
+          },
+          disabled: !(
+            row._sourceId &&
+            (row._sourceType === "BANK" || row._sourceType === "INVOICE")
+          ),
+        },
+        {
+          label: t("copyEntryNo", "Sao chép số chứng từ"),
+          icon: <Copy className="w-4 h-4" />,
+          onClick: () => {
+            if (row._entryNo && navigator.clipboard) {
+              navigator.clipboard.writeText(row._entryNo);
+            }
+          },
+        },
+      ],
+    },
+  ];
+
   const summaryRow = useMemo(() => {
-    if (!flattenedData.length) return undefined;
-    const totalDebit = flattenedData.reduce(
+    if (!listHook.data.length) return undefined;
+    const totalDebit = listHook.data.reduce(
       (sum, item) => sum + (Number(item.debit) || 0),
       0,
     );
-    const totalCredit = flattenedData.reduce(
+    const totalCredit = listHook.data.reduce(
       (sum, item) => sum + (Number(item.credit) || 0),
       0,
     );
+    const totals = listHook.totals;
+    const grandDebit = totals?.grandTotalDebit ?? totalDebit;
+    const grandCredit = totals?.grandTotalCredit ?? totalCredit;
+    const grandLines = totals?.totalLines ?? listHook.total;
+    const cumDebit =
+      totals?.cumulativeDebit ?? (listHook.page === 1 ? totalDebit : undefined);
+    const cumCredit =
+      totals?.cumulativeCredit ??
+      (listHook.page === 1 ? totalCredit : undefined);
+    const cumLines =
+      totals?.cumulativeLines ??
+      (listHook.page === 1 ? listHook.data.length : undefined);
+
     return {
-      debit: <span className="font-semibold">{money(totalDebit)}</span>,
-      credit: <span className="font-semibold">{money(totalCredit)}</span>,
+      _opposingAccount: (
+        <div className="w-full flex justify-end">
+          <SubtotalSummaryCell
+            variantType="label"
+            label={`${t("common.subtotal", "Tổng cộng")}:`}
+            page={listHook.page}
+            totalPages={listHook.totalPages}
+            totalCount={grandLines}
+            currentPageCount={listHook.data.length}
+            cumulativeCount={cumLines}
+          />
+        </div>
+      ),
+      debit: (
+        <div className="w-full flex justify-end">
+          <SubtotalSummaryCell
+            variantType="amount"
+            metricTitle={t("finance.totalDebit", "Phát sinh Nợ")}
+            subtotalAmount={totalDebit}
+            cumulativeAmount={cumDebit}
+            grandTotalAmount={grandDebit}
+            page={listHook.page}
+            totalPages={listHook.totalPages}
+            valueClassName="font-semibold tabular-nums text-slate-900 dark:text-slate-100"
+          />
+        </div>
+      ),
+      credit: (
+        <div className="w-full flex justify-end">
+          <SubtotalSummaryCell
+            variantType="amount"
+            metricTitle={t("finance.totalCredit", "Phát sinh Có")}
+            subtotalAmount={totalCredit}
+            cumulativeAmount={cumCredit}
+            grandTotalAmount={grandCredit}
+            page={listHook.page}
+            totalPages={listHook.totalPages}
+            valueClassName="font-semibold tabular-nums text-slate-900 dark:text-slate-100"
+          />
+        </div>
+      ),
     };
-  }, [flattenedData]);
+  }, [
+    listHook.data,
+    listHook.total,
+    listHook.totals,
+    listHook.page,
+    listHook.totalPages,
+    t,
+  ]);
+
+  const customActionsNode = (
+    <div className="w-full sm:w-auto flex items-center flex-wrap gap-2 py-0.5">
+      <PillTabs
+        className="w-full sm:w-auto shrink-0"
+        listClassName="h-8 p-0.5 rounded-full bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/60 shadow-[0_1px_2px_rgba(15,23,42,.03)]"
+        triggerClassName="h-7 px-3.5 text-xs rounded-full"
+        items={[
+          { value: "ALL", label: t("tabs.all", "Tất cả") },
+          { value: "CASHFLOW", label: t("tabs.cashflow", "Dòng tiền") },
+          { value: "INVOICE", label: t("tabs.invoice", "Hóa đơn") },
+          { value: "OTHER", label: t("tabs.other", "Khác") },
+        ]}
+        value={listHook.activeSourceType}
+        onValueChange={listHook.setActiveSourceType}
+        hideBorder
+      />
+    </div>
+  );
 
   return (
     <>
-      <SpreadsheetPageTemplate
-        title={t("Nhật ký chung")}
-        icon={<BookOpen className="w-5 h-5 text-gray-700 dark:text-gray-300" />}
+      <SpreadsheetPageTemplate<JournalEntrySpreadsheetRow>
+        title={t("title", "Nhật ký chung")}
+        desc={t("desc", "Sổ nhật ký chung và các bút toán hạch toán kế toán")}
+        icon={<BookOpen className="w-5 h-5 text-primary" />}
         tableId="general-journal-table"
-        items={flattenedData}
+        items={listHook.data}
         columns={columns}
-        getRowKey={(row: any) => row._id}
-        loading={isFetching}
-        page={page}
-        pageSize={pageSize}
-        total={journalData?.total || 0}
-        totalPages={journalData?.totalPages || 0}
-        onPage={setPage}
-        onPageSize={setPageSize}
-        onRefresh={refetch}
-        filterConfig={filterConfig}
-        filter={filter}
-        sortArray={sortArray}
-        summaryRow={summaryRow}
-        onSort={(colKey) => {
-          setSortArray((prev) => {
-            const current = prev[0];
-            if (current === colKey) return [`-${colKey}`];
-            if (current === `-${colKey}`) return [];
-            return [colKey];
-          });
+        getRowKey={(row) => row._id}
+        loading={listHook.isLoading}
+        emptyLabel={t("noData", "Không có dữ liệu")}
+        page={listHook.page}
+        pageSize={listHook.pageSize}
+        total={listHook.total}
+        totalPages={listHook.totalPages}
+        onPage={listHook.setPage}
+        onPageSize={(s) => {
+          listHook.setPageSize(s);
+          listHook.setPage(1);
         }}
+        onRefresh={listHook.refetch}
+        activeFilterCount={listHook.activeFilterCount}
+        onClearAllFilters={listHook.clearAllFilters}
+        rowActions={getRowActions}
+        summaryRow={summaryRow}
+        customActionsNode={customActionsNode}
+        listHook={listHook}
       />
 
       <BankTransactionDetailDrawer

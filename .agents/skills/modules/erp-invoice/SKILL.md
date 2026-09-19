@@ -45,6 +45,11 @@ src/
 │   │   └── erpInvoiceDashboardApi.ts          # API Client cho Dashboard KPI & đối tác
 │   ├── components/
 │   │   ├── ErpInvoicesTab/                    # Core Table Page: Quản lý chuyển đổi 4 tab, đồng bộ URL và header actions
+│   │   ├── ErpInvoiceSettlementTab/           # Tab Tài chính & Đối soát dòng tiền hợp nhất (PillTabs, Unified Table, Debt Progress)
+│   │   │   ├── components/ErpInvoiceUnifiedSettlementTable.tsx # Bảng hợp nhất sao kê tích hợp bộ lọc đa chiều & header filter
+│   │   │   ├── context/ErpInvoiceSettlementContext.tsx         # Context quản lý state chọn giao dịch, tính toán công nợ & cấn trừ
+│   │   │   ├── ErpInvoiceSettlementRightPanel.tsx              # Cột phải: Thông tin chung, Công nợ & Tiến độ thanh toán, Thao tác cấn trừ
+│   │   │   └── types.ts                                        # Data contracts & view presets
 │   │   ├── ErpInvoiceItemsSection/            # Bảng hiển thị phẳng chi tiết dòng hàng hóa đơn (Lines table)
 │   │   ├── InvoiceViewModeCombobox.tsx        # Combobox chọn chế độ xem (Tổng quan / Đối soát / Custom)
 │   │   ├── InvoiceViewConfigDrawer.tsx        # Drawer 1-column cấu hình tên view & tùy chỉnh cột hiển thị
@@ -111,11 +116,11 @@ src/
 
 ### 3.3. Form Drawer Chi Tiết Hóa Đơn (`ErpInvoiceInternalDrawer.tsx`)
 - Hỗ trợ 2 chế độ: **Xem chi tiết** (Read-only kèm template trực quan `VietnamInvoiceTemplate`) và **Chỉnh sửa/Tạo mới**.
-- **Các phân khu chính**:
+- **Các phân khu & Tabs chính**:
   1. `ErpInvoiceFormGeneral`: Số HĐ, ký hiệu, ngày lập, chi nhánh, thông tin người bán, thông tin người mua (MST, tên, địa chỉ, CCCD).
   2. `ErpInvoiceFormItems`: Bảng dòng mặt hàng động (Tên hàng, mã, ĐVT, số lượng, đơn giá, tiền trước thuế, thuế suất %, tiền thuế, chiết khấu, thành tiền).
-  3. `ErpInvoiceLinkedDocuments`: Liên kết đơn mua hàng PO / đơn bán hàng SO.
-  4. `ErpInvoiceNetOffSection`: Danh sách các giao dịch ngân hàng đã cấn trừ kèm số tiền và nút gán nhanh.
+  3. `ErpInvoiceSettlementTab` (Tab **Tài chính**): Tích hợp trực tiếp đối soát dòng tiền vào Drawer chi tiết, gồm Sub-Tabs (`1. Sao kê` / `2. Sổ quỹ`), Quick View Presets (`Tất cả`, `Gợi ý khớp`, `Đang chọn`, `Đã cấn trừ`), Bảng hợp nhất `ErpInvoiceUnifiedSettlementTable` fit height và Right Panel tính toán công nợ/tiến độ thanh toán.
+  4. `DrawerDocumentTraceability` (Tab **Chứng từ liên kết**): Mạng lưới liên kết đa tầng PO, SO, Bank Txn, Garage Cases.
   5. `ErpInvoicePdfUpload`: Danh sách các file PDF đính kèm, hỗ trợ xem trước inline qua PDF viewer hoặc tải xuống.
 
 ### 3.4. Dashboard Hóa Đơn (`InvoiceDashboard.tsx`)

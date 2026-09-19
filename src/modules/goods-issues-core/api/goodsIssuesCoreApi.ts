@@ -130,4 +130,13 @@ export const goodsIssuesCoreApi = {
     );
     return data.data;
   },
+  nextNo: async (date?: string): Promise<string> => {
+    const { data } = await axiosInstance.get<{ nextNo: string }>(
+      `${BASE}/next-no`,
+      {
+        params: date ? { date } : {},
+      },
+    );
+    return data.nextNo;
+  },
 };

@@ -20,9 +20,13 @@ import {
   type ModuleAttributeDef,
 } from "@/core/api/moduleConfigApi";
 import { formatGMT7 } from "@/shared/utils/format";
-import { Tag, Layers, X, Globe } from "lucide-react";
+import { Layers, X, CornerDownRight } from "lucide-react";
 import { cn } from "@/shared/utils";
 import { AttributeTypeBadge } from "@/shared/components/AttributeTypeBadge";
+import {
+  buildAttributeTree,
+  type AttributeTreeNode,
+} from "@/shared/components/ModuleCustomFieldConfigDrawer";
 
 export interface ModuleEntityCustomFieldsSectionProps {
   moduleKey: ModuleKey;
@@ -234,8 +238,11 @@ interface AttributeFieldRendererProps {
   isEditable: boolean;
   moduleKey: string;
   categoryCode?: string | null;
+  allAttributes?: Record<string, any>;
   onChange: (val: any) => void;
   t: (key: string, fallback: string) => string;
+  isChild?: boolean;
+  parentDef?: ModuleAttributeDef;
 }
 
 function AttributeFieldRenderer({
@@ -244,78 +251,176 @@ function AttributeFieldRenderer({
   isEditable,
   moduleKey,
   categoryCode,
+  allAttributes,
   onChange,
   t,
+  isChild,
+  parentDef,
 }: AttributeFieldRendererProps) {
   const { locale } = useAppStore();
   const displayName = resolveAttrName(attr, moduleKey, categoryCode, t);
+  const parentDisplayName = parentDef
+    ? resolveAttrName(parentDef, moduleKey, categoryCode, t)
+    : attr.parentAttrCode;
 
   const fieldLabel = (
-    <span className="inline-flex items-center gap-1.5 flex-wrap">
-      <span>{displayName}</span>
-      {attr.isSystem ? (
-        <AttributeTypeBadge type="system" />
-      ) : (
-        <AttributeTypeBadge type="custom" />
+    <div className="flex flex-col gap-0.5">
+      <div className="inline-flex items-center gap-1.5 flex-wrap">
+        {isChild && (
+          <CornerDownRight className="w-3 h-3 text-primary/70 shrink-0 inline-block mr-0.5" />
+        )}
+        <span>{displayName}</span>
+        {attr.isSystem ? (
+          <AttributeTypeBadge type="system" />
+        ) : (
+          <AttributeTypeBadge type="custom" />
+        )}
+      </div>
+      {isChild && parentDisplayName && (
+        <span className="text-[10px] text-muted-foreground/80 flex items-center gap-1 font-normal">
+          <span>🔗 {t("moduleConfig.childOf", "Phụ thuộc:")}</span>
+          <span className="font-medium text-foreground/80">
+            {parentDisplayName}
+          </span>
+          {parentDef?.code && (
+            <span className="font-mono text-[9px] text-muted-foreground">
+              ({parentDef.code})
+            </span>
+          )}
+        </span>
       )}
-    </span>
+    </div>
   );
 
-  if (isEditable) {
-    if (attr.fieldType === "CHECKBOX") {
-      return (
-        <div className="flex items-center justify-between gap-2 pt-1">
-          <div className="flex items-center gap-2">
-            <Checkbox
-              id={`attr-field-${attr.id}`}
-              checked={value === true || value === "true"}
-              onCheckedChange={(checked) =>
-                onChange(checked ? "true" : "false")
-              }
-            />
-            <label
-              htmlFor={`attr-field-${attr.id}`}
-              className="text-xs font-medium cursor-pointer select-none text-foreground flex items-center gap-1"
-            >
-              <span>{displayName}</span>
-              {attr.isRequired && (
-                <span className="text-destructive ml-0.5">*</span>
-              )}
-            </label>
+  const renderFieldContent = () => {
+    if (isEditable) {
+      if (attr.fieldType === "CHECKBOX") {
+        return (
+          <div className="flex items-center justify-between gap-2 pt-1">
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id={`attr-field-${attr.id}`}
+                checked={value === true || value === "true"}
+                onCheckedChange={(checked) =>
+                  onChange(checked ? "true" : "false")
+                }
+              />
+              <label
+                htmlFor={`attr-field-${attr.id}`}
+                className="text-xs font-medium cursor-pointer select-none text-foreground flex items-center gap-1"
+              >
+                {isChild && (
+                  <CornerDownRight className="w-3 h-3 text-primary/70 shrink-0 inline-block mr-0.5" />
+                )}
+                <span>{displayName}</span>
+                {attr.isRequired && (
+                  <span className="text-destructive ml-0.5">*</span>
+                )}
+              </label>
+            </div>
+            {attr.isSystem ? (
+              <AttributeTypeBadge type="system" />
+            ) : (
+              <AttributeTypeBadge type="custom" />
+            )}
           </div>
-          {attr.isSystem ? (
-            <AttributeTypeBadge type="system" />
-          ) : (
-            <AttributeTypeBadge type="custom" />
-          )}
-        </div>
-      );
-    }
+        );
+      }
 
-    if (attr.fieldType === "SELECT") {
-      const optList: ComboboxOption[] = (attr.options || []).map((opt) => ({
-        value: opt.value,
-        label: `${resolveOptionLabel(opt, locale, t)} [${opt.value}]`,
-      }));
+      if (attr.fieldType === "SELECT") {
+        let rawOptions = attr.options || [];
 
-      return (
-        <DrawerField label={fieldLabel} required={attr.isRequired}>
-          <Combobox
-            options={optList}
-            value={value || ""}
-            onChange={(v) => onChange(v || null)}
-            placeholder={`-- ${t("common.select", "Chọn")} ${displayName} --`}
-            allowClear={!attr.isRequired}
-          />
-        </DrawerField>
-      );
-    }
+        // Tìm giá trị thuộc tính cha đã được chọn
+        let selectedParent = "";
+        if (parentDef) {
+          selectedParent =
+            allAttributes?.[parentDef.id] ||
+            allAttributes?.[parentDef.code] ||
+            "";
+        }
+        if (!selectedParent && attr.parentAttrCode) {
+          selectedParent = allAttributes?.[attr.parentAttrCode] || "";
+        }
+        if (!selectedParent) {
+          selectedParent =
+            allAttributes?.category ||
+            allAttributes?.type_invoice_in ||
+            allAttributes?.type_invoice_out ||
+            allAttributes?.type_inventory_receipt ||
+            categoryCode ||
+            "";
+        }
 
-    if (attr.fieldType === "NUMBER") {
+        const hasParentConstraint =
+          Boolean(attr.parentAttrCode) ||
+          rawOptions.some((opt) => Boolean(opt.parentValue));
+
+        if (hasParentConstraint) {
+          if (selectedParent) {
+            rawOptions = rawOptions.filter(
+              (opt) => !opt.parentValue || opt.parentValue === selectedParent,
+            );
+          } else if (attr.parentAttrCode) {
+            rawOptions = [];
+          }
+        }
+
+        const optList: ComboboxOption[] = rawOptions.map((opt) => ({
+          value: opt.value,
+          label: resolveOptionLabel(opt, locale, t),
+          code: opt.value,
+        }));
+
+        const selectPlaceholder =
+          attr.parentAttrCode && !selectedParent
+            ? `-- ${t("moduleConfig.selectParentFirst", "Vui lòng chọn")} ${parentDisplayName} ${t("moduleConfig.first", "trước")} --`
+            : `-- ${t("common.select", "Chọn")} ${displayName} --`;
+
+        return (
+          <DrawerField label={fieldLabel} required={attr.isRequired}>
+            <Combobox
+              options={optList}
+              value={value || ""}
+              onChange={(v) => onChange(v || null)}
+              placeholder={selectPlaceholder}
+              allowClear={!attr.isRequired}
+              disabled={Boolean(attr.parentAttrCode && !selectedParent)}
+            />
+          </DrawerField>
+        );
+      }
+
+      if (attr.fieldType === "NUMBER") {
+        return (
+          <DrawerField label={fieldLabel} required={attr.isRequired}>
+            <BufferedTextInput
+              type="number"
+              className={inputCls}
+              value={value !== undefined && value !== null ? value : ""}
+              onChange={onChange}
+              placeholder={`${t("common.enter", "Nhập")} ${displayName}...`}
+            />
+          </DrawerField>
+        );
+      }
+
+      if (attr.fieldType === "DATE") {
+        return (
+          <DrawerField label={fieldLabel} required={attr.isRequired}>
+            <DatePicker
+              value={value || ""}
+              onChange={onChange}
+              placeholder={t("common.dateFormat", "DD/MM/YYYY")}
+            />
+          </DrawerField>
+        );
+      }
+
+      // Default: TEXT
       return (
         <DrawerField label={fieldLabel} required={attr.isRequired}>
           <BufferedTextInput
-            type="number"
+            type="text"
             className={inputCls}
             value={value !== undefined && value !== null ? value : ""}
             onChange={onChange}
@@ -325,75 +430,46 @@ function AttributeFieldRenderer({
       );
     }
 
-    if (attr.fieldType === "DATE") {
-      return (
-        <DrawerField label={fieldLabel} required={attr.isRequired}>
-          <DatePicker
-            value={value || ""}
-            onChange={onChange}
-            placeholder={t("common.dateFormat", "DD/MM/YYYY")}
-          />
-        </DrawerField>
+    // View Mode
+    let displayVal: React.ReactNode = value || "—";
+    if (attr.fieldType === "CHECKBOX") {
+      const isChecked = value === true || value === "true";
+      displayVal = isChecked ? (
+        <Badge variant="default" className="text-[10px]">
+          {t("common.yes", "Có")}
+        </Badge>
+      ) : (
+        <Badge variant="secondary" className="text-[10px]">
+          {t("common.no", "Không")}
+        </Badge>
       );
+    } else if (attr.fieldType === "SELECT") {
+      const matchedOpt = (attr.options || []).find((o) => o.value === value);
+      if (matchedOpt) {
+        displayVal = resolveOptionLabel(matchedOpt, locale, t);
+      }
+    } else if (attr.fieldType === "DATE" && value) {
+      displayVal = formatGMT7(value, "date") || value;
     }
 
-    // Default: TEXT
     return (
       <DrawerField label={fieldLabel} required={attr.isRequired}>
-        <BufferedTextInput
-          type="text"
-          className={inputCls}
-          value={value !== undefined && value !== null ? value : ""}
-          onChange={onChange}
-          placeholder={`${t("common.enter", "Nhập")} ${displayName}...`}
-        />
+        <div className="font-medium text-[color:var(--foreground)] text-sm px-3 py-2 bg-gray-50 dark:bg-muted/40 rounded-lg border border-transparent min-h-[38px] flex items-center">
+          {displayVal}
+        </div>
       </DrawerField>
     );
-  }
+  };
 
-  // View Mode
-  let displayVal = value || "—";
-  if (attr.fieldType === "CHECKBOX") {
-    const isChecked = value === true || value === "true";
-    displayVal = isChecked ? (
-      <Badge variant="default" className="text-[10px]">
-        {t("common.yes", "Có")}
-      </Badge>
-    ) : (
-      <Badge variant="secondary" className="text-[10px]">
-        {t("common.no", "Không")}
-      </Badge>
+  if (isChild) {
+    return (
+      <div className="ml-3.5 pl-3 border-l-2 border-primary/30 py-0.5 space-y-1">
+        {renderFieldContent()}
+      </div>
     );
-  } else if (attr.fieldType === "SELECT") {
-    const matchedOpt = (attr.options || []).find((o) => o.value === value);
-    if (matchedOpt) {
-      displayVal = `${resolveOptionLabel(matchedOpt, locale, t)} [${matchedOpt.value}]`;
-    }
-  } else if (attr.fieldType === "DATE" && value) {
-    displayVal = formatGMT7(value, "date") || value;
   }
 
-  return (
-    <div className="flex flex-col gap-0.5 text-xs pb-1.5 border-b border-border/30 last:border-0">
-      <span className="text-[11px] text-muted-foreground font-medium flex items-center justify-between gap-1">
-        <span className="flex items-center gap-1">
-          {attr.isGlobal ? (
-            <Globe className="w-3 h-3 text-muted-foreground opacity-80 shrink-0" />
-          ) : (
-            <Tag className="w-3 h-3 opacity-60 shrink-0" />
-          )}
-          <span>{displayName}</span>
-          {attr.isRequired && <span className="text-destructive">*</span>}
-        </span>
-        {attr.isSystem ? (
-          <AttributeTypeBadge type="system" />
-        ) : (
-          <AttributeTypeBadge type="custom" />
-        )}
-      </span>
-      <div className="font-medium text-foreground px-1">{displayVal}</div>
-    </div>
-  );
+  return renderFieldContent();
 }
 
 export function ModuleEntityCustomFieldsSection({
@@ -504,6 +580,17 @@ export function ModuleEntityCustomFieldsSection({
     includeSystemAttributes,
   ]);
 
+  // Tree structures
+  const globalTrees = useMemo(
+    () => buildAttributeTree(activeGlobalAttributeDefs),
+    [activeGlobalAttributeDefs],
+  );
+
+  const categoryTrees = useMemo(
+    () => buildAttributeTree(activeCategoryAttributeDefs),
+    [activeCategoryAttributeDefs],
+  );
+
   // Category dropdown options (with i18n resolution)
   const categoryOptions: ComboboxOption[] = useMemo(() => {
     return categories
@@ -563,6 +650,45 @@ export function ModuleEntityCustomFieldsSection({
 
   const showCategorySection = !hideCategorySection;
 
+  // Render tree nodes helper
+  const renderAttributeTrees = (
+    nodes: AttributeTreeNode[],
+    attrsValues: Record<string, any>,
+    isCategory: boolean,
+  ) => {
+    return nodes.map((node) => {
+      const isRoot = !node.parentDef;
+      return (
+        <div key={node.def.id} className="space-y-2">
+          <AttributeFieldRenderer
+            attr={node.def}
+            value={attrsValues[node.def.id]}
+            isEditable={isEditable}
+            moduleKey={moduleKey}
+            categoryCode={isCategory ? selectedCategory?.code : undefined}
+            allAttributes={{
+              ...(effectiveAttributes || {}),
+              ...(effectiveGlobalAttributes || {}),
+            }}
+            onChange={(v) =>
+              isCategory
+                ? handleCategoryAttributeChange(node.def.id, v)
+                : handleGlobalAttributeChange(node.def.id, v)
+            }
+            t={t}
+            isChild={!isRoot}
+            parentDef={node.parentDef}
+          />
+          {node.children && node.children.length > 0 && (
+            <div className="space-y-2">
+              {renderAttributeTrees(node.children, attrsValues, isCategory)}
+            </div>
+          )}
+        </div>
+      );
+    });
+  };
+
   return (
     <div className={cn("space-y-4", className)}>
       {/* 1. GLOBAL ATTRIBUTES SECTION (Auto-loaded without Category selection) */}
@@ -581,18 +707,11 @@ export function ModuleEntityCustomFieldsSection({
                 )}
               </div>
             ) : (
-              activeGlobalAttributeDefs.map((attr) => (
-                <AttributeFieldRenderer
-                  key={attr.id}
-                  attr={attr}
-                  value={effectiveGlobalAttributes[attr.id]}
-                  isEditable={isEditable}
-                  moduleKey={moduleKey}
-                  categoryCode={undefined}
-                  onChange={(v) => handleGlobalAttributeChange(attr.id, v)}
-                  t={t}
-                />
-              ))
+              renderAttributeTrees(
+                globalTrees,
+                effectiveGlobalAttributes,
+                false,
+              )
             )}
           </div>
         </DrawerSection>
@@ -656,20 +775,7 @@ export function ModuleEntityCustomFieldsSection({
                     )}
                   </div>
                 ) : (
-                  activeCategoryAttributeDefs.map((attr) => (
-                    <AttributeFieldRenderer
-                      key={attr.id}
-                      attr={attr}
-                      value={effectiveAttributes[attr.id]}
-                      isEditable={isEditable}
-                      moduleKey={moduleKey}
-                      categoryCode={selectedCategory.code}
-                      onChange={(v) =>
-                        handleCategoryAttributeChange(attr.id, v)
-                      }
-                      t={t}
-                    />
-                  ))
+                  renderAttributeTrees(categoryTrees, effectiveAttributes, true)
                 )}
               </div>
             )}

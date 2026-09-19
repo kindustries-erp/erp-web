@@ -9,6 +9,7 @@ export const DEFAULT_STOCK_COLUMN_VISIBILITY: Record<string, boolean> = {
   on_hand_qty: true,
   reserved_qty: true,
   unit: true,
+  tracking_policy: true,
   last: false,
   item_type: true,
   status: true,
@@ -23,6 +24,7 @@ export const AUDIT_STOCK_COLUMN_VISIBILITY: Record<string, boolean> = {
   on_hand_qty: true,
   reserved_qty: true,
   unit: true,
+  tracking_policy: true,
   last: true,
   item_type: true,
   status: true,
@@ -128,6 +130,11 @@ export const STOCK_COLUMN_GROUPS: ColumnGroupDef[] = [
     groupKey: "tracking",
     titleKey: "viewConfigGroupTracking",
     columns: [
+      {
+        key: "tracking_policy",
+        labelKey: "inventoryMasters.columns.trackingPolicy",
+        defaultVisible: true,
+      },
       {
         key: "last",
         labelKey: "inventory.table.columns.lastTx",
