@@ -70,7 +70,7 @@ export function useAmountColumns({
             onFilterChange={(vals) => handleFilterChange("description", vals)}
             align="center"
             columnKey="description"
-            queryKeyPrefix="erp-invoice-options"
+            queryKeyPrefix={`erp-invoice-options-${direction}`}
             allFilters={effectiveAllFilters}
             fetchOptions={fetchInvoiceOptions}
             showBlankOption={true}
@@ -111,7 +111,7 @@ export function useAmountColumns({
             }
             align="center"
             columnKey="discountAmount"
-            queryKeyPrefix="erp-invoice-options"
+            queryKeyPrefix={`erp-invoice-options-${direction}`}
             allFilters={effectiveAllFilters}
             fetchOptions={fetchInvoiceOptions}
             formatOptionLabel={formatAmtOption}
@@ -138,7 +138,7 @@ export function useAmountColumns({
             onFilterChange={(vals) => handleFilterChange("preVatAmount", vals)}
             align="center"
             columnKey="preVatAmount"
-            queryKeyPrefix="erp-invoice-options"
+            queryKeyPrefix={`erp-invoice-options-${direction}`}
             allFilters={effectiveAllFilters}
             fetchOptions={fetchInvoiceOptions}
             formatOptionLabel={formatAmtOption}
@@ -163,7 +163,7 @@ export function useAmountColumns({
             onFilterChange={(vals) => handleFilterChange("vatRate", vals)}
             align="center"
             columnKey="vatRate"
-            queryKeyPrefix="erp-invoice-options"
+            queryKeyPrefix={`erp-invoice-options-${direction}`}
             allFilters={effectiveAllFilters}
             fetchOptions={fetchInvoiceOptions}
           />
@@ -189,7 +189,7 @@ export function useAmountColumns({
             onFilterChange={(vals) => handleFilterChange("vatAmount", vals)}
             align="center"
             columnKey="vatAmount"
-            queryKeyPrefix="erp-invoice-options"
+            queryKeyPrefix={`erp-invoice-options-${direction}`}
             allFilters={effectiveAllFilters}
             fetchOptions={fetchInvoiceOptions}
             formatOptionLabel={formatAmtOption}
@@ -216,7 +216,7 @@ export function useAmountColumns({
             onFilterChange={(vals) => handleFilterChange("totalAmount", vals)}
             align="center"
             columnKey="totalAmount"
-            queryKeyPrefix="erp-invoice-options"
+            queryKeyPrefix={`erp-invoice-options-${direction}`}
             allFilters={effectiveAllFilters}
             fetchOptions={fetchInvoiceOptions}
             formatOptionLabel={formatAmtOption}
