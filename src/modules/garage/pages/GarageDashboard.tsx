@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Download } from "lucide-react";
+import { Download, LayoutDashboard } from "lucide-react";
 import { DashboardTemplate } from "@/shared/components/DashboardTemplate";
 import { Button } from "@/shared/components/ui/Button";
 import { useTranslation } from "react-i18next";
@@ -10,7 +10,7 @@ import toast from "react-hot-toast";
 import { garageDashboardApi } from "../api/garageDashboardApi";
 import { GarageStatsCards } from "../components/GarageStatsCards";
 import { GarageTrendChart } from "../components/GarageTrendChart";
-import { GarageStatusDistributionChart } from "../components/GarageStatusDistributionChart";
+import { GarageClassificationDistributionChart } from "../components/GarageClassificationDistributionChart";
 import { GaragePaymentProgressCard } from "../components/GaragePaymentProgressCard";
 import { GaragePnlSection } from "../components/GaragePnlSection";
 
@@ -27,7 +27,7 @@ export function GarageDashboard() {
   });
   const isRefreshing = isFetchingStats > 0 || isFetchingKpis > 0;
 
-  // Query unified dashboard stats (trend, collectionSummary, statusDistribution)
+  // Query unified dashboard stats (trend, collectionSummary, classificationDistribution)
   const { data: statsData, isLoading: isLoadingStats } = useQuery({
     queryKey: ["garage-dashboard-stats"],
     queryFn: () => garageDashboardApi.getStats(),
@@ -71,6 +71,7 @@ export function GarageDashboard() {
         "dashboard.desc",
         "Báo cáo tổng quan hiệu quả hoạt động xưởng dịch vụ, doanh thu, chi phí, lợi nhuận gộp theo ngày hoàn thành và tiến độ thu tiền",
       )}
+      icon={<LayoutDashboard className="h-4 w-4" />}
       loading={isRefreshing}
       onRefresh={handleRefresh}
       extraActions={
@@ -86,17 +87,23 @@ export function GarageDashboard() {
       }
     >
       <div className="flex flex-col gap-6 mb-8">
-        {/* Section 1: KPI Doanh thu Dịch vụ Cards (Tính theo ngày hoàn thành) */}
-        <GarageStatsCards
-          type="REVENUE"
-          title="Doanh thu Dịch vụ (Đã hoàn thành công việc)"
-        />
+        {/* Section 1: KPI Hiệu quả Dịch vụ Cards (Tính theo ngày hoàn thành) */}
+        <GarageStatsCards />
 
-        {/* Section 2: KPI Giá vốn & Chi phí Cards */}
-        <GarageStatsCards
-          type="COST"
-          title="Giá vốn & Chi phí Dịch vụ (Đã hoàn thành)"
-        />
+        {/* Section 2: Trend & Classification Distribution Charts */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="lg:col-span-2">
+            <GarageTrendChart />
+          </div>
+          <div className="lg:col-span-1">
+            <GarageClassificationDistributionChart
+              data={statsData?.classificationDistribution}
+              byMonth={statsData?.classificationDistributionByMonth}
+              availableMonths={statsData?.availableMonths}
+              loading={isLoadingStats}
+            />
+          </div>
+        </div>
 
         {/* Section 3: Báo cáo Lợi nhuận (P&L) Section */}
         <GaragePnlSection />
@@ -108,21 +115,6 @@ export function GarageDashboard() {
           trend={statsData?.trend}
           loading={isLoadingStats}
         />
-
-        {/* Section 5: Trend & Status Distribution Charts */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <div className="lg:col-span-2">
-            <GarageTrendChart />
-          </div>
-          <div className="lg:col-span-1">
-            <GarageStatusDistributionChart
-              data={statsData?.statusDistribution}
-              byMonth={statsData?.statusDistributionByMonth}
-              availableMonths={statsData?.availableMonths}
-              loading={isLoadingStats}
-            />
-          </div>
-        </div>
       </div>
     </DashboardTemplate>
   );

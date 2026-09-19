@@ -224,12 +224,14 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
     inv: ErpInvoice | string,
     skipFetch = false,
     initialTab = "invoice_details",
+    initialMode: "view" | "edit" = "view",
   ) {
     setActiveTabKey(initialTab);
+    const isEdit = initialMode === "edit";
     // Handle string ID — open drawer first then fetch
     if (typeof inv === "string") {
       setInternalDrawerOpen(true);
-      setEditMode(false);
+      setEditMode(isEdit);
       setDeleteConfirm(false);
       setCancelConfirm(false);
       setPendingUnpost(false);
@@ -274,7 +276,7 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
 
     setDetailInvoice(inv);
     setForm(mapInvoiceToForm(inv));
-    setEditMode(false);
+    setEditMode(isEdit);
     setDeleteConfirm(false);
     setCancelConfirm(false);
     setPendingUnpost(false);
@@ -421,10 +423,14 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
       return;
     }
 
-    // Validate branch if internal drawer is open and there are accounting amounts
-    if (internalDrawerOpen && !form.branchId && (form.totalAmount || 0) > 0) {
+    // Validate branch only if accounting is enabled with posting lines
+    if (
+      (form as any).accountingEnabled &&
+      postingState.lines.length > 0 &&
+      !form.branchId
+    ) {
       const errMsg =
-        "Vui lòng chọn chi nhánh trước khi lưu thông tin nội bộ và hạch toán.";
+        "Vui lòng chọn chi nhánh trước khi lưu và hạch toán kế toán.";
       setFormError(errMsg);
       toast.error(errMsg);
       return;
@@ -719,7 +725,8 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
         }
       } else if (
         !wasPosted &&
-        (linkedCount > 0 || (form.branchId && (form.totalAmount || 0) > 0))
+        form.branchId &&
+        (linkedCount > 0 || (form.totalAmount || 0) > 0)
       ) {
         try {
           await erpInvoicesCoreApi.autoPostStandard(invoiceIdToProcess);

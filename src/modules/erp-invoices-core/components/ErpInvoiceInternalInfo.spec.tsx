@@ -26,7 +26,7 @@ vi.mock("@/core/api/moduleConfigApi", () => ({
     getGlobalAttributeDefs: vi.fn().mockResolvedValue([
       {
         id: "def-type-in",
-        code: "type_invoice_in",
+        code: "category",
         name: "Phân loại hóa đơn mua vào",
         isGlobal: true,
         isSystem: true,

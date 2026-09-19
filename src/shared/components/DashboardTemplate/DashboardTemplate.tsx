@@ -1,4 +1,5 @@
 import React from "react";
+import { LayoutDashboard } from "lucide-react";
 import { PageLayout } from "@/shared/components/PageLayout";
 import { TableActionGroup } from "@/shared/components/TableActionGroup";
 import { FilterPanel } from "@/shared/components/FilterPanel";
@@ -28,7 +29,7 @@ export interface DashboardTemplateProps {
 export function DashboardTemplate({
   title,
   desc,
-  icon,
+  icon = <LayoutDashboard className="h-4 w-4" />,
   filterConfig,
   filter,
   onRefresh,

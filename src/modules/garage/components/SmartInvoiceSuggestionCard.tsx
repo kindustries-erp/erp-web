@@ -6,6 +6,7 @@ import { Tooltip } from "@/core/components/ui/Tooltip";
 import { money, formatGMT7 } from "@/shared/utils/format";
 import {
   BADGE_CONFIG_MAP,
+  SuggestionBadgePill,
   highlightText,
 } from "@/modules/erp-invoices-core/components/SmartSuggestionCard";
 import type { GarageSmartInvoiceSuggestionItem } from "../api/garageApi";
@@ -74,19 +75,12 @@ export function SmartInvoiceSuggestionCard({
             <div className="font-bold text-xs font-mono text-slate-800 dark:text-slate-100 tabular-nums">
               {money(invoice.totalAmount)}
             </div>
-            {cfg && (
-              <div
-                className={`mt-0.5 flex items-center px-1.5 py-0.5 rounded text-[9px] font-medium border whitespace-nowrap leading-none ${cfg.badgeClasses}`}
-              >
-                <span className="relative flex h-1.5 w-1.5 mr-1 shrink-0">
-                  <span
-                    className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${cfg.glowClasses}`}
-                  ></span>
-                  <span
-                    className={`relative inline-flex rounded-full h-1.5 w-1.5 ${cfg.dotClasses}`}
-                  ></span>
-                </span>
-                {t(cfg.key, cfg.label)}
+            {score?.badge && (
+              <div className="mt-0.5">
+                <SuggestionBadgePill
+                  badgeType={score.badge}
+                  showShortLabel={true}
+                />
               </div>
             )}
           </div>

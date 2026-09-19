@@ -8,11 +8,11 @@ import { DrawerField, inputCls } from "@/shared/components/DrawerModal";
 import {
   moduleConfigApi,
   resolveOptionLabel,
+  resolveAttrName,
 } from "@/core/api/moduleConfigApi";
 import { useAppStore } from "@/core/config/appStore";
 import { AttributeTypeBadge } from "@/shared/components/AttributeTypeBadge";
 import { EntityTagSelector } from "@/modules/tags/components/EntityTagSelector";
-import { fmtQty } from "@/shared/utils/format";
 import type { UseGrDrawerReturn } from "@/modules/goods-receipts-core/hooks/useGrDrawer";
 
 interface GrFormRightPanelProps {
@@ -23,11 +23,6 @@ interface GrFormRightPanelProps {
 /** Section 1: THÔNG TIN CHUNG */
 export function GrFormRightPanel({ drawer, t }: GrFormRightPanelProps) {
   const { form, setForm, viewOnly, editing } = drawer;
-
-  // Thống kê nhanh
-  const totalReceivedQty = useMemo(() => {
-    return form.lines.reduce((sum, l) => sum + Number(l.qtyReceived || 0), 0);
-  }, [form.lines]);
 
   return (
     <>
@@ -93,50 +88,34 @@ export function GrFormRightPanel({ drawer, t }: GrFormRightPanelProps) {
           />
         )}
       </DrawerField>
-
-      {/* Thẻ nhãn (Tags) */}
-      <div className="pt-1">
-        <div className="text-sm font-medium mb-1.5 text-gray-700 dark:text-gray-300">
-          {t("tags", "Thẻ nhãn")}
-        </div>
-        {editing?.id ? (
-          <EntityTagSelector
-            entityType="erp_goods_receipt"
-            entityId={editing.id}
-            readOnly={viewOnly}
-          />
-        ) : !viewOnly ? (
-          <EntityTagSelector
-            entityType="erp_goods_receipt"
-            entityId="__pending__"
-            readOnly={false}
-            pendingMode
-          />
-        ) : null}
-      </div>
-
-      {/* Summary Cards khi ở chế độ View hoặc khi có dòng */}
-      {viewOnly && form.lines.length > 0 && (
-        <div className="mt-3 grid grid-cols-2 gap-2 text-center">
-          <div className="flex flex-col items-center justify-center p-2.5 bg-blue-500/10 rounded-lg border border-blue-500/20">
-            <span className="text-[11px] font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider mb-1">
-              {t("Số mặt hàng")}
-            </span>
-            <span className="font-bold text-blue-700 dark:text-blue-300 text-base tabular-nums">
-              {form.lines.length}
-            </span>
-          </div>
-          <div className="flex flex-col items-center justify-center p-2.5 bg-emerald-500/10 rounded-lg border border-emerald-500/20">
-            <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mb-1">
-              {t("Tổng SL nhận")}
-            </span>
-            <span className="font-bold text-emerald-700 dark:text-emerald-300 text-base tabular-nums">
-              +{fmtQty(totalReceivedQty)}
-            </span>
-          </div>
-        </div>
-      )}
     </>
+  );
+}
+
+/** Thẻ nhãn (Tags) hiển thị trong tagsSlot bên dưới Ghi chú */
+export function GrFormTagsSection({ drawer, t }: GrFormRightPanelProps) {
+  const { viewOnly, editing } = drawer;
+
+  return (
+    <div className="pt-1">
+      <div className="text-sm font-medium mb-1.5 text-gray-700 dark:text-gray-300">
+        {t("tags", "Thẻ nhãn")}
+      </div>
+      {editing?.id ? (
+        <EntityTagSelector
+          entityType="erp_goods_receipt"
+          entityId={editing.id}
+          readOnly={viewOnly}
+        />
+      ) : !viewOnly ? (
+        <EntityTagSelector
+          entityType="erp_goods_receipt"
+          entityId="__pending__"
+          readOnly={false}
+          pendingMode
+        />
+      ) : null}
+    </div>
   );
 }
 
@@ -148,7 +127,7 @@ export function GrDefaultAttributesSection({
   const { form, setForm, viewOnly, editing, poOptions, poDetail } = drawer;
   const locale = useAppStore((s) => s.locale);
 
-  // Lấy danh sách thuộc tính động cho GOODS_RECEIPT để nạp options cho Loại nhập kho (code: type_inventory_receipt)
+  // Lấy danh sách thuộc tính động cho GOODS_RECEIPT để nạp options cho Loại nhập kho (code: category)
   const { data: grAttrDefs = [] } = useQuery({
     queryKey: ["module-config-global-defs", "GOODS_RECEIPT"],
     queryFn: () => moduleConfigApi.getGlobalAttributeDefs("GOODS_RECEIPT"),
@@ -157,26 +136,25 @@ export function GrDefaultAttributesSection({
 
   const receiptTypeOptions = useMemo(() => {
     const typeDef = Array.isArray(grAttrDefs)
-      ? grAttrDefs.find(
-          (d) =>
-            (d?.code === "type_inventory_receipt" ||
-              d?.code === "type" ||
-              d?.code === "receipt_type") &&
-            !d?.isDeleted,
-        )
+      ? grAttrDefs.find((d) => d?.code === "category" && !d?.isDeleted)
       : undefined;
     if (typeDef?.options && typeDef.options.length > 0) {
       return typeDef.options.map((opt) => ({
-        label: `${resolveOptionLabel(opt, locale, t)} [${opt.value}]`,
+        label: resolveOptionLabel(opt, locale, t),
         value: opt.value,
+        code: opt.value,
       }));
     }
     return [
-      { label: `${t("Đơn mua hàng (PO)")} [PO]`, value: "PO" },
-      { label: `${t("Nhập sản xuất")} [PRODUCTION]`, value: "PRODUCTION" },
-      { label: `${t("Nhập trả hàng")} [RETURN]`, value: "RETURN" },
-      { label: `${t("Nhập bảo hành")} [WARRANTY]`, value: "WARRANTY" },
-      { label: `${t("Nhập khác")} [OTHER]`, value: "OTHER" },
+      { label: t("Đơn mua hàng (PO)"), value: "PO", code: "PO" },
+      {
+        label: t("Nhập sản xuất (MO)"),
+        value: "PRODUCTION",
+        code: "PRODUCTION",
+      },
+      { label: t("Nhập trả hàng"), value: "RETURN", code: "RETURN" },
+      { label: t("Nhập bảo hành"), value: "WARRANTY", code: "WARRANTY" },
+      { label: t("Nhập khác"), value: "OTHER", code: "OTHER" },
     ];
   }, [grAttrDefs, locale, t]);
 
@@ -193,6 +171,35 @@ export function GrDefaultAttributesSection({
     }
     return "";
   }, [poDetail, poOptions, form.purchaseOrderId]);
+
+  const subcategoryDef = useMemo(() => {
+    return Array.isArray(grAttrDefs)
+      ? grAttrDefs.find((d) => d?.code === "subcategory" && !d?.isDeleted)
+      : undefined;
+  }, [grAttrDefs]);
+
+  const subcategoryOptions = useMemo(() => {
+    if (!subcategoryDef?.options || subcategoryDef.options.length === 0)
+      return [];
+    const currentCategory =
+      form.receiptType || (form.purchaseOrderId ? "PO" : "OTHER");
+    return subcategoryDef.options
+      .filter((opt) => !opt.parentValue || opt.parentValue === currentCategory)
+      .map((opt) => ({
+        label: resolveOptionLabel(opt, locale, t),
+        value: opt.value,
+        code: opt.value,
+      }));
+  }, [subcategoryDef, form.receiptType, form.purchaseOrderId, locale, t]);
+
+  const currentSubcategoryLabel = useMemo(() => {
+    const rawVal =
+      form.globalAttributes?.subcategory ||
+      form.customAttributes?.subcategory ||
+      "";
+    const opt = (subcategoryDef?.options || []).find((o) => o.value === rawVal);
+    return opt ? resolveOptionLabel(opt, locale, t) : rawVal || "—";
+  }, [subcategoryDef, form.globalAttributes, form.customAttributes, locale, t]);
 
   return (
     <div className="space-y-4">
@@ -214,13 +221,25 @@ export function GrDefaultAttributesSection({
             value={form.receiptType}
             onChange={(val) => {
               if (val === "PO") {
-                setForm((f) => ({ ...f, receiptType: "PO", lines: [] }));
+                setForm((f) => ({
+                  ...f,
+                  receiptType: "PO",
+                  lines: [],
+                  globalAttributes: {
+                    ...(f.globalAttributes || {}),
+                    subcategory: undefined,
+                  },
+                }));
               } else {
                 setForm((f) => ({
                   ...f,
                   receiptType: val || "OTHER",
                   purchaseOrderId: "",
                   lines: [],
+                  globalAttributes: {
+                    ...(f.globalAttributes || {}),
+                    subcategory: undefined,
+                  },
                 }));
               }
             }}
@@ -230,6 +249,52 @@ export function GrDefaultAttributesSection({
           />
         )}
       </DrawerField>
+
+      {/* Sub-field: Phân loại chi tiết (Subcategory) khi có cấu hình */}
+      {subcategoryDef && subcategoryOptions.length > 0 && (
+        <DrawerField
+          label={
+            <span className="inline-flex items-center gap-1.5 flex-wrap">
+              <span>
+                {resolveAttrName(subcategoryDef, "GOODS_RECEIPT", locale, t)}
+              </span>
+              <AttributeTypeBadge type="system" />
+            </span>
+          }
+          required={subcategoryDef.isRequired}
+        >
+          {viewOnly ? (
+            <div className="font-medium text-[color:var(--foreground)] text-sm px-3 py-2 bg-gray-50 dark:bg-muted/40 rounded-lg border border-transparent">
+              {currentSubcategoryLabel}
+            </div>
+          ) : (
+            <Combobox
+              options={subcategoryOptions}
+              value={
+                form.globalAttributes?.subcategory ||
+                form.customAttributes?.subcategory ||
+                ""
+              }
+              onChange={(val) => {
+                setForm((f) => ({
+                  ...f,
+                  globalAttributes: {
+                    ...(f.globalAttributes || {}),
+                    subcategory: val || undefined,
+                  },
+                  customAttributes: {
+                    ...(f.customAttributes || {}),
+                    subcategory: val || undefined,
+                  },
+                }));
+              }}
+              disabled={editing?.status === "POSTED"}
+              placeholder={t("— Chọn phân loại chi tiết —")}
+              allowClear={!subcategoryDef.isRequired}
+            />
+          )}
+        </DrawerField>
+      )}
 
       {/* Sub-field: Đơn mua hàng (PO) khi Loại nhập = PO */}
       {form.receiptType === "PO" && (

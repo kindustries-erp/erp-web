@@ -255,7 +255,7 @@ export function DrawerModal({
         {/* ── Fixed Header at Top of Panel ── */}
         <div
           className={cn(
-            "z-20 px-4 py-2 border-b border-border/80 table-header-glass flex items-center gap-2.5 flex-shrink-0 transition-shadow duration-200",
+            "z-20 px-3 sm:px-4 py-2 sm:py-2.5 border-b border-border/80 table-header-glass flex items-center gap-2 sm:gap-2.5 flex-shrink-0 transition-shadow duration-200",
             isScrolledTop
               ? "shadow-[0_4px_16px_-4px_rgba(15,23,42,0.08),0_2px_4px_-2px_rgba(15,23,42,0.04)]"
               : "shadow-none",
@@ -271,7 +271,7 @@ export function DrawerModal({
               {icon}
             </div>
           )}
-          <div className="flex-1 min-w-0 flex items-center gap-2 flex-wrap">
+          <div className="flex-1 min-w-0 flex items-center gap-1.5 sm:gap-2 flex-wrap">
             <span className="text-sm font-semibold text-foreground leading-tight">
               {title}
             </span>
@@ -291,7 +291,8 @@ export function DrawerModal({
             variant="ghost"
             size="icon-sm"
             onClick={requestClose}
-            className="text-[color:var(--faint)] h-7 w-7 p-0 flex items-center justify-center"
+            aria-label={t("common.close", "Đóng")}
+            className="text-[color:var(--faint)] h-8 w-8 sm:h-7 sm:w-7 min-w-[32px] min-h-[32px] sm:min-w-0 sm:min-h-0 p-0 flex items-center justify-center"
           >
             <X className="w-4 h-4" />
           </Button>
@@ -302,14 +303,16 @@ export function DrawerModal({
           ref={scrollContainerRef}
           className="flex-1 overflow-y-auto overflow-x-hidden flex flex-col min-h-0 relative"
         >
-          <div className={cn("flex-1 p-[18px]", bodyClassName)}>{children}</div>
+          <div className={cn("flex-1 p-3 sm:p-4 md:p-[18px]", bodyClassName)}>
+            {children}
+          </div>
         </div>
 
         {/* ── Fixed Footer at Bottom of Slide Panel (Always cleanly at bottom) ── */}
         {(footerLeft || (actions && actions.length > 0)) && (
           <div
             className={cn(
-              "z-20 mt-auto px-5 py-3 border-t border-border/80 table-footer-glass flex gap-2 flex-shrink-0 transition-shadow duration-200",
+              "z-20 mt-auto px-3 sm:px-5 py-2.5 sm:py-3 border-t border-border/80 table-footer-glass flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 flex-shrink-0 transition-shadow duration-200",
               isScrolledBottom
                 ? "shadow-[0_-4px_16px_-4px_rgba(15,23,42,0.08),0_-2px_4px_-2px_rgba(15,23,42,0.04)]"
                 : "shadow-none",
@@ -318,10 +321,12 @@ export function DrawerModal({
               backgroundColor: isScrolledBottom
                 ? "var(--drawer-footer-scrolled-bg, rgba(246, 248, 252, 0.90))"
                 : "var(--drawer-footer-bg, rgba(246, 248, 252, 0.75))",
+              paddingBottom:
+                "max(0.75rem, env(safe-area-inset-bottom, 0.75rem))",
             }}
           >
             {/* Left-aligned actions or custom footerLeft */}
-            <div className="flex gap-2 flex-1 min-w-0 items-center">
+            <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap flex-1 min-w-0">
               {footerLeft}
               {actions
                 ?.filter((a) => a.align === "left")
@@ -330,7 +335,7 @@ export function DrawerModal({
                 ))}
             </div>
             {/* Right-aligned actions (default) */}
-            <div className="flex gap-2">
+            <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap ml-auto">
               {actions
                 ?.filter((a) => a.align !== "left")
                 .map((a) => (
@@ -364,7 +369,7 @@ export function DrawerModal({
 // ── Section / Row helpers (re-exported for use inside drawers) ─────────────
 
 export interface DrawerSectionProps {
-  title: React.ReactNode;
+  title?: React.ReactNode;
   titleExtra?: React.ReactNode;
   collapsible?: boolean;
   collapsed?: boolean;
@@ -375,6 +380,10 @@ export interface DrawerSectionProps {
   children: React.ReactNode;
   className?: string;
   bodyClassName?: string;
+  /** When true, omits the section header bar (title, collapsible chevron, and titleExtra) */
+  hideHeader?: boolean;
+  /** Alias for hideHeader */
+  hideTitle?: boolean;
 }
 
 export function DrawerSection({
@@ -389,6 +398,8 @@ export function DrawerSection({
   children,
   className,
   bodyClassName,
+  hideHeader = false,
+  hideTitle = false,
 }: DrawerSectionProps) {
   const [internalCollapsed, setInternalCollapsed] = useState(defaultCollapsed);
   const isCollapsed =
@@ -406,15 +417,18 @@ export function DrawerSection({
 
   const isFitHeight = fitViewportHeight || peekRelatedDeck;
   const heightClass = peekRelatedDeck
-    ? "max-h-[calc(100vh-260px)]"
+    ? "max-h-none lg:max-h-[calc(100vh-260px)]"
     : isFitHeight
-      ? "max-h-[calc(100vh-210px)]"
+      ? "max-h-none lg:max-h-[calc(100vh-210px)]"
       : undefined;
+
+  const shouldHideHeader =
+    hideHeader || hideTitle || (!title && !titleExtra && !collapsible);
 
   return (
     <div
       className={cn(
-        "mb-3 rounded-xl border border-border/80 p-3 shadow-[0_2px_8px_-1px_rgba(0,0,0,0.06),0_1px_4px_-1px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_8px_-1px_rgba(0,0,0,0.3)] transition-all duration-200",
+        "mb-3 rounded-xl border border-border/80 p-2.5 sm:p-3 shadow-[0_2px_8px_-1px_rgba(0,0,0,0.06),0_1px_4px_-1px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_8px_-1px_rgba(0,0,0,0.3)] transition-all duration-200",
         isFitHeight && !isCollapsed && cn("flex flex-col", heightClass),
         className,
         isCollapsed && "!h-auto !flex-none !min-h-0 !flex-initial",
@@ -425,36 +439,38 @@ export function DrawerSection({
         WebkitBackdropFilter: "blur(12px) saturate(180%)",
       }}
     >
-      <div
-        className={cn(
-          "text-[11px] font-bold text-foreground/80 uppercase tracking-[0.06em] pb-[6px] border-b border-[color:var(--border)] flex justify-between items-center flex-shrink-0",
-          !isCollapsed && "mb-[10px]",
-        )}
-      >
-        <div className="flex items-center gap-2">
-          {collapsible && (
-            <button
-              type="button"
-              aria-label={isCollapsed ? "Mở rộng" : "Thu gọn"}
-              onClick={handleToggle}
-              className="p-0.5 -ml-0.5 rounded hover:bg-surface-hover text-muted-foreground hover:text-foreground transition-colors cursor-pointer inline-flex items-center justify-center focus-visible:outline-none"
-            >
-              <ChevronDown
-                className={cn(
-                  "w-3.5 h-3.5 transition-transform duration-200",
-                  isCollapsed ? "-rotate-90" : "rotate-0",
-                )}
-              />
-            </button>
+      {!shouldHideHeader && (
+        <div
+          className={cn(
+            "text-[11px] font-bold text-foreground/80 uppercase tracking-[0.06em] pb-[6px] border-b border-[color:var(--border)] flex justify-between items-center flex-shrink-0",
+            !isCollapsed && "mb-[10px]",
           )}
-          <span>{title}</span>
-        </div>
-        {titleExtra && (
-          <div className="text-foreground normal-case font-semibold text-sm">
-            {titleExtra}
+        >
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            {collapsible && (
+              <button
+                type="button"
+                aria-label={isCollapsed ? "Mở rộng" : "Thu gọn"}
+                onClick={handleToggle}
+                className="p-1 -ml-1 sm:p-0.5 sm:-ml-0.5 min-w-[28px] min-h-[28px] rounded hover:bg-surface-hover text-muted-foreground hover:text-foreground transition-colors cursor-pointer inline-flex items-center justify-center focus-visible:outline-none"
+              >
+                <ChevronDown
+                  className={cn(
+                    "w-3.5 h-3.5 transition-transform duration-200",
+                    isCollapsed ? "-rotate-90" : "rotate-0",
+                  )}
+                />
+              </button>
+            )}
+            <span>{title}</span>
           </div>
-        )}
-      </div>
+          {titleExtra && (
+            <div className="text-foreground normal-case font-semibold text-sm">
+              {titleExtra}
+            </div>
+          )}
+        </div>
+      )}
       <div
         className={cn(
           "grid transition-[grid-template-rows,opacity] duration-300 ease-in-out",
@@ -488,11 +504,14 @@ export function DrawerRow({
   cls?: string;
 }) {
   return (
-    <div className="flex justify-between items-start py-[7px] border-b border-[color:var(--border-light)] text-xs last:border-b-0">
-      <span className="text-[color:var(--muted-fg)] flex-shrink-0">
-        {label}
-      </span>
-      <span className={cn("text-foreground font-medium text-right ml-3", cls)}>
+    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start py-[7px] border-b border-[color:var(--border-light)] text-xs last:border-b-0 gap-0.5 sm:gap-3">
+      <span className="text-[color:var(--muted-fg)] shrink-0">{label}</span>
+      <span
+        className={cn(
+          "text-foreground font-medium text-left sm:text-right min-w-0 break-words",
+          cls,
+        )}
+      >
         {value ?? "—"}
       </span>
     </div>

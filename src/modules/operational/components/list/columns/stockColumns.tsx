@@ -121,7 +121,7 @@ export function useStockColumns({
         header: headerFilter("item_code", t("inventoryMasters.columns.sku")),
         className: "align-middle text-left",
         sortable: false,
-        size: 200,
+        size: 250,
         enableResizing: true,
         cell: (row) => (
           <TableText
@@ -144,14 +144,14 @@ export function useStockColumns({
         ),
         className: "align-middle text-left",
         sortable: false,
-        size: 200,
+        size: 250,
         enableResizing: true,
         cell: (row) => (
-          <Tooltip content={row.item_name || ""}>
-            <span className="truncate block w-full">
-              {row.item_name || "—"}
-            </span>
-          </Tooltip>
+          <TableText
+            text={row.item_name || ""}
+            tooltip={true}
+            enableCopy={true}
+          />
         ),
       },
       {
@@ -265,6 +265,59 @@ export function useStockColumns({
         ),
       },
       {
+        key: "tracking_policy",
+        header: headerFilter(
+          "tracking_policy",
+          t("inventoryMasters.columns.trackingPolicy", "Tracking policy"),
+          {
+            showBlankOption: true,
+            formatOptionLabel: (val: string) => {
+              const v = (val || "").toUpperCase();
+              if (v === "NONE") return "Không theo dõi (NONE)";
+              if (v === "SERIAL") return "Serial (SERIAL)";
+              if (v === "VEHICLE") return "Xe (VEHICLE)";
+              if (v === "LOT") return "Lô (LOT)";
+              if (v === "CUSTOM") return "Barcode tùy chỉnh (CUSTOM)";
+              return val;
+            },
+          },
+        ),
+        className: "align-middle text-center",
+        sortable: false,
+        size: 140,
+        enableResizing: true,
+        cell: (row) => {
+          const code = row.tracking_policy_code;
+          const name = row.tracking_policy_name;
+          if (!code || code === "NONE") {
+            return <span className="text-muted-foreground text-xs">—</span>;
+          }
+          let badgeClass = "bg-muted text-foreground border-border";
+          if (code === "SERIAL" || code === "VEHICLE" || code === "CUSTOM") {
+            badgeClass =
+              "bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/40 dark:text-indigo-300 dark:border-indigo-800";
+          } else if (code === "LOT") {
+            badgeClass =
+              "bg-amber-50 text-amber-700 border-amber-300 dark:bg-amber-950/30 dark:text-amber-300";
+          }
+          const displayLabel = name || code;
+          return (
+            <div className="w-full text-center flex justify-center">
+              <Tooltip content={displayLabel}>
+                <span
+                  className={cn(
+                    "inline-flex items-center justify-center rounded-md px-2 py-0.5 text-[11px] font-semibold border truncate max-w-full shadow-xs",
+                    badgeClass,
+                  )}
+                >
+                  {displayLabel}
+                </span>
+              </Tooltip>
+            </div>
+          );
+        },
+      },
+      {
         key: "last",
         header: headerFilter.date("last", t("inventory.table.columns.lastTx")),
         className: "align-middle whitespace-nowrap text-right",
@@ -302,10 +355,17 @@ export function useStockColumns({
         enableResizing: true,
         cell: (row) => {
           const itemType = row.item_type;
-          let cls = "bg-slate-100 text-slate-600";
-          if (itemType === "RAW") cls = "bg-blue-100 text-blue-700";
-          else if (itemType === "FG") cls = "bg-emerald-100 text-emerald-700";
-          else if (itemType === "WIP") cls = "bg-amber-100 text-amber-700";
+          let cls =
+            "bg-slate-100 text-slate-700 dark:bg-zinc-800 dark:text-zinc-300";
+          if (itemType === "RAW")
+            cls =
+              "bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-950/40 dark:text-indigo-300";
+          else if (itemType === "FG")
+            cls =
+              "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300";
+          else if (itemType === "WIP")
+            cls =
+              "bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300";
           const typeText = itemType
             ? t(
                 `inventory.itemTypes.${itemType.toLowerCase() as "raw" | "fg" | "wip"}`,

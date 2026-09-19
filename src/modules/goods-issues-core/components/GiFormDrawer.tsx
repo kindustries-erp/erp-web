@@ -20,6 +20,7 @@ import { CellInput } from "@/shared/components/CellInput";
 import { CellTextarea } from "@/shared/components/CellTextarea";
 import { DrawerField, inputCls } from "@/shared/components/DrawerModal";
 import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
+import { SubtotalSummaryCell } from "@/shared/components/DataTable/SubtotalSummaryCell";
 import { DatePicker } from "@/shared/components/DatePicker";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
@@ -35,9 +36,7 @@ import {
 import { basicMastersApi } from "@/modules/basic-masters/api/basicMastersApi";
 import { useT } from "@/core/i18n";
 import toast from "react-hot-toast";
-import { FilterButton } from "@/shared/components/FilterPanel";
-import { inventoryCoreApi } from "@/modules/inventory-core/api/inventoryCoreApi";
-import type { InventorySerialRow } from "@/modules/inventory-core/api/inventoryCoreApi";
+import { GiFormSectionTitleExtra } from "./GiFormSectionTitleExtra";
 import { useVoucherClientFilter } from "@/modules/inventory-core/hooks/useVoucherClientFilter";
 import {
   emptyGiLine,
@@ -66,6 +65,9 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
     saving,
     soOptions,
     handleSoChange,
+    itemsDict,
+    serialDetails,
+    fetchSerialDetails,
     itemOptions,
     setItemSearch,
     fetchNextItems,
@@ -89,36 +91,18 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
   );
   const isAdmin = useHasPermission(ErpResource.SUPER_ADMIN, ErpAction.ALL);
 
-  // ── Serial details ─────────────────────────────────────────────────────────
+  // ── Serial details for newly selected serials in create/edit mode ──────────
 
-  const [serialDetails, setSerialDetails] = useState<
-    Record<string, InventorySerialRow>
-  >({});
   const [isImportOpen, setIsImportOpen] = useState(false);
 
   useEffect(() => {
-    let active = true;
-    const sIds = form.lines.map((l) => l.serialId).filter(Boolean);
+    const sIds = form.lines
+      .map((l) => l.serialId)
+      .filter((id) => Boolean(id) && !serialDetails[id]);
     if (sIds.length > 0) {
-      inventoryCoreApi
-        .listSerials({ ids: sIds, pageSize: 1000 })
-        .then((res) => {
-          if (active) {
-            const map: Record<string, InventorySerialRow> = {};
-            res.items.forEach((s) => {
-              map[s.id] = s;
-            });
-            setSerialDetails(map);
-          }
-        })
-        .catch(console.error);
-    } else {
-      setSerialDetails({});
+      void fetchSerialDetails(sIds);
     }
-    return () => {
-      active = false;
-    };
-  }, [form.lines]);
+  }, [form.lines, serialDetails, fetchSerialDetails]);
 
   // ── Print ──────────────────────────────────────────────────────────────────
 
@@ -129,22 +113,87 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
   });
   const { data: companyProfile } = useCompanyProfile();
 
-  // ── Client-side filter / sort ──────────────────────────────────────────────
+  // ── Client-side filter / sort / pagination ───────────────────────────────
 
-  const { listHook, processedLines, buildFilterOptions } =
-    useVoucherClientFilter({
-      tableId: "gi-details-table",
-      lines: form.lines,
-      isOpen: open,
-      getCode: (line: any) =>
-        line.itemCode || line.itemName?.split(" — ")[0] || "",
-      getName: (line: any) => {
-        const nameParts = line.itemName?.split(" — ");
-        return nameParts && nameParts.length > 1
-          ? nameParts[1]
-          : line.itemName || "";
+  const {
+    listHook,
+    processedLines,
+    paginatedLines,
+    page,
+    pageSize,
+    total,
+    totalPages,
+    setPage,
+    setPageSize,
+    buildFilterOptions,
+  } = useVoucherClientFilter({
+    tableId: "gi-details-table",
+    lines: form.lines,
+    isOpen: open,
+    getCode: (line: any) =>
+      line.itemCode ||
+      (line.itemId && itemsDict[line.itemId]
+        ? itemsDict[line.itemId].sku
+        : "") ||
+      line.itemName?.split(" — ")[0] ||
+      "",
+    getName: (line: any) => {
+      const rawName =
+        (line.itemId && itemsDict[line.itemId]
+          ? itemsDict[line.itemId].itemName
+          : "") ||
+        line.itemName ||
+        "";
+      const nameParts = rawName.split(" — ");
+      return nameParts && nameParts.length > 1 ? nameParts[1] : rawName;
+    },
+    customExtractors: {
+      itemCode: (line: any) =>
+        line.itemCode ||
+        (line.itemId && itemsDict[line.itemId]
+          ? itemsDict[line.itemId].sku
+          : "") ||
+        line.itemName?.split(" — ")[0] ||
+        "",
+      itemName: (line: any) => {
+        const rawName =
+          (line.itemId && itemsDict[line.itemId]
+            ? itemsDict[line.itemId].itemName
+            : "") ||
+          line.itemName ||
+          "";
+        const nameParts = rawName.split(" — ");
+        return nameParts && nameParts.length > 1 ? nameParts[1] : rawName;
       },
-    });
+      tracking: (line: any) => {
+        if (!line.serialId) return "";
+        const s = serialDetails[line.serialId];
+        if (!s) return "";
+        return [s.vinNo, s.serialNo, s.engineNo].filter(Boolean).join(" ");
+      },
+      serials: (line: any) => {
+        if (!line.serialId) return "";
+        const s = serialDetails[line.serialId];
+        if (!s) return "";
+        return [s.vinNo, s.serialNo, s.engineNo].filter(Boolean).join(" ");
+      },
+      qtyIssued: (line: any) => line.qtyIssued,
+      unitCost: (line: any) => line.unitCost,
+    },
+    customSort: (a: any, b: any, field: string, isDesc: boolean) => {
+      if (field === "qtyIssued") {
+        const numA = Number(a.qtyIssued ?? 0);
+        const numB = Number(b.qtyIssued ?? 0);
+        return isDesc ? numB - numA : numA - numB;
+      }
+      if (field === "unitCost") {
+        const numA = Number(a.unitCost ?? 0);
+        const numB = Number(b.unitCost ?? 0);
+        return isDesc ? numB - numA : numA - numB;
+      }
+      return null;
+    },
+  });
 
   // ── Column header helper ───────────────────────────────────────────────────
 
@@ -185,12 +234,15 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
   const tableColumns = [
     {
       key: "index",
-      header: "#",
+      header: <span className="w-full block text-center">#</span>,
       size: 40,
+      enableResizing: false,
       headerClassName: "text-center w-[40px] min-w-[40px]",
       className: "text-center w-[40px] min-w-[40px]",
       cell: (_: any, idx: number) => (
-        <span className="text-muted-foreground">{idx}</span>
+        <span className="w-full block text-center text-muted-foreground">
+          {idx}
+        </span>
       ),
     },
     {
@@ -206,7 +258,9 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
         : "w-[200px] min-w-[200px] p-0 align-middle",
       cell: (line: any, idx: number) => {
         if (isLineViewOnly) {
-          const code = line.itemCode || line.itemName?.split(" — ")[0] || "—";
+          const item = line.itemId ? itemsDict[line.itemId] : null;
+          const code =
+            line.itemCode || item?.sku || line.itemName?.split(" — ")[0] || "—";
           return <span>{code}</span>;
         }
         return (
@@ -214,7 +268,12 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
             variant="spreadsheet"
             options={itemOptions}
             value={line.itemId}
-            fallbackLabel={line.itemCode || line.itemName}
+            fallbackLabel={
+              line.itemCode ||
+              (line.itemId && itemsDict[line.itemId]
+                ? itemsDict[line.itemId].sku
+                : line.itemName)
+            }
             disabled={isLineViewOnly || form.issueType !== "OTHER"}
             placeholder={t("Chọn hàng hóa")}
             searchPlaceholder={t("Tìm SKU / tên")}
@@ -250,11 +309,11 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
       headerClassName: "w-[200px] min-w-[200px]",
       className: "w-[200px] min-w-[200px]",
       cell: (line: any) => {
-        const nameParts = line.itemName?.split(" — ");
-        const name =
-          nameParts && nameParts.length > 1
-            ? nameParts[1]
-            : line.itemName || "—";
+        const item = line.itemId ? itemsDict[line.itemId] : null;
+        const rawName =
+          (item && item.itemName ? item.itemName : "") || line.itemName || "—";
+        const nameParts = rawName.split(" — ");
+        const name = nameParts && nameParts.length > 1 ? nameParts[1] : rawName;
         return (
           <div
             className={cn(
@@ -270,9 +329,7 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
     },
     {
       key: "tracking",
-      header: makeFilterHeader("tracking", t("Serials / Số khung"), {
-        hideFilter: true,
-      }),
+      header: makeFilterHeader("tracking", t("Serials / Số khung")),
       minSize: 250,
       enableResizing: true,
       headerClassName: "w-[250px] min-w-[250px]",
@@ -283,7 +340,7 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
         }
         const s = serialDetails[line.serialId];
         if (!s) {
-          return <span className="text-[11px] text-muted-foreground">...</span>;
+          return <span className="text-[11px] text-muted-foreground">—</span>;
         }
         return (
           <div className="flex flex-col text-[13px] py-1">
@@ -301,9 +358,7 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
     },
     {
       key: "qtyIssued",
-      header: makeFilterHeader("qtyIssued", t("Số lượng"), {
-        hideFilter: true,
-      }),
+      header: makeFilterHeader("qtyIssued", t("Số lượng")),
       minSize: 140,
       enableResizing: true,
       headerClassName: isLineViewOnly
@@ -351,7 +406,7 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
     },
     {
       key: "unitCost",
-      header: makeFilterHeader("unitCost", t("Đơn giá"), { hideFilter: true }),
+      header: makeFilterHeader("unitCost", t("Đơn giá")),
       minSize: 140,
       enableResizing: true,
       headerClassName: isLineViewOnly
@@ -396,28 +451,38 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
     },
   ];
 
-  // ── Summary row ────────────────────────────────────────────────────────────
+  // ── Summary row calculations ───────────────────────────────────────────────
+
+  const subtotalIssuedQty = useMemo(() => {
+    return paginatedLines.reduce(
+      (sum, line) => sum + (line.itemId ? Number(line.qtyIssued || 0) : 0),
+      0,
+    );
+  }, [paginatedLines]);
+
+  const grandTotalIssuedQty = useMemo(() => {
+    return processedLines.reduce(
+      (sum, line) => sum + (line.itemId ? Number(line.qtyIssued || 0) : 0),
+      0,
+    );
+  }, [processedLines]);
 
   const summaryRow = {
-    tracking: (
-      <div className="text-right w-full font-semibold">{t("Tổng")}:</div>
-    ),
     qtyIssued: (
-      <div
-        className={cn(
-          "text-center font-semibold",
-          viewOnly ? "text-red-600" : "",
-        )}
-      >
-        {fmtQty(
-          form.lines
-            .reduce(
-              (sum, line) =>
-                sum + (line.itemId ? Number(line.qtyIssued || 0) : 0),
-              0,
-            )
-            .toString(),
-        )}
+      <div className="w-full flex justify-center">
+        <SubtotalSummaryCell
+          variantType="qty"
+          metricTitle="SL Xuất kho"
+          itemTitle="Dòng xuất kho"
+          itemUnit="dòng"
+          subtotalQty={subtotalIssuedQty}
+          grandTotalQty={grandTotalIssuedQty}
+          itemCount={form.lines.length}
+          page={page}
+          totalPages={totalPages}
+          currentPageCount={paginatedLines.length}
+          totalCount={total}
+        />
       </div>
     ),
   };
@@ -457,7 +522,7 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
 
   const locale = useAppStore((s) => s.locale);
 
-  // Lấy danh sách thuộc tính động cho GOODS_ISSUE để nạp options cho Loại xuất kho (code: type_inventory_issue)
+  // Lấy danh sách thuộc tính động cho GOODS_ISSUE để nạp options cho Loại xuất kho (code: category)
   const { data: giAttrDefs = [] } = useQuery({
     queryKey: ["module-config-global-defs", "GOODS_ISSUE"],
     queryFn: () => moduleConfigApi.getGlobalAttributeDefs("GOODS_ISSUE"),
@@ -466,26 +531,29 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
 
   const ISSUE_TYPE_OPTIONS = useMemo(() => {
     const typeDef = Array.isArray(giAttrDefs)
-      ? giAttrDefs.find(
-          (d) =>
-            (d?.code === "type_inventory_issue" ||
-              d?.code === "issue_type" ||
-              d?.code === "type") &&
-            !d?.isDeleted,
-        )
+      ? giAttrDefs.find((d) => d?.code === "category" && !d?.isDeleted)
       : undefined;
     if (typeDef?.options && typeDef.options.length > 0) {
       return typeDef.options.map((opt) => ({
         value: opt.value,
-        label: `${resolveOptionLabel(opt, locale, t)} [${opt.value}]`,
+        label: resolveOptionLabel(opt, locale, t),
+        code: opt.value,
       }));
     }
     return [
-      { value: "SALE", label: `${t("Xuất bán (SO)")} [SALE]` },
-      { value: "PRODUCTION", label: `${t("Xuất sản xuất")} [PRODUCTION]` },
-      { value: "WARRANTY", label: `${t("Xuất bảo hành")} [WARRANTY]` },
-      { value: "SCRAP", label: `${t("Xuất hủy / hao hụt")} [SCRAP]` },
-      { value: "OTHER", label: `${t("Xuất khác")} [OTHER]` },
+      { value: "SALE", label: t("Xuất bán hàng (SO)"), code: "SALE" },
+      {
+        value: "PRODUCTION",
+        label: t("Xuất sản xuất (NVL)"),
+        code: "PRODUCTION",
+      },
+      { value: "WARRANTY", label: t("Xuất bảo hành"), code: "WARRANTY" },
+      {
+        value: "INTERNAL",
+        label: t("Xuất nội bộ / Trưng bày"),
+        code: "INTERNAL",
+      },
+      { value: "OTHER", label: t("Xuất khác"), code: "OTHER" },
     ];
   }, [giAttrDefs, locale, t]);
 
@@ -558,10 +626,6 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
     ) : undefined;
 
   // ── Thống kê tóm tắt ───────────────────────────────────────────────────
-  const totalIssuedQty = useMemo(() => {
-    return form.lines.reduce((sum, l) => sum + Number(l.qtyIssued || 0), 0);
-  }, [form.lines]);
-
   const customerDisplay = useMemo(() => {
     const selectedSo = soOptions.find((o) => o.value === form.salesOrderId);
     if (selectedSo && selectedSo.label.includes(" — ")) {
@@ -639,7 +703,11 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
           />
         )}
       </DrawerField>
+    </>
+  );
 
+  const tagsSlot = (
+    <>
       {/* Thẻ nhãn (Tags) */}
       <div className="pt-1">
         <div className="text-sm font-medium mb-1.5 text-gray-700 dark:text-gray-300">
@@ -660,28 +728,6 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
           />
         ) : null}
       </div>
-
-      {/* Summary Cards khi ở chế độ View hoặc khi có dòng */}
-      {viewOnly && form.lines.length > 0 && (
-        <div className="mt-3 grid grid-cols-2 gap-2 text-center">
-          <div className="flex flex-col items-center justify-center p-2.5 bg-blue-500/10 rounded-lg border border-blue-500/20">
-            <span className="text-[11px] font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider mb-1">
-              {t("Số mặt hàng")}
-            </span>
-            <span className="font-bold text-blue-700 dark:text-blue-300 text-base tabular-nums">
-              {form.lines.length}
-            </span>
-          </div>
-          <div className="flex flex-col items-center justify-center p-2.5 bg-amber-500/10 rounded-lg border border-amber-500/20">
-            <span className="text-[11px] font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wider mb-1">
-              {t("Tổng SL xuất")}
-            </span>
-            <span className="font-bold text-amber-700 dark:text-amber-300 text-base tabular-nums">
-              -{fmtQty(totalIssuedQty)}
-            </span>
-          </div>
-        </div>
-      )}
     </>
   );
 
@@ -830,47 +876,31 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
 
   // ── Section info ───────────────────────────────────────────────────────────
 
-  const sectionTitle = t("Dòng xuất kho") + " (" + form.lines.length + ")";
-  const clearFilterBtn =
-    listHook.activeFilterCount > 0 ? (
-      <FilterButton
-        activeCount={listHook.activeFilterCount}
-        onClick={() => {}}
-        onClear={listHook.resetFilters}
-      />
-    ) : null;
+  const sectionTitle =
+    t("Dòng xuất kho") +
+    " (" +
+    (processedLines.length < form.lines.length
+      ? `${processedLines.length}/${form.lines.length}`
+      : form.lines.length) +
+    ")";
 
   const sectionTitleExtra = (
-    <div className="flex items-center gap-2">
-      {clearFilterBtn}
-      {!viewOnly &&
-        form.issueType === "OTHER" &&
-        editing?.status !== "POSTED" && (
-          <>
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8 text-xs font-semibold"
-              onClick={() =>
-                setForm((f) => ({
-                  ...f,
-                  lines: [...f.lines, emptyGiLine()],
-                }))
-              }
-            >
-              + {t("Thêm dòng")}
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8 text-xs font-semibold"
-              onClick={() => setIsImportOpen(true)}
-            >
-              {t("Nhập từ Excel")}
-            </Button>
-          </>
-        )}
-    </div>
+    <GiFormSectionTitleExtra
+      activeFilterCount={listHook.activeFilterCount}
+      onResetFilters={listHook.resetFilters}
+      canAddLine={
+        !viewOnly && form.issueType === "OTHER" && editing?.status !== "POSTED"
+      }
+      onAddLine={() =>
+        setForm((f) => ({
+          ...f,
+          lines: [...f.lines, emptyGiLine()],
+        }))
+      }
+      onOpenImport={() => setIsImportOpen(true)}
+      tableId="gi-details-table"
+      t={t}
+    />
   );
 
   // ── Render ─────────────────────────────────────────────────────────────────
@@ -907,9 +937,11 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
       error={saveError}
       unifiedContext={drawer.unifiedContext}
       // Table
+      tableId="gi-details-table"
+      enableColumnVisibility={true}
       sectionTitle={sectionTitle}
       sectionTitleExtra={sectionTitleExtra}
-      tableItems={showEmptySOMessage ? [] : processedLines}
+      tableItems={showEmptySOMessage ? [] : paginatedLines}
       getRowKey={(item) => String(form.lines.indexOf(item))}
       tableColumns={tableColumns}
       summaryRow={summaryRow}
@@ -924,10 +956,18 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
               : t("Không có dữ liệu")
       }
       tableFooter={tableFooter}
+      page={page}
+      pageSize={pageSize}
+      total={total}
+      totalPages={totalPages}
+      onPage={setPage}
+      onPageSize={setPageSize}
+      pageSizeOptions={[20, 50, 100, 200]}
       // Right panel
       rightPanelContent={rightPanelContent}
       defaultAttributesSlot={defaultAttributesSlot}
       remarksContent={remarksContent}
+      tagsSlot={tagsSlot}
       customFieldsSlot={
         <ModuleEntityCustomFieldsSection
           moduleKey="GOODS_ISSUE"

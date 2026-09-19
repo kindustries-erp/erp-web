@@ -214,6 +214,12 @@ export type UpdateErpInvoicePayload = Partial<CreateErpInvoicePayload>;
 export interface ErpInvoiceListParams {
   direction?: "IN" | "OUT";
   search?: string;
+  invoice_no?: string;
+  serial_no?: string;
+  related_invoice_no?: string;
+  related_serial_no?: string;
+  tax_invoice_status?: number | string;
+  is_valid?: string;
   seller_name?: string;
   buyer_name?: string;
   partner_tax_code?: string;
@@ -230,12 +236,28 @@ export interface ErpInvoiceListParams {
   unlinked_po_id?: string;
 }
 
+export interface ErpInvoiceTotals {
+  grandTotalPreVat: number;
+  grandTotalVat: number;
+  grandTotalDiscount: number;
+  grandTotalAmount: number;
+  grandTotalNetOff: number;
+  grandTotalRemaining: number;
+  cumulativePreVat: number;
+  cumulativeVat: number;
+  cumulativeDiscount: number;
+  cumulativeTotal: number;
+  cumulativeNetOff: number;
+  cumulativeRemaining: number;
+}
+
 export interface ErpInvoiceListResponse {
   items: ErpInvoice[];
   total: number;
   page: number;
   pageSize: number;
   totalPages: number;
+  totals?: ErpInvoiceTotals;
 }
 
 export interface BranchStatEntry {

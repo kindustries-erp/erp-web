@@ -12,6 +12,7 @@ import { bankStatementApi } from "@/modules/bank-statements/api/bankStatementApi
 import { Link2, BookOpen, History, FileText, Building2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Badge } from "@/shared/components/ui/badge";
 import { usePosting } from "@/shared/components/accounting/usePosting";
 import { PostingSection } from "@/shared/components/accounting/PostingSection";
 import { PostedAccountingSummary } from "@/shared/components/accounting/PostedAccountingSummary";
@@ -32,6 +33,7 @@ interface Props {
   transactionId: string | null;
   onSaved?: () => void;
   defaultTabKey?: string;
+  initialMode?: "view" | "edit";
 }
 
 function createClientId() {
@@ -48,6 +50,7 @@ export function BankTransactionDetailDrawer({
   transactionId,
   onSaved,
   defaultTabKey = "txn_details",
+  initialMode = "view",
 }: Props) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
@@ -62,6 +65,8 @@ export function BankTransactionDetailDrawer({
   const [globalAttributes, setGlobalAttributes] = useState<Record<string, any>>(
     {},
   );
+  const [editBranchId, setEditBranchId] = useState<string>("");
+  const [editDescription, setEditDescription] = useState<string>("");
 
   const { data: transaction, isLoading } = useQuery({
     queryKey: ["bank-transaction", transactionId],
@@ -269,20 +274,28 @@ export function BankTransactionDetailDrawer({
       setFormError(null);
       setCategoryId(null);
       setCustomAttributes({});
+      setGlobalAttributes({});
+      setEditBranchId("");
+      setEditDescription("");
       postingState.reset();
       return;
     }
 
     if (transaction) {
-      setEditMode(false);
+      setEditMode(initialMode === "edit");
       setAccountingEnabled(initialAccountingEnabled);
       setFormError(null);
+      setEditBranchId(transaction.branchId || transaction.branch?.id || "");
+      setEditDescription(
+        transaction.description || transaction.accountingDescription || "",
+      );
       hydratePostingState(transaction);
       moduleConfigApi
         .getEntityValues("BANK_TXN", transaction.id)
         .then((res) => {
           setCategoryId(res.categoryId || null);
           setCustomAttributes(res.attributes || {});
+          setGlobalAttributes(res.globalAttributes || {});
         })
         .catch(() => {});
     }
@@ -292,6 +305,7 @@ export function BankTransactionDetailDrawer({
     transaction?.id,
     transaction?.postingStatus,
     initialAccountingEnabled,
+    initialMode,
   ]);
 
   const saveMutation = useMutation({
@@ -332,7 +346,7 @@ export function BankTransactionDetailDrawer({
         }
       }
 
-      // Save custom fields if present
+      // 1. Save custom fields if present
       if (
         categoryId !== undefined ||
         customAttributes !== undefined ||
@@ -347,6 +361,22 @@ export function BankTransactionDetailDrawer({
         } catch (cfErr: any) {
           console.warn("Failed to save custom attributes", cfErr);
         }
+      }
+
+      // 2. Save branchId and description if changed
+      const origBranchId = transaction.branchId || transaction.branch?.id || "";
+      const origDescription =
+        transaction.description || transaction.accountingDescription || "";
+
+      if (
+        editBranchId !== origBranchId ||
+        editDescription !== origDescription
+      ) {
+        await bankStatementApi.updateTransaction(transactionId, {
+          branchId: editBranchId || undefined,
+          description: editDescription,
+          accountingDescription: editDescription,
+        });
       }
 
       if (!accountingEnabled) {
@@ -442,12 +472,22 @@ export function BankTransactionDetailDrawer({
     if (!transaction) return;
     hydratePostingState(transaction);
     setAccountingEnabled(isPosted);
+    setEditBranchId(transaction.branchId || transaction.branch?.id || "");
+    setEditDescription(
+      transaction.description || transaction.accountingDescription || "",
+    );
     setFormError(null);
     setEditMode(true);
   };
 
   const cancelEdit = () => {
-    if (transaction) hydratePostingState(transaction);
+    if (transaction) {
+      hydratePostingState(transaction);
+      setEditBranchId(transaction.branchId || transaction.branch?.id || "");
+      setEditDescription(
+        transaction.description || transaction.accountingDescription || "",
+      );
+    }
     setAccountingEnabled(isPosted);
     setFormError(null);
     setEditMode(false);
@@ -549,127 +589,145 @@ export function BankTransactionDetailDrawer({
     }
   };
 
-  const resolvedDrawerTabs: DrawerTopTabItem[] = transaction
-    ? [
-        {
-          key: "txn_details",
-          label: t("bankStatement.tabDetails", {
-            defaultValue: "Chi tiết giao dịch",
-          }),
-          icon: <FileText className="w-3.5 h-3.5" />,
-          content: (
-            <div className="flex flex-col gap-4">
-              <DrawerSection
-                title={
-                  <span className="flex items-center gap-1.5 text-xs font-bold text-foreground">
-                    <FileText className="w-3.5 h-3.5 text-primary" />
-                    {t("bankStatement.previewStatementTitle", {
-                      defaultValue: "Xem trước chứng từ",
-                    })}
-                  </span>
-                }
-                collapsible={true}
-                defaultCollapsed={false}
+  const resolvedDrawerTabs: DrawerTopTabItem[] = useMemo(() => {
+    if (!transaction) return [];
+
+    return [
+      {
+        key: "txn_details",
+        label: t("bankStatement.tabDetails", {
+          defaultValue: "Chi tiết giao dịch",
+        }),
+        icon: <FileText className="w-3.5 h-3.5" />,
+        content: (
+          <div className="flex flex-col gap-4">
+            <DrawerSection
+              title={
+                <span className="flex items-center gap-1.5 text-xs font-bold text-foreground">
+                  <FileText className="w-3.5 h-3.5 text-primary" />
+                  {t("bankStatement.previewStatementTitle", {
+                    defaultValue: "Xem trước chứng từ",
+                  })}
+                </span>
+              }
+              collapsible={true}
+              defaultCollapsed={false}
+            >
+              <div
+                className={`mx-auto min-h-[420px] max-w-[960px] rounded-[20px] border border-slate-200 bg-gradient-to-br ${bankTheme.paperTone} p-5 shadow-sm md:p-7`}
               >
                 <div
-                  className={`mx-auto min-h-[420px] max-w-[960px] rounded-[20px] border border-slate-200 bg-gradient-to-br ${bankTheme.paperTone} p-5 shadow-sm md:p-7`}
-                >
-                  <div
-                    className={`h-1.5 w-full rounded-full bg-gradient-to-r ${bankTheme.stripe}`}
-                  />
-                  <div className="mt-5 flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                      <div
-                        className={`text-xl font-extrabold tracking-wide ${bankTheme.titleColor}`}
-                      >
-                        {bankTheme.bankLabel}
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div
-                        className={`text-base font-bold uppercase ${bankTheme.titleColor}`}
-                      >
-                        {previewDocumentType}
-                      </div>
-                      <div className="text-xs text-slate-500">
-                        Ngày GD: {formatGMT7(transaction.transDate, "date")}
-                      </div>
+                  className={`h-1.5 w-full rounded-full bg-gradient-to-r ${bankTheme.stripe}`}
+                />
+                <div className="mt-5 flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <div
+                      className={`text-xl font-extrabold tracking-wide ${bankTheme.titleColor}`}
+                    >
+                      {bankTheme.bankLabel}
                     </div>
                   </div>
-
-                  <div className="mt-6 rounded-2xl border border-slate-200/80 bg-white/90 p-4 shadow-sm backdrop-blur">
-                    <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                      <div>
-                        <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-600">
-                          Tài khoản nguồn
-                        </span>
-                        <div className="mt-1 text-sm font-semibold text-slate-900">
-                          {transactionInsights?.sourceLabel}
-                        </div>
-                      </div>
-                      <div>
-                        <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-600">
-                          Đối tác giao dịch
-                        </span>
-                        <div className="mt-1 text-sm font-semibold text-slate-900">
-                          {transactionInsights?.counterpartLabel || "—"}
-                        </div>
-                      </div>
+                  <div className="text-right">
+                    <div
+                      className={`text-base font-bold uppercase ${bankTheme.titleColor}`}
+                    >
+                      {previewDocumentType}
                     </div>
-                    <div className="mt-3 border-t border-slate-100 pt-3">
-                      <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-600">
-                        Nội dung giao dịch
-                      </span>
-                      <div className="mt-1 text-xs text-slate-700">
-                        {transaction.description || "—"}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="mt-5 flex flex-wrap items-end justify-between gap-3 rounded-2xl border border-slate-200/90 bg-white p-4">
-                    <div>
-                      <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-600">
-                        Số tiền giao dịch
-                      </span>
-                      <div
-                        className={`mt-1 font-mono text-2xl font-black ${
-                          Number(transaction.creditAmount || 0) > 0
-                            ? "text-emerald-700"
-                            : "text-rose-700"
-                        }`}
-                      >
-                        {Number(transaction.creditAmount || 0) > 0
-                          ? `+${money(Number(transaction.creditAmount || 0))}`
-                          : `-${money(Number(transaction.debitAmount || 0))}`}
-                      </div>
-                    </div>
-                    <div className="text-right text-xs text-slate-500">
-                      Tham chiếu: {transaction.referenceNumber || "—"}
+                    <div className="text-xs text-slate-500">
+                      Ngày GD: {formatGMT7(transaction.transDate, "date")}
                     </div>
                   </div>
                 </div>
-              </DrawerSection>
-            </div>
-          ),
-        },
-        {
-          key: "partner",
-          label: t("bankStatement.tabObjectDetails", {
-            defaultValue: "Chi tiết theo đối tượng",
-          }),
-          icon: <Building2 className="w-3.5 h-3.5" />,
-          content: <BankTransactionPartnerTab transaction={transaction} />,
-          rightPanel: (
-            <BankTransactionPartnerRightPanel transaction={transaction} />
-          ),
-        },
-        {
-          key: "accounting",
-          label: "Hạch toán kế toán",
-          icon: <BookOpen className="w-3.5 h-3.5" />,
-          badgeCount: isPosted ? 1 : 0,
-          content: (
-            <div className="p-3 bg-surface/50 rounded-xl border border-border/70">
+
+                <div className="mt-6 rounded-2xl border border-slate-200/80 bg-white/90 p-4 shadow-sm backdrop-blur">
+                  <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                    <div>
+                      <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-600">
+                        Tài khoản nguồn
+                      </span>
+                      <div className="mt-1 text-sm font-semibold text-slate-900">
+                        {transactionInsights?.sourceLabel}
+                      </div>
+                    </div>
+                    <div>
+                      <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-600">
+                        Đối tác giao dịch
+                      </span>
+                      <div className="mt-1 text-sm font-semibold text-slate-900">
+                        {transactionInsights?.counterpartLabel || "—"}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-3 border-t border-slate-100 pt-3">
+                    <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-600">
+                      Nội dung giao dịch
+                    </span>
+                    <div className="mt-1 text-xs text-slate-700">
+                      {transaction.description || "—"}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-5 flex flex-wrap items-end justify-between gap-3 rounded-2xl border border-slate-200/90 bg-white p-4">
+                  <div>
+                    <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-600">
+                      Số tiền giao dịch
+                    </span>
+                    <div
+                      className={`mt-1 font-mono text-2xl font-black ${
+                        Number(transaction.creditAmount || 0) > 0
+                          ? "text-emerald-700"
+                          : "text-rose-700"
+                      }`}
+                    >
+                      {Number(transaction.creditAmount || 0) > 0
+                        ? `+${money(Number(transaction.creditAmount || 0))}`
+                        : `-${money(Number(transaction.debitAmount || 0))}`}
+                    </div>
+                  </div>
+                  <div className="text-right text-xs text-slate-500">
+                    Tham chiếu: {transaction.referenceNumber || "—"}
+                  </div>
+                </div>
+              </div>
+            </DrawerSection>
+          </div>
+        ),
+      },
+      {
+        key: "partner",
+        label: t("bankStatement.tabObjectDetails", {
+          defaultValue: "Chi tiết theo đối tượng",
+        }),
+        icon: <Building2 className="w-3.5 h-3.5" />,
+        content: <BankTransactionPartnerTab transaction={transaction} />,
+        rightPanel: (
+          <BankTransactionPartnerRightPanel transaction={transaction} />
+        ),
+      },
+      {
+        key: "accounting",
+        label: t("bankStatement.tabAccounting", {
+          defaultValue: "Hạch toán kế toán",
+        }),
+        icon: <BookOpen className="w-3.5 h-3.5" />,
+        badgeCount: isPosted ? 1 : 0,
+        content: (
+          <div className="space-y-4">
+            <DrawerSection
+              title={
+                <div className="flex items-center gap-1.5">
+                  <BookOpen className="w-3.5 h-3.5 text-primary" />
+                  <span>
+                    {t("bankStatement.tabAccountingTitle", {
+                      defaultValue: "Hạch toán & Định khoản kế toán",
+                    })}
+                  </span>
+                </div>
+              }
+              collapsible={true}
+              defaultCollapsed={false}
+            >
               {editMode ? (
                 <div className="py-2 space-y-3">
                   <div className="flex items-center justify-between">
@@ -717,42 +775,112 @@ export function BankTransactionDetailDrawer({
                   />
                 </div>
               )}
-            </div>
-          ),
-        },
-        {
-          key: "traceability",
-          label: "Chứng từ liên kết",
-          icon: <Link2 className="w-3.5 h-3.5" />,
-          badgeCount: transaction.invoiceNetOffs?.length || 0,
-          hideRightPanel: true, // Bung 100% full width để nhìn rõ Traceability Canvas Graph
-          content: (
-            <DrawerDocumentTraceability
-              rootId={transaction.id}
-              rootType="BANK_TXN"
-              fetchGraph={(id) => bankStatementApi.getTraceabilityGraph(id)}
-              editMode={editMode}
-              onAddLink={() => setShowInvoiceNetOffModal(true)}
-              onUnlinkNode={handleUnlinkInvoiceNode}
-            />
-          ),
-        },
-        {
-          key: "history",
-          label: "Lịch sử",
-          icon: <History className="w-3.5 h-3.5" />,
-          badgeCount: auditItems.length,
-          content: (
-            <div className="p-3 bg-surface/50 rounded-xl border border-border/70">
+            </DrawerSection>
+          </div>
+        ),
+      },
+      {
+        key: "traceability",
+        label: t("bankStatement.tabTraceability", {
+          defaultValue: "Chứng từ liên kết",
+        }),
+        icon: <Link2 className="w-3.5 h-3.5" />,
+        badgeCount: transaction.invoiceNetOffs?.length || 0,
+        content: (
+          <div className="space-y-4">
+            <DrawerSection
+              title={
+                <div className="flex items-center gap-1.5">
+                  <Link2 className="w-3.5 h-3.5 text-primary" />
+                  <span>
+                    {t("bankStatement.linkedDocsTraceability", {
+                      defaultValue: "Mạng lưới chứng từ liên kết & Cấn trừ",
+                    })}
+                  </span>
+                  {(transaction.invoiceNetOffs?.length || 0) > 0 && (
+                    <Badge
+                      variant="secondary"
+                      className="text-[10px] font-bold px-1.5 py-0.5 bg-primary/10 text-primary border-primary/20"
+                    >
+                      {transaction.invoiceNetOffs.length}
+                    </Badge>
+                  )}
+                </div>
+              }
+              collapsible={true}
+              defaultCollapsed={false}
+            >
+              <div className="w-full rounded-xl border border-border/70 overflow-hidden bg-background">
+                <DrawerDocumentTraceability
+                  rootId={transaction.id}
+                  rootType="BANK_TXN"
+                  fetchGraph={(id) => bankStatementApi.getTraceabilityGraph(id)}
+                  editMode={editMode}
+                  onAddLink={() => setShowInvoiceNetOffModal(true)}
+                  onUnlinkNode={handleUnlinkInvoiceNode}
+                />
+              </div>
+            </DrawerSection>
+          </div>
+        ),
+      },
+      {
+        key: "history",
+        label: t("bankStatement.tabHistory", {
+          defaultValue: "Lịch sử",
+        }),
+        icon: <History className="w-3.5 h-3.5" />,
+        badgeCount: auditItems.length,
+        content: (
+          <div className="space-y-4">
+            <DrawerSection
+              title={
+                <div className="flex items-center gap-1.5">
+                  <History className="w-3.5 h-3.5 text-primary" />
+                  <span>
+                    {t("bankStatement.tabHistoryTitle", {
+                      defaultValue: "Lịch sử & Nhật ký thao tác",
+                    })}
+                  </span>
+                  {auditItems.length > 0 && (
+                    <Badge
+                      variant="secondary"
+                      className="text-[10px] font-bold px-1.5 py-0.5 bg-primary/10 text-primary border-primary/20"
+                    >
+                      {auditItems.length}
+                    </Badge>
+                  )}
+                </div>
+              }
+              collapsible={true}
+              defaultCollapsed={false}
+            >
               <DrawerAuditTimeline
                 items={auditItems}
-                emptyLabel="Chưa có ghi nhận lịch sử."
+                emptyLabel={t("bankStatement.noHistory", {
+                  defaultValue: "Chưa có ghi nhận lịch sử.",
+                })}
               />
-            </div>
-          ),
-        },
-      ]
-    : [];
+            </DrawerSection>
+          </div>
+        ),
+      },
+    ];
+  }, [
+    transaction,
+    t,
+    bankTheme,
+    previewDocumentType,
+    transactionInsights,
+    isPosted,
+    editMode,
+    accountingEnabled,
+    postingState,
+    defaultPostingDate,
+    baseDescription,
+    unpostMutation,
+    auditItems,
+  ]);
 
   return (
     <>
@@ -775,7 +903,14 @@ export function BankTransactionDetailDrawer({
         rightPanel={
           transaction ? (
             <div className="space-y-4">
-              <BankTransactionGeneralInfoSection transaction={transaction} />
+              <BankTransactionGeneralInfoSection
+                transaction={transaction}
+                editMode={editMode}
+                branchId={editBranchId}
+                onBranchChange={setEditBranchId}
+                description={editDescription}
+                onDescriptionChange={setEditDescription}
+              />
 
               <ModuleEntityCustomFieldsSection
                 moduleKey="BANK_TXN"
@@ -787,6 +922,8 @@ export function BankTransactionDetailDrawer({
                 onAttributesChange={setCustomAttributes}
                 globalAttributes={globalAttributes}
                 onGlobalAttributesChange={setGlobalAttributes}
+                title="THUỘC TÍNH TÙY CHỈNH"
+                globalTitle="THUỘC TÍNH MẶC ĐỊNH"
               />
             </div>
           ) : null

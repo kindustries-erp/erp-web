@@ -1,11 +1,11 @@
 import React, { useMemo } from "react";
 import { useT } from "@/core/i18n";
 import { cn } from "@/shared/utils";
-import { fmtQty } from "@/shared/utils/format";
 import {
   createColumnHeaderFilter,
   type DataTableColumn,
 } from "@/shared/components/DataTable";
+import { SubtotalSummaryCell } from "@/shared/components/DataTable/SubtotalSummaryCell";
 import { TableText } from "@/shared/components/DataTable/TableText";
 import { StatusBadge } from "@/shared/components/badges";
 import { Badge } from "@/shared/components/ui/badge";
@@ -26,6 +26,9 @@ export interface UseWarehouseColumnsOptions {
   setPage: (page: number) => void;
   unifiedDrawer: ReturnType<typeof useInventoryVoucherDrawer>;
   rows: WarehouseRow[];
+  page?: number;
+  totalPages?: number;
+  total?: number;
 }
 
 export function useWarehouseColumns({
@@ -36,6 +39,9 @@ export function useWarehouseColumns({
   setPage,
   unifiedDrawer,
   rows,
+  page = 1,
+  totalPages = 1,
+  total = 0,
 }: UseWarehouseColumnsOptions) {
   const t = useT();
   const { grDrawer, giDrawer, iaDrawer } = unifiedDrawer;
@@ -127,86 +133,6 @@ export function useWarehouseColumns({
         cell: (row) => (
           <TableDateCell date={row.createdAt} className="justify-end w-full" />
         ),
-      },
-      {
-        key: "type",
-        header: headerFilter("type", t("inventory.voucherType", "Loại phiếu"), {
-          formatOptionLabel: (val: string) => {
-            if (val === "receipt") return t("inventory.receipt", "Nhập kho");
-            if (val === "issue") return t("inventory.issue", "Xuất kho");
-            if (val === "adjustment")
-              return t("inventory.adjustment", "Điều chỉnh");
-            return val;
-          },
-        }),
-        size: 130,
-        enableResizing: true,
-        className: "text-center",
-        headerClassName: "p-0 h-full",
-        cell: (row) => {
-          const typeMap: Record<string, { label: string; cls: string }> = {
-            receipt: {
-              label: t("inventory.receipt", "Nhập kho"),
-              cls: "bg-emerald-100 text-emerald-700",
-            },
-            issue: {
-              label: t("inventory.issue", "Xuất kho"),
-              cls: "bg-orange-100 text-orange-700",
-            },
-            adjustment: {
-              label: t("inventory.adjustment", "Điều chỉnh"),
-              cls: "bg-blue-100 text-blue-700",
-            },
-          };
-          const item = typeMap[row.type] ?? {
-            label: row.type,
-            cls: "bg-slate-100 text-slate-700",
-          };
-          return (
-            <div className="w-full flex justify-center">
-              <Tooltip content={item.label}>
-                <span
-                  className={cn(
-                    "text-[11px] px-2 py-[3px] rounded-md font-semibold whitespace-nowrap w-[80px] inline-flex items-center justify-center text-center truncate",
-                    item.cls,
-                  )}
-                >
-                  {item.label}
-                </span>
-              </Tooltip>
-            </div>
-          );
-        },
-      },
-      {
-        key: "categoryName",
-        header: headerFilter(
-          "categoryName",
-          t("inventory.category", "Phân loại / Lý do"),
-        ),
-        size: 160,
-        enableResizing: true,
-        className: "text-left",
-        headerClassName: "p-0 h-full",
-        cell: (row) => {
-          if (!row.categoryName) {
-            return (
-              <span className="text-muted-foreground/50 text-xs italic px-1">
-                -
-              </span>
-            );
-          }
-          return (
-            <div className="flex items-center gap-1.5 truncate px-1">
-              <span
-                className="text-xs font-medium text-foreground truncate"
-                title={row.categoryName}
-              >
-                {row.categoryName}
-              </span>
-            </div>
-          );
-        },
       },
       {
         key: "voucherNo",
@@ -321,12 +247,92 @@ export function useWarehouseColumns({
               ? "text-emerald-600"
               : qty < 0
                 ? "text-red-600"
-                : "text-blue-600";
+                : "text-indigo-600";
           return (
             <span className={cn("font-medium tabular-nums", colorClass)}>
               {qty > 0 ? "+" : ""}
               {qty.toLocaleString("vi-VN")}
             </span>
+          );
+        },
+      },
+      {
+        key: "type",
+        header: headerFilter("type", t("inventory.voucherType", "Loại phiếu"), {
+          formatOptionLabel: (val: string) => {
+            if (val === "receipt") return t("inventory.receipt", "Nhập kho");
+            if (val === "issue") return t("inventory.issue", "Xuất kho");
+            if (val === "adjustment")
+              return t("inventory.adjustment", "Điều chỉnh");
+            return val;
+          },
+        }),
+        size: 130,
+        enableResizing: true,
+        className: "text-center",
+        headerClassName: "p-0 h-full",
+        cell: (row) => {
+          const typeMap: Record<string, { label: string; cls: string }> = {
+            receipt: {
+              label: t("inventory.receipt", "Nhập kho"),
+              cls: "bg-emerald-100 text-emerald-700",
+            },
+            issue: {
+              label: t("inventory.issue", "Xuất kho"),
+              cls: "bg-orange-100 text-orange-700",
+            },
+            adjustment: {
+              label: t("inventory.adjustment", "Điều chỉnh"),
+              cls: "bg-indigo-100 text-indigo-700",
+            },
+          };
+          const item = typeMap[row.type] ?? {
+            label: row.type,
+            cls: "bg-slate-100 text-slate-700",
+          };
+          return (
+            <div className="w-full flex justify-center">
+              <Tooltip content={item.label}>
+                <span
+                  className={cn(
+                    "text-[11px] px-2 py-[3px] rounded-md font-semibold whitespace-nowrap w-[80px] inline-flex items-center justify-center text-center truncate",
+                    item.cls,
+                  )}
+                >
+                  {item.label}
+                </span>
+              </Tooltip>
+            </div>
+          );
+        },
+      },
+      {
+        key: "categoryName",
+        header: headerFilter(
+          "categoryName",
+          t("inventory.category", "Phân loại / Lý do"),
+        ),
+        size: 160,
+        enableResizing: true,
+        className: "text-left",
+        headerClassName: "p-0 h-full",
+        cell: (row) => {
+          if (!row.categoryName) {
+            return (
+              <span className="text-muted-foreground/50 text-xs italic px-1">
+                -
+              </span>
+            );
+          }
+          return (
+            <div className="flex items-center gap-1.5 truncate px-1">
+              <span
+                className="text-xs font-medium text-foreground truncate"
+                title={row.categoryName}
+              >
+                {row.categoryName}
+              </span>
+            </div>
           );
         },
       },
@@ -409,49 +415,99 @@ export function useWarehouseColumns({
 
   const summaryRow = useMemo(() => {
     if (!rows || rows.length === 0) return undefined;
-    const totalReceipt = rows
-      .filter((r) => r.type === "receipt")
+    const receiptRows = rows.filter((r) => r.type === "receipt");
+    const issueRows = rows.filter((r) => r.type === "issue");
+    const adjustmentRows = rows.filter((r) => r.type === "adjustment");
+
+    const totalReceipt = receiptRows.reduce(
+      (sum, r) => sum + Number(r.totalQty || 0),
+      0,
+    );
+    const totalIssue = issueRows.reduce(
+      (sum, r) => sum + Number(r.totalQty || 0),
+      0,
+    );
+    const totalAdjustment = adjustmentRows.reduce(
+      (sum, r) => sum + Number(r.totalQty || 0),
+      0,
+    );
+
+    const positiveAdj = adjustmentRows
+      .filter((r) => Number(r.totalQty) > 0)
       .reduce((sum, r) => sum + Number(r.totalQty || 0), 0);
-    const totalIssue = rows
-      .filter((r) => r.type === "issue")
-      .reduce((sum, r) => sum + Number(r.totalQty || 0), 0);
-    const totalAdjustment = rows
-      .filter((r) => r.type === "adjustment")
-      .reduce((sum, r) => sum + Number(r.totalQty || 0), 0);
+
+    const negativeAdj = adjustmentRows
+      .filter((r) => Number(r.totalQty) < 0)
+      .reduce((sum, r) => sum + Math.abs(Number(r.totalQty || 0)), 0);
 
     return {
       voucherNo: (
-        <div className="text-right w-full font-bold text-xs uppercase text-muted-foreground pr-2">
-          {t("common.total", "Tổng cộng")}:
-        </div>
+        <SubtotalSummaryCell
+          variantType="label"
+          label={`${t("common.total", "Tổng cộng")}:`}
+          page={page}
+          totalPages={totalPages}
+          totalCount={total || rows.length}
+          currentPageCount={rows.length}
+        />
       ),
       qtyReceipt: (
-        <div className="text-right font-bold text-emerald-600 tabular-nums">
-          {fmtQty(totalReceipt)}
-        </div>
+        <SubtotalSummaryCell
+          variantType="qty"
+          metricTitle={t("inventory.qtyReceipt", "SL Nhập")}
+          itemTitle={t("inventory.voucherReceipt", "Phiếu nhập")}
+          itemUnit={t("common.summaryLines", "phiếu")}
+          subtotalQty={totalReceipt}
+          grandTotalQty={totalReceipt}
+          page={page}
+          totalPages={totalPages}
+          currentPageCount={receiptRows.length}
+          totalCount={receiptRows.length}
+          valueClassName="text-emerald-600 font-bold"
+        />
       ),
       qtyIssue: (
-        <div className="text-right font-bold text-orange-600 tabular-nums">
-          {fmtQty(totalIssue)}
-        </div>
+        <SubtotalSummaryCell
+          variantType="qty"
+          metricTitle={t("inventory.qtyIssue", "SL Xuất")}
+          itemTitle={t("inventory.voucherIssue", "Phiếu xuất")}
+          itemUnit={t("common.summaryLines", "phiếu")}
+          subtotalQty={totalIssue}
+          grandTotalQty={totalIssue}
+          page={page}
+          totalPages={totalPages}
+          currentPageCount={issueRows.length}
+          totalCount={issueRows.length}
+          valueClassName="text-orange-600 font-bold"
+        />
       ),
       qtyAdjustment: (
-        <div
-          className={cn(
-            "text-right font-bold tabular-nums",
+        <SubtotalSummaryCell
+          variantType="qty"
+          metricTitle={t("inventory.qtyAdjustment", "SL Điều chỉnh")}
+          itemTitle={t("inventory.voucherAdjustment", "Phiếu điều chỉnh")}
+          itemUnit={t("common.summaryLines", "phiếu")}
+          subtotalQty={totalAdjustment}
+          grandTotalQty={totalAdjustment}
+          positiveQty={positiveAdj}
+          negativeQty={negativeAdj}
+          showSign={true}
+          page={page}
+          totalPages={totalPages}
+          currentPageCount={adjustmentRows.length}
+          totalCount={adjustmentRows.length}
+          valueClassName={cn(
+            "font-bold",
             totalAdjustment > 0
               ? "text-emerald-600"
               : totalAdjustment < 0
                 ? "text-red-600"
-                : "text-blue-600",
+                : "text-indigo-600",
           )}
-        >
-          {totalAdjustment > 0 ? "+" : ""}
-          {fmtQty(totalAdjustment)}
-        </div>
+        />
       ),
     };
-  }, [rows, t]);
+  }, [rows, page, totalPages, total, t]);
 
   return {
     columns,

@@ -80,7 +80,7 @@ export function TraceabilityPipelineView({
   };
 
   return (
-    <div className="flex items-start gap-3 overflow-x-auto pb-4 pt-1">
+    <div className="flex items-start gap-3 overflow-x-auto scrollbar-none pb-3 pt-1">
       {STAGES_CONFIG.map((stage, sIdx) => {
         const stageNodes = stageGroupsMap.get(stage.key) || [];
         const validStageTypes = !allowedDocTypes

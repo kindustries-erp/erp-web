@@ -1,5 +1,7 @@
+import { useCallback } from "react";
 import { Button } from "@/shared/components/ui/Button";
 import { FilterButton } from "@/shared/components/FilterPanel";
+import { setPortalTarget } from "@/shared/components/portalStore";
 import type { UseGrDrawerReturn } from "@/modules/goods-receipts-core/hooks/useGrDrawer";
 import type { GrTableMode } from "../types";
 
@@ -9,6 +11,7 @@ interface GrFormSectionTitleExtraProps {
   activeFilterCount: number;
   onResetFilters: () => void;
   onOpenImport: () => void;
+  tableId?: string;
   t: (key: string, ...args: any[]) => string;
 }
 
@@ -18,9 +21,17 @@ export function GrFormSectionTitleExtra({
   activeFilterCount,
   onResetFilters,
   onOpenImport,
+  tableId = "gr-details-table",
   t,
 }: GrFormSectionTitleExtraProps) {
   const { form, setForm, viewOnly, editing, poDetail } = drawer;
+
+  const portalRefCallback = useCallback(
+    (el: Element | null) => {
+      setPortalTarget(tableId, el);
+    },
+    [tableId],
+  );
 
   const clearFilterBtn =
     activeFilterCount > 0 ? (
@@ -34,6 +45,10 @@ export function GrFormSectionTitleExtra({
   return (
     <div className="flex items-center gap-2">
       {clearFilterBtn}
+      <div
+        ref={portalRefCallback}
+        className="empty:hidden flex items-center justify-center"
+      />
       {tableMode === "other-edit" && form.receiptType === "OTHER" && (
         <>
           <Button

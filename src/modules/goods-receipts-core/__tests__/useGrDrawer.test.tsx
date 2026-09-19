@@ -8,6 +8,7 @@ import {
   buildGrPayload,
 } from "@/modules/goods-receipts-core/hooks/useGrDrawer";
 import { goodsReceiptsCoreApi } from "@/modules/goods-receipts-core/api/goodsReceiptsCoreApi";
+import { inventoryCoreApi } from "@/modules/inventory-core/api/inventoryCoreApi";
 
 vi.mock("@/modules/goods-receipts-core/api/goodsReceiptsCoreApi", () => ({
   goodsReceiptsCoreApi: {
@@ -141,9 +142,22 @@ describe("useGrDrawer", () => {
     vi.clearAllMocks();
   });
 
-  it("openDetail loads detail and populates editing + form", async () => {
+  it("openDetail loads detail, fetches itemsDict and populates editing + form", async () => {
     const client = makeClient();
     vi.mocked(goodsReceiptsCoreApi.get).mockResolvedValue(mockGrDetail as any);
+    vi.mocked(inventoryCoreApi.list).mockResolvedValue({
+      items: [
+        {
+          id: "item-1",
+          sku: "SKU-001",
+          itemName: "Item 1",
+        } as any,
+      ],
+      total: 1,
+      page: 1,
+      pageSize: 1000,
+      totalPages: 1,
+    });
 
     const { result } = renderHook(() => useGrDrawer(), {
       wrapper: createWrapper(client),
@@ -155,9 +169,15 @@ describe("useGrDrawer", () => {
 
     await waitFor(() => {
       expect(goodsReceiptsCoreApi.get).toHaveBeenCalledWith("gr-1");
+      expect(inventoryCoreApi.list).toHaveBeenCalledWith({
+        ids: "item-1",
+        pageSize: 1000,
+      });
+      expect(result.current.itemsDict["item-1"]?.sku).toBe("SKU-001");
       expect(result.current.editing?.id).toBe("gr-1");
       expect(result.current.form.receiptNo).toBe("NK-20260720-01");
       expect(result.current.viewOnly).toBe(true);
+      expect(result.current.loading).toBe(false);
     });
   });
 
@@ -239,6 +259,40 @@ describe("useGrDrawer", () => {
       expect(goodsReceiptsCoreApi.cancel).toHaveBeenCalledWith("gr-1");
       expect(onSaved).toHaveBeenCalledTimes(1);
       expect(result.current.cancelId).toBeNull();
+    });
+  });
+
+  it("openCreate with prefillPurchaseOrderId sets receiptType to PO and purchaseOrderId", async () => {
+    const client = makeClient();
+    const { result } = renderHook(() => useGrDrawer(), {
+      wrapper: createWrapper(client),
+    });
+
+    await act(async () => {
+      result.current.openCreate("po-123");
+    });
+
+    await waitFor(() => {
+      expect(result.current.open).toBe(true);
+      expect(result.current.form.receiptType).toBe("PO");
+      expect(result.current.form.purchaseOrderId).toBe("po-123");
+    });
+  });
+
+  it("openCreate with prefillProductionOrderId sets receiptType to PRODUCTION and productionOrderId", async () => {
+    const client = makeClient();
+    const { result } = renderHook(() => useGrDrawer(), {
+      wrapper: createWrapper(client),
+    });
+
+    await act(async () => {
+      result.current.openCreate(undefined, "mo-456");
+    });
+
+    await waitFor(() => {
+      expect(result.current.open).toBe(true);
+      expect(result.current.form.receiptType).toBe("PRODUCTION");
+      expect(result.current.form.productionOrderId).toBe("mo-456");
     });
   });
 });

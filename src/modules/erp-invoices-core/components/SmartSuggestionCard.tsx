@@ -1,13 +1,26 @@
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/shared/components/ui/Button";
-import { Check, X, AlertCircle } from "lucide-react";
+import {
+  Check,
+  X,
+  AlertCircle,
+  Sparkles,
+  CheckCircle2,
+  Building2,
+  Coins,
+  Split,
+} from "lucide-react";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import { money, formatGMT7 } from "@/shared/utils/format";
+import { cn } from "@/shared/utils";
 
 export interface SuggestionBadgeConfig {
   key: string;
   label: string;
+  shortLabel: string;
+  tooltipText: string;
+  icon: React.ComponentType<{ className?: string }>;
   badgeClasses: string;
   glowClasses: string;
   dotClasses: string;
@@ -23,8 +36,12 @@ export const BADGE_CONFIG_MAP: Record<
   PERFECT: {
     key: "smartSuggestion.badge.perfect",
     label: "Tiền + Số HĐ/CT + Đối tác",
+    shortLabel: "Hoàn hảo",
+    tooltipText:
+      "Khớp hoàn hảo 100%: Số tiền + Số HĐ/CT/Ký hiệu mẫu + Tên đối tác & MST",
+    icon: Sparkles,
     badgeClasses:
-      "text-emerald-800 bg-emerald-100 border-emerald-300 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800",
+      "text-emerald-800 bg-emerald-100/90 border-emerald-300 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800",
     glowClasses: "bg-emerald-500",
     dotClasses: "bg-emerald-600",
     isActionable: true,
@@ -32,6 +49,10 @@ export const BADGE_CONFIG_MAP: Record<
   HIGH: {
     key: "smartSuggestion.badge.high",
     label: "Tiền + Số HĐ/CT",
+    shortLabel: "Khớp số HĐ",
+    tooltipText:
+      "Độ tin cậy cao: Khớp Số tiền + Số HĐ/Ký hiệu mẫu số/Biển số xe",
+    icon: CheckCircle2,
     badgeClasses:
       "text-emerald-700 bg-emerald-50 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800",
     glowClasses: "bg-emerald-400",
@@ -41,15 +62,23 @@ export const BADGE_CONFIG_MAP: Record<
   LIKELY: {
     key: "smartSuggestion.badge.likely",
     label: "Tiền + Tên đối tác",
+    shortLabel: "Khớp đối tác",
+    tooltipText:
+      "Khả năng cao: Khớp Số tiền + Tên đối tác kinh doanh / Mã số thuế",
+    icon: Building2,
     badgeClasses:
-      "text-blue-700 bg-blue-50 border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800",
-    glowClasses: "bg-blue-400",
-    dotClasses: "bg-blue-500",
+      "text-teal-800 bg-teal-50 border-teal-200 dark:bg-teal-950/40 dark:text-teal-300 dark:border-teal-800",
+    glowClasses: "bg-teal-400",
+    dotClasses: "bg-teal-500",
     isActionable: true,
   },
   POSSIBLE: {
     key: "smartSuggestion.badge.possible",
     label: "Chỉ khớp số tiền",
+    shortLabel: "Khớp tiền",
+    tooltipText:
+      "Chỉ khớp số tiền: Chưa tìm thấy số HĐ hoặc tên đối tác trong nội dung sao kê (Vui lòng kiểm tra kỹ)",
+    icon: Coins,
     badgeClasses:
       "text-amber-800 bg-amber-50 border-amber-300 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800",
     glowClasses: "bg-amber-400",
@@ -61,8 +90,12 @@ export const BADGE_CONFIG_MAP: Record<
   NOTICE_STRONG: {
     key: "smartSuggestion.badge.noticeStrong",
     label: "Số HĐ/CT + Đối tác (khác tiền)",
+    shortLabel: "Khác tiền",
+    tooltipText:
+      "Khớp Số HĐ & Đối tác (khác tiền): Khớp thông tin nhận diện nhưng số tiền lệch (có thể trả góp hoặc gộp nhiều HĐ)",
+    icon: Split,
     badgeClasses:
-      "text-orange-700 bg-orange-100 border-orange-300 dark:bg-orange-950/50 dark:text-orange-300 dark:border-orange-800",
+      "text-orange-800 bg-orange-100 border-orange-300 dark:bg-orange-950/50 dark:text-orange-300 dark:border-orange-800",
     glowClasses: "bg-orange-500",
     dotClasses: "bg-orange-600",
     isActionable: false,
@@ -70,13 +103,86 @@ export const BADGE_CONFIG_MAP: Record<
   NOTICE: {
     key: "smartSuggestion.badge.notice",
     label: "Khớp Số HĐ/CT (khác tiền)",
+    shortLabel: "Khác tiền",
+    tooltipText:
+      "Khớp Số HĐ (khác tiền): Tìm thấy số hóa đơn trong nội dung sao kê nhưng số tiền không khớp chính xác",
+    icon: AlertCircle,
     badgeClasses:
-      "text-orange-600 bg-orange-50 border-orange-200 dark:bg-orange-950/40 dark:text-orange-300 dark:border-orange-800",
+      "text-orange-700 bg-orange-50 border-orange-200 dark:bg-orange-950/40 dark:text-orange-300 dark:border-orange-800",
     glowClasses: "bg-orange-400",
     dotClasses: "bg-orange-500",
     isActionable: false,
   },
 };
+
+export interface SuggestionBadgePillProps {
+  badgeType?:
+    | "PERFECT"
+    | "HIGH"
+    | "LIKELY"
+    | "POSSIBLE"
+    | "NOTICE_STRONG"
+    | "NOTICE";
+  className?: string;
+  showShortLabel?: boolean;
+  customTooltip?: React.ReactNode;
+}
+
+export function SuggestionBadgePill({
+  badgeType = "NOTICE",
+  className,
+  showShortLabel = true,
+  customTooltip,
+}: SuggestionBadgePillProps) {
+  const { t } = useTranslation("erpInvoices");
+  const cfg = BADGE_CONFIG_MAP[badgeType] || BADGE_CONFIG_MAP.NOTICE;
+  const IconComp = cfg.icon;
+
+  const content = (
+    <div
+      className={cn(
+        "inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9.5px] font-semibold border whitespace-nowrap leading-none transition-colors cursor-help",
+        cfg.badgeClasses,
+        className,
+      )}
+    >
+      <span className="relative flex h-1.5 w-1.5 shrink-0">
+        <span
+          className={cn(
+            "animate-ping absolute inline-flex h-full w-full rounded-full opacity-75",
+            cfg.glowClasses,
+          )}
+        />
+        <span
+          className={cn(
+            "relative inline-flex rounded-full h-1.5 w-1.5",
+            cfg.dotClasses,
+          )}
+        />
+      </span>
+      <IconComp className="w-3 h-3 shrink-0" />
+      {showShortLabel && (
+        <span className="truncate max-w-[85px]">
+          {t(`smartSuggestion.shortBadge.${badgeType}`, cfg.shortLabel)}
+        </span>
+      )}
+    </div>
+  );
+
+  const tooltipText = customTooltip || (
+    <div className="flex flex-col gap-1 max-w-[260px] text-xs">
+      <div className="font-bold flex items-center gap-1.5">
+        <IconComp className="w-3.5 h-3.5" />
+        <span>{t(cfg.key, cfg.label)}</span>
+      </div>
+      <div className="text-[11px] opacity-90 leading-relaxed">
+        {cfg.tooltipText}
+      </div>
+    </div>
+  );
+
+  return <Tooltip content={tooltipText}>{content}</Tooltip>;
+}
 
 export function highlightText(
   text: string,
@@ -224,20 +330,11 @@ export function SmartSuggestionCard({
                     ĐÃ CẤN TRỪ
                   </div>
                 )}
-                {cfg && (
-                  <div
-                    className={`flex items-center px-1.5 py-0.5 rounded text-[9px] font-medium border whitespace-nowrap leading-none ${cfg.badgeClasses}`}
-                  >
-                    <span className="relative flex h-1.5 w-1.5 mr-1 shrink-0">
-                      <span
-                        className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${cfg.glowClasses}`}
-                      ></span>
-                      <span
-                        className={`relative inline-flex rounded-full h-1.5 w-1.5 ${cfg.dotClasses}`}
-                      ></span>
-                    </span>
-                    {t(cfg.key, cfg.label)}
-                  </div>
+                {badgeType && (
+                  <SuggestionBadgePill
+                    badgeType={badgeType}
+                    showShortLabel={true}
+                  />
                 )}
               </div>
             )}

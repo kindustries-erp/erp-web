@@ -286,6 +286,17 @@ export function FormGeneralInfoPanel({
             />
           )}
 
+          {/* Ghi chú */}
+          <DrawerField label={t("common.remarks", "Ghi chú")}>
+            <textarea
+              className={`${inputCls} min-h-[72px] resize-y`}
+              value={notes}
+              disabled={viewOnly}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder={t("Nhập ghi chú...")}
+            />
+          </DrawerField>
+
           {/* Tags — purchase & sales only */}
           {isAdminEmail &&
             (variant === "purchase" || variant === "sales") &&
@@ -309,18 +320,6 @@ export function FormGeneralInfoPanel({
                 ) : null}
               </DrawerField>
             )}
-        </div>
-      </DrawerSection>
-
-      <DrawerSection title={t("Ghi chú")}>
-        <div className="overflow-hidden">
-          <textarea
-            className={`${inputCls} min-h-[84px] w-full mt-1 mb-2`}
-            value={notes}
-            disabled={viewOnly}
-            onChange={(e) => setNotes(e.target.value)}
-            placeholder={t("Nhập ghi chú...")}
-          />
         </div>
       </DrawerSection>
     </div>

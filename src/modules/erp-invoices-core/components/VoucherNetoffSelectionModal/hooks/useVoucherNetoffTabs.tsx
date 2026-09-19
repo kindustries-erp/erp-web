@@ -137,6 +137,11 @@ export function useVoucherNetoffTabs({
                 setPageSize={logic.setPageSize}
                 onToggleRow={logic.handleToggleRow}
                 onViewDetail={(id) => logic.setDetailTxnId(id)}
+                setDateRange={(from, to) => {
+                  logic.setDateFrom(from || "");
+                  logic.setDateTo(to || "");
+                  logic.setPage(1);
+                }}
               />
             </DrawerSection>
           </div>
@@ -147,7 +152,7 @@ export function useVoucherNetoffTabs({
         label: t("tabCashBook", "2. Sổ quỹ"),
         icon: <Receipt className="w-3.5 h-3.5" />,
         content: (
-          <div className="h-[calc(100vh-280px)] min-h-[380px] flex flex-col justify-center">
+          <div className="h-[calc(100vh-240px)] min-h-[400px] flex-1 flex flex-col min-h-0 w-full">
             <ComingSoonTabContent
               title={t("comingSoonCashBookTitle", "Sổ quỹ tiền mặt")}
               description={t(
@@ -155,6 +160,7 @@ export function useVoucherNetoffTabs({
                 "Tính năng đối soát sổ quỹ tiền mặt đang được phát triển.",
               )}
               badge={t("comingSoonBadge", "Sắp ra mắt")}
+              className="flex-1 h-full w-full"
             />
           </div>
         ),
@@ -273,6 +279,11 @@ export function useVoucherNetoffTabs({
                 setPageSize={logic.setPageSize}
                 onToggleRow={logic.handleToggleRow}
                 onViewDetail={(id) => logic.setDetailTxnId(id)}
+                setDateRange={(from, to) => {
+                  logic.setDateFrom(from || "");
+                  logic.setDateTo(to || "");
+                  logic.setPage(1);
+                }}
               />
             </DrawerSection>
           </div>

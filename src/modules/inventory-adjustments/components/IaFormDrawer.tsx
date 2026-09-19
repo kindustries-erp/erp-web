@@ -24,6 +24,7 @@ import { CellInput } from "@/shared/components/CellInput";
 import { CellTextarea } from "@/shared/components/CellTextarea";
 import { DrawerField, inputCls } from "@/shared/components/DrawerModal";
 import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
+import { SubtotalSummaryCell } from "@/shared/components/DataTable/SubtotalSummaryCell";
 import { DatePicker } from "@/shared/components/DatePicker";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
@@ -36,7 +37,7 @@ import {
 import { basicMastersApi } from "@/modules/basic-masters/api/basicMastersApi";
 import { useT } from "@/core/i18n";
 import toast from "react-hot-toast";
-import { FilterButton } from "@/shared/components/FilterPanel";
+import { IaFormSectionTitleExtra } from "./IaFormSectionTitleExtra";
 import type { UseIaDrawerReturn } from "@/modules/inventory-adjustments/hooks/useIaDrawer";
 import { InventoryVoucherFormDrawer } from "@/modules/inventory-core/components/inventory-voucher-drawer/InventoryVoucherFormDrawer";
 import { useVoucherClientFilter } from "@/modules/inventory-core/hooks/useVoucherClientFilter";
@@ -59,6 +60,7 @@ interface IaFormDrawerProps {
 }
 
 export function IaFormDrawer({ drawer }: IaFormDrawerProps) {
+  const t = useT();
   const {
     open,
     loading,
@@ -78,9 +80,6 @@ export function IaFormDrawer({ drawer }: IaFormDrawerProps) {
     setViewOnly,
   } = drawer;
 
-  const t = useT();
-  const [isImportOpen, setIsImportOpen] = useState(false);
-
   const setGlobalLoading = useUIStore((s) => s.setGlobalLoading);
   useEffect(() => {
     setGlobalLoading(saving);
@@ -91,46 +90,75 @@ export function IaFormDrawer({ drawer }: IaFormDrawerProps) {
     ErpAction.UPDATE,
   );
 
-  // ── Client-side filter / sort ──────────────────────────────────────────────
+  const [isImportOpen, setIsImportOpen] = useState(false);
 
-  const { listHook, processedLines, buildFilterOptions } =
-    useVoucherClientFilter({
-      tableId: "ia-details-table",
-      lines: form.lines,
-      isOpen: open,
-      getCode: (line: any) =>
+  // ── Client-side filter / sort / pagination ───────────────────────────────
+
+  const {
+    listHook,
+    processedLines,
+    paginatedLines,
+    page,
+    pageSize,
+    total,
+    totalPages,
+    setPage,
+    setPageSize,
+    buildFilterOptions,
+  } = useVoucherClientFilter({
+    tableId: "ia-details-table",
+    lines: form.lines,
+    isOpen: open,
+    getCode: (line: any) =>
+      line.itemCode ||
+      (line.itemId && itemsDict[line.itemId]
+        ? itemsDict[line.itemId].sku
+        : "") ||
+      "",
+    getName: (line: any) => {
+      const rawName =
+        line.itemName ||
+        (line.itemId && itemsDict[line.itemId]
+          ? itemsDict[line.itemId].itemName
+          : "") ||
+        "";
+      const nameParts = rawName.split(" — ");
+      return nameParts && nameParts.length > 1 ? nameParts[1] : rawName;
+    },
+    customExtractors: {
+      itemCode: (line: any) =>
         line.itemCode ||
         (line.itemId && itemsDict[line.itemId]
           ? itemsDict[line.itemId].sku
           : "") ||
         "",
-      getName: (line: any) => {
-        const nameParts = line.itemName?.split(" — ");
-        return nameParts && nameParts.length > 1
-          ? nameParts[1]
-          : line.itemName || "";
+      itemName: (line: any) => {
+        const rawName =
+          line.itemName ||
+          (line.itemId && itemsDict[line.itemId]
+            ? itemsDict[line.itemId].itemName
+            : "") ||
+          "";
+        const nameParts = rawName.split(" — ");
+        return nameParts && nameParts.length > 1 ? nameParts[1] : rawName;
       },
-      customSort: (a, b, field, isDesc) => {
-        if (field === "qtyAdjusted") {
-          return isDesc
-            ? Number(b.qtyAdjusted ?? 0) - Number(a.qtyAdjusted ?? 0)
-            : Number(a.qtyAdjusted ?? 0) - Number(b.qtyAdjusted ?? 0);
-        }
-        return null;
-      },
-    });
-
-  // ── Totals ─────────────────────────────────────────────────────────────────
-
-  const filteredTotalAmount = useMemo(
-    () =>
-      processedLines.reduce(
-        (sum, line) =>
-          sum + Number(line.qtyAdjusted) * Number(line.unitCost || 0),
-        0,
-      ),
-    [processedLines],
-  );
+      qtyAdjusted: (line: any) => line.qtyAdjusted,
+      unitCost: (line: any) => line.unitCost,
+    },
+    customSort: (a: any, b: any, field: string, isDesc: boolean) => {
+      if (field === "qtyAdjusted") {
+        const numA = Number(a.qtyAdjusted ?? 0);
+        const numB = Number(b.qtyAdjusted ?? 0);
+        return isDesc ? numB - numA : numA - numB;
+      }
+      if (field === "unitCost") {
+        const numA = Number(a.unitCost ?? 0);
+        const numB = Number(b.unitCost ?? 0);
+        return isDesc ? numB - numA : numA - numB;
+      }
+      return null;
+    },
+  });
 
   // ── Column header helper ───────────────────────────────────────────────────
 
@@ -171,13 +199,15 @@ export function IaFormDrawer({ drawer }: IaFormDrawerProps) {
   const tableColumns = [
     {
       key: "index",
-      header: "#",
+      header: <span className="w-full block text-center">#</span>,
       size: 40,
+      enableResizing: false,
       headerClassName: "text-center w-[40px] min-w-[40px]",
       className: "text-center w-[40px] min-w-[40px]",
-      // ✅ Use {idx} — core DataTable is already 1-based, do NOT add +1
       cell: (_: any, idx: number) => (
-        <span className="text-muted-foreground">{idx}</span>
+        <span className="w-full block text-center text-muted-foreground">
+          {idx}
+        </span>
       ),
     },
     {
@@ -245,11 +275,14 @@ export function IaFormDrawer({ drawer }: IaFormDrawerProps) {
       headerClassName: "w-[260px] min-w-[260px]",
       className: "w-[260px] min-w-[260px]",
       cell: (line: any) => {
-        const nameParts = line.itemName?.split(" — ");
-        const name =
-          nameParts && nameParts.length > 1
-            ? nameParts[1]
-            : line.itemName || "—";
+        const rawName =
+          line.itemName ||
+          (line.itemId && itemsDict[line.itemId]
+            ? itemsDict[line.itemId].itemName
+            : "") ||
+          "—";
+        const nameParts = rawName.split(" — ");
+        const name = nameParts && nameParts.length > 1 ? nameParts[1] : rawName;
         return (
           <div
             className={cn(
@@ -265,9 +298,7 @@ export function IaFormDrawer({ drawer }: IaFormDrawerProps) {
     },
     {
       key: "qtyAdjusted",
-      header: makeFilterHeader("qtyAdjusted", t("SL Điều chỉnh"), {
-        hideFilter: true,
-      }),
+      header: makeFilterHeader("qtyAdjusted", t("SL Điều chỉnh")),
       minSize: 140,
       enableResizing: true,
       headerClassName: "text-center w-[140px] min-w-[140px]",
@@ -315,7 +346,7 @@ export function IaFormDrawer({ drawer }: IaFormDrawerProps) {
     },
     {
       key: "unitCost",
-      header: makeFilterHeader("unitCost", t("Đơn giá"), { hideFilter: true }),
+      header: makeFilterHeader("unitCost", t("Đơn giá")),
       minSize: 140,
       enableResizing: true,
       headerClassName: "text-center w-[140px] min-w-[140px]",
@@ -367,24 +398,86 @@ export function IaFormDrawer({ drawer }: IaFormDrawerProps) {
     },
   ];
 
-  // ── Summary row ────────────────────────────────────────────────────────────
+  // ── Thống kê tóm tắt biến động kiểm kê ──────────────────────────────
+  const { totalPositiveQty, totalNegativeQty } = useMemo(() => {
+    let pos = 0;
+    let neg = 0;
+    for (const line of form.lines) {
+      const q = Number(line.qtyAdjusted || 0);
+      if (q > 0) pos += q;
+      else if (q < 0) neg += Math.abs(q);
+    }
+    return { totalPositiveQty: pos, totalNegativeQty: neg };
+  }, [form.lines]);
+
+  // ── Summary row calculations ───────────────────────────────────────────────
+
+  const subtotalQtyAdjusted = useMemo(() => {
+    return paginatedLines.reduce(
+      (sum, l) => sum + Number(l.qtyAdjusted || 0),
+      0,
+    );
+  }, [paginatedLines]);
+
+  const grandTotalQtyAdjusted = useMemo(() => {
+    return processedLines.reduce(
+      (sum, l) => sum + Number(l.qtyAdjusted || 0),
+      0,
+    );
+  }, [processedLines]);
+
+  const subtotalAmount = useMemo(() => {
+    return paginatedLines.reduce(
+      (sum, l) => sum + Number(l.qtyAdjusted || 0) * Number(l.unitCost || 0),
+      0,
+    );
+  }, [paginatedLines]);
+
+  const grandTotalAmount = useMemo(() => {
+    return processedLines.reduce(
+      (sum, l) => sum + Number(l.qtyAdjusted || 0) * Number(l.unitCost || 0),
+      0,
+    );
+  }, [processedLines]);
 
   const summaryRow = {
-    itemName: (
-      <div className="text-right w-full font-semibold">{t("Tổng")}:</div>
-    ),
     qtyAdjusted: (
-      <div className="text-center font-semibold">
-        {fmtQty(
-          processedLines
-            .reduce((sum, l) => sum + Number(l.qtyAdjusted || 0), 0)
-            .toString(),
-        )}
+      <div className="w-full flex justify-center">
+        <SubtotalSummaryCell
+          variantType="qty"
+          metricTitle="SL Chênh lệch"
+          itemTitle="Dòng điều chỉnh"
+          itemUnit="dòng"
+          subtotalQty={subtotalQtyAdjusted}
+          grandTotalQty={grandTotalQtyAdjusted}
+          positiveQty={totalPositiveQty}
+          negativeQty={totalNegativeQty}
+          itemCount={form.lines.length}
+          page={page}
+          totalPages={totalPages}
+          currentPageCount={paginatedLines.length}
+          totalCount={total}
+        />
       </div>
     ),
     amount: (
-      <div className="text-center font-semibold text-emerald-600">
-        {Number(filteredTotalAmount).toLocaleString("vi-VN")}
+      <div className="w-full flex justify-center">
+        <SubtotalSummaryCell
+          variantType="amount"
+          metricTitle="Giá trị điều chỉnh"
+          itemTitle="Dòng điều chỉnh"
+          itemUnit="dòng"
+          subtotalAmount={subtotalAmount}
+          grandTotalAmount={grandTotalAmount}
+          grandTotalQty={grandTotalQtyAdjusted}
+          positiveQty={totalPositiveQty}
+          negativeQty={totalNegativeQty}
+          itemCount={form.lines.length}
+          page={page}
+          totalPages={totalPages}
+          currentPageCount={paginatedLines.length}
+          totalCount={total}
+        />
       </div>
     ),
   };
@@ -473,7 +566,7 @@ export function IaFormDrawer({ drawer }: IaFormDrawerProps) {
 
   const locale = useAppStore((s) => s.locale);
 
-  // Lấy danh sách thuộc tính động cho INVENTORY_ADJUSTMENT để nạp options cho Lý do điều chỉnh (code: type_inventory_adjustment)
+  // Lấy danh sách thuộc tính động cho INVENTORY_ADJUSTMENT để nạp options cho Lý do điều chỉnh (code: category)
   const { data: iaAttrDefs = [] } = useQuery({
     queryKey: ["module-config-global-defs", "INVENTORY_ADJUSTMENT"],
     queryFn: () =>
@@ -483,36 +576,37 @@ export function IaFormDrawer({ drawer }: IaFormDrawerProps) {
 
   const adjustmentReasonOptions = useMemo(() => {
     const reasonDef = Array.isArray(iaAttrDefs)
-      ? iaAttrDefs.find(
-          (d) =>
-            (d?.code === "type_inventory_adjustment" ||
-              d?.code === "adjustment_reason" ||
-              d?.code === "reason") &&
-            !d?.isDeleted,
-        )
+      ? iaAttrDefs.find((d) => d?.code === "category" && !d?.isDeleted)
       : undefined;
     if (reasonDef?.options && reasonDef.options.length > 0) {
       return reasonDef.options.map((opt) => ({
         value: opt.value,
-        label: `${resolveOptionLabel(opt, locale, t)} [${opt.value}]`,
+        label: resolveOptionLabel(opt, locale, t),
+        code: opt.value,
       }));
     }
     return [
-      { value: "PERIODIC", label: `${t("Kiểm kê định kỳ")} [PERIODIC]` },
-      { value: "DAMAGED", label: `${t("Hàng hỏng hóc / hao hụt")} [DAMAGED]` },
+      { value: "PERIODIC", label: t("Kiểm kê định kỳ"), code: "PERIODIC" },
+      {
+        value: "DAMAGED",
+        label: t("Hàng hỏng hóc / Hao hụt"),
+        code: "DAMAGED",
+      },
       {
         value: "COUNT_ERROR",
-        label: `${t("Sai lệch kiểm đếm")} [COUNT_ERROR]`,
+        label: t("Sai lệch kiểm đếm"),
+        code: "COUNT_ERROR",
       },
-      { value: "RECLASSIFY", label: `${t("Phân loại quy cách")} [RECLASSIFY]` },
-      { value: "OTHER", label: `${t("Lý do khác")} [OTHER]` },
+      {
+        value: "RECLASSIFY",
+        label: t("Phân loại quy cách"),
+        code: "RECLASSIFY",
+      },
+      { value: "OTHER", label: t("Lý do khác"), code: "OTHER" },
     ];
   }, [iaAttrDefs, locale, t]);
 
-  const currentReasonVal =
-    form.globalAttributes?.type_inventory_adjustment ||
-    form.globalAttributes?.adjustment_reason ||
-    "";
+  const currentReasonVal = form.globalAttributes?.category || "";
 
   const currentReasonLabel = useMemo(() => {
     const opt = adjustmentReasonOptions.find(
@@ -520,18 +614,6 @@ export function IaFormDrawer({ drawer }: IaFormDrawerProps) {
     );
     return opt?.label || currentReasonVal || "—";
   }, [adjustmentReasonOptions, currentReasonVal]);
-
-  // ── Thống kê tóm tắt biến động kiểm kê ──────────────────────────────
-  const { totalPositiveQty, totalNegativeQty } = useMemo(() => {
-    let pos = 0;
-    let neg = 0;
-    for (const line of form.lines) {
-      const q = Number(line.qtyAdjusted || 0);
-      if (q > 0) pos += q;
-      else if (q < 0) neg += Math.abs(q);
-    }
-    return { totalPositiveQty: pos, totalNegativeQty: neg };
-  }, [form.lines]);
 
   // ── Right panel content (1. THÔNG TIN CHUNG) ───────────────────────────────
 
@@ -599,50 +681,29 @@ export function IaFormDrawer({ drawer }: IaFormDrawerProps) {
           />
         )}
       </DrawerField>
-
-      {/* Thẻ nhãn (Tags) */}
-      <div className="pt-1">
-        <div className="text-sm font-medium mb-1.5 text-gray-700 dark:text-gray-300">
-          {t("tags", "Thẻ nhãn")}
-        </div>
-        {editing?.id ? (
-          <EntityTagSelector
-            entityType="erp_inventory_adjustment"
-            entityId={editing.id}
-            readOnly={viewOnly}
-          />
-        ) : !viewOnly ? (
-          <EntityTagSelector
-            entityType="erp_inventory_adjustment"
-            entityId="__pending__"
-            readOnly={false}
-            pendingMode
-          />
-        ) : null}
-      </div>
-
-      {/* Summary Cards khi ở chế độ View hoặc khi có dòng */}
-      {viewOnly && form.lines.length > 0 && (
-        <div className="mt-3 grid grid-cols-2 gap-2 text-center">
-          <div className="flex flex-col items-center justify-center p-2.5 bg-emerald-500/10 rounded-lg border border-emerald-500/20">
-            <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mb-1">
-              {t("Tổng tăng (+)")}
-            </span>
-            <span className="font-bold text-emerald-700 dark:text-emerald-300 text-base tabular-nums">
-              +{fmtQty(totalPositiveQty)}
-            </span>
-          </div>
-          <div className="flex flex-col items-center justify-center p-2.5 bg-rose-500/10 rounded-lg border border-rose-500/20">
-            <span className="text-[11px] font-semibold text-rose-600 dark:text-rose-400 uppercase tracking-wider mb-1">
-              {t("Tổng giảm (-)")}
-            </span>
-            <span className="font-bold text-rose-700 dark:text-rose-300 text-base tabular-nums">
-              -{fmtQty(totalNegativeQty)}
-            </span>
-          </div>
-        </div>
-      )}
     </>
+  );
+
+  const tagsSlot = (
+    <div className="pt-1">
+      <div className="text-sm font-medium mb-1.5 text-gray-700 dark:text-gray-300">
+        {t("tags", "Thẻ nhãn")}
+      </div>
+      {editing?.id ? (
+        <EntityTagSelector
+          entityType="erp_inventory_adjustment"
+          entityId={editing.id}
+          readOnly={viewOnly}
+        />
+      ) : !viewOnly ? (
+        <EntityTagSelector
+          entityType="erp_inventory_adjustment"
+          entityId="__pending__"
+          readOnly={false}
+          pendingMode
+        />
+      ) : null}
+    </div>
   );
 
   // ── Default attributes slot (2. THUỘC TÍNH MẶC ĐỊNH) ───────────────────────
@@ -673,8 +734,7 @@ export function IaFormDrawer({ drawer }: IaFormDrawerProps) {
                 ...f,
                 globalAttributes: {
                   ...f.globalAttributes,
-                  type_inventory_adjustment: v || "",
-                  adjustment_reason: v || "",
+                  category: v || "",
                 },
               }))
             }
@@ -706,53 +766,30 @@ export function IaFormDrawer({ drawer }: IaFormDrawerProps) {
       : form.lines.length) +
     ")";
 
-  const clearFilterBtn =
-    listHook.activeFilterCount > 0 ? (
-      <FilterButton
-        activeCount={listHook.activeFilterCount}
-        onClick={() => {}}
-        onClear={listHook.resetFilters}
-      />
-    ) : null;
-
   const sectionTitleExtra = (
-    <div className="flex items-center gap-2">
-      {clearFilterBtn}
-      {!viewOnly && editing?.status !== "POSTED" && (
-        <>
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-8 text-xs font-semibold"
-            onClick={() => {
-              setForm((f) => ({
-                ...f,
-                lines: [
-                  ...f.lines,
-                  {
-                    itemId: "",
-                    itemCode: "",
-                    itemName: "",
-                    qtyAdjusted: "",
-                    unitCost: "",
-                  },
-                ],
-              }));
-            }}
-          >
-            + {t("Thêm dòng")}
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-8 text-xs font-semibold"
-            onClick={() => setIsImportOpen(true)}
-          >
-            {t("Nhập từ Excel")}
-          </Button>
-        </>
-      )}
-    </div>
+    <IaFormSectionTitleExtra
+      activeFilterCount={listHook.activeFilterCount}
+      onResetFilters={listHook.resetFilters}
+      canAddLine={!viewOnly && editing?.status !== "POSTED"}
+      onAddLine={() => {
+        setForm((f) => ({
+          ...f,
+          lines: [
+            ...f.lines,
+            {
+              itemId: "",
+              itemCode: "",
+              itemName: "",
+              qtyAdjusted: "",
+              unitCost: "",
+            },
+          ],
+        }));
+      }}
+      onOpenImport={() => setIsImportOpen(true)}
+      tableId="ia-details-table"
+      t={t}
+    />
   );
 
   // ── Render ─────────────────────────────────────────────────────────────────
@@ -787,19 +824,29 @@ export function IaFormDrawer({ drawer }: IaFormDrawerProps) {
       error={saveError}
       unifiedContext={drawer.unifiedContext}
       // Table
+      tableId="ia-details-table"
+      enableColumnVisibility={true}
       sectionTitle={sectionTitle}
       sectionTitleExtra={sectionTitleExtra}
-      tableItems={processedLines}
+      tableItems={paginatedLines}
       getRowKey={(item) => String(form.lines.indexOf(item))}
       tableColumns={tableColumns}
       summaryRow={summaryRow}
       actionsColumn={actionsColumn}
       emptyLabel={t("Không có dữ liệu")}
       tableFooter={tableFooter}
+      page={page}
+      pageSize={pageSize}
+      total={total}
+      totalPages={totalPages}
+      onPage={setPage}
+      onPageSize={setPageSize}
+      pageSizeOptions={[20, 50, 100, 200]}
       // Right panel
       rightPanelContent={rightPanelContent}
       defaultAttributesSlot={defaultAttributesSlot}
       remarksContent={remarksContent}
+      tagsSlot={tagsSlot}
       customFieldsSlot={
         <ModuleEntityCustomFieldsSection
           moduleKey="INVENTORY_ADJUSTMENT"

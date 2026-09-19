@@ -30,21 +30,41 @@ Khi tạo mới hoặc chỉnh sửa Drawer trong hệ thống, bạn **BẮT BU
 
 Toàn bộ kích thước Drawer trên Desktop được thiết kế co giãn linh hoạt theo tỷ lệ khung nhìn (**`vw`**) kết hợp với **`min-width`** và **`max-width`** chặt chẽ, tối ưu trải nghiệm cho mọi độ phân giải màn hình từ **1280px (Laptop), 1440px (Desktop), 1920px (FHD), 2K đến 4K Ultrawide**:
 
-| Size Preset | Độ rộng Responsive theo `vw` (Desktop $\ge 1280px$) | Min Width | Max Width | Mục đích sử dụng thực tế |
-| :--- | :--- | :--- | :--- | :--- |
-| **`sm`** *(Default 1-col)* | `lg:w-[42vw] xl:w-[38vw] 2xl:w-[32vw]` | `420px` | `660px` | Form đơn giản 1 cột: Profile, Đổi mật khẩu, Gán nhãn tags. |
-| **`md`** | `lg:w-[60vw] xl:w-[54vw] 2xl:w-[48vw]` | `620px` | `980px` | Form 1 cột trung bình: Master data, Cấu hình danh mục kho, Đơn vị tính. |
-| **`lg`** | `lg:w-[78vw] xl:w-[74vw] 2xl:w-[68vw]` | `840px` | `1380px` | Form 2 cột vừa phải: Đối tác, Khách hàng Garage, Chi nhánh. |
-| **`xl`** *(Default 2-col)* | `lg:w-[93vw] xl:w-[90vw] 2xl:w-[88vw]` | `1020px` | `1780px` | Chứng từ lớn & Multi-Facet Tabs (~90vw): Hóa đơn ERP, Phiếu kho (PNK/PXK), PO, Sales Orders, Lệnh SX, Sổ báo giá. |
-| **`full`** | `w-[calc(100vw-208px)]` | `1020px` | `calc(100vw-208px)` | Báo cáo chi tiết, Canvas Graph Traceability toàn màn hình. |
+| Size Preset | Độ rộng Responsive trên Mobile & Tablet (< 1024px) | Độ rộng Responsive theo `vw` (Desktop $\ge 1280px$) | Desktop Min Width | Desktop Max Width | Mục đích sử dụng thực tế |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **`sm`** *(Default 1-col)* | `w-full min-w-0 max-w-full md:w-[90vw]` | `lg:w-[42vw] xl:w-[38vw] 2xl:w-[32vw]` | `420px` (`lg:min-w-[420px]`) | `660px` (`lg:max-w-[660px]`) | Form đơn giản 1 cột: Profile, Đổi mật khẩu, Gán nhãn tags. |
+| **`md`** | `w-full min-w-0 max-w-full md:w-[92vw]` | `lg:w-[60vw] xl:w-[54vw] 2xl:w-[48vw]` | `620px` (`lg:min-w-[620px]`) | `980px` (`lg:max-w-[980px]`) | Form 1 cột trung bình: Master data, Cấu hình danh mục kho, Đơn vị tính. |
+| **`lg`** | `w-full min-w-0 max-w-full md:w-[95vw]` | `lg:w-[78vw] xl:w-[74vw] 2xl:w-[68vw]` | `840px` (`lg:min-w-[840px]`) | `1380px` (`lg:max-w-[1380px]`) | Form 2 cột vừa phải: Đối tác, Khách hàng Garage, Chi nhánh. |
+| **`xl`** *(Default 2-col)* | `w-full min-w-0 max-w-full md:w-[96vw]` | `lg:w-[93vw] xl:w-[90vw] 2xl:w-[88vw]` | `1020px` (`lg:min-w-[1020px]`) | `1780px` (`lg:max-w-[1780px]`) | Chứng từ lớn & Multi-Facet Tabs (~90vw): Hóa đơn ERP, Phiếu kho (PNK/PXK), PO, Sales Orders, Lệnh SX, Sổ báo giá. |
+| **`full`** | `w-full min-w-0 max-w-full md:w-[98vw]` | `lg:w-[calc(100vw-208px)] xl:w-[calc(100vw-208px)]` | `1020px` (`lg:min-w-[1020px]`) | `calc(100vw-208px)` | Báo cáo chi tiết, Canvas Graph Traceability toàn màn hình. |
 
-> **Nguyên tắc an toàn**: 
-> 1. Bề rộng tối đa của Drawer trên Desktop luôn được giới hạn bởi `max-width: calc(100vw - 208px)` để **không bao giờ che khuất Sidebar** bên trái hệ thống.
-> 2. Trên Mobile & Tablet (`md:w-[95vw]`), Drawer tự động mở rộng `w-full` hoặc `95vw` để tối ưu diện tích thao tác.
+> **Nguyên tắc an toàn & Responsive cốt lõi**: 
+> 1. **Desktop ($\ge 1024px$)**: Bề rộng tối đa của Drawer luôn được giới hạn bởi `max-width: calc(100vw - 208px)` để **không bao giờ che khuất Sidebar** bên trái hệ thống.
+> 2. **Mobile & Tablet ($< 1024px$)**: Drawer tự động chiếm `100vw` và `100dvh` toàn màn hình (`border-radius: 0; border: none; min-width: 0`), đảm bảo không có bất kỳ class `min-w` cứng nào gây tràn màn hình sang phải.
 
 ---
 
-## 2.1. 🎨 Quy Tắc Bảng Màu & Tuyệt Đối Cấm Màu Xanh Dương (No Blue Mandate)
+## 2.1. 📱 Quy Chuẩn Tối Ưu Trải Nghiệm Mobile & Tablet (Mobile Excellence Standards)
+
+1. **Thích ứng Chiều cao Động & Safe Area Insets**:
+   - Drawer container tự động thích ứng với `100dvh` (Dynamic Viewport Height) để không bị che khuất bởi thanh điều hướng trình duyệt di động (iOS Safari / Chrome Android).
+   - Tự động bổ sung `padding-top: env(safe-area-inset-top, 0px)` và `padding-bottom: env(safe-area-inset-bottom, 0px)` để tránh tai thỏ (Notch) và thanh gạt Home (Home Indicator).
+2. **Khoảng cách Đệm Responsive (Body Padding)**:
+   - Body của Drawer sử dụng `p-3 sm:p-4 md:p-[18px]` để tiết kiệm diện tích tối đa trên màn hình di động (360px–430px) mà vẫn thoáng đãng trên máy tính bảng và desktop.
+3. **Thanh Header & Nút Điều Khiển Cảm Ứng**:
+   - Nút Toàn màn hình (`Maximize2` / `Minimize2`) tự động ẩn trên Mobile/Tablet (`hidden lg:inline-flex`) vì giao diện đã mặc định toàn màn hình.
+   - Nút Đóng `X` và các nút hành động đạt kích thước cảm ứng tối thiểu $\ge 32px \times 32px$ (trên mobile) giúp thao tác ngón tay chính xác 100%.
+4. **Thanh Tab Trên Đỉnh (`DrawerTopTabBar`) & Khung Liên Quan (`DrawerRelatedDeck`)**:
+   - Negative margin tự động đồng bộ hoàn hảo với Body: `-mx-3 -mt-3 sm:-mx-4 sm:-mt-4 md:-mx-[18px] md:-mt-[18px]`.
+   - Danh sách tabs hỗ trợ cuộn ngang mượt mà bằng ngón tay (`touch-pan-x`, `-webkit-overflow-scrolling: touch`, `scrollbar-none`) với padding đệm đuôi (`pr-2`).
+5. **Khử Cuộn Lồng trên Mobile (`DrawerSection fitViewportHeight`)**:
+   - Trên desktop, các section có `fitViewportHeight` áp dụng `lg:max-h-[calc(100vh-210px)]`. Trên mobile ($< 1024px$), tự động chuyển về `max-h-none` để người dùng cuộn 1 trục dọc tự nhiên, không bị kẹt ngón tay trong các vùng cuộn lồng nhau.
+6. **Footer Tự Động Xuống Dòng & Giữ Vị Trí Cố Định (Sticky Footer)**:
+   - Footer hỗ trợ `flex-wrap sm:flex-nowrap` với `gap-2`, đảm bảo các nút bấm (Lưu, Đóng, Hủy) không bị tràn mép và có padding đáy an toàn `paddingBottom: max(0.75rem, env(safe-area-inset-bottom, 0.75rem))`.
+
+---
+
+## 2.2. 🎨 Quy Tắc Bảng Màu & Tuyệt Đối Cấm Màu Xanh Dương (No Blue Mandate)
 
 > [!CAUTION]
 > **TUYỆT ĐỐI KHÔNG SỬ DỤNG MÀU XANH DƯƠNG (`blue-*`, `bg-blue-*`, `text-blue-*`, `border-blue-*`)** trong toàn bộ Drawer (Header, Tabs, Badges, Banners, Progress Bars, Stat Cards, Right Panel, Icons, Buttons).
@@ -303,16 +323,66 @@ Dành cho các form đơn giản không có nhiều phân hệ (như Company Pro
        - Dòng tiêu đề: Tên sự kiện/phiên bản + Badge/Actor ở bên trái, Ngày giờ/Timestamp căn phải thẳng hàng.
        - Nội dung chi tiết: Danh sách bullet không viền khung cứng, sử dụng soft pill/dot phân loại để giao diện thoáng, tinh tế và cao cấp.
 
+6. **Prop `hideHeader` / `hideTitle` cho `<DrawerSection>` (Container Kính Mờ Không Tiêu Đề)**:
+   - Khi cần bọc một vùng giao diện (ví dụ: nhóm 4 thẻ KPI summary, banner thông báo, headerless card group) trong phong cách chuẩn mực của Drawer (kính mờ glassmorphism `backdrop-blur`, viền `border-border/80`, shadow mịn và padding đều), sử dụng prop `hideHeader={true}` (hoặc `hideTitle={true}`).
+   - Khi bật prop này, thanh tiêu đề uppercase và nút mũi tên expand/collapse sẽ được ẩn hoàn toàn, render trực tiếp nội dung con trong khung chứa thanh lịch mà không làm vỡ ngôn ngữ thiết kế chung.
+
 ---
 
-## 7. Quy tắc cho Thông tin Phụ trợ đính kèm dưới đáy (`relatedTabs`)
+## 7. Quy tắc cho Cột Phải (Right Panel) & Kiến Trúc 3 Tầng Chuẩn Hóa (3-Tier Right Panel Architecture)
+
+Đối với các Drawer 2 cột (`layout="2-columns"`), Cột phải (Right Panel) được chuẩn hóa theo **Kiến trúc 3 Tầng (3-Tier Structure)** đồng nhất trên toàn hệ sinh thái ERP (Hóa đơn, Sao kê, Phiếu kho, Đơn hàng, v.v.):
+
+```mermaid
+graph TD
+  A[Right Panel Container] --> B[Tầng 1: THÔNG TIN CHUNG]
+  A --> C[Tầng 2: THUỘC TÍNH MẶC ĐỊNH]
+  A --> D[Tầng 3: THUỘC TÍNH TÙY CHỈNH]
+  
+  B --> B1[View Mode: Icon-based Building2, MapPin, Calendar, FileText + CopyButton]
+  B --> B2[Edit Mode: Combobox Chi nhánh, BufferedTextarea Ghi chú, Tag Selector]
+  
+  C --> C1[System / Global Attributes: is_system = true, Phân loại nghiệp vụ, Trạng thái kiểm duyệt]
+  
+  D --> D1[ModuleEntityCustomFieldsSection: Danh mục & Dynamic Custom Fields]
+```
+
+### 7.1. Tầng 1 — THÔNG TIN CHUNG (`GeneralInfoSection`)
+- **Dùng chung 1 component duy nhất** xuyên suốt tất cả các Tab của Drawer (ví dụ: Tab Chi tiết, Tab Tài chính, Tab Đối tác...).
+- **Chế độ Xem (View Mode)**:
+  - Hiển thị theo phong cách **Icon-based** thanh lịch, dễ đọc:
+    - Đối tác: Icon `<Building2 className="w-3.5 h-3.5 text-muted-foreground/70" />` kèm `<CopyButton />`.
+    - Chi nhánh: Icon `<MapPin className="w-3.5 h-3.5 text-muted-foreground/70" />` (tự động resolve UUID sang tên chi nhánh rõ ràng, vd: "Đào Trí", qua `branchOptions`).
+    - Ngày chứng từ / giao dịch: Icon `<Calendar className="w-3.5 h-3.5 text-muted-foreground/70" />` định dạng qua `formatGMT7(date, "date")`.
+    - Ghi chú / Diễn giải: Icon `<FileText className="w-3.5 h-3.5 text-muted-foreground/70" />` với class `whitespace-pre-wrap break-words`.
+    - Thẻ nhãn (Tags): `<EntityTagSelector readOnly={true} />`.
+- **Chế độ Chỉnh sửa (Edit Mode)**:
+  - Chi nhánh: `<Combobox options={branchOptions} value={branchId} onChange={...} />`.
+  - Ghi chú / Diễn giải: `<BufferedTextarea value={notes} onChange={...} rows={3} />` (hỗ trợ debounce 500ms, nút `X` xóa nhanh tức thì).
+  - Thẻ nhãn (Tags): `<EntityTagSelector readOnly={false} />`.
+
+### 7.2. Tầng 2 — THUỘC TÍNH MẶC ĐỊNH (`DefaultAttributesSection`)
+- Tiêu đề: `THUỘC TÍNH MẶC ĐỊNH` (`DrawerSection collapsible defaultCollapsed={false}`).
+- Hiển thị các trường cốt lõi hệ thống (`is_system = true`), ví dụ:
+  - Phân loại hóa đơn bán ra / mua vào (kèm `<AttributeTypeBadge type="system" />`).
+  - Trạng thái kiểm duyệt hợp lý, hợp lệ (`isValid` checkbox).
+
+### 7.3. Tầng 3 — THUỘC TÍNH TÙY CHỈNH (`ModuleEntityCustomFieldsSection`)
+- Sử dụng component chuẩn `<ModuleEntityCustomFieldsSection>` với:
+  - `moduleKey="<MODULE_KEY>"` (vd: `"INVOICE_IN"`, `"INVOICE_OUT"`, `"BANK_TXN"`, `"BOM"`).
+  - `title={t("customAttributes", "THUỘC TÍNH TÙY CHỈNH")}`.
+  - Tự động ẩn khi không có thuộc tính hoặc danh mục được cấu hình (`empty state`).
+
+---
+
+## 8. Quy tắc cho Thông tin Phụ trợ đính kèm dưới đáy (`relatedTabs`)
 
 Đối với các form 1 cột hoặc 2 cột **đơn giản** không chia thành nhiều tab nghiệp vụ ngang hàng, nếu chỉ cần đính kèm tệp tóm tắt (`<DrawerAttachmentsDeck>`) hoặc khung ghi chú thảo luận (`<DrawerInternalNotes>`), có thể sử dụng prop `relatedTabs` dưới đáy.
 - **Lưu ý**: Đối với tất cả chứng từ có *Traceability Graph*, *Hạch toán*, *Sao kê cấn trừ*, **BẮT BUỘC sử dụng Top Navigation Tabs (`tabs`)** thay vì nhồi vào `relatedTabs` dưới đáy.
 
 ---
 
-## 8. Quy chuẩn Tối ưu Hiệu năng & Trải nghiệm Nhập liệu trong Drawer
+## 9. Quy chuẩn Tối ưu Hiệu năng & Trải nghiệm Nhập liệu trong Drawer
 
 1. **Memoize mảng `tabs` với `useMemo`**:
    - Khi truyền prop `tabs` vào `<StandardFormDrawer>`, **bắt buộc** bọc mảng tabs trong `useMemo`.
@@ -333,6 +403,8 @@ Dành cho các form đơn giản không có nhiều phân hệ (như Company Pro
 - [ ] Drawer đã sử dụng `<StandardFormDrawer>` chưa?
 - [ ] **Cả Cột trái (Main Content / Tab 1) lẫn Cột phải (Right Panel) đều đã phân chia các khối nội dung thành `<DrawerSection>` có bật `collapsible={true}` chưa?**
 - [ ] Size Drawer đã áp dụng chuẩn responsive `vw` kết hợp `min-width` / `max-width` (tối ưu cho desktop $\ge 1280px$, $\ge 1440px$, $\ge 1920px$ và không vượt quá `calc(100vw-208px)`) chưa?
+- [ ] **Khả năng hiển thị trên Mobile & Tablet (< 1024px) đã được kiểm tra (không bị tràn ngang, body padding `p-3 sm:p-4 md:p-[18px]`, safe-area insets cho đáy màn hình, nút bấm cảm ứng $\ge 32px$) chưa?**
+- [ ] **Nếu Drawer có Top Tabs hoặc Related Deck, negative margins đã khớp với padding body và tab list có hỗ trợ cuộn cảm ứng `touch-pan-x` chưa?**
 - [ ] Giao diện đã loại bỏ các border lồng nhau không cần thiết, Timeline đã áp dụng đúng trục dọc spine + dotted connector chưa?
 - [ ] Nếu Drawer cho phép cập nhật, đã truyền `onToggleEdit` chưa?
 - [ ] Nếu record có trạng thái (status), đã dùng `<Badge>` truyền vào `titleExtra` chưa?

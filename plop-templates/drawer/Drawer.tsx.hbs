@@ -57,7 +57,7 @@ export function {{pascalCase componentName}}Drawer({
       label: t("tabDetails", "Chi tiết chính"),
       icon: <FileText className="w-3.5 h-3.5" />,
       content: (
-        <div className="space-y-4 p-1">
+        <div className="space-y-3 sm:space-y-4 pb-2">
           <DrawerSection title={t("basicInfo", "Thông tin chung")} collapsible defaultCollapsed={false}>
             {mode === "view" ? (
               <>
@@ -66,7 +66,7 @@ export function {{pascalCase componentName}}Drawer({
                 <DrawerRow label={t("notes", "Ghi chú")} value={data?.notes || "—"} />
               </>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 <DrawerField label={t("code", "Mã")} required>
                   <input
                     value={formData.code || ""}
@@ -100,7 +100,7 @@ export function {{pascalCase componentName}}Drawer({
       label: t("tabHistory", "Lịch sử thao tác"),
       icon: <History className="w-3.5 h-3.5" />,
       content: (
-        <div className="p-4 text-muted-foreground text-sm">
+        <div className="p-3 sm:p-4 text-muted-foreground text-sm">
           {t("noHistory", "Chưa có lịch sử thay đổi.")}
         </div>
       ),
@@ -155,7 +155,7 @@ export function {{pascalCase componentName}}Drawer({
 {{/if}}
 {{#if (eq drawerType "2-columns")}}
       leftPanel={
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           <DrawerSection title={t("mainSection", "Thông tin chính")} collapsible defaultCollapsed={false}>
             {mode === "view" ? (
               <>
@@ -164,7 +164,7 @@ export function {{pascalCase componentName}}Drawer({
                 <DrawerRow label={t("notes", "Ghi chú")} value={data?.notes || "—"} />
               </>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 <DrawerField label={t("code", "Mã")} required>
                   <input
                     value={formData.code || ""}
@@ -203,7 +203,7 @@ export function {{pascalCase componentName}}Drawer({
 {{/if}}
 {{#if (eq drawerType "1-column")}}
       leftPanel={
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           <DrawerSection title={t("mainSection", "Thông tin chi tiết")} collapsible defaultCollapsed={false}>
             {mode === "view" ? (
               <>
@@ -212,7 +212,7 @@ export function {{pascalCase componentName}}Drawer({
                 <DrawerRow label={t("notes", "Ghi chú")} value={data?.notes || "—"} />
               </>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 <DrawerField label={t("code", "Mã")} required>
                   <input
                     value={formData.code || ""}

@@ -261,7 +261,14 @@ export const InvoiceHeaderSection = React.memo(function InvoiceHeaderSection({
     fetchInvoiceOptions: tableHandlers.fetchInvoiceOptions,
   });
 
-  const summaryRow = useInvoiceSummary(listHook.invoices);
+  const summaryRow = useInvoiceSummary({
+    invoices: listHook.invoices,
+    totals: listHook.totals,
+    page: listHook.page,
+    pageSize: listHook.pageSize,
+    totalCount: listHook.total,
+    totalPages: listHook.totalPages,
+  });
 
   const rowActions = React.useCallback(
     (inv: any) => {
@@ -356,9 +363,9 @@ export const InvoiceHeaderSection = React.memo(function InvoiceHeaderSection({
 
       if (canEditInvoice && inv.status !== "CANCELLED") {
         thaoTacItems.push({
-          label: t("actionNetOff", "Cấn trừ sao kê"),
+          label: t("actionNetOff", "Đối soát dòng tiền"),
           icon: <Scale className="w-3.5 h-3.5" />,
-          onClick: () => setNetOffInvoice(inv),
+          onClick: () => handleOpenInternal(inv, "edit", "financials"),
         });
       }
 

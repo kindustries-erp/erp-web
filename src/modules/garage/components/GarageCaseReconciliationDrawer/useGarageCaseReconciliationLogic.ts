@@ -14,43 +14,102 @@ import type {
   ReconciliationTabKey,
   SettlementSubmissionItem,
   PdfPreviewState,
+  FinancialsDomainDirection,
 } from "./types";
 
 export function useGarageCaseReconciliationLogic({
   open,
   onClose,
   caseId,
-  initialTab = "bank_cash",
+  caseCode,
+  caseData,
+  initialTab = "invoices_out",
   defaultType = "RECEIPT",
   suggestedAmount = 0,
   remainingReceivable = 0,
   remainingPayable = 0,
   editingItem = null,
+  editMode = false,
   onSuccess,
+  activeLinkedInvoices,
+  activeSettlements,
+  activeSummary,
   onSubmitSettlements,
+  onRemoveSettlement,
   onSubmitInvoices,
-}: GarageCaseReconciliationDrawerProps) {
+  onRemoveInvoice,
+}: GarageCaseReconciliationDrawerProps & { editMode?: boolean }) {
+  void caseCode;
+  void suggestedAmount;
+  void editingItem;
   const { t } = useTranslation(["garage", "erpInvoices", "common"]);
   const queryClient = useQueryClient();
 
-  // Active Tab State
-  const [activeTab, setActiveTab] = useState<ReconciliationTabKey>(initialTab);
-
-  useEffect(() => {
-    if (open) {
-      setActiveTab(initialTab);
-    }
-  }, [open, initialTab]);
-
   // ─── Query Case Financial Summary & Details ──────────────────────────────
-  const { data: caseSummary } = useQuery({
+  const { data: queriedCaseSummary } = useQuery({
     queryKey: ["garage-case-financial-summary", caseId],
     queryFn: () =>
       caseId
         ? garageApi.getCaseFinancialSummary(caseId)
         : Promise.resolve(null),
-    enabled: open && !!caseId,
+    enabled: open && !!caseId && !activeSummary,
   });
+
+  const caseSummary = activeSummary || queriedCaseSummary;
+
+  // Compute VAT eligibility for invoice tabs
+  const hasVat = useMemo(() => {
+    if (!caseData && !caseSummary) return true; // Default fallback if no data yet
+    const rawData = caseData?.rawData;
+    const vatKh = Number(rawData?.TienThueKH ?? caseData?.tienThueKh ?? 0);
+    const vatRaw = Number(
+      rawData?.TienThue ??
+        caseData?.tienThue ??
+        caseData?.vatAmount ??
+        caseSummary?.vatAmount ??
+        0,
+    );
+    const vatRate = Number(
+      rawData?.PhanTramThue ?? caseData?.phanTramThue ?? 0,
+    );
+    const daTaoHd = Boolean(
+      rawData?.DaTaoHoaDonThue ?? caseData?.daTaoHoaDonThue ?? false,
+    );
+
+    return vatKh > 0 || vatRaw > 0 || vatRate > 0 || daTaoHd;
+  }, [caseData, caseSummary]);
+
+  // Active Tab & View Preset State
+  const resolvedInitialTab = useMemo(() => {
+    if (!hasVat) return "manual_cashflow";
+    return initialTab;
+  }, [hasVat, initialTab]);
+
+  const [activeTab, setActiveTab] =
+    useState<ReconciliationTabKey>(resolvedInitialTab);
+  const [viewPreset, setViewPreset] = useState<
+    "all" | "suggestions" | "selected" | "linked"
+  >("all");
+
+  useEffect(() => {
+    if (open) {
+      setActiveTab(resolvedInitialTab);
+      setViewPreset("all");
+    }
+  }, [open, resolvedInitialTab]);
+
+  useEffect(() => {
+    if (
+      !hasVat &&
+      (activeTab === "invoices_out" || activeTab === "invoices_in")
+    ) {
+      setActiveTab("manual_cashflow");
+    }
+  }, [hasVat, activeTab]);
+
+  useEffect(() => {
+    setViewPreset("all");
+  }, [activeTab, caseId]);
 
   const targetRevenue = Number(
     caseSummary?.targetRevenue ?? caseSummary?.targetReceivable ?? 0,
@@ -78,12 +137,14 @@ export function useGarageCaseReconciliationLogic({
   );
 
   // ─── Query Currently Linked Invoices ──────────────────────────────────────
-  const { data: linkedInvoices = [] } = useQuery({
+  const { data: queriedLinkedInvoices = [] } = useQuery({
     queryKey: ["garage-case-linked-invoices-for-drawer", caseId],
     queryFn: () =>
       caseId ? garageApi.getCaseLinkedInvoices(caseId) : Promise.resolve([]),
-    enabled: open && !!caseId,
+    enabled: open && !!caseId && !activeLinkedInvoices,
   });
+
+  const linkedInvoices = activeLinkedInvoices || queriedLinkedInvoices;
 
   const initialLinkedOutCount = useMemo(
     () =>
@@ -93,14 +154,74 @@ export function useGarageCaseReconciliationLogic({
   );
 
   const initialLinkedInCount = useMemo(
-    () => (linkedInvoices || []).filter((l: any) => l.linkType === "IN").length,
+    () =>
+      (linkedInvoices || []).filter((l: any) => (l.linkType || "OUT") === "IN")
+        .length,
     [linkedInvoices],
   );
 
-  // ─── TAB 1 & 2: BANK & CASH SETTLEMENTS STATE ─────────────────────────────
+  // ─── Domain Direction & Settlement Type (REVENUE vs COST) ────────────────
+  const [domainDirection, setDomainDirection] =
+    useState<FinancialsDomainDirection>(
+      defaultType === "PAYMENT" || initialTab === "invoices_in"
+        ? "COST"
+        : "REVENUE",
+    );
+
   const [settlementType, setSettlementType] = useState<"RECEIPT" | "PAYMENT">(
-    defaultType,
+    defaultType || (domainDirection === "COST" ? "PAYMENT" : "RECEIPT"),
   );
+
+  const handleSetDomainDirection = useCallback(
+    (domain: FinancialsDomainDirection) => {
+      setDomainDirection(domain);
+      if (domain === "REVENUE") {
+        setSettlementType("RECEIPT");
+        if (hasVat && activeTab === "invoices_in") {
+          setActiveTab("invoices_out");
+        }
+      } else {
+        setSettlementType("PAYMENT");
+        if (hasVat && activeTab === "invoices_out") {
+          setActiveTab("invoices_in");
+        }
+      }
+      setViewPreset("all");
+    },
+    [activeTab, hasVat],
+  );
+
+  const handleSetSettlementType = useCallback(
+    (type: "RECEIPT" | "PAYMENT") => {
+      setSettlementType(type);
+      if (type === "RECEIPT") {
+        setDomainDirection("REVENUE");
+        if (hasVat && activeTab === "invoices_in") {
+          setActiveTab("invoices_out");
+        }
+      } else {
+        setDomainDirection("COST");
+        if (hasVat && activeTab === "invoices_out") {
+          setActiveTab("invoices_in");
+        }
+      }
+      setViewPreset("all");
+    },
+    [activeTab, hasVat],
+  );
+
+  // Auto switch settlementType & domain when activeTab changes
+  useEffect(() => {
+    if (activeTab === "invoices_out") {
+      setSettlementType("RECEIPT");
+      setDomainDirection("REVENUE");
+    } else if (activeTab === "invoices_in") {
+      setSettlementType("PAYMENT");
+      setDomainDirection("COST");
+    }
+  }, [activeTab]);
+
+  // ─── Bank & Cash Table Selection & NetOff Amounts State ──────────────────
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [selectedTxns, setSelectedTxns] = useState<Record<string, any>>({});
   const [netOffAmounts, setNetOffAmounts] = useState<Record<string, number>>(
@@ -109,29 +230,39 @@ export function useGarageCaseReconciliationLogic({
   const [maxAmounts, setMaxAmounts] = useState<Record<string, number>>({});
   const [detailTxnId, setDetailTxnId] = useState<string | null>(null);
 
-  // Manual Form States (Tab 2)
-  const [manualAmount, setManualAmount] = useState<number | string>(
-    suggestedAmount || 0,
-  );
-  const [manualCategory, setManualCategory] = useState<string>(
-    editingItem?.category || "TIEN_MAT_NGOAI",
-  );
+  // Manual Cashflow State
+  const [manualAmount, setManualAmount] = useState<number | string>("");
+  const [manualCategory, setManualCategory] =
+    useState<string>("TIEN_MAT_NGOAI");
   const [manualDate, setManualDate] = useState<string>(
-    editingItem?.transDate || new Date().toISOString().slice(0, 10),
+    new Date().toISOString().slice(0, 10),
   );
-  const [manualPartner, setManualPartner] = useState<string>(
-    editingItem?.partnerName || caseSummary?.customerName || "",
-  );
-  const [manualNote, setManualNote] = useState<string>(editingItem?.note || "");
+  const [manualPartner, setManualPartner] = useState<string>("");
+  const [manualNote, setManualNote] = useState<string>("");
 
-  // Table State for Bank Transactions
+  // Bank & Cash Statements Pagination & Filter State
   const bankTableState = useTableColumnState(
-    "garage-bank-netoff-selection-table",
+    "garage-case-bank-reconciliation-table",
   );
   const [bankPage, setBankPage] = useState<number>(1);
   const [bankPageSize, setBankPageSize] = useState<number>(50);
   const [bankDateFrom, setBankDateFrom] = useState<string>("");
   const [bankDateTo, setBankDateTo] = useState<string>("");
+
+  // Invoices Selection State
+  const [selectedInvoicesMap, setSelectedInvoicesMap] = useState<
+    Record<string, ErpInvoice>
+  >({});
+  const [viewInvoiceId, setViewInvoiceId] = useState<string | null>(null);
+  const [invoiceNote, setInvoiceNote] = useState<string>("");
+  const [invoicePage, setInvoicePage] = useState<number>(1);
+  const [invoicePageSize, setInvoicePageSize] = useState<number>(50);
+  const [invoiceDateFrom, setInvoiceDateFrom] = useState<string>("");
+  const [invoiceDateTo, setInvoiceDateTo] = useState<string>("");
+  const [previewPdf, setPreviewPdf] = useState<PdfPreviewState | null>(null);
+  const invoiceTableState = useTableColumnState(
+    "garage-invoice-selection-table",
+  );
 
   const currentRemaining =
     settlementType === "RECEIPT" ? effectiveReceivable : effectivePayable;
@@ -148,7 +279,9 @@ export function useGarageCaseReconciliationLogic({
   }, [manualAmount]);
 
   const activeTabSettlementTotal = useMemo(() => {
-    if (activeTab === "bank_cash") return currentSelectedBankTotal;
+    if (activeTab === "bank_statement" || activeTab === "cash_book") {
+      return currentSelectedBankTotal;
+    }
     if (activeTab === "manual_cashflow") return currentManualAmount;
     return 0;
   }, [activeTab, currentSelectedBankTotal, currentManualAmount]);
@@ -169,6 +302,52 @@ export function useGarageCaseReconciliationLogic({
     return baseRemaining - activeTabSettlementTotal;
   }, [baseRemaining, activeTabSettlementTotal]);
 
+  const domainTargetAmount = useMemo(() => {
+    return domainDirection === "REVENUE" ? targetRevenue : targetCost;
+  }, [domainDirection, targetRevenue, targetCost]);
+
+  const domainSettledAmount = useMemo(() => {
+    return domainDirection === "REVENUE" ? totalCollected : totalPaid;
+  }, [domainDirection, totalCollected, totalPaid]);
+
+  const remainingDebt = useMemo(() => {
+    return domainDirection === "REVENUE"
+      ? effectiveReceivable
+      : effectivePayable;
+  }, [domainDirection, effectiveReceivable, effectivePayable]);
+
+  const remainingAfterNetOff = useMemo(() => {
+    const netOff =
+      activeTab === "invoices_out" || activeTab === "invoices_in"
+        ? 0
+        : activeTabSettlementTotal;
+    return Math.max(0, remainingDebt - netOff);
+  }, [remainingDebt, activeTab, activeTabSettlementTotal]);
+
+  const paymentPercent = useMemo(() => {
+    if (domainTargetAmount <= 0) return domainSettledAmount > 0 ? 100 : 0;
+    return Math.min(
+      100,
+      Math.round((domainSettledAmount / domainTargetAmount) * 100),
+    );
+  }, [domainTargetAmount, domainSettledAmount]);
+
+  const isPaidFull = useMemo(() => {
+    return (
+      remainingDebt <= 0 ||
+      (domainTargetAmount > 0 && domainSettledAmount >= domainTargetAmount)
+    );
+  }, [remainingDebt, domainTargetAmount, domainSettledAmount]);
+
+  const handleUnselectAll = useCallback(() => {
+    setSelectedIds([]);
+    setSelectedTxns({});
+    setNetOffAmounts({});
+    setMaxAmounts({});
+    setSelectedInvoicesMap({});
+    setManualAmount("");
+  }, []);
+
   const bankSortBy =
     bankTableState.sorts.length > 0
       ? bankTableState.sorts[0]?.replace("-", "")
@@ -180,12 +359,19 @@ export function useGarageCaseReconciliationLogic({
         : "ASC"
       : undefined;
 
+  const bankSourceType = useMemo(() => {
+    if (activeTab === "cash_book") return "CASH";
+    if (activeTab === "bank_statement") return "BANK";
+    return undefined;
+  }, [activeTab]);
+
   const { data: bankData, isLoading: isLoadingBank } = useQuery({
     queryKey: [
       "bank-statements-for-netoff",
       bankPage,
       bankPageSize,
       settlementType,
+      bankSourceType,
       bankDateFrom,
       bankDateTo,
       bankTableState.columnFilters,
@@ -205,6 +391,7 @@ export function useGarageCaseReconciliationLogic({
       return bankStatementApi.getTransactions({
         page: bankPage,
         pageSize: bankPageSize,
+        sourceType: bankSourceType,
         column_filters: JSON.stringify(combinedFilters),
         column_search:
           Object.keys(bankTableState.columnSearch).length > 0
@@ -215,19 +402,25 @@ export function useGarageCaseReconciliationLogic({
       });
     },
     enabled:
-      open && (activeTab === "bank_cash" || activeTab === "manual_cashflow"),
+      open &&
+      (activeTab === "bank_statement" ||
+        activeTab === "cash_book" ||
+        activeTab === "manual_cashflow"),
   });
 
-  const vouchers = bankData?.items || [];
+  const rawBankVouchers = bankData?.items || [];
 
   const selectedBankItems = useMemo(() => {
     return selectedIds
-      .map((id) => selectedTxns[id] || vouchers.find((v: any) => v.id === id))
+      .map(
+        (id) =>
+          selectedTxns[id] || rawBankVouchers.find((v: any) => v.id === id),
+      )
       .filter(Boolean);
-  }, [selectedIds, selectedTxns, vouchers]);
+  }, [selectedIds, selectedTxns, rawBankVouchers]);
 
   // Query Smart Bank Suggestions
-  const { data: bankSuggestions = [], isLoading: isLoadingBankSuggestions } =
+  const { data: allBankSuggestions = [], isLoading: isLoadingBankSuggestions } =
     useQuery({
       queryKey: [
         "garage-case-smart-settlement-suggestions",
@@ -241,27 +434,34 @@ export function useGarageCaseReconciliationLogic({
       enabled:
         open &&
         !!caseId &&
-        (activeTab === "bank_cash" || activeTab === "manual_cashflow"),
+        (activeTab === "bank_statement" || activeTab === "cash_book"),
     });
+
+  const bankSuggestions = useMemo(() => {
+    if (activeTab === "cash_book") {
+      return (allBankSuggestions || []).filter((sug: any) => {
+        const txn = sug.bankTransaction || sug.transaction || sug;
+        return (
+          txn.sourceType === "CASH" ||
+          txn.sourceType === "CASH_BOOK" ||
+          !!txn.cashBookId ||
+          !!txn.cashBook
+        );
+      });
+    }
+    return (allBankSuggestions || []).filter((sug: any) => {
+      const txn = sug.bankTransaction || sug.transaction || sug;
+      return (
+        txn.sourceType !== "CASH" &&
+        txn.sourceType !== "CASH_BOOK" &&
+        !txn.cashBookId
+      );
+    });
+  }, [allBankSuggestions, activeTab]);
 
   // ─── TAB 3 & 4: INVOICES SELECTION STATE ──────────────────────────────────
   const invoiceDirection: "IN" | "OUT" =
     activeTab === "invoices_in" ? "IN" : "OUT";
-
-  const [selectedInvoicesMap, setSelectedInvoicesMap] = useState<
-    Record<string, ErpInvoice>
-  >({});
-  const [viewInvoiceId, setViewInvoiceId] = useState<string | null>(null);
-  const [invoiceNote, setInvoiceNote] = useState<string>("");
-  const [invoicePage, setInvoicePage] = useState<number>(1);
-  const [invoicePageSize, setInvoicePageSize] = useState<number>(50);
-  const [invoiceDateFrom, setInvoiceDateFrom] = useState<string>("");
-  const [invoiceDateTo, setInvoiceDateTo] = useState<string>("");
-  const [previewPdf, setPreviewPdf] = useState<PdfPreviewState | null>(null);
-
-  const invoiceTableState = useTableColumnState(
-    "garage-invoice-selection-table",
-  );
 
   // Query Smart Invoice Suggestions
   const {
@@ -295,26 +495,39 @@ export function useGarageCaseReconciliationLogic({
     );
   }, [initialLinkedInvoicesForType]);
 
-  // Pre-populate selected invoices on direction change
+  // Reset all temporary selections when editMode turns false
+  useEffect(() => {
+    if (!editMode) {
+      setSelectedIds([]);
+      setSelectedTxns({});
+      setNetOffAmounts({});
+      setMaxAmounts({});
+      setInvoiceNote("");
+      setManualAmount("");
+    }
+  }, [editMode]);
+
+  // Pre-populate selected invoices on direction change or when editMode turns false
   useEffect(() => {
     if (open && (activeTab === "invoices_out" || activeTab === "invoices_in")) {
       const map: Record<string, ErpInvoice> = {};
       initialLinkedInvoicesForType.forEach((item: any) => {
-        if (item.invoiceId) {
-          map[item.invoiceId] = {
-            id: item.invoiceId,
-            invoiceNo: item.invoiceNo,
-            sellerName: item.sellerName,
-            buyerName: item.buyerName,
-            totalAmount: item.totalAmount,
-            preVatAmount: item.preVatAmount,
-            vatAmount: item.vatAmount,
-            description: item.description,
+        const invId = item.invoiceId || item.id;
+        if (invId) {
+          map[invId] = {
+            id: invId,
+            invoiceNo: item.invoiceNo || item.invoice?.invoiceNo,
+            sellerName: item.sellerName || item.invoice?.sellerName,
+            buyerName: item.buyerName || item.invoice?.buyerName,
+            totalAmount: item.totalAmount || item.invoice?.totalAmount,
+            preVatAmount: item.preVatAmount || item.invoice?.preVatAmount,
+            vatAmount: item.vatAmount || item.invoice?.vatAmount,
+            description: item.description || item.invoice?.description,
             direction: item.direction || item.linkType,
             licensePlate: item.licensePlate,
             settlementOrder: item.settlementOrder,
             serialNo: item.serialNo,
-            invoiceDate: item.invoiceDate,
+            invoiceDate: item.invoiceDate || item.invoice?.invoiceDate,
           } as ErpInvoice;
         }
       });
@@ -322,7 +535,13 @@ export function useGarageCaseReconciliationLogic({
       setViewInvoiceId(null);
       setInvoiceNote("");
     }
-  }, [open, invoiceDirection, initialLinkedInvoicesForType, activeTab]);
+  }, [
+    open,
+    invoiceDirection,
+    initialLinkedInvoicesForType,
+    activeTab,
+    editMode,
+  ]);
 
   const selectedInvoicesList = useMemo(
     () => Object.values(selectedInvoicesMap),
@@ -394,9 +613,127 @@ export function useGarageCaseReconciliationLogic({
             ? JSON.stringify(invoiceTableState.columnFilters)
             : undefined,
       }),
-    enabled:
-      open && (activeTab === "invoices_out" || activeTab === "invoices_in"),
   });
+
+  const rawInvoiceItems = invoiceData?.items || [];
+
+  const vouchers = useMemo(() => {
+    if (viewPreset === "suggestions") {
+      return bankSuggestions.map(
+        (sug: any) => sug.bankTransaction || sug.transaction || sug,
+      );
+    }
+    if (viewPreset === "selected") {
+      return selectedBankItems;
+    }
+    if (viewPreset === "linked") {
+      const recSettlements =
+        caseSummary?.breakdown?.receipts?.settlements || [];
+      const paySettlements =
+        caseSummary?.breakdown?.payments?.settlements || [];
+      return recSettlements
+        .concat(paySettlements)
+        .filter((s: any) => s.sourceChannel === "ON_SYSTEM")
+        .map((s: any) => ({
+          id: s.bankTransactionId || s.id,
+          bankTransactionId: s.bankTransactionId,
+          bookingDate: s.transDate,
+          transactionDate: s.transDate,
+          referenceNumber: s.referenceNumber,
+          partnerName: s.partnerName,
+          description: s.note,
+          bankName: s.bankName,
+          accountNumber: s.accountNumber,
+          creditAmount: s.settlementType === "RECEIPT" ? s.amount : 0,
+          debitAmount: s.settlementType === "PAYMENT" ? s.amount : 0,
+          netOffAmount: s.amount,
+          isLinked: true,
+        }));
+    }
+    return rawBankVouchers;
+  }, [
+    viewPreset,
+    bankSuggestions,
+    selectedBankItems,
+    caseSummary,
+    rawBankVouchers,
+  ]);
+
+  const invoiceItems = useMemo(() => {
+    if (viewPreset === "suggestions") {
+      return invoiceSuggestions.map((sug: any) => sug.invoice || sug);
+    }
+    if (viewPreset === "selected") {
+      return selectedInvoicesList;
+    }
+    if (viewPreset === "linked") {
+      return initialLinkedInvoicesForType.map((item: any) => ({
+        id: item.invoiceId || item.id,
+        invoiceNo: item.invoiceNo || item.invoiceNumber,
+        invoiceNumber: item.invoiceNumber || item.invoiceNo,
+        invoiceDate: item.invoiceDate,
+        buyerName: item.buyerName,
+        sellerName: item.sellerName,
+        partnerName: item.partnerName || item.buyerName || item.sellerName,
+        taxCode: item.taxCode || item.buyerTaxCode || item.sellerTaxCode,
+        totalAmount: item.totalAmount,
+        vatAmount: item.vatAmount,
+        preVatAmount: item.preVatAmount,
+        isLinked: true,
+      }));
+    }
+    return rawInvoiceItems;
+  }, [
+    viewPreset,
+    invoiceSuggestions,
+    selectedInvoicesList,
+    initialLinkedInvoicesForType,
+    rawInvoiceItems,
+  ]);
+
+  const displayBankTotal = useMemo(() => {
+    if (viewPreset === "suggestions") return bankSuggestions.length;
+    if (viewPreset === "selected") return selectedBankItems.length;
+    if (viewPreset === "linked") {
+      const recSettlements =
+        caseSummary?.breakdown?.receipts?.settlements || [];
+      const paySettlements =
+        caseSummary?.breakdown?.payments?.settlements || [];
+      return recSettlements
+        .concat(paySettlements)
+        .filter((s: any) => s.sourceChannel === "ON_SYSTEM").length;
+    }
+    return bankData?.total || 0;
+  }, [
+    viewPreset,
+    bankSuggestions.length,
+    selectedBankItems.length,
+    caseSummary,
+    bankData?.total,
+  ]);
+
+  const displayBankTotalPages = useMemo(() => {
+    if (viewPreset !== "all") return 1;
+    return bankData?.totalPages || 0;
+  }, [viewPreset, bankData?.totalPages]);
+
+  const displayInvoiceTotal = useMemo(() => {
+    if (viewPreset === "suggestions") return invoiceSuggestions.length;
+    if (viewPreset === "selected") return selectedInvoicesList.length;
+    if (viewPreset === "linked") return initialLinkedInvoicesForType.length;
+    return invoiceData?.total || 0;
+  }, [
+    viewPreset,
+    invoiceSuggestions.length,
+    selectedInvoicesList.length,
+    initialLinkedInvoicesForType.length,
+    invoiceData?.total,
+  ]);
+
+  const displayInvoiceTotalPages = useMemo(() => {
+    if (viewPreset !== "all") return 1;
+    return invoiceData?.totalPages || 0;
+  }, [viewPreset, invoiceData?.totalPages]);
 
   // ─── SMART INVOICE CROSS-NAVIGATION HANDLER ──────────────────────────────
   const handleNavigateToInvoiceTab = useCallback(
@@ -423,118 +760,284 @@ export function useGarageCaseReconciliationLogic({
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   // Tab 1 & 2: Bank Selection Handlers
-  const handleSelectBankTxn = (row: any, checked: boolean) => {
-    const id = row.id;
-    if (checked) {
-      setSelectedIds((prev) => [...prev, id]);
-      setSelectedTxns((prev) => ({ ...prev, [id]: row }));
-
-      const credit = parseFloat(row.creditAmount) || 0;
-      const debit = parseFloat(row.debitAmount) || 0;
-      const amount = credit > 0 ? credit : debit;
-      const netOff = parseFloat(row.netOffAmount) || 0;
-      const remaining = Math.max(0, amount - netOff);
-
-      setMaxAmounts((prev) => ({ ...prev, [id]: remaining }));
-
-      const allocated =
-        currentRemaining > 0
-          ? Math.min(remaining, currentRemaining)
-          : remaining;
-      setNetOffAmounts((prev) => ({ ...prev, [id]: allocated }));
-    } else {
-      setSelectedIds((prev) => prev.filter((item) => item !== id));
-      setSelectedTxns((prev) => {
-        const next = { ...prev };
-        delete next[id];
-        return next;
-      });
-      setNetOffAmounts((prev) => {
-        const next = { ...prev };
-        delete next[id];
-        return next;
-      });
-      setMaxAmounts((prev) => {
-        const next = { ...prev };
-        delete next[id];
-        return next;
-      });
-    }
-  };
-
-  const handleSelectAllBankTxns = (checked: boolean) => {
-    if (!checked) {
-      setSelectedIds([]);
-      setSelectedTxns({});
-      setNetOffAmounts({});
-      setMaxAmounts({});
-      return;
-    }
-
-    const newSelectedIds: string[] = [];
-    const newSelectedTxns: Record<string, any> = {};
-    const newNetOffAmounts: Record<string, number> = {};
-    const newMaxAmounts: Record<string, number> = {};
-
-    vouchers.forEach((row: any) => {
+  const handleSelectBankTxn = useCallback(
+    (row: any, checked: boolean) => {
       const id = row.id;
-      newSelectedIds.push(id);
-      newSelectedTxns[id] = row;
+      if (checked) {
+        setSelectedIds((prev) => (prev.includes(id) ? prev : [...prev, id]));
+        setSelectedTxns((prev) => ({ ...prev, [id]: row }));
 
-      const credit = parseFloat(row.creditAmount) || 0;
-      const debit = parseFloat(row.debitAmount) || 0;
-      const amount = credit > 0 ? credit : debit;
-      const netOff = parseFloat(row.netOffAmount) || 0;
-      const remaining = Math.max(0, amount - netOff);
+        const credit = parseFloat(row.creditAmount) || 0;
+        const debit = parseFloat(row.debitAmount) || 0;
+        const amount = credit > 0 ? credit : debit;
+        const netOff = parseFloat(row.netOffAmount) || 0;
+        const remaining = Math.max(0, amount - netOff);
 
-      newMaxAmounts[id] = remaining;
-      newNetOffAmounts[id] = remaining;
-    });
+        setMaxAmounts((prev) => ({ ...prev, [id]: remaining }));
 
-    setSelectedIds(newSelectedIds);
-    setSelectedTxns(newSelectedTxns);
-    setNetOffAmounts(newNetOffAmounts);
-    setMaxAmounts(newMaxAmounts);
-  };
+        const allocated =
+          currentRemaining > 0
+            ? Math.min(remaining, currentRemaining)
+            : remaining;
+        setNetOffAmounts((prev) => ({ ...prev, [id]: allocated }));
 
-  const handleBankAmountChange = (row: any, val: number) => {
-    setNetOffAmounts((prev) => ({ ...prev, [row.id]: val }));
-    if (!selectedIds.includes(row.id) && val > 0) {
-      setSelectedIds((prev) => [...prev, row.id]);
-      setSelectedTxns((prev) => ({ ...prev, [row.id]: row }));
-    }
-  };
-
-  const handleToggleInvoice = (inv: ErpInvoice) => {
-    setSelectedInvoicesMap((prev) => {
-      const next = { ...prev };
-      if (next[inv.id]) {
-        delete next[inv.id];
+        if (editMode && onSubmitSettlements) {
+          const isCredit = Number(row.creditAmount || 0) > 0;
+          onSubmitSettlements([
+            {
+              bankTransactionId: id,
+              settlementType: isCredit ? "RECEIPT" : "PAYMENT",
+              sourceChannel: "ON_SYSTEM",
+              amount: allocated,
+              transDate:
+                row.bookingDate ||
+                row.transactionDate ||
+                (row.transDate
+                  ? new Date(row.transDate).toISOString().slice(0, 10)
+                  : undefined),
+              partnerName: row.partnerName || row.correspondentName,
+              note: row.description || row.note,
+              referenceNumber: row.referenceNumber,
+              bankName:
+                row.bankName || row.bankAccount?.bankName || row.cashBook?.name,
+              correspondentName: row.correspondentName || row.partnerName,
+              sourceType: row.sourceType,
+              accountNumber:
+                row.accountNumber || row.bankAccount?.accountNumber,
+              cashBookName: row.cashBookName || row.cashBook?.name,
+            },
+          ]);
+        }
       } else {
-        next[inv.id] = inv;
-      }
-      return next;
-    });
-  };
+        setSelectedIds((prev) => prev.filter((item) => item !== id));
+        setSelectedTxns((prev) => {
+          const next = { ...prev };
+          delete next[id];
+          return next;
+        });
+        setNetOffAmounts((prev) => {
+          const next = { ...prev };
+          delete next[id];
+          return next;
+        });
+        setMaxAmounts((prev) => {
+          const next = { ...prev };
+          delete next[id];
+          return next;
+        });
 
-  const handleSelectAllInvoices = (checked: boolean) => {
-    if (!checked) {
-      setSelectedInvoicesMap({});
-      return;
+        if (editMode && onRemoveSettlement) {
+          onRemoveSettlement(id);
+        }
+      }
+    },
+    [currentRemaining, editMode, onSubmitSettlements, onRemoveSettlement],
+  );
+
+  const handleSelectAllBankTxns = useCallback(
+    (checked: boolean) => {
+      if (!checked) {
+        if (editMode && onRemoveSettlement) {
+          selectedIds.forEach((id) => onRemoveSettlement(id));
+        }
+        setSelectedIds([]);
+        setSelectedTxns({});
+        setNetOffAmounts({});
+        setMaxAmounts({});
+        return;
+      }
+
+      const newSelectedIds: string[] = [];
+      const newSelectedTxns: Record<string, any> = {};
+      const newNetOffAmounts: Record<string, number> = {};
+      const newMaxAmounts: Record<string, number> = {};
+      const newItemsToSubmit: SettlementSubmissionItem[] = [];
+
+      vouchers.forEach((row: any) => {
+        const id = row.id;
+        newSelectedIds.push(id);
+        newSelectedTxns[id] = row;
+
+        const credit = parseFloat(row.creditAmount) || 0;
+        const debit = parseFloat(row.debitAmount) || 0;
+        const amount = credit > 0 ? credit : debit;
+        const netOff = parseFloat(row.netOffAmount) || 0;
+        const remaining = Math.max(0, amount - netOff);
+
+        newMaxAmounts[id] = remaining;
+        newNetOffAmounts[id] = remaining;
+
+        const isCredit = Number(row.creditAmount || 0) > 0;
+        newItemsToSubmit.push({
+          bankTransactionId: id,
+          settlementType: isCredit ? "RECEIPT" : "PAYMENT",
+          sourceChannel: "ON_SYSTEM",
+          amount: remaining,
+          transDate: row.bookingDate || row.transactionDate,
+          partnerName: row.partnerName || row.correspondentName,
+          note: row.description || row.note,
+          referenceNumber: row.referenceNumber,
+          bankName: row.bankName,
+          sourceType: row.sourceType,
+        });
+      });
+
+      setSelectedIds(newSelectedIds);
+      setSelectedTxns(newSelectedTxns);
+      setNetOffAmounts(newNetOffAmounts);
+      setMaxAmounts(newMaxAmounts);
+
+      if (editMode && onSubmitSettlements && newItemsToSubmit.length > 0) {
+        onSubmitSettlements(newItemsToSubmit);
+      }
+    },
+    [editMode, onRemoveSettlement, onSubmitSettlements, selectedIds, vouchers],
+  );
+
+  const handleBankAmountChange = useCallback(
+    (row: any, val: number) => {
+      setNetOffAmounts((prev) => ({ ...prev, [row.id]: val }));
+      if (!selectedIds.includes(row.id) && val > 0) {
+        handleSelectBankTxn(row, true);
+      }
+    },
+    [handleSelectBankTxn, selectedIds],
+  );
+
+  const handleToggleInvoice = useCallback(
+    (inv: ErpInvoice) => {
+      const isCurrentlySelected = !!selectedInvoicesMap[inv.id];
+      if (isCurrentlySelected) {
+        setSelectedInvoicesMap((prev) => {
+          const next = { ...prev };
+          delete next[inv.id];
+          return next;
+        });
+        if (editMode && onRemoveInvoice) {
+          const found = (linkedInvoices || []).find(
+            (l: any) =>
+              l.invoiceId === inv.id || l.id === inv.id || l.tempId === inv.id,
+          );
+          onRemoveInvoice(found?.id || found?.tempId || inv.id);
+        }
+      } else {
+        setSelectedInvoicesMap((prev) => ({
+          ...prev,
+          [inv.id]: inv,
+        }));
+        if (editMode && onSubmitInvoices) {
+          onSubmitInvoices({
+            invoiceId: inv.id,
+            linkType: invoiceDirection,
+            note: invoiceNote,
+            invoice: inv,
+          });
+        }
+      }
+    },
+    [
+      selectedInvoicesMap,
+      setSelectedInvoicesMap,
+      editMode,
+      onRemoveInvoice,
+      onSubmitInvoices,
+      linkedInvoices,
+      invoiceDirection,
+      invoiceNote,
+    ],
+  );
+
+  const handleSelectAllInvoices = useCallback(
+    (checked: boolean) => {
+      if (!checked) {
+        if (editMode && onRemoveInvoice) {
+          Object.keys(selectedInvoicesMap).forEach((id) => {
+            const found = (linkedInvoices || []).find(
+              (l: any) => l.invoiceId === id || l.id === id || l.tempId === id,
+            );
+            onRemoveInvoice(found?.id || found?.tempId || id);
+          });
+        }
+        setSelectedInvoicesMap({});
+        return;
+      }
+      const map: Record<string, ErpInvoice> = {};
+      const itemsToAdd: any[] = [];
+      (invoiceData?.items || []).forEach((inv: ErpInvoice) => {
+        map[inv.id] = inv;
+        if (!selectedInvoicesMap[inv.id]) {
+          itemsToAdd.push({
+            invoiceId: inv.id,
+            linkType: invoiceDirection,
+            note: invoiceNote,
+            invoice: inv,
+          });
+        }
+      });
+      setSelectedInvoicesMap(map);
+      if (editMode && onSubmitInvoices && itemsToAdd.length > 0) {
+        onSubmitInvoices(itemsToAdd);
+      }
+    },
+    [
+      editMode,
+      onRemoveInvoice,
+      onSubmitInvoices,
+      selectedInvoicesMap,
+      setSelectedInvoicesMap,
+      linkedInvoices,
+      invoiceData?.items,
+      invoiceDirection,
+      invoiceNote,
+    ],
+  );
+
+  // Select All Filtered Suggestions Handler (1-Click)
+  const handleSelectAllSuggestions = useCallback(() => {
+    if (activeTab === "bank_statement" || activeTab === "cash_book") {
+      bankSuggestions.forEach((sug: any) => {
+        const txn = sug.bankTransaction || sug.transaction || sug;
+        if (txn && !selectedIds.includes(txn.id)) {
+          handleSelectBankTxn(txn, true);
+        }
+      });
+      toast.success(
+        t(
+          "cases.financials.selectedAllSuggestions",
+          "Đã chọn tất cả gợi ý khớp",
+        ),
+      );
+    } else if (activeTab === "invoices_out" || activeTab === "invoices_in") {
+      invoiceSuggestions.forEach((sug: any) => {
+        const inv = sug.invoice || sug;
+        if (inv && !selectedInvoicesMap[inv.id]) {
+          handleToggleInvoice(inv);
+        }
+      });
+      toast.success(
+        t(
+          "cases.financials.selectedAllSuggestions",
+          "Đã chọn tất cả gợi ý khớp",
+        ),
+      );
     }
-    const map: Record<string, ErpInvoice> = {};
-    (invoiceData?.items || []).forEach((inv: ErpInvoice) => {
-      map[inv.id] = inv;
-    });
-    setSelectedInvoicesMap(map);
-  };
+  }, [
+    activeTab,
+    bankSuggestions,
+    invoiceSuggestions,
+    selectedIds,
+    selectedInvoicesMap,
+    handleSelectBankTxn,
+    handleToggleInvoice,
+    t,
+  ]);
 
   // Submit Bank & Cash Settlements (Tab 1 & 2)
   const handleSubmitBankAndCash = async () => {
     try {
       setIsSubmitting(true);
 
-      if (activeTab === "bank_cash") {
+      if (activeTab === "bank_statement" || activeTab === "cash_book") {
         if (selectedIds.length === 0) {
           toast.error(
             t(
@@ -762,7 +1265,7 @@ export function useGarageCaseReconciliationLogic({
     initialLinkedOutCount,
     initialLinkedInCount,
     settlementType,
-    setSettlementType,
+    setSettlementType: handleSetSettlementType,
     selectedIds,
     selectedBankItems,
     netOffAmounts,
@@ -823,15 +1326,36 @@ export function useGarageCaseReconciliationLogic({
     isLoadingInvoices,
     invoiceSuggestions,
     isLoadingInvoiceSuggestions,
-    hasInvoiceChanges,
+    viewPreset,
+    setViewPreset,
+    displayBankTotal,
+    displayBankTotalPages,
+    displayInvoiceTotal,
+    displayInvoiceTotalPages,
+    invoiceItems,
+    editMode,
     isSubmitting,
+    hasInvoiceChanges,
+    domainDirection,
+    setDomainDirection: handleSetDomainDirection,
+    isPaidFull,
+    paymentPercent,
+    remainingDebt,
+    remainingAfterNetOff,
+    handleUnselectAll,
     handleSelectBankTxn,
     handleSelectAllBankTxns,
     handleBankAmountChange,
     handleToggleInvoice,
     handleSelectAllInvoices,
+    handleSelectAllSuggestions,
     handleNavigateToInvoiceTab,
     handleSubmitBankAndCash,
     handleSubmitInvoices,
+    activeSettlements: activeSettlements || [],
+    onRemoveSettlement,
+    onSubmitSettlements,
+    hasVat,
+    caseData,
   };
 }

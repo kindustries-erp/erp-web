@@ -151,7 +151,7 @@ export const erpInvoicesVi = {
   actionSaveChange: "Lưu thay đổi",
   actionSaving: "Đang lưu...",
   actionClose: "Đóng",
-  actionNetOff: "Đối soát dòng tiền",
+  actionNetOff: "Đối soát",
   netOffSuccess: "Đã đối soát dòng tiền thành công",
   netOffError: "Lỗi khi đối soát dòng tiền",
 
@@ -441,8 +441,19 @@ export const erpInvoicesVi = {
   pastSettlementsTitle: "Dòng tiền đã ghi nhận trước đó",
   comingSoonCashBookTitle: "Sổ quỹ tiền mặt",
   comingSoonCashBookDesc:
-    "Tính năng đối soát sổ quỹ tiền mặt đang được phát triển.",
+    "Tính năng đối soát & cấn trừ phiếu thu / chi sổ quỹ tiền mặt cho hóa đơn VAT đang được phát triển.",
   comingSoonBadge: "Sắp ra mắt",
+  featureCashVouchers: "Phiếu Thu / Phiếu Chi",
+  featureCashVouchersDesc:
+    "Tự động khớp số tiền, đối tác và số phiếu thu/chi nội bộ theo từng hóa đơn.",
+  featureMultiBranchFunds: "Đa Quỹ Chi Nhánh",
+  featureMultiBranchFundsDesc:
+    "Quản lý và đối soát nguồn tiền mặt chuẩn xác theo từng chi nhánh và điểm giao dịch.",
+  featureRealtimePosting: "Hạch Toán TK 1111",
+  featureRealtimePostingDesc:
+    "Tự động sinh bút toán Nợ/Có sổ cái và cấn trừ công nợ ngay khi xác nhận đối soát.",
+  comingSoonReleaseNote:
+    "Dự kiến phát hành trong bản cập nhật phân hệ Quản lý Tài chính Kế toán tiếp theo.",
 
   // Selected Bank Transactions Table
   "selectedBankTable.noSelection":
@@ -473,4 +484,12 @@ export const erpInvoicesVi = {
   customFieldsOut: "Cấu hình hóa đơn bán ra",
   configTitleIn: "Hóa đơn mua vào",
   configTitleOut: "Hóa đơn bán ra",
+
+  // Unified Settlement Table
+  colStatus: "Trạng thái",
+  colCredit: "Thu",
+  colDebit: "Chi",
+  colCreditAmount: "Thu",
+  colDebitAmount: "Chi",
+  colThisNetOff: "Cấn trừ đợt này",
 };
