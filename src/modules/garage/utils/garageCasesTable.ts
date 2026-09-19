@@ -56,9 +56,25 @@ function getCellValue(item: Record<string, any>, key: string) {
     case "dataAsOf":
       return item.dataAsOf || "";
     case "totalAmount":
+    case "tienCoThue":
+    case "tongPhaiThu":
+    case "totalReceivable":
       return item.tienCoThue || 0;
     case "balanceAmount":
+    case "tienConPhaiThanhToan":
+    case "conPhaiThu":
+    case "remainingReceivable":
       return item.tienConPhaiThanhToan || 0;
+    case "tongPhaiTra":
+    case "totalPayable":
+      return item.chiPhi ?? item.rawData?.ChiPhi ?? 0;
+    case "tienConPhaiChi":
+    case "conPhaiTra":
+    case "remainingPayable": {
+      const cost = Number(item.chiPhi ?? item.rawData?.ChiPhi ?? 0);
+      const paidCost = Number(item.tienDaChi ?? item.rawData?.TienDaChi ?? 0);
+      return Math.max(0, cost - paidCost);
+    }
     case "doanhThu":
       return item.doanhThu ?? item.rawData?.DoanhThu ?? 0;
     case "chiPhi":
@@ -247,11 +263,24 @@ export function applyGarageCasesTableState(
         continue;
       }
 
-      // Handler riêng cho các cột số tiền doanh thu, chi phí, lợi nhuận
+      // Handler riêng cho các cột số tiền tài chính
       if (
         columnKey === "doanhThu" ||
         columnKey === "chiPhi" ||
-        columnKey === "loiNhuan"
+        columnKey === "loiNhuan" ||
+        columnKey === "tienCoThue" ||
+        columnKey === "totalAmount" ||
+        columnKey === "tongPhaiThu" ||
+        columnKey === "totalReceivable" ||
+        columnKey === "tienConPhaiThanhToan" ||
+        columnKey === "balanceAmount" ||
+        columnKey === "conPhaiThu" ||
+        columnKey === "remainingReceivable" ||
+        columnKey === "tongPhaiTra" ||
+        columnKey === "totalPayable" ||
+        columnKey === "tienConPhaiChi" ||
+        columnKey === "conPhaiTra" ||
+        columnKey === "remainingPayable"
       ) {
         const numVal = Number(rawValue) || 0;
         const isBlankNum = rawValue == null || numVal === 0;

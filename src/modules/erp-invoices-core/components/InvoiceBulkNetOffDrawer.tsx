@@ -10,7 +10,6 @@ import {
   type DataTableColumn,
   createColumnHeaderFilter,
   TableColumnAlign,
-  TableText,
 } from "@/shared/components/DataTable";
 import { StandardTable } from "@/shared/components/StandardTable";
 import type { ActionDropdownItem } from "@/shared/components/ActionDropdown";
@@ -51,13 +50,12 @@ import { bankStatementApi } from "@/modules/bank-statements/api/bankStatementApi
 import { money, formatGMT7 } from "@/shared/utils/format";
 import { cn } from "@/shared/utils";
 import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
-import { BADGE_CONFIG_MAP } from "@/modules/erp-invoices-core/components/SmartSuggestionCard";
+import { SuggestionBadgePill } from "@/modules/erp-invoices-core/components/SmartSuggestionCard";
 import { SmartMatchComparisonPopover } from "@/modules/erp-invoices-core/components/SmartMatchComparisonPopover";
 import { ComingSoonTabContent } from "@/modules/erp-invoices-core/components/VoucherNetoffSelectionModal/components/ComingSoonTabContent";
 import { NetOffInput } from "@/modules/erp-invoices-core/components/VoucherNetoffSelectionModal/components/NetOffInput";
 import { InvoiceNoCell } from "./ErpInvoicesTab/components/cells/InvoiceNoCell";
 import { InvoicePartnerCell } from "./ErpInvoicesTab/components/cells/InvoicePartnerCell";
-import { InvoiceItemsPopover } from "./ErpInvoicesTab/components/cells/InvoiceItemsPopover";
 import { ErpInvoiceStandaloneDrawer } from "./ErpInvoiceStandaloneDrawer";
 
 export type BulkSubTabKey = "bank_statement" | "cash_book";
@@ -779,41 +777,10 @@ export function InvoiceBulkNetOffDrawer({
         ),
         headerClassName: "text-center",
         className: "text-left",
-        size: 220,
+        size: 260,
         enableResizing: true,
         cell: (inv) => {
           return <InvoicePartnerCell inv={inv} direction={direction} />;
-        },
-      },
-      {
-        key: "description",
-        header: bulkHeaderFilter.client(
-          "description",
-          t("tableColDescription", "DIỄN GIẢI"),
-          { filterOptions: descriptionOptions, showBlankOption: true },
-        ),
-        headerClassName: "text-center",
-        className: "text-left whitespace-normal",
-        size: 240,
-        enableResizing: true,
-        cell: (inv) => {
-          if (!inv.description) {
-            return (
-              <span className="text-muted-foreground font-mono text-xs">—</span>
-            );
-          }
-          return (
-            <TableText
-              text={(inv.description || "—").replace(/\n/g, " ")}
-              tooltip={true}
-              popoverContent={
-                inv.items && inv.items.length > 0
-                  ? () => <InvoiceItemsPopover items={inv.items} />
-                  : undefined
-              }
-              textClassName="line-clamp-3 break-words whitespace-normal text-xs leading-relaxed text-slate-700 dark:text-slate-300 py-0.5"
-            />
-          );
         },
       },
       {
@@ -863,7 +830,7 @@ export function InvoiceBulkNetOffDrawer({
           <span className="font-bold text-center block">Cấn trừ / Gợi ý</span>
         ),
         headerClassName: "text-center",
-        size: 300,
+        size: 320,
         enableResizing: true,
         cell: (inv) => {
           const currentSelections = Object.entries(netOffMap[inv.id] || {});
@@ -983,26 +950,35 @@ export function InvoiceBulkNetOffDrawer({
                 (pendingTxnUsage[txn.id] || 0),
             );
             const amtToApply = Math.min(remaining, txnRemaining);
-            const badgeConfig =
-              BADGE_CONFIG_MAP[score.badge] || BADGE_CONFIG_MAP.NOTICE;
+            const txnGrossAmount =
+              Number(direction === "IN" ? txn.debitAmount : txn.creditAmount) ||
+              0;
 
             return (
-              <div className="flex flex-col justify-center gap-0.5 py-0.5 max-w-[290px]">
-                {/* Dòng 1: Badge gợi ý + Tiền + Nút Áp dụng */}
-                <div className="flex items-center justify-between gap-1">
-                  <div className="flex items-center gap-1 min-w-0">
-                    <Badge
-                      variant="outline"
-                      className={cn(
-                        "text-[9px] px-1 py-0 h-4 font-semibold shrink-0",
-                        badgeConfig.badgeClasses,
-                      )}
-                    >
-                      {t(badgeConfig.key, badgeConfig.label)}
-                    </Badge>
-                    <span className="font-mono text-[11px] font-bold text-slate-900 dark:text-slate-100 truncate">
-                      {money(amtToApply)}
-                    </span>
+              <div className="flex flex-col justify-center gap-1 py-0.5 max-w-[310px]">
+                {/* Dòng 1: Badge gợi ý + Điểm + Gợi ý cấn + Nút Áp dụng */}
+                <div className="flex items-center justify-between gap-1.5">
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <SuggestionBadgePill
+                      badgeType={score.badge}
+                      showShortLabel={true}
+                    />
+                    {score.score !== undefined && (
+                      <span
+                        className="text-[9.5px] font-mono px-1 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold border border-slate-200 dark:border-slate-700 shrink-0"
+                        title={`Điểm tin cậy đối soát: ${score.score}/100`}
+                      >
+                        {score.score}đ
+                      </span>
+                    )}
+                    <div className="flex items-baseline gap-1 min-w-0">
+                      <span className="text-[9.5px] text-muted-foreground uppercase font-medium tracking-tight">
+                        Cấn:
+                      </span>
+                      <span className="font-mono text-[11px] font-bold text-slate-900 dark:text-slate-100 truncate tabular-nums">
+                        {money(amtToApply)}
+                      </span>
+                    </div>
                   </div>
 
                   <Button
@@ -1015,10 +991,21 @@ export function InvoiceBulkNetOffDrawer({
                   </Button>
                 </div>
 
-                {/* Dòng 2: Thông tin giao dịch gợi ý */}
-                <div className="text-[10px] text-muted-foreground truncate font-mono">
-                  Ref: {txn.referenceNumber || txn.seqNo || "—"} (
-                  {formatGMT7(txn.transDate, "date")})
+                {/* Dòng 2: Thông tin giao dịch gợi ý & Số tiền gốc GD sao kê */}
+                <div className="flex items-center justify-between text-[10px] text-muted-foreground font-mono leading-tight">
+                  <span
+                    className="truncate max-w-[180px]"
+                    title={`Ref: ${txn.referenceNumber || txn.seqNo || "—"} (${formatGMT7(txn.transDate, "date")})`}
+                  >
+                    Ref: {txn.referenceNumber || txn.seqNo || "—"} (
+                    {formatGMT7(txn.transDate, "date")})
+                  </span>
+                  <span
+                    className="text-slate-500 dark:text-slate-400 font-medium shrink-0 ml-1 text-[9.5px]"
+                    title={`Tổng phát sinh giao dịch sao kê: ${money(txnGrossAmount)} (Khả dụng: ${money(txnRemaining)})`}
+                  >
+                    GD: {money(txnGrossAmount)}
+                  </span>
                 </div>
 
                 {/* Dòng 3: Link đối chiếu & Chọn khác */}

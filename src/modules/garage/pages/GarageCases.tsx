@@ -5,6 +5,7 @@ import { DateRangeColumnSlot } from "@/shared/components/DataTable/DateRangeColu
 import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
 import { TableText } from "@/shared/components/DataTable/TableText";
 import { TableDateCell } from "@/shared/components/DataTable/TableDateCell";
+import { SubtotalSummaryCell } from "@/shared/components/DataTable/SubtotalSummaryCell";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import { money } from "@/shared/utils/format";
 import { cn } from "@/shared/utils";
@@ -895,7 +896,7 @@ export function GarageCases() {
         />
       ),
       sortable: false,
-      size: 130,
+      size: 180,
       enableResizing: true,
       className: "text-right font-semibold tabular-nums",
       cell: (item: any) => {
@@ -944,7 +945,7 @@ export function GarageCases() {
         />
       ),
       sortable: false,
-      size: 130,
+      size: 180,
       enableResizing: true,
       className: "text-right font-semibold tabular-nums",
       cell: (item: any) => {
@@ -993,7 +994,7 @@ export function GarageCases() {
         />
       ),
       sortable: false,
-      size: 130,
+      size: 180,
       enableResizing: true,
       className: "text-right font-semibold tabular-nums",
       cell: (item: any) => {
@@ -1216,16 +1217,16 @@ export function GarageCases() {
         </div>
       ),
     },
-    // 11. Tiến độ thu tiền (Phong cách Neutral Business)
+    // 13. Tổng phải thu (Thay thế Tiến độ thu, hiển thị Progress Bar)
     {
       key: "collectionProgress",
-      label: t("cases.columns.collectionProgress", "Tiến độ thu"),
+      label: t("cases.columns.collectionProgress", "Tổng phải thu"),
       header: (
         <TableColumnHeaderFilter
           {...createHeaderProps(
             "collectionProgress",
-            t("cases.columns.collectionProgress", "Tiến độ thu"),
-            "center",
+            t("cases.columns.collectionProgress", "Tổng phải thu"),
+            "right",
             false,
             (val: string) => {
               if (val === "PAID") return t("cases.filter.paid", "Đã thu đủ");
@@ -1251,9 +1252,9 @@ export function GarageCases() {
         />
       ),
       sortable: false,
-      size: 210,
+      size: 200,
       enableResizing: true,
-      className: "text-left",
+      className: "text-right",
       cell: (item: any) => {
         const total = Number(item.tienCoThue) || 0;
         const paid = Number(item.tienDaThanhToan) || 0;
@@ -1276,73 +1277,84 @@ export function GarageCases() {
               ? 100
               : 0;
 
-        return (
-          <div className="flex flex-col gap-1 w-full py-0.5 justify-center">
-            {/* Row 1: Left label/rate + Right amounts */}
-            <div className="flex items-center justify-between text-xs tabular-nums leading-tight">
-              {isAllPaid ? (
-                <span className="text-emerald-700 dark:text-emerald-400 font-medium text-xs">
-                  Đã thu đủ
-                </span>
-              ) : isUnpaid ? (
-                <span />
-              ) : (
-                <span className="font-mono font-bold text-xs text-emerald-800 dark:text-emerald-300">
-                  {rate}%
-                </span>
-              )}
+        const tooltipText = isAllPaid
+          ? `Đã thu đủ 100%: ${money(paid)}`
+          : isUnpaid
+            ? `Chưa thu (0%): Còn phải thu ${money(bal)} / Tổng ${money(total)}`
+            : `Đã thu: ${money(paid)} / ${money(total)} (${rate}%) • Còn phải thu: ${money(bal)}`;
 
-              <div className="flex items-center gap-1 font-mono text-xs truncate ml-auto">
-                {isAllPaid ? (
-                  <span className="text-emerald-700 dark:text-emerald-400 font-semibold">
-                    {money(paid)}
-                  </span>
-                ) : isUnpaid ? (
-                  <span className="text-muted-foreground font-normal">
-                    {money(bal)}
-                  </span>
-                ) : (
-                  <>
-                    <span className="text-emerald-700 dark:text-emerald-400 font-semibold">
-                      {money(paid)}
-                    </span>
-                    <span className="text-muted-foreground/40">/</span>
-                    <span className="text-muted-foreground font-normal">
-                      {money(bal)}
-                    </span>
-                  </>
-                )}
+        return (
+          <Tooltip content={tooltipText}>
+            <div className="flex flex-col gap-1 w-full py-0.5 justify-center cursor-default">
+              <div className="flex items-center justify-end text-xs tabular-nums leading-tight">
+                <span className="font-semibold text-foreground font-mono">
+                  {money(total)}
+                </span>
+              </div>
+              <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                <div
+                  className={cn(
+                    "h-full rounded-full transition-all duration-300",
+                    isAllPaid
+                      ? "bg-emerald-500 dark:bg-emerald-400"
+                      : isUnpaid
+                        ? "bg-transparent"
+                        : "bg-emerald-600 dark:bg-emerald-500",
+                  )}
+                  style={{ width: `${rate}%` }}
+                />
               </div>
             </div>
-
-            {/* Row 2: Progress bar */}
-            <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
-              <div
-                className={cn(
-                  "h-full rounded-full transition-all duration-300",
-                  isAllPaid
-                    ? "bg-emerald-500 dark:bg-emerald-400"
-                    : isUnpaid
-                      ? "bg-transparent"
-                      : "bg-emerald-600 dark:bg-emerald-500",
-                )}
-                style={{ width: `${rate}%` }}
-              />
-            </div>
-          </div>
+          </Tooltip>
         );
       },
     },
-    // 12. Tiến độ chi trả NCC (Dựa trên số tiền đã chi thực tế / tổng chi phí)
+    // 14. Còn phải thu
+    {
+      key: "tienConPhaiThanhToan",
+      label: t("cases.columns.remainingReceivable", "Còn phải thu"),
+      header: (
+        <TableColumnHeaderFilter
+          {...createHeaderProps(
+            "tienConPhaiThanhToan",
+            t("cases.columns.remainingReceivable", "Còn phải thu"),
+            "right",
+            false,
+            (val: string) => money(Number(val) || 0),
+          )}
+          {...commonOptionProps}
+        />
+      ),
+      sortable: false,
+      size: 200,
+      enableResizing: true,
+      className: "text-right",
+      cell: (item: any) => {
+        const bal = Number(item.tienConPhaiThanhToan) || 0;
+        return (
+          <span
+            className={cn(
+              "font-semibold tabular-nums",
+              bal === 0
+                ? "text-emerald-600 dark:text-emerald-400"
+                : "text-destructive",
+            )}
+          >
+            {money(bal)}
+          </span>
+        );
+      },
+    },
+    // 15. Tổng phải trả (Thay thế Tiến độ chi, hiển thị Progress Bar)
     {
       key: "costProgress",
-      label: t("cases.columns.costProgress", "Tiến độ chi"),
+      label: t("cases.columns.costProgress", "Tổng phải trả"),
       header: (
         <TableColumnHeaderFilter
           {...createHeaderProps(
             "costProgress",
-            t("cases.columns.costProgress", "Tiến độ chi"),
-            "center",
+            t("cases.columns.costProgress", "Tổng phải trả"),
+            "right",
             false,
             (val: string) => {
               if (val === "PAID")
@@ -1375,7 +1387,7 @@ export function GarageCases() {
       sortable: false,
       size: 200,
       enableResizing: true,
-      className: "text-left",
+      className: "text-right",
       cell: (item: any) => {
         const pItem = profitCases.find(
           (p: any) => p.VuViecCode === item.soChungTu,
@@ -1399,162 +1411,77 @@ export function GarageCases() {
         const costRate =
           cost > 0 ? Math.min(100, Math.round((paidCost / cost) * 100)) : 0;
 
+        const tooltipText = isAllPaidCost
+          ? `Đã trả đủ 100%: ${money(paidCost)}`
+          : isUnpaidCost
+            ? `Chưa trả (0%): Còn phải trả ${money(balCost)} / Tổng ${money(cost)}`
+            : `Đã trả: ${money(paidCost)} / ${money(cost)} (${costRate}%) • Còn phải trả: ${money(balCost)}`;
+
         return (
-          <div className="flex flex-col gap-1 w-full py-0.5 justify-center">
-            <div className="flex items-center justify-between text-xs tabular-nums leading-tight">
-              {isAllPaidCost ? (
-                <span className="text-emerald-700 dark:text-emerald-400 font-medium text-xs">
-                  Đã chi đủ
+          <Tooltip content={tooltipText}>
+            <div className="flex flex-col gap-1 w-full py-0.5 justify-center cursor-default">
+              <div className="flex items-center justify-end text-xs tabular-nums leading-tight">
+                <span className="font-semibold text-foreground font-mono">
+                  {money(cost)}
                 </span>
-              ) : isUnpaidCost ? (
-                <span />
-              ) : (
-                <span className="font-mono font-bold text-xs text-slate-700 dark:text-slate-300">
-                  {costRate}%
-                </span>
-              )}
-              <div className="flex items-center gap-1 font-mono text-xs truncate ml-auto">
-                {isAllPaidCost ? (
-                  <span className="text-emerald-700 dark:text-emerald-400 font-semibold">
-                    {money(paidCost)}
-                  </span>
-                ) : isUnpaidCost ? (
-                  <span className="text-muted-foreground font-normal">
-                    {money(balCost)}
-                  </span>
-                ) : (
-                  <>
-                    <span className="text-foreground font-medium">
-                      {money(paidCost)}
-                    </span>
-                    <span className="text-muted-foreground/40">/</span>
-                    <span className="text-muted-foreground font-normal">
-                      {money(balCost)}
-                    </span>
-                  </>
-                )}
+              </div>
+              <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                <div
+                  className={cn(
+                    "h-full rounded-full transition-all duration-300",
+                    isAllPaidCost
+                      ? "bg-emerald-500 dark:bg-emerald-400"
+                      : isUnpaidCost
+                        ? "bg-transparent"
+                        : "bg-slate-600 dark:bg-slate-400",
+                  )}
+                  style={{ width: `${costRate}%` }}
+                />
               </div>
             </div>
-            <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
-              <div
-                className={cn(
-                  "h-full rounded-full transition-all duration-300",
-                  isAllPaidCost
-                    ? "bg-emerald-500 dark:bg-emerald-400"
-                    : isUnpaidCost
-                      ? "bg-transparent"
-                      : "bg-slate-600 dark:bg-slate-400",
-                )}
-                style={{ width: `${costRate}%` }}
-              />
-            </div>
-          </div>
+          </Tooltip>
         );
       },
     },
-    // 13. Chi nhánh Kgara
+    // 16. Còn phải trả
     {
-      key: "branchName",
-      label: t("cases.columns.branchName", "Chi nhánh"),
+      key: "tienConPhaiChi",
+      label: t("cases.columns.remainingPayable", "Còn phải trả"),
       header: (
         <TableColumnHeaderFilter
           {...createHeaderProps(
-            "branchName",
-            t("cases.columns.branchName", "Chi nhánh"),
-            "center",
-            true,
-            undefined,
-            true,
+            "tienConPhaiChi",
+            t("cases.columns.remainingPayable", "Còn phải trả"),
+            "right",
+            false,
+            (val: string) => money(Number(val) || 0),
           )}
-          hideFooter={true}
+          {...commonOptionProps}
         />
       ),
       sortable: false,
-      size: 160,
+      size: 200,
       enableResizing: true,
-      className: "text-left",
+      className: "text-right",
       cell: (item: any) => {
-        const b = branches?.find(
-          (b: any) => b.externalId === item.branchExternalId,
+        const cost = Number(item.chiPhi ?? item.rawData?.ChiPhi ?? 0);
+        const paidCost = Number(item.tienDaChi ?? item.rawData?.TienDaChi ?? 0);
+        const balCost = Math.max(0, cost - paidCost);
+        return (
+          <span
+            className={cn(
+              "font-semibold tabular-nums",
+              balCost === 0
+                ? "text-emerald-600 dark:text-emerald-400"
+                : "text-amber-700 dark:text-amber-400",
+            )}
+          >
+            {money(balCost)}
+          </span>
         );
-        return b?.name || "-";
       },
     },
-    // 14. Ngày tạo HT
-    {
-      key: "createdAt",
-      label: t("cases.columns.createdAt", "Ngày tạo"),
-      header: (
-        <TableColumnHeaderFilter
-          {...createHeaderProps(
-            "createdAt",
-            t("cases.columns.createdAt", "Ngày tạo"),
-            "center",
-            true,
-          )}
-          isActive={
-            !!(getDateRange("createdAt").from || getDateRange("createdAt").to)
-          }
-          hideFooter={true}
-          dateRangeSlot={({ close }) => (
-            <DateRangeColumnSlot
-              dateFrom={getDateRange("createdAt").from}
-              dateTo={getDateRange("createdAt").to}
-              onChange={(from, to) => {
-                handleDateRangeChange("createdAt", from, to);
-                close();
-              }}
-              onClose={close}
-            />
-          )}
-        />
-      ),
-      sortable: false,
-      size: 150,
-      enableResizing: true,
-      className: "text-right",
-      cell: (item: any) => (
-        <TableDateCell date={item.createdAt} className="justify-end w-full" />
-      ),
-    },
-    // 15. Dữ liệu lúc
-    {
-      key: "dataAsOf",
-      label: t("cases.columns.dataAsOf", "Dữ liệu lúc"),
-      header: (
-        <TableColumnHeaderFilter
-          {...createHeaderProps(
-            "dataAsOf",
-            t("cases.columns.dataAsOf", "Dữ liệu lúc"),
-            "center",
-            true,
-          )}
-          isActive={
-            !!(getDateRange("dataAsOf").from || getDateRange("dataAsOf").to)
-          }
-          hideFooter={true}
-          dateRangeSlot={({ close }) => (
-            <DateRangeColumnSlot
-              dateFrom={getDateRange("dataAsOf").from}
-              dateTo={getDateRange("dataAsOf").to}
-              onChange={(from, to) => {
-                handleDateRangeChange("dataAsOf", from, to);
-                close();
-              }}
-              onClose={close}
-            />
-          )}
-        />
-      ),
-      sortable: false,
-      size: 150,
-      enableResizing: true,
-      className: "text-right",
-      cell: (item: any) => (
-        <TableDateCell date={item.dataAsOf} className="justify-end w-full" />
-      ),
-    },
-    // 16. Bảo hiểm (BH) - Di chuyển sang bên trái Ngày cập nhật
+    // 17. Bảo hiểm (BH) - Di chuyển xuống cuối
     {
       key: "isInsuranceClaim",
       label: t("cases.columns.insurance", "BH"),
@@ -1592,7 +1519,7 @@ export function GarageCases() {
           </span>
         ),
     },
-    // 17. Hóa đơn VAT (HĐ VAT) - Nằm ngay bên phải cột BH
+    // 18. Hóa đơn VAT (HĐ VAT) - Nằm ngay bên phải cột BH
     {
       key: "hasInvoice",
       label: t("cases.columns.vatInvoice", "HĐ VAT"),
@@ -1643,7 +1570,109 @@ export function GarageCases() {
         );
       },
     },
-    // 18. Ngày cập nhật
+    // 19. Chi nhánh Kgara
+    {
+      key: "branchName",
+      label: t("cases.columns.branchName", "Chi nhánh"),
+      header: (
+        <TableColumnHeaderFilter
+          {...createHeaderProps(
+            "branchName",
+            t("cases.columns.branchName", "Chi nhánh"),
+            "center",
+            true,
+            undefined,
+            true,
+          )}
+          hideFooter={true}
+        />
+      ),
+      sortable: false,
+      size: 160,
+      enableResizing: true,
+      className: "text-left",
+      cell: (item: any) => {
+        const b = branches?.find(
+          (b: any) => b.externalId === item.branchExternalId,
+        );
+        return b?.name || "-";
+      },
+    },
+    // 20. Ngày tạo HT
+    {
+      key: "createdAt",
+      label: t("cases.columns.createdAt", "Ngày tạo"),
+      header: (
+        <TableColumnHeaderFilter
+          {...createHeaderProps(
+            "createdAt",
+            t("cases.columns.createdAt", "Ngày tạo"),
+            "center",
+            true,
+          )}
+          isActive={
+            !!(getDateRange("createdAt").from || getDateRange("createdAt").to)
+          }
+          hideFooter={true}
+          dateRangeSlot={({ close }) => (
+            <DateRangeColumnSlot
+              dateFrom={getDateRange("createdAt").from}
+              dateTo={getDateRange("createdAt").to}
+              onChange={(from, to) => {
+                handleDateRangeChange("createdAt", from, to);
+                close();
+              }}
+              onClose={close}
+            />
+          )}
+        />
+      ),
+      sortable: false,
+      size: 150,
+      enableResizing: true,
+      className: "text-right",
+      cell: (item: any) => (
+        <TableDateCell date={item.createdAt} className="justify-end w-full" />
+      ),
+    },
+    // 21. Dữ liệu lúc
+    {
+      key: "dataAsOf",
+      label: t("cases.columns.dataAsOf", "Dữ liệu lúc"),
+      header: (
+        <TableColumnHeaderFilter
+          {...createHeaderProps(
+            "dataAsOf",
+            t("cases.columns.dataAsOf", "Dữ liệu lúc"),
+            "center",
+            true,
+          )}
+          isActive={
+            !!(getDateRange("dataAsOf").from || getDateRange("dataAsOf").to)
+          }
+          hideFooter={true}
+          dateRangeSlot={({ close }) => (
+            <DateRangeColumnSlot
+              dateFrom={getDateRange("dataAsOf").from}
+              dateTo={getDateRange("dataAsOf").to}
+              onChange={(from, to) => {
+                handleDateRangeChange("dataAsOf", from, to);
+                close();
+              }}
+              onClose={close}
+            />
+          )}
+        />
+      ),
+      sortable: false,
+      size: 150,
+      enableResizing: true,
+      className: "text-right",
+      cell: (item: any) => (
+        <TableDateCell date={item.dataAsOf} className="justify-end w-full" />
+      ),
+    },
+    // 22. Ngày cập nhật
     {
       key: "updatedAt",
       label: t("cases.columns.updatedAt", "Ngày cập nhật"),
@@ -1688,8 +1717,9 @@ export function GarageCases() {
     let totalRev = 0;
     let totalCost = 0;
     let totalProfit = 0;
-    let totalPaidVal = 0;
+    let totalReceivable = 0;
     let totalBalanceVal = 0;
+    let totalRemainingPayable = 0;
 
     for (const item of visibleCases) {
       const pItem = profitCases.find(
@@ -1701,14 +1731,17 @@ export function GarageCases() {
         Number(item.chiPhi ?? pItem?.ChiPhi ?? item.rawData?.ChiPhi) || 0;
       const profit =
         Number(item.loiNhuan ?? pItem?.LoiNhuan ?? item.rawData?.LoiNhuan) || 0;
-      const paidAmt = Number(item.tienDaThanhToan) || 0;
+      const rec = Number(item.tienCoThue) || 0;
       const balAmt = Number(item.tienConPhaiThanhToan) || 0;
+      const paidCost =
+        Number(item.tienDaChi ?? item.rawData?.TienDaChi ?? 0) || 0;
 
       totalRev += rev;
       totalCost += cost;
       totalProfit += profit;
-      totalPaidVal += paidAmt;
+      totalReceivable += rec;
       totalBalanceVal += balAmt;
+      totalRemainingPayable += Math.max(0, cost - paidCost);
     }
 
     const isNgayHoanThanhVisible =
@@ -1717,48 +1750,225 @@ export function GarageCases() {
       ? "ngayHoanThanhCongViec"
       : "customerName";
 
+    const totalPages = Math.ceil(totalCases / pageSize) || 1;
+    const totals = casesData?.totals;
+
+    const grandTotalRev =
+      totals?.grandTotalRevenue !== undefined
+        ? Number(totals.grandTotalRevenue)
+        : totalRev;
+    const grandTotalCostVal =
+      totals?.grandTotalCost !== undefined
+        ? Number(totals.grandTotalCost)
+        : totalCost;
+    const grandTotalProfitVal =
+      totals?.grandTotalProfit !== undefined
+        ? Number(totals.grandTotalProfit)
+        : totalProfit;
+    const grandTotalRec =
+      totals?.grandTotalReceivable !== undefined
+        ? Number(totals.grandTotalReceivable)
+        : totalReceivable;
+    const grandTotalBal =
+      totals?.grandTotalBalance !== undefined
+        ? Number(totals.grandTotalBalance)
+        : totalBalanceVal;
+    const grandTotalRemPayable =
+      totals?.grandTotalRemainingPayable !== undefined
+        ? Number(totals.grandTotalRemainingPayable)
+        : totalRemainingPayable;
+
+    const cumRev =
+      totals?.cumulativeRevenue !== undefined
+        ? Number(totals.cumulativeRevenue)
+        : page === 1
+          ? totalRev
+          : undefined;
+    const cumCost =
+      totals?.cumulativeCost !== undefined
+        ? Number(totals.cumulativeCost)
+        : page === 1
+          ? totalCost
+          : undefined;
+    const cumProfit =
+      totals?.cumulativeProfit !== undefined
+        ? Number(totals.cumulativeProfit)
+        : page === 1
+          ? totalProfit
+          : undefined;
+    const cumRec =
+      totals?.cumulativeReceivable !== undefined
+        ? Number(totals.cumulativeReceivable)
+        : page === 1
+          ? totalReceivable
+          : undefined;
+    const cumBal =
+      totals?.cumulativeBalance !== undefined
+        ? Number(totals.cumulativeBalance)
+        : page === 1
+          ? totalBalanceVal
+          : undefined;
+    const cumRemPayable =
+      totals?.cumulativeRemainingPayable !== undefined
+        ? Number(totals.cumulativeRemainingPayable)
+        : page === 1
+          ? totalRemainingPayable
+          : undefined;
+    const cumCount = (page - 1) * pageSize + visibleCases.length;
+
     return {
       [totalLabelCol]: (
-        <div className="text-right w-full font-bold text-xs uppercase text-muted-foreground pr-2">
-          {t("cases.common.total", "Tổng")}:
-        </div>
+        <SubtotalSummaryCell
+          variantType="label"
+          label={`${t("cases.common.total", "Tổng cộng")}:`}
+          page={page}
+          totalPages={totalPages}
+          totalCount={totalCases}
+          currentPageCount={visibleCases.length}
+          cumulativeCount={cumCount}
+          itemTitle={t("cases.summary.items", "Phiếu dịch vụ")}
+          itemUnit={t("cases.summary.unit", "phiếu")}
+        />
       ),
       doanhThu: (
-        <div className="text-right font-bold text-primary tabular-nums">
-          {money(totalRev)}
+        <div className="w-full flex justify-end">
+          <SubtotalSummaryCell
+            variantType="amount"
+            metricTitle={t("cases.columns.doanhThu", "Doanh thu")}
+            subtotalAmount={totalRev}
+            cumulativeAmount={cumRev}
+            grandTotalAmount={grandTotalRev}
+            page={page}
+            totalPages={totalPages}
+            currentPageCount={visibleCases.length}
+            totalCount={totalCases}
+            valueClassName="font-bold text-primary"
+          />
         </div>
       ),
       chiPhi: (
-        <div className="text-right font-bold text-slate-600 dark:text-slate-300 tabular-nums">
-          {money(totalCost)}
+        <div className="w-full flex justify-end">
+          <SubtotalSummaryCell
+            variantType="amount"
+            metricTitle={t("cases.columns.chiPhi", "Chi phí")}
+            subtotalAmount={totalCost}
+            cumulativeAmount={cumCost}
+            grandTotalAmount={grandTotalCostVal}
+            page={page}
+            totalPages={totalPages}
+            currentPageCount={visibleCases.length}
+            totalCount={totalCases}
+            valueClassName="font-bold text-slate-700 dark:text-slate-300"
+          />
         </div>
       ),
       loiNhuan: (
-        <div
-          className={`text-right font-bold tabular-nums ${
-            totalProfit >= 0 ? "text-emerald-600" : "text-rose-600"
-          }`}
-        >
-          {money(totalProfit)}
+        <div className="w-full flex justify-end">
+          <SubtotalSummaryCell
+            variantType="amount"
+            metricTitle={t("cases.columns.loiNhuan", "Lợi nhuận gộp")}
+            subtotalAmount={totalProfit}
+            cumulativeAmount={cumProfit}
+            grandTotalAmount={grandTotalProfitVal}
+            page={page}
+            totalPages={totalPages}
+            currentPageCount={visibleCases.length}
+            totalCount={totalCases}
+            valueClassName={
+              totalProfit >= 0
+                ? "font-bold text-emerald-600 dark:text-emerald-400"
+                : "font-bold text-rose-600 dark:text-rose-400"
+            }
+          />
         </div>
       ),
+      // Cột Tổng phải thu (thay thế Tiến độ thu): Chỉ ghi số tổng ở hàng summaryRow
       collectionProgress: (
-        <div className="flex flex-col gap-0.5 text-right font-bold tabular-nums">
-          <div className="text-emerald-600 dark:text-emerald-400 text-xs">
-            Đã thu: {money(totalPaidVal)}
-          </div>
-          <div className="text-destructive text-[11px]">
-            Còn lại: {money(totalBalanceVal)}
-          </div>
+        <div className="w-full flex justify-end">
+          <SubtotalSummaryCell
+            variantType="amount"
+            metricTitle={t("cases.columns.collectionProgress", "Tổng phải thu")}
+            subtotalAmount={totalReceivable}
+            cumulativeAmount={cumRec}
+            grandTotalAmount={grandTotalRec}
+            page={page}
+            totalPages={totalPages}
+            currentPageCount={visibleCases.length}
+            totalCount={totalCases}
+            valueClassName="font-bold text-primary"
+          />
         </div>
       ),
+      // Cột Còn phải thu: Chỉ ghi số tổng ở hàng summaryRow
+      tienConPhaiThanhToan: (
+        <div className="w-full flex justify-end">
+          <SubtotalSummaryCell
+            variantType="amount"
+            metricTitle={t("cases.columns.remainingReceivable", "Còn phải thu")}
+            subtotalAmount={totalBalanceVal}
+            cumulativeAmount={cumBal}
+            grandTotalAmount={grandTotalBal}
+            page={page}
+            totalPages={totalPages}
+            currentPageCount={visibleCases.length}
+            totalCount={totalCases}
+            valueClassName={
+              totalBalanceVal === 0
+                ? "font-bold text-emerald-600 dark:text-emerald-400"
+                : "font-bold text-destructive"
+            }
+          />
+        </div>
+      ),
+      // Cột Tổng phải trả (thay thế Tiến độ chi): Chỉ ghi số tổng ở hàng summaryRow
       costProgress: (
-        <div className="text-right font-bold text-slate-600 dark:text-slate-300 tabular-nums text-xs">
-          Tổng chi: {money(totalCost)}
+        <div className="w-full flex justify-end">
+          <SubtotalSummaryCell
+            variantType="amount"
+            metricTitle={t("cases.columns.costProgress", "Tổng phải trả")}
+            subtotalAmount={totalCost}
+            cumulativeAmount={cumCost}
+            grandTotalAmount={grandTotalCostVal}
+            page={page}
+            totalPages={totalPages}
+            currentPageCount={visibleCases.length}
+            totalCount={totalCases}
+            valueClassName="font-bold text-slate-700 dark:text-slate-300"
+          />
+        </div>
+      ),
+      // Cột Còn phải trả: Chỉ ghi số tổng ở hàng summaryRow
+      tienConPhaiChi: (
+        <div className="w-full flex justify-end">
+          <SubtotalSummaryCell
+            variantType="amount"
+            metricTitle={t("cases.columns.remainingPayable", "Còn phải trả")}
+            subtotalAmount={totalRemainingPayable}
+            cumulativeAmount={cumRemPayable}
+            grandTotalAmount={grandTotalRemPayable}
+            page={page}
+            totalPages={totalPages}
+            currentPageCount={visibleCases.length}
+            totalCount={totalCases}
+            valueClassName={
+              totalRemainingPayable === 0
+                ? "font-bold text-emerald-600 dark:text-emerald-400"
+                : "font-bold text-amber-700 dark:text-amber-400"
+            }
+          />
         </div>
       ),
     };
-  }, [visibleCases, profitCases, t, currentColumnVisibility]);
+  }, [
+    visibleCases,
+    profitCases,
+    t,
+    currentColumnVisibility,
+    page,
+    pageSize,
+    totalCases,
+    casesData?.totals,
+  ]);
 
   return (
     <>
