@@ -39,12 +39,6 @@ const loadInventoryDashboard = () =>
   }));
 const InventoryDashboard = lazy(loadInventoryDashboard);
 
-const CashflowDashboard = lazy(() =>
-  import("@/pages/CashflowDashboard").then((m) => ({
-    default: m.CashflowDashboard,
-  })),
-);
-
 const loadMuaHang = () =>
   import("@/pages/Purchasing").then((m) => ({ default: m.MuaHang }));
 const MuaHang = lazy(loadMuaHang);
@@ -154,26 +148,6 @@ const ErpInvoicesPage = lazy(() =>
     default: m.ErpInvoicesPage,
   })),
 );
-const ErpInvoicesInPage = lazy(() =>
-  import("@/pages/ErpInvoicesInPage").then((m) => ({
-    default: m.ErpInvoicesInPage,
-  })),
-);
-const ErpInvoicesDraftPage = lazy(() =>
-  import("@/pages/ErpInvoicesDraftPage").then((m) => ({
-    default: m.ErpInvoicesDraftPage,
-  })),
-);
-const ErpInvoicesOutPage = lazy(() =>
-  import("@/pages/ErpInvoicesOutPage").then((m) => ({
-    default: m.ErpInvoicesOutPage,
-  })),
-);
-const InvoiceDashboard = lazy(() =>
-  import("@/pages/InvoiceDashboard").then((m) => ({
-    default: m.InvoiceDashboard,
-  })),
-);
 const SysTagsPage = lazy(() =>
   import("@/pages/SysTagsPage").then((m) => ({ default: m.SysTagsPage })),
 );
@@ -255,12 +229,17 @@ const OpexPage = lazy(() =>
     default: m.OpexPage,
   })),
 );
+const InvoiceDebtsPage = lazy(() =>
+  import("@/pages/InvoiceDebtsPage").then((m) => ({
+    default: m.InvoiceDebtsPage,
+  })),
+);
 
 const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   dashboard: Dashboard,
   opex: OpexPage,
   "inventory-dashboard": InventoryDashboard,
-  "cashflow-dashboard": CashflowDashboard,
+  "cashflow-dashboard": () => <BankStatementPage initialTab="dashboard" />,
   purchasing: MuaHang,
   "erp-inventory-stock": InventoryStockPage,
   "erp-inventory-tracking": InventoryTrackingPage,
@@ -286,19 +265,20 @@ const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   "email-inbox": EmailInboxPage,
   "erp-permissions-core": ErpPermissionsCorePage,
   "erp-invoices": ErpInvoicesPage,
-  "erp-invoices-in": ErpInvoicesInPage,
-  "erp-invoices-out": ErpInvoicesOutPage,
-  "erp-invoices-draft": ErpInvoicesDraftPage,
-  "invoice-dashboard": InvoiceDashboard,
+  "erp-invoices-in": () => <ErpInvoicesPage initialTab="in" />,
+  "erp-invoices-out": () => <ErpInvoicesPage initialTab="out" />,
+  "erp-invoices-draft": () => <ErpInvoicesPage initialTab="draft" />,
+  "invoice-dashboard": () => <ErpInvoicesPage initialTab="dashboard" />,
   "sys-tags": SysTagsPage,
   attachments: AttachmentsPage,
-  "bank-statement": () => <BankStatementPage type="bank" />,
-  "cash-statement": () => <BankStatementPage type="cash" />,
+  "bank-statement": () => <BankStatementPage initialTab="bank" />,
+  "cash-statement": () => <BankStatementPage initialTab="cash" />,
   "journal-entry": GeneralJournalPage,
   "settings-accounts": ChartOfAccountsPage,
   "settings-bank": ThietLapNganHang,
   "settings-cash-fund": ThietLapQuy,
   "settings-branch": SettingsBranch,
+  "invoice-debts": InvoiceDebtsPage,
   "garage-dashboard": GarageDashboard,
   "garage-cases": GarageCases,
   "garage-opex": GarageOpex,
@@ -330,6 +310,7 @@ const PAGE_PRELOADERS: Partial<Record<PageKey, PageLoader>> = {
     import("@/pages/inventory/InventoryTrackingPartsPage"),
   "erp-finished-goods": () => import("@/pages/manufacturing/FinishedGoodsPage"),
   "garage-partners": () => import("@/modules/garage/pages/GaragePartners"),
+  "invoice-debts": () => import("@/pages/InvoiceDebtsPage"),
   "erp-inventory-vouchers": loadInventoryVouchersPage,
   "erp-sales-orders": loadErpSalesOrdersPage,
   "erp-goods-issues": loadErpGoodsIssuesPage,
@@ -391,7 +372,7 @@ export default function App() {
         ) {
           const canonicalPath = pageToPath(
             "erp-invoices",
-            parsed.tab || "in",
+            parsed.tab || "dashboard",
             parsed.instanceIndex === 2 ? { _i: "2" } : undefined,
           );
           window.history.replaceState(null, "", canonicalPath);

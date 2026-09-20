@@ -23,7 +23,6 @@ import {
   Paperclip,
   Wallet,
   FileText,
-  Building2,
 } from "lucide-react";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/Button";
@@ -40,10 +39,7 @@ import {
   ErpInvoiceSettlementRightPanel,
   ErpInvoiceSettlementProvider,
 } from "./ErpInvoiceSettlementTab";
-import {
-  ErpInvoicePartnerTab,
-  ErpInvoicePartnerRightPanel,
-} from "./ErpInvoicePartnerTab";
+import { ErpInvoicePartnerTab } from "./ErpInvoicePartnerTab";
 import { PostedAccountingSummary } from "@/shared/components/accounting/PostedAccountingSummary";
 import { PostingSection } from "@/shared/components/accounting/PostingSection";
 import { ErpInvoicePdfUpload } from "./ErpInvoicePdfUpload";
@@ -86,7 +82,7 @@ interface Props {
   defaultRelatedTabKey?: string;
   defaultRelatedCollapsed?: boolean;
   bottomPanel?: React.ReactNode;
-  partnerViewMode?: "invoices" | "lines";
+  partnerViewMode?: "details" | "invoices" | "lines";
 }
 
 function formatTaxInvoiceStatus(val?: number | null) {
@@ -143,6 +139,9 @@ export function ErpInvoiceInternalDrawer({
   const [showPoModal, setShowPoModal] = useState(false);
   const [showSoModal, setShowSoModal] = useState(false);
   const [showGarageCaseModal, setShowGarageCaseModal] = useState(false);
+  const [subTabKey, setSubTabKey] = useState<
+    "details" | "invoices" | "lines" | "analytics"
+  >("details");
 
   const handleFetchGraph = useCallback(
     (id: string) => erpInvoicesCoreApi.getTraceabilityGraph(id),
@@ -355,32 +354,22 @@ export function ErpInvoiceInternalDrawer({
       (detailInvoice.attachments?.length || 0);
 
     return [
-      // 1. Tab Chi tiết (Form / Sheet Preview Chính)
+      // 1. Tab Chi tiết (Hợp nhất: Thông tin HĐ + Đối tác + Hàng hóa + Analytics)
       {
         key: "invoice_details",
         label: t("tabDetails", "Chi tiết"),
         icon: <FileText className="w-3.5 h-3.5" />,
-        content: <div className="space-y-4">{children}</div>,
-      },
-
-      // 2. Tab Chi tiết theo đối tượng (Thông tin đối tác & Lịch sử giao dịch liên quan)
-      {
-        key: "partner",
-        label: t("tabObjectDetails", "Chi tiết theo đối tượng"),
-        icon: <Building2 className="w-3.5 h-3.5" />,
         content: (
           <ErpInvoicePartnerTab
             detailInvoice={detailInvoice}
             direction={direction}
-            defaultViewMode={partnerViewMode}
-          />
+            defaultViewMode={partnerViewMode ?? "details"}
+            onViewModeChange={setSubTabKey}
+          >
+            <div className="space-y-4">{children}</div>
+          </ErpInvoicePartnerTab>
         ),
-        rightPanel: (
-          <ErpInvoicePartnerRightPanel
-            detailInvoice={detailInvoice}
-            direction={direction}
-          />
-        ),
+        rightPanel,
       },
 
       // 3. Tab Tài chính (Settlements & Cashflow)
@@ -759,6 +748,9 @@ export function ErpInvoiceInternalDrawer({
     onUnpost,
     onSyncDetail,
     handleFetchGraph,
+    subTabKey,
+    rightPanel,
+    partnerViewMode,
   ]);
 
   return (
@@ -779,7 +771,13 @@ export function ErpInvoiceInternalDrawer({
         title={drawerTitle}
         titleExtra={titleExtra}
         size="xl"
-        layout={rightPanel ? "2-columns" : "1-column"}
+        layout={
+          resolvedDrawerTabs
+            ? "2-columns"
+            : rightPanel
+              ? "2-columns"
+              : "1-column"
+        }
         collapsibleRightPanel={true}
         confirmOnClose={editMode}
         actions={editMode ? editActions : undefined}
@@ -789,7 +787,7 @@ export function ErpInvoiceInternalDrawer({
         activeTabKey={activeTabKey}
         onTabChange={onTabChange}
         leftPanel={!resolvedDrawerTabs ? children : undefined}
-        rightPanel={rightPanel}
+        rightPanel={!resolvedDrawerTabs ? rightPanel : undefined}
         relatedTabs={customRelatedTabs}
         defaultRelatedTabKey={defaultRelatedTabKey}
         defaultRelatedCollapsed={defaultRelatedCollapsed}

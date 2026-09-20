@@ -309,4 +309,5 @@ Khi lắp ráp bảng vào `<SpreadsheetPageTemplate>`, cần lưu ý sự khác
 | **Pagination Responsive** | Hỗ trợ `pageSizeOptions = [20, 50, 100, 200]`, khởi tạo `defaultPageSize` bằng `getDefaultPageSize()` (`< 900px` -> 20, `>= 900px` -> 50). Reset `setPage(1)` khi đổi filter/sort/tab. | [ ] |
 | **Container & Table ID** | Có `tableId` unique để tự động lưu column sizing/visibility/order vào App Setting. | [ ] |
 | **Summary Row & Header Glass** | Bảng có cột số tiền/số lượng phải có dòng tổng cộng `summaryRow`; Cả TableHeader lẫn TableFooter tự động có hiệu ứng `table-header-glass` / `table-footer-glass` mờ mịn. | [ ] |
+| **Cumulative Subtotal Popover (Số lũy kế trang 2+)** | Khi bảng có phân trang (`totalPages > 1`), **BẮT BUỘC TRUYỀN `cumulativeAmount`, `cumulativeQty`, `cumulativeCount`** vào `SubtotalSummaryCell` để popover không bị ẩn mất dòng Lũy kế `↳ Lũy kế (T1 → TP)` từ trang 2 trở đi. | [ ] |
 | **i18n** | 100% text bọc trong `t(...)`, bao gồm cả `TableColumnHeaderFilter`. | [ ] |

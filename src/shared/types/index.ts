@@ -13,6 +13,7 @@ export type PageKey =
   | "settings-accounts"
   | "receivables"
   | "payables"
+  | "invoice-debts"
   | "ledger"
   | "journal"
   | "journal-entry"

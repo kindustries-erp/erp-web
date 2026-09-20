@@ -27,8 +27,19 @@ import { InvoiceItemsPopover } from "@/modules/erp-invoices-core/components/ErpI
 import { ErpUrlQueryParam } from "@/shared/constants/urlParams";
 import { DEFAULT_DEBOUNCE_TIME } from "@/shared/constants/timing";
 import { encodeStateParam } from "@/shared/utils/pageUrl";
+import type { TabItem } from "@/shared/components/PageLayout";
 
-export function ErpInvoicesDraftPage() {
+export interface ErpInvoicesDraftPageProps {
+  tabs?: TabItem[];
+  activeTab?: string;
+  onTabChange?: (val: string) => void;
+}
+
+export function ErpInvoicesDraftPage({
+  tabs,
+  activeTab,
+  onTabChange,
+}: ErpInvoicesDraftPageProps = {}) {
   const { t } = useTranslation("erpInvoices");
   const canEditInvoice = useHasPermission(
     ErpResource.INVOICES,
@@ -47,7 +58,9 @@ export function ErpInvoicesDraftPage() {
   );
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    if (typeof window === "undefined" || (activeTab && activeTab !== "draft")) {
+      return;
+    }
 
     if (debounceUrlTimerRef.current) {
       clearTimeout(debounceUrlTimerRef.current);
@@ -56,6 +69,9 @@ export function ErpInvoicesDraftPage() {
     debounceUrlTimerRef.current = setTimeout(() => {
       const currentUrl = new URL(window.location.href);
       const newParams = new URLSearchParams(currentUrl.search);
+
+      // Keep tab param
+      newParams.set(ErpUrlQueryParam.TAB, "draft");
 
       // Detail drawer
       if (detailDraft?.id) {
@@ -131,6 +147,7 @@ export function ErpInvoicesDraftPage() {
         clearTimeout(debounceUrlTimerRef.current);
     };
   }, [
+    activeTab,
     detailDraft?.id,
     listHook.page,
     listHook.pageSize,
@@ -578,6 +595,9 @@ export function ErpInvoicesDraftPage() {
         desc="Quản lý danh sách hóa đơn điện tử nháp"
         icon={<FileText className="h-5 w-5" />}
         tableId="erp-invoices-draft-table"
+        tabs={tabs}
+        activeTab={activeTab}
+        onTabChange={onTabChange}
         items={listHook.drafts}
         columns={columns}
         getRowKey={(r) => r.id}

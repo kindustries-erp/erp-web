@@ -206,7 +206,7 @@ export function DataTable<T>({
             >
               <Table
                 className={cn(
-                  "table-fixed",
+                  "table-fixed min-h-full",
                   variant === "spreadsheet" &&
                     "border-collapse border-spacing-0",
                 )}
@@ -512,6 +512,17 @@ export function DataTable<T>({
                         );
                       });
                     })()
+                  )}
+                  {summaryRow && items.length > 0 && !loading && (
+                    <tr
+                      aria-hidden="true"
+                      className="h-full border-none hover:bg-transparent pointer-events-none select-none"
+                    >
+                      <td
+                        colSpan={table.getVisibleLeafColumns().length + 1}
+                        className="p-0 border-none bg-transparent pointer-events-none"
+                      />
+                    </tr>
                   )}
                 </TableBody>
 

@@ -105,6 +105,9 @@ export function SidebarNav({
     ErpResource.INVOICES,
     ErpAction.READ,
   );
+  const canReadDebts =
+    useHasPermission(ErpResource.INVOICE_DEBTS, ErpAction.READ) ||
+    canReadInvoices;
   const canReadBankStatements = useHasPermission(
     ErpResource.BANK_STATEMENTS,
     ErpAction.READ,
@@ -114,7 +117,7 @@ export function SidebarNav({
     ErpAction.READ,
   );
   const showCashflow = canReadBankStatements || canReadCashStatements;
-  const showAccounting = canReadInvoices || showCashflow;
+  const showAccounting = canReadInvoices || canReadDebts || showCashflow;
 
   const canReadEmployees = useHasPermission(
     ErpResource.EMPLOYEES,
@@ -414,7 +417,7 @@ export function SidebarNav({
       {showAccounting && (
         <NavSection collapsed={c} label={t("nav.sections.accounting")}>
           {showCashflow && (
-            <NavGroup
+            <NavItem
               collapsed={c}
               icon={<Wallet className="w-4 h-4 opacity-65 flex-shrink-0" />}
               label={t("nav.items.cashflow")}
@@ -423,65 +426,37 @@ export function SidebarNav({
                 currentPage === "bank-statement" ||
                 currentPage === "cash-statement"
               }
-            >
-              <NavGroupItem
-                label={t("nav.items.cashflowDashboard")}
-                active={currentPage === "cashflow-dashboard"}
-                onClick={() => navTo("cashflow-dashboard")}
-                contextPage="cashflow-dashboard"
-              />
-              {canReadBankStatements && (
-                <NavGroupItem
-                  label={t("bankStatement.bankTitle")}
-                  active={currentPage === "bank-statement"}
-                  onClick={() => navTo("bank-statement")}
-                  contextPage="bank-statement"
-                />
-              )}
-              {canReadCashStatements && (
-                <NavGroupItem
-                  label={t("bankStatement.cashTitle")}
-                  active={currentPage === "cash-statement"}
-                  onClick={() => navTo("cash-statement")}
-                  contextPage="cash-statement"
-                />
-              )}
-            </NavGroup>
+              onClick={() => navTo("cashflow-dashboard")}
+              contextPage="cashflow-dashboard"
+            />
           )}
           {canReadInvoices && (
-            <NavGroup
+            <NavItem
               collapsed={c}
               icon={<Receipt className="w-4 h-4 opacity-65 flex-shrink-0" />}
               label={t("nav.items.erpInvoices")}
               active={
                 currentPage === "erp-invoices" ||
                 currentPage === "erp-invoices-in" ||
+                currentPage === "erp-invoices-out" ||
                 currentPage === "erp-invoices-draft" ||
                 currentPage === "invoice-dashboard"
               }
-            >
-              <NavGroupItem
-                label="Tổng quan"
-                active={currentPage === "invoice-dashboard"}
-                onClick={() => navTo("invoice-dashboard")}
-                contextPage="invoice-dashboard"
-              />
-              <NavGroupItem
-                label={t("nav.items.erpInvoices")}
-                active={
-                  currentPage === "erp-invoices" ||
-                  currentPage === "erp-invoices-in"
-                }
-                onClick={() => navTo("erp-invoices")}
-                contextPage="erp-invoices"
-              />
-              <NavGroupItem
-                label="Hóa đơn nháp"
-                active={currentPage === "erp-invoices-draft"}
-                onClick={() => navTo("erp-invoices-draft")}
-                contextPage="erp-invoices-draft"
-              />
-            </NavGroup>
+              onClick={() => navTo("erp-invoices")}
+              contextPage="erp-invoices"
+            />
+          )}
+          {canReadDebts && (
+            <NavItem
+              collapsed={c}
+              icon={
+                <ReceiptText className="w-4 h-4 opacity-65 flex-shrink-0" />
+              }
+              label={t("nav.items.debt", "Công nợ")}
+              active={currentPage === "invoice-debts"}
+              onClick={() => navTo("invoice-debts")}
+              contextPage="invoice-debts"
+            />
           )}
           {canReadBankStatements && isAdminEmail && (
             <NavItem

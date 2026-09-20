@@ -10,26 +10,27 @@ description: Module tri thức Quản lý Hóa đơn Điện tử & Dashboard H�
 Module Hóa đơn Điện tử quản lý tập trung toàn bộ hóa đơn đầu vào (`IN`), hóa đơn đầu ra (`OUT`), hóa đơn nháp (`DRAFT`), và Dashboard phân tích dòng tiền/thuế hóa đơn.
 
 - **PageKeys**:
-  - `erp-invoices`: Quản lý tập trung Hóa đơn điện tử với 4 Tabs (`in`, `in-lines`, `out`, `out-lines`).
+  - `erp-invoices`: Quản lý tập trung Hóa đơn điện tử với 6 Tabs (`dashboard`, `in`, `in-lines`, `out`, `out-lines`, `draft`).
   - `erp-invoices-in`: (Legacy Slug) Tự động redirect sang `erp-invoices?tab=in`.
   - `erp-invoices-out`: (Legacy Slug) Tự động redirect sang `erp-invoices?tab=out`.
-  - `erp-invoices-draft`: Hóa đơn nháp.
-  - `invoice-dashboard`: Báo cáo & Phân tích Dashboard Hóa đơn.
+  - `erp-invoices-draft`: (Legacy Slug) Tự động redirect sang `erp-invoices?tab=draft`.
+  - `invoice-dashboard`: (Legacy Slug) Tự động redirect sang `erp-invoices?tab=dashboard`.
   - `e-invoice`: Quản lý phát hành hóa đơn SInvoice Viettel.
-- **Sidebar Group**: `accounting` (Kế toán & Tài chính).
-- **Cấu trúc 4 Tabs trên giao diện chính (`/erp-invoices`)**:
-  1. `tab=in` (mặc định): **Hóa đơn mua vào** (Header Table, chiều `IN`, PillTab: `tax_tab` `[ Tất cả | Mới | Thay thế | Điều chỉnh ]` + `view_mode` Combobox).
-  2. `tab=in-lines`: **Chi tiết mua vào** (Lines Table, chiều `IN`, PillTab: `subcat` `[ Tất cả dòng | Hàng hóa | Chiết khấu ]`).
-  3. `tab=out`: **Hóa đơn bán ra** (Header Table, chiều `OUT`, PillTab: `tax_tab` + `view_mode` Combobox).
-  4. `tab=out-lines`: **Chi tiết bán ra** (Lines Table, chiều `OUT`, PillTab: `subcat`).
+- **Sidebar Group**: `accounting` (Kế toán & Tài chính) > Đơn mục **"Hóa đơn"** (`/erp-invoices`).
+- **Cấu trúc 6 Tabs trên giao diện chính (`/erp-invoices`)**:
+  1. `tab=dashboard`: **Tổng quan** (`InvoiceDashboard` - Báo cáo KPI, xu hướng dòng tiền, VAT, công nợ đối tác).
+  2. `tab=in` (mặc định): **Hóa đơn mua vào** (Header Table, chiều `IN`, PillTab: `tax_tab` `[ Tất cả | Mới | Thay thế | Điều chỉnh ]` + `view_mode` Combobox).
+  3. `tab=in-lines`: **Chi tiết mua vào** (Lines Table, chiều `IN`, PillTab: `subcat` `[ Tất cả dòng | Hàng hóa | Chiết khấu ]`).
+  4. `tab=out`: **Hóa đơn bán ra** (Header Table, chiều `OUT`, PillTab: `tax_tab` + `view_mode` Combobox).
+  5. `tab=out-lines`: **Chi tiết bán ra** (Lines Table, chiều `OUT`, PillTab: `subcat`).
+  6. `tab=draft`: **Hóa đơn nháp** (`ErpInvoicesDraftPage` - Quản lý hóa đơn SInvoice Viettel nháp).
 - **Breadcrumbs**:
   - `erp-invoices`: `Kế toán` > `Hóa đơn điện tử`
-  - `erp-invoices-draft`: `Kế toán` > `Hóa đơn nháp`
 - **Route Components**:
   - `src/pages/ErpInvoicesPage.tsx` (Core Container Page cho `/erp-invoices`)
   - `src/pages/ErpInvoicesInPage.tsx` & `src/pages/ErpInvoicesOutPage.tsx` (Legacy Forwarders)
-  - `src/pages/ErpInvoicesDraftPage.tsx`
-  - `src/pages/InvoiceDashboard.tsx`
+  - `src/pages/ErpInvoicesDraftPage.tsx` (Forwarder & Multi-tab Embedded Page)
+  - `src/pages/InvoiceDashboard.tsx` (Forwarder & Multi-tab Embedded Page)
   - `src/pages/EInvoice.tsx`
 
 ---

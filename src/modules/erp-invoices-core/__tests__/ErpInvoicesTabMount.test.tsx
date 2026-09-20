@@ -37,6 +37,12 @@ vi.mock(
   }),
 );
 
+vi.mock("@/pages/InvoiceDashboard", () => ({
+  InvoiceDashboard: ({ activeTab }: any) => (
+    <div data-testid="view-dashboard">Dashboard - {activeTab}</div>
+  ),
+}));
+
 vi.mock("@/shared/hooks/useHasPermission", () => ({
   useHasPermission: () => true,
 }));
@@ -94,7 +100,18 @@ describe("ErpInvoicesTab Synchronous Keep-Alive Mounting", () => {
     window.history.replaceState(null, "", "/erp-invoices");
   });
 
-  it("mounts initial tab 'in' immediately on first render", () => {
+  it("mounts initial tab 'dashboard' immediately on first render", () => {
+    render(<ErpInvoicesTab />, { wrapper: createWrapper() });
+
+    expect(screen.getByTestId("view-dashboard")).toBeDefined();
+    expect(screen.queryByTestId("view-header-in")).toBeNull();
+    expect(screen.queryByTestId("view-header-out")).toBeNull();
+    expect(screen.queryByTestId("view-items-in")).toBeNull();
+    expect(screen.queryByTestId("view-items-out")).toBeNull();
+  });
+
+  it("mounts initial tab 'in' when tab=in query param is provided", () => {
+    window.history.replaceState(null, "", "/erp-invoices?tab=in");
     render(<ErpInvoicesTab />, { wrapper: createWrapper() });
 
     expect(screen.getByTestId("view-header-in")).toBeDefined();

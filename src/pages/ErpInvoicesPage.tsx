@@ -5,7 +5,7 @@ export function ErpInvoicesPage({
   initialTab,
 }: {
   instanceIndex?: 1 | 2;
-  initialTab?: "in" | "in-lines" | "out" | "out-lines";
+  initialTab?: "dashboard" | "in" | "in-lines" | "out" | "out-lines" | "draft";
 }) {
   const initialDirection =
     initialTab === "out" || initialTab === "out-lines" ? "OUT" : undefined;
@@ -13,6 +13,7 @@ export function ErpInvoicesPage({
     <ErpInvoicesTab
       direction={initialDirection}
       instanceIndex={instanceIndex}
+      initialTab={initialTab}
     />
   );
 }

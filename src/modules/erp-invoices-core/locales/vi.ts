@@ -33,10 +33,12 @@ export const erpInvoicesVi = {
   allTags: "Tất cả thẻ",
 
   // Tabs
+  dashboard: "Tổng quan",
   inbound: "Hóa đơn mua vào",
   inboundLines: "Chi tiết mua vào",
   outbound: "Hóa đơn bán ra",
   outboundLines: "Chi tiết bán ra",
+  draftInvoices: "Hóa đơn nháp",
   tabAll: "Tất cả",
   tabNew: "Mới",
   tabReplacement: "Thay thế",
