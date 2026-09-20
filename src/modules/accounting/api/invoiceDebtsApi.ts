@@ -20,6 +20,11 @@ export interface InvoiceDebtSummary {
   grandTotalAmount: number;
   grandTotalPaid: number;
   grandTotalBalance: number;
+  cumulativeTotalAmount?: number;
+  cumulativePaidAmount?: number;
+  cumulativeBalanceAmount?: number;
+  cumulativeInvoiceCount?: number;
+  cumulativePartnersCount?: number;
 }
 
 export interface InvoiceDebtsResponse {
@@ -53,8 +58,10 @@ export interface PartnerInvoiceDetailItem {
   direction: "IN" | "OUT";
   sellerName?: string;
   sellerTaxCode?: string;
+  sellerAddress?: string;
   buyerName?: string;
   buyerTaxCode?: string;
+  buyerAddress?: string;
   preVatAmount: number;
   vatAmount: number;
   totalAmount: number;
@@ -124,6 +131,7 @@ export const invoiceDebtsApi = {
       partner_type?: InvoicePartnerType;
       date_from?: string;
       date_to?: string;
+      partner_name?: string;
     },
   ): Promise<PartnerInvoiceDetailItem[]> => {
     const { data } = await axiosInstance.get<PartnerInvoiceDetailItem[]>(
