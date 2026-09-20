@@ -229,6 +229,11 @@ const OpexPage = lazy(() =>
     default: m.OpexPage,
   })),
 );
+const InvoiceDebtsPage = lazy(() =>
+  import("@/pages/InvoiceDebtsPage").then((m) => ({
+    default: m.InvoiceDebtsPage,
+  })),
+);
 
 const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   dashboard: Dashboard,
@@ -273,6 +278,7 @@ const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   "settings-bank": ThietLapNganHang,
   "settings-cash-fund": ThietLapQuy,
   "settings-branch": SettingsBranch,
+  "invoice-debts": InvoiceDebtsPage,
   "garage-dashboard": GarageDashboard,
   "garage-cases": GarageCases,
   "garage-opex": GarageOpex,
@@ -304,6 +310,7 @@ const PAGE_PRELOADERS: Partial<Record<PageKey, PageLoader>> = {
     import("@/pages/inventory/InventoryTrackingPartsPage"),
   "erp-finished-goods": () => import("@/pages/manufacturing/FinishedGoodsPage"),
   "garage-partners": () => import("@/modules/garage/pages/GaragePartners"),
+  "invoice-debts": () => import("@/pages/InvoiceDebtsPage"),
   "erp-inventory-vouchers": loadInventoryVouchersPage,
   "erp-sales-orders": loadErpSalesOrdersPage,
   "erp-goods-issues": loadErpGoodsIssuesPage,

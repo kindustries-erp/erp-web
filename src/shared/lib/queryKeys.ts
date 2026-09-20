@@ -23,6 +23,9 @@ export enum ErpQueryKey {
   INVOICE_EXPORT_HISTORY = "invoice-export-history",
   INVOICE_SMART_NETOFF_SUGGESTIONS = "invoice-smart-netoff-suggestions",
   INVOICE_TRACEABILITY_GRAPH = "erp-invoice-traceability-graph",
+  INVOICE_DEBTS_LIST = "invoice-debts-list",
+  INVOICE_DEBT_OPTIONS = "invoice-debt-options",
+  INVOICE_DEBT_PARTNER_INVOICES = "invoice-debt-partner-invoices",
 
   // 2. Phân hệ Phụ Tùng VinFast (Vinfast Parts)
   VINFAST_PARTS_STOCK = "vinfast-parts-stock",

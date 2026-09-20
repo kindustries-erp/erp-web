@@ -105,6 +105,9 @@ export function SidebarNav({
     ErpResource.INVOICES,
     ErpAction.READ,
   );
+  const canReadDebts =
+    useHasPermission(ErpResource.INVOICE_DEBTS, ErpAction.READ) ||
+    canReadInvoices;
   const canReadBankStatements = useHasPermission(
     ErpResource.BANK_STATEMENTS,
     ErpAction.READ,
@@ -114,7 +117,7 @@ export function SidebarNav({
     ErpAction.READ,
   );
   const showCashflow = canReadBankStatements || canReadCashStatements;
-  const showAccounting = canReadInvoices || showCashflow;
+  const showAccounting = canReadInvoices || canReadDebts || showCashflow;
 
   const canReadEmployees = useHasPermission(
     ErpResource.EMPLOYEES,
@@ -441,6 +444,18 @@ export function SidebarNav({
               }
               onClick={() => navTo("erp-invoices")}
               contextPage="erp-invoices"
+            />
+          )}
+          {canReadDebts && (
+            <NavItem
+              collapsed={c}
+              icon={
+                <ReceiptText className="w-4 h-4 opacity-65 flex-shrink-0" />
+              }
+              label={t("nav.items.debt", "Công nợ")}
+              active={currentPage === "invoice-debts"}
+              onClick={() => navTo("invoice-debts")}
+              contextPage="invoice-debts"
             />
           )}
           {canReadBankStatements && isAdminEmail && (

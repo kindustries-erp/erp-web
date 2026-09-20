@@ -28,6 +28,7 @@ export const ALL_PAGE_KEYS: PageKey[] = [
   "invoice-dashboard",
   "erp-invoices",
   "erp-invoices-draft",
+  "invoice-debts",
   "bank-statement",
   "cash-statement",
   "journal-entry",

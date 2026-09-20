@@ -49,6 +49,7 @@ export enum ErpResource {
   GARAGE = "garage",
   ACCOUNTING_CONFIGS = "accounting_configs",
   INVOICES = "invoices",
+  INVOICE_DEBTS = "invoice_debts",
   SALES_REPORTS = "sales_reports",
   PURCHASING_REPORTS = "purchasing_reports",
   SYS_TAGS = "sys_tags",
@@ -217,6 +218,11 @@ export const RBAC_COLLECTIONS: CollectionDef[] = [
     label: "Hóa đơn",
     group: "Tài chính",
   },
+  {
+    collection: "invoice_debts",
+    label: "Công nợ (Khách hàng & Nhà cung cấp)",
+    group: "Tài chính",
+  },
 ];
 
 export const CRUD_ACTIONS: { action: CrudAction; label: string }[] = [
@@ -288,6 +294,7 @@ export const PERMISSION_RESOURCE_GROUPS: PermissionResourceGroup[] = [
     defaultLabel: "Kế toán & Dòng tiền",
     resources: [
       ErpResource.INVOICES,
+      ErpResource.INVOICE_DEBTS,
       ErpResource.BANK_STATEMENTS,
       ErpResource.CASH_STATEMENTS,
       ErpResource.JOURNAL_ENTRIES,

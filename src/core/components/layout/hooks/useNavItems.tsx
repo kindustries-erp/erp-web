@@ -90,6 +90,9 @@ export function useNavItems(): NavSearchItem[] {
     ErpResource.INVOICES,
     ErpAction.READ,
   );
+  const canReadDebts =
+    useHasPermission(ErpResource.INVOICE_DEBTS, ErpAction.READ) ||
+    canReadInvoices;
   const canReadBankStatements = useHasPermission(
     ErpResource.BANK_STATEMENTS,
     ErpAction.READ,
@@ -99,7 +102,7 @@ export function useNavItems(): NavSearchItem[] {
     ErpAction.READ,
   );
   const canReadCashflow = canReadBankStatements || canReadCashStatements;
-  const showAccounting = canReadInvoices || canReadCashflow;
+  const showAccounting = canReadInvoices || canReadDebts || canReadCashflow;
 
   const canReadEmployees = useHasPermission(
     ErpResource.EMPLOYEES,
@@ -413,6 +416,27 @@ export function useNavItems(): NavSearchItem[] {
           "gdt",
         ],
         icon: <Receipt className="w-4 h-4" />,
+      });
+    }
+    if (canReadDebts) {
+      items.push({
+        key: "invoice-debts",
+        label: t("nav.items.debt", "Công nợ"),
+        section: accountingSection,
+        keywords: [
+          "cong no",
+          "công nợ",
+          "debts",
+          "khach hang",
+          "nha cung cap",
+          "phai thu",
+          "phai tra",
+          "receivable",
+          "payable",
+          "tuoi no",
+          "hoa don",
+        ],
+        icon: <ReceiptText className="w-4 h-4" />,
       });
     }
     if (canReadBankStatements && isAdminEmail) {
