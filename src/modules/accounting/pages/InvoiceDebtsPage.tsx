@@ -8,10 +8,10 @@ import {
 import { TableText } from "@/shared/components/DataTable/TableText";
 import { TableDateCell } from "@/shared/components/DataTable/TableDateCell";
 import { SubtotalSummaryCell } from "@/shared/components/DataTable/SubtotalSummaryCell";
-import { Badge } from "@/shared/components/ui/badge";
+import { Tooltip } from "@/core/components/ui/Tooltip";
 import { money } from "@/shared/utils/format";
 import { cn } from "@/shared/utils";
-import { ReceiptText, Eye } from "lucide-react";
+import { ReceiptText, Eye, FileText } from "lucide-react";
 import type { TabItem } from "@/shared/components/PageLayout";
 import type { ActionDropdownItem } from "@/shared/components/ActionDropdown";
 import { useInvoiceDebtsList } from "../hooks/useInvoiceDebtsList";
@@ -108,7 +108,7 @@ export function InvoiceDebtsPage() {
     [listHook, activeTab],
   );
 
-  // 5. Columns Definition Following /standardize-table
+  // 5. Columns Definition Following /standardize-table & /garage-cases
   const columns: DataTableColumn<InvoiceDebtItem>[] = useMemo(() => {
     return [
       // 1. STT (40px, 1-based, căn giữa)
@@ -125,35 +125,7 @@ export function InvoiceDebtsPage() {
         ),
       },
 
-      // 2. Mã số thuế / Mã định danh đối tác
-      {
-        key: "taxCode",
-        header: headerFilter(
-          "taxCode",
-          t("debts:columns.taxCode", "Mã số thuế / MST"),
-          {
-            showBlankOption: true,
-          },
-        ),
-        size: 170,
-        enableResizing: true,
-        cell: (row) => (
-          <TableText
-            text={
-              row.taxCode === "KHONG_MST" ? "— (Không có MST)" : row.taxCode
-            }
-            enableCopy={row.taxCode !== "KHONG_MST"}
-            tooltip={true}
-            className="font-mono text-primary font-medium"
-            onDetailClick={(e) => {
-              e?.stopPropagation();
-              openDetail(row.taxCode, row.partnerName);
-            }}
-          />
-        ),
-      },
-
-      // 3. Tên đối tác (Khách hàng hoặc Nhà cung cấp)
+      // 2. Tên đối tác (Khách hàng hoặc Nhà cung cấp) - BẬT ICON MẮT / XEM CHI TIẾT
       {
         key: "partnerName",
         header: headerFilter(
@@ -163,61 +135,135 @@ export function InvoiceDebtsPage() {
             : t("debts:columns.supplierName", "Tên nhà cung cấp"),
           { showBlankOption: true },
         ),
-        size: 260,
+        size: 280,
+        minSize: 220,
         enableResizing: true,
         cell: (row) => (
           <TableText
             text={row.partnerName || "—"}
             tooltip={true}
             enableCopy={true}
-            textClassName="whitespace-normal line-clamp-2 break-words text-foreground font-normal text-xs leading-normal select-text"
+            textClassName="whitespace-normal line-clamp-2 break-words text-foreground font-medium text-xs leading-normal select-text"
+            onDetailClick={(e) => {
+              e?.stopPropagation();
+              openDetail(row.taxCode, row.partnerName);
+            }}
           />
         ),
       },
 
-      // 4. Số lượng hóa đơn
+      // 3. Mã số thuế / Mã định danh đối tác - TẮT ICON MẮT, GIỮ COPY
+      {
+        key: "taxCode",
+        header: headerFilter(
+          "taxCode",
+          t("debts:columns.taxCode", "Mã số thuế / MST"),
+          {
+            showBlankOption: true,
+          },
+        ),
+        size: 160,
+        minSize: 130,
+        enableResizing: true,
+        cell: (row) => (
+          <TableText
+            text={
+              row.taxCode === "KHONG_MST" ? "— (Không có MST)" : row.taxCode
+            }
+            enableCopy={row.taxCode !== "KHONG_MST"}
+            tooltip={true}
+            className="font-mono text-muted-foreground font-normal text-xs"
+          />
+        ),
+      },
+
+      // 4. Số lượng hóa đơn - THIẾT KẾ WOW, HIỆN ĐẠI & HÀI HÒA BẢNG TÍNH
       {
         key: "invoiceCount",
         header: headerFilter.qty(
           "invoiceCount",
           t("debts:columns.invoiceCount", "SL Hóa đơn"),
         ),
-        size: 110,
+        size: 120,
+        minSize: 105,
         enableResizing: true,
         className: "text-center",
-        cell: (row) => (
-          <Badge variant="secondary" className="tabular-nums font-mono text-xs">
-            {row.invoiceCount}
-          </Badge>
-        ),
+        cell: (row) => {
+          if (!row.invoiceCount || row.invoiceCount <= 0) {
+            return (
+              <span className="text-muted-foreground/30 font-mono text-xs select-none">
+                0
+              </span>
+            );
+          }
+          return (
+            <Tooltip
+              content={`${row.invoiceCount} hóa đơn phát sinh • Click xem chi tiết`}
+            >
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  openDetail(row.taxCode, row.partnerName);
+                }}
+                className="inline-flex items-center justify-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-100/90 hover:bg-slate-200/90 dark:bg-slate-800/80 dark:hover:bg-slate-700 border border-slate-200/80 dark:border-slate-700/80 text-foreground transition-all duration-150 cursor-pointer group shadow-xs hover:scale-105"
+              >
+                <FileText className="w-3 h-3 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
+                <span className="tabular-nums font-mono font-semibold text-xs text-foreground">
+                  {row.invoiceCount.toLocaleString("vi-VN")}
+                </span>
+                <span className="text-[10px] text-muted-foreground font-normal">
+                  HĐ
+                </span>
+              </button>
+            </Tooltip>
+          );
+        },
       },
 
-      // 5. Tổng tiền hóa đơn
-      {
-        key: "totalAmount",
-        className: "text-right",
-        header: headerFilter.amount(
-          "totalAmount",
-          t("debts:columns.totalAmount", "Tổng tiền HĐ"),
-        ),
-        size: 150,
-        enableResizing: true,
-        cell: (row) => (
-          <span className="tabular-nums font-mono font-semibold text-xs text-foreground">
-            {money(row.totalAmount)}
-          </span>
-        ),
-      },
-
-      // 6. Tiến độ thanh toán (Fintech Neutral Progress Bar)
+      // 5. Tổng phải thu / Tổng phải trả (Progress bar + Tooltip như /garage-cases)
       {
         key: "paymentProgress",
-        className: "text-left",
+        className: "text-right",
         header: headerFilter(
           "paymentProgress",
-          t("debts:columns.paymentProgress", "Tiến độ thanh toán"),
+          isCustomer
+            ? t("debts:columns.totalReceivable", "Tổng phải thu")
+            : t("debts:columns.totalPayable", "Tổng phải trả"),
+          {
+            align: "right",
+            filterOptions: isCustomer
+              ? [
+                  {
+                    label: t("debts:filter.paidCustomer", "Đã thu đủ"),
+                    value: "PAID",
+                  },
+                  {
+                    label: t("debts:filter.partialCustomer", "Thu một phần"),
+                    value: "PARTIAL",
+                  },
+                  {
+                    label: t("debts:filter.unpaidCustomer", "Chưa thu"),
+                    value: "UNPAID",
+                  },
+                ]
+              : [
+                  {
+                    label: t("debts:filter.paidSupplier", "Đã trả đủ"),
+                    value: "PAID",
+                  },
+                  {
+                    label: t("debts:filter.partialSupplier", "Trả một phần"),
+                    value: "PARTIAL",
+                  },
+                  {
+                    label: t("debts:filter.unpaidSupplier", "Chưa trả"),
+                    value: "UNPAID",
+                  },
+                ],
+          },
         ),
-        size: 210,
+        size: 190,
         enableResizing: true,
         cell: (row) => {
           const total = Number(row.totalAmount) || 0;
@@ -241,62 +287,74 @@ export function InvoiceDebtsPage() {
                 ? 100
                 : 0;
 
-          return (
-            <div className="flex flex-col gap-1 w-full py-0.5 justify-center">
-              {/* Row 1: Left status/rate + Right amounts */}
-              <div className="flex items-center justify-between text-xs tabular-nums leading-tight">
-                {isAllPaid ? (
-                  <span className="text-emerald-700 dark:text-emerald-400 font-medium text-xs">
-                    {t("debts:filter.paid", "Đã tất toán")}
-                  </span>
-                ) : isUnpaid ? (
-                  <span className="text-muted-foreground font-normal text-xs">
-                    {t("debts:filter.unpaid", "Chưa thanh toán")}
-                  </span>
-                ) : (
-                  <span className="font-mono font-bold text-xs text-emerald-800 dark:text-emerald-300">
-                    {rate}%
-                  </span>
-                )}
+          const tooltipText = isCustomer
+            ? isAllPaid
+              ? `Đã thu đủ 100%: ${money(paid)}`
+              : isUnpaid
+                ? `Chưa thu (0%): Còn phải thu ${money(bal)} / Tổng ${money(total)}`
+                : `Đã thu: ${money(paid)} / ${money(total)} (${rate}%) • Còn phải thu: ${money(bal)}`
+            : isAllPaid
+              ? `Đã trả đủ 100%: ${money(paid)}`
+              : isUnpaid
+                ? `Chưa trả (0%): Còn phải trả ${money(bal)} / Tổng ${money(total)}`
+                : `Đã trả: ${money(paid)} / ${money(total)} (${rate}%) • Còn phải trả: ${money(bal)}`;
 
-                <div className="flex items-center gap-1 font-mono text-xs truncate ml-auto">
-                  {isAllPaid ? (
-                    <span className="text-emerald-700 dark:text-emerald-400 font-semibold">
-                      {money(paid)}
-                    </span>
-                  ) : isUnpaid ? (
-                    <span className="text-muted-foreground font-normal">
-                      {money(bal)}
-                    </span>
-                  ) : (
-                    <>
-                      <span className="text-emerald-700 dark:text-emerald-400 font-semibold">
-                        {money(paid)}
-                      </span>
-                      <span className="text-muted-foreground/40">/</span>
-                      <span className="text-muted-foreground font-normal">
-                        {money(bal)}
-                      </span>
-                    </>
-                  )}
+          return (
+            <Tooltip content={tooltipText}>
+              <div className="flex flex-col gap-1 w-full py-0.5 justify-center cursor-default">
+                <div className="flex items-center justify-end text-xs tabular-nums leading-tight">
+                  <span className="font-semibold text-foreground font-mono">
+                    {money(total)}
+                  </span>
+                </div>
+                <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                  <div
+                    className={cn(
+                      "h-full rounded-full transition-all duration-300",
+                      isAllPaid
+                        ? "bg-emerald-500 dark:bg-emerald-400"
+                        : isUnpaid
+                          ? "bg-transparent"
+                          : isCustomer
+                            ? "bg-emerald-600 dark:bg-emerald-500"
+                            : "bg-slate-600 dark:bg-slate-400",
+                    )}
+                    style={{ width: `${rate}%` }}
+                  />
                 </div>
               </div>
+            </Tooltip>
+          );
+        },
+      },
 
-              {/* Row 2: Progress bar */}
-              <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
-                <div
-                  className={cn(
-                    "h-full rounded-full transition-all duration-300",
-                    isAllPaid
-                      ? "bg-emerald-500 dark:bg-emerald-400"
-                      : isUnpaid
-                        ? "bg-transparent"
-                        : "bg-emerald-600 dark:bg-emerald-500",
-                  )}
-                  style={{ width: `${rate}%` }}
-                />
-              </div>
-            </div>
+      // 6. Còn phải thu / Còn phải trả (Highlight màu sắc như /garage-cases)
+      {
+        key: "balanceAmount",
+        className: "text-right",
+        header: headerFilter.amount(
+          "balanceAmount",
+          isCustomer
+            ? t("debts:columns.remainingReceivable", "Còn phải thu")
+            : t("debts:columns.remainingPayable", "Còn phải trả"),
+        ),
+        size: 170,
+        enableResizing: true,
+        cell: (row) => {
+          const bal = Number(row.balanceAmount) || 0;
+          return (
+            <span
+              className={cn(
+                "font-semibold tabular-nums font-mono text-xs",
+                bal === 0
+                  ? "text-emerald-600 dark:text-emerald-400"
+                  : isCustomer
+                    ? "text-destructive"
+                    : "text-amber-700 dark:text-amber-400",
+              )}
+            >
+              {money(bal)}
+            </span>
           );
         },
       },
@@ -410,6 +468,7 @@ export function InvoiceDebtsPage() {
         cell: (row) => (
           <TableDateCell
             date={row.latestInvoiceDate || ""}
+            format="date"
             className="justify-end w-full"
           />
         ),
@@ -424,18 +483,42 @@ export function InvoiceDebtsPage() {
 
     let subtotalInvoices = 0;
     let subtotalAmount = 0;
-    let subtotalPaid = 0;
     let subtotalBal = 0;
 
     for (const r of items) {
       subtotalInvoices += Number(r.invoiceCount) || 0;
       subtotalAmount += Number(r.totalAmount) || 0;
-      subtotalPaid += Number(r.paidAmount) || 0;
       subtotalBal += Number(r.balanceAmount) || 0;
     }
 
+    const cumAmount =
+      listHook.summary.cumulativeTotalAmount !== undefined
+        ? Number(listHook.summary.cumulativeTotalAmount)
+        : listHook.page === 1
+          ? subtotalAmount
+          : undefined;
+
+    const cumBal =
+      listHook.summary.cumulativeBalanceAmount !== undefined
+        ? Number(listHook.summary.cumulativeBalanceAmount)
+        : listHook.page === 1
+          ? subtotalBal
+          : undefined;
+
+    const cumInvoices =
+      listHook.summary.cumulativeInvoiceCount !== undefined
+        ? Number(listHook.summary.cumulativeInvoiceCount)
+        : listHook.page === 1
+          ? subtotalInvoices
+          : undefined;
+
+    const cumCount =
+      listHook.summary.cumulativePartnersCount !== undefined
+        ? Number(listHook.summary.cumulativePartnersCount)
+        : (listHook.page - 1) * listHook.pageSize + items.length;
+
     return {
-      taxCode: (
+      partnerName: (
         <SubtotalSummaryCell
           variantType="label"
           label={`${t("common:total", "Tổng cộng")}:`}
@@ -443,6 +526,9 @@ export function InvoiceDebtsPage() {
           totalPages={listHook.totalPages}
           totalCount={listHook.total}
           currentPageCount={items.length}
+          cumulativeCount={cumCount}
+          itemTitle={t("debts:partner", "Đối tác")}
+          itemUnit={t("debts:unitPartner", "đối tác")}
         />
       ),
       invoiceCount: (
@@ -452,6 +538,7 @@ export function InvoiceDebtsPage() {
           itemTitle={t("debts:partner", "Đối tác")}
           itemUnit={t("debts:unitPartner", "đối tác")}
           subtotalQty={subtotalInvoices}
+          cumulativeQty={cumInvoices}
           grandTotalQty={listHook.summary.totalInvoiceCount}
           page={listHook.page}
           totalPages={listHook.totalPages}
@@ -460,13 +547,18 @@ export function InvoiceDebtsPage() {
           valueClassName="text-primary font-bold"
         />
       ),
-      totalAmount: (
+      paymentProgress: (
         <SubtotalSummaryCell
           variantType="amount"
-          metricTitle={t("debts:columns.totalAmount", "Tổng giá trị hóa đơn")}
+          metricTitle={
+            isCustomer
+              ? t("debts:columns.totalReceivable", "Tổng phải thu")
+              : t("debts:columns.totalPayable", "Tổng phải trả")
+          }
           itemTitle={t("debts:partner", "Đối tác")}
           itemUnit={t("debts:unitPartner", "đối tác")}
           subtotalAmount={subtotalAmount}
+          cumulativeAmount={cumAmount}
           grandTotalAmount={listHook.summary.grandTotalAmount}
           page={listHook.page}
           totalPages={listHook.totalPages}
@@ -475,23 +567,35 @@ export function InvoiceDebtsPage() {
           valueClassName="text-foreground font-bold"
         />
       ),
-      paymentProgress: (
-        <div className="flex flex-col gap-0.5 text-right font-bold tabular-nums pr-2">
-          <div className="text-emerald-700 dark:text-emerald-400 text-xs leading-tight">
-            {isCustomer
-              ? t("debts:received", "Đã thu")
-              : t("debts:paid", "Đã trả")}
-            : {money(subtotalPaid)}
-          </div>
-          <div className="text-destructive text-[11px] leading-tight">
-            {t("debts:remaining", "Còn nợ")}: {money(subtotalBal)}
-          </div>
-        </div>
+      balanceAmount: (
+        <SubtotalSummaryCell
+          variantType="amount"
+          metricTitle={
+            isCustomer
+              ? t("debts:columns.remainingReceivable", "Còn phải thu")
+              : t("debts:columns.remainingPayable", "Còn phải trả")
+          }
+          itemTitle={t("debts:partner", "Đối tác")}
+          itemUnit={t("debts:unitPartner", "đối tác")}
+          subtotalAmount={subtotalBal}
+          cumulativeAmount={cumBal}
+          grandTotalAmount={listHook.summary.grandTotalBalance}
+          page={listHook.page}
+          totalPages={listHook.totalPages}
+          currentPageCount={items.length}
+          totalCount={listHook.total}
+          valueClassName={
+            subtotalBal === 0
+              ? "font-bold text-emerald-600 dark:text-emerald-400"
+              : "font-bold text-destructive"
+          }
+        />
       ),
     };
   }, [
     listHook.data,
     listHook.page,
+    listHook.pageSize,
     listHook.totalPages,
     listHook.total,
     listHook.summary,
@@ -539,7 +643,7 @@ export function InvoiceDebtsPage() {
         }
         items={listHook.data}
         columns={columns}
-        getRowKey={(row) => row.taxCode}
+        getRowKey={(row) => `${row.partnerName}_${row.taxCode || "NO_MST"}`}
         loading={listHook.isLoading}
         emptyLabel={
           isCustomer
