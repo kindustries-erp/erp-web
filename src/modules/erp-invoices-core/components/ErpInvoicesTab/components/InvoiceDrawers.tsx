@@ -55,7 +55,7 @@ export interface InvoiceDrawersProps {
   netOffInvoice: any | null;
   setNetOffInvoice: (inv: any | null) => void;
   activeView?: "header" | "lines" | "dashboard" | "draft";
-  partnerViewMode?: "invoices" | "lines";
+  partnerViewMode?: "details" | "invoices" | "lines";
 }
 
 export function InvoiceDrawers({
@@ -93,7 +93,7 @@ export function InvoiceDrawers({
         activeTabKey={formHook.activeTabKey}
         onTabChange={formHook.setActiveTabKey}
         partnerViewMode={
-          partnerViewMode || (activeView === "lines" ? "lines" : "invoices")
+          partnerViewMode || (activeView === "lines" ? "lines" : "details")
         }
         startEdit={formHook.startEdit}
         saving={formHook.saving}

@@ -99,15 +99,16 @@ describe("ErpInvoiceInternalMain", () => {
     invoicePreview: <div data-testid="fallback-preview">Fallback Preview</div>,
   };
 
-  it("should render fallback invoicePreview when there is no pdfKey", () => {
+  it("should render invoicePreview by default when previewMode is template", () => {
     render(<ErpInvoiceInternalMain {...defaultProps} />);
     expect(screen.getByTestId("fallback-preview")).toBeInTheDocument();
     expect(screen.queryByTitle("PDF Preview")).not.toBeInTheDocument();
   });
 
-  it("should render iframe when pdfKey exists", async () => {
+  it("should render iframe when previewMode is pdf and pdfKey exists", async () => {
     const propsWithPdf = {
       ...defaultProps,
+      previewMode: "pdf" as const,
       detailInvoice: {
         ...defaultProps.detailInvoice,
         pdfFileKey: "some-pdf.pdf",
@@ -121,6 +122,12 @@ describe("ErpInvoiceInternalMain", () => {
     });
 
     expect(screen.queryByTestId("fallback-preview")).not.toBeInTheDocument();
+  });
+
+  it("should render empty state when previewMode is pdf but no pdfKey exists", () => {
+    render(<ErpInvoiceInternalMain {...defaultProps} previewMode="pdf" />);
+    expect(screen.getByText("Chưa có tệp PDF đính kèm")).toBeInTheDocument();
+    expect(screen.queryByTitle("PDF Preview")).not.toBeInTheDocument();
   });
 });
 
