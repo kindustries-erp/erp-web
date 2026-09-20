@@ -371,7 +371,7 @@ export default function App() {
         ) {
           const canonicalPath = pageToPath(
             "erp-invoices",
-            parsed.tab || "in",
+            parsed.tab || "dashboard",
             parsed.instanceIndex === 2 ? { _i: "2" } : undefined,
           );
           window.history.replaceState(null, "", canonicalPath);

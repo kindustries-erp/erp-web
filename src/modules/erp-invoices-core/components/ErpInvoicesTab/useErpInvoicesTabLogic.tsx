@@ -39,6 +39,7 @@ import { useErpInvoicesParallelPrefetch } from "@/modules/erp-invoices-core/hook
 
 export interface ErpInvoicesTabProps {
   direction?: "IN" | "OUT";
+  initialTab?: "dashboard" | "in" | "in-lines" | "out" | "out-lines" | "draft";
   initialDateFrom?: string;
   initialDateTo?: string;
   isDrawer?: boolean;
@@ -48,6 +49,7 @@ export interface ErpInvoicesTabProps {
 
 export function useErpInvoicesTabLogic({
   direction: propDirection,
+  initialTab: propInitialTab,
   isDrawer = false,
   instanceIndex = 1,
   partnerTaxCode,
@@ -122,11 +124,61 @@ export function useErpInvoicesTabLogic({
         };
       }
     }
-    const dir = propDirection || "IN";
+    if (propInitialTab) {
+      if (propInitialTab === "dashboard") {
+        return {
+          dir: "IN" as const,
+          view: "dashboard" as const,
+          tabKey: "dashboard",
+        };
+      }
+      if (propInitialTab === "draft") {
+        return {
+          dir: "IN" as const,
+          view: "draft" as const,
+          tabKey: "draft",
+        };
+      }
+      if (propInitialTab === "out-lines") {
+        return {
+          dir: "OUT" as const,
+          view: "lines" as const,
+          tabKey: "out-lines",
+        };
+      }
+      if (propInitialTab === "out") {
+        return {
+          dir: "OUT" as const,
+          view: "header" as const,
+          tabKey: "out",
+        };
+      }
+      if (propInitialTab === "in-lines") {
+        return {
+          dir: "IN" as const,
+          view: "lines" as const,
+          tabKey: "in-lines",
+        };
+      }
+      if (propInitialTab === "in") {
+        return {
+          dir: "IN" as const,
+          view: "header" as const,
+          tabKey: "in",
+        };
+      }
+    }
+    if (propDirection) {
+      return {
+        dir: propDirection,
+        view: "header" as const,
+        tabKey: propDirection === "IN" ? "in" : "out",
+      };
+    }
     return {
-      dir,
-      view: "header" as const,
-      tabKey: dir === "IN" ? "in" : "out",
+      dir: "IN" as const,
+      view: "dashboard" as const,
+      tabKey: "dashboard",
     };
   };
 

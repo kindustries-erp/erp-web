@@ -13,6 +13,7 @@ export function ErpInvoicesPage({
     <ErpInvoicesTab
       direction={initialDirection}
       instanceIndex={instanceIndex}
+      initialTab={initialTab}
     />
   );
 }

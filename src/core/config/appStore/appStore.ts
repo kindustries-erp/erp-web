@@ -113,7 +113,7 @@ export const useAppStore = create<AppState>()(
         if (page === "erp-invoices" && !targetPath.includes("tab=")) {
           targetPath = pageToPath(
             "erp-invoices",
-            "in",
+            "dashboard",
             instanceIndex === 2 ? { _i: "2" } : undefined,
           );
         }
