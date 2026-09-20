@@ -54,7 +54,7 @@ export interface InvoiceDrawersProps {
   setPreviewPdf: (pdf: any) => void;
   netOffInvoice: any | null;
   setNetOffInvoice: (inv: any | null) => void;
-  activeView?: "header" | "lines";
+  activeView?: "header" | "lines" | "dashboard" | "draft";
   partnerViewMode?: "invoices" | "lines";
 }
 

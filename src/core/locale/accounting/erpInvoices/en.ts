@@ -38,8 +38,12 @@ export const erpInvoicesEn = {
   allTags: "All tags",
 
   // View Tabs
+  dashboard: "Overview",
   inbound: "Inbound Invoices",
+  inboundLines: "Inbound Item Details",
   outbound: "Outbound Invoices",
+  outboundLines: "Outbound Item Details",
+  draftInvoices: "Draft Invoices",
   tabAll: "All",
   tabNew: "New",
   tabReplacement: "Replacement",
