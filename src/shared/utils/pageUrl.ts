@@ -215,7 +215,8 @@ export function pageToPath(
   const base = slug ? `/${slug}` : "/";
   const searchParams = new URLSearchParams();
 
-  const effectiveTab = tab || (page === "erp-invoices" ? "in" : undefined);
+  const effectiveTab =
+    tab || (page === "erp-invoices" ? "dashboard" : undefined);
   if (effectiveTab) {
     searchParams.set(ErpUrlQueryParam.TAB, effectiveTab);
   }
@@ -286,23 +287,25 @@ export function pathToPage(
     } else {
       tab = "out";
     }
-  } else if (
-    slug === "erp-invoices-in" ||
-    slug === "erp-invoice" ||
-    page === "erp-invoices"
-  ) {
-    if (tab === "dashboard") {
-      tab = "dashboard";
-    } else if (tab === "draft") {
-      tab = "draft";
-    } else if (tab === "out-lines") {
-      tab = "out-lines";
+  } else if (slug === "erp-invoices-in") {
+    if (tab === "lines" || viewParam === "lines" || tab === "in-lines") {
+      tab = "in-lines";
+    } else {
+      tab = "in";
+    }
+  } else if (slug === "erp-invoice" || page === "erp-invoices") {
+    if (tab === "in") {
+      tab = "in";
+    } else if (tab === "in-lines" || tab === "lines" || viewParam === "lines") {
+      tab = "in-lines";
     } else if (tab === "out") {
       tab = "out";
-    } else if (tab === "lines" || viewParam === "lines" || tab === "in-lines") {
-      tab = "in-lines";
-    } else if (tab === "header" || !tab || tab === "in") {
-      tab = "in";
+    } else if (tab === "out-lines") {
+      tab = "out-lines";
+    } else if (tab === "draft") {
+      tab = "draft";
+    } else if (tab === "dashboard" || !tab) {
+      tab = "dashboard";
     }
   }
 

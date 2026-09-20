@@ -61,14 +61,14 @@ describe("ErpInvoices6TabsRouting", () => {
     window.history.replaceState(null, "", "/erp-invoices");
   });
 
-  it("initializes with tab 'in' by default and exposes all 6 page tabs", () => {
+  it("initializes with tab 'dashboard' by default and exposes all 6 page tabs", () => {
     const { result } = renderHook(() => useErpInvoicesTabLogic({}), {
       wrapper: createWrapper(),
     });
 
-    expect(result.current.currentTabKey).toBe("in");
+    expect(result.current.currentTabKey).toBe("dashboard");
     expect(result.current.direction).toBe("IN");
-    expect(result.current.activeView).toBe("header");
+    expect(result.current.activeView).toBe("dashboard");
     expect(result.current.pageTabs).toHaveLength(6);
     expect(result.current.pageTabs?.map((t) => t.value)).toEqual([
       "dashboard",
@@ -78,6 +78,17 @@ describe("ErpInvoices6TabsRouting", () => {
       "out-lines",
       "draft",
     ]);
+  });
+
+  it("initializes from URL query param tab=in", () => {
+    window.history.replaceState(null, "", "/erp-invoices?tab=in");
+    const { result } = renderHook(() => useErpInvoicesTabLogic({}), {
+      wrapper: createWrapper(),
+    });
+
+    expect(result.current.currentTabKey).toBe("in");
+    expect(result.current.direction).toBe("IN");
+    expect(result.current.activeView).toBe("header");
   });
 
   it("initializes from URL query param tab=dashboard", () => {
