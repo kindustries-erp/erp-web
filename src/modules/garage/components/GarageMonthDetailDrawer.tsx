@@ -22,10 +22,7 @@ import {
   Building2,
   ExternalLink,
   HelpCircle,
-  FileText,
-  FileX,
   Table as TableIcon,
-  PieChart,
   Eye,
 } from "lucide-react";
 
@@ -46,18 +43,8 @@ interface MonthClassificationRow {
   billed: number;
   paid: number;
   remaining: number;
-  rate: number;
-  shareRate: number;
-}
-
-interface MonthInvoiceRow {
-  key: string;
-  name: string;
-  icon: React.ReactNode;
-  caseCount?: number;
-  billed: number;
-  paid: number;
-  remaining: number;
+  remainingWithInvoice: number;
+  remainingNoInvoice: number;
   rate: number;
   shareRate: number;
 }
@@ -161,12 +148,9 @@ export function GarageMonthDetailDrawer({
     filterLabel: "",
   });
 
-  // Table Column State Hooks for Client-side Filter & Sort
+  // Table Column State Hook for Client-side Filter & Sort
   const classificationTableId = "garage-month-detail-classification-table";
   const classificationTableHook = useTableColumnState(classificationTableId);
-
-  const invoiceTableId = "garage-month-detail-invoice-table";
-  const invoiceTableHook = useTableColumnState(invoiceTableId);
 
   const safeItem = useMemo<GarageTrendItem>(
     () =>
@@ -231,6 +215,12 @@ export function GarageMonthDetailDrawer({
     ? (safeItem.rateSuaChuaChung ?? 0)
     : (safeItem.costRateSuaChuaChung ?? 0);
   const countScc = safeItem.caseCountSuaChuaChung ?? 0;
+  const remainingWithInvScc = isReceipt
+    ? (safeItem.receivableWithInvoiceSuaChuaChung ?? 0)
+    : (safeItem.payableCostWithInvoiceSuaChuaChung ?? 0);
+  const remainingNoInvScc = isReceipt
+    ? (safeItem.receivableNoInvoiceSuaChuaChung ?? 0)
+    : (safeItem.payableCostNoInvoiceSuaChuaChung ?? 0);
 
   // ── Classification: Ký gửi / Nội bộ ─────────────────────────────
   const billedKgNb = isReceipt
@@ -243,6 +233,12 @@ export function GarageMonthDetailDrawer({
     ? (safeItem.rateKyGuiNoiBo ?? 0)
     : (safeItem.costRateKyGuiNoiBo ?? 0);
   const countKgNb = safeItem.caseCountKyGuiNoiBo ?? 0;
+  const remainingWithInvKgNb = isReceipt
+    ? (safeItem.receivableWithInvoiceKyGuiNoiBo ?? 0)
+    : (safeItem.payableCostWithInvoiceKyGuiNoiBo ?? 0);
+  const remainingNoInvKgNb = isReceipt
+    ? (safeItem.receivableNoInvoiceKyGuiNoiBo ?? 0)
+    : (safeItem.payableCostNoInvoiceKyGuiNoiBo ?? 0);
 
   // ── Classification: OJ Ngoài ────────────────────────────────────
   const billedOj = isReceipt
@@ -255,6 +251,12 @@ export function GarageMonthDetailDrawer({
     ? (safeItem.rateOj ?? 0)
     : (safeItem.costRateOj ?? 0);
   const countOj = safeItem.caseCountOj ?? 0;
+  const remainingWithInvOj = isReceipt
+    ? (safeItem.receivableWithInvoiceOj ?? 0)
+    : (safeItem.payableCostWithInvoiceOj ?? 0);
+  const remainingNoInvOj = isReceipt
+    ? (safeItem.receivableNoInvoiceOj ?? 0)
+    : (safeItem.payableCostNoInvoiceOj ?? 0);
 
   // ── Classification: Khác / Chưa phân loại ───────────────────────
   const billedOther = isReceipt
@@ -267,6 +269,12 @@ export function GarageMonthDetailDrawer({
     ? (safeItem.rateOther ?? 0)
     : (safeItem.costRateOther ?? 0);
   const countOther = safeItem.caseCountOther ?? 0;
+  const remainingWithInvOther = isReceipt
+    ? (safeItem.receivableWithInvoiceOther ?? 0)
+    : (safeItem.payableCostWithInvoiceOther ?? 0);
+  const remainingNoInvOther = isReceipt
+    ? (safeItem.receivableNoInvoiceOther ?? 0)
+    : (safeItem.payableCostNoInvoiceOther ?? 0);
 
   // ── Table Data: Classification Rows ─────────────────────────────
   const classificationRows = useMemo<MonthClassificationRow[]>(() => {
@@ -284,6 +292,8 @@ export function GarageMonthDetailDrawer({
         billed: billedScc,
         paid: paidScc,
         remaining: Math.max(0, billedScc - paidScc),
+        remainingWithInvoice: remainingWithInvScc,
+        remainingNoInvoice: remainingNoInvScc,
         rate: rateScc,
         shareRate: mainBilled > 0 ? (billedScc / mainBilled) * 100 : 0,
       },
@@ -300,6 +310,8 @@ export function GarageMonthDetailDrawer({
         billed: billedKgNb,
         paid: paidKgNb,
         remaining: Math.max(0, billedKgNb - paidKgNb),
+        remainingWithInvoice: remainingWithInvKgNb,
+        remainingNoInvoice: remainingNoInvKgNb,
         rate: rateKgNb,
         shareRate: mainBilled > 0 ? (billedKgNb / mainBilled) * 100 : 0,
       },
@@ -319,6 +331,8 @@ export function GarageMonthDetailDrawer({
         billed: billedOj,
         paid: paidOj,
         remaining: Math.max(0, billedOj - paidOj),
+        remainingWithInvoice: remainingWithInvOj,
+        remainingNoInvoice: remainingNoInvOj,
         rate: rateOj,
         shareRate: mainBilled > 0 ? (billedOj / mainBilled) * 100 : 0,
       });
@@ -336,6 +350,8 @@ export function GarageMonthDetailDrawer({
         billed: billedOther,
         paid: paidOther,
         remaining: Math.max(0, billedOther - paidOther),
+        remainingWithInvoice: remainingWithInvOther,
+        remainingNoInvoice: remainingNoInvOther,
         rate: rateOther,
         shareRate: mainBilled > 0 ? (billedOther / mainBilled) * 100 : 0,
       });
@@ -347,85 +363,30 @@ export function GarageMonthDetailDrawer({
     billedScc,
     paidScc,
     rateScc,
+    remainingWithInvScc,
+    remainingNoInvScc,
     countKgNb,
     billedKgNb,
     paidKgNb,
     rateKgNb,
+    remainingWithInvKgNb,
+    remainingNoInvKgNb,
     billedOj,
     paidOj,
     rateOj,
     countOj,
+    remainingWithInvOj,
+    remainingNoInvOj,
     billedOther,
     paidOther,
     rateOther,
     countOther,
+    remainingWithInvOther,
+    remainingNoInvOther,
     mainBilled,
   ]);
 
-  // ── Table Data: Invoice Status Breakdown ──────────────────────────
-  const billedWithInv = isReceipt
-    ? (safeItem.billedWithInvoice ?? 0)
-    : (safeItem.costWithInvoice ?? 0);
-  const paidWithInv = isReceipt
-    ? (safeItem.paidWithInvoice ?? 0)
-    : (safeItem.paidCostWithInvoice ?? 0);
-  const rateWithInv = isReceipt
-    ? (safeItem.rateWithInvoice ?? 0)
-    : (safeItem.costRateWithInvoice ?? 0);
-  const countWithInv = safeItem.caseCountWithInvoice ?? 0;
-
-  const billedNoInv = isReceipt
-    ? (safeItem.billedNoInvoice ?? 0)
-    : (safeItem.costNoInvoice ?? 0);
-  const paidNoInv = isReceipt
-    ? (safeItem.paidNoInvoice ?? 0)
-    : (safeItem.paidCostNoInvoice ?? 0);
-  const rateNoInv = isReceipt
-    ? (safeItem.rateNoInvoice ?? 0)
-    : (safeItem.costRateNoInvoice ?? 0);
-  const countNoInv = safeItem.caseCountNoInvoice ?? 0;
-
-  const invoiceRows = useMemo<MonthInvoiceRow[]>(
-    () => [
-      {
-        key: "WITH_INVOICE",
-        name: "Có hóa đơn (HĐ)",
-        icon: (
-          <FileText className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-        ),
-        caseCount: countWithInv,
-        billed: billedWithInv,
-        paid: paidWithInv,
-        remaining: Math.max(0, billedWithInv - paidWithInv),
-        rate: rateWithInv,
-        shareRate: mainBilled > 0 ? (billedWithInv / mainBilled) * 100 : 0,
-      },
-      {
-        key: "NO_INVOICE",
-        name: "Không hóa đơn",
-        icon: <FileX className="w-3.5 h-3.5 text-slate-500" />,
-        caseCount: countNoInv,
-        billed: billedNoInv,
-        paid: paidNoInv,
-        remaining: Math.max(0, billedNoInv - paidNoInv),
-        rate: rateNoInv,
-        shareRate: mainBilled > 0 ? (billedNoInv / mainBilled) * 100 : 0,
-      },
-    ],
-    [
-      countWithInv,
-      billedWithInv,
-      paidWithInv,
-      rateWithInv,
-      countNoInv,
-      billedNoInv,
-      paidNoInv,
-      rateNoInv,
-      mainBilled,
-    ],
-  );
-
-  // ── Column Header Filter Builders (Client-side auto extraction) ───
+  // ── Column Header Filter Builder (Client-side auto extraction) ───
   const classificationHeaderFilter = useMemo(
     () =>
       createColumnHeaderFilter({
@@ -436,25 +397,10 @@ export function GarageMonthDetailDrawer({
     [classificationTableHook, classificationRows],
   );
 
-  const invoiceHeaderFilter = useMemo(
-    () =>
-      createColumnHeaderFilter({
-        listHook: invoiceTableHook,
-        items: invoiceRows,
-        defaultAlign: "center",
-      }),
-    [invoiceTableHook, invoiceRows],
-  );
-
   // ── Filtered Rows (Universal client filter & sorter) ───────────────
   const filteredClassificationRows = useMemo(
     () => filterClientItems(classificationRows, classificationTableHook),
     [classificationRows, classificationTableHook],
-  );
-
-  const filteredInvoiceRows = useMemo(
-    () => filterClientItems(invoiceRows, invoiceTableHook),
-    [invoiceRows, invoiceTableHook],
   );
 
   // ── Table Columns: Classification DataTable ──────────────────────
@@ -482,7 +428,7 @@ export function GarageMonthDetailDrawer({
           t("progress.columns.classification", "Loại nghiệp vụ"),
           { align: "left" },
         ),
-        size: 210,
+        size: 200,
         enableResizing: true,
         headerClassName: "text-left font-semibold",
         className: "text-left",
@@ -529,17 +475,64 @@ export function GarageMonthDetailDrawer({
           t("progress.columns.totalBilled", "Tổng phát sinh"),
           { align: "right" },
         ),
-        size: 140,
+        size: 150,
         enableResizing: true,
         headerClassName: "text-right font-semibold",
         className: "text-right font-mono tabular-nums text-foreground",
-        cell: (row: MonthClassificationRow) => (
-          <Tooltip content={money(row.billed)} side="top">
-            <span className="font-medium text-xs cursor-default">
-              {money(row.billed)}
-            </span>
-          </Tooltip>
-        ),
+        cell: (row: MonthClassificationRow) => {
+          const total = row.billed;
+          const paid = row.paid;
+          const bal = row.remaining;
+          if (total <= 0) {
+            return (
+              <span className="text-muted-foreground/40 font-normal select-none">
+                —
+              </span>
+            );
+          }
+          const isAllPaid = bal <= 0 && paid > 0;
+          const isUnpaid = paid <= 0 && total > 0;
+          const rate = row.rate;
+
+          const tooltipText = isReceipt
+            ? isAllPaid
+              ? `Đã thu đủ 100%: ${money(paid)}`
+              : isUnpaid
+                ? `Chưa thu (0%): Còn phải thu ${money(bal)} / Tổng ${money(total)}`
+                : `Đã thu: ${money(paid)} / ${money(total)} (${rate.toFixed(1)}%) • Còn phải thu: ${money(bal)}`
+            : isAllPaid
+              ? `Đã trả đủ 100%: ${money(paid)}`
+              : isUnpaid
+                ? `Chưa trả (0%): Còn phải trả ${money(bal)} / Tổng ${money(total)}`
+                : `Đã trả: ${money(paid)} / ${money(total)} (${rate.toFixed(1)}%) • Còn phải trả: ${money(bal)}`;
+
+          return (
+            <Tooltip content={tooltipText} side="top">
+              <div className="flex flex-col gap-1 w-full py-0.5 justify-center cursor-default">
+                <div className="flex items-center justify-end text-xs tabular-nums leading-tight">
+                  <span className="font-semibold text-foreground font-mono">
+                    {money(total)}
+                  </span>
+                </div>
+                <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                  <div
+                    className={cn(
+                      "h-full rounded-full transition-all duration-300",
+                      isAllPaid
+                        ? "bg-emerald-500 dark:bg-emerald-400"
+                        : isUnpaid
+                          ? "bg-transparent"
+                          : isReceipt
+                            ? "bg-emerald-600 dark:bg-emerald-500"
+                            : "bg-slate-600 dark:bg-slate-400",
+                    )}
+                    style={{ width: `${Math.min(100, Math.max(0, rate))}%` }}
+                  />
+                </div>
+              </div>
+            </Tooltip>
+          );
+        },
       },
       {
         key: "paid",
@@ -550,41 +543,15 @@ export function GarageMonthDetailDrawer({
             : t("progress.columns.paidPayment", "Đã chi"),
           { align: "right" },
         ),
-        size: 150,
+        size: 140,
         enableResizing: true,
         headerClassName: "text-right font-semibold",
-        className: "text-right font-mono tabular-nums",
+        className: "text-right font-mono tabular-nums text-foreground",
         cell: (row: MonthClassificationRow) => (
-          <Tooltip
-            content={
-              <div className="text-xs font-mono">
-                <div>Đã thanh toán: {money(row.paid)}</div>
-                <div>Tỷ lệ hoàn tất: {row.rate.toFixed(1)}%</div>
-              </div>
-            }
-            side="top"
-          >
-            <div className="flex flex-col items-end gap-0.5 cursor-default">
-              <span className="font-bold text-foreground text-xs">
-                {money(row.paid)}
-              </span>
-              <div className="flex items-center gap-1">
-                <span className="text-[10px] text-muted-foreground tabular-nums">
-                  {row.rate.toFixed(1)}%
-                </span>
-                <div className="w-12 bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden border border-slate-200/50 dark:border-slate-700/50">
-                  <div
-                    className={cn(
-                      "h-full rounded-full",
-                      isReceipt ? "bg-emerald-500" : "bg-orange-500",
-                    )}
-                    style={{
-                      width: `${Math.min(100, Math.max(0, row.rate))}%`,
-                    }}
-                  />
-                </div>
-              </div>
-            </div>
+          <Tooltip content={money(row.paid)} side="top">
+            <span className="font-semibold text-xs cursor-default">
+              {money(row.paid)}
+            </span>
           </Tooltip>
         ),
       },
@@ -628,6 +595,88 @@ export function GarageMonthDetailDrawer({
         ),
       },
       {
+        key: "remainingWithInvoice",
+        header: classificationHeaderFilter.amount(
+          "remainingWithInvoice",
+          isReceipt
+            ? t("progress.columns.receivableWithInvoice", "Còn phải thu có HĐ")
+            : t(
+                "progress.columns.payableCostWithInvoice",
+                "Còn phải trả có HĐ",
+              ),
+          { align: "right" },
+        ),
+        size: 150,
+        enableResizing: true,
+        headerClassName: "text-right font-semibold",
+        className: "text-right font-mono tabular-nums",
+        cell: (row: MonthClassificationRow) => {
+          const val = row.remainingWithInvoice;
+          return (
+            <Tooltip
+              content={
+                val > 0
+                  ? `${isReceipt ? "Còn phải thu có HĐ" : "Còn phải trả có HĐ"}: ${money(val)}`
+                  : undefined
+              }
+              side="top"
+            >
+              <span
+                className={cn(
+                  "text-xs font-mono tabular-nums cursor-default",
+                  val > 0
+                    ? "font-semibold text-foreground"
+                    : "text-muted-foreground/60",
+                )}
+              >
+                {val > 0 ? money(val) : "—"}
+              </span>
+            </Tooltip>
+          );
+        },
+      },
+      {
+        key: "remainingNoInvoice",
+        header: classificationHeaderFilter.amount(
+          "remainingNoInvoice",
+          isReceipt
+            ? t("progress.columns.receivableNoInvoice", "Còn phải thu không HĐ")
+            : t(
+                "progress.columns.payableCostNoInvoice",
+                "Còn phải trả không HĐ",
+              ),
+          { align: "right" },
+        ),
+        size: 150,
+        enableResizing: true,
+        headerClassName: "text-right font-semibold",
+        className: "text-right font-mono tabular-nums",
+        cell: (row: MonthClassificationRow) => {
+          const val = row.remainingNoInvoice;
+          return (
+            <Tooltip
+              content={
+                val > 0
+                  ? `${isReceipt ? "Còn phải thu không HĐ" : "Còn phải trả không HĐ"}: ${money(val)}`
+                  : undefined
+              }
+              side="top"
+            >
+              <span
+                className={cn(
+                  "text-xs font-mono tabular-nums cursor-default",
+                  val > 0
+                    ? "font-semibold text-foreground"
+                    : "text-muted-foreground/60",
+                )}
+              >
+                {val > 0 ? money(val) : "—"}
+              </span>
+            </Tooltip>
+          );
+        },
+      },
+      {
         key: "shareRate",
         header: classificationHeaderFilter.numeric(
           "shareRate",
@@ -640,7 +689,7 @@ export function GarageMonthDetailDrawer({
             },
           },
         ),
-        size: 100,
+        size: 90,
         enableResizing: true,
         headerClassName: "text-center font-semibold",
         className: "text-center",
@@ -659,11 +708,15 @@ export function GarageMonthDetailDrawer({
     let billed = 0;
     let paid = 0;
     let remaining = 0;
+    let remainingWithInvoice = 0;
+    let remainingNoInvoice = 0;
     let caseCount = 0;
     filteredClassificationRows.forEach((r) => {
       billed += r.billed;
       paid += r.paid;
       remaining += r.remaining;
+      remainingWithInvoice += r.remainingWithInvoice;
+      remainingNoInvoice += r.remainingNoInvoice;
       caseCount += r.caseCount;
     });
     const rate = billed > 0 ? (paid / billed) * 100 : 0;
@@ -681,19 +734,44 @@ export function GarageMonthDetailDrawer({
         </span>
       ),
       billed: (
-        <span className="font-bold text-right block font-mono tabular-nums text-foreground text-xs">
-          {money(billed)}
-        </span>
+        <Tooltip
+          content={
+            billed > 0
+              ? isReceipt
+                ? `Đã thu: ${money(paid)} / ${money(billed)} (${rate.toFixed(1)}%) • Còn phải thu: ${money(remaining)}`
+                : `Đã trả: ${money(paid)} / ${money(billed)} (${rate.toFixed(1)}%) • Còn phải trả: ${money(remaining)}`
+              : undefined
+          }
+          side="top"
+        >
+          <div className="flex flex-col gap-1 w-full py-0.5 justify-center cursor-default">
+            <div className="flex items-center justify-end text-xs tabular-nums leading-tight">
+              <span className="font-bold text-foreground font-mono">
+                {money(billed)}
+              </span>
+            </div>
+            <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
+              <div
+                className={cn(
+                  "h-full rounded-full transition-all duration-300",
+                  remaining <= 0 && paid > 0
+                    ? "bg-emerald-500 dark:bg-emerald-400"
+                    : paid <= 0
+                      ? "bg-transparent"
+                      : isReceipt
+                        ? "bg-emerald-600 dark:bg-emerald-500"
+                        : "bg-slate-600 dark:bg-slate-400",
+                )}
+                style={{ width: `${Math.min(100, Math.max(0, rate))}%` }}
+              />
+            </div>
+          </div>
+        </Tooltip>
       ),
       paid: (
-        <div className="flex flex-col items-end">
-          <span className="font-bold text-foreground font-mono text-xs">
-            {money(paid)}
-          </span>
-          <span className="text-[10px] text-muted-foreground tabular-nums">
-            {rate.toFixed(1)}% Hoàn tất
-          </span>
-        </div>
+        <span className="font-bold text-right block font-mono tabular-nums text-foreground text-xs">
+          {money(paid)}
+        </span>
       ),
       remaining: (
         <span
@@ -707,6 +785,30 @@ export function GarageMonthDetailDrawer({
           )}
         >
           {remaining > 0 ? money(remaining) : "—"}
+        </span>
+      ),
+      remainingWithInvoice: (
+        <span
+          className={cn(
+            "font-mono font-bold text-right block tabular-nums text-xs",
+            remainingWithInvoice > 0
+              ? "text-foreground"
+              : "text-muted-foreground/60",
+          )}
+        >
+          {remainingWithInvoice > 0 ? money(remainingWithInvoice) : "—"}
+        </span>
+      ),
+      remainingNoInvoice: (
+        <span
+          className={cn(
+            "font-mono font-bold text-right block tabular-nums text-xs",
+            remainingNoInvoice > 0
+              ? "text-foreground"
+              : "text-muted-foreground/60",
+          )}
+        >
+          {remainingNoInvoice > 0 ? money(remainingNoInvoice) : "—"}
         </span>
       ),
       shareRate: (
@@ -717,261 +819,10 @@ export function GarageMonthDetailDrawer({
     };
   }, [filteredClassificationRows, mainBilled, isReceipt]);
 
-  // ── Table Columns: Invoice Status DataTable ───────────────────────
-  const invoiceColumns = useMemo<DataTableColumn<MonthInvoiceRow>[]>(
-    () => [
-      {
-        key: "index",
-        header: <span className="w-full block text-center">#</span>,
-        size: 40,
-        enableResizing: false,
-        headerClassName: "text-center w-[40px] min-w-[40px]",
-        className: "text-center w-[40px] min-w-[40px]",
-        cell: (_: any, idx: number) => (
-          <span className="w-full block text-center text-muted-foreground font-medium">
-            {idx}
-          </span>
-        ),
-      },
-      {
-        key: "name",
-        header: invoiceHeaderFilter(
-          "name",
-          t("progress.columns.invoiceStatus", "Trạng thái Hóa đơn"),
-          { align: "left" },
-        ),
-        size: 210,
-        enableResizing: true,
-        headerClassName: "text-left font-semibold",
-        className: "text-left",
-        cell: (row: MonthInvoiceRow) => (
-          <div
-            className="flex items-center gap-2 cursor-pointer group"
-            onClick={() => {
-              setClassificationDrawerState({
-                open: true,
-                filterType: "INVOICE",
-                filterKey: row.key,
-                filterLabel: row.name,
-              });
-            }}
-          >
-            <span className="shrink-0 group-hover:scale-110 transition-transform">
-              {row.icon}
-            </span>
-            <span className="font-semibold text-foreground text-xs group-hover:text-primary group-hover:underline transition-colors">
-              {row.name}
-            </span>
-            {row.caseCount !== undefined && row.caseCount > 0 && (
-              <Badge
-                variant="outline"
-                className="ml-auto text-[10px] px-1.5 py-0 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium tabular-nums shrink-0 group-hover:bg-primary/10 group-hover:text-primary group-hover:border-primary/30 transition-colors"
-              >
-                {row.caseCount}p
-              </Badge>
-            )}
-          </div>
-        ),
-      },
-      {
-        key: "billed",
-        header: invoiceHeaderFilter.amount(
-          "billed",
-          t("progress.columns.totalBilled", "Tổng phát sinh"),
-          { align: "right" },
-        ),
-        size: 140,
-        enableResizing: true,
-        headerClassName: "text-right font-semibold",
-        className: "text-right font-mono tabular-nums text-foreground",
-        cell: (row: MonthInvoiceRow) => (
-          <Tooltip content={money(row.billed)} side="top">
-            <span className="font-medium text-xs cursor-default">
-              {money(row.billed)}
-            </span>
-          </Tooltip>
-        ),
-      },
-      {
-        key: "paid",
-        header: invoiceHeaderFilter.amount(
-          "paid",
-          isReceipt
-            ? t("progress.columns.paidReceipt", "Đã thu")
-            : t("progress.columns.paidPayment", "Đã chi"),
-          { align: "right" },
-        ),
-        size: 150,
-        enableResizing: true,
-        headerClassName: "text-right font-semibold",
-        className: "text-right font-mono tabular-nums",
-        cell: (row: MonthInvoiceRow) => (
-          <Tooltip
-            content={
-              <div className="text-xs font-mono">
-                <div>Đã thanh toán: {money(row.paid)}</div>
-                <div>Tỷ lệ hoàn tất: {row.rate.toFixed(1)}%</div>
-              </div>
-            }
-            side="top"
-          >
-            <div className="flex flex-col items-end gap-0.5 cursor-default">
-              <span className="font-bold text-foreground text-xs">
-                {money(row.paid)}
-              </span>
-              <div className="flex items-center gap-1">
-                <span className="text-[10px] text-muted-foreground tabular-nums">
-                  {row.rate.toFixed(1)}%
-                </span>
-                <div className="w-12 bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden border border-slate-200/50 dark:border-slate-700/50">
-                  <div
-                    className={cn(
-                      "h-full rounded-full",
-                      isReceipt ? "bg-emerald-500" : "bg-orange-500",
-                    )}
-                    style={{
-                      width: `${Math.min(100, Math.max(0, row.rate))}%`,
-                    }}
-                  />
-                </div>
-              </div>
-            </div>
-          </Tooltip>
-        ),
-      },
-      {
-        key: "remaining",
-        header: invoiceHeaderFilter.amount(
-          "remaining",
-          isReceipt
-            ? t("progress.columns.receivable", "Còn phải thu")
-            : t("progress.columns.payable", "Còn phải trả"),
-          { align: "right" },
-        ),
-        size: 140,
-        enableResizing: true,
-        headerClassName:
-          "text-right bg-slate-100 dark:bg-slate-800/60 font-semibold",
-        className:
-          "text-right font-mono tabular-nums bg-slate-50 dark:bg-slate-800/30",
-        cell: (row: MonthInvoiceRow) => (
-          <Tooltip
-            content={
-              row.remaining > 0
-                ? `${isReceipt ? "Còn phải thu" : "Còn phải trả"}: ${money(row.remaining)}`
-                : undefined
-            }
-            side="top"
-          >
-            <span
-              className={cn(
-                "text-xs font-mono tabular-nums cursor-default",
-                row.remaining > 0
-                  ? isReceipt
-                    ? "font-bold text-amber-600 dark:text-amber-400"
-                    : "font-bold text-orange-600 dark:text-orange-400"
-                  : "text-muted-foreground/60",
-              )}
-            >
-              {row.remaining > 0 ? money(row.remaining) : "—"}
-            </span>
-          </Tooltip>
-        ),
-      },
-      {
-        key: "shareRate",
-        header: invoiceHeaderFilter.numeric(
-          "shareRate",
-          t("progress.columns.shareRate", "Tỷ trọng"),
-          {
-            align: "center",
-            formatOptionLabel: (v) => {
-              const num = typeof v === "number" ? v : parseFloat(String(v));
-              return !Number.isNaN(num) ? `${num.toFixed(1)}%` : String(v);
-            },
-          },
-        ),
-        size: 100,
-        enableResizing: true,
-        headerClassName: "text-center font-semibold",
-        className: "text-center font-semibold text-xs text-foreground",
-        cell: (row: MonthInvoiceRow) => (
-          <span className="w-full block text-center font-semibold text-xs tabular-nums text-foreground">
-            {row.shareRate.toFixed(1)}%
-          </span>
-        ),
-      },
-    ],
-    [invoiceHeaderFilter, isReceipt, t],
-  );
-
-  // ── Summary Row for Invoice Table ────────────────────────────────
-  const invoiceSummaryRow = useMemo(() => {
-    let billed = 0;
-    let paid = 0;
-    let remaining = 0;
-    let caseCount = 0;
-    filteredInvoiceRows.forEach((r) => {
-      billed += r.billed;
-      paid += r.paid;
-      remaining += r.remaining;
-      caseCount += r.caseCount || 0;
-    });
-    const rate = billed > 0 ? (paid / billed) * 100 : 0;
-    const shareRate = mainBilled > 0 ? (billed / mainBilled) * 100 : 0;
-
-    return {
-      index: (
-        <span className="w-full block text-center font-bold text-muted-foreground">
-          Σ
-        </span>
-      ),
-      name: (
-        <span className="font-bold text-xs uppercase tracking-wider text-foreground">
-          TỔNG CỘNG ({caseCount} phiếu)
-        </span>
-      ),
-      billed: (
-        <span className="font-bold text-right block font-mono tabular-nums text-foreground text-xs">
-          {money(billed)}
-        </span>
-      ),
-      paid: (
-        <div className="flex flex-col items-end">
-          <span className="font-bold text-foreground font-mono text-xs">
-            {money(paid)}
-          </span>
-          <span className="text-[10px] text-muted-foreground tabular-nums">
-            {rate.toFixed(1)}% Hoàn tất
-          </span>
-        </div>
-      ),
-      remaining: (
-        <span
-          className={cn(
-            "font-mono font-bold text-right block tabular-nums text-xs",
-            remaining > 0
-              ? isReceipt
-                ? "text-amber-600 dark:text-amber-400"
-                : "text-orange-600 dark:text-orange-400"
-              : "text-muted-foreground/60",
-          )}
-        >
-          {remaining > 0 ? money(remaining) : "—"}
-        </span>
-      ),
-      shareRate: (
-        <span className="font-bold text-center block text-xs text-foreground">
-          {shareRate.toFixed(1)}%
-        </span>
-      ),
-    };
-  }, [filteredInvoiceRows, mainBilled, isReceipt]);
-
-  // ── LEFT PANEL: Standard Table of Classifications & Invoices ──────
+  // ── LEFT PANEL: Standard Table of Classifications ────────────────
   const leftPanel = (
     <div className="flex flex-col gap-4">
-      {/* 1. Main Content: Table Phân loại theo Nghiệp vụ */}
+      {/* Main Content: Table Phân loại theo Nghiệp vụ */}
       <DrawerSection
         title={
           <div className="flex items-center gap-2">
@@ -1030,74 +881,6 @@ export function GarageMonthDetailDrawer({
                     setClassificationDrawerState({
                       open: true,
                       filterType: "CLASSIFICATION",
-                      filterKey: row.key,
-                      filterLabel: row.name,
-                    });
-                  },
-                  quickAction: true,
-                },
-              ],
-            },
-          ]}
-        />
-      </DrawerSection>
-
-      {/* 2. Secondary Table: Phân loại theo Hóa đơn Thuế */}
-      <DrawerSection
-        title={
-          <div className="flex items-center gap-2">
-            <span>Bảng phân loại theo Hóa đơn Thuế (VAT)</span>
-            {invoiceTableHook.activeFilterCount > 0 && (
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  invoiceTableHook.resetFilters();
-                }}
-                className="text-[11px] font-medium text-destructive hover:underline flex items-center gap-1 bg-destructive/10 px-2 py-0.5 rounded-full lowercase first-letter:uppercase tracking-normal font-sans"
-              >
-                <span>Xóa bộ lọc ({invoiceTableHook.activeFilterCount})</span>
-              </button>
-            )}
-          </div>
-        }
-        collapsible={true}
-        defaultCollapsed={false}
-        titleExtra={
-          <div className="flex items-center gap-1 text-xs text-muted-foreground">
-            <PieChart className="w-3.5 h-3.5 text-emerald-600 mr-1" />
-            {filteredInvoiceRows.length} / {invoiceRows.length} nhóm
-          </div>
-        }
-      >
-        <DataTable
-          items={filteredInvoiceRows}
-          getRowKey={(row) => row.key}
-          variant="spreadsheet"
-          columns={invoiceColumns}
-          summaryRow={invoiceSummaryRow}
-          emptyLabel="Không tìm thấy nhóm hóa đơn phù hợp bộ lọc"
-          enableColumnResizing={true}
-          tableId={invoiceTableId}
-          onRowClick={(row: MonthInvoiceRow) => {
-            setClassificationDrawerState({
-              open: true,
-              filterType: "INVOICE",
-              filterKey: row.key,
-              filterLabel: row.name,
-            });
-          }}
-          rowHoverActions={(row: MonthInvoiceRow) => [
-            {
-              groupLabel: "TRA CỨU",
-              items: [
-                {
-                  label: "Xem chi tiết danh sách vụ việc",
-                  icon: <Eye className="w-3.5 h-3.5" />,
-                  onClick: () => {
-                    setClassificationDrawerState({
-                      open: true,
-                      filterType: "INVOICE",
                       filterKey: row.key,
                       filterLabel: row.name,
                     });

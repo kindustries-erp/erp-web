@@ -251,8 +251,53 @@ export function GaragePaymentProgressCard({
         headerClassName: "text-center",
         className:
           "text-right font-medium tabular-nums text-foreground font-mono",
-        cell: (item: GarageTrendItem) =>
-          money(item.tienCoThue || item.totalBilled || 0),
+        cell: (item: GarageTrendItem) => {
+          const total = item.tienCoThue || item.totalBilled || 0;
+          const paid = item.paid || 0;
+          const bal = item.receivable || 0;
+          if (total <= 0) {
+            return (
+              <span className="text-muted-foreground/40 font-normal select-none">
+                —
+              </span>
+            );
+          }
+          const isAllPaid = bal <= 0 && paid > 0;
+          const isUnpaid = paid <= 0 && total > 0;
+          const rate =
+            item.collectionRate ?? (total > 0 ? (paid / total) * 100 : 0);
+
+          const tooltipText = isAllPaid
+            ? `Đã thu đủ 100%: ${money(paid)}`
+            : isUnpaid
+              ? `Chưa thu (0%): Còn phải thu ${money(bal)} / Tổng ${money(total)}`
+              : `Đã thu: ${money(paid)} / ${money(total)} (${rate.toFixed(1)}%) • Còn phải thu: ${money(bal)}`;
+
+          return (
+            <Tooltip content={tooltipText} side="top">
+              <div className="flex flex-col gap-1 w-full py-0.5 justify-center cursor-default">
+                <div className="flex items-center justify-end text-xs tabular-nums leading-tight">
+                  <span className="font-semibold text-foreground font-mono">
+                    {money(total)}
+                  </span>
+                </div>
+                <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                  <div
+                    className={cn(
+                      "h-full rounded-full transition-all duration-300",
+                      isAllPaid
+                        ? "bg-emerald-500 dark:bg-emerald-400"
+                        : isUnpaid
+                          ? "bg-transparent"
+                          : "bg-emerald-600 dark:bg-emerald-500",
+                    )}
+                    style={{ width: `${Math.min(100, Math.max(0, rate))}%` }}
+                  />
+                </div>
+              </div>
+            </Tooltip>
+          );
+        },
       },
       {
         key: "paid",
@@ -417,7 +462,53 @@ export function GaragePaymentProgressCard({
         headerClassName: "text-center",
         className:
           "text-right font-medium tabular-nums text-foreground font-mono",
-        cell: (item: GarageTrendItem) => money(item.cost || 0),
+        cell: (item: GarageTrendItem) => {
+          const total = item.cost || 0;
+          const paid = item.paidCost || 0;
+          const bal = item.payableCost || 0;
+          if (total <= 0) {
+            return (
+              <span className="text-muted-foreground/40 font-normal select-none">
+                —
+              </span>
+            );
+          }
+          const isAllPaid = bal <= 0 && paid > 0;
+          const isUnpaid = paid <= 0 && total > 0;
+          const rate =
+            item.costPaymentRate ?? (total > 0 ? (paid / total) * 100 : 0);
+
+          const tooltipText = isAllPaid
+            ? `Đã trả đủ 100%: ${money(paid)}`
+            : isUnpaid
+              ? `Chưa trả (0%): Còn phải trả ${money(bal)} / Tổng ${money(total)}`
+              : `Đã trả: ${money(paid)} / ${money(total)} (${rate.toFixed(1)}%) • Còn phải trả: ${money(bal)}`;
+
+          return (
+            <Tooltip content={tooltipText} side="top">
+              <div className="flex flex-col gap-1 w-full py-0.5 justify-center cursor-default">
+                <div className="flex items-center justify-end text-xs tabular-nums leading-tight">
+                  <span className="font-semibold text-foreground font-mono">
+                    {money(total)}
+                  </span>
+                </div>
+                <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                  <div
+                    className={cn(
+                      "h-full rounded-full transition-all duration-300",
+                      isAllPaid
+                        ? "bg-emerald-500 dark:bg-emerald-400"
+                        : isUnpaid
+                          ? "bg-transparent"
+                          : "bg-slate-600 dark:bg-slate-400",
+                    )}
+                    style={{ width: `${Math.min(100, Math.max(0, rate))}%` }}
+                  />
+                </div>
+              </div>
+            </Tooltip>
+          );
+        },
       },
       {
         key: "paidCost",
@@ -542,9 +633,37 @@ export function GaragePaymentProgressCard({
         </span>
       ),
       tienCoThue: (
-        <span className="font-bold text-right block tabular-nums text-foreground font-mono">
-          {money(totals.billed)}
-        </span>
+        <Tooltip
+          content={
+            totals.billed > 0
+              ? `Đã thu: ${money(totals.paid)} / ${money(totals.billed)} (${(totals.billed > 0 ? (totals.paid / totals.billed) * 100 : 0).toFixed(1)}%) • Còn phải thu: ${money(totals.receivable)}`
+              : undefined
+          }
+          side="top"
+        >
+          <div className="flex flex-col gap-1 w-full py-0.5 justify-center cursor-default">
+            <div className="flex items-center justify-end text-xs tabular-nums leading-tight">
+              <span className="font-bold text-foreground font-mono">
+                {money(totals.billed)}
+              </span>
+            </div>
+            <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
+              <div
+                className={cn(
+                  "h-full rounded-full transition-all duration-300",
+                  totals.receivable <= 0 && totals.paid > 0
+                    ? "bg-emerald-500 dark:bg-emerald-400"
+                    : totals.paid <= 0
+                      ? "bg-transparent"
+                      : "bg-emerald-600 dark:bg-emerald-500",
+                )}
+                style={{
+                  width: `${Math.min(100, Math.max(0, totals.billed > 0 ? (totals.paid / totals.billed) * 100 : 0))}%`,
+                }}
+              />
+            </div>
+          </div>
+        </Tooltip>
       ),
       paid: (
         <span className="font-bold text-right block tabular-nums text-foreground font-mono">
@@ -610,9 +729,37 @@ export function GaragePaymentProgressCard({
         </span>
       ),
       cost: (
-        <span className="font-bold text-right block tabular-nums text-foreground font-mono">
-          {money(totals.cost)}
-        </span>
+        <Tooltip
+          content={
+            totals.cost > 0
+              ? `Đã trả: ${money(totals.paidCost)} / ${money(totals.cost)} (${(totals.cost > 0 ? (totals.paidCost / totals.cost) * 100 : 0).toFixed(1)}%) • Còn phải trả: ${money(totals.payableCost)}`
+              : undefined
+          }
+          side="top"
+        >
+          <div className="flex flex-col gap-1 w-full py-0.5 justify-center cursor-default">
+            <div className="flex items-center justify-end text-xs tabular-nums leading-tight">
+              <span className="font-bold text-foreground font-mono">
+                {money(totals.cost)}
+              </span>
+            </div>
+            <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
+              <div
+                className={cn(
+                  "h-full rounded-full transition-all duration-300",
+                  totals.payableCost <= 0 && totals.paidCost > 0
+                    ? "bg-emerald-500 dark:bg-emerald-400"
+                    : totals.paidCost <= 0
+                      ? "bg-transparent"
+                      : "bg-slate-600 dark:bg-slate-400",
+                )}
+                style={{
+                  width: `${Math.min(100, Math.max(0, totals.cost > 0 ? (totals.paidCost / totals.cost) * 100 : 0))}%`,
+                }}
+              />
+            </div>
+          </div>
+        </Tooltip>
       ),
       paidCost: (
         <span className="font-bold text-right block tabular-nums text-foreground font-mono">
