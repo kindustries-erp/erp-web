@@ -311,7 +311,19 @@ function BranchPartnerStatsTable({
   );
 }
 
-export function CashflowDashboard() {
+import type { TabItem } from "@/shared/components/PageLayout";
+
+export interface CashflowDashboardProps {
+  tabs?: TabItem[];
+  activeTab?: string;
+  onTabChange?: (val: string) => void;
+}
+
+export function CashflowDashboard({
+  tabs,
+  activeTab,
+  onTabChange,
+}: CashflowDashboardProps = {}) {
   const t = useT();
   const { employee } = useAuthStore();
   const isAdminEmail = employee?.email === "admin@liouni.com";
@@ -453,6 +465,9 @@ export function CashflowDashboard() {
       title={t("dashboard.title")}
       desc={t("dashboard.desc")}
       icon={<LayoutDashboard className="h-4 w-4" />}
+      tabs={tabs}
+      activeTab={activeTab}
+      onTabChange={onTabChange}
       filterConfig={filterConfig}
       filter={filter}
       loading={isFetching}

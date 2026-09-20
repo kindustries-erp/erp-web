@@ -414,7 +414,7 @@ export function SidebarNav({
       {showAccounting && (
         <NavSection collapsed={c} label={t("nav.sections.accounting")}>
           {showCashflow && (
-            <NavGroup
+            <NavItem
               collapsed={c}
               icon={<Wallet className="w-4 h-4 opacity-65 flex-shrink-0" />}
               label={t("nav.items.cashflow")}
@@ -423,30 +423,9 @@ export function SidebarNav({
                 currentPage === "bank-statement" ||
                 currentPage === "cash-statement"
               }
-            >
-              <NavGroupItem
-                label={t("nav.items.cashflowDashboard")}
-                active={currentPage === "cashflow-dashboard"}
-                onClick={() => navTo("cashflow-dashboard")}
-                contextPage="cashflow-dashboard"
-              />
-              {canReadBankStatements && (
-                <NavGroupItem
-                  label={t("bankStatement.bankTitle")}
-                  active={currentPage === "bank-statement"}
-                  onClick={() => navTo("bank-statement")}
-                  contextPage="bank-statement"
-                />
-              )}
-              {canReadCashStatements && (
-                <NavGroupItem
-                  label={t("bankStatement.cashTitle")}
-                  active={currentPage === "cash-statement"}
-                  onClick={() => navTo("cash-statement")}
-                  contextPage="cash-statement"
-                />
-              )}
-            </NavGroup>
+              onClick={() => navTo("cashflow-dashboard")}
+              contextPage="cashflow-dashboard"
+            />
           )}
           {canReadInvoices && (
             <NavItem

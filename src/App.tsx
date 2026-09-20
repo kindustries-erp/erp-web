@@ -39,12 +39,6 @@ const loadInventoryDashboard = () =>
   }));
 const InventoryDashboard = lazy(loadInventoryDashboard);
 
-const CashflowDashboard = lazy(() =>
-  import("@/pages/CashflowDashboard").then((m) => ({
-    default: m.CashflowDashboard,
-  })),
-);
-
 const loadMuaHang = () =>
   import("@/pages/Purchasing").then((m) => ({ default: m.MuaHang }));
 const MuaHang = lazy(loadMuaHang);
@@ -240,7 +234,7 @@ const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   dashboard: Dashboard,
   opex: OpexPage,
   "inventory-dashboard": InventoryDashboard,
-  "cashflow-dashboard": CashflowDashboard,
+  "cashflow-dashboard": () => <BankStatementPage initialTab="dashboard" />,
   purchasing: MuaHang,
   "erp-inventory-stock": InventoryStockPage,
   "erp-inventory-tracking": InventoryTrackingPage,
@@ -272,8 +266,8 @@ const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   "invoice-dashboard": () => <ErpInvoicesPage initialTab="dashboard" />,
   "sys-tags": SysTagsPage,
   attachments: AttachmentsPage,
-  "bank-statement": () => <BankStatementPage type="bank" />,
-  "cash-statement": () => <BankStatementPage type="cash" />,
+  "bank-statement": () => <BankStatementPage initialTab="bank" />,
+  "cash-statement": () => <BankStatementPage initialTab="cash" />,
   "journal-entry": GeneralJournalPage,
   "settings-accounts": ChartOfAccountsPage,
   "settings-bank": ThietLapNganHang,

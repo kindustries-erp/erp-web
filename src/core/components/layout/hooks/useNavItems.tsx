@@ -372,35 +372,27 @@ export function useNavItems(): NavSearchItem[] {
 
     // 7. Accounting (Kế toán)
     const accountingSection = t("nav.sections.accounting");
-    const cashflowGroup = t("nav.items.cashflow");
-
-    if (canReadCashflow) {
+    if (canReadCashflow || canReadBankStatements || canReadCashStatements) {
       items.push({
         key: "cashflow-dashboard",
-        label: t("nav.items.cashflowDashboard"),
-        group: cashflowGroup,
+        label: t("nav.items.cashflow"),
         section: accountingSection,
-        keywords: ["dong tien", "cashflow", "tien mat", "ngan hang"],
-        icon: <Wallet className="w-4 h-4" />,
-      });
-    }
-    if (canReadBankStatements) {
-      items.push({
-        key: "bank-statement",
-        label: t("bankStatement.bankTitle"),
-        group: cashflowGroup,
-        section: accountingSection,
-        keywords: ["dong tien", "sao ke", "ngan hang", "bank statement"],
-        icon: <Wallet className="w-4 h-4" />,
-      });
-    }
-    if (canReadCashStatements) {
-      items.push({
-        key: "cash-statement",
-        label: t("bankStatement.cashTitle"),
-        group: cashflowGroup,
-        section: accountingSection,
-        keywords: ["dong tien", "sao ke", "tien mat", "cash statement"],
+        keywords: [
+          "dong tien",
+          "dòng tiền",
+          "cashflow",
+          "sao ke",
+          "sao kê",
+          "ngan hang",
+          "ngân hàng",
+          "bank statement",
+          "so quy",
+          "sổ quỹ",
+          "tien mat",
+          "tiền mặt",
+          "tong quan dong tien",
+          "tổng quan dòng tiền",
+        ],
         icon: <Wallet className="w-4 h-4" />,
       });
     }
