@@ -45,10 +45,14 @@ export interface GarageTrendItem {
   billedSuaChuaChung?: number;
   paidSuaChuaChung?: number;
   receivableSuaChuaChung?: number;
+  receivableWithInvoiceSuaChuaChung?: number;
+  receivableNoInvoiceSuaChuaChung?: number;
   rateSuaChuaChung?: number;
   costSuaChuaChung?: number;
   paidCostSuaChuaChung?: number;
   payableCostSuaChuaChung?: number;
+  payableCostWithInvoiceSuaChuaChung?: number;
+  payableCostNoInvoiceSuaChuaChung?: number;
   costRateSuaChuaChung?: number;
 
   // Classification breakdowns: Ký gửi / Nội bộ
@@ -56,10 +60,14 @@ export interface GarageTrendItem {
   billedKyGuiNoiBo?: number;
   paidKyGuiNoiBo?: number;
   receivableKyGuiNoiBo?: number;
+  receivableWithInvoiceKyGuiNoiBo?: number;
+  receivableNoInvoiceKyGuiNoiBo?: number;
   rateKyGuiNoiBo?: number;
   costKyGuiNoiBo?: number;
   paidCostKyGuiNoiBo?: number;
   payableCostKyGuiNoiBo?: number;
+  payableCostWithInvoiceKyGuiNoiBo?: number;
+  payableCostNoInvoiceKyGuiNoiBo?: number;
   costRateKyGuiNoiBo?: number;
 
   // Classification breakdowns: OJ Ngoài
@@ -67,10 +75,14 @@ export interface GarageTrendItem {
   billedOj?: number;
   paidOj?: number;
   receivableOj?: number;
+  receivableWithInvoiceOj?: number;
+  receivableNoInvoiceOj?: number;
   rateOj?: number;
   costOj?: number;
   paidCostOj?: number;
   payableCostOj?: number;
+  payableCostWithInvoiceOj?: number;
+  payableCostNoInvoiceOj?: number;
   costRateOj?: number;
 
   // Classification breakdowns: Khác / Chưa phân loại
@@ -78,10 +90,14 @@ export interface GarageTrendItem {
   billedOther?: number;
   paidOther?: number;
   receivableOther?: number;
+  receivableWithInvoiceOther?: number;
+  receivableNoInvoiceOther?: number;
   rateOther?: number;
   costOther?: number;
   paidCostOther?: number;
   payableCostOther?: number;
+  payableCostWithInvoiceOther?: number;
+  payableCostNoInvoiceOther?: number;
   costRateOther?: number;
 }
 

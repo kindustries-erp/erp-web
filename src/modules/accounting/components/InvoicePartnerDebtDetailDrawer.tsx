@@ -1,10 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
-import {
-  StandardFormDrawer,
-  type DrawerTopTabItem,
-} from "@/shared/components/StandardFormDrawer";
+import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
 import { DrawerSection, DrawerRow } from "@/shared/components/DrawerModal";
 import { Badge } from "@/shared/components/ui/badge";
 import { money } from "@/shared/utils/format";
@@ -32,7 +29,9 @@ import {
   TrendingUp,
   Activity,
   Percent,
+  RotateCcw,
 } from "lucide-react";
+import { PillTabs } from "@/shared/components/PillTabs";
 import {
   invoiceDebtsApi,
   type PartnerInvoiceDetailItem,
@@ -76,6 +75,11 @@ export function InvoicePartnerDebtDetailDrawer({
   // Client-side pagination state
   const [page, setPage] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(10);
+
+  // Sub-tab navigation state (Left Panel)
+  const [activeSubTab, setActiveSubTab] = useState<"invoices" | "analytics">(
+    "invoices",
+  );
 
   // Fetch Invoices of Partner
   const {
@@ -827,39 +831,42 @@ export function InvoicePartnerDebtDetailDrawer({
 
   // Tab 1 Content: Invoices List DataTable and Pagination
   const leftPanelContent = (
-    <div className="space-y-4">
-      <DrawerSection
-        title={
-          <div className="flex items-center gap-2">
-            <span>
-              {t(
-                "debts:drawer.invoicesListTitle",
-                "Danh sách hóa đơn chi tiết",
-              )}
+    <DrawerSection
+      title={
+        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">
+          <ReceiptText className="w-4 h-4 text-muted-foreground" />
+          <span>
+            {t("debts:drawer.invoicesListTitle", "Danh sách hóa đơn chi tiết")}
+          </span>
+          {invoices.length > 0 && (
+            <span className="text-xs font-normal text-muted-foreground lowercase font-mono">
+              ({filteredInvoices.length} / {invoices.length}{" "}
+              {t("debts:unitInvoice", "hóa đơn")})
             </span>
-            {tableState.activeFilterCount > 0 && (
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  tableState.resetFilters();
-                }}
-                className="text-[11px] font-medium text-destructive hover:underline flex items-center gap-1 bg-destructive/10 px-2 py-0.5 rounded-full cursor-pointer"
-              >
-                <span>Xóa bộ lọc ({tableState.activeFilterCount})</span>
-              </button>
-            )}
-          </div>
-        }
-        titleExtra={
-          <div className="text-xs text-muted-foreground font-mono">
-            {filteredInvoices.length} / {invoices.length}{" "}
-            {t("debts:unitInvoice", "hóa đơn")}
-          </div>
-        }
-        collapsible={false}
-        defaultCollapsed={false}
-      >
+          )}
+        </div>
+      }
+      titleExtra={
+        tableState.activeFilterCount > 0 ? (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              tableState.resetFilters();
+            }}
+            className="text-[11px] font-medium text-destructive hover:bg-destructive/10 flex items-center gap-1 px-2 py-0.5 rounded-md border border-destructive/20 cursor-pointer"
+          >
+            <RotateCcw className="w-3 h-3" />
+            <span>Xóa bộ lọc ({tableState.activeFilterCount})</span>
+          </button>
+        ) : undefined
+      }
+      collapsible={true}
+      defaultCollapsed={false}
+      className="p-2.5 mb-0 border border-slate-200/80 dark:border-slate-800"
+      bodyClassName="p-0"
+    >
+      <div className="h-[calc(100vh-395px)] min-h-[260px] max-h-[calc(100vh-395px)] flex flex-col overflow-hidden bg-white dark:bg-slate-900">
         <DataTable
           items={paginatedInvoices}
           columns={columns}
@@ -878,9 +885,10 @@ export function InvoicePartnerDebtDetailDrawer({
             setPage(1);
           }}
           summaryRow={summaryRow}
+          containerClassName="flex-1 min-h-0"
         />
-      </DrawerSection>
-    </div>
+      </div>
+    </DrawerSection>
   );
 
   // Tab 2 Content: Full-size Monthly Trend & Aging Breakdown & Health Analytics
@@ -1095,24 +1103,63 @@ export function InvoicePartnerDebtDetailDrawer({
     </div>
   );
 
-  // Drawer Top Tabs configuration
-  const drawerTabs: DrawerTopTabItem[] = useMemo(() => {
-    return [
-      {
-        key: "invoices",
-        label: t("debts:drawer.tabInvoices", "Danh sách hóa đơn"),
-        icon: <ReceiptText className="w-3.5 h-3.5" />,
-        badgeCount: invoices.length,
-        content: leftPanelContent,
-      },
-      {
-        key: "analytics",
-        label: t("debts:drawer.tabAnalytics", "Phân tích & Biến động"),
-        icon: <TrendingUp className="w-3.5 h-3.5" />,
-        content: analyticsContent,
-      },
-    ];
-  }, [invoices.length, leftPanelContent, analyticsContent, t]);
+  // Left Panel with top navigation PillTabs
+  const leftPanel = (
+    <div className="space-y-3 pb-2 flex-1 min-w-0 w-full flex flex-col">
+      {/* ─── 1. THANH ĐIỀU HƯỚNG TỔNG HỢP: SUB-TABS + QUICK ACTIONS ─── */}
+      <div className="flex flex-wrap items-center justify-between gap-3 pt-0.5">
+        {/* Bên trái: Sub-Tabs 1. Danh sách hóa đơn / 2. Biến động & Phân tích */}
+        <div className="flex items-center gap-2">
+          <PillTabs<"invoices" | "analytics">
+            size="sm"
+            value={activeSubTab}
+            onValueChange={setActiveSubTab}
+            items={[
+              {
+                value: "invoices",
+                label: t("debts:drawer.tabInvoices", "1. Danh sách hóa đơn"),
+                icon: ReceiptText,
+                badgeCount: invoices.length > 0 ? invoices.length : undefined,
+              },
+              {
+                value: "analytics",
+                label: t(
+                  "debts:drawer.tabAnalytics",
+                  "2. Biến động & Phân tích",
+                ),
+                icon: TrendingUp,
+              },
+            ]}
+          />
+        </div>
+
+        {/* Bên phải: Quick Actions & Count Summary */}
+        <div className="flex items-center gap-2">
+          {activeSubTab === "invoices" && (
+            <>
+              {tableState.activeFilterCount > 0 && (
+                <button
+                  type="button"
+                  onClick={() => tableState.resetFilters()}
+                  className="h-6 px-2 text-[11px] font-medium text-destructive hover:bg-destructive/10 flex items-center gap-1 rounded-md border border-destructive/20 cursor-pointer"
+                >
+                  <RotateCcw className="w-3 h-3" />
+                  <span>Xóa bộ lọc ({tableState.activeFilterCount})</span>
+                </button>
+              )}
+              <span className="text-xs font-normal text-muted-foreground font-mono">
+                {filteredInvoices.length} / {invoices.length}{" "}
+                {t("debts:unitInvoice", "hóa đơn")}
+              </span>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* ─── 2. NỘI DUNG CHÍNH THEO SUB-TAB ─── */}
+      {activeSubTab === "invoices" ? leftPanelContent : analyticsContent}
+    </div>
+  );
 
   return (
     <>
@@ -1134,8 +1181,7 @@ export function InvoicePartnerDebtDetailDrawer({
         size="xl"
         layout="2-columns"
         collapsibleRightPanel={true}
-        tabs={drawerTabs}
-        defaultTabKey="invoices"
+        leftPanel={leftPanel}
         rightPanel={rightPanelContent}
       />
 
