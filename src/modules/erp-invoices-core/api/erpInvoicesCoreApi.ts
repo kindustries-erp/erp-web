@@ -85,6 +85,11 @@ export interface ErpInvoiceItemListResponse {
     totalVatAmount: number;
     totalDiscountAmount: number;
     totalAmount: number;
+    cumulativeQuantity?: number;
+    cumulativePreVatAmount?: number;
+    cumulativeVatAmount?: number;
+    cumulativeDiscountAmount?: number;
+    cumulativeTotalAmount?: number;
   };
 }
 

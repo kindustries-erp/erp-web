@@ -64,8 +64,11 @@ const LEGACY_SLUGS: Record<string, PageKey> = {
   "mua-hang": "purchasing",
   kho: "erp-inventory-stock",
   "email-hop-thu": "email-inbox",
+  "erp-invoice": "erp-invoices",
   "erp-invoices-in": "erp-invoices",
   "erp-invoices-out": "erp-invoices",
+  "erp-invoices-draft": "erp-invoices",
+  "invoice-dashboard": "erp-invoices",
   "garage-customers": "garage-partners",
   journal: "journal-entry",
   "nhat-ky-chung": "journal-entry",
@@ -253,7 +256,13 @@ export function pathToPage(
 
   if (slug === "") {
     page = "dashboard";
-  } else if (slug === "erp-invoices-out" || slug === "erp-invoices-in") {
+  } else if (
+    slug === "erp-invoices-out" ||
+    slug === "erp-invoices-in" ||
+    slug === "erp-invoices-draft" ||
+    slug === "invoice-dashboard" ||
+    slug === "erp-invoice"
+  ) {
     page = "erp-invoices";
   } else {
     page = ALL_PAGE_KEYS.includes(slug as PageKey)
@@ -266,17 +275,33 @@ export function pathToPage(
   let tab = searchParams.get(ErpUrlQueryParam.TAB) ?? undefined;
   const viewParam = searchParams.get(ErpUrlQueryParam.VIEW);
 
-  // Normalize tab for erp-invoices / erp-invoices-in / erp-invoices-out
-  if (slug === "erp-invoices-out") {
+  // Normalize tab for erp-invoices / erp-invoices-in / erp-invoices-out / invoice-dashboard / erp-invoices-draft
+  if (slug === "invoice-dashboard") {
+    tab = "dashboard";
+  } else if (slug === "erp-invoices-draft") {
+    tab = "draft";
+  } else if (slug === "erp-invoices-out") {
     if (tab === "lines" || viewParam === "lines" || tab === "out-lines") {
       tab = "out-lines";
     } else {
       tab = "out";
     }
-  } else if (slug === "erp-invoices-in" || page === "erp-invoices") {
-    if (tab === "lines" || viewParam === "lines") {
+  } else if (
+    slug === "erp-invoices-in" ||
+    slug === "erp-invoice" ||
+    page === "erp-invoices"
+  ) {
+    if (tab === "dashboard") {
+      tab = "dashboard";
+    } else if (tab === "draft") {
+      tab = "draft";
+    } else if (tab === "out-lines") {
+      tab = "out-lines";
+    } else if (tab === "out") {
+      tab = "out";
+    } else if (tab === "lines" || viewParam === "lines" || tab === "in-lines") {
       tab = "in-lines";
-    } else if (tab === "header" || !tab) {
+    } else if (tab === "header" || !tab || tab === "in") {
       tab = "in";
     }
   }

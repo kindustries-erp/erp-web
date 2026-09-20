@@ -72,6 +72,20 @@ export function useErpInvoicesTabLogic({
       const tabParam = params.get("tab") || "";
       const viewParam = params.get("view") || "";
 
+      if (tabParam === "dashboard") {
+        return {
+          dir: "IN" as const,
+          view: "dashboard" as const,
+          tabKey: "dashboard",
+        };
+      }
+      if (tabParam === "draft") {
+        return {
+          dir: "IN" as const,
+          view: "draft" as const,
+          tabKey: "draft",
+        };
+      }
       if (
         tabParam === "out-lines" ||
         (tabParam === "out" && viewParam === "lines")
@@ -120,9 +134,9 @@ export function useErpInvoicesTabLogic({
   const [currentDirection, setCurrentDirection] = useState<"IN" | "OUT">(
     initialTabInfo.dir,
   );
-  const [activeView, setActiveView] = useState<"header" | "lines">(
-    initialTabInfo.view,
-  );
+  const [activeView, setActiveView] = useState<
+    "header" | "lines" | "dashboard" | "draft"
+  >(initialTabInfo.view);
   const [currentTabKey, setCurrentTabKey] = useState<string>(
     initialTabInfo.tabKey,
   );
@@ -198,6 +212,10 @@ export function useErpInvoicesTabLogic({
       setCurrentTabKey(info.tabKey);
       setCurrentDirection(info.dir);
       setActiveView(info.view);
+
+      if (info.view === "dashboard" || info.view === "draft") {
+        return;
+      }
 
       const targetStoreDir: Direction =
         instanceIndex === 2 ? (info.dir === "IN" ? "IN_2" : "OUT_2") : info.dir;
@@ -319,9 +337,15 @@ export function useErpInvoicesTabLogic({
       }
 
       let nextDir: "IN" | "OUT";
-      let nextView: "header" | "lines";
+      let nextView: "header" | "lines" | "dashboard" | "draft";
 
-      if (newTab === "in-lines") {
+      if (newTab === "dashboard") {
+        nextDir = "IN";
+        nextView = "dashboard";
+      } else if (newTab === "draft") {
+        nextDir = "IN";
+        nextView = "draft";
+      } else if (newTab === "in-lines") {
         nextDir = "IN";
         nextView = "lines";
       } else if (newTab === "out") {
@@ -405,7 +429,13 @@ export function useErpInvoicesTabLogic({
 
   // ── Two-Way URL Sync Effect for ERP Invoices Tab ───────────────────────────
   useEffect(() => {
-    if (isDrawer || typeof window === "undefined") return;
+    if (
+      isDrawer ||
+      typeof window === "undefined" ||
+      activeView === "dashboard" ||
+      activeView === "draft"
+    )
+      return;
 
     if (debounceUrlTimerRef.current) {
       clearTimeout(debounceUrlTimerRef.current);
@@ -846,6 +876,7 @@ export function useErpInvoicesTabLogic({
     () =>
       !isDrawer
         ? [
+            { value: "dashboard", label: t("dashboard", "Tổng quan") },
             { value: "in", label: t("inbound", "Hóa đơn mua vào") },
             {
               value: "in-lines",
@@ -856,6 +887,7 @@ export function useErpInvoicesTabLogic({
               value: "out-lines",
               label: t("outboundLines", "Chi tiết bán ra"),
             },
+            { value: "draft", label: t("draftInvoices", "Hóa đơn nháp") },
           ]
         : undefined,
     [isDrawer, t],

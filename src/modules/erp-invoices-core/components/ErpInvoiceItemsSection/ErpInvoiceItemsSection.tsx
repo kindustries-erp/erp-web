@@ -17,7 +17,15 @@ export const ErpInvoiceItemsSection = React.memo(
       onOpenSync,
     } = props;
     const logic = useErpInvoiceItemsSectionLogic(props);
-    const { t, tableId, listHook, columns, rowActions, createActions } = logic;
+    const {
+      t,
+      tableId,
+      listHook,
+      columns,
+      summaryRow,
+      rowActions,
+      createActions,
+    } = logic;
 
     const customActionsNode = (
       <div className="w-full sm:w-auto flex items-center flex-wrap gap-2 py-0.5">
@@ -74,33 +82,7 @@ export const ErpInvoiceItemsSection = React.memo(
         createLabel={t("syncInvoices", "Đồng bộ")}
         createIcon={<DownloadCloud className="w-4 h-4 mr-1 text-indigo-100" />}
         createActions={createActions}
-        summaryRow={{
-          quantity: (
-            <div className="text-right font-bold tabular-nums text-xs">
-              {listHook.summary.totalQuantity.toLocaleString("vi-VN")}
-            </div>
-          ),
-          preVatAmount: (
-            <div className="text-right font-bold tabular-nums text-xs">
-              {listHook.summary.totalPreVatAmount.toLocaleString("vi-VN")} đ
-            </div>
-          ),
-          vatAmount: (
-            <div className="text-right font-bold tabular-nums text-xs">
-              {listHook.summary.totalVatAmount.toLocaleString("vi-VN")} đ
-            </div>
-          ),
-          discountAmount: (
-            <div className="text-right font-bold tabular-nums text-xs">
-              {listHook.summary.totalDiscountAmount.toLocaleString("vi-VN")} đ
-            </div>
-          ),
-          totalAmount: (
-            <div className="text-right font-bold text-primary tabular-nums text-xs">
-              {listHook.summary.totalAmount.toLocaleString("vi-VN")} đ
-            </div>
-          ),
-        }}
+        summaryRow={summaryRow}
       />
     );
   },

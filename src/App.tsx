@@ -154,26 +154,6 @@ const ErpInvoicesPage = lazy(() =>
     default: m.ErpInvoicesPage,
   })),
 );
-const ErpInvoicesInPage = lazy(() =>
-  import("@/pages/ErpInvoicesInPage").then((m) => ({
-    default: m.ErpInvoicesInPage,
-  })),
-);
-const ErpInvoicesDraftPage = lazy(() =>
-  import("@/pages/ErpInvoicesDraftPage").then((m) => ({
-    default: m.ErpInvoicesDraftPage,
-  })),
-);
-const ErpInvoicesOutPage = lazy(() =>
-  import("@/pages/ErpInvoicesOutPage").then((m) => ({
-    default: m.ErpInvoicesOutPage,
-  })),
-);
-const InvoiceDashboard = lazy(() =>
-  import("@/pages/InvoiceDashboard").then((m) => ({
-    default: m.InvoiceDashboard,
-  })),
-);
 const SysTagsPage = lazy(() =>
   import("@/pages/SysTagsPage").then((m) => ({ default: m.SysTagsPage })),
 );
@@ -286,10 +266,10 @@ const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   "email-inbox": EmailInboxPage,
   "erp-permissions-core": ErpPermissionsCorePage,
   "erp-invoices": ErpInvoicesPage,
-  "erp-invoices-in": ErpInvoicesInPage,
-  "erp-invoices-out": ErpInvoicesOutPage,
-  "erp-invoices-draft": ErpInvoicesDraftPage,
-  "invoice-dashboard": InvoiceDashboard,
+  "erp-invoices-in": () => <ErpInvoicesPage initialTab="in" />,
+  "erp-invoices-out": () => <ErpInvoicesPage initialTab="out" />,
+  "erp-invoices-draft": () => <ErpInvoicesPage initialTab="draft" />,
+  "invoice-dashboard": () => <ErpInvoicesPage initialTab="dashboard" />,
   "sys-tags": SysTagsPage,
   attachments: AttachmentsPage,
   "bank-statement": () => <BankStatementPage type="bank" />,

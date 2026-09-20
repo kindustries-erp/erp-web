@@ -373,7 +373,6 @@ export function useNavItems(): NavSearchItem[] {
     // 7. Accounting (Kế toán)
     const accountingSection = t("nav.sections.accounting");
     const cashflowGroup = t("nav.items.cashflow");
-    const invoiceGroup = t("nav.items.erpInvoices");
 
     if (canReadCashflow) {
       items.push({
@@ -407,17 +406,8 @@ export function useNavItems(): NavSearchItem[] {
     }
     if (canReadInvoices) {
       items.push({
-        key: "invoice-dashboard",
-        label: t("nav.items.invoiceDashboard") || "Tổng quan hóa đơn",
-        group: invoiceGroup,
-        section: accountingSection,
-        keywords: ["hoa don", "hóa đơn", "invoices", "tong quan", "dashboard"],
-        icon: <Receipt className="w-4 h-4" />,
-      });
-      items.push({
         key: "erp-invoices",
         label: t("nav.items.erpInvoices"),
-        group: invoiceGroup,
         section: accountingSection,
         keywords: [
           "hoa don",
@@ -426,16 +416,10 @@ export function useNavItems(): NavSearchItem[] {
           "vat",
           "ban ra",
           "mua vao",
+          "tong quan",
+          "nhap",
           "gdt",
         ],
-        icon: <Receipt className="w-4 h-4" />,
-      });
-      items.push({
-        key: "erp-invoices-draft",
-        label: t("nav.items.erpInvoicesDraft"),
-        group: invoiceGroup,
-        section: accountingSection,
-        keywords: ["hoa don", "hóa đơn nháp", "nhap", "draft"],
         icon: <Receipt className="w-4 h-4" />,
       });
     }

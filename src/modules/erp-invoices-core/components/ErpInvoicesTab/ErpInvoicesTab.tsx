@@ -6,6 +6,8 @@ import {
 } from "./useErpInvoicesTabLogic";
 import { InvoiceHeaderSection } from "./components/InvoiceHeaderSection";
 import { ErpInvoiceItemsSection } from "../ErpInvoiceItemsSection";
+import { InvoiceDashboard } from "@/pages/InvoiceDashboard";
+import { ErpInvoicesDraftPage } from "@/pages/ErpInvoicesDraftPage";
 import { InvoiceDrawers } from "./components/InvoiceDrawers";
 import { InvoiceBulkModals } from "./components/InvoiceBulkModals";
 import { InvoiceViewConfigDrawer } from "./components/InvoiceViewConfigDrawer";
@@ -77,12 +79,14 @@ export function ErpInvoicesTab(props: ErpInvoicesTabProps) {
     handleBulkDownloadSelected,
   } = logic;
 
-  // 4-View Lazy Mounted Keep-Alive State (Synchronous render-time marking to prevent blank-frame flicker)
+  // 6-View Lazy Mounted Keep-Alive State (Synchronous render-time marking to prevent blank-frame flicker)
   const mountedViewsRef = React.useRef<Record<string, boolean>>({
+    dashboard: logic.currentTabKey === "dashboard",
     in: logic.currentTabKey === "in",
     "in-lines": logic.currentTabKey === "in-lines",
     out: logic.currentTabKey === "out",
     "out-lines": logic.currentTabKey === "out-lines",
+    draft: logic.currentTabKey === "draft",
   });
 
   if (logic.currentTabKey) {
@@ -103,6 +107,22 @@ export function ErpInvoicesTab(props: ErpInvoicesTabProps) {
 
   return (
     <div className="flex flex-col h-full flex-1 min-h-0 w-full overflow-hidden">
+      {/* ── View 0: Dashboard (Tổng quan hóa đơn) ────────────────────── */}
+      {mountedViewsRef.current["dashboard"] && (
+        <div
+          className={
+            logic.currentTabKey === "dashboard"
+              ? "flex flex-col h-full flex-1 min-h-0 overflow-hidden"
+              : "hidden"
+          }
+        >
+          <InvoiceDashboard
+            tabs={logic.pageTabs}
+            activeTab={logic.currentTabKey}
+            onTabChange={logic.handleTabChange}
+          />
+        </div>
+      )}
       {/* ── View 1: Header IN (Hóa đơn mua vào) ────────────────────────── */}
       {mountedViewsRef.current["in"] && (
         <div
@@ -235,6 +255,23 @@ export function ErpInvoicesTab(props: ErpInvoicesTabProps) {
             handleDownload={handleDownload}
             onOpenSync={handleOpenSync}
             onOpenPortalAuth={handleOpenPortalAuth}
+          />
+        </div>
+      )}
+
+      {/* ── View 5: Draft (Hóa đơn nháp) ─────────────────────────────── */}
+      {mountedViewsRef.current["draft"] && (
+        <div
+          className={
+            logic.currentTabKey === "draft"
+              ? "flex flex-col h-full flex-1 min-h-0 overflow-hidden"
+              : "hidden"
+          }
+        >
+          <ErpInvoicesDraftPage
+            tabs={logic.pageTabs}
+            activeTab={logic.currentTabKey}
+            onTabChange={logic.handleTabChange}
           />
         </div>
       )}

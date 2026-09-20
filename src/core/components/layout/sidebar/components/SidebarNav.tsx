@@ -449,39 +449,20 @@ export function SidebarNav({
             </NavGroup>
           )}
           {canReadInvoices && (
-            <NavGroup
+            <NavItem
               collapsed={c}
               icon={<Receipt className="w-4 h-4 opacity-65 flex-shrink-0" />}
               label={t("nav.items.erpInvoices")}
               active={
                 currentPage === "erp-invoices" ||
                 currentPage === "erp-invoices-in" ||
+                currentPage === "erp-invoices-out" ||
                 currentPage === "erp-invoices-draft" ||
                 currentPage === "invoice-dashboard"
               }
-            >
-              <NavGroupItem
-                label="Tổng quan"
-                active={currentPage === "invoice-dashboard"}
-                onClick={() => navTo("invoice-dashboard")}
-                contextPage="invoice-dashboard"
-              />
-              <NavGroupItem
-                label={t("nav.items.erpInvoices")}
-                active={
-                  currentPage === "erp-invoices" ||
-                  currentPage === "erp-invoices-in"
-                }
-                onClick={() => navTo("erp-invoices")}
-                contextPage="erp-invoices"
-              />
-              <NavGroupItem
-                label="Hóa đơn nháp"
-                active={currentPage === "erp-invoices-draft"}
-                onClick={() => navTo("erp-invoices-draft")}
-                contextPage="erp-invoices-draft"
-              />
-            </NavGroup>
+              onClick={() => navTo("erp-invoices")}
+              contextPage="erp-invoices"
+            />
           )}
           {canReadBankStatements && isAdminEmail && (
             <NavItem
