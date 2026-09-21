@@ -290,6 +290,7 @@ const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   "garage-opex": GarageOpex,
   "garage-customers": GaragePartners,
   "garage-partners": GaragePartners,
+  "garage-debts": GaragePartners,
   "after-sales": AfterSalesPage,
   "vinfast-parts": VinfastPartsTrackingPage,
   "vinfast-parts-dashboard": () => (
@@ -315,7 +316,8 @@ const PAGE_PRELOADERS: Partial<Record<PageKey, PageLoader>> = {
   "erp-inventory-tracking-parts": () =>
     import("@/pages/inventory/InventoryTrackingPartsPage"),
   "erp-finished-goods": () => import("@/pages/manufacturing/FinishedGoodsPage"),
-  "garage-partners": () => import("@/modules/garage/pages/GaragePartners"),
+  "garage-partners": () => import("@/modules/garage/pages/GarageDebts"),
+  "garage-debts": () => import("@/modules/garage/pages/GarageDebts"),
   "invoice-debts": () => import("@/pages/InvoiceDebtsPage"),
   "erp-inventory-vouchers": loadInventoryVouchersPage,
   "erp-sales-orders": loadErpSalesOrdersPage,

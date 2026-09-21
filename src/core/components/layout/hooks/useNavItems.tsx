@@ -321,14 +321,15 @@ export function useNavItems(): NavSearchItem[] {
         icon: <Car className="w-4 h-4" />,
       });
       items.push({
-        key: "garage-partners",
-        label: t("nav.items.garagePartners", "Đối tác"),
+        key: "garage-debts",
+        label: t("nav.items.garageDebts", "Công nợ garage"),
         section: garageSection,
         keywords: [
           "garage",
+          "cong no",
+          "cong no garage",
           "khach hang",
           "doi tac",
-          "cong no",
           "phai thu",
           "tuoi no",
         ],

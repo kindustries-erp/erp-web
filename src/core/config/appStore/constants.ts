@@ -207,11 +207,15 @@ export const SECTION_ROOTS: Partial<Record<PageKey, SectionRoot>> = {
     group: "garage",
   },
   "garage-customers": {
-    labelKey: "breadcrumb.garageCustomers",
+    labelKey: "breadcrumb.garageDebts",
     group: "garage",
   },
   "garage-partners": {
-    labelKey: "breadcrumb.garagePartners",
+    labelKey: "breadcrumb.garageDebts",
+    group: "garage",
+  },
+  "garage-debts": {
+    labelKey: "breadcrumb.garageDebts",
     group: "garage",
   },
   opex: {
@@ -361,8 +365,9 @@ export const BREADCRUMBS: Partial<Record<PageKey, Array<[string, string?]>>> = {
   "garage-dashboard": [["breadcrumb.garage"], ["breadcrumb.garageDashboard"]],
   "garage-cases": [["breadcrumb.garage"], ["breadcrumb.garageCases"]],
   "garage-opex": [["breadcrumb.garage"], ["breadcrumb.garageOpex"]],
-  "garage-customers": [["breadcrumb.garage"], ["breadcrumb.garageCustomers"]],
-  "garage-partners": [["breadcrumb.garage"], ["breadcrumb.garagePartners"]],
+  "garage-customers": [["breadcrumb.garage"], ["breadcrumb.garageDebts"]],
+  "garage-partners": [["breadcrumb.garage"], ["breadcrumb.garageDebts"]],
+  "garage-debts": [["breadcrumb.garage"], ["breadcrumb.garageDebts"]],
 };
 
 export const DUPLICATABLE_PAGES = new Set<PageKey>([
