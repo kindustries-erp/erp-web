@@ -184,6 +184,11 @@ const SettingsBranch = lazy(() =>
     default: m.SettingsBranch,
   })),
 );
+const CustomFieldsPage = lazy(() =>
+  import("@/pages/CustomFieldsPage").then((m) => ({
+    default: m.CustomFieldsPage,
+  })),
+);
 const SalesReportDashboardPage = lazy(() =>
   import("@/pages/SalesReportDashboardPage").then((m) => ({
     default: m.SalesReportDashboardPage,
@@ -278,6 +283,7 @@ const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   "settings-bank": ThietLapNganHang,
   "settings-cash-fund": ThietLapQuy,
   "settings-branch": SettingsBranch,
+  "custom-fields": CustomFieldsPage,
   "invoice-debts": InvoiceDebtsPage,
   "garage-dashboard": GarageDashboard,
   "garage-cases": GarageCases,

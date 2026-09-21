@@ -42,6 +42,7 @@ export const navVi = {
     reportLedger: "Sổ cái",
     reportJournal: "Nhật ký chung",
     catalog: "Thiết lập chung",
+    customFields: "Trường tùy chỉnh",
     catalogFunds: "Quỹ tiền mặt",
     catalogBank: "Tài khoản ngân hàng",
     catalogAccounts: "Hệ thống tài khoản",

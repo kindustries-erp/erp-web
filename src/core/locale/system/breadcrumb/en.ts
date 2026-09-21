@@ -9,6 +9,7 @@ export const breadcrumbEn = {
   bankStatementBank: "Bank Statements",
   bankStatementCash: "Cash Statements",
   catalog: "General Settings",
+  customFields: "Custom Fields",
   debt: "Receivables",
   debtReceivable: "Accounts Receivable",
   debtPayable: "Accounts Payable",

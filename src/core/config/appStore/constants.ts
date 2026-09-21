@@ -177,6 +177,10 @@ export const SECTION_ROOTS: Partial<Record<PageKey, SectionRoot>> = {
     labelKey: "thietlap.tabs.quy",
     group: "settings",
   },
+  "custom-fields": {
+    labelKey: "nav.items.customFields",
+    group: "settings",
+  },
   "bank-statement": {
     labelKey: "bankStatement.bankTitle",
     group: "accounting",
@@ -349,6 +353,11 @@ export const BREADCRUMBS: Partial<Record<PageKey, Array<[string, string?]>>> = {
   "cashflow-dashboard": [["breadcrumb.accounting"], ["nav.items.cashflow"]],
   "settings-branch": [["breadcrumb.settings"], ["thietlap.tabs.chi-nhanh"]],
   "settings-bank": [["breadcrumb.settings"], ["thietlap.tabs.ngan-hang"]],
+  "custom-fields": [
+    ["breadcrumb.settings"],
+    ["breadcrumb.catalog"],
+    ["nav.items.customFields"],
+  ],
   "garage-dashboard": [["breadcrumb.garage"], ["breadcrumb.garageDashboard"]],
   "garage-cases": [["breadcrumb.garage"], ["breadcrumb.garageCases"]],
   "garage-opex": [["breadcrumb.garage"], ["breadcrumb.garageOpex"]],

@@ -32,7 +32,6 @@ import {
 } from "lucide-react";
 
 import { useAuthStore } from "@/modules/auth/domain/authStore";
-import { useAppStore } from "@/core/config/appStore";
 
 export function SidebarNav({
   c,
@@ -44,7 +43,6 @@ export function SidebarNav({
   navTo: (p: PageKey) => void;
 }) {
   const t = useT();
-  const { openCustomFieldsDrawer } = useAppStore();
   const { employee } = useAuthStore();
   const isAdminEmail = employee?.email === "admin@liouni.com";
 
@@ -577,7 +575,8 @@ export function SidebarNav({
                 currentPage === "settings-branch" ||
                 currentPage === "settings-bank" ||
                 currentPage === "settings-cash-fund" ||
-                currentPage === "sys-tags"
+                currentPage === "sys-tags" ||
+                currentPage === "custom-fields"
               }
             >
               {canReadAdminUsers && (
@@ -619,7 +618,9 @@ export function SidebarNav({
                 canReadInventoryVouchers) && (
                 <NavGroupItem
                   label={t("nav.items.customFields", "Trường tùy chỉnh")}
-                  onClick={() => openCustomFieldsDrawer("ALL", "INVOICE_IN")}
+                  active={currentPage === "custom-fields"}
+                  onClick={() => navTo("custom-fields")}
+                  contextPage="custom-fields"
                 />
               )}
             </NavGroup>
