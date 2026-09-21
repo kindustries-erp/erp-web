@@ -11,12 +11,20 @@ import { SubtotalSummaryCell } from "@/shared/components/DataTable/SubtotalSumma
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import { money } from "@/shared/utils/format";
 import { cn } from "@/shared/utils";
-import { ReceiptText, Eye, FileText } from "lucide-react";
+import {
+  ReceiptText,
+  Eye,
+  FileText,
+  Download,
+  FileSpreadsheet,
+} from "lucide-react";
+import toast from "react-hot-toast";
 import type { TabItem } from "@/shared/components/PageLayout";
 import type { ActionDropdownItem } from "@/shared/components/ActionDropdown";
 import { useInvoiceDebtsList } from "../hooks/useInvoiceDebtsList";
 import { invoiceDebtsApi, type InvoiceDebtItem } from "../api/invoiceDebtsApi";
 import { InvoicePartnerDebtDetailDrawer } from "../components/InvoicePartnerDebtDetailDrawer";
+import { InvoiceDebtsExportDrawer } from "../components/InvoiceDebtsExportDrawer";
 import { useHasAnyPermission } from "@/shared/hooks/useHasPermission";
 import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
 import { Forbidden } from "@/pages/Forbidden";
@@ -71,15 +79,86 @@ export function InvoiceDebtsPage() {
   // 2. Data Hook
   const listHook = useInvoiceDebtsList(activeTab);
 
-  // 3. Detail Drawer State
+  // 3. Detail Drawer & Export Drawer State
   const [selectedPartner, setSelectedPartner] = useState<{
     taxCode: string;
     partnerName?: string;
   } | null>(null);
+  const [exportDrawerOpen, setExportDrawerOpen] = useState(false);
 
   const openDetail = useCallback((taxCode: string, partnerName?: string) => {
     setSelectedPartner({ taxCode, partnerName });
   }, []);
+
+  const handleQuickExport = useCallback(async () => {
+    try {
+      toast.loading(
+        t("debts:exportDrawer.toast.downloading", "Đang xuất file Excel..."),
+        { id: "quick-export-debt" },
+      );
+      const blob = await invoiceDebtsApi.exportExcel({
+        partner_type: listHook.partnerType,
+        search: listHook.search || undefined,
+        date_from: listHook.dateFrom || undefined,
+        date_to: listHook.dateTo || undefined,
+        column_search:
+          Object.keys(listHook.columnSearch).length > 0
+            ? JSON.stringify(listHook.columnSearch)
+            : undefined,
+        column_filters:
+          Object.keys(listHook.columnFilters).length > 0
+            ? JSON.stringify(listHook.columnFilters)
+            : undefined,
+      });
+      const blobUrl = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.style.display = "none";
+      a.href = blobUrl;
+      a.download = `Bao_cao_cong_no_${activeTab === "suppliers" ? "nha_cung_cap" : "khach_hang"}_${new Date().toISOString().slice(0, 10)}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => {
+        if (document.body.contains(a)) {
+          document.body.removeChild(a);
+        }
+        window.URL.revokeObjectURL(blobUrl);
+      }, 2000);
+      toast.success(
+        t("debts:exportDrawer.toast.downloading", "Đã tải xuống file Excel."),
+        { id: "quick-export-debt" },
+      );
+    } catch (e: any) {
+      toast.error(
+        e?.message ||
+          t(
+            "debts:exportDrawer.error.downloadFailed",
+            "Không thể xuất file Excel.",
+          ),
+        { id: "quick-export-debt" },
+      );
+    }
+  }, [activeTab, listHook, t]);
+
+  const createActions = useMemo<ActionDropdownItem[]>(
+    () => [
+      {
+        groupLabel: t("common:search", "Tra cứu"),
+        items: [
+          {
+            label: t("debts:exportDetailed", "Xuất Excel theo kỳ / Nâng cao"),
+            icon: <FileSpreadsheet className="w-4 h-4 text-emerald-600" />,
+            onClick: () => setExportDrawerOpen(true),
+          },
+          {
+            label: t("debts:exportCurrentView", "Xuất nhanh dữ liệu hiện tại"),
+            icon: <Download className="w-4 h-4 text-primary" />,
+            onClick: handleQuickExport,
+          },
+        ],
+      },
+    ],
+    [handleQuickExport, t],
+  );
 
   // 4. Server-Side Column Header Filter Builder
   const headerFilter = useMemo(
@@ -359,19 +438,153 @@ export function InvoiceDebtsPage() {
         },
       },
 
-      // 7. Tuổi nợ (Aging - Fintech Progress Bar & Badges)
+      // 7. Nợ 0-30 ngày - Xanh lá Emerald
+      {
+        key: "aging0To30",
+        className:
+          "text-right bg-emerald-50/40 dark:bg-emerald-950/20 font-mono text-xs",
+        headerClassName:
+          "bg-emerald-50/80 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 font-semibold text-right justify-end",
+        header: headerFilter.amount(
+          "aging0To30",
+          t("debts:columns.aging0_30", "0-30 ngày"),
+        ),
+        size: 155,
+        minSize: 135,
+        enableResizing: true,
+        cell: (row) => {
+          const val = Number(row.aging0To30) || 0;
+          if (val <= 0) {
+            return (
+              <span className="text-muted-foreground/30 font-normal select-none">
+                —
+              </span>
+            );
+          }
+          return (
+            <span className="font-semibold text-emerald-700 dark:text-emerald-400 tabular-nums">
+              {money(val)}
+            </span>
+          );
+        },
+      },
+
+      // 8. Nợ 31-60 ngày - Vàng Amber
+      {
+        key: "aging31To60",
+        className:
+          "text-right bg-amber-50/40 dark:bg-amber-950/20 font-mono text-xs",
+        headerClassName:
+          "bg-amber-50/80 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 font-semibold text-right justify-end",
+        header: headerFilter.amount(
+          "aging31To60",
+          t("debts:columns.aging31_60", "31-60 ngày"),
+        ),
+        size: 155,
+        minSize: 135,
+        enableResizing: true,
+        cell: (row) => {
+          const val = Number(row.aging31To60) || 0;
+          if (val <= 0) {
+            return (
+              <span className="text-muted-foreground/30 font-normal select-none">
+                —
+              </span>
+            );
+          }
+          return (
+            <span className="font-semibold text-amber-800 dark:text-amber-300 tabular-nums">
+              {money(val)}
+            </span>
+          );
+        },
+      },
+
+      // 9. Nợ 61-90 ngày - Cam Orange
+      {
+        key: "aging61To90",
+        className:
+          "text-right bg-orange-50/40 dark:bg-orange-950/20 font-mono text-xs",
+        headerClassName:
+          "bg-orange-50/80 dark:bg-orange-950/40 text-orange-800 dark:text-orange-300 font-semibold text-right justify-end",
+        header: headerFilter.amount(
+          "aging61To90",
+          t("debts:columns.aging61_90", "61-90 ngày"),
+        ),
+        size: 155,
+        minSize: 135,
+        enableResizing: true,
+        cell: (row) => {
+          const val = Number(row.aging61To90) || 0;
+          if (val <= 0) {
+            return (
+              <span className="text-muted-foreground/30 font-normal select-none">
+                —
+              </span>
+            );
+          }
+          return (
+            <span className="font-semibold text-orange-700 dark:text-orange-400 tabular-nums">
+              {money(val)}
+            </span>
+          );
+        },
+      },
+
+      // 10. Nợ >90 ngày - Đỏ Rose
+      {
+        key: "agingOver90",
+        className:
+          "text-right bg-rose-50/40 dark:bg-rose-950/20 font-mono text-xs",
+        headerClassName:
+          "bg-rose-50/80 dark:bg-rose-950/40 text-rose-800 dark:text-rose-300 font-semibold text-right justify-end",
+        header: headerFilter.amount(
+          "agingOver90",
+          t("debts:columns.agingOver90", ">90 ngày"),
+        ),
+        size: 160,
+        minSize: 140,
+        enableResizing: true,
+        cell: (row) => {
+          const val = Number(row.agingOver90) || 0;
+          if (val <= 0) {
+            return (
+              <span className="text-muted-foreground/30 font-normal select-none">
+                —
+              </span>
+            );
+          }
+          return (
+            <span className="font-bold text-rose-700 dark:text-rose-400 tabular-nums">
+              {money(val)}
+            </span>
+          );
+        },
+      },
+
+      // 11. Tuổi nợ (Multi-Bracket Aging - Stacked Progress Bar, Rich Tooltip & Smart Badges)
       {
         key: "maxAgingDays",
         className: "text-left",
         header: headerFilter(
           "maxAgingDays",
-          t("debts:columns.maxAgingDays", "Tuổi nợ"),
+          t("debts:columns.agingOverview", "Tuổi nợ & Rủi ro"),
         ),
-        size: 200,
+        size: 210,
+        minSize: 180,
         enableResizing: true,
         cell: (row) => {
           const bal = Number(row.balanceAmount) || 0;
           const aging = row.maxAgingDays || 0;
+          const weightedAging = row.weightedAgingDays || 0;
+          const a0_30 = Number(row.aging0To30) || 0;
+          const a31_60 = Number(row.aging31To60) || 0;
+          const a61_90 = Number(row.aging61To90) || 0;
+          const aOver90 = Number(row.agingOver90) || 0;
+          const c0_30 = Number(row.count0To30) || 0;
+          const c31_60 = Number(row.count31To60) || 0;
+          const c61_90 = Number(row.count61To90) || 0;
+          const cOver90 = Number(row.countOver90) || 0;
 
           if (bal <= 0) {
             return (
@@ -389,73 +602,182 @@ export function InvoiceDebtsPage() {
             );
           }
 
-          const agingPercent = Math.min(100, Math.round((aging / 90) * 100));
-          const isOver90 = aging > 90;
-          const is61to90 = aging > 60 && aging <= 90;
-          const is31to60 = aging > 30 && aging <= 60;
+          const p0_30 = bal > 0 ? (a0_30 / bal) * 100 : 0;
+          const p31_60 = bal > 0 ? (a31_60 / bal) * 100 : 0;
+          const p61_90 = bal > 0 ? (a61_90 / bal) * 100 : 0;
+          const pOver90 = bal > 0 ? (aOver90 / bal) * 100 : 0;
 
-          const bracketLabel = isOver90
-            ? ">90 ngày"
-            : is61to90
-              ? "61-90 ngày"
-              : is31to60
-                ? "31-60 ngày"
-                : "0-30 ngày";
+          const activeBuckets = [a0_30, a31_60, a61_90, aOver90].filter(
+            (v) => v > 0,
+          ).length;
 
-          const tagCls = isOver90
-            ? "bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 border-rose-200/80 dark:border-rose-800/50"
-            : is61to90
-              ? "bg-orange-50 dark:bg-orange-950/40 text-orange-700 dark:text-orange-400 border-orange-200/80 dark:border-orange-800/50"
-              : is31to60
-                ? "bg-amber-50/90 dark:bg-amber-950/30 text-amber-800 dark:text-amber-300 border-amber-200/70 dark:border-amber-800/40"
-                : "bg-emerald-50/90 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border-emerald-200/70 dark:border-emerald-800/40";
+          let badgeLabel = "0-30 ngày";
+          let badgeCls =
+            "bg-emerald-50/90 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border-emerald-200/70 dark:border-emerald-800/40";
+          let mainText = `${aging} ngày`;
+          let mainTextCls =
+            "text-emerald-700 dark:text-emerald-400 font-medium";
 
-          const dayTextCls = isOver90
-            ? "text-rose-700 dark:text-rose-400 font-bold"
-            : is61to90
-              ? "text-orange-700 dark:text-orange-400 font-semibold"
-              : is31to60
-                ? "text-amber-800 dark:text-amber-300 font-semibold"
-                : "text-emerald-700 dark:text-emerald-400 font-medium";
+          if (activeBuckets > 1) {
+            mainText = weightedAging ? `BQ ${weightedAging}d` : `Max ${aging}d`;
+            if (aOver90 > 0) {
+              badgeLabel = "Đa tầng (>90d)";
+              badgeCls =
+                "bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 border-rose-200/80 dark:border-rose-800/50";
+              mainTextCls = "text-rose-700 dark:text-rose-400 font-bold";
+            } else if (a61_90 > 0) {
+              badgeLabel = "Đa tầng (61-90d)";
+              badgeCls =
+                "bg-orange-50 dark:bg-orange-950/40 text-orange-700 dark:text-orange-400 border-orange-200/80 dark:border-orange-800/50";
+              mainTextCls =
+                "text-orange-700 dark:text-orange-400 font-semibold";
+            } else {
+              badgeLabel = "Đa tầng (0-60d)";
+              badgeCls =
+                "bg-amber-50/90 dark:bg-amber-950/30 text-amber-800 dark:text-amber-300 border-amber-200/70 dark:border-amber-800/40";
+              mainTextCls = "text-amber-800 dark:text-amber-300 font-semibold";
+            }
+          } else {
+            if (aOver90 > 0 || aging > 90) {
+              badgeLabel = ">90 ngày";
+              badgeCls =
+                "bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 border-rose-200/80 dark:border-rose-800/50";
+              mainTextCls = "text-rose-700 dark:text-rose-400 font-bold";
+            } else if (a61_90 > 0 || (aging > 60 && aging <= 90)) {
+              badgeLabel = "61-90 ngày";
+              badgeCls =
+                "bg-orange-50 dark:bg-orange-950/40 text-orange-700 dark:text-orange-400 border-orange-200/80 dark:border-orange-800/50";
+              mainTextCls =
+                "text-orange-700 dark:text-orange-400 font-semibold";
+            } else if (a31_60 > 0 || (aging > 30 && aging <= 60)) {
+              badgeLabel = "31-60 ngày";
+              badgeCls =
+                "bg-amber-50/90 dark:bg-amber-950/30 text-amber-800 dark:text-amber-300 border-amber-200/70 dark:border-amber-800/40";
+              mainTextCls = "text-amber-800 dark:text-amber-300 font-semibold";
+            }
+          }
 
-          const barColorCls = isOver90
-            ? "bg-rose-500 dark:bg-rose-400"
-            : is61to90
-              ? "bg-orange-500 dark:bg-orange-400"
-              : is31to60
-                ? "bg-amber-500 dark:bg-amber-400"
-                : "bg-emerald-500 dark:bg-emerald-400";
-
-          return (
-            <div className="flex flex-col gap-1.5 w-full py-1 justify-center">
-              <div className="flex items-center justify-between text-xs tabular-nums leading-none">
-                <span className={cn("font-mono text-xs", dayTextCls)}>
-                  {aging} ngày
-                </span>
-                <span
-                  className={cn(
-                    "text-[10px] px-1.5 py-0.5 rounded font-sans shrink-0 border leading-none font-medium",
-                    tagCls,
-                  )}
-                >
-                  {bracketLabel}
+          const tooltipContent = (
+            <div className="flex flex-col gap-2 p-1 text-xs min-w-[260px]">
+              <div className="font-semibold text-foreground border-b border-border/50 pb-1 flex justify-between items-center">
+                <span>Cơ cấu phân tầng tuổi nợ</span>
+                <span className="text-[11px] font-mono font-normal text-muted-foreground">
+                  Tổng nợ: {money(bal)}
                 </span>
               </div>
-              <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
-                <div
-                  className={cn(
-                    "h-full rounded-full transition-all duration-300",
-                    barColorCls,
-                  )}
-                  style={{ width: `${agingPercent}%` }}
-                />
+              <div className="space-y-1.5 tabular-nums">
+                {a0_30 > 0 && (
+                  <div className="flex justify-between items-center text-emerald-600 dark:text-emerald-400">
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block shrink-0" />
+                      0-30 ngày (Trong hạn):
+                    </span>
+                    <span className="font-mono font-medium">
+                      {money(a0_30)} {c0_30 > 0 ? `(${c0_30} HĐ)` : ""} •{" "}
+                      {Math.round(p0_30)}%
+                    </span>
+                  </div>
+                )}
+                {a31_60 > 0 && (
+                  <div className="flex justify-between items-center text-amber-700 dark:text-amber-400">
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-amber-500 inline-block shrink-0" />
+                      31-60 ngày (Cần theo dõi):
+                    </span>
+                    <span className="font-mono font-medium">
+                      {money(a31_60)} {c31_60 > 0 ? `(${c31_60} HĐ)` : ""} •{" "}
+                      {Math.round(p31_60)}%
+                    </span>
+                  </div>
+                )}
+                {a61_90 > 0 && (
+                  <div className="flex justify-between items-center text-orange-700 dark:text-orange-400">
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-orange-500 inline-block shrink-0" />
+                      61-90 ngày (Quá hạn):
+                    </span>
+                    <span className="font-mono font-medium">
+                      {money(a61_90)} {c61_90 > 0 ? `(${c61_90} HĐ)` : ""} •{" "}
+                      {Math.round(p61_90)}%
+                    </span>
+                  </div>
+                )}
+                {aOver90 > 0 && (
+                  <div className="flex justify-between items-center text-rose-700 dark:text-rose-400 font-medium">
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-rose-500 inline-block shrink-0" />
+                      &gt;90 ngày (Quá hạn nặng):
+                    </span>
+                    <span className="font-mono font-bold">
+                      {money(aOver90)} {cOver90 > 0 ? `(${cOver90} HĐ)` : ""} •{" "}
+                      {Math.round(pOver90)}%
+                    </span>
+                  </div>
+                )}
+              </div>
+              <div className="pt-1 border-t border-border/40 text-[10px] text-muted-foreground flex justify-between">
+                <span>
+                  Tuổi nợ max: <b>{aging} ngày</b>
+                </span>
+                {weightedAging > 0 && (
+                  <span>
+                    Tuổi nợ BQ: <b>{weightedAging} ngày</b>
+                  </span>
+                )}
               </div>
             </div>
+          );
+
+          return (
+            <Tooltip content={tooltipContent}>
+              <div className="flex flex-col gap-1.5 w-full py-1 justify-center cursor-pointer group">
+                <div className="flex items-center justify-between text-xs tabular-nums leading-none">
+                  <span className={cn("font-mono text-xs", mainTextCls)}>
+                    {mainText}
+                  </span>
+                  <span
+                    className={cn(
+                      "text-[10px] px-1.5 py-0.5 rounded font-sans shrink-0 border leading-none font-medium",
+                      badgeCls,
+                    )}
+                  >
+                    {badgeLabel}
+                  </span>
+                </div>
+                {/* Multi-Segment Stacked Progress Bar */}
+                <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden flex">
+                  {p0_30 > 0 && (
+                    <div
+                      className="h-full bg-emerald-500 dark:bg-emerald-400 transition-all duration-300"
+                      style={{ width: `${p0_30}%` }}
+                    />
+                  )}
+                  {p31_60 > 0 && (
+                    <div
+                      className="h-full bg-amber-500 dark:bg-amber-400 transition-all duration-300"
+                      style={{ width: `${p31_60}%` }}
+                    />
+                  )}
+                  {p61_90 > 0 && (
+                    <div
+                      className="h-full bg-orange-500 dark:bg-orange-400 transition-all duration-300"
+                      style={{ width: `${p61_90}%` }}
+                    />
+                  )}
+                  {pOver90 > 0 && (
+                    <div
+                      className="h-full bg-rose-500 dark:bg-rose-400 transition-all duration-300"
+                      style={{ width: `${pOver90}%` }}
+                    />
+                  )}
+                </div>
+              </div>
+            </Tooltip>
           );
         },
       },
 
-      // 8. Ngày hóa đơn phát sinh gần nhất
+      // 12. Ngày hóa đơn phát sinh gần nhất
       {
         key: "latestInvoiceDate",
         className: "text-right",
@@ -484,11 +806,19 @@ export function InvoiceDebtsPage() {
     let subtotalInvoices = 0;
     let subtotalAmount = 0;
     let subtotalBal = 0;
+    let subtotalA0_30 = 0;
+    let subtotalA31_60 = 0;
+    let subtotalA61_90 = 0;
+    let subtotalAOver90 = 0;
 
     for (const r of items) {
       subtotalInvoices += Number(r.invoiceCount) || 0;
       subtotalAmount += Number(r.totalAmount) || 0;
       subtotalBal += Number(r.balanceAmount) || 0;
+      subtotalA0_30 += Number(r.aging0To30) || 0;
+      subtotalA31_60 += Number(r.aging31To60) || 0;
+      subtotalA61_90 += Number(r.aging61To90) || 0;
+      subtotalAOver90 += Number(r.agingOver90) || 0;
     }
 
     const cumAmount =
@@ -516,6 +846,34 @@ export function InvoiceDebtsPage() {
       listHook.summary.cumulativePartnersCount !== undefined
         ? Number(listHook.summary.cumulativePartnersCount)
         : (listHook.page - 1) * listHook.pageSize + items.length;
+
+    const cumA0_30 =
+      listHook.summary.cumulativeAging0To30 !== undefined
+        ? Number(listHook.summary.cumulativeAging0To30)
+        : listHook.page === 1
+          ? subtotalA0_30
+          : undefined;
+
+    const cumA31_60 =
+      listHook.summary.cumulativeAging31To60 !== undefined
+        ? Number(listHook.summary.cumulativeAging31To60)
+        : listHook.page === 1
+          ? subtotalA31_60
+          : undefined;
+
+    const cumA61_90 =
+      listHook.summary.cumulativeAging61To90 !== undefined
+        ? Number(listHook.summary.cumulativeAging61To90)
+        : listHook.page === 1
+          ? subtotalA61_90
+          : undefined;
+
+    const cumAOver90 =
+      listHook.summary.cumulativeAgingOver90 !== undefined
+        ? Number(listHook.summary.cumulativeAgingOver90)
+        : listHook.page === 1
+          ? subtotalAOver90
+          : undefined;
 
     return {
       partnerName: (
@@ -590,6 +948,115 @@ export function InvoiceDebtsPage() {
               : "font-bold text-destructive"
           }
         />
+      ),
+      aging0To30: (
+        <SubtotalSummaryCell
+          variantType="amount"
+          metricTitle={t("debts:columns.aging0_30", "0-30 ngày")}
+          itemTitle={t("debts:partner", "Đối tác")}
+          itemUnit={t("debts:unitPartner", "đối tác")}
+          subtotalAmount={subtotalA0_30}
+          cumulativeAmount={cumA0_30}
+          grandTotalAmount={listHook.summary.grandTotalAging0To30}
+          page={listHook.page}
+          totalPages={listHook.totalPages}
+          currentPageCount={items.length}
+          totalCount={listHook.total}
+          valueClassName="font-bold text-emerald-700 dark:text-emerald-400"
+        />
+      ),
+      aging31To60: (
+        <SubtotalSummaryCell
+          variantType="amount"
+          metricTitle={t("debts:columns.aging31_60", "31-60 ngày")}
+          itemTitle={t("debts:partner", "Đối tác")}
+          itemUnit={t("debts:unitPartner", "đối tác")}
+          subtotalAmount={subtotalA31_60}
+          cumulativeAmount={cumA31_60}
+          grandTotalAmount={listHook.summary.grandTotalAging31To60}
+          page={listHook.page}
+          totalPages={listHook.totalPages}
+          currentPageCount={items.length}
+          totalCount={listHook.total}
+          valueClassName="font-bold text-amber-800 dark:text-amber-300"
+        />
+      ),
+      aging61To90: (
+        <SubtotalSummaryCell
+          variantType="amount"
+          metricTitle={t("debts:columns.aging61_90", "61-90 ngày")}
+          itemTitle={t("debts:partner", "Đối tác")}
+          itemUnit={t("debts:unitPartner", "đối tác")}
+          subtotalAmount={subtotalA61_90}
+          cumulativeAmount={cumA61_90}
+          grandTotalAmount={listHook.summary.grandTotalAging61To90}
+          page={listHook.page}
+          totalPages={listHook.totalPages}
+          currentPageCount={items.length}
+          totalCount={listHook.total}
+          valueClassName="font-bold text-orange-700 dark:text-orange-400"
+        />
+      ),
+      agingOver90: (
+        <SubtotalSummaryCell
+          variantType="amount"
+          metricTitle={t("debts:columns.agingOver90", ">90 ngày")}
+          itemTitle={t("debts:partner", "Đối tác")}
+          itemUnit={t("debts:unitPartner", "đối tác")}
+          subtotalAmount={subtotalAOver90}
+          cumulativeAmount={cumAOver90}
+          grandTotalAmount={listHook.summary.grandTotalAgingOver90}
+          page={listHook.page}
+          totalPages={listHook.totalPages}
+          currentPageCount={items.length}
+          totalCount={listHook.total}
+          valueClassName="font-bold text-rose-700 dark:text-rose-400"
+        />
+      ),
+      maxAgingDays: (
+        <Tooltip
+          content={
+            <div className="flex flex-col gap-1.5 p-1 text-xs min-w-[240px]">
+              <div className="font-semibold text-foreground border-b border-border/50 pb-1">
+                Tổng nợ theo phân tầng toàn hệ thống
+              </div>
+              <div className="space-y-1 tabular-nums">
+                <div className="flex justify-between text-emerald-600 dark:text-emerald-400">
+                  <span>🟢 0-30 ngày (Trong hạn):</span>
+                  <span className="font-mono font-medium">
+                    {money(listHook.summary.grandTotalAging0To30 || 0)}
+                  </span>
+                </div>
+                <div className="flex justify-between text-amber-700 dark:text-amber-400">
+                  <span>🟡 31-60 ngày (Theo dõi):</span>
+                  <span className="font-mono font-medium">
+                    {money(listHook.summary.grandTotalAging31To60 || 0)}
+                  </span>
+                </div>
+                <div className="flex justify-between text-orange-700 dark:text-orange-400">
+                  <span>🟠 61-90 ngày (Quá hạn):</span>
+                  <span className="font-mono font-medium">
+                    {money(listHook.summary.grandTotalAging61To90 || 0)}
+                  </span>
+                </div>
+                <div className="flex justify-between text-rose-700 dark:text-rose-400 font-bold">
+                  <span>🔴 &gt;90 ngày (Quá hạn nặng):</span>
+                  <span className="font-mono">
+                    {money(listHook.summary.grandTotalAgingOver90 || 0)}
+                  </span>
+                </div>
+              </div>
+            </div>
+          }
+        >
+          <div className="flex items-center gap-1 cursor-default text-xs font-medium text-muted-foreground py-1">
+            <span className="w-2 h-2 rounded-full bg-emerald-500" />
+            <span className="w-2 h-2 rounded-full bg-amber-500" />
+            <span className="w-2 h-2 rounded-full bg-orange-500" />
+            <span className="w-2 h-2 rounded-full bg-rose-500" />
+            <span className="text-[11px] ml-1 font-mono">Đa tầng</span>
+          </div>
+        </Tooltip>
       ),
     };
   }, [
@@ -666,6 +1133,12 @@ export function InvoiceDebtsPage() {
           listHook.setPage(1);
         }}
         onRefresh={() => listHook.refetch()}
+        createLabel={t("debts:exportExcel", "Xuất Excel")}
+        createIcon={
+          <FileSpreadsheet className="w-4 h-4 mr-1 text-primary-fg/80" />
+        }
+        onCreate={() => setExportDrawerOpen(true)}
+        createActions={createActions}
         activeFilterCount={listHook.activeFilterCount}
         onClearAllFilters={listHook.clearAllFilters}
         rowActions={getRowActions}
@@ -681,6 +1154,27 @@ export function InvoiceDebtsPage() {
         partnerType={listHook.partnerType}
         dateFrom={listHook.dateFrom || undefined}
         dateTo={listHook.dateTo || undefined}
+      />
+
+      {/* Export Drawer */}
+      <InvoiceDebtsExportDrawer
+        open={exportDrawerOpen}
+        onClose={() => setExportDrawerOpen(false)}
+        initialPartnerType={listHook.partnerType}
+        buildBaseQuery={() => ({
+          partner_type: listHook.partnerType,
+          search: listHook.search || undefined,
+          date_from: listHook.dateFrom || undefined,
+          date_to: listHook.dateTo || undefined,
+          column_search:
+            Object.keys(listHook.columnSearch).length > 0
+              ? JSON.stringify(listHook.columnSearch)
+              : undefined,
+          column_filters:
+            Object.keys(listHook.columnFilters).length > 0
+              ? JSON.stringify(listHook.columnFilters)
+              : undefined,
+        })}
       />
     </>
   );
