@@ -370,13 +370,14 @@ export function SidebarNav({
           <NavItem
             collapsed={c}
             icon={<Users className="w-4 h-4 opacity-65 flex-shrink-0" />}
-            label={t("nav.items.garagePartners", "Đối tác")}
+            label={t("nav.items.garageDebts", "Công nợ garage")}
             active={
+              currentPage === "garage-debts" ||
               currentPage === "garage-partners" ||
               currentPage === "garage-customers"
             }
-            onClick={() => navTo("garage-partners")}
-            contextPage="garage-partners"
+            onClick={() => navTo("garage-debts")}
+            contextPage="garage-debts"
           />
           <NavItem
             collapsed={c}

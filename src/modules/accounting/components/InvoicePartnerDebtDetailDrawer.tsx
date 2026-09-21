@@ -7,6 +7,7 @@ import { Badge } from "@/shared/components/ui/badge";
 import { money } from "@/shared/utils/format";
 import { cn } from "@/shared/utils";
 import { BarChart } from "@/shared/components/charts/BarChart";
+import { LineChart } from "@/shared/components/charts/LineChart";
 import { DonutChart, DonutLegend } from "@/shared/components/charts/DonutChart";
 import { ChartSkeleton } from "@/shared/components/Skeleton";
 import {
@@ -27,7 +28,6 @@ import {
   AlertCircle,
   ReceiptText,
   TrendingUp,
-  Activity,
   Percent,
   RotateCcw,
 } from "lucide-react";
@@ -108,7 +108,7 @@ export function InvoicePartnerDebtDetailDrawer({
   });
 
   // Fetch Stats Trend
-  const { data: statsData, isLoading: isLoadingStats } = useQuery({
+  const { isLoading: isLoadingStats } = useQuery({
     queryKey: [
       "invoice-partner-trend-stats",
       taxCode,
@@ -852,11 +852,55 @@ export function InvoicePartnerDebtDetailDrawer({
     t,
   ]);
 
-  const barIn = "#ea580c"; // Cam: Đầu vào / Chi phí
-  const barOut = "#059669"; // Lục: Đầu ra / Doanh thu
-  const cashTrendLabels = statsData?.cashTrend?.map((t) => t.label) || [];
-  const cashTrendIn = statsData?.cashTrend?.map((t) => t.cashOut) || [];
-  const cashTrendOut = statsData?.cashTrend?.map((t) => t.cashIn) || [];
+  // Monthly Stacked Bar Data (Đã thanh toán + Còn nợ = Tổng giá trị HĐ)
+  const monthlyBarData = useMemo(() => {
+    const monthMap: Record<
+      string,
+      { paid: number; balance: number; total: number }
+    > = {};
+
+    invoices.forEach((inv) => {
+      const dateStr = inv.invoiceDate;
+      if (!dateStr) return;
+      const monthKey = String(dateStr).slice(0, 7); // "YYYY-MM"
+      if (!monthMap[monthKey]) {
+        monthMap[monthKey] = { paid: 0, balance: 0, total: 0 };
+      }
+      const tot = Number(inv.totalAmount) || 0;
+      const paid = Number(inv.paidAmount) || 0;
+      const bal = Number(inv.balanceAmount) || 0;
+
+      monthMap[monthKey].paid += paid;
+      monthMap[monthKey].balance += bal;
+      monthMap[monthKey].total += tot;
+    });
+
+    const sortedMonths = Object.keys(monthMap).sort();
+    const labels = sortedMonths.map((m) => {
+      const [year, month] = m.split("-");
+      return `Th${month}/${year?.slice(2) || ""}`;
+    });
+    const paidData = sortedMonths.map((m) => monthMap[m].paid);
+    const balData = sortedMonths.map((m) => monthMap[m].balance);
+
+    return {
+      labels,
+      datasets: [
+        {
+          label: isCustomer
+            ? t("debts:drawer.paidAmount", "Đã thu")
+            : t("debts:drawer.paidAmount", "Đã trả"),
+          data: paidData,
+          color: "#10b981", // emerald-500
+        },
+        {
+          label: t("debts:drawer.balanceAmount", "Còn nợ"),
+          data: balData,
+          color: "#f97316", // orange-500
+        },
+      ],
+    };
+  }, [invoices, isCustomer, t]);
 
   // Aging Donut chart items
   const agingDonutItems = useMemo(() => {
@@ -891,14 +935,157 @@ export function InvoicePartnerDebtDetailDrawer({
     ].filter((item) => item.value > 0 || totals.totalBalance === 0);
   }, [totals, t]);
 
-  const overdueBalance =
-    totals.aging31_60 + totals.aging61_90 + totals.agingOver90;
-  const overdueRatioPct =
-    totals.totalBalance > 0
-      ? Math.round((overdueBalance / totals.totalBalance) * 100)
-      : 0;
-  const avgInvoiceVal =
-    invoices.length > 0 ? Math.round(totals.totalRevenue / invoices.length) : 0;
+  // Monthly Breakdown Matrix aggregation for Analytics Tab (Khối 4)
+  const monthlyBreakdownStats = useMemo(() => {
+    const map: Record<
+      string,
+      {
+        monthKey: string;
+        monthLabel: string;
+        latestDate?: string;
+        invoiceCount: number;
+        totalAmount: number;
+        paidAmount: number;
+        balanceAmount: number;
+        maxAgingDays: number;
+      }
+    > = {};
+
+    invoices.forEach((inv) => {
+      const dateStr = inv.invoiceDate;
+      if (!dateStr) return;
+      const monthKey = String(dateStr).slice(0, 7); // "YYYY-MM"
+      if (!map[monthKey]) {
+        const [year, month] = monthKey.split("-");
+        map[monthKey] = {
+          monthKey,
+          monthLabel: `Thg ${month}/${year}`,
+          latestDate: dateStr,
+          invoiceCount: 0,
+          totalAmount: 0,
+          paidAmount: 0,
+          balanceAmount: 0,
+          maxAgingDays: 0,
+        };
+      } else if (
+        dateStr &&
+        (!map[monthKey].latestDate || dateStr > map[monthKey].latestDate!)
+      ) {
+        map[monthKey].latestDate = dateStr;
+      }
+      const tot = Number(inv.totalAmount) || 0;
+      const paid = Number(inv.paidAmount) || 0;
+      const bal = Number(inv.balanceAmount) || 0;
+      const aging = Number(inv.agingDays) || 0;
+
+      map[monthKey].invoiceCount += 1;
+      map[monthKey].totalAmount += tot;
+      map[monthKey].paidAmount += paid;
+      map[monthKey].balanceAmount += bal;
+      if (bal > 0 && aging > map[monthKey].maxAgingDays) {
+        map[monthKey].maxAgingDays = aging;
+      }
+    });
+
+    return Object.values(map).sort((a, b) =>
+      b.monthKey.localeCompare(a.monthKey),
+    );
+  }, [invoices]);
+
+  // Cumulative Cashflow & Balance Run-rate Trend Data (LineChart)
+  const cumulativeTrendData = useMemo(() => {
+    const monthMap: Record<
+      string,
+      { total: number; paid: number; balance: number }
+    > = {};
+
+    invoices.forEach((inv) => {
+      const dateStr = inv.invoiceDate;
+      if (!dateStr) return;
+      const monthKey = String(dateStr).slice(0, 7); // "YYYY-MM"
+      if (!monthMap[monthKey]) {
+        monthMap[monthKey] = { total: 0, paid: 0, balance: 0 };
+      }
+      monthMap[monthKey].total += Number(inv.totalAmount) || 0;
+      monthMap[monthKey].paid += Number(inv.paidAmount) || 0;
+      monthMap[monthKey].balance += Number(inv.balanceAmount) || 0;
+    });
+
+    const sortedMonths = Object.keys(monthMap).sort();
+    const labels = sortedMonths.map((m) => {
+      const [year, month] = m.split("-");
+      return `Th${month}/${year?.slice(2) || ""}`;
+    });
+
+    let runningTotal = 0;
+    let runningPaid = 0;
+    const cumTotalData: number[] = [];
+    const cumPaidData: number[] = [];
+    const balanceData: number[] = [];
+
+    sortedMonths.forEach((m) => {
+      runningTotal += monthMap[m].total;
+      runningPaid += monthMap[m].paid;
+      cumTotalData.push(runningTotal);
+      cumPaidData.push(runningPaid);
+      balanceData.push(Math.max(0, runningTotal - runningPaid));
+    });
+
+    return {
+      labels,
+      datasets: [
+        {
+          label: t("debts:drawer.cumTotal", "Tổng giá trị HĐ tích lũy"),
+          data: cumTotalData,
+          color: "#3b82f6", // blue-500
+          fill: false,
+        },
+        {
+          label: isCustomer
+            ? t("debts:drawer.cumPaid", "Tiền đã thu tích lũy")
+            : t("debts:drawer.cumPaidSupplier", "Tiền đã trả tích lũy"),
+          data: cumPaidData,
+          color: "#10b981", // emerald-500
+          fill: false,
+        },
+        {
+          label: t("debts:drawer.cumBalance", "Dư nợ còn lại"),
+          data: balanceData,
+          color: "#ef4444", // rose-500
+          fill: false,
+          borderDash: [4, 4],
+        },
+      ],
+    };
+  }, [invoices, isCustomer, t]);
+
+  // Monthly Recovery/Payment Rate % Chart Data (BarChart)
+  const monthlyRecoveryRateData = useMemo(() => {
+    const sorted = [...monthlyBreakdownStats].sort((a, b) =>
+      a.monthKey.localeCompare(b.monthKey),
+    );
+    const labels = sorted.map((m) => {
+      const [year, month] = m.monthKey.split("-");
+      return `Th${month}/${year?.slice(2) || ""}`;
+    });
+    const rates = sorted.map((m) => {
+      if (m.totalAmount <= 0) return m.balanceAmount === 0 ? 100 : 0;
+      return Math.min(100, Math.round((m.paidAmount / m.totalAmount) * 100));
+    });
+
+    return {
+      labels,
+      datasets: [
+        {
+          label: isCustomer
+            ? t("debts:drawer.recoveryRateBar", "Tỷ lệ thu hồi (%)")
+            : t("debts:drawer.paymentRateBar", "Tỷ lệ thanh toán (%)"),
+          data: rates,
+          color: "#10b981", // emerald-500
+        },
+      ],
+    };
+  }, [monthlyBreakdownStats, isCustomer, t]);
 
   // Right Panel: 2-Tier Overview Information (Partner Info & Financial KPIs)
   const rightPanelContent = (
@@ -1128,209 +1315,141 @@ export function InvoicePartnerDebtDetailDrawer({
   // Tab 2 Content: Full-size Monthly Trend & Aging Breakdown & Health Analytics
   const analyticsContent = (
     <div className="space-y-4 pb-2">
-      {/* SECTION 1: BIẾN ĐỘNG HÓA ĐƠN THEO THÁNG */}
-      <DrawerSection
-        title={t(
-          "debts:drawer.trendChartTitle",
-          "Biến động hóa đơn theo tháng",
-        )}
-        collapsible
-        defaultCollapsed={false}
-      >
-        <div className="bg-card border rounded-xl p-3 sm:p-4 shadow-sm">
-          <div className="relative h-[240px] sm:h-[260px]">
-            {isLoadingStats ? (
-              <ChartSkeleton type="bar" />
-            ) : cashTrendLabels.length > 0 ? (
-              <BarChart
-                labels={cashTrendLabels}
-                yCallback={(v) => money(Number(v))}
-                datasets={[
-                  {
-                    data: cashTrendIn,
-                    color: barIn,
-                    label: isCustomer
-                      ? "HĐ Đầu vào (Mua từ KH)"
-                      : "HĐ Đầu vào (Mua từ NCC)",
-                  },
-                  {
-                    data: cashTrendOut,
-                    color: barOut,
-                    label: isCustomer
-                      ? "HĐ Đầu ra (Bán cho KH)"
-                      : "HĐ Đầu ra (Bán)",
-                  },
-                ]}
-              />
-            ) : (
-              <div className="flex flex-col items-center justify-center h-full text-muted-foreground text-xs gap-1.5">
-                <FileText className="w-8 h-8 opacity-30" />
-                <span>Chưa có dữ liệu biến động dòng tiền theo tháng</span>
-              </div>
+      {/* HÀNG 1: GRID 3:1 (BIẾN ĐỘNG PHÁT SINH THEO THÁNG + CƠ CẤU TUỔI NỢ) */}
+      <div className="grid grid-cols-1 xl:grid-cols-4 gap-3">
+        {/* CỘT 1 (3/4): BIẾN ĐỘNG HÓA ĐƠN THEO THÁNG */}
+        <div className="xl:col-span-3">
+          <DrawerSection
+            title={t(
+              "debts:drawer.trendChartTitle",
+              "Biến động hóa đơn theo tháng",
             )}
-          </div>
+            collapsible
+            defaultCollapsed={false}
+          >
+            <div className="relative h-[250px] w-full pt-1">
+              {isLoadingStats ? (
+                <ChartSkeleton type="bar" />
+              ) : monthlyBarData.labels.length > 0 ? (
+                <BarChart
+                  labels={monthlyBarData.labels}
+                  stacked={true}
+                  showLegend={true}
+                  yCallback={(v) => money(Number(v))}
+                  datasets={monthlyBarData.datasets}
+                />
+              ) : (
+                <div className="flex flex-col items-center justify-center h-full text-muted-foreground text-xs gap-1.5">
+                  <FileText className="w-8 h-8 opacity-30" />
+                  <span>Chưa có dữ liệu biến động dòng tiền theo tháng</span>
+                </div>
+              )}
+            </div>
+          </DrawerSection>
         </div>
-      </DrawerSection>
 
-      {/* SECTION 2 & 3: GRID 2 CỘT CHO CƠ CẤU TUỔI NỢ & SỨC KHỎE TÀI CHÍNH */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* KHỐI CƠ CẤU PHÂN BỔ TUỔI NỢ */}
+        {/* CỘT 2 (1/4): CƠ CẤU PHÂN BỔ TUỔI NỢ */}
+        <div className="xl:col-span-1">
+          <DrawerSection
+            title={t(
+              "debts:drawer.agingDistribution",
+              "Cơ cấu phân bổ tuổi nợ",
+            )}
+            collapsible
+            defaultCollapsed={false}
+          >
+            <div className="flex flex-col justify-center gap-2.5 h-[250px] w-full pt-1">
+              {totals.totalBalance > 0 ? (
+                <>
+                  <div className="relative h-[135px]">
+                    <DonutChart
+                      items={agingDonutItems}
+                      cutout="65%"
+                      valueFormatter={(v) => money(Number(v))}
+                    />
+                  </div>
+                  <div className="text-[11px]">
+                    <DonutLegend
+                      items={agingDonutItems}
+                      valueFormatter={(v) => money(Number(v))}
+                    />
+                  </div>
+                </>
+              ) : (
+                <div className="flex flex-col items-center justify-center flex-1 text-center py-4 gap-2">
+                  <CheckCircle2 className="w-9 h-9 text-emerald-500/80" />
+                  <div className="text-xs font-semibold text-foreground">
+                    Đã tất toán toàn bộ
+                  </div>
+                  <div className="text-[11px] text-muted-foreground">
+                    Không còn dư nợ quá hạn.
+                  </div>
+                </div>
+              )}
+            </div>
+          </DrawerSection>
+        </div>
+      </div>
+
+      {/* HÀNG 2: GRID 1:1 HOẶC 3:2 (DÒNG TIỀN LŨY KẾ & TỶ LỆ HOÀN TẤT THANH TOÁN THEO THÁNG) */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
+        {/* CỘT 1: BIỂU ĐỒ LUÂN CHUYỂN & DÒNG TIỀN TÍCH LŨY */}
         <DrawerSection
-          title={t("debts:drawer.agingDistribution", "Cơ cấu phân bổ tuổi nợ")}
+          title={t(
+            "debts:drawer.cumulativeTrendTitle",
+            "Biểu đồ luân chuyển & Dòng tiền tích lũy",
+          )}
           collapsible
           defaultCollapsed={false}
         >
-          <div className="bg-card border rounded-xl p-3.5 shadow-sm flex flex-col gap-3 min-h-[260px]">
-            {totals.totalBalance > 0 ? (
-              <>
-                <div className="relative h-[150px]">
-                  <DonutChart
-                    items={agingDonutItems}
-                    cutout="65%"
-                    valueFormatter={(v) => money(Number(v))}
-                  />
-                </div>
-                <DonutLegend
-                  items={agingDonutItems}
-                  valueFormatter={(v) => money(Number(v))}
-                />
-              </>
+          <div className="relative h-[250px] w-full pt-1">
+            {cumulativeTrendData.labels.length > 0 ? (
+              <LineChart
+                labels={cumulativeTrendData.labels}
+                datasets={cumulativeTrendData.datasets}
+                showLegend={true}
+                yCallback={(v) => money(Number(v))}
+              />
             ) : (
-              <div className="flex flex-col items-center justify-center flex-1 text-center py-6 gap-2">
-                <CheckCircle2 className="w-10 h-10 text-emerald-500/80" />
-                <div className="text-xs font-semibold text-foreground">
-                  Đã tất toán toàn bộ công nợ
-                </div>
-                <div className="text-[11px] text-muted-foreground">
-                  Không còn dư nợ quá hạn đối với đối tác này.
-                </div>
+              <div className="flex flex-col items-center justify-center h-full text-muted-foreground text-xs gap-1.5">
+                <TrendingUp className="w-8 h-8 opacity-30" />
+                <span>Chưa có dữ liệu dòng tiền tích lũy</span>
               </div>
             )}
           </div>
         </DrawerSection>
 
-        {/* KHỐI SỨC KHỎE TÀI CHÍNH & THU HỒI NỢ */}
+        {/* CỘT 2: TỶ LỆ THU HỒI / THANH TOÁN THEO KỲ */}
         <DrawerSection
-          title={t(
-            "debts:drawer.financialHealth",
-            "Chỉ số sức khỏe tài chính & Thu hồi nợ",
-          )}
+          title={
+            isCustomer
+              ? t(
+                  "debts:drawer.recoveryRateTitle",
+                  "Tỷ lệ thu hồi nợ theo từng tháng (%)",
+                )
+              : t(
+                  "debts:drawer.paymentRateTitle",
+                  "Tỷ lệ thanh toán theo từng tháng (%)",
+                )
+          }
           collapsible
           defaultCollapsed={false}
         >
-          <div className="bg-card border rounded-xl p-3.5 shadow-sm flex flex-col justify-between gap-3 min-h-[260px]">
-            <div className="grid grid-cols-2 gap-2.5">
-              {/* Thẻ 1: Giá trị TB / HĐ */}
-              <div className="bg-muted/40 border border-border/60 rounded-lg p-2.5 space-y-1">
-                <div className="flex items-center justify-between text-[11px] text-muted-foreground">
-                  <span>
-                    {t("debts:drawer.avgInvoiceValue", "Giá trị TB / HĐ")}
-                  </span>
-                  <Activity className="w-3.5 h-3.5 text-primary" />
-                </div>
-                <div className="text-sm font-bold font-mono text-foreground truncate">
-                  {money(avgInvoiceVal)}
-                </div>
-                <div className="text-[10px] text-muted-foreground">
-                  {invoices.length} {t("debts:unitInvoice", "hóa đơn")}
-                </div>
+          <div className="relative h-[250px] w-full pt-1">
+            {monthlyRecoveryRateData.labels.length > 0 ? (
+              <BarChart
+                labels={monthlyRecoveryRateData.labels}
+                datasets={monthlyRecoveryRateData.datasets}
+                showLegend={true}
+                yMax={100}
+                yCallback={(v) => `${v}%`}
+              />
+            ) : (
+              <div className="flex flex-col items-center justify-center h-full text-muted-foreground text-xs gap-1.5">
+                <Percent className="w-8 h-8 opacity-30" />
+                <span>Chưa có dữ liệu tỷ lệ theo tháng</span>
               </div>
-
-              {/* Thẻ 2: Tỷ lệ hoàn tất */}
-              <div className="bg-muted/40 border border-border/60 rounded-lg p-2.5 space-y-1">
-                <div className="flex items-center justify-between text-[11px] text-muted-foreground">
-                  <span>
-                    {t("debts:drawer.kpiRecoveryRate", "Tỷ lệ thanh toán")}
-                  </span>
-                  <Percent className="w-3.5 h-3.5 text-emerald-600" />
-                </div>
-                <div className="text-sm font-bold font-mono text-emerald-700 dark:text-emerald-400">
-                  {totals.recoveryRate}%
-                </div>
-                <div className="text-[10px] text-muted-foreground truncate">
-                  {totals.recoveryRate === 100
-                    ? "Tất toán 100%"
-                    : `${money(totals.totalPaid)}`}
-                </div>
-              </div>
-
-              {/* Thẻ 3: Tỷ trọng quá hạn */}
-              <div className="bg-muted/40 border border-border/60 rounded-lg p-2.5 space-y-1">
-                <div className="flex items-center justify-between text-[11px] text-muted-foreground">
-                  <span>
-                    {t("debts:drawer.overdueRatio", "Tỷ trọng quá hạn")}
-                  </span>
-                  <AlertCircle
-                    className={cn(
-                      "w-3.5 h-3.5",
-                      overdueRatioPct > 0
-                        ? "text-destructive"
-                        : "text-emerald-600",
-                    )}
-                  />
-                </div>
-                <div
-                  className={cn(
-                    "text-sm font-bold font-mono",
-                    overdueRatioPct > 0
-                      ? "text-destructive"
-                      : "text-emerald-600 dark:text-emerald-400",
-                  )}
-                >
-                  {overdueRatioPct}%
-                </div>
-                <div className="text-[10px] text-muted-foreground truncate">
-                  {overdueBalance > 0
-                    ? money(overdueBalance)
-                    : "0 đ (Trong hạn)"}
-                </div>
-              </div>
-
-              {/* Thẻ 4: Tuổi nợ tối đa */}
-              <div className="bg-muted/40 border border-border/60 rounded-lg p-2.5 space-y-1">
-                <div className="flex items-center justify-between text-[11px] text-muted-foreground">
-                  <span>{t("debts:drawer.kpiMaxAging", "Tuổi nợ max")}</span>
-                  <Clock className="w-3.5 h-3.5 text-amber-600" />
-                </div>
-                <div className="text-sm font-bold font-mono text-amber-800 dark:text-amber-300">
-                  {totals.maxAging} ngày
-                </div>
-                <div className="text-[10px] text-muted-foreground truncate">
-                  {totals.totalBalance === 0
-                    ? "Đã tất toán"
-                    : totals.maxAging > 90
-                      ? "Quá hạn nghiêm trọng"
-                      : totals.maxAging > 30
-                        ? "Cần theo dõi"
-                        : "Trong hạn"}
-                </div>
-              </div>
-            </div>
-
-            {/* Thanh tiến độ thu hồi */}
-            <div className="pt-2 border-t border-border/50 flex flex-col gap-1.5">
-              <div className="flex items-center justify-between text-[11px]">
-                <span className="text-muted-foreground">
-                  Tiến độ thu hồi & cấn trừ công nợ:
-                </span>
-                <span className="font-mono font-bold text-foreground">
-                  {totals.recoveryRate}%
-                </span>
-              </div>
-              <div className="w-full h-2 bg-slate-200 dark:bg-slate-700/80 rounded-full overflow-hidden p-[0.5px]">
-                <div
-                  className={cn(
-                    "h-full rounded-full transition-all duration-300",
-                    totals.recoveryRate === 100
-                      ? "bg-emerald-500"
-                      : totals.recoveryRate >= 50
-                        ? "bg-primary"
-                        : "bg-amber-500",
-                  )}
-                  style={{ width: `${Math.max(totals.recoveryRate, 2)}%` }}
-                />
-              </div>
-            </div>
+            )}
           </div>
         </DrawerSection>
       </div>
