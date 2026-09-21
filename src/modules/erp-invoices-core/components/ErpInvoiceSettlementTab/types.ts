@@ -33,6 +33,10 @@ export interface ActiveVoucherItem {
   amount: number;
   bankName: string;
   partnerName: string;
+  sourceType?: "BANK" | "CASH";
+  bankAccount?: { bankName?: string; accountNumber?: string } | any;
+  accountNumber?: string;
+  cashBook?: { name?: string } | any;
   isPending: boolean;
 }
 
