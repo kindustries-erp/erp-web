@@ -377,6 +377,136 @@ export function InvoicePartnerDebtDetailDrawer({
           </span>
         ),
       },
+      // Nợ 0-30 ngày
+      {
+        key: "aging0To30",
+        className:
+          "text-right bg-emerald-50/40 dark:bg-emerald-950/20 font-mono text-xs",
+        headerClassName:
+          "bg-emerald-50/80 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 font-semibold text-right justify-end",
+        header: headerFilter.amount(
+          "aging0To30",
+          t("debts:drawer.aging0_30", "0-30 ngày"),
+        ),
+        size: 135,
+        minSize: 120,
+        enableResizing: true,
+        cell: (row) => {
+          const val =
+            row.balanceAmount > 0 && row.agingDays <= 30
+              ? row.balanceAmount
+              : 0;
+          if (val <= 0) {
+            return (
+              <span className="text-muted-foreground/30 font-normal select-none">
+                —
+              </span>
+            );
+          }
+          return (
+            <span className="font-semibold text-emerald-700 dark:text-emerald-400 tabular-nums">
+              {money(val)}
+            </span>
+          );
+        },
+      },
+      // Nợ 31-60 ngày
+      {
+        key: "aging31To60",
+        className:
+          "text-right bg-amber-50/40 dark:bg-amber-950/20 font-mono text-xs",
+        headerClassName:
+          "bg-amber-50/80 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 font-semibold text-right justify-end",
+        header: headerFilter.amount(
+          "aging31To60",
+          t("debts:drawer.aging31_60", "31-60 ngày"),
+        ),
+        size: 135,
+        minSize: 120,
+        enableResizing: true,
+        cell: (row) => {
+          const val =
+            row.balanceAmount > 0 && row.agingDays > 30 && row.agingDays <= 60
+              ? row.balanceAmount
+              : 0;
+          if (val <= 0) {
+            return (
+              <span className="text-muted-foreground/30 font-normal select-none">
+                —
+              </span>
+            );
+          }
+          return (
+            <span className="font-semibold text-amber-800 dark:text-amber-300 tabular-nums">
+              {money(val)}
+            </span>
+          );
+        },
+      },
+      // Nợ 61-90 ngày
+      {
+        key: "aging61To90",
+        className:
+          "text-right bg-orange-50/40 dark:bg-orange-950/20 font-mono text-xs",
+        headerClassName:
+          "bg-orange-50/80 dark:bg-orange-950/40 text-orange-800 dark:text-orange-300 font-semibold text-right justify-end",
+        header: headerFilter.amount(
+          "aging61To90",
+          t("debts:drawer.aging61_90", "61-90 ngày"),
+        ),
+        size: 135,
+        minSize: 120,
+        enableResizing: true,
+        cell: (row) => {
+          const val =
+            row.balanceAmount > 0 && row.agingDays > 60 && row.agingDays <= 90
+              ? row.balanceAmount
+              : 0;
+          if (val <= 0) {
+            return (
+              <span className="text-muted-foreground/30 font-normal select-none">
+                —
+              </span>
+            );
+          }
+          return (
+            <span className="font-semibold text-orange-700 dark:text-orange-400 tabular-nums">
+              {money(val)}
+            </span>
+          );
+        },
+      },
+      // Nợ >90 ngày
+      {
+        key: "agingOver90",
+        className:
+          "text-right bg-rose-50/40 dark:bg-rose-950/20 font-mono text-xs",
+        headerClassName:
+          "bg-rose-50/80 dark:bg-rose-950/40 text-rose-800 dark:text-rose-300 font-semibold text-right justify-end",
+        header: headerFilter.amount(
+          "agingOver90",
+          t("debts:drawer.agingOver90", ">90 ngày"),
+        ),
+        size: 140,
+        minSize: 125,
+        enableResizing: true,
+        cell: (row) => {
+          const val =
+            row.balanceAmount > 0 && row.agingDays > 90 ? row.balanceAmount : 0;
+          if (val <= 0) {
+            return (
+              <span className="text-muted-foreground/30 font-normal select-none">
+                —
+              </span>
+            );
+          }
+          return (
+            <span className="font-bold text-rose-700 dark:text-rose-400 tabular-nums">
+              {money(val)}
+            </span>
+          );
+        },
+      },
       {
         key: "agingDays",
         className: "text-center",
@@ -473,13 +603,31 @@ export function InvoicePartnerDebtDetailDrawer({
     let cumTotal = 0;
     let cumPaid = 0;
     let cumBal = 0;
+    let cumA0_30 = 0;
+    let cumA31_60 = 0;
+    let cumA61_90 = 0;
+    let cumAOver90 = 0;
 
     for (const inv of cumulativeItems) {
-      cumPreVat += Number(inv.preVatAmount) || 0;
-      cumVat += Number(inv.vatAmount) || 0;
-      cumTotal += Number(inv.totalAmount) || 0;
-      cumPaid += Number(inv.paidAmount) || 0;
-      cumBal += Number(inv.balanceAmount) || 0;
+      const preVat = Number(inv.preVatAmount) || 0;
+      const vat = Number(inv.vatAmount) || 0;
+      const tot = Number(inv.totalAmount) || 0;
+      const paid = Number(inv.paidAmount) || 0;
+      const bal = Number(inv.balanceAmount) || 0;
+      const aging = Number(inv.agingDays) || 0;
+
+      cumPreVat += preVat;
+      cumVat += vat;
+      cumTotal += tot;
+      cumPaid += paid;
+      cumBal += bal;
+
+      if (bal > 0) {
+        if (aging <= 30) cumA0_30 += bal;
+        else if (aging <= 60) cumA31_60 += bal;
+        else if (aging <= 90) cumA61_90 += bal;
+        else cumAOver90 += bal;
+      }
     }
 
     return {
@@ -488,6 +636,10 @@ export function InvoicePartnerDebtDetailDrawer({
       cumTotal,
       cumPaid,
       cumBal,
+      cumA0_30,
+      cumA31_60,
+      cumA61_90,
+      cumAOver90,
       cumCount: cumulativeItems.length,
     };
   }, [cumulativeItems]);
@@ -501,13 +653,31 @@ export function InvoicePartnerDebtDetailDrawer({
     let subtotalTotal = 0;
     let subtotalPaid = 0;
     let subtotalBal = 0;
+    let subtotalA0_30 = 0;
+    let subtotalA31_60 = 0;
+    let subtotalA61_90 = 0;
+    let subtotalAOver90 = 0;
 
     for (const inv of paginatedInvoices) {
-      subtotalPreVat += Number(inv.preVatAmount) || 0;
-      subtotalVat += Number(inv.vatAmount) || 0;
-      subtotalTotal += Number(inv.totalAmount) || 0;
-      subtotalPaid += Number(inv.paidAmount) || 0;
-      subtotalBal += Number(inv.balanceAmount) || 0;
+      const preVat = Number(inv.preVatAmount) || 0;
+      const vat = Number(inv.vatAmount) || 0;
+      const tot = Number(inv.totalAmount) || 0;
+      const paid = Number(inv.paidAmount) || 0;
+      const bal = Number(inv.balanceAmount) || 0;
+      const aging = Number(inv.agingDays) || 0;
+
+      subtotalPreVat += preVat;
+      subtotalVat += vat;
+      subtotalTotal += tot;
+      subtotalPaid += paid;
+      subtotalBal += bal;
+
+      if (bal > 0) {
+        if (aging <= 30) subtotalA0_30 += bal;
+        else if (aging <= 60) subtotalA31_60 += bal;
+        else if (aging <= 90) subtotalA61_90 += bal;
+        else subtotalAOver90 += bal;
+      }
     }
 
     return {
@@ -604,6 +774,70 @@ export function InvoicePartnerDebtDetailDrawer({
               ? "text-emerald-600 dark:text-emerald-400 font-bold"
               : "text-destructive font-bold"
           }
+        />
+      ),
+      aging0To30: (
+        <SubtotalSummaryCell
+          variantType="amount"
+          metricTitle={t("debts:drawer.aging0_30", "0-30 ngày")}
+          itemTitle={t("debts:unitInvoice", "hóa đơn")}
+          subtotalAmount={subtotalA0_30}
+          cumulativeAmount={cumulativeTotals.cumA0_30}
+          grandTotalAmount={totals.aging0_30}
+          page={page}
+          totalPages={totalPages}
+          currentPageCount={paginatedInvoices.length}
+          totalCount={totalItems}
+          cumulativeCount={cumulativeTotals.cumCount}
+          valueClassName="text-emerald-700 dark:text-emerald-400 font-bold"
+        />
+      ),
+      aging31To60: (
+        <SubtotalSummaryCell
+          variantType="amount"
+          metricTitle={t("debts:drawer.aging31_60", "31-60 ngày")}
+          itemTitle={t("debts:unitInvoice", "hóa đơn")}
+          subtotalAmount={subtotalA31_60}
+          cumulativeAmount={cumulativeTotals.cumA31_60}
+          grandTotalAmount={totals.aging31_60}
+          page={page}
+          totalPages={totalPages}
+          currentPageCount={paginatedInvoices.length}
+          totalCount={totalItems}
+          cumulativeCount={cumulativeTotals.cumCount}
+          valueClassName="text-amber-800 dark:text-amber-300 font-bold"
+        />
+      ),
+      aging61To90: (
+        <SubtotalSummaryCell
+          variantType="amount"
+          metricTitle={t("debts:drawer.aging61_90", "61-90 ngày")}
+          itemTitle={t("debts:unitInvoice", "hóa đơn")}
+          subtotalAmount={subtotalA61_90}
+          cumulativeAmount={cumulativeTotals.cumA61_90}
+          grandTotalAmount={totals.aging61_90}
+          page={page}
+          totalPages={totalPages}
+          currentPageCount={paginatedInvoices.length}
+          totalCount={totalItems}
+          cumulativeCount={cumulativeTotals.cumCount}
+          valueClassName="text-orange-700 dark:text-orange-400 font-bold"
+        />
+      ),
+      agingOver90: (
+        <SubtotalSummaryCell
+          variantType="amount"
+          metricTitle={t("debts:drawer.agingOver90", ">90 ngày")}
+          itemTitle={t("debts:unitInvoice", "hóa đơn")}
+          subtotalAmount={subtotalAOver90}
+          cumulativeAmount={cumulativeTotals.cumAOver90}
+          grandTotalAmount={totals.agingOver90}
+          page={page}
+          totalPages={totalPages}
+          currentPageCount={paginatedInvoices.length}
+          totalCount={totalItems}
+          cumulativeCount={cumulativeTotals.cumCount}
+          valueClassName="text-rose-700 dark:text-rose-400 font-bold"
         />
       ),
     };
