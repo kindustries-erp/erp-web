@@ -76,7 +76,8 @@ export type PageKey =
   | "vinfast-parts-stock"
   | "vinfast-parts-oto-stock"
   | "vinfast-parts-xemay-stock"
-  | "inventory-dashboard";
+  | "inventory-dashboard"
+  | "custom-fields";
 export type TxSource = "cash-fund" | "bank-deposit";
 
 export interface Transaction {

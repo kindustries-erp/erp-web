@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { BookOpen, Eye, Copy } from "lucide-react";
+import { BookOpen, Eye, Copy, Pencil, Building2, FileText } from "lucide-react";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate";
 import { createColumnHeaderFilter } from "@/shared/components/DataTable/createColumnHeaderFilter";
 import { TableDateCell } from "@/shared/components/DataTable/TableDateCell";
@@ -13,9 +13,13 @@ import type { JournalEntrySpreadsheetRow } from "@/modules/accounting/types/jour
 import { money } from "@/shared/utils/format";
 import { BankTransactionDetailDrawer } from "@/pages/finance/components/BankTransactionDetailDrawer";
 import { InvoiceDetailWrapper } from "@/modules/erp-invoices-core/components/InvoiceDetailWrapper";
-import { Popover } from "@/core/components/ui/Popover";
+import { JournalEntryDetailDrawer } from "@/modules/accounting/components/JournalEntryDetailDrawer";
+import { Tooltip } from "@/core/components/ui/Tooltip";
 import type { DataTableColumn } from "@/shared/components/DataTable";
-import type { ActionDropdownItem } from "@/shared/components/ActionDropdown";
+import type {
+  ActionDropdownItem,
+  ActionItem,
+} from "@/shared/components/ActionDropdown";
 
 export const GeneralJournalPage: React.FC = () => {
   const t = useT();
@@ -27,6 +31,13 @@ export const GeneralJournalPage: React.FC = () => {
   const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(
     null,
   );
+  const [selectedJournalEntryId, setSelectedJournalEntryId] = useState<
+    string | null
+  >(null);
+  const [journalDrawerMode, setJournalDrawerMode] = useState<"view" | "edit">(
+    "view",
+  );
+  const [selectedRowData, setSelectedRowData] = useState<any | null>(null);
 
   const headerFilter = useMemo(
     () =>
@@ -100,21 +111,34 @@ export const GeneralJournalPage: React.FC = () => {
       },
       {
         key: "_entryNo",
-        header: headerFilter("_entryNo", t("Số CT", "Số CT")),
-        size: 140,
+        header: headerFilter("_entryNo", t("Số CT", "Số CT"), {
+          showBlankOption: true,
+        }),
+        size: 200,
         enableResizing: true,
         cell: (row: JournalEntrySpreadsheetRow) => (
           <TableText
-            className="w-full font-medium"
-            text={row._entryNo}
-            enableCopy={true}
-            tooltip={true}
+            text={row._entryNo || "—"}
+            enableCopy={Boolean(row._entryNo)}
+            onDetailClick={(e) => {
+              e.stopPropagation();
+              setSelectedRowData(row);
+              setSelectedJournalEntryId(row._entryNo || row._id);
+              setJournalDrawerMode("view");
+            }}
+            detailTooltip={t(
+              "journalEntries.drawer.viewTooltip",
+              "Xem chi tiết bút toán",
+            )}
+            textClassName="font-medium font-mono text-slate-800 dark:text-slate-200"
           />
         ),
       },
       {
         key: "_account",
-        header: headerFilter("_account", t("TK", "TK")),
+        header: headerFilter("_account", t("TK", "TK"), {
+          showBlankOption: true,
+        }),
         size: 80,
         enableResizing: true,
         className: "text-center",
@@ -188,19 +212,18 @@ export const GeneralJournalPage: React.FC = () => {
         }),
         size: 350,
         enableResizing: true,
-        cell: (row: JournalEntrySpreadsheetRow) => (
-          <Popover
-            content={
-              <div className="p-3 text-sm max-w-md break-words whitespace-normal text-slate-800 dark:text-slate-200">
-                {row.description || row._description || "—"}
-              </div>
-            }
-          >
-            <div className="text-slate-600 dark:text-slate-300 w-full cursor-pointer hover:text-primary underline decoration-dashed underline-offset-4 decoration-slate-300 line-clamp-2">
-              {row.description || row._description || "-"}
-            </div>
-          </Popover>
-        ),
+        cell: (row: JournalEntrySpreadsheetRow) => {
+          const text = row.description || row._description || "—";
+          if (!text || text === "—")
+            return <span className="text-slate-400">—</span>;
+          return (
+            <Tooltip content={text}>
+              <span className="text-slate-700 dark:text-slate-300 w-full truncate block text-xs select-text">
+                {text}
+              </span>
+            </Tooltip>
+          );
+        },
       },
       {
         key: "_subjectName",
@@ -209,23 +232,24 @@ export const GeneralJournalPage: React.FC = () => {
         }),
         size: 180,
         enableResizing: true,
-        cell: (row: JournalEntrySpreadsheetRow) => (
-          <Popover
-            content={
-              <div className="p-3 text-sm max-w-sm break-words whitespace-normal text-slate-800 dark:text-slate-200">
-                {row._subjectName || "—"}
-              </div>
-            }
-          >
-            <span className="text-slate-600 dark:text-slate-400 cursor-pointer hover:text-primary underline decoration-dashed underline-offset-4 decoration-slate-300 truncate block">
-              {row._subjectName || "-"}
-            </span>
-          </Popover>
-        ),
+        cell: (row: JournalEntrySpreadsheetRow) => {
+          const text = row._subjectName || "—";
+          if (!text || text === "—")
+            return <span className="text-slate-400">—</span>;
+          return (
+            <Tooltip content={text}>
+              <span className="text-slate-700 dark:text-slate-300 truncate block text-xs select-text">
+                {text}
+              </span>
+            </Tooltip>
+          );
+        },
       },
       {
         key: "_branch",
-        header: headerFilter("_branch", t("Chi nhánh", "Chi nhánh")),
+        header: headerFilter("_branch", t("Chi nhánh", "Chi nhánh"), {
+          showBlankOption: true,
+        }),
         size: 150,
         enableResizing: true,
         cell: (row: JournalEntrySpreadsheetRow) => (
@@ -236,35 +260,49 @@ export const GeneralJournalPage: React.FC = () => {
       },
       {
         key: "_reference",
-        header: headerFilter("_reference", t("Tham chiếu", "Tham chiếu")),
-        size: 130,
+        header: headerFilter("_reference", t("Tham chiếu", "Tham chiếu"), {
+          showBlankOption: true,
+        }),
+        size: 140,
         enableResizing: true,
         cell: (row: JournalEntrySpreadsheetRow) => {
-          if (!row._reference) return <span className="text-slate-400">-</span>;
-          if (row._sourceType === "BANK" && row._sourceId) {
-            return (
-              <span
-                className="text-primary hover:underline cursor-pointer font-medium"
-                onClick={() => setSelectedBankTxnId(row._sourceId || null)}
-              >
-                {row._reference}
-              </span>
-            );
-          }
-          if (row._sourceType === "INVOICE" && row._sourceId) {
-            return (
-              <span
-                className="text-primary hover:underline cursor-pointer font-medium"
-                onClick={() => setSelectedInvoiceId(row._sourceId || null)}
-              >
-                {row._reference}
-              </span>
-            );
-          }
+          if (!row._reference) return <span className="text-slate-400">—</span>;
+          const isBank = row._sourceType === "BANK" && Boolean(row._sourceId);
+          const isInvoice =
+            row._sourceType === "INVOICE" && Boolean(row._sourceId);
+
           return (
-            <span className="text-slate-600 dark:text-slate-400">
-              {row._reference}
-            </span>
+            <TableText
+              text={row._reference}
+              enableCopy={true}
+              textClassName="font-mono text-xs text-slate-700 dark:text-slate-300"
+              onDrawerClick={
+                isBank
+                  ? (e) => {
+                      e.stopPropagation();
+                      setSelectedBankTxnId(row._sourceId || null);
+                    }
+                  : isInvoice
+                    ? (e) => {
+                        e.stopPropagation();
+                        setSelectedInvoiceId(row._sourceId || null);
+                      }
+                    : undefined
+              }
+              drawerTooltip={
+                isBank
+                  ? t(
+                      "journalEntries.drawer.viewBankTxn",
+                      "Xem giao dịch ngân hàng",
+                    )
+                  : isInvoice
+                    ? t(
+                        "journalEntries.drawer.viewInvoice",
+                        "Xem hóa đơn VAT liên quan",
+                      )
+                    : undefined
+              }
+            />
           );
         },
       },
@@ -274,37 +312,97 @@ export const GeneralJournalPage: React.FC = () => {
 
   const getRowActions = (
     row: JournalEntrySpreadsheetRow,
-  ): ActionDropdownItem[] => [
-    {
-      groupLabel: t("TRA CỨU", "TRA CỨU"),
-      items: [
-        {
-          label: t("viewSourceDoc", "Xem chứng từ gốc"),
-          icon: <Eye className="w-4 h-4" />,
-          onClick: () => {
-            if (row._sourceType === "BANK" && row._sourceId) {
-              setSelectedBankTxnId(row._sourceId);
-            } else if (row._sourceType === "INVOICE" && row._sourceId) {
-              setSelectedInvoiceId(row._sourceId);
-            }
-          },
-          disabled: !(
-            row._sourceId &&
-            (row._sourceType === "BANK" || row._sourceType === "INVOICE")
-          ),
+  ): ActionDropdownItem[] => {
+    const isBank = row._sourceType === "BANK" && Boolean(row._sourceId);
+    const isInvoice = row._sourceType === "INVOICE" && Boolean(row._sourceId);
+    const hasGenericSource = Boolean(row._sourceId);
+
+    const lookupItems: ActionItem[] = [
+      {
+        label: t("journalEntries.drawer.viewDetails", "Chi tiết"),
+        icon: <Eye className="w-3.5 h-3.5" />,
+        onClick: () => {
+          setSelectedRowData(row);
+          setSelectedJournalEntryId(row._entryNo || row._id);
+          setJournalDrawerMode("view");
         },
-        {
-          label: t("copyEntryNo", "Sao chép số chứng từ"),
-          icon: <Copy className="w-4 h-4" />,
-          onClick: () => {
-            if (row._entryNo && navigator.clipboard) {
-              navigator.clipboard.writeText(row._entryNo);
-            }
-          },
+      },
+    ];
+
+    if (isBank || isInvoice || hasGenericSource) {
+      lookupItems.push({
+        label: isBank
+          ? t("journalEntries.drawer.viewBankTxn", "Xem giao dịch ngân hàng")
+          : isInvoice
+            ? t(
+                "journalEntries.drawer.viewInvoice",
+                "Xem hóa đơn VAT liên quan",
+              )
+            : t("journalEntries.drawer.viewSourceDoc", "Xem chứng từ gốc"),
+        icon: isBank ? (
+          <Building2 className="w-3.5 h-3.5" />
+        ) : isInvoice ? (
+          <FileText className="w-3.5 h-3.5" />
+        ) : (
+          <Eye className="w-3.5 h-3.5" />
+        ),
+        onClick: () => {
+          if (isBank) {
+            setSelectedBankTxnId(row._sourceId!);
+          } else if (isInvoice) {
+            setSelectedInvoiceId(row._sourceId!);
+          }
         },
-      ],
-    },
-  ];
+      });
+    }
+
+    return [
+      {
+        groupLabel: t("journalEntries.drawer.groupTraCuu", "TRA CỨU"),
+        items: lookupItems,
+      },
+      {
+        groupLabel: t("journalEntries.drawer.groupThaoTac", "THAO TÁC"),
+        items: [
+          {
+            label: t("common.edit", "Chỉnh sửa"),
+            icon: <Pencil className="w-3.5 h-3.5" />,
+            onClick: () => {
+              setSelectedRowData(row);
+              setSelectedJournalEntryId(row._entryNo || row._id);
+              setJournalDrawerMode("edit");
+            },
+          },
+          {
+            label: t(
+              "journalEntries.drawer.copyEntryNo",
+              "Sao chép số chứng từ",
+            ),
+            icon: <Copy className="w-3.5 h-3.5" />,
+            onClick: () => {
+              if (row._entryNo && navigator.clipboard) {
+                navigator.clipboard.writeText(row._entryNo);
+              }
+            },
+            disabled: !row._entryNo,
+          },
+          {
+            label: t(
+              "journalEntries.drawer.copyReference",
+              "Sao chép mã tham chiếu",
+            ),
+            icon: <Copy className="w-3.5 h-3.5" />,
+            onClick: () => {
+              if (row._reference && navigator.clipboard) {
+                navigator.clipboard.writeText(row._reference);
+              }
+            },
+            disabled: !row._reference,
+          },
+        ],
+      },
+    ];
+  };
 
   const summaryRow = useMemo(() => {
     if (!listHook.data.length) return undefined;
@@ -438,6 +536,19 @@ export const GeneralJournalPage: React.FC = () => {
       <InvoiceDetailWrapper
         invoiceId={selectedInvoiceId}
         onClose={() => setSelectedInvoiceId(null)}
+      />
+      <JournalEntryDetailDrawer
+        open={!!selectedJournalEntryId}
+        journalEntryId={selectedJournalEntryId}
+        initialMode={journalDrawerMode}
+        initialData={selectedRowData}
+        onClose={() => {
+          setSelectedJournalEntryId(null);
+          setSelectedRowData(null);
+        }}
+        onSaved={() => {
+          listHook.refetch();
+        }}
       />
     </>
   );

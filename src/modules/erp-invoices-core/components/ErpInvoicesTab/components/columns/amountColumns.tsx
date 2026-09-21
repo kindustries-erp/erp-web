@@ -88,7 +88,7 @@ export function useAmountColumns({
                 ? () => <InvoiceItemsPopover items={row.items} />
                 : undefined
             }
-            textClassName="line-clamp-2 break-words whitespace-normal text-[11px] leading-[1.4] text-slate-700 dark:text-slate-300 py-0.5"
+            textClassName="truncate text-xs leading-normal text-slate-700 dark:text-slate-300"
           />
         ),
       },

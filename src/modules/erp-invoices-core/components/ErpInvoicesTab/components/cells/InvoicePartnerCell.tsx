@@ -29,13 +29,13 @@ export const InvoicePartnerCell = React.memo(function InvoicePartnerCell({
   const taxPrefix = taxCode ? "MST: " : "CCCD: ";
 
   return (
-    <div className="flex items-center gap-1.5 w-full min-w-0 py-0.5 leading-none">
-      {/* Right Column: 2 tightly packed single lines */}
+    <div className="flex items-center gap-1.5 w-full min-w-0">
+      {/* Right Column: 2 clearly readable single lines */}
       <div className="flex flex-col justify-center min-w-0 flex-1 gap-0.5">
         {/* Row 1: Partner Name with independent copy */}
         <div className="flex items-center gap-1 min-w-0 group/pname">
           <Tooltip content={partnerName || "—"}>
-            <span className="truncate text-[11px] font-semibold text-slate-800 dark:text-slate-200 leading-tight select-text">
+            <span className="truncate text-xs font-semibold text-slate-800 dark:text-slate-200 leading-tight select-text">
               {partnerName || "—"}
             </span>
           </Tooltip>

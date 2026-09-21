@@ -59,6 +59,7 @@ export const ALL_PAGE_KEYS: PageKey[] = [
   "vinfast-parts-stock",
   "vinfast-parts-oto-stock",
   "vinfast-parts-xemay-stock",
+  "custom-fields",
 ];
 
 const LEGACY_SLUGS: Record<string, PageKey> = {
@@ -75,6 +76,8 @@ const LEGACY_SLUGS: Record<string, PageKey> = {
   "nhat-ky-chung": "journal-entry",
   "general-journal": "journal-entry",
   "chart-of-accounts": "settings-accounts",
+  "settings-custom-fields": "custom-fields",
+  "module-config": "custom-fields",
 };
 
 export interface PageUrlParsedState {

@@ -583,7 +583,7 @@ export function useNavItems(): NavSearchItem[] {
       canReadInventoryVouchers
     ) {
       items.push({
-        key: "custom-fields" as any,
+        key: "custom-fields",
         label: t("nav.items.customFields", "Trường tùy chỉnh"),
         group: catalogGroup,
         section: settingsSection,
