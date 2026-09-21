@@ -54,9 +54,18 @@ export function ErpInvoiceSettlementProvider({
   const [activeSubTab, setActiveSubTab] =
     useState<SettlementSubTabKey>("bank_statement");
 
+  const initialHasLinked = Boolean(
+    (invoice?.voucherNetOffs && invoice.voucherNetOffs.length > 0) ||
+    (form?.pendingDocumentChanges &&
+      form.pendingDocumentChanges.some(
+        (p) => p.type === "BANK" && p.action !== "REMOVE",
+      )),
+  );
+
   // View Preset: "all" | "suggestions" | "selected" | "linked"
-  const [viewPreset, setViewPreset] =
-    useState<SettlementTableViewPreset>("all");
+  const [viewPreset, setViewPreset] = useState<SettlementTableViewPreset>(() =>
+    initialHasLinked ? "linked" : "all",
+  );
 
   // Popup xem chi tiết sao kê
   const [detailTxnId, setDetailTxnId] = useState<string | null>(null);
@@ -82,8 +91,15 @@ export function ErpInvoiceSettlementProvider({
     setNetOffAmounts({});
     setMaxAmounts({});
     setSelectedTxns({});
-    setViewPreset("all");
-  }, [invoiceId]);
+    const hasLinked = Boolean(
+      (invoice?.voucherNetOffs && invoice.voucherNetOffs.length > 0) ||
+      (form?.pendingDocumentChanges &&
+        form.pendingDocumentChanges.some(
+          (p) => p.type === "BANK" && p.action !== "REMOVE",
+        )),
+    );
+    setViewPreset(hasLinked ? "linked" : "all");
+  }, [invoiceId, invoice?.voucherNetOffs?.length]);
 
   // Table & Filter State
   const [page, setPage] = useState(1);
@@ -199,6 +215,12 @@ export function ErpInvoiceSettlementProvider({
         description: v.bankTransaction?.description || "—",
         transDate: v.bankTransaction?.transDate || null,
         amount: Number(v.netOffAmount || 0),
+        sourceType: v.bankTransaction?.sourceType || "BANK",
+        bankAccount: v.bankTransaction?.bankAccount,
+        accountNumber:
+          v.bankTransaction?.bankAccount?.accountNumber ||
+          v.bankTransaction?.accountNumber,
+        cashBook: v.bankTransaction?.cashBook,
         bankName:
           v.bankTransaction?.bankAccount?.bankName ||
           v.bankTransaction?.bankName ||
@@ -223,6 +245,7 @@ export function ErpInvoiceSettlementProvider({
           description: "Giao dịch đang chờ lưu...",
           transDate: new Date().toISOString(),
           amount: Number(p.amount || 0),
+          sourceType: "BANK",
           bankName: "Sao kê ERP",
           partnerName: "",
           isPending: true,
