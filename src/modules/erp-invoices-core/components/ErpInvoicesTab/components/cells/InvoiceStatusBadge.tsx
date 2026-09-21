@@ -22,18 +22,18 @@ export const TaxInvoiceStatusBadge = React.memo(function TaxInvoiceStatusBadge({
   switch (status) {
     case 1:
       badgeClass =
-        "w-[80px] border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100";
+        "w-[80px] border-slate-300 bg-slate-100 text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200";
       break;
     case 2:
     case 3:
     case 5:
       badgeClass =
-        "w-[80px] border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100";
+        "w-[80px] border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100 dark:border-amber-800/40 dark:bg-amber-950/40 dark:text-amber-300";
       break;
     case 4:
     case 6:
       badgeClass =
-        "w-[80px] border-red-200 bg-red-50 text-red-700 hover:bg-red-100";
+        "w-[80px] border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100 dark:border-rose-800/40 dark:bg-rose-950/40 dark:text-rose-300";
       break;
   }
 
@@ -62,7 +62,10 @@ export const TaxInvoiceStatusBadge = React.memo(function TaxInvoiceStatusBadge({
   return (
     <Tooltip content={tooltipContent}>
       <div className="inline-flex flex-col items-center justify-center gap-0.5 max-w-[130px]">
-        <Badge variant="ghost" className={`border ${badgeClass}`}>
+        <Badge
+          variant="ghost"
+          className={`border min-h-[18px] h-[18px] py-0 px-1.5 text-[10px] leading-none ${badgeClass}`}
+        >
           <span className="truncate block max-w-full">{lbl}</span>
         </Badge>
         {subText && (
@@ -89,7 +92,7 @@ export const TaxProcessStatusBadge = React.memo(function TaxProcessStatusBadge({
     <Tooltip content={lbl}>
       <Badge
         variant="outline"
-        className="w-[100px] bg-slate-50 text-slate-700 hover:bg-slate-100"
+        className="w-[100px] min-h-[18px] h-[18px] py-0 px-1 text-[10px] leading-none bg-slate-50 text-slate-700 hover:bg-slate-100"
       >
         <span className="truncate block max-w-full">{lbl}</span>
       </Badge>
@@ -111,10 +114,10 @@ export const PostingStatusBadge = React.memo(function PostingStatusBadge({
     <Tooltip content={lbl}>
       <Badge
         variant="ghost"
-        className={`border w-[110px] ${
+        className={`border w-[100px] min-h-[18px] h-[18px] py-0 px-1 text-[10px] leading-none ${
           isPosted
-            ? "border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100"
-            : "border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100"
+            ? "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:border-emerald-800/40 dark:bg-emerald-950/40 dark:text-emerald-300"
+            : "border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
         }`}
       >
         {lbl}
@@ -138,7 +141,7 @@ export const InvoiceValidBadge = React.memo(function InvoiceValidBadge({
     return (
       <Badge
         variant="ghost"
-        className="border border-emerald-200 bg-emerald-50 text-emerald-700 w-[85px] hover:bg-emerald-100"
+        className="border border-emerald-200 bg-emerald-50 text-emerald-700 w-[80px] min-h-[18px] h-[18px] py-0 px-1 text-[10px] leading-none hover:bg-emerald-100"
       >
         <span className="truncate block max-w-full">{validLabel}</span>
       </Badge>
@@ -148,7 +151,7 @@ export const InvoiceValidBadge = React.memo(function InvoiceValidBadge({
   return (
     <Badge
       variant="ghost"
-      className="border border-slate-200 bg-slate-50 text-slate-700 w-[85px] hover:bg-slate-100"
+      className="border border-slate-200 bg-slate-50 text-slate-700 w-[80px] min-h-[18px] h-[18px] py-0 px-1 text-[10px] leading-none hover:bg-slate-100"
     >
       <span className="truncate block max-w-full">{invalidLabel}</span>
     </Badge>

@@ -41,14 +41,14 @@ export const InvoiceNoCell = React.memo(function InvoiceNoCell({
   }
 
   return (
-    <div className="flex items-center gap-1.5 w-full min-w-0 py-0.5 leading-none">
+    <div className="flex items-center gap-1.5 w-full min-w-0">
       {/* Left Eye Icon: Vertically centered across both rows */}
       <Tooltip content="Xem chi tiết hóa đơn">
         <Button
           type="button"
           variant="ghost"
           size="sm"
-          className="h-6 w-6 p-0 flex-shrink-0 opacity-60 hover:opacity-100 hover:bg-transparent hover:text-primary transition-all focus:ring-0 focus-visible:ring-0 focus:outline-none"
+          className="h-6 w-6 p-0 flex-shrink-0 opacity-60 hover:opacity-100 hover:bg-muted/60 hover:text-primary rounded-xs transition-all focus:ring-0 focus-visible:ring-0 focus:outline-none"
           onClick={handleOpenDetail}
           aria-label="Xem chi tiết hóa đơn"
         >
@@ -56,13 +56,13 @@ export const InvoiceNoCell = React.memo(function InvoiceNoCell({
         </Button>
       </Tooltip>
 
-      {/* Right Column: 2 tightly packed single lines */}
+      {/* Right Column: 2 clearly readable lines with proper spacing */}
       <div className="flex flex-col justify-center min-w-0 flex-1 gap-0.5">
         {/* Row 1: Invoice No with independent copy */}
         <div className="flex items-center gap-1 min-w-0 group/invno">
           <Tooltip content={tooltipInvoiceNo}>
             <span
-              className="truncate text-[11px] font-semibold text-primary leading-tight select-text cursor-pointer hover:underline"
+              className="truncate text-xs font-semibold text-primary leading-tight select-text cursor-pointer hover:underline"
               onClick={handleOpenDetail}
             >
               {invoiceNo || "—"}
