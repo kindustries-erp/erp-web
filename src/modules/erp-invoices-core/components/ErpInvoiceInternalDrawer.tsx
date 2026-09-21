@@ -23,6 +23,7 @@ import {
   Paperclip,
   Wallet,
   FileText,
+  FileSpreadsheet,
 } from "lucide-react";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/Button";
@@ -265,12 +266,55 @@ export function ErpInvoiceInternalDrawer({
     );
   }, [detailInvoice]);
 
+  const [exportingExcel, setExportingExcel] = useState(false);
+
+  const handleExportSingleExcel = useCallback(async () => {
+    if (!detailInvoice?.id) return;
+    try {
+      setExportingExcel(true);
+      toast.loading(t("exportingExcel", "Đang xuất file Excel..."), {
+        id: "export-single-invoice",
+      });
+      const blob = await erpInvoicesCoreApi.exportExcel({
+        id: detailInvoice.id,
+        direction: (detailInvoice.direction as any) || direction,
+      });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      const safeInvoiceNo = detailInvoice.invoiceNo
+        ? detailInvoice.invoiceNo.replace(/[^a-zA-Z0-9_-]/g, "_")
+        : detailInvoice.id;
+      const safeSerial = detailInvoice.serialNo
+        ? `_${detailInvoice.serialNo.replace(/[^a-zA-Z0-9_-]/g, "_")}`
+        : "";
+      a.download = `Hoa_don_${safeInvoiceNo}${safeSerial}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success(t("exportExcelSuccess", "Xuất file Excel thành công!"), {
+        id: "export-single-invoice",
+      });
+    } catch (err: any) {
+      toast.error(
+        err?.message || t("exportExcelError", "Lỗi xuất file Excel"),
+        { id: "export-single-invoice" },
+      );
+    } finally {
+      setExportingExcel(false);
+    }
+  }, [detailInvoice, direction, t]);
+
   // Dropdown menu items for the left side of the footer (View mode only)
   const footerLeft = useMemo(() => {
-    if (editMode || !onSyncDetail) return undefined;
+    if (editMode) return undefined;
+    if (!onSyncDetail && !detailInvoice) return undefined;
 
-    const dropdownItems: ActionDropdownItem[] = [
-      {
+    const dropdownItems: ActionDropdownItem[] = [];
+
+    if (onSyncDetail) {
+      dropdownItems.push({
         groupLabel: "ĐỒNG BỘ",
         items: [
           {
@@ -284,8 +328,28 @@ export function ErpInvoiceInternalDrawer({
             disabled: loadingDetail,
           },
         ],
-      },
-    ];
+      });
+    }
+
+    if (detailInvoice?.id) {
+      dropdownItems.push({
+        groupLabel: "XUẤT DỮ LIỆU",
+        items: [
+          {
+            label: "Xuất Excel hóa đơn",
+            icon: (
+              <FileSpreadsheet
+                className={`w-4 h-4 text-emerald-600 ${exportingExcel ? "animate-spin" : ""}`}
+              />
+            ),
+            onClick: handleExportSingleExcel,
+            disabled: exportingExcel,
+          },
+        ],
+      });
+    }
+
+    if (dropdownItems.length === 0) return undefined;
 
     return (
       <ActionDropdown
@@ -294,7 +358,7 @@ export function ErpInvoiceInternalDrawer({
         customTrigger={
           <button
             type="button"
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium border border-[color:var(--border)] bg-white hover:bg-[color:var(--bg-muted)] text-[color:var(--fg)] shadow-sm transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium border border-[color:var(--border)] bg-white hover:bg-[color:var(--bg-muted)] text-[color:var(--fg)] shadow-sm transition-colors cursor-pointer"
           >
             <span className="font-semibold text-[color:var(--fg)]">
               Thao tác
@@ -304,7 +368,14 @@ export function ErpInvoiceInternalDrawer({
         }
       />
     );
-  }, [editMode, onSyncDetail, loadingDetail]);
+  }, [
+    editMode,
+    onSyncDetail,
+    loadingDetail,
+    detailInvoice,
+    exportingExcel,
+    handleExportSingleExcel,
+  ]);
 
   const formAccountingEnabled = (form as any)?.accountingEnabled;
 

@@ -97,6 +97,8 @@ describe("ErpInvoiceSettlementContext", () => {
     expect(result.current.paymentPercent).toBe(40);
     expect(result.current.isPaidFull).toBe(false);
     expect(result.current.activeVouchers).toHaveLength(1);
+    expect(result.current.activeVouchers[0].sourceType).toBe("BANK");
+    expect(result.current.viewPreset).toBe("linked");
 
     // Toggle row selection
     const mockTxn = {
