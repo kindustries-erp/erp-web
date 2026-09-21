@@ -30,6 +30,24 @@ export interface ChartOfAccountItem {
   updatedAt?: string | null;
 }
 
+export interface UpdateJournalEntryLinePayload {
+  id?: string;
+  accountId: string;
+  debit: number;
+  credit: number;
+  description?: string;
+}
+
+export interface UpdateJournalEntryPayload {
+  entryNo?: string;
+  date?: string;
+  documentDate?: string;
+  description?: string;
+  subjectName?: string;
+  branchId?: string;
+  lines?: UpdateJournalEntryLinePayload[];
+}
+
 export const accountingApi = {
   getJournalEntries: async (params: any) => {
     const cleanParams = Object.fromEntries(
@@ -80,6 +98,17 @@ export const accountingApi = {
   getJournalEntryById: async (id: string) => {
     const res = await axiosInstance.get(
       `/api/v1/accounting-core/journal-entries/${id}`,
+    );
+    return res.data.data;
+  },
+
+  updateJournalEntry: async (
+    id: string,
+    payload: UpdateJournalEntryPayload,
+  ) => {
+    const res = await axiosInstance.patch(
+      `/api/v1/accounting-core/journal-entries/${id}`,
+      payload,
     );
     return res.data.data;
   },
