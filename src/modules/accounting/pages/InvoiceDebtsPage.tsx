@@ -222,7 +222,7 @@ export function InvoiceDebtsPage() {
             text={row.partnerName || "—"}
             tooltip={true}
             enableCopy={true}
-            textClassName="whitespace-normal line-clamp-2 break-words text-foreground font-medium text-xs leading-normal select-text"
+            textClassName="truncate text-foreground font-medium text-xs leading-tight select-text"
             onDetailClick={(e) => {
               e?.stopPropagation();
               openDetail(row.taxCode, row.partnerName);
@@ -285,9 +285,9 @@ export function InvoiceDebtsPage() {
                   e.stopPropagation();
                   openDetail(row.taxCode, row.partnerName);
                 }}
-                className="inline-flex items-center justify-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-100/90 hover:bg-slate-200/90 dark:bg-slate-800/80 dark:hover:bg-slate-700 border border-slate-200/80 dark:border-slate-700/80 text-foreground transition-all duration-150 cursor-pointer group shadow-xs hover:scale-105"
+                className="inline-flex items-center justify-center gap-1 px-2 py-0 h-[20px] rounded-full bg-slate-100/90 hover:bg-slate-200/90 dark:bg-slate-800/80 dark:hover:bg-slate-700 border border-slate-200/80 dark:border-slate-700/80 text-foreground transition-all duration-150 cursor-pointer group shadow-xs hover:scale-105"
               >
-                <FileText className="w-3 h-3 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
+                <FileText className="w-2.5 h-2.5 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
                 <span className="tabular-nums font-mono font-semibold text-xs text-foreground">
                   {row.invoiceCount.toLocaleString("vi-VN")}
                 </span>
@@ -380,13 +380,13 @@ export function InvoiceDebtsPage() {
 
           return (
             <Tooltip content={tooltipText}>
-              <div className="flex flex-col gap-1 w-full py-0.5 justify-center cursor-default">
+              <div className="flex flex-col gap-0.5 w-full py-0 justify-center cursor-default">
                 <div className="flex items-center justify-end text-xs tabular-nums leading-tight">
                   <span className="font-semibold text-foreground font-mono">
                     {money(total)}
                   </span>
                 </div>
-                <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1 overflow-hidden">
                   <div
                     className={cn(
                       "h-full rounded-full transition-all duration-300",

@@ -42,6 +42,7 @@ export const navEn = {
     reportLedger: "General Ledger",
     reportJournal: "General Journal",
     catalog: "General Settings",
+    customFields: "Custom Fields",
     catalogFunds: "Cash Funds",
     catalogBank: "Bank Accounts",
     catalogAccounts: "Chart of Accounts",

@@ -9,6 +9,7 @@ export const breadcrumbVi = {
   bankStatementBank: "Sao kê Ngân hàng",
   bankStatementCash: "Sao kê Tiền mặt",
   catalog: "Thiết lập chung",
+  customFields: "Trường tùy chỉnh",
   debt: "Công nợ",
   debtReceivable: "Phải thu",
   debtPayable: "Phải trả",
