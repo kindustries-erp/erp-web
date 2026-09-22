@@ -723,16 +723,6 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
               "Lỗi hạch toán tự động sau khi lưu.",
           );
         }
-      } else if (
-        !wasPosted &&
-        form.branchId &&
-        (linkedCount > 0 || (form.totalAmount || 0) > 0)
-      ) {
-        try {
-          await erpInvoicesCoreApi.autoPostStandard(invoiceIdToProcess);
-        } catch (autoErr: any) {
-          console.warn("Auto-post standard failed (non-blocking)", autoErr);
-        }
       }
 
       if (!detailInvoice) {
