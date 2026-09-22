@@ -25,6 +25,7 @@ import { useInvoiceDebtsList } from "../hooks/useInvoiceDebtsList";
 import { invoiceDebtsApi, type InvoiceDebtItem } from "../api/invoiceDebtsApi";
 import { InvoicePartnerDebtDetailDrawer } from "../components/InvoicePartnerDebtDetailDrawer";
 import { InvoiceDebtsExportDrawer } from "../components/InvoiceDebtsExportDrawer";
+import { InvoiceDebtsDashboardTab } from "../components/InvoiceDebtsDashboardTab";
 import { useHasAnyPermission } from "@/shared/hooks/useHasPermission";
 import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
 import { Forbidden } from "@/pages/Forbidden";
@@ -36,22 +37,31 @@ export function InvoiceDebtsPage() {
     ErpAction.READ,
   );
 
-  // 1. Tab State synchronized with URL Query Param (?tab=customers | ?tab=suppliers)
-  const [activeTab, setActiveTab] = useState<"customers" | "suppliers">(() => {
+  // 1. Tab State synchronized with URL Query Param (?tab=overview | ?tab=customers | ?tab=suppliers)
+  const [activeTab, setActiveTab] = useState<
+    "overview" | "customers" | "suppliers"
+  >(() => {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
       const tabParam = params.get("tab");
+      if (tabParam === "customers") return "customers";
       if (tabParam === "suppliers") return "suppliers";
+      if (tabParam === "overview") return "overview";
     }
-    return "customers";
+    return "overview";
   });
 
   const handleTabChange = useCallback((newTab: string) => {
-    const validTab = newTab === "suppliers" ? "suppliers" : "customers";
+    const validTab =
+      newTab === "customers"
+        ? "customers"
+        : newTab === "suppliers"
+          ? "suppliers"
+          : "overview";
     setActiveTab(validTab);
     if (typeof window !== "undefined") {
       const url = new URL(window.location.href);
-      if (validTab === "customers") {
+      if (validTab === "overview") {
         url.searchParams.delete("tab");
       } else {
         url.searchParams.set("tab", validTab);
@@ -62,6 +72,10 @@ export function InvoiceDebtsPage() {
 
   const pageTabs: TabItem[] = useMemo(
     () => [
+      {
+        value: "overview",
+        label: t("debts:tabs.overview", "Tổng quan"),
+      },
       {
         value: "customers",
         label: t("debts:tabs.customers", "Khách hàng"),
@@ -77,7 +91,9 @@ export function InvoiceDebtsPage() {
   const isCustomer = activeTab === "customers";
 
   // 2. Data Hook
-  const listHook = useInvoiceDebtsList(activeTab);
+  const listHook = useInvoiceDebtsList(
+    activeTab === "suppliers" ? "suppliers" : "customers",
+  );
 
   // 3. Detail Drawer & Export Drawer State
   const [selectedPartner, setSelectedPartner] = useState<{
@@ -1093,57 +1109,67 @@ export function InvoiceDebtsPage() {
 
   return (
     <>
-      <SpreadsheetPageTemplate<InvoiceDebtItem>
-        title={t("debts:title", "Công nợ")}
-        desc={t(
-          "debts:desc",
-          "Theo dõi, đối soát và phân tích tổng hợp công nợ phải thu, phải trả và tuổi nợ theo Hóa đơn điện tử",
-        )}
-        icon={<ReceiptText className="w-5 h-5 text-primary" />}
-        tabs={pageTabs}
-        activeTab={activeTab}
-        onTabChange={handleTabChange}
-        tableId={
-          activeTab === "suppliers"
-            ? "invoice-debts-table-suppliers"
-            : "invoice-debts-table-customers"
-        }
-        items={listHook.data}
-        columns={columns}
-        getRowKey={(row) => `${row.partnerName}_${row.taxCode || "NO_MST"}`}
-        loading={listHook.isLoading}
-        emptyLabel={
-          isCustomer
-            ? t(
-                "debts:emptyCustomers",
-                "Không tìm thấy dữ liệu công nợ khách hàng",
-              )
-            : t(
-                "debts:emptySuppliers",
-                "Không tìm thấy dữ liệu công nợ nhà cung cấp",
-              )
-        }
-        page={listHook.page}
-        pageSize={listHook.pageSize}
-        total={listHook.total}
-        totalPages={listHook.totalPages}
-        onPage={(p) => listHook.setPage(p)}
-        onPageSize={(s) => {
-          listHook.setPageSize(s);
-          listHook.setPage(1);
-        }}
-        onRefresh={() => listHook.refetch()}
-        createLabel={t("debts:exportExcel", "Xuất Excel")}
-        createIcon={
-          <FileSpreadsheet className="w-4 h-4 mr-1 text-primary-fg/80" />
-        }
-        onCreate={() => setExportDrawerOpen(true)}
-        createActions={createActions}
-        activeFilterCount={listHook.activeFilterCount}
-        onClearAllFilters={listHook.clearAllFilters}
-        rowActions={getRowActions}
-        summaryRow={summaryRow}
-      />
+      {activeTab === "overview" ? (
+        <InvoiceDebtsDashboardTab
+          tabs={pageTabs}
+          activeTab={activeTab}
+          onTabChange={handleTabChange}
+          onExportClick={() => setExportDrawerOpen(true)}
+          onOpenPartnerDetail={openDetail}
+        />
+      ) : (
+        <SpreadsheetPageTemplate<InvoiceDebtItem>
+          title={t("debts:title", "Công nợ")}
+          desc={t(
+            "debts:desc",
+            "Theo dõi, đối soát và phân tích tổng hợp công nợ phải thu, phải trả và tuổi nợ theo Hóa đơn điện tử",
+          )}
+          icon={<ReceiptText className="w-5 h-5 text-primary" />}
+          tabs={pageTabs}
+          activeTab={activeTab}
+          onTabChange={handleTabChange}
+          tableId={
+            activeTab === "suppliers"
+              ? "invoice-debts-table-suppliers"
+              : "invoice-debts-table-customers"
+          }
+          items={listHook.data}
+          columns={columns}
+          getRowKey={(row) => `${row.partnerName}_${row.taxCode || "NO_MST"}`}
+          loading={listHook.isLoading}
+          emptyLabel={
+            isCustomer
+              ? t(
+                  "debts:emptyCustomers",
+                  "Không tìm thấy dữ liệu công nợ khách hàng",
+                )
+              : t(
+                  "debts:emptySuppliers",
+                  "Không tìm thấy dữ liệu công nợ nhà cung cấp",
+                )
+          }
+          page={listHook.page}
+          pageSize={listHook.pageSize}
+          total={listHook.total}
+          totalPages={listHook.totalPages}
+          onPage={(p) => listHook.setPage(p)}
+          onPageSize={(s) => {
+            listHook.setPageSize(s);
+            listHook.setPage(1);
+          }}
+          onRefresh={() => listHook.refetch()}
+          createLabel={t("debts:exportExcel", "Xuất Excel")}
+          createIcon={
+            <FileSpreadsheet className="w-4 h-4 mr-1 text-primary-fg/80" />
+          }
+          onCreate={() => setExportDrawerOpen(true)}
+          createActions={createActions}
+          activeFilterCount={listHook.activeFilterCount}
+          onClearAllFilters={listHook.clearAllFilters}
+          rowActions={getRowActions}
+          summaryRow={summaryRow}
+        />
+      )}
 
       {/* Detail Drawer */}
       <InvoicePartnerDebtDetailDrawer

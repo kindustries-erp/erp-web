@@ -9,8 +9,60 @@ export const debtsEn = {
   remaining: "Remaining",
 
   tabs: {
+    overview: "Overview",
     customers: "Customers",
     suppliers: "Suppliers",
+  },
+
+  dashboard: {
+    title: "Debts Overview",
+    desc: "Comprehensive receivables, payables, cashflow time horizon forecast and aging risk analytics",
+    totalReceivable: "Customer Receivables",
+    remainingReceivable: "Remaining Receivables",
+    totalPayable: "Supplier Payables",
+    remainingPayable: "Remaining Payables",
+    netDebtPosition: "Net Debt Position",
+    netSurplus: "Net Receivables Surplus",
+    netDeficit: "Net Payables Pressure",
+    netDifference: "Receivables minus Payables",
+    collectionRate: "Collection Rate",
+    paymentRate: "Payment Rate",
+
+    // Time horizons
+    timeHorizonsTitle: "Cashflow Time Horizons & Maturity Forecast",
+    nextWeekDue: "Next 7 Days Forecast",
+    nextMonthDue: "Next 30 Days Plan",
+    overdue30To90: "Overdue 31-90 Days (Action Required)",
+    criticalOverdue90Plus: "Critical Overdue >90 Days (Bad Debt Risk)",
+    inTermDue: "In Term",
+    overdueDue: "Overdue",
+    expectedIn: "Est. Inflow",
+    expectedOut: "Est. Outflow",
+    netFlow: "Net",
+
+    // Charts
+    trendChartTitle: "Monthly Cashflow Trend & Net Position",
+    agingMatrixTitle: "Aging Comparison Matrix (Receivables vs Payables)",
+    agingChartTitle: "System-wide Debt Aging Breakdown",
+    topRiskTitle: "Top 5 Debt Risk & Priority Exposures",
+    topCustomersTab: "Top Debt Customers",
+    topSuppliersTab: "Top Payables Suppliers",
+
+    cashIn: "Sales (Inflow)",
+    cashOut: "Purchases (Outflow)",
+    netCash: "Net Cashflow",
+    receivableLegend: "Receivables (Customers)",
+    payableLegend: "Payables (Suppliers)",
+
+    aging0_30: "0-30 days",
+    aging31_60: "31-60 days",
+    aging61_90: "61-90 days",
+    agingOver90: ">90 days",
+
+    viewDetail: "View partner details",
+    noData: "No data available",
+    overdueLabel: "Overdue",
+    maxAgingLabel: "Max aging",
   },
 
   columns: {

@@ -9,8 +9,60 @@ export const debtsVi = {
   remaining: "Còn nợ",
 
   tabs: {
+    overview: "Tổng quan",
     customers: "Khách hàng",
     suppliers: "Nhà cung cấp",
+  },
+
+  dashboard: {
+    title: "Tổng quan Công nợ",
+    desc: "Tổng hợp tình hình phải thu, phải trả, dự báo dòng tiền theo mốc thời gian và rủi ro tuổi nợ",
+    totalReceivable: "Phải thu Khách hàng",
+    remainingReceivable: "Còn phải thu",
+    totalPayable: "Phải trả Nhà cung cấp",
+    remainingPayable: "Còn phải trả",
+    netDebtPosition: "Vị thế Công nợ ròng",
+    netSurplus: "Thặng dư phải thu",
+    netDeficit: "Áp lực chi trả",
+    netDifference: "Chênh lệch Phải thu - Phải trả",
+    collectionRate: "Tỷ lệ thu hồi",
+    paymentRate: "Tỷ lệ chi trả",
+
+    // Time horizons
+    timeHorizonsTitle: "Dự báo & Phân bổ Dòng tiền theo Mốc thời gian",
+    nextWeekDue: "Dự báo Tuần tới (7 ngày)",
+    nextMonthDue: "Kế hoạch Tháng tới (30 ngày)",
+    overdue30To90: "Quá hạn 31-90 ngày (Cần đôn đốc)",
+    criticalOverdue90Plus: "Quá hạn >90 ngày (Cảnh báo nợ khó đòi)",
+    inTermDue: "Trong hạn",
+    overdueDue: "Quá hạn",
+    expectedIn: "Dự thu",
+    expectedOut: "Dự chi",
+    netFlow: "Ròng",
+
+    // Charts
+    trendChartTitle: "Biến động Dòng tiền Mua/Bán & Vị thế ròng theo tháng",
+    agingMatrixTitle: "Ma trận so sánh Tuổi nợ (Phải thu vs Phải trả)",
+    agingChartTitle: "Cơ cấu Phân bổ Tuổi nợ Toàn hệ thống",
+    topRiskTitle: "Top 5 Đầu mối Rủi ro & Áp lực Công nợ",
+    topCustomersTab: "Top Khách hàng nợ",
+    topSuppliersTab: "Top Nhà cung cấp cần trả",
+
+    cashIn: "Bán ra (Thu)",
+    cashOut: "Mua vào (Chi)",
+    netCash: "Dòng tiền ròng",
+    receivableLegend: "Phải thu (KH)",
+    payableLegend: "Phải trả (NCC)",
+
+    aging0_30: "0-30 ngày",
+    aging31_60: "31-60 ngày",
+    aging61_90: "61-90 ngày",
+    agingOver90: ">90 ngày",
+
+    viewDetail: "Xem chi tiết đối tác",
+    noData: "Chưa có dữ liệu",
+    overdueLabel: "Quá hạn",
+    maxAgingLabel: "Tuổi nợ max",
   },
 
   columns: {

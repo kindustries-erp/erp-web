@@ -15,25 +15,59 @@ export const getDefaultPageSize = (): number => {
   return 20;
 };
 
+export type InvoiceDebtTabKey = "customers" | "suppliers";
+
+export interface InvoiceDebtTabState {
+  page: number;
+  pageSize: number;
+  search: string;
+  sorts: string[];
+  dateFrom: string;
+  dateTo: string;
+  columnFilters: Record<string, string[]>;
+  columnSearch: Record<string, string>;
+}
+
+export const createDefaultDebtTabState = (): InvoiceDebtTabState => ({
+  page: 1,
+  pageSize: getDefaultPageSize(),
+  search: "",
+  sorts: [],
+  dateFrom: "",
+  dateTo: "",
+  columnFilters: {},
+  columnSearch: {},
+});
+
 export function useInvoiceDebtsList(
-  activeTab: "customers" | "suppliers" = "customers",
+  activeTab: InvoiceDebtTabKey = "customers",
   branchId?: string,
 ) {
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState<number>(getDefaultPageSize);
-  const [search, setSearch] = useState<string>("");
-  const [sorts, setSorts] = useState<string[]>([]);
-  const [dateFrom, setDateFrom] = useState<string>("");
-  const [dateTo, setDateTo] = useState<string>("");
-  const [columnFilters, setColumnFilters] = useState<Record<string, string[]>>(
-    {},
-  );
-  const [columnSearch, setColumnSearchState] = useState<Record<string, string>>(
-    {},
-  );
+  const [tabStates, setTabStates] = useState<
+    Record<InvoiceDebtTabKey, InvoiceDebtTabState>
+  >({
+    customers: createDefaultDebtTabState(),
+    suppliers: createDefaultDebtTabState(),
+  });
 
   const partnerType: InvoicePartnerType =
     activeTab === "suppliers" ? "SUPPLIER" : "CUSTOMER";
+
+  // Current tab state (with safety fallback)
+  const currentTabState = useMemo(() => {
+    return tabStates[activeTab] || createDefaultDebtTabState();
+  }, [tabStates, activeTab]);
+
+  const {
+    page,
+    pageSize,
+    search,
+    sorts,
+    dateFrom,
+    dateTo,
+    columnFilters,
+    columnSearch,
+  } = currentTabState;
 
   // Parse sort for backend
   const { sortBy, sortOrder } = useMemo(() => {
@@ -85,45 +119,144 @@ export function useInvoiceDebtsList(
     staleTime: DEFAULT_STALE_TIME,
   });
 
-  const setSort = useCallback((key: string, state: "asc" | "desc" | "none") => {
-    setSorts((prev) => {
-      const filtered = prev.filter((s) => s !== key && s !== `-${key}`);
-      if (state === "asc") return [...filtered, key];
-      if (state === "desc") return [...filtered, `-${key}`];
-      return filtered;
-    });
-    setPage(1);
-  }, []);
+  const setPage = useCallback(
+    (updater: number | ((prev: number) => number)) => {
+      setTabStates((prev) => {
+        const cur = prev[activeTab] || createDefaultDebtTabState();
+        const nextVal =
+          typeof updater === "function" ? updater(cur.page) : updater;
+        return {
+          ...prev,
+          [activeTab]: {
+            ...cur,
+            page: nextVal,
+          },
+        };
+      });
+    },
+    [activeTab],
+  );
 
-  const setColumnFilter = useCallback((key: string, vals: string[]) => {
-    setColumnFilters((prev) => {
-      if (!vals || vals.length === 0) {
-        const next = { ...prev };
-        delete next[key];
-        return next;
-      }
-      return { ...prev, [key]: vals };
-    });
-    setPage(1);
-  }, []);
+  const setPageSize = useCallback(
+    (updater: number | ((prev: number) => number)) => {
+      setTabStates((prev) => {
+        const cur = prev[activeTab] || createDefaultDebtTabState();
+        const nextVal =
+          typeof updater === "function" ? updater(cur.pageSize) : updater;
+        return {
+          ...prev,
+          [activeTab]: {
+            ...cur,
+            pageSize: nextVal,
+            page: 1,
+          },
+        };
+      });
+    },
+    [activeTab],
+  );
 
-  const setColumnSearch = useCallback((key: string, val: string) => {
-    setColumnSearchState((prev) => {
-      if (!val || !val.trim()) {
-        const next = { ...prev };
-        delete next[key];
-        return next;
-      }
-      return { ...prev, [key]: val };
-    });
-    setPage(1);
-  }, []);
+  const setSearch = useCallback(
+    (newSearch: string) => {
+      setTabStates((prev) => {
+        const cur = prev[activeTab] || createDefaultDebtTabState();
+        return {
+          ...prev,
+          [activeTab]: {
+            ...cur,
+            search: newSearch,
+            page: 1,
+          },
+        };
+      });
+    },
+    [activeTab],
+  );
 
-  const setDateRange = useCallback((from?: string, to?: string) => {
-    setDateFrom(from || "");
-    setDateTo(to || "");
-    setPage(1);
-  }, []);
+  const setSort = useCallback(
+    (key: string, state: "asc" | "desc" | "none") => {
+      setTabStates((prev) => {
+        const cur = prev[activeTab] || createDefaultDebtTabState();
+        const filtered = cur.sorts.filter((s) => s !== key && s !== `-${key}`);
+        let nextSorts = filtered;
+        if (state === "asc") nextSorts = [...filtered, key];
+        if (state === "desc") nextSorts = [...filtered, `-${key}`];
+        return {
+          ...prev,
+          [activeTab]: {
+            ...cur,
+            sorts: nextSorts,
+            page: 1,
+          },
+        };
+      });
+    },
+    [activeTab],
+  );
+
+  const setColumnFilter = useCallback(
+    (key: string, vals: string[]) => {
+      setTabStates((prev) => {
+        const cur = prev[activeTab] || createDefaultDebtTabState();
+        const nextFilters = { ...cur.columnFilters };
+        if (!vals || vals.length === 0) {
+          delete nextFilters[key];
+        } else {
+          nextFilters[key] = vals;
+        }
+        return {
+          ...prev,
+          [activeTab]: {
+            ...cur,
+            columnFilters: nextFilters,
+            page: 1,
+          },
+        };
+      });
+    },
+    [activeTab],
+  );
+
+  const setColumnSearch = useCallback(
+    (key: string, val: string) => {
+      setTabStates((prev) => {
+        const cur = prev[activeTab] || createDefaultDebtTabState();
+        const nextSearch = { ...cur.columnSearch };
+        if (!val || !val.trim()) {
+          delete nextSearch[key];
+        } else {
+          nextSearch[key] = val;
+        }
+        return {
+          ...prev,
+          [activeTab]: {
+            ...cur,
+            columnSearch: nextSearch,
+            page: 1,
+          },
+        };
+      });
+    },
+    [activeTab],
+  );
+
+  const setDateRange = useCallback(
+    (from?: string, to?: string) => {
+      setTabStates((prev) => {
+        const cur = prev[activeTab] || createDefaultDebtTabState();
+        return {
+          ...prev,
+          [activeTab]: {
+            ...cur,
+            dateFrom: from || "",
+            dateTo: to || "",
+            page: 1,
+          },
+        };
+      });
+    },
+    [activeTab],
+  );
 
   const activeFilterCount = useMemo(() => {
     let count = 0;
@@ -139,13 +272,22 @@ export function useInvoiceDebtsList(
   }, [columnFilters, columnSearch, dateFrom, dateTo, search]);
 
   const clearAllFilters = useCallback(() => {
-    setColumnFilters({});
-    setColumnSearchState({});
-    setDateFrom("");
-    setDateTo("");
-    setSearch("");
-    setPage(1);
-  }, []);
+    setTabStates((prev) => {
+      const cur = prev[activeTab] || createDefaultDebtTabState();
+      return {
+        ...prev,
+        [activeTab]: {
+          ...cur,
+          columnFilters: {},
+          columnSearch: {},
+          dateFrom: "",
+          dateTo: "",
+          search: "",
+          page: 1,
+        },
+      };
+    });
+  }, [activeTab]);
 
   const emptySummary: InvoiceDebtSummary = {
     totalPartners: 0,
