@@ -351,19 +351,12 @@ export function SidebarNav({
         <NavSection collapsed={c} label={t("nav.sections.garage", "GARAGE")}>
           <NavItem
             collapsed={c}
-            icon={
-              <LayoutDashboard className="w-4 h-4 opacity-65 flex-shrink-0" />
-            }
-            label={t("nav.items.garageDashboard", "Tổng quan Garage")}
-            active={currentPage === "garage-dashboard"}
-            onClick={() => navTo("garage-dashboard")}
-            contextPage="garage-dashboard"
-          />
-          <NavItem
-            collapsed={c}
             icon={<Car className="w-4 h-4 opacity-65 flex-shrink-0" />}
             label={t("nav.items.garageCases", "Phiếu dịch vụ")}
-            active={currentPage === "garage-cases"}
+            active={
+              currentPage === "garage-cases" ||
+              currentPage === "garage-dashboard"
+            }
             onClick={() => navTo("garage-cases")}
             contextPage="garage-cases"
           />

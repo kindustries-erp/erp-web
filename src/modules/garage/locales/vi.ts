@@ -1,4 +1,8 @@
 export const garageVi = {
+  tabs: {
+    dashboard: "Tổng quan",
+    cases: "Phiếu dịch vụ",
+  },
   dashboard: {
     title: "Tổng quan Garage",
     desc: "Báo cáo tổng quan hiệu quả hoạt động xưởng dịch vụ, doanh thu, chi phí và tình trạng phiếu sửa chữa",

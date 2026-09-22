@@ -1,4 +1,8 @@
 export const garageEn = {
+  tabs: {
+    dashboard: "Overview",
+    cases: "Service Cases",
+  },
   dashboard: {
     title: "Garage Dashboard",
     desc: "Overview of workshop performance, revenue, cost, and service order statuses",

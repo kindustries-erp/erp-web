@@ -62,8 +62,19 @@ import {
   DEFAULT_GARAGE_CASE_COLUMN_VISIBILITY,
 } from "../utils/garageCaseViewPresets";
 import { Button } from "@/shared/components/ui/Button";
+import type { TabItem } from "@/shared/components/PageLayout";
 
-export function GarageCases() {
+export interface GarageCasesProps {
+  tabs?: TabItem[];
+  activeTab?: string;
+  onTabChange?: (val: string) => void;
+}
+
+export function GarageCases({
+  tabs,
+  activeTab,
+  onTabChange,
+}: GarageCasesProps = {}) {
   const { t } = useTranslation("garage");
   const queryClient = useQueryClient();
   const { selectedBranchId, setSelectedBranchId } = useGarageStore();
@@ -2113,6 +2124,9 @@ export function GarageCases() {
         desc={t("cases.desc")}
         icon={<FileText className="w-5 h-5 text-slate-700" />}
         tableId="garage-cases-table"
+        tabs={tabs}
+        activeTab={activeTab}
+        onTabChange={onTabChange}
         items={visibleCases}
         columns={columns}
         defaultColumnVisibility={defaultColumnVisibility}
