@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import { useGarageTabLogic } from "../components/GarageTab/useGarageTabLogic";
-import { useAppStore } from "@/core/config/appStore";
 
 describe("useGarageTabLogic Routing & 2-Way URL Sync", () => {
   beforeEach(() => {

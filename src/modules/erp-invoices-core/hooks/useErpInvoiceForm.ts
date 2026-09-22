@@ -448,16 +448,6 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
       return;
     }
 
-    const pendingChanges = form.pendingDocumentChanges || [];
-    let linkedCount =
-      (detailInvoice?.voucherNetOffs?.length || 0) +
-      ((detailInvoice as any)?.relatedPos?.length || 0);
-
-    pendingChanges.forEach((p) => {
-      if (p.action === "ADD") linkedCount++;
-      else if (p.action === "REMOVE") linkedCount--;
-    });
-
     setSaving(true);
     setFormError(null);
     try {
