@@ -19,6 +19,7 @@ export interface UseInvoiceDebtsDashboardReturn {
   summary?: InvoiceDebtsAnalyticsSummary;
   agingComparison: InvoiceAgingComparisonItem[];
   timeHorizons?: InvoiceTimeHorizons;
+  forecastHorizons?: import("../api/invoiceDashboardApi").ForecastHorizonsData;
   cashTrend: (InvoiceCashTrendItem & { netCash: number })[];
   topReceivableCustomers: TopDebtPartnerItem[];
   topPayableSuppliers: TopDebtPartnerItem[];
@@ -52,6 +53,7 @@ export function useInvoiceDebtsDashboard({
     summary: data?.summary,
     agingComparison: data?.agingComparison || [],
     timeHorizons: data?.timeHorizons,
+    forecastHorizons: data?.forecastHorizons,
     cashTrend: data?.cashTrend || [],
     topReceivableCustomers: data?.topReceivableCustomers || [],
     topPayableSuppliers: data?.topPayableSuppliers || [],

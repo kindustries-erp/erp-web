@@ -10,6 +10,7 @@ import {
   Clock,
   AlertTriangle,
   AlertOctagon,
+  Brain,
   ExternalLink,
 } from "lucide-react";
 import { DashboardTemplate } from "@/shared/components/DashboardTemplate";
@@ -25,6 +26,9 @@ import { money } from "@/shared/utils/format";
 import { cn } from "@/shared/utils";
 import type { TabItem } from "@/shared/components/PageLayout";
 import { useInvoiceDebtsDashboard } from "../hooks/useInvoiceDebtsDashboard";
+import { InvoiceTimeHorizonDetailDrawer } from "./InvoiceTimeHorizonDetailDrawer";
+import { DebtAgingExplanationPopover } from "./DebtAgingExplanationPopover";
+import type { TimeHorizonKey } from "../api/invoiceDashboardApi";
 
 export interface InvoiceDebtsDashboardTabProps {
   tabs?: TabItem[];
@@ -45,6 +49,10 @@ export function InvoiceDebtsDashboardTab({
   const [topRiskTab, setTopRiskTab] = useState<"customers" | "suppliers">(
     "customers",
   );
+  const [viewMode, setViewMode] = useState<"aging" | "forecast">("aging");
+  const [selectedHorizon, setSelectedHorizon] = useState<TimeHorizonKey | null>(
+    null,
+  );
 
   const filterConfig = useMemo(
     () => ({
@@ -61,6 +69,7 @@ export function InvoiceDebtsDashboardTab({
     summary,
     agingComparison,
     timeHorizons,
+    forecastHorizons,
     cashTrend,
     topReceivableCustomers,
     topPayableSuppliers,
@@ -274,192 +283,478 @@ export function InvoiceDebtsDashboardTab({
         />
       </div>
 
-      {/* ── SECTION 2: Time Horizons Grid (Dự Báo Dòng Tiền Theo Mốc Thời Gian) ── */}
+      {/* ── SECTION 2: Aging Allocation & Algorithmic Cashflow Forecast Grid ── */}
       <div className="mb-4">
-        <div className="text-xs font-semibold uppercase tracking-[0.05em] text-muted-foreground mb-2 flex items-center gap-1.5">
-          <Clock className="w-3.5 h-3.5 text-primary" />
-          {t(
-            "debts:dashboard.timeHorizonsTitle",
-            "Dự báo & Phân bổ Dòng tiền theo Mốc thời gian",
-          )}
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          {/* Horizon 1: Tuần tới */}
-          <div className="bg-surface border border-border rounded-xl card-shadow p-3.5 transition-all hover:border-border/80 flex flex-col justify-between">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-[11px] font-medium uppercase tracking-[0.04em] text-muted-foreground flex items-center gap-1">
-                <Calendar className="w-3.5 h-3.5 text-emerald-600" />
-                {t("debts:dashboard.nextWeekDue", "Dự báo Tuần tới (7 ngày)")}
-              </span>
-              <span className="text-[10px] font-mono font-medium px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-foreground">
-                T+7
-              </span>
-            </div>
-            <div className="space-y-1 my-1">
-              <div className="flex justify-between text-xs tabular-nums">
-                <span className="text-muted-foreground">
-                  {t("debts:dashboard.expectedIn", "Dự thu")}:
-                </span>
-                <span className="font-mono font-semibold text-emerald-600 dark:text-emerald-400">
-                  +{money(timeHorizons?.nextWeekDue?.receivable || 0)}
-                </span>
-              </div>
-              <div className="flex justify-between text-xs tabular-nums">
-                <span className="text-muted-foreground">
-                  {t("debts:dashboard.expectedOut", "Dự chi")}:
-                </span>
-                <span className="font-mono font-semibold text-amber-700 dark:text-amber-400">
-                  -{money(timeHorizons?.nextWeekDue?.payable || 0)}
-                </span>
-              </div>
-            </div>
-            <div className="pt-2 border-t border-border/50 flex justify-between items-center text-xs tabular-nums mt-1">
-              <span className="text-muted-foreground font-medium">
-                {t("debts:dashboard.netFlow", "Ròng")}:
-              </span>
-              <span
+        <div className="text-xs font-semibold uppercase tracking-[0.05em] text-muted-foreground mb-2 flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <div className="inline-flex rounded-lg border border-border p-0.5 bg-muted/30">
+              <button
+                type="button"
+                onClick={() => setViewMode("aging")}
                 className={cn(
-                  "font-mono font-bold",
-                  (timeHorizons?.nextWeekDue?.net || 0) >= 0
-                    ? "text-emerald-700 dark:text-emerald-400"
-                    : "text-destructive",
+                  "px-2.5 py-1 text-xs font-medium rounded-md transition-all flex items-center gap-1.5",
+                  viewMode === "aging"
+                    ? "bg-surface shadow-xs text-foreground font-semibold"
+                    : "text-muted-foreground hover:text-foreground",
                 )}
               >
-                {(timeHorizons?.nextWeekDue?.net || 0) >= 0 ? "+" : ""}
-                {money(timeHorizons?.nextWeekDue?.net || 0)}
-              </span>
-            </div>
-          </div>
-
-          {/* Horizon 2: Tháng tới */}
-          <div className="bg-surface border border-border rounded-xl card-shadow p-3.5 transition-all hover:border-border/80 flex flex-col justify-between">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-[11px] font-medium uppercase tracking-[0.04em] text-muted-foreground flex items-center gap-1">
-                <Calendar className="w-3.5 h-3.5 text-primary" />
-                {t(
-                  "debts:dashboard.nextMonthDue",
-                  "Kế hoạch Tháng tới (30 ngày)",
-                )}
-              </span>
-              <span className="text-[10px] font-mono font-medium px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-foreground">
-                T+30
-              </span>
-            </div>
-            <div className="space-y-1 my-1">
-              <div className="flex justify-between text-xs tabular-nums">
-                <span className="text-muted-foreground">
-                  {t("debts:dashboard.expectedIn", "Dự thu")}:
-                </span>
-                <span className="font-mono font-semibold text-emerald-600 dark:text-emerald-400">
-                  +{money(timeHorizons?.nextMonthDue?.receivable || 0)}
-                </span>
-              </div>
-              <div className="flex justify-between text-xs tabular-nums">
-                <span className="text-muted-foreground">
-                  {t("debts:dashboard.expectedOut", "Dự chi")}:
-                </span>
-                <span className="font-mono font-semibold text-amber-700 dark:text-amber-400">
-                  -{money(timeHorizons?.nextMonthDue?.payable || 0)}
-                </span>
-              </div>
-            </div>
-            <div className="pt-2 border-t border-border/50 flex justify-between items-center text-xs tabular-nums mt-1">
-              <span className="text-muted-foreground font-medium">
-                {t("debts:dashboard.netFlow", "Ròng")}:
-              </span>
-              <span
+                <Clock className="w-3.5 h-3.5 text-primary" />
+                {t("debts:dashboard.viewAgingMode", "Phân bổ Tuổi nợ")}
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode("forecast")}
                 className={cn(
-                  "font-mono font-bold",
-                  (timeHorizons?.nextMonthDue?.net || 0) >= 0
-                    ? "text-emerald-700 dark:text-emerald-400"
-                    : "text-destructive",
+                  "px-2.5 py-1 text-xs font-medium rounded-md transition-all flex items-center gap-1.5",
+                  viewMode === "forecast"
+                    ? "bg-surface shadow-xs text-primary font-semibold"
+                    : "text-muted-foreground hover:text-foreground",
                 )}
               >
-                {(timeHorizons?.nextMonthDue?.net || 0) >= 0 ? "+" : ""}
-                {money(timeHorizons?.nextMonthDue?.net || 0)}
-              </span>
+                <Brain className="w-3.5 h-3.5 text-primary" />
+                {t("debts:dashboard.viewForecastMode", "Dự báo Thuật toán")}
+              </button>
             </div>
+            <DebtAgingExplanationPopover />
           </div>
 
-          {/* Horizon 3: Quá hạn 31-90 ngày */}
-          <div className="bg-surface border border-border rounded-xl card-shadow p-3.5 transition-all hover:border-border/80 flex flex-col justify-between">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-[11px] font-medium uppercase tracking-[0.04em] text-orange-700 dark:text-orange-400 flex items-center gap-1">
-                <AlertTriangle className="w-3.5 h-3.5" />
-                {t("debts:dashboard.overdue30To90", "Quá hạn 31-90 ngày")}
-              </span>
-              <span className="text-[10px] font-mono font-medium px-1.5 py-0.5 rounded bg-orange-100 text-orange-800 dark:bg-orange-950/40 dark:text-orange-300">
-                Đôn đốc
-              </span>
-            </div>
-            <div className="space-y-1 my-1">
-              <div className="flex justify-between text-xs tabular-nums">
-                <span className="text-muted-foreground">
-                  {t("debts:dashboard.receivableLegend", "Phải thu (KH)")}:
-                </span>
-                <span className="font-mono font-semibold text-orange-700 dark:text-orange-400">
-                  {money(timeHorizons?.overdue30To90?.receivable || 0)}
-                </span>
-              </div>
-              <div className="flex justify-between text-xs tabular-nums">
-                <span className="text-muted-foreground">
-                  {t("debts:dashboard.payableLegend", "Phải trả (NCC)")}:
-                </span>
-                <span className="font-mono font-semibold text-amber-700 dark:text-amber-400">
-                  {money(timeHorizons?.overdue30To90?.payable || 0)}
-                </span>
-              </div>
-            </div>
-            <div className="pt-2 border-t border-border/50 flex justify-between items-center text-xs tabular-nums mt-1">
-              <span className="text-muted-foreground font-medium">
-                {t("debts:dashboard.netFlow", "Chênh lệch")}:
-              </span>
-              <span className="font-mono font-bold text-foreground">
-                {money(timeHorizons?.overdue30To90?.net || 0)}
-              </span>
-            </div>
-          </div>
-
-          {/* Horizon 4: Quá hạn >90 ngày */}
-          <div className="bg-surface border border-border rounded-xl card-shadow p-3.5 transition-all hover:border-border/80 flex flex-col justify-between">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-[11px] font-medium uppercase tracking-[0.04em] text-rose-700 dark:text-rose-400 flex items-center gap-1">
-                <AlertOctagon className="w-3.5 h-3.5" />
-                {t("debts:dashboard.criticalOverdue90Plus", "Quá hạn >90 ngày")}
-              </span>
-              <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-rose-100 text-rose-800 dark:bg-rose-950/40 dark:text-rose-300">
-                Cảnh báo
-              </span>
-            </div>
-            <div className="space-y-1 my-1">
-              <div className="flex justify-between text-xs tabular-nums">
-                <span className="text-muted-foreground">
-                  {t("debts:dashboard.receivableLegend", "Phải thu (KH)")}:
-                </span>
-                <span className="font-mono font-bold text-rose-700 dark:text-rose-400">
-                  {money(timeHorizons?.criticalOverdue90Plus?.receivable || 0)}
-                </span>
-              </div>
-              <div className="flex justify-between text-xs tabular-nums">
-                <span className="text-muted-foreground">
-                  {t("debts:dashboard.payableLegend", "Phải trả (NCC)")}:
-                </span>
-                <span className="font-mono font-semibold text-amber-700 dark:text-amber-400">
-                  {money(timeHorizons?.criticalOverdue90Plus?.payable || 0)}
-                </span>
-              </div>
-            </div>
-            <div className="pt-2 border-t border-border/50 flex justify-between items-center text-xs tabular-nums mt-1">
-              <span className="text-muted-foreground font-medium">
-                {t("debts:dashboard.netFlow", "Chênh lệch")}:
-              </span>
-              <span className="font-mono font-bold text-foreground">
-                {money(timeHorizons?.criticalOverdue90Plus?.net || 0)}
-              </span>
-            </div>
-          </div>
+          <span className="text-[11px] text-muted-foreground/70 normal-case font-normal hidden sm:inline">
+            Click vào từng thẻ để xem chi tiết hóa đơn & đối tác
+          </span>
         </div>
+
+        {viewMode === "aging" ? (
+          /* ── VIEW 1: Phân Bổ Tuổi Nợ Danh Nghĩa ── */
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            {/* Horizon 1: Mới phát sinh (≤ 7 ngày) */}
+            <div
+              onClick={() => setSelectedHorizon("nextWeekDue")}
+              className="bg-surface border border-border rounded-xl card-shadow p-3.5 transition-all hover:border-emerald-500/50 hover:shadow-md cursor-pointer group active:scale-[0.99] flex flex-col justify-between"
+            >
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[11px] font-medium uppercase tracking-[0.04em] text-muted-foreground flex items-center gap-1 group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors">
+                  <Calendar className="w-3.5 h-3.5 text-emerald-600" />
+                  {t("debts:dashboard.freshDebt7", "Mới phát sinh (≤ 7 ngày)")}
+                </span>
+                <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200/80">
+                  {t("debts:dashboard.freshBadge", "Mới")}
+                </span>
+              </div>
+              <div className="space-y-1 my-1">
+                <div className="flex justify-between text-xs tabular-nums">
+                  <span className="text-muted-foreground">
+                    {t("debts:dashboard.expectedIn", "Phải thu (KH)")}:
+                  </span>
+                  <span className="font-mono font-semibold text-emerald-600 dark:text-emerald-400">
+                    +{money(timeHorizons?.nextWeekDue?.receivable || 0)}
+                  </span>
+                </div>
+                <div className="flex justify-between text-xs tabular-nums">
+                  <span className="text-muted-foreground">
+                    {t("debts:dashboard.expectedOut", "Phải trả (NCC)")}:
+                  </span>
+                  <span className="font-mono font-semibold text-amber-700 dark:text-amber-400">
+                    -{money(timeHorizons?.nextWeekDue?.payable || 0)}
+                  </span>
+                </div>
+              </div>
+              <div className="pt-2 border-t border-border/50 flex justify-between items-center text-xs tabular-nums mt-1">
+                <span className="text-muted-foreground font-medium">
+                  {t("debts:dashboard.netFlow", "Chênh lệch")}:
+                </span>
+                <span
+                  className={cn(
+                    "font-mono font-bold",
+                    (timeHorizons?.nextWeekDue?.net || 0) >= 0
+                      ? "text-emerald-700 dark:text-emerald-400"
+                      : "text-destructive",
+                  )}
+                >
+                  {(timeHorizons?.nextWeekDue?.net || 0) >= 0 ? "+" : ""}
+                  {money(timeHorizons?.nextWeekDue?.net || 0)}
+                </span>
+              </div>
+            </div>
+
+            {/* Horizon 2: Trong hạn chuẩn (≤ 30 ngày) */}
+            <div
+              onClick={() => setSelectedHorizon("nextMonthDue")}
+              className="bg-surface border border-border rounded-xl card-shadow p-3.5 transition-all hover:border-primary/50 hover:shadow-md cursor-pointer group active:scale-[0.99] flex flex-col justify-between"
+            >
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[11px] font-medium uppercase tracking-[0.04em] text-muted-foreground flex items-center gap-1 group-hover:text-primary transition-colors">
+                  <Calendar className="w-3.5 h-3.5 text-primary" />
+                  {t(
+                    "debts:dashboard.standardDebt30",
+                    "Trong hạn chuẩn (≤ 30 ngày)",
+                  )}
+                </span>
+                <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-foreground group-hover:bg-primary/10 group-hover:text-primary transition-colors">
+                  {t("debts:dashboard.standardBadge", "Chuẩn")}
+                </span>
+              </div>
+              <div className="space-y-1 my-1">
+                <div className="flex justify-between text-xs tabular-nums">
+                  <span className="text-muted-foreground">
+                    {t("debts:dashboard.expectedIn", "Phải thu (KH)")}:
+                  </span>
+                  <span className="font-mono font-semibold text-emerald-600 dark:text-emerald-400">
+                    +{money(timeHorizons?.nextMonthDue?.receivable || 0)}
+                  </span>
+                </div>
+                <div className="flex justify-between text-xs tabular-nums">
+                  <span className="text-muted-foreground">
+                    {t("debts:dashboard.expectedOut", "Phải trả (NCC)")}:
+                  </span>
+                  <span className="font-mono font-semibold text-amber-700 dark:text-amber-400">
+                    -{money(timeHorizons?.nextMonthDue?.payable || 0)}
+                  </span>
+                </div>
+              </div>
+              <div className="pt-2 border-t border-border/50 flex justify-between items-center text-xs tabular-nums mt-1">
+                <span className="text-muted-foreground font-medium">
+                  {t("debts:dashboard.netFlow", "Chênh lệch")}:
+                </span>
+                <span
+                  className={cn(
+                    "font-mono font-bold",
+                    (timeHorizons?.nextMonthDue?.net || 0) >= 0
+                      ? "text-emerald-700 dark:text-emerald-400"
+                      : "text-destructive",
+                  )}
+                >
+                  {(timeHorizons?.nextMonthDue?.net || 0) >= 0 ? "+" : ""}
+                  {money(timeHorizons?.nextMonthDue?.net || 0)}
+                </span>
+              </div>
+            </div>
+
+            {/* Horizon 3: Quá hạn 31-90 ngày */}
+            <div
+              onClick={() => setSelectedHorizon("overdue30To90")}
+              className="bg-surface border border-border rounded-xl card-shadow p-3.5 transition-all hover:border-orange-400/60 hover:shadow-md cursor-pointer group active:scale-[0.99] flex flex-col justify-between"
+            >
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[11px] font-medium uppercase tracking-[0.04em] text-orange-700 dark:text-orange-400 flex items-center gap-1 group-hover:text-orange-600 transition-colors">
+                  <AlertTriangle className="w-3.5 h-3.5" />
+                  {t("debts:dashboard.overdue30To90", "Quá hạn 31-90 ngày")}
+                </span>
+                <span className="text-[10px] font-mono font-medium px-1.5 py-0.5 rounded bg-orange-100 text-orange-800 dark:bg-orange-950/40 dark:text-orange-300">
+                  {t("debts:dashboard.urgentBadge", "Đôn đốc")}
+                </span>
+              </div>
+              <div className="space-y-1 my-1">
+                <div className="flex justify-between text-xs tabular-nums">
+                  <span className="text-muted-foreground">
+                    {t("debts:dashboard.receivableLegend", "Phải thu (KH)")}:
+                  </span>
+                  <span className="font-mono font-semibold text-orange-700 dark:text-orange-400">
+                    +{money(timeHorizons?.overdue30To90?.receivable || 0)}
+                  </span>
+                </div>
+                <div className="flex justify-between text-xs tabular-nums">
+                  <span className="text-muted-foreground">
+                    {t("debts:dashboard.payableLegend", "Phải trả (NCC)")}:
+                  </span>
+                  <span className="font-mono font-semibold text-amber-700 dark:text-amber-400">
+                    -{money(timeHorizons?.overdue30To90?.payable || 0)}
+                  </span>
+                </div>
+              </div>
+              <div className="pt-2 border-t border-border/50 flex justify-between items-center text-xs tabular-nums mt-1">
+                <span className="text-muted-foreground font-medium">
+                  {t("debts:dashboard.netFlow", "Chênh lệch")}:
+                </span>
+                <span
+                  className={cn(
+                    "font-mono font-bold",
+                    (timeHorizons?.overdue30To90?.net || 0) >= 0
+                      ? "text-emerald-700 dark:text-emerald-400"
+                      : "text-destructive",
+                  )}
+                >
+                  {(timeHorizons?.overdue30To90?.net || 0) >= 0 ? "+" : ""}
+                  {money(timeHorizons?.overdue30To90?.net || 0)}
+                </span>
+              </div>
+            </div>
+
+            {/* Horizon 4: Quá hạn >90 ngày */}
+            <div
+              onClick={() => setSelectedHorizon("criticalOverdue90Plus")}
+              className="bg-surface border border-border rounded-xl card-shadow p-3.5 transition-all hover:border-rose-400/60 hover:shadow-md cursor-pointer group active:scale-[0.99] flex flex-col justify-between"
+            >
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[11px] font-medium uppercase tracking-[0.04em] text-rose-700 dark:text-rose-400 flex items-center gap-1 group-hover:text-rose-600 transition-colors">
+                  <AlertOctagon className="w-3.5 h-3.5" />
+                  {t(
+                    "debts:dashboard.criticalOverdue90Plus",
+                    "Quá hạn >90 ngày",
+                  )}
+                </span>
+                <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-rose-100 text-rose-800 dark:bg-rose-950/40 dark:text-rose-300">
+                  {t("debts:dashboard.warningBadge", "Cảnh báo")}
+                </span>
+              </div>
+              <div className="space-y-1 my-1">
+                <div className="flex justify-between text-xs tabular-nums">
+                  <span className="text-muted-foreground">
+                    {t("debts:dashboard.receivableLegend", "Phải thu (KH)")}:
+                  </span>
+                  <span className="font-mono font-bold text-rose-700 dark:text-rose-400">
+                    +
+                    {money(
+                      timeHorizons?.criticalOverdue90Plus?.receivable || 0,
+                    )}
+                  </span>
+                </div>
+                <div className="flex justify-between text-xs tabular-nums">
+                  <span className="text-muted-foreground">
+                    {t("debts:dashboard.payableLegend", "Phải trả (NCC)")}:
+                  </span>
+                  <span className="font-mono font-semibold text-amber-700 dark:text-amber-400">
+                    -{money(timeHorizons?.criticalOverdue90Plus?.payable || 0)}
+                  </span>
+                </div>
+              </div>
+              <div className="pt-2 border-t border-border/50 flex justify-between items-center text-xs tabular-nums mt-1">
+                <span className="text-muted-foreground font-medium">
+                  {t("debts:dashboard.netFlow", "Chênh lệch")}:
+                </span>
+                <span
+                  className={cn(
+                    "font-mono font-bold",
+                    (timeHorizons?.criticalOverdue90Plus?.net || 0) >= 0
+                      ? "text-emerald-700 dark:text-emerald-400"
+                      : "text-destructive",
+                  )}
+                >
+                  {(timeHorizons?.criticalOverdue90Plus?.net || 0) >= 0
+                    ? "+"
+                    : ""}
+                  {money(timeHorizons?.criticalOverdue90Plus?.net || 0)}
+                </span>
+              </div>
+            </div>
+          </div>
+        ) : (
+          /* ── VIEW 2: Dự Báo Dòng Tiền Thuật Toán (Algorithmic Forecast) ── */
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            {/* Forecast 1: Dự báo Tuần tới (7 ngày) */}
+            <div
+              onClick={() => setSelectedHorizon("forecastNext7Days")}
+              className="bg-surface border border-border rounded-xl card-shadow p-3.5 transition-all hover:border-emerald-500/50 hover:shadow-md cursor-pointer group active:scale-[0.99] flex flex-col justify-between"
+            >
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[11px] font-medium uppercase tracking-[0.04em] text-muted-foreground flex items-center gap-1 group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors">
+                  <Calendar className="w-3.5 h-3.5 text-emerald-600" />
+                  {t(
+                    "debts:dashboard.forecastNext7Days",
+                    "Dự báo Tuần tới (7 ngày)",
+                  )}
+                </span>
+                <span className="text-[10px] font-mono font-medium px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200/80">
+                  {t("debts:dashboard.forecastT7Badge", "T+7 (Lag)")}
+                </span>
+              </div>
+              <div className="space-y-1 my-1">
+                <div className="flex justify-between text-xs tabular-nums">
+                  <span className="text-muted-foreground">
+                    {t("debts:dashboard.expectedIn", "Dự thu")}:
+                  </span>
+                  <span className="font-mono font-semibold text-emerald-600 dark:text-emerald-400">
+                    +{money(forecastHorizons?.next7Days?.receivable || 0)}
+                  </span>
+                </div>
+                <div className="flex justify-between text-xs tabular-nums">
+                  <span className="text-muted-foreground">
+                    {t("debts:dashboard.expectedOut", "Dự chi")}:
+                  </span>
+                  <span className="font-mono font-semibold text-amber-700 dark:text-amber-400">
+                    -{money(forecastHorizons?.next7Days?.payable || 0)}
+                  </span>
+                </div>
+              </div>
+              <div className="pt-2 border-t border-border/50 flex justify-between items-center text-xs tabular-nums mt-1">
+                <span className="text-muted-foreground font-medium">
+                  {t("debts:dashboard.netFlow", "Ròng")}:
+                </span>
+                <span
+                  className={cn(
+                    "font-mono font-bold",
+                    (forecastHorizons?.next7Days?.net || 0) >= 0
+                      ? "text-emerald-700 dark:text-emerald-400"
+                      : "text-destructive",
+                  )}
+                >
+                  {(forecastHorizons?.next7Days?.net || 0) >= 0 ? "+" : ""}
+                  {money(forecastHorizons?.next7Days?.net || 0)}
+                </span>
+              </div>
+            </div>
+
+            {/* Forecast 2: Kế hoạch Tháng tới (30 ngày) */}
+            <div
+              onClick={() => setSelectedHorizon("forecastNext30Days")}
+              className="bg-surface border border-border rounded-xl card-shadow p-3.5 transition-all hover:border-primary/50 hover:shadow-md cursor-pointer group active:scale-[0.99] flex flex-col justify-between"
+            >
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[11px] font-medium uppercase tracking-[0.04em] text-muted-foreground flex items-center gap-1 group-hover:text-primary transition-colors">
+                  <Calendar className="w-3.5 h-3.5 text-primary" />
+                  {t(
+                    "debts:dashboard.forecastNext30Days",
+                    "Kế hoạch Tháng tới (30 ngày)",
+                  )}
+                </span>
+                <span className="text-[10px] font-mono font-medium px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-foreground group-hover:bg-primary/10 group-hover:text-primary transition-colors">
+                  {t("debts:dashboard.forecastT30Badge", "T+30 (Lag)")}
+                </span>
+              </div>
+              <div className="space-y-1 my-1">
+                <div className="flex justify-between text-xs tabular-nums">
+                  <span className="text-muted-foreground">
+                    {t("debts:dashboard.expectedIn", "Dự thu")}:
+                  </span>
+                  <span className="font-mono font-semibold text-emerald-600 dark:text-emerald-400">
+                    +{money(forecastHorizons?.next30Days?.receivable || 0)}
+                  </span>
+                </div>
+                <div className="flex justify-between text-xs tabular-nums">
+                  <span className="text-muted-foreground">
+                    {t("debts:dashboard.expectedOut", "Dự chi")}:
+                  </span>
+                  <span className="font-mono font-semibold text-amber-700 dark:text-amber-400">
+                    -{money(forecastHorizons?.next30Days?.payable || 0)}
+                  </span>
+                </div>
+              </div>
+              <div className="pt-2 border-t border-border/50 flex justify-between items-center text-xs tabular-nums mt-1">
+                <span className="text-muted-foreground font-medium">
+                  {t("debts:dashboard.netFlow", "Ròng")}:
+                </span>
+                <span
+                  className={cn(
+                    "font-mono font-bold",
+                    (forecastHorizons?.next30Days?.net || 0) >= 0
+                      ? "text-emerald-700 dark:text-emerald-400"
+                      : "text-destructive",
+                  )}
+                >
+                  {(forecastHorizons?.next30Days?.net || 0) >= 0 ? "+" : ""}
+                  {money(forecastHorizons?.next30Days?.net || 0)}
+                </span>
+              </div>
+            </div>
+
+            {/* Forecast 3: Dòng tiền Kỳ vọng (IFRS 9) */}
+            <div
+              onClick={() => setSelectedHorizon("expectedCashflow")}
+              className="bg-surface border border-border rounded-xl card-shadow p-3.5 transition-all hover:border-violet-500/50 hover:shadow-md cursor-pointer group active:scale-[0.99] flex flex-col justify-between"
+            >
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[11px] font-medium uppercase tracking-[0.04em] text-violet-700 dark:text-violet-400 flex items-center gap-1 group-hover:text-violet-600 transition-colors">
+                  <Brain className="w-3.5 h-3.5" />
+                  {t(
+                    "debts:dashboard.expectedCashflow",
+                    "Dòng tiền Kỳ vọng (IFRS 9)",
+                  )}
+                </span>
+                <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-violet-50 text-violet-800 dark:bg-violet-950/40 dark:text-violet-300 border border-violet-200/80">
+                  {t("debts:dashboard.forecastExpectedBadge", "Kỳ vọng")}
+                </span>
+              </div>
+              <div className="space-y-1 my-1">
+                <div className="flex justify-between text-xs tabular-nums">
+                  <span className="text-muted-foreground">
+                    {t("debts:dashboard.expectedIn", "Thu kỳ vọng")}:
+                  </span>
+                  <span className="font-mono font-semibold text-emerald-600 dark:text-emerald-400">
+                    +
+                    {money(forecastHorizons?.expectedCashflow?.receivable || 0)}
+                  </span>
+                </div>
+                <div className="flex justify-between text-xs tabular-nums">
+                  <span className="text-muted-foreground">
+                    {t("debts:dashboard.expectedOut", "Chi kỳ vọng")}:
+                  </span>
+                  <span className="font-mono font-semibold text-amber-700 dark:text-amber-400">
+                    -{money(forecastHorizons?.expectedCashflow?.payable || 0)}
+                  </span>
+                </div>
+              </div>
+              <div className="pt-2 border-t border-border/50 flex justify-between items-center text-xs tabular-nums mt-1">
+                <span className="text-muted-foreground font-medium">
+                  {t("debts:dashboard.netFlow", "Ròng kỳ vọng")}:
+                </span>
+                <span
+                  className={cn(
+                    "font-mono font-bold",
+                    (forecastHorizons?.expectedCashflow?.net || 0) >= 0
+                      ? "text-emerald-700 dark:text-emerald-400"
+                      : "text-destructive",
+                  )}
+                >
+                  {(forecastHorizons?.expectedCashflow?.net || 0) >= 0
+                    ? "+"
+                    : ""}
+                  {money(forecastHorizons?.expectedCashflow?.net || 0)}
+                </span>
+              </div>
+            </div>
+
+            {/* Forecast 4: Dự phòng Rủi ro Nợ (IFRS 9) */}
+            <div
+              onClick={() => setSelectedHorizon("defaultRiskProvision")}
+              className="bg-surface border border-border rounded-xl card-shadow p-3.5 transition-all hover:border-rose-400/60 hover:shadow-md cursor-pointer group active:scale-[0.99] flex flex-col justify-between"
+            >
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[11px] font-medium uppercase tracking-[0.04em] text-rose-700 dark:text-rose-400 flex items-center gap-1 group-hover:text-rose-600 transition-colors">
+                  <AlertOctagon className="w-3.5 h-3.5" />
+                  {t(
+                    "debts:dashboard.defaultRiskProvision",
+                    "Dự phòng Rủi ro Nợ",
+                  )}
+                </span>
+                <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-rose-100 text-rose-800 dark:bg-rose-950/40 dark:text-rose-300">
+                  {t("debts:dashboard.forecastRiskBadge", "Rủi ro")}
+                </span>
+              </div>
+              <div className="space-y-1 my-1">
+                <div className="flex justify-between text-xs tabular-nums">
+                  <span className="text-muted-foreground">
+                    {t("debts:dashboard.receivableLegend", "Rủi ro Phải thu")}:
+                  </span>
+                  <span className="font-mono font-bold text-rose-700 dark:text-rose-400">
+                    +
+                    {money(
+                      forecastHorizons?.defaultRiskProvision?.receivableRisk ||
+                        0,
+                    )}
+                  </span>
+                </div>
+                <div className="flex justify-between text-xs tabular-nums">
+                  <span className="text-muted-foreground">
+                    {t("debts:dashboard.payableLegend", "Rủi ro Phải trả")}:
+                  </span>
+                  <span className="font-mono font-semibold text-amber-700 dark:text-amber-400">
+                    -
+                    {money(
+                      forecastHorizons?.defaultRiskProvision?.payableRisk || 0,
+                    )}
+                  </span>
+                </div>
+              </div>
+              <div className="pt-2 border-t border-border/50 flex justify-between items-center text-xs tabular-nums mt-1">
+                <span className="text-muted-foreground font-medium">
+                  {t("debts:dashboard.netFlow", "Chênh lệch rủi ro")}:
+                </span>
+                <span className="font-mono font-bold text-foreground">
+                  {money(forecastHorizons?.defaultRiskProvision?.netRisk || 0)}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* ── SECTION 3: Deep-Dive Analytics Charts Grid ── */}
@@ -665,6 +960,16 @@ export function InvoiceDebtsDashboardTab({
           </div>
         </Panel>
       </div>
+
+      {/* ── SECTION 4: Time Horizon Detail Drawer ── */}
+      <InvoiceTimeHorizonDetailDrawer
+        open={Boolean(selectedHorizon)}
+        onClose={() => setSelectedHorizon(null)}
+        horizon={selectedHorizon}
+        dateFrom={filter.state.dateFrom || undefined}
+        dateTo={filter.state.dateTo || undefined}
+        onOpenPartnerDetail={onOpenPartnerDetail}
+      />
     </DashboardTemplate>
   );
 }

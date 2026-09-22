@@ -28,17 +28,34 @@ export const debtsEn = {
     collectionRate: "Collection Rate",
     paymentRate: "Payment Rate",
 
-    // Time horizons
-    timeHorizonsTitle: "Cashflow Time Horizons & Maturity Forecast",
-    nextWeekDue: "Next 7 Days Forecast",
-    nextMonthDue: "Next 30 Days Plan",
-    overdue30To90: "Overdue 31-90 Days (Action Required)",
-    criticalOverdue90Plus: "Critical Overdue >90 Days (Bad Debt Risk)",
-    inTermDue: "In Term",
+    // Time horizons & Aging risk allocation
+    timeHorizonsTitle: "Debt Allocation by Aging Buckets & Risk Profile",
+    forecastHorizonsTitle: "Algorithmic Cashflow Forecast & Financial Health",
+    viewAgingMode: "Aging Breakdown",
+    viewForecastMode: "Algorithm Forecast",
+    freshDebt7: "Fresh Invoices (≤ 7 days)",
+    standardDebt30: "Standard Current (≤ 30 days)",
+    nextWeekDue: "Fresh Invoices (≤ 7 days)",
+    nextMonthDue: "Standard Current (≤ 30 days)",
+    overdue30To90: "Overdue 31-90 days",
+    criticalOverdue90Plus: "Critical Overdue >90 days",
+    forecastNext7Days: "Next 7 Days Forecast",
+    forecastNext30Days: "Next 30 Days Plan",
+    expectedCashflow: "Expected Cashflow (IFRS 9)",
+    defaultRiskProvision: "Default Risk Provision",
+    inTermDue: "Current",
     overdueDue: "Overdue",
-    expectedIn: "Est. Inflow",
-    expectedOut: "Est. Outflow",
-    netFlow: "Net",
+    expectedIn: "Receivables (Customers)",
+    expectedOut: "Payables (Suppliers)",
+    netFlow: "Net Difference",
+    freshBadge: "Fresh",
+    standardBadge: "Normal",
+    urgentBadge: "Follow-up",
+    warningBadge: "Warning",
+    forecastT7Badge: "T+7 (Lag)",
+    forecastT30Badge: "T+30 (Lag)",
+    forecastExpectedBadge: "Expected",
+    forecastRiskBadge: "Risk",
 
     // Charts
     trendChartTitle: "Monthly Cashflow Trend & Net Position",
@@ -88,6 +105,9 @@ export const debtsEn = {
     agingOverview: "Aging & Risk",
     maxAgingDays: "Aging Days",
     latestInvoiceDate: "Latest Invoice Date",
+    partnerAvgLagDays: "Avg Lag",
+    estimatedSettlementDate: "Estimated Date",
+    recoveryProbability: "Recovery Prob.",
   },
 
   filter: {
@@ -195,5 +215,71 @@ export const debtsEn = {
     agingDays: "Aging Days",
     status: "Status",
     emptyInvoices: "No invoices found",
+  },
+
+  horizonDrawer: {
+    title: "Debt Aging Details: {{name}}",
+    subtitle:
+      "Track invoice details, settlement progress, and debt structure across aging buckets",
+    financialSummary: "Aging Bucket Financial Summary",
+    topPartners: "Key Business Partners in Bucket",
+    recommendations: "Recommended Actions & Risk Management",
+    tabAll: "All",
+    tabReceivables: "Receivables (Sales)",
+    tabPayables: "Payables (Purchases)",
+    invoicesList: "Detailed Invoice List",
+    expectedIn: "Receivables (Customers)",
+    expectedOut: "Payables (Suppliers)",
+    netFlow: "Net Difference",
+    surplus: "Receivables Surplus",
+    deficit: "Payment Pressure",
+    topCustomers: "Top 5 Receivable Customers",
+    topSuppliers: "Top 5 Payable Suppliers",
+    recNextWeek:
+      "Fresh invoices issued within the last 7 days, currently in normal circulation and initial billing verification.",
+    recNextMonth:
+      "Standard current debts (0-30 days). Closely monitor payment terms and align available funds for due payables.",
+    recOverdue30To90:
+      "Debts overdue 31 to 90 days require strict follow-up. Send reconciliation notices and payment reminders to key customers.",
+    recCriticalOverdue90Plus:
+      "High risk warning for debts overdue >90 days. Initiate strict debt recovery procedures and consider provisioning for bad debts.",
+    recForecastNext7Days:
+      "Projected actual cashflow expected in the next 7 days based on historical average payment lag (DSO/DPO) for each partner.",
+    recForecastNext30Days:
+      "Cashflow circulation plan for the next 30 days. Balance collections from short-lag customers to prepare payables for suppliers.",
+    recExpectedCashflow:
+      "Expected recoverable cashflow value weighted by IFRS 9 probability of default matrix across aging buckets.",
+    recDefaultRiskProvision:
+      "Provision for bad debts under IFRS 9 expected credit loss model for severely overdue invoices or high-risk partners.",
+    emptyInvoices: "No invoices found in this aging bucket",
+  },
+
+  agingExplanation: {
+    title: "Methodology & Forecasting Algorithms",
+    subtitle:
+      "Detailed breakdown of the 4 aging buckets and intelligent cashflow forecasting models",
+    tabBuckets: "1. 4 Debt Aging Buckets",
+    tabAlgorithms: "2. Cashflow Forecasting Models",
+    bucket1Title: "Fresh Invoices (≤ 7 days)",
+    bucket1Desc:
+      "Invoices newly issued within the last 7 days, currently in normal billing circulation and initial matching.",
+    bucket2Title: "Standard Current (≤ 30 days)",
+    bucket2Desc:
+      "Debts within standard commercial payment terms (Net 30), regular operational collection and disbursements.",
+    bucket3Title: "Overdue 31-90 days (Follow-up)",
+    bucket3Desc:
+      "Debts delayed for 1 to 3 months. Accounting needs to issue payment reminders, reconcile statements, and schedule recovery.",
+    bucket4Title: "Critical Overdue >90 days (Warning)",
+    bucket4Desc:
+      "Long-standing overdue balances at risk of default. Trigger strict recovery protocols or provision for bad debts.",
+    algo1Title: "1. Weighted Partner Lag (DSO/DPO)",
+    algo1Desc:
+      "Learns historical payment habits per customer/supplier to accurately predict actual settlement dates rather than theoretical due dates.",
+    algo2Title: "2. Recovery Probability Matrix (IFRS 9 / Roll Rate)",
+    algo2Desc:
+      "Expected cashflow is computed using declining recovery probabilities across aging buckets (0-30d: 85%, 31-60d: 60%, 61-90d: 30%, >90d: 10%).",
+    algo3Title: "3. Bank Statement Time-Series Analysis",
+    algo3Desc:
+      "Analyzes actual periodic cash-in and cash-out cycles across month intervals from bank statements to forecast liquidity curve.",
   },
 };

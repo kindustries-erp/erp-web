@@ -28,17 +28,35 @@ export const debtsVi = {
     collectionRate: "Tỷ lệ thu hồi",
     paymentRate: "Tỷ lệ chi trả",
 
-    // Time horizons
-    timeHorizonsTitle: "Dự báo & Phân bổ Dòng tiền theo Mốc thời gian",
-    nextWeekDue: "Dự báo Tuần tới (7 ngày)",
-    nextMonthDue: "Kế hoạch Tháng tới (30 ngày)",
-    overdue30To90: "Quá hạn 31-90 ngày (Cần đôn đốc)",
-    criticalOverdue90Plus: "Quá hạn >90 ngày (Cảnh báo nợ khó đòi)",
+    // Time horizons & Aging risk allocation
+    timeHorizonsTitle: "Phân bổ Công nợ theo Tuổi nợ & Mức độ Rủi ro",
+    forecastHorizonsTitle:
+      "Dự báo Dòng tiền & Sức khỏe Tài chính theo Thuật toán",
+    viewAgingMode: "Phân bổ Tuổi nợ",
+    viewForecastMode: "Dự báo Thuật toán",
+    freshDebt7: "Mới phát sinh (≤ 7 ngày)",
+    standardDebt30: "Trong hạn chuẩn (≤ 30 ngày)",
+    nextWeekDue: "Mới phát sinh (≤ 7 ngày)",
+    nextMonthDue: "Trong hạn chuẩn (≤ 30 ngày)",
+    overdue30To90: "Quá hạn 31-90 ngày",
+    criticalOverdue90Plus: "Quá hạn >90 ngày",
+    forecastNext7Days: "Dự báo Tuần tới (7 ngày)",
+    forecastNext30Days: "Kế hoạch Tháng tới (30 ngày)",
+    expectedCashflow: "Dòng tiền Kỳ vọng (IFRS 9)",
+    defaultRiskProvision: "Dự phòng Rủi ro Nợ",
     inTermDue: "Trong hạn",
     overdueDue: "Quá hạn",
-    expectedIn: "Dự thu",
-    expectedOut: "Dự chi",
-    netFlow: "Ròng",
+    expectedIn: "Phải thu (KH)",
+    expectedOut: "Phải trả (NCC)",
+    netFlow: "Chênh lệch",
+    freshBadge: "Mới",
+    standardBadge: "Chuẩn",
+    urgentBadge: "Đôn đốc",
+    warningBadge: "Cảnh báo",
+    forecastT7Badge: "T+7 (Lag)",
+    forecastT30Badge: "T+30 (Lag)",
+    forecastExpectedBadge: "Kỳ vọng",
+    forecastRiskBadge: "Rủi ro",
 
     // Charts
     trendChartTitle: "Biến động Dòng tiền Mua/Bán & Vị thế ròng theo tháng",
@@ -88,6 +106,9 @@ export const debtsVi = {
     agingOverview: "Tuổi nợ & Rủi ro",
     maxAgingDays: "Tuổi nợ",
     latestInvoiceDate: "Ngày HĐ gần nhất",
+    partnerAvgLagDays: "Độ trễ TB",
+    estimatedSettlementDate: "Dự kiến thu/trả",
+    recoveryProbability: "Xác suất thu hồi",
   },
 
   filter: {
@@ -194,5 +215,71 @@ export const debtsVi = {
     agingDays: "Số ngày nợ",
     status: "Trạng thái",
     emptyInvoices: "Chưa có hóa đơn nào",
+  },
+
+  horizonDrawer: {
+    title: "Chi tiết Phân tầng Công nợ: {{name}}",
+    subtitle:
+      "Theo dõi chi tiết hóa đơn phát sinh, tiến độ cấn trừ và cơ cấu nợ theo nhóm tuổi nợ",
+    financialSummary: "Tổng quan tài chính nhóm tuổi nợ",
+    topPartners: "Top đối tác trọng yếu trong nhóm",
+    recommendations: "Hành động đề xuất & Quản trị rủi ro",
+    tabAll: "Tất cả",
+    tabReceivables: "Phải thu (Bán ra)",
+    tabPayables: "Phải trả (Mua vào)",
+    invoicesList: "Danh sách hóa đơn chi tiết",
+    expectedIn: "Phải thu (KH)",
+    expectedOut: "Phải trả (NCC)",
+    netFlow: "Chênh lệch ròng",
+    surplus: "Thặng dư phải thu",
+    deficit: "Áp lực chi trả",
+    topCustomers: "Top 5 Khách hàng nợ nhiều nhất",
+    topSuppliers: "Top 5 Nhà cung cấp cần thanh toán",
+    recNextWeek:
+      "Các khoản nợ mới phát sinh trong 7 ngày gần nhất, đang trong hạn luân chuyển chứng từ và chuẩn bị đối chiếu công nợ ban đầu.",
+    recNextMonth:
+      "Các khoản nợ trong hạn tiêu chuẩn thông thường (0-30 ngày). Cần theo dõi sát hạn thanh toán và chuẩn bị nguồn tiền cân đối dòng tiền chi trả.",
+    recOverdue30To90:
+      "Các khoản nợ quá hạn từ 31 đến 90 ngày cần được đôn đốc quyết liệt. Gửi công văn đối soát và nhắc nợ đối với các khách hàng trọng yếu.",
+    recCriticalOverdue90Plus:
+      "Cảnh báo rủi ro cao đối với các khoản nợ quá hạn >90 ngày. Cần kích hoạt quy trình thu hồi nợ nghiêm ngặt và xem xét trích lập dự phòng nợ phải thu khó đòi.",
+    recForecastNext7Days:
+      "Dự phóng dòng tiền thực tế sẽ phát sinh trong 7 ngày tới dựa trên độ trễ thanh toán trung bình (DSO/DPO) lịch sử của từng đối tác.",
+    recForecastNext30Days:
+      "Kế hoạch dòng tiền luân chuyển trong vòng 30 ngày tới. Cân đối các khoản thu từ khách hàng có độ trễ ngắn để chuẩn bị nguồn thanh toán cho nhà cung cấp.",
+    recExpectedCashflow:
+      "Giá trị dòng tiền kỳ vọng thực thu/thực chi sau khi áp dụng ma trận xác suất thu hồi nợ IFRS 9 dựa trên mức độ trễ hạn của từng khoản nợ.",
+    recDefaultRiskProvision:
+      "Giá trị nợ cần trích lập dự phòng rủi ro khó đòi theo IFRS 9 đối với các khoản nợ quá hạn kéo dài hoặc đối tác có lịch sử thanh toán chậm bất thường.",
+    emptyInvoices: "Không tìm thấy hóa đơn nào trong nhóm tuổi nợ này",
+  },
+
+  agingExplanation: {
+    title: "Phương Pháp Luận & Diễn Giải Thuật Toán",
+    subtitle:
+      "Giải thích chi tiết 4 nhóm phân tầng tuổi nợ và các mô hình dự báo dòng tiền thông minh",
+    tabBuckets: "1. Bản chất 4 Nhóm Tuổi Nợ",
+    tabAlgorithms: "2. Thuật Toán Dự Báo Dòng Tiền",
+    bucket1Title: "Mới phát sinh (≤ 7 ngày)",
+    bucket1Desc:
+      "Hóa đơn mới phát hành trong vòng 7 ngày qua, đang trong chu kỳ luân chuyển và đối chiếu chứng từ gốc.",
+    bucket2Title: "Trong hạn chuẩn (≤ 30 ngày)",
+    bucket2Desc:
+      "Nợ nằm trong chu kỳ công nợ thương mại tiêu chuẩn (Net 30), hoạt động thu chi diễn ra bình thường.",
+    bucket3Title: "Quá hạn 31-90 ngày (Đôn đốc)",
+    bucket3Desc:
+      "Nợ đã trễ hạn từ 1 đến 3 tháng. Kế toán cần gửi thư nhắc nợ, đối soát và lên lịch đôn đốc thu hồi.",
+    bucket4Title: "Quá hạn >90 ngày (Cảnh báo)",
+    bucket4Desc:
+      "Nợ tồn đọng lâu ngày có nguy cơ trở thành nợ khó đòi. Cần kích hoạt quy trình thu hồi đặc biệt hoặc trích lập dự phòng rủi ro.",
+    algo1Title: "1. Thuật toán Weighted Partner Lag (DSO/DPO)",
+    algo1Desc:
+      "Hệ thống học thói quen thanh toán lịch sử của từng khách hàng để dự báo chính xác ngày tiền về thực tế thay vì nhìn vào kỳ hạn lý thuyết.",
+    algo2Title: "2. Ma trận Xác suất Thu hồi (IFRS 9 / Roll Rate)",
+    algo2Desc:
+      "Dòng tiền kỳ vọng được tính theo trọng số xác suất thu hồi giảm dần theo từng nhóm tuổi nợ (0-30d: 85%, 31-60d: 60%, 61-90d: 30%, >90d: 10%).",
+    algo3Title: "3. Chuỗi thời gian Dòng tiền Ngân hàng (Time Series)",
+    algo3Desc:
+      "Phân tích chu kỳ thu/chi thực tế qua sao kê ngân hàng theo từng khoảng thời gian trong tháng để dự phóng biến động số dư tiền mặt.",
   },
 };
