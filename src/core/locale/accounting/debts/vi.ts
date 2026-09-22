@@ -81,6 +81,9 @@ export const debtsVi = {
     noData: "Chưa có dữ liệu",
     overdueLabel: "Quá hạn",
     maxAgingLabel: "Tuổi nợ max",
+    sectionAgingAndForecast: "Phân bổ & Dự báo Công nợ",
+    sectionAnalyticsCharts: "Biến động & Phân tích Công nợ",
+    horizonClickHint: "Click vào từng thẻ để xem chi tiết hóa đơn & đối tác",
   },
 
   columns: {
@@ -224,10 +227,24 @@ export const debtsVi = {
     financialSummary: "Tổng quan tài chính nhóm tuổi nợ",
     topPartners: "Top đối tác trọng yếu trong nhóm",
     recommendations: "Hành động đề xuất & Quản trị rủi ro",
+    tabInvoices: "1. Danh sách hóa đơn",
+    tabAnalytics: "2. Biến động & Phân tích",
+    tabReceivablesShort: "Phải thu",
+    tabPayablesShort: "Phải trả",
+    trendChartTitle: "Biến động hóa đơn theo tháng",
+    agingDistribution: "Cơ cấu phân bổ tuổi nợ",
+    cumulativeTrendTitle: "Biểu đồ luân chuyển & Dòng tiền tích lũy",
+    recoveryRateTitle: "Tỷ lệ thu hồi nợ theo từng tháng (%)",
+    paymentRateTitle: "Tỷ lệ thanh toán theo từng tháng (%)",
+    monthlyMatrixTitle: "Bảng kê tổng hợp phát sinh & dư nợ theo tháng",
     tabAll: "Tất cả",
     tabReceivables: "Phải thu (Bán ra)",
     tabPayables: "Phải trả (Mua vào)",
     invoicesList: "Danh sách hóa đơn chi tiết",
+    invoiceNoAndSerial: "Số / Ký hiệu HĐ",
+    partnerAndTax: "Đối tác / MST",
+    partnerBuyerAndTax: "Bên mua / MST",
+    partnerSellerAndTax: "Bên bán / MST",
     expectedIn: "Phải thu (KH)",
     expectedOut: "Phải trả (NCC)",
     netFlow: "Chênh lệch ròng",
@@ -235,6 +252,26 @@ export const debtsVi = {
     deficit: "Áp lực chi trả",
     topCustomers: "Top 5 Khách hàng nợ nhiều nhất",
     topSuppliers: "Top 5 Nhà cung cấp cần thanh toán",
+    partnerAvgLag: "Độ trễ TB",
+    estimatedSettlementDate: "Dự kiến thu/trả",
+    recoveryProbability: "Xác suất thu hồi",
+    riskProbability: "Tỷ lệ trích lập",
+    expectedAmount: "Tiền kỳ vọng",
+    riskAmount: "Dự phòng rủi ro",
+    sharePercentage: "Tỷ trọng",
+    formulaTitle: "Công thức & Mô hình tính toán",
+    topContributorsTitle: "Top đối tác đóng góp lớn nhất",
+    contributingShare: "Chiếm {{percent}}% tổng chỉ số của thẻ",
+    cardReceivable: "Phải thu",
+    cardPayable: "Phải trả",
+    cardNet: "Vị thế ròng",
+    matrixTitle: "Ma trận trọng số xác suất IFRS 9",
+    matrixReceivable:
+      "Phải thu KH: ≤30d (85%), 31-60d (60%), 61-90d (30%), >90d (10%)",
+    matrixPayable:
+      "Phải trả NCC: ≤30d (95%), 31-60d (85%), 61-90d (70%), >90d (50%)",
+    dsoExplanation:
+      "Ngày dự kiến thu/trả = Ngày phát hành HĐ + Độ trễ thanh toán TB (DSO/DPO) của đối tác.",
     recNextWeek:
       "Các khoản nợ mới phát sinh trong 7 ngày gần nhất, đang trong hạn luân chuyển chứng từ và chuẩn bị đối chiếu công nợ ban đầu.",
     recNextMonth:
@@ -251,7 +288,68 @@ export const debtsVi = {
       "Giá trị dòng tiền kỳ vọng thực thu/thực chi sau khi áp dụng ma trận xác suất thu hồi nợ IFRS 9 dựa trên mức độ trễ hạn của từng khoản nợ.",
     recDefaultRiskProvision:
       "Giá trị nợ cần trích lập dự phòng rủi ro khó đòi theo IFRS 9 đối với các khoản nợ quá hạn kéo dài hoặc đối tác có lịch sử thanh toán chậm bất thường.",
+    flowBreakdownTitle: "Bóc tách Cơ cấu Nguồn tiền & Đối tác Trọng yếu",
+    dueInPeriod: "Đến hạn trong kỳ (Chuẩn chu kỳ)",
+    overdueCarried: "Quá hạn trôi sang (DSO quá hạn)",
+    concentrationAlert: "Top {{count}} đối tác chi phối {{percent}}% dòng tiền",
+    overdueLagBadge: "Trễ hạn {{days}} ngày",
+    normalLagBadge: "Đúng chu kỳ",
+    expectedAmountCol: "Tiền dự thu",
+    expectedPayableCol: "Tiền dự chi",
     emptyInvoices: "Không tìm thấy hóa đơn nào trong nhóm tuổi nợ này",
+    // Forecast Analytics - Daily Timeline
+    forecastDailyTimelineTitle: "Lịch trình Dự thu / Dự chi theo Ngày",
+    forecastDailyTimelineDesc:
+      "Biểu đồ dự báo dòng tiền thu/chi theo từng ngày trong kỳ",
+    forecastOverdueBucket: "Quá hạn trôi sang",
+    forecastDailyReceivable: "Dự thu",
+    forecastDailyPayable: "Dự chi",
+    forecastCumulativeTitle: "Dòng tiền Dự báo Tích lũy & Vị thế Ròng",
+    forecastCumulativeReceivable: "Dự thu tích lũy",
+    forecastCumulativePayable: "Dự chi tích lũy",
+    forecastCumulativeNet: "Vị thế ròng",
+    forecastCompositionTitle: "Cơ cấu Nguồn Tiền Dự báo",
+    forecastDueInPeriod: "Đến hạn chuẩn kỳ",
+    forecastOverdueCarried: "Quá hạn trôi sang (DSO)",
+    forecastScheduleTableTitle: "Bảng Kê Lịch Trình Thu/Chi Dự Kiến theo Ngày",
+    forecastColDate: "Ngày dự kiến",
+    forecastColReceivable: "Dự thu",
+    forecastColPayable: "Dự chi",
+    forecastColNet: "Vị thế ròng",
+    forecastColInvoices: "Số HĐ",
+    forecastOverdueRow: "Quá hạn trôi sang",
+
+    // Executive Aging Analytics
+    ticketSizeTitle: "Cơ cấu Quy mô Hóa đơn (Pareto 80/20)",
+    ticketSizeUnder10m: "< 10 triệu",
+    ticketSize10mTo50m: "10 - 50 triệu",
+    ticketSize50mTo100m: "50 - 100 triệu",
+    branchDistributionTitle: "Phân bổ Công nợ theo Chi nhánh",
+    topPartnersConcentrationTitle: "Đối tác Chi phối & Tập trung Nợ (Top 5)",
+    riskExposureTitle: "Ma trận Bóc tách Rủi ro Khó đòi & Trích lập IFRS 9",
+    actionStrategyTitle: "Chiến lược Hành động & Cơ chế Mô hình",
+    unassignedBranch: "Chưa phân chi nhánh",
+    deficitWarning: "Áp lực chi trả: Thâm hụt {{amount}}",
+    deficitDesc:
+      "Nhu cầu chi trả lớn hơn dòng tiền dự thu trong kỳ. Cần ưu tiên thu hồi nợ quá hạn từ các khách hàng lớn và đàm phán giãn thời hạn thanh toán với nhà cung cấp.",
+    surplusSafe: "Vị thế an toàn: Thặng dư {{amount}}",
+    surplusDesc:
+      "Dòng tiền dự thu đủ đáp ứng các nghĩa vụ chi trả. Duy trì đối soát và thu hồi đúng chu kỳ.",
+    methodModelTitle: "Phương pháp & Mô hình tính toán",
+    weightedLagTitle: "Thuật toán Weighted Partner Lag (DSO/DPO):",
+    forecastFilterNote:
+      "Lọc các hóa đơn có Ngày dự kiến thu/trả ≤ {{horizon}}.",
+    standardAgingNote:
+      "Khoảng phân loại tuổi nợ theo số ngày trôi qua kể từ Ngày hóa đơn: ",
+    expectedFormula:
+      "Tiền kỳ vọng = ∑(Còn nợ × Xác suất IFRS 9). Khớp 100% với cột Tiền kỳ vọng trong bảng chi tiết.",
+    riskModelTitle: "Mô hình Dự phòng Rủi ro Tín dụng (IFRS 9 ECL):",
+    riskReceivable:
+      "Phải thu KH: ≤30d (15%), 31-60d (40%), 61-90d (70%), >90d (90%)",
+    riskPayable:
+      "Phải trả NCC: ≤30d (5%), 31-60d (15%), 61-90d (30%), >90d (50%)",
+    riskFormula:
+      "Dự phòng rủi ro = ∑(Còn nợ × Tỷ lệ trích lập). Khớp 100% với cột Dự phòng rủi ro trong bảng chi tiết.",
   },
 
   agingExplanation: {

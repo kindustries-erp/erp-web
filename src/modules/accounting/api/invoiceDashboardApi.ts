@@ -107,6 +107,9 @@ export interface TimeHorizonInvoiceItem {
   partnerAvgLagDays?: number;
   estimatedSettlementDate?: string;
   recoveryProbability?: number;
+  riskProbability?: number;
+  expectedAmount?: number;
+  riskAmount?: number;
   status: string;
   taxInvoiceStatus?: number;
   description?: string;
@@ -117,7 +120,86 @@ export interface TimeHorizonTopPartnerItem {
   taxCode: string;
   partnerName: string;
   balanceAmount: number;
+  contributingAmount?: number;
+  sharePercentage?: number;
   invoiceCount: number;
+  avgLagDays?: number;
+  overdueCarriedAmount?: number;
+  overdueInvoicesCount?: number;
+  isOverdueLag?: boolean;
+}
+
+export interface TimeHorizonMonthlyTrendItem {
+  month: string;
+  outTotal: number;
+  outPaid: number;
+  outBalance: number;
+  inTotal: number;
+  inPaid: number;
+  inBalance: number;
+  invoiceCount: number;
+}
+
+export interface TimeHorizonAgingBreakdown {
+  outAging0_30: number;
+  outAging31_60: number;
+  outAging61_90: number;
+  outAgingOver90: number;
+  inAging0_30: number;
+  inAging31_60: number;
+  inAging61_90: number;
+  inAgingOver90: number;
+}
+
+export interface TimeHorizonMaturityBreakdown {
+  outDueInPeriodAmount: number;
+  outDueInPeriodCount: number;
+  outOverdueCarriedAmount: number;
+  outOverdueCarriedCount: number;
+  inDueInPeriodAmount: number;
+  inDueInPeriodCount: number;
+  inOverdueCarriedAmount: number;
+  inOverdueCarriedCount: number;
+}
+
+export interface TimeHorizonTicketSizeBuckets {
+  outUnder10mAmount: number;
+  outUnder10mCount: number;
+  out10mTo50mAmount: number;
+  out10mTo50mCount: number;
+  out50mTo100mAmount: number;
+  out50mTo100mCount: number;
+  outOver100mAmount: number;
+  outOver100mCount: number;
+
+  inUnder10mAmount: number;
+  inUnder10mCount: number;
+  in10mTo50mAmount: number;
+  in10mTo50mCount: number;
+  in50mTo100mAmount: number;
+  in50mTo100mCount: number;
+  inOver100mAmount: number;
+  inOver100mCount: number;
+}
+
+export interface TimeHorizonBranchBreakdownItem {
+  branchId: string;
+  branchName?: string;
+  branchCode?: string;
+  outAmount: number;
+  outCount: number;
+  inAmount: number;
+  inCount: number;
+}
+
+/** Một điểm dữ liệu trong Lịch trình Dự báo Dòng tiền theo Ngày */
+export interface TimeHorizonDailyForecastItem {
+  /** 'OVERDUE' (quá hạn trôi sang) hoặc 'YYYY-MM-DD' (ngày cụ thể) */
+  dateKey: string;
+  outAmount: number; // Dự thu
+  outCount: number;
+  inAmount: number; // Dự chi
+  inCount: number;
 }
 
 export interface TimeHorizonDetailSummary {
@@ -130,6 +212,13 @@ export interface TimeHorizonDetailSummary {
   payableCount: number;
   topReceivablePartners: TimeHorizonTopPartnerItem[];
   topPayablePartners: TimeHorizonTopPartnerItem[];
+  monthlyTrend?: TimeHorizonMonthlyTrendItem[];
+  agingBreakdown?: TimeHorizonAgingBreakdown;
+  maturityBreakdown?: TimeHorizonMaturityBreakdown;
+  ticketSizeBuckets?: TimeHorizonTicketSizeBuckets;
+  branchBreakdown?: TimeHorizonBranchBreakdownItem[];
+  /** Chỉ trả về cho forecastNext7Days / forecastNext30Days */
+  dailyForecastTimeline?: TimeHorizonDailyForecastItem[];
 }
 
 export interface TimeHorizonInvoicesResponse {

@@ -12,8 +12,11 @@ import {
   AlertOctagon,
   Brain,
   ExternalLink,
+  BarChart2,
+  TrendingUp,
 } from "lucide-react";
 import { DashboardTemplate } from "@/shared/components/DashboardTemplate";
+import { PillTabs } from "@/shared/components/PillTabs";
 import { KpiCard, KpiBadge } from "@/shared/components/KpiCard";
 import { Panel } from "@/shared/components/Panel";
 import { BarChart } from "@/shared/components/charts/BarChart";
@@ -284,42 +287,51 @@ export function InvoiceDebtsDashboardTab({
       </div>
 
       {/* ── SECTION 2: Aging Allocation & Algorithmic Cashflow Forecast Grid ── */}
-      <div className="mb-4">
-        <div className="text-xs font-semibold uppercase tracking-[0.05em] text-muted-foreground mb-2 flex flex-wrap items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <div className="inline-flex rounded-lg border border-border p-0.5 bg-muted/30">
-              <button
-                type="button"
-                onClick={() => setViewMode("aging")}
-                className={cn(
-                  "px-2.5 py-1 text-xs font-medium rounded-md transition-all flex items-center gap-1.5",
-                  viewMode === "aging"
-                    ? "bg-surface shadow-xs text-foreground font-semibold"
-                    : "text-muted-foreground hover:text-foreground",
-                )}
-              >
-                <Clock className="w-3.5 h-3.5 text-primary" />
-                {t("debts:dashboard.viewAgingMode", "Phân bổ Tuổi nợ")}
-              </button>
-              <button
-                type="button"
-                onClick={() => setViewMode("forecast")}
-                className={cn(
-                  "px-2.5 py-1 text-xs font-medium rounded-md transition-all flex items-center gap-1.5",
-                  viewMode === "forecast"
-                    ? "bg-surface shadow-xs text-primary font-semibold"
-                    : "text-muted-foreground hover:text-foreground",
-                )}
-              >
-                <Brain className="w-3.5 h-3.5 text-primary" />
-                {t("debts:dashboard.viewForecastMode", "Dự báo Thuật toán")}
-              </button>
-            </div>
-            <DebtAgingExplanationPopover />
+      <div className="flex flex-col gap-3 mb-4">
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <div className="flex items-center gap-3 flex-1 min-w-[240px]">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-md border border-slate-200/80 dark:border-slate-700 shadow-sm flex items-center gap-1.5 whitespace-nowrap">
+              <BarChart2 className="w-3.5 h-3.5 text-slate-600 dark:text-slate-400" />
+              {t(
+                "debts:dashboard.sectionAgingAndForecast",
+                "Phân bổ & Dự báo Công nợ",
+              )}
+            </h4>
+            <div className="h-px bg-slate-200/80 dark:bg-slate-700 flex-1 hidden sm:block" />
           </div>
 
-          <span className="text-[11px] text-muted-foreground/70 normal-case font-normal hidden sm:inline">
-            Click vào từng thẻ để xem chi tiết hóa đơn & đối tác
+          <div className="flex items-center gap-2">
+            <PillTabs<"aging" | "forecast">
+              value={viewMode}
+              onValueChange={setViewMode}
+              size="sm"
+              items={[
+                {
+                  value: "aging",
+                  label: t("debts:dashboard.viewAgingMode", "Phân bổ Tuổi nợ"),
+                  icon: Clock,
+                },
+                {
+                  value: "forecast",
+                  label: t(
+                    "debts:dashboard.viewForecastMode",
+                    "Dự báo Thuật toán",
+                  ),
+                  icon: Brain,
+                },
+              ]}
+              className="w-auto"
+            />
+            <DebtAgingExplanationPopover />
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between -mt-1">
+          <span className="text-[11px] text-muted-foreground/70 font-normal hidden sm:inline">
+            {t(
+              "debts:dashboard.horizonClickHint",
+              "Click vào từng thẻ để xem chi tiết hóa đơn & đối tác",
+            )}
           </span>
         </div>
 
@@ -758,104 +770,124 @@ export function InvoiceDebtsDashboardTab({
       </div>
 
       {/* ── SECTION 3: Deep-Dive Analytics Charts Grid ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
-        {/* Chart 1: Monthly Cashflow Trend & Net Position */}
-        <Panel
-          title={t(
-            "debts:dashboard.trendChartTitle",
-            "Biến động Dòng tiền Mua/Bán & Vị thế ròng theo tháng",
+      <div className="flex items-center gap-3 mb-3">
+        <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-md border border-slate-200/80 dark:border-slate-700 shadow-sm flex items-center gap-1.5 whitespace-nowrap">
+          <TrendingUp className="w-3.5 h-3.5 text-slate-600 dark:text-slate-400" />
+          {t(
+            "debts:dashboard.sectionAnalyticsCharts",
+            "Biến động & Phân tích Công nợ",
           )}
-        >
-          <div className="relative h-[280px]">
-            {isLoading ? (
-              <ChartSkeleton />
-            ) : trendLabels.length > 0 ? (
-              <BarChart
-                labels={trendLabels}
-                datasets={trendDatasets}
-                showLegend={true}
-                yCallback={(v) => money(Number(v))}
-              />
-            ) : (
-              <div className="h-full flex items-center justify-center">
-                <EmptyState
-                  message={t(
-                    "debts:dashboard.noData",
-                    "Chưa có dữ liệu biểu đồ",
-                  )}
-                  size="sm"
-                />
-              </div>
-            )}
-          </div>
-        </Panel>
+        </h4>
+        <div className="h-px bg-slate-200/80 dark:bg-slate-700 flex-1 hidden sm:block" />
+      </div>
 
-        {/* Chart 2: Aging Matrix Comparison (Receivables vs Payables) */}
-        <Panel
-          title={t(
-            "debts:dashboard.agingMatrixTitle",
-            "Ma trận so sánh Tuổi nợ (Phải thu vs Phải trả)",
-          )}
-        >
-          <div className="relative h-[280px]">
-            {isLoading ? (
-              <ChartSkeleton />
-            ) : agingComparison.length > 0 ? (
-              <BarChart
-                labels={agingLabels}
-                datasets={agingMatrixDatasets}
-                showLegend={true}
-                yCallback={(v) => money(Number(v))}
-              />
-            ) : (
-              <div className="h-full flex items-center justify-center">
-                <EmptyState
-                  message={t(
-                    "debts:dashboard.noData",
-                    "Chưa có dữ liệu biểu đồ",
-                  )}
-                  size="sm"
-                />
-              </div>
+      {/* ── HÀNG 1: BIỂU ĐỒ DÒNG TIỀN (50%) + MA TRẬN TUỔI NỢ (25%) + CƠ CẤU TUỔI NỢ (25%) ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-4 mb-4">
+        {/* Chart 1: Monthly Cashflow Trend & Net Position (Chiếm 2 cột = 50% width) */}
+        <div className="lg:col-span-2 xl:col-span-2">
+          <Panel
+            title={t(
+              "debts:dashboard.trendChartTitle",
+              "Biến động Dòng tiền Mua/Bán & Vị thế ròng theo tháng",
             )}
-          </div>
-        </Panel>
+          >
+            <div className="relative h-[280px]">
+              {isLoading ? (
+                <ChartSkeleton />
+              ) : trendLabels.length > 0 ? (
+                <BarChart
+                  labels={trendLabels}
+                  datasets={trendDatasets}
+                  showLegend={true}
+                  yCallback={(v) => money(Number(v))}
+                />
+              ) : (
+                <div className="h-full flex items-center justify-center">
+                  <EmptyState
+                    message={t(
+                      "debts:dashboard.noData",
+                      "Chưa có dữ liệu biểu đồ",
+                    )}
+                    size="sm"
+                  />
+                </div>
+              )}
+            </div>
+          </Panel>
+        </div>
 
-        {/* Chart 3: System-wide Debt Aging Breakdown (Donut) */}
-        <Panel
-          title={t(
-            "debts:dashboard.agingChartTitle",
-            "Cơ cấu Phân bổ Tuổi nợ Toàn hệ thống",
-          )}
-        >
-          <div className="relative h-[280px] flex flex-col justify-between">
-            {isLoading ? (
-              <ChartSkeleton />
-            ) : agingDonutData.items.length > 0 ? (
-              <>
-                <div className="h-[180px] flex items-center justify-center">
-                  <DonutChart
+        {/* Chart 2: Aging Matrix Comparison (Chiếm 1 cột = 25% width) */}
+        <div className="lg:col-span-1 xl:col-span-1">
+          <Panel
+            title={t(
+              "debts:dashboard.agingMatrixTitle",
+              "Ma trận so sánh Tuổi nợ",
+            )}
+          >
+            <div className="relative h-[280px]">
+              {isLoading ? (
+                <ChartSkeleton />
+              ) : agingComparison.length > 0 ? (
+                <BarChart
+                  labels={agingLabels}
+                  datasets={agingMatrixDatasets}
+                  showLegend={true}
+                  yCallback={(v) => money(Number(v))}
+                />
+              ) : (
+                <div className="h-full flex items-center justify-center">
+                  <EmptyState
+                    message={t(
+                      "debts:dashboard.noData",
+                      "Chưa có dữ liệu biểu đồ",
+                    )}
+                    size="sm"
+                  />
+                </div>
+              )}
+            </div>
+          </Panel>
+        </div>
+
+        {/* Chart 3: System-wide Debt Aging Breakdown (Donut - Chiếm 1 cột = 25% width) */}
+        <div className="lg:col-span-1 xl:col-span-1">
+          <Panel
+            title={t(
+              "debts:dashboard.agingChartTitle",
+              "Cơ cấu Phân bổ Tuổi nợ",
+            )}
+          >
+            <div className="relative h-[280px] flex flex-col justify-between">
+              {isLoading ? (
+                <ChartSkeleton />
+              ) : agingDonutData.items.length > 0 ? (
+                <>
+                  <div className="h-[180px] flex items-center justify-center">
+                    <DonutChart
+                      items={agingDonutData.items}
+                      valueFormatter={(val) => `${val}%`}
+                    />
+                  </div>
+                  <DonutLegend
                     items={agingDonutData.items}
                     valueFormatter={(val) => `${val}%`}
                   />
+                </>
+              ) : (
+                <div className="h-full flex items-center justify-center">
+                  <EmptyState
+                    message={t("debts:dashboard.noData", "Chưa có dữ liệu")}
+                    size="sm"
+                  />
                 </div>
-                <DonutLegend
-                  items={agingDonutData.items}
-                  valueFormatter={(val) => `${val}%`}
-                />
-              </>
-            ) : (
-              <div className="h-full flex items-center justify-center">
-                <EmptyState
-                  message={t("debts:dashboard.noData", "Chưa có dữ liệu")}
-                  size="sm"
-                />
-              </div>
-            )}
-          </div>
-        </Panel>
+              )}
+            </div>
+          </Panel>
+        </div>
+      </div>
 
-        {/* Chart 4: Top 5 Debt Risk Exposures Panel */}
+      {/* ── HÀNG 2: TOP 5 ĐẦU MỐI RỦI RO & ÁP LỰC CÔNG NỢ ── */}
+      <div className="mb-4">
         <Panel
           title={t(
             "debts:dashboard.topRiskTitle",
@@ -890,7 +922,7 @@ export function InvoiceDebtsDashboardTab({
             </div>
           }
         >
-          <div className="min-h-[280px] flex flex-col justify-between">
+          <div className="min-h-[220px] flex flex-col justify-between">
             {isLoading ? (
               <div className="space-y-3 py-2">
                 {[1, 2, 3, 4, 5].map((i) => (
@@ -901,7 +933,7 @@ export function InvoiceDebtsDashboardTab({
                 ))}
               </div>
             ) : activeTopRiskList.length > 0 ? (
-              <div className="space-y-2 py-1">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5 py-1">
                 {activeTopRiskList.map((partner, idx) => {
                   const hasOverdue = partner.overdueAmount > 0;
                   return (
@@ -926,21 +958,23 @@ export function InvoiceDebtsDashboardTab({
                             </span>
                             <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 text-primary" />
                           </div>
-                          <div className="text-[10px] text-muted-foreground font-mono truncate">
-                            {partner.taxCode} •{" "}
-                            {t("debts:dashboard.maxAgingLabel", "Tuổi nợ")}:{" "}
-                            {partner.maxAgingDays} ngày
+                          <div className="text-[10px] text-muted-foreground font-mono flex items-center gap-1.5 mt-0.5">
+                            <span>{partner.taxCode}</span>
+                            <span>•</span>
+                            <span>
+                              {t("debts:dashboard.agingDays", "Tuổi nợ")}:{" "}
+                              {partner.maxAgingDays} ngày
+                            </span>
                           </div>
                         </div>
                       </div>
-
                       <div className="text-right shrink-0">
-                        <div className="text-xs font-semibold font-mono text-foreground tabular-nums">
+                        <div className="font-mono text-xs font-semibold text-foreground">
                           {money(partner.balanceAmount)}
                         </div>
                         {hasOverdue && (
-                          <div className="text-[10px] font-mono text-rose-600 dark:text-rose-400">
-                            {t("debts:dashboard.overdueLabel", "Quá hạn")}:{" "}
+                          <div className="text-[10px] text-rose-600 dark:text-rose-400 font-mono font-medium">
+                            {t("debts:dashboard.overdue", "Quá hạn")}:{" "}
                             {money(partner.overdueAmount)}
                           </div>
                         )}
@@ -950,7 +984,7 @@ export function InvoiceDebtsDashboardTab({
                 })}
               </div>
             ) : (
-              <div className="h-full flex items-center justify-center py-10">
+              <div className="h-full min-h-[160px] flex items-center justify-center">
                 <EmptyState
                   message={t("debts:dashboard.noData", "Chưa có dữ liệu")}
                   size="sm"

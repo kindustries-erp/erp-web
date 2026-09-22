@@ -80,6 +80,9 @@ export const debtsEn = {
     noData: "No data available",
     overdueLabel: "Overdue",
     maxAgingLabel: "Max aging",
+    sectionAgingAndForecast: "Debt Allocation & Forecast",
+    sectionAnalyticsCharts: "Debt Trend & Analytics",
+    horizonClickHint: "Click a card to view detailed invoices & partners",
   },
 
   columns: {
@@ -224,10 +227,24 @@ export const debtsEn = {
     financialSummary: "Aging Bucket Financial Summary",
     topPartners: "Key Business Partners in Bucket",
     recommendations: "Recommended Actions & Risk Management",
+    tabInvoices: "1. Detailed Invoices",
+    tabAnalytics: "2. Trends & Analytics",
+    tabReceivablesShort: "Receivables",
+    tabPayablesShort: "Payables",
+    trendChartTitle: "Monthly Invoice Dynamics",
+    agingDistribution: "Aging Bucket Structure",
+    cumulativeTrendTitle: "Cumulative Cashflow & Balance Run-Rate",
+    recoveryRateTitle: "Monthly Recovery Rate (%)",
+    paymentRateTitle: "Monthly Payment Rate (%)",
+    monthlyMatrixTitle: "Monthly Breakdown Summary",
     tabAll: "All",
     tabReceivables: "Receivables (Sales)",
     tabPayables: "Payables (Purchases)",
     invoicesList: "Detailed Invoice List",
+    invoiceNoAndSerial: "Invoice No / Serial",
+    partnerAndTax: "Partner / Tax Code",
+    partnerBuyerAndTax: "Buyer / Tax Code",
+    partnerSellerAndTax: "Seller / Tax Code",
     expectedIn: "Receivables (Customers)",
     expectedOut: "Payables (Suppliers)",
     netFlow: "Net Difference",
@@ -235,6 +252,26 @@ export const debtsEn = {
     deficit: "Payment Pressure",
     topCustomers: "Top 5 Receivable Customers",
     topSuppliers: "Top 5 Payable Suppliers",
+    partnerAvgLag: "Avg Lag",
+    estimatedSettlementDate: "Estimated Due",
+    recoveryProbability: "Recovery Prob",
+    riskProbability: "Risk Rate",
+    expectedAmount: "Expected Cashflow",
+    riskAmount: "Risk Provision",
+    sharePercentage: "Share",
+    formulaTitle: "Formula & Mathematical Model",
+    topContributorsTitle: "Top Contributing Partners",
+    contributingShare: "Represents {{percent}}% of card total",
+    cardReceivable: "Receivables",
+    cardPayable: "Payables",
+    cardNet: "Net Position",
+    matrixTitle: "IFRS 9 Probability Matrix",
+    matrixReceivable:
+      "Receivables: ≤30d (85%), 31-60d (60%), 61-90d (30%), >90d (10%)",
+    matrixPayable:
+      "Payables: ≤30d (95%), 31-60d (85%), 61-90d (70%), >90d (50%)",
+    dsoExplanation:
+      "Estimated Settlement Date = Invoice Date + Partner Average Payment Lag (DSO/DPO).",
     recNextWeek:
       "Fresh invoices issued within the last 7 days, currently in normal circulation and initial billing verification.",
     recNextMonth:
@@ -251,7 +288,71 @@ export const debtsEn = {
       "Expected recoverable cashflow value weighted by IFRS 9 probability of default matrix across aging buckets.",
     recDefaultRiskProvision:
       "Provision for bad debts under IFRS 9 expected credit loss model for severely overdue invoices or high-risk partners.",
+    flowBreakdownTitle: "Cashflow Breakdown & Key Exposure",
+    dueInPeriod: "Due in Period (Normal Cycle)",
+    overdueCarried: "Overdue Carried (DSO Overdue)",
+    concentrationAlert:
+      "Top {{count}} partners control {{percent}}% of cashflow",
+    overdueLagBadge: "Overdue {{days}} days",
+    normalLagBadge: "On Cycle",
+    expectedAmountCol: "Expected Inflow",
+    expectedPayableCol: "Expected Outflow",
     emptyInvoices: "No invoices found in this aging bucket",
+    // Forecast Analytics - Daily Timeline
+    forecastDailyTimelineTitle: "Daily Inflow / Outflow Schedule",
+    forecastDailyTimelineDesc:
+      "Daily cashflow forecast for inflows and outflows within the period",
+    forecastOverdueBucket: "Overdue Carried Over",
+    forecastDailyReceivable: "Est. Inflow",
+    forecastDailyPayable: "Est. Outflow",
+    forecastCumulativeTitle: "Cumulative Forecast Cashflow & Net Position",
+    forecastCumulativeReceivable: "Cumulative Inflow",
+    forecastCumulativePayable: "Cumulative Outflow",
+    forecastCumulativeNet: "Net Position",
+    forecastCompositionTitle: "Forecast Cashflow Composition",
+    forecastDueInPeriod: "Due In Period",
+    forecastOverdueCarried: "Overdue Carried (DSO)",
+    forecastScheduleTableTitle: "Daily Settlement Schedule",
+    forecastColDate: "Expected Date",
+    forecastColReceivable: "Est. Inflow",
+    forecastColPayable: "Est. Outflow",
+    forecastColNet: "Net",
+    forecastColInvoices: "# Inv.",
+    forecastOverdueRow: "Overdue Carried",
+
+    // Executive Aging Analytics
+    ticketSizeTitle: "Invoice Size Distribution (Pareto 80/20)",
+    ticketSizeUnder10m: "< 10M",
+    ticketSize10mTo50m: "10 - 50M",
+    ticketSize50mTo100m: "50 - 100M",
+    ticketSizeOver100m: "> 100M",
+    branchDistributionTitle: "Debt Allocation by Branch",
+    topPartnersConcentrationTitle:
+      "Dominant Partners & Debt Concentration (Top 5)",
+    riskExposureTitle: "IFRS 9 Expected Credit Loss & Provision Matrix",
+    actionStrategyTitle: "Action Strategy & Model Mechanics",
+    unassignedBranch: "Unassigned Branch",
+    deficitWarning: "Payment Pressure: Deficit {{amount}}",
+    deficitDesc:
+      "Disbursement requirements exceed forecasted inflow in this period. Prioritize overdue collections and negotiate extended vendor payment terms.",
+    surplusSafe: "Safe Liquidity: Surplus {{amount}}",
+    surplusDesc:
+      "Expected cash inflow is sufficient to meet disbursement commitments. Maintain regular statement matching and scheduled recovery.",
+    methodModelTitle: "Methodology & Forecasting Models",
+    weightedLagTitle: "Weighted Partner Lag Algorithm (DSO/DPO):",
+    forecastFilterNote:
+      "Filters invoices with expected settlement date ≤ {{horizon}}.",
+    standardAgingNote:
+      "Aging classification based on elapsed days since invoice date: ",
+    expectedFormula:
+      "Expected Inflow = ∑(Balance × IFRS 9 Probability). Matches 100% with the detail table.",
+    riskModelTitle: "IFRS 9 Expected Credit Loss (ECL) Model:",
+    riskReceivable:
+      "Customer Receivables: ≤30d (15%), 31-60d (40%), 61-90d (70%), >90d (90%)",
+    riskPayable:
+      "Vendor Payables: ≤30d (5%), 31-60d (15%), 61-90d (30%), >90d (50%)",
+    riskFormula:
+      "Credit Loss Provision = ∑(Balance × Provision Rate). Matches 100% with the detail table.",
   },
 
   agingExplanation: {
