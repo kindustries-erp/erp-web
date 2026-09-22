@@ -1,4 +1,8 @@
 export const garageVi = {
+  tabs: {
+    dashboard: "Tổng quan",
+    cases: "Phiếu dịch vụ",
+  },
   dashboard: {
     title: "Tổng quan Garage",
     desc: "Báo cáo tổng quan hiệu quả hoạt động xưởng dịch vụ, doanh thu, chi phí và tình trạng phiếu sửa chữa",
@@ -97,6 +101,7 @@ export const garageVi = {
       caseDate: "Ngày tiếp nhận",
       caseCode: "Số chứng từ",
       licensePlate: "Biển số xe",
+      customer: "Khách hàng",
       customerCode: "Mã KH",
       customerName: "Tên khách hàng",
       insurance: "BH",
@@ -126,7 +131,9 @@ export const garageVi = {
       createdAt: "Ngày tạo",
       updatedAt: "Ngày cập nhật",
       status: "Trạng thái",
-      classification: "Phân loại",
+      classification: "Phân loại ERP",
+      classificationErp: "Phân loại ERP",
+      kgaraClassification: "Phân loại KGara",
     },
     summary: {
       items: "Phiếu dịch vụ",
@@ -284,6 +291,8 @@ export const garageVi = {
       creationDate: "Ngày phát sinh",
       classificationAndNotes: "Phân loại & Ghi chú ERP",
       classification: "Phân loại",
+      kgaraClassification: "Nguồn gốc xe (KGara)",
+      kgaraClassificationHint: "Đồng bộ từ KGara - Bất biến",
       erpNotes: "Ghi chú ERP",
       financials: "Tài chính",
       financialsErp: "Tài chính",

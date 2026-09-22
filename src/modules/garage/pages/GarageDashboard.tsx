@@ -7,6 +7,8 @@ import { useQuery, useQueryClient, useIsFetching } from "@tanstack/react-query";
 import { format } from "date-fns";
 import toast from "react-hot-toast";
 
+import type { TabItem } from "@/shared/components/PageLayout";
+
 import { garageDashboardApi } from "../api/garageDashboardApi";
 import { GarageStatsCards } from "../components/GarageStatsCards";
 import { GarageTrendChart } from "../components/GarageTrendChart";
@@ -14,7 +16,17 @@ import { GarageClassificationDistributionChart } from "../components/GarageClass
 import { GaragePaymentProgressCard } from "../components/GaragePaymentProgressCard";
 import { GaragePnlSection } from "../components/GaragePnlSection";
 
-export function GarageDashboard() {
+export interface GarageDashboardProps {
+  tabs?: TabItem[];
+  activeTab?: string;
+  onTabChange?: (val: string) => void;
+}
+
+export function GarageDashboard({
+  tabs,
+  activeTab,
+  onTabChange,
+}: GarageDashboardProps = {}) {
   const { t } = useTranslation("garage");
   const queryClient = useQueryClient();
   const [isExporting, setIsExporting] = useState(false);
@@ -74,6 +86,9 @@ export function GarageDashboard() {
       icon={<LayoutDashboard className="h-4 w-4" />}
       loading={isRefreshing}
       onRefresh={handleRefresh}
+      tabs={tabs}
+      activeTab={activeTab}
+      onTabChange={onTabChange}
       extraActions={
         <Button
           onClick={handleExportExcel}

@@ -1080,16 +1080,75 @@ export function GarageCaseStandaloneDrawer({
                         }
                       />
                       <DrawerRow
+                        label={t(
+                          "cases.drawer.kgaraClassification",
+                          "Nguồn gốc xe (KGara)",
+                        )}
+                        value={
+                          selectedCase.kgaraClassification ||
+                          selectedCase.rawData?.NguonGocKhachHangName ? (
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="font-medium text-slate-800 dark:text-slate-200">
+                                {selectedCase.kgaraClassification ||
+                                  selectedCase.rawData?.NguonGocKhachHangName}
+                              </span>
+                              {selectedCase.kgaraClassificationCode && (
+                                <span className="text-[11px] font-mono text-muted-foreground bg-muted/60 px-1.5 py-0.5 rounded border border-border/40">
+                                  {selectedCase.kgaraClassificationCode}
+                                </span>
+                              )}
+                              <span className="text-[10px] text-muted-foreground/70 italic">
+                                (
+                                {t(
+                                  "cases.drawer.kgaraClassificationHint",
+                                  "Đồng bộ từ KGara - Bất biến",
+                                )}
+                                )
+                              </span>
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground/60">—</span>
+                          )
+                        }
+                      />
+                      <DrawerRow
                         label={t("cases.drawer.erpNotes", "Ghi chú ERP")}
                         value={selectedCase.erpNotes || "—"}
                       />
                     </>
                   ) : (
                     <div className="flex flex-col gap-3">
+                      {(selectedCase.kgaraClassification ||
+                        selectedCase.rawData?.NguonGocKhachHangName) && (
+                        <div className="flex items-center justify-between text-xs px-3 py-2 rounded-md bg-muted/40 border border-border/50 text-muted-foreground">
+                          <span>
+                            {t(
+                              "cases.drawer.kgaraClassification",
+                              "Nguồn gốc xe (KGara)",
+                            )}
+                            :
+                          </span>
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-semibold text-foreground">
+                              {selectedCase.kgaraClassification ||
+                                selectedCase.rawData?.NguonGocKhachHangName}
+                            </span>
+                            {selectedCase.kgaraClassificationCode && (
+                              <span className="text-[10px] font-mono bg-muted px-1.5 py-0.5 rounded border border-border/40">
+                                {selectedCase.kgaraClassificationCode}
+                              </span>
+                            )}
+                            <span className="text-[10px] text-amber-600 dark:text-amber-400 font-medium">
+                              🔒 Read-only
+                            </span>
+                          </div>
+                        </div>
+                      )}
+
                       <DrawerField
                         label={t(
                           "cases.configDrawer.classificationLabel",
-                          "Phân loại phiếu",
+                          "Phân loại phiếu (ERP)",
                         )}
                       >
                         <Combobox

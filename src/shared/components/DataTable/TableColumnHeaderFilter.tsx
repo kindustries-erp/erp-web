@@ -22,6 +22,7 @@ import { Button } from "@/shared/components/ui/Button";
 import { Input } from "@/shared/components/ui/input";
 import { Checkbox } from "@/shared/components/ui/checkbox";
 import { cn } from "@/shared/utils";
+import { formatCompositeFilterValue } from "@/shared/utils/format";
 import { useTranslation } from "react-i18next";
 import type { TableSortStateType, TableColumnAlignType } from "./types";
 
@@ -69,6 +70,16 @@ export function clearAllDropdownSearchStates() {
   dropdownSearchState.clear();
 }
 
+export function setDropdownSearchState(columnKey: string, value: string) {
+  if (!columnKey) return;
+  dropdownSearchState.set(columnKey, value);
+}
+
+export function getDropdownSearchState(columnKey: string): string | undefined {
+  if (!columnKey) return undefined;
+  return dropdownSearchState.get(columnKey);
+}
+
 export function TableColumnHeaderFilter({
   title,
   sortState,
@@ -97,10 +108,10 @@ export function TableColumnHeaderFilter({
   const { t } = useTranslation("table");
   const [open, setOpen] = useState(false);
   const [localSearch, setLocalSearch] = useState(() => {
-    if (columnKey && dropdownSearchState.has(columnKey)) {
-      return dropdownSearchState.get(columnKey) || "";
+    if (columnKey && getDropdownSearchState(columnKey) !== undefined) {
+      return getDropdownSearchState(columnKey) || "";
     }
-    return searchValue;
+    return searchValue || "";
   });
   const [pendingFilters, setPendingFilters] =
     useState<string[]>(selectedFilters);
@@ -218,7 +229,10 @@ export function TableColumnHeaderFilter({
         ? []
         : selectedFilters
             .filter((v) => !apiValues.has(v) && v !== "__BLANK__")
-            .map((v) => ({ label: v, value: v }));
+            .map((v) => ({
+              label: formatCompositeFilterValue(v),
+              value: v,
+            }));
       opts = [...missingSelected, ...apiOptions];
     } else {
       opts = filterOptions || [];
@@ -237,17 +251,19 @@ export function TableColumnHeaderFilter({
     showBlankOption,
   ]);
 
-  // Restore local search when popover opens, or clear when searchValue is cleared from outside
+  // Restore local search when popover opens, or sync when searchValue is changed/cleared from outside
   useEffect(() => {
     if (open) {
-      if (columnKey && dropdownSearchState.has(columnKey)) {
-        setLocalSearch(dropdownSearchState.get(columnKey) || "");
+      if (columnKey && getDropdownSearchState(columnKey) !== undefined) {
+        setLocalSearch(getDropdownSearchState(columnKey) || "");
       } else {
-        setLocalSearch(searchValue);
+        setLocalSearch(searchValue || "");
       }
-    } else if (!searchValue) {
-      setLocalSearch("");
-      if (columnKey) dropdownSearchState.set(columnKey, "");
+    } else {
+      if ((searchValue || "") !== localSearch) {
+        setLocalSearch(searchValue || "");
+        if (columnKey) setDropdownSearchState(columnKey, searchValue || "");
+      }
     }
   }, [open, searchValue, columnKey]);
 
@@ -301,21 +317,23 @@ export function TableColumnHeaderFilter({
   };
 
   const handleApply = () => {
+    const trimmedSearch = localSearch.trim();
     if (pendingFilters.length > 0) {
       if (pendingFilters[0] === "__ALL_MATCHING__") {
         onFilterChange(["__ALL_MATCHING__", localSearch]);
-        onSearchChange("");
+        onSearchChange(trimmedSearch);
       } else {
         onFilterChange(pendingFilters);
-        onSearchChange("");
+        onSearchChange(trimmedSearch);
       }
-    } else if (localSearch.trim()) {
-      onSearchChange(localSearch.trim());
+    } else if (trimmedSearch) {
+      onSearchChange(trimmedSearch);
       onFilterChange([]);
     } else {
       onSearchChange("");
       onFilterChange([]);
     }
+    if (columnKey) setDropdownSearchState(columnKey, trimmedSearch);
     setOpen(false);
   };
 
@@ -441,7 +459,7 @@ export function TableColumnHeaderFilter({
                     onChange={(e) => {
                       setLocalSearch(e.target.value);
                       if (columnKey)
-                        dropdownSearchState.set(columnKey, e.target.value);
+                        setDropdownSearchState(columnKey, e.target.value);
                     }}
                     onKeyDown={(e) => {
                       if (e.key === "Enter") {
@@ -455,7 +473,7 @@ export function TableColumnHeaderFilter({
                       className="absolute right-2 text-muted-foreground hover:text-foreground"
                       onClick={() => {
                         setLocalSearch("");
-                        if (columnKey) dropdownSearchState.set(columnKey, "");
+                        if (columnKey) setDropdownSearchState(columnKey, "");
                       }}
                     >
                       <X size={14} />
@@ -499,45 +517,47 @@ export function TableColumnHeaderFilter({
                               )}
                         </span>
                       </label>
-                      {finalOptions.map((opt) => (
-                        <label
-                          key={opt.value}
-                          className="flex items-center gap-2 px-2 py-1.5 hover:bg-muted rounded-md cursor-pointer"
-                        >
-                          <Checkbox
-                            checked={
-                              isAllMatchingMode ||
-                              pendingFilters.includes(opt.value)
-                            }
-                            onCheckedChange={() => {
-                              if (isAllMatchingMode) {
-                                const all = finalOptions.map((o) => o.value);
-                                setPendingFilters(
-                                  all.filter((v) => v !== opt.value),
-                                );
-                              } else {
-                                handleToggleFilter(opt.value);
-                              }
-                            }}
-                          />
-                          <span
-                            className="text-xs truncate"
-                            title={
-                              formatOptionLabel
-                                ? formatOptionLabel(opt.label)
-                                : opt.label === "(blank)"
-                                  ? t("blank", "(Trống)")
-                                  : opt.label
-                            }
+                      {finalOptions.map((opt) => {
+                        const rawLabel = opt.label || opt.value || "";
+                        const formattedComposite =
+                          formatCompositeFilterValue(rawLabel);
+                        const displayLabel = formatOptionLabel
+                          ? formatOptionLabel(formattedComposite)
+                          : formattedComposite === "(blank)" ||
+                              !formattedComposite
+                            ? t("blank", "(Trống)")
+                            : formattedComposite;
+
+                        return (
+                          <label
+                            key={opt.value}
+                            className="flex items-center gap-2 px-2 py-1.5 hover:bg-muted rounded-md cursor-pointer"
                           >
-                            {formatOptionLabel
-                              ? formatOptionLabel(opt.label)
-                              : opt.label === "(blank)" || !opt.label
-                                ? t("blank", "(Trống)")
-                                : opt.label}
-                          </span>
-                        </label>
-                      ))}
+                            <Checkbox
+                              checked={
+                                isAllMatchingMode ||
+                                pendingFilters.includes(opt.value)
+                              }
+                              onCheckedChange={() => {
+                                if (isAllMatchingMode) {
+                                  const all = finalOptions.map((o) => o.value);
+                                  setPendingFilters(
+                                    all.filter((v) => v !== opt.value),
+                                  );
+                                } else {
+                                  handleToggleFilter(opt.value);
+                                }
+                              }}
+                            />
+                            <span
+                              className="text-xs truncate"
+                              title={displayLabel}
+                            >
+                              {displayLabel}
+                            </span>
+                          </label>
+                        );
+                      })}
                       {isFetchingNextPage && (
                         <div className="p-2 flex justify-center text-muted-foreground">
                           <Loader2 size={14} className="animate-spin" />
@@ -564,7 +584,7 @@ export function TableColumnHeaderFilter({
                 onClick={() => {
                   setPendingFilters([]);
                   setLocalSearch("");
-                  if (columnKey) dropdownSearchState.set(columnKey, "");
+                  if (columnKey) setDropdownSearchState(columnKey, "");
                   onSearchChange("");
                   onFilterChange([]);
                   setOpen(false);

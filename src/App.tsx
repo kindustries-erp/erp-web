@@ -199,14 +199,9 @@ const PurchasingReportDashboardPage = lazy(() =>
     default: m.PurchasingReportDashboardPage,
   })),
 );
-const GarageDashboard = lazy(() =>
-  import("@/modules/garage/pages/GarageDashboard").then((m) => ({
-    default: m.GarageDashboard,
-  })),
-);
-const GarageCases = lazy(() =>
-  import("@/modules/garage/pages/GarageCases").then((m) => ({
-    default: m.GarageCases,
+const GarageCasesPage = lazy(() =>
+  import("@/pages/GarageCasesPage").then((m) => ({
+    default: m.GarageCasesPage,
   })),
 );
 const GarageOpex = lazy(() =>
@@ -285,8 +280,8 @@ const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   "settings-branch": SettingsBranch,
   "custom-fields": CustomFieldsPage,
   "invoice-debts": InvoiceDebtsPage,
-  "garage-dashboard": GarageDashboard,
-  "garage-cases": GarageCases,
+  "garage-dashboard": () => <GarageCasesPage initialTab="dashboard" />,
+  "garage-cases": GarageCasesPage,
   "garage-opex": GarageOpex,
   "garage-customers": GaragePartners,
   "garage-partners": GaragePartners,

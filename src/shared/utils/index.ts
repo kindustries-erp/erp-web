@@ -20,3 +20,4 @@ export function bangChu(n: number): string {
 }
 
 export * from "./buildVersion";
+export * from "./format";

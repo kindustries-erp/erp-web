@@ -301,18 +301,13 @@ export function useNavItems(): NavSearchItem[] {
     const garageSection = t("nav.sections.garage", "GARAGE");
     if (canReadGarage) {
       items.push({
-        key: "garage-dashboard",
-        label: t("nav.items.garageDashboard", "Tổng quan Garage"),
-        section: garageSection,
-        keywords: ["garage", "tong quan garage", "dashboard", "xuong"],
-        icon: <LayoutDashboard className="w-4 h-4" />,
-      });
-      items.push({
         key: "garage-cases",
         label: t("nav.items.garageCases", "Phiếu dịch vụ"),
         section: garageSection,
         keywords: [
           "garage",
+          "tong quan garage",
+          "dashboard",
           "phieu dich vu",
           "so bao gia",
           "sua chua",

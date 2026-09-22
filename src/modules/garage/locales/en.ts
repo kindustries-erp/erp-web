@@ -1,4 +1,8 @@
 export const garageEn = {
+  tabs: {
+    dashboard: "Overview",
+    cases: "Service Cases",
+  },
   dashboard: {
     title: "Garage Dashboard",
     desc: "Overview of workshop performance, revenue, cost, and service order statuses",
@@ -97,6 +101,7 @@ export const garageEn = {
       caseDate: "Reception Date",
       caseCode: "Case Code",
       licensePlate: "License Plate",
+      customer: "Customer",
       customerCode: "Customer Code",
       customerName: "Customer Name",
       insurance: "BH",
@@ -126,7 +131,9 @@ export const garageEn = {
       createdAt: "Created At",
       updatedAt: "Updated At",
       status: "Status",
-      classification: "Classification",
+      classification: "ERP Classification",
+      classificationErp: "ERP Classification",
+      kgaraClassification: "KGara Classification",
     },
     summary: {
       items: "Service Cases",
@@ -239,6 +246,8 @@ export const garageEn = {
       creationDate: "Creation Date",
       classificationAndNotes: "Classification & ERP Notes",
       classification: "Classification",
+      kgaraClassification: "KGara Vehicle Source",
+      kgaraClassificationHint: "Synced from KGara (Read-only)",
       erpNotes: "ERP Notes",
       financials: "Financials",
       financialsErp: "Financials",
