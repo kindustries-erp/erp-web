@@ -319,6 +319,31 @@ export const debtsVi = {
     forecastColInvoices: "Số HĐ",
     forecastOverdueRow: "Quá hạn trôi sang",
 
+    // Column names & Tooltips for Horizon Detail Tables
+    colMonth: "Tháng",
+    colInvoiceCount: "Số lượng HĐ",
+    colTotalAmount: "Tổng phát sinh",
+    colPaidOut: "Đã thu",
+    colPaidIn: "Đã trả",
+    colBalanceAmount: "Còn nợ",
+    colCompletionRate: "Tỷ lệ hoàn tất",
+    colRiskRate: "Tỷ lệ rủi ro",
+    colProvisionAmount: "Dự phòng rủi ro",
+    colProbability: "Xác suất",
+    colExpectedAmount: "Dòng tiền kỳ vọng",
+    colLagDays: "Độ trễ TB",
+    colEstDate: "Dự kiến thu/trả",
+    colBranch: "Chi nhánh",
+    colActions: "Thao tác",
+    daysUnit: "ngày",
+    unitMonth: "tháng",
+    emptyMonthlyData: "Không có dữ liệu tháng nào khớp với bộ lọc",
+    viewInvoiceDetail: "Xem chi tiết hóa đơn",
+    copyTaxCode: "Sao chép MST",
+    openPartnerDetail: "Mở chi tiết đối tác",
+    partnerShare: "Tỷ trọng",
+    ticketSizeOver100m: "> 100 triệu",
+
     // Executive Aging Analytics
     ticketSizeTitle: "Cơ cấu Quy mô Hóa đơn (Pareto 80/20)",
     ticketSizeUnder10m: "< 10 triệu",
@@ -350,6 +375,24 @@ export const debtsVi = {
       "Phải trả NCC: ≤30d (5%), 31-60d (15%), 61-90d (30%), >90d (50%)",
     riskFormula:
       "Dự phòng rủi ro = ∑(Còn nợ × Tỷ lệ trích lập). Khớp 100% với cột Dự phòng rủi ro trong bảng chi tiết.",
+
+    // Sub-view switcher & Top partners table
+    invoicesListTitle: "Danh sách hóa đơn chi tiết",
+    topPartnersTitle: "Danh sách Top 5 đối tác chi phối",
+    subTabInvoicesShort: "Hóa đơn chi tiết",
+    subTabTopPartnersShort: "Top 5 chi phối",
+    topPartnersConcentrationAlert:
+      "Top {{count}} đối tác chi phối {{percent}}% dòng tiền",
+    topPartnersTotalContributing: "Tổng giá trị chi phối",
+    topPartnersTotalShare: "Tỷ trọng chi phối",
+    topPartnersInvoiceCount: "Tổng số HĐ",
+    colPartner: "Đối tác",
+    colCycleStatus: "Chu kỳ thanh toán",
+    colContributingAmount: "Số tiền chi phối",
+    colShare: "Tỷ trọng",
+    emptyTopPartners: "Không tìm thấy đối tác chi phối nào trong nhóm này",
+    partnerDetailHint:
+      "Click vào đối tác để mở hồ sơ công nợ và lịch sử hóa đơn chi tiết",
   },
 
   agingExplanation: {

@@ -320,6 +320,30 @@ export const debtsEn = {
     forecastColInvoices: "# Inv.",
     forecastOverdueRow: "Overdue Carried",
 
+    // Column names & Tooltips for Horizon Detail Tables
+    colMonth: "Month",
+    colInvoiceCount: "# Invoices",
+    colTotalAmount: "Total Amount",
+    colPaidOut: "Received",
+    colPaidIn: "Paid",
+    colBalanceAmount: "Balance",
+    colCompletionRate: "Completion Rate",
+    colRiskRate: "Risk Rate",
+    colProvisionAmount: "Provision",
+    colProbability: "Probability",
+    colExpectedAmount: "Expected Cashflow",
+    colLagDays: "Avg Lag",
+    colEstDate: "Est. Date",
+    colBranch: "Branch",
+    colActions: "Actions",
+    daysUnit: "days",
+    unitMonth: "month",
+    emptyMonthlyData: "No monthly data matching filters",
+    viewInvoiceDetail: "View invoice detail",
+    copyTaxCode: "Copy Tax Code",
+    openPartnerDetail: "Open partner detail",
+    partnerShare: "Share",
+
     // Executive Aging Analytics
     ticketSizeTitle: "Invoice Size Distribution (Pareto 80/20)",
     ticketSizeUnder10m: "< 10M",
@@ -353,6 +377,24 @@ export const debtsEn = {
       "Vendor Payables: ≤30d (5%), 31-60d (15%), 61-90d (30%), >90d (50%)",
     riskFormula:
       "Credit Loss Provision = ∑(Balance × Provision Rate). Matches 100% with the detail table.",
+
+    // Sub-view switcher & Top partners table
+    invoicesListTitle: "Detailed Invoices List",
+    topPartnersTitle: "Top 5 Concentrated Partners List",
+    subTabInvoicesShort: "Detailed Invoices",
+    subTabTopPartnersShort: "Top 5 Concentrated",
+    topPartnersConcentrationAlert:
+      "Top {{count}} partners concentrate {{percent}}% of cashflow",
+    topPartnersTotalContributing: "Total Concentrated Value",
+    topPartnersTotalShare: "Concentration Share",
+    topPartnersInvoiceCount: "Total Invoices",
+    colPartner: "Partner",
+    colCycleStatus: "Payment Cycle",
+    colContributingAmount: "Concentrated Amount",
+    colShare: "Share",
+    emptyTopPartners: "No concentrated partners found in this bucket",
+    partnerDetailHint:
+      "Click a partner to open full debt profile & invoice history",
   },
 
   agingExplanation: {

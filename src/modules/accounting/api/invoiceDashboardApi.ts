@@ -207,6 +207,14 @@ export interface TimeHorizonDetailSummary {
   horizonLabel: string;
   receivableAmount: number;
   payableAmount: number;
+  receivableTotalAmount?: number;
+  payableTotalAmount?: number;
+  receivedAmount?: number;
+  paidAmount?: number;
+  receivableExpectedAmount?: number;
+  payableExpectedAmount?: number;
+  receivableRiskAmount?: number;
+  payableRiskAmount?: number;
   netAmount: number;
   receivableCount: number;
   payableCount: number;

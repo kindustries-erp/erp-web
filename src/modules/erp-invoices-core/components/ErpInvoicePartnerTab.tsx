@@ -16,6 +16,7 @@ import {
   Boxes,
   Calendar,
   Scale,
+  Paperclip,
 } from "lucide-react";
 import { CopyButton } from "@/shared/components/CopyButton";
 
@@ -46,15 +47,26 @@ import {
   InvoicePreviewModeContext,
   type InvoiceDetailViewMode,
 } from "../context/InvoicePreviewModeContext";
+import { ErpInvoiceAttachmentsSubTab } from "./ErpInvoiceAttachmentsSubTab";
 
 export interface ErpInvoicePartnerTabProps {
   detailInvoice: ErpInvoice | null;
   direction?: "IN" | "OUT";
-  defaultViewMode?: "details" | "invoices" | "lines" | "analytics";
+  defaultViewMode?:
+    | "details"
+    | "invoices"
+    | "lines"
+    | "analytics"
+    | "attachments";
   children?: React.ReactNode;
   onViewModeChange?: (
-    mode: "details" | "invoices" | "lines" | "analytics",
+    mode: "details" | "invoices" | "lines" | "analytics" | "attachments",
   ) => void;
+  form?: any;
+  editMode?: boolean;
+  fieldSet?: (key: string, value: unknown) => void;
+  onLinkExistingAttachment?: (attachmentId: string) => void;
+  onUnlinkAttachment?: (attachmentId: string) => void;
 }
 
 export const getDefaultPageSize = (): number => {
@@ -70,6 +82,11 @@ export const ErpInvoicePartnerTab = React.memo(function ErpInvoicePartnerTab({
   defaultViewMode,
   children,
   onViewModeChange,
+  form,
+  editMode = false,
+  fieldSet,
+  onLinkExistingAttachment,
+  onUnlinkAttachment,
 }: ErpInvoicePartnerTabProps) {
   const { t } = useTranslation("erpInvoices");
   const [previewSubInvoice, setPreviewSubInvoice] = useState<ErpInvoice | null>(
@@ -87,14 +104,14 @@ export const ErpInvoicePartnerTab = React.memo(function ErpInvoicePartnerTab({
   }, []);
 
   const [viewMode, setViewMode] = useState<
-    "details" | "invoices" | "lines" | "analytics"
+    "details" | "invoices" | "lines" | "analytics" | "attachments"
   >(() => {
     if (defaultViewMode) return defaultViewMode;
     return isUrlLinesTab ? "lines" : "details";
   });
 
   const handleViewModeChange = useCallback(
-    (mode: "details" | "invoices" | "lines" | "analytics") => {
+    (mode: "details" | "invoices" | "lines" | "analytics" | "attachments") => {
       setViewMode(mode);
       onViewModeChange?.(mode);
     },
@@ -103,8 +120,43 @@ export const ErpInvoicePartnerTab = React.memo(function ErpInvoicePartnerTab({
 
   const hasPdf = Boolean(
     detailInvoice?.pdfFileKey ||
-    (detailInvoice?.pdfFiles && detailInvoice.pdfFiles.length > 0),
+    (detailInvoice?.pdfFiles && detailInvoice.pdfFiles.length > 0) ||
+    (detailInvoice?.attachments &&
+      detailInvoice.attachments.some(
+        (a) =>
+          a.attachment?.mimeType === "application/pdf" ||
+          a.attachment?.fileName?.toLowerCase().endsWith(".pdf") ||
+          a.attachment?.fileKey?.toLowerCase().endsWith(".pdf"),
+      )),
   );
+
+  const attachmentCount = useMemo(() => {
+    let count = 0;
+    if (detailInvoice?.pdfFileKey) count++;
+    if (detailInvoice?.pdfFiles && detailInvoice.pdfFiles.length > 0) {
+      count += detailInvoice.pdfFiles.length;
+    }
+    if (detailInvoice?.attachments && detailInvoice.attachments.length > 0) {
+      count += detailInvoice.attachments.length;
+    }
+    if (
+      form?.pendingAddedAttachments &&
+      form.pendingAddedAttachments.length > 0
+    ) {
+      count += form.pendingAddedAttachments.length;
+    }
+    if (form?.pendingDeletedPdfs && form.pendingDeletedPdfs.length > 0) {
+      count -= form.pendingDeletedPdfs.length;
+    }
+    return Math.max(0, count);
+  }, [
+    detailInvoice?.pdfFileKey,
+    detailInvoice?.pdfFiles,
+    detailInvoice?.attachments,
+    form?.pendingAddedAttachments,
+    form?.pendingDeletedPdfs,
+  ]);
+
   const [detailViewMode, setDetailViewMode] =
     useState<InvoiceDetailViewMode>("template");
 
@@ -1126,10 +1178,12 @@ export const ErpInvoicePartnerTab = React.memo(function ErpInvoicePartnerTab({
   return (
     <div className="space-y-3 pb-2 flex-1 min-w-0 w-full flex flex-col">
       {/* ─── 1. THANH ĐIỀU HƯỚNG TỔNG HỢP: SUB-TABS + QUICK ACTIONS ─── */}
-      <div className="flex flex-wrap items-center justify-between gap-3 pt-0.5">
-        {/* Bên trái: Sub-Tabs (1. Chi tiết / 2. Danh sách hóa đơn / 3. Chi tiết hàng hóa / 4. Biến động & Dòng tiền) */}
-        <div className="flex items-center gap-2">
-          <PillTabs<"details" | "invoices" | "lines" | "analytics">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pt-0.5 w-full">
+        {/* Bên trái: Sub-Tabs (1. Chi tiết / 2. Danh sách hóa đơn / 3. Chi tiết HHDV / 4. Biến động / 5. Tài liệu đính kèm) */}
+        <div className="flex items-center overflow-x-auto scrollbar-none max-w-full pb-1 -mb-1 shrink-0">
+          <PillTabs<
+            "details" | "invoices" | "lines" | "analytics" | "attachments"
+          >
             size="sm"
             value={viewMode}
             onValueChange={handleViewModeChange}
@@ -1147,54 +1201,48 @@ export const ErpInvoicePartnerTab = React.memo(function ErpInvoicePartnerTab({
               },
               {
                 value: "lines",
-                label: t("tabGoodsItems", "3. Chi tiết hàng hóa"),
+                label: t("tabGoodsItems", "3. Chi tiết HHDV"),
                 icon: Boxes,
                 badgeCount: itemLinesTotal > 0 ? itemLinesTotal : undefined,
               },
               {
                 value: "analytics",
-                label: t("tabCashflowAnalytics", "4. Biến động & Dòng tiền"),
+                label: t("tabCashflowAnalytics", "4. Biến động"),
                 icon: TrendingUp,
+              },
+              {
+                value: "attachments",
+                label: t("tabAttachments", "5. Tài liệu đính kèm"),
+                icon: Paperclip,
+                badgeCount: attachmentCount > 0 ? attachmentCount : undefined,
               },
             ]}
           />
         </div>
 
         {/* Bên phải: Quick Actions & Count Summary & View Mode Toggle */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap shrink-0">
           {viewMode === "details" && (
-            <div className="flex items-center gap-1 p-0.5">
-              <button
-                type="button"
-                onClick={() => setDetailViewMode("template")}
-                className={cn(
-                  "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-colors cursor-pointer select-none whitespace-nowrap",
-                  detailViewMode === "template"
-                    ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900 font-semibold shadow-xs"
-                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800",
-                )}
-              >
-                <FileText className="w-3.5 h-3.5" />
-                <span>{t("viewModeTemplate", "Xem trước HĐ thuần")}</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setDetailViewMode("pdf")}
-                className={cn(
-                  "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-colors cursor-pointer select-none whitespace-nowrap",
-                  detailViewMode === "pdf"
-                    ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900 font-semibold shadow-xs"
-                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800",
-                )}
-              >
-                <FileDown className="w-3.5 h-3.5" />
-                <span>{t("viewModePdf", "File PDF")}</span>
-                {hasPdf && (
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
-                )}
-              </button>
-            </div>
+            <PillTabs<"template" | "pdf">
+              size="sm"
+              variant="button-group"
+              value={detailViewMode}
+              onValueChange={(val) => setDetailViewMode(val)}
+              items={[
+                {
+                  value: "template",
+                  label: t("viewModeTemplate", "Xem trước HĐ thuần"),
+                  icon: FileText,
+                },
+                {
+                  value: "pdf",
+                  label: t("viewModePdf", "File PDF"),
+                  icon: FileDown,
+                  dot: hasPdf,
+                  dotColor: "emerald",
+                },
+              ]}
+            />
           )}
 
           {viewMode === "invoices" && (
@@ -1233,7 +1281,7 @@ export const ErpInvoicePartnerTab = React.memo(function ErpInvoicePartnerTab({
               )}
               {itemLinesTotal > 0 && (
                 <span className="text-xs font-normal text-muted-foreground">
-                  {itemLinesTotal} {t("itemsCount", "dòng hàng hóa")}
+                  {itemLinesTotal} {t("itemsCount", "dòng HHDV")}
                 </span>
               )}
             </>
@@ -1242,6 +1290,12 @@ export const ErpInvoicePartnerTab = React.memo(function ErpInvoicePartnerTab({
           {viewMode === "analytics" && cashTrendLabels.length > 0 && (
             <span className="text-xs font-normal text-muted-foreground">
               {cashTrendLabels.length} {t("periodsCount", "kỳ phát sinh")}
+            </span>
+          )}
+
+          {viewMode === "attachments" && attachmentCount > 0 && (
+            <span className="text-xs font-normal text-muted-foreground">
+              {attachmentCount} {t("attachmentsCount", "tài liệu")}
             </span>
           )}
         </div>
@@ -1256,7 +1310,7 @@ export const ErpInvoicePartnerTab = React.memo(function ErpInvoicePartnerTab({
             hasPdf,
           }}
         >
-          <div className="flex-1 min-h-0 overflow-y-auto space-y-3">
+          <div className="flex-1 min-h-0 overflow-y-auto space-y-3 w-full">
             {children ?? (
               <div className="p-8 text-center text-xs text-muted-foreground">
                 {t("noDetailContent", "Không có nội dung chi tiết")}
@@ -1266,11 +1320,11 @@ export const ErpInvoicePartnerTab = React.memo(function ErpInvoicePartnerTab({
         </InvoicePreviewModeContext.Provider>
       )}
 
-      {/* ─── 2. NỘI DUNG BIẾN ĐỘNG & DÒNG TIỀN (ANALYTICS DASHBOARD) ─── */}
+      {/* ─── 2. NỘI DUNG BIẾN ĐỘNG (ANALYTICS DASHBOARD) ─── */}
       {viewMode === "analytics" && (
-        <div className="space-y-3.5 flex-1 min-h-0 overflow-y-auto pr-1">
+        <div className="space-y-3.5 flex-1 min-h-0 overflow-y-auto pr-1 w-full">
           {/* 2.1 KPI Cards Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-2.5 w-full">
             {/* KPI 1: Tổng HĐ Đầu Vào */}
             <div className="p-3 rounded-xl bg-orange-500/10 border border-orange-500/20 flex flex-col justify-between">
               <div className="flex items-center justify-between text-xs text-muted-foreground">
@@ -1279,7 +1333,7 @@ export const ErpInvoicePartnerTab = React.memo(function ErpInvoicePartnerTab({
                   {t("totalInvoicesIn", "Tổng HĐ Đầu vào (Chi)")}
                 </span>
                 <span className="text-[11px] font-medium text-muted-foreground/70">
-                  {cashTrendLabels.length} kỳ
+                  {cashTrendLabels.length} {t("periodsUnit", "kỳ")}
                 </span>
               </div>
               <div className="mt-2 text-lg font-bold text-foreground tabular-nums">
@@ -1298,7 +1352,7 @@ export const ErpInvoicePartnerTab = React.memo(function ErpInvoicePartnerTab({
                   {t("totalInvoicesOut", "Tổng HĐ Đầu ra (Thu)")}
                 </span>
                 <span className="text-[11px] font-medium text-muted-foreground/70">
-                  {cashTrendLabels.length} kỳ
+                  {cashTrendLabels.length} {t("periodsUnit", "kỳ")}
                 </span>
               </div>
               <div className="mt-2 text-lg font-bold text-foreground tabular-nums">
@@ -1309,12 +1363,12 @@ export const ErpInvoicePartnerTab = React.memo(function ErpInvoicePartnerTab({
               </div>
             </div>
 
-            {/* KPI 3: Dòng tiền ròng */}
+            {/* KPI 3: Chênh lệch ròng (No Blue Mandate: emerald khi >= 0, amber khi < 0) */}
             <div
               className={cn(
                 "p-3 rounded-xl border flex flex-col justify-between",
                 netCashflow >= 0
-                  ? "bg-blue-500/10 border-blue-500/20"
+                  ? "bg-emerald-500/10 border-emerald-500/20"
                   : "bg-amber-500/10 border-amber-500/20",
               )}
             >
@@ -1323,7 +1377,7 @@ export const ErpInvoicePartnerTab = React.memo(function ErpInvoicePartnerTab({
                   className={cn(
                     "font-semibold flex items-center gap-1.5",
                     netCashflow >= 0
-                      ? "text-blue-600 dark:text-blue-400"
+                      ? "text-emerald-600 dark:text-emerald-400"
                       : "text-amber-600 dark:text-amber-400",
                   )}
                 >
@@ -1335,7 +1389,7 @@ export const ErpInvoicePartnerTab = React.memo(function ErpInvoicePartnerTab({
                 className={cn(
                   "mt-2 text-lg font-bold tabular-nums",
                   netCashflow >= 0
-                    ? "text-blue-600 dark:text-blue-400"
+                    ? "text-emerald-600 dark:text-emerald-400"
                     : "text-amber-600 dark:text-amber-400",
                 )}
               >
@@ -1344,8 +1398,8 @@ export const ErpInvoicePartnerTab = React.memo(function ErpInvoicePartnerTab({
               </div>
               <div className="mt-1 text-[11px] text-muted-foreground">
                 {netCashflow >= 0
-                  ? t("positiveNet", "Dòng tiền dương (Xuất > Mua)")
-                  : t("negativeNet", "Dòng tiền âm (Mua > Xuất)")}
+                  ? t("positiveNet", "Chênh lệch dương (Bán > Mua)")
+                  : t("negativeNet", "Chênh lệch âm (Mua > Bán)")}
               </div>
             </div>
 
@@ -1372,16 +1426,13 @@ export const ErpInvoicePartnerTab = React.memo(function ErpInvoicePartnerTab({
             </div>
           </div>
 
-          {/* 2.2 Biểu đồ biến động dòng tiền lớn */}
+          {/* 2.2 Biểu đồ biến động theo tháng */}
           <DrawerSection
             title={
               <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">
                 <TrendingUp className="w-4 h-4 text-primary" />
                 <span>
-                  {t(
-                    "cashTrendChartTitle",
-                    "Biểu đồ biến động dòng tiền theo tháng",
-                  )}
+                  {t("cashTrendChartTitle", "Biểu đồ biến động theo tháng")}
                 </span>
               </div>
             }
@@ -1412,26 +1463,20 @@ export const ErpInvoicePartnerTab = React.memo(function ErpInvoicePartnerTab({
                   <ChartSkeleton type="bar" />
                 ) : (
                   <div className="flex items-center justify-center h-full text-xs text-muted-foreground">
-                    {t(
-                      "noChartData",
-                      "Chưa có dữ liệu biến động dòng tiền của đối tác",
-                    )}
+                    {t("noChartData", "Chưa có dữ liệu biến động của đối tác")}
                   </div>
                 )}
               </div>
             </div>
           </DrawerSection>
 
-          {/* 2.3 Bảng kê biến động dòng tiền theo tháng */}
+          {/* 2.3 Bảng kê biến động theo kỳ */}
           <DrawerSection
             title={
               <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">
                 <Calendar className="w-4 h-4 text-primary" />
                 <span>
-                  {t(
-                    "cashTrendTableTitle",
-                    "Bảng kê biến động dòng tiền theo kỳ",
-                  )}
+                  {t("cashTrendTableTitle", "Bảng kê biến động theo kỳ")}
                 </span>
                 {statsData?.cashTrend && statsData.cashTrend.length > 0 && (
                   <span className="text-xs font-normal text-muted-foreground lowercase">
@@ -1464,7 +1509,7 @@ export const ErpInvoicePartnerTab = React.memo(function ErpInvoicePartnerTab({
         </div>
       )}
 
-      {/* ─── 3. NỘI DUNG BẢNG DANH SÁCH HÓA ĐƠN HOẶC CHI TIẾT HÀNG HÓA ─── */}
+      {/* ─── 3. NỘI DUNG BẢNG DANH SÁCH HÓA ĐƠN HOẶC CHI TIẾT HHDV ─── */}
       {(viewMode === "invoices" || viewMode === "lines") && (
         <DrawerSection
           title={
@@ -1485,11 +1530,14 @@ export const ErpInvoicePartnerTab = React.memo(function ErpInvoicePartnerTab({
                 <>
                   <Boxes className="w-4 h-4 text-muted-foreground" />
                   <span>
-                    {t("tabGoodsItemsTitle", "Danh sách chi tiết hàng hóa")}
+                    {t(
+                      "tabGoodsItemsTitle",
+                      "Danh sách chi tiết hàng hóa & dịch vụ",
+                    )}
                   </span>
                   {itemLinesTotal > 0 && (
                     <span className="text-xs font-normal text-muted-foreground lowercase">
-                      ({itemLinesTotal} {t("recordsItems", "dòng hàng hóa")})
+                      ({itemLinesTotal} {t("recordsItems", "dòng HHDV")})
                     </span>
                   )}
                 </>
@@ -1575,6 +1623,18 @@ export const ErpInvoicePartnerTab = React.memo(function ErpInvoicePartnerTab({
             )}
           </div>
         </DrawerSection>
+      )}
+
+      {/* ─── 5. NỘI DUNG TÀI LIỆU ĐÍNH KÈM (ATTACHMENTS SUB-TAB) ─── */}
+      {viewMode === "attachments" && (
+        <ErpInvoiceAttachmentsSubTab
+          invoice={detailInvoice}
+          form={form}
+          editMode={editMode}
+          fieldSet={fieldSet}
+          onLinkExistingAttachment={onLinkExistingAttachment}
+          onUnlinkAttachment={onUnlinkAttachment}
+        />
       )}
 
       {/* Sub-drawer for previewing another invoice from partner's list */}

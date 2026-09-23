@@ -2,9 +2,10 @@ import React, { useState, useMemo } from "react";
 import { DonutChart, DonutLegend } from "@/shared/components/charts/DonutChart";
 import { EmptyState } from "@/shared/components/EmptyState";
 import { useTranslation } from "react-i18next";
-import { Calendar } from "lucide-react";
+import { Calendar, DollarSign, Layers } from "lucide-react";
 import { Combobox, ComboboxOption } from "@/shared/components/Combobox";
 import { GarageStatusDistributionItem } from "../api/garageDashboardApi";
+import { cn } from "@/shared/utils";
 
 interface GarageStatusDistributionChartProps {
   data?: GarageStatusDistributionItem[];
@@ -56,8 +57,9 @@ export function GarageStatusDistributionChart({
 }: GarageStatusDistributionChartProps) {
   const { t } = useTranslation("garage");
   const [selectedMonth, setSelectedMonth] = useState<string>("ALL");
+  const [viewMode, setViewMode] = useState<"revenue" | "count">("revenue");
 
-  // Dữ liệu hiển thị dựa trên tháng được chọn
+  // Dữ liệu hiển thị dựa trên tháng được chọn (Backend đã lọc bỏ status Hủy = 9)
   const activeData = useMemo(() => {
     if (selectedMonth === "ALL" || !byMonth[selectedMonth]) {
       return data;
@@ -66,19 +68,26 @@ export function GarageStatusDistributionChart({
   }, [selectedMonth, byMonth, data]);
 
   const totalCount = useMemo(
-    () => activeData.reduce((sum, d) => sum + d.count, 0),
+    () => activeData.reduce((sum, d) => sum + (d.count || 0), 0),
     [activeData],
   );
 
-  const items = useMemo(
-    () =>
-      activeData.map((d, index) => ({
-        label: d.statusName,
-        value: d.count,
-        color: getStatusColor(d.statusName, index),
-      })),
+  const totalRevenue = useMemo(
+    () => activeData.reduce((sum, d) => sum + (d.revenue || 0), 0),
     [activeData],
   );
+
+  const items = useMemo(() => {
+    return activeData.map((d, index) => {
+      const isRevenue = viewMode === "revenue";
+      const value = isRevenue ? d.revenue || 0 : d.count || 0;
+      return {
+        label: d.statusName,
+        value,
+        color: getStatusColor(d.statusName, index),
+      };
+    });
+  }, [activeData, viewMode]);
 
   const formatMonthLabel = (m: string) => {
     const parts = m.split("-");
@@ -88,19 +97,32 @@ export function GarageStatusDistributionChart({
     return m;
   };
 
+  const formatCurrencyShort = (amount: number) => {
+    if (Math.abs(amount) >= 1_000_000_000) {
+      return `${(amount / 1_000_000_000).toFixed(2)} tỷ`;
+    }
+    if (Math.abs(amount) >= 1_000_000) {
+      return `${(amount / 1_000_000).toFixed(1)} tr`;
+    }
+    return `${new Intl.NumberFormat("vi-VN").format(amount)} đ`;
+  };
+
   const monthOptions: ComboboxOption[] = useMemo(() => {
     const allCount = data.reduce((s, d) => s + d.count, 0);
+    const allRev = data.reduce((s, d) => s + (d.revenue || 0), 0);
     const opts: ComboboxOption[] = [
       {
         value: "ALL",
-        label: `Toàn bộ 6 tháng (${allCount} phiếu)`,
+        label: `Toàn bộ 6 tháng (${allCount} phiếu • ${formatCurrencyShort(allRev)})`,
       },
     ];
     availableMonths.forEach((m) => {
-      const mCount = (byMonth[m] || []).reduce((s, d) => s + d.count, 0);
+      const monthItems = byMonth[m] || [];
+      const mCount = monthItems.reduce((s, d) => s + d.count, 0);
+      const mRev = monthItems.reduce((s, d) => s + (d.revenue || 0), 0);
       opts.push({
         value: m,
-        label: `${formatMonthLabel(m)} (${mCount} phiếu)`,
+        label: `${formatMonthLabel(m)} (${mCount} phiếu • ${formatCurrencyShort(mRev)})`,
       });
     });
     return opts;
@@ -121,53 +143,117 @@ export function GarageStatusDistributionChart({
   }
 
   return (
-    <div className="bg-surface border border-border rounded-xl card-shadow p-5 flex flex-col h-full min-h-[340px]">
-      <div className="mb-2">
+    <div className="bg-surface border border-border rounded-xl card-shadow p-5 flex flex-col h-full min-h-[370px]">
+      <div className="mb-3">
         <div className="flex items-center justify-between flex-wrap gap-2">
-          <h4 className="text-sm font-semibold text-foreground">
-            {t(
-              "dashboard.charts.statusDistribution",
-              "Phân bổ Trạng thái Phiếu DV",
-            )}
-          </h4>
+          <div>
+            <h4 className="text-sm font-semibold text-foreground flex items-center gap-1.5">
+              <Layers className="w-4 h-4 text-primary" />
+              {t(
+                "dashboard.charts.statusDistribution",
+                "Phân bổ Trạng thái Phiếu DV",
+              )}
+            </h4>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {selectedMonth === "ALL"
+                ? "Tỷ lệ trạng thái tiếp nhận & đang làm (không gồm Hủy)"
+                : `Tỷ lệ trạng thái trong ${formatMonthLabel(selectedMonth)} (không gồm Hủy)`}
+            </p>
+          </div>
 
-          {/* Month Selector Combobox */}
-          <div className="flex items-center gap-1.5 min-w-[200px] max-w-[240px]">
-            <Calendar className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-            <div className="flex-1">
-              <Combobox
-                options={monthOptions}
-                value={selectedMonth}
-                onChange={(val) => setSelectedMonth(val || "ALL")}
-                allowClear={false}
-                placeholder="Chọn tháng..."
-                className="h-7 text-xs"
-              />
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* View Mode Toggle */}
+            <div className="flex items-center bg-muted/60 p-0.5 rounded-lg border border-border">
+              <button
+                type="button"
+                onClick={() => setViewMode("revenue")}
+                className={cn(
+                  "px-2 py-1 text-xs font-medium rounded-md transition-all flex items-center gap-1",
+                  viewMode === "revenue"
+                    ? "bg-surface text-foreground shadow-xs"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                <DollarSign className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                Tổng thu
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode("count")}
+                className={cn(
+                  "px-2 py-1 text-xs font-medium rounded-md transition-all flex items-center gap-1",
+                  viewMode === "count"
+                    ? "bg-surface text-foreground shadow-xs"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                <Layers className="w-3 h-3 text-blue-600 dark:text-blue-400" />
+                Số lượng
+              </button>
+            </div>
+
+            {/* Month Selector Combobox */}
+            <div className="flex items-center gap-1.5 min-w-[210px] max-w-[260px]">
+              <Calendar className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+              <div className="flex-1">
+                <Combobox
+                  options={monthOptions}
+                  value={selectedMonth}
+                  onChange={(val) => setSelectedMonth(val || "ALL")}
+                  allowClear={false}
+                  placeholder="Chọn tháng..."
+                  className="h-7 text-xs"
+                />
+              </div>
             </div>
           </div>
         </div>
-        <p className="text-xs text-muted-foreground mt-0.5">
-          {selectedMonth === "ALL"
-            ? "Tỷ lệ trạng thái tiếp nhận trong 6 tháng gần nhất"
-            : `Tỷ lệ trạng thái tiếp nhận trong ${formatMonthLabel(selectedMonth)}`}
-        </p>
+
+        {/* Quick summary strip */}
+        <div className="mt-2.5 flex items-center gap-4 text-xs bg-muted/30 px-3 py-1.5 rounded-lg border border-border/60">
+          <div>
+            <span className="text-muted-foreground">Tổng phiếu: </span>
+            <span className="font-semibold text-foreground">
+              {totalCount} phiếu
+            </span>
+          </div>
+          <div className="w-px h-3 bg-border" />
+          <div>
+            <span className="text-muted-foreground">Tổng tiền có thuế: </span>
+            <span className="font-bold text-emerald-600 dark:text-emerald-400">
+              {new Intl.NumberFormat("vi-VN").format(totalRevenue)} đ
+            </span>
+          </div>
+        </div>
       </div>
 
       <div className="h-[180px] w-full flex items-center justify-center relative my-auto">
         <DonutChart
           items={items}
           cutout="62%"
-          valueFormatter={(val) => `${val} phiếu`}
+          valueFormatter={(val) =>
+            viewMode === "revenue"
+              ? `${new Intl.NumberFormat("vi-VN").format(val)} đ`
+              : `${val} phiếu`
+          }
         />
       </div>
 
-      <div className="border-t pt-2 max-h-[120px] overflow-y-auto">
+      <div className="border-t border-border pt-2 max-h-[130px] overflow-y-auto">
         <DonutLegend
           items={items}
           valueFormatter={(val) => {
-            const pct =
-              totalCount > 0 ? ((val / totalCount) * 100).toFixed(1) : "0.0";
-            return `${val} phiếu (${pct}%)`;
+            if (viewMode === "revenue") {
+              const pct =
+                totalRevenue > 0
+                  ? ((val / totalRevenue) * 100).toFixed(1)
+                  : "0.0";
+              return `${formatCurrencyShort(val)} (${pct}%)`;
+            } else {
+              const pct =
+                totalCount > 0 ? ((val / totalCount) * 100).toFixed(1) : "0.0";
+              return `${val} phiếu (${pct}%)`;
+            }
           }}
         />
       </div>

@@ -20,7 +20,6 @@ import {
   History,
   Link2,
   BookOpen,
-  Paperclip,
   Wallet,
   FileText,
   FileSpreadsheet,
@@ -43,7 +42,6 @@ import {
 import { ErpInvoicePartnerTab } from "./ErpInvoicePartnerTab";
 import { PostedAccountingSummary } from "@/shared/components/accounting/PostedAccountingSummary";
 import { PostingSection } from "@/shared/components/accounting/PostingSection";
-import { ErpInvoicePdfUpload } from "./ErpInvoicePdfUpload";
 import { resolvePurchaseDebitAccountCode } from "../utils/invoiceTaxCodeAccounting";
 import toast from "react-hot-toast";
 
@@ -141,7 +139,7 @@ export function ErpInvoiceInternalDrawer({
   const [showSoModal, setShowSoModal] = useState(false);
   const [showGarageCaseModal, setShowGarageCaseModal] = useState(false);
   const [subTabKey, setSubTabKey] = useState<
-    "details" | "invoices" | "lines" | "analytics"
+    "details" | "invoices" | "lines" | "analytics" | "attachments"
   >("details");
 
   const handleFetchGraph = useCallback(
@@ -420,12 +418,8 @@ export function ErpInvoiceInternalDrawer({
       (detailInvoice.voucherNetOffs?.length || 0) +
       ((detailInvoice as any).relatedPos?.length || 0);
 
-    const attachmentCount =
-      (detailInvoice.pdfFiles?.length || (detailInvoice.pdfFileKey ? 1 : 0)) +
-      (detailInvoice.attachments?.length || 0);
-
     return [
-      // 1. Tab Chi tiết (Hợp nhất: Thông tin HĐ + Đối tác + Hàng hóa + Analytics)
+      // 1. Tab Chi tiết (Hợp nhất: Thông tin HĐ + Đối tác + Hàng hóa + Analytics + Tài liệu đính kèm)
       {
         key: "invoice_details",
         label: t("tabDetails", "Chi tiết"),
@@ -436,6 +430,9 @@ export function ErpInvoiceInternalDrawer({
             direction={direction}
             defaultViewMode={partnerViewMode ?? "details"}
             onViewModeChange={setSubTabKey}
+            form={form}
+            editMode={editMode}
+            fieldSet={fieldSet}
           >
             <div className="space-y-4">{children}</div>
           </ErpInvoicePartnerTab>
@@ -443,7 +440,7 @@ export function ErpInvoiceInternalDrawer({
         rightPanel,
       },
 
-      // 3. Tab Tài chính (Settlements & Cashflow)
+      // 2. Tab Tài chính (Settlements & Cashflow)
       {
         key: "financials",
         label: t("tabFinancials", "Tài chính"),
@@ -476,7 +473,7 @@ export function ErpInvoiceInternalDrawer({
         ),
       },
 
-      // 4. Tab Mạng lưới chứng từ liên kết (Canvas Graph Traceability - Full Width)
+      // 3. Tab Mạng lưới chứng từ liên kết (Canvas Graph Traceability - Full Width)
       {
         key: "linked_docs",
         label: t("tabLinkedDocs", "Chứng từ liên kết"),
@@ -571,36 +568,7 @@ export function ErpInvoiceInternalDrawer({
         ),
       },
 
-      // 5. Tab Tài liệu đính kèm (PDF Files & Upload)
-      {
-        key: "attachments",
-        label: t("tabAttachments", "Tài liệu đính kèm"),
-        icon: <Paperclip className="w-3.5 h-3.5" />,
-        badgeCount: attachmentCount,
-        content: (
-          <div className="p-3 bg-surface/50 rounded-xl border border-border/70">
-            <ErpInvoicePdfUpload
-              noCard={true}
-              invoiceId={detailInvoice.id}
-              attachments={detailInvoice.attachments ?? null}
-              pdfFileKey={detailInvoice.pdfFileKey ?? null}
-              pdfFiles={detailInvoice.pdfFiles ?? null}
-              editMode={editMode}
-              pendingDeletedPdfs={form?.pendingDeletedPdfs}
-              onPendingDeletePdf={(key) => {
-                const current = form?.pendingDeletedPdfs || [];
-                fieldSet?.("pendingDeletedPdfs", [...current, key]);
-              }}
-              pendingAddedAttachments={form?.pendingAddedAttachments}
-              onPendingAddedAttachmentsChange={(files) => {
-                fieldSet?.("pendingAddedAttachments", files);
-              }}
-            />
-          </div>
-        ),
-      },
-
-      // 6. Tab Hạch toán kế toán (View & Edit)
+      // 4. Tab Hạch toán kế toán (View & Edit)
       {
         key: "accounting",
         label: t("tabAccounting", "Hạch toán kế toán"),

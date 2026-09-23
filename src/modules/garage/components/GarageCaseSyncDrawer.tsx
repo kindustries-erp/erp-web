@@ -5,6 +5,10 @@ import { DatePicker } from "@/shared/components/DatePicker";
 import { Combobox } from "@/shared/components/Combobox";
 import { RefreshCw } from "lucide-react";
 import { format, startOfMonth, endOfMonth } from "date-fns";
+import {
+  getPastMonthPresets,
+  getCurrentMonthPreset,
+} from "@/shared/utils/datePresets";
 import { useGarageStore } from "../store/garageStore";
 import {
   useSyncGarageCases,
@@ -39,9 +43,12 @@ export function GarageCaseSyncDrawer({
 
   const isSyncing = isSyncingCases || isSyncingGrossProfit;
 
-  const [selectedPreset, setSelectedPreset] = useState<string>("");
-  const [dateFrom, setDateFrom] = useState<string>("");
-  const [dateTo, setDateTo] = useState<string>("");
+  const initialPreset = useMemo(() => getCurrentMonthPreset(), []);
+  const [selectedPreset, setSelectedPreset] = useState<string>(
+    initialPreset.presetKey,
+  );
+  const [dateFrom, setDateFrom] = useState<string>(initialPreset.from);
+  const [dateTo, setDateTo] = useState<string>(initialPreset.to);
 
   const modalTitle =
     title ||
@@ -61,19 +68,7 @@ export function GarageCaseSyncDrawer({
           "Chọn khoảng thời gian để đồng bộ phiếu dịch vụ (Cases) và doanh thu chi phí từ hệ thống Garage về ERP.",
         ));
 
-  const presetOptions = useMemo(() => {
-    const options = [];
-    const currentYear = new Date().getFullYear();
-    for (let year = currentYear; year >= currentYear - 2; year--) {
-      for (let month = 12; month >= 1; month--) {
-        options.push({
-          value: `month-${month}-${year}`,
-          label: `Tháng ${month}/${year}`,
-        });
-      }
-    }
-    return options;
-  }, []);
+  const presetOptions = useMemo(() => getPastMonthPresets(2), []);
 
   const handlePresetChange = (val: string) => {
     setSelectedPreset(val);
@@ -90,9 +85,10 @@ export function GarageCaseSyncDrawer({
 
   useEffect(() => {
     if (open) {
-      setSelectedPreset("");
-      setDateFrom("");
-      setDateTo("");
+      const current = getCurrentMonthPreset();
+      setSelectedPreset(current.presetKey);
+      setDateFrom(current.from);
+      setDateTo(current.to);
     }
   }, [open]);
 

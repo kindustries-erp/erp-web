@@ -108,7 +108,7 @@ describe("ErpInvoicePartnerTab", () => {
     vi.clearAllMocks();
   });
 
-  it("renders 4 subtabs: '1. Chi tiết', '2. Danh sách hóa đơn', '3. Chi tiết hàng hóa', and '4. Biến động & Dòng tiền'", async () => {
+  it("renders 5 subtabs: '1. Chi tiết', '2. Danh sách hóa đơn', '3. Chi tiết HHDV', '4. Biến động', and '5. Tài liệu đính kèm'", async () => {
     renderWithClient(
       <ErpInvoicePartnerTab detailInvoice={mockInvoice as any} direction="IN">
         <div data-testid="detail-children">Nội dung chi tiết test</div>
@@ -117,8 +117,9 @@ describe("ErpInvoicePartnerTab", () => {
 
     expect(screen.getByText("1. Chi tiết")).toBeInTheDocument();
     expect(screen.getByText("2. Danh sách hóa đơn")).toBeInTheDocument();
-    expect(screen.getByText("3. Chi tiết hàng hóa")).toBeInTheDocument();
-    expect(screen.getByText("4. Biến động & Dòng tiền")).toBeInTheDocument();
+    expect(screen.getByText("3. Chi tiết HHDV")).toBeInTheDocument();
+    expect(screen.getByText("4. Biến động")).toBeInTheDocument();
+    expect(screen.getByText("5. Tài liệu đính kèm")).toBeInTheDocument();
   });
 
   it("defaults to '1. Chi tiết', renders children and view mode toggle buttons (Xem trước HĐ thuần / File PDF)", async () => {
@@ -153,7 +154,7 @@ describe("ErpInvoicePartnerTab", () => {
     });
   });
 
-  it("switches to '3. Chi tiết hàng hóa' when clicked and calls getItemsList", async () => {
+  it("switches to '3. Chi tiết HHDV' when clicked and calls getItemsList", async () => {
     renderWithClient(
       <ErpInvoicePartnerTab
         detailInvoice={mockInvoice as any}
@@ -161,7 +162,7 @@ describe("ErpInvoicePartnerTab", () => {
       />,
     );
 
-    const itemsSubTabBtn = screen.getByText("3. Chi tiết hàng hóa");
+    const itemsSubTabBtn = screen.getByText("3. Chi tiết HHDV");
     fireEvent.click(itemsSubTabBtn);
 
     await waitFor(() => {
@@ -174,7 +175,7 @@ describe("ErpInvoicePartnerTab", () => {
     });
   });
 
-  it("switches to '4. Biến động & Dòng tiền' when clicked and renders analytics dashboard", async () => {
+  it("switches to '4. Biến động' when clicked and renders analytics dashboard", async () => {
     (erpInvoiceDashboardApi.getPartnerStats as any).mockResolvedValueOnce({
       cashTrend: [
         { label: "2026-01", cashIn: 5000000, cashOut: 2000000 },
@@ -189,7 +190,7 @@ describe("ErpInvoicePartnerTab", () => {
       />,
     );
 
-    const analyticsSubTabBtn = screen.getByText("4. Biến động & Dòng tiền");
+    const analyticsSubTabBtn = screen.getByText("4. Biến động");
     fireEvent.click(analyticsSubTabBtn);
 
     await waitFor(() => {
@@ -197,11 +198,9 @@ describe("ErpInvoicePartnerTab", () => {
         "0101234567",
       );
       expect(
-        screen.getByText("Biểu đồ biến động dòng tiền theo tháng"),
+        screen.getByText("Biểu đồ biến động theo tháng"),
       ).toBeInTheDocument();
-      expect(
-        screen.getByText("Bảng kê biến động dòng tiền theo kỳ"),
-      ).toBeInTheDocument();
+      expect(screen.getByText("Bảng kê biến động theo kỳ")).toBeInTheDocument();
     });
   });
 });
