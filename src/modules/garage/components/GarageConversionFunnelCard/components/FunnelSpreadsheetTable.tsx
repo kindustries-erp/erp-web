@@ -35,15 +35,13 @@ export function FunnelSpreadsheetTable({
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center justify-between flex-wrap gap-2">
-        <h5 className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+        <span className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
           <Layers className="w-3.5 h-3.5 text-primary" />
-          <span>
-            {t(
-              "dashboard.funnel.tableTitle",
-              "Chi tiết Phễu Chuyển Đổi theo 4 Phân Loại ERP",
-            )}
-          </span>
-        </h5>
+          {t(
+            "dashboard.funnel.tableTitle",
+            "Chi tiết Phễu Chuyển Đổi theo 4 Phân Loại ERP",
+          )}
+        </span>
         <span className="text-[11px] text-muted-foreground">
           {t(
             "dashboard.funnel.tableDesc",

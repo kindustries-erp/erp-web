@@ -1,6 +1,7 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { BarChart3, DollarSign, Layers } from "lucide-react";
+import { BarChart3 } from "lucide-react";
+import { Switch } from "@/shared/components/ui/switch";
 import { cn } from "@/shared/utils";
 import { formatMonthLabel } from "../utils/funnelConfig";
 import { FunnelTimelineChart } from "./FunnelTimelineChart";
@@ -50,15 +51,15 @@ export function FunnelChartsGrid({
   return (
     <div className="flex flex-col gap-3">
       {/* Sub-header / Toolbar for Charts */}
-      <div className="flex items-center justify-between flex-wrap gap-2 pt-1 border-t border-border/60">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-2 flex-wrap">
-          <BarChart3 className="w-4 h-4 text-primary" />
-          <h5 className="text-xs font-semibold text-foreground">
+          <span className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+            <BarChart3 className="w-3.5 h-3.5 text-primary" />
             {t(
               "dashboard.funnel.chartsSectionTitle",
               "Phân Tích Xu Hướng & Cơ Cấu Chuyển Đổi",
             )}
-          </h5>
+          </span>
           <span className="text-[11px] text-muted-foreground hidden sm:inline">
             •{" "}
             {selectedMonth === "ALL"
@@ -67,34 +68,37 @@ export function FunnelChartsGrid({
           </span>
         </div>
 
-        {/* View Mode Toggle Switch */}
-        <div className="flex items-center bg-muted/70 p-0.5 rounded-lg border border-border">
-          <button
-            type="button"
-            onClick={() => setViewMode("AMOUNT")}
+        {/* View Mode Toggle Switch (Invoice Dashboard Style) */}
+        <div className="flex items-center gap-2.5 flex-shrink-0">
+          <span
             className={cn(
-              "px-2.5 py-1 text-xs font-medium rounded-md transition-all flex items-center gap-1 cursor-pointer select-none",
+              "text-xs cursor-pointer select-none transition-colors",
               isAmount
-                ? "bg-surface text-foreground shadow-xs font-semibold"
+                ? "font-semibold text-primary"
                 : "text-muted-foreground hover:text-foreground",
             )}
+            onClick={() => setViewMode("AMOUNT")}
           >
-            <DollarSign className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
             {t("dashboard.funnel.viewByAmount", "Giá trị (VND)")}
-          </button>
-          <button
-            type="button"
-            onClick={() => setViewMode("COUNT")}
+          </span>
+          <Switch
+            checked={!isAmount}
+            onCheckedChange={(checked) =>
+              setViewMode(checked ? "COUNT" : "AMOUNT")
+            }
+            aria-label="Chuyển đổi xem Giá trị hoặc Số lượng"
+          />
+          <span
             className={cn(
-              "px-2.5 py-1 text-xs font-medium rounded-md transition-all flex items-center gap-1 cursor-pointer select-none",
+              "text-xs cursor-pointer select-none transition-colors",
               !isAmount
-                ? "bg-surface text-foreground shadow-xs font-semibold text-primary"
+                ? "font-semibold text-primary"
                 : "text-muted-foreground hover:text-foreground",
             )}
+            onClick={() => setViewMode("COUNT")}
           >
-            <Layers className="w-3 h-3 text-indigo-600 dark:text-indigo-400" />
             {t("dashboard.funnel.viewByCount", "Số lượng (Xe)")}
-          </button>
+          </span>
         </div>
       </div>
 

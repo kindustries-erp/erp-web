@@ -34,8 +34,8 @@ export function GaragePaymentProgressCard(
     <>
       <div className="flex flex-col gap-3">
         {/* Header & Tabs */}
-        <div className="flex items-center justify-between flex-wrap gap-2">
-          <div className="flex items-center gap-3">
+        <div className="flex items-center justify-between gap-3 flex-wrap sm:flex-nowrap">
+          <div className="flex items-center gap-2 flex-wrap">
             <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-md border border-slate-200/80 dark:border-slate-700 shadow-sm flex items-center gap-1.5">
               {isReceipt ? (
                 <Wallet className="w-3.5 h-3.5 text-slate-600 dark:text-slate-400" />
@@ -45,6 +45,8 @@ export function GaragePaymentProgressCard(
               {t("progress.cardTitle", "Tiến độ Dòng tiền & Công nợ Dịch vụ")}
             </h4>
           </div>
+
+          <div className="h-px bg-slate-200/80 dark:bg-slate-700 flex-1 hidden md:block" />
 
           {/* Tab Switcher matching Overview Page */}
           <PillTabs<"RECEIPT" | "PAYMENT">
@@ -63,7 +65,7 @@ export function GaragePaymentProgressCard(
                 icon: Truck,
               },
             ]}
-            className="w-auto"
+            className="w-auto shrink-0"
           />
         </div>
 

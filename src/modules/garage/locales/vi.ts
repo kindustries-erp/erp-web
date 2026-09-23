@@ -44,6 +44,7 @@ export const garageVi = {
       hubTitle: "Pipeline Dự Thu & Phễu Chuyển Đổi Dịch Vụ",
       hubDesc:
         "Theo dõi luồng chuyển đổi từ Tiếp nhận đến Nghiệm thu doanh thu & Dự thu theo 4 phân loại ERP",
+      stageOverviewTitle: "Tổng Quan Các Giai Đoạn Phễu Tiếp Nhận",
       stageIntake: "1. Tổng Tiếp Nhận",
       stageIntakeSub: "Tổng nhu cầu đưa xe vào xưởng",
       stageInProgress: "2. Đang Xử Lý (Dự thu)",
@@ -61,11 +62,11 @@ export const garageVi = {
       donutClassificationSubtitle: "4 nhóm ERP theo",
       donutStatusTitle: "Phân Bổ Trạng Thái Phiếu DV",
       donutStatusSubtitle: "Tỷ lệ trạng thái phiếu tiếp nhận & xử lý",
-      chartTitle:
-        "Biểu đồ Xu Hướng Tiếp Nhận & Tỷ Lệ Hoàn Tất Theo Dòng Thời Gian (6 Tháng)",
+      chartTitle: "Tiến Trình & Tỷ Lệ Hoàn Tất",
       timelineChartDesc:
         "Phân bổ 3 trạng thái và đường % hoàn tất theo từng tháng (Nhấp vào cột để lọc chi tiết)",
       allSixMonthsView: "Toàn bộ 6 tháng",
+      selectMonthPlaceholder: "Chọn tháng...",
       monthFilterLabel: "Đang xem chi tiết:",
       resetToAllMonths: "Xem toàn bộ 6 tháng",
       chartCompleted: "Hoàn tất (Doanh thu)",
@@ -1049,6 +1050,8 @@ export const garageVi = {
     monthLabel: "Tháng",
     yearLabel: "Năm",
     monthPrefix: "Tháng",
+    selectPeriodPlaceholder: "Chọn kỳ...",
+    financialReportTable: "Bảng Phân Tích Kết Quả Kinh Doanh",
     exportExcel: "Xuất P&L Excel",
     tableHeaderCategory: "Danh Mục",
     tableHeaderValue: "Tháng này",

@@ -4,7 +4,6 @@ import { DashboardTemplate } from "@/shared/components/DashboardTemplate";
 import { Button } from "@/shared/components/ui/Button";
 
 import { GarageStatsCards } from "../../components/GarageStatsCards";
-import { GarageTrendChart } from "../../components/GarageTrendChart";
 import { GarageConversionFunnelCard } from "../../components/GarageConversionFunnelCard";
 import { GaragePaymentProgressCard } from "../../components/GaragePaymentProgressCard";
 import { GaragePnlSection } from "../../components/GaragePnlSection";
@@ -57,7 +56,7 @@ export function GarageDashboard(props: GarageDashboardProps = {}) {
         {/* Section 1: KPI Hiệu quả Dịch vụ & Tiến độ thu tiền thực tế */}
         <GarageStatsCards />
 
-        {/* Section 2: Pipeline Dự Thu & Phễu Chuyển Đổi Dịch Vụ (Hub 3 Tầng & Donut Phân Bổ Đồng Bộ) */}
+        {/* Section 2: Pipeline Dự Thu & Phễu Chuyển Đổi Dịch Vụ (3 Cards Độc Lập & Period Picker) */}
         <GarageConversionFunnelCard
           funnel={statsData?.conversionFunnel}
           byMonth={statsData?.conversionFunnelByMonth}
@@ -73,15 +72,10 @@ export function GarageDashboard(props: GarageDashboardProps = {}) {
           loading={isLoadingStats || isLoadingKpis}
         />
 
-        {/* Section 3: Xu hướng Doanh thu & Chi phí */}
-        <div className="w-full">
-          <GarageTrendChart />
-        </div>
-
-        {/* Section 4: Báo cáo Lợi nhuận (P&L) Section */}
+        {/* Section 3: Báo cáo Lợi nhuận (P&L) Section (Header + Chart Xu Hướng + Bảng P&L) */}
         <GaragePnlSection />
 
-        {/* Section 5: Tiến độ Dòng tiền & Công nợ (Thu tiền KH & Trả tiền NCC) */}
+        {/* Section 4: Tiến độ Dòng tiền & Công nợ (Thu tiền KH & Trả tiền NCC) */}
         <GaragePaymentProgressCard
           collectionSummary={statsData?.collectionSummary}
           costPaymentSummary={statsData?.costPaymentSummary}

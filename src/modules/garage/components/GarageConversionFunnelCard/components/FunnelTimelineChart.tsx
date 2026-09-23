@@ -29,16 +29,13 @@ export function FunnelTimelineChart({
   return (
     <div className="col-span-12 md:col-span-2 lg:col-span-6 bg-slate-50/50 dark:bg-slate-900/30 border border-border/80 rounded-xl p-4 flex flex-col justify-between">
       <div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 mb-0.5">
           <BarChart3 className="w-4 h-4 text-primary" />
-          <h5 className="text-xs font-semibold text-foreground">
-            {t(
-              "dashboard.funnel.chartTitle",
-              "Biểu đồ Xu Hướng Tiếp Nhận & Tỷ Lệ Hoàn Tất Theo Dòng Thời Gian (6 Tháng)",
-            )}
-          </h5>
+          <span className="text-xs font-semibold text-foreground">
+            {t("dashboard.funnel.chartTitle", "Tiến Trình & Tỷ Lệ Hoàn Tất")}
+          </span>
         </div>
-        <p className="text-[11px] text-muted-foreground mt-0.5">
+        <p className="text-[11px] text-muted-foreground">
           {t(
             "dashboard.funnel.timelineChartDesc",
             "Phân bổ 3 trạng thái và đường % hoàn tất theo từng tháng (Nhấp vào cột để lọc chi tiết)",

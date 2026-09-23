@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useChartTheme } from "@/shared/utils/chartTheme";
 import type { ComboboxOption } from "@/shared/components/Combobox";
@@ -33,8 +33,20 @@ export function useGarageConversionFunnelLogic(
   const { t } = useTranslation("garage");
   const { gridColor, tickColor } = useChartTheme();
 
-  const [selectedMonth, setSelectedMonth] = useState<string>("ALL");
+  const now = new Date();
+  const currentMonthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+
+  const [selectedMonth, setSelectedMonth] = useState<string>(currentMonthStr);
   const [viewMode, setViewMode] = useState<"AMOUNT" | "COUNT">("AMOUNT");
+
+  // Đồng bộ kỳ chọn khi dữ liệu availableMonths tải về
+  useEffect(() => {
+    if (availableMonths.length > 0 && selectedMonth !== "ALL") {
+      if (!availableMonths.includes(selectedMonth) && !byMonth[selectedMonth]) {
+        setSelectedMonth(availableMonths[0]);
+      }
+    }
+  }, [availableMonths, byMonth]);
 
   // Dữ liệu phễu hiển thị dựa trên tháng được chọn (hoặc Toàn bộ 6 tháng)
   const activeFunnel = useMemo(() => {

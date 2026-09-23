@@ -9,6 +9,7 @@ import type { PeriodStatsData } from "../types";
 
 interface StatsKpiCardItemProps {
   label: string;
+  icon?: React.ReactNode;
   data?: PeriodStatsData;
   loading?: boolean;
   defaultChartLength?: number;
@@ -21,6 +22,7 @@ interface StatsKpiCardItemProps {
 
 export function StatsKpiCardItem({
   label,
+  icon,
   data,
   loading,
   defaultChartLength = 6,
@@ -48,6 +50,7 @@ export function StatsKpiCardItem({
       <KpiCard
         loading={loading}
         label={label}
+        icon={icon}
         value={money(rev)}
         badge={
           <div className="flex items-center gap-1.5">

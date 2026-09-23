@@ -1,4 +1,5 @@
 import React from "react";
+import { TrendingUp, Calendar, Clock } from "lucide-react";
 import { GarageCheckpointDrawer } from "../GarageCheckpointDrawer";
 import { StatsKpiCardItem } from "./components/StatsKpiCardItem";
 import { useGarageStatsCardsLogic } from "./useGarageStatsCardsLogic";
@@ -25,6 +26,7 @@ export function GarageStatsCards() {
         {/* 1. Month Card */}
         <StatsKpiCardItem
           label={t("dashboard.kpis.monthLabel", "Doanh thu Tháng này")}
+          icon={<TrendingUp className="w-3.5 h-3.5 text-primary" />}
           data={statsData?.month}
           loading={statsLoading}
           defaultChartLength={6}
@@ -44,6 +46,7 @@ export function GarageStatsCards() {
         {/* 2. Week Card */}
         <StatsKpiCardItem
           label={t("dashboard.kpis.weekLabel", "Doanh thu Tuần này")}
+          icon={<Calendar className="w-3.5 h-3.5 text-primary" />}
           data={statsData?.week}
           loading={statsLoading}
           defaultChartLength={4}
@@ -63,6 +66,7 @@ export function GarageStatsCards() {
         {/* 3. Day Card */}
         <StatsKpiCardItem
           label={t("dashboard.kpis.dayLabel", "Doanh thu Hôm nay")}
+          icon={<Clock className="w-3.5 h-3.5 text-primary" />}
           data={statsData?.day}
           loading={statsLoading}
           defaultChartLength={7}

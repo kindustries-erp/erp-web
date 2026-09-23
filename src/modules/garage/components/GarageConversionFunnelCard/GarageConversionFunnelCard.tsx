@@ -1,14 +1,10 @@
 import React from "react";
-import { TrendingUp, RotateCcw, Calendar } from "lucide-react";
+import { TrendingUp, Calendar } from "lucide-react";
 import { Combobox } from "@/shared/components/Combobox";
 import { EmptyState } from "@/shared/components/EmptyState";
-import { Button } from "@/shared/components/ui/Button";
-import { Badge } from "@/shared/components/ui/badge";
-import { cn } from "@/shared/utils";
 
 import type { GarageConversionFunnelCardProps } from "./types";
 import { useGarageConversionFunnelLogic } from "./useGarageConversionFunnelLogic";
-import { formatMonthLabel } from "./utils/funnelConfig";
 import { FunnelOverviewCards } from "./components/FunnelOverviewCards";
 import { FunnelChartsGrid } from "./components/FunnelChartsGrid";
 import { FunnelSpreadsheetTable } from "./components/FunnelSpreadsheetTable";
@@ -44,24 +40,13 @@ export function GarageConversionFunnelCard(
     tableRows,
   } = useGarageConversionFunnelLogic(props);
 
-  if (!loading && (!activeFunnel || activeFunnel.totalIntake.count === 0)) {
-    return (
-      <div className="bg-surface border border-border rounded-xl card-shadow p-5 flex flex-col justify-center items-center min-h-[300px]">
-        <EmptyState
-          message={t(
-            "dashboard.funnel.noFunnelData",
-            "Chưa có dữ liệu phễu chuyển đổi trong khoảng thời gian này",
-          )}
-          size="sm"
-        />
-      </div>
-    );
-  }
+  const hasData =
+    loading || (activeFunnel && activeFunnel.totalIntake.count > 0);
 
   return (
     <div className="flex flex-col gap-4">
-      {/* SECTION HEADER BADGE */}
-      <div className="flex items-center justify-between gap-3">
+      {/* SECTION HEADER: BADGE (LEFT) ── HORIZONTAL DIVIDER (MIDDLE) ── PERIOD PICKER (RIGHT) */}
+      <div className="flex items-center justify-between gap-3 flex-wrap sm:flex-nowrap">
         <div className="flex items-center gap-2 flex-wrap">
           <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-md border border-slate-200/80 dark:border-slate-700 shadow-sm flex items-center gap-1.5">
             <TrendingUp className="w-3.5 h-3.5 text-primary" />
@@ -70,7 +55,7 @@ export function GarageConversionFunnelCard(
               "Pipeline Dự Thu & Phễu Chuyển Đổi Dịch Vụ",
             )}
           </h4>
-          <span className="text-[11px] text-muted-foreground hidden sm:inline">
+          <span className="text-[11px] text-muted-foreground hidden lg:inline">
             *{" "}
             {t(
               "dashboard.funnel.hubDesc",
@@ -78,100 +63,87 @@ export function GarageConversionFunnelCard(
             )}
           </span>
         </div>
+
         <div className="h-px bg-slate-200/80 dark:bg-slate-700 flex-1 hidden md:block" />
-      </div>
 
-      {/* MAIN CONTAINER CARD */}
-      <div className="bg-surface border border-border rounded-xl card-shadow p-5 flex flex-col gap-5">
-        {/* Header Filter Bar */}
-        <div className="flex items-center justify-between flex-wrap gap-3">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-xs text-muted-foreground font-medium">
-              {t("dashboard.funnel.monthFilterLabel", "Đang xem chi tiết:")}
-            </span>
-            <Badge
-              variant="outline"
-              className={cn(
-                "text-xs font-semibold px-2 py-0.5",
-                selectedMonth === "ALL"
-                  ? "bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200 border-slate-300"
-                  : "bg-primary/10 text-primary border-primary/30",
-              )}
-            >
-              {selectedMonth === "ALL"
-                ? t("dashboard.funnel.allSixMonthsView", "Toàn bộ 6 tháng")
-                : formatMonthLabel(selectedMonth)}
-            </Badge>
-            {selectedMonth !== "ALL" && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setSelectedMonth("ALL")}
-                className="h-6 px-2 text-[11px] text-muted-foreground hover:text-foreground gap-1"
-                title={t(
-                  "dashboard.funnel.resetToAllMonths",
-                  "Xem toàn bộ 6 tháng",
-                )}
-              >
-                <RotateCcw className="w-3 h-3" />
-                {t("dashboard.funnel.resetToAllMonths", "Xem toàn bộ 6 tháng")}
-              </Button>
-            )}
+        {/* Enhanced Month Selector Combobox (Header Right) */}
+        <div className="h-7 flex items-center bg-surface border border-border/90 rounded-md px-2 shadow-2xs shrink-0 w-full sm:w-auto">
+          <div className="flex items-center justify-center w-4 h-4 rounded bg-primary/10 text-primary shrink-0 mr-1.5">
+            <Calendar className="w-3 h-3" />
           </div>
-
-          {/* Month Selector Combobox (Header Right) */}
-          <div className="flex items-center gap-1.5 min-w-[210px] max-w-[260px]">
-            <Calendar className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-            <div className="flex-1">
-              <Combobox
-                options={monthOptions}
-                value={selectedMonth}
-                onChange={(val) => setSelectedMonth(val || "ALL")}
-                allowClear={false}
-                placeholder="Chọn tháng..."
-                className="h-7 text-xs"
-              />
-            </div>
+          <div className="min-w-[170px] sm:min-w-[195px] flex-1">
+            <Combobox
+              options={monthOptions}
+              value={selectedMonth}
+              onChange={(val) => setSelectedMonth(val || "ALL")}
+              allowClear={false}
+              variant="ghost"
+              placeholder={t(
+                "dashboard.funnel.selectMonthPlaceholder",
+                "Chọn tháng...",
+              )}
+              className="h-6 text-xs font-medium text-foreground px-1"
+            />
           </div>
         </div>
-
-        {/* TẦNG 1: 4 Cards Phễu Chuyển Đổi & Thanh Tỷ Lệ */}
-        <FunnelOverviewCards
-          totalIntake={totalIntake}
-          inProgress={inProgress}
-          completed={completed}
-          cancelled={cancelled}
-          projectedToday={projectedToday}
-          projectedMonth={projectedMonth}
-        />
-
-        {/* TẦNG 2: 3 Biểu đồ Song Song */}
-        <FunnelChartsGrid
-          selectedMonth={selectedMonth}
-          setSelectedMonth={setSelectedMonth}
-          viewMode={viewMode}
-          setViewMode={setViewMode}
-          isAmount={isAmount}
-          timelineMonths={timelineMonths}
-          timelineLabels={timelineLabels}
-          timelineDatasets={timelineDatasets}
-          classificationDonutItems={classificationDonutItems}
-          totalClassificationVal={totalClassificationVal}
-          statusDonutItems={statusDonutItems}
-          totalStatusVal={totalStatusVal}
-          gridColor={gridColor}
-          tickColor={tickColor}
-        />
-
-        {/* TẦNG 3: Bảng Spreadsheet 4 Phân Loại ERP */}
-        <FunnelSpreadsheetTable
-          tableRows={tableRows}
-          totalIntake={totalIntake}
-          inProgress={inProgress}
-          completed={completed}
-          cancelled={cancelled}
-        />
       </div>
+
+      {!hasData ? (
+        <div className="bg-surface border border-border rounded-xl card-shadow p-5 flex flex-col justify-center items-center min-h-[260px]">
+          <EmptyState
+            message={t(
+              "dashboard.funnel.noFunnelData",
+              "Chưa có dữ liệu phễu chuyển đổi trong khoảng thời gian này",
+            )}
+            size="sm"
+          />
+        </div>
+      ) : (
+        <div className="flex flex-col gap-4">
+          {/* CARD 1: 4 Cards Phễu Chuyển Đổi & Thanh Tỷ Lệ */}
+          <div className="bg-surface border border-border rounded-xl card-shadow p-5 flex flex-col gap-4">
+            <FunnelOverviewCards
+              totalIntake={totalIntake}
+              inProgress={inProgress}
+              completed={completed}
+              cancelled={cancelled}
+              projectedToday={projectedToday}
+              projectedMonth={projectedMonth}
+            />
+          </div>
+
+          {/* CARD 2: Phân Tích Xu Hướng & Cơ Cấu Chuyển Đổi (3 Biểu đồ Song Song) */}
+          <div className="bg-surface border border-border rounded-xl card-shadow p-5 flex flex-col gap-4">
+            <FunnelChartsGrid
+              selectedMonth={selectedMonth}
+              setSelectedMonth={setSelectedMonth}
+              viewMode={viewMode}
+              setViewMode={setViewMode}
+              isAmount={isAmount}
+              timelineMonths={timelineMonths}
+              timelineLabels={timelineLabels}
+              timelineDatasets={timelineDatasets}
+              classificationDonutItems={classificationDonutItems}
+              totalClassificationVal={totalClassificationVal}
+              statusDonutItems={statusDonutItems}
+              totalStatusVal={totalStatusVal}
+              gridColor={gridColor}
+              tickColor={tickColor}
+            />
+          </div>
+
+          {/* CARD 3: Chi Tiết Phễu Chuyển Đổi theo 4 Phân Loại ERP (Bảng Spreadsheet) */}
+          <div className="bg-surface border border-border rounded-xl card-shadow p-5 flex flex-col gap-4">
+            <FunnelSpreadsheetTable
+              tableRows={tableRows}
+              totalIntake={totalIntake}
+              inProgress={inProgress}
+              completed={completed}
+              cancelled={cancelled}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

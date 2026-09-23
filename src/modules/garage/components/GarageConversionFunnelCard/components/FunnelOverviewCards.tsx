@@ -26,6 +26,17 @@ export function FunnelOverviewCards({
 
   return (
     <>
+      {/* Card Header: Title on Left */}
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <span className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+          <Inbox className="w-3.5 h-3.5 text-primary" />
+          {t(
+            "dashboard.funnel.stageOverviewTitle",
+            "Tổng Quan Các Giai Đoạn Phễu Tiếp Nhận",
+          )}
+        </span>
+      </div>
+
       {/* TẦNG 1: 4 Cards Phễu Chuyển Đổi Tinh Gọn */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         {/* Stage 1: Tiếp Nhận */}
