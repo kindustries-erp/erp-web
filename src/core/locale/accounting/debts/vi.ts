@@ -375,6 +375,24 @@ export const debtsVi = {
       "Phải trả NCC: ≤30d (5%), 31-60d (15%), 61-90d (30%), >90d (50%)",
     riskFormula:
       "Dự phòng rủi ro = ∑(Còn nợ × Tỷ lệ trích lập). Khớp 100% với cột Dự phòng rủi ro trong bảng chi tiết.",
+
+    // Sub-view switcher & Top partners table
+    invoicesListTitle: "Danh sách hóa đơn chi tiết",
+    topPartnersTitle: "Danh sách Top 5 đối tác chi phối",
+    subTabInvoicesShort: "Hóa đơn chi tiết",
+    subTabTopPartnersShort: "Top 5 chi phối",
+    topPartnersConcentrationAlert:
+      "Top {{count}} đối tác chi phối {{percent}}% dòng tiền",
+    topPartnersTotalContributing: "Tổng giá trị chi phối",
+    topPartnersTotalShare: "Tỷ trọng chi phối",
+    topPartnersInvoiceCount: "Tổng số HĐ",
+    colPartner: "Đối tác",
+    colCycleStatus: "Chu kỳ thanh toán",
+    colContributingAmount: "Số tiền chi phối",
+    colShare: "Tỷ trọng",
+    emptyTopPartners: "Không tìm thấy đối tác chi phối nào trong nhóm này",
+    partnerDetailHint:
+      "Click vào đối tác để mở hồ sơ công nợ và lịch sử hóa đơn chi tiết",
   },
 
   agingExplanation: {

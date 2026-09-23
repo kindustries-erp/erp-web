@@ -4,13 +4,17 @@ import type {
   TimeHorizonInvoiceItem,
   TimeHorizonDailyForecastItem,
   TimeHorizonDetailSummary,
+  TimeHorizonTopPartnerItem,
 } from "../../api/invoiceDashboardApi";
+
+export type TimeHorizonSubTab = "invoices" | "top_partners" | "analytics";
 
 export type {
   TimeHorizonKey,
   TimeHorizonInvoiceItem,
   TimeHorizonDailyForecastItem,
   TimeHorizonDetailSummary,
+  TimeHorizonTopPartnerItem,
 };
 
 export interface ForecastScheduleRow {

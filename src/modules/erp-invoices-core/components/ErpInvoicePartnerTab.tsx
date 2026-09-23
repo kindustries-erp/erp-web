@@ -1163,38 +1163,26 @@ export const ErpInvoicePartnerTab = React.memo(function ErpInvoicePartnerTab({
         {/* Bên phải: Quick Actions & Count Summary & View Mode Toggle */}
         <div className="flex items-center gap-2">
           {viewMode === "details" && (
-            <div className="flex items-center gap-1 p-0.5">
-              <button
-                type="button"
-                onClick={() => setDetailViewMode("template")}
-                className={cn(
-                  "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-colors cursor-pointer select-none whitespace-nowrap",
-                  detailViewMode === "template"
-                    ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900 font-semibold shadow-xs"
-                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800",
-                )}
-              >
-                <FileText className="w-3.5 h-3.5" />
-                <span>{t("viewModeTemplate", "Xem trước HĐ thuần")}</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setDetailViewMode("pdf")}
-                className={cn(
-                  "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-colors cursor-pointer select-none whitespace-nowrap",
-                  detailViewMode === "pdf"
-                    ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900 font-semibold shadow-xs"
-                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800",
-                )}
-              >
-                <FileDown className="w-3.5 h-3.5" />
-                <span>{t("viewModePdf", "File PDF")}</span>
-                {hasPdf && (
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
-                )}
-              </button>
-            </div>
+            <PillTabs<"template" | "pdf">
+              size="sm"
+              variant="button-group"
+              value={detailViewMode}
+              onValueChange={(val) => setDetailViewMode(val)}
+              items={[
+                {
+                  value: "template",
+                  label: t("viewModeTemplate", "Xem trước HĐ thuần"),
+                  icon: FileText,
+                },
+                {
+                  value: "pdf",
+                  label: t("viewModePdf", "File PDF"),
+                  icon: FileDown,
+                  dot: hasPdf,
+                  dotColor: "emerald",
+                },
+              ]}
+            />
           )}
 
           {viewMode === "invoices" && (

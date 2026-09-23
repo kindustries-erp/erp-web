@@ -56,9 +56,21 @@ describe("PillTabs Component Suite", () => {
     expect(onValueChange).toHaveBeenCalledWith("tab2");
   });
 
-  it("supports size variants sm, md, and lg", () => {
+  it("supports size variants xs, sm, md, and lg", () => {
     const onValueChange = vi.fn();
     const { rerender, container } = render(
+      <PillTabs
+        value="tab1"
+        onValueChange={onValueChange}
+        items={sampleItems}
+        size="xs"
+      />,
+    );
+
+    const listXs = container.querySelector('[role="tablist"]');
+    expect(listXs?.className).toContain("h-7");
+
+    rerender(
       <PillTabs
         value="tab1"
         onValueChange={onValueChange}
@@ -66,7 +78,6 @@ describe("PillTabs Component Suite", () => {
         size="sm"
       />,
     );
-
     const listSm = container.querySelector('[role="tablist"]');
     expect(listSm?.className).toContain("h-8");
 
@@ -107,5 +118,68 @@ describe("PillTabs Component Suite", () => {
     render(<PillTabs value="tab1" onValueChange={() => {}} items={items} />);
 
     expect(screen.getByText("12")).toBeInTheDocument();
+  });
+
+  it("supports segmented and direction variants", () => {
+    const directionItems: PillTabItem<"OUT" | "IN">[] = [
+      {
+        value: "OUT",
+        label: "Phải thu",
+        badgeCount: 288,
+        accentColor: "emerald",
+      },
+      { value: "IN", label: "Phải trả", badgeCount: 320, accentColor: "amber" },
+    ];
+
+    const { rerender, container } = render(
+      <PillTabs
+        value="OUT"
+        onValueChange={() => {}}
+        items={directionItems}
+        variant="direction"
+        size="sm"
+      />,
+    );
+
+    expect(screen.getByText("Phải thu")).toBeInTheDocument();
+    expect(screen.getByText("Phải trả")).toBeInTheDocument();
+    expect(screen.getByText("288")).toBeInTheDocument();
+
+    rerender(
+      <PillTabs
+        value="tab1"
+        onValueChange={() => {}}
+        items={sampleItems}
+        variant="segmented"
+        size="sm"
+      />,
+    );
+
+    const listSegmented = container.querySelector('[role="tablist"]');
+    expect(listSegmented?.className).toContain("rounded-lg");
+  });
+
+  it("supports button-group variant and dot indicators", () => {
+    const buttonGroupItems: PillTabItem<"template" | "pdf">[] = [
+      { value: "template", label: "Xem trước HĐ thuần" },
+      { value: "pdf", label: "File PDF", dot: true, dotColor: "emerald" },
+    ];
+
+    const onValueChange = vi.fn();
+    const { container } = render(
+      <PillTabs
+        value="template"
+        onValueChange={onValueChange}
+        items={buttonGroupItems}
+        variant="button-group"
+        size="sm"
+      />,
+    );
+
+    expect(screen.getByText("Xem trước HĐ thuần")).toBeInTheDocument();
+    expect(screen.getByText("File PDF")).toBeInTheDocument();
+
+    const list = container.querySelector('[role="tablist"]');
+    expect(list?.className).toContain("bg-transparent");
   });
 });

@@ -1,16 +1,22 @@
 import React from "react";
-import { ReceiptText, TrendingUp, RotateCcw } from "lucide-react";
+import {
+  ReceiptText,
+  Building2,
+  TrendingUp,
+  RotateCcw,
+  ArrowUpRight,
+  ArrowDownLeft,
+} from "lucide-react";
 import { PillTabs } from "@/shared/components/PillTabs";
-import { FinanceDirectionTabs } from "@/shared/components/FinanceDirectionTabs";
+import type { TimeHorizonSubTab } from "../types";
 
 export interface TimeHorizonHeaderBannerProps {
-  activeSubTab: "invoices" | "analytics";
-  onSubTabChange: (val: "invoices" | "analytics") => void;
+  activeSubTab: TimeHorizonSubTab;
+  onSubTabChange: (val: TimeHorizonSubTab) => void;
   direction: "IN" | "OUT";
   onDirectionChange: (dir: "IN" | "OUT") => void;
   totalInvoices: number;
-  receivableCount?: number;
-  payableCount?: number;
+  topPartnersCount?: number;
   activeFilterCount: number;
   onResetFilters: () => void;
   t: (key: string, fallback?: any) => string;
@@ -22,18 +28,18 @@ export function TimeHorizonHeaderBanner({
   direction,
   onDirectionChange,
   totalInvoices,
-  receivableCount,
-  payableCount,
+  topPartnersCount = 0,
   activeFilterCount,
   onResetFilters,
   t,
 }: TimeHorizonHeaderBannerProps) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 pt-0.5 pb-1">
-      {/* Bên trái: Sub-Tabs 1. Danh sách hóa đơn / 2. Biến động & Phân tích */}
+      {/* Bên trái: Sub-Tabs 1. Danh sách hóa đơn / 2. Top đối tác chi phối / 3. Biến động & Phân tích */}
       <div className="flex items-center gap-2">
-        <PillTabs<"invoices" | "analytics">
+        <PillTabs<TimeHorizonSubTab>
           size="sm"
+          variant="pill"
           value={activeSubTab}
           onValueChange={onSubTabChange}
           items={[
@@ -47,10 +53,19 @@ export function TimeHorizonHeaderBanner({
               badgeCount: totalInvoices > 0 ? totalInvoices : undefined,
             },
             {
+              value: "top_partners",
+              label: t(
+                "debts:horizonDrawer.tabTopPartners",
+                "2. Top đối tác chi phối",
+              ),
+              icon: Building2,
+              badgeCount: topPartnersCount > 0 ? topPartnersCount : undefined,
+            },
+            {
               value: "analytics",
               label: t(
                 "debts:horizonDrawer.tabAnalytics",
-                "2. Biến động & Phân tích",
+                "3. Biến động & Phân tích",
               ),
               icon: TrendingUp,
             },
@@ -58,16 +73,25 @@ export function TimeHorizonHeaderBanner({
         />
       </div>
 
-      {/* Bên phải: Cụm nút chọn Phải thu / Phải trả + Xóa bộ lọc */}
+      {/* Bên phải: Cụm nút chọn Phải thu / Phải trả (PillTabs variant button-group) + Xóa bộ lọc */}
       <div className="flex items-center gap-2 flex-wrap">
-        <FinanceDirectionTabs
-          value={direction}
-          onChange={onDirectionChange}
-          outLabel={t("debts:horizonDrawer.tabReceivablesShort", "Phải thu")}
-          inLabel={t("debts:horizonDrawer.tabPayablesShort", "Phải trả")}
-          outCount={receivableCount}
-          inCount={payableCount}
+        <PillTabs<"OUT" | "IN">
           size="sm"
+          variant="button-group"
+          value={direction}
+          onValueChange={onDirectionChange}
+          items={[
+            {
+              value: "OUT",
+              label: t("debts:horizonDrawer.tabReceivablesShort", "Phải thu"),
+              icon: ArrowUpRight,
+            },
+            {
+              value: "IN",
+              label: t("debts:horizonDrawer.tabPayablesShort", "Phải trả"),
+              icon: ArrowDownLeft,
+            },
+          ]}
         />
 
         {activeFilterCount > 0 && (

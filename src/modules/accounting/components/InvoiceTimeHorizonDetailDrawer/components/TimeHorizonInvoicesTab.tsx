@@ -32,13 +32,12 @@ export function TimeHorizonInvoicesTab({
   onPageSizeChange,
   t,
 }: TimeHorizonInvoicesTabProps) {
+  const sectionTitle = `${t("debts:horizonDrawer.invoicesListTitle", "DANH SÁCH HÓA ĐƠN CHI TIẾT")} (${total})`;
+
   return (
-    <div className="flex-1 min-w-0 w-full flex flex-col pt-1">
+    <div className="flex-1 min-w-0 w-full flex flex-col pt-0.5 pb-2">
       <DrawerSection
-        title={`${t(
-          "debts:horizonDrawer.invoicesListTitle",
-          "Danh sách hóa đơn chi tiết",
-        )} (${total})`}
+        title={sectionTitle}
         collapsible
         defaultCollapsed={false}
         bodyClassName="p-0"
@@ -58,7 +57,8 @@ export function TimeHorizonInvoicesTab({
           totalPages={totalPages}
           onPage={onPageChange}
           onPageSize={onPageSizeChange}
-          containerClassName="max-h-[calc(100vh-275px)] overflow-y-auto pb-2"
+          containerClassName="max-h-[calc(100vh-320px)] min-h-[380px] overflow-y-auto pb-1"
+          paginationClassName="mt-2.5 pt-0.5"
           emptyLabel={t(
             "debts:horizonDrawer.emptyInvoices",
             "Không tìm thấy hóa đơn nào trong nhóm tuổi nợ này",

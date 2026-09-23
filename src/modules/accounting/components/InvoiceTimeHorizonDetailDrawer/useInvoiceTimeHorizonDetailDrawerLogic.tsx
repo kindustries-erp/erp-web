@@ -24,7 +24,10 @@ import { createTimeHorizonInvoiceColumns } from "./components/TimeHorizonInvoice
 import { createTimeHorizonScheduleColumns } from "./components/TimeHorizonScheduleColumns";
 import { createTimeHorizonMonthlyColumns } from "./components/TimeHorizonMonthlyColumns";
 import { CHART_COLORS } from "./constants";
-import type { InvoiceTimeHorizonDetailDrawerProps } from "./types";
+import type {
+  InvoiceTimeHorizonDetailDrawerProps,
+  TimeHorizonSubTab,
+} from "./types";
 
 export function useInvoiceTimeHorizonDetailDrawerLogic({
   open,
@@ -36,10 +39,9 @@ export function useInvoiceTimeHorizonDetailDrawerLogic({
 }: InvoiceTimeHorizonDetailDrawerProps) {
   const { t } = useTranslation(["debts", "common"]);
 
-  // Sub-tab navigation: 'invoices' | 'analytics'
-  const [activeSubTab, setActiveSubTab] = useState<"invoices" | "analytics">(
-    "invoices",
-  );
+  // Sub-tab navigation: 'invoices' | 'top_partners' | 'analytics'
+  const [activeSubTab, setActiveSubTab] =
+    useState<TimeHorizonSubTab>("invoices");
 
   // Direction: 'OUT' (Receivables) | 'IN' (Payables)
   const [direction, setDirection] = useState<"IN" | "OUT">("OUT");
@@ -316,19 +318,15 @@ export function useInvoiceTimeHorizonDetailDrawerLogic({
   }, [summary?.agingBreakdown, isReceivable, horizon, t]);
 
   // 3. Top Partners & Branch Breakdown Bar Data (Shared across Mode 2 & Mode 3)
+  const topPartners = useMemo(() => {
+    return direction === "OUT"
+      ? summary?.topReceivablePartners || []
+      : summary?.topPayablePartners || [];
+  }, [summary?.topReceivablePartners, summary?.topPayablePartners, direction]);
+
   const topPartnersBarData = useMemo(() => {
-    const partners =
-      direction === "OUT"
-        ? summary?.topReceivablePartners || []
-        : summary?.topPayablePartners || [];
-    return calculateTopPartnersBarData(partners, isReceivable, t);
-  }, [
-    summary?.topReceivablePartners,
-    summary?.topPayablePartners,
-    direction,
-    isReceivable,
-    t,
-  ]);
+    return calculateTopPartnersBarData(topPartners, isReceivable, t);
+  }, [topPartners, isReceivable, t]);
 
   const branchBarData = useMemo(() => {
     return calculateBranchBarData(
@@ -737,6 +735,7 @@ export function useInvoiceTimeHorizonDetailDrawerLogic({
     scheduleColumns,
     scheduleSummaryRow,
     ifrs9ComparisonData,
+    topPartners,
     topPartnersBarData,
     branchBarData,
     ticketSizeDonutItems,

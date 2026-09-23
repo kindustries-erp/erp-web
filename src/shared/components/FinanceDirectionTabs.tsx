@@ -29,25 +29,37 @@ export function FinanceDirectionTabs({
       label: outLabel,
       icon: ArrowUpRight,
       count: outCount,
-      colorActive: "bg-slate-900 text-white dark:bg-white dark:text-slate-900",
-      iconColor: "text-emerald-600 dark:text-emerald-400",
-      badgeClass: "bg-emerald-500/20 text-emerald-700 dark:text-emerald-300",
+      activeClass:
+        "bg-emerald-600 text-white font-bold shadow-xs border-emerald-600 hover:bg-emerald-700",
+      inactiveClass:
+        "bg-emerald-50/80 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200/80 dark:border-emerald-800/60 hover:bg-emerald-100/80 dark:hover:bg-emerald-950/70",
+      iconActiveColor: "text-white",
+      iconInactiveColor: "text-emerald-600 dark:text-emerald-400",
+      badgeActiveClass: "bg-white/25 text-white font-bold",
+      badgeInactiveClass:
+        "bg-emerald-200/70 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300 font-medium",
     },
     {
       value: "IN" as const,
       label: inLabel,
       icon: ArrowDownLeft,
       count: inCount,
-      colorActive: "bg-slate-900 text-white dark:bg-white dark:text-slate-900",
-      iconColor: "text-amber-600 dark:text-amber-400",
-      badgeClass: "bg-amber-500/20 text-amber-700 dark:text-amber-300",
+      activeClass:
+        "bg-amber-600 text-white font-bold shadow-xs border-amber-600 hover:bg-amber-700",
+      inactiveClass:
+        "bg-amber-50/80 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200/80 dark:border-amber-800/60 hover:bg-amber-100/80 dark:hover:bg-amber-950/70",
+      iconActiveColor: "text-white",
+      iconInactiveColor: "text-amber-600 dark:text-amber-400",
+      badgeActiveClass: "bg-white/25 text-white font-bold",
+      badgeInactiveClass:
+        "bg-amber-200/70 text-amber-800 dark:bg-amber-900/60 dark:text-amber-300 font-medium",
     },
   ];
 
   const sizeClasses = {
-    xs: "px-2 py-0.5 text-[11px]",
-    sm: "px-2.5 py-1 text-xs",
-    md: "px-3 py-1.5 text-sm",
+    xs: "px-2 py-0.5 text-[11px] h-6",
+    sm: "px-2.5 py-1 text-xs h-7",
+    md: "px-3.5 py-1.5 text-sm h-8",
   };
 
   const iconSizes = {
@@ -57,12 +69,7 @@ export function FinanceDirectionTabs({
   };
 
   return (
-    <div
-      className={cn(
-        "inline-flex items-center gap-1 p-0.5 bg-muted/40 rounded-lg border border-border/60",
-        className,
-      )}
-    >
+    <div className={cn("inline-flex items-center gap-1.5", className)}>
       {tabs.map((tab) => {
         const isActive = value === tab.value;
         const Icon = tab.icon;
@@ -73,27 +80,24 @@ export function FinanceDirectionTabs({
             type="button"
             onClick={() => onChange(tab.value)}
             className={cn(
-              "inline-flex items-center gap-1.5 rounded-md font-medium transition-all cursor-pointer select-none whitespace-nowrap",
+              "inline-flex items-center gap-1.5 rounded-lg border transition-all duration-150 cursor-pointer select-none whitespace-nowrap",
               sizeClasses[size],
-              isActive
-                ? cn(tab.colorActive, "font-semibold shadow-xs")
-                : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800",
+              isActive ? tab.activeClass : tab.inactiveClass,
             )}
           >
             <Icon
               className={cn(
                 iconSizes[size],
-                isActive ? "text-inherit" : tab.iconColor,
+                "shrink-0 transition-colors",
+                isActive ? tab.iconActiveColor : tab.iconInactiveColor,
               )}
             />
             <span>{tab.label}</span>
             {tab.count !== undefined && tab.count > 0 && (
               <span
                 className={cn(
-                  "px-1.5 py-0.2 rounded-full text-[10px] font-mono font-bold leading-none",
-                  isActive
-                    ? "bg-white/20 text-white dark:bg-slate-900/20 dark:text-slate-900"
-                    : tab.badgeClass,
+                  "inline-flex items-center justify-center font-mono text-[10px] px-1.5 py-0.5 min-w-[18px] h-4 rounded-full transition-colors leading-none",
+                  isActive ? tab.badgeActiveClass : tab.badgeInactiveClass,
                 )}
               >
                 {tab.count}
