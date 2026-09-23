@@ -11,7 +11,6 @@ import {
   AlertTriangle,
   AlertOctagon,
   Brain,
-  ExternalLink,
   BarChart2,
   TrendingUp,
 } from "lucide-react";
@@ -49,9 +48,6 @@ export function InvoiceDebtsDashboardTab({
   onOpenPartnerDetail,
 }: InvoiceDebtsDashboardTabProps) {
   const { t } = useTranslation(["debts", "common"]);
-  const [topRiskTab, setTopRiskTab] = useState<"customers" | "suppliers">(
-    "customers",
-  );
   const [viewMode, setViewMode] = useState<"aging" | "forecast">("aging");
   const [selectedHorizon, setSelectedHorizon] = useState<TimeHorizonKey | null>(
     null,
@@ -74,8 +70,6 @@ export function InvoiceDebtsDashboardTab({
     timeHorizons,
     forecastHorizons,
     cashTrend,
-    topReceivableCustomers,
-    topPayableSuppliers,
     isLoading,
     isFetching,
     refetch,
@@ -197,9 +191,6 @@ export function InvoiceDebtsDashboardTab({
 
     return { total, items };
   }, [agingComparison, t]);
-
-  const activeTopRiskList =
-    topRiskTab === "customers" ? topReceivableCustomers : topPayableSuppliers;
 
   return (
     <DashboardTemplate
@@ -884,115 +875,6 @@ export function InvoiceDebtsDashboardTab({
             </div>
           </Panel>
         </div>
-      </div>
-
-      {/* ── HÀNG 2: TOP 5 ĐẦU MỐI RỦI RO & ÁP LỰC CÔNG NỢ ── */}
-      <div className="mb-4">
-        <Panel
-          title={t(
-            "debts:dashboard.topRiskTitle",
-            "Top 5 Đầu mối Rủi ro & Áp lực Công nợ",
-          )}
-          extra={
-            <div className="inline-flex rounded-lg border border-border p-0.5 bg-muted/30">
-              <button
-                type="button"
-                onClick={() => setTopRiskTab("customers")}
-                className={cn(
-                  "px-2.5 py-1 text-xs font-medium rounded-md transition-all",
-                  topRiskTab === "customers"
-                    ? "bg-surface shadow-xs text-foreground font-semibold"
-                    : "text-muted-foreground hover:text-foreground",
-                )}
-              >
-                {t("debts:dashboard.topCustomersTab", "Khách hàng")}
-              </button>
-              <button
-                type="button"
-                onClick={() => setTopRiskTab("suppliers")}
-                className={cn(
-                  "px-2.5 py-1 text-xs font-medium rounded-md transition-all",
-                  topRiskTab === "suppliers"
-                    ? "bg-surface shadow-xs text-foreground font-semibold"
-                    : "text-muted-foreground hover:text-foreground",
-                )}
-              >
-                {t("debts:dashboard.topSuppliersTab", "Nhà cung cấp")}
-              </button>
-            </div>
-          }
-        >
-          <div className="min-h-[220px] flex flex-col justify-between">
-            {isLoading ? (
-              <div className="space-y-3 py-2">
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <div
-                    key={i}
-                    className="h-10 bg-muted/40 animate-pulse rounded-lg"
-                  />
-                ))}
-              </div>
-            ) : activeTopRiskList.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5 py-1">
-                {activeTopRiskList.map((partner, idx) => {
-                  const hasOverdue = partner.overdueAmount > 0;
-                  return (
-                    <div
-                      key={partner.taxCode + idx}
-                      onClick={() =>
-                        onOpenPartnerDetail?.(
-                          partner.taxCode,
-                          partner.partnerName,
-                        )
-                      }
-                      className="group flex items-center justify-between p-2.5 rounded-lg border border-border/60 bg-muted/10 hover:bg-muted/30 hover:border-primary/40 transition-all cursor-pointer"
-                    >
-                      <div className="flex items-center gap-2.5 min-w-0 flex-1 mr-3">
-                        <span className="w-5 h-5 rounded-full bg-slate-100 dark:bg-slate-800 text-[11px] font-mono font-semibold flex items-center justify-center shrink-0 text-muted-foreground group-hover:text-primary">
-                          {idx + 1}
-                        </span>
-                        <div className="min-w-0 flex-1">
-                          <div className="text-xs font-medium text-foreground truncate group-hover:text-primary transition-colors flex items-center gap-1.5">
-                            <span className="truncate">
-                              {partner.partnerName}
-                            </span>
-                            <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 text-primary" />
-                          </div>
-                          <div className="text-[10px] text-muted-foreground font-mono flex items-center gap-1.5 mt-0.5">
-                            <span>{partner.taxCode}</span>
-                            <span>•</span>
-                            <span>
-                              {t("debts:dashboard.agingDays", "Tuổi nợ")}:{" "}
-                              {partner.maxAgingDays} ngày
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="text-right shrink-0">
-                        <div className="font-mono text-xs font-semibold text-foreground">
-                          {money(partner.balanceAmount)}
-                        </div>
-                        {hasOverdue && (
-                          <div className="text-[10px] text-rose-600 dark:text-rose-400 font-mono font-medium">
-                            {t("debts:dashboard.overdue", "Quá hạn")}:{" "}
-                            {money(partner.overdueAmount)}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="h-full min-h-[160px] flex items-center justify-center">
-                <EmptyState
-                  message={t("debts:dashboard.noData", "Chưa có dữ liệu")}
-                  size="sm"
-                />
-              </div>
-            )}
-          </div>
-        </Panel>
       </div>
 
       {/* ── SECTION 4: Time Horizon Detail Drawer ── */}
