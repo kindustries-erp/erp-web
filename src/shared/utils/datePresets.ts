@@ -1,4 +1,5 @@
 import {
+  format,
   startOfMonth,
   endOfMonth,
   startOfYear,
@@ -68,4 +69,54 @@ export function getPresetRange(
     default:
       return { from: undefined, to: undefined };
   }
+}
+
+export interface MonthPresetOption {
+  value: string;
+  label: string;
+}
+
+/**
+ * Sinh danh sách các kỳ tháng từ thời điểm hiện tại trở về quá khứ (không bao gồm tháng tương lai).
+ * @param yearsBack Số năm về quá khứ cần sinh (mặc định 2 năm)
+ * @param labelFormatter Hàm format hiển thị (mặc định `Tháng ${month}/${year}`)
+ */
+export function getPastMonthPresets(
+  yearsBack = 2,
+  labelFormatter: (month: number, year: number) => string = (m, y) =>
+    `Tháng ${m}/${y}`,
+): MonthPresetOption[] {
+  const options: MonthPresetOption[] = [];
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth() + 1;
+
+  for (let year = currentYear; year >= currentYear - yearsBack; year--) {
+    const maxMonth = year === currentYear ? currentMonth : 12;
+    for (let month = maxMonth; month >= 1; month--) {
+      options.push({
+        value: `month-${month}-${year}`,
+        label: labelFormatter(month, year),
+      });
+    }
+  }
+  return options;
+}
+
+/**
+ * Trả về preset và khoảng ngày của tháng hiện tại (từ ngày đầu tháng đến ngày cuối tháng).
+ */
+export function getCurrentMonthPreset(): {
+  presetKey: string;
+  from: string;
+  to: string;
+} {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth() + 1;
+  return {
+    presetKey: `month-${month}-${year}`,
+    from: format(startOfMonth(now), "yyyy-MM-dd"),
+    to: format(endOfMonth(now), "yyyy-MM-dd"),
+  };
 }
