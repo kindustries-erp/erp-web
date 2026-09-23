@@ -12,7 +12,7 @@ import type { TabItem } from "@/shared/components/PageLayout";
 import { garageDashboardApi } from "../api/garageDashboardApi";
 import { GarageStatsCards } from "../components/GarageStatsCards";
 import { GarageTrendChart } from "../components/GarageTrendChart";
-import { GarageClassificationDistributionChart } from "../components/GarageClassificationDistributionChart";
+import { GarageConversionFunnelCard } from "../components/GarageConversionFunnelCard";
 import { GaragePaymentProgressCard } from "../components/GaragePaymentProgressCard";
 import { GaragePnlSection } from "../components/GaragePnlSection";
 
@@ -39,10 +39,16 @@ export function GarageDashboard({
   });
   const isRefreshing = isFetchingStats > 0 || isFetchingKpis > 0;
 
-  // Query unified dashboard stats (trend, collectionSummary, classificationDistribution)
+  // Query unified dashboard stats (trend, collectionSummary, classificationDistribution, statusDistribution, conversionFunnel)
   const { data: statsData, isLoading: isLoadingStats } = useQuery({
     queryKey: ["garage-dashboard-stats"],
     queryFn: () => garageDashboardApi.getStats(),
+  });
+
+  // Query checkpoint KPIs (for projectedToday & projectedMonth pipelines)
+  const { data: kpisData, isLoading: isLoadingKpis } = useQuery({
+    queryKey: ["garage-checkpoint-kpis"],
+    queryFn: () => garageDashboardApi.getCheckpointKpis(),
   });
 
   const handleExportExcel = async () => {
@@ -102,28 +108,34 @@ export function GarageDashboard({
       }
     >
       <div className="flex flex-col gap-6 mb-8">
-        {/* Section 1: KPI Hiệu quả Dịch vụ Cards (Tính theo ngày hoàn thành) */}
+        {/* Section 1: KPI Hiệu quả Dịch vụ & Tiến độ thu tiền thực tế */}
         <GarageStatsCards />
 
-        {/* Section 2: Trend & Classification Distribution Charts */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <div className="lg:col-span-2">
-            <GarageTrendChart />
-          </div>
-          <div className="lg:col-span-1">
-            <GarageClassificationDistributionChart
-              data={statsData?.classificationDistribution}
-              byMonth={statsData?.classificationDistributionByMonth}
-              availableMonths={statsData?.availableMonths}
-              loading={isLoadingStats}
-            />
-          </div>
+        {/* Section 2: Pipeline Dự Thu & Phễu Chuyển Đổi Dịch Vụ (Hub 3 Tầng & Donut Phân Bổ Đồng Bộ) */}
+        <GarageConversionFunnelCard
+          funnel={statsData?.conversionFunnel}
+          byMonth={statsData?.conversionFunnelByMonth}
+          availableMonths={statsData?.availableMonths}
+          projectedToday={kpisData?.projectedToday}
+          projectedMonth={kpisData?.projectedMonth}
+          statusDistribution={statsData?.statusDistribution}
+          statusDistributionByMonth={statsData?.statusDistributionByMonth}
+          classificationDistribution={statsData?.classificationDistribution}
+          classificationDistributionByMonth={
+            statsData?.classificationDistributionByMonth
+          }
+          loading={isLoadingStats || isLoadingKpis}
+        />
+
+        {/* Section 3: Xu hướng Doanh thu & Chi phí */}
+        <div className="w-full">
+          <GarageTrendChart />
         </div>
 
-        {/* Section 3: Báo cáo Lợi nhuận (P&L) Section */}
+        {/* Section 4: Báo cáo Lợi nhuận (P&L) Section */}
         <GaragePnlSection />
 
-        {/* Section 4: Tiến độ Dòng tiền & Công nợ (Thu tiền KH & Trả tiền NCC) */}
+        {/* Section 5: Tiến độ Dòng tiền & Công nợ (Thu tiền KH & Trả tiền NCC) */}
         <GaragePaymentProgressCard
           collectionSummary={statsData?.collectionSummary}
           costPaymentSummary={statsData?.costPaymentSummary}
