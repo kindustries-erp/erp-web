@@ -2,6 +2,7 @@ export const garageVi = {
   tabs: {
     dashboard: "Tổng quan",
     cases: "Phiếu dịch vụ",
+    services: "Chi tiết phiếu DV",
   },
   dashboard: {
     title: "Tổng quan Garage",
@@ -1122,5 +1123,40 @@ export const garageVi = {
       total: "TỔNG CỘNG",
     },
     empty: "Chưa có dữ liệu giao dịch trong kỳ",
+  },
+  services: {
+    title: "Chi tiết phiếu dịch vụ",
+    description:
+      "Bảng kê chi tiết từng dòng công việc, công thợ và phụ tùng của các phiếu dịch vụ",
+    items: "Dòng hạng mục",
+    typePt: "Phụ tùng",
+    typeDv: "Dịch vụ",
+    exporting: "Đang xuất file Excel chi tiết...",
+    exportSuccess: "Đã xuất file {{fileName}} thành công!",
+    exportError: "Lỗi khi xuất file Excel chi tiết phiếu dịch vụ",
+    tabs: {
+      all: "Tất cả hạng mục",
+      dv: "Công dịch vụ",
+      pt: "Phụ tùng",
+    },
+    actions: {
+      exportExcel: "Xuất Excel chi tiết",
+    },
+    columns: {
+      itemType: "Loại",
+      itemCode: "Mã hạng mục",
+      itemName: "Tên & Diễn giải",
+      unit: "ĐVT",
+      quantity: "Số lượng",
+      unitPrice: "Đơn giá",
+      preVatAmount: "Tiền trước thuế",
+      vatRate: "Thuế (%)",
+      totalAmount: "Thành tiền",
+      laborCost: "Tiền công DV",
+      partsRevenue: "Tiền phụ tùng",
+      partsCost: "Giá vốn PT",
+      discountAmount: "Chiết khấu",
+      warehouseCode: "Mã kho",
+    },
   },
 };

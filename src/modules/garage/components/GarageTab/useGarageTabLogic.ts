@@ -4,7 +4,7 @@ import { useAppStore } from "@/core/config/appStore";
 import { ErpUrlQueryParam } from "@/shared/constants/urlParams";
 import type { TabItem } from "@/shared/components/PageLayout";
 
-export type GarageTabKey = "dashboard" | "cases";
+export type GarageTabKey = "dashboard" | "cases" | "services";
 
 export interface GarageTabProps {
   initialTab?: GarageTabKey;
@@ -21,11 +21,19 @@ export function useGarageTabLogic({
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
       const tabParam = params.get(ErpUrlQueryParam.TAB);
-      if (tabParam === "dashboard" || tabParam === "cases") {
+      if (
+        tabParam === "dashboard" ||
+        tabParam === "cases" ||
+        tabParam === "services"
+      ) {
         return tabParam;
       }
     }
-    if (propInitialTab === "dashboard" || propInitialTab === "cases") {
+    if (
+      propInitialTab === "dashboard" ||
+      propInitialTab === "cases" ||
+      propInitialTab === "services"
+    ) {
       return propInitialTab;
     }
     return "dashboard";
@@ -44,7 +52,11 @@ export function useGarageTabLogic({
       }
 
       const targetTab: GarageTabKey =
-        newTab === "cases" ? "cases" : "dashboard";
+        newTab === "cases"
+          ? "cases"
+          : newTab === "services"
+            ? "services"
+            : "dashboard";
       setCurrentTabKey(targetTab);
 
       if (typeof window !== "undefined") {
@@ -75,7 +87,11 @@ export function useGarageTabLogic({
     const handlePopState = () => {
       const params = new URLSearchParams(window.location.search);
       const tabParam = params.get(ErpUrlQueryParam.TAB);
-      if (tabParam === "dashboard" || tabParam === "cases") {
+      if (
+        tabParam === "dashboard" ||
+        tabParam === "cases" ||
+        tabParam === "services"
+      ) {
         setCurrentTabKey(tabParam);
       } else {
         setCurrentTabKey("dashboard");
@@ -115,6 +131,7 @@ export function useGarageTabLogic({
     () => [
       { value: "dashboard", label: t("tabs.dashboard", "Tổng quan") },
       { value: "cases", label: t("tabs.cases", "Phiếu dịch vụ") },
+      { value: "services", label: t("tabs.services", "Chi tiết phiếu DV") },
     ],
     [t],
   );
