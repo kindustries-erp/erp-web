@@ -44,7 +44,7 @@ export function DataTable<T>({
   emptyLabel,
   filters,
   minWidth = 800,
-  loadingRows = 8,
+  loadingRows = 12,
   elevated = false,
   containerClassName,
   actionsColumn,
@@ -207,6 +207,8 @@ export function DataTable<T>({
               <Table
                 className={cn(
                   "table-fixed",
+                  (summaryRow || (loading && items.length === 0)) &&
+                    "min-h-full",
                   variant === "spreadsheet" &&
                     "border-collapse border-spacing-0",
                 )}
@@ -229,7 +231,7 @@ export function DataTable<T>({
                       key={headerGroup.id}
                       className={cn(
                         "hover:bg-transparent border-none",
-                        variant === "spreadsheet" ? "h-7" : "",
+                        variant === "spreadsheet" ? "h-8" : "",
                       )}
                     >
                       {headerGroup.headers.map((header, index) => {
@@ -427,40 +429,54 @@ export function DataTable<T>({
                   )}
                 >
                   {loading && items.length === 0 ? (
-                    Array.from({ length: loadingRows }).map((_, index) => (
-                      <TableRow
-                        key={index}
-                        className={cn(variant === "spreadsheet" ? "h-7" : "")}
-                      >
-                        {table.getVisibleLeafColumns().map((column) => {
-                          const meta = column.columnDef
-                            .meta as DataTableRowMeta;
-                          return (
-                            <TableCell
-                              key={column.id}
-                              className={cn(
-                                meta?.className,
-                                variant === "spreadsheet" &&
-                                  "border-r border-border py-1 px-2",
-                              )}
-                              style={{
-                                maxWidth: enableColumnResizing
-                                  ? column.getSize()
-                                  : undefined,
-                              }}
-                            >
-                              <Skeleton
+                    <>
+                      {Array.from({ length: loadingRows }).map((_, index) => (
+                        <TableRow
+                          key={index}
+                          className={cn(
+                            "hover:bg-transparent",
+                            variant === "spreadsheet" ? "h-[38px]" : "h-10",
+                          )}
+                        >
+                          {table.getVisibleLeafColumns().map((column) => {
+                            const meta = column.columnDef
+                              .meta as DataTableRowMeta;
+                            return (
+                              <TableCell
+                                key={column.id}
                                 className={cn(
-                                  "h-4 w-full",
-                                  meta?.skeletonClassName,
+                                  meta?.className,
+                                  variant === "spreadsheet" &&
+                                    "border-r border-border py-1 px-2",
                                 )}
-                              />
-                            </TableCell>
-                          );
-                        })}
-                        <TableCell className="w-auto p-0 m-0 border-none" />
-                      </TableRow>
-                    ))
+                                style={{
+                                  maxWidth: enableColumnResizing
+                                    ? column.getSize()
+                                    : undefined,
+                                }}
+                              >
+                                <Skeleton
+                                  className={cn(
+                                    "h-4 w-full rounded-xs",
+                                    meta?.skeletonClassName,
+                                  )}
+                                />
+                              </TableCell>
+                            );
+                          })}
+                          <TableCell className="w-auto p-0 m-0 border-none" />
+                        </TableRow>
+                      ))}
+                      <tr
+                        aria-hidden="true"
+                        className="h-full border-none hover:bg-transparent pointer-events-none select-none"
+                      >
+                        <td
+                          colSpan={table.getVisibleLeafColumns().length + 1}
+                          className="p-0 border-none bg-transparent pointer-events-none"
+                        />
+                      </tr>
+                    </>
                   ) : items.length === 0 ? (
                     <TableRow>
                       <TableCell
@@ -477,40 +493,58 @@ export function DataTable<T>({
                         .map((col) => `${col.id}:${col.getSize()}`)
                         .join("|");
 
-                      return table.getRowModel().rows.map((row, index) => {
-                        const rowKey = getRowKey
-                          ? getRowKey(row.original)
-                          : row.id;
-                        const isExpanded = expandedRowKeys?.includes(rowKey);
-                        const isSelected = row.getIsSelected();
-                        const isContextMenuActive =
-                          contextMenu?.rowKey === rowKey;
+                      return (
+                        <>
+                          {table.getRowModel().rows.map((row, index) => {
+                            const rowKey = getRowKey
+                              ? getRowKey(row.original)
+                              : row.id;
+                            const isExpanded =
+                              expandedRowKeys?.includes(rowKey);
+                            const isSelected = row.getIsSelected();
+                            const isContextMenuActive =
+                              contextMenu?.rowKey === rowKey;
 
-                        return (
-                          <DataTableRowMemo
-                            key={rowKey}
-                            row={row}
-                            rowKey={rowKey}
-                            tableColumns={tableColumns}
-                            tableMeta={tableMeta}
-                            visibleColumnsKey={visibleColumnsKey}
-                            isExpanded={isExpanded}
-                            isContextMenuActive={isContextMenuActive}
-                            rowIndex={index}
-                            isSelected={isSelected}
-                            getRowClassName={getRowClassName}
-                            onRowClick={onRowClick}
-                            onRowContextMenu={onRowContextMenu}
-                            enableRowContextMenu={enableRowContextMenu}
-                            rowHoverActions={rowHoverActions}
-                            setContextMenu={setContextMenu}
-                            variant={variant}
-                            enableRowSelection={enableRowSelection}
-                            enableColumnResizing={enableColumnResizing}
-                            renderSubRow={renderSubRow}
-                          />
-                        );
-                      });
+                            return (
+                              <DataTableRowMemo
+                                key={rowKey}
+                                row={row}
+                                rowKey={rowKey}
+                                tableColumns={tableColumns}
+                                tableMeta={tableMeta}
+                                visibleColumnsKey={visibleColumnsKey}
+                                isExpanded={isExpanded}
+                                isContextMenuActive={isContextMenuActive}
+                                rowIndex={index}
+                                isSelected={isSelected}
+                                getRowClassName={getRowClassName}
+                                onRowClick={onRowClick}
+                                onRowContextMenu={onRowContextMenu}
+                                enableRowContextMenu={enableRowContextMenu}
+                                rowHoverActions={rowHoverActions}
+                                setContextMenu={setContextMenu}
+                                variant={variant}
+                                enableRowSelection={enableRowSelection}
+                                enableColumnResizing={enableColumnResizing}
+                                renderSubRow={renderSubRow}
+                              />
+                            );
+                          })}
+                          {summaryRow && (
+                            <tr
+                              aria-hidden="true"
+                              className="h-full border-none hover:bg-transparent pointer-events-none select-none"
+                            >
+                              <td
+                                colSpan={
+                                  table.getVisibleLeafColumns().length + 1
+                                }
+                                className="p-0 border-none bg-transparent pointer-events-none"
+                              />
+                            </tr>
+                          )}
+                        </>
+                      );
                     })()
                   )}
                 </TableBody>

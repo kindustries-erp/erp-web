@@ -43,7 +43,7 @@ interface ComboboxProps {
   loading?: boolean;
   onSearch?: (query: string) => void;
   fallbackLabel?: string;
-  variant?: "default" | "spreadsheet";
+  variant?: "default" | "spreadsheet" | "ghost";
 }
 
 export function Combobox({
@@ -159,6 +159,11 @@ export function Combobox({
               variant === "spreadsheet" &&
                 open &&
                 "bg-white border-0 rounded-none shadow-none ring-0 outline-none",
+              variant === "ghost" &&
+                "px-2 py-1 text-xs border-0 rounded-lg shadow-none ring-0 outline-none bg-transparent hover:bg-slate-100/50 dark:hover:bg-slate-800/50",
+              variant === "ghost" &&
+                open &&
+                "bg-transparent border-0 ring-0 outline-none shadow-none",
               disabled
                 ? "opacity-60 cursor-not-allowed"
                 : readOnly

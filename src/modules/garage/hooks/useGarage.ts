@@ -191,6 +191,38 @@ export const useSyncGarageGrossProfit = () => {
   });
 };
 
+export const useSyncGarageCaseDetails = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (params: {
+      branchId?: string;
+      from?: string;
+      to?: string;
+      force?: boolean;
+    }) =>
+      garageApi.syncCaseDetails(
+        params.branchId,
+        params.from,
+        params.to,
+        params.force,
+      ),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["garage", "case-services"] });
+      queryClient.invalidateQueries({ queryKey: ["garage", "cases"] });
+      toast.success(
+        data?.message || "Đồng bộ chi tiết phiếu dịch vụ thành công!",
+      );
+    },
+    onError: (error: any) => {
+      toast.error(
+        error?.response?.data?.message ||
+          error?.message ||
+          "Đồng bộ chi tiết thất bại",
+      );
+    },
+  });
+};
+
 export function useGarageGrossProfitLinkedInvoices(grossProfitId?: string) {
   return useQuery({
     queryKey: ["garage", "grossProfitLinkedInvoices", grossProfitId],

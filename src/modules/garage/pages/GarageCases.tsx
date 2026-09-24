@@ -7,6 +7,7 @@ import { TableText } from "@/shared/components/DataTable/TableText";
 import { TableDateCell } from "@/shared/components/DataTable/TableDateCell";
 import { SubtotalSummaryCell } from "@/shared/components/DataTable/SubtotalSummaryCell";
 import { Tooltip } from "@/core/components/ui/Tooltip";
+import { CopyButton } from "@/shared/components/CopyButton";
 import { money } from "@/shared/utils/format";
 import { cn } from "@/shared/utils";
 import { useGarageStore } from "../store/garageStore";
@@ -61,8 +62,19 @@ import {
   DEFAULT_GARAGE_CASE_COLUMN_VISIBILITY,
 } from "../utils/garageCaseViewPresets";
 import { Button } from "@/shared/components/ui/Button";
+import type { TabItem } from "@/shared/components/PageLayout";
 
-export function GarageCases() {
+export interface GarageCasesProps {
+  tabs?: TabItem[];
+  activeTab?: string;
+  onTabChange?: (val: string) => void;
+}
+
+export function GarageCases({
+  tabs,
+  activeTab,
+  onTabChange,
+}: GarageCasesProps = {}) {
   const { t } = useTranslation("garage");
   const queryClient = useQueryClient();
   const { selectedBranchId, setSelectedBranchId } = useGarageStore();
@@ -820,7 +832,92 @@ export function GarageCases() {
       className: "font-medium text-left",
       cell: (item: any) => item.bienSoXe || "-",
     },
-    // 4. Mã khách hàng
+    // 4. Khách hàng (Tên KH + Mã KH layout 2 dòng giống InvoicePartnerCell)
+    {
+      key: "customer",
+      label: t("cases.columns.customer", "Khách hàng"),
+      header: (
+        <TableColumnHeaderFilter
+          {...createHeaderProps(
+            "customer",
+            t("cases.columns.customer", "Khách hàng"),
+            "center",
+            false,
+            undefined,
+            true,
+          )}
+          {...commonOptionProps}
+        />
+      ),
+      sortable: false,
+      size: 240,
+      enableResizing: true,
+      className: "text-left",
+      cell: (item: any) => {
+        const customerName = item.khachHangName?.trim() || "";
+        const customerCode = item.khachHangCode?.trim() || "";
+
+        if (!customerName && !customerCode) {
+          return (
+            <span className="text-muted-foreground/50 select-none">—</span>
+          );
+        }
+
+        return (
+          <div className="flex items-center gap-1.5 w-full min-w-0">
+            <div className="flex flex-col justify-center min-w-0 flex-1 gap-0.5 py-0.5">
+              {/* Dòng 1: Tên khách hàng (đậm) + Nút Copy */}
+              <div className="flex items-center gap-1 min-w-0 group/cname">
+                <Tooltip content={customerName || "—"}>
+                  <span className="truncate text-xs font-semibold text-slate-800 dark:text-slate-200 leading-tight select-text">
+                    {customerName || "—"}
+                  </span>
+                </Tooltip>
+                {customerName && customerName !== "—" && (
+                  <CopyButton
+                    value={customerName}
+                    tooltip={t("cases.actions.copyCustomerName", "Copy tên")}
+                    copiedTooltip={t("cases.actions.copied", "Đã copy")}
+                    toastMessage={t(
+                      "cases.actions.copiedCustomerName",
+                      "Đã copy tên khách hàng",
+                    )}
+                    iconClassName="w-2.5 h-2.5"
+                    className="h-3.5 w-3.5 p-0 opacity-0 group-hover/cname:opacity-100 transition-opacity flex-shrink-0 text-slate-400 hover:text-slate-600 focus:outline-none"
+                  />
+                )}
+              </div>
+
+              {/* Dòng 2: Mã khách hàng (mono mờ) + Nút Copy */}
+              {customerCode && (
+                <div className="flex items-center gap-1 min-w-0 group/ccode">
+                  <Tooltip content={`Mã KH: ${customerCode}`}>
+                    <span className="truncate text-[11px] font-normal font-mono text-muted-foreground leading-tight select-text">
+                      <span className="text-slate-400 font-sans mr-0.5">
+                        Mã:
+                      </span>
+                      {customerCode}
+                    </span>
+                  </Tooltip>
+                  <CopyButton
+                    value={customerCode}
+                    tooltip={t("cases.actions.copyCustomerCode", "Copy mã KH")}
+                    copiedTooltip={t("cases.actions.copied", "Đã copy")}
+                    toastMessage={t(
+                      "cases.actions.copiedCustomerCode",
+                      "Đã copy mã khách hàng",
+                    )}
+                    iconClassName="w-2.5 h-2.5"
+                    className="h-3 w-3 p-0 opacity-0 group-hover/ccode:opacity-100 transition-opacity flex-shrink-0 text-slate-400 hover:text-slate-600 focus:outline-none"
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      },
+    },
+    // 5. Mã khách hàng (Tùy chọn ẩn)
     {
       key: "customerCode",
       label: t("cases.columns.customerCode", "Mã KH"),
@@ -843,7 +940,7 @@ export function GarageCases() {
       className: "text-left font-mono",
       cell: (item: any) => item.khachHangCode || "-",
     },
-    // 5. Tên khách hàng
+    // 6. Tên khách hàng (Tùy chọn ẩn)
     {
       key: "customerName",
       label: t("cases.columns.customerName", "Tên khách hàng"),
@@ -1136,15 +1233,15 @@ export function GarageCases() {
         );
       },
     },
-    // 11. Phân loại nghiệp vụ
+    // 11. Phân loại ERP
     {
       key: "classification",
-      label: t("cases.columns.classification", "Phân loại"),
+      label: t("cases.columns.classificationErp", "Phân loại ERP"),
       header: (
         <TableColumnHeaderFilter
           {...createHeaderProps(
             "classification",
-            t("cases.columns.classification", "Phân loại"),
+            t("cases.columns.classificationErp", "Phân loại ERP"),
             "center",
             false,
             (val: string) => {
@@ -1162,11 +1259,11 @@ export function GarageCases() {
         />
       ),
       sortable: false,
-      size: 150,
+      size: 140,
       enableResizing: true,
       className: "text-center",
       cell: (item: any) => (
-        <div className="w-full flex justify-center">
+        <div className="w-full flex items-center justify-center py-0.5">
           <button
             type="button"
             onClick={(e) => {
@@ -1184,6 +1281,56 @@ export function GarageCases() {
           </button>
         </div>
       ),
+    },
+    // 12. Phân loại KGara (Read-only, nguồn gốc gốc từ KGara)
+    {
+      key: "kgaraClassification",
+      label: t("cases.columns.kgaraClassification", "Phân loại KGara"),
+      header: (
+        <TableColumnHeaderFilter
+          {...createHeaderProps(
+            "kgaraClassification",
+            t("cases.columns.kgaraClassification", "Phân loại KGara"),
+            "center",
+            false,
+            (val: string) => {
+              if (val === "__BLANK__")
+                return t("cases.common.blankOption", "(Trống)");
+              return val;
+            },
+            true,
+          )}
+          {...commonOptionProps}
+        />
+      ),
+      sortable: false,
+      size: 140,
+      enableResizing: true,
+      className: "text-center",
+      cell: (item: any) => {
+        const kgaraClass =
+          item.kgaraClassification || item.rawData?.NguonGocKhachHangName;
+
+        if (!kgaraClass) {
+          return (
+            <span className="text-muted-foreground/40 text-xs select-none">
+              —
+            </span>
+          );
+        }
+
+        return (
+          <div className="w-full flex items-center justify-center py-0.5">
+            <span
+              className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800/80 px-2 py-0.5 rounded-md border border-slate-200/80 dark:border-slate-700/60 max-w-[130px] truncate"
+              title={`Nguồn gốc KGara: ${kgaraClass}${item.kgaraClassificationCode ? ` (${item.kgaraClassificationCode})` : ""} - Bất biến`}
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-slate-400 shrink-0" />
+              <span className="truncate">{kgaraClass}</span>
+            </span>
+          </div>
+        );
+      },
     },
     // 12. Trạng thái
     {
@@ -1977,6 +2124,9 @@ export function GarageCases() {
         desc={t("cases.desc")}
         icon={<FileText className="w-5 h-5 text-slate-700" />}
         tableId="garage-cases-table"
+        tabs={tabs}
+        activeTab={activeTab}
+        onTabChange={onTabChange}
         items={visibleCases}
         columns={columns}
         defaultColumnVisibility={defaultColumnVisibility}

@@ -23,11 +23,23 @@ import { useSinvoiceDraftsList } from "@/modules/accounting/hooks/useSinvoiceDra
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
 import { InvoiceDateRangeSlot } from "@/modules/erp-invoices-core/components/InvoiceDateRangeSlot";
+import { InvoiceItemsPopover } from "@/modules/erp-invoices-core/components/ErpInvoicesTab/components/cells/InvoiceItemsPopover";
 import { ErpUrlQueryParam } from "@/shared/constants/urlParams";
 import { DEFAULT_DEBOUNCE_TIME } from "@/shared/constants/timing";
 import { encodeStateParam } from "@/shared/utils/pageUrl";
+import type { TabItem } from "@/shared/components/PageLayout";
 
-export function ErpInvoicesDraftPage() {
+export interface ErpInvoicesDraftPageProps {
+  tabs?: TabItem[];
+  activeTab?: string;
+  onTabChange?: (val: string) => void;
+}
+
+export function ErpInvoicesDraftPage({
+  tabs,
+  activeTab,
+  onTabChange,
+}: ErpInvoicesDraftPageProps = {}) {
   const { t } = useTranslation("erpInvoices");
   const canEditInvoice = useHasPermission(
     ErpResource.INVOICES,
@@ -46,7 +58,9 @@ export function ErpInvoicesDraftPage() {
   );
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    if (typeof window === "undefined" || (activeTab && activeTab !== "draft")) {
+      return;
+    }
 
     if (debounceUrlTimerRef.current) {
       clearTimeout(debounceUrlTimerRef.current);
@@ -55,6 +69,9 @@ export function ErpInvoicesDraftPage() {
     debounceUrlTimerRef.current = setTimeout(() => {
       const currentUrl = new URL(window.location.href);
       const newParams = new URLSearchParams(currentUrl.search);
+
+      // Keep tab param
+      newParams.set(ErpUrlQueryParam.TAB, "draft");
 
       // Detail drawer
       if (detailDraft?.id) {
@@ -130,6 +147,7 @@ export function ErpInvoicesDraftPage() {
         clearTimeout(debounceUrlTimerRef.current);
     };
   }, [
+    activeTab,
     detailDraft?.id,
     listHook.page,
     listHook.pageSize,
@@ -433,25 +451,9 @@ export function ErpInvoicesDraftPage() {
           console.error("Lỗi parse dữ liệu mặt hàng:", e);
         }
 
-        const fmtAmt = (val: string | number | null | undefined) => {
-          if (val == null) return "—";
-          const n = Number(val);
-          if (isNaN(n)) return "—";
-          return (
-            n.toLocaleString("vi-VN", {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            }) + " đ"
-          );
-        };
-
-        const popoverContent = (
-          <div className="p-3 max-h-[350px] w-[850px] max-w-[90vw] overflow-auto">
-            <h4 className="font-semibold text-sm mb-2 text-slate-800">
-              Chi tiết mặt hàng
-            </h4>
-            {items.length > 0 ? (
-              (() => {
+        const popoverContent =
+          items.length > 0
+            ? () => {
                 const descriptionLineCount = String(inv.description || "")
                   .split(/\r?\n/)
                   .map((line) => line.trim())
@@ -469,136 +471,9 @@ export function ErpInvoicesDraftPage() {
                     invoiceLineCount,
                   ),
                 );
-
-                return (
-                  <table className="w-full text-sm text-left border-collapse min-w-[700px]">
-                    <thead className="bg-slate-100/60 sticky top-0 backdrop-blur-sm">
-                      <tr>
-                        <th className="px-2 py-1 border-b text-slate-600 font-medium">
-                          Tên mặt hàng
-                        </th>
-                        <th className="px-2 py-1 border-b text-slate-600 font-medium text-right">
-                          SL
-                        </th>
-                        <th className="px-2 py-1 border-b text-slate-600 font-medium text-left">
-                          ĐVT
-                        </th>
-                        <th className="px-2 py-1 border-b text-slate-600 font-medium text-right">
-                          Đơn giá
-                        </th>
-                        <th className="px-2 py-1 border-b text-slate-600 font-medium text-right">
-                          Thành tiền trước thuế
-                        </th>
-                        <th className="px-2 py-1 border-b text-slate-600 font-medium text-right">
-                          Thuế suất
-                        </th>
-                        <th className="px-2 py-1 border-b text-slate-600 font-medium text-right">
-                          Thuế VAT
-                        </th>
-                        <th className="px-2 py-1 border-b text-slate-600 font-medium text-right">
-                          Thành tiền
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {displayItems.map((item: any, idx: number) => (
-                        <tr
-                          key={idx}
-                          className="border-b last:border-0 hover:bg-slate-50"
-                        >
-                          <td className="px-2 py-1 whitespace-normal break-words max-w-[200px]">
-                            {item.description || item.itemName || "—"}
-                          </td>
-                          <td className="px-2 py-1 text-right whitespace-nowrap">
-                            {item.quantity != null
-                              ? Number(item.quantity).toLocaleString("vi-VN", {
-                                  minimumFractionDigits: 1,
-                                  maximumFractionDigits: 1,
-                                })
-                              : "—"}
-                          </td>
-                          <td className="px-2 py-1 text-left whitespace-nowrap">
-                            {item.unit || item.unitName || "—"}
-                          </td>
-                          <td className="px-2 py-1 text-right whitespace-nowrap">
-                            {fmtAmt(item.unitPrice)}
-                          </td>
-                          <td className="px-2 py-1 text-right whitespace-nowrap font-medium">
-                            {fmtAmt(item.preVatAmount)}
-                          </td>
-                          <td className="px-2 py-1 text-right whitespace-nowrap">
-                            {item.vatPercentage != null
-                              ? `${Number(item.vatPercentage).toFixed(0)}%`
-                              : "—"}
-                          </td>
-                          <td className="px-2 py-1 text-right whitespace-nowrap">
-                            {fmtAmt(item.vatAmount)}
-                          </td>
-                          <td className="px-2 py-1 text-right whitespace-nowrap font-semibold text-slate-800">
-                            {fmtAmt(item.totalAmount)}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                    <tfoot className="table-footer-glass sticky bottom-0 border-t border-border shadow-[0_-2px_6px_rgba(0,0,0,0.04)]">
-                      <tr>
-                        <td className="px-2 py-2 font-semibold text-right text-slate-700">
-                          Tổng cộng
-                        </td>
-                        <td className="px-2 py-2 font-semibold text-right text-slate-700">
-                          {displayItems
-                            .reduce(
-                              (acc: number, item: any) =>
-                                acc + (Number(item.quantity) || 0),
-                              0,
-                            )
-                            .toLocaleString("vi-VN", {
-                              minimumFractionDigits: 1,
-                              maximumFractionDigits: 1,
-                            })}
-                        </td>
-                        <td className="px-2 py-2"></td>
-                        <td className="px-2 py-2"></td>
-                        <td className="px-2 py-2 font-semibold text-right text-slate-700">
-                          {fmtAmt(
-                            displayItems.reduce(
-                              (acc: number, item: any) =>
-                                acc + (Number(item.preVatAmount) || 0),
-                              0,
-                            ),
-                          )}
-                        </td>
-                        <td className="px-2 py-2"></td>
-                        <td className="px-2 py-2 font-semibold text-right text-slate-700">
-                          {fmtAmt(
-                            displayItems.reduce(
-                              (acc: number, item: any) =>
-                                acc + (Number(item.vatAmount) || 0),
-                              0,
-                            ),
-                          )}
-                        </td>
-                        <td className="px-2 py-2 font-semibold text-right text-slate-800">
-                          {fmtAmt(
-                            displayItems.reduce(
-                              (acc: number, item: any) =>
-                                acc + (Number(item.totalAmount) || 0),
-                              0,
-                            ),
-                          )}
-                        </td>
-                      </tr>
-                    </tfoot>
-                  </table>
-                );
-              })()
-            ) : (
-              <div className="text-slate-500 text-sm italic">
-                Không có chi tiết mặt hàng.
-              </div>
-            )}
-          </div>
-        );
+                return <InvoiceItemsPopover items={displayItems} />;
+              }
+            : undefined;
 
         return (
           <TableText
@@ -720,6 +595,9 @@ export function ErpInvoicesDraftPage() {
         desc="Quản lý danh sách hóa đơn điện tử nháp"
         icon={<FileText className="h-5 w-5" />}
         tableId="erp-invoices-draft-table"
+        tabs={tabs}
+        activeTab={activeTab}
+        onTabChange={onTabChange}
         items={listHook.drafts}
         columns={columns}
         getRowKey={(r) => r.id}

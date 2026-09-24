@@ -1,25 +1,14 @@
-import React, { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { useAppStore } from "@/core/config/appStore";
 import { bankStatementApi } from "@/modules/bank-statements/api/bankStatementApi";
-import { getBranchesApi } from "@/modules/branches/api/branchApi";
-import { getTags } from "@/modules/tags/api/tagsApi";
-import { useFilterPanel } from "@/shared/hooks/useFilterPanel";
-import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
 import { clearAllDropdownSearchStates } from "@/shared/components/DataTable/TableColumnHeaderFilter";
-import { usePageViewPresets } from "@/shared/hooks/usePageViewPresets";
 import { usePageUrlState } from "@/shared/hooks/usePageUrlState";
-import {
-  useUserPreferencesStore,
-  type TableViewPreset,
-} from "@/shared/hooks/useUserPreferences";
-import { SubtotalSummaryCell } from "@/shared/components/DataTable/SubtotalSummaryCell";
-import {
-  BANK_STATEMENT_COLUMN_VIEW_PRESETS,
-  DEFAULT_BANK_COLUMN_VISIBILITY,
-} from "./utils";
 import { useBankStatementColumns } from "./components/BankStatementColumns";
+import { useBankStatementPresets } from "./hooks/useBankStatementPresets";
+import { useBankStatementFilters } from "./hooks/useBankStatementFilters";
+import { useBankStatementSummary } from "./hooks/useBankStatementSummary";
 import { PageKey } from "@/shared/types";
 
 export interface UseBankStatementsTabLogicProps {
@@ -106,258 +95,46 @@ export function useBankStatementsTabLogic({
     [],
   );
 
-  // 3. View Mode Presets & Column Preferences
-  const columnViewPresetsHook = usePageViewPresets({
-    tableId,
-    defaultPresets: BANK_STATEMENT_COLUMN_VIEW_PRESETS,
-  });
+  // 4. Sub-hooks (Presets & Filters)
+  const presets = useBankStatementPresets(tableId);
+  const filtersHook = useBankStatementFilters({ type, tableId, t });
+  const { branches, accountsData, filter, tableState, appliedFilters } =
+    filtersHook;
 
-  const currentTablePref = useUserPreferencesStore((s) => s.tables[tableId]);
-  const currentColumnVisibility = currentTablePref?.columnVisibility;
-
-  const [activeColumnPresetKey, setActiveColumnPresetKey] = useState<string>(
-    () => {
-      const stored = useUserPreferencesStore
-        .getState()
-        .getTablePreference(tableId);
-      return stored?.activeView || "overview";
-    },
-  );
-
-  const [viewConfigDrawerOpen, setViewConfigDrawerOpen] = useState(false);
-  const [editingViewPreset, setEditingViewPreset] =
-    useState<TableViewPreset | null>(null);
-
-  const handleColumnPresetChange = (preset: TableViewPreset) => {
-    setActiveColumnPresetKey(preset.key);
-
-    const currentPref = useUserPreferencesStore
-      .getState()
-      .getTablePreference(tableId) || {
-      columnOrder: [],
-      columnVisibility: {},
-    };
-
-    useUserPreferencesStore.getState().setTablePreferences(tableId, {
-      ...currentPref,
-      columnVisibility:
-        preset.columnVisibility || DEFAULT_BANK_COLUMN_VISIBILITY,
-      activeView: preset.key,
-    });
-  };
-
-  const handleOpenCreateView = () => {
-    setEditingViewPreset(null);
-    setViewConfigDrawerOpen(true);
-  };
-
-  const handleOpenEditView = (preset: TableViewPreset) => {
-    setEditingViewPreset(preset);
-    setViewConfigDrawerOpen(true);
-  };
-
-  const handleSaveViewPreset = (data: {
-    key?: string;
-    label: string;
-    columnVisibility: Record<string, boolean>;
-  }) => {
-    columnViewPresetsHook.saveView(
-      data.label,
-      {},
-      {},
-      {},
-      data.columnVisibility,
-      data.key,
-    );
-
-    if (data.key) {
-      setActiveColumnPresetKey(data.key);
-      const currentPref = useUserPreferencesStore
-        .getState()
-        .getTablePreference(tableId) || {
-        columnOrder: [],
-        columnVisibility: {},
-      };
-      useUserPreferencesStore.getState().setTablePreferences(tableId, {
-        ...currentPref,
-        columnVisibility: data.columnVisibility,
-        activeView: data.key,
-      });
-    }
-  };
-
-  const handleResetViewPreset = (key: string) => {
-    columnViewPresetsHook.resetView(key);
-    const factoryPreset = BANK_STATEMENT_COLUMN_VIEW_PRESETS.find(
-      (p) => p.key === key,
-    );
-    if (factoryPreset) {
-      handleColumnPresetChange(factoryPreset);
-    }
-  };
-
-  const handleDeleteViewPreset = (key: string) => {
-    columnViewPresetsHook.deleteView(key);
-    if (activeColumnPresetKey === key) {
-      const defaultPreset = BANK_STATEMENT_COLUMN_VIEW_PRESETS[0];
-      handleColumnPresetChange(defaultPreset);
-    }
-  };
-
-  // 4. Remote Master Data
-  const { data: branches = [] } = useQuery({
-    queryKey: ["branches:list"],
-    queryFn: getBranchesApi,
-  });
-
-  const { data: accountsData = [] } = useQuery<any[]>({
-    queryKey: [type === "bank" ? "bank-accounts" : "cash-books"],
-    queryFn: async () => {
-      const data =
-        type === "bank"
-          ? await bankStatementApi.getBankAccounts()
-          : await bankStatementApi.getCashBooks();
-      return data as any[];
-    },
-  });
-
-  const { data: tags = [] } = useQuery({
-    queryKey: ["sys-tags"],
-    queryFn: getTags,
-  });
-
-  // 5. Filter Panel & Table Column State
-  const filterConfig = useMemo(() => {
-    const custom: any[] = [
-      {
-        key: "branchId",
-        label: t("bankStatement.filters.branch", { defaultValue: "Chi nhánh" }),
-        placeholder: t("bankStatement.filters.allBranches", {
-          defaultValue: "Tất cả chi nhánh",
-        }),
-        options: branches.map((b) => ({ value: b.id, label: b.name })),
-      },
-    ];
-
-    if (accountsData && accountsData.length > 0) {
-      custom.push({
-        key: type === "bank" ? "bankAccountId" : "cashBookId",
-        label:
-          type === "bank"
-            ? t("bankStatement.filters.bank", { defaultValue: "Ngân hàng" })
-            : t("bankStatement.filters.cashBook", { defaultValue: "Sổ quỹ" }),
-        placeholder:
-          type === "bank"
-            ? t("bankStatement.filters.allBanks", {
-                defaultValue: "Tất cả ngân hàng",
-              })
-            : t("bankStatement.filters.allCashBooks", {
-                defaultValue: "Tất cả sổ quỹ",
-              }),
-        options: accountsData.map((a: any) => ({
-          value: a.id,
-          label:
-            type === "bank" ? `${a.bankCode} - ${a.accountNumber}` : a.name,
-        })),
-      });
-    }
-
-    custom.push({
-      key: "tagIds",
-      label: t("bankStatement.filters.tags", {
-        defaultValue: "Danh mục (Tags)",
-      }),
-      placeholder: t("bankStatement.filters.selectTags", {
-        defaultValue: "Chọn danh mục",
-      }),
-      options: tags.map((t) => ({ value: t.id, label: t.name })),
-      multiple: true,
-    });
-
-    return {
-      search: false,
-      period: true,
-      noDefaultPeriod: true,
-      custom,
-    };
-  }, [branches, accountsData, type, tags, t]);
-
-  const filter = useFilterPanel(filterConfig, () => setPage(1));
-  const tableState = useTableColumnState(tableId);
-
-  const sortBy = tableState.sorts[0]
-    ? tableState.sorts[0].replace("-", "")
-    : undefined;
-  const sortOrder = tableState.sorts[0]
-    ? tableState.sorts[0].startsWith("-")
-      ? "DESC"
-      : "ASC"
-    : undefined;
-
-  // 6. Query Transactions Data
-  const effectiveTransactionType =
-    activeTransactionType === "ALL" ? undefined : activeTransactionType;
-
-  const { data, isFetching, refetch } = useQuery({
-    queryKey: [
-      "bank-transactions",
-      type,
+  // 5. Query Transactions API
+  const queryParams = useMemo(() => {
+    const params: any = {
       page,
       pageSize,
-      filter.state,
-      tableState.sorts,
-      tableState.columnFilters,
-      tableState.columnSearch,
-      effectiveTransactionType,
-    ],
-    queryFn: () =>
-      bankStatementApi.getTransactions({
-        sourceType: type === "bank" ? "BANK" : "CASH",
-        page,
-        pageSize,
-        sortBy,
-        sortOrder,
-        search: filter.state.search || undefined,
-        startDate: filter.state.dateFrom || undefined,
-        endDate: filter.state.dateTo || undefined,
-        branchId: filter.state.custom.branchId || undefined,
-        bankAccountId: filter.state.custom.bankAccountId || undefined,
-        cashBookId: filter.state.custom.cashBookId || undefined,
-        transactionType: effectiveTransactionType,
-        tagIds: filter.state.custom.tagIds as unknown as string[] | undefined,
-        column_search:
-          Object.keys(tableState.columnSearch).length > 0
-            ? JSON.stringify(tableState.columnSearch)
-            : undefined,
-        column_filters:
-          Object.keys(tableState.columnFilters).length > 0
-            ? JSON.stringify(tableState.columnFilters)
-            : undefined,
-      }),
+      sourceType: type === "bank" ? "BANK" : "CASH",
+      ...appliedFilters,
+      columnFilters: tableState.columnFilters,
+      columnSearch: tableState.columnSearch,
+      sorts: tableState.sorts,
+    };
+
+    if (activeTransactionType !== "ALL") {
+      params.transactionType = activeTransactionType;
+    }
+    return params;
+  }, [page, pageSize, type, appliedFilters, tableState, activeTransactionType]);
+
+  const { data, isFetching, refetch } = useQuery({
+    queryKey: ["bank-transactions", queryParams],
+    queryFn: () => bankStatementApi.getTransactions(queryParams),
+    placeholderData: (prev) => prev,
   });
 
   const { data: dashboardStats } = useQuery({
-    queryKey: [
-      "bank-transactions-dashboard-stats",
-      type,
-      filter.state,
-      effectiveTransactionType,
-    ],
+    queryKey: ["bank-transactions-dashboard", appliedFilters],
     queryFn: () =>
       bankStatementApi.getDashboardStats({
+        ...appliedFilters,
         sourceType: type === "bank" ? "BANK" : "CASH",
-        search: filter.state.search || undefined,
-        startDate: filter.state.dateFrom || undefined,
-        endDate: filter.state.dateTo || undefined,
-        branchId: filter.state.custom.branchId || undefined,
-        bankAccountId: filter.state.custom.bankAccountId || undefined,
-        cashBookId: filter.state.custom.cashBookId || undefined,
-        transactionType: effectiveTransactionType,
-        tagIds: filter.state.custom.tagIds as unknown as string[] | undefined,
       }),
   });
 
-  // 7. Columns Definition
+  // 6. Columns & Summary
   const { columns } = useBankStatementColumns({
     type,
     page,
@@ -371,132 +148,13 @@ export function useBankStatementsTabLogic({
     setPartnerDrawerOpen,
   });
 
-  // 8. Summary Row Calculation
-  const summaryRow = useMemo(() => {
-    if (!data?.items || data.items.length === 0) return undefined;
-
-    const items = data.items;
-
-    const totalDebit = items.reduce(
-      (acc: number, curr: any) => acc + (parseFloat(curr.debitAmount) || 0),
-      0,
-    );
-    const totalCredit = items.reduce(
-      (acc: number, curr: any) => acc + (parseFloat(curr.creditAmount) || 0),
-      0,
-    );
-    const totalNetOff = items.reduce(
-      (acc: number, curr: any) => acc + (parseFloat(curr.netOffAmount) || 0),
-      0,
-    );
-    const totalRemaining = items.reduce(
-      (acc: number, curr: any) =>
-        acc +
-        (Math.max(
-          parseFloat(curr.creditAmount) || 0,
-          parseFloat(curr.debitAmount) || 0,
-        ) -
-          (parseFloat(curr.netOffAmount) || 0)),
-      0,
-    );
-
-    const totalPages = data.totalPages || 1;
-    const totalCount = data.total || items.length;
-    const grandCashIn =
-      dashboardStats?.totalCashIn !== undefined
-        ? Number(dashboardStats.totalCashIn)
-        : data?.totals?.grandTotalCredit !== undefined
-          ? Number(data.totals.grandTotalCredit)
-          : totalCredit;
-    const grandCashOut =
-      dashboardStats?.totalCashOut !== undefined
-        ? Number(dashboardStats.totalCashOut)
-        : data?.totals?.grandTotalDebit !== undefined
-          ? Number(data.totals.grandTotalDebit)
-          : totalDebit;
-
-    const cumulativeCashIn =
-      data?.totals?.cumulativeCredit !== undefined
-        ? Number(data.totals.cumulativeCredit)
-        : undefined;
-    const cumulativeCashOut =
-      data?.totals?.cumulativeDebit !== undefined
-        ? Number(data.totals.cumulativeDebit)
-        : undefined;
-
-    return {
-      transDate: null,
-      description: (
-        <SubtotalSummaryCell
-          variantType="label"
-          label={`${t("common.total", { defaultValue: "Tổng cộng" })}:`}
-          page={page}
-          totalPages={totalPages}
-          totalCount={totalCount}
-          currentPageCount={items.length}
-          cumulativeCount={(page - 1) * pageSize + items.length}
-        />
-      ),
-      thu: (
-        <SubtotalSummaryCell
-          variantType="amount"
-          metricTitle={t("bankStatement.columns.thu", {
-            defaultValue: "Tiền vào (Thu)",
-          })}
-          subtotalAmount={totalCredit}
-          cumulativeAmount={cumulativeCashIn}
-          grandTotalAmount={grandCashIn}
-          page={page}
-          totalPages={totalPages}
-          valueClassName="text-emerald-600 font-bold"
-        />
-      ),
-      chi: (
-        <SubtotalSummaryCell
-          variantType="amount"
-          metricTitle={t("bankStatement.columns.chi", {
-            defaultValue: "Tiền ra (Chi)",
-          })}
-          subtotalAmount={totalDebit}
-          cumulativeAmount={cumulativeCashOut}
-          grandTotalAmount={grandCashOut}
-          page={page}
-          totalPages={totalPages}
-          valueClassName="text-[#ea580c] font-bold"
-        />
-      ),
-      netOffAmount: (
-        <SubtotalSummaryCell
-          variantType="amount"
-          metricTitle={t("bankStatement.columns.netOffAmount", {
-            defaultValue: "Đã cấn trừ",
-          })}
-          subtotalAmount={totalNetOff}
-          grandTotalAmount={totalNetOff}
-          page={page}
-          totalPages={totalPages}
-          valueClassName="text-indigo-600 font-bold"
-        />
-      ),
-      remainingAmount: (
-        <SubtotalSummaryCell
-          variantType="amount"
-          metricTitle={t("bankStatement.columns.remainingAmount", {
-            defaultValue: "Còn lại",
-          })}
-          subtotalAmount={totalRemaining}
-          grandTotalAmount={totalRemaining}
-          page={page}
-          totalPages={totalPages}
-          valueClassName={
-            totalRemaining === 0
-              ? "text-emerald-600 font-bold"
-              : "text-slate-700 dark:text-slate-300 font-bold"
-          }
-        />
-      ),
-    };
-  }, [data, dashboardStats, page, t]);
+  const summaryRow = useBankStatementSummary({
+    data,
+    dashboardStats,
+    page,
+    pageSize,
+    t,
+  });
 
   const handleRefresh = useCallback(() => {
     refetch();
@@ -521,21 +179,9 @@ export function useBankStatementsTabLogic({
     setPageSize,
     activeTransactionType,
     handleTransactionTypeChange,
-    columnViewPresetsHook,
-    activeColumnPresetKey,
-    handleColumnPresetChange,
-    viewConfigDrawerOpen,
-    setViewConfigDrawerOpen,
-    editingViewPreset,
-    handleOpenCreateView,
-    handleOpenEditView,
-    handleSaveViewPreset,
-    handleResetViewPreset,
-    handleDeleteViewPreset,
-    currentColumnVisibility,
+    ...presets,
     branches,
     accountsData,
-    filterConfig,
     filter,
     tableState,
     data,
@@ -555,13 +201,12 @@ export function useBankStatementsTabLogic({
     detailTransactionId,
     setDetailTransactionId,
     detailDefaultTab,
-    setDetailDefaultTab,
     detailMode,
-    setDetailMode,
     handleOpenDetail,
     partnerDrawerOpen,
     setPartnerDrawerOpen,
     selectedPartner,
+    setSelectedPartner,
     openCustomFieldsDrawer,
   };
 }

@@ -85,6 +85,11 @@ export interface ErpInvoiceItemListResponse {
     totalVatAmount: number;
     totalDiscountAmount: number;
     totalAmount: number;
+    cumulativeQuantity?: number;
+    cumulativePreVatAmount?: number;
+    cumulativeVatAmount?: number;
+    cumulativeDiscountAmount?: number;
+    cumulativeTotalAmount?: number;
   };
 }
 
@@ -212,6 +217,7 @@ export interface CreateErpInvoicePayload {
 export type UpdateErpInvoicePayload = Partial<CreateErpInvoicePayload>;
 
 export interface ErpInvoiceListParams {
+  id?: string;
   direction?: "IN" | "OUT";
   search?: string;
   invoice_no?: string;

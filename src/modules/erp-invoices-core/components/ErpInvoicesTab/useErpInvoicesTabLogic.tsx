@@ -39,6 +39,7 @@ import { useErpInvoicesParallelPrefetch } from "@/modules/erp-invoices-core/hook
 
 export interface ErpInvoicesTabProps {
   direction?: "IN" | "OUT";
+  initialTab?: "dashboard" | "in" | "in-lines" | "out" | "out-lines" | "draft";
   initialDateFrom?: string;
   initialDateTo?: string;
   isDrawer?: boolean;
@@ -48,6 +49,7 @@ export interface ErpInvoicesTabProps {
 
 export function useErpInvoicesTabLogic({
   direction: propDirection,
+  initialTab: propInitialTab,
   isDrawer = false,
   instanceIndex = 1,
   partnerTaxCode,
@@ -72,6 +74,20 @@ export function useErpInvoicesTabLogic({
       const tabParam = params.get("tab") || "";
       const viewParam = params.get("view") || "";
 
+      if (tabParam === "dashboard") {
+        return {
+          dir: "IN" as const,
+          view: "dashboard" as const,
+          tabKey: "dashboard",
+        };
+      }
+      if (tabParam === "draft") {
+        return {
+          dir: "IN" as const,
+          view: "draft" as const,
+          tabKey: "draft",
+        };
+      }
       if (
         tabParam === "out-lines" ||
         (tabParam === "out" && viewParam === "lines")
@@ -108,11 +124,61 @@ export function useErpInvoicesTabLogic({
         };
       }
     }
-    const dir = propDirection || "IN";
+    if (propInitialTab) {
+      if (propInitialTab === "dashboard") {
+        return {
+          dir: "IN" as const,
+          view: "dashboard" as const,
+          tabKey: "dashboard",
+        };
+      }
+      if (propInitialTab === "draft") {
+        return {
+          dir: "IN" as const,
+          view: "draft" as const,
+          tabKey: "draft",
+        };
+      }
+      if (propInitialTab === "out-lines") {
+        return {
+          dir: "OUT" as const,
+          view: "lines" as const,
+          tabKey: "out-lines",
+        };
+      }
+      if (propInitialTab === "out") {
+        return {
+          dir: "OUT" as const,
+          view: "header" as const,
+          tabKey: "out",
+        };
+      }
+      if (propInitialTab === "in-lines") {
+        return {
+          dir: "IN" as const,
+          view: "lines" as const,
+          tabKey: "in-lines",
+        };
+      }
+      if (propInitialTab === "in") {
+        return {
+          dir: "IN" as const,
+          view: "header" as const,
+          tabKey: "in",
+        };
+      }
+    }
+    if (propDirection) {
+      return {
+        dir: propDirection,
+        view: "header" as const,
+        tabKey: propDirection === "IN" ? "in" : "out",
+      };
+    }
     return {
-      dir,
-      view: "header" as const,
-      tabKey: dir === "IN" ? "in" : "out",
+      dir: "IN" as const,
+      view: "dashboard" as const,
+      tabKey: "dashboard",
     };
   };
 
@@ -120,9 +186,9 @@ export function useErpInvoicesTabLogic({
   const [currentDirection, setCurrentDirection] = useState<"IN" | "OUT">(
     initialTabInfo.dir,
   );
-  const [activeView, setActiveView] = useState<"header" | "lines">(
-    initialTabInfo.view,
-  );
+  const [activeView, setActiveView] = useState<
+    "header" | "lines" | "dashboard" | "draft"
+  >(initialTabInfo.view);
   const [currentTabKey, setCurrentTabKey] = useState<string>(
     initialTabInfo.tabKey,
   );
@@ -198,6 +264,10 @@ export function useErpInvoicesTabLogic({
       setCurrentTabKey(info.tabKey);
       setCurrentDirection(info.dir);
       setActiveView(info.view);
+
+      if (info.view === "dashboard" || info.view === "draft") {
+        return;
+      }
 
       const targetStoreDir: Direction =
         instanceIndex === 2 ? (info.dir === "IN" ? "IN_2" : "OUT_2") : info.dir;
@@ -319,9 +389,15 @@ export function useErpInvoicesTabLogic({
       }
 
       let nextDir: "IN" | "OUT";
-      let nextView: "header" | "lines";
+      let nextView: "header" | "lines" | "dashboard" | "draft";
 
-      if (newTab === "in-lines") {
+      if (newTab === "dashboard") {
+        nextDir = "IN";
+        nextView = "dashboard";
+      } else if (newTab === "draft") {
+        nextDir = "IN";
+        nextView = "draft";
+      } else if (newTab === "in-lines") {
         nextDir = "IN";
         nextView = "lines";
       } else if (newTab === "out") {
@@ -405,7 +481,13 @@ export function useErpInvoicesTabLogic({
 
   // ── Two-Way URL Sync Effect for ERP Invoices Tab ───────────────────────────
   useEffect(() => {
-    if (isDrawer || typeof window === "undefined") return;
+    if (
+      isDrawer ||
+      typeof window === "undefined" ||
+      activeView === "dashboard" ||
+      activeView === "draft"
+    )
+      return;
 
     if (debounceUrlTimerRef.current) {
       clearTimeout(debounceUrlTimerRef.current);
@@ -846,6 +928,7 @@ export function useErpInvoicesTabLogic({
     () =>
       !isDrawer
         ? [
+            { value: "dashboard", label: t("dashboard", "Tổng quan") },
             { value: "in", label: t("inbound", "Hóa đơn mua vào") },
             {
               value: "in-lines",
@@ -856,6 +939,7 @@ export function useErpInvoicesTabLogic({
               value: "out-lines",
               label: t("outboundLines", "Chi tiết bán ra"),
             },
+            { value: "draft", label: t("draftInvoices", "Hóa đơn nháp") },
           ]
         : undefined,
     [isDrawer, t],

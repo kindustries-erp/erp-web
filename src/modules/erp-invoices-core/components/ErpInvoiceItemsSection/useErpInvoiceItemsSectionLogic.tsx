@@ -20,6 +20,7 @@ import {
 } from "../../api/erpInvoicesCoreApi";
 import { useErpInvoiceItemsList } from "../../hooks/useErpInvoiceItemsList";
 import { useItemColumns } from "./components/itemColumns";
+import { useInvoiceItemsSummary } from "./hooks/useInvoiceItemsSummary";
 import type { ErpInvoiceItemsSectionProps } from "./types";
 
 export function useErpInvoiceItemsSectionLogic({
@@ -258,11 +259,21 @@ export function useErpInvoiceItemsSectionLogic({
     ],
   );
 
+  const summaryRow = useInvoiceItemsSummary({
+    items: listHook.data,
+    summary: listHook.summary,
+    page: listHook.page,
+    pageSize: listHook.pageSize,
+    totalCount: listHook.total,
+    totalPages: listHook.totalPages,
+  });
+
   return {
     t,
     tableId,
     listHook,
     columns,
+    summaryRow,
     rowActions,
     createActions,
     filterConfig,

@@ -39,6 +39,12 @@ export function useErpInvoiceSettlementLogic({
         description: v.bankTransaction?.description || "—",
         transDate: v.bankTransaction?.transDate || null,
         amount: Number(v.netOffAmount || 0),
+        sourceType: v.bankTransaction?.sourceType || "BANK",
+        bankAccount: v.bankTransaction?.bankAccount,
+        accountNumber:
+          v.bankTransaction?.bankAccount?.accountNumber ||
+          v.bankTransaction?.accountNumber,
+        cashBook: v.bankTransaction?.cashBook,
         bankName:
           v.bankTransaction?.bankAccount?.bankName ||
           v.bankTransaction?.bankName ||
@@ -63,6 +69,7 @@ export function useErpInvoiceSettlementLogic({
           description: "Giao dịch đang chờ lưu...",
           transDate: new Date().toISOString(),
           amount: Number(p.amount || 0),
+          sourceType: "BANK",
           bankName: "Sao kê ERP",
           partnerName: "",
           isPending: true,

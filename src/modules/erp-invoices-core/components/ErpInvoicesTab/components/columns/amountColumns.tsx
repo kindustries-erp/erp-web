@@ -70,7 +70,7 @@ export function useAmountColumns({
             onFilterChange={(vals) => handleFilterChange("description", vals)}
             align="center"
             columnKey="description"
-            queryKeyPrefix="erp-invoice-options"
+            queryKeyPrefix={`erp-invoice-options-${direction}`}
             allFilters={effectiveAllFilters}
             fetchOptions={fetchInvoiceOptions}
             showBlankOption={true}
@@ -88,7 +88,7 @@ export function useAmountColumns({
                 ? () => <InvoiceItemsPopover items={row.items} />
                 : undefined
             }
-            textClassName="line-clamp-2 break-words whitespace-normal text-[11px] leading-[1.4] text-slate-700 dark:text-slate-300 py-0.5"
+            textClassName="truncate text-xs leading-normal text-slate-700 dark:text-slate-300"
           />
         ),
       },
@@ -111,14 +111,14 @@ export function useAmountColumns({
             }
             align="center"
             columnKey="discountAmount"
-            queryKeyPrefix="erp-invoice-options"
+            queryKeyPrefix={`erp-invoice-options-${direction}`}
             allFilters={effectiveAllFilters}
             fetchOptions={fetchInvoiceOptions}
             formatOptionLabel={formatAmtOption}
             enableSelectAllMatching={true}
           />
         ),
-        size: 120,
+        size: 160,
         headerClassName: "text-center",
         className: "text-right",
         cell: (inv: ErpInvoice) => fmtAmt(inv.discountAmount),
@@ -138,14 +138,14 @@ export function useAmountColumns({
             onFilterChange={(vals) => handleFilterChange("preVatAmount", vals)}
             align="center"
             columnKey="preVatAmount"
-            queryKeyPrefix="erp-invoice-options"
+            queryKeyPrefix={`erp-invoice-options-${direction}`}
             allFilters={effectiveAllFilters}
             fetchOptions={fetchInvoiceOptions}
             formatOptionLabel={formatAmtOption}
             enableSelectAllMatching={true}
           />
         ),
-        size: 120,
+        size: 160,
         headerClassName: "text-center",
         className: "text-right",
         cell: (row: ErpInvoice) => fmtAmt(row.preVatAmount),
@@ -163,7 +163,7 @@ export function useAmountColumns({
             onFilterChange={(vals) => handleFilterChange("vatRate", vals)}
             align="center"
             columnKey="vatRate"
-            queryKeyPrefix="erp-invoice-options"
+            queryKeyPrefix={`erp-invoice-options-${direction}`}
             allFilters={effectiveAllFilters}
             fetchOptions={fetchInvoiceOptions}
           />
@@ -189,14 +189,14 @@ export function useAmountColumns({
             onFilterChange={(vals) => handleFilterChange("vatAmount", vals)}
             align="center"
             columnKey="vatAmount"
-            queryKeyPrefix="erp-invoice-options"
+            queryKeyPrefix={`erp-invoice-options-${direction}`}
             allFilters={effectiveAllFilters}
             fetchOptions={fetchInvoiceOptions}
             formatOptionLabel={formatAmtOption}
             enableSelectAllMatching={true}
           />
         ),
-        size: 120,
+        size: 160,
         headerClassName: "text-center",
         className: "text-right",
         cell: (inv: ErpInvoice) => fmtAmt(inv.vatAmount),
@@ -216,14 +216,14 @@ export function useAmountColumns({
             onFilterChange={(vals) => handleFilterChange("totalAmount", vals)}
             align="center"
             columnKey="totalAmount"
-            queryKeyPrefix="erp-invoice-options"
+            queryKeyPrefix={`erp-invoice-options-${direction}`}
             allFilters={effectiveAllFilters}
             fetchOptions={fetchInvoiceOptions}
             formatOptionLabel={formatAmtOption}
             enableSelectAllMatching={true}
           />
         ),
-        size: 120,
+        size: 160,
         headerClassName: "text-center",
         className: "text-right font-semibold",
         cell: (inv: ErpInvoice) => fmtAmt(inv.totalAmount),

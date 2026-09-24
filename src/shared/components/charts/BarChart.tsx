@@ -12,7 +12,10 @@ interface BarChartProps {
     borderColor?: string;
     borderWidth?: number;
     fill?: boolean;
+    stack?: string;
   }>;
+  stacked?: boolean;
+  showLegend?: boolean;
   yMax?: number;
   yCallback?: (v: number | string) => string;
   onClick?: (datasetIndex: number, index: number, label: string) => void;
@@ -21,6 +24,8 @@ interface BarChartProps {
 export function BarChart({
   labels,
   datasets,
+  stacked,
+  showLegend = false,
   yMax,
   yCallback,
   onClick,
@@ -39,7 +44,8 @@ export function BarChart({
           borderColor: d.borderColor || d.color,
           borderWidth: d.borderWidth,
           fill: d.fill,
-          borderRadius: 4,
+          stack: d.stack || (stacked ? "stack-0" : undefined),
+          borderRadius: stacked ? 2 : 4,
           barPercentage: 0.45,
           tension: d.type === "line" ? 0 : undefined,
           pointRadius: d.type === "line" ? 4 : undefined,
@@ -63,7 +69,19 @@ export function BarChart({
             }
           : undefined,
         plugins: {
-          legend: { display: false },
+          legend: {
+            display: showLegend,
+            position: "top",
+            align: "end",
+            labels: {
+              boxWidth: 10,
+              boxHeight: 10,
+              usePointStyle: true,
+              pointStyle: "circle",
+              font: { size: 11 },
+              color: tickColor,
+            },
+          },
           tooltip: {
             callbacks: {
               label: (context: any) => {
@@ -83,10 +101,12 @@ export function BarChart({
         },
         scales: {
           x: {
+            stacked: Boolean(stacked),
             grid: { display: false },
             ticks: { font: { size: 11 }, color: tickColor },
           },
           y: {
+            stacked: Boolean(stacked),
             grid: { color: gridColor },
             border: { display: false },
             beginAtZero: true,

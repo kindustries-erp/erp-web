@@ -90,6 +90,9 @@ export function useNavItems(): NavSearchItem[] {
     ErpResource.INVOICES,
     ErpAction.READ,
   );
+  const canReadDebts =
+    useHasPermission(ErpResource.INVOICE_DEBTS, ErpAction.READ) ||
+    canReadInvoices;
   const canReadBankStatements = useHasPermission(
     ErpResource.BANK_STATEMENTS,
     ErpAction.READ,
@@ -99,7 +102,7 @@ export function useNavItems(): NavSearchItem[] {
     ErpAction.READ,
   );
   const canReadCashflow = canReadBankStatements || canReadCashStatements;
-  const showAccounting = canReadInvoices || canReadCashflow;
+  const showAccounting = canReadInvoices || canReadDebts || canReadCashflow;
 
   const canReadEmployees = useHasPermission(
     ErpResource.EMPLOYEES,
@@ -298,18 +301,13 @@ export function useNavItems(): NavSearchItem[] {
     const garageSection = t("nav.sections.garage", "GARAGE");
     if (canReadGarage) {
       items.push({
-        key: "garage-dashboard",
-        label: t("nav.items.garageDashboard", "Tổng quan Garage"),
-        section: garageSection,
-        keywords: ["garage", "tong quan garage", "dashboard", "xuong"],
-        icon: <LayoutDashboard className="w-4 h-4" />,
-      });
-      items.push({
         key: "garage-cases",
         label: t("nav.items.garageCases", "Phiếu dịch vụ"),
         section: garageSection,
         keywords: [
           "garage",
+          "tong quan garage",
+          "dashboard",
           "phieu dich vu",
           "so bao gia",
           "sua chua",
@@ -318,14 +316,15 @@ export function useNavItems(): NavSearchItem[] {
         icon: <Car className="w-4 h-4" />,
       });
       items.push({
-        key: "garage-partners",
-        label: t("nav.items.garagePartners", "Đối tác"),
+        key: "garage-debts",
+        label: t("nav.items.garageDebts", "Công nợ garage"),
         section: garageSection,
         keywords: [
           "garage",
+          "cong no",
+          "cong no garage",
           "khach hang",
           "doi tac",
-          "cong no",
           "phai thu",
           "tuoi no",
         ],
@@ -372,52 +371,34 @@ export function useNavItems(): NavSearchItem[] {
 
     // 7. Accounting (Kế toán)
     const accountingSection = t("nav.sections.accounting");
-    const cashflowGroup = t("nav.items.cashflow");
-    const invoiceGroup = t("nav.items.erpInvoices");
-
-    if (canReadCashflow) {
+    if (canReadCashflow || canReadBankStatements || canReadCashStatements) {
       items.push({
-        key: "cashflow-dashboard",
-        label: t("nav.items.cashflowDashboard"),
-        group: cashflowGroup,
+        key: "cashflow",
+        label: t("nav.items.cashflow"),
         section: accountingSection,
-        keywords: ["dong tien", "cashflow", "tien mat", "ngan hang"],
-        icon: <Wallet className="w-4 h-4" />,
-      });
-    }
-    if (canReadBankStatements) {
-      items.push({
-        key: "bank-statement",
-        label: t("bankStatement.bankTitle"),
-        group: cashflowGroup,
-        section: accountingSection,
-        keywords: ["dong tien", "sao ke", "ngan hang", "bank statement"],
-        icon: <Wallet className="w-4 h-4" />,
-      });
-    }
-    if (canReadCashStatements) {
-      items.push({
-        key: "cash-statement",
-        label: t("bankStatement.cashTitle"),
-        group: cashflowGroup,
-        section: accountingSection,
-        keywords: ["dong tien", "sao ke", "tien mat", "cash statement"],
+        keywords: [
+          "dong tien",
+          "dòng tiền",
+          "cashflow",
+          "sao ke",
+          "sao kê",
+          "ngan hang",
+          "ngân hàng",
+          "bank statement",
+          "so quy",
+          "sổ quỹ",
+          "tien mat",
+          "tiền mặt",
+          "tong quan dong tien",
+          "tổng quan dòng tiền",
+        ],
         icon: <Wallet className="w-4 h-4" />,
       });
     }
     if (canReadInvoices) {
       items.push({
-        key: "invoice-dashboard",
-        label: t("nav.items.invoiceDashboard") || "Tổng quan hóa đơn",
-        group: invoiceGroup,
-        section: accountingSection,
-        keywords: ["hoa don", "hóa đơn", "invoices", "tong quan", "dashboard"],
-        icon: <Receipt className="w-4 h-4" />,
-      });
-      items.push({
         key: "erp-invoices",
         label: t("nav.items.erpInvoices"),
-        group: invoiceGroup,
         section: accountingSection,
         keywords: [
           "hoa don",
@@ -426,17 +407,32 @@ export function useNavItems(): NavSearchItem[] {
           "vat",
           "ban ra",
           "mua vao",
+          "tong quan",
+          "nhap",
           "gdt",
         ],
         icon: <Receipt className="w-4 h-4" />,
       });
+    }
+    if (canReadDebts) {
       items.push({
-        key: "erp-invoices-draft",
-        label: t("nav.items.erpInvoicesDraft"),
-        group: invoiceGroup,
+        key: "invoice-debts",
+        label: t("nav.items.debt", "Công nợ"),
         section: accountingSection,
-        keywords: ["hoa don", "hóa đơn nháp", "nhap", "draft"],
-        icon: <Receipt className="w-4 h-4" />,
+        keywords: [
+          "cong no",
+          "công nợ",
+          "debts",
+          "khach hang",
+          "nha cung cap",
+          "phai thu",
+          "phai tra",
+          "receivable",
+          "payable",
+          "tuoi no",
+          "hoa don",
+        ],
+        icon: <ReceiptText className="w-4 h-4" />,
       });
     }
     if (canReadBankStatements && isAdminEmail) {
@@ -583,7 +579,7 @@ export function useNavItems(): NavSearchItem[] {
       canReadInventoryVouchers
     ) {
       items.push({
-        key: "custom-fields" as any,
+        key: "custom-fields",
         label: t("nav.items.customFields", "Trường tùy chỉnh"),
         group: catalogGroup,
         section: settingsSection,

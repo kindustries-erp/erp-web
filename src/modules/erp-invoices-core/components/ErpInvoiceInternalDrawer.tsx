@@ -20,10 +20,9 @@ import {
   History,
   Link2,
   BookOpen,
-  Paperclip,
   Wallet,
   FileText,
-  Building2,
+  FileSpreadsheet,
 } from "lucide-react";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/Button";
@@ -40,13 +39,9 @@ import {
   ErpInvoiceSettlementRightPanel,
   ErpInvoiceSettlementProvider,
 } from "./ErpInvoiceSettlementTab";
-import {
-  ErpInvoicePartnerTab,
-  ErpInvoicePartnerRightPanel,
-} from "./ErpInvoicePartnerTab";
+import { ErpInvoicePartnerTab } from "./ErpInvoicePartnerTab";
 import { PostedAccountingSummary } from "@/shared/components/accounting/PostedAccountingSummary";
 import { PostingSection } from "@/shared/components/accounting/PostingSection";
-import { ErpInvoicePdfUpload } from "./ErpInvoicePdfUpload";
 import { resolvePurchaseDebitAccountCode } from "../utils/invoiceTaxCodeAccounting";
 import toast from "react-hot-toast";
 
@@ -86,7 +81,7 @@ interface Props {
   defaultRelatedTabKey?: string;
   defaultRelatedCollapsed?: boolean;
   bottomPanel?: React.ReactNode;
-  partnerViewMode?: "invoices" | "lines";
+  partnerViewMode?: "details" | "invoices" | "lines";
 }
 
 function formatTaxInvoiceStatus(val?: number | null) {
@@ -143,6 +138,9 @@ export function ErpInvoiceInternalDrawer({
   const [showPoModal, setShowPoModal] = useState(false);
   const [showSoModal, setShowSoModal] = useState(false);
   const [showGarageCaseModal, setShowGarageCaseModal] = useState(false);
+  const [subTabKey, setSubTabKey] = useState<
+    "details" | "invoices" | "lines" | "analytics" | "attachments"
+  >("details");
 
   const handleFetchGraph = useCallback(
     (id: string) => erpInvoicesCoreApi.getTraceabilityGraph(id),
@@ -266,12 +264,55 @@ export function ErpInvoiceInternalDrawer({
     );
   }, [detailInvoice]);
 
+  const [exportingExcel, setExportingExcel] = useState(false);
+
+  const handleExportSingleExcel = useCallback(async () => {
+    if (!detailInvoice?.id) return;
+    try {
+      setExportingExcel(true);
+      toast.loading(t("exportingExcel", "Đang xuất file Excel..."), {
+        id: "export-single-invoice",
+      });
+      const blob = await erpInvoicesCoreApi.exportExcel({
+        id: detailInvoice.id,
+        direction: (detailInvoice.direction as any) || direction,
+      });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      const safeInvoiceNo = detailInvoice.invoiceNo
+        ? detailInvoice.invoiceNo.replace(/[^a-zA-Z0-9_-]/g, "_")
+        : detailInvoice.id;
+      const safeSerial = detailInvoice.serialNo
+        ? `_${detailInvoice.serialNo.replace(/[^a-zA-Z0-9_-]/g, "_")}`
+        : "";
+      a.download = `Hoa_don_${safeInvoiceNo}${safeSerial}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success(t("exportExcelSuccess", "Xuất file Excel thành công!"), {
+        id: "export-single-invoice",
+      });
+    } catch (err: any) {
+      toast.error(
+        err?.message || t("exportExcelError", "Lỗi xuất file Excel"),
+        { id: "export-single-invoice" },
+      );
+    } finally {
+      setExportingExcel(false);
+    }
+  }, [detailInvoice, direction, t]);
+
   // Dropdown menu items for the left side of the footer (View mode only)
   const footerLeft = useMemo(() => {
-    if (editMode || !onSyncDetail) return undefined;
+    if (editMode) return undefined;
+    if (!onSyncDetail && !detailInvoice) return undefined;
 
-    const dropdownItems: ActionDropdownItem[] = [
-      {
+    const dropdownItems: ActionDropdownItem[] = [];
+
+    if (onSyncDetail) {
+      dropdownItems.push({
         groupLabel: "ĐỒNG BỘ",
         items: [
           {
@@ -285,8 +326,28 @@ export function ErpInvoiceInternalDrawer({
             disabled: loadingDetail,
           },
         ],
-      },
-    ];
+      });
+    }
+
+    if (detailInvoice?.id) {
+      dropdownItems.push({
+        groupLabel: "XUẤT DỮ LIỆU",
+        items: [
+          {
+            label: "Xuất Excel hóa đơn",
+            icon: (
+              <FileSpreadsheet
+                className={`w-4 h-4 text-emerald-600 ${exportingExcel ? "animate-spin" : ""}`}
+              />
+            ),
+            onClick: handleExportSingleExcel,
+            disabled: exportingExcel,
+          },
+        ],
+      });
+    }
+
+    if (dropdownItems.length === 0) return undefined;
 
     return (
       <ActionDropdown
@@ -295,7 +356,7 @@ export function ErpInvoiceInternalDrawer({
         customTrigger={
           <button
             type="button"
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium border border-[color:var(--border)] bg-white hover:bg-[color:var(--bg-muted)] text-[color:var(--fg)] shadow-sm transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium border border-[color:var(--border)] bg-white hover:bg-[color:var(--bg-muted)] text-[color:var(--fg)] shadow-sm transition-colors cursor-pointer"
           >
             <span className="font-semibold text-[color:var(--fg)]">
               Thao tác
@@ -305,7 +366,14 @@ export function ErpInvoiceInternalDrawer({
         }
       />
     );
-  }, [editMode, onSyncDetail, loadingDetail]);
+  }, [
+    editMode,
+    onSyncDetail,
+    loadingDetail,
+    detailInvoice,
+    exportingExcel,
+    handleExportSingleExcel,
+  ]);
 
   const formAccountingEnabled = (form as any)?.accountingEnabled;
 
@@ -350,40 +418,29 @@ export function ErpInvoiceInternalDrawer({
       (detailInvoice.voucherNetOffs?.length || 0) +
       ((detailInvoice as any).relatedPos?.length || 0);
 
-    const attachmentCount =
-      (detailInvoice.pdfFiles?.length || (detailInvoice.pdfFileKey ? 1 : 0)) +
-      (detailInvoice.attachments?.length || 0);
-
     return [
-      // 1. Tab Chi tiết (Form / Sheet Preview Chính)
+      // 1. Tab Chi tiết (Hợp nhất: Thông tin HĐ + Đối tác + Hàng hóa + Analytics + Tài liệu đính kèm)
       {
         key: "invoice_details",
         label: t("tabDetails", "Chi tiết"),
         icon: <FileText className="w-3.5 h-3.5" />,
-        content: <div className="space-y-4">{children}</div>,
-      },
-
-      // 2. Tab Chi tiết theo đối tượng (Thông tin đối tác & Lịch sử giao dịch liên quan)
-      {
-        key: "partner",
-        label: t("tabObjectDetails", "Chi tiết theo đối tượng"),
-        icon: <Building2 className="w-3.5 h-3.5" />,
         content: (
           <ErpInvoicePartnerTab
             detailInvoice={detailInvoice}
             direction={direction}
-            defaultViewMode={partnerViewMode}
-          />
+            defaultViewMode={partnerViewMode ?? "details"}
+            onViewModeChange={setSubTabKey}
+            form={form}
+            editMode={editMode}
+            fieldSet={fieldSet}
+          >
+            <div className="space-y-4">{children}</div>
+          </ErpInvoicePartnerTab>
         ),
-        rightPanel: (
-          <ErpInvoicePartnerRightPanel
-            detailInvoice={detailInvoice}
-            direction={direction}
-          />
-        ),
+        rightPanel,
       },
 
-      // 3. Tab Tài chính (Settlements & Cashflow)
+      // 2. Tab Tài chính (Settlements & Cashflow)
       {
         key: "financials",
         label: t("tabFinancials", "Tài chính"),
@@ -416,7 +473,7 @@ export function ErpInvoiceInternalDrawer({
         ),
       },
 
-      // 4. Tab Mạng lưới chứng từ liên kết (Canvas Graph Traceability - Full Width)
+      // 3. Tab Mạng lưới chứng từ liên kết (Canvas Graph Traceability - Full Width)
       {
         key: "linked_docs",
         label: t("tabLinkedDocs", "Chứng từ liên kết"),
@@ -511,36 +568,7 @@ export function ErpInvoiceInternalDrawer({
         ),
       },
 
-      // 5. Tab Tài liệu đính kèm (PDF Files & Upload)
-      {
-        key: "attachments",
-        label: t("tabAttachments", "Tài liệu đính kèm"),
-        icon: <Paperclip className="w-3.5 h-3.5" />,
-        badgeCount: attachmentCount,
-        content: (
-          <div className="p-3 bg-surface/50 rounded-xl border border-border/70">
-            <ErpInvoicePdfUpload
-              noCard={true}
-              invoiceId={detailInvoice.id}
-              attachments={detailInvoice.attachments ?? null}
-              pdfFileKey={detailInvoice.pdfFileKey ?? null}
-              pdfFiles={detailInvoice.pdfFiles ?? null}
-              editMode={editMode}
-              pendingDeletedPdfs={form?.pendingDeletedPdfs}
-              onPendingDeletePdf={(key) => {
-                const current = form?.pendingDeletedPdfs || [];
-                fieldSet?.("pendingDeletedPdfs", [...current, key]);
-              }}
-              pendingAddedAttachments={form?.pendingAddedAttachments}
-              onPendingAddedAttachmentsChange={(files) => {
-                fieldSet?.("pendingAddedAttachments", files);
-              }}
-            />
-          </div>
-        ),
-      },
-
-      // 6. Tab Hạch toán kế toán (View & Edit)
+      // 4. Tab Hạch toán kế toán (View & Edit)
       {
         key: "accounting",
         label: t("tabAccounting", "Hạch toán kế toán"),
@@ -759,6 +787,9 @@ export function ErpInvoiceInternalDrawer({
     onUnpost,
     onSyncDetail,
     handleFetchGraph,
+    subTabKey,
+    rightPanel,
+    partnerViewMode,
   ]);
 
   return (
@@ -779,7 +810,13 @@ export function ErpInvoiceInternalDrawer({
         title={drawerTitle}
         titleExtra={titleExtra}
         size="xl"
-        layout={rightPanel ? "2-columns" : "1-column"}
+        layout={
+          resolvedDrawerTabs
+            ? "2-columns"
+            : rightPanel
+              ? "2-columns"
+              : "1-column"
+        }
         collapsibleRightPanel={true}
         confirmOnClose={editMode}
         actions={editMode ? editActions : undefined}
@@ -789,7 +826,7 @@ export function ErpInvoiceInternalDrawer({
         activeTabKey={activeTabKey}
         onTabChange={onTabChange}
         leftPanel={!resolvedDrawerTabs ? children : undefined}
-        rightPanel={rightPanel}
+        rightPanel={!resolvedDrawerTabs ? rightPanel : undefined}
         relatedTabs={customRelatedTabs}
         defaultRelatedTabKey={defaultRelatedTabKey}
         defaultRelatedCollapsed={defaultRelatedCollapsed}

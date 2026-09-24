@@ -62,6 +62,10 @@ export function ErpInvoiceUnifiedSettlementTable() {
           referenceNumber: v.refNo,
           partnerName: v.partnerName,
           description: v.description,
+          sourceType: v.sourceType || "BANK",
+          bankAccount: v.bankAccount,
+          accountNumber: v.accountNumber,
+          cashBook: v.cashBook,
           bankName: v.bankName,
           creditAmount: ctx.direction === "OUT" ? v.amount : 0,
           debitAmount: ctx.direction === "IN" ? v.amount : 0,
@@ -287,22 +291,33 @@ export function ErpInvoiceUnifiedSettlementTable() {
         }),
         size: 140,
         enableResizing: true,
-        cell: (row) => (
-          <div className="flex flex-col text-xs leading-tight">
-            <span className="font-medium text-slate-800 dark:text-slate-200 truncate">
-              {row.sourceType === "BANK"
-                ? row.bankAccount?.bankName ||
-                  row.bankName ||
-                  t("sourceBank", "Ngân hàng")
-                : row.cashBook?.name || t("sourceCash", "Sổ quỹ")}
-            </span>
-            <span className="text-[10.5px] text-muted-foreground font-mono truncate">
-              {row.sourceType === "BANK"
-                ? row.bankAccount?.accountNumber || row.accountNumber || ""
-                : t("cash", "Tiền mặt")}
-            </span>
-          </div>
-        ),
+        cell: (row) => {
+          const isBank =
+            row.sourceType === "BANK" ||
+            (!row.sourceType &&
+              (row.bankAccount || row.bankName || row.accountNumber));
+          const primaryText = isBank
+            ? row.bankAccount?.bankName ||
+              row.bankName ||
+              t("sourceBank", "Ngân hàng")
+            : row.cashBook?.name || t("sourceCash", "Sổ quỹ");
+          const secondaryText = isBank
+            ? row.bankAccount?.accountNumber || row.accountNumber || ""
+            : t("cash", "Tiền mặt");
+
+          return (
+            <div className="flex flex-col text-xs leading-tight">
+              <span className="font-medium text-slate-800 dark:text-slate-200 truncate">
+                {primaryText}
+              </span>
+              {secondaryText ? (
+                <span className="text-[10.5px] text-muted-foreground font-mono truncate">
+                  {secondaryText}
+                </span>
+              ) : null}
+            </div>
+          );
+        },
       },
       {
         key: "transDate",

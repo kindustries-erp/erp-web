@@ -564,10 +564,14 @@ export interface SubtotalSummaryCellProps {
   variantType: "qty" | "amount" | "label";
   /** Giá trị subtotal số lượng của trang hiện tại */
   subtotalQty?: number;
+  /** Giá trị lũy kế số lượng từ trang 1 đến trang hiện tại (BẮT BUỘC khi có phân trang) */
+  cumulativeQty?: number;
   /** Tổng số lượng toàn bộ (Grand Total) */
   grandTotalQty?: number;
   /** Giá trị subtotal amount của trang hiện tại */
   subtotalAmount?: number;
+  /** Giá trị lũy kế số tiền từ trang 1 đến trang hiện tại (BẮT BUỘC khi có phân trang) */
+  cumulativeAmount?: number;
   /** Tổng thành tiền toàn bộ (Grand Total) */
   grandTotalAmount?: number;
   /** Trang hiện tại */
@@ -576,6 +580,8 @@ export interface SubtotalSummaryCellProps {
   totalPages?: number;
   /** Số dòng trên trang hiện tại */
   currentPageCount?: number;
+  /** Số dòng lũy kế từ trang 1 đến trang hiện tại (BẮT BUỘC khi có phân trang) */
+  cumulativeCount?: number;
   /** Tổng số dòng toàn bộ */
   totalCount?: number;
   /** Tiêu đề ngữ cảnh cho chỉ số số lượng (vd: "SL Nhập kho", "SL Tồn kho", "SL Thực nhận") */
@@ -607,7 +613,23 @@ export interface SubtotalSummaryCellProps {
 
 ---
 
-### C. 💻 Mẫu Code Chuẩn Cho `summaryRow`
+### C. ⚠️ QUY TẮC BẮT BUỘC: Hiển Thị Số Lũy Kế Từ Trang 2+ (`cumulativeAmount` / `cumulativeQty` / `cumulativeCount`)
+
+> [!CAUTION]
+> **LỖI PHỔ BIẾN CẦN TRÁNH: MẤT DÒNG LŨY KẾ TỪ TRANG 2 TRỞ ĐI**:
+> Khi bảng có phân trang (`totalPages > 1` / `isMultiPage`), `SubtotalSummaryCell` chỉ tự fallback hiển thị dòng Lũy kế trên `page === 1`. Từ `page >= 2`, nếu component cha **KHÔNG TRUYỀN** các prop `cumulativeAmount`, `cumulativeQty`, hoặc `cumulativeCount`, biến `resolvedCumulativeAmount` / `resolvedCumulativeQty` sẽ nhận `undefined` và **DÒNG LŨY KẾ `↳ Lũy kế (T1 → TP): ...` CÙNG THANH TỶ TRỌNG SẼ BỊ ẨN HOÀN TOÀN TRÊN POPOVER**!
+>
+> **Quy chuẩn triển khai bắt buộc:**
+> 1. **Với Bảng Client-side (trong Drawer / Modal / Client Table)**:
+>    - Cắt mảng tích lũy từ đầu đến trang hiện tại: `const cumulativeItems = filteredItems.slice(0, page * pageSize);`
+>    - Tính tổng dồn `cumQty`, `cumAmount`, và `cumCount = cumulativeItems.length`.
+>    - Truyền `cumulativeAmount={cumAmount}`, `cumulativeQty={cumQty}`, và `cumulativeCount={cumCount}` vào từng ô `SubtotalSummaryCell`.
+> 2. **Với Bảng Server-side**:
+>    - Truyền các giá trị tích lũy nhận được từ API hoặc hook (`cumulativeAmount`, `cumulativeQty`, `cumulativeCount`).
+
+---
+
+### D. 💻 Mẫu Code Chuẩn Cho `summaryRow`
 
 #### 1. Mẫu Page Bảng Dữ Liệu Lớn (Nhiều Trang / Multi-page):
 ```tsx
@@ -625,6 +647,7 @@ const summaryRow = useMemo(() => {
         totalPages={totalPages}
         totalCount={totalCount}
         currentPageCount={items.length}
+        cumulativeCount={cumulativeCount}
       />
     ),
     quantity: (
@@ -634,11 +657,13 @@ const summaryRow = useMemo(() => {
         itemTitle={t("inventory.items", "Mặt hàng")}
         itemUnit="SKU"
         subtotalQty={subtotalQty}
+        cumulativeQty={cumulativeQty}
         grandTotalQty={grandTotalQty}
         page={page}
         totalPages={totalPages}
         currentPageCount={items.length}
         totalCount={totalCount}
+        cumulativeCount={cumulativeCount}
         valueClassName="text-primary font-bold"
       />
     ),
@@ -649,16 +674,18 @@ const summaryRow = useMemo(() => {
         itemTitle={t("inventory.items", "Mặt hàng")}
         itemUnit="SKU"
         subtotalAmount={subtotalAmount}
+        cumulativeAmount={cumulativeAmount}
         grandTotalAmount={grandTotalAmount}
         page={page}
         totalPages={totalPages}
         currentPageCount={items.length}
         totalCount={totalCount}
+        cumulativeCount={cumulativeCount}
         valueClassName="text-primary font-bold"
       />
     ),
   };
-}, [items, page, totalPages, totalCount, subtotalQty, grandTotalQty, subtotalAmount, grandTotalAmount, t]);
+}, [items, page, totalPages, totalCount, subtotalQty, cumulativeQty, grandTotalQty, subtotalAmount, cumulativeAmount, grandTotalAmount, cumulativeCount, t]);
 ```
 
 #### 2. Mẫu Bảng Kế Toán Kép / Nhật Ký Chung (Double-Entry Reconciliation):
@@ -907,6 +934,26 @@ Khi một bảng dữ liệu có nhiều góc nhìn tra cứu (như Hóa đơn �
 - **Bảo vệ View Mặc định**: Nút Xóa (Trash) chỉ hiển thị cho custom views; các view mặc định hệ thống (`isDefault === true`, `overview`, `audit`) được bảo vệ an toàn, không thể xóa.
 - **Đồng bộ 2 chiều**: Toàn bộ danh sách presets và active preset key được tự động lưu vào backend qua `updateUserPreferencesApi` và cache LocalStorage.
 
+## 16. Chuẩn Hóa Composite Filter Keys & Đồng Bộ Tìm Kiếm "Chọn Tất Cả" (`__ALL_MATCHING__`)
+
+Để hỗ trợ lọc dữ liệu chính xác trên các cột có giá trị lặp (ví dụ cùng Số HĐ nhưng khác Ký hiệu, hoặc cùng Tên đối tác nhưng khác MST) và đảm bảo trải nghiệm bộ lọc mượt mà:
+
+1. **Quy tắc Composite Key (`:::`) & `formatCompositeFilterValue`**:
+   - Backend sinh `value` dạng composite `primary_val:::secondary_val` (ví dụ `1066:::C25MDP` hoặc `:::C25THP` khi `primary_val` rỗng).
+   - Frontend bắt buộc sử dụng helper dùng chung `formatCompositeFilterValue` (`@/shared/utils/format`) làm fallback format trên:
+     - Dải chip `ĐANG LỌC` (`useUnifiedTableFilter`).
+     - Checkbox option list (`ColumnOptionList` & `TableColumnHeaderFilter`).
+   - Kết quả hiển thị cho người dùng:
+     - `1066:::C25MDP` $\rightarrow$ `1066 (C25MDP)`
+     - `:::C25THP` $\rightarrow$ `(C25THP)`
+     - `__BLANK__` $\rightarrow$ `(Trống)`
+     - Tuyệt đối **KHÔNG ĐƯỢC ĐỂ LỘ** chuỗi phân cách nội bộ `:::` trên giao diện người dùng.
+
+2. **Cơ chế Đồng Bộ Tìm Kiếm Khi Ở Chế Độ "Chọn Tất Cả" (`__ALL_MATCHING__`)**:
+   - Khi người dùng tick chọn `(Chọn tất cả kết quả tìm kiếm)`, `pendingFilters` lưu mảng `["__ALL_MATCHING__", keyword]`.
+   - Nếu người dùng nhập thêm hoặc thay đổi từ khóa trong ô tìm kiếm của Filter Panel (`ColumnFilterCard`), `pendingFilters` **bắt buộc phải tự động đồng bộ từ khóa mới nhất** `["__ALL_MATCHING__", pendingSearch]`.
+   - Khi bấm **Áp dụng**, `handleApply` gửi mảng `finalFilters = ["__ALL_MATCHING__", pendingSearch]` để backend làm mới dữ liệu và lọc bảng ngay lập tức theo toàn bộ từ khóa mới.
+
 ---
 
 ## Summary Checklist trước khi hoàn thành:
@@ -933,7 +980,7 @@ Khi một bảng dữ liệu có nhiều góc nhìn tra cứu (như Hóa đơn �
 - [ ] Cột thời gian có format 2 dòng (Ngày to, Giờ nhỏ xám) chưa?
 - [ ] Cột số lượng có class `tabular-nums`, cột tiền tệ có class `font-semibold` chưa?
 - [ ] Cột trạng thái (status/state) độc lập có dùng App `<Badge>`/`<StatusBadge>`, fixed width đều nhau, bọc `<Tooltip>` & `truncate` chưa?
-- [ ] Các cột số tiền / số lượng có `summaryRow` tổng không?
+- [ ] Các cột số tiền / số lượng có `summaryRow` tổng không? **Đặc biệt: Bảng có phân trang (`totalPages > 1`) ĐÃ BẮT BUỘC TRUYỀN `cumulativeAmount`, `cumulativeQty`, `cumulativeCount` vào `SubtotalSummaryCell` để không bị ẩn mất dòng Lũy kế từ trang 2 trở đi chưa?**
 - [ ] Text đã có namespace i18n (`t(...)`) chưa?
 - [ ] Đã bỏ default state `sortBy` ở UI và dùng default sort ở Backend chưa?
 - [ ] Container bảng đã có bo góc chuẩn `rounded-xl`, viền `border border-border/60` thanh thoát và TUYỆT ĐỐI KHÔNG bị `rounded-none` chưa?

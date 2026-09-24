@@ -1,25 +1,18 @@
-import React, { useState } from "react";
+import React from "react";
+import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
-import { Panel } from "@/shared/components/Panel";
+import { BarChart3 } from "lucide-react";
 import { ChartSkeleton } from "@/shared/components/Skeleton";
 import { BarChart } from "@/shared/components/charts/BarChart";
 import { money } from "@/shared/utils/format";
-import { DatePicker } from "@/shared/components/DatePicker";
-import { Button } from "@/shared/components/ui/Button";
-import { RotateCcw } from "lucide-react";
 import { garageDashboardApi } from "../api/garageDashboardApi";
 
 export function GarageTrendChart() {
-  const [dateFrom, setDateFrom] = useState<string>("");
-  const [dateTo, setDateTo] = useState<string>("");
+  const { t } = useTranslation("garage");
 
   const { data: statsData, isLoading } = useQuery({
-    queryKey: ["garage-dashboard-stats-chart", dateFrom, dateTo],
-    queryFn: () =>
-      garageDashboardApi.getStats({
-        date_from: dateFrom || undefined,
-        date_to: dateTo || undefined,
-      }),
+    queryKey: ["garage-dashboard-stats-chart"],
+    queryFn: () => garageDashboardApi.getStats(),
   });
 
   const colorRevenue = "#059669"; // Emerald 600
@@ -58,40 +51,20 @@ export function GarageTrendChart() {
   ];
 
   return (
-    <Panel
-      title="Xu hướng Doanh thu, Chi phí & Lợi nhuận gộp"
-      extra={
-        <div className="flex items-center gap-1.5 flex-wrap">
-          <DatePicker
-            value={dateFrom}
-            onChange={setDateFrom}
-            placeholder="Từ ngày"
-            className="h-7 w-[115px] text-xs"
-          />
-          <span className="text-xs text-muted-foreground/70">-</span>
-          <DatePicker
-            value={dateTo}
-            onChange={setDateTo}
-            placeholder="Đến ngày"
-            className="h-7 w-[115px] text-xs"
-          />
-          {(dateFrom || dateTo) && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => {
-                setDateFrom("");
-                setDateTo("");
-              }}
-              className="h-7 w-7 text-muted-foreground hover:text-foreground"
-              title="Đặt lại khoảng ngày"
-            >
-              <RotateCcw className="h-3.5 w-3.5" />
-            </Button>
-          )}
+    <div className="bg-surface border border-border rounded-xl card-shadow p-5 flex flex-col gap-4">
+      {/* Card Header matching Standard P&L Table */}
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+            <BarChart3 className="w-3.5 h-3.5 text-primary" />
+            {t(
+              "dashboard.charts.revenueProfitTrend",
+              "Xu hướng Doanh thu, Chi phí & Lợi nhuận gộp",
+            )}
+          </span>
         </div>
-      }
-    >
+      </div>
+
       <div className="relative h-[290px]">
         {!isLoading && labels.length > 0 ? (
           <BarChart
@@ -113,7 +86,7 @@ export function GarageTrendChart() {
         <LegendItem color={colorRevenue} label="Doanh thu" />
         <LegendItem color={lineProfit} label="Lợi nhuận gộp" isLine={true} />
       </div>
-    </Panel>
+    </div>
   );
 }
 
