@@ -373,7 +373,7 @@ export function useNavItems(): NavSearchItem[] {
     const accountingSection = t("nav.sections.accounting");
     if (canReadCashflow || canReadBankStatements || canReadCashStatements) {
       items.push({
-        key: "cashflow-dashboard",
+        key: "cashflow",
         label: t("nav.items.cashflow"),
         section: accountingSection,
         keywords: [

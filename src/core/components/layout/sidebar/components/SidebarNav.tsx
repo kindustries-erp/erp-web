@@ -414,12 +414,12 @@ export function SidebarNav({
               icon={<Wallet className="w-4 h-4 opacity-65 flex-shrink-0" />}
               label={t("nav.items.cashflow")}
               active={
-                currentPage === "cashflow-dashboard" ||
+                currentPage === "cashflow" ||
                 currentPage === "bank-statement" ||
                 currentPage === "cash-statement"
               }
-              onClick={() => navTo("cashflow-dashboard")}
-              contextPage="cashflow-dashboard"
+              onClick={() => navTo("cashflow")}
+              contextPage="cashflow"
             />
           )}
           {canReadInvoices && (

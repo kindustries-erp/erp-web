@@ -170,15 +170,16 @@ export function useBankStatementColumns({
     () => [
       {
         key: "index",
-        header: "#",
+        header: <span className="w-full block text-center">#</span>,
         size: 40,
         minSize: 40,
         maxSize: 40,
         enableResizing: false,
         headerClassName: "w-[40px] min-w-[40px] text-center",
-        className: "w-[40px] min-w-[40px] text-center",
+        className:
+          "w-[40px] min-w-[40px] text-center font-mono text-xs text-muted-foreground",
         cell: (_: any, idx: number) => (
-          <span className="text-muted-foreground">{idx}</span>
+          <span className="w-full block text-center">{idx}</span>
         ),
       },
       {

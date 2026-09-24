@@ -22,6 +22,13 @@ describe("useGarageTabLogic Routing & 2-Way URL Sync", () => {
     expect(result.current.currentTabKey).toBe("cases");
   });
 
+  it("initializes with 'services' if URL already has ?tab=services", () => {
+    window.history.replaceState(null, "", "/garage-cases?tab=services");
+    const { result } = renderHook(() => useGarageTabLogic());
+
+    expect(result.current.currentTabKey).toBe("services");
+  });
+
   it("updates state and URL when handleTabChange is called", () => {
     const { result } = renderHook(() => useGarageTabLogic());
 
@@ -31,6 +38,13 @@ describe("useGarageTabLogic Routing & 2-Way URL Sync", () => {
 
     expect(result.current.currentTabKey).toBe("cases");
     expect(window.location.search).toContain("tab=cases");
+
+    act(() => {
+      result.current.handleTabChange("services");
+    });
+
+    expect(result.current.currentTabKey).toBe("services");
+    expect(window.location.search).toContain("tab=services");
 
     act(() => {
       result.current.handleTabChange("dashboard");
@@ -46,18 +60,19 @@ describe("useGarageTabLogic Routing & 2-Way URL Sync", () => {
     expect(result.current.currentTabKey).toBe("dashboard");
 
     act(() => {
-      window.history.replaceState(null, "", "/garage-cases?tab=cases");
+      window.history.replaceState(null, "", "/garage-cases?tab=services");
       window.dispatchEvent(new PopStateEvent("popstate"));
     });
 
-    expect(result.current.currentTabKey).toBe("cases");
+    expect(result.current.currentTabKey).toBe("services");
   });
 
-  it("provides 2 page tabs (dashboard and cases)", () => {
+  it("provides 3 page tabs (dashboard, cases, services)", () => {
     const { result } = renderHook(() => useGarageTabLogic());
 
-    expect(result.current.pageTabs).toHaveLength(2);
+    expect(result.current.pageTabs).toHaveLength(3);
     expect(result.current.pageTabs[0].value).toBe("dashboard");
     expect(result.current.pageTabs[1].value).toBe("cases");
+    expect(result.current.pageTabs[2].value).toBe("services");
   });
 });

@@ -2,16 +2,18 @@ import React, { useRef } from "react";
 import { useGarageTabLogic, type GarageTabProps } from "./useGarageTabLogic";
 import { GarageDashboard } from "@/modules/garage/pages/GarageDashboard";
 import { GarageCases } from "@/modules/garage/pages/GarageCases";
+import { GarageCaseServicesSection } from "@/modules/garage/components/GarageCaseServicesSection";
 
 export type { GarageTabProps };
 
 export function GarageTab(props: GarageTabProps = {}) {
   const logic = useGarageTabLogic(props);
 
-  // 2-View Lazy Mounted Keep-Alive State (Synchronous render-time marking to prevent blank-frame flicker)
+  // 3-View Lazy Mounted Keep-Alive State (Synchronous render-time marking to prevent blank-frame flicker)
   const mountedViewsRef = useRef<Record<string, boolean>>({
     dashboard: logic.currentTabKey === "dashboard",
     cases: logic.currentTabKey === "cases",
+    services: logic.currentTabKey === "services",
   });
 
   if (logic.currentTabKey) {
@@ -47,6 +49,23 @@ export function GarageTab(props: GarageTabProps = {}) {
           }
         >
           <GarageCases
+            tabs={logic.pageTabs}
+            activeTab={logic.currentTabKey}
+            onTabChange={logic.handleTabChange}
+          />
+        </div>
+      )}
+
+      {/* ── View 2: Services (Chi tiết dòng phiếu dịch vụ) ─────────────── */}
+      {mountedViewsRef.current["services"] && (
+        <div
+          className={
+            logic.currentTabKey === "services"
+              ? "flex flex-col h-full flex-1 min-h-0 overflow-hidden"
+              : "hidden"
+          }
+        >
+          <GarageCaseServicesSection
             tabs={logic.pageTabs}
             activeTab={logic.currentTabKey}
             onTabChange={logic.handleTabChange}

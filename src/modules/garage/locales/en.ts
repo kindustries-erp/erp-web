@@ -2,6 +2,7 @@ export const garageEn = {
   tabs: {
     dashboard: "Overview",
     cases: "Service Cases",
+    services: "Service Lines Detail",
   },
   dashboard: {
     title: "Garage Dashboard",
@@ -1076,5 +1077,40 @@ export const garageEn = {
       total: "TOTAL",
     },
     empty: "No transaction data in this period",
+  },
+  services: {
+    title: "Service Lines Detail",
+    description:
+      "Detailed breakdown of labor jobs, technician fees, and parts across all service cases",
+    items: "Items",
+    typePt: "Parts",
+    typeDv: "Labor",
+    exporting: "Exporting service details to Excel...",
+    exportSuccess: "Successfully exported {{fileName}}!",
+    exportError: "Failed to export service details Excel",
+    tabs: {
+      all: "All Items",
+      dv: "Labor Services",
+      pt: "Parts",
+    },
+    actions: {
+      exportExcel: "Export Excel Details",
+    },
+    columns: {
+      itemType: "Type",
+      itemCode: "Item Code",
+      itemName: "Description",
+      unit: "Unit",
+      quantity: "Quantity",
+      unitPrice: "Unit Price",
+      preVatAmount: "Pre-VAT Amount",
+      vatRate: "VAT (%)",
+      totalAmount: "Total Amount",
+      laborCost: "Labor Cost",
+      partsRevenue: "Parts Revenue",
+      partsCost: "Parts Cost",
+      discountAmount: "Discount",
+      warehouseCode: "Warehouse",
+    },
   },
 };

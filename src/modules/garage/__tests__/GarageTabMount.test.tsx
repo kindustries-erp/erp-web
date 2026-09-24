@@ -20,6 +20,14 @@ vi.mock("@/modules/garage/pages/GarageCases", () => ({
   ),
 }));
 
+vi.mock("@/modules/garage/components/GarageCaseServicesSection", () => ({
+  GarageCaseServicesSection: ({ activeTab, tabs }: any) => (
+    <div data-testid="view-garage-services">
+      Services View - Active: {activeTab} - TabsCount: {tabs?.length}
+    </div>
+  ),
+}));
+
 vi.mock("@/shared/hooks/useHasPermission", () => ({
   useHasPermission: () => true,
 }));
@@ -48,6 +56,7 @@ describe("GarageTab Synchronous Keep-Alive Mounting & Default Dashboard Tab", ()
 
     expect(screen.getByTestId("view-garage-dashboard")).toBeDefined();
     expect(screen.queryByTestId("view-garage-cases")).toBeNull();
+    expect(screen.queryByTestId("view-garage-services")).toBeNull();
   });
 
   it("mounts initial tab 'cases' when tab=cases query param is provided", () => {
@@ -56,12 +65,23 @@ describe("GarageTab Synchronous Keep-Alive Mounting & Default Dashboard Tab", ()
 
     expect(screen.getByTestId("view-garage-cases")).toBeDefined();
     expect(screen.queryByTestId("view-garage-dashboard")).toBeNull();
+    expect(screen.queryByTestId("view-garage-services")).toBeNull();
   });
 
-  it("synchronously mounts view-garage-cases when initialTab prop is 'cases'", () => {
-    render(<GarageTab initialTab="cases" />, { wrapper: createWrapper() });
+  it("mounts initial tab 'services' when tab=services query param is provided", () => {
+    window.history.replaceState(null, "", "/garage-cases?tab=services");
+    render(<GarageTab />, { wrapper: createWrapper() });
 
-    expect(screen.getByTestId("view-garage-cases")).toBeDefined();
+    expect(screen.getByTestId("view-garage-services")).toBeDefined();
     expect(screen.queryByTestId("view-garage-dashboard")).toBeNull();
+    expect(screen.queryByTestId("view-garage-cases")).toBeNull();
+  });
+
+  it("synchronously mounts view-garage-services when initialTab prop is 'services'", () => {
+    render(<GarageTab initialTab="services" />, { wrapper: createWrapper() });
+
+    expect(screen.getByTestId("view-garage-services")).toBeDefined();
+    expect(screen.queryByTestId("view-garage-dashboard")).toBeNull();
+    expect(screen.queryByTestId("view-garage-cases")).toBeNull();
   });
 });

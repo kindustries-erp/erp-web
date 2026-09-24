@@ -4,7 +4,7 @@ import { ErpUrlQueryParam } from "@/shared/constants/urlParams";
 export const ALL_PAGE_KEYS: PageKey[] = [
   "dashboard",
   "opex",
-  "cashflow-dashboard",
+  "cashflow",
   "purchasing",
   "erp-inventory-stock",
   "erp-inventory-tracking",
@@ -64,6 +64,7 @@ export const ALL_PAGE_KEYS: PageKey[] = [
 ];
 
 const LEGACY_SLUGS: Record<string, PageKey> = {
+  "cashflow-dashboard": "cashflow",
   "mua-hang": "purchasing",
   kho: "erp-inventory-stock",
   "email-hop-thu": "email-inbox",
