@@ -239,7 +239,7 @@ const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   dashboard: Dashboard,
   opex: OpexPage,
   "inventory-dashboard": InventoryDashboard,
-  "cashflow-dashboard": () => <BankStatementPage initialTab="dashboard" />,
+  cashflow: () => <BankStatementPage initialTab="dashboard" />,
   purchasing: MuaHang,
   "erp-inventory-stock": InventoryStockPage,
   "erp-inventory-tracking": InventoryTrackingPage,
