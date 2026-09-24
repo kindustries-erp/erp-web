@@ -301,18 +301,13 @@ export function useNavItems(): NavSearchItem[] {
     const garageSection = t("nav.sections.garage", "GARAGE");
     if (canReadGarage) {
       items.push({
-        key: "garage-dashboard",
-        label: t("nav.items.garageDashboard", "Tổng quan Garage"),
-        section: garageSection,
-        keywords: ["garage", "tong quan garage", "dashboard", "xuong"],
-        icon: <LayoutDashboard className="w-4 h-4" />,
-      });
-      items.push({
         key: "garage-cases",
         label: t("nav.items.garageCases", "Phiếu dịch vụ"),
         section: garageSection,
         keywords: [
           "garage",
+          "tong quan garage",
+          "dashboard",
           "phieu dich vu",
           "so bao gia",
           "sua chua",
@@ -321,14 +316,15 @@ export function useNavItems(): NavSearchItem[] {
         icon: <Car className="w-4 h-4" />,
       });
       items.push({
-        key: "garage-partners",
-        label: t("nav.items.garagePartners", "Đối tác"),
+        key: "garage-debts",
+        label: t("nav.items.garageDebts", "Công nợ garage"),
         section: garageSection,
         keywords: [
           "garage",
+          "cong no",
+          "cong no garage",
           "khach hang",
           "doi tac",
-          "cong no",
           "phai thu",
           "tuoi no",
         ],
@@ -377,7 +373,7 @@ export function useNavItems(): NavSearchItem[] {
     const accountingSection = t("nav.sections.accounting");
     if (canReadCashflow || canReadBankStatements || canReadCashStatements) {
       items.push({
-        key: "cashflow-dashboard",
+        key: "cashflow",
         label: t("nav.items.cashflow"),
         section: accountingSection,
         keywords: [

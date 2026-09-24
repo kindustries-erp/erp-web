@@ -6,6 +6,7 @@ import {
   AlertCircle,
   RefreshCw,
   XCircle,
+  KeyRound,
 } from "lucide-react";
 import { DrawerModal } from "@/shared/components/DrawerModal";
 import { Button } from "@/shared/components/ui/Button";
@@ -37,7 +38,10 @@ import { ImportResultTables } from "./xml-upload/ImportResultTables";
 import { ImportPreviewModal } from "./xml-upload/ImportPreviewModal";
 import { InvoiceDetailWrapper } from "./InvoiceDetailWrapper";
 import { GdtPortalAuthDrawer } from "./GdtPortalAuthDrawer";
-import { KeyRound } from "lucide-react";
+import {
+  getPastMonthPresets,
+  getCurrentMonthPreset,
+} from "@/shared/utils/datePresets";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
 
@@ -60,19 +64,7 @@ export function InvoiceImportSyncDrawer({
     ErpAction.UPDATE,
   );
 
-  const presetOptions = useMemo(() => {
-    const options = [];
-    const currentYear = new Date().getFullYear();
-    for (let year = currentYear; year >= currentYear - 2; year--) {
-      for (let month = 12; month >= 1; month--) {
-        options.push({
-          value: `month-${month}-${year}`,
-          label: `${month}/${year}`,
-        });
-      }
-    }
-    return options;
-  }, []);
+  const presetOptions = useMemo(() => getPastMonthPresets(2), []);
 
   const [method, setMethod] = useState<"GDT" | "XML">("GDT");
   const [configOpen, setConfigOpen] = useState(false);
@@ -80,7 +72,10 @@ export function InvoiceImportSyncDrawer({
   const [bulkXmlLoading, setBulkXmlLoading] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [viewInvoiceId, setViewInvoiceId] = useState<string | null>(null);
-  const [selectedPreset, setSelectedPreset] = useState<string>("");
+  const initialPreset = useMemo(() => getCurrentMonthPreset(), []);
+  const [selectedPreset, setSelectedPreset] = useState<string>(
+    initialPreset.presetKey,
+  );
 
   const xml = useInvoiceXmlUpload((_importId, dir) => onImported(dir));
   const portal = usePortalSync();
@@ -95,6 +90,10 @@ export function InvoiceImportSyncDrawer({
     if (open) {
       setDirection(initialDirection);
       xml.setDirection(initialDirection);
+      const current = getCurrentMonthPreset();
+      setSelectedPreset(current.presetKey);
+      portal.setDateFrom(current.from);
+      portal.setDateTo(current.to);
     }
   }, [open, initialDirection]);
 

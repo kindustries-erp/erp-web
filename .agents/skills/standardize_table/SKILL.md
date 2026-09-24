@@ -934,6 +934,26 @@ Khi một bảng dữ liệu có nhiều góc nhìn tra cứu (như Hóa đơn �
 - **Bảo vệ View Mặc định**: Nút Xóa (Trash) chỉ hiển thị cho custom views; các view mặc định hệ thống (`isDefault === true`, `overview`, `audit`) được bảo vệ an toàn, không thể xóa.
 - **Đồng bộ 2 chiều**: Toàn bộ danh sách presets và active preset key được tự động lưu vào backend qua `updateUserPreferencesApi` và cache LocalStorage.
 
+## 16. Chuẩn Hóa Composite Filter Keys & Đồng Bộ Tìm Kiếm "Chọn Tất Cả" (`__ALL_MATCHING__`)
+
+Để hỗ trợ lọc dữ liệu chính xác trên các cột có giá trị lặp (ví dụ cùng Số HĐ nhưng khác Ký hiệu, hoặc cùng Tên đối tác nhưng khác MST) và đảm bảo trải nghiệm bộ lọc mượt mà:
+
+1. **Quy tắc Composite Key (`:::`) & `formatCompositeFilterValue`**:
+   - Backend sinh `value` dạng composite `primary_val:::secondary_val` (ví dụ `1066:::C25MDP` hoặc `:::C25THP` khi `primary_val` rỗng).
+   - Frontend bắt buộc sử dụng helper dùng chung `formatCompositeFilterValue` (`@/shared/utils/format`) làm fallback format trên:
+     - Dải chip `ĐANG LỌC` (`useUnifiedTableFilter`).
+     - Checkbox option list (`ColumnOptionList` & `TableColumnHeaderFilter`).
+   - Kết quả hiển thị cho người dùng:
+     - `1066:::C25MDP` $\rightarrow$ `1066 (C25MDP)`
+     - `:::C25THP` $\rightarrow$ `(C25THP)`
+     - `__BLANK__` $\rightarrow$ `(Trống)`
+     - Tuyệt đối **KHÔNG ĐƯỢC ĐỂ LỘ** chuỗi phân cách nội bộ `:::` trên giao diện người dùng.
+
+2. **Cơ chế Đồng Bộ Tìm Kiếm Khi Ở Chế Độ "Chọn Tất Cả" (`__ALL_MATCHING__`)**:
+   - Khi người dùng tick chọn `(Chọn tất cả kết quả tìm kiếm)`, `pendingFilters` lưu mảng `["__ALL_MATCHING__", keyword]`.
+   - Nếu người dùng nhập thêm hoặc thay đổi từ khóa trong ô tìm kiếm của Filter Panel (`ColumnFilterCard`), `pendingFilters` **bắt buộc phải tự động đồng bộ từ khóa mới nhất** `["__ALL_MATCHING__", pendingSearch]`.
+   - Khi bấm **Áp dụng**, `handleApply` gửi mảng `finalFilters = ["__ALL_MATCHING__", pendingSearch]` để backend làm mới dữ liệu và lọc bảng ngay lập tức theo toàn bộ từ khóa mới.
+
 ---
 
 ## Summary Checklist trước khi hoàn thành:

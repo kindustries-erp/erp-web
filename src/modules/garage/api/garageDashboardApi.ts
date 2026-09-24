@@ -121,7 +121,9 @@ export interface GarageStatusDistributionItem {
   statusCode: number;
   statusName: string;
   count: number;
+  revenue: number;
   percentage: number;
+  revenuePercentage: number;
 }
 
 export interface GarageClassificationDistributionItem {
@@ -131,6 +133,39 @@ export interface GarageClassificationDistributionItem {
   revenue: number;
   percentage: number;
   revenuePercentage: number;
+}
+
+export interface GarageConversionFunnelStage {
+  count: number;
+  amount: number;
+  rate?: number;
+}
+
+export interface GarageConversionFunnelClassificationItem {
+  name: string;
+  totalCount: number;
+  totalAmount: number;
+  inProgressCount: number;
+  inProgressAmount: number;
+  completedCount: number;
+  completedAmount: number;
+  cancelledCount: number;
+  cancelledAmount: number;
+  completionRate: number;
+  cancellationRate: number;
+}
+
+export interface GarageConversionFunnel {
+  totalIntake: GarageConversionFunnelStage;
+  inProgress: GarageConversionFunnelStage;
+  completed: GarageConversionFunnelStage;
+  cancelled: GarageConversionFunnelStage;
+  byClassification: {
+    SUA_CHUA_CHUNG: GarageConversionFunnelClassificationItem;
+    KY_GUI_NOI_BO: GarageConversionFunnelClassificationItem;
+    OJ_NGOAI: GarageConversionFunnelClassificationItem;
+    KHAC: GarageConversionFunnelClassificationItem;
+  };
 }
 
 export interface GarageDashboardStatsResponse {
@@ -144,6 +179,8 @@ export interface GarageDashboardStatsResponse {
     string,
     GarageClassificationDistributionItem[]
   >;
+  conversionFunnel?: GarageConversionFunnel;
+  conversionFunnelByMonth?: Record<string, GarageConversionFunnel>;
   availableMonths?: string[];
 }
 
@@ -152,18 +189,42 @@ export interface GarageKpiPeriod {
   totalCost: number;
   totalProfit: number;
   totalTienCoThue?: number;
+  totalPaid?: number;
+  totalReceivable?: number;
+  collectionRate?: number;
   totalCount: number;
   revenueChart: number[];
   costChart: number[];
   profitChart: number[];
   tienCoThueChart?: number[];
+  paidChart?: number[];
+  receivableChart?: number[];
   labels: string[];
+}
+
+export interface GarageProjectedPipelineItem {
+  name: string;
+  count: number;
+  amount: number;
+}
+
+export interface GarageProjectedPipeline {
+  totalCount: number;
+  totalAmount: number;
+  byClassification: {
+    SUA_CHUA_CHUNG: GarageProjectedPipelineItem;
+    KY_GUI_NOI_BO: GarageProjectedPipelineItem;
+    OJ_NGOAI: GarageProjectedPipelineItem;
+    KHAC: GarageProjectedPipelineItem;
+  };
 }
 
 export interface GarageCheckpointKpisResponse {
   month: GarageKpiPeriod;
   week: GarageKpiPeriod;
   day: GarageKpiPeriod;
+  projectedToday?: GarageProjectedPipeline;
+  projectedMonth?: GarageProjectedPipeline;
 }
 
 export interface GarageCheckpointCaseItem {
@@ -173,13 +234,38 @@ export interface GarageCheckpointCaseItem {
   khachHangCode: string;
   khachHangName: string;
   tenTinhTrangDichVu: string;
+  classification?: string;
   doanhThu: number;
   chiPhi: number;
   loiNhuan: number;
+  tienCoThue: number;
   tienDaThanhToan: number;
   tienConPhaiThanhToan: number;
+  hasInvoice?: boolean;
   ngayHoanThanhCongViec?: string;
   ngayPhatSinh: string;
+}
+
+export interface GarageCheckpointSummary {
+  totalCount: number;
+  totalTienCoThue: number;
+  totalRevenue: number;
+  totalCost: number;
+  totalProfit: number;
+  totalPaid: number;
+  totalRemaining: number;
+  collectionRate: number;
+  paidCount: number;
+  remainingCount: number;
+  unpaidCount: number;
+}
+
+export interface GarageClassificationSummaryItem {
+  name: string;
+  count: number;
+  amount: number;
+  paid: number;
+  remaining: number;
 }
 
 export interface GarageCheckpointCasesResponse {
@@ -188,6 +274,8 @@ export interface GarageCheckpointCasesResponse {
   page: number;
   pageSize: number;
   totalPages: number;
+  summary?: GarageCheckpointSummary;
+  classificationSummary?: Record<string, GarageClassificationSummaryItem>;
 }
 
 export interface GarageCustomerDebtInfo {
@@ -238,6 +326,11 @@ export const garageDashboardApi = {
     date_to: string;
     page?: number;
     pageSize?: number;
+    search?: string;
+    payment_status?: "all" | "remaining" | "paid" | "unpaid";
+    classification?: string;
+    sort_by?: string;
+    sort_order?: "ASC" | "DESC";
   }): Promise<GarageCheckpointCasesResponse> => {
     const { data } = await axiosInstance.get<GarageCheckpointCasesResponse>(
       `${BASE}/checkpoint-cases`,

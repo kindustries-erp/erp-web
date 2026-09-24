@@ -4,7 +4,7 @@ import { ErpUrlQueryParam } from "@/shared/constants/urlParams";
 export const ALL_PAGE_KEYS: PageKey[] = [
   "dashboard",
   "opex",
-  "cashflow-dashboard",
+  "cashflow",
   "purchasing",
   "erp-inventory-stock",
   "erp-inventory-tracking",
@@ -50,6 +50,7 @@ export const ALL_PAGE_KEYS: PageKey[] = [
   "garage-opex",
   "garage-customers",
   "garage-partners",
+  "garage-debts",
   "after-sales",
   "purchasing-report-dashboard",
   "vinfast-parts",
@@ -63,6 +64,7 @@ export const ALL_PAGE_KEYS: PageKey[] = [
 ];
 
 const LEGACY_SLUGS: Record<string, PageKey> = {
+  "cashflow-dashboard": "cashflow",
   "mua-hang": "purchasing",
   kho: "erp-inventory-stock",
   "email-hop-thu": "email-inbox",
@@ -71,7 +73,9 @@ const LEGACY_SLUGS: Record<string, PageKey> = {
   "erp-invoices-out": "erp-invoices",
   "erp-invoices-draft": "erp-invoices",
   "invoice-dashboard": "erp-invoices",
-  "garage-customers": "garage-partners",
+  "garage-dashboard": "garage-cases",
+  "garage-customers": "garage-debts",
+  "garage-partners": "garage-debts",
   journal: "journal-entry",
   "nhat-ky-chung": "journal-entry",
   "general-journal": "journal-entry",
@@ -220,7 +224,10 @@ export function pageToPath(
   const searchParams = new URLSearchParams();
 
   const effectiveTab =
-    tab || (page === "erp-invoices" ? "dashboard" : undefined);
+    tab ||
+    (page === "erp-invoices" || page === "garage-cases"
+      ? "dashboard"
+      : undefined);
   if (effectiveTab) {
     searchParams.set(ErpUrlQueryParam.TAB, effectiveTab);
   }
@@ -269,6 +276,8 @@ export function pathToPage(
     slug === "erp-invoice"
   ) {
     page = "erp-invoices";
+  } else if (slug === "garage-dashboard") {
+    page = "garage-cases";
   } else {
     page = ALL_PAGE_KEYS.includes(slug as PageKey)
       ? (slug as PageKey)
@@ -309,6 +318,14 @@ export function pathToPage(
     } else if (tab === "draft") {
       tab = "draft";
     } else if (tab === "dashboard" || !tab) {
+      tab = "dashboard";
+    }
+  } else if (slug === "garage-dashboard") {
+    tab = "dashboard";
+  } else if (slug === "garage-cases" || page === "garage-cases") {
+    if (tab === "cases") {
+      tab = "cases";
+    } else {
       tab = "dashboard";
     }
   }

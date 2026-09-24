@@ -448,16 +448,6 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
       return;
     }
 
-    const pendingChanges = form.pendingDocumentChanges || [];
-    let linkedCount =
-      (detailInvoice?.voucherNetOffs?.length || 0) +
-      ((detailInvoice as any)?.relatedPos?.length || 0);
-
-    pendingChanges.forEach((p) => {
-      if (p.action === "ADD") linkedCount++;
-      else if (p.action === "REMOVE") linkedCount--;
-    });
-
     setSaving(true);
     setFormError(null);
     try {
@@ -722,16 +712,6 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
               err.message ||
               "Lỗi hạch toán tự động sau khi lưu.",
           );
-        }
-      } else if (
-        !wasPosted &&
-        form.branchId &&
-        (linkedCount > 0 || (form.totalAmount || 0) > 0)
-      ) {
-        try {
-          await erpInvoicesCoreApi.autoPostStandard(invoiceIdToProcess);
-        } catch (autoErr: any) {
-          console.warn("Auto-post standard failed (non-blocking)", autoErr);
         }
       }
 

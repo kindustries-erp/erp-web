@@ -63,9 +63,9 @@ describe("TableColumnHeaderFilter", () => {
     const applyButton = screen.getByText("Áp dụng");
     fireEvent.click(applyButton);
 
-    // 5. Verify: onFilterChange receives ["1187"], onSearchChange receives "" (NO DOUBLE FILTER)
+    // 5. Verify: onFilterChange receives ["1187"], onSearchChange receives "1187" (search keyword is preserved)
     expect(onFilterChange).toHaveBeenCalledWith(["1187"]);
-    expect(onSearchChange).toHaveBeenCalledWith("");
+    expect(onSearchChange).toHaveBeenCalledWith("1187");
   });
 
   it("calls onSearchChange when no checkboxes are selected but search keyword is typed", () => {
@@ -142,5 +142,68 @@ describe("TableColumnHeaderFilter", () => {
     // 3. Verify
     expect(onSearchChange).toHaveBeenCalledWith("");
     expect(onFilterChange).toHaveBeenCalledWith([]);
+  });
+
+  it("persists search keyword in searchbox when popover is reopened", () => {
+    const onSearchChange = vi.fn();
+    const onFilterChange = vi.fn();
+    const onSortChange = vi.fn();
+
+    const { rerender } = renderWithClient(
+      <TableColumnHeaderFilter
+        title="Số hóa đơn"
+        columnKey="invoiceNo"
+        sortState="none"
+        onSortChange={onSortChange}
+        searchValue=""
+        onSearchChange={onSearchChange}
+        filterOptions={[
+          { label: "1187", value: "1187" },
+          { label: "1188", value: "1188" },
+        ]}
+        selectedFilters={[]}
+        onFilterChange={onFilterChange}
+      />,
+    );
+
+    // 1. Open Popover
+    fireEvent.click(screen.getByText("Số hóa đơn"));
+
+    // 2. Type "1187" and click Apply
+    const searchInput = screen.getByPlaceholderText(
+      'Tìm... ("..." chính xác, ; nhiều từ)',
+    );
+    fireEvent.change(searchInput, { target: { value: "1187" } });
+    fireEvent.click(screen.getByText("1187"));
+    fireEvent.click(screen.getByText("Áp dụng"));
+
+    // 3. Rerender with updated parent props (searchValue="1187", selectedFilters=["1187"])
+    rerender(
+      <QueryClientProvider client={new QueryClient()}>
+        <TableColumnHeaderFilter
+          title="Số hóa đơn"
+          columnKey="invoiceNo"
+          sortState="none"
+          onSortChange={onSortChange}
+          searchValue="1187"
+          onSearchChange={onSearchChange}
+          filterOptions={[
+            { label: "1187", value: "1187" },
+            { label: "1188", value: "1188" },
+          ]}
+          selectedFilters={["1187"]}
+          onFilterChange={onFilterChange}
+        />
+      </QueryClientProvider>,
+    );
+
+    // 4. Reopen Popover
+    fireEvent.click(screen.getByText("Số hóa đơn"));
+
+    // 5. Verify the search input value is still "1187"
+    const reopenedSearchInput = screen.getByPlaceholderText(
+      'Tìm... ("..." chính xác, ; nhiều từ)',
+    ) as HTMLInputElement;
+    expect(reopenedSearchInput.value).toBe("1187");
   });
 });

@@ -5,10 +5,15 @@ import { DatePicker } from "@/shared/components/DatePicker";
 import { Combobox } from "@/shared/components/Combobox";
 import { RefreshCw } from "lucide-react";
 import { format, startOfMonth, endOfMonth } from "date-fns";
+import {
+  getPastMonthPresets,
+  getCurrentMonthPreset,
+} from "@/shared/utils/datePresets";
 import { useGarageStore } from "../store/garageStore";
 import {
   useSyncGarageCases,
   useSyncGarageGrossProfit,
+  useSyncGarageCaseDetails,
 } from "../hooks/useGarage";
 import { GarageBranchSelector } from "./GarageBranchSelector";
 import { useTranslation } from "react-i18next";
@@ -17,7 +22,7 @@ interface GarageCaseSyncDrawerProps {
   open: boolean;
   onClose: () => void;
   onSuccess?: () => void;
-  mode?: "cases" | "gross-profit";
+  mode?: "cases" | "gross-profit" | "case-details";
   title?: string;
   description?: string;
 }
@@ -36,18 +41,30 @@ export function GarageCaseSyncDrawer({
     useSyncGarageCases();
   const { mutateAsync: syncGrossProfit, isPending: isSyncingGrossProfit } =
     useSyncGarageGrossProfit();
+  const { mutateAsync: syncCaseDetails, isPending: isSyncingCaseDetails } =
+    useSyncGarageCaseDetails();
 
-  const isSyncing = isSyncingCases || isSyncingGrossProfit;
+  const isSyncing =
+    isSyncingCases || isSyncingGrossProfit || isSyncingCaseDetails;
 
-  const [selectedPreset, setSelectedPreset] = useState<string>("");
-  const [dateFrom, setDateFrom] = useState<string>("");
-  const [dateTo, setDateTo] = useState<string>("");
+  const initialPreset = useMemo(() => getCurrentMonthPreset(), []);
+  const [selectedPreset, setSelectedPreset] = useState<string>(
+    initialPreset.presetKey,
+  );
+  const [dateFrom, setDateFrom] = useState<string>(initialPreset.from);
+  const [dateTo, setDateTo] = useState<string>(initialPreset.to);
+  const [force, setForce] = useState<boolean>(false);
 
   const modalTitle =
     title ||
     (mode === "gross-profit"
       ? t("cases.syncDrawer.titleGrossProfit", "Đồng bộ Lợi nhuận gộp Garage")
-      : t("cases.syncDrawer.titleCases", "Đồng bộ Cases từ Garage"));
+      : mode === "case-details"
+        ? t(
+            "cases.syncDrawer.titleCaseDetails",
+            "Đồng bộ Chi tiết vật tư & Nhân công",
+          )
+        : t("cases.syncDrawer.titleCases", "Đồng bộ Cases từ Garage"));
 
   const modalDesc =
     description ||
@@ -56,24 +73,17 @@ export function GarageCaseSyncDrawer({
           "cases.syncDrawer.descGrossProfit",
           "Chọn khoảng thời gian để cập nhật lại dữ liệu Doanh thu - Chi phí - Lợi nhuận gộp từ hệ thống Garage.",
         )
-      : t(
-          "cases.syncDrawer.descCases",
-          "Chọn khoảng thời gian để đồng bộ phiếu dịch vụ (Cases) và doanh thu chi phí từ hệ thống Garage về ERP.",
-        ));
+      : mode === "case-details"
+        ? t(
+            "cases.syncDrawer.descCaseDetails",
+            "Tải chi tiết từng dòng vật tư, phụ tùng và công thợ của các phiếu dịch vụ từ hệ thống Garage về ERP.",
+          )
+        : t(
+            "cases.syncDrawer.descCases",
+            "Chọn khoảng thời gian để đồng bộ phiếu dịch vụ (Cases) và doanh thu chi phí từ hệ thống Garage về ERP.",
+          ));
 
-  const presetOptions = useMemo(() => {
-    const options = [];
-    const currentYear = new Date().getFullYear();
-    for (let year = currentYear; year >= currentYear - 2; year--) {
-      for (let month = 12; month >= 1; month--) {
-        options.push({
-          value: `month-${month}-${year}`,
-          label: `Tháng ${month}/${year}`,
-        });
-      }
-    }
-    return options;
-  }, []);
+  const presetOptions = useMemo(() => getPastMonthPresets(2), []);
 
   const handlePresetChange = (val: string) => {
     setSelectedPreset(val);
@@ -90,9 +100,10 @@ export function GarageCaseSyncDrawer({
 
   useEffect(() => {
     if (open) {
-      setSelectedPreset("");
-      setDateFrom("");
-      setDateTo("");
+      const current = getCurrentMonthPreset();
+      setSelectedPreset(current.presetKey);
+      setDateFrom(current.from);
+      setDateTo(current.to);
     }
   }, [open]);
 
@@ -103,9 +114,12 @@ export function GarageCaseSyncDrawer({
         branchId: selectedBranchId,
         from: dateFrom ? dateFrom : undefined,
         to: dateTo ? dateTo : undefined,
+        force,
       };
       if (mode === "gross-profit") {
         await syncGrossProfit(payload);
+      } else if (mode === "case-details") {
+        await syncCaseDetails(payload);
       } else {
         await syncCases(payload);
       }
@@ -185,6 +199,27 @@ export function GarageCaseSyncDrawer({
                   className="flex-1"
                 />
               </div>
+
+              {mode === "case-details" && (
+                <div className="flex items-center gap-2 pt-1">
+                  <input
+                    type="checkbox"
+                    id="force-sync-details"
+                    checked={force}
+                    onChange={(e) => setForce(e.target.checked)}
+                    className="rounded border-border text-primary focus:ring-primary h-4 w-4"
+                  />
+                  <label
+                    htmlFor="force-sync-details"
+                    className="text-xs text-foreground cursor-pointer select-none"
+                  >
+                    {t(
+                      "cases.syncDrawer.forceDetails",
+                      "Đồng bộ lại toàn bộ (tải lại cả những phiếu đã có chi tiết)",
+                    )}
+                  </label>
+                </div>
+              )}
 
               <div className="flex justify-end items-center mt-2">
                 <Button

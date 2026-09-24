@@ -21,10 +21,16 @@ function getCellValue(item: Record<string, any>, key: string) {
       return item.tenTinhTrangDichVu || "";
     case "classification":
       return item.classification || "";
+    case "kgaraClassification":
+      return item.kgaraClassification || "";
+    case "kgaraClassificationCode":
+      return item.kgaraClassificationCode || "";
     case "caseCode":
       return item.soChungTu || "";
     case "licensePlate":
       return item.bienSoXe || "";
+    case "customer":
+      return `${item.khachHangName || ""} ${item.khachHangCode || ""}`.trim();
     case "customerCode":
       return item.khachHangCode || "";
     case "customerName":
@@ -176,6 +182,7 @@ export function applyGarageCasesTableState(
         item.khachHangCode,
         item.khachHangName,
         item.classification,
+        item.kgaraClassification,
         item.tenTinhTrangDichVu,
         item.rawData?.XeLamBaoHiem ? "yes" : "no",
       ]

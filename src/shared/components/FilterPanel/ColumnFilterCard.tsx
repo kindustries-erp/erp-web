@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   ChevronDown,
   ChevronUp,
@@ -23,6 +23,7 @@ import {
   NumberFilterOperator,
 } from "@/shared/components/DataTable/types";
 import type { ColumnFilterDescriptor } from "@/shared/components/DataTable/createColumnHeaderFilter";
+import { setDropdownSearchState } from "@/shared/components/DataTable/TableColumnHeaderFilter";
 import { ColumnOptionList } from "./ColumnOptionList";
 import { cn } from "@/shared/utils";
 import {
@@ -98,45 +99,149 @@ export function ColumnFilterCard({
     if (defaultExpanded) setExpanded(true);
   }, [defaultExpanded]);
 
-  // Local text/number input values before submitting / debouncing
-  const [localText, setLocalText] = useState(searchValue);
-  useEffect(() => {
-    setLocalText(searchValue);
-  }, [searchValue]);
+  // Pending Search State
+  const [pendingSearch, setPendingSearch] = useState(searchValue || "");
 
   // Number range split (if operator is between: "10..50")
-  const [numFrom, setNumFrom] = useState(() => {
-    if (searchValue.includes("..")) return searchValue.split("..")[0] || "";
-    return searchValue;
+  const [pendingNumFrom, setPendingNumFrom] = useState(() => {
+    if (searchValue && searchValue.includes(".."))
+      return searchValue.split("..")[0] || "";
+    return searchValue || "";
   });
-  const [numTo, setNumTo] = useState(() => {
-    if (searchValue.includes("..")) return searchValue.split("..")[1] || "";
+  const [pendingNumTo, setPendingNumTo] = useState(() => {
+    if (searchValue && searchValue.includes(".."))
+      return searchValue.split("..")[1] || "";
     return "";
   });
 
-  const handleNumRangeApply = (from: string, to: string) => {
-    setNumFrom(from);
-    setNumTo(to);
+  useEffect(() => {
+    if ((searchValue || "") !== pendingSearch) {
+      setPendingSearch(searchValue || "");
+      if (descriptor.type === ColumnValueType.NUMBER) {
+        if (searchValue && searchValue.includes("..")) {
+          const parts = searchValue.split("..");
+          setPendingNumFrom(parts[0] || "");
+          setPendingNumTo(parts[1] || "");
+        } else {
+          setPendingNumFrom(searchValue || "");
+          setPendingNumTo("");
+        }
+      }
+    }
+  }, [searchValue]);
+
+  // Pending Filters State (Checkboxes)
+  const [pendingFilters, setPendingFilters] = useState<string[]>(
+    selectedFilters || [],
+  );
+  useEffect(() => {
+    setPendingFilters(selectedFilters || []);
+  }, [selectedFilters]);
+
+  const isAllMatchingMode = pendingFilters[0] === "__ALL_MATCHING__";
+  useEffect(() => {
+    if (isAllMatchingMode) {
+      setPendingFilters(["__ALL_MATCHING__", pendingSearch]);
+    }
+  }, [pendingSearch, isAllMatchingMode]);
+
+  // Pending Operator State
+  const [pendingOperator, setPendingOperator] = useState<
+    TextFilterOperator | NumberFilterOperator | undefined
+  >(operator);
+  useEffect(() => {
+    setPendingOperator(operator);
+  }, [operator]);
+
+  const handleNumRangeChange = (from: string, to: string) => {
+    setPendingNumFrom(from);
+    setPendingNumTo(to);
     if (!from && !to) {
-      onSearchChange("");
+      setPendingSearch("");
     } else {
-      onSearchChange(`${from}..${to}`);
+      setPendingSearch(`${from}..${to}`);
     }
   };
 
-  const isSearchActive = Boolean(searchValue && searchValue.trim().length > 0);
+  // Pending Date Range
+  const [pendingDateFrom, setPendingDateFrom] = useState(dateFrom);
+  const [pendingDateTo, setPendingDateTo] = useState(dateTo);
+  useEffect(() => {
+    setPendingDateFrom(dateFrom);
+    setPendingDateTo(dateTo);
+  }, [dateFrom, dateTo]);
+
   const isFilterListActive = Boolean(
     selectedFilters && selectedFilters.length > 0,
+  );
+  const isSearchActive = Boolean(
+    !isFilterListActive && searchValue && searchValue.trim().length > 0,
   );
   const isSortActive = sortState !== TableSortState.NONE;
   const isDateActive = Boolean(dateFrom || dateTo);
   const hasActiveModifiers =
     isSearchActive || isFilterListActive || isSortActive || isDateActive;
 
+  const hasPendingChanges = useMemo(() => {
+    if ((pendingSearch || "").trim() !== (searchValue || "").trim())
+      return true;
+    if (
+      JSON.stringify(pendingFilters || []) !==
+      JSON.stringify(selectedFilters || [])
+    )
+      return true;
+    if (pendingOperator !== operator) return true;
+    if (descriptor.type === ColumnValueType.DATE) {
+      if (pendingDateFrom !== dateFrom || pendingDateTo !== dateTo) return true;
+    }
+    return false;
+  }, [
+    pendingSearch,
+    searchValue,
+    pendingFilters,
+    selectedFilters,
+    pendingOperator,
+    operator,
+    pendingDateFrom,
+    dateFrom,
+    pendingDateTo,
+    dateTo,
+    descriptor.type,
+  ]);
+
+  const handleApply = () => {
+    const trimmedSearch = (pendingSearch || "").trim();
+    onSearchChange(trimmedSearch);
+    if (descriptor.key) {
+      setDropdownSearchState(descriptor.key, trimmedSearch);
+    }
+    const finalFilters =
+      pendingFilters[0] === "__ALL_MATCHING__"
+        ? ["__ALL_MATCHING__", pendingSearch]
+        : pendingFilters;
+    onFilterChange(finalFilters);
+    if (pendingOperator && onOperatorChange && pendingOperator !== operator) {
+      onOperatorChange(pendingOperator);
+    }
+    if (descriptor.type === ColumnValueType.DATE && onDateRangeChange) {
+      onDateRangeChange(pendingDateFrom, pendingDateTo);
+    }
+  };
+
   const handleClearColumn = () => {
+    setPendingSearch("");
+    setPendingFilters([]);
+    setPendingNumFrom("");
+    setPendingNumTo("");
+    setPendingDateFrom(undefined);
+    setPendingDateTo(undefined);
+    setPendingOperator(undefined);
     onSearchChange("");
     onFilterChange([]);
     onSortChange(TableSortState.NONE);
+    if (descriptor.key) {
+      setDropdownSearchState(descriptor.key, "");
+    }
     if (onDateRangeChange) onDateRangeChange(undefined, undefined);
   };
 
@@ -223,7 +328,9 @@ export function ColumnFilterCard({
               variant="secondary"
               className="h-4.5 px-1.5 text-[10px] font-medium bg-blue-50 text-blue-600 border border-blue-200/50 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800/40"
             >
-              {selectedFilters.length}
+              {selectedFilters[0] === "__ALL_MATCHING__"
+                ? "Tất cả"
+                : selectedFilters.length}
             </Badge>
           )}
 
@@ -260,7 +367,7 @@ export function ColumnFilterCard({
                 <button
                   type="button"
                   className={cn(
-                    "flex-1 h-6 text-[11px] rounded-md flex items-center justify-center gap-1 transition-all",
+                    "flex-1 h-6 text-[11px] rounded-md flex items-center justify-center gap-1 transition-all cursor-pointer",
                     sortState === TableSortState.ASC
                       ? "bg-surface text-primary font-semibold shadow-2xs"
                       : "text-muted-foreground hover:text-foreground",
@@ -280,7 +387,7 @@ export function ColumnFilterCard({
                 <button
                   type="button"
                   className={cn(
-                    "flex-1 h-6 text-[11px] rounded-md flex items-center justify-center gap-1 transition-all",
+                    "flex-1 h-6 text-[11px] rounded-md flex items-center justify-center gap-1 transition-all cursor-pointer",
                     sortState === TableSortState.DESC
                       ? "bg-surface text-primary font-semibold shadow-2xs"
                       : "text-muted-foreground hover:text-foreground",
@@ -300,7 +407,7 @@ export function ColumnFilterCard({
                 {sortState !== TableSortState.NONE && (
                   <button
                     type="button"
-                    className="px-1.5 h-6 text-[10px] rounded-md text-muted-foreground hover:text-red-600 transition-colors"
+                    className="px-1.5 h-6 text-[10px] rounded-md text-muted-foreground hover:text-red-600 transition-colors cursor-pointer"
                     onClick={() => onSortChange(TableSortState.NONE)}
                     title="Bỏ sắp xếp"
                   >
@@ -321,9 +428,9 @@ export function ColumnFilterCard({
               </div>
               <Combobox
                 options={NUMBER_OPERATOR_OPTIONS}
-                value={operator || NumberFilterOperator.EQUALS}
+                value={pendingOperator || NumberFilterOperator.EQUALS}
                 onChange={(v) =>
-                  onOperatorChange?.(
+                  setPendingOperator(
                     (v as NumberFilterOperator) || NumberFilterOperator.EQUALS,
                   )
                 }
@@ -331,25 +438,39 @@ export function ColumnFilterCard({
                 className="w-full h-7 text-xs bg-muted/30 border-border/50"
               />
 
-              {operator === NumberFilterOperator.BETWEEN ? (
+              {pendingOperator === NumberFilterOperator.BETWEEN ? (
                 <div className="grid grid-cols-2 gap-1.5">
                   <Input
                     type="text"
                     inputMode="numeric"
                     placeholder="Từ..."
                     className="h-7 text-xs bg-muted/30 border-border/50"
-                    value={numFrom}
-                    onChange={(e) => handleNumRangeApply(e.target.value, numTo)}
+                    value={pendingNumFrom}
+                    onChange={(e) =>
+                      handleNumRangeChange(e.target.value, pendingNumTo)
+                    }
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleApply();
+                      }
+                    }}
                   />
                   <Input
                     type="text"
                     inputMode="numeric"
                     placeholder="Đến..."
                     className="h-7 text-xs bg-muted/30 border-border/50"
-                    value={numTo}
+                    value={pendingNumTo}
                     onChange={(e) =>
-                      handleNumRangeApply(numFrom, e.target.value)
+                      handleNumRangeChange(pendingNumFrom, e.target.value)
                     }
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleApply();
+                      }
+                    }}
                   />
                 </div>
               ) : (
@@ -359,20 +480,20 @@ export function ColumnFilterCard({
                     inputMode="numeric"
                     placeholder="Nhập giá trị..."
                     className="h-7 text-xs pr-7 bg-muted/30 border-border/50"
-                    value={localText}
-                    onChange={(e) => {
-                      setLocalText(e.target.value);
-                      onSearchChange(e.target.value);
+                    value={pendingSearch}
+                    onChange={(e) => setPendingSearch(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleApply();
+                      }
                     }}
                   />
-                  {localText && (
+                  {pendingSearch && (
                     <button
                       type="button"
-                      className="absolute right-2 text-muted-foreground/70 hover:text-foreground"
-                      onClick={() => {
-                        setLocalText("");
-                        onSearchChange("");
-                      }}
+                      className="absolute right-2 text-muted-foreground/70 hover:text-foreground cursor-pointer"
+                      onClick={() => setPendingSearch("")}
                     >
                       <X className="h-3 w-3" />
                     </button>
@@ -392,9 +513,9 @@ export function ColumnFilterCard({
               </div>
               <Combobox
                 options={TEXT_OPERATOR_OPTIONS}
-                value={operator || TextFilterOperator.CONTAINS}
+                value={pendingOperator || TextFilterOperator.CONTAINS}
                 onChange={(v) =>
-                  onOperatorChange?.(
+                  setPendingOperator(
                     (v as TextFilterOperator) || TextFilterOperator.CONTAINS,
                   )
                 }
@@ -402,27 +523,27 @@ export function ColumnFilterCard({
                 className="w-full h-7 text-xs bg-muted/30 border-border/50"
               />
 
-              {operator !== TextFilterOperator.IS_EMPTY &&
-                operator !== TextFilterOperator.IS_NOT_EMPTY && (
+              {pendingOperator !== TextFilterOperator.IS_EMPTY &&
+                pendingOperator !== TextFilterOperator.IS_NOT_EMPTY && (
                   <div className="relative flex items-center">
                     <Search className="absolute left-2.5 h-3.5 w-3.5 text-muted-foreground/60 pointer-events-none" />
                     <Input
                       placeholder='Từ khóa ("..." hoặc a;b)'
                       className="pl-8 pr-7 h-7 text-xs bg-muted/30 border-border/50"
-                      value={localText}
-                      onChange={(e) => {
-                        setLocalText(e.target.value);
-                        onSearchChange(e.target.value);
+                      value={pendingSearch}
+                      onChange={(e) => setPendingSearch(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          handleApply();
+                        }
                       }}
                     />
-                    {localText && (
+                    {pendingSearch && (
                       <button
                         type="button"
-                        className="absolute right-2 text-muted-foreground/70 hover:text-foreground"
-                        onClick={() => {
-                          setLocalText("");
-                          onSearchChange("");
-                        }}
+                        className="absolute right-2 text-muted-foreground/70 hover:text-foreground cursor-pointer"
+                        onClick={() => setPendingSearch("")}
                       >
                         <X className="h-3 w-3" />
                       </button>
@@ -442,14 +563,14 @@ export function ColumnFilterCard({
               </div>
               <div className="grid grid-cols-2 gap-1.5">
                 <DatePicker
-                  value={dateFrom || ""}
-                  onChange={(d) => onDateRangeChange?.(d, dateTo)}
+                  value={pendingDateFrom || ""}
+                  onChange={(d) => setPendingDateFrom(d)}
                   placeholder="Từ ngày"
                   className="h-7 text-xs"
                 />
                 <DatePicker
-                  value={dateTo || ""}
-                  onChange={(d) => onDateRangeChange?.(dateFrom, d)}
+                  value={pendingDateTo || ""}
+                  onChange={(d) => setPendingDateTo(d)}
                   placeholder="Đến ngày"
                   className="h-7 text-xs"
                 />
@@ -459,33 +580,36 @@ export function ColumnFilterCard({
               <div className="flex flex-wrap gap-1 pt-0.5">
                 <button
                   type="button"
-                  className="h-5 px-2 rounded-md bg-muted/60 hover:bg-muted text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+                  className="h-5 px-2 rounded-md bg-muted/60 hover:bg-muted text-[10px] text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                   onClick={() => {
                     const p = initPeriod();
-                    onDateRangeChange?.(periodFirstDay(p), periodLastDay(p));
+                    setPendingDateFrom(periodFirstDay(p));
+                    setPendingDateTo(periodLastDay(p));
                   }}
                 >
                   Tháng này
                 </button>
                 <button
                   type="button"
-                  className="h-5 px-2 rounded-md bg-muted/60 hover:bg-muted text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+                  className="h-5 px-2 rounded-md bg-muted/60 hover:bg-muted text-[10px] text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                   onClick={() => {
                     const now = new Date();
                     const y = now.getFullYear();
                     const m = String(now.getMonth()).padStart(2, "0");
                     const p = `${y}-${m === "00" ? "12" : m}`;
-                    onDateRangeChange?.(periodFirstDay(p), periodLastDay(p));
+                    setPendingDateFrom(periodFirstDay(p));
+                    setPendingDateTo(periodLastDay(p));
                   }}
                 >
                   Tháng trước
                 </button>
                 <button
                   type="button"
-                  className="h-5 px-2 rounded-md bg-muted/60 hover:bg-muted text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+                  className="h-5 px-2 rounded-md bg-muted/60 hover:bg-muted text-[10px] text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                   onClick={() => {
                     const today = new Date().toISOString().slice(0, 10);
-                    onDateRangeChange?.(today, today);
+                    setPendingDateFrom(today);
+                    setPendingDateTo(today);
                   }}
                 >
                   Hôm nay
@@ -504,26 +628,40 @@ export function ColumnFilterCard({
               </span>
               <ColumnOptionList
                 descriptor={descriptor}
-                selectedValues={selectedFilters}
-                onChangeSelected={onFilterChange}
+                selectedValues={pendingFilters}
+                onChangeSelected={setPendingFilters}
                 allFilters={allFilters}
+                searchValue={pendingSearch}
+                onSearchChange={setPendingSearch}
               />
             </div>
           )}
 
-          {/* Clear Column Action */}
-          {hasActiveModifiers && (
-            <div className="pt-1 flex justify-end">
+          {/* Bottom Actions: Clear & Apply */}
+          <div className="pt-2 flex items-center justify-between border-t border-border/40 mt-1">
+            {hasActiveModifiers ? (
               <button
                 type="button"
-                className="h-5 px-1.5 text-[11px] text-muted-foreground/70 hover:text-red-600 inline-flex items-center gap-1 transition-colors"
+                className="h-6 px-1.5 text-[11px] text-muted-foreground/70 hover:text-red-600 inline-flex items-center gap-1 transition-colors cursor-pointer"
                 onClick={handleClearColumn}
               >
                 <RotateCcw className="h-2.5 w-2.5" />
                 <span>Xóa lọc cột</span>
               </button>
-            </div>
-          )}
+            ) : (
+              <div />
+            )}
+            <Button
+              type="button"
+              variant="primary"
+              size="sm"
+              className="h-6 text-xs px-2.5"
+              disabled={!hasPendingChanges && !hasActiveModifiers}
+              onClick={handleApply}
+            >
+              Áp dụng
+            </Button>
+          </div>
         </div>
       )}
     </div>

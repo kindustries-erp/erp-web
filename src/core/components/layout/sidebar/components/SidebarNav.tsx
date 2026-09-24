@@ -351,32 +351,26 @@ export function SidebarNav({
         <NavSection collapsed={c} label={t("nav.sections.garage", "GARAGE")}>
           <NavItem
             collapsed={c}
-            icon={
-              <LayoutDashboard className="w-4 h-4 opacity-65 flex-shrink-0" />
-            }
-            label={t("nav.items.garageDashboard", "Tổng quan Garage")}
-            active={currentPage === "garage-dashboard"}
-            onClick={() => navTo("garage-dashboard")}
-            contextPage="garage-dashboard"
-          />
-          <NavItem
-            collapsed={c}
             icon={<Car className="w-4 h-4 opacity-65 flex-shrink-0" />}
             label={t("nav.items.garageCases", "Phiếu dịch vụ")}
-            active={currentPage === "garage-cases"}
+            active={
+              currentPage === "garage-cases" ||
+              currentPage === "garage-dashboard"
+            }
             onClick={() => navTo("garage-cases")}
             contextPage="garage-cases"
           />
           <NavItem
             collapsed={c}
             icon={<Users className="w-4 h-4 opacity-65 flex-shrink-0" />}
-            label={t("nav.items.garagePartners", "Đối tác")}
+            label={t("nav.items.garageDebts", "Công nợ garage")}
             active={
+              currentPage === "garage-debts" ||
               currentPage === "garage-partners" ||
               currentPage === "garage-customers"
             }
-            onClick={() => navTo("garage-partners")}
-            contextPage="garage-partners"
+            onClick={() => navTo("garage-debts")}
+            contextPage="garage-debts"
           />
           <NavItem
             collapsed={c}
@@ -420,12 +414,12 @@ export function SidebarNav({
               icon={<Wallet className="w-4 h-4 opacity-65 flex-shrink-0" />}
               label={t("nav.items.cashflow")}
               active={
-                currentPage === "cashflow-dashboard" ||
+                currentPage === "cashflow" ||
                 currentPage === "bank-statement" ||
                 currentPage === "cash-statement"
               }
-              onClick={() => navTo("cashflow-dashboard")}
-              contextPage="cashflow-dashboard"
+              onClick={() => navTo("cashflow")}
+              contextPage="cashflow"
             />
           )}
           {canReadInvoices && (

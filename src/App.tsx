@@ -199,14 +199,9 @@ const PurchasingReportDashboardPage = lazy(() =>
     default: m.PurchasingReportDashboardPage,
   })),
 );
-const GarageDashboard = lazy(() =>
-  import("@/modules/garage/pages/GarageDashboard").then((m) => ({
-    default: m.GarageDashboard,
-  })),
-);
-const GarageCases = lazy(() =>
-  import("@/modules/garage/pages/GarageCases").then((m) => ({
-    default: m.GarageCases,
+const GarageCasesPage = lazy(() =>
+  import("@/pages/GarageCasesPage").then((m) => ({
+    default: m.GarageCasesPage,
   })),
 );
 const GarageOpex = lazy(() =>
@@ -244,7 +239,7 @@ const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   dashboard: Dashboard,
   opex: OpexPage,
   "inventory-dashboard": InventoryDashboard,
-  "cashflow-dashboard": () => <BankStatementPage initialTab="dashboard" />,
+  cashflow: () => <BankStatementPage initialTab="dashboard" />,
   purchasing: MuaHang,
   "erp-inventory-stock": InventoryStockPage,
   "erp-inventory-tracking": InventoryTrackingPage,
@@ -285,11 +280,12 @@ const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   "settings-branch": SettingsBranch,
   "custom-fields": CustomFieldsPage,
   "invoice-debts": InvoiceDebtsPage,
-  "garage-dashboard": GarageDashboard,
-  "garage-cases": GarageCases,
+  "garage-dashboard": () => <GarageCasesPage initialTab="dashboard" />,
+  "garage-cases": GarageCasesPage,
   "garage-opex": GarageOpex,
   "garage-customers": GaragePartners,
   "garage-partners": GaragePartners,
+  "garage-debts": GaragePartners,
   "after-sales": AfterSalesPage,
   "vinfast-parts": VinfastPartsTrackingPage,
   "vinfast-parts-dashboard": () => (
@@ -315,7 +311,8 @@ const PAGE_PRELOADERS: Partial<Record<PageKey, PageLoader>> = {
   "erp-inventory-tracking-parts": () =>
     import("@/pages/inventory/InventoryTrackingPartsPage"),
   "erp-finished-goods": () => import("@/pages/manufacturing/FinishedGoodsPage"),
-  "garage-partners": () => import("@/modules/garage/pages/GaragePartners"),
+  "garage-partners": () => import("@/modules/garage/pages/GarageDebts"),
+  "garage-debts": () => import("@/modules/garage/pages/GarageDebts"),
   "invoice-debts": () => import("@/pages/InvoiceDebtsPage"),
   "erp-inventory-vouchers": loadInventoryVouchersPage,
   "erp-sales-orders": loadErpSalesOrdersPage,

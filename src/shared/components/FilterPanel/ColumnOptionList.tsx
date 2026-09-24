@@ -1,10 +1,11 @@
-import React, { useState, useMemo, useRef, useCallback } from "react";
+import React, { useMemo, useRef, useCallback } from "react";
 import { Search, X, Loader2 } from "lucide-react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { operationalApi } from "@/modules/operational/api/operationalApi";
 import { Input } from "@/shared/components/ui/input";
 import { Checkbox } from "@/shared/components/ui/checkbox";
 import { useDebounce } from "@/shared/hooks/useDebounce";
+import { formatCompositeFilterValue } from "@/shared/utils/format";
 import type { ColumnFilterDescriptor } from "@/shared/components/DataTable/createColumnHeaderFilter";
 
 interface ColumnOptionListProps {
@@ -12,6 +13,8 @@ interface ColumnOptionListProps {
   selectedValues: string[];
   onChangeSelected: (vals: string[]) => void;
   allFilters?: Record<string, string[]>;
+  searchValue?: string;
+  onSearchChange?: (val: string) => void;
 }
 
 export function ColumnOptionList({
@@ -19,8 +22,10 @@ export function ColumnOptionList({
   selectedValues = [],
   onChangeSelected,
   allFilters,
+  searchValue = "",
+  onSearchChange,
 }: ColumnOptionListProps) {
-  const [search, setSearch] = useState("");
+  const search = searchValue;
   const debouncedSearch = useDebounce(search, 300);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -122,7 +127,10 @@ export function ColumnOptionList({
         ? []
         : selectedValues
             .filter((v) => !apiValues.has(v) && v !== "__BLANK__")
-            .map((v) => ({ label: v, value: v }));
+            .map((v) => ({
+              label: formatCompositeFilterValue(v),
+              value: v,
+            }));
       opts = [...missingSelected, ...apiOptions];
     }
 
@@ -189,13 +197,13 @@ export function ColumnOptionList({
           placeholder="Tìm giá trị..."
           className="pl-8 pr-7 h-7 text-xs bg-muted/30 border-border/50 focus:bg-background"
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => onSearchChange?.(e.target.value)}
         />
         {search && (
           <button
             type="button"
             className="absolute right-2 text-muted-foreground/70 hover:text-foreground"
-            onClick={() => setSearch("")}
+            onClick={() => onSearchChange?.("")}
           >
             <X className="h-3 w-3" />
           </button>
@@ -231,9 +239,11 @@ export function ColumnOptionList({
             {finalOptions.map((opt) => {
               const isChecked =
                 isAllMatchingMode || selectedValues.includes(opt.value);
+              const rawLabel = opt.label || opt.value || "";
+              const formattedComposite = formatCompositeFilterValue(rawLabel);
               const label = descriptor.formatOptionLabel
-                ? descriptor.formatOptionLabel(opt.label)
-                : opt.label;
+                ? descriptor.formatOptionLabel(formattedComposite)
+                : formattedComposite;
 
               return (
                 <label
@@ -244,6 +254,7 @@ export function ColumnOptionList({
                     checked={isChecked}
                     onCheckedChange={() => handleToggle(opt.value)}
                   />
+
                   <span
                     className="truncate flex-1 text-foreground"
                     title={label}

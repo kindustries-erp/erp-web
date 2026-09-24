@@ -56,6 +56,7 @@ const TAB_ICONS: Partial<Record<PageKey, React.ElementType>> = {
   "garage-opex": ReceiptText,
   "garage-customers": Users,
   "garage-partners": Users,
+  "garage-debts": Users,
   "invoice-debts": ReceiptText,
 };
 

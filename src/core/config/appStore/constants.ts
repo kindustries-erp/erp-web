@@ -190,7 +190,7 @@ export const SECTION_ROOTS: Partial<Record<PageKey, SectionRoot>> = {
     group: "accounting",
   },
   "email-inbox": { labelKey: "nav.items.emailInbox", group: "system" },
-  "cashflow-dashboard": {
+  cashflow: {
     labelKey: "nav.items.cashflow",
     group: "accounting",
   },
@@ -207,11 +207,15 @@ export const SECTION_ROOTS: Partial<Record<PageKey, SectionRoot>> = {
     group: "garage",
   },
   "garage-customers": {
-    labelKey: "breadcrumb.garageCustomers",
+    labelKey: "breadcrumb.garageDebts",
     group: "garage",
   },
   "garage-partners": {
-    labelKey: "breadcrumb.garagePartners",
+    labelKey: "breadcrumb.garageDebts",
+    group: "garage",
+  },
+  "garage-debts": {
+    labelKey: "breadcrumb.garageDebts",
     group: "garage",
   },
   opex: {
@@ -350,7 +354,7 @@ export const BREADCRUMBS: Partial<Record<PageKey, Array<[string, string?]>>> = {
     ["bankStatement.cashTitle"],
   ],
   "email-inbox": [["nav.items.system"], ["nav.items.emailInbox"]],
-  "cashflow-dashboard": [["breadcrumb.accounting"], ["nav.items.cashflow"]],
+  cashflow: [["breadcrumb.accounting"], ["nav.items.cashflow"]],
   "settings-branch": [["breadcrumb.settings"], ["thietlap.tabs.chi-nhanh"]],
   "settings-bank": [["breadcrumb.settings"], ["thietlap.tabs.ngan-hang"]],
   "custom-fields": [
@@ -361,8 +365,9 @@ export const BREADCRUMBS: Partial<Record<PageKey, Array<[string, string?]>>> = {
   "garage-dashboard": [["breadcrumb.garage"], ["breadcrumb.garageDashboard"]],
   "garage-cases": [["breadcrumb.garage"], ["breadcrumb.garageCases"]],
   "garage-opex": [["breadcrumb.garage"], ["breadcrumb.garageOpex"]],
-  "garage-customers": [["breadcrumb.garage"], ["breadcrumb.garageCustomers"]],
-  "garage-partners": [["breadcrumb.garage"], ["breadcrumb.garagePartners"]],
+  "garage-customers": [["breadcrumb.garage"], ["breadcrumb.garageDebts"]],
+  "garage-partners": [["breadcrumb.garage"], ["breadcrumb.garageDebts"]],
+  "garage-debts": [["breadcrumb.garage"], ["breadcrumb.garageDebts"]],
 };
 
 export const DUPLICATABLE_PAGES = new Set<PageKey>([
