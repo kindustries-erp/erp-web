@@ -125,3 +125,59 @@ export function calculateClassificationTableRows(
     };
   });
 }
+
+export function calculateClassificationDonutItems(
+  data: {
+    classificationName?: string;
+    classificationKey: string;
+    revenue?: number;
+    count?: number;
+  }[],
+  isAmount: boolean,
+) {
+  const itemMap = new Map<
+    string,
+    { label: string; value: number; color: string }
+  >();
+  data.forEach((d) => {
+    const label = d.classificationName || "Khác";
+    const val = isAmount ? d.revenue || 0 : d.count || 0;
+    const existing = itemMap.get(label);
+    if (existing) {
+      existing.value += val;
+    } else {
+      itemMap.set(label, {
+        label,
+        value: val,
+        color: CLASSIFICATION_CONFIG[d.classificationKey]?.dot || "#64748b",
+      });
+    }
+  });
+  return Array.from(itemMap.values());
+}
+
+export function calculateStatusDonutItems(
+  data: { statusName?: string; revenue?: number; count?: number }[],
+  isAmount: boolean,
+  getStatusColorFn: (name: string, index: number) => string,
+) {
+  const itemMap = new Map<
+    string,
+    { label: string; value: number; color: string }
+  >();
+  data.forEach((d, index) => {
+    const label = d.statusName || "Khác";
+    const val = isAmount ? d.revenue || 0 : d.count || 0;
+    const existing = itemMap.get(label);
+    if (existing) {
+      existing.value += val;
+    } else {
+      itemMap.set(label, {
+        label,
+        value: val,
+        color: getStatusColorFn(label, index),
+      });
+    }
+  });
+  return Array.from(itemMap.values());
+}

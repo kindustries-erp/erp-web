@@ -1161,10 +1161,22 @@ export function ModuleCustomFieldConfigContent({
     }) => moduleConfigApi.createAttributeDef(dto),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["module-config-global-defs", activeModuleKey],
+        queryKey: ["module-config-global-defs"],
       });
       queryClient.invalidateQueries({
         queryKey: ["module-config-all-global-defs"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["custom-fields-all-global-defs"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["custom-fields-all-categories"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["module-config-categories"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["module-entity-values"],
       });
       toast.success(
         t("moduleConfig.createAttrSuccess", "Thêm thuộc tính thành công"),
@@ -1184,10 +1196,22 @@ export function ModuleCustomFieldConfigContent({
       moduleConfigApi.updateAttributeDef(id, dto),
     onSuccess: (updated: any) => {
       queryClient.invalidateQueries({
-        queryKey: ["module-config-global-defs", activeModuleKey],
+        queryKey: ["module-config-global-defs"],
       });
       queryClient.invalidateQueries({
         queryKey: ["module-config-all-global-defs"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["custom-fields-all-global-defs"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["custom-fields-all-categories"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["module-config-categories"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["module-entity-values"],
       });
       if (updated?.id) {
         queryClient.setQueryData(
@@ -1216,10 +1240,22 @@ export function ModuleCustomFieldConfigContent({
     mutationFn: (id: string) => moduleConfigApi.deleteAttributeDef(id),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["module-config-global-defs", activeModuleKey],
+        queryKey: ["module-config-global-defs"],
       });
       queryClient.invalidateQueries({
         queryKey: ["module-config-all-global-defs"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["custom-fields-all-global-defs"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["custom-fields-all-categories"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["module-config-categories"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["module-entity-values"],
       });
       toast.success(
         t("moduleConfig.deleteAttrSuccess", "Xóa thuộc tính thành công"),
@@ -1271,9 +1307,23 @@ export function ModuleCustomFieldConfigContent({
       const anyFilledOpt = Object.values(editingOptionLabels).find(
         (v) => v && v.trim(),
       );
-      if (trimmedOptVi || trimmedOptEn || anyFilledOpt) {
-        const finalOptVi = trimmedOptVi || anyFilledOpt || trimmedOptEn;
-        const finalOptEn = trimmedOptEn || finalOptVi;
+      if (
+        trimmedOptVi ||
+        trimmedOptEn ||
+        anyFilledOpt ||
+        editingOptionParentValue.trim() !==
+          (finalOptions[editingOptionIdx].parentValue || "")
+      ) {
+        const finalOptVi =
+          trimmedOptVi ||
+          anyFilledOpt ||
+          trimmedOptEn ||
+          finalOptions[editingOptionIdx].label;
+        const finalOptEn =
+          trimmedOptEn ||
+          finalOptVi ||
+          finalOptions[editingOptionIdx].labelEn ||
+          "";
         finalOptions[editingOptionIdx] = {
           ...finalOptions[editingOptionIdx],
           label: finalOptVi,
@@ -1283,6 +1333,7 @@ export function ModuleCustomFieldConfigContent({
             vi: finalOptVi,
             en: finalOptEn,
           },
+          parentValue: editingOptionParentValue.trim() || undefined,
         };
       }
     }
@@ -1310,6 +1361,7 @@ export function ModuleCustomFieldConfigContent({
             vi: finalLVi,
             en: finalLEn,
           },
+          parentValue: newOptionParentValue.trim() || undefined,
         });
       }
     }
@@ -1367,10 +1419,22 @@ export function ModuleCustomFieldConfigContent({
         isActive: !attr.isActive,
       });
       queryClient.invalidateQueries({
-        queryKey: ["module-config-global-defs", activeModuleKey],
+        queryKey: ["module-config-global-defs"],
       });
       queryClient.invalidateQueries({
         queryKey: ["module-config-all-global-defs"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["custom-fields-all-global-defs"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["custom-fields-all-categories"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["module-config-categories"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["module-entity-values"],
       });
       toast.success(
         attr.isActive
@@ -1737,9 +1801,17 @@ export function ModuleCustomFieldConfigContent({
                     </span>
 
                     {opt.parentValue && (
-                      <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-semibold bg-primary/10 text-primary border border-primary/20">
+                      <button
+                        type="button"
+                        onClick={() => handleStartEditOption(idx, opt)}
+                        title={t(
+                          "moduleConfig.editParentValue",
+                          "Click để đổi tùy chọn cha",
+                        )}
+                        className="inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-semibold bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 cursor-pointer transition-colors"
+                      >
                         {opt.parentValue}
-                      </span>
+                      </button>
                     )}
 
                     {/* Reusable Multilingual Translation Preview Badge */}
@@ -1773,7 +1845,10 @@ export function ModuleCustomFieldConfigContent({
                       type="button"
                       onClick={() => handleStartEditOption(idx, opt)}
                       className="text-muted-foreground/60 group-hover/opt:text-muted-foreground hover:!text-foreground hover:bg-muted rounded p-0.5 transition-colors ml-0.5 cursor-pointer"
-                      title={t("common.edit", "Sửa tên hiển thị")}
+                      title={t(
+                        "moduleConfig.editOptionTitle",
+                        "Chỉnh sửa tên & tùy chọn cha",
+                      )}
                     >
                       <Pencil className="w-2.5 h-2.5" />
                     </button>

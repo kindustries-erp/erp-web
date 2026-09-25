@@ -370,6 +370,7 @@ export function CustomFieldFormDrawer({
           code: cleanCode,
           name: nameVi,
           nameEn: nameEn || undefined,
+          parentAttrCode: attrParentAttrCode || null,
           fieldType: attrFieldType,
           options: attrFieldType === "SELECT" ? attrOptions : undefined,
           isRequired: attrRequired,
@@ -394,7 +395,15 @@ export function CustomFieldFormDrawer({
       queryClient.invalidateQueries({
         queryKey: ["module-config-global-defs"],
       });
-      queryClient.invalidateQueries({ queryKey: ["module-config-categories"] });
+      queryClient.invalidateQueries({
+        queryKey: ["module-config-all-global-defs"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["module-config-categories"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["module-entity-values"],
+      });
       onSuccess?.();
       onClose();
     },

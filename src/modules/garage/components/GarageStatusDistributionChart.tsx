@@ -6,6 +6,12 @@ import { Calendar, DollarSign, Layers } from "lucide-react";
 import { Combobox, ComboboxOption } from "@/shared/components/Combobox";
 import { GarageStatusDistributionItem } from "../api/garageDashboardApi";
 import { cn } from "@/shared/utils";
+import {
+  getStatusColor,
+  formatMonthLabel,
+} from "./GarageConversionFunnelCard/utils/funnelConfig";
+import { calculateStatusDonutItems } from "./GarageConversionFunnelCard/utils/funnelDataCalculators";
+import { money, shortMoney } from "@/shared/utils/format";
 
 interface GarageStatusDistributionChartProps {
   data?: GarageStatusDistributionItem[];
@@ -13,41 +19,6 @@ interface GarageStatusDistributionChartProps {
   availableMonths?: string[];
   loading?: boolean;
 }
-
-const getStatusColor = (name: string, index: number) => {
-  const lower = name.toLowerCase();
-  if (
-    lower.includes("kết thúc") ||
-    lower.includes("hoàn tất") ||
-    lower.includes("xong")
-  ) {
-    return "#10b981"; // Emerald
-  }
-  if (
-    lower.includes("đang thực hiện") ||
-    lower.includes("đang sửa") ||
-    lower.includes("tiến hành")
-  ) {
-    return "#3b82f6"; // Blue
-  }
-  if (lower.includes("tiếp nhận") || lower.includes("mới")) {
-    return "#6366f1"; // Indigo
-  }
-  if (lower.includes("báo giá") || lower.includes("chờ duyệt")) {
-    return "#f59e0b"; // Amber
-  }
-  if (lower.includes("hủy") || lower.includes("từ chối")) {
-    return "#ef4444"; // Red
-  }
-  const fallbackColors = [
-    "#8b5cf6",
-    "#06b6d4",
-    "#ec4899",
-    "#64748b",
-    "#84cc16",
-  ];
-  return fallbackColors[index % fallbackColors.length];
-};
 
 export function GarageStatusDistributionChart({
   data = [],
@@ -59,7 +30,6 @@ export function GarageStatusDistributionChart({
   const [selectedMonth, setSelectedMonth] = useState<string>("ALL");
   const [viewMode, setViewMode] = useState<"revenue" | "count">("revenue");
 
-  // Dữ liệu hiển thị dựa trên tháng được chọn (Backend đã lọc bỏ status Hủy = 9)
   const activeData = useMemo(() => {
     if (selectedMonth === "ALL" || !byMonth[selectedMonth]) {
       return data;
@@ -77,35 +47,11 @@ export function GarageStatusDistributionChart({
     [activeData],
   );
 
+  const isRevenue = viewMode === "revenue";
+
   const items = useMemo(() => {
-    return activeData.map((d, index) => {
-      const isRevenue = viewMode === "revenue";
-      const value = isRevenue ? d.revenue || 0 : d.count || 0;
-      return {
-        label: d.statusName,
-        value,
-        color: getStatusColor(d.statusName, index),
-      };
-    });
-  }, [activeData, viewMode]);
-
-  const formatMonthLabel = (m: string) => {
-    const parts = m.split("-");
-    if (parts.length === 2) {
-      return `Tháng ${parts[1]}/${parts[0]}`;
-    }
-    return m;
-  };
-
-  const formatCurrencyShort = (amount: number) => {
-    if (Math.abs(amount) >= 1_000_000_000) {
-      return `${(amount / 1_000_000_000).toFixed(2)} tỷ`;
-    }
-    if (Math.abs(amount) >= 1_000_000) {
-      return `${(amount / 1_000_000).toFixed(1)} tr`;
-    }
-    return `${new Intl.NumberFormat("vi-VN").format(amount)} đ`;
-  };
+    return calculateStatusDonutItems(activeData, isRevenue, getStatusColor);
+  }, [activeData, isRevenue]);
 
   const monthOptions: ComboboxOption[] = useMemo(() => {
     const allCount = data.reduce((s, d) => s + d.count, 0);
@@ -113,7 +59,7 @@ export function GarageStatusDistributionChart({
     const opts: ComboboxOption[] = [
       {
         value: "ALL",
-        label: `Toàn bộ 6 tháng (${allCount} phiếu • ${formatCurrencyShort(allRev)})`,
+        label: `Toàn bộ 6 tháng (${allCount} phiếu • ${shortMoney(allRev)})`,
       },
     ];
     availableMonths.forEach((m) => {
@@ -122,7 +68,7 @@ export function GarageStatusDistributionChart({
       const mRev = monthItems.reduce((s, d) => s + (d.revenue || 0), 0);
       opts.push({
         value: m,
-        label: `${formatMonthLabel(m)} (${mCount} phiếu • ${formatCurrencyShort(mRev)})`,
+        label: `${formatMonthLabel(m)} (${mCount} phiếu • ${shortMoney(mRev)})`,
       });
     });
     return opts;
@@ -162,7 +108,6 @@ export function GarageStatusDistributionChart({
           </div>
 
           <div className="flex items-center gap-2 flex-wrap">
-            {/* View Mode Toggle */}
             <div className="flex items-center bg-muted/60 p-0.5 rounded-lg border border-border">
               <button
                 type="button"
@@ -192,7 +137,6 @@ export function GarageStatusDistributionChart({
               </button>
             </div>
 
-            {/* Month Selector Combobox */}
             <div className="flex items-center gap-1.5 min-w-[210px] max-w-[260px]">
               <Calendar className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
               <div className="flex-1">
@@ -209,7 +153,6 @@ export function GarageStatusDistributionChart({
           </div>
         </div>
 
-        {/* Quick summary strip */}
         <div className="mt-2.5 flex items-center gap-4 text-xs bg-muted/30 px-3 py-1.5 rounded-lg border border-border/60">
           <div>
             <span className="text-muted-foreground">Tổng phiếu: </span>
@@ -221,7 +164,7 @@ export function GarageStatusDistributionChart({
           <div>
             <span className="text-muted-foreground">Tổng tiền có thuế: </span>
             <span className="font-bold text-emerald-600 dark:text-emerald-400">
-              {new Intl.NumberFormat("vi-VN").format(totalRevenue)} đ
+              {money(totalRevenue)}
             </span>
           </div>
         </div>
@@ -231,11 +174,7 @@ export function GarageStatusDistributionChart({
         <DonutChart
           items={items}
           cutout="62%"
-          valueFormatter={(val) =>
-            viewMode === "revenue"
-              ? `${new Intl.NumberFormat("vi-VN").format(val)} đ`
-              : `${val} phiếu`
-          }
+          valueFormatter={(val) => (isRevenue ? money(val) : `${val} phiếu`)}
         />
       </div>
 
@@ -243,12 +182,12 @@ export function GarageStatusDistributionChart({
         <DonutLegend
           items={items}
           valueFormatter={(val) => {
-            if (viewMode === "revenue") {
+            if (isRevenue) {
               const pct =
                 totalRevenue > 0
                   ? ((val / totalRevenue) * 100).toFixed(1)
                   : "0.0";
-              return `${formatCurrencyShort(val)} (${pct}%)`;
+              return `${shortMoney(val)} (${pct}%)`;
             } else {
               const pct =
                 totalCount > 0 ? ((val / totalCount) * 100).toFixed(1) : "0.0";

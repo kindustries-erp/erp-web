@@ -7,6 +7,8 @@ import { Combobox, ComboboxOption } from "@/shared/components/Combobox";
 import { money, shortMoney } from "@/shared/utils/format";
 import { cn } from "@/shared/utils";
 import { GarageClassificationDistributionItem } from "../api/garageDashboardApi";
+import { formatMonthLabel } from "./GarageConversionFunnelCard/utils/funnelConfig";
+import { calculateClassificationDonutItems } from "./GarageConversionFunnelCard/utils/funnelDataCalculators";
 
 interface GarageClassificationDistributionChartProps {
   data?: GarageClassificationDistributionItem[];
@@ -14,20 +16,6 @@ interface GarageClassificationDistributionChartProps {
   availableMonths?: string[];
   loading?: boolean;
 }
-
-const getClassificationColor = (key: string) => {
-  switch (key) {
-    case "SUA_CHUA_CHUNG":
-      return "#059669"; // Emerald
-    case "KY_GUI_NOI_BO":
-      return "#6366f1"; // Indigo
-    case "OJ_NGOAI":
-    case "OJ":
-      return "#ea580c"; // Orange
-    default:
-      return "#64748b"; // Slate
-  }
-};
 
 export function GarageClassificationDistributionChart({
   data = [],
@@ -39,7 +27,6 @@ export function GarageClassificationDistributionChart({
   const [selectedMonth, setSelectedMonth] = useState<string>("ALL");
   const [viewMode, setViewMode] = useState<"COUNT" | "REVENUE">("COUNT");
 
-  // Dữ liệu hiển thị dựa trên tháng được chọn
   const activeData = useMemo(() => {
     if (selectedMonth === "ALL" || !byMonth[selectedMonth]) {
       return data;
@@ -60,22 +47,9 @@ export function GarageClassificationDistributionChart({
   const isCount = viewMode === "COUNT";
 
   const items = useMemo(
-    () =>
-      activeData.map((d) => ({
-        label: d.classificationName,
-        value: isCount ? d.count : d.revenue || 0,
-        color: getClassificationColor(d.classificationKey),
-      })),
+    () => calculateClassificationDonutItems(activeData, !isCount),
     [activeData, isCount],
   );
-
-  const formatMonthLabel = (m: string) => {
-    const parts = m.split("-");
-    if (parts.length === 2) {
-      return `Tháng ${parts[1]}/${parts[0]}`;
-    }
-    return m;
-  };
 
   const monthOptions: ComboboxOption[] = useMemo(() => {
     const allCount = data.reduce((s, d) => s + d.count, 0);
@@ -120,7 +94,6 @@ export function GarageClassificationDistributionChart({
             )}
           </h4>
 
-          {/* Month Selector Combobox */}
           <div className="flex items-center gap-1.5 min-w-[180px] max-w-[220px]">
             <Calendar className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
             <div className="flex-1">
@@ -147,7 +120,6 @@ export function GarageClassificationDistributionChart({
                 : `Tỷ lệ doanh thu trong ${formatMonthLabel(selectedMonth)}`}
           </p>
 
-          {/* Switch View Mode: Count vs Revenue */}
           <div className="inline-flex items-center p-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-[11px] font-medium border border-slate-200/80 dark:border-slate-700">
             <button
               type="button"
