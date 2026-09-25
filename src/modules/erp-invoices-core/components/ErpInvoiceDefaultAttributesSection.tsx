@@ -1,13 +1,7 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import {
-  CornerDownRight,
-  Sparkles,
-  CheckCircle2,
-  AlertTriangle,
-  RefreshCw,
-} from "lucide-react";
+import { Sparkles, CheckCircle2, AlertTriangle, RefreshCw } from "lucide-react";
 import { DrawerField, DrawerSection } from "@/shared/components/DrawerModal";
 import { Combobox } from "@/shared/components/Combobox";
 import { Checkbox } from "@/shared/components/ui/checkbox";
@@ -222,7 +216,7 @@ export function ErpInvoiceDefaultAttributesSection({
       if (!detailInvoice?.id) return;
       return erpInvoicesCoreApi.setCategory(detailInvoice.id, catId);
     },
-    onSuccess: (updated) => {
+    onSuccess: () => {
       toast.success(
         t("categoryUpdated", "Đã cập nhật phân loại & Tự động hạch toán lại"),
       );
