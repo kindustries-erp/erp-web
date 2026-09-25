@@ -557,6 +557,36 @@ export const erpInvoicesCoreApi = {
     return data;
   },
 
+  setCategory: async (
+    id: string,
+    categoryId: string | null,
+  ): Promise<ErpInvoice> => {
+    const { data } = await axiosInstance.patch<ErpInvoice>(
+      `${BASE}/${id}/category`,
+      { categoryId },
+    );
+    return data;
+  },
+
+  bulkSetCategory: async (
+    invoiceIds: string[],
+    categoryId: string | null,
+  ): Promise<{ updated: number; total: number; errors: any[] }> => {
+    const { data } = await axiosInstance.patch<{
+      updated: number;
+      total: number;
+      errors: any[];
+    }>(`${BASE}/bulk-set-category`, { invoiceIds, categoryId });
+    return data;
+  },
+
+  aiClassifyAndAutoPost: async (id: string) => {
+    const { data } = await axiosInstance.post(
+      `${BASE}/${id}/ai-classify-autopost`,
+    );
+    return data;
+  },
+
   bulkSetNotes: async (ids: string[], notes: string) => {
     const { data } = await axiosInstance.patch<{
       updated: number;

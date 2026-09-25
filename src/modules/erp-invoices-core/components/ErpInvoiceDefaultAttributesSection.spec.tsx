@@ -7,24 +7,30 @@ import "@testing-library/jest-dom";
 vi.mock("../api/erpInvoicesCoreApi", () => ({
   erpInvoicesCoreApi: {
     setValid: vi.fn().mockResolvedValue({ success: true }),
+    setCategory: vi.fn().mockResolvedValue({ success: true }),
+    aiClassifyAndAutoPost: vi.fn().mockResolvedValue({
+      categoryCode: "VF_PARTS",
+      confidence: 0.95,
+      isFallback: false,
+    }),
   },
 }));
 
 vi.mock("@/core/api/moduleConfigApi", () => ({
   moduleConfigApi: {
-    getGlobalAttributeDefs: vi.fn().mockResolvedValue([
+    getCategories: vi.fn().mockResolvedValue([
       {
-        id: "def-cat",
-        code: "category",
-        name: "Phân loại hóa đơn mua vào",
-        isGlobal: true,
-        isSystem: true,
-        fieldType: "SELECT",
-        options: [
-          { value: "PURCHASE_GOODS", label: "Mua hàng hóa / NVL" },
-          { value: "EXPENSE_OPEX", label: "Chi phí OPEX" },
-        ],
+        id: "cat-1",
+        code: "VF_PARTS",
+        name: "Phụ tùng chính hãng VinFast",
       },
+      {
+        id: "cat-2",
+        code: "OEM_OTHER_PARTS",
+        name: "Phụ tùng OEM & Hãng khác",
+      },
+    ]),
+    getGlobalAttributeDefs: vi.fn().mockResolvedValue([
       {
         id: "def-sub",
         code: "subcategory",
@@ -36,12 +42,6 @@ vi.mock("@/core/api/moduleConfigApi", () => ({
           {
             value: "PUR_GOODS",
             label: "Hàng hóa / Phụ tùng",
-            parentValue: "PURCHASE_GOODS",
-          },
-          {
-            value: "EXP_ELECTRICITY",
-            label: "Tiền điện",
-            parentValue: "EXPENSE_OPEX",
           },
         ],
       },
@@ -81,8 +81,8 @@ describe("ErpInvoiceDefaultAttributesSection", () => {
     form: {
       invoiceNo: "INV-001",
       direction: "IN",
+      categoryId: "cat-1",
       globalAttributes: {
-        category: "PURCHASE_GOODS",
         subcategory: "PUR_GOODS",
       },
     } as any,
@@ -92,6 +92,12 @@ describe("ErpInvoiceDefaultAttributesSection", () => {
     detailInvoice: {
       id: "inv-1",
       invoiceNo: "INV-001",
+      categoryId: "cat-1",
+      category: {
+        id: "cat-1",
+        code: "VF_PARTS",
+        name: "Phụ tùng chính hãng VinFast",
+      },
       isValid: true,
       validatedAt: new Date("2026-09-01"),
     } as any,
@@ -110,13 +116,11 @@ describe("ErpInvoiceDefaultAttributesSection", () => {
     });
 
     expect(screen.getByText("Phân loại hóa đơn mua vào")).toBeInTheDocument();
-    expect(screen.getByText("Mua hàng hóa / NVL")).toBeInTheDocument();
     await waitFor(() => {
       expect(
         screen.getByText("Phân loại chi tiết hóa đơn mua vào"),
       ).toBeInTheDocument();
     });
-    expect(screen.getByText("Hàng hóa / Phụ tùng")).toBeInTheDocument();
     expect(screen.getByText("Đã kiểm duyệt")).toBeInTheDocument();
   });
 
@@ -142,23 +146,13 @@ describe("ErpInvoiceDefaultAttributesSection", () => {
     });
   });
 
-  it("should reset subcategory when category changes to a different one", async () => {
-    const fieldSetMock = vi.fn();
-    renderWithQuery(
-      <ErpInvoiceDefaultAttributesSection
-        {...baseProps}
-        editMode={true}
-        fieldSet={fieldSetMock}
-      />,
-    );
+  it("should render AI auto classify button for IN direction", async () => {
+    renderWithQuery(<ErpInvoiceDefaultAttributesSection {...baseProps} />);
 
     await waitFor(() => {
-      expect(screen.getByText("Phân loại hóa đơn mua vào")).toBeInTheDocument();
+      expect(screen.getByText("THUỘC TÍNH MẶC ĐỊNH")).toBeInTheDocument();
     });
-    await waitFor(() => {
-      expect(
-        screen.getByText("Phân loại chi tiết hóa đơn mua vào"),
-      ).toBeInTheDocument();
-    });
+
+    expect(screen.getByText("AI Phân loại")).toBeInTheDocument();
   });
 });

@@ -19,6 +19,8 @@ import {
   erpInvoicesCoreApi,
   type ErpInvoice,
 } from "@/modules/erp-invoices-core/api/erpInvoicesCoreApi";
+import { moduleConfigApi } from "@/core/api/moduleConfigApi";
+import { CATEGORY_ACCOUNT_HINTS } from "./ErpInvoicesTab/utils";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -131,12 +133,34 @@ export function BulkEditDrawer({
     return Array.from(map.values());
   }, [invoices, missingInvoices]);
 
+  // Fetch categories for TT99 classification
+  const { data: invoiceCategories = [] } = useQuery({
+    queryKey: ["module-config-categories", "INVOICE"],
+    queryFn: () => moduleConfigApi.getCategories("INVOICE"),
+    staleTime: 60000,
+  });
+
+  const categoryOptions = useMemo(() => {
+    return invoiceCategories.map((c) => {
+      const hint = CATEGORY_ACCOUNT_HINTS[c.code];
+      const accountBadge = hint ? `[TK ${hint.account}] ` : "";
+      return {
+        label: `${accountBadge}${c.name}`,
+        value: c.id,
+      };
+    });
+  }, [invoiceCategories]);
+
   // --- Apply-all fields ---
   const [bulkBranchId, setBulkBranchId] = useState<string | null>(null);
+  const [bulkCategoryId, setBulkCategoryId] = useState<string | null>(null);
   const [bulkNotesValue, setBulkNotesValue] = useState("");
 
   // --- Per-invoice assignments ---
   const [branchAssignments, setBranchAssignments] = useState<
+    Record<string, string>
+  >({});
+  const [categoryAssignments, setCategoryAssignments] = useState<
     Record<string, string>
   >({});
   const [notesAssignments, setNotesAssignments] = useState<
@@ -145,6 +169,7 @@ export function BulkEditDrawer({
 
   // --- Snapshots để detect dirty ---
   const [initBranch, setInitBranch] = useState<Record<string, string>>({});
+  const [initCategory, setInitCategory] = useState<Record<string, string>>({});
   const [initNotes, setInitNotes] = useState<Record<string, string>>({});
 
   // --- UI state ---
@@ -158,16 +183,21 @@ export function BulkEditDrawer({
         selectedIds.includes(inv.id),
       );
       const snapshotBranch: Record<string, string> = {};
+      const snapshotCategory: Record<string, string> = {};
       const snapshotNotes: Record<string, string> = {};
       selectedInvs.forEach((inv) => {
         snapshotBranch[inv.id] = inv.branchId ?? "";
+        snapshotCategory[inv.id] = inv.categoryId ?? inv.category?.id ?? "";
         snapshotNotes[inv.id] = inv.notes ?? "";
       });
       setBranchAssignments({ ...snapshotBranch });
+      setCategoryAssignments({ ...snapshotCategory });
       setNotesAssignments({ ...snapshotNotes });
       setInitBranch(snapshotBranch);
+      setInitCategory(snapshotCategory);
       setInitNotes(snapshotNotes);
       setBulkBranchId(null);
+      setBulkCategoryId(null);
       setBulkNotesValue("");
       setInvoiceSearch("");
     }
@@ -179,9 +209,18 @@ export function BulkEditDrawer({
       selectedIds.some(
         (id) =>
           (branchAssignments[id] ?? "") !== (initBranch[id] ?? "") ||
+          (categoryAssignments[id] ?? "") !== (initCategory[id] ?? "") ||
           (notesAssignments[id] ?? "") !== (initNotes[id] ?? ""),
       ),
-    [selectedIds, branchAssignments, notesAssignments, initBranch, initNotes],
+    [
+      selectedIds,
+      branchAssignments,
+      categoryAssignments,
+      notesAssignments,
+      initBranch,
+      initCategory,
+      initNotes,
+    ],
   );
 
   // Filtered invoice list (client-side search)
@@ -203,6 +242,10 @@ export function BulkEditDrawer({
     setBranchAssignments((prev) => ({ ...prev, [id]: value }));
   }, []);
 
+  const handleCategoryChange = useCallback((id: string, value: string) => {
+    setCategoryAssignments((prev) => ({ ...prev, [id]: value }));
+  }, []);
+
   const handleNotesChange = useCallback((id: string, value: string) => {
     setNotesAssignments((prev) => ({ ...prev, [id]: value }));
   }, []);
@@ -213,7 +256,7 @@ export function BulkEditDrawer({
       {
         key: "invoiceNo",
         header: t("invoiceNo", "Số HĐ"),
-        size: 120,
+        size: 110,
         cell: (inv) => (
           <div className="font-medium text-xs text-slate-800">
             {inv.invoiceNo}
@@ -221,17 +264,9 @@ export function BulkEditDrawer({
         ),
       },
       {
-        key: "serialNo",
-        header: t("serialNo", "Ký hiệu"),
-        size: 120,
-        cell: (inv) => (
-          <div className="text-xs text-slate-800">{inv.serialNo || "---"}</div>
-        ),
-      },
-      {
         key: "partner",
         header: t("partner", "Đối tác"),
-        size: 200,
+        size: 180,
         cell: (inv) => {
           const text = inv.sellerName || inv.buyerName || "---";
           return (
@@ -242,9 +277,23 @@ export function BulkEditDrawer({
         },
       },
       {
+        key: "category",
+        header: t("bulkEditCategory", "Phân loại (TT99)"),
+        size: 240,
+        cell: (inv) => (
+          <Combobox
+            options={categoryOptions}
+            value={categoryAssignments[inv.id] ?? ""}
+            onChange={(v) => handleCategoryChange(inv.id, v ?? "")}
+            placeholder={t("bulkEditCategoryPlaceholder", "Chọn phân loại...")}
+            allowClear={true}
+          />
+        ),
+      },
+      {
         key: "branch",
         header: t("bulkEditBranch", "Chi nhánh"),
-        size: 200,
+        size: 160,
         cell: (inv) => (
           <Combobox
             options={branches}
@@ -257,7 +306,7 @@ export function BulkEditDrawer({
       {
         key: "notes",
         header: t("bulkEditNotes", "Ghi chú"),
-        size: 200,
+        size: 180,
         cell: (inv) => (
           <NotesInputCell
             invId={inv.id}
@@ -270,9 +319,12 @@ export function BulkEditDrawer({
     ],
     [
       branches,
+      categoryOptions,
       branchAssignments,
+      categoryAssignments,
       notesAssignments,
       handleBranchChange,
+      handleCategoryChange,
       handleNotesChange,
       t,
     ],
@@ -287,6 +339,15 @@ export function BulkEditDrawer({
     });
     setBranchAssignments(updated);
   }, [bulkBranchId, selectedIds]);
+
+  const applyAllCategory = useCallback(() => {
+    if (!bulkCategoryId) return;
+    const updated: Record<string, string> = {};
+    selectedIds.forEach((id) => {
+      updated[id] = bulkCategoryId;
+    });
+    setCategoryAssignments(updated);
+  }, [bulkCategoryId, selectedIds]);
 
   const applyAllNotes = useCallback(() => {
     const updated: Record<string, string> = {};
@@ -303,7 +364,31 @@ export function BulkEditDrawer({
     try {
       const tasks: Promise<void>[] = [];
       let branchUpdated = 0;
+      let categoryUpdated = 0;
       let notesUpdated = 0;
+
+      // Category: group các invoice có thay đổi theo giá trị mới
+      const categoryGroups: Record<string, string[]> = {};
+      selectedIds.forEach((id) => {
+        const newVal = categoryAssignments[id] ?? "";
+        if (newVal !== (initCategory[id] ?? "")) {
+          if (!categoryGroups[newVal]) categoryGroups[newVal] = [];
+          categoryGroups[newVal].push(id);
+        }
+      });
+      if (Object.keys(categoryGroups).length > 0) {
+        tasks.push(
+          Promise.all(
+            Object.entries(categoryGroups).map(async ([catId, ids]) => {
+              const res = await erpInvoicesCoreApi.bulkSetCategory(
+                ids,
+                catId || null,
+              );
+              categoryUpdated += res.updated || ids.length;
+            }),
+          ).then(() => {}),
+        );
+      }
 
       // Branch: group các invoice có thay đổi theo giá trị mới
       const branchGroups: Record<string, string[]> = {};
@@ -353,10 +438,17 @@ export function BulkEditDrawer({
         return;
       }
 
-      // Branch & notes calls chạy song song
+      // Calls chạy song song
       await Promise.all(tasks);
 
       const parts: string[] = [];
+      if (categoryUpdated > 0)
+        parts.push(
+          t("bulkEditSuccessCategory", {
+            count: categoryUpdated,
+            defaultValue: `Phân loại (${categoryUpdated})`,
+          }),
+        );
       if (branchUpdated > 0)
         parts.push(t("bulkEditSuccessBranch", { count: branchUpdated }));
       if (notesUpdated > 0)
@@ -377,8 +469,10 @@ export function BulkEditDrawer({
     }
   }, [
     selectedIds,
+    categoryAssignments,
     branchAssignments,
     notesAssignments,
+    initCategory,
     initBranch,
     initNotes,
     t,
@@ -458,6 +552,39 @@ export function BulkEditDrawer({
       rightPanelDefaultCollapsed={false}
       rightPanel={
         <div className="space-y-4">
+          {/* Category apply-all */}
+          <div className="space-y-1">
+            <label className="text-[11px] text-slate-500 font-medium">
+              {t("bulkEditCategory", "Phân loại (TT99/2025/TT-BTC)")}
+            </label>
+            <div className="flex items-center gap-1">
+              <div className="flex-1 min-w-0">
+                <Combobox
+                  options={categoryOptions}
+                  value={bulkCategoryId ?? ""}
+                  onChange={(v) => setBulkCategoryId(v ?? null)}
+                  placeholder={t(
+                    "bulkEditCategoryPlaceholderCommon",
+                    "Chọn phân loại chung...",
+                  )}
+                  allowClear={true}
+                />
+              </div>
+              <Tooltip content={t("bulkEditApplyAll", "Áp dụng tất cả")}>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-9 w-9 shrink-0 text-slate-400 hover:text-primary"
+                  disabled={!bulkCategoryId}
+                  onClick={applyAllCategory}
+                >
+                  <CopyCheck size={16} />
+                </Button>
+              </Tooltip>
+            </div>
+          </div>
+
           {/* Branch apply-all */}
           <div className="space-y-1">
             <label className="text-[11px] text-slate-500 font-medium">

@@ -1,6 +1,38 @@
 import { type ErpInvoice } from "@/modules/erp-invoices-core/api/erpInvoicesCoreApi";
 import { type TableViewPreset } from "@/shared/hooks/useUserPreferences";
 
+export const CATEGORY_ACCOUNT_HINTS: Record<
+  string,
+  { account: string; label: string }
+> = {
+  VF_PARTS: { account: "1561", label: "Hàng hóa VinFast" },
+  COMMERCIAL_VEHICLES: {
+    account: "1562",
+    label: "Mua xe thương mại (Xe lướt)",
+  },
+  OEM_OTHER_PARTS: { account: "1563", label: "Phụ tùng OEM / Hãng khác" },
+  WORKSHOP_CONSUMABLES: { account: "152", label: "Nguyên vật liệu xưởng" },
+  GARAGE_SUBCONTRACT: { account: "632", label: "Giá vốn gia công ngoài" },
+  GARAGE_TOOLS_EQUIPMENT: { account: "153", label: "CCDC / Thiết bị xưởng" },
+  OFFICE_IT_FACILITIES: { account: "153", label: "CCDC / CNTT văn phòng" },
+  OPEX_LOGISTICS: {
+    account: "6427",
+    label: "Giao nhận (Grab, 911, Bưu chính)",
+  },
+  OPEX_SECURITY_CLEANING: {
+    account: "6427",
+    label: "Bảo vệ, Vệ sinh, Mặt bằng",
+  },
+  OPEX_BANK_FEES: { account: "635", label: "Phí ngân hàng, Lãi vay" },
+  OPEX_ADMIN: { account: "6422", label: "Hành chính, VPP, Nước 19L" },
+  OPEX_LEGAL_CONSULTING: {
+    account: "6427",
+    label: "Tư vấn Luật, Kế toán BCTC",
+  },
+  OPEX_IT_SOFTWARE: { account: "6427", label: "Phần mềm KGARA, Cloud, 4G" },
+  OPEX_MARKETING: { account: "6428", label: "Tiếp thị, Sự kiện, Quà tặng" },
+};
+
 export const INVOICE_TYPE_MAP: Record<string, string> = {
   CHI_NHANH: "Hóa đơn chi nhánh",
   CHIET_KHAU: "Hóa đơn chiết khấu",

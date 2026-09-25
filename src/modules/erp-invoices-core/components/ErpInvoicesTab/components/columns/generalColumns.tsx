@@ -6,7 +6,7 @@ import { TableText } from "@/shared/components/DataTable/TableText";
 import { InvoiceDateRangeSlot } from "@/modules/erp-invoices-core/components/InvoiceDateRangeSlot";
 import { type ErpInvoice } from "@/modules/erp-invoices-core/api/erpInvoicesCoreApi";
 import { type useErpInvoicesList } from "@/modules/erp-invoices-core/hooks/useErpInvoicesList";
-import { INVOICE_TYPE_MAP } from "../../utils";
+import { CATEGORY_ACCOUNT_HINTS, INVOICE_TYPE_MAP } from "../../utils";
 import { InvoiceAttachmentsCell } from "../cells/InvoiceAttachmentsCell";
 import { InvoiceNoCell } from "../cells/InvoiceNoCell";
 import {
@@ -330,7 +330,11 @@ export function useGeneralColumns({
         key: "invoiceCategory",
         header: (
           <TableColumnHeaderFilter
-            title={t("invoice.columns.invoiceCategory", "Phân loại HĐ")}
+            title={
+              direction === "IN"
+                ? t("invoice.columns.invoiceCategory", "Phân loại (TT99)")
+                : t("invoice.columns.invoiceCategoryOut", "Phân loại HĐ")
+            }
             sortState={getSortState("invoiceCategory")}
             onSortChange={(state) => handleSortChange("invoiceCategory", state)}
             searchValue={
@@ -351,10 +355,41 @@ export function useGeneralColumns({
             showBlankOption={true}
           />
         ),
-        size: 140,
+        size: 190,
         headerClassName: "text-center",
         className: "text-center",
         cell: (inv: any) => {
+          if (direction === "IN") {
+            const cat = inv.category;
+            const catCode = cat?.code;
+            const hint = catCode ? CATEGORY_ACCOUNT_HINTS[catCode] : null;
+
+            if (cat) {
+              return (
+                <div
+                  className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-medium bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/80 max-w-[180px] truncate"
+                  title={`${cat.name} (TK ${hint?.account || "..."})`}
+                >
+                  {hint?.account && (
+                    <span className="font-bold text-emerald-800 dark:text-emerald-200 bg-emerald-100/80 dark:bg-emerald-900/60 px-1 py-0.2 rounded text-[10px]">
+                      {hint.account}
+                    </span>
+                  )}
+                  <span className="truncate">{cat.name}</span>
+                </div>
+              );
+            }
+
+            return (
+              <div className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-normal bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800/80">
+                <span className="font-semibold text-amber-800 dark:text-amber-200">
+                  T0003
+                </span>
+                <span>Chưa phân loại</span>
+              </div>
+            );
+          }
+
           if (!inv.invoiceCategory) return "—";
           return INVOICE_TYPE_MAP[inv.invoiceCategory] || inv.invoiceCategory;
         },
