@@ -36,6 +36,26 @@ vi.mock("@/core/api/moduleConfigApi", () => ({
           { value: "EXPENSE_OPEX", label: "Chi phí OPEX" },
         ],
       },
+      {
+        id: "def-sub-in",
+        code: "subcategory",
+        name: "Phân loại chi tiết hóa đơn mua vào",
+        isGlobal: true,
+        isSystem: true,
+        fieldType: "SELECT",
+        options: [
+          {
+            value: "PUR_GOODS",
+            label: "Hàng hóa / Phụ tùng",
+            parentValue: "PURCHASE_GOODS",
+          },
+          {
+            value: "EXP_ELECTRICITY",
+            label: "Tiền điện",
+            parentValue: "EXPENSE_OPEX",
+          },
+        ],
+      },
     ]),
     getCategories: vi.fn().mockResolvedValue([]),
     getEntityValues: vi
@@ -43,6 +63,7 @@ vi.mock("@/core/api/moduleConfigApi", () => ({
       .mockResolvedValue({ attributes: {}, globalAttributes: {} }),
   },
   resolveOptionLabel: (opt: any) => opt.label || opt.value,
+  resolveAttrName: (def: any) => def.name || def.code,
 }));
 
 vi.mock("react-i18next", () => ({
@@ -157,7 +178,7 @@ describe("ErpInvoiceInternalSidebar", () => {
     } as any,
   };
 
-  it("should render 3 distinct sections: THÔNG TIN CHUNG, THUỘC TÍNH MẶC ĐỊNH, and THUỘC TÍNH TÙY CHỈNH", async () => {
+  it("should render 3 distinct sections: THÔNG TIN CHUNG, THUỘC TÍNH MẶC ĐỊNH, and THUỘC TÍNH TÙY CHỈNH including subcategory", async () => {
     renderWithQuery(<ErpInvoiceInternalSidebar {...defaultSidebarProps} />);
 
     await waitFor(() => {
@@ -171,8 +192,13 @@ describe("ErpInvoiceInternalSidebar", () => {
     // Section 2: THUỘC TÍNH MẶC ĐỊNH
     expect(screen.getByText("THUỘC TÍNH MẶC ĐỊNH")).toBeInTheDocument();
     expect(screen.getByText("Phân loại hóa đơn mua vào")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(
+        screen.getByText("Phân loại chi tiết hóa đơn mua vào"),
+      ).toBeInTheDocument();
+    });
     expect(screen.getByText("Hóa đơn hợp lý, hợp lệ")).toBeInTheDocument();
-    expect(screen.getAllByText("Mặc định").length).toBeGreaterThanOrEqual(2); // Badges for invoiceType & isValid
+    expect(screen.getAllByText("Mặc định").length).toBeGreaterThanOrEqual(3); // Badges for category, subcategory & isValid
 
     // Section 3: THUỘC TÍNH TÙY CHỈNH
     expect(
@@ -181,7 +207,7 @@ describe("ErpInvoiceInternalSidebar", () => {
     expect(screen.getByText("THUỘC TÍNH TÙY CHỈNH")).toBeInTheDocument();
   });
 
-  it("should render editable combobox for default attributes in editMode", async () => {
+  it("should render editable combobox for default attributes and subcategory in editMode", async () => {
     const fieldSetMock = vi.fn();
     renderWithQuery(
       <ErpInvoiceInternalSidebar
@@ -195,9 +221,14 @@ describe("ErpInvoiceInternalSidebar", () => {
       expect(screen.getByText("THUỘC TÍNH MẶC ĐỊNH")).toBeInTheDocument();
     });
     expect(screen.getByText("Phân loại hóa đơn mua vào")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(
+        screen.getByText("Phân loại chi tiết hóa đơn mua vào"),
+      ).toBeInTheDocument();
+    });
   });
 
-  it("should render default attributes and isValid badge for OUT direction (Hóa đơn bán ra)", async () => {
+  it("should render default attributes, subcategory and isValid badge for OUT direction (Hóa đơn bán ra)", async () => {
     const outProps = {
       ...defaultSidebarProps,
       direction: "OUT" as const,
