@@ -1,9 +1,9 @@
 ---
-name: erp-atomic-refactor
+name: ui-atomic-refactor
 description: Quy chuẩn và trợ lý bắt buộc về Atomic Component Refactoring trong Liouni ERP Web. Chia tách file lớn (> 200 LoC) thành cấu trúc Atomic chuẩn (Index, Component, Hook, Util), bắt buộc 100% Đa ngôn ngữ (i18n VI/EN), tối ưu Web Responsive toàn diện và ưu tiên tái sử dụng Reusable UI Components có sẵn trong App.
 ---
 
-# ⚛️ ERP Atomic Component Refactoring Standards (`/erp-atomic-refactor`)
+# ⚛️ UI Atomic Component Refactoring Standards (`/ui-atomic-refactor`)
 
 > ⚡ **Mục tiêu cốt lõi**: Đảm bảo mã nguồn giao diện trong `erp-web` luôn tinh gọn, dễ đọc, dễ kiểm thử và có tính mở rộng cao. Tuyệt đối không để xảy ra tình trạng các file Component phình to thành hàng ngàn dòng code (God Components / Monolithic Files).
 

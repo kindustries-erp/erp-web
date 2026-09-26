@@ -30,6 +30,8 @@ export interface ModuleAttributeOption {
     [key: string]: string | undefined;
   };
   parentValue?: string;
+  accountCode?: string | null;
+  defaultDebitAccountId?: string | null;
 }
 
 export interface ModuleAttributeDef {
