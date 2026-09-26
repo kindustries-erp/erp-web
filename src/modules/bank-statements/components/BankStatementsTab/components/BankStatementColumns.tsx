@@ -1,12 +1,19 @@
 import React, { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { toast } from "react-hot-toast";
-import { Tooltip } from "@/core/components/ui/Tooltip";
 import { TableDateCell } from "@/shared/components/DataTable/TableDateCell";
-import { TableText } from "@/shared/components/DataTable/TableText";
 import { createColumnHeaderFilter } from "@/shared/components/DataTable/createColumnHeaderFilter";
 import { money } from "@/shared/utils/format";
 import { bankStatementApi } from "@/modules/bank-statements/api/bankStatementApi";
+import {
+  renderCopyableText,
+  renderReferenceCell,
+  renderThuCell,
+  renderChiCell,
+  renderNetOffCell,
+  renderRemainingCell,
+  renderInvoiceSubjectCell,
+  renderPartnerCell,
+} from "./BankStatementCellRenderers";
 
 export interface UseBankStatementColumnsProps {
   type: "bank" | "cash";
@@ -85,9 +92,7 @@ export function useBankStatementColumns({
   const listHook = useMemo(
     () => ({
       sorts: tableState.sorts,
-      setSort: (key: string, state: any) => {
-        tableState.setSort(key, state);
-      },
+      setSort: (key: string, state: any) => tableState.setSort(key, state),
       columnFilters: tableState.columnFilters,
       setColumnFilter: (key: string, values: string[]) => {
         tableState.setColumnFilter(key, values);
@@ -101,9 +106,8 @@ export function useBankStatementColumns({
       dateFrom: filter.state.dateFrom,
       dateTo: filter.state.dateTo,
       setDateRange: (from?: string, to?: string) => {
-        if (filter.setDateRange) {
-          filter.setDateRange(from || "", to || "");
-        } else if (filter.setDateFrom && filter.setDateTo) {
+        if (filter.setDateRange) filter.setDateRange(from || "", to || "");
+        else if (filter.setDateFrom && filter.setDateTo) {
           filter.setDateFrom(from || "");
           filter.setDateTo(to || "");
         }
@@ -148,22 +152,18 @@ export function useBankStatementColumns({
     [t],
   );
 
-  const renderCopyableText = (text: string) => {
-    if (!text) return null;
-    return (
-      <Tooltip content={<div className="whitespace-pre-wrap">{text}</div>}>
-        <div
-          className="w-full line-clamp-2 break-words whitespace-normal cursor-pointer hover:opacity-80 active:opacity-50"
-          onClick={(e) => {
-            e.stopPropagation();
-            navigator.clipboard.writeText(text);
-            toast.success(t("copied", { defaultValue: "Đã copy text" }));
-          }}
-        >
-          {text}
-        </div>
-      </Tooltip>
-    );
+  const handleOpenPartner = (
+    account?: string,
+    name?: string,
+    rowId?: string,
+  ) => {
+    if (setDetailDefaultTab && setDetailTransactionId && rowId) {
+      setDetailDefaultTab("partner");
+      setDetailTransactionId(rowId);
+    } else {
+      setSelectedPartner({ account, name });
+      setPartnerDrawerOpen(true);
+    }
   };
 
   const columns: any[] = useMemo(
@@ -200,7 +200,7 @@ export function useBankStatementColumns({
                 ? `${row.bankAccount.bankName} - ${row.bankAccount.accountNumber}`
                 : ""
               : row.cashBook?.name || "";
-          return renderCopyableText(text);
+          return renderCopyableText(text, t);
         },
         size: 140,
       },
@@ -226,21 +226,8 @@ export function useBankStatementColumns({
           { showBlankOption: true },
         ),
         size: 180,
-        cell: (row: any) => {
-          if (!row.referenceNumber) return "—";
-          return (
-            <TableText
-              text={row.referenceNumber}
-              onDetailClick={(e) => {
-                e.stopPropagation();
-                setDetailTransactionId(row.id);
-              }}
-              tooltip={true}
-              enableCopy={true}
-              textClassName="text-primary"
-            />
-          );
-        },
+        cell: (row: any) =>
+          renderReferenceCell(row, (id) => setDetailTransactionId(id)),
       },
       {
         key: "description",
@@ -253,7 +240,7 @@ export function useBankStatementColumns({
           { showBlankOption: true },
         ),
         size: 360,
-        cell: (row: any) => renderCopyableText(row.description),
+        cell: (row: any) => renderCopyableText(row.description, t),
       },
       {
         key: "thu",
@@ -261,19 +248,9 @@ export function useBankStatementColumns({
           "thu",
           t("bankStatement.columns.thu", { defaultValue: "Tiền vào (Thu)" }),
         ),
-        cell: (row: any) => {
-          const credit = parseFloat(row.creditAmount) || 0;
-          if (credit > 0)
-            return (
-              <span className="text-emerald-600 font-medium">
-                {money(credit)}
-              </span>
-            );
-          return null;
-        },
+        cell: renderThuCell,
         className: "text-right",
         size: 140,
-        sortable: false,
       },
       {
         key: "chi",
@@ -281,17 +258,9 @@ export function useBankStatementColumns({
           "chi",
           t("bankStatement.columns.chi", { defaultValue: "Tiền ra (Chi)" }),
         ),
-        cell: (row: any) => {
-          const debit = parseFloat(row.debitAmount) || 0;
-          if (debit > 0)
-            return (
-              <span className="text-[#ea580c] font-medium">{money(debit)}</span>
-            );
-          return null;
-        },
+        cell: renderChiCell,
         className: "text-right",
         size: 140,
-        sortable: false,
       },
       {
         key: "balance",
@@ -300,10 +269,11 @@ export function useBankStatementColumns({
           "balance",
           t("bankStatement.columns.balance", { defaultValue: "Số dư" }),
         ),
-        cell: (row: any) => money(row.balance),
+        cell: (row: any) => (
+          <span className="tabular-nums font-medium">{money(row.balance)}</span>
+        ),
         className: "text-right font-medium",
         size: 140,
-        sortable: false,
       },
       {
         key: "netOffAmount",
@@ -315,19 +285,11 @@ export function useBankStatementColumns({
           { filterOptions: settledOptions },
         ),
         className:
-          "text-right bg-indigo-50/40 dark:bg-indigo-950/20 border-l border-indigo-200/60 dark:border-indigo-800/30",
+          "text-right bg-muted/20 border-l border-border/40 font-medium",
         headerClassName:
-          "text-center bg-indigo-50/40 dark:bg-indigo-950/20 border-l border-indigo-200/60 dark:border-indigo-800/30",
+          "text-center bg-muted/20 border-l border-border/40 font-medium",
         size: 140,
-        cell: (row: any) => {
-          const netOff = parseFloat(row.netOffAmount) || 0;
-          if (netOff === 0) return "--";
-          return (
-            <span className="text-indigo-600 dark:text-indigo-400 font-medium">
-              {money(netOff)}
-            </span>
-          );
-        },
+        cell: renderNetOffCell,
       },
       {
         key: "remainingAmount",
@@ -338,24 +300,10 @@ export function useBankStatementColumns({
           }),
           { filterOptions: settledOptions },
         ),
-        className:
-          "text-right font-semibold bg-indigo-50/40 dark:bg-indigo-950/20",
-        headerClassName: "text-center bg-indigo-50/40 dark:bg-indigo-950/20",
+        className: "text-right font-semibold bg-muted/20",
+        headerClassName: "text-center bg-muted/20 font-semibold",
         size: 140,
-        cell: (row: any) => {
-          const credit = parseFloat(row.creditAmount) || 0;
-          const debit = parseFloat(row.debitAmount) || 0;
-          const amount = credit > 0 ? credit : debit;
-          const netOff = parseFloat(row.netOffAmount) || 0;
-          const remaining = amount - netOff;
-          if (remaining === 0)
-            return <span className="text-emerald-600 font-medium">0</span>;
-          return (
-            <span className="text-slate-700 dark:text-slate-300 font-medium">
-              {money(remaining)}
-            </span>
-          );
-        },
+        cell: renderRemainingCell,
       },
       {
         key: "invoiceSubject",
@@ -367,25 +315,7 @@ export function useBankStatementColumns({
           { showBlankOption: true },
         ),
         size: 200,
-        cell: (row: any) => {
-          let subject = row.invoiceSubject;
-          if (!subject && row.invoiceNetOffs && row.invoiceNetOffs.length > 0) {
-            const subjects = row.invoiceNetOffs
-              .map((link: any) => {
-                const inv = link.invoice || link.erpInvoice || {};
-                const name =
-                  inv.direction === "IN" ? inv.sellerName : inv.buyerName;
-                const taxCode =
-                  inv.direction === "IN" ? inv.sellerTaxCode : inv.buyerTaxCode;
-                return taxCode && name ? `${taxCode} - ${name}` : name;
-              })
-              .filter(Boolean);
-            if (subjects.length > 0) {
-              subject = Array.from(new Set(subjects)).join(", ");
-            }
-          }
-          return renderCopyableText(subject);
-        },
+        cell: (row: any) => renderInvoiceSubjectCell(row, t),
       },
       {
         key: "correspondentName",
@@ -397,30 +327,13 @@ export function useBankStatementColumns({
           { showBlankOption: true },
         ),
         size: 200,
-        cell: (row: any) => {
-          if (!row.correspondentName) return null;
-          return (
-            <TableText
-              text={row.correspondentName}
-              onDrawerClick={(e) => {
-                e.stopPropagation();
-                if (setDetailDefaultTab && setDetailTransactionId) {
-                  setDetailDefaultTab("partner");
-                  setDetailTransactionId(row.id);
-                } else {
-                  setSelectedPartner({
-                    account: row.correspondentAccount,
-                    name: row.correspondentName,
-                  });
-                  setPartnerDrawerOpen(true);
-                }
-              }}
-              tooltip={row.correspondentName}
-              enableCopy={true}
-              textClassName="text-primary"
-            />
-          );
-        },
+        cell: (row: any) =>
+          renderPartnerCell(
+            row.correspondentAccount,
+            row.correspondentName,
+            row.id,
+            handleOpenPartner,
+          ),
       },
       {
         key: "correspondentAccount",
@@ -432,30 +345,13 @@ export function useBankStatementColumns({
           { showBlankOption: true },
         ),
         size: 160,
-        cell: (row: any) => {
-          if (!row.correspondentAccount) return null;
-          return (
-            <TableText
-              text={row.correspondentAccount}
-              onDrawerClick={(e) => {
-                e.stopPropagation();
-                if (setDetailDefaultTab && setDetailTransactionId) {
-                  setDetailDefaultTab("partner");
-                  setDetailTransactionId(row.id);
-                } else {
-                  setSelectedPartner({
-                    account: row.correspondentAccount,
-                    name: row.correspondentName,
-                  });
-                  setPartnerDrawerOpen(true);
-                }
-              }}
-              tooltip={row.correspondentAccount}
-              enableCopy={true}
-              textClassName="text-primary"
-            />
-          );
-        },
+        cell: (row: any) =>
+          renderPartnerCell(
+            row.correspondentAccount,
+            row.correspondentName,
+            row.id,
+            handleOpenPartner,
+          ),
       },
       {
         key: "correspondentBank",
@@ -467,7 +363,7 @@ export function useBankStatementColumns({
           { showBlankOption: true },
         ),
         size: 160,
-        cell: (row: any) => renderCopyableText(row.correspondentBank),
+        cell: (row: any) => renderCopyableText(row.correspondentBank, t),
       },
       {
         key: "branch",
@@ -477,10 +373,7 @@ export function useBankStatementColumns({
           { showBlankOption: true },
         ),
         size: 140,
-        cell: (row: any) => {
-          const text = row.branch?.name || "";
-          return renderCopyableText(text);
-        },
+        cell: (row: any) => renderCopyableText(row.branch?.name || "", t),
       },
     ],
     [
@@ -495,5 +388,8 @@ export function useBankStatementColumns({
     ],
   );
 
-  return { columns, renderCopyableText };
+  return {
+    columns,
+    renderCopyableText: (txt: string) => renderCopyableText(txt, t),
+  };
 }

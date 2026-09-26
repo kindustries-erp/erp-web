@@ -10,7 +10,6 @@ import {
 import { ErpInvoiceInternalDrawer } from "@/modules/erp-invoices-core/components/ErpInvoiceInternalDrawer";
 import { InvoiceImportSyncDrawer } from "@/modules/erp-invoices-core/components/InvoiceImportSyncDrawer";
 import { GdtPortalAuthDrawer } from "@/modules/erp-invoices-core/components/GdtPortalAuthDrawer";
-import { VietnamInvoiceTemplate } from "@/modules/erp-invoices-core/components/VietnamInvoiceTemplate";
 import { VoucherNetoffSelectionModal } from "@/modules/erp-invoices-core/components/VoucherNetoffSelectionModal";
 import { BankTransactionDetailDrawer } from "@/pages/finance/components/BankTransactionDetailDrawer";
 import {
@@ -146,13 +145,6 @@ export function InvoiceDrawers({
                 )}
                 <ErpInvoiceInternalMain
                   detailInvoice={formHook.detailInvoice}
-                  invoicePreview={
-                    formHook.detailInvoice ? (
-                      <VietnamInvoiceTemplate
-                        invoice={formHook.detailInvoice}
-                      />
-                    ) : undefined
-                  }
                 />
               </>
             )}

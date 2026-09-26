@@ -1195,7 +1195,7 @@ export const ErpInvoicePartnerTab = React.memo(function ErpInvoicePartnerTab({
               },
               {
                 value: "invoices",
-                label: t("tabInvoicesList", "2. Danh sách hóa đơn"),
+                label: t("tabInvoicesList", "2. Chi tiết theo đối tượng"),
                 icon: FileText,
                 badgeCount: total > 0 ? total : undefined,
               },
@@ -1518,7 +1518,10 @@ export const ErpInvoicePartnerTab = React.memo(function ErpInvoicePartnerTab({
                 <>
                   <FileText className="w-4 h-4 text-muted-foreground" />
                   <span>
-                    {t("tabInvoicesListTitle", "Danh sách hóa đơn đối tác")}
+                    {t(
+                      "tabInvoicesListTitle",
+                      "Chi tiết hóa đơn theo đối tượng",
+                    )}
                   </span>
                   {total > 0 && (
                     <span className="text-xs font-normal text-muted-foreground lowercase">

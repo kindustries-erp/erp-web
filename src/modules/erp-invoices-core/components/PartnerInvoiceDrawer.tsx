@@ -13,7 +13,6 @@ import { money } from "@/shared/utils/format";
 import { BarChart } from "@/shared/components/charts/BarChart";
 import { ChartSkeleton } from "@/shared/components/Skeleton";
 import { Tooltip } from "@/core/components/ui/Tooltip";
-import { VietnamInvoiceTemplate } from "./VietnamInvoiceTemplate";
 
 import { ErpInvoiceInternalDrawer } from "./ErpInvoiceInternalDrawer";
 import {
@@ -550,14 +549,7 @@ export function PartnerInvoiceDrawer({
         }
       >
         <div className="flex flex-col gap-4">
-          <ErpInvoiceInternalMain
-            detailInvoice={formHook.detailInvoice}
-            invoicePreview={
-              formHook.detailInvoice ? (
-                <VietnamInvoiceTemplate invoice={formHook.detailInvoice} />
-              ) : undefined
-            }
-          />
+          <ErpInvoiceInternalMain detailInvoice={formHook.detailInvoice} />
         </div>
       </ErpInvoiceInternalDrawer>
 

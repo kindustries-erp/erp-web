@@ -108,7 +108,7 @@ describe("ErpInvoicePartnerTab", () => {
     vi.clearAllMocks();
   });
 
-  it("renders 5 subtabs: '1. Chi tiết', '2. Danh sách hóa đơn', '3. Chi tiết HHDV', '4. Biến động', and '5. Tài liệu đính kèm'", async () => {
+  it("renders 5 subtabs: '1. Chi tiết', '2. Chi tiết theo đối tượng', '3. Chi tiết HHDV', '4. Biến động', and '5. Tài liệu đính kèm'", async () => {
     renderWithClient(
       <ErpInvoicePartnerTab detailInvoice={mockInvoice as any} direction="IN">
         <div data-testid="detail-children">Nội dung chi tiết test</div>
@@ -116,7 +116,7 @@ describe("ErpInvoicePartnerTab", () => {
     );
 
     expect(screen.getByText("1. Chi tiết")).toBeInTheDocument();
-    expect(screen.getByText("2. Danh sách hóa đơn")).toBeInTheDocument();
+    expect(screen.getByText("2. Chi tiết theo đối tượng")).toBeInTheDocument();
     expect(screen.getByText("3. Chi tiết HHDV")).toBeInTheDocument();
     expect(screen.getByText("4. Biến động")).toBeInTheDocument();
     expect(screen.getByText("5. Tài liệu đính kèm")).toBeInTheDocument();
@@ -134,7 +134,7 @@ describe("ErpInvoicePartnerTab", () => {
     expect(screen.getByText("File PDF")).toBeInTheDocument();
   });
 
-  it("switches to '2. Danh sách hóa đơn' when clicked and calls erpInvoicesCoreApi.list", async () => {
+  it("switches to '2. Chi tiết theo đối tượng' when clicked and calls erpInvoicesCoreApi.list", async () => {
     renderWithClient(
       <ErpInvoicePartnerTab
         detailInvoice={mockInvoice as any}
@@ -142,7 +142,7 @@ describe("ErpInvoicePartnerTab", () => {
       />,
     );
 
-    const invoicesSubTabBtn = screen.getByText("2. Danh sách hóa đơn");
+    const invoicesSubTabBtn = screen.getByText("2. Chi tiết theo đối tượng");
     fireEvent.click(invoicesSubTabBtn);
 
     await waitFor(() => {

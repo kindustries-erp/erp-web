@@ -1,3 +1,4 @@
+import React from "react";
 import { Building2, Wallet, Upload } from "lucide-react";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate";
 import { PillTabs } from "@/shared/components/PillTabs";
@@ -82,7 +83,6 @@ export function BankStatementSection(props: BankStatementSectionProps) {
     setIsOriginalFilesOpen,
   });
 
-  // View Tabs (Switch Thu/Chi + View Mode Presets Combobox)
   const viewTabsNode = (
     <div className="w-full sm:w-auto flex items-center flex-wrap gap-2 py-0.5">
       <PillTabs
@@ -105,9 +105,7 @@ export function BankStatementSection(props: BankStatementSectionProps) {
         value={activeTransactionType}
         onValueChange={handleTransactionTypeChange}
       />
-
-      <div className="hidden sm:block h-4 w-px bg-slate-300/80 dark:bg-zinc-700/80 shrink-0" />
-
+      <div className="hidden sm:block h-4 w-px bg-border shrink-0" />
       <BankStatementViewModeCombobox
         presets={columnViewPresetsHook.presets}
         activePresetKey={activeColumnPresetKey}
@@ -125,9 +123,7 @@ export function BankStatementSection(props: BankStatementSectionProps) {
         title={
           type === "bank"
             ? t("bankStatement.bankTitle", { defaultValue: "Sao kê ngân hàng" })
-            : t("bankStatement.cashTitle", {
-                defaultValue: "Sổ quỹ tiền mặt",
-              })
+            : t("bankStatement.cashTitle", { defaultValue: "Sổ quỹ tiền mặt" })
         }
         desc={
           type === "bank"
@@ -150,18 +146,11 @@ export function BankStatementSection(props: BankStatementSectionProps) {
         onTabChange={onTabChange}
         tableId={tableId}
         items={data?.items || []}
-        columns={columns.map((c) => ({
-          ...c,
-          headerClassName: c.headerClassName
-            ? `${c.headerClassName} text-center`
-            : "text-center",
-        }))}
+        columns={columns}
         getRowKey={(row: any) => row.id}
         summaryRow={summaryRow}
         loading={isFetching}
-        emptyLabel={t("emptyData", {
-          defaultValue: "Chưa có giao dịch nào.",
-        })}
+        emptyLabel={t("emptyData", { defaultValue: "Chưa có giao dịch nào." })}
         minWidth={1200}
         page={page}
         pageSize={pageSize}
@@ -191,7 +180,7 @@ export function BankStatementSection(props: BankStatementSectionProps) {
         createLabel={t("bankStatement.importBtn", {
           defaultValue: "Nhập sao kê",
         })}
-        createIcon={<Upload className="w-4 h-4 mr-1 text-indigo-100" />}
+        createIcon={<Upload className="w-4 h-4 mr-1 text-primary-foreground" />}
         createActions={createActions}
       />
 

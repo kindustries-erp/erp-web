@@ -7,7 +7,6 @@ import {
   ErpInvoiceInternalMain,
   ErpInvoiceInternalSidebar,
 } from "./ErpInvoiceInternalInfo";
-import { VietnamInvoiceTemplate } from "./VietnamInvoiceTemplate";
 import { ErpInvoicePdfUpload } from "./ErpInvoicePdfUpload";
 
 interface Props {
@@ -102,13 +101,6 @@ export function InvoiceDetailWrapper({ invoiceId, onClose }: Props) {
               formHook.openInternal(formHook.detailInvoice);
             }
           }}
-          invoicePreview={
-            formHook.detailInvoice ? (
-              <div className="flex justify-center bg-slate-100 p-8 min-h-full">
-                <VietnamInvoiceTemplate invoice={formHook.detailInvoice} />
-              </div>
-            ) : undefined
-          }
         />
       </div>
     </ErpInvoiceInternalDrawer>

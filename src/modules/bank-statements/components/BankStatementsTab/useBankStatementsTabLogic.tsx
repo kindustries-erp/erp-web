@@ -26,11 +26,9 @@ export function useBankStatementsTabLogic({
     type === "bank" ? "bank-statement" : "cash-statement";
   const tableId = `bank-statement-${type}-table-v3`;
 
-  // 1. Pagination & Modal States
+  // 1. Pagination & URL State Management
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
-
-  // 2. URL State Management & Tab Switcher (ALL / IN / OUT)
   const [activeTransactionType, setActiveTransactionType] = useState<
     "ALL" | "IN" | "OUT"
   >("ALL");
@@ -65,7 +63,7 @@ export function useBankStatementsTabLogic({
     [urlState, setPage],
   );
 
-  // 3. Modal States
+  // 2. Modal & Drawer States
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [isExportOpen, setIsExportOpen] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -83,11 +81,7 @@ export function useBankStatementsTabLogic({
   } | null>(null);
 
   const handleOpenDetail = useCallback(
-    (
-      id: string,
-      tab: string = "txn_details",
-      mode: "view" | "edit" = "view",
-    ) => {
+    (id: string, tab = "txn_details", mode: "view" | "edit" = "view") => {
       setDetailDefaultTab(tab);
       setDetailMode(mode);
       setDetailTransactionId(id);
@@ -95,13 +89,13 @@ export function useBankStatementsTabLogic({
     [],
   );
 
-  // 4. Sub-hooks (Presets & Filters)
+  // 3. Sub-hooks (Presets & Filters)
   const presets = useBankStatementPresets(tableId);
   const filtersHook = useBankStatementFilters({ type, tableId, t });
   const { branches, accountsData, filter, tableState, appliedFilters } =
     filtersHook;
 
-  // 5. Query Transactions API
+  // 4. Server-Side Query Transactions API (Auto sorted by backend)
   const queryParams = useMemo(() => {
     const hasColumnFilters =
       tableState.columnFilters &&
@@ -165,7 +159,7 @@ export function useBankStatementsTabLogic({
       }),
   });
 
-  // 6. Columns & Summary
+  // 5. Columns & Summary Subtotal
   const { columns } = useBankStatementColumns({
     type,
     page,
