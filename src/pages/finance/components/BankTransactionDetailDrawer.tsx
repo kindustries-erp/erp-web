@@ -21,7 +21,6 @@ import {
   BankTransactionDetailTab,
   type BankTransactionDetailViewMode,
 } from "@/modules/bank-statements/components/BankTransactionDetailTab";
-import { BankTransactionPartnerRightPanel } from "@/modules/bank-statements/components/BankTransactionPartnerRightPanel";
 import { BankTransactionGeneralInfoSection } from "@/modules/bank-statements/components/BankTransactionGeneralInfoSection";
 import {
   ModuleEntityCustomFieldsSection,
@@ -498,7 +497,7 @@ export function BankTransactionDetailDrawer({
     if (!transaction) return [];
 
     return [
-      // 1. Tab Chi tiết (Gồm 2 Sub-Tabs: Chi tiết & Chi tiết theo đối tượng)
+      // 1. Tab Chi tiết (Gồm 3 Sub-Tabs: Chi tiết, Chi tiết theo đối tượng, Biến động)
       {
         key: "txn_details",
         label: t("bankStatement.tabDetails", {
@@ -512,10 +511,6 @@ export function BankTransactionDetailDrawer({
             onViewModeChange={setSubTabKey}
           />
         ),
-        rightPanel:
-          subTabKey === "partner" ? (
-            <BankTransactionPartnerRightPanel transaction={transaction} />
-          ) : undefined,
       },
 
       // 2. Tab Hạch toán kế toán

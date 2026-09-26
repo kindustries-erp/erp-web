@@ -1,13 +1,14 @@
 import React, { useState, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { FileText, Building2 } from "lucide-react";
+import { FileText, Building2, TrendingUp } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { PillTabs } from "@/shared/components/PillTabs";
 import { bankStatementApi } from "@/modules/bank-statements/api/bankStatementApi";
 import { BankTransactionVoucherPreview } from "./components/BankTransactionVoucherPreview";
 import { BankTransactionPartnerSubTab } from "./BankTransactionPartnerSubTab";
+import { BankTransactionAnalyticsSubTab } from "./BankTransactionAnalyticsSubTab";
 
-export type BankTransactionDetailViewMode = "details" | "partner";
+export type BankTransactionDetailViewMode = "details" | "partner" | "analytics";
 
 export interface BankTransactionDetailTabProps {
   transaction: any | null;
@@ -78,6 +79,13 @@ export const BankTransactionDetailTab = React.memo(
           icon: Building2,
           badgeCount: partnerTotal > 0 ? partnerTotal : undefined,
         },
+        {
+          value: "analytics" as const,
+          label: t("bankStatement.subTabAnalytics", {
+            defaultValue: "3. Biến động",
+          }),
+          icon: TrendingUp,
+        },
       ],
       [t, partnerTotal],
     );
@@ -123,6 +131,13 @@ export const BankTransactionDetailTab = React.memo(
               transaction={transaction}
               onSelectTransaction={onSelectTransaction}
             />
+          </div>
+        )}
+
+        {/* ─── 4. SUB-TAB 3: BIẾN ĐỘNG DÒNG TIỀN & BIỂU ĐỒ ─── */}
+        {viewMode === "analytics" && (
+          <div className="flex-1 min-h-0 overflow-y-auto space-y-3 w-full">
+            <BankTransactionAnalyticsSubTab transaction={transaction} />
           </div>
         )}
       </div>

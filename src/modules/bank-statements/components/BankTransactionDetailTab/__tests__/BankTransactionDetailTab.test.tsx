@@ -21,8 +21,24 @@ vi.mock("@/modules/bank-statements/api/bankStatementApi", () => ({
       total: 1,
       totalPages: 1,
     }),
+    getDashboardStats: vi.fn().mockResolvedValue({
+      totalCashIn: 5000000,
+      totalCashOut: 0,
+      netCashFlow: 5000000,
+      cashTrend: [
+        {
+          label: "2026-08",
+          cashIn: 5000000,
+          cashOut: 0,
+        },
+      ],
+    }),
     getColumnOptions: vi.fn().mockResolvedValue([]),
   },
+}));
+
+vi.mock("@/shared/components/charts/BarChart", () => ({
+  BarChart: () => <div data-testid="mock-bar-chart">Mock BarChart</div>,
 }));
 
 describe("BankTransactionDetailTab", () => {
@@ -42,7 +58,7 @@ describe("BankTransactionDetailTab", () => {
       </QueryClientProvider>,
     );
 
-  it("renders Sub-Tabs PillTabs with 1. Chi tiết and 2. Chi tiết theo đối tượng", async () => {
+  it("renders Sub-Tabs PillTabs with 1. Chi tiết, 2. Chi tiết theo đối tượng and 3. Biến động", async () => {
     const mockTxn = {
       id: "txn-1",
       sourceType: "BANK",
@@ -65,6 +81,8 @@ describe("BankTransactionDetailTab", () => {
     expect(screen.getByText("1. Chi tiết")).toBeTruthy();
     // Sub-tab 2: Chi tiết theo đối tượng
     expect(screen.getByText("2. Chi tiết theo đối tượng")).toBeTruthy();
+    // Sub-tab 3: Biến động
+    expect(screen.getByText("3. Biến động")).toBeTruthy();
 
     // Default view mode renders Voucher Preview Card
     expect(screen.getByText("Xem trước chứng từ")).toBeTruthy();
@@ -101,5 +119,37 @@ describe("BankTransactionDetailTab", () => {
     });
 
     expect(handleViewModeChange).toHaveBeenCalledWith("partner");
+  });
+
+  it("switches to analytics sub-tab when clicked and shows analytics charts and KPIs", async () => {
+    const mockTxn = {
+      id: "txn-1",
+      sourceType: "BANK",
+      transDate: "2026-08-01T00:00:00.000Z",
+      referenceNumber: "REF-001",
+      description: "Thanh toan tien",
+      creditAmount: 1000000,
+      debitAmount: 0,
+      correspondentName: "Đối tác Công ty ABC",
+      correspondentAccount: "987654321",
+    };
+
+    const handleViewModeChange = vi.fn();
+
+    renderComponent({
+      transaction: mockTxn,
+      defaultViewMode: "details",
+      onViewModeChange: handleViewModeChange,
+    });
+
+    // Click sub-tab 3
+    fireEvent.click(screen.getByText("3. Biến động"));
+
+    await waitFor(() => {
+      expect(screen.getByText("Biểu đồ biến động theo tháng")).toBeTruthy();
+      expect(screen.getByText("Bảng kê biến động theo kỳ")).toBeTruthy();
+    });
+
+    expect(handleViewModeChange).toHaveBeenCalledWith("analytics");
   });
 });
