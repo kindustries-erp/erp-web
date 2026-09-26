@@ -103,14 +103,45 @@ export function useBankStatementsTabLogic({
 
   // 5. Query Transactions API
   const queryParams = useMemo(() => {
+    const hasColumnFilters =
+      tableState.columnFilters &&
+      Object.keys(tableState.columnFilters).length > 0 &&
+      Object.values(tableState.columnFilters).some(
+        (vals) => Array.isArray(vals) && vals.length > 0,
+      );
+
+    const hasColumnSearch =
+      tableState.columnSearch &&
+      Object.keys(tableState.columnSearch).length > 0 &&
+      Object.values(tableState.columnSearch).some(
+        (val) => typeof val === "string" && val.trim().length > 0,
+      );
+
+    const firstSort = tableState.sorts?.[0];
+    const sortBy = firstSort
+      ? firstSort.startsWith("-")
+        ? firstSort.substring(1)
+        : firstSort
+      : undefined;
+    const sortOrder = firstSort
+      ? firstSort.startsWith("-")
+        ? ("DESC" as const)
+        : ("ASC" as const)
+      : undefined;
+
     const params: any = {
       page,
       pageSize,
       sourceType: type === "bank" ? "BANK" : "CASH",
       ...appliedFilters,
-      columnFilters: tableState.columnFilters,
-      columnSearch: tableState.columnSearch,
-      sorts: tableState.sorts,
+      column_filters: hasColumnFilters
+        ? JSON.stringify(tableState.columnFilters)
+        : undefined,
+      column_search: hasColumnSearch
+        ? JSON.stringify(tableState.columnSearch)
+        : undefined,
+      sortBy,
+      sortOrder,
     };
 
     if (activeTransactionType !== "ALL") {
