@@ -60,6 +60,14 @@ export interface ModuleCategory {
   name: string;
   nameEn?: string | null;
   description?: string | null;
+  defaultDebitAccountId?: string | null;
+  defaultDebitAccount?: {
+    id: string;
+    accountCode?: string;
+    accountName?: string;
+    account_code?: string;
+    account_name?: string;
+  } | null;
   isActive?: boolean;
   isDeleted?: boolean;
   attributeDefs?: ModuleAttributeDef[];
@@ -73,6 +81,7 @@ export interface CreateModuleCategoryPayload {
   name: string;
   nameEn?: string;
   description?: string;
+  defaultDebitAccountId?: string | null;
   isActive?: boolean;
 }
 

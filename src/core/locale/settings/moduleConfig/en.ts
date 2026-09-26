@@ -199,4 +199,11 @@ export const moduleConfigEn = {
   selectCategoryPlaceholder: "-- Select category --",
   searchCategory: "Search category...",
   noCategorySelected: "— No category selected —",
+  defaultDebitAccount: "Default Debit Account (Accounting)",
+  defaultDebitAccountPlaceholder:
+    "Leave empty = use default TT99 / Fallback T0003",
+  defaultDebitAccountHint:
+    "Accounting account prioritized for Debit entry when Auto-Posting invoices in this category.",
+  defaultDebitAccountCol: "Debit Account",
+  coaPlaceholder: "Select accounting account...",
 };

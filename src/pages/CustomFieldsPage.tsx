@@ -515,6 +515,15 @@ export function CustomFieldsPage() {
               >
                 {row.categoryName || row.categoryCode || "Danh mục"}
               </span>
+              {row.defaultDebitAccountCode && (
+                <Badge
+                  variant="outline"
+                  className="ml-1 font-mono text-[10px] h-4 px-1 border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-foreground shrink-0"
+                  title={`${t("moduleConfig.defaultDebitAccountCol", "TK Nợ")}: ${row.defaultDebitAccountCode}${row.defaultDebitAccountName ? ` - ${row.defaultDebitAccountName}` : ""}`}
+                >
+                  {row.defaultDebitAccountCode}
+                </Badge>
+              )}
             </div>
           );
         },
