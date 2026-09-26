@@ -47,6 +47,7 @@ import { Button } from "@/shared/components/ui/Button";
 import { Badge } from "@/shared/components/ui/badge";
 import { Checkbox } from "@/shared/components/ui/checkbox";
 import { Combobox, type ComboboxOption } from "@/shared/components/Combobox";
+import { CoaCombobox } from "@/shared/components/CoaCombobox";
 import { DatePicker } from "@/shared/components/DatePicker";
 import { PillTabs } from "@/shared/components/PillTabs";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
@@ -752,6 +753,11 @@ export function ModuleCustomFieldConfigContent({
     Record<string, string>
   >({ vi: "", en: "" });
   const [newOptionParentValue, setNewOptionParentValue] = useState("");
+  const [newOptionAccountCode, setNewOptionAccountCode] = useState<
+    string | null
+  >(null);
+  const [newOptionDefaultDebitAccountId, setNewOptionDefaultDebitAccountId] =
+    useState<string | null>(null);
   const [deleteAttrTarget, setDeleteAttrTarget] =
     useState<ModuleAttributeDef | null>(null);
 
@@ -813,6 +819,34 @@ export function ModuleCustomFieldConfigContent({
   const [editingOptionOriginalLabelEn, setEditingOptionOriginalLabelEn] =
     useState("");
   const [editingOptionParentValue, setEditingOptionParentValue] = useState("");
+  const [editingOptionAccountCode, setEditingOptionAccountCode] = useState<
+    string | null
+  >(null);
+  const [
+    editingOptionDefaultDebitAccountId,
+    setEditingOptionDefaultDebitAccountId,
+  ] = useState<string | null>(null);
+  const [
+    editingOptionOriginalAccountCode,
+    setEditingOptionOriginalAccountCode,
+  ] = useState<string | null>(null);
+  const [
+    editingOptionOriginalDefaultDebitAccountId,
+    setEditingOptionOriginalDefaultDebitAccountId,
+  ] = useState<string | null>(null);
+
+  // Check if current attribute is an accounting / invoice category field that supports debit accounts
+  const isAccountingCategoryAttribute = useMemo(() => {
+    const key = (activeModuleKey || "").toUpperCase();
+    const code = (attrCode || "").toLowerCase();
+    return (
+      code === "category" ||
+      key.includes("INVOICE") ||
+      key.includes("BANK_TXN") ||
+      key.includes("JOURNAL") ||
+      domainKey === "FINANCE"
+    );
+  }, [attrCode, activeModuleKey, domainKey]);
 
   // State: Discard / Cancel Confirm Modal
   const [cancelConfirmTarget, setCancelConfirmTarget] = useState<
@@ -916,6 +950,12 @@ export function ModuleCustomFieldConfigContent({
     setEditingOptionOriginalLabel(curLabelVi);
     setEditingOptionOriginalLabelEn(curLabelEn);
     setEditingOptionParentValue(opt.parentValue || "");
+    setEditingOptionAccountCode(opt.accountCode || null);
+    setEditingOptionDefaultDebitAccountId(opt.defaultDebitAccountId || null);
+    setEditingOptionOriginalAccountCode(opt.accountCode || null);
+    setEditingOptionOriginalDefaultDebitAccountId(
+      opt.defaultDebitAccountId || null,
+    );
   };
 
   const handleSaveOptionLabel = (index: number) => {
@@ -949,6 +989,9 @@ export function ModuleCustomFieldConfigContent({
               labelEn: finalEn,
               labels: nextLabels,
               parentValue: editingOptionParentValue.trim() || undefined,
+              accountCode: editingOptionAccountCode || undefined,
+              defaultDebitAccountId:
+                editingOptionDefaultDebitAccountId || undefined,
             }
           : item,
       ),
@@ -961,6 +1004,10 @@ export function ModuleCustomFieldConfigContent({
     setEditingOptionOriginalLabel("");
     setEditingOptionOriginalLabelEn("");
     setEditingOptionParentValue("");
+    setEditingOptionAccountCode(null);
+    setEditingOptionDefaultDebitAccountId(null);
+    setEditingOptionOriginalAccountCode(null);
+    setEditingOptionOriginalDefaultDebitAccountId(null);
   };
 
   const handleCancelEditOption = () => {
@@ -968,7 +1015,9 @@ export function ModuleCustomFieldConfigContent({
       if (
         Object.keys(editingOptionOriginalLabels).length > 0 ||
         editingOptionOriginalLabel ||
-        editingOptionOriginalLabelEn
+        editingOptionOriginalLabelEn ||
+        editingOptionOriginalAccountCode ||
+        editingOptionOriginalDefaultDebitAccountId
       ) {
         setAttrOptions((prev) =>
           prev.map((item, i) =>
@@ -987,6 +1036,11 @@ export function ModuleCustomFieldConfigContent({
                     ...(item.labels || {}),
                     ...editingOptionOriginalLabels,
                   },
+                  accountCode:
+                    editingOptionOriginalAccountCode || item.accountCode,
+                  defaultDebitAccountId:
+                    editingOptionOriginalDefaultDebitAccountId ||
+                    item.defaultDebitAccountId,
                 }
               : item,
           ),
@@ -1001,6 +1055,10 @@ export function ModuleCustomFieldConfigContent({
     setEditingOptionOriginalLabel("");
     setEditingOptionOriginalLabelEn("");
     setEditingOptionParentValue("");
+    setEditingOptionAccountCode(null);
+    setEditingOptionDefaultDebitAccountId(null);
+    setEditingOptionOriginalAccountCode(null);
+    setEditingOptionOriginalDefaultDebitAccountId(null);
   };
 
   // Open Create Attribute form
@@ -1132,6 +1190,8 @@ export function ModuleCustomFieldConfigContent({
         labelEn: finalLEn,
         labels: nextLabels,
         parentValue: newOptionParentValue.trim() || undefined,
+        accountCode: newOptionAccountCode || undefined,
+        defaultDebitAccountId: newOptionDefaultDebitAccountId || undefined,
       },
     ]);
     setNewOptionKey("");
@@ -1139,6 +1199,8 @@ export function ModuleCustomFieldConfigContent({
     setNewOptionLabelEn("");
     setNewOptionLabels({ vi: "", en: "" });
     setNewOptionParentValue("");
+    setNewOptionAccountCode(null);
+    setNewOptionDefaultDebitAccountId(null);
   };
 
   const handleRemoveOption = (index: number) => {
@@ -1334,6 +1396,14 @@ export function ModuleCustomFieldConfigContent({
             en: finalOptEn,
           },
           parentValue: editingOptionParentValue.trim() || undefined,
+          accountCode:
+            editingOptionAccountCode ||
+            finalOptions[editingOptionIdx].accountCode ||
+            undefined,
+          defaultDebitAccountId:
+            editingOptionDefaultDebitAccountId ||
+            finalOptions[editingOptionIdx].defaultDebitAccountId ||
+            undefined,
         };
       }
     }
@@ -1362,6 +1432,8 @@ export function ModuleCustomFieldConfigContent({
             en: finalLEn,
           },
           parentValue: newOptionParentValue.trim() || undefined,
+          accountCode: newOptionAccountCode || undefined,
+          defaultDebitAccountId: newOptionDefaultDebitAccountId || undefined,
         });
       }
     }
@@ -1635,9 +1707,13 @@ export function ModuleCustomFieldConfigContent({
           <div
             className={cn(
               "grid gap-2 items-end bg-background/60 dark:bg-background/40 p-2.5 rounded-lg border border-border/40",
-              parentCategoryOptions.length > 0
-                ? "grid-cols-1 sm:grid-cols-[1fr_1.5fr_1.5fr_auto]"
-                : "grid-cols-1 sm:grid-cols-[1fr_2fr_auto]",
+              parentCategoryOptions.length > 0 && isAccountingCategoryAttribute
+                ? "grid-cols-1 sm:grid-cols-[1fr_1.5fr_1.2fr_1.5fr_auto]"
+                : parentCategoryOptions.length > 0
+                  ? "grid-cols-1 sm:grid-cols-[1fr_1.5fr_1.5fr_auto]"
+                  : isAccountingCategoryAttribute
+                    ? "grid-cols-1 sm:grid-cols-[1fr_1.8fr_1.5fr_auto]"
+                    : "grid-cols-1 sm:grid-cols-[1fr_2fr_auto]",
             )}
           >
             <div>
@@ -1696,6 +1772,32 @@ export function ModuleCustomFieldConfigContent({
                     placeholder={t(
                       "moduleConfig.parentCategoryAll",
                       "Tất cả / Chung",
+                    )}
+                    allowClear={true}
+                  />
+                </DrawerField>
+              </div>
+            )}
+
+            {isAccountingCategoryAttribute && (
+              <div>
+                <DrawerField
+                  label={t(
+                    "moduleConfig.optionAccountCode",
+                    "TK Nợ (Hạch toán)",
+                  )}
+                >
+                  <CoaCombobox
+                    value={
+                      newOptionAccountCode || newOptionDefaultDebitAccountId
+                    }
+                    onSelectAccount={(acc) => {
+                      setNewOptionAccountCode(acc?.accountCode || null);
+                      setNewOptionDefaultDebitAccountId(acc?.id || null);
+                    }}
+                    placeholder={t(
+                      "moduleConfig.coaPlaceholderShort",
+                      "TK Nợ (vd: 1561)...",
                     )}
                     allowClear={true}
                   />
@@ -1764,6 +1866,29 @@ export function ModuleCustomFieldConfigContent({
                           />
                         </div>
                       )}
+                      {isAccountingCategoryAttribute && (
+                        <div className="min-w-[150px] sm:min-w-[190px]">
+                          <CoaCombobox
+                            value={
+                              editingOptionAccountCode ||
+                              editingOptionDefaultDebitAccountId
+                            }
+                            onSelectAccount={(acc) => {
+                              setEditingOptionAccountCode(
+                                acc?.accountCode || null,
+                              );
+                              setEditingOptionDefaultDebitAccountId(
+                                acc?.id || null,
+                              );
+                            }}
+                            placeholder={t(
+                              "moduleConfig.coaPlaceholderShort",
+                              "TK Nợ...",
+                            )}
+                            allowClear={true}
+                          />
+                        </div>
+                      )}
                       <div className="flex items-center gap-1 self-end sm:self-center">
                         <button
                           type="button"
@@ -1799,6 +1924,18 @@ export function ModuleCustomFieldConfigContent({
                     <span className="text-foreground font-medium">
                       {optionLabelCurrent}
                     </span>
+
+                    {opt.accountCode && (
+                      <span
+                        className="inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-mono font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
+                        title={t(
+                          "moduleConfig.defaultDebitAccountBadge",
+                          "Tài khoản Nợ mặc định: {{code}}",
+                        ).replace("{{code}}", opt.accountCode)}
+                      >
+                        TK {opt.accountCode}
+                      </span>
+                    )}
 
                     {opt.parentValue && (
                       <button

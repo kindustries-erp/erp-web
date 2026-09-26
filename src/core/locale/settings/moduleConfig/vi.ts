@@ -204,4 +204,7 @@ export const moduleConfigVi = {
     "Tài khoản kế toán được ưu tiên sinh bút toán Nợ khi Auto-Post hóa đơn thuộc danh mục này.",
   defaultDebitAccountCol: "TK Nợ",
   coaPlaceholder: "Chọn tài khoản kế toán...",
+  optionAccountCode: "TK Nợ (Hạch toán)",
+  coaPlaceholderShort: "TK Nợ (vd: 1561)...",
+  defaultDebitAccountBadge: "Tài khoản Nợ mặc định: {{code}}",
 };

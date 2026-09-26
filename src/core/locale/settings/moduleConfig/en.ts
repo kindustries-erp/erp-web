@@ -206,4 +206,7 @@ export const moduleConfigEn = {
     "Accounting account prioritized for Debit entry when Auto-Posting invoices in this category.",
   defaultDebitAccountCol: "Debit Account",
   coaPlaceholder: "Select accounting account...",
+  optionAccountCode: "Debit Account",
+  coaPlaceholderShort: "Debit Acc (e.g. 1561)...",
+  defaultDebitAccountBadge: "Default Debit Account: {{code}}",
 };
