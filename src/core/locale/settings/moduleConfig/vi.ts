@@ -197,4 +197,11 @@ export const moduleConfigVi = {
   selectCategoryPlaceholder: "-- Chọn danh mục --",
   searchCategory: "Tìm kiếm danh mục...",
   noCategorySelected: "— Chưa chọn danh mục —",
+  defaultDebitAccount: "Tài khoản Nợ mặc định (hạch toán)",
+  defaultDebitAccountPlaceholder:
+    "Để trống = dùng TT99 mặc định / Fallback T0003",
+  defaultDebitAccountHint:
+    "Tài khoản kế toán được ưu tiên sinh bút toán Nợ khi Auto-Post hóa đơn thuộc danh mục này.",
+  defaultDebitAccountCol: "TK Nợ",
+  coaPlaceholder: "Chọn tài khoản kế toán...",
 };
