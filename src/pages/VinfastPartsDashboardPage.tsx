@@ -3,6 +3,7 @@ import { DashboardTemplate } from "@/shared/components/DashboardTemplate";
 import { ComingSoon } from "@/pages/ComingSoon";
 import { useFilterPanel } from "@/shared/hooks/useFilterPanel";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { useQuery, useQueryClient, useIsFetching } from "@tanstack/react-query";
 import api from "@/core/api/axiosInstance";
 import { Panel } from "@/shared/components/Panel";
@@ -28,6 +29,7 @@ export function VinfastPartsDashboardPage({
   activeTab,
   onTabChange,
 }: VinfastPartsDashboardPageProps = {}) {
+  const { t } = useTranslation(["vinfastParts", "common"]);
   const hasVinfastPerm = useHasPermission(ErpResource.VINFAST, ErpAction.READ);
 
   const queryClient = useQueryClient();
@@ -42,17 +44,17 @@ export function VinfastPartsDashboardPage({
       custom: [
         {
           key: "groupBy",
-          label: "Chu kỳ",
-          placeholder: "Chọn chu kỳ",
+          label: t("vinfastParts:groupBy", "Chu kỳ"),
+          placeholder: t("vinfastParts:selectGroupBy", "Chọn chu kỳ"),
           options: [
-            { value: "month", label: "Theo tháng" },
-            { value: "week", label: "Theo tuần" },
+            { value: "month", label: t("vinfastParts:byMonth", "Theo tháng") },
+            { value: "week", label: t("vinfastParts:byWeek", "Theo tuần") },
           ],
           initialValue: "month",
         },
       ],
     };
-  }, []);
+  }, [t]);
 
   const filter = useFilterPanel(filterConfig, () => {});
   const groupBy = filter.state.custom.groupBy || "month";
@@ -123,7 +125,7 @@ export function VinfastPartsDashboardPage({
       <div className="pt-3 border-t border-border/50 grid grid-cols-2 gap-2">
         <div className="flex flex-col min-w-0">
           <span className="text-[10px] text-muted-foreground uppercase tracking-wider truncate">
-            Ô tô
+            {t("vinfastParts:car", "Ô tô")}
           </span>
           <span className="font-semibold text-foreground text-sm mt-0.5 truncate">
             {money(carVal)}
@@ -131,7 +133,7 @@ export function VinfastPartsDashboardPage({
         </div>
         <div className="flex flex-col min-w-0">
           <span className="text-[10px] text-muted-foreground uppercase tracking-wider truncate">
-            Xe máy
+            {t("vinfastParts:motorbike", "Xe máy")}
           </span>
           <span className="font-semibold text-foreground text-sm mt-0.5 truncate">
             {money(motorVal)}
@@ -147,8 +149,11 @@ export function VinfastPartsDashboardPage({
 
   return (
     <DashboardTemplate
-      title="Tổng quan phụ tùng"
-      desc="Báo cáo tổng hợp tình hình mua bán phụ tùng Vinfast"
+      title={t("vinfastParts:title", "Tổng quan phụ tùng")}
+      desc={t(
+        "vinfastParts:desc",
+        "Báo cáo tổng hợp tình hình mua bán phụ tùng Vinfast",
+      )}
       icon={<LayoutDashboard className="h-4 w-4" />}
       tabs={tabs}
       activeTab={activeTab}
@@ -169,7 +174,7 @@ export function VinfastPartsDashboardPage({
         <div className="grid gap-4 md:grid-cols-4">
           <KpiCard
             compact
-            label="Doanh thu"
+            label={t("vinfastParts:kpiRevenue", "Doanh thu")}
             value={`${money(summary.revenue)} đ`}
             rightNode={
               <KpiSparkline data={charts.revenue} labels={chartLabels} />
@@ -178,14 +183,14 @@ export function VinfastPartsDashboardPage({
           />
           <KpiCard
             compact
-            label="Giá vốn (FIFO)"
+            label={t("vinfastParts:kpiCogs", "Giá vốn (FIFO)")}
             value={`${money(summary.cogs)} đ`}
             rightNode={<KpiSparkline data={charts.cogs} labels={chartLabels} />}
             bottomNode={renderBottomNode("cogs")}
           />
           <KpiCard
             compact
-            label="Lợi nhuận gộp"
+            label={t("vinfastParts:kpiGrossProfit", "Lợi nhuận gộp")}
             value={`${money(summary.grossProfit)} đ`}
             rightNode={
               <KpiSparkline data={charts.grossProfit} labels={chartLabels} />
@@ -194,7 +199,7 @@ export function VinfastPartsDashboardPage({
           />
           <KpiCard
             compact
-            label="Giá trị tồn kho"
+            label={t("vinfastParts:kpiInventoryValue", "Giá trị tồn kho")}
             value={`${money(summary.inventoryValue)} đ`}
             rightNode={
               <KpiSparkline data={charts.inventoryValue} labels={chartLabels} />
@@ -205,12 +210,12 @@ export function VinfastPartsDashboardPage({
 
         <div>
           <h3 className="text-lg font-semibold mb-4">
-            Biến động Mua / Bán phụ tùng
+            {t("vinfastParts:trendTitle", "Biến động Mua / Bán phụ tùng")}
           </h3>
 
           <div className="mb-4">
             <VinfastPartTrendChart
-              title="Tất cả phụ tùng (Tổng hợp)"
+              title={t("vinfastParts:chartAll", "Tất cả phụ tùng (Tổng hợp)")}
               vehicleType="all"
               filterState={filter.state}
               groupBy={groupBy as string}
@@ -219,13 +224,13 @@ export function VinfastPartsDashboardPage({
 
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
             <VinfastPartTrendChart
-              title="Phụ tùng Ô tô"
+              title={t("vinfastParts:chartCar", "Phụ tùng Ô tô")}
               vehicleType="CAR"
               filterState={filter.state}
               groupBy={groupBy as string}
             />
             <VinfastPartTrendChart
-              title="Phụ tùng Xe máy"
+              title={t("vinfastParts:chartMotorbike", "Phụ tùng Xe máy")}
               vehicleType="MOTORBIKE"
               filterState={filter.state}
               groupBy={groupBy as string}
@@ -254,6 +259,7 @@ export function VinfastPartTrendChart({
   chartHeight?: number;
   variant?: "panel" | "drawer";
 }) {
+  const { t } = useTranslation(["vinfastParts", "common"]);
   const { data, isLoading } = useQuery({
     queryKey: [
       "vinfast-parts-dashboard",
@@ -303,19 +309,19 @@ export function VinfastPartTrendChart({
                 borderColor: lineProfit,
                 borderWidth: 2,
                 fill: false,
-                label: "Lợi nhuận gộp",
+                label: t("vinfastParts:trendProfit", "Lợi nhuận gộp"),
               },
               {
                 type: "bar",
                 data: trendBuy,
                 color: colorExpense,
-                label: "Giá vốn",
+                label: t("vinfastParts:trendBuy", "Giá vốn"),
               },
               {
                 type: "bar",
                 data: trendSell,
                 color: colorRevenue,
-                label: "Doanh thu",
+                label: t("vinfastParts:trendSell", "Doanh thu"),
               },
             ]}
           />
@@ -323,14 +329,24 @@ export function VinfastPartTrendChart({
           <ChartSkeleton type="bar" />
         ) : (
           <div className="flex items-center justify-center h-full text-sm text-[color:var(--muted-fg)]">
-            Chưa có dữ liệu
+            {t("common:noData", "Chưa có dữ liệu")}
           </div>
         )}
       </div>
       <div className="flex gap-4 mt-[10px] justify-center flex-wrap">
-        <LegendItem color={colorExpense} label="Giá vốn" />
-        <LegendItem color={colorRevenue} label="Doanh thu" />
-        <LegendItem color={lineProfit} label="Lợi nhuận gộp" isLine={true} />
+        <LegendItem
+          color={colorExpense}
+          label={t("vinfastParts:trendBuy", "Giá vốn")}
+        />
+        <LegendItem
+          color={colorRevenue}
+          label={t("vinfastParts:trendSell", "Doanh thu")}
+        />
+        <LegendItem
+          color={lineProfit}
+          label={t("vinfastParts:trendProfit", "Lợi nhuận gộp")}
+          isLine={true}
+        />
       </div>
     </>
   );
