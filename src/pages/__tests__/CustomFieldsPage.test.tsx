@@ -16,12 +16,14 @@ window.ResizeObserver = class ResizeObserver {
 vi.mock("@/core/api/moduleConfigApi", () => ({
   moduleConfigApi: {
     getGlobalAttributeDefs: vi.fn(),
+    getAttributeDefs: vi.fn().mockResolvedValue([]),
     getCategories: vi.fn(),
     createAttributeDef: vi.fn(),
     updateAttributeDef: vi.fn(),
     deleteAttributeDef: vi.fn(),
   },
   resolveAttrName: (def: any) => def?.name || def?.code,
+  resolveOptionLabel: (opt: any) => opt?.label || opt?.value,
   resolveCategoryName: (cat: any) => cat?.name || cat?.code,
 }));
 
@@ -186,7 +188,7 @@ describe("CustomFieldsPage", () => {
     expect(screen.getAllByText("Tùy chọn").length).toBeGreaterThan(0);
   });
 
-  it("opens CustomFieldFormDrawer when clicking 'Tạo trường tùy chỉnh' button", async () => {
+  it("opens ModuleCustomFieldConfigDrawer when clicking 'Tạo trường tùy chỉnh' button", async () => {
     renderComponent();
 
     const createButton = await screen.findByRole(
@@ -196,10 +198,10 @@ describe("CustomFieldsPage", () => {
     );
     fireEvent.click(createButton);
 
-    // Form drawer should be open with create title
+    // Module Custom Field Config Drawer should be open
     expect(
       await screen.findByText(
-        "Tạo trường tùy chỉnh mới",
+        /Cấu hình trường tùy chỉnh/i,
         {},
         { timeout: 4000 },
       ),

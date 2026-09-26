@@ -12,12 +12,17 @@ export function useCoaComboboxLogic(filterActiveOnly: boolean = true) {
     queryFn: async () => {
       const res = await accountingApi.getChartOfAccounts({
         isActive: filterActiveOnly ? true : undefined,
+        pageSize: 500,
       });
       const list: ChartOfAccountItem[] = Array.isArray(res)
         ? res
-        : Array.isArray(res?.data)
-          ? res.data
-          : [];
+        : Array.isArray(res?.items)
+          ? res.items
+          : Array.isArray(res?.data)
+            ? res.data
+            : Array.isArray(res?.data?.items)
+              ? res.data.items
+              : [];
       return list;
     },
     staleTime: 5 * 60 * 1000,

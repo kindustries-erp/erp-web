@@ -677,6 +677,7 @@ export interface ModuleCustomFieldConfigContentProps {
   isOpen: boolean;
   onDirtyChange?: (isDirty: boolean) => void;
   hidePillTabs?: boolean;
+  initialAttrCode?: string | null;
 }
 
 export function ModuleCustomFieldConfigContent({
@@ -686,6 +687,7 @@ export function ModuleCustomFieldConfigContent({
   isOpen,
   onDirtyChange,
   hidePillTabs = false,
+  initialAttrCode,
 }: ModuleCustomFieldConfigContentProps) {
   const t = useT();
   const locale = useAppStore((s) => s.locale);
@@ -1122,6 +1124,18 @@ export function ModuleCustomFieldConfigContent({
     setNewOptionParentValue("");
     handleCancelEditOption();
   };
+
+  // Auto-focus and open edit form for initialAttrCode if requested
+  useEffect(() => {
+    if (isOpen && initialAttrCode && globalDefs.length > 0) {
+      const found = globalDefs.find(
+        (d) => d.code.toLowerCase() === initialAttrCode.toLowerCase(),
+      );
+      if (found && editingAttr?.id !== found.id) {
+        openEditAttr(found);
+      }
+    }
+  }, [isOpen, initialAttrCode, globalDefs]);
 
   // Reset attribute form when active module changes
   useEffect(() => {
@@ -2532,6 +2546,7 @@ export interface ModuleCustomFieldConfigDrawerProps {
   moduleKey?: ModuleKey | null;
   moduleLabel?: string;
   initialTab?: ModuleKey | string;
+  initialAttrCode?: string | null;
 }
 
 export function ModuleCustomFieldConfigDrawer({
@@ -2541,6 +2556,7 @@ export function ModuleCustomFieldConfigDrawer({
   moduleKey,
   moduleLabel,
   initialTab,
+  initialAttrCode,
 }: ModuleCustomFieldConfigDrawerProps) {
   const t = useT();
 
@@ -2647,6 +2663,7 @@ export function ModuleCustomFieldConfigDrawer({
             onSelectModule={setActiveModuleKey}
             isOpen={open}
             onDirtyChange={setIsContentDirty}
+            initialAttrCode={initialAttrCode}
           />
         ),
       };

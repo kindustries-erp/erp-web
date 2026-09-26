@@ -38,12 +38,12 @@ import {
 import {
   ERP_MODULE_REGISTRY,
   ERP_DOMAIN_REGISTRY,
+  ModuleCustomFieldConfigDrawer,
 } from "@/shared/components/ModuleCustomFieldConfigDrawer";
 import {
   useCustomFieldsList,
   type CustomFieldRow,
 } from "./settings/hooks/useCustomFieldsList";
-import { CustomFieldFormDrawer } from "./settings/components/CustomFieldFormDrawer";
 
 const FIELD_TYPE_BADGES: Record<
   ModuleAttributeFieldType,
@@ -138,26 +138,37 @@ export function CustomFieldsPage() {
     return () => setCustomBreadcrumbs(null);
   }, [setCustomBreadcrumbs]);
 
-  // Drawer Management
+  // Drawer Management (Unified ModuleCustomFieldConfigDrawer)
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [drawerMode, setDrawerMode] = useState<"view" | "edit" | "create">(
-    "view",
-  );
-  const [selectedRow, setSelectedRow] = useState<CustomFieldRow | null>(null);
+  const [selectedModuleKey, setSelectedModuleKey] =
+    useState<string>("INVOICE_IN");
+  const [selectedAttrCode, setSelectedAttrCode] = useState<string | null>(null);
 
   // Delete Confirm Modal
   const [deleteTarget, setDeleteTarget] = useState<CustomFieldRow | null>(null);
   const [deleting, setDeleting] = useState(false);
 
   const openCreate = () => {
-    setSelectedRow(null);
-    setDrawerMode("create");
+    const defaultKey =
+      listHook.activeModule !== "ALL"
+        ? listHook.activeModule
+        : listHook.activeDomain === "FINANCE"
+          ? "INVOICE_IN"
+          : listHook.activeDomain === "COMMERCE"
+            ? "GOODS_RECEIPT"
+            : listHook.activeDomain === "PRODUCTION"
+              ? "BOM"
+              : listHook.activeDomain === "GARAGE"
+                ? "GARAGE_CASE"
+                : "INVOICE_IN";
+    setSelectedModuleKey(defaultKey);
+    setSelectedAttrCode(null);
     setDrawerOpen(true);
   };
 
-  const openDetail = (row: CustomFieldRow, mode: "view" | "edit" = "view") => {
-    setSelectedRow(row);
-    setDrawerMode(mode);
+  const openDetail = (row: CustomFieldRow, _mode: "view" | "edit" = "view") => {
+    setSelectedModuleKey(row.moduleKey);
+    setSelectedAttrCode(row.code);
     setDrawerOpen(true);
   };
 
@@ -799,19 +810,16 @@ export function CustomFieldsPage() {
         rowActions={getRowActions}
       />
 
-      {/* Detail & Edit Drawer */}
-      <CustomFieldFormDrawer
+      {/* Unified Custom Field Config Drawer */}
+      <ModuleCustomFieldConfigDrawer
         open={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
-        mode={drawerMode}
-        setMode={setDrawerMode}
-        fieldRow={selectedRow}
-        defaultModuleKey={
-          listHook.activeModule !== "ALL"
-            ? listHook.activeModule
-            : "GOODS_RECEIPT"
-        }
-        onSuccess={() => listHook.refetch()}
+        onClose={() => {
+          setDrawerOpen(false);
+          setSelectedAttrCode(null);
+          listHook.refetch();
+        }}
+        initialTab={selectedModuleKey}
+        initialAttrCode={selectedAttrCode}
       />
 
       {/* Confirm Modal for Field Delete */}
