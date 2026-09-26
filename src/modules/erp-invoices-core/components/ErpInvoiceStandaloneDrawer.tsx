@@ -1,7 +1,6 @@
 import React, { useEffect } from "react";
 import { ErpInvoiceInternalDrawer } from "./ErpInvoiceInternalDrawer";
 import { useErpInvoiceForm } from "../hooks/useErpInvoiceForm";
-import { VietnamInvoiceTemplate } from "./VietnamInvoiceTemplate";
 import { type ErpInvoice } from "../api/erpInvoicesCoreApi";
 
 import {
@@ -100,14 +99,7 @@ export function ErpInvoiceStandaloneDrawer({
                   {formHook.formError}
                 </div>
               )}
-              <ErpInvoiceInternalMain
-                detailInvoice={formHook.detailInvoice}
-                invoicePreview={
-                  formHook.detailInvoice ? (
-                    <VietnamInvoiceTemplate invoice={formHook.detailInvoice} />
-                  ) : undefined
-                }
-              />
+              <ErpInvoiceInternalMain detailInvoice={formHook.detailInvoice} />
             </>
           )}
         </div>

@@ -53,7 +53,7 @@ describe("ErpInvoiceInternalMain", () => {
     vi.clearAllMocks();
   });
 
-  it("renders template preview when previewMode is template", () => {
+  it("renders custom preview when provided in template mode", () => {
     renderWithContext(
       <ErpInvoiceInternalMain
         detailInvoice={{ id: "inv-1" } as any}
@@ -63,6 +63,29 @@ describe("ErpInvoiceInternalMain", () => {
     );
 
     expect(screen.getByTestId("custom-preview")).toBeInTheDocument();
+  });
+
+  it("renders ErpInvoiceDetailLinesTable by default when invoicePreview is omitted in template mode", () => {
+    const mockInvoice: any = {
+      id: "inv-1",
+      invoiceNo: "0006362",
+      items: [
+        {
+          id: "item-1",
+          description: "Bánh trung thu thập cẩm",
+          quantity: 10,
+          unitPrice: 50000,
+          totalAmount: 500000,
+        },
+      ],
+    };
+
+    renderWithContext(
+      <ErpInvoiceInternalMain detailInvoice={mockInvoice} />,
+      "template",
+    );
+
+    expect(screen.getByText("Bánh trung thu thập cẩm")).toBeInTheDocument();
   });
 
   it("renders empty PDF state when previewMode is pdf and invoice has no pdf attachments or keys", () => {
