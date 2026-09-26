@@ -166,7 +166,7 @@ export function CustomFieldsPage() {
     setDrawerOpen(true);
   };
 
-  const openDetail = (row: CustomFieldRow, _mode: "view" | "edit" = "view") => {
+  const openDetail = (row: CustomFieldRow) => {
     setSelectedModuleKey(row.moduleKey);
     setSelectedAttrCode(row.code);
     setDrawerOpen(true);
@@ -403,7 +403,7 @@ export function CustomFieldsPage() {
               enableCopy={true}
               tooltip={true}
               textClassName="font-mono text-xs font-semibold text-primary select-text"
-              onDetailClick={() => openDetail(row, "view")}
+              onDetailClick={() => openDetail(row)}
             />
             {row.isSystem && (
               <span
@@ -726,7 +726,7 @@ export function CustomFieldsPage() {
           {
             label: t("common.viewDetail", "Xem chi tiết"),
             icon: <Eye className="w-4 h-4" />,
-            onClick: () => openDetail(row, "view"),
+            onClick: () => openDetail(row),
           },
         ],
       },
@@ -736,7 +736,7 @@ export function CustomFieldsPage() {
           {
             label: t("common.edit", "Chỉnh sửa"),
             icon: <Pencil className="w-4 h-4" />,
-            onClick: () => openDetail(row, "edit"),
+            onClick: () => openDetail(row),
           },
           ...(!row.isSystem
             ? [
