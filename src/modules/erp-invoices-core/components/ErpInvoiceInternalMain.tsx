@@ -1,6 +1,6 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { FileDown, Boxes } from "lucide-react";
+import { Paperclip, Boxes } from "lucide-react";
 import { DrawerSection } from "@/shared/components/DrawerModal";
 import {
   useInvoicePreviewMode,
@@ -26,12 +26,20 @@ export interface ErpInvoiceInternalMainProps {
   invoicePreview?: React.ReactNode;
   hideLinkedDocuments?: boolean;
   previewMode?: InvoiceDetailViewMode;
+  onLinkExistingAttachment?: (attachmentId: string) => void;
+  onUnlinkAttachment?: (attachmentId: string) => void;
 }
 
 export function ErpInvoiceInternalMain({
   detailInvoice,
   invoicePreview,
   previewMode: explicitPreviewMode,
+  form,
+  editMode,
+  fieldSet,
+  onLinkExistingAttachment,
+  onUnlinkAttachment,
+  onRefreshDetail,
 }: ErpInvoiceInternalMainProps) {
   const { t } = useTranslation("erpInvoices");
   const previewContext = useInvoicePreviewMode();
@@ -47,8 +55,8 @@ export function ErpInvoiceInternalMain({
           <span className="flex items-center gap-1.5 text-xs font-bold text-foreground">
             {activeMode === "pdf" ? (
               <>
-                <FileDown className="w-3.5 h-3.5 text-primary" />
-                {t("previewPdfTitle", "Tệp PDF hóa đơn gốc")}
+                <Paperclip className="w-3.5 h-3.5 text-primary" />
+                {t("tabAttachmentsAndPdfTitle", "Tài liệu đính kèm & Tệp PDF")}
               </>
             ) : (
               <>
@@ -65,7 +73,15 @@ export function ErpInvoiceInternalMain({
       >
         <div className="w-full">
           {activeMode === "pdf" ? (
-            <ErpInvoicePdfPreview detailInvoice={detailInvoice} />
+            <ErpInvoicePdfPreview
+              detailInvoice={detailInvoice}
+              form={form}
+              editMode={editMode}
+              fieldSet={fieldSet}
+              onLinkExistingAttachment={onLinkExistingAttachment}
+              onUnlinkAttachment={onUnlinkAttachment}
+              onRefreshDetail={onRefreshDetail}
+            />
           ) : (
             <div className="w-full">
               {invoicePreview ??

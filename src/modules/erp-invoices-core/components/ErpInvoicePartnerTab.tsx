@@ -5,7 +5,6 @@ import { useQuery } from "@tanstack/react-query";
 import {
   Building2,
   FileText,
-  FileDown,
   TrendingUp,
   TrendingDown,
   CreditCard,
@@ -47,20 +46,14 @@ import {
   InvoicePreviewModeContext,
   type InvoiceDetailViewMode,
 } from "../context/InvoicePreviewModeContext";
-import { ErpInvoiceAttachmentsSubTab } from "./ErpInvoiceAttachmentsSubTab";
 
 export interface ErpInvoicePartnerTabProps {
   detailInvoice: ErpInvoice | null;
   direction?: "IN" | "OUT";
-  defaultViewMode?:
-    | "details"
-    | "invoices"
-    | "lines"
-    | "analytics"
-    | "attachments";
+  defaultViewMode?: "details" | "invoices" | "lines" | "analytics";
   children?: React.ReactNode;
   onViewModeChange?: (
-    mode: "details" | "invoices" | "lines" | "analytics" | "attachments",
+    mode: "details" | "invoices" | "lines" | "analytics",
   ) => void;
   form?: any;
   editMode?: boolean;
@@ -83,10 +76,6 @@ export const ErpInvoicePartnerTab = React.memo(function ErpInvoicePartnerTab({
   children,
   onViewModeChange,
   form,
-  editMode = false,
-  fieldSet,
-  onLinkExistingAttachment,
-  onUnlinkAttachment,
 }: ErpInvoicePartnerTabProps) {
   const { t } = useTranslation("erpInvoices");
   const [previewSubInvoice, setPreviewSubInvoice] = useState<ErpInvoice | null>(
@@ -104,14 +93,14 @@ export const ErpInvoicePartnerTab = React.memo(function ErpInvoicePartnerTab({
   }, []);
 
   const [viewMode, setViewMode] = useState<
-    "details" | "invoices" | "lines" | "analytics" | "attachments"
+    "details" | "invoices" | "lines" | "analytics"
   >(() => {
     if (defaultViewMode) return defaultViewMode;
     return isUrlLinesTab ? "lines" : "details";
   });
 
   const handleViewModeChange = useCallback(
-    (mode: "details" | "invoices" | "lines" | "analytics" | "attachments") => {
+    (mode: "details" | "invoices" | "lines" | "analytics") => {
       setViewMode(mode);
       onViewModeChange?.(mode);
     },
@@ -1179,11 +1168,9 @@ export const ErpInvoicePartnerTab = React.memo(function ErpInvoicePartnerTab({
     <div className="space-y-3 pb-2 flex-1 min-w-0 w-full flex flex-col">
       {/* ─── 1. THANH ĐIỀU HƯỚNG TỔNG HỢP: SUB-TABS + QUICK ACTIONS ─── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pt-0.5 w-full">
-        {/* Bên trái: Sub-Tabs (1. Chi tiết / 2. Danh sách hóa đơn / 3. Chi tiết HHDV / 4. Biến động / 5. Tài liệu đính kèm) */}
+        {/* Bên trái: Sub-Tabs (1. Chi tiết / 2. Danh sách hóa đơn / 3. Chi tiết HHDV / 4. Biến động) */}
         <div className="flex items-center overflow-x-auto scrollbar-none max-w-full pb-1 -mb-1 shrink-0">
-          <PillTabs<
-            "details" | "invoices" | "lines" | "analytics" | "attachments"
-          >
+          <PillTabs<"details" | "invoices" | "lines" | "analytics">
             size="sm"
             value={viewMode}
             onValueChange={handleViewModeChange}
@@ -1210,12 +1197,6 @@ export const ErpInvoicePartnerTab = React.memo(function ErpInvoicePartnerTab({
                 label: t("tabCashflowAnalytics", "4. Biến động"),
                 icon: TrendingUp,
               },
-              {
-                value: "attachments",
-                label: t("tabAttachments", "5. Tài liệu đính kèm"),
-                icon: Paperclip,
-                badgeCount: attachmentCount > 0 ? attachmentCount : undefined,
-              },
             ]}
           />
         </div>
@@ -1236,9 +1217,10 @@ export const ErpInvoicePartnerTab = React.memo(function ErpInvoicePartnerTab({
                 },
                 {
                   value: "pdf",
-                  label: t("viewModePdf", "File PDF"),
-                  icon: FileDown,
-                  dot: hasPdf,
+                  label: t("viewModeAttachmentsAndPdf", "Tài liệu & PDF"),
+                  icon: Paperclip,
+                  badgeCount: attachmentCount > 0 ? attachmentCount : undefined,
+                  dot: hasPdf && attachmentCount === 0,
                   dotColor: "emerald",
                 },
               ]}
@@ -1290,12 +1272,6 @@ export const ErpInvoicePartnerTab = React.memo(function ErpInvoicePartnerTab({
           {viewMode === "analytics" && cashTrendLabels.length > 0 && (
             <span className="text-xs font-normal text-muted-foreground">
               {cashTrendLabels.length} {t("periodsCount", "kỳ phát sinh")}
-            </span>
-          )}
-
-          {viewMode === "attachments" && attachmentCount > 0 && (
-            <span className="text-xs font-normal text-muted-foreground">
-              {attachmentCount} {t("attachmentsCount", "tài liệu")}
             </span>
           )}
         </div>
@@ -1626,18 +1602,6 @@ export const ErpInvoicePartnerTab = React.memo(function ErpInvoicePartnerTab({
             )}
           </div>
         </DrawerSection>
-      )}
-
-      {/* ─── 5. NỘI DUNG TÀI LIỆU ĐÍNH KÈM (ATTACHMENTS SUB-TAB) ─── */}
-      {viewMode === "attachments" && (
-        <ErpInvoiceAttachmentsSubTab
-          invoice={detailInvoice}
-          form={form}
-          editMode={editMode}
-          fieldSet={fieldSet}
-          onLinkExistingAttachment={onLinkExistingAttachment}
-          onUnlinkAttachment={onUnlinkAttachment}
-        />
       )}
 
       {/* Sub-drawer for previewing another invoice from partner's list */}
