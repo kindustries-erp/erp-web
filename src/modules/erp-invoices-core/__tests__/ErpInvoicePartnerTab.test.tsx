@@ -108,7 +108,7 @@ describe("ErpInvoicePartnerTab", () => {
     vi.clearAllMocks();
   });
 
-  it("renders 5 subtabs: '1. Chi tiết', '2. Chi tiết theo đối tượng', '3. Chi tiết HHDV', '4. Biến động', and '5. Tài liệu đính kèm'", async () => {
+  it("renders 4 subtabs: '1. Chi tiết', '2. Chi tiết theo đối tượng', '3. Chi tiết HHDV', and '4. Biến động'", async () => {
     renderWithClient(
       <ErpInvoicePartnerTab detailInvoice={mockInvoice as any} direction="IN">
         <div data-testid="detail-children">Nội dung chi tiết test</div>
@@ -119,10 +119,9 @@ describe("ErpInvoicePartnerTab", () => {
     expect(screen.getByText("2. Chi tiết theo đối tượng")).toBeInTheDocument();
     expect(screen.getByText("3. Chi tiết HHDV")).toBeInTheDocument();
     expect(screen.getByText("4. Biến động")).toBeInTheDocument();
-    expect(screen.getByText("5. Tài liệu đính kèm")).toBeInTheDocument();
   });
 
-  it("defaults to '1. Chi tiết', renders children and view mode toggle buttons (Xem trước HĐ thuần / File PDF)", async () => {
+  it("defaults to '1. Chi tiết', renders children and view mode toggle buttons (Xem trước HĐ thuần / Tài liệu & PDF)", async () => {
     renderWithClient(
       <ErpInvoicePartnerTab detailInvoice={mockInvoice as any} direction="IN">
         <div data-testid="detail-children">Nội dung chi tiết test</div>
@@ -131,7 +130,7 @@ describe("ErpInvoicePartnerTab", () => {
 
     expect(screen.getByTestId("detail-children")).toBeInTheDocument();
     expect(screen.getByText("Xem trước HĐ thuần")).toBeInTheDocument();
-    expect(screen.getByText("File PDF")).toBeInTheDocument();
+    expect(screen.getByText("Tài liệu & PDF")).toBeInTheDocument();
   });
 
   it("switches to '2. Chi tiết theo đối tượng' when clicked and calls erpInvoicesCoreApi.list", async () => {

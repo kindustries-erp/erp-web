@@ -145,6 +145,14 @@ export function InvoiceDrawers({
                 )}
                 <ErpInvoiceInternalMain
                   detailInvoice={formHook.detailInvoice}
+                  form={formHook.form}
+                  editMode={formHook.editMode}
+                  fieldSet={formHook.fieldSet}
+                  direction={direction}
+                  postingState={formHook.postingState}
+                  pendingUnpost={formHook.pendingUnpost}
+                  onUnpost={() => formHook.setPendingUnpost(true)}
+                  onRefreshDetail={formHook.handleSyncDetail}
                 />
               </>
             )}

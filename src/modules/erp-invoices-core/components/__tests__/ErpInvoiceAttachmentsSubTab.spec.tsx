@@ -4,54 +4,32 @@ import { ErpInvoiceAttachmentsSubTab } from "../ErpInvoiceAttachmentsSubTab";
 import { describe, it, expect, vi } from "vitest";
 import "@testing-library/jest-dom";
 
-vi.mock("react-i18next", () => ({
-  useTranslation: () => ({
-    t: (key: string, defaultVal?: string) => defaultVal || key,
-  }),
-}));
-
-vi.mock("../ErpInvoicePdfUpload", () => ({
-  ErpInvoicePdfUpload: (props: any) => (
+vi.mock("../InvoiceDocumentWorkspace", () => ({
+  InvoiceDocumentWorkspace: (props: any) => (
     <div
-      data-testid="erp-invoice-pdf-upload"
+      data-testid="invoice-document-workspace"
       data-props={JSON.stringify(props)}
     >
-      PDF Upload Component ({props.invoiceId})
+      Document Workspace Component ({props.detailInvoice?.id || "empty"})
     </div>
   ),
 }));
 
 describe("ErpInvoiceAttachmentsSubTab", () => {
-  it("renders empty message when invoice is null or has no id", () => {
-    render(<ErpInvoiceAttachmentsSubTab invoice={null} />);
-    expect(
-      screen.getByText(
-        "Chưa có thông tin hóa đơn để quản lý tài liệu đính kèm.",
-      ),
-    ).toBeInTheDocument();
-  });
-
-  it("renders DrawerSection and ErpInvoicePdfUpload with correct invoice id and badge count", () => {
+  it("renders InvoiceDocumentWorkspace with invoice passed as detailInvoice", () => {
     const mockInvoice: any = {
       id: "inv-uuid-123",
       invoiceNo: "0001234",
-      attachments: [{ attachmentId: "att-1", attachment: { id: "att-1" } }],
-      pdfFileKey: "invoices/inv-123.pdf",
     };
 
     render(
-      <ErpInvoiceAttachmentsSubTab
-        invoice={mockInvoice}
-        editMode={true}
-        form={{ pendingDeletedPdfs: [], pendingAddedAttachments: [] } as any}
-      />,
+      <ErpInvoiceAttachmentsSubTab invoice={mockInvoice} editMode={true} />,
     );
 
-    expect(screen.getByText("Tài liệu đính kèm & Tệp PDF")).toBeInTheDocument();
-    expect(screen.getByText("(2 tệp)")).toBeInTheDocument();
-
-    const uploadComp = screen.getByTestId("erp-invoice-pdf-upload");
-    expect(uploadComp).toBeInTheDocument();
-    expect(uploadComp).toHaveTextContent("PDF Upload Component (inv-uuid-123)");
+    const wsComp = screen.getByTestId("invoice-document-workspace");
+    expect(wsComp).toBeInTheDocument();
+    expect(wsComp).toHaveTextContent(
+      "Document Workspace Component (inv-uuid-123)",
+    );
   });
 });
