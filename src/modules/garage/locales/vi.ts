@@ -272,6 +272,7 @@ export const garageVi = {
       historyCleared: "Đã xóa lịch sử xuất file",
       allScope: "Tất cả",
       ready: "Sẵn sàng",
+      actions: "THAO TÁC",
       table: {
         createdAt: "Tạo lúc",
         period: "Kỳ / Khoảng ngày",

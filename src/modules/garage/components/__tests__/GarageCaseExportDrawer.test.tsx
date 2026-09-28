@@ -43,12 +43,13 @@ vi.mock("@/shared/components/StandardTable", () => ({
 }));
 
 vi.mock("@/shared/components/Combobox", () => ({
-  Combobox: ({ value, onChange, placeholder, options }: any) => (
-    <div data-testid="combobox">
+  Combobox: ({ value, onChange, placeholder, options, disabled }: any) => (
+    <div data-testid="combobox" data-disabled={disabled ? "true" : "false"}>
       <select
         value={value}
         onChange={(e) => onChange?.(e.target.value)}
         aria-label={placeholder}
+        disabled={disabled}
       >
         {options?.map((opt: any) => (
           <option key={opt.value} value={opt.value}>
@@ -95,6 +96,31 @@ describe("GarageCaseExportDrawer", () => {
     expect(screen.getByTestId("drawer-content")).toBeDefined();
     expect(screen.getByTestId("history-table")).toBeDefined();
     expect(screen.getByText("Xuất Excel")).toBeDefined();
+
+    // Verify StandardTable was called with standardized props
+    expect(standardTableSpy).toHaveBeenCalled();
+    const tableProps = standardTableSpy.mock.calls[0][0];
+    expect(tableProps.hideLegacyActionColumn).toBe(true);
+    expect(typeof tableProps.actions).toBe("function");
+    expect(tableProps.columns[0].key).toBe("index");
+    expect(tableProps.columns[0].size).toBe(40);
+  });
+
+  it("renders branch combobox as disabled (view-only)", () => {
+    render(
+      <GarageCaseExportDrawer
+        open={true}
+        onClose={vi.fn()}
+        initialBranchId="CN-01"
+      />,
+    );
+
+    const comboboxes = screen.getAllByTestId("combobox");
+    // Find the disabled combobox (Chi nhánh)
+    const disabledCombobox = comboboxes.find(
+      (el) => el.getAttribute("data-disabled") === "true",
+    );
+    expect(disabledCombobox).toBeDefined();
   });
 
   it("triggers garageApi.exportCompletedCasesExcel when clicking start export", async () => {
