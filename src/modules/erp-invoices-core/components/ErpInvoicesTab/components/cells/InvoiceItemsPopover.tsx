@@ -1,6 +1,7 @@
 import React from "react";
 import { Package } from "lucide-react";
 import { fmtAmt } from "../../utils";
+import { formatUom } from "../../../../utils/uom.helper";
 
 export interface InvoiceItemsPopoverProps {
   items?: any[];
@@ -192,8 +193,8 @@ export const InvoiceItemsPopover = React.memo(function InvoiceItemsPopover({
                   </td>
 
                   {/* ĐVT */}
-                  <td className="w-[55px] min-w-[55px] px-2 py-1.5 text-left whitespace-nowrap text-muted-foreground text-[11px] truncate align-top border-r border-border">
-                    {item.unit || item.unitName || "—"}
+                  <td className="w-[55px] min-w-[55px] px-2 py-1.5 text-left whitespace-nowrap font-medium text-foreground/80 text-[11px] truncate align-top border-r border-border">
+                    {formatUom(item.unit || item.unitName)}
                   </td>
 
                   {/* Đơn giá */}

@@ -5,6 +5,7 @@ import type { DataTableColumn } from "@/shared/components/DataTable";
 import { money } from "@/shared/utils/format";
 import type { OutInvoiceLineDisplayResult } from "../../../utils/outInvoiceDisplay";
 import { formatVatRate } from "../../ErpInvoiceItemsSection/components/itemColumns";
+import { formatUom } from "../../../utils/uom.helper";
 
 export function getInvoiceDetailLinesColumns(
   t: TFunction<"erpInvoices", undefined>,
@@ -53,7 +54,9 @@ export function getInvoiceDetailLinesColumns(
       headerClassName: "text-center",
       className: "text-center",
       cell: (row: OutInvoiceLineDisplayResult) => (
-        <span className="text-xs text-muted-foreground">{row.unit || "—"}</span>
+        <span className="text-xs font-medium text-slate-700 dark:text-slate-300">
+          {formatUom(row.unit)}
+        </span>
       ),
     },
 

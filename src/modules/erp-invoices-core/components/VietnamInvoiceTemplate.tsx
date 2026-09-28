@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { format } from "date-fns";
 import { type ErpInvoice } from "../api/erpInvoicesCoreApi";
 import { normalizeOutInvoiceLineDisplay } from "../utils/outInvoiceDisplay";
+import { formatUom } from "../utils/uom.helper";
 import { formatVatRate } from "./ErpInvoiceItemsSection/components/itemColumns";
 
 interface Props {
@@ -205,7 +206,7 @@ export function VietnamInvoiceTemplate({ invoice }: Props) {
                     {item.description ? item.description.normalize("NFC") : ""}
                   </td>
                   <td className="border-b border-r border-slate-300 p-2.5 text-center">
-                    {norm(item.unit)}
+                    {formatUom(item.unit, "---")}
                   </td>
                   <td className="border-b border-r border-slate-300 p-2.5 text-right font-mono">
                     {formatNumber(item.quantity)}

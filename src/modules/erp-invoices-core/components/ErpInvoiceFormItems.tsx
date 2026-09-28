@@ -6,6 +6,7 @@ import {
 import { DocumentLineTable } from "@/shared/components/DocumentLineTable";
 import { useTranslation } from "react-i18next";
 import { type CreateErpInvoicePayload } from "../api/erpInvoicesCoreApi";
+import { formatUom } from "../utils/uom.helper";
 
 type InvoiceItem = NonNullable<CreateErpInvoicePayload["items"]>[number];
 
@@ -126,7 +127,7 @@ export function ErpInvoiceFormItems({
                     }}
                   />
                 ) : (
-                  <div>{row.unit}</div>
+                  <div>{formatUom(row.unit)}</div>
                 ),
             },
             {
