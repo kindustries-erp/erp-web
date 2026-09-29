@@ -34,7 +34,7 @@ import { GarageCasePartnerTab } from "./GarageCasePartnerTab";
 import { useGarageCaseDrawerLogic } from "./drawer/hooks/useGarageCaseDrawerLogic";
 import { GarageCaseGeneralInfoSection } from "./drawer/sections/GarageCaseGeneralInfoSection";
 import { GarageCaseDefaultAttributesSection } from "./drawer/sections/GarageCaseDefaultAttributesSection";
-import { ModuleEntityCustomFieldsSection } from "@/shared/components/ModuleEntityCustomFieldsSection";
+import { ModuleEntityCustomFieldsSection } from "@/shared/components/module-entity-custom-fields-section";
 import { GarageCaseBusinessPerformanceSection } from "./drawer/sections/GarageCaseBusinessPerformanceSection";
 
 export interface GarageCaseStandaloneDrawerProps {

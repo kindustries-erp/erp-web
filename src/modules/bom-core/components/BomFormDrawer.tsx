@@ -15,7 +15,7 @@ import { bomCoreApi, type ErpBom } from "@/modules/bom-core/api/bomCoreApi";
 import {
   ModuleEntityCustomFieldsSection,
   validateModuleRequiredFields,
-} from "@/shared/components/ModuleEntityCustomFieldsSection";
+} from "@/shared/components/module-entity-custom-fields-section";
 import { moduleConfigApi } from "@/core/api/moduleConfigApi";
 import type { DrawerMode } from "@/shared/stores/useDrawerStore";
 import toast from "react-hot-toast";

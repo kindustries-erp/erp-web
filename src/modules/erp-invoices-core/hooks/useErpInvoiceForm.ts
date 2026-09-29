@@ -11,7 +11,7 @@ import { updateEntityTags } from "@/modules/tags/api/tagsApi";
 import { purchaseOrdersCoreApi } from "@/modules/purchase-orders-core/api/purchaseOrdersCoreApi";
 import { usePosting } from "@/shared/components/accounting/usePosting";
 import { moduleConfigApi } from "@/core/api/moduleConfigApi";
-import { validateModuleRequiredFields } from "@/shared/components/ModuleEntityCustomFieldsSection";
+import { validateModuleRequiredFields } from "@/shared/components/module-entity-custom-fields-section";
 import { toast } from "react-hot-toast";
 
 type Direction = "IN" | "OUT";

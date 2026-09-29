@@ -5,7 +5,7 @@ import { TooltipProvider } from "@/core/components/ui/Tooltip";
 import {
   ModuleEntityCustomFieldsSection,
   validateModuleRequiredFields,
-} from "../ModuleEntityCustomFieldsSection";
+} from "../module-entity-custom-fields-section";
 import { moduleConfigApi } from "@/core/api/moduleConfigApi";
 
 vi.mock("@/core/i18n", () => ({

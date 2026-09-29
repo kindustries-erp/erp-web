@@ -1,6 +1,6 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { ModuleEntityCustomFieldsSection } from "@/shared/components/ModuleEntityCustomFieldsSection";
+import { ModuleEntityCustomFieldsSection } from "@/shared/components/module-entity-custom-fields-section";
 import { ErpInvoiceGeneralInfoSection } from "./ErpInvoiceGeneralInfoSection";
 import { ErpInvoiceDefaultAttributesSection } from "./ErpInvoiceDefaultAttributesSection";
 import type {

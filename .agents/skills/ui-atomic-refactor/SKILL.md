@@ -26,33 +26,45 @@ graph TD
 
 ---
 
-## 1. 📏 Giới Hạn Kích Thước Atomic File (< 200 LoC Threshold)
+## 1. 📏 Giới Hạn Kích Thước Atomic File (< 200 LoC Threshold) & Cấu Trúc Thư Mục Chuẩn
 
-- **Ngưỡng cảnh báo**: Bất kỳ file React Component nào vượt quá **~200 dòng code** (hoặc chứa quá nhiều logic nghiệp vụ lộn xộn với JSX markup) **BẮT BUỘC** phải được phân tách theo kiến trúc Atomic.
-- **Phân rã 4 lớp chuẩn mực**:
-  1. **Entry Point (`index.ts` / `index.tsx`)**: Xuất khẩu gọn gàng component chính và các kiểu dữ liệu public.
-  2. **Presentational Component (`<FeatureName>.tsx`)**: Chỉ phụ trách render giao diện (JSX), nhận props hoặc dữ liệu từ Custom Hook. File này nên `< 150 LoC`.
-  3. **Custom Hook (`use<FeatureName>Logic.ts` hoặc `hooks/...`)**: Chứa toàn bộ State, TanStack Query (`useQuery`, `useMutation`), URL Search Params, Form handlers và sự kiện tương tác.
-  4. **Pure Helpers & Types (`utils.ts`, `types.ts`)**: Chứa hàm tính toán thuần túy (formatting tiền tệ, xử lý mảng, validate logic) không phụ thuộc trực tiếp vào React Lifecycle.
+- **Ngưỡng cảnh báo**: Bất kỳ file React Component nào vượt quá **~200 dòng code** (hoặc chứa quá nhiều logic nghiệp vụ lộn xộn với JSX markup) **BẮT BUỘC** phải được phân tách theo kiến trúc Atomic + Domains.
+- **Quy chuẩn đặt tên thư mục**: Sử dụng **kebab-case** (gạch nối, ví dụ `module-entity-custom-fields-section`, `invoice-summary-tab`, `goods-receipt-lines`).
+- **Phân rã 4 tầng kiến trúc chuẩn mực (Atomic Design + DDD)**:
+  1. **Entry Point (`index.ts`)**: Xuất khẩu gọn gàng component chính và các kiểu dữ liệu, hook, atoms public.
+  2. **Tầng Nghiệp vụ (`domains/`)**: Chứa `types.ts`, `schemas.ts` (Zod validation), `constants.ts` và `index.ts`.
+  3. **Tầng Trạng thái & Logic (`hooks/`, `utils/`)**: Chứa Custom Hooks (`use...Logic.ts`), TanStack Query, helpers tính toán độc lập React Lifecycle.
+  4. **Tầng Giao diện Trực quan (`components/`)**:
+     - `atoms/`: Các thành phần UI nguyên tử cơ bản nhất (Inputs, Badges, Labels, Icons, Branches).
+     - `molecules/`: Kết hợp các atoms tạo thành khối chức năng nhỏ (FieldRenderers, Sub-lists, Sections).
+     - `organisms/`: Khối Component phức hợp hoàn chỉnh kết nối Hooks và Molecules (`<FeatureName>.tsx`).
 
 ### 📂 Cấu trúc thư mục Atomic chuẩn mẫu:
 
 ```
-src/modules/<module-name>/components/<FeatureFolder>/
-├── index.ts                         # Entry point re-export
-├── <FeatureName>.tsx                # Presentational Component chính (< 150 LoC)
-├── <FeatureName>SubTab.tsx          # Sub-tab hoặc phân đoạn độc lập (< 150 LoC)
-├── hooks/
-│   ├── use<FeatureName>Logic.ts     # Toàn bộ logic & data fetching (< 200 LoC)
-│   └── use<FeatureName>Filters.ts   # Quản lý filter & pagination
-├── components/                      # Các sub-components nhỏ tách rời
-│   ├── <FeatureName>Header.tsx
-│   ├── <FeatureName>KpiCards.tsx
-│   └── <FeatureName>EmptyState.tsx
-├── utils/
-│   └── <featureName>Helper.ts       # Formatters, calculators thuần túy
+src/shared/components/<feature-name>/ (hoặc src/modules/<module>/components/<feature-name>/)
+├── index.ts                                        # Public Entry Point re-export facade
+├── domains/                                        # Domain Models, Types, Schemas & Constants
+│   ├── types.ts                                    # Interfaces & Component Props (< 100 LoC)
+│   └── index.ts
+├── hooks/                                          # Custom Hooks & State Resolution
+│   ├── use<FeatureName>Logic.ts                    # TanStack Query & data fetching (< 150 LoC)
+│   └── index.ts
+├── utils/                                          # Pure Helpers & Validations
+│   ├── <featureName>Helper.ts                      # Formatters, pure calculators (< 100 LoC)
+│   └── index.ts
+├── components/                                     # Presentation Layer (Atomic)
+│   ├── atoms/                                      # Atoms: Các thành phần UI nhỏ nhất
+│   │   ├── <AtomName>.tsx                          # (< 80 LoC)
+│   │   └── index.ts
+│   ├── molecules/                                  # Molecules: Nhóm các atoms
+│   │   ├── <MoleculeName>.tsx                      # (< 120 LoC)
+│   │   └── index.ts
+│   └── organisms/                                  # Organisms: Khối hoàn chỉnh kết nối Hook
+│       ├── <FeatureName>.tsx                       # Main Component (< 100 LoC)
+│       └── index.ts
 └── __tests__/
-    └── <FeatureName>.spec.tsx       # Unit tests độc lập
+    └── <FeatureName>.test.tsx                      # Unit & integration tests
 ```
 
 ---
