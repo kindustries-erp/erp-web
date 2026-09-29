@@ -147,6 +147,7 @@ export const debtsEn = {
     customRange: "Custom date range",
     dateFrom: "Date from",
     dateTo: "Date to",
+    allTime: "All time",
     allRange: "All",
     start: "Export Excel",
     starting: "Initializing...",
