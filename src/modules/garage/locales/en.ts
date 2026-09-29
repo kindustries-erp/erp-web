@@ -181,6 +181,7 @@ export const garageEn = {
       classification: "ERP Classification",
       classificationErp: "ERP Classification",
       kgaraClassification: "KGara Classification",
+      exclusionRules: "Exclusion Rules",
     },
     summary: {
       items: "Service Cases",
@@ -198,6 +199,9 @@ export const garageEn = {
       reports: "Exclude from Reports",
       debt: "Exclude from Debt",
       allExclusions: "All Exclusion Flags",
+      excludeReports: "Excluded from Reports",
+      excludeDebt: "Excluded from Debt",
+      normal: "Standard (Included)",
     },
     configDrawer: {
       title: "Case Configuration:",
@@ -1129,6 +1133,7 @@ export const garageEn = {
       receivable: "Remaining Receivable",
       receivableWithInvoice: "Remaining (With Inv)",
       receivableNoInvoice: "Remaining (No Inv)",
+      excludedDebt: "Excluded from Debt",
       withInvoice: "With Invoice",
       noInvoice: "Without Invoice",
       cost: "Total Payable",
@@ -1136,6 +1141,7 @@ export const garageEn = {
       payableCost: "Remaining Payable",
       payableCostWithInvoice: "Remaining Payable (With Inv)",
       payableCostNoInvoice: "Remaining Payable (No Inv)",
+      excludedDebtCost: "Excluded from Debt",
       withInvoiceCost: "With Invoice",
       noInvoiceCost: "Without Invoice",
     },

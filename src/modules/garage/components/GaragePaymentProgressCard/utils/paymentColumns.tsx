@@ -2,10 +2,11 @@ import React from "react";
 import type { TFunction } from "i18next";
 import { money } from "@/shared/utils/format";
 import { Tooltip } from "@/core/components/ui/Tooltip";
-import { cn } from "@/shared/utils";
 import type { DataTableColumn } from "@/shared/components/DataTable";
 import type { GarageTrendItem } from "@/modules/garage/api/garageDashboardApi";
 import { formatMonth } from "./paymentProgressHelpers";
+import { PaymentTotalCostCell } from "../components/PaymentTotalCostCell";
+import { PaymentExcludedDebtCell } from "../components/PaymentExcludedDebtCell";
 
 export function getPaymentColumns(
   headerFilter: any,
@@ -66,58 +67,12 @@ export function getPaymentColumns(
         "cost",
         t("progress.columns.cost", "Tổng Phải Trả"),
       ),
-      size: 200,
+      size: 190,
       enableResizing: true,
       headerClassName: "text-center",
       className:
         "text-right font-medium tabular-nums text-foreground font-mono",
-      cell: (item: GarageTrendItem) => {
-        const total = item.cost || 0;
-        const paid = item.paidCost || 0;
-        const bal = item.payableCost || 0;
-        if (total <= 0) {
-          return (
-            <span className="text-muted-foreground/40 font-normal select-none">
-              —
-            </span>
-          );
-        }
-        const isAllPaid = bal <= 0 && paid > 0;
-        const isUnpaid = paid <= 0 && total > 0;
-        const rate =
-          item.costPaymentRate ?? (total > 0 ? (paid / total) * 100 : 0);
-
-        const tooltipText = isAllPaid
-          ? `Đã trả đủ 100%: ${money(paid)}`
-          : isUnpaid
-            ? `Chưa trả (0%): Còn phải trả ${money(bal)} / Tổng ${money(total)}`
-            : `Đã trả: ${money(paid)} / ${money(total)} (${rate.toFixed(1)}%) • Còn phải trả: ${money(bal)}`;
-
-        return (
-          <Tooltip content={tooltipText} side="top">
-            <div className="flex flex-col gap-1 w-full py-0.5 justify-center cursor-default">
-              <div className="flex items-center justify-end text-xs tabular-nums leading-tight">
-                <span className="font-semibold text-foreground font-mono">
-                  {money(total)}
-                </span>
-              </div>
-              <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
-                <div
-                  className={cn(
-                    "h-full rounded-full transition-all duration-300",
-                    isAllPaid
-                      ? "bg-emerald-500 dark:bg-emerald-400"
-                      : isUnpaid
-                        ? "bg-transparent"
-                        : "bg-slate-600 dark:bg-slate-400",
-                  )}
-                  style={{ width: `${Math.min(100, Math.max(0, rate))}%` }}
-                />
-              </div>
-            </div>
-          </Tooltip>
-        );
-      },
+      cell: (item: GarageTrendItem) => <PaymentTotalCostCell item={item} />,
     },
     {
       key: "paidCost",
@@ -125,7 +80,7 @@ export function getPaymentColumns(
         "paidCost",
         t("progress.columns.paidCost", "Đã Trả"),
       ),
-      size: 200,
+      size: 180,
       enableResizing: true,
       headerClassName: "text-center",
       className:
@@ -138,7 +93,7 @@ export function getPaymentColumns(
         "payableCost",
         t("progress.columns.payableCost", "Còn Phải Trả"),
       ),
-      size: 200,
+      size: 180,
       enableResizing: true,
       headerClassName:
         "text-center bg-slate-100 dark:bg-slate-800/60 font-semibold border-r border-border/50",
@@ -170,7 +125,7 @@ export function getPaymentColumns(
         "payableCostWithInvoice",
         t("progress.columns.payableCostWithInvoice", "Còn Phải Trả Có HĐ"),
       ),
-      size: 200,
+      size: 170,
       enableResizing: true,
       headerClassName: "text-center",
       className: "text-right font-medium tabular-nums font-mono",
@@ -195,7 +150,7 @@ export function getPaymentColumns(
         "payableCostNoInvoice",
         t("progress.columns.payableCostNoInvoice", "Còn Phải Trả Không HĐ"),
       ),
-      size: 200,
+      size: 170,
       enableResizing: true,
       headerClassName: "text-center",
       className: "text-right font-medium tabular-nums font-mono",
@@ -213,6 +168,26 @@ export function getPaymentColumns(
           </span>
         );
       },
+    },
+    {
+      key: "excludedDebtCost",
+      header: headerFilter.amount(
+        "excludedDebtCost",
+        t("progress.columns.excludedDebtCost", "Không Theo Dõi Công Nợ"),
+      ),
+      size: 170,
+      enableResizing: true,
+      headerClassName: "text-center",
+      className: "text-right font-medium tabular-nums font-mono",
+      cell: (item: GarageTrendItem) => (
+        <PaymentExcludedDebtCell
+          amount={item.excludedDebtCost}
+          labelTooltipPrefix={t(
+            "progress.columns.excludedDebtCost",
+            "Không theo dõi công nợ",
+          )}
+        />
+      ),
     },
   ];
 }

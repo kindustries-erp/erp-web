@@ -35,6 +35,7 @@ export const DEFAULT_GARAGE_CASE_COLUMN_VISIBILITY: Record<string, boolean> = {
   customerName: false,
   classification: true,
   kgaraClassification: true,
+  exclusionRules: true,
   statusName: true,
   doanhThu: true,
   chiPhi: true,
@@ -72,6 +73,7 @@ export const AUDIT_GARAGE_CASE_COLUMN_VISIBILITY: Record<string, boolean> = {
   // Ẩn các cột không thuộc đối soát dòng tiền
   classification: false,
   kgaraClassification: false,
+  exclusionRules: false,
   margin: false,
   isInsuranceClaim: false,
   branchName: false,
@@ -164,6 +166,12 @@ export const GARAGE_CASE_COLUMN_GROUPS: ColumnGroupDef[] = [
         key: "kgaraClassification",
         labelKey: "cases.columns.kgaraClassification",
         defaultLabel: "Phân loại KGara",
+        defaultVisible: true,
+      },
+      {
+        key: "exclusionRules",
+        labelKey: "cases.columns.exclusionRules",
+        defaultLabel: "Quy tắc loại trừ",
         defaultVisible: true,
       },
       {
