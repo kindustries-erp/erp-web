@@ -23,11 +23,28 @@ export const CoaCombobox = React.memo(function CoaCombobox({
   const searchPlaceholder = t("common.search", "Tìm kiếm...");
   const emptyLabel = t("common.noData", "Không tìm thấy dữ liệu.");
 
+  const trimmedValue = (value || "").trim();
+
   const effectiveValue = useMemo(() => {
-    if (!value) return "";
-    const found = options.find((o) => o.value === value || o.code === value);
-    return found ? found.value : value;
-  }, [options, value]);
+    if (!trimmedValue) return "";
+    const found = options.find(
+      (o) =>
+        o.value === trimmedValue ||
+        (o.code && o.code.toLowerCase() === trimmedValue.toLowerCase()),
+    );
+    return found ? found.value : trimmedValue;
+  }, [options, trimmedValue]);
+
+  const fallbackLabel = useMemo(() => {
+    if (!trimmedValue) return undefined;
+    const found = options.find(
+      (o) =>
+        o.value === trimmedValue ||
+        (o.code && o.code.toLowerCase() === trimmedValue.toLowerCase()),
+    );
+    if (found) return undefined;
+    return trimmedValue.startsWith("TK") ? trimmedValue : `TK ${trimmedValue}`;
+  }, [options, trimmedValue]);
 
   const handleChange = (selectedVal: string | null) => {
     const selectedOpt = options.find((o) => o.value === selectedVal);
@@ -57,6 +74,7 @@ export const CoaCombobox = React.memo(function CoaCombobox({
       className={className}
       allowClear={allowClear}
       loading={isLoading}
+      fallbackLabel={fallbackLabel}
     />
   );
 });

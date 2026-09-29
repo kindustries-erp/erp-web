@@ -41,7 +41,7 @@ import { IaFormSectionTitleExtra } from "./IaFormSectionTitleExtra";
 import type { UseIaDrawerReturn } from "@/modules/inventory-adjustments/hooks/useIaDrawer";
 import { InventoryVoucherFormDrawer } from "@/modules/inventory-core/components/inventory-voucher-drawer/InventoryVoucherFormDrawer";
 import { useVoucherClientFilter } from "@/modules/inventory-core/hooks/useVoucherClientFilter";
-import { ModuleEntityCustomFieldsSection } from "@/shared/components/module-entity-custom-fields-section";
+import { ModuleEntityCustomFieldsSection } from "@/shared/features/custom-fields";
 import { AttributeTypeBadge } from "@/shared/components/AttributeTypeBadge";
 import { EntityTagSelector } from "@/modules/tags/components/EntityTagSelector";
 

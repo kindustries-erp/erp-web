@@ -25,7 +25,7 @@ import { BankTransactionGeneralInfoSection } from "@/modules/bank-statements/com
 import {
   ModuleEntityCustomFieldsSection,
   validateModuleRequiredFields,
-} from "@/shared/components/module-entity-custom-fields-section";
+} from "@/shared/features/custom-fields";
 import { bankStatementApi } from "@/modules/bank-statements/api/bankStatementApi";
 import { moduleConfigApi } from "@/core/api/moduleConfigApi";
 

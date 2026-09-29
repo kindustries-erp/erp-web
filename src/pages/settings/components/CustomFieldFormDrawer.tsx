@@ -33,7 +33,7 @@ import {
   ERP_DOMAIN_REGISTRY,
   ModuleLivePreviewPanel,
   NeutralCountBadge,
-} from "@/shared/components/ModuleCustomFieldConfigDrawer";
+} from "@/shared/features/custom-fields";
 import type { CustomFieldRow } from "../hooks/useCustomFieldsList";
 
 export interface CustomFieldFormDrawerProps {

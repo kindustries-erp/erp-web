@@ -39,7 +39,7 @@ import {
   ERP_MODULE_REGISTRY,
   ERP_DOMAIN_REGISTRY,
   ModuleCustomFieldConfigDrawer,
-} from "@/shared/components/ModuleCustomFieldConfigDrawer";
+} from "@/shared/features/custom-fields";
 import {
   useCustomFieldsList,
   type CustomFieldRow,

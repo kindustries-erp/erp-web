@@ -12,7 +12,7 @@ import {
 import {
   ERP_MODULE_REGISTRY,
   type ErpModuleDomain,
-} from "@/shared/components/ModuleCustomFieldConfigDrawer";
+} from "@/shared/features/custom-fields";
 
 export interface CustomFieldRow {
   id: string;

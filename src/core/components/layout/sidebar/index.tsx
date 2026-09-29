@@ -4,7 +4,7 @@ import { useAuthStore } from "@/modules/auth/domain/authStore";
 import { UserProfileModal } from "@/modules/auth/components/UserProfileModal";
 import { GlobalSettingsDrawer } from "@/core/components/layout/GlobalSettingsDrawer";
 import { SystemChangelogDrawer } from "@/core/components/SystemChangelogDrawer";
-import { ModuleCustomFieldConfigDrawer } from "@/shared/components/ModuleCustomFieldConfigDrawer";
+import { ModuleCustomFieldConfigDrawer } from "@/shared/features/custom-fields";
 import { CompanyProfileDrawer } from "../../CompanyProfileDrawer";
 import { useCompanyProfile } from "../../../api/companyProfileApi";
 import type { PageKey } from "@/shared/types";

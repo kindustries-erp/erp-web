@@ -1,149 +1,140 @@
 ---
 name: ui-atomic-refactor
-description: Quy chuẩn và trợ lý bắt buộc về Atomic Component Refactoring trong Liouni ERP Web. Chia tách file lớn (> 200 LoC) thành cấu trúc Atomic chuẩn (Index, Component, Hook, Util), bắt buộc 100% Đa ngôn ngữ (i18n VI/EN), tối ưu Web Responsive toàn diện và ưu tiên tái sử dụng Reusable UI Components có sẵn trong App.
+description: Quy chuẩn và trợ lý bắt buộc về 5 Tầng Atomic Design (Atoms, Molecules, Organisms, Templates, Pages), Cross-Cutting Features, Co-located Testing trong Liouni ERP Web. Chia tách file lớn (> 200 LoC) thành cấu trúc Atomic chuẩn (Domains, Hooks, Utils, Components, Tests), bắt buộc 100% Đa ngôn ngữ (i18n VI/EN), tối ưu Web Responsive toàn diện và tuân thủ No Blue Mandate.
 ---
 
-# ⚛️ UI Atomic Component Refactoring Standards (`/ui-atomic-refactor`)
+# ⚛️ UI Atomic Component & Architectural Standards (`/ui-atomic-refactor`)
 
-> ⚡ **Mục tiêu cốt lõi**: Đảm bảo mã nguồn giao diện trong `erp-web` luôn tinh gọn, dễ đọc, dễ kiểm thử và có tính mở rộng cao. Tuyệt đối không để xảy ra tình trạng các file Component phình to thành hàng ngàn dòng code (God Components / Monolithic Files).
+> ⚡ **Mục tiêu cốt lõi**: Đảm bảo toàn bộ mã nguồn giao diện trong `erp-web` được tổ chức mạch lạc, phân lớp rõ ràng theo đúng chuẩn **5 Tầng Atomic Design (Brad Frost) kết hợp Domain-Driven Design (DDD)**. Tuyệt đối không để xảy ra tình trạng các file Component phình to thành hàng ngàn dòng code (God Components / Monolithic Files) hoặc thư mục `shared` biến thành bãi rác không kiểm soát.
 
 ---
 
-## 🎯 4 Trụ Cột Bắt Buộc Khi Refactor Hoặc Tạo Mới Component
+## 🏛️ 1. Mô Hình Kiến Trúc Phân Lớp Toàn Diện (5-Stage Atomic Design)
 
 ```mermaid
 graph TD
-  A[Yêu cầu Giao diện / Refactor] --> B[1. Giới Hạn Atomic LoC < 200]
-  A --> C[2. Bắt buộc 100% i18n VI & EN]
-  A --> D[3. Tối ưu Web Responsive Toàn diện]
-  A --> E[4. Ưu tiên Reusable App Components]
+  subgraph Level 1: Atoms [1. ⚛️ Atoms / UI Primitives - @/shared/ui]
+    A1[Button, Dialog, Input, Badge, Checkbox, Calendar, Tooltip...]
+    A1_Note[0% Logic nghiệp vụ, shadcn/Radix thuần túy]
+  end
 
-  B --> B1[Index + Pure JSX + Custom Hook + Utils]
-  C --> C1[useTranslation + vi.ts + en.ts]
-  D --> D1[Touch scroll x + Breakpoints sm/md/lg/xl]
-  E --> E1[StandardTable + DrawerSection + PillTabs + Combobox...]
+  subgraph Level 2: Molecules [2. 🧬 Molecules - @/shared/components/molecules]
+    M1[PillTabs, Combobox, BufferedTextarea, DatePicker, CopyButton...]
+  end
+
+  subgraph Level 3: Organisms [3. 🧫 Organisms - @/shared/components/organisms]
+    O1[StandardTable, DataTable, StandardFormDrawer, ConfirmModal, FilterPanel...]
+  end
+
+  subgraph Level 4: Templates [4. 📄 Templates - @/shared/components/templates]
+    T1[SpreadsheetPageTemplate, DashboardTemplate, PageLayout, PageWithTabsLayout...]
+    T1_Note[Khung xương layout trang/bảng/drawer chưa gắn dữ liệu nghiệp vụ]
+  end
+
+  subgraph Cross-Cutting Features [🔌 Cross-Cutting Domain Features - @/shared/features]
+    F1[custom-fields: Config Drawer + Entity Form Section]
+    F2[document-traceability: Multi-hop Drawer Graph]
+    F3[file-manager: Cloudflare R2 Upload & Lightbox]
+  end
+
+  subgraph Level 5: Pages / Modules [5. 📑 Pages & Domain Modules - @/modules]
+    P1[erp-invoices-core, inventory-core, garage, accounting...]
+  end
+
+  Level 5 --> Cross-Cutting Features
+  Level 5 --> Level 4
+  Cross-Cutting Features --> Level 4
+  Cross-Cutting Features --> Level 3
+  Cross-Cutting Features --> Level 2
+  Cross-Cutting Features --> Level 1
+  Level 4 --> Level 3
+  Level 3 --> Level 2
+  Level 2 --> Level 1
 ```
 
 ---
 
-## 1. 📏 Giới Hạn Kích Thước Atomic File (< 200 LoC Threshold) & Cấu Trúc Thư Mục Chuẩn
+### 📋 Bảng Định Nghĩa & Ranh Giới 5 Tầng
 
-- **Ngưỡng cảnh báo**: Bất kỳ file React Component nào vượt quá **~200 dòng code** (hoặc chứa quá nhiều logic nghiệp vụ lộn xộn với JSX markup) **BẮT BUỘC** phải được phân tách theo kiến trúc Atomic + Domains.
-- **Quy chuẩn đặt tên thư mục**: Sử dụng **kebab-case** (gạch nối, ví dụ `module-entity-custom-fields-section`, `invoice-summary-tab`, `goods-receipt-lines`).
-- **Phân rã 4 tầng kiến trúc chuẩn mực (Atomic Design + DDD)**:
-  1. **Entry Point (`index.ts`)**: Xuất khẩu gọn gàng component chính và các kiểu dữ liệu, hook, atoms public.
-  2. **Tầng Nghiệp vụ (`domains/`)**: Chứa `types.ts`, `schemas.ts` (Zod validation), `constants.ts` và `index.ts`.
-  3. **Tầng Trạng thái & Logic (`hooks/`, `utils/`)**: Chứa Custom Hooks (`use...Logic.ts`), TanStack Query, helpers tính toán độc lập React Lifecycle.
-  4. **Tầng Giao diện Trực quan (`components/`)**:
-     - `atoms/`: Các thành phần UI nguyên tử cơ bản nhất (Inputs, Badges, Labels, Icons, Branches).
-     - `molecules/`: Kết hợp các atoms tạo thành khối chức năng nhỏ (FieldRenderers, Sub-lists, Sections).
-     - `organisms/`: Khối Component phức hợp hoàn chỉnh kết nối Hooks và Molecules (`<FeatureName>.tsx`).
+| Tầng Atomic | Thư mục quy ước | Bản chất & Vai trò | Phụ thuộc (Dependencies) | Ví dụ cụ thể |
+| :--- | :--- | :--- | :--- | :--- |
+| **1. Atoms (UI Primitives)** | `src/shared/ui/` | Phần tử cơ bản nhất, không thể phân rã, không chứa nghiệp vụ | Chỉ phụ thuộc React, Tailwind, Radix | `button.tsx`, `input.tsx`, `badge.tsx`, `dialog.tsx` |
+| **2. Molecules** | `src/shared/components/molecules/` | Cụm chức năng nhỏ kết hợp từ 2+ atoms | Chỉ dùng Atoms | `PillTabs.tsx`, `Combobox.tsx`, `DatePicker.tsx` |
+| **3. Organisms** | `src/shared/components/organisms/` | Khối UI phức hợp hoàn chỉnh, **câm nghiệp vụ (0% API)** | Dùng Molecules & Atoms | `StandardTable.tsx`, `StandardFormDrawer.tsx`, `FilterPanel.tsx` |
+| **4. Templates** | `src/shared/components/templates/` | **Khung xương layout trang/drawer mẫu**, định vị Header, Toolbar, Grid, Slots | Dùng Organisms & Molecules | `SpreadsheetPageTemplate/`, `DashboardTemplate/`, `PageLayout.tsx` |
+| **🔌 Cross-Cutting Features** | `src/shared/features/<feature>/` | Tính năng nghiệp vụ dùng chung đa module (tự gọi API, tự quản lý state) | Dùng Templates, Organisms, Atoms | `custom-fields/`, `document-traceability/`, `file-manager/` |
+| **5. Pages / Modules** | `src/modules/<module>/pages/` | Màn hình nghiệp vụ hoàn chỉnh của từng phân hệ (gắn API thật vào Template) | Dùng toàn bộ các tầng trên | `InvoicesListPage.tsx`, `InventoryStockPage.tsx` |
 
-### 📂 Cấu trúc thư mục Atomic chuẩn mẫu:
+---
+
+## 2. 🧪 Nguyên Tắc Co-located Testing Bắt Buộc (Colocation Testing Mandate)
+
+> [!CAUTION]
+> **TUYỆT ĐỐI KHÔNG DỒN TẤT CẢ TEST VÀO 1 THƯ MỤC ROOT `__tests__` TẬP TRUNG**.
+> Mọi Unit Test và Component Integration Test bắt buộc phải nằm **Co-located (đi kèm)** với mã nguồn.
+
+### Quy tắc đặt file Test:
+1. **Atoms & Molecules**: Đặt file test ngay bên cạnh: `button.tsx` $\rightarrow$ `button.test.tsx` (hoặc `PillTabs.test.tsx`).
+2. **Cross-Cutting Features**: Tạo thư mục `__tests__/` nội bộ bên trong feature:
+   `src/shared/features/<feature-name>/__tests__/<FeatureName>.test.tsx`
+3. **Modules Nghiệp vụ**: Tạo thư mục `__tests__/` nội bộ bên trong module:
+   `src/modules/<module-name>/__tests__/<PageName>.test.tsx`
+4. **Root `src/test/` & `src/__tests__/`**: Chỉ dùng cho Global Setup (`setup.ts`), Test Utilities (`test-utils.tsx`), Mocks toàn cục (`server.ts`) và Test luồng App toàn cục (`App.routing.test.tsx`, `App.forbidden.test.tsx`).
+
+---
+
+## 3. 📏 Giới Hạn Atomic File (< 200 LoC) & Cấu Trúc Mini 4 Tầng Cho Feature/Module
+
+Mọi Feature hoặc Component phức hợp bắt buộc phải được chia tách thành **4 tầng vi mô (Mini 4-Tier Pattern)**:
 
 ```
-src/shared/components/<feature-name>/ (hoặc src/modules/<module>/components/<feature-name>/)
+src/shared/features/<feature-name>/ (hoặc src/modules/<module>/components/<feature-name>/)
 ├── index.ts                                        # Public Entry Point re-export facade
 ├── domains/                                        # Domain Models, Types, Schemas & Constants
 │   ├── types.ts                                    # Interfaces & Component Props (< 100 LoC)
+│   ├── constants.ts                                # Registries, Enums, Options constants (< 100 LoC)
+│   ├── schemas.ts                                  # Zod validation schemas (< 80 LoC)
 │   └── index.ts
 ├── hooks/                                          # Custom Hooks & State Resolution
-│   ├── use<FeatureName>Logic.ts                    # TanStack Query & data fetching (< 150 LoC)
+│   ├── use<FeatureName>Logic.ts                    # Form state, modal toggle, dirty check (< 140 LoC)
+│   ├── use<FeatureName>Mutations.ts                # TanStack mutations (< 120 LoC)
 │   └── index.ts
 ├── utils/                                          # Pure Helpers & Validations
-│   ├── <featureName>Helper.ts                      # Formatters, pure calculators (< 100 LoC)
+│   ├── <featureName>Helper.ts                      # Formatters, pure converters (< 100 LoC)
 │   └── index.ts
 ├── components/                                     # Presentation Layer (Atomic)
-│   ├── atoms/                                      # Atoms: Các thành phần UI nhỏ nhất
-│   │   ├── <AtomName>.tsx                          # (< 80 LoC)
+│   ├── atoms/                                      # Atoms: Nhỏ nhất (< 80 LoC)
+│   │   ├── <AtomName>.tsx
 │   │   └── index.ts
-│   ├── molecules/                                  # Molecules: Nhóm các atoms
-│   │   ├── <MoleculeName>.tsx                      # (< 120 LoC)
+│   ├── molecules/                                  # Molecules: Nhóm atoms (< 150 LoC)
+│   │   ├── <MoleculeName>.tsx
 │   │   └── index.ts
-│   └── organisms/                                  # Organisms: Khối hoàn chỉnh kết nối Hook
-│       ├── <FeatureName>.tsx                       # Main Component (< 100 LoC)
+│   └── organisms/                                  # Organisms: Khối Drawer/Section hoàn chỉnh (< 180 LoC)
+│       ├── <OrganismName>.tsx
 │       └── index.ts
-└── __tests__/
-    └── <FeatureName>.test.tsx                      # Unit & integration tests
+└── __tests__/                                      # Co-located Test Suite
+    ├── <FeatureName>.test.tsx
+    └── <featureName>Helper.test.ts
 ```
 
 ---
 
-## 2. 🌐 Bắt Buộc 100% Đa Ngôn Ngữ (i18n Translation Mandate)
+## 4. 🌐 Bắt Buộc 100% Đa Ngôn Ngữ (i18n Translation Mandate)
 
-> [!CAUTION]
-> **TUYỆT ĐỐI KHÔNG HARDCODE CHUỖI VĂN BẢN (Text Strings)** trực tiếp trong mã nguồn TSX/JSX (kể cả tiếng Việt lẫn tiếng Anh).
+> [!IMPORTANT]
+> **TUYỆT ĐỐI KHÔNG HARDCODE CHUỖI VĂN BẢN (Text Strings)** trực tiếp trong mã nguồn TSX/JSX.
 
-### Quy tắc triển khai i18n:
 1. **Luôn sử dụng `useTranslation`**:
    ```tsx
    import { useTranslation } from "react-i18next";
    
    export function MyComponent() {
-     const { t } = useTranslation("erpInvoices"); // Sử dụng namespace tương ứng của module
+     const { t } = useTranslation("erpInvoices");
      return <span>{t("tabDetails", "1. Chi tiết")}</span>;
    }
    ```
-2. **Đồng bộ song ngữ 1-1**: Khi thêm hoặc sửa bất kỳ khóa (key) nào, **BẮT BUỘC cập nhật đồng thời cả 2 file từ điển**:
-   - **Tiếng Việt**: `src/modules/<module-name>/locales/vi.ts` (hoặc `src/core/locale/.../vi.ts`)
-   - **Tiếng Anh**: `src/core/locale/.../en.ts` (hoặc `src/modules/<module-name>/locales/en.ts`)
-3. **Fallback mặc định**: Luôn cung cấp fallback tiếng Việt rõ ràng ở tham số thứ 2 của hàm `t("key", "Fallback tiếng Việt")`.
-
----
-
-## 3. 📱 Tối Ưu Web Responsive Toàn Diện (Web Responsive Excellence)
-
-Mọi component và phân hệ con khi chia tách bắt buộc phải thích ứng mượt mà trên mọi độ phân giải:
-- **Mobile (< 640px)**
-- **Tablet (< 1024px)**
-- **Desktop Laptop (1280px - 1440px)**
-- **FHD & Ultrawide ($\ge 1920px$)**
-
-### Các quy tắc kỹ thuật Responsive cốt lõi:
-1. **Thanh Tabs & Toolbars (Cuộn ngang cảm ứng)**:
-   - Khi có nhiều tabs hoặc thanh nút điều khiển ngang, bọc trong container có:
-     ```tsx
-     <div className="flex items-center overflow-x-auto scrollbar-none max-w-full pb-1 -mb-1 shrink-0">
-       <PillTabs ... />
-     </div>
-     ```
-   - Thanh Header tổng hợp kết hợp toolbar phải dùng layout co giãn:
-     ```tsx
-     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pt-0.5 w-full">
-     ```
-2. **Lưới Thẻ Chỉ Số & KPI (Responsive Grid)**:
-   - Tuyệt đối không hardcode số cột cứng (`grid-cols-4`). Bắt buộc áp dụng responsive breakpoints:
-     ```tsx
-     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-2.5 w-full">
-     ```
-3. **Tránh Tràn Chiều Rộng (No Horizontal Overflow)**:
-   - Không đặt `width` cố định dạng pixel lớn (`w-[800px]`) vào các container cấp trang hoặc section.
-   - Luôn sử dụng `w-full min-w-0 max-w-full`.
-   - Với bảng dữ liệu `<StandardTable>`, truyền prop `containerClassName="flex-1 min-h-0 w-full"` và quản lý cuộn bên trong bảng qua `minWidth`.
-
----
-
-## 4. 🧩 Ưu Tiên Tái Sử Dụng Reusable Components Có Sẵn Trong App (App Reusables First)
-
-> [!IMPORTANT]
-> Tuyệt đối không tự tạo lại các thẻ HTML thô (`<button>`, `<input>`, `<select>`, `<dialog>`, thẻ div viền tự chế) khi hệ thống đã có sẵn các Reusable Components chuẩn mực.
-
-### Danh mục Reusable Components chuẩn của dự án:
-
-| Phân loại | Component chuẩn trong App | Đường dẫn Import (`@/...`) | Mục đích sử dụng |
-| :--- | :--- | :--- | :--- |
-| **Drawer Container** | `<StandardFormDrawer>` | `@/shared/components/StandardFormDrawer` | Khung Drawer chuẩn 1 cột / 2 cột / Top-tabs |
-| **Drawer Section** | `<DrawerSection>` | `@/shared/components/DrawerModal` | Bao bọc các nhóm form, bảng hoặc attachments có header uppercase & collapse |
-| **Drawer Rows / Fields** | `<DrawerRow>`, `<DrawerField>` | `@/shared/components/DrawerModal` | Hàng dữ liệu nhãn/giá trị hoặc ô nhập liệu chuẩn |
-| **Bảng dữ liệu** | `<StandardTable variant="spreadsheet">` | `@/shared/components/StandardTable` | Bảng ô tính kế toán, phân trang, resize cột, context menu |
-| **Bảng Data Table** | `<DataTable>` | `@/shared/components/DataTable` | Bảng quản lý lớn với bộ lọc header filter đa chiều |
-| **Điều hướng Tab** | `<PillTabs>` | `@/shared/components/PillTabs` | Thanh chuyển tab mềm, badge count, variant button-group |
-| **Dropdown / Chọn lựa** | `<Combobox>` | `@/shared/components/Combobox` | Dropdown tìm kiếm, chọn đối tác, chi nhánh, phân loại |
-| **Nhập văn bản có Buffer**| `<BufferedTextarea>` | `@/shared/components/BufferedTextarea` | Textarea phản hồi tức thì 0ms, debounce 500ms, nút xóa nhanh |
-| **Hộp thoại xác nhận** | `<ConfirmModal>` | `@/shared/components/ConfirmModal` | Modal popup xác nhận thao tác xóa, cập nhật, cảnh báo |
-| **Nút bấm / Badge** | `<Button>`, `<Badge>` | `@/shared/components/ui/Button`, `@/shared/components/ui/badge` | Nút bấm, nhãn trạng thái đồng bộ |
-| **Sao chép nhanh** | `<CopyButton>` | `@/shared/components/CopyButton` | Nút copy clipboard mã chứng từ, MST, địa chỉ |
-| **Biểu đồ** | `<BarChart>`, `<LineChart>` | `@/shared/components/charts/...` | Biểu đồ cột, biểu đồ đường thích ứng |
+2. **Đồng bộ song ngữ 1-1**: Cập nhật đồng thời cả `locales/vi.ts` và `locales/en.ts`.
+3. **Fallback mặc định**: Luôn cung cấp fallback tiếng Việt rõ ràng: `t("key", "Fallback tiếng Việt")`.
 
 ---
 
@@ -159,138 +150,46 @@ Mọi component và phân hệ con khi chia tách bắt buộc phải thích ứ
 
 ---
 
-## 6. 📝 Mẫu Triển Khai Minh Họa (Complete Implementation Pattern)
+## 6. 📱 Tối Ưu Web Responsive Toàn Diện
 
-### 🔹 1. Custom Hook (`hooks/useInvoiceSummaryLogic.ts`):
-```typescript
-import { useState, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { erpInvoicesCoreApi } from "../../api/erpInvoicesCoreApi";
+- **Thanh Tabs & Toolbars**: Luôn bọc trong container cuộn ngang cảm ứng:
+  `overflow-x-auto scrollbar-none max-w-full pb-1 -mb-1 shrink-0`
+- **Lưới Thẻ Chỉ Số**: Áp dụng breakpoints `grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-2.5`.
+- **Tránh Tràn Chiều Rộng**: Sử dụng `w-full min-w-0 max-w-full`, không dùng `w-[px]` cố định lớn.
 
-export function useInvoiceSummaryLogic(partnerTaxCode?: string) {
-  const [selectedPeriod, setSelectedPeriod] = useState<string>("ALL");
+---
 
-  const { data: stats, isLoading } = useQuery({
-    queryKey: ["partner-stats", partnerTaxCode, selectedPeriod],
-    queryFn: () => erpInvoicesCoreApi.getStats(partnerTaxCode, selectedPeriod),
-    enabled: Boolean(partnerTaxCode),
-    staleTime: 60000,
-  });
+## 7. 🎯 Cây Quyết Định (Decision Tree): Lưu Trữ Component Ở Đâu?
 
-  const netBalance = useMemo(() => {
-    return (stats?.totalOut || 0) - (stats?.totalIn || 0);
-  }, [stats]);
-
-  return {
-    selectedPeriod,
-    setSelectedPeriod,
-    stats,
-    isLoading,
-    netBalance,
-  };
-}
 ```
-
-### 🔹 2. Sub-Tab Component (`InvoiceSummarySubTab.tsx`):
-```tsx
-import React from "react";
-import { useTranslation } from "react-i18next";
-import { TrendingUp, Scale, FileText } from "lucide-react";
-import { DrawerSection } from "@/shared/components/DrawerModal";
-import { money } from "@/shared/utils/format";
-import { cn } from "@/shared/utils";
-import { useInvoiceSummaryLogic } from "./hooks/useInvoiceSummaryLogic";
-
-export interface InvoiceSummarySubTabProps {
-  partnerTaxCode?: string;
-}
-
-export const InvoiceSummarySubTab = React.memo(function InvoiceSummarySubTab({
-  partnerTaxCode,
-}: InvoiceSummarySubTabProps) {
-  const { t } = useTranslation("erpInvoices");
-  const { stats, isLoading, netBalance } = useInvoiceSummaryLogic(partnerTaxCode);
-
-  return (
-    <div className="space-y-3 flex-1 min-h-0 overflow-y-auto pr-1 w-full">
-      <DrawerSection
-        title={
-          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">
-            <TrendingUp className="w-4 h-4 text-primary" />
-            <span>{t("tabSummaryTitle", "Tổng quan biến động")}</span>
-          </div>
-        }
-        collapsible={true}
-        defaultCollapsed={false}
-        className="p-3 border border-slate-200/80 dark:border-slate-800"
-      >
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2.5 w-full">
-          {/* Card 1: Doanh số mua vào */}
-          <div className="p-3 rounded-xl bg-orange-500/10 border border-orange-500/20">
-            <div className="text-xs text-orange-600 dark:text-orange-400 font-semibold">
-              {t("totalIn", "Tổng mua vào")}
-            </div>
-            <div className="mt-2 text-lg font-bold text-foreground tabular-nums">
-              {money(stats?.totalIn || 0)}
-            </div>
-          </div>
-
-          {/* Card 2: Doanh số bán ra */}
-          <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
-            <div className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold">
-              {t("totalOut", "Tổng bán ra")}
-            </div>
-            <div className="mt-2 text-lg font-bold text-foreground tabular-nums">
-              {money(stats?.totalOut || 0)}
-            </div>
-          </div>
-
-          {/* Card 3: Chênh lệch ròng (No Blue Mandate) */}
-          <div
-            className={cn(
-              "p-3 rounded-xl border",
-              netBalance >= 0
-                ? "bg-emerald-500/10 border-emerald-500/20"
-                : "bg-amber-500/10 border-amber-500/20",
-            )}
-          >
-            <div className="flex items-center gap-1 text-xs font-semibold">
-              <Scale className="w-3.5 h-3.5" />
-              <span>{t("netDifference", "Chênh lệch ròng")}</span>
-            </div>
-            <div
-              className={cn(
-                "mt-2 text-lg font-bold tabular-nums",
-                netBalance >= 0
-                  ? "text-emerald-600 dark:text-emerald-400"
-                  : "text-amber-600 dark:text-amber-400",
-              )}
-            >
-              {netBalance >= 0 ? "+" : ""}
-              {money(netBalance)}
-            </div>
-          </div>
-        </div>
-      </DrawerSection>
-    </div>
-  );
-});
+Khi tạo mới một Component:
+├── Có dính dáng tới API hoặc dữ liệu nghiệp vụ cụ thể không?
+│   ├── KHÔNG (Thuần túy UI/Presentation):
+│   │   ├── Là phần tử nguyên tử cơ bản (Button, Input, Badge, Dialog)?
+│   │   │   └── 👉 Đặt vào `src/shared/ui/` (Level 1: Atoms)
+│   │   ├── Là cụm nhập liệu/chức năng nhỏ (Combobox, PillTabs, DatePicker)?
+│   │   │   └── 👉 Đặt vào `src/shared/components/molecules/` (Level 2: Molecules)
+│   │   ├── Là khối UI phức hợp hoàn chỉnh (StandardTable, StandardFormDrawer, FilterPanel)?
+│   │   │   └── 👉 Đặt vào `src/shared/components/organisms/` (Level 3: Organisms)
+│   │   └── Là khung xương bố cục trang/bảng/drawer mẫu (SpreadsheetPageTemplate, PageLayout)?
+│   │       └── 👉 Đặt vào `src/shared/components/templates/` (Level 4: Templates)
+│   │
+│   └── CÓ (Có gọi API, có State nghiệp vụ, có Domain Models):
+│       ├── Tính năng dùng chung cho từ 2 module trở lên (Custom fields, Traceability, Attachments)?
+│       │   └── 👉 Đặt vào `src/shared/features/<feature-name>/` (Cross-Cutting Features)
+│       └── Tính năng chỉ phục vụ riêng 1 phân hệ (Hóa đơn, Kho, Garage, Kế toán)?
+│           └── 👉 Đặt vào `src/modules/<module-name>/` (Level 5: Pages/Module Components)
 ```
 
 ---
 
-## 📋 Checklist Kiểm Tra Trước Khi Hoàn Thành (Atomic DoD)
+## 📋 Checklist Kiểm Tra Hoàn Thành (Atomic DoD)
 
-- [ ] **Kích thước file**: File Component chính và các sub-components đều $< 200\text{ LoC}$?
-- [ ] **Phân tách Logic**: Toàn bộ TanStack Query, mutations, và form state đã được đưa vào custom hook riêng (`use...Logic.ts`) chưa?
-- [ ] **Đa ngôn ngữ (i18n)**:
-  - [ ] Đã dùng `useTranslation("namespace")` cho toàn bộ văn bản giao diện?
-  - [ ] Đã thêm đầy đủ key và fallback vào cả `locales/vi.ts` và `locales/en.ts` (hoặc `core/locale/...`)?
-- [ ] **Web Responsive**:
-  - [ ] Thanh tab / thanh công cụ có hỗ trợ cuộn ngang `overflow-x-auto scrollbar-none max-w-full` trên mobile/tablet chưa?
-  - [ ] Lưới layout đã dùng `grid-cols-1 sm:grid-cols-2 lg:grid-cols-4` thay vì cột cứng?
-  - [ ] Không có class `w-[px]` cố định gây tràn màn hình?
-- [ ] **Tái sử dụng App Components**:
-  - [ ] Sử dụng `<DrawerSection>`, `<PillTabs>`, `<StandardTable>`, `<Combobox>`, `<Button>`, `<Badge>` thay vì thẻ HTML thô?
-- [ ] **No Blue Mandate**: Đã kiểm tra không còn class màu xanh dương (`blue-*`) nào trong component chưa?
-- [ ] **Type Check & Tests**: Đã chạy `bun run type:check` và unit tests pass 100% chưa?
+- [ ] **Phân lớp đúng đắn**: Component được đặt đúng thư mục theo 5 tầng Atomic & Features?
+- [ ] **Kích thước file**: Tất cả các file đều $< 200\text{ LoC}$?
+- [ ] **Tách biệt Logic & UI**: Toàn bộ TanStack Query, mutations, và form state nằm trong `hooks/`?
+- [ ] **Co-located Tests**: Test nằm ngay cạnh component hoặc trong `__tests__/` nội bộ?
+- [ ] **Đa ngôn ngữ 100%**: Sử dụng `useTranslation` có fallback tiếng Việt và đồng bộ VI/EN?
+- [ ] **No Blue Mandate**: Tuyệt đối không còn class `blue-*` nào trong giao diện?
+- [ ] **Web Responsive**: Hỗ trợ đầy đủ mobile, tablet, laptop và màn hình lớn?
+- [ ] **Type Check & Tests**: `bun run type:check` 0 lỗi và unit tests pass 100%?
