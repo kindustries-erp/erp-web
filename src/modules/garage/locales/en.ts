@@ -194,6 +194,11 @@ export const garageEn = {
       OJ_NGOAI: "OJ External",
       KHAC: "Other",
     },
+    exclusions: {
+      reports: "Exclude from Reports",
+      debt: "Exclude from Debt",
+      allExclusions: "All Exclusion Flags",
+    },
     configDrawer: {
       title: "Case Configuration:",
       generalInfo: "Case Information",
@@ -336,8 +341,19 @@ export const garageEn = {
       customer: "Customer",
       serviceStatus: "Status",
       creationDate: "Creation Date",
-      classificationAndNotes: "Classification & ERP Notes",
+      classificationAndNotes: "Classification & ERP Attributes",
       classification: "Classification",
+      defaultAttributes: "Default Attributes",
+      customAttributes: "Custom Attributes",
+      exclusionsSection: "Exclusion Rules",
+      excludeFromReports: "Exclude from Reports",
+      excludeFromReportsDesc:
+        "Exclude this case from P&L, Checkpoint & Workshop Revenue Reports",
+      excludeFromDebt: "Exclude from Debt & Receivables",
+      excludeFromDebtDesc:
+        "Exclude this case from Customer Debt & Aging Ledger",
+      moduleCustomFields: "Category Attributes",
+      moduleGlobalFields: "Global Attributes",
       kgaraClassification: "KGara Vehicle Source",
       kgaraClassificationHint: "Synced from KGara (Read-only)",
       erpNotes: "ERP Notes",

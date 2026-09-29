@@ -9,6 +9,7 @@ export const MODULE_KEYS = {
   GOODS_RECEIPT: "GOODS_RECEIPT",
   GOODS_ISSUE: "GOODS_ISSUE",
   INVENTORY_ADJUSTMENT: "INVENTORY_ADJUSTMENT",
+  GARAGE_CASE: "GARAGE_CASE",
 } as const;
 
 export type ModuleKey = (typeof MODULE_KEYS)[keyof typeof MODULE_KEYS] | string;

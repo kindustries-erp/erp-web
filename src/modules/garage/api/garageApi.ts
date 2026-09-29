@@ -73,6 +73,16 @@ export interface CaseServicesResponse {
   };
 }
 
+export interface UpdateCaseConfigPayload {
+  categoryId?: string | null;
+  classification?: string | null;
+  excludeFromReports?: boolean;
+  excludeFromDebt?: boolean;
+  erpNotes?: string | null;
+  customAttributes?: Record<string, any>;
+  attributes?: Record<string, any>;
+}
+
 export const garageApi = {
   exportCompletedCasesExcel: async (
     params: ExportCompletedCasesParams,
@@ -376,10 +386,9 @@ export const garageApi = {
     );
     return res.data;
   },
-
   updateCaseConfig: async (
     caseId: string,
-    payload: { classification?: string | null; erpNotes?: string | null },
+    payload: UpdateCaseConfigPayload,
   ) => {
     const res = await axiosInstance.patch(
       `${BASE}/cases/${caseId}/config`,

@@ -195,6 +195,11 @@ export const garageVi = {
       OJ_NGOAI: "OJ Ngoài",
       KHAC: "Khác",
     },
+    exclusions: {
+      reports: "Không báo cáo",
+      debt: "Không công nợ",
+      allExclusions: "Tất cả cờ loại trừ",
+    },
     configDrawer: {
       title: "Cấu hình phiếu dịch vụ:",
       generalInfo: "Thông tin phiếu dịch vụ",
@@ -338,8 +343,19 @@ export const garageVi = {
       customer: "Khách hàng",
       serviceStatus: "Trạng thái",
       creationDate: "Ngày phát sinh",
-      classificationAndNotes: "Phân loại & Ghi chú ERP",
+      classificationAndNotes: "Phân loại & Thuộc tính ERP",
       classification: "Phân loại",
+      defaultAttributes: "Thuộc tính mặc định",
+      customAttributes: "Thuộc tính tùy chỉnh",
+      exclusionsSection: "Quy tắc loại trừ",
+      excludeFromReports: "Không tính vào báo cáo",
+      excludeFromReportsDesc:
+        "Loại trừ vụ việc này khỏi Báo cáo P&L, Checkpoint & Doanh thu Garage",
+      excludeFromDebt: "Không tính công nợ doanh thu / chi phí",
+      excludeFromDebtDesc:
+        "Loại trừ vụ việc này khỏi Sổ theo dõi công nợ khách hàng Garage",
+      moduleCustomFields: "Thuộc tính theo phân loại",
+      moduleGlobalFields: "Thuộc tính chung",
       kgaraClassification: "Nguồn gốc xe (KGara)",
       kgaraClassificationHint: "Đồng bộ từ KGara - Bất biến",
       erpNotes: "Ghi chú ERP",
