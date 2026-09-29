@@ -147,6 +147,7 @@ export const debtsVi = {
     customRange: "Tùy chỉnh từ ngày/đến ngày",
     dateFrom: "Từ ngày",
     dateTo: "Đến ngày",
+    allTime: "Tất cả thời gian",
     allRange: "Tất cả",
     start: "Xuất Excel",
     starting: "Đang khởi tạo...",

@@ -60,20 +60,35 @@ export const GARAGE_CASE_CLASSIFICATIONS: Record<string, ClassificationMeta> = {
   },
 };
 
-interface GarageCaseClassificationBadgeProps {
+export interface CategoryObject {
+  id?: string;
+  code?: string;
+  name?: string;
+  nameEn?: string | null;
+  description?: string | null;
+  color?: string | null;
+}
+
+export interface GarageCaseClassificationBadgeProps {
   classification?: string | null;
+  category?: CategoryObject | null;
   className?: string;
   interactive?: boolean;
 }
 
 export function GarageCaseClassificationBadge({
   classification,
+  category,
   className,
   interactive = false,
 }: GarageCaseClassificationBadgeProps) {
   const { t } = useTranslation("garage");
 
-  if (!classification || !GARAGE_CASE_CLASSIFICATIONS[classification]) {
+  // If category object is passed or classification matches a known category code
+  const effectiveCode = category?.code || classification || "";
+  const meta = GARAGE_CASE_CLASSIFICATIONS[effectiveCode];
+
+  if (!effectiveCode && !category?.name) {
     return (
       <span
         className={cn(
@@ -89,19 +104,33 @@ export function GarageCaseClassificationBadge({
     );
   }
 
-  const meta = GARAGE_CASE_CLASSIFICATIONS[classification];
+  const label =
+    category?.name ||
+    (meta
+      ? t(`cases.classification.${meta.value}`, meta.label)
+      : effectiveCode);
+
+  const icon = meta ? (
+    meta.icon
+  ) : (
+    <Building2 className="w-3 h-3 mr-1 shrink-0" />
+  );
+
+  const colorClass =
+    meta?.colorClass ||
+    "bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-900/50 dark:text-slate-300 dark:border-slate-800/40";
 
   return (
     <span
       className={cn(
         "inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold border transition-all select-none",
-        meta.colorClass,
-        interactive && "hover:opacity-85 hover:shadow-xs",
+        colorClass,
+        interactive && "hover:opacity-85 hover:shadow-xs cursor-pointer",
         className,
       )}
     >
-      {meta.icon}
-      {t(`cases.classification.${meta.value}`, meta.label)}
+      {icon}
+      {label}
     </span>
   );
 }

@@ -59,7 +59,7 @@ describe("ErpInvoiceDetailLinesTable", () => {
       screen.getByText("BÁNH TRUNG THU NHÂN THẬP CẨM LẠP XƯỞNG 150GR"),
     ).toBeInTheDocument();
     expect(screen.getByText("Tem UV")).toBeInTheDocument();
-    expect(screen.getAllByText("Cái").length).toBe(2);
+    expect(screen.getAllByText("CÁI").length).toBe(2);
     expect(screen.getAllByText("8%").length).toBe(2);
     expect(screen.getByText("50")).toBeInTheDocument();
     expect(screen.getByText("25")).toBeInTheDocument();

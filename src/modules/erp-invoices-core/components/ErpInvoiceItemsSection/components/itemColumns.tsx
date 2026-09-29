@@ -13,6 +13,7 @@ import type { ErpInvoiceItemRow } from "../../../api/erpInvoicesCoreApi";
 import type { useErpInvoiceItemsList } from "../../../hooks/useErpInvoiceItemsList";
 import { formatAmtOption } from "../../ErpInvoicesTab/utils";
 import { TaxInvoiceStatusBadge } from "../../ErpInvoicesTab/components/cells/InvoiceStatusBadge";
+import { formatUom } from "../../../utils/uom.helper";
 
 export const formatQtyOption = (val: string | number) => {
   const n = Number(val || 0);
@@ -422,8 +423,8 @@ export function useItemColumns({
         enableResizing: true,
         className: "text-center",
         cell: (row: ErpInvoiceItemRow) => (
-          <span className="w-full block text-center text-xs text-muted-foreground">
-            {row.unit || "—"}
+          <span className="w-full block text-center text-xs font-medium text-slate-700 dark:text-slate-300">
+            {formatUom(row.unit)}
           </span>
         ),
       },

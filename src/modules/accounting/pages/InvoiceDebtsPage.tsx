@@ -165,15 +165,10 @@ export function InvoiceDebtsPage() {
             icon: <FileSpreadsheet className="w-4 h-4 text-emerald-600" />,
             onClick: () => setExportDrawerOpen(true),
           },
-          {
-            label: t("debts:exportCurrentView", "Xuất nhanh dữ liệu hiện tại"),
-            icon: <Download className="w-4 h-4 text-primary" />,
-            onClick: handleQuickExport,
-          },
         ],
       },
     ],
-    [handleQuickExport, t],
+    [t],
   );
 
   // 4. Server-Side Column Header Filter Builder
@@ -1158,11 +1153,12 @@ export function InvoiceDebtsPage() {
             listHook.setPage(1);
           }}
           onRefresh={() => listHook.refetch()}
-          createLabel={t("debts:exportExcel", "Xuất Excel")}
-          createIcon={
-            <FileSpreadsheet className="w-4 h-4 mr-1 text-primary-fg/80" />
-          }
-          onCreate={() => setExportDrawerOpen(true)}
+          createLabel={t(
+            "debts:exportCurrentView",
+            "Xuất nhanh dữ liệu hiện tại",
+          )}
+          createIcon={<Download className="w-4 h-4 mr-1 text-primary-fg/80" />}
+          onCreate={handleQuickExport}
           createActions={createActions}
           activeFilterCount={listHook.activeFilterCount}
           onClearAllFilters={listHook.clearAllFilters}

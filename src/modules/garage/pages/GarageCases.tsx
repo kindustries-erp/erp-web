@@ -20,6 +20,7 @@ import {
   GarageCaseClassificationBadge,
   GARAGE_CASE_CLASSIFICATIONS,
 } from "../components/GarageCaseClassificationBadge";
+import { GarageCaseExclusionBadges } from "../components/GarageCaseExclusionBadges";
 import {
   useGarageCases,
   useGarageBranches,
@@ -1263,7 +1264,7 @@ export function GarageCases({
       enableResizing: true,
       className: "text-center",
       cell: (item: any) => (
-        <div className="w-full flex items-center justify-center py-0.5">
+        <div className="w-full flex items-center justify-center gap-1.5 py-0.5">
           <button
             type="button"
             onClick={(e) => {
@@ -1275,10 +1276,15 @@ export function GarageCases({
             title={t("cases.actions.configure", "Phân loại")}
           >
             <GarageCaseClassificationBadge
+              category={item.category}
               classification={item.classification}
               interactive={true}
             />
           </button>
+          <GarageCaseExclusionBadges
+            excludeFromReports={item.excludeFromReports}
+            excludeFromDebt={item.excludeFromDebt}
+          />
         </div>
       ),
     },

@@ -39,6 +39,7 @@ import { Button } from "@/shared/components/ui/Button";
 import { money } from "@/shared/utils/format";
 import { cn } from "@/shared/utils";
 import { VietnamInvoiceTemplate } from "./VietnamInvoiceTemplate";
+import { formatUom } from "../utils/uom.helper";
 import { DrawerModal, DrawerSection } from "@/shared/components/DrawerModal";
 import { InvoiceNoCell } from "./ErpInvoicesTab/components/cells/InvoiceNoCell";
 import { PillTabs } from "@/shared/components/PillTabs";
@@ -984,7 +985,7 @@ export const ErpInvoicePartnerTab = React.memo(function ErpInvoicePartnerTab({
         header: itemHeaderFilter("unit", t("unit", "ĐVT")),
         cell: (row: ErpInvoiceItemRow) => (
           <span className="text-center w-full block text-xs text-muted-foreground">
-            {row.unit || "—"}
+            {formatUom(row.unit, "—")}
           </span>
         ),
       },

@@ -1,3 +1,5 @@
+import { formatUom } from "./uom.helper";
+
 const DAO_TRI_OUT_TAX_CODES = new Set([
   "0110269067-001",
   "0110269067",
@@ -41,7 +43,7 @@ export interface OutInvoiceLineDisplayInput {
 }
 
 export interface OutInvoiceLineDisplayResult {
-  id?: string | number | null;
+  id: string | number | null;
   description: string;
   unit: string;
   quantity: number;
@@ -60,7 +62,7 @@ export function normalizeOutInvoiceLineDisplay(
   invoiceLineCount: number = 1,
 ): OutInvoiceLineDisplayResult {
   const description = normalizeText(item.description || item.unitName || "");
-  const baseUnit = normalizeText(item.unit || item.unitName || "");
+  const baseUnit = formatUom(item.unit || item.unitName, "");
   const quantity = toNumber(item.quantity);
   const unitPrice = toNumber(item.unitPrice);
   const discountAmount = toNumber(item.discountAmount);
