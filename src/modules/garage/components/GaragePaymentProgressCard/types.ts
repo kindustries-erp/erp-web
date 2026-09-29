@@ -19,9 +19,12 @@ export interface PaymentProgressTotals {
   receivable: number;
   receivableWithInvoice: number;
   receivableNoInvoice: number;
+  excludedDebtAmount: number;
+  excludedDebtCaseCount: number;
   cost: number;
   paidCost: number;
   payableCost: number;
   payableCostWithInvoice: number;
   payableCostNoInvoice: number;
+  excludedDebtCost: number;
 }

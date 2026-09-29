@@ -1338,6 +1338,68 @@ export function GarageCases({
         );
       },
     },
+    // 12.1 Quy tắc loại trừ (Loại trừ Báo cáo / Không theo dõi công nợ)
+    {
+      key: "exclusionRules",
+      label: t("cases.columns.exclusionRules", "Quy tắc loại trừ"),
+      header: (
+        <TableColumnHeaderFilter
+          {...createHeaderProps(
+            "exclusionRules",
+            t("cases.columns.exclusionRules", "Quy tắc loại trừ"),
+            "center",
+            false,
+            (val: string) => {
+              if (val === "EXCLUDE_REPORTS")
+                return t("cases.exclusions.excludeReports", "Loại trừ báo cáo");
+              if (val === "EXCLUDE_DEBT")
+                return t(
+                  "cases.exclusions.excludeDebt",
+                  "Không theo dõi công nợ",
+                );
+              if (val === "NORMAL" || val === "NONE")
+                return t("cases.exclusions.normal", "Bình thường (Đầy đủ)");
+              return val;
+            },
+            true,
+          )}
+          fetchOptions={async () => ({
+            items: [
+              {
+                label: t("cases.exclusions.excludeReports", "Loại trừ báo cáo"),
+                value: "EXCLUDE_REPORTS",
+              },
+              {
+                label: t(
+                  "cases.exclusions.excludeDebt",
+                  "Không theo dõi công nợ",
+                ),
+                value: "EXCLUDE_DEBT",
+              },
+              {
+                label: t("cases.exclusions.normal", "Bình thường (Đầy đủ)"),
+                value: "NORMAL",
+              },
+            ],
+            total: 3,
+            next: null,
+          })}
+          allFilters={tableState.columnFilters}
+        />
+      ),
+      sortable: false,
+      size: 130,
+      enableResizing: true,
+      className: "text-center",
+      cell: (item: any) => (
+        <div className="w-full flex items-center justify-center py-0.5">
+          <GarageCaseExclusionBadges
+            excludeFromReports={item.excludeFromReports}
+            excludeFromDebt={item.excludeFromDebt}
+          />
+        </div>
+      ),
+    },
     // 12. Trạng thái
     {
       key: "statusName",

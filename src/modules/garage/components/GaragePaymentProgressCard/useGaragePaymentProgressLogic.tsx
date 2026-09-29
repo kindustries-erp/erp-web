@@ -92,6 +92,9 @@ export function useGaragePaymentProgressLogic({
           item.payableCostWithInvoice || 0,
         payableCostNoInvoice: (item: GarageTrendItem) =>
           item.payableCostNoInvoice || 0,
+        excludedDebtAmount: (item: GarageTrendItem) =>
+          item.excludedDebtAmount || 0,
+        excludedDebtCost: (item: GarageTrendItem) => item.excludedDebtCost || 0,
         revenue: (item: GarageTrendItem) => item.revenue || 0,
       },
     });
@@ -109,6 +112,10 @@ export function useGaragePaymentProgressLogic({
           acc.receivableWithInvoice + (item.receivableWithInvoice || 0),
         receivableNoInvoice:
           acc.receivableNoInvoice + (item.receivableNoInvoice || 0),
+        excludedDebtAmount:
+          acc.excludedDebtAmount + (item.excludedDebtAmount || 0),
+        excludedDebtCaseCount:
+          acc.excludedDebtCaseCount + (item.excludedDebtCaseCount || 0),
         cost: acc.cost + (item.cost || 0),
         paidCost: acc.paidCost + (item.paidCost || 0),
         payableCost: acc.payableCost + (item.payableCost || 0),
@@ -116,6 +123,7 @@ export function useGaragePaymentProgressLogic({
           acc.payableCostWithInvoice + (item.payableCostWithInvoice || 0),
         payableCostNoInvoice:
           acc.payableCostNoInvoice + (item.payableCostNoInvoice || 0),
+        excludedDebtCost: acc.excludedDebtCost + (item.excludedDebtCost || 0),
       }),
       {
         caseCount: 0,
@@ -125,11 +133,14 @@ export function useGaragePaymentProgressLogic({
         receivable: 0,
         receivableWithInvoice: 0,
         receivableNoInvoice: 0,
+        excludedDebtAmount: 0,
+        excludedDebtCaseCount: 0,
         cost: 0,
         paidCost: 0,
         payableCost: 0,
         payableCostWithInvoice: 0,
         payableCostNoInvoice: 0,
+        excludedDebtCost: 0,
       },
     );
   }, [processedItems]);

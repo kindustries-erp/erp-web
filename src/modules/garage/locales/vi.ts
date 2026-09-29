@@ -182,6 +182,7 @@ export const garageVi = {
       classification: "Phân loại ERP",
       classificationErp: "Phân loại ERP",
       kgaraClassification: "Phân loại KGara",
+      exclusionRules: "Quy tắc loại trừ",
     },
     summary: {
       items: "Phiếu dịch vụ",
@@ -199,6 +200,9 @@ export const garageVi = {
       reports: "Không báo cáo",
       debt: "Không công nợ",
       allExclusions: "Tất cả cờ loại trừ",
+      excludeReports: "Loại trừ báo cáo",
+      excludeDebt: "Không theo dõi công nợ",
+      normal: "Bình thường (Đầy đủ)",
     },
     configDrawer: {
       title: "Cấu hình phiếu dịch vụ:",
@@ -1131,6 +1135,7 @@ export const garageVi = {
       receivable: "Còn Phải Thu",
       receivableWithInvoice: "Còn Phải Thu Có HĐ",
       receivableNoInvoice: "Còn Phải Thu Không HĐ",
+      excludedDebt: "Không Theo Dõi Công Nợ",
       withInvoice: "Có HĐ",
       noInvoice: "Không HĐ",
       cost: "Tổng Phải Trả",
@@ -1138,6 +1143,7 @@ export const garageVi = {
       payableCost: "Còn Phải Trả",
       payableCostWithInvoice: "Còn Phải Trả Có HĐ",
       payableCostNoInvoice: "Còn Phải Trả Không HĐ",
+      excludedDebtCost: "Không Theo Dõi Công Nợ",
       withInvoiceCost: "Có HĐ",
       noInvoiceCost: "Không HĐ",
     },
