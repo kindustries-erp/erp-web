@@ -4,7 +4,7 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ErpInvoicePartnerTab } from "../components/organisms/erp-invoice-partner-tab";
 import { erpInvoicesCoreApi } from "../api/erpInvoicesCoreApi";
-import { erpInvoiceDashboardApi } from "../api/erpInvoiceDashboardApi";
+import { invoiceDebtsApi } from "@/modules/accounting/api/invoiceDebtsApi";
 
 // Mocks
 vi.mock("../api/erpInvoicesCoreApi", () => ({
@@ -63,11 +63,9 @@ vi.mock("../api/erpInvoicesCoreApi", () => ({
   },
 }));
 
-vi.mock("../api/erpInvoiceDashboardApi", () => ({
-  erpInvoiceDashboardApi: {
-    getPartnerStats: vi.fn().mockResolvedValue({
-      cashTrend: [],
-    }),
+vi.mock("@/modules/accounting/api/invoiceDebtsApi", () => ({
+  invoiceDebtsApi: {
+    getPartnerInvoices: vi.fn().mockResolvedValue([]),
   },
 }));
 
@@ -175,12 +173,19 @@ describe("ErpInvoicePartnerTab", () => {
   });
 
   it("switches to '4. Biến động' when clicked and renders analytics dashboard", async () => {
-    (erpInvoiceDashboardApi.getPartnerStats as any).mockResolvedValueOnce({
-      cashTrend: [
-        { label: "2026-01", cashIn: 5000000, cashOut: 2000000 },
-        { label: "2026-02", cashIn: 8000000, cashOut: 3000000 },
-      ],
-    });
+    (invoiceDebtsApi.getPartnerInvoices as any).mockResolvedValueOnce([
+      {
+        id: "inv-debt-1",
+        invoiceNo: "0000001",
+        serialNo: "1C26TGA",
+        invoiceDate: "2026-03-01",
+        totalAmount: 5000000,
+        paidAmount: 2000000,
+        balanceAmount: 3000000,
+        agingDays: 20,
+        status: "CONFIRMED",
+      },
+    ]);
 
     renderWithClient(
       <ErpInvoicePartnerTab
@@ -193,13 +198,22 @@ describe("ErpInvoicePartnerTab", () => {
     fireEvent.click(analyticsSubTabBtn);
 
     await waitFor(() => {
-      expect(erpInvoiceDashboardApi.getPartnerStats).toHaveBeenCalledWith(
+      expect(invoiceDebtsApi.getPartnerInvoices).toHaveBeenCalledWith(
         "0101234567",
+        expect.objectContaining({
+          partner_type: "SUPPLIER",
+        }),
       );
       expect(
-        screen.getByText("Biểu đồ biến động theo tháng"),
+        screen.getByText("Biến động hóa đơn theo tháng"),
       ).toBeInTheDocument();
-      expect(screen.getByText("Bảng kê biến động theo kỳ")).toBeInTheDocument();
+      expect(screen.getByText("Cơ cấu phân bổ tuổi nợ")).toBeInTheDocument();
+      expect(
+        screen.getByText("Biểu đồ luân chuyển & Dòng tiền tích lũy"),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText("Tỷ lệ thanh toán theo từng tháng (%)"),
+      ).toBeInTheDocument();
     });
   });
 });

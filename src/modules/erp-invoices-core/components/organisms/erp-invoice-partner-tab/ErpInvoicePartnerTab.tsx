@@ -6,15 +6,12 @@ import {
   Building2,
   FileText,
   TrendingUp,
-  TrendingDown,
   CreditCard,
   MapPin,
   AlertCircle,
   Eye,
   RotateCcw,
   Boxes,
-  Calendar,
-  Scale,
   Paperclip,
 } from "lucide-react";
 import { CopyButton } from "@/shared/components/CopyButton";
@@ -23,21 +20,19 @@ import {
   type ErpInvoice,
   type ErpInvoiceItemRow,
 } from "@/modules/erp-invoices-core/api/erpInvoicesCoreApi";
-import { erpInvoiceDashboardApi } from "@/modules/erp-invoices-core/api/erpInvoiceDashboardApi";
+import { invoiceDebtsApi } from "@/modules/accounting/api/invoiceDebtsApi";
 import { erpInvoicesCoreApi } from "@/modules/erp-invoices-core/api/erpInvoicesCoreApi";
+import { PartnerDebtAnalyticsSection } from "../partner-debt-analytics";
 import { StandardTable } from "@/shared/components/StandardTable";
 import {
   createColumnHeaderFilter,
   type DataTableColumn,
 } from "@/shared/components/DataTable";
 import { TableText } from "@/shared/components/DataTable/TableText";
-import { BarChart } from "@/shared/components/charts/BarChart";
-import { ChartSkeleton } from "@/shared/components/Skeleton";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/Button";
 import { money } from "@/shared/utils/format";
-import { cn } from "@/shared/utils";
 import { VietnamInvoiceTemplate } from "@/modules/erp-invoices-core/components/molecules/vietnam-invoice-template";
 import { formatUom } from "@/modules/erp-invoices-core/utils/uom.helper";
 import { DrawerModal, DrawerSection } from "@/shared/components/DrawerModal";
@@ -411,139 +406,25 @@ export const ErpInvoicePartnerTab = React.memo(function ErpInvoicePartnerTab({
   const itemLinesTotal = itemLinesResponse?.total || 0;
   const itemLinesTotalPages = itemLinesResponse?.totalPages || 0;
 
-  // ── Query Partner Stats (Analytics & Cashflow Trend) ───
-  const { data: statsData, isLoading: isLoadingStats } = useQuery({
-    queryKey: ["partner-invoice-stats", taxCode],
-    queryFn: () => erpInvoiceDashboardApi.getPartnerStats(taxCode),
-    enabled: !!taxCode,
-  });
-
-  const cashTrendLabels = useMemo(
-    () => statsData?.cashTrend?.map((t: any) => t.label) || [],
-    [statsData?.cashTrend],
-  );
-  const cashTrendIn = useMemo(
-    () => statsData?.cashTrend?.map((t: any) => t.cashOut) || [],
-    [statsData?.cashTrend],
-  );
-  const cashTrendOut = useMemo(
-    () => statsData?.cashTrend?.map((t: any) => t.cashIn) || [],
-    [statsData?.cashTrend],
-  );
-
-  const totalInAmount = useMemo(
-    () =>
-      cashTrendIn.reduce((sum: number, v: any) => sum + (Number(v) || 0), 0),
-    [cashTrendIn],
-  );
-  const totalOutAmount = useMemo(
-    () =>
-      cashTrendOut.reduce((sum: number, v: any) => sum + (Number(v) || 0), 0),
-    [cashTrendOut],
-  );
-  const netCashflow = totalOutAmount - totalInAmount;
-
-  const cashTrendColumns: DataTableColumn<any>[] = useMemo(
-    () => [
-      {
-        key: "index",
-        header: <span className="w-full block text-center">#</span>,
-        headerClassName: "text-center w-[40px] min-w-[40px]",
-        className: "text-center w-[40px] min-w-[40px]",
-        size: 40,
-        enableResizing: false,
-        cell: (_: any, idx: number) => (
-          <span className="w-full block text-center font-medium text-muted-foreground">
-            {idx}
-          </span>
-        ),
+  // ── Query Partner Debt Invoices (Analytics & Cashflow Trend) ───
+  const partnerType = isDirectionIn ? "SUPPLIER" : "CUSTOMER";
+  const { data: debtInvoices = [], isLoading: isLoadingDebtInvoices } =
+    useQuery({
+      queryKey: [
+        "partner-debt-invoices-analytics",
+        partnerType,
+        taxCode,
+        partnerName,
+      ],
+      queryFn: () => {
+        if (!taxCode && !partnerName) return Promise.resolve([]);
+        return invoiceDebtsApi.getPartnerInvoices(taxCode || "KHONG_MST", {
+          partner_type: partnerType,
+          partner_name: partnerName || undefined,
+        });
       },
-      {
-        key: "label",
-        header: t("periodMonth", "Kỳ / Tháng"),
-        size: 140,
-        enableResizing: true,
-        className: "text-left font-semibold text-foreground",
-        cell: (row: any) => <span>{row.label || "—"}</span>,
-      },
-      {
-        key: "cashOut",
-        header: t("invoicesInAmount", "HĐ Đầu vào (Chi)"),
-        size: 180,
-        enableResizing: true,
-        className:
-          "text-right tabular-nums text-orange-600 dark:text-orange-400 font-medium",
-        cell: (row: any) => money(Number(row.cashOut) || 0),
-      },
-      {
-        key: "cashIn",
-        header: t("invoicesOutAmount", "HĐ Đầu ra (Thu)"),
-        size: 180,
-        enableResizing: true,
-        className:
-          "text-right tabular-nums text-emerald-600 dark:text-emerald-400 font-medium",
-        cell: (row: any) => money(Number(row.cashIn) || 0),
-      },
-      {
-        key: "netCashflow",
-        header: t("netCashflowCol", "Chênh lệch ròng"),
-        size: 200,
-        enableResizing: true,
-        className: "text-right tabular-nums font-semibold",
-        cell: (row: any) => {
-          const net = (Number(row.cashIn) || 0) - (Number(row.cashOut) || 0);
-          return (
-            <span
-              className={cn(
-                net >= 0
-                  ? "text-emerald-600 dark:text-emerald-400"
-                  : "text-amber-600 dark:text-amber-400",
-              )}
-            >
-              {net >= 0 ? "+" : ""}
-              {money(net)}
-            </span>
-          );
-        },
-      },
-    ],
-    [t],
-  );
-
-  const cashTrendSummaryRow = useMemo(() => {
-    if (!statsData?.cashTrend || statsData.cashTrend.length === 0)
-      return undefined;
-    return {
-      label: (
-        <span className="font-bold text-foreground">
-          {t("totalSummary", "Tổng cộng")}
-        </span>
-      ),
-      cashOut: (
-        <span className="font-bold tabular-nums text-orange-600 dark:text-orange-400">
-          {money(totalInAmount)}
-        </span>
-      ),
-      cashIn: (
-        <span className="font-bold tabular-nums text-emerald-600 dark:text-emerald-400">
-          {money(totalOutAmount)}
-        </span>
-      ),
-      netCashflow: (
-        <span
-          className={cn(
-            "font-bold tabular-nums",
-            netCashflow >= 0
-              ? "text-emerald-600 dark:text-emerald-400"
-              : "text-amber-600 dark:text-amber-400",
-          )}
-        >
-          {netCashflow >= 0 ? "+" : ""}
-          {money(netCashflow)}
-        </span>
-      ),
-    };
-  }, [statsData?.cashTrend, totalInAmount, totalOutAmount, netCashflow, t]);
+      enabled: (!!taxCode || !!partnerName) && viewMode === "analytics",
+    });
 
   // ═══════════════════════════════════════════════════════════════════════════
   // 3. COLUMNS & FILTERS CHO BẢNG HÓA ĐƠN (INVOICE HEADERS)
@@ -1260,9 +1141,9 @@ export const ErpInvoicePartnerTab = React.memo(function ErpInvoicePartnerTab({
             </>
           )}
 
-          {viewMode === "analytics" && cashTrendLabels.length > 0 && (
+          {viewMode === "analytics" && debtInvoices.length > 0 && (
             <span className="text-xs font-normal text-muted-foreground">
-              {cashTrendLabels.length} {t("periodsCount", "kỳ phát sinh")}
+              {debtInvoices.length} {t("invoicesCount", "hóa đơn")}
             </span>
           )}
         </div>
@@ -1287,192 +1168,14 @@ export const ErpInvoicePartnerTab = React.memo(function ErpInvoicePartnerTab({
         </InvoicePreviewModeContext.Provider>
       )}
 
-      {/* ─── 2. NỘI DUNG BIẾN ĐỘNG (ANALYTICS DASHBOARD) ─── */}
+      {/* ─── 2. NỘI DUNG BIẾN ĐỘNG & PHÂN TÍCH (DEBT ANALYTICS DASHBOARD) ─── */}
       {viewMode === "analytics" && (
-        <div className="space-y-3.5 flex-1 min-h-0 overflow-y-auto pr-1 w-full">
-          {/* 2.1 KPI Cards Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-2.5 w-full">
-            {/* KPI 1: Tổng HĐ Đầu Vào */}
-            <div className="p-3 rounded-xl bg-orange-500/10 border border-orange-500/20 flex flex-col justify-between">
-              <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <span className="font-semibold text-orange-600 dark:text-orange-400 flex items-center gap-1.5">
-                  <TrendingDown className="w-3.5 h-3.5" />
-                  {t("totalInvoicesIn", "Tổng HĐ Đầu vào (Chi)")}
-                </span>
-                <span className="text-[11px] font-medium text-muted-foreground/70">
-                  {cashTrendLabels.length} {t("periodsUnit", "kỳ")}
-                </span>
-              </div>
-              <div className="mt-2 text-lg font-bold text-foreground tabular-nums">
-                {money(totalInAmount)}
-              </div>
-              <div className="mt-1 text-[11px] text-muted-foreground">
-                {t("totalInvoicesInDesc", "Tổng giá trị mua vào / chi phí")}
-              </div>
-            </div>
-
-            {/* KPI 2: Tổng HĐ Đầu Ra */}
-            <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex flex-col justify-between">
-              <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <span className="font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
-                  <TrendingUp className="w-3.5 h-3.5" />
-                  {t("totalInvoicesOut", "Tổng HĐ Đầu ra (Thu)")}
-                </span>
-                <span className="text-[11px] font-medium text-muted-foreground/70">
-                  {cashTrendLabels.length} {t("periodsUnit", "kỳ")}
-                </span>
-              </div>
-              <div className="mt-2 text-lg font-bold text-foreground tabular-nums">
-                {money(totalOutAmount)}
-              </div>
-              <div className="mt-1 text-[11px] text-muted-foreground">
-                {t("totalInvoicesOutDesc", "Tổng doanh thu bán ra")}
-              </div>
-            </div>
-
-            {/* KPI 3: Chênh lệch ròng (No Blue Mandate: emerald khi >= 0, amber khi < 0) */}
-            <div
-              className={cn(
-                "p-3 rounded-xl border flex flex-col justify-between",
-                netCashflow >= 0
-                  ? "bg-emerald-500/10 border-emerald-500/20"
-                  : "bg-amber-500/10 border-amber-500/20",
-              )}
-            >
-              <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <span
-                  className={cn(
-                    "font-semibold flex items-center gap-1.5",
-                    netCashflow >= 0
-                      ? "text-emerald-600 dark:text-emerald-400"
-                      : "text-amber-600 dark:text-amber-400",
-                  )}
-                >
-                  <Scale className="w-3.5 h-3.5" />
-                  {t("netCashflow", "Chênh lệch Ròng (Bán - Mua)")}
-                </span>
-              </div>
-              <div
-                className={cn(
-                  "mt-2 text-lg font-bold tabular-nums",
-                  netCashflow >= 0
-                    ? "text-emerald-600 dark:text-emerald-400"
-                    : "text-amber-600 dark:text-amber-400",
-                )}
-              >
-                {netCashflow >= 0 ? "+" : ""}
-                {money(netCashflow)}
-              </div>
-              <div className="mt-1 text-[11px] text-muted-foreground">
-                {netCashflow >= 0
-                  ? t("positiveNet", "Chênh lệch dương (Bán > Mua)")
-                  : t("negativeNet", "Chênh lệch âm (Mua > Bán)")}
-              </div>
-            </div>
-
-            {/* KPI 4: Tổng số hóa đơn */}
-            <div className="p-3 rounded-xl bg-slate-500/10 border border-slate-500/20 flex flex-col justify-between">
-              <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <span className="font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                  <FileText className="w-3.5 h-3.5" />
-                  {t("totalInvoicesCount", "Tổng số HĐ đã lưu")}
-                </span>
-                <span className="text-[11px] font-medium text-muted-foreground/70">
-                  {t("allTime", "Toàn thời gian")}
-                </span>
-              </div>
-              <div className="mt-2 text-lg font-bold text-foreground tabular-nums">
-                {total}{" "}
-                <span className="text-xs font-normal text-muted-foreground">
-                  {t("invoicesUnit", "hóa đơn")}
-                </span>
-              </div>
-              <div className="mt-1 text-[11px] text-muted-foreground">
-                {t("invoicesTotalScope", "Gồm tất cả hóa đơn mua vào & bán ra")}
-              </div>
-            </div>
-          </div>
-
-          {/* 2.2 Biểu đồ biến động theo tháng */}
-          <DrawerSection
-            title={
-              <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">
-                <TrendingUp className="w-4 h-4 text-primary" />
-                <span>
-                  {t("cashTrendChartTitle", "Biểu đồ biến động theo tháng")}
-                </span>
-              </div>
-            }
-            collapsible={true}
-            defaultCollapsed={false}
-            className="p-3 border border-slate-200/80 dark:border-slate-800"
-          >
-            <div className="space-y-3">
-              <div className="h-[260px] w-full relative">
-                {!isLoadingStats && cashTrendLabels.length > 0 ? (
-                  <BarChart
-                    labels={cashTrendLabels}
-                    yCallback={(v) => money(Number(v))}
-                    datasets={[
-                      {
-                        data: cashTrendIn,
-                        color: "#ea580c",
-                        label: t("invoicesIn", "HĐ Đầu vào (Mua)"),
-                      },
-                      {
-                        data: cashTrendOut,
-                        color: "#059669",
-                        label: t("invoicesOut", "HĐ Đầu ra (Bán)"),
-                      },
-                    ]}
-                  />
-                ) : isLoadingStats ? (
-                  <ChartSkeleton type="bar" />
-                ) : (
-                  <div className="flex items-center justify-center h-full text-xs text-muted-foreground">
-                    {t("noChartData", "Chưa có dữ liệu biến động của đối tác")}
-                  </div>
-                )}
-              </div>
-            </div>
-          </DrawerSection>
-
-          {/* 2.3 Bảng kê biến động theo kỳ */}
-          <DrawerSection
-            title={
-              <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">
-                <Calendar className="w-4 h-4 text-primary" />
-                <span>
-                  {t("cashTrendTableTitle", "Bảng kê biến động theo kỳ")}
-                </span>
-                {statsData?.cashTrend && statsData.cashTrend.length > 0 && (
-                  <span className="text-xs font-normal text-muted-foreground lowercase">
-                    ({statsData.cashTrend.length} {t("periodsUnit", "kỳ")})
-                  </span>
-                )}
-              </div>
-            }
-            collapsible={true}
-            defaultCollapsed={false}
-            className="p-2.5 mb-0 border border-slate-200/80 dark:border-slate-800"
-            bodyClassName="p-0"
-          >
-            <div className="min-h-[200px] flex flex-col overflow-hidden bg-white dark:bg-slate-900">
-              <StandardTable
-                items={statsData?.cashTrend || []}
-                columns={cashTrendColumns}
-                getRowKey={(r: any) => r.label || ""}
-                loading={isLoadingStats}
-                variant="spreadsheet"
-                minWidth={700}
-                tableId="erp-invoice-partner-cash-trend-table"
-                enableColumnResizing={true}
-                enableRowHoverActions={false}
-                summaryRow={cashTrendSummaryRow}
-                containerClassName="flex-1 min-h-0"
-              />
-            </div>
-          </DrawerSection>
+        <div className="flex-1 min-h-0 overflow-y-auto pr-1 w-full">
+          <PartnerDebtAnalyticsSection
+            invoices={debtInvoices}
+            isLoading={isLoadingDebtInvoices}
+            isCustomer={!isDirectionIn}
+          />
         </div>
       )}
 
