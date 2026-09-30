@@ -211,7 +211,7 @@ export interface CreateErpInvoicePayload {
   }[];
   accountingEnabled?: boolean;
   pendingDeletedPdfs?: string[];
-  pendingAddedAttachments?: import("../components/ErpInvoicePdfUpload").PendingAttachment[];
+  pendingAddedAttachments?: import("../components/organisms/erp-invoice-pdf-upload").PendingAttachment[];
 }
 
 export type UpdateErpInvoicePayload = Partial<CreateErpInvoicePayload>;

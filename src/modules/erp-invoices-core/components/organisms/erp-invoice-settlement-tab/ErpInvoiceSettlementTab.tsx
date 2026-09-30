@@ -5,7 +5,7 @@ import { Button } from "@/shared/components/ui/Button";
 import { cn } from "@/shared/utils";
 import { money } from "@/shared/utils/format";
 import { BankTransactionDetailDrawer } from "@/pages/finance/components/BankTransactionDetailDrawer";
-import { ComingSoonTabContent } from "../modals/voucher-netoff-selection-modal/components/ComingSoonTabContent";
+import { ComingSoonTabContent } from "../voucher-netoff-selection-modal/components/ComingSoonTabContent";
 import { ErpInvoiceUnifiedSettlementTable } from "./components/ErpInvoiceUnifiedSettlementTable";
 import { useErpInvoiceSettlement } from "./context/ErpInvoiceSettlementContext";
 import {

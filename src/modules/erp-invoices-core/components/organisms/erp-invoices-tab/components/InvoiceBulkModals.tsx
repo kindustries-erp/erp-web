@@ -2,9 +2,9 @@ import React from "react";
 import { Checkbox } from "@/shared/components/ui/checkbox";
 import { DrawerModal } from "@/shared/components/DrawerModal";
 import { Combobox } from "@/shared/components/Combobox";
-import { BulkEditDrawer } from "@/modules/erp-invoices-core/components/BulkEditDrawer";
-import { InvoiceBulkPostingDrawer } from "@/modules/erp-invoices-core/components/InvoiceBulkPostingDrawer";
-import { InvoiceBulkNetOffDrawer } from "@/modules/erp-invoices-core/components/InvoiceBulkNetOffDrawer";
+import { BulkEditDrawer } from "@/modules/erp-invoices-core/components/organisms/bulk-edit-drawer";
+import { InvoiceBulkPostingDrawer } from "@/modules/erp-invoices-core/components/organisms/invoice-bulk-posting-drawer";
+import { InvoiceBulkNetOffDrawer } from "@/modules/erp-invoices-core/components/organisms/invoice-bulk-netoff-drawer";
 import { type ErpInvoice } from "@/modules/erp-invoices-core/api/erpInvoicesCoreApi";
 
 export interface InvoiceBulkModalsProps {

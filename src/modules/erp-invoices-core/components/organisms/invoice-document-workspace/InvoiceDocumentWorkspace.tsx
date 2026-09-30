@@ -2,7 +2,7 @@ import React from "react";
 import { Search, Download } from "lucide-react";
 import { Button } from "@/shared/components/ui/Button";
 import { useInvoicePreviewMode } from "@/modules/erp-invoices-core/context/InvoicePreviewModeContext";
-import { ErpAttachmentSelectDrawer } from "../drawers/erp-attachment-select-drawer";
+import { ErpAttachmentSelectDrawer } from "../erp-attachment-select-drawer";
 import { useInvoiceDocumentWorkspaceLogic } from "./hooks/useInvoiceDocumentWorkspaceLogic";
 import { InvoiceFileList } from "./components/InvoiceFileList";
 import { InvoiceFileUploadSection } from "./components/InvoiceFileUploadSection";

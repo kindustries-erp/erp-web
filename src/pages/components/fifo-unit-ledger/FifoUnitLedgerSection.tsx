@@ -8,7 +8,7 @@ import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
 import { TablePagination } from "@/shared/components/TablePagination";
 
 import { useFifoUnitLedger } from "./useFifoUnitLedger";
-import { ErpInvoiceStandaloneDrawer } from "@/modules/erp-invoices-core/components/ErpInvoiceStandaloneDrawer";
+import { ErpInvoiceStandaloneDrawer } from "@/modules/erp-invoices-core/components";
 import { VinfastPartsStockExportDrawer } from "../VinfastPartsStockExportDrawer";
 import { FifoFlatTable, FifoFlatTableTotals } from "./FifoFlatTable";
 import { buildFlatLedgerRows } from "./fifoTransform";

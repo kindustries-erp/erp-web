@@ -4,7 +4,7 @@ import { Button } from "@/shared/components/ui/Button";
 import { Plus, Trash2, ExternalLink } from "lucide-react";
 import { EmptyState } from "@/shared/components/EmptyState";
 import { money } from "@/shared/utils/format";
-import { VoucherNetoffSelectionModal } from "../modals/voucher-netoff-selection-modal";
+import { VoucherNetoffSelectionModal } from "../voucher-netoff-selection-modal";
 import { purchaseOrdersCoreApi } from "@/modules/purchase-orders-core/api/purchaseOrdersCoreApi";
 import { Combobox } from "@/shared/components/Combobox";
 import type {

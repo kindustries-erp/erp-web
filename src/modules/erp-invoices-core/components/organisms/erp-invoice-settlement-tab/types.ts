@@ -5,7 +5,7 @@ import {
 import {
   type SettlementType,
   type SelectedVoucherItem,
-} from "../modals/voucher-netoff-selection-modal/types";
+} from "../voucher-netoff-selection-modal/types";
 
 export type SettlementSubTabKey = "bank_statement" | "cash_book";
 export type SettlementTableViewPreset =

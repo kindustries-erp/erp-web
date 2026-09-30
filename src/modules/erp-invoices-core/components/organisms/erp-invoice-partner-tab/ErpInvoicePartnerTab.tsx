@@ -41,7 +41,7 @@ import { cn } from "@/shared/utils";
 import { VietnamInvoiceTemplate } from "@/modules/erp-invoices-core/components/molecules/vietnam-invoice-template";
 import { formatUom } from "@/modules/erp-invoices-core/utils/uom.helper";
 import { DrawerModal, DrawerSection } from "@/shared/components/DrawerModal";
-import { InvoiceNoCell } from "@/modules/erp-invoices-core/components/ErpInvoicesTab/components/cells/InvoiceNoCell";
+import { InvoiceNoCell } from "../erp-invoices-tab/components/cells/InvoiceNoCell";
 import { PillTabs } from "@/shared/components/PillTabs";
 import {
   InvoicePreviewModeContext,

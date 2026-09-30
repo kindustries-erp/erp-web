@@ -4,7 +4,7 @@ import {
   ErpInvoiceInternalMain,
   ErpInvoiceInternalSidebar,
 } from "../erp-invoice-detail-drawer";
-import { ErpInvoicePdfUpload } from "../../ErpInvoicePdfUpload";
+import { ErpInvoicePdfUpload } from "../erp-invoice-pdf-upload";
 import { type InvoiceDetailWrapperProps } from "./InvoiceDetailWrapper.type";
 import { useInvoiceDetailWrapper } from "./InvoiceDetailWrapper.hook";
 

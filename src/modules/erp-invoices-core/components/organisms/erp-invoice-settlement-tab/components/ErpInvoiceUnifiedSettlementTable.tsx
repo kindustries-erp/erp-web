@@ -16,7 +16,7 @@ import { Tooltip } from "@/core/components/ui/Tooltip";
 import { FilterButton } from "@/shared/components/FilterPanel";
 import { money } from "@/shared/utils/format";
 import { bankStatementApi } from "@/modules/bank-statements/api/bankStatementApi";
-import { NetOffInput } from "../../modals/voucher-netoff-selection-modal/components/NetOffInput";
+import { NetOffInput } from "../../voucher-netoff-selection-modal/components/NetOffInput";
 import { useErpInvoiceSettlement } from "../context/ErpInvoiceSettlementContext";
 
 export function ErpInvoiceUnifiedSettlementTable() {

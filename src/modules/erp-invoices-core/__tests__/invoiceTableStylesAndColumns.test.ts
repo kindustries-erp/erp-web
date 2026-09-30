@@ -1,9 +1,13 @@
 import { describe, it, expect, vi } from "vitest";
 import { renderHook } from "@testing-library/react";
-import { getInvoiceRowClassName } from "../components/ErpInvoicesTab/utils";
-import { useInvoiceColumns } from "../components/ErpInvoicesTab/components/InvoiceColumns";
-import { useItemColumns } from "../components/ErpInvoiceItemsSection/components/itemColumns";
-import { type ErpInvoice } from "../api/erpInvoicesCoreApi";
+import { getInvoiceRowClassName } from "../components/organisms/erp-invoices-tab/utils";
+import { useInvoiceColumns } from "../components/organisms/erp-invoices-tab/components/InvoiceColumns";
+import { useItemColumns } from "../components/organisms/erp-invoice-items-section/components/itemColumns";
+import {
+  type ErpInvoice,
+  type ErpInvoiceItemRow,
+} from "../api/erpInvoicesCoreApi";
+import type { DataTableColumn } from "@/shared/components/DataTable";
 
 describe("Invoice Table Styles & Columns Enhancements", () => {
   describe("getInvoiceRowClassName (Row Dimming Rules)", () => {
@@ -297,7 +301,9 @@ describe("Invoice Table Styles & Columns Enhancements", () => {
       };
 
       const { result } = renderHook(() => useItemColumns(options));
-      const columnKeys = result.current.map((col) => col.key);
+      const columnKeys = (result.current as DataTableColumn<any>[]).map(
+        (col) => col.key,
+      );
 
       const dateIdx = columnKeys.indexOf("invoiceDate");
       const noIdx = columnKeys.indexOf("invoiceNo");
@@ -364,12 +370,14 @@ describe("Invoice Table Styles & Columns Enhancements", () => {
       const { result: itemColsInResult } = renderHook(() =>
         useItemColumns(itemOptionsIn),
       );
-      const itemColsIn = itemColsInResult.current;
+      const itemColsIn =
+        itemColsInResult.current as DataTableColumn<ErpInvoiceItemRow>[];
 
       const { result: itemColsOutResult } = renderHook(() =>
         useItemColumns(itemOptionsOut),
       );
-      const itemColsOut = itemColsOutResult.current;
+      const itemColsOut =
+        itemColsOutResult.current as DataTableColumn<ErpInvoiceItemRow>[];
 
       // Verify invoiceNo size is 120px in OUT direction and 180px in IN direction
       const invoiceNoColOut = itemColsOut.find((c) => c.key === "invoiceNo");

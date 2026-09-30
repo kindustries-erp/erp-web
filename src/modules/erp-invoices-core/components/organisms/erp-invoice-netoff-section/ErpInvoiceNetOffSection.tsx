@@ -3,7 +3,7 @@ import { DrawerSection } from "@/shared/components/DrawerModal";
 import { Button } from "@/shared/components/ui/Button";
 import { PlusCircle, Trash, ExternalLink } from "lucide-react";
 import { money } from "@/shared/utils/format";
-import { VoucherNetoffSelectionModal } from "../modals/voucher-netoff-selection-modal";
+import { VoucherNetoffSelectionModal } from "../voucher-netoff-selection-modal";
 import type { ErpInvoiceNetOffSectionProps } from "./ErpInvoiceNetOffSection.type";
 import { useErpInvoiceNetOffSection } from "./ErpInvoiceNetOffSection.hook";
 

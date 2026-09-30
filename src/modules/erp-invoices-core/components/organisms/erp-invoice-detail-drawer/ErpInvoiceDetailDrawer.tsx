@@ -7,16 +7,16 @@ import {
 import { FileText, Wallet, Link2, BookOpen, History } from "lucide-react";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/Button";
-import { VoucherNetoffSelectionModal } from "@/modules/erp-invoices-core/components/VoucherNetoffSelectionModal";
-import { PurchaseOrderSelectionModal } from "@/modules/erp-invoices-core/components/PurchaseOrderSelectionModal";
-import { SalesOrderSelectionModal } from "@/modules/erp-invoices-core/components/SalesOrderSelectionModal";
-import { GarageCaseSelectionModal } from "@/modules/erp-invoices-core/components/GarageCaseSelectionModal";
+import { VoucherNetoffSelectionModal } from "../voucher-netoff-selection-modal";
+import { PurchaseOrderSelectionModal } from "../purchase-order-selection-modal";
+import { SalesOrderSelectionModal } from "../sales-order-selection-modal";
+import { GarageCaseSelectionModal } from "../garage-case-selection-modal";
 import {
   ErpInvoiceSettlementTab,
   ErpInvoiceSettlementRightPanel,
   ErpInvoiceSettlementProvider,
-} from "@/modules/erp-invoices-core/components/ErpInvoiceSettlementTab";
-import { ErpInvoicePartnerTab } from "@/modules/erp-invoices-core/components/ErpInvoicePartnerTab";
+} from "../erp-invoice-settlement-tab";
+import { ErpInvoicePartnerTab } from "../erp-invoice-partner-tab";
 import { PostedAccountingSummary } from "@/shared/components/accounting/PostedAccountingSummary";
 import { PostingSection } from "@/shared/components/accounting/PostingSection";
 import { resolvePurchaseDebitAccountCode } from "@/modules/erp-invoices-core/utils/invoiceTaxCodeAccounting";

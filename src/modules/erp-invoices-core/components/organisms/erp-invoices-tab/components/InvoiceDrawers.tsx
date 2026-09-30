@@ -7,16 +7,16 @@ import {
   erpInvoicesCoreApi,
   type ErpInvoiceListParams,
 } from "@/modules/erp-invoices-core/api/erpInvoicesCoreApi";
-import { ErpInvoiceInternalDrawer } from "@/modules/erp-invoices-core/components/ErpInvoiceInternalDrawer";
-import { InvoiceImportSyncDrawer } from "@/modules/erp-invoices-core/components/InvoiceImportSyncDrawer";
-import { GdtPortalAuthDrawer } from "@/modules/erp-invoices-core/components/GdtPortalAuthDrawer";
-import { VoucherNetoffSelectionModal } from "@/modules/erp-invoices-core/components/VoucherNetoffSelectionModal";
-import { BankTransactionDetailDrawer } from "@/pages/finance/components/BankTransactionDetailDrawer";
 import {
+  ErpInvoiceInternalDrawer,
   ErpInvoiceInternalMain,
   ErpInvoiceInternalSidebar,
-} from "@/modules/erp-invoices-core/components/ErpInvoiceInternalInfo";
-import { InvoiceExportDrawer } from "@/modules/erp-invoices-core/components/InvoiceExportDrawer";
+} from "@/modules/erp-invoices-core/components/organisms/erp-invoice-detail-drawer";
+import { InvoiceImportSyncDrawer } from "@/modules/erp-invoices-core/components/organisms/invoice-import-sync-drawer";
+import { GdtPortalAuthDrawer } from "@/modules/erp-invoices-core/components/organisms/gdt-portal-auth-drawer";
+import { VoucherNetoffSelectionModal } from "@/modules/erp-invoices-core/components/organisms/voucher-netoff-selection-modal";
+import { BankTransactionDetailDrawer } from "@/pages/finance/components/BankTransactionDetailDrawer";
+import { InvoiceExportDrawer } from "@/modules/erp-invoices-core/components/organisms/invoice-export-drawer";
 import {
   getAttachmentContentBlobApi,
   getAttachmentDownloadUrlApi,

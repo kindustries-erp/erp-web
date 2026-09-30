@@ -3,7 +3,7 @@ import { format } from "date-fns";
 import { type TFunction } from "i18next";
 import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
 import { TableText } from "@/shared/components/DataTable/TableText";
-import { InvoiceDateRangeSlot } from "@/modules/erp-invoices-core/components/InvoiceDateRangeSlot";
+import { InvoiceDateRangeSlot } from "@/modules/erp-invoices-core/components/molecules/invoice-date-range-slot";
 import { type ErpInvoice } from "@/modules/erp-invoices-core/api/erpInvoicesCoreApi";
 import { type useErpInvoicesList } from "@/modules/erp-invoices-core/hooks/useErpInvoicesList";
 import { CATEGORY_ACCOUNT_HINTS, INVOICE_TYPE_MAP } from "../../utils";

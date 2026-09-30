@@ -10,7 +10,7 @@ import type {
   CreateErpInvoicePayload,
   ErpInvoice,
 } from "@/modules/erp-invoices-core/api/erpInvoicesCoreApi";
-import { ErpInvoiceDetailLinesTable } from "@/modules/erp-invoices-core/components/ErpInvoiceDetailLinesTable";
+import { ErpInvoiceDetailLinesTable } from "../erp-invoice-detail-lines-table";
 import { ErpInvoicePdfPreview } from "../../molecules/erp-invoice-pdf-preview";
 
 export interface ErpInvoiceInternalMainProps {

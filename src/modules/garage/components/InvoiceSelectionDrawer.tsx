@@ -32,7 +32,7 @@ import { Checkbox } from "@/shared/components/ui/checkbox";
 import { Button } from "@/shared/components/ui/Button";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { SmartInvoiceSuggestionCard } from "./SmartInvoiceSuggestionCard";
-import { ErpInvoiceStandaloneDrawer } from "@/modules/erp-invoices-core/components/ErpInvoiceStandaloneDrawer";
+import { ErpInvoiceStandaloneDrawer } from "@/modules/erp-invoices-core/components";
 import { FilePreviewDrawer } from "@/shared/components/FilePreviewDrawer";
 import { cn } from "@/shared/utils";
 

@@ -1,8 +1,8 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { ModuleEntityCustomFieldsSection } from "@/shared/components/organisms";
-import { ErpInvoiceGeneralInfoSection } from "@/modules/erp-invoices-core/components/ErpInvoiceGeneralInfoSection";
-import { ErpInvoiceDefaultAttributesSection } from "@/modules/erp-invoices-core/components/ErpInvoiceDefaultAttributesSection";
+import { ErpInvoiceGeneralInfoSection } from "../erp-invoice-general-info";
+import { ErpInvoiceDefaultAttributesSection } from "../erp-invoice-default-attributes-section";
 import type {
   CreateErpInvoicePayload,
   ErpInvoice,

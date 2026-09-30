@@ -22,12 +22,12 @@ import {
 import {
   type SettlementType,
   type SelectedVoucherItem,
-} from "../../modals/voucher-netoff-selection-modal/types";
+} from "../../voucher-netoff-selection-modal/types";
 import {
   calculateTotalNetOff,
   calculateRemainingAfterNetOff,
   checkIsOverRemaining,
-} from "../../modals/voucher-netoff-selection-modal/utils";
+} from "../../voucher-netoff-selection-modal/utils";
 
 const ErpInvoiceSettlementContext =
   createContext<ErpInvoiceSettlementContextValue | null>(null);

@@ -14,7 +14,7 @@ import {
   getAttachmentDownloadUrlApi,
   getAttachmentContentBlobApi,
 } from "@/modules/system/api/attachmentsApi";
-import { ErpAttachmentSelectDrawer } from "@/modules/erp-invoices-core/components/ErpAttachmentSelectDrawer";
+import { ErpAttachmentSelectDrawer } from "../erp-attachment-select-drawer";
 import type {
   PendingAttachment,
   ErpInvoicePdfUploadProps,
