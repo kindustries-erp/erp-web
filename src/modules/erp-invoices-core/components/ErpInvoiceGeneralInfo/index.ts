@@ -1,2 +1,2 @@
-export { ErpInvoiceGeneralInfoSection } from "./ErpInvoiceGeneralInfoSection";
-export type { ErpInvoiceGeneralInfoSectionProps } from "./types";
+export * from "../organisms/erp-invoice-general-info";
+export { default } from "../organisms/erp-invoice-general-info";

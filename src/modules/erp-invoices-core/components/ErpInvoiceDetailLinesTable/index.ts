@@ -1,3 +1,2 @@
-export { ErpInvoiceDetailLinesTable } from "./ErpInvoiceDetailLinesTable";
-export type { ErpInvoiceDetailLinesTableProps } from "./types";
-export { useInvoiceDetailLinesColumns } from "./hooks/useInvoiceDetailLinesColumns";
+export * from "../organisms/erp-invoice-detail-lines-table";
+export { default } from "../organisms/erp-invoice-detail-lines-table";

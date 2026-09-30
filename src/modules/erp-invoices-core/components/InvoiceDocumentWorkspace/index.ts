@@ -1,3 +1,2 @@
-export { InvoiceDocumentWorkspace } from "./InvoiceDocumentWorkspace";
-export { InvoiceDocumentWorkspace as ErpInvoicePdfPreview } from "./InvoiceDocumentWorkspace";
-export * from "./types";
+export * from "../organisms/invoice-document-workspace";
+export { default } from "../organisms/invoice-document-workspace";

@@ -1,0 +1,375 @@
+import React, { useState, useEffect } from "react";
+import { Button } from "@/shared/components/ui/Button";
+
+import { Plus, Trash2, ExternalLink } from "lucide-react";
+import { EmptyState } from "@/shared/components/EmptyState";
+import { money } from "@/shared/utils/format";
+import { VoucherNetoffSelectionModal } from "../modals/voucher-netoff-selection-modal";
+import { purchaseOrdersCoreApi } from "@/modules/purchase-orders-core/api/purchaseOrdersCoreApi";
+import { Combobox } from "@/shared/components/Combobox";
+import type {
+  LinkedDocument,
+  ErpInvoiceLinkedDocumentsProps,
+} from "./ErpInvoiceLinkedDocuments.type";
+
+function createClientId() {
+  const maybeCrypto = (globalThis as any)?.crypto;
+  if (maybeCrypto && typeof maybeCrypto.randomUUID === "function") {
+    return maybeCrypto.randomUUID();
+  }
+  return `tmp-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
+const EMPTY_ARRAY: any[] = [];
+
+export function ErpInvoiceLinkedDocuments({
+  form,
+  fieldSet,
+  invoiceId,
+  direction,
+  voucherNetOffs = EMPTY_ARRAY,
+  relatedPos = EMPTY_ARRAY,
+  editMode,
+}: ErpInvoiceLinkedDocumentsProps) {
+  const [modalOpen, setModalOpen] = useState(false);
+  const [saving] = useState(false);
+  const [rows, setRows] = useState<LinkedDocument[]>([]);
+  const [poOptions, setPoOptions] = useState<
+    { value: string; label: string }[]
+  >([]);
+
+  const [linkedCases, setLinkedCases] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (invoiceId) {
+      import("@/modules/erp-invoices-core/api/erpInvoicesCoreApi").then((m) => {
+        m.erpInvoicesCoreApi
+          .getLinkedCases(invoiceId)
+          .then((cases: any) => setLinkedCases(cases))
+          .catch(console.error);
+      });
+    }
+  }, [invoiceId]);
+
+  // Sync rows from props and pending changes
+  useEffect(() => {
+    const combined: LinkedDocument[] = [];
+    const pending = form.pendingDocumentChanges || [];
+
+    // Filter out removed ones
+    const removedBankIds = pending
+      .filter((p: any) => p.action === "REMOVE" && p.type === "BANK")
+      .map((p: any) => p.refId);
+    const removedPoIds = pending
+      .filter((p: any) => p.action === "REMOVE" && p.type === "PO")
+      .map((p: any) => p.refId);
+
+    relatedPos.forEach((po: any) => {
+      if (removedPoIds.includes(po.id)) return;
+      combined.push({
+        id: po.id,
+        type: "PO",
+        refId: po.id,
+        refNo: po.poNo,
+        date: po.orderDate,
+        status: po.status,
+      });
+    });
+
+    voucherNetOffs.forEach((v: any) => {
+      if (removedBankIds.includes(v.bankTransactionId)) return;
+      combined.push({
+        id: v.id, // the link id
+        type: "BANK",
+        refId: v.bankTransactionId,
+        refNo: v.bankTransaction?.description || "Giao dịch ngân hàng",
+        date: v.bankTransaction?.transDate,
+        amount: v.netOffAmount,
+      });
+    });
+
+    linkedCases.forEach((c) => {
+      combined.push({
+        id: c.id,
+        type: "CASE",
+        refId: c.caseDbId,
+        refNo: `Sổ báo giá ${c.soChungTu || ""} - ${c.bienSoXe || ""}`,
+        date: c.createdAt,
+      });
+    });
+
+    // Add pending adds
+    pending
+      .filter((p: any) => p.action === "ADD")
+      .forEach((p: any) => {
+        if (p.type === "PO") {
+          const po = poOptions.find((o) => o.value === p.refId);
+          combined.push({
+            id: p.refId,
+            type: "PO",
+            refId: p.refId,
+            refNo: po?.label || "PO đang chờ lưu",
+            isNew: false, // Treat as existing row visually so it has remove button
+          });
+        } else if (p.type === "BANK") {
+          combined.push({
+            id: p.refId,
+            type: "BANK",
+            refId: p.refId,
+            refNo: "Giao dịch đang chờ lưu",
+            amount: p.amount,
+            isNew: false,
+          });
+        }
+      });
+
+    // Keep any UI-only empty rows only if in edit mode
+    const uiRows = editMode ? rows.filter((r) => r.isNew) : [];
+    setRows([...combined, ...uiRows]);
+  }, [
+    relatedPos,
+    voucherNetOffs,
+    linkedCases,
+    form.pendingDocumentChanges,
+    poOptions,
+    editMode,
+  ]);
+
+  // Fetch recent POs for dropdown
+  useEffect(() => {
+    if (editMode && direction === "IN") {
+      purchaseOrdersCoreApi.list({ page: 1, pageSize: 50 }).then((res) => {
+        setPoOptions(res.items.map((po) => ({ value: po.id, label: po.poNo })));
+      });
+    }
+  }, [editMode, direction]);
+
+  const handleAddRow = () => {
+    setRows([
+      ...rows,
+      {
+        id: createClientId(),
+        type: direction === "IN" ? "PO" : "BANK",
+        refId: "",
+        refNo: "",
+        isNew: true,
+      },
+    ]);
+  };
+
+  const updateRowType = (rowId: string, type: "PO" | "BANK") => {
+    setRows(
+      rows.map((r) =>
+        r.id === rowId ? { ...r, type, refId: "", refNo: "" } : r,
+      ),
+    );
+  };
+
+  const addPendingChange = (change: {
+    action: "ADD" | "REMOVE";
+    type: "PO" | "BANK" | "CASE";
+    refId: string;
+    amount?: number;
+  }) => {
+    const current = form.pendingDocumentChanges || [];
+    fieldSet("pendingDocumentChanges", [...current, change]);
+  };
+
+  const handleRemoveRow = async (row: LinkedDocument) => {
+    if (row.isNew) {
+      setRows(rows.filter((r) => r.id !== row.id));
+      return;
+    }
+
+    addPendingChange({ action: "REMOVE", type: row.type, refId: row.refId });
+  };
+
+  const handleSelectBank = (selected: { id: string; amount: number }[]) => {
+    if (selected.length === 0) return;
+
+    selected.forEach((s) => {
+      addPendingChange({
+        action: "ADD",
+        type: "BANK",
+        refId: s.id,
+        amount: s.amount,
+      });
+    });
+
+    // Remove any pending new bank rows
+    setRows(rows.filter((r) => !(r.isNew && r.type === "BANK")));
+  };
+
+  const handleSelectPO = async (rowId: string, poId: string) => {
+    addPendingChange({ action: "ADD", type: "PO", refId: poId });
+    setRows(rows.filter((r) => r.id !== rowId)); // Remove temp row
+  };
+
+  const openDocument = (type: "PO" | "BANK" | "CASE", id: string) => {
+    let eventType = "";
+    if (type === "PO") eventType = "purchase_order";
+    else if (type === "BANK") eventType = "bank_transaction";
+    else if (type === "CASE") eventType = "garage_case";
+
+    if (eventType) {
+      const event = new CustomEvent("open_erp_document", {
+        detail: {
+          type: eventType,
+          id,
+        },
+      });
+      window.dispatchEvent(event);
+    }
+  };
+
+  return (
+    <div className="flex-1 min-w-0 w-full space-y-3">
+      {editMode && (
+        <div className="flex justify-start">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleAddRow}
+            disabled={saving}
+            className="gap-1.5 text-primary border-primary/20 bg-primary/5 hover:bg-primary/10 h-7 text-xs"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            Thêm chứng từ
+          </Button>
+        </div>
+      )}
+
+      {rows.length === 0 ? (
+        <EmptyState size="sm" message="Chưa có chứng từ liên kết nào." />
+      ) : (
+        <div className="border border-border/70 rounded-lg overflow-x-auto bg-surface shadow-2xs">
+          <table className="w-full text-xs text-left">
+            <thead className="bg-muted/40 border-b border-border/60">
+              <tr>
+                <th className="px-3 py-2 font-medium text-muted-foreground w-1/4">
+                  Loại chứng từ
+                </th>
+                <th className="px-3 py-2 font-medium text-muted-foreground w-1/3">
+                  Chứng từ
+                </th>
+                <th className="px-3 py-2 font-medium text-muted-foreground w-1/4 text-right">
+                  Chi tiết
+                </th>
+                <th className="px-3 py-2 font-medium text-muted-foreground text-right w-12"></th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border/40">
+              {rows.map((row) => (
+                <tr
+                  key={row.id}
+                  className="hover:bg-muted/30 group transition-colors"
+                >
+                  <td className="px-3 py-2">
+                    {row.isNew ? (
+                      <Combobox
+                        options={[
+                          ...(direction === "IN"
+                            ? [{ value: "PO", label: "Đơn mua hàng (PO)" }]
+                            : []),
+                          { value: "BANK", label: "Giao dịch ngân hàng" },
+                        ]}
+                        value={row.type}
+                        onChange={(val) =>
+                          updateRowType(row.id, val as "PO" | "BANK")
+                        }
+                        allowClear={false}
+                      />
+                    ) : (
+                      <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-slate-100 text-slate-700">
+                        {row.type === "PO"
+                          ? "Đơn mua hàng (PO)"
+                          : row.type === "CASE"
+                            ? "Sổ báo giá"
+                            : "Giao dịch ngân hàng"}
+                      </span>
+                    )}
+                  </td>
+                  <td className="px-3 py-2">
+                    {row.isNew ? (
+                      row.type === "PO" ? (
+                        <Combobox
+                          options={poOptions}
+                          value={row.refId}
+                          onChange={(val) => handleSelectPO(row.id, val)}
+                          placeholder="-- Chọn PO --"
+                        />
+                      ) : (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setModalOpen(true)}
+                          className="w-full justify-start text-muted-foreground"
+                        >
+                          Nhấn để chọn giao dịch...
+                        </Button>
+                      )
+                    ) : (
+                      <span
+                        className="text-primary font-medium cursor-pointer flex items-center gap-1.5 transition-opacity hover:opacity-80 group/link w-fit"
+                        onClick={() => openDocument(row.type, row.refId)}
+                      >
+                        <span className="group-hover/link:underline underline-offset-4 line-clamp-1">
+                          {row.refNo}
+                        </span>
+                        <ExternalLink className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover/link:opacity-100 transition-all flex-shrink-0" />
+                      </span>
+                    )}
+                  </td>
+                  <td className="px-3 py-2 text-right">
+                    {!row.isNew && (
+                      <div className="flex flex-col items-end">
+                        {row.amount !== undefined ? (
+                          <span className="font-medium text-emerald-600">
+                            {money(row.amount)}
+                          </span>
+                        ) : null}
+                        {row.date ? (
+                          <span className="text-xs text-muted-foreground">
+                            {row.date.slice(0, 10)}
+                          </span>
+                        ) : null}
+                      </div>
+                    )}
+                  </td>
+                  <td className="px-3 py-2 text-right">
+                    {editMode && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-red-500 hover:text-red-700 hover:bg-red-50 h-8 w-8 p-0"
+                        onClick={() => handleRemoveRow(row)}
+                        disabled={saving}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      <VoucherNetoffSelectionModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        invoice={{
+          id: invoiceId,
+          invoiceNo: form.invoiceNo,
+          totalAmount: form.totalAmount,
+          sellerName: form.sellerName,
+          buyerName: form.buyerName,
+          direction,
+        }}
+        onSelect={handleSelectBank}
+        existingVoucherIds={voucherNetOffs.map((v: any) => v.bankTransactionId)}
+      />
+    </div>
+  );
+}

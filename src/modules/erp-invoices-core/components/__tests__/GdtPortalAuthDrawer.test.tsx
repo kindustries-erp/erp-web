@@ -3,6 +3,14 @@ import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { GdtPortalAuthDrawer } from "../GdtPortalAuthDrawer";
 
+vi.mock(
+  "../organisms/drawers/gdt-portal-auth-drawer/GdtPortalAuthForm",
+  () => ({
+    GdtPortalAuthForm: () => (
+      <div data-testid="gdt-portal-auth-form">Auth Form</div>
+    ),
+  }),
+);
 vi.mock("../GdtPortalAuthForm", () => ({
   GdtPortalAuthForm: () => (
     <div data-testid="gdt-portal-auth-form">Auth Form</div>

@@ -1,2 +1,2 @@
-export { ErpInvoicesTab } from "./ErpInvoicesTab";
-export type { ErpInvoicesTabProps } from "./ErpInvoicesTab";
+export * from "../organisms/erp-invoices-tab";
+export { default } from "../organisms/erp-invoices-tab";

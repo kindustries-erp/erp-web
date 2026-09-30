@@ -111,14 +111,39 @@ graph TD
 > [!IMPORTANT]
 > **QUY TẮC BẮT BUỘC: MỖI COMPONENT PHẢI NẰM TRONG 1 THƯ MỤC RIÊNG BIỆT (`kebab-case`)**.
 
-| Thành Phần | Định Dạng (Case) | Quy Ước Đặt Tên | Ví Dụ Chuẩn ✅ | Sai ❌ |
+| Thành Phần | Định Dạng (Case) | Quy Ước Đặt Tên (Số Ít Chuẩn Xác) | Ví Dụ Chuẩn ✅ | Sai ❌ |
 | :--- | :--- | :--- | :--- | :--- |
 | **Thư mục Component** | `kebab-case` | Mỗi component nằm trong 1 folder riêng | `env-stamp/`, `tab-item/`, `sidebar/`, `top-bar/` | `EnvStamp/`, `tabItem/` |
 | **File Component TSX** | `PascalCase.tsx` | Tên file component chính | `EnvStamp.tsx`, `TabItem.tsx`, `TopBar.tsx` | `envStamp.tsx`, `tab-item.tsx` |
 | **File Component Icons** | `PascalCase.tsx` | Nhóm hoặc file icon SVG | `NavigationIcons.tsx`, `UiIcons.tsx` | `navigation-icons.tsx` |
-| **File Hook** | `camelCase.ts` | Bắt đầu bằng tiền tố `use` | `useTabDrag.ts`, `useSidebarPermissions.ts` | `UseTabDrag.ts` |
-| **File Helpers / Utils** | `camelCase.ts` | Tên mô tả chức năng | `excelUtils.ts`, `customFieldHelper.ts` | `ExcelUtils.ts` |
-| **File Constants / Types** | `camelCase.ts` | Tên file mô tả | `constants.ts`, `types.ts`, `options.ts` | `Constants.ts` |
+| **File Co-located Hook** | `<ComponentName>.hook.ts` | Bám theo tên component, dạng số ít `.hook.ts` | `TabItem.hook.ts`, `InvoiceDetailDrawer.hook.ts` | `*.hooks.ts` (số nhiều), `useTab.ts` |
+| **File Co-located State** | `<ComponentName>.state.ts` | Chứa initial values, reducers, form draft, dạng số ít `.state.ts` | `InvoiceDetailDrawer.state.ts`, `Sidebar.state.ts` | `*.states.ts` (số nhiều), `store.js` |
+| **File Co-located Type** | `<ComponentName>.type.ts` | Props, event types, local interfaces, dạng số ít `.type.ts` | `TabItem.type.ts`, `InvoiceDetailDrawer.type.ts` | `*.types.ts` (số nhiều), `interface.ts` |
+| **File Co-located Schema**| `<ComponentName>.schema.ts`| Zod / Yup validation schemas, dạng số ít `.schema.ts` | `InvoiceForm.schema.ts`, `EditDrawer.schema.ts` | `*.schemas.ts` (số nhiều) |
+| **File Co-located Helper**| `<ComponentName>.helper.ts`| Parsers, formatters cục bộ, dạng số ít `.helper.ts` | `InvoiceTable.helper.ts` | `*.helpers.ts` (số nhiều), `utils.ts` |
+| **File Public Export** | `index.ts` | Public API barrel export của component folder | `index.ts` | `Index.ts`, `export.ts` |
+| **Shared Global Hook** | `camelCase.ts` | Bắt đầu bằng tiền tố `use` (dùng chung trong `hooks/`) | `useModuleConfigQuery.ts`, `useAppStore.ts` | `UseModuleConfigQuery.ts` |
+
+---
+
+### 🧠 Quy Tắc Phân Định Ranh Giới Hook & State Giữa Các Tầng:
+
+1. **Atoms (`Level 1`) & Molecules (`Level 2`)**:
+   - **CHỈ CHỨA HOOK LOGIC CỦA COMPONENT UI THUẦN TÚY (`Pure UI Logic Hooks`)**.
+   - Chỉ được phép quản lý: Local UI state (`useState`, `useRef`, `useCallback`), UI toggles, keyboard navigation, popover positioning, drag-and-drop UI, scroll position, animations.
+   - **TUYỆT ĐỐI CẤM BUSINESS LOGIC**: Không gọi API, không dùng `@tanstack/react-query` mutations, không kết nối Global Domain Stores, không tính toán tài chính/nghiệp vụ hệ thống.
+   - Đặt tên: `<ComponentName>.hook.ts` hoặc `<ComponentName>.ui.hook.ts`.
+   - Types: `<ComponentName>.type.ts`.
+
+2. **Organisms (`Level 3`)**:
+   - **ĐƯỢC PHÉP CHỨA CẢ UI LOGIC HOOKS VÀ BUSINESS LOGIC HOOKS**:
+     - **UI Logic Hook (`<ComponentName>.ui.hook.ts` hoặc kết hợp trong `<ComponentName>.hook.ts`)**: Quản lý drawer open/close, active sub-tabs, collapsible sections, modal toggle state, UI selection checklist.
+     - **Business Logic Hook (`<ComponentName>.biz.hook.ts` hoặc kết hợp trong `<ComponentName>.hook.ts`)**: Kết nối REST API, TanStack Queries/Mutations, đồng bộ GDT, hạch toán kép, cấn trừ chứng từ, form validation, RBAC permissions check.
+     - **State File (`<ComponentName>.state.ts`)**: Quản lý draft form values, initial state, form errors, filter presets, action payload builders.
+     - **Validation Schema (`<ComponentName>.schema.ts`)**: Schema kiểm tra dữ liệu form nếu có.
+     - **Type Contract (`<ComponentName>.type.ts`)**: Đặt toàn bộ interface, props, action types.
+
+
 
 ---
 
@@ -283,9 +308,10 @@ Khi tạo mới một Component:
 - [ ] **Thứ tự Import Chuẩn**: Tuân thủ nghiêm ngặt `Templates > Organisms > Molecules > Atoms` (không import ngược dòng)?
 - [ ] **Không Import Ngang Cấp**: Không import lẫn nhau giữa các component cùng cấp trong cùng scope (ngoại trừ Module import Shared cùng cấp)?
 - [ ] **Mỗi Component 1 Folder**: Tất cả các component đều nằm trong thư mục `kebab-case` riêng có `index.ts`?
-- [ ] **Đặt tên chuẩn**: Tên component và icons chuẩn `PascalCase.tsx`, hooks `camelCase.ts`?
-- [ ] **Kích thước file**: Tất cả các file đều $< 180	ext{ LoC}$?
-- [ ] **Tách biệt Logic & UI**: Toàn bộ TanStack Query, mutations, và form state nằm trong `hooks/`?
+- [ ] **Đặt tên chuẩn (Số Ít Đồng Nhất)**: Component `PascalCase.tsx`, co-located files chuẩn số ít: `<ComponentName>.hook.ts`, `<ComponentName>.state.ts`, `<ComponentName>.type.ts`, `<ComponentName>.schema.ts`, `<ComponentName>.helper.ts`?
+- [ ] **Ranh giới Hook Đúng Tầng**: Atoms & Molecules CHỈ chứa UI Logic hooks (0% API/Store). Organisms chứa UI Logic hooks + Business Logic hooks?
+- [ ] **Kích thước file**: Tất cả các file đều $< 180\text{ LoC}$?
+- [ ] **Tách biệt Logic & UI**: Toàn bộ TanStack Query, mutations, và form state nằm trong hook/state files riêng biệt?
 - [ ] **Co-located Tests**: Test nằm trực tiếp cùng cấp trong component folder đơn lẻ hoặc trong `__tests__/` của multi-component feature/organism?
 - [ ] **Đa ngôn ngữ 100%**: Sử dụng `useTranslation` có fallback tiếng Việt và đồng bộ VI/EN?
 - [ ] **No Blue Mandate**: Tuyệt đối không còn class `blue-*` nào trong giao diện?
