@@ -513,9 +513,11 @@ export const erpInvoicesCoreApi = {
   },
 
   getBulkNetOffs: async (ids: string[]): Promise<any[]> => {
-    const { data } = await axiosInstance.post<any[]>(`${BASE}/bulk-net-offs`, {
-      ids,
-    });
+    const { data } = await axiosInstance.post<any[]>(
+      `${BASE}/bulk-net-offs`,
+      { ids },
+      { _silentSuccess: true },
+    );
     return data;
   },
 
@@ -524,9 +526,11 @@ export const erpInvoicesCoreApi = {
   ): Promise<Record<string, SmartNetOffSuggestionItem[]>> => {
     const { data } = await axiosInstance.post<
       Record<string, SmartNetOffSuggestionItem[]>
-    >(`${BASE}/smart-net-off-suggestions`, {
-      invoiceIds,
-    });
+    >(
+      `${BASE}/smart-net-off-suggestions`,
+      { invoiceIds },
+      { _silentSuccess: true },
+    );
     return data;
   },
 
@@ -732,10 +736,14 @@ export const erpInvoicesCoreApi = {
       } | null
     >
   > => {
-    const res = await axiosInstance.post(`${BASE}/preview-pdf-match`, {
-      filenames,
-      direction,
-    });
+    const res = await axiosInstance.post(
+      `${BASE}/preview-pdf-match`,
+      {
+        filenames,
+        direction,
+      },
+      { _silentSuccess: true },
+    );
     return res.data;
   },
 

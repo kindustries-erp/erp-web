@@ -43,3 +43,29 @@ describe("erpInvoicesCoreApi blob error handling", () => {
     ).rejects.toThrow("Không có hóa đơn nào được chọn");
   });
 });
+
+describe("erpInvoicesCoreApi query methods with POST", () => {
+  it("calls getSmartNetOffSuggestions with _silentSuccess: true", async () => {
+    vi.mocked(axiosInstance.post).mockResolvedValue({ data: {} } as any);
+
+    await erpInvoicesCoreApi.getSmartNetOffSuggestions(["inv-1", "inv-2"]);
+
+    expect(axiosInstance.post).toHaveBeenCalledWith(
+      "/api/v1/erp-invoices/smart-net-off-suggestions",
+      { invoiceIds: ["inv-1", "inv-2"] },
+      { _silentSuccess: true },
+    );
+  });
+
+  it("calls getBulkNetOffs with _silentSuccess: true", async () => {
+    vi.mocked(axiosInstance.post).mockResolvedValue({ data: [] } as any);
+
+    await erpInvoicesCoreApi.getBulkNetOffs(["inv-1"]);
+
+    expect(axiosInstance.post).toHaveBeenCalledWith(
+      "/api/v1/erp-invoices/bulk-net-offs",
+      { ids: ["inv-1"] },
+      { _silentSuccess: true },
+    );
+  });
+});
