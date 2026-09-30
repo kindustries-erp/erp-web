@@ -18,12 +18,14 @@ import type {
   TraceabilityEdge,
 } from "@/shared/types/traceability";
 import { money } from "@/shared/utils/format";
+import type { GarageCaseDetailViewMode } from "../../garage-case-details-tab/GarageCaseDetailsTab.type";
 
 export interface UseGarageCaseDrawerLogicOptions {
   isOpen: boolean;
   caseCode?: string | null;
   initialEditMode?: boolean;
   initialTabKey?: string;
+  initialSubTabKey?: GarageCaseDetailViewMode;
   onClose: () => void;
   onSuccess?: () => void;
 }
@@ -33,6 +35,7 @@ export function useGarageCaseDrawerLogic({
   caseCode,
   initialEditMode = false,
   initialTabKey,
+  initialSubTabKey,
   onSuccess,
 }: UseGarageCaseDrawerLogicOptions) {
   const { t } = useTranslation(["garage", "common"]);
@@ -48,16 +51,30 @@ export function useGarageCaseDrawerLogic({
     useState<SettlementSubmissionItem | null>(null);
   const [showInvoiceModal, setShowInvoiceModal] = useState<boolean>(false);
 
+  const [activeCaseCode, setActiveCaseCode] = useState<
+    string | null | undefined
+  >(caseCode);
+
+  useEffect(() => {
+    setActiveCaseCode(caseCode);
+  }, [caseCode]);
+
+  const effectiveCaseCode = activeCaseCode || caseCode;
+
   const {
     data: selectedCase,
     isLoading: isLoadingCase,
     refetch: refetchCase,
-  } = useGarageCaseByCode(isOpen && caseCode ? caseCode : undefined);
+  } = useGarageCaseByCode(
+    isOpen && effectiveCaseCode ? effectiveCaseCode : undefined,
+  );
 
   const { mutate: syncCaseDetail, isPending: isSyncingDetail } =
     useSyncGarageCaseDetail();
 
-  const { data: grossProfit } = useGarageCaseGrossProfit(caseCode || undefined);
+  const { data: grossProfit } = useGarageCaseGrossProfit(
+    effectiveCaseCode || undefined,
+  );
 
   // Client-side Draft States for Category, Exclusions, Attributes & ERP notes
   const [draftCategoryId, setDraftCategoryId] = useState<string | null>(null);
@@ -131,15 +148,29 @@ export function useGarageCaseDrawerLogic({
   } = useGarageCaseEditForm(selectedCase?.id);
 
   const [activeTabKey, setActiveTabKey] = useState<string>(
-    initialTabKey || "quote_details",
+    initialTabKey === "partner_details"
+      ? "quote_details"
+      : initialTabKey || "quote_details",
+  );
+
+  const [detailsSubTab, setDetailsSubTab] = useState<GarageCaseDetailViewMode>(
+    initialTabKey === "partner_details"
+      ? "partner"
+      : initialSubTabKey || "details",
   );
 
   useEffect(() => {
     if (isOpen) {
-      if (initialTabKey) {
-        setActiveTabKey(initialTabKey);
-      } else {
+      if (initialTabKey === "partner_details") {
         setActiveTabKey("quote_details");
+        setDetailsSubTab("partner");
+      } else {
+        if (initialTabKey) {
+          setActiveTabKey(initialTabKey);
+        } else {
+          setActiveTabKey("quote_details");
+        }
+        setDetailsSubTab(initialSubTabKey || "details");
       }
       if (initialEditMode) {
         startEdit();
@@ -150,7 +181,15 @@ export function useGarageCaseDrawerLogic({
       setEditingSettlementItem(null);
       setShowInvoiceModal(false);
     }
-  }, [isOpen, caseCode, initialEditMode, initialTabKey, cancelEdit, startEdit]);
+  }, [
+    isOpen,
+    caseCode,
+    initialEditMode,
+    initialTabKey,
+    initialSubTabKey,
+    cancelEdit,
+    startEdit,
+  ]);
 
   const isConfigDirty = useMemo(() => {
     if (!selectedCase) return false;
@@ -735,9 +774,46 @@ export function useGarageCaseDrawerLogic({
     [editMode, activeSettlements, t],
   );
 
+  const handleSelectCase = useCallback(
+    (
+      newCaseCode: string,
+      options?: {
+        tabKey?: string;
+        subTabKey?: GarageCaseDetailViewMode;
+        editMode?: boolean;
+      },
+    ) => {
+      setActiveCaseCode(newCaseCode);
+      queryClient.invalidateQueries({
+        queryKey: ["garage-case-by-code", newCaseCode],
+      });
+
+      if (options?.tabKey) {
+        setActiveTabKey(options.tabKey);
+      } else {
+        setActiveTabKey("quote_details");
+      }
+
+      if (options?.subTabKey) {
+        setDetailsSubTab(options.subTabKey);
+      } else if (!options?.tabKey || options.tabKey === "quote_details") {
+        setDetailsSubTab("details");
+      }
+
+      if (options?.editMode) {
+        startEdit();
+      } else {
+        cancelEdit();
+      }
+    },
+    [queryClient, startEdit, cancelEdit],
+  );
+
   return {
     t,
     selectedBranchId,
+    activeCaseCode,
+    handleSelectCase,
     selectedCase,
     isLoadingCase,
     refetchCase,
@@ -770,6 +846,8 @@ export function useGarageCaseDrawerLogic({
     // Tabs & Traceability
     activeTabKey,
     setActiveTabKey,
+    detailsSubTab,
+    setDetailsSubTab,
     activeSettlements,
     activeLinkedInvoices,
     activeSummary,

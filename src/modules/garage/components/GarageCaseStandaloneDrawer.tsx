@@ -5,7 +5,10 @@ import {
   type DrawerTopTabItem,
 } from "@/shared/components/StandardFormDrawer";
 import { useTranslation } from "react-i18next";
-import { GarageCasePreview } from "./GarageCasePreview";
+import {
+  GarageCaseDetailsTab,
+  type GarageCaseDetailViewMode,
+} from "./garage-case-details-tab";
 import { KgaraCaseStatusBadge } from "./KgaraCaseStatusBadge";
 import { GarageCaseSettlementDrawerModal } from "./GarageCaseSettlementDrawerModal";
 import { InvoiceSelectionDrawer } from "./InvoiceSelectionDrawer";
@@ -27,10 +30,8 @@ import {
   ChevronDown,
   Wallet,
   FileText,
-  Users,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
-import { GarageCasePartnerTab } from "./GarageCasePartnerTab";
 import { useGarageCaseDrawerLogic } from "./drawer/hooks/useGarageCaseDrawerLogic";
 import { GarageCaseGeneralInfoSection } from "./drawer/sections/GarageCaseGeneralInfoSection";
 import { GarageCaseDefaultAttributesSection } from "./drawer/sections/GarageCaseDefaultAttributesSection";
@@ -42,6 +43,7 @@ export interface GarageCaseStandaloneDrawerProps {
   caseCode?: string | null;
   initialEditMode?: boolean;
   initialTabKey?: string;
+  initialSubTabKey?: GarageCaseDetailViewMode;
   onClose: () => void;
   onSuccess?: () => void;
 }
@@ -79,6 +81,9 @@ export function GarageCaseStandaloneDrawer(
     handleSaveAll,
     activeTabKey,
     setActiveTabKey,
+    detailsSubTab,
+    setDetailsSubTab,
+    handleSelectCase,
     activeSettlements,
     activeLinkedInvoices,
     activeSummary,
@@ -174,33 +179,16 @@ export function GarageCaseStandaloneDrawer(
     return [
       {
         key: "quote_details",
-        label: t("cases.drawer.quoteDetails", "Chi tiết báo giá"),
+        label: t("cases.drawer.tabDetails", "Chi tiết"),
         icon: <FileText className="w-3.5 h-3.5" />,
         content: (
-          <div className="space-y-4">
-            <GarageCasePreview
-              caseData={selectedCase}
-              grossProfit={grossProfit}
-            />
-          </div>
-        ),
-      },
-      {
-        key: "partner_details",
-        label: t("cases.drawer.partnerDetails", "Chi tiết theo đối tác"),
-        icon: <Users className="w-3.5 h-3.5" />,
-        content: (
-          <GarageCasePartnerTab
-            customerCode={selectedCase.khachHangCode}
-            customerName={selectedCase.khachHangName}
-            currentCaseCode={selectedCase.soChungTu}
-            branchId={selectedCase.branchExternalId || selectedBranchId}
-            onSelectCase={(newCaseCode) => {
-              queryClient.invalidateQueries({
-                queryKey: ["garage-case-by-code", newCaseCode],
-              });
-              refetchCase();
-            }}
+          <GarageCaseDetailsTab
+            selectedCase={selectedCase}
+            grossProfit={grossProfit}
+            selectedBranchId={selectedCase.branchExternalId || selectedBranchId}
+            viewMode={detailsSubTab}
+            onViewModeChange={setDetailsSubTab}
+            onSelectCase={handleSelectCase}
           />
         ),
       },
@@ -358,6 +346,9 @@ export function GarageCaseStandaloneDrawer(
     handleOpenAddInvoice,
     handleOpenAddSettlement,
     auditItems,
+    detailsSubTab,
+    setDetailsSubTab,
+    handleSelectCase,
     refetchCase,
     queryClient,
     t,

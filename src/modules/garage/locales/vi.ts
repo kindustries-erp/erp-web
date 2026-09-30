@@ -327,8 +327,11 @@ export const garageVi = {
     },
     drawer: {
       caseDetails: "Sổ báo giá:",
-      quoteDetails: "Chi tiết báo giá",
-      partnerDetails: "Chi tiết theo đối tác",
+      tabDetails: "Chi tiết",
+      subTabDetails: "Chi tiết",
+      subTabObjectDetails: "Chi tiết theo đối tượng",
+      quoteDetails: "Chi tiết",
+      partnerDetails: "Chi tiết theo đối tượng",
       partnerSummary: "Phân tích công nợ & Lịch sử đối tác",
       partnerCasesList: "Danh sách phiếu dịch vụ của đối tác",
       currentCaseBadge: "Phiếu hiện tại",
