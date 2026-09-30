@@ -52,10 +52,10 @@ import { cn } from "@/shared/utils";
 import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
 import { SuggestionBadgePill } from "@/modules/erp-invoices-core/components/molecules/smart-suggestion-card";
 import { SmartMatchComparisonPopover } from "@/modules/erp-invoices-core/components/molecules/smart-match-comparison-popover";
-import { ComingSoonTabContent } from "@/modules/erp-invoices-core/components/organisms/voucher-netoff-selection-modal";
-import { NetOffInput } from "@/modules/erp-invoices-core/components/organisms/voucher-netoff-selection-modal";
-import { InvoiceNoCell } from "@/modules/erp-invoices-core/components/organisms/erp-invoices-tab/components/cells/InvoiceNoCell";
-import { InvoicePartnerCell } from "@/modules/erp-invoices-core/components/organisms/erp-invoices-tab/components/cells/InvoicePartnerCell";
+import { ComingSoonTabContent } from "@/modules/erp-invoices-core/components/molecules/coming-soon-tab-content";
+import { VoucherNetoffInput as NetOffInput } from "@/modules/erp-invoices-core/components/molecules/voucher-netoff-input";
+import { InvoiceNoCell } from "@/modules/erp-invoices-core/components/molecules/invoice-no-cell";
+import { InvoicePartnerCell } from "@/modules/erp-invoices-core/components/molecules/invoice-partner-cell";
 import { ErpInvoiceStandaloneDrawer } from "@/modules/erp-invoices-core/components/organisms/erp-invoice-standalone-drawer";
 import type {
   BulkSubTabKey,

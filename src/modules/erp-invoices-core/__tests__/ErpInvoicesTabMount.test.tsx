@@ -5,7 +5,7 @@ import { ErpInvoicesTab } from "../components/organisms/erp-invoices-tab/ErpInvo
 
 // Mocks for child sections
 vi.mock(
-  "../components/organisms/erp-invoices-tab/components/InvoiceHeaderSection",
+  "../components/organisms/erp-invoices-tab/ErpInvoicesTabHeaderSection",
   () => ({
     InvoiceHeaderSection: ({ direction, activeTab }: any) => (
       <div data-testid={`view-header-${direction.toLowerCase()}`}>
@@ -24,21 +24,21 @@ vi.mock("../components/organisms/erp-invoice-items-section", () => ({
 }));
 
 vi.mock(
-  "../components/organisms/erp-invoices-tab/components/InvoiceDrawers",
+  "../components/organisms/erp-invoices-tab/ErpInvoicesTabDrawers",
   () => ({
     InvoiceDrawers: () => <div data-testid="invoice-drawers" />,
   }),
 );
 
 vi.mock(
-  "../components/organisms/erp-invoices-tab/components/InvoiceBulkModals",
+  "../components/organisms/erp-invoices-tab/ErpInvoicesTabBulkModals",
   () => ({
     InvoiceBulkModals: () => <div data-testid="invoice-bulk-modals" />,
   }),
 );
 
 vi.mock(
-  "../components/ErpInvoicesTab/components/InvoiceViewConfigDrawer",
+  "@/modules/erp-invoices-core/components/organisms/invoice-view-config-drawer",
   () => ({
     InvoiceViewConfigDrawer: () => (
       <div data-testid="invoice-view-config-drawer" />

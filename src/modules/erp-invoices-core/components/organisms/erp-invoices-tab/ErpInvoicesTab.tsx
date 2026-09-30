@@ -1,16 +1,14 @@
 import React from "react";
 import { useAppStore } from "@/core/config/appStore";
-import {
-  useErpInvoicesTabLogic,
-  type ErpInvoicesTabProps,
-} from "./useErpInvoicesTabLogic";
-import { InvoiceHeaderSection } from "./components/InvoiceHeaderSection";
+import { useErpInvoicesTabLogic } from "./ErpInvoicesTab.hook";
+import { type ErpInvoicesTabProps } from "./ErpInvoicesTab.type";
+import { InvoiceHeaderSection } from "./ErpInvoicesTabHeaderSection";
 import { ErpInvoiceItemsSection } from "../erp-invoice-items-section";
 import { InvoiceDashboard } from "@/pages/InvoiceDashboard";
 import { ErpInvoicesDraftPage } from "@/pages/ErpInvoicesDraftPage";
-import { InvoiceDrawers } from "./components/InvoiceDrawers";
-import { InvoiceBulkModals } from "./components/InvoiceBulkModals";
-import { InvoiceViewConfigDrawer } from "./components/InvoiceViewConfigDrawer";
+import { InvoiceDrawers } from "./ErpInvoicesTabDrawers";
+import { InvoiceBulkModals } from "./ErpInvoicesTabBulkModals";
+import { InvoiceViewConfigDrawer } from "@/modules/erp-invoices-core/components/organisms/invoice-view-config-drawer";
 
 export type { ErpInvoicesTabProps };
 

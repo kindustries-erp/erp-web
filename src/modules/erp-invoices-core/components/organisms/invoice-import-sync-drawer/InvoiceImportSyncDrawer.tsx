@@ -31,11 +31,11 @@ import {
 import { usePortalSync } from "@/modules/erp-invoices-core/hooks/usePortalSync";
 import { erpInvoicesCoreApi } from "@/modules/erp-invoices-core/api/erpInvoicesCoreApi";
 
-import { UploadDropzone } from "@/modules/erp-invoices-core/components/organisms/xml-upload/UploadDropzone";
-import { UploadFileList } from "@/modules/erp-invoices-core/components/organisms/xml-upload/UploadFileList";
-import { ImportResultSummary } from "@/modules/erp-invoices-core/components/organisms/xml-upload/ImportResultSummary";
-import { ImportResultTables } from "@/modules/erp-invoices-core/components/organisms/xml-upload/ImportResultTables";
-import { ImportPreviewModal } from "@/modules/erp-invoices-core/components/organisms/xml-upload/ImportPreviewModal";
+import { XmlUploadDropzone as UploadDropzone } from "@/modules/erp-invoices-core/components/molecules/xml-upload-dropzone";
+import { XmlUploadFileList as UploadFileList } from "@/modules/erp-invoices-core/components/molecules/xml-upload-file-list";
+import { XmlImportResultSummary as ImportResultSummary } from "@/modules/erp-invoices-core/components/molecules/xml-import-result-summary";
+import { XmlImportResultTables as ImportResultTables } from "@/modules/erp-invoices-core/components/organisms/xml-import-result-tables";
+import { InvoiceXmlImportModal as ImportPreviewModal } from "@/modules/erp-invoices-core/components/organisms/invoice-xml-import-modal";
 import { InvoiceDetailWrapper } from "@/modules/erp-invoices-core/components/organisms/invoice-detail-wrapper";
 import { GdtPortalAuthDrawer } from "@/modules/erp-invoices-core/components/organisms/gdt-portal-auth-drawer";
 import {

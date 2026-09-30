@@ -3,11 +3,11 @@ import { Search, Download } from "lucide-react";
 import { Button } from "@/shared/components/ui/Button";
 import { useInvoicePreviewMode } from "@/modules/erp-invoices-core/context/InvoicePreviewModeContext";
 import { ErpAttachmentSelectDrawer } from "../erp-attachment-select-drawer";
-import { useInvoiceDocumentWorkspaceLogic } from "./hooks/useInvoiceDocumentWorkspaceLogic";
-import { InvoiceFileList } from "./components/InvoiceFileList";
-import { InvoiceFileUploadSection } from "./components/InvoiceFileUploadSection";
-import { InvoiceDocumentPreviewFrame } from "./components/InvoiceDocumentPreviewFrame";
-import type { InvoiceDocumentWorkspaceProps } from "./types";
+import { useInvoiceDocumentWorkspaceLogic } from "./InvoiceDocumentWorkspace.hook";
+import { InvoiceFileList } from "@/modules/erp-invoices-core/components/molecules/invoice-file-list";
+import { InvoiceFileUploadSection } from "@/modules/erp-invoices-core/components/molecules/invoice-file-upload-section";
+import { InvoiceDocumentPreviewFrame } from "@/modules/erp-invoices-core/components/molecules/invoice-document-preview-frame";
+import type { InvoiceDocumentWorkspaceProps } from "./InvoiceDocumentWorkspace.type";
 
 export const InvoiceDocumentWorkspace = React.memo(
   function InvoiceDocumentWorkspace(props: InvoiceDocumentWorkspaceProps) {

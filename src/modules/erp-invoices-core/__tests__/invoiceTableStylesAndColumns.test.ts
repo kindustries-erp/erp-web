@@ -1,8 +1,8 @@
 import { describe, it, expect, vi } from "vitest";
 import { renderHook } from "@testing-library/react";
 import { getInvoiceRowClassName } from "../components/organisms/erp-invoices-tab/utils";
-import { useInvoiceColumns } from "../components/organisms/erp-invoices-tab/components/InvoiceColumns";
-import { useItemColumns } from "../components/organisms/erp-invoice-items-section/components/itemColumns";
+import { useInvoiceColumns } from "../components/organisms/erp-invoices-tab/ErpInvoicesTabColumns";
+import { useItemColumns } from "../components/organisms/erp-invoice-items-section/ErpInvoiceItemsSection.columns";
 import {
   type ErpInvoice,
   type ErpInvoiceItemRow,

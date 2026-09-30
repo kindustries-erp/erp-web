@@ -1,8 +1,8 @@
 import React from "react";
 import { StandardTable } from "@/shared/components/StandardTable";
 import { useTranslation } from "react-i18next";
-import { useInvoiceDetailLinesColumns } from "./hooks/useInvoiceDetailLinesColumns";
-import type { ErpInvoiceDetailLinesTableProps } from "./types";
+import { useInvoiceDetailLinesColumns } from "./ErpInvoiceDetailLinesTable.hook";
+import type { ErpInvoiceDetailLinesTableProps } from "./ErpInvoiceDetailLinesTable.type";
 import { Boxes } from "lucide-react";
 
 export const ErpInvoiceDetailLinesTable = React.memo(

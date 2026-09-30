@@ -3,8 +3,8 @@ import { Receipt, DownloadCloud } from "lucide-react";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate/SpreadsheetPageTemplate";
 import { PillTabs } from "@/shared/components/PillTabs";
 import type { ErpInvoiceItemRow } from "@/modules/erp-invoices-core/api/erpInvoicesCoreApi";
-import type { ErpInvoiceItemsSectionProps } from "./types";
-import { useErpInvoiceItemsSectionLogic } from "./useErpInvoiceItemsSectionLogic";
+import type { ErpInvoiceItemsSectionProps } from "./ErpInvoiceItemsSection.type";
+import { useErpInvoiceItemsSectionLogic } from "./ErpInvoiceItemsSection.hook";
 
 export const ErpInvoiceItemsSection = React.memo(
   function ErpInvoiceItemsSection(props: ErpInvoiceItemsSectionProps) {

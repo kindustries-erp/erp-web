@@ -18,16 +18,14 @@ import {
   type ActiveVoucherItem,
   type ErpInvoiceSettlementContextValue,
   type ErpInvoiceSettlementTabProps,
-} from "../types";
-import {
-  type SettlementType,
-  type SelectedVoucherItem,
-} from "../../voucher-netoff-selection-modal/types";
+} from "../ErpInvoiceSettlementTab.type";
+import { type SettlementType } from "../../voucher-netoff-right-panel";
+import { type SelectedVoucherItem } from "../../selected-bank-transactions-table";
 import {
   calculateTotalNetOff,
   calculateRemainingAfterNetOff,
   checkIsOverRemaining,
-} from "../../voucher-netoff-selection-modal/utils";
+} from "../../voucher-netoff-selection-modal/VoucherNetoffSelectionModal.helper";
 
 const ErpInvoiceSettlementContext =
   createContext<ErpInvoiceSettlementContextValue | null>(null);

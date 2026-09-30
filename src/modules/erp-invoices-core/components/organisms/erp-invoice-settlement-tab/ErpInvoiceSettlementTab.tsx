@@ -5,14 +5,14 @@ import { Button } from "@/shared/components/ui/Button";
 import { cn } from "@/shared/utils";
 import { money } from "@/shared/utils/format";
 import { BankTransactionDetailDrawer } from "@/pages/finance/components/BankTransactionDetailDrawer";
-import { ComingSoonTabContent } from "../voucher-netoff-selection-modal/components/ComingSoonTabContent";
-import { ErpInvoiceUnifiedSettlementTable } from "./components/ErpInvoiceUnifiedSettlementTable";
+import { ComingSoonTabContent } from "@/modules/erp-invoices-core/components/molecules/coming-soon-tab-content";
+import { ErpInvoiceUnifiedSettlementTable } from "@/modules/erp-invoices-core/components/organisms/erp-invoice-unified-settlement-table";
 import { useErpInvoiceSettlement } from "./context/ErpInvoiceSettlementContext";
 import {
   type ErpInvoiceSettlementTabProps,
   type SettlementSubTabKey,
   type SettlementTableViewPreset,
-} from "./types";
+} from "./ErpInvoiceSettlementTab.type";
 
 export function ErpInvoiceSettlementTab(props?: ErpInvoiceSettlementTabProps) {
   void props;

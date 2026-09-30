@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { format } from "date-fns";
 import { normalizeOutInvoiceLineDisplay } from "../../../utils/outInvoiceDisplay";
 import { formatUom } from "../../../utils/uom.helper";
-import { formatVatRate } from "@/modules/erp-invoices-core/components/organisms/erp-invoice-items-section/components/itemColumns";
+import { formatVatRate } from "@/modules/erp-invoices-core/components/organisms/erp-invoice-items-section/ErpInvoiceItemsSection.columns";
 import type { VietnamInvoiceTemplateProps } from "./VietnamInvoiceTemplate.type";
 
 export function VietnamInvoiceTemplate({

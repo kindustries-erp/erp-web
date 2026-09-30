@@ -13,9 +13,9 @@ import { SalesOrderSelectionModal } from "../sales-order-selection-modal";
 import { GarageCaseSelectionModal } from "../garage-case-selection-modal";
 import {
   ErpInvoiceSettlementTab,
-  ErpInvoiceSettlementRightPanel,
   ErpInvoiceSettlementProvider,
 } from "../erp-invoice-settlement-tab";
+import { ErpInvoiceSettlementRightPanel } from "../erp-invoice-settlement-right-panel";
 import { ErpInvoicePartnerTab } from "../erp-invoice-partner-tab";
 import { PostedAccountingSummary } from "@/shared/components/accounting/PostedAccountingSummary";
 import { PostingSection } from "@/shared/components/accounting/PostingSection";

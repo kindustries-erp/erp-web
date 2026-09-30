@@ -23,7 +23,7 @@ import { useSinvoiceDraftsList } from "@/modules/accounting/hooks/useSinvoiceDra
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
 import { InvoiceDateRangeSlot } from "@/modules/erp-invoices-core/components";
-import { InvoiceItemsPopover } from "@/modules/erp-invoices-core/components/organisms/erp-invoices-tab/components/cells/InvoiceItemsPopover";
+import { InvoiceItemsPopover } from "@/modules/erp-invoices-core/components/molecules/invoice-items-popover";
 import { ErpUrlQueryParam } from "@/shared/constants/urlParams";
 import { DEFAULT_DEBOUNCE_TIME } from "@/shared/constants/timing";
 import { encodeStateParam } from "@/shared/utils/pageUrl";

@@ -1,10 +1,10 @@
 import { useTranslation } from "react-i18next";
 import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
 import { BankTransactionDetailDrawer } from "@/pages/finance/components/BankTransactionDetailDrawer";
-import { type VoucherNetoffSelectionModalProps } from "./types";
-import { useVoucherNetoffSelectionLogic } from "./hooks/useVoucherNetoffSelectionLogic";
-import { useVoucherNetoffTabs } from "./hooks/useVoucherNetoffTabs";
-import { NetOffRightPanel } from "./components/NetOffRightPanel";
+import { type VoucherNetoffSelectionModalProps } from "./VoucherNetoffSelectionModal.type";
+import { useVoucherNetoffSelectionLogic } from "./VoucherNetoffSelectionModal.hook";
+import { useVoucherNetoffTabs } from "./VoucherNetoffSelectionModal.tabs";
+import { VoucherNetoffRightPanel as NetOffRightPanel } from "@/modules/erp-invoices-core/components/organisms/voucher-netoff-right-panel";
 
 export function VoucherNetoffSelectionModal(
   props: VoucherNetoffSelectionModalProps,
