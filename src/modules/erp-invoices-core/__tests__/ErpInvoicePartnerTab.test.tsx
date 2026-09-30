@@ -106,7 +106,7 @@ describe("ErpInvoicePartnerTab", () => {
     vi.clearAllMocks();
   });
 
-  it("renders 4 subtabs: '1. Chi tiết', '2. Chi tiết theo đối tượng', '3. Chi tiết HHDV', and '4. Biến động'", async () => {
+  it("renders 4 subtabs: '1. Chi tiết', '2. Chi tiết theo đối tượng', '3. Chi tiết HHDV', and '4. Biến động & Phân tích'", async () => {
     renderWithClient(
       <ErpInvoicePartnerTab detailInvoice={mockInvoice as any} direction="IN">
         <div data-testid="detail-children">Nội dung chi tiết test</div>
@@ -116,7 +116,7 @@ describe("ErpInvoicePartnerTab", () => {
     expect(screen.getByText("1. Chi tiết")).toBeInTheDocument();
     expect(screen.getByText("2. Chi tiết theo đối tượng")).toBeInTheDocument();
     expect(screen.getByText("3. Chi tiết HHDV")).toBeInTheDocument();
-    expect(screen.getByText("4. Biến động")).toBeInTheDocument();
+    expect(screen.getByText("4. Biến động & Phân tích")).toBeInTheDocument();
   });
 
   it("defaults to '1. Chi tiết', renders children and view mode toggle buttons (Xem trước HĐ thuần / Tài liệu & PDF)", async () => {
@@ -131,7 +131,21 @@ describe("ErpInvoicePartnerTab", () => {
     expect(screen.getByText("Tài liệu & PDF")).toBeInTheDocument();
   });
 
-  it("switches to '2. Chi tiết theo đối tượng' when clicked and calls erpInvoicesCoreApi.list", async () => {
+  it("switches to '2. Chi tiết theo đối tượng' when clicked and calls invoiceDebtsApi.getPartnerInvoices", async () => {
+    (invoiceDebtsApi.getPartnerInvoices as any).mockResolvedValueOnce([
+      {
+        id: "inv-debt-1",
+        invoiceNo: "0000001",
+        serialNo: "1C26TGA",
+        invoiceDate: "2026-03-01",
+        totalAmount: 1100000,
+        paidAmount: 500000,
+        balanceAmount: 600000,
+        agingDays: 15,
+        status: "CONFIRMED",
+      },
+    ]);
+
     renderWithClient(
       <ErpInvoicePartnerTab
         detailInvoice={mockInvoice as any}
@@ -143,11 +157,14 @@ describe("ErpInvoicePartnerTab", () => {
     fireEvent.click(invoicesSubTabBtn);
 
     await waitFor(() => {
-      expect(erpInvoicesCoreApi.list).toHaveBeenCalledWith(
+      expect(invoiceDebtsApi.getPartnerInvoices).toHaveBeenCalledWith(
+        "0101234567",
         expect.objectContaining({
-          partner_tax_code: "0101234567",
+          partner_type: "SUPPLIER",
         }),
       );
+      expect(screen.getByText("Đã cấn trừ")).toBeInTheDocument();
+      expect(screen.getByText("Còn nợ")).toBeInTheDocument();
     });
   });
 
@@ -172,7 +189,7 @@ describe("ErpInvoicePartnerTab", () => {
     });
   });
 
-  it("switches to '4. Biến động' when clicked and renders analytics dashboard", async () => {
+  it("switches to '4. Biến động & Phân tích' when clicked and renders analytics dashboard", async () => {
     (invoiceDebtsApi.getPartnerInvoices as any).mockResolvedValueOnce([
       {
         id: "inv-debt-1",
@@ -194,7 +211,7 @@ describe("ErpInvoicePartnerTab", () => {
       />,
     );
 
-    const analyticsSubTabBtn = screen.getByText("4. Biến động");
+    const analyticsSubTabBtn = screen.getByText("4. Biến động & Phân tích");
     fireEvent.click(analyticsSubTabBtn);
 
     await waitFor(() => {

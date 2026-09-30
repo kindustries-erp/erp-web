@@ -39,6 +39,7 @@ export * from "./off-system-manual-section";
 export * from "./xml-import-result-tables";
 export * from "./invoice-xml-import-modal";
 export * from "./partner-debt-analytics";
+export * from "./erp-invoice-partner-invoices-section";
 
 // Explicit re-exports to resolve TypeScript ambiguity collisions
 export { formatTaxInvoiceStatus } from "../atoms/invoice-status-badge";

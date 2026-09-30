@@ -85,6 +85,9 @@ describe("ErpInvoiceInternalMain", () => {
       "template",
     );
 
+    expect(
+      screen.getByText("Danh sách chi tiết hàng hóa & dịch vụ"),
+    ).toBeInTheDocument();
     expect(screen.getByText("Bánh trung thu thập cẩm")).toBeInTheDocument();
   });
 

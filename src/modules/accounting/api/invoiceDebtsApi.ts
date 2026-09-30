@@ -81,6 +81,7 @@ export interface PartnerInvoiceDetailItem {
   buyerTaxCode?: string;
   buyerAddress?: string;
   preVatAmount: number;
+  vatRate?: string | null;
   vatAmount: number;
   totalAmount: number;
   paidAmount: number;
