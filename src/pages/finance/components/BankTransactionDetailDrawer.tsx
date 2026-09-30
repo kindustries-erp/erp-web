@@ -22,10 +22,8 @@ import {
   type BankTransactionDetailViewMode,
 } from "@/modules/bank-statements/components/BankTransactionDetailTab";
 import { BankTransactionGeneralInfoSection } from "@/modules/bank-statements/components/BankTransactionGeneralInfoSection";
-import {
-  ModuleEntityCustomFieldsSection,
-  validateModuleRequiredFields,
-} from "@/shared/features/custom-fields";
+import { ModuleEntityCustomFieldsSection } from "@/shared/components/organisms";
+import { validateModuleRequiredFields } from "@/shared/utils";
 import { bankStatementApi } from "@/modules/bank-statements/api/bankStatementApi";
 import { moduleConfigApi } from "@/core/api/moduleConfigApi";
 

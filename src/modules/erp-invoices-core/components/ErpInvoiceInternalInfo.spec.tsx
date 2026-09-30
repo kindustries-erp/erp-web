@@ -80,7 +80,7 @@ vi.mock("@/modules/tags/components/EntityTagSelector", () => ({
   EntityTagSelector: () => <div data-testid="mock-tag-selector" />,
 }));
 
-vi.mock("@/shared/features/custom-fields", () => ({
+vi.mock("@/shared/components/organisms", () => ({
   ModuleEntityCustomFieldsSection: ({
     globalTitle,
   }: {

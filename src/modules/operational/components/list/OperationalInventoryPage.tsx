@@ -15,7 +15,7 @@ import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemp
 import { PillTabs } from "@/shared/components/PillTabs";
 import { ErpUrlQueryParam } from "@/shared/constants/urlParams";
 import { InventoryItemFormDrawer } from "@/modules/inventory-core/components/InventoryItemFormDrawer";
-import { ModuleCustomFieldConfigDrawer } from "@/shared/features/custom-fields";
+import { ModuleCustomFieldConfigDrawer } from "@/shared/components/organisms";
 import { useGrDrawer } from "@/modules/goods-receipts-core/hooks/useGrDrawer";
 import { GrFormDrawer } from "@/modules/goods-receipts-core/components/GrFormDrawer";
 import { useGiDrawer } from "@/modules/goods-issues-core/hooks/useGiDrawer";

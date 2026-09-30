@@ -28,12 +28,9 @@ import {
   type CreateModuleAttributeDefPayload,
   type UpdateModuleAttributeDefPayload,
 } from "@/core/api/moduleConfigApi";
-import {
-  ERP_MODULE_REGISTRY,
-  ERP_DOMAIN_REGISTRY,
-  ModuleLivePreviewPanel,
-  NeutralCountBadge,
-} from "@/shared/features/custom-fields";
+import { ERP_MODULE_REGISTRY, ERP_DOMAIN_REGISTRY } from "@/shared/constants";
+import { ModuleLivePreviewPanel } from "@/shared/components/molecules";
+import { NeutralCountBadge } from "@/shared/components/atoms";
 import type { CustomFieldRow } from "../hooks/useCustomFieldsList";
 
 export interface CustomFieldFormDrawerProps {
