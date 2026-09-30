@@ -51,7 +51,7 @@ export const erpInvoicesVi = {
   tabAttachments: "Tài liệu đính kèm",
   tabAccounting: "Hạch toán kế toán",
   tabHistory: "Lịch sử & Kiểm duyệt",
-  tabCashflowAnalytics: "Biến động",
+  tabCashflowAnalytics: "Biến động & Phân tích",
   tabAttachmentsTitle: "Tài liệu đính kèm & Tệp PDF",
   attachmentsUnit: "tệp",
   cashTrendChartTitle: "Biểu đồ biến động theo tháng",

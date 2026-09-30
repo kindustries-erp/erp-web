@@ -23,7 +23,7 @@ import type { TabItem } from "@/shared/components/PageLayout";
 import type { ActionDropdownItem } from "@/shared/components/ActionDropdown";
 import { useInvoiceDebtsList } from "../hooks/useInvoiceDebtsList";
 import { invoiceDebtsApi, type InvoiceDebtItem } from "../api/invoiceDebtsApi";
-import { InvoicePartnerDebtDetailDrawer } from "../components/InvoicePartnerDebtDetailDrawer";
+import { InvoicePartnerDebtDetailDrawer } from "../components/organisms/invoice-partner-debt-detail-drawer";
 import { InvoiceDebtsExportDrawer } from "../components/InvoiceDebtsExportDrawer";
 import { InvoiceDebtsDashboardTab } from "../components/InvoiceDebtsDashboardTab";
 import { useHasAnyPermission } from "@/shared/hooks/useHasPermission";

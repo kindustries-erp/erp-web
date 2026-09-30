@@ -14,10 +14,10 @@ export function getInvoiceDetailLinesColumns(
     // 1. Cột STT: 40px, căn giữa
     {
       key: "index",
-      header: <span className="w-full block text-center">#</span>,
+      header: <span className="w-full block text-center font-semibold">#</span>,
       size: 40,
       enableResizing: false,
-      headerClassName: "text-center w-[40px] min-w-[40px]",
+      headerClassName: "text-center w-[40px] min-w-[40px] font-semibold",
       className: "text-center w-[40px] min-w-[40px]",
       cell: (_: OutInvoiceLineDisplayResult, idx: number) => (
         <span className="w-full block text-center text-xs text-muted-foreground">
@@ -29,9 +29,14 @@ export function getInvoiceDetailLinesColumns(
     // 2. Tên hàng hóa, dịch vụ / Diễn giải
     {
       key: "description",
-      header: t("description", "Tên hàng hóa, dịch vụ"),
+      header: (
+        <span className="uppercase font-semibold">
+          {t("description", "Diễn giải")}
+        </span>
+      ),
       size: 300,
       enableResizing: true,
+      headerClassName: "uppercase font-semibold",
       cell: (row: OutInvoiceLineDisplayResult) => (
         <div className="flex items-center gap-1.5 w-full min-w-0">
           <TableText
@@ -48,10 +53,12 @@ export function getInvoiceDetailLinesColumns(
     {
       key: "unit",
       header: (
-        <span className="w-full block text-center">{t("unit", "ĐVT")}</span>
+        <span className="w-full block text-center uppercase font-semibold">
+          {t("unit", "ĐVT")}
+        </span>
       ),
       size: 70,
-      headerClassName: "text-center",
+      headerClassName: "text-center uppercase font-semibold",
       className: "text-center",
       cell: (row: OutInvoiceLineDisplayResult) => (
         <span className="text-xs font-medium text-slate-700 dark:text-slate-300">
@@ -64,12 +71,12 @@ export function getInvoiceDetailLinesColumns(
     {
       key: "quantity",
       header: (
-        <span className="w-full block text-right">
+        <span className="w-full block text-right uppercase font-semibold">
           {t("quantity", "Số lượng")}
         </span>
       ),
       size: 80,
-      headerClassName: "text-right",
+      headerClassName: "text-right uppercase font-semibold",
       className: "text-right",
       cell: (row: OutInvoiceLineDisplayResult) => (
         <span className="tabular-nums font-mono text-xs text-foreground">
@@ -84,12 +91,12 @@ export function getInvoiceDetailLinesColumns(
     {
       key: "unitPrice",
       header: (
-        <span className="w-full block text-right">
+        <span className="w-full block text-right uppercase font-semibold">
           {t("unitPrice", "Đơn giá")}
         </span>
       ),
       size: 110,
-      headerClassName: "text-right",
+      headerClassName: "text-right uppercase font-semibold",
       className: "text-right",
       cell: (row: OutInvoiceLineDisplayResult) => (
         <span className="tabular-nums font-mono text-xs text-foreground">
@@ -102,12 +109,12 @@ export function getInvoiceDetailLinesColumns(
     {
       key: "discountAmount",
       header: (
-        <span className="w-full block text-right">
+        <span className="w-full block text-right uppercase font-semibold">
           {t("discountAmount", "Chiết khấu")}
         </span>
       ),
       size: 100,
-      headerClassName: "text-right",
+      headerClassName: "text-right uppercase font-semibold",
       className: "text-right",
       cell: (row: OutInvoiceLineDisplayResult) => (
         <span className="tabular-nums font-mono text-xs text-muted-foreground">
@@ -120,12 +127,12 @@ export function getInvoiceDetailLinesColumns(
     {
       key: "vatRate",
       header: (
-        <span className="w-full block text-center">
+        <span className="w-full block text-center uppercase font-semibold">
           {t("vatRate", "Thuế suất")}
         </span>
       ),
       size: 80,
-      headerClassName: "text-center",
+      headerClassName: "text-center uppercase font-semibold",
       className: "text-center",
       cell: (row: OutInvoiceLineDisplayResult) => (
         <span className="font-mono text-xs text-muted-foreground">
@@ -138,12 +145,12 @@ export function getInvoiceDetailLinesColumns(
     {
       key: "vatAmount",
       header: (
-        <span className="w-full block text-right">
-          {t("vatAmount", "Tiền thuế")}
+        <span className="w-full block text-right uppercase font-semibold">
+          {t("vatAmount", "Thuế GTGT")}
         </span>
       ),
       size: 110,
-      headerClassName: "text-right",
+      headerClassName: "text-right uppercase font-semibold",
       className: "text-right",
       cell: (row: OutInvoiceLineDisplayResult) => (
         <span className="tabular-nums font-mono text-xs text-foreground">
@@ -156,12 +163,12 @@ export function getInvoiceDetailLinesColumns(
     {
       key: "preVatAmount",
       header: (
-        <span className="w-full block text-right">
-          {t("preVatAmount", "Tiền chưa thuế")}
+        <span className="w-full block text-right uppercase font-semibold">
+          {t("preVatAmount", "Trước GTGT")}
         </span>
       ),
       size: 130,
-      headerClassName: "text-right",
+      headerClassName: "text-right uppercase font-semibold",
       className: "text-right",
       cell: (row: OutInvoiceLineDisplayResult) => (
         <span className="tabular-nums font-mono font-medium text-xs text-foreground">
@@ -174,12 +181,12 @@ export function getInvoiceDetailLinesColumns(
     {
       key: "totalAmount",
       header: (
-        <span className="w-full block text-right">
-          {t("totalAmount", "Tổng tiền")}
+        <span className="w-full block text-right uppercase font-semibold">
+          {t("totalAmount", "Thành tiền")}
         </span>
       ),
       size: 140,
-      headerClassName: "text-right",
+      headerClassName: "text-right uppercase font-semibold",
       className: "text-right",
       cell: (row: OutInvoiceLineDisplayResult) => (
         <span className="tabular-nums font-mono font-semibold text-xs text-primary">

@@ -56,7 +56,7 @@ export const erpInvoicesEn = {
   tabAttachments: "Attachments",
   tabAccounting: "Accounting",
   tabHistory: "History & Audit",
-  tabCashflowAnalytics: "Fluctuations",
+  tabCashflowAnalytics: "Fluctuations & Analytics",
   tabAttachmentsTitle: "Attachments & PDF Files",
   attachmentsUnit: "files",
   cashTrendChartTitle: "Monthly Fluctuation Chart",

@@ -52,7 +52,7 @@ export function ErpInvoiceInternalMain({
       {/* Invoice lines / PDF preview — ALWAYS rendered in both view and edit mode */}
       <DrawerSection
         title={
-          <span className="flex items-center gap-1.5 text-xs font-bold text-foreground">
+          <span className="flex items-center gap-1.5 text-xs font-bold text-foreground uppercase tracking-wide">
             {activeMode === "pdf" ? (
               <>
                 <Paperclip className="w-3.5 h-3.5 text-primary" />
@@ -61,7 +61,12 @@ export function ErpInvoiceInternalMain({
             ) : (
               <>
                 <Boxes className="w-3.5 h-3.5 text-primary" />
-                {t("tabGoodsItemsTitle", "Chi tiết hàng hóa, dịch vụ")}
+                <span>
+                  {t(
+                    "tabGoodsItemsTitle",
+                    "Danh sách chi tiết hàng hóa & dịch vụ",
+                  )}
+                </span>
               </>
             )}
           </span>

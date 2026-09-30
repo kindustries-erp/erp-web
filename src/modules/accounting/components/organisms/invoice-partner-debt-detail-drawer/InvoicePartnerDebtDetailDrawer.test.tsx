@@ -2,11 +2,11 @@ import React from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { InvoicePartnerDebtDetailDrawer } from "../components/InvoicePartnerDebtDetailDrawer";
-import { invoiceDebtsApi } from "../api/invoiceDebtsApi";
+import { InvoicePartnerDebtDetailDrawer } from "./InvoicePartnerDebtDetailDrawer";
+import { invoiceDebtsApi } from "@/modules/accounting/api/invoiceDebtsApi";
 
 // Mocks
-vi.mock("../api/invoiceDebtsApi", () => ({
+vi.mock("@/modules/accounting/api/invoiceDebtsApi", () => ({
   invoiceDebtsApi: {
     getPartnerInvoices: vi.fn().mockResolvedValue([
       {
@@ -22,6 +22,7 @@ vi.mock("../api/invoiceDebtsApi", () => ({
         agingDays: 15,
         status: "CONFIRMED",
         buyerName: "Khách hàng Test",
+        description: "Hóa đơn dịch vụ",
       },
     ]),
     getPartnerStats: vi.fn().mockResolvedValue({
@@ -55,7 +56,7 @@ describe("InvoicePartnerDebtDetailDrawer", () => {
     vi.clearAllMocks();
   });
 
-  it("renders PillTabs with '1. Danh sách hóa đơn' and '2. Biến động & Phân tích' inside Left Panel", async () => {
+  it("renders PillTabs with '1. Chi tiết theo đối tượng' and '2. Biến động & Phân tích' inside Left Panel", async () => {
     renderWithClient(
       <InvoicePartnerDebtDetailDrawer
         open={true}
@@ -67,11 +68,11 @@ describe("InvoicePartnerDebtDetailDrawer", () => {
     );
 
     // Verify sub-tabs render in left panel
-    expect(screen.getByText("1. Danh sách hóa đơn")).toBeInTheDocument();
+    expect(screen.getByText("1. Chi tiết theo đối tượng")).toBeInTheDocument();
     expect(screen.getByText("2. Biến động & Phân tích")).toBeInTheDocument();
   });
 
-  it("defaults to '1. Danh sách hóa đơn' and fetches partner invoices", async () => {
+  it("defaults to '1. Chi tiết theo đối tượng' and renders ErpInvoicePartnerInvoicesSection", async () => {
     renderWithClient(
       <InvoicePartnerDebtDetailDrawer
         open={true}
@@ -89,6 +90,8 @@ describe("InvoicePartnerDebtDetailDrawer", () => {
           partner_type: "CUSTOMER",
         }),
       );
+      expect(screen.getAllByText("Đã cấn trừ").length).toBeGreaterThan(0);
+      expect(screen.getAllByText("Còn nợ").length).toBeGreaterThan(0);
     });
   });
 
