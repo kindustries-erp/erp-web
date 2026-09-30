@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { InvoiceBulkPostingDrawer } from "../components/InvoiceBulkPostingDrawer";
+import { InvoiceBulkPostingDrawer } from "../components/organisms/invoice-bulk-posting-drawer";
 import { erpInvoicesCoreApi } from "../api/erpInvoicesCoreApi";
 
 vi.mock("@tanstack/react-query", () => ({

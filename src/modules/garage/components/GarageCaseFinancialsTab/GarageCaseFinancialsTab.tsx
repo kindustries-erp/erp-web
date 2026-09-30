@@ -13,7 +13,7 @@ import { Button } from "@/shared/components/ui/Button";
 import { cn } from "@/shared/utils";
 import { money } from "@/shared/utils/format";
 import { BankTransactionDetailDrawer } from "@/pages/finance/components/BankTransactionDetailDrawer";
-import { ErpInvoiceStandaloneDrawer } from "@/modules/erp-invoices-core/components/ErpInvoiceStandaloneDrawer";
+import { ErpInvoiceStandaloneDrawer } from "@/modules/erp-invoices-core/components";
 import { FilePreviewDrawer } from "@/shared/components/FilePreviewDrawer";
 import { ManualCashflowTabContent } from "../GarageCaseReconciliationDrawer/components/ManualCashflowTabContent";
 import { InvoiceTabContent } from "../GarageCaseReconciliationDrawer/components/InvoiceTabContent";

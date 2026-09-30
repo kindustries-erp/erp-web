@@ -35,11 +35,8 @@ import {
   moduleConfigApi,
   type ModuleAttributeFieldType,
 } from "@/core/api/moduleConfigApi";
-import {
-  ERP_MODULE_REGISTRY,
-  ERP_DOMAIN_REGISTRY,
-  ModuleCustomFieldConfigDrawer,
-} from "@/shared/components/ModuleCustomFieldConfigDrawer";
+import { ERP_MODULE_REGISTRY, ERP_DOMAIN_REGISTRY } from "@/shared/constants";
+import { ModuleCustomFieldConfigDrawer } from "@/shared/components/organisms";
 import {
   useCustomFieldsList,
   type CustomFieldRow,

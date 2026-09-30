@@ -1,18 +1,21 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ErpInvoicesTab } from "../components/ErpInvoicesTab/ErpInvoicesTab";
+import { ErpInvoicesTab } from "../components/organisms/erp-invoices-tab/ErpInvoicesTab";
 
 // Mocks for child sections
-vi.mock("../components/ErpInvoicesTab/components/InvoiceHeaderSection", () => ({
-  InvoiceHeaderSection: ({ direction, activeTab }: any) => (
-    <div data-testid={`view-header-${direction.toLowerCase()}`}>
-      Header {direction} - {activeTab}
-    </div>
-  ),
-}));
+vi.mock(
+  "../components/organisms/erp-invoices-tab/ErpInvoicesTabHeaderSection",
+  () => ({
+    InvoiceHeaderSection: ({ direction, activeTab }: any) => (
+      <div data-testid={`view-header-${direction.toLowerCase()}`}>
+        Header {direction} - {activeTab}
+      </div>
+    ),
+  }),
+);
 
-vi.mock("../components/ErpInvoiceItemsSection", () => ({
+vi.mock("../components/organisms/erp-invoice-items-section", () => ({
   ErpInvoiceItemsSection: ({ direction, activeTab }: any) => (
     <div data-testid={`view-items-${direction.toLowerCase()}`}>
       Items {direction} - {activeTab}
@@ -20,16 +23,22 @@ vi.mock("../components/ErpInvoiceItemsSection", () => ({
   ),
 }));
 
-vi.mock("../components/ErpInvoicesTab/components/InvoiceDrawers", () => ({
-  InvoiceDrawers: () => <div data-testid="invoice-drawers" />,
-}));
-
-vi.mock("../components/ErpInvoicesTab/components/InvoiceBulkModals", () => ({
-  InvoiceBulkModals: () => <div data-testid="invoice-bulk-modals" />,
-}));
+vi.mock(
+  "../components/organisms/erp-invoices-tab/ErpInvoicesTabDrawers",
+  () => ({
+    InvoiceDrawers: () => <div data-testid="invoice-drawers" />,
+  }),
+);
 
 vi.mock(
-  "../components/ErpInvoicesTab/components/InvoiceViewConfigDrawer",
+  "../components/organisms/erp-invoices-tab/ErpInvoicesTabBulkModals",
+  () => ({
+    InvoiceBulkModals: () => <div data-testid="invoice-bulk-modals" />,
+  }),
+);
+
+vi.mock(
+  "@/modules/erp-invoices-core/components/organisms/invoice-view-config-drawer",
   () => ({
     InvoiceViewConfigDrawer: () => (
       <div data-testid="invoice-view-config-drawer" />

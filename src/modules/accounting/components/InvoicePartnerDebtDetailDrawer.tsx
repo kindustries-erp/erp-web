@@ -37,12 +37,12 @@ import {
   type PartnerInvoiceDetailItem,
   type InvoicePartnerType,
 } from "../api/invoiceDebtsApi";
-import { ErpInvoiceInternalDrawer } from "@/modules/erp-invoices-core/components/ErpInvoiceInternalDrawer";
 import {
+  ErpInvoiceInternalDrawer,
   ErpInvoiceInternalMain,
   ErpInvoiceInternalSidebar,
-} from "@/modules/erp-invoices-core/components/ErpInvoiceInternalInfo";
-import { VietnamInvoiceTemplate } from "@/modules/erp-invoices-core/components/VietnamInvoiceTemplate";
+  VietnamInvoiceTemplate,
+} from "@/modules/erp-invoices-core/components";
 import { useErpInvoiceForm } from "@/modules/erp-invoices-core/hooks/useErpInvoiceForm";
 
 interface InvoicePartnerDebtDetailDrawerProps {

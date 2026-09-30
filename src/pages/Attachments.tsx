@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { ExternalLink, FileText, Paperclip } from "lucide-react";
 import { Button } from "@/shared/components/ui/Button";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate";
-import { InvoiceDateRangeSlot } from "@/modules/erp-invoices-core/components/InvoiceDateRangeSlot";
 import { Badge } from "@/shared/components/ui/badge";
 import type { DataTableColumn } from "@/shared/components/DataTable";
 import { DrawerModal, DrawerRow } from "@/shared/components/DrawerModal";
@@ -15,13 +14,14 @@ import {
 import { TableText } from "@/shared/components/DataTable/TableText";
 import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
 import { useErpInvoiceForm } from "@/modules/erp-invoices-core/hooks/useErpInvoiceForm";
-import { ErpInvoiceInternalDrawer } from "@/modules/erp-invoices-core/components/ErpInvoiceInternalDrawer";
 import {
+  InvoiceDateRangeSlot,
+  ErpInvoiceInternalDrawer,
   ErpInvoiceInternalMain,
   ErpInvoiceInternalSidebar,
-} from "@/modules/erp-invoices-core/components/ErpInvoiceInternalInfo";
-import { ErpInvoicePdfUpload } from "@/modules/erp-invoices-core/components/ErpInvoicePdfUpload";
-import { VietnamInvoiceTemplate } from "@/modules/erp-invoices-core/components/VietnamInvoiceTemplate";
+  ErpInvoicePdfUpload,
+  VietnamInvoiceTemplate,
+} from "@/modules/erp-invoices-core/components";
 
 const TYPE_OPTS = [
   { value: "HOP_DONG", label: "Hợp đồng" },

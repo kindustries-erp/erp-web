@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { renderHook } from "@testing-library/react";
-import { useInvoiceItemsSummary } from "../components/ErpInvoiceItemsSection/hooks/useInvoiceItemsSummary";
+import { useInvoiceItemsSummary } from "../components/organisms/erp-invoice-items-section/hooks/useInvoiceItemsSummary";
 import { type ErpInvoiceItemRow } from "../api/erpInvoicesCoreApi";
 
 describe("useInvoiceItemsSummary", () => {

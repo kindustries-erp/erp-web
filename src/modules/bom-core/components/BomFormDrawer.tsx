@@ -12,10 +12,8 @@ import { DrawerField, DrawerSection } from "@/shared/components/DrawerModal";
 import { CellInput } from "@/shared/components/CellInput";
 import { formatGMT7, fmtQty } from "@/shared/utils/format";
 import { bomCoreApi, type ErpBom } from "@/modules/bom-core/api/bomCoreApi";
-import {
-  ModuleEntityCustomFieldsSection,
-  validateModuleRequiredFields,
-} from "@/shared/components/ModuleEntityCustomFieldsSection";
+import { ModuleEntityCustomFieldsSection } from "@/shared/components/organisms";
+import { validateModuleRequiredFields } from "@/shared/utils";
 import { moduleConfigApi } from "@/core/api/moduleConfigApi";
 import type { DrawerMode } from "@/shared/stores/useDrawerStore";
 import toast from "react-hot-toast";

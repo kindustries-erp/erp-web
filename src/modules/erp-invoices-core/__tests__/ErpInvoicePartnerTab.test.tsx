@@ -2,7 +2,7 @@ import React from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ErpInvoicePartnerTab } from "../components/ErpInvoicePartnerTab";
+import { ErpInvoicePartnerTab } from "../components/organisms/erp-invoice-partner-tab";
 import { erpInvoicesCoreApi } from "../api/erpInvoicesCoreApi";
 import { erpInvoiceDashboardApi } from "../api/erpInvoiceDashboardApi";
 

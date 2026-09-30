@@ -11,7 +11,7 @@ import { useGrDrawer } from "@/modules/goods-receipts-core/hooks/useGrDrawer";
 import { purchaseOrdersCoreApi } from "@/modules/purchase-orders-core/api/purchaseOrdersCoreApi";
 import { type ErpInvoice } from "@/modules/erp-invoices-core/api/erpInvoicesCoreApi";
 import { PurchaseInvoicePickerDrawer } from "@/modules/purchase-orders-core/components/PurchaseInvoicePickerDrawer";
-import { ErpInvoiceStandaloneDrawer } from "@/modules/erp-invoices-core/components/ErpInvoiceStandaloneDrawer";
+import { ErpInvoiceStandaloneDrawer } from "@/modules/erp-invoices-core/components";
 
 function createClientId() {
   const maybeCrypto = (globalThis as any)?.crypto;

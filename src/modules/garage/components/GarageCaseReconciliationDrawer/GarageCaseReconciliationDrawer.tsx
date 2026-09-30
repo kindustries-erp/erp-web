@@ -5,7 +5,7 @@ import {
   type DrawerTopTabItem,
 } from "@/shared/components/StandardFormDrawer";
 import { money } from "@/shared/utils/format";
-import { ErpInvoiceStandaloneDrawer } from "@/modules/erp-invoices-core/components/ErpInvoiceStandaloneDrawer";
+import { ErpInvoiceStandaloneDrawer } from "@/modules/erp-invoices-core/components";
 import { BankTransactionDetailDrawer } from "@/pages/finance/components/BankTransactionDetailDrawer";
 import { FilePreviewDrawer } from "@/shared/components/FilePreviewDrawer";
 

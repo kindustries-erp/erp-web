@@ -8,7 +8,7 @@ import {
   BADGE_CONFIG_MAP,
   SuggestionBadgePill,
   highlightText,
-} from "@/modules/erp-invoices-core/components/SmartSuggestionCard";
+} from "@/modules/erp-invoices-core/components";
 import type { GarageSmartInvoiceSuggestionItem } from "../api/garageApi";
 import { cn } from "@/shared/utils";
 

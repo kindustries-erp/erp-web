@@ -9,10 +9,8 @@ import {
   type ModuleAttributeFieldType,
   type ModuleAttributeOption,
 } from "@/core/api/moduleConfigApi";
-import {
-  ERP_MODULE_REGISTRY,
-  type ErpModuleDomain,
-} from "@/shared/components/ModuleCustomFieldConfigDrawer";
+import { ERP_MODULE_REGISTRY } from "@/shared/constants";
+import type { ErpModuleDomain } from "@/shared/types";
 
 export interface CustomFieldRow {
   id: string;

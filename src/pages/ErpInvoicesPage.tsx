@@ -1,4 +1,4 @@
-import { ErpInvoicesTab } from "@/modules/erp-invoices-core/components/ErpInvoicesTab";
+import { ErpInvoicesTab } from "@/modules/erp-invoices-core/components";
 
 export function ErpInvoicesPage({
   instanceIndex = 1,

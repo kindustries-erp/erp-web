@@ -14,7 +14,7 @@ import type {
 } from "@/modules/inventory-core/api/inventoryCoreApi";
 import { StandardTable } from "@/shared/components/StandardTable";
 import type { DataTableColumn } from "@/shared/components/DataTable";
-import { InvoiceDateRangeSlot } from "@/modules/erp-invoices-core/components/InvoiceDateRangeSlot";
+import { InvoiceDateRangeSlot } from "@/modules/erp-invoices-core/components";
 import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
 import { TableDateCell } from "@/shared/components/DataTable/TableDateCell";
 import { TableText } from "@/shared/components/DataTable/TableText";
