@@ -6,6 +6,7 @@ import {
   type ErpInvoice,
 } from "@/modules/erp-invoices-core/api/erpInvoicesCoreApi";
 import { openGlobalErpDocument } from "@/shared/components/drawer/DrawerDocumentTraceability/constants";
+import { useInvoiceAdjustmentReconciliation } from "@/modules/erp-invoices-core/hooks/useInvoiceAdjustmentReconciliation";
 
 export function useRelatedInvoiceSidebarSection({
   invoice,
@@ -22,6 +23,16 @@ export function useRelatedInvoiceSidebarSection({
 
   const isAdjustmentOrReplacement =
     taxStatus === 2 || taxStatus === 3 || Boolean(relatedInvNo);
+  const isOriginalAdjustedOrReplaced = taxStatus === 4 || taxStatus === 5;
+
+  const {
+    reconciliation,
+    isLoading: loadingReconciliation,
+    executeNetoff,
+    isExecutingNetoff,
+  } = useInvoiceAdjustmentReconciliation(invoice?.id, {
+    enabled: Boolean(isAdjustmentOrReplacement || isOriginalAdjustedOrReplaced),
+  });
 
   const { data: originalInvoiceRes, isLoading: loadingOriginal } = useQuery({
     queryKey: [
@@ -40,11 +51,13 @@ export function useRelatedInvoiceSidebarSection({
       });
       return res.items?.[0] || null;
     },
-    enabled: Boolean(isAdjustmentOrReplacement && relatedInvNo),
+    enabled: Boolean(
+      isAdjustmentOrReplacement &&
+      relatedInvNo &&
+      !reconciliation?.relatedInvoices?.[0]?.id,
+    ),
     staleTime: 30000,
   });
-
-  const isOriginalAdjustedOrReplaced = taxStatus === 4 || taxStatus === 5;
 
   const { data: adjustingInvoicesRes, isLoading: loadingAdjusting } = useQuery({
     queryKey: [
@@ -63,7 +76,12 @@ export function useRelatedInvoiceSidebarSection({
       });
       return res.items || [];
     },
-    enabled: Boolean(isOriginalAdjustedOrReplaced && invoice?.invoiceNo),
+    enabled: Boolean(
+      isOriginalAdjustedOrReplaced &&
+      invoice?.invoiceNo &&
+      (!reconciliation?.relatedInvoices ||
+        reconciliation.relatedInvoices.length === 0),
+    ),
     staleTime: 30000,
   });
 
@@ -82,6 +100,24 @@ export function useRelatedInvoiceSidebarSection({
     }
   };
 
+  const handleExecuteNetoff = () => {
+    if (!invoice?.id) return;
+    const originalId =
+      reconciliation?.relatedInvoices?.find(
+        (r) => r.relationType === "ORIGINAL_OF_THIS",
+      )?.id || originalInvoiceRes?.id;
+
+    if (!originalId) {
+      toast.error(t("Không tìm thấy HĐ Gốc để thực hiện cấn trừ"));
+      return;
+    }
+
+    executeNetoff({
+      originalInvoiceId: originalId,
+      adjustingInvoiceId: invoice.id,
+    });
+  };
+
   return {
     t,
     isAdjustmentOrReplacement,
@@ -91,6 +127,10 @@ export function useRelatedInvoiceSidebarSection({
     adjustingInvoicesRes,
     loadingAdjusting,
     handleOpenInvoice,
+    handleExecuteNetoff,
+    reconciliation,
+    loadingReconciliation,
+    isExecutingNetoff,
     relatedInvNo,
     taxStatus,
   };

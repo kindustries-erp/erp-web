@@ -88,7 +88,8 @@ export interface SpreadsheetPageTemplateProps<T> {
   onRowContextMenu?: (item: T, index: number, event: React.MouseEvent) => void;
   loadingRows?: number;
 
-  // --- Fullscreen ---
+  // --- Fullscreen & Styling ---
   enableFullscreen?: boolean;
   onFullscreenChange?: (isFullscreen: boolean) => void;
+  containerClassName?: string;
 }

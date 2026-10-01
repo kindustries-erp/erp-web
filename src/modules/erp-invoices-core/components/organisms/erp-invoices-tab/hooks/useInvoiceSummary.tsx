@@ -85,13 +85,17 @@ export function useInvoiceSummary(
       (acc: number, curr: any) => acc + (parseFloat(curr.netOffAmount) || 0),
       0,
     );
-    const totalRemaining = invoices.reduce(
-      (acc: number, curr: any) =>
-        acc +
-        ((parseFloat(curr.totalAmount) || 0) -
-          (parseFloat(curr.netOffAmount) || 0)),
-      0,
-    );
+    const totalRemaining = invoices.reduce((acc: number, curr: any) => {
+      const total = parseFloat(curr.totalAmount) || 0;
+      const netOff = parseFloat(curr.netOffAmount) || 0;
+      const isAdjustment = curr.taxInvoiceStatus === 3 || total < 0;
+      const remaining = isAdjustment
+        ? netOff >= Math.abs(total)
+          ? 0
+          : total + netOff
+        : Math.max(0, total - netOff);
+      return acc + remaining;
+    }, 0);
 
     const grandPreVat =
       totals?.grandTotalPreVat !== undefined

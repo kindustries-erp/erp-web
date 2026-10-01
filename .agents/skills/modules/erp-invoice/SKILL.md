@@ -1,11 +1,15 @@
 ---
-name: erp-invoice
+name: erp-invoice-web
 description: Module tri thức Quản lý Hóa đơn Điện tử & Dashboard Hóa đơn (ERP Invoices & Dashboard) trong erp-web. Chứa toàn bộ cấu trúc UI, routing, DataTable columns, Drawers, Modals, XML/GDT Sync, SSE Progress, API client và các tương tác UX.
 ---
 
 # 🎨 Module Tri Thức: Quản Lý Hóa Đơn Điện Tử (ERP Invoices) - Frontend (`erp-web`)
 
 ## 1. Tổng quan & Đăng ký Giao diện
+
+> [!NOTE]
+> Đặc tả chi tiết về Database Schema, Entity, DTOs, API Endpoints, Hạch toán Kế toán Kép Thông tư 99, 5-Slot Heartbeat Cron GDT Sync và Phân loại AI 9router của module Hóa đơn được lưu trữ tại:
+> 👉 [`erp-invoice-api`](file:///home/dev/repos-dev/erp/erp-api/.agents/skills/modules/erp-invoice/SKILL.md)
 
 Module Hóa đơn Điện tử quản lý tập trung toàn bộ hóa đơn đầu vào (`IN`), hóa đơn đầu ra (`OUT`), hóa đơn nháp (`DRAFT`), và Dashboard phân tích dòng tiền/thuế hóa đơn. Giao diện được cấu trúc theo chuẩn **Atomic Design (Atoms -> Molecules -> Organisms)** đáp ứng quy chuẩn No Blue Mandate, Tabular Numbers và Multi-tab Navigation.
 
@@ -49,8 +53,12 @@ src/modules/erp-invoices-core/
 ├── components/
 │   ├── index.ts                               # Unified barrel export (Atoms, Molecules, Organisms)
 │   ├── atoms/                                 # CÁC THÀNH PHẦN NGUYÊN TỬ CƠ BẢN (Tầng 1)
+│   │   ├── adjustment-type-badge/             # Badge phân loại hóa đơn điều chỉnh (Tiền, Thông tin, Số lượng, Thay thế)
 │   │   └── invoice-status-badge/              # Badge trạng thái xử lý thuế, hạch toán, hóa đơn gốc
 │   ├── molecules/                             # CÁC PHÂN TỬ GIAO DIỆN TÁI SỬ DỤNG (Tầng 2)
+│   │   ├── adjustment-financial-summary/      # Card tóm tắt tài chính so sánh Trước -> Điều chỉnh -> Hiệu lực
+│   │   ├── adjustment-info-diff-card/         # Card hiển thị khác biệt thông tin (Biển số xe, Lệnh sửa chữa)
+│   │   ├── adjustment-items-table/            # Bảng so sánh chi tiết từng dòng hàng hóa điều chỉnh
 │   │   ├── coming-soon-tab-content/           # Placeholder tab đang hoàn thiện
 │   │   ├── erp-invoice-attachments-sub-tab/   # Sub-tab quản lý danh sách file đính kèm
 │   │   ├── erp-invoice-pdf-preview/           # Khung xem trước file PDF inline
@@ -73,6 +81,7 @@ src/modules/erp-invoices-core/
 │   │   ├── xml-upload-dropzone/               # Vùng kéo thả upload tệp XML/ZIP
 │   │   └── xml-upload-file-list/              # Danh sách tệp XML chờ phân tích
 │   └── organisms/                             # CÁC KHỐI CHỨC NĂNG & MÀN HÌNH HOÀN CHỈNH (Tầng 3)
+│       ├── related-invoice-sidebar-section/   # Section hiển thị hóa đơn gốc / điều chỉnh liên quan trong Sidebar Drawer
 │       ├── erp-invoices-tab/                  # Container Header Table (/erp-invoices?tab=in / out)
 │       │   ├── ErpInvoicesTab.tsx             # Main component tích hợp SpreadsheetPageTemplate
 │       │   ├── ErpInvoicesTab.hook.tsx        # Custom hook điều khiển lifecycle & dữ liệu tab

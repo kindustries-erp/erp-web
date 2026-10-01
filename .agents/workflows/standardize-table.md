@@ -1,313 +1,364 @@
 ---
-description: Quy trình 4 bước chuẩn hóa và kiểm duyệt Bảng dữ liệu (DataTable / SpreadsheetPageTemplate) trong Liouni ERP
+description: Quy trình chuẩn 5 giai đoạn thiết kế, phân rã kiến trúc Atomic và chuẩn hóa Bảng dữ liệu (DataTable / SpreadsheetPageTemplate) trong Liouni ERP
 ---
 
-# 📊 Standardize Table Workflow (`/standardize-table`)
+# 📊 Standardize Table & Atomic Workflow (`/standardize-table`)
 
-Workflow này hướng dẫn Agent và Developer quy trình chuẩn 4 bước khi **tạo mới**, **fix bug** hoặc **refactor** bất kỳ bảng dữ liệu nào trong Liouni ERP, đảm bảo **100% cột có đầy đủ Header Filter, STT 1-based, Pagination responsive, Numeric formatting, Server-side integration và QC Verification**.
+Workflow này hướng dẫn quy trình chuẩn 5 giai đoạn khi **tạo mới**, **fix bug** hoặc **refactor** bất kỳ bảng dữ liệu nào trong Liouni ERP. Workflow này **kế thừa 100% triết lý UI Atomic từ [`/ui-atomic-refactor`](./ui-atomic-refactor.md)** và bổ sung toàn bộ chuẩn mực khắt khe của **DataTable**, tích hợp **Bộ 8 Lệnh Grep Audit Tự Động** để loại bỏ hoàn toàn các lỗi sai hoặc thiếu sót thường gặp.
 
 ---
 
 ## ⚡ Fast-Track: Khi tạo mới Module Bảng
-
 Nếu bạn đang tạo mới một màn hình bảng dữ liệu, **hãy ưu tiên chạy PlopJS Generator** để sinh ngay 100% code chuẩn trong 1 giây:
 ```bash
-# Di chuyển vào erp-web
-cd /home/dev/repos/erp/erp-web
-
-# Chạy generator tạo full Table Page (API + Hook + Page + Drawer + Locales)
 bun plop table-page <moduleName> <componentName> "<pageTitle>" <tableId> <drawerType> <drawerSize> <hasDateColumn> <hasAmountColumn> <hasStatusColumn>
+# Hoặc sinh bảng nhúng trong Drawer/Modal:
+bun plop table-section <moduleName> <componentName> <rowTypeName>
 ```
 
 ---
 
-## 🧭 Quy trình 4 Bước Bắt Buộc
+## 🏛️ Triết Lý Kiến Trúc: Table Là Một Organism (Level 3)
 
-### 🔹 BƯỚC 1: Kiểm Tra Backend API Contract (`getColumnOptions`)
-
-Trước khi cấu hình bảng UI, **BẮT BUỘC** xác nhận API Backend đã hỗ trợ:
-1. Endpoint `getColumnOptions`:
-   - Endpoint: `GET /api/[module]/column-options?columnKey=...&search=...&page=1&pageSize=20&filters={...}`
-   - Trả về payload phân trang: `{ items: string[] | { label: string; value: string }[], total: number, page: number, totalPages: number }`.
-2. Endpoint `getList`:
-   - Nhận query params: `page`, `pageSize`, `sorts` (mảng string, vd `createdAt` hoặc `-createdAt`), `date_from`, `date_to`, `column_filters` (JSON string), `column_search` (JSON string).
-   - **Xử lý `column_search` (Tìm kiếm nâng cao)**:
-     - Bắt buộc dùng `applyMultiKeywordFilter` hoặc `applyMultiKeywordMultiFieldFilter` (`@/common/utils/query-builder.util.ts`).
-     - **Exact search (`"..."`)**: Tự động nhận diện chuỗi bọc trong cặp ngoặc kép `""` để so sánh chính xác tuyệt đối (bỏ `%...%` hoặc dùng toán tử `=`).
-     - **Multi-search (`;`)**: Tự động phân tách chuỗi bằng dấu chấm phẩy `;` (`split(';')`) để tìm kiếm đồng thời nhiều giá trị với logic `OR`.
-   - **Xử lý `column_filters` (Lọc giá trị rỗng `__BLANK__`)**:
-     - Khi mảng giá trị lọc chứa `"__BLANK__"` (do UI bật `showBlankOption: true`), backend phải bổ sung điều kiện `(field IS NULL OR field = '')`.
+Trong hệ thống Atomic Design 5 tầng:
+- `<StandardTable>` / `<DataTable>` là **Organism Dùng Chung (`@/shared/components/organisms/`)**.
+- Bảng của một phân hệ (ví dụ: `InvoiceTable`, `GarageCasesTable`, `InventoryStockTable`) là một **Module Organism (`src/modules/[module]/components/organisms/[name]-table/`)**.
+- Các thành phần bên trong bảng:
+  - **Molecules (L2)**: `<TableText>`, `<SubtotalSummaryCell>`, `<TableColumnHeaderFilter>`, `<FilterChips>`.
+  - **Atoms (L1)**: `<TableDateCell>`, `<StatusBadge>`, `<RequiredIndicator>`, `<NeutralCountBadge>`, App Badges, Buttons.
+  - **Templates (L4)**: `<SpreadsheetPageTemplate>`, `<DashboardTemplate>`.
+  - **Pages (L5)**: `<InvoicesPage>`, `<GarageCasesPage>`.
 
 ---
 
-### 🔹 BƯỚC 2: Chuẩn Hóa Frontend List Hook (`use[Module]List`)
+## 🧭 Quy Trình 5 Giai Đoạn Chuẩn (5-Phase SOP)
 
-Hook quản lý danh sách (`src/modules/[module]/hooks/use[Module]List.ts`) phải tuân thủ mẫu chuẩn:
+```mermaid
+graph TD
+    P1["GIAI ĐOẠN 1: Pre-flight & Atomic Table Scaffolding<br>(Chia folder kebab-case, 5 files chuẩn < 180 LoC)"]
+    P2["GIAI ĐOẠN 2: Backend API Contract & Data Hook<br>(getColumnOptions, exact/multi search, cumulative trackers)"]
+    P3["GIAI ĐOẠN 3: Standard Columns Definition<br>(STT 40px {idx}, createColumnHeaderFilter, TableText, Badges)"]
+    P4["GIAI ĐOẠN 4: Assembly Organism & Subtotal Summary Cell<br>(variant=spreadsheet, NO nested border, rowActions, cumulative)"]
+    P5["GIAI ĐOẠN 5: Zero-Miss Grep Audit Suite<br>(8 lệnh Grep quét lỗi STT, Blue, Actions, LoC + Bun Test)"]
 
-```ts
-import { useState, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { moduleApi } from "../api/moduleApi";
+    P1 --> P2 --> P3 --> P4 --> P5
+```
 
-export const getDefaultPageSize = (): number => {
-  if (typeof window !== "undefined" && window.innerHeight >= 900) {
-    return 50; // Desktop / màn hình lớn
+---
+
+### 🔹 GIAI ĐOẠN 1: Pre-flight & Khởi Tạo Thư Mục Atomic Table
+
+> [!IMPORTANT]
+> **QUY TẮC BẮT BUỘC: KHÔNG VIẾT TABLE NGUYÊN KHỐI (> 180 LoC)**.
+> Bất kỳ Table Organism nào cũng phải nằm trong một thư mục `kebab-case/` riêng và bóc tách thành 5 file chuẩn:
+
+```
+src/modules/[module]/components/organisms/[name]-table/
+├── [Name]Table.tsx               # View JSX chính, render StandardTable (< 150 LoC)
+├── [Name]Table.columns.tsx       # Định nghĩa columns + headerFilter helper (< 180 LoC)
+├── [Name]Table.hook.ts           # React Query + table/filter state + cumulative logic (< 180 LoC)
+├── [Name]Table.type.ts           # Props, DTOs, FilterState interfaces (< 100 LoC)
+├── [Name]Table.test.tsx          # Co-located Unit Test (render, headers, STT)
+└── index.ts                      # Barrel export: export * from "./[Name]Table";
+```
+
+---
+
+### 🔹 GIAI ĐOẠN 2: Backend API Contract & Data Hook (`.hook.ts`)
+
+#### 1. Kiểm Tra Hợp Đồng API Backend:
+- **API `getColumnOptions`**:
+  - Endpoint: `GET /api/[module]/column-options?columnKey=...&search=...&page=1&pageSize=20&filters={...}`
+  - Mapping `next` bắt buộc cho Infinite Scroll:
+    ```typescript
+    next: res.page < res.totalPages ? res.page + 1 : null
+    ```
+- **API `getList` (Tìm kiếm nâng cao & Lọc rỗng)**:
+  - Exact search `""`: Khớp chính xác tuyệt đối từ khóa nằm trong cặp ngoặc kép.
+  - Multi-search `;`: Phân tách dấu chấm phẩy và tìm kiếm theo logic `OR`.
+  - Filter `__BLANK__`: Khi mảng lọc chứa `"__BLANK__"`, backend áp dụng `(field IS NULL OR field = '')`.
+
+#### 2. Xây Dựng List Hook (`[Name]Table.hook.ts`):
+- Sử dụng TanStack Query với enum **`ErpQueryKey`** (ví dụ: `ErpQueryKey.INVOICES_LIST`).
+- Thời gian cache chuẩn **90s (`DEFAULT_STALE_TIME = 90_000`)**.
+- Quản lý state lọc 2 cấp độ: `columnFilters`, `columnSearch`, `dateRanges`.
+- Tính `activeFilterCount` và hàm `clearAllFilters`.
+- **BẮT BUỘC TÍNH SỐ LŨY KẾ CHO MULTI-PAGE**: Tính `cumulativeAmount`, `cumulativeQty`, `cumulativeCount` từ trang 1 đến trang hiện tại.
+
+```typescript
+// Mẫu logic tính lũy kế trong hook (Client-side hoặc từ Server-side metadata):
+const cumulativeStats = useMemo(() => {
+  if (!items || items.length === 0) {
+    return { cumulativeAmount: 0, cumulativeQty: 0, cumulativeCount: 0 };
   }
-  return 20;   // Laptop / màn hình phổ thông
-};
-
-export function useModuleList() {
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState<number>(getDefaultPageSize);
-  const [sorts, setSorts] = useState<string[]>([]);
-  const [dateFrom, setDateFrom] = useState<string>("");
-  const [dateTo, setDateTo] = useState<string>("");
-  const [columnFilters, setColumnFilters] = useState<Record<string, string[]>>({});
-  const [columnSearch, setColumnSearch] = useState<Record<string, string>>({});
-
-  const { data, isLoading, refetch } = useQuery({
-    queryKey: ["[module]-list", page, pageSize, sorts, dateFrom, dateTo, columnFilters, columnSearch],
-    queryFn: () =>
-      moduleApi.getList({
-        page,
-        pageSize,
-        sorts,
-        date_from: dateFrom || undefined,
-        date_to: dateTo || undefined,
-        column_filters: Object.keys(columnFilters).length ? JSON.stringify(columnFilters) : undefined,
-        column_search: Object.keys(columnSearch).length ? JSON.stringify(columnSearch) : undefined,
-      }),
-  });
-
-  const setSort = (key: string, state: "asc" | "desc" | "none") => {
-    setSorts((prev) => {
-      const filtered = prev.filter((s) => s !== key && s !== `-${key}`);
-      if (state === "asc") return [...filtered, key];
-      if (state === "desc") return [...filtered, `-${key}`];
-      return filtered;
-    });
-    setPage(1);
-  };
-
-  const setColumnFilter = (key: string, vals: string[]) => {
-    setColumnFilters((prev) => ({ ...prev, [key]: vals }));
-    setPage(1);
-  };
-
-  const setColumnSearch = (key: string, val: string) => {
-    setColumnSearch((prev) => ({ ...prev, [key]: val }));
-    setPage(1);
-  };
-
-  const setDateRange = (from: string, to: string) => {
-    setDateFrom(from);
-    setDateTo(to);
-    setPage(1);
-  };
-
-  const activeFilterCount = useMemo(() => {
-    let count = 0;
-    Object.values(columnFilters).forEach((vals) => {
-      if (vals && vals.length > 0) count += vals.length;
-    });
-    Object.values(columnSearch).forEach((val) => {
-      if (val && val.trim().length > 0) count += 1;
-    });
-    if (dateFrom || dateTo) count += 1;
-    return count;
-  }, [columnFilters, columnSearch, dateFrom, dateTo]);
-
-  const clearAllFilters = () => {
-    setColumnFilters({});
-    setColumnSearch({});
-    setDateFrom("");
-    setDateTo("");
-    setPage(1);
-  };
-
+  // Nếu là client-side pagination:
+  const cumulativeRows = allFilteredRows.slice(0, page * pageSize);
   return {
-    data: data?.data ?? [],
-    total: data?.total ?? 0,
-    totalPages: data?.totalPages ?? 0,
-    isLoading,
-    page,
-    setPage,
-    pageSize,
-    setPageSize,
-    sorts,
-    setSort,
-    dateFrom,
-    dateTo,
-    setDateRange,
-    columnFilters,
-    setColumnFilter,
-    columnSearch,
-    setColumnSearch,
-    activeFilterCount,
-    clearAllFilters,
-    refetch,
+    cumulativeAmount: cumulativeRows.reduce((sum, r) => sum + (r.amount || 0), 0),
+    cumulativeQty: cumulativeRows.reduce((sum, r) => sum + (r.quantity || 0), 0),
+    cumulativeCount: cumulativeRows.length,
   };
+}, [items, allFilteredRows, page, pageSize]);
+```
+
+---
+
+### 🔹 GIAI ĐOẠN 3: Định Nghĩa Columns Chuẩn (`[Name]Table.columns.tsx`)
+
+Sử dụng `createColumnHeaderFilter` từ `@/shared/components/DataTable`.
+
+```tsx
+import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
+import {
+  createColumnHeaderFilter,
+  type DataTableColumn,
+} from "@/shared/components/DataTable";
+import { TableDateCell } from "@/shared/components/DataTable/TableDateCell";
+import { TableText } from "@/shared/components/DataTable/TableText";
+import { Badge } from "@/shared/components/ui/badge";
+import { Tooltip } from "@/shared/components/ui/tooltip";
+import type { ExampleRow, ExampleTableHookReturn } from "./ExampleTable.type";
+
+export function useExampleColumns(
+  tableHook: ExampleTableHookReturn,
+  openDetail: (id: string, mode: "view" | "edit") => void,
+) {
+  const { t } = useTranslation("exampleModule");
+
+  // 1. Helper builder Header Filter
+  const headerFilter = useMemo(
+    () =>
+      createColumnHeaderFilter({
+        listHook: tableHook,
+        queryKeyPrefix: "example-column-options",
+        fetchOptions: ({ columnKey, search, pageParam, filtersStr }) =>
+          exampleApi.getColumnOptions(columnKey, search, pageParam, 20, filtersStr),
+      }),
+    [tableHook],
+  );
+
+  // 2. Ma trận cột chuẩn mực
+  return useMemo<DataTableColumn<ExampleRow>[]>(() => [
+    // CỘT STT: 40px, căn giữa cả Header lẫn Cell, dùng {idx} (CẤM idx + 1)
+    {
+      key: "index",
+      header: <span className="w-full block text-center">#</span>,
+      size: 40,
+      enableResizing: false,
+      headerClassName: "text-center w-[40px] min-w-[40px]",
+      className: "text-center w-[40px] min-w-[40px]",
+      cell: (_, idx) => <span className="w-full block text-center">{idx}</span>,
+    },
+
+    // CỘT MÃ / CODE: TableText + onDetailClick (mở View mode) + badge nháp/hủy cố định w-[50px]
+    {
+      key: "code",
+      size: 200,
+      enableResizing: true,
+      header: headerFilter("code", t("code", "Mã phiếu")),
+      cell: (row) => (
+        <div className="flex items-center gap-1.5 w-full min-w-0">
+          <TableText
+            className="flex-1 min-w-0"
+            text={row.code}
+            enableCopy
+            tooltip
+            onDetailClick={() => openDetail(row.id, "view")}
+          />
+          {row.status === "DRAFT" && (
+            <Tooltip content={t("draft", "Nháp")}>
+              <Badge
+                variant="secondary"
+                className="text-[10px] px-1.5 py-0 h-4 flex-shrink-0 ml-auto w-[50px] inline-flex items-center justify-center truncate"
+              >
+                {t("draft", "Nháp")}
+              </Badge>
+            </Tooltip>
+          )}
+        </div>
+      ),
+    },
+
+    // CỘT NGÀY: headerFilter.date (ẩn filter options) + TableDateCell căn phải
+    {
+      key: "createdAt",
+      size: 150,
+      enableResizing: true,
+      className: "text-right",
+      header: headerFilter.date("createdAt", t("createdAt", "Ngày tạo")),
+      cell: (row) => <TableDateCell date={row.createdAt} className="justify-end w-full" />,
+    },
+
+    // CỘT SỐ TIỀN: headerFilter.amount + text-right tabular-nums font-semibold
+    {
+      key: "amount",
+      size: 150,
+      enableResizing: true,
+      className: "text-right",
+      header: headerFilter.amount("amount", t("amount", "Số tiền")),
+      cell: (row) => (
+        <span className="tabular-nums font-semibold">
+          {(row.amount || 0).toLocaleString("vi-VN")} đ
+        </span>
+      ),
+    },
+
+    // CỘT TRẠNG THÁI: Badge cố định w-[88px] + Tooltip + truncate
+    {
+      key: "status",
+      size: 140,
+      enableResizing: true,
+      className: "text-center",
+      header: headerFilter("status", t("status", "Trạng thái")),
+      cell: (row) => (
+        <div className="w-full flex justify-center">
+          <Tooltip content={t(row.status, row.status)}>
+            <Badge
+              variant={row.status === "COMPLETED" ? "default" : "secondary"}
+              className="w-[88px] inline-flex items-center justify-center text-center truncate"
+            >
+              {t(row.status, row.status)}
+            </Badge>
+          </Tooltip>
+        </div>
+      ),
+    },
+
+    // CỘT NULLABLE: Bật showBlankOption để hỗ trợ lọc (blank) / (Trống)
+    {
+      key: "referenceNo",
+      size: 160,
+      enableResizing: true,
+      header: headerFilter("referenceNo", t("referenceNo", "Tham chiếu"), { showBlankOption: true }),
+      cell: (row) => <span className="text-muted-foreground">{row.referenceNo || "—"}</span>,
+    },
+  ], [headerFilter, t, openDetail]);
 }
 ```
 
 ---
 
-### 🔹 BƯỚC 3: Xây Dựng Cột Bảng Với `createColumnHeaderFilter`
+### 🔹 GIAI ĐOẠN 4: Lắp Ráp Table Organism & Subtotal Summary Cell (`[Name]Table.tsx`)
 
-Sử dụng `createColumnHeaderFilter` từ `@/shared/components/DataTable` để sinh nhanh header filter:
+> [!CAUTION]
+> **2 ĐIỀU TUYỆT ĐỐI CẤM KHI LẮP RÁP BẢNG**:
+> 1. **TUYỆT ĐỐI KHÔNG bọc thêm thẻ `div border rounded-xl` xung quanh Table**: `<StandardTable>` và `<DataTable>` đã tự quản lý viền. Việc bọc thêm tạo ra lỗi lồng viền (nested border) rất xấu.
+> 2. **TUYỆT ĐỐI KHÔNG tạo cột Action tĩnh `{ key: "actions" }`**: Thay thế 100% bằng prop `rowActions`.
+
+#### 1. Cấu Trúc `rowActions` Chuẩn:
+Bắt buộc có 2 Quick Actions đầu tiên mở View & Edit mode của Drawer:
+- Nút 1: 👁️ Xem chi tiết (`openDetail(row.id, "view")`)
+- Nút 2: ✏️ Chỉnh sửa (`openDetail(row.id, "edit")`)
+- Nút 3: Ba chấm (`...`) mở dropdown các thao tác mở rộng.
+
+#### 2. Dòng Tổng Cộng `summaryRow` & `<SubtotalSummaryCell>`:
+Khi bảng có phân trang (`totalPages > 1`), **BẮT BUỘC TRUYỀN ĐỦ `cumulativeAmount`, `cumulativeQty`, `cumulativeCount`**:
 
 ```tsx
-import {
-  createColumnHeaderFilter,
-  type DataTableColumn,
-} from "@/shared/components/DataTable";
+import { useMemo } from "react";
+import { SubtotalSummaryCell } from "@/shared/components/DataTable/SubtotalSummaryCell";
 
-// 1. Khởi tạo helper builder (Server-side)
-const headerFilter = useMemo(
-  () =>
-    createColumnHeaderFilter({
-      listHook,
-      queryKeyPrefix: "module-column-options",
-      fetchOptions: ({ columnKey, search, pageParam, filtersStr }) =>
-        moduleApi.getColumnOptions(columnKey, search, pageParam, 20, filtersStr),
-    }),
-  [listHook],
-);
+const summaryRow = useMemo(() => {
+  if (!items || items.length === 0) return undefined;
 
-// 2. Định nghĩa các cột theo ma trận chuẩn
-const columns: DataTableColumn<RowItem>[] = useMemo(() => [
-  // Cột STT: 40px, căn giữa tuyệt đối cả Header và Cell, 1-based index
-  {
-    key: "index",
-    header: <span className="w-full block text-center">#</span>,
-    size: 40,
-    enableResizing: false,
-    headerClassName: "text-center w-[40px] min-w-[40px]",
-    className: "text-center w-[40px] min-w-[40px]",
-    cell: (_, idx) => <span className="w-full block text-center">{idx}</span>,
-  },
-
-  // Cột Mã / Code: TableText + onDetailClick mở View Drawer + Badge trạng thái nháp/hủy
-  {
-    key: "code",
-    size: 200,
-    enableResizing: true,
-    header: headerFilter("code", t("code", "Mã")),
-    cell: (row) => (
-      <div className="flex items-center gap-1.5 w-full min-w-0">
-        <TableText
-          className="flex-1 min-w-0"
-          text={row.code}
-          enableCopy
-          tooltip
-          onDetailClick={() => openDetail(row.id, "view")}
-        />
-        {row.status === "DRAFT" && (
-          <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 flex-shrink-0 ml-auto w-[50px] inline-flex items-center justify-center truncate">
-            {t("draft", "Nháp")}
-          </Badge>
-        )}
-      </div>
+  return {
+    code: (
+      <SubtotalSummaryCell
+        variantType="label"
+        label={`${t("total", "Tổng cộng")}:`}
+        page={page}
+        totalPages={totalPages}
+        totalCount={total}
+        currentPageCount={items.length}
+        cumulativeCount={cumulativeStats.cumulativeCount}
+      />
     ),
-  },
-
-  // Cột Ngày: DateRangeColumnSlot + TableDateCell căn phải
-  {
-    key: "createdAt",
-    size: 150,
-    enableResizing: true,
-    className: "text-right",
-    header: headerFilter.date("createdAt", t("createdAt", "Ngày tạo")),
-    cell: (row) => <TableDateCell date={row.createdAt} className="justify-end w-full" />,
-  },
-
-  // Cột Số tiền / Tiền tệ: headerFilter.amount tự động format số phân tách hàng nghìn trong popover options
-  {
-    key: "amount",
-    size: 150,
-    enableResizing: true,
-    className: "text-right",
-    header: headerFilter.amount("amount", t("amount", "Số tiền")),
-    cell: (row) => (
-      <span className="tabular-nums font-semibold">
-        {(row.amount || 0).toLocaleString("vi-VN")} đ
-      </span>
+    quantity: (
+      <SubtotalSummaryCell
+        variantType="qty"
+        metricTitle={t("totalQty", "Tổng số lượng")}
+        itemTitle={t("items", "Mặt hàng")}
+        itemUnit="SKU"
+        subtotalQty={subtotalQty}
+        cumulativeQty={cumulativeStats.cumulativeQty}
+        grandTotalQty={grandTotalQty}
+        page={page}
+        totalPages={totalPages}
+        currentPageCount={items.length}
+        cumulativeCount={cumulativeStats.cumulativeCount}
+        totalCount={total}
+      />
     ),
-  },
-
-  // Cột Trạng thái: Badge fixed width w-[88px] + Tooltip
-  {
-    key: "status",
-    size: 140,
-    enableResizing: true,
-    className: "text-center",
-    header: headerFilter("status", t("status", "Trạng thái")),
-    cell: (row) => (
-      <div className="w-full flex justify-center">
-        <Tooltip content={t(row.status, row.status)}>
-          <Badge
-            variant={row.status === "ACTIVE" ? "default" : "secondary"}
-            className="w-[88px] inline-flex items-center justify-center text-center truncate"
-          >
-            {t(row.status, row.status)}
-          </Badge>
-        </Tooltip>
-      </div>
+    amount: (
+      <SubtotalSummaryCell
+        variantType="amount"
+        metricTitle={t("totalAmount", "Tổng thành tiền")}
+        subtotalAmount={subtotalAmount}
+        cumulativeAmount={cumulativeStats.cumulativeAmount}
+        grandTotalAmount={grandTotalAmount}
+        page={page}
+        totalPages={totalPages}
+        currentPageCount={items.length}
+        cumulativeCount={cumulativeStats.cumulativeCount}
+        totalCount={total}
+      />
     ),
-  },
-
-  // Cột có giá trị Null/Optional (Dùng showBlankOption để hỗ trợ lọc (blank) / (Trống))
-  {
-    key: "referenceNo",
-    size: 160,
-    enableResizing: true,
-    header: headerFilter("referenceNo", t("referenceNo", "Mã tham chiếu"), { showBlankOption: true }),
-    cell: (row) => <span className="text-muted-foreground">{row.referenceNo || "—"}</span>,
-  },
-], [headerFilter, t]);
+  };
+}, [items, page, totalPages, total, subtotalQty, subtotalAmount, grandTotalQty, grandTotalAmount, cumulativeStats, t]);
 ```
 
 ---
 
-### 🔹 BƯỚC 4: Lắp Ráp Giao Diện & Tích Hợp Tabs (`<SpreadsheetPageTemplate>`)
+### 🔹 GIAI ĐOẠN 5: Zero-Miss Grep Audit Suite (Bắt Buộc Chạy)
 
-Khi lắp ráp bảng vào `<SpreadsheetPageTemplate>`, cần lưu ý sự khác biệt giữa 2 tầng Tab:
+Trước khi nghiệm thu hoặc commit code bảng, Developer / Agent **BẮT BUỘC chạy bộ 8 lệnh Grep kiểm tra sau**:
 
-#### 1. Header Page Tabs (`tabs={pageTabs}`) — OPTIONAL (TÙY CHỌN)
-- **Khi nào dùng**: Chỉ sử dụng khi trang nghiệp vụ cần phân rã thành các **phân hệ / góc nhìn lớn cấp Trang** (ví dụ: `erp-invoice` chia `Hóa đơn mua vào`, `Chi tiết mua vào`, `Hóa đơn bán ra`, `Chi tiết bán ra`; hoặc `Đơn mua hàng` vs `Chi tiết dòng hàng`).
-- **Quy chuẩn bắt buộc**:
-  - Dùng `TabItem[]` (`{ value: string, label: string }`) với label bọc `t(...)`.
-  - Truyền `tabs={pageTabs}`, `activeTab={currentTab}`, `onTabChange={handleTabChange}` vào `<SpreadsheetPageTemplate>`.
-  - **Đồng bộ URL**: Lưu param `?tab=...` trên URL và khởi tạo tab từ query param.
-  - **State Isolation**: Bắt buộc reset trang về 1 (`setPage(1)`) khi chuyển tab, và cách ly bộ lọc giữa các tab.
-  - **Tách `tableId`**: Bắt buộc thêm hậu tố tab vào `tableId` (ví dụ: `tableId={`[module]-table-${currentTab}`}`) để App Settings lưu riêng biệt sizing/visibility cột cho từng view.
-  - *Nếu là trang bảng đơn thông thường: Bỏ qua không cần truyền prop `tabs`.*
+```bash
+# 1. QUÉT LỖI STT + 1: Phải trả về 0 kết quả (Chỉ dùng {idx})
+grep -rn "idx + 1" src/modules/[module]/components/organisms/[name]-table/
 
-#### 2. Toolbar Switch Tabs (`PillTabs` trong `customActionsNode`)
-- **Khi nào dùng**: Lọc nhanh các trạng thái hoặc phân loại nhỏ trong cùng 1 view dữ liệu (ví dụ: `Tất cả` / `Mới` / `Thay thế` / `Điều chỉnh`, hoặc `Tất cả` / `Thu` / `Chi`).
-- Xem chi tiết triển khai tại [`standardize-table-page`](../skills/standardize_table_page/SKILL.md).
+# 2. QUÉT NO BLUE MANDATE: Phải trả về 0 kết quả (Cấm class blue-*)
+grep -rn "blue-" src/modules/[module]/components/organisms/[name]-table/
+
+# 3. QUÉT CỘT ACTION TĨNH: Phải trả về 0 kết quả (Dùng prop rowActions)
+grep -rn 'key: "actions"' src/modules/[module]/components/organisms/[name]-table/
+
+# 4. QUÉT GIỚI HẠN FILE < 180 LoC: Không file nào vượt quá 180 dòng
+wc -l src/modules/[module]/components/organisms/[name]-table/*
+
+# 5. QUÉT TRUYỀN LŨY KẾ SUB-TOTAL: Bắt buộc phải có cumulativeAmount
+grep -rn "cumulativeAmount" src/modules/[module]/components/organisms/[name]-table/
+
+# 6. QUÉT HARDCODE TEXT: Kiểm tra header labels có bọc t(...)
+grep -rn 'header: "' src/modules/[module]/components/organisms/[name]-table/
+
+# 7. QUÉT LỒNG VIỀN BẢNG (NESTED BORDER): Kiểm tra không có wrapper border quanh table
+grep -rn 'className=".*border.*rounded.*"' src/modules/[module]/components/organisms/[name]-table/[Name]Table.tsx
+
+# 8. TYPE CHECK VÀ UNIT TESTS PASS 100%
+bun run type:check
+bun test src/modules/[module]/components/organisms/[name]-table/
+```
 
 ---
 
-### 🔹 BẢNG KIỂM DUYỆT CHUẨN (QC Verification Checklist)
+## 📋 Bảng Kiểm Duyệt Hoàn Thành (Table DoD Checklist)
 
-| Tiêu Chí Kiểm Tra | Yêu Cầu Kỹ Thuật Chi Tiết | Đạt (x) |
-| :--- | :--- | :---: |
-| **Cột STT (Index)** | Rộng đúng `40px`, không resize, căn giữa tuyệt đối cả Header (`header: <span className="w-full block text-center">#</span>`) và Cell (`cell: (_, idx) => <span className="w-full block text-center">{idx}</span>`). Core `DataTable` đã tự tính 1-based, **TUYỆT ĐỐI KHÔNG CỘNG THÊM 1** (`idx + 1` hay `(page - 1) * pageSize + idx + 1`). | [ ] |
-| **Mặc định Variant Spreadsheet** | `<StandardTable>` / `<DataTable>` bắt buộc sử dụng `variant="spreadsheet"` mặc định để có giao diện ô tính sắc nét và compact. | [ ] |
-| **Cấm bọc Wrapper có Border** | **TUYỆT ĐỐI KHÔNG** bọc thêm `div` có `border`, `rounded-xl`, `bg-background` xung quanh `<StandardTable>` / `<DataTable>` và pagination khi nhúng trong Drawer / Modal / Page. | [ ] |
-| **100% Cột có Filter** | Không cột dữ liệu nào bị thiếu header filter (trừ STT & Selection). Dùng `headerFilter(key, title)` hoặc `headerFilter.date(...)` / `headerFilter.amount(...)`. | [ ] |
-| **Numeric Filter Options** | Cột số/tiền tệ dùng `headerFilter.amount(...)` hoặc `headerFilter.numeric(...)` để tự động format số có phân tách hàng nghìn (`10.000.000 đ`) trên dropdown checkbox. | [ ] |
-| **Cột Ngày (Date)** | Sử dụng `headerFilter.date(...)` để gắn `DateRangeColumnSlot` với preset range, ẩn checkbox filter mặc định (`hideFilter={true}`). Cell dùng `TableDateCell` căn phải. | [ ] |
-| **Cột Mã Code/SKU** | Size `200px`, dùng `<TableText enableCopy tooltip onDetailClick>`, có badge Nháp/Hủy fixed width `w-[50px]` align right (`ml-auto`). | [ ] |
-| **Cột Trạng Thái** | Dùng `<Badge>` fixed width `w-[88px]`, bọc `<Tooltip>` & `truncate`. | [ ] |
-| **Lọc Giá trị Rỗng (`showBlankOption`)** | Các cột có dữ liệu null/optional được bật `{ showBlankOption: true }` để chèn lựa chọn `(blank)` / `(Trống)` (value: `"__BLANK__"`). | [ ] |
-| **Exact & Multi-search (`""` và `;`)** | Backend API `column_search` đã dùng `applyMultiKeywordFilter` để hỗ trợ tìm chính xác `"..."` và tìm kiếm nhiều từ khóa qua `;` (OR). | [ ] |
-| **Row Hover Actions & Context Menu** | BẮT BUỘC truyền prop `rowActions` trên `<SpreadsheetPageTemplate>`. Không tạo cột `{ key: "actions" }` tĩnh. 2 Quick Actions đầu tiên là **Xem chi tiết** (`openDetail(id, "view")` — 👁️) và **Chỉnh sửa** (`openDetail(id, "edit")` — ✏️). | [ ] |
-| **Header Page Tabs (Tùy chọn)** | Nếu trang có nhiều phân hệ lớn (Header vs Lines, Mua vs Bán), đã truyền `tabs={pageTabs}`, `activeTab`, `onTabChange` vào `<SpreadsheetPageTemplate>`, đồng bộ `?tab=...`, reset `setPage(1)` và tách `tableId` theo tab chưa? | [ ] |
-| **2 Cấp độ Xóa Bộ Lọc** | Cột có nút "Xóa bộ lọc" trong Popover (cục bộ); Bảng có nút Clear All Filters khi `activeFilterCount > 0` (Page: `onClearAllFilters`; Drawer: `FilterButton` trong `titleExtra`). | [ ] |
-| **Pagination Responsive** | Hỗ trợ `pageSizeOptions = [20, 50, 100, 200]`, khởi tạo `defaultPageSize` bằng `getDefaultPageSize()` (`< 900px` -> 20, `>= 900px` -> 50). Reset `setPage(1)` khi đổi filter/sort/tab. | [ ] |
-| **Container & Table ID** | Có `tableId` unique để tự động lưu column sizing/visibility/order vào App Setting. | [ ] |
-| **Summary Row & Header Glass** | Bảng có cột số tiền/số lượng phải có dòng tổng cộng `summaryRow`; Cả TableHeader lẫn TableFooter tự động có hiệu ứng `table-header-glass` / `table-footer-glass` mờ mịn. | [ ] |
-| **Cumulative Subtotal Popover (Số lũy kế trang 2+)** | Khi bảng có phân trang (`totalPages > 1`), **BẮT BUỘC TRUYỀN `cumulativeAmount`, `cumulativeQty`, `cumulativeCount`** vào `SubtotalSummaryCell` để popover không bị ẩn mất dòng Lũy kế `↳ Lũy kế (T1 → TP)` từ trang 2 trở đi. | [ ] |
-| **i18n** | 100% text bọc trong `t(...)`, bao gồm cả `TableColumnHeaderFilter`. | [ ] |
+| STT | Tiêu Chí Kiểm Tra | Yêu Cầu Kỹ Thuật Chi Tiết | Đạt |
+| :---: | :--- | :--- | :---: |
+| 1 | **Chuẩn Cột STT** | Căn giữa tuyệt đối Header & Cell, size `40px`, non-resizable, `cell: (_, idx) => <span className="w-full block text-center">{idx}</span>`. **TUYỆT ĐỐI KHÔNG CỘNG 1** (`idx + 1`). | [ ] |
+| 2 | **Variant Spreadsheet** | `<StandardTable>` / `<DataTable>` bắt buộc dùng `variant="spreadsheet"`. | [ ] |
+| 3 | **Cấm Nested Border** | Không bọc thêm `div border rounded-xl` bên ngoài table container. | [ ] |
+| 4 | **No Blue Mandate** | 100% không còn class `blue-*` trong toàn bộ Table, Badges, Tabs, Popovers. | [ ] |
+| 5 | **Row Actions & Context Menu** | Dùng `rowActions` với 2 Quick Actions đầu tiên: 👁️ Xem chi tiết (`openDetail(id, "view")`) và ✏️ Chỉnh sửa (`openDetail(id, "edit")`). Không dùng cột action tĩnh. | [ ] |
+| 6 | **Header Filter Helper** | Dùng `createColumnHeaderFilter`, hỗ trợ exact `""`, multi `;`, lọc rỗng `(blank)`. | [ ] |
+| 7 | **Cột Mã Code** | `<TableText enableCopy tooltip onDetailClick>`, badge trạng thái nháp/hủy cố định width `w-[50px]` align-right. | [ ] |
+| 8 | **Cột Tiền & Số lượng** | `text-right tabular-nums font-semibold` kết hợp `headerFilter.amount(...)` hoặc `headerFilter.numeric(...)`. | [ ] |
+| 9 | **Cột Trạng Thái** | Dùng `<Badge>` cố định width `w-[88px]` + Tooltip + `truncate`. | [ ] |
+| 10 | **Subtotal Lũy Kế Trang 2+** | Dùng `<SubtotalSummaryCell>`, truyền đủ `cumulativeAmount`, `cumulativeQty`, `cumulativeCount` khi có phân trang. | [ ] |
+| 11 | **Hai Cấp Độ Xóa Lọc** | Nút xóa lọc cục bộ trong Popover + Nút Clear All Filters tổng thể khi `activeFilterCount > 0`. | [ ] |
+| 12 | **Giới Hạn File Atomic** | Chia 5 file chuẩn (`.tsx`, `.columns.tsx`, `.hook.ts`, `.type.ts`, `.test.tsx`), không file nào $> 180\text{ LoC}$. | [ ] |
+| 13 | **i18n 100%** | Toàn bộ headers, tooltips, dialogs, empty states bọc trong `t(...)`. | [ ] |
+| 14 | **Zero-Miss Audit Pass** | 8 lệnh Grep Audit CLI chạy thành công, 0 vi phạm. | [ ] |
+| 15 | **Type Check & Test Pass** | `bun run type:check` 0 lỗi và unit test co-located pass 100%. | [ ] |

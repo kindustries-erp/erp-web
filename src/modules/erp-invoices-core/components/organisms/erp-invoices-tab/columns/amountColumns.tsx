@@ -363,7 +363,13 @@ export function useAmountColumns({
         cell: (inv: any) => {
           const total = parseFloat(inv.totalAmount) || 0;
           const netOff = parseFloat(inv.netOffAmount) || 0;
-          const remaining = total - netOff;
+          const isAdjustment = inv.taxInvoiceStatus === 3 || total < 0;
+          const remaining = isAdjustment
+            ? netOff >= Math.abs(total)
+              ? 0
+              : total + netOff
+            : Math.max(0, total - netOff);
+
           if (remaining === 0)
             return <span className="text-[color:var(--up-fg)]">0</span>;
           return (

@@ -71,6 +71,7 @@ export function SpreadsheetPageTemplate<T>({
   hideHeader,
   enableFullscreen = true,
   onFullscreenChange,
+  containerClassName,
 }: SpreadsheetPageTemplateProps<T>) {
   const t = useT();
   const finalEmptyLabel = emptyLabel ?? t("common.noData");
@@ -253,6 +254,7 @@ export function SpreadsheetPageTemplate<T>({
             enableRowHoverActions={enableRowHoverActions}
             hideLegacyActionColumn={hideLegacyActionColumn}
             summaryRow={summaryRow}
+            containerClassName={containerClassName}
             page={page}
             pageSize={pageSize}
             total={total}
