@@ -122,4 +122,27 @@ describe("useInvoiceSummary Hook Suite", () => {
     // 65M / 108M = 60.2%
     expect(screen.getByText("60.2%")).toBeInTheDocument();
   });
+
+  it("calculates remaining = 0 for fully offset negative adjusting invoices", () => {
+    const adjustingInvoices: ErpInvoice[] = [
+      {
+        id: "adj-1",
+        invoiceNo: "00003",
+        taxInvoiceStatus: 3,
+        totalAmount: -2761102,
+        netOffAmount: "2761102",
+      } as any,
+      {
+        id: "adj-2",
+        invoiceNo: "00004",
+        taxInvoiceStatus: 3,
+        totalAmount: -2372302,
+        netOffAmount: "2372302",
+      } as any,
+    ];
+
+    render(<SummaryTestComponent invoices={adjustingInvoices} />);
+    const remainingCell = screen.getByTestId("cell-remaining");
+    expect(remainingCell).toHaveTextContent("0");
+  });
 });

@@ -138,6 +138,7 @@ export interface ErpInvoice {
   taxProcessStatus?: number | null;
   relatedInvoiceNo?: string | null;
   relatedSerialNo?: string | null;
+  effectiveData?: InvoiceEffectiveData | null;
   createdAt?: string;
   updatedAt?: string;
   postingStatus?: string | null;
@@ -1028,7 +1029,125 @@ export const erpInvoicesCoreApi = {
     }>(`${BASE}/${id}/traceability-graph`);
     return data as any;
   },
+
+  getAdjustmentReconciliation: async (
+    id: string,
+  ): Promise<AdjustmentReconciliationDto> => {
+    const { data } = await axiosInstance.get<AdjustmentReconciliationDto>(
+      `${BASE}/${id}/adjustment-reconciliation`,
+    );
+    return data;
+  },
+
+  executeAdjustmentNetoff: async (
+    payload: ExecuteAdjustmentNetoffPayload,
+  ): Promise<{
+    success: boolean;
+    netoffId: string;
+    offsetAmount: number;
+    message: string;
+  }> => {
+    const { data } = await axiosInstance.post<{
+      success: boolean;
+      netoffId: string;
+      offsetAmount: number;
+      message: string;
+    }>(`${BASE}/adjustment-netoff`, payload);
+    return data;
+  },
 };
+
+export interface InvoiceEffectiveData {
+  isAdjusted?: boolean;
+  hasInfoAdjustment?: boolean;
+  adjustingInvoiceId?: string;
+  adjustingInvoiceNo?: string;
+  adjustingSerialNo?: string;
+  adjustedAt?: string;
+  lastAdjustedAt?: string;
+  lastAdjustingInvoiceId?: string;
+  effectiveValues?: {
+    buyerTaxCode?: string;
+    buyerName?: string;
+    buyerAddress?: string;
+    licensePlate?: string;
+    buyerCccd?: string;
+    settlementOrder?: string;
+  };
+  diffLog?: Array<{
+    field: string;
+    fieldNameVi: string;
+    oldValue: string;
+    newValue: string;
+  }>;
+  infoDiffs?: Array<{
+    field: string;
+    fieldNameVi: string;
+    oldValue: string;
+    newValue: string;
+  }>;
+}
+
+export interface FinancialReconciliationDto {
+  originalAmount: number;
+  adjustedDeltaAmount: number;
+  netEffectiveAmount: number;
+  isFullyCancelled: boolean;
+  netoffOffsetAmount: number;
+  remainingDebt: number;
+}
+
+export interface ItemReconciliationDto {
+  itemCode: string | null;
+  description: string;
+  originalQty: number;
+  adjustedDeltaQty: number;
+  netEffectiveQty: number;
+  unit: string | null;
+  unitPrice: number;
+  netAmount: number;
+}
+
+export interface InfoDiffItemDto {
+  field: string;
+  fieldNameVi: string;
+  oldValue: string;
+  newValue: string;
+}
+
+export interface InfoDiffReconciliationDto {
+  hasInfoAdjustment: boolean;
+  diffs: InfoDiffItemDto[];
+}
+
+export interface RelatedInvoiceSummaryDto {
+  id: string;
+  invoiceNo: string;
+  serialNo: string | null;
+  invoiceDate: string | null;
+  totalAmount: number;
+  taxInvoiceStatus: number | null;
+  relationType: "ADJUSTING_FOR_THIS" | "ORIGINAL_OF_THIS";
+}
+
+export interface AdjustmentReconciliationDto {
+  invoiceId: string;
+  invoiceNo: string;
+  serialNo: string | null;
+  taxInvoiceStatus: number | null;
+  role: "ORIGINAL" | "ADJUSTING" | "REPLACEMENT" | "STANDARD";
+  financial: FinancialReconciliationDto;
+  itemReconciliations: ItemReconciliationDto[];
+  infoDiff: InfoDiffReconciliationDto;
+  relatedInvoices: RelatedInvoiceSummaryDto[];
+}
+
+export interface ExecuteAdjustmentNetoffPayload {
+  originalInvoiceId: string;
+  adjustingInvoiceId: string;
+  offsetAmount?: number;
+  notes?: string;
+}
 
 export interface BulkImportSkippedItem {
   filename: string;
