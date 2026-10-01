@@ -67,6 +67,14 @@ export function GarageCaseDefaultAttributesSection({
     }));
   }, [categories, locale]);
 
+  const resolvedCategory = useMemo(() => {
+    if (caseData.category) return caseData.category;
+    if (caseData.categoryId && categories.length > 0) {
+      return categories.find((c: any) => c.id === caseData.categoryId) || null;
+    }
+    return null;
+  }, [caseData.category, caseData.categoryId, categories]);
+
   if (!caseData) return null;
 
   return (
@@ -90,7 +98,7 @@ export function GarageCaseDefaultAttributesSection({
                 )}
               >
                 <GarageCaseClassificationBadge
-                  category={caseData.category}
+                  category={resolvedCategory}
                   classification={caseData.classification}
                   interactive={true}
                 />

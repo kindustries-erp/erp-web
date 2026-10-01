@@ -268,6 +268,8 @@ export function useGarageCaseDrawerLogic({
           attributes: draftAttributes,
         });
         queryClient.invalidateQueries({ queryKey: ["garage", "cases"] });
+        queryClient.invalidateQueries({ queryKey: ["garage-case"] });
+        queryClient.invalidateQueries({ queryKey: ["garage-case-code"] });
         queryClient.invalidateQueries({
           queryKey: ["garage-case-column-options"],
         });
@@ -282,7 +284,7 @@ export function useGarageCaseDrawerLogic({
         });
       }
       await handleSave(selectedCase.id);
-      refetchCase();
+      await refetchCase();
       if (onSuccess) onSuccess();
     } catch (err: any) {
       toast.error(
