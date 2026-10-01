@@ -1,11 +1,15 @@
 ---
-name: erp-invoice
+name: erp-invoice-web
 description: Module tri thức Quản lý Hóa đơn Điện tử & Dashboard Hóa đơn (ERP Invoices & Dashboard) trong erp-web. Chứa toàn bộ cấu trúc UI, routing, DataTable columns, Drawers, Modals, XML/GDT Sync, SSE Progress, API client và các tương tác UX.
 ---
 
 # 🎨 Module Tri Thức: Quản Lý Hóa Đơn Điện Tử (ERP Invoices) - Frontend (`erp-web`)
 
 ## 1. Tổng quan & Đăng ký Giao diện
+
+> [!NOTE]
+> Đặc tả chi tiết về Database Schema, Entity, DTOs, API Endpoints, Hạch toán Kế toán Kép Thông tư 99, 5-Slot Heartbeat Cron GDT Sync và Phân loại AI 9router của module Hóa đơn được lưu trữ tại:
+> 👉 [`erp-invoice-api`](file:///home/dev/repos-dev/erp/erp-api/.agents/skills/modules/erp-invoice/SKILL.md)
 
 Module Hóa đơn Điện tử quản lý tập trung toàn bộ hóa đơn đầu vào (`IN`), hóa đơn đầu ra (`OUT`), hóa đơn nháp (`DRAFT`), và Dashboard phân tích dòng tiền/thuế hóa đơn. Giao diện được cấu trúc theo chuẩn **Atomic Design (Atoms -> Molecules -> Organisms)** đáp ứng quy chuẩn No Blue Mandate, Tabular Numbers và Multi-tab Navigation.
 
