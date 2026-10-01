@@ -102,8 +102,11 @@ export function useGarageCaseDrawerLogic({
         selectedCase.attributes || selectedCase.attributeValues || {},
       );
       setDraftGlobalAttributes(selectedCase.globalAttributes || {});
+      if (selectedCase.soChungTu && selectedCase.soChungTu !== activeCaseCode) {
+        setActiveCaseCode(selectedCase.soChungTu);
+      }
     }
-  }, [selectedCase]);
+  }, [selectedCase, activeCaseCode]);
 
   // Financial Summary & Settlements Queries
   const { data: serverSummary } = useQuery({

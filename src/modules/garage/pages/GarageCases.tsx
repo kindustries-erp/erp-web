@@ -3,11 +3,9 @@ import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemp
 import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
 import { DateRangeColumnSlot } from "@/shared/components/DataTable/DateRangeColumnSlot";
 import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
-import { TableText } from "@/shared/components/DataTable/TableText";
 import { TableDateCell } from "@/shared/components/DataTable/TableDateCell";
 import { SubtotalSummaryCell } from "@/shared/components/DataTable/SubtotalSummaryCell";
 import { Tooltip } from "@/core/components/ui/Tooltip";
-import { CopyButton } from "@/shared/components/CopyButton";
 import { money } from "@/shared/utils/format";
 import { cn } from "@/shared/utils";
 import { useGarageStore } from "../store/garageStore";
@@ -19,6 +17,8 @@ import { KgaraCaseStatusBadge } from "../components/KgaraCaseStatusBadge";
 import { GARAGE_CASE_CLASSIFICATIONS } from "../components/GarageCaseClassificationBadge";
 import { GarageCaseClassificationDropdown } from "../components/organisms/garage-case-classification-dropdown";
 import { GarageCaseExclusionDropdown } from "../components/organisms/garage-case-exclusion-dropdown";
+import { GarageCaseCodeCell } from "../components/molecules/garage-case-code-cell";
+import { GarageCaseCustomerCell } from "../components/molecules/garage-case-customer-cell";
 import {
   useGarageCases,
   useGarageBranches,
@@ -30,9 +30,6 @@ import {
   TrendingUp,
   FileText,
   FileSpreadsheet,
-  XCircle,
-  FileClock,
-  Wrench,
   ShieldCheck,
   FileCheck,
   Eye,
@@ -41,7 +38,6 @@ import {
   Link2,
   SlidersHorizontal,
   Users,
-  Car,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { useTranslation } from "react-i18next";
@@ -729,130 +725,17 @@ export function GarageCases({
       size: 220,
       enableResizing: true,
       className: "text-left",
-      cell: (item: any) => {
-        const s = (item.tenTinhTrangDichVu || "").toLowerCase();
-        const isCanceled =
-          s.includes("hủy") ||
-          s.includes("từ chối") ||
-          s.includes("không duyệt");
-        const isInProgress =
-          s.includes("đang sửa") ||
-          s.includes("đang làm") ||
-          s.includes("tiếp nhận") ||
-          s.includes("đang xử lý") ||
-          s.includes("kiểm tra") ||
-          s.includes("sửa chữa") ||
-          s.includes("xử lý");
-        const isDraft =
-          s.includes("nháp") || s.includes("báo giá") || s.includes("chờ");
-
-        const outCount = Number(item.linkedInvoiceOutCount || 0);
-        const inCount = Number(item.linkedInvoiceInCount || 0);
-        const totalLinked = Number(
-          item.linkedInvoiceCount || outCount + inCount || 0,
-        );
-
-        const licensePlate = item.bienSoXe?.trim();
-
-        return (
-          <div className="flex items-center gap-1.5 w-full min-w-0">
-            {/* Nút Xem chi tiết (Con mắt) nằm ở bên trái, căn giữa theo chiều dọc của cả 2 dòng */}
-            <Tooltip content={t("cases.actions.viewDetail", "Xem chi tiết")}>
-              <button
-                type="button"
-                onClick={() => setSelectedCaseId(item.soChungTu || item.id)}
-                className="h-6 w-6 p-0 flex-shrink-0 flex items-center justify-center opacity-60 hover:opacity-100 hover:text-primary transition-all cursor-pointer text-slate-400 focus:outline-hidden"
-                aria-label={t("cases.actions.viewDetail", "Xem chi tiết")}
-              >
-                <Eye className="w-3.5 h-3.5" />
-              </button>
-            </Tooltip>
-
-            {/* Khối 2 dòng: Số chứng từ & Biển số xe */}
-            <div className="flex flex-col justify-center min-w-0 flex-1 py-0.5 gap-0.5">
-              {/* Dòng 1: Số chứng từ + Copy + Status Icons */}
-              <div className="flex items-center gap-1.5 w-full min-w-0">
-                <TableText
-                  className="flex-1 min-w-0"
-                  text={item.soChungTu}
-                  textClassName="font-medium text-primary text-left cursor-pointer hover:underline"
-                  enableCopy={true}
-                  tooltip={true}
-                />
-
-                {totalLinked > 0 && (
-                  <Tooltip
-                    content={
-                      outCount > 0 && inCount > 0
-                        ? `${outCount} HĐ bán ra (doanh thu), ${inCount} HĐ mua vào (chi phí)`
-                        : outCount > 0
-                          ? `${outCount} HĐ bán ra (doanh thu)`
-                          : inCount > 0
-                            ? `${inCount} HĐ mua vào (chi phí)`
-                            : t("cases.filter.hasLinked", "Đã liên kết HĐ")
-                    }
-                  >
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setDrawerEditMode(false);
-                        setDrawerInitialTab("financials");
-                        setSelectedCaseId(item.soChungTu || item.id);
-                      }}
-                      className="text-emerald-600 dark:text-emerald-400 hover:text-primary transition-colors cursor-pointer shrink-0 inline-flex items-center justify-center p-0.5"
-                    >
-                      <Link2 className="w-3.5 h-3.5" />
-                    </button>
-                  </Tooltip>
-                )}
-
-                {isCanceled && (
-                  <Tooltip content={item.tenTinhTrangDichVu}>
-                    <XCircle className="w-3.5 h-3.5 text-rose-500 dark:text-rose-400 shrink-0" />
-                  </Tooltip>
-                )}
-                {isInProgress && (
-                  <Tooltip content={item.tenTinhTrangDichVu}>
-                    <Wrench className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400 shrink-0" />
-                  </Tooltip>
-                )}
-                {isDraft && (
-                  <Tooltip content={item.tenTinhTrangDichVu}>
-                    <FileClock className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 shrink-0" />
-                  </Tooltip>
-                )}
-              </div>
-
-              {/* Dòng 2: Biển số xe (sub text nằm ở dưới, giống cột khách hàng) */}
-              {licensePlate && (
-                <div className="flex items-center gap-1 min-w-0 group/plate">
-                  <Tooltip content={`Biển số xe: ${licensePlate}`}>
-                    <span className="truncate text-[11px] font-mono text-muted-foreground leading-tight select-text inline-flex items-center gap-1">
-                      <Car className="w-3 h-3 text-slate-400 shrink-0" />
-                      <span>{licensePlate}</span>
-                    </span>
-                  </Tooltip>
-                  <CopyButton
-                    value={licensePlate}
-                    tooltip={t(
-                      "cases.actions.copyLicensePlate",
-                      "Copy biển số",
-                    )}
-                    copiedTooltip={t("cases.actions.copied", "Đã copy")}
-                    toastMessage={t(
-                      "cases.actions.copiedLicensePlate",
-                      "Đã copy biển số xe",
-                    )}
-                    iconClassName="w-2.5 h-2.5"
-                    className="h-3 w-3 p-0 opacity-0 group-hover/plate:opacity-100 transition-opacity flex-shrink-0 text-slate-400 hover:text-slate-600 focus:outline-none"
-                  />
-                </div>
-              )}
-            </div>
-          </div>
-        );
-      },
+      cell: (item: any) => (
+        <GarageCaseCodeCell
+          item={item}
+          onOpenDetail={(code) => setSelectedCaseId(code)}
+          onOpenFinancials={(code) => {
+            setDrawerEditMode(false);
+            setDrawerInitialTab("financials");
+            setSelectedCaseId(code);
+          }}
+        />
+      ),
     },
     // 4. Khách hàng (Tên KH + Mã KH layout 2 dòng giống InvoicePartnerCell)
     {
@@ -875,69 +758,7 @@ export function GarageCases({
       size: 240,
       enableResizing: true,
       className: "text-left",
-      cell: (item: any) => {
-        const customerName = item.khachHangName?.trim() || "";
-        const customerCode = item.khachHangCode?.trim() || "";
-
-        if (!customerName && !customerCode) {
-          return (
-            <span className="text-muted-foreground/50 select-none">—</span>
-          );
-        }
-
-        return (
-          <div className="flex items-center gap-1.5 w-full min-w-0">
-            <div className="flex flex-col justify-center min-w-0 flex-1 gap-0.5 py-0.5">
-              {/* Dòng 1: Tên khách hàng (đậm) + Nút Copy */}
-              <div className="flex items-center gap-1 min-w-0 group/cname">
-                <Tooltip content={customerName || "—"}>
-                  <span className="truncate text-xs font-semibold text-slate-800 dark:text-slate-200 leading-tight select-text">
-                    {customerName || "—"}
-                  </span>
-                </Tooltip>
-                {customerName && customerName !== "—" && (
-                  <CopyButton
-                    value={customerName}
-                    tooltip={t("cases.actions.copyCustomerName", "Copy tên")}
-                    copiedTooltip={t("cases.actions.copied", "Đã copy")}
-                    toastMessage={t(
-                      "cases.actions.copiedCustomerName",
-                      "Đã copy tên khách hàng",
-                    )}
-                    iconClassName="w-2.5 h-2.5"
-                    className="h-3.5 w-3.5 p-0 opacity-0 group-hover/cname:opacity-100 transition-opacity flex-shrink-0 text-slate-400 hover:text-slate-600 focus:outline-none"
-                  />
-                )}
-              </div>
-
-              {/* Dòng 2: Mã khách hàng (mono mờ) + Nút Copy */}
-              {customerCode && (
-                <div className="flex items-center gap-1 min-w-0 group/ccode">
-                  <Tooltip content={`Mã KH: ${customerCode}`}>
-                    <span className="truncate text-[11px] font-normal font-mono text-muted-foreground leading-tight select-text">
-                      <span className="text-slate-400 font-sans mr-0.5">
-                        Mã:
-                      </span>
-                      {customerCode}
-                    </span>
-                  </Tooltip>
-                  <CopyButton
-                    value={customerCode}
-                    tooltip={t("cases.actions.copyCustomerCode", "Copy mã KH")}
-                    copiedTooltip={t("cases.actions.copied", "Đã copy")}
-                    toastMessage={t(
-                      "cases.actions.copiedCustomerCode",
-                      "Đã copy mã khách hàng",
-                    )}
-                    iconClassName="w-2.5 h-2.5"
-                    className="h-3 w-3 p-0 opacity-0 group-hover/ccode:opacity-100 transition-opacity flex-shrink-0 text-slate-400 hover:text-slate-600 focus:outline-none"
-                  />
-                </div>
-              )}
-            </div>
-          </div>
-        );
-      },
+      cell: (item: any) => <GarageCaseCustomerCell item={item} />,
     },
     // 7. Doanh thu
     {
@@ -1192,7 +1013,7 @@ export function GarageCases({
                 isHigh
                   ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40"
                   : isMid
-                    ? "bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 border border-blue-200 dark:border-blue-800/40"
+                    ? "bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300 border border-amber-200 dark:border-amber-800/40"
                     : "bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300 border border-rose-200 dark:border-rose-800/40"
               }`}
             >
@@ -2240,6 +2061,7 @@ export function GarageCases({
           },
         ]}
         customActionsNode={viewTabsNode}
+        containerClassName="max-h-[calc(100vh-220px)]"
         page={page}
         pageSize={pageSize}
         total={totalCases}
