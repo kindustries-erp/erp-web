@@ -31,7 +31,7 @@ export const GARAGE_CASE_CLASSIFICATIONS: Record<string, ClassificationMeta> = {
     label: "Sửa chữa chung",
     subLabel: "Bảo dưỡng định kỳ, sửa chữa tổng quát cho khách hàng",
     colorClass:
-      "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/50 dark:text-blue-300 dark:border-blue-800/40",
+      "bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/50 dark:text-indigo-300 dark:border-indigo-800/40",
     icon: <Wrench className="w-3 h-3 mr-1 shrink-0" />,
   },
   OJ: {
