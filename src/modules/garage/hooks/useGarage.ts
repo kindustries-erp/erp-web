@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { garageApi } from "../api/garageApi";
+import { garageApi, type UpdateCaseConfigPayload } from "../api/garageApi";
 import { toast } from "react-hot-toast";
 
 export const useGarageBranches = () => {
@@ -309,12 +309,21 @@ export function useUpdateGarageCaseConfig() {
       payload,
     }: {
       caseId: string;
-      payload: { classification?: string | null; erpNotes?: string | null };
+      payload: UpdateCaseConfigPayload;
     }) => garageApi.updateCaseConfig(caseId, payload),
     onSuccess: (updatedCase) => {
       queryClient.invalidateQueries({ queryKey: ["garage", "cases"] });
       queryClient.invalidateQueries({
         queryKey: ["garage-case-column-options"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["garage-customers-debt"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["garage-pnl"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["garage-checkpoint"],
       });
       if (updatedCase?.id) {
         queryClient.invalidateQueries({

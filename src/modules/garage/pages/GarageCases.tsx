@@ -16,11 +16,9 @@ import { GarageCaseSyncDrawer } from "../components/GarageCaseSyncDrawer";
 import { GarageCaseStandaloneDrawer } from "../components/GarageCaseStandaloneDrawer";
 import { GarageCaseExportDrawer } from "../components/GarageCaseExportDrawer";
 import { KgaraCaseStatusBadge } from "../components/KgaraCaseStatusBadge";
-import {
-  GarageCaseClassificationBadge,
-  GARAGE_CASE_CLASSIFICATIONS,
-} from "../components/GarageCaseClassificationBadge";
-import { GarageCaseExclusionBadges } from "../components/GarageCaseExclusionBadges";
+import { GARAGE_CASE_CLASSIFICATIONS } from "../components/GarageCaseClassificationBadge";
+import { GarageCaseClassificationDropdown } from "../components/organisms/garage-case-classification-dropdown";
+import { GarageCaseExclusionDropdown } from "../components/organisms/garage-case-exclusion-dropdown";
 import {
   useGarageCases,
   useGarageBranches,
@@ -43,6 +41,7 @@ import {
   Link2,
   SlidersHorizontal,
   Users,
+  Car,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { useTranslation } from "react-i18next";
@@ -753,85 +752,107 @@ export function GarageCases({
           item.linkedInvoiceCount || outCount + inCount || 0,
         );
 
+        const licensePlate = item.bienSoXe?.trim();
+
         return (
           <div className="flex items-center gap-1.5 w-full min-w-0">
-            <TableText
-              className="flex-1 min-w-0"
-              text={item.soChungTu}
-              textClassName="font-medium text-primary text-left"
-              enableCopy={true}
-              tooltip={true}
-              onDetailClick={() => setSelectedCaseId(item.soChungTu)}
-            />
-
-            {totalLinked > 0 && (
-              <Tooltip
-                content={
-                  outCount > 0 && inCount > 0
-                    ? `${outCount} HĐ bán ra (doanh thu), ${inCount} HĐ mua vào (chi phí)`
-                    : outCount > 0
-                      ? `${outCount} HĐ bán ra (doanh thu)`
-                      : inCount > 0
-                        ? `${inCount} HĐ mua vào (chi phí)`
-                        : t("cases.filter.hasLinked", "Đã liên kết HĐ")
-                }
+            {/* Nút Xem chi tiết (Con mắt) nằm ở bên trái, căn giữa theo chiều dọc của cả 2 dòng */}
+            <Tooltip content={t("cases.actions.viewDetail", "Xem chi tiết")}>
+              <button
+                type="button"
+                onClick={() => setSelectedCaseId(item.soChungTu || item.id)}
+                className="h-6 w-6 p-0 flex-shrink-0 flex items-center justify-center opacity-60 hover:opacity-100 hover:text-primary transition-all cursor-pointer text-slate-400 focus:outline-hidden"
+                aria-label={t("cases.actions.viewDetail", "Xem chi tiết")}
               >
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setDrawerEditMode(false);
-                    setDrawerInitialTab("financials");
-                    setSelectedCaseId(item.soChungTu || item.id);
-                  }}
-                  className="text-emerald-600 dark:text-emerald-400 hover:text-primary transition-colors cursor-pointer shrink-0 inline-flex items-center justify-center p-0.5"
-                >
-                  <Link2 className="w-3.5 h-3.5" />
-                </button>
-              </Tooltip>
-            )}
+                <Eye className="w-3.5 h-3.5" />
+              </button>
+            </Tooltip>
 
-            {isCanceled && (
-              <Tooltip content={item.tenTinhTrangDichVu}>
-                <XCircle className="w-3.5 h-3.5 text-rose-500 dark:text-rose-400 shrink-0" />
-              </Tooltip>
-            )}
-            {isInProgress && (
-              <Tooltip content={item.tenTinhTrangDichVu}>
-                <Wrench className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400 shrink-0" />
-              </Tooltip>
-            )}
-            {isDraft && (
-              <Tooltip content={item.tenTinhTrangDichVu}>
-                <FileClock className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 shrink-0" />
-              </Tooltip>
-            )}
+            {/* Khối 2 dòng: Số chứng từ & Biển số xe */}
+            <div className="flex flex-col justify-center min-w-0 flex-1 py-0.5 gap-0.5">
+              {/* Dòng 1: Số chứng từ + Copy + Status Icons */}
+              <div className="flex items-center gap-1.5 w-full min-w-0">
+                <TableText
+                  className="flex-1 min-w-0"
+                  text={item.soChungTu}
+                  textClassName="font-medium text-primary text-left cursor-pointer hover:underline"
+                  enableCopy={true}
+                  tooltip={true}
+                />
+
+                {totalLinked > 0 && (
+                  <Tooltip
+                    content={
+                      outCount > 0 && inCount > 0
+                        ? `${outCount} HĐ bán ra (doanh thu), ${inCount} HĐ mua vào (chi phí)`
+                        : outCount > 0
+                          ? `${outCount} HĐ bán ra (doanh thu)`
+                          : inCount > 0
+                            ? `${inCount} HĐ mua vào (chi phí)`
+                            : t("cases.filter.hasLinked", "Đã liên kết HĐ")
+                    }
+                  >
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDrawerEditMode(false);
+                        setDrawerInitialTab("financials");
+                        setSelectedCaseId(item.soChungTu || item.id);
+                      }}
+                      className="text-emerald-600 dark:text-emerald-400 hover:text-primary transition-colors cursor-pointer shrink-0 inline-flex items-center justify-center p-0.5"
+                    >
+                      <Link2 className="w-3.5 h-3.5" />
+                    </button>
+                  </Tooltip>
+                )}
+
+                {isCanceled && (
+                  <Tooltip content={item.tenTinhTrangDichVu}>
+                    <XCircle className="w-3.5 h-3.5 text-rose-500 dark:text-rose-400 shrink-0" />
+                  </Tooltip>
+                )}
+                {isInProgress && (
+                  <Tooltip content={item.tenTinhTrangDichVu}>
+                    <Wrench className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400 shrink-0" />
+                  </Tooltip>
+                )}
+                {isDraft && (
+                  <Tooltip content={item.tenTinhTrangDichVu}>
+                    <FileClock className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 shrink-0" />
+                  </Tooltip>
+                )}
+              </div>
+
+              {/* Dòng 2: Biển số xe (sub text nằm ở dưới, giống cột khách hàng) */}
+              {licensePlate && (
+                <div className="flex items-center gap-1 min-w-0 group/plate">
+                  <Tooltip content={`Biển số xe: ${licensePlate}`}>
+                    <span className="truncate text-[11px] font-mono text-muted-foreground leading-tight select-text inline-flex items-center gap-1">
+                      <Car className="w-3 h-3 text-slate-400 shrink-0" />
+                      <span>{licensePlate}</span>
+                    </span>
+                  </Tooltip>
+                  <CopyButton
+                    value={licensePlate}
+                    tooltip={t(
+                      "cases.actions.copyLicensePlate",
+                      "Copy biển số",
+                    )}
+                    copiedTooltip={t("cases.actions.copied", "Đã copy")}
+                    toastMessage={t(
+                      "cases.actions.copiedLicensePlate",
+                      "Đã copy biển số xe",
+                    )}
+                    iconClassName="w-2.5 h-2.5"
+                    className="h-3 w-3 p-0 opacity-0 group-hover/plate:opacity-100 transition-opacity flex-shrink-0 text-slate-400 hover:text-slate-600 focus:outline-none"
+                  />
+                </div>
+              )}
+            </div>
           </div>
         );
       },
-    },
-    // 3. Biển số xe
-    {
-      key: "licensePlate",
-      label: t("cases.columns.licensePlate", "Biển số xe"),
-      header: (
-        <TableColumnHeaderFilter
-          {...createHeaderProps(
-            "licensePlate",
-            t("cases.columns.licensePlate", "Biển số xe"),
-            "center",
-            false,
-            undefined,
-            true,
-          )}
-          {...commonOptionProps}
-        />
-      ),
-      sortable: false,
-      size: 130,
-      enableResizing: true,
-      className: "font-medium text-left",
-      cell: (item: any) => item.bienSoXe || "-",
     },
     // 4. Khách hàng (Tên KH + Mã KH layout 2 dòng giống InvoicePartnerCell)
     {
@@ -917,59 +938,6 @@ export function GarageCases({
           </div>
         );
       },
-    },
-    // 5. Mã khách hàng (Tùy chọn ẩn)
-    {
-      key: "customerCode",
-      label: t("cases.columns.customerCode", "Mã KH"),
-      header: (
-        <TableColumnHeaderFilter
-          {...createHeaderProps(
-            "customerCode",
-            t("cases.columns.customerCode", "Mã KH"),
-            "center",
-            false,
-            undefined,
-            true,
-          )}
-          {...commonOptionProps}
-        />
-      ),
-      sortable: false,
-      size: 130,
-      enableResizing: true,
-      className: "text-left font-mono",
-      cell: (item: any) => item.khachHangCode || "-",
-    },
-    // 6. Tên khách hàng (Tùy chọn ẩn)
-    {
-      key: "customerName",
-      label: t("cases.columns.customerName", "Tên khách hàng"),
-      header: (
-        <TableColumnHeaderFilter
-          {...createHeaderProps(
-            "customerName",
-            t("cases.columns.customerName", "Tên khách hàng"),
-            "center",
-            false,
-            undefined,
-            true,
-          )}
-          {...commonOptionProps}
-        />
-      ),
-      sortable: false,
-      size: 250,
-      enableResizing: true,
-      className: "text-left",
-      cell: (item: any) => (
-        <TableText
-          text={item.khachHangName || "—"}
-          tooltip={true}
-          enableCopy={true}
-          textClassName="whitespace-normal line-clamp-2 break-words text-foreground font-normal text-xs leading-normal select-text"
-        />
-      ),
     },
     // 7. Doanh thu
     {
@@ -1234,61 +1202,7 @@ export function GarageCases({
         );
       },
     },
-    // 11. Phân loại ERP
-    {
-      key: "classification",
-      label: t("cases.columns.classificationErp", "Phân loại ERP"),
-      header: (
-        <TableColumnHeaderFilter
-          {...createHeaderProps(
-            "classification",
-            t("cases.columns.classificationErp", "Phân loại ERP"),
-            "center",
-            false,
-            (val: string) => {
-              if (val === "__BLANK__")
-                return t(
-                  "cases.classification.unclassified",
-                  "(Chưa phân loại)",
-                );
-              const meta = GARAGE_CASE_CLASSIFICATIONS[val];
-              return meta ? meta.label : val;
-            },
-            true,
-          )}
-          {...commonOptionProps}
-        />
-      ),
-      sortable: false,
-      size: 140,
-      enableResizing: true,
-      className: "text-center",
-      cell: (item: any) => (
-        <div className="w-full flex items-center justify-center gap-1.5 py-0.5">
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              setDrawerEditMode(true);
-              setSelectedCaseId(item.soChungTu || item.id);
-            }}
-            className="group cursor-pointer transition-transform hover:scale-105"
-            title={t("cases.actions.configure", "Phân loại")}
-          >
-            <GarageCaseClassificationBadge
-              category={item.category}
-              classification={item.classification}
-              interactive={true}
-            />
-          </button>
-          <GarageCaseExclusionBadges
-            excludeFromReports={item.excludeFromReports}
-            excludeFromDebt={item.excludeFromDebt}
-          />
-        </div>
-      ),
-    },
-    // 12. Phân loại KGara (Read-only, nguồn gốc gốc từ KGara)
+    // 11. Phân loại KGara (Read-only, nguồn gốc gốc từ KGara)
     {
       key: "kgaraClassification",
       label: t("cases.columns.kgaraClassification", "Phân loại KGara"),
@@ -1337,6 +1251,48 @@ export function GarageCases({
           </div>
         );
       },
+    },
+    // 12. Phân loại ERP
+    {
+      key: "classification",
+      label: t("cases.columns.classificationErp", "Phân loại ERP"),
+      header: (
+        <TableColumnHeaderFilter
+          {...createHeaderProps(
+            "classification",
+            t("cases.columns.classificationErp", "Phân loại ERP"),
+            "center",
+            false,
+            (val: string) => {
+              if (val === "__BLANK__")
+                return t(
+                  "cases.classification.unclassified",
+                  "(Chưa phân loại)",
+                );
+              const meta = GARAGE_CASE_CLASSIFICATIONS[val];
+              return meta ? meta.label : val;
+            },
+            true,
+          )}
+          {...commonOptionProps}
+        />
+      ),
+      sortable: false,
+      size: 180,
+      enableResizing: true,
+      className: "text-center",
+      cell: (item: any) => (
+        <div className="w-full flex items-center justify-center py-0.5">
+          <GarageCaseClassificationDropdown
+            caseItem={item}
+            canUpdate={canUpdateGarage}
+            onOpenDrawer={() => {
+              setDrawerEditMode(true);
+              setSelectedCaseId(item.soChungTu || item.id);
+            }}
+          />
+        </div>
+      ),
     },
     // 12.1 Quy tắc loại trừ (Loại trừ Báo cáo / Không theo dõi công nợ)
     {
@@ -1388,14 +1344,18 @@ export function GarageCases({
         />
       ),
       sortable: false,
-      size: 130,
+      size: 180,
       enableResizing: true,
       className: "text-center",
       cell: (item: any) => (
         <div className="w-full flex items-center justify-center py-0.5">
-          <GarageCaseExclusionBadges
-            excludeFromReports={item.excludeFromReports}
-            excludeFromDebt={item.excludeFromDebt}
+          <GarageCaseExclusionDropdown
+            caseItem={item}
+            canUpdate={canUpdateGarage}
+            onOpenDrawer={() => {
+              setDrawerEditMode(true);
+              setSelectedCaseId(item.soChungTu || item.id);
+            }}
           />
         </div>
       ),
@@ -1963,7 +1923,7 @@ export function GarageCases({
       currentColumnVisibility?.ngayHoanThanhCongViec !== false;
     const totalLabelCol = isNgayHoanThanhVisible
       ? "ngayHoanThanhCongViec"
-      : "customerName";
+      : "customer";
 
     const totalPages = Math.ceil(totalCases / pageSize) || 1;
     const totals = casesData?.totals;
