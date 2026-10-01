@@ -17,23 +17,30 @@ import {
 } from "../hooks/useGarageCustomersList";
 import { useGarageBranches } from "../hooks/useGarage";
 import { GarageCustomerDetailDrawer } from "../components/GarageCustomerDetailDrawer";
+import { GarageDebtsDashboardTab } from "../components/GarageDebtsDashboardTab";
+import { GarageDebtsExportDrawer } from "../components/organisms/garage-debts-export-drawer";
 import { garageApi } from "../api/garageApi";
 import { money } from "@/shared/utils/format";
 import { cn } from "@/shared/utils";
-import { Users, Eye, FileText, Download } from "lucide-react";
+import { Users, Eye, FileText, Download, FileSpreadsheet } from "lucide-react";
 import toast from "react-hot-toast";
 import type { TabItem } from "@/shared/components/PageLayout";
 import type { ActionDropdownItem } from "@/shared/components/ActionDropdown";
 
 export function GarageDebts() {
-  const { t } = useTranslation(["garage", "common"]);
+  const { t } = useTranslation(["garage", "debts", "common"]);
   const { selectedBranchId } = useGarageStore();
   const { data: branches } = useGarageBranches();
 
-  const [activeTab, setActiveTab] = useState<string>("customers");
+  const [activeTab, setActiveTab] = useState<string>("overview");
+  const [exportDrawerOpen, setExportDrawerOpen] = useState(false);
 
   const pageTabs: TabItem[] = useMemo(
     () => [
+      {
+        value: "overview",
+        label: t("debts:tabs.overview", "Tổng quan"),
+      },
       {
         value: "customers",
         label: t("partners.tabCustomers", "Khách hàng"),
@@ -152,6 +159,11 @@ export function GarageDebts() {
             ),
             icon: <Download className="w-4 h-4 text-primary" />,
             onClick: handleQuickExport,
+          },
+          {
+            label: t("debts:exportDetailed", "Xuất báo cáo chi tiết..."),
+            icon: <FileSpreadsheet className="w-4 h-4 text-emerald-600" />,
+            onClick: () => setExportDrawerOpen(true),
           },
         ],
       },
@@ -1253,55 +1265,70 @@ export function GarageDebts() {
 
   return (
     <>
-      <SpreadsheetPageTemplate<CustomerDebtItem>
-        title={t("partners.title", "Công nợ garage")}
-        desc={t(
-          "partners.desc",
-          "Theo dõi, đối soát và phân tích tổng hợp công nợ phải thu, tuổi nợ và danh sách phiếu dịch vụ theo từng khách hàng Garage (Dữ liệu công nợ ghi nhận từ tháng 07/2026)",
-        )}
-        icon={<Users className="w-5 h-5 text-primary" />}
-        tabs={pageTabs}
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-        tableId="garage-debts-table"
-        createActions={createActions}
-        items={listHook.data}
-        columns={columns}
-        getRowKey={(row) =>
-          `${row.customerCode}_${row.branchExternalId || "all"}`
-        }
-        loading={listHook.isLoading}
-        emptyLabel={t("customers.empty", "Không có dữ liệu khách hàng")}
-        page={listHook.page}
-        pageSize={listHook.pageSize}
-        total={listHook.total}
-        totalPages={listHook.totalPages}
-        onPage={(p) => listHook.setPage(p)}
-        onPageSize={(s) => {
-          listHook.setPageSize(s);
-          listHook.setPage(1);
-        }}
-        onRefresh={() => listHook.refetch()}
-        activeFilterCount={listHook.activeFilterCount}
-        onClearAllFilters={listHook.clearAllFilters}
-        rowActions={(row: CustomerDebtItem) => [
-          {
-            groupLabel: "TRA CỨU",
-            items: [
-              {
-                label: t("customers.viewDetail", "Xem chi tiết công nợ"),
-                icon: <Eye className="w-4 h-4" />,
-                onClick: () =>
-                  setSelectedCustomer({
-                    code: row.customerCode,
-                    name: row.customerName,
-                  }),
-              },
-            ],
-          },
-        ]}
-        summaryRow={summaryRow}
-      />
+      {activeTab === "overview" ? (
+        <GarageDebtsDashboardTab
+          tabs={pageTabs}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          onExportClick={() => setExportDrawerOpen(true)}
+          onOpenCustomerDetail={(code, name) =>
+            setSelectedCustomer({
+              code,
+              name: name || "",
+            })
+          }
+        />
+      ) : (
+        <SpreadsheetPageTemplate<CustomerDebtItem>
+          title={t("partners.title", "Công nợ garage")}
+          desc={t(
+            "partners.desc",
+            "Theo dõi, đối soát và phân tích tổng hợp công nợ phải thu, tuổi nợ và danh sách phiếu dịch vụ theo từng khách hàng Garage (Dữ liệu công nợ ghi nhận từ tháng 07/2026)",
+          )}
+          icon={<Users className="w-5 h-5 text-primary" />}
+          tabs={pageTabs}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          tableId="garage-debts-table"
+          createActions={createActions}
+          items={listHook.data}
+          columns={columns}
+          getRowKey={(row) =>
+            `${row.customerCode}_${row.branchExternalId || "all"}`
+          }
+          loading={listHook.isLoading}
+          emptyLabel={t("customers.empty", "Không có dữ liệu khách hàng")}
+          page={listHook.page}
+          pageSize={listHook.pageSize}
+          total={listHook.total}
+          totalPages={listHook.totalPages}
+          onPage={(p) => listHook.setPage(p)}
+          onPageSize={(s) => {
+            listHook.setPageSize(s);
+            listHook.setPage(1);
+          }}
+          onRefresh={() => listHook.refetch()}
+          activeFilterCount={listHook.activeFilterCount}
+          onClearAllFilters={listHook.clearAllFilters}
+          rowActions={(row: CustomerDebtItem) => [
+            {
+              groupLabel: "TRA CỨU",
+              items: [
+                {
+                  label: t("customers.viewDetail", "Xem chi tiết công nợ"),
+                  icon: <Eye className="w-4 h-4" />,
+                  onClick: () =>
+                    setSelectedCustomer({
+                      code: row.customerCode,
+                      name: row.customerName,
+                    }),
+                },
+              ],
+            },
+          ]}
+          summaryRow={summaryRow}
+        />
+      )}
 
       {/* Customer Detail Drawer */}
       <GarageCustomerDetailDrawer
@@ -1309,6 +1336,13 @@ export function GarageDebts() {
         onClose={() => setSelectedCustomer(null)}
         customerCode={selectedCustomer?.code || null}
         customerName={selectedCustomer?.name}
+        branchId={selectedBranchId || undefined}
+      />
+
+      {/* Export Drawer */}
+      <GarageDebtsExportDrawer
+        open={exportDrawerOpen}
+        onClose={() => setExportDrawerOpen(false)}
         branchId={selectedBranchId || undefined}
       />
     </>
