@@ -118,7 +118,7 @@ describe("ErpInvoiceInternalMain", () => {
   };
 
   it("should render invoicePreview by default when previewMode is template", () => {
-    render(<ErpInvoiceInternalMain {...defaultProps} />);
+    renderWithQuery(<ErpInvoiceInternalMain {...defaultProps} />);
     expect(screen.getByTestId("fallback-preview")).toBeInTheDocument();
     expect(screen.queryByTitle("PDF Preview")).not.toBeInTheDocument();
   });
@@ -133,7 +133,7 @@ describe("ErpInvoiceInternalMain", () => {
       },
     };
 
-    render(<ErpInvoiceInternalMain {...propsWithPdf} />);
+    renderWithQuery(<ErpInvoiceInternalMain {...propsWithPdf} />);
 
     await waitFor(() => {
       expect(screen.getByTitle("PDF Preview")).toBeInTheDocument();
@@ -143,7 +143,9 @@ describe("ErpInvoiceInternalMain", () => {
   });
 
   it("should render empty state when previewMode is pdf but no pdfKey exists", () => {
-    render(<ErpInvoiceInternalMain {...defaultProps} previewMode="pdf" />);
+    renderWithQuery(
+      <ErpInvoiceInternalMain {...defaultProps} previewMode="pdf" />,
+    );
     expect(screen.getByText("Chưa có tệp PDF đính kèm")).toBeInTheDocument();
     expect(screen.queryByTitle("PDF Preview")).not.toBeInTheDocument();
   });

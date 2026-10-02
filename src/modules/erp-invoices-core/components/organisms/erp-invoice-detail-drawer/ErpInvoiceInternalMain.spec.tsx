@@ -31,20 +31,30 @@ vi.mock("@/modules/system/api/attachmentsApi", () => ({
   getFileViewUrl: vi.fn((id: string) => `http://mock-view-url/${id}`),
 }));
 
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
 function renderWithContext(
   ui: React.ReactElement,
   previewMode: InvoiceDetailViewMode = "template",
 ) {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: { retry: false },
+    },
+  });
+
   return render(
-    <InvoicePreviewModeContext.Provider
-      value={{
-        previewMode,
-        setPreviewMode: vi.fn(),
-        hasPdf: previewMode === "pdf",
-      }}
-    >
-      {ui}
-    </InvoicePreviewModeContext.Provider>,
+    <QueryClientProvider client={queryClient}>
+      <InvoicePreviewModeContext.Provider
+        value={{
+          previewMode,
+          setPreviewMode: vi.fn(),
+          hasPdf: previewMode === "pdf",
+        }}
+      >
+        {ui}
+      </InvoicePreviewModeContext.Provider>
+    </QueryClientProvider>,
   );
 }
 
@@ -170,5 +180,23 @@ describe("ErpInvoiceInternalMain", () => {
       "invoices/2026/09/inv-legacy.pdf",
       true,
     );
+  });
+
+  it("renders ErpInvoiceAdjustmentSection for adjustment invoices", async () => {
+    const mockAdjustingInvoice: any = {
+      id: "inv-adj-1",
+      invoiceNo: "146",
+      relatedInvoiceNo: "142",
+      taxInvoiceStatus: 3,
+      items: [],
+    };
+
+    renderWithContext(
+      <ErpInvoiceInternalMain detailInvoice={mockAdjustingInvoice} />,
+    );
+
+    expect(
+      screen.getByText("Hóa đơn gốc bị điều chỉnh & Đối soát"),
+    ).toBeInTheDocument();
   });
 });

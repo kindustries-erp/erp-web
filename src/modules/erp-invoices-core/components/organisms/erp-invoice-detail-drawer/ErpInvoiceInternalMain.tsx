@@ -12,6 +12,7 @@ import type {
 } from "@/modules/erp-invoices-core/api/erpInvoicesCoreApi";
 import { ErpInvoiceDetailLinesTable } from "../erp-invoice-detail-lines-table";
 import { ErpInvoicePdfPreview } from "../../molecules/erp-invoice-pdf-preview";
+import { ErpInvoiceAdjustmentSection } from "../erp-invoice-adjustment-section";
 
 export interface ErpInvoiceInternalMainProps {
   form?: CreateErpInvoicePayload;
@@ -32,6 +33,7 @@ export interface ErpInvoiceInternalMainProps {
 
 export function ErpInvoiceInternalMain({
   detailInvoice,
+  direction = "IN",
   invoicePreview,
   previewMode: explicitPreviewMode,
   form,
@@ -49,7 +51,13 @@ export function ErpInvoiceInternalMain({
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Invoice lines / PDF preview — ALWAYS rendered in both view and edit mode */}
+      {/* 1. HÓA ĐƠN GỐC & ĐỐI SOÁT ĐIỀU CHỈNH (Chỉ hiển thị khi có liên kết) */}
+      <ErpInvoiceAdjustmentSection
+        invoice={detailInvoice}
+        direction={direction}
+      />
+
+      {/* 2. Danh sách hàng hóa / PDF preview */}
       <DrawerSection
         title={
           <span className="flex items-center gap-1.5 text-xs font-bold text-foreground uppercase tracking-wide">

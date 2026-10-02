@@ -17,6 +17,8 @@ export function useGarageCases(
   from?: string,
   to?: string,
   filtersStr?: string,
+  includeDeleted?: string,
+  sorts?: string | string[],
 ) {
   return useQuery({
     queryKey: [
@@ -29,10 +31,21 @@ export function useGarageCases(
       from,
       to,
       filtersStr,
+      includeDeleted,
+      sorts,
     ],
     queryFn: () =>
-      garageApi.getCases(branchId!, page, pageSize, q, from, to, filtersStr),
-    enabled: !!branchId,
+      garageApi.getCases(
+        branchId || "",
+        page,
+        pageSize,
+        q,
+        from,
+        to,
+        filtersStr,
+        includeDeleted,
+        sorts,
+      ),
     staleTime: 1000 * 60,
   });
 }
@@ -100,8 +113,7 @@ export function useGarageGrossProfit(
 ) {
   return useQuery({
     queryKey: ["garage", "grossProfitReport", branchId, from, to],
-    queryFn: () => garageApi.getGrossProfitReport(branchId!, from, to),
-    enabled: !!branchId,
+    queryFn: () => garageApi.getGrossProfitReport(branchId || "", from, to),
   });
 }
 

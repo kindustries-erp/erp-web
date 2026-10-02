@@ -56,9 +56,10 @@ src/modules/erp-invoices-core/
 │   │   ├── adjustment-type-badge/             # Badge phân loại hóa đơn điều chỉnh (Tiền, Thông tin, Số lượng, Thay thế)
 │   │   └── invoice-status-badge/              # Badge trạng thái xử lý thuế, hạch toán, hóa đơn gốc
 │   ├── molecules/                             # CÁC PHÂN TỬ GIAO DIỆN TÁI SỬ DỤNG (Tầng 2)
+│   │   ├── adjustment-original-invoice-card/  # Thẻ hiển thị HĐ gốc (#1474 C26TGA, ngày, tiền, link mở chi tiết)
 │   │   ├── adjustment-financial-summary/      # Card tóm tắt tài chính so sánh Trước -> Điều chỉnh -> Hiệu lực
 │   │   ├── adjustment-info-diff-card/         # Card hiển thị khác biệt thông tin (Biển số xe, Lệnh sửa chữa)
-│   │   ├── adjustment-items-table/            # Bảng so sánh chi tiết từng dòng hàng hóa điều chỉnh
+│   │   ├── adjustment-items-table/            # Bảng so sánh chi tiết từng dòng hàng hóa điều chỉnh (StandardTable Spreadsheet)
 │   │   ├── coming-soon-tab-content/           # Placeholder tab đang hoàn thiện
 │   │   ├── erp-invoice-attachments-sub-tab/   # Sub-tab quản lý danh sách file đính kèm
 │   │   ├── erp-invoice-pdf-preview/           # Khung xem trước file PDF inline
@@ -81,7 +82,8 @@ src/modules/erp-invoices-core/
 │   │   ├── xml-upload-dropzone/               # Vùng kéo thả upload tệp XML/ZIP
 │   │   └── xml-upload-file-list/              # Danh sách tệp XML chờ phân tích
 │   └── organisms/                             # CÁC KHỐI CHỨC NĂNG & MÀN HÌNH HOÀN CHỈNH (Tầng 3)
-│       ├── related-invoice-sidebar-section/   # Section hiển thị hóa đơn gốc / điều chỉnh liên quan trong Sidebar Drawer
+│       ├── erp-invoice-adjustment-section/    # DrawerSection chuyên dụng đối soát HĐ gốc/điều chỉnh ở Cột Trái (Main)
+│       ├── related-invoice-sidebar-section/   # (Legacy) Section hiển thị HĐ liên quan trong Sidebar Drawer
 │       ├── erp-invoices-tab/                  # Container Header Table (/erp-invoices?tab=in / out)
 │       │   ├── ErpInvoicesTab.tsx             # Main component tích hợp SpreadsheetPageTemplate
 │       │   ├── ErpInvoicesTab.hook.tsx        # Custom hook điều khiển lifecycle & dữ liệu tab
@@ -98,11 +100,11 @@ src/modules/erp-invoices-core/
 │       │   ├── ErpInvoiceItemsSection.columns.tsx # Cột hiển thị chi tiết dòng mặt hàng
 │       │   └── hooks/                         # Hooks hỗ trợ query dòng hàng
 │       ├── erp-invoice-detail-drawer/         # Drawer Chi Tiết Hóa Đơn Chuẩn Hóa
-│       │   ├── ErpInvoiceDetailDrawer.tsx     # Form drawer chính kế thừa StandardFormDrawer
+│       │   ├── ErpInvoiceDetailDrawer.tsx     # Form drawer chính kế thừa StandardFormDrawer (2-columns, xl)
 │       │   ├── ErpInvoiceDetailDrawer.hook.tsx# Hook quản lý form state, mode xem/sửa, auto-calculate
 │       │   ├── ErpInvoiceDetailDrawer.state.ts# Initial state & validation schema
-│       │   ├── ErpInvoiceInternalMain.tsx     # Phân khu nội dung chính (Thông tin chung, Bảng hàng, Tài chính)
-│       │   └── ErpInvoiceInternalSidebar.tsx  # Cột bên phải: Tệp đính kèm, Ghi chú, Liên kết chứng từ
+│       │   ├── ErpInvoiceInternalMain.tsx     # Cột Trái: ErpInvoiceAdjustmentSection (trên đầu), Bảng hàng, PDF
+│       │   └── ErpInvoiceInternalSidebar.tsx  # Cột Phải: Thông tin chung, Thuộc tính mặc định, Thuộc tính tùy chỉnh
 │       ├── erp-invoice-settlement-tab/        # Tab Tài chính & Đối soát hợp nhất trong Drawer
 │       │   ├── ErpInvoiceSettlementTab.tsx    # Giao diện đối soát: Sub-tabs Sao kê & Sổ quỹ
 │       │   ├── ErpInvoiceSettlementTab.hook.ts# Hook tính toán dư nợ, auto-match, net-off actions
