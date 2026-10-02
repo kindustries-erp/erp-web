@@ -459,6 +459,24 @@ export const erpInvoicesCoreApi = {
     };
   },
 
+  getColumnOptions: async (
+    column: string,
+    search: string,
+    page: number = 1,
+    pageSize: number = 20,
+    filtersStr?: string,
+    direction?: "IN" | "OUT",
+  ) => {
+    return erpInvoicesCoreApi.getInvoiceColumnOptions(
+      column,
+      search,
+      page,
+      pageSize,
+      filtersStr,
+      direction,
+    );
+  },
+
   getItemColumnOptions: async (
     column: string,
     search: string,
