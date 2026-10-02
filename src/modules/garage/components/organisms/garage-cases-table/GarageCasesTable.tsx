@@ -77,6 +77,22 @@ export function GarageCasesTable(props: GarageCasesTableProps) {
     ],
   );
 
+  const totalLabelCol = useMemo(() => {
+    const isHidden = props.columnViewPresetsHook?.isColumnHidden;
+    const colVis = props.columnViewPresetsHook?.activePreset?.columnVisibility;
+    const isCustVisible =
+      typeof isHidden === "function"
+        ? !isHidden("customer")
+        : colVis?.customer !== false;
+    if (isCustVisible) return "customer";
+    const isCodeVisible =
+      typeof isHidden === "function"
+        ? !isHidden("caseCode")
+        : colVis?.caseCode !== false;
+    if (isCodeVisible) return "caseCode";
+    return "customer";
+  }, [props.columnViewPresetsHook]);
+
   const summaryRow = useMemo(
     () =>
       buildCasesSummaryRow({
@@ -86,9 +102,19 @@ export function GarageCasesTable(props: GarageCasesTableProps) {
         page,
         pageSize,
         totalCases: total,
+        totalLabelCol,
         t: translate,
       }),
-    [visibleCases, profitCases, totals, page, pageSize, total, translate],
+    [
+      visibleCases,
+      profitCases,
+      totals,
+      page,
+      pageSize,
+      total,
+      totalLabelCol,
+      translate,
+    ],
   );
 
   const createActions = useMemo(

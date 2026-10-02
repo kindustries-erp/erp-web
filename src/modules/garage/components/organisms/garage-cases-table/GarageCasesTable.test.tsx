@@ -30,9 +30,12 @@ vi.mock("../../../hooks/useGarage", () => ({
           soChungTu: "GR-PDV-2026-001",
           ngayTiepNhan: "2026-03-01",
           tenKhachHang: "Nguyen Van A",
-          tongTienThanhToan: 1000000,
-          tongChiPhi: 600000,
-          tienKhachDaTra: 1000000,
+          doanhThu: 1000000,
+          chiPhi: 600000,
+          loiNhuan: 400000,
+          tienCoThue: 1000000,
+          tienDaThanhToan: 1000000,
+          tienConPhaiThanhToan: 0,
           tienDaChi: 600000,
         },
       ],
@@ -44,7 +47,7 @@ vi.mock("../../../hooks/useGarage", () => ({
     refetch: vi.fn(),
   }),
   useGarageGrossProfit: vi.fn().mockReturnValue({
-    data: { Groups: [] },
+    data: { results: [] },
   }),
 }));
 
@@ -131,15 +134,18 @@ describe("GarageCasesTable Organism", () => {
     expect(screen.getByText("0")).toBeDefined();
   });
 
-  it("buildCasesSummaryRow aggregates totals correctly", () => {
+  it("buildCasesSummaryRow aggregates totals correctly with backend fields and customer label", () => {
     const summary = buildCasesSummaryRow({
       visibleCases: [
         {
           id: "1",
           soChungTu: "C1",
-          tongTienThanhToan: 2000,
-          tongChiPhi: 1200,
-          tienKhachDaTra: 1500,
+          doanhThu: 2000,
+          chiPhi: 1200,
+          loiNhuan: 800,
+          tienCoThue: 2200,
+          tienDaThanhToan: 1500,
+          tienConPhaiThanhToan: 700,
           tienDaChi: 1000,
         },
       ],
@@ -147,11 +153,16 @@ describe("GarageCasesTable Organism", () => {
       page: 1,
       pageSize: 20,
       totalCases: 1,
+      totalLabelCol: "customer",
       t: (_k, d) => d || _k,
     });
+    expect(summary.customer).toBeDefined();
     expect(summary.doanhThu).toBeDefined();
     expect(summary.chiPhi).toBeDefined();
     expect(summary.loiNhuan).toBeDefined();
+    expect(summary.tienCoThue).toBeDefined();
+    expect(summary.tienDaThanhToan).toBeDefined();
+    expect(summary.tienConPhaiThanhToan).toBeDefined();
   });
 
   it("getGarageCaseRowClassName flags cancelled cases", () => {

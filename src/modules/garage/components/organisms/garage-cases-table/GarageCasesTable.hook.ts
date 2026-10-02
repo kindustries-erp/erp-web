@@ -10,7 +10,6 @@ export function useGarageCasesTable(props: GarageCasesTableProps) {
 
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
-
   const tableState = useTableColumnState("garage-cases-table");
 
   const handleSortChange = useCallback(
@@ -53,10 +52,12 @@ export function useGarageCasesTable(props: GarageCasesTableProps) {
       }
     });
 
-    if (activeStatusTab && activeStatusTab !== "all") {
-      if (!combined["statusName"] || combined["statusName"].length === 0) {
-        combined["statusTab"] = [activeStatusTab];
-      }
+    if (
+      activeStatusTab &&
+      activeStatusTab !== "all" &&
+      (!combined["statusName"] || combined["statusName"].length === 0)
+    ) {
+      combined["statusTab"] = [activeStatusTab];
     }
 
     return Object.keys(combined).length > 0
@@ -104,6 +105,8 @@ export function useGarageCasesTable(props: GarageCasesTableProps) {
 
   const { data: profitData } = useGarageGrossProfit(branchId);
   const profitCases = useMemo(() => {
+    if (Array.isArray(profitData?.results)) return profitData.results;
+    if (Array.isArray(profitData?.items)) return profitData.items;
     const groups = profitData?.results?.Groups || profitData?.Groups || [];
     return groups.flatMap((g: any) => g.Items || []);
   }, [profitData]);
