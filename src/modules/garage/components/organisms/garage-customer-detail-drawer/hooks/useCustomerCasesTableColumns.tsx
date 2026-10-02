@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import type { DataTableColumn } from "@/shared/components/DataTable";
 import { TableDateCell } from "@/shared/components/DataTable/TableDateCell";
 import { TableText } from "@/shared/components/DataTable/TableText";
-import { KgaraCaseStatusBadge } from "../../KgaraCaseStatusBadge";
+import { KgaraCaseStatusBadge } from "@/modules/garage/components/KgaraCaseStatusBadge";
 import { CustomerCaseActionsCell } from "../components/CustomerCaseActionsCell";
 import { CustomerCaseAgingBadgeCell } from "../components/CustomerCaseAgingBadgeCell";
 import { money } from "@/shared/utils/format";

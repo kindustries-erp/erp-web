@@ -1,8 +1,8 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { garageApi } from "../../../api/garageApi";
-import { useSyncGarageCaseDetail } from "../../../hooks/useGarage";
+import { garageApi } from "@/modules/garage/api/garageApi";
+import { useSyncGarageCaseDetail } from "@/modules/garage/hooks/useGarage";
 import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
 import { filterClientItems } from "@/shared/components/DataTable";
 import { toast } from "react-hot-toast";

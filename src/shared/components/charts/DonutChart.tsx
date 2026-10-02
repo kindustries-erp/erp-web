@@ -3,7 +3,7 @@ import "@/shared/utils/chartSetup";
 import { useChartTheme } from "@/shared/utils/chartTheme";
 import { cn } from "@/shared/utils";
 
-interface DonutItem {
+export interface DonutItem {
   id?: string;
   label: string;
   value: number;

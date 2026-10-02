@@ -5,7 +5,7 @@ import { TableDateCell } from "@/shared/components/DataTable/TableDateCell";
 import { TableText } from "@/shared/components/DataTable/TableText";
 import { Button } from "@/shared/components/ui/Button";
 import { Badge } from "@/shared/components/ui/badge";
-import { KgaraCaseStatusBadge } from "../../KgaraCaseStatusBadge";
+import { KgaraCaseStatusBadge } from "@/modules/garage/components/KgaraCaseStatusBadge";
 import { money } from "@/shared/utils/format";
 import { Car, Eye, Info } from "lucide-react";
 

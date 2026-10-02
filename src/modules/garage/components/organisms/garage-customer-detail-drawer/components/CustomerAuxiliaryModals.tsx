@@ -1,9 +1,9 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { GarageCaseStandaloneDrawer } from "../../GarageCaseStandaloneDrawer";
-import { GarageCaseSettlementDrawerModal } from "../../GarageCaseSettlementDrawerModal";
-import { InvoiceSelectionDrawer } from "../../InvoiceSelectionDrawer";
-import { garageApi } from "../../../api/garageApi";
+import { GarageCaseStandaloneDrawer } from "@/modules/garage/components/GarageCaseStandaloneDrawer";
+import { GarageCaseSettlementDrawerModal } from "@/modules/garage/components/GarageCaseSettlementDrawerModal";
+import { InvoiceSelectionDrawer } from "@/modules/garage/components/InvoiceSelectionDrawer";
+import { garageApi } from "@/modules/garage/api/garageApi";
 import { toast } from "react-hot-toast";
 
 interface CustomerAuxiliaryModalsProps {
