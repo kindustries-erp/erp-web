@@ -34,7 +34,7 @@ export const ErpInvoiceGeneralInfoEdit = React.memo(
     onPendingTagsChange,
     defaultCollapsed = false,
     showTags = true,
-    showRelatedInvoices = true,
+    showRelatedInvoices = false,
   }: ErpInvoiceGeneralInfoEditProps) {
     const { t } = useTranslation("erpInvoices");
     const isInvoiceIn = effectiveDirection === "IN";

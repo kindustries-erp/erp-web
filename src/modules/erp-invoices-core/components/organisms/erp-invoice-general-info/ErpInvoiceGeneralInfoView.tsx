@@ -38,7 +38,7 @@ export const ErpInvoiceGeneralInfoView = React.memo(
     effectiveDirection,
     defaultCollapsed = false,
     showTags = true,
-    showRelatedInvoices = true,
+    showRelatedInvoices = false,
   }: ErpInvoiceGeneralInfoViewProps) {
     const { t } = useTranslation("erpInvoices");
     const isInvoiceIn = effectiveDirection === "IN";

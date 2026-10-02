@@ -11,6 +11,7 @@ export * from "./erp-invoice-default-attributes-section";
 export * from "./erp-invoice-linked-documents";
 export * from "./erp-invoice-pdf-upload";
 export * from "./related-invoice-sidebar-section";
+export * from "./erp-invoice-adjustment-section";
 export * from "./erp-invoice-netoff-section";
 export * from "./bulk-edit-drawer";
 export * from "./erp-attachment-select-drawer";
