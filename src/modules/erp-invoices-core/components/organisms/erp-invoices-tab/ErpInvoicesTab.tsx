@@ -79,7 +79,7 @@ export function ErpInvoicesTab(props: ErpInvoicesTabProps) {
 
   // 6-View Lazy Mounted Keep-Alive State (Synchronous render-time marking to prevent blank-frame flicker)
   const mountedViewsRef = React.useRef<Record<string, boolean>>({
-    dashboard: logic.currentTabKey === "dashboard",
+    overview: logic.currentTabKey === "overview",
     in: logic.currentTabKey === "in",
     "in-lines": logic.currentTabKey === "in-lines",
     out: logic.currentTabKey === "out",
@@ -105,11 +105,11 @@ export function ErpInvoicesTab(props: ErpInvoicesTabProps) {
 
   return (
     <div className="flex flex-col h-full flex-1 min-h-0 w-full overflow-hidden">
-      {/* ── View 0: Dashboard (Tổng quan hóa đơn) ────────────────────── */}
-      {mountedViewsRef.current["dashboard"] && (
+      {/* ── View 0: Overview (Tổng quan hóa đơn) ────────────────────── */}
+      {mountedViewsRef.current["overview"] && (
         <div
           className={
-            logic.currentTabKey === "dashboard"
+            logic.currentTabKey === "overview"
               ? "flex flex-col h-full flex-1 min-h-0 overflow-hidden"
               : "hidden"
           }

@@ -14,16 +14,17 @@ description: Module tri thức Quản lý Hóa đơn Điện tử & Dashboard H�
 Module Hóa đơn Điện tử quản lý tập trung toàn bộ hóa đơn đầu vào (`IN`), hóa đơn đầu ra (`OUT`), hóa đơn nháp (`DRAFT`), và Dashboard phân tích dòng tiền/thuế hóa đơn. Giao diện được cấu trúc theo chuẩn **Atomic Design (Atoms -> Molecules -> Organisms)** đáp ứng quy chuẩn No Blue Mandate, Tabular Numbers và Multi-tab Navigation.
 
 - **PageKeys**:
-  - `erp-invoices`: Quản lý tập trung Hóa đơn điện tử với 6 Tabs (`dashboard`, `in`, `in-lines`, `out`, `out-lines`, `draft`).
+  - `erp-invoices`: Quản lý tập trung Hóa đơn điện tử với 6 Tabs (`overview`, `in`, `in-lines`, `out`, `out-lines`, `draft`).
   - `erp-invoices-in`: (Legacy Slug) Tự động redirect sang `erp-invoices?tab=in`.
   - `erp-invoices-out`: (Legacy Slug) Tự động redirect sang `erp-invoices?tab=out`.
   - `erp-invoices-draft`: (Legacy Slug) Tự động redirect sang `erp-invoices?tab=draft`.
-  - `invoice-dashboard`: (Legacy Slug) Tự động redirect sang `erp-invoices?tab=dashboard`.
-  - `e-invoice`: Quản lý phát hành hóa đơn SInvoice Viettel.
-- **Sidebar Group**: `accounting` (Kế toán & Tài chính) > Đơn mục **"Hóa đơn"** (`/erp-invoices`).
+  - `invoice-dashboard`: (Legacy Slug) Tự động redirect sang `erp-invoices?tab=overview`.
+- **Sidebar Group**: `accounting` (Kế toán & Tài chính) > **Menu Nhóm Hóa đơn (`InvoiceNavGroup` - Molecule L2)**:
+  - Sub-menu 1: **"Hóa đơn"** (`/erp-invoices`) - Quản lý 6 tabs Hóa đơn điện tử (Mặc định mở `?tab=overview`).
+  - Sub-menu 2: **"Công nợ theo đối tượng"** (`/invoice-debts`) - Theo dõi, đối soát giao dịch và phân tích tuổi nợ chi tiết theo từng khách hàng, nhà cung cấp (Mặc định mở `?tab=overview`).
 - **Cấu trúc 6 Tabs trên giao diện chính (`/erp-invoices`)**:
-  1. `tab=dashboard`: **Tổng quan** (`InvoiceDashboard` - Báo cáo KPI, xu hướng dòng tiền, VAT, công nợ đối tác).
-  2. `tab=in` (mặc định): **Hóa đơn mua vào** (Header Table, chiều `IN`, PillTab: `tax_tab` `[ Tất cả | Mới | Thay thế | Điều chỉnh ]` + `view_mode` Combobox).
+  1. `tab=overview` (mặc định): **Tổng quan** (`InvoiceDashboard` - Báo cáo KPI, xu hướng dòng tiền, VAT, công nợ đối tác).
+  2. `tab=in`: **Hóa đơn mua vào** (Header Table, chiều `IN`, PillTab: `tax_tab` `[ Tất cả | Mới | Thay thế | Điều chỉnh ]` + `view_mode` Combobox).
   3. `tab=in-lines`: **Chi tiết mua vào** (Lines Table, chiều `IN`, PillTab: `subcat` `[ Tất cả dòng | Hàng hóa | Chiết khấu ]`).
   4. `tab=out`: **Hóa đơn bán ra** (Header Table, chiều `OUT`, PillTab: `tax_tab` + `view_mode` Combobox).
   5. `tab=out-lines`: **Chi tiết bán ra** (Lines Table, chiều `OUT`, PillTab: `subcat`).
@@ -142,6 +143,12 @@ src/modules/erp-invoices-core/
 │       ├── xml-import-result-tables/          # Bảng chi tiết danh sách hóa đơn sau import XML
 │       ├── invoice-document-workspace/        # Workspace xem trước văn bản hóa đơn
 │       └── invoice-detail-wrapper/            # Wrapper bao bọc modal chi tiết hóa đơn
+├── layout-navigation/                         # LIÊN KẾT ĐIỀU HƯỚNG SIDEBAR CHUẨN UI ATOMIC (Tầng 2 - Molecule)
+│   └── invoice-nav-group/                     # Molecule L2: Nhóm menu Hóa đơn & Chi tiết theo đối tượng
+│       ├── InvoiceNavGroup.tsx                # Component TSX render NavGroup + 2 sub-items
+│       ├── InvoiceNavGroup.hook.ts            # Hook quản lý active routes & handlers
+│       ├── InvoiceNavGroup.type.ts            # Props contract
+│       └── InvoiceNavGroup.test.tsx           # Co-located unit test
 ├── context/
 │   └── InvoicePreviewModeContext.tsx          # Context quản lý chế độ xem trước (Preview Mode)
 ├── hooks/

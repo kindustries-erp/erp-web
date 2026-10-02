@@ -268,7 +268,7 @@ const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   "erp-invoices-in": () => <ErpInvoicesPage initialTab="in" />,
   "erp-invoices-out": () => <ErpInvoicesPage initialTab="out" />,
   "erp-invoices-draft": () => <ErpInvoicesPage initialTab="draft" />,
-  "invoice-dashboard": () => <ErpInvoicesPage initialTab="dashboard" />,
+  "invoice-dashboard": () => <ErpInvoicesPage initialTab="overview" />,
   "sys-tags": SysTagsPage,
   attachments: AttachmentsPage,
   "bank-statement": () => <BankStatementPage initialTab="bank" />,

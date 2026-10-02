@@ -39,7 +39,7 @@ import { useErpInvoicesParallelPrefetch } from "@/modules/erp-invoices-core/hook
 
 export interface ErpInvoicesTabProps {
   direction?: "IN" | "OUT";
-  initialTab?: "dashboard" | "in" | "in-lines" | "out" | "out-lines" | "draft";
+  initialTab?: "overview" | "in" | "in-lines" | "out" | "out-lines" | "draft";
   initialDateFrom?: string;
   initialDateTo?: string;
   isDrawer?: boolean;
@@ -74,11 +74,11 @@ export function useErpInvoicesTabLogic({
       const tabParam = params.get("tab") || "";
       const viewParam = params.get("view") || "";
 
-      if (tabParam === "dashboard") {
+      if (tabParam === "overview") {
         return {
           dir: "IN" as const,
           view: "dashboard" as const,
-          tabKey: "dashboard",
+          tabKey: "overview",
         };
       }
       if (tabParam === "draft") {
@@ -125,11 +125,11 @@ export function useErpInvoicesTabLogic({
       }
     }
     if (propInitialTab) {
-      if (propInitialTab === "dashboard") {
+      if (propInitialTab === "overview") {
         return {
           dir: "IN" as const,
           view: "dashboard" as const,
-          tabKey: "dashboard",
+          tabKey: "overview",
         };
       }
       if (propInitialTab === "draft") {
@@ -178,7 +178,7 @@ export function useErpInvoicesTabLogic({
     return {
       dir: "IN" as const,
       view: "dashboard" as const,
-      tabKey: "dashboard",
+      tabKey: "overview",
     };
   };
 
@@ -391,7 +391,7 @@ export function useErpInvoicesTabLogic({
       let nextDir: "IN" | "OUT";
       let nextView: "header" | "lines" | "dashboard" | "draft";
 
-      if (newTab === "dashboard") {
+      if (newTab === "overview") {
         nextDir = "IN";
         nextView = "dashboard";
       } else if (newTab === "draft") {
@@ -928,7 +928,7 @@ export function useErpInvoicesTabLogic({
     () =>
       !isDrawer
         ? [
-            { value: "dashboard", label: t("dashboard", "Tổng quan") },
+            { value: "overview", label: t("overview", "Tổng quan") },
             { value: "in", label: t("inbound", "Hóa đơn mua vào") },
             {
               value: "in-lines",

@@ -5,7 +5,7 @@ export function ErpInvoicesPage({
   initialTab,
 }: {
   instanceIndex?: 1 | 2;
-  initialTab?: "dashboard" | "in" | "in-lines" | "out" | "out-lines" | "draft";
+  initialTab?: "overview" | "in" | "in-lines" | "out" | "out-lines" | "draft";
 }) {
   const initialDirection =
     initialTab === "out" || initialTab === "out-lines" ? "OUT" : undefined;

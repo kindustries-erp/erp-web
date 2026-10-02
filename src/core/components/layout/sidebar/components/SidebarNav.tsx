@@ -8,6 +8,7 @@ import {
   NavGroupItem,
   NavSection,
 } from "./SidebarPrimitives";
+import { InvoiceNavGroup } from "./invoice-nav-group";
 import {
   Boxes,
   Users,
@@ -17,7 +18,6 @@ import {
   Network,
   Factory,
   Shield,
-  Receipt,
   ReceiptText,
   Package,
   LayoutDashboard,
@@ -422,34 +422,13 @@ export function SidebarNav({
               contextPage="cashflow"
             />
           )}
-          {canReadInvoices && (
-            <NavItem
-              collapsed={c}
-              icon={<Receipt className="w-4 h-4 opacity-65 flex-shrink-0" />}
-              label={t("nav.items.erpInvoices")}
-              active={
-                currentPage === "erp-invoices" ||
-                currentPage === "erp-invoices-in" ||
-                currentPage === "erp-invoices-out" ||
-                currentPage === "erp-invoices-draft" ||
-                currentPage === "invoice-dashboard"
-              }
-              onClick={() => navTo("erp-invoices")}
-              contextPage="erp-invoices"
-            />
-          )}
-          {canReadDebts && (
-            <NavItem
-              collapsed={c}
-              icon={
-                <ReceiptText className="w-4 h-4 opacity-65 flex-shrink-0" />
-              }
-              label={t("nav.items.debt", "Công nợ")}
-              active={currentPage === "invoice-debts"}
-              onClick={() => navTo("invoice-debts")}
-              contextPage="invoice-debts"
-            />
-          )}
+          <InvoiceNavGroup
+            collapsed={c}
+            currentPage={currentPage}
+            navTo={navTo}
+            canReadInvoices={canReadInvoices}
+            canReadDebts={canReadDebts}
+          />
           {canReadBankStatements && isAdminEmail && (
             <NavItem
               collapsed={c}

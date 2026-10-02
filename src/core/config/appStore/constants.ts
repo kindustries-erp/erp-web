@@ -142,7 +142,7 @@ export const SECTION_ROOTS: Partial<Record<PageKey, SectionRoot>> = {
     group: "accounting",
   },
   "invoice-debts": {
-    labelKey: "nav.items.debt",
+    labelKey: "nav.items.partnerDebts",
     group: "accounting",
   },
   "vinfast-parts": {
@@ -316,7 +316,7 @@ export const BREADCRUMBS: Partial<Record<PageKey, Array<[string, string?]>>> = {
     ["breadcrumb.accounting"],
     ["nav.items.erpInvoicesDraft"],
   ],
-  "invoice-debts": [["breadcrumb.accounting"], ["nav.items.debt"]],
+  "invoice-debts": [["breadcrumb.accounting"], ["nav.items.partnerDebts"]],
   "vinfast-parts": [["breadcrumb.vinfast"], ["nav.items.vinfastParts"]],
   "vinfast-parts-dashboard": [
     ["breadcrumb.vinfast"],

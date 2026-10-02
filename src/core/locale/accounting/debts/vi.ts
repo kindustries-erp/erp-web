@@ -1,6 +1,6 @@
 export const debtsVi = {
-  title: "Công nợ",
-  desc: "Theo dõi, đối soát và phân tích tổng hợp công nợ phải thu, phải trả và tuổi nợ theo Hóa đơn điện tử",
+  title: "Công nợ theo đối tượng",
+  desc: "Theo dõi, đối soát giao dịch và phân tích tuổi nợ chi tiết theo từng khách hàng, nhà cung cấp gắn với Hóa đơn điện tử",
   partner: "Đối tác",
   unitPartner: "đối tác",
   unitInvoice: "hóa đơn",
@@ -15,8 +15,8 @@ export const debtsVi = {
   },
 
   dashboard: {
-    title: "Tổng quan Công nợ",
-    desc: "Tổng hợp tình hình phải thu, phải trả, dự báo dòng tiền theo mốc thời gian và rủi ro tuổi nợ",
+    title: "Tổng quan Công nợ theo đối tượng",
+    desc: "Báo cáo tổng quan vị thế công nợ, dự báo dòng tiền và ma trận phân bổ tuổi nợ theo đối tác",
     totalReceivable: "Phải thu Khách hàng",
     remainingReceivable: "Còn phải thu",
     totalPayable: "Phải trả Nhà cung cấp",
