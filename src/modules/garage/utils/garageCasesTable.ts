@@ -1,3 +1,9 @@
+import {
+  isQuotationStatus,
+  isInProgressStatus,
+  isCompletedStatus,
+} from "./garageCaseViewPresets";
+
 export interface GarageCasesTableState {
   sorts: string[];
   columnSearch: Record<string, string>;
@@ -130,11 +136,50 @@ function parseDateValue(value: unknown): Date | null {
   return parsed;
 }
 
-import {
-  isQuotationStatus,
-  isInProgressStatus,
-  isCompletedStatus,
-} from "./garageCaseViewPresets";
+function cleanAlphaNum(s: string) {
+  return s.replace(/[^a-z0-9]/gi, "").toLowerCase();
+}
+
+function matchKeyword(val: string, kw: string, extraVal?: string): boolean {
+  let isExact = false;
+  let cleanKw = kw.trim();
+  if (cleanKw.startsWith('"') && cleanKw.endsWith('"') && cleanKw.length >= 2) {
+    isExact = true;
+    cleanKw = cleanKw.slice(1, -1).trim();
+  }
+  const normKw = normalizeString(cleanKw);
+  if (isExact) {
+    if (val === normKw) return true;
+    if (extraVal && extraVal === normKw) return true;
+    const cleanKwAlpha = cleanAlphaNum(cleanKw);
+    if (cleanKwAlpha) {
+      if (cleanAlphaNum(val) === cleanKwAlpha) return true;
+      if (extraVal && cleanAlphaNum(extraVal) === cleanKwAlpha) return true;
+    }
+    return false;
+  }
+  if (val.includes(normKw)) return true;
+  if (extraVal && extraVal.includes(normKw)) return true;
+  const cleanKwAlpha = cleanAlphaNum(cleanKw);
+  if (cleanKwAlpha) {
+    if (cleanAlphaNum(val).includes(cleanKwAlpha)) return true;
+    if (extraVal && cleanAlphaNum(extraVal).includes(cleanKwAlpha)) return true;
+  }
+  return false;
+}
+
+function matchMultiKeyword(
+  val: string,
+  searchStr: string,
+  extraVal?: string,
+): boolean {
+  const parts = searchStr
+    .split(";")
+    .map((k) => k.trim())
+    .filter(Boolean);
+  if (parts.length === 0) return true;
+  return parts.some((p) => matchKeyword(val, p, extraVal));
+}
 
 export function applyGarageCasesTableState(
   items: Record<string, any>[],
@@ -197,8 +242,17 @@ export function applyGarageCasesTableState(
     for (const [columnKey, searchValue] of Object.entries(
       tableState.columnSearch,
     )) {
-      const value = normalizeString(getCellValue(item, columnKey));
-      if (searchValue && !value.includes(normalizeString(searchValue))) {
+      if (!searchValue || !searchValue.trim()) continue;
+      const rawVal = getCellValue(item, columnKey);
+      const val = normalizeString(rawVal);
+      const extraVal =
+        columnKey === "caseCode" || columnKey === "soChungTu"
+          ? normalizeString(item.bienSoXe)
+          : columnKey === "customer"
+            ? normalizeString(item.khachHangCode)
+            : undefined;
+
+      if (!matchMultiKeyword(val, searchValue, extraVal)) {
         return false;
       }
     }
@@ -219,27 +273,14 @@ export function applyGarageCasesTableState(
         const rawSearch = (filters[1] || "").trim();
         if (!rawSearch) continue;
         const val = normalizeString(rawValue);
-        const keywords = rawSearch
-          .split(";")
-          .map((k) => k.trim())
-          .filter(Boolean);
-        if (keywords.length === 0) continue;
+        const extraVal =
+          columnKey === "caseCode" || columnKey === "soChungTu"
+            ? normalizeString(item.bienSoXe)
+            : columnKey === "customer"
+              ? normalizeString(item.khachHangCode)
+              : undefined;
 
-        const matchesAnyKw = keywords.some((kw) => {
-          let isExact = false;
-          let cleanKw = kw;
-          if (kw.startsWith('"') && kw.endsWith('"') && kw.length >= 2) {
-            isExact = true;
-            cleanKw = kw.slice(1, -1);
-          }
-          const normKw = normalizeString(cleanKw);
-          if (isExact) {
-            return val === normKw;
-          }
-          return val.includes(normKw);
-        });
-
-        if (!matchesAnyKw) {
+        if (!matchMultiKeyword(val, rawSearch, extraVal)) {
           return false;
         }
         continue;
@@ -311,13 +352,73 @@ export function applyGarageCasesTableState(
       }
 
       const value = normalizeString(rawValue);
+      const extraVal =
+        columnKey === "caseCode" || columnKey === "soChungTu"
+          ? normalizeString(item.bienSoXe)
+          : undefined;
+
       const matches = filters.some((filter) => {
         if (filter === "__BLANK__") return isBlank;
+        if (
+          filter.includes(";") ||
+          (filter.startsWith('"') && filter.endsWith('"'))
+        ) {
+          return matchMultiKeyword(value, filter, extraVal);
+        }
         const normalizedFilter = normalizeString(filter);
         if (isNumericLike(value) && isNumericLike(normalizedFilter)) {
           return Number(value) === Number(normalizedFilter);
         }
-        return value === normalizedFilter;
+
+        if (columnKey === "caseCode" || columnKey === "soChungTu") {
+          if (normalizedFilter.includes(":::")) {
+            const [fCode, fPlate] = normalizedFilter
+              .split(":::")
+              .map((s) => s.trim());
+            if (
+              fCode &&
+              (value === fCode || cleanAlphaNum(value) === cleanAlphaNum(fCode))
+            )
+              return true;
+            if (
+              fPlate &&
+              extraVal &&
+              (extraVal === fPlate ||
+                cleanAlphaNum(extraVal) === cleanAlphaNum(fPlate))
+            )
+              return true;
+          }
+          if (
+            normalizedFilter.includes("(") &&
+            normalizedFilter.includes(")")
+          ) {
+            const beforeParen = normalizedFilter.split("(")[0].trim();
+            const insideParen = normalizedFilter
+              .split("(")[1]
+              .replace(")", "")
+              .trim();
+            if (beforeParen && value === beforeParen) return true;
+            if (
+              insideParen &&
+              extraVal &&
+              (extraVal === insideParen ||
+                cleanAlphaNum(extraVal) === cleanAlphaNum(insideParen))
+            )
+              return true;
+          }
+          if (value === normalizedFilter) return true;
+          if (extraVal && extraVal === normalizedFilter) return true;
+          const cleanF = cleanAlphaNum(filter);
+          if (cleanF) {
+            if (cleanAlphaNum(value) === cleanF) return true;
+            if (extraVal && cleanAlphaNum(extraVal) === cleanF) return true;
+          }
+          return false;
+        }
+
+        if (value === normalizedFilter) return true;
+        if (extraVal && extraVal === normalizedFilter) return true;
+        return false;
       });
       if (!matches) return false;
     }

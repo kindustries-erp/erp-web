@@ -255,7 +255,10 @@ export function GarageMonthClassificationCasesDrawer({
         filtersStr,
       );
       return {
-        items: res.items.map((item: string) => {
+        items: res.items.map((item: any) => {
+          if (typeof item === "object" && item !== null) {
+            return item;
+          }
           if (columnKey === "classification") {
             return {
               label:
