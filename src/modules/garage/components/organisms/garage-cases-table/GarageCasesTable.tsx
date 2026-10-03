@@ -62,6 +62,9 @@ export function GarageCasesTable(props: GarageCasesTableProps) {
         fetchCaseColumnOptions,
         onOpenDetail: props.onOpenDetail,
         onOpenFinancials: props.onOpenFinancials,
+        onOpenConfig: props.onOpenConfig,
+        canUpdateGarage: props.canUpdateGarage,
+        branches: props.branches,
       }),
     [
       translate,
@@ -74,6 +77,9 @@ export function GarageCasesTable(props: GarageCasesTableProps) {
       fetchCaseColumnOptions,
       props.onOpenDetail,
       props.onOpenFinancials,
+      props.onOpenConfig,
+      props.canUpdateGarage,
+      props.branches,
     ],
   );
 

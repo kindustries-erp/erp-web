@@ -12,6 +12,8 @@ export interface GarageCasesTableProps {
   onOpenEditNotes?: (item: any) => void;
   onOpenConfig?: (item: any) => void;
   canSyncGarage?: boolean;
+  canUpdateGarage?: boolean;
+  branches?: any[];
   onSyncCases?: () => void;
   onExportExcel?: () => void;
   onSyncGrossProfit?: () => void;
@@ -42,4 +44,7 @@ export interface ColumnContext {
   fetchCaseColumnOptions: any;
   onOpenDetail: (code: string) => void;
   onOpenFinancials: (code: string) => void;
+  onOpenConfig?: (item: any) => void;
+  canUpdateGarage?: boolean;
+  branches?: any[];
 }

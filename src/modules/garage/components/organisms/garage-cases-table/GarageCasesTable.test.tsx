@@ -49,6 +49,10 @@ vi.mock("../../../hooks/useGarage", () => ({
   useGarageGrossProfit: vi.fn().mockReturnValue({
     data: { results: [] },
   }),
+  useUpdateGarageCaseConfig: vi.fn().mockReturnValue({
+    mutate: vi.fn(),
+    isPending: false,
+  }),
 }));
 
 vi.mock("../../../api/garageApi", () => ({
@@ -134,6 +138,55 @@ describe("GarageCasesTable Organism", () => {
     expect(screen.getByText("0")).toBeDefined();
   });
 
+  it("buildGarageCasesColumns builds all 23 columns matching presets", () => {
+    const ctx: any = {
+      t: (k: string, d?: string) => d || k,
+      tableState: { sorts: [], columnSearch: {}, columnFilters: {} },
+      dateRanges: {},
+      onDateRangeChange: vi.fn(),
+      onSortChange: vi.fn(),
+      onSearchChange: vi.fn(),
+      onFilterChange: vi.fn(),
+      fetchCaseColumnOptions: vi.fn(),
+      onOpenDetail: vi.fn(),
+      onOpenFinancials: vi.fn(),
+      onOpenConfig: vi.fn(),
+      canUpdateGarage: true,
+      branches: [{ externalId: "b1", name: "Chi nhánh 1" }],
+    };
+    const cols = buildGarageCasesColumns(ctx);
+    expect(cols.length).toBe(23);
+    const keys = cols.map((c) => c.key);
+    const expectedKeys = [
+      "index",
+      "caseDate",
+      "ngayHoanThanhCongViec",
+      "caseCode",
+      "customer",
+      "kgaraClassification",
+      "classification",
+      "exclusionRules",
+      "statusName",
+      "branchName",
+      "createdAt",
+      "updatedAt",
+      "dataAsOf",
+      "doanhThu",
+      "chiPhi",
+      "loiNhuan",
+      "margin",
+      "collectionProgress",
+      "tienConPhaiThanhToan",
+      "costProgress",
+      "tienConPhaiChi",
+      "isInsuranceClaim",
+      "hasInvoice",
+    ];
+    expectedKeys.forEach((key) => {
+      expect(keys).toContain(key);
+    });
+  });
+
   it("buildCasesSummaryRow aggregates totals correctly with backend fields and customer label", () => {
     const summary = buildCasesSummaryRow({
       visibleCases: [
@@ -160,9 +213,10 @@ describe("GarageCasesTable Organism", () => {
     expect(summary.doanhThu).toBeDefined();
     expect(summary.chiPhi).toBeDefined();
     expect(summary.loiNhuan).toBeDefined();
-    expect(summary.tienCoThue).toBeDefined();
-    expect(summary.tienDaThanhToan).toBeDefined();
+    expect(summary.collectionProgress).toBeDefined();
+    expect(summary.costProgress).toBeDefined();
     expect(summary.tienConPhaiThanhToan).toBeDefined();
+    expect(summary.tienConPhaiChi).toBeDefined();
   });
 
   it("getGarageCaseRowClassName flags cancelled cases", () => {

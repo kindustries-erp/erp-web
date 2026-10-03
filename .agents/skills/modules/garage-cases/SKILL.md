@@ -21,11 +21,21 @@ src/modules/garage/
 ├── api/
 │   └── garageApi.ts                 # API client gọi các endpoints backend (/api/v1/kgara-cases, /api/v1/kgara-gross-profit)
 ├── components/
+│   ├── molecules/                   # Các molecule nguyên tử tái sử dụng
+│   │   ├── garage-case-progress-cell/ # Molecule hiển thị tiến độ thu/chi tiền kèm progress bar & tooltip
+│   │   └── ...
+│   ├── organisms/                   # Các organism phức hợp chuẩn hóa < 180 LoC
+│   │   ├── garage-cases-table/      # Bảng danh sách phiếu dịch vụ (GarageCasesTable) phân rã atomic
+│   │   │   ├── GarageCasesTable.tsx # L3 Organism bọc DataTable
+│   │   │   ├── GarageCasesTable.type.ts # Type contract & ColumnContext
+│   │   │   ├── GarageCasesTable.columns.tsx # Aggregator kết hợp các nhóm cột
+│   │   │   ├── GarageCasesTable.date-columns.tsx # Nhóm 5 cột ngày tháng
+│   │   │   ├── GarageCasesTable.general-columns.tsx # Nhóm 12 cột thông tin chung
+│   │   │   ├── GarageCasesTable.progress-columns.tsx # Nhóm 4 cột tiến độ thu/chi
+│   │   │   ├── GarageCasesTable.financial-columns.tsx # Nhóm 10 cột tài chính P&L
+│   │   │   └── GarageCasesTable.test.tsx # Unit tests kiểm tra 23 cột khớp view presets
+│   │   └── ...
 │   ├── garage-case-details-tab/     # Tab hợp nhất Chi tiết & Chi tiết theo đối tượng (PillTabs, sub-tab quote & partner)
-│   │   ├── GarageCaseDetailsTab.tsx # Component Organism điều phối 2 sub-tabs
-│   │   ├── GarageCaseDetailsTab.hook.ts # Hook quản lý sub-tab & cache query count
-│   │   ├── GarageCaseDetailsTab.type.ts # Type contract & view mode definitions
-│   │   └── index.ts                 # Barrel export public API
 │   ├── GarageBranchSelector.tsx     # Dropdown chọn chi nhánh xưởng
 │   ├── GarageCaseLinkedDocuments.tsx# Quản lý liên kết hóa đơn thuế
 │   ├── GarageCasePreview.tsx        # Bản xem trước Sổ báo giá & Lợi nhuận dự kiến (bọc trong DrawerSection)
