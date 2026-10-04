@@ -28,6 +28,10 @@ const buttonVariants = cva(
         link: "text-primary underline-offset-4 hover:underline",
         spreadsheet:
           "border border-border bg-surface hover:bg-surface-hover text-foreground rounded-sm font-normal",
+        "drawer-edit":
+          "px-3 py-[5px] rounded-lg text-xs font-medium border border-primary text-primary bg-transparent hover:bg-primary hover:text-primary-fg transition-colors",
+        "drawer-tab":
+          "group relative inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 min-h-[30px] sm:min-h-[32px] text-xs rounded-lg font-medium transition-all select-none whitespace-nowrap",
       },
       size: {
         xs: "h-6 px-2 text-[11px] rounded",

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import type {
   V2StandardFormDrawerProps,
   V2DrawerSize,
@@ -10,7 +10,7 @@ const DESKTOP_SIZE_CLASSES: Record<V2DrawerSize, string> = {
   md: "w-full min-w-0 max-w-full md:w-[92vw] lg:w-[60vw] xl:w-[54vw] 2xl:w-[48vw] lg:min-w-[620px] lg:max-w-[980px]",
   lg: "w-full min-w-0 max-w-full md:w-[95vw] lg:w-[78vw] xl:w-[74vw] 2xl:w-[68vw] lg:min-w-[840px] lg:max-w-[1380px]",
   xl: "w-full min-w-0 max-w-full md:w-[96vw] lg:w-[93vw] xl:w-[90vw] 2xl:w-[88vw] lg:min-w-[1020px] lg:max-w-[1780px]",
-  full: "w-full min-w-0 max-w-full md:w-[98vw] lg:w-[calc(100vw-208px)] xl:w-[calc(100vw-208px)] lg:min-w-[1020px] lg:max-w-[calc(100vw-208px)]",
+  full: "w-full min-w-0 max-w-full md:w-[98vw] lg:w-[calc(100vw-36px)] xl:w-[calc(100vw-40px)] lg:min-w-[1020px]",
 };
 
 export function useStandardFormDrawer(props: V2StandardFormDrawerProps) {
@@ -32,7 +32,6 @@ export function useStandardFormDrawer(props: V2StandardFormDrawerProps) {
     onClose,
   } = props;
 
-  // Active Tab State
   const [internalTabKey, setInternalTabKey] = useState<string>(
     () => defaultTabKey || tabs?.[0]?.key || "details",
   );
@@ -41,15 +40,12 @@ export function useStandardFormDrawer(props: V2StandardFormDrawerProps) {
 
   const handleTabChange = useCallback(
     (key: string) => {
-      if (controlledTabKey === undefined) {
-        setInternalTabKey(key);
-      }
+      if (controlledTabKey === undefined) setInternalTabKey(key);
       onTabChange?.(key);
     },
     [controlledTabKey, onTabChange],
   );
 
-  // Fullscreen State
   const [internalFullscreen, setInternalFullscreen] = useState(false);
   const isFullscreen =
     controlledFullscreen !== undefined
@@ -58,13 +54,10 @@ export function useStandardFormDrawer(props: V2StandardFormDrawerProps) {
 
   const toggleFullscreen = useCallback(() => {
     const nextVal = !isFullscreen;
-    if (controlledFullscreen === undefined) {
-      setInternalFullscreen(nextVal);
-    }
+    if (controlledFullscreen === undefined) setInternalFullscreen(nextVal);
     onFullscreenChange?.(nextVal);
   }, [controlledFullscreen, isFullscreen, onFullscreenChange]);
 
-  // Right Panel Collapsed State
   const [internalRightCollapsed, setInternalRightCollapsed] = useState(false);
   const isRightPanelCollapsed =
     controlledRightCollapsed !== undefined
@@ -73,9 +66,8 @@ export function useStandardFormDrawer(props: V2StandardFormDrawerProps) {
 
   const toggleRightPanel = useCallback(() => {
     const nextVal = !isRightPanelCollapsed;
-    if (controlledRightCollapsed === undefined) {
+    if (controlledRightCollapsed === undefined)
       setInternalRightCollapsed(nextVal);
-    }
     onRightPanelCollapseChange?.(nextVal);
   }, [
     controlledRightCollapsed,
@@ -83,9 +75,7 @@ export function useStandardFormDrawer(props: V2StandardFormDrawerProps) {
     onRightPanelCollapseChange,
   ]);
 
-  // Confirm Close State
   const [showConfirmClose, setShowConfirmClose] = useState(false);
-
   const requestClose = useCallback(() => {
     if (confirmOnClose && mode === "edit") {
       setShowConfirmClose(true);
@@ -94,15 +84,6 @@ export function useStandardFormDrawer(props: V2StandardFormDrawerProps) {
     }
   }, [confirmOnClose, mode, onClose]);
 
-  const confirmClose = useCallback(() => {
-    setShowConfirmClose(false);
-    onClose();
-  }, [onClose]);
-
-  const cancelClose = useCallback(() => {
-    setShowConfirmClose(false);
-  }, []);
-
   // Esc Key Handler: Esc 1st shrinks fullscreen; Esc 2nd requests close
   useEffect(() => {
     if (!open) return;
@@ -110,37 +91,48 @@ export function useStandardFormDrawer(props: V2StandardFormDrawerProps) {
       if (e.key === "Escape") {
         e.preventDefault();
         e.stopPropagation();
-        if (showConfirmClose) {
-          setShowConfirmClose(false);
-        } else if (isFullscreen) {
-          toggleFullscreen();
-        } else {
-          requestClose();
-        }
+        if (showConfirmClose) setShowConfirmClose(false);
+        else if (isFullscreen) toggleFullscreen();
+        else requestClose();
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [open, showConfirmClose, isFullscreen, toggleFullscreen, requestClose]);
 
-  // Active Tab Item Resolution
+  // Scroll detection for shadows
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [isScrolledTop, setIsScrolledTop] = useState(false);
+  const [isScrolledBottom, setIsScrolledBottom] = useState(false);
+
+  const checkScroll = useCallback(() => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    setIsScrolledTop(el.scrollTop > 8);
+    setIsScrolledBottom(el.scrollHeight - el.scrollTop - el.clientHeight > 8);
+  }, []);
+
+  useEffect(() => {
+    const el = scrollContainerRef.current;
+    if (!el || !open) return;
+    checkScroll();
+    el.addEventListener("scroll", checkScroll, { passive: true });
+    return () => el.removeEventListener("scroll", checkScroll);
+  }, [open, checkScroll]);
+
   const activeTabItem = useMemo(
     () => tabs?.find((t) => t.key === activeTabKey),
     [tabs, activeTabKey],
   );
 
-  // Layout Resolution: if active tab hides right panel, force 1-column layout
   const effectiveLayout: V2DrawerLayout = useMemo(() => {
     if (activeTabItem?.hideRightPanel) return "1-column";
     if (props.layout) return props.layout;
     return size === "sm" || size === "md" ? "1-column" : "2-columns";
   }, [activeTabItem?.hideRightPanel, props.layout, size]);
 
-  // Dynamic Size Class
   const sizeClass = useMemo(() => {
-    if (isFullscreen) {
-      return "w-full min-w-0 max-w-full md:w-[98vw] lg:w-[calc(100vw-208px)] xl:w-[calc(100vw-208px)] lg:min-w-[1020px] lg:max-w-[calc(100vw-208px)]";
-    }
+    if (isFullscreen) return "w-screen h-dvh max-w-none rounded-none border-0";
     return DESKTOP_SIZE_CLASSES[size] || DESKTOP_SIZE_CLASSES.xl;
   }, [isFullscreen, size]);
 
@@ -159,7 +151,14 @@ export function useStandardFormDrawer(props: V2StandardFormDrawerProps) {
     sizeClass,
     showConfirmClose,
     requestClose,
-    confirmClose,
-    cancelClose,
+    confirmClose: () => {
+      setShowConfirmClose(false);
+      onClose();
+    },
+    cancelClose: () => setShowConfirmClose(false),
+    scrollContainerRef,
+    isScrolledTop,
+    isScrolledBottom,
+    checkScroll,
   };
 }

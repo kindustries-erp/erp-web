@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { Copy, Check } from "lucide-react";
+import { Button } from "@/v2/shared/ui";
+import { V2Text } from "@/v2/shared/components/atoms/v2-text";
 import { cn } from "@/v2/shared/utils/cn";
 import type { DrawerRowProps } from "./DrawerField.type";
 
@@ -35,14 +37,16 @@ export const DrawerRow: React.FC<DrawerRowProps> = ({
         className,
       )}
     >
-      <span
+      <V2Text
+        color="muted"
+        variant="body-sm"
         className={cn(
-          "text-muted-fg font-normal shrink-0 max-w-[45%] truncate select-none",
+          "font-normal shrink-0 max-w-[45%] truncate select-none",
           labelClassName,
         )}
       >
         {label}
-      </span>
+      </V2Text>
 
       <div
         className={cn(
@@ -50,20 +54,28 @@ export const DrawerRow: React.FC<DrawerRowProps> = ({
           valueClassName,
         )}
       >
-        <span className="truncate">{value}</span>
+        <V2Text
+          variant="body-sm"
+          weight="medium"
+          className="truncate text-foreground"
+        >
+          {value}
+        </V2Text>
         {copyable && (
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="icon-xs"
             onClick={handleCopy}
             aria-label="Copy to clipboard"
-            className="p-0.5 rounded hover:bg-black/5 dark:hover:bg-white/10 transition-colors cursor-pointer text-muted-fg hover:text-foreground shrink-0"
+            className="p-0.5 text-muted-fg hover:text-foreground shrink-0 cursor-pointer"
           >
             {copied ? (
               <Check className="w-3 h-3 text-emerald-600" />
             ) : (
               <Copy className="w-3 h-3" />
             )}
-          </button>
+          </Button>
         )}
       </div>
     </div>

@@ -9,7 +9,7 @@ export type DrawerActionVariant =
 
 export interface DrawerAction {
   label: string;
-  onClick: () => void;
+  onClick?: () => void;
   primary?: boolean;
   disabled?: boolean;
   loading?: boolean;
@@ -22,4 +22,5 @@ export interface DrawerFooterProps {
   actions?: DrawerAction[];
   footerLeft?: React.ReactNode;
   className?: string;
+  isScrolledBottom?: boolean;
 }

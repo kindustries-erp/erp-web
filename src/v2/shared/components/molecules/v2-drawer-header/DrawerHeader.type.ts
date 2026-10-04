@@ -24,4 +24,5 @@ export interface DrawerHeaderProps {
 
   className?: string;
   closeAriaLabel?: string;
+  isScrolledTop?: boolean;
 }

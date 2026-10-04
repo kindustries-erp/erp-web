@@ -19,6 +19,10 @@ const textVariants = cva("text-foreground", {
       numeric: "font-mono tabular-nums",
       currency: "font-mono tabular-nums font-medium",
       link: "text-primary underline-offset-4 hover:underline cursor-pointer",
+      "section-title":
+        "text-[11px] font-bold text-foreground/80 uppercase tracking-[0.06em]",
+      "drawer-title": "text-sm font-semibold text-foreground leading-tight",
+      "drawer-subtitle": "text-[11px] text-muted-fg leading-tight truncate",
     },
     color: {
       default: "",
@@ -77,6 +81,9 @@ const defaultElementMap: Record<string, TextElement> = {
   numeric: "span",
   currency: "span",
   link: "span",
+  "section-title": "div",
+  "drawer-title": "span",
+  "drawer-subtitle": "div",
 };
 
 const Text = React.forwardRef<HTMLElement, TextProps>(

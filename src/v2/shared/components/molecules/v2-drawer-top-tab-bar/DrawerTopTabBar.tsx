@@ -1,4 +1,5 @@
 import React from "react";
+import { V2Text } from "@/v2/shared/components/atoms/v2-text";
 import { cn } from "@/v2/shared/utils/cn";
 import type { DrawerTopTabBarProps } from "./DrawerTopTabBar.type";
 
@@ -50,7 +51,15 @@ export const DrawerTopTabBar: React.FC<DrawerTopTabBarProps> = ({
                 {tab.icon}
               </span>
             )}
-            <span>{tab.label}</span>
+            <V2Text
+              variant="body-sm"
+              className={cn(
+                "leading-none",
+                isActive ? "text-primary-fg font-semibold" : "text-inherit",
+              )}
+            >
+              {tab.label}
+            </V2Text>
 
             {tab.badgeCount !== undefined && tab.badgeCount > 0 && (
               <span

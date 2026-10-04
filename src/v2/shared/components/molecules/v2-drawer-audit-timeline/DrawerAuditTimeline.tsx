@@ -1,5 +1,6 @@
 import React from "react";
 import { Activity, CheckCircle2, AlertTriangle, XCircle } from "lucide-react";
+import { V2Text } from "@/v2/shared/components/atoms/v2-text";
 import { cn } from "@/v2/shared/utils/cn";
 import type {
   DrawerAuditTimelineProps,
@@ -75,26 +76,41 @@ export const DrawerAuditTimeline: React.FC<DrawerAuditTimelineProps> = ({
               <div className="flex-1 min-w-0 bg-surface/50 rounded-lg p-2.5 border border-border/60 hover:border-border transition-colors">
                 <div className="flex items-center justify-between gap-2 mb-1">
                   <div className="flex items-center gap-1.5 flex-wrap min-w-0">
-                    <span className="font-semibold text-foreground text-xs truncate">
+                    <V2Text
+                      variant="body-sm"
+                      weight="semibold"
+                      className="truncate"
+                    >
                       {item.action}
-                    </span>
+                    </V2Text>
                     {item.actor && (
-                      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-muted text-muted-fg">
+                      <V2Text
+                        variant="caption"
+                        className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-muted text-muted-fg leading-none"
+                      >
                         {item.actor}
-                      </span>
+                      </V2Text>
                     )}
                     {item.badge}
                   </div>
 
-                  <span className="text-[11px] text-muted-fg whitespace-nowrap shrink-0">
+                  <V2Text
+                    variant="caption"
+                    color="muted"
+                    className="whitespace-nowrap shrink-0 leading-none"
+                  >
                     {item.timestamp}
-                  </span>
+                  </V2Text>
                 </div>
 
                 {item.details && (
-                  <div className="text-[11px] text-muted-fg leading-relaxed break-words mt-1">
+                  <V2Text
+                    variant="caption"
+                    color="muted"
+                    className="leading-relaxed break-words mt-1 block"
+                  >
                     {item.details}
-                  </div>
+                  </V2Text>
                 )}
               </div>
             </div>

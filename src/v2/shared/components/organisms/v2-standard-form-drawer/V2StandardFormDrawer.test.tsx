@@ -178,4 +178,55 @@ describe("V2StandardFormDrawer Organism", () => {
     fireEvent.click(confirmBtn);
     expect(handleClose).toHaveBeenCalledTimes(1);
   });
+
+  it("renders relatedTabs deck beneath content when provided", () => {
+    render(
+      <V2StandardFormDrawer
+        open={true}
+        onClose={vi.fn()}
+        title="Drawer Với Related Deck"
+        leftPanel={<div>Thông tin chính</div>}
+        relatedTabs={[
+          {
+            key: "timeline",
+            label: "Dòng Thời Gian",
+            badgeCount: 3,
+            content: <div data-testid="timeline-content">Timeline items</div>,
+          },
+        ]}
+      />,
+    );
+
+    expect(screen.getByText("Thông tin chính")).toBeInTheDocument();
+    expect(screen.getByText("Dòng Thời Gian")).toBeInTheDocument();
+    expect(screen.getByText("3")).toBeInTheDocument();
+    expect(screen.getByTestId("timeline-content")).toBeInTheDocument();
+  });
+
+  it("renders loading spinner and error banner correctly", () => {
+    const { rerender } = render(
+      <V2StandardFormDrawer
+        open={true}
+        onClose={vi.fn()}
+        title="Loading State"
+        loading={true}
+      />,
+    );
+
+    expect(screen.getByText("Đang tải dữ liệu...")).toBeInTheDocument();
+
+    rerender(
+      <V2StandardFormDrawer
+        open={true}
+        onClose={vi.fn()}
+        title="Error State"
+        loading={false}
+        error="Không thể kết nối đến máy chủ"
+      />,
+    );
+
+    expect(
+      screen.getByText("Không thể kết nối đến máy chủ"),
+    ).toBeInTheDocument();
+  });
 });

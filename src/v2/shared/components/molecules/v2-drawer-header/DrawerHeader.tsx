@@ -1,12 +1,14 @@
 import React from "react";
 import {
-  Edit3,
   Maximize2,
   Minimize2,
   ChevronRight,
   ChevronLeft,
   X,
 } from "lucide-react";
+import { Button } from "@/v2/shared/ui";
+import { V2Text } from "@/v2/shared/components/atoms/v2-text";
+import { V2Button } from "@/v2/shared/components/atoms/v2-button";
 import { cn } from "@/v2/shared/utils/cn";
 import type { DrawerHeaderProps } from "./DrawerHeader.type";
 
@@ -27,12 +29,16 @@ export const DrawerHeader: React.FC<DrawerHeaderProps> = ({
   onToggleRightPanel,
   className,
   closeAriaLabel = "Close drawer",
+  isScrolledTop = false,
 }) => {
   return (
     <div
       className={cn(
         "flex items-center justify-between px-3 sm:px-4 md:px-[18px] py-2.5",
-        "border-b border-border/70 bg-[var(--drawer-header-bg,rgba(246,248,252,0.75))] backdrop-blur-md shrink-0 gap-2",
+        "border-b border-border/70 backdrop-blur-md shrink-0 gap-2 transition-shadow duration-200",
+        isScrolledTop
+          ? "shadow-[0_4px_16px_-4px_rgba(15,23,42,0.08),0_2px_4px_-2px_rgba(15,23,42,0.04)] bg-[var(--drawer-header-scrolled-bg,rgba(246,248,252,0.92))]"
+          : "shadow-none bg-[var(--drawer-header-bg,rgba(246,248,252,0.75))]",
         className,
       )}
     >
@@ -41,40 +47,52 @@ export const DrawerHeader: React.FC<DrawerHeaderProps> = ({
         {icon && <div className="text-muted-fg shrink-0">{icon}</div>}
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 flex-wrap min-w-0">
-            <h2 className="text-sm font-semibold text-foreground truncate leading-tight">
-              {title}
-            </h2>
+            {typeof title === "string" ? (
+              <V2Text variant="drawer-title" className="truncate leading-tight">
+                {title}
+              </V2Text>
+            ) : (
+              <div className="truncate text-sm font-semibold">{title}</div>
+            )}
             {titleExtra}
           </div>
-          {subtitle && (
-            <p className="text-[11px] text-muted-fg truncate mt-0.5 leading-none">
-              {subtitle}
-            </p>
-          )}
+          {subtitle &&
+            (typeof subtitle === "string" ? (
+              <V2Text variant="drawer-subtitle" className="mt-0.5 leading-none">
+                {subtitle}
+              </V2Text>
+            ) : (
+              <div className="text-[11px] text-muted-fg truncate mt-0.5 leading-none">
+                {subtitle}
+              </div>
+            ))}
         </div>
       </div>
 
       {/* Right: Controls & Actions */}
-      <div className="flex items-center gap-1 shrink-0">
+      <div className="flex items-center gap-1.5 shrink-0">
         {headerExtra}
 
         {/* Toggle Edit Button */}
         {onToggleEdit && !isEditing && (
-          <button
+          <V2Button
             type="button"
+            variant="drawer-edit"
             onClick={onToggleEdit}
             aria-label="Chuyển sang chế độ chỉnh sửa"
             title="Chỉnh sửa (Edit mode)"
-            className="p-1.5 rounded-lg text-muted-fg hover:text-foreground hover:bg-surface-hover transition-colors cursor-pointer"
+            className="hidden sm:inline-flex"
           >
-            <Edit3 className="w-4 h-4" />
-          </button>
+            Chỉnh sửa
+          </V2Button>
         )}
 
         {/* Toggle Right Panel (Desktop only) */}
         {collapsibleRightPanel && onToggleRightPanel && (
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="icon-sm"
             onClick={onToggleRightPanel}
             aria-label={
               isRightPanelCollapsed
@@ -84,42 +102,46 @@ export const DrawerHeader: React.FC<DrawerHeaderProps> = ({
             title={
               isRightPanelCollapsed ? "Mở rộng cột phải" : "Thu gọn cột phải"
             }
-            className="hidden lg:inline-flex p-1.5 rounded-lg text-muted-fg hover:text-foreground hover:bg-surface-hover transition-colors cursor-pointer"
+            className="hidden lg:inline-flex text-muted-fg hover:text-foreground cursor-pointer"
           >
             {isRightPanelCollapsed ? (
               <ChevronLeft className="w-4 h-4" />
             ) : (
               <ChevronRight className="w-4 h-4" />
             )}
-          </button>
+          </Button>
         )}
 
         {/* Fullscreen Button (Desktop only) */}
         {enableFullscreen && onToggleFullscreen && (
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="icon-sm"
             onClick={onToggleFullscreen}
             aria-label={isFullscreen ? "Thu nhỏ màn hình" : "Toàn màn hình"}
             title={isFullscreen ? "Thu nhỏ (Esc)" : "Toàn màn hình"}
-            className="hidden lg:inline-flex p-1.5 rounded-lg text-muted-fg hover:text-foreground hover:bg-surface-hover transition-colors cursor-pointer"
+            className="hidden lg:inline-flex text-muted-fg hover:text-foreground cursor-pointer"
           >
             {isFullscreen ? (
               <Minimize2 className="w-4 h-4" />
             ) : (
               <Maximize2 className="w-4 h-4" />
             )}
-          </button>
+          </Button>
         )}
 
         {/* Close Button */}
-        <button
+        <Button
           type="button"
+          variant="ghost"
+          size="icon-sm"
           onClick={onClose}
           aria-label={closeAriaLabel}
-          className="p-1.5 rounded-lg text-muted-fg hover:text-foreground hover:bg-surface-hover transition-colors cursor-pointer"
+          className="text-muted-fg hover:text-foreground cursor-pointer"
         >
           <X className="w-4 h-4" />
-        </button>
+        </Button>
       </div>
     </div>
   );

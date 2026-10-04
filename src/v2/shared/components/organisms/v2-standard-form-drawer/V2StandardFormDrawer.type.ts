@@ -1,8 +1,9 @@
 import * as React from "react";
 import type { DrawerTopTabItem } from "@/v2/shared/components/molecules/v2-drawer-top-tab-bar";
 import type { DrawerAction } from "@/v2/shared/components/molecules/v2-drawer-footer";
+import type { DrawerRelatedTabItem } from "@/v2/shared/components/molecules/v2-drawer-related-deck";
 
-export type { DrawerTopTabItem, DrawerAction };
+export type { DrawerTopTabItem, DrawerAction, DrawerRelatedTabItem };
 
 export type V2DrawerSize = "sm" | "md" | "lg" | "xl" | "full";
 export type V2DrawerMode = "view" | "edit";
@@ -14,7 +15,7 @@ export interface V2StandardFormDrawerProps {
   onClose: () => void;
   onToggleEdit?: () => void;
 
-  title: string;
+  title: string | React.ReactNode;
   titleExtra?: React.ReactNode;
   subtitle?: React.ReactNode;
   icon?: React.ReactNode;
@@ -31,6 +32,7 @@ export interface V2StandardFormDrawerProps {
   collapsibleRightPanel?: boolean;
   isRightPanelCollapsed?: boolean;
   onRightPanelCollapseChange?: (collapsed: boolean) => void;
+  stickyRightPanel?: boolean;
 
   // Top Tabs for multi-facet documents
   tabs?: DrawerTopTabItem[];
@@ -43,6 +45,15 @@ export interface V2StandardFormDrawerProps {
   rightPanel?: React.ReactNode;
   children?: React.ReactNode;
 
+  // Horizon Divider & Related Deck
+  relatedTabs?: DrawerRelatedTabItem[];
+  defaultRelatedTabKey?: string;
+  defaultRelatedCollapsed?: boolean;
+  bottomPanel?: React.ReactNode;
+  bottomPanelTitle?: React.ReactNode;
+  onRelatedTabChange?: (tabKey: string) => void;
+  deckCardClassName?: string;
+
   // Actions & Footer
   actions?: DrawerAction[];
   footerLeft?: React.ReactNode;
@@ -52,9 +63,10 @@ export interface V2StandardFormDrawerProps {
   error?: string | null;
   confirmOnClose?: boolean;
 
-  // Class overrides
+  // Class overrides & Options
   className?: string;
   panelClassName?: string;
   bodyClassName?: string;
   closeAriaLabel?: string;
+  floating?: boolean;
 }

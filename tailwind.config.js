@@ -126,6 +126,22 @@ export default {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" },
         },
+        "slide-in-from-right": {
+          from: { transform: "translateX(100%)" },
+          to: { transform: "translateX(0)" },
+        },
+        "slide-out-to-right": {
+          from: { transform: "translateX(0)" },
+          to: { transform: "translateX(100%)" },
+        },
+        "slide-in-from-bottom": {
+          from: { transform: "translateY(100%)" },
+          to: { transform: "translateY(0)" },
+        },
+        "slide-out-to-bottom": {
+          from: { transform: "translateY(0)" },
+          to: { transform: "translateY(100%)" },
+        },
       },
       animation: {
         slideDownAndFade: "slideDownAndFade 300ms ease-out forwards",
@@ -137,6 +153,14 @@ export default {
         "animate-out": "fade-out 100ms ease-in both",
         "accordion-down": "accordion-down 200ms ease-out",
         "accordion-up": "accordion-up 200ms ease-out",
+        "slide-in-from-right":
+          "slide-in-from-right 300ms cubic-bezier(0.16, 1, 0.3, 1) forwards",
+        "slide-out-to-right":
+          "slide-out-to-right 200ms cubic-bezier(0.16, 1, 0.3, 1) forwards",
+        "slide-in-from-bottom":
+          "slide-in-from-bottom 300ms cubic-bezier(0.16, 1, 0.3, 1) forwards",
+        "slide-out-to-bottom":
+          "slide-out-to-bottom 200ms cubic-bezier(0.16, 1, 0.3, 1) forwards",
       },
     },
   },

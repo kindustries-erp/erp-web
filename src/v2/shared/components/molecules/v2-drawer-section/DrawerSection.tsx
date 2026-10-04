@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { ChevronDown } from "lucide-react";
+import { Button } from "@/v2/shared/ui";
+import { V2Text } from "@/v2/shared/components/atoms/v2-text";
 import { cn } from "@/v2/shared/utils/cn";
 import type { DrawerSectionProps } from "./DrawerSection.type";
 
@@ -59,12 +61,14 @@ export const DrawerSection: React.FC<DrawerSectionProps> = ({
         >
           <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
             {collapsible && (
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="icon-xs"
                 onClick={handleToggle}
                 aria-label={isCollapsed ? "Expand section" : "Collapse section"}
                 data-testid="drawer-section-toggle-btn"
-                className="p-0.5 -ml-1 rounded hover:bg-black/5 dark:hover:bg-white/10 transition-colors cursor-pointer text-muted-fg hover:text-foreground shrink-0"
+                className="p-0.5 -ml-1 text-muted-fg hover:text-foreground shrink-0 cursor-pointer"
               >
                 <ChevronDown
                   className={cn(
@@ -72,12 +76,15 @@ export const DrawerSection: React.FC<DrawerSectionProps> = ({
                     isCollapsed ? "-rotate-90" : "rotate-0",
                   )}
                 />
-              </button>
+              </Button>
             )}
             {title && (
-              <span className="truncate select-text cursor-default">
+              <V2Text
+                variant="section-title"
+                className="truncate select-text cursor-default"
+              >
                 {title}
-              </span>
+              </V2Text>
             )}
           </div>
 
