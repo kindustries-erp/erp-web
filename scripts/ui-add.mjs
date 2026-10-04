@@ -21,10 +21,14 @@ try {
   });
 
   // 2. Tự động tổ chức lại file vừa tải vào subfolder chuẩn
-  console.log(`📦 Đang tổ chức lại "${componentName}" theo chuẩn Folder-per-Component...`);
+  console.log(
+    `📦 Đang tổ chức lại "${componentName}" theo chuẩn Folder-per-Component...`,
+  );
   organizeUi();
 
-  console.log(`✨ Hoàn tất thêm component: src/v2/shared/ui/${componentName}/!`);
+  console.log(
+    `✨ Hoàn tất thêm component: src/v2/shared/ui/${componentName}/!`,
+  );
 } catch (error) {
   console.error(`❌ Thất bại khi thêm component "${componentName}":`, error);
   process.exit(1);

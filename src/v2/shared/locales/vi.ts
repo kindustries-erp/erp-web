@@ -70,6 +70,23 @@ export const v2Vi = {
       defaultCancel: "Hủy",
       processing: "Đang xử lý...",
     },
+    drawer: {
+      editMode: "Chuyển sang chế độ chỉnh sửa",
+      viewMode: "Chế độ xem",
+      fullscreen: "Toàn màn hình",
+      exitFullscreen: "Thu nhỏ màn hình",
+      collapseRightPanel: "Thu gọn cột thông tin phải",
+      expandRightPanel: "Mở rộng cột thông tin phải",
+      closeDrawer: "Đóng",
+      closeConfirmTitle: "Xác nhận đóng biểu mẫu",
+      closeConfirmDesc:
+        "Biểu mẫu đang ở chế độ chỉnh sửa. Bạn có chắc chắn muốn đóng và hủy các thay đổi chưa lưu?",
+      closeWithoutSaving: "Đóng không lưu",
+      continueEdit: "Tiếp tục chỉnh sửa",
+      emptyTimeline: "Chưa có lịch sử thao tác",
+      expandSection: "Mở rộng phân vùng",
+      collapseSection: "Thu gọn phân vùng",
+    },
   },
 };
 

@@ -28,7 +28,9 @@ export function organizeUi() {
   );
 
   if (flatTsxFiles.length === 0) {
-    console.log("✓ Không có component phẳng nào cần tổ chức lại trong src/v2/shared/ui/.");
+    console.log(
+      "✓ Không có component phẳng nào cần tổ chức lại trong src/v2/shared/ui/.",
+    );
   }
 
   let masterIndexContent = fs.existsSync(MASTER_INDEX)
@@ -50,18 +52,26 @@ export function organizeUi() {
 
     // 2. Di chuyển file .tsx vào subfolder
     fs.renameSync(oldFilePath, newFilePath);
-    console.log(`✓ Đã di chuyển: ${file.name} ➔ ${componentName}/${componentName}.tsx`);
+    console.log(
+      `✓ Đã di chuyển: ${file.name} ➔ ${componentName}/${componentName}.tsx`,
+    );
 
     // Di chuyển test file cũ nếu có ở root
     const oldTestFile = path.join(UI_DIR, `${componentName}.test.tsx`);
     if (fs.existsSync(oldTestFile)) {
       fs.renameSync(oldTestFile, testPath);
-      console.log(`✓ Đã di chuyển test: ${componentName}.test.tsx ➔ ${componentName}/`);
+      console.log(
+        `✓ Đã di chuyển test: ${componentName}.test.tsx ➔ ${componentName}/`,
+      );
     }
 
     // 3. Tạo index.ts
     if (!fs.existsSync(indexPath)) {
-      fs.writeFileSync(indexPath, `export * from "./${componentName}";\n`, "utf-8");
+      fs.writeFileSync(
+        indexPath,
+        `export * from "./${componentName}";\n`,
+        "utf-8",
+      );
       console.log(`✓ Đã tạo index: ${componentName}/index.ts`);
     }
 
@@ -81,7 +91,9 @@ describe("V2 ${pascal} Primitive", () => {
 });
 `;
       fs.writeFileSync(testPath, testContent, "utf-8");
-      console.log(`✓ Đã tạo test mẫu: ${componentName}/${componentName}.test.tsx`);
+      console.log(
+        `✓ Đã tạo test mẫu: ${componentName}/${componentName}.test.tsx`,
+      );
     }
 
     // 5. Cập nhật master index.ts

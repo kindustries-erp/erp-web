@@ -1,0 +1,181 @@
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { render, screen, fireEvent } from "@testing-library/react";
+import React from "react";
+import * as viewportHook from "@/v2/shared/hooks/useViewport";
+import { V2StandardFormDrawer } from "./V2StandardFormDrawer";
+import type { DrawerTopTabItem } from "./V2StandardFormDrawer.type";
+
+describe("V2StandardFormDrawer Organism", () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+    vi.spyOn(viewportHook, "useViewport").mockReturnValue({
+      width: 1440,
+      height: 900,
+      isMobile: false,
+      isTablet: false,
+      isDesktop: true,
+    });
+  });
+
+  it("renders Desktop 2-columns drawer with title, badge, panels, and actions", () => {
+    const handleClose = vi.fn();
+    const handleSave = vi.fn();
+
+    render(
+      <V2StandardFormDrawer
+        open={true}
+        onClose={handleClose}
+        title="Phiếu Nhập Kho NK-001"
+        titleExtra={<span data-testid="status-badge">Đã duyệt</span>}
+        subtitle="Chi nhánh chính"
+        leftPanel={<div data-testid="left-panel">Nội dung phiếu kho</div>}
+        rightPanel={<div data-testid="right-panel">Thông tin đối tác</div>}
+        actions={[
+          { label: "Lưu thay đổi", onClick: handleSave, primary: true },
+        ]}
+      />,
+    );
+
+    expect(screen.getByText("Phiếu Nhập Kho NK-001")).toBeInTheDocument();
+    expect(screen.getByTestId("status-badge")).toBeInTheDocument();
+    expect(screen.getByText("Chi nhánh chính")).toBeInTheDocument();
+    expect(screen.getByTestId("left-panel")).toBeInTheDocument();
+    expect(screen.getByTestId("right-panel")).toBeInTheDocument();
+
+    const saveBtn = screen.getByRole("button", { name: "Lưu thay đổi" });
+    fireEvent.click(saveBtn);
+    expect(handleSave).toHaveBeenCalledTimes(1);
+  });
+
+  it("triggers onToggleEdit when edit button is clicked in view mode", () => {
+    const handleToggleEdit = vi.fn();
+    render(
+      <V2StandardFormDrawer
+        open={true}
+        onClose={vi.fn()}
+        mode="view"
+        onToggleEdit={handleToggleEdit}
+        title="Xem Chi Tiết"
+      >
+        <p>Thân drawer</p>
+      </V2StandardFormDrawer>,
+    );
+
+    const editBtn = screen.getByRole("button", {
+      name: "Chuyển sang chế độ chỉnh sửa",
+    });
+    fireEvent.click(editBtn);
+    expect(handleToggleEdit).toHaveBeenCalledTimes(1);
+  });
+
+  it("collapses and expands the right panel when chevron toggle is clicked", () => {
+    render(
+      <V2StandardFormDrawer
+        open={true}
+        onClose={vi.fn()}
+        title="Kiểm tra Cột Phải"
+        layout="2-columns"
+        collapsibleRightPanel={true}
+        leftPanel={<div>Bên trái</div>}
+        rightPanel={<div data-testid="collapsible-right">Bên phải</div>}
+      />,
+    );
+
+    expect(screen.getByTestId("collapsible-right")).toBeInTheDocument();
+    const collapseBtn = screen.getByRole("button", {
+      name: "Thu gọn cột thông tin phải",
+    });
+    fireEvent.click(collapseBtn);
+    expect(screen.queryByTestId("collapsible-right")).not.toBeInTheDocument();
+
+    const expandBtn = screen.getByRole("button", {
+      name: "Mở rộng cột thông tin phải",
+    });
+    fireEvent.click(expandBtn);
+    expect(screen.getByTestId("collapsible-right")).toBeInTheDocument();
+  });
+
+  it("switches top navigation tabs and handles hideRightPanel tab", () => {
+    const mockTabs: DrawerTopTabItem[] = [
+      { key: "details", label: "Chi Tiết", content: <div>Nội dung Tab 1</div> },
+      {
+        key: "graph",
+        label: "Biểu Đồ",
+        hideRightPanel: true,
+        content: <div>Full Width Graph</div>,
+      },
+    ];
+
+    render(
+      <V2StandardFormDrawer
+        open={true}
+        onClose={vi.fn()}
+        title="Chứng Từ Đa Góc Nhìn"
+        tabs={mockTabs}
+        rightPanel={<div data-testid="tab-right-panel">Cột thông tin</div>}
+      />,
+    );
+
+    expect(screen.getByText("Nội dung Tab 1")).toBeInTheDocument();
+    expect(screen.getByTestId("tab-right-panel")).toBeInTheDocument();
+
+    const graphTab = screen.getByRole("tab", { name: "Biểu Đồ" });
+    fireEvent.click(graphTab);
+
+    expect(screen.getByText("Full Width Graph")).toBeInTheDocument();
+    expect(screen.queryByTestId("tab-right-panel")).not.toBeInTheDocument();
+  });
+
+  it("renders Mobile Bottom Sheet with grab handle when isMobile is true", () => {
+    vi.spyOn(viewportHook, "useViewport").mockReturnValue({
+      width: 375,
+      height: 812,
+      isMobile: true,
+      isTablet: false,
+      isDesktop: false,
+    });
+
+    render(
+      <V2StandardFormDrawer
+        open={true}
+        onClose={vi.fn()}
+        title="Mobile Drawer"
+        rightPanel={<div>Thông tin thêm mobile</div>}
+      >
+        <p>Nội dung mobile</p>
+      </V2StandardFormDrawer>,
+    );
+
+    expect(screen.getByText("Mobile Drawer")).toBeInTheDocument();
+    expect(screen.getByText("Nội dung mobile")).toBeInTheDocument();
+    expect(screen.getByTestId("drawer-mobile-grab-handle")).toBeInTheDocument();
+    expect(
+      screen.getByTestId("drawer-mobile-stacked-panel"),
+    ).toBeInTheDocument();
+  });
+
+  it("prompts V2ConfirmModal before closing when in edit mode with confirmOnClose=true", () => {
+    const handleClose = vi.fn();
+    render(
+      <V2StandardFormDrawer
+        open={true}
+        onClose={handleClose}
+        mode="edit"
+        confirmOnClose={true}
+        title="Đang Chỉnh Sửa"
+      >
+        <p>Form đang nhập dở</p>
+      </V2StandardFormDrawer>,
+    );
+
+    const closeBtn = screen.getByRole("button", { name: "Close drawer" });
+    fireEvent.click(closeBtn);
+
+    expect(screen.getByText("Xác nhận đóng biểu mẫu")).toBeInTheDocument();
+    expect(handleClose).not.toHaveBeenCalled();
+
+    const confirmBtn = screen.getByRole("button", { name: "Đóng không lưu" });
+    fireEvent.click(confirmBtn);
+    expect(handleClose).toHaveBeenCalledTimes(1);
+  });
+});

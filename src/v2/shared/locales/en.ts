@@ -72,5 +72,22 @@ export const v2En: V2Dictionary = {
       defaultCancel: "Cancel",
       processing: "Processing...",
     },
+    drawer: {
+      editMode: "Switch to edit mode",
+      viewMode: "View mode",
+      fullscreen: "Full screen",
+      exitFullscreen: "Exit full screen",
+      collapseRightPanel: "Collapse right panel",
+      expandRightPanel: "Expand right panel",
+      closeDrawer: "Close",
+      closeConfirmTitle: "Confirm closing form",
+      closeConfirmDesc:
+        "The form is in edit mode. Are you sure you want to close and discard unsaved changes?",
+      closeWithoutSaving: "Close without saving",
+      continueEdit: "Continue editing",
+      emptyTimeline: "No activity history yet",
+      expandSection: "Expand section",
+      collapseSection: "Collapse section",
+    },
   },
 };

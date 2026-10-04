@@ -5,6 +5,9 @@ description: Create or enhance a Drawer component using StandardFormDrawer to fo
 
 # 📋 Drawer Standards
 
+> 🚀 **V2 ARCHITECTURE NOTICE**: Đối với các màn hình hoặc module xây dựng trên kiến trúc ERP Web V2 (`src/v2/`), sử dụng **`<V2StandardFormDrawer>`** từ `@/v2/shared/components/organisms/v2-standard-form-drawer` (kèm `<DrawerSection>`, `<DrawerField>`, `<DrawerRow>`, `<DrawerTopTabBar>`, `<DrawerAuditTimeline>`). Xem chi tiết tại module skill:
+> 👉 [`v2-drawer`](../modules/v2-drawer/SKILL.md)
+
 > ⚡ **FAST-TRACK (PlopJS Generator)**: Để sinh nhanh component Drawer chuẩn (`1-column`, `2-columns`, hoặc `multi-tab`), chạy:
 > ```bash
 > bun plop drawer <moduleName> <componentName> <drawerType> <drawerSize> <hasStatus>
