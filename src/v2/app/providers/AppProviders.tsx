@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Lock, LogIn } from "lucide-react";
 import { useAuthStore } from "@/modules/auth/domain/authStore";
 import { V2Button, V2Text } from "@/v2/shared/components/atoms";
+import { TooltipProvider } from "@/v2/shared/ui";
 import { AppProvidersProps } from "./AppProviders.type";
 
 const queryClient = new QueryClient({
@@ -50,6 +51,8 @@ export const AppProviders: React.FC<AppProvidersProps> = ({ children }) => {
   }
 
   return (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider delayDuration={200}>{children}</TooltipProvider>
+    </QueryClientProvider>
   );
 };

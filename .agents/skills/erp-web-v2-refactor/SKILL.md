@@ -194,8 +194,39 @@ useViewport() → breakpoints:
 | **App Shell** | ✅ Bắt buộc | `V2AppLayout.desktop.tsx` (Sidebar) vs `V2AppLayout.mobile.tsx` (Bottom Nav) |
 | **Drawers** | ✅ Bắt buộc | Desktop: Right Drawer (65vw); Mobile: Bottom Sheet trượt từ đáy |
 | **Modals / Dialogs** | ✅ Bắt buộc | Desktop: Centered Glass Modal (`V2Modal.desktop.tsx`, `V2ConfirmModal.desktop.tsx`); Mobile: Bottom Sheet (`V2Modal.mobile.tsx`, `V2ConfirmModal.mobile.tsx`) |
+| **Popovers** | ✅ Bắt buộc | Desktop: Floating Glass Panel (`V2Popover.desktop.tsx`); Mobile: Bottom Sheet Drawer với Grab Handle (`V2Popover.mobile.tsx`) |
+| **Tooltips** | ❌ Không split (Atom) | `V2Tooltip.tsx` (`AppTooltip`): Tự động bypass trên touch/mobile để chống kẹt hover |
 
 ---
+
+## 💡 AppPopover & AppTooltip Ergonomic Pattern
+
+### 1. V2Tooltip (Atom) — `src/v2/shared/components/atoms/v2-tooltip/`
+Cung cấp component gợi ý thao tác dạng 1 thẻ gọn nhẹ, tự xử lý độ trễ (delay 200ms) và vô hiệu hóa an toàn trên mobile touch:
+```tsx
+import { AppTooltip } from "@/v2/shared/components/atoms";
+
+// Sử dụng trực quan bao quanh bất kỳ trigger nào
+<AppTooltip content="Lưu lại chứng từ kho">
+  <V2Button variant="default">Lưu</V2Button>
+</AppTooltip>
+```
+
+### 2. V2Popover (Molecule) — `src/v2/shared/components/molecules/v2-popover/`
+Hỗ trợ Platform Split thông minh với Desktop Floating Glass Panel và Mobile Bottom Sheet Drawer:
+```tsx
+import { AppPopover } from "@/v2/shared/components/molecules";
+
+<AppPopover
+  title="Tùy chọn hiển thị"
+  content={<div>Nội dung bộ lọc nâng cao</div>}
+>
+  <V2Button variant="outline">Tùy chọn</V2Button>
+</AppPopover>
+```
+
+---
+
 
 ## 🔍 Grep Audit Suite (Chạy trước khi Commit / Hoàn Tất Task)
 

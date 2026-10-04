@@ -10,3 +10,12 @@ vi.mock("react-pdf", () => ({
     React.createElement("div", { "data-testid": "pdf-document" }, children),
   Page: () => React.createElement("div", { "data-testid": "pdf-page" }),
 }));
+
+// Global mock for ResizeObserver in jsdom environment (required by Radix UI and UI components)
+if (typeof window !== "undefined" && !window.ResizeObserver) {
+  window.ResizeObserver = class ResizeObserver {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  };
+}

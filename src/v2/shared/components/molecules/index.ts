@@ -18,3 +18,4 @@ export * from "./v2-drawer-top-tab-bar";
 export * from "./v2-drawer-audit-timeline";
 export * from "./v2-drawer-header";
 export * from "./v2-drawer-footer";
+export * from "./v2-popover";

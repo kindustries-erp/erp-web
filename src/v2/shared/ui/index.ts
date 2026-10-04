@@ -3,3 +3,5 @@ export * from "./badge";
 export * from "./text";
 export * from "./dialog";
 export * from "./sheet";
+export * from "./popover";
+export * from "./tooltip";
