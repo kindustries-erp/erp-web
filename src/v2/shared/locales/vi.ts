@@ -59,6 +59,17 @@ export const v2Vi = {
       badgeStability: "Stability",
       badgeQuality: "Quality Gate",
     },
+    modal: {
+      close: "Đóng",
+      defaultTitle: "Hộp thoại",
+      dragHandleAria: "Kéo để đóng hộp thoại",
+    },
+    confirmModal: {
+      defaultTitle: "Xác nhận hành động",
+      defaultConfirm: "Xác nhận",
+      defaultCancel: "Hủy",
+      processing: "Đang xử lý...",
+    },
   },
 };
 

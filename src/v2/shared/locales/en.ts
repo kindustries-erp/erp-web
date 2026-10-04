@@ -61,5 +61,16 @@ export const v2En: V2Dictionary = {
       badgeStability: "Stability",
       badgeQuality: "Quality Gate",
     },
+    modal: {
+      close: "Close",
+      defaultTitle: "Dialog",
+      dragHandleAria: "Drag to close dialog",
+    },
+    confirmModal: {
+      defaultTitle: "Confirm action",
+      defaultConfirm: "Confirm",
+      defaultCancel: "Cancel",
+      processing: "Processing...",
+    },
   },
 };

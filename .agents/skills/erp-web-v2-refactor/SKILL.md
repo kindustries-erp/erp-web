@@ -192,7 +192,8 @@ useViewport() → breakpoints:
 | **Templates (L4)** | ✅ Bắt buộc | `SpreadsheetPageTemplate.desktop.tsx` vs `MobilePageTemplate.mobile.tsx` |
 | **Pages (L5)** | ✅ Bắt buộc khi UX khác biệt | Tách riêng file page Desktop và Mobile |
 | **App Shell** | ✅ Bắt buộc | `V2AppLayout.desktop.tsx` (Sidebar) vs `V2AppLayout.mobile.tsx` (Bottom Nav) |
-| **Drawers / Modals** | ✅ Bắt buộc | Desktop: Right Drawer (65vw); Mobile: Bottom Sheet trượt từ đáy |
+| **Drawers** | ✅ Bắt buộc | Desktop: Right Drawer (65vw); Mobile: Bottom Sheet trượt từ đáy |
+| **Modals / Dialogs** | ✅ Bắt buộc | Desktop: Centered Glass Modal (`V2Modal.desktop.tsx`, `V2ConfirmModal.desktop.tsx`); Mobile: Bottom Sheet (`V2Modal.mobile.tsx`, `V2ConfirmModal.mobile.tsx`) |
 
 ---
 
