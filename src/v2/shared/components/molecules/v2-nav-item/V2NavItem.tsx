@@ -1,7 +1,7 @@
 import * as React from "react";
 import { cn } from "@/v2/shared/utils/cn";
 import { V2NavIcon } from "@/v2/shared/components/atoms/v2-nav-icon";
-import { Badge } from "@/v2/shared/ui/badge";
+import { Badge } from "@/v2/shared/ui";
 import { V2NavItemProps } from "./V2NavItem.type";
 
 export const V2NavItem: React.FC<V2NavItemProps> = ({

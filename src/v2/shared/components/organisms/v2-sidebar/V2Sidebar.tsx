@@ -69,7 +69,7 @@ export const V2Sidebar: React.FC<V2SidebarProps> = ({
       <V2SidebarBottom
         collapsed={isCollapsed}
         avatarInitials={user?.avatarInitials ?? "U"}
-        displayName={user?.displayName ?? "User"}
+        displayName={user?.displayName}
         unreadCount={user?.unreadCount ?? 0}
       />
     </aside>

@@ -1,16 +1,22 @@
 import React from "react";
 import { cn } from "@/v2/shared/utils/cn";
+import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { V2SidebarBottomProps } from "./V2SidebarBottom.type";
 
 export const V2SidebarBottom: React.FC<V2SidebarBottomProps> = ({
   collapsed = false,
   avatarInitials = "U",
-  displayName = "User",
+  displayName,
   unreadCount = 0,
   onUserClick,
   onNotificationClick,
   className,
 }) => {
+  const { t } = useV2Translation();
+  const effectiveDisplayName =
+    displayName ?? t("v2.sidebar.userFallback", "Quản trị viên");
+  const notificationLabel = t("v2.sidebar.notifications", "Thông báo");
+
   return (
     <div
       className={cn(
@@ -33,7 +39,7 @@ export const V2SidebarBottom: React.FC<V2SidebarBottomProps> = ({
             "flex items-center gap-2 px-1 py-[7px] rounded-lg hover:bg-accent/50 cursor-pointer border-none bg-transparent transition-colors text-left",
             collapsed ? "justify-center w-full" : "flex-1 min-w-0",
           )}
-          aria-label={displayName}
+          aria-label={effectiveDisplayName}
         >
           <div className="w-[22px] h-[22px] min-w-[22px] bg-primary rounded-full flex items-center justify-center text-primary-foreground text-[8px] font-semibold flex-shrink-0">
             {avatarInitials}
@@ -41,7 +47,7 @@ export const V2SidebarBottom: React.FC<V2SidebarBottomProps> = ({
           {!collapsed && (
             <>
               <span className="text-xs font-medium text-[color:var(--muted-fg,hsl(var(--muted-foreground)))] whitespace-nowrap overflow-hidden text-ellipsis flex-1 min-w-0">
-                {displayName}
+                {effectiveDisplayName}
               </span>
               <svg
                 width="12"
@@ -64,7 +70,8 @@ export const V2SidebarBottom: React.FC<V2SidebarBottomProps> = ({
           type="button"
           onClick={onNotificationClick}
           className="relative flex items-center justify-center w-[26px] h-[26px] min-w-[26px] rounded-md text-[color:var(--faint,hsl(var(--muted-foreground)))] hover:text-foreground hover:bg-accent/50 border-none bg-transparent cursor-pointer flex-shrink-0 transition-colors"
-          aria-label="Thông báo"
+          aria-label={notificationLabel}
+          title={notificationLabel}
         >
           <svg
             width="14"

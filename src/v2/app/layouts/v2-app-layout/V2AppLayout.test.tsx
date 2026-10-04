@@ -1,5 +1,6 @@
 import { describe, it, expect, afterEach } from "vitest";
 import { render, screen } from "@testing-library/react";
+import { useAppStore } from "@/core/config/appStore";
 import { V2AppLayout } from "./V2AppLayout";
 
 describe("V2AppLayout Switcher", () => {
@@ -44,5 +45,22 @@ describe("V2AppLayout Switcher", () => {
 
     expect(screen.getByTestId("v2-app-layout-mobile")).toBeInTheDocument();
     expect(screen.getByText("Content Mobile")).toBeInTheDocument();
+  });
+
+  it("tự động cập nhật nội dung đa ngôn ngữ khi thay đổi locale", () => {
+    useAppStore.setState({ locale: "vi" });
+    Object.defineProperty(window, "innerWidth", {
+      writable: true,
+      configurable: true,
+      value: 1280,
+    });
+
+    render(
+      <V2AppLayout>
+        <div>Content</div>
+      </V2AppLayout>,
+    );
+
+    expect(screen.getAllByText("Tổng quan").length).toBeGreaterThan(0);
   });
 });

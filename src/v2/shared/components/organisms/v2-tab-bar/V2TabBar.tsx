@@ -1,5 +1,6 @@
 import * as React from "react";
 import { cn } from "@/v2/shared/utils/cn";
+import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { V2TabItem } from "../../molecules/v2-tab-item";
 import { V2TabBarProps } from "./V2TabBar.type";
 
@@ -10,6 +11,7 @@ export const V2TabBar: React.FC<V2TabBarProps> = ({
   onTabClose,
   className,
 }) => {
+  const { t } = useV2Translation();
   const scrollContainerRef = React.useRef<HTMLDivElement>(null);
 
   // Horizontal wheel scroll handler
@@ -25,7 +27,7 @@ export const V2TabBar: React.FC<V2TabBarProps> = ({
     <div
       data-testid="v2-tab-bar"
       role="tablist"
-      aria-label="Thanh tab đa nhiệm"
+      aria-label={t("v2.tabBar.ariaLabel", "Thanh tab đa nhiệm")}
       className={cn(
         "v2-tab-bar flex h-8 min-h-[32px] w-full border-t border-border bg-card/60 select-none flex-shrink-0 backdrop-blur-xs",
         className,

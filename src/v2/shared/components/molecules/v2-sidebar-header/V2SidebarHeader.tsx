@@ -2,15 +2,19 @@ import * as React from "react";
 import { cn } from "@/v2/shared/utils/cn";
 import { V2SidebarLogo } from "@/v2/shared/components/atoms/v2-sidebar-logo";
 import { V2SidebarToggleBtn } from "@/v2/shared/components/atoms/v2-sidebar-toggle-btn";
+import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { V2SidebarHeaderProps } from "./V2SidebarHeader.type";
 
 export const V2SidebarHeader: React.FC<V2SidebarHeaderProps> = ({
-  appName = "LIOUNI ERP",
+  appName,
   isCollapsed = false,
   onToggle,
   onClickLogo,
   className,
 }) => {
+  const { t } = useV2Translation();
+  const displayAppName = appName ?? t("v2.sidebar.appName", "ERP");
+
   return (
     <div
       data-testid="v2-sidebar-header"
@@ -30,7 +34,7 @@ export const V2SidebarHeader: React.FC<V2SidebarHeaderProps> = ({
         {!isCollapsed && (
           <div className="flex-1 min-w-0 overflow-hidden">
             <p className="text-[13px] font-semibold leading-[1.2] text-foreground line-clamp-2">
-              {appName}
+              {displayAppName}
             </p>
           </div>
         )}

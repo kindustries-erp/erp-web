@@ -1,13 +1,13 @@
 ---
 name: erp-inventory-items
-description: Module tri thức Danh mục Mặt hàng & Master Data Kho trong Liouni ERP. Chứa toàn bộ database schema (erp_inventory_items, erp_uom, erp_item_types, erp_tracking_policies, erp_tracking_categories), DTOs, API endpoints, quy trình quản lý SKU, ràng buộc xóa mềm và sơ đồ kết nối phụ thuộc (connections/movements).
+description: Module tri thức Danh mục Mặt hàng & Master Data Kho trong ERP. Chứa toàn bộ database schema (erp_inventory_items, erp_uom, erp_item_types, erp_tracking_policies, erp_tracking_categories), DTOs, API endpoints, quy trình quản lý SKU, ràng buộc xóa mềm và sơ đồ kết nối phụ thuộc (connections/movements).
 ---
 
 # 📦 Module Tri Thức: Danh Mục Mặt Hàng & Dữ Liệu Gốc Kho (`erp-inventory-items`)
 
 ## 1. Tổng quan Nghiệp vụ
 
-Module `erp-inventory-items` (thuộc phân hệ `inventory-core`) quản lý toàn bộ danh mục vật tư, phụ tùng, linh kiện và thành phẩm trong hệ thống Liouni ERP. Đây là master data nền tảng cho mọi hoạt động Mua hàng (PO), Bán hàng (SO), Sản xuất (BOM & MO), Quản lý Kho và Kế toán giá vốn.
+Module `erp-inventory-items` (thuộc phân hệ `inventory-core`) quản lý toàn bộ danh mục vật tư, phụ tùng, linh kiện và thành phẩm trong hệ thống ERP. Đây là master data nền tảng cho mọi hoạt động Mua hàng (PO), Bán hàng (SO), Sản xuất (BOM & MO), Quản lý Kho và Kế toán giá vốn.
 
 ### 1.1. Các tính năng cốt lõi:
 - **Quản lý Danh mục Mặt hàng (SKU Catalog)**:

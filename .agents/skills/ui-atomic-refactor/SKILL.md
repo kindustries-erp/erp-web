@@ -1,6 +1,6 @@
 ---
 name: ui-atomic-refactor
-description: Quy chuẩn và trợ lý bắt buộc về 5 Tầng Atomic Design (Atoms, Molecules, Organisms, Templates, Pages), Cross-Cutting Features, Co-located Testing trong Liouni ERP Web. Chia tách file lớn (> 200 LoC) thành cấu trúc Atomic chuẩn (Domains, Hooks, Utils, Components, Tests), bắt buộc 100% Đa ngôn ngữ (i18n VI/EN), tối ưu Web Responsive toàn diện và tuân thủ No Blue Mandate.
+description: Quy chuẩn và trợ lý bắt buộc về 5 Tầng Atomic Design (Atoms, Molecules, Organisms, Templates, Pages), Cross-Cutting Features, Co-located Testing trong ERP Web. Chia tách file lớn (> 200 LoC) thành cấu trúc Atomic chuẩn (Domains, Hooks, Utils, Components, Tests), bắt buộc 100% Đa ngôn ngữ (i18n VI/EN), tối ưu Web Responsive toàn diện và tuân thủ No Blue Mandate.
 ---
 
 # ⚛️ UI Atomic Component & Architectural Standards (`/ui-atomic-refactor`)

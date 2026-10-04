@@ -1,9 +1,9 @@
 ---
 name: liouni-erp-web-current-truth
-description: Web-specific local-only skill for Liouni ERP. Use when working in this repo to load the repo-local current-truth context, index, and implementation rules without relying on external docs.
+description: Web-specific local-only skill for ERP. Use when working in this repo to load the repo-local current-truth context, index, and implementation rules without relying on external docs.
 ---
 
-# Liouni ERP Web Current-Truth
+# ERP Web Current-Truth
 
 Use this skill only inside this repository.
 

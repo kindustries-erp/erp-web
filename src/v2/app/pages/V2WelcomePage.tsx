@@ -7,34 +7,48 @@ import {
   ArrowRight,
   ExternalLink,
 } from "lucide-react";
-import { Button } from "@/v2/shared/ui/button";
-import { Badge } from "@/v2/shared/ui/badge";
+import { Button, Badge } from "@/v2/shared/ui";
+import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 
 export const V2WelcomePage: React.FC = () => {
+  const { t } = useV2Translation();
+
   const features = [
     {
       icon: Smartphone,
-      title: "Platform Split Tự Động",
-      desc: "Chuyển đổi linh hoạt giao diện chuyên biệt cho Desktop và Mobile.",
-      tag: "Responsive",
+      title: t("v2.welcome.featureSplitTitle", "Platform Split Tự Động"),
+      desc: t(
+        "v2.welcome.featureSplitDesc",
+        "Chuyển đổi linh hoạt giao diện chuyên biệt cho Desktop và Mobile.",
+      ),
+      tag: t("v2.welcome.badgeResponsive", "Responsive"),
     },
     {
       icon: Layers,
-      title: "5 Tầng Atomic Design",
-      desc: "Kiến trúc mô-đun hóa nghiêm ngặt, khống chế kích thước file < 180 LoC.",
-      tag: "Architecture",
+      title: t("v2.welcome.featureAtomicTitle", "5 Tầng Atomic Design"),
+      desc: t(
+        "v2.welcome.featureAtomicDesc",
+        "Kiến trúc mô-đun hóa nghiêm ngặt, khống chế kích thước file < 180 LoC.",
+      ),
+      tag: t("v2.welcome.badgeArchitecture", "Architecture"),
     },
     {
       icon: ShieldCheck,
-      title: "Dual-Run Song Song",
-      desc: "Hoạt động độc lập tại /v2/*, bảo vệ 100% độ ổn định của hệ thống V1.",
-      tag: "Stability",
+      title: t("v2.welcome.featureDualRunTitle", "Dual-Run Song Song"),
+      desc: t(
+        "v2.welcome.featureDualRunDesc",
+        "Hoạt động độc lập tại /v2/*, bảo vệ 100% độ ổn định của hệ thống V1.",
+      ),
+      tag: t("v2.welcome.badgeStability", "Stability"),
     },
     {
       icon: Zap,
-      title: "Co-located Testing",
-      desc: "100% thành phần đều có unit test tự động bảo đảm chất lượng code.",
-      tag: "Quality Gate",
+      title: t("v2.welcome.featureTestingTitle", "Co-located Testing"),
+      desc: t(
+        "v2.welcome.featureTestingDesc",
+        "100% thành phần đều có unit test tự động bảo đảm chất lượng code.",
+      ),
+      tag: t("v2.welcome.badgeQuality", "Quality Gate"),
     },
   ];
 
@@ -49,18 +63,19 @@ export const V2WelcomePage: React.FC = () => {
               className="gap-1.5 py-1 px-3 text-xs font-semibold text-primary"
             >
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              Nền tảng V2 Sẵn sàng
+              {t("v2.welcome.badgeReady", "Nền tảng V2 Sẵn sàng")}
             </Badge>
           </div>
 
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
-            Khung Ứng Dụng Liouni ERP V2
+            {t("v2.welcome.heroTitle", "Khung Ứng Dụng ERP V2")}
           </h1>
 
           <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
-            Hạ tầng v2/app đã hoàn thiện với đầy đủ Providers, Layout Switcher
-            (Desktop & Mobile), Primitives Shadcn và cơ chế Dual-Run an toàn
-            tuyệt đối.
+            {t(
+              "v2.welcome.heroSubtitle",
+              "Kiến trúc giao diện mới với thiết kế 2-Card nổi (Floating Cards), Primitives Shadcn và cơ chế Dual-Run an toàn song song với V1.",
+            )}
           </p>
 
           <div className="flex flex-wrap items-center gap-3 pt-2">
@@ -72,7 +87,7 @@ export const V2WelcomePage: React.FC = () => {
               }}
               className="gap-2 text-xs"
             >
-              <span>Khám phá menu điều hướng</span>
+              <span>{t("v2.welcome.exploreBtn", "Khám phá giao diện V2")}</span>
               <ArrowRight size={14} />
             </Button>
 
@@ -83,7 +98,7 @@ export const V2WelcomePage: React.FC = () => {
               }}
               className="gap-2 text-xs text-muted-foreground hover:text-foreground"
             >
-              <span>Về phiên bản ERP V1</span>
+              <span>{t("v2.welcome.backV1Btn", "Quay lại ERP V1")}</span>
               <ExternalLink size={14} />
             </Button>
           </div>

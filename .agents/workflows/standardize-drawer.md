@@ -1,10 +1,10 @@
 ---
-description: Quy trình 4 bước chuẩn hóa và kiểm duyệt Drawer (StandardFormDrawer / DrawerSection) trong Liouni ERP
+description: Quy trình 4 bước chuẩn hóa và kiểm duyệt Drawer (StandardFormDrawer / DrawerSection) trong ERP
 ---
 
 # 🗂️ Standardize Drawer Workflow (`/standardize-drawer`)
 
-Workflow này hướng dẫn Agent và Developer quy trình chuẩn 4 bước khi **tạo mới**, **fix bug** hoặc **refactor** bất kỳ Drawer nào trong Liouni ERP, đảm bảo **100% tuân thủ StandardFormDrawer, Responsive `vw` Size Presets, Collapsible Sections, Collapsible Right Panel, Top Navigation Tabs, Traceability Graph và QC Verification**.
+Workflow này hướng dẫn Agent và Developer quy trình chuẩn 4 bước khi **tạo mới**, **fix bug** hoặc **refactor** bất kỳ Drawer nào trong ERP, đảm bảo **100% tuân thủ StandardFormDrawer, Responsive `vw` Size Presets, Collapsible Sections, Collapsible Right Panel, Top Navigation Tabs, Traceability Graph và QC Verification**.
 
 ---
 

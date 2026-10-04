@@ -7,10 +7,10 @@ description: Module tri thức Kiến trúc Layout V2 (Floating 2-Cards, Platfor
 
 ## 1. Tổng Quan Kiến Trúc & Trách Nhiệm Hệ Thống
 
-Kiến trúc Layout V2 (`src/v2/app/layouts/` và `src/v2/shared/components/`) là bộ khung sườn giao diện chuẩn mực thế hệ mới của **Liouni ERP Web**, kế thừa toàn bộ trải nghiệm ưu việt của V1 đồng thời tái cấu trúc mã nguồn theo **Atomic Design 5 tầng**, **Platform Split (Desktop vs Mobile)** và **No Blue Mandate**:
+Kiến trúc Layout V2 (`src/v2/app/layouts/` và `src/v2/shared/components/`) là bộ khung sườn giao diện chuẩn mực thế hệ mới của **ERP Web**, kế thừa toàn bộ trải nghiệm ưu việt của V1 đồng thời tái cấu trúc mã nguồn theo **Atomic Design 5 tầng**, **Platform Split (Desktop vs Mobile)** và **No Blue Mandate**:
 
 - **Kiến trúc Floating 2-Cards (Desktop)**: Toàn bộ viewport nằm trên nền canvas xám dịu mắt `#f4f4f4` (dark mode: `bg-background`), có khoảng đệm mép `p-2` và khe hở `gap-2` (8px). Gồm 2 khối Card nổi song song độc lập bo tròn `rounded-2xl`, border mỏng và shadow mềm mại:
-  - **Cột Trái (Sidebar)**: Chiều rộng `210px` (thu gọn `58px`), hiển thị Logo Liouni, tên app, các phân hệ điều hướng in hoa, và avatar user ở chân trang.
+  - **Cột Trái (Sidebar)**: Chiều rộng `210px` (thu gọn `58px`), hiển thị Logo thương hiệu, tên app, các phân hệ điều hướng in hoa, và avatar user ở chân trang.
   - **Cột Phải (Right Panel)**: Card co giãn linh hoạt (`flex-1 min-w-0`), ôm trọn **Topbar (36px)** ở đỉnh, **Vùng nội dung nghiệp vụ (App Content)** cuộn mượt mà ở giữa, và **Thanh TabBar đa nhiệm** ở đáy.
 - **Cơ chế Dual-Run Song Song Tuyệt Đối**: Chạy độc lập tại tiền tố route `/v2/*` trên cùng một single bundle và dev server của Vite. Kế thừa trực tiếp `useAuthStore` của V1 mà không gây bất kỳ tác dụng phụ nào tới hệ thống V1 đang vận hành.
 - **Platform Split Tự Động (`useViewport`)**: Tự động chuyển đổi giao diện dựa trên kích thước màn hình mà không bị giật lag layout:
@@ -32,20 +32,35 @@ src/v2/
 │           ├── V2AppLayout.tsx         # Switcher Router (< 20 LoC) dựa trên useViewport()
 │           ├── V2AppLayout.desktop.tsx # Bố cục Floating 2-Cards song song (p-2 gap-2)
 │           ├── V2AppLayout.mobile.tsx  # Bố cục Mobile chuyên dụng kèm BottomNav
+│           ├── v2Navigation.ts         # Hàm sinh danh mục điều hướng đa ngôn ngữ getV2NavigationSections(t)
+│           ├── v2Navigation.config.ts  # Cấu hình danh mục thô (NAV_DEFS & SECTION_DEFS)
+│           ├── v2Navigation.test.ts    # Unit test danh mục điều hướng
 │           ├── V2AppLayout.type.ts     # Interface V2AppLayoutProps toàn diện
-│           ├── V2AppLayout.test.tsx    # Unit test kiểm tra chuyển đổi Desktop/Mobile
+│           ├── V2AppLayout.test.tsx    # Unit test kiểm tra chuyển đổi Desktop/Mobile & i18n
 │           └── index.ts                # Public export
 │
 └── shared/
-    ├── ui/
-    │   └── button.tsx                  # [Level 1 - Atom/Primitive] Button chuẩn token text-primary-fg
+    ├── locales/                        # [i18n Dictionary]
+    │   ├── vi.ts                       # Từ điển V2 tiếng Việt (v2Vi, type V2Dictionary)
+    │   ├── en.ts                       # Từ điển V2 tiếng Anh (v2En)
+    │   └── index.ts                    # Public export
     │
-    └── components/
+    ├── hooks/
+    │   ├── useV2Translation.ts         # Hook đa ngôn ngữ đồng bộ useAppStore & fallback useT() V1
+    │   └── useViewport.ts              # Hook xác định kích thước màn hình Desktop/Mobile
+    │
+    ├── ui/                             # [Level 1 - Primitives] Shadcn UI (Folder-per-component)
+    │   ├── button/                     # button.tsx, button.test.tsx, index.ts
+    │   ├── badge/                      # badge.tsx, badge.test.tsx, index.ts
+    │   └── index.ts                    # Master Barrel Export
+    │
+    └── components/                     # [Atomic Components] (Import 1 chiều từ shared/ui)
         ├── molecules/                  # [Level 2 - Molecules]
         │   ├── v2-breadcrumb/          # Dãy đường dẫn điều hướng (Home > Bán hàng > Đơn hàng)
-        │   ├── v2-quick-search/        # Nút kích hoạt tìm kiếm nhanh Ctrl+K / ⌘K
+        │   ├── v2-quick-search/        # Nút kích hoạt tìm kiếm nhanh Ctrl+K / ⌘K (i18n placeholder)
+        │   ├── v2-language-switcher/   # Nút chuyển đổi ngôn ngữ pill compact 24px (VI 🇻🇳 / EN 🇬🇧)
         │   ├── v2-branch-badge/        # Huy hiệu chi nhánh làm việc hiện tại & Profile công ty
-        │   ├── v2-tab-item/            # Thẻ tab đa nhiệm (icon + label + nút đóng x)
+        │   ├── v2-tab-item/            # Thẻ tab đa nhiệm (icon + label + nút đóng x i18n)
         │   ├── v2-topbar/              # Thanh Topbar 36px nằm bên trong Right Panel
         │   ├── v2-sidebar-header/      # Header Sidebar h-12 (Logo + App name + Toggle Button)
         │   ├── v2-sidebar-nav-item/    # Hàng menu điều hướng (12px, icon 16px, active pill)
@@ -157,7 +172,26 @@ export interface V2SidebarProps {
 
 ---
 
-## 5. Hướng Dẫn Tích Hợp Trang Nghiệp Vụ Vào Layout V2
+## 5. Kiến Trúc Đa Ngôn Ngữ (i18n VI/EN) Trong V2 Layout
+
+Hệ thống Layout V2 hỗ trợ 100% đa ngôn ngữ (Tiếng Việt 🇻🇳 và English 🇬🇧) với kiến trúc 2 tầng mượt mà, đồng bộ thời gian thực với Zustand Core Store:
+
+### 5.1. Hook `useV2Translation` ([`useV2Translation.ts`](file:///home/dev/repos-dev/erp/erp-web/src/v2/shared/hooks/useV2Translation.ts))
+- **Đồng bộ Zustand Store**: Lấy và cập nhật `locale` trực tiếp từ `useAppStore` (`state.locale`, `state.setLocale`).
+- **Ưu tiên Từ điển V2**: Các key có tiền tố `v2.` (như `v2.sidebar.appName`, `v2.welcome.heroTitle`) được tra cứu tại `src/v2/shared/locales/{vi,en}.ts`. Hỗ trợ template interpolation `{{name}}`.
+- **Fallback Sang Core V1**: Tự động ủy thác sang `useT()` của V1 khi tra cứu các key dùng chung (`nav.items.*`, `nav.sections.*`), bảo đảm tái sử dụng triệt để từ điển hệ thống.
+
+### 5.2. Phân Tử `V2LanguageSwitcher` ([`V2LanguageSwitcher.tsx`](file:///home/dev/repos-dev/erp/erp-web/src/v2/shared/components/molecules/v2-language-switcher/V2LanguageSwitcher.tsx))
+- Thiết kế dạng Pill Badge compact siêu gọn cao **24px**, tích hợp trên thanh `V2Topbar` (Desktop) và `V2Header` (Mobile).
+- Hiển thị cờ và mã ngôn ngữ: `🇻🇳 VI` | `🇬🇧 EN`. Click để chuyển đổi ngôn ngữ tức thời và kích hoạt re-render toàn bộ layout.
+
+### 5.3. Động Hóa Danh Mục Điều Hướng ([`v2Navigation.ts`](file:///home/dev/repos-dev/erp/erp-web/src/v2/app/layouts/v2-app-layout/v2Navigation.ts))
+- Menu Sidebar và Mobile BottomNav được động hóa hoàn toàn thông qua `getV2NavigationSections(t)` và `getV2NavItems(t)`.
+- Tách bạch cấu hình thô sang [`v2Navigation.config.ts`](file:///home/dev/repos-dev/erp/erp-web/src/v2/app/layouts/v2-app-layout/v2Navigation.config.ts), bảo đảm tuân thủ nghiêm ngặt ngưỡng kích thước file < 180 LoC.
+
+---
+
+## 6. Hướng Dẫn Tích Hợp Trang Nghiệp Vụ Vào Layout V2
 
 Khi phát triển trang mới trong V2 (hoặc migrate cuốn chiếu module từ V1 sang V2), chỉ cần bọc trang bằng `V2AppLayout`:
 
@@ -174,7 +208,7 @@ export const MyV2OrderPage: React.FC = () => {
         { label: "Đơn bán hàng" },
       ]}
       branchName="Chi nhánh Sài Gòn"
-      tenantName="Liouni Industries"
+      tenantName="Enterprise Industries"
       onSearchClick={() => console.log("Mở quick search Ctrl+K")}
     >
       <div className="space-y-4">
@@ -188,7 +222,7 @@ export const MyV2OrderPage: React.FC = () => {
 
 ---
 
-## 6. Quy Chuẩn Kiểm Thử & Quality Gate
+## 7. Quy Chuẩn Kiểm Thử & Quality Gate
 
 Mỗi khi chỉnh sửa hoặc thêm component vào Layout V2, bắt buộc chạy chuỗi kiểm tra Zero-Miss:
 

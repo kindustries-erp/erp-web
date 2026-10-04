@@ -4,7 +4,7 @@ import { useAuthStore } from "@/modules/auth/domain/authStore";
 import { V2AppLayout } from "@/v2/app/layouts/v2-app-layout";
 import { type V2SidebarNavItem } from "@/v2/shared/components/organisms/v2-sidebar";
 import { V2WelcomePage } from "@/v2/app/pages/V2WelcomePage";
-import { Badge } from "@/v2/shared/ui/badge";
+import { Badge } from "@/v2/shared/ui";
 import { Clock } from "lucide-react";
 
 export const V2RouterView: React.FC = () => {

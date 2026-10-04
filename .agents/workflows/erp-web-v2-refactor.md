@@ -22,9 +22,10 @@ graph TD
 1. **Dual-Run Route `/v2/` Song Song Tuyệt Đối**:
    - Route `/v2/*` và `/` (V1) chạy song song trên cùng một Vite server và bundle.
    - Chia sẻ hoàn toàn Auth state (`useAuthStore`) và Axios HTTP client từ V1. Không dựng Bridge Adapter trung gian.
-2. **Phân Định Rõ Ràng Thư Mục Shared**:
-   - `src/v2/shared/ui/`: Thư viện primitive thuần túy từ Shadcn/UI (Button, Dialog, Popover, Select...). Giữ nguyên mã nguồn gốc, không tùy biến trực tiếp logic.
-   - `src/v2/shared/components/`: Các UI components chuẩn hệ sinh thái Liouni Atomic Design (Atoms, Molecules, Organisms, Templates).
+2. **Phân Định Rõ Ràng Thư Mục Shared & Quy Tắc Import 1 Chiều**:
+   - `src/v2/shared/ui/<component>/`: Thư viện primitive từ Shadcn/UI (Button, Dialog, Popover, Select...). Mỗi component tổ chức theo chuẩn **Folder-per-Component** (gồm `<component>.tsx`, `<component>.test.tsx`, `index.ts`), kèm master barrel export `src/v2/shared/ui/index.ts`. Thêm component mới thông qua lệnh `bun run ui:add <name>`.
+   - `src/v2/shared/components/`: Các UI components chuẩn hệ sinh thái Atomic Design (Atoms, Molecules, Organisms, Templates).
+   - **Quy tắc Import 1 Chiều Bắt Buộc (Unidirectional Dependency)**: Các component trong cấu trúc Atoms, Molecules ĐƯỢC PHÉP import từ `shared/ui` của Shadcn UI (`@/v2/shared/ui`) và wrap/custom lại cho phù hợp dự án. **TUYỆT ĐỐI CẤM CHIỀU NGƯỢC LẠI** (`shared/ui` không bao giờ import từ `atoms`, `molecules`, `organisms` hay bất kỳ tầng nào cao hơn).
 3. **Platform Split (Desktop vs Mobile) Phân Cấp Cây Giao Diện**:
    - Tách rời giao diện bằng component tree độc lập: `[Name].desktop.tsx` và `[Name].mobile.tsx`.
    - File entry `[Name].tsx` là **Switcher thuần túy (< 15 LoC)**, dùng `useViewport()` hook để render variant tương ứng.
@@ -60,11 +61,11 @@ src/v2/
 │       └── guards/                         # AuthGuard, PermissionGuard
 │
 ├── shared/                                 # Tài sản dùng chung toàn bộ V2
-│   ├── ui/                                 # Shadcn/ui Primitives (Button, Dialog...)
-│   │   ├── button.tsx
-│   │   ├── dialog.tsx
-│   │   └── popover.tsx
-│   ├── components/                         # Liouni Atomic Design Components
+│   ├── ui/                                 # Shadcn/ui Primitives (Folder-per-component)
+│   │   ├── button/                         # button.tsx, button.test.tsx, index.ts
+│   │   ├── badge/                          # badge.tsx, badge.test.tsx, index.ts
+│   │   └── index.ts                        # Master Barrel Export (export * from './button'...)
+│   ├── components/                         # Atomic Design Components (Import 1 chiều từ shared/ui)
 │   │   ├── atoms/                          # L1: Button, Badge, StatusDot, TableDateCell
 │   │   ├── molecules/                      # L2: PillTabs, Combobox, SubtotalSummaryCell
 │   │   ├── organisms/                      # L3: StandardTable, StandardFormDrawer, FilterPanel

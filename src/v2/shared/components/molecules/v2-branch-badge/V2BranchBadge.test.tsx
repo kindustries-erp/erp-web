@@ -9,13 +9,13 @@ describe("V2BranchBadge Molecule", () => {
     render(
       <V2BranchBadge
         branchName="Chi nhánh Quận 7"
-        companyName="Liouni Industries"
+        companyName="Enterprise Industries"
         onClick={handleClick}
       />,
     );
 
     expect(screen.getByText("Chi nhánh Quận 7")).toBeInTheDocument();
-    expect(screen.getByText("Liouni Industries")).toBeInTheDocument();
+    expect(screen.getByText("Enterprise Industries")).toBeInTheDocument();
 
     fireEvent.click(
       screen.getByRole("button", { name: "Chi nhánh: Chi nhánh Quận 7" }),

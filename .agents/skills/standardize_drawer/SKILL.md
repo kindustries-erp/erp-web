@@ -81,7 +81,7 @@ Toàn bộ kích thước Drawer trên Desktop được thiết kế co giãn li
 
 ## 3. Phân loại Kiến trúc Drawer trong Toàn hệ thống ERP
 
-Trong hệ thống Liouni ERP, Drawer được chuẩn hóa thành 3 mô hình kiến trúc rõ ràng:
+Trong hệ thống ERP, Drawer được chuẩn hóa thành 3 mô hình kiến trúc rõ ràng:
 
 ```mermaid
 graph TD

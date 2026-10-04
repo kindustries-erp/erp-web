@@ -1,7 +1,8 @@
-import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { render, screen, fireEvent, act } from "@testing-library/react";
 import React from "react";
 import { LayoutDashboard, Users, Boxes } from "lucide-react";
+import { useAppStore } from "@/core/config/appStore";
 import { V2Sidebar } from "./V2Sidebar";
 import { V2SidebarSectionData } from "./V2Sidebar.type";
 
@@ -40,6 +41,12 @@ const mockSections: V2SidebarSectionData[] = [
 ];
 
 describe("V2Sidebar Organism", () => {
+  beforeEach(() => {
+    act(() => {
+      useAppStore.getState().setLocale("vi");
+    });
+  });
+
   it("renders with 210px width floating card, sections, items and user footer", () => {
     const handleNavigate = vi.fn();
 
@@ -79,5 +86,23 @@ describe("V2Sidebar Organism", () => {
     fireEvent.click(toggleBtn);
 
     expect(aside).toHaveClass("w-[58px]");
+  });
+
+  it("updates header and bottom labels when locale changes", () => {
+    const { rerender } = render(
+      <V2Sidebar sections={mockSections} activeId="dashboard" />,
+    );
+
+    expect(screen.getByLabelText("Thông báo")).toBeInTheDocument();
+    expect(screen.getByText("Quản trị viên")).toBeInTheDocument();
+
+    act(() => {
+      useAppStore.getState().setLocale("en");
+    });
+
+    rerender(<V2Sidebar sections={mockSections} activeId="dashboard" />);
+
+    expect(screen.getByLabelText("Notifications")).toBeInTheDocument();
+    expect(screen.getByText("Administrator")).toBeInTheDocument();
   });
 });

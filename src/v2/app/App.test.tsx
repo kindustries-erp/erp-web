@@ -9,7 +9,7 @@ vi.mock("@/modules/auth/domain/authStore", () => ({
       full_name: "Kỹ Sư Trưởng",
     },
     profile: {
-      email: "engineer@liouni.com",
+      email: "engineer@example.com",
       role: { name: "Quản trị viên" },
     },
   }),
@@ -26,9 +26,7 @@ describe("V2App Root Component", () => {
     render(<V2App />);
 
     expect(screen.getByTestId("v2-app-layout-desktop")).toBeInTheDocument();
-    expect(
-      screen.getByText("Khung Ứng Dụng Liouni ERP V2"),
-    ).toBeInTheDocument();
+    expect(screen.getByText("Khung Ứng Dụng ERP V2")).toBeInTheDocument();
     expect(screen.getAllByText("Kỹ Sư Trưởng").length).toBeGreaterThanOrEqual(
       1,
     );

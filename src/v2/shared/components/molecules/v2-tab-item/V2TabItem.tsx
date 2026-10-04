@@ -1,6 +1,7 @@
 import * as React from "react";
 import { X } from "lucide-react";
 import { cn } from "@/v2/shared/utils/cn";
+import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { V2TabItemProps } from "./V2TabItem.type";
 
 export const V2TabItem: React.FC<V2TabItemProps> = ({
@@ -13,6 +14,12 @@ export const V2TabItem: React.FC<V2TabItemProps> = ({
   onClose,
   className,
 }) => {
+  const { t } = useV2Translation();
+  const closeTabAria = t("v2.tabBar.closeTab", {
+    name: label,
+    defaultValue: `Đóng tab ${label}`,
+  });
+
   return (
     <div
       role="tab"
@@ -44,7 +51,8 @@ export const V2TabItem: React.FC<V2TabItemProps> = ({
       {isClosable && (
         <button
           type="button"
-          aria-label={`Đóng tab ${label}`}
+          aria-label={closeTabAria}
+          title={closeTabAria}
           onClick={(e) => {
             e.stopPropagation();
             onClose?.();

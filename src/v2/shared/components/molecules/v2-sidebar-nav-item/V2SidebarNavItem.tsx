@@ -1,7 +1,7 @@
 import * as React from "react";
 import { cn } from "@/v2/shared/utils/cn";
 import { V2SidebarIcon } from "@/v2/shared/components/atoms/v2-sidebar-icon";
-import { Badge } from "@/v2/shared/ui/badge";
+import { Badge } from "@/v2/shared/ui";
 import { V2SidebarNavItemProps } from "./V2SidebarNavItem.type";
 
 export const V2SidebarNavItem: React.FC<V2SidebarNavItemProps> = ({

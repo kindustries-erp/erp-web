@@ -1,170 +1,24 @@
 import * as React from "react";
-import {
-  LayoutDashboard,
-  Boxes,
-  Users,
-  Shield,
-  FileText,
-  Building2,
-  Package,
-  PackageCheck,
-  Layers,
-  Factory,
-  ReceiptText,
-  Wallet,
-  Settings,
-} from "lucide-react";
-import {
-  V2Sidebar,
-  type V2SidebarSectionData,
-  type V2SidebarNavItem,
-} from "@/v2/shared/components/organisms/v2-sidebar";
+import { LayoutDashboard } from "lucide-react";
+import { V2Sidebar } from "@/v2/shared/components/organisms/v2-sidebar";
 import { V2RightPanel } from "@/v2/shared/components/organisms/v2-right-panel";
+import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
+import {
+  getV2NavigationSections,
+  DEFAULT_V2_NAV_ITEMS,
+  DEFAULT_V2_SECTIONS,
+} from "./v2Navigation";
 import { V2AppLayoutProps } from "./V2AppLayout.type";
 
-export const DEFAULT_V2_NAV_ITEMS: V2SidebarNavItem[] = [
-  { id: "dashboard", label: "Tổng quan", icon: LayoutDashboard, href: "/v2" },
-  {
-    id: "sales-orders",
-    label: "Đơn bán hàng",
-    icon: Boxes,
-    href: "/v2/sales-orders",
-  },
-  {
-    id: "purchasing",
-    label: "Mua hàng",
-    icon: FileText,
-    href: "/v2/purchasing",
-  },
-  { id: "inventory", label: "Kho vận", icon: Package, href: "/v2/inventory" },
-  { id: "settings", label: "Cài đặt", icon: Settings, href: "/v2/settings" },
-];
-
-export const DEFAULT_V2_SECTIONS: V2SidebarSectionData[] = [
-  {
-    id: "overview",
-    label: "TỔNG QUAN",
-    items: [
-      {
-        id: "dashboard",
-        label: "Tổng quan",
-        icon: LayoutDashboard,
-        href: "/v2",
-      },
-    ],
-  },
-  {
-    id: "sales",
-    label: "BÁN HÀNG",
-    items: [
-      {
-        id: "sales-orders",
-        label: "Đơn bán hàng",
-        icon: Boxes,
-        href: "/v2/sales-orders",
-      },
-      {
-        id: "customers",
-        label: "Khách hàng",
-        icon: Users,
-        href: "/v2/customers",
-      },
-      {
-        id: "after-sales",
-        label: "Sau bán hàng & Bảo hành",
-        icon: Shield,
-        href: "/v2/after-sales",
-      },
-    ],
-  },
-  {
-    id: "purchasing",
-    label: "MUA HÀNG",
-    items: [
-      {
-        id: "purchasing-orders",
-        label: "Mua hàng",
-        icon: FileText,
-        href: "/v2/purchasing",
-      },
-      {
-        id: "suppliers",
-        label: "Nhà cung cấp",
-        icon: Building2,
-        href: "/v2/suppliers",
-      },
-    ],
-  },
-  {
-    id: "inventory",
-    label: "KHO VẬN",
-    items: [
-      {
-        id: "inventory-stock",
-        label: "Tồn kho thực tế",
-        icon: Package,
-        href: "/v2/inventory",
-      },
-      {
-        id: "inventory-vouchers",
-        label: "Chứng từ kho",
-        icon: PackageCheck,
-        href: "/v2/inventory-vouchers",
-      },
-    ],
-  },
-  {
-    id: "manufacturing",
-    label: "SẢN XUẤT",
-    items: [
-      { id: "bom", label: "Định mức BOM", icon: Layers, href: "/v2/bom" },
-      {
-        id: "production",
-        label: "Lệnh sản xuất",
-        icon: Factory,
-        href: "/v2/production",
-      },
-    ],
-  },
-  {
-    id: "accounting",
-    label: "KẾ TOÁN & DÒNG TIỀN",
-    items: [
-      {
-        id: "invoices",
-        label: "Hóa đơn điện tử",
-        icon: ReceiptText,
-        href: "/v2/invoices",
-      },
-      {
-        id: "cashflow",
-        label: "Sổ quỹ & Sao kê",
-        icon: Wallet,
-        href: "/v2/cashflow",
-      },
-    ],
-  },
-  {
-    id: "settings",
-    label: "CÀI ĐẶT",
-    items: [
-      {
-        id: "settings-app",
-        label: "Cài đặt chung",
-        icon: Settings,
-        href: "/v2/settings",
-      },
-    ],
-  },
-];
+export { DEFAULT_V2_NAV_ITEMS, DEFAULT_V2_SECTIONS };
 
 export const V2AppLayoutDesktop: React.FC<V2AppLayoutProps> = ({
   children,
   activeNavId = "dashboard",
-  breadcrumbs = [{ label: "Tổng quan" }],
-  userName = "Quản trị viên",
-  branchName = "Chi nhánh chính",
-  tenantName = "Liouni Ecosystem",
+  breadcrumbs,
+  userName,
+  branchName,
+  tenantName = "Enterprise Ecosystem",
   sections,
   navItems,
   tabs,
@@ -175,17 +29,34 @@ export const V2AppLayoutDesktop: React.FC<V2AppLayoutProps> = ({
   onSearchClick,
   onBranchClick,
 }) => {
+  const { t, locale } = useV2Translation();
+
+  const dynamicSections = React.useMemo(
+    () => getV2NavigationSections(t),
+    [t, locale],
+  );
+
+  const fallbackBreadcrumbs = React.useMemo(
+    () => [{ label: t("nav.items.dashboard", "Tổng quan") }],
+    [t, locale],
+  );
+
   const fallbackTabs = React.useMemo(
     () => [
       {
         id: "dashboard",
-        label: "Tổng quan",
+        label: t("nav.items.dashboard", "Tổng quan"),
         icon: LayoutDashboard,
         isClosable: false,
       },
     ],
-    [],
+    [t, locale],
   );
+
+  const effectiveUserName =
+    userName ?? t("v2.sidebar.userFallback", "Quản trị viên");
+  const effectiveBranchName =
+    branchName ?? t("v2.topbar.mainBranch", "Chi nhánh chính");
 
   return (
     <div
@@ -194,14 +65,14 @@ export const V2AppLayoutDesktop: React.FC<V2AppLayoutProps> = ({
     >
       {/* Card 1: Sidebar floating card */}
       <V2Sidebar
-        sections={sections ?? (navItems ? undefined : DEFAULT_V2_SECTIONS)}
+        sections={sections ?? (navItems ? undefined : dynamicSections)}
         items={navItems}
         activeId={activeNavId}
         onNavigate={onNavigate}
         user={{
-          displayName: userName,
-          avatarInitials: userName
-            ? userName.substring(0, 2).toUpperCase()
+          displayName: effectiveUserName,
+          avatarInitials: effectiveUserName
+            ? effectiveUserName.substring(0, 2).toUpperCase()
             : "AD",
           unreadCount: 0,
         }}
@@ -209,8 +80,8 @@ export const V2AppLayoutDesktop: React.FC<V2AppLayoutProps> = ({
 
       {/* Card 2: Right Panel floating card with Topbar, Content & TabBar */}
       <V2RightPanel
-        breadcrumbs={breadcrumbs}
-        branchName={branchName}
+        breadcrumbs={breadcrumbs ?? fallbackBreadcrumbs}
+        branchName={effectiveBranchName}
         companyName={tenantName}
         onSearchClick={onSearchClick}
         onBranchClick={onBranchClick}

@@ -1,7 +1,8 @@
 import * as React from "react";
 import { V2Header } from "@/v2/shared/components/organisms/v2-header";
 import { V2BottomNav } from "@/v2/shared/components/organisms/v2-bottom-nav";
-import { DEFAULT_V2_NAV_ITEMS } from "./V2AppLayout.desktop";
+import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
+import { getV2NavItems } from "./v2Navigation";
 import { V2AppLayoutProps } from "./V2AppLayout.type";
 
 export const V2AppLayoutMobile: React.FC<V2AppLayoutProps> = ({
@@ -11,17 +12,29 @@ export const V2AppLayoutMobile: React.FC<V2AppLayoutProps> = ({
   userName,
   userRole,
   tenantName,
-  navItems = DEFAULT_V2_NAV_ITEMS,
+  navItems,
   onNavigate,
 }) => {
+  const { t, locale } = useV2Translation();
+
+  const dynamicNavItems = React.useMemo(() => getV2NavItems(t), [t, locale]);
+
+  const fallbackBreadcrumbs = React.useMemo(
+    () => [{ label: t("nav.items.dashboard", "Tổng quan") }],
+    [t, locale],
+  );
+
+  const effectiveUserName =
+    userName ?? t("v2.sidebar.userFallback", "Quản trị viên");
+
   return (
     <div
       data-testid="v2-app-layout-mobile"
       className="flex min-h-screen w-full flex-col bg-background text-foreground"
     >
       <V2Header
-        breadcrumbs={breadcrumbs}
-        userName={userName}
+        breadcrumbs={breadcrumbs ?? fallbackBreadcrumbs}
+        userName={effectiveUserName}
         userRole={userRole}
         tenantName={tenantName}
       />
@@ -29,7 +42,7 @@ export const V2AppLayoutMobile: React.FC<V2AppLayoutProps> = ({
         {children}
       </main>
       <V2BottomNav
-        items={navItems}
+        items={navItems ?? dynamicNavItems}
         activeId={activeNavId}
         onNavigate={onNavigate}
       />

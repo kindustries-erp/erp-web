@@ -1,9 +1,10 @@
 import * as React from "react";
 import { ArrowLeft, ChevronRight, Sparkles } from "lucide-react";
 import { cn } from "@/v2/shared/utils/cn";
-import { Button } from "@/v2/shared/ui/button";
-import { Badge } from "@/v2/shared/ui/badge";
+import { Button, Badge } from "@/v2/shared/ui";
 import { V2UserBadge } from "@/v2/shared/components/molecules/v2-user-badge";
+import { V2LanguageSwitcher } from "@/v2/shared/components/molecules/v2-language-switcher";
+import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { V2HeaderProps } from "./V2Header.type";
 
 export const V2Header: React.FC<V2HeaderProps> = ({
@@ -15,6 +16,8 @@ export const V2Header: React.FC<V2HeaderProps> = ({
   onReturnToV1,
   className,
 }) => {
+  const { t } = useV2Translation();
+
   const handleReturnV1 = () => {
     if (onReturnToV1) {
       onReturnToV1();
@@ -76,17 +79,21 @@ export const V2Header: React.FC<V2HeaderProps> = ({
         )}
       </div>
 
-      {/* Right Actions: Return to V1 button & User info */}
-      <div className="flex items-center gap-2.5">
+      {/* Right Actions: Return to V1 button, Language Switcher & User info */}
+      <div className="flex items-center gap-2">
+        <V2LanguageSwitcher />
+
         <Button
           variant="outline"
           size="sm"
           onClick={handleReturnV1}
           className="gap-1.5 text-xs text-muted-foreground hover:text-foreground"
-          title="Quay lại giao diện ERP V1"
+          title={t("v2.topbar.returnV1", "Quay lại ERP V1")}
         >
           <ArrowLeft size={14} />
-          <span className="hidden sm:inline">Quay lại ERP V1</span>
+          <span className="hidden sm:inline">
+            {t("v2.topbar.returnV1", "Quay lại ERP V1")}
+          </span>
         </Button>
 
         <div className="h-4 w-px bg-border hidden sm:block" />

@@ -1,11 +1,11 @@
 ---
 name: drawer-document-traceability
-description: Mạng lưới chứng từ liên kết & Cấn trừ thông minh (Multi-hop Traceability Graph) trong Drawer hệ thống Liouni ERP. Hướng dẫn sử dụng component DrawerDocumentTraceability, props interface, data contract, 3 view modes (Canvas, Pipeline, Table), zero-trust RBAC và thao tác ghép nối/gỡ liên kết chứng từ.
+description: Mạng lưới chứng từ liên kết & Cấn trừ thông minh (Multi-hop Traceability Graph) trong Drawer hệ thống ERP. Hướng dẫn sử dụng component DrawerDocumentTraceability, props interface, data contract, 3 view modes (Canvas, Pipeline, Table), zero-trust RBAC và thao tác ghép nối/gỡ liên kết chứng từ.
 ---
 
 # 🕸️ Drawer Document Traceability Standard
 
-Component `<DrawerDocumentTraceability>` cung cấp khả năng trực quan hóa và thao tác trên **Mạng lưới chứng từ liên kết đa tầng (Multi-hop Traceability Graph)** trong Liouni ERP.
+Component `<DrawerDocumentTraceability>` cung cấp khả năng trực quan hóa và thao tác trên **Mạng lưới chứng từ liên kết đa tầng (Multi-hop Traceability Graph)** trong ERP.
 
 ---
 

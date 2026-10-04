@@ -2,7 +2,7 @@ import * as React from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Lock, LogIn } from "lucide-react";
 import { useAuthStore } from "@/modules/auth/domain/authStore";
-import { Button } from "@/v2/shared/ui/button";
+import { Button } from "@/v2/shared/ui";
 import { AppProvidersProps } from "./AppProviders.type";
 
 const queryClient = new QueryClient({
