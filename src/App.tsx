@@ -29,6 +29,8 @@ import { PageKey } from "@/shared/types";
 
 type PageLoader = () => Promise<unknown>;
 
+const V2App = lazy(() => import("@/v2/app/App"));
+
 const loadDashboard = () =>
   import("@/pages/Dashboard").then((m) => ({ default: m.Dashboard }));
 const Dashboard = lazy(loadDashboard);
@@ -367,6 +369,7 @@ export default function App() {
 
   useEffect(() => {
     const sync = () => {
+      if (location.pathname.startsWith("/v2")) return;
       const parsed = pathToPage(location.pathname, location.search);
       if (parsed) {
         if (
@@ -423,6 +426,14 @@ export default function App() {
   function keepContentXLocked() {
     const el = contentRef.current;
     if (el && el.scrollLeft !== 0) el.scrollLeft = 0;
+  }
+
+  if (typeof window !== "undefined" && location.pathname.startsWith("/v2")) {
+    return (
+      <Suspense fallback={PAGE_FALLBACK}>
+        <V2App />
+      </Suspense>
+    );
   }
 
   if (!isLoggedIn) return <Login />;
