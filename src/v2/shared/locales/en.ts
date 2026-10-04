@@ -35,6 +35,9 @@ export const v2En: V2Dictionary = {
       ariaLabel: "Multi-task tab bar",
       closeTab: "Close tab {{name}}",
       closeTabShort: "Close tab",
+      headerAriaLabel: "Drawer top navigation tabs",
+      subAriaLabel: "Drawer sub navigation tabs",
+      buttonGroupAriaLabel: "Button group tabs",
     },
     welcome: {
       badgeReady: "V2 Platform Ready",

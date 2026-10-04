@@ -136,15 +136,12 @@ export function useStandardDrawer(props: V2StandardDrawerProps) {
     return () => el.removeEventListener("scroll", checkScroll);
   }, [open, checkScroll]);
 
-  const effectiveLayout: V2DrawerLayout = useMemo(() => {
-    if (props.layout) return props.layout;
-    return size === "sm" || size === "md" ? "1-column" : "2-columns";
-  }, [props.layout, size]);
+  const effectiveLayout: V2DrawerLayout =
+    props.layout || (size === "sm" || size === "md" ? "1-column" : "2-columns");
 
-  const sizeClass = useMemo(() => {
-    if (isFullscreen) return "w-screen h-dvh max-w-none rounded-none border-0";
-    return SIZE_CLASSES[size] || SIZE_CLASSES.xl;
-  }, [isFullscreen, size]);
+  const sizeClass = isFullscreen
+    ? "w-screen h-dvh max-w-none rounded-none border-0"
+    : SIZE_CLASSES[size] || SIZE_CLASSES.xl;
 
   return {
     activeTabKey,

@@ -33,6 +33,9 @@ export const v2Vi = {
       ariaLabel: "Thanh tab đa nhiệm",
       closeTab: "Đóng tab {{name}}",
       closeTabShort: "Đóng tab",
+      headerAriaLabel: "Thanh điều hướng tiêu đề",
+      subAriaLabel: "Thanh điều hướng phụ",
+      buttonGroupAriaLabel: "Nhóm nút chuyển đổi tab",
     },
     welcome: {
       badgeReady: "Nền tảng V2 Sẵn sàng",

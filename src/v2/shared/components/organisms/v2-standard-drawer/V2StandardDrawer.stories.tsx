@@ -1,6 +1,7 @@
 import type { Meta } from "@storybook/react";
 import React, { useState } from "react";
 import { V2StandardDrawer } from "./V2StandardDrawer";
+import { V2TabBar } from "@/v2/shared/components/molecules/v2-tab-bar";
 import { DrawerSection } from "@/v2/shared/components/molecules/v2-drawer-section";
 import { DrawerField } from "@/v2/shared/components/molecules/v2-drawer-field";
 import { V2Button } from "@/v2/shared/components/atoms/v2-button";
@@ -77,6 +78,9 @@ export const SingleColumnSimple = () => {
 export const ErpInvoiceDetailGoldenSimulation = () => {
   const [open, setOpen] = useState(true);
   const [activeLeftTab, setActiveLeftTab] = useState("detail");
+  const [previewMode, setPreviewMode] = useState<"template" | "pdf">(
+    "template",
+  );
 
   return (
     <div className="p-6">
@@ -125,7 +129,11 @@ export const ErpInvoiceDetailGoldenSimulation = () => {
           },
         ]}
         leftTabs={[
-          { key: "detail", label: "Chi tiết" },
+          {
+            key: "detail",
+            label: "Chi tiết",
+            icon: <FileText className="w-3.5 h-3.5" />,
+          },
           { key: "target", label: "Chi tiết theo đối tượng", badgeCount: 20 },
           { key: "items", label: "Chi tiết HHDV" },
           { key: "analysis", label: "Biến động & Phân tích" },
@@ -133,26 +141,23 @@ export const ErpInvoiceDetailGoldenSimulation = () => {
         activeLeftTabKey={activeLeftTab}
         onLeftTabChange={setActiveLeftTab}
         leftTabExtra={
-          <div className="flex items-center gap-2">
-            <V2Button
-              variant="outline"
-              size="xs"
-              className="text-xs h-7 px-2.5 gap-1.5"
-              onClick={() => alert("Xem trước HĐ thuần")}
-            >
-              <FileText className="w-3.5 h-3.5 text-muted-fg" />
-              Xem trước HĐ thuần
-            </V2Button>
-            <V2Button
-              variant="outline"
-              size="xs"
-              className="text-xs h-7 px-2.5 gap-1.5"
-              onClick={() => alert("Tài liệu & PDF")}
-            >
-              <Paperclip className="w-3.5 h-3.5 text-muted-fg" />
-              Tài liệu & PDF
-            </V2Button>
-          </div>
+          <V2TabBar
+            variant="button-group"
+            tabs={[
+              {
+                key: "template",
+                label: "Xem trước HĐ thuần",
+                icon: <FileText className="w-3.5 h-3.5" />,
+              },
+              {
+                key: "pdf",
+                label: "Tài liệu & PDF",
+                icon: <Paperclip className="w-3.5 h-3.5" />,
+              },
+            ]}
+            activeTabKey={previewMode}
+            onTabChange={(key) => setPreviewMode(key as any)}
+          />
         }
         actionGroups={[
           {

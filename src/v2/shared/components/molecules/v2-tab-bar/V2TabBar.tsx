@@ -37,13 +37,28 @@ export const V2TabBar: React.FC<V2TabBarProps> = ({
     }
   }, []);
 
-  if (!tabs || tabs.length === 0) return null;
+  const renderPillItems = (v: "header" | "button-group" | "sub") =>
+    tabs.map((tab) => {
+      const tabKey = (tab.key ?? tab.id) || "";
+      return (
+        <TabBarPillItem
+          key={tabKey}
+          tab={tab}
+          variant={v}
+          isActive={activeKey === tabKey}
+          onSelect={handleSelect}
+        />
+      );
+    });
 
   if (variant === "header") {
     return (
       <div
         role="tablist"
-        aria-label={ariaLabel || "Drawer Top Navigation Tabs"}
+        aria-label={
+          ariaLabel ||
+          t("v2.tabBar.headerAriaLabel", "Drawer Top Navigation Tabs")
+        }
         className={cn(
           "flex items-center justify-between px-3 sm:px-4 md:px-[18px] py-1.5",
           "border-b border-border/70 bg-[var(--drawer-header-bg,rgba(246,248,252,0.85))] backdrop-blur-md shrink-0 w-full gap-2",
@@ -52,21 +67,34 @@ export const V2TabBar: React.FC<V2TabBarProps> = ({
         {...props}
       >
         <div className="flex items-center gap-1.5 overflow-x-auto touch-pan-x scrollbar-none flex-1 min-w-0">
-          {tabs.map((tab) => {
-            const tabKey = (tab.key ?? tab.id) || "";
-            return (
-              <TabBarPillItem
-                key={tabKey}
-                tab={tab}
-                variant="header"
-                isActive={activeKey === tabKey}
-                onSelect={handleSelect}
-              />
-            );
-          })}
+          {renderPillItems("header")}
         </div>
         {extra && (
           <div className="flex items-center gap-2 shrink-0 ml-auto">
+            {extra}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  if (variant === "button-group") {
+    return (
+      <div
+        role="tablist"
+        aria-label={
+          ariaLabel ||
+          t("v2.tabBar.buttonGroupAriaLabel", "Nhóm nút chuyển đổi tab")
+        }
+        className={cn(
+          "inline-flex items-center gap-1.5 p-0 bg-transparent border-0 shadow-none h-auto select-none",
+          className,
+        )}
+        {...props}
+      >
+        {renderPillItems("button-group")}
+        {extra && (
+          <div className="flex items-center gap-1.5 shrink-0 ml-auto">
             {extra}
           </div>
         )}
@@ -78,26 +106,17 @@ export const V2TabBar: React.FC<V2TabBarProps> = ({
     return (
       <div
         role="tablist"
-        aria-label={ariaLabel || "Drawer Sub Navigation Tabs"}
+        aria-label={
+          ariaLabel || t("v2.tabBar.subAriaLabel", "Drawer Sub Navigation Tabs")
+        }
         className={cn(
           "flex flex-wrap items-center justify-between gap-2.5 pb-2 select-none w-full",
           className,
         )}
         {...props}
       >
-        <div className="flex items-center gap-1 p-1 rounded-xl bg-muted/40 border border-border/70 overflow-x-auto touch-pan-x scrollbar-none">
-          {tabs.map((tab) => {
-            const tabKey = (tab.key ?? tab.id) || "";
-            return (
-              <TabBarPillItem
-                key={tabKey}
-                tab={tab}
-                variant="sub"
-                isActive={activeKey === tabKey}
-                onSelect={handleSelect}
-              />
-            );
-          })}
+        <div className="flex items-center gap-1 p-0.5 rounded-full bg-slate-100/90 dark:bg-zinc-800/80 border border-slate-200/70 dark:border-zinc-700/60 shadow-[0_1px_2px_rgba(15,23,42,.03),0_6px_18px_-14px_rgba(15,23,42,.08)] overflow-x-auto touch-pan-x scrollbar-none h-8">
+          {renderPillItems("sub")}
         </div>
         {extra && (
           <div className="flex items-center gap-2 shrink-0 ml-auto">

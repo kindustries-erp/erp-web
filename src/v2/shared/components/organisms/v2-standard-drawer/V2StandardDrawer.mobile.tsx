@@ -5,8 +5,9 @@ import { DrawerHeader } from "@/v2/shared/components/molecules/v2-drawer-header"
 import { DrawerFooter } from "@/v2/shared/components/molecules/v2-drawer-footer";
 import { V2TabBar } from "@/v2/shared/components/molecules/v2-tab-bar";
 import { DrawerRelatedDeck } from "@/v2/shared/components/molecules/v2-drawer-related-deck";
-import { V2ConfirmModal } from "@/v2/shared/components/molecules/v2-confirm-modal";
+import { DrawerConfirmCloseModal } from "./DrawerConfirmCloseModal";
 import { V2Text } from "@/v2/shared/components/atoms/v2-text";
+import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { cn } from "@/v2/shared/utils/cn";
 import { useStandardDrawer } from "./V2StandardDrawer.hook";
 import type { V2StandardDrawerProps } from "./V2StandardDrawer.type";
@@ -14,6 +15,7 @@ import type { V2StandardDrawerProps } from "./V2StandardDrawer.type";
 export const V2StandardDrawerMobile: React.FC<V2StandardDrawerProps> = (
   props,
 ) => {
+  const { t } = useV2Translation();
   const h = useStandardDrawer(props);
   const mainContent =
     h.activeLeftTabItem?.content ||
@@ -49,8 +51,8 @@ export const V2StandardDrawerMobile: React.FC<V2StandardDrawerProps> = (
 
           <SheetTitle className="sr-only">
             {typeof props.title === "string"
-              ? `${props.title} Dialog`
-              : "Drawer Dialog"}
+              ? `${props.title} ${t("v2.modal.defaultTitle", "Hộp thoại")}`
+              : t("v2.modal.defaultTitle", "Hộp thoại")}
           </SheetTitle>
 
           <DrawerHeader
@@ -86,7 +88,7 @@ export const V2StandardDrawerMobile: React.FC<V2StandardDrawerProps> = (
               <div className="flex-1 flex flex-col items-center justify-center py-16 gap-3">
                 <Loader2 className="w-7 h-7 text-primary animate-spin" />
                 <V2Text variant="body-sm" className="text-muted-foreground">
-                  Đang tải dữ liệu...
+                  {t("v2.common.loading", "Đang tải dữ liệu...")}
                 </V2Text>
               </div>
             ) : props.error ? (
@@ -158,14 +160,8 @@ export const V2StandardDrawerMobile: React.FC<V2StandardDrawerProps> = (
         </SheetContent>
       </Sheet>
 
-      <V2ConfirmModal
+      <DrawerConfirmCloseModal
         open={h.showConfirmClose}
-        onOpenChange={(v) => !v && h.cancelClose()}
-        title="Xác nhận đóng biểu mẫu"
-        message="Biểu mẫu đang ở chế độ chỉnh sửa. Bạn có chắc chắn muốn đóng và hủy các thay đổi chưa lưu?"
-        confirmLabel="Đóng không lưu"
-        cancelLabel="Tiếp tục chỉnh sửa"
-        variant="danger"
         onConfirm={h.confirmClose}
         onCancel={h.cancelClose}
       />

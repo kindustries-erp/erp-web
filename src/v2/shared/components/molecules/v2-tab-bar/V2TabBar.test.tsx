@@ -55,6 +55,34 @@ describe("V2TabBar Molecule", () => {
     expect(handleChange).toHaveBeenCalledWith("tab1");
   });
 
+  it("renders variant='button-group' with toggle state and dot indicator", () => {
+    const handleChange = vi.fn();
+    render(
+      <V2TabBar
+        variant="button-group"
+        tabs={[
+          {
+            key: "preview",
+            label: "Xem trước",
+            dot: true,
+            dotColor: "emerald",
+          },
+          { key: "attachments", label: "Tài liệu", badgeCount: 2 },
+        ]}
+        activeTabKey="preview"
+        onTabChange={handleChange}
+      />,
+    );
+
+    expect(screen.getByText("Xem trước")).toBeInTheDocument();
+    expect(screen.getByText("Tài liệu")).toBeInTheDocument();
+    expect(screen.getByText("2")).toBeInTheDocument();
+
+    const tab2 = screen.getByText("Tài liệu");
+    fireEvent.click(tab2);
+    expect(handleChange).toHaveBeenCalledWith("attachments");
+  });
+
   it("renders variant='app' with closable tabs", () => {
     const handleSelect = vi.fn();
     const handleClose = vi.fn();

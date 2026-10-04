@@ -206,7 +206,7 @@ describe("V2StandardDrawer Organism", () => {
       />,
     );
 
-    expect(screen.getByText("Đang tải dữ liệu...")).toBeInTheDocument();
+    expect(screen.getByText("Đang tải...")).toBeInTheDocument();
 
     rerender(
       <V2StandardDrawer
