@@ -1,6 +1,7 @@
 import React from "react";
 import { ChevronDown } from "lucide-react";
 import { V2Button } from "@/v2/shared/components/atoms/v2-button";
+import { V2Text } from "@/v2/shared/components/atoms/v2-text";
 import { V2Dropdown } from "@/v2/shared/components/molecules/v2-dropdown";
 import { cn } from "@/v2/shared/utils/cn";
 import type { DrawerFooterProps, DrawerAction } from "./DrawerFooter.type";
@@ -21,7 +22,9 @@ function ActionButton({ action }: { action: DrawerAction }) {
       disabled={action.disabled}
       onClick={action.onClick}
     >
-      {action.label}
+      <V2Text as="span" variant="body-sm" className="leading-none text-inherit">
+        {action.label}
+      </V2Text>
     </V2Button>
   );
 }
@@ -64,13 +67,23 @@ export const DrawerFooter: React.FC<DrawerFooterProps> = ({
             groups={actionGroups}
             items={actionDropdownItems}
             trigger={
-              <button
+              <V2Button
                 type="button"
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-border/70 bg-surface/80 hover:bg-surface-hover text-foreground shadow-xs transition-colors cursor-pointer select-none"
+                variant="outline"
+                size="sm"
+                rightIcon={
+                  <ChevronDown className="w-3.5 h-3.5 text-muted-fg" />
+                }
+                className="h-auto px-3 py-1.5 rounded-lg text-xs font-medium border-border/70 bg-surface/80 hover:bg-surface-hover text-foreground shadow-xs cursor-pointer select-none"
               >
-                <span>{actionDropdownTriggerLabel}</span>
-                <ChevronDown className="w-3.5 h-3.5 text-muted-fg" />
-              </button>
+                <V2Text
+                  as="span"
+                  variant="body-sm"
+                  className="leading-none text-inherit"
+                >
+                  {actionDropdownTriggerLabel}
+                </V2Text>
+              </V2Button>
             }
           />
         )}

@@ -3,28 +3,23 @@ import { AlertCircle, Loader2 } from "lucide-react";
 import { Sheet, SheetContent, SheetTitle } from "@/v2/shared/ui/sheet";
 import { DrawerHeader } from "@/v2/shared/components/molecules/v2-drawer-header";
 import { DrawerFooter } from "@/v2/shared/components/molecules/v2-drawer-footer";
-import { DrawerTopTabBar } from "@/v2/shared/components/molecules/v2-drawer-top-tab-bar";
-import { DrawerSubTabBar } from "@/v2/shared/components/molecules/v2-drawer-sub-tab-bar";
+import { V2TabBar } from "@/v2/shared/components/molecules/v2-tab-bar";
 import { DrawerRelatedDeck } from "@/v2/shared/components/molecules/v2-drawer-related-deck";
 import { V2ConfirmModal } from "@/v2/shared/components/molecules/v2-confirm-modal";
 import { V2Text } from "@/v2/shared/components/atoms/v2-text";
 import { cn } from "@/v2/shared/utils/cn";
-import { useStandardFormDrawer } from "./V2StandardFormDrawer.hook";
-import type { V2StandardFormDrawerProps } from "./V2StandardFormDrawer.type";
+import { useStandardDrawer } from "./V2StandardDrawer.hook";
+import type { V2StandardDrawerProps } from "./V2StandardDrawer.type";
 
-export const V2StandardFormDrawerDesktop: React.FC<
-  V2StandardFormDrawerProps
-> = (props) => {
-  const h = useStandardFormDrawer(props);
+export const V2StandardDrawerMobile: React.FC<V2StandardDrawerProps> = (
+  props,
+) => {
+  const h = useStandardDrawer(props);
   const mainContent =
     h.activeLeftTabItem?.content ||
     h.activeTabItem?.content ||
     props.leftPanel ||
     props.children;
-  const showRight =
-    h.effectiveLayout === "2-columns" &&
-    props.rightPanel &&
-    !h.isRightPanelCollapsed;
   const hasRelated = Boolean(
     props.bottomPanel || (props.relatedTabs && props.relatedTabs.length > 0),
   );
@@ -36,15 +31,22 @@ export const V2StandardFormDrawerDesktop: React.FC<
         onOpenChange={(v) => (!v ? h.requestClose() : undefined)}
       >
         <SheetContent
-          side={h.isFullscreen ? "fullscreen" : "floating"}
+          side="bottom"
           hideCloseButton
           className={cn(
-            "p-0 flex flex-col overflow-hidden",
-            h.sizeClass,
+            "fixed inset-x-0 bottom-0 top-auto left-0 translate-x-0 translate-y-0",
+            "w-full max-w-none rounded-t-2xl rounded-b-none h-[100dvh] max-h-[100dvh]",
+            "flex flex-col p-0 overflow-hidden border-b-0 border-t border-border/80 pt-[env(safe-area-inset-top,0px)]",
             props.panelClassName,
             props.className,
           )}
         >
+          <div
+            data-testid="drawer-mobile-grab-handle"
+            className="w-10 h-1 bg-muted-fg/30 rounded-full mx-auto my-1.5 shrink-0"
+            aria-hidden="true"
+          />
+
           <SheetTitle className="sr-only">
             {typeof props.title === "string"
               ? `${props.title} Dialog`
@@ -59,18 +61,13 @@ export const V2StandardFormDrawerDesktop: React.FC<
             onClose={h.requestClose}
             onToggleEdit={props.onToggleEdit}
             isEditing={props.mode === "edit"}
-            enableFullscreen={h.enableFullscreen}
-            isFullscreen={h.isFullscreen}
-            onToggleFullscreen={h.toggleFullscreen}
-            collapsibleRightPanel={h.collapsibleRightPanel}
-            isRightPanelCollapsed={h.isRightPanelCollapsed}
-            onToggleRightPanel={h.toggleRightPanel}
             closeAriaLabel={props.closeAriaLabel}
             isScrolledTop={h.isScrolledTop}
           />
 
           {props.tabs && props.tabs.length > 0 && (
-            <DrawerTopTabBar
+            <V2TabBar
+              variant="header"
               tabs={props.tabs}
               activeTabKey={h.activeTabKey}
               onTabChange={h.handleTabChange}
@@ -81,7 +78,7 @@ export const V2StandardFormDrawerDesktop: React.FC<
           <div
             ref={h.scrollContainerRef}
             className={cn(
-              "flex-1 overflow-y-auto min-h-0 flex flex-col p-3 sm:p-4 md:p-[18px]",
+              "flex-1 overflow-y-auto min-h-0 p-3 sm:p-4",
               props.bodyClassName,
             )}
           >
@@ -103,39 +100,38 @@ export const V2StandardFormDrawerDesktop: React.FC<
                 </V2Text>
               </div>
             ) : (
-              <div className="flex flex-col gap-4">
-                <div className="flex flex-col lg:flex-row gap-4 lg:gap-6 items-start">
-                  <div className="flex-1 min-w-0 w-full space-y-3 sm:space-y-4">
-                    {props.leftTabs && props.leftTabs.length > 0 && (
-                      <DrawerSubTabBar
-                        tabs={props.leftTabs}
-                        activeTabKey={h.activeLeftTabKey}
-                        onTabChange={h.handleLeftTabChange}
-                        extra={props.leftTabExtra}
+              <div className="space-y-3">
+                <div className="space-y-2">
+                  {props.leftTabs && props.leftTabs.length > 0 && (
+                    <V2TabBar
+                      variant="sub"
+                      tabs={props.leftTabs}
+                      activeTabKey={h.activeLeftTabKey}
+                      onTabChange={h.handleLeftTabChange}
+                      extra={props.leftTabExtra}
+                    />
+                  )}
+                  {mainContent}
+                </div>
+
+                {props.rightPanel && !h.activeTabItem?.hideRightPanel && (
+                  <div
+                    data-testid="drawer-mobile-stacked-panel"
+                    className="pt-2 border-t border-border/50 space-y-2"
+                  >
+                    {props.rightTabs && props.rightTabs.length > 0 && (
+                      <V2TabBar
+                        variant="sub"
+                        tabs={props.rightTabs}
+                        activeTabKey={h.activeRightTabKey}
+                        onTabChange={h.handleRightTabChange}
+                        extra={props.rightTabExtra}
                       />
                     )}
-                    {mainContent}
+                    {h.activeRightTabItem?.content || props.rightPanel}
                   </div>
-                  {showRight && (
-                    <div
-                      data-testid="drawer-desktop-right-panel"
-                      className={cn(
-                        "w-full lg:w-72 xl:w-80 2xl:w-88 shrink-0 space-y-3 sm:space-y-4",
-                        props.stickyRightPanel && "lg:sticky lg:top-0",
-                      )}
-                    >
-                      {props.rightTabs && props.rightTabs.length > 0 && (
-                        <DrawerSubTabBar
-                          tabs={props.rightTabs}
-                          activeTabKey={h.activeRightTabKey}
-                          onTabChange={h.handleRightTabChange}
-                          extra={props.rightTabExtra}
-                        />
-                      )}
-                      {h.activeRightTabItem?.content || props.rightPanel}
-                    </div>
-                  )}
-                </div>
+                )}
+
                 {hasRelated && (
                   <DrawerRelatedDeck
                     tabs={props.relatedTabs}

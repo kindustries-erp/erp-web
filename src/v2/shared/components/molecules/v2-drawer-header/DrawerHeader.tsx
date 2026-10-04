@@ -6,7 +6,6 @@ import {
   ChevronLeft,
   X,
 } from "lucide-react";
-import { Button } from "@/v2/shared/ui";
 import { V2Text } from "@/v2/shared/components/atoms/v2-text";
 import { V2Button } from "@/v2/shared/components/atoms/v2-button";
 import { cn } from "@/v2/shared/utils/cn";
@@ -48,11 +47,20 @@ export const DrawerHeader: React.FC<DrawerHeaderProps> = ({
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 flex-wrap min-w-0">
             {typeof title === "string" ? (
-              <V2Text variant="drawer-title" className="truncate leading-tight">
+              <V2Text
+                variant="drawer-title"
+                className="truncate leading-tight font-semibold"
+              >
                 {title}
               </V2Text>
             ) : (
-              <div className="truncate text-sm font-semibold">{title}</div>
+              <V2Text
+                as="div"
+                variant="drawer-title"
+                className="truncate leading-tight font-semibold"
+              >
+                {title}
+              </V2Text>
             )}
             {titleExtra}
           </div>
@@ -62,9 +70,13 @@ export const DrawerHeader: React.FC<DrawerHeaderProps> = ({
                 {subtitle}
               </V2Text>
             ) : (
-              <div className="text-[11px] text-muted-fg truncate mt-0.5 leading-none">
+              <V2Text
+                as="div"
+                variant="drawer-subtitle"
+                className="mt-0.5 leading-none"
+              >
                 {subtitle}
-              </div>
+              </V2Text>
             ))}
         </div>
       </div>
@@ -98,7 +110,7 @@ export const DrawerHeader: React.FC<DrawerHeaderProps> = ({
 
         {/* Toggle Right Panel (Desktop only) */}
         {collapsibleRightPanel && onToggleRightPanel && (
-          <Button
+          <V2Button
             type="button"
             variant="ghost"
             size="icon-sm"
@@ -118,12 +130,12 @@ export const DrawerHeader: React.FC<DrawerHeaderProps> = ({
             ) : (
               <ChevronRight className="w-4 h-4" />
             )}
-          </Button>
+          </V2Button>
         )}
 
         {/* Fullscreen Button (Desktop only) */}
         {enableFullscreen && onToggleFullscreen && (
-          <Button
+          <V2Button
             type="button"
             variant="ghost"
             size="icon-sm"
@@ -137,11 +149,11 @@ export const DrawerHeader: React.FC<DrawerHeaderProps> = ({
             ) : (
               <Maximize2 className="w-4 h-4" />
             )}
-          </Button>
+          </V2Button>
         )}
 
         {/* Close Button */}
-        <Button
+        <V2Button
           type="button"
           variant="ghost"
           size="icon-sm"
@@ -150,7 +162,7 @@ export const DrawerHeader: React.FC<DrawerHeaderProps> = ({
           className="text-muted-fg hover:text-foreground cursor-pointer"
         >
           <X className="w-4 h-4" />
-        </Button>
+        </V2Button>
       </div>
     </div>
   );

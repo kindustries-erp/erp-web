@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { ChevronDown } from "lucide-react";
-import { Button } from "@/v2/shared/ui";
+import { V2Button } from "@/v2/shared/components/atoms/v2-button";
 import { V2Text } from "@/v2/shared/components/atoms/v2-text";
 import { cn } from "@/v2/shared/utils/cn";
 import type { DrawerSectionProps } from "./DrawerSection.type";
@@ -61,7 +61,7 @@ export const DrawerSection: React.FC<DrawerSectionProps> = ({
         >
           <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
             {collapsible && (
-              <Button
+              <V2Button
                 type="button"
                 variant="ghost"
                 size="icon-xs"
@@ -76,7 +76,7 @@ export const DrawerSection: React.FC<DrawerSectionProps> = ({
                     isCollapsed ? "-rotate-90" : "rotate-0",
                   )}
                 />
-              </Button>
+              </V2Button>
             )}
             {title && (
               <V2Text

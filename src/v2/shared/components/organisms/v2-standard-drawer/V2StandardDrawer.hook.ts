@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import type {
-  V2StandardFormDrawerProps,
+  V2StandardDrawerProps,
   V2DrawerSize,
   V2DrawerLayout,
-} from "./V2StandardFormDrawer.type";
+} from "./V2StandardDrawer.type";
 
 const SIZE_CLASSES: Record<V2DrawerSize, string> = {
   sm: "w-full min-w-0 max-w-full md:w-[90vw] lg:w-[42vw] xl:w-[38vw] 2xl:w-[32vw] lg:min-w-[420px] lg:max-w-[660px]",
@@ -30,40 +30,43 @@ function useTabControl(
   return [activeKey, handleChange] as const;
 }
 
-export function useStandardFormDrawer(props: V2StandardFormDrawerProps) {
+export function useStandardDrawer(props: V2StandardDrawerProps) {
   const { open, mode = "view", tabs, confirmOnClose = false, onClose } = props;
   const size = props.size ?? (props.layout === "1-column" ? "sm" : "xl");
 
   // 1. Top Header Tabs
+  const firstHeaderKey = tabs?.[0]?.key ?? tabs?.[0]?.id ?? "details";
   const [activeTabKey, handleTabChange] = useTabControl(
     props.activeTabKey,
-    props.defaultTabKey || tabs?.[0]?.key || "details",
+    props.defaultTabKey || firstHeaderKey,
     props.onTabChange,
   );
   const activeTabItem = useMemo(
-    () => tabs?.find((t) => t.key === activeTabKey),
+    () => tabs?.find((t) => (t.key ?? t.id) === activeTabKey),
     [tabs, activeTabKey],
   );
 
   // 2. Left Sub-Tabs
+  const firstLeftKey = props.leftTabs?.[0]?.key ?? props.leftTabs?.[0]?.id;
   const [activeLeftTabKey, handleLeftTabChange] = useTabControl(
     props.activeLeftTabKey,
-    props.defaultLeftTabKey || props.leftTabs?.[0]?.key,
+    props.defaultLeftTabKey || firstLeftKey,
     props.onLeftTabChange,
   );
   const activeLeftTabItem = useMemo(
-    () => props.leftTabs?.find((t) => t.key === activeLeftTabKey),
+    () => props.leftTabs?.find((t) => (t.key ?? t.id) === activeLeftTabKey),
     [props.leftTabs, activeLeftTabKey],
   );
 
   // 3. Right Sub-Tabs
+  const firstRightKey = props.rightTabs?.[0]?.key ?? props.rightTabs?.[0]?.id;
   const [activeRightTabKey, handleRightTabChange] = useTabControl(
     props.activeRightTabKey,
-    props.defaultRightTabKey || props.rightTabs?.[0]?.key,
+    props.defaultRightTabKey || firstRightKey,
     props.onRightTabChange,
   );
   const activeRightTabItem = useMemo(
-    () => props.rightTabs?.find((t) => t.key === activeRightTabKey),
+    () => props.rightTabs?.find((t) => (t.key ?? t.id) === activeRightTabKey),
     [props.rightTabs, activeRightTabKey],
   );
 
@@ -134,10 +137,9 @@ export function useStandardFormDrawer(props: V2StandardFormDrawerProps) {
   }, [open, checkScroll]);
 
   const effectiveLayout: V2DrawerLayout = useMemo(() => {
-    if (activeTabItem?.hideRightPanel) return "1-column";
     if (props.layout) return props.layout;
     return size === "sm" || size === "md" ? "1-column" : "2-columns";
-  }, [activeTabItem?.hideRightPanel, props.layout, size]);
+  }, [props.layout, size]);
 
   const sizeClass = useMemo(() => {
     if (isFullscreen) return "w-screen h-dvh max-w-none rounded-none border-0";

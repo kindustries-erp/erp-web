@@ -1,7 +1,7 @@
 import * as React from "react";
 import { cn } from "@/v2/shared/utils/cn";
 import { V2Topbar } from "../../molecules/v2-topbar";
-import { V2TabBar } from "../v2-tab-bar";
+import { V2TabBar } from "../../molecules/v2-tab-bar";
 import { V2RightPanelProps } from "./V2RightPanel.type";
 
 export const V2RightPanel: React.FC<V2RightPanelProps> = ({

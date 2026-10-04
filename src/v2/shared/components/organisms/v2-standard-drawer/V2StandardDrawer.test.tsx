@@ -2,10 +2,10 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import React from "react";
 import * as viewportHook from "@/v2/shared/hooks/useViewport";
-import { V2StandardFormDrawer } from "./V2StandardFormDrawer";
-import type { DrawerTopTabItem } from "./V2StandardFormDrawer.type";
+import { V2StandardDrawer } from "./V2StandardDrawer";
+import type { V2TabItemData } from "./V2StandardDrawer.type";
 
-describe("V2StandardFormDrawer Organism", () => {
+describe("V2StandardDrawer Organism", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
     vi.spyOn(viewportHook, "useViewport").mockReturnValue({
@@ -22,7 +22,7 @@ describe("V2StandardFormDrawer Organism", () => {
     const handleSave = vi.fn();
 
     render(
-      <V2StandardFormDrawer
+      <V2StandardDrawer
         open={true}
         onClose={handleClose}
         title="Phiếu Nhập Kho NK-001"
@@ -50,7 +50,7 @@ describe("V2StandardFormDrawer Organism", () => {
   it("triggers onToggleEdit when edit button is clicked in view mode", () => {
     const handleToggleEdit = vi.fn();
     render(
-      <V2StandardFormDrawer
+      <V2StandardDrawer
         open={true}
         onClose={vi.fn()}
         mode="view"
@@ -58,7 +58,7 @@ describe("V2StandardFormDrawer Organism", () => {
         title="Xem Chi Tiết"
       >
         <p>Thân drawer</p>
-      </V2StandardFormDrawer>,
+      </V2StandardDrawer>,
     );
 
     const editBtn = screen.getByRole("button", {
@@ -70,7 +70,7 @@ describe("V2StandardFormDrawer Organism", () => {
 
   it("collapses and expands the right panel when chevron toggle is clicked", () => {
     render(
-      <V2StandardFormDrawer
+      <V2StandardDrawer
         open={true}
         onClose={vi.fn()}
         title="Kiểm tra Cột Phải"
@@ -95,19 +95,14 @@ describe("V2StandardFormDrawer Organism", () => {
     expect(screen.getByTestId("collapsible-right")).toBeInTheDocument();
   });
 
-  it("switches top navigation tabs and handles hideRightPanel tab", () => {
-    const mockTabs: DrawerTopTabItem[] = [
+  it("switches top navigation tabs rendered via V2TabBar", () => {
+    const mockTabs: V2TabItemData[] = [
       { key: "details", label: "Chi Tiết", content: <div>Nội dung Tab 1</div> },
-      {
-        key: "graph",
-        label: "Biểu Đồ",
-        hideRightPanel: true,
-        content: <div>Full Width Graph</div>,
-      },
+      { key: "graph", label: "Biểu Đồ", content: <div>Nội dung Tab 2</div> },
     ];
 
     render(
-      <V2StandardFormDrawer
+      <V2StandardDrawer
         open={true}
         onClose={vi.fn()}
         title="Chứng Từ Đa Góc Nhìn"
@@ -119,11 +114,9 @@ describe("V2StandardFormDrawer Organism", () => {
     expect(screen.getByText("Nội dung Tab 1")).toBeInTheDocument();
     expect(screen.getByTestId("tab-right-panel")).toBeInTheDocument();
 
-    const graphTab = screen.getByRole("tab", { name: "Biểu Đồ" });
+    const graphTab = screen.getByRole("tab", { name: /Biểu Đồ/i });
     fireEvent.click(graphTab);
-
-    expect(screen.getByText("Full Width Graph")).toBeInTheDocument();
-    expect(screen.queryByTestId("tab-right-panel")).not.toBeInTheDocument();
+    expect(screen.getByText("Nội dung Tab 2")).toBeInTheDocument();
   });
 
   it("renders Mobile Bottom Sheet with grab handle when isMobile is true", () => {
@@ -136,14 +129,14 @@ describe("V2StandardFormDrawer Organism", () => {
     });
 
     render(
-      <V2StandardFormDrawer
+      <V2StandardDrawer
         open={true}
         onClose={vi.fn()}
         title="Mobile Drawer"
         rightPanel={<div>Thông tin thêm mobile</div>}
       >
         <p>Nội dung mobile</p>
-      </V2StandardFormDrawer>,
+      </V2StandardDrawer>,
     );
 
     expect(screen.getByText("Mobile Drawer")).toBeInTheDocument();
@@ -157,7 +150,7 @@ describe("V2StandardFormDrawer Organism", () => {
   it("prompts V2ConfirmModal before closing when in edit mode with confirmOnClose=true", () => {
     const handleClose = vi.fn();
     render(
-      <V2StandardFormDrawer
+      <V2StandardDrawer
         open={true}
         onClose={handleClose}
         mode="edit"
@@ -165,7 +158,7 @@ describe("V2StandardFormDrawer Organism", () => {
         title="Đang Chỉnh Sửa"
       >
         <p>Form đang nhập dở</p>
-      </V2StandardFormDrawer>,
+      </V2StandardDrawer>,
     );
 
     const closeBtn = screen.getByRole("button", { name: "Close drawer" });
@@ -181,7 +174,7 @@ describe("V2StandardFormDrawer Organism", () => {
 
   it("renders relatedTabs deck beneath content when provided", () => {
     render(
-      <V2StandardFormDrawer
+      <V2StandardDrawer
         open={true}
         onClose={vi.fn()}
         title="Drawer Với Related Deck"
@@ -205,7 +198,7 @@ describe("V2StandardFormDrawer Organism", () => {
 
   it("renders loading spinner and error banner correctly", () => {
     const { rerender } = render(
-      <V2StandardFormDrawer
+      <V2StandardDrawer
         open={true}
         onClose={vi.fn()}
         title="Loading State"
@@ -216,7 +209,7 @@ describe("V2StandardFormDrawer Organism", () => {
     expect(screen.getByText("Đang tải dữ liệu...")).toBeInTheDocument();
 
     rerender(
-      <V2StandardFormDrawer
+      <V2StandardDrawer
         open={true}
         onClose={vi.fn()}
         title="Error State"
@@ -233,7 +226,7 @@ describe("V2StandardFormDrawer Organism", () => {
   it("renders actionGroups dropdown in Drawer footer", () => {
     const handleSync = vi.fn();
     render(
-      <V2StandardFormDrawer
+      <V2StandardDrawer
         open={true}
         onClose={vi.fn()}
         title="Drawer with Action Groups"
@@ -259,7 +252,7 @@ describe("V2StandardFormDrawer Organism", () => {
   it("renders leftTabs and rightTabs sub tab bars correctly", () => {
     const onLeftTabChange = vi.fn();
     render(
-      <V2StandardFormDrawer
+      <V2StandardDrawer
         open={true}
         onClose={vi.fn()}
         title="Drawer with Sub Tabs"
@@ -275,11 +268,11 @@ describe("V2StandardFormDrawer Organism", () => {
       />,
     );
 
-    expect(screen.getByRole("tab", { name: "Chi tiết" })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: /Chi tiết$/i })).toBeInTheDocument();
     expect(screen.getByText("20")).toBeInTheDocument();
     expect(screen.getByText("Xem trước HĐ")).toBeInTheDocument();
     expect(
-      screen.getByRole("tab", { name: "Thông tin chung" }),
+      screen.getByRole("tab", { name: /Thông tin chung/i }),
     ).toBeInTheDocument();
   });
 });

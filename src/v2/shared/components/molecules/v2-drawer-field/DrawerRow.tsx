@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Copy, Check } from "lucide-react";
-import { Button } from "@/v2/shared/ui";
+import { V2Button } from "@/v2/shared/components/atoms/v2-button";
 import { V2Text } from "@/v2/shared/components/atoms/v2-text";
 import { cn } from "@/v2/shared/utils/cn";
 import type { DrawerRowProps } from "./DrawerField.type";
@@ -62,7 +62,7 @@ export const DrawerRow: React.FC<DrawerRowProps> = ({
           {value}
         </V2Text>
         {copyable && (
-          <Button
+          <V2Button
             type="button"
             variant="ghost"
             size="icon-xs"
@@ -75,7 +75,7 @@ export const DrawerRow: React.FC<DrawerRowProps> = ({
             ) : (
               <Copy className="w-3 h-3" />
             )}
-          </Button>
+          </V2Button>
         )}
       </div>
     </div>

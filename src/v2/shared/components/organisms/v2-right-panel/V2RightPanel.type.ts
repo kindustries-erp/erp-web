@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import type { V2BreadcrumbItem } from "../../molecules/v2-breadcrumb";
-import type { V2TabEntry } from "../v2-tab-bar";
+import type { V2TabEntry } from "../../molecules/v2-tab-bar";
 import type { V2BaseProps } from "@/v2/shared/types";
 
 export interface V2RightPanelProps extends V2BaseProps<HTMLElement> {

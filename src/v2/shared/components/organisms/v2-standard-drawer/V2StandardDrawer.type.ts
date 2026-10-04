@@ -1,5 +1,5 @@
-import type { DrawerTopTabItem } from "@/v2/shared/components/molecules/v2-drawer-top-tab-bar";
-import type { DrawerSubTabItem } from "@/v2/shared/components/molecules/v2-drawer-sub-tab-bar";
+import type * as React from "react";
+import type { V2TabItemData } from "@/v2/shared/components/molecules/v2-tab-bar";
 import type { DrawerAction } from "@/v2/shared/components/molecules/v2-drawer-footer";
 import type { DrawerRelatedTabItem } from "@/v2/shared/components/molecules/v2-drawer-related-deck";
 import type {
@@ -8,8 +8,7 @@ import type {
 } from "@/v2/shared/components/molecules/v2-dropdown";
 
 export type {
-  DrawerTopTabItem,
-  DrawerSubTabItem,
+  V2TabItemData,
   DrawerAction,
   DrawerRelatedTabItem,
   V2DropdownGroup,
@@ -20,7 +19,7 @@ export type V2DrawerSize = "sm" | "md" | "lg" | "xl" | "full";
 export type V2DrawerMode = "view" | "edit";
 export type V2DrawerLayout = "1-column" | "2-columns";
 
-export interface V2StandardFormDrawerProps {
+export interface V2StandardDrawerProps {
   open: boolean;
   mode?: V2DrawerMode;
   onClose: () => void;
@@ -45,22 +44,22 @@ export interface V2StandardFormDrawerProps {
   onRightPanelCollapseChange?: (collapsed: boolean) => void;
   stickyRightPanel?: boolean;
 
-  // 1. Header Tabs (Default / Toàn cục)
-  tabs?: DrawerTopTabItem[];
+  // 1. Header Tabs (Toàn cục qua V2TabBar variant="header")
+  tabs?: V2TabItemData[];
   activeTabKey?: string;
   defaultTabKey?: string;
   onTabChange?: (tabKey: string) => void;
   tabBarExtra?: React.ReactNode;
 
-  // 2. Left Sub-Tabs (Optional)
-  leftTabs?: DrawerSubTabItem[];
+  // 2. Left Sub-Tabs (Optional qua V2TabBar variant="sub")
+  leftTabs?: V2TabItemData[];
   activeLeftTabKey?: string;
   defaultLeftTabKey?: string;
   onLeftTabChange?: (subTabKey: string) => void;
   leftTabExtra?: React.ReactNode;
 
-  // 3. Right Sub-Tabs (Optional)
-  rightTabs?: DrawerSubTabItem[];
+  // 3. Right Sub-Tabs (Optional qua V2TabBar variant="sub")
+  rightTabs?: V2TabItemData[];
   activeRightTabKey?: string;
   defaultRightTabKey?: string;
   onRightTabChange?: (subTabKey: string) => void;
