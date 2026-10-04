@@ -17,12 +17,14 @@ export default {
         },
         "muted-fg": "var(--muted-fg)",
         faint: "var(--faint)",
+        "sidebar-label": "var(--sidebar-label, var(--muted-fg))",
         primary: {
           DEFAULT: "var(--primary)",
           foreground: "var(--primary-fg)",
         },
         "primary-fg": "var(--primary-fg)",
         "primary-foreground": "var(--primary-fg)",
+        "on-primary": "var(--primary-fg)",
 
         /* Semantic indicators V1 */
         "up-bg": "var(--up-bg)",
@@ -33,6 +35,18 @@ export default {
         "warn-fg": "var(--warn-fg)",
         "approve-bg": "var(--approve-bg)",
         "approve-fg": "var(--approve-fg)",
+
+        /* Semantic indicators V2 */
+        success: {
+          DEFAULT: "var(--approve-fg, #10b981)",
+          foreground: "#ffffff",
+          bg: "var(--approve-bg, rgba(16, 185, 129, 0.1))",
+        },
+        warning: {
+          DEFAULT: "var(--warn-fg, #f59e0b)",
+          foreground: "#ffffff",
+          bg: "var(--warn-bg, rgba(245, 158, 11, 0.1))",
+        },
 
         /* V2 & Shadcn UI Primitives Compatibility Tokens */
         card: {
@@ -59,16 +73,29 @@ export default {
         ring: "var(--primary)",
       },
       boxShadow: {
+        "2xs": "0 1px 2px rgba(0, 0, 0, 0.05)",
+        xs: "0 1px 3px rgba(0, 0, 0, 0.08)",
         panel: "0 4px 16px rgba(0, 0, 0, 0.08)",
+      },
+      borderRadius: {
+        xs: "4px",
+        sm: "6px",
+        md: "8px",
+        lg: "10px",
+        xl: "12px",
       },
       fontFamily: {
         sans: ["-apple-system", "BlinkMacSystemFont", "Segoe UI", "sans-serif"],
       },
       fontSize: {
-        "2xs": "10px",
-        xs: "11px",
-        sm: "12px",
-        base: "13px",
+        "2xs": ["10px", { lineHeight: "14px" }],
+        xs: ["11px", { lineHeight: "16px" }],
+        sm: ["12px", { lineHeight: "18px" }],
+        base: ["13px", { lineHeight: "20px" }],
+        md: ["14px", { lineHeight: "20px" }],
+        lg: ["16px", { lineHeight: "24px" }],
+        xl: ["18px", { lineHeight: "26px" }],
+        "2xl": ["20px", { lineHeight: "28px" }],
       },
       keyframes: {
         slideDownAndFade: {

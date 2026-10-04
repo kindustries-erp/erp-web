@@ -40,6 +40,10 @@ src/v2/
 │           └── index.ts                # Public export
 │
 └── shared/
+    ├── types/                          # [Base TypeScript Contracts]
+    │   ├── v2-base-props.ts            # V2BaseProps, V2ButtonBaseProps kế thừa React HTML Types
+    │   └── index.ts                    # Public export
+    │
     ├── locales/                        # [i18n Dictionary]
     │   ├── vi.ts                       # Từ điển V2 tiếng Việt (v2Vi, type V2Dictionary)
     │   ├── en.ts                       # Từ điển V2 tiếng Anh (v2En)
@@ -50,11 +54,21 @@ src/v2/
     │   └── useViewport.ts              # Hook xác định kích thước màn hình Desktop/Mobile
     │
     ├── ui/                             # [Level 1 - Primitives] Shadcn UI (Folder-per-component)
-    │   ├── button/                     # button.tsx, button.test.tsx, index.ts
+    │   ├── button/                     # button.tsx, button.test.tsx, index.ts (CVA + Radix Slot)
+    │   ├── text/                       # text.tsx, text.test.tsx, index.ts (CVA + Radix Slot)
     │   ├── badge/                      # badge.tsx, badge.test.tsx, index.ts
     │   └── index.ts                    # Master Barrel Export
     │
     └── components/                     # [Atomic Components] (Import 1 chiều từ shared/ui)
+        ├── atoms/                      # [Level 1 - Core Atoms]
+        │   ├── v2-button/              # Nút chuẩn hoá (loading, icons, fullWidth, variants V1+V2)
+        │   ├── v2-text/                # Chữ chuẩn hoá (auto HTML mapping, truncate, copyable, required)
+        │   ├── v2-sidebar-toggle-btn/  # Nút thu gọn / mở rộng Sidebar 26x26px
+        │   ├── v2-sidebar-icon/        # Container bọc icon điều hướng Sidebar
+        │   ├── v2-sidebar-logo/        # Khối hiển thị Logo ERP 24x24px
+        │   ├── v2-nav-icon/            # Icon điều hướng di động / desktop
+        │   └── index.ts                # Master Barrel Export
+        │
         ├── molecules/                  # [Level 2 - Molecules]
         │   ├── v2-breadcrumb/          # Dãy đường dẫn điều hướng (Home > Bán hàng > Đơn hàng)
         │   ├── v2-quick-search/        # Nút kích hoạt tìm kiếm nhanh Ctrl+K / ⌘K (i18n placeholder)
@@ -91,9 +105,23 @@ colors: {
   muted: { DEFAULT: "var(--muted)", foreground: "var(--muted-fg)" },
   "muted-fg": "var(--muted-fg)",
   faint: "var(--faint)",
+  "sidebar-label": "var(--sidebar-label, var(--muted-fg))",
   primary: { DEFAULT: "var(--primary)", foreground: "var(--primary-fg)" },
   "primary-fg": "var(--primary-fg)",
   "primary-foreground": "var(--primary-fg)", // 🎯 Khắc phục lỗi chữ đen trên nền đen
+  "on-primary": "var(--primary-fg)",
+
+  /* Semantic indicators V2 */
+  success: {
+    DEFAULT: "var(--approve-fg, #10b981)",
+    foreground: "#ffffff",
+    bg: "var(--approve-bg, rgba(16, 185, 129, 0.1))",
+  },
+  warning: {
+    DEFAULT: "var(--warn-fg, #f59e0b)",
+    foreground: "#ffffff",
+    bg: "var(--warn-bg, rgba(245, 158, 11, 0.1))",
+  },
 
   /* V2 & Shadcn UI Primitives Compatibility Tokens */
   card: { DEFAULT: "var(--surface)", foreground: "var(--foreground)" },

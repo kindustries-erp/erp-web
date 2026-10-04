@@ -1,4 +1,5 @@
 import type { LucideIcon } from "lucide-react";
+import type { V2BaseProps } from "@/v2/shared/types";
 
 export interface V2SidebarItem {
   id: string;
@@ -22,7 +23,7 @@ export interface V2SidebarUserData {
   unreadCount?: number;
 }
 
-export interface V2SidebarProps {
+export interface V2SidebarProps extends V2BaseProps<HTMLElement> {
   sections?: V2SidebarSectionData[];
   items?: V2SidebarItem[];
   activeId?: string;
@@ -30,5 +31,4 @@ export interface V2SidebarProps {
   user?: V2SidebarUserData;
   collapsed?: boolean;
   onToggleCollapse?: () => void;
-  className?: string;
 }

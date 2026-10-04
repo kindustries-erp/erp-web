@@ -4,6 +4,7 @@ import { useAuthStore } from "@/modules/auth/domain/authStore";
 import { V2AppLayout } from "@/v2/app/layouts/v2-app-layout";
 import { type V2SidebarNavItem } from "@/v2/shared/components/organisms/v2-sidebar";
 import { V2WelcomePage } from "@/v2/app/pages/V2WelcomePage";
+import { V2Text } from "@/v2/shared/components/atoms";
 import { Badge } from "@/v2/shared/ui";
 import { Clock } from "lucide-react";
 
@@ -61,13 +62,13 @@ export const V2RouterView: React.FC = () => {
           <Badge variant="outline" className="text-xs">
             Đang quy hoạch Phase 3
           </Badge>
-          <h2 className="text-lg font-bold text-foreground">
+          <V2Text as="h2" variant="h3" weight="bold">
             {titleMap[activeNavId] || "Phân hệ V2"}
-          </h2>
-          <p className="text-xs text-muted-foreground max-w-md mx-auto">
+          </V2Text>
+          <V2Text variant="body-sm" color="muted" className="max-w-md mx-auto">
             Module này sẽ được triển khai cuốn chiếu (Rolling Migration) theo
             chuẩn Atomic Design 5 tầng và Pure Domain Rules ở giai đoạn kế tiếp.
-          </p>
+          </V2Text>
         </div>
       </div>
     );

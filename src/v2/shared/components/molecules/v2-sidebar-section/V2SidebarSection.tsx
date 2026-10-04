@@ -2,6 +2,7 @@ import * as React from "react";
 import { useState } from "react";
 import { ChevronRight } from "lucide-react";
 import { cn } from "@/v2/shared/utils/cn";
+import { V2Text } from "@/v2/shared/components/atoms";
 import { V2SidebarSectionProps } from "./V2SidebarSection.type";
 
 export const V2SidebarSection: React.FC<V2SidebarSectionProps> = ({
@@ -11,6 +12,7 @@ export const V2SidebarSection: React.FC<V2SidebarSectionProps> = ({
   onToggle,
   children,
   className,
+  ...props
 }) => {
   const [isExpanded, setIsExpanded] = useState(defaultOpen);
 
@@ -21,14 +23,14 @@ export const V2SidebarSection: React.FC<V2SidebarSectionProps> = ({
 
   if (!label) {
     return (
-      <div className={cn("sidebar-nav-section py-1", className)}>
+      <div className={cn("sidebar-nav-section py-1", className)} {...props}>
         {children}
       </div>
     );
   }
 
   return (
-    <div className={cn("sidebar-nav-section py-1", className)}>
+    <div className={cn("sidebar-nav-section py-1", className)} {...props}>
       {!isCollapsed && (
         <div
           role="button"
@@ -41,9 +43,16 @@ export const V2SidebarSection: React.FC<V2SidebarSectionProps> = ({
               handleToggle();
             }
           }}
-          className="sidebar-label-el flex cursor-pointer items-center justify-between px-4 pt-2 pb-1 text-[11px] font-semibold text-[color:var(--sidebar-label)] uppercase tracking-[0.08em] select-none hover:text-foreground transition-colors"
+          className="sidebar-label-el flex cursor-pointer items-center justify-between px-4 pt-2 pb-1 text-[11px] font-semibold text-sidebar-label uppercase tracking-[0.08em] select-none hover:text-foreground transition-colors"
         >
-          <span className="truncate">{label}</span>
+          <V2Text
+            as="span"
+            variant="label"
+            truncate
+            className="text-inherit uppercase tracking-[0.08em] font-semibold text-[11px]"
+          >
+            {label}
+          </V2Text>
           <span
             className={cn(
               "nav-arrow-el ml-auto text-[10px] opacity-70 flex-shrink-0 transition-transform duration-200",

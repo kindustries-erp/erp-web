@@ -1,7 +1,8 @@
 import * as React from "react";
 import { ArrowLeft, ChevronRight, Sparkles } from "lucide-react";
 import { cn } from "@/v2/shared/utils/cn";
-import { Button, Badge } from "@/v2/shared/ui";
+import { V2Button, V2Text } from "@/v2/shared/components/atoms";
+import { Badge } from "@/v2/shared/ui";
 import { V2UserBadge } from "@/v2/shared/components/molecules/v2-user-badge";
 import { V2LanguageSwitcher } from "@/v2/shared/components/molecules/v2-language-switcher";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
@@ -15,6 +16,7 @@ export const V2Header: React.FC<V2HeaderProps> = ({
   tenantName,
   onReturnToV1,
   className,
+  ...props
 }) => {
   const { t } = useV2Translation();
 
@@ -33,6 +35,7 @@ export const V2Header: React.FC<V2HeaderProps> = ({
         "flex h-14 w-full shrink-0 items-center justify-between border-b border-border bg-card/60 px-4 backdrop-blur-md select-none",
         className,
       )}
+      {...props}
     >
       {/* Left: Breadcrumbs or Title */}
       <div className="flex items-center gap-2 overflow-hidden">
@@ -44,30 +47,36 @@ export const V2Header: React.FC<V2HeaderProps> = ({
             {breadcrumbs.map((crumb, idx) => (
               <React.Fragment key={crumb.label}>
                 {idx > 0 && (
-                  <ChevronRight
-                    size={14}
-                    className="text-muted-foreground shrink-0"
-                  />
+                  <ChevronRight size={14} className="text-muted-fg shrink-0" />
                 )}
                 {crumb.href ? (
-                  <a
-                    href={crumb.href}
-                    className="text-muted-foreground hover:text-foreground truncate transition-colors"
+                  <V2Text
+                    asChild
+                    variant="body-sm"
+                    className="text-muted-fg hover:text-foreground truncate transition-colors"
+                  >
+                    <a href={crumb.href}>{crumb.label}</a>
+                  </V2Text>
+                ) : (
+                  <V2Text
+                    variant="body-sm"
+                    weight="semibold"
+                    className="text-foreground truncate"
                   >
                     {crumb.label}
-                  </a>
-                ) : (
-                  <span className="font-semibold text-foreground truncate">
-                    {crumb.label}
-                  </span>
+                  </V2Text>
                 )}
               </React.Fragment>
             ))}
           </nav>
         ) : title ? (
-          <h1 className="text-sm font-semibold tracking-tight text-foreground truncate">
+          <V2Text
+            as="h1"
+            variant="h4"
+            className="tracking-tight text-foreground truncate"
+          >
             {title}
-          </h1>
+          </V2Text>
         ) : (
           <Badge
             variant="outline"
@@ -83,18 +92,18 @@ export const V2Header: React.FC<V2HeaderProps> = ({
       <div className="flex items-center gap-2">
         <V2LanguageSwitcher />
 
-        <Button
+        <V2Button
           variant="outline"
           size="sm"
           onClick={handleReturnV1}
-          className="gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+          className="gap-1.5 text-xs text-muted-fg hover:text-foreground"
           title={t("v2.topbar.returnV1", "Quay lại ERP V1")}
         >
           <ArrowLeft size={14} />
           <span className="hidden sm:inline">
             {t("v2.topbar.returnV1", "Quay lại ERP V1")}
           </span>
-        </Button>
+        </V2Button>
 
         <div className="h-4 w-px bg-border hidden sm:block" />
 

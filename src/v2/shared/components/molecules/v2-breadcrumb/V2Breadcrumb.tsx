@@ -1,19 +1,21 @@
 import * as React from "react";
 import { ChevronRight } from "lucide-react";
 import { cn } from "@/v2/shared/utils/cn";
+import { V2Button, V2Text } from "@/v2/shared/components/atoms";
 import { V2BreadcrumbProps } from "./V2Breadcrumb.type";
 
 export const V2Breadcrumb: React.FC<V2BreadcrumbProps> = ({
   items,
   separator,
   className,
+  ...props
 }) => {
   if (!items || items.length === 0) return null;
 
   const defaultSeparator = (
     <ChevronRight
       size={12}
-      className="text-[color:var(--faint,hsl(var(--muted-foreground)))] flex-shrink-0 opacity-70"
+      className="text-faint flex-shrink-0 opacity-70"
       aria-hidden="true"
     />
   );
@@ -22,9 +24,10 @@ export const V2Breadcrumb: React.FC<V2BreadcrumbProps> = ({
     <nav
       aria-label="Breadcrumb"
       className={cn(
-        "v2-breadcrumb flex items-center gap-[5px] text-xs text-[color:var(--muted-fg,hsl(var(--muted-foreground)))] min-w-0 overflow-hidden select-none",
+        "v2-breadcrumb flex items-center gap-[5px] text-xs text-muted-fg min-w-0 overflow-hidden select-none",
         className,
       )}
+      {...props}
     >
       {items.map((item, index) => {
         const isLast = index === items.length - 1;
@@ -37,20 +40,24 @@ export const V2Breadcrumb: React.FC<V2BreadcrumbProps> = ({
               </span>
             )}
             {isLast ? (
-              <span
-                className="font-medium text-foreground truncate"
+              <V2Text
+                variant="body-sm"
+                weight="medium"
+                className="text-foreground truncate"
                 aria-current="page"
               >
                 {item.label}
-              </span>
+              </V2Text>
             ) : (
-              <button
+              <V2Button
                 type="button"
+                variant="ghost"
+                size="xs"
                 onClick={item.onClick}
-                className="truncate hover:text-foreground transition-colors cursor-pointer border-none bg-transparent p-0 text-xs text-[color:var(--muted-fg,hsl(var(--muted-foreground)))]"
+                className="h-auto p-0 text-xs font-normal text-muted-fg hover:text-foreground hover:bg-transparent truncate"
               >
                 {item.label}
-              </button>
+              </V2Button>
             )}
           </React.Fragment>
         );

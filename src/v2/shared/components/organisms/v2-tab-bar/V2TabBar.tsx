@@ -10,6 +10,7 @@ export const V2TabBar: React.FC<V2TabBarProps> = ({
   onTabSelect,
   onTabClose,
   className,
+  ...props
 }) => {
   const { t } = useV2Translation();
   const scrollContainerRef = React.useRef<HTMLDivElement>(null);
@@ -32,6 +33,7 @@ export const V2TabBar: React.FC<V2TabBarProps> = ({
         "v2-tab-bar flex h-8 min-h-[32px] w-full border-t border-border bg-card/60 select-none flex-shrink-0 backdrop-blur-xs",
         className,
       )}
+      {...props}
     >
       <div
         ref={scrollContainerRef}

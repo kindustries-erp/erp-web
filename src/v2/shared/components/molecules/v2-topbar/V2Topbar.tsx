@@ -14,6 +14,7 @@ export const V2Topbar: React.FC<V2TopbarProps> = ({
   onBranchClick,
   actions,
   className,
+  ...props
 }) => {
   return (
     <header
@@ -22,6 +23,7 @@ export const V2Topbar: React.FC<V2TopbarProps> = ({
         "v2-topbar flex h-9 min-h-[36px] items-center justify-between gap-3 border-b border-border bg-card/60 px-3 select-none flex-shrink-0 transition-colors",
         className,
       )}
+      {...props}
     >
       {/* Left: Breadcrumbs navigation */}
       <div className="flex items-center min-w-0 flex-1 overflow-hidden">

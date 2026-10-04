@@ -16,6 +16,7 @@ export const V2Sidebar: React.FC<V2SidebarProps> = ({
   collapsed,
   onToggleCollapse,
   className,
+  ...props
 }) => {
   const { isCollapsed, openSections, toggleCollapse, toggleSection } =
     useV2Sidebar(false, collapsed, onToggleCollapse);
@@ -36,6 +37,7 @@ export const V2Sidebar: React.FC<V2SidebarProps> = ({
         isCollapsed ? "w-[58px]" : "w-[210px]",
         className,
       )}
+      {...props}
     >
       <V2SidebarHeader isCollapsed={isCollapsed} onToggle={toggleCollapse} />
 

@@ -1,6 +1,7 @@
 import React from "react";
 import { cn } from "@/v2/shared/utils/cn";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
+import { V2Button, V2Text } from "@/v2/shared/components/atoms";
 import { V2SidebarBottomProps } from "./V2SidebarBottom.type";
 
 export const V2SidebarBottom: React.FC<V2SidebarBottomProps> = ({
@@ -11,6 +12,7 @@ export const V2SidebarBottom: React.FC<V2SidebarBottomProps> = ({
   onUserClick,
   onNotificationClick,
   className,
+  ...props
 }) => {
   const { t } = useV2Translation();
   const effectiveDisplayName =
@@ -23,6 +25,7 @@ export const V2SidebarBottom: React.FC<V2SidebarBottomProps> = ({
         "v2-sidebar-bottom flex flex-col flex-shrink-0 border-t border-border px-[10px] py-[4px]",
         className,
       )}
+      {...props}
     >
       <div
         className={cn(
@@ -32,11 +35,13 @@ export const V2SidebarBottom: React.FC<V2SidebarBottomProps> = ({
             : "flex items-center gap-[6px]",
         )}
       >
-        <button
+        <V2Button
           type="button"
+          variant="ghost"
+          size="xs"
           onClick={onUserClick}
           className={cn(
-            "flex items-center gap-2 px-1 py-[7px] rounded-lg hover:bg-accent/50 cursor-pointer border-none bg-transparent transition-colors text-left",
+            "h-auto flex items-center gap-2 px-1 py-[7px] rounded-lg hover:bg-accent/50 cursor-pointer border-none bg-transparent transition-colors text-left",
             collapsed ? "justify-center w-full" : "flex-1 min-w-0",
           )}
           aria-label={effectiveDisplayName}
@@ -46,9 +51,14 @@ export const V2SidebarBottom: React.FC<V2SidebarBottomProps> = ({
           </div>
           {!collapsed && (
             <>
-              <span className="text-xs font-medium text-[color:var(--muted-fg,hsl(var(--muted-foreground)))] whitespace-nowrap overflow-hidden text-ellipsis flex-1 min-w-0">
+              <V2Text
+                as="span"
+                variant="body-sm"
+                truncate
+                className="text-muted-fg font-medium flex-1 min-w-0"
+              >
                 {effectiveDisplayName}
-              </span>
+              </V2Text>
               <svg
                 width="12"
                 height="12"
@@ -56,7 +66,7 @@ export const V2SidebarBottom: React.FC<V2SidebarBottomProps> = ({
                 fill="none"
                 stroke="currentColor"
                 strokeWidth="2"
-                className="text-[color:var(--faint,hsl(var(--muted-foreground)))] flex-shrink-0 opacity-70"
+                className="text-faint flex-shrink-0 opacity-70"
                 aria-hidden="true"
               >
                 <polyline points="7 10 12 5 17 10" />
@@ -64,12 +74,14 @@ export const V2SidebarBottom: React.FC<V2SidebarBottomProps> = ({
               </svg>
             </>
           )}
-        </button>
+        </V2Button>
 
-        <button
+        <V2Button
           type="button"
+          variant="ghost"
+          size="icon-xs"
           onClick={onNotificationClick}
-          className="relative flex items-center justify-center w-[26px] h-[26px] min-w-[26px] rounded-md text-[color:var(--faint,hsl(var(--muted-foreground)))] hover:text-foreground hover:bg-accent/50 border-none bg-transparent cursor-pointer flex-shrink-0 transition-colors"
+          className="relative flex items-center justify-center w-[26px] h-[26px] min-w-[26px] rounded-md text-faint hover:text-foreground hover:bg-accent/50 border-none bg-transparent cursor-pointer flex-shrink-0 transition-colors p-0"
           aria-label={notificationLabel}
           title={notificationLabel}
         >
@@ -91,7 +103,7 @@ export const V2SidebarBottom: React.FC<V2SidebarBottomProps> = ({
               className="absolute top-[2px] right-[2px] w-[6px] h-[6px] bg-destructive rounded-full"
             />
           )}
-        </button>
+        </V2Button>
       </div>
     </div>
   );

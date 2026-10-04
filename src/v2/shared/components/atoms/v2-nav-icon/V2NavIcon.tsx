@@ -7,17 +7,17 @@ export const V2NavIcon: React.FC<V2NavIconProps> = ({
   isActive = false,
   className,
   size = 20,
+  ...props
 }) => {
   return (
     <span
       data-testid="v2-nav-icon"
       className={cn(
         "inline-flex shrink-0 items-center justify-center transition-colors duration-150",
-        isActive
-          ? "text-primary"
-          : "text-muted-foreground group-hover:text-foreground",
+        isActive ? "text-primary" : "text-muted-fg group-hover:text-foreground",
         className,
       )}
+      {...props}
     >
       <Icon size={size} strokeWidth={isActive ? 2.2 : 1.8} aria-hidden="true" />
     </span>

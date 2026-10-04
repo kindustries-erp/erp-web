@@ -7,7 +7,8 @@ import {
   ArrowRight,
   ExternalLink,
 } from "lucide-react";
-import { Button, Badge } from "@/v2/shared/ui";
+import { V2Button, V2Text } from "@/v2/shared/components/atoms";
+import { Badge } from "@/v2/shared/ui";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 
 export const V2WelcomePage: React.FC = () => {
@@ -67,40 +68,48 @@ export const V2WelcomePage: React.FC = () => {
             </Badge>
           </div>
 
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
+          <V2Text
+            as="h1"
+            variant="h1"
+            className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground"
+          >
             {t("v2.welcome.heroTitle", "Khung Ứng Dụng ERP V2")}
-          </h1>
+          </V2Text>
 
-          <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
+          <V2Text
+            variant="body"
+            color="muted"
+            className="text-sm sm:text-base leading-relaxed"
+          >
             {t(
               "v2.welcome.heroSubtitle",
               "Kiến trúc giao diện mới với thiết kế 2-Card nổi (Floating Cards), Primitives Shadcn và cơ chế Dual-Run an toàn song song với V1.",
             )}
-          </p>
+          </V2Text>
 
           <div className="flex flex-wrap items-center gap-3 pt-2">
-            <Button
+            <V2Button
               variant="default"
               onClick={() => {
                 const aside = document.querySelector("aside");
                 if (aside) aside.scrollIntoView({ behavior: "smooth" });
               }}
               className="gap-2 text-xs"
+              rightIcon={<ArrowRight size={14} />}
             >
               <span>{t("v2.welcome.exploreBtn", "Khám phá giao diện V2")}</span>
-              <ArrowRight size={14} />
-            </Button>
+            </V2Button>
 
-            <Button
+            <V2Button
               variant="outline"
               onClick={() => {
                 window.location.href = "/";
               }}
-              className="gap-2 text-xs text-muted-foreground hover:text-foreground"
+              className="gap-2 text-xs text-muted-fg hover:text-foreground"
+              rightIcon={<ExternalLink size={14} />}
             >
               <span>{t("v2.welcome.backV1Btn", "Quay lại ERP V1")}</span>
-              <ExternalLink size={14} />
-            </Button>
+            </V2Button>
           </div>
         </div>
       </div>
@@ -126,12 +135,16 @@ export const V2WelcomePage: React.FC = () => {
                     {feat.tag}
                   </Badge>
                 </div>
-                <h2 className="text-sm font-bold text-foreground">
+                <V2Text as="h2" variant="h4" weight="bold">
                   {feat.title}
-                </h2>
-                <p className="text-xs text-muted-foreground leading-normal">
+                </V2Text>
+                <V2Text
+                  variant="body-sm"
+                  color="muted"
+                  className="leading-normal"
+                >
                   {feat.desc}
-                </p>
+                </V2Text>
               </div>
             </div>
           );

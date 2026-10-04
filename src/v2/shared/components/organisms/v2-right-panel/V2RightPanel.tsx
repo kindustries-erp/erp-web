@@ -17,6 +17,7 @@ export const V2RightPanel: React.FC<V2RightPanelProps> = ({
   onTabClose,
   children,
   className,
+  ...props
 }) => {
   return (
     <div
@@ -25,6 +26,7 @@ export const V2RightPanel: React.FC<V2RightPanelProps> = ({
         "v2-right-panel relative flex flex-1 min-w-0 flex-col h-full rounded-2xl border border-border bg-card text-card-foreground shadow-sm overflow-hidden transition-all duration-200",
         className,
       )}
+      {...props}
     >
       {/* Topbar inside Right Panel */}
       <V2Topbar

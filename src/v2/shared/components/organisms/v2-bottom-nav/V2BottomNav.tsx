@@ -8,6 +8,7 @@ export const V2BottomNav: React.FC<V2BottomNavProps> = ({
   activeId,
   onNavigate,
   className,
+  ...props
 }) => {
   return (
     <nav
@@ -17,6 +18,7 @@ export const V2BottomNav: React.FC<V2BottomNavProps> = ({
         "fixed bottom-0 left-0 right-0 z-40 flex h-16 w-full items-center justify-around border-t border-border bg-card/95 px-2 pb-safe backdrop-blur-md select-none",
         className,
       )}
+      {...props}
     >
       {items.map((item) => (
         <V2NavItem

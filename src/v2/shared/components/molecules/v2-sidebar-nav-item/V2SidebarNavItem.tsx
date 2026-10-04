@@ -1,6 +1,7 @@
 import * as React from "react";
 import { cn } from "@/v2/shared/utils/cn";
 import { V2SidebarIcon } from "@/v2/shared/components/atoms/v2-sidebar-icon";
+import { V2Text } from "@/v2/shared/components/atoms/v2-text";
 import { Badge } from "@/v2/shared/ui";
 import { V2SidebarNavItemProps } from "./V2SidebarNavItem.type";
 
@@ -13,6 +14,7 @@ export const V2SidebarNavItem: React.FC<V2SidebarNavItemProps> = ({
   badgeCount,
   onClick,
   className,
+  ...props
 }) => {
   return (
     <div
@@ -30,21 +32,27 @@ export const V2SidebarNavItem: React.FC<V2SidebarNavItemProps> = ({
       }}
       className={cn(
         "group flex min-h-[34px] items-center gap-2 mx-2 px-2 py-[7px] rounded-md cursor-pointer whitespace-nowrap overflow-hidden text-[12px] font-medium transition-colors select-none",
-        "text-[color:var(--muted-fg)] opacity-75 hover:opacity-100 hover:bg-accent/40 hover:text-foreground",
+        "text-muted-fg opacity-75 hover:opacity-100 hover:bg-accent/40 hover:text-foreground",
         isActive &&
           "!text-foreground font-semibold opacity-100 bg-accent/70 shadow-xs",
         isCollapsed && "justify-center px-0 mx-1",
         className,
       )}
+      {...props}
     >
       <V2SidebarIcon icon={icon} isActive={isActive}>
         {iconNode}
       </V2SidebarIcon>
 
       {!isCollapsed && (
-        <span className="nav-label flex-1 truncate text-left text-[12px]">
+        <V2Text
+          as="span"
+          variant="body-sm"
+          truncate
+          className="nav-label flex-1 text-left text-[12px] text-inherit font-inherit"
+        >
           {label}
-        </span>
+        </V2Text>
       )}
 
       {!isCollapsed && typeof badgeCount === "number" && badgeCount > 0 && (

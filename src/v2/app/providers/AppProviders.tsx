@@ -2,7 +2,7 @@ import * as React from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Lock, LogIn } from "lucide-react";
 import { useAuthStore } from "@/modules/auth/domain/authStore";
-import { Button } from "@/v2/shared/ui";
+import { V2Button, V2Text } from "@/v2/shared/components/atoms";
 import { AppProvidersProps } from "./AppProviders.type";
 
 const queryClient = new QueryClient({
@@ -26,21 +26,24 @@ export const AppProviders: React.FC<AppProvidersProps> = ({ children }) => {
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10 text-destructive">
             <Lock size={24} />
           </div>
-          <h2 className="text-lg font-bold">Yêu cầu đăng nhập</h2>
-          <p className="text-xs text-muted-foreground">
+          <V2Text as="h2" variant="h3" weight="bold">
+            Yêu cầu đăng nhập
+          </V2Text>
+          <V2Text variant="body-sm" color="muted">
             Phiên làm việc của bạn đã hết hạn hoặc chưa được xác thực. Vui lòng
             đăng nhập vào ERP để tiếp tục.
-          </p>
-          <Button
+          </V2Text>
+          <V2Button
             variant="default"
+            fullWidth
             onClick={() => {
               window.location.href = "/";
             }}
-            className="w-full gap-2 text-xs"
+            className="gap-2 text-xs"
+            leftIcon={<LogIn size={16} />}
           >
-            <LogIn size={16} />
             <span>Đăng nhập hệ thống</span>
-          </Button>
+          </V2Button>
         </div>
       </div>
     );

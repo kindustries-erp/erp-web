@@ -1,5 +1,6 @@
 import * as React from "react";
 import { cn } from "@/v2/shared/utils/cn";
+import { V2Text } from "@/v2/shared/components/atoms";
 import { Badge } from "@/v2/shared/ui";
 import { V2UserBadgeProps } from "./V2UserBadge.type";
 
@@ -18,6 +19,7 @@ export const V2UserBadge: React.FC<V2UserBadgeProps> = ({
   isCompact = false,
   className,
   onClick,
+  ...props
 }) => {
   const initials = getInitials(name);
 
@@ -32,6 +34,7 @@ export const V2UserBadge: React.FC<V2UserBadgeProps> = ({
         onClick && "cursor-pointer hover:bg-accent/50 p-1.5 transition-colors",
         className,
       )}
+      {...props}
     >
       <div className="relative flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary/10 text-primary font-semibold text-xs border border-border/50">
         {avatarUrl ? (
@@ -41,29 +44,36 @@ export const V2UserBadge: React.FC<V2UserBadgeProps> = ({
             className="h-full w-full object-cover"
           />
         ) : (
-          <span>{initials}</span>
+          <V2Text
+            as="span"
+            variant="caption"
+            weight="semibold"
+            className="text-primary"
+          >
+            {initials}
+          </V2Text>
         )}
       </div>
 
       {!isCompact && (
         <div className="flex flex-col min-w-0 leading-none">
           <div className="flex items-center gap-1.5">
-            <span className="truncate text-xs font-semibold text-foreground">
+            <V2Text variant="body-sm" weight="semibold" truncate>
               {name}
-            </span>
+            </V2Text>
             {role && (
               <Badge
                 variant="outline"
-                className="h-4 px-1 text-[9px] font-normal text-muted-foreground"
+                className="h-4 px-1 text-[9px] font-normal text-muted-fg"
               >
                 {role}
               </Badge>
             )}
           </div>
           {tenantName && (
-            <span className="truncate text-[10px] text-muted-foreground mt-0.5">
+            <V2Text variant="caption" truncate className="mt-0.5 text-muted-fg">
               {tenantName}
-            </span>
+            </V2Text>
           )}
         </div>
       )}
