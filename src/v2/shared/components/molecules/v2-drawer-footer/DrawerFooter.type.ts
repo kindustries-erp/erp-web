@@ -1,4 +1,8 @@
 import * as React from "react";
+import type {
+  V2DropdownGroup,
+  V2DropdownEntry,
+} from "@/v2/shared/components/molecules/v2-dropdown";
 
 export type DrawerActionVariant =
   | "primary"
@@ -20,6 +24,9 @@ export interface DrawerAction {
 
 export interface DrawerFooterProps {
   actions?: DrawerAction[];
+  actionGroups?: V2DropdownGroup[];
+  actionDropdownItems?: V2DropdownEntry[];
+  actionDropdownTriggerLabel?: string;
   footerLeft?: React.ReactNode;
   className?: string;
   isScrolledBottom?: boolean;

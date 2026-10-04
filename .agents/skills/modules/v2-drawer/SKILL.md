@@ -18,9 +18,11 @@ description: Module tri thức Chuẩn Hóa Drawer V2 (V2StandardFormDrawer) the
      - `<DrawerSection>`: Phân vùng nội dung kính mờ `backdrop-blur-[12px]`, cơ chế **Collapsible Arrow-Only** (chỉ thu gọn khi click đúng vào icon mũi tên `ChevronDown`, không bắt sự kiện trên toàn header), `fitViewportHeight`, hỗ trợ `hideHeader`/`hideTitle`, dùng `V2Text variant="section-title"`.
      - `<DrawerField>`: Trường nhập liệu kèm nhãn (`V2Text variant="label"`), dấu `*` đỏ khi bắt buộc, helper text và thông báo lỗi.
      - `<DrawerRow>`: Cặp key-value tinh tế cho chế độ xem (View Mode), tích hợp nút copy nhanh giá trị (`Button variant="ghost"`).
-     - `<DrawerHeader>`: Thanh tiêu đề kính mờ tích hợp `isScrolledTop` shadow, `V2Text variant="drawer-title"`, `V2Button variant="drawer-edit"`, Toàn màn hình (`Maximize2`/`Minimize2`), Thu gọn/Mở rộng Cột phải (`ChevronRight`/`ChevronLeft`), và nút Đóng `X`.
-     - `<DrawerFooter>`: Chân trang cố định (sticky) với `isScrolledBottom` shadow, hỗ trợ `safe-area-inset-bottom`, tự động wrap nút trên mobile và dùng `V2Button` cho tất cả actions.
-     - `<DrawerTopTabBar>`: Dải tabs điều hướng trên đỉnh ngay dưới Header, hỗ trợ cuộn cảm ứng `touch-pan-x` trên mobile, `badgeCount`, icon, dùng `V2Text`.
+     - `<DrawerHeader>`: Thanh tiêu đề kính mờ tích hợp `isScrolledTop` shadow, `V2Text variant="drawer-title"`, `V2Button variant="drawer-edit"`, **thanh divider dọc phân cách nút Chỉnh sửa với cụm controls**, Toàn màn hình (`Maximize2`/`Minimize2`), Thu gọn/Mở rộng Cột phải (`ChevronRight`/`ChevronLeft`), và nút Đóng `X`.
+     - `<DrawerFooter>`: Chân trang cố định (sticky) với `isScrolledBottom` shadow, hỗ trợ `safe-area-inset-bottom`, tự động wrap nút trên mobile, dùng `V2Button` cho tất cả actions, và **tích hợp `V2Dropdown` mở menu nhóm tác vụ `[ Thao tác ⌄ ]` ở góc trái**.
+     - `<DrawerTopTabBar>`: Dải tabs điều hướng trên đỉnh **đặt cố định (sticky) ngay dưới Header** và nằm ngoài scroll container, tràn viền 100%, active tab nền đen `bg-slate-900 text-white` (icon trắng), badge counter tròn tinh tế, hỗ trợ cuộn cảm ứng `touch-pan-x` trên mobile, `badgeCount`, icon, dùng `V2Text`.
+     - `<V2Dropdown>` (`src/v2/shared/components/molecules/v2-dropdown/`): Molecule menu dropdown độc lập 2 tầng (bọc Primitive `src/v2/shared/ui/dropdown-menu/`), Platform Split (Desktop Popover menu vs Mobile Bottom Sheet), hỗ trợ phân nhóm (`groupLabel`), icons, loading spinner xoay, danger variant.
+
      - `<DrawerAuditTimeline>`: Lịch sử thao tác dạng trục dọc (`spine`) liên tục, node tròn (`w-6 h-6`), không lồng viền card nặng nề, dùng `V2Text`.
      - `<DrawerRelatedDeck>`: Horizon Divider Bar (`border-t border-border/60`) và Connected Context Deck ở đáy Main Body (dùng `V2Button variant="drawer-tab"`, `V2Text`, thẻ kính mờ `backdrop-blur-md`, collapsible).
    - **L3 (Organisms)**: `src/v2/shared/components/organisms/v2-standard-form-drawer/`:
@@ -93,6 +95,7 @@ export interface V2StandardFormDrawerProps {
   activeTabKey?: string;
   defaultTabKey?: string;
   onTabChange?: (tabKey: string) => void;
+  tabBarExtra?: React.ReactNode;
 
   // Nội dung
   leftPanel?: React.ReactNode;
@@ -110,7 +113,11 @@ export interface V2StandardFormDrawerProps {
 
   // Thao tác nút bấm & Chân trang
   actions?: DrawerAction[];
+  actionGroups?: V2DropdownGroup[]; // Nhóm thao tác mở popover dropdown [ Thao tác ⌄ ]
+  actionDropdownItems?: V2DropdownEntry[];
+  actionDropdownTriggerLabel?: string; // Mặc định "Thao tác"
   footerLeft?: React.ReactNode;
+
 
   // Cảnh báo & Trạng thái
   loading?: boolean;

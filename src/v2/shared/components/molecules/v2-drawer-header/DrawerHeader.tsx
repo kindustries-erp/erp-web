@@ -87,6 +87,15 @@ export const DrawerHeader: React.FC<DrawerHeaderProps> = ({
           </V2Button>
         )}
 
+        {/* Divider bar separating action buttons from window controls */}
+        {onToggleEdit && !isEditing && (
+          <div
+            data-testid="v2-drawer-header-divider"
+            className="h-4 w-px bg-border/70 mx-1 hidden sm:block shrink-0"
+            aria-hidden="true"
+          />
+        )}
+
         {/* Toggle Right Panel (Desktop only) */}
         {collapsibleRightPanel && onToggleRightPanel && (
           <Button

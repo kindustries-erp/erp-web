@@ -1,5 +1,7 @@
 import React from "react";
+import { ChevronDown } from "lucide-react";
 import { V2Button } from "@/v2/shared/components/atoms/v2-button";
+import { V2Dropdown } from "@/v2/shared/components/molecules/v2-dropdown";
 import { cn } from "@/v2/shared/utils/cn";
 import type { DrawerFooterProps, DrawerAction } from "./DrawerFooter.type";
 
@@ -26,11 +28,18 @@ function ActionButton({ action }: { action: DrawerAction }) {
 
 export const DrawerFooter: React.FC<DrawerFooterProps> = ({
   actions,
+  actionGroups,
+  actionDropdownItems,
+  actionDropdownTriggerLabel = "Thao tác",
   footerLeft,
   className,
   isScrolledBottom = false,
 }) => {
-  if (!actions?.length && !footerLeft) return null;
+  const hasDropdown =
+    (actionGroups && actionGroups.length > 0) ||
+    (actionDropdownItems && actionDropdownItems.length > 0);
+
+  if (!actions?.length && !footerLeft && !hasDropdown) return null;
 
   const leftActions = actions?.filter((a) => a.align === "left") || [];
   const rightActions = actions?.filter((a) => a.align !== "left") || [];
@@ -50,6 +59,21 @@ export const DrawerFooter: React.FC<DrawerFooterProps> = ({
       )}
     >
       <div className="flex items-center gap-2 flex-wrap">
+        {hasDropdown && (
+          <V2Dropdown
+            groups={actionGroups}
+            items={actionDropdownItems}
+            trigger={
+              <button
+                type="button"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-border/70 bg-surface/80 hover:bg-surface-hover text-foreground shadow-xs transition-colors cursor-pointer select-none"
+              >
+                <span>{actionDropdownTriggerLabel}</span>
+                <ChevronDown className="w-3.5 h-3.5 text-muted-fg" />
+              </button>
+            }
+          />
+        )}
         {footerLeft}
         {leftActions.map((action, idx) => (
           <ActionButton key={idx} action={action} />

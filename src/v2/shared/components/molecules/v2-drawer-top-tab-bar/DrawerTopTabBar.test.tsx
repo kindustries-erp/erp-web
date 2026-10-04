@@ -73,14 +73,36 @@ describe("V2 DrawerTopTabBar Molecule", () => {
     expect(handleChange).toHaveBeenCalledWith("history");
   });
 
-  it("returns null when tabs array has less than 2 items", () => {
-    const { container } = render(
+  it("renders when tabs array has 1 item and returns null when empty", () => {
+    const { container, rerender } = render(
       <DrawerTopTabBar
         tabs={[MOCK_TABS[0]]}
         activeTabKey="details"
         onTabChange={vi.fn()}
       />,
     );
+    expect(screen.getByText("Chi Tiết")).toBeInTheDocument();
+
+    rerender(
+      <DrawerTopTabBar
+        tabs={[]}
+        activeTabKey="details"
+        onTabChange={vi.fn()}
+      />,
+    );
     expect(container.firstChild).toBeNull();
+  });
+
+  it("renders extra element when provided", () => {
+    render(
+      <DrawerTopTabBar
+        tabs={MOCK_TABS}
+        activeTabKey="details"
+        onTabChange={vi.fn()}
+        extra={<div data-testid="tab-extra">Extra Action</div>}
+      />,
+    );
+
+    expect(screen.getByTestId("tab-extra")).toBeInTheDocument();
   });
 });

@@ -10,7 +10,17 @@ import { DrawerAuditTimeline } from "@/v2/shared/components/molecules/v2-drawer-
 import { V2Button } from "@/v2/shared/components/atoms/v2-button";
 import { V2Text } from "@/v2/shared/components/atoms/v2-text";
 import { Badge } from "@/v2/shared/ui/badge";
-import { FileText, Wallet, History, CheckCircle } from "lucide-react";
+import {
+  FileText,
+  Wallet,
+  History,
+  CheckCircle,
+  CreditCard,
+  Link2,
+  BookOpen,
+  RefreshCw,
+  FileSpreadsheet,
+} from "lucide-react";
 
 const meta: Meta<typeof V2StandardFormDrawer> = {
   title: "V2/Organisms/V2StandardFormDrawer",
@@ -70,25 +80,84 @@ export const ErpInvoiceDetailGoldenSimulation = () => {
       <V2StandardFormDrawer
         open={open}
         onClose={() => setOpen(false)}
+        onToggleEdit={() => alert("Chuyển sang chế độ chỉnh sửa hóa đơn")}
+        enableFullscreen={true}
+        collapsibleRightPanel={true}
         layout="2-columns"
         size="xl"
-        title="Hóa Đơn Điện Tử: 1C26TLL - 0001290"
+        title="Thông tin nội bộ: 65114302"
         titleExtra={
           <div className="flex items-center gap-1.5">
             <Badge
               variant="outline"
               className="border-emerald-500/50 text-emerald-600 bg-emerald-50/50 dark:bg-emerald-950/20"
             >
-              <CheckCircle className="w-3 h-3 mr-1" /> Đã Phát Hành
+              <CheckCircle className="w-3 h-3 mr-1" /> Mới
             </Badge>
-            <Badge variant="secondary">Đã Cấn Trừ Đủ</Badge>
           </div>
         }
-        subtitle="Người mua: Công ty Cổ phần Công nghệ Klotus • Ký ngày: 04/10/2026"
+        subtitle="Người mua: CÔNG TY CỔ PHẦN DI CHUYỂN XANH VÀ THÔNG MINH GSM • Ký ngày: 03/10/2026"
+        tabs={[
+          {
+            key: "details",
+            label: "Chi tiết",
+            icon: <FileText className="w-3.5 h-3.5" />,
+            content: null,
+          },
+          {
+            key: "financials",
+            label: "Tài chính",
+            icon: <CreditCard className="w-3.5 h-3.5" />,
+            content: null,
+          },
+          {
+            key: "linked_docs",
+            label: "Chứng từ liên kết",
+            icon: <Link2 className="w-3.5 h-3.5" />,
+            content: null,
+          },
+          {
+            key: "accounting",
+            label: "Hạch toán kế toán",
+            icon: <BookOpen className="w-3.5 h-3.5" />,
+            content: null,
+          },
+          {
+            key: "history",
+            label: "Lịch sử & Kiểm duyệt",
+            icon: <History className="w-3.5 h-3.5" />,
+            badgeCount: 1,
+            content: null,
+          },
+        ]}
+        actionGroups={[
+          {
+            groupLabel: "ĐỒNG BỘ",
+            items: [
+              {
+                key: "sync-gdt",
+                label: "Đồng bộ từ GDT",
+                icon: <RefreshCw className="w-3.5 h-3.5" />,
+                onClick: () => alert("Đang đồng bộ từ Tổng cục thuế (GDT)..."),
+              },
+            ],
+          },
+          {
+            groupLabel: "XUẤT DỮ LIỆU",
+            items: [
+              {
+                key: "export-excel",
+                label: "Xuất Excel hóa đơn",
+                icon: <FileSpreadsheet className="w-3.5 h-3.5" />,
+                onClick: () => alert("Đang xuất file Excel hóa đơn..."),
+              },
+            ],
+          },
+        ]}
         footerLeft={
           <V2Text variant="body-sm" className="font-semibold text-foreground">
             Tổng thanh toán:{" "}
-            <span className="text-primary font-bold">165,000,000 đ</span>
+            <span className="text-primary font-bold">74,001 đ</span>
           </V2Text>
         }
         actions={[

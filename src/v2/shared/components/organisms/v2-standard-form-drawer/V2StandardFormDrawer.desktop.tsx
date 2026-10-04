@@ -65,6 +65,15 @@ export const V2StandardFormDrawerDesktop: React.FC<
             isScrolledTop={h.isScrolledTop}
           />
 
+          {props.tabs && props.tabs.length > 0 && (
+            <DrawerTopTabBar
+              tabs={props.tabs}
+              activeTabKey={h.activeTabKey}
+              onTabChange={h.handleTabChange}
+              extra={props.tabBarExtra}
+            />
+          )}
+
           <div
             ref={h.scrollContainerRef}
             className={cn(
@@ -72,16 +81,6 @@ export const V2StandardFormDrawerDesktop: React.FC<
               props.bodyClassName,
             )}
           >
-            {props.tabs && props.tabs.length > 1 && (
-              <div className="mb-3 shrink-0">
-                <DrawerTopTabBar
-                  tabs={props.tabs}
-                  activeTabKey={h.activeTabKey}
-                  onTabChange={h.handleTabChange}
-                />
-              </div>
-            )}
-
             {props.loading ? (
               <div className="flex-1 flex flex-col items-center justify-center py-16 gap-3">
                 <Loader2 className="w-7 h-7 text-primary animate-spin" />
@@ -134,6 +133,9 @@ export const V2StandardFormDrawerDesktop: React.FC<
 
           <DrawerFooter
             actions={props.actions}
+            actionGroups={props.actionGroups}
+            actionDropdownItems={props.actionDropdownItems}
+            actionDropdownTriggerLabel={props.actionDropdownTriggerLabel}
             footerLeft={props.footerLeft}
             isScrolledBottom={h.isScrolledBottom}
           />

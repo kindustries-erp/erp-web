@@ -63,6 +63,15 @@ export const V2StandardFormDrawerMobile: React.FC<V2StandardFormDrawerProps> = (
             isScrolledTop={h.isScrolledTop}
           />
 
+          {props.tabs && props.tabs.length > 0 && (
+            <DrawerTopTabBar
+              tabs={props.tabs}
+              activeTabKey={h.activeTabKey}
+              onTabChange={h.handleTabChange}
+              extra={props.tabBarExtra}
+            />
+          )}
+
           <div
             ref={h.scrollContainerRef}
             className={cn(
@@ -70,16 +79,6 @@ export const V2StandardFormDrawerMobile: React.FC<V2StandardFormDrawerProps> = (
               props.bodyClassName,
             )}
           >
-            {props.tabs && props.tabs.length > 1 && (
-              <div className="mb-3">
-                <DrawerTopTabBar
-                  tabs={props.tabs}
-                  activeTabKey={h.activeTabKey}
-                  onTabChange={h.handleTabChange}
-                />
-              </div>
-            )}
-
             {props.loading ? (
               <div className="flex-1 flex flex-col items-center justify-center py-16 gap-3">
                 <Loader2 className="w-7 h-7 text-primary animate-spin" />
@@ -127,6 +126,9 @@ export const V2StandardFormDrawerMobile: React.FC<V2StandardFormDrawerProps> = (
 
           <DrawerFooter
             actions={props.actions}
+            actionGroups={props.actionGroups}
+            actionDropdownItems={props.actionDropdownItems}
+            actionDropdownTriggerLabel={props.actionDropdownTriggerLabel}
             footerLeft={props.footerLeft}
             isScrolledBottom={h.isScrolledBottom}
           />

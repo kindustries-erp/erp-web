@@ -14,4 +14,5 @@ export interface DrawerTopTabBarProps {
   activeTabKey: string;
   onTabChange: (key: string) => void;
   className?: string;
+  extra?: React.ReactNode;
 }

@@ -76,4 +76,33 @@ describe("V2 DrawerFooter Molecule", () => {
     const loadingBtn = screen.getByRole("button", { name: "Đang tải" });
     expect(loadingBtn).toBeDisabled();
   });
+
+  it("renders V2Dropdown when actionGroups is provided", () => {
+    const handleSync = vi.fn();
+    render(
+      <DrawerFooter
+        actionGroups={[
+          {
+            groupLabel: "ĐỒNG BỘ",
+            items: [
+              {
+                label: "Đồng bộ từ GDT",
+                onClick: handleSync,
+              },
+            ],
+          },
+        ]}
+      />,
+    );
+
+    const triggerBtn = screen.getByRole("button", { name: "Thao tác" });
+    expect(triggerBtn).toBeInTheDocument();
+
+    fireEvent.pointerDown(triggerBtn, { button: 0, ctrlKey: false });
+    expect(screen.getByText("ĐỒNG BỘ")).toBeInTheDocument();
+    expect(screen.getByText("Đồng bộ từ GDT")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByText("Đồng bộ từ GDT"));
+    expect(handleSync).toHaveBeenCalledTimes(1);
+  });
 });

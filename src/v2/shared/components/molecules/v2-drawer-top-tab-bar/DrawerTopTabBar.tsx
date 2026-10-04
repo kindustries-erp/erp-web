@@ -8,74 +8,83 @@ export const DrawerTopTabBar: React.FC<DrawerTopTabBarProps> = ({
   activeTabKey,
   onTabChange,
   className,
+  extra,
 }) => {
-  if (!tabs || tabs.length <= 1) return null;
+  if (!tabs || tabs.length === 0) return null;
 
   return (
     <div
       role="tablist"
       aria-label="Drawer Top Navigation Tabs"
       className={cn(
-        "-mx-3 -mt-3 sm:-mx-4 sm:-mt-4 md:-mx-[18px] md:-mt-[18px] mb-3.5",
-        "flex items-center gap-1.5 px-3 sm:px-4 md:px-[18px] py-1.5",
-        "border-b border-border/70 bg-surface/75 backdrop-blur-md shrink-0",
-        "overflow-x-auto touch-pan-x scrollbar-none",
+        "flex items-center justify-between px-3 sm:px-4 md:px-[18px] py-1.5",
+        "border-b border-border/70 bg-[var(--drawer-header-bg,rgba(246,248,252,0.85))] backdrop-blur-md shrink-0 w-full gap-2",
         className,
       )}
     >
-      {tabs.map((tab) => {
-        const isActive = activeTabKey === tab.key;
-        return (
-          <button
-            key={tab.key}
-            role="tab"
-            type="button"
-            aria-selected={isActive}
-            aria-controls={`tab-panel-${tab.key}`}
-            id={`tab-${tab.key}`}
-            onClick={() => onTabChange(tab.key)}
-            className={cn(
-              "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all duration-150 cursor-pointer select-none shrink-0",
-              isActive
-                ? "bg-primary text-primary-fg shadow-sm font-semibold"
-                : "text-muted-fg hover:text-foreground hover:bg-surface-hover",
-            )}
-          >
-            {tab.icon && (
-              <span
-                className={cn(
-                  "shrink-0",
-                  isActive ? "text-primary-fg" : "text-muted-fg",
-                )}
-              >
-                {tab.icon}
-              </span>
-            )}
-            <V2Text
-              variant="body-sm"
+      <div className="flex items-center gap-1.5 overflow-x-auto touch-pan-x scrollbar-none flex-1 min-w-0">
+        {tabs.map((tab) => {
+          const isActive = activeTabKey === tab.key;
+          return (
+            <button
+              key={tab.key}
+              role="tab"
+              type="button"
+              aria-selected={isActive}
+              aria-controls={`tab-panel-${tab.key}`}
+              id={`tab-${tab.key}`}
+              onClick={() => onTabChange(tab.key)}
               className={cn(
-                "leading-none",
-                isActive ? "text-primary-fg font-semibold" : "text-inherit",
+                "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all duration-150 cursor-pointer select-none shrink-0",
+                isActive
+                  ? "bg-slate-900 text-white dark:bg-primary dark:text-primary-foreground shadow-xs font-semibold"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/70",
               )}
             >
-              {tab.label}
-            </V2Text>
-
-            {tab.badgeCount !== undefined && tab.badgeCount > 0 && (
-              <span
+              {tab.icon && (
+                <span
+                  className={cn(
+                    "shrink-0",
+                    isActive
+                      ? "text-white dark:text-primary-foreground"
+                      : "text-muted-foreground",
+                  )}
+                >
+                  {tab.icon}
+                </span>
+              )}
+              <V2Text
+                variant="body-sm"
                 className={cn(
-                  "inline-flex items-center justify-center px-1.5 py-0.2 min-w-[18px] h-4 rounded-full text-[10px] font-semibold leading-none shrink-0",
+                  "leading-none",
                   isActive
-                    ? "bg-white/20 text-white"
-                    : "bg-muted text-muted-fg border border-border/50",
+                    ? "text-white dark:text-primary-foreground font-semibold"
+                    : "text-inherit",
                 )}
               >
-                {tab.badgeCount > 99 ? "99+" : tab.badgeCount}
-              </span>
-            )}
-          </button>
-        );
-      })}
+                {tab.label}
+              </V2Text>
+
+              {tab.badgeCount !== undefined && tab.badgeCount > 0 && (
+                <span
+                  className={cn(
+                    "inline-flex items-center justify-center min-w-[18px] h-[18px] px-1.5 rounded-full text-[10px] font-bold leading-none shrink-0 transition-colors",
+                    isActive
+                      ? "bg-white text-slate-900 dark:bg-primary-foreground dark:text-primary"
+                      : "bg-muted text-muted-foreground border border-border/50",
+                  )}
+                >
+                  {tab.badgeCount > 99 ? "99+" : tab.badgeCount}
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      {extra && (
+        <div className="flex items-center gap-2 shrink-0 ml-auto">{extra}</div>
+      )}
     </div>
   );
 };

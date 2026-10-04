@@ -123,4 +123,29 @@ describe("V2 DrawerHeader Molecule", () => {
       screen.getByRole("button", { name: "Mở rộng cột thông tin phải" }),
     ).toBeInTheDocument();
   });
+
+  it("renders divider bar when onToggleEdit is present and isEditing=false", () => {
+    const { rerender } = render(
+      <DrawerHeader
+        title="Drawer"
+        onClose={vi.fn()}
+        onToggleEdit={vi.fn()}
+        isEditing={false}
+      />,
+    );
+
+    expect(screen.getByTestId("v2-drawer-header-divider")).toBeInTheDocument();
+
+    rerender(
+      <DrawerHeader
+        title="Drawer"
+        onClose={vi.fn()}
+        onToggleEdit={vi.fn()}
+        isEditing={true}
+      />,
+    );
+    expect(
+      screen.queryByTestId("v2-drawer-header-divider"),
+    ).not.toBeInTheDocument();
+  });
 });

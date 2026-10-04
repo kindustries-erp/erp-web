@@ -229,4 +229,30 @@ describe("V2StandardFormDrawer Organism", () => {
       screen.getByText("Không thể kết nối đến máy chủ"),
     ).toBeInTheDocument();
   });
+
+  it("renders actionGroups dropdown in Drawer footer", () => {
+    const handleSync = vi.fn();
+    render(
+      <V2StandardFormDrawer
+        open={true}
+        onClose={vi.fn()}
+        title="Drawer with Action Groups"
+        actionGroups={[
+          {
+            groupLabel: "ĐỒNG BỘ",
+            items: [
+              {
+                label: "Đồng bộ từ GDT",
+                onClick: handleSync,
+              },
+            ],
+          },
+        ]}
+      />,
+    );
+
+    const triggerBtn = screen.getByRole("button", { name: "Thao tác" });
+    expect(triggerBtn).toBeInTheDocument();
+    expect(triggerBtn).toHaveAttribute("aria-haspopup", "menu");
+  });
 });

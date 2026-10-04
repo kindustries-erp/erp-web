@@ -1,9 +1,18 @@
-import * as React from "react";
 import type { DrawerTopTabItem } from "@/v2/shared/components/molecules/v2-drawer-top-tab-bar";
 import type { DrawerAction } from "@/v2/shared/components/molecules/v2-drawer-footer";
 import type { DrawerRelatedTabItem } from "@/v2/shared/components/molecules/v2-drawer-related-deck";
+import type {
+  V2DropdownGroup,
+  V2DropdownEntry,
+} from "@/v2/shared/components/molecules/v2-dropdown";
 
-export type { DrawerTopTabItem, DrawerAction, DrawerRelatedTabItem };
+export type {
+  DrawerTopTabItem,
+  DrawerAction,
+  DrawerRelatedTabItem,
+  V2DropdownGroup,
+  V2DropdownEntry,
+};
 
 export type V2DrawerSize = "sm" | "md" | "lg" | "xl" | "full";
 export type V2DrawerMode = "view" | "edit";
@@ -39,6 +48,7 @@ export interface V2StandardFormDrawerProps {
   activeTabKey?: string;
   defaultTabKey?: string;
   onTabChange?: (tabKey: string) => void;
+  tabBarExtra?: React.ReactNode;
 
   // Content Panels
   leftPanel?: React.ReactNode;
@@ -56,6 +66,9 @@ export interface V2StandardFormDrawerProps {
 
   // Actions & Footer
   actions?: DrawerAction[];
+  actionGroups?: V2DropdownGroup[];
+  actionDropdownItems?: V2DropdownEntry[];
+  actionDropdownTriggerLabel?: string;
   footerLeft?: React.ReactNode;
 
   // State guards
