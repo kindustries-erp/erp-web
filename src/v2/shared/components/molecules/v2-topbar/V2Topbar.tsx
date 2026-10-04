@@ -20,7 +20,7 @@ export const V2Topbar: React.FC<V2TopbarProps> = ({
     <header
       data-testid="v2-topbar"
       className={cn(
-        "v2-topbar flex h-9 min-h-[36px] items-center justify-between gap-3 border-b border-border bg-card/60 px-3 select-none flex-shrink-0 transition-colors",
+        "v2-topbar flex h-9 min-h-[36px] items-center justify-between gap-3 bg-background/80 backdrop-blur-md px-4 sm:px-6 select-none flex-shrink-0 transition-colors rounded-t-2xl",
         className,
       )}
       {...props}

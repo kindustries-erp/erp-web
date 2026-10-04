@@ -32,9 +32,9 @@ export const V2SidebarNavItem: React.FC<V2SidebarNavItemProps> = ({
       }}
       className={cn(
         "group flex min-h-[34px] items-center gap-2 mx-2 px-2 py-[7px] rounded-md cursor-pointer whitespace-nowrap overflow-hidden text-[12px] font-medium transition-colors select-none",
-        "text-muted-fg opacity-75 hover:opacity-100 hover:bg-accent/40 hover:text-foreground",
+        "text-muted-fg opacity-75 hover:opacity-100 hover:bg-[color:var(--sidebar-active-bg,rgba(0,0,0,0.04))] hover:text-foreground dark:hover:bg-white/[0.06]",
         isActive &&
-          "!text-foreground font-semibold opacity-100 bg-accent/70 shadow-xs",
+          "!text-foreground font-semibold opacity-100 bg-[color:var(--sidebar-active-bg,rgba(0,0,0,0.06))] dark:bg-white/[0.1] shadow-xs",
         isCollapsed && "justify-center px-0 mx-1",
         className,
       )}

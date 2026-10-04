@@ -29,17 +29,17 @@ export const V2TabItem: React.FC<V2TabItemProps> = ({
       data-testid={`v2-tab-item-${id}`}
       onClick={onClick}
       className={cn(
-        "v2-tab-item group relative flex h-8 min-h-[32px] items-center gap-1.5 px-3 border-r border-border text-[11px] font-medium cursor-pointer transition-colors whitespace-nowrap select-none",
+        "v2-tab-item group relative flex h-full items-center gap-[6px] px-[14px] text-[11px] font-medium cursor-pointer transition-all duration-150 ease-out whitespace-nowrap select-none border-b-2 border-transparent",
         isActive
-          ? "bg-card text-foreground font-semibold border-b-2 border-b-primary shadow-xs"
-          : "bg-surface/50 text-muted-fg hover:bg-surface-hover hover:text-foreground",
+          ? "text-foreground font-semibold border-b-primary"
+          : "text-muted-fg hover:text-foreground hover:border-b-black/10 dark:hover:border-b-white/10",
         className,
       )}
       {...props}
     >
       {Icon && (
         <Icon
-          size={13}
+          size={14}
           className={cn(
             "flex-shrink-0 transition-opacity",
             isActive
@@ -69,7 +69,7 @@ export const V2TabItem: React.FC<V2TabItemProps> = ({
             e.stopPropagation();
             onClose?.();
           }}
-          className="ml-1 flex h-4 w-4 min-w-[16px] items-center justify-center rounded-full text-faint hover:bg-accent hover:text-foreground border-none bg-transparent p-0 cursor-pointer opacity-50 group-hover:opacity-100 transition-opacity"
+          className="ml-1 flex h-4 w-4 min-w-[16px] items-center justify-center rounded-full text-faint hover:bg-surface-hover hover:text-foreground border-none bg-transparent p-0 cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"
         >
           <X size={10} strokeWidth={2.5} />
         </V2Button>

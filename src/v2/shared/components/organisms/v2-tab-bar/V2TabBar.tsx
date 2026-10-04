@@ -30,7 +30,7 @@ export const V2TabBar: React.FC<V2TabBarProps> = ({
       role="tablist"
       aria-label={t("v2.tabBar.ariaLabel", "Thanh tab đa nhiệm")}
       className={cn(
-        "v2-tab-bar flex h-8 min-h-[32px] w-full border-t border-border bg-card/60 select-none flex-shrink-0 backdrop-blur-xs",
+        "v2-tab-bar flex h-9 min-h-[36px] w-full bg-background/80 backdrop-blur-md px-4 sm:px-6 select-none flex-shrink-0 rounded-b-2xl",
         className,
       )}
       {...props}
@@ -38,7 +38,7 @@ export const V2TabBar: React.FC<V2TabBarProps> = ({
       <div
         ref={scrollContainerRef}
         onWheel={handleWheel}
-        className="flex items-center flex-1 overflow-x-auto overflow-y-hidden scrollbar-none"
+        className="flex items-center flex-1 h-full overflow-x-auto overflow-y-hidden scrollbar-none"
       >
         {tabs.map((tab) => (
           <V2TabItem

@@ -10,8 +10,8 @@ description: Module tri thức Kiến trúc Layout V2 (Floating 2-Cards, Platfor
 Kiến trúc Layout V2 (`src/v2/app/layouts/` và `src/v2/shared/components/`) là bộ khung sườn giao diện chuẩn mực thế hệ mới của **ERP Web**, kế thừa toàn bộ trải nghiệm ưu việt của V1 đồng thời tái cấu trúc mã nguồn theo **Atomic Design 5 tầng**, **Platform Split (Desktop vs Mobile)** và **No Blue Mandate**:
 
 - **Kiến trúc Floating 2-Cards (Desktop)**: Toàn bộ viewport nằm trên nền canvas xám dịu mắt `#f4f4f4` (dark mode: `bg-background`), có khoảng đệm mép `p-2` và khe hở `gap-2` (8px). Gồm 2 khối Card nổi song song độc lập bo tròn `rounded-2xl`, border mỏng và shadow mềm mại:
-  - **Cột Trái (Sidebar)**: Chiều rộng `210px` (thu gọn `58px`), hiển thị Logo thương hiệu, tên app, các phân hệ điều hướng in hoa, và avatar user ở chân trang.
-  - **Cột Phải (Right Panel)**: Card co giãn linh hoạt (`flex-1 min-w-0`), ôm trọn **Topbar (36px)** ở đỉnh, **Vùng nội dung nghiệp vụ (App Content)** cuộn mượt mà ở giữa, và **Thanh TabBar đa nhiệm** ở đáy.
+  - **Cột Trái (Sidebar)**: Chiều rộng `210px` (thu gọn `58px`), hiển thị Logo thương hiệu, tên app, các phân hệ điều hướng in hoa, và avatar user ở chân trang. Tích hợp **thanh cuộn tinh tế (slim scrollbar 6px)** bo tròn mềm mại khi mở rộng (tự động ẩn khi thu gọn), các mục menu được làm nổi bật với **highlight active pill background** (`bg-[color:var(--sidebar-active-bg)]`) chuẩn xác 1:1 theo V1.
+  - **Cột Phải (Right Panel)**: Card co giãn linh hoạt (`flex-1 min-w-0`), sử dụng màu nền canvas `bg-background text-foreground` (`#f9fbfc` ở Classic / `#f4f6f8` ở Default) giúp các thẻ nội dung con (`bg-card`) nổi khối rõ rệt (Visual Depth & Layering). Bố cục **Absolute Overlay Scroll**: ôm trọn **Topbar (36px, Frosted Glass `bg-background/80 backdrop-blur-md` không viền divider, padding `px-4 sm:px-6`)** cố định ở đỉnh, **Vùng nội dung nghiệp vụ (`main`)** cuộn toàn dải trượt lướt mờ ảo ngầm phía sau Header/Footer (`pt-9 pb-9 px-4 sm:px-6`), và **Thanh TabBar đa nhiệm (36px, Frosted Glass `bg-background/80 backdrop-blur-md` không viền divider, padding `px-4 sm:px-6`)** cố định ở đáy, hòa quyện hoàn toàn vào nền canvas không để lại vạch kẻ ngăn cách thô cứng như V1.
 - **Cơ chế Dual-Run Song Song Tuyệt Đối**: Chạy độc lập tại tiền tố route `/v2/*` trên cùng một single bundle và dev server của Vite. Kế thừa trực tiếp `useAuthStore` của V1 mà không gây bất kỳ tác dụng phụ nào tới hệ thống V1 đang vận hành.
 - **Platform Split Tự Động (`useViewport`)**: Tự động chuyển đổi giao diện dựa trên kích thước màn hình mà không bị giật lag layout:
   - Màn hình Desktop (>= 768px): Hiển thị kiến trúc Floating 2-Cards.
@@ -285,9 +285,16 @@ Storybook được cấu hình hoàn toàn độc lập và **chỉ kết nối 
 # 1. Khởi chạy Storybook Dev Server (Mặc định port 6006)
 cd /home/dev/repos-dev/erp/erp-web && bun run storybook
 
-# 2. Build Storybook Tĩnh (Kiểm tra bundle và export tĩnh)
-cd /home/dev/repos-dev/erp/erp-web && bun run build-storybook
-```
+### 4.4. Quy Chuẩn Thẩm Mỹ TabBar & TabItem (`V2TabBar`, `V2TabItem`)
+Để đảm bảo trải nghiệm người dùng đồng nhất tuyệt đối giữa V1 và V2:
+- **Thanh TabBar (`V2TabBar`)**: Chiều cao chuẩn `h-9` (`36px`), nền `bg-background/80 backdrop-blur-md`, không viền gạch ngang (`border-none`), cuộn ngang ẩn thanh cuộn (`scrollbar-none`).
+- **Thẻ Tab (`V2TabItem`)**:
+  - Tuyệt đối không dùng nền hộp trắng (`bg-card`), không dùng viền chia cột (`border-r`). Nền tab luôn trong suốt (`bg-transparent`) hòa quyện vào Right Panel.
+  - Active Tab: `text-foreground font-semibold border-b-2 border-b-primary`.
+  - Inactive Tab: `text-muted-fg hover:text-foreground border-b-2 border-transparent hover:border-b-black/10 dark:hover:border-b-white/10`.
+  - Đệm ngang chuẩn: `px-[14px]`. Nút đóng tab ẩn khi bình thường, chỉ hiển thị mượt mà khi hover chuột vào tab (`opacity-0 group-hover:opacity-100`).
+- **Neo Context Menu Thanh Tab (`AppContextMenu`)**:
+  - Khi mở context menu từ `tabbar` (`source === "tabbar"`), context menu được neo bằng `bottom: Math.max(40, window.innerHeight - menu.y + 4)` thay vì `top`. Menu tự động nở ngược lên trên (UPWARDS) từ vị trí đáy màn hình (cách thanh TabBar 4px), triệt tiêu lỗi menu bị trôi nổi lên giữa màn hình.
 
 ---
 

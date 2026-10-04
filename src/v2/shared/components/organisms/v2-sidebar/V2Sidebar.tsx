@@ -42,7 +42,12 @@ export const V2Sidebar: React.FC<V2SidebarProps> = ({
       <V2SidebarHeader isCollapsed={isCollapsed} onToggle={toggleCollapse} />
 
       <nav
-        className="flex-1 overflow-y-auto overflow-x-hidden py-2 space-y-1"
+        className={cn(
+          "flex-1 overflow-y-auto overflow-x-hidden py-2 space-y-1",
+          isCollapsed
+            ? "scrollbar-none [&::-webkit-scrollbar]:hidden"
+            : "[&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-slate-300/80 hover:[&::-webkit-scrollbar-thumb]:bg-slate-400 dark:[&::-webkit-scrollbar-thumb]:bg-zinc-700 dark:hover:[&::-webkit-scrollbar-thumb]:bg-zinc-600 [&::-webkit-scrollbar-thumb]:rounded-full [scrollbar-width:thin] [scrollbar-color:var(--scrollbar-thumb,#cbd5e1)_transparent]",
+        )}
         aria-label="Sidebar Navigation"
       >
         {effectiveSections.map((section) => (

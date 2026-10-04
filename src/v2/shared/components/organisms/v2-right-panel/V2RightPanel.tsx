@@ -23,12 +23,12 @@ export const V2RightPanel: React.FC<V2RightPanelProps> = ({
     <div
       data-testid="v2-right-panel"
       className={cn(
-        "v2-right-panel relative flex flex-1 min-w-0 flex-col h-full rounded-2xl border border-border bg-card text-card-foreground shadow-sm overflow-hidden transition-all duration-200",
+        "v2-right-panel relative flex flex-1 min-w-0 flex-col h-full rounded-2xl border border-border bg-background text-foreground shadow-sm overflow-hidden transition-all duration-200",
         className,
       )}
       {...props}
     >
-      {/* Topbar inside Right Panel */}
+      {/* Topbar inside Right Panel (Absolute Frosted Glass Overlay) */}
       <V2Topbar
         breadcrumbs={breadcrumbs}
         branchName={branchName}
@@ -36,23 +36,28 @@ export const V2RightPanel: React.FC<V2RightPanelProps> = ({
         onSearchClick={onSearchClick}
         onBranchClick={onBranchClick}
         actions={topbarActions}
+        className="absolute top-0 left-0 right-0 z-20"
       />
 
-      {/* Main Content Area */}
+      {/* Main Content Area: scrolls full height under frosted glass header & footer */}
       <main
         tabIndex={-1}
-        className="v2-right-panel-content flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-6 focus:outline-none"
+        className={cn(
+          "v2-right-panel-content flex-1 overflow-y-auto overflow-x-hidden pt-9 px-4 sm:px-6 focus:outline-none",
+          tabs && tabs.length > 0 && activeTabId ? "pb-9" : "pb-4 sm:pb-6",
+        )}
       >
         {children}
       </main>
 
-      {/* TabBar at bottom of Right Panel */}
+      {/* TabBar at bottom of Right Panel (Absolute Frosted Glass Overlay) */}
       {tabs && tabs.length > 0 && activeTabId && onTabSelect && (
         <V2TabBar
           tabs={tabs}
           activeTabId={activeTabId}
           onTabSelect={onTabSelect}
           onTabClose={onTabClose}
+          className="absolute bottom-0 left-0 right-0 z-20"
         />
       )}
     </div>

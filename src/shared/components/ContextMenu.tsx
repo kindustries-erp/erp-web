@@ -193,8 +193,9 @@ export function AppContextMenu() {
   const GAP = 8;
   const isTabbarMenu = menu.source === "tabbar";
   const W = 220;
-  const H = isTabbarMenu ? 220 : configInfo ? 84 : 44;
   const x = Math.min(menu.x, window.innerWidth - W - GAP);
+  const bottom = Math.max(40, window.innerHeight - menu.y + 4);
+  const H = configInfo ? 84 : 44;
   const y = Math.min(menu.y, window.innerHeight - H - GAP);
 
   const canDuplicate = DUPLICATABLE_PAGES.has(targetPage);
@@ -253,7 +254,7 @@ export function AppContextMenu() {
   return createPortal(
     <div
       className="context-menu"
-      style={{ left: x, top: y }}
+      style={isTabbarMenu ? { left: x, bottom } : { left: x, top: y }}
       onMouseDown={(e) => e.stopPropagation()}
       onClick={(e) => e.stopPropagation()}
     >
