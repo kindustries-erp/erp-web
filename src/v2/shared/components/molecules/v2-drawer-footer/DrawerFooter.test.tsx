@@ -98,7 +98,7 @@ describe("V2 DrawerFooter Molecule", () => {
     const triggerBtn = screen.getByRole("button", { name: "Thao tác" });
     expect(triggerBtn).toBeInTheDocument();
 
-    fireEvent.pointerDown(triggerBtn, { button: 0, ctrlKey: false });
+    fireEvent.click(triggerBtn);
     expect(screen.getByText("ĐỒNG BỘ")).toBeInTheDocument();
     expect(screen.getByText("Đồng bộ từ GDT")).toBeInTheDocument();
 

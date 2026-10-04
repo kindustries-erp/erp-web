@@ -6,7 +6,7 @@ export interface DrawerTopTabItem {
   icon?: React.ReactNode;
   badgeCount?: number;
   hideRightPanel?: boolean;
-  content: React.ReactNode;
+  content?: React.ReactNode;
 }
 
 export interface DrawerTopTabBarProps {

@@ -53,7 +53,7 @@ describe("V2Dropdown Molecule", () => {
     expect(trigger).toBeInTheDocument();
     expect(screen.queryByText("ĐỒNG BỘ")).not.toBeInTheDocument();
 
-    fireEvent.pointerDown(trigger, { button: 0, ctrlKey: false });
+    fireEvent.click(trigger);
     expect(screen.getByText("ĐỒNG BỘ")).toBeInTheDocument();
     expect(screen.getByText("Đồng bộ từ GDT")).toBeInTheDocument();
     expect(screen.getByText("XUẤT DỮ LIỆU")).toBeInTheDocument();

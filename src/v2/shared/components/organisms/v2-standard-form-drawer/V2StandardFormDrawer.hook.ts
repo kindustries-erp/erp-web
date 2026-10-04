@@ -5,7 +5,7 @@ import type {
   V2DrawerLayout,
 } from "./V2StandardFormDrawer.type";
 
-const DESKTOP_SIZE_CLASSES: Record<V2DrawerSize, string> = {
+const SIZE_CLASSES: Record<V2DrawerSize, string> = {
   sm: "w-full min-w-0 max-w-full md:w-[90vw] lg:w-[42vw] xl:w-[38vw] 2xl:w-[32vw] lg:min-w-[420px] lg:max-w-[660px]",
   md: "w-full min-w-0 max-w-full md:w-[92vw] lg:w-[60vw] xl:w-[54vw] 2xl:w-[48vw] lg:min-w-[620px] lg:max-w-[980px]",
   lg: "w-full min-w-0 max-w-full md:w-[95vw] lg:w-[78vw] xl:w-[74vw] 2xl:w-[68vw] lg:min-w-[840px] lg:max-w-[1380px]",
@@ -13,78 +13,91 @@ const DESKTOP_SIZE_CLASSES: Record<V2DrawerSize, string> = {
   full: "w-full min-w-0 max-w-full md:w-[98vw] lg:w-[calc(100vw-36px)] xl:w-[calc(100vw-40px)] lg:min-w-[1020px]",
 };
 
-export function useStandardFormDrawer(props: V2StandardFormDrawerProps) {
-  const {
-    open,
-    mode = "view",
-    size = props.layout === "1-column" ? "sm" : "xl",
-    tabs,
-    activeTabKey: controlledTabKey,
-    defaultTabKey,
-    onTabChange,
-    isFullscreen: controlledFullscreen,
-    onFullscreenChange,
-    enableFullscreen = true,
-    isRightPanelCollapsed: controlledRightCollapsed,
-    onRightPanelCollapseChange,
-    collapsibleRightPanel = true,
-    confirmOnClose = false,
-    onClose,
-  } = props;
-
-  const [internalTabKey, setInternalTabKey] = useState<string>(
-    () => defaultTabKey || tabs?.[0]?.key || "details",
-  );
-  const activeTabKey =
-    controlledTabKey !== undefined ? controlledTabKey : internalTabKey;
-
-  const handleTabChange = useCallback(
-    (key: string) => {
-      if (controlledTabKey === undefined) setInternalTabKey(key);
-      onTabChange?.(key);
+function useTabControl(
+  controlled?: string,
+  fallback?: string,
+  onChange?: (k: string) => void,
+) {
+  const [internal, setInternal] = useState(fallback || "");
+  const activeKey = controlled !== undefined ? controlled : internal;
+  const handleChange = useCallback(
+    (k: string) => {
+      if (controlled === undefined) setInternal(k);
+      onChange?.(k);
     },
-    [controlledTabKey, onTabChange],
+    [controlled, onChange],
+  );
+  return [activeKey, handleChange] as const;
+}
+
+export function useStandardFormDrawer(props: V2StandardFormDrawerProps) {
+  const { open, mode = "view", tabs, confirmOnClose = false, onClose } = props;
+  const size = props.size ?? (props.layout === "1-column" ? "sm" : "xl");
+
+  // 1. Top Header Tabs
+  const [activeTabKey, handleTabChange] = useTabControl(
+    props.activeTabKey,
+    props.defaultTabKey || tabs?.[0]?.key || "details",
+    props.onTabChange,
+  );
+  const activeTabItem = useMemo(
+    () => tabs?.find((t) => t.key === activeTabKey),
+    [tabs, activeTabKey],
   );
 
-  const [internalFullscreen, setInternalFullscreen] = useState(false);
-  const isFullscreen =
-    controlledFullscreen !== undefined
-      ? controlledFullscreen
-      : internalFullscreen;
+  // 2. Left Sub-Tabs
+  const [activeLeftTabKey, handleLeftTabChange] = useTabControl(
+    props.activeLeftTabKey,
+    props.defaultLeftTabKey || props.leftTabs?.[0]?.key,
+    props.onLeftTabChange,
+  );
+  const activeLeftTabItem = useMemo(
+    () => props.leftTabs?.find((t) => t.key === activeLeftTabKey),
+    [props.leftTabs, activeLeftTabKey],
+  );
 
+  // 3. Right Sub-Tabs
+  const [activeRightTabKey, handleRightTabChange] = useTabControl(
+    props.activeRightTabKey,
+    props.defaultRightTabKey || props.rightTabs?.[0]?.key,
+    props.onRightTabChange,
+  );
+  const activeRightTabItem = useMemo(
+    () => props.rightTabs?.find((t) => t.key === activeRightTabKey),
+    [props.rightTabs, activeRightTabKey],
+  );
+
+  // Fullscreen controls
+  const [internalFullscreen, setInternalFullscreen] = useState(false);
+  const isFullscreen = props.isFullscreen ?? internalFullscreen;
   const toggleFullscreen = useCallback(() => {
     const nextVal = !isFullscreen;
-    if (controlledFullscreen === undefined) setInternalFullscreen(nextVal);
-    onFullscreenChange?.(nextVal);
-  }, [controlledFullscreen, isFullscreen, onFullscreenChange]);
+    if (props.isFullscreen === undefined) setInternalFullscreen(nextVal);
+    props.onFullscreenChange?.(nextVal);
+  }, [props.isFullscreen, isFullscreen, props.onFullscreenChange]);
 
+  // Right panel collapsible
   const [internalRightCollapsed, setInternalRightCollapsed] = useState(false);
   const isRightPanelCollapsed =
-    controlledRightCollapsed !== undefined
-      ? controlledRightCollapsed
-      : internalRightCollapsed;
-
+    props.isRightPanelCollapsed ?? internalRightCollapsed;
   const toggleRightPanel = useCallback(() => {
     const nextVal = !isRightPanelCollapsed;
-    if (controlledRightCollapsed === undefined)
+    if (props.isRightPanelCollapsed === undefined)
       setInternalRightCollapsed(nextVal);
-    onRightPanelCollapseChange?.(nextVal);
+    props.onRightPanelCollapseChange?.(nextVal);
   }, [
-    controlledRightCollapsed,
+    props.isRightPanelCollapsed,
     isRightPanelCollapsed,
-    onRightPanelCollapseChange,
+    props.onRightPanelCollapseChange,
   ]);
 
   const [showConfirmClose, setShowConfirmClose] = useState(false);
   const requestClose = useCallback(() => {
-    if (confirmOnClose && mode === "edit") {
-      setShowConfirmClose(true);
-    } else {
-      onClose();
-    }
+    if (confirmOnClose && mode === "edit") setShowConfirmClose(true);
+    else onClose();
   }, [confirmOnClose, mode, onClose]);
 
-  // Esc Key Handler: Esc 1st shrinks fullscreen; Esc 2nd requests close
+  // Esc Key Handler
   useEffect(() => {
     if (!open) return;
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -100,7 +113,7 @@ export function useStandardFormDrawer(props: V2StandardFormDrawerProps) {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [open, showConfirmClose, isFullscreen, toggleFullscreen, requestClose]);
 
-  // Scroll detection for shadows
+  // Scroll detection
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [isScrolledTop, setIsScrolledTop] = useState(false);
   const [isScrolledBottom, setIsScrolledBottom] = useState(false);
@@ -120,11 +133,6 @@ export function useStandardFormDrawer(props: V2StandardFormDrawerProps) {
     return () => el.removeEventListener("scroll", checkScroll);
   }, [open, checkScroll]);
 
-  const activeTabItem = useMemo(
-    () => tabs?.find((t) => t.key === activeTabKey),
-    [tabs, activeTabKey],
-  );
-
   const effectiveLayout: V2DrawerLayout = useMemo(() => {
     if (activeTabItem?.hideRightPanel) return "1-column";
     if (props.layout) return props.layout;
@@ -133,20 +141,27 @@ export function useStandardFormDrawer(props: V2StandardFormDrawerProps) {
 
   const sizeClass = useMemo(() => {
     if (isFullscreen) return "w-screen h-dvh max-w-none rounded-none border-0";
-    return DESKTOP_SIZE_CLASSES[size] || DESKTOP_SIZE_CLASSES.xl;
+    return SIZE_CLASSES[size] || SIZE_CLASSES.xl;
   }, [isFullscreen, size]);
 
   return {
     activeTabKey,
     handleTabChange,
     activeTabItem,
+    activeLeftTabKey,
+    handleLeftTabChange,
+    activeLeftTabItem,
+    activeRightTabKey,
+    handleRightTabChange,
+    activeRightTabItem,
     isFullscreen,
     toggleFullscreen,
-    enableFullscreen: enableFullscreen && effectiveLayout === "2-columns",
+    enableFullscreen:
+      (props.enableFullscreen ?? true) && effectiveLayout === "2-columns",
     isRightPanelCollapsed,
     toggleRightPanel,
     collapsibleRightPanel:
-      collapsibleRightPanel && effectiveLayout === "2-columns",
+      (props.collapsibleRightPanel ?? true) && effectiveLayout === "2-columns",
     effectiveLayout,
     sizeClass,
     showConfirmClose,

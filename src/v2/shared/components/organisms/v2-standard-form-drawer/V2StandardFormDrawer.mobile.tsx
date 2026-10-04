@@ -4,6 +4,7 @@ import { Sheet, SheetContent, SheetTitle } from "@/v2/shared/ui/sheet";
 import { DrawerHeader } from "@/v2/shared/components/molecules/v2-drawer-header";
 import { DrawerFooter } from "@/v2/shared/components/molecules/v2-drawer-footer";
 import { DrawerTopTabBar } from "@/v2/shared/components/molecules/v2-drawer-top-tab-bar";
+import { DrawerSubTabBar } from "@/v2/shared/components/molecules/v2-drawer-sub-tab-bar";
 import { DrawerRelatedDeck } from "@/v2/shared/components/molecules/v2-drawer-related-deck";
 import { V2ConfirmModal } from "@/v2/shared/components/molecules/v2-confirm-modal";
 import { V2Text } from "@/v2/shared/components/atoms/v2-text";
@@ -16,7 +17,10 @@ export const V2StandardFormDrawerMobile: React.FC<V2StandardFormDrawerProps> = (
 ) => {
   const h = useStandardFormDrawer(props);
   const mainContent =
-    h.activeTabItem?.content || props.leftPanel || props.children;
+    h.activeLeftTabItem?.content ||
+    h.activeTabItem?.content ||
+    props.leftPanel ||
+    props.children;
   const hasRelated = Boolean(
     props.bottomPanel || (props.relatedTabs && props.relatedTabs.length > 0),
   );
@@ -98,14 +102,32 @@ export const V2StandardFormDrawerMobile: React.FC<V2StandardFormDrawerProps> = (
               </div>
             ) : (
               <div className="space-y-3">
-                <div>{mainContent}</div>
+                <div className="space-y-2">
+                  {props.leftTabs && props.leftTabs.length > 0 && (
+                    <DrawerSubTabBar
+                      tabs={props.leftTabs}
+                      activeTabKey={h.activeLeftTabKey}
+                      onTabChange={h.handleLeftTabChange}
+                      extra={props.leftTabExtra}
+                    />
+                  )}
+                  {mainContent}
+                </div>
 
                 {props.rightPanel && !h.activeTabItem?.hideRightPanel && (
                   <div
                     data-testid="drawer-mobile-stacked-panel"
-                    className="pt-2 border-t border-border/50"
+                    className="pt-2 border-t border-border/50 space-y-2"
                   >
-                    {props.rightPanel}
+                    {props.rightTabs && props.rightTabs.length > 0 && (
+                      <DrawerSubTabBar
+                        tabs={props.rightTabs}
+                        activeTabKey={h.activeRightTabKey}
+                        onTabChange={h.handleRightTabChange}
+                        extra={props.rightTabExtra}
+                      />
+                    )}
+                    {h.activeRightTabItem?.content || props.rightPanel}
                   </div>
                 )}
 

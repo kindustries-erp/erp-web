@@ -21,7 +21,8 @@ description: Module tri thức Chuẩn Hóa Drawer V2 (V2StandardFormDrawer) the
      - `<DrawerHeader>`: Thanh tiêu đề kính mờ tích hợp `isScrolledTop` shadow, `V2Text variant="drawer-title"`, `V2Button variant="drawer-edit"`, **thanh divider dọc phân cách nút Chỉnh sửa với cụm controls**, Toàn màn hình (`Maximize2`/`Minimize2`), Thu gọn/Mở rộng Cột phải (`ChevronRight`/`ChevronLeft`), và nút Đóng `X`.
      - `<DrawerFooter>`: Chân trang cố định (sticky) với `isScrolledBottom` shadow, hỗ trợ `safe-area-inset-bottom`, tự động wrap nút trên mobile, dùng `V2Button` cho tất cả actions, và **tích hợp `V2Dropdown` mở menu nhóm tác vụ `[ Thao tác ⌄ ]` ở góc trái**.
      - `<DrawerTopTabBar>`: Dải tabs điều hướng trên đỉnh **đặt cố định (sticky) ngay dưới Header** và nằm ngoài scroll container, tràn viền 100%, active tab nền đen `bg-slate-900 text-white` (icon trắng), badge counter tròn tinh tế, hỗ trợ cuộn cảm ứng `touch-pan-x` trên mobile, `badgeCount`, icon, dùng `V2Text`.
-     - `<V2Dropdown>` (`src/v2/shared/components/molecules/v2-dropdown/`): Molecule menu dropdown độc lập 2 tầng (bọc Primitive `src/v2/shared/ui/dropdown-menu/`), Platform Split (Desktop Popover menu vs Mobile Bottom Sheet), hỗ trợ phân nhóm (`groupLabel`), icons, loading spinner xoay, danger variant.
+     - `<DrawerSubTabBar>` (`src/v2/shared/components/molecules/v2-drawer-sub-tab-bar/`): Dải tab phụ dạng pill (`rounded-xl p-1 bg-muted/40 border border-border/70`), hỗ trợ gắn trên đỉnh Cột trái (`leftTabs`) hoặc Cột phải (`rightTabs`), kèm nút tiện ích bên phải (`leftTabExtra` / `rightTabExtra`: `[ 📄 Xem trước HĐ thuần ]`, `[ 📎 Tài liệu & PDF ]`).
+     - `<V2Dropdown>` (`src/v2/shared/components/molecules/v2-dropdown/`): Molecule menu dropdown độc lập 2 tầng, **Desktop chạy trên nền tảng `AppPopover` (`V2Popover`)** giúp triệt tiêu hoàn toàn lỗi xung đột focus-trap / pointer-event bên trong Sheet/Dialog; Mobile mở dạng Bottom Sheet có grab handle.
 
      - `<DrawerAuditTimeline>`: Lịch sử thao tác dạng trục dọc (`spine`) liên tục, node tròn (`w-6 h-6`), không lồng viền card nặng nề, dùng `V2Text`.
      - `<DrawerRelatedDeck>`: Horizon Divider Bar (`border-t border-border/60`) và Connected Context Deck ở đáy Main Body (dùng `V2Button variant="drawer-tab"`, `V2Text`, thẻ kính mờ `backdrop-blur-md`, collapsible).
@@ -90,12 +91,26 @@ export interface V2StandardFormDrawerProps {
   onRightPanelCollapseChange?: (collapsed: boolean) => void;
   stickyRightPanel?: boolean;
 
-  // Top Tabs cho chứng từ đa góc nhìn
+  // 1. Header Tabs (Default / Toàn cục)
   tabs?: DrawerTopTabItem[];
   activeTabKey?: string;
   defaultTabKey?: string;
   onTabChange?: (tabKey: string) => void;
   tabBarExtra?: React.ReactNode;
+
+  // 2. Left Sub-Tabs (Optional)
+  leftTabs?: DrawerSubTabItem[];
+  activeLeftTabKey?: string;
+  defaultLeftTabKey?: string;
+  onLeftTabChange?: (subTabKey: string) => void;
+  leftTabExtra?: React.ReactNode;
+
+  // 3. Right Sub-Tabs (Optional)
+  rightTabs?: DrawerSubTabItem[];
+  activeRightTabKey?: string;
+  defaultRightTabKey?: string;
+  onRightTabChange?: (subTabKey: string) => void;
+  rightTabExtra?: React.ReactNode;
 
   // Nội dung
   leftPanel?: React.ReactNode;

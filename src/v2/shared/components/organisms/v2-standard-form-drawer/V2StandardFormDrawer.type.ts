@@ -1,4 +1,5 @@
 import type { DrawerTopTabItem } from "@/v2/shared/components/molecules/v2-drawer-top-tab-bar";
+import type { DrawerSubTabItem } from "@/v2/shared/components/molecules/v2-drawer-sub-tab-bar";
 import type { DrawerAction } from "@/v2/shared/components/molecules/v2-drawer-footer";
 import type { DrawerRelatedTabItem } from "@/v2/shared/components/molecules/v2-drawer-related-deck";
 import type {
@@ -8,6 +9,7 @@ import type {
 
 export type {
   DrawerTopTabItem,
+  DrawerSubTabItem,
   DrawerAction,
   DrawerRelatedTabItem,
   V2DropdownGroup,
@@ -43,12 +45,26 @@ export interface V2StandardFormDrawerProps {
   onRightPanelCollapseChange?: (collapsed: boolean) => void;
   stickyRightPanel?: boolean;
 
-  // Top Tabs for multi-facet documents
+  // 1. Header Tabs (Default / Toàn cục)
   tabs?: DrawerTopTabItem[];
   activeTabKey?: string;
   defaultTabKey?: string;
   onTabChange?: (tabKey: string) => void;
   tabBarExtra?: React.ReactNode;
+
+  // 2. Left Sub-Tabs (Optional)
+  leftTabs?: DrawerSubTabItem[];
+  activeLeftTabKey?: string;
+  defaultLeftTabKey?: string;
+  onLeftTabChange?: (subTabKey: string) => void;
+  leftTabExtra?: React.ReactNode;
+
+  // 3. Right Sub-Tabs (Optional)
+  rightTabs?: DrawerSubTabItem[];
+  activeRightTabKey?: string;
+  defaultRightTabKey?: string;
+  onRightTabChange?: (subTabKey: string) => void;
+  rightTabExtra?: React.ReactNode;
 
   // Content Panels
   leftPanel?: React.ReactNode;

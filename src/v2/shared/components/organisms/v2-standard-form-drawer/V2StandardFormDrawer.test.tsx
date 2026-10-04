@@ -253,6 +253,33 @@ describe("V2StandardFormDrawer Organism", () => {
 
     const triggerBtn = screen.getByRole("button", { name: "Thao tác" });
     expect(triggerBtn).toBeInTheDocument();
-    expect(triggerBtn).toHaveAttribute("aria-haspopup", "menu");
+    expect(triggerBtn).toHaveAttribute("aria-haspopup", "dialog");
+  });
+
+  it("renders leftTabs and rightTabs sub tab bars correctly", () => {
+    const onLeftTabChange = vi.fn();
+    render(
+      <V2StandardFormDrawer
+        open={true}
+        onClose={vi.fn()}
+        title="Drawer with Sub Tabs"
+        layout="2-columns"
+        leftTabs={[
+          { key: "detail", label: "Chi tiết" },
+          { key: "target", label: "Chi tiết theo đối tượng", badgeCount: 20 },
+        ]}
+        onLeftTabChange={onLeftTabChange}
+        leftTabExtra={<button type="button">Xem trước HĐ</button>}
+        rightTabs={[{ key: "info", label: "Thông tin chung" }]}
+        rightPanel={<div>Nội dung cột phải</div>}
+      />,
+    );
+
+    expect(screen.getByRole("tab", { name: "Chi tiết" })).toBeInTheDocument();
+    expect(screen.getByText("20")).toBeInTheDocument();
+    expect(screen.getByText("Xem trước HĐ")).toBeInTheDocument();
+    expect(
+      screen.getByRole("tab", { name: "Thông tin chung" }),
+    ).toBeInTheDocument();
   });
 });

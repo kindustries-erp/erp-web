@@ -21,3 +21,4 @@ export * from "./v2-drawer-footer";
 export * from "./v2-popover";
 export * from "./v2-drawer-related-deck";
 export * from "./v2-dropdown";
+export * from "./v2-drawer-sub-tab-bar";
