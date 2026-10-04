@@ -128,7 +128,7 @@ colors: {
   popover: { DEFAULT: "var(--surface)", foreground: "var(--foreground)" },
   secondary: { DEFAULT: "var(--muted)", foreground: "var(--foreground)" },
   accent: { DEFAULT: "var(--surface-hover)", foreground: "var(--foreground)" },
-  destructive: { DEFAULT: "var(--down-fg, #ef4444)", foreground: "#ffffff" },
+  destructive: { DEFAULT: "var(--destructive, #ef4444)", foreground: "var(--destructive-fg, #ffffff)" },
   input: "var(--border)",
   ring: "var(--primary)",
 }
@@ -139,6 +139,19 @@ Tuyệt đối không sử dụng các class Tailwind có tiền tố `blue-*` (
 - Màu chính thương hiệu: `bg-primary`, `text-primary`, `text-primary-fg`.
 - Màu nhấn/hover: `bg-accent`, `hover:bg-surface-hover`.
 - Màu phụ/thẻ: `bg-muted`, `text-muted-fg`.
+
+### 🎨 3.2. Hệ Thống Theme Độc Lập V2 (`src/v2/shared/theme/` & `src/v2/shared/styles/`)
+Kiến trúc V2 sở hữu hệ thống Theme hoàn toàn độc lập, tách rời 100% khỏi style của V1:
+- **Style Files**:
+  - `src/v2/shared/styles/v2-theme.css`: Định nghĩa CSS Custom Properties cho cả 4 bộ themes (`Default`, `Classic`, `OrcaQ`, `Midnight`) ở cả 2 chế độ Light & Dark thông qua thuộc tính `[data-v2-theme="..."]` và class `.dark`.
+  - `src/v2/shared/styles/index.css`: Điểm nhập khẩu master cho style V2 (Tailwind base/components/utilities + v2-theme.css).
+- **Core Theme Engine** (`src/v2/shared/theme/`):
+  - `v2Theme.type.ts`: Định nghĩa kiểu `V2ThemeId` (`"default" | "classic" | "orca-q" | "midnight"`), `V2ThemeMode` (`"light" | "dark"`), `V2ThemeState`.
+  - `v2ThemeHelper.ts`: Cung cấp các hàm chuẩn hóa:
+    - `applyV2Theme(themeId, mode, targetElement)`: Gắn thuộc tính `data-v2-theme` và toggle class `dark`.
+    - `getV2ThemeName(themeId)`: Trả về tên hiển thị (Default, Classic, OrcaQ, Midnight).
+    - `isDarkV2Mode(mode)`: Kiểm tra trạng thái dark mode.
+  - Được kiểm thử tự động 100% tại `v2ThemeHelper.test.ts`.
 
 ---
 
@@ -250,7 +263,35 @@ export const MyV2OrderPage: React.FC = () => {
 
 ---
 
-## 7. Quy Chuẩn Kiểm Thử & Quality Gate
+## 7. Storybook Component Explorer & Môi Trường Cô Lập V2
+
+Storybook được cấu hình hoàn toàn độc lập và **chỉ kết nối với thư mục `src/v2/`**, phục vụ phát triển, kiểm thử trực quan và tài liệu hóa toàn bộ các components của Layout V2:
+
+### 7.1. Cấu Hình Cô Lập Tuyệt Đối (`.storybook/`)
+- `.storybook/main.ts`: Chỉ quét các files stories thuộc phạm vi `../src/v2/**/*.stories.@(js|jsx|mjs|ts|tsx)`. Lọc bỏ plugin `VitePWA` để tránh caching service worker khi dev storybook.
+- `.storybook/preview.tsx`:
+  - **Zero V1 Coupling**: Chỉ import duy nhất `@/v2/shared/styles/index.css`, tuyệt đối không import `src/index.css` hay bất kỳ tài nguyên V1 nào.
+  - **Toolbar Theme Switcher**: Hỗ trợ chuyển đổi trực tiếp giữa 4 bộ themes V2 (`Default`, `Classic`, `OrcaQ`, `Midnight`) và 2 chế độ `Light` / `Dark` thông qua decorator `applyV2Theme`.
+  - **Toolbar Locale Switcher**: Hỗ trợ chuyển đổi nhanh giữa Tiếng Việt (`🇻🇳 Tiếng Việt`) và Tiếng Anh (`🇬🇧 English`), tự động cập nhật ngôn ngữ cho `useV2Translation`.
+
+### 7.2. Danh Mục 26 Components Đã Hỗ Trợ Stories
+1. **Primitives UI (`src/v2/shared/ui/`)**: `Button`, `Text`, `Badge`.
+2. **Atoms (`src/v2/shared/components/atoms/`)**: `V2Button`, `V2Text`, `V2NavIcon`, `V2SidebarIcon`, `V2SidebarLogo`, `V2SidebarToggleBtn`.
+3. **Molecules (`src/v2/shared/components/molecules/`)**: `V2BranchBadge`, `V2UserBadge`, `V2LanguageSwitcher`, `V2QuickSearch`, `V2Breadcrumb`, `V2TabItem`, `V2Topbar`, `V2NavItem`, `V2SidebarHeader`, `V2SidebarNavItem`, `V2SidebarSection`, `V2SidebarBottom`.
+4. **Organisms (`src/v2/shared/components/organisms/`)**: `V2Sidebar`, `V2TabBar`, `V2Header`, `V2RightPanel`, `V2BottomNav`.
+
+### 7.3. Các Lệnh Thực Thi Storybook
+```bash
+# 1. Khởi chạy Storybook Dev Server (Mặc định port 6006)
+cd /home/dev/repos-dev/erp/erp-web && bun run storybook
+
+# 2. Build Storybook Tĩnh (Kiểm tra bundle và export tĩnh)
+cd /home/dev/repos-dev/erp/erp-web && bun run build-storybook
+```
+
+---
+
+## 8. Quy Chuẩn Kiểm Thử & Quality Gate
 
 Mỗi khi chỉnh sửa hoặc thêm component vào Layout V2, bắt buộc chạy chuỗi kiểm tra Zero-Miss:
 
@@ -265,8 +306,11 @@ find src/v2 -type f \( -name "*.tsx" -o -name "*.ts" \) -exec wc -l {} + | awk '
 cd /home/dev/repos-dev/erp/erp-web && bun run type:check
 
 # 4. Chạy toàn bộ Unit Tests Co-located (Phải 100% PASS)
-cd /home/dev/repos-dev/erp/erp-web && bun test src/v2/
+cd /home/dev/repos-dev/erp/erp-web && bun run test src/v2/
 
-# 5. Kiểm tra đóng gói Production Build
+# 5. Kiểm tra build Storybook tĩnh (Phải Exit Code 0)
+cd /home/dev/repos-dev/erp/erp-web && bun run build-storybook
+
+# 6. Kiểm tra đóng gói Production Build của Vite
 cd /home/dev/repos-dev/erp/erp-web && bun run build
 ```

@@ -1,0 +1,19 @@
+/* ══════════════════════════════════════════════════════════════
+   V2 Standalone Stylesheet — ERP Web V2
+   ══════════════════════════════════════════════════════════════ */
+
+@import "./v2-theme.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Global focus ring reset for V2 ── */
+@layer utilities {
+  *:focus,
+  *:focus-visible,
+  *:focus-within {
+    outline: none !important;
+    --tw-ring-shadow: 0 0 #0000 !important;
+  }
+}

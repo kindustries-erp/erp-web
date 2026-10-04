@@ -9,16 +9,17 @@ Skill này chứa toàn bộ tri thức kỹ thuật, quy chuẩn kiến trúc, 
 
 ---
 
-## 🎯 6 Nguyên Tắc Kiến Trúc Sống Còn
+## 🎯 7 Nguyên Tắc Kiến Trúc Sống Còn
 
 | # | Nguyên tắc | Quy định cụ thể |
 | :--- | :--- | :--- |
 | 1 | **Dual-Run Route `/v2/`** | Chạy song song `/v2/*` và `/` (V1) trên cùng 1 bundle. Chia sẻ `useAuthStore` & Axios API client. Không dùng Bridge Adapter. |
 | 2 | **Shared UI vs Components (Import 1 Chiều)** | `src/v2/shared/ui/<name>/`: Mỗi primitive 1 subfolder riêng biệt (`button/`, `badge/`), kèm master barrel `@/v2/shared/ui`. Cài đặt qua `bun run ui:add <name>`. Atoms & Molecules ĐƯỢC PHÉP import từ `shared/ui` để wrap/custom. TUYỆT ĐỐI CẤM CHIỀU NGƯỢC LẠI (`shared/ui` không bao giờ import từ `atoms`/`molecules`). |
-| 3 | **Platform Split (Desktop vs Mobile)** | Tách component tree: `[Name].desktop.tsx` & `[Name].mobile.tsx`. File entry `[Name].tsx` là Switcher (< 15 LoC) dùng `useViewport()`. |
-| 4 | **Testing Pyramid 3 Tầng** | Unit tests co-located cạnh source file; Integration tests tại `modules/<name>/tests/integration/`; E2E tests tại `src/v2/tests/e2e/`. |
-| 5 | **Giới Hạn Cứng < 180 LoC** | Cấm file vượt quá 180 LoC. Tách ngay `.hook.ts`, `.helper.ts`, sub-components nếu tiệm cận. |
-| 6 | **Rolling Migration User-Driven** | Agent KHÔNG tự ý di chuyển module nào khi chưa có lệnh rõ ràng từ User. Di chuyển cuốn chiếu từng module, bảo đảm zero regression. |
+| 3 | **Storybook CDD & Theme V2 Độc Lập** | Mọi Shared Component (Atoms, Molecules, Organisms) và UI Primitives bắt buộc có file `[ComponentName].stories.tsx` co-located. Cấu hình theme độc lập tại `src/v2/shared/styles/` (`v2-theme.css`, `index.css`) & `src/v2/shared/theme/` (`applyV2Theme`, 4 themes). Storybook chỉ quét `src/v2` và chỉ import style V2. |
+| 4 | **Platform Split (Desktop vs Mobile)** | Tách component tree: `[Name].desktop.tsx` & `[Name].mobile.tsx`. File entry `[Name].tsx` là Switcher (< 15 LoC) dùng `useViewport()`. |
+| 5 | **Testing Pyramid 3 Tầng** | Unit tests co-located cạnh source file; Integration tests tại `modules/<name>/tests/integration/`; E2E tests tại `src/v2/tests/e2e/`. |
+| 6 | **Giới Hạn Cứng < 180 LoC** | Cấm file vượt quá 180 LoC. Tách ngay `.hook.ts`, `.helper.ts`, sub-components nếu tiệm cận. |
+| 7 | **Rolling Migration User-Driven** | Agent KHÔNG tự ý di chuyển module nào khi chưa có lệnh rõ ràng từ User. Di chuyển cuốn chiếu từng module, bảo đảm zero regression. |
 
 ---
 
@@ -35,6 +36,8 @@ Skill này chứa toàn bộ tri thức kỹ thuật, quy chuẩn kiến trúc, 
 | **File Hook co-located** | `[ComponentName].hook.ts` | `SalesOrderTable.hook.ts` |
 | **File Type/Interface** | `[ComponentName].type.ts` hoặc `[name].entity.ts` | `SalesOrderTable.type.ts`, `sales-order.entity.ts` |
 | **File Unit Test co-located** | `[Name].test.ts` / `[Name].test.tsx` | `can-deliver-order.test.ts`, `useViewport.test.ts` |
+| **File Storybook co-located** | `[ComponentName].stories.tsx` | `V2Button.stories.tsx`, `V2Sidebar.stories.tsx` |
+| **Theme & Styles V2** | `src/v2/shared/styles/` & `src/v2/shared/theme/` | `v2-theme.css`, `v2ThemeHelper.ts` |
 | **Shadcn primitives** | `src/v2/shared/ui/<name>/` (Folder-per-component) | `@/v2/shared/ui` hoặc `@/v2/shared/ui/button` |
 | **Màu sắc** | No Blue Mandate — HSL Semantic Palette | CẤM dùng `bg-blue-600`, dùng `bg-primary` hoặc HSL token |
 | **Đa ngôn ngữ** | 100% i18n VI/EN | CẤM hardcode chuỗi string trong JSX, dùng `t('...')` |

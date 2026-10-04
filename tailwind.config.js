@@ -66,8 +66,8 @@ export default {
           foreground: "var(--foreground)",
         },
         destructive: {
-          DEFAULT: "var(--down-fg, #ef4444)",
-          foreground: "#ffffff",
+          DEFAULT: "var(--destructive, #ef4444)",
+          foreground: "var(--destructive-fg, #ffffff)",
         },
         input: "var(--border)",
         ring: "var(--primary)",

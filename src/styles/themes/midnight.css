@@ -30,6 +30,8 @@
   --warn-fg: #fbbf24;
   --approve-bg: rgba(16, 185, 129, 0.12);
   --approve-fg: #34d399;
+  --destructive: #ef4444;
+  --destructive-fg: #ffffff;
 
   --card-shadow: 0 10px 38px rgba(0, 0, 0, 0.5), 0 3px 10px rgba(0, 0, 0, 0.28);
   --panel-shadow:

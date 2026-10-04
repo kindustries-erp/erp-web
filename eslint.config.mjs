@@ -7,7 +7,7 @@ import reactRefresh from "eslint-plugin-react-refresh";
 
 export default tseslint.config(
   {
-    ignores: ["dist", "eslint.config.mjs"],
+    ignores: ["dist", "eslint.config.mjs", "storybook-static"],
   },
   eslint.configs.recommended,
   ...tseslint.configs.recommended,

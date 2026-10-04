@@ -26,19 +26,23 @@ graph TD
    - `src/v2/shared/ui/<component>/`: Thư viện primitive từ Shadcn/UI (Button, Dialog, Popover, Select...). Mỗi component tổ chức theo chuẩn **Folder-per-Component** (gồm `<component>.tsx`, `<component>.test.tsx`, `index.ts`), kèm master barrel export `src/v2/shared/ui/index.ts`. Thêm component mới thông qua lệnh `bun run ui:add <name>`.
    - `src/v2/shared/components/`: Các UI components chuẩn hệ sinh thái Atomic Design (Atoms, Molecules, Organisms, Templates).
    - **Quy tắc Import 1 Chiều Bắt Buộc (Unidirectional Dependency)**: Các component trong cấu trúc Atoms, Molecules ĐƯỢC PHÉP import từ `shared/ui` của Shadcn UI (`@/v2/shared/ui`) và wrap/custom lại cho phù hợp dự án. **TUYỆT ĐỐI CẤM CHIỀU NGƯỢC LẠI** (`shared/ui` không bao giờ import từ `atoms`, `molecules`, `organisms` hay bất kỳ tầng nào cao hơn).
-3. **Platform Split (Desktop vs Mobile) Phân Cấp Cây Giao Diện**:
+3. **Component-Driven Development (Storybook) & V2 Theme Cô Lập**:
+   - Mọi Shared Component trong `src/v2/shared/components/` và `src/v2/shared/ui/` bắt buộc phải có file Storybook co-located: `[ComponentName].stories.tsx`.
+   - **Hệ thống Theme V2 độc lập**: Cấu hình theme riêng biệt tại `src/v2/shared/styles/` (`v2-theme.css`, `index.css`) và `src/v2/shared/theme/` (`applyV2Theme`, 4 themes: `Default`, `Classic`, `OrcaQ`, `Midnight`), không phụ thuộc theme V1.
+   - **Storybook Scope Cô Lập Tuyệt Đối**: `.storybook/main.ts` chỉ quét `src/v2/**/*.stories.*`, `.storybook/preview.tsx` chỉ import `@/v2/shared/styles/index.css`. Storybook kết nối độc lập với V2 Theme Toolbar và V2 Locale Toolbar.
+4. **Platform Split (Desktop vs Mobile) Phân Cấp Cây Giao Diện**:
    - Tách rời giao diện bằng component tree độc lập: `[Name].desktop.tsx` và `[Name].mobile.tsx`.
    - File entry `[Name].tsx` là **Switcher thuần túy (< 15 LoC)**, dùng `useViewport()` hook để render variant tương ứng.
    - **Bắt buộc áp dụng**: Layouts, Drawers (Desktop: Slide từ phải 65vw; Mobile: Bottom Sheet), Modals, Pages có trải nghiệm khác biệt.
-4. **Testing Pyramid 3 Tầng Toàn Diện**:
+5. **Testing Pyramid 3 Tầng Toàn Diện**:
    - **Unit Tests**: Co-located ngay cạnh source file (`[Name].test.ts` / `[Name].test.tsx`). Test pure business rules trong `domain/rules/`, test component state, test hooks.
    - **Integration Tests**: Đặt tại `src/v2/modules/<name>/tests/integration/` nhằm test tương tác Form -> Validate -> Mutation -> Table Refresh.
    - **E2E Tests**: Đặt tại `src/v2/tests/e2e/` chạy trên browser thật kiểm tra trọn vẹn luồng nghiệp vụ tại `/v2/*`.
-5. **Kỷ Luật Code Cứng (< 180 LoC, No Blue Mandate, 100% i18n)**:
+6. **Kỷ Luật Code Cứng (< 180 LoC, No Blue Mandate, 100% i18n)**:
    - Cấm bất kỳ file nào vượt quá 180 LoC. Vượt ngưỡng phải bóc tách ngay `.hook.ts`, `.helper.ts`, sub-components.
    - Cấm dùng màu `blue-*` của Tailwind mặc định. Bắt buộc dùng bảng màu HSL ngữ cảnh (`var(--primary)`, `var(--accent)`, `var(--muted)`...).
    - Cấm hardcode text thô trong JSX. Bắt buộc 100% qua `t('...')` (i18n VI/EN).
-6. **Rolling Migration Tuân Thủ Triệt Để Lệnh Của User**:
+7. **Rolling Migration Tuân Thủ Triệt Để Lệnh Của User**:
    - Agent **TUYỆT ĐỐI KHÔNG** tự ý bắt đầu migrate bất kỳ module nào nếu chưa có lệnh rõ ràng từ User.
    - Mỗi module migrate độc lập, verify 100% Quality Gate trước khi báo cáo kết quả và dừng lại chờ lệnh tiếp theo.
 
@@ -61,14 +65,22 @@ src/v2/
 │       └── guards/                         # AuthGuard, PermissionGuard
 │
 ├── shared/                                 # Tài sản dùng chung toàn bộ V2
+│   ├── styles/                             # Hệ thống CSS & theme độc lập V2
+│   │   ├── v2-theme.css                    # Biến màu 4 themes (Default, Classic, OrcaQ, Midnight)
+│   │   └── index.css                       # Master V2 stylesheet (@tailwind + focus reset)
+│   ├── theme/                              # Quản lý theme V2
+│   │   ├── v2Theme.type.ts                 # Type V2Theme ('default' | 'classic' | 'orcaq' | 'midnight')
+│   │   ├── v2ThemeHelper.ts                # applyV2Theme toggle class documentElement
+│   │   ├── v2ThemeHelper.test.ts
+│   │   └── index.ts
 │   ├── ui/                                 # Shadcn/ui Primitives (Folder-per-component)
-│   │   ├── button/                         # button.tsx, button.test.tsx, index.ts
-│   │   ├── badge/                          # badge.tsx, badge.test.tsx, index.ts
+│   │   ├── button/                         # button.tsx, button.stories.tsx, button.test.tsx, index.ts
+│   │   ├── badge/                          # badge.tsx, badge.stories.tsx, badge.test.tsx, index.ts
 │   │   └── index.ts                        # Master Barrel Export (export * from './button'...)
 │   ├── components/                         # Atomic Design Components (Import 1 chiều từ shared/ui)
-│   │   ├── atoms/                          # L1: Button, Badge, StatusDot, TableDateCell
-│   │   ├── molecules/                      # L2: PillTabs, Combobox, SubtotalSummaryCell
-│   │   ├── organisms/                      # L3: StandardTable, StandardFormDrawer, FilterPanel
+│   │   ├── atoms/                          # L1: V2Button, V2Text, V2NavIcon, V2SidebarIcon (kèm *.stories.tsx)
+│   │   ├── molecules/                      # L2: V2Topbar, V2Breadcrumb, V2TabItem, V2NavItem (kèm *.stories.tsx)
+│   │   ├── organisms/                      # L3: V2Sidebar, V2TabBar, V2Header, V2RightPanel (kèm *.stories.tsx)
 │   │   └── templates/                      # L4: SpreadsheetPageTemplate, DashboardTemplate
 │   ├── hooks/                              # useViewport, useDebounce, usePermission
 │   │   ├── useViewport.ts
@@ -200,5 +212,10 @@ grep -rn '>[A-ZÀ-Ỹa-zà-ỹ0-9 ]*<' src/v2/modules/[target-module]/
 cd /home/dev/repos-dev/erp/erp-web && bunx tsc --noEmit
 
 # 5. Chạy toàn bộ Unit Tests của module
-cd /home/dev/repos-dev/erp/erp-web && bun test src/v2/modules/[target-module]/
+cd /home/dev/repos-dev/erp/erp-web && bun run test src/v2/modules/[target-module]/
+
+# 6. Kiểm tra Storybook CDD & Build tĩnh V2
+cd /home/dev/repos-dev/erp/erp-web && bun run build-storybook
+# Khởi chạy Storybook dev server (:6006)
+cd /home/dev/repos-dev/erp/erp-web && bun run storybook
 ```

@@ -162,6 +162,7 @@ graph TD
 1. Component Folder Đơn Lẻ (Atoms, Molecules, Single Organisms):
    └── tab-item/
        ├── TabItem.tsx              # Component TSX
+       ├── TabItem.stories.tsx      # Co-located Storybook Stories (bắt buộc cho shared/v2)
        ├── TabItem.test.tsx         # Test đặt TRỰC TIẾP CÙNG CẤP
        └── index.ts                 # Public Export
 
@@ -315,8 +316,9 @@ Khi tạo mới một Component:
 - [ ] **Ranh giới Hook Đúng Tầng**: Atoms & Molecules CHỈ chứa UI Logic hooks (0% API/Store). Organisms chứa UI Logic hooks + Business Logic hooks?
 - [ ] **Kích thước file**: Tất cả các file đều $< 180\text{ LoC}$?
 - [ ] **Tách biệt Logic & UI**: Toàn bộ TanStack Query, mutations, và form state nằm trong hook/state files riêng biệt?
+- [ ] **Co-located Stories**: Có file `[ComponentName].stories.tsx` đối với các component shared/v2?
 - [ ] **Co-located Tests**: Test nằm trực tiếp cùng cấp trong component folder đơn lẻ hoặc trong `__tests__/` của multi-component feature/organism?
 - [ ] **Đa ngôn ngữ 100%**: Sử dụng `useTranslation` có fallback tiếng Việt và đồng bộ VI/EN?
 - [ ] **No Blue Mandate**: Tuyệt đối không còn class `blue-*` nào trong giao diện?
 - [ ] **Web Responsive**: Hỗ trợ đầy đủ mobile, tablet, laptop và màn hình lớn?
-- [ ] **Type Check & Tests**: `bun run type:check` 0 lỗi và unit tests pass 100%?
+- [ ] **Type Check & Tests**: `bun run type:check` 0 lỗi, unit tests pass 100% và `bun run build-storybook` thành công?
