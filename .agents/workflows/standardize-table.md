@@ -1,10 +1,10 @@
 ---
-description: Quy trình chuẩn 5 giai đoạn thiết kế, phân rã kiến trúc Atomic và chuẩn hóa Bảng dữ liệu (DataTable / SpreadsheetPageTemplate) trong Liouni ERP
+description: Quy trình chuẩn 5 giai đoạn thiết kế, phân rã kiến trúc Atomic và chuẩn hóa Bảng dữ liệu (DataTable / SpreadsheetPageTemplate) trong ERP
 ---
 
 # 📊 Standardize Table & Atomic Workflow (`/standardize-table`)
 
-Workflow này hướng dẫn quy trình chuẩn 5 giai đoạn khi **tạo mới**, **fix bug** hoặc **refactor** bất kỳ bảng dữ liệu nào trong Liouni ERP. Workflow này **kế thừa 100% triết lý UI Atomic từ [`/ui-atomic-refactor`](./ui-atomic-refactor.md)** và bổ sung toàn bộ chuẩn mực khắt khe của **DataTable**, tích hợp **Bộ 8 Lệnh Grep Audit Tự Động** để loại bỏ hoàn toàn các lỗi sai hoặc thiếu sót thường gặp.
+Workflow này hướng dẫn quy trình chuẩn 5 giai đoạn khi **tạo mới**, **fix bug** hoặc **refactor** bất kỳ bảng dữ liệu nào trong ERP. Workflow này **kế thừa 100% triết lý UI Atomic từ [`/ui-atomic-refactor`](./ui-atomic-refactor.md)** và bổ sung toàn bộ chuẩn mực khắt khe của **DataTable**, tích hợp **Bộ 8 Lệnh Grep Audit Tự Động** để loại bỏ hoàn toàn các lỗi sai hoặc thiếu sót thường gặp.
 
 ---
 

@@ -1,2 +1,1 @@
-export * from "./DebtTimeHorizonCard";
-export * from "./DebtTimeHorizonCard.type";
+export * from "@/shared/components/molecules/debt-time-horizon-card";

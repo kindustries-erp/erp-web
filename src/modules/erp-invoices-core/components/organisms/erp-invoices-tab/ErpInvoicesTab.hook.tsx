@@ -39,7 +39,7 @@ import { useErpInvoicesParallelPrefetch } from "@/modules/erp-invoices-core/hook
 
 export interface ErpInvoicesTabProps {
   direction?: "IN" | "OUT";
-  initialTab?: "dashboard" | "in" | "in-lines" | "out" | "out-lines" | "draft";
+  initialTab?: "overview" | "in" | "in-lines" | "out" | "out-lines" | "draft";
   initialDateFrom?: string;
   initialDateTo?: string;
   isDrawer?: boolean;
@@ -74,11 +74,11 @@ export function useErpInvoicesTabLogic({
       const tabParam = params.get("tab") || "";
       const viewParam = params.get("view") || "";
 
-      if (tabParam === "dashboard") {
+      if (tabParam === "overview") {
         return {
           dir: "IN" as const,
           view: "dashboard" as const,
-          tabKey: "dashboard",
+          tabKey: "overview",
         };
       }
       if (tabParam === "draft") {
@@ -125,11 +125,11 @@ export function useErpInvoicesTabLogic({
       }
     }
     if (propInitialTab) {
-      if (propInitialTab === "dashboard") {
+      if (propInitialTab === "overview") {
         return {
           dir: "IN" as const,
           view: "dashboard" as const,
-          tabKey: "dashboard",
+          tabKey: "overview",
         };
       }
       if (propInitialTab === "draft") {
@@ -178,7 +178,7 @@ export function useErpInvoicesTabLogic({
     return {
       dir: "IN" as const,
       view: "dashboard" as const,
-      tabKey: "dashboard",
+      tabKey: "overview",
     };
   };
 
@@ -391,7 +391,7 @@ export function useErpInvoicesTabLogic({
       let nextDir: "IN" | "OUT";
       let nextView: "header" | "lines" | "dashboard" | "draft";
 
-      if (newTab === "dashboard") {
+      if (newTab === "overview") {
         nextDir = "IN";
         nextView = "dashboard";
       } else if (newTab === "draft") {
@@ -911,6 +911,12 @@ export function useErpInvoicesTabLogic({
         buyer_name: headerState.buyer_name || undefined,
         status: headerState.status || undefined,
         tag_id: headerState.tag_id || undefined,
+        date_from: headerState.dateFrom
+          ? `${headerState.dateFrom}T00:00:00`
+          : undefined,
+        date_to: headerState.dateTo
+          ? `${headerState.dateTo}T23:59:59`
+          : undefined,
         sort_by: sortBy,
         sort_order: sortOrder,
         column_search:
@@ -924,11 +930,47 @@ export function useErpInvoicesTabLogic({
       };
     }, [direction, instanceIndex, isDrawer]);
 
+  const currentFilterSummary = useMemo(() => {
+    const targetStoreDir: Direction =
+      instanceIndex === 2 ? (direction === "IN" ? "IN_2" : "OUT_2") : direction;
+    const headerState =
+      useErpInvoiceListStore.getState().states[targetStoreDir] ||
+      useErpInvoiceListStore.getState().states.IN;
+    const targetTableId = isDrawer
+      ? `erp-invoices-table-checkpoint-${direction}`
+      : `erp-invoices-table-${targetStoreDir}`;
+    const tableState = useTableColumnStore.getState().tables[targetTableId] || {
+      columnFilters: {},
+      columnSearch: {},
+      sorts: [],
+    };
+
+    const filterCount =
+      Object.keys(tableState.columnFilters || {}).length +
+      Object.keys(tableState.columnSearch || {}).length +
+      (headerState.status ? 1 : 0) +
+      (headerState.tag_id ? 1 : 0) +
+      (headerState.seller_name ? 1 : 0) +
+      (headerState.buyer_name ? 1 : 0);
+
+    return {
+      dateFrom: headerState.dateFrom,
+      dateTo: headerState.dateTo,
+      search: headerState.search,
+      filterCount,
+      hasActiveFilters:
+        filterCount > 0 ||
+        Boolean(headerState.search) ||
+        Boolean(headerState.dateFrom) ||
+        Boolean(headerState.dateTo),
+    };
+  }, [direction, instanceIndex, isDrawer, modals.exportDrawerOpen]);
+
   const pageTabs = useMemo(
     () =>
       !isDrawer
         ? [
-            { value: "dashboard", label: t("dashboard", "Tổng quan") },
+            { value: "overview", label: t("overview", "Tổng quan") },
             { value: "in", label: t("inbound", "Hóa đơn mua vào") },
             {
               value: "in-lines",
@@ -975,6 +1017,7 @@ export function useErpInvoicesTabLogic({
     loadInvoices,
     invoices,
     buildExportBaseQuery,
+    currentFilterSummary,
     // Modals
     ...modals,
     // Bulk Actions

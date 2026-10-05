@@ -109,7 +109,7 @@ describe("ErpInvoicesTab Synchronous Keep-Alive Mounting", () => {
     window.history.replaceState(null, "", "/erp-invoices");
   });
 
-  it("mounts initial tab 'dashboard' immediately on first render", () => {
+  it("mounts initial tab 'overview' immediately on first render", () => {
     render(<ErpInvoicesTab />, { wrapper: createWrapper() });
 
     expect(screen.getByTestId("view-dashboard")).toBeDefined();

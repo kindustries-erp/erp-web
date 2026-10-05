@@ -1,6 +1,6 @@
 export interface ErpInvoicesTabProps {
   direction?: "IN" | "OUT";
-  initialTab?: "dashboard" | "in" | "in-lines" | "out" | "out-lines" | "draft";
+  initialTab?: "overview" | "in" | "in-lines" | "out" | "out-lines" | "draft";
   initialDateFrom?: string;
   initialDateTo?: string;
   isDrawer?: boolean;

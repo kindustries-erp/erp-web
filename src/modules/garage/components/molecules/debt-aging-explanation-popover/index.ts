@@ -1,2 +1,1 @@
-export * from "./DebtAgingExplanationPopover";
-export * from "./DebtAgingExplanationPopover.type";
+export * from "@/shared/components/molecules/debt-aging-explanation-popover";

@@ -1,9 +1,9 @@
 ---
 name: liouni-erp-web-current-truth
-description: Web-specific local-only skill for Liouni ERP. Use when working in this repo to load the repo-local current-truth context, index, and implementation rules without relying on external docs.
+description: Web-specific local-only skill for ERP. Use when working in this repo to load the repo-local current-truth context, index, and implementation rules without relying on external docs.
 ---
 
-# Liouni ERP Web Current-Truth
+# ERP Web Current-Truth
 
 Use this skill only inside this repository.
 
@@ -47,6 +47,7 @@ Mỗi domain/module frontend đều có tài liệu tri thức chuyên sâu (Rou
   - **Phụ tùng VinFast**: `vinfast-parts-stock`, `vinfast-parts-dashboard`
   - **Tài chính & Hóa đơn**: `erp-invoice-web`
   - **Quản trị, Cấu hình & Core Stores**: `rbac-core`, `app-store`
+  - **Kiến trúc Layout & Thành Phần Chuẩn V2 (Atomic 5 tầng)**: `v2-layout`, `v2-drawer`
 - Khi cần quét mới hoặc cập nhật tài liệu cho một module: Sử dụng skill `scan-module-knowledge` (`.agents/skills/scan-module-knowledge/SKILL.md`).
 
 ## Team-scale reminders

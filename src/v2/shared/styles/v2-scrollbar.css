@@ -1,0 +1,79 @@
+/* ══════════════════════════════════════════════════════════════
+   V2 Global Scrollbar System — ERP Web V2
+   Scope: V2 Standalone, Storybook & V2 Application
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── 1. WebKit Browsers (Chrome, Safari, Edge, Mobile WebKit) ── */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent !important;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.4);
+  border-radius: 9999px;
+  transition: background-color 0.15s ease-in-out;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.7);
+}
+
+/* Dark theme thumbs */
+.dark ::-webkit-scrollbar-thumb,
+.theme-midnight ::-webkit-scrollbar-thumb,
+.theme-orcaq ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.dark ::-webkit-scrollbar-thumb:hover,
+.theme-midnight ::-webkit-scrollbar-thumb:hover,
+.theme-orcaq ::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.4);
+}
+
+/* Corner connecting horizontal & vertical scrollbars */
+::-webkit-scrollbar-corner {
+  background: transparent !important;
+}
+
+/* Triệt tiêu 100% các nút mũi tên thô thiển trên mọi nền tảng */
+::-webkit-scrollbar-button {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+/* ── 2. Firefox Standards ── */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.4) transparent;
+}
+
+.dark *,
+.theme-midnight *,
+.theme-orcaq * {
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+/* ── 3. Universal Scrollbar Hiding Utility (.scrollbar-none) ── */
+.scrollbar-none {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+.scrollbar-none::-webkit-scrollbar-button {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}

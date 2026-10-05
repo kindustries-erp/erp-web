@@ -417,9 +417,22 @@ export function useNavItems(): NavSearchItem[] {
     if (canReadDebts) {
       items.push({
         key: "invoice-debts",
-        label: t("nav.items.debt", "Công nợ"),
+        label: t("nav.items.partnerDebts", "Công nợ theo đối tượng"),
         section: accountingSection,
         keywords: [
+          "cong no theo doi tuong",
+          "công nợ theo đối tượng",
+          "partner debts",
+          "debts by partner",
+          "chi tiet theo doi tuong",
+          "chi tiết theo đối tượng",
+          "doi tuong",
+          "đối tượng",
+          "partner details",
+          "so doi tuong",
+          "sổ đối tượng",
+          "giao dich",
+          "giao dịch",
           "cong no",
           "công nợ",
           "debts",

@@ -1,2 +1,1 @@
-export * from "./ChartTableSwitch";
-export * from "./ChartTableSwitch.type";
+export * from "@/shared/components/molecules/chart-table-switch";

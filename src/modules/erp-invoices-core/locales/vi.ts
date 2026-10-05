@@ -292,6 +292,18 @@ export const erpInvoicesVi = {
   "exportDrawer.subtitle":
     "Tạo file theo kỳ và tải lại file đã tạo trong 24 tiếng",
   "exportDrawer.filterConditions": "Điều kiện xuất dữ liệu",
+  "exportDrawer.modeLabel": "Chế độ xuất dữ liệu",
+  "exportDrawer.modePeriod": "Theo kỳ",
+  "exportDrawer.modePeriodDesc":
+    "Chọn khoảng thời gian theo kỳ hoặc ngày tùy chỉnh",
+  "exportDrawer.modeCurrentFilter": "Theo filter hiện tại",
+  "exportDrawer.modeCurrentFilterDesc":
+    "Giữ nguyên toàn bộ bộ lọc và khoảng ngày đang xem trên bảng",
+  "exportDrawer.activeFilterSummary": "Tóm tắt bộ lọc bảng",
+  "exportDrawer.activeFiltersCount": "{{count}} điều kiện lọc",
+  "exportDrawer.noActiveFilters": "Không có bộ lọc nào",
+  "exportDrawer.tableDateRange": "Khoảng ngày bảng:",
+  "exportDrawer.searchKeyword": "Từ khóa:",
   "exportDrawer.customRange": "Tùy chỉnh từ ngày/đến ngày",
   "exportDrawer.period": "Kỳ",
   "exportDrawer.selectPeriod": "Chọn kỳ...",

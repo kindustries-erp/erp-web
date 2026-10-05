@@ -146,7 +146,8 @@ export function useInvoiceTableHandlers({
 
   const buildExportBaseQuery =
     useCallback((): Partial<ErpInvoiceListParams> => {
-      const { search, status, custom } = listHook.filterPanel.state;
+      const { search, status, custom, dateFrom, dateTo } =
+        listHook.filterPanel.state;
       return {
         direction,
         search: search || undefined,
@@ -154,6 +155,8 @@ export function useInvoiceTableHandlers({
         buyer_name: custom?.buyer_name || undefined,
         status: status || undefined,
         tag_id: (custom?.tag_id as string) || undefined,
+        date_from: dateFrom ? `${dateFrom}T00:00:00` : undefined,
+        date_to: dateTo ? `${dateTo}T23:59:59` : undefined,
         sort_by: listHook.sortBy || undefined,
         sort_order: listHook.sortOrder || undefined,
         column_search:

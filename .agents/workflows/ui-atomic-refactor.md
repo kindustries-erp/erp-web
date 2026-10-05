@@ -71,6 +71,7 @@ Mỗi component **BẮT BUỘC** nằm trong một thư mục riêng biệt theo
 ├── [ComponentName].type.ts        # TypeScript props, interfaces (< 80 LoC)
 ├── [ComponentName].schema.ts      # Zod validation schema (nếu có form, < 80 LoC)
 ├── [ComponentName].helper.ts      # Parsers, formatters nội bộ (< 100 LoC)
+├── [ComponentName].stories.tsx    # Co-located Storybook Stories (bắt buộc cho shared/v2)
 ├── [ComponentName].test.tsx       # Co-located Unit Test bắt buộc
 └── index.ts                       # Public barrel export: export * from "./[ComponentName]";
 ```
@@ -148,6 +149,9 @@ grep -rn "templates/" src/modules/[target-module]/components/organisms/
 # 5. Chạy Type Check & Co-located Tests
 bun run type:check
 bun test src/modules/[target-module]/components/
+
+# 6. Kiểm tra Storybook Build (nếu thuộc shared/v2)
+bun run build-storybook
 ```
 
 ---
@@ -156,11 +160,13 @@ bun test src/modules/[target-module]/components/
 
 - [ ] **Đúng Tầng Atomic**: Xác định chuẩn xác component thuộc Level 1, 2, 3, 4 hay 5.
 - [ ] **Mỗi Component 1 Folder**: Toàn bộ component nằm trong thư mục `kebab-case/` riêng có `index.ts`.
-- [ ] **Đặt Tên Chuẩn Số Ít**: File chính `PascalCase.tsx`, các file đi kèm chuẩn số ít (`.hook.ts`, `.state.ts`, `.type.ts`, `.schema.ts`, `.helper.ts`, `.test.tsx`).
+- [ ] **Đặt Tên Chuẩn Số Ít**: File chính `PascalCase.tsx`, các file đi kèm chuẩn số ít (`.hook.ts`, `.state.ts`, `.type.ts`, `.schema.ts`, `.helper.ts`, `.stories.tsx`, `.test.tsx`).
 - [ ] **Ranh Giới Hook Chuẩn**: Atoms & Molecules CHỈ chứa Pure UI Hook (0% API/Store). Organisms chứa Business Logic Hooks.
 - [ ] **Import Một Chiều**: Không có import ngược dòng (`Templates > Organisms > Molecules > Atoms`) và không import ngang hàng cùng cấp.
 - [ ] **Giới Hạn File**: 100% các file đều $< 180\text{ LoC}$.
 - [ ] **No Blue Mandate**: Tuyệt đối không còn class `blue-*` nào trong mã nguồn giao diện.
 - [ ] **i18n 100%**: Tất cả user-facing text bọc trong `t(...)` có fallback tiếng Việt và đồng bộ VI/EN.
+- [ ] **Co-located Stories**: Có file `[ComponentName].stories.tsx` đối với shared/v2 components, render độc lập không phụ thuộc V1.
 - [ ] **Co-located Test**: File `[ComponentName].test.tsx` nằm trực tiếp cùng cấp trong folder.
-- [ ] **Type Check & Test Pass**: `bun run type:check` 0 lỗi và unit test pass 100%.
+- [ ] **Type Check & Test Pass**: `bun run type:check` 0 lỗi, unit test pass 100% và `bun run build-storybook` thành công.
+

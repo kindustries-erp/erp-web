@@ -1,6 +1,6 @@
 export const debtsEn = {
-  title: "Debts",
-  desc: "Monitor, reconcile and analyze customer receivables, supplier payables and aging breakdown based on E-invoices",
+  title: "Debts by Partner",
+  desc: "Monitor, reconcile transactions, and analyze detailed debt aging by customer and supplier linked to e-invoices",
   partner: "Partner",
   unitPartner: "partners",
   unitInvoice: "invoices",
@@ -15,8 +15,8 @@ export const debtsEn = {
   },
 
   dashboard: {
-    title: "Debts Overview",
-    desc: "Comprehensive receivables, payables, cashflow time horizon forecast and aging risk analytics",
+    title: "Debts Overview by Partner",
+    desc: "Comprehensive overview of net debt position, cashflow forecast, and debt aging allocation matrix by partner",
     totalReceivable: "Customer Receivables",
     remainingReceivable: "Remaining Receivables",
     totalPayable: "Supplier Payables",

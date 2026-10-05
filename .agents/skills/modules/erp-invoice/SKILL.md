@@ -14,16 +14,17 @@ description: Module tri thức Quản lý Hóa đơn Điện tử & Dashboard H�
 Module Hóa đơn Điện tử quản lý tập trung toàn bộ hóa đơn đầu vào (`IN`), hóa đơn đầu ra (`OUT`), hóa đơn nháp (`DRAFT`), và Dashboard phân tích dòng tiền/thuế hóa đơn. Giao diện được cấu trúc theo chuẩn **Atomic Design (Atoms -> Molecules -> Organisms)** đáp ứng quy chuẩn No Blue Mandate, Tabular Numbers và Multi-tab Navigation.
 
 - **PageKeys**:
-  - `erp-invoices`: Quản lý tập trung Hóa đơn điện tử với 6 Tabs (`dashboard`, `in`, `in-lines`, `out`, `out-lines`, `draft`).
+  - `erp-invoices`: Quản lý tập trung Hóa đơn điện tử với 6 Tabs (`overview`, `in`, `in-lines`, `out`, `out-lines`, `draft`).
   - `erp-invoices-in`: (Legacy Slug) Tự động redirect sang `erp-invoices?tab=in`.
   - `erp-invoices-out`: (Legacy Slug) Tự động redirect sang `erp-invoices?tab=out`.
   - `erp-invoices-draft`: (Legacy Slug) Tự động redirect sang `erp-invoices?tab=draft`.
-  - `invoice-dashboard`: (Legacy Slug) Tự động redirect sang `erp-invoices?tab=dashboard`.
-  - `e-invoice`: Quản lý phát hành hóa đơn SInvoice Viettel.
-- **Sidebar Group**: `accounting` (Kế toán & Tài chính) > Đơn mục **"Hóa đơn"** (`/erp-invoices`).
+  - `invoice-dashboard`: (Legacy Slug) Tự động redirect sang `erp-invoices?tab=overview`.
+- **Sidebar Group**: `accounting` (Kế toán & Tài chính) > **Menu Nhóm Hóa đơn (`InvoiceNavGroup` - Molecule L2)**:
+  - Sub-menu 1: **"Hóa đơn"** (`/erp-invoices`) - Quản lý 6 tabs Hóa đơn điện tử (Mặc định mở `?tab=overview`).
+  - Sub-menu 2: **"Công nợ theo đối tượng"** (`/invoice-debts`) - Theo dõi, đối soát giao dịch và phân tích tuổi nợ chi tiết theo từng khách hàng, nhà cung cấp (Mặc định mở `?tab=overview`).
 - **Cấu trúc 6 Tabs trên giao diện chính (`/erp-invoices`)**:
-  1. `tab=dashboard`: **Tổng quan** (`InvoiceDashboard` - Báo cáo KPI, xu hướng dòng tiền, VAT, công nợ đối tác).
-  2. `tab=in` (mặc định): **Hóa đơn mua vào** (Header Table, chiều `IN`, PillTab: `tax_tab` `[ Tất cả | Mới | Thay thế | Điều chỉnh ]` + `view_mode` Combobox).
+  1. `tab=overview` (mặc định): **Tổng quan** (`InvoiceDashboard` - Báo cáo KPI, xu hướng dòng tiền, VAT, công nợ đối tác).
+  2. `tab=in`: **Hóa đơn mua vào** (Header Table, chiều `IN`, PillTab: `tax_tab` `[ Tất cả | Mới | Thay thế | Điều chỉnh ]` + `view_mode` Combobox).
   3. `tab=in-lines`: **Chi tiết mua vào** (Lines Table, chiều `IN`, PillTab: `subcat` `[ Tất cả dòng | Hàng hóa | Chiết khấu ]`).
   4. `tab=out`: **Hóa đơn bán ra** (Header Table, chiều `OUT`, PillTab: `tax_tab` + `view_mode` Combobox).
   5. `tab=out-lines`: **Chi tiết bán ra** (Lines Table, chiều `OUT`, PillTab: `subcat`).
@@ -117,9 +118,7 @@ src/modules/erp-invoices-core/
 │       ├── invoice-view-config-drawer/        # Drawer cấu hình View Mode & Tùy chỉnh cột
 │       ├── invoice-posting-drawer/            # Drawer hạch toán sổ cái kép 1 hóa đơn
 │       ├── invoice-bulk-posting-drawer/       # Drawer hạch toán / hủy hạch toán hàng loạt
-│       ├── invoice-bulk-netoff-drawer/        # Drawer cấn trừ hàng loạt hóa đơn với sao kê
-│       ├── invoice-export-drawer/             # Drawer xuất Excel trực tiếp hoặc tác vụ nền SSE
-│       ├── invoice-import-sync-drawer/        # Drawer tích hợp đồng bộ GDT & Import XML/PDF/ZIP
+│       ├── invoice-export-drawer/             # Drawer xuất Excel tác vụ nền SSE (2 chế độ: Theo kỳ hoặc Theo filter bảng hiện tại)
 │       ├── gdt-portal-auth-drawer/            # Drawer đăng nhập Cổng Thuế GDT kèm giải Captcha
 │       ├── erp-attachment-select-drawer/      # Drawer chọn tệp đính kèm từ kho chung
 │       ├── bulk-edit-drawer/                  # Drawer sửa hàng loạt (gán Chi nhánh, Ghi chú)
@@ -142,6 +141,12 @@ src/modules/erp-invoices-core/
 │       ├── xml-import-result-tables/          # Bảng chi tiết danh sách hóa đơn sau import XML
 │       ├── invoice-document-workspace/        # Workspace xem trước văn bản hóa đơn
 │       └── invoice-detail-wrapper/            # Wrapper bao bọc modal chi tiết hóa đơn
+├── layout-navigation/                         # LIÊN KẾT ĐIỀU HƯỚNG SIDEBAR CHUẨN UI ATOMIC (Tầng 2 - Molecule)
+│   └── invoice-nav-group/                     # Molecule L2: Nhóm menu Hóa đơn & Chi tiết theo đối tượng
+│       ├── InvoiceNavGroup.tsx                # Component TSX render NavGroup + 2 sub-items
+│       ├── InvoiceNavGroup.hook.ts            # Hook quản lý active routes & handlers
+│       ├── InvoiceNavGroup.type.ts            # Props contract
+│       └── InvoiceNavGroup.test.tsx           # Co-located unit test
 ├── context/
 │   └── InvoicePreviewModeContext.tsx          # Context quản lý chế độ xem trước (Preview Mode)
 ├── hooks/
@@ -213,6 +218,16 @@ src/modules/erp-invoices-core/
   - Biểu đồ xu hướng dòng tiền `cashTrend` (12 tháng gần nhất).
   - Chuyển đổi linh hoạt giữa chế độ xem Doanh số (`invoice`) và chế độ xem Thuế (`vat`).
 - **Bảng kê Đối tác / Nhà cung cấp (`InvoicePartnersTable`)**: Bảng tổng hợp giá trị mua/bán theo từng mã số thuế, hỗ trợ click mở `partner-invoice-drawer` để xem ngay danh sách hóa đơn của đối tác đó.
+
+### 3.5. Drawer Xuất Excel Hóa Đơn (`invoice-export-drawer`)
+- **Hai chế độ xuất dữ liệu linh hoạt (`exportMode`)**:
+  - `by-period` (Theo kỳ - Mặc định): Cho phép chọn theo kỳ định sẵn hoặc tùy chỉnh khoảng ngày `dateFrom` - `dateTo`.
+  - `by-current-filter` (Theo filter hiện tại): Giữ nguyên toàn bộ các điều kiện lọc và tìm kiếm đang xem trên bảng (`search`, `column_filters`, `column_search`, `status`, `tag_id`, khoảng ngày bảng, `sort_by`, `sort_order`). Giao diện tự động ẩn picker ngày và hiển thị thẻ tóm tắt bộ lọc bảng (`currentFilterSummary`).
+- **Tác vụ nền & Lịch sử tải lại**: Hỗ trợ Server-Sent Events (SSE) theo dõi tiến độ nền, cơ chế tái sử dụng file đã xuất trong 24h và bảng lịch sử có thể resize cột.
+- **Kiến trúc Atomic Refactor (< 180 LoC, No Blue Mandate)**:
+  - Phân rã triệt để thành: `InvoiceExportDrawer.tsx` (98 LoC), `InvoiceExportDrawer.columns.tsx` (158 LoC), `InvoiceExportDrawer.hook.ts` (164 LoC), `InvoiceExportDrawer.sync.hook.ts` (147 LoC), `InvoiceExportDrawer.helper.tsx` (36 LoC).
+  - Molecules & Atoms: `InvoiceExportConditionSection.tsx` (120 LoC), `InvoiceExportModeSelector.tsx` (96 LoC), `InvoiceExportFilterPreview.tsx` (75 LoC), `CustomRadioIndicator.tsx` (28 LoC).
+  - **No Blue Mandate**: 0% màu xanh dương. Native browser `<input type="radio">` được bọc `sr-only` và thay bằng `CustomRadioIndicator` chuẩn tone neutral `foreground` / `background`. Badge trạng thái `RUNNING` dùng `amber` tone (`bg-amber-50 text-amber-700`).
 
 ---
 

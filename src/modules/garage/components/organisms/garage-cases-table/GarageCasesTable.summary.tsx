@@ -11,7 +11,7 @@ export function getGarageCaseRowClassName(item: any) {
   return undefined;
 }
 
-interface BuildSummaryRowParams {
+export interface BuildSummaryRowParams {
   visibleCases: any[];
   profitCases: any[];
   totals?: any;
@@ -19,6 +19,7 @@ interface BuildSummaryRowParams {
   pageSize: number;
   totalCases: number;
   isNgayHoanThanhVisible?: boolean;
+  totalLabelCol?: string;
   t: (key: string, def?: string) => string;
 }
 
@@ -30,76 +31,102 @@ export function buildCasesSummaryRow({
   pageSize,
   totalCases,
   isNgayHoanThanhVisible,
+  totalLabelCol: customLabelCol,
   t,
 }: BuildSummaryRowParams) {
   const profitMap = new Map<string, any>();
   for (const pc of profitCases) {
-    if (pc.SoChungTu) profitMap.set(pc.SoChungTu, pc);
+    const code = pc.VuViecCode || pc.SoChungTu || pc.soChungTu;
+    if (code) profitMap.set(code, pc);
   }
 
-  let totalRev = 0,
-    totalCost = 0,
-    totalProfit = 0,
-    totalReceivable = 0,
-    totalBalanceVal = 0,
-    totalRemainingPayable = 0;
+  let totalRev = 0;
+  let totalCost = 0;
+  let totalProfit = 0;
+  let totalReceivable = 0;
+  let totalPaid = 0;
+  let totalBalanceVal = 0;
+  let totalRemainingPayable = 0;
 
   for (const item of visibleCases) {
     const pc = profitMap.get(item.soChungTu);
-    const rev = pc
-      ? Number(pc.DoanhThu || 0)
-      : Number(item.tongTienThanhToan || 0);
-    const cost = pc ? Number(pc.ChiPhi || 0) : Number(item.tongChiPhi || 0);
-    const profit = pc ? Number(pc.LoiNhuan || 0) : rev - cost;
-    const paidRec = Number(item.tienKhachDaTra || 0);
-    const paidCost = Number(item.tienDaChi || 0);
+    const rev = Number(
+      item.doanhThu ?? pc?.DoanhThu ?? item.rawData?.DoanhThu ?? 0,
+    );
+    const cost = Number(item.chiPhi ?? pc?.ChiPhi ?? item.rawData?.ChiPhi ?? 0);
+    const profit = Number(
+      item.loiNhuan ?? pc?.LoiNhuan ?? item.rawData?.LoiNhuan ?? rev - cost,
+    );
+    const rec = Number(
+      item.tienCoThue ??
+        item.tongTienThanhToan ??
+        item.rawData?.TienCoThue ??
+        0,
+    );
+    const paid = Number(
+      item.tienDaThanhToan ??
+        item.tienKhachDaTra ??
+        item.rawData?.TienDaThanhToan ??
+        0,
+    );
+    const bal = Number(item.tienConPhaiThanhToan ?? Math.max(0, rec - paid));
+    const paidCost = Number(item.tienDaChi ?? item.rawData?.TienDaChi ?? 0);
 
     totalRev += rev;
     totalCost += cost;
     totalProfit += profit;
-    totalReceivable += rev;
-    totalBalanceVal += Math.max(0, rev - paidRec);
+    totalReceivable += rec;
+    totalPaid += paid;
+    totalBalanceVal += bal;
     totalRemainingPayable += Math.max(0, cost - paidCost);
   }
 
   const totalLabelCol =
-    isNgayHoanThanhVisible !== false ? "ngayHoanThanhCongViec" : "customer";
+    customLabelCol ||
+    (isNgayHoanThanhVisible ? "ngayHoanThanhCongViec" : "customer");
   const totalPages = Math.ceil(totalCases / pageSize) || 1;
+  const isP1 = page === 1;
 
   const cumRev =
-    totals?.cumulativeRevenue !== undefined
+    totals?.cumulativeRevenue != null
       ? Number(totals.cumulativeRevenue)
-      : page === 1
+      : isP1
         ? totalRev
         : undefined;
   const cumCost =
-    totals?.cumulativeCost !== undefined
+    totals?.cumulativeCost != null
       ? Number(totals.cumulativeCost)
-      : page === 1
+      : isP1
         ? totalCost
         : undefined;
   const cumProfit =
-    totals?.cumulativeProfit !== undefined
+    totals?.cumulativeProfit != null
       ? Number(totals.cumulativeProfit)
-      : page === 1
+      : isP1
         ? totalProfit
         : undefined;
   const cumRec =
-    totals?.cumulativeReceivable !== undefined
+    totals?.cumulativeReceivable != null
       ? Number(totals.cumulativeReceivable)
-      : page === 1
+      : isP1
         ? totalReceivable
         : undefined;
+  const cumPaid =
+    totals?.cumulativePaid != null
+      ? Number(totals.cumulativePaid)
+      : isP1
+        ? totalPaid
+        : undefined;
   const cumBal =
-    totals?.cumulativeBalance !== undefined
+    totals?.cumulativeBalance != null
       ? Number(totals.cumulativeBalance)
-      : page === 1
+      : isP1
         ? totalBalanceVal
         : undefined;
   const cumRemPayable =
-    totals?.cumulativeRemainingPayable !== undefined
+    totals?.cumulativeRemainingPayable != null
       ? Number(totals.cumulativeRemainingPayable)
-      : page === 1
+      : isP1
         ? totalRemainingPayable
         : undefined;
   const cumCount = (page - 1) * pageSize + visibleCases.length;
@@ -108,7 +135,7 @@ export function buildCasesSummaryRow({
     metricTitle: string,
     subtotal: number,
     cum: number | undefined,
-    grand: number,
+    grand: number | undefined,
     valueClassName?: string,
   ) => (
     <div className="w-full flex justify-end">
@@ -117,7 +144,7 @@ export function buildCasesSummaryRow({
         metricTitle={metricTitle}
         subtotalAmount={subtotal}
         cumulativeAmount={cum}
-        grandTotalAmount={grand}
+        grandTotalAmount={grand != null ? Number(grand) : subtotal}
         page={page}
         totalPages={totalPages}
         currentPageCount={visibleCases.length}
@@ -145,67 +172,67 @@ export function buildCasesSummaryRow({
       t("cases.columns.doanhThu", "Doanh thu"),
       totalRev,
       cumRev,
-      totals?.grandTotalRevenue !== undefined
-        ? Number(totals.grandTotalRevenue)
-        : totalRev,
+      totals?.grandTotalRevenue,
       "font-bold text-primary",
     ),
     chiPhi: renderAmount(
       t("cases.columns.chiPhi", "Chi phí"),
       totalCost,
       cumCost,
-      totals?.grandTotalCost !== undefined
-        ? Number(totals.grandTotalCost)
-        : totalCost,
+      totals?.grandTotalCost,
       "font-bold text-slate-700 dark:text-slate-300",
     ),
     loiNhuan: renderAmount(
       t("cases.columns.loiNhuan", "Lợi nhuận gộp"),
       totalProfit,
       cumProfit,
-      totals?.grandTotalProfit !== undefined
-        ? Number(totals.grandTotalProfit)
-        : totalProfit,
+      totals?.grandTotalProfit,
       totalProfit >= 0
         ? "font-bold text-emerald-600 dark:text-emerald-400"
         : "font-bold text-rose-600 dark:text-rose-400",
+    ),
+    tienCoThue: renderAmount(
+      t("cases.columns.totalAmount", "Tổng tiền"),
+      totalReceivable,
+      cumRec,
+      totals?.grandTotalReceivable,
+      "font-bold text-primary",
+    ),
+    tienDaThanhToan: renderAmount(
+      t("cases.columns.paidAmount", "Đã thu"),
+      totalPaid,
+      cumPaid,
+      totals?.grandTotalPaid,
+      "font-bold text-emerald-600 dark:text-emerald-400",
+    ),
+    tienConPhaiThanhToan: renderAmount(
+      t("cases.columns.balanceAmount", "Còn phải thu"),
+      totalBalanceVal,
+      cumBal,
+      totals?.grandTotalBalance,
+      totalBalanceVal === 0
+        ? "font-bold text-emerald-600 dark:text-emerald-400"
+        : "font-bold text-destructive",
     ),
     collectionProgress: renderAmount(
       t("cases.columns.collectionProgress", "Tổng phải thu"),
       totalReceivable,
       cumRec,
-      totals?.grandTotalReceivable !== undefined
-        ? Number(totals.grandTotalReceivable)
-        : totalReceivable,
+      totals?.grandTotalReceivable,
       "font-bold text-primary",
-    ),
-    tienConPhaiThanhToan: renderAmount(
-      t("cases.columns.remainingReceivable", "Còn phải thu"),
-      totalBalanceVal,
-      cumBal,
-      totals?.grandTotalBalance !== undefined
-        ? Number(totals.grandTotalBalance)
-        : totalBalanceVal,
-      totalBalanceVal === 0
-        ? "font-bold text-emerald-600 dark:text-emerald-400"
-        : "font-bold text-destructive",
     ),
     costProgress: renderAmount(
       t("cases.columns.costProgress", "Tổng phải trả"),
       totalCost,
       cumCost,
-      totals?.grandTotalCost !== undefined
-        ? Number(totals.grandTotalCost)
-        : totalCost,
+      totals?.grandTotalCost,
       "font-bold text-slate-700 dark:text-slate-300",
     ),
     tienConPhaiChi: renderAmount(
       t("cases.columns.remainingPayable", "Còn phải trả"),
       totalRemainingPayable,
       cumRemPayable,
-      totals?.grandTotalRemainingPayable !== undefined
-        ? Number(totals.grandTotalRemainingPayable)
-        : totalRemainingPayable,
+      totals?.grandTotalRemainingPayable,
       totalRemainingPayable === 0
         ? "font-bold text-emerald-600 dark:text-emerald-400"
         : "font-bold text-amber-700 dark:text-amber-400",

@@ -103,6 +103,7 @@ export function GarageCases({
     };
     useUserPreferencesStore.getState().setTablePreferences(actualTableId, {
       ...currentPref,
+      columnOrder: [],
       columnVisibility:
         preset.columnVisibility || DEFAULT_GARAGE_CASE_COLUMN_VISIBILITY,
       activeView: preset.key,
@@ -175,6 +176,8 @@ export function GarageCases({
     <>
       <GarageCasesTable
         branchId={activeBranchId}
+        branches={branches}
+        canUpdateGarage={canUpdateGarage}
         tabs={tabs}
         activeTab={activeTab}
         onTabChange={onTabChange}

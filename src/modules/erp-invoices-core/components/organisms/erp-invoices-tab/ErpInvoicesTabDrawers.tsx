@@ -34,6 +34,13 @@ export interface InvoiceDrawersProps {
   loadInvoices: () => Promise<any>;
   handleCloseInternal: () => void;
   buildExportBaseQuery: () => Partial<ErpInvoiceListParams>;
+  currentFilterSummary?: {
+    dateFrom?: string;
+    dateTo?: string;
+    hasActiveFilters: boolean;
+    filterCount: number;
+    search?: string;
+  };
   // Modals & Drawers
   exportDrawerOpen: boolean;
   setExportDrawerOpen: (open: boolean) => void;
@@ -65,6 +72,7 @@ export function InvoiceDrawers({
   loadInvoices,
   handleCloseInternal,
   buildExportBaseQuery,
+  currentFilterSummary,
   exportDrawerOpen,
   setExportDrawerOpen,
   portalAuthOpen,
@@ -250,6 +258,7 @@ export function InvoiceDrawers({
         onClose={() => setExportDrawerOpen(false)}
         direction={direction}
         buildBaseQuery={buildExportBaseQuery}
+        currentFilterSummary={currentFilterSummary}
       />
 
       <BankTransactionDetailDrawer
