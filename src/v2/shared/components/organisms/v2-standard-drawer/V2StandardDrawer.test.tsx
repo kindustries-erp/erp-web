@@ -161,7 +161,7 @@ describe("V2StandardDrawer Organism", () => {
       </V2StandardDrawer>,
     );
 
-    const closeBtn = screen.getByRole("button", { name: "Close drawer" });
+    const closeBtn = screen.getByRole("button", { name: /Close drawer|Đóng/i });
     fireEvent.click(closeBtn);
 
     expect(screen.getByText("Xác nhận đóng biểu mẫu")).toBeInTheDocument();

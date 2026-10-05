@@ -3,6 +3,7 @@
    ══════════════════════════════════════════════════════════════ */
 
 @import "./v2-theme.css";
+@import "./v2-scrollbar.css";
 
 @tailwind base;
 @tailwind components;

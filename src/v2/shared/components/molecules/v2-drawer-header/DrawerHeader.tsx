@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { V2Text } from "@/v2/shared/components/atoms/v2-text";
 import { V2Button } from "@/v2/shared/components/atoms/v2-button";
+import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { cn } from "@/v2/shared/utils/cn";
 import type { DrawerHeaderProps } from "./DrawerHeader.type";
 
@@ -27,9 +28,22 @@ export const DrawerHeader: React.FC<DrawerHeaderProps> = ({
   isRightPanelCollapsed = false,
   onToggleRightPanel,
   className,
-  closeAriaLabel = "Close drawer",
+  closeAriaLabel,
   isScrolledTop = false,
 }) => {
+  const { t } = useV2Translation();
+
+  const panelAria = isRightPanelCollapsed
+    ? t("v2.drawer.expandRightPanel", "Mở rộng cột thông tin phải")
+    : t("v2.drawer.collapseRightPanel", "Thu gọn cột thông tin phải");
+
+  const fullscreenAria = isFullscreen
+    ? t("v2.drawer.exitFullscreen", "Thu nhỏ màn hình")
+    : t("v2.drawer.fullscreen", "Toàn màn hình");
+
+  const editLabel = t("v2.drawer.edit", "Chỉnh sửa");
+  const editAria = t("v2.drawer.editMode", "Chuyển sang chế độ chỉnh sửa");
+
   return (
     <div
       className={cn(
@@ -46,38 +60,24 @@ export const DrawerHeader: React.FC<DrawerHeaderProps> = ({
         {icon && <div className="text-muted-fg shrink-0">{icon}</div>}
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 flex-wrap min-w-0">
-            {typeof title === "string" ? (
-              <V2Text
-                variant="drawer-title"
-                className="truncate leading-tight font-semibold"
-              >
-                {title}
-              </V2Text>
-            ) : (
-              <V2Text
-                as="div"
-                variant="drawer-title"
-                className="truncate leading-tight font-semibold"
-              >
-                {title}
-              </V2Text>
-            )}
+            <V2Text
+              as={typeof title === "string" ? "span" : "div"}
+              variant="drawer-title"
+              className="truncate leading-tight font-semibold"
+            >
+              {title}
+            </V2Text>
             {titleExtra}
           </div>
-          {subtitle &&
-            (typeof subtitle === "string" ? (
-              <V2Text variant="drawer-subtitle" className="mt-0.5 leading-none">
-                {subtitle}
-              </V2Text>
-            ) : (
-              <V2Text
-                as="div"
-                variant="drawer-subtitle"
-                className="mt-0.5 leading-none"
-              >
-                {subtitle}
-              </V2Text>
-            ))}
+          {subtitle && (
+            <V2Text
+              as={typeof subtitle === "string" ? "span" : "div"}
+              variant="drawer-subtitle"
+              className="mt-0.5 leading-none block"
+            >
+              {subtitle}
+            </V2Text>
+          )}
         </div>
       </div>
 
@@ -91,15 +91,15 @@ export const DrawerHeader: React.FC<DrawerHeaderProps> = ({
             type="button"
             variant="drawer-edit"
             onClick={onToggleEdit}
-            aria-label="Chuyển sang chế độ chỉnh sửa"
-            title="Chỉnh sửa (Edit mode)"
+            aria-label={editAria}
+            title={editAria}
             className="hidden sm:inline-flex"
           >
-            Chỉnh sửa
+            {editLabel}
           </V2Button>
         )}
 
-        {/* Divider bar separating action buttons from window controls */}
+        {/* Divider bar */}
         {onToggleEdit && !isEditing && (
           <div
             data-testid="v2-drawer-header-divider"
@@ -115,14 +115,8 @@ export const DrawerHeader: React.FC<DrawerHeaderProps> = ({
             variant="ghost"
             size="icon-sm"
             onClick={onToggleRightPanel}
-            aria-label={
-              isRightPanelCollapsed
-                ? "Mở rộng cột thông tin phải"
-                : "Thu gọn cột thông tin phải"
-            }
-            title={
-              isRightPanelCollapsed ? "Mở rộng cột phải" : "Thu gọn cột phải"
-            }
+            aria-label={panelAria}
+            title={panelAria}
             className="hidden lg:inline-flex text-muted-fg hover:text-foreground cursor-pointer"
           >
             {isRightPanelCollapsed ? (
@@ -140,8 +134,8 @@ export const DrawerHeader: React.FC<DrawerHeaderProps> = ({
             variant="ghost"
             size="icon-sm"
             onClick={onToggleFullscreen}
-            aria-label={isFullscreen ? "Thu nhỏ màn hình" : "Toàn màn hình"}
-            title={isFullscreen ? "Thu nhỏ (Esc)" : "Toàn màn hình"}
+            aria-label={fullscreenAria}
+            title={fullscreenAria}
             className="hidden lg:inline-flex text-muted-fg hover:text-foreground cursor-pointer"
           >
             {isFullscreen ? (
@@ -158,7 +152,7 @@ export const DrawerHeader: React.FC<DrawerHeaderProps> = ({
           variant="ghost"
           size="icon-sm"
           onClick={onClose}
-          aria-label={closeAriaLabel}
+          aria-label={closeAriaLabel || t("v2.drawer.closeDrawer", "Đóng")}
           className="text-muted-fg hover:text-foreground cursor-pointer"
         >
           <X className="w-4 h-4" />

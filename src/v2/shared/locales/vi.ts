@@ -74,6 +74,7 @@ export const v2Vi = {
       processing: "Đang xử lý...",
     },
     drawer: {
+      edit: "Chỉnh sửa",
       editMode: "Chuyển sang chế độ chỉnh sửa",
       viewMode: "Chế độ xem",
       fullscreen: "Toàn màn hình",
@@ -89,6 +90,12 @@ export const v2Vi = {
       emptyTimeline: "Chưa có lịch sử thao tác",
       expandSection: "Mở rộng phân vùng",
       collapseSection: "Thu gọn phân vùng",
+      relatedInfo: "Thông tin liên quan",
+      expand: "Mở rộng",
+      collapse: "Thu gọn",
+    },
+    dropdown: {
+      optionsTitle: "Tùy chọn thao tác",
     },
   },
 };

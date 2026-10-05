@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, act } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
 import React from "react";
 import { V2TabBar } from "./V2TabBar";
@@ -105,5 +105,40 @@ describe("V2TabBar Molecule", () => {
     const tab2 = screen.getByText("Tab App 2");
     fireEvent.click(tab2);
     expect(handleSelect).toHaveBeenCalledWith("app2");
+  });
+
+  it("renders mobile view when viewport is mobile (< 768px)", () => {
+    // Mock mobile window innerWidth
+    const originalInnerWidth = window.innerWidth;
+    Object.defineProperty(window, "innerWidth", {
+      writable: true,
+      configurable: true,
+      value: 400,
+    });
+    act(() => {
+      window.dispatchEvent(new Event("resize"));
+    });
+
+    render(
+      <V2TabBar
+        variant="sub"
+        tabs={mockTabs}
+        activeTabKey="tab1"
+        extra={<button type="button">MobileExtra</button>}
+      />,
+    );
+
+    expect(screen.getByText("Chi tiết")).toBeInTheDocument();
+    expect(screen.getByText("MobileExtra")).toBeInTheDocument();
+
+    // Restore original innerWidth
+    Object.defineProperty(window, "innerWidth", {
+      writable: true,
+      configurable: true,
+      value: originalInnerWidth,
+    });
+    act(() => {
+      window.dispatchEvent(new Event("resize"));
+    });
   });
 });

@@ -1,6 +1,7 @@
 import * as React from "react";
 import { MoreHorizontal, Loader2 } from "lucide-react";
 import { AppPopover } from "@/v2/shared/components/molecules/v2-popover";
+import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { cn } from "@/v2/shared/utils/cn";
 import type {
   V2DropdownProps,
@@ -22,6 +23,7 @@ export const V2DropdownDesktop: React.FC<V2DropdownProps> = ({
   triggerClassName,
   modal = false,
 }) => {
+  const { t } = useV2Translation();
   const [internalOpen, setInternalOpen] = React.useState(false);
   const isControlled = open !== undefined;
   const isOpen = isControlled ? open : internalOpen;
@@ -37,7 +39,7 @@ export const V2DropdownDesktop: React.FC<V2DropdownProps> = ({
     <button
       type="button"
       className="inline-flex items-center justify-center w-7 h-7 rounded-lg text-muted-fg hover:bg-surface-hover hover:text-foreground cursor-pointer transition-colors"
-      aria-label="Thao tác"
+      aria-label={t("common.actions", "Thao tác")}
     >
       <MoreHorizontal className="w-4 h-4" />
     </button>

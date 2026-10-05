@@ -76,6 +76,7 @@ export const v2En: V2Dictionary = {
       processing: "Processing...",
     },
     drawer: {
+      edit: "Edit",
       editMode: "Switch to edit mode",
       viewMode: "View mode",
       fullscreen: "Full screen",
@@ -91,6 +92,12 @@ export const v2En: V2Dictionary = {
       emptyTimeline: "No activity history yet",
       expandSection: "Expand section",
       collapseSection: "Collapse section",
+      relatedInfo: "Related Information",
+      expand: "Expand",
+      collapse: "Collapse",
+    },
+    dropdown: {
+      optionsTitle: "Action options",
     },
   },
 };

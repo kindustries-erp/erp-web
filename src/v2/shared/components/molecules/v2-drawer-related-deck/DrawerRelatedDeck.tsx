@@ -1,8 +1,8 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import { Button } from "@/v2/shared/ui";
 import { V2Button } from "@/v2/shared/components/atoms/v2-button";
 import { V2Text } from "@/v2/shared/components/atoms/v2-text";
+import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { cn } from "@/v2/shared/utils/cn";
 import { DeckBadge } from "./DeckBadge";
 import type { DrawerRelatedDeckProps } from "./DrawerRelatedDeck.type";
@@ -17,6 +17,7 @@ export const DrawerRelatedDeck: React.FC<DrawerRelatedDeckProps> = ({
   className,
   cardClassName,
 }) => {
+  const { t } = useV2Translation();
   const [collapsed, setCollapsed] = useState(defaultCollapsed);
   const deckRef = useRef<HTMLDivElement>(null);
 
@@ -68,7 +69,8 @@ export const DrawerRelatedDeck: React.FC<DrawerRelatedDeckProps> = ({
                 variant="caption"
                 className="font-semibold uppercase tracking-wider text-muted-foreground"
               >
-                {customTitle || "Thông tin liên quan"}
+                {customTitle ||
+                  t("v2.drawer.relatedInfo", "Thông tin liên quan")}
               </V2Text>
             </div>
           ) : (
@@ -122,7 +124,7 @@ export const DrawerRelatedDeck: React.FC<DrawerRelatedDeckProps> = ({
         {/* Right Controls */}
         <div className="flex items-center gap-1 shrink-0 ml-auto">
           {activeTab?.headerExtra}
-          <Button
+          <V2Button
             type="button"
             variant="ghost"
             size="icon-sm"
@@ -131,7 +133,11 @@ export const DrawerRelatedDeck: React.FC<DrawerRelatedDeckProps> = ({
               setCollapsed(next);
               if (!next) scrollToDeck();
             }}
-            aria-label={collapsed ? "Mở rộng" : "Thu gọn"}
+            aria-label={
+              collapsed
+                ? t("v2.drawer.expand", "Mở rộng")
+                : t("v2.drawer.collapse", "Thu gọn")
+            }
             className="text-muted-foreground hover:text-foreground h-7 w-7 min-w-[28px] min-h-[28px]"
           >
             {collapsed ? (
@@ -139,7 +145,7 @@ export const DrawerRelatedDeck: React.FC<DrawerRelatedDeckProps> = ({
             ) : (
               <ChevronUp className="w-3.5 h-3.5" />
             )}
-          </Button>
+          </V2Button>
         </div>
       </div>
 

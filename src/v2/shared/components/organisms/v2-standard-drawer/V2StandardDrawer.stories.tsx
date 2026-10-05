@@ -15,6 +15,8 @@ import {
   RefreshCw,
   FileSpreadsheet,
   Paperclip,
+  Boxes,
+  TrendingUp,
 } from "lucide-react";
 import {
   MockInvoiceTable,
@@ -131,12 +133,25 @@ export const ErpInvoiceDetailGoldenSimulation = () => {
         leftTabs={[
           {
             key: "detail",
-            label: "Chi tiết",
+            label: "1. Chi tiết",
             icon: <FileText className="w-3.5 h-3.5" />,
           },
-          { key: "target", label: "Chi tiết theo đối tượng", badgeCount: 20 },
-          { key: "items", label: "Chi tiết HHDV" },
-          { key: "analysis", label: "Biến động & Phân tích" },
+          {
+            key: "target",
+            label: "2. Chi tiết theo đối tượng",
+            icon: <FileText className="w-3.5 h-3.5" />,
+            badgeCount: 20,
+          },
+          {
+            key: "items",
+            label: "3. Chi tiết HHDV",
+            icon: <Boxes className="w-3.5 h-3.5" />,
+          },
+          {
+            key: "analysis",
+            label: "4. Biến động & Phân tích",
+            icon: <TrendingUp className="w-3.5 h-3.5" />,
+          },
         ]}
         activeLeftTabKey={activeLeftTab}
         onLeftTabChange={setActiveLeftTab}

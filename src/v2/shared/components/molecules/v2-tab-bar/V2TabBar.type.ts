@@ -54,3 +54,13 @@ export interface V2TabBarProps extends V2BaseProps<HTMLElement> {
   /** Nhãn aria-label hỗ trợ accessibility */
   ariaLabel?: string;
 }
+
+export interface TabBarPillViewProps {
+  tabs: V2TabItemData[];
+  variant: "header" | "button-group" | "sub";
+  activeKey: string;
+  onSelect: (key: string) => void;
+  extra?: React.ReactNode;
+  className?: string;
+  ariaLabel?: string;
+}

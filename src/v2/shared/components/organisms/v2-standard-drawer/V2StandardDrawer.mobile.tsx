@@ -80,7 +80,7 @@ export const V2StandardDrawerMobile: React.FC<V2StandardDrawerProps> = (
           <div
             ref={h.scrollContainerRef}
             className={cn(
-              "flex-1 overflow-y-auto min-h-0 p-3 sm:p-4",
+              "flex-1 overflow-y-auto min-h-0 p-3 sm:p-4 touch-pan-y [-webkit-overflow-scrolling:touch]",
               props.bodyClassName,
             )}
           >

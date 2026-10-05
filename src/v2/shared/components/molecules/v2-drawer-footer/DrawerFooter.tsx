@@ -3,6 +3,7 @@ import { ChevronDown } from "lucide-react";
 import { V2Button } from "@/v2/shared/components/atoms/v2-button";
 import { V2Text } from "@/v2/shared/components/atoms/v2-text";
 import { V2Dropdown } from "@/v2/shared/components/molecules/v2-dropdown";
+import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { cn } from "@/v2/shared/utils/cn";
 import type { DrawerFooterProps, DrawerAction } from "./DrawerFooter.type";
 
@@ -33,11 +34,14 @@ export const DrawerFooter: React.FC<DrawerFooterProps> = ({
   actions,
   actionGroups,
   actionDropdownItems,
-  actionDropdownTriggerLabel = "Thao tác",
+  actionDropdownTriggerLabel,
   footerLeft,
   className,
   isScrolledBottom = false,
 }) => {
+  const { t } = useV2Translation();
+  const dropdownLabel =
+    actionDropdownTriggerLabel || t("v2.common.actions", "Thao tác");
   const hasDropdown =
     (actionGroups && actionGroups.length > 0) ||
     (actionDropdownItems && actionDropdownItems.length > 0);
@@ -81,7 +85,7 @@ export const DrawerFooter: React.FC<DrawerFooterProps> = ({
                   variant="body-sm"
                   className="leading-none text-inherit"
                 >
-                  {actionDropdownTriggerLabel}
+                  {dropdownLabel}
                 </V2Text>
               </V2Button>
             }

@@ -23,9 +23,11 @@ const textVariants = cva("text-foreground", {
         "text-[11px] font-bold text-foreground/80 uppercase tracking-[0.06em]",
       "drawer-title": "text-sm font-semibold text-foreground leading-tight",
       "drawer-subtitle": "text-[11px] text-muted-fg leading-tight truncate",
+      "tab-pill": "text-xs leading-none tracking-tight select-none",
     },
     color: {
       default: "",
+      inherit: "text-inherit",
       muted: "text-muted-fg",
       faint: "text-faint",
       primary: "text-primary",
@@ -84,6 +86,7 @@ const defaultElementMap: Record<string, TextElement> = {
   "section-title": "div",
   "drawer-title": "span",
   "drawer-subtitle": "div",
+  "tab-pill": "span",
 };
 
 const Text = React.forwardRef<HTMLElement, TextProps>(

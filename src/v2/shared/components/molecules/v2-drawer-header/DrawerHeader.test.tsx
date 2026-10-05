@@ -25,7 +25,9 @@ describe("V2 DrawerHeader Molecule", () => {
     const handleClose = vi.fn();
     render(<DrawerHeader title="Drawer" onClose={handleClose} />);
 
-    const closeBtn = screen.getByRole("button", { name: "Close drawer" });
+    const closeBtn = screen.getByRole("button", {
+      name: /Close drawer|Đóng/i,
+    });
     fireEvent.click(closeBtn);
     expect(handleClose).toHaveBeenCalledTimes(1);
   });

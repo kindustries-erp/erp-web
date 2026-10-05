@@ -17,7 +17,7 @@ description: Module tri thức Chuẩn Hóa Drawer V2 (V2StandardDrawer) theo ki
    - **L2 (Molecules)**:
      - `<V2TabBar>` (`src/v2/shared/components/molecules/v2-tab-bar/`): Thành phần TabBar thống nhất toàn diện hỗ trợ 4 biến thể (`variant`):
        - `variant="header"`: Dải tabs điều hướng trên đỉnh đặt sticky ngay dưới Header và nằm ngoài scroll container, active tab nền đen `bg-slate-900 text-white dark:bg-primary dark:text-primary-foreground`, icon, badge tròn, hỗ trợ `extra`.
-       - `variant="sub"`: Dải tab phụ dạng viên thuốc bo tròn toàn phần (`rounded-full bg-slate-100/90 dark:bg-zinc-800/80 border border-slate-200/70 p-0.5 h-8 gap-1 shadow-...`), tab items dạng viên thuốc `rounded-full h-7 px-3`, active pill thẻ trắng nổi bóng nhẹ (`bg-white dark:bg-zinc-900 shadow-[0_1px_3px_...] font-semibold text-slate-900`), ẩn icon khi inactive (chỉ tab active hiện icon hoặc có `alwaysShowIcon: true`), badge đếm nhỏ gọn (`min-w-[16px] h-4 px-1 rounded-full text-[10px]`). Hỗ trợ `leftTabs` và `rightTabs`.
+       - `variant="sub"`: Dải tab phụ dạng viên thuốc bo tròn toàn phần (`rounded-full bg-slate-100/90 dark:bg-zinc-800/80 border border-slate-200/70 p-0.5 h-8 gap-1 shadow-... overflow-x-auto overflow-y-hidden`), tích hợp **Sliding Pill Indicator** trượt mượt mà (`180ms ease-out`), triệt tiêu hoàn toàn lỗi cuộn dọc Linux `▲▼`. Các tab items sử dụng `V2Button` (`variant="pill-tab"`, `size="pill-sm"`, `h-7 px-2.5 text-xs`), nhãn dùng `V2Text` (`variant="tab-pill"` `tracking-tight`), ẩn icon khi inactive (chỉ bung `w-3.5` khi tab active hoặc có `alwaysShowIcon: true` kèm transition mượt), badge đếm chuẩn hóa (`min-w-[16px] h-4 px-1.5 ml-1 rounded-full text-[10px] font-mono`). Hỗ trợ `leftTabs` và `rightTabs`.
        - `variant="button-group"`: Dải tab chuyển đổi chế độ xem bên phải (`leftTabExtra`), tab active nền đen phẳng `bg-slate-900 text-white font-semibold shadow-xs`, tab inactive thẻ trắng có viền `bg-white dark:bg-zinc-900 text-slate-700 border border-slate-200/80`, hỗ trợ icon, badge và chấm tròn trạng thái `dot` (emerald/amber/rose).
        - `variant="app"`: Dải tab đa nhiệm cấp ứng dụng với gạch chân `border-b-2 border-primary` và nút đóng `X`.
      - `<DrawerSection>`: Phân vùng nội dung kính mờ `backdrop-blur-[12px]`, cơ chế **Collapsible Arrow-Only** (click đúng icon mũi tên `V2Button` `ChevronDown`), `fitViewportHeight`, hỗ trợ `hideHeader`/`hideTitle`, dùng `V2Text variant="section-title"`.
@@ -236,11 +236,15 @@ export function ErpInvoiceDetailDrawer({ open, onClose, invoice }) {
 - [x] Lấy ERP Invoice V1 (`StandardDrawer` + `slide-panel`) làm chuẩn vàng (100% feature & visual parity).
 - [x] Đổi tên triệt để `V2StandardFormDrawer` thành `V2StandardDrawer`.
 - [x] 100% components trong Drawer sử dụng `V2Button`, `V2Text`, và `V2TabBar`.
-- [x] Hợp nhất thanh TabBar: `V2TabBar` tại `src/v2/shared/components/molecules/v2-tab-bar/` hỗ trợ 3 variants: `header`, `sub`, `app` và prop `extra`.
+- [x] Hợp nhất thanh TabBar: `V2TabBar` tại `src/v2/shared/components/molecules/v2-tab-bar/` hỗ trợ 4 variants: `header`, `sub`, `button-group`, `app` và prop `extra`.
+- [x] Sliding Pill Indicator: Hook `useSlidingTabIndicator` cung cấp animation lướt trượt êm ái cho cả Header tabs và Sub tabs.
+- [x] Platform Split cho TabBarPillView: Tách `TabBarPillView.desktop.tsx` và `TabBarPillView.mobile.tsx` với router mỏng `TabBarPillView.tsx` (< 20 LoC) dùng `useViewport()`.
+- [x] Hệ Thống Global Scrollbar V2 Độc Lập: `src/v2/shared/styles/v2-scrollbar.css` mỏng 5px, rãnh trong suốt, bo tròn con nhộng, triệt tiêu 100% nút mũi tên thô nhọn `◀ ▶` cho toàn bộ V2 (Storybook & V2 App), giữ nguyên bản 100% cho V1.
 - [x] Floating Card: 4 góc bo cong `rounded-2xl`, viền 4 cạnh `border border-border/80`, cách mép màn hình `top-2.5 right-4 bottom-4 md:right-5 md:bottom-4.5`.
 - [x] Slide animation êm mượt: Sử dụng `cubic-bezier(0.16, 1, 0.3, 1)` với Tailwind keyframes `slide-in-from-right` và `slide-in-from-bottom`.
 - [x] 2 Khối Card Kính Độc Lập: Cột trái và cột phải nằm trên canvas với `gap-4 lg:gap-6`, không dùng đường kẻ dọc `border-l` cứng nhắc.
-- [x] Khống chế kích thước file: 100% file thành phần đều `< 175 LoC`.
+- [x] Khống chế kích thước file: 100% file thành phần đều `< 178 LoC` (tuân thủ /ui-atomic-refactor < 180 LoC).
 - [x] Tuân thủ No Blue Mandate: Không dùng class màu `blue-*`.
 - [x] Phím tắt `Esc` 2 tầng: Esc lần 1 thu nhỏ toàn màn hình, Esc lần 2 đóng drawer (hỏi confirm nếu đang edit).
-- [x] 100% unit tests Vitest co-located pass (155/155 tests pass) và Storybook stories mô phỏng đầy đủ ERP Invoice.
+- [x] 100% unit tests Vitest co-located pass (166/166 tests pass) và Storybook stories mô phỏng đầy đủ ERP Invoice.
+

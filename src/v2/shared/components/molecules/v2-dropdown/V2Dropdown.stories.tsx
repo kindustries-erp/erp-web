@@ -11,7 +11,7 @@ import { V2Dropdown } from "./V2Dropdown";
 import type { V2DropdownGroup } from "./V2Dropdown.type";
 
 const meta: Meta<typeof V2Dropdown> = {
-  title: "V2/Shared/Molecules/V2Dropdown",
+  title: "V2/Molecules/V2Dropdown",
   component: V2Dropdown,
   parameters: {
     layout: "centered",
