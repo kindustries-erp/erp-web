@@ -68,7 +68,7 @@ describe("V2StandardDrawer Organism", () => {
     expect(handleToggleEdit).toHaveBeenCalledTimes(1);
   });
 
-  it("collapses and expands the right panel when chevron toggle is clicked", () => {
+  it("collapses and expands the right panel with smooth animation classes when chevron toggle is clicked", () => {
     render(
       <V2StandardDrawer
         open={true}
@@ -81,18 +81,57 @@ describe("V2StandardDrawer Organism", () => {
       />,
     );
 
-    expect(screen.getByTestId("collapsible-right")).toBeInTheDocument();
+    const rightPanelContainer = screen.getByTestId(
+      "drawer-desktop-right-panel",
+    );
+    expect(rightPanelContainer).toBeInTheDocument();
+    expect(rightPanelContainer).toHaveAttribute("aria-hidden", "false");
+    expect(rightPanelContainer).toHaveClass("opacity-100");
+
     const collapseBtn = screen.getByRole("button", {
       name: "Thu gọn cột thông tin phải",
     });
     fireEvent.click(collapseBtn);
-    expect(screen.queryByTestId("collapsible-right")).not.toBeInTheDocument();
+    expect(rightPanelContainer).toHaveAttribute("aria-hidden", "true");
+    expect(rightPanelContainer).toHaveClass("opacity-0");
+    expect(rightPanelContainer).toHaveClass("w-0");
 
     const expandBtn = screen.getByRole("button", {
       name: "Mở rộng cột thông tin phải",
     });
     fireEvent.click(expandBtn);
-    expect(screen.getByTestId("collapsible-right")).toBeInTheDocument();
+    expect(rightPanelContainer).toHaveAttribute("aria-hidden", "false");
+    expect(rightPanelContainer).toHaveClass("opacity-100");
+  });
+
+  it("supports children as a render prop function receiving active tab context", () => {
+    const mockTabs: V2TabItemData[] = [
+      { key: "overview", label: "Tổng quan" },
+      { key: "history", label: "Lịch sử" },
+    ];
+
+    render(
+      <V2StandardDrawer
+        open={true}
+        onClose={vi.fn()}
+        title="Render Props Drawer"
+        tabs={mockTabs}
+      >
+        {({ activeTabKey }) => (
+          <div data-testid="dynamic-content">
+            {activeTabKey === "overview"
+              ? "Nội dung Tổng quan"
+              : "Nội dung Lịch sử"}
+          </div>
+        )}
+      </V2StandardDrawer>,
+    );
+
+    expect(screen.getByText("Nội dung Tổng quan")).toBeInTheDocument();
+
+    const historyTab = screen.getByRole("tab", { name: /Lịch sử/i });
+    fireEvent.click(historyTab);
+    expect(screen.getByText("Nội dung Lịch sử")).toBeInTheDocument();
   });
 
   it("switches top navigation tabs rendered via V2TabBar", () => {

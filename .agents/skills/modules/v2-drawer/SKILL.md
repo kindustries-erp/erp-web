@@ -30,9 +30,15 @@ description: Module tri thức Chuẩn Hóa Drawer V2 (V2StandardDrawer) theo ki
      - `<DrawerRelatedDeck>`: Horizon Divider Bar (`border-t border-border/60`) và Connected Context Deck ở đáy Main Body (dùng `V2Button`, `V2Text`, thẻ kính mờ `backdrop-blur-md`, collapsible).
    - **L3 (Organisms)**: `src/v2/shared/components/organisms/v2-standard-drawer/`:
      - `V2StandardDrawer.tsx`: Switcher nền tảng (< 20 LoC) dùng `useViewport()`.
-     - `V2StandardDrawer.desktop.tsx`: Floating Sheet Card (`top-2.5 right-4 bottom-4 md:right-5 md:bottom-4.5`, `rounded-2xl`, `border border-border/80`, `card-shadow`). Bố cục 2 khối Card kính độc lập nằm trên canvas, cách nhau bằng `gap-4 lg:gap-6` (không dùng đường kẻ dọc `border-l` ngăn cách).
+     - `V2StandardDrawer.desktop.tsx`: Floating Sheet Card (< 140 LoC) tích hợp `V2StandardDrawer.state-guard.tsx`, `V2StandardDrawer.desktop-columns.tsx`, `V2StandardDrawer.confirm-modal.tsx` và `DrawerRelatedDeck`.
+     - `V2StandardDrawer.desktop-columns.tsx`: Bố cục 2 cột Desktop (< 80 LoC), điều khiển hiệu ứng **Smooth CSS Transition Expand/Collapse** cho cột phải (`transition-all duration-300 ease-in-out`, co giãn `gap-0` <-> `gap-4 lg:gap-6`, `w-0 opacity-0` <-> `w-72 xl:w-80 opacity-100`, inner wrapper `min-w-[280px]` chống vỡ layout) và hiệu ứng **Tab Content Fade Transition** (`animate-in fade-in-50 duration-200`).
+     - `V2StandardDrawer.state-guard.tsx`: Trình bao bọc trạng thái Loading spinner và Error banner tập trung (< 50 LoC) dùng chung cho cả Desktop và Mobile.
+     - `V2StandardDrawer.confirm-modal.tsx`: Modal xác nhận đóng Drawer khi form bẩn / dirty state (< 40 LoC).
      - `V2StandardDrawer.mobile.tsx`: Fullscreen Bottom Sheet (`100vw`, `100dvh`, Grab Handle, Slide-up).
      - `V2StandardDrawer.hook.ts`: Hook quản lý state tabs, fullscreen, right panel collapse, scroll detection (`isScrolledTop`, `isScrolledBottom`), confirm close và phím tắt `Esc` 2 tầng.
+     - `V2StandardDrawer.mock.tsx`: Mock data & components chuẩn vàng phục vụ Storybook và mô phỏng hóa đơn/chứng từ.
+     - `V2StandardDrawer.stories.tsx`: Storybook stories minh họa trực quan (Single Column, Hóa đơn GSM, Tab switching & Right panel collapse animation).
+     - `V2StandardDrawer.test.tsx`: 11 test cases Vitest co-located phủ 100% desktop/mobile/fullscreen/confirm-modal/tabs.
 2. **Platform Split (Desktop vs Mobile)**:
    - **Desktop ($\ge 1024px$)**: Floating Card với 4 góc bo cong (`rounded-2xl`), viền 4 cạnh (`border border-border/80`), trượt êm từ phải sang trái. Khi bật fullscreen chuyển sang `inset-0 w-screen h-dvh rounded-none border-0`.
    - **Mobile & Tablet ($< 1024px$)**: Fullscreen Bottom Sheet chiếm `100vw` và `100dvh`, trượt từ dưới lên, có Grab Handle, bù padding an toàn (`env(safe-area-inset-top)` / `env(safe-area-inset-bottom)`), cột phải xếp dọc tự nhiên dưới cột trái.
@@ -116,10 +122,10 @@ export interface V2StandardDrawerProps {
   onRightTabChange?: (subTabKey: string) => void;
   rightTabExtra?: React.ReactNode;
 
-  // Nội dung
+  // Content Panels
   leftPanel?: React.ReactNode;
   rightPanel?: React.ReactNode;
-  children?: React.ReactNode;
+  children?: V2DrawerChildren; // Hỗ trợ cả ReactNode và Render Props (context) => ReactNode
 
   // Horizon Divider & Related Deck
   relatedTabs?: DrawerRelatedTabItem[];

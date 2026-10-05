@@ -1,12 +1,11 @@
 import React from "react";
-import { AlertCircle, Loader2 } from "lucide-react";
 import { Sheet, SheetContent, SheetTitle } from "@/v2/shared/ui/sheet";
 import { DrawerHeader } from "@/v2/shared/components/molecules/v2-drawer-header";
 import { DrawerFooter } from "@/v2/shared/components/molecules/v2-drawer-footer";
 import { V2TabBar } from "@/v2/shared/components/molecules/v2-tab-bar";
 import { DrawerRelatedDeck } from "@/v2/shared/components/molecules/v2-drawer-related-deck";
-import { DrawerConfirmCloseModal } from "./DrawerConfirmCloseModal";
-import { V2Text } from "@/v2/shared/components/atoms/v2-text";
+import { DrawerConfirmCloseModal } from "./V2StandardDrawer.confirm-modal";
+import { DrawerStateGuard } from "./V2StandardDrawer.state-guard";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { cn } from "@/v2/shared/utils/cn";
 import { useStandardDrawer } from "./V2StandardDrawer.hook";
@@ -17,11 +16,20 @@ export const V2StandardDrawerMobile: React.FC<V2StandardDrawerProps> = (
 ) => {
   const { t } = useV2Translation();
   const h = useStandardDrawer(props);
+  const childrenCtx = {
+    activeTabKey: h.activeTabKey,
+    activeLeftTabKey: h.activeLeftTabKey,
+    activeRightTabKey: h.activeRightTabKey,
+  };
+  const resolvedChildren =
+    typeof props.children === "function"
+      ? props.children(childrenCtx)
+      : props.children;
   const mainContent =
     h.activeLeftTabItem?.content ||
     h.activeTabItem?.content ||
     props.leftPanel ||
-    props.children;
+    resolvedChildren;
   const hasRelated = Boolean(
     props.bottomPanel || (props.relatedTabs && props.relatedTabs.length > 0),
   );
@@ -84,24 +92,7 @@ export const V2StandardDrawerMobile: React.FC<V2StandardDrawerProps> = (
               props.bodyClassName,
             )}
           >
-            {props.loading ? (
-              <div className="flex-1 flex flex-col items-center justify-center py-16 gap-3">
-                <Loader2 className="w-7 h-7 text-primary animate-spin" />
-                <V2Text variant="body-sm" className="text-muted-foreground">
-                  {t("v2.common.loading", "Đang tải dữ liệu...")}
-                </V2Text>
-              </div>
-            ) : props.error ? (
-              <div className="p-4 rounded-xl border border-destructive/30 bg-destructive/10 text-destructive flex items-center gap-2.5">
-                <AlertCircle className="w-5 h-5 shrink-0" />
-                <V2Text
-                  variant="body-sm"
-                  className="text-destructive font-medium"
-                >
-                  {props.error}
-                </V2Text>
-              </div>
-            ) : (
+            <DrawerStateGuard loading={props.loading} error={props.error}>
               <div className="space-y-3">
                 <div className="space-y-2">
                   {props.leftTabs && props.leftTabs.length > 0 && (
@@ -113,7 +104,12 @@ export const V2StandardDrawerMobile: React.FC<V2StandardDrawerProps> = (
                       extra={props.leftTabExtra}
                     />
                   )}
-                  {mainContent}
+                  <div
+                    key={h.activeTabKey || "tab-content"}
+                    className="w-full animate-in fade-in-50 duration-200"
+                  >
+                    {mainContent}
+                  </div>
                 </div>
 
                 {props.rightPanel && !h.activeTabItem?.hideRightPanel && (
@@ -146,7 +142,7 @@ export const V2StandardDrawerMobile: React.FC<V2StandardDrawerProps> = (
                   />
                 )}
               </div>
-            )}
+            </DrawerStateGuard>
           </div>
 
           <DrawerFooter

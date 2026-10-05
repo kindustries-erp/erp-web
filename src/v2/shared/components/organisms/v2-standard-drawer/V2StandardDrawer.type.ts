@@ -19,6 +19,16 @@ export type V2DrawerSize = "sm" | "md" | "lg" | "xl" | "full";
 export type V2DrawerMode = "view" | "edit";
 export type V2DrawerLayout = "1-column" | "2-columns";
 
+export interface V2DrawerChildrenContext {
+  activeTabKey: string;
+  activeLeftTabKey?: string;
+  activeRightTabKey?: string;
+}
+
+export type V2DrawerChildren =
+  | React.ReactNode
+  | ((context: V2DrawerChildrenContext) => React.ReactNode);
+
 export interface V2StandardDrawerProps {
   open: boolean;
   mode?: V2DrawerMode;
@@ -68,7 +78,7 @@ export interface V2StandardDrawerProps {
   // Content Panels
   leftPanel?: React.ReactNode;
   rightPanel?: React.ReactNode;
-  children?: React.ReactNode;
+  children?: V2DrawerChildren;
 
   // Horizon Divider & Related Deck
   relatedTabs?: DrawerRelatedTabItem[];
