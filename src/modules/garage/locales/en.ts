@@ -624,6 +624,14 @@ export const garageEn = {
       manualNote: "Detailed Note & Description",
       manualNotePlaceholder: "Enter reason for off-book collection/payment...",
       total: "Total",
+      addManualToList: "Add to List",
+      manualDraftHint:
+        'You have unadded amounts. Click "Add to List" to stage before Saving Changes.',
+      manualReceiptGuidance:
+        "Enter off-book receipt details then click Add to List.",
+      manualPaymentGuidance:
+        "Enter off-book payment details then click Add to List.",
+      pendingBadge: "Pending save",
       // Toasts
       navigatedToInvoice: "Switched to Reconciliation Invoices Tab: {{type}}",
       noTxnSelected: "Please select at least 1 bank transaction",

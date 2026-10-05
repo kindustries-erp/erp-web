@@ -625,6 +625,14 @@ export const garageVi = {
       manualNote: "Ghi chú & Diễn giải chi tiết",
       manualNotePlaceholder: "Nhập lý do thu/chi ngoài sổ sách...",
       total: "Tổng cộng",
+      addManualToList: "Thêm vào danh sách",
+      manualDraftHint:
+        'Đang có số tiền chưa thêm. Bấm "Thêm vào danh sách" để đưa vào danh sách chờ trước khi Lưu thay đổi.',
+      manualReceiptGuidance:
+        "Nhập thông tin khoản thu ngoài sổ rồi bấm Thêm vào danh sách.",
+      manualPaymentGuidance:
+        "Nhập thông tin khoản chi ngoài sổ rồi bấm Thêm vào danh sách.",
+      pendingBadge: "Chờ lưu",
       // Toasts
       navigatedToInvoice: "Đã chuyển sang Tab Hóa đơn đối soát: {{type}}",
       noTxnSelected: "Vui lòng chọn ít nhất 1 giao dịch sao kê",

@@ -365,6 +365,8 @@ export function GarageCaseFinancialsTab(props: GarageCaseFinancialsTabProps) {
           onSetManualDate={logic.setManualDate}
           onSetManualPartner={logic.setManualPartner}
           onSetManualNote={logic.setManualNote}
+          onAddManualSettlement={logic.handleAddManualToDraft}
+          manualDraftPending={logic.manualDraftPending}
         />
       )}
 
