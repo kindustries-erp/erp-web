@@ -1,34 +1,12 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import type {
-  V2StandardDrawerProps,
-  V2DrawerSize,
-  V2DrawerLayout,
+import { useV2DrawerStack } from "./v2DrawerStack";
+import {
+  V2_DRAWER_SIZE_CLASSES,
+  type V2StandardDrawerProps,
+  type V2DrawerLayout,
 } from "./V2StandardDrawer.type";
 
-const SIZE_CLASSES: Record<V2DrawerSize, string> = {
-  sm: "w-full min-w-0 max-w-full md:w-[90vw] lg:w-[42vw] xl:w-[38vw] 2xl:w-[32vw] lg:min-w-[420px] lg:max-w-[660px]",
-  md: "w-full min-w-0 max-w-full md:w-[92vw] lg:w-[60vw] xl:w-[54vw] 2xl:w-[48vw] lg:min-w-[620px] lg:max-w-[980px]",
-  lg: "w-full min-w-0 max-w-full md:w-[95vw] lg:w-[78vw] xl:w-[74vw] 2xl:w-[68vw] lg:min-w-[840px] lg:max-w-[1380px]",
-  xl: "w-full min-w-0 max-w-full md:w-[96vw] lg:w-[93vw] xl:w-[90vw] 2xl:w-[88vw] lg:min-w-[1020px] lg:max-w-[1780px]",
-  full: "w-full min-w-0 max-w-full md:w-[98vw] lg:w-[calc(100vw-36px)] xl:w-[calc(100vw-40px)] lg:min-w-[1020px]",
-};
-
-function useTabControl(
-  controlled?: string,
-  fallback?: string,
-  onChange?: (k: string) => void,
-) {
-  const [internal, setInternal] = useState(fallback || "");
-  const activeKey = controlled !== undefined ? controlled : internal;
-  const handleChange = useCallback(
-    (k: string) => {
-      if (controlled === undefined) setInternal(k);
-      onChange?.(k);
-    },
-    [controlled, onChange],
-  );
-  return [activeKey, handleChange] as const;
-}
+import { useTabControl } from "./v2TabControl";
 
 export function useStandardDrawer(props: V2StandardDrawerProps) {
   const { open, mode = "view", tabs, confirmOnClose = false, onClose } = props;
@@ -79,6 +57,12 @@ export function useStandardDrawer(props: V2StandardDrawerProps) {
     props.onFullscreenChange?.(nextVal);
   }, [props.isFullscreen, isFullscreen, props.onFullscreenChange]);
 
+  // Multi-drawer stack coordination
+  const stack = useV2DrawerStack(props.id, open, {
+    stackOffsetPx: props.stackOffsetPx,
+    disableStackOffset: props.disableStackOffset || isFullscreen,
+  });
+
   // Right panel collapsible
   const [internalRightCollapsed, setInternalRightCollapsed] = useState(false);
   const isRightPanelCollapsed =
@@ -100,9 +84,9 @@ export function useStandardDrawer(props: V2StandardDrawerProps) {
     else onClose();
   }, [confirmOnClose, mode, onClose]);
 
-  // Esc Key Handler
+  // Esc Key Handler: Only topmost active drawer listens & closes on Escape
   useEffect(() => {
-    if (!open) return;
+    if (!open || !stack.isTopmost) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         e.preventDefault();
@@ -114,7 +98,14 @@ export function useStandardDrawer(props: V2StandardDrawerProps) {
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [open, showConfirmClose, isFullscreen, toggleFullscreen, requestClose]);
+  }, [
+    open,
+    stack.isTopmost,
+    showConfirmClose,
+    isFullscreen,
+    toggleFullscreen,
+    requestClose,
+  ]);
 
   // Scroll detection
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -141,7 +132,7 @@ export function useStandardDrawer(props: V2StandardDrawerProps) {
 
   const sizeClass = isFullscreen
     ? "w-screen h-dvh max-w-none rounded-none border-0"
-    : SIZE_CLASSES[size] || SIZE_CLASSES.xl;
+    : V2_DRAWER_SIZE_CLASSES[size] || V2_DRAWER_SIZE_CLASSES.xl;
 
   return {
     activeTabKey,
@@ -174,5 +165,12 @@ export function useStandardDrawer(props: V2StandardDrawerProps) {
     isScrolledTop,
     isScrolledBottom,
     checkScroll,
+    stack,
+    depth: stack.depth,
+    isTopmost: stack.isTopmost,
+    isUnderlying: stack.isUnderlying,
+    desktopShiftPx: stack.desktopShiftPx,
+    mobileTopOffsetPx: stack.mobileTopOffsetPx,
+    zIndex: stack.zIndex,
   };
 }

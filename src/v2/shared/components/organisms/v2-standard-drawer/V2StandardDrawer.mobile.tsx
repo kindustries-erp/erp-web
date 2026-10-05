@@ -3,9 +3,9 @@ import { Sheet, SheetContent, SheetTitle } from "@/v2/shared/ui/sheet";
 import { DrawerHeader } from "@/v2/shared/components/molecules/v2-drawer-header";
 import { DrawerFooter } from "@/v2/shared/components/molecules/v2-drawer-footer";
 import { V2TabBar } from "@/v2/shared/components/molecules/v2-tab-bar";
-import { DrawerRelatedDeck } from "@/v2/shared/components/molecules/v2-drawer-related-deck";
 import { DrawerConfirmCloseModal } from "./V2StandardDrawer.confirm-modal";
 import { DrawerStateGuard } from "./V2StandardDrawer.state-guard";
+import { DrawerMobilePanels } from "./V2StandardDrawer.mobile-panels";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { cn } from "@/v2/shared/utils/cn";
 import { useStandardDrawer } from "./V2StandardDrawer.hook";
@@ -34,6 +34,15 @@ export const V2StandardDrawerMobile: React.FC<V2StandardDrawerProps> = (
     props.bottomPanel || (props.relatedTabs && props.relatedTabs.length > 0),
   );
 
+  const mobileTop =
+    h.mobileTopOffsetPx > 0
+      ? `calc(env(safe-area-inset-top, 0px) + ${h.mobileTopOffsetPx}px)`
+      : "env(safe-area-inset-top, 0px)";
+  const mobileHeight =
+    h.mobileTopOffsetPx > 0
+      ? `calc(100dvh - env(safe-area-inset-top, 0px) - ${h.mobileTopOffsetPx}px)`
+      : "100dvh";
+
   return (
     <>
       <Sheet
@@ -45,11 +54,20 @@ export const V2StandardDrawerMobile: React.FC<V2StandardDrawerProps> = (
           hideCloseButton
           className={cn(
             "fixed inset-x-0 bottom-0 top-auto left-0 translate-x-0 translate-y-0",
-            "w-full max-w-none rounded-t-2xl rounded-b-none h-[100dvh] max-h-[100dvh]",
-            "flex flex-col p-0 overflow-hidden border-b-0 border-t border-border/80 pt-[env(safe-area-inset-top,0px)]",
+            "w-full max-w-none rounded-t-2xl rounded-b-none flex flex-col p-0 overflow-hidden",
+            "border-b-0 border-t border-border/80 transition-all duration-300 ease-out",
+            h.isUnderlying && "scale-[0.97] opacity-85 origin-bottom",
+            h.depth > 0 && "shadow-[0_-12px_32px_rgba(15,23,42,0.28)]",
             props.panelClassName,
             props.className,
           )}
+          style={{
+            zIndex: h.zIndex,
+            top: mobileTop,
+            height: mobileHeight,
+            maxHeight: mobileHeight,
+          }}
+          overlayStyle={{ zIndex: h.zIndex - 1 }}
         >
           <div
             data-testid="drawer-mobile-grab-handle"
@@ -93,55 +111,12 @@ export const V2StandardDrawerMobile: React.FC<V2StandardDrawerProps> = (
             )}
           >
             <DrawerStateGuard loading={props.loading} error={props.error}>
-              <div className="space-y-3">
-                <div className="space-y-2">
-                  {props.leftTabs && props.leftTabs.length > 0 && (
-                    <V2TabBar
-                      variant="sub"
-                      tabs={props.leftTabs}
-                      activeTabKey={h.activeLeftTabKey}
-                      onTabChange={h.handleLeftTabChange}
-                      extra={props.leftTabExtra}
-                    />
-                  )}
-                  <div
-                    key={h.activeTabKey || "tab-content"}
-                    className="w-full animate-in fade-in-50 duration-200"
-                  >
-                    {mainContent}
-                  </div>
-                </div>
-
-                {props.rightPanel && !h.activeTabItem?.hideRightPanel && (
-                  <div
-                    data-testid="drawer-mobile-stacked-panel"
-                    className="pt-2 border-t border-border/50 space-y-2"
-                  >
-                    {props.rightTabs && props.rightTabs.length > 0 && (
-                      <V2TabBar
-                        variant="sub"
-                        tabs={props.rightTabs}
-                        activeTabKey={h.activeRightTabKey}
-                        onTabChange={h.handleRightTabChange}
-                        extra={props.rightTabExtra}
-                      />
-                    )}
-                    {h.activeRightTabItem?.content || props.rightPanel}
-                  </div>
-                )}
-
-                {hasRelated && (
-                  <DrawerRelatedDeck
-                    tabs={props.relatedTabs}
-                    defaultTabKey={props.defaultRelatedTabKey}
-                    defaultCollapsed={props.defaultRelatedCollapsed}
-                    customContent={props.bottomPanel}
-                    customTitle={props.bottomPanelTitle}
-                    onTabChange={props.onRelatedTabChange}
-                    cardClassName={props.deckCardClassName}
-                  />
-                )}
-              </div>
+              <DrawerMobilePanels
+                props={props}
+                h={h}
+                mainContent={mainContent}
+                hasRelated={hasRelated}
+              />
             </DrawerStateGuard>
           </div>
 

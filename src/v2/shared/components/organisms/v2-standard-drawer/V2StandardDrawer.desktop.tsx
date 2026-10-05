@@ -45,11 +45,21 @@ export const V2StandardDrawerDesktop: React.FC<V2StandardDrawerProps> = (
           side={h.isFullscreen ? "fullscreen" : "floating"}
           hideCloseButton
           className={cn(
-            "p-0 flex flex-col overflow-hidden",
+            "p-0 flex flex-col overflow-hidden transition-all duration-300 ease-out",
             h.sizeClass,
             props.panelClassName,
             props.className,
           )}
+          style={{
+            zIndex: h.zIndex,
+            transform:
+              !h.isFullscreen && h.desktopShiftPx > 0
+                ? `translateX(-${h.desktopShiftPx}px)`
+                : undefined,
+          }}
+          overlayStyle={{
+            zIndex: h.zIndex - 1,
+          }}
         >
           <SheetTitle className="sr-only">
             {typeof props.title === "string"
