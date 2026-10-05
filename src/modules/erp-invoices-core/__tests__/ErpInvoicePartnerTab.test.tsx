@@ -233,4 +233,44 @@ describe("ErpInvoicePartnerTab", () => {
       ).toBeInTheDocument();
     });
   });
+
+  it("still renders children in '1. Chi tiết' even when invoice has NO partner info (khách lẻ / no tax code)", async () => {
+    const anonymousInvoice = {
+      id: "inv-anon-1",
+      invoiceNo: "1208",
+      serialNo: "C26TGA",
+      direction: "OUT",
+      buyerName: "",
+      buyerTaxCode: "",
+      buyerPersonalName: "",
+      buyerCccd: "",
+      sellerName: "GREENWAY",
+      sellerTaxCode: "0318334886-003",
+    };
+
+    renderWithClient(
+      <ErpInvoicePartnerTab
+        detailInvoice={anonymousInvoice as any}
+        direction="OUT"
+      >
+        <div data-testid="anon-invoice-details">
+          Nội dung hóa đơn 1208 khách lẻ
+        </div>
+      </ErpInvoicePartnerTab>,
+    );
+
+    // Sub-tab 1 must ALWAYS render children
+    expect(screen.getByTestId("anon-invoice-details")).toBeInTheDocument();
+    expect(screen.getByText("1. Chi tiết")).toBeInTheDocument();
+
+    // When switching to Sub-tab 2, it should show the empty partner message
+    const invoicesSubTabBtn = screen.getByText("2. Chi tiết theo đối tượng");
+    fireEvent.click(invoicesSubTabBtn);
+
+    await waitFor(() => {
+      expect(
+        screen.getByText("Không có thông tin đối tác"),
+      ).toBeInTheDocument();
+    });
+  });
 });
