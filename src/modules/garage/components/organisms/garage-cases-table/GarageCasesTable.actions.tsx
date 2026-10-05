@@ -84,7 +84,8 @@ export function buildGarageCaseRowActions(
         {
           label: t("cases.actions.reconcile", "Đối soát"),
           icon: <Scale className="w-4 h-4" />,
-          onClick: () => props.onOpenFinancials(item.soChungTu || item.id),
+          onClick: () =>
+            props.onOpenFinancials(item.soChungTu || item.id, true),
         },
       ],
     },

@@ -206,8 +206,8 @@ export function GarageCases({
           setDrawerInitialTab("quote_details");
           setSelectedCaseId(code);
         }}
-        onOpenFinancials={(code) => {
-          setDrawerEditMode(false);
+        onOpenFinancials={(code, editMode = true) => {
+          setDrawerEditMode(editMode);
           setDrawerInitialTab("financials");
           setSelectedCaseId(code);
         }}
