@@ -123,7 +123,7 @@ export const TabBarPillViewDesktop: React.FC<TabBarPillViewProps> = ({
     >
       <div
         ref={subContainerRef}
-        className="relative flex items-center gap-1 p-0.5 rounded-full bg-slate-100/90 dark:bg-zinc-800/80 border border-slate-200/70 dark:border-zinc-700/60 shadow-[0_1px_2px_rgba(15,23,42,.03),0_6px_18px_-14px_rgba(15,23,42,.08)] overflow-x-auto overflow-y-hidden touch-pan-x scrollbar-none h-8 max-w-full"
+        className="relative flex items-center gap-1 p-[3px] rounded-full bg-slate-100/90 dark:bg-zinc-800/80 border border-slate-200/70 dark:border-zinc-700/60 shadow-[0_1px_2px_rgba(15,23,42,.03),0_6px_18px_-14px_rgba(15,23,42,.08)] overflow-x-auto overflow-y-hidden touch-pan-x scrollbar-none h-8 max-w-full"
       >
         <div
           ref={subIndicatorRef}

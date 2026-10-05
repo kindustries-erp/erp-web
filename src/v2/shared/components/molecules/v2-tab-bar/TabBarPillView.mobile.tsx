@@ -118,7 +118,7 @@ export const TabBarPillViewMobile: React.FC<TabBarPillViewProps> = ({
       <div className="relative w-full overflow-x-auto touch-pan-x scrollbar-none [-webkit-overflow-scrolling:touch] py-0.5">
         <div
           ref={subContainerRef}
-          className="relative inline-flex items-center gap-1 p-0.5 rounded-full bg-slate-100/90 dark:bg-zinc-800/80 border border-slate-200/70 dark:border-zinc-700/60 shadow-xs h-8"
+          className="relative inline-flex items-center gap-1 p-[3px] rounded-full bg-slate-100/90 dark:bg-zinc-800/80 border border-slate-200/70 dark:border-zinc-700/60 shadow-xs h-8"
         >
           <div
             ref={subIndicatorRef}

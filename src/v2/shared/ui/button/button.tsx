@@ -33,7 +33,7 @@ const buttonVariants = cva(
         "drawer-tab":
           "group relative inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 min-h-[30px] sm:min-h-[32px] text-xs rounded-lg font-medium transition-all select-none whitespace-nowrap",
         "pill-tab":
-          "group relative inline-flex items-center justify-center gap-1.5 h-7 px-2.5 rounded-full text-xs font-medium transition-all duration-150 select-none whitespace-nowrap bg-transparent hover:bg-transparent text-slate-600 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-zinc-100 data-[state=active]:text-slate-900 data-[state=active]:font-semibold dark:data-[state=active]:text-white relative z-10",
+          "group relative inline-flex items-center justify-center gap-1.5 h-6 px-3 rounded-full text-xs font-medium transition-all duration-150 select-none whitespace-nowrap bg-transparent hover:bg-transparent text-slate-600 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-zinc-100 data-[state=active]:text-slate-900 data-[state=active]:font-semibold dark:data-[state=active]:text-white relative z-10",
       },
       size: {
         xs: "h-6 px-2 text-[11px] rounded",
@@ -44,7 +44,7 @@ const buttonVariants = cva(
         icon: "h-9 w-9 p-0",
         "icon-sm": "h-7 w-7 p-0 rounded-md",
         "icon-xs": "h-6 w-6 p-0 rounded",
-        "pill-sm": "h-7 px-2.5 text-xs rounded-full",
+        "pill-sm": "h-6 px-3 text-xs rounded-full",
       },
     },
     defaultVariants: {
