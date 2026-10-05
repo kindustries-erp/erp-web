@@ -709,7 +709,7 @@ export function GarageCasePartnerTab({
                     if (onSelectCase) {
                       onSelectCase(row.soChungTu, {
                         tabKey: "financials",
-                        editMode: false,
+                        editMode: true,
                       });
                     }
                   },

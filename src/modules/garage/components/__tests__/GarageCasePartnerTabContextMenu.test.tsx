@@ -144,7 +144,7 @@ describe("GarageCasePartnerTab Context Menu (rowHoverActions)", () => {
     groups[1].items[2].onClick();
     expect(onSelectCase).toHaveBeenLastCalledWith("GR-PDV2609-0070", {
       tabKey: "financials",
-      editMode: false,
+      editMode: true,
     });
   });
 });

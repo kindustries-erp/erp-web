@@ -59,6 +59,7 @@ export interface SheetContentProps
   hideCloseButton?: boolean;
   hideOverlay?: boolean;
   overlayClassName?: string;
+  overlayStyle?: React.CSSProperties;
   closeAriaLabel?: string;
 }
 
@@ -74,13 +75,16 @@ const SheetContent = React.forwardRef<
       hideCloseButton = false,
       hideOverlay = false,
       overlayClassName,
+      overlayStyle,
       closeAriaLabel = "Close",
       ...props
     },
     ref,
   ) => (
     <SheetPortal>
-      {!hideOverlay && <SheetOverlay className={overlayClassName} />}
+      {!hideOverlay && (
+        <SheetOverlay className={overlayClassName} style={overlayStyle} />
+      )}
       <SheetPrimitive.Content
         ref={ref}
         className={cn(sheetVariants({ side }), className)}

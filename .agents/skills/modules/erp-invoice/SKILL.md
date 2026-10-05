@@ -111,8 +111,13 @@ src/modules/erp-invoices-core/
 │       │   ├── ErpInvoiceSettlementTab.hook.ts# Hook tính toán dư nợ, auto-match, net-off actions
 │       │   └── context/                       # Context chia sẻ state chọn giao dịch & số dư
 │       ├── erp-invoice-unified-settlement-table/ # Bảng hợp nhất giao dịch ngân hàng & sổ quỹ
-│       ├── erp-invoice-settlement-right-panel/# Cột phải Drawer Tài chính: Thẻ công nợ & Nút cấn trừ
-│       ├── erp-invoice-partner-tab/           # Tab Đối tác: Lịch sử hóa đơn & công nợ theo MST
+│       ├── erp-invoice-partner-tab/           # Tab Đối tác & Chi tiết hóa đơn (Chuẩn Atomic 5 tầng < 180 LoC)
+│       │   ├── ErpInvoicePartnerTab.tsx       # Root Organism (< 150 LoC) - Quản lý 4 subtabs, luôn hiển thị Sub-tab 1
+│       │   ├── ErpInvoicePartnerTab.hook.ts   # Custom hook (< 150 LoC) - State sub-tabs, partner info, preview
+│       │   ├── ErpInvoicePartnerTabNav.tsx    # Molecule điều hướng subtabs & view mode toggles (< 150 LoC)
+│       │   ├── ErpInvoicePartnerTabEmpty.tsx  # Molecule trạng thái rỗng khi đối tác chưa có MST/Tên (< 50 LoC)
+│       │   ├── ErpInvoicePartnerRightPanel.tsx# Section hồ sơ đối tác ở cột phải (< 150 LoC)
+│       │   └── ErpInvoicePartnerLinesSection/ # Sub-organism cho Sub-tab 3 (Chi tiết HHDV đối tác, < 180 LoC/file)
 │       ├── erp-invoice-standalone-drawer/     # Drawer xem nhanh độc lập từ các màn hình khác
 │       ├── partner-invoice-drawer/            # Drawer danh sách hóa đơn theo từng đối tác
 │       ├── invoice-view-config-drawer/        # Drawer cấu hình View Mode & Tùy chỉnh cột

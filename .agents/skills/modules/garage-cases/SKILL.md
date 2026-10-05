@@ -38,7 +38,20 @@ src/modules/garage/
 │   ├── garage-case-details-tab/     # Tab hợp nhất Chi tiết & Chi tiết theo đối tượng (PillTabs, sub-tab quote & partner)
 │   ├── GarageBranchSelector.tsx     # Dropdown chọn chi nhánh xưởng
 │   ├── GarageCaseLinkedDocuments.tsx# Quản lý liên kết hóa đơn thuế
-│   ├── GarageCasePreview.tsx        # Bản xem trước Sổ báo giá & Lợi nhuận dự kiến (bọc trong DrawerSection)
+│   ├── GarageCasePreview.tsx        # Re-export mỏng của organism garage-case-preview
+│   ├── organisms/
+│   │   ├── garage-case-preview/     # Organism Sổ báo giá & Lợi nhuận dự kiến (Atomic 5 tầng, < 180 LoC)
+│   │   │   ├── GarageCasePreview.tsx # Container DrawerSection bọc View Switch & Dual Views (Document / Table)
+│   │   │   ├── GarageCasePreview.hook.ts # Hook quản lý mode, lọc dòng chi tiết, tính toán tài chính & lợi nhuận
+│   │   │   ├── GarageCasePreview.type.ts # Contract types (QuoteLineItem, QuoteFinancialItem, QuoteProfitSummaryData)
+│   │   │   ├── GarageCasePreview.helper.ts # Parsers & formatters tách biệt
+│   │   │   ├── GarageCaseFinancial.helper.ts # Bóc tách danh mục tài chính (hoa hồng BH, môi giới, công nợ, thuế)
+│   │   │   ├── components/
+│   │   │   │   ├── QuotePreviewViewSwitch.tsx # Molecule switch Bản in (Document) ⇄ Bảng dữ liệu (Table)
+│   │   │   │   ├── QuotePreviewDocument.tsx # Chế độ Bản in chuẩn hóa gồm Header, InfoGrid, Tables, Summary, Signatures
+│   │   │   │   ├── QuotePreviewTables.tsx # Chế độ Bảng dữ liệu: 2 bảng StandardTable variant="spreadsheet"
+│   │   │   │   ├── document/        # Sub-components < 150 LoC cho bản in (Header, InfoGrid, Tables, Summary, Signatures)
+│   │   │   │   └── tables/          # Sub-components < 180 LoC cho 2 bảng (QuoteLinesTable, QuoteFinancialsTable)
 │   ├── GarageCaseSettlementDrawerModal.tsx # Wrapper cấn trừ dòng tiền & sổ ngoài sử dụng VoucherNetoffSelectionModal
 │   ├── GarageCaseSettlementSection.tsx # Section quản lý cấn trừ thu/chi dòng tiền vụ việc
 │   ├── GarageCaseStandaloneDrawer.tsx # Drawer chi tiết phiếu dịch vụ 4 tab Top-level chuẩn UI
@@ -129,7 +142,7 @@ src/modules/garage/
   - Nút **Bỏ lọc** (`clearFilters`) và đếm số bộ lọc active trên tiêu đề section.
   - **Context Menu (`rowHoverActions`) chuẩn hóa 100% khớp bảng ngoài**:
     - **TRA CỨU**: `Xem chi tiết` (`Eye`), `Chi tiết theo đối tượng` (`Users`).
-    - **THAO TÁC**: `Chỉnh sửa` (`Pencil`), `Phân loại` (`SlidersHorizontal`), `Đối soát` (`Scale`).
+    - **THAO TÁC**: `Chỉnh sửa` (`Pencil`), `Phân loại` (`SlidersHorizontal`), `Đối soát` (`Scale` - Mở Drawer chuyển thẳng vào tab **Tài chính (`financials`)** và tự động kích hoạt sẵn **Edit Mode**).
 
 ### 4.3. Liên Kết Hóa Đơn VAT (`InvoiceSelectionDrawer`)
 - Sử dụng `<StandardFormDrawer layout="2-columns" size="xl" collapsibleRightPanel={true}>`.

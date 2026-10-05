@@ -8,6 +8,7 @@ import {
   getGarageCaseRowClassName,
 } from "./GarageCasesTable.summary";
 import { buildGarageCasesColumns } from "./GarageCasesTable.columns";
+import { buildGarageCaseRowActions } from "./GarageCasesTable.actions";
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
@@ -232,5 +233,33 @@ describe("GarageCasesTable Organism", () => {
         tenTinhTrangDichVu: "Đang sửa",
       }),
     ).toBeUndefined();
+  });
+
+  it("buildGarageCaseRowActions triggers onOpenFinancials with editMode = true when clicking reconcile", () => {
+    const onOpenFinancials = vi.fn();
+    const props: any = {
+      ...defaultProps,
+      onOpenFinancials,
+    };
+    const rowActionsBuilder = buildGarageCaseRowActions(
+      props,
+      (_k: string, d?: string) => d || _k,
+    );
+    const groups = rowActionsBuilder({
+      id: "raw-id-001",
+      soChungTu: "GR-PDV-2026-999",
+    });
+
+    const thaoTacGroup = groups.find((g: any) => g.groupLabel === "THAO TÁC");
+    expect(thaoTacGroup).toBeDefined();
+
+    const reconcileAction = thaoTacGroup?.items.find(
+      (item: any) => item.label === "Đối soát",
+    );
+    expect(reconcileAction).toBeDefined();
+
+    reconcileAction?.onClick();
+    expect(onOpenFinancials).toHaveBeenCalledTimes(1);
+    expect(onOpenFinancials).toHaveBeenCalledWith("GR-PDV-2026-999", true);
   });
 });

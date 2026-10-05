@@ -8,7 +8,7 @@ export interface GarageCasesTableProps {
   activeTab?: string;
   onTabChange?: (key: string) => void;
   onOpenDetail: (code: string) => void;
-  onOpenFinancials: (code: string) => void;
+  onOpenFinancials: (code: string, editMode?: boolean) => void;
   onOpenEditNotes?: (item: any) => void;
   onOpenConfig?: (item: any) => void;
   canSyncGarage?: boolean;
@@ -43,7 +43,7 @@ export interface ColumnContext {
   onFilterChange: (key: string, vals: string[]) => void;
   fetchCaseColumnOptions: any;
   onOpenDetail: (code: string) => void;
-  onOpenFinancials: (code: string) => void;
+  onOpenFinancials: (code: string, editMode?: boolean) => void;
   onOpenConfig?: (item: any) => void;
   canUpdateGarage?: boolean;
   branches?: any[];
