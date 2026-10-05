@@ -7,6 +7,19 @@ import { InvoiceExportDrawer } from "./InvoiceExportDrawer";
 const standardTableSpy = vi.fn();
 const mockRefetch = vi.fn();
 const useQuerySpy = vi.fn();
+const startExportExcelBackgroundSpy = vi.fn().mockResolvedValue({
+  jobId: "mock-job-123",
+  reused: false,
+  message: "Started",
+});
+
+vi.mock("@/modules/erp-invoices-core/api/erpInvoicesCoreApi", () => ({
+  erpInvoicesCoreApi: {
+    listExportExcelBackgroundHistory: vi.fn(),
+    startExportExcelBackground: (...args: any[]) =>
+      startExportExcelBackgroundSpy(...args),
+  },
+}));
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
@@ -187,5 +200,85 @@ describe("InvoiceExportDrawer", () => {
     const messageColumn = props.columns.find((c: any) => c.key === "message");
     expect(messageColumn).toBeDefined();
     expect(messageColumn.size).toBe(200);
+  });
+
+  it("switches to by-current-filter mode and displays filter summary instead of date pickers", () => {
+    render(
+      <InvoiceExportDrawer
+        open={true}
+        onClose={() => {}}
+        direction="IN"
+        buildBaseQuery={() => ({
+          search: "Cong ty ABC",
+          status: "APPROVED",
+        })}
+        currentFilterSummary={{
+          dateFrom: "2026-10-01",
+          dateTo: "2026-10-31",
+          hasActiveFilters: true,
+          filterCount: 3,
+          search: "Cong ty ABC",
+        }}
+      />,
+    );
+
+    // Initial state: date pickers are present
+    expect(screen.getAllByTestId("date-picker")).toHaveLength(2);
+
+    // Find and click the "by-current-filter" radio option
+    const radioOptions = screen.getAllByRole("radio");
+    expect(radioOptions).toHaveLength(2);
+    expect(radioOptions[0]).toBeChecked(); // by-period
+    expect(radioOptions[1]).not.toBeChecked(); // by-current-filter
+
+    fireEvent.click(radioOptions[1]);
+
+    // After switching, date pickers are no longer rendered
+    expect(screen.queryByTestId("date-picker")).toBeNull();
+    expect(screen.queryByTestId("period-combobox")).toBeNull();
+
+    // Summary texts are displayed
+    expect(screen.getByText("Cong ty ABC")).toBeInTheDocument();
+  });
+
+  it("exports using current filter payload when in by-current-filter mode", async () => {
+    startExportExcelBackgroundSpy.mockClear();
+
+    render(
+      <InvoiceExportDrawer
+        open={true}
+        onClose={() => {}}
+        direction="OUT"
+        buildBaseQuery={() => ({
+          search: "Customer XYZ",
+          status: "PAID",
+          date_from: "2026-10-01T00:00:00",
+          date_to: "2026-10-15T23:59:59",
+        })}
+        currentFilterSummary={{
+          dateFrom: "2026-10-01",
+          dateTo: "2026-10-15",
+          hasActiveFilters: true,
+          filterCount: 1,
+          search: "Customer XYZ",
+        }}
+      />,
+    );
+
+    // Switch to by-current-filter
+    const radioOptions = screen.getAllByRole("radio");
+    fireEvent.click(radioOptions[1]);
+
+    // Click start export button
+    const exportButton = screen.getByText("Xuất Excel");
+    fireEvent.click(exportButton);
+
+    expect(startExportExcelBackgroundSpy).toHaveBeenCalledWith({
+      direction: "OUT",
+      search: "Customer XYZ",
+      status: "PAID",
+      date_from: "2026-10-01T00:00:00",
+      date_to: "2026-10-15T23:59:59",
+    });
   });
 });

@@ -118,9 +118,7 @@ src/modules/erp-invoices-core/
 │       ├── invoice-view-config-drawer/        # Drawer cấu hình View Mode & Tùy chỉnh cột
 │       ├── invoice-posting-drawer/            # Drawer hạch toán sổ cái kép 1 hóa đơn
 │       ├── invoice-bulk-posting-drawer/       # Drawer hạch toán / hủy hạch toán hàng loạt
-│       ├── invoice-bulk-netoff-drawer/        # Drawer cấn trừ hàng loạt hóa đơn với sao kê
-│       ├── invoice-export-drawer/             # Drawer xuất Excel trực tiếp hoặc tác vụ nền SSE
-│       ├── invoice-import-sync-drawer/        # Drawer tích hợp đồng bộ GDT & Import XML/PDF/ZIP
+│       ├── invoice-export-drawer/             # Drawer xuất Excel tác vụ nền SSE (2 chế độ: Theo kỳ hoặc Theo filter bảng hiện tại)
 │       ├── gdt-portal-auth-drawer/            # Drawer đăng nhập Cổng Thuế GDT kèm giải Captcha
 │       ├── erp-attachment-select-drawer/      # Drawer chọn tệp đính kèm từ kho chung
 │       ├── bulk-edit-drawer/                  # Drawer sửa hàng loạt (gán Chi nhánh, Ghi chú)
@@ -220,6 +218,16 @@ src/modules/erp-invoices-core/
   - Biểu đồ xu hướng dòng tiền `cashTrend` (12 tháng gần nhất).
   - Chuyển đổi linh hoạt giữa chế độ xem Doanh số (`invoice`) và chế độ xem Thuế (`vat`).
 - **Bảng kê Đối tác / Nhà cung cấp (`InvoicePartnersTable`)**: Bảng tổng hợp giá trị mua/bán theo từng mã số thuế, hỗ trợ click mở `partner-invoice-drawer` để xem ngay danh sách hóa đơn của đối tác đó.
+
+### 3.5. Drawer Xuất Excel Hóa Đơn (`invoice-export-drawer`)
+- **Hai chế độ xuất dữ liệu linh hoạt (`exportMode`)**:
+  - `by-period` (Theo kỳ - Mặc định): Cho phép chọn theo kỳ định sẵn hoặc tùy chỉnh khoảng ngày `dateFrom` - `dateTo`.
+  - `by-current-filter` (Theo filter hiện tại): Giữ nguyên toàn bộ các điều kiện lọc và tìm kiếm đang xem trên bảng (`search`, `column_filters`, `column_search`, `status`, `tag_id`, khoảng ngày bảng, `sort_by`, `sort_order`). Giao diện tự động ẩn picker ngày và hiển thị thẻ tóm tắt bộ lọc bảng (`currentFilterSummary`).
+- **Tác vụ nền & Lịch sử tải lại**: Hỗ trợ Server-Sent Events (SSE) theo dõi tiến độ nền, cơ chế tái sử dụng file đã xuất trong 24h và bảng lịch sử có thể resize cột.
+- **Kiến trúc Atomic Refactor (< 180 LoC, No Blue Mandate)**:
+  - Phân rã triệt để thành: `InvoiceExportDrawer.tsx` (98 LoC), `InvoiceExportDrawer.columns.tsx` (158 LoC), `InvoiceExportDrawer.hook.ts` (164 LoC), `InvoiceExportDrawer.sync.hook.ts` (147 LoC), `InvoiceExportDrawer.helper.tsx` (36 LoC).
+  - Molecules & Atoms: `InvoiceExportConditionSection.tsx` (120 LoC), `InvoiceExportModeSelector.tsx` (96 LoC), `InvoiceExportFilterPreview.tsx` (75 LoC), `CustomRadioIndicator.tsx` (28 LoC).
+  - **No Blue Mandate**: 0% màu xanh dương. Native browser `<input type="radio">` được bọc `sr-only` và thay bằng `CustomRadioIndicator` chuẩn tone neutral `foreground` / `background`. Badge trạng thái `RUNNING` dùng `amber` tone (`bg-amber-50 text-amber-700`).
 
 ---
 

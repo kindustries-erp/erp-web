@@ -5,4 +5,11 @@ export interface InvoiceExportDrawerProps {
   onClose: () => void;
   direction: "IN" | "OUT";
   buildBaseQuery: () => Partial<ErpInvoiceListParams>;
+  currentFilterSummary?: {
+    dateFrom?: string;
+    dateTo?: string;
+    hasActiveFilters: boolean;
+    filterCount: number;
+    search?: string;
+  };
 }

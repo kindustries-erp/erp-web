@@ -911,6 +911,12 @@ export function useErpInvoicesTabLogic({
         buyer_name: headerState.buyer_name || undefined,
         status: headerState.status || undefined,
         tag_id: headerState.tag_id || undefined,
+        date_from: headerState.dateFrom
+          ? `${headerState.dateFrom}T00:00:00`
+          : undefined,
+        date_to: headerState.dateTo
+          ? `${headerState.dateTo}T23:59:59`
+          : undefined,
         sort_by: sortBy,
         sort_order: sortOrder,
         column_search:
@@ -923,6 +929,42 @@ export function useErpInvoicesTabLogic({
             : undefined,
       };
     }, [direction, instanceIndex, isDrawer]);
+
+  const currentFilterSummary = useMemo(() => {
+    const targetStoreDir: Direction =
+      instanceIndex === 2 ? (direction === "IN" ? "IN_2" : "OUT_2") : direction;
+    const headerState =
+      useErpInvoiceListStore.getState().states[targetStoreDir] ||
+      useErpInvoiceListStore.getState().states.IN;
+    const targetTableId = isDrawer
+      ? `erp-invoices-table-checkpoint-${direction}`
+      : `erp-invoices-table-${targetStoreDir}`;
+    const tableState = useTableColumnStore.getState().tables[targetTableId] || {
+      columnFilters: {},
+      columnSearch: {},
+      sorts: [],
+    };
+
+    const filterCount =
+      Object.keys(tableState.columnFilters || {}).length +
+      Object.keys(tableState.columnSearch || {}).length +
+      (headerState.status ? 1 : 0) +
+      (headerState.tag_id ? 1 : 0) +
+      (headerState.seller_name ? 1 : 0) +
+      (headerState.buyer_name ? 1 : 0);
+
+    return {
+      dateFrom: headerState.dateFrom,
+      dateTo: headerState.dateTo,
+      search: headerState.search,
+      filterCount,
+      hasActiveFilters:
+        filterCount > 0 ||
+        Boolean(headerState.search) ||
+        Boolean(headerState.dateFrom) ||
+        Boolean(headerState.dateTo),
+    };
+  }, [direction, instanceIndex, isDrawer, modals.exportDrawerOpen]);
 
   const pageTabs = useMemo(
     () =>
@@ -975,6 +1017,7 @@ export function useErpInvoicesTabLogic({
     loadInvoices,
     invoices,
     buildExportBaseQuery,
+    currentFilterSummary,
     // Modals
     ...modals,
     // Bulk Actions

@@ -1,28 +1,37 @@
 import React from "react";
 import { FileSpreadsheet } from "lucide-react";
-import { useTranslation } from "react-i18next";
+import { useT } from "@/core/i18n";
 import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
 import { DrawerSection } from "@/shared/components/DrawerModal";
 import { StandardTable } from "@/shared/components/StandardTable";
-import { useInvoiceExportDrawer } from "./InvoiceExportDrawer.hook";
-import { useInvoiceExportColumns } from "./InvoiceExportDrawer.columns";
-import { InvoiceExportConditionSection } from "./components/InvoiceExportConditionSection";
-import type { InvoiceExportDrawerProps } from "./InvoiceExportDrawer.type";
+import { useBankStatementExportDrawer } from "./BankStatementExportDrawer.hook";
+import { useBankStatementExportColumns } from "./BankStatementExportDrawer.columns";
+import { BankStatementExportConditionSection } from "./components/BankStatementExportConditionSection";
+import type { BankStatementExportDrawerProps } from "./BankStatementExportDrawer.type";
 
-export type { InvoiceExportDrawerProps };
+export type { BankStatementExportDrawerProps };
 
-export function InvoiceExportDrawer(props: InvoiceExportDrawerProps) {
-  const { open, onClose, direction, buildBaseQuery, currentFilterSummary } =
-    props;
-  const { t } = useTranslation("erpInvoices");
-
-  const hook = useInvoiceExportDrawer({
+export function BankStatementExportDrawer(
+  props: BankStatementExportDrawerProps,
+) {
+  const {
     open,
-    direction,
+    onClose,
+    type,
+    accountsData,
+    buildBaseQuery,
+    currentFilterSummary,
+  } = props;
+  const t = useT();
+
+  const hook = useBankStatementExportDrawer({
+    open,
+    type,
+    accountsData,
     buildBaseQuery,
   });
 
-  const columns = useInvoiceExportColumns({
+  const columns = useBankStatementExportColumns({
     downloadingJobId: hook.downloadingJobId,
     progress: hook.progress,
     onDownload: hook.handleDownload,
@@ -33,9 +42,13 @@ export function InvoiceExportDrawer(props: InvoiceExportDrawerProps) {
       open={open}
       mode="view"
       onClose={onClose}
-      title={t("erpInvoices:exportDrawer.title", "Xuất Excel hóa đơn")}
+      title={
+        type === "bank"
+          ? t("bankStatement.exportBankTitle", "Xuất Excel sao kê ngân hàng")
+          : t("bankStatement.exportCashTitle", "Xuất Excel sổ quỹ tiền mặt")
+      }
       subtitle={t(
-        "erpInvoices:exportDrawer.subtitle",
+        "bankStatement.exportSubtitle",
         "Tạo file theo kỳ và tải lại file đã tạo trong 24 tiếng",
       )}
       icon={<FileSpreadsheet className="w-4 h-4" />}
@@ -44,15 +57,12 @@ export function InvoiceExportDrawer(props: InvoiceExportDrawerProps) {
       leftPanel={
         <div className="space-y-4">
           <DrawerSection
-            title={t(
-              "erpInvoices:exportDrawer.historyTitle",
-              "Lịch sử xuất file",
-            )}
+            title={t("bankStatement.historyTitle", "Lịch sử xuất file")}
             collapsible
             defaultCollapsed={false}
           >
             <StandardTable
-              tableId="invoice-export-history"
+              tableId="bank-statement-export-history"
               variant="spreadsheet"
               enableColumnResizing={true}
               items={hook.historyQuery.data?.items || []}
@@ -68,7 +78,7 @@ export function InvoiceExportDrawer(props: InvoiceExportDrawerProps) {
               onPage={hook.setPage}
               onPageSize={hook.setPageSize}
               emptyLabel={t(
-                "erpInvoices:exportDrawer.emptyHistory",
+                "bankStatement.emptyHistory",
                 "Chưa có file xuất nào",
               )}
             />
@@ -77,7 +87,8 @@ export function InvoiceExportDrawer(props: InvoiceExportDrawerProps) {
       }
       rightPanel={
         <div className="space-y-4">
-          <InvoiceExportConditionSection
+          <BankStatementExportConditionSection
+            type={type}
             exportMode={hook.exportMode}
             onExportModeChange={hook.setExportMode}
             period={hook.period}
@@ -87,6 +98,16 @@ export function InvoiceExportDrawer(props: InvoiceExportDrawerProps) {
             onDateFromChange={(val) => hook.setDateFrom(val || "")}
             dateTo={hook.dateTo}
             onDateToChange={(val) => hook.setDateTo(val || "")}
+            accountOptions={hook.accountOptions}
+            selectedAccountId={hook.selectedAccountId}
+            onSelectedAccountIdChange={(val) =>
+              hook.setSelectedAccountId(val || "")
+            }
+            transactionTypeOptions={hook.transactionTypeOptions}
+            transactionType={hook.transactionType}
+            onTransactionTypeChange={(val) =>
+              hook.setTransactionType(val || "")
+            }
             currentFilterSummary={currentFilterSummary}
             starting={hook.starting}
             onStartExport={hook.handleStartExport}

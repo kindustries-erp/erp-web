@@ -29,6 +29,8 @@ export interface BankStatementDrawersProps {
   dateTo?: string;
   branchId?: string;
   onRefresh: () => void;
+  buildBaseQuery?: () => any;
+  currentFilterSummary?: any;
 }
 
 export function BankStatementDrawers({
@@ -54,6 +56,8 @@ export function BankStatementDrawers({
   dateTo,
   branchId,
   onRefresh,
+  buildBaseQuery,
+  currentFilterSummary,
 }: BankStatementDrawersProps) {
   return (
     <>
@@ -63,6 +67,8 @@ export function BankStatementDrawers({
         type={type}
         branches={branches}
         accountsData={accountsData}
+        buildBaseQuery={buildBaseQuery}
+        currentFilterSummary={currentFilterSummary}
       />
 
       <OriginalStatementFilesDrawer

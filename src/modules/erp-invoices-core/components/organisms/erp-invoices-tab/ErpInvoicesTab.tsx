@@ -73,6 +73,7 @@ export function ErpInvoicesTab(props: ErpInvoicesTabProps) {
     handleDownload,
     handleExportExcel,
     buildExportBaseQuery,
+    currentFilterSummary,
     handleBulkDownloadFiles,
     handleBulkDownloadSelected,
   } = logic;
@@ -285,6 +286,7 @@ export function ErpInvoicesTab(props: ErpInvoicesTabProps) {
         loadInvoices={loadInvoices}
         handleCloseInternal={handleCloseInternal}
         buildExportBaseQuery={buildExportBaseQuery}
+        currentFilterSummary={currentFilterSummary}
         exportDrawerOpen={exportDrawerOpen}
         setExportDrawerOpen={setExportDrawerOpen}
         portalAuthOpen={portalAuthOpen}

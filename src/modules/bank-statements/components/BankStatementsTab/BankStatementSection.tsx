@@ -207,6 +207,8 @@ export function BankStatementSection(props: BankStatementSectionProps) {
         dateTo={filter.state.dateTo}
         branchId={filter.state.custom.branchId as string}
         onRefresh={handleRefresh}
+        buildBaseQuery={logic.buildBaseQuery}
+        currentFilterSummary={logic.currentFilterSummary}
       />
 
       <BankStatementViewConfigDrawer
