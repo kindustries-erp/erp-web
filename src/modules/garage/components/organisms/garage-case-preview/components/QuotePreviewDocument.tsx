@@ -45,6 +45,10 @@ export function QuotePreviewDocument({
           partsTotalAmount={partsTotalAmount}
           partsTotalCost={partsTotalCost}
           servicesTotalAmount={servicesTotalAmount}
+          costBreakdown={profitSummary.costBreakdown}
+          totalCost={profitSummary.totalCost}
+          grossProfit={profitSummary.grossProfit}
+          grossMargin={profitSummary.profitMargin}
         />
         <QuoteDocumentSummary
           rawData={rawData}

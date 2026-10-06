@@ -41,8 +41,8 @@ export const parseQuoteLines = (
       item.TienChuaThue ?? unitPrice * qty * (1 - discountRate / 100),
     );
     const taxRate = Number(item.ThueSuat || 0);
-    const unitCost = Number(item.GiaVonPhuTung || 0);
-    const totalCost = unitCost * qty;
+    const unitCost = Number(item.GiaVonPhuTung ?? item.giaVonPhuTung ?? 0);
+    const totalCost = Number(item.TongVon ?? item.tongVon ?? unitCost * qty);
 
     return {
       id: item.Id || item.MaChiTiet || `line-${idx}`,
@@ -66,6 +66,8 @@ export const parseQuoteLines = (
       technicianName: item.NhanVienKyThuatName || undefined,
       isInsurance: Boolean(item.CoBaoHiemChiTiet),
       insuranceApprovedAmount: Number(item.TienBaoHiemDuyet || 0),
+      costAllocationType:
+        item.CostAllocationType || item.costAllocationType || undefined,
     };
   });
 
@@ -105,6 +107,23 @@ export const calculateProfitSummary = (
 
   const hasData = rev > 0 || cost > 0 || grossProfit != null;
 
+  const costBreakdown = caseData?.costBreakdown ??
+    grossProfit?.costBreakdown ?? {
+      warehousePartsCost: Number(
+        grossProfit?.GiaVonPhuTung ?? caseData?.giaVonPhuTung ?? 0,
+      ),
+      inventoryPartCost: Number(
+        grossProfit?.GiaVonPhuTung ?? caseData?.giaVonPhuTung ?? 0,
+      ),
+      externalCost: Number(grossProfit?.ChiPhiMuaNgoai ?? 0),
+      outsourceCost: Number(grossProfit?.ChiPhiMuaNgoai ?? 0),
+      commissionCost: Number(
+        grossProfit?.TienHoaHongMoiGioi ?? rawData?.TienHoaHongMoiGioi ?? 0,
+      ),
+      otherCost: 0,
+      totalCost: cost,
+    };
+
   return {
     revenue: rev,
     totalCost: cost,
@@ -112,5 +131,6 @@ export const calculateProfitSummary = (
     grossProfit: profit,
     profitMargin: margin,
     hasProfitData: hasData,
+    costBreakdown,
   };
 };

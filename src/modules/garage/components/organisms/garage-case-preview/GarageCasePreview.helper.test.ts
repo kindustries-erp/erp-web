@@ -49,7 +49,9 @@ describe("GarageCasePreview.helper", () => {
     expect(parts).toHaveLength(1);
     expect(parts[0].itemType).toBe("PT");
     expect(parts[0].name).toBe("Lọc nhớt");
+    expect(parts[0].unitCost).toBe(70000);
     expect(parts[0].totalCost).toBe(140000); // 70000 * 2
+    expect(parts[0].costAllocationType).toBeUndefined();
 
     expect(services).toHaveLength(1);
     expect(services[0].itemType).toBe("DV");

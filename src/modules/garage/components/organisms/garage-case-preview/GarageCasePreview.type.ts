@@ -17,6 +17,19 @@ export interface QuoteLineItem {
   technicianName?: string;
   isInsurance?: boolean;
   insuranceApprovedAmount?: number;
+  costAllocationType?: string;
+}
+
+export interface CaseCostBreakdown {
+  warehousePartsCost?: number;
+  externalCost?: number;
+  commissionCost?: number;
+  otherCost?: number;
+  totalCost?: number;
+  allocatedPartsCost?: number;
+  unallocatedCost?: number;
+  inventoryPartCost?: number;
+  outsourceCost?: number;
 }
 
 export type QuoteFinancialPayer = "KH" | "BH" | "GARAGE" | "NONE";
@@ -41,6 +54,7 @@ export interface QuoteProfitSummaryData {
   grossProfit: number;
   profitMargin: number;
   hasProfitData: boolean;
+  costBreakdown?: CaseCostBreakdown;
 }
 
 export interface GarageCasePreviewProps {
