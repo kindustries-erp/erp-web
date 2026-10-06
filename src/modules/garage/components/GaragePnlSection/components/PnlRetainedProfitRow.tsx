@@ -11,6 +11,7 @@ interface PnlRetainedProfitRowProps {
   ojDvCommission?: number;
   isLoadingPrev: boolean;
   isLoadingPrev2?: boolean;
+  isOjOnly?: boolean;
 }
 
 export function PnlRetainedProfitRow({
@@ -21,20 +22,37 @@ export function PnlRetainedProfitRow({
   ojDvCommission,
   isLoadingPrev,
   isLoadingPrev2 = false,
+  isOjOnly = false,
 }: PnlRetainedProfitRowProps) {
   const { t } = useTranslation("garage");
 
-  const retainedProfit0 =
+  const rawRetainedProfit0 =
     report.netProfitAfterCommission ??
     (report.netProfit || 0) - (totalServiceComm ?? 0);
-  const prevRetainedProfit = prevReport?.netProfitAfterCommission;
-  const prev2RetainedProfit = prev2Report?.netProfitAfterCommission;
+  const rawPrevRetainedProfit = prevReport?.netProfitAfterCommission;
+  const rawPrev2RetainedProfit = prev2Report?.netProfitAfterCommission;
 
   const ojRetainedProfit0 =
     report.oj?.netProfitAfterCommission ??
     (report.oj?.netProfit || 0) - (ojDvCommission ?? 0);
   const prevOjRetainedProfit = prevReport?.oj?.netProfitAfterCommission;
   const prev2OjRetainedProfit = prev2Report?.oj?.netProfitAfterCommission;
+
+  const retainedProfit0 = isOjOnly ? ojRetainedProfit0 : rawRetainedProfit0;
+  const prevRetainedProfit = isOjOnly
+    ? prevOjRetainedProfit
+    : rawPrevRetainedProfit;
+  const prev2RetainedProfit = isOjOnly
+    ? prev2OjRetainedProfit
+    : rawPrev2RetainedProfit;
+
+  const rate0 = isOjOnly ? report.oj?.netMarginRate : report.netMarginRate;
+  const rate1 = isOjOnly
+    ? prevReport?.oj?.netMarginRate
+    : prevReport?.netMarginRate;
+  const rate2 = isOjOnly
+    ? prev2Report?.oj?.netMarginRate
+    : prev2Report?.netMarginRate;
 
   const subCell =
     "py-1.5 px-4 text-right tabular-nums font-mono text-[11px] text-muted-foreground";
@@ -54,7 +72,7 @@ export function PnlRetainedProfitRow({
         <PnlAmountCell
           amount={retainedProfit0}
           prevAmount={prevRetainedProfit}
-          customRate={report.netMarginRate}
+          customRate={rate0}
           isCost={false}
           isLoadingPrev={isLoadingPrev}
           tdClassName="py-3 px-4 text-right tabular-nums font-mono text-[14px] font-bold text-emerald-600 dark:text-emerald-400"
@@ -63,7 +81,7 @@ export function PnlRetainedProfitRow({
         <PnlAmountCell
           amount={prevRetainedProfit}
           prevAmount={prev2RetainedProfit}
-          customRate={prevReport?.netMarginRate}
+          customRate={rate1}
           isCost={false}
           isLoading={isLoadingPrev}
           isLoadingPrev={isLoadingPrev2}
@@ -72,7 +90,7 @@ export function PnlRetainedProfitRow({
         />
         <PnlAmountCell
           amount={prev2RetainedProfit}
-          customRate={prev2Report?.netMarginRate}
+          customRate={rate2}
           isCost={false}
           isLoading={isLoadingPrev2}
           hideDelta
@@ -81,37 +99,39 @@ export function PnlRetainedProfitRow({
         />
       </tr>
 
-      {/* 8.1. Trong đó: Lợi nhuận giữ lại mảng OJ */}
-      <tr className="text-muted-foreground bg-emerald-50/20 dark:bg-emerald-950/10 hover:bg-emerald-50/30 dark:hover:bg-emerald-950/20 transition-colors border-b border-border/20">
-        <td className="py-1.5 pl-14 pr-4">
-          <span className="text-[11px] italic">
-            {t(
-              "pnl.retainedProfitOjSub",
-              "8.1. Trong đó: Lợi nhuận giữ lại mảng OJ",
-            )}
-          </span>
-        </td>
-        <PnlAmountCell
-          amount={ojRetainedProfit0 !== 0 ? ojRetainedProfit0 : 0}
-          hideDelta
-          hideRate
-          tdClassName={subCell}
-        />
-        <PnlAmountCell
-          amount={prevOjRetainedProfit}
-          isLoading={isLoadingPrev}
-          hideDelta
-          hideRate
-          tdClassName={subCell}
-        />
-        <PnlAmountCell
-          amount={prev2OjRetainedProfit}
-          isLoading={isLoadingPrev2}
-          hideDelta
-          hideRate
-          tdClassName={subCell}
-        />
-      </tr>
+      {/* 8.1. Trong đó: Lợi nhuận giữ lại mảng OJ (Ẩn khi đang xem riêng OJ) */}
+      {!isOjOnly && (
+        <tr className="text-muted-foreground bg-emerald-50/20 dark:bg-emerald-950/10 hover:bg-emerald-50/30 dark:hover:bg-emerald-950/20 transition-colors border-b border-border/20">
+          <td className="py-1.5 pl-14 pr-4">
+            <span className="text-[11px] italic">
+              {t(
+                "pnl.retainedProfitOjSub",
+                "8.1. Trong đó: Lợi nhuận giữ lại mảng OJ",
+              )}
+            </span>
+          </td>
+          <PnlAmountCell
+            amount={ojRetainedProfit0 !== 0 ? ojRetainedProfit0 : 0}
+            hideDelta
+            hideRate
+            tdClassName={subCell}
+          />
+          <PnlAmountCell
+            amount={prevOjRetainedProfit}
+            isLoading={isLoadingPrev}
+            hideDelta
+            hideRate
+            tdClassName={subCell}
+          />
+          <PnlAmountCell
+            amount={prev2OjRetainedProfit}
+            isLoading={isLoadingPrev2}
+            hideDelta
+            hideRate
+            tdClassName={subCell}
+          />
+        </tr>
+      )}
     </>
   );
 }

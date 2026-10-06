@@ -24,6 +24,7 @@ interface PnlFinancialTableProps {
   prevYear: number;
   prev2Month?: number;
   prev2Year?: number;
+  isOjOnly?: boolean;
   onOpenDrawer: () => void;
 }
 
@@ -40,6 +41,7 @@ export function PnlFinancialTable({
   prevYear,
   prev2Month,
   prev2Year,
+  isOjOnly = false,
   onOpenDrawer,
 }: PnlFinancialTableProps) {
   const { t } = useTranslation("garage");
@@ -95,6 +97,7 @@ export function PnlFinancialTable({
             prev2Report={prev2Report}
             isLoadingPrev={isLoadingPrev}
             isLoadingPrev2={isLoadingPrev2}
+            isOjOnly={isOjOnly}
           />
           {/* 2. Giá vốn */}
           <PnlCogsRows
@@ -103,6 +106,7 @@ export function PnlFinancialTable({
             prev2Report={prev2Report}
             isLoadingPrev={isLoadingPrev}
             isLoadingPrev2={isLoadingPrev2}
+            isOjOnly={isOjOnly}
           />
           {/* 3. Lợi nhuận gộp */}
           <PnlGrossProfitRow
@@ -111,6 +115,7 @@ export function PnlFinancialTable({
             prev2Report={prev2Report}
             isLoadingPrev={isLoadingPrev}
             isLoadingPrev2={isLoadingPrev2}
+            isOjOnly={isOjOnly}
           />
           {/* 4. Chi phí bán hàng (gồm HH Sale 10%) */}
           <PnlSellingExpenseRows
@@ -119,6 +124,7 @@ export function PnlFinancialTable({
             prev2Report={prev2Report}
             isLoadingPrev={isLoadingPrev}
             isLoadingPrev2={isLoadingPrev2}
+            isOjOnly={isOjOnly}
           />
           {/* 5. Chi phí vận hành (OPEX) */}
           <PnlOpexRows
@@ -127,6 +133,7 @@ export function PnlFinancialTable({
             prev2Report={prev2Report}
             isLoadingPrev={isLoadingPrev}
             isLoadingPrev2={isLoadingPrev2}
+            isOjOnly={isOjOnly}
             onOpenDrawer={onOpenDrawer}
           />
           {/* 6. Lợi nhuận ròng = 3 - 4 - 5 */}
@@ -136,6 +143,7 @@ export function PnlFinancialTable({
             prev2Report={prev2Report}
             isLoadingPrev={isLoadingPrev}
             isLoadingPrev2={isLoadingPrev2}
+            isOjOnly={isOjOnly}
           />
           {/* 7. Thưởng và Hoa hồng Dịch vụ */}
           <PnlServiceCommissionRows
@@ -144,6 +152,7 @@ export function PnlFinancialTable({
             prev2Report={prev2Report}
             isLoadingPrev={isLoadingPrev}
             isLoadingPrev2={isLoadingPrev2}
+            isOjOnly={isOjOnly}
           />
           {/* 8. Lợi nhuận giữ lại của Garage (Sau hoa hồng DV) */}
           <PnlRetainedProfitRow
@@ -152,6 +161,7 @@ export function PnlFinancialTable({
             prev2Report={prev2Report}
             isLoadingPrev={isLoadingPrev}
             isLoadingPrev2={isLoadingPrev2}
+            isOjOnly={isOjOnly}
           />
         </tbody>
       </table>

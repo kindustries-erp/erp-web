@@ -11,6 +11,7 @@ interface PnlCogsRowsProps {
   prev2Report?: GaragePnlReportResponse;
   isLoadingPrev: boolean;
   isLoadingPrev2?: boolean;
+  isOjOnly?: boolean;
 }
 
 export function PnlCogsRows({
@@ -19,6 +20,7 @@ export function PnlCogsRows({
   prev2Report,
   isLoadingPrev,
   isLoadingPrev2 = false,
+  isOjOnly = false,
 }: PnlCogsRowsProps) {
   const { t } = useTranslation("garage");
   const cogsAdjustments = mergePnlItems(
@@ -31,6 +33,24 @@ export function PnlCogsRows({
   const prevOjCogsDirect = prevReport?.oj?.cogsDirect;
   const prev2OjCogsDirect = prev2Report?.oj?.cogsDirect;
 
+  const cogs0 = isOjOnly ? report.oj?.cogs || 0 : report.cogs;
+  const cogs1 = isOjOnly ? prevReport?.oj?.cogs : prevReport?.cogs;
+  const cogs2 = isOjOnly ? prev2Report?.oj?.cogs : prev2Report?.cogs;
+
+  const direct0 = isOjOnly
+    ? curOjCogsDirect
+    : (report.cogsDirect ?? report.cogs);
+  const direct1 = isOjOnly
+    ? prevOjCogsDirect
+    : (prevReport?.cogsDirect ?? prevReport?.cogs);
+  const direct2 = isOjOnly
+    ? prev2OjCogsDirect
+    : (prev2Report?.cogsDirect ?? prev2Report?.cogs);
+
+  const rev0 = isOjOnly ? report.oj?.revenue || 0 : report.revenue;
+  const rev1 = isOjOnly ? prevReport?.oj?.revenue : prevReport?.revenue;
+  const rev2 = isOjOnly ? prev2Report?.oj?.revenue : prev2Report?.revenue;
+
   return (
     <>
       {/* 2. Chi phí (Giá vốn) */}
@@ -39,18 +59,18 @@ export function PnlCogsRows({
           <span>{t("pnl.cogsHeader", "2. Chi phí (Giá vốn)")}</span>
         </td>
         <PnlAmountCell
-          amount={report.cogs}
-          prevAmount={prevReport?.cogs}
-          revenue={report.revenue}
+          amount={cogs0}
+          prevAmount={cogs1}
+          revenue={rev0}
           isCost
           isLoadingPrev={isLoadingPrev}
           tdClassName="py-2.5 px-4 text-right tabular-nums font-mono text-[13px]"
           amountClassName="font-bold text-foreground"
         />
         <PnlAmountCell
-          amount={prevReport?.cogs}
-          prevAmount={prev2Report?.cogs}
-          revenue={prevReport?.revenue}
+          amount={cogs1}
+          prevAmount={cogs2}
+          revenue={rev1}
           isCost
           isLoading={isLoadingPrev}
           isLoadingPrev={isLoadingPrev2}
@@ -58,8 +78,8 @@ export function PnlCogsRows({
           amountClassName="font-semibold"
         />
         <PnlAmountCell
-          amount={prev2Report?.cogs}
-          revenue={prev2Report?.revenue}
+          amount={cogs2}
+          revenue={rev2}
           isCost
           isLoading={isLoadingPrev2}
           hideDelta
@@ -76,20 +96,20 @@ export function PnlCogsRows({
           )}
         </td>
         <PnlAmountCell
-          amount={report.cogsDirect ?? report.cogs}
+          amount={direct0}
           hideDelta
           hideRate
           tdClassName="py-2 px-4 text-right tabular-nums font-mono font-semibold"
         />
         <PnlAmountCell
-          amount={prevReport?.cogsDirect ?? prevReport?.cogs}
+          amount={direct1}
           isLoading={isLoadingPrev}
           hideDelta
           hideRate
           tdClassName="py-2 px-4 text-right tabular-nums font-mono text-slate-700 dark:text-slate-300"
         />
         <PnlAmountCell
-          amount={prev2Report?.cogsDirect ?? prev2Report?.cogs}
+          amount={direct2}
           isLoading={isLoadingPrev2}
           hideDelta
           hideRate
@@ -97,34 +117,36 @@ export function PnlCogsRows({
         />
       </tr>
 
-      {/* 2.1.1. Trong đó: Phát sinh liên quan OJ */}
-      <tr className="text-muted-foreground bg-slate-50/30 dark:bg-slate-800/10 hover:bg-muted/10 transition-colors border-b border-border/20">
-        <td className="py-1.5 pl-14 pr-4">
-          <span className="text-[11px] italic">
-            {t("pnl.cogsOjSub", "2.1.1. Trong đó: Phát sinh liên quan OJ")}
-          </span>
-        </td>
-        <PnlAmountCell
-          amount={curOjCogsDirect}
-          revenue={report.revenue}
-          hideDelta
-          tdClassName="py-1.5 px-4 text-right tabular-nums font-mono text-[11px] text-muted-foreground"
-        />
-        <PnlAmountCell
-          amount={prevOjCogsDirect}
-          revenue={prevReport?.revenue}
-          isLoading={isLoadingPrev}
-          hideDelta
-          tdClassName="py-1.5 px-4 text-right tabular-nums font-mono text-[11px] text-muted-foreground"
-        />
-        <PnlAmountCell
-          amount={prev2OjCogsDirect}
-          revenue={prev2Report?.revenue}
-          isLoading={isLoadingPrev2}
-          hideDelta
-          tdClassName="py-1.5 px-4 text-right tabular-nums font-mono text-[11px] text-muted-foreground"
-        />
-      </tr>
+      {/* 2.1.1. Trong đó: Phát sinh liên quan OJ (Ẩn khi xem riêng OJ) */}
+      {!isOjOnly && (
+        <tr className="text-muted-foreground bg-slate-50/30 dark:bg-slate-800/10 hover:bg-muted/10 transition-colors border-b border-border/20">
+          <td className="py-1.5 pl-14 pr-4">
+            <span className="text-[11px] italic">
+              {t("pnl.cogsOjSub", "2.1.1. Trong đó: Phát sinh liên quan OJ")}
+            </span>
+          </td>
+          <PnlAmountCell
+            amount={curOjCogsDirect}
+            revenue={report.revenue}
+            hideDelta
+            tdClassName="py-1.5 px-4 text-right tabular-nums font-mono text-[11px] text-muted-foreground"
+          />
+          <PnlAmountCell
+            amount={prevOjCogsDirect}
+            revenue={prevReport?.revenue}
+            isLoading={isLoadingPrev}
+            hideDelta
+            tdClassName="py-1.5 px-4 text-right tabular-nums font-mono text-[11px] text-muted-foreground"
+          />
+          <PnlAmountCell
+            amount={prev2OjCogsDirect}
+            revenue={prev2Report?.revenue}
+            isLoading={isLoadingPrev2}
+            hideDelta
+            tdClassName="py-1.5 px-4 text-right tabular-nums font-mono text-[11px] text-muted-foreground"
+          />
+        </tr>
+      )}
 
       {/* 2.2. Chi phí trực tiếp nhập tay */}
       <PnlCogsAdjustmentRows
@@ -134,6 +156,7 @@ export function PnlCogsRows({
         cogsAdjustments={cogsAdjustments}
         isLoadingPrev={isLoadingPrev}
         isLoadingPrev2={isLoadingPrev2}
+        isOjOnly={isOjOnly}
       />
     </>
   );

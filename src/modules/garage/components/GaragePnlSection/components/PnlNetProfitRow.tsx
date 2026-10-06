@@ -9,6 +9,7 @@ interface PnlNetProfitRowProps {
   prev2Report?: GaragePnlReportResponse;
   isLoadingPrev: boolean;
   isLoadingPrev2?: boolean;
+  isOjOnly?: boolean;
 }
 
 function getNetProfit(r?: GaragePnlReportResponse): number | undefined {
@@ -34,6 +35,7 @@ export function PnlNetProfitRow({
   prev2Report,
   isLoadingPrev,
   isLoadingPrev2 = false,
+  isOjOnly = false,
 }: PnlNetProfitRowProps) {
   const { t } = useTranslation("garage");
 
@@ -45,6 +47,14 @@ export function PnlNetProfitRow({
   const ojNetProfit1 = getOjNetProfit(prevReport);
   const ojNetProfit2 = getOjNetProfit(prev2Report);
 
+  const val0 = isOjOnly ? ojNetProfit0 : netProfit0;
+  const val1 = isOjOnly ? ojNetProfit1 : netProfit1;
+  const val2 = isOjOnly ? ojNetProfit2 : netProfit2;
+
+  const rev0 = isOjOnly ? report.oj?.revenue : report.revenue;
+  const rev1 = isOjOnly ? prevReport?.oj?.revenue : prevReport?.revenue;
+  const rev2 = isOjOnly ? prev2Report?.oj?.revenue : prev2Report?.revenue;
+
   const subCell =
     "py-1.5 px-4 text-right tabular-nums font-mono text-[11px] text-muted-foreground";
 
@@ -55,18 +65,18 @@ export function PnlNetProfitRow({
           <span>{t("pnl.netProfitHeader", "6. Lợi nhuận ròng")}</span>
         </td>
         <PnlAmountCell
-          amount={netProfit0}
-          prevAmount={netProfit1}
-          revenue={report.revenue}
+          amount={val0}
+          prevAmount={val1}
+          revenue={rev0}
           isCost={false}
           isLoadingPrev={isLoadingPrev}
           tdClassName="py-2.5 px-4 text-right tabular-nums font-mono text-[13px] font-bold text-foreground"
           amountClassName="font-bold text-foreground"
         />
         <PnlAmountCell
-          amount={netProfit1}
-          prevAmount={netProfit2}
-          revenue={prevReport?.revenue}
+          amount={val1}
+          prevAmount={val2}
+          revenue={rev1}
           isCost={false}
           isLoading={isLoadingPrev}
           isLoadingPrev={isLoadingPrev2}
@@ -74,8 +84,8 @@ export function PnlNetProfitRow({
           amountClassName="font-semibold"
         />
         <PnlAmountCell
-          amount={netProfit2}
-          revenue={prev2Report?.revenue}
+          amount={val2}
+          revenue={rev2}
           isCost={false}
           isLoading={isLoadingPrev2}
           hideDelta
@@ -84,34 +94,36 @@ export function PnlNetProfitRow({
         />
       </tr>
 
-      {/* 6.1. Trong đó: Lợi nhuận ròng mảng OJ */}
-      <tr className="text-muted-foreground bg-slate-50/30 dark:bg-slate-800/10 hover:bg-muted/10 transition-colors border-b border-border/20">
-        <td className="py-1.5 pl-14 pr-4">
-          <span className="text-[11px] italic">
-            {t("pnl.netProfitOjSub", "6.1. Trong đó: Lợi nhuận ròng mảng OJ")}
-          </span>
-        </td>
-        <PnlAmountCell
-          amount={ojNetProfit0 !== 0 ? ojNetProfit0 : 0}
-          hideDelta
-          hideRate
-          tdClassName={subCell}
-        />
-        <PnlAmountCell
-          amount={ojNetProfit1}
-          isLoading={isLoadingPrev}
-          hideDelta
-          hideRate
-          tdClassName={subCell}
-        />
-        <PnlAmountCell
-          amount={ojNetProfit2}
-          isLoading={isLoadingPrev2}
-          hideDelta
-          hideRate
-          tdClassName={subCell}
-        />
-      </tr>
+      {/* 6.1. Trong đó: Lợi nhuận ròng mảng OJ (Ẩn khi đang xem riêng OJ) */}
+      {!isOjOnly && (
+        <tr className="text-muted-foreground bg-slate-50/30 dark:bg-slate-800/10 hover:bg-muted/10 transition-colors border-b border-border/20">
+          <td className="py-1.5 pl-14 pr-4">
+            <span className="text-[11px] italic">
+              {t("pnl.netProfitOjSub", "6.1. Trong đó: Lợi nhuận ròng mảng OJ")}
+            </span>
+          </td>
+          <PnlAmountCell
+            amount={ojNetProfit0 !== 0 ? ojNetProfit0 : 0}
+            hideDelta
+            hideRate
+            tdClassName={subCell}
+          />
+          <PnlAmountCell
+            amount={ojNetProfit1}
+            isLoading={isLoadingPrev}
+            hideDelta
+            hideRate
+            tdClassName={subCell}
+          />
+          <PnlAmountCell
+            amount={ojNetProfit2}
+            isLoading={isLoadingPrev2}
+            hideDelta
+            hideRate
+            tdClassName={subCell}
+          />
+        </tr>
+      )}
     </>
   );
 }

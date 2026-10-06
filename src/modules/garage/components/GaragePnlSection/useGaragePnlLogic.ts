@@ -19,6 +19,7 @@ export function useGaragePnlLogic() {
   const defaultPeriod = `${currentYear}-${String(currentMonth).padStart(2, "0")}`;
 
   const [selectedPeriod, setSelectedPeriod] = useState<string>(defaultPeriod);
+  const [isOjOnly, setIsOjOnly] = useState<boolean>(false);
 
   // Sinh 24 tháng gần nhất cho Combobox kỳ báo cáo
   const periodOptions = useMemo<ComboboxOption[]>(() => {
@@ -138,6 +139,8 @@ export function useGaragePnlLogic() {
     isLoadingPrev2,
     selectedPeriod,
     setSelectedPeriod,
+    isOjOnly,
+    setIsOjOnly,
     periodOptions,
     selectedYear,
     selectedMonth,

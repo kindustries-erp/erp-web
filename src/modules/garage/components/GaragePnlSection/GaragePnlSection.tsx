@@ -12,6 +12,7 @@ import { GarageTrendChart } from "../GarageTrendChart";
 import { GarageOpexDrawer } from "../GarageOpexDrawer";
 import { useGaragePnlLogic } from "./useGaragePnlLogic";
 import { PnlFinancialTable } from "./components/PnlFinancialTable";
+import { PnlViewModeSwitch } from "./components/PnlViewModeSwitch";
 
 export function GaragePnlSection() {
   const [drawerOpen, setDrawerOpen] = useState<boolean>(false);
@@ -25,6 +26,8 @@ export function GaragePnlSection() {
     isLoadingPrev2,
     selectedPeriod,
     setSelectedPeriod,
+    isOjOnly,
+    setIsOjOnly,
     periodOptions,
     selectedYear,
     selectedMonth,
@@ -70,8 +73,12 @@ export function GaragePnlSection() {
             </span>
           </div>
 
-          {/* Action buttons: Period Picker + Xuất P&L Excel (Left) + Chi phí vận hành Garage → (Right) */}
-          <div className="flex items-center flex-wrap gap-2 w-full sm:w-auto justify-start sm:justify-end">
+          {/* Action buttons: View Mode Switch + Period Picker + Xuất P&L Excel + Chi phí vận hành Garage → */}
+          <div className="flex items-center flex-wrap gap-2.5 w-full sm:w-auto justify-start sm:justify-end">
+            <PnlViewModeSwitch isOjOnly={isOjOnly} onChange={setIsOjOnly} />
+
+            <div className="h-4 w-px bg-border/60 hidden sm:block" />
+
             {/* Enhanced Period Selector Combobox (Ghost variant, clean container) */}
             <div className="h-7 flex items-center bg-muted/40 dark:bg-slate-800/60 border border-border/80 rounded-md px-2 shadow-2xs shrink-0">
               <div className="flex items-center justify-center w-4 h-4 rounded bg-primary/10 text-primary shrink-0 mr-1.5">
@@ -131,6 +138,7 @@ export function GaragePnlSection() {
           prevYear={prevYear}
           prev2Month={prev2Month}
           prev2Year={prev2Year}
+          isOjOnly={isOjOnly}
           onOpenDrawer={() => setDrawerOpen(true)}
         />
       </div>
