@@ -124,12 +124,24 @@ export interface GaragePnlReportResponse {
     cogs: number;
     grossProfit: number;
   };
+  sellingExpenses?: {
+    total: number;
+    ojTotal?: number;
+    items: GaragePnlItem[];
+  };
   opex: {
     total: number;
     ojTotal?: number;
     items: GaragePnlItem[];
   };
+  netProfit?: number;
   netProfitBeforeCommission: number;
+  serviceCommission?: {
+    total: number;
+    ojTotal?: number;
+    dvCommission?: number;
+    items: GaragePnlItem[];
+  };
   commission: {
     total: number;
     ojTotal?: number;
@@ -161,8 +173,11 @@ export interface GaragePnlReportResponse {
     cogsAdjustmentTotal: number;
     grossProfit: number;
     grossMarginRate: number;
+    sellingExpensesTotal?: number;
     opexTotal: number;
+    netProfit?: number;
     netProfitBeforeCommission: number;
+    serviceCommissionTotal?: number;
     commissionTotal: number;
     commissionAuto?: {
       kyGuiProfitRate: number;

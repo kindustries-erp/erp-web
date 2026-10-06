@@ -127,10 +127,16 @@ src/modules/garage/
   1. **Chi tiết (`quote_details`)**: Tích hợp component `GarageCaseDetailsTab` gồm 2 Sub-Tabs (`PillTabs`):
      - `Chi tiết` (`details`): Hiển thị `GarageCasePreview` bọc trong `DrawerSection title="Sổ báo giá & Lợi nhuận dự kiến"`.
      - `Chi tiết theo đối tượng` (`partner`): Hiển thị `GarageCasePartnerTab` kèm `badgeCount` số phiếu của khách hàng.
-  2. **Tài chính (`financials`)**: Quản lý cấn trừ dòng tiền và hóa đơn liên kết (`GarageCaseFinancialsTab`).
+  2. **Tài chính (`financials`)**: Quản lý cấn trừ dòng tiền và hóa đơn liên kết (`GarageCaseFinancialsTab`):
+     - Giao diện tinh gọn gồm 3 Bảng dữ liệu chuẩn hóa (`/standardize-table`):
+       - `QuoteReceivablesTable`: Bảng Phải thu đúng 2 hàng (1 là Khách hàng thanh toán, 2 là Bảo hiểm thanh toán). Click nút "Thu KH" hoặc "Thu BH" sẽ mở Drawer cấn trừ Hóa đơn bán ra (`OUT`) hoặc Thu ngoài sổ (`RECEIPT`).
+       - `QuotePartsTable`: Bảng Chi tiết Vật tư & Phụ tùng cấn trừ CHI TIỀN. Click nút "Chi tiền" sẽ mở Drawer cấn trừ Hóa đơn mua vào (`IN`) hoặc Chi ngoài sổ (`PAYMENT`).
+       - `QuoteServicesTable`: Bảng Chi tiết Nhân công & Dịch vụ cấn trừ CHI TIỀN. Click nút "Chi tiền" sẽ mở Drawer cấn trừ Hóa đơn mua vào (`IN`) hoặc Chi ngoài sổ (`PAYMENT`).
+     - **Drawer Cấn trừ chuyên biệt (`CaseLinePaymentDrawer`)**: Sử dụng component chuẩn `PillTabs` đặt bên trái với thứ tự đảo ngược ưu tiên: 1. `Đã cấn trừ` (`linked`) ➔ 2. `Đang chọn` (`selected`) ➔ 3. `Gợi ý khớp` (`suggestions`) ➔ 4. `Tất cả` (`all`). Nút footer tự động biến đổi động theo tab: khi ở tab Hóa đơn thì hiển thị "Lưu cấn trừ (X HĐ)", khi chuyển sang tab Thu/Chi ngoài sổ sách thì đổi thành "Ghi nhận thu ngoài sổ" / "Ghi nhận chi ngoài sổ" (kích hoạt `handleSubmitBankAndCash`, kết nối đầy đủ `handleAddManualToDraft` và `activeSettlements`).
   3. **Chứng từ liên kết (`linked_docs`)**: Mạng lưới Canvas Graph truy xuất nguồn gốc chứng từ đa chặng (`DrawerDocumentTraceability`).
   4. **Lịch sử & Đồng bộ (`sync_history`)**: Timeline kiểm toán và đồng bộ từ KGara (`DrawerAuditTimeline`).
 - **Cột phải (`rightPanel`)**: `GarageCaseGeneralInfoSection`, `GarageCaseDefaultAttributesSection`, `ModuleEntityCustomFieldsSection` và `GarageCaseBusinessPerformanceSection`.
+
 
 ### 4.2. Công Nợ Đối Tác (`GarageCustomerDetailDrawer` & `GarageCasePartnerTab`)
 - Sử dụng `<StandardFormDrawer layout="2-columns" size="xl">` và tuân thủ chặt chẽ workflow `/standardize-table`.

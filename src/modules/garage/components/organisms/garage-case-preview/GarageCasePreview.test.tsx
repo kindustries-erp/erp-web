@@ -1,6 +1,6 @@
 import React from "react";
 import { describe, expect, it, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { GarageCasePreview } from "./GarageCasePreview";
 
 // Mock react-i18next
@@ -60,45 +60,16 @@ const mockCaseData = {
 };
 
 describe("GarageCasePreview Organism", () => {
-  it("renders in DOCUMENT mode by default", () => {
+  it("renders in DOCUMENT mode", () => {
     render(<GarageCasePreview caseData={mockCaseData} />);
 
     expect(
       screen.getByText("Sổ báo giá & Lợi nhuận dự kiến"),
     ).toBeInTheDocument();
-    expect(screen.getByText("Bản in")).toBeInTheDocument();
-    expect(screen.getByText("Bảng dữ liệu")).toBeInTheDocument();
     expect(
       screen.getByText("CÔNG TY CỔ PHẦN GREENWAY AUTOMOTIVES"),
     ).toBeInTheDocument();
-  });
-
-  it("switches to TABLE mode when clicking Bảng dữ liệu", () => {
-    render(<GarageCasePreview caseData={mockCaseData} />);
-
-    const tableSwitchBtn = screen.getByText("Bảng dữ liệu");
-    fireEvent.click(tableSwitchBtn);
-
-    expect(
-      screen.getByText("1. Bảng chi tiết vật tư & nhân công dịch vụ"),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText("2. Bảng tổng hợp dòng tiền, thuế & hoa hồng"),
-    ).toBeInTheDocument();
-  });
-
-  it("switches back to DOCUMENT mode when clicking Bản in", () => {
-    render(<GarageCasePreview caseData={mockCaseData} defaultMode="TABLE" />);
-
-    expect(
-      screen.getByText("1. Bảng chi tiết vật tư & nhân công dịch vụ"),
-    ).toBeInTheDocument();
-
-    const docSwitchBtn = screen.getByText("Bản in");
-    fireEvent.click(docSwitchBtn);
-
-    expect(
-      screen.getByText("CÔNG TY CỔ PHẦN GREENWAY AUTOMOTIVES"),
-    ).toBeInTheDocument();
+    expect(screen.getByText("Bảo dưỡng định kỳ")).toBeInTheDocument();
+    expect(screen.getByText("Lọc gió động cơ")).toBeInTheDocument();
   });
 });

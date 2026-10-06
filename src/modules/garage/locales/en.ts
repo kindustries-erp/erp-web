@@ -1122,6 +1122,12 @@ export const garageEn = {
     monthPrefix: "Month",
     selectPeriodPlaceholder: "Select period...",
     financialReportTable: "Financial Performance Analysis",
+    viewModeAll: "All",
+    viewModeOj: "OJ Only",
+    viewModeAriaLabel: "Toggle between All and OJ Only financial results",
+    noOjOpexHint: "5.1. No operating expenses allocated to OJ",
+    noOjDirectCostHint: "2.2.1. No direct costs allocated to OJ",
+    ojSaleCommissionNote: "OJ does not apply Sales commission",
     exportExcel: "Export P&L Excel",
     tableHeaderCategory: "Category",
     tableHeaderValue: "This Month",
@@ -1149,6 +1155,7 @@ export const garageEn = {
     dvCommissionBadge: "10% × (Net Profit - Sales Comm)",
     dvCommissionSubtitle:
       "Calculated on 10% of Net Profit after deducting Sales commission",
+    dvCommissionOjSubtitle: "Calculated on 10% of OJ Net Profit",
     manualCommissionBadge: "Manual",
     autoCalculatedBadge: "Auto",
     autoCalculatedTooltip:
