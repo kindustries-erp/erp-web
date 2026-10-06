@@ -13,6 +13,7 @@ export function QuoteReceivablesTable({
   caseData,
   loading = false,
   className,
+  canEditFinancial = true,
   onPaymentClick,
 }: QuoteReceivablesTableProps) {
   const { t } = useTranslation(["garage", "common"]);
@@ -50,8 +51,8 @@ export function QuoteReceivablesTable({
   }, [propItems, caseData]);
 
   const columns = useMemo(
-    () => getQuoteReceivablesTableColumns(t, onPaymentClick),
-    [t, onPaymentClick],
+    () => getQuoteReceivablesTableColumns(t, onPaymentClick, canEditFinancial),
+    [t, onPaymentClick, canEditFinancial],
   );
 
   const totalAmount = useMemo(() => {

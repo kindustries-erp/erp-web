@@ -46,6 +46,15 @@ export function SidebarNav({
   const { employee } = useAuthStore();
   const isAdminEmail = employee?.email === "admin@liouni.com";
 
+  const canReadDashboard = useHasPermission(
+    ErpResource.DASHBOARD,
+    ErpAction.READ,
+  );
+  const canReadAttachments = useHasPermission(
+    ErpResource.ATTACHMENTS,
+    ErpAction.READ,
+  );
+
   const canReadSalesOrders = useHasPermission(
     ErpResource.SALES_ORDERS,
     ErpAction.READ,
@@ -122,6 +131,7 @@ export function SidebarNav({
     ErpAction.READ,
   );
   const showHR = canReadEmployees;
+  const showAdmin = showHR || canReadAttachments;
 
   const canReadAdminUsers = useHasPermission(
     ErpResource.ADMIN_USERS,
@@ -156,18 +166,20 @@ export function SidebarNav({
   return (
     <div className="flex-1 overflow-y-auto overflow-x-hidden">
       {/* Dashboard */}
-      <NavSection collapsed={c}>
-        <NavItem
-          collapsed={c}
-          icon={
-            <LayoutDashboard className="w-4 h-4 opacity-65 flex-shrink-0" />
-          }
-          label={t("nav.items.dashboard")}
-          active={currentPage === "dashboard"}
-          onClick={() => navTo("dashboard")}
-          contextPage="dashboard"
-        />
-      </NavSection>
+      {canReadDashboard && (
+        <NavSection collapsed={c}>
+          <NavItem
+            collapsed={c}
+            icon={
+              <LayoutDashboard className="w-4 h-4 opacity-65 flex-shrink-0" />
+            }
+            label={t("nav.items.dashboard")}
+            active={currentPage === "dashboard"}
+            onClick={() => navTo("dashboard")}
+            contextPage="dashboard"
+          />
+        </NavSection>
+      )}
 
       {/* Sales */}
       {showSales && (
@@ -466,26 +478,32 @@ export function SidebarNav({
       )}
 
       {/* Admin */}
-      <NavSection collapsed={c} label={t("nav.sections.admin")}>
-        {showHR && (
-          <NavItem
-            collapsed={c}
-            icon={<UserSquare2 className="w-4 h-4 opacity-65 flex-shrink-0" />}
-            label={t("nav.items.erpEmployees")}
-            active={currentPage === "erp-employees"}
-            onClick={() => navTo("erp-employees")}
-            contextPage="erp-employees"
-          />
-        )}
-        <NavItem
-          collapsed={c}
-          icon={<Paperclip className="w-4 h-4 opacity-65 flex-shrink-0" />}
-          label={t("nav.items.attachments")}
-          active={currentPage === "attachments"}
-          onClick={() => navTo("attachments" as PageKey)}
-          contextPage={"attachments" as PageKey}
-        />
-      </NavSection>
+      {showAdmin && (
+        <NavSection collapsed={c} label={t("nav.sections.admin")}>
+          {showHR && (
+            <NavItem
+              collapsed={c}
+              icon={
+                <UserSquare2 className="w-4 h-4 opacity-65 flex-shrink-0" />
+              }
+              label={t("nav.items.erpEmployees")}
+              active={currentPage === "erp-employees"}
+              onClick={() => navTo("erp-employees")}
+              contextPage="erp-employees"
+            />
+          )}
+          {canReadAttachments && (
+            <NavItem
+              collapsed={c}
+              icon={<Paperclip className="w-4 h-4 opacity-65 flex-shrink-0" />}
+              label={t("nav.items.attachments")}
+              active={currentPage === "attachments"}
+              onClick={() => navTo("attachments" as PageKey)}
+              contextPage={"attachments" as PageKey}
+            />
+          )}
+        </NavSection>
+      )}
 
       {/* Settings & System */}
       {showSettings && (

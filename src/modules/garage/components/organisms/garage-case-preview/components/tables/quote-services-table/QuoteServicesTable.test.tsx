@@ -53,6 +53,22 @@ describe("QuoteServicesTable", () => {
     expect(onPaymentClick).toHaveBeenCalledWith(mockLines[0]);
   });
 
+  it("hides payment button when canEditFinancial is false", () => {
+    const onPaymentClick = vi.fn();
+    render(
+      <QuoteServicesTable
+        lines={mockLines}
+        onPaymentClick={onPaymentClick}
+        canEditFinancial={false}
+      />,
+    );
+
+    expect(
+      screen.queryByRole("button", { name: /Chi tiền/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByText("---")).toBeInTheDocument();
+  });
+
   it("shows empty state when no lines", () => {
     render(<QuoteServicesTable lines={[]} />);
     expect(

@@ -9,6 +9,7 @@ import type { QuoteReceivableRow } from "./QuoteReceivablesTable.type";
 export function getQuoteReceivablesTableColumns(
   t: TFunction,
   onPaymentClick?: (row: QuoteReceivableRow) => void,
+  canEditFinancial: boolean = true,
 ): DataTableColumn<QuoteReceivableRow>[] {
   return [
     {
@@ -74,6 +75,13 @@ export function getQuoteReceivablesTableColumns(
       header: t("cases.quotePreview.paymentCol", "Thanh toán / Thu tiền"),
       size: 140,
       cell: (row) => {
+        if (!canEditFinancial) {
+          return (
+            <div className="w-full flex justify-center text-xs text-muted-foreground">
+              ---
+            </div>
+          );
+        }
         if (row.payer === "BH") {
           return (
             <div className="w-full flex justify-center">

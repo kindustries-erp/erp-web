@@ -4,5 +4,6 @@ export interface QuotePartsTableProps {
   lines: QuoteLineItem[];
   loading?: boolean;
   className?: string;
+  canEditFinancial?: boolean;
   onPaymentClick?: (line: QuoteLineItem) => void;
 }

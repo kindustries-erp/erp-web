@@ -61,6 +61,7 @@ export function GarageCaseStandaloneDrawer(
     syncCaseDetail,
     isSyncingDetail,
     grossProfit,
+    canUpdateGarage,
     editMode,
     startEdit,
     saving,
@@ -360,7 +361,7 @@ export function GarageCaseStandaloneDrawer(
       caseCode={selectedCase?.soChungTu || ""}
       caseData={selectedCase}
       editMode={editMode}
-      onStartEdit={startEdit}
+      onStartEdit={canUpdateGarage ? startEdit : undefined}
       activeSettlements={activeSettlements}
       activeLinkedInvoices={activeLinkedInvoices}
       activeSummary={activeSummary}
@@ -372,7 +373,7 @@ export function GarageCaseStandaloneDrawer(
       <StandardFormDrawer
         open={props.isOpen}
         mode={editMode ? "edit" : "view"}
-        onToggleEdit={!editMode ? startEdit : undefined}
+        onToggleEdit={!editMode && canUpdateGarage ? startEdit : undefined}
         confirmOnClose={editMode}
         onClose={props.onClose}
         collapsibleRightPanel={true}
@@ -419,7 +420,7 @@ export function GarageCaseStandaloneDrawer(
                 onExcludeFromReportsChange={setDraftExcludeFromReports}
                 excludeFromDebt={draftExcludeFromDebt}
                 onExcludeFromDebtChange={setDraftExcludeFromDebt}
-                onStartEdit={startEdit}
+                onStartEdit={canUpdateGarage ? startEdit : undefined}
               />
               <ModuleEntityCustomFieldsSection
                 moduleKey="GARAGE_CASE"

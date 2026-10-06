@@ -9,6 +9,7 @@ import type { QuoteLineItem } from "../../../GarageCasePreview.type";
 export function getQuotePartsTableColumns(
   t: TFunction,
   onPaymentClick?: (line: QuoteLineItem) => void,
+  canEditFinancial: boolean = true,
 ): DataTableColumn<QuoteLineItem>[] {
   return [
     {
@@ -155,21 +156,30 @@ export function getQuotePartsTableColumns(
       key: "payment",
       header: t("cases.quotePreview.costPaymentCol", "Cấn trừ chi"),
       size: 110,
-      cell: (row) => (
-        <div className="w-full flex justify-center">
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onPaymentClick?.(row);
-            }}
-            className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800 dark:hover:bg-amber-900/50 transition-colors cursor-pointer"
-          >
-            <ArrowUpRight className="w-3 h-3 text-amber-600 dark:text-amber-400" />
-            <span>{t("cases.quotePreview.payCost", "Chi tiền")}</span>
-          </button>
-        </div>
-      ),
+      cell: (row) => {
+        if (!canEditFinancial) {
+          return (
+            <div className="w-full flex justify-center text-xs text-muted-foreground">
+              ---
+            </div>
+          );
+        }
+        return (
+          <div className="w-full flex justify-center">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onPaymentClick?.(row);
+              }}
+              className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800 dark:hover:bg-amber-900/50 transition-colors cursor-pointer"
+            >
+              <ArrowUpRight className="w-3 h-3 text-amber-600 dark:text-amber-400" />
+              <span>{t("cases.quotePreview.payCost", "Chi tiền")}</span>
+            </button>
+          </div>
+        );
+      },
     },
   ];
 }
