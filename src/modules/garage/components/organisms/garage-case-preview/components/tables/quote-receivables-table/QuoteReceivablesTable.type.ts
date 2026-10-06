@@ -14,5 +14,7 @@ export interface QuoteReceivablesTableProps {
   loading?: boolean;
   className?: string;
   canEditFinancial?: boolean;
+  canPerformPayment?: boolean;
+  disabledReason?: string;
   onPaymentClick?: (row: QuoteReceivableRow) => void;
 }

@@ -19,4 +19,8 @@ export interface QuoteFinancialsTabContentProps {
   caseData: any;
   grossProfit?: any;
   className?: string;
+  editMode?: boolean;
+  activeSettlements?: any[];
+  activeLinkedInvoices?: any[];
+  onPaymentSaved?: () => void;
 }

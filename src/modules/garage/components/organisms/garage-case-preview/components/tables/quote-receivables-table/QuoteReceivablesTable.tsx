@@ -14,6 +14,8 @@ export function QuoteReceivablesTable({
   loading = false,
   className,
   canEditFinancial = true,
+  canPerformPayment = true,
+  disabledReason,
   onPaymentClick,
 }: QuoteReceivablesTableProps) {
   const { t } = useTranslation(["garage", "common"]);
@@ -50,9 +52,17 @@ export function QuoteReceivablesTable({
     ];
   }, [propItems, caseData]);
 
+  const effectiveCanPerform = Boolean(canPerformPayment && canEditFinancial);
+
   const columns = useMemo(
-    () => getQuoteReceivablesTableColumns(t, onPaymentClick, canEditFinancial),
-    [t, onPaymentClick, canEditFinancial],
+    () =>
+      getQuoteReceivablesTableColumns(
+        t,
+        onPaymentClick,
+        effectiveCanPerform,
+        disabledReason,
+      ),
+    [t, onPaymentClick, effectiveCanPerform, disabledReason],
   );
 
   const totalAmount = useMemo(() => {

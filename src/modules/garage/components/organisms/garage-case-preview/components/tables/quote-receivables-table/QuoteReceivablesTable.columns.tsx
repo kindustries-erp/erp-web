@@ -1,6 +1,7 @@
 import React from "react";
 import type { TFunction } from "i18next";
 import { UserCheck, ShieldCheck } from "lucide-react";
+import { Tooltip } from "@/core/components/ui/Tooltip";
 import type { DataTableColumn } from "@/shared/components/DataTable";
 import { TableText } from "@/shared/components/DataTable/TableText";
 import { formatNumber } from "../../../GarageCasePreview.helper";
@@ -9,7 +10,8 @@ import type { QuoteReceivableRow } from "./QuoteReceivablesTable.type";
 export function getQuoteReceivablesTableColumns(
   t: TFunction,
   onPaymentClick?: (row: QuoteReceivableRow) => void,
-  canEditFinancial: boolean = true,
+  canPerformPayment: boolean = true,
+  disabledReason?: string,
 ): DataTableColumn<QuoteReceivableRow>[] {
   return [
     {
@@ -75,45 +77,55 @@ export function getQuoteReceivablesTableColumns(
       header: t("cases.quotePreview.paymentCol", "Thanh toán / Thu tiền"),
       size: 140,
       cell: (row) => {
-        if (!canEditFinancial) {
-          return (
-            <div className="w-full flex justify-center text-xs text-muted-foreground">
-              ---
-            </div>
-          );
-        }
-        if (row.payer === "BH") {
+        const isBH = row.payer === "BH";
+        const btnContent = (
+          <button
+            type="button"
+            disabled={!canPerformPayment}
+            onClick={(e) => {
+              e.stopPropagation();
+              if (canPerformPayment) {
+                onPaymentClick?.(row);
+              }
+            }}
+            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded text-xs font-semibold border transition-colors ${
+              isBH
+                ? "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800"
+                : "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800"
+            } ${
+              canPerformPayment
+                ? isBH
+                  ? "hover:bg-amber-100 dark:hover:bg-amber-900/50 cursor-pointer"
+                  : "hover:bg-emerald-100 dark:hover:bg-emerald-900/50 cursor-pointer"
+                : "opacity-60 cursor-not-allowed pointer-events-none"
+            }`}
+          >
+            {isBH ? (
+              <ShieldCheck className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+            ) : (
+              <UserCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+            )}
+            <span>
+              {isBH
+                ? t("cases.quotePreview.payBH", "Thu BH")
+                : t("cases.quotePreview.payKH", "Thu KH")}
+            </span>
+          </button>
+        );
+
+        if (!canPerformPayment && disabledReason) {
           return (
             <div className="w-full flex justify-center">
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onPaymentClick?.(row);
-                }}
-                className="inline-flex items-center gap-1.5 px-3 py-1 rounded text-xs font-semibold bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800 dark:hover:bg-amber-900/50 transition-colors cursor-pointer"
-              >
-                <ShieldCheck className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
-                <span>{t("cases.quotePreview.payBH", "Thu BH")}</span>
-              </button>
+              <Tooltip content={disabledReason} side="top">
+                <span className="inline-flex cursor-not-allowed">
+                  {btnContent}
+                </span>
+              </Tooltip>
             </div>
           );
         }
-        return (
-          <div className="w-full flex justify-center">
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onPaymentClick?.(row);
-              }}
-              className="inline-flex items-center gap-1.5 px-3 py-1 rounded text-xs font-semibold bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800 dark:hover:bg-emerald-900/50 transition-colors cursor-pointer"
-            >
-              <UserCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-              <span>{t("cases.quotePreview.payKH", "Thu KH")}</span>
-            </button>
-          </div>
-        );
+
+        return <div className="w-full flex justify-center">{btnContent}</div>;
       },
     },
   ];

@@ -29,6 +29,8 @@ export function useCaseLinePaymentDrawer(props: CaseLinePaymentDrawerProps) {
     defaultType,
     suggestedAmount: props.lineAmount,
     editMode: true,
+    activeSettlements: props.activeSettlements,
+    activeLinkedInvoices: props.activeLinkedInvoices,
     onSuccess: props.onSuccess,
   });
 

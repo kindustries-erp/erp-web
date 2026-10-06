@@ -11,11 +11,18 @@ export function GarageCaseFinancialsTab(props: GarageCaseFinancialsTabProps) {
 
   return (
     <div className="space-y-4 pb-2">
-      {/* ─── QUOTE FINANCIALS: 3 BẢNG (PHẢI THU, PHỤ TÙNG, DỊCH VỤ & DRAWER CẤN TRỪ) ─── */}
+      {/* ─── QUOTE FINANCIALS: BẢNG PHẢI THU & TỔNG CHI PHÍ KÈM DANH SÁCH ĐÃ CHI ─── */}
       <QuoteFinancialsTabContent
         caseId={props.caseId || logic.caseData?.id || ""}
         caseCode={props.caseCode || logic.caseData?.soChungTu || ""}
         caseData={props.caseData || logic.caseData}
+        editMode={props.editMode ?? logic.editMode}
+        activeSettlements={props.activeSettlements || logic.activeSettlements}
+        activeLinkedInvoices={
+          props.activeLinkedInvoices ||
+          (logic as any).linkedInvoices ||
+          (logic as any).activeLinkedInvoices
+        }
       />
 
       {/* ─── STANDALONE DETAIL DRAWERS & PREVIEWS ─── */}

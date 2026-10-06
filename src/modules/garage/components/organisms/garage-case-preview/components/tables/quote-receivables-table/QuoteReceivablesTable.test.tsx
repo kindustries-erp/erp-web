@@ -74,12 +74,17 @@ describe("QuoteReceivablesTable", () => {
     expect(screen.getByText("Bảo hiểm thanh toán")).toBeInTheDocument();
   });
 
-  it("hides payment buttons when canEditFinancial is false", () => {
+  it("disables payment buttons when canEditFinancial is false", () => {
     render(
-      <QuoteReceivablesTable items={mockItems} canEditFinancial={false} />,
+      <QuoteReceivablesTable
+        items={mockItems}
+        canEditFinancial={false}
+        disabledReason="Cần bật Chế độ chỉnh sửa"
+      />,
     );
-    expect(screen.queryByRole("button", { name: /Thu KH/i })).toBeNull();
-    expect(screen.queryByRole("button", { name: /Thu BH/i })).toBeNull();
-    expect(screen.getAllByText("---").length).toBeGreaterThan(0);
+    const khButtons = screen.getAllByRole("button", { name: /Thu KH/i });
+    expect(khButtons[0]).toBeDisabled();
+    const bhButtons = screen.getAllByRole("button", { name: /Thu BH/i });
+    expect(bhButtons[0]).toBeDisabled();
   });
 });

@@ -1,9 +1,8 @@
 import React from "react";
-import { Landmark, Package, Wrench } from "lucide-react";
+import { Landmark, Wallet } from "lucide-react";
 import { DrawerSection } from "@/shared/components/DrawerModal";
 import { QuoteReceivablesTable } from "../components/tables/quote-receivables-table";
-import { QuotePartsTable } from "../components/tables/quote-parts-table";
-import { QuoteServicesTable } from "../components/tables/quote-services-table";
+import { QuoteCostSummarySection } from "../components/tables/quote-cost-summary-section";
 import { CaseLinePaymentDrawer } from "../../../organisms/case-line-payment-drawer";
 import { useQuoteFinancialsTabContent } from "./QuoteFinancialsTabContent.hook";
 import type { QuoteFinancialsTabContentProps } from "./QuoteFinancialsTabContent.type";
@@ -13,14 +12,12 @@ export function QuoteFinancialsTabContent(
 ) {
   const {
     t,
-    parts,
-    services,
-    canEditFinancial,
+    totalCostAmount,
+    canPerformPayment,
+    disabledReason,
     isPaymentDrawerOpen,
     paymentDrawerTarget,
     handleReceivablePaymentClick,
-    handlePartPaymentClick,
-    handleServicePaymentClick,
     closePaymentDrawer,
   } = useQuoteFinancialsTabContent(props);
 
@@ -45,61 +42,42 @@ export function QuoteFinancialsTabContent(
       >
         <QuoteReceivablesTable
           caseData={props.caseData}
-          canEditFinancial={canEditFinancial}
+          canPerformPayment={canPerformPayment}
+          disabledReason={disabledReason}
           onPaymentClick={handleReceivablePaymentClick}
         />
       </DrawerSection>
 
-      {/* ─── 2. BẢNG PHỤ TÙNG (ĐỨNG THỨ HAI - CẤN TRỪ CHI) ─── */}
+      {/* ─── 2. BẢNG CHI PHÍ VỤ VIỆC (1 HÀNG TỔNG CHI PHÍ & DANH SÁCH ĐÃ CHI) ─── */}
       <DrawerSection
         title={
           <span className="flex items-center gap-1.5 text-xs font-bold text-foreground">
-            <Package className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+            <Wallet className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
             {t(
-              "cases.quotePreview.partsTitle",
-              "2. Bảng Chi tiết Vật tư & Phụ tùng",
+              "cases.quotePreview.costSectionTitle",
+              "2. Bảng Chi phí vụ việc & Cấn trừ",
             )}
-            <span className="text-xs font-normal text-muted-foreground ml-1">
-              ({parts.length})
-            </span>
           </span>
         }
         collapsible
         defaultCollapsed={false}
       >
-        <QuotePartsTable
-          lines={parts}
-          canEditFinancial={canEditFinancial}
-          onPaymentClick={handlePartPaymentClick}
+        <QuoteCostSummarySection
+          totalCostAmount={totalCostAmount}
+          activeSettlements={props.activeSettlements}
+          activeLinkedInvoices={props.activeLinkedInvoices}
+          editMode={props.editMode}
+          canPerformPayment={canPerformPayment}
+          disabledReason={disabledReason}
+          caseId={props.caseId}
+          caseCode={props.caseCode}
+          caseData={props.caseData}
+          onPaymentSaved={props.onPaymentSaved}
         />
       </DrawerSection>
 
-      {/* ─── 3. BẢNG DỊCH VỤ (ĐỨNG THỨ BA) ─── */}
-      <DrawerSection
-        title={
-          <span className="flex items-center gap-1.5 text-xs font-bold text-foreground">
-            <Wrench className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
-            {t(
-              "cases.quotePreview.servicesTitle",
-              "3. Bảng Chi tiết Nhân công & Dịch vụ",
-            )}
-            <span className="text-xs font-normal text-muted-foreground ml-1">
-              ({services.length})
-            </span>
-          </span>
-        }
-        collapsible
-        defaultCollapsed={false}
-      >
-        <QuoteServicesTable
-          lines={services}
-          canEditFinancial={canEditFinancial}
-          onPaymentClick={handleServicePaymentClick}
-        />
-      </DrawerSection>
-
-      {/* ─── DRAWER CẤN TRỪ KHI CLICK THANH TOÁN ─── */}
-      {isPaymentDrawerOpen && paymentDrawerTarget && canEditFinancial && (
+      {/* ─── DRAWER CẤN TRỪ KHI CLICK THU TIỀN (PHẢI THU KH / BH) ─── */}
+      {isPaymentDrawerOpen && paymentDrawerTarget && canPerformPayment && (
         <CaseLinePaymentDrawer
           open={isPaymentDrawerOpen}
           onClose={closePaymentDrawer}
@@ -113,6 +91,8 @@ export function QuoteFinancialsTabContent(
           lineType={paymentDrawerTarget.lineType}
           payer={paymentDrawerTarget.payer}
           direction={paymentDrawerTarget.direction}
+          activeSettlements={props.activeSettlements}
+          activeLinkedInvoices={props.activeLinkedInvoices}
         />
       )}
     </div>
