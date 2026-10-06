@@ -1,16 +1,16 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import React from "react";
-import { ManualCashflowTabContent } from "../ManualCashflowTabContent";
+import { ManualCashflowTabContent } from "./ManualCashflowTabContent";
 
 // Mock react-i18next
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
-    t: (key: string, defaultVal: string) => defaultVal,
+    t: (_key: string, defaultVal: string) => defaultVal,
   }),
 }));
 
-describe("ManualCashflowTabContent UI Component", () => {
+describe("ManualCashflowTabContent Organism", () => {
   const baseProps = {
     editMode: true,
     activeSettlements: [],
@@ -31,8 +31,16 @@ describe("ManualCashflowTabContent UI Component", () => {
     manualDraftPending: false,
   };
 
-  it("should render 'Thêm vào danh sách' button in edit mode and disable it when amount is empty", () => {
+  it("should render form inputs in edit mode and disable 'Thêm vào danh sách' button when amount is empty", () => {
     render(<ManualCashflowTabContent {...baseProps} manualAmount="" />);
+
+    expect(
+      screen.getByPlaceholderText(/Ví dụ: Anh Nam \(Tài xế\), Chị Hương.../i),
+    ).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("0")).toBeInTheDocument();
+    expect(
+      screen.getByPlaceholderText(/Nhập lý do thu\/chi ngoài sổ sách.../i),
+    ).toBeInTheDocument();
 
     const addButton = screen.getByRole("button", {
       name: /Thêm vào danh sách/i,
@@ -60,6 +68,37 @@ describe("ManualCashflowTabContent UI Component", () => {
     expect(onAdd).toHaveBeenCalledTimes(1);
   });
 
+  it("should trigger input change callbacks when user types", () => {
+    const onSetAmount = vi.fn();
+    const onSetPartner = vi.fn();
+    const onSetNote = vi.fn();
+
+    render(
+      <ManualCashflowTabContent
+        {...baseProps}
+        onSetManualAmount={onSetAmount}
+        onSetManualPartner={onSetPartner}
+        onSetManualNote={onSetNote}
+      />,
+    );
+
+    const partnerInput = screen.getByPlaceholderText(
+      /Ví dụ: Anh Nam \(Tài xế\), Chị Hương.../i,
+    );
+    fireEvent.change(partnerInput, { target: { value: "Nguyễn Văn A" } });
+    expect(onSetPartner).toHaveBeenCalledWith("Nguyễn Văn A");
+
+    const amountInput = screen.getByPlaceholderText("0");
+    fireEvent.change(amountInput, { target: { value: "1500000" } });
+    expect(onSetAmount).toHaveBeenCalledWith("1500000");
+
+    const noteInput = screen.getByPlaceholderText(
+      /Nhập lý do thu\/chi ngoài sổ sách.../i,
+    );
+    fireEvent.change(noteInput, { target: { value: "Tiền mặt sửa phanh" } });
+    expect(onSetNote).toHaveBeenCalledWith("Tiền mặt sửa phanh");
+  });
+
   it("should display 'Chờ lưu' badge for pending added settlements in table", () => {
     const activeSettlements = [
       {
@@ -82,7 +121,7 @@ describe("ManualCashflowTabContent UI Component", () => {
       />,
     );
 
-    expect(screen.getByText("Chờ lưu")).toBeDefined();
+    expect(screen.getByText("Chờ lưu")).toBeInTheDocument();
   });
 
   it("should display count including pending status in titleExtra", () => {
@@ -115,5 +154,14 @@ describe("ManualCashflowTabContent UI Component", () => {
     );
 
     expect(screen.getByText(/2 GD, 1 chờ lưu/i)).toBeInTheDocument();
+  });
+
+  it("should hide form when editMode is false", () => {
+    render(<ManualCashflowTabContent {...baseProps} editMode={false} />);
+
+    expect(
+      screen.queryByPlaceholderText(/Ví dụ: Anh Nam \(Tài xế\), Chị Hương.../i),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByPlaceholderText("0")).not.toBeInTheDocument();
   });
 });

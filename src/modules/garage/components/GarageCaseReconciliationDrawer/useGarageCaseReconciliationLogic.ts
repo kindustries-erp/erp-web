@@ -91,10 +91,27 @@ export function useGarageCaseReconciliationLogic({
     "all" | "suggestions" | "selected" | "linked"
   >("all");
 
+  // Manual Cashflow State
+  const [manualAmount, setManualAmount] = useState<number | string>("");
+  const [manualCategory, setManualCategory] =
+    useState<string>("TIEN_MAT_NGOAI");
+  const [manualDate, setManualDate] = useState<string>(
+    new Date().toISOString().slice(0, 10),
+  );
+  const [manualPartner, setManualPartner] = useState<string>("");
+  const [manualNote, setManualNote] = useState<string>("");
+  const [pendingManualSettlements, setPendingManualSettlements] = useState<
+    any[]
+  >([]);
+  const [pendingDeletedSettlementIds, setPendingDeletedSettlementIds] =
+    useState<string[]>([]);
+
   useEffect(() => {
     if (open) {
       setActiveTab(resolvedInitialTab);
       setViewPreset("all");
+      setPendingManualSettlements([]);
+      setPendingDeletedSettlementIds([]);
     }
   }, [open, resolvedInitialTab]);
 
@@ -230,16 +247,6 @@ export function useGarageCaseReconciliationLogic({
   const [maxAmounts, setMaxAmounts] = useState<Record<string, number>>({});
   const [detailTxnId, setDetailTxnId] = useState<string | null>(null);
 
-  // Manual Cashflow State
-  const [manualAmount, setManualAmount] = useState<number | string>("");
-  const [manualCategory, setManualCategory] =
-    useState<string>("TIEN_MAT_NGOAI");
-  const [manualDate, setManualDate] = useState<string>(
-    new Date().toISOString().slice(0, 10),
-  );
-  const [manualPartner, setManualPartner] = useState<string>("");
-  const [manualNote, setManualNote] = useState<string>("");
-
   // Bank & Cash Statements Pagination & Filter State
   const bankTableState = useTableColumnState(
     "garage-case-bank-reconciliation-table",
@@ -274,9 +281,27 @@ export function useGarageCaseReconciliationLogic({
     }, 0);
   }, [selectedIds, netOffAmounts]);
 
+  const pendingManualTotal = useMemo(() => {
+    return pendingManualSettlements.reduce(
+      (sum, s) => sum + Number(s.amount || 0),
+      0,
+    );
+  }, [pendingManualSettlements]);
+
   const currentManualAmount = useMemo(() => {
-    return Number(manualAmount) || 0;
-  }, [manualAmount]);
+    return pendingManualTotal + (Number(manualAmount) || 0);
+  }, [pendingManualTotal, manualAmount]);
+
+  const combinedActiveSettlements = useMemo(() => {
+    const base = (activeSettlements || []).filter(
+      (s: any) => !pendingDeletedSettlementIds.includes(s.id),
+    );
+    return [...base, ...pendingManualSettlements];
+  }, [
+    activeSettlements,
+    pendingDeletedSettlementIds,
+    pendingManualSettlements,
+  ]);
 
   const activeTabSettlementTotal = useMemo(() => {
     if (activeTab === "bank_statement" || activeTab === "cash_book") {
@@ -1090,31 +1115,72 @@ export function useGarageCaseReconciliationLogic({
           ),
         );
       } else if (activeTab === "manual_cashflow") {
-        if (!manualAmount || Number(manualAmount) <= 0) {
+        const itemsToSubmit: SettlementSubmissionItem[] =
+          pendingManualSettlements.map((s) => ({
+            settlementType: s.settlementType || settlementType,
+            sourceChannel: "OFF_SYSTEM_MANUAL",
+            category: s.category,
+            amount: Number(s.amount),
+            transDate: s.transDate || s.trans_date,
+            partnerName: s.partnerName || s.partner_name || undefined,
+            note: s.note || undefined,
+          }));
+
+        // Nếu người dùng đang nhập số tiền trên form mà chưa kịp bấm "Thêm vào danh sách"
+        if (Number(manualAmount) > 0) {
+          itemsToSubmit.push({
+            settlementType,
+            sourceChannel: "OFF_SYSTEM_MANUAL",
+            category: manualCategory,
+            amount: Number(manualAmount),
+            transDate: manualDate,
+            partnerName: manualPartner || undefined,
+            note: manualNote || undefined,
+          });
+        }
+
+        const hasDeletions = pendingDeletedSettlementIds.length > 0;
+        const hasAdditions = itemsToSubmit.length > 0;
+
+        if (!hasDeletions && !hasAdditions) {
           toast.error(
             t(
               "cases.reconciliation.validAmount",
-              "Vui lòng nhập số tiền hợp lệ (> 0)",
+              "Vui lòng nhập số tiền hoặc thêm ít nhất một khoản vào danh sách",
             ),
           );
           return;
         }
 
-        const manualItem: SettlementSubmissionItem = {
-          settlementType,
-          sourceChannel: "OFF_SYSTEM_MANUAL",
-          category: manualCategory,
-          amount: Number(manualAmount),
-          transDate: manualDate,
-          partnerName: manualPartner || undefined,
-          note: manualNote || undefined,
-        };
-
-        if (onSubmitSettlements) {
-          await onSubmitSettlements([manualItem]);
-        } else if (caseId) {
-          await garageApi.addCaseSettlement(caseId, manualItem);
+        // 1. Thực thi xóa hàng loạt các khoản đã lưu trong DB được đánh dấu xóa tạm
+        if (hasDeletions) {
+          if (onRemoveSettlement) {
+            for (const delId of pendingDeletedSettlementIds) {
+              onRemoveSettlement(delId);
+            }
+          } else if (caseId) {
+            for (const delId of pendingDeletedSettlementIds) {
+              await garageApi.removeCaseSettlement(caseId, delId);
+            }
+          }
         }
+
+        // 2. Thực thi thêm hàng loạt các khoản cấn trừ mới
+        if (hasAdditions) {
+          if (onSubmitSettlements) {
+            await onSubmitSettlements(itemsToSubmit);
+          } else if (caseId) {
+            for (const item of itemsToSubmit) {
+              await garageApi.addCaseSettlement(caseId, item);
+            }
+          }
+        }
+
+        setPendingDeletedSettlementIds([]);
+        setPendingManualSettlements([]);
+        setManualAmount("");
+        setManualPartner("");
+        setManualNote("");
 
         toast.success(
           t(
@@ -1153,8 +1219,8 @@ export function useGarageCaseReconciliationLogic({
     }
   };
 
-  // Add Manual Cashflow to Draft (for Embedded Financials Tab / Edit Mode)
-  const handleAddManualToDraft = useCallback(async () => {
+  // Add Manual Cashflow to Pending Draft List (Draft-First: chỉ lưu local state)
+  const handleAddManualToDraft = useCallback(() => {
     if (!manualAmount || Number(manualAmount) <= 0) {
       toast.error(
         t(
@@ -1165,41 +1231,38 @@ export function useGarageCaseReconciliationLogic({
       return;
     }
 
-    const manualItem: SettlementSubmissionItem = {
+    const tempId = `draft_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+    const manualItem: any = {
+      id: tempId,
+      tempId,
+      isPending: true,
       settlementType,
+      settlement_type: settlementType,
       sourceChannel: "OFF_SYSTEM_MANUAL",
+      source_channel: "OFF_SYSTEM_MANUAL",
       category: manualCategory,
       amount: Number(manualAmount),
       transDate: manualDate,
+      trans_date: manualDate,
       partnerName: manualPartner || undefined,
+      partner_name: manualPartner || undefined,
       note: manualNote || undefined,
+      createdAt: new Date().toISOString(),
     };
 
-    if (onSubmitSettlements) {
-      await onSubmitSettlements([manualItem]);
-    } else if (caseId) {
-      await garageApi.addCaseSettlement(caseId, manualItem);
-      queryClient.invalidateQueries({
-        queryKey: ["garage-case-financial-summary", caseId],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["garage-case-settlements", caseId],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["garage-case-traceability-graph", caseId],
-      });
-      toast.success(
-        t(
-          "cases.reconciliation.manualSuccess",
-          "Đã ghi nhận dòng tiền ngoài sổ sách thành công",
-        ),
-      );
-    }
+    setPendingManualSettlements((prev) => [...prev, manualItem]);
 
     // Reset form fields after adding
     setManualAmount("");
     setManualPartner("");
     setManualNote("");
+
+    toast.success(
+      t(
+        "cases.reconciliation.manualAddedToDraft",
+        "Đã thêm vào danh sách chờ ghi nhận",
+      ),
+    );
   }, [
     manualAmount,
     settlementType,
@@ -1207,11 +1270,49 @@ export function useGarageCaseReconciliationLogic({
     manualDate,
     manualPartner,
     manualNote,
-    onSubmitSettlements,
-    caseId,
-    queryClient,
+    setPendingManualSettlements,
     t,
   ]);
+
+  // Remove Settlement (Pending Draft or Persisted DB Settlement)
+  const handleRemoveSettlement = useCallback(
+    async (idOrTempId: string) => {
+      // 1. Kiểm tra nếu là hàng draft chờ lưu
+      const isPending = pendingManualSettlements.some(
+        (s) => s.id === idOrTempId || s.tempId === idOrTempId,
+      );
+      if (isPending) {
+        setPendingManualSettlements((prev) =>
+          prev.filter((s) => s.id !== idOrTempId && s.tempId !== idOrTempId),
+        );
+        toast.success(
+          t(
+            "cases.reconciliation.manualDraftRemoved",
+            "Đã xóa khỏi danh sách chờ lưu",
+          ),
+        );
+        return;
+      }
+
+      // 2. Nếu là settlement đã lưu trong DB -> chỉ đánh dấu xóa tạm ở local, KHÔNG gọi API
+      setPendingDeletedSettlementIds((prev) => {
+        if (prev.includes(idOrTempId)) return prev;
+        return [...prev, idOrTempId];
+      });
+      toast.success(
+        t(
+          "cases.reconciliation.manualMarkedForDelete",
+          "Đã xóa tạm khỏi danh sách. Bấm nút Lưu/Ghi nhận để áp dụng thay đổi.",
+        ),
+      );
+    },
+    [
+      pendingManualSettlements,
+      setPendingManualSettlements,
+      setPendingDeletedSettlementIds,
+      t,
+    ],
+  );
 
   // Submit Linked Invoices (Tab 3 & 4)
   const handleSubmitInvoices = async () => {
@@ -1413,9 +1514,19 @@ export function useGarageCaseReconciliationLogic({
     handleSubmitBankAndCash,
     handleSubmitInvoices,
     handleAddManualToDraft,
-    manualDraftPending: Number(manualAmount) > 0,
-    activeSettlements: activeSettlements || [],
-    onRemoveSettlement,
+    manualDraftPending:
+      pendingManualSettlements.length > 0 ||
+      pendingDeletedSettlementIds.length > 0 ||
+      Number(manualAmount) > 0,
+    hasManualChanges:
+      pendingManualSettlements.length > 0 ||
+      pendingDeletedSettlementIds.length > 0 ||
+      Number(manualAmount) > 0,
+    activeSettlements: combinedActiveSettlements,
+    onRemoveSettlement: handleRemoveSettlement,
+    pendingManualSettlements,
+    pendingDeletedSettlementIds,
+    setPendingDeletedSettlementIds,
     onSubmitSettlements,
     hasVat,
     caseData,

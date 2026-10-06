@@ -52,6 +52,7 @@ vi.mock(
       handleSelectAllSuggestions: vi.fn(),
       invoiceSuggestions: [],
       activeSettlements: [],
+      pendingManualSettlements: [],
       onRemoveSettlement: vi.fn(),
       manualAmount: 0,
       manualCategory: "TIEN_MAT_NGOAI",
