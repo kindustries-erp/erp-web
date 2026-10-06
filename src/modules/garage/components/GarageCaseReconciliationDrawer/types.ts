@@ -139,6 +139,8 @@ export interface ManualCashflowTabContentProps {
   onSetManualDate: (val: string) => void;
   onSetManualPartner: (val: string) => void;
   onSetManualNote: (val: string) => void;
+  onAddManualSettlement?: () => void;
+  manualDraftPending?: boolean;
 }
 
 export interface InvoiceTabContentProps {

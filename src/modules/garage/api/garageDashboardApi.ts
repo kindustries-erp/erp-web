@@ -17,6 +17,9 @@ export interface GarageTrendItem {
   collectionRateDiff: number;
   costPaymentRateDiff: number;
   caseCount: number;
+  excludedDebtAmount?: number;
+  excludedDebtCaseCount?: number;
+  excludedDebtCost?: number;
 
   // Invoice breakdowns for Receivables
   caseCountWithInvoice?: number;
@@ -108,6 +111,8 @@ export interface GarageCollectionSummary {
   totalPaid: number;
   totalReceivable: number;
   collectionRate: number;
+  totalExcludedDebt?: number;
+  totalExcludedDebtCaseCount?: number;
 }
 
 export interface GarageCostPaymentSummary {
@@ -115,6 +120,7 @@ export interface GarageCostPaymentSummary {
   totalPaidCost: number;
   totalPayableCost: number;
   paymentRate: number;
+  totalExcludedDebtCost?: number;
 }
 
 export interface GarageStatusDistributionItem {

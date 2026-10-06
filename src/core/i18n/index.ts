@@ -8,8 +8,20 @@ export function useT() {
   const locale = useAppStore((s) => s.locale);
   const dict = locale === "en" ? en : vi;
   return useCallback(
-    function t(key: string, fallback?: string): string {
-      if (!key) return fallback ?? "";
+    function t(
+      key: string,
+      fallbackOrOptions?: string | { defaultValue?: string; [k: string]: any },
+    ): string {
+      const fallbackStr: string =
+        typeof fallbackOrOptions === "object" && fallbackOrOptions !== null
+          ? typeof fallbackOrOptions.defaultValue === "string"
+            ? fallbackOrOptions.defaultValue
+            : key
+          : typeof fallbackOrOptions === "string"
+            ? fallbackOrOptions
+            : key;
+
+      if (!key) return fallbackStr;
 
       // 1. Direct key match in dictionary (flat strings, full sentences with punctuation, labels with colons)
       if (
@@ -23,7 +35,11 @@ export function useT() {
 
       // 2. Namespaced key via i18next (only if key contains ":" and does not end with ":")
       if (key.includes(":") && !key.endsWith(":") && !key.startsWith(":")) {
-        const value = i18n.t(key, { defaultValue: fallback ?? key });
+        const options =
+          typeof fallbackOrOptions === "object" && fallbackOrOptions !== null
+            ? fallbackOrOptions
+            : { defaultValue: fallbackStr };
+        const value = i18n.t(key, options);
         if (typeof value === "string" && value !== key) return value;
       }
 
@@ -46,11 +62,15 @@ export function useT() {
 
       // 4. Fallback to i18next if available
       if (i18n.isInitialized && i18n.exists(key)) {
-        const value = i18n.t(key, { defaultValue: fallback ?? key });
+        const options =
+          typeof fallbackOrOptions === "object" && fallbackOrOptions !== null
+            ? fallbackOrOptions
+            : { defaultValue: fallbackStr };
+        const value = i18n.t(key, options);
         if (typeof value === "string") return value;
       }
 
-      return fallback ?? key;
+      return fallbackStr;
     },
     [dict],
   );

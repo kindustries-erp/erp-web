@@ -11,7 +11,7 @@ import {
 import type { DrawerMode } from "@/shared/stores/useDrawerStore";
 import { Combobox } from "@/shared/components/Combobox";
 import { cn } from "@/shared/utils";
-import { ModuleEntityCustomFieldsSection } from "@/shared/components/ModuleEntityCustomFieldsSection";
+import { ModuleEntityCustomFieldsSection } from "@/shared/components/organisms";
 import {
   DrawerAction,
   DrawerField,

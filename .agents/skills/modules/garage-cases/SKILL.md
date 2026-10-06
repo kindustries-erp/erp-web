@@ -21,12 +21,40 @@ src/modules/garage/
 ├── api/
 │   └── garageApi.ts                 # API client gọi các endpoints backend (/api/v1/kgara-cases, /api/v1/kgara-gross-profit)
 ├── components/
+│   ├── molecules/                   # Các molecule nguyên tử tái sử dụng
+│   │   ├── garage-case-progress-cell/ # Molecule hiển thị tiến độ thu/chi tiền kèm progress bar & tooltip
+│   │   └── ...
+│   ├── organisms/                   # Các organism phức hợp chuẩn hóa < 180 LoC
+│   │   ├── garage-cases-table/      # Bảng danh sách phiếu dịch vụ (GarageCasesTable) phân rã atomic
+│   │   │   ├── GarageCasesTable.tsx # L3 Organism bọc DataTable
+│   │   │   ├── GarageCasesTable.type.ts # Type contract & ColumnContext
+│   │   │   ├── GarageCasesTable.columns.tsx # Aggregator kết hợp các nhóm cột
+│   │   │   ├── GarageCasesTable.date-columns.tsx # Nhóm 5 cột ngày tháng
+│   │   │   ├── GarageCasesTable.general-columns.tsx # Nhóm 12 cột thông tin chung
+│   │   │   ├── GarageCasesTable.progress-columns.tsx # Nhóm 4 cột tiến độ thu/chi
+│   │   │   ├── GarageCasesTable.financial-columns.tsx # Nhóm 10 cột tài chính P&L
+│   │   │   └── GarageCasesTable.test.tsx # Unit tests kiểm tra 23 cột khớp view presets
+│   │   └── ...
+│   ├── garage-case-details-tab/     # Tab hợp nhất Chi tiết & Chi tiết theo đối tượng (PillTabs, sub-tab quote & partner)
 │   ├── GarageBranchSelector.tsx     # Dropdown chọn chi nhánh xưởng
 │   ├── GarageCaseLinkedDocuments.tsx# Quản lý liên kết hóa đơn thuế
-│   ├── GarageCasePreview.tsx        # Bản xem trước Sổ báo giá & Lợi nhuận dự kiến (bọc trong DrawerSection)
+│   ├── GarageCasePreview.tsx        # Re-export mỏng của organism garage-case-preview
+│   ├── organisms/
+│   │   ├── garage-case-preview/     # Organism Sổ báo giá & Lợi nhuận dự kiến (Atomic 5 tầng, < 180 LoC)
+│   │   │   ├── GarageCasePreview.tsx # Container DrawerSection bọc View Switch & Dual Views (Document / Table)
+│   │   │   ├── GarageCasePreview.hook.ts # Hook quản lý mode, lọc dòng chi tiết, tính toán tài chính & lợi nhuận
+│   │   │   ├── GarageCasePreview.type.ts # Contract types (QuoteLineItem, QuoteFinancialItem, QuoteProfitSummaryData)
+│   │   │   ├── GarageCasePreview.helper.ts # Parsers & formatters tách biệt
+│   │   │   ├── GarageCaseFinancial.helper.ts # Bóc tách danh mục tài chính (hoa hồng BH, môi giới, công nợ, thuế)
+│   │   │   ├── components/
+│   │   │   │   ├── QuotePreviewViewSwitch.tsx # Molecule switch Bản in (Document) ⇄ Bảng dữ liệu (Table)
+│   │   │   │   ├── QuotePreviewDocument.tsx # Chế độ Bản in chuẩn hóa gồm Header, InfoGrid, Tables, Summary, Signatures
+│   │   │   │   ├── QuotePreviewTables.tsx # Chế độ Bảng dữ liệu: 2 bảng StandardTable variant="spreadsheet"
+│   │   │   │   ├── document/        # Sub-components < 150 LoC cho bản in (Header, InfoGrid, Tables, Summary, Signatures)
+│   │   │   │   └── tables/          # Sub-components < 180 LoC cho 2 bảng (QuoteLinesTable, QuoteFinancialsTable)
 │   ├── GarageCaseSettlementDrawerModal.tsx # Wrapper cấn trừ dòng tiền & sổ ngoài sử dụng VoucherNetoffSelectionModal
 │   ├── GarageCaseSettlementSection.tsx # Section quản lý cấn trừ thu/chi dòng tiền vụ việc
-│   ├── GarageCaseStandaloneDrawer.tsx # Drawer chi tiết phiếu dịch vụ 2 cột chuẩn UI
+│   ├── GarageCaseStandaloneDrawer.tsx # Drawer chi tiết phiếu dịch vụ 4 tab Top-level chuẩn UI
 │   ├── GarageCaseSyncDrawer.tsx     # Drawer cấu hình đồng bộ dữ liệu
 │   ├── GarageCaseViewConfigDrawer.tsx # Drawer cấu hình & tùy biến cột cho Chế độ xem (View Presets)
 │   ├── GarageCaseViewModeCombobox.tsx # Combobox chọn nhanh Chế độ xem (Tổng quan / Đối soát / Tiến độ & Dòng tiền / Custom)
@@ -95,9 +123,20 @@ src/modules/garage/
 ## 4. Tích hợp Drawer Chuẩn Hóa (`standardize-drawer` & `standardize-table`)
 
 ### 4.1. Phiếu Dịch Vụ (`GarageCaseStandaloneDrawer`)
-- Sử dụng `<StandardFormDrawer layout="2-columns" size="xl">`.
-- **Cột trái (`leftPanel`)**: Chứa `GarageCasePreview` bọc trong `<DrawerSection title="Sổ báo giá & Lợi nhuận dự kiến" collapsible>`, căn thẳng hàng trên cùng (`align-top`) với cột phải.
-- **Cột phải (`rightPanel`)**: Các `DrawerSection` thông tin (Khách hàng, Xe & Bảo hiểm, Cố vấn & Phân công, Tiến độ & Ghi chú).
+- Sử dụng `<StandardFormDrawer layout="2-columns" size="xl">` với 4 Top Navigation Tabs:
+  1. **Chi tiết (`quote_details`)**: Tích hợp component `GarageCaseDetailsTab` gồm 2 Sub-Tabs (`PillTabs`):
+     - `Chi tiết` (`details`): Hiển thị `GarageCasePreview` bọc trong `DrawerSection title="Sổ báo giá & Lợi nhuận dự kiến"`.
+     - `Chi tiết theo đối tượng` (`partner`): Hiển thị `GarageCasePartnerTab` kèm `badgeCount` số phiếu của khách hàng.
+  2. **Tài chính (`financials`)**: Quản lý cấn trừ dòng tiền và hóa đơn liên kết (`GarageCaseFinancialsTab`):
+     - Giao diện tinh gọn gồm 3 Bảng dữ liệu chuẩn hóa (`/standardize-table`):
+       - `QuoteReceivablesTable`: Bảng Phải thu đúng 2 hàng (1 là Khách hàng thanh toán, 2 là Bảo hiểm thanh toán). Click nút "Thu KH" hoặc "Thu BH" sẽ mở Drawer cấn trừ Hóa đơn bán ra (`OUT`) hoặc Thu ngoài sổ (`RECEIPT`).
+       - `QuotePartsTable`: Bảng Chi tiết Vật tư & Phụ tùng cấn trừ CHI TIỀN. Click nút "Chi tiền" sẽ mở Drawer cấn trừ Hóa đơn mua vào (`IN`) hoặc Chi ngoài sổ (`PAYMENT`).
+       - `QuoteServicesTable`: Bảng Chi tiết Nhân công & Dịch vụ cấn trừ CHI TIỀN. Click nút "Chi tiền" sẽ mở Drawer cấn trừ Hóa đơn mua vào (`IN`) hoặc Chi ngoài sổ (`PAYMENT`).
+     - **Drawer Cấn trừ chuyên biệt (`CaseLinePaymentDrawer`)**: Sử dụng component chuẩn `PillTabs` đặt bên trái với thứ tự đảo ngược ưu tiên: 1. `Đã cấn trừ` (`linked`) ➔ 2. `Đang chọn` (`selected`) ➔ 3. `Gợi ý khớp` (`suggestions`) ➔ 4. `Tất cả` (`all`). Nút footer tự động biến đổi động theo tab: khi ở tab Hóa đơn thì hiển thị "Lưu cấn trừ (X HĐ)", khi chuyển sang tab Thu/Chi ngoài sổ sách thì đổi thành "Ghi nhận thu ngoài sổ" / "Ghi nhận chi ngoài sổ" (kích hoạt `handleSubmitBankAndCash`, kết nối đầy đủ `handleAddManualToDraft` và `activeSettlements`).
+  3. **Chứng từ liên kết (`linked_docs`)**: Mạng lưới Canvas Graph truy xuất nguồn gốc chứng từ đa chặng (`DrawerDocumentTraceability`).
+  4. **Lịch sử & Đồng bộ (`sync_history`)**: Timeline kiểm toán và đồng bộ từ KGara (`DrawerAuditTimeline`).
+- **Cột phải (`rightPanel`)**: `GarageCaseGeneralInfoSection`, `GarageCaseDefaultAttributesSection`, `ModuleEntityCustomFieldsSection` và `GarageCaseBusinessPerformanceSection`.
+
 
 ### 4.2. Công Nợ Đối Tác (`GarageCustomerDetailDrawer` & `GarageCasePartnerTab`)
 - Sử dụng `<StandardFormDrawer layout="2-columns" size="xl">` và tuân thủ chặt chẽ workflow `/standardize-table`.
@@ -107,6 +146,9 @@ src/modules/garage/
   - Lọc và sắp xếp client-side qua `filterClientItems`.
   - Dòng tổng cộng `summaryRow` hiển thị tổng phát sinh, đã thu, còn nợ.
   - Nút **Bỏ lọc** (`clearFilters`) và đếm số bộ lọc active trên tiêu đề section.
+  - **Context Menu (`rowHoverActions`) chuẩn hóa 100% khớp bảng ngoài**:
+    - **TRA CỨU**: `Xem chi tiết` (`Eye`), `Chi tiết theo đối tượng` (`Users`).
+    - **THAO TÁC**: `Chỉnh sửa` (`Pencil`), `Phân loại` (`SlidersHorizontal`), `Đối soát` (`Scale` - Mở Drawer chuyển thẳng vào tab **Tài chính (`financials`)** và tự động kích hoạt sẵn **Edit Mode**).
 
 ### 4.3. Liên Kết Hóa Đơn VAT (`InvoiceSelectionDrawer`)
 - Sử dụng `<StandardFormDrawer layout="2-columns" size="xl" collapsibleRightPanel={true}>`.

@@ -5,6 +5,9 @@ description: Create or enhance a DataTable to follow standard UI rules in the ER
 
 # 📋 DataTable Standards
 
+> 📋 **EXECUTION WORKFLOW**: Để thực thi quy trình chuẩn hóa Bảng dữ liệu 5 giai đoạn, kế thừa 100% chuẩn Atomic và chạy bộ lệnh Grep Audit tự động, hãy tuân thủ workflow:
+> 👉 [`.agents/workflows/standardize-table.md`](../../workflows/standardize-table.md)
+
 > ⚡ **FAST-TRACK (PlopJS Generator)**: Để sinh nhanh bảng dữ liệu nhúng cho Drawer / Modal / Section, chạy:
 > ```bash
 > bun plop table-section <moduleName> <componentName> <rowTypeName>

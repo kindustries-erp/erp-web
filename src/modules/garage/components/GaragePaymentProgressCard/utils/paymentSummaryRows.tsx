@@ -104,6 +104,16 @@ export function getReceiptSummaryRow(
         {money(totals.receivableNoInvoice)}
       </span>
     ),
+    excludedDebtAmount: (
+      <span
+        className={cn(
+          "font-mono font-bold text-right block tabular-nums text-slate-700 dark:text-slate-300",
+          totals.excludedDebtAmount <= 0 && "text-muted-foreground/50",
+        )}
+      >
+        {totals.excludedDebtAmount > 0 ? money(totals.excludedDebtAmount) : "—"}
+      </span>
+    ),
   };
 }
 
@@ -199,6 +209,16 @@ export function getPaymentSummaryRow(
         )}
       >
         {money(totals.payableCostNoInvoice)}
+      </span>
+    ),
+    excludedDebtCost: (
+      <span
+        className={cn(
+          "font-mono font-bold text-right block tabular-nums text-slate-700 dark:text-slate-300",
+          totals.excludedDebtCost <= 0 && "text-muted-foreground/50",
+        )}
+      >
+        {totals.excludedDebtCost > 0 ? money(totals.excludedDebtCost) : "—"}
       </span>
     ),
   };

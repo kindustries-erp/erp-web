@@ -1,12 +1,9 @@
-import React, { useState, useMemo } from "react";
+import React, { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { money } from "@/shared/utils/format";
 import { cn } from "@/shared/utils";
 import { garageApi } from "../api/garageApi";
-import { GarageCaseSettlementDrawerModal } from "./GarageCaseSettlementDrawerModal";
-import { InvoiceSelectionDrawer } from "./InvoiceSelectionDrawer";
-import { useSyncGarageCaseDetail } from "../hooks/useGarage";
 import { KgaraCaseStatusBadge } from "./KgaraCaseStatusBadge";
 import {
   DataTable,
@@ -19,24 +16,33 @@ import { TableText } from "@/shared/components/DataTable/TableText";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/Button";
 import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
-import { toast } from "react-hot-toast";
 import {
   User,
   Car,
   Eye,
   Scale,
-  Link2,
-  RefreshCw,
   TrendingUp,
   RotateCcw,
+  Users,
+  Pencil,
+  SlidersHorizontal,
 } from "lucide-react";
+
+export interface GarageCasePartnerActionOptions {
+  tabKey?: "quote_details" | "financials" | "linked_docs" | "sync_history";
+  subTabKey?: "details" | "partner";
+  editMode?: boolean;
+}
 
 export interface GarageCasePartnerTabProps {
   customerCode?: string | null;
   customerName?: string;
   currentCaseCode?: string;
   branchId?: string;
-  onSelectCase?: (caseCode: string) => void;
+  onSelectCase?: (
+    caseCode: string,
+    options?: GarageCasePartnerActionOptions,
+  ) => void;
 }
 
 export function GarageCasePartnerTab({
@@ -47,13 +53,6 @@ export function GarageCasePartnerTab({
   onSelectCase,
 }: GarageCasePartnerTabProps) {
   const { t } = useTranslation(["garage", "common"]);
-  const queryClient = useQueryClient();
-  const { mutate: syncCaseDetail } = useSyncGarageCaseDetail();
-
-  const [settlementCase, setSettlementCase] = useState<any | null>(null);
-  const [invoiceLinkingCase, setInvoiceLinkingCase] = useState<any | null>(
-    null,
-  );
 
   // Table state hook following /standardize-table
   const tableState = useTableColumnState("garage-case-partner-detail-table");
@@ -199,7 +198,11 @@ export function GarageCasePartnerTab({
                   onSelectCase
                     ? (e) => {
                         e?.stopPropagation();
-                        onSelectCase(row.soChungTu);
+                        onSelectCase(row.soChungTu, {
+                          tabKey: "quote_details",
+                          subTabKey: "details",
+                          editMode: false,
+                        });
                       }
                     : undefined
                 }
@@ -414,18 +417,6 @@ export function GarageCasePartnerTab({
       ),
     };
   }, [filteredCases, t]);
-
-  const invalidateData = () => {
-    queryClient.invalidateQueries({
-      queryKey: ["garage-cases-by-customer", branchId, customerCode],
-    });
-    queryClient.invalidateQueries({
-      queryKey: ["garage-customers-debt"],
-    });
-    queryClient.invalidateQueries({
-      queryKey: ["garage", "cases"],
-    });
-  };
 
   return (
     <div className="space-y-5 pb-6">
@@ -654,9 +645,31 @@ export function GarageCasePartnerTab({
                   label: t("cases.actions.viewDetail", "Xem chi tiết"),
                   icon: <Eye className="w-3.5 h-3.5" />,
                   onClick: () => {
-                    if (onSelectCase) onSelectCase(row.soChungTu);
+                    if (onSelectCase) {
+                      onSelectCase(row.soChungTu, {
+                        tabKey: "quote_details",
+                        subTabKey: "details",
+                        editMode: false,
+                      });
+                    }
                   },
                   quickAction: true,
+                },
+                {
+                  label: t(
+                    "cases.actions.viewPartnerDetail",
+                    "Chi tiết theo đối tượng",
+                  ),
+                  icon: <Users className="w-3.5 h-3.5" />,
+                  onClick: () => {
+                    if (onSelectCase) {
+                      onSelectCase(row.soChungTu, {
+                        tabKey: "quote_details",
+                        subTabKey: "partner",
+                        editMode: false,
+                      });
+                    }
+                  },
                 },
               ],
             },
@@ -664,30 +677,41 @@ export function GarageCasePartnerTab({
               groupLabel: "THAO TÁC",
               items: [
                 {
-                  label: t("cases.actions.syncDetails", "Đồng bộ từ KGara"),
-                  icon: <RefreshCw className="w-3.5 h-3.5" />,
+                  label: t("cases.actions.editCase", "Chỉnh sửa"),
+                  icon: <Pencil className="w-3.5 h-3.5" />,
                   onClick: () => {
-                    const targetBranch = branchId || row.branchExternalId;
-                    if (targetBranch && row.hdPhieuDichVuId) {
-                      syncCaseDetail({
-                        branchId: targetBranch,
-                        caseId: row.hdPhieuDichVuId,
+                    if (onSelectCase) {
+                      onSelectCase(row.soChungTu, {
+                        tabKey: "quote_details",
+                        subTabKey: "details",
+                        editMode: true,
                       });
                     }
                   },
                 },
                 {
-                  label: t("cases.actions.netOffSettlement", "Cấn trừ sao kê"),
-                  icon: <Scale className="w-3.5 h-3.5" />,
+                  label: t("cases.actions.configure", "Phân loại"),
+                  icon: <SlidersHorizontal className="w-3.5 h-3.5" />,
                   onClick: () => {
-                    setSettlementCase(row);
+                    if (onSelectCase) {
+                      onSelectCase(row.soChungTu, {
+                        tabKey: "quote_details",
+                        subTabKey: "details",
+                        editMode: true,
+                      });
+                    }
                   },
                 },
                 {
-                  label: t("cases.actions.linkInvoice", "Liên kết hóa đơn"),
-                  icon: <Link2 className="w-3.5 h-3.5" />,
+                  label: t("cases.actions.reconcile", "Đối soát"),
+                  icon: <Scale className="w-3.5 h-3.5" />,
                   onClick: () => {
-                    setInvoiceLinkingCase(row);
+                    if (onSelectCase) {
+                      onSelectCase(row.soChungTu, {
+                        tabKey: "financials",
+                        editMode: true,
+                      });
+                    }
                   },
                 },
               ],
@@ -695,59 +719,6 @@ export function GarageCasePartnerTab({
           ]}
         />
       </div>
-
-      {/* Settlement Modal */}
-      {settlementCase && (
-        <GarageCaseSettlementDrawerModal
-          open={!!settlementCase}
-          onClose={() => setSettlementCase(null)}
-          caseId={settlementCase.id}
-          caseCode={settlementCase.soChungTu || settlementCase.hdPhieuDichVuId}
-          defaultType="RECEIPT"
-          suggestedAmount={Number(
-            settlementCase.tienConPhaiThanhToan ||
-              settlementCase.tienCoThue ||
-              0,
-          )}
-          onSubmit={async (items) => {
-            try {
-              for (const item of items) {
-                await garageApi.addCaseSettlement(settlementCase.id, item);
-              }
-              toast.success(
-                t(
-                  "cases.settlementSuccess",
-                  "Đã ghi nhận cấn trừ sao kê thành công",
-                ),
-              );
-              setSettlementCase(null);
-              invalidateData();
-            } catch (err: any) {
-              toast.error(
-                err.response?.data?.message ||
-                  t("cases.settlementError", "Lỗi ghi nhận cấn trừ sao kê"),
-              );
-            }
-          }}
-        />
-      )}
-
-      {/* Invoice Linking Drawer */}
-      {invoiceLinkingCase && (
-        <InvoiceSelectionDrawer
-          open={!!invoiceLinkingCase}
-          onClose={() => setInvoiceLinkingCase(null)}
-          caseId={invoiceLinkingCase.id}
-          caseCode={
-            invoiceLinkingCase.soChungTu || invoiceLinkingCase.hdPhieuDichVuId
-          }
-          defaultLinkType="OUT"
-          onSuccess={() => {
-            setInvoiceLinkingCase(null);
-            invalidateData();
-          }}
-        />
-      )}
     </div>
   );
 }

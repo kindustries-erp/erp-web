@@ -18,6 +18,14 @@ export function mergePnlItems(
     ojAmount?: number;
     note?: string | null;
   }> = [],
+  prev2Items: Array<{
+    id?: string;
+    categoryKey: string;
+    categoryName: string;
+    amount: number;
+    ojAmount?: number;
+    note?: string | null;
+  }> = [],
 ): PairedPnlItem[] {
   const map = new Map<string, PairedPnlItem>();
 
@@ -31,6 +39,9 @@ export function mergePnlItems(
       curAmount: item.amount,
       curOjAmount: item.ojAmount || 0,
       prevAmount: undefined,
+      prevOjAmount: undefined,
+      prev2Amount: undefined,
+      prev2OjAmount: undefined,
     });
   }
 
@@ -39,6 +50,7 @@ export function mergePnlItems(
     if (map.has(key)) {
       const existing = map.get(key)!;
       existing.prevAmount = prev.amount;
+      existing.prevOjAmount = prev.ojAmount || 0;
       if (!existing.note && prev.note) {
         existing.note = prev.note;
       }
@@ -51,6 +63,34 @@ export function mergePnlItems(
         curAmount: 0,
         curOjAmount: 0,
         prevAmount: prev.amount,
+        prevOjAmount: prev.ojAmount || 0,
+        prev2Amount: undefined,
+        prev2OjAmount: undefined,
+      });
+    }
+  }
+
+  for (const prev2 of prev2Items) {
+    const key = prev2.categoryKey || prev2.categoryName;
+    if (map.has(key)) {
+      const existing = map.get(key)!;
+      existing.prev2Amount = prev2.amount;
+      existing.prev2OjAmount = prev2.ojAmount || 0;
+      if (!existing.note && prev2.note) {
+        existing.note = prev2.note;
+      }
+    } else {
+      map.set(key, {
+        key,
+        categoryKey: prev2.categoryKey,
+        categoryName: prev2.categoryName,
+        note: prev2.note,
+        curAmount: 0,
+        curOjAmount: 0,
+        prevAmount: 0,
+        prevOjAmount: 0,
+        prev2Amount: prev2.amount,
+        prev2OjAmount: prev2.ojAmount || 0,
       });
     }
   }

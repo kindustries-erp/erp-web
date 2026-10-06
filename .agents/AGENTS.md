@@ -1,4 +1,4 @@
-# Liouni ERP Web Agent Bootstrap
+# ERP Web Agent Bootstrap
 
 Source of truth for this repo (`./erp-web`).
 

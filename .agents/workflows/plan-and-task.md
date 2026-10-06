@@ -41,6 +41,10 @@ graph LR
      - Tiêu chí hoàn thành (DoD) rõ ràng.
      - **Verification Command** chạy ngay để xác thực (`bun run test`, `bun run build`).
 
+5. **Knowledge-Sync Guard (Cập nhật Tri thức / Skill Liền Tay)**:
+   - Ngay sau khi hoàn thành task/feature/refactor có thay đổi về UI layout, Component architecture, Token styling, Store state hoặc Props interface, Agent **BẮT BUỘC cập nhật lại Module Skill** tương ứng (tại `.agents/skills/modules/<module>/SKILL.md`) hoặc tạo mới skill (ví dụ `v2-layout`) để lưu giữ tri thức.
+   - Tuyệt đối không để tri thức trong skill bị lỗi thời.
+
 ---
 
 ## 🧭 Quy Trình 5 Giai Đoạn Chuẩn (5-Phase SOP)
@@ -117,7 +121,10 @@ graph TD
 
 1. Thực thi từng task, tuân thủ Atomic Refactor (< 200 dòng/file).
 2. Chạy `bun run test` và `bun run build`.
-3. Soạn `walkthrough.md` với đầy đủ kết quả test, screenshot giao diện, và hướng dẫn thao tác.
+3. **Knowledge & Skill Sync (Bắt buộc kiểm tra & cập nhật liền sau khi xong task)**:
+   - Nếu có thay đổi cấu trúc component, props, hooks, stores, hoặc semantic tokens: cập nhật ngay file Module Skill tương ứng (như `v2-layout`, `app-store`, `drawer-document-traceability`, ...) hoặc tạo skill mới.
+   - Liên kết skill mới vào `liouni-erp-web-current-truth`.
+4. Soạn `walkthrough.md` với đầy đủ kết quả test, screenshot giao diện, trạng thái đồng bộ skill, và hướng dẫn thao tác.
 
 ---
 
@@ -182,7 +189,32 @@ Tóm tắt mục tiêu giao diện, người dùng mục tiêu và luồng tươ
   - **Files**: `[NEW]` [src/modules/example/components/ExampleDrawer/ExampleDetailDrawer.tsx](file:///home/dev/repos/erp/erp-web/src/modules/example/components/ExampleDrawer/ExampleDetailDrawer.tsx)
   - **DoD**: StandardFormDrawer, kích thước `65vw`, responsive, validate form chuẩn.
 
-### Phase 4: QC & Verification
+### Phase 4: QC & Knowledge Sync
 - [ ] **Task 4.1: Chạy Test & Build Kiểm tra**
   - **Verification**: `bun run test && bun run build`
+- [ ] **Task 4.2: Đồng bộ Module Skill (Nếu có thay đổi UI/Layout/Store/Contract)**
+  - **Files**: `[MODIFY]` / `[NEW]` [.agents/skills/modules/<module>/SKILL.md](file:///home/dev/repos/erp/erp-web/.agents/skills/modules/xxx/SKILL.md)
+  - **DoD**: Bổ sung props, tokens, component tree mới vào Module Skill.
+```
+
+---
+
+## 📦 MẪU BÁO CÁO NGHIỆM THU (`walkthrough.md`)
+
+```markdown
+# 🚀 Walkthrough & Verification Report: [Tên Giao Diện]
+
+## 📝 Tóm Tắt Thay Đổi
+| Phân hệ | File | Loại | Mô tả |
+| :--- | :--- | :---: | :--- |
+| **Web** | `src/modules/.../ListPage.tsx` | `NEW` | Màn hình DataTable chuẩn |
+| **Web** | `src/modules/.../Drawer.tsx` | `NEW` | Drawer chỉnh sửa/chi tiết |
+
+## 🧪 Bằng Chứng Xác Thực (Test Evidence)
+- **Unit Tests**: `bun run test` ➔ `PASS (100% tests)`
+- **Build Check**: `bun run build` ➔ `SUCCESS (0 errors)`
+
+## 🧠 Tri Thức & Skill Đồng Bộ (Knowledge Sync)
+- **Module Skill**: Đã cập nhật `[path/to/SKILL.md]` (hoặc: *Không có thay đổi contract/component*).
+- **Current Truth**: Đã liên kết vào `liouni-erp-web-current-truth`.
 ```

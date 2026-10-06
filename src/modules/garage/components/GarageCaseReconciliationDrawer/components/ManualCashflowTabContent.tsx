@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { Sparkles, CheckCircle2, Trash2 } from "lucide-react";
+import { Sparkles, CheckCircle2, Trash2, Plus } from "lucide-react";
 import { DrawerSection } from "@/shared/components/DrawerModal";
 import { Input } from "@/shared/components/ui/input";
 import { Textarea } from "@/shared/components/ui/textarea";
@@ -34,6 +34,8 @@ export function ManualCashflowTabContent({
   onSetManualDate,
   onSetManualPartner,
   onSetManualNote,
+  onAddManualSettlement,
+  manualDraftPending,
 }: ManualCashflowTabContentProps) {
   const { t } = useTranslation(["garage", "common"]);
 
@@ -105,9 +107,16 @@ export function ManualCashflowTabContent({
                 : t("cases.reconciliation.channelOther", "✨ Hình thức khác");
 
           return (
-            <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700/60 truncate max-w-[140px]">
-              {categoryLabel}
-            </span>
+            <div className="flex items-center justify-center gap-1.5 flex-wrap">
+              <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700/60 truncate max-w-[140px]">
+                {categoryLabel}
+              </span>
+              {row.isPending && (
+                <span className="text-[10px] px-1.5 py-0.2 rounded font-mono font-semibold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-300/60 whitespace-nowrap">
+                  {t("cases.reconciliation.pendingBadge", "Chờ lưu")}
+                </span>
+              )}
+            </div>
           );
         },
       },
@@ -520,6 +529,52 @@ export function ManualCashflowTabContent({
             />
           </div>
         </div>
+
+        {/* Action Row for Form Entry in Edit Mode */}
+        {editMode && onAddManualSettlement && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-slate-200/80 dark:border-slate-800">
+            <div className="text-xs text-muted-foreground w-full sm:w-auto">
+              {Number(manualAmount) > 0 || manualDraftPending ? (
+                <span className="text-amber-600 dark:text-amber-400 font-medium flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse shrink-0" />
+                  {t(
+                    "cases.reconciliation.manualDraftHint",
+                    'Đang có số tiền chưa thêm. Bấm "Thêm vào danh sách" để đưa vào danh sách chờ trước khi Lưu thay đổi.',
+                  )}
+                </span>
+              ) : (
+                <span>
+                  {settlementType === "RECEIPT"
+                    ? t(
+                        "cases.reconciliation.manualReceiptGuidance",
+                        "Nhập thông tin khoản thu ngoài sổ rồi bấm Thêm vào danh sách.",
+                      )
+                    : t(
+                        "cases.reconciliation.manualPaymentGuidance",
+                        "Nhập thông tin khoản chi ngoài sổ rồi bấm Thêm vào danh sách.",
+                      )}
+                </span>
+              )}
+            </div>
+
+            <Button
+              type="button"
+              variant="primary"
+              size="sm"
+              onClick={onAddManualSettlement}
+              disabled={!manualAmount || Number(manualAmount) <= 0}
+              className="w-full sm:w-auto font-medium cursor-pointer shrink-0"
+            >
+              <Plus className="w-4 h-4 mr-1.5" />
+              <span>
+                {t(
+                  "cases.reconciliation.addManualToList",
+                  "Thêm vào danh sách",
+                )}
+              </span>
+            </Button>
+          </div>
+        )}
       </DrawerSection>
 
       {/* List of previously recorded off-book settlements (with delete action in edit mode) */}

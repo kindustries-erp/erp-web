@@ -2,10 +2,11 @@ import React from "react";
 import type { TFunction } from "i18next";
 import { money } from "@/shared/utils/format";
 import { Tooltip } from "@/core/components/ui/Tooltip";
-import { cn } from "@/shared/utils";
 import type { DataTableColumn } from "@/shared/components/DataTable";
 import type { GarageTrendItem } from "@/modules/garage/api/garageDashboardApi";
 import { formatMonth } from "./paymentProgressHelpers";
+import { PaymentTotalBilledCell } from "../components/PaymentTotalBilledCell";
+import { PaymentExcludedDebtCell } from "../components/PaymentExcludedDebtCell";
 
 export function getReceiptColumns(
   headerFilter: any,
@@ -66,7 +67,7 @@ export function getReceiptColumns(
         "revenue",
         t("progress.columns.revenue", "Doanh Thu"),
       ),
-      size: 200,
+      size: 180,
       enableResizing: true,
       headerClassName: "text-center",
       className:
@@ -79,63 +80,17 @@ export function getReceiptColumns(
         "tienCoThue",
         t("progress.columns.totalBilled", "Tổng Phải Thu"),
       ),
-      size: 200,
+      size: 190,
       enableResizing: true,
       headerClassName: "text-center",
       className:
         "text-right font-medium tabular-nums text-foreground font-mono",
-      cell: (item: GarageTrendItem) => {
-        const total = item.tienCoThue || item.totalBilled || 0;
-        const paid = item.paid || 0;
-        const bal = item.receivable || 0;
-        if (total <= 0) {
-          return (
-            <span className="text-muted-foreground/40 font-normal select-none">
-              —
-            </span>
-          );
-        }
-        const isAllPaid = bal <= 0 && paid > 0;
-        const isUnpaid = paid <= 0 && total > 0;
-        const rate =
-          item.collectionRate ?? (total > 0 ? (paid / total) * 100 : 0);
-
-        const tooltipText = isAllPaid
-          ? `Đã thu đủ 100%: ${money(paid)}`
-          : isUnpaid
-            ? `Chưa thu (0%): Còn phải thu ${money(bal)} / Tổng ${money(total)}`
-            : `Đã thu: ${money(paid)} / ${money(total)} (${rate.toFixed(1)}%) • Còn phải thu: ${money(bal)}`;
-
-        return (
-          <Tooltip content={tooltipText} side="top">
-            <div className="flex flex-col gap-1 w-full py-0.5 justify-center cursor-default">
-              <div className="flex items-center justify-end text-xs tabular-nums leading-tight">
-                <span className="font-semibold text-foreground font-mono">
-                  {money(total)}
-                </span>
-              </div>
-              <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
-                <div
-                  className={cn(
-                    "h-full rounded-full transition-all duration-300",
-                    isAllPaid
-                      ? "bg-emerald-500 dark:bg-emerald-400"
-                      : isUnpaid
-                        ? "bg-transparent"
-                        : "bg-emerald-600 dark:bg-emerald-500",
-                  )}
-                  style={{ width: `${Math.min(100, Math.max(0, rate))}%` }}
-                />
-              </div>
-            </div>
-          </Tooltip>
-        );
-      },
+      cell: (item: GarageTrendItem) => <PaymentTotalBilledCell item={item} />,
     },
     {
       key: "paid",
       header: headerFilter.amount("paid", t("progress.columns.paid", "Đã Thu")),
-      size: 200,
+      size: 180,
       enableResizing: true,
       headerClassName: "text-center",
       className:
@@ -148,7 +103,7 @@ export function getReceiptColumns(
         "receivable",
         t("progress.columns.receivable", "Còn Phải Thu"),
       ),
-      size: 200,
+      size: 180,
       enableResizing: true,
       headerClassName:
         "text-center bg-slate-100 dark:bg-slate-800/60 font-semibold border-r border-border/50",
@@ -180,7 +135,7 @@ export function getReceiptColumns(
         "receivableWithInvoice",
         t("progress.columns.receivableWithInvoice", "Còn Phải Thu Có HĐ"),
       ),
-      size: 200,
+      size: 170,
       enableResizing: true,
       headerClassName: "text-center",
       className: "text-right font-medium tabular-nums font-mono",
@@ -205,7 +160,7 @@ export function getReceiptColumns(
         "receivableNoInvoice",
         t("progress.columns.receivableNoInvoice", "Còn Phải Thu Không HĐ"),
       ),
-      size: 200,
+      size: 170,
       enableResizing: true,
       headerClassName: "text-center",
       className: "text-right font-medium tabular-nums font-mono",
@@ -223,6 +178,27 @@ export function getReceiptColumns(
           </span>
         );
       },
+    },
+    {
+      key: "excludedDebtAmount",
+      header: headerFilter.amount(
+        "excludedDebtAmount",
+        t("progress.columns.excludedDebt", "Không Theo Dõi Công Nợ"),
+      ),
+      size: 170,
+      enableResizing: true,
+      headerClassName: "text-center",
+      className: "text-right font-medium tabular-nums font-mono",
+      cell: (item: GarageTrendItem) => (
+        <PaymentExcludedDebtCell
+          amount={item.excludedDebtAmount}
+          caseCount={item.excludedDebtCaseCount}
+          labelTooltipPrefix={t(
+            "progress.columns.excludedDebt",
+            "Không theo dõi công nợ",
+          )}
+        />
+      ),
     },
   ];
 }

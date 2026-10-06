@@ -3,7 +3,7 @@ import "@/shared/utils/chartSetup";
 import { useChartTheme } from "@/shared/utils/chartTheme";
 import { cn } from "@/shared/utils";
 
-interface DonutItem {
+export interface DonutItem {
   id?: string;
   label: string;
   value: number;
@@ -82,9 +82,9 @@ export function DonutLegend({
 }) {
   return (
     <div className="mt-[10px] flex flex-col gap-[5px]">
-      {items.map((x) => (
+      {items.map((x, idx) => (
         <div
-          key={x.label}
+          key={x.id || `${x.label}_${idx}`}
           className={cn(
             "flex items-center justify-between text-xs",
             onClick &&

@@ -9,6 +9,7 @@ export const MODULE_KEYS = {
   GOODS_RECEIPT: "GOODS_RECEIPT",
   GOODS_ISSUE: "GOODS_ISSUE",
   INVENTORY_ADJUSTMENT: "INVENTORY_ADJUSTMENT",
+  GARAGE_CASE: "GARAGE_CASE",
 } as const;
 
 export type ModuleKey = (typeof MODULE_KEYS)[keyof typeof MODULE_KEYS] | string;
@@ -30,6 +31,8 @@ export interface ModuleAttributeOption {
     [key: string]: string | undefined;
   };
   parentValue?: string;
+  accountCode?: string | null;
+  defaultDebitAccountId?: string | null;
 }
 
 export interface ModuleAttributeDef {
@@ -60,6 +63,14 @@ export interface ModuleCategory {
   name: string;
   nameEn?: string | null;
   description?: string | null;
+  defaultDebitAccountId?: string | null;
+  defaultDebitAccount?: {
+    id: string;
+    accountCode?: string;
+    accountName?: string;
+    account_code?: string;
+    account_name?: string;
+  } | null;
   isActive?: boolean;
   isDeleted?: boolean;
   attributeDefs?: ModuleAttributeDef[];
@@ -73,6 +84,7 @@ export interface CreateModuleCategoryPayload {
   name: string;
   nameEn?: string;
   description?: string;
+  defaultDebitAccountId?: string | null;
   isActive?: boolean;
 }
 

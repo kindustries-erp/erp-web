@@ -1153,6 +1153,66 @@ export function useGarageCaseReconciliationLogic({
     }
   };
 
+  // Add Manual Cashflow to Draft (for Embedded Financials Tab / Edit Mode)
+  const handleAddManualToDraft = useCallback(async () => {
+    if (!manualAmount || Number(manualAmount) <= 0) {
+      toast.error(
+        t(
+          "cases.reconciliation.validAmount",
+          "Vui lòng nhập số tiền hợp lệ (> 0)",
+        ),
+      );
+      return;
+    }
+
+    const manualItem: SettlementSubmissionItem = {
+      settlementType,
+      sourceChannel: "OFF_SYSTEM_MANUAL",
+      category: manualCategory,
+      amount: Number(manualAmount),
+      transDate: manualDate,
+      partnerName: manualPartner || undefined,
+      note: manualNote || undefined,
+    };
+
+    if (onSubmitSettlements) {
+      await onSubmitSettlements([manualItem]);
+    } else if (caseId) {
+      await garageApi.addCaseSettlement(caseId, manualItem);
+      queryClient.invalidateQueries({
+        queryKey: ["garage-case-financial-summary", caseId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["garage-case-settlements", caseId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["garage-case-traceability-graph", caseId],
+      });
+      toast.success(
+        t(
+          "cases.reconciliation.manualSuccess",
+          "Đã ghi nhận dòng tiền ngoài sổ sách thành công",
+        ),
+      );
+    }
+
+    // Reset form fields after adding
+    setManualAmount("");
+    setManualPartner("");
+    setManualNote("");
+  }, [
+    manualAmount,
+    settlementType,
+    manualCategory,
+    manualDate,
+    manualPartner,
+    manualNote,
+    onSubmitSettlements,
+    caseId,
+    queryClient,
+    t,
+  ]);
+
   // Submit Linked Invoices (Tab 3 & 4)
   const handleSubmitInvoices = async () => {
     if (!hasInvoiceChanges) {
@@ -1352,6 +1412,8 @@ export function useGarageCaseReconciliationLogic({
     handleNavigateToInvoiceTab,
     handleSubmitBankAndCash,
     handleSubmitInvoices,
+    handleAddManualToDraft,
+    manualDraftPending: Number(manualAmount) > 0,
     activeSettlements: activeSettlements || [],
     onRemoveSettlement,
     onSubmitSettlements,

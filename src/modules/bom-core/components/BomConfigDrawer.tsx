@@ -23,7 +23,9 @@ import { Button } from "@/shared/components/ui/Button";
 import { Badge } from "@/shared/components/ui/badge";
 import { Checkbox } from "@/shared/components/ui/checkbox";
 import { Combobox, type ComboboxOption } from "@/shared/components/Combobox";
+import { CoaCombobox } from "@/shared/components/CoaCombobox";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
+
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import { useT } from "@/core/i18n";
 import {
@@ -70,6 +72,9 @@ export function BomConfigDrawer({ open, onClose }: BomConfigDrawerProps) {
   const [catCode, setCatCode] = useState("");
   const [catName, setCatName] = useState("");
   const [catDescription, setCatDescription] = useState("");
+  const [catDefaultDebitAccountId, setCatDefaultDebitAccountId] = useState<
+    string | null
+  >(null);
   const [deleteCatTarget, setDeleteCatTarget] = useState<BomCategory | null>(
     null,
   );
@@ -191,6 +196,7 @@ export function BomConfigDrawer({ open, onClose }: BomConfigDrawerProps) {
     setCatCode("");
     setCatName("");
     setCatDescription("");
+    setCatDefaultDebitAccountId(null);
     setIsCreatingCategory(true);
   };
 
@@ -200,6 +206,7 @@ export function BomConfigDrawer({ open, onClose }: BomConfigDrawerProps) {
     setCatCode(cat.code);
     setCatName(cat.name);
     setCatDescription(cat.description || "");
+    setCatDefaultDebitAccountId(cat.defaultDebitAccountId || null);
   };
 
   const resetCatForm = () => {
@@ -208,6 +215,7 @@ export function BomConfigDrawer({ open, onClose }: BomConfigDrawerProps) {
     setCatCode("");
     setCatName("");
     setCatDescription("");
+    setCatDefaultDebitAccountId(null);
   };
 
   const handleToggleCategoryActive = (cat: BomCategory) => {
@@ -252,6 +260,7 @@ export function BomConfigDrawer({ open, onClose }: BomConfigDrawerProps) {
           code: trimmedCode,
           name: trimmedName,
           description: catDescription.trim() || undefined,
+          defaultDebitAccountId: catDefaultDebitAccountId,
         },
       });
     } else {
@@ -259,6 +268,7 @@ export function BomConfigDrawer({ open, onClose }: BomConfigDrawerProps) {
         code: trimmedCode,
         name: trimmedName,
         description: catDescription.trim() || undefined,
+        defaultDebitAccountId: catDefaultDebitAccountId,
       });
     }
   };
@@ -531,6 +541,22 @@ export function BomConfigDrawer({ open, onClose }: BomConfigDrawerProps) {
                         onChange={(e) => setCatDescription(e.target.value)}
                       />
                     </DrawerField>
+                    <DrawerField
+                      label={t(
+                        "moduleConfig.defaultDebitAccount",
+                        "Tài khoản Nợ mặc định (hạch toán)",
+                      )}
+                    >
+                      <CoaCombobox
+                        value={catDefaultDebitAccountId}
+                        onChange={setCatDefaultDebitAccountId}
+                        placeholder={t(
+                          "moduleConfig.defaultDebitAccountPlaceholder",
+                          "Để trống = dùng TT99 mặc định / Fallback T0003",
+                        )}
+                      />
+                    </DrawerField>
+
                     <div className="flex justify-end gap-2 mt-4">
                       <Button
                         size="sm"

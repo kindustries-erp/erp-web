@@ -1,16 +1,16 @@
 import React, { useEffect, useState } from "react";
 import { type SinvoiceDraft } from "@/modules/accounting/api/sinvoiceDraftApi";
 import { useErpInvoiceForm } from "@/modules/erp-invoices-core/hooks/useErpInvoiceForm";
-import { ErpInvoiceInternalDrawer } from "@/modules/erp-invoices-core/components/ErpInvoiceInternalDrawer";
 import {
+  ErpInvoiceInternalDrawer,
   ErpInvoiceInternalMain,
   ErpInvoiceInternalSidebar,
-} from "@/modules/erp-invoices-core/components/ErpInvoiceInternalInfo";
+  VietnamInvoiceTemplate,
+} from "@/modules/erp-invoices-core/components";
 import {
   type ErpInvoice,
   type ErpInvoiceItem,
 } from "@/modules/erp-invoices-core/api/erpInvoicesCoreApi";
-import { VietnamInvoiceTemplate } from "@/modules/erp-invoices-core/components/VietnamInvoiceTemplate";
 import {
   useCompanyProfile,
   type CompanyProfile,

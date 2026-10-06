@@ -28,12 +28,9 @@ import {
   type CreateModuleAttributeDefPayload,
   type UpdateModuleAttributeDefPayload,
 } from "@/core/api/moduleConfigApi";
-import {
-  ERP_MODULE_REGISTRY,
-  ERP_DOMAIN_REGISTRY,
-  ModuleLivePreviewPanel,
-  NeutralCountBadge,
-} from "@/shared/components/ModuleCustomFieldConfigDrawer";
+import { ERP_MODULE_REGISTRY, ERP_DOMAIN_REGISTRY } from "@/shared/constants";
+import { ModuleLivePreviewPanel } from "@/shared/components/molecules";
+import { NeutralCountBadge } from "@/shared/components/atoms";
 import type { CustomFieldRow } from "../hooks/useCustomFieldsList";
 
 export interface CustomFieldFormDrawerProps {
@@ -370,6 +367,7 @@ export function CustomFieldFormDrawer({
           code: cleanCode,
           name: nameVi,
           nameEn: nameEn || undefined,
+          parentAttrCode: attrParentAttrCode || null,
           fieldType: attrFieldType,
           options: attrFieldType === "SELECT" ? attrOptions : undefined,
           isRequired: attrRequired,
@@ -394,7 +392,15 @@ export function CustomFieldFormDrawer({
       queryClient.invalidateQueries({
         queryKey: ["module-config-global-defs"],
       });
-      queryClient.invalidateQueries({ queryKey: ["module-config-categories"] });
+      queryClient.invalidateQueries({
+        queryKey: ["module-config-all-global-defs"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["module-config-categories"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["module-entity-values"],
+      });
       onSuccess?.();
       onClose();
     },

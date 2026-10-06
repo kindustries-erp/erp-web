@@ -300,4 +300,117 @@ describe("applyGarageCasesTableState", () => {
     );
     expect(sortRes.map((r) => r.id)).toEqual(["f1", "f2"]);
   });
+
+  describe("caseCode and columnSearch advanced filtering", () => {
+    it("filters caseCode with exact quotes", () => {
+      const res = applyGarageCasesTableState(items, {
+        sorts: [],
+        columnSearch: {},
+        columnFilters: { caseCode: ['"A001"'] },
+      });
+      expect(res).toHaveLength(1);
+      expect(res[0].id).toBe("1");
+    });
+
+    it("filters caseCode with semicolon multi-search", () => {
+      const res = applyGarageCasesTableState(items, {
+        sorts: [],
+        columnSearch: {},
+        columnFilters: { caseCode: ["A001;B002"] },
+      });
+      expect(res).toHaveLength(2);
+    });
+
+    it("matches license plate when filtering on caseCode column", () => {
+      const res = applyGarageCasesTableState(items, {
+        sorts: [],
+        columnSearch: {},
+        columnFilters: { caseCode: ["30A-11111"] },
+      });
+      expect(res).toHaveLength(1);
+      expect(res[0].id).toBe("1");
+    });
+
+    it("matches license plate without hyphens or punctuation (clean alphanumeric)", () => {
+      const res = applyGarageCasesTableState(items, {
+        sorts: [],
+        columnSearch: {},
+        columnFilters: { caseCode: ["30A11111"] },
+      });
+      expect(res).toHaveLength(1);
+      expect(res[0].id).toBe("1");
+    });
+
+    it("matches exact quote license plate with and without punctuation", () => {
+      const res1 = applyGarageCasesTableState(items, {
+        sorts: [],
+        columnSearch: {},
+        columnFilters: { caseCode: ['"30A-11111"'] },
+      });
+      expect(res1).toHaveLength(1);
+      expect(res1[0].id).toBe("1");
+
+      const res2 = applyGarageCasesTableState(items, {
+        sorts: [],
+        columnSearch: {},
+        columnFilters: { caseCode: ['"30A11111"'] },
+      });
+      expect(res2).toHaveLength(1);
+      expect(res2[0].id).toBe("1");
+    });
+
+    it("matches composite code:::plate and formatted code (plate)", () => {
+      const resComposite = applyGarageCasesTableState(items, {
+        sorts: [],
+        columnSearch: {},
+        columnFilters: { caseCode: ["A001:::30A-11111"] },
+      });
+      expect(resComposite).toHaveLength(1);
+      expect(resComposite[0].id).toBe("1");
+
+      const resFormatted = applyGarageCasesTableState(items, {
+        sorts: [],
+        columnSearch: {},
+        columnFilters: { caseCode: ["A001 (30A-11111)"] },
+      });
+      expect(resFormatted).toHaveLength(1);
+      expect(resFormatted[0].id).toBe("1");
+    });
+
+    it("handles columnSearch with semicolon multi-search and license plate", () => {
+      const res = applyGarageCasesTableState(items, {
+        sorts: [],
+        columnSearch: { caseCode: "30A-22222;XYZ" },
+        columnFilters: {},
+      });
+      expect(res).toHaveLength(1);
+      expect(res[0].id).toBe("2");
+
+      const resClean = applyGarageCasesTableState(items, {
+        sorts: [],
+        columnSearch: { caseCode: "30A22222;XYZ" },
+        columnFilters: {},
+      });
+      expect(resClean).toHaveLength(1);
+      expect(resClean[0].id).toBe("2");
+    });
+
+    it("handles caseCode with __ALL_MATCHING__", () => {
+      const res = applyGarageCasesTableState(items, {
+        sorts: [],
+        columnSearch: {},
+        columnFilters: { caseCode: ["__ALL_MATCHING__", "A001"] },
+      });
+      expect(res).toHaveLength(1);
+      expect(res[0].id).toBe("1");
+
+      const resPlate = applyGarageCasesTableState(items, {
+        sorts: [],
+        columnSearch: {},
+        columnFilters: { caseCode: ["__ALL_MATCHING__", "30A22222"] },
+      });
+      expect(resPlate).toHaveLength(1);
+      expect(resPlate[0].id).toBe("2");
+    });
+  });
 });

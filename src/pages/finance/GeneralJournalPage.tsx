@@ -12,7 +12,7 @@ import { useJournalEntriesList } from "@/modules/accounting/hooks/useJournalEntr
 import type { JournalEntrySpreadsheetRow } from "@/modules/accounting/types/journalEntry";
 import { money } from "@/shared/utils/format";
 import { BankTransactionDetailDrawer } from "@/pages/finance/components/BankTransactionDetailDrawer";
-import { InvoiceDetailWrapper } from "@/modules/erp-invoices-core/components/InvoiceDetailWrapper";
+import { InvoiceDetailWrapper } from "@/modules/erp-invoices-core/components";
 import { JournalEntryDetailDrawer } from "@/modules/accounting/components/JournalEntryDetailDrawer";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import type { DataTableColumn } from "@/shared/components/DataTable";

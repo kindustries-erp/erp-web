@@ -92,6 +92,7 @@ export function useBankStatementFilters({
 
   const filter = useFilterPanel({
     period: true,
+    noDefaultPeriod: true,
     custom: filterConfig,
   });
 

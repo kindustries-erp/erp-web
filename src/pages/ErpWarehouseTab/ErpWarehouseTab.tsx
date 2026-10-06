@@ -8,7 +8,7 @@ import { useErpWarehouseTabLogic } from "./useErpWarehouseTabLogic";
 import { WarehouseModals } from "./components/WarehouseModals";
 import { WarehousePrintSlot } from "./components/WarehousePrintSlot";
 import { WarehouseViewConfigDrawer } from "./components/WarehouseViewConfigDrawer";
-import { ModuleCustomFieldConfigDrawer } from "@/shared/components/ModuleCustomFieldConfigDrawer";
+import { ModuleCustomFieldConfigDrawer } from "@/shared/components/organisms";
 
 export function ErpWarehouseTab() {
   const {

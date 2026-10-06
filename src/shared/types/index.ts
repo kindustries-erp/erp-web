@@ -155,3 +155,6 @@ export interface TabInstance {
   url?: string;
   search?: string;
 }
+
+export * from "./customFields";
+export * from "./customFieldSchemas";

@@ -90,11 +90,11 @@ export function VinfastPartsStockDetailDrawer({
                   {Number(catalogData?.qtyOut || 0).toLocaleString()}
                 </span>
               </div>
-              <div className="flex flex-col items-center justify-center p-2 bg-blue-50/50 rounded-md border border-blue-100">
-                <span className="text-[11px] font-medium text-blue-600/80 uppercase tracking-wider mb-1">
+              <div className="flex flex-col items-center justify-center p-2 bg-slate-100/70 dark:bg-slate-800/70 rounded-md border border-slate-200/80 dark:border-slate-700">
+                <span className="text-[11px] font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">
                   {t("vinfastParts:BALANCE", "Tồn cuối")}
                 </span>
-                <span className="font-bold text-blue-700 text-lg">
+                <span className="font-bold text-foreground text-lg tabular-nums">
                   {Number(catalogData?.qtyBalance || 0).toLocaleString()}
                 </span>
               </div>

@@ -73,6 +73,16 @@ export interface CaseServicesResponse {
   };
 }
 
+export interface UpdateCaseConfigPayload {
+  categoryId?: string | null;
+  classification?: string | null;
+  excludeFromReports?: boolean;
+  excludeFromDebt?: boolean;
+  erpNotes?: string | null;
+  customAttributes?: Record<string, any>;
+  attributes?: Record<string, any>;
+}
+
 export const garageApi = {
   exportCompletedCasesExcel: async (
     params: ExportCompletedCasesParams,
@@ -97,12 +107,52 @@ export const garageApi = {
       },
     );
 
-    const now = new Date();
-    const pad = (n: number) => String(n).padStart(2, "0");
-    const timestamp = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
-    const fileName =
-      params.customFileName ||
-      `Bang_ke_phieu_dich_vu_ket_thuc_${timestamp}.xlsx`;
+    let fileName = params.customFileName;
+
+    if (!fileName) {
+      const disposition = res.headers?.["content-disposition"];
+      if (disposition) {
+        const match = disposition.match(
+          /filename\*?=(?:UTF-8'')?"?([^";]+)"?/i,
+        );
+        if (match?.[1]) {
+          fileName = decodeURIComponent(match[1]);
+        }
+      }
+    }
+
+    if (!fileName) {
+      const now = new Date();
+      const pad = (n: number) => String(n).padStart(2, "0");
+      const timestamp = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+
+      let classLabel = "Tat_ca_phan_loai";
+      if (params.classification && params.classification !== "ALL") {
+        const classMap: Record<string, string> = {
+          KY_GUI_NOI_BO: "Ky_gui_noi_bo",
+          SUA_CHUA_CHUNG: "Sua_chua_chung",
+          OJ: "OJ",
+          OJ_NGOAI: "OJ_ngoai",
+          KHAC: "Khac",
+        };
+        classLabel =
+          classMap[params.classification] ||
+          params.classification.replace(/[^a-zA-Z0-9_-]/g, "_");
+      }
+
+      let statusLabel = "Ket_thuc";
+      if (params.status) {
+        if (params.status.toLowerCase() === "all") {
+          statusLabel = "Tat_ca_trang_thai";
+        } else if (params.status.toLowerCase() === "completed") {
+          statusLabel = "Ket_thuc";
+        } else {
+          statusLabel = params.status.replace(/[^a-zA-Z0-9_-]/g, "_");
+        }
+      }
+
+      fileName = `Bang_ke_phieu_dich_vu_${classLabel}_${statusLabel}_${timestamp}.xlsx`;
+    }
 
     const blob = new Blob([res.data], {
       type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -181,7 +231,7 @@ export const garageApi = {
       },
     });
     return res.data as {
-      items: string[];
+      items: Array<string | { label: string; value: string }>;
       total: number;
       page: number;
       totalPages: number;
@@ -336,10 +386,9 @@ export const garageApi = {
     );
     return res.data;
   },
-
   updateCaseConfig: async (
     caseId: string,
-    payload: { classification?: string | null; erpNotes?: string | null },
+    payload: UpdateCaseConfigPayload,
   ) => {
     const res = await axiosInstance.patch(
       `${BASE}/cases/${caseId}/config`,

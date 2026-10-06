@@ -7,7 +7,7 @@ description: Module tri thức Quản lý App State, Multi-tab Navigation, Routi
 
 ## 1. Tổng quan & Trách nhiệm Hệ thống
 
-`appStore` (`src/core/config/appStore/`) là "trái tim" điều phối trạng thái toàn cục của ứng dụng web Liouni ERP (`erp-web`), đóng vai trò:
+`appStore` (`src/core/config/appStore/`) là "trái tim" điều phối trạng thái toàn cục của ứng dụng web ERP (`erp-web`), đóng vai trò:
 - **Quản lý Vòng đời Multi-tab & Điều hướng (Tabs Lifecycle & Routing)**: Quản lý danh sách các tab đang mở (`openTabs`), tab hiện tại (`currentPage`, `currentInstanceId`), cơ chế nhân đôi tab (`duplicateTab` với `_i=2`), đóng tab (đóng tab hiện tại, đóng tab khác, đóng tab bên phải, đóng tất cả ngoại trừ `STATIC_TABS`), và sắp xếp kéo thả tab (`reorderTabs`).
 - **Định nghĩa Hằng số Điều hướng & Metadata (Routing Constants)**: Tập hợp danh mục trang tĩnh không thể đóng (`STATIC_TABS`), gốc phân hệ điều hướng (`SECTION_ROOTS`), phân cấp đường dẫn chỉ mục (`BREADCRUMBS`), và các trang hỗ trợ mở đồng thời nhiều bản ghi (`DUPLICATABLE_PAGES`).
 - **Quản lý Giao diện & Chủ đề (Themes Engine)**: Quản lý 4 chủ đề giao diện (`classic`, `shell`, `orcaq`, `midnight`) thông qua enum `AppThemeEnum`, chuyển đổi nhanh, cập nhật class CSS trên `document.documentElement` và tự động đồng bộ lên backend `PATCH /api/v1/app/preferences`.
@@ -19,7 +19,7 @@ description: Module tri thức Quản lý App State, Multi-tab Navigation, Routi
 
 ## 2. Cấu Trúc Atomic Source Code (`src/core/config/appStore/`)
 
-Module được chia tách theo chuẩn `/erp-atomic-refactor`:
+Module được chia tách theo chuẩn `/ui-atomic-refactor`:
 
 ```text
 src/core/config/appStore/
