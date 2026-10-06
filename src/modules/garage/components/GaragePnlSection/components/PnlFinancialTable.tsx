@@ -1,7 +1,8 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { Loader2 } from "lucide-react";
-import type { GaragePnlReportResponse } from "@/modules/garage/api/garageOpexApi";
+import { Loader2, ChevronsUpDown } from "lucide-react";
+import type { PnlFinancialTableProps } from "../types";
+import { usePnlCollapseState } from "../hooks/usePnlCollapseState";
 import { PnlRevenueRows } from "./PnlRevenueRows";
 import { PnlCogsRows } from "./PnlCogsRows";
 import { PnlGrossProfitRow } from "./PnlGrossProfitRow";
@@ -10,23 +11,6 @@ import { PnlOpexRows } from "./PnlOpexRows";
 import { PnlNetProfitRow } from "./PnlNetProfitRow";
 import { PnlServiceCommissionRows } from "./PnlServiceCommissionRows";
 import { PnlRetainedProfitRow } from "./PnlRetainedProfitRow";
-
-interface PnlFinancialTableProps {
-  report?: GaragePnlReportResponse;
-  prevReport?: GaragePnlReportResponse;
-  prev2Report?: GaragePnlReportResponse;
-  isLoading: boolean;
-  isLoadingPrev: boolean;
-  isLoadingPrev2?: boolean;
-  selectedMonth: number;
-  selectedYear: number;
-  prevMonth: number;
-  prevYear: number;
-  prev2Month?: number;
-  prev2Year?: number;
-  isOjOnly?: boolean;
-  onOpenDrawer: () => void;
-}
 
 export function PnlFinancialTable({
   report,
@@ -45,6 +29,8 @@ export function PnlFinancialTable({
   onOpenDrawer,
 }: PnlFinancialTableProps) {
   const { t } = useTranslation("garage");
+  const { isCollapsed, toggleSection, isAllCollapsed, toggleAll } =
+    usePnlCollapseState(false);
 
   if (isLoading) {
     return (
@@ -65,13 +51,41 @@ export function PnlFinancialTable({
     );
   }
 
+  const commonProps = {
+    report,
+    prevReport,
+    prev2Report,
+    isLoadingPrev,
+    isLoadingPrev2,
+    isOjOnly,
+  };
+
   return (
     <div className="overflow-x-auto rounded-lg border border-border/60">
       <table className="w-full text-xs text-left border-collapse">
         <thead>
           <tr className="bg-slate-50 dark:bg-slate-800/60 border-b border-border/70 text-muted-foreground uppercase font-semibold text-[11px]">
             <th className="py-2.5 px-4 w-[40%]">
-              {t("pnl.tableHeaderCategory", "Danh Mục")}
+              <div className="flex items-center justify-between">
+                <span>{t("pnl.tableHeaderCategory", "Danh Mục")}</span>
+                <button
+                  type="button"
+                  onClick={toggleAll}
+                  className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors lowercase tracking-normal border border-border/50"
+                  title={
+                    isAllCollapsed
+                      ? t("pnl.expandAll", "Mở rộng tất cả")
+                      : t("pnl.collapseAll", "Thu gọn tất cả")
+                  }
+                >
+                  <ChevronsUpDown className="w-3 h-3" />
+                  <span>
+                    {isAllCollapsed
+                      ? t("pnl.expandAll", "Mở rộng tất cả")
+                      : t("pnl.collapseAll", "Thu gọn tất cả")}
+                  </span>
+                </button>
+              </div>
             </th>
             <th className="py-2.5 px-4 w-[20%] text-right text-foreground font-bold">
               {t("pnl.monthPrefix", "Tháng")}{" "}
@@ -90,78 +104,46 @@ export function PnlFinancialTable({
           </tr>
         </thead>
         <tbody className="divide-y divide-border/40">
-          {/* 1. Doanh thu */}
           <PnlRevenueRows
-            report={report}
-            prevReport={prevReport}
-            prev2Report={prev2Report}
-            isLoadingPrev={isLoadingPrev}
-            isLoadingPrev2={isLoadingPrev2}
-            isOjOnly={isOjOnly}
+            {...commonProps}
+            isCollapsed={isCollapsed("revenue")}
+            onToggle={() => toggleSection("revenue")}
           />
-          {/* 2. Giá vốn */}
           <PnlCogsRows
-            report={report}
-            prevReport={prevReport}
-            prev2Report={prev2Report}
-            isLoadingPrev={isLoadingPrev}
-            isLoadingPrev2={isLoadingPrev2}
-            isOjOnly={isOjOnly}
+            {...commonProps}
+            isCollapsed={isCollapsed("cogs")}
+            onToggle={() => toggleSection("cogs")}
           />
-          {/* 3. Lợi nhuận gộp */}
           <PnlGrossProfitRow
-            report={report}
-            prevReport={prevReport}
-            prev2Report={prev2Report}
-            isLoadingPrev={isLoadingPrev}
-            isLoadingPrev2={isLoadingPrev2}
-            isOjOnly={isOjOnly}
+            {...commonProps}
+            isCollapsed={isCollapsed("grossProfit")}
+            onToggle={() => toggleSection("grossProfit")}
           />
-          {/* 4. Chi phí bán hàng (gồm HH Sale 10%) */}
           <PnlSellingExpenseRows
-            report={report}
-            prevReport={prevReport}
-            prev2Report={prev2Report}
-            isLoadingPrev={isLoadingPrev}
-            isLoadingPrev2={isLoadingPrev2}
-            isOjOnly={isOjOnly}
+            {...commonProps}
+            isCollapsed={isCollapsed("selling")}
+            onToggle={() => toggleSection("selling")}
           />
-          {/* 5. Chi phí vận hành (OPEX) */}
           <PnlOpexRows
-            report={report}
-            prevReport={prevReport}
-            prev2Report={prev2Report}
-            isLoadingPrev={isLoadingPrev}
-            isLoadingPrev2={isLoadingPrev2}
-            isOjOnly={isOjOnly}
+            {...commonProps}
             onOpenDrawer={onOpenDrawer}
+            isCollapsed={isCollapsed("opex")}
+            onToggle={() => toggleSection("opex")}
           />
-          {/* 6. Lợi nhuận ròng = 3 - 4 - 5 */}
           <PnlNetProfitRow
-            report={report}
-            prevReport={prevReport}
-            prev2Report={prev2Report}
-            isLoadingPrev={isLoadingPrev}
-            isLoadingPrev2={isLoadingPrev2}
-            isOjOnly={isOjOnly}
+            {...commonProps}
+            isCollapsed={isCollapsed("netProfit")}
+            onToggle={() => toggleSection("netProfit")}
           />
-          {/* 7. Thưởng và Hoa hồng Dịch vụ */}
           <PnlServiceCommissionRows
-            report={report}
-            prevReport={prevReport}
-            prev2Report={prev2Report}
-            isLoadingPrev={isLoadingPrev}
-            isLoadingPrev2={isLoadingPrev2}
-            isOjOnly={isOjOnly}
+            {...commonProps}
+            isCollapsed={isCollapsed("serviceComm")}
+            onToggle={() => toggleSection("serviceComm")}
           />
-          {/* 8. Lợi nhuận giữ lại của Garage (Sau hoa hồng DV) */}
           <PnlRetainedProfitRow
-            report={report}
-            prevReport={prevReport}
-            prev2Report={prev2Report}
-            isLoadingPrev={isLoadingPrev}
-            isLoadingPrev2={isLoadingPrev2}
-            isOjOnly={isOjOnly}
+            {...commonProps}
+            isCollapsed={isCollapsed("retainedProfit")}
+            onToggle={() => toggleSection("retainedProfit")}
           />
         </tbody>
       </table>

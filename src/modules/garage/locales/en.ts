@@ -1138,9 +1138,14 @@ export const garageEn = {
     cogsHeader: "II. Cost of Goods Sold (COGS)",
     cogsDirect: "Parts & Outsourcing Costs (from cases)",
     grossProfitHeader: "III. Gross Profit",
-    opexHeader: "IV. Operating Expenses (OPEX)",
-    netProfitBeforeCommissionHeader: "V. Net Profit (Before Commission)",
-    commissionHeader: "VI. Commissions",
+    sellingExpensesHeader: "IV. Selling Expenses",
+    opexHeader: "V. Operating Expenses (OPEX)",
+    netProfitHeader: "VI. Net Profit",
+    serviceCommissionHeader: "VII. Service Bonus & Commission",
+    retainedProfitHeader:
+      "VIII. Retained Profit of Garage (After Service Commission)",
+    netProfitBeforeCommissionHeader: "Net Profit (Before Commission)",
+    commissionHeader: "Commissions",
     kyGuiProfitRate: "Consignment Profit Share / Total Profit",
     kyGuiProfitRateTooltip:
       "Percentage of gross profit from Consignment/Internal cases over total workshop gross profit. Used to allocate Net Profit for 10% Sales commission.",
@@ -1164,12 +1169,14 @@ export const garageEn = {
     autoCalculatedPnlBadge: "Auto from P&L",
     saveToOpexBtn: "⚡ Save to OPEX",
     saveToOpexSuccess: "Saved commission to operating expenses!",
-    netProfitAfterCommissionHeader: "VII. Net Profit (After Commission)",
+    netProfitAfterCommissionHeader: "Retained Profit (After Commission)",
     noOpexHint: "No operating expenses recorded for this month",
     noCommissionHint: "No commissions recorded",
     goToOpex: "Garage Operating Expenses →",
     casesCompleted: "completed cases",
     ojCases: "OJ cases",
+    collapseAll: "Collapse All",
+    expandAll: "Expand All",
   },
   progress: {
     tabs: {

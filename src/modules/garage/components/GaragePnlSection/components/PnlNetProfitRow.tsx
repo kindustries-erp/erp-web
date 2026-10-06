@@ -1,7 +1,9 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
+import { Coins } from "lucide-react";
 import type { GaragePnlReportResponse } from "@/modules/garage/api/garageOpexApi";
 import { PnlAmountCell } from "./PnlAmountCell";
+import { PnlLevel1HeaderCell } from "./PnlLevel1HeaderCell";
 
 interface PnlNetProfitRowProps {
   report: GaragePnlReportResponse;
@@ -10,6 +12,8 @@ interface PnlNetProfitRowProps {
   isLoadingPrev: boolean;
   isLoadingPrev2?: boolean;
   isOjOnly?: boolean;
+  isCollapsed?: boolean;
+  onToggle?: () => void;
 }
 
 function getNetProfit(r?: GaragePnlReportResponse): number | undefined {
@@ -36,6 +40,8 @@ export function PnlNetProfitRow({
   isLoadingPrev,
   isLoadingPrev2 = false,
   isOjOnly = false,
+  isCollapsed = false,
+  onToggle,
 }: PnlNetProfitRowProps) {
   const { t } = useTranslation("garage");
 
@@ -60,10 +66,15 @@ export function PnlNetProfitRow({
 
   return (
     <>
+      {/* VI. Lợi nhuận ròng Header */}
       <tr className="bg-slate-100/70 dark:bg-slate-800/60 text-foreground font-bold border-y border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
-        <td className="py-2.5 px-4 flex items-center gap-1.5">
-          <span>{t("pnl.netProfitHeader", "6. Lợi nhuận ròng")}</span>
-        </td>
+        <PnlLevel1HeaderCell
+          title={t("pnl.netProfitHeader", "VI. Lợi nhuận ròng")}
+          icon={Coins}
+          isCollapsed={isCollapsed}
+          onToggle={onToggle}
+          hasSubRows={!isOjOnly}
+        />
         <PnlAmountCell
           amount={val0}
           prevAmount={val1}
@@ -94,8 +105,8 @@ export function PnlNetProfitRow({
         />
       </tr>
 
-      {/* 6.1. Trong đó: Lợi nhuận ròng mảng OJ (Ẩn khi đang xem riêng OJ) */}
-      {!isOjOnly && (
+      {/* 6.1. Trong đó: Lợi nhuận ròng mảng OJ (Ẩn khi đang xem riêng OJ hoặc collapsed) */}
+      {!isOjOnly && !isCollapsed && (
         <tr className="text-muted-foreground bg-slate-50/30 dark:bg-slate-800/10 hover:bg-muted/10 transition-colors border-b border-border/20">
           <td className="py-1.5 pl-14 pr-4">
             <span className="text-[11px] italic">
