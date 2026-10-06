@@ -73,4 +73,13 @@ describe("QuoteReceivablesTable", () => {
     expect(screen.getByText("Khách hàng thanh toán")).toBeInTheDocument();
     expect(screen.getByText("Bảo hiểm thanh toán")).toBeInTheDocument();
   });
+
+  it("hides payment buttons when canEditFinancial is false", () => {
+    render(
+      <QuoteReceivablesTable items={mockItems} canEditFinancial={false} />,
+    );
+    expect(screen.queryByRole("button", { name: /Thu KH/i })).toBeNull();
+    expect(screen.queryByRole("button", { name: /Thu BH/i })).toBeNull();
+    expect(screen.getAllByText("---").length).toBeGreaterThan(0);
+  });
 });

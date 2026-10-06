@@ -10,12 +10,13 @@ export function QuoteServicesTable({
   loading = false,
   className,
   onPaymentClick,
+  canEditFinancial = true,
 }: QuoteServicesTableProps) {
   const { t } = useTranslation(["garage", "common"]);
 
   const columns = useMemo(
-    () => getQuoteServicesTableColumns(t, onPaymentClick),
-    [t, onPaymentClick],
+    () => getQuoteServicesTableColumns(t, onPaymentClick, canEditFinancial),
+    [t, onPaymentClick, canEditFinancial],
   );
 
   const { totalQty, totalAmount, totalCost } = useMemo(() => {

@@ -1,7 +1,9 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
+import { ShieldCheck } from "lucide-react";
 import type { GaragePnlReportResponse } from "@/modules/garage/api/garageOpexApi";
 import { PnlAmountCell } from "./PnlAmountCell";
+import { PnlLevel1HeaderCell } from "./PnlLevel1HeaderCell";
 
 interface PnlRetainedProfitRowProps {
   report: GaragePnlReportResponse;
@@ -12,6 +14,8 @@ interface PnlRetainedProfitRowProps {
   isLoadingPrev: boolean;
   isLoadingPrev2?: boolean;
   isOjOnly?: boolean;
+  isCollapsed?: boolean;
+  onToggle?: () => void;
 }
 
 export function PnlRetainedProfitRow({
@@ -23,6 +27,8 @@ export function PnlRetainedProfitRow({
   isLoadingPrev,
   isLoadingPrev2 = false,
   isOjOnly = false,
+  isCollapsed = false,
+  onToggle,
 }: PnlRetainedProfitRowProps) {
   const { t } = useTranslation("garage");
 
@@ -59,16 +65,20 @@ export function PnlRetainedProfitRow({
 
   return (
     <>
-      {/* 8. Lợi nhuận giữ lại của Garage (Sau hoa hồng DV) */}
+      {/* VIII. Lợi nhuận giữ lại của Garage (Sau hoa hồng DV) Header */}
       <tr className="bg-emerald-50/70 dark:bg-emerald-950/30 text-foreground font-bold border-t-2 border-emerald-500/40 dark:border-emerald-600/40 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 transition-colors">
-        <td className="py-3 px-4 flex items-center gap-2">
-          <span className="text-[13px] text-emerald-900 dark:text-emerald-200">
-            {t(
-              "pnl.retainedProfitHeader",
-              "8. Lợi nhuận giữ lại của Garage (Sau hoa hồng DV)",
-            )}
-          </span>
-        </td>
+        <PnlLevel1HeaderCell
+          title={t(
+            "pnl.retainedProfitHeader",
+            "VIII. Lợi nhuận giữ lại của Garage (Sau hoa hồng DV)",
+          )}
+          icon={ShieldCheck}
+          iconClassName="text-emerald-700 dark:text-emerald-300"
+          titleClassName="text-emerald-900 dark:text-emerald-200"
+          isCollapsed={isCollapsed}
+          onToggle={onToggle}
+          hasSubRows={!isOjOnly}
+        />
         <PnlAmountCell
           amount={retainedProfit0}
           prevAmount={prevRetainedProfit}
@@ -92,15 +102,15 @@ export function PnlRetainedProfitRow({
           amount={prev2RetainedProfit}
           customRate={rate2}
           isCost={false}
-          isLoading={isLoadingPrev2}
+          isLoadingPrev={isLoadingPrev2}
           hideDelta
           tdClassName="py-3 px-4 text-right tabular-nums font-mono text-[14px] font-semibold text-emerald-600/80 dark:text-emerald-400/80"
           amountClassName="font-semibold text-emerald-600/80 dark:text-emerald-400/80"
         />
       </tr>
 
-      {/* 8.1. Trong đó: Lợi nhuận giữ lại mảng OJ (Ẩn khi đang xem riêng OJ) */}
-      {!isOjOnly && (
+      {/* 8.1. Trong đó: Lợi nhuận giữ lại mảng OJ (Ẩn khi đang xem riêng OJ hoặc collapsed) */}
+      {!isOjOnly && !isCollapsed && (
         <tr className="text-muted-foreground bg-emerald-50/20 dark:bg-emerald-950/10 hover:bg-emerald-50/30 dark:hover:bg-emerald-950/20 transition-colors border-b border-border/20">
           <td className="py-1.5 pl-14 pr-4">
             <span className="text-[11px] italic">

@@ -207,16 +207,16 @@ export function GarageCases({
           setSelectedCaseId(code);
         }}
         onOpenFinancials={(code, editMode = true) => {
-          setDrawerEditMode(editMode);
+          setDrawerEditMode(canUpdateGarage ? editMode : false);
           setDrawerInitialTab("financials");
           setSelectedCaseId(code);
         }}
         onOpenEditNotes={(item) => {
-          setDrawerEditMode(true);
+          setDrawerEditMode(canUpdateGarage ? true : false);
           setSelectedCaseId(item.soChungTu || item.id);
         }}
         onOpenConfig={(item) => {
-          setDrawerEditMode(true);
+          setDrawerEditMode(canUpdateGarage ? true : false);
           setSelectedCaseId(item.soChungTu || item.id);
         }}
         columnViewPresetsHook={columnViewPresetsHook}

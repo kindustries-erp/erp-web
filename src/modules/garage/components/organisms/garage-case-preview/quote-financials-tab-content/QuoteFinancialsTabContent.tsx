@@ -15,6 +15,7 @@ export function QuoteFinancialsTabContent(
     t,
     parts,
     services,
+    canEditFinancial,
     isPaymentDrawerOpen,
     paymentDrawerTarget,
     handleReceivablePaymentClick,
@@ -44,6 +45,7 @@ export function QuoteFinancialsTabContent(
       >
         <QuoteReceivablesTable
           caseData={props.caseData}
+          canEditFinancial={canEditFinancial}
           onPaymentClick={handleReceivablePaymentClick}
         />
       </DrawerSection>
@@ -67,6 +69,7 @@ export function QuoteFinancialsTabContent(
       >
         <QuotePartsTable
           lines={parts}
+          canEditFinancial={canEditFinancial}
           onPaymentClick={handlePartPaymentClick}
         />
       </DrawerSection>
@@ -90,12 +93,13 @@ export function QuoteFinancialsTabContent(
       >
         <QuoteServicesTable
           lines={services}
+          canEditFinancial={canEditFinancial}
           onPaymentClick={handleServicePaymentClick}
         />
       </DrawerSection>
 
       {/* ─── DRAWER CẤN TRỪ KHI CLICK THANH TOÁN ─── */}
-      {isPaymentDrawerOpen && paymentDrawerTarget && (
+      {isPaymentDrawerOpen && paymentDrawerTarget && canEditFinancial && (
         <CaseLinePaymentDrawer
           open={isPaymentDrawerOpen}
           onClose={closePaymentDrawer}

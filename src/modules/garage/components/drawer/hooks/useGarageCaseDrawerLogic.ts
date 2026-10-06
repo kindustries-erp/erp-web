@@ -10,6 +10,8 @@ import {
   useGarageCaseByCode,
 } from "@/modules/garage/hooks/useGarage";
 import { useGarageCaseEditForm } from "@/modules/garage/hooks/useGarageCaseEditForm";
+import { useHasPermission } from "@/shared/hooks/useHasPermission";
+import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
 import type { SettlementSubmissionItem } from "@/modules/garage/components/GarageCaseSettlementDrawerModal";
 import type { DrawerAuditLogItem } from "@/shared/components/StandardFormDrawer";
 import type {
@@ -41,6 +43,10 @@ export function useGarageCaseDrawerLogic({
   const { t } = useTranslation(["garage", "common"]);
   const queryClient = useQueryClient();
   const { selectedBranchId } = useGarageStore();
+  const canUpdateGarage = useHasPermission(
+    ErpResource.GARAGE,
+    ErpAction.UPDATE,
+  );
 
   const [showSettlementModal, setShowSettlementModal] =
     useState<boolean>(false);
@@ -150,6 +156,19 @@ export function useGarageCaseDrawerLogic({
     getActiveFinancialSummary,
   } = useGarageCaseEditForm(selectedCase?.id);
 
+  const guardedStartEdit = useCallback(() => {
+    if (!canUpdateGarage) {
+      toast.error(
+        t(
+          "cases.errors.noPermissionEditGarage",
+          "Bạn không có quyền chỉnh sửa vụ việc này",
+        ),
+      );
+      return;
+    }
+    startEdit();
+  }, [canUpdateGarage, startEdit, t]);
+
   const [activeTabKey, setActiveTabKey] = useState<string>(
     initialTabKey === "partner_details"
       ? "quote_details"
@@ -175,7 +194,7 @@ export function useGarageCaseDrawerLogic({
         }
         setDetailsSubTab(initialSubTabKey || "details");
       }
-      if (initialEditMode) {
+      if (initialEditMode && canUpdateGarage) {
         startEdit();
       } else {
         cancelEdit();
@@ -192,6 +211,7 @@ export function useGarageCaseDrawerLogic({
     initialSubTabKey,
     cancelEdit,
     startEdit,
+    canUpdateGarage,
   ]);
 
   const isConfigDirty = useMemo(() => {
@@ -805,13 +825,13 @@ export function useGarageCaseDrawerLogic({
         setDetailsSubTab("details");
       }
 
-      if (options?.editMode) {
+      if (options?.editMode && canUpdateGarage) {
         startEdit();
       } else {
         cancelEdit();
       }
     },
-    [queryClient, startEdit, cancelEdit],
+    [queryClient, startEdit, cancelEdit, canUpdateGarage],
   );
 
   return {
@@ -825,9 +845,10 @@ export function useGarageCaseDrawerLogic({
     syncCaseDetail,
     isSyncingDetail,
     grossProfit,
+    canUpdateGarage,
     // Edit & Draft state
     editMode,
-    startEdit,
+    startEdit: guardedStartEdit,
     cancelEdit,
     saving,
     hasPendingChanges,

@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
 import { PnlFinancialTable } from "../PnlFinancialTable";
 import { mockPnlReport } from "./mockReport.fixture";
@@ -11,7 +11,7 @@ vi.mock("react-i18next", () => ({
 }));
 
 describe("PnlFinancialTable Component", () => {
-  it("renders all 8 sections in default view mode with OJ sub-rows", () => {
+  it("renders all 8 sections in default view mode with Roman numerals and OJ sub-rows", () => {
     render(
       <PnlFinancialTable
         report={mockPnlReport}
@@ -36,18 +36,18 @@ describe("PnlFinancialTable Component", () => {
     expect(screen.getByText("Tháng 06/2026")).toBeInTheDocument();
     expect(screen.getByText("Tháng 05/2026")).toBeInTheDocument();
 
-    // 8 headers
-    expect(screen.getByText("1. Doanh Thu")).toBeInTheDocument();
-    expect(screen.getByText("2. Chi phí (Giá vốn)")).toBeInTheDocument();
-    expect(screen.getByText("3. Lợi nhuận gộp")).toBeInTheDocument();
-    expect(screen.getByText("4. Chi phí bán hàng")).toBeInTheDocument();
-    expect(screen.getByText("5. Chi phí vận hành")).toBeInTheDocument();
-    expect(screen.getByText("6. Lợi nhuận ròng")).toBeInTheDocument();
+    // 8 headers with Roman numerals
+    expect(screen.getByText("I. Doanh Thu")).toBeInTheDocument();
+    expect(screen.getByText("II. Chi phí (Giá vốn)")).toBeInTheDocument();
+    expect(screen.getByText("III. Lợi nhuận gộp")).toBeInTheDocument();
+    expect(screen.getByText("IV. Chi phí bán hàng")).toBeInTheDocument();
+    expect(screen.getByText("V. Chi phí vận hành")).toBeInTheDocument();
+    expect(screen.getByText("VI. Lợi nhuận ròng")).toBeInTheDocument();
     expect(
-      screen.getByText("7. Thưởng và Hoa hồng Dịch vụ"),
+      screen.getByText("VII. Thưởng và Hoa hồng Dịch vụ"),
     ).toBeInTheDocument();
     expect(
-      screen.getByText("8. Lợi nhuận giữ lại của Garage (Sau hoa hồng DV)"),
+      screen.getByText("VIII. Lợi nhuận giữ lại của Garage (Sau hoa hồng DV)"),
     ).toBeInTheDocument();
 
     // Sub-rows
@@ -94,16 +94,16 @@ describe("PnlFinancialTable Component", () => {
       />,
     );
 
-    // 8 headers still exist
-    expect(screen.getByText("1. Doanh Thu")).toBeInTheDocument();
-    expect(screen.getByText("2. Chi phí (Giá vốn)")).toBeInTheDocument();
-    expect(screen.getByText("3. Lợi nhuận gộp")).toBeInTheDocument();
-    expect(screen.getByText("6. Lợi nhuận ròng")).toBeInTheDocument();
+    // 8 headers still exist with Roman numerals
+    expect(screen.getByText("I. Doanh Thu")).toBeInTheDocument();
+    expect(screen.getByText("II. Chi phí (Giá vốn)")).toBeInTheDocument();
+    expect(screen.getByText("III. Lợi nhuận gộp")).toBeInTheDocument();
+    expect(screen.getByText("VI. Lợi nhuận ròng")).toBeInTheDocument();
     expect(
-      screen.getByText("7. Thưởng và Hoa hồng Dịch vụ"),
+      screen.getByText("VII. Thưởng và Hoa hồng Dịch vụ"),
     ).toBeInTheDocument();
     expect(
-      screen.getByText("8. Lợi nhuận giữ lại của Garage (Sau hoa hồng DV)"),
+      screen.getByText("VIII. Lợi nhuận giữ lại của Garage (Sau hoa hồng DV)"),
     ).toBeInTheDocument();
 
     // OJ sub-rows MUST NOT be displayed when viewing OJ only
@@ -132,5 +132,77 @@ describe("PnlFinancialTable Component", () => {
     // Verify OJ Revenue and OJ Gross Profit numbers appear
     expect(screen.getAllByText("50.000.000 đ").length).toBeGreaterThan(0);
     expect(screen.getAllByText("20.000.000 đ").length).toBeGreaterThan(0);
+  });
+
+  it("toggles section collapse when clicking Level 1 header cell", () => {
+    render(
+      <PnlFinancialTable
+        report={mockPnlReport}
+        prevReport={mockPnlReport}
+        prev2Report={mockPnlReport}
+        isLoading={false}
+        isLoadingPrev={false}
+        selectedMonth={7}
+        selectedYear={2026}
+        prevMonth={6}
+        prevYear={2026}
+        onOpenDrawer={vi.fn()}
+      />,
+    );
+
+    // Initial state: sub-row 1.1 is present
+    expect(screen.getByText("1.1. Doanh Thu Dịch Vụ")).toBeInTheDocument();
+
+    // Click on "I. Doanh Thu" to collapse
+    fireEvent.click(screen.getByText("I. Doanh Thu"));
+    expect(
+      screen.queryByText("1.1. Doanh Thu Dịch Vụ"),
+    ).not.toBeInTheDocument();
+
+    // Click again to expand
+    fireEvent.click(screen.getByText("I. Doanh Thu"));
+    expect(screen.getByText("1.1. Doanh Thu Dịch Vụ")).toBeInTheDocument();
+  });
+
+  it("collapses all and expands all using global toggle button", () => {
+    render(
+      <PnlFinancialTable
+        report={mockPnlReport}
+        prevReport={mockPnlReport}
+        prev2Report={mockPnlReport}
+        isLoading={false}
+        isLoadingPrev={false}
+        selectedMonth={7}
+        selectedYear={2026}
+        prevMonth={6}
+        prevYear={2026}
+        onOpenDrawer={vi.fn()}
+      />,
+    );
+
+    // Initial state: sub-rows present
+    expect(screen.getByText("1.1. Doanh Thu Dịch Vụ")).toBeInTheDocument();
+    expect(
+      screen.getByText("2.1. Chi phí phụ tùng & Gia công ngoài (từ vụ việc)"),
+    ).toBeInTheDocument();
+
+    // Find and click global collapse button
+    const toggleBtn = screen.getByTitle("Thu gọn tất cả");
+    fireEvent.click(toggleBtn);
+
+    // Sub-rows should now be collapsed
+    expect(
+      screen.queryByText("1.1. Doanh Thu Dịch Vụ"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("2.1. Chi phí phụ tùng & Gia công ngoài (từ vụ việc)"),
+    ).not.toBeInTheDocument();
+
+    // Click again to expand all
+    fireEvent.click(screen.getByTitle("Mở rộng tất cả"));
+    expect(screen.getByText("1.1. Doanh Thu Dịch Vụ")).toBeInTheDocument();
+    expect(
+      screen.getByText("2.1. Chi phí phụ tùng & Gia công ngoài (từ vụ việc)"),
+    ).toBeInTheDocument();
   });
 });

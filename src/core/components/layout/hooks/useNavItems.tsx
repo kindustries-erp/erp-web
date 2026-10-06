@@ -42,6 +42,15 @@ export function useNavItems(): NavSearchItem[] {
   const { employee } = useAuthStore();
   const isAdminEmail = employee?.email === "admin@liouni.com";
 
+  const canReadDashboard = useHasPermission(
+    ErpResource.DASHBOARD,
+    ErpAction.READ,
+  );
+  const canReadAttachments = useHasPermission(
+    ErpResource.ATTACHMENTS,
+    ErpAction.READ,
+  );
+
   const canReadSalesOrders = useHasPermission(
     ErpResource.SALES_ORDERS,
     ErpAction.READ,
@@ -134,13 +143,15 @@ export function useNavItems(): NavSearchItem[] {
     const items: NavSearchItem[] = [];
 
     // 1. Dashboard
-    items.push({
-      key: "dashboard",
-      label: t("nav.items.dashboard"),
-      section: t("nav.items.dashboard"),
-      keywords: ["dashboard", "home", "trang chu", "tong quan"],
-      icon: <LayoutDashboard className="w-4 h-4" />,
-    });
+    if (canReadDashboard) {
+      items.push({
+        key: "dashboard",
+        label: t("nav.items.dashboard"),
+        section: t("nav.items.dashboard"),
+        keywords: ["dashboard", "home", "trang chu", "tong quan"],
+        icon: <LayoutDashboard className="w-4 h-4" />,
+      });
+    }
 
     // 2. Sales
     const salesSection = t("nav.sections.sales");
@@ -494,13 +505,15 @@ export function useNavItems(): NavSearchItem[] {
         icon: <UserSquare2 className="w-4 h-4" />,
       });
     }
-    items.push({
-      key: "attachments",
-      label: t("nav.items.attachments"),
-      section: adminSection,
-      keywords: ["tai lieu", "dinh kem", "attachments", "files"],
-      icon: <Paperclip className="w-4 h-4" />,
-    });
+    if (canReadAttachments) {
+      items.push({
+        key: "attachments",
+        label: t("nav.items.attachments"),
+        section: adminSection,
+        keywords: ["tai lieu", "dinh kem", "attachments", "files"],
+        icon: <Paperclip className="w-4 h-4" />,
+      });
+    }
 
     // 9. Settings (Hệ thống & Cài đặt)
     const settingsSection = t("nav.sections.settings");
@@ -613,6 +626,8 @@ export function useNavItems(): NavSearchItem[] {
     return items;
   }, [
     t,
+    canReadDashboard,
+    canReadAttachments,
     canReadSalesOrders,
     canReadCustomers,
     canReadSalesReports,
