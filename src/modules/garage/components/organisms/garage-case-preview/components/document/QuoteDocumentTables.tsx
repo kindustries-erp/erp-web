@@ -20,6 +20,16 @@ export function QuoteDocumentTables({
 }: QuoteDocumentTablesProps) {
   const { t } = useTranslation(["garage", "common"]);
 
+  const hasInsuranceParts = parts.some((p) => p.isInsurance);
+  const partsInsuranceTotal = parts
+    .filter((p) => p.isInsurance)
+    .reduce((sum, p) => sum + (p.insuranceApprovedAmount || p.amount || 0), 0);
+
+  const hasInsuranceServices = services.some((s) => s.isInsurance);
+  const servicesInsuranceTotal = services
+    .filter((s) => s.isInsurance)
+    .reduce((sum, s) => sum + (s.insuranceApprovedAmount || s.amount || 0), 0);
+
   return (
     <div className="mb-6 space-y-6">
       {/* 1. Vật tư phụ tùng */}
@@ -58,6 +68,11 @@ export function QuoteDocumentTables({
                 <th className="p-2 w-24 text-right">
                   {t("cases.quotePreview.amount", "Thành tiền")}
                 </th>
+                {hasInsuranceParts && (
+                  <th className="p-2 w-24 text-right text-amber-700 dark:text-amber-300">
+                    {t("cases.quotePreview.insuranceApproved", "BH duyệt")}
+                  </th>
+                )}
                 <th className="p-2 w-12">
                   {t("cases.quotePreview.tax", "Thuế")}
                 </th>
@@ -94,6 +109,13 @@ export function QuoteDocumentTables({
                   <td className="p-2 text-right font-semibold tabular-nums text-slate-900 dark:text-slate-100">
                     {formatNumber(p.amount)}
                   </td>
+                  {hasInsuranceParts && (
+                    <td className="p-2 text-right tabular-nums text-amber-700 dark:text-amber-300 font-medium">
+                      {p.isInsurance
+                        ? formatNumber(p.insuranceApprovedAmount || p.amount)
+                        : "---"}
+                    </td>
+                  )}
                   <td className="p-2 text-slate-500">
                     {formatNumber(p.taxRate)}%
                   </td>
@@ -106,25 +128,43 @@ export function QuoteDocumentTables({
                 </tr>
               ))}
               {parts.length > 0 ? (
-                <tr className="bg-slate-50/80 dark:bg-slate-800/60 font-semibold border-t-2 border-slate-200 dark:border-slate-700">
-                  <td
-                    colSpan={6}
-                    className="p-2 text-right text-slate-600 dark:text-slate-400"
-                  >
-                    {t("cases.quotePreview.subtotalParts", "Cộng phụ tùng:")}
-                  </td>
-                  <td className="p-2 text-right tabular-nums text-primary font-bold">
-                    {formatNumber(partsTotalAmount)}
-                  </td>
-                  <td colSpan={2} className="p-2" />
-                  <td className="p-2 text-right tabular-nums text-slate-700 dark:text-slate-300 font-bold">
-                    {formatNumber(partsTotalCost)}
-                  </td>
-                </tr>
+                <>
+                  <tr className="bg-slate-50/80 dark:bg-slate-800/60 font-semibold border-t-2 border-slate-200 dark:border-slate-700">
+                    <td
+                      colSpan={6}
+                      className="p-2 text-right text-slate-600 dark:text-slate-400"
+                    >
+                      {t("cases.quotePreview.subtotalParts", "Cộng phụ tùng:")}
+                    </td>
+                    <td className="p-2 text-right tabular-nums text-primary font-bold">
+                      {formatNumber(partsTotalAmount)}
+                    </td>
+                    {hasInsuranceParts && <td className="p-2" />}
+                    <td colSpan={2} className="p-2" />
+                    <td className="p-2 text-right tabular-nums text-slate-700 dark:text-slate-300 font-bold">
+                      {formatNumber(partsTotalCost)}
+                    </td>
+                  </tr>
+                  {hasInsuranceParts && (
+                    <tr className="bg-amber-50/50 dark:bg-amber-950/20 font-semibold border-t border-amber-200/60 dark:border-amber-900/40 text-amber-800 dark:text-amber-300">
+                      <td colSpan={6} className="p-2 text-right">
+                        {t(
+                          "cases.quotePreview.totalInsuranceParts",
+                          "Tổng BH duyệt (Phụ tùng):",
+                        )}
+                      </td>
+                      <td className="p-2" />
+                      <td className="p-2 text-right tabular-nums font-bold">
+                        {formatNumber(partsInsuranceTotal)}
+                      </td>
+                      <td colSpan={3} className="p-2" />
+                    </tr>
+                  )}
+                </>
               ) : (
                 <tr>
                   <td
-                    colSpan={10}
+                    colSpan={hasInsuranceParts ? 11 : 10}
                     className="p-4 text-center text-slate-400 italic"
                   >
                     {t(
@@ -175,6 +215,11 @@ export function QuoteDocumentTables({
                 <th className="p-2 w-24 text-right">
                   {t("cases.quotePreview.amount", "Thành tiền")}
                 </th>
+                {hasInsuranceServices && (
+                  <th className="p-2 w-24 text-right text-amber-700 dark:text-amber-300">
+                    {t("cases.quotePreview.insuranceApproved", "BH duyệt")}
+                  </th>
+                )}
                 <th className="p-2 w-12">
                   {t("cases.quotePreview.tax", "Thuế")}
                 </th>
@@ -208,6 +253,13 @@ export function QuoteDocumentTables({
                   <td className="p-2 text-right font-semibold tabular-nums text-slate-900 dark:text-slate-100">
                     {formatNumber(s.amount)}
                   </td>
+                  {hasInsuranceServices && (
+                    <td className="p-2 text-right tabular-nums text-amber-700 dark:text-amber-300 font-medium">
+                      {s.isInsurance
+                        ? formatNumber(s.insuranceApprovedAmount || s.amount)
+                        : "---"}
+                    </td>
+                  )}
                   <td className="p-2 text-slate-500">
                     {formatNumber(s.taxRate)}%
                   </td>
@@ -217,22 +269,40 @@ export function QuoteDocumentTables({
                 </tr>
               ))}
               {services.length > 0 ? (
-                <tr className="bg-slate-50/80 dark:bg-slate-800/60 font-semibold border-t-2 border-slate-200 dark:border-slate-700">
-                  <td
-                    colSpan={6}
-                    className="p-2 text-right text-slate-600 dark:text-slate-400"
-                  >
-                    {t("cases.quotePreview.subtotalLabor", "Cộng nhân công:")}
-                  </td>
-                  <td className="p-2 text-right tabular-nums text-primary font-bold">
-                    {formatNumber(servicesTotalAmount)}
-                  </td>
-                  <td colSpan={2} className="p-2" />
-                </tr>
+                <>
+                  <tr className="bg-slate-50/80 dark:bg-slate-800/60 font-semibold border-t-2 border-slate-200 dark:border-slate-700">
+                    <td
+                      colSpan={6}
+                      className="p-2 text-right text-slate-600 dark:text-slate-400"
+                    >
+                      {t("cases.quotePreview.subtotalLabor", "Cộng nhân công:")}
+                    </td>
+                    <td className="p-2 text-right tabular-nums text-primary font-bold">
+                      {formatNumber(servicesTotalAmount)}
+                    </td>
+                    {hasInsuranceServices && <td className="p-2" />}
+                    <td colSpan={2} className="p-2" />
+                  </tr>
+                  {hasInsuranceServices && (
+                    <tr className="bg-amber-50/50 dark:bg-amber-950/20 font-semibold border-t border-amber-200/60 dark:border-amber-900/40 text-amber-800 dark:text-amber-300">
+                      <td colSpan={6} className="p-2 text-right">
+                        {t(
+                          "cases.quotePreview.totalInsuranceLabor",
+                          "Tổng BH duyệt (Nhân công):",
+                        )}
+                      </td>
+                      <td className="p-2" />
+                      <td className="p-2 text-right tabular-nums font-bold">
+                        {formatNumber(servicesInsuranceTotal)}
+                      </td>
+                      <td colSpan={2} className="p-2" />
+                    </tr>
+                  )}
+                </>
               ) : (
                 <tr>
                   <td
-                    colSpan={9}
+                    colSpan={hasInsuranceServices ? 10 : 9}
                     className="p-4 text-center text-slate-400 italic"
                   >
                     {t(

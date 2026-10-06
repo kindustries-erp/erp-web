@@ -18,6 +18,10 @@ export function QuoteDocumentSummary({
 
   const discountAmount = Number(rawData?.TienChietKhau || 0);
   const totalPayable = rawData?.TongTienThanhToan || caseData?.tienCoThue || 0;
+  const tienHhMoiGioi = Number(rawData?.TienHoaHongMoiGioi || 0);
+  const tyLeHhMoiGioi = Number(rawData?.TyLeHoaHongMoiGioi || 0);
+  const tienHhBaoHiem = Number(rawData?.TienHoaHongBaoHiem || 0);
+  const tyLeHhBaoHiem = Number(rawData?.TyLeHoaHongBaoHiem || 0);
 
   return (
     <div className="flex justify-end mb-8">
@@ -76,6 +80,40 @@ export function QuoteDocumentSummary({
             </span>
           </div>
         </div>
+
+        {/* Hoa hồng môi giới & bảo hiểm */}
+        {(tienHhMoiGioi > 0 || tienHhBaoHiem > 0) && (
+          <div className="pt-1.5 border-t border-slate-200 dark:border-slate-700 space-y-1 text-[11px]">
+            {tienHhMoiGioi > 0 && (
+              <div className="flex justify-between text-slate-600 dark:text-slate-400">
+                <span>
+                  {t(
+                    "cases.quotePreview.brokerCommission",
+                    "Hoa hồng môi giới",
+                  )}
+                  {tyLeHhMoiGioi > 0 ? ` (${tyLeHhMoiGioi}%)` : ""}:
+                </span>
+                <span className="font-mono font-medium text-rose-600 dark:text-rose-400 tabular-nums">
+                  {formatNumber(tienHhMoiGioi)} ₫
+                </span>
+              </div>
+            )}
+            {tienHhBaoHiem > 0 && (
+              <div className="flex justify-between text-slate-600 dark:text-slate-400">
+                <span>
+                  {t(
+                    "cases.quotePreview.insuranceCommission",
+                    "Hoa hồng bảo hiểm",
+                  )}
+                  {tyLeHhBaoHiem > 0 ? ` (${tyLeHhBaoHiem}%)` : ""}:
+                </span>
+                <span className="font-mono font-medium text-rose-600 dark:text-rose-400 tabular-nums">
+                  {formatNumber(tienHhBaoHiem)} ₫
+                </span>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Gross profit data if available */}
         {profitSummary.hasProfitData && (
