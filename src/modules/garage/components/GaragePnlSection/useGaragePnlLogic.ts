@@ -51,10 +51,13 @@ export function useGaragePnlLogic() {
   const prevMonth = selectedMonth === 1 ? 12 : selectedMonth - 1;
   const prevYear = selectedMonth === 1 ? selectedYear - 1 : selectedYear;
 
+  const prev2Month = prevMonth === 1 ? 12 : prevMonth - 1;
+  const prev2Year = prevMonth === 1 ? prevYear - 1 : prevYear;
+
   const {
     data: report,
     isLoading,
-    refetch,
+    refetch: refetchReport,
   } = useQuery<GaragePnlReportResponse>({
     queryKey: ["garage-pnl-report", selectedYear, selectedMonth],
     queryFn: () =>
@@ -64,15 +67,37 @@ export function useGaragePnlLogic() {
       }),
   });
 
-  const { data: prevReport, isLoading: isLoadingPrev } =
-    useQuery<GaragePnlReportResponse>({
-      queryKey: ["garage-pnl-report", prevYear, prevMonth],
-      queryFn: () =>
-        garageOpexApi.getPnlReport({
-          year: prevYear,
-          month: prevMonth,
-        }),
-    });
+  const {
+    data: prevReport,
+    isLoading: isLoadingPrev,
+    refetch: refetchPrev,
+  } = useQuery<GaragePnlReportResponse>({
+    queryKey: ["garage-pnl-report", prevYear, prevMonth],
+    queryFn: () =>
+      garageOpexApi.getPnlReport({
+        year: prevYear,
+        month: prevMonth,
+      }),
+  });
+
+  const {
+    data: prev2Report,
+    isLoading: isLoadingPrev2,
+    refetch: refetchPrev2,
+  } = useQuery<GaragePnlReportResponse>({
+    queryKey: ["garage-pnl-report", prev2Year, prev2Month],
+    queryFn: () =>
+      garageOpexApi.getPnlReport({
+        year: prev2Year,
+        month: prev2Month,
+      }),
+  });
+
+  const refetch = () => {
+    refetchReport();
+    refetchPrev();
+    refetchPrev2();
+  };
 
   const handleExportExcel = async () => {
     setExporting(true);
@@ -107,8 +132,10 @@ export function useGaragePnlLogic() {
     t,
     report,
     prevReport,
+    prev2Report,
     isLoading,
     isLoadingPrev,
+    isLoadingPrev2,
     selectedPeriod,
     setSelectedPeriod,
     periodOptions,
@@ -116,6 +143,8 @@ export function useGaragePnlLogic() {
     selectedMonth,
     prevYear,
     prevMonth,
+    prev2Year,
+    prev2Month,
     exporting,
     handleExportExcel,
     handleGoToOpex,

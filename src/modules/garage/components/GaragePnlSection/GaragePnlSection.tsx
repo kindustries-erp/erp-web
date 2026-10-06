@@ -19,8 +19,10 @@ export function GaragePnlSection() {
     t,
     report,
     prevReport,
+    prev2Report,
     isLoading,
     isLoadingPrev,
+    isLoadingPrev2,
     selectedPeriod,
     setSelectedPeriod,
     periodOptions,
@@ -28,6 +30,8 @@ export function GaragePnlSection() {
     selectedMonth,
     prevYear,
     prevMonth,
+    prev2Year,
+    prev2Month,
     exporting,
     handleExportExcel,
     handleGoToOpex,
@@ -117,12 +121,16 @@ export function GaragePnlSection() {
         <PnlFinancialTable
           report={report}
           prevReport={prevReport}
+          prev2Report={prev2Report}
           isLoading={isLoading}
           isLoadingPrev={isLoadingPrev}
+          isLoadingPrev2={isLoadingPrev2}
           selectedMonth={selectedMonth}
           selectedYear={selectedYear}
           prevMonth={prevMonth}
           prevYear={prevYear}
+          prev2Month={prev2Month}
+          prev2Year={prev2Year}
           onOpenDrawer={() => setDrawerOpen(true)}
         />
       </div>

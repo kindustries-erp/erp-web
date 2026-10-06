@@ -2,31 +2,44 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { Loader2 } from "lucide-react";
 import type { GaragePnlReportResponse } from "@/modules/garage/api/garageOpexApi";
-import { PnlRevenueCogsRows } from "./PnlRevenueCogsRows";
+import { PnlRevenueRows } from "./PnlRevenueRows";
+import { PnlCogsRows } from "./PnlCogsRows";
+import { PnlGrossProfitRow } from "./PnlGrossProfitRow";
+import { PnlSellingExpenseRows } from "./PnlSellingExpenseRows";
 import { PnlOpexRows } from "./PnlOpexRows";
-import { PnlCommissionRows } from "./PnlCommissionRows";
+import { PnlNetProfitRow } from "./PnlNetProfitRow";
+import { PnlServiceCommissionRows } from "./PnlServiceCommissionRows";
+import { PnlRetainedProfitRow } from "./PnlRetainedProfitRow";
 
 interface PnlFinancialTableProps {
   report?: GaragePnlReportResponse;
   prevReport?: GaragePnlReportResponse;
+  prev2Report?: GaragePnlReportResponse;
   isLoading: boolean;
   isLoadingPrev: boolean;
+  isLoadingPrev2?: boolean;
   selectedMonth: number;
   selectedYear: number;
   prevMonth: number;
   prevYear: number;
+  prev2Month?: number;
+  prev2Year?: number;
   onOpenDrawer: () => void;
 }
 
 export function PnlFinancialTable({
   report,
   prevReport,
+  prev2Report,
   isLoading,
   isLoadingPrev,
+  isLoadingPrev2 = false,
   selectedMonth,
   selectedYear,
   prevMonth,
   prevYear,
+  prev2Month,
+  prev2Year,
   onOpenDrawer,
 }: PnlFinancialTableProps) {
   const { t } = useTranslation("garage");
@@ -55,39 +68,90 @@ export function PnlFinancialTable({
       <table className="w-full text-xs text-left border-collapse">
         <thead>
           <tr className="bg-slate-50 dark:bg-slate-800/60 border-b border-border/70 text-muted-foreground uppercase font-semibold text-[11px]">
-            <th className="py-2.5 px-4 w-[38%]">
+            <th className="py-2.5 px-4 w-[40%]">
               {t("pnl.tableHeaderCategory", "Danh Mục")}
             </th>
-            <th className="py-2.5 px-4 w-[20%] text-right font-semibold text-slate-700 dark:text-slate-300 border-r border-border/40">
-              {t("pnl.tableHeaderOj", "Phát sinh OJ")} (T
-              {String(selectedMonth).padStart(2, "0")}/{selectedYear})
-            </th>
-            <th className="py-2.5 px-4 w-[22%] text-right text-foreground font-bold">
+            <th className="py-2.5 px-4 w-[20%] text-right text-foreground font-bold">
               {t("pnl.monthPrefix", "Tháng")}{" "}
               {String(selectedMonth).padStart(2, "0")}/{selectedYear}
             </th>
-            <th className="py-2.5 px-4 w-[20%] text-right text-muted-foreground">
+            <th className="py-2.5 px-4 w-[20%] text-right text-slate-700 dark:text-slate-300 font-semibold">
               {t("pnl.monthPrefix", "Tháng")}{" "}
               {String(prevMonth).padStart(2, "0")}/{prevYear}
+            </th>
+            <th className="py-2.5 px-4 w-[20%] text-right text-muted-foreground">
+              {t("pnl.monthPrefix", "Tháng")}{" "}
+              {prev2Month && prev2Year
+                ? `${String(prev2Month).padStart(2, "0")}/${prev2Year}`
+                : "—"}
             </th>
           </tr>
         </thead>
         <tbody className="divide-y divide-border/40">
-          <PnlRevenueCogsRows
+          {/* 1. Doanh thu */}
+          <PnlRevenueRows
             report={report}
             prevReport={prevReport}
+            prev2Report={prev2Report}
             isLoadingPrev={isLoadingPrev}
+            isLoadingPrev2={isLoadingPrev2}
           />
+          {/* 2. Giá vốn */}
+          <PnlCogsRows
+            report={report}
+            prevReport={prevReport}
+            prev2Report={prev2Report}
+            isLoadingPrev={isLoadingPrev}
+            isLoadingPrev2={isLoadingPrev2}
+          />
+          {/* 3. Lợi nhuận gộp */}
+          <PnlGrossProfitRow
+            report={report}
+            prevReport={prevReport}
+            prev2Report={prev2Report}
+            isLoadingPrev={isLoadingPrev}
+            isLoadingPrev2={isLoadingPrev2}
+          />
+          {/* 4. Chi phí bán hàng (gồm HH Sale 10%) */}
+          <PnlSellingExpenseRows
+            report={report}
+            prevReport={prevReport}
+            prev2Report={prev2Report}
+            isLoadingPrev={isLoadingPrev}
+            isLoadingPrev2={isLoadingPrev2}
+          />
+          {/* 5. Chi phí vận hành (OPEX) */}
           <PnlOpexRows
             report={report}
             prevReport={prevReport}
+            prev2Report={prev2Report}
             isLoadingPrev={isLoadingPrev}
+            isLoadingPrev2={isLoadingPrev2}
             onOpenDrawer={onOpenDrawer}
           />
-          <PnlCommissionRows
+          {/* 6. Lợi nhuận ròng = 3 - 4 - 5 */}
+          <PnlNetProfitRow
             report={report}
             prevReport={prevReport}
+            prev2Report={prev2Report}
             isLoadingPrev={isLoadingPrev}
+            isLoadingPrev2={isLoadingPrev2}
+          />
+          {/* 7. Thưởng và Hoa hồng Dịch vụ */}
+          <PnlServiceCommissionRows
+            report={report}
+            prevReport={prevReport}
+            prev2Report={prev2Report}
+            isLoadingPrev={isLoadingPrev}
+            isLoadingPrev2={isLoadingPrev2}
+          />
+          {/* 8. Lợi nhuận giữ lại của Garage (Sau hoa hồng DV) */}
+          <PnlRetainedProfitRow
+            report={report}
+            prevReport={prevReport}
+            prev2Report={prev2Report}
+            isLoadingPrev={isLoadingPrev}
+            isLoadingPrev2={isLoadingPrev2}
           />
         </tbody>
       </table>
