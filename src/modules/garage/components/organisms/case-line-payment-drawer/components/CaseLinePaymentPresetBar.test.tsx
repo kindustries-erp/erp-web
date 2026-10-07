@@ -42,47 +42,23 @@ describe("CaseLinePaymentPresetBar", () => {
     expect(onSelectPreset).toHaveBeenCalledWith("suggestions");
   });
 
-  it("shows select all suggestions button when viewing suggestions and count > 0", () => {
-    const onSelectAllSuggestions = vi.fn();
-    render(
-      <CaseLinePaymentPresetBar
-        viewPreset="suggestions"
-        onSelectPreset={vi.fn()}
-        totalCount={10}
-        suggestionsCount={4}
-        selectedCount={0}
-        linkedCount={0}
-        onSelectAllSuggestions={onSelectAllSuggestions}
-      />,
-    );
-
-    const selectAllBtn = screen.getByRole("button", {
-      name: /Chọn tất cả gợi ý/i,
-    });
-    expect(selectAllBtn).toBeInTheDocument();
-    fireEvent.click(selectAllBtn);
-    expect(onSelectAllSuggestions).toHaveBeenCalled();
-  });
-
-  it("shows unselect button when selectedCount > 0", () => {
-    const onUnselectAll = vi.fn();
+  it("handles switching to other presets cleanly", () => {
+    const onSelectPreset = vi.fn();
     render(
       <CaseLinePaymentPresetBar
         viewPreset="all"
-        onSelectPreset={vi.fn()}
+        onSelectPreset={onSelectPreset}
         totalCount={10}
-        suggestionsCount={0}
+        suggestionsCount={4}
         selectedCount={2}
-        linkedCount={0}
-        selectedTotal={500000}
-        onUnselectAll={onUnselectAll}
+        linkedCount={1}
       />,
     );
 
-    expect(screen.getByText(/500.000/i)).toBeInTheDocument();
-    const unselectBtn = screen.getByRole("button", { name: /Bỏ chọn/i });
-    expect(unselectBtn).toBeInTheDocument();
-    fireEvent.click(unselectBtn);
-    expect(onUnselectAll).toHaveBeenCalled();
+    fireEvent.click(screen.getByText("Đang chọn"));
+    expect(onSelectPreset).toHaveBeenCalledWith("selected");
+
+    fireEvent.click(screen.getByText("Đã cấn trừ"));
+    expect(onSelectPreset).toHaveBeenCalledWith("linked");
   });
 });

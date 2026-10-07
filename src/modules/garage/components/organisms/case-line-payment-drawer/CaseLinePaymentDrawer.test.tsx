@@ -159,13 +159,20 @@ describe("CaseLinePaymentDrawer", () => {
     ).toBeInTheDocument();
   });
 
-  it("renders 'Tiến độ chi tiền' in right panel when direction is COST", () => {
+  it("renders 'Thông tin sổ báo giá' and target amount in right panel", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <CaseLinePaymentDrawer
           open={true}
           onClose={vi.fn()}
           caseId="case-1"
+          caseCode="GR-PDV2609-0056"
+          caseData={{
+            soChungTu: "GR-PDV2609-0056",
+            bienSoXe: "50E-123.45",
+            khachHangName: "CÔNG TY ABC",
+            tienCoThue: 9018000,
+          }}
           lineId="line-2"
           lineCode="PT-02"
           lineName="Bugi đánh lửa"
@@ -177,77 +184,16 @@ describe("CaseLinePaymentDrawer", () => {
       </QueryClientProvider>,
     );
 
-    expect(screen.getByText(/Tiến độ chi tiền/i)).toBeInTheDocument();
-    expect(screen.getByText(/Đã chi \(sao kê\)/i)).toBeInTheDocument();
-    expect(screen.getByText(/Còn phải chi/i)).toBeInTheDocument();
-  });
+    // Section 1: Khoản mục cấn trừ có số tiền cần cấn trừ
+    expect(screen.getByText(/Khoản mục cấn trừ/i)).toBeInTheDocument();
+    expect(screen.getByText(/Số tiền cần cấn trừ/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/500.000 ₫/i).length).toBeGreaterThanOrEqual(2);
 
-  it("keeps progress at 0% when selected invoice is NOT settled with bank statement", () => {
-    mockReconOverrides = {
-      selectedInvoicesMap: {
-        "inv-unsettled": {
-          id: "inv-unsettled",
-          totalAmount: 300000,
-          hasBankNetOff: false,
-          bankSettledAmount: 0,
-        },
-      },
-      selectedInvoicesTotal: 300000,
-    };
-
-    render(
-      <QueryClientProvider client={queryClient}>
-        <CaseLinePaymentDrawer
-          open={true}
-          onClose={vi.fn()}
-          caseId="case-1"
-          lineId="line-1"
-          lineCode="PT-01"
-          lineName="Lọc nhớt"
-          lineAmount={300000}
-          lineType="PT"
-          payer="KH"
-          direction="REVENUE"
-        />
-      </QueryClientProvider>,
-    );
-
-    // Tiến độ phải là 0% vì HĐ chưa cấn trừ sao kê
-    expect(screen.getByText(/0% hoàn thành/i)).toBeInTheDocument();
-    expect(screen.getByText(/Đã thu \(sao kê\)/i)).toBeInTheDocument();
-  });
-
-  it("increases progress to 100% when selected invoice HAS bank statement netoff", () => {
-    mockReconOverrides = {
-      selectedInvoicesMap: {
-        "inv-settled": {
-          id: "inv-settled",
-          totalAmount: 300000,
-          hasBankNetOff: true,
-          bankSettledAmount: 300000,
-        },
-      },
-      selectedInvoicesTotal: 300000,
-    };
-
-    render(
-      <QueryClientProvider client={queryClient}>
-        <CaseLinePaymentDrawer
-          open={true}
-          onClose={vi.fn()}
-          caseId="case-1"
-          lineId="line-1"
-          lineCode="PT-01"
-          lineName="Lọc nhớt"
-          lineAmount={300000}
-          lineType="PT"
-          payer="KH"
-          direction="REVENUE"
-        />
-      </QueryClientProvider>,
-    );
-
-    // Tiến độ phải là 100% vì HĐ đã cấn trừ sao kê
-    expect(screen.getByText(/100% hoàn thành/i)).toBeInTheDocument();
+    // Section 2: Thông tin sổ báo giá
+    expect(screen.getByText(/Thông tin sổ báo giá/i)).toBeInTheDocument();
+    expect(screen.getByText(/GR-PDV2609-0056/i)).toBeInTheDocument();
+    expect(screen.getByText(/50E-123.45/i)).toBeInTheDocument();
+    expect(screen.getByText(/CÔNG TY ABC/i)).toBeInTheDocument();
+    expect(screen.getByText(/9.018.000 ₫/i)).toBeInTheDocument();
   });
 });

@@ -62,9 +62,6 @@ export function CaseLinePaymentDrawer(props: CaseLinePaymentDrawerProps) {
               suggestionsCount={reconLogic.invoiceSuggestions.length}
               selectedCount={reconLogic.selectedInvoicesCount}
               linkedCount={linkedCount}
-              selectedTotal={reconLogic.selectedInvoicesTotal}
-              onUnselectAll={() => reconLogic.handleSelectAllInvoices(false)}
-              onSelectAllSuggestions={reconLogic.handleSelectAllSuggestions}
             />
             <InvoiceTabContent
               invoiceDirection={invoiceDirection}
