@@ -1,6 +1,6 @@
 import React from "react";
 import { describe, it, expect, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { GarageCasesTable } from "./GarageCasesTable";
 import {
@@ -139,7 +139,7 @@ describe("GarageCasesTable Organism", () => {
     expect(screen.getByText("0")).toBeDefined();
   });
 
-  it("buildGarageCasesColumns builds all 23 columns matching presets", () => {
+  it("buildGarageCasesColumns builds all 25 columns matching presets and places revenue before receivables in overview preset", () => {
     const ctx: any = {
       t: (k: string, d?: string) => d || k,
       tableState: { sorts: [], columnSearch: {}, columnFilters: {} },
@@ -154,9 +154,10 @@ describe("GarageCasesTable Organism", () => {
       onOpenConfig: vi.fn(),
       canUpdateGarage: true,
       branches: [{ externalId: "b1", name: "Chi nhánh 1" }],
+      activeColumnPresetKey: "overview",
     };
     const cols = buildGarageCasesColumns(ctx);
-    expect(cols.length).toBe(23);
+    expect(cols.length).toBe(25);
     const keys = cols.map((c) => c.key);
     const expectedKeys = [
       "index",
@@ -177,6 +178,8 @@ describe("GarageCasesTable Organism", () => {
       "loiNhuan",
       "margin",
       "collectionProgress",
+      "phaiThuKhachHang",
+      "phaiThuBaoHiem",
       "tienConPhaiThanhToan",
       "costProgress",
       "tienConPhaiChi",
@@ -186,6 +189,42 @@ describe("GarageCasesTable Organism", () => {
     expectedKeys.forEach((key) => {
       expect(keys).toContain(key);
     });
+
+    // In overview preset: revenue, cost, profit must be positioned BEFORE receivables
+    const doanhThuIdx = keys.indexOf("doanhThu");
+    const phaiThuKhIdx = keys.indexOf("phaiThuKhachHang");
+    const phaiThuBhIdx = keys.indexOf("phaiThuBaoHiem");
+    expect(doanhThuIdx).toBeLessThan(phaiThuKhIdx);
+    expect(doanhThuIdx).toBeLessThan(phaiThuBhIdx);
+  });
+
+  it("buildGarageCasesColumns places receivables before revenue/profit columns when in audit preset", () => {
+    const ctx: any = {
+      t: (k: string, d?: string) => d || k,
+      tableState: { sorts: [], columnSearch: {}, columnFilters: {} },
+      dateRanges: {},
+      onDateRangeChange: vi.fn(),
+      onSortChange: vi.fn(),
+      onSearchChange: vi.fn(),
+      onFilterChange: vi.fn(),
+      fetchCaseColumnOptions: vi.fn(),
+      onOpenDetail: vi.fn(),
+      onOpenFinancials: vi.fn(),
+      onOpenConfig: vi.fn(),
+      canUpdateGarage: true,
+      branches: [{ externalId: "b1", name: "Chi nhánh 1" }],
+      activeColumnPresetKey: "audit",
+    };
+    const cols = buildGarageCasesColumns(ctx);
+    expect(cols.length).toBe(25);
+    const keys = cols.map((c) => c.key);
+
+    // In audit preset: receivables must be positioned BEFORE revenue, cost, profit
+    const doanhThuIdx = keys.indexOf("doanhThu");
+    const phaiThuKhIdx = keys.indexOf("phaiThuKhachHang");
+    const phaiThuBhIdx = keys.indexOf("phaiThuBaoHiem");
+    expect(phaiThuKhIdx).toBeLessThan(doanhThuIdx);
+    expect(phaiThuBhIdx).toBeLessThan(doanhThuIdx);
   });
 
   it("buildCasesSummaryRow aggregates totals correctly with backend fields and customer label", () => {
@@ -201,6 +240,8 @@ describe("GarageCasesTable Organism", () => {
           tienDaThanhToan: 1500,
           tienConPhaiThanhToan: 700,
           tienDaChi: 1000,
+          phaiThuKhachHang: 1200,
+          phaiThuBaoHiem: 1000,
         },
       ],
       profitCases: [],
@@ -215,6 +256,8 @@ describe("GarageCasesTable Organism", () => {
     expect(summary.chiPhi).toBeDefined();
     expect(summary.loiNhuan).toBeDefined();
     expect(summary.collectionProgress).toBeDefined();
+    expect(summary.phaiThuKhachHang).toBeDefined();
+    expect(summary.phaiThuBaoHiem).toBeDefined();
     expect(summary.costProgress).toBeDefined();
     expect(summary.tienConPhaiThanhToan).toBeDefined();
     expect(summary.tienConPhaiChi).toBeDefined();
@@ -261,5 +304,83 @@ describe("GarageCasesTable Organism", () => {
     reconcileAction?.onClick();
     expect(onOpenFinancials).toHaveBeenCalledTimes(1);
     expect(onOpenFinancials).toHaveBeenCalledWith("GR-PDV-2026-999", true);
+  });
+
+  it("verifies updated column sizes match design specifications", () => {
+    const ctx: any = {
+      t: (k: string, d?: string) => d || k,
+      tableState: { sorts: [], columnSearch: {}, columnFilters: {} },
+      dateRanges: {},
+      onDateRangeChange: vi.fn(),
+      onSortChange: vi.fn(),
+      onSearchChange: vi.fn(),
+      onFilterChange: vi.fn(),
+      fetchCaseColumnOptions: vi.fn(),
+      onOpenDetail: vi.fn(),
+      onOpenFinancials: vi.fn(),
+      onOpenConfig: vi.fn(),
+      canUpdateGarage: true,
+      branches: [],
+      activeColumnPresetKey: "overview",
+    };
+    const cols = buildGarageCasesColumns(ctx);
+    const sizeMap = Object.fromEntries(cols.map((c) => [c.key, c.size]));
+
+    expect(sizeMap.caseDate).toBe(130);
+    expect(sizeMap.ngayHoanThanhCongViec).toBe(130);
+    expect(sizeMap.caseCode).toBe(180);
+    expect(sizeMap.customer).toBe(200);
+    expect(sizeMap.kgaraClassification).toBe(150);
+    expect(sizeMap.classification).toBe(150);
+    expect(sizeMap.exclusionRules).toBe(150);
+    expect(sizeMap.statusName).toBe(130);
+    expect(sizeMap.doanhThu).toBe(140);
+    expect(sizeMap.chiPhi).toBe(140);
+    expect(sizeMap.loiNhuan).toBe(140);
+    expect(sizeMap.collectionProgress).toBe(140);
+    expect(sizeMap.phaiThuKhachHang).toBe(140);
+    expect(sizeMap.phaiThuBaoHiem).toBe(140);
+    expect(sizeMap.tienConPhaiThanhToan).toBe(140);
+    expect(sizeMap.costProgress).toBe(140);
+    expect(sizeMap.tienConPhaiChi).toBe(140);
+    expect(sizeMap.hasInvoice).toBe(100);
+  });
+
+  it("renders linked invoice icon in hasInvoice column and triggers onOpenFinancials", () => {
+    const onOpenFinancials = vi.fn();
+    const ctx: any = {
+      t: (k: string, d?: string) => d || k,
+      tableState: { sorts: [], columnSearch: {}, columnFilters: {} },
+      dateRanges: {},
+      onDateRangeChange: vi.fn(),
+      onSortChange: vi.fn(),
+      onSearchChange: vi.fn(),
+      onFilterChange: vi.fn(),
+      fetchCaseColumnOptions: vi.fn(),
+      onOpenDetail: vi.fn(),
+      onOpenFinancials,
+      onOpenConfig: vi.fn(),
+      canUpdateGarage: true,
+      branches: [],
+      activeColumnPresetKey: "audit",
+    };
+    const cols = buildGarageCasesColumns(ctx);
+    const hasInvoiceCol = cols.find((c) => c.key === "hasInvoice");
+    expect(hasInvoiceCol).toBeDefined();
+
+    const cellWithLinked = hasInvoiceCol?.cell(
+      {
+        id: "case-01",
+        soChungTu: "GR-PDV-001",
+        linkedInvoiceCount: 2,
+        linkedInvoiceOutCount: 1,
+        linkedInvoiceInCount: 1,
+      },
+      0,
+    );
+    const { getByLabelText } = render(<div>{cellWithLinked}</div>);
+    const linkBtn = getByLabelText("Đã liên kết HĐ");
+    fireEvent.click(linkBtn);
+    expect(onOpenFinancials).toHaveBeenCalledWith("GR-PDV-001");
   });
 });

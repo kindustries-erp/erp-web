@@ -92,9 +92,16 @@ export function ErpInvoicesTab(props: ErpInvoicesTabProps) {
     mountedViewsRef.current[logic.currentTabKey] = true;
   }
 
+  const [syncAdvancedModalOpen, setSyncAdvancedModalOpen] =
+    React.useState(false);
+
   const handleOpenSync = React.useCallback(() => {
     setImportModalOpen(true);
   }, [setImportModalOpen]);
+
+  const handleOpenSyncAdvanced = React.useCallback(() => {
+    setSyncAdvancedModalOpen(true);
+  }, []);
 
   const handleOpenPortalAuth = React.useCallback(() => {
     setPortalAuthOpen(true);
@@ -144,6 +151,7 @@ export function ErpInvoicesTab(props: ErpInvoicesTabProps) {
             handleDownload={handleDownload}
             handleExportExcel={handleExportExcelAction}
             onOpenSync={handleOpenSync}
+            onOpenSyncAdvanced={handleOpenSyncAdvanced}
             onOpenPortalAuth={handleOpenPortalAuth}
             setNetOffInvoice={setNetOffInvoice}
             formHook={formHook}
@@ -212,6 +220,7 @@ export function ErpInvoicesTab(props: ErpInvoicesTabProps) {
             handleDownload={handleDownload}
             handleExportExcel={handleExportExcelAction}
             onOpenSync={handleOpenSync}
+            onOpenSyncAdvanced={handleOpenSyncAdvanced}
             onOpenPortalAuth={handleOpenPortalAuth}
             setNetOffInvoice={setNetOffInvoice}
             formHook={formHook}
@@ -300,6 +309,8 @@ export function ErpInvoicesTab(props: ErpInvoicesTabProps) {
         netOffInvoice={netOffInvoice}
         setNetOffInvoice={setNetOffInvoice}
         activeView={logic.activeView}
+        syncAdvancedModalOpen={syncAdvancedModalOpen}
+        setSyncAdvancedModalOpen={setSyncAdvancedModalOpen}
       />
 
       <InvoiceBulkModals

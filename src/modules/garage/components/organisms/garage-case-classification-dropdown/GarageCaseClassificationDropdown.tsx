@@ -1,17 +1,11 @@
 import React from "react";
 import { cn } from "@/shared/utils";
 import { Popover } from "@/core/components/ui/Popover";
-import {
-  Check,
-  ChevronDown,
-  Settings2,
-  Loader2,
-  Building2,
-  Plus,
-} from "lucide-react";
+import { Tooltip } from "@/core/components/ui/Tooltip";
+import { Check, ChevronDown, Settings2, Loader2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { GARAGE_CASE_CLASSIFICATIONS } from "../../GarageCaseClassificationBadge";
 import { useGarageCaseClassificationDropdown } from "./GarageCaseClassificationDropdown.hook";
+import { getClassificationDisplayMeta } from "./GarageCaseClassificationDropdown.helper";
 import type { GarageCaseClassificationDropdownProps } from "./GarageCaseClassificationDropdown.type";
 
 export function GarageCaseClassificationDropdown({
@@ -103,30 +97,7 @@ export function GarageCaseClassificationDropdown({
     </div>
   );
 
-  const effectiveCode =
-    caseItem.category?.code || caseItem.classification || "";
-  const meta =
-    GARAGE_CASE_CLASSIFICATIONS[
-      effectiveCode === "OJ_NGOAI" ? "OJ" : effectiveCode
-    ];
-  const label =
-    caseItem.category?.name ||
-    (meta
-      ? t(`cases.classification.${meta.value}`, meta.label)
-      : effectiveCode) ||
-    t("cases.classification.unclassified", "Chưa phân loại");
-  const icon =
-    meta?.icon ||
-    (effectiveCode ? (
-      <Building2 className="w-3 h-3 mr-1 shrink-0" />
-    ) : (
-      <Plus className="w-2.5 h-2.5 mr-1 opacity-70 shrink-0" />
-    ));
-  const colorClass =
-    meta?.colorClass ||
-    (effectiveCode
-      ? "bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-900/50 dark:text-slate-300 dark:border-slate-800/40"
-      : "border-dashed border-slate-300 dark:border-slate-700 text-muted-foreground/70 bg-transparent");
+  const { label, icon, colorClass } = getClassificationDisplayMeta(caseItem, t);
 
   return (
     <div
@@ -146,7 +117,7 @@ export function GarageCaseClassificationDropdown({
           onClick={handleTriggerClick}
           disabled={isUpdating}
           className={cn(
-            "group w-[150px] h-6 inline-flex items-center justify-between px-2 rounded-md text-[11px] font-semibold border transition-all select-none focus:outline-hidden",
+            "group w-[136px] h-6 inline-flex items-center justify-between px-2 rounded-md text-[11px] font-semibold border transition-all select-none focus:outline-hidden",
             canUpdate
               ? "cursor-pointer hover:opacity-90 hover:scale-[1.02]"
               : "cursor-default opacity-90",
@@ -162,10 +133,12 @@ export function GarageCaseClassificationDropdown({
               : t("cases.actions.viewOnly", "Chỉ xem")
           }
         >
-          <div className="flex items-center gap-1 min-w-0 truncate pr-1">
-            {icon}
-            <span className="truncate">{label}</span>
-          </div>
+          <Tooltip content={label}>
+            <div className="flex items-center gap-1 min-w-0 truncate pr-1">
+              {icon}
+              <span className="truncate">{label}</span>
+            </div>
+          </Tooltip>
           {isUpdating ? (
             <Loader2 className="w-2.5 h-2.5 animate-spin text-muted-foreground shrink-0" />
           ) : (

@@ -1,5 +1,9 @@
 import React from "react";
 import { SubtotalSummaryCell } from "@/shared/components/DataTable/SubtotalSummaryCell";
+import {
+  extractPhaiThuKhachHang,
+  extractPhaiThuBaoHiem,
+} from "../../../utils/garageCasesTable";
 
 export function getGarageCaseRowClassName(item: any) {
   if (
@@ -44,6 +48,8 @@ export function buildCasesSummaryRow({
   let totalCost = 0;
   let totalProfit = 0;
   let totalReceivable = 0;
+  let totalPhaiThuKH = 0;
+  let totalPhaiThuBH = 0;
   let totalPaid = 0;
   let totalBalanceVal = 0;
   let totalRemainingPayable = 0;
@@ -63,6 +69,8 @@ export function buildCasesSummaryRow({
         item.rawData?.TienCoThue ??
         0,
     );
+    const ptKh = extractPhaiThuKhachHang(item);
+    const ptBh = extractPhaiThuBaoHiem(item);
     const paid = Number(
       item.tienDaThanhToan ??
         item.tienKhachDaTra ??
@@ -76,6 +84,8 @@ export function buildCasesSummaryRow({
     totalCost += cost;
     totalProfit += profit;
     totalReceivable += rec;
+    totalPhaiThuKH += ptKh;
+    totalPhaiThuBH += ptBh;
     totalPaid += paid;
     totalBalanceVal += bal;
     totalRemainingPayable += Math.max(0, cost - paidCost);
@@ -110,6 +120,18 @@ export function buildCasesSummaryRow({
       ? Number(totals.cumulativeReceivable)
       : isP1
         ? totalReceivable
+        : undefined;
+  const cumPhaiThuKH =
+    totals?.cumulativePhaiThuKhachHang != null
+      ? Number(totals.cumulativePhaiThuKhachHang)
+      : isP1
+        ? totalPhaiThuKH
+        : undefined;
+  const cumPhaiThuBH =
+    totals?.cumulativePhaiThuBaoHiem != null
+      ? Number(totals.cumulativePhaiThuBaoHiem)
+      : isP1
+        ? totalPhaiThuBH
         : undefined;
   const cumPaid =
     totals?.cumulativePaid != null
@@ -220,6 +242,20 @@ export function buildCasesSummaryRow({
       cumRec,
       totals?.grandTotalReceivable,
       "font-bold text-primary",
+    ),
+    phaiThuKhachHang: renderAmount(
+      t("cases.columns.receivableCustomer", "Phải thu KH"),
+      totalPhaiThuKH,
+      cumPhaiThuKH,
+      totals?.grandTotalPhaiThuKhachHang,
+      "font-bold text-primary",
+    ),
+    phaiThuBaoHiem: renderAmount(
+      t("cases.columns.receivableInsurance", "Phải thu BH"),
+      totalPhaiThuBH,
+      cumPhaiThuBH,
+      totals?.grandTotalPhaiThuBaoHiem,
+      "font-bold text-blue-600 dark:text-blue-400",
     ),
     costProgress: renderAmount(
       t("cases.columns.costProgress", "Tổng phải trả"),

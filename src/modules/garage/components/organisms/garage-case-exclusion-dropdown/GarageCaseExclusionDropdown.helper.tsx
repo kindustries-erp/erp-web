@@ -41,3 +41,18 @@ export const EXCLUSION_OPTIONS: ExclusionOptionDef[] = [
     activeBorder: "border-rose-600 dark:border-rose-400",
   },
 ];
+
+export function getExclusionTooltipContent(
+  hasAnyExclusion: boolean,
+  excludeFromReports: boolean,
+  excludeFromDebt: boolean,
+  defaultLabel: string,
+): string {
+  if (!hasAnyExclusion) return defaultLabel;
+  return [
+    excludeFromReports && "Loại trừ khỏi báo cáo P&L",
+    excludeFromDebt && "Loại trừ khỏi công nợ",
+  ]
+    .filter(Boolean)
+    .join(", ");
+}

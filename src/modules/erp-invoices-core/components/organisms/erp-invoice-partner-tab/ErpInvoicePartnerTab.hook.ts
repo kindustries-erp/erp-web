@@ -6,6 +6,7 @@ import { DEFAULT_STALE_TIME } from "@/shared/lib/queryKeys";
 import type { InvoiceDetailViewMode } from "@/modules/erp-invoices-core/context/InvoicePreviewModeContext";
 import type { ErpInvoicePartnerTabProps } from "./ErpInvoicePartnerTab.type";
 import type { PartnerSubTabMode } from "./ErpInvoicePartnerTabNav";
+import { normalizeInvoiceDocuments } from "../invoice-document-workspace/InvoiceDocumentWorkspace.helper";
 
 export function useErpInvoicePartnerTab({
   detailInvoice,
@@ -54,31 +55,12 @@ export function useErpInvoicePartnerTab({
   );
 
   const attachmentCount = useMemo(() => {
-    let count = 0;
-    if (detailInvoice?.pdfFileKey) count++;
-    if (detailInvoice?.pdfFiles && detailInvoice.pdfFiles.length > 0) {
-      count += detailInvoice.pdfFiles.length;
-    }
-    if (detailInvoice?.attachments && detailInvoice.attachments.length > 0) {
-      count += detailInvoice.attachments.length;
-    }
-    if (
-      form?.pendingAddedAttachments &&
-      form.pendingAddedAttachments.length > 0
-    ) {
-      count += form.pendingAddedAttachments.length;
-    }
-    if (form?.pendingDeletedPdfs && form.pendingDeletedPdfs.length > 0) {
-      count -= form.pendingDeletedPdfs.length;
-    }
-    return Math.max(0, count);
-  }, [
-    detailInvoice?.pdfFileKey,
-    detailInvoice?.pdfFiles,
-    detailInvoice?.attachments,
-    form?.pendingAddedAttachments,
-    form?.pendingDeletedPdfs,
-  ]);
+    return normalizeInvoiceDocuments(
+      detailInvoice,
+      form?.pendingAddedAttachments || [],
+      form?.pendingDeletedPdfs || [],
+    ).length;
+  }, [detailInvoice, form?.pendingAddedAttachments, form?.pendingDeletedPdfs]);
 
   const [detailViewMode, setDetailViewMode] =
     useState<InvoiceDetailViewMode>("template");

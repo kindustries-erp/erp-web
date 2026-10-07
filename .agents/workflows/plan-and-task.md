@@ -35,11 +35,11 @@ graph LR
    - DataTable: STT 1-based, Header Filter (`showColumnFilter: true`), Server-side sorting & search (`applyMultiKeywordFilter`), Pagination responsive (`getDefaultPageSize()`).
    - Drawer: `StandardFormDrawer`, kích thước `vw` responsive (`45vw` / `65vw` / `85vw`), Top Navigation Tabs, Collapsible Sections.
 
-4. **Atomic Tasks with Concrete DoD & Visual Verification**:
+4. **Atomic Tasks with Scoped DoD & Fast Verification**:
    - Mỗi Task **bắt buộc** đi kèm:
      - Danh sách file cụ thể (`[NEW]`, `[MODIFY]`, `[DELETE]`).
      - Tiêu chí hoàn thành (DoD) rõ ràng.
-     - **Verification Command** chạy ngay để xác thực (`bun run test`, `bun run build`).
+     - **Verification Command thu hẹp (< 5s)**: `bunx tsc --noEmit`, `bunx vitest run <spec>`, hoặc `bunx vitest related <file> --run`. **TUYỆT ĐỐI CẤM** chạy full test (`bun run test`) hoặc full build (`bun run build`) ở từng task nhỏ.
 
 5. **Knowledge-Sync Guard (Cập nhật Tri thức / Skill Liền Tay)**:
    - Ngay sau khi hoàn thành task/feature/refactor có thay đổi về UI layout, Component architecture, Token styling, Store state hoặc Props interface, Agent **BẮT BUỘC cập nhật lại Module Skill** tương ứng (tại `.agents/skills/modules/<module>/SKILL.md`) hoặc tạo mới skill (ví dụ `v2-layout`) để lưu giữ tri thức.
@@ -98,12 +98,14 @@ graph TD
     - `[NEW]` [src/modules/example/hooks/useExampleList.ts](file:///home/dev/repos/erp/erp-web/src/modules/example/hooks/useExampleList.ts)
     - `[NEW]` [src/modules/example/pages/ExampleListPage.tsx](file:///home/dev/repos/erp/erp-web/src/modules/example/pages/ExampleListPage.tsx)
   - **Definition of Done (DoD)**:
-    - [x] TypeScript strict pass không có lỗi `any` (`bun run build`).
+    - [x] TypeScript strict pass không có lỗi type (`bunx tsc --noEmit`).
     - [x] STT 1-based hiển thị chính xác qua các trang (Trang 1: 1..20, Trang 2: 21..40).
     - [x] Header Filter popup hiển thị danh sách options phân trang đúng.
-  - **Verification Command**:
+  - **Verification Command (Nhanh < 5s)**:
     ```bash
-    cd /home/dev/repos/erp/erp-web && bun run test && bun run build
+    cd /home/dev/repos/erp/erp-web && bunx tsc --noEmit
+    # Hoặc test spec liên quan:
+    cd /home/dev/repos/erp/erp-web && bunx vitest run src/modules/example/example.spec.tsx
     ```
 ```
 
@@ -120,8 +122,12 @@ graph TD
 ### 🔹 GIAI ĐOẠN 5: Execution, Test & Walkthrough (Thực Thi & Nghiệm Thu)
 
 1. Thực thi từng task, tuân thủ Atomic Refactor (< 200 dòng/file).
-2. Chạy `bun run test` và `bun run build`.
-3. **Knowledge & Skill Sync (Bắt buộc kiểm tra & cập nhật liền sau khi xong task)**:
+2. Chạy Scoped Verification Command tại mỗi task (`bunx tsc --noEmit` hoặc `bunx vitest run <spec>`).
+3. **Nghiệm thu cuối cùng (Final Gate)**: Chạy full check DUY NHẤT một lần ở cuối khi toàn bộ màn hình/tính năng hoàn tất:
+   ```bash
+   bun run check:ci && bun run test
+   ```
+4. **Knowledge & Skill Sync (Bắt buộc kiểm tra & cập nhật liền sau khi xong task)**:
    - Nếu có thay đổi cấu trúc component, props, hooks, stores, hoặc semantic tokens: cập nhật ngay file Module Skill tương ứng (như `v2-layout`, `app-store`, `drawer-document-traceability`, ...) hoặc tạo skill mới.
    - Liên kết skill mới vào `liouni-erp-web-current-truth`.
 4. Soạn `walkthrough.md` với đầy đủ kết quả test, screenshot giao diện, trạng thái đồng bộ skill, và hướng dẫn thao tác.

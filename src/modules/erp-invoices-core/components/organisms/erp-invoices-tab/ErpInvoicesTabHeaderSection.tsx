@@ -11,6 +11,7 @@ import {
   Scale,
   Settings,
   Building2,
+  FileCheck2,
 } from "lucide-react";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate/SpreadsheetPageTemplate";
 import { PillTabs } from "@/shared/components/PillTabs";
@@ -51,6 +52,7 @@ export interface InvoiceHeaderSectionProps {
   handleDownload: (id: string, type: "pdf" | "xml") => Promise<void>;
   handleExportExcel: () => void;
   onOpenSync: () => void;
+  onOpenSyncAdvanced?: () => void;
   onOpenPortalAuth: () => void;
   setNetOffInvoice: (inv: any) => void;
   formHook: any;
@@ -96,6 +98,7 @@ export const InvoiceHeaderSection = React.memo(function InvoiceHeaderSection({
   handleDownload,
   handleExportExcel,
   onOpenSync,
+  onOpenSyncAdvanced,
   onOpenPortalAuth,
   setNetOffInvoice,
   formHook,
@@ -446,6 +449,20 @@ export const InvoiceHeaderSection = React.memo(function InvoiceHeaderSection({
                   icon: <KeyRound className="w-4 h-4 text-primary" />,
                   onClick: onOpenPortalAuth,
                 },
+                ...(onOpenSyncAdvanced
+                  ? [
+                      {
+                        label: t(
+                          "advancedSyncAndOriginalPdf",
+                          "Đồng bộ & Tải PDF gốc NCC",
+                        ),
+                        icon: (
+                          <FileCheck2 className="w-4 h-4 text-emerald-600" />
+                        ),
+                        onClick: onOpenSyncAdvanced,
+                      },
+                    ]
+                  : []),
               ],
             },
           ]

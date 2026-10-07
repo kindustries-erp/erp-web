@@ -13,6 +13,7 @@ import {
   ErpInvoiceInternalSidebar,
 } from "@/modules/erp-invoices-core/components/organisms/erp-invoice-detail-drawer";
 import { InvoiceImportSyncDrawer } from "@/modules/erp-invoices-core/components/organisms/invoice-import-sync-drawer";
+import { InvoiceSyncAdvancedModal } from "@/modules/erp-invoices-core/components/organisms/invoice-sync-advanced-modal";
 import { GdtPortalAuthDrawer } from "@/modules/erp-invoices-core/components/organisms/gdt-portal-auth-drawer";
 import { VoucherNetoffSelectionModal } from "@/modules/erp-invoices-core/components/organisms/voucher-netoff-selection-modal";
 import { BankTransactionDetailDrawer } from "@/pages/finance/components/BankTransactionDetailDrawer";
@@ -62,6 +63,8 @@ export interface InvoiceDrawersProps {
   setNetOffInvoice: (inv: any | null) => void;
   activeView?: "header" | "lines" | "dashboard" | "draft";
   partnerViewMode?: "details" | "invoices" | "lines";
+  syncAdvancedModalOpen?: boolean;
+  setSyncAdvancedModalOpen?: (open: boolean) => void;
 }
 
 export function InvoiceDrawers({
@@ -87,6 +90,8 @@ export function InvoiceDrawers({
   setNetOffInvoice,
   activeView,
   partnerViewMode,
+  syncAdvancedModalOpen,
+  setSyncAdvancedModalOpen,
 }: InvoiceDrawersProps) {
   const isInternalOpen = formHook.internalDrawerOpen;
 
@@ -295,6 +300,15 @@ export function InvoiceDrawers({
               );
             }
           }}
+        />
+      )}
+
+      {setSyncAdvancedModalOpen && (
+        <InvoiceSyncAdvancedModal
+          open={Boolean(syncAdvancedModalOpen)}
+          onClose={() => setSyncAdvancedModalOpen(false)}
+          defaultCompanyTaxCode=""
+          onSuccess={() => void loadInvoices()}
         />
       )}
     </>

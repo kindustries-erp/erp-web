@@ -84,4 +84,36 @@ describe("ManualCashflowTabContent UI Component", () => {
 
     expect(screen.getByText("Chờ lưu")).toBeDefined();
   });
+
+  it("should display count including pending status in titleExtra", () => {
+    const activeSettlements = [
+      {
+        id: "persisted-1",
+        settlement_type: "RECEIPT",
+        source_channel: "OFF_SYSTEM_MANUAL",
+        category: "TIEN_MAT_NGOAI",
+        amount: 500000,
+        trans_date: "2026-10-05",
+      },
+      {
+        id: "tmp-item-2",
+        tempId: "tmp-item-2",
+        isPending: true,
+        settlement_type: "RECEIPT",
+        source_channel: "OFF_SYSTEM_MANUAL",
+        category: "CHUYEN_KHOAN_CA_NHAN",
+        amount: 300000,
+        trans_date: "2026-10-05",
+      },
+    ];
+
+    render(
+      <ManualCashflowTabContent
+        {...baseProps}
+        activeSettlements={activeSettlements}
+      />,
+    );
+
+    expect(screen.getByText(/2 GD, 1 chờ lưu/i)).toBeInTheDocument();
+  });
 });
