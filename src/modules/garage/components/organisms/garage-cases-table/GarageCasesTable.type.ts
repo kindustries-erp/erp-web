@@ -47,4 +47,5 @@ export interface ColumnContext {
   onOpenConfig?: (item: any) => void;
   canUpdateGarage?: boolean;
   branches?: any[];
+  activeColumnPresetKey?: string;
 }

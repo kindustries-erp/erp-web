@@ -1,4 +1,5 @@
 import React from "react";
+import { Tooltip } from "@/core/components/ui/Tooltip";
 import { GarageCaseCodeCell } from "../../molecules/garage-case-code-cell";
 import { GarageCaseCustomerCell } from "../../molecules/garage-case-customer-cell";
 import { GarageCaseClassificationDropdown } from "../garage-case-classification-dropdown";
@@ -42,7 +43,7 @@ export function buildGeneralColumns(
       header: makeHdr("caseCode", t("cases.columns.caseCode", "Số chứng từ"), {
         isActive: Boolean(tableState.columnFilters.caseCode?.length),
       }),
-      size: 220,
+      size: 180,
       cell: (item: any) => (
         <GarageCaseCodeCell
           item={item}
@@ -58,7 +59,7 @@ export function buildGeneralColumns(
         align: "left",
         showBlankOption: true,
       }),
-      size: 240,
+      size: 200,
       cell: (item: any) => <GarageCaseCustomerCell item={item} />,
     },
     {
@@ -68,7 +69,7 @@ export function buildGeneralColumns(
         "kgaraClassification",
         t("cases.columns.kgaraClassification", "Phân loại KGara"),
       ),
-      size: 170,
+      size: 150,
       className: "text-center",
       cell: (item: any) => {
         const kgaraClass =
@@ -82,15 +83,15 @@ export function buildGeneralColumns(
             </span>
           );
         }
+        const fullTitle = `Nguồn gốc KGara: ${kgaraClass}${item.kgaraClassificationCode ? ` (${item.kgaraClassificationCode})` : ""} - Bất biến`;
         return (
           <div className="w-full flex items-center justify-center">
-            <span
-              className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700 max-w-[160px] truncate"
-              title={`Nguồn gốc KGara: ${kgaraClass}${item.kgaraClassificationCode ? ` (${item.kgaraClassificationCode})` : ""} - Bất biến`}
-            >
-              <span className="w-1.5 h-1.5 rounded-full bg-slate-400 shrink-0" />
-              <span className="truncate">{kgaraClass}</span>
-            </span>
+            <Tooltip content={fullTitle}>
+              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700 max-w-[135px] truncate">
+                <span className="w-1.5 h-1.5 rounded-full bg-slate-400 shrink-0" />
+                <span className="truncate">{kgaraClass}</span>
+              </span>
+            </Tooltip>
           </div>
         );
       },
@@ -102,7 +103,7 @@ export function buildGeneralColumns(
         "classification",
         t("cases.columns.classificationErp", "Phân loại ERP"),
       ),
-      size: 180,
+      size: 150,
       className: "text-center",
       cell: (item: any) => (
         <div className="w-full flex items-center justify-center py-0.5">
@@ -121,7 +122,7 @@ export function buildGeneralColumns(
         "exclusionRules",
         t("cases.columns.exclusionRules", "Quy tắc loại trừ"),
       ),
-      size: 180,
+      size: 150,
       className: "text-center",
       cell: (item: any) => (
         <div className="w-full flex items-center justify-center py-0.5">
@@ -137,7 +138,7 @@ export function buildGeneralColumns(
       key: "statusName",
       label: t("cases.columns.status", "Trạng thái"),
       header: makeHdr("statusName", t("cases.columns.status", "Trạng thái")),
-      size: 140,
+      size: 130,
       className: "text-center",
       cell: (item: any) => (
         <div className="w-full flex justify-center">

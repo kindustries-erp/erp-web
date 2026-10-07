@@ -1,6 +1,6 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { Eye, Car, Link2, FileClock } from "lucide-react";
+import { Eye, Car, FileClock } from "lucide-react";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import { CopyButton } from "@/shared/components/CopyButton";
 import type { GarageCaseCodeCellProps } from "./GarageCaseCodeCell.type";
@@ -8,18 +8,12 @@ import type { GarageCaseCodeCellProps } from "./GarageCaseCodeCell.type";
 export function GarageCaseCodeCell({
   item,
   onOpenDetail,
-  onOpenFinancials,
 }: GarageCaseCodeCellProps) {
   const { t } = useTranslation(["garage", "common"]);
   const s = (item.tenTinhTrangDichVu || "").toLowerCase();
   const isDraft =
     s.includes("nháp") || s.includes("báo giá") || s.includes("chờ");
 
-  const outCount = Number(item.linkedInvoiceOutCount || 0);
-  const inCount = Number(item.linkedInvoiceInCount || 0);
-  const totalLinked = Number(
-    item.linkedInvoiceCount || outCount + inCount || 0,
-  );
   const licensePlate = item.bienSoXe?.trim();
   const targetId = item.soChungTu || item.id;
 
@@ -63,32 +57,6 @@ export function GarageCaseCodeCell({
               iconClassName="w-3 h-3"
               className="h-3.5 w-3.5 p-0"
             />
-          )}
-
-          {totalLinked > 0 && (
-            <Tooltip
-              content={
-                outCount > 0 && inCount > 0
-                  ? `${outCount} HĐ bán ra (doanh thu), ${inCount} HĐ mua vào (chi phí)`
-                  : outCount > 0
-                    ? `${outCount} HĐ bán ra (doanh thu)`
-                    : inCount > 0
-                      ? `${inCount} HĐ mua vào (chi phí)`
-                      : t("cases.filter.hasLinked", "Đã liên kết HĐ")
-              }
-            >
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onOpenFinancials?.(targetId);
-                }}
-                className="inline-flex items-center justify-center text-emerald-600 dark:text-emerald-400 hover:opacity-80 transition-opacity p-0.5 cursor-pointer shrink-0"
-                aria-label={t("cases.filter.hasLinked", "Đã liên kết HĐ")}
-              >
-                <Link2 className="w-3 h-3" />
-              </button>
-            </Tooltip>
           )}
 
           {isDraft && (

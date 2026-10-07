@@ -1,5 +1,9 @@
 import React from "react";
 import { money } from "@/shared/utils/format";
+import {
+  extractPhaiThuKhachHang,
+  extractPhaiThuBaoHiem,
+} from "../../../utils/garageCasesTable";
 import { GarageCaseProgressCell } from "../../molecules/garage-case-progress-cell";
 import type { ColumnContext } from "./GarageCasesTable.type";
 
@@ -8,6 +12,8 @@ export function buildProgressColumns(
   makeHdr: (key: string, title: string, opts?: any) => React.ReactNode,
 ) {
   const { t } = ctx;
+  const fmtMoneyOpt = (v: string) =>
+    v === "__BLANK__" ? "(Trống / 0 đ)" : money(Number(v) || 0);
 
   return [
     {
@@ -18,7 +24,7 @@ export function buildProgressColumns(
         t("cases.columns.collectionProgress", "Tổng phải thu"),
         { align: "right", hideFilter: true },
       ),
-      size: 190,
+      size: 140,
       className: "text-right",
       cell: (item: any) => (
         <GarageCaseProgressCell
@@ -28,6 +34,44 @@ export function buildProgressColumns(
           balance={Number(item.tienConPhaiThanhToan) || 0}
         />
       ),
+    },
+    {
+      key: "phaiThuKhachHang",
+      label: t("cases.columns.receivableCustomer", "Phải thu KH"),
+      header: makeHdr(
+        "phaiThuKhachHang",
+        t("cases.columns.receivableCustomer", "Phải thu KH"),
+        {
+          align: "right",
+          showBlankOption: true,
+          formatOptionLabel: fmtMoneyOpt,
+        },
+      ),
+      size: 140,
+      className: "text-right tabular-nums font-semibold",
+      cell: (item: any) => {
+        const val = extractPhaiThuKhachHang(item);
+        return val > 0 ? money(val) : "—";
+      },
+    },
+    {
+      key: "phaiThuBaoHiem",
+      label: t("cases.columns.receivableInsurance", "Phải thu BH"),
+      header: makeHdr(
+        "phaiThuBaoHiem",
+        t("cases.columns.receivableInsurance", "Phải thu BH"),
+        {
+          align: "right",
+          showBlankOption: true,
+          formatOptionLabel: fmtMoneyOpt,
+        },
+      ),
+      size: 140,
+      className: "text-right tabular-nums font-semibold",
+      cell: (item: any) => {
+        const val = extractPhaiThuBaoHiem(item);
+        return val > 0 ? money(val) : "—";
+      },
     },
     {
       key: "tienConPhaiThanhToan",
@@ -40,7 +84,7 @@ export function buildProgressColumns(
           formatOptionLabel: (v: string) => money(Number(v) || 0),
         },
       ),
-      size: 160,
+      size: 140,
       className: "text-right tabular-nums font-semibold",
       cell: (item: any) => {
         const bal = Number(item.tienConPhaiThanhToan) || 0;
@@ -65,7 +109,7 @@ export function buildProgressColumns(
         t("cases.columns.costProgress", "Tổng phải trả"),
         { align: "right", hideFilter: true },
       ),
-      size: 190,
+      size: 140,
       className: "text-right",
       cell: (item: any) => {
         const cost = Number(item.chiPhi ?? item.rawData?.ChiPhi ?? 0);
@@ -91,7 +135,7 @@ export function buildProgressColumns(
           formatOptionLabel: (v: string) => money(Number(v) || 0),
         },
       ),
-      size: 160,
+      size: 140,
       className: "text-right tabular-nums font-semibold",
       cell: (item: any) => {
         const cost = Number(item.chiPhi ?? item.rawData?.ChiPhi ?? 0);
