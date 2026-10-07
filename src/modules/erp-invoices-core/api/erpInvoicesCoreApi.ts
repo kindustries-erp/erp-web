@@ -473,7 +473,7 @@ export const erpInvoicesCoreApi = {
     invoiceId: string,
   ): Promise<OriginalPdfDownloadResponse> => {
     const { data } = await axiosInstance.post<OriginalPdfDownloadResponse>(
-      `/erp-invoices/original-pdf/${invoiceId}/download`,
+      `${BASE}/original-pdf/${invoiceId}/download`,
     );
     return data;
   },
@@ -482,7 +482,7 @@ export const erpInvoicesCoreApi = {
     invoiceId: string,
   ): Promise<OriginalPdfLookupInfoResponse> => {
     const { data } = await axiosInstance.get<OriginalPdfLookupInfoResponse>(
-      `/erp-invoices/original-pdf/${invoiceId}/lookup-info`,
+      `${BASE}/original-pdf/${invoiceId}/lookup-info`,
     );
     return data;
   },
@@ -491,7 +491,7 @@ export const erpInvoicesCoreApi = {
     payload: SyncAdvancedPayload,
   ): Promise<SyncAdvancedResponse> => {
     const { data } = await axiosInstance.post<SyncAdvancedResponse>(
-      `/erp-invoices/original-pdf/sync-advanced`,
+      `${BASE}/original-pdf/sync-advanced`,
       payload,
     );
     return data;
@@ -501,7 +501,7 @@ export const erpInvoicesCoreApi = {
     syncId: string,
   ): Promise<SyncStatusResponse> => {
     const { data } = await axiosInstance.get<SyncStatusResponse>(
-      `/erp-invoices/original-pdf/sync-status/${syncId}`,
+      `${BASE}/original-pdf/sync-status/${syncId}`,
     );
     return data;
   },
