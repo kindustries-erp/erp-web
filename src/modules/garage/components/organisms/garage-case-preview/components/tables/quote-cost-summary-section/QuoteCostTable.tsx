@@ -1,150 +1,88 @@
 import React, { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { StandardTable } from "@/shared/components/StandardTable";
-import { SubtotalSummaryCell } from "@/shared/components/DataTable/SubtotalSummaryCell";
-import { getQuoteCostTableColumns } from "./QuoteCostTable.columns";
-import type {
-  QuoteCostTableProps,
-  QuoteCostTableRow,
-} from "./QuoteCostSummarySection.type";
+import {
+  buildCostTreeItems,
+  FinancialTreeParentRow,
+  FinancialTreeChildRow,
+  type FinancialTreeItem,
+} from "../financial-tree-rows";
+import type { QuoteCostTableProps } from "./QuoteCostSummarySection.type";
 
 export const QuoteCostTable: React.FC<QuoteCostTableProps> = ({
   totalCostAmount,
-  totalPaid,
-  remainingAmount,
   activeLinkedInvoices,
   activeSettlements,
   canPerformPayment,
   disabledReason,
   onPaymentClick,
+  onRemoveInvoice,
+  onRemoveSettlement,
   className,
 }) => {
   const { t } = useTranslation(["garage", "common"]);
 
-  const costLinkedInvoices = useMemo(() => {
-    return (activeLinkedInvoices || [])
-      .filter((inv: any) => {
-        const linkType = inv.linkType || inv.direction;
-        return linkType === "IN";
-      })
-      .map((inv: any) => ({
-        id: inv.id || inv.invoiceId,
-        invoiceId: inv.invoiceId || inv.id,
-        invoiceNo: inv.invoiceNo || inv.invoice?.invoiceNo || "---",
-        totalAmount: Number(inv.totalAmount || inv.invoice?.totalAmount || 0),
-        invoiceDate: inv.invoiceDate || inv.invoice?.invoiceDate,
-        sellerName:
-          inv.sellerName || inv.invoice?.sellerName || inv.partnerName,
-        hasBankNetOff: Boolean(
-          inv.hasBankNetOff ||
-          Number(inv.bankSettledAmount || 0) > 0 ||
-          (activeSettlements || []).some(
-            (s: any) =>
-              (s.sourceChannel === "ON_SYSTEM" ||
-                s.source_channel === "ON_SYSTEM") &&
-              (s.invoiceId === inv.invoiceId ||
-                s.referenceNumber === inv.invoiceNo),
-          ),
-        ),
-        bankSettledAmount: Number(inv.bankSettledAmount || 0),
-      }));
-  }, [activeLinkedInvoices, activeSettlements]);
+  const treeItems = useMemo(() => {
+    return buildCostTreeItems(
+      totalCostAmount,
+      activeSettlements,
+      activeLinkedInvoices,
+      t,
+    );
+  }, [totalCostAmount, activeSettlements, activeLinkedInvoices, t]);
 
-  const items: QuoteCostTableRow[] = useMemo(() => {
-    return [
-      {
-        id: "cost_total",
-        stt: 1,
-        payer: "VENDOR",
-        labelKey: "cases.financials.totalCostTitle",
-        defaultLabel: "Tổng chi phí vụ việc (Giá vốn & Nhân công)",
-        amount: totalCostAmount,
-        paidAmount: totalPaid,
-        remainingAmount: remainingAmount,
-        linkedInvoices: costLinkedInvoices,
-      },
-    ];
-  }, [totalCostAmount, totalPaid, remainingAmount, costLinkedInvoices]);
+  const parentItem = treeItems[0];
+  const childItems = treeItems.slice(1);
 
-  const columns = useMemo(
-    () =>
-      getQuoteCostTableColumns(
-        t,
-        onPaymentClick,
-        canPerformPayment,
-        disabledReason,
-      ),
-    [t, onPaymentClick, canPerformPayment, disabledReason],
-  );
+  const handleRemoveItem = (item: FinancialTreeItem) => {
+    if (!item.sourceId) return;
+    if (item.sourceType === "INVOICE") {
+      onRemoveInvoice?.(item.sourceId);
+    } else if (item.sourceType === "SETTLEMENT") {
+      onRemoveSettlement?.(item.sourceId);
+    }
+  };
 
-  const summaryRow = useMemo(() => {
-    return {
-      stt: (
-        <SubtotalSummaryCell
-          variantType="label"
-          label={t("common.total", "Tổng") + ":"}
-        />
-      ),
-      payer: (
-        <SubtotalSummaryCell
-          variantType="label"
-          label={`1 ${t("cases.financials.costCategoryUnit", "khoản mục")}`}
-        />
-      ),
-      label: (
-        <SubtotalSummaryCell
-          variantType="label"
-          label={t("cases.financials.totalCostLabel", "Tổng chi phí")}
-        />
-      ),
-      amount: (
-        <SubtotalSummaryCell
-          variantType="amount"
-          subtotalAmount={totalCostAmount}
-          metricTitle={t("cases.financials.totalCostLabel", "Tổng chi phí")}
-        />
-      ),
-      paidAmount: (
-        <SubtotalSummaryCell
-          variantType="amount"
-          subtotalAmount={totalPaid}
-          metricTitle={t("cases.financials.paidCostCol", "Đã chi")}
-        />
-      ),
-      remainingAmount: (
-        <SubtotalSummaryCell
-          variantType="amount"
-          subtotalAmount={remainingAmount}
-          metricTitle={t("cases.financials.remainingCostCol", "Còn lại")}
-        />
-      ),
-      linkedInvoices: (
-        <SubtotalSummaryCell
-          variantType="label"
-          label={`${costLinkedInvoices.length} HĐ`}
-        />
-      ),
-    };
-  }, [
-    totalCostAmount,
-    totalPaid,
-    remainingAmount,
-    costLinkedInvoices.length,
-    t,
-  ]);
+  if (!parentItem) return null;
 
   return (
-    <div className={className || "w-full"}>
-      <StandardTable
-        tableId="garage-quote-cost-table"
-        items={items}
-        columns={columns}
-        getRowKey={(row) => row.id}
-        variant="spreadsheet"
-        minWidth={780}
-        summaryRow={summaryRow}
-        containerClassName="min-h-0"
+    <div
+      className={`rounded-md border border-border/80 overflow-hidden bg-card ${className || "w-full"}`}
+    >
+      {/* ── HEADER TABLE THEO HÌNH 2 ── */}
+      <div className="flex items-center justify-between px-3 py-2 bg-muted/40 border-b border-border/60 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+        <div className="flex-1 min-w-0">
+          {t("cases.quotePreview.fin.itemCol", "Danh mục / Chứng từ")}
+        </div>
+        <div className="w-36 text-right px-2">
+          {t("cases.quotePreview.fin.amountCol", "Số tiền")}
+        </div>
+        <div className="w-20 text-right px-2">
+          {t("cases.financials.percentTotal", "% Tổng")}
+        </div>
+        <div className="w-24 text-right pl-1">
+          {t("cases.financials.actionCol", "Thao tác")}
+        </div>
+      </div>
+
+      {/* ── DÒNG CHA MỤC TIÊU ── */}
+      <FinancialTreeParentRow
+        item={parentItem}
+        childCount={childItems.length}
+        canPerform={canPerformPayment}
+        disabledReason={disabledReason}
+        onPay={onPaymentClick}
       />
+
+      {/* ── CÁC DÒNG CON CẤN TRỪ ↳ ── */}
+      {childItems.map((child) => (
+        <FinancialTreeChildRow
+          key={child.id}
+          item={child}
+          canRemove={canPerformPayment}
+          disabledReason={disabledReason}
+          onRemove={handleRemoveItem}
+        />
+      ))}
     </div>
   );
 };

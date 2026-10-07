@@ -16,7 +16,7 @@ vi.mock("react-i18next", () => ({
 }));
 
 describe("CaseLinePaymentPresetBar", () => {
-  it("renders all preset buttons with correct counts", () => {
+  it("renders 3 preset tabs with correct counts in prioritized order", () => {
     const onSelectPreset = vi.fn();
     render(
       <CaseLinePaymentPresetBar
@@ -24,41 +24,26 @@ describe("CaseLinePaymentPresetBar", () => {
         onSelectPreset={onSelectPreset}
         totalCount={20}
         suggestionsCount={3}
-        selectedCount={2}
         linkedCount={1}
       />,
     );
 
-    expect(screen.getByText("Tất cả")).toBeInTheDocument();
-    expect(screen.getByText("20")).toBeInTheDocument();
-    expect(screen.getByText("Gợi ý khớp")).toBeInTheDocument();
-    expect(screen.getByText("3")).toBeInTheDocument();
-    expect(screen.getByText("Đang chọn")).toBeInTheDocument();
-    expect(screen.getByText("2")).toBeInTheDocument();
+    // Thứ tự hiển thị: Đã cấn trừ -> Gợi ý khớp -> Tất cả
     expect(screen.getByText("Đã cấn trừ")).toBeInTheDocument();
     expect(screen.getByText("1")).toBeInTheDocument();
+    expect(screen.getByText("Gợi ý khớp")).toBeInTheDocument();
+    expect(screen.getByText("3")).toBeInTheDocument();
+    expect(screen.getByText("Tất cả")).toBeInTheDocument();
+    expect(screen.getByText("20")).toBeInTheDocument();
+    expect(screen.queryByText("Đang chọn")).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByText("Gợi ý khớp"));
     expect(onSelectPreset).toHaveBeenCalledWith("suggestions");
-  });
-
-  it("handles switching to other presets cleanly", () => {
-    const onSelectPreset = vi.fn();
-    render(
-      <CaseLinePaymentPresetBar
-        viewPreset="all"
-        onSelectPreset={onSelectPreset}
-        totalCount={10}
-        suggestionsCount={4}
-        selectedCount={2}
-        linkedCount={1}
-      />,
-    );
-
-    fireEvent.click(screen.getByText("Đang chọn"));
-    expect(onSelectPreset).toHaveBeenCalledWith("selected");
 
     fireEvent.click(screen.getByText("Đã cấn trừ"));
     expect(onSelectPreset).toHaveBeenCalledWith("linked");
+
+    fireEvent.click(screen.getByText("Tất cả"));
+    expect(onSelectPreset).toHaveBeenCalledWith("all");
   });
 });

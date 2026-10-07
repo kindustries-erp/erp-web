@@ -162,6 +162,8 @@ export const garageEn = {
       paidAmount: "Paid Amount",
       balanceAmount: "Remaining Balance",
       collectionProgress: "Total Receivable",
+      receivableCustomer: "Customer Receivable",
+      receivableInsurance: "Insurance Receivable",
       costProgress: "Total Payable",
       totalReceivable: "Total Receivable",
       remainingReceivable: "Remaining Receivable",

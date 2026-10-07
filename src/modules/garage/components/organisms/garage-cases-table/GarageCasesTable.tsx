@@ -65,6 +65,7 @@ export function GarageCasesTable(props: GarageCasesTableProps) {
         onOpenConfig: props.onOpenConfig,
         canUpdateGarage: props.canUpdateGarage,
         branches: props.branches,
+        activeColumnPresetKey: props.activeColumnPresetKey,
       }),
     [
       translate,
@@ -80,6 +81,7 @@ export function GarageCasesTable(props: GarageCasesTableProps) {
       props.onOpenConfig,
       props.canUpdateGarage,
       props.branches,
+      props.activeColumnPresetKey,
     ],
   );
 

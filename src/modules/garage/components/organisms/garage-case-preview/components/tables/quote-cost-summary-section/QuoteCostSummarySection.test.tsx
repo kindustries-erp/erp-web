@@ -45,7 +45,7 @@ describe("QuoteCostSummarySection", () => {
       {
         id: "settle-2",
         transDate: "2026-03-02",
-        settlementType: "RECEIPT", // Should be filtered out
+        settlementType: "RECEIPT", // Should be filtered out from cost
         amount: 5000000,
       },
     ],
@@ -62,7 +62,7 @@ describe("QuoteCostSummarySection", () => {
       },
       {
         id: "inv-out-1",
-        linkType: "OUT", // Should be filtered out
+        linkType: "OUT", // Should be filtered out from cost
         totalAmount: 9018000,
       },
     ],
@@ -72,37 +72,52 @@ describe("QuoteCostSummarySection", () => {
     caseData: { id: "case-001" },
   };
 
-  it("renders summary row unifying both manual cashflow and linked IN invoices", () => {
+  it("renders Unified Tree Table parent row and child rows for cost", () => {
     render(<QuoteCostSummarySection {...mockProps} />);
 
-    // Total Cost = 10,000,000 (hiện diện ở cả hàng chi phí và summaryRow)
-    expect(screen.getAllByText(/10.000.000/i).length).toBeGreaterThanOrEqual(1);
-    // Paid = 2,400,000 (manual) + 1,176,120 (invoice) = 3,576,120
-    expect(screen.getAllByText(/3.576.120/i).length).toBeGreaterThanOrEqual(1);
-    // Remaining = 10,000,000 - 3,576,120 = 6,423,880
-    expect(screen.getAllByText(/6.423.880/i).length).toBeGreaterThanOrEqual(1);
+    // Parent row
+    expect(screen.getByText(/Tổng phải trả vụ việc/i)).toBeInTheDocument();
+    expect(screen.getByText("10.000.000 ₫")).toBeInTheDocument();
+    expect(screen.getByText("100.0%")).toBeInTheDocument();
+
+    // Child row 1: HĐ Đầu vào #229
+    expect(screen.getByText(/HĐ Đầu vào #229/i)).toBeInTheDocument();
+    expect(screen.getByText("1.176.120 ₫")).toBeInTheDocument();
+    expect(screen.getByText("11.8%")).toBeInTheDocument();
+    expect(screen.getByText("(Công ty Phụ Tùng Fast)")).toBeInTheDocument();
+
+    // Child row 2: Tiền mặt ngoài
+    expect(screen.getByText(/Tiền mặt ngoài/i)).toBeInTheDocument();
+    expect(screen.getByText("2.400.000 ₫")).toBeInTheDocument();
+    expect(screen.getByText("24%")).toBeInTheDocument();
+    expect(screen.getByText("(Cửa hàng phụ tùng A)")).toBeInTheDocument();
+
     // Button Chi tiền is rendered and enabled
     const payBtn = screen.getByRole("button", { name: /Chi tiền/i });
     expect(payBtn).toBeInTheDocument();
     expect(payBtn).not.toBeDisabled();
-
-    // Cột HĐ đã cấn trừ hiển thị badge #229
-    expect(screen.getByText("#229")).toBeInTheDocument();
   });
 
-  it("filters and renders settlements table with both IN invoice and manual payment", () => {
-    render(<QuoteCostSummarySection {...mockProps} />);
+  it("handles remove callbacks on child rows", () => {
+    const onRemoveInvoice = vi.fn();
+    const onRemoveSettlement = vi.fn();
 
-    // Header count: 2 items (1 manual settlement + 1 IN invoice)
-    expect(screen.getByText(/Chi tiết các lần chi tiền/i)).toBeInTheDocument();
-    expect(screen.getByText(/\(2\)/i)).toBeInTheDocument();
+    render(
+      <QuoteCostSummarySection
+        {...mockProps}
+        onRemoveInvoice={onRemoveInvoice}
+        onRemoveSettlement={onRemoveSettlement}
+      />,
+    );
 
-    // Table rows
-    expect(screen.getByText("Cửa hàng phụ tùng A")).toBeInTheDocument();
-    expect(screen.getByText(/2.400.000/i)).toBeInTheDocument();
-    expect(screen.getByText("Công ty Phụ Tùng Fast")).toBeInTheDocument();
-    expect(screen.getByText(/1.176.120/i)).toBeInTheDocument();
-    expect(screen.getByText(/HĐ Đầu vào #229/i)).toBeInTheDocument();
+    const deleteButtons = screen.getAllByTitle("Xóa");
+    expect(deleteButtons).toHaveLength(2);
+
+    fireEvent.click(deleteButtons[0]);
+    expect(onRemoveInvoice).toHaveBeenCalledWith("inv-229");
+
+    fireEvent.click(deleteButtons[1]);
+    expect(onRemoveSettlement).toHaveBeenCalledWith("settle-1");
   });
 
   it("opens CaseLinePaymentDrawer passing both activeSettlements and activeLinkedInvoices", () => {

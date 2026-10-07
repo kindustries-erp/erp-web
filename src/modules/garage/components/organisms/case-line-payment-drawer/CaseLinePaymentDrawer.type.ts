@@ -17,4 +17,8 @@ export interface CaseLinePaymentDrawerProps {
   activeSettlements?: any[];
   activeLinkedInvoices?: any[];
   onSuccess?: () => void;
+  onAddSettlement?: (items: any[]) => void;
+  onRemoveSettlement?: (id: string) => void;
+  onAddInvoice?: (payload: any) => void;
+  onRemoveInvoice?: (id: string) => void;
 }

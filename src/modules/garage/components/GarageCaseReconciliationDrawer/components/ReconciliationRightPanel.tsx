@@ -1,6 +1,12 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { TrendingUp, ArrowUpRight, ArrowDownLeft, Wallet } from "lucide-react";
+import {
+  TrendingUp,
+  ArrowUpRight,
+  ArrowDownLeft,
+  Wallet,
+  Info,
+} from "lucide-react";
 import { DrawerSection, DrawerRow } from "@/shared/components/DrawerModal";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { money, formatGMT7 } from "@/shared/utils/format";
@@ -30,6 +36,7 @@ export function ReconciliationRightPanel({
   editMode = false,
   onSetInvoiceNote,
   hideDebtCashflowSection = false,
+  hideGrossProfitSection = false,
 }: ReconciliationRightPanelProps) {
   void selectedIds;
   void selectedInvoicesCount;
@@ -73,7 +80,12 @@ export function ReconciliationRightPanel({
     <div className="space-y-2 pb-2">
       {/* ─── SECTION 1: THÔNG TIN CHUNG VỤ VIỆC (ĐỒNG BỘ CHUẨN VỚI CÁC TAB CÒN LẠI) ─── */}
       <DrawerSection
-        title={t("cases.drawer.generalInfo", "Thông tin chung")}
+        title={
+          <div className="flex items-center gap-1.5 font-bold text-xs uppercase tracking-wider text-slate-800 dark:text-slate-200">
+            <Info className="w-3.5 h-3.5 text-muted-foreground" />
+            <span>{t("cases.drawer.generalInfo", "Thông tin chung")}</span>
+          </div>
+        }
         collapsible
         defaultCollapsed={false}
       >
@@ -321,97 +333,100 @@ export function ReconciliationRightPanel({
       )}
 
       {/* ─── SECTION 3: HIỆU QUẢ LỢI NHUẬN GỘP ─── */}
-      <DrawerSection
-        title={
-          <div className="flex items-center gap-1.5 font-bold text-xs uppercase tracking-wider text-slate-800 dark:text-slate-200">
-            <TrendingUp className="w-3.5 h-3.5 text-muted-foreground" />
-            <span>
-              {t(
-                "cases.reconciliation.grossProfitSection",
-                "Hiệu quả lợi nhuận gộp",
+      {!hideGrossProfitSection && (
+        <DrawerSection
+          title={
+            <div className="flex items-center gap-1.5 font-bold text-xs uppercase tracking-wider text-slate-800 dark:text-slate-200">
+              <TrendingUp className="w-3.5 h-3.5 text-muted-foreground" />
+              <span>
+                {t(
+                  "cases.reconciliation.grossProfitSection",
+                  "Hiệu quả lợi nhuận gộp",
+                )}
+              </span>
+            </div>
+          }
+          collapsible={true}
+          defaultCollapsed={false}
+          className="p-2.5 mb-0 border border-slate-200/80 dark:border-slate-800"
+        >
+          <div className="space-y-1 text-xs">
+            <DrawerRow
+              label={t(
+                "cases.reconciliation.targetRevenue",
+                "Doanh thu mục tiêu",
               )}
-            </span>
+              value={
+                <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                  {targetRevenue > 0 ? money(targetRevenue) : "—"}
+                </span>
+              }
+            />
+            <DrawerRow
+              label={t("cases.reconciliation.targetCost", "Chi phí mục tiêu")}
+              value={
+                <span className="font-mono font-bold text-slate-700 dark:text-slate-300">
+                  {targetCost > 0 ? money(targetCost) : "—"}
+                </span>
+              }
+            />
+            <DrawerRow
+              label={t(
+                "cases.reconciliation.targetProfit",
+                "Lợi nhuận gộp mục tiêu",
+              )}
+              value={
+                <span
+                  className={cn(
+                    "font-mono font-bold",
+                    targetRevenue - targetCost >= 0
+                      ? "text-primary"
+                      : "text-rose-600 dark:text-rose-400",
+                  )}
+                >
+                  {targetRevenue > 0 || targetCost > 0 ? (
+                    <>
+                      {money(targetRevenue - targetCost)}
+                      {targetRevenue > 0 && (
+                        <span className="text-[10px] ml-1 font-normal text-muted-foreground">
+                          (
+                          {Math.round(
+                            ((targetRevenue - targetCost) / targetRevenue) *
+                              100,
+                          )}
+                          %)
+                        </span>
+                      )}
+                    </>
+                  ) : (
+                    "—"
+                  )}
+                </span>
+              }
+            />
+            <DrawerRow
+              label={t(
+                "cases.reconciliation.actualGrossProfit",
+                "Lợi nhuận gộp thực tế",
+              )}
+              value={
+                <span
+                  className={cn(
+                    "font-mono font-bold",
+                    totalCollected - totalPaid >= 0
+                      ? "text-emerald-600 dark:text-emerald-400"
+                      : "text-rose-600 dark:text-rose-400",
+                  )}
+                >
+                  {totalCollected > 0 || totalPaid > 0
+                    ? money(totalCollected - totalPaid)
+                    : "—"}
+                </span>
+              }
+            />
           </div>
-        }
-        collapsible={true}
-        defaultCollapsed={false}
-        className="p-2.5 mb-0 border border-slate-200/80 dark:border-slate-800"
-      >
-        <div className="space-y-1 text-xs">
-          <DrawerRow
-            label={t(
-              "cases.reconciliation.targetRevenue",
-              "Doanh thu mục tiêu",
-            )}
-            value={
-              <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">
-                {targetRevenue > 0 ? money(targetRevenue) : "—"}
-              </span>
-            }
-          />
-          <DrawerRow
-            label={t("cases.reconciliation.targetCost", "Chi phí mục tiêu")}
-            value={
-              <span className="font-mono font-bold text-slate-700 dark:text-slate-300">
-                {targetCost > 0 ? money(targetCost) : "—"}
-              </span>
-            }
-          />
-          <DrawerRow
-            label={t(
-              "cases.reconciliation.targetProfit",
-              "Lợi nhuận gộp mục tiêu",
-            )}
-            value={
-              <span
-                className={cn(
-                  "font-mono font-bold",
-                  targetRevenue - targetCost >= 0
-                    ? "text-primary"
-                    : "text-rose-600 dark:text-rose-400",
-                )}
-              >
-                {targetRevenue > 0 || targetCost > 0 ? (
-                  <>
-                    {money(targetRevenue - targetCost)}
-                    {targetRevenue > 0 && (
-                      <span className="text-[10px] ml-1 font-normal text-muted-foreground">
-                        (
-                        {Math.round(
-                          ((targetRevenue - targetCost) / targetRevenue) * 100,
-                        )}
-                        %)
-                      </span>
-                    )}
-                  </>
-                ) : (
-                  "—"
-                )}
-              </span>
-            }
-          />
-          <DrawerRow
-            label={t(
-              "cases.reconciliation.actualGrossProfit",
-              "Lợi nhuận gộp thực tế",
-            )}
-            value={
-              <span
-                className={cn(
-                  "font-mono font-bold",
-                  totalCollected - totalPaid >= 0
-                    ? "text-emerald-600 dark:text-emerald-400"
-                    : "text-rose-600 dark:text-rose-400",
-                )}
-              >
-                {totalCollected > 0 || totalPaid > 0
-                  ? money(totalCollected - totalPaid)
-                  : "—"}
-              </span>
-            }
-          />
-        </div>
-      </DrawerSection>
+        </DrawerSection>
+      )}
     </div>
   );
 }

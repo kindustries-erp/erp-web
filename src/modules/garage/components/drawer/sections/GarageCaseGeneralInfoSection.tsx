@@ -1,4 +1,5 @@
 import React from "react";
+import { Info } from "lucide-react";
 import {
   DrawerSection,
   DrawerRow,
@@ -30,7 +31,12 @@ export function GarageCaseGeneralInfoSection({
 
   return (
     <DrawerSection
-      title={t("cases.drawer.generalInfo", "Thông tin chung")}
+      title={
+        <div className="flex items-center gap-1.5 font-bold text-xs uppercase tracking-wider text-slate-800 dark:text-slate-200">
+          <Info className="w-3.5 h-3.5 text-muted-foreground" />
+          <span>{t("cases.drawer.generalInfo", "Thông tin chung")}</span>
+        </div>
+      }
       collapsible
       defaultCollapsed={false}
     >

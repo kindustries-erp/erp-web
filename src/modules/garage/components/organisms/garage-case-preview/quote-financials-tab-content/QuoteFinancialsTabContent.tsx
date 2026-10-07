@@ -23,14 +23,14 @@ export function QuoteFinancialsTabContent(
 
   return (
     <div className={`space-y-4 ${props.className || ""}`}>
-      {/* ─── 1. BẢNG PHẢI THU (ĐỨNG ĐẦU TIÊN - ĐÚNG 2 HÀNG KH & BH) ─── */}
+      {/* ─── 1. BẢNG PHẢI THU & CẤN TRỪ ─── */}
       <DrawerSection
         title={
           <span className="flex items-center gap-1.5 text-xs font-bold text-foreground">
             <Landmark className="w-3.5 h-3.5 text-primary" />
             {t(
               "cases.quotePreview.receivablesTitle",
-              "1. Bảng Phải thu & Phân bổ",
+              "1. Bảng Phải thu & Cấn trừ",
             )}
             <span className="text-xs font-normal text-muted-foreground ml-1">
               (2)
@@ -44,20 +44,23 @@ export function QuoteFinancialsTabContent(
           caseData={props.caseData}
           activeSettlements={props.activeSettlements}
           activeLinkedInvoices={props.activeLinkedInvoices}
+          canEditFinancial={canPerformPayment}
           canPerformPayment={canPerformPayment}
           disabledReason={disabledReason}
           onPaymentClick={handleReceivablePaymentClick}
+          onRemoveInvoice={props.onRemoveInvoice}
+          onRemoveSettlement={props.onRemoveSettlement}
         />
       </DrawerSection>
 
-      {/* ─── 2. BẢNG CHI PHÍ VỤ VIỆC (1 HÀNG TỔNG CHI PHÍ & DANH SÁCH ĐÃ CHI) ─── */}
+      {/* ─── 2. BẢNG PHẢI TRẢ & CẤN TRỪ ─── */}
       <DrawerSection
         title={
           <span className="flex items-center gap-1.5 text-xs font-bold text-foreground">
             <Wallet className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
             {t(
               "cases.quotePreview.costSectionTitle",
-              "2. Bảng Chi phí vụ việc & Cấn trừ",
+              "2. Bảng Phải trả & Cấn trừ",
             )}
           </span>
         }
@@ -75,6 +78,10 @@ export function QuoteFinancialsTabContent(
           caseCode={props.caseCode}
           caseData={props.caseData}
           onPaymentSaved={props.onPaymentSaved}
+          onAddSettlement={props.onAddSettlement}
+          onRemoveSettlement={props.onRemoveSettlement}
+          onAddInvoice={props.onAddInvoice}
+          onRemoveInvoice={props.onRemoveInvoice}
         />
       </DrawerSection>
 
@@ -95,6 +102,11 @@ export function QuoteFinancialsTabContent(
           direction={paymentDrawerTarget.direction}
           activeSettlements={props.activeSettlements}
           activeLinkedInvoices={props.activeLinkedInvoices}
+          onAddSettlement={props.onAddSettlement}
+          onRemoveSettlement={props.onRemoveSettlement}
+          onAddInvoice={props.onAddInvoice}
+          onRemoveInvoice={props.onRemoveInvoice}
+          onSuccess={closePaymentDrawer}
         />
       )}
     </div>

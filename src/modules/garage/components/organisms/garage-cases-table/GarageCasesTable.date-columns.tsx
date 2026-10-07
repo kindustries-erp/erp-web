@@ -9,7 +9,7 @@ export function buildDateColumns(
 ) {
   const { t, dateRanges, onDateRangeChange } = ctx;
 
-  const makeDateCol = (key: string, label: string) => ({
+  const makeDateCol = (key: string, label: string, size = 130) => ({
     key,
     label,
     header: makeHdr(key, label, {
@@ -27,7 +27,7 @@ export function buildDateColumns(
         />
       ),
     }),
-    size: 150,
+    size,
     className: "text-right",
     cell: (item: any) => (
       <TableDateCell

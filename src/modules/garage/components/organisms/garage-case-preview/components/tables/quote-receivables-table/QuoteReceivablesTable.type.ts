@@ -34,4 +34,6 @@ export interface QuoteReceivablesTableProps {
   canPerformPayment?: boolean;
   disabledReason?: string;
   onPaymentClick?: (row: QuoteReceivableRow) => void;
+  onRemoveInvoice?: (id: string) => void;
+  onRemoveSettlement?: (id: string) => void;
 }

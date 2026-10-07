@@ -2,7 +2,6 @@ import React from "react";
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { QuoteReceivablesTable } from "./QuoteReceivablesTable";
-import type { QuoteReceivableRow } from "./QuoteReceivablesTable.type";
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
@@ -17,154 +16,156 @@ vi.mock("react-i18next", () => ({
 }));
 
 describe("QuoteReceivablesTable", () => {
-  const mockItems: QuoteReceivableRow[] = [
-    {
-      id: "KH",
-      stt: 1,
-      payer: "KH",
-      labelKey: "cases.quotePreview.fin.customerPayment",
-      defaultLabel: "Khách hàng thanh toán",
-      amount: 1500000,
-    },
-    {
-      id: "BH",
-      stt: 2,
-      payer: "BH",
-      labelKey: "cases.quotePreview.fin.insuranceApproved",
-      defaultLabel: "Bảo hiểm thanh toán",
-      amount: 2000000,
-    },
-  ];
+  const mockCaseData = {
+    tienCoThue: 1296000,
+    tienThanhToanKh: 1296000,
+    tienThanhToanBh: 0,
+  };
 
-  it("renders financial items correctly", () => {
-    render(<QuoteReceivablesTable items={mockItems} />);
-    expect(screen.getByText("Khách hàng thanh toán")).toBeInTheDocument();
-    expect(screen.getByText("Bảo hiểm thanh toán")).toBeInTheDocument();
-  });
+  const mockCaseWithInsurance = {
+    tienCoThue: 10000000,
+    tienThanhToanKh: 2000000,
+    tienThanhToanBh: 8000000,
+  };
 
-  it("handles KH and BH payment clicks separately", () => {
+  it("renders 1 parent target row with single collect button when no insurance", () => {
     const onPaymentClick = vi.fn();
     render(
       <QuoteReceivablesTable
-        items={mockItems}
+        caseData={mockCaseData}
         onPaymentClick={onPaymentClick}
       />,
     );
 
-    const khButtons = screen.getAllByRole("button", { name: /Thu KH/i });
-    expect(khButtons.length).toBeGreaterThan(0);
-    fireEvent.click(khButtons[0]);
-    expect(onPaymentClick).toHaveBeenCalledWith(mockItems[0]);
+    expect(screen.getByText("Tổng phải thu vụ việc")).toBeInTheDocument();
+    expect(screen.getByText("1.296.000 ₫")).toBeInTheDocument();
+    expect(screen.getByText("100.0%")).toBeInTheDocument();
 
-    const bhButtons = screen.getAllByRole("button", { name: /Thu BH/i });
-    expect(bhButtons.length).toBeGreaterThan(0);
-    fireEvent.click(bhButtons[0]);
-    expect(onPaymentClick).toHaveBeenCalledWith(mockItems[1]);
+    const collectBtn = screen.getByRole("button", { name: /Thu tiền/i });
+    expect(collectBtn).toBeInTheDocument();
+    fireEvent.click(collectBtn);
+    expect(onPaymentClick).toHaveBeenCalledWith(
+      expect.objectContaining({ id: "KH", payer: "KH" }),
+    );
   });
 
-  it("derives rows from caseData if items not passed", () => {
-    const caseData = {
-      rawData: {
-        TienThanhToanKH: 5000000,
-        TienThanhToanBH: 10000000,
-      },
-    };
-    render(<QuoteReceivablesTable caseData={caseData} />);
-    expect(screen.getByText("Khách hàng thanh toán")).toBeInTheDocument();
-    expect(screen.getByText("Bảo hiểm thanh toán")).toBeInTheDocument();
-  });
-
-  it("disables payment buttons when canEditFinancial is false", () => {
+  it("renders separate Thu KH and Thu BH buttons when insurance exists", () => {
+    const onPaymentClick = vi.fn();
     render(
       <QuoteReceivablesTable
-        items={mockItems}
-        canEditFinancial={false}
-        disabledReason="Cần bật Chế độ chỉnh sửa"
+        caseData={mockCaseWithInsurance}
+        onPaymentClick={onPaymentClick}
       />,
     );
-    const khButtons = screen.getAllByRole("button", { name: /Thu KH/i });
-    expect(khButtons[0]).toBeDisabled();
-    const bhButtons = screen.getAllByRole("button", { name: /Thu BH/i });
-    expect(bhButtons[0]).toBeDisabled();
+
+    expect(screen.getByText("10.000.000 ₫")).toBeInTheDocument();
+    const btnKH = screen.getByRole("button", { name: /Thu KH/i });
+    const btnBH = screen.getByRole("button", { name: /Thu BH/i });
+    expect(btnKH).toBeInTheDocument();
+    expect(btnBH).toBeInTheDocument();
+
+    fireEvent.click(btnKH);
+    expect(onPaymentClick).toHaveBeenCalledWith(
+      expect.objectContaining({ id: "KH", payer: "KH", amount: 2000000 }),
+    );
+
+    fireEvent.click(btnBH);
+    expect(onPaymentClick).toHaveBeenCalledWith(
+      expect.objectContaining({ id: "BH", payer: "BH", amount: 8000000 }),
+    );
   });
 
-  it("calculates collected and remaining amounts from activeSettlements", () => {
-    const caseData = {
-      rawData: {
-        TienThanhToanKH: 5000000,
-        TienThanhToanBH: 10000000,
+  it("renders child rows for linked invoices and settlements", () => {
+    const activeLinkedInvoices = [
+      {
+        id: "inv-1",
+        direction: "OUT",
+        invoiceNo: "375",
+        totalAmount: 1000000,
+        buyerName: "Công ty ABC",
       },
-    };
+    ];
+
     const activeSettlements = [
       {
-        id: "s1",
+        id: "set-1",
         settlementType: "RECEIPT",
-        amount: 3000000,
-        payer: "KH",
-      },
-      {
-        id: "s2",
-        settlementType: "RECEIPT",
-        amount: 4000000,
-        partnerName: "Bảo hiểm Bảo Việt",
+        sourceChannel: "OFF_SYSTEM_MANUAL",
+        amount: 296000,
+        partnerName: "Khách lẻ",
       },
     ];
 
     render(
       <QuoteReceivablesTable
-        caseData={caseData}
+        caseData={mockCaseData}
+        activeLinkedInvoices={activeLinkedInvoices}
         activeSettlements={activeSettlements}
       />,
     );
 
-    // KH: Amount 5,000,000 | Collected 3,000,000 | Remaining 2,000,000
-    expect(screen.getAllByText(/5.000.000/i).length).toBeGreaterThanOrEqual(1);
-    expect(screen.getAllByText(/3.000.000/i).length).toBeGreaterThanOrEqual(1);
-    expect(screen.getAllByText(/2.000.000/i).length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText("HĐ Đầu ra #375")).toBeInTheDocument();
+    expect(screen.getByText("1.000.000 ₫")).toBeInTheDocument();
+    expect(screen.getByText("77.2%")).toBeInTheDocument();
 
-    // BH: Amount 10,000,000 | Collected 4,000,000 | Remaining 6,000,000
-    expect(screen.getAllByText(/10.000.000/i).length).toBeGreaterThanOrEqual(1);
-    expect(screen.getAllByText(/4.000.000/i).length).toBeGreaterThanOrEqual(1);
-    expect(screen.getAllByText(/6.000.000/i).length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText("Tiền mặt ngoài")).toBeInTheDocument();
+    expect(screen.getByText("296.000 ₫")).toBeInTheDocument();
+    expect(screen.getByText("22.8%")).toBeInTheDocument();
   });
 
-  it("renders linked invoices column correctly for KH and BH", () => {
-    const caseData = {
-      rawData: {
-        TienThanhToanKH: 5000000,
-        TienThanhToanBH: 10000000,
-      },
-    };
+  it("calls onRemoveInvoice and onRemoveSettlement when delete buttons are clicked", () => {
+    const onRemoveInvoice = vi.fn();
+    const onRemoveSettlement = vi.fn();
+
     const activeLinkedInvoices = [
       {
-        id: "inv1",
-        invoiceId: "inv1",
-        invoiceNo: "1856",
-        linkType: "OUT",
-        totalAmount: 5000000,
-        buyerName: "Công ty Khách Hàng",
-        hasBankNetOff: true,
+        id: "inv-1",
+        direction: "OUT",
+        invoiceNo: "375",
+        totalAmount: 1000000,
       },
+    ];
+
+    const activeSettlements = [
       {
-        id: "inv2",
-        invoiceId: "inv2",
-        invoiceNo: "2045",
-        linkType: "OUT",
-        totalAmount: 10000000,
-        buyerName: "Bảo hiểm PVI",
-        hasBankNetOff: false,
+        id: "set-1",
+        settlementType: "RECEIPT",
+        sourceChannel: "OFF_SYSTEM_MANUAL",
+        amount: 296000,
       },
     ];
 
     render(
       <QuoteReceivablesTable
-        caseData={caseData}
+        caseData={mockCaseData}
         activeLinkedInvoices={activeLinkedInvoices}
+        activeSettlements={activeSettlements}
+        canEditFinancial={true}
+        onRemoveInvoice={onRemoveInvoice}
+        onRemoveSettlement={onRemoveSettlement}
       />,
     );
 
-    // Should display both invoice badges
-    expect(screen.getByText("#1856")).toBeInTheDocument();
-    expect(screen.getByText("#2045")).toBeInTheDocument();
+    const deleteButtons = screen.getAllByTitle("Xóa");
+    expect(deleteButtons).toHaveLength(2);
+
+    fireEvent.click(deleteButtons[0]);
+    expect(onRemoveInvoice).toHaveBeenCalledWith("inv-1");
+
+    fireEvent.click(deleteButtons[1]);
+    expect(onRemoveSettlement).toHaveBeenCalledWith("set-1");
+  });
+
+  it("disables collect button when canEditFinancial is false", () => {
+    render(
+      <QuoteReceivablesTable
+        caseData={mockCaseData}
+        canEditFinancial={false}
+        disabledReason="Chế độ chỉ đọc"
+      />,
+    );
+
+    const collectBtn = screen.getByRole("button", { name: /Thu tiền/i });
+    expect(collectBtn).toBeDisabled();
   });
 });

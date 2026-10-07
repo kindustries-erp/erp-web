@@ -1,7 +1,6 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { QuoteCostTable } from "./QuoteCostTable";
-import { QuoteCostSettlementsTable } from "./QuoteCostSettlementsTable";
 import { CaseLinePaymentDrawer } from "@/modules/garage/components/organisms/case-line-payment-drawer";
 import { useQuoteCostSummarySection } from "./QuoteCostSummarySection.hook";
 import type { QuoteCostSummarySectionProps } from "./QuoteCostSummarySection.type";
@@ -12,7 +11,6 @@ export const QuoteCostSummarySection: React.FC<QuoteCostSummarySectionProps> = (
   const { t } = useTranslation(["garage", "common"]);
   const {
     isPaymentDrawerOpen,
-    costSettlements,
     totalPaid,
     remainingAmount,
     handleOpenPayment,
@@ -23,7 +21,7 @@ export const QuoteCostSummarySection: React.FC<QuoteCostSummarySectionProps> = (
 
   return (
     <div className={`space-y-3 ${props.className || ""}`}>
-      {/* ─── BẢNG CHI PHÍ VỤ VIỆC CHUẨN HÓA THEO /standardize-table ─── */}
+      {/* ─── BẢNG CHI PHÍ VỤ VIỆC DẠNG CÂY 1 DÒNG TỔNG THEO HÌNH 2 ─── */}
       <QuoteCostTable
         totalCostAmount={props.totalCostAmount}
         totalPaid={totalPaid}
@@ -33,10 +31,9 @@ export const QuoteCostSummarySection: React.FC<QuoteCostSummarySectionProps> = (
         canPerformPayment={canPerform}
         disabledReason={props.disabledReason}
         onPaymentClick={handleOpenPayment}
+        onRemoveInvoice={props.onRemoveInvoice}
+        onRemoveSettlement={props.onRemoveSettlement}
       />
-
-      {/* ─── BẢNG DANH SÁCH CÁC KHOẢN ĐÃ CHI TIỀN (HỢP NHẤT HĐ ĐẦU VÀO & CHI NGOÀI SỔ) ─── */}
-      <QuoteCostSettlementsTable settlements={costSettlements} />
 
       {/* ─── DRAWER GHI NHẬN CHI TIỀN & CẤN TRỪ ─── */}
       {isPaymentDrawerOpen && canPerform && (
@@ -57,6 +54,10 @@ export const QuoteCostSummarySection: React.FC<QuoteCostSummarySectionProps> = (
           direction="COST"
           activeSettlements={props.activeSettlements}
           activeLinkedInvoices={props.activeLinkedInvoices}
+          onAddSettlement={props.onAddSettlement}
+          onRemoveSettlement={props.onRemoveSettlement}
+          onAddInvoice={props.onAddInvoice}
+          onRemoveInvoice={props.onRemoveInvoice}
           onSuccess={handleClosePayment}
         />
       )}

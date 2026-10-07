@@ -1,6 +1,6 @@
 import React from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, within } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { CaseLinePaymentDrawer } from "./CaseLinePaymentDrawer";
 
@@ -195,5 +195,37 @@ describe("CaseLinePaymentDrawer", () => {
     expect(screen.getByText(/50E-123.45/i)).toBeInTheDocument();
     expect(screen.getByText(/CÔNG TY ABC/i)).toBeInTheDocument();
     expect(screen.getByText(/9.018.000 ₫/i)).toBeInTheDocument();
+  });
+
+  it("renders 'Đang chọn' button in header when selectedInvoicesCount > 0 and toggles viewPreset", () => {
+    const setViewPreset = vi.fn();
+    mockReconOverrides = {
+      selectedInvoicesCount: 2,
+      viewPreset: "all",
+      setViewPreset,
+    };
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <CaseLinePaymentDrawer
+          open={true}
+          onClose={vi.fn()}
+          caseId="case-1"
+          lineId="line-1"
+          lineCode="PT-01"
+          lineName="Lọc nhớt"
+          lineAmount={300000}
+          lineType="PT"
+          payer="KH"
+        />
+      </QueryClientProvider>,
+    );
+
+    const selectedBtn = screen.getByRole("button", { name: /Đang chọn/i });
+    expect(selectedBtn).toBeInTheDocument();
+    expect(within(selectedBtn).getByText("2")).toBeInTheDocument();
+
+    fireEvent.click(selectedBtn);
+    expect(setViewPreset).toHaveBeenCalledWith("selected");
   });
 });

@@ -205,6 +205,7 @@ export function GarageCaseStandaloneDrawer(
             caseId={selectedCase.id}
             caseCode={selectedCase.soChungTu}
             caseData={selectedCase}
+            grossProfit={grossProfit}
             editMode={editMode}
             onStartEdit={startEdit}
             activeSettlements={activeSettlements}
@@ -221,6 +222,7 @@ export function GarageCaseStandaloneDrawer(
             caseId={selectedCase.id}
             caseCode={selectedCase.soChungTu}
             caseData={selectedCase}
+            grossProfit={grossProfit}
           />
         ),
       },

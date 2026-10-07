@@ -1,6 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { parseQuoteLines } from "../GarageCasePreview.helper";
 import type { QuoteReceivableRow } from "../components/tables/quote-receivables-table";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
@@ -56,33 +55,27 @@ export function useQuoteFinancialsTabContent(
     );
   }, [canPerformPayment, isEditMode, hasPermissions, t]);
 
-  const { parts, services } = useMemo(() => {
-    return parseQuoteLines(props.caseData?.rawData);
-  }, [props.caseData?.rawData]);
-
   const totalCostAmount = useMemo(() => {
-    const directCost =
-      props.caseData?.chi_phi ??
+    const rawCost =
       props.caseData?.chiPhi ??
-      props.caseData?.totalCost;
+      props.caseData?.chi_phi ??
+      props.caseData?.ChiPhi ??
+      props.caseData?.rawData?.ChiPhi ??
+      props.caseData?.rawData?.chiPhi ??
+      props.grossProfit?.chiPhi ??
+      props.grossProfit?.ChiPhi ??
+      props.caseData?.targetCost;
+
     if (
-      directCost !== undefined &&
-      directCost !== null &&
-      !isNaN(Number(directCost)) &&
-      Number(directCost) > 0
+      rawCost !== undefined &&
+      rawCost !== null &&
+      !isNaN(Number(rawCost)) &&
+      Number(rawCost) > 0
     ) {
-      return Number(directCost);
+      return Number(rawCost);
     }
-    const partsCost = parts.reduce(
-      (sum, p) => sum + Number(p.totalCost || p.amount || 0),
-      0,
-    );
-    const servicesCost = services.reduce(
-      (sum, s) => sum + Number(s.totalCost || s.amount || 0),
-      0,
-    );
-    return partsCost + servicesCost;
-  }, [props.caseData, parts, services]);
+    return 0;
+  }, [props.caseData, props.grossProfit]);
 
   const handleReceivablePaymentClick = useCallback(
     (row: QuoteReceivableRow) => {

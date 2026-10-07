@@ -1,5 +1,4 @@
-import React from "react";
-import { ShieldCheck, FileCheck } from "lucide-react";
+import { ShieldCheck, FileCheck, Link2 } from "lucide-react";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import { money } from "@/shared/utils/format";
 import { buildProgressColumns } from "./GarageCasesTable.progress-columns";
@@ -21,12 +20,12 @@ export function buildFinancialColumns(
       showBlankOption: true,
       formatOptionLabel: fmtMoneyOpt,
     }),
-    size: 160,
+    size: 140,
     className: "text-right font-semibold tabular-nums",
     cell: (item: any) => (item[key] ? money(Number(item[key])) : "—"),
   });
 
-  return [
+  const revenueProfitCols = [
     makeMoneyCol("doanhThu", t("cases.columns.doanhThu", "Doanh thu")),
     makeMoneyCol("chiPhi", t("cases.columns.chiPhi", "Chi phí")),
     {
@@ -37,7 +36,7 @@ export function buildFinancialColumns(
         showBlankOption: true,
         formatOptionLabel: fmtMoneyOpt,
       }),
-      size: 160,
+      size: 140,
       className: "text-right font-semibold tabular-nums",
       cell: (item: any) => {
         const val = Number(item.loiNhuan) || 0;
@@ -67,7 +66,9 @@ export function buildFinancialColumns(
         return <span>{m > 0 ? `+${m.toFixed(1)}%` : `${m.toFixed(1)}%`}</span>;
       },
     },
-    ...buildProgressColumns(ctx, makeHdr),
+  ];
+
+  const flagCols = [
     {
       key: "isInsuranceClaim",
       label: t("cases.columns.insurance", "BH"),
@@ -95,7 +96,7 @@ export function buildFinancialColumns(
       header: makeHdr("hasInvoice", t("cases.columns.vatInvoice", "HĐ VAT"), {
         align: "center",
       }),
-      size: 90,
+      size: 100,
       className: "text-center",
       cell: (item: any) => {
         const hasVat = Boolean(
@@ -104,23 +105,68 @@ export function buildFinancialColumns(
           item.rawData?.DaTaoHoaDonThue === true ||
           (item.rawData?.TienThue && Number(item.rawData.TienThue) > 0),
         );
-        return hasVat ? (
-          <div className="w-full flex justify-center">
-            <Tooltip
-              content={t(
-                "cases.columns.hasInvoiceTooltip",
-                "Có xuất hóa đơn VAT",
-              )}
-            >
-              <FileCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 hover:text-primary transition-colors" />
-            </Tooltip>
+        const outCount = Number(item.linkedInvoiceOutCount || 0);
+        const inCount = Number(item.linkedInvoiceInCount || 0);
+        const totalLinked = Number(
+          item.linkedInvoiceCount || outCount + inCount || 0,
+        );
+        const targetId = item.soChungTu || item.id;
+
+        if (!hasVat && totalLinked === 0) {
+          return (
+            <span className="text-muted-foreground/30 select-none font-normal">
+              —
+            </span>
+          );
+        }
+
+        return (
+          <div className="w-full flex items-center justify-center gap-1.5">
+            {hasVat && (
+              <Tooltip
+                content={t(
+                  "cases.columns.hasInvoiceTooltip",
+                  "Có xuất hóa đơn VAT",
+                )}
+              >
+                <FileCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 hover:text-primary transition-colors shrink-0" />
+              </Tooltip>
+            )}
+            {totalLinked > 0 && (
+              <Tooltip
+                content={
+                  outCount > 0 && inCount > 0
+                    ? `${outCount} HĐ bán ra (doanh thu), ${inCount} HĐ mua vào (chi phí)`
+                    : outCount > 0
+                      ? `${outCount} HĐ bán ra (doanh thu)`
+                      : inCount > 0
+                        ? `${inCount} HĐ mua vào (chi phí)`
+                        : t("cases.filter.hasLinked", "Đã liên kết HĐ")
+                }
+              >
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    ctx.onOpenFinancials?.(targetId);
+                  }}
+                  className="inline-flex items-center justify-center text-emerald-600 dark:text-emerald-400 hover:opacity-80 transition-opacity p-0.5 cursor-pointer shrink-0"
+                  aria-label={t("cases.filter.hasLinked", "Đã liên kết HĐ")}
+                >
+                  <Link2 className="w-3.5 h-3.5" />
+                </button>
+              </Tooltip>
+            )}
           </div>
-        ) : (
-          <span className="text-muted-foreground/30 select-none font-normal">
-            —
-          </span>
         );
       },
     },
   ];
+
+  const progressCols = buildProgressColumns(ctx, makeHdr);
+  const isOverview =
+    !ctx.activeColumnPresetKey || ctx.activeColumnPresetKey === "overview";
+  return isOverview
+    ? [...revenueProfitCols, ...progressCols, ...flagCols]
+    : [...progressCols, ...revenueProfitCols, ...flagCols];
 }

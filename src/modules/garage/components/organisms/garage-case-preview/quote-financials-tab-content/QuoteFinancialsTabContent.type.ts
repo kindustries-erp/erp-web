@@ -23,4 +23,8 @@ export interface QuoteFinancialsTabContentProps {
   activeSettlements?: any[];
   activeLinkedInvoices?: any[];
   onPaymentSaved?: () => void;
+  onAddSettlement?: (items: any[]) => void;
+  onRemoveSettlement?: (id: string) => void;
+  onAddInvoice?: (payload: any) => void;
+  onRemoveInvoice?: (id: string) => void;
 }

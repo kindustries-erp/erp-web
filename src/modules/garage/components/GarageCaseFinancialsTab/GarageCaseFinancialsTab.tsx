@@ -16,12 +16,23 @@ export function GarageCaseFinancialsTab(props: GarageCaseFinancialsTabProps) {
         caseId={props.caseId || logic.caseData?.id || ""}
         caseCode={props.caseCode || logic.caseData?.soChungTu || ""}
         caseData={props.caseData || logic.caseData}
+        grossProfit={props.grossProfit}
         editMode={props.editMode ?? logic.editMode}
         activeSettlements={props.activeSettlements || logic.activeSettlements}
         activeLinkedInvoices={
           props.activeLinkedInvoices ||
           (logic as any).linkedInvoices ||
           (logic as any).activeLinkedInvoices
+        }
+        onAddSettlement={
+          props.onAddSettlement || (logic as any).onSubmitSettlements
+        }
+        onRemoveSettlement={
+          props.onRemoveSettlement || (logic as any).onRemoveSettlement
+        }
+        onAddInvoice={props.onAddInvoice || (logic as any).onSubmitInvoices}
+        onRemoveInvoice={
+          props.onRemoveInvoice || (logic as any).onRemoveInvoice
         }
       />
 

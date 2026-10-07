@@ -163,6 +163,8 @@ export const garageVi = {
       paidAmount: "Đã thu",
       balanceAmount: "Còn phải thu",
       collectionProgress: "Tổng phải thu",
+      receivableCustomer: "Phải thu KH",
+      receivableInsurance: "Phải thu BH",
       costProgress: "Tổng phải trả",
       totalReceivable: "Tổng phải thu",
       remainingReceivable: "Còn phải thu",

@@ -129,4 +129,41 @@ describe("InvoiceDocumentWorkspace", () => {
     expect(screen.getByText("test-invoice.pdf")).toBeInTheDocument();
     expect(screen.getByText("Chờ lưu")).toBeInTheDocument();
   });
+
+  it("deduplicates files when pdfFileKey matches an attachment fileKey", () => {
+    const dedupeInvoice: any = {
+      id: "inv-dedupe",
+      invoiceNo: "0005555",
+      pdfFileKey: "invoices/pdf/duplicate-uuid.pdf",
+      attachments: [
+        {
+          attachmentId: "att-match",
+          attachment: {
+            id: "att-match",
+            fileName: "2026-10-02_C26MHD_65114302.pdf",
+            fileKey: "invoices/pdf/duplicate-uuid.pdf",
+            mimeType: "application/pdf",
+            documentType: "HOA_DON",
+            fileSize: 280145,
+          },
+        },
+      ],
+    };
+
+    render(
+      <InvoiceDocumentWorkspace
+        detailInvoice={dedupeInvoice}
+        editMode={false}
+      />,
+    );
+
+    // Should only render 1 file item with the friendly name, size, and original badge
+    expect(screen.getByText("1 tệp")).toBeInTheDocument();
+    expect(
+      screen.getByText("2026-10-02_C26MHD_65114302.pdf"),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("duplicate-uuid.pdf")).not.toBeInTheDocument();
+    expect(screen.getByText("PDF gốc")).toBeInTheDocument();
+    expect(screen.getByText("• 274 KB")).toBeInTheDocument();
+  });
 });

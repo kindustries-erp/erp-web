@@ -27,6 +27,8 @@ vi.mock("@/modules/garage/api/garageApi", () => ({
     getSmartInvoiceSuggestions: vi.fn().mockResolvedValue([]),
     addCaseSettlement: vi.fn().mockResolvedValue({ id: "settlement-new-1" }),
     removeCaseSettlement: vi.fn().mockResolvedValue({ success: true }),
+    addCaseLinkedInvoice: vi.fn().mockResolvedValue({ success: true }),
+    removeCaseLinkedInvoice: vi.fn().mockResolvedValue({ success: true }),
   },
 }));
 
@@ -320,6 +322,95 @@ describe("useGarageCaseReconciliationLogic - Draft-First Manual Cashflow", () =>
     });
 
     expect(result.current.viewPreset).toBe("all");
+    unmount();
+  });
+
+  it("should support draft-first mode for handleSubmitInvoices without calling backend API", async () => {
+    const onSubmitInvoices = vi.fn();
+    const onRemoveInvoice = vi.fn();
+    const onClose = vi.fn();
+
+    const { result, unmount } = renderHook(
+      () =>
+        useGarageCaseReconciliationLogic({
+          open: true,
+          onClose,
+          caseId: "case-123",
+          initialTab: "invoices_out",
+          activeLinkedInvoices: [],
+          onSubmitInvoices,
+          onRemoveInvoice,
+        }),
+      { wrapper },
+    );
+
+    // Toggle invoice
+    act(() => {
+      result.current.handleToggleInvoice({
+        id: "inv-99",
+        invoiceNo: "9999",
+        totalAmount: 1000000,
+      } as any);
+    });
+
+    expect(result.current.selectedInvoicesCount).toBe(1);
+
+    // Call submit
+    await act(async () => {
+      await result.current.handleSubmitInvoices();
+    });
+
+    expect(onSubmitInvoices).toHaveBeenCalledTimes(1);
+    expect(onSubmitInvoices).toHaveBeenCalledWith([
+      expect.objectContaining({
+        invoiceId: "inv-99",
+        linkType: "OUT",
+      }),
+    ]);
+    expect(garageApi.addCaseLinkedInvoice).not.toHaveBeenCalled();
+    expect(garageApi.removeCaseLinkedInvoice).not.toHaveBeenCalled();
+    expect(onClose).toHaveBeenCalled();
+    unmount();
+  });
+
+  it("should support draft-first mode for handleSubmitBankAndCash without calling backend API", async () => {
+    const onSubmitSettlements = vi.fn();
+    const onRemoveSettlement = vi.fn();
+    const onClose = vi.fn();
+
+    const { result, unmount } = renderHook(
+      () =>
+        useGarageCaseReconciliationLogic({
+          open: true,
+          onClose,
+          caseId: "case-123",
+          initialTab: "manual_cashflow",
+          onSubmitSettlements,
+          onRemoveSettlement,
+        }),
+      { wrapper },
+    );
+
+    // Enter manual amount
+    act(() => {
+      result.current.setManualAmount(500000);
+    });
+
+    // Call submit
+    await act(async () => {
+      await result.current.handleSubmitBankAndCash();
+    });
+
+    expect(onSubmitSettlements).toHaveBeenCalledTimes(1);
+    expect(onSubmitSettlements).toHaveBeenCalledWith([
+      expect.objectContaining({
+        amount: 500000,
+        sourceChannel: "OFF_SYSTEM_MANUAL",
+      }),
+    ]);
+    expect(garageApi.addCaseSettlement).not.toHaveBeenCalled();
+    expect(garageApi.removeCaseSettlement).not.toHaveBeenCalled();
+    expect(onClose).toHaveBeenCalled();
     unmount();
   });
 });

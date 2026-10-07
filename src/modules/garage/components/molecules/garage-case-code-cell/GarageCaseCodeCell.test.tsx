@@ -49,20 +49,10 @@ describe("GarageCaseCodeCell", () => {
     expect(onOpenDetail).toHaveBeenCalledWith("case-uuid-99");
   });
 
-  it("triggers onOpenFinancials when clicking linked invoice icon", () => {
+  it("does not render linked invoice icon in code cell (relocated to hasInvoice column)", () => {
     const onOpenDetail = vi.fn();
-    const onOpenFinancials = vi.fn();
-    render(
-      <GarageCaseCodeCell
-        item={mockItem}
-        onOpenDetail={onOpenDetail}
-        onOpenFinancials={onOpenFinancials}
-      />,
-    );
+    render(<GarageCaseCodeCell item={mockItem} onOpenDetail={onOpenDetail} />);
 
-    const linkBtn = screen.getByLabelText("Đã liên kết HĐ");
-    fireEvent.click(linkBtn);
-
-    expect(onOpenFinancials).toHaveBeenCalledWith("GR-PDV2609-0076");
+    expect(screen.queryByLabelText("Đã liên kết HĐ")).toBeNull();
   });
 });

@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { applyGarageCasesTableState } from "./garageCasesTable";
+import {
+  applyGarageCasesTableState,
+  extractPhaiThuKhachHang,
+  extractPhaiThuBaoHiem,
+} from "./garageCasesTable";
 
 describe("applyGarageCasesTableState", () => {
   const items = [
@@ -411,6 +415,44 @@ describe("applyGarageCasesTableState", () => {
       });
       expect(resPlate).toHaveLength(1);
       expect(resPlate[0].id).toBe("2");
+    });
+  });
+
+  describe("extractPhaiThuKhachHang & extractPhaiThuBaoHiem", () => {
+    it("extracts customer and insurance amounts correctly for insurance cases with breakdown", () => {
+      const item = {
+        tienCoThue: 6561000,
+        rawData: {
+          XeLamBaoHiem: true,
+          TienThanhToanKH: 1620000,
+          TienThanhToanBH: 4941000,
+        },
+      };
+      expect(extractPhaiThuKhachHang(item)).toBe(1620000);
+      expect(extractPhaiThuBaoHiem(item)).toBe(4941000);
+    });
+
+    it("assigns full amount to customer when case is not insurance", () => {
+      const item = {
+        tienCoThue: 46900000,
+        rawData: {
+          XeLamBaoHiem: false,
+        },
+      };
+      expect(extractPhaiThuKhachHang(item)).toBe(46900000);
+      expect(extractPhaiThuBaoHiem(item)).toBe(0);
+    });
+
+    it("falls back to TienBaoHiemDuyet when TienThanhToanBH is missing for insurance vehicle", () => {
+      const item = {
+        tienCoThue: 10000000,
+        rawData: {
+          XeLamBaoHiem: true,
+          TienBaoHiemDuyet: 7000000,
+        },
+      };
+      expect(extractPhaiThuBaoHiem(item)).toBe(7000000);
+      expect(extractPhaiThuKhachHang(item)).toBe(3000000);
     });
   });
 });

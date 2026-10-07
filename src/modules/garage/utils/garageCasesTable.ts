@@ -21,6 +21,55 @@ function normalizeString(value?: string | null) {
   return (value ?? "").toString().trim().toLowerCase();
 }
 
+export function extractPhaiThuBaoHiem(item: Record<string, any>): number {
+  if (!item) return 0;
+  if (
+    item.phaiThuBaoHiem != null &&
+    !Number.isNaN(Number(item.phaiThuBaoHiem))
+  ) {
+    return Number(item.phaiThuBaoHiem);
+  }
+  const raw = item.rawData;
+  if (
+    raw?.TienThanhToanBH != null &&
+    !Number.isNaN(Number(raw.TienThanhToanBH))
+  ) {
+    return Number(raw.TienThanhToanBH);
+  }
+  if (
+    raw?.XeLamBaoHiem === true &&
+    raw?.TienBaoHiemDuyet != null &&
+    !Number.isNaN(Number(raw.TienBaoHiemDuyet)) &&
+    Number(raw.TienBaoHiemDuyet) > 0
+  ) {
+    return Number(raw.TienBaoHiemDuyet);
+  }
+  return 0;
+}
+
+export function extractPhaiThuKhachHang(item: Record<string, any>): number {
+  if (!item) return 0;
+  if (
+    item.phaiThuKhachHang != null &&
+    !Number.isNaN(Number(item.phaiThuKhachHang))
+  ) {
+    return Number(item.phaiThuKhachHang);
+  }
+  const raw = item.rawData;
+  if (
+    raw?.TienThanhToanKH != null &&
+    !Number.isNaN(Number(raw.TienThanhToanKH))
+  ) {
+    return Number(raw.TienThanhToanKH);
+  }
+  const targetRev = Number(item.tienCoThue ?? raw?.TongTienThanhToan ?? 0);
+  if (!raw?.XeLamBaoHiem) {
+    return targetRev;
+  }
+  const bh = extractPhaiThuBaoHiem(item);
+  return Math.max(0, targetRev - bh);
+}
+
 function getCellValue(item: Record<string, any>, key: string) {
   switch (key) {
     case "statusName":
@@ -72,6 +121,12 @@ function getCellValue(item: Record<string, any>, key: string) {
     case "tongPhaiThu":
     case "totalReceivable":
       return item.tienCoThue || 0;
+    case "phaiThuKhachHang":
+    case "phaiThuKH":
+      return extractPhaiThuKhachHang(item);
+    case "phaiThuBaoHiem":
+    case "phaiThuBH":
+      return extractPhaiThuBaoHiem(item);
     case "balanceAmount":
     case "tienConPhaiThanhToan":
     case "conPhaiThu":
