@@ -134,6 +134,14 @@ export interface ErpInvoice {
   pdfFiles?: any[] | null;
   xmlFileKey?: string | null;
   xmlImportId?: string | null;
+  syncId?: string | null;
+  msttcgp?: string | null;
+  providerCode?: string | null;
+  lookupUrl?: string | null;
+  lookupCode?: string | null;
+  pdfPath?: string | null;
+  pdfSource?: string | null;
+  pdfError?: string | null;
   taxInvoiceStatus?: number | null;
   taxProcessStatus?: number | null;
   relatedInvoiceNo?: string | null;
@@ -413,7 +421,89 @@ async function resolveBlobErrorMessage(
   return fallback;
 }
 
+export interface OriginalPdfDownloadResponse {
+  invoiceId: string;
+  invoiceNo: string;
+  success: boolean;
+  pdfSource: string | null;
+  pdfFileKey: string | null;
+  pdfError: string | null;
+}
+
+export interface OriginalPdfLookupInfoResponse {
+  invoiceId: string;
+  invoiceNo: string;
+  providerCode: string;
+  providerName: string;
+  msttcgp: string | null;
+  lookupCode: string | null;
+  lookupUrl: string | null;
+  pdfSource: string | null;
+  pdfFileKey: string | null;
+  pdfError: string | null;
+}
+
+export interface SyncAdvancedPayload {
+  companyTaxCode: string;
+  syncType: "purchase" | "sold";
+  queryType?: "query" | "sco-query" | "all";
+  fromDate: string;
+  toDate: string;
+}
+
+export interface SyncAdvancedResponse {
+  syncId: string;
+  totalFound: number;
+  status: string;
+}
+
+export interface SyncStatusResponse {
+  id: string;
+  status: string;
+  totalFound: number;
+  totalPdfSuccess: number;
+  totalPdfFailed: number;
+  errorMessage: string | null;
+}
+
 export const erpInvoicesCoreApi = {
+  downloadOriginalPdf: async (
+    invoiceId: string,
+  ): Promise<OriginalPdfDownloadResponse> => {
+    const { data } = await axiosInstance.post<OriginalPdfDownloadResponse>(
+      `/erp-invoices/original-pdf/${invoiceId}/download`,
+    );
+    return data;
+  },
+
+  getOriginalPdfLookupInfo: async (
+    invoiceId: string,
+  ): Promise<OriginalPdfLookupInfoResponse> => {
+    const { data } = await axiosInstance.get<OriginalPdfLookupInfoResponse>(
+      `/erp-invoices/original-pdf/${invoiceId}/lookup-info`,
+    );
+    return data;
+  },
+
+  syncAdvanced: async (
+    payload: SyncAdvancedPayload,
+  ): Promise<SyncAdvancedResponse> => {
+    const { data } = await axiosInstance.post<SyncAdvancedResponse>(
+      `/erp-invoices/original-pdf/sync-advanced`,
+      payload,
+    );
+    return data;
+  },
+
+  getOriginalPdfSyncStatus: async (
+    syncId: string,
+  ): Promise<SyncStatusResponse> => {
+    const { data } = await axiosInstance.get<SyncStatusResponse>(
+      `/erp-invoices/original-pdf/sync-status/${syncId}`,
+    );
+    return data;
+  },
+
   list: async (
     params?: ErpInvoiceListParams,
   ): Promise<ErpInvoiceListResponse> => {

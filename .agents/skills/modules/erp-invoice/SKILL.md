@@ -55,12 +55,14 @@ src/modules/erp-invoices-core/
 │   ├── index.ts                               # Unified barrel export (Atoms, Molecules, Organisms)
 │   ├── atoms/                                 # CÁC THÀNH PHẦN NGUYÊN TỬ CƠ BẢN (Tầng 1)
 │   │   ├── adjustment-type-badge/             # Badge phân loại hóa đơn điều chỉnh (Tiền, Thông tin, Số lượng, Thay thế)
+│   │   ├── original-pdf-status-badge/         # [NEW] Badge hiển thị trạng thái tải PDF gốc nhà cung cấp (VinFast, MISA, Viettel...)
 │   │   └── invoice-status-badge/              # Badge trạng thái xử lý thuế, hạch toán, hóa đơn gốc
 │   ├── molecules/                             # CÁC PHÂN TỬ GIAO DIỆN TÁI SỬ DỤNG (Tầng 2)
 │   │   ├── adjustment-original-invoice-card/  # Thẻ hiển thị HĐ gốc (#1474 C26TGA, ngày, tiền, link mở chi tiết)
 │   │   ├── adjustment-financial-summary/      # Card tóm tắt tài chính so sánh Trước -> Điều chỉnh -> Hiệu lực
 │   │   ├── adjustment-info-diff-card/         # Card hiển thị khác biệt thông tin (Biển số xe, Lệnh sửa chữa)
 │   │   ├── adjustment-items-table/            # Bảng so sánh chi tiết từng dòng hàng hóa điều chỉnh (StandardTable Spreadsheet)
+│   │   ├── provider-lookup-info-card/         # [NEW] Card thông tin nhà cung cấp, mã tra cứu, copy 1-chạm & mở portal
 │   │   ├── coming-soon-tab-content/           # Placeholder tab đang hoàn thiện
 │   │   ├── erp-invoice-attachments-sub-tab/   # Sub-tab quản lý danh sách file đính kèm
 │   │   ├── erp-invoice-pdf-preview/           # Khung xem trước file PDF inline
@@ -83,6 +85,7 @@ src/modules/erp-invoices-core/
 │   │   ├── xml-upload-dropzone/               # Vùng kéo thả upload tệp XML/ZIP
 │   │   └── xml-upload-file-list/              # Danh sách tệp XML chờ phân tích
 │   └── organisms/                             # CÁC KHỐI CHỨC NĂNG & MÀN HÌNH HOÀN CHỈNH (Tầng 3)
+│       ├── invoice-sync-advanced-modal/       # [NEW] Modal kích hoạt đồng bộ GDT nâng cao & tải PDF gốc nhà cung cấp
 │       ├── erp-invoice-adjustment-section/    # DrawerSection chuyên dụng đối soát HĐ gốc/điều chỉnh ở Cột Trái (Main)
 │       ├── related-invoice-sidebar-section/   # (Legacy) Section hiển thị HĐ liên quan trong Sidebar Drawer
 │       ├── erp-invoices-tab/                  # Container Header Table (/erp-invoices?tab=in / out)
