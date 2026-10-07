@@ -1,5 +1,5 @@
 import React from "react";
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { CaseLinePaymentDrawer } from "./CaseLinePaymentDrawer";
@@ -15,6 +15,8 @@ vi.mock("react-i18next", () => ({
     },
   }),
 }));
+
+let mockReconOverrides: Record<string, any> = {};
 
 vi.mock(
   "../../GarageCaseReconciliationDrawer/useGarageCaseReconciliationLogic",
@@ -52,6 +54,7 @@ vi.mock(
       handleSelectAllSuggestions: vi.fn(),
       invoiceSuggestions: [],
       activeSettlements: [],
+      pendingManualSettlements: [],
       onRemoveSettlement: vi.fn(),
       manualAmount: 0,
       manualCategory: "TIEN_MAT_NGOAI",
@@ -70,6 +73,7 @@ vi.mock(
       isSubmitting: false,
       handleSubmitInvoices: vi.fn(),
       handleSubmitBankAndCash: vi.fn(),
+      ...mockReconOverrides,
     }),
   }),
 );
@@ -77,6 +81,10 @@ vi.mock(
 describe("CaseLinePaymentDrawer", () => {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },
+  });
+
+  beforeEach(() => {
+    mockReconOverrides = {};
   });
 
   it("renders correctly when open", () => {
@@ -149,5 +157,43 @@ describe("CaseLinePaymentDrawer", () => {
     expect(
       screen.getByRole("button", { name: /Ghi nhận thu ngoài sổ/i }),
     ).toBeInTheDocument();
+  });
+
+  it("renders 'Thông tin sổ báo giá' and target amount in right panel", () => {
+    render(
+      <QueryClientProvider client={queryClient}>
+        <CaseLinePaymentDrawer
+          open={true}
+          onClose={vi.fn()}
+          caseId="case-1"
+          caseCode="GR-PDV2609-0056"
+          caseData={{
+            soChungTu: "GR-PDV2609-0056",
+            bienSoXe: "50E-123.45",
+            khachHangName: "CÔNG TY ABC",
+            tienCoThue: 9018000,
+          }}
+          lineId="line-2"
+          lineCode="PT-02"
+          lineName="Bugi đánh lửa"
+          lineAmount={500000}
+          lineType="PT"
+          direction="COST"
+          payer="GARAGE"
+        />
+      </QueryClientProvider>,
+    );
+
+    // Section 1: Khoản mục cấn trừ có số tiền cần cấn trừ
+    expect(screen.getByText(/Khoản mục cấn trừ/i)).toBeInTheDocument();
+    expect(screen.getByText(/Số tiền cần cấn trừ/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/500.000 ₫/i).length).toBeGreaterThanOrEqual(2);
+
+    // Section 2: Thông tin sổ báo giá
+    expect(screen.getByText(/Thông tin sổ báo giá/i)).toBeInTheDocument();
+    expect(screen.getByText(/GR-PDV2609-0056/i)).toBeInTheDocument();
+    expect(screen.getByText(/50E-123.45/i)).toBeInTheDocument();
+    expect(screen.getByText(/CÔNG TY ABC/i)).toBeInTheDocument();
+    expect(screen.getByText(/9.018.000 ₫/i)).toBeInTheDocument();
   });
 });

@@ -16,12 +16,14 @@ export function CaseLinePaymentDrawer(props: CaseLinePaymentDrawerProps) {
   const {
     t,
     direction,
+    isCost,
     invoiceTabKey,
     activeTab,
     handleTabChange,
     reconLogic,
     targetAmount,
     selectedAmount,
+    realSettledAmount,
     remainingAmount,
     progressPercent,
     lineTypeLabel,
@@ -60,9 +62,6 @@ export function CaseLinePaymentDrawer(props: CaseLinePaymentDrawerProps) {
               suggestionsCount={reconLogic.invoiceSuggestions.length}
               selectedCount={reconLogic.selectedInvoicesCount}
               linkedCount={linkedCount}
-              selectedTotal={reconLogic.selectedInvoicesTotal}
-              onUnselectAll={() => reconLogic.handleSelectAllInvoices(false)}
-              onSelectAllSuggestions={reconLogic.handleSelectAllSuggestions}
             />
             <InvoiceTabContent
               invoiceDirection={invoiceDirection}
@@ -132,7 +131,24 @@ export function CaseLinePaymentDrawer(props: CaseLinePaymentDrawerProps) {
     if (isManualTab) {
       const hasAmount =
         Boolean(reconLogic.manualAmount) && Number(reconLogic.manualAmount) > 0;
-      const canSave = hasAmount || reconLogic.manualDraftPending;
+      const pendingCount = reconLogic.pendingManualSettlements?.length || 0;
+      const deletedCount = reconLogic.pendingDeletedSettlementIds?.length || 0;
+      const canSave = hasAmount || pendingCount > 0 || deletedCount > 0;
+
+      const baseLabel =
+        direction === "COST"
+          ? t("cases.financials.saveManualPayment", "Ghi nhận chi ngoài sổ")
+          : t("cases.financials.saveManualReceipt", "Ghi nhận thu ngoài sổ");
+
+      let submitLabel = baseLabel;
+      if (pendingCount > 0 && deletedCount > 0) {
+        submitLabel = `${baseLabel} (+${pendingCount}, -${deletedCount})`;
+      } else if (deletedCount > 0) {
+        submitLabel = `${baseLabel} (-${deletedCount})`;
+      } else if (pendingCount > 0 || hasAmount) {
+        const totalAdd = pendingCount + (hasAmount ? 1 : 0);
+        submitLabel = `${baseLabel} (${totalAdd})`;
+      }
 
       return [
         {
@@ -141,13 +157,7 @@ export function CaseLinePaymentDrawer(props: CaseLinePaymentDrawerProps) {
           onClick: props.onClose,
         },
         {
-          label:
-            direction === "COST"
-              ? t("cases.financials.saveManualPayment", "Ghi nhận chi ngoài sổ")
-              : t(
-                  "cases.financials.saveManualReceipt",
-                  "Ghi nhận thu ngoài sổ",
-                ),
+          label: submitLabel,
           disabled: !canSave,
           loading: reconLogic.isSubmitting,
           onClick: reconLogic.handleSubmitBankAndCash,
@@ -210,10 +220,12 @@ export function CaseLinePaymentDrawer(props: CaseLinePaymentDrawerProps) {
           props={props}
           targetAmount={targetAmount}
           selectedAmount={selectedAmount}
+          realSettledAmount={realSettledAmount}
           remainingAmount={remainingAmount}
           progressPercent={progressPercent}
           lineTypeLabel={lineTypeLabel}
           payerLabel={payerLabel}
+          isCost={isCost}
         />
       }
     />

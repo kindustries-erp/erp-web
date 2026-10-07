@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { StandardTable } from "@/shared/components/StandardTable";
 import { SubtotalSummaryCell } from "@/shared/components/DataTable/SubtotalSummaryCell";
 import { getQuoteReceivablesTableColumns } from "./QuoteReceivablesTable.columns";
+import { computeQuoteReceivableRows } from "./QuoteReceivablesTable.helper";
 import type {
   QuoteReceivablesTableProps,
   QuoteReceivableRow,
@@ -11,52 +12,55 @@ import type {
 export function QuoteReceivablesTable({
   items: propItems,
   caseData,
+  activeSettlements,
+  activeLinkedInvoices,
   loading = false,
   className,
   canEditFinancial = true,
+  canPerformPayment = true,
+  disabledReason,
   onPaymentClick,
 }: QuoteReceivablesTableProps) {
   const { t } = useTranslation(["garage", "common"]);
 
   const items: QuoteReceivableRow[] = useMemo(() => {
-    if (propItems && propItems.length > 0) {
-      return propItems;
-    }
-    const rawData = caseData?.rawData;
-    const khAmount = Number(
-      rawData?.TienThanhToanKH ?? caseData?.tienThanhToanKh ?? 0,
+    return computeQuoteReceivableRows(
+      caseData,
+      activeSettlements,
+      propItems,
+      activeLinkedInvoices,
     );
-    const bhAmount = Number(
-      rawData?.TienThanhToanBH ?? caseData?.tienThanhToanBh ?? 0,
-    );
+  }, [propItems, caseData, activeSettlements, activeLinkedInvoices]);
 
-    return [
-      {
-        id: "KH",
-        stt: 1,
-        payer: "KH",
-        labelKey: "cases.quotePreview.fin.customerPayment",
-        defaultLabel: "Khách hàng thanh toán",
-        amount: khAmount,
-      },
-      {
-        id: "BH",
-        stt: 2,
-        payer: "BH",
-        labelKey: "cases.quotePreview.fin.insuranceApproved",
-        defaultLabel: "Bảo hiểm thanh toán",
-        amount: bhAmount,
-      },
-    ];
-  }, [propItems, caseData]);
+  const effectiveCanPerform = Boolean(canPerformPayment && canEditFinancial);
 
   const columns = useMemo(
-    () => getQuoteReceivablesTableColumns(t, onPaymentClick, canEditFinancial),
-    [t, onPaymentClick, canEditFinancial],
+    () =>
+      getQuoteReceivablesTableColumns(
+        t,
+        onPaymentClick,
+        effectiveCanPerform,
+        disabledReason,
+      ),
+    [t, onPaymentClick, effectiveCanPerform, disabledReason],
   );
 
   const totalAmount = useMemo(() => {
     return items.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
+  }, [items]);
+
+  const totalCollected = useMemo(() => {
+    return items.reduce(
+      (sum, item) => sum + (Number(item.collectedAmount) || 0),
+      0,
+    );
+  }, [items]);
+
+  const totalRemaining = useMemo(() => {
+    return items.reduce(
+      (sum, item) => sum + (Number(item.remainingAmount) || 0),
+      0,
+    );
   }, [items]);
 
   const summaryRow = useMemo(() => {
@@ -90,8 +94,34 @@ export function QuoteReceivablesTable({
           )}
         />
       ),
+      collectedAmount: (
+        <SubtotalSummaryCell
+          variantType="amount"
+          subtotalAmount={totalCollected}
+          metricTitle={t(
+            "cases.quotePreview.fin.totalCollected",
+            "Tổng đã thu",
+          )}
+        />
+      ),
+      remainingAmount: (
+        <SubtotalSummaryCell
+          variantType="amount"
+          subtotalAmount={totalRemaining}
+          metricTitle={t(
+            "cases.quotePreview.fin.totalRemaining",
+            "Tổng còn lại",
+          )}
+        />
+      ),
+      linkedInvoices: (
+        <SubtotalSummaryCell
+          variantType="label"
+          label={`${items.reduce((sum, item) => sum + (item.linkedInvoices?.length || 0), 0)} HĐ`}
+        />
+      ),
     };
-  }, [items.length, totalAmount, t]);
+  }, [items, totalAmount, totalCollected, totalRemaining, t]);
 
   return (
     <div className={className || "w-full"}>

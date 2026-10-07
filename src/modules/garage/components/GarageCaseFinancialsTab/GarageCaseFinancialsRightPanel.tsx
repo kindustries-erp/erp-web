@@ -38,6 +38,7 @@ export function GarageCaseFinancialsRightPanel({
       editMode={logic.editMode}
       onSetSettlementType={logic.setSettlementType}
       onSetInvoiceNote={logic.setInvoiceNote}
+      hideDebtCashflowSection={true}
     />
   );
 }

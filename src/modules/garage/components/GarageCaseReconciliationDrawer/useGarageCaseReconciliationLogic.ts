@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
@@ -87,14 +87,40 @@ export function useGarageCaseReconciliationLogic({
 
   const [activeTab, setActiveTab] =
     useState<ReconciliationTabKey>(resolvedInitialTab);
-  const [viewPreset, setViewPreset] = useState<
+  const userSelectedPresetRef = useRef<boolean>(false);
+  const [viewPreset, setViewPresetState] = useState<
     "all" | "suggestions" | "selected" | "linked"
   >("all");
+
+  const setViewPreset = useCallback(
+    (preset: "all" | "suggestions" | "selected" | "linked") => {
+      userSelectedPresetRef.current = true;
+      setViewPresetState(preset);
+    },
+    [],
+  );
+
+  // Manual Cashflow State
+  const [manualAmount, setManualAmount] = useState<number | string>("");
+  const [manualCategory, setManualCategory] =
+    useState<string>("TIEN_MAT_NGOAI");
+  const [manualDate, setManualDate] = useState<string>(
+    new Date().toISOString().slice(0, 10),
+  );
+  const [manualPartner, setManualPartner] = useState<string>("");
+  const [manualNote, setManualNote] = useState<string>("");
+  const [pendingManualSettlements, setPendingManualSettlements] = useState<
+    any[]
+  >([]);
+  const [pendingDeletedSettlementIds, setPendingDeletedSettlementIds] =
+    useState<string[]>([]);
 
   useEffect(() => {
     if (open) {
       setActiveTab(resolvedInitialTab);
-      setViewPreset("all");
+      userSelectedPresetRef.current = false;
+      setPendingManualSettlements([]);
+      setPendingDeletedSettlementIds([]);
     }
   }, [open, resolvedInitialTab]);
 
@@ -108,7 +134,7 @@ export function useGarageCaseReconciliationLogic({
   }, [hasVat, activeTab]);
 
   useEffect(() => {
-    setViewPreset("all");
+    userSelectedPresetRef.current = false;
   }, [activeTab, caseId]);
 
   const targetRevenue = Number(
@@ -186,7 +212,7 @@ export function useGarageCaseReconciliationLogic({
           setActiveTab("invoices_in");
         }
       }
-      setViewPreset("all");
+      userSelectedPresetRef.current = false;
     },
     [activeTab, hasVat],
   );
@@ -205,7 +231,7 @@ export function useGarageCaseReconciliationLogic({
           setActiveTab("invoices_in");
         }
       }
-      setViewPreset("all");
+      userSelectedPresetRef.current = false;
     },
     [activeTab, hasVat],
   );
@@ -229,16 +255,6 @@ export function useGarageCaseReconciliationLogic({
   );
   const [maxAmounts, setMaxAmounts] = useState<Record<string, number>>({});
   const [detailTxnId, setDetailTxnId] = useState<string | null>(null);
-
-  // Manual Cashflow State
-  const [manualAmount, setManualAmount] = useState<number | string>("");
-  const [manualCategory, setManualCategory] =
-    useState<string>("TIEN_MAT_NGOAI");
-  const [manualDate, setManualDate] = useState<string>(
-    new Date().toISOString().slice(0, 10),
-  );
-  const [manualPartner, setManualPartner] = useState<string>("");
-  const [manualNote, setManualNote] = useState<string>("");
 
   // Bank & Cash Statements Pagination & Filter State
   const bankTableState = useTableColumnState(
@@ -274,9 +290,27 @@ export function useGarageCaseReconciliationLogic({
     }, 0);
   }, [selectedIds, netOffAmounts]);
 
+  const pendingManualTotal = useMemo(() => {
+    return pendingManualSettlements.reduce(
+      (sum, s) => sum + Number(s.amount || 0),
+      0,
+    );
+  }, [pendingManualSettlements]);
+
   const currentManualAmount = useMemo(() => {
-    return Number(manualAmount) || 0;
-  }, [manualAmount]);
+    return pendingManualTotal + (Number(manualAmount) || 0);
+  }, [pendingManualTotal, manualAmount]);
+
+  const combinedActiveSettlements = useMemo(() => {
+    const base = (activeSettlements || []).filter(
+      (s: any) => !pendingDeletedSettlementIds.includes(s.id),
+    );
+    return [...base, ...pendingManualSettlements];
+  }, [
+    activeSettlements,
+    pendingDeletedSettlementIds,
+    pendingManualSettlements,
+  ]);
 
   const activeTabSettlementTotal = useMemo(() => {
     if (activeTab === "bank_statement" || activeTab === "cash_book") {
@@ -495,6 +529,59 @@ export function useGarageCaseReconciliationLogic({
     );
   }, [initialLinkedInvoicesForType]);
 
+  // ─── Initial View Preset Priority Router ─────────────────────────────────
+  // Quy tắc ưu tiên: Đã cấn trừ (linked) > Gợi ý khớp (suggestions) > Tất cả (all)
+  const bankLinkedCount = useMemo(() => {
+    const recSettlements = caseSummary?.breakdown?.receipts?.settlements || [];
+    const paySettlements = caseSummary?.breakdown?.payments?.settlements || [];
+    return recSettlements
+      .concat(paySettlements)
+      .filter((s: any) => s.sourceChannel === "ON_SYSTEM").length;
+  }, [
+    caseSummary?.breakdown?.receipts?.settlements,
+    caseSummary?.breakdown?.payments?.settlements,
+  ]);
+
+  useEffect(() => {
+    if (!open) return;
+    if (userSelectedPresetRef.current) return;
+
+    let targetPreset: "all" | "suggestions" | "selected" | "linked" = "all";
+
+    if (activeTab === "invoices_out" || activeTab === "invoices_in") {
+      const linkedCount = initialLinkedInvoicesForType.length;
+      const suggestionsCount = invoiceSuggestions.length;
+      if (linkedCount > 0) {
+        targetPreset = "linked";
+      } else if (suggestionsCount > 0) {
+        targetPreset = "suggestions";
+      } else {
+        targetPreset = "all";
+      }
+    } else if (activeTab === "bank_statement" || activeTab === "cash_book") {
+      const suggestionsCount = bankSuggestions.length;
+      if (bankLinkedCount > 0) {
+        targetPreset = "linked";
+      } else if (suggestionsCount > 0) {
+        targetPreset = "suggestions";
+      } else {
+        targetPreset = "all";
+      }
+    } else {
+      targetPreset = "all";
+    }
+
+    setViewPresetState((prev) => (prev !== targetPreset ? targetPreset : prev));
+  }, [
+    open,
+    activeTab,
+    caseId,
+    initialLinkedInvoicesForType.length,
+    invoiceSuggestions.length,
+    bankSuggestions.length,
+    bankLinkedCount,
+  ]);
+
   // Reset all temporary selections when editMode turns false
   useEffect(() => {
     if (!editMode) {
@@ -528,12 +615,25 @@ export function useGarageCaseReconciliationLogic({
             settlementOrder: item.settlementOrder,
             serialNo: item.serialNo,
             invoiceDate: item.invoiceDate || item.invoice?.invoiceDate,
+            hasBankNetOff: Boolean(item.hasBankNetOff),
+            bankSettledAmount: Number(item.bankSettledAmount || 0),
           } as ErpInvoice;
         }
       });
-      setSelectedInvoicesMap(map);
-      setViewInvoiceId(null);
-      setInvoiceNote("");
+      setSelectedInvoicesMap((prev) => {
+        const prevKeys = Object.keys(prev);
+        const nextKeys = Object.keys(map);
+        if (prevKeys.length === 0 && nextKeys.length === 0) return prev;
+        if (
+          prevKeys.length === nextKeys.length &&
+          prevKeys.every((k) => prev[k]?.id === map[k]?.id)
+        ) {
+          return prev;
+        }
+        return map;
+      });
+      setViewInvoiceId((prev) => (prev !== null ? null : prev));
+      setInvoiceNote((prev) => (prev !== "" ? "" : prev));
     }
   }, [
     open,
@@ -1090,31 +1190,72 @@ export function useGarageCaseReconciliationLogic({
           ),
         );
       } else if (activeTab === "manual_cashflow") {
-        if (!manualAmount || Number(manualAmount) <= 0) {
+        const itemsToSubmit: SettlementSubmissionItem[] =
+          pendingManualSettlements.map((s) => ({
+            settlementType: s.settlementType || settlementType,
+            sourceChannel: "OFF_SYSTEM_MANUAL",
+            category: s.category,
+            amount: Number(s.amount),
+            transDate: s.transDate || s.trans_date,
+            partnerName: s.partnerName || s.partner_name || undefined,
+            note: s.note || undefined,
+          }));
+
+        // Nếu người dùng đang nhập số tiền trên form mà chưa kịp bấm "Thêm vào danh sách"
+        if (Number(manualAmount) > 0) {
+          itemsToSubmit.push({
+            settlementType,
+            sourceChannel: "OFF_SYSTEM_MANUAL",
+            category: manualCategory,
+            amount: Number(manualAmount),
+            transDate: manualDate,
+            partnerName: manualPartner || undefined,
+            note: manualNote || undefined,
+          });
+        }
+
+        const hasDeletions = pendingDeletedSettlementIds.length > 0;
+        const hasAdditions = itemsToSubmit.length > 0;
+
+        if (!hasDeletions && !hasAdditions) {
           toast.error(
             t(
               "cases.reconciliation.validAmount",
-              "Vui lòng nhập số tiền hợp lệ (> 0)",
+              "Vui lòng nhập số tiền hoặc thêm ít nhất một khoản vào danh sách",
             ),
           );
           return;
         }
 
-        const manualItem: SettlementSubmissionItem = {
-          settlementType,
-          sourceChannel: "OFF_SYSTEM_MANUAL",
-          category: manualCategory,
-          amount: Number(manualAmount),
-          transDate: manualDate,
-          partnerName: manualPartner || undefined,
-          note: manualNote || undefined,
-        };
-
-        if (onSubmitSettlements) {
-          await onSubmitSettlements([manualItem]);
-        } else if (caseId) {
-          await garageApi.addCaseSettlement(caseId, manualItem);
+        // 1. Thực thi xóa hàng loạt các khoản đã lưu trong DB được đánh dấu xóa tạm
+        if (hasDeletions) {
+          if (onRemoveSettlement) {
+            for (const delId of pendingDeletedSettlementIds) {
+              onRemoveSettlement(delId);
+            }
+          } else if (caseId) {
+            for (const delId of pendingDeletedSettlementIds) {
+              await garageApi.removeCaseSettlement(caseId, delId);
+            }
+          }
         }
+
+        // 2. Thực thi thêm hàng loạt các khoản cấn trừ mới
+        if (hasAdditions) {
+          if (onSubmitSettlements) {
+            await onSubmitSettlements(itemsToSubmit);
+          } else if (caseId) {
+            for (const item of itemsToSubmit) {
+              await garageApi.addCaseSettlement(caseId, item);
+            }
+          }
+        }
+
+        setPendingDeletedSettlementIds([]);
+        setPendingManualSettlements([]);
+        setManualAmount("");
+        setManualPartner("");
+        setManualNote("");
 
         toast.success(
           t(
@@ -1153,8 +1294,8 @@ export function useGarageCaseReconciliationLogic({
     }
   };
 
-  // Add Manual Cashflow to Draft (for Embedded Financials Tab / Edit Mode)
-  const handleAddManualToDraft = useCallback(async () => {
+  // Add Manual Cashflow to Pending Draft List (Draft-First: chỉ lưu local state)
+  const handleAddManualToDraft = useCallback(() => {
     if (!manualAmount || Number(manualAmount) <= 0) {
       toast.error(
         t(
@@ -1165,41 +1306,38 @@ export function useGarageCaseReconciliationLogic({
       return;
     }
 
-    const manualItem: SettlementSubmissionItem = {
+    const tempId = `draft_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+    const manualItem: any = {
+      id: tempId,
+      tempId,
+      isPending: true,
       settlementType,
+      settlement_type: settlementType,
       sourceChannel: "OFF_SYSTEM_MANUAL",
+      source_channel: "OFF_SYSTEM_MANUAL",
       category: manualCategory,
       amount: Number(manualAmount),
       transDate: manualDate,
+      trans_date: manualDate,
       partnerName: manualPartner || undefined,
+      partner_name: manualPartner || undefined,
       note: manualNote || undefined,
+      createdAt: new Date().toISOString(),
     };
 
-    if (onSubmitSettlements) {
-      await onSubmitSettlements([manualItem]);
-    } else if (caseId) {
-      await garageApi.addCaseSettlement(caseId, manualItem);
-      queryClient.invalidateQueries({
-        queryKey: ["garage-case-financial-summary", caseId],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["garage-case-settlements", caseId],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["garage-case-traceability-graph", caseId],
-      });
-      toast.success(
-        t(
-          "cases.reconciliation.manualSuccess",
-          "Đã ghi nhận dòng tiền ngoài sổ sách thành công",
-        ),
-      );
-    }
+    setPendingManualSettlements((prev) => [...prev, manualItem]);
 
     // Reset form fields after adding
     setManualAmount("");
     setManualPartner("");
     setManualNote("");
+
+    toast.success(
+      t(
+        "cases.reconciliation.manualAddedToDraft",
+        "Đã thêm vào danh sách chờ ghi nhận",
+      ),
+    );
   }, [
     manualAmount,
     settlementType,
@@ -1207,11 +1345,49 @@ export function useGarageCaseReconciliationLogic({
     manualDate,
     manualPartner,
     manualNote,
-    onSubmitSettlements,
-    caseId,
-    queryClient,
+    setPendingManualSettlements,
     t,
   ]);
+
+  // Remove Settlement (Pending Draft or Persisted DB Settlement)
+  const handleRemoveSettlement = useCallback(
+    async (idOrTempId: string) => {
+      // 1. Kiểm tra nếu là hàng draft chờ lưu
+      const isPending = pendingManualSettlements.some(
+        (s) => s.id === idOrTempId || s.tempId === idOrTempId,
+      );
+      if (isPending) {
+        setPendingManualSettlements((prev) =>
+          prev.filter((s) => s.id !== idOrTempId && s.tempId !== idOrTempId),
+        );
+        toast.success(
+          t(
+            "cases.reconciliation.manualDraftRemoved",
+            "Đã xóa khỏi danh sách chờ lưu",
+          ),
+        );
+        return;
+      }
+
+      // 2. Nếu là settlement đã lưu trong DB -> chỉ đánh dấu xóa tạm ở local, KHÔNG gọi API
+      setPendingDeletedSettlementIds((prev) => {
+        if (prev.includes(idOrTempId)) return prev;
+        return [...prev, idOrTempId];
+      });
+      toast.success(
+        t(
+          "cases.reconciliation.manualMarkedForDelete",
+          "Đã xóa tạm khỏi danh sách. Bấm nút Lưu/Ghi nhận để áp dụng thay đổi.",
+        ),
+      );
+    },
+    [
+      pendingManualSettlements,
+      setPendingManualSettlements,
+      setPendingDeletedSettlementIds,
+      t,
+    ],
+  );
 
   // Submit Linked Invoices (Tab 3 & 4)
   const handleSubmitInvoices = async () => {
@@ -1413,9 +1589,19 @@ export function useGarageCaseReconciliationLogic({
     handleSubmitBankAndCash,
     handleSubmitInvoices,
     handleAddManualToDraft,
-    manualDraftPending: Number(manualAmount) > 0,
-    activeSettlements: activeSettlements || [],
-    onRemoveSettlement,
+    manualDraftPending:
+      pendingManualSettlements.length > 0 ||
+      pendingDeletedSettlementIds.length > 0 ||
+      Number(manualAmount) > 0,
+    hasManualChanges:
+      pendingManualSettlements.length > 0 ||
+      pendingDeletedSettlementIds.length > 0 ||
+      Number(manualAmount) > 0,
+    activeSettlements: combinedActiveSettlements,
+    onRemoveSettlement: handleRemoveSettlement,
+    pendingManualSettlements,
+    pendingDeletedSettlementIds,
+    setPendingDeletedSettlementIds,
     onSubmitSettlements,
     hasVat,
     caseData,

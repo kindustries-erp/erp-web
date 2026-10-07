@@ -14,5 +14,7 @@ export interface CaseLinePaymentDrawerProps {
   lineType?: CaseLineType;
   payer?: CaseLinePayer;
   direction?: "REVENUE" | "COST";
+  activeSettlements?: any[];
+  activeLinkedInvoices?: any[];
   onSuccess?: () => void;
 }

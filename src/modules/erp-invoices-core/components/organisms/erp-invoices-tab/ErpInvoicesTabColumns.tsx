@@ -78,6 +78,7 @@ export function useInvoiceColumns(
       general.branchId,
       general.invoiceCategory,
       general.attachments,
+      tax.originalPdf,
       general.notes,
     ];
   }, [general, tax, amount, direction]);

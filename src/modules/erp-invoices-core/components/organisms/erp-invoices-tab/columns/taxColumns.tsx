@@ -10,6 +10,7 @@ import {
   TaxProcessStatusBadge,
   InvoiceValidBadge,
 } from "@/modules/erp-invoices-core/components/atoms/invoice-status-badge";
+import { OriginalPdfStatusBadge } from "@/modules/erp-invoices-core/components/atoms/original-pdf-status-badge";
 
 export interface TaxColumnsOptions {
   direction: "IN" | "OUT";
@@ -168,6 +169,39 @@ export function useTaxColumns({
         className: "text-center text-xs whitespace-normal",
         cell: (inv: ErpInvoice) => (
           <TaxProcessStatusBadge status={inv.taxProcessStatus} />
+        ),
+      },
+      originalPdf: {
+        key: "originalPdf",
+        header: (
+          <TableColumnHeaderFilter
+            title={t("originalPdf", "PDF Gốc")}
+            sortState={getSortState("pdfSource")}
+            onSortChange={(state) => handleSortChange("pdfSource", state)}
+            searchValue=""
+            onSearchChange={() => {}}
+            selectedFilters={
+              listHook.tableState.columnFilters["pdfSource"] || []
+            }
+            onFilterChange={(vals) => handleFilterChange("pdfSource", vals)}
+            filterOptions={[
+              { label: "PDF Gốc Nhà Cung Cấp", value: "provider_original" },
+              { label: "PDF Tải Lên Thủ Công", value: "manual_upload" },
+              { label: "Lỗi Tải PDF", value: "failed" },
+            ]}
+            align="center"
+            columnKey="pdfSource"
+          />
+        ),
+        size: 140,
+        className: "text-center",
+        cell: (inv: ErpInvoice) => (
+          <OriginalPdfStatusBadge
+            pdfFileKey={inv.pdfFileKey}
+            pdfSource={inv.pdfSource}
+            providerCode={inv.providerCode}
+            pdfError={inv.pdfError}
+          />
         ),
       },
       inboundCols:

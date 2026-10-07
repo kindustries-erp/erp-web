@@ -2,6 +2,7 @@ import React from "react";
 import type { TFunction } from "i18next";
 import { formatNumber } from "../../../GarageCasePreview.helper";
 import type { QuoteFinancialItem } from "../../../GarageCasePreview.type";
+import type { QuoteReceivableRow } from "./QuoteReceivablesTable.type";
 
 export function renderFinancialGroupBadge(t: TFunction, group: string) {
   const groupLabels: Record<string, { label: string; cls: string }> = {
@@ -64,4 +65,133 @@ export function renderFinancialAmount(row: QuoteFinancialItem) {
       {formatNumber(row.amount)} ₫
     </div>
   );
+}
+
+export function computeQuoteReceivableRows(
+  caseData?: any,
+  activeSettlements?: any[],
+  propItems?: QuoteReceivableRow[],
+  activeLinkedInvoices?: any[],
+): QuoteReceivableRow[] {
+  if (propItems && propItems.length > 0) {
+    return propItems;
+  }
+  const rawData = caseData?.rawData;
+  const khAmount = Number(
+    rawData?.TienThanhToanKH ?? caseData?.tienThanhToanKh ?? 0,
+  );
+  const bhAmount = Number(
+    rawData?.TienThanhToanBH ?? caseData?.tienThanhToanBh ?? 0,
+  );
+
+  let khCollected = 0;
+  let bhCollected = 0;
+
+  const receiptSettlements = (activeSettlements || []).filter((s: any) => {
+    const type = s.settlementType || s.settlement_type;
+    return type === "RECEIPT";
+  });
+
+  if (receiptSettlements.length > 0) {
+    receiptSettlements.forEach((s: any) => {
+      const amt = Number(s.amount || 0);
+      const isBh =
+        s.payer === "BH" ||
+        /bảo hiểm|bảo việt|pti|pvi|bic|mic|pjico|vbi/i.test(
+          `${s.partnerName || ""} ${s.partner_name || ""} ${s.note || ""} ${s.category || ""}`,
+        );
+      if (isBh) {
+        bhCollected += amt;
+      } else {
+        khCollected += amt;
+      }
+    });
+  } else {
+    const kgaraPaid = Number(
+      rawData?.TienDaThanhToan ?? caseData?.tienDaThanhToan ?? 0,
+    );
+    if (kgaraPaid > 0) {
+      if (bhAmount <= 0) {
+        khCollected = Math.min(khAmount, kgaraPaid);
+      } else {
+        khCollected = Math.min(khAmount, kgaraPaid);
+        bhCollected = Math.max(0, Math.min(bhAmount, kgaraPaid - khCollected));
+      }
+    }
+  }
+
+  const khRemaining = Math.max(0, khAmount - khCollected);
+  const bhRemaining = Math.max(0, bhAmount - bhCollected);
+
+  // Phân loại các hóa đơn đầu ra (OUT) đã liên kết
+  const khLinkedInvoices: any[] = [];
+  const bhLinkedInvoices: any[] = [];
+
+  const outInvoices = (activeLinkedInvoices || []).filter((inv: any) => {
+    const linkType = inv.linkType || inv.direction;
+    return linkType === "OUT";
+  });
+
+  outInvoices.forEach((inv: any) => {
+    const buyerStr = `${inv.buyerName || inv.invoice?.buyerName || inv.partnerName || ""} ${inv.note || ""}`;
+    const isBh =
+      inv.payer === "BH" ||
+      inv.isInsurance === true ||
+      /bảo hiểm|bảo việt|pti|pvi|bic|mic|pjico|vbi|bhhk|liberty|bảo minh|hàng không/i.test(
+        buyerStr,
+      );
+
+    const invItem = {
+      id: inv.id || inv.invoiceId,
+      invoiceId: inv.invoiceId || inv.id,
+      invoiceNo: inv.invoiceNo || inv.invoice?.invoiceNo || "---",
+      totalAmount: Number(inv.totalAmount || inv.invoice?.totalAmount || 0),
+      invoiceDate: inv.invoiceDate || inv.invoice?.invoiceDate,
+      buyerName: inv.buyerName || inv.invoice?.buyerName || inv.partnerName,
+      sellerName: inv.sellerName || inv.invoice?.sellerName,
+      hasBankNetOff: Boolean(
+        inv.hasBankNetOff ||
+        Number(inv.bankSettledAmount || 0) > 0 ||
+        (activeSettlements || []).some(
+          (s: any) =>
+            (s.sourceChannel === "ON_SYSTEM" ||
+              s.source_channel === "ON_SYSTEM") &&
+            (s.invoiceId === inv.invoiceId ||
+              s.referenceNumber === inv.invoiceNo),
+        ),
+      ),
+      bankSettledAmount: Number(inv.bankSettledAmount || 0),
+    };
+
+    if (bhAmount > 0 && isBh) {
+      bhLinkedInvoices.push(invItem);
+    } else {
+      khLinkedInvoices.push(invItem);
+    }
+  });
+
+  return [
+    {
+      id: "KH",
+      stt: 1,
+      payer: "KH",
+      labelKey: "cases.quotePreview.fin.customerPayment",
+      defaultLabel: "Khách hàng thanh toán",
+      amount: khAmount,
+      collectedAmount: khCollected,
+      remainingAmount: khRemaining,
+      linkedInvoices: khLinkedInvoices,
+    },
+    {
+      id: "BH",
+      stt: 2,
+      payer: "BH",
+      labelKey: "cases.quotePreview.fin.insuranceApproved",
+      defaultLabel: "Bảo hiểm thanh toán",
+      amount: bhAmount,
+      collectedAmount: bhCollected,
+      remainingAmount: bhRemaining,
+      linkedInvoices: bhLinkedInvoices,
+    },
+  ];
 }

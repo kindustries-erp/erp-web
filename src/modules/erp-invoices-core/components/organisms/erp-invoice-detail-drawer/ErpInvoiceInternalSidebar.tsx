@@ -1,11 +1,14 @@
-import React from "react";
+import React, { useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
+import toast from "react-hot-toast";
 import { ModuleEntityCustomFieldsSection } from "@/shared/components/organisms";
 import { ErpInvoiceGeneralInfoSection } from "../erp-invoice-general-info";
 import { ErpInvoiceDefaultAttributesSection } from "../erp-invoice-default-attributes-section";
-import type {
-  CreateErpInvoicePayload,
-  ErpInvoice,
+import { ProviderLookupInfoCard } from "../../molecules/provider-lookup-info-card";
+import {
+  erpInvoicesCoreApi,
+  type CreateErpInvoicePayload,
+  type ErpInvoice,
 } from "@/modules/erp-invoices-core/api/erpInvoicesCoreApi";
 
 export interface ErpInvoiceInternalSidebarProps {
@@ -34,9 +37,55 @@ export function ErpInvoiceInternalSidebar({
   onRefreshDetail,
 }: ErpInvoiceInternalSidebarProps) {
   const { t } = useTranslation("erpInvoices");
+  const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
+
+  const handleDownloadOriginalPdf = useCallback(
+    async (invId: string) => {
+      try {
+        setIsDownloadingPdf(true);
+        await erpInvoicesCoreApi.downloadOriginalPdf(invId);
+        toast.success(
+          t("downloadPdfSuccess", "Tải PDF gốc nhà cung cấp thành công"),
+        );
+        onRefreshDetail?.();
+      } catch (err: any) {
+        toast.error(
+          err?.response?.data?.message ||
+            t("downloadPdfFailed", "Tải PDF gốc nhà cung cấp thất bại"),
+        );
+      } finally {
+        setIsDownloadingPdf(false);
+      }
+    },
+    [onRefreshDetail, t],
+  );
+
+  const hasLookupInfo = Boolean(
+    detailInvoice &&
+    (detailInvoice.providerCode ||
+      detailInvoice.lookupCode ||
+      detailInvoice.lookupUrl ||
+      detailInvoice.pdfSource),
+  );
 
   return (
     <div className="flex flex-col gap-4">
+      {/* 0. THÔNG TIN TRA CỨU & PDF GỐC NHÀ CUNG CẤP */}
+      {hasLookupInfo && detailInvoice && (
+        <ProviderLookupInfoCard
+          invoiceId={detailInvoice.id}
+          invoiceNo={detailInvoice.invoiceNo}
+          providerCode={detailInvoice.providerCode}
+          lookupCode={detailInvoice.lookupCode}
+          lookupUrl={detailInvoice.lookupUrl}
+          pdfFileKey={detailInvoice.pdfFileKey}
+          pdfSource={detailInvoice.pdfSource}
+          pdfError={detailInvoice.pdfError}
+          onDownloadPdf={handleDownloadOriginalPdf}
+          isDownloading={isDownloadingPdf}
+        />
+      )}
+
       {/* 1. THÔNG TIN CHUNG (SHARED COMPONENT) */}
       <ErpInvoiceGeneralInfoSection
         invoice={detailInvoice}
