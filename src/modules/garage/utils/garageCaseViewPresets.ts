@@ -44,7 +44,6 @@ export const DEFAULT_GARAGE_CASE_COLUMN_VISIBILITY: Record<string, boolean> = {
   chiPhi: true,
   loiNhuan: true,
   margin: true,
-  isInsuranceClaim: true,
   hasInvoice: true,
   branchName: false,
   createdAt: false,
@@ -73,7 +72,6 @@ export const AUDIT_GARAGE_CASE_COLUMN_VISIBILITY: Record<string, boolean> = {
   classification: false,
   exclusionRules: false,
   margin: false,
-  isInsuranceClaim: false,
   branchName: false,
   createdAt: false,
   updatedAt: false,
@@ -204,6 +202,12 @@ export const GARAGE_CASE_COLUMN_GROUPS: ColumnGroupDef[] = [
     defaultTitle: "Tài chính & Dòng tiền",
     columns: [
       {
+        key: "hasInvoice",
+        labelKey: "cases.columns.vatInvoice",
+        defaultLabel: "HĐ VAT",
+        defaultVisible: true,
+      },
+      {
         key: "doanhThu",
         labelKey: "cases.columns.doanhThu",
         defaultLabel: "Doanh thu",
@@ -261,18 +265,6 @@ export const GARAGE_CASE_COLUMN_GROUPS: ColumnGroupDef[] = [
         key: "tienConPhaiChi",
         labelKey: "cases.columns.remainingPayable",
         defaultLabel: "Còn phải trả",
-        defaultVisible: true,
-      },
-      {
-        key: "isInsuranceClaim",
-        labelKey: "cases.columns.insurance",
-        defaultLabel: "BH",
-        defaultVisible: true,
-      },
-      {
-        key: "hasInvoice",
-        labelKey: "cases.columns.vatInvoice",
-        defaultLabel: "HĐ VAT",
         defaultVisible: true,
       },
     ],

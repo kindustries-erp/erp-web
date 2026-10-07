@@ -70,6 +70,27 @@ export function extractPhaiThuKhachHang(item: Record<string, any>): number {
   return Math.max(0, targetRev - bh);
 }
 
+export function extractVatAmount(item: Record<string, any>): number {
+  if (!item) return 0;
+  if (item.vatAmount != null && !Number.isNaN(Number(item.vatAmount))) {
+    return Number(item.vatAmount);
+  }
+  if (item.tienThueKh != null && !Number.isNaN(Number(item.tienThueKh))) {
+    return Number(item.tienThueKh);
+  }
+  if (item.tienThue != null && !Number.isNaN(Number(item.tienThue))) {
+    return Number(item.tienThue);
+  }
+  const raw = item.rawData;
+  if (raw?.TienThueKH != null && !Number.isNaN(Number(raw.TienThueKH))) {
+    return Number(raw.TienThueKH);
+  }
+  if (raw?.TienThue != null && !Number.isNaN(Number(raw.TienThue))) {
+    return Number(raw.TienThue);
+  }
+  return 0;
+}
+
 function getCellValue(item: Record<string, any>, key: string) {
   switch (key) {
     case "statusName":
@@ -102,6 +123,8 @@ function getCellValue(item: Record<string, any>, key: string) {
       );
       return hasVat ? "YES" : "NO";
     }
+    case "vatAmount":
+      return extractVatAmount(item);
     case "caseDate":
     case "ngayPhatSinh":
       return item.ngayPhatSinh || item.ngayTiepNhan || "";

@@ -3,6 +3,7 @@ import {
   applyGarageCasesTableState,
   extractPhaiThuKhachHang,
   extractPhaiThuBaoHiem,
+  extractVatAmount,
 } from "./garageCasesTable";
 
 describe("applyGarageCasesTableState", () => {
@@ -453,6 +454,35 @@ describe("applyGarageCasesTableState", () => {
       };
       expect(extractPhaiThuBaoHiem(item)).toBe(7000000);
       expect(extractPhaiThuKhachHang(item)).toBe(3000000);
+    });
+  });
+
+  describe("extractVatAmount", () => {
+    it("extracts vatAmount from item directly when present", () => {
+      expect(extractVatAmount({ vatAmount: 250000 })).toBe(250000);
+    });
+
+    it("extracts tienThueKh or tienThue when present", () => {
+      expect(extractVatAmount({ tienThueKh: 300000 })).toBe(300000);
+      expect(extractVatAmount({ tienThue: 150000 })).toBe(150000);
+    });
+
+    it("falls back to rawData TienThueKH or TienThue", () => {
+      expect(
+        extractVatAmount({
+          rawData: { TienThueKH: 500000 },
+        }),
+      ).toBe(500000);
+      expect(
+        extractVatAmount({
+          rawData: { TienThue: 120000 },
+        }),
+      ).toBe(120000);
+    });
+
+    it("returns 0 when no VAT data exists", () => {
+      expect(extractVatAmount({})).toBe(0);
+      expect(extractVatAmount(null as any)).toBe(0);
     });
   });
 });

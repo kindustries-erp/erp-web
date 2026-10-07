@@ -1,4 +1,5 @@
 import React from "react";
+import { cn } from "@/shared/utils";
 import { money } from "@/shared/utils/format";
 import {
   extractPhaiThuKhachHang,
@@ -6,6 +7,12 @@ import {
 } from "../../../utils/garageCasesTable";
 import { GarageCaseProgressCell } from "../../molecules/garage-case-progress-cell";
 import type { ColumnContext } from "./GarageCasesTable.type";
+
+const RECEIVABLE_CELL_BG = "bg-emerald-50/50 dark:bg-emerald-950/20";
+const RECEIVABLE_HEADER_BG = "bg-emerald-100/60 dark:bg-emerald-900/30";
+
+const PAYABLE_CELL_BG = "bg-amber-50/50 dark:bg-amber-950/20";
+const PAYABLE_HEADER_BG = "bg-amber-100/60 dark:bg-amber-900/30";
 
 export function buildProgressColumns(
   ctx: ColumnContext,
@@ -25,7 +32,8 @@ export function buildProgressColumns(
         { align: "right", hideFilter: true },
       ),
       size: 140,
-      className: "text-right",
+      headerClassName: RECEIVABLE_HEADER_BG,
+      className: cn("text-right", RECEIVABLE_CELL_BG),
       cell: (item: any) => (
         <GarageCaseProgressCell
           type="receivable"
@@ -48,7 +56,11 @@ export function buildProgressColumns(
         },
       ),
       size: 140,
-      className: "text-right tabular-nums font-semibold",
+      headerClassName: RECEIVABLE_HEADER_BG,
+      className: cn(
+        "text-right tabular-nums font-semibold",
+        RECEIVABLE_CELL_BG,
+      ),
       cell: (item: any) => {
         const val = extractPhaiThuKhachHang(item);
         return val > 0 ? money(val) : "—";
@@ -67,7 +79,11 @@ export function buildProgressColumns(
         },
       ),
       size: 140,
-      className: "text-right tabular-nums font-semibold",
+      headerClassName: RECEIVABLE_HEADER_BG,
+      className: cn(
+        "text-right tabular-nums font-semibold",
+        RECEIVABLE_CELL_BG,
+      ),
       cell: (item: any) => {
         const val = extractPhaiThuBaoHiem(item);
         return val > 0 ? money(val) : "—";
@@ -85,7 +101,11 @@ export function buildProgressColumns(
         },
       ),
       size: 140,
-      className: "text-right tabular-nums font-semibold",
+      headerClassName: RECEIVABLE_HEADER_BG,
+      className: cn(
+        "text-right tabular-nums font-semibold",
+        RECEIVABLE_CELL_BG,
+      ),
       cell: (item: any) => {
         const bal = Number(item.tienConPhaiThanhToan) || 0;
         return (
@@ -110,7 +130,8 @@ export function buildProgressColumns(
         { align: "right", hideFilter: true },
       ),
       size: 140,
-      className: "text-right",
+      headerClassName: PAYABLE_HEADER_BG,
+      className: cn("text-right", PAYABLE_CELL_BG),
       cell: (item: any) => {
         const cost = Number(item.chiPhi ?? item.rawData?.ChiPhi ?? 0);
         const paidCost = Number(item.tienDaChi ?? item.rawData?.TienDaChi ?? 0);
@@ -136,7 +157,8 @@ export function buildProgressColumns(
         },
       ),
       size: 140,
-      className: "text-right tabular-nums font-semibold",
+      headerClassName: PAYABLE_HEADER_BG,
+      className: cn("text-right tabular-nums font-semibold", PAYABLE_CELL_BG),
       cell: (item: any) => {
         const cost = Number(item.chiPhi ?? item.rawData?.ChiPhi ?? 0);
         const paidCost = Number(item.tienDaChi ?? item.rawData?.TienDaChi ?? 0);
