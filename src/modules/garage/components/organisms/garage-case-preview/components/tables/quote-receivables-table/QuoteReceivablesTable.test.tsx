@@ -87,4 +87,84 @@ describe("QuoteReceivablesTable", () => {
     const bhButtons = screen.getAllByRole("button", { name: /Thu BH/i });
     expect(bhButtons[0]).toBeDisabled();
   });
+
+  it("calculates collected and remaining amounts from activeSettlements", () => {
+    const caseData = {
+      rawData: {
+        TienThanhToanKH: 5000000,
+        TienThanhToanBH: 10000000,
+      },
+    };
+    const activeSettlements = [
+      {
+        id: "s1",
+        settlementType: "RECEIPT",
+        amount: 3000000,
+        payer: "KH",
+      },
+      {
+        id: "s2",
+        settlementType: "RECEIPT",
+        amount: 4000000,
+        partnerName: "Bảo hiểm Bảo Việt",
+      },
+    ];
+
+    render(
+      <QuoteReceivablesTable
+        caseData={caseData}
+        activeSettlements={activeSettlements}
+      />,
+    );
+
+    // KH: Amount 5,000,000 | Collected 3,000,000 | Remaining 2,000,000
+    expect(screen.getAllByText(/5.000.000/i).length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText(/3.000.000/i).length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText(/2.000.000/i).length).toBeGreaterThanOrEqual(1);
+
+    // BH: Amount 10,000,000 | Collected 4,000,000 | Remaining 6,000,000
+    expect(screen.getAllByText(/10.000.000/i).length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText(/4.000.000/i).length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText(/6.000.000/i).length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("renders linked invoices column correctly for KH and BH", () => {
+    const caseData = {
+      rawData: {
+        TienThanhToanKH: 5000000,
+        TienThanhToanBH: 10000000,
+      },
+    };
+    const activeLinkedInvoices = [
+      {
+        id: "inv1",
+        invoiceId: "inv1",
+        invoiceNo: "1856",
+        linkType: "OUT",
+        totalAmount: 5000000,
+        buyerName: "Công ty Khách Hàng",
+        hasBankNetOff: true,
+      },
+      {
+        id: "inv2",
+        invoiceId: "inv2",
+        invoiceNo: "2045",
+        linkType: "OUT",
+        totalAmount: 10000000,
+        buyerName: "Bảo hiểm PVI",
+        hasBankNetOff: false,
+      },
+    ];
+
+    render(
+      <QuoteReceivablesTable
+        caseData={caseData}
+        activeLinkedInvoices={activeLinkedInvoices}
+      />,
+    );
+
+    // Should display both invoice badges
+    expect(screen.getByText("#1856")).toBeInTheDocument();
+    expect(screen.getByText("#2045")).toBeInTheDocument();
+  });
 });

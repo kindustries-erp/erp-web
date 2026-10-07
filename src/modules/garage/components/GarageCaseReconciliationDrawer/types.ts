@@ -215,4 +215,5 @@ export interface ReconciliationRightPanelProps {
   onToggleInvoice?: (inv: ErpInvoice) => void;
   onViewInvoiceDetail?: (id: string) => void;
   onSetInvoiceNote?: (note: string) => void;
+  hideDebtCashflowSection?: boolean;
 }

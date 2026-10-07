@@ -75,16 +75,19 @@ describe("QuoteCostSummarySection", () => {
   it("renders summary row unifying both manual cashflow and linked IN invoices", () => {
     render(<QuoteCostSummarySection {...mockProps} />);
 
-    // Total Cost = 10,000,000
-    expect(screen.getByText(/10.000.000/i)).toBeInTheDocument();
+    // Total Cost = 10,000,000 (hiện diện ở cả hàng chi phí và summaryRow)
+    expect(screen.getAllByText(/10.000.000/i).length).toBeGreaterThanOrEqual(1);
     // Paid = 2,400,000 (manual) + 1,176,120 (invoice) = 3,576,120
-    expect(screen.getByText(/3.576.120/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/3.576.120/i).length).toBeGreaterThanOrEqual(1);
     // Remaining = 10,000,000 - 3,576,120 = 6,423,880
-    expect(screen.getByText(/6.423.880/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/6.423.880/i).length).toBeGreaterThanOrEqual(1);
     // Button Chi tiền is rendered and enabled
     const payBtn = screen.getByRole("button", { name: /Chi tiền/i });
     expect(payBtn).toBeInTheDocument();
     expect(payBtn).not.toBeDisabled();
+
+    // Cột HĐ đã cấn trừ hiển thị badge #229
+    expect(screen.getByText("#229")).toBeInTheDocument();
   });
 
   it("filters and renders settlements table with both IN invoice and manual payment", () => {

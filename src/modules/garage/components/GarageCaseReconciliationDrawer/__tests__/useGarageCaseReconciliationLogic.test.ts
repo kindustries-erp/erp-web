@@ -24,8 +24,23 @@ vi.mock("@/modules/garage/api/garageApi", () => ({
     getCaseFinancialSummary: vi.fn().mockResolvedValue(null),
     getCaseLinkedInvoices: vi.fn().mockResolvedValue([]),
     getSmartSettlementSuggestions: vi.fn().mockResolvedValue([]),
+    getSmartInvoiceSuggestions: vi.fn().mockResolvedValue([]),
     addCaseSettlement: vi.fn().mockResolvedValue({ id: "settlement-new-1" }),
     removeCaseSettlement: vi.fn().mockResolvedValue({ success: true }),
+  },
+}));
+
+vi.mock("@/modules/erp-invoices-core/api/erpInvoicesCoreApi", () => ({
+  erpInvoicesCoreApi: {
+    list: vi.fn().mockResolvedValue({ items: [], total: 0, totalPages: 1 }),
+  },
+}));
+
+vi.mock("@/modules/bank-statements/api/bankStatementApi", () => ({
+  bankStatementApi: {
+    getTransactions: vi
+      .fn()
+      .mockResolvedValue({ items: [], total: 0, totalPages: 1 }),
   },
 }));
 
@@ -231,5 +246,80 @@ describe("useGarageCaseReconciliationLogic - Draft-First Manual Cashflow", () =>
     );
     expect(result.current.pendingDeletedSettlementIds).toHaveLength(0);
     expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it("should initialize viewPreset correctly with linked invoices", () => {
+    const activeLinkedInvoices = [
+      {
+        id: "inv-1",
+        invoiceId: "inv-1",
+        invoiceNo: "1856",
+        linkType: "OUT",
+      },
+    ];
+
+    const { result, unmount } = renderHook(
+      () =>
+        useGarageCaseReconciliationLogic({
+          open: true,
+          onClose: vi.fn(),
+          caseId: "case-123",
+          initialTab: "invoices_out",
+          activeLinkedInvoices,
+        }),
+      { wrapper },
+    );
+
+    expect(result.current.viewPreset).toBe("linked");
+    unmount();
+  });
+
+  it("should default to 'all' when there are no linked invoices and no suggestions", () => {
+    const { result, unmount } = renderHook(
+      () =>
+        useGarageCaseReconciliationLogic({
+          open: true,
+          onClose: vi.fn(),
+          caseId: "case-123",
+          initialTab: "invoices_out",
+          activeLinkedInvoices: [],
+        }),
+      { wrapper },
+    );
+
+    expect(result.current.viewPreset).toBe("all");
+    unmount();
+  });
+
+  it("should respect user manual preset selection", () => {
+    const activeLinkedInvoices = [
+      {
+        id: "inv-1",
+        invoiceId: "inv-1",
+        invoiceNo: "1856",
+        linkType: "OUT",
+      },
+    ];
+
+    const { result, unmount } = renderHook(
+      () =>
+        useGarageCaseReconciliationLogic({
+          open: true,
+          onClose: vi.fn(),
+          caseId: "case-123",
+          initialTab: "invoices_out",
+          activeLinkedInvoices,
+        }),
+      { wrapper },
+    );
+
+    expect(result.current.viewPreset).toBe("linked");
+
+    act(() => {
+      result.current.setViewPreset("all");
+    });
+
+    expect(result.current.viewPreset).toBe("all");
+    unmount();
   });
 });

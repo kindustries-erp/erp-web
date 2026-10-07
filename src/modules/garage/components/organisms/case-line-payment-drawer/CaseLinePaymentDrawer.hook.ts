@@ -8,8 +8,9 @@ export function useCaseLinePaymentDrawer(props: CaseLinePaymentDrawerProps) {
 
   const direction =
     props.direction || (props.lineType === "PT" ? "COST" : "REVENUE");
-  const defaultType = direction === "COST" ? "PAYMENT" : "RECEIPT";
-  const invoiceTabKey = direction === "COST" ? "invoices_in" : "invoices_out";
+  const isCost = direction === "COST";
+  const defaultType = isCost ? "PAYMENT" : "RECEIPT";
+  const invoiceTabKey = isCost ? "invoices_in" : "invoices_out";
 
   const [activeTab, setActiveTab] = useState<string>(invoiceTabKey);
 
@@ -39,14 +40,58 @@ export function useCaseLinePaymentDrawer(props: CaseLinePaymentDrawerProps) {
     return reconLogic.selectedInvoicesTotal;
   }, [reconLogic.selectedInvoicesTotal]);
 
+  // Số tiền thực tế đã cấn trừ sao kê ngân hàng / tiền mặt
+  const realSettledAmount = useMemo(() => {
+    const selectedInvoices = Object.values(reconLogic.selectedInvoicesMap);
+    const activeSettlements = props.activeSettlements || [];
+
+    // 1. Tính từ các hóa đơn được chọn mà CÓ cấn trừ sao kê
+    const settledFromInvoices = selectedInvoices.reduce((sum, inv: any) => {
+      const hasBank =
+        Boolean(inv.hasBankNetOff) ||
+        Number(inv.bankSettledAmount || 0) > 0 ||
+        activeSettlements.some(
+          (s: any) =>
+            s.sourceChannel === "ON_SYSTEM" &&
+            (s.invoiceId === inv.id || s.referenceNumber === inv.invoiceNo),
+        );
+
+      if (!hasBank) return sum;
+
+      const settledAmt =
+        Number(inv.bankSettledAmount || 0) > 0
+          ? Math.min(
+              Number(inv.totalAmount || 0),
+              Number(inv.bankSettledAmount || 0),
+            )
+          : Number(inv.totalAmount || 0);
+
+      return sum + settledAmt;
+    }, 0);
+
+    // 2. Nếu đang ở tab sao kê/sổ quỹ và người dùng chọn trực tiếp các giao dịch
+    const directBankSelected =
+      activeTab === "bank_statement" || activeTab === "cash_book"
+        ? reconLogic.currentSelectedBankTotal
+        : 0;
+
+    return Math.min(targetAmount, settledFromInvoices + directBankSelected);
+  }, [
+    reconLogic.selectedInvoicesMap,
+    props.activeSettlements,
+    activeTab,
+    reconLogic.currentSelectedBankTotal,
+    targetAmount,
+  ]);
+
   const remainingAmount = useMemo(() => {
-    return Math.max(0, targetAmount - selectedAmount);
-  }, [targetAmount, selectedAmount]);
+    return Math.max(0, targetAmount - realSettledAmount);
+  }, [targetAmount, realSettledAmount]);
 
   const progressPercent = useMemo(() => {
-    if (targetAmount <= 0) return 0;
-    return Math.min(100, Math.round((selectedAmount / targetAmount) * 100));
-  }, [targetAmount, selectedAmount]);
+    if (targetAmount <= 0) return realSettledAmount > 0 ? 100 : 0;
+    return Math.min(100, Math.round((realSettledAmount / targetAmount) * 100));
+  }, [targetAmount, realSettledAmount]);
 
   const lineTypeLabel = useMemo(() => {
     if (props.lineType === "DV") {
@@ -76,6 +121,7 @@ export function useCaseLinePaymentDrawer(props: CaseLinePaymentDrawerProps) {
   return {
     t,
     direction,
+    isCost,
     invoiceTabKey,
     activeTab,
     setActiveTab,
@@ -83,6 +129,7 @@ export function useCaseLinePaymentDrawer(props: CaseLinePaymentDrawerProps) {
     reconLogic,
     targetAmount,
     selectedAmount,
+    realSettledAmount,
     remainingAmount,
     progressPercent,
     lineTypeLabel,

@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
@@ -87,9 +87,18 @@ export function useGarageCaseReconciliationLogic({
 
   const [activeTab, setActiveTab] =
     useState<ReconciliationTabKey>(resolvedInitialTab);
-  const [viewPreset, setViewPreset] = useState<
+  const userSelectedPresetRef = useRef<boolean>(false);
+  const [viewPreset, setViewPresetState] = useState<
     "all" | "suggestions" | "selected" | "linked"
   >("all");
+
+  const setViewPreset = useCallback(
+    (preset: "all" | "suggestions" | "selected" | "linked") => {
+      userSelectedPresetRef.current = true;
+      setViewPresetState(preset);
+    },
+    [],
+  );
 
   // Manual Cashflow State
   const [manualAmount, setManualAmount] = useState<number | string>("");
@@ -109,7 +118,7 @@ export function useGarageCaseReconciliationLogic({
   useEffect(() => {
     if (open) {
       setActiveTab(resolvedInitialTab);
-      setViewPreset("all");
+      userSelectedPresetRef.current = false;
       setPendingManualSettlements([]);
       setPendingDeletedSettlementIds([]);
     }
@@ -125,7 +134,7 @@ export function useGarageCaseReconciliationLogic({
   }, [hasVat, activeTab]);
 
   useEffect(() => {
-    setViewPreset("all");
+    userSelectedPresetRef.current = false;
   }, [activeTab, caseId]);
 
   const targetRevenue = Number(
@@ -203,7 +212,7 @@ export function useGarageCaseReconciliationLogic({
           setActiveTab("invoices_in");
         }
       }
-      setViewPreset("all");
+      userSelectedPresetRef.current = false;
     },
     [activeTab, hasVat],
   );
@@ -222,7 +231,7 @@ export function useGarageCaseReconciliationLogic({
           setActiveTab("invoices_in");
         }
       }
-      setViewPreset("all");
+      userSelectedPresetRef.current = false;
     },
     [activeTab, hasVat],
   );
@@ -520,6 +529,59 @@ export function useGarageCaseReconciliationLogic({
     );
   }, [initialLinkedInvoicesForType]);
 
+  // ─── Initial View Preset Priority Router ─────────────────────────────────
+  // Quy tắc ưu tiên: Đã cấn trừ (linked) > Gợi ý khớp (suggestions) > Tất cả (all)
+  const bankLinkedCount = useMemo(() => {
+    const recSettlements = caseSummary?.breakdown?.receipts?.settlements || [];
+    const paySettlements = caseSummary?.breakdown?.payments?.settlements || [];
+    return recSettlements
+      .concat(paySettlements)
+      .filter((s: any) => s.sourceChannel === "ON_SYSTEM").length;
+  }, [
+    caseSummary?.breakdown?.receipts?.settlements,
+    caseSummary?.breakdown?.payments?.settlements,
+  ]);
+
+  useEffect(() => {
+    if (!open) return;
+    if (userSelectedPresetRef.current) return;
+
+    let targetPreset: "all" | "suggestions" | "selected" | "linked" = "all";
+
+    if (activeTab === "invoices_out" || activeTab === "invoices_in") {
+      const linkedCount = initialLinkedInvoicesForType.length;
+      const suggestionsCount = invoiceSuggestions.length;
+      if (linkedCount > 0) {
+        targetPreset = "linked";
+      } else if (suggestionsCount > 0) {
+        targetPreset = "suggestions";
+      } else {
+        targetPreset = "all";
+      }
+    } else if (activeTab === "bank_statement" || activeTab === "cash_book") {
+      const suggestionsCount = bankSuggestions.length;
+      if (bankLinkedCount > 0) {
+        targetPreset = "linked";
+      } else if (suggestionsCount > 0) {
+        targetPreset = "suggestions";
+      } else {
+        targetPreset = "all";
+      }
+    } else {
+      targetPreset = "all";
+    }
+
+    setViewPresetState((prev) => (prev !== targetPreset ? targetPreset : prev));
+  }, [
+    open,
+    activeTab,
+    caseId,
+    initialLinkedInvoicesForType.length,
+    invoiceSuggestions.length,
+    bankSuggestions.length,
+    bankLinkedCount,
+  ]);
+
   // Reset all temporary selections when editMode turns false
   useEffect(() => {
     if (!editMode) {
@@ -553,12 +615,25 @@ export function useGarageCaseReconciliationLogic({
             settlementOrder: item.settlementOrder,
             serialNo: item.serialNo,
             invoiceDate: item.invoiceDate || item.invoice?.invoiceDate,
+            hasBankNetOff: Boolean(item.hasBankNetOff),
+            bankSettledAmount: Number(item.bankSettledAmount || 0),
           } as ErpInvoice;
         }
       });
-      setSelectedInvoicesMap(map);
-      setViewInvoiceId(null);
-      setInvoiceNote("");
+      setSelectedInvoicesMap((prev) => {
+        const prevKeys = Object.keys(prev);
+        const nextKeys = Object.keys(map);
+        if (prevKeys.length === 0 && nextKeys.length === 0) return prev;
+        if (
+          prevKeys.length === nextKeys.length &&
+          prevKeys.every((k) => prev[k]?.id === map[k]?.id)
+        ) {
+          return prev;
+        }
+        return map;
+      });
+      setViewInvoiceId((prev) => (prev !== null ? null : prev));
+      setInvoiceNote((prev) => (prev !== "" ? "" : prev));
     }
   }, [
     open,

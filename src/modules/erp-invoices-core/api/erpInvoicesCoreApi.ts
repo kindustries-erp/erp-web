@@ -176,6 +176,8 @@ export interface ErpInvoice {
     valueText?: string | null;
     isGlobal?: boolean;
   }>;
+  hasBankNetOff?: boolean;
+  bankSettledAmount?: number;
 }
 
 export interface CreateErpInvoicePayload {

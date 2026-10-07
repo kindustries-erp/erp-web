@@ -22,6 +22,31 @@ export interface QuoteCostSummaryRowProps {
   onPaymentClick: () => void;
 }
 
+export interface QuoteCostTableRow {
+  id: string;
+  stt: number;
+  payer: "GARAGE" | "VENDOR";
+  labelKey: string;
+  defaultLabel: string;
+  amount: number;
+  paidAmount: number;
+  remainingAmount: number;
+  note?: string;
+  linkedInvoices?: any[];
+}
+
+export interface QuoteCostTableProps {
+  totalCostAmount: number;
+  totalPaid: number;
+  remainingAmount: number;
+  activeLinkedInvoices?: any[];
+  activeSettlements?: any[];
+  canPerformPayment: boolean;
+  disabledReason?: string;
+  onPaymentClick: () => void;
+  className?: string;
+}
+
 export interface QuoteCostSettlementItem {
   id: string;
   transDate?: string;

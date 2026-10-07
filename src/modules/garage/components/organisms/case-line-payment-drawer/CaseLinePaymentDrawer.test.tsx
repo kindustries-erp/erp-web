@@ -1,5 +1,5 @@
 import React from "react";
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { CaseLinePaymentDrawer } from "./CaseLinePaymentDrawer";
@@ -15,6 +15,8 @@ vi.mock("react-i18next", () => ({
     },
   }),
 }));
+
+let mockReconOverrides: Record<string, any> = {};
 
 vi.mock(
   "../../GarageCaseReconciliationDrawer/useGarageCaseReconciliationLogic",
@@ -71,6 +73,7 @@ vi.mock(
       isSubmitting: false,
       handleSubmitInvoices: vi.fn(),
       handleSubmitBankAndCash: vi.fn(),
+      ...mockReconOverrides,
     }),
   }),
 );
@@ -78,6 +81,10 @@ vi.mock(
 describe("CaseLinePaymentDrawer", () => {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },
+  });
+
+  beforeEach(() => {
+    mockReconOverrides = {};
   });
 
   it("renders correctly when open", () => {
@@ -150,5 +157,97 @@ describe("CaseLinePaymentDrawer", () => {
     expect(
       screen.getByRole("button", { name: /Ghi nhận thu ngoài sổ/i }),
     ).toBeInTheDocument();
+  });
+
+  it("renders 'Tiến độ chi tiền' in right panel when direction is COST", () => {
+    render(
+      <QueryClientProvider client={queryClient}>
+        <CaseLinePaymentDrawer
+          open={true}
+          onClose={vi.fn()}
+          caseId="case-1"
+          lineId="line-2"
+          lineCode="PT-02"
+          lineName="Bugi đánh lửa"
+          lineAmount={500000}
+          lineType="PT"
+          direction="COST"
+          payer="GARAGE"
+        />
+      </QueryClientProvider>,
+    );
+
+    expect(screen.getByText(/Tiến độ chi tiền/i)).toBeInTheDocument();
+    expect(screen.getByText(/Đã chi \(sao kê\)/i)).toBeInTheDocument();
+    expect(screen.getByText(/Còn phải chi/i)).toBeInTheDocument();
+  });
+
+  it("keeps progress at 0% when selected invoice is NOT settled with bank statement", () => {
+    mockReconOverrides = {
+      selectedInvoicesMap: {
+        "inv-unsettled": {
+          id: "inv-unsettled",
+          totalAmount: 300000,
+          hasBankNetOff: false,
+          bankSettledAmount: 0,
+        },
+      },
+      selectedInvoicesTotal: 300000,
+    };
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <CaseLinePaymentDrawer
+          open={true}
+          onClose={vi.fn()}
+          caseId="case-1"
+          lineId="line-1"
+          lineCode="PT-01"
+          lineName="Lọc nhớt"
+          lineAmount={300000}
+          lineType="PT"
+          payer="KH"
+          direction="REVENUE"
+        />
+      </QueryClientProvider>,
+    );
+
+    // Tiến độ phải là 0% vì HĐ chưa cấn trừ sao kê
+    expect(screen.getByText(/0% hoàn thành/i)).toBeInTheDocument();
+    expect(screen.getByText(/Đã thu \(sao kê\)/i)).toBeInTheDocument();
+  });
+
+  it("increases progress to 100% when selected invoice HAS bank statement netoff", () => {
+    mockReconOverrides = {
+      selectedInvoicesMap: {
+        "inv-settled": {
+          id: "inv-settled",
+          totalAmount: 300000,
+          hasBankNetOff: true,
+          bankSettledAmount: 300000,
+        },
+      },
+      selectedInvoicesTotal: 300000,
+    };
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <CaseLinePaymentDrawer
+          open={true}
+          onClose={vi.fn()}
+          caseId="case-1"
+          lineId="line-1"
+          lineCode="PT-01"
+          lineName="Lọc nhớt"
+          lineAmount={300000}
+          lineType="PT"
+          payer="KH"
+          direction="REVENUE"
+        />
+      </QueryClientProvider>,
+    );
+
+    // Tiến độ phải là 100% vì HĐ đã cấn trừ sao kê
+    expect(screen.getByText(/100% hoàn thành/i)).toBeInTheDocument();
   });
 });

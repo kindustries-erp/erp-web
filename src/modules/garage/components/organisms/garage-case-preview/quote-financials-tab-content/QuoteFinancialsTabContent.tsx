@@ -42,6 +42,8 @@ export function QuoteFinancialsTabContent(
       >
         <QuoteReceivablesTable
           caseData={props.caseData}
+          activeSettlements={props.activeSettlements}
+          activeLinkedInvoices={props.activeLinkedInvoices}
           canPerformPayment={canPerformPayment}
           disabledReason={disabledReason}
           onPaymentClick={handleReceivablePaymentClick}

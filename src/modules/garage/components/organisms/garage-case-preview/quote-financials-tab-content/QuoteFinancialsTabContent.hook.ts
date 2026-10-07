@@ -87,10 +87,15 @@ export function useQuoteFinancialsTabContent(
   const handleReceivablePaymentClick = useCallback(
     (row: QuoteReceivableRow) => {
       if (!canPerformPayment) return;
+      const targetAmount =
+        row.remainingAmount !== undefined && row.remainingAmount > 0
+          ? row.remainingAmount
+          : row.amount;
+
       setPaymentDrawerTarget({
         lineId: row.id,
         lineName: row.defaultLabel,
-        lineAmount: row.amount,
+        lineAmount: targetAmount,
         lineType: "RECEIVABLE",
         payer: row.payer,
         direction: "REVENUE",

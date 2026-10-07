@@ -1,6 +1,6 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { QuoteCostSummaryRow } from "./QuoteCostSummaryRow";
+import { QuoteCostTable } from "./QuoteCostTable";
 import { QuoteCostSettlementsTable } from "./QuoteCostSettlementsTable";
 import { CaseLinePaymentDrawer } from "@/modules/garage/components/organisms/case-line-payment-drawer";
 import { useQuoteCostSummarySection } from "./QuoteCostSummarySection.hook";
@@ -23,11 +23,13 @@ export const QuoteCostSummarySection: React.FC<QuoteCostSummarySectionProps> = (
 
   return (
     <div className={`space-y-3 ${props.className || ""}`}>
-      {/* ─── 1 HÀNG TỔNG CHI PHÍ & NÚT CHI TIỀN (HỖ TRỢ DISABLED + TOOLTIP) ─── */}
-      <QuoteCostSummaryRow
+      {/* ─── BẢNG CHI PHÍ VỤ VIỆC CHUẨN HÓA THEO /standardize-table ─── */}
+      <QuoteCostTable
         totalCostAmount={props.totalCostAmount}
         totalPaid={totalPaid}
         remainingAmount={remainingAmount}
+        activeLinkedInvoices={props.activeLinkedInvoices}
+        activeSettlements={props.activeSettlements}
         canPerformPayment={canPerform}
         disabledReason={props.disabledReason}
         onPaymentClick={handleOpenPayment}

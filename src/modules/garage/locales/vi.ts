@@ -461,6 +461,11 @@ export const garageVi = {
     financials: {
       domainRevenue: "1. DOANH THU (KHÁCH HÀNG)",
       domainCost: "2. CHI PHÍ (NHÀ CUNG CẤP / THỢ)",
+      paymentKpi: "Tiến độ thu tiền",
+      paymentCostKpi: "Tiến độ chi tiền",
+      selectedInvoicesTotal: "HĐ đã chọn cấn trừ",
+      collectedActual: "Đã thu (sao kê)",
+      paidActual: "Đã chi (sao kê)",
       collected: "Đã thu:",
       paid: "Đã chi:",
       remainingReceivable: "Còn phải thu:",

@@ -16,12 +16,14 @@ export function CaseLinePaymentDrawer(props: CaseLinePaymentDrawerProps) {
   const {
     t,
     direction,
+    isCost,
     invoiceTabKey,
     activeTab,
     handleTabChange,
     reconLogic,
     targetAmount,
     selectedAmount,
+    realSettledAmount,
     remainingAmount,
     progressPercent,
     lineTypeLabel,
@@ -221,10 +223,12 @@ export function CaseLinePaymentDrawer(props: CaseLinePaymentDrawerProps) {
           props={props}
           targetAmount={targetAmount}
           selectedAmount={selectedAmount}
+          realSettledAmount={realSettledAmount}
           remainingAmount={remainingAmount}
           progressPercent={progressPercent}
           lineTypeLabel={lineTypeLabel}
           payerLabel={payerLabel}
+          isCost={isCost}
         />
       }
     />
