@@ -39,7 +39,7 @@ describe("FinancialTreeChildRow", () => {
     expect(screen.getByText("Chờ lưu")).toBeInTheDocument();
   });
 
-  it("calls onRemove when delete button is clicked", () => {
+  it("calls onRemove when delete button is clicked in edit mode", () => {
     const onRemove = vi.fn();
     render(
       <FinancialTreeChildRow
@@ -51,7 +51,30 @@ describe("FinancialTreeChildRow", () => {
 
     const deleteBtn = screen.getByRole("button");
     expect(deleteBtn).toBeInTheDocument();
+    expect(deleteBtn).not.toBeDisabled();
     fireEvent.click(deleteBtn);
     expect(onRemove).toHaveBeenCalledWith(baseItem);
+  });
+
+  it("renders disabled delete button with tooltip when canRemove is false", () => {
+    const onRemove = vi.fn();
+    render(
+      <FinancialTreeChildRow
+        item={baseItem}
+        canRemove={false}
+        disabledReason="Cần bật Chế độ chỉnh sửa để thao tác."
+        onRemove={onRemove}
+      />,
+    );
+
+    const deleteBtn = screen.getByRole("button");
+    expect(deleteBtn).toBeInTheDocument();
+    expect(deleteBtn).toBeDisabled();
+    expect(deleteBtn).toHaveAttribute(
+      "title",
+      "Cần bật Chế độ chỉnh sửa để thao tác.",
+    );
+    fireEvent.click(deleteBtn);
+    expect(onRemove).not.toHaveBeenCalled();
   });
 });

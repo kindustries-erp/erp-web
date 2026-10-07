@@ -23,10 +23,7 @@ export function buildCostTreeItems(
     id: "cost_total",
     rowType: "PARENT_TARGET",
     direction: "COST",
-    title: t(
-      "cases.financials.totalCostTitle",
-      "Tổng chi phí vụ việc (Giá vốn & Nhân công)",
-    ),
+    title: t("cases.financials.totalCostTitle", "Tổng phải trả vụ việc"),
     iconType: "TARGET_COST",
     targetAmount: totalCostAmount,
     amount: totalCostAmount,

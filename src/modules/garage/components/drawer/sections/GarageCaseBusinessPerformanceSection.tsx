@@ -1,4 +1,5 @@
 import React from "react";
+import { TrendingUp } from "lucide-react";
 import { DrawerSection, DrawerRow } from "@/shared/components/DrawerModal";
 import { money } from "@/shared/utils/format";
 import { useTranslation } from "react-i18next";
@@ -45,10 +46,17 @@ export function GarageCaseBusinessPerformanceSection({
 
   return (
     <DrawerSection
-      title={t(
-        "cases.drawer.businessPerformance",
-        "Hiệu quả kinh doanh & Lợi nhuận",
-      )}
+      title={
+        <div className="flex items-center gap-1.5 font-bold text-xs uppercase tracking-wider text-slate-800 dark:text-slate-200">
+          <TrendingUp className="w-3.5 h-3.5 text-muted-foreground" />
+          <span>
+            {t(
+              "cases.drawer.businessPerformance",
+              "Hiệu quả kinh doanh & Lợi nhuận",
+            )}
+          </span>
+        </div>
+      }
       collapsible
       defaultCollapsed={false}
     >

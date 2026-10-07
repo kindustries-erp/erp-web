@@ -114,7 +114,8 @@ export function QuoteReceivablesTable({
         <FinancialTreeChildRow
           key={child.id}
           item={child}
-          canRemove={canEditFinancial}
+          canRemove={effectiveCanPerform}
+          disabledReason={disabledReason}
           onRemove={handleRemoveItem}
         />
       ))}

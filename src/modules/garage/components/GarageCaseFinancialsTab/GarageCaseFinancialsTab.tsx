@@ -16,6 +16,7 @@ export function GarageCaseFinancialsTab(props: GarageCaseFinancialsTabProps) {
         caseId={props.caseId || logic.caseData?.id || ""}
         caseCode={props.caseCode || logic.caseData?.soChungTu || ""}
         caseData={props.caseData || logic.caseData}
+        grossProfit={props.grossProfit}
         editMode={props.editMode ?? logic.editMode}
         activeSettlements={props.activeSettlements || logic.activeSettlements}
         activeLinkedInvoices={

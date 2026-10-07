@@ -76,7 +76,7 @@ describe("QuoteCostSummarySection", () => {
     render(<QuoteCostSummarySection {...mockProps} />);
 
     // Parent row
-    expect(screen.getByText(/Tổng chi phí vụ việc/i)).toBeInTheDocument();
+    expect(screen.getByText(/Tổng phải trả vụ việc/i)).toBeInTheDocument();
     expect(screen.getByText("10.000.000 ₫")).toBeInTheDocument();
     expect(screen.getByText("100.0%")).toBeInTheDocument();
 

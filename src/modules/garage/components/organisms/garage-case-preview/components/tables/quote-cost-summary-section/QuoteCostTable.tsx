@@ -79,6 +79,7 @@ export const QuoteCostTable: React.FC<QuoteCostTableProps> = ({
           key={child.id}
           item={child}
           canRemove={canPerformPayment}
+          disabledReason={disabledReason}
           onRemove={handleRemoveItem}
         />
       ))}

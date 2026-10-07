@@ -15,6 +15,7 @@ import type { FinancialTreeChildRowProps } from "./FinancialTreeChildRow.type";
 export function FinancialTreeChildRow({
   item,
   canRemove = false,
+  disabledReason,
   onRemove,
   className,
 }: FinancialTreeChildRowProps) {
@@ -90,14 +91,28 @@ export function FinancialTreeChildRow({
 
       {/* ── CỘT 4: THAO TÁC (GỠ / XÓA) ── */}
       <div className="w-16 flex justify-end shrink-0 pl-1">
-        {canRemove && onRemove && (
+        {onRemove && (
           <Button
             type="button"
             variant="ghost"
             size="icon-sm"
             onClick={() => onRemove(item)}
-            className="h-6 w-6 text-muted-foreground hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 opacity-70 group-hover:opacity-100 transition-opacity"
-            title={t("common.delete", "Xóa")}
+            disabled={!canRemove}
+            className={cn(
+              "h-6 w-6 text-muted-foreground transition-opacity",
+              canRemove
+                ? "hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 opacity-70 group-hover:opacity-100"
+                : "opacity-30 cursor-not-allowed hover:bg-transparent text-muted-foreground/50",
+            )}
+            title={
+              !canRemove
+                ? disabledReason ||
+                  t(
+                    "cases.financials.disabledNoEditMode",
+                    "Cần bật Chế độ chỉnh sửa để thao tác.",
+                  )
+                : t("common.delete", "Xóa")
+            }
           >
             <Trash2 className="w-3.5 h-3.5" />
           </Button>
