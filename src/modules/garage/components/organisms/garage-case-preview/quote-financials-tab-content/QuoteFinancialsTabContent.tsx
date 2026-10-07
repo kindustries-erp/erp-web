@@ -47,6 +47,8 @@ export function QuoteFinancialsTabContent(
           canPerformPayment={canPerformPayment}
           disabledReason={disabledReason}
           onPaymentClick={handleReceivablePaymentClick}
+          onRemoveInvoice={props.onRemoveInvoice}
+          onRemoveSettlement={props.onRemoveSettlement}
         />
       </DrawerSection>
 
@@ -75,6 +77,10 @@ export function QuoteFinancialsTabContent(
           caseCode={props.caseCode}
           caseData={props.caseData}
           onPaymentSaved={props.onPaymentSaved}
+          onAddSettlement={props.onAddSettlement}
+          onRemoveSettlement={props.onRemoveSettlement}
+          onAddInvoice={props.onAddInvoice}
+          onRemoveInvoice={props.onRemoveInvoice}
         />
       </DrawerSection>
 
@@ -95,6 +101,11 @@ export function QuoteFinancialsTabContent(
           direction={paymentDrawerTarget.direction}
           activeSettlements={props.activeSettlements}
           activeLinkedInvoices={props.activeLinkedInvoices}
+          onAddSettlement={props.onAddSettlement}
+          onRemoveSettlement={props.onRemoveSettlement}
+          onAddInvoice={props.onAddInvoice}
+          onRemoveInvoice={props.onRemoveInvoice}
+          onSuccess={closePaymentDrawer}
         />
       )}
     </div>

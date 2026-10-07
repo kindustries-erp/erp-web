@@ -14,12 +14,6 @@ export function useCaseLinePaymentDrawer(props: CaseLinePaymentDrawerProps) {
 
   const [activeTab, setActiveTab] = useState<string>(invoiceTabKey);
 
-  useEffect(() => {
-    if (props.open) {
-      setActiveTab(invoiceTabKey);
-    }
-  }, [props.open, invoiceTabKey]);
-
   const reconLogic = useGarageCaseReconciliationLogic({
     open: props.open,
     onClose: props.onClose,
@@ -33,7 +27,18 @@ export function useCaseLinePaymentDrawer(props: CaseLinePaymentDrawerProps) {
     activeSettlements: props.activeSettlements,
     activeLinkedInvoices: props.activeLinkedInvoices,
     onSuccess: props.onSuccess,
+    onSubmitSettlements: props.onAddSettlement,
+    onRemoveSettlement: props.onRemoveSettlement,
+    onSubmitInvoices: props.onAddInvoice,
+    onRemoveInvoice: props.onRemoveInvoice,
   });
+
+  useEffect(() => {
+    if (props.open) {
+      setActiveTab(invoiceTabKey);
+      reconLogic.setActiveTab(invoiceTabKey);
+    }
+  }, [props.open, invoiceTabKey]);
 
   const targetAmount = Number(props.lineAmount || 0);
   const selectedAmount = useMemo(() => {

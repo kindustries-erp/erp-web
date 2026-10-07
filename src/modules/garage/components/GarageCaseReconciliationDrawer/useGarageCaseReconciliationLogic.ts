@@ -81,7 +81,7 @@ export function useGarageCaseReconciliationLogic({
 
   // Active Tab & View Preset State
   const resolvedInitialTab = useMemo(() => {
-    if (!hasVat) return "manual_cashflow";
+    if (!hasVat && !initialTab) return "manual_cashflow";
     return initialTab;
   }, [hasVat, initialTab]);
 
@@ -123,15 +123,6 @@ export function useGarageCaseReconciliationLogic({
       setPendingDeletedSettlementIds([]);
     }
   }, [open, resolvedInitialTab]);
-
-  useEffect(() => {
-    if (
-      !hasVat &&
-      (activeTab === "invoices_out" || activeTab === "invoices_in")
-    ) {
-      setActiveTab("manual_cashflow");
-    }
-  }, [hasVat, activeTab]);
 
   useEffect(() => {
     userSelectedPresetRef.current = false;
@@ -185,6 +176,24 @@ export function useGarageCaseReconciliationLogic({
         .length,
     [linkedInvoices],
   );
+
+  useEffect(() => {
+    if (
+      !hasVat &&
+      !editMode &&
+      initialLinkedInCount === 0 &&
+      initialLinkedOutCount === 0 &&
+      (activeTab === "invoices_out" || activeTab === "invoices_in")
+    ) {
+      setActiveTab("manual_cashflow");
+    }
+  }, [
+    hasVat,
+    activeTab,
+    editMode,
+    initialLinkedInCount,
+    initialLinkedOutCount,
+  ]);
 
   // ─── Domain Direction & Settlement Type (REVENUE vs COST) ────────────────
   const [domainDirection, setDomainDirection] =
@@ -517,15 +526,23 @@ export function useGarageCaseReconciliationLogic({
       (activeTab === "invoices_out" || activeTab === "invoices_in"),
   });
 
+  const linkedInvoicesKey = useMemo(() => {
+    return (linkedInvoices || [])
+      .map((l: any) => `${l.id || l.invoiceId}:${l.linkType || "OUT"}`)
+      .join(",");
+  }, [linkedInvoices]);
+
   const initialLinkedInvoicesForType = useMemo(() => {
     return (linkedInvoices || []).filter(
       (l: any) => (l.linkType || "OUT") === invoiceDirection,
     );
-  }, [linkedInvoices, invoiceDirection]);
+  }, [linkedInvoicesKey, invoiceDirection]);
 
   const initialLinkedIdSet = useMemo(() => {
     return new Set(
-      initialLinkedInvoicesForType.map((l: any) => l.invoiceId).filter(Boolean),
+      initialLinkedInvoicesForType
+        .map((l: any) => l.invoiceId || l.id)
+        .filter(Boolean),
     );
   }, [initialLinkedInvoicesForType]);
 
@@ -594,54 +611,47 @@ export function useGarageCaseReconciliationLogic({
     }
   }, [editMode]);
 
-  // Pre-populate selected invoices on direction change or when editMode turns false
+  const prevTabRef = useRef(activeTab);
+  const prevOpenRef = useRef(open);
+
+  // Pre-populate selected invoices on open, tab change, or when editMode turns false
   useEffect(() => {
+    const isNewOpen = open && !prevOpenRef.current;
+    const isTabChanged = activeTab !== prevTabRef.current;
+    prevOpenRef.current = open;
+    prevTabRef.current = activeTab;
+
     if (open && (activeTab === "invoices_out" || activeTab === "invoices_in")) {
-      const map: Record<string, ErpInvoice> = {};
-      initialLinkedInvoicesForType.forEach((item: any) => {
-        const invId = item.invoiceId || item.id;
-        if (invId) {
-          map[invId] = {
-            id: invId,
-            invoiceNo: item.invoiceNo || item.invoice?.invoiceNo,
-            sellerName: item.sellerName || item.invoice?.sellerName,
-            buyerName: item.buyerName || item.invoice?.buyerName,
-            totalAmount: item.totalAmount || item.invoice?.totalAmount,
-            preVatAmount: item.preVatAmount || item.invoice?.preVatAmount,
-            vatAmount: item.vatAmount || item.invoice?.vatAmount,
-            description: item.description || item.invoice?.description,
-            direction: item.direction || item.linkType,
-            licensePlate: item.licensePlate,
-            settlementOrder: item.settlementOrder,
-            serialNo: item.serialNo,
-            invoiceDate: item.invoiceDate || item.invoice?.invoiceDate,
-            hasBankNetOff: Boolean(item.hasBankNetOff),
-            bankSettledAmount: Number(item.bankSettledAmount || 0),
-          } as ErpInvoice;
-        }
-      });
-      setSelectedInvoicesMap((prev) => {
-        const prevKeys = Object.keys(prev);
-        const nextKeys = Object.keys(map);
-        if (prevKeys.length === 0 && nextKeys.length === 0) return prev;
-        if (
-          prevKeys.length === nextKeys.length &&
-          prevKeys.every((k) => prev[k]?.id === map[k]?.id)
-        ) {
-          return prev;
-        }
-        return map;
-      });
-      setViewInvoiceId((prev) => (prev !== null ? null : prev));
-      setInvoiceNote((prev) => (prev !== "" ? "" : prev));
+      if (isNewOpen || isTabChanged || !editMode) {
+        const map: Record<string, ErpInvoice> = {};
+        initialLinkedInvoicesForType.forEach((item: any) => {
+          const invId = item.invoiceId || item.id;
+          if (invId) {
+            map[invId] = {
+              id: invId,
+              invoiceNo: item.invoiceNo || item.invoice?.invoiceNo,
+              sellerName: item.sellerName || item.invoice?.sellerName,
+              buyerName: item.buyerName || item.invoice?.buyerName,
+              totalAmount: item.totalAmount || item.invoice?.totalAmount,
+              preVatAmount: item.preVatAmount || item.invoice?.preVatAmount,
+              vatAmount: item.vatAmount || item.invoice?.vatAmount,
+              description: item.description || item.invoice?.description,
+              direction: item.direction || item.linkType,
+              licensePlate: item.licensePlate,
+              settlementOrder: item.settlementOrder,
+              serialNo: item.serialNo,
+              invoiceDate: item.invoiceDate || item.invoice?.invoiceDate,
+              hasBankNetOff: Boolean(item.hasBankNetOff),
+              bankSettledAmount: Number(item.bankSettledAmount || 0),
+            } as ErpInvoice;
+          }
+        });
+        setSelectedInvoicesMap(map);
+        setViewInvoiceId(null);
+        setInvoiceNote("");
+      }
     }
-  }, [
-    open,
-    invoiceDirection,
-    initialLinkedInvoicesForType,
-    activeTab,
-    editMode,
-  ]);
+  }, [open, activeTab, editMode, initialLinkedInvoicesForType]);
 
   const selectedInvoicesList = useMemo(
     () => Object.values(selectedInvoicesMap),
@@ -1013,83 +1023,29 @@ export function useGarageCaseReconciliationLogic({
           delete next[inv.id];
           return next;
         });
-        if (editMode && onRemoveInvoice) {
-          const found = (linkedInvoices || []).find(
-            (l: any) =>
-              l.invoiceId === inv.id || l.id === inv.id || l.tempId === inv.id,
-          );
-          onRemoveInvoice(found?.id || found?.tempId || inv.id);
-        }
       } else {
         setSelectedInvoicesMap((prev) => ({
           ...prev,
           [inv.id]: inv,
         }));
-        if (editMode && onSubmitInvoices) {
-          onSubmitInvoices({
-            invoiceId: inv.id,
-            linkType: invoiceDirection,
-            note: invoiceNote,
-            invoice: inv,
-          });
-        }
       }
     },
-    [
-      selectedInvoicesMap,
-      setSelectedInvoicesMap,
-      editMode,
-      onRemoveInvoice,
-      onSubmitInvoices,
-      linkedInvoices,
-      invoiceDirection,
-      invoiceNote,
-    ],
+    [selectedInvoicesMap, setSelectedInvoicesMap],
   );
 
   const handleSelectAllInvoices = useCallback(
     (checked: boolean) => {
       if (!checked) {
-        if (editMode && onRemoveInvoice) {
-          Object.keys(selectedInvoicesMap).forEach((id) => {
-            const found = (linkedInvoices || []).find(
-              (l: any) => l.invoiceId === id || l.id === id || l.tempId === id,
-            );
-            onRemoveInvoice(found?.id || found?.tempId || id);
-          });
-        }
         setSelectedInvoicesMap({});
         return;
       }
       const map: Record<string, ErpInvoice> = {};
-      const itemsToAdd: any[] = [];
       (invoiceData?.items || []).forEach((inv: ErpInvoice) => {
         map[inv.id] = inv;
-        if (!selectedInvoicesMap[inv.id]) {
-          itemsToAdd.push({
-            invoiceId: inv.id,
-            linkType: invoiceDirection,
-            note: invoiceNote,
-            invoice: inv,
-          });
-        }
       });
       setSelectedInvoicesMap(map);
-      if (editMode && onSubmitInvoices && itemsToAdd.length > 0) {
-        onSubmitInvoices(itemsToAdd);
-      }
     },
-    [
-      editMode,
-      onRemoveInvoice,
-      onSubmitInvoices,
-      selectedInvoicesMap,
-      setSelectedInvoicesMap,
-      linkedInvoices,
-      invoiceData?.items,
-      invoiceDirection,
-      invoiceNote,
-    ],
+    [invoiceData?.items, setSelectedInvoicesMap],
   );
 
   // Select All Filtered Suggestions Handler (1-Click)
@@ -1227,6 +1183,8 @@ export function useGarageCaseReconciliationLogic({
           return;
         }
 
+        const isDraftMode = Boolean(onSubmitSettlements || onRemoveSettlement);
+
         // 1. Thực thi xóa hàng loạt các khoản đã lưu trong DB được đánh dấu xóa tạm
         if (hasDeletions) {
           if (onRemoveSettlement) {
@@ -1256,6 +1214,18 @@ export function useGarageCaseReconciliationLogic({
         setManualAmount("");
         setManualPartner("");
         setManualNote("");
+
+        if (isDraftMode) {
+          toast.success(
+            t(
+              "cases.reconciliation.manualDraftSuccess",
+              "Đã ghi nhận dòng tiền (chờ Lưu thay đổi)",
+            ),
+          );
+          if (onSuccess) onSuccess();
+          onClose();
+          return;
+        }
 
         toast.success(
           t(
@@ -1399,6 +1369,51 @@ export function useGarageCaseReconciliationLogic({
     try {
       setIsSubmitting(true);
 
+      // Nếu có onSubmitInvoices (Draft-First Mode từ Parent): chỉ lưu vào local state, không gọi API!
+      if (onSubmitInvoices) {
+        // 1. Gỡ các liên kết bị bỏ chọn khỏi draft
+        const removedLinks = (linkedInvoices || []).filter(
+          (l: any) =>
+            (l.linkType || "OUT") === invoiceDirection &&
+            !selectedInvoicesMap[l.invoiceId || l.id],
+        );
+        if (onRemoveInvoice) {
+          for (const r of removedLinks) {
+            const linkId = r.id || r.invoiceId;
+            if (linkId) {
+              onRemoveInvoice(linkId);
+            }
+          }
+        }
+
+        // 2. Thêm các hóa đơn mới chọn vào draft
+        const newlyAddedInvoices = selectedInvoicesList.filter(
+          (inv) => !initialLinkedIdSet.has(inv.id),
+        );
+        if (newlyAddedInvoices.length > 0) {
+          await onSubmitInvoices(
+            newlyAddedInvoices.map((inv) => ({
+              invoiceId: inv.id,
+              linkType: invoiceDirection,
+              note: invoiceNote,
+              invoice: inv,
+            })),
+          );
+        }
+
+        toast.success(
+          t(
+            "cases.reconciliation.invoiceDraftSuccess",
+            "Đã ghi nhận cấn trừ hóa đơn (chờ Lưu thay đổi)",
+          ),
+        );
+
+        if (onSuccess) onSuccess();
+        onClose();
+        return;
+      }
+
+      // Standalone Direct API Mode
       if (caseId && !caseId.startsWith("tmp-")) {
         // 1. Remove unselected invoices
         const removedLinks = (linkedInvoices || []).filter(
@@ -1436,17 +1451,6 @@ export function useGarageCaseReconciliationLogic({
             );
           }
         }
-      }
-
-      if (onSubmitInvoices) {
-        await onSubmitInvoices(
-          selectedInvoicesList.map((inv) => ({
-            invoiceId: inv.id,
-            linkType: invoiceDirection,
-            note: invoiceNote,
-            invoice: inv,
-          })),
-        );
       }
 
       toast.success(
@@ -1601,8 +1605,9 @@ export function useGarageCaseReconciliationLogic({
     onRemoveSettlement: handleRemoveSettlement,
     pendingManualSettlements,
     pendingDeletedSettlementIds,
-    setPendingDeletedSettlementIds,
     onSubmitSettlements,
+    onSubmitInvoices,
+    onRemoveInvoice,
     hasVat,
     caseData,
   };

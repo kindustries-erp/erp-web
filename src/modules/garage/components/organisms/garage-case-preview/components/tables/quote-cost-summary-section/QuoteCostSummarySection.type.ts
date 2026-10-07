@@ -10,6 +10,10 @@ export interface QuoteCostSummarySectionProps {
   caseCode?: string;
   caseData: any;
   onPaymentSaved?: () => void;
+  onAddSettlement?: (items: any[]) => void;
+  onRemoveSettlement?: (id: string) => void;
+  onAddInvoice?: (payload: any) => void;
+  onRemoveInvoice?: (id: string) => void;
   className?: string;
 }
 
@@ -44,6 +48,8 @@ export interface QuoteCostTableProps {
   canPerformPayment: boolean;
   disabledReason?: string;
   onPaymentClick: () => void;
+  onRemoveInvoice?: (id: string) => void;
+  onRemoveSettlement?: (id: string) => void;
   className?: string;
 }
 
