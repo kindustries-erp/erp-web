@@ -157,7 +157,7 @@ describe("GarageCasesTable Organism", () => {
       activeColumnPresetKey: "overview",
     };
     const cols = buildGarageCasesColumns(ctx);
-    expect(cols.length).toBe(25);
+    expect(cols.length).toBe(24);
     const keys = cols.map((c) => c.key);
     const expectedKeys = [
       "index",
@@ -173,6 +173,7 @@ describe("GarageCasesTable Organism", () => {
       "createdAt",
       "updatedAt",
       "dataAsOf",
+      "hasInvoice",
       "doanhThu",
       "chiPhi",
       "loiNhuan",
@@ -183,17 +184,17 @@ describe("GarageCasesTable Organism", () => {
       "tienConPhaiThanhToan",
       "costProgress",
       "tienConPhaiChi",
-      "isInsuranceClaim",
-      "hasInvoice",
     ];
     expectedKeys.forEach((key) => {
       expect(keys).toContain(key);
     });
 
-    // In overview preset: revenue, cost, profit must be positioned BEFORE receivables
+    // In overview preset: hasInvoice is right before doanhThu, and revenue is before receivables
+    const hasInvoiceIdx = keys.indexOf("hasInvoice");
     const doanhThuIdx = keys.indexOf("doanhThu");
     const phaiThuKhIdx = keys.indexOf("phaiThuKhachHang");
     const phaiThuBhIdx = keys.indexOf("phaiThuBaoHiem");
+    expect(hasInvoiceIdx).toBe(doanhThuIdx - 1);
     expect(doanhThuIdx).toBeLessThan(phaiThuKhIdx);
     expect(doanhThuIdx).toBeLessThan(phaiThuBhIdx);
   });
@@ -216,13 +217,15 @@ describe("GarageCasesTable Organism", () => {
       activeColumnPresetKey: "audit",
     };
     const cols = buildGarageCasesColumns(ctx);
-    expect(cols.length).toBe(25);
+    expect(cols.length).toBe(24);
     const keys = cols.map((c) => c.key);
 
-    // In audit preset: receivables must be positioned BEFORE revenue, cost, profit
+    // In audit preset: receivables must be positioned BEFORE revenue, cost, profit, and hasInvoice is right before doanhThu
+    const hasInvoiceIdx = keys.indexOf("hasInvoice");
     const doanhThuIdx = keys.indexOf("doanhThu");
     const phaiThuKhIdx = keys.indexOf("phaiThuKhachHang");
     const phaiThuBhIdx = keys.indexOf("phaiThuBaoHiem");
+    expect(hasInvoiceIdx).toBe(doanhThuIdx - 1);
     expect(phaiThuKhIdx).toBeLessThan(doanhThuIdx);
     expect(phaiThuBhIdx).toBeLessThan(doanhThuIdx);
   });
@@ -343,7 +346,7 @@ describe("GarageCasesTable Organism", () => {
     expect(sizeMap.tienConPhaiThanhToan).toBe(140);
     expect(sizeMap.costProgress).toBe(140);
     expect(sizeMap.tienConPhaiChi).toBe(140);
-    expect(sizeMap.hasInvoice).toBe(100);
+    expect(sizeMap.hasInvoice).toBe(130);
   });
 
   it("renders linked invoice icon in hasInvoice column and triggers onOpenFinancials", () => {
@@ -382,5 +385,80 @@ describe("GarageCasesTable Organism", () => {
     const linkBtn = getByLabelText("Đã liên kết HĐ");
     fireEvent.click(linkBtn);
     expect(onOpenFinancials).toHaveBeenCalledWith("GR-PDV-001");
+  });
+
+  it("renders vat amount aligned right in hasInvoice column", () => {
+    const ctx: any = {
+      t: (k: string, d?: string) => d || k,
+      tableState: { sorts: [], columnSearch: {}, columnFilters: {} },
+      dateRanges: {},
+      onDateRangeChange: vi.fn(),
+      onSortChange: vi.fn(),
+      onSearchChange: vi.fn(),
+      onFilterChange: vi.fn(),
+      fetchCaseColumnOptions: vi.fn(),
+      onOpenDetail: vi.fn(),
+      onOpenFinancials: vi.fn(),
+      onOpenConfig: vi.fn(),
+      canUpdateGarage: true,
+      branches: [],
+      activeColumnPresetKey: "overview",
+    };
+    const cols = buildGarageCasesColumns(ctx);
+    const hasInvoiceCol = cols.find((c) => c.key === "hasInvoice");
+    expect(hasInvoiceCol).toBeDefined();
+    expect(hasInvoiceCol?.className).toContain("text-right");
+
+    const cellWithVat = hasInvoiceCol?.cell(
+      {
+        id: "case-02",
+        soChungTu: "GR-PDV-002",
+        tienThueKh: 500000,
+      },
+      0,
+    );
+    const { getByText } = render(<div>{cellWithVat}</div>);
+    expect(getByText(/500\.000/)).toBeDefined();
+  });
+
+  it("applies light emerald background to receivable columns and amber to payable columns", () => {
+    const ctx: any = {
+      t: (k: string, d?: string) => d || k,
+      tableState: { sorts: [], columnSearch: {}, columnFilters: {} },
+      dateRanges: {},
+      onDateRangeChange: vi.fn(),
+      onSortChange: vi.fn(),
+      onSearchChange: vi.fn(),
+      onFilterChange: vi.fn(),
+      fetchCaseColumnOptions: vi.fn(),
+      onOpenDetail: vi.fn(),
+      onOpenFinancials: vi.fn(),
+      onOpenConfig: vi.fn(),
+      canUpdateGarage: true,
+      branches: [],
+      activeColumnPresetKey: "overview",
+    };
+    const cols = buildGarageCasesColumns(ctx);
+
+    const receivableKeys = [
+      "collectionProgress",
+      "phaiThuKhachHang",
+      "phaiThuBaoHiem",
+      "tienConPhaiThanhToan",
+    ];
+    receivableKeys.forEach((key) => {
+      const col = cols.find((c) => c.key === key);
+      expect(col).toBeDefined();
+      expect(col?.className).toContain("bg-emerald-50/50");
+      expect((col as any)?.headerClassName).toContain("bg-emerald-100/60");
+    });
+
+    const payableKeys = ["costProgress", "tienConPhaiChi"];
+    payableKeys.forEach((key) => {
+      const col = cols.find((c) => c.key === key);
+      expect(col).toBeDefined();
+      expect(col?.className).toContain("bg-amber-50/50");
+      expect((col as any)?.headerClassName).toContain("bg-amber-100/60");
+    });
   });
 });
