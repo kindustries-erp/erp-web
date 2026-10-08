@@ -284,10 +284,9 @@ export const useAppStore = create<AppState>()(
             pageKey: "dashboard" as PageKey,
             instanceIndex: 1 as const,
           };
-          const path = getPathWithPreservedSearch(
-            nextTab.pageKey,
-            nextTab.instanceIndex,
-          );
+          const path =
+            nextTab.url ||
+            getPathWithPreservedSearch(nextTab.pageKey, nextTab.instanceIndex);
           const current = window.location.pathname + window.location.search;
           if (current !== path) history.pushState(null, "", path);
           set({
@@ -302,10 +301,12 @@ export const useAppStore = create<AppState>()(
             (t) => t.instanceId === nextCurrentId,
           );
           if (currentTab) {
-            const path = getPathWithPreservedSearch(
-              currentTab.pageKey,
-              currentTab.instanceIndex,
-            );
+            const path =
+              currentTab.url ||
+              getPathWithPreservedSearch(
+                currentTab.pageKey,
+                currentTab.instanceIndex,
+              );
             const current = window.location.pathname + window.location.search;
             if (current !== path) history.replaceState(null, "", path);
             set({
@@ -350,10 +351,12 @@ export const useAppStore = create<AppState>()(
             (t) => t.instanceId === nextCurrentId,
           );
           if (currentTab) {
-            const path = getPathWithPreservedSearch(
-              currentTab.pageKey,
-              currentTab.instanceIndex,
-            );
+            const path =
+              currentTab.url ||
+              getPathWithPreservedSearch(
+                currentTab.pageKey,
+                currentTab.instanceIndex,
+              );
             const current = window.location.pathname + window.location.search;
             if (current !== path) history.replaceState(null, "", path);
             set({
@@ -411,10 +414,12 @@ export const useAppStore = create<AppState>()(
             (t) => t.instanceId === nextCurrentId,
           );
           if (currentTab) {
-            const path = getPathWithPreservedSearch(
-              currentTab.pageKey,
-              currentTab.instanceIndex,
-            );
+            const path =
+              currentTab.url ||
+              getPathWithPreservedSearch(
+                currentTab.pageKey,
+                currentTab.instanceIndex,
+              );
             const current = window.location.pathname + window.location.search;
             if (current !== path) history.replaceState(null, "", path);
             set({

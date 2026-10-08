@@ -1,4 +1,5 @@
 import { V2Dictionary } from "./vi";
+import { v2EnTable } from "./en.table";
 
 export const v2En: V2Dictionary = {
   v2: {
@@ -99,5 +100,6 @@ export const v2En: V2Dictionary = {
     dropdown: {
       optionsTitle: "Action options",
     },
+    table: v2EnTable,
   },
 };

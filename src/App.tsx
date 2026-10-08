@@ -211,6 +211,7 @@ const GarageOpex = lazy(() =>
     default: m.GarageOpex,
   })),
 );
+
 const GaragePartners = lazy(() =>
   import("@/modules/garage/pages/GaragePartners").then((m) => ({
     default: m.GaragePartners,

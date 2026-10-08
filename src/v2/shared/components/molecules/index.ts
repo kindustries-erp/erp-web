@@ -21,3 +21,8 @@ export * from "./v2-popover";
 export * from "./v2-drawer-related-deck";
 export * from "./v2-dropdown";
 export * from "./v2-tab-bar";
+export * from "./v2-table-pagination";
+export * from "./v2-column-toggle";
+export * from "./v2-column-header-filter";
+export * from "./v2-table-row-actions";
+export * from "./v2-table-text";

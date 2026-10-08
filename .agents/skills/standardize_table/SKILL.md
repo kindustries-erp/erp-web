@@ -5,6 +5,8 @@ description: Create or enhance a DataTable to follow standard UI rules in the ER
 
 # 📋 DataTable Standards
 
+> 🆕 **Bản V2**: Với trang dưới `src/v2/` dùng `V2StandardTable` (không dùng `DataTable`/`StandardTable` của V1). Đã khớp `variant="spreadsheet"` (kẻ ô, header 32px, dòng 38px, phân trang `‹ 1 … N ›`, filter chọn rồi Áp dụng) và cùng nghiệp vụ (STT 1-based, row actions, `__BLANK__`, `__ALL_MATCHING__`, `""` và `;`) nhưng API khác. Xem skill `modules/v2-table`.
+
 > 📋 **EXECUTION WORKFLOW**: Để thực thi quy trình chuẩn hóa Bảng dữ liệu 5 giai đoạn, kế thừa 100% chuẩn Atomic và chạy bộ lệnh Grep Audit tự động, hãy tuân thủ workflow:
 > 👉 [`.agents/workflows/standardize-table.md`](../../workflows/standardize-table.md)
 
