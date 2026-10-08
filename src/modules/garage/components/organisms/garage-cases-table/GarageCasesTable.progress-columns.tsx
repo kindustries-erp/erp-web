@@ -22,6 +22,27 @@ export function buildProgressColumns(
   const fmtMoneyOpt = (v: string) =>
     v === "__BLANK__" ? "(Trống / 0 đ)" : money(Number(v) || 0);
 
+  const makeExtractorCol = (
+    key: string,
+    label: string,
+    extractor: (item: any) => number,
+  ) => ({
+    key,
+    label,
+    header: makeHdr(key, label, {
+      align: "right",
+      showBlankOption: true,
+      formatOptionLabel: fmtMoneyOpt,
+    }),
+    size: 140,
+    headerClassName: RECEIVABLE_HEADER_BG,
+    className: cn("text-right tabular-nums font-semibold", RECEIVABLE_CELL_BG),
+    cell: (item: any) => {
+      const val = extractor(item);
+      return val > 0 ? money(val) : "—";
+    },
+  });
+
   return [
     {
       key: "collectionProgress",
@@ -31,7 +52,7 @@ export function buildProgressColumns(
         t("cases.columns.collectionProgress", "Tổng phải thu"),
         { align: "right", hideFilter: true },
       ),
-      size: 140,
+      size: 155,
       headerClassName: RECEIVABLE_HEADER_BG,
       className: cn("text-right", RECEIVABLE_CELL_BG),
       cell: (item: any) => (
@@ -43,52 +64,16 @@ export function buildProgressColumns(
         />
       ),
     },
-    {
-      key: "phaiThuKhachHang",
-      label: t("cases.columns.receivableCustomer", "Phải thu KH"),
-      header: makeHdr(
-        "phaiThuKhachHang",
-        t("cases.columns.receivableCustomer", "Phải thu KH"),
-        {
-          align: "right",
-          showBlankOption: true,
-          formatOptionLabel: fmtMoneyOpt,
-        },
-      ),
-      size: 140,
-      headerClassName: RECEIVABLE_HEADER_BG,
-      className: cn(
-        "text-right tabular-nums font-semibold",
-        RECEIVABLE_CELL_BG,
-      ),
-      cell: (item: any) => {
-        const val = extractPhaiThuKhachHang(item);
-        return val > 0 ? money(val) : "—";
-      },
-    },
-    {
-      key: "phaiThuBaoHiem",
-      label: t("cases.columns.receivableInsurance", "Phải thu BH"),
-      header: makeHdr(
-        "phaiThuBaoHiem",
-        t("cases.columns.receivableInsurance", "Phải thu BH"),
-        {
-          align: "right",
-          showBlankOption: true,
-          formatOptionLabel: fmtMoneyOpt,
-        },
-      ),
-      size: 140,
-      headerClassName: RECEIVABLE_HEADER_BG,
-      className: cn(
-        "text-right tabular-nums font-semibold",
-        RECEIVABLE_CELL_BG,
-      ),
-      cell: (item: any) => {
-        const val = extractPhaiThuBaoHiem(item);
-        return val > 0 ? money(val) : "—";
-      },
-    },
+    makeExtractorCol(
+      "phaiThuKhachHang",
+      t("cases.columns.receivableCustomer", "Phải thu KH"),
+      extractPhaiThuKhachHang,
+    ),
+    makeExtractorCol(
+      "phaiThuBaoHiem",
+      t("cases.columns.receivableInsurance", "Phải thu BH"),
+      extractPhaiThuBaoHiem,
+    ),
     {
       key: "tienConPhaiThanhToan",
       label: t("cases.columns.balanceAmount", "Còn phải thu"),
@@ -129,7 +114,7 @@ export function buildProgressColumns(
         t("cases.columns.costProgress", "Tổng phải trả"),
         { align: "right", hideFilter: true },
       ),
-      size: 140,
+      size: 155,
       headerClassName: PAYABLE_HEADER_BG,
       className: cn("text-right", PAYABLE_CELL_BG),
       cell: (item: any) => {

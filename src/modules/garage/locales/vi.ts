@@ -153,7 +153,7 @@ export const garageVi = {
       customerCode: "Mã KH",
       customerName: "Tên khách hàng",
       insurance: "BH",
-      vatInvoice: "HĐ VAT",
+      vatInvoice: "Thuế GTGT",
       hasInvoiceTooltip: "Có xuất hóa đơn VAT",
       doanhThu: "Doanh thu",
       chiPhi: "Chi phí",

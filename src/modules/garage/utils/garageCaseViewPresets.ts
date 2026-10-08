@@ -30,10 +30,10 @@ export const DEFAULT_GARAGE_CASE_COLUMN_VISIBILITY: Record<string, boolean> = {
   ngayHoanThanhCongViec: true,
   caseCode: true,
   customer: true,
+  statusName: true,
   kgaraClassification: true,
   classification: true,
   exclusionRules: true,
-  statusName: true,
   collectionProgress: false,
   phaiThuKhachHang: true,
   phaiThuBaoHiem: true,
@@ -56,6 +56,7 @@ export const AUDIT_GARAGE_CASE_COLUMN_VISIBILITY: Record<string, boolean> = {
   ngayHoanThanhCongViec: true,
   caseCode: true,
   customer: true,
+  statusName: true,
   collectionProgress: false,
   phaiThuKhachHang: true,
   phaiThuBaoHiem: true,
@@ -65,7 +66,6 @@ export const AUDIT_GARAGE_CASE_COLUMN_VISIBILITY: Record<string, boolean> = {
   doanhThu: true,
   chiPhi: true,
   loiNhuan: true,
-  statusName: true,
   hasInvoice: true,
   // Ẩn các cột không thuộc đối soát dòng tiền
   kgaraClassification: false,
@@ -147,6 +147,12 @@ export const GARAGE_CASE_COLUMN_GROUPS: ColumnGroupDef[] = [
         defaultVisible: true,
       },
       {
+        key: "statusName",
+        labelKey: "cases.columns.status",
+        defaultLabel: "Trạng thái",
+        defaultVisible: true,
+      },
+      {
         key: "kgaraClassification",
         labelKey: "cases.columns.kgaraClassification",
         defaultLabel: "Phân loại KGara",
@@ -162,12 +168,6 @@ export const GARAGE_CASE_COLUMN_GROUPS: ColumnGroupDef[] = [
         key: "exclusionRules",
         labelKey: "cases.columns.exclusionRules",
         defaultLabel: "Quy tắc loại trừ",
-        defaultVisible: true,
-      },
-      {
-        key: "statusName",
-        labelKey: "cases.columns.status",
-        defaultLabel: "Trạng thái",
         defaultVisible: true,
       },
       {
@@ -204,7 +204,7 @@ export const GARAGE_CASE_COLUMN_GROUPS: ColumnGroupDef[] = [
       {
         key: "hasInvoice",
         labelKey: "cases.columns.vatInvoice",
-        defaultLabel: "HĐ VAT",
+        defaultLabel: "Thuế GTGT",
         defaultVisible: true,
       },
       {

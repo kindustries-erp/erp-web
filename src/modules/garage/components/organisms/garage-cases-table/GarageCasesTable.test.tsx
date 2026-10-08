@@ -165,10 +165,10 @@ describe("GarageCasesTable Organism", () => {
       "ngayHoanThanhCongViec",
       "caseCode",
       "customer",
+      "statusName",
       "kgaraClassification",
       "classification",
       "exclusionRules",
-      "statusName",
       "branchName",
       "createdAt",
       "updatedAt",
@@ -188,6 +188,11 @@ describe("GarageCasesTable Organism", () => {
     expectedKeys.forEach((key) => {
       expect(keys).toContain(key);
     });
+
+    // statusName is placed directly after customer
+    const customerIdx = keys.indexOf("customer");
+    const statusNameIdx = keys.indexOf("statusName");
+    expect(statusNameIdx).toBe(customerIdx + 1);
 
     // In overview preset: hasInvoice is right before doanhThu, and revenue is before receivables
     const hasInvoiceIdx = keys.indexOf("hasInvoice");
@@ -340,11 +345,11 @@ describe("GarageCasesTable Organism", () => {
     expect(sizeMap.doanhThu).toBe(140);
     expect(sizeMap.chiPhi).toBe(140);
     expect(sizeMap.loiNhuan).toBe(140);
-    expect(sizeMap.collectionProgress).toBe(140);
+    expect(sizeMap.collectionProgress).toBe(155);
     expect(sizeMap.phaiThuKhachHang).toBe(140);
     expect(sizeMap.phaiThuBaoHiem).toBe(140);
     expect(sizeMap.tienConPhaiThanhToan).toBe(140);
-    expect(sizeMap.costProgress).toBe(140);
+    expect(sizeMap.costProgress).toBe(155);
     expect(sizeMap.tienConPhaiChi).toBe(140);
     expect(sizeMap.hasInvoice).toBe(130);
   });
@@ -460,5 +465,94 @@ describe("GarageCasesTable Organism", () => {
       expect(col?.className).toContain("bg-amber-50/50");
       expect((col as any)?.headerClassName).toContain("bg-amber-100/60");
     });
+  });
+
+  it("completionDate column strictly uses ngayHoanThanhCongViec from KGara without fallback to ngayTiepNhan", () => {
+    const ctx: any = {
+      t: (k: string, d?: string) => d || k,
+      tableState: { sorts: [], columnSearch: {}, columnFilters: {} },
+      dateRanges: {},
+      onDateRangeChange: vi.fn(),
+      onSortChange: vi.fn(),
+      onSearchChange: vi.fn(),
+      onFilterChange: vi.fn(),
+      fetchCaseColumnOptions: vi.fn(),
+      onOpenDetail: vi.fn(),
+      onOpenFinancials: vi.fn(),
+      onOpenConfig: vi.fn(),
+      canUpdateGarage: true,
+      branches: [],
+      activeColumnPresetKey: "overview",
+    };
+    const cols = buildGarageCasesColumns(ctx);
+    const completionCol = cols.find((c) => c.key === "ngayHoanThanhCongViec");
+    expect(completionCol).toBeDefined();
+
+    // Case 1: Has completion date
+    const cellWithDate = completionCol?.cell(
+      {
+        ngayHoanThanhCongViec: "2026-03-25T10:00:00Z",
+        ngayTiepNhan: "2026-03-01T08:00:00Z",
+      },
+      0,
+    );
+    const { container: c1 } = render(<div>{cellWithDate}</div>);
+    expect(c1.textContent).toContain("25/03/2026");
+
+    // Case 2: Does NOT have completion date, but HAS ngayTiepNhan -> must render dash, NO fallback
+    const cellWithoutDate = completionCol?.cell(
+      {
+        ngayHoanThanhCongViec: null,
+        ngayTiepNhan: "2026-03-01T08:00:00Z",
+      },
+      1,
+    );
+    const { container: c2 } = render(<div>{cellWithoutDate}</div>);
+    expect(c2.textContent).toContain("—");
+    expect(c2.textContent).not.toContain("01/03/2026");
+  });
+
+  it("renames hasInvoice column label to Thuế GTGT and renders margin with range colored badge", () => {
+    const ctx: any = {
+      t: (k: string, d?: string) => d || k,
+      tableState: { sorts: [], columnSearch: {}, columnFilters: {} },
+      dateRanges: {},
+      onDateRangeChange: vi.fn(),
+      onSortChange: vi.fn(),
+      onSearchChange: vi.fn(),
+      onFilterChange: vi.fn(),
+      fetchCaseColumnOptions: vi.fn(),
+      onOpenDetail: vi.fn(),
+      onOpenFinancials: vi.fn(),
+      onOpenConfig: vi.fn(),
+      canUpdateGarage: true,
+      branches: [],
+      activeColumnPresetKey: "overview",
+    };
+    const cols = buildGarageCasesColumns(ctx);
+
+    // 1. Check hasInvoice label renamed to Thuế GTGT
+    const hasInvoiceCol = cols.find((c) => c.key === "hasInvoice");
+    expect(hasInvoiceCol?.label).toBe("Thuế GTGT");
+
+    // 2. Check margin column renders GarageMarginBadge with range colors
+    const marginCol = cols.find((c) => c.key === "margin");
+    expect(marginCol).toBeDefined();
+
+    const cellSkyMargin = marginCol?.cell(
+      { margin: 35.5, doanhThu: 10000000 },
+      0,
+    );
+    const { container: cSky } = render(<div>{cellSkyMargin}</div>);
+    expect(cSky.textContent).toContain("+35.5%");
+    expect(cSky.querySelector(".text-sky-800")).toBeDefined();
+
+    const cellNegativeMargin = marginCol?.cell(
+      { margin: -10.2, doanhThu: 5000000 },
+      1,
+    );
+    const { container: cRose } = render(<div>{cellNegativeMargin}</div>);
+    expect(cRose.textContent).toContain("-10.2%");
+    expect(cRose.querySelector(".text-rose-800")).toBeDefined();
   });
 });

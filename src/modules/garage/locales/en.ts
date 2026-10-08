@@ -152,7 +152,7 @@ export const garageEn = {
       customerCode: "Customer Code",
       customerName: "Customer Name",
       insurance: "BH",
-      vatInvoice: "VAT Inv",
+      vatInvoice: "VAT",
       hasInvoiceTooltip: "Has VAT Invoice issued",
       doanhThu: "Revenue",
       chiPhi: "Cost",
