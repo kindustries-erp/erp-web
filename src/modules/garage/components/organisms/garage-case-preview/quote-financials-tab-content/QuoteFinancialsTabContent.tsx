@@ -1,9 +1,10 @@
 import React from "react";
-import { Landmark, Wallet } from "lucide-react";
+import { Landmark, Wallet, Plus } from "lucide-react";
 import { DrawerSection } from "@/shared/components/DrawerModal";
 import { QuoteReceivablesTable } from "../components/tables/quote-receivables-table";
 import { QuoteCostSummarySection } from "../components/tables/quote-cost-summary-section";
 import { CaseLinePaymentDrawer } from "../../../organisms/case-line-payment-drawer";
+import { GarageCashflowFormDrawer } from "../../../organisms/garage-cashflow-form-drawer";
 import { useQuoteFinancialsTabContent } from "./QuoteFinancialsTabContent.hook";
 import type { QuoteFinancialsTabContentProps } from "./QuoteFinancialsTabContent.type";
 
@@ -19,6 +20,12 @@ export function QuoteFinancialsTabContent(
     paymentDrawerTarget,
     handleReceivablePaymentClick,
     closePaymentDrawer,
+    cashflowDrawerOpen,
+    cashflowType,
+    remainingReceivable,
+    handleOpenReceiptCashflow,
+    handleOpenPaymentCashflow,
+    handleCloseCashflowDrawer,
   } = useQuoteFinancialsTabContent(props);
 
   return (
@@ -36,6 +43,17 @@ export function QuoteFinancialsTabContent(
               (2)
             </span>
           </span>
+        }
+        titleExtra={
+          <button
+            type="button"
+            onClick={handleOpenReceiptCashflow}
+            className="flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 transition-colors"
+            title="Ghi nhận thu tiền cấn trừ trực tiếp cho phiếu này"
+          >
+            <Plus className="w-3 h-3" />
+            <span>Thu tiền</span>
+          </button>
         }
         collapsible
         defaultCollapsed={false}
@@ -63,6 +81,17 @@ export function QuoteFinancialsTabContent(
               "2. Bảng Phải trả & Cấn trừ",
             )}
           </span>
+        }
+        titleExtra={
+          <button
+            type="button"
+            onClick={handleOpenPaymentCashflow}
+            className="flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded bg-amber-50 text-amber-700 hover:bg-amber-100 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-300 dark:border-amber-700 transition-colors"
+            title="Ghi nhận chi tiền liên quan phiếu này"
+          >
+            <Plus className="w-3 h-3" />
+            <span>Chi tiền</span>
+          </button>
         }
         collapsible
         defaultCollapsed={false}
@@ -109,6 +138,21 @@ export function QuoteFinancialsTabContent(
           onSuccess={closePaymentDrawer}
         />
       )}
+
+      {/* ─── DRAWER THU/CHI NHANH CẤN TRỪ SỔ BÁO GIÁ ─── */}
+      <GarageCashflowFormDrawer
+        open={cashflowDrawerOpen}
+        onClose={handleCloseCashflowDrawer}
+        mode="create"
+        defaultType={cashflowType}
+        fixedCaseId={props.caseId}
+        fixedCaseCode={props.caseCode}
+        suggestedAmount={cashflowType === "RECEIPT" ? remainingReceivable : 0}
+        onSuccess={() => {
+          handleCloseCashflowDrawer();
+          props.onPaymentSaved?.();
+        }}
+      />
     </div>
   );
 }

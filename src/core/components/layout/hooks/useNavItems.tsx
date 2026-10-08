@@ -26,6 +26,7 @@ import {
   Mail,
   Target,
   PackageCheck,
+  DollarSign,
 } from "lucide-react";
 
 export interface NavSearchItem {
@@ -355,6 +356,20 @@ export function useNavItems(): NavSearchItem[] {
           "chi phi",
         ],
         icon: <ReceiptText className="w-4 h-4" />,
+      });
+      items.push({
+        key: "garage-cashflow",
+        label: t("nav.items.garageCashflow", "Thu chi xưởng"),
+        section: garageSection,
+        keywords: [
+          "garage",
+          "thu chi",
+          "dong tien",
+          "cashflow",
+          "can tru",
+          "so quy",
+        ],
+        icon: <DollarSign className="w-4 h-4" />,
       });
     }
 

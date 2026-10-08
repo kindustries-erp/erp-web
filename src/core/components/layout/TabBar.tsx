@@ -26,6 +26,7 @@ import {
   Shield,
   Target,
   PackageCheck,
+  DollarSign,
 } from "lucide-react";
 
 const TAB_ICONS: Partial<Record<PageKey, React.ElementType>> = {
@@ -57,6 +58,7 @@ const TAB_ICONS: Partial<Record<PageKey, React.ElementType>> = {
   "garage-customers": Users,
   "garage-partners": Users,
   "garage-debts": Users,
+  "garage-cashflow": DollarSign,
   "invoice-debts": ReceiptText,
 };
 

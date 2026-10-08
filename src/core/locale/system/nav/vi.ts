@@ -126,6 +126,7 @@ export const navVi = {
     garageDebts: "Công nợ garage",
     garageCustomers: "Khách hàng",
     garageSuppliers: "Nhà cung cấp",
+    garageCashflow: "Thu chi xưởng",
   },
   bottom: {
     themeLight: "Giao diện sáng",
