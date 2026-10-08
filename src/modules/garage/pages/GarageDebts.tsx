@@ -5,6 +5,8 @@ import { GarageCustomerDetailDrawer } from "../components/organisms/garage-custo
 import { GarageDebtsDashboardTab } from "../components/GarageDebtsDashboardTab";
 import { GarageDebtsExportDrawer } from "../components/organisms/garage-debts-export-drawer";
 import { GarageDebtsTable } from "../components/organisms/garage-debts-table";
+import { GaragePayablesTable } from "../components/organisms/garage-payables-table";
+import { GarageSupplierDetailDrawer } from "../components/organisms/garage-supplier-detail-drawer";
 import type { TabItem } from "@/shared/components/PageLayout";
 
 export function GarageDebts() {
@@ -17,6 +19,11 @@ export function GarageDebts() {
     code: string;
     name: string;
   } | null>(null);
+  const [selectedSupplier, setSelectedSupplier] = useState<{
+    id: string;
+    code: string;
+    name: string;
+  } | null>(null);
 
   const pageTabs: TabItem[] = useMemo(
     () => [
@@ -25,8 +32,12 @@ export function GarageDebts() {
         label: t("debts:tabs.overview", "Tổng quan"),
       },
       {
-        value: "customers",
-        label: t("partners.tabCustomers", "Khách hàng"),
+        value: "receivables",
+        label: t("partners.tabReceivables", "Phải thu"),
+      },
+      {
+        value: "payables",
+        label: t("partners.tabPayables", "Phải trả"),
       },
     ],
     [t],
@@ -34,7 +45,7 @@ export function GarageDebts() {
 
   return (
     <>
-      {activeTab === "overview" ? (
+      {activeTab === "overview" && (
         <GarageDebtsDashboardTab
           tabs={pageTabs}
           activeTab={activeTab}
@@ -47,10 +58,23 @@ export function GarageDebts() {
             })
           }
         />
-      ) : (
-        <GarageDebtsTable
+      )}
+
+      {activeTab === "payables" && (
+        <GaragePayablesTable
           tabs={pageTabs}
           activeTab={activeTab}
+          onTabChange={setActiveTab}
+          onOpenCustomerDetail={(customer) => setSelectedCustomer(customer)}
+          onOpenSupplierDetail={(supplier) => setSelectedSupplier(supplier)}
+          onOpenExportDrawer={() => setExportDrawerOpen(true)}
+        />
+      )}
+
+      {(activeTab === "receivables" || activeTab === "customers") && (
+        <GarageDebtsTable
+          tabs={pageTabs}
+          activeTab={activeTab === "customers" ? "receivables" : activeTab}
           onTabChange={setActiveTab}
           onOpenCustomerDetail={(customer) => setSelectedCustomer(customer)}
           onOpenExportDrawer={() => setExportDrawerOpen(true)}
@@ -63,6 +87,16 @@ export function GarageDebts() {
         onClose={() => setSelectedCustomer(null)}
         customerCode={selectedCustomer?.code || null}
         customerName={selectedCustomer?.name}
+        branchId={selectedBranchId || undefined}
+      />
+
+      {/* Supplier Detail Drawer */}
+      <GarageSupplierDetailDrawer
+        open={Boolean(selectedSupplier)}
+        onClose={() => setSelectedSupplier(null)}
+        supplierId={selectedSupplier?.id || null}
+        supplierCode={selectedSupplier?.code}
+        supplierName={selectedSupplier?.name}
         branchId={selectedBranchId || undefined}
       />
 
