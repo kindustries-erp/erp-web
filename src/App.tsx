@@ -211,11 +211,7 @@ const GarageOpex = lazy(() =>
     default: m.GarageOpex,
   })),
 );
-const GarageCashflowPage = lazy(() =>
-  import("@/pages/GarageCashflowPage").then((m) => ({
-    default: m.GarageCashflowPage,
-  })),
-);
+
 const GaragePartners = lazy(() =>
   import("@/modules/garage/pages/GaragePartners").then((m) => ({
     default: m.GaragePartners,
@@ -290,7 +286,6 @@ const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   "garage-dashboard": () => <GarageCasesPage initialTab="dashboard" />,
   "garage-cases": GarageCasesPage,
   "garage-opex": GarageOpex,
-  "garage-cashflow": GarageCashflowPage,
   "garage-customers": GaragePartners,
   "garage-partners": GaragePartners,
   "garage-debts": GaragePartners,

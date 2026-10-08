@@ -103,35 +103,6 @@ export function useQuoteFinancialsTabContent(
     setPaymentDrawerTarget(null);
   }, []);
 
-  // ── Thao tác Thu/Chi nhanh liên kết Sổ Báo Giá ──
-  const [cashflowDrawerOpen, setCashflowDrawerOpen] = useState(false);
-  const [cashflowType, setCashflowType] = useState<"RECEIPT" | "PAYMENT">(
-    "RECEIPT",
-  );
-
-  const remainingReceivable = useMemo(() => {
-    const raw =
-      props.caseData?.conLai ??
-      props.caseData?.tienConPhaiThanhToan ??
-      props.caseData?.tien_con_phai_thanh_toan ??
-      0;
-    return Math.max(0, Number(raw) || 0);
-  }, [props.caseData]);
-
-  const handleOpenReceiptCashflow = useCallback(() => {
-    setCashflowType("RECEIPT");
-    setCashflowDrawerOpen(true);
-  }, []);
-
-  const handleOpenPaymentCashflow = useCallback(() => {
-    setCashflowType("PAYMENT");
-    setCashflowDrawerOpen(true);
-  }, []);
-
-  const handleCloseCashflowDrawer = useCallback(() => {
-    setCashflowDrawerOpen(false);
-  }, []);
-
   return {
     t,
     totalCostAmount,
@@ -142,11 +113,5 @@ export function useQuoteFinancialsTabContent(
     paymentDrawerTarget,
     handleReceivablePaymentClick,
     closePaymentDrawer,
-    cashflowDrawerOpen,
-    cashflowType,
-    remainingReceivable,
-    handleOpenReceiptCashflow,
-    handleOpenPaymentCashflow,
-    handleCloseCashflowDrawer,
   };
 }
