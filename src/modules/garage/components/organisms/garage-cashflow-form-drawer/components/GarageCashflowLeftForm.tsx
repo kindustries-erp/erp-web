@@ -4,7 +4,7 @@ import {
   DrawerField,
   inputCls,
 } from "@/shared/components/DrawerModal";
-import { Landmark, Wallet, CreditCard, Banknote, FileText } from "lucide-react";
+import { Landmark, Wallet, FileText } from "lucide-react";
 import { formatNumber } from "@/modules/garage/components/organisms/garage-case-preview/GarageCasePreview.helper";
 import type {
   GarageCashflowFormData,
