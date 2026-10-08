@@ -6,3 +6,6 @@ export * from "./sheet";
 export * from "./popover";
 export * from "./tooltip";
 export * from "./dropdown-menu";
+export * from "./table";
+export * from "./checkbox";
+export * from "./input";

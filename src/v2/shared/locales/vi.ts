@@ -1,3 +1,5 @@
+import { v2ViTable } from "./vi.table";
+
 export const v2Vi = {
   v2: {
     common: {
@@ -97,6 +99,7 @@ export const v2Vi = {
     dropdown: {
       optionsTitle: "Tùy chọn thao tác",
     },
+    table: v2ViTable,
   },
 };
 

@@ -5,3 +5,5 @@ export * from "./v2-sidebar-icon";
 export * from "./v2-sidebar-logo";
 export * from "./v2-sidebar-toggle-btn";
 export * from "./v2-tooltip";
+export * from "./v2-page-button";
+export * from "./v2-table-date-cell";

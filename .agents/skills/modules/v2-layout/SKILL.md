@@ -278,7 +278,9 @@ Storybook được cấu hình hoàn toàn độc lập và **chỉ kết nối 
 1. **Primitives UI (`src/v2/shared/ui/`)**: `Button`, `Text`, `Badge`.
 2. **Atoms (`src/v2/shared/components/atoms/`)**: `V2Button`, `V2Text`, `V2NavIcon`, `V2SidebarIcon`, `V2SidebarLogo`, `V2SidebarToggleBtn`.
 3. **Molecules (`src/v2/shared/components/molecules/`)**: `V2BranchBadge`, `V2UserBadge`, `V2LanguageSwitcher`, `V2QuickSearch`, `V2Breadcrumb`, `V2TabItem`, `V2Topbar`, `V2NavItem`, `V2SidebarHeader`, `V2SidebarNavItem`, `V2SidebarSection`, `V2SidebarBottom`.
-4. **Organisms (`src/v2/shared/components/organisms/`)**: `V2Sidebar`, `V2TabBar`, `V2Header`, `V2RightPanel`, `V2BottomNav`.
+4. **Organisms (`src/v2/shared/components/organisms/`)**: `V2Sidebar`, `V2TabBar`, `V2Header`, `V2RightPanel`, `V2BottomNav`, `V2StandardDrawer` (xem `v2-drawer`), `V2StandardTable` (xem `v2-table`).
+5. **Atoms bảng**: `V2PageButton`, `V2TableDateCell`. **Molecules bảng**: `V2TablePagination`, `V2ColumnToggle`, `V2ColumnHeaderFilter`, `V2TableRowHoverActions`, `V2TableContextMenu`, `V2TableText` (chi tiết ở skill `v2-table`).
+6. **Templates (`src/v2/shared/components/templates/`)**: `V2SpreadsheetPageTemplate` (header + vùng nội dung full-height cho bảng).
 
 ### 7.3. Các Lệnh Thực Thi Storybook
 ```bash
