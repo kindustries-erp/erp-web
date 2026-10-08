@@ -21,6 +21,8 @@ import {
   fetchMockOrders,
 } from "@/v2/shared/components/organisms/v2-standard-table/V2StandardTable.mock-server";
 import type { MockOrder } from "@/v2/shared/components/organisms/v2-standard-table/V2StandardTable.mock-server";
+import { V2TabPanel } from "@/v2/shared/components/molecules/v2-tab-panel";
+import { MOCK_ORDERS } from "@/v2/shared/components/organisms/v2-standard-table/V2StandardTable.mock-server";
 import { V2SpreadsheetPageTemplate } from "./V2SpreadsheetPageTemplate";
 
 const queryClient = new QueryClient();
@@ -113,6 +115,52 @@ export const WithoutHeader = () => {
         getRowKey={(row) => row.id}
         fetchOptions={fetchMockOptions}
       />
+    </V2SpreadsheetPageTemplate>
+  );
+};
+
+const INVOICE_TABS = [
+  { key: "overview", label: "Tổng quan" },
+  { key: "in", label: "Hóa đơn mua vào" },
+  { key: "out", label: "Hóa đơn bán ra" },
+];
+
+export const MultiTabInvoices = () => {
+  const { columns, rowActions } = useDemoActions();
+  const [tab, setTab] = useState("in");
+  const toolbar = (label: string) => ({
+    onRefresh: () => {},
+    onFilterToggle: () => {},
+    create: { label, onClick: () => {} },
+  });
+  return (
+    <V2SpreadsheetPageTemplate
+      title="Hóa đơn"
+      description="Mỗi tab một bảng, toolbar hiện ở header"
+      icon={<ClipboardList className="h-5 w-5" />}
+      tabs={INVOICE_TABS}
+      activeTab={tab}
+      onTabChange={setTab}
+      tabVariant="page"
+    >
+      <V2TabPanel tabKey="overview">
+        <p className="p-4 text-sm text-muted-fg">Dashboard (không có bảng)</p>
+      </V2TabPanel>
+      {(["in", "out"] as const).map((key) => (
+        <V2TabPanel key={key} tabKey={key}>
+          <V2StandardTable<MockOrder>
+            tableId={`story-invoices-${key}`}
+            className="min-h-0 flex-1"
+            mode="client"
+            columns={columns}
+            items={MOCK_ORDERS}
+            getRowKey={(row) => row.id}
+            rowActions={rowActions}
+            enableRowSelection
+            toolbar={toolbar(key === "in" ? "Đồng bộ" : "Phát hành")}
+          />
+        </V2TabPanel>
+      ))}
     </V2SpreadsheetPageTemplate>
   );
 };

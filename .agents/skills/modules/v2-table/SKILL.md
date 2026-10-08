@@ -18,24 +18,37 @@ src/v2/shared/
 └── components/
     ├── atoms/
     │   ├── v2-page-button/               Nút số trang 28px, active = primary, aria-current
-    │   └── v2-table-date-cell/           Ngày + giờ 2 dòng (thuần hiển thị)
+    │   ├── v2-table-date-cell/           Ngày + giờ 2 dòng (thuần hiển thị)
+    │   ├── v2-table-filter-button/       Nút Lọc + badge số cột đang lọc (dùng V2ToolbarIconButton)
+    │   ├── v2-toolbar-icon-button/       NGUỒN DUY NHẤT cho nút icon toolbar: outline h-8 w-8, label = aria-label + title, active, badge
+    │   └── v2-filter-chip/               Chip "Cột: tóm tắt" + ✕
     ├── molecules/
     │   ├── v2-table-pagination/          Kiểu V1: "Hiển thị [n▾] hàng/trang", a–b / total, ‹ 1 … 5 … N ›
     │   ├── v2-column-toggle/             Ẩn/hiện, kéo thả (@dnd-kit, có bàn phím), Khôi phục
     │   ├── v2-column-header-filter/      Trigger + popup kiểu V1; .options (thuần), .operator, .date-slot, .panel, .hook
     │   ├── v2-table-row-actions/         Hover pill + menu chuột phải + V2RowActionList dùng chung
-    │   └── v2-table-text/                V2TableText (copy, tooltip, detail/drawer)
+    │   ├── v2-table-text/                V2TableText (copy, tooltip, detail/drawer)
+    │   ├── v2-tab-panel/                 V2TabPanel (lazy + keepAlive), V2PageTabs.context, useV2ToolbarPortal (slot header)
+    │   ├── v2-split-button/              Nút chính + chevron; menu bơm qua renderMenu (molecule không import molecule)
+    │   ├── v2-table-selection-chip/      ☑ (N) ▾ ✕; menu bơm qua renderMenu
+    │   ├── v2-view-mode-combobox/        Chọn/tạo/sửa/xóa chế độ xem qua callback (không tự lưu)
+    │   ├── v2-filter-card/               Card thu gọn/mở cho một cột (icon theo kiểu dữ liệu, chấm active); children chỉ render khi mở
+    │   └── v2-filter-panel/              Shell panel lọc: header, reset, đóng, ô tìm cột, chips, extraContent, empty state
     ├── organisms/v2-standard-table/
     │   V2StandardTable.tsx               Switcher theo useViewport
     │   .desktop.tsx / .mobile.tsx        Bảng spreadsheet / danh sách card
     │   .controller.hook.ts               State + view + selection dùng chung hai bản
     │   .state.hook.ts / .preferences.hook.ts / .view.hook.ts / .scroll.hook.ts / .menu.hook.ts
     │   .options.hook.ts + .filter.hook.ts  Truy vấn options (React Query) cho cột đang mở popup
+    │   .toolbar.tsx / .toolbar.cluster.tsx / .toolbar.hook.ts   Cụm nút (portal lên slot header hoặc inline), cột + fullscreen + slot
+    │   .fullscreen.hook.ts               Bật/tắt fullscreen (ESC thoát)
+    │   .grid.tsx                         Phần <table> (colgroup + header + body)
+    │   .filterpanel.tsx / .filterpanel.hook.ts / v2ActiveFilterChips.ts   Panel lọc theo cột: card = V2ColumnHeaderFilterPanel, chips, mở card nào truy vấn options card đó
     │   .hook.tsx                         useV2TableColumns (STT, cột chọn, cột dữ liệu TanStack)
     │   v2TableFilter / v2TableEvaluate / v2TableClient / v2TableData / v2TableQuery / v2ColumnPreferences
     │   v2HeaderFilterBuilder.ts          headerFilter(label), .date, .amount, .qty, .select
-    │   .mock.tsx / .mock-server.ts / .stories.tsx / .variants.stories.tsx
-    └── templates/v2-spreadsheet-page-template/   Header (icon, tiêu đề, mô tả, tab, actions) + vùng bảng full-height
+    │   .mock.tsx / .mock-server.ts / .stories.tsx / .variants.stories.tsx / .toolbar.stories.tsx
+    └── templates/v2-spreadsheet-page-template/   Header (icon, tiêu đề, mô tả, slot toolbar theo tab, actions) + tab (`tabVariant`) + vùng bảng full-height
 ```
 
 Quy tắc tầng đã áp dụng (theo `ui-atomic-refactor`):
@@ -74,6 +87,32 @@ const columns = useMemo<V2Column<Order>[]>(() => [
 - Cột không có `filter` thì không có popover lọc/sắp xếp và không tham gia lọc client.
 - Đặt bảng trong `V2SpreadsheetPageTemplate` (title, tabs, actions) để trang có khung full-height và sticky header hoạt động.
 
+### Cụm nút toolbar (`toolbar`) và slot theo tab
+
+```tsx
+<V2SpreadsheetPageTemplate title="Hóa đơn" tabs={tabs} activeTab={tab} onTabChange={setTab} tabVariant="page">
+  <V2TabPanel tabKey="overview"><Dashboard /></V2TabPanel>
+  <V2TabPanel tabKey="in">
+    <V2StandardTable toolbar={{
+      pillTabs: { items, activeKey, onChange },                 // Tất cả / Mới / ...
+      viewModes: { items, activeKey, onSelect, onCreate },      // Tổng quan ▾
+      bulkActions: [/* V2DropdownGroup[] cho chip (N) */],
+      filterPanel: { defaultOpen: false, extraContent: <PageFilters /> },   // panel lọc bên phải, nút Lọc tự mở/đóng
+      onFilterToggle, onRefresh, enableFullscreen: true,
+      create: { label: "Đồng bộ", icon, onClick, actions },     // split button
+    }} … />
+  </V2TabPanel>
+</V2SpreadsheetPageTemplate>
+```
+
+- Template tạo **một slot ở header cho mỗi tab**; chỉ slot của tab đang active hiển thị. Bảng trong `V2TabPanel` portal toolbar vào slot của tab mình, nên bảng giữ toàn bộ chiều cao.
+- Toolbar rơi về **inline** khi: bảng ngoài template/`V2TabPanel`, template `hideHeader`, đang fullscreen, hoặc mobile. Không truyền `toolbar` thì giao diện cũ (cột + "Xóa lọc").
+- `V2TabPanel`: `lazy` (mount khi mở lần đầu) + `keepAlive` (giữ mounted, ẩn bằng CSS), mặc định cả hai. Thay `mountedViewsRef` thủ công.
+- Layering: context + hook portal ở L2 (`v2-tab-panel`); template (L4) cung cấp, bảng (L3) tiêu thụ. **Không import template từ organism.**
+- Mobile bỏ `viewModes`, fullscreen, cấu hình cột, panel lọc.
+- **Nút icon toolbar luôn dùng `V2ToolbarIconButton`** (Lọc, Cột, Toàn màn hình, Làm mới); không tự viết `V2Button` icon mới cho cụm này.
+- **Panel lọc** (`toolbar.filterPanel`): cột bên phải `w-80`, co bảng lại, nằm trong vùng fullscreen. Mỗi cột có `filter` spec + nguồn options là một `V2FilterCard`, thân là `V2ColumnHeaderFilterPanel` (cùng mô hình chờ "Áp dụng" như popup header, một nguồn logic). Chip "Đang lọc" dựng bởi `v2ActiveFilterChips` (một chip/cột, gỡ = `clearColumn`). `extraContent` cho bộ lọc theo trang.
+
 ## 3. Quy tắc cố định (giữ khi sửa)
 
 **Giao diện spreadsheet (đã đo trên Storybook, khớp V1):**
@@ -111,11 +150,11 @@ const columns = useMemo<V2Column<Order>[]>(() => [
 
 ## 4. Chưa làm (đợt sau)
 
-`SubtotalSummaryCell`, fullscreen, view-mode presets, filter panel bên phải, header filter trên mobile, đồng bộ cấu hình cột lên backend (`core_user_preferences`), bảng nhúng trong `V2StandardDrawer`. Chưa migrate trang V1 nào.
+`SubtotalSummaryCell`, lưu/áp preset chế độ xem (UI đã có, chưa persist), filter panel dạng popover cho mobile, header filter trên mobile, đồng bộ cấu hình cột lên backend (`core_user_preferences`), bảng nhúng trong `V2StandardDrawer`. Chưa migrate trang V1 nào.
 
 ## 5. Kiểm thử
 
 - Unit/integration co-located bằng vitest + testing-library (`bunx vitest run src/v2/shared/components/organisms/v2-standard-table`).
 - Test component dùng `.fixture.tsx` (có ở organism và `v2-column-header-filter`) (dữ liệu, `renderTable`, mock viewport) và bọc `QueryClientProvider`.
-- Stories: `V2/Organisms/V2StandardTable` (ServerSide, ClientSide, WithSelection, Empty, Loading), `.../Variants` (MobileCards, CustomColumnStorage) và `V2/Templates/V2SpreadsheetPageTemplate` (FullPage, WithoutHeader). Story phải có decorator `QueryClientProvider` vì preview chung không có.
+- Stories: `V2/Organisms/V2StandardTable` (ServerSide, ClientSide, WithSelection, Empty, Loading), `.../Variants` (MobileCards, CustomColumnStorage), `.../Toolbar` (WithFullToolbar, WithFilterPanel, FilterPanelWithExtraContent). Mọi thành phần con đều có story riêng (V2ColumnToggle, V2ColumnHeaderFilter, V2TablePagination, V2TableRowActions, V2TableText, V2PageButton, V2TableDateCell, V2TabBar, V2ToolbarIconButton, V2FilterChip/Card/Panel...). `storyCoverage.test.ts` chặn thành phần V2 mới thiếu story (allowlist chỉ còn 6 molecule drawer) và `V2/Templates/V2SpreadsheetPageTemplate` (FullPage, WithoutHeader). Story phải có decorator `QueryClientProvider` vì preview chung không có.
 - Gate: `grep -rn "blue-" src/v2/`, không file > 180 LoC (trừ 3 file có sẵn của `v2-standard-drawer`), `grep -rn 'from "@/shared' src/v2/` rỗng, không molecule import molecule, không `<button` thuần trong code bảng.

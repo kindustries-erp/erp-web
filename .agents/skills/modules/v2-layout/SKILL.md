@@ -298,6 +298,12 @@ cd /home/dev/repos-dev/erp/erp-web && bun run storybook
 - **Neo Context Menu Thanh Tab (`AppContextMenu`)**:
   - Khi mở context menu từ `tabbar` (`source === "tabbar"`), context menu được neo bằng `bottom: Math.max(40, window.innerHeight - menu.y + 4)` thay vì `top`. Menu tự động nở ngược lên trên (UPWARDS) từ vị trí đáy màn hình (cách thanh TabBar 4px), triệt tiêu lỗi menu bị trôi nổi lên giữa màn hình.
 
+### 4.5. Tab trang nhiều bảng: `V2TabBar variant="page"`, `V2TabPanel`, slot toolbar
+- `V2TabBar` có thêm `variant="page"`: tab gạch chân (`border-b-2 border-primary` khi active), dùng cho tab cấp trang.
+- `V2SpreadsheetPageTemplate` nhận `tabVariant: "header" | "page"` (mặc định `header`), render một slot toolbar ở header cho mỗi `tabs[].key` và cung cấp `V2PageTabsContext`.
+- `V2TabPanel` (`molecules/v2-tab-panel`) bọc nội dung từng tab: lazy + keepAlive, `role="tabpanel"`. Context và `useV2ToolbarPortal` nằm ở L2 để organism (L3) tiêu thụ mà không import ngược lên template (L4). Chi tiết dùng cho bảng: xem `v2-table`.
+- Chốt chặn Storybook: `src/v2/shared/components/storyCoverage.test.ts` quét `atoms|molecules|organisms|templates`, thành phần mới phải có `*.stories.tsx` (ngoại lệ phải thêm vào allowlist kèm lý do).
+
 ---
 
 ## 8. Quy Chuẩn Kiểm Thử & Quality Gate

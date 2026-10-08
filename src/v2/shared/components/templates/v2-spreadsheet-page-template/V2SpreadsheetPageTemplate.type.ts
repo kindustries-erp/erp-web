@@ -1,5 +1,8 @@
 import type * as React from "react";
-import type { V2TabItemData } from "@/v2/shared/components/molecules/v2-tab-bar";
+import type {
+  V2TabBarVariant,
+  V2TabItemData,
+} from "@/v2/shared/components/molecules/v2-tab-bar";
 
 export interface V2SpreadsheetPageTemplateProps {
   title: string;
@@ -10,6 +13,8 @@ export interface V2SpreadsheetPageTemplateProps {
   tabs?: V2TabItemData[];
   activeTab?: string;
   onTabChange?: (key: string) => void;
+  /** Giao diện tab trang: pill tối (`header`, mặc định) hoặc gạch chân (`page`) */
+  tabVariant?: Extract<V2TabBarVariant, "header" | "page">;
   hideHeader?: boolean;
   /** Vùng nội dung chiếm hết chiều cao còn lại, thường là `V2StandardTable` */
   children: React.ReactNode;

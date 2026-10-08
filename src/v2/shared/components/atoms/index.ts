@@ -7,3 +7,6 @@ export * from "./v2-sidebar-toggle-btn";
 export * from "./v2-tooltip";
 export * from "./v2-page-button";
 export * from "./v2-table-date-cell";
+export * from "./v2-table-filter-button";
+export * from "./v2-toolbar-icon-button";
+export * from "./v2-filter-chip";

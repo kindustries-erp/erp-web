@@ -1,4 +1,10 @@
 import type { ReactNode } from "react";
+import type { V2DropdownGroup } from "@/v2/shared/components/molecules/v2-dropdown";
+import type { V2TabItemData } from "@/v2/shared/components/molecules/v2-tab-bar";
+import type {
+  V2ViewModeComboboxProps,
+  V2ViewModeItem,
+} from "@/v2/shared/components/molecules/v2-view-mode-combobox";
 import type {
   ColumnValueType,
   TableColumnAlign,
@@ -46,6 +52,47 @@ export interface V2ColumnPreferencesStorage {
   clear: (tableId: string) => void;
 }
 
+export interface V2TableFilterPanelConfig {
+  /** Controlled; bỏ trống thì bảng tự giữ trạng thái mở/đóng */
+  open?: boolean;
+  defaultOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  /** Bộ lọc tùy biến theo trang (kỳ, tag...) đặt trên danh sách cột */
+  extraContent?: ReactNode;
+}
+
+export interface V2TableToolbarConfig {
+  /** Pill tabs lọc nhanh (Tất cả / Mới / ...) */
+  pillTabs?: {
+    items: V2TabItemData[];
+    activeKey: string;
+    onChange: (key: string) => void;
+  };
+  viewModes?: {
+    items: V2ViewModeItem[];
+    activeKey: string;
+    onSelect: (key: string) => void;
+    onCreate?: V2ViewModeComboboxProps["onCreate"];
+    onEdit?: V2ViewModeComboboxProps["onEdit"];
+    onDelete?: V2ViewModeComboboxProps["onDelete"];
+  };
+  /** Menu của chip `(N)` khi có dòng được chọn */
+  bulkActions?: V2DropdownGroup[];
+  /** Có handler thì hiện nút Lọc (badge = số cột đang lọc) */
+  /** Bật panel lọc theo cột bên phải; nút Lọc tự mở/đóng panel */
+  filterPanel?: V2TableFilterPanelConfig;
+  onFilterToggle?: () => void;
+  onRefresh?: () => void;
+  /** Mặc định true; bỏ qua trên mobile */
+  enableFullscreen?: boolean;
+  create?: {
+    label: string;
+    icon?: ReactNode;
+    onClick?: () => void;
+    actions?: V2DropdownGroup[];
+  };
+}
+
 export interface V2StandardTableProps<T> {
   tableId: string;
   columns: V2Column<T>[];
@@ -65,6 +112,8 @@ export interface V2StandardTableProps<T> {
   getRowClassName?: (row: T, index: number) => string | undefined;
   preferencesStorage?: V2ColumnPreferencesStorage;
   toolbarExtra?: ReactNode;
+  /** Cụm nút toolbar; có slot header của template thì tự hiển thị ở đó */
+  toolbar?: V2TableToolbarConfig;
   className?: string;
   containerClassName?: string;
 }

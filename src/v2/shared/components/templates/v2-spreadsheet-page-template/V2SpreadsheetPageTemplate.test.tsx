@@ -1,6 +1,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import * as viewportHook from "@/v2/shared/hooks/useViewport";
+import { createPortal } from "react-dom";
+import {
+  V2TabPanel,
+  useV2ToolbarPortal,
+} from "@/v2/shared/components/molecules/v2-tab-panel";
 import { V2SpreadsheetPageTemplate } from "./V2SpreadsheetPageTemplate";
 
 const mockViewport = () =>
@@ -79,5 +84,78 @@ describe("V2SpreadsheetPageTemplate", () => {
     );
     fireEvent.click(screen.getByText("Nháp"));
     expect(onTabChange).toHaveBeenCalledWith("draft");
+  });
+
+  const tabs = [
+    { key: "in", label: "Mua vào" },
+    { key: "out", label: "Bán ra" },
+  ];
+  const Probe = ({ name }: { name: string }) => {
+    const slot = useV2ToolbarPortal();
+    const bar = <span>{`toolbar-${name}`}</span>;
+    return slot ? createPortal(bar, slot) : <i>{`inline-${name}`}</i>;
+  };
+  const page = (activeTab: string) => (
+    <V2SpreadsheetPageTemplate
+      title="Hóa đơn"
+      tabs={tabs}
+      activeTab={activeTab}
+    >
+      <V2TabPanel tabKey="in">
+        <Probe name="in" />
+      </V2TabPanel>
+      <V2TabPanel tabKey="out">
+        <Probe name="out" />
+      </V2TabPanel>
+    </V2SpreadsheetPageTemplate>
+  );
+
+  it("mỗi tab có slot riêng; chỉ slot tab active hiển thị, state tab ẩn được giữ", () => {
+    mockViewport();
+    const { container, rerender } = render(page("in"));
+    const slotIn = container.querySelector('[data-toolbar-slot="in"]');
+    const slotOut = container.querySelector('[data-toolbar-slot="out"]');
+    expect(slotIn).toHaveTextContent("toolbar-in");
+    expect(slotIn).toHaveClass("flex");
+    expect(slotOut).toHaveClass("hidden");
+    rerender(page("out"));
+    expect(slotOut).toHaveTextContent("toolbar-out");
+    expect(slotOut).toHaveClass("flex");
+    expect(slotIn).toHaveClass("hidden");
+    expect(slotIn).toHaveTextContent("toolbar-in");
+  });
+
+  it("hideHeader: không có slot nên bảng rơi về inline", () => {
+    mockViewport();
+    render(
+      <V2SpreadsheetPageTemplate
+        title="T"
+        tabs={tabs}
+        activeTab="in"
+        hideHeader
+      >
+        <V2TabPanel tabKey="in">
+          <Probe name="in" />
+        </V2TabPanel>
+      </V2SpreadsheetPageTemplate>,
+    );
+    expect(screen.getByText("inline-in")).toBeInTheDocument();
+  });
+
+  it("tabVariant='page' dùng tab gạch chân", () => {
+    mockViewport();
+    render(
+      <V2SpreadsheetPageTemplate
+        title="T"
+        tabs={tabs}
+        activeTab="in"
+        tabVariant="page"
+      >
+        <div />
+      </V2SpreadsheetPageTemplate>,
+    );
+    expect(screen.getByRole("tab", { name: "Mua vào" }).className).toContain(
+      "border-primary",
+    );
   });
 });

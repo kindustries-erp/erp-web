@@ -2,7 +2,12 @@ import type * as React from "react";
 import type { LucideIcon } from "lucide-react";
 import type { V2BaseProps } from "@/v2/shared/types";
 
-export type V2TabBarVariant = "app" | "header" | "sub" | "button-group";
+export type V2TabBarVariant =
+  | "app"
+  | "header"
+  | "sub"
+  | "button-group"
+  | "page";
 
 export interface V2TabItemData {
   /** Định danh của tab (hỗ trợ cả id và key) */
@@ -45,7 +50,7 @@ export interface V2TabBarProps extends V2BaseProps<HTMLElement> {
   onTabChange?: (key: string) => void;
   /** Callback khi đóng tab (variant="app") */
   onTabClose?: (id: string) => void;
-  /** Biến thể giao diện của tab bar: "app" | "header" | "sub" | "button-group" */
+  /** Biến thể giao diện của tab bar: "app" | "header" | "sub" | "button-group" | "page" */
   variant?: V2TabBarVariant;
   /** Cụm nút tiện ích hoặc actions hiển thị bên phải thanh tab */
   extra?: React.ReactNode;

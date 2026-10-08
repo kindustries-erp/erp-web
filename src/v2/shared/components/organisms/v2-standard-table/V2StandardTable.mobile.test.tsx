@@ -86,4 +86,30 @@ describe("V2StandardTableMobile", () => {
     fireEvent.click(screen.getByRole("button", { name: "Xóa bộ lọc (1)" }));
     expect(screen.getByText("1–20 / 45")).toBeInTheDocument();
   });
+
+  it("toolbar rút gọn: có pill tabs, làm mới, tạo mới; không có chế độ xem và toàn màn hình", () => {
+    const onRefresh = vi.fn();
+    render({
+      toolbar: {
+        pillTabs: {
+          items: [{ key: "all", label: "Tất cả" }],
+          activeKey: "all",
+          onChange: vi.fn(),
+        },
+        viewModes: {
+          items: [{ key: "overview", label: "Tổng quan" }],
+          activeKey: "overview",
+          onSelect: vi.fn(),
+        },
+        onRefresh,
+        create: { label: "Đồng bộ", onClick: vi.fn() },
+      },
+    });
+    expect(screen.getByRole("tab", { name: "Tất cả" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Đồng bộ" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Làm mới" }));
+    expect(onRefresh).toHaveBeenCalled();
+    expect(screen.queryByRole("button", { name: "Chế độ xem" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Toàn màn hình" })).toBeNull();
+  });
 });

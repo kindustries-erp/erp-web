@@ -30,6 +30,9 @@ export function V2StandardTableMobile<T>(props: V2StandardTableProps<T>) {
         onClearAllFilters={state.resetAll}
         selectedCount={selection.selectedCount}
         toolbarExtra={props.toolbarExtra}
+        config={props.toolbar && { ...props.toolbar, viewModes: undefined }}
+        onClearSelection={() => selection.onRowSelectionChange({})}
+        loading={loading}
       />
       {view.rows.length === 0 ? (
         <p className="py-10 text-center text-xs text-muted-fg">
