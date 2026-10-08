@@ -60,6 +60,7 @@ describe("GarageDebts Page", () => {
 
     expect(screen.getByText("Công nợ Garage")).toBeInTheDocument();
     expect(screen.getByText("Tổng quan")).toBeInTheDocument();
-    expect(screen.getByText("Khách hàng")).toBeInTheDocument();
+    expect(screen.getByText("Phải thu")).toBeInTheDocument();
+    expect(screen.getByText("Phải trả")).toBeInTheDocument();
   });
 });

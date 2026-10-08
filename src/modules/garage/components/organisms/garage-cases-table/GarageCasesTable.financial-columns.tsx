@@ -3,6 +3,7 @@ import { Link2 } from "lucide-react";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import { money } from "@/shared/utils/format";
 import { extractVatAmount } from "../../../utils/garageCasesTable";
+import { GarageMarginBadge } from "../../atoms/garage-margin-badge";
 import { buildProgressColumns } from "./GarageCasesTable.progress-columns";
 import type { ColumnContext } from "./GarageCasesTable.type";
 
@@ -29,8 +30,8 @@ export function buildFinancialColumns(
 
   const vatInvoiceCol = {
     key: "hasInvoice",
-    label: t("cases.columns.vatInvoice", "HĐ VAT"),
-    header: makeHdr("hasInvoice", t("cases.columns.vatInvoice", "HĐ VAT"), {
+    label: t("cases.columns.vatInvoice", "Thuế GTGT"),
+    header: makeHdr("hasInvoice", t("cases.columns.vatInvoice", "Thuế GTGT"), {
       align: "right",
     }),
     size: 130,
@@ -122,10 +123,9 @@ export function buildFinancialColumns(
       }),
       size: 110,
       className: "text-right tabular-nums",
-      cell: (item: any) => {
-        const m = Number(item.margin) || 0;
-        return <span>{m > 0 ? `+${m.toFixed(1)}%` : `${m.toFixed(1)}%`}</span>;
-      },
+      cell: (item: any) => (
+        <GarageMarginBadge margin={item.margin} revenue={item.doanhThu} />
+      ),
     },
   ];
 

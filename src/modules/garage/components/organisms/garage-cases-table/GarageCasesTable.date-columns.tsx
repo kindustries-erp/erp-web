@@ -29,12 +29,20 @@ export function buildDateColumns(
     }),
     size,
     className: "text-right",
-    cell: (item: any) => (
-      <TableDateCell
-        date={item[key] || item.ngayTiepNhan || item.ngayPhatSinh}
-        className="justify-end w-full"
-      />
-    ),
+    cell: (item: any) => {
+      // Ngày tiếp nhận: ưu tiên caseDate, fallback ngayTiepNhan || ngayPhatSinh
+      // Ngày kết thúc: lấy 100% từ KGara (ngayHoanThanhCongViec), tuyệt đối không fallback sang ngày tiếp nhận
+      const rawDate =
+        key === "caseDate"
+          ? item.caseDate || item.ngayTiepNhan || item.ngayPhatSinh
+          : key === "ngayHoanThanhCongViec" || key === "completionDate"
+            ? item.ngayHoanThanhCongViec ||
+              item.rawData?.NgayHoanThanhCongViec ||
+              null
+            : item[key];
+
+      return <TableDateCell date={rawDate} className="justify-end w-full" />;
+    },
   });
 
   return {

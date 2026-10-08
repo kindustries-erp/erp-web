@@ -63,6 +63,23 @@ export function buildGeneralColumns(
       cell: (item: any) => <GarageCaseCustomerCell item={item} />,
     },
     {
+      key: "statusName",
+      label: t("cases.columns.status", "Trạng thái"),
+      header: makeHdr("statusName", t("cases.columns.status", "Trạng thái")),
+      size: 130,
+      className: "text-center",
+      cell: (item: any) => (
+        <div className="w-full flex justify-center">
+          <KgaraCaseStatusBadge
+            status={
+              item.tenTinhTrangDichVu ||
+              t("cases.common.unknown", "Chưa xác định")
+            }
+          />
+        </div>
+      ),
+    },
+    {
       key: "kgaraClassification",
       label: t("cases.columns.kgaraClassification", "Phân loại KGara"),
       header: makeHdr(
@@ -130,23 +147,6 @@ export function buildGeneralColumns(
             caseItem={item}
             canUpdate={canUpdateGarage}
             onOpenDrawer={() => onOpenConfig?.(item)}
-          />
-        </div>
-      ),
-    },
-    {
-      key: "statusName",
-      label: t("cases.columns.status", "Trạng thái"),
-      header: makeHdr("statusName", t("cases.columns.status", "Trạng thái")),
-      size: 130,
-      className: "text-center",
-      cell: (item: any) => (
-        <div className="w-full flex justify-center">
-          <KgaraCaseStatusBadge
-            status={
-              item.tenTinhTrangDichVu ||
-              t("cases.common.unknown", "Chưa xác định")
-            }
           />
         </div>
       ),
