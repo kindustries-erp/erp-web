@@ -7,7 +7,6 @@ const ALLOWLIST = new Set([
   "molecules/v2-drawer-footer",
   "molecules/v2-drawer-header",
   "molecules/v2-drawer-related-deck",
-  "molecules/v2-drawer-section",
 ]);
 
 const files = Object.keys(
