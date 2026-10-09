@@ -34,3 +34,4 @@ export * from "./v2-filter-card";
 export * from "./v2-filter-panel";
 export * from "./v2-page-toolbar-slot";
 export * from "./v2-page-header";
+export * from "./v2-table-select-checkbox";

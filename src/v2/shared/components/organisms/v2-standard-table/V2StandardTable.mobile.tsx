@@ -5,7 +5,8 @@ import { V2Dropdown } from "@/v2/shared/components/molecules/v2-dropdown";
 import { V2TablePagination } from "@/v2/shared/components/molecules/v2-table-pagination";
 import { hasRowActions } from "@/v2/shared/components/molecules/v2-table-row-actions";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
-import { Checkbox } from "@/v2/shared/ui";
+import { V2Text } from "@/v2/shared/components/atoms/v2-text";
+import { V2TableSelectCheckbox } from "@/v2/shared/components/molecules/v2-table-select-checkbox";
 import { cn } from "@/v2/shared/utils/cn";
 import { useV2TableController } from "./V2StandardTable.controller.hook";
 import { resolveMobileSlots } from "./V2StandardTable.mobile-slots";
@@ -35,11 +36,16 @@ export function V2StandardTableMobile<T>(props: V2StandardTableProps<T>) {
         loading={loading}
       />
       {view.rows.length === 0 ? (
-        <p className="py-10 text-center text-xs text-muted-fg">
+        <V2Text
+          as="p"
+          variant="body-sm"
+          color="muted"
+          className="py-10 text-center"
+        >
           {loading
             ? t("v2.table.loading", "Đang tải dữ liệu...")
             : (props.emptyLabel ?? t("v2.table.empty", "Không có dữ liệu"))}
-        </p>
+        </V2Text>
       ) : (
         <ul className={cn("flex flex-col gap-2", loading && "opacity-60")}>
           {view.rows.map((row, rowIndex) => {
@@ -57,7 +63,7 @@ export function V2StandardTableMobile<T>(props: V2StandardTableProps<T>) {
               >
                 <div className="flex items-start gap-2">
                   {props.enableRowSelection && (
-                    <Checkbox
+                    <V2TableSelectCheckbox
                       aria-label={t("v2.table.selectRow", "Chọn dòng")}
                       checked={selected.has(key)}
                       onCheckedChange={(value) =>

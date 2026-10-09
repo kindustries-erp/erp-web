@@ -1,6 +1,7 @@
 import * as React from "react";
 import { createPortal } from "react-dom";
 import { V2Button } from "@/v2/shared/components/atoms/v2-button";
+import { V2Text } from "@/v2/shared/components/atoms/v2-text";
 import { V2ColumnToggle } from "@/v2/shared/components/molecules/v2-column-toggle";
 import type { V2ColumnToggleProps } from "@/v2/shared/components/molecules/v2-column-toggle";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
@@ -79,9 +80,9 @@ export const V2TableToolbar: React.FC<V2TableToolbarProps> = ({
       <div className="flex flex-wrap items-center gap-2">
         {toolbarExtra}
         {selectedCount > 0 && (
-          <span className="text-xs text-muted-fg">
+          <V2Text as="span" variant="body-sm" color="muted">
             {t("v2.table.selectedCount", { count: selectedCount })}
-          </span>
+          </V2Text>
         )}
         {activeFilterCount > 0 && (
           <V2Button

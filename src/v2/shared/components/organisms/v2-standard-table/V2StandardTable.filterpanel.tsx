@@ -1,4 +1,5 @@
 import * as React from "react";
+import { V2Text } from "@/v2/shared/components/atoms/v2-text";
 import { V2FilterChip } from "@/v2/shared/components/atoms/v2-filter-chip";
 import { V2ColumnHeaderFilterPanel } from "@/v2/shared/components/molecules/v2-column-header-filter/V2ColumnHeaderFilter.panel";
 import { V2FilterCard } from "@/v2/shared/components/molecules/v2-filter-card";
@@ -45,9 +46,13 @@ export function V2TableFilterPanel<T>({
       chips={
         chips.length > 0 ? (
           <>
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-fg">
+            <V2Text
+              as="span"
+              variant="caption"
+              className="text-[10px] font-semibold uppercase tracking-wider"
+            >
               {t("v2.table.activeFilters", { count: chips.length })}
-            </span>
+            </V2Text>
             <div className="flex flex-wrap gap-1.5">
               {chips.map((chip) => (
                 <V2FilterChip

@@ -158,3 +158,10 @@ const columns = useMemo<V2Column<Order>[]>(() => [
 - Test component dùng `.fixture.tsx` (có ở organism và `v2-column-header-filter`) (dữ liệu, `renderTable`, mock viewport) và bọc `QueryClientProvider`.
 - Stories: `V2/Organisms/V2StandardTable` (ServerSide, ClientSide, WithSelection, Empty, Loading), `.../Variants` (MobileCards, CustomColumnStorage), `.../Toolbar` (WithFullToolbar, WithFilterPanel, FilterPanelWithExtraContent). Mọi thành phần con đều có story riêng (V2ColumnToggle, V2ColumnHeaderFilter, V2TablePagination, V2TableRowActions, V2TableText, V2PageButton, V2TableDateCell, V2TabBar, V2ToolbarIconButton, V2FilterChip/Card/Panel...). `storyCoverage.test.ts` chặn thành phần V2 mới thiếu story (allowlist chỉ còn 6 molecule drawer) và `V2/Templates/V2SpreadsheetPageTemplate` (FullPage, WithoutHeader). Story phải có decorator `QueryClientProvider` vì preview chung không có.
 - Gate: `grep -rn "blue-" src/v2/`, không file > 180 LoC (trừ 3 file có sẵn của `v2-standard-drawer`), `grep -rn 'from "@/shared' src/v2/` rỗng, không molecule import molecule, không `<button` thuần trong code bảng.
+
+## Tái sử dụng atom/molecule trong V2StandardTable
+
+- Chữ trong toolbar, header, empty state và nhãn lọc dùng `V2Text` (atom) thay cho `<span>`/`<p>` thuần; giữ class cũ bằng `className` để không đổi giao diện.
+- Vạch ngăn toolbar dùng atom `V2Divider` (`orientation="vertical"` mặc định).
+- Ô chọn dòng/chọn tất cả (desktop header, desktop cell, mobile card) dùng molecule `V2TableSelectCheckbox` (nhận `checked: boolean | "indeterminate"`, `aria-label` bắt buộc do bên gọi truyền i18n).
+- Không thay `<table>` trong `V2StandardTable.grid.tsx` bằng primitive `Table` của `shared/ui`: primitive bọc thêm `div.overflow-auto`, làm mất sticky header.

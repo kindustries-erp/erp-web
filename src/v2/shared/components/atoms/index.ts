@@ -12,3 +12,4 @@ export * from "./v2-toolbar-icon-button";
 export * from "./v2-filter-chip";
 export * from "./v2-page-icon";
 export * from "./v2-stack";
+export * from "./v2-divider";

@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Checkbox } from "@/v2/shared/ui";
+import { V2Text } from "@/v2/shared/components/atoms/v2-text";
+import { V2TableSelectCheckbox } from "@/v2/shared/components/molecules/v2-table-select-checkbox";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import type { V2ColumnPreferencesApi } from "./V2StandardTable.preferences.hook";
 import type { V2Column } from "./V2StandardTable.type";
@@ -37,7 +38,7 @@ export function useV2TableColumns<T>({
         size: V2_FIXED_COLUMN_SIZE,
         enableResizing: false,
         header: ({ table }) => (
-          <Checkbox
+          <V2TableSelectCheckbox
             aria-label={t("v2.table.selectAll", "Chọn tất cả")}
             checked={
               table.getIsAllPageRowsSelected()
@@ -52,7 +53,7 @@ export function useV2TableColumns<T>({
           />
         ),
         cell: ({ row }) => (
-          <Checkbox
+          <V2TableSelectCheckbox
             aria-label={t("v2.table.selectRow", "Chọn dòng")}
             checked={row.getIsSelected()}
             onCheckedChange={(value) => row.toggleSelected(Boolean(value))}
@@ -66,14 +67,22 @@ export function useV2TableColumns<T>({
       size: V2_FIXED_COLUMN_SIZE,
       enableResizing: false,
       header: () => (
-        <span className="block w-full text-center">
+        <V2Text
+          as="span"
+          variant="body-sm"
+          className="block w-full text-center"
+        >
           {t("v2.table.indexHeader", "#")}
-        </span>
+        </V2Text>
       ),
       cell: ({ row }) => (
-        <span className="block w-full text-center tabular-nums">
+        <V2Text
+          as="span"
+          variant="body-sm"
+          className="block w-full text-center tabular-nums"
+        >
           {startIndex + row.index + 1}
-        </span>
+        </V2Text>
       ),
     });
 

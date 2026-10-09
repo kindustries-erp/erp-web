@@ -1,5 +1,6 @@
 import { flexRender } from "@tanstack/react-table";
 import type { Header, Table } from "@tanstack/react-table";
+import { V2Text } from "@/v2/shared/components/atoms/v2-text";
 import { V2ColumnHeaderFilter } from "@/v2/shared/components/molecules/v2-column-header-filter";
 import { TableHead, TableHeader, TableRow } from "@/v2/shared/ui";
 import { cn } from "@/v2/shared/utils/cn";
@@ -54,9 +55,14 @@ function V2TableHeaderCell<T>({
         align={column.align}
       />
     ) : (
-      <span className="block truncate font-semibold">
+      <V2Text
+        as="span"
+        variant="body-sm"
+        weight="semibold"
+        className="block truncate"
+      >
         {flexRender(header.column.columnDef.header, header.getContext())}
-      </span>
+      </V2Text>
     );
 
   return (

@@ -3,6 +3,7 @@ import { Maximize2, Minimize2, RefreshCw } from "lucide-react";
 import { V2Button } from "@/v2/shared/components/atoms/v2-button";
 import { V2ToolbarIconButton } from "@/v2/shared/components/atoms/v2-toolbar-icon-button";
 import { V2TableFilterButton } from "@/v2/shared/components/atoms/v2-table-filter-button";
+import { V2Divider } from "@/v2/shared/components/atoms/v2-divider";
 import { V2ColumnToggle } from "@/v2/shared/components/molecules/v2-column-toggle";
 import type { V2ColumnToggleProps } from "@/v2/shared/components/molecules/v2-column-toggle";
 import { V2Dropdown } from "@/v2/shared/components/molecules/v2-dropdown";
@@ -61,9 +62,7 @@ export const V2TableToolbarCluster: React.FC<V2TableToolbarClusterProps> = ({
           onTabChange={pillTabs.onChange}
         />
       )}
-      {pillTabs && viewModes && (
-        <span className="hidden h-4 w-px bg-border sm:block" aria-hidden />
-      )}
+      {pillTabs && viewModes && <V2Divider className="hidden sm:block" />}
       {viewModes && <V2ViewModeCombobox {...viewModes} />}
       <V2TableSelectionChip
         count={selectedCount}
