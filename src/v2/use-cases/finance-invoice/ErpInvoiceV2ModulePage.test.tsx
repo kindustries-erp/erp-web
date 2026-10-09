@@ -46,30 +46,30 @@ describe("InvoiceShape page (parity smoke test)", () => {
     expect(screen.getByTestId("bar")).toBeInTheDocument();
   });
 
-  it("loads a list tab on demand and shows rows, pill tabs and search", async () => {
+  it("loads a list tab on demand and shows rows and pill tabs without a global search", async () => {
     renderPage();
     fireEvent.click(screen.getByText("Hóa đơn mua vào"));
     expect(await screen.findByText("C26TGA-1001")).toBeInTheDocument();
-    expect(
-      screen.getByRole("textbox", { name: "Tìm số hóa đơn, đối tác, MST" }),
-    ).toBeInTheDocument();
     expect(screen.getByText("Thay thế")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("textbox", { name: /Tìm số hóa đơn/ }),
+    ).toBeNull();
     expect(window.location.search).toContain("tab=in");
   });
 
-  it("narrows the list with the search box", async () => {
+  it("opens the sync split button menu with its three groups", async () => {
     renderPage();
     fireEvent.click(screen.getByText("Hóa đơn mua vào"));
     await screen.findByText("C26TGA-1001");
-    const box = screen.getByRole("textbox", {
-      name: "Tìm số hóa đơn, đối tác, MST",
-    });
-    fireEvent.change(box, { target: { value: "1005" } });
-    fireEvent.keyDown(box, { key: "Enter" });
-    await waitFor(() =>
-      expect(screen.queryByText("C26TGA-1001")).not.toBeInTheDocument(),
+    fireEvent.click(
+      screen.getAllByRole("button", { name: "Thao tác khác" })[0]!,
     );
-    expect(screen.getByText("C26TGA-1005")).toBeInTheDocument();
+    expect(await screen.findByText("Tra cứu")).toBeInTheDocument();
+    expect(screen.getByText("Thao tác")).toBeInTheDocument();
+    expect(screen.getByText("Cấu hình")).toBeInTheDocument();
+    // "Xuất Excel" cũng là nút ở header, nên chỉ cần có ít nhất một phần tử
+    expect(screen.getAllByText("Xuất Excel").length).toBeGreaterThan(1);
+    expect(screen.getByText("Đăng nhập Cổng Thuế")).toBeInTheDocument();
   });
 
   it("opens the detail drawer from a row with its info, preview and tabs", async () => {

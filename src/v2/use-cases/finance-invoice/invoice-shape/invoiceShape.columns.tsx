@@ -83,14 +83,15 @@ export const buildInvoiceColumns = (
     ...columns,
     {
       key: "paid",
-      label: "Đã thanh toán",
+      ...headerFilter.amount("Đã thanh toán"),
       size: 160,
       align: TableColumnAlign.RIGHT,
       cell: (row) => money(row.paid),
     },
     {
       key: "remaining",
-      label: "Còn lại",
+      ...headerFilter.amount("Còn lại"),
+      accessor: (row) => row.total - row.paid,
       size: 160,
       align: TableColumnAlign.RIGHT,
       cell: (row) => money(row.total - row.paid),
