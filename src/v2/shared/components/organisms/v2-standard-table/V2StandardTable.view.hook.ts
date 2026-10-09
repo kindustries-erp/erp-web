@@ -28,12 +28,18 @@ export function useV2TableView<T>({
   const view = useMemo(() => {
     const startIndex = (query.page - 1) * query.pageSize;
     if (mode === "server") {
-      return { rows: items, total: total ?? items.length, startIndex };
+      return {
+        rows: items,
+        allRows: items,
+        total: total ?? items.length,
+        startIndex,
+      };
     }
     const filtered = filterClientItems(items, clientColumns, query);
     const sorted = sortClientItems(filtered, clientColumns, query.sorts);
     return {
       rows: paginateClientItems(sorted, query.page, query.pageSize),
+      allRows: sorted,
       total: sorted.length,
       startIndex,
     };

@@ -10,6 +10,8 @@ import {
 } from "./V2StandardTable.header";
 import type { V2HeaderFilters } from "./V2StandardTable.filter.hook";
 import type { V2TableState } from "./V2StandardTable.state.hook";
+import { V2TableSummary } from "./V2StandardTable.summary.row";
+import type { V2ColumnSummaryValues } from "./V2StandardTable.summary";
 import type { V2Column } from "./V2StandardTable.type";
 
 interface V2TableGridProps<T> extends Omit<
@@ -21,6 +23,12 @@ interface V2TableGridProps<T> extends Omit<
   state: V2TableState;
   fetchOptionsFor: (column: V2Column<T>) => unknown;
   filters: V2HeaderFilters;
+  /** Có thì hiện hàng tổng cuối bảng (chỉ desktop truyền vào) */
+  summary?: {
+    values: Record<string, V2ColumnSummaryValues>;
+    page: number;
+    totalPages: number;
+  };
 }
 
 /** Phần `<table>` thuần: colgroup + header + body, dùng chung cho desktop */
@@ -30,6 +38,7 @@ export function V2TableGrid<T>({
   state,
   fetchOptionsFor,
   filters,
+  summary,
   ...bodyProps
 }: V2TableGridProps<T>) {
   return (
@@ -56,6 +65,15 @@ export function V2TableGrid<T>({
         colSpan={table.getVisibleLeafColumns().length + 1}
         {...bodyProps}
       />
+      {summary && (
+        <V2TableSummary
+          table={table}
+          columnsByKey={columnsByKey}
+          values={summary.values}
+          page={summary.page}
+          totalPages={summary.totalPages}
+        />
+      )}
     </table>
   );
 }

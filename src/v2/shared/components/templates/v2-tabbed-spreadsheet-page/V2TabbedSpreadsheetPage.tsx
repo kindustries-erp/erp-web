@@ -3,15 +3,19 @@ import { V2Stack } from "@/v2/shared/components/atoms/v2-stack";
 import { V2PageHeader } from "@/v2/shared/components/molecules/v2-page-header";
 import { V2TabBar } from "@/v2/shared/components/molecules/v2-tab-bar";
 import { V2PageTabsContext } from "@/v2/shared/components/molecules/v2-tab-panel";
-import type { V2SpreadsheetPageTemplateProps } from "./V2SpreadsheetPageTemplate.type";
+import type { V2TabbedSpreadsheetPageProps } from "./V2TabbedSpreadsheetPage.type";
 
-export const V2SpreadsheetPageTemplate: React.FC<
-  V2SpreadsheetPageTemplateProps
+/** Slot toolbar mặc định khi trang không có tab: toolbar vẫn nằm trên header */
+const PAGE_SLOT_KEY = "__page__";
+
+export const V2TabbedSpreadsheetPage: React.FC<
+  V2TabbedSpreadsheetPageProps
 > = ({
   title,
   description,
   icon,
   actions,
+  layout = "tabbed",
   tabs,
   activeTab,
   onTabChange,
@@ -28,9 +32,13 @@ export const V2SpreadsheetPageTemplate: React.FC<
       setSlots((prev) => (prev[key] === el ? prev : { ...prev, [key]: el })),
     [],
   );
+  const showTabs = layout === "tabbed" && !!tabs && tabs.length > 0;
   const tabKeys = React.useMemo(
-    () => tabs?.map((tab) => (tab.key ?? tab.id) || "") ?? [],
-    [tabs],
+    () =>
+      showTabs && tabs
+        ? tabs.map((tab) => (tab.key ?? tab.id) || "")
+        : [PAGE_SLOT_KEY],
+    [showTabs, tabs],
   );
   const activeKey = activeTab ?? tabKeys[0] ?? "";
   const ctx = React.useMemo(
@@ -52,7 +60,7 @@ export const V2SpreadsheetPageTemplate: React.FC<
             register={register}
           />
         )}
-        {tabs && tabs.length > 0 && (
+        {showTabs && tabs && (
           <V2TabBar
             variant={tabVariant}
             tabs={tabs}

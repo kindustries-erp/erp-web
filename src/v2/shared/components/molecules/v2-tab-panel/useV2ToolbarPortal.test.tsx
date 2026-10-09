@@ -38,11 +38,11 @@ describe("useV2ToolbarPortal", () => {
     expect(result.current).toBeNull();
   });
 
-  it("trả null khi ngoài panel", () => {
+  it("ngoài panel thì dùng slot của tab active", () => {
     const { result } = renderHook(() => useV2ToolbarPortal(), {
       wrapper: wrap(true, null),
     });
-    expect(result.current).toBeNull();
+    expect(result.current).toBe(slot);
   });
 
   it("trả slot của đúng panel, null nếu panel chưa có slot", () => {

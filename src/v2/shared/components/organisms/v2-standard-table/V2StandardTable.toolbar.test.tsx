@@ -138,6 +138,16 @@ describe("V2StandardTable toolbar", () => {
       ).toBeNull();
     });
 
+    it("không có `toolbar` nhưng có slot: nút cột portal lên header, không nằm dưới bảng", () => {
+      const { container } = renderTable(InSlot);
+      expect(
+        within(slot).getByRole("button", { name: "Tùy chỉnh cột" }),
+      ).toBeInTheDocument();
+      expect(
+        within(container).queryByRole("button", { name: "Tùy chỉnh cột" }),
+      ).toBeNull();
+    });
+
     it("vào fullscreen thì toolbar quay về inline trong bảng", () => {
       const { container } = renderTable(InSlot, { toolbar: makeConfig() });
       fireEvent.click(

@@ -4,7 +4,15 @@ import type {
   V2TabItemData,
 } from "@/v2/shared/components/molecules/v2-tab-bar";
 
-export interface V2SpreadsheetPageTemplateProps {
+/**
+ * `tabbed` (mặc định): có tab bar, toolbar của mỗi tab nằm trên header.
+ * `fullpage`: không có tab bar, bảng chiếm toàn bộ vùng nội dung; toolbar vẫn trên header.
+ */
+export type V2SpreadsheetLayout = "tabbed" | "fullpage";
+
+export interface V2TabbedSpreadsheetPageProps {
+  /** Bố cục trang, mặc định `tabbed` */
+  layout?: V2SpreadsheetLayout;
   title: string;
   description?: string;
   icon?: React.ReactNode;

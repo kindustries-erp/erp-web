@@ -75,24 +75,48 @@ export const V2TableToolbar: React.FC<V2TableToolbarProps> = ({
     );
   }
 
+  const statusItems = (
+    <>
+      {selectedCount > 0 && (
+        <V2Text as="span" variant="body-sm" color="muted">
+          {t("v2.table.selectedCount", { count: selectedCount })}
+        </V2Text>
+      )}
+      {activeFilterCount > 0 && (
+        <V2Button
+          variant="destructive-outline"
+          size="xs"
+          onClick={onClearAllFilters}
+        >
+          {t("v2.table.clearAllFilters", { count: activeFilterCount })}
+        </V2Button>
+      )}
+    </>
+  );
+
+  /** Không có config nhưng có slot header: đưa trạng thái + nút cột lên cùng hàng với header */
+  if (portalTarget) {
+    return (
+      <>
+        {createPortal(
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            {statusItems}
+            {columnToggle && <V2ColumnToggle {...columnToggle} />}
+          </div>,
+          portalTarget,
+        )}
+        {toolbarExtra && (
+          <div className="flex min-h-8 items-center gap-2">{toolbarExtra}</div>
+        )}
+      </>
+    );
+  }
+
   return (
     <div className="flex min-h-8 flex-wrap items-center justify-between gap-2">
       <div className="flex flex-wrap items-center gap-2">
         {toolbarExtra}
-        {selectedCount > 0 && (
-          <V2Text as="span" variant="body-sm" color="muted">
-            {t("v2.table.selectedCount", { count: selectedCount })}
-          </V2Text>
-        )}
-        {activeFilterCount > 0 && (
-          <V2Button
-            variant="destructive-outline"
-            size="xs"
-            onClick={onClearAllFilters}
-          >
-            {t("v2.table.clearAllFilters", { count: activeFilterCount })}
-          </V2Button>
-        )}
+        {statusItems}
       </div>
       {columnToggle && <V2ColumnToggle {...columnToggle} />}
     </div>

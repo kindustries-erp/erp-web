@@ -23,13 +23,13 @@ import {
 import type { MockOrder } from "@/v2/shared/components/organisms/v2-standard-table/V2StandardTable.mock-server";
 import { V2TabPanel } from "@/v2/shared/components/molecules/v2-tab-panel";
 import { MOCK_ORDERS } from "@/v2/shared/components/organisms/v2-standard-table/V2StandardTable.mock-server";
-import { V2SpreadsheetPageTemplate } from "./V2SpreadsheetPageTemplate";
+import { V2TabbedSpreadsheetPage } from "./V2TabbedSpreadsheetPage";
 
 const queryClient = new QueryClient();
 
-const meta: Meta<typeof V2SpreadsheetPageTemplate> = {
-  title: "Components/Templates/V2SpreadsheetPageTemplate",
-  component: V2SpreadsheetPageTemplate,
+const meta: Meta<typeof V2TabbedSpreadsheetPage> = {
+  title: "Components/Templates/V2TabbedSpreadsheetPage",
+  component: V2TabbedSpreadsheetPage,
   tags: ["autodocs"],
   parameters: { layout: "fullscreen" },
   decorators: [
@@ -45,17 +45,10 @@ const meta: Meta<typeof V2SpreadsheetPageTemplate> = {
 
 export default meta;
 
-const TABS = [
-  { key: "all", label: "Tất cả" },
-  { key: "draft", label: "Nháp" },
-  { key: "done", label: "Hoàn tất" },
-];
-
-export const FullPage = () => {
+export const FullPageLayout = () => {
   const { columns, rowActions } = useDemoActions();
   const initialQuery = useMemo(() => createInitialQuery(), []);
   const [query, setQuery] = useState(initialQuery);
-  const [tab, setTab] = useState("all");
   const { data, isFetching, refetch } = useQuery({
     queryKey: ["v2-demo-orders-page", query],
     queryFn: () => fetchMockOrders(query),
@@ -63,13 +56,11 @@ export const FullPage = () => {
   });
 
   return (
-    <V2SpreadsheetPageTemplate
+    <V2TabbedSpreadsheetPage
       title="Đơn bán hàng"
       description="Danh sách đơn bán hàng và trạng thái xử lý"
       icon={<ClipboardList className="h-5 w-5" />}
-      tabs={TABS}
-      activeTab={tab}
-      onTabChange={setTab}
+      layout="fullpage"
       actions={
         <>
           <V2Button
@@ -99,14 +90,36 @@ export const FullPage = () => {
         rowActions={rowActions}
         getRowClassName={orderRowClassName}
       />
-    </V2SpreadsheetPageTemplate>
+    </V2TabbedSpreadsheetPage>
+  );
+};
+
+export const WithSummary = () => {
+  const { columns, rowActions } = useDemoActions();
+  const withSummary = columns.map((column) =>
+    column.key === "amount"
+      ? { ...column, summary: { variant: "amount" as const } }
+      : column,
+  );
+  return (
+    <V2TabbedSpreadsheetPage title="Bảng có hàng tổng">
+      <V2StandardTable<MockOrder>
+        tableId="story-template-summary"
+        className="min-h-0 flex-1"
+        mode="client"
+        columns={withSummary}
+        items={MOCK_ORDERS}
+        getRowKey={(row) => row.id}
+        rowActions={rowActions}
+      />
+    </V2TabbedSpreadsheetPage>
   );
 };
 
 export const WithoutHeader = () => {
   const { columns } = useDemoActions();
   return (
-    <V2SpreadsheetPageTemplate title="Ẩn tiêu đề" hideHeader>
+    <V2TabbedSpreadsheetPage title="Ẩn tiêu đề" hideHeader>
       <V2StandardTable<MockOrder>
         tableId="story-template-no-header"
         columns={columns}
@@ -115,17 +128,17 @@ export const WithoutHeader = () => {
         getRowKey={(row) => row.id}
         fetchOptions={fetchMockOptions}
       />
-    </V2SpreadsheetPageTemplate>
+    </V2TabbedSpreadsheetPage>
   );
 };
 
-const INVOICE_TABS = [
+const PANEL_TABS = [
   { key: "overview", label: "Tổng quan" },
-  { key: "in", label: "Hóa đơn mua vào" },
-  { key: "out", label: "Hóa đơn bán ra" },
+  { key: "in", label: "Nhóm 1" },
+  { key: "out", label: "Nhóm 2" },
 ];
 
-export const MultiTabInvoices = () => {
+export const TabbedWithPanels = () => {
   const { columns, rowActions } = useDemoActions();
   const [tab, setTab] = useState("in");
   const toolbar = (label: string) => ({
@@ -134,11 +147,11 @@ export const MultiTabInvoices = () => {
     create: { label, onClick: () => {} },
   });
   return (
-    <V2SpreadsheetPageTemplate
-      title="Hóa đơn"
+    <V2TabbedSpreadsheetPage
+      title="Danh sách theo tab"
       description="Mỗi tab một bảng, toolbar hiện ở header"
       icon={<ClipboardList className="h-5 w-5" />}
-      tabs={INVOICE_TABS}
+      tabs={PANEL_TABS}
       activeTab={tab}
       onTabChange={setTab}
     >
@@ -160,6 +173,6 @@ export const MultiTabInvoices = () => {
           />
         </V2TabPanel>
       ))}
-    </V2SpreadsheetPageTemplate>
+    </V2TabbedSpreadsheetPage>
   );
 };

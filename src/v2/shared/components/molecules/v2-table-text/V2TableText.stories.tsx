@@ -25,6 +25,9 @@ export const LongTextWithTooltip = () => <V2TableText text={LONG} tooltip />;
 export const DetailLink = () => (
   <V2TableText text="HD-000123" enableCopy onDetailClick={() => {}} />
 );
+export const TextAction = () => (
+  <V2TableText text="HD-000123" enableCopy onTextClick={() => {}} />
+);
 export const LinkedRecord = () => (
   <V2TableText text="PO-4471" onDrawerClick={() => {}} />
 );

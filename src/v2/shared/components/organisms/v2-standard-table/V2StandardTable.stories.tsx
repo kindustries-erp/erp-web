@@ -86,6 +86,66 @@ export const ClientSide = () => {
   );
 };
 
+/** Thêm hàng tổng cho cột thành tiền (demo) */
+const withAmountSummary = <T extends { key: string }>(
+  columns: T[],
+  summary: { total?: number } = {},
+) =>
+  columns.map((column) =>
+    column.key === "amount"
+      ? { ...column, summary: { variant: "amount" as const, ...summary } }
+      : column,
+  );
+
+export const WithSummary = () => {
+  const { columns, rowActions } = useDemoActions();
+  return (
+    <div className="flex h-full flex-col gap-2">
+      <V2StandardTable<MockOrder>
+        tableId="story-orders-summary-client"
+        className="min-h-0 flex-1"
+        mode="client"
+        columns={withAmountSummary(columns)}
+        items={MOCK_ORDERS}
+        getRowKey={(row) => row.id}
+        rowActions={rowActions}
+        getRowClassName={orderRowClassName}
+      />
+    </div>
+  );
+};
+
+export const WithSummaryServer = () => {
+  const { columns, rowActions } = useDemoActions();
+  const initialQuery = useMemo(() => createInitialQuery(), []);
+  const [query, setQuery] = useState(initialQuery);
+  const { data, isFetching } = useQuery({
+    queryKey: ["v2-demo-orders-summary", query],
+    queryFn: () => fetchMockOrders(query),
+    placeholderData: keepPreviousData,
+  });
+  const grandTotal = MOCK_ORDERS.reduce((sum, row) => sum + row.amount, 0);
+
+  return (
+    <div className="flex h-full flex-col gap-2">
+      <V2StandardTable<MockOrder>
+        tableId="story-orders-summary-server"
+        className="min-h-0 flex-1"
+        columns={withAmountSummary(columns, { total: grandTotal })}
+        items={data?.items ?? []}
+        total={data?.total ?? 0}
+        loading={isFetching}
+        getRowKey={(row) => row.id}
+        fetchOptions={fetchMockOptions}
+        initialQuery={initialQuery}
+        onQueryChange={setQuery}
+        rowActions={rowActions}
+        getRowClassName={orderRowClassName}
+      />
+    </div>
+  );
+};
+
 export const WithSelection = () => {
   const { columns, rowActions } = useDemoActions();
   const [selected, setSelected] = useState<string[]>([]);

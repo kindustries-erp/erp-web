@@ -57,7 +57,7 @@ export const createOrderColumns = (
     cell: (row) => (
       <Badge
         variant={STATUS_VARIANT[row.status]}
-        className="inline-flex w-[96px] justify-center truncate"
+        className="inline-flex w-[80px] justify-center truncate"
       >
         {STATUS_LABEL[row.status]}
       </Badge>
@@ -76,7 +76,9 @@ export const createOrderColumns = (
     size: 170,
     align: TableColumnAlign.RIGHT,
     cell: (row) => (
-      <span className="font-semibold">{formatAmount(row.amount)}</span>
+      <span className="font-semibold tabular-nums">
+        {formatAmount(row.amount)}
+      </span>
     ),
   },
   {

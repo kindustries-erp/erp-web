@@ -1,3 +1,4 @@
+import type { V2SubtotalVariant } from "@/v2/shared/components/molecules/v2-subtotal-summary-cell";
 import type { ReactNode } from "react";
 import type { V2DropdownGroup } from "@/v2/shared/components/molecules/v2-dropdown";
 import type { V2TabItemData } from "@/v2/shared/components/molecules/v2-tab-bar";
@@ -24,6 +25,20 @@ export interface V2ColumnFilterSpec {
   filterOptions?: V2FilterOption[];
 }
 
+/** Ô tổng (subtotal + lũy kế + tổng toàn bộ) của một cột, hiện ở hàng tổng cuối bảng (desktop) */
+export interface V2ColumnSummary<T> {
+  /** Loại số liệu hiển thị trong ô tổng */
+  variant: V2SubtotalVariant;
+  /** Lấy số để cộng; mặc định đọc theo `key` của cột (hỗ trợ "a.b") */
+  accessor?: (row: T) => unknown;
+  /** Chế độ `server`: tổng toàn bộ do consumer truyền (từ API); `client` tự tính */
+  total?: number;
+  /** Tiêu đề chỉ số trong popover, ví dụ "SL nhập kho" */
+  metricTitle?: string;
+  /** Đơn vị sau số, ví dụ "kg" */
+  unit?: string;
+}
+
 export interface V2Column<T> {
   key: string;
   label: string;
@@ -38,6 +53,7 @@ export interface V2Column<T> {
   enableResizing?: boolean;
   enableHiding?: boolean;
   mobileSlot?: V2MobileSlot;
+  summary?: V2ColumnSummary<T>;
 }
 
 export interface V2ColumnPreferences {

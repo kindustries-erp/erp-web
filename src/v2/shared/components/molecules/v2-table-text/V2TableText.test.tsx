@@ -36,6 +36,24 @@ describe("V2TableText", () => {
     expect(onRowClick).not.toHaveBeenCalled();
   });
 
+  it("bấm vào text thì mở chi tiết (dạng link), không lan lên dòng", () => {
+    const onTextClick = vi.fn();
+    const onRowClick = vi.fn();
+    render(
+      <div onClick={onRowClick}>
+        <V2TableText text="HD-001" onTextClick={onTextClick} />
+      </div>,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "HD-001" }));
+    expect(onTextClick).toHaveBeenCalledTimes(1);
+    expect(onRowClick).not.toHaveBeenCalled();
+  });
+
+  it("không có onTextClick thì text vẫn là chữ thường, không phải nút", () => {
+    render(<V2TableText text="HD-001" />);
+    expect(screen.queryByRole("button", { name: "HD-001" })).toBeNull();
+  });
+
   it("opens the linked record from the drawer icon", () => {
     const onDrawerClick = vi.fn();
     render(<V2TableText text="KH-9" onDrawerClick={onDrawerClick} />);

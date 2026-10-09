@@ -12,6 +12,7 @@ import { useV2FilterPanelToolbar } from "./V2StandardTable.filterpanel.hook";
 import { V2TableFilterPanel } from "./V2StandardTable.filterpanel";
 import { useV2DesktopToolbar } from "./V2StandardTable.toolbar.hook";
 import { useV2TableScroll } from "./V2StandardTable.scroll.hook";
+import { useV2TableSummary } from "./V2StandardTable.summary.hook";
 import { useV2HeaderFilters } from "./V2StandardTable.filter.hook";
 import { useV2RowMenu } from "./V2StandardTable.menu.hook";
 import { useV2ColumnPreferences } from "./V2StandardTable.preferences.hook";
@@ -22,7 +23,8 @@ export function V2StandardTableDesktop<T>(props: V2StandardTableProps<T>) {
   const { tableId, columns, getRowKey, rowActions, loading = false } = props;
   const enableRowSelection = props.enableRowSelection ?? false;
   const { t } = useV2Translation();
-  const { state, columnsByKey, view, selection } = useV2TableController(props);
+  const { mode, state, columnsByKey, view, selection } =
+    useV2TableController(props);
   const columnKeys = React.useMemo(() => columns.map((c) => c.key), [columns]);
   const prefs = useV2ColumnPreferences({
     tableId,
@@ -42,6 +44,16 @@ export function V2StandardTableDesktop<T>(props: V2StandardTableProps<T>) {
     filtersStrFor: view.filtersStrFor,
   });
   const scroll = useV2TableScroll(view.rows.length, loading);
+  const summaryValues = useV2TableSummary({
+    columns,
+    mode,
+    query: state.query,
+    allRows: view.allRows,
+    pageRows: view.rows,
+    loading,
+  });
+  const hasSummary = columns.some((column) => column.summary);
+  const totalPages = Math.max(1, Math.ceil(view.total / state.query.pageSize));
   const { menu, menuRowKey, menuGroups } = useV2RowMenu(
     view.rows,
     getRowKey,
@@ -136,6 +148,15 @@ export function V2StandardTableDesktop<T>(props: V2StandardTableProps<T>) {
               rowActions={rowActions}
               getRowClassName={props.getRowClassName}
               onRowContextMenu={menu.open}
+              summary={
+                hasSummary
+                  ? {
+                      values: summaryValues,
+                      page: state.query.page,
+                      totalPages,
+                    }
+                  : undefined
+              }
             />
           </div>
           <V2TablePagination
