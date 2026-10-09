@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Panel, PanelMore } from "@/shared/components/Panel";
 import { ChartSkeleton } from "@/shared/components/Skeleton";
 import { BarChart } from "@/shared/components/charts/BarChart";
-import { money } from "@/shared/utils/format";
+import { shortMoney, money } from "@/shared/utils/format";
 import { erpInvoiceDashboardApi } from "@/modules/erp-invoices-core/api/erpInvoiceDashboardApi";
 
 interface BranchVatChartProps {
@@ -51,12 +51,13 @@ export function BranchVatChart({
         {!isLoadingStats && cashTrendLabels.length > 0 ? (
           <BarChart
             labels={cashTrendLabels}
-            yCallback={(v) => money(Number(v))}
+            yCallback={(v) => shortMoney(Number(v))}
             datasets={[
               {
                 type: "line",
                 data: vatDiff,
                 color: "transparent",
+
                 borderColor: lineDiff,
                 borderWidth: 2,
                 fill: false,
