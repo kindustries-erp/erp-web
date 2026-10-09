@@ -25,6 +25,8 @@ export const GarageCashflowTable: React.FC<GarageCashflowTableProps> = ({
     () =>
       createColumnHeaderFilter({
         listHook: tableHook as any,
+        fetchOptions: tableHook.getColumnOptions,
+        queryKeyPrefix: "garage-cashflow-options",
       }),
     [tableHook],
   );
