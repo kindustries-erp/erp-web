@@ -392,6 +392,14 @@ export function SidebarNav({
             onClick={() => navTo("garage-opex")}
             contextPage="garage-opex"
           />
+          <NavItem
+            collapsed={c}
+            icon={<Wallet className="w-4 h-4 opacity-65 flex-shrink-0" />}
+            label={t("nav.items.garageCashflow", "Thu chi xưởng")}
+            active={currentPage === "garage-cashflow"}
+            onClick={() => navTo("garage-cashflow")}
+            contextPage="garage-cashflow"
+          />
         </NavSection>
       )}
 
