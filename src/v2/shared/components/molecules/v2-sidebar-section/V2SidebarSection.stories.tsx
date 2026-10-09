@@ -5,7 +5,7 @@ import { V2SidebarSection } from "./V2SidebarSection";
 import { V2SidebarNavItem } from "../v2-sidebar-nav-item";
 
 const meta: Meta<typeof V2SidebarSection> = {
-  title: "V2/Molecules/V2SidebarSection",
+  title: "Components/Molecules/Navigation & Sidebar/V2SidebarSection",
   component: V2SidebarSection,
   tags: ["autodocs"],
   argTypes: {

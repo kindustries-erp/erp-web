@@ -1,6 +1,7 @@
 import * as React from "react";
 import { RotateCcw, Settings2 } from "lucide-react";
 import { V2Button } from "@/v2/shared/components/atoms/v2-button";
+import { V2ToolbarIconButton } from "@/v2/shared/components/atoms/v2-toolbar-icon-button";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { Popover, PopoverContent, PopoverTrigger } from "@/v2/shared/ui";
 import { V2ColumnToggleList } from "./V2ColumnToggle.list";
@@ -43,14 +44,11 @@ export const V2ColumnToggle: React.FC<V2ColumnToggleProps> = ({
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <V2Button
-          variant="ghost"
-          size="icon-sm"
+        <V2ToolbarIconButton
           className={className}
-          aria-label={t("v2.table.columnSettings", "Tùy chỉnh cột")}
-        >
-          <Settings2 className="h-4 w-4" />
-        </V2Button>
+          label={t("v2.table.columnSettings", "Tùy chỉnh cột")}
+          icon={<Settings2 className="h-4 w-4" />}
+        />
       </PopoverTrigger>
       <PopoverContent align="end" className="w-auto p-2">
         {content}

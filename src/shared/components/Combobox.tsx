@@ -79,7 +79,23 @@ export function Combobox({
     return options.filter((o) => o.value !== "" && o.value !== undefined);
   }, [options, allowClear]);
 
-  const selected = options.find((o) => o.value === value);
+  const [cachedSelected, setCachedSelected] = useState<
+    ComboboxOption | undefined
+  >(undefined);
+
+  const selectedFromOptions = options.find((o) => o.value === value);
+  const selected =
+    selectedFromOptions ||
+    (cachedSelected?.value === value ? cachedSelected : undefined);
+
+  useEffect(() => {
+    if (selectedFromOptions) {
+      setCachedSelected(selectedFromOptions);
+    } else if (!value) {
+      setCachedSelected(undefined);
+    }
+  }, [value, selectedFromOptions]);
+
   const selectedDisplay = useMemo(
     () => parseComboboxOptionDisplay(selected),
     [selected],
@@ -133,11 +149,19 @@ export function Combobox({
     <Popover.Root open={open} onOpenChange={setOpen}>
       <Tooltip
         content={
-          selected
-            ? selectedDisplay.code
-              ? `${selectedDisplay.label} (${selectedDisplay.code})`
-              : selectedDisplay.label
-            : fallbackLabel || ""
+          selected ? (
+            <div className="flex flex-col gap-0.5">
+              <span>
+                {selectedDisplay.label}
+                {selectedDisplay.code && ` (${selectedDisplay.code})`}
+              </span>
+              {selected.subLabel && (
+                <span className="text-white/70">{selected.subLabel}</span>
+              )}
+            </div>
+          ) : (
+            fallbackLabel || ""
+          )
         }
         side="top"
         disabled={!selected || open}
@@ -271,7 +295,20 @@ export function Combobox({
                 const { label: itemLabel, code: itemCode } =
                   parseComboboxOptionDisplay(o);
                 return (
-                  <Tooltip key={o.value} content={itemLabel} side="right">
+                  <Tooltip
+                    key={o.value}
+                    content={
+                      o.subLabel ? (
+                        <div className="flex flex-col gap-0.5">
+                          <span>{itemLabel}</span>
+                          <span className="text-white/70">{o.subLabel}</span>
+                        </div>
+                      ) : (
+                        itemLabel
+                      )
+                    }
+                    side="right"
+                  >
                     <button
                       type="button"
                       onClick={() => {

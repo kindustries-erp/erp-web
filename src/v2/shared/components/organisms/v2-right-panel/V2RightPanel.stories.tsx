@@ -4,7 +4,7 @@ import { FileText, Wrench } from "lucide-react";
 import { V2RightPanel } from "./V2RightPanel";
 
 const meta: Meta<typeof V2RightPanel> = {
-  title: "V2/Organisms/V2RightPanel",
+  title: "Components/Organisms/Layout Shell/V2RightPanel",
   component: V2RightPanel,
   tags: ["autodocs"],
   parameters: {

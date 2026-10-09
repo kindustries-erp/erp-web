@@ -51,6 +51,7 @@ export const ALL_PAGE_KEYS: PageKey[] = [
   "garage-customers",
   "garage-partners",
   "garage-debts",
+  "garage-cashflow",
   "after-sales",
   "purchasing-report-dashboard",
   "vinfast-parts",
@@ -278,6 +279,8 @@ export function pathToPage(
     page = "erp-invoices";
   } else if (slug === "garage-dashboard") {
     page = "garage-cases";
+  } else if (slug === "garage-cashflow") {
+    page = "garage-cashflow";
   } else {
     page = ALL_PAGE_KEYS.includes(slug as PageKey)
       ? (slug as PageKey)
@@ -325,6 +328,12 @@ export function pathToPage(
   } else if (slug === "garage-cases" || page === "garage-cases") {
     if (tab === "cases") {
       tab = "cases";
+    } else {
+      tab = "dashboard";
+    }
+  } else if (slug === "garage-cashflow" || page === "garage-cashflow") {
+    if (tab === "vouchers") {
+      tab = "vouchers";
     } else {
       tab = "dashboard";
     }

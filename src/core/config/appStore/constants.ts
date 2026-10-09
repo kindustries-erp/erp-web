@@ -206,6 +206,10 @@ export const SECTION_ROOTS: Partial<Record<PageKey, SectionRoot>> = {
     labelKey: "breadcrumb.garageOpex",
     group: "garage",
   },
+  "garage-cashflow": {
+    labelKey: "nav.items.garageCashflow",
+    group: "garage",
+  },
   "garage-customers": {
     labelKey: "breadcrumb.garageDebts",
     group: "garage",
@@ -365,6 +369,7 @@ export const BREADCRUMBS: Partial<Record<PageKey, Array<[string, string?]>>> = {
   "garage-dashboard": [["breadcrumb.garage"], ["breadcrumb.garageDashboard"]],
   "garage-cases": [["breadcrumb.garage"], ["breadcrumb.garageCases"]],
   "garage-opex": [["breadcrumb.garage"], ["breadcrumb.garageOpex"]],
+  "garage-cashflow": [["breadcrumb.garage"], ["nav.items.garageCashflow"]],
   "garage-customers": [["breadcrumb.garage"], ["breadcrumb.garageDebts"]],
   "garage-partners": [["breadcrumb.garage"], ["breadcrumb.garageDebts"]],
   "garage-debts": [["breadcrumb.garage"], ["breadcrumb.garageDebts"]],

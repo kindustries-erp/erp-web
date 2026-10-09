@@ -83,7 +83,7 @@ function V2TableRowInner<T>({
 
 const V2TableRow = React.memo(V2TableRowInner) as typeof V2TableRowInner;
 
-interface BodyProps<T> {
+export interface V2TableBodyRowsProps<T> {
   table: Table<T>;
   layoutKey: string;
   columnsByKey: Map<string, V2Column<T>>;
@@ -109,7 +109,7 @@ export function V2TableBodyRows<T>({
   rowActions,
   getRowClassName,
   onRowContextMenu,
-}: BodyProps<T>) {
+}: V2TableBodyRowsProps<T>) {
   const rows = table.getRowModel().rows;
 
   if (rows.length === 0) {

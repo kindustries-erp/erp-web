@@ -3,7 +3,7 @@ import { FolderKanban, BarChart3, ShieldCheck, Database } from "lucide-react";
 import { V2SidebarIcon } from "./V2SidebarIcon";
 
 const meta: Meta<typeof V2SidebarIcon> = {
-  title: "V2/Atoms/V2SidebarIcon",
+  title: "Components/Atoms/Display/V2SidebarIcon",
   component: V2SidebarIcon,
   tags: ["autodocs"],
   argTypes: {

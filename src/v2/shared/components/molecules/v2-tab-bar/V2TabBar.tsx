@@ -2,6 +2,7 @@ import * as React from "react";
 import { cn } from "@/v2/shared/utils/cn";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { V2TabItem } from "../v2-tab-item";
+import { TabBarPageView } from "./TabBarPageView";
 import { TabBarPillView } from "./TabBarPillView";
 import type { V2TabBarProps } from "./V2TabBar.type";
 
@@ -36,6 +37,19 @@ export const V2TabBar: React.FC<V2TabBarProps> = ({
       scrollRef.current.scrollLeft += e.deltaY;
     }
   }, []);
+
+  if (variant === "page") {
+    return (
+      <TabBarPageView
+        tabs={tabs}
+        activeKey={activeKey}
+        onSelect={handleSelect}
+        extra={extra}
+        className={className}
+        ariaLabel={ariaLabel}
+      />
+    );
+  }
 
   if (variant === "header" || variant === "button-group" || variant === "sub") {
     return (

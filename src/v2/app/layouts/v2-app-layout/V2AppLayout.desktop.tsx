@@ -2,9 +2,11 @@ import * as React from "react";
 import { LayoutDashboard } from "lucide-react";
 import { V2Sidebar } from "@/v2/shared/components/organisms/v2-sidebar";
 import { V2RightPanel } from "@/v2/shared/components/organisms/v2-right-panel";
+import { useV2PermissionChecker } from "@/v2/shared/hooks/useV2HasPermission";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import {
   getV2NavigationSections,
+  filterV2NavSections,
   DEFAULT_V2_NAV_ITEMS,
   DEFAULT_V2_SECTIONS,
 } from "./v2Navigation";
@@ -30,10 +32,11 @@ export const V2AppLayoutDesktop: React.FC<V2AppLayoutProps> = ({
   onBranchClick,
 }) => {
   const { t, locale } = useV2Translation();
+  const can = useV2PermissionChecker();
 
   const dynamicSections = React.useMemo(
-    () => getV2NavigationSections(t),
-    [t, locale],
+    () => filterV2NavSections(getV2NavigationSections(t), can),
+    [t, locale, can],
   );
 
   const fallbackBreadcrumbs = React.useMemo(

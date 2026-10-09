@@ -1,13 +1,15 @@
-import React, { useState } from "react";
+import React, { useId, useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { V2Button } from "@/v2/shared/components/atoms/v2-button";
 import { V2Text } from "@/v2/shared/components/atoms/v2-text";
+import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import { cn } from "@/v2/shared/utils/cn";
 import type { DrawerSectionProps } from "./DrawerSection.type";
 
 export const DrawerSection: React.FC<DrawerSectionProps> = ({
   title,
   titleExtra,
+  count,
   collapsible = true,
   collapsed: controlledCollapsed,
   defaultCollapsed = false,
@@ -20,6 +22,8 @@ export const DrawerSection: React.FC<DrawerSectionProps> = ({
   hideHeader = false,
   hideTitle = false,
 }) => {
+  const { t } = useV2Translation();
+  const bodyId = useId();
   const [internalCollapsed, setInternalCollapsed] = useState(defaultCollapsed);
   const isCollapsed =
     controlledCollapsed !== undefined ? controlledCollapsed : internalCollapsed;
@@ -66,7 +70,13 @@ export const DrawerSection: React.FC<DrawerSectionProps> = ({
                 variant="ghost"
                 size="icon-xs"
                 onClick={handleToggle}
-                aria-label={isCollapsed ? "Expand section" : "Collapse section"}
+                aria-label={
+                  isCollapsed
+                    ? t("v2.drawer.expandSection", "Mở rộng")
+                    : t("v2.drawer.collapseSection", "Thu gọn")
+                }
+                aria-expanded={!isCollapsed}
+                aria-controls={bodyId}
                 data-testid="drawer-section-toggle-btn"
                 className="p-0.5 -ml-1 text-muted-fg hover:text-foreground shrink-0 cursor-pointer"
               >
@@ -86,6 +96,15 @@ export const DrawerSection: React.FC<DrawerSectionProps> = ({
                 {title}
               </V2Text>
             )}
+            {typeof count === "number" && (
+              <V2Text
+                variant="section-title"
+                color="muted"
+                className="shrink-0 tabular-nums"
+              >
+                ({count})
+              </V2Text>
+            )}
           </div>
 
           {titleExtra && (
@@ -96,17 +115,31 @@ export const DrawerSection: React.FC<DrawerSectionProps> = ({
         </div>
       )}
 
-      {!isCollapsed && (
+      {/* Giữ nội dung trong DOM và animate chiều cao (như DrawerSection V1), không unmount khi thu gọn */}
+      <div
+        id={bodyId}
+        data-testid="drawer-section-body-wrapper"
+        aria-hidden={isCollapsed}
+        {...(isCollapsed ? { inert: "" } : {})}
+        className={cn(
+          "grid transition-[grid-template-rows,opacity] duration-300 ease-in-out",
+          isCollapsed
+            ? "grid-rows-[0fr] opacity-0 pointer-events-none"
+            : "grid-rows-[1fr] opacity-100",
+          fitViewportHeight && !isCollapsed && "flex-1 flex flex-col min-h-0",
+        )}
+      >
         <div
           data-testid="drawer-section-body"
           className={cn(
-            fitViewportHeight ? "flex-1 overflow-y-auto min-h-0" : "",
+            "overflow-hidden min-h-0",
+            fitViewportHeight && !isCollapsed && "flex-1 overflow-y-auto",
             bodyClassName,
           )}
         >
           {children}
         </div>
-      )}
+      </div>
     </div>
   );
 };

@@ -9,7 +9,7 @@ import {
 } from "./popover";
 
 const meta: Meta<typeof Popover> = {
-  title: "V2/UI Primitives/Popover",
+  title: "Components/UI Primitives/Popover",
   component: Popover,
   tags: ["autodocs"],
 };

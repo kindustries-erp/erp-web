@@ -31,6 +31,7 @@ export interface V2TableState {
     filter: V2OperatorFilter | null,
   ) => void;
   setDateRange: (columnKey: string, range: V2DateRange | null) => void;
+  setSearch: (text: string) => void;
   clearColumn: (columnKey: string) => void;
   resetAll: () => void;
 }
@@ -121,6 +122,12 @@ export const useV2TableState = ({
     [patch],
   );
 
+  const setSearch = useCallback(
+    (text: string) =>
+      patch(() => ({ search: text.trim() === "" ? undefined : text })),
+    [patch],
+  );
+
   const clearColumn = useCallback(
     (columnKey: string) =>
       patch((c) => ({
@@ -139,6 +146,7 @@ export const useV2TableState = ({
         columnSearch: {},
         columnOperators: {},
         dateRanges: {},
+        search: undefined,
       })),
     [patch],
   );
@@ -163,6 +171,7 @@ export const useV2TableState = ({
     setColumnSearch,
     setColumnOperator,
     setDateRange,
+    setSearch,
     clearColumn,
     resetAll,
   };

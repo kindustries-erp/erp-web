@@ -141,4 +141,23 @@ describe("V2TabBar Molecule", () => {
       window.dispatchEvent(new Event("resize"));
     });
   });
+
+  it("renders variant='page' underline tabs, active = primary", () => {
+    const handleChange = vi.fn();
+    render(
+      <V2TabBar
+        variant="page"
+        tabs={mockTabs}
+        activeTabKey="tab1"
+        onTabChange={handleChange}
+      />,
+    );
+    const active = screen.getByRole("tab", { name: /Chi tiết/ });
+    expect(active).toHaveAttribute("aria-selected", "true");
+    expect(active.className).toContain("border-primary");
+    fireEvent.click(screen.getByRole("tab", { name: "Tài chính" }));
+    expect(handleChange).toHaveBeenCalledWith("tab2");
+    fireEvent.click(screen.getByRole("tab", { name: "Chứng từ" }));
+    expect(handleChange).not.toHaveBeenCalledWith("tab3");
+  });
 });

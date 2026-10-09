@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { V2Header } from "./V2Header";
 
 const meta: Meta<typeof V2Header> = {
-  title: "V2/Organisms/V2Header",
+  title: "Components/Organisms/Layout Shell/V2Header",
   component: V2Header,
   tags: ["autodocs"],
   parameters: {

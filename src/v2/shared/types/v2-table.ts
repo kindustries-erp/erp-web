@@ -104,6 +104,8 @@ export interface V2TableQuery {
   columnSearch: Record<string, string>;
   columnOperators: Record<string, V2OperatorFilter>;
   dateRanges: Record<string, V2DateRange>;
+  /** Tìm kiếm toàn cục trên mọi cột; bỏ trống nghĩa là không tìm */
+  search?: string;
 }
 
 export interface V2RowAction {

@@ -291,3 +291,24 @@ export function ErpInvoiceDetailDrawer({ open, onClose, invoice }) {
 - [x] 100% unit tests Vitest co-located pass (bao gồm 5 unit tests stack + 4 integration tests multi-drawer) và Storybook stories mô phỏng đầy đủ.
 
 
+
+## Component dùng chung trong V2StandardDrawer
+
+- Vỏ Sheet của cả desktop và mobile dùng molecule `V2DrawerSheet` (Esc và bấm nền đi qua `onRequestClose`, có tiêu đề sr-only).
+- Trạng thái loading dùng atom `V2Spinner`; lỗi dùng molecule `V2AlertBanner` (`role="alert"`).
+- Vạch kéo trên bottom sheet mobile dùng atom `V2GrabHandle`.
+- Khối bố cục dùng `V2Stack` (có `shrink-0` khi nằm trong vùng cuộn `flex-col`, vì `V2Stack` có `min-h-0`); vạch ngăn trong panel mobile dùng `V2Divider`.
+
+## DrawerSection (molecule) — đủ chuẩn
+
+- Thu gọn/mở rộng giống DrawerSection V1: nội dung luôn nằm trong DOM, animate `grid-template-rows` và `opacity` (300ms). Khi thu gọn: `aria-hidden` và `inert` để không focus/tương tác được.
+- Chỉ bấm nút mũi tên mới đổi trạng thái; nút có `aria-expanded`, `aria-controls` (id của vùng nội dung) và nhãn i18n (`v2.drawer.expandSection` / `v2.drawer.collapseSection`).
+- Prop `count` hiển thị `(N)` cạnh tiêu đề (ví dụ số dòng bảng).
+- Có story trong Storybook: `Components/Molecules/Overlay & Menu/V2DrawerSection`.
+
+## Bổ sung: nhúng bảng, xem trước tệp, xếp tầng
+
+- Bảng nhúng: `DrawerSection fitViewportHeight bodyClassName="flex flex-col overflow-hidden"` bao `V2StandardTable` (story `WithEmbeddedTable`). Không có `bodyClassName` thì thanh phân trang bị cắt và header không dính.
+- Panel phải xem trước hóa đơn/chứng từ: `V2FilePreviewPanel` (organism `v2-file-preview-panel`), module tải tệp rồi truyền `url` hoặc `text`.
+- Xếp tầng nhiều drawer được điều phối bằng `id` của drawer; trạng thái mở nên lấy từ `useV2OverlayState` để link/Back/tải lại giữ đúng chồng. Mẫu: `templates/v2-module-page/invoice-shape/` (drawer chi tiết + drawer hạch toán). Xem `v2-foundation`.
+

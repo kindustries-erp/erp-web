@@ -4,7 +4,7 @@ import { V2ConfirmModal } from "./V2ConfirmModal";
 import { V2Button } from "@/v2/shared/components/atoms/v2-button";
 
 const meta: Meta<typeof V2ConfirmModal> = {
-  title: "V2/Molecules/V2ConfirmModal",
+  title: "Components/Molecules/Overlay & Menu/V2ConfirmModal",
   component: V2ConfirmModal,
   tags: ["autodocs"],
 };

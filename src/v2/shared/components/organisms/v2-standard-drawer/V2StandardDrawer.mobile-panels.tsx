@@ -1,6 +1,8 @@
 import React from "react";
 import { V2TabBar } from "@/v2/shared/components/molecules/v2-tab-bar";
 import { DrawerRelatedDeck } from "@/v2/shared/components/molecules/v2-drawer-related-deck";
+import { V2Stack } from "@/v2/shared/components/atoms/v2-stack";
+import { V2Divider } from "@/v2/shared/components/atoms/v2-divider";
 import type { useStandardDrawer } from "./V2StandardDrawer.hook";
 import type { V2StandardDrawerProps } from "./V2StandardDrawer.type";
 
@@ -18,8 +20,8 @@ export const DrawerMobilePanels: React.FC<DrawerMobilePanelsProps> = ({
   hasRelated,
 }) => {
   return (
-    <div className="space-y-3">
-      <div className="space-y-2">
+    <V2Stack gap="sm">
+      <V2Stack gap="xs">
         {props.leftTabs && props.leftTabs.length > 0 && (
           <V2TabBar
             variant="sub"
@@ -35,13 +37,11 @@ export const DrawerMobilePanels: React.FC<DrawerMobilePanelsProps> = ({
         >
           {mainContent}
         </div>
-      </div>
+      </V2Stack>
 
       {props.rightPanel && !h.activeTabItem?.hideRightPanel && (
-        <div
-          data-testid="drawer-mobile-stacked-panel"
-          className="pt-2 border-t border-border/50 space-y-2"
-        >
+        <V2Stack gap="xs" data-testid="drawer-mobile-stacked-panel">
+          <V2Divider orientation="horizontal" className="bg-border/50" />
           {props.rightTabs && props.rightTabs.length > 0 && (
             <V2TabBar
               variant="sub"
@@ -52,7 +52,7 @@ export const DrawerMobilePanels: React.FC<DrawerMobilePanelsProps> = ({
             />
           )}
           {h.activeRightTabItem?.content || props.rightPanel}
-        </div>
+        </V2Stack>
       )}
 
       {hasRelated && (
@@ -66,6 +66,6 @@ export const DrawerMobilePanels: React.FC<DrawerMobilePanelsProps> = ({
           cardClassName={props.deckCardClassName}
         />
       )}
-    </div>
+    </V2Stack>
   );
 };

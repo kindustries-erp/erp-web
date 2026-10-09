@@ -1,1 +1,1 @@
-export * from "./v2-spreadsheet-page-template";
+export * from "./v2-module-page";

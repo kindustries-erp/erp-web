@@ -4,7 +4,7 @@ import { V2Modal } from "./V2Modal";
 import { V2Button } from "@/v2/shared/components/atoms/v2-button";
 
 const meta: Meta<typeof V2Modal> = {
-  title: "V2/Molecules/V2Modal",
+  title: "Components/Molecules/Overlay & Menu/V2Modal",
   component: V2Modal,
   tags: ["autodocs"],
 };

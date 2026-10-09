@@ -204,7 +204,7 @@ export function useExampleColumns(
       ),
     },
 
-    // CỘT TRẠNG THÁI: Badge cố định w-[88px] + Tooltip + truncate
+    // CỘT TRẠNG THÁI: Badge cố định w-[80px] + Tooltip + truncate
     {
       key: "status",
       size: 140,
@@ -216,7 +216,7 @@ export function useExampleColumns(
           <Tooltip content={t(row.status, row.status)}>
             <Badge
               variant={row.status === "COMPLETED" ? "default" : "secondary"}
-              className="w-[88px] inline-flex items-center justify-center text-center truncate"
+              className="w-[80px] inline-flex items-center justify-center text-center truncate"
             >
               {t(row.status, row.status)}
             </Badge>
@@ -355,7 +355,7 @@ bun test src/modules/[module]/components/organisms/[name]-table/
 | 6 | **Header Filter Helper** | Dùng `createColumnHeaderFilter`, hỗ trợ exact `""`, multi `;`, lọc rỗng `(blank)`. | [ ] |
 | 7 | **Cột Mã Code** | `<TableText enableCopy tooltip onDetailClick>`, badge trạng thái nháp/hủy cố định width `w-[50px]` align-right. | [ ] |
 | 8 | **Cột Tiền & Số lượng** | `text-right tabular-nums font-semibold` kết hợp `headerFilter.amount(...)` hoặc `headerFilter.numeric(...)`. | [ ] |
-| 9 | **Cột Trạng Thái** | Dùng `<Badge>` cố định width `w-[88px]` + Tooltip + `truncate`. | [ ] |
+| 9 | **Cột Trạng Thái** | Dùng `<Badge>` cố định width `w-[80px]` + Tooltip + `truncate`. | [ ] |
 | 10 | **Subtotal Lũy Kế Trang 2+** | Dùng `<SubtotalSummaryCell>`, truyền đủ `cumulativeAmount`, `cumulativeQty`, `cumulativeCount` khi có phân trang. | [ ] |
 | 11 | **Hai Cấp Độ Xóa Lọc** | Nút xóa lọc cục bộ trong Popover + Nút Clear All Filters tổng thể khi `activeFilterCount > 0`. | [ ] |
 | 12 | **Giới Hạn File Atomic** | Chia 5 file chuẩn (`.tsx`, `.columns.tsx`, `.hook.ts`, `.type.ts`, `.test.tsx`), không file nào $> 180\text{ LoC}$. | [ ] |

@@ -43,6 +43,12 @@ export const toClientColumns = <T>(
       : [],
   );
 
+/** Giá trị của mọi cột trên một dòng, dùng cho tìm kiếm toàn cục (chế độ client) */
+export const toSearchValues =
+  <T>(columns: V2Column<T>[]) =>
+  (row: T): unknown[] =>
+    columns.map((column) => getCellValue(row, column.key, column.accessor));
+
 export const createStaticFetchOptions =
   (options: V2FilterOption[]): V2FetchOptions =>
   async ({ search, pageParam }) => {

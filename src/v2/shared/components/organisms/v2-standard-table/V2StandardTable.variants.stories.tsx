@@ -11,7 +11,7 @@ import type { V2ColumnPreferencesStorage } from "./V2StandardTable.type";
 const queryClient = new QueryClient();
 
 const meta: Meta<typeof V2StandardTable> = {
-  title: "V2/Organisms/V2StandardTable/Variants",
+  title: "Components/Organisms/Table/V2StandardTable/Variants",
   component: V2StandardTable,
   parameters: { layout: "fullscreen" },
   decorators: [

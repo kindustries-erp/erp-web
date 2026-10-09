@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { V2QuickSearch } from "./V2QuickSearch";
 
 const meta: Meta<typeof V2QuickSearch> = {
-  title: "V2/Molecules/V2QuickSearch",
+  title: "Components/Molecules/Filter & Search/V2QuickSearch",
   component: V2QuickSearch,
   tags: ["autodocs"],
   argTypes: {

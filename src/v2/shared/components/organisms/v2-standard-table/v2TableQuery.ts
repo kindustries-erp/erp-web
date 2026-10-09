@@ -14,6 +14,7 @@ export const createInitialQuery = (
   columnSearch: initial.columnSearch ?? {},
   columnOperators: initial.columnOperators ?? {},
   dateRanges: initial.dateRanges ?? {},
+  ...(initial.search ? { search: initial.search } : {}),
 });
 
 export const countActiveFilters = (query: V2TableQuery): number => {

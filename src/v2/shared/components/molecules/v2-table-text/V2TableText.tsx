@@ -11,6 +11,8 @@ export interface V2TableTextProps {
   enableCopy?: boolean;
   /** Cắt chữ dài và hiện tooltip đầy đủ */
   tooltip?: boolean;
+  /** Bấm vào chính text (hiển thị dạng link) để mở chi tiết; icon vẫn hiện bình thường */
+  onTextClick?: (event: React.MouseEvent) => void;
   /** Bản ghi chính: hiện icon con mắt để mở chi tiết */
   onDetailClick?: (event: React.MouseEvent) => void;
   /** Dữ liệu liên kết: hiện icon ngăn kéo để mở bản ghi liên quan */
@@ -26,6 +28,7 @@ export const V2TableText = React.memo(function V2TableText({
   text,
   enableCopy = false,
   tooltip = true,
+  onTextClick,
   onDetailClick,
   onDrawerClick,
   className,
@@ -71,7 +74,21 @@ export const V2TableText = React.memo(function V2TableText({
       )}
     >
       <V2Tooltip content={text} side="bottom" disabled={!tooltip}>
-        <span className="min-w-0 flex-1 truncate">{text}</span>
+        {onTextClick ? (
+          <V2Button
+            variant="link"
+            size="xs"
+            className="h-auto min-w-0 flex-1 justify-start truncate p-0 text-left"
+            onClick={(event) => {
+              event.stopPropagation();
+              onTextClick(event);
+            }}
+          >
+            {text}
+          </V2Button>
+        ) : (
+          <span className="min-w-0 flex-1 truncate">{text}</span>
+        )}
       </V2Tooltip>
       {onDetailClick &&
         iconButton(
