@@ -19,7 +19,7 @@ export const useGarageCaseCombobox = (propsBranchId?: string) => {
       queryKey: ["garage-cases-infinite", branchId, debouncedSearch],
       queryFn: ({ pageParam = 1 }) =>
         garageApi.getCases(
-          branchId || "",
+          "", // Do not filter by ERP branch ID since Kgara uses external branch IDs
           pageParam,
           20, // pageSize
           debouncedSearch,
@@ -37,10 +37,27 @@ export const useGarageCaseCombobox = (propsBranchId?: string) => {
   const options =
     data?.pages
       ?.flatMap((page) => page?.data || [])
-      ?.map((item: any) => ({
-        label: item.soChungTu || item.id,
-        value: item.id,
-      })) || [];
+      ?.map((item: any) => {
+        const date =
+          item.ngayPhatSinh || item.caseDate
+            ? new Date(item.ngayPhatSinh || item.caseDate).toLocaleDateString(
+                "vi-VN",
+              )
+            : "";
+        const ref = item.soChungTu || item.id;
+        const plate = item.bienSoXe || "Không BKS";
+
+        // Phải thu (Receivable) = tienCoThue, Phải trả (Payable) = chiPhi
+        const thu = Number(item.tienCoThue) || 0;
+        const tra = Number(item.chiPhi) || 0;
+
+        return {
+          label: `[${date}] ${ref} - ${plate}`,
+          code: `Thu: ${thu.toLocaleString("vi-VN")}đ | Chi: ${tra.toLocaleString("vi-VN")}đ`,
+          subLabel: item.khachHangName || "Không có thông tin",
+          value: item.id,
+        };
+      }) || [];
 
   return {
     options,

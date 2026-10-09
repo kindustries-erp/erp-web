@@ -277,8 +277,10 @@ export const GarageCashflowDrawer: React.FC<GarageCashflowDrawerProps> = ({
                       })
                     }
                     fallbackLabel={
-                      voucher?.erpBankTransaction?.transactionCode
-                        ? voucher.erpBankTransaction.transactionCode
+                      voucher?.erpBankTransaction
+                        ? voucher.erpBankTransaction.referenceNumber ||
+                          voucher.erpBankTransaction.seqNo ||
+                          voucher.erpBankTransaction.id
                         : undefined
                     }
                   />
@@ -293,8 +295,10 @@ export const GarageCashflowDrawer: React.FC<GarageCashflowDrawerProps> = ({
                       })
                     }
                     fallbackLabel={
-                      voucher?.erpCashVoucher?.transactionCode
-                        ? voucher.erpCashVoucher.transactionCode
+                      voucher?.erpCashVoucher
+                        ? voucher.erpCashVoucher.referenceNumber ||
+                          voucher.erpCashVoucher.seqNo ||
+                          voucher.erpCashVoucher.id
                         : undefined
                     }
                   />
@@ -321,14 +325,22 @@ export const GarageCashflowDrawer: React.FC<GarageCashflowDrawerProps> = ({
                 <DrawerRow
                   label="Tham chiếu ERP Bank"
                   value={
-                    voucher?.erpBankTransaction?.transactionCode
-                      ? voucher.erpBankTransaction.transactionCode
+                    voucher?.erpBankTransaction
+                      ? voucher.erpBankTransaction.referenceNumber ||
+                        voucher.erpBankTransaction.seqNo ||
+                        voucher.erpBankTransaction.id
                       : voucher?.erpBankTransactionId || "—"
                   }
                 />
                 <DrawerRow
                   label="Tham chiếu ERP Cash"
-                  value={voucher?.erpCashVoucherId || "—"}
+                  value={
+                    voucher?.erpCashVoucher
+                      ? voucher.erpCashVoucher.referenceNumber ||
+                        voucher.erpCashVoucher.seqNo ||
+                        voucher.erpCashVoucher.id
+                      : voucher?.erpCashVoucherId || "—"
+                  }
                 />
               </div>
             )}

@@ -19,7 +19,7 @@ export const useErpCashVoucherCombobox = (propsBranchId?: string) => {
       queryKey: ["cash-vouchers-combobox", branchId, debouncedSearch],
       queryFn: ({ pageParam = 1 }) =>
         bankStatementApi.getTransactions({
-          branchId: branchId || undefined,
+          branchId: undefined, // Do not filter by branchId because Kgara branch ID != ERP branch ID
           page: pageParam,
           pageSize: 20,
           search: debouncedSearch || undefined,
@@ -38,10 +38,23 @@ export const useErpCashVoucherCombobox = (propsBranchId?: string) => {
   const options =
     data?.pages
       ?.flatMap((page) => page?.items || [])
-      ?.map((item: any) => ({
-        label: `${item.transactionCode || item.id} - ${item.amount?.toLocaleString("vi-VN") || 0}đ`,
-        value: item.id,
-      })) || [];
+      ?.map((item: any) => {
+        const date = item.transDate
+          ? new Date(item.transDate).toLocaleDateString("vi-VN")
+          : "";
+        const ref = item.referenceNumber || item.seqNo || item.id;
+        const source =
+          item.cashBook?.name || item.correspondentName || "Tiền mặt";
+        const amount =
+          (Number(item.creditAmount) || 0) + (Number(item.debitAmount) || 0);
+
+        return {
+          label: `[${date}] ${ref} - ${source}`,
+          code: `${amount.toLocaleString("vi-VN")}đ`,
+          subLabel: item.description || "",
+          value: item.id,
+        };
+      }) || [];
 
   return {
     options,

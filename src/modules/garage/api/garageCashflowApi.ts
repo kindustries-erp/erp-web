@@ -24,11 +24,13 @@ export interface GarageCashflowVoucher {
   };
   erpBankTransaction?: {
     id: string;
-    transactionCode: string;
+    referenceNumber?: string;
+    seqNo?: string;
   };
   erpCashVoucher?: {
     id: string;
-    transactionCode: string;
+    referenceNumber?: string;
+    seqNo?: string;
   };
 }
 
