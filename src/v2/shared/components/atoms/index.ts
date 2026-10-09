@@ -13,3 +13,5 @@ export * from "./v2-filter-chip";
 export * from "./v2-page-icon";
 export * from "./v2-stack";
 export * from "./v2-divider";
+export * from "./v2-spinner";
+export * from "./v2-grab-handle";

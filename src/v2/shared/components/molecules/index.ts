@@ -35,3 +35,5 @@ export * from "./v2-filter-panel";
 export * from "./v2-page-toolbar-slot";
 export * from "./v2-page-header";
 export * from "./v2-table-select-checkbox";
+export * from "./v2-alert-banner";
+export * from "./v2-drawer-sheet";

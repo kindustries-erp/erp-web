@@ -1,6 +1,7 @@
 import React from "react";
-import { AlertCircle, Loader2 } from "lucide-react";
+import { V2Spinner } from "@/v2/shared/components/atoms/v2-spinner";
 import { V2Text } from "@/v2/shared/components/atoms/v2-text";
+import { V2AlertBanner } from "@/v2/shared/components/molecules/v2-alert-banner";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 
 interface DrawerStateGuardProps {
@@ -19,8 +20,11 @@ export const DrawerStateGuard: React.FC<DrawerStateGuardProps> = ({
   if (loading) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center py-16 gap-3">
-        <Loader2 className="w-7 h-7 text-primary animate-spin" />
-        <V2Text variant="body-sm" className="text-muted-foreground">
+        <V2Spinner
+          size="md"
+          aria-label={t("v2.common.loading", "Đang tải dữ liệu...")}
+        />
+        <V2Text variant="body-sm" className="text-muted-fg">
           {t("v2.common.loading", "Đang tải dữ liệu...")}
         </V2Text>
       </div>
@@ -28,14 +32,7 @@ export const DrawerStateGuard: React.FC<DrawerStateGuardProps> = ({
   }
 
   if (error) {
-    return (
-      <div className="p-4 rounded-xl border border-destructive/30 bg-destructive/10 text-destructive flex items-center gap-2.5">
-        <AlertCircle className="w-5 h-5 shrink-0" />
-        <V2Text variant="body-sm" className="text-destructive font-medium">
-          {error}
-        </V2Text>
-      </div>
-    );
+    return <V2AlertBanner>{error}</V2AlertBanner>;
   }
 
   return <>{children}</>;

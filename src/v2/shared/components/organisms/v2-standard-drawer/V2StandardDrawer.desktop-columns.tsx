@@ -1,5 +1,6 @@
 import React from "react";
 import { V2TabBar } from "@/v2/shared/components/molecules/v2-tab-bar";
+import { V2Stack } from "@/v2/shared/components/atoms/v2-stack";
 import { cn } from "@/v2/shared/utils/cn";
 import type { useStandardDrawer } from "./V2StandardDrawer.hook";
 import type { V2StandardDrawerProps } from "./V2StandardDrawer.type";
@@ -27,7 +28,7 @@ export const DrawerDesktopColumns: React.FC<DrawerDesktopColumnsProps> = ({
         hasRightPanel && !isRightCollapsed ? "gap-4 lg:gap-6" : "gap-0",
       )}
     >
-      <div className="flex-1 min-w-0 w-full space-y-3 sm:space-y-4">
+      <V2Stack gap="sm" className="flex-1 min-w-0 w-full sm:gap-4">
         {props.leftTabs && props.leftTabs.length > 0 && (
           <V2TabBar
             variant="sub"
@@ -43,20 +44,24 @@ export const DrawerDesktopColumns: React.FC<DrawerDesktopColumnsProps> = ({
         >
           {mainContent}
         </div>
-      </div>
+      </V2Stack>
       {hasRightPanel && (
-        <div
+        <V2Stack
+          gap="sm"
           data-testid="drawer-desktop-right-panel"
           aria-hidden={isRightCollapsed}
           className={cn(
-            "shrink-0 space-y-3 sm:space-y-4 transition-all duration-300 ease-in-out overflow-x-hidden",
+            "shrink-0 sm:gap-4 transition-all duration-300 ease-in-out overflow-x-hidden",
             props.stickyRightPanel && "lg:sticky lg:top-0",
             isRightCollapsed
               ? "w-0 lg:w-0 opacity-0 overflow-hidden !p-0 !m-0 pointer-events-none"
               : "w-full lg:w-72 xl:w-80 2xl:w-88 opacity-100",
           )}
         >
-          <div className="w-full min-w-0 lg:min-w-[280px] space-y-3 sm:space-y-4">
+          <V2Stack
+            gap="sm"
+            className="w-full min-w-0 lg:min-w-[280px] sm:gap-4"
+          >
             {props.rightTabs && props.rightTabs.length > 0 && (
               <V2TabBar
                 variant="sub"
@@ -67,8 +72,8 @@ export const DrawerDesktopColumns: React.FC<DrawerDesktopColumnsProps> = ({
               />
             )}
             {h.activeRightTabItem?.content || props.rightPanel}
-          </div>
-        </div>
+          </V2Stack>
+        </V2Stack>
       )}
     </div>
   );
