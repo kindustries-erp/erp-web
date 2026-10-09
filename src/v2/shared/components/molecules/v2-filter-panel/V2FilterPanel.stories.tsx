@@ -6,7 +6,7 @@ import { V2FilterCard } from "@/v2/shared/components/molecules/v2-filter-card";
 import { V2FilterPanel } from "./V2FilterPanel";
 
 const meta: Meta<typeof V2FilterPanel> = {
-  title: "V2/Molecules/V2FilterPanel",
+  title: "Components/Molecules/Filter & Search/V2FilterPanel",
   component: V2FilterPanel,
   tags: ["autodocs"],
   decorators: [

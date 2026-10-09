@@ -3,7 +3,7 @@ import React from "react";
 import { V2PageButton } from "./V2PageButton";
 
 const meta: Meta<typeof V2PageButton> = {
-  title: "V2/Atoms/V2PageButton",
+  title: "Components/Atoms/Buttons & Icons/V2PageButton",
   component: V2PageButton,
   tags: ["autodocs"],
 };

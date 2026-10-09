@@ -3,7 +3,7 @@ import React from "react";
 import { V2TableFilterButton } from "./V2TableFilterButton";
 
 const meta: Meta<typeof V2TableFilterButton> = {
-  title: "V2/Atoms/V2TableFilterButton",
+  title: "Components/Atoms/Buttons & Icons/V2TableFilterButton",
   component: V2TableFilterButton,
   tags: ["autodocs"],
 };

@@ -4,7 +4,7 @@ import { ColumnValueType } from "@/v2/shared/types/v2-table";
 import { V2FilterCard } from "./V2FilterCard";
 
 const meta: Meta<typeof V2FilterCard> = {
-  title: "V2/Molecules/V2FilterCard",
+  title: "Components/Molecules/Filter & Search/V2FilterCard",
   component: V2FilterCard,
   tags: ["autodocs"],
   decorators: [

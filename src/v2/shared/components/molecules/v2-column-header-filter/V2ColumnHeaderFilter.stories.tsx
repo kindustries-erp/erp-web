@@ -13,7 +13,7 @@ import {
 } from "./V2ColumnHeaderFilter.type";
 
 const meta: Meta<typeof V2ColumnHeaderFilter> = {
-  title: "V2/Molecules/V2ColumnHeaderFilter",
+  title: "Components/Molecules/Table/V2ColumnHeaderFilter",
   component: V2ColumnHeaderFilter,
   tags: ["autodocs"],
   parameters: { layout: "centered" },

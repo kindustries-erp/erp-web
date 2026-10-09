@@ -28,7 +28,7 @@ import { V2SpreadsheetPageTemplate } from "./V2SpreadsheetPageTemplate";
 const queryClient = new QueryClient();
 
 const meta: Meta<typeof V2SpreadsheetPageTemplate> = {
-  title: "V2/Templates/V2SpreadsheetPageTemplate",
+  title: "Components/Templates/V2SpreadsheetPageTemplate",
   component: V2SpreadsheetPageTemplate,
   tags: ["autodocs"],
   parameters: { layout: "fullscreen" },

@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { V2ViewModeCombobox } from "./V2ViewModeCombobox";
 
 const meta: Meta<typeof V2ViewModeCombobox> = {
-  title: "V2/Molecules/V2ViewModeCombobox",
+  title: "Components/Molecules/Filter & Search/V2ViewModeCombobox",
   component: V2ViewModeCombobox,
   tags: ["autodocs"],
 };

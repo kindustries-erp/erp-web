@@ -39,7 +39,7 @@ import {
 } from "./V2StandardDrawer.mock";
 
 const meta: Meta<typeof V2StandardDrawer> = {
-  title: "V2/Organisms/V2StandardDrawer",
+  title: "Components/Organisms/Drawer/V2StandardDrawer",
   component: V2StandardDrawer,
   tags: ["autodocs"],
 };

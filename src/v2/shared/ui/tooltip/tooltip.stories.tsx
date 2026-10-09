@@ -9,7 +9,7 @@ import {
 } from "./tooltip";
 
 const meta: Meta<typeof Tooltip> = {
-  title: "V2/UI Primitives/Tooltip",
+  title: "Components/UI Primitives/Tooltip",
   component: Tooltip,
   tags: ["autodocs"],
 };

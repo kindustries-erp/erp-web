@@ -10,7 +10,7 @@ import type { MockOrder } from "./V2StandardTable.mock-server";
 const queryClient = new QueryClient();
 
 const meta: Meta<typeof V2StandardTable> = {
-  title: "V2/Organisms/V2StandardTable/Toolbar",
+  title: "Components/Organisms/Table/V2StandardTable/Toolbar",
   component: V2StandardTable,
   parameters: { layout: "fullscreen" },
   decorators: [

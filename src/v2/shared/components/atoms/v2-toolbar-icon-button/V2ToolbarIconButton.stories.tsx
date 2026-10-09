@@ -4,7 +4,7 @@ import { Filter, Maximize2, RefreshCw, Settings2 } from "lucide-react";
 import { V2ToolbarIconButton } from "./V2ToolbarIconButton";
 
 const meta: Meta<typeof V2ToolbarIconButton> = {
-  title: "V2/Atoms/V2ToolbarIconButton",
+  title: "Components/Atoms/Buttons & Icons/V2ToolbarIconButton",
   component: V2ToolbarIconButton,
   tags: ["autodocs"],
 };

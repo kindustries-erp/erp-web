@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { V2Topbar } from "./V2Topbar";
 
 const meta: Meta<typeof V2Topbar> = {
-  title: "V2/Molecules/V2Topbar",
+  title: "Components/Molecules/Header & Account/V2Topbar",
   component: V2Topbar,
   tags: ["autodocs"],
   parameters: {

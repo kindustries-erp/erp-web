@@ -4,7 +4,7 @@ import { V2ColumnToggle } from "./V2ColumnToggle";
 import type { V2ColumnToggleItem } from "./V2ColumnToggle.type";
 
 const meta: Meta<typeof V2ColumnToggle> = {
-  title: "V2/Molecules/V2ColumnToggle",
+  title: "Components/Molecules/Table/V2ColumnToggle",
   component: V2ColumnToggle,
   tags: ["autodocs"],
   parameters: { layout: "centered" },

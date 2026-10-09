@@ -4,7 +4,7 @@ import { Calendar, Hash, ListFilter } from "lucide-react";
 import { V2FilterChip } from "./V2FilterChip";
 
 const meta: Meta<typeof V2FilterChip> = {
-  title: "V2/Atoms/V2FilterChip",
+  title: "Components/Atoms/Display/V2FilterChip",
   component: V2FilterChip,
   tags: ["autodocs"],
 };

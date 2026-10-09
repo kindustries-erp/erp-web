@@ -3,7 +3,7 @@ import React from "react";
 import { V2TableDateCell } from "./V2TableDateCell";
 
 const meta: Meta<typeof V2TableDateCell> = {
-  title: "V2/Atoms/V2TableDateCell",
+  title: "Components/Atoms/Display/V2TableDateCell",
   component: V2TableDateCell,
   tags: ["autodocs"],
   decorators: [

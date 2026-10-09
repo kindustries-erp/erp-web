@@ -12,7 +12,7 @@ import {
 } from "./dialog";
 
 const meta: Meta<typeof Dialog> = {
-  title: "V2/UI Primitives/Dialog",
+  title: "Components/UI Primitives/Dialog",
   component: Dialog,
   tags: ["autodocs"],
 };

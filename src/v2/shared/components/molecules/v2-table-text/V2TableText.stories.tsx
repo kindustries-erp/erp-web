@@ -3,7 +3,7 @@ import React from "react";
 import { V2TableText } from "./V2TableText";
 
 const meta: Meta<typeof V2TableText> = {
-  title: "V2/Molecules/V2TableText",
+  title: "Components/Molecules/Table/V2TableText",
   component: V2TableText,
   tags: ["autodocs"],
   decorators: [

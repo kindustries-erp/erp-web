@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { V2SidebarToggleBtn } from "./V2SidebarToggleBtn";
 
 const meta: Meta<typeof V2SidebarToggleBtn> = {
-  title: "V2/Atoms/V2SidebarToggleBtn",
+  title: "Components/Atoms/Buttons & Icons/V2SidebarToggleBtn",
   component: V2SidebarToggleBtn,
   tags: ["autodocs"],
   argTypes: {

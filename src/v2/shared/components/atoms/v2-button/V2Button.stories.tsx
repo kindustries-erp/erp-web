@@ -4,7 +4,7 @@ import { Plus, ArrowRight, Trash2, Check } from "lucide-react";
 import { V2Button } from "./V2Button";
 
 const meta: Meta<typeof V2Button> = {
-  title: "V2/Atoms/V2Button",
+  title: "Components/Atoms/Buttons & Icons/V2Button",
   component: V2Button,
   tags: ["autodocs"],
   argTypes: {

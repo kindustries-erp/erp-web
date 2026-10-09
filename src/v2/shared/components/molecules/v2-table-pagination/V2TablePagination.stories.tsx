@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { V2TablePagination } from "./V2TablePagination";
 
 const meta: Meta<typeof V2TablePagination> = {
-  title: "V2/Molecules/V2TablePagination",
+  title: "Components/Molecules/Table/V2TablePagination",
   component: V2TablePagination,
   tags: ["autodocs"],
   decorators: [

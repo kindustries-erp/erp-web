@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { V2LanguageSwitcher } from "./V2LanguageSwitcher";
 
 const meta: Meta<typeof V2LanguageSwitcher> = {
-  title: "V2/Molecules/V2LanguageSwitcher",
+  title: "Components/Molecules/Header & Account/V2LanguageSwitcher",
   component: V2LanguageSwitcher,
   tags: ["autodocs"],
   argTypes: {

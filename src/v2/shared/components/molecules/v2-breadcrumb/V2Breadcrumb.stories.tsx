@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { V2Breadcrumb } from "./V2Breadcrumb";
 
 const meta: Meta<typeof V2Breadcrumb> = {
-  title: "V2/Molecules/V2Breadcrumb",
+  title: "Components/Molecules/Navigation & Sidebar/V2Breadcrumb",
   component: V2Breadcrumb,
   tags: ["autodocs"],
 };

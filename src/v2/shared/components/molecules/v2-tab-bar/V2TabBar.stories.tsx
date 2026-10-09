@@ -5,7 +5,7 @@ import { V2TabBar } from "./V2TabBar";
 import type { V2TabBarVariant, V2TabItemData } from "./V2TabBar.type";
 
 const meta: Meta<typeof V2TabBar> = {
-  title: "V2/Molecules/V2TabBar",
+  title: "Components/Molecules/Navigation & Sidebar/V2TabBar",
   component: V2TabBar,
   tags: ["autodocs"],
   parameters: { layout: "padded" },

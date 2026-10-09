@@ -3,7 +3,7 @@ import { LayoutDashboard, ShoppingCart, Bell, Wrench } from "lucide-react";
 import { V2NavItem } from "./V2NavItem";
 
 const meta: Meta<typeof V2NavItem> = {
-  title: "V2/Molecules/V2NavItem",
+  title: "Components/Molecules/Navigation & Sidebar/V2NavItem",
   component: V2NavItem,
   tags: ["autodocs"],
   argTypes: {

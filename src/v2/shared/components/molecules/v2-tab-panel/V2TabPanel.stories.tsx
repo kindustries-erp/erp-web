@@ -4,7 +4,7 @@ import { V2PageTabsContext } from "./V2PageTabs.context";
 import { V2TabPanel } from "./V2TabPanel";
 
 const meta: Meta<typeof V2TabPanel> = {
-  title: "V2/Molecules/V2TabPanel",
+  title: "Components/Molecules/Navigation & Sidebar/V2TabPanel",
   component: V2TabPanel,
   tags: ["autodocs"],
 };
