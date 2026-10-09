@@ -53,7 +53,8 @@ export const useGarageCaseCombobox = (propsBranchId?: string) => {
 
         return {
           label: `[${date}] ${ref} - ${plate}`,
-          code: `Thu: ${thu.toLocaleString("vi-VN")}đ | Chi: ${tra.toLocaleString("vi-VN")}đ`,
+          code: `Thu: ${thu.toLocaleString("vi-VN")}đ`,
+          subCode: `Chi: ${tra.toLocaleString("vi-VN")}đ`,
           subLabel: item.khachHangName || "Không có thông tin",
           value: item.id,
         };

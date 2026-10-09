@@ -196,6 +196,19 @@ export const GarageCashflowDrawer: React.FC<GarageCashflowDrawerProps> = ({
                     className="w-full text-sm"
                   />
                 </DrawerField>
+                <DrawerField label="Mã Phiếu Dịch Vụ (Garage Case)">
+                  <GarageCaseCombobox
+                    value={formData.caseId || ""}
+                    onChange={(val: string) =>
+                      setFormData({ ...formData, caseId: val })
+                    }
+                    fallbackLabel={
+                      voucher?.case?.soChungTu
+                        ? voucher.case.soChungTu
+                        : undefined
+                    }
+                  />
+                </DrawerField>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-2">
@@ -222,6 +235,14 @@ export const GarageCashflowDrawer: React.FC<GarageCashflowDrawerProps> = ({
                   value={voucher?.partnerPhone || "—"}
                 />
                 <DrawerRow label="Diễn giải" value={voucher?.note || "—"} />
+                <DrawerRow
+                  label="Mã Phiếu Dịch Vụ"
+                  value={
+                    voucher?.case?.soChungTu
+                      ? voucher.case.soChungTu
+                      : voucher?.caseId || "—"
+                  }
+                />
               </div>
             )}
           </DrawerSection>
@@ -256,19 +277,7 @@ export const GarageCashflowDrawer: React.FC<GarageCashflowDrawerProps> = ({
                     className="w-full h-8 text-sm"
                   />
                 </DrawerField>
-                <DrawerField label="Mã Phiếu Dịch Vụ (Garage Case)">
-                  <GarageCaseCombobox
-                    value={formData.caseId || ""}
-                    onChange={(val: string) =>
-                      setFormData({ ...formData, caseId: val })
-                    }
-                    fallbackLabel={
-                      voucher?.case?.soChungTu
-                        ? voucher.case.soChungTu
-                        : undefined
-                    }
-                  />
-                </DrawerField>
+
                 <DrawerField label="Tham chiếu ERP Bank">
                   <ErpBankTransactionCombobox
                     value={formData.erpBankTransactionId || ""}
@@ -315,14 +324,6 @@ export const GarageCashflowDrawer: React.FC<GarageCashflowDrawerProps> = ({
                 <DrawerRow
                   label="Mã tham chiếu"
                   value={voucher?.referenceNumber || "—"}
-                />
-                <DrawerRow
-                  label="Mã Phiếu Dịch Vụ"
-                  value={
-                    voucher?.case?.soChungTu
-                      ? voucher.case.soChungTu
-                      : voucher?.caseId || "—"
-                  }
                 />
                 <DrawerRow
                   label="Tham chiếu ERP Bank"
