@@ -5,12 +5,12 @@ import { InvoiceShapePage } from "./invoice-shape";
 const queryClient = new QueryClient();
 
 /**
- * Bằng chứng parity: một trang có hình dạng erp-invoice (dashboard + 2 bảng + drawer chi tiết 2 cột
- * + drawer hạch toán xếp tầng + drawer xuất + modal hàng loạt + modal nhập XML) chỉ gồm thành phần V2
- * và logic giả. Không gọi API, không import module thật.
+ * Use case: mô phỏng màn erp-invoice bằng V2 module page (hình dạng InvoiceShape).
+ * Không có global searchbox; mỗi cột có header filter và sort; nút "Đồng bộ" có menu thao tác.
+ * Dữ liệu giả, không gọi API.
  */
 const meta: Meta<typeof InvoiceShapePage> = {
-  title: "Components/Templates/V2ModulePage/InvoiceShape",
+  title: "Use Cases/Tài chính & Hóa đơn/Hóa đơn (V2 module page)",
   component: InvoiceShapePage,
   parameters: { layout: "fullscreen" },
   decorators: [

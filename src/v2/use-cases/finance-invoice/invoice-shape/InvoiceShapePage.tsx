@@ -1,10 +1,19 @@
 import * as React from "react";
-import { FileDown, FileUp, Receipt } from "lucide-react";
+import {
+  Download,
+  DownloadCloud,
+  FileCheck,
+  FileDown,
+  FileUp,
+  KeyRound,
+  Receipt,
+  Settings,
+} from "lucide-react";
 import { V2Button } from "@/v2/shared/components/atoms/v2-button";
 import { useV2OverlayState } from "@/v2/shared/hooks/useV2OverlayState";
 import { resetV2TableUrl } from "@/v2/shared/utils/v2TableUrl";
-import { V2ModulePage } from "../V2ModulePage";
-import type { V2ModuleTab } from "../V2ModulePage.type";
+import { V2ModulePage } from "@/v2/shared/components/templates/v2-module-page/V2ModulePage";
+import type { V2ModuleTab } from "@/v2/shared/components/templates/v2-module-page/V2ModulePage.type";
 import { buildInvoiceColumns } from "./invoiceShape.columns";
 import type { InvoiceView } from "./invoiceShape.columns";
 import type {
@@ -87,7 +96,6 @@ export const InvoiceShapePage: React.FC<{ syncUrl?: boolean }> = ({
         },
       ],
       toolbar: {
-        search: { placeholder: "Tìm số hóa đơn, đối tác, MST" },
         pillTabs: {
           items: TAX_TABS,
           activeKey: taxTab,
@@ -111,6 +119,45 @@ export const InvoiceShapePage: React.FC<{ syncUrl?: boolean }> = ({
           },
         ],
         filterPanel: {},
+        create: {
+          label: "Đồng bộ",
+          icon: <DownloadCloud className="h-4 w-4" />,
+          onClick: () => setResetCount((count) => count + 1),
+          actions: [
+            {
+              groupLabel: "Tra cứu",
+              items: [
+                {
+                  label: "Xuất Excel",
+                  icon: <Download className="h-3.5 w-3.5" />,
+                  onClick: () => openOverlay("export"),
+                },
+              ],
+            },
+            {
+              groupLabel: "Thao tác",
+              items: [
+                {
+                  label: "Đăng nhập Cổng Thuế",
+                  icon: <KeyRound className="h-3.5 w-3.5" />,
+                },
+                {
+                  label: "Đồng bộ & Tải PDF gốc NCC",
+                  icon: <FileCheck className="h-3.5 w-3.5" />,
+                },
+              ],
+            },
+            {
+              groupLabel: "Cấu hình",
+              items: [
+                {
+                  label: "Cấu hình hóa đơn mua vào",
+                  icon: <Settings className="h-3.5 w-3.5" />,
+                },
+              ],
+            },
+          ],
+        },
       },
     },
   });

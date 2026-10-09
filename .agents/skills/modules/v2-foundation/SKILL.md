@@ -51,7 +51,8 @@ Giới hạn: bảng không phản ứng khi người dùng bấm Back làm đ�
 - `summaries: { [columnKey]: tổng }` là tổng toàn bộ mọi trang, khung gắn vào `summary.total` của cột (chế độ server).
 - State ngoài `V2TableQuery` (pill tab, chế độ xem) do page giữ; `useData` đọc qua closure. Đổi pill tab thì gọi `resetV2TableUrl(tabKey)` và đổi `resetKey` để bảng về trang 1.
 - `syncUrl` (mặc định true) giữ tab trên URL; tắt trong story/test cần cô lập.
-- Mẫu hoàn chỉnh: `templates/v2-module-page/invoice-shape/` (dữ liệu giả, không gọi API) và story `Components/Templates/V2ModulePage/InvoiceShape`; smoke test `V2ModulePage.invoice-shape.test.tsx`.
+- Mẫu hoàn chỉnh: `src/v2/use-cases/finance-invoice/invoice-shape/` (dữ liệu giả, không gọi API), story use case `ErpInvoiceV2ModulePage.stories.tsx`; smoke test `ErpInvoiceV2ModulePage.test.tsx`. Đã bỏ global searchbox; cột "Đã thanh toán" và "Còn lại" có header filter; nút "Đồng bộ" là split button (`toolbar.create`).
+- Use case dựng từ mẫu này: `src/v2/use-cases/finance-invoice/ErpInvoiceV2ModulePage.stories.tsx`.
 
 ## 5. Thành phần V2 thêm cho module hoàn chỉnh
 

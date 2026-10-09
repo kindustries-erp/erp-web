@@ -311,7 +311,8 @@ cd /home/dev/repos-dev/erp/erp-web && bun run storybook
 - Khung dùng `V2PageHeader`, `V2TabBar`, `V2TabPanel` (L2) và `V2StandardTable` (L3). Logic đăng ký slot nằm trong `V2ModulePage.hook.ts`. Tab được mount lazy (keepAlive), nên bảng chỉ render khi tab được mở lần đầu.
 - `V2StatCard` (`molecules/v2-stat-card/`, L2): KPI một chỉ số, props `label`, `value` (đã format sẵn), `unit`, `icon`, `trend {direction, label}`, `loading`. Không tự format số/tiền, không có text hardcode.
 - Tab `list` nhận `useData(query)` (hook của module, được gọi trong tab mount lazy), `initialQuery`, `resetKey`; tab `dashboard` nhận `content`. Props thêm: `defaultTab`, `syncUrl`. Chi tiết hợp đồng, hook URL, i18n theo module, router/guard và bảng parity với erp-invoice: xem skill `v2-foundation`.
-- Mẫu hoàn chỉnh dùng dữ liệu giả: `templates/v2-module-page/invoice-shape/` (story `Components/Templates/V2ModulePage/InvoiceShape`).
+- Mẫu hoàn chỉnh dùng dữ liệu giả: `src/v2/use-cases/finance-invoice/invoice-shape/` (story `Use Cases/Tài chính & Hóa đơn/Hóa đơn (V2 module page)`). Không có global searchbox: mọi cột có header filter và sort (lọc qua `filterClientItems`/`sortClientItems`, khai báo ở `INVOICE_FILTER_COLUMNS`). Nút "Đồng bộ" là `toolbar.create` (split button, menu nhóm Tra cứu / Thao tác / Cấu hình).
+- Use case mô phỏng erp-invoice: `src/v2/use-cases/finance-invoice/ErpInvoiceV2ModulePage.stories.tsx` (story `Use Cases/Tài chính & Hóa đơn/Hóa đơn (V2 module page)`).
 - Thành phần V2 thêm cho form và dashboard: atom `V2Switch`, `V2Textarea`, `V2Skeleton`, `V2Progress`, `V2NumberInput`, `V2CopyButton`, `V2Sparkline`; molecule `V2Combobox`, `V2DatePicker`/`V2DateRangePicker`, `V2EmptyState`, `V2FileUpload`, `V2SearchInput`, `V2Panel`, `V2ChartFrame`; organism `V2BarChart`/`V2LineChart`/`V2DonutChart`, `V2FilePreviewPanel`.
 
 ---

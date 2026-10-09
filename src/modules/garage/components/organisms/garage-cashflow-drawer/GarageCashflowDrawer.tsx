@@ -58,7 +58,7 @@ export const GarageCashflowDrawer: React.FC<GarageCashflowDrawerProps> = ({
             | "RECEIPT"
             | "PAYMENT",
           amount: voucher.amount,
-          partnerName: voucher.partnerName || "",
+          partnerName: voucher.partnerName || voucher.case?.khachHangName || "",
           partnerPhone: voucher.partnerPhone || "",
           note: voucher.note || "",
           paymentMethod: voucher.paymentMethod || "",
@@ -213,7 +213,9 @@ export const GarageCashflowDrawer: React.FC<GarageCashflowDrawerProps> = ({
                 />
                 <DrawerRow
                   label="Đối tác"
-                  value={voucher?.partnerName || "—"}
+                  value={
+                    voucher?.partnerName || voucher?.case?.khachHangName || "—"
+                  }
                 />
                 <DrawerRow
                   label="SĐT Đối tác"
