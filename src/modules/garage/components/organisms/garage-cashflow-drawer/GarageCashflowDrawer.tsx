@@ -11,6 +11,11 @@ import { Input } from "@/shared/components/ui/input";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { Badge } from "@/shared/components/ui/badge";
 
+import { PaymentMethodCombobox } from "../../molecules/payment-method-combobox";
+import { GarageCaseCombobox } from "../garage-case-combobox";
+import { ErpBankTransactionCombobox } from "../erp-bank-transaction-combobox";
+import { ErpCashVoucherCombobox } from "../erp-cash-voucher-combobox";
+
 import type {
   GarageCashflowVoucher,
   CreateGarageCashflowVoucherDto,
@@ -227,16 +232,14 @@ export const GarageCashflowDrawer: React.FC<GarageCashflowDrawerProps> = ({
             {mode === "edit" ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <DrawerField label="Phương thức TT">
-                  <Input
+                  <PaymentMethodCombobox
                     value={formData.paymentMethod || ""}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    onChange={(val: string) =>
                       setFormData({
                         ...formData,
-                        paymentMethod: e.target.value,
+                        paymentMethod: val,
                       })
                     }
-                    className="w-full h-8 text-sm"
-                    placeholder="Tiền mặt, Chuyển khoản..."
                   />
                 </DrawerField>
                 <DrawerField label="Mã tham chiếu">
@@ -252,36 +255,48 @@ export const GarageCashflowDrawer: React.FC<GarageCashflowDrawerProps> = ({
                   />
                 </DrawerField>
                 <DrawerField label="Mã Phiếu Dịch Vụ (Garage Case)">
-                  <Input
+                  <GarageCaseCombobox
                     value={formData.caseId || ""}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                      setFormData({ ...formData, caseId: e.target.value })
+                    onChange={(val: string) =>
+                      setFormData({ ...formData, caseId: val })
                     }
-                    className="w-full h-8 text-sm"
+                    fallbackLabel={
+                      voucher?.case?.soChungTu
+                        ? voucher.case.soChungTu
+                        : undefined
+                    }
                   />
                 </DrawerField>
                 <DrawerField label="Tham chiếu ERP Bank">
-                  <Input
+                  <ErpBankTransactionCombobox
                     value={formData.erpBankTransactionId || ""}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    onChange={(val: string) =>
                       setFormData({
                         ...formData,
-                        erpBankTransactionId: e.target.value,
+                        erpBankTransactionId: val,
                       })
                     }
-                    className="w-full h-8 text-sm"
+                    fallbackLabel={
+                      voucher?.erpBankTransaction?.transactionCode
+                        ? voucher.erpBankTransaction.transactionCode
+                        : undefined
+                    }
                   />
                 </DrawerField>
                 <DrawerField label="Tham chiếu ERP Cash">
-                  <Input
+                  <ErpCashVoucherCombobox
                     value={formData.erpCashVoucherId || ""}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    onChange={(val: string) =>
                       setFormData({
                         ...formData,
-                        erpCashVoucherId: e.target.value,
+                        erpCashVoucherId: val,
                       })
                     }
-                    className="w-full h-8 text-sm"
+                    fallbackLabel={
+                      voucher?.erpCashVoucher?.transactionCode
+                        ? voucher.erpCashVoucher.transactionCode
+                        : undefined
+                    }
                   />
                 </DrawerField>
               </div>

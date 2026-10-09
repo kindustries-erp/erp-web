@@ -26,6 +26,10 @@ export interface GarageCashflowVoucher {
     id: string;
     transactionCode: string;
   };
+  erpCashVoucher?: {
+    id: string;
+    transactionCode: string;
+  };
 }
 
 export interface CreateGarageCashflowVoucherDto {
