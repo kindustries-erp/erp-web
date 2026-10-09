@@ -49,22 +49,22 @@ export const GarageCashflowDrawer: React.FC<GarageCashflowDrawerProps> = ({
       if (voucher) {
         setFormData({
           ...voucher,
-          voucher_type: (voucher.voucher_type || "").toUpperCase() as
+          voucherType: (voucher.voucherType || "").toUpperCase() as
             | "RECEIPT"
             | "PAYMENT",
           amount: voucher.amount,
-          partner_name: voucher.partner_name || "",
-          partner_phone: voucher.partner_phone || "",
-          description: voucher.description || "",
-          payment_method: voucher.payment_method || "",
-          reference_number: voucher.reference_number || "",
-          case_id: voucher.case_id || "",
-          erp_bank_transaction_id: voucher.erp_bank_transaction_id || "",
-          erp_cash_transaction_id: voucher.erp_cash_transaction_id || "",
+          partnerName: voucher.partnerName || "",
+          partnerPhone: voucher.partnerPhone || "",
+          note: voucher.note || "",
+          paymentMethod: voucher.paymentMethod || "",
+          referenceNumber: voucher.referenceNumber || "",
+          caseId: voucher.caseId || "",
+          erpBankTransactionId: voucher.erpBankTransactionId || "",
+          erpCashVoucherId: voucher.erpCashVoucherId || "",
         });
       } else {
         setFormData({
-          voucher_type: "RECEIPT",
+          voucherType: "RECEIPT",
           amount: 0,
         });
       }
@@ -101,12 +101,12 @@ export const GarageCashflowDrawer: React.FC<GarageCashflowDrawerProps> = ({
       title={
         initialMode === "create"
           ? "Tạo Phiếu Thu Chi Mới"
-          : `Phiếu ${voucher?.voucher_code || ""}`
+          : `Phiếu ${voucher?.voucherCode || ""}`
       }
       titleExtra={
         voucher && (
           <Badge variant="outline">
-            {(voucher.voucher_type || "").toUpperCase() === "RECEIPT"
+            {(voucher.voucherType || "").toUpperCase() === "RECEIPT"
               ? "Thu"
               : "Chi"}
           </Badge>
@@ -133,11 +133,11 @@ export const GarageCashflowDrawer: React.FC<GarageCashflowDrawerProps> = ({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <DrawerField label="Loại phiếu" required>
                   <Combobox
-                    value={formData.voucher_type || ""}
+                    value={formData.voucherType || ""}
                     onChange={(val) =>
                       setFormData({
                         ...formData,
-                        voucher_type: val as "RECEIPT" | "PAYMENT",
+                        voucherType: val as "RECEIPT" | "PAYMENT",
                       })
                     }
                     options={[
@@ -162,20 +162,20 @@ export const GarageCashflowDrawer: React.FC<GarageCashflowDrawerProps> = ({
                 </DrawerField>
                 <DrawerField label="Đối tác">
                   <Input
-                    value={formData.partner_name || ""}
+                    value={formData.partnerName || ""}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                      setFormData({ ...formData, partner_name: e.target.value })
+                      setFormData({ ...formData, partnerName: e.target.value })
                     }
                     className="w-full h-8 text-sm"
                   />
                 </DrawerField>
                 <DrawerField label="SĐT Đối tác">
                   <Input
-                    value={formData.partner_phone || ""}
+                    value={formData.partnerPhone || ""}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                       setFormData({
                         ...formData,
-                        partner_phone: e.target.value,
+                        partnerPhone: e.target.value,
                       })
                     }
                     className="w-full h-8 text-sm"
@@ -183,9 +183,9 @@ export const GarageCashflowDrawer: React.FC<GarageCashflowDrawerProps> = ({
                 </DrawerField>
                 <DrawerField label="Diễn giải">
                   <Textarea
-                    value={formData.description || ""}
+                    value={formData.note || ""}
                     onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
-                      setFormData({ ...formData, description: e.target.value })
+                      setFormData({ ...formData, note: e.target.value })
                     }
                     rows={2}
                     className="w-full text-sm"
@@ -197,7 +197,7 @@ export const GarageCashflowDrawer: React.FC<GarageCashflowDrawerProps> = ({
                 <DrawerRow
                   label="Loại phiếu"
                   value={
-                    (voucher?.voucher_type || "").toUpperCase() === "RECEIPT"
+                    (voucher?.voucherType || "").toUpperCase() === "RECEIPT"
                       ? "Phiếu Thu"
                       : "Phiếu Chi"
                   }
@@ -208,16 +208,13 @@ export const GarageCashflowDrawer: React.FC<GarageCashflowDrawerProps> = ({
                 />
                 <DrawerRow
                   label="Đối tác"
-                  value={voucher?.partner_name || "—"}
+                  value={voucher?.partnerName || "—"}
                 />
                 <DrawerRow
                   label="SĐT Đối tác"
-                  value={voucher?.partner_phone || "—"}
+                  value={voucher?.partnerPhone || "—"}
                 />
-                <DrawerRow
-                  label="Diễn giải"
-                  value={voucher?.description || "—"}
-                />
+                <DrawerRow label="Diễn giải" value={voucher?.note || "—"} />
               </div>
             )}
           </DrawerSection>
@@ -231,11 +228,11 @@ export const GarageCashflowDrawer: React.FC<GarageCashflowDrawerProps> = ({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <DrawerField label="Phương thức TT">
                   <Input
-                    value={formData.payment_method || ""}
+                    value={formData.paymentMethod || ""}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                       setFormData({
                         ...formData,
-                        payment_method: e.target.value,
+                        paymentMethod: e.target.value,
                       })
                     }
                     className="w-full h-8 text-sm"
@@ -244,11 +241,11 @@ export const GarageCashflowDrawer: React.FC<GarageCashflowDrawerProps> = ({
                 </DrawerField>
                 <DrawerField label="Mã tham chiếu">
                   <Input
-                    value={formData.reference_number || ""}
+                    value={formData.referenceNumber || ""}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                       setFormData({
                         ...formData,
-                        reference_number: e.target.value,
+                        referenceNumber: e.target.value,
                       })
                     }
                     className="w-full h-8 text-sm"
@@ -256,20 +253,20 @@ export const GarageCashflowDrawer: React.FC<GarageCashflowDrawerProps> = ({
                 </DrawerField>
                 <DrawerField label="Mã Phiếu Dịch Vụ (Garage Case)">
                   <Input
-                    value={formData.case_id || ""}
+                    value={formData.caseId || ""}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                      setFormData({ ...formData, case_id: e.target.value })
+                      setFormData({ ...formData, caseId: e.target.value })
                     }
                     className="w-full h-8 text-sm"
                   />
                 </DrawerField>
                 <DrawerField label="Tham chiếu ERP Bank">
                   <Input
-                    value={formData.erp_bank_transaction_id || ""}
+                    value={formData.erpBankTransactionId || ""}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                       setFormData({
                         ...formData,
-                        erp_bank_transaction_id: e.target.value,
+                        erpBankTransactionId: e.target.value,
                       })
                     }
                     className="w-full h-8 text-sm"
@@ -277,11 +274,11 @@ export const GarageCashflowDrawer: React.FC<GarageCashflowDrawerProps> = ({
                 </DrawerField>
                 <DrawerField label="Tham chiếu ERP Cash">
                   <Input
-                    value={formData.erp_cash_transaction_id || ""}
+                    value={formData.erpCashVoucherId || ""}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                       setFormData({
                         ...formData,
-                        erp_cash_transaction_id: e.target.value,
+                        erpCashVoucherId: e.target.value,
                       })
                     }
                     className="w-full h-8 text-sm"
@@ -292,23 +289,31 @@ export const GarageCashflowDrawer: React.FC<GarageCashflowDrawerProps> = ({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-2">
                 <DrawerRow
                   label="Phương thức TT"
-                  value={voucher?.payment_method || "—"}
+                  value={voucher?.paymentMethod || "—"}
                 />
                 <DrawerRow
                   label="Mã tham chiếu"
-                  value={voucher?.reference_number || "—"}
+                  value={voucher?.referenceNumber || "—"}
                 />
                 <DrawerRow
                   label="Mã Phiếu Dịch Vụ"
-                  value={voucher?.case_id || "—"}
+                  value={
+                    voucher?.case?.soChungTu
+                      ? voucher.case.soChungTu
+                      : voucher?.caseId || "—"
+                  }
                 />
                 <DrawerRow
                   label="Tham chiếu ERP Bank"
-                  value={voucher?.erp_bank_transaction_id || "—"}
+                  value={
+                    voucher?.erpBankTransaction?.transactionCode
+                      ? voucher.erpBankTransaction.transactionCode
+                      : voucher?.erpBankTransactionId || "—"
+                  }
                 />
                 <DrawerRow
                   label="Tham chiếu ERP Cash"
-                  value={voucher?.erp_cash_transaction_id || "—"}
+                  value={voucher?.erpCashVoucherId || "—"}
                 />
               </div>
             )}

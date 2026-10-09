@@ -2,32 +2,44 @@ import axiosInstance from "@/core/api/axiosInstance";
 
 export interface GarageCashflowVoucher {
   id: string;
-  voucher_code: string;
-  voucher_type: "RECEIPT" | "PAYMENT";
-  partner_name?: string;
-  partner_phone?: string;
-  description?: string;
+  voucherCode: string;
+  voucherType: "RECEIPT" | "PAYMENT";
+  partnerName?: string;
+  partnerPhone?: string;
+  note?: string;
   amount: number;
-  payment_method?: string;
-  reference_number?: string;
-  case_id?: string;
-  erp_bank_transaction_id?: string;
-  erp_cash_transaction_id?: string;
-  created_at: string;
-  updated_at: string;
+  paymentMethod?: string;
+  referenceNumber?: string;
+  caseId?: string;
+  erpBankTransactionId?: string;
+  erpCashVoucherId?: string; // backend is erpCashVoucherId not erp_cash_transaction_id
+  createdAt: string;
+  updatedAt: string;
+  transDate: string;
+  case?: {
+    id: string;
+    khachHangName: string;
+    khachHangCode?: string;
+    soChungTu?: string;
+  };
+  erpBankTransaction?: {
+    id: string;
+    transactionCode: string;
+  };
 }
 
 export interface CreateGarageCashflowVoucherDto {
-  voucher_type: "RECEIPT" | "PAYMENT";
+  voucherType: "RECEIPT" | "PAYMENT";
   amount: number;
-  partner_name?: string;
-  partner_phone?: string;
-  description?: string;
-  payment_method?: string;
-  reference_number?: string;
-  case_id?: string;
-  erp_bank_transaction_id?: string;
-  erp_cash_transaction_id?: string;
+  partnerName?: string;
+  partnerPhone?: string;
+  note?: string;
+  paymentMethod?: string;
+  referenceNumber?: string;
+  caseId?: string;
+  erpBankTransactionId?: string;
+  erpCashVoucherId?: string;
+  transDate?: string;
 }
 
 export type UpdateGarageCashflowVoucherDto =
@@ -63,6 +75,27 @@ export const garageCashflowApi = {
   delete: async (id: string) => {
     const res = await axiosInstance.delete(
       `/api/v1/greenway/cashflow-vouchers/${id}`,
+    );
+    return res.data;
+  },
+  getOptions: async (
+    column: string,
+    search: string,
+    page: number,
+    pageSize: number,
+    columnFilters?: string,
+  ) => {
+    const res = await axiosInstance.get(
+      "/api/v1/greenway/cashflow-vouchers/column-options",
+      {
+        params: {
+          column,
+          search,
+          page,
+          pageSize,
+          column_filters: columnFilters,
+        },
+      },
     );
     return res.data;
   },
