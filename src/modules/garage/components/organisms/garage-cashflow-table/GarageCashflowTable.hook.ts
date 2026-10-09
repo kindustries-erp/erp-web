@@ -116,25 +116,32 @@ export function useGarageCashflowTable() {
     setPage(1);
   };
 
-  const getColumnOptions = async (
-    columnKey: string,
-    search: string,
-    page = 1,
-  ) => {
+  const getColumnOptions = async ({
+    columnKey,
+    search,
+    pageParam,
+    pageSize: reqPageSize = 20,
+  }: {
+    columnKey: string;
+    search?: string;
+    pageParam?: number;
+    pageSize?: number;
+  }) => {
     const filtersWithoutCurrent = { ...columnFilters };
     delete filtersWithoutCurrent[columnKey];
     const res = await garageCashflowApi.getOptions(
       columnKey,
-      search,
-      page,
-      50,
+      search || "",
+      pageParam || 1,
+      reqPageSize,
       Object.keys(filtersWithoutCurrent).length
         ? JSON.stringify(filtersWithoutCurrent)
         : undefined,
     );
     return {
-      options: res.items.map((i: string) => ({ label: i, value: i })),
-      hasMore: page < res.totalPages,
+      items: res.items.map((i: string) => ({ label: i, value: i })),
+      total: res.total,
+      next: (pageParam || 1) < res.totalPages ? (pageParam || 1) + 1 : null,
     };
   };
 

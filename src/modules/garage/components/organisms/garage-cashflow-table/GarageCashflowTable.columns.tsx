@@ -6,6 +6,11 @@ import {
 import type { GarageCashflowVoucher } from "../../../api/garageCashflowApi";
 import { Eye, Pencil, Trash2 } from "lucide-react";
 import { TableText } from "@/shared/components/DataTable/TableText";
+import {
+  renderCreatedAtCell,
+  renderThuCell,
+  renderChiCell,
+} from "./GarageCashflowTable.helper";
 
 export const getGarageCashflowColumns = (
   filterBuilder: any,
@@ -30,23 +35,7 @@ export const getGarageCashflowColumns = (
       sortKey: "createdAt",
       size: 110,
       header: filterBuilder.date("createdAt", "Ngày tạo"),
-      cell: (row) => {
-        if (!row.createdAt) return "—";
-        const d = new Date(row.createdAt);
-        return (
-          <div className="flex flex-col">
-            <span className="text-sm font-medium">
-              {d.toLocaleDateString("vi-VN")}
-            </span>
-            <span className="text-xs text-slate-500">
-              {d.toLocaleTimeString("vi-VN", {
-                hour: "2-digit",
-                minute: "2-digit",
-              })}
-            </span>
-          </div>
-        );
-      },
+      cell: renderCreatedAtCell,
     },
     {
       key: "voucherCode",
@@ -83,46 +72,28 @@ export const getGarageCashflowColumns = (
       },
     },
     {
-      key: "voucherType",
-      sortKey: "voucherType",
-      size: 120,
-      header: filterBuilder.client("voucherType", "Loại phiếu", {
-        valueType: ColumnValueType.TEXT,
-        filterOptions: [
-          { label: "Thu (RECEIPT)", value: "RECEIPT" },
-          { label: "Chi (PAYMENT)", value: "PAYMENT" },
-        ],
-      }),
-      cell: (row) => {
-        const type = (row.voucherType || "").toUpperCase();
-        return (
-          <span
-            className={
-              type === "RECEIPT"
-                ? "text-emerald-600 font-medium"
-                : "text-rose-600 font-medium"
-            }
-          >
-            {type === "RECEIPT" ? "Phiếu Thu" : "Phiếu Chi"}
-          </span>
-        );
-      },
-    },
-    {
-      key: "amount",
+      key: "thu",
       sortKey: "amount",
       size: 140,
-      header: filterBuilder.amount("amount", "Số tiền", {
+      header: filterBuilder.amount("thu", "Tiền vào (Thu)", {
         valueType: ColumnValueType.NUMBER,
         align: "right",
       }),
       className: "text-right",
       headerClassName: "text-right",
-      cell: (row) => (
-        <span className="tabular-nums font-medium block w-full text-right">
-          {Number(row.amount || 0).toLocaleString("vi-VN")} đ
-        </span>
-      ),
+      cell: renderThuCell,
+    },
+    {
+      key: "chi",
+      sortKey: "amount",
+      size: 140,
+      header: filterBuilder.amount("chi", "Tiền ra (Chi)", {
+        valueType: ColumnValueType.NUMBER,
+        align: "right",
+      }),
+      className: "text-right",
+      headerClassName: "text-right",
+      cell: renderChiCell,
     },
     {
       key: "partnerName",
