@@ -9,3 +9,4 @@ export * from "./dropdown-menu";
 export * from "./table";
 export * from "./checkbox";
 export * from "./input";
+export * from "./progress";

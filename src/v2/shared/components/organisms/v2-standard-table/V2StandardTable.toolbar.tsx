@@ -25,6 +25,8 @@ interface V2TableToolbarProps {
   loading?: boolean;
   isFullscreen?: boolean;
   onToggleFullscreen?: () => void;
+  /** Trạng thái ô tìm kiếm; chỉ hiện khi `config.search` được bật */
+  search?: V2TableToolbarClusterProps["search"];
 }
 
 export const V2TableToolbar: React.FC<V2TableToolbarProps> = ({
@@ -39,6 +41,7 @@ export const V2TableToolbar: React.FC<V2TableToolbarProps> = ({
   loading,
   isFullscreen,
   onToggleFullscreen,
+  search,
 }) => {
   const { t } = useV2Translation();
 
@@ -53,6 +56,7 @@ export const V2TableToolbar: React.FC<V2TableToolbarProps> = ({
       loading,
       isFullscreen,
       onToggleFullscreen,
+      search: config.search ? search : undefined,
     };
     const cluster = <V2TableToolbarCluster {...clusterProps} />;
     if (portalTarget) {

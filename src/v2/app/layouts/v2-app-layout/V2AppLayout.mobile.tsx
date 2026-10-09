@@ -1,8 +1,9 @@
 import * as React from "react";
 import { V2Header } from "@/v2/shared/components/organisms/v2-header";
 import { V2BottomNav } from "@/v2/shared/components/organisms/v2-bottom-nav";
+import { useV2PermissionChecker } from "@/v2/shared/hooks/useV2HasPermission";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
-import { getV2NavItems } from "./v2Navigation";
+import { filterV2NavItems, getV2NavItems } from "./v2Navigation";
 import { V2AppLayoutProps } from "./V2AppLayout.type";
 
 export const V2AppLayoutMobile: React.FC<V2AppLayoutProps> = ({
@@ -16,8 +17,12 @@ export const V2AppLayoutMobile: React.FC<V2AppLayoutProps> = ({
   onNavigate,
 }) => {
   const { t, locale } = useV2Translation();
+  const can = useV2PermissionChecker();
 
-  const dynamicNavItems = React.useMemo(() => getV2NavItems(t), [t, locale]);
+  const dynamicNavItems = React.useMemo(
+    () => filterV2NavItems(getV2NavItems(t), can),
+    [t, locale, can],
+  );
 
   const fallbackBreadcrumbs = React.useMemo(
     () => [{ label: t("nav.items.dashboard", "Tổng quan") }],

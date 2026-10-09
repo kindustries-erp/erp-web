@@ -280,7 +280,7 @@ Storybook được cấu hình hoàn toàn độc lập và **chỉ kết nối 
 3. **Molecules (`src/v2/shared/components/molecules/`)**: `V2BranchBadge`, `V2UserBadge`, `V2LanguageSwitcher`, `V2QuickSearch`, `V2Breadcrumb`, `V2TabItem`, `V2Topbar`, `V2NavItem`, `V2SidebarHeader`, `V2SidebarNavItem`, `V2SidebarSection`, `V2SidebarBottom`.
 4. **Organisms (`src/v2/shared/components/organisms/`)**: `V2Sidebar`, `V2TabBar`, `V2Header`, `V2RightPanel`, `V2BottomNav`, `V2StandardDrawer` (xem `v2-drawer`), `V2StandardTable` (xem `v2-table`).
 5. **Atoms bảng**: `V2PageButton`, `V2TableDateCell`. **Molecules bảng**: `V2TablePagination`, `V2ColumnToggle`, `V2ColumnHeaderFilter`, `V2TableRowHoverActions`, `V2TableContextMenu`, `V2TableText` (chi tiết ở skill `v2-table`).
-6. **Templates (`src/v2/shared/components/templates/v2-tabbed-spreadsheet-page/`)**: `V2TabbedSpreadsheetPage` (header + vùng nội dung full-height cho bảng). Mặc định `layout="tabbed"`; `layout="fullpage"` là tùy chọn khi cần bố cục không tab.
+6. **Templates (`src/v2/shared/components/templates/v2-module-page/`)**: `V2ModulePage` (header + tab list/dashboard, bảng full-height cho tab list).
 
 ### 7.3. Các Lệnh Thực Thi Storybook
 ```bash
@@ -300,10 +300,19 @@ cd /home/dev/repos-dev/erp/erp-web && bun run storybook
 
 ### 4.5. Tab trang nhiều bảng: `V2TabBar variant="page"`, `V2TabPanel`, slot toolbar
 - `V2TabBar` có thêm `variant="page"`: tab gạch chân (`border-b-2 border-primary` khi active), dùng cho tab cấp trang.
-- `V2TabbedSpreadsheetPage` nhận `layout: "tabbed" | "fullpage"` (mặc định `tabbed`). `tabbed` có tab bar khi truyền `tabs`; không có `tabs` thì rơi về bố cục không tab. `fullpage` bỏ tab bar và bỏ qua `tabs`. Cả hai đều render `V2PageHeader` với slot toolbar (`tabs[].key`, hoặc slot mặc định `__page__` khi không có tab) và cung cấp `V2PageTabsContext`. Nhận `tabVariant: "header" | "page"` (mặc định `page`, tab gạch chân).
 - Thành phần layout/header dùng chung: atom `V2Stack` (flex-col, `gap`/`fill`/`grow`), atom `V2PageIcon`, molecule `V2PageHeader` (tiêu đề, mô tả, icon, actions, slot toolbar), molecule `V2PageToolbarSlot` (thay cho `V2ToolbarSlot` cũ).
 - `V2TabPanel` (`molecules/v2-tab-panel`) bọc nội dung từng tab: lazy + keepAlive, `role="tabpanel"`. Context và `useV2ToolbarPortal` nằm ở L2 để organism (L3) tiêu thụ mà không import ngược lên template (L4). Chi tiết dùng cho bảng: xem `v2-table`.
 - Chốt chặn Storybook: `src/v2/shared/components/storyCoverage.test.ts` quét `atoms|molecules|organisms|templates`, thành phần mới phải có `*.stories.tsx` (ngoại lệ phải thêm vào allowlist kèm lý do).
+
+### 4.6. Khung trang module `V2ModulePage` (L4) và KPI `V2StatCard` (L2)
+- `V2ModulePage` (`templates/v2-module-page/`) nhận `title`, `description`, `icon`, `actions`, `tabs`, `activeTab`, `onTabChange`, `tabVariant`, `overlays`. Mỗi tab có `kind`:
+  - `kind: "list"`: `table` (props `V2StandardTable` trừ `items/total/loading/onQueryChange`) + `data` (`items`, `total`, `loading`, `onQueryChange`) lấy từ hook nghiệp vụ của page.
+  - `kind: "dashboard"`: `content` (ReactNode) do page truyền vào.
+- Khung dùng `V2PageHeader`, `V2TabBar`, `V2TabPanel` (L2) và `V2StandardTable` (L3). Logic đăng ký slot nằm trong `V2ModulePage.hook.ts`. Tab được mount lazy (keepAlive), nên bảng chỉ render khi tab được mở lần đầu.
+- `V2StatCard` (`molecules/v2-stat-card/`, L2): KPI một chỉ số, props `label`, `value` (đã format sẵn), `unit`, `icon`, `trend {direction, label}`, `loading`. Không tự format số/tiền, không có text hardcode.
+- Tab `list` nhận `useData(query)` (hook của module, được gọi trong tab mount lazy), `initialQuery`, `resetKey`; tab `dashboard` nhận `content`. Props thêm: `defaultTab`, `syncUrl`. Chi tiết hợp đồng, hook URL, i18n theo module, router/guard và bảng parity với erp-invoice: xem skill `v2-foundation`.
+- Mẫu hoàn chỉnh dùng dữ liệu giả: `templates/v2-module-page/invoice-shape/` (story `Components/Templates/V2ModulePage/InvoiceShape`).
+- Thành phần V2 thêm cho form và dashboard: atom `V2Switch`, `V2Textarea`, `V2Skeleton`, `V2Progress`, `V2NumberInput`, `V2CopyButton`, `V2Sparkline`; molecule `V2Combobox`, `V2DatePicker`/`V2DateRangePicker`, `V2EmptyState`, `V2FileUpload`, `V2SearchInput`, `V2Panel`, `V2ChartFrame`; organism `V2BarChart`/`V2LineChart`/`V2DonutChart`, `V2FilePreviewPanel`.
 
 ---
 

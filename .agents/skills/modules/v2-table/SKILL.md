@@ -1,6 +1,6 @@
 ---
 name: v2-table
-description: Module tri thức Bảng dữ liệu chuẩn V2 (V2StandardTable) trong erp-web (src/v2/shared/components/organisms/v2-standard-table cùng atom v2-page-button, v2-table-date-cell, molecule v2-table-pagination, v2-column-toggle, v2-column-header-filter, v2-table-row-actions, v2-table-text và template v2-tabbed-spreadsheet-page). Chứa cây thư mục, props, hai chế độ server/client, header filter, lưu cấu hình cột, quy tắc UI bắt buộc và checklist khi dùng cho trang mới.
+description: Module tri thức Bảng dữ liệu chuẩn V2 (V2StandardTable) trong erp-web (src/v2/shared/components/organisms/v2-standard-table cùng atom v2-page-button, v2-table-date-cell, molecule v2-table-pagination, v2-column-toggle, v2-column-header-filter, v2-table-row-actions, v2-table-text và template v2-module-page). Chứa cây thư mục, props, hai chế độ server/client, header filter, lưu cấu hình cột, quy tắc UI bắt buộc và checklist khi dùng cho trang mới.
 ---
 
 # Module Tri Thức: Bảng Chuẩn V2 (`V2StandardTable`) - `erp-web`
@@ -48,7 +48,7 @@ src/v2/shared/
     │   v2TableFilter / v2TableEvaluate / v2TableClient / v2TableData / v2TableQuery / v2ColumnPreferences
     │   v2HeaderFilterBuilder.ts          headerFilter(label), .date, .amount, .qty, .select
     │   .mock.tsx / .mock-server.ts / .stories.tsx / .variants.stories.tsx / .toolbar.stories.tsx
-    └── templates/v2-tabbed-spreadsheet-page/   Khung trang `V2TabbedSpreadsheetPage`: `V2PageHeader` (icon, tiêu đề, mô tả, slot toolbar theo tab hoặc `__page__`, actions) + tab (`layout` mặc định `tabbed`, `tabVariant` mặc định `page`) + vùng bảng full-height (`V2Stack`)
+    └── templates/v2-module-page/               Khung trang `V2ModulePage`: `V2PageHeader` (icon, tiêu đề, mô tả, slot toolbar theo tab, actions) + tab (`kind`: `list` dựng `V2StandardTable`, `dashboard` render nội dung) + vùng nội dung full-height (`V2Stack`)
 ```
 
 Quy tắc tầng đã áp dụng (theo `ui-atomic-refactor`):
@@ -85,26 +85,37 @@ const columns = useMemo<V2Column<Order>[]>(() => [
 - `mode="client"`: truyền toàn bộ `items`, bảng tự lọc, sắp xếp, phân trang (`total` bị bỏ qua). Options header lấy từ chính dữ liệu.
 - `headerFilter.select(label, options)`: danh sách option tĩnh (enum), không gọi `fetchOptions`.
 - Cột không có `filter` thì không có popover lọc/sắp xếp và không tham gia lọc client.
-- Đặt bảng trong `V2TabbedSpreadsheetPage` (title, tabs, actions) để trang có khung full-height và sticky header hoạt động. Mặc định là `layout="tabbed"`; `layout="fullpage"` bỏ tab bar nhưng toolbar vẫn nằm trên header.
+- Đặt bảng trong `V2ModulePage` (title, tabs, actions) để trang có khung full-height và sticky header hoạt động. Bảng của tab `list` được khung dựng tự động từ `table` và `data`.
 
 ### Cụm nút toolbar (`toolbar`) và slot theo tab
 
-- Có slot header (`V2TabbedSpreadsheetPage`, kể cả layout `fullpage`) thì toolbar luôn portal lên header: có `toolbar` thì là cụm đầy đủ; không có `toolbar` thì chỉ portal trạng thái chọn/lọc và nút "Tùy chỉnh cột" (cùng hàng với nút header). Fullscreen hoặc không có slot thì render inline dưới header.
+- Có slot header (`V2ModulePage`) thì toolbar luôn portal lên header: có `toolbar` thì là cụm đầy đủ; không có `toolbar` thì chỉ portal trạng thái chọn/lọc và nút "Tùy chỉnh cột" (cùng hàng với nút header). Fullscreen hoặc không có slot thì render inline dưới header.
 
 ```tsx
-<V2TabbedSpreadsheetPage title="Danh sách" tabs={tabs} activeTab={tab} onTabChange={setTab} tabVariant="page">
-  <V2TabPanel tabKey="overview"><Dashboard /></V2TabPanel>
-  <V2TabPanel tabKey="in">
-    <V2StandardTable toolbar={{
-      pillTabs: { items, activeKey, onChange },                 // Tất cả / Mới / ...
-      viewModes: { items, activeKey, onSelect, onCreate },      // Tổng quan ▾
-      bulkActions: [/* V2DropdownGroup[] cho chip (N) */],
-      filterPanel: { defaultOpen: false, extraContent: <PageFilters /> },   // panel lọc bên phải, nút Lọc tự mở/đóng
-      onFilterToggle, onRefresh, enableFullscreen: true,
-      create: { label: "Đồng bộ", icon, onClick, actions },     // split button
-    }} … />
-  </V2TabPanel>
-</V2TabbedSpreadsheetPage>
+<V2ModulePage
+  title="Danh sách"
+  tabs={[
+    { key: "overview", label: "Tổng quan", kind: "dashboard", content: <Dashboard /> },
+    {
+      key: "in", label: "Danh sách", kind: "list",
+      table: {
+        tableId: "in", columns, getRowKey,
+        toolbar: {
+          pillTabs: { items, activeKey, onChange },                 // Tất cả / Mới / ...
+          viewModes: { items, activeKey, onSelect, onCreate },      // Tổng quan ▾
+          bulkActions: [/* V2DropdownGroup[] cho chip (N) */],
+          filterPanel: { defaultOpen: false, extraContent: <PageFilters /> },   // panel lọc bên phải
+          onRefresh, enableFullscreen: true,
+          create: { label: "Đồng bộ", icon, onClick, actions },     // split button
+        },
+      },
+      data: { items, total, loading, onQueryChange },
+    },
+  ]}
+  activeTab={tab}
+  onTabChange={setTab}
+  tabVariant="page"
+/>
 ```
 
 - Template tạo **một slot ở header cho mỗi tab**; chỉ slot của tab đang active hiển thị. Bảng trong `V2TabPanel` portal toolbar vào slot của tab mình, nên bảng giữ toàn bộ chiều cao.
@@ -148,7 +159,7 @@ const columns = useMemo<V2Column<Order>[]>(() => [
 - Hiệu năng: `columns`, `rowActions`, `getRowClassName` nên được memo/`useCallback`; row được `React.memo`.
 
 **Chiều cao và sticky header:**
-- Bảng gốc có `h-full min-h-0`; container cuộn là `flex-1 overflow-auto`. Sticky header chỉ hoạt động khi cha có chiều cao xác định. Dùng `V2TabbedSpreadsheetPage` (vùng nội dung `flex-1 min-h-0`) hoặc cha có `h-...`/`max-h-...` (qua `containerClassName`). Trong Storybook, decorator chung thêm `p-6` nên bọc story bằng `h-[calc(100vh-3rem)]`.
+- Bảng gốc có `h-full min-h-0`; container cuộn là `flex-1 overflow-auto`. Sticky header chỉ hoạt động khi cha có chiều cao xác định. Dùng `V2ModulePage` (vùng nội dung `flex-1 min-h-0`) hoặc cha có `h-...`/`max-h-...` (qua `containerClassName`). Trong Storybook, decorator chung thêm `p-6` nên bọc story bằng `h-[calc(100vh-3rem)]`.
 
 ## 4. Chưa làm (đợt sau)
 
@@ -158,7 +169,7 @@ lưu/áp preset chế độ xem (UI đã có, chưa persist), filter panel dạn
 
 - Unit/integration co-located bằng vitest + testing-library (`bunx vitest run src/v2/shared/components/organisms/v2-standard-table`).
 - Test component dùng `.fixture.tsx` (có ở organism và `v2-column-header-filter`) (dữ liệu, `renderTable`, mock viewport) và bọc `QueryClientProvider`.
-- Stories: `V2/Organisms/V2StandardTable` (ServerSide, ClientSide, WithSelection, Empty, Loading), `.../Variants` (MobileCards, CustomColumnStorage), `.../Toolbar` (WithFullToolbar, WithFilterPanel, FilterPanelWithExtraContent). Mọi thành phần con đều có story riêng (V2ColumnToggle, V2ColumnHeaderFilter, V2TablePagination, V2TableRowActions, V2TableText, V2PageButton, V2TableDateCell, V2TabBar, V2ToolbarIconButton, V2FilterChip/Card/Panel...). `storyCoverage.test.ts` chặn thành phần V2 mới thiếu story (allowlist chỉ còn 6 molecule drawer) và `V2/Templates/V2TabbedSpreadsheetPage` (FullPageLayout, WithoutHeader, TabbedWithPanels). Story phải có decorator `QueryClientProvider` vì preview chung không có.
+- Stories: `V2/Organisms/V2StandardTable` (ServerSide, ClientSide, WithSelection, Empty, Loading), `.../Variants` (MobileCards, CustomColumnStorage), `.../Toolbar` (WithFullToolbar, WithFilterPanel, FilterPanelWithExtraContent). Mọi thành phần con đều có story riêng (V2ColumnToggle, V2ColumnHeaderFilter, V2TablePagination, V2TableRowActions, V2TableText, V2PageButton, V2TableDateCell, V2TabBar, V2ToolbarIconButton, V2FilterChip/Card/Panel...). `storyCoverage.test.ts` chặn thành phần V2 mới thiếu story (allowlist chỉ còn 6 molecule drawer) và `Components/Templates/V2ModulePage` (ListAndDashboard, ListOnly). Story phải có decorator `QueryClientProvider` vì preview chung không có.
 - Gate: `grep -rn "blue-" src/v2/`, không file > 180 LoC (trừ 3 file có sẵn của `v2-standard-drawer`), `grep -rn 'from "@/shared' src/v2/` rỗng, không molecule import molecule, không `<button` thuần trong code bảng.
 
 ## Tái sử dụng atom/molecule trong V2StandardTable
@@ -183,5 +194,12 @@ lưu/áp preset chế độ xem (UI đã có, chưa persist), filter panel dạn
 - Giá trị (`V2StandardTable.summary.ts` + `V2StandardTable.summary.hook.ts`):
   - `mode="client"`: tự tính từ toàn bộ dòng đã lọc/sắp xếp (subtotal trang, lũy kế, tổng).
   - `mode="server"`: subtotal trang lấy từ `items`; **tổng toàn bộ phải truyền qua `summary.total`** (từ API); **lũy kế được bảng tự tích lũy theo từng trang**, reset khi đổi filter/sort/pageSize. Trang chưa đi qua thì không có lũy kế.
-- Story: `V2StandardTable` → `WithSummary` (client) và `WithSummaryServer`; template → `V2TabbedSpreadsheetPage` → `WithSummary`.
+- Story: `V2StandardTable` → `WithSummary` (client) và `WithSummaryServer`; template → `V2ModulePage` → `ListAndDashboard`.
+
+## 8. Tìm kiếm toàn cục, query trên URL và dữ liệu từ khung trang
+
+- `V2TableQuery.search?: string` và `toolbar.search = { placeholder? }`: ô tìm kiếm (`V2SearchInput`, debounce 300ms, Enter/nút xóa áp dụng ngay) ở đầu cụm toolbar. Đổi tìm kiếm thì về trang 1; `resetAll` xóa luôn tìm kiếm. Chế độ `client` lọc theo giá trị mọi cột (dấu `;` nhiều từ khóa, `"..."` khớp chính xác); chế độ `server` chỉ báo `query.search`.
+- Bảng là uncontrolled: đồng bộ URL bằng `useV2TableUrlState` (truyền `initialQuery`, `onQueryChange`). Khi bảng nằm trong `V2ModulePage`, khung đã làm sẵn với tiền tố là khóa tab.
+- Chế độ `server` với hàng tổng: tổng toàn bộ do hook trả về trong `summaries` của `useData`, khung gắn vào `summary.total` của cột.
+- Bảng nhúng trong drawer: xem `v2-foundation` mục 5.
 

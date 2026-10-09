@@ -8,6 +8,7 @@ import { V2ColumnToggle } from "@/v2/shared/components/molecules/v2-column-toggl
 import type { V2ColumnToggleProps } from "@/v2/shared/components/molecules/v2-column-toggle";
 import { V2Dropdown } from "@/v2/shared/components/molecules/v2-dropdown";
 import type { V2DropdownGroup } from "@/v2/shared/components/molecules/v2-dropdown";
+import { V2SearchInput } from "@/v2/shared/components/molecules/v2-search-input";
 import { V2SplitButton } from "@/v2/shared/components/molecules/v2-split-button";
 import { V2TabBar } from "@/v2/shared/components/molecules/v2-tab-bar";
 import { V2TableSelectionChip } from "@/v2/shared/components/molecules/v2-table-selection-chip";
@@ -25,6 +26,8 @@ export interface V2TableToolbarClusterProps {
   loading?: boolean;
   isFullscreen?: boolean;
   onToggleFullscreen?: () => void;
+  /** Có thì hiện ô tìm kiếm toàn cục ở đầu cụm */
+  search?: { value: string; onChange: (text: string) => void };
 }
 
 const menuOf = (groups?: V2DropdownGroup[], align: "start" | "end" = "end") =>
@@ -44,6 +47,7 @@ export const V2TableToolbarCluster: React.FC<V2TableToolbarClusterProps> = ({
   loading,
   isFullscreen,
   onToggleFullscreen,
+  search,
 }) => {
   const { t } = useV2Translation();
   const { pillTabs, viewModes, create } = config;
@@ -54,6 +58,13 @@ export const V2TableToolbarCluster: React.FC<V2TableToolbarClusterProps> = ({
 
   return (
     <div className="flex flex-wrap items-center gap-2">
+      {search && (
+        <V2SearchInput
+          value={search.value}
+          onChange={search.onChange}
+          placeholder={config.search?.placeholder}
+        />
+      )}
       {pillTabs && (
         <V2TabBar
           variant="button-group"

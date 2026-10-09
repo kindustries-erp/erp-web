@@ -305,3 +305,10 @@ export function ErpInvoiceDetailDrawer({ open, onClose, invoice }) {
 - Chỉ bấm nút mũi tên mới đổi trạng thái; nút có `aria-expanded`, `aria-controls` (id của vùng nội dung) và nhãn i18n (`v2.drawer.expandSection` / `v2.drawer.collapseSection`).
 - Prop `count` hiển thị `(N)` cạnh tiêu đề (ví dụ số dòng bảng).
 - Có story trong Storybook: `Components/Molecules/Overlay & Menu/V2DrawerSection`.
+
+## Bổ sung: nhúng bảng, xem trước tệp, xếp tầng
+
+- Bảng nhúng: `DrawerSection fitViewportHeight bodyClassName="flex flex-col overflow-hidden"` bao `V2StandardTable` (story `WithEmbeddedTable`). Không có `bodyClassName` thì thanh phân trang bị cắt và header không dính.
+- Panel phải xem trước hóa đơn/chứng từ: `V2FilePreviewPanel` (organism `v2-file-preview-panel`), module tải tệp rồi truyền `url` hoặc `text`.
+- Xếp tầng nhiều drawer được điều phối bằng `id` của drawer; trạng thái mở nên lấy từ `useV2OverlayState` để link/Back/tải lại giữ đúng chồng. Mẫu: `templates/v2-module-page/invoice-shape/` (drawer chi tiết + drawer hạch toán). Xem `v2-foundation`.
+

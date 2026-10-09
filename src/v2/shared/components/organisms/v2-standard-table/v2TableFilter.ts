@@ -108,6 +108,19 @@ const buildColumnPredicate = <T>(
   };
 };
 
+/** Tìm toàn cục: dòng khớp khi bất kỳ giá trị nào chứa một trong các từ khóa (dấu `;` ngăn cách, "..." là khớp chính xác) */
+export const searchClientItems = <T>(
+  items: T[],
+  getValues: (row: T) => unknown[],
+  search: string | undefined,
+): T[] => {
+  const keywords = parseKeywords(search ?? "");
+  if (keywords.length === 0) return items;
+  return items.filter((row) =>
+    getValues(row).some((value) => matchesKeywords(value, keywords)),
+  );
+};
+
 export const filterClientItems = <T>(
   items: T[],
   columns: V2ClientFilterColumn<T>[],

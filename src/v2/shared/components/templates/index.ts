@@ -1,1 +1,1 @@
-export * from "./v2-tabbed-spreadsheet-page";
+export * from "./v2-module-page";

@@ -99,6 +99,8 @@ export interface V2TableToolbarConfig {
   filterPanel?: V2TableFilterPanelConfig;
   onFilterToggle?: () => void;
   onRefresh?: () => void;
+  /** Ô tìm kiếm toàn cục trên mọi cột, kết quả nằm ở `query.search` */
+  search?: { placeholder?: string };
   /** Mặc định true; bỏ qua trên mobile */
   enableFullscreen?: boolean;
   create?: {

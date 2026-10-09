@@ -34,6 +34,7 @@ export function V2StandardTableMobile<T>(props: V2StandardTableProps<T>) {
         config={props.toolbar && { ...props.toolbar, viewModes: undefined }}
         onClearSelection={() => selection.onRowSelectionChange({})}
         loading={loading}
+        search={{ value: state.query.search ?? "", onChange: state.setSearch }}
       />
       {view.rows.length === 0 ? (
         <V2Text

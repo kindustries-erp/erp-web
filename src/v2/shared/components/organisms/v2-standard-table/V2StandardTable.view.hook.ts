@@ -1,8 +1,12 @@
 import { useCallback, useMemo } from "react";
 import type { V2FetchOptions, V2TableQuery } from "@/v2/shared/types/v2-table";
 import { paginateClientItems, sortClientItems } from "./v2TableClient";
-import { resolveColumnFetchOptions, toClientColumns } from "./v2TableData";
-import { filterClientItems } from "./v2TableFilter";
+import {
+  resolveColumnFetchOptions,
+  toClientColumns,
+  toSearchValues,
+} from "./v2TableData";
+import { filterClientItems, searchClientItems } from "./v2TableFilter";
 import { serializeOtherFilters } from "./v2TableSerialize";
 import type { V2Column, V2TableMode } from "./V2StandardTable.type";
 
@@ -24,6 +28,7 @@ export function useV2TableView<T>({
   serverFetch,
 }: UseV2TableViewParams<T>) {
   const clientColumns = useMemo(() => toClientColumns(columns), [columns]);
+  const searchValues = useMemo(() => toSearchValues(columns), [columns]);
 
   const view = useMemo(() => {
     const startIndex = (query.page - 1) * query.pageSize;
@@ -35,7 +40,8 @@ export function useV2TableView<T>({
         startIndex,
       };
     }
-    const filtered = filterClientItems(items, clientColumns, query);
+    const searched = searchClientItems(items, searchValues, query.search);
+    const filtered = filterClientItems(searched, clientColumns, query);
     const sorted = sortClientItems(filtered, clientColumns, query.sorts);
     return {
       rows: paginateClientItems(sorted, query.page, query.pageSize),
@@ -43,7 +49,7 @@ export function useV2TableView<T>({
       total: sorted.length,
       startIndex,
     };
-  }, [mode, items, total, clientColumns, query]);
+  }, [mode, items, total, clientColumns, searchValues, query]);
 
   const fetchOptionsFor = useCallback(
     (column: V2Column<T>) =>

@@ -117,6 +117,7 @@ export function V2StandardTableDesktop<T>(props: V2StandardTableProps<T>) {
         selectedCount={selection.selectedCount}
         toolbarExtra={props.toolbarExtra}
         loading={loading}
+        search={{ value: state.query.search ?? "", onChange: state.setSearch }}
         {...toolbarProps}
       />
       <div className="flex min-h-0 flex-1 gap-2">
