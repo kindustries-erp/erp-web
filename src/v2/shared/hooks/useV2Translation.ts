@@ -1,7 +1,7 @@
 import { useCallback } from "react";
 import { useAppStore } from "@/core/config/appStore";
 import { useT } from "@/core/i18n";
-import { v2Vi, v2En } from "../locales";
+import { v2Vi, v2En, lookupV2ModuleKey, walkV2Dictionary } from "../locales";
 
 export interface UseV2TranslationReturn {
   locale: "vi" | "en";
@@ -37,20 +37,13 @@ export function useV2Translation(): UseV2TranslationReturn {
 
       if (!key) return fallbackStr;
 
-      // 1. Direct or nested check in V2 Dictionary
+      // 1. V2 Dictionary, then module dictionaries registered via registerV2ModuleLocale
       if (key.startsWith("v2.")) {
-        const parts = key.split(".");
-        let cur: any = v2Dict;
-        let matched = true;
-        for (const p of parts) {
-          if (cur == null || typeof cur !== "object" || !(p in cur)) {
-            matched = false;
-            break;
-          }
-          cur = cur[p];
-        }
+        const cur =
+          walkV2Dictionary(v2Dict, key.split(".")) ??
+          lookupV2ModuleKey(locale, key);
 
-        if (matched && typeof cur === "string") {
+        if (typeof cur === "string") {
           if (
             typeof optionsOrFallback === "object" &&
             optionsOrFallback !== null

@@ -4,7 +4,7 @@ import { V2Tooltip } from "./V2Tooltip";
 import { V2Button } from "../v2-button";
 
 const meta: Meta<typeof V2Tooltip> = {
-  title: "V2/Atoms/V2Tooltip",
+  title: "Components/Atoms/Display/V2Tooltip",
   component: V2Tooltip,
   tags: ["autodocs"],
 };

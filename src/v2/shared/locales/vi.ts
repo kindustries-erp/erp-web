@@ -1,3 +1,5 @@
+import { v2ViTable } from "./vi.table";
+
 export const v2Vi = {
   v2: {
     common: {
@@ -97,6 +99,47 @@ export const v2Vi = {
     dropdown: {
       optionsTitle: "Tùy chọn thao tác",
     },
+    guard: {
+      forbidden: "Bạn không có quyền truy cập trang này",
+      forbiddenHint: "Liên hệ quản trị viên để được cấp quyền.",
+    },
+    preview: {
+      empty: "Chọn tệp để xem trước",
+      unsupported: "Không hỗ trợ xem trước định dạng này",
+      download: "Tải xuống",
+    },
+    chart: {
+      viewChart: "Xem biểu đồ",
+      viewTable: "Xem dạng bảng",
+      category: "Hạng mục",
+      other: "Khác",
+    },
+    form: {
+      selectPlaceholder: "Chọn...",
+      searchPlaceholder: "Tìm kiếm...",
+      noResults: "Không có kết quả",
+      clearSelection: "Bỏ lựa chọn",
+      pickDate: "Chọn ngày",
+      pickDateRange: "Chọn khoảng ngày",
+      clearDate: "Xóa ngày",
+      copy: "Sao chép",
+      copied: "Đã sao chép",
+      presetToday: "Hôm nay",
+      presetThisMonth: "Tháng này",
+      presetLastMonth: "Tháng trước",
+      presetThisQuarter: "Quý này",
+      presetThisYear: "Năm nay",
+      prevMonth: "Tháng trước",
+      nextMonth: "Tháng sau",
+      rangeSeparator: "đến",
+      uploadTitle: "Kéo thả tệp vào đây hoặc bấm để chọn",
+      removeFile: "Bỏ tệp",
+      rejectType: "Định dạng tệp không được hỗ trợ",
+      rejectSize: "Tệp vượt quá dung lượng cho phép",
+      rejectCount: "Vượt quá số tệp cho phép",
+      emptyTitle: "Chưa có dữ liệu",
+    },
+    table: v2ViTable,
   },
 };
 

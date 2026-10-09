@@ -9,7 +9,7 @@ import {
 import { V2Sidebar } from "./V2Sidebar";
 
 const meta: Meta<typeof V2Sidebar> = {
-  title: "V2/Organisms/V2Sidebar",
+  title: "Components/Organisms/Layout Shell/V2Sidebar",
   component: V2Sidebar,
   tags: ["autodocs"],
   parameters: {

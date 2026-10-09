@@ -3,7 +3,7 @@ import { FileText, Wrench, Package } from "lucide-react";
 import { V2TabItem } from "./V2TabItem";
 
 const meta: Meta<typeof V2TabItem> = {
-  title: "V2/Molecules/V2TabItem",
+  title: "Components/Molecules/Navigation & Sidebar/V2TabItem",
   component: V2TabItem,
   tags: ["autodocs"],
   argTypes: {

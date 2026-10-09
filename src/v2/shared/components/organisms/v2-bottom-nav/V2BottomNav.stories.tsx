@@ -9,7 +9,7 @@ import {
 import { V2BottomNav } from "./V2BottomNav";
 
 const meta: Meta<typeof V2BottomNav> = {
-  title: "V2/Organisms/V2BottomNav",
+  title: "Components/Organisms/Layout Shell/V2BottomNav",
   component: V2BottomNav,
   tags: ["autodocs"],
   parameters: {

@@ -1,4 +1,5 @@
 import { V2Dictionary } from "./vi";
+import { v2EnTable } from "./en.table";
 
 export const v2En: V2Dictionary = {
   v2: {
@@ -99,5 +100,46 @@ export const v2En: V2Dictionary = {
     dropdown: {
       optionsTitle: "Action options",
     },
+    guard: {
+      forbidden: "You do not have permission to view this page",
+      forbiddenHint: "Contact an administrator to request access.",
+    },
+    preview: {
+      empty: "Select a file to preview",
+      unsupported: "Preview is not available for this file type",
+      download: "Download",
+    },
+    chart: {
+      viewChart: "View chart",
+      viewTable: "View as table",
+      category: "Category",
+      other: "Other",
+    },
+    form: {
+      selectPlaceholder: "Select...",
+      searchPlaceholder: "Search...",
+      noResults: "No results",
+      clearSelection: "Clear selection",
+      pickDate: "Pick a date",
+      pickDateRange: "Pick a date range",
+      clearDate: "Clear date",
+      copy: "Copy",
+      copied: "Copied",
+      presetToday: "Today",
+      presetThisMonth: "This month",
+      presetLastMonth: "Last month",
+      presetThisQuarter: "This quarter",
+      presetThisYear: "This year",
+      prevMonth: "Previous month",
+      nextMonth: "Next month",
+      rangeSeparator: "to",
+      uploadTitle: "Drag files here or click to choose",
+      removeFile: "Remove file",
+      rejectType: "File type is not supported",
+      rejectSize: "File exceeds the allowed size",
+      rejectCount: "Too many files",
+      emptyTitle: "No data yet",
+    },
+    table: v2EnTable,
   },
 };

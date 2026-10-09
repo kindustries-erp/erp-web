@@ -121,6 +121,7 @@ export const navEn = {
     garageDashboard: "Garage Dashboard",
     garageCases: "Service Cases",
     garageOpex: "Garage Operating Expenses",
+    garageCashflow: "Garage Cashflow",
     garagePartnersGroup: "Debts",
     garagePartners: "Garage Debts",
     garageDebts: "Garage Debts",

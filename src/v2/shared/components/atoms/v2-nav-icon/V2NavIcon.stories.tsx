@@ -9,7 +9,7 @@ import {
 import { V2NavIcon } from "./V2NavIcon";
 
 const meta: Meta<typeof V2NavIcon> = {
-  title: "V2/Atoms/V2NavIcon",
+  title: "Components/Atoms/Display/V2NavIcon",
   component: V2NavIcon,
   tags: ["autodocs"],
   argTypes: {

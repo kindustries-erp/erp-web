@@ -4,7 +4,7 @@ import { V2Popover } from "./V2Popover";
 import { V2Button } from "../../atoms/v2-button";
 
 const meta: Meta<typeof V2Popover> = {
-  title: "V2/Molecules/V2Popover",
+  title: "Components/Molecules/Overlay & Menu/V2Popover",
   component: V2Popover,
   tags: ["autodocs"],
 };
