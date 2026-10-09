@@ -141,7 +141,6 @@ export const MultiTabInvoices = () => {
       tabs={INVOICE_TABS}
       activeTab={tab}
       onTabChange={setTab}
-      tabVariant="page"
     >
       <V2TabPanel tabKey="overview">
         <p className="p-4 text-sm text-muted-fg">Dashboard (không có bảng)</p>

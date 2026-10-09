@@ -300,7 +300,8 @@ cd /home/dev/repos-dev/erp/erp-web && bun run storybook
 
 ### 4.5. Tab trang nhiều bảng: `V2TabBar variant="page"`, `V2TabPanel`, slot toolbar
 - `V2TabBar` có thêm `variant="page"`: tab gạch chân (`border-b-2 border-primary` khi active), dùng cho tab cấp trang.
-- `V2SpreadsheetPageTemplate` nhận `tabVariant: "header" | "page"` (mặc định `header`), render một slot toolbar ở header cho mỗi `tabs[].key` và cung cấp `V2PageTabsContext`.
+- `V2SpreadsheetPageTemplate` nhận `tabVariant: "header" | "page"` (mặc định `page`, tab gạch chân), render `V2PageHeader` với một slot toolbar cho mỗi `tabs[].key` và cung cấp `V2PageTabsContext`.
+- Thành phần layout/header dùng chung: atom `V2Stack` (flex-col, `gap`/`fill`/`grow`), atom `V2PageIcon`, molecule `V2PageHeader` (tiêu đề, mô tả, icon, actions, slot toolbar), molecule `V2PageToolbarSlot` (thay cho `V2ToolbarSlot` cũ).
 - `V2TabPanel` (`molecules/v2-tab-panel`) bọc nội dung từng tab: lazy + keepAlive, `role="tabpanel"`. Context và `useV2ToolbarPortal` nằm ở L2 để organism (L3) tiêu thụ mà không import ngược lên template (L4). Chi tiết dùng cho bảng: xem `v2-table`.
 - Chốt chặn Storybook: `src/v2/shared/components/storyCoverage.test.ts` quét `atoms|molecules|organisms|templates`, thành phần mới phải có `*.stories.tsx` (ngoại lệ phải thêm vào allowlist kèm lý do).
 

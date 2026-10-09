@@ -13,7 +13,7 @@ export interface V2SpreadsheetPageTemplateProps {
   tabs?: V2TabItemData[];
   activeTab?: string;
   onTabChange?: (key: string) => void;
-  /** Giao diện tab trang: pill tối (`header`, mặc định) hoặc gạch chân (`page`) */
+  /** Giao diện tab trang: gạch chân (`page`, mặc định) hoặc pill tối (`header`) */
   tabVariant?: Extract<V2TabBarVariant, "header" | "page">;
   hideHeader?: boolean;
   /** Vùng nội dung chiếm hết chiều cao còn lại, thường là `V2StandardTable` */

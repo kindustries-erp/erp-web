@@ -10,3 +10,5 @@ export * from "./v2-table-date-cell";
 export * from "./v2-table-filter-button";
 export * from "./v2-toolbar-icon-button";
 export * from "./v2-filter-chip";
+export * from "./v2-page-icon";
+export * from "./v2-stack";

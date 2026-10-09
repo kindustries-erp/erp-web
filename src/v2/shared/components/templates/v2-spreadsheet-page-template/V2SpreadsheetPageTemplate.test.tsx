@@ -158,4 +158,33 @@ describe("V2SpreadsheetPageTemplate", () => {
       "border-primary",
     );
   });
+
+  it("mặc định tabVariant là 'page' (tab gạch chân) khi không truyền prop", () => {
+    mockViewport();
+    render(
+      <V2SpreadsheetPageTemplate title="T" tabs={tabs} activeTab="in">
+        <div />
+      </V2SpreadsheetPageTemplate>,
+    );
+    expect(screen.getByRole("tab", { name: "Mua vào" }).className).toContain(
+      "border-primary",
+    );
+  });
+
+  it("header dùng V2PageHeader: tiêu đề là h1 và icon nằm trong V2PageIcon", () => {
+    render(
+      <V2SpreadsheetPageTemplate
+        title="Hóa đơn"
+        icon={<svg data-testid="page-icon-svg" />}
+      >
+        <div />
+      </V2SpreadsheetPageTemplate>,
+    );
+    expect(
+      screen.getByRole("heading", { level: 1, name: "Hóa đơn" }),
+    ).toBeInTheDocument();
+    expect(screen.getByTestId("page-icon-svg").parentElement).toHaveClass(
+      "bg-primary/10",
+    );
+  });
 });

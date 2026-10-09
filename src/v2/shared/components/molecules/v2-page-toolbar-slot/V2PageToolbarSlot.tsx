@@ -1,13 +1,8 @@
 import * as React from "react";
 import { cn } from "@/v2/shared/utils/cn";
+import type { V2PageToolbarSlotProps } from "./V2PageToolbarSlot.type";
 
-interface V2ToolbarSlotProps {
-  tabKey: string;
-  active: boolean;
-  register: (key: string, el: HTMLElement | null) => void;
-}
-
-export const V2ToolbarSlot: React.FC<V2ToolbarSlotProps> = ({
+export const V2PageToolbarSlot: React.FC<V2PageToolbarSlotProps> = ({
   tabKey,
   active,
   register,

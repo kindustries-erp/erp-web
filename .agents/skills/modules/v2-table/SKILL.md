@@ -48,7 +48,7 @@ src/v2/shared/
     │   v2TableFilter / v2TableEvaluate / v2TableClient / v2TableData / v2TableQuery / v2ColumnPreferences
     │   v2HeaderFilterBuilder.ts          headerFilter(label), .date, .amount, .qty, .select
     │   .mock.tsx / .mock-server.ts / .stories.tsx / .variants.stories.tsx / .toolbar.stories.tsx
-    └── templates/v2-spreadsheet-page-template/   Header (icon, tiêu đề, mô tả, slot toolbar theo tab, actions) + tab (`tabVariant`) + vùng bảng full-height
+    └── templates/v2-spreadsheet-page-template/   Khung trang: `V2PageHeader` (icon, tiêu đề, mô tả, slot toolbar theo tab, actions) + tab (`tabVariant`, mặc định `page`) + vùng bảng full-height (`V2Stack`)
 ```
 
 Quy tắc tầng đã áp dụng (theo `ui-atomic-refactor`):
