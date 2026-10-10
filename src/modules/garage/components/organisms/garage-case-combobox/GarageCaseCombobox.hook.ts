@@ -57,6 +57,7 @@ export const useGarageCaseCombobox = (propsBranchId?: string) => {
           subCode: `Chi: ${tra.toLocaleString("vi-VN")}đ`,
           subLabel: item.khachHangName || "Không có thông tin",
           value: item.id,
+          originalName: item.khachHangName || "",
         };
       }) || [];
 

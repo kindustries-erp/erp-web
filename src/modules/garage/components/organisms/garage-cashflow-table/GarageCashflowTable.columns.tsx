@@ -6,11 +6,8 @@ import {
 import type { GarageCashflowVoucher } from "../../../api/garageCashflowApi";
 import { Eye, Pencil, Trash2 } from "lucide-react";
 import { TableText } from "@/shared/components/DataTable/TableText";
-import {
-  renderCreatedAtCell,
-  renderThuCell,
-  renderChiCell,
-} from "./GarageCashflowTable.helper";
+import { renderThuCell, renderChiCell } from "./GarageCashflowTable.helper";
+import { TableDateCell } from "@/shared/components/DataTable/TableDateCell";
 
 export const getGarageCashflowColumns = (
   filterBuilder: any,
@@ -31,11 +28,34 @@ export const getGarageCashflowColumns = (
       ),
     },
     {
+      key: "transDate",
+      sortKey: "transDate",
+      size: 110,
+      header: filterBuilder.date("transDate", "Ngày", {
+        hideFilter: true,
+        hideFooter: true,
+      }),
+      className: "text-right",
+      cell: (row) => (
+        <TableDateCell
+          date={row.transDate}
+          format="date"
+          className="justify-end w-full"
+        />
+      ),
+    },
+    {
       key: "createdAt",
       sortKey: "createdAt",
       size: 110,
-      header: filterBuilder.date("createdAt", "Ngày tạo"),
-      cell: renderCreatedAtCell,
+      header: filterBuilder.date("createdAt", "Ngày tạo", {
+        hideFilter: true,
+        hideFooter: true,
+      }),
+      className: "text-right",
+      cell: (row) => (
+        <TableDateCell date={row.createdAt} className="justify-end w-full" />
+      ),
     },
     {
       key: "voucherCode",
@@ -151,19 +171,21 @@ export const getGarageCashflowRowActions = (
         },
       ],
     },
-    {
-      groupLabel: "Khác",
-      items: [
-        {
-          key: "delete",
-          label: "Xóa phiếu",
-          icon: <Trash2 className="w-4 h-4" />,
-          variant: "danger" as const,
-          onClick: () => {
-            if (onDelete) onDelete(row);
+    ...(onDelete
+      ? [
+          {
+            groupLabel: "Khác",
+            items: [
+              {
+                key: "delete",
+                label: "Xóa phiếu",
+                icon: <Trash2 className="w-4 h-4" />,
+                variant: "danger" as const,
+                onClick: () => onDelete(row),
+              },
+            ],
           },
-        },
-      ],
-    },
+        ]
+      : []),
   ];
 };

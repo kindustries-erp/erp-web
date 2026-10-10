@@ -59,6 +59,7 @@ export const GarageCashflowTable: React.FC<GarageCashflowTableProps> = ({
       onTabChange={onTabChange}
       tableId="garage-cashflow-list"
       columns={columns}
+      defaultColumnVisibility={{ createdAt: false }}
       items={tableHook.data}
       total={tableHook.total}
       totalPages={tableHook.totalPages}
