@@ -10,6 +10,7 @@ import { Combobox } from "@/shared/components/Combobox";
 import { Input } from "@/shared/components/ui/input";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { Badge } from "@/shared/components/ui/badge";
+import { DatePicker } from "@/shared/components/DatePicker";
 
 import { PaymentMethodCombobox } from "../../molecules/payment-method-combobox";
 import { GarageCaseCombobox } from "../garage-case-combobox";
@@ -57,6 +58,10 @@ export const GarageCashflowDrawer: React.FC<GarageCashflowDrawerProps> = ({
           voucherType: (voucher.voucherType || "").toUpperCase() as
             | "RECEIPT"
             | "PAYMENT",
+          voucherCode: voucher.voucherCode || "",
+          transDate: voucher.transDate
+            ? voucher.transDate.slice(0, 10)
+            : new Date().toISOString().slice(0, 10),
           amount: voucher.amount,
           partnerName: voucher.partnerName || voucher.case?.khachHangName || "",
           partnerPhone: voucher.partnerPhone || "",
@@ -70,6 +75,7 @@ export const GarageCashflowDrawer: React.FC<GarageCashflowDrawerProps> = ({
       } else {
         setFormData({
           voucherType: "RECEIPT",
+          transDate: new Date().toISOString().slice(0, 10),
           amount: 0,
         });
       }
@@ -136,6 +142,15 @@ export const GarageCashflowDrawer: React.FC<GarageCashflowDrawerProps> = ({
           <DrawerSection title="THÔNG TIN CHUNG">
             {mode === "edit" ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <DrawerField label="Ngày giao dịch" required>
+                  <DatePicker
+                    value={formData.transDate || ""}
+                    onChange={(val: string) =>
+                      setFormData({ ...formData, transDate: val })
+                    }
+                    className="w-full"
+                  />
+                </DrawerField>
                 <DrawerField label="Loại phiếu" required>
                   <Combobox
                     value={formData.voucherType || ""}
@@ -165,6 +180,46 @@ export const GarageCashflowDrawer: React.FC<GarageCashflowDrawerProps> = ({
                     className="w-full h-8 text-sm"
                   />
                 </DrawerField>
+                <DrawerField label="Phương thức TT">
+                  <PaymentMethodCombobox
+                    value={formData.paymentMethod || ""}
+                    onChange={(val: string) =>
+                      setFormData({
+                        ...formData,
+                        paymentMethod: val,
+                      })
+                    }
+                  />
+                </DrawerField>
+                <DrawerField label="Mã chứng từ">
+                  <Input
+                    value={formData.voucherCode || ""}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                      setFormData({ ...formData, voucherCode: e.target.value })
+                    }
+                    placeholder="Tự động sinh nếu để trống"
+                    className="w-full h-8 text-sm"
+                  />
+                </DrawerField>
+                <DrawerField label="Mã Phiếu Dịch Vụ (Garage Case)">
+                  <GarageCaseCombobox
+                    value={formData.caseId || ""}
+                    onChange={(val: string, selectedOption?: any) => {
+                      const updates: Partial<CreateGarageCashflowVoucherDto> = {
+                        caseId: val,
+                      };
+                      if (selectedOption?.originalName) {
+                        updates.partnerName = selectedOption.originalName;
+                      }
+                      setFormData({ ...formData, ...updates });
+                    }}
+                    fallbackLabel={
+                      voucher?.case?.soChungTu
+                        ? voucher.case.soChungTu
+                        : undefined
+                    }
+                  />
+                </DrawerField>
                 <DrawerField label="Đối tác">
                   <Input
                     value={formData.partnerName || ""}
@@ -186,19 +241,29 @@ export const GarageCashflowDrawer: React.FC<GarageCashflowDrawerProps> = ({
                     className="w-full h-8 text-sm"
                   />
                 </DrawerField>
-                <DrawerField label="Diễn giải">
-                  <Textarea
-                    value={formData.note || ""}
-                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
-                      setFormData({ ...formData, note: e.target.value })
-                    }
-                    rows={2}
-                    className="w-full text-sm"
-                  />
-                </DrawerField>
+                <div className="col-span-1 md:col-span-2">
+                  <DrawerField label="Ghi chú">
+                    <Textarea
+                      value={formData.note || ""}
+                      onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                        setFormData({ ...formData, note: e.target.value })
+                      }
+                      rows={2}
+                      className="w-full text-sm"
+                    />
+                  </DrawerField>
+                </div>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-2">
+                <DrawerRow
+                  label="Ngày giao dịch"
+                  value={
+                    voucher?.transDate
+                      ? new Date(voucher.transDate).toLocaleDateString("vi-VN")
+                      : "—"
+                  }
+                />
                 <DrawerRow
                   label="Loại phiếu"
                   value={
@@ -212,6 +277,22 @@ export const GarageCashflowDrawer: React.FC<GarageCashflowDrawerProps> = ({
                   value={`${(voucher?.amount || 0).toLocaleString("vi-VN")} đ`}
                 />
                 <DrawerRow
+                  label="Phương thức TT"
+                  value={voucher?.paymentMethod || "—"}
+                />
+                <DrawerRow
+                  label="Mã chứng từ"
+                  value={voucher?.voucherCode || "—"}
+                />
+                <DrawerRow
+                  label="Mã Phiếu Dịch Vụ"
+                  value={
+                    voucher?.case?.soChungTu
+                      ? voucher.case.soChungTu
+                      : voucher?.caseId || "—"
+                  }
+                />
+                <DrawerRow
                   label="Đối tác"
                   value={
                     voucher?.partnerName || voucher?.case?.khachHangName || "—"
@@ -221,7 +302,9 @@ export const GarageCashflowDrawer: React.FC<GarageCashflowDrawerProps> = ({
                   label="SĐT Đối tác"
                   value={voucher?.partnerPhone || "—"}
                 />
-                <DrawerRow label="Diễn giải" value={voucher?.note || "—"} />
+                <div className="col-span-1 md:col-span-2">
+                  <DrawerRow label="Ghi chú" value={voucher?.note || "—"} />
+                </div>
               </div>
             )}
           </DrawerSection>
@@ -233,42 +316,6 @@ export const GarageCashflowDrawer: React.FC<GarageCashflowDrawerProps> = ({
           >
             {mode === "edit" ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <DrawerField label="Phương thức TT">
-                  <PaymentMethodCombobox
-                    value={formData.paymentMethod || ""}
-                    onChange={(val: string) =>
-                      setFormData({
-                        ...formData,
-                        paymentMethod: val,
-                      })
-                    }
-                  />
-                </DrawerField>
-                <DrawerField label="Mã tham chiếu">
-                  <Input
-                    value={formData.referenceNumber || ""}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                      setFormData({
-                        ...formData,
-                        referenceNumber: e.target.value,
-                      })
-                    }
-                    className="w-full h-8 text-sm"
-                  />
-                </DrawerField>
-                <DrawerField label="Mã Phiếu Dịch Vụ (Garage Case)">
-                  <GarageCaseCombobox
-                    value={formData.caseId || ""}
-                    onChange={(val: string) =>
-                      setFormData({ ...formData, caseId: val })
-                    }
-                    fallbackLabel={
-                      voucher?.case?.soChungTu
-                        ? voucher.case.soChungTu
-                        : undefined
-                    }
-                  />
-                </DrawerField>
                 <DrawerField label="Tham chiếu ERP Bank">
                   <ErpBankTransactionCombobox
                     value={formData.erpBankTransactionId || ""}
@@ -308,22 +355,6 @@ export const GarageCashflowDrawer: React.FC<GarageCashflowDrawerProps> = ({
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-2">
-                <DrawerRow
-                  label="Phương thức TT"
-                  value={voucher?.paymentMethod || "—"}
-                />
-                <DrawerRow
-                  label="Mã tham chiếu"
-                  value={voucher?.referenceNumber || "—"}
-                />
-                <DrawerRow
-                  label="Mã Phiếu Dịch Vụ"
-                  value={
-                    voucher?.case?.soChungTu
-                      ? voucher.case.soChungTu
-                      : voucher?.caseId || "—"
-                  }
-                />
                 <DrawerRow
                   label="Tham chiếu ERP Bank"
                   value={

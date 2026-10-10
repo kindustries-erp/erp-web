@@ -19,7 +19,10 @@ export const GarageCaseCombobox: React.FC<GarageCaseComboboxProps> = ({
       <Combobox
         value={value || ""}
         onChange={(val: string) => {
-          if (onChange) onChange(val);
+          if (onChange) {
+            const selectedOption = options.find((o: any) => o.value === val);
+            onChange(val, selectedOption);
+          }
         }}
         options={options}
         placeholder={isLoading ? "Đang tải..." : placeholder}

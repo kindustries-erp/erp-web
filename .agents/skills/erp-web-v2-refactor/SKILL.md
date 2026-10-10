@@ -241,8 +241,8 @@ find src/v2/modules/[module-name]/ -name "*.tsx" -o -name "*.ts" | xargs wc -l |
 grep -rn '>[A-ZÀ-Ỹa-zà-ỹ0-9 ]*<' src/v2/modules/[module-name]/
 
 # 4. Kiểm tra TypeScript toàn dự án
-cd /home/dev/repos-dev/erp/erp-web && bunx tsc --noEmit
+cd erp/erp-web && bunx tsc --noEmit
 
 # 5. Chạy unit tests của module
-cd /home/dev/repos-dev/erp/erp-web && bun test src/v2/modules/[module-name]/
+cd erp/erp-web && bun test src/v2/modules/[module-name]/
 ```

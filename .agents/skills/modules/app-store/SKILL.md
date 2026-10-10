@@ -85,11 +85,11 @@ src/core/config/appStore.ts # Root barrel re-export giữ 100% tương thích ng
 
 Có hơn 40 components và modules trong toàn hệ sinh thái `erp-web` phụ thuộc trực tiếp vào `appStore`:
 - **App Shell & Layout**:
-  - [`src/App.tsx`](file:///home/dev/repos-dev/erp/erp-web/src/App.tsx): Đồng bộ URL khi khởi động (`syncFromUrl`), điều hướng trang 403 Forbidden.
-  - [`src/core/components/layout/TabBar.tsx`](file:///home/dev/repos-dev/erp/erp-web/src/core/components/layout/TabBar.tsx): Render tabs, kéo thả tab, menu chuột phải (close/duplicate/close other).
-  - [`src/core/components/layout/Topbar.tsx`](file:///home/dev/repos-dev/erp/erp-web/src/core/components/layout/Topbar.tsx): Render dynamic breadcrumb.
-  - [`src/core/components/layout/sidebar/`](file:///home/dev/repos-dev/erp/erp-web/src/core/components/layout/sidebar/): Active link navigation và đóng mở sidebar.
-  - [`src/core/components/layout/ThemePopover.tsx`](file:///home/dev/repos-dev/erp/erp-web/src/core/components/layout/ThemePopover.tsx): Bảng điều khiển đổi theme trực quan.
+  - [`src/App.tsx`](erp/erp-web/src/App.tsx): Đồng bộ URL khi khởi động (`syncFromUrl`), điều hướng trang 403 Forbidden.
+  - [`src/core/components/layout/TabBar.tsx`](erp/erp-web/src/core/components/layout/TabBar.tsx): Render tabs, kéo thả tab, menu chuột phải (close/duplicate/close other).
+  - [`src/core/components/layout/Topbar.tsx`](erp/erp-web/src/core/components/layout/Topbar.tsx): Render dynamic breadcrumb.
+  - [`src/core/components/layout/sidebar/`](erp/erp-web/src/core/components/layout/sidebar/): Active link navigation và đóng mở sidebar.
+  - [`src/core/components/layout/ThemePopover.tsx`](erp/erp-web/src/core/components/layout/ThemePopover.tsx): Bảng điều khiển đổi theme trực quan.
 - **Tích hợp Backend API & Preferences**:
   - Khi `appTheme` hoặc `locale` thay đổi, store gọi `updateUserPreferencesApi()` để lưu trực tiếp vào database PostgreSQL (`core_user_preferences`).
 

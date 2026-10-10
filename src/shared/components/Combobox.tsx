@@ -9,6 +9,7 @@ export interface ComboboxOption {
   value: string;
   label: string;
   code?: string;
+  subCode?: string;
   searchText?: string;
   subLabel?: string;
 }
@@ -16,16 +17,21 @@ export interface ComboboxOption {
 export function parseComboboxOptionDisplay(o?: ComboboxOption | null): {
   label: string;
   code?: string;
+  subCode?: string;
 } {
-  if (!o) return { label: "", code: undefined };
+  if (!o) return { label: "", code: undefined, subCode: undefined };
   if (o.code) {
-    return { label: o.label, code: o.code };
+    return { label: o.label, code: o.code, subCode: o.subCode };
   }
   const match = o.label.match(/^(.*?)\s*\[([^\]]+)\]$/);
   if (match) {
-    return { label: match[1].trim(), code: match[2].trim() };
+    return {
+      label: match[1].trim(),
+      code: match[2].trim(),
+      subCode: o.subCode,
+    };
   }
-  return { label: o.label, code: undefined };
+  return { label: o.label, code: undefined, subCode: o.subCode };
 }
 
 interface ComboboxProps {
@@ -154,6 +160,7 @@ export function Combobox({
               <span>
                 {selectedDisplay.label}
                 {selectedDisplay.code && ` (${selectedDisplay.code})`}
+                {selectedDisplay.subCode && ` (${selectedDisplay.subCode})`}
               </span>
               {selected.subLabel && (
                 <span className="text-white/70">{selected.subLabel}</span>
@@ -211,11 +218,20 @@ export function Combobox({
                   </span>
                 )}
               </span>
-              {selected && selectedDisplay.code && (
-                <span className="shrink-0 px-1.5 py-0.5 rounded text-[10px] font-mono font-medium text-muted-foreground bg-slate-100 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80">
-                  {selectedDisplay.code}
-                </span>
-              )}
+              {selected && (selectedDisplay.code || selectedDisplay.subCode) ? (
+                <div className="shrink-0 flex flex-col items-end gap-0.5">
+                  {selectedDisplay.code && (
+                    <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-medium text-muted-foreground bg-slate-100 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80">
+                      {selectedDisplay.code}
+                    </span>
+                  )}
+                  {selectedDisplay.subCode && (
+                    <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-medium text-muted-foreground bg-slate-100 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80">
+                      {selectedDisplay.subCode}
+                    </span>
+                  )}
+                </div>
+              ) : null}
             </span>
             <ChevronDown className="w-3.5 h-3.5 shrink-0 text-[color:var(--muted-fg)] ml-2" />
           </button>
@@ -337,10 +353,19 @@ export function Combobox({
                             </span>
                           )}
                         </div>
-                        {itemCode && (
-                          <span className="shrink-0 px-1.5 py-0.5 rounded text-[10px] font-mono font-medium text-muted-foreground bg-slate-100 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80 shadow-2xs group-hover/item:text-foreground transition-colors">
-                            {itemCode}
-                          </span>
+                        {(itemCode || o.subCode) && (
+                          <div className="shrink-0 flex flex-col items-end gap-0.5">
+                            {itemCode && (
+                              <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-medium text-muted-foreground bg-slate-100 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80 shadow-2xs group-hover/item:text-foreground transition-colors">
+                                {itemCode}
+                              </span>
+                            )}
+                            {o.subCode && (
+                              <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-medium text-muted-foreground bg-slate-100 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80 shadow-2xs group-hover/item:text-foreground transition-colors">
+                                {o.subCode}
+                              </span>
+                            )}
+                          </div>
                         )}
                       </div>
                     </button>

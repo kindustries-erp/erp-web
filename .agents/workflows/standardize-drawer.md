@@ -13,7 +13,7 @@ Workflow này hướng dẫn Agent và Developer quy trình chuẩn 4 bước kh
 Nếu bạn đang tạo mới một Drawer cho phân hệ mới, **hãy ưu tiên chạy PlopJS Generator** để sinh ngay 100% code chuẩn trong 1 giây:
 ```bash
 # Di chuyển vào erp-web
-cd /home/dev/repos/erp/erp-web
+cd erp/erp-web
 
 # Chạy generator tạo full Drawer chuẩn (Form + Sections + Top Tabs + Locales)
 bun plop drawer <moduleName> <componentName> <drawerType> <drawerSize> <hasStatus>
