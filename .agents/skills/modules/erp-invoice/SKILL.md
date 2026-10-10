@@ -9,7 +9,7 @@ description: Module tri thức Quản lý Hóa đơn Điện tử & Dashboard H�
 
 > [!NOTE]
 > Đặc tả chi tiết về Database Schema, Entity, DTOs, API Endpoints, Hạch toán Kế toán Kép Thông tư 99, 5-Slot Heartbeat Cron GDT Sync và Phân loại AI 9router của module Hóa đơn được lưu trữ tại:
-> 👉 [`erp-invoice-api`](file:///home/dev/repos-dev/erp/erp-api/.agents/skills/modules/erp-invoice/SKILL.md)
+> 👉 [`erp-invoice-api`](erp/erp-api/.agents/skills/modules/erp-invoice/SKILL.md)
 
 Module Hóa đơn Điện tử quản lý tập trung toàn bộ hóa đơn đầu vào (`IN`), hóa đơn đầu ra (`OUT`), hóa đơn nháp (`DRAFT`), và Dashboard phân tích dòng tiền/thuế hóa đơn. Giao diện được cấu trúc theo chuẩn **Atomic Design (Atoms -> Molecules -> Organisms)** đáp ứng quy chuẩn No Blue Mandate, Tabular Numbers và Multi-tab Navigation.
 

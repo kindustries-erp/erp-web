@@ -37,6 +37,7 @@ export interface GarageCashflowVoucher {
 export interface CreateGarageCashflowVoucherDto {
   voucherType: "RECEIPT" | "PAYMENT";
   amount: number;
+  voucherCode?: string;
   partnerName?: string;
   partnerPhone?: string;
   note?: string;

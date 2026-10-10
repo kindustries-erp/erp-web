@@ -157,7 +157,7 @@ Kiến trúc V2 sở hữu hệ thống Theme hoàn toàn độc lập, tách r�
 
 ## 4. Đặc Tả Contracts & Interfaces Cốt Lõi
 
-### 4.1. `V2AppLayoutProps` ([`V2AppLayout.type.ts`](file:///home/dev/repos-dev/erp/erp-web/src/v2/app/layouts/v2-app-layout/V2AppLayout.type.ts))
+### 4.1. `V2AppLayoutProps` ([`V2AppLayout.type.ts`](erp/erp-web/src/v2/app/layouts/v2-app-layout/V2AppLayout.type.ts))
 ```typescript
 export interface V2AppLayoutProps {
   children?: ReactNode;
@@ -179,7 +179,7 @@ export interface V2AppLayoutProps {
 }
 ```
 
-### 4.2. `V2RightPanelProps` ([`V2RightPanel.type.ts`](file:///home/dev/repos-dev/erp/erp-web/src/v2/shared/components/organisms/v2-right-panel/V2RightPanel.type.ts))
+### 4.2. `V2RightPanelProps` ([`V2RightPanel.type.ts`](erp/erp-web/src/v2/shared/components/organisms/v2-right-panel/V2RightPanel.type.ts))
 ```typescript
 export interface V2RightPanelProps {
   breadcrumbs?: V2BreadcrumbItem[];
@@ -197,7 +197,7 @@ export interface V2RightPanelProps {
 }
 ```
 
-### 4.3. `V2SidebarProps` ([`V2Sidebar.type.ts`](file:///home/dev/repos-dev/erp/erp-web/src/v2/shared/components/organisms/v2-sidebar/V2Sidebar.type.ts))
+### 4.3. `V2SidebarProps` ([`V2Sidebar.type.ts`](erp/erp-web/src/v2/shared/components/organisms/v2-sidebar/V2Sidebar.type.ts))
 ```typescript
 export interface V2SidebarProps {
   sections?: V2SidebarSectionData[];
@@ -217,18 +217,18 @@ export interface V2SidebarProps {
 
 Hệ thống Layout V2 hỗ trợ 100% đa ngôn ngữ (Tiếng Việt 🇻🇳 và English 🇬🇧) với kiến trúc 2 tầng mượt mà, đồng bộ thời gian thực với Zustand Core Store:
 
-### 5.1. Hook `useV2Translation` ([`useV2Translation.ts`](file:///home/dev/repos-dev/erp/erp-web/src/v2/shared/hooks/useV2Translation.ts))
+### 5.1. Hook `useV2Translation` ([`useV2Translation.ts`](erp/erp-web/src/v2/shared/hooks/useV2Translation.ts))
 - **Đồng bộ Zustand Store**: Lấy và cập nhật `locale` trực tiếp từ `useAppStore` (`state.locale`, `state.setLocale`).
 - **Ưu tiên Từ điển V2**: Các key có tiền tố `v2.` (như `v2.sidebar.appName`, `v2.welcome.heroTitle`) được tra cứu tại `src/v2/shared/locales/{vi,en}.ts`. Hỗ trợ template interpolation `{{name}}`.
 - **Fallback Sang Core V1**: Tự động ủy thác sang `useT()` của V1 khi tra cứu các key dùng chung (`nav.items.*`, `nav.sections.*`), bảo đảm tái sử dụng triệt để từ điển hệ thống.
 
-### 5.2. Phân Tử `V2LanguageSwitcher` ([`V2LanguageSwitcher.tsx`](file:///home/dev/repos-dev/erp/erp-web/src/v2/shared/components/molecules/v2-language-switcher/V2LanguageSwitcher.tsx))
+### 5.2. Phân Tử `V2LanguageSwitcher` ([`V2LanguageSwitcher.tsx`](erp/erp-web/src/v2/shared/components/molecules/v2-language-switcher/V2LanguageSwitcher.tsx))
 - Thiết kế dạng Pill Badge compact siêu gọn cao **24px**, tích hợp trên thanh `V2Topbar` (Desktop) và `V2Header` (Mobile).
 - Hiển thị cờ và mã ngôn ngữ: `🇻🇳 VI` | `🇬🇧 EN`. Click để chuyển đổi ngôn ngữ tức thời và kích hoạt re-render toàn bộ layout.
 
-### 5.3. Động Hóa Danh Mục Điều Hướng ([`v2Navigation.ts`](file:///home/dev/repos-dev/erp/erp-web/src/v2/app/layouts/v2-app-layout/v2Navigation.ts))
+### 5.3. Động Hóa Danh Mục Điều Hướng ([`v2Navigation.ts`](erp/erp-web/src/v2/app/layouts/v2-app-layout/v2Navigation.ts))
 - Menu Sidebar và Mobile BottomNav được động hóa hoàn toàn thông qua `getV2NavigationSections(t)` và `getV2NavItems(t)`.
-- Tách bạch cấu hình thô sang [`v2Navigation.config.ts`](file:///home/dev/repos-dev/erp/erp-web/src/v2/app/layouts/v2-app-layout/v2Navigation.config.ts), bảo đảm tuân thủ nghiêm ngặt ngưỡng kích thước file < 180 LoC.
+- Tách bạch cấu hình thô sang [`v2Navigation.config.ts`](erp/erp-web/src/v2/app/layouts/v2-app-layout/v2Navigation.config.ts), bảo đảm tuân thủ nghiêm ngặt ngưỡng kích thước file < 180 LoC.
 
 ---
 
@@ -285,7 +285,7 @@ Storybook được cấu hình hoàn toàn độc lập và **chỉ kết nối 
 ### 7.3. Các Lệnh Thực Thi Storybook
 ```bash
 # 1. Khởi chạy Storybook Dev Server (Mặc định port 6006)
-cd /home/dev/repos-dev/erp/erp-web && bun run storybook
+cd erp/erp-web && bun run storybook
 
 ### 4.4. Quy Chuẩn Thẩm Mỹ TabBar & TabItem (`V2TabBar`, `V2TabItem`)
 Để đảm bảo trải nghiệm người dùng đồng nhất tuyệt đối giữa V1 và V2:
@@ -329,14 +329,14 @@ grep -rn "blue-" src/v2/
 find src/v2 -type f \( -name "*.tsx" -o -name "*.ts" \) -exec wc -l {} + | awk '$1 > 180 {print}'
 
 # 3. Kiểm tra tính toàn vẹn kiểu dữ liệu TypeScript (Phải Exit Code 0)
-cd /home/dev/repos-dev/erp/erp-web && bun run type:check
+cd erp/erp-web && bun run type:check
 
 # 4. Chạy toàn bộ Unit Tests Co-located (Phải 100% PASS)
-cd /home/dev/repos-dev/erp/erp-web && bun run test src/v2/
+cd erp/erp-web && bun run test src/v2/
 
 # 5. Kiểm tra build Storybook tĩnh (Phải Exit Code 0)
-cd /home/dev/repos-dev/erp/erp-web && bun run build-storybook
+cd erp/erp-web && bun run build-storybook
 
 # 6. Kiểm tra đóng gói Production Build của Vite
-cd /home/dev/repos-dev/erp/erp-web && bun run build
+cd erp/erp-web && bun run build
 ```

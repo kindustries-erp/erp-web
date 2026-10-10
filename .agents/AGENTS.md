@@ -82,7 +82,7 @@ Source of truth for this repo (`./erp-web`).
 - **Strict Git Workflow**: You MUST follow the exact commit/push sequence defined below (pull -> build -> check:ci -> test -> commit -> push).
 - push this repo with `github-industries`
 - when debugging and testing API locally, always start dev on port 10010
-- by default, always work on ERP_MASTER_DATABASE_URL unless ERP_KLTOUS_STAGING_DATABASE_URL or ERP_KLTOUS_MASTER_DATABASE_URL is explicitly indicated
+- by default, work on the `DATABASE_URL` in `.env.local` (DB `erp_local`, master); use the matching `.env.<tenant>-<stage>` file (greenway/klotus) only when explicitly indicated; scripts must take the env file explicitly and never rely on a bare `.env` (it may point at a production DB)
 - reuse existing components/hooks/utils/helpers/functions/page patterns first
 - extend/adapt before forking parallel patterns
 - cancel or delete actions must have modal confirm (e.g. ConfirmModal)
@@ -115,7 +115,7 @@ Source of truth for this repo (`./erp-web`).
 
 5. When asked to **sync/deploy to downstream branches** (`erp-greenway-production`, `erp-greenway-staging`, `erp-klotus-*`):
    - First ensure `erp-master` is committed, tested, and pushed to `github-industries erp-master`.
-   - Run `/home/dev/repos/erp/.agents/scripts/sync-branch.sh <target-branch> --push` or follow `erp-git-workflow.md` Scenario 4.
+   - Run `../.agents/scripts/sync-branch.sh <target-branch> --push` or follow `erp-git-workflow.md` Scenario 4.
    - Always return back to `erp-master` after syncing.
 
 **Git Execution Context**: You MUST perform all Git operations (add, commit, pull, push) exclusively inside the `erp-web` directory. NEVER run git commands from the workspace root. When pulling or pushing, ALWAYS specify the remote `github-industries` (e.g., `git push github-industries erp-master`).
@@ -126,7 +126,7 @@ Source of truth for this repo (`./erp-web`).
 - use repo-local context as default guidance
 - MUST use bun/bunx exclusively (do NOT use npm)
 - when debugging and testing API locally, always start dev on port 10010
-- by default, always work on ERP_MASTER_DATABASE_URL unless ERP_KLTOUS_STAGING_DATABASE_URL or ERP_KLTOUS_MASTER_DATABASE_URL is explicitly indicated
+- by default, work on the `DATABASE_URL` in `.env.local` (DB `erp_local`, master); use the matching `.env.<tenant>-<stage>` file (greenway/klotus) only when explicitly indicated; scripts must take the env file explicitly and never rely on a bare `.env` (it may point at a production DB)
 - follow DB -> API -> UI -> QC
 - inspect current state before edits
 - use evidence-first wording

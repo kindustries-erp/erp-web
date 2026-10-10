@@ -124,7 +124,7 @@ Phân chia toàn bộ công việc theo hệ thống đánh số 3 cấp **`X.Y.
 ```markdown
 - [ ] **Task X.Y.Z: [Tên Task súc tích, rõ hành động]**
   - **Phân hệ**: `Frontend Web` | **Ưu tiên**: `[P0 / P1 / P2]`
-  - **Files**: `[NEW]` / `[MODIFY]` / `[DELETE]` [path/to/file](file:///absolute/path/to/file)
+  - **Files**: `[NEW]` / `[MODIFY]` / `[DELETE]` [path/to/file](erp/erp-web/path/to/file)
   - **DoD**: TypeScript strict pass, render đúng layout, validate form chuẩn.
   - **Verification**: `[Lệnh kiểm thử scoped cụ thể: bunx tsc --noEmit hoặc bunx vitest run <spec>]`
 ```
@@ -222,14 +222,14 @@ Tóm tắt mục tiêu giao diện, người dùng mục tiêu và luồng tươ
 #### 1.1 Type Contracts & API Client
 - [ ] **Task 1.1.1: Định nghĩa Interface & API Client**
   - **Phân hệ**: `Web` | **Ưu tiên**: `P1`
-  - **Files**: `[NEW]` [src/modules/example/api/exampleApi.ts](file:///home/dev/repos/erp/erp-web/src/modules/example/api/exampleApi.ts)
+  - **Files**: `[NEW]` [src/modules/example/api/exampleApi.ts](erp/erp-web/src/modules/example/api/exampleApi.ts)
   - **DoD**: Khớp type contract với Backend response DTO.
   - **Verification**: `bunx tsc --noEmit`
 
 #### 1.2 TanStack Query Hooks
 - [ ] **Task 1.2.1: Tạo useExampleList Hook**
   - **Phân hệ**: `Web` | **Ưu tiên**: `P1`
-  - **Files**: `[NEW]` [src/modules/example/hooks/useExampleList.ts](file:///home/dev/repos/erp/erp-web/src/modules/example/hooks/useExampleList.ts)
+  - **Files**: `[NEW]` [src/modules/example/hooks/useExampleList.ts](erp/erp-web/src/modules/example/hooks/useExampleList.ts)
   - **DoD**: Fetch dữ liệu có phân trang, server filter.
   - **Verification**: `bunx tsc --noEmit`
 
@@ -237,7 +237,7 @@ Tóm tắt mục tiêu giao diện, người dùng mục tiêu và luồng tươ
 #### 2.1 DataTable Page
 - [ ] **Task 2.1.1: Xây dựng ExampleListPage**
   - **Phân hệ**: `Web` | **Ưu tiên**: `P1`
-  - **Files**: `[NEW]` [src/modules/example/pages/ExampleListPage.tsx](file:///home/dev/repos/erp/erp-web/src/modules/example/pages/ExampleListPage.tsx)
+  - **Files**: `[NEW]` [src/modules/example/pages/ExampleListPage.tsx](erp/erp-web/src/modules/example/pages/ExampleListPage.tsx)
   - **DoD**: Dùng `SpreadsheetPageTemplate`, STT 1-based, Header Filter đầy đủ.
   - **Verification**: `bunx tsc --noEmit`
 
@@ -245,7 +245,7 @@ Tóm tắt mục tiêu giao diện, người dùng mục tiêu và luồng tươ
 #### 3.1 Drawer Assembly
 - [ ] **Task 3.1.1: Xây dựng ExampleDetailDrawer**
   - **Phân hệ**: `Web` | **Ưu tiên**: `P1`
-  - **Files**: `[NEW]` [src/modules/example/components/ExampleDrawer/ExampleDetailDrawer.tsx](file:///home/dev/repos/erp/erp-web/src/modules/example/components/ExampleDrawer/ExampleDetailDrawer.tsx)
+  - **Files**: `[NEW]` [src/modules/example/components/ExampleDrawer/ExampleDetailDrawer.tsx](erp/erp-web/src/modules/example/components/ExampleDrawer/ExampleDetailDrawer.tsx)
   - **DoD**: `StandardFormDrawer`, kích thước `65vw`, responsive, validate form chuẩn.
   - **Verification**: `bunx tsc --noEmit`
 
@@ -259,7 +259,7 @@ Tóm tắt mục tiêu giao diện, người dùng mục tiêu và luồng tươ
 #### 4.2 Knowledge & Skill Sync
 - [ ] **Task 4.2.1: Đồng bộ Module Skill (Nếu có thay đổi UI/Layout/Store/Contract)**
   - **Phân hệ**: `Docs/Skill` | **Ưu tiên**: `P1`
-  - **Files**: `[MODIFY]` / `[NEW]` [.agents/skills/modules/<module>/SKILL.md](file:///absolute/path/to/SKILL.md)
+  - **Files**: `[MODIFY]` / `[NEW]` [.agents/skills/modules/<module>/SKILL.md](erp/erp-web/.agents/skills/modules/<module>/SKILL.md)
   - **DoD**: Bổ sung props, tokens, component tree mới vào Module Skill.
   - **Verification**: `view_file` kiểm tra nội dung skill chuẩn xác, không còn thông tin cũ/sai lệch.
 

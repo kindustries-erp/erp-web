@@ -19,6 +19,14 @@ export const renderCreatedAtCell = (row: GarageCashflowVoucher) => {
   );
 };
 
+export const renderTransDateCell = (row: GarageCashflowVoucher) => {
+  if (!row.transDate) return "—";
+  const d = new Date(row.transDate);
+  return (
+    <span className="text-sm font-medium">{d.toLocaleDateString("vi-VN")}</span>
+  );
+};
+
 export const renderThuCell = (row: GarageCashflowVoucher) => {
   const isIn = (row.voucherType || "").toUpperCase() === "RECEIPT";
   return isIn ? (
