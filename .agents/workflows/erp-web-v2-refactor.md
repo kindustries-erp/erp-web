@@ -209,13 +209,13 @@ find src/v2/modules/[target-module]/ -name "*.tsx" -o -name "*.ts" | xargs wc -l
 grep -rn '>[A-ZÀ-Ỹa-zà-ỹ0-9 ]*<' src/v2/modules/[target-module]/
 
 # 4. Kiểm tra Type-check toàn dự án
-cd /home/dev/repos-dev/erp/erp-web && bunx tsc --noEmit
+cd erp/erp-web && bunx tsc --noEmit
 
 # 5. Chạy toàn bộ Unit Tests của module
-cd /home/dev/repos-dev/erp/erp-web && bun run test src/v2/modules/[target-module]/
+cd erp/erp-web && bun run test src/v2/modules/[target-module]/
 
 # 6. Kiểm tra Storybook CDD & Build tĩnh V2
-cd /home/dev/repos-dev/erp/erp-web && bun run build-storybook
+cd erp/erp-web && bun run build-storybook
 # Khởi chạy Storybook dev server (:6006)
-cd /home/dev/repos-dev/erp/erp-web && bun run storybook
+cd erp/erp-web && bun run storybook
 ```
