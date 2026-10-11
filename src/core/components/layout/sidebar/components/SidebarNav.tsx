@@ -9,6 +9,7 @@ import {
   NavSection,
 } from "./SidebarPrimitives";
 import { InvoiceNavGroup } from "./invoice-nav-group";
+import { GarageNavGroup } from "./garage-nav-group";
 import {
   Boxes,
   Users,
@@ -24,7 +25,6 @@ import {
   Wallet,
   Settings,
   UserSquare2,
-  Car,
   Paperclip,
   Mail,
   Target,
@@ -106,11 +106,7 @@ export function SidebarNav({
   const showManufacturing = canReadBom || canReadProduction;
 
   const canReadGarage = useHasPermission(ErpResource.GARAGE, ErpAction.READ);
-  const canReadGarageCashflow = useHasPermission(
-    ErpResource.GARAGE_CASHFLOW,
-    ErpAction.READ,
-  );
-  const showGarage = canReadGarage || canReadGarageCashflow;
+  const showGarage = canReadGarage;
 
   const canReadInvoices = useHasPermission(
     ErpResource.INVOICES,
@@ -365,53 +361,20 @@ export function SidebarNav({
       {/* GARAGE */}
       {showGarage && (
         <NavSection collapsed={c} label={t("nav.sections.garage", "GARAGE")}>
-          {canReadGarage && (
-            <>
-              <NavItem
-                collapsed={c}
-                icon={<Car className="w-4 h-4 opacity-65 flex-shrink-0" />}
-                label={t("nav.items.garageCases", "Phiếu dịch vụ")}
-                active={
-                  currentPage === "garage-cases" ||
-                  currentPage === "garage-dashboard"
-                }
-                onClick={() => navTo("garage-cases")}
-                contextPage="garage-cases"
-              />
-              <NavItem
-                collapsed={c}
-                icon={<Users className="w-4 h-4 opacity-65 flex-shrink-0" />}
-                label={t("nav.items.garageDebts", "Công nợ garage")}
-                active={
-                  currentPage === "garage-debts" ||
-                  currentPage === "garage-partners" ||
-                  currentPage === "garage-customers"
-                }
-                onClick={() => navTo("garage-debts")}
-                contextPage="garage-debts"
-              />
-              <NavItem
-                collapsed={c}
-                icon={
-                  <ReceiptText className="w-4 h-4 opacity-65 flex-shrink-0" />
-                }
-                label={t("nav.items.garageOpex", "Chi phí vận hành Garage")}
-                active={currentPage === "garage-opex"}
-                onClick={() => navTo("garage-opex")}
-                contextPage="garage-opex"
-              />
-            </>
-          )}
-          {canReadGarageCashflow && (
-            <NavItem
-              collapsed={c}
-              icon={<Wallet className="w-4 h-4 opacity-65 flex-shrink-0" />}
-              label={t("nav.items.garageCashflow", "Thu chi xưởng")}
-              active={currentPage === "garage-cashflow"}
-              onClick={() => navTo("garage-cashflow")}
-              contextPage="garage-cashflow"
-            />
-          )}
+          <GarageNavGroup
+            collapsed={c}
+            currentPage={currentPage}
+            navTo={navTo}
+            canReadGarage={canReadGarage}
+          />
+          <NavItem
+            collapsed={c}
+            icon={<ReceiptText className="w-4 h-4 opacity-65 flex-shrink-0" />}
+            label={t("nav.items.garageOpex", "Chi phí vận hành Garage")}
+            active={currentPage === "garage-opex"}
+            onClick={() => navTo("garage-opex")}
+            contextPage="garage-opex"
+          />
         </NavSection>
       )}
 

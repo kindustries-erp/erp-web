@@ -310,10 +310,15 @@ export function useNavItems(): NavSearchItem[] {
 
     // 6. Garage
     const garageSection = t("nav.sections.garage", "GARAGE");
+    const garageServicesGroup = t(
+      "nav.items.garageServicesGroup",
+      "Dịch vụ Garage",
+    );
     if (canReadGarage) {
       items.push({
         key: "garage-cases",
         label: t("nav.items.garageCases", "Phiếu dịch vụ"),
+        group: garageServicesGroup,
         section: garageSection,
         keywords: [
           "garage",
@@ -329,6 +334,7 @@ export function useNavItems(): NavSearchItem[] {
       items.push({
         key: "garage-debts",
         label: t("nav.items.garageDebts", "Công nợ garage"),
+        group: garageServicesGroup,
         section: garageSection,
         keywords: [
           "garage",
@@ -337,7 +343,15 @@ export function useNavItems(): NavSearchItem[] {
           "khach hang",
           "doi tac",
           "phai thu",
+          "phai tra",
           "tuoi no",
+          "thu chi xuong",
+          "thu chi xưởng",
+          "dong tien xuong",
+          "dòng tiền xưởng",
+          "so quy",
+          "sổ quỹ",
+          "garage cashflow",
         ],
         icon: <Users className="w-4 h-4" />,
       });

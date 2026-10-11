@@ -12,6 +12,7 @@ export const debtsVi = {
     overview: "Tổng quan",
     customers: "Khách hàng",
     suppliers: "Nhà cung cấp",
+    cashflow: "Thu chi xưởng",
   },
 
   dashboard: {
