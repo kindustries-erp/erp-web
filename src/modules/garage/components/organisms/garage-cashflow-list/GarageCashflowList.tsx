@@ -39,7 +39,18 @@ export const GarageCashflowList: React.FC<GarageCashflowListProps> = ({
     voucher: null,
   });
 
-  const canDelete = useHasPermission(ErpResource.GARAGE, ErpAction.DELETE);
+  const canCreate = useHasPermission(
+    ErpResource.GARAGE_CASHFLOW,
+    ErpAction.CREATE,
+  );
+  const canUpdate = useHasPermission(
+    ErpResource.GARAGE_CASHFLOW,
+    ErpAction.UPDATE,
+  );
+  const canDelete = useHasPermission(
+    ErpResource.GARAGE_CASHFLOW,
+    ErpAction.DELETE,
+  );
   const queryClient = useQueryClient();
 
   const deleteMutation = useMutation({
@@ -79,10 +90,11 @@ export const GarageCashflowList: React.FC<GarageCashflowListProps> = ({
         tabs={tabs}
         activeTab={activeTab}
         onTabChange={onTabChange}
-        onCreate={handleCreate}
+        onCreate={canCreate ? handleCreate : undefined}
         onView={handleView}
-        onEdit={handleEdit}
+        onEdit={canUpdate ? handleEdit : undefined}
         onDelete={canDelete ? handleDelete : undefined}
+        canDelete={canDelete}
       />
 
       <GarageCashflowDrawer

@@ -6,8 +6,15 @@ import {
 import type { GarageCashflowVoucher } from "../../../api/garageCashflowApi";
 import { Eye, Pencil, Trash2 } from "lucide-react";
 import { TableText } from "@/shared/components/DataTable/TableText";
-import { renderThuCell, renderChiCell } from "./GarageCashflowTable.helper";
 import { TableDateCell } from "@/shared/components/DataTable/TableDateCell";
+import {
+  renderThuCell,
+  renderChiCell,
+  renderCaseCodeCell,
+  renderPartnerNameCell,
+  renderNoteCell,
+  renderSttCell,
+} from "./GarageCashflowTable.helper";
 
 export const getGarageCashflowColumns = (
   filterBuilder: any,
@@ -21,11 +28,7 @@ export const getGarageCashflowColumns = (
       className: "text-center w-[40px] min-w-[40px]",
       headerClassName: "text-center w-[40px] min-w-[40px]",
       enableResizing: false,
-      cell: (_: any, idx: number) => (
-        <span className="w-full block text-center font-mono text-xs text-muted-foreground">
-          {idx}
-        </span>
-      ),
+      cell: renderSttCell,
     },
     {
       key: "transDate",
@@ -79,17 +82,7 @@ export const getGarageCashflowColumns = (
       header: filterBuilder("caseCode", "Mã PDV", {
         valueType: ColumnValueType.TEXT,
       }),
-      cell: (row) => {
-        return row.case?.soChungTu ? (
-          <TableText
-            text={row.case.soChungTu}
-            enableCopy
-            textClassName="font-mono text-xs border border-input rounded-md px-2 py-0.5"
-          />
-        ) : (
-          <span className="text-muted-foreground">—</span>
-        );
-      },
+      cell: renderCaseCodeCell,
     },
     {
       key: "thu",
@@ -122,14 +115,7 @@ export const getGarageCashflowColumns = (
       header: filterBuilder("partnerName", "Đối tác", {
         valueType: ColumnValueType.TEXT,
       }),
-      cell: (row) => {
-        const name = row.partnerName || row.case?.khachHangName || "—";
-        return (
-          <span className="truncate block" title={name}>
-            {name}
-          </span>
-        );
-      },
+      cell: renderPartnerNameCell,
     },
     {
       key: "note",
@@ -137,14 +123,7 @@ export const getGarageCashflowColumns = (
       header: filterBuilder("note", "Diễn giải", {
         valueType: ColumnValueType.TEXT,
       }),
-      cell: (row) => (
-        <span
-          className="text-muted-foreground text-xs truncate block"
-          title={row.note || ""}
-        >
-          {row.note || "—"}
-        </span>
-      ),
+      cell: renderNoteCell,
     },
   ];
 };
@@ -152,7 +131,10 @@ export const getGarageCashflowColumns = (
 export const getGarageCashflowRowActions = (
   openDetail: (row: GarageCashflowVoucher, mode: "view" | "edit") => void,
   onDelete?: (row: GarageCashflowVoucher) => void,
+  canEdit: boolean = true,
+  canDelete: boolean = true,
 ) => {
+  const showDelete = Boolean(canDelete && onDelete);
   return (row: GarageCashflowVoucher) => [
     {
       groupLabel: "Thao tác chính",
@@ -163,15 +145,19 @@ export const getGarageCashflowRowActions = (
           icon: <Eye className="w-4 h-4" />,
           onClick: () => openDetail(row, "view"),
         },
-        {
-          key: "edit",
-          label: "Chỉnh sửa",
-          icon: <Pencil className="w-4 h-4" />,
-          onClick: () => openDetail(row, "edit"),
-        },
+        ...(canEdit
+          ? [
+              {
+                key: "edit",
+                label: "Chỉnh sửa",
+                icon: <Pencil className="w-4 h-4" />,
+                onClick: () => openDetail(row, "edit"),
+              },
+            ]
+          : []),
       ],
     },
-    ...(onDelete
+    ...(showDelete
       ? [
           {
             groupLabel: "Khác",
@@ -179,9 +165,8 @@ export const getGarageCashflowRowActions = (
               {
                 key: "delete",
                 label: "Xóa phiếu",
-                icon: <Trash2 className="w-4 h-4" />,
-                variant: "danger" as const,
-                onClick: () => onDelete(row),
+                icon: <Trash2 className="w-4 h-4 text-red-500" />,
+                onClick: () => onDelete!(row),
               },
             ],
           },
