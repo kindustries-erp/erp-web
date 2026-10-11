@@ -20,6 +20,7 @@ export async function exportGarageDebtsCsv(
     }
 
     const headers = [
+      "Biển số xe",
       "Mã khách hàng",
       "Tên khách hàng",
       "Số phiếu DV",
@@ -43,6 +44,7 @@ export async function exportGarageDebtsCsv(
       const branchLabel = branchObj?.name || row.branchExternalId || "";
       csvRows.push(
         [
+          `"${(row.licensePlate || "").replace(/"/g, '""')}"`,
           `"${(row.customerCode || "").replace(/"/g, '""')}"`,
           `"${(row.customerName || "").replace(/"/g, '""')}"`,
           row.caseCount,

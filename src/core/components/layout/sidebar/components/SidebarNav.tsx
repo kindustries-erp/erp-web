@@ -9,6 +9,7 @@ import {
   NavSection,
 } from "./SidebarPrimitives";
 import { InvoiceNavGroup } from "./invoice-nav-group";
+import { GarageNavGroup } from "./garage-nav-group";
 import {
   Boxes,
   Users,
@@ -24,7 +25,6 @@ import {
   Wallet,
   Settings,
   UserSquare2,
-  Car,
   Paperclip,
   Mail,
   Target,
@@ -361,28 +361,11 @@ export function SidebarNav({
       {/* GARAGE */}
       {showGarage && (
         <NavSection collapsed={c} label={t("nav.sections.garage", "GARAGE")}>
-          <NavItem
+          <GarageNavGroup
             collapsed={c}
-            icon={<Car className="w-4 h-4 opacity-65 flex-shrink-0" />}
-            label={t("nav.items.garageCases", "Phiếu dịch vụ")}
-            active={
-              currentPage === "garage-cases" ||
-              currentPage === "garage-dashboard"
-            }
-            onClick={() => navTo("garage-cases")}
-            contextPage="garage-cases"
-          />
-          <NavItem
-            collapsed={c}
-            icon={<Users className="w-4 h-4 opacity-65 flex-shrink-0" />}
-            label={t("nav.items.garageDebts", "Công nợ garage")}
-            active={
-              currentPage === "garage-debts" ||
-              currentPage === "garage-partners" ||
-              currentPage === "garage-customers"
-            }
-            onClick={() => navTo("garage-debts")}
-            contextPage="garage-debts"
+            currentPage={currentPage}
+            navTo={navTo}
+            canReadGarage={canReadGarage}
           />
           <NavItem
             collapsed={c}
@@ -391,14 +374,6 @@ export function SidebarNav({
             active={currentPage === "garage-opex"}
             onClick={() => navTo("garage-opex")}
             contextPage="garage-opex"
-          />
-          <NavItem
-            collapsed={c}
-            icon={<Wallet className="w-4 h-4 opacity-65 flex-shrink-0" />}
-            label={t("nav.items.garageCashflow", "Thu chi xưởng")}
-            active={currentPage === "garage-cashflow"}
-            onClick={() => navTo("garage-cashflow")}
-            contextPage="garage-cashflow"
           />
         </NavSection>
       )}

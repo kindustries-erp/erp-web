@@ -18,6 +18,7 @@ export const GarageCashflowTable: React.FC<GarageCashflowTableProps> = ({
   onView,
   onEdit,
   onDelete,
+  canDelete = true,
 }) => {
   const tableHook = useGarageCashflowTable();
 
@@ -45,8 +46,14 @@ export const GarageCashflowTable: React.FC<GarageCashflowTableProps> = ({
   );
 
   const rowActions = useMemo(
-    () => getGarageCashflowRowActions(openDetail, onDelete),
-    [openDetail, onDelete],
+    () =>
+      getGarageCashflowRowActions(
+        openDetail,
+        canDelete ? onDelete : undefined,
+        Boolean(onEdit),
+        canDelete,
+      ),
+    [openDetail, onDelete, onEdit, canDelete],
   );
 
   return (

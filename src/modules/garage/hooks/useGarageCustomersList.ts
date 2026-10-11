@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { garageApi } from "../api/garageApi";
 
 export interface CustomerDebtItem {
+  licensePlate?: string;
   customerCode: string;
   customerName: string;
   branchExternalId?: string;

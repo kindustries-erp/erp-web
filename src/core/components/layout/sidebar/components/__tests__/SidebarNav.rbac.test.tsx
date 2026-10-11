@@ -24,6 +24,10 @@ vi.mock("@/core/i18n", () => ({
       "nav.items.erpEmployees": "Nhân sự",
       "nav.sections.garage": "DỊCH VỤ GARAGE",
       "nav.items.garageCases": "Vụ việc Garage",
+      "nav.items.garageCashflow": "Dòng tiền xưởng",
+      "nav.items.garageServicesGroup": "Dịch vụ Garage",
+      "nav.items.garageDebts": "Công nợ garage",
+      "nav.items.garageOpex": "Chi phí vận hành Garage",
     };
     return map[k] ?? k;
   },
@@ -49,6 +53,40 @@ describe("SidebarNav RBAC Guard", () => {
     expect(screen.queryByText("Tổng quan")).toBeNull();
     expect(screen.queryByText("QUẢN TRỊ")).toBeNull();
     expect(screen.queryByText("Quản lý tài liệu")).toBeNull();
+    expect(screen.getByText("Dịch vụ Garage")).toBeDefined();
+    expect(screen.getByText("Chi phí vận hành Garage")).toBeDefined();
+    expect(screen.queryByText("Dòng tiền xưởng")).toBeNull();
+  });
+
+  it("hides GARAGE section when user lacks GARAGE permission even with GARAGE_CASHFLOW", () => {
+    vi.mocked(useHasPermission).mockImplementation((resource) => {
+      if (resource === ErpResource.GARAGE_CASHFLOW) return true;
+      return false;
+    });
+
+    render(
+      <SidebarNav c={false} currentPage="garage-debts" navTo={mockNavTo} />,
+    );
+
+    expect(screen.queryByText("Dòng tiền xưởng")).toBeNull();
+    expect(screen.queryByText("Dịch vụ Garage")).toBeNull();
+    expect(screen.queryByText("Chi phí vận hành Garage")).toBeNull();
+  });
+
+  it("displays Dịch vụ Garage and OPEX but never displays standalone Dòng tiền xưởng when user has GARAGE permission", () => {
+    vi.mocked(useHasPermission).mockImplementation((resource) => {
+      if (resource === ErpResource.GARAGE) return true;
+      if (resource === ErpResource.GARAGE_CASHFLOW) return true;
+      return false;
+    });
+
+    render(
+      <SidebarNav c={false} currentPage="garage-cases" navTo={mockNavTo} />,
+    );
+
+    expect(screen.queryByText("Dòng tiền xưởng")).toBeNull();
+    expect(screen.getByText("Dịch vụ Garage")).toBeDefined();
+    expect(screen.getByText("Chi phí vận hành Garage")).toBeDefined();
   });
 
   it("displays Dashboard and Attachments when user has explicit permissions", () => {

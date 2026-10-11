@@ -81,7 +81,7 @@ export const GarageDebtsTable: React.FC<GarageDebtsTableProps> = ({
       items={listHook.data}
       columns={columns}
       getRowKey={(row) =>
-        `${row.customerCode}_${row.branchExternalId || "all"}`
+        `${row.licensePlate || "no_bks"}_${row.customerCode}_${row.branchExternalId || "all"}`
       }
       loading={listHook.isLoading}
       emptyLabel={t("customers.empty", "Không có dữ liệu khách hàng")}
