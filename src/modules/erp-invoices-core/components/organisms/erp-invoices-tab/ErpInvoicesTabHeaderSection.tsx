@@ -12,6 +12,7 @@ import {
   Settings,
   Building2,
   FileCheck2,
+  FileText,
 } from "lucide-react";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate/SpreadsheetPageTemplate";
 import { PillTabs } from "@/shared/components/PillTabs";
@@ -51,6 +52,7 @@ export interface InvoiceHeaderSectionProps {
   handleOpenInternal: (inv: any, mode?: "view" | "edit", tab?: string) => void;
   handleDownload: (id: string, type: "pdf" | "xml") => Promise<void>;
   handleExportExcel: () => void;
+  handleExportPdf: () => void;
   onOpenSync: () => void;
   onOpenSyncAdvanced?: () => void;
   onOpenPortalAuth: () => void;
@@ -97,6 +99,7 @@ export const InvoiceHeaderSection = React.memo(function InvoiceHeaderSection({
   handleOpenInternal,
   handleDownload,
   handleExportExcel,
+  handleExportPdf,
   onOpenSync,
   onOpenSyncAdvanced,
   onOpenPortalAuth,
@@ -437,6 +440,11 @@ export const InvoiceHeaderSection = React.memo(function InvoiceHeaderSection({
             icon: <Download className="w-4 h-4 text-green-600" />,
             onClick: handleExportExcel,
           },
+          {
+            label: t("exportPdf", "Xuất PDF"),
+            icon: <FileText className="w-4 h-4 text-red-600" />,
+            onClick: handleExportPdf,
+          },
         ],
       },
       ...(canEditInvoice
@@ -492,6 +500,7 @@ export const InvoiceHeaderSection = React.memo(function InvoiceHeaderSection({
       direction,
       canEditInvoice,
       handleExportExcel,
+      handleExportPdf,
       onOpenPortalAuth,
       openCustomFieldsDrawer,
     ],

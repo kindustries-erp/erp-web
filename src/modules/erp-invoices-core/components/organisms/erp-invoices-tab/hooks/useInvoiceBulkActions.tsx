@@ -28,12 +28,7 @@ export function useInvoiceBulkActions({
   const [bulkMonth, setBulkMonth] = useState("");
   const [bulkTypes, setBulkTypes] = useState<string[]>(["pdf", "xml"]);
   const [bulkDownloading, setBulkDownloading] = useState(false);
-  const [bulkSelectedTypes, setBulkSelectedTypes] = useState<string[]>([
-    "pdf",
-    "xml",
-  ]);
-  const [bulkSelectedDownloading, setBulkSelectedDownloading] = useState(false);
-  const [bulkSelectedModalOpen, setBulkSelectedModalOpen] = useState(false);
+  const [fileExportDrawerOpen, setFileExportDrawerOpen] = useState(false);
 
   const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({});
   const [bulkEditDrawerOpen, setBulkEditDrawerOpen] = useState(false);
@@ -112,40 +107,6 @@ export function useInvoiceBulkActions({
     }
   };
 
-  const handleBulkDownloadSelected = async () => {
-    if (bulkSelectedTypes.length === 0) {
-      toast.error("Vui lòng chọn ít nhất 1 loại file");
-      return;
-    }
-    if (selectedIds.length === 0) {
-      toast.error("Không có hóa đơn nào được chọn");
-      return;
-    }
-
-    try {
-      setBulkSelectedDownloading(true);
-      const blob = await erpInvoicesCoreApi.bulkDownloadSelected({
-        ids: selectedIds,
-        types: bulkSelectedTypes,
-      });
-
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `HoaDon_${selectedIds.length}_invoices.zip`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
-      setBulkSelectedModalOpen(false);
-      toast.success(`Đã tải ${selectedIds.length} hóa đơn thành công!`);
-    } catch (error: any) {
-      toast.error("Tải thất bại: " + error.message);
-    } finally {
-      setBulkSelectedDownloading(false);
-    }
-  };
-
   const bulkActionsNode = useMemo(() => {
     if (selectedIds.length === 0) return null;
     return (
@@ -214,9 +175,9 @@ export function useInvoiceBulkActions({
                   groupLabel: "Tải & Xuất tệp",
                   items: [
                     {
-                      label: "Tải ZIP PDF/XML",
+                      label: "Xuất PDF / Tải ZIP",
                       icon: <Download className="w-4 h-4 mr-2 text-blue-500" />,
-                      onClick: () => setBulkSelectedModalOpen(true),
+                      onClick: () => setFileExportDrawerOpen(true),
                     },
                   ],
                 },
@@ -247,11 +208,8 @@ export function useInvoiceBulkActions({
     bulkTypes,
     setBulkTypes,
     bulkDownloading,
-    bulkSelectedTypes,
-    setBulkSelectedTypes,
-    bulkSelectedDownloading,
-    bulkSelectedModalOpen,
-    setBulkSelectedModalOpen,
+    fileExportDrawerOpen,
+    setFileExportDrawerOpen,
     rowSelection,
     setRowSelection,
     bulkEditDrawerOpen,
@@ -265,6 +223,5 @@ export function useInvoiceBulkActions({
     monthOptions,
     bulkActionsNode,
     handleBulkDownloadFiles,
-    handleBulkDownloadSelected,
   };
 }

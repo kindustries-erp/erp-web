@@ -25,6 +25,14 @@ export interface InvoiceExportConditionSectionProps {
   currentFilterSummary?: InvoiceExportDrawerProps["currentFilterSummary"];
   starting: boolean;
   onStartExport: () => void;
+  /** Chế độ phạm vi được phép; mặc định theo kỳ + theo filter. */
+  modes?: InvoiceExportMode[];
+  selectedCount?: number;
+  /** Nhãn/icon nút chạy; mặc định "Xuất Excel". */
+  startLabel?: string;
+  startIcon?: React.ReactNode;
+  /** Nội dung chèn trước nút chạy (vd: chọn loại file PDF/XML). */
+  children?: React.ReactNode;
 }
 
 export function InvoiceExportConditionSection({
@@ -40,6 +48,11 @@ export function InvoiceExportConditionSection({
   currentFilterSummary,
   starting,
   onStartExport,
+  modes,
+  selectedCount,
+  startLabel,
+  startIcon,
+  children,
 }: InvoiceExportConditionSectionProps) {
   const { t } = useTranslation("erpInvoices");
 
@@ -56,6 +69,8 @@ export function InvoiceExportConditionSection({
         <InvoiceExportModeSelector
           exportMode={exportMode}
           onChange={onExportModeChange}
+          modes={modes}
+          selectedCount={selectedCount}
         />
 
         {exportMode === "by-period" ? (
@@ -96,11 +111,13 @@ export function InvoiceExportConditionSection({
               />
             </div>
           </>
-        ) : (
+        ) : exportMode === "by-current-filter" ? (
           <InvoiceExportFilterPreview
             currentFilterSummary={currentFilterSummary}
           />
-        )}
+        ) : null}
+
+        {children}
 
         <div className="pt-2">
           <Button
@@ -108,10 +125,11 @@ export function InvoiceExportConditionSection({
             onClick={onStartExport}
             disabled={starting}
           >
-            <Play className="w-4 h-4 mr-1.5" />
+            {startIcon ?? <Play className="w-4 h-4 mr-1.5" />}
             {starting
               ? t("erpInvoices:exportDrawer.starting", "Đang khởi tạo...")
-              : t("erpInvoices:exportDrawer.start", "Xuất Excel")}
+              : (startLabel ??
+                t("erpInvoices:exportDrawer.start", "Xuất Excel"))}
           </Button>
         </div>
       </div>

@@ -2,6 +2,8 @@ import React from "react";
 import { Checkbox } from "@/shared/components/ui/checkbox";
 import { DrawerModal } from "@/shared/components/DrawerModal";
 import { Combobox } from "@/shared/components/Combobox";
+import { InvoiceFileExportDrawer } from "@/modules/erp-invoices-core/components/organisms/invoice-file-export-drawer";
+import type { InvoiceExportDrawerProps } from "@/modules/erp-invoices-core/components/organisms/invoice-export-drawer";
 import { BulkEditDrawer } from "@/modules/erp-invoices-core/components/organisms/bulk-edit-drawer";
 import { InvoiceBulkPostingDrawer } from "@/modules/erp-invoices-core/components/organisms/invoice-bulk-posting-drawer";
 import { InvoiceBulkNetOffDrawer } from "@/modules/erp-invoices-core/components/organisms/invoice-bulk-netoff-drawer";
@@ -16,13 +18,11 @@ export interface InvoiceBulkModalsProps {
     React.SetStateAction<Record<string, boolean>>
   >;
   loadInvoices: () => Promise<any>;
-  // Bulk Selected ZIP
-  bulkSelectedModalOpen: boolean;
-  setBulkSelectedModalOpen: (open: boolean) => void;
-  bulkSelectedDownloading: boolean;
-  bulkSelectedTypes: string[];
-  setBulkSelectedTypes: React.Dispatch<React.SetStateAction<string[]>>;
-  handleBulkDownloadSelected: () => Promise<void>;
+  // Xuất PDF / Tải ZIP (đã chọn, theo kỳ, theo filter)
+  fileExportDrawerOpen: boolean;
+  setFileExportDrawerOpen: (open: boolean) => void;
+  buildExportBaseQuery: InvoiceExportDrawerProps["buildBaseQuery"];
+  currentFilterSummary?: InvoiceExportDrawerProps["currentFilterSummary"];
   // Bulk Month ZIP
   bulkDrawerOpen: boolean;
   setBulkDrawerOpen: (open: boolean) => void;
@@ -52,12 +52,10 @@ export const InvoiceBulkModals = React.memo(function InvoiceBulkModals({
   selectedIds,
   setRowSelection,
   loadInvoices,
-  bulkSelectedModalOpen,
-  setBulkSelectedModalOpen,
-  bulkSelectedDownloading,
-  bulkSelectedTypes,
-  setBulkSelectedTypes,
-  handleBulkDownloadSelected,
+  fileExportDrawerOpen,
+  setFileExportDrawerOpen,
+  buildExportBaseQuery,
+  currentFilterSummary,
   bulkDrawerOpen,
   setBulkDrawerOpen,
   bulkDownloading,
@@ -82,66 +80,14 @@ export const InvoiceBulkModals = React.memo(function InvoiceBulkModals({
 
   return (
     <>
-      <DrawerModal
-        open={bulkSelectedModalOpen}
-        onClose={() => setBulkSelectedModalOpen(false)}
-        title={`Tải ZIP ${selectedIds.length} hóa đơn đã chọn`}
-        actions={[
-          {
-            label: "Hủy",
-            onClick: () => setBulkSelectedModalOpen(false),
-            variant: "outline" as const,
-            disabled: bulkSelectedDownloading,
-          },
-          {
-            label: bulkSelectedDownloading
-              ? "Đang nén file..."
-              : "Xác nhận tải",
-            onClick: handleBulkDownloadSelected,
-            disabled: bulkSelectedDownloading,
-          },
-        ]}
-      >
-        <div className="space-y-4 py-2">
-          <p className="text-sm text-muted-foreground">
-            Hệ thống sẽ tổng hợp toàn bộ các file hóa đơn được chọn thành 1 file
-            nén .zip để tải về. Vui lòng chọn loại file:
-          </p>
-
-          <div className="space-y-2">
-            <label className="flex items-center gap-2 text-sm font-medium cursor-pointer">
-              <Checkbox
-                checked={bulkSelectedTypes.includes("pdf")}
-                onCheckedChange={(checked) => {
-                  if (checked) {
-                    setBulkSelectedTypes([...bulkSelectedTypes, "pdf"]);
-                  } else {
-                    setBulkSelectedTypes(
-                      bulkSelectedTypes.filter((t) => t !== "pdf"),
-                    );
-                  }
-                }}
-              />
-              <span>File PDF (Bản thể hiện hóa đơn)</span>
-            </label>
-            <label className="flex items-center gap-2 text-sm font-medium cursor-pointer">
-              <Checkbox
-                checked={bulkSelectedTypes.includes("xml")}
-                onCheckedChange={(checked) => {
-                  if (checked) {
-                    setBulkSelectedTypes([...bulkSelectedTypes, "xml"]);
-                  } else {
-                    setBulkSelectedTypes(
-                      bulkSelectedTypes.filter((t) => t !== "xml"),
-                    );
-                  }
-                }}
-              />
-              <span>File XML (Dữ liệu gốc hóa đơn điện tử)</span>
-            </label>
-          </div>
-        </div>
-      </DrawerModal>
+      <InvoiceFileExportDrawer
+        open={fileExportDrawerOpen}
+        onClose={() => setFileExportDrawerOpen(false)}
+        direction={direction}
+        buildBaseQuery={buildExportBaseQuery}
+        currentFilterSummary={currentFilterSummary}
+        selectedIds={selectedIds}
+      />
 
       <DrawerModal
         open={bulkDrawerOpen}

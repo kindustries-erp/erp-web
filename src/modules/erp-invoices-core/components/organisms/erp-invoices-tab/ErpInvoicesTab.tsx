@@ -47,11 +47,8 @@ export function ErpInvoicesTab(props: ErpInvoicesTabProps) {
     bulkTypes,
     setBulkTypes,
     bulkDownloading,
-    bulkSelectedTypes,
-    setBulkSelectedTypes,
-    bulkSelectedDownloading,
-    bulkSelectedModalOpen,
-    setBulkSelectedModalOpen,
+    fileExportDrawerOpen,
+    setFileExportDrawerOpen,
     bulkEditDrawerOpen,
     setBulkEditDrawerOpen,
     bulkPostingModalOpen,
@@ -75,7 +72,6 @@ export function ErpInvoicesTab(props: ErpInvoicesTabProps) {
     buildExportBaseQuery,
     currentFilterSummary,
     handleBulkDownloadFiles,
-    handleBulkDownloadSelected,
   } = logic;
 
   // 6-View Lazy Mounted Keep-Alive State (Synchronous render-time marking to prevent blank-frame flicker)
@@ -110,6 +106,10 @@ export function ErpInvoicesTab(props: ErpInvoicesTabProps) {
   const handleExportExcelAction = React.useCallback(() => {
     void handleExportExcel();
   }, [handleExportExcel]);
+
+  const handleExportPdfAction = React.useCallback(() => {
+    setFileExportDrawerOpen(true);
+  }, [setFileExportDrawerOpen]);
 
   return (
     <div className="flex flex-col h-full flex-1 min-h-0 w-full overflow-hidden">
@@ -150,6 +150,7 @@ export function ErpInvoicesTab(props: ErpInvoicesTabProps) {
             handleOpenInternal={handleOpenInternal}
             handleDownload={handleDownload}
             handleExportExcel={handleExportExcelAction}
+            handleExportPdf={handleExportPdfAction}
             onOpenSync={handleOpenSync}
             onOpenSyncAdvanced={handleOpenSyncAdvanced}
             onOpenPortalAuth={handleOpenPortalAuth}
@@ -219,6 +220,7 @@ export function ErpInvoicesTab(props: ErpInvoicesTabProps) {
             handleOpenInternal={handleOpenInternal}
             handleDownload={handleDownload}
             handleExportExcel={handleExportExcelAction}
+            handleExportPdf={handleExportPdfAction}
             onOpenSync={handleOpenSync}
             onOpenSyncAdvanced={handleOpenSyncAdvanced}
             onOpenPortalAuth={handleOpenPortalAuth}
@@ -320,12 +322,10 @@ export function ErpInvoicesTab(props: ErpInvoicesTabProps) {
         selectedIds={selectedIds}
         setRowSelection={setRowSelection}
         loadInvoices={loadInvoices}
-        bulkSelectedModalOpen={bulkSelectedModalOpen}
-        setBulkSelectedModalOpen={setBulkSelectedModalOpen}
-        bulkSelectedDownloading={bulkSelectedDownloading}
-        bulkSelectedTypes={bulkSelectedTypes}
-        setBulkSelectedTypes={setBulkSelectedTypes}
-        handleBulkDownloadSelected={handleBulkDownloadSelected}
+        fileExportDrawerOpen={fileExportDrawerOpen}
+        setFileExportDrawerOpen={setFileExportDrawerOpen}
+        buildExportBaseQuery={buildExportBaseQuery}
+        currentFilterSummary={currentFilterSummary}
         bulkDrawerOpen={bulkDrawerOpen}
         setBulkDrawerOpen={setBulkDrawerOpen}
         bulkDownloading={bulkDownloading}
