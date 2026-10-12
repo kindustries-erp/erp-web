@@ -42,7 +42,8 @@ describe("useNavItems RBAC Guard", () => {
     const casesItem = result.current.find(
       (item) => item.key === "garage-cases",
     );
-    expect(casesItem?.group).toBe("Dịch vụ Garage");
+    expect(casesItem?.group).toBeUndefined();
+    expect(casesItem?.section).toBe("GARAGE");
   });
 
   it("includes cashflow keywords in garage-debts and does not include standalone garage-cashflow", () => {
