@@ -9,7 +9,10 @@ import { Input } from "@/shared/components/ui/input";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { DatePicker } from "@/shared/components/DatePicker";
 import { PaymentMethodCombobox } from "../../molecules/payment-method-combobox";
-import { GarageCaseCombobox } from "../garage-case-combobox";
+import {
+  GarageCaseCombobox,
+  renderGarageCaseTooltipContent,
+} from "../garage-case-combobox";
 import type { CreateGarageCashflowVoucherDto } from "../../../api/garageCashflowApi";
 import type { DrawerSectionProps } from "./GarageCashflowDrawer.type";
 
@@ -103,6 +106,16 @@ export const GarageCashflowDrawerGeneralSection: React.FC<
                   ? voucher.case.bienSoXe
                     ? `${voucher.case.bienSoXe} - ${voucher.case.soChungTu}`
                     : voucher.case.soChungTu
+                  : undefined
+              }
+              fallbackTooltipContent={
+                voucher?.case
+                  ? renderGarageCaseTooltipContent({
+                      bienSoXe: voucher.case.bienSoXe,
+                      soChungTu: voucher.case.soChungTu,
+                      id: voucher.case.id,
+                      khachHangName: voucher.case.khachHangName,
+                    })
                   : undefined
               }
             />

@@ -1,6 +1,48 @@
 import React from "react";
 import type { GarageCashflowVoucher } from "../../../api/garageCashflowApi";
 import { TableText } from "@/shared/components/DataTable/TableText";
+import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
+import { DateRangeColumnSlot } from "@/shared/components/DataTable/DateRangeColumnSlot";
+
+export const createCashflowDateHeader = (
+  key: string,
+  title: string,
+  tableHook?: any,
+) => {
+  const sortState = tableHook?.sorts?.includes(key)
+    ? "asc"
+    : tableHook?.sorts?.includes(`-${key}`)
+      ? "desc"
+      : "none";
+  const dateRange = tableHook?.getDateRange?.(key);
+
+  return (
+    <TableColumnHeaderFilter
+      title={title}
+      sortState={sortState}
+      onSortChange={(s) => tableHook?.setSort?.(key, s)}
+      searchValue=""
+      onSearchChange={() => {}}
+      selectedFilters={[]}
+      onFilterChange={() => {}}
+      hideFilter
+      hideFooter
+      isActive={Boolean(dateRange?.from || dateRange?.to)}
+      align="center"
+      dateRangeSlot={({ close }) => (
+        <DateRangeColumnSlot
+          dateFrom={dateRange?.from || ""}
+          dateTo={dateRange?.to || ""}
+          onChange={(from, to) => {
+            tableHook?.setDateRange?.(key, from, to);
+            close();
+          }}
+          onClose={close}
+        />
+      )}
+    />
+  );
+};
 
 export const renderCreatedAtCell = (row: GarageCashflowVoucher) => {
   if (!row.createdAt) return "—";
@@ -54,23 +96,17 @@ export const renderCaseCodeCell = (
   row: GarageCashflowVoucher,
   onOpenCaseDetail?: (caseCode: string) => void,
 ) => {
-  return row.case?.soChungTu ? (
+  const code = row.case?.soChungTu;
+  return (
     <TableText
-      text={row.case.soChungTu}
-      enableCopy
-      textClassName="font-mono text-xs border border-input rounded-md px-2 py-0.5"
-      onDrawerClick={
-        onOpenCaseDetail
-          ? (e) => {
-              e.stopPropagation();
-              onOpenCaseDetail(row.case!.soChungTu!);
-            }
-          : undefined
+      text={code || "—"}
+      enableCopy={Boolean(code)}
+      tooltip={Boolean(code)}
+      textClassName="font-medium text-primary text-left"
+      onDetailClick={
+        code && onOpenCaseDetail ? () => onOpenCaseDetail(code) : undefined
       }
-      drawerTooltip="Xem chi tiết phiếu dịch vụ"
     />
-  ) : (
-    <span className="text-muted-foreground">—</span>
   );
 };
 
@@ -83,16 +119,14 @@ export const renderPartnerNameCell = (row: GarageCashflowVoucher) => {
   );
 };
 
-export const renderNoteCell = (row: GarageCashflowVoucher) => {
-  return (
-    <span
-      className="text-muted-foreground text-xs truncate block"
-      title={row.note || ""}
-    >
-      {row.note || "—"}
-    </span>
-  );
-};
+export const renderNoteCell = (row: GarageCashflowVoucher) => (
+  <span
+    className="text-muted-foreground text-xs truncate block"
+    title={row.note || ""}
+  >
+    {row.note || "—"}
+  </span>
+);
 
 export const renderSttCell = (_: any, idx: number) => (
   <span className="w-full block text-center font-mono text-xs text-muted-foreground">
@@ -102,14 +136,13 @@ export const renderSttCell = (_: any, idx: number) => (
 
 export const renderLicensePlateCell = (row: GarageCashflowVoucher) => {
   const plate = row.licensePlate || row.case?.bienSoXe || "";
-  return plate ? (
+  return (
     <TableText
-      text={plate}
-      enableCopy
-      textClassName="font-mono text-xs font-semibold uppercase tracking-wider text-slate-800 dark:text-slate-200"
+      text={plate || "—"}
+      enableCopy={Boolean(plate)}
+      tooltip={Boolean(plate)}
+      textClassName="font-medium text-foreground text-left"
     />
-  ) : (
-    <span className="text-muted-foreground">—</span>
   );
 };
 
@@ -124,18 +157,16 @@ export const renderPaymentMethodCell = (row: GarageCashflowVoucher) => {
 
   if (!method) return <span className="text-muted-foreground">—</span>;
 
-  let badgeStyle = "bg-slate-500/10 text-slate-600 border-slate-500/20";
-  if (method === "Ứng trước") {
-    badgeStyle = "bg-amber-500/10 text-amber-600 border-amber-500/20";
-  } else if (method === "Chuyển khoản") {
-    badgeStyle = "bg-sky-500/10 text-sky-600 border-sky-500/20";
-  } else if (method === "Tiền mặt") {
-    badgeStyle = "bg-emerald-500/10 text-emerald-600 border-emerald-500/20";
-  } else if (method === "Thẻ tín dụng") {
-    badgeStyle = "bg-purple-500/10 text-purple-600 border-purple-500/20";
-  } else if (method === "Cấn trừ") {
-    badgeStyle = "bg-indigo-500/10 text-indigo-600 border-indigo-500/20";
-  }
+  const BADGE_STYLES: Record<string, string> = {
+    "Ứng trước": "bg-amber-500/10 text-amber-600 border-amber-500/20",
+    "Chuyển khoản": "bg-sky-500/10 text-sky-600 border-sky-500/20",
+    "Tiền mặt": "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
+    "Thẻ tín dụng": "bg-purple-500/10 text-purple-600 border-purple-500/20",
+    "Cấn trừ": "bg-indigo-500/10 text-indigo-600 border-indigo-500/20",
+  };
+  const badgeStyle =
+    BADGE_STYLES[method] ||
+    "bg-slate-500/10 text-slate-600 border-slate-500/20";
 
   return (
     <span

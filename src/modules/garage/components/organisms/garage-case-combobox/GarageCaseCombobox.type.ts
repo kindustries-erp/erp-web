@@ -5,4 +5,5 @@ export interface GarageCaseComboboxProps {
   className?: string;
   branchId?: string;
   fallbackLabel?: string;
+  fallbackTooltipContent?: React.ReactNode;
 }

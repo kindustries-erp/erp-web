@@ -42,8 +42,14 @@ export const GarageCashflowTable: React.FC<GarageCashflowTableProps> = ({
   );
 
   const columns = useMemo(
-    () => getGarageCashflowColumns(filterBuilder, openDetail, onOpenCaseDetail),
-    [filterBuilder, openDetail, onOpenCaseDetail],
+    () =>
+      getGarageCashflowColumns(
+        filterBuilder,
+        openDetail,
+        onOpenCaseDetail,
+        tableHook,
+      ),
+    [filterBuilder, openDetail, onOpenCaseDetail, tableHook],
   );
 
   const rowActions = useMemo(

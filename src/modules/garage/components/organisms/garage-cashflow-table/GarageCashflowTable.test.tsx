@@ -139,7 +139,7 @@ describe("GarageCashflowTable", () => {
   });
 
   describe("renderCaseCodeCell", () => {
-    it("renders case code and calls onOpenCaseDetail when drawer icon is clicked", () => {
+    it("renders case code and calls onOpenCaseDetail when clicked", () => {
       const onOpenCaseDetail = vi.fn();
       const mockVoucher = {
         ...mockRow,
@@ -149,11 +149,11 @@ describe("GarageCashflowTable", () => {
       render(<div>{renderCaseCodeCell(mockVoucher, onOpenCaseDetail)}</div>);
 
       expect(screen.getByText("GR-PDV-001")).toBeInTheDocument();
-      const drawerButton = screen.getByRole("button", {
-        name: "Xem chi tiết phiếu dịch vụ",
+      const detailButton = screen.getByRole("button", {
+        name: "Xem chi tiết",
       });
-      expect(drawerButton).toBeInTheDocument();
-      drawerButton.click();
+      expect(detailButton).toBeInTheDocument();
+      detailButton.click();
       expect(onOpenCaseDetail).toHaveBeenCalledWith("GR-PDV-001");
     });
   });
@@ -204,7 +204,7 @@ describe("GarageCashflowTable", () => {
   });
 
   describe("getGarageCashflowColumns", () => {
-    it("includes licensePlate and paymentMethod columns", () => {
+    it("places caseCode and licensePlate right after paymentMethod", () => {
       const mockFilterBuilder = vi.fn((key) => key) as any;
       mockFilterBuilder.date = vi.fn(() => "date");
       mockFilterBuilder.amount = vi.fn(() => "amount");
@@ -216,8 +216,10 @@ describe("GarageCashflowTable", () => {
       );
 
       const keys = columns.map((c) => c.key);
-      expect(keys).toContain("licensePlate");
-      expect(keys).toContain("paymentMethod");
+      const paymentIndex = keys.indexOf("paymentMethod");
+      expect(paymentIndex).toBeGreaterThan(-1);
+      expect(keys[paymentIndex + 1]).toBe("caseCode");
+      expect(keys[paymentIndex + 2]).toBe("licensePlate");
     });
   });
 });

@@ -50,6 +50,7 @@ interface ComboboxProps {
   loading?: boolean;
   onSearch?: (query: string) => void;
   fallbackLabel?: string;
+  fallbackTooltipContent?: React.ReactNode;
   variant?: "default" | "spreadsheet" | "ghost";
 }
 
@@ -68,6 +69,7 @@ export function Combobox({
   loading,
   onSearch,
   fallbackLabel,
+  fallbackTooltipContent,
   variant = "default",
 }: ComboboxProps) {
   const t = useT();
@@ -156,7 +158,9 @@ export function Combobox({
     <Popover.Root open={open} onOpenChange={setOpen}>
       <Tooltip
         content={
-          selected ? (
+          selected?.tooltipContent ? (
+            selected.tooltipContent
+          ) : selected ? (
             <div className="flex flex-col gap-0.5">
               <span>
                 {selectedDisplay.label}
@@ -168,11 +172,13 @@ export function Combobox({
               )}
             </div>
           ) : (
-            fallbackLabel || ""
+            fallbackTooltipContent || fallbackLabel || ""
           )
         }
         side="top"
-        disabled={!selected || open}
+        disabled={
+          open || (!selected && !fallbackLabel && !fallbackTooltipContent)
+        }
       >
         <Popover.Trigger asChild>
           <button

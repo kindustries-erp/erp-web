@@ -23,6 +23,7 @@ vi.mock("../../../hooks/useGarageCashflowList", () => ({
 // Mock sub-comboboxes
 vi.mock("../garage-case-combobox", () => ({
   GarageCaseCombobox: () => <div data-testid="mock-case-combobox" />,
+  renderGarageCaseTooltipContent: vi.fn(() => <div>mock-tooltip</div>),
 }));
 vi.mock("../erp-bank-transaction-combobox", () => ({
   ErpBankTransactionCombobox: () => <div data-testid="mock-bank-combobox" />,
