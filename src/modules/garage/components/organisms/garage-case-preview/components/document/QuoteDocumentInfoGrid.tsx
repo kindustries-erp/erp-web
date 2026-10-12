@@ -40,6 +40,14 @@ export function QuoteDocumentInfoGrid({
         </div>
         <div className="flex">
           <span className="w-28 text-slate-500 shrink-0">
+            {t("cases.quotePreview.driverName", "Tên lái xe:")}
+          </span>
+          <span className="text-slate-700 dark:text-slate-300">
+            {rawData?.TenLaiXe || "---"}
+          </span>
+        </div>
+        <div className="flex">
+          <span className="w-28 text-slate-500 shrink-0">
             {t("cases.quotePreview.phone", "Điện thoại:")}
           </span>
           <span className="font-mono">

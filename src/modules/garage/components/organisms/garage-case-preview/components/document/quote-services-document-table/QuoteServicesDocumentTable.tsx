@@ -13,6 +13,10 @@ export function QuoteServicesDocumentTable({
   const insuranceTotal = services
     .filter((s) => s.isInsurance)
     .reduce((sum, s) => sum + (s.insuranceApprovedAmount || s.amount || 0), 0);
+  const outsourceTotal = services.reduce(
+    (sum, s) => sum + (s.outsourceCost || 0),
+    0,
+  );
 
   return (
     <div>
@@ -54,6 +58,9 @@ export function QuoteServicesDocumentTable({
               <th className="p-2 w-12">
                 {t("cases.quotePreview.tax", "Thuế")}
               </th>
+              <th className="p-2 w-20 text-right">
+                {t("cases.quotePreview.outsourceCostCol", "GCN")}
+              </th>
               <th className="p-2 w-28 text-left">
                 {t("cases.quotePreview.technician", "Kỹ thuật viên")}
               </th>
@@ -92,6 +99,11 @@ export function QuoteServicesDocumentTable({
                 <td className="p-2 text-slate-500">
                   {formatNumber(s.taxRate)}%
                 </td>
+                <td className="p-2 text-right tabular-nums font-mono text-slate-700 dark:text-slate-300">
+                  {s.outsourceCost && s.outsourceCost > 0
+                    ? formatNumber(s.outsourceCost)
+                    : "---"}
+                </td>
                 <td className="p-2 text-left text-slate-600 dark:text-slate-400 truncate">
                   {s.technicianName || "---"}
                 </td>
@@ -110,7 +122,11 @@ export function QuoteServicesDocumentTable({
                     {formatNumber(servicesTotalAmount)}
                   </td>
                   {hasInsurance && <td className="p-2" />}
-                  <td colSpan={2} className="p-2" />
+                  <td className="p-2" />
+                  <td className="p-2 text-right tabular-nums font-bold text-slate-800 dark:text-slate-200">
+                    {outsourceTotal > 0 ? formatNumber(outsourceTotal) : "---"}
+                  </td>
+                  <td className="p-2" />
                 </tr>
                 {hasInsurance && (
                   <tr className="bg-amber-50/50 dark:bg-amber-950/20 font-semibold border-t border-amber-200/60 dark:border-amber-900/40 text-amber-800 dark:text-amber-300">
@@ -124,14 +140,14 @@ export function QuoteServicesDocumentTable({
                     <td className="p-2 text-right tabular-nums font-bold">
                       {formatNumber(insuranceTotal)}
                     </td>
-                    <td colSpan={2} className="p-2" />
+                    <td colSpan={3} className="p-2" />
                   </tr>
                 )}
               </>
             ) : (
               <tr>
                 <td
-                  colSpan={hasInsurance ? 10 : 9}
+                  colSpan={hasInsurance ? 11 : 10}
                   className="p-4 text-center text-slate-400 italic"
                 >
                   {t(
