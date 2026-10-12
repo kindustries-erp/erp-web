@@ -4,21 +4,25 @@ import {
   type DataTableColumn,
 } from "@/shared/components/DataTable/types";
 import type { GarageCashflowVoucher } from "../../../api/garageCashflowApi";
-import { Eye, Pencil, Trash2 } from "lucide-react";
 import { TableText } from "@/shared/components/DataTable/TableText";
 import { TableDateCell } from "@/shared/components/DataTable/TableDateCell";
 import {
   renderThuCell,
   renderChiCell,
   renderCaseCodeCell,
+  renderLicensePlateCell,
+  renderPaymentMethodCell,
   renderPartnerNameCell,
   renderNoteCell,
   renderSttCell,
 } from "./GarageCashflowTable.helper";
 
+export { getGarageCashflowRowActions } from "./GarageCashflowTable.actions";
+
 export const getGarageCashflowColumns = (
   filterBuilder: any,
   openDetail: (row: GarageCashflowVoucher, mode: "view" | "edit") => void,
+  onOpenCaseDetail?: (caseCode: string) => void,
 ): DataTableColumn<GarageCashflowVoucher>[] => {
   return [
     {
@@ -82,7 +86,16 @@ export const getGarageCashflowColumns = (
       header: filterBuilder("caseCode", "Mã PDV", {
         valueType: ColumnValueType.TEXT,
       }),
-      cell: renderCaseCodeCell,
+      cell: (row) => renderCaseCodeCell(row, onOpenCaseDetail),
+    },
+    {
+      key: "licensePlate",
+      sortKey: "licensePlate",
+      size: 130,
+      header: filterBuilder("licensePlate", "Biển số xe", {
+        valueType: ColumnValueType.TEXT,
+      }),
+      cell: renderLicensePlateCell,
     },
     {
       key: "thu",
@@ -109,6 +122,23 @@ export const getGarageCashflowColumns = (
       cell: renderChiCell,
     },
     {
+      key: "paymentMethod",
+      sortKey: "paymentMethod",
+      size: 140,
+      header: filterBuilder("paymentMethod", "Phương thức TT", {
+        valueType: ColumnValueType.SELECT,
+        options: [
+          { label: "Tiền mặt", value: "Tiền mặt" },
+          { label: "Chuyển khoản", value: "Chuyển khoản" },
+          { label: "Ứng trước", value: "Ứng trước" },
+          { label: "Thẻ tín dụng", value: "Thẻ tín dụng" },
+          { label: "Cấn trừ", value: "Cấn trừ" },
+          { label: "Khác", value: "Khác" },
+        ],
+      }),
+      cell: renderPaymentMethodCell,
+    },
+    {
       key: "partnerName",
       sortKey: "partnerName",
       size: 200,
@@ -125,52 +155,5 @@ export const getGarageCashflowColumns = (
       }),
       cell: renderNoteCell,
     },
-  ];
-};
-
-export const getGarageCashflowRowActions = (
-  openDetail: (row: GarageCashflowVoucher, mode: "view" | "edit") => void,
-  onDelete?: (row: GarageCashflowVoucher) => void,
-  canEdit: boolean = true,
-  canDelete: boolean = true,
-) => {
-  const showDelete = Boolean(canDelete && onDelete);
-  return (row: GarageCashflowVoucher) => [
-    {
-      groupLabel: "Thao tác chính",
-      items: [
-        {
-          key: "view",
-          label: "Xem chi tiết",
-          icon: <Eye className="w-4 h-4" />,
-          onClick: () => openDetail(row, "view"),
-        },
-        ...(canEdit
-          ? [
-              {
-                key: "edit",
-                label: "Chỉnh sửa",
-                icon: <Pencil className="w-4 h-4" />,
-                onClick: () => openDetail(row, "edit"),
-              },
-            ]
-          : []),
-      ],
-    },
-    ...(showDelete
-      ? [
-          {
-            groupLabel: "Khác",
-            items: [
-              {
-                key: "delete",
-                label: "Xóa phiếu",
-                icon: <Trash2 className="w-4 h-4 text-red-500" />,
-                onClick: () => onDelete!(row),
-              },
-            ],
-          },
-        ]
-      : []),
   ];
 };

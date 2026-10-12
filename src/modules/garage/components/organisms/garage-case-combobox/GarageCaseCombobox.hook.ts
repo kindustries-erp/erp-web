@@ -58,6 +58,7 @@ export const useGarageCaseCombobox = (propsBranchId?: string) => {
           subLabel: item.khachHangName || "Không có thông tin",
           value: item.id,
           originalName: item.khachHangName || "",
+          originalLicensePlate: item.bienSoXe || "",
         };
       }) || [];
 

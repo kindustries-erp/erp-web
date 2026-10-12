@@ -5,6 +5,7 @@ import { PaymentMethodComboboxProps } from "./PaymentMethodCombobox.type";
 const PAYMENT_METHOD_OPTIONS = [
   { label: "Tiền mặt", value: "Tiền mặt" },
   { label: "Chuyển khoản", value: "Chuyển khoản" },
+  { label: "Ứng trước", value: "Ứng trước" },
   { label: "Thẻ tín dụng", value: "Thẻ tín dụng" },
   { label: "Cấn trừ", value: "Cấn trừ" },
   { label: "Khác", value: "Khác" },

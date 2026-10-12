@@ -47,7 +47,11 @@ export function useGaragePayablesColumns({
         filtersStr,
       );
       return {
-        items: res.items.map((it: string) => ({ label: it, value: it })),
+        items: res.items.map((it: any) =>
+          typeof it === "object" && it && "value" in it
+            ? { label: it.label || it.value, value: it.value }
+            : { label: String(it), value: String(it) },
+        ),
         total: res.total,
         next: res.page < res.totalPages ? res.page + 1 : null,
       };

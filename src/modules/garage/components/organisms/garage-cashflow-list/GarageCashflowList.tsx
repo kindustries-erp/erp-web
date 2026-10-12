@@ -3,6 +3,7 @@ import type { TabItem } from "@/shared/components/PageLayout";
 import type { GarageCashflowVoucher } from "../../../api/garageCashflowApi";
 import { GarageCashflowDrawer } from "../garage-cashflow-drawer/GarageCashflowDrawer";
 import { GarageCashflowTable } from "../garage-cashflow-table/GarageCashflowTable";
+import { GarageCaseStandaloneDrawer } from "../../GarageCaseStandaloneDrawer";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
@@ -14,13 +15,16 @@ export interface GarageCashflowListProps {
   tabs?: TabItem[];
   activeTab?: string;
   onTabChange?: (val: string) => void;
+  onOpenCaseDetail?: (caseCode: string) => void;
 }
 
 export const GarageCashflowList: React.FC<GarageCashflowListProps> = ({
   tabs,
   activeTab,
   onTabChange,
+  onOpenCaseDetail: onOpenCaseDetailProp,
 }) => {
+  const [selectedCaseCode, setSelectedCaseCode] = useState<string | null>(null);
   const [drawerState, setDrawerState] = useState<{
     open: boolean;
     mode: "view" | "edit" | "create";
@@ -84,6 +88,17 @@ export const GarageCashflowList: React.FC<GarageCashflowListProps> = ({
     setDeleteModal({ open: true, voucher: row });
   }, []);
 
+  const handleOpenCaseDetail = useCallback(
+    (caseCode: string) => {
+      if (onOpenCaseDetailProp) {
+        onOpenCaseDetailProp(caseCode);
+      } else {
+        setSelectedCaseCode(caseCode);
+      }
+    },
+    [onOpenCaseDetailProp],
+  );
+
   return (
     <>
       <GarageCashflowTable
@@ -94,7 +109,14 @@ export const GarageCashflowList: React.FC<GarageCashflowListProps> = ({
         onView={handleView}
         onEdit={canUpdate ? handleEdit : undefined}
         onDelete={canDelete ? handleDelete : undefined}
+        onOpenCaseDetail={handleOpenCaseDetail}
         canDelete={canDelete}
+      />
+
+      <GarageCaseStandaloneDrawer
+        isOpen={Boolean(selectedCaseCode)}
+        caseCode={selectedCaseCode}
+        onClose={() => setSelectedCaseCode(null)}
       />
 
       <GarageCashflowDrawer

@@ -1,11 +1,19 @@
 import React from "react";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import { cn } from "@/shared/utils";
-import type { CustomerDebtItem } from "@/modules/garage/hooks/useGarageCustomersList";
 import { GarageDebtsAgingTooltip } from "./GarageDebtsAgingTooltip";
 
-interface AgingDaysCellProps {
-  row: CustomerDebtItem;
+export interface AgingDaysCellItem {
+  balanceAmount?: number | string;
+  maxAgingDays?: number;
+  aging0_30?: number | string;
+  aging31_60?: number | string;
+  aging61_90?: number | string;
+  agingOver90?: number | string;
+}
+
+export interface AgingDaysCellProps {
+  row: AgingDaysCellItem;
   t: (key: string, fallback: string) => string;
 }
 
