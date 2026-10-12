@@ -3,6 +3,7 @@ import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
 import type {
   CreateGarageCashflowVoucherDto,
+  UpdateGarageCashflowVoucherDto,
   GarageCashflowVoucher,
 } from "../../../api/garageCashflowApi";
 import { useGarageCashflowList } from "../../../hooks/useGarageCashflowList";
@@ -49,7 +50,6 @@ export function useGarageCashflowDrawer({
 
       if (voucher) {
         setFormData({
-          ...voucher,
           voucherType: (voucher.voucherType || "").toUpperCase() as
             | "RECEIPT"
             | "PAYMENT",
@@ -57,7 +57,7 @@ export function useGarageCashflowDrawer({
           transDate: voucher.transDate
             ? voucher.transDate.slice(0, 10)
             : new Date().toISOString().slice(0, 10),
-          amount: voucher.amount,
+          amount: Number(voucher.amount) || 0,
           partnerName: voucher.partnerName || voucher.case?.khachHangName || "",
           partnerPhone: voucher.partnerPhone || "",
           licensePlate: voucher.licensePlate || voucher.case?.bienSoXe || "",
@@ -84,14 +84,50 @@ export function useGarageCashflowDrawer({
     if (!canSave) return;
 
     if (initialMode === "create") {
-      createMutation.mutate(formData as CreateGarageCashflowVoucherDto, {
+      const createDto: CreateGarageCashflowVoucherDto = {
+        voucherType: (formData.voucherType || "RECEIPT").toUpperCase() as
+          | "RECEIPT"
+          | "PAYMENT",
+        amount: Number(formData.amount) || 0,
+        transDate: formData.transDate,
+        partnerName: formData.partnerName?.trim() || undefined,
+        partnerPhone: formData.partnerPhone?.trim() || undefined,
+        licensePlate: formData.licensePlate?.trim() || undefined,
+        note: formData.note?.trim() || undefined,
+        paymentMethod: formData.paymentMethod || undefined,
+        referenceNumber: formData.referenceNumber?.trim() || undefined,
+        caseId: formData.caseId?.trim() || undefined,
+        erpBankTransactionId:
+          formData.erpBankTransactionId?.trim() || undefined,
+        erpCashVoucherId: formData.erpCashVoucherId?.trim() || undefined,
+      };
+
+      createMutation.mutate(createDto, {
         onSuccess: () => {
           onClose();
         },
       });
     } else if (voucher) {
+      const updateDto: UpdateGarageCashflowVoucherDto = {
+        voucherType: formData.voucherType
+          ? (formData.voucherType.toUpperCase() as "RECEIPT" | "PAYMENT")
+          : undefined,
+        amount: Number(formData.amount) || 0,
+        transDate: formData.transDate,
+        partnerName: formData.partnerName?.trim() || undefined,
+        partnerPhone: formData.partnerPhone?.trim() || undefined,
+        licensePlate: formData.licensePlate?.trim() || undefined,
+        note: formData.note?.trim() || undefined,
+        paymentMethod: formData.paymentMethod || undefined,
+        referenceNumber: formData.referenceNumber?.trim() || undefined,
+        caseId: formData.caseId?.trim() || undefined,
+        erpBankTransactionId:
+          formData.erpBankTransactionId?.trim() || undefined,
+        erpCashVoucherId: formData.erpCashVoucherId?.trim() || undefined,
+      };
+
       updateMutation.mutate(
-        { id: voucher.id, data: formData },
+        { id: voucher.id, data: updateDto },
         {
           onSuccess: () => {
             onClose();
