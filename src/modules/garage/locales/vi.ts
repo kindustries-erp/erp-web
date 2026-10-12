@@ -1,4 +1,18 @@
 export const garageVi = {
+  cashflowDuplicate: {
+    title: "Phiếu thu/chi có thể bị trùng",
+    intro:
+      "Số tiền {{amount}} đã xuất hiện ở các phiếu sau. Bạn có muốn nhập tiếp không?",
+    groupNearby: "Cùng số tiền trong 7 ngày trước/sau ngày nhập",
+    groupCase: "Cùng số tiền cho phiếu dịch vụ này",
+    groupPlate: "Cùng số tiền cho biển số xe này",
+    more: "+{{count}} phiếu khác",
+    receipt: "Thu",
+    payment: "Chi",
+    back: "Quay lại sửa",
+    proceed: "Vẫn nhập tiếp",
+    checkFailed: "Không kiểm tra được phiếu trùng, tiếp tục lưu.",
+  },
   tabs: {
     dashboard: "Tổng quan",
     cases: "Phiếu dịch vụ",

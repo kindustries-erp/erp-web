@@ -1,4 +1,18 @@
 export const garageEn = {
+  cashflowDuplicate: {
+    title: "Possible duplicate voucher",
+    intro:
+      "The amount {{amount}} already appears in the vouchers below. Continue anyway?",
+    groupNearby: "Same amount within 7 days before/after the entered date",
+    groupCase: "Same amount for this service case",
+    groupPlate: "Same amount for this license plate",
+    more: "+{{count}} more",
+    receipt: "Receipt",
+    payment: "Payment",
+    back: "Go back and edit",
+    proceed: "Continue anyway",
+    checkFailed: "Could not check for duplicates, saving anyway.",
+  },
   tabs: {
     dashboard: "Overview",
     cases: "Service Cases",
