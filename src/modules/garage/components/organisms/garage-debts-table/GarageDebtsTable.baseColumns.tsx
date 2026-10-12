@@ -55,8 +55,8 @@ export function createBaseColumns({
           align="center"
         />
       ),
-      size: 160,
-      minSize: 140,
+      size: 150,
+      minSize: 130,
       enableResizing: true,
       cell: (row: CustomerDebtItem) => (
         <LicensePlateCell licensePlate={row.licensePlate} />

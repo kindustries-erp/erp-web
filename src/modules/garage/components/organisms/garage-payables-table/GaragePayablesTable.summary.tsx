@@ -14,6 +14,7 @@ export function useGaragePayablesSummaryRow({
   return useMemo(() => {
     const items = listHook.data || [];
     let subtotalCost = 0;
+    let subtotalPaid = 0;
     let subtotalBal = 0;
     let subtotalCases = 0;
     let subtotalA0_30 = 0;
@@ -23,6 +24,7 @@ export function useGaragePayablesSummaryRow({
 
     for (const row of items) {
       subtotalCost += Number(row.costAmount) || 0;
+      subtotalPaid += Number(row.paidAmount) || 0;
       subtotalBal += Number(row.balanceAmount) || 0;
       subtotalCases += Number(row.caseCount) || 0;
       subtotalA0_30 += Number(row.aging0_30) || 0;
@@ -36,6 +38,7 @@ export function useGaragePayablesSummaryRow({
 
     const grandCost =
       Number(listHook.summary.totalCost ?? listHook.summary.totalPsCo) || 0;
+    const grandPaid = Number(listHook.summary.totalPaid) || 0;
     const grandBal =
       Number(listHook.summary.totalBalance ?? listHook.summary.totalCkCo) || 0;
 
@@ -73,6 +76,25 @@ export function useGaragePayablesSummaryRow({
           valueClassName="text-foreground font-bold"
         />
       ),
+      paidAmount: (
+        <SubtotalSummaryCell
+          variantType="amount"
+          metricTitle={t("payables.columns.paidAmount", "Đã chi")}
+          itemTitle={unit}
+          itemUnit={unit}
+          subtotalAmount={subtotalPaid}
+          grandTotalAmount={grandPaid}
+          page={listHook.page}
+          totalPages={listHook.totalPages}
+          currentPageCount={items.length}
+          totalCount={listHook.total}
+          valueClassName={
+            subtotalPaid === 0
+              ? "font-bold text-muted-foreground/60"
+              : "font-bold text-emerald-700 dark:text-emerald-400"
+          }
+        />
+      ),
       balanceAmount: (
         <SubtotalSummaryCell
           variantType="amount"
@@ -88,7 +110,9 @@ export function useGaragePayablesSummaryRow({
           valueClassName={
             subtotalBal === 0
               ? "font-bold text-muted-foreground/60"
-              : "font-bold text-amber-800 dark:text-amber-300"
+              : subtotalBal < 0
+                ? "font-bold text-rose-700 dark:text-rose-400"
+                : "font-bold text-amber-800 dark:text-amber-300"
           }
         />
       ),

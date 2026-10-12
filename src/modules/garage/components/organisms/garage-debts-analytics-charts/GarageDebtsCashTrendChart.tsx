@@ -24,13 +24,13 @@ export const GarageDebtsCashTrendChart: React.FC<
         type: "bar" as const,
         data: cashTrend.map((x) => x.cashIn),
         color: "#10b981",
-        label: t("garage:debts.cashInLegend", "Doanh thu dịch vụ (Thu)"),
+        label: t("garage:debts.cashInLegend", "Đã thu"),
       },
       {
         type: "bar" as const,
         data: cashTrend.map((x) => x.cashOut),
         color: "#f59e0b",
-        label: t("garage:debts.cashOutLegend", "Chi phí xưởng (Chi)"),
+        label: t("garage:debts.cashOutLegend", "Đã chi"),
       },
       {
         type: "line" as const,
@@ -48,7 +48,7 @@ export const GarageDebtsCashTrendChart: React.FC<
     <Panel
       title={t(
         "garage:debts.trendChartTitle",
-        "Biến động Doanh thu/Chi phí & Dòng tiền ròng",
+        "Biến động Đã thu/Đã chi & Dòng tiền ròng",
       )}
     >
       <div className="relative h-[280px]">

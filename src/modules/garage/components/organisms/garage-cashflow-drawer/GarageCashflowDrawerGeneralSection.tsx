@@ -99,7 +99,11 @@ export const GarageCashflowDrawerGeneralSection: React.FC<
                 setFormData((prev) => ({ ...prev, ...updates }));
               }}
               fallbackLabel={
-                voucher?.case?.soChungTu ? voucher.case.soChungTu : undefined
+                voucher?.case?.soChungTu
+                  ? voucher.case.bienSoXe
+                    ? `${voucher.case.bienSoXe} - ${voucher.case.soChungTu}`
+                    : voucher.case.soChungTu
+                  : undefined
               }
             />
           </DrawerField>

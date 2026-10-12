@@ -103,6 +103,24 @@ export const SupplierCostCell: React.FC<{ row: SupplierDebtItem }> = ({
   </span>
 );
 
+export const SupplierPaidCell: React.FC<{ row: SupplierDebtItem }> = ({
+  row,
+}) => {
+  const paid = Number(row.paidAmount) || 0;
+  return (
+    <span
+      className={cn(
+        "font-mono text-xs tabular-nums font-medium",
+        paid === 0
+          ? "text-muted-foreground/60"
+          : "text-emerald-700 dark:text-emerald-400",
+      )}
+    >
+      {money(paid)}
+    </span>
+  );
+};
+
 export const SupplierBalanceCell: React.FC<{ row: SupplierDebtItem }> = ({
   row,
 }) => {
@@ -113,7 +131,9 @@ export const SupplierBalanceCell: React.FC<{ row: SupplierDebtItem }> = ({
         "font-mono text-xs tabular-nums font-semibold",
         bal === 0
           ? "text-muted-foreground/60"
-          : "text-amber-800 dark:text-amber-300",
+          : bal < 0
+            ? "text-rose-700 dark:text-rose-400"
+            : "text-amber-800 dark:text-amber-300",
       )}
     >
       {money(bal)}

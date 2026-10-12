@@ -91,7 +91,7 @@ export const getGarageCashflowColumns = (
     {
       key: "licensePlate",
       sortKey: "licensePlate",
-      size: 130,
+      size: 150,
       header: filterBuilder("licensePlate", "Biển số xe", {
         valueType: ColumnValueType.TEXT,
       }),

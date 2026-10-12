@@ -1,10 +1,13 @@
 import React from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { GarageCashflowDrawer } from "./GarageCashflowDrawer";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
+
+export const mockCreateMutate = vi.fn();
+export const mockUpdateMutate = vi.fn();
 
 vi.mock("@/shared/hooks/useHasPermission", () => ({
   useHasPermission: vi.fn(),
@@ -12,8 +15,8 @@ vi.mock("@/shared/hooks/useHasPermission", () => ({
 
 vi.mock("../../../hooks/useGarageCashflowList", () => ({
   useGarageCashflowList: () => ({
-    createMutation: { mutate: vi.fn(), isPending: false },
-    updateMutation: { mutate: vi.fn(), isPending: false },
+    createMutation: { mutate: mockCreateMutate, isPending: false },
+    updateMutation: { mutate: mockUpdateMutate, isPending: false },
   }),
 }));
 
@@ -117,5 +120,69 @@ describe("GarageCashflowDrawer Organism", () => {
 
     expect(screen.getByText("Tạo Phiếu Thu Chi Mới")).toBeInTheDocument();
     expect(screen.getByText("Lưu")).toBeInTheDocument();
+  });
+
+  it("sanitizes payload and excludes nested case and rawData when updating voucher", () => {
+    vi.mocked(useHasPermission).mockReturnValue(true);
+
+    const voucherWithHeavyCase: any = {
+      id: "voucher-heavy-1",
+      voucherCode: "PT-GARA-261012-984",
+      voucherType: "RECEIPT",
+      amount: 10000000,
+      transDate: "2026-10-12",
+      partnerName: "Anh Dũng",
+      partnerPhone: "0987654321",
+      licensePlate: "3UR-3168658",
+      note: "CIF:26985202",
+      paymentMethod: "Chuyển khoản",
+      caseId: "704a0916-3e78-4f93-be03-98461447c409",
+      createdAt: "2026-10-12T10:10:00.966Z",
+      updatedAt: "2026-10-12T10:10:00.966Z",
+      case: {
+        id: "704a0916-3e78-4f93-be03-98461447c409",
+        soChungTu: "GR-PDV2610-0001",
+        rawData: {
+          ListPhieuDichVuChiTiet: Array(30).fill({ item: "Phụ tùng nặng" }),
+        },
+      },
+    };
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <GarageCashflowDrawer
+          open={true}
+          onClose={vi.fn()}
+          voucher={voucherWithHeavyCase}
+          initialMode="edit"
+        />
+      </QueryClientProvider>,
+    );
+
+    const saveButton = screen.getByText("Lưu");
+    expect(saveButton).toBeInTheDocument();
+    fireEvent.click(saveButton);
+
+    expect(mockUpdateMutate).toHaveBeenCalledTimes(1);
+    const calledArg = mockUpdateMutate.mock.calls[0][0];
+    expect(calledArg.id).toBe("voucher-heavy-1");
+    expect(calledArg.data).toEqual({
+      voucherType: "RECEIPT",
+      amount: 10000000,
+      transDate: "2026-10-12",
+      partnerName: "Anh Dũng",
+      partnerPhone: "0987654321",
+      licensePlate: "3UR-3168658",
+      note: "CIF:26985202",
+      paymentMethod: "Chuyển khoản",
+      caseId: "704a0916-3e78-4f93-be03-98461447c409",
+      referenceNumber: undefined,
+      erpBankTransactionId: undefined,
+      erpCashVoucherId: undefined,
+    });
+    // Tuyệt đối không chứa trường case hoặc rawData
+    expect(calledArg.data.case).toBeUndefined();
+    expect(calledArg.data.rawData).toBeUndefined();
+    expect(calledArg.data.id).toBeUndefined();
   });
 });

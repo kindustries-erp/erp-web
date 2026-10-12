@@ -78,5 +78,9 @@ describe("GaragePayablesTable", () => {
     expect(screen.getByText("phiếu")).toBeInTheDocument();
     expect(screen.getByText("15 ngày")).toBeInTheDocument();
     expect(screen.getAllByText("0-30 ngày").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("Đã chi").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("Còn phải chi").length).toBeGreaterThanOrEqual(
+      1,
+    );
   });
 });

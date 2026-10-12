@@ -12,6 +12,7 @@ export interface ComboboxOption {
   subCode?: string;
   searchText?: string;
   subLabel?: string;
+  tooltipContent?: React.ReactNode;
 }
 
 export function parseComboboxOptionDisplay(o?: ComboboxOption | null): {
@@ -314,7 +315,9 @@ export function Combobox({
                   <Tooltip
                     key={o.value}
                     content={
-                      o.subLabel ? (
+                      o.tooltipContent ? (
+                        o.tooltipContent
+                      ) : o.subLabel ? (
                         <div className="flex flex-col gap-0.5">
                           <span>{itemLabel}</span>
                           <span className="text-white/70">{o.subLabel}</span>
