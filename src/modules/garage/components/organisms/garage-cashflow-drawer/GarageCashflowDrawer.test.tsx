@@ -43,6 +43,7 @@ const sampleVoucher: any = {
   amount: 5000000,
   partnerName: "Nguyễn Văn A",
   partnerPhone: "0901234567",
+  licensePlate: "51A-999.99",
   note: "Thu tiền dịch vụ",
 };
 
@@ -51,7 +52,7 @@ describe("GarageCashflowDrawer Organism", () => {
     vi.clearAllMocks();
   });
 
-  it("renders voucher details in view mode", () => {
+  it("renders voucher details in view mode with license plate", () => {
     vi.mocked(useHasPermission).mockReturnValue(true);
 
     render(
@@ -68,6 +69,8 @@ describe("GarageCashflowDrawer Organism", () => {
     expect(screen.getByText("Phiếu PT-GARA-261011-001")).toBeInTheDocument();
     expect(screen.getByText("THÔNG TIN CHUNG")).toBeInTheDocument();
     expect(screen.getByText("THAM CHIẾU LIÊN KẾT")).toBeInTheDocument();
+    expect(screen.getByText("51A-999.99")).toBeInTheDocument();
+    expect(screen.getByText("Biển số xe")).toBeInTheDocument();
   });
 
   it("hides Save button when user lacks CREATE permission in create mode", () => {

@@ -4,6 +4,12 @@ import { render, screen } from "@testing-library/react";
 import { GarageCashflowTable } from "./GarageCashflowTable";
 import { useGarageCashflowTable } from "./GarageCashflowTable.hook";
 import { getGarageCashflowRowActions } from "./GarageCashflowTable.columns";
+import {
+  renderCaseCodeCell,
+  renderLicensePlateCell,
+  renderPaymentMethodCell,
+} from "./GarageCashflowTable.helper";
+import { getGarageCashflowColumns } from "./GarageCashflowTable.columns";
 import type { GarageCashflowVoucher } from "../../../api/garageCashflowApi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
@@ -129,6 +135,89 @@ describe("GarageCashflowTable", () => {
 
       deleteItem?.onClick();
       expect(onDelete).toHaveBeenCalledWith(mockRow);
+    });
+  });
+
+  describe("renderCaseCodeCell", () => {
+    it("renders case code and calls onOpenCaseDetail when drawer icon is clicked", () => {
+      const onOpenCaseDetail = vi.fn();
+      const mockVoucher = {
+        ...mockRow,
+        case: { id: "c-1", soChungTu: "GR-PDV-001" },
+      } as any;
+
+      render(<div>{renderCaseCodeCell(mockVoucher, onOpenCaseDetail)}</div>);
+
+      expect(screen.getByText("GR-PDV-001")).toBeInTheDocument();
+      const drawerButton = screen.getByRole("button", {
+        name: "Xem chi tiết phiếu dịch vụ",
+      });
+      expect(drawerButton).toBeInTheDocument();
+      drawerButton.click();
+      expect(onOpenCaseDetail).toHaveBeenCalledWith("GR-PDV-001");
+    });
+  });
+
+  describe("renderLicensePlateCell", () => {
+    it("renders licensePlate from voucher or case", () => {
+      const mockVoucher = {
+        ...mockRow,
+        licensePlate: "51A-888.88",
+      } as any;
+
+      render(<div>{renderLicensePlateCell(mockVoucher)}</div>);
+      expect(screen.getByText("51A-888.88")).toBeInTheDocument();
+    });
+
+    it("renders dash when no license plate", () => {
+      render(<div>{renderLicensePlateCell({} as any)}</div>);
+      expect(screen.getByText("—")).toBeInTheDocument();
+    });
+  });
+
+  describe("renderPaymentMethodCell", () => {
+    it("renders Ứng trước badge with amber styling", () => {
+      const mockVoucher = {
+        ...mockRow,
+        paymentMethod: "Ứng trước",
+      } as any;
+
+      const { container } = render(
+        <div>{renderPaymentMethodCell(mockVoucher)}</div>,
+      );
+      expect(screen.getByText("Ứng trước")).toBeInTheDocument();
+      expect(container.innerHTML).toContain("text-amber-600");
+    });
+
+    it("renders Chuyển khoản badge with sky styling", () => {
+      const mockVoucher = {
+        ...mockRow,
+        paymentMethod: "Chuyển khoản",
+      } as any;
+
+      const { container } = render(
+        <div>{renderPaymentMethodCell(mockVoucher)}</div>,
+      );
+      expect(screen.getByText("Chuyển khoản")).toBeInTheDocument();
+      expect(container.innerHTML).toContain("text-sky-600");
+    });
+  });
+
+  describe("getGarageCashflowColumns", () => {
+    it("includes licensePlate and paymentMethod columns", () => {
+      const mockFilterBuilder = vi.fn((key) => key) as any;
+      mockFilterBuilder.date = vi.fn(() => "date");
+      mockFilterBuilder.amount = vi.fn(() => "amount");
+
+      const columns = getGarageCashflowColumns(
+        mockFilterBuilder,
+        vi.fn(),
+        vi.fn(),
+      );
+
+      const keys = columns.map((c) => c.key);
+      expect(keys).toContain("licensePlate");
+      expect(keys).toContain("paymentMethod");
     });
   });
 });

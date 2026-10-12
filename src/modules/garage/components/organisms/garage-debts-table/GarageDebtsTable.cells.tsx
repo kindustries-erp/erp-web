@@ -1,42 +1,15 @@
 import React from "react";
-import { useTranslation } from "react-i18next";
 import { Tooltip } from "@/core/components/ui/Tooltip";
-import { CopyButton } from "@/shared/components/CopyButton";
 import { money } from "@/shared/utils/format";
 import { cn } from "@/shared/utils";
-import { FileText, Car } from "lucide-react";
+import { FileText } from "lucide-react";
+import { LicensePlateCell as AtomLicensePlateCell } from "@/modules/garage/components/atoms/license-plate-cell";
 import type { CustomerDebtItem } from "@/modules/garage/hooks/useGarageCustomersList";
 export { AgingDaysCell } from "./GarageDebtsAgingCell";
 
 export const LicensePlateCell: React.FC<{ row: CustomerDebtItem }> = ({
   row,
-}) => {
-  const { t } = useTranslation(["garage", "common"]);
-  const lp = row.licensePlate?.trim();
-  if (!lp) {
-    return (
-      <span className="text-muted-foreground/50 italic select-none text-xs">
-        {t("customers.emptyLicensePlate", "— (Chưa có BKS)")}
-      </span>
-    );
-  }
-  return (
-    <div className="flex items-center gap-1.5 min-w-0 group/lp">
-      <Car className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-      <span className="truncate font-mono font-medium text-xs text-foreground select-text">
-        {lp}
-      </span>
-      <CopyButton
-        value={lp}
-        variant="hover-only"
-        tooltip={t("customers.actions.copyLicensePlate", "Copy biển số")}
-        copiedTooltip={t("customers.actions.copied", "Đã copy")}
-        iconClassName="w-2.5 h-2.5"
-        className="h-3.5 w-3.5 p-0"
-      />
-    </div>
-  );
-};
+}) => <AtomLicensePlateCell licensePlate={row.licensePlate} />;
 
 export const CaseCountCell: React.FC<{
   row: CustomerDebtItem;
@@ -126,5 +99,23 @@ export const PaymentProgressCell: React.FC<{ row: CustomerDebtItem }> = ({
         </div>
       </div>
     </Tooltip>
+  );
+};
+
+export const CustomerBalanceCell: React.FC<{ row: CustomerDebtItem }> = ({
+  row,
+}) => {
+  const bal = Number(row.balanceAmount) || 0;
+  return (
+    <span
+      className={cn(
+        "font-semibold tabular-nums font-mono text-xs",
+        bal === 0
+          ? "text-emerald-600 dark:text-emerald-400"
+          : "text-destructive font-bold",
+      )}
+    >
+      {money(bal)}
+    </span>
   );
 };

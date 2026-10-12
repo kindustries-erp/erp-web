@@ -50,12 +50,24 @@ export const renderChiCell = (row: GarageCashflowVoucher) => {
   );
 };
 
-export const renderCaseCodeCell = (row: GarageCashflowVoucher) => {
+export const renderCaseCodeCell = (
+  row: GarageCashflowVoucher,
+  onOpenCaseDetail?: (caseCode: string) => void,
+) => {
   return row.case?.soChungTu ? (
     <TableText
       text={row.case.soChungTu}
       enableCopy
       textClassName="font-mono text-xs border border-input rounded-md px-2 py-0.5"
+      onDrawerClick={
+        onOpenCaseDetail
+          ? (e) => {
+              e.stopPropagation();
+              onOpenCaseDetail(row.case!.soChungTu!);
+            }
+          : undefined
+      }
+      drawerTooltip="Xem chi tiết phiếu dịch vụ"
     />
   ) : (
     <span className="text-muted-foreground">—</span>
@@ -87,3 +99,49 @@ export const renderSttCell = (_: any, idx: number) => (
     {idx}
   </span>
 );
+
+export const renderLicensePlateCell = (row: GarageCashflowVoucher) => {
+  const plate = row.licensePlate || row.case?.bienSoXe || "";
+  return plate ? (
+    <TableText
+      text={plate}
+      enableCopy
+      textClassName="font-mono text-xs font-semibold uppercase tracking-wider text-slate-800 dark:text-slate-200"
+    />
+  ) : (
+    <span className="text-muted-foreground">—</span>
+  );
+};
+
+export const renderPaymentMethodCell = (row: GarageCashflowVoucher) => {
+  const method =
+    row.paymentMethod ||
+    (row.erpBankTransactionId
+      ? "Chuyển khoản"
+      : row.erpCashVoucherId
+        ? "Tiền mặt"
+        : "");
+
+  if (!method) return <span className="text-muted-foreground">—</span>;
+
+  let badgeStyle = "bg-slate-500/10 text-slate-600 border-slate-500/20";
+  if (method === "Ứng trước") {
+    badgeStyle = "bg-amber-500/10 text-amber-600 border-amber-500/20";
+  } else if (method === "Chuyển khoản") {
+    badgeStyle = "bg-sky-500/10 text-sky-600 border-sky-500/20";
+  } else if (method === "Tiền mặt") {
+    badgeStyle = "bg-emerald-500/10 text-emerald-600 border-emerald-500/20";
+  } else if (method === "Thẻ tín dụng") {
+    badgeStyle = "bg-purple-500/10 text-purple-600 border-purple-500/20";
+  } else if (method === "Cấn trừ") {
+    badgeStyle = "bg-indigo-500/10 text-indigo-600 border-indigo-500/20";
+  }
+
+  return (
+    <span
+      className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${badgeStyle}`}
+    >
+      {method}
+    </span>
+  );
+};

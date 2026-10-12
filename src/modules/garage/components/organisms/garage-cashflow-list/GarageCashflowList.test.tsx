@@ -1,6 +1,6 @@
 import React from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render } from "@testing-library/react";
+import { render, act } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { GarageCashflowList } from "./GarageCashflowList";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
@@ -22,6 +22,14 @@ vi.mock("../garage-cashflow-drawer/GarageCashflowDrawer", () => ({
   GarageCashflowDrawer: () => <div data-testid="garage-cashflow-drawer" />,
 }));
 
+let caseDrawerPropsSpy: any = null;
+vi.mock("../../GarageCaseStandaloneDrawer", () => ({
+  GarageCaseStandaloneDrawer: (props: any) => {
+    caseDrawerPropsSpy = props;
+    return <div data-testid="garage-case-standalone-drawer" />;
+  },
+}));
+
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: false } },
 });
@@ -30,6 +38,7 @@ describe("GarageCashflowList Organism RBAC", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     tablePropsSpy = null;
+    caseDrawerPropsSpy = null;
   });
 
   it("passes onCreate, onEdit, onDelete when user has full permissions", () => {
@@ -118,5 +127,25 @@ describe("GarageCashflowList Organism RBAC", () => {
     expect(tablePropsSpy.onEdit).toBeDefined();
     expect(tablePropsSpy.onDelete).toBeUndefined();
     expect(tablePropsSpy.canDelete).toBe(false);
+  });
+
+  it("opens GarageCaseStandaloneDrawer when onOpenCaseDetail is called", () => {
+    vi.mocked(useHasPermission).mockReturnValue(true);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <GarageCashflowList />
+      </QueryClientProvider>,
+    );
+
+    expect(tablePropsSpy.onOpenCaseDetail).toBeDefined();
+    expect(caseDrawerPropsSpy.isOpen).toBe(false);
+
+    act(() => {
+      tablePropsSpy.onOpenCaseDetail("GR-202610-0012");
+    });
+
+    expect(caseDrawerPropsSpy.isOpen).toBe(true);
+    expect(caseDrawerPropsSpy.caseCode).toBe("GR-202610-0012");
   });
 });

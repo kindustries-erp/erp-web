@@ -7,6 +7,7 @@ export function exportGaragePayablesCsv(
   if (!items || items.length === 0) return;
 
   const headers = [
+    t("customers.columns.licensePlate", "Biển số xe"),
     t("customers.columns.customerCode", "Mã KH"),
     t("customers.columns.customerName", "Khách hàng"),
     t("customers.columns.caseCount", "SL Phiếu DV"),
@@ -25,6 +26,7 @@ export function exportGaragePayablesCsv(
     const escapedName = (r.customerName || "").replace(/"/g, '""');
     rows.push(
       [
+        `"${r.licensePlate || ""}"`,
         `"${r.customerCode || ""}"`,
         `"${escapedName}"`,
         r.caseCount ?? 0,
@@ -45,7 +47,7 @@ export function exportGaragePayablesCsv(
   const a = document.createElement("a");
   a.style.display = "none";
   a.href = url;
-  a.download = `Chi_phi_phai_tra_khach_hang_garage_${new Date().toISOString().slice(0, 10)}.csv`;
+  a.download = `Chi_phi_phai_tra_bien_so_xe_garage_${new Date().toISOString().slice(0, 10)}.csv`;
   document.body.appendChild(a);
   a.click();
   setTimeout(() => {

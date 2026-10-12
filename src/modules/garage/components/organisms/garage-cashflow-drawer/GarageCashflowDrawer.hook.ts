@@ -60,6 +60,7 @@ export function useGarageCashflowDrawer({
           amount: voucher.amount,
           partnerName: voucher.partnerName || voucher.case?.khachHangName || "",
           partnerPhone: voucher.partnerPhone || "",
+          licensePlate: voucher.licensePlate || voucher.case?.bienSoXe || "",
           note: voucher.note || "",
           paymentMethod: voucher.paymentMethod || "",
           referenceNumber: voucher.referenceNumber || "",

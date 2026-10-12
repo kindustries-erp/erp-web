@@ -35,6 +35,14 @@ export const GarageCashflowDrawerGeneralSection: React.FC<
               className="w-full"
             />
           </DrawerField>
+          <DrawerField label="Mã chứng từ">
+            <Input
+              value={formData.voucherCode || ""}
+              onChange={handleFieldChange("voucherCode")}
+              placeholder="Tự động sinh nếu để trống"
+              className="w-full h-8 text-sm"
+            />
+          </DrawerField>
           <DrawerField label="Loại phiếu" required>
             <Combobox
               value={formData.voucherType || ""}
@@ -51,6 +59,14 @@ export const GarageCashflowDrawerGeneralSection: React.FC<
               placeholder="— Chọn —"
             />
           </DrawerField>
+          <DrawerField label="Phương thức TT">
+            <PaymentMethodCombobox
+              value={formData.paymentMethod || ""}
+              onChange={(val: string) =>
+                setFormData((prev) => ({ ...prev, paymentMethod: val }))
+              }
+            />
+          </DrawerField>
           <DrawerField label="Số tiền" required>
             <Input
               type="number"
@@ -64,22 +80,6 @@ export const GarageCashflowDrawerGeneralSection: React.FC<
               className="w-full h-8 text-sm"
             />
           </DrawerField>
-          <DrawerField label="Phương thức TT">
-            <PaymentMethodCombobox
-              value={formData.paymentMethod || ""}
-              onChange={(val: string) =>
-                setFormData((prev) => ({ ...prev, paymentMethod: val }))
-              }
-            />
-          </DrawerField>
-          <DrawerField label="Mã chứng từ">
-            <Input
-              value={formData.voucherCode || ""}
-              onChange={handleFieldChange("voucherCode")}
-              placeholder="Tự động sinh nếu để trống"
-              className="w-full h-8 text-sm"
-            />
-          </DrawerField>
           <DrawerField label="Mã Phiếu Dịch Vụ (Garage Case)">
             <GarageCaseCombobox
               value={formData.caseId || ""}
@@ -89,6 +89,12 @@ export const GarageCashflowDrawerGeneralSection: React.FC<
                 };
                 if (selectedOption?.originalName) {
                   updates.partnerName = selectedOption.originalName;
+                }
+                if (
+                  selectedOption?.originalLicensePlate &&
+                  !formData.licensePlate
+                ) {
+                  updates.licensePlate = selectedOption.originalLicensePlate;
                 }
                 setFormData((prev) => ({ ...prev, ...updates }));
               }}
@@ -104,11 +110,17 @@ export const GarageCashflowDrawerGeneralSection: React.FC<
               className="w-full h-8 text-sm"
             />
           </DrawerField>
-          <DrawerField label="SĐT Đối tác">
+          <DrawerField label="Biển số xe">
             <Input
-              value={formData.partnerPhone || ""}
-              onChange={handleFieldChange("partnerPhone")}
-              className="w-full h-8 text-sm"
+              value={formData.licensePlate || ""}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  licensePlate: e.target.value.toUpperCase(),
+                }))
+              }
+              placeholder="VD: 51A-123.45"
+              className="w-full h-8 text-sm font-mono uppercase"
             />
           </DrawerField>
           <div className="col-span-1 md:col-span-2">
@@ -132,6 +144,7 @@ export const GarageCashflowDrawerGeneralSection: React.FC<
                 : "—"
             }
           />
+          <DrawerRow label="Mã chứng từ" value={voucher?.voucherCode || "—"} />
           <DrawerRow
             label="Loại phiếu"
             value={
@@ -141,14 +154,13 @@ export const GarageCashflowDrawerGeneralSection: React.FC<
             }
           />
           <DrawerRow
-            label="Số tiền"
-            value={`${(voucher?.amount || 0).toLocaleString("vi-VN")} đ`}
-          />
-          <DrawerRow
             label="Phương thức TT"
             value={voucher?.paymentMethod || "—"}
           />
-          <DrawerRow label="Mã chứng từ" value={voucher?.voucherCode || "—"} />
+          <DrawerRow
+            label="Số tiền"
+            value={`${(voucher?.amount || 0).toLocaleString("vi-VN")} đ`}
+          />
           <DrawerRow
             label="Mã Phiếu Dịch Vụ"
             value={
@@ -161,7 +173,10 @@ export const GarageCashflowDrawerGeneralSection: React.FC<
             label="Đối tác"
             value={voucher?.partnerName || voucher?.case?.khachHangName || "—"}
           />
-          <DrawerRow label="SĐT Đối tác" value={voucher?.partnerPhone || "—"} />
+          <DrawerRow
+            label="Biển số xe"
+            value={voucher?.licensePlate || voucher?.case?.bienSoXe || "—"}
+          />
           <div className="col-span-1 md:col-span-2">
             <DrawerRow label="Ghi chú" value={voucher?.note || "—"} />
           </div>

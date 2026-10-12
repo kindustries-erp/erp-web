@@ -3,24 +3,17 @@ import {
   TableColumnHeaderFilter,
   type DataTableColumn,
 } from "@/shared/components/DataTable";
-import { TableText } from "@/shared/components/DataTable/TableText";
-import { money } from "@/shared/utils/format";
-import { cn } from "@/shared/utils";
-import type { useGarageSuppliersList } from "@/modules/garage/hooks/useGarageSuppliersList";
-import type { SupplierDebtItem } from "./GaragePayablesTable.type";
-
-interface CreateBaseColumnsProps {
-  createFilterProps: (columnKey: string, queryPrefix: string) => any;
-  getSortState: (key: string) => "asc" | "desc" | "none";
-  listHook: ReturnType<typeof useGarageSuppliersList>;
-  t: (key: string, fallback: string) => string;
-  onOpenCustomerDetail?: (customer: { code: string; name: string }) => void;
-  onOpenSupplierDetail?: (supplier: {
-    id: string;
-    code: string;
-    name: string;
-  }) => void;
-}
+import { GarageCaseCustomerCell } from "../../molecules/garage-case-customer-cell";
+import { LicensePlateCell } from "@/modules/garage/components/atoms/license-plate-cell";
+import {
+  SupplierCaseCountCell,
+  SupplierCostCell,
+  SupplierBalanceCell,
+} from "./GaragePayablesTable.cells";
+import type {
+  SupplierDebtItem,
+  CreateBaseColumnsProps,
+} from "./GaragePayablesTable.type";
 
 export function createBaseColumns({
   createFilterProps,
@@ -31,8 +24,8 @@ export function createBaseColumns({
   const handleOpenDetail = (row: SupplierDebtItem) => {
     if (onOpenCustomerDetail) {
       onOpenCustomerDetail({ code: row.customerCode, name: row.customerName });
-    } else if (onOpenSupplierDetail) {
-      onOpenSupplierDetail({
+    } else {
+      onOpenSupplierDetail?.({
         id: row.id,
         code: row.customerCode,
         name: row.customerName,
@@ -52,12 +45,34 @@ export function createBaseColumns({
       cell: (_: SupplierDebtItem, idx: number) => <span>{idx}</span>,
     },
     {
-      key: "customerName",
+      key: "licensePlate",
       header: (
         <TableColumnHeaderFilter
-          title={t("customers.columns.customerName", "Tên khách hàng")}
-          {...createFilterProps("customerName", "garage-customer-name-options")}
+          title={t("customers.columns.licensePlate", "Biển số xe")}
+          {...createFilterProps(
+            "licensePlate",
+            "garage-payables-license-plate-options",
+          )}
           showBlankOption={true}
+          enableSelectAllMatching={true}
+          align="center"
+        />
+      ),
+      size: 160,
+      minSize: 140,
+      enableResizing: true,
+      cell: (row: SupplierDebtItem) => (
+        <LicensePlateCell licensePlate={row.licensePlate} />
+      ),
+    },
+    {
+      key: "customer",
+      header: (
+        <TableColumnHeaderFilter
+          title={t("customers.columns.customer", "Khách hàng")}
+          {...createFilterProps("customer", "garage-payables-customer-options")}
+          showBlankOption={true}
+          enableSelectAllMatching={true}
           align="center"
         />
       ),
@@ -65,37 +80,12 @@ export function createBaseColumns({
       minSize: 220,
       enableResizing: true,
       cell: (row: SupplierDebtItem) => (
-        <TableText
-          text={row.customerName || "—"}
-          tooltip={true}
-          enableCopy={true}
-          textClassName="truncate text-foreground font-medium text-xs leading-tight select-text"
-          onDetailClick={(e) => {
-            e?.stopPropagation();
-            handleOpenDetail(row);
+        <GarageCaseCustomerCell
+          item={{
+            customerName: row.customerName,
+            customerCode: row.customerCode,
           }}
-        />
-      ),
-    },
-    {
-      key: "customerCode",
-      header: (
-        <TableColumnHeaderFilter
-          title={t("customers.columns.customerCode", "Mã KH")}
-          {...createFilterProps("customerCode", "garage-customer-code-options")}
-          showBlankOption={true}
-          align="center"
-        />
-      ),
-      size: 150,
-      minSize: 120,
-      enableResizing: true,
-      cell: (row: SupplierDebtItem) => (
-        <TableText
-          text={row.customerCode || "— (Chưa có mã)"}
-          enableCopy={Boolean(row.customerCode)}
-          tooltip={true}
-          className="font-mono text-muted-foreground font-normal text-xs"
+          onOpenDetail={() => handleOpenDetail(row)}
         />
       ),
     },
@@ -111,18 +101,15 @@ export function createBaseColumns({
           align="center"
         />
       ),
-      size: 110,
-      minSize: 95,
+      size: 120,
+      minSize: 105,
       enableResizing: true,
       className: "text-center",
       cell: (row: SupplierDebtItem) => (
-        <button
-          type="button"
+        <SupplierCaseCountCell
+          row={row}
           onClick={() => handleOpenDetail(row)}
-          className="inline-flex items-center justify-center font-mono text-xs font-semibold px-2 py-0.5 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors cursor-pointer"
-        >
-          {row.caseCount || 0}
-        </button>
+        />
       ),
     },
     {
@@ -138,11 +125,7 @@ export function createBaseColumns({
       size: 150,
       minSize: 130,
       enableResizing: true,
-      cell: (row: SupplierDebtItem) => (
-        <span className="font-mono text-xs font-medium tabular-nums text-foreground">
-          {money(Number(row.costAmount) || 0)}
-        </span>
-      ),
+      cell: (row: SupplierDebtItem) => <SupplierCostCell row={row} />,
     },
     {
       key: "balanceAmount",
@@ -157,21 +140,7 @@ export function createBaseColumns({
       size: 150,
       minSize: 130,
       enableResizing: true,
-      cell: (row: SupplierDebtItem) => {
-        const bal = Number(row.balanceAmount) || 0;
-        return (
-          <span
-            className={cn(
-              "font-mono text-xs tabular-nums font-semibold",
-              bal === 0
-                ? "text-muted-foreground/60"
-                : "text-amber-800 dark:text-amber-300",
-            )}
-          >
-            {money(bal)}
-          </span>
-        );
-      },
+      cell: (row: SupplierDebtItem) => <SupplierBalanceCell row={row} />,
     },
   ];
 }

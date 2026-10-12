@@ -6,6 +6,7 @@ export interface GarageCashflowVoucher {
   voucherType: "RECEIPT" | "PAYMENT";
   partnerName?: string;
   partnerPhone?: string;
+  licensePlate?: string;
   note?: string;
   amount: number;
   paymentMethod?: string;
@@ -21,6 +22,7 @@ export interface GarageCashflowVoucher {
     khachHangName: string;
     khachHangCode?: string;
     soChungTu?: string;
+    bienSoXe?: string;
   };
   erpBankTransaction?: {
     id: string;
@@ -40,6 +42,7 @@ export interface CreateGarageCashflowVoucherDto {
   voucherCode?: string;
   partnerName?: string;
   partnerPhone?: string;
+  licensePlate?: string;
   note?: string;
   paymentMethod?: string;
   referenceNumber?: string;
