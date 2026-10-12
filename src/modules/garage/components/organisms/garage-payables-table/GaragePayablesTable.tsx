@@ -84,10 +84,10 @@ export const GaragePayablesTable: React.FC<GaragePayablesTableProps> = ({
 
   return (
     <SpreadsheetPageTemplate<SupplierDebtItem>
-      title={t("payables.titleGrouped", "Công nợ phải trả theo khách hàng")}
+      title={t("payables.titleGrouped", "Công nợ phải trả theo biển số xe")}
       desc={t(
         "payables.descGrouped",
-        "Theo dõi, đối soát và phân tích chi phí sổ báo giá theo từng khách hàng, phân tầng 4 mốc tuổi nợ phải chi (Dữ liệu ghi nhận từ tháng 07/2026)",
+        "Theo dõi, đối soát và phân tích chi phí sổ báo giá theo từng biển số xe, phân tầng 4 mốc tuổi nợ phải chi (Dữ liệu ghi nhận từ tháng 07/2026)",
       )}
       icon={<Truck className="w-5 h-5 text-primary" />}
       tabs={tabs}
@@ -97,7 +97,9 @@ export const GaragePayablesTable: React.FC<GaragePayablesTableProps> = ({
       createActions={createActions}
       items={listHook.data}
       columns={columns}
-      getRowKey={(row) => row.id || row.customerCode || row.soPhieu}
+      getRowKey={(row) =>
+        `${row.licensePlate || "no_bks"}_${row.customerCode}_${row.branchExternalId || "all"}`
+      }
       loading={listHook.isLoading}
       emptyLabel={t("payables.empty", "Không có dữ liệu công nợ phải trả")}
       page={listHook.page}

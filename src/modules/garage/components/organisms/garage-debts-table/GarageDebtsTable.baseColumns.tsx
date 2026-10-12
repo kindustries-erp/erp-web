@@ -3,17 +3,16 @@ import {
   TableColumnHeaderFilter,
   type DataTableColumn,
 } from "@/shared/components/DataTable";
-import { money } from "@/shared/utils/format";
-import { cn } from "@/shared/utils";
 import type {
   CustomerDebtItem,
   useGarageCustomersList,
 } from "@/modules/garage/hooks/useGarageCustomersList";
 import { GarageCaseCustomerCell } from "../../molecules/garage-case-customer-cell";
+import { LicensePlateCell } from "@/modules/garage/components/atoms/license-plate-cell";
 import {
   CaseCountCell,
-  LicensePlateCell,
   PaymentProgressCell,
+  CustomerBalanceCell,
 } from "./GarageDebtsTable.cells";
 
 interface CreateBaseColumnsProps {
@@ -59,7 +58,9 @@ export function createBaseColumns({
       size: 160,
       minSize: 140,
       enableResizing: true,
-      cell: (row: CustomerDebtItem) => <LicensePlateCell row={row} />,
+      cell: (row: CustomerDebtItem) => (
+        <LicensePlateCell licensePlate={row.licensePlate} />
+      ),
     },
     {
       key: "customer",
@@ -165,21 +166,7 @@ export function createBaseColumns({
       ),
       size: 170,
       enableResizing: true,
-      cell: (row: CustomerDebtItem) => {
-        const bal = Number(row.balanceAmount) || 0;
-        return (
-          <span
-            className={cn(
-              "font-semibold tabular-nums font-mono text-xs",
-              bal === 0
-                ? "text-emerald-600 dark:text-emerald-400"
-                : "text-destructive font-bold",
-            )}
-          >
-            {money(bal)}
-          </span>
-        );
-      },
+      cell: (row: CustomerDebtItem) => <CustomerBalanceCell row={row} />,
     },
   ];
 }

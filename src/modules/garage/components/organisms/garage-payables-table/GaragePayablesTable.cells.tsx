@@ -125,3 +125,29 @@ export const SupplierAgingDaysCell: React.FC<AgingDaysCellProps> = ({
     </div>
   );
 };
+
+export const SupplierCostCell: React.FC<{ row: SupplierDebtItem }> = ({
+  row,
+}) => (
+  <span className="font-mono text-xs font-medium tabular-nums text-foreground">
+    {money(Number(row.costAmount) || 0)}
+  </span>
+);
+
+export const SupplierBalanceCell: React.FC<{ row: SupplierDebtItem }> = ({
+  row,
+}) => {
+  const bal = Number(row.balanceAmount) || 0;
+  return (
+    <span
+      className={cn(
+        "font-mono text-xs tabular-nums font-semibold",
+        bal === 0
+          ? "text-muted-foreground/60"
+          : "text-amber-800 dark:text-amber-300",
+      )}
+    >
+      {money(bal)}
+    </span>
+  );
+};
