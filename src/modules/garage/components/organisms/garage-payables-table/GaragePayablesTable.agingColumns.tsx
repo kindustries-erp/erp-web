@@ -34,7 +34,7 @@ export function createAgingColumns({
       enableResizing: true,
       cell: (row: SupplierDebtItem) => {
         const val = Number(row.aging0_30) || 0;
-        return val > 0 ? (
+        return val !== 0 ? (
           <span className="font-semibold text-emerald-700 dark:text-emerald-400 tabular-nums">
             {money(val)}
           </span>
@@ -62,7 +62,7 @@ export function createAgingColumns({
       enableResizing: true,
       cell: (row: SupplierDebtItem) => {
         const val = Number(row.aging31_60) || 0;
-        return val > 0 ? (
+        return val !== 0 ? (
           <span className="font-semibold text-amber-800 dark:text-amber-300 tabular-nums">
             {money(val)}
           </span>
@@ -90,7 +90,7 @@ export function createAgingColumns({
       enableResizing: true,
       cell: (row: SupplierDebtItem) => {
         const val = Number(row.aging61_90) || 0;
-        return val > 0 ? (
+        return val !== 0 ? (
           <span className="font-semibold text-orange-700 dark:text-orange-400 tabular-nums">
             {money(val)}
           </span>
@@ -118,7 +118,7 @@ export function createAgingColumns({
       enableResizing: true,
       cell: (row: SupplierDebtItem) => {
         const val = Number(row.agingOver90) || 0;
-        return val > 0 ? (
+        return val !== 0 ? (
           <span className="font-bold text-rose-700 dark:text-rose-400 tabular-nums">
             {money(val)}
           </span>

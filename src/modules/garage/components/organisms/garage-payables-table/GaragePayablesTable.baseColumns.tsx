@@ -9,6 +9,7 @@ import {
   SupplierCaseCountCell,
   SupplierCostCell,
   SupplierBalanceCell,
+  SupplierPaidCell,
 } from "./GaragePayablesTable.cells";
 import type {
   SupplierDebtItem,
@@ -126,6 +127,22 @@ export function createBaseColumns({
       minSize: 130,
       enableResizing: true,
       cell: (row: SupplierDebtItem) => <SupplierCostCell row={row} />,
+    },
+    {
+      key: "paidAmount",
+      className: "text-right",
+      header: (
+        <TableColumnHeaderFilter
+          title={t("payables.columns.paidAmount", "Đã chi")}
+          {...createFilterProps("paidAmount", "garage-paid-options")}
+          align="right"
+          hideFilter
+        />
+      ),
+      size: 150,
+      minSize: 130,
+      enableResizing: true,
+      cell: (row: SupplierDebtItem) => <SupplierPaidCell row={row} />,
     },
     {
       key: "balanceAmount",

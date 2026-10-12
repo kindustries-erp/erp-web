@@ -17,7 +17,7 @@ describe("GarageDebtsAnalyticsCharts", () => {
       screen.getByText("Biến động & Phân tích Công nợ"),
     ).toBeInTheDocument();
     expect(
-      screen.getByText("Biến động Doanh thu/Chi phí & Dòng tiền ròng"),
+      screen.getByText("Biến động Đã thu/Đã chi & Dòng tiền ròng"),
     ).toBeInTheDocument();
     expect(screen.getByText("Ma trận so sánh Tuổi nợ")).toBeInTheDocument();
     expect(screen.getByText("Cơ cấu Phân bổ Tuổi nợ")).toBeInTheDocument();
