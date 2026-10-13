@@ -42,8 +42,9 @@ describe("SidebarNav RBAC Guard", () => {
 
   it("hides Dashboard and Admin/Attachments for garage user lacking permissions", () => {
     vi.mocked(useHasPermission).mockImplementation((resource) => {
-      if (resource === ErpResource.GARAGE) return true;
-      return false;
+      return (
+        resource === ErpResource.GARAGE || resource === ErpResource.GARAGE_DEBTS
+      );
     });
 
     render(
@@ -59,7 +60,7 @@ describe("SidebarNav RBAC Guard", () => {
     expect(screen.queryByText("Dòng tiền xưởng")).toBeNull();
   });
 
-  it("hides GARAGE section when user lacks GARAGE permission even with GARAGE_CASHFLOW", () => {
+  it("hides GARAGE section when user lacks cases and debts permissions", () => {
     vi.mocked(useHasPermission).mockImplementation((resource) => {
       if (resource === ErpResource.GARAGE_CASHFLOW) return true;
       return false;
@@ -78,6 +79,7 @@ describe("SidebarNav RBAC Guard", () => {
   it("displays flat Garage items and OPEX but never displays standalone Dòng tiền xưởng when user has GARAGE permission", () => {
     vi.mocked(useHasPermission).mockImplementation((resource) => {
       if (resource === ErpResource.GARAGE) return true;
+      if (resource === ErpResource.GARAGE_DEBTS) return true;
       if (resource === ErpResource.GARAGE_CASHFLOW) return true;
       return false;
     });
