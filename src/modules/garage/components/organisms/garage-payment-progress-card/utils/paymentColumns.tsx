@@ -1,12 +1,15 @@
 import React from "react";
 import type { TFunction } from "i18next";
 import { money } from "@/shared/utils/format";
-import { Tooltip } from "@/core/components/ui/Tooltip";
 import type { DataTableColumn } from "@/shared/components/DataTable";
 import type { GarageTrendItem } from "@/modules/garage/api/garageDashboardApi";
-import { formatMonth } from "./paymentProgressHelpers";
+import { formatMonth } from "../GaragePaymentProgressCard.helper";
 import { PaymentTotalCostCell } from "../components/PaymentTotalCostCell";
 import { PaymentExcludedDebtCell } from "../components/PaymentExcludedDebtCell";
+import {
+  PaymentRemainingDebtCell,
+  renderDebtAmount,
+} from "../components/PaymentRemainingDebtCell";
 
 export function getPaymentColumns(
   headerFilter: any,
@@ -99,25 +102,12 @@ export function getPaymentColumns(
         "text-center bg-slate-100 dark:bg-slate-800/60 font-semibold border-r border-border/50",
       className:
         "text-right font-medium tabular-nums bg-slate-50 dark:bg-slate-800/30 border-r border-border/30",
-      cell: (item: GarageTrendItem) => {
-        const val = item.payableCost || 0;
-        return (
-          <Tooltip
-            content={val > 0 ? `Còn phải trả: ${money(val)}` : undefined}
-            side="top"
-          >
-            <span
-              className={
-                val > 0
-                  ? "font-mono font-bold text-foreground text-[12px] tabular-nums cursor-default"
-                  : "font-mono text-muted-foreground/60 text-[11px] cursor-default"
-              }
-            >
-              {val > 0 ? money(val) : "—"}
-            </span>
-          </Tooltip>
-        );
-      },
+      cell: (item: GarageTrendItem) => (
+        <PaymentRemainingDebtCell
+          val={item.payableCost || 0}
+          prefix="Còn phải trả"
+        />
+      ),
     },
     {
       key: "payableCostWithInvoice",
@@ -129,20 +119,8 @@ export function getPaymentColumns(
       enableResizing: true,
       headerClassName: "text-center",
       className: "text-right font-medium tabular-nums font-mono",
-      cell: (item: GarageTrendItem) => {
-        const val = item.payableCostWithInvoice || 0;
-        return (
-          <span
-            className={
-              val > 0
-                ? "font-mono font-bold text-foreground text-[12px] tabular-nums"
-                : "font-mono text-muted-foreground/60 text-[11px]"
-            }
-          >
-            {val > 0 ? money(val) : "—"}
-          </span>
-        );
-      },
+      cell: (item: GarageTrendItem) =>
+        renderDebtAmount(item.payableCostWithInvoice || 0),
     },
     {
       key: "payableCostNoInvoice",
@@ -154,20 +132,8 @@ export function getPaymentColumns(
       enableResizing: true,
       headerClassName: "text-center",
       className: "text-right font-medium tabular-nums font-mono",
-      cell: (item: GarageTrendItem) => {
-        const val = item.payableCostNoInvoice || 0;
-        return (
-          <span
-            className={
-              val > 0
-                ? "font-mono font-bold text-foreground text-[12px] tabular-nums"
-                : "font-mono text-muted-foreground/60 text-[11px]"
-            }
-          >
-            {val > 0 ? money(val) : "—"}
-          </span>
-        );
-      },
+      cell: (item: GarageTrendItem) =>
+        renderDebtAmount(item.payableCostNoInvoice || 0),
     },
     {
       key: "excludedDebtCost",

@@ -283,7 +283,7 @@ const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   "settings-branch": SettingsBranch,
   "custom-fields": CustomFieldsPage,
   "invoice-debts": InvoiceDebtsPage,
-  "garage-dashboard": () => <GarageCasesPage initialTab="dashboard" />,
+  "garage-dashboard": () => <GarageCasesPage initialTab="overview" />,
   "garage-cases": GarageCasesPage,
   "garage-opex": GarageOpex,
   "garage-cashflow": () => <GaragePartners initialTab="cashflow" />,

@@ -2,13 +2,13 @@ import React from "react";
 import { Wallet, Truck, Table as TableIcon } from "lucide-react";
 import { PillTabs } from "@/shared/components/PillTabs";
 import { DataTable } from "@/shared/components/DataTable";
-import { GarageMonthDetailDrawer } from "../GarageMonthDetailDrawer";
-import type { GaragePaymentProgressCardProps } from "./types";
-import { useGaragePaymentProgressLogic } from "./useGaragePaymentProgressLogic";
+import { GarageMonthDetailDrawer } from "../../GarageMonthDetailDrawer";
+import type { GaragePaymentProgressCardProps } from "./GaragePaymentProgressCard.type";
+import { useGaragePaymentProgressLogic } from "./GaragePaymentProgressCard.hook";
 import { PaymentProgressBar } from "./components/PaymentProgressBar";
 
 export function GaragePaymentProgressCard(
-  props: GaragePaymentProgressCardProps,
+  props: GaragePaymentProgressCardProps = {},
 ) {
   const {
     t,

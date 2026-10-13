@@ -15,6 +15,7 @@ export const garageVi = {
   },
   tabs: {
     dashboard: "Tổng quan",
+    overview: "Tổng quan",
     cases: "Phiếu dịch vụ",
     services: "Chi tiết phiếu DV",
   },

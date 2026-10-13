@@ -15,6 +15,7 @@ export const garageEn = {
   },
   tabs: {
     dashboard: "Overview",
+    overview: "Overview",
     cases: "Service Cases",
     services: "Service Lines Detail",
   },

@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { useQuery } from "@tanstack/react-query";
 import { Eye } from "lucide-react";
 import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
 import {
@@ -7,11 +8,11 @@ import {
   filterClientItems,
 } from "@/shared/components/DataTable";
 import type { ActionDropdownItem } from "@/shared/components/ActionDropdown";
-import type { GarageTrendItem } from "@/modules/garage/api/garageDashboardApi";
-import type {
-  GaragePaymentProgressCardProps,
-  PaymentProgressTotals,
-} from "./types";
+import {
+  garageDashboardApi,
+  type GarageTrendItem,
+} from "../../../api/garageDashboardApi";
+import type { GaragePaymentProgressCardProps } from "./GaragePaymentProgressCard.type";
 import {
   getReceiptColumns,
   getPaymentColumns,
@@ -20,16 +21,34 @@ import {
   getReceiptSummaryRow,
   getPaymentSummaryRow,
 } from "./utils/paymentSummaryRows";
+import {
+  calculateTotals,
+  trendExtractors,
+} from "./GaragePaymentProgressCard.helper";
 
-export function useGaragePaymentProgressLogic({
-  collectionSummary,
-  costPaymentSummary,
-  trend = [],
-  loading = false,
-}: GaragePaymentProgressCardProps) {
+export function useGaragePaymentProgressLogic(
+  props: GaragePaymentProgressCardProps = {},
+) {
   const { t } = useTranslation("garage");
   const [activeTab, setActiveTab] = useState<"RECEIPT" | "PAYMENT">("RECEIPT");
   const isReceipt = activeTab === "RECEIPT";
+
+  // Self-fetching fallback when parent does not pass data props
+  const shouldFetchSelf =
+    !props.collectionSummary && !props.costPaymentSummary && !props.trend;
+
+  const { data: selfStats, isLoading: isSelfLoading } = useQuery({
+    queryKey: ["garage-dashboard-stats"],
+    queryFn: () => garageDashboardApi.getStats(),
+    enabled: shouldFetchSelf,
+  });
+
+  const collectionSummary =
+    props.collectionSummary ?? selfStats?.collectionSummary;
+  const costPaymentSummary =
+    props.costPaymentSummary ?? selfStats?.costPaymentSummary;
+  const trend = props.trend ?? selfStats?.trend ?? [];
+  const loading = props.loading ?? (shouldFetchSelf && isSelfLoading);
 
   // Month detail drawer state
   const [selectedMonth, setSelectedMonth] = useState<GarageTrendItem | null>(
@@ -60,13 +79,13 @@ export function useGaragePaymentProgressLogic({
   const currentTotal = isReceipt ? totalBilled : totalCost;
   const currentPaid = isReceipt ? totalPaid : totalPaidCost;
 
-  // Table Column State Hook (Client-side for trend breakdown table)
+  // Table Column State Hook
   const tableId = isReceipt
     ? "garage-payment-progress-receipt"
     : "garage-payment-progress-payment";
   const listHook = useTableColumnState(tableId);
 
-  // Chỉ hiển thị từ tháng 07/2026 trở đi
+  // Chỉ hiển thị từ tháng 07/2026 trở đi (neo mốc đối soát dòng tiền)
   const effectiveTrend = useMemo(() => {
     if (!trend || trend.length === 0) return [];
     return trend.filter((t) => t.label >= "2026-07");
@@ -76,74 +95,14 @@ export function useGaragePaymentProgressLogic({
   const processedItems = useMemo(() => {
     return filterClientItems(effectiveTrend, listHook, {
       dateField: "label",
-      customExtractors: {
-        tienCoThue: (item: GarageTrendItem) =>
-          item.tienCoThue || item.totalBilled || 0,
-        paid: (item: GarageTrendItem) => item.paid || 0,
-        receivable: (item: GarageTrendItem) => item.receivable || 0,
-        receivableWithInvoice: (item: GarageTrendItem) =>
-          item.receivableWithInvoice || 0,
-        receivableNoInvoice: (item: GarageTrendItem) =>
-          item.receivableNoInvoice || 0,
-        cost: (item: GarageTrendItem) => item.cost || 0,
-        paidCost: (item: GarageTrendItem) => item.paidCost || 0,
-        payableCost: (item: GarageTrendItem) => item.payableCost || 0,
-        payableCostWithInvoice: (item: GarageTrendItem) =>
-          item.payableCostWithInvoice || 0,
-        payableCostNoInvoice: (item: GarageTrendItem) =>
-          item.payableCostNoInvoice || 0,
-        excludedDebtAmount: (item: GarageTrendItem) =>
-          item.excludedDebtAmount || 0,
-        excludedDebtCost: (item: GarageTrendItem) => item.excludedDebtCost || 0,
-        revenue: (item: GarageTrendItem) => item.revenue || 0,
-      },
+      customExtractors: trendExtractors,
     });
   }, [effectiveTrend, listHook]);
 
-  const totals = useMemo<PaymentProgressTotals>(() => {
-    return processedItems.reduce(
-      (acc: PaymentProgressTotals, item: GarageTrendItem) => ({
-        caseCount: acc.caseCount + (item.caseCount || 0),
-        revenue: acc.revenue + (item.revenue || 0),
-        billed: acc.billed + (item.tienCoThue || item.totalBilled || 0),
-        paid: acc.paid + (item.paid || 0),
-        receivable: acc.receivable + (item.receivable || 0),
-        receivableWithInvoice:
-          acc.receivableWithInvoice + (item.receivableWithInvoice || 0),
-        receivableNoInvoice:
-          acc.receivableNoInvoice + (item.receivableNoInvoice || 0),
-        excludedDebtAmount:
-          acc.excludedDebtAmount + (item.excludedDebtAmount || 0),
-        excludedDebtCaseCount:
-          acc.excludedDebtCaseCount + (item.excludedDebtCaseCount || 0),
-        cost: acc.cost + (item.cost || 0),
-        paidCost: acc.paidCost + (item.paidCost || 0),
-        payableCost: acc.payableCost + (item.payableCost || 0),
-        payableCostWithInvoice:
-          acc.payableCostWithInvoice + (item.payableCostWithInvoice || 0),
-        payableCostNoInvoice:
-          acc.payableCostNoInvoice + (item.payableCostNoInvoice || 0),
-        excludedDebtCost: acc.excludedDebtCost + (item.excludedDebtCost || 0),
-      }),
-      {
-        caseCount: 0,
-        revenue: 0,
-        billed: 0,
-        paid: 0,
-        receivable: 0,
-        receivableWithInvoice: 0,
-        receivableNoInvoice: 0,
-        excludedDebtAmount: 0,
-        excludedDebtCaseCount: 0,
-        cost: 0,
-        paidCost: 0,
-        payableCost: 0,
-        payableCostWithInvoice: 0,
-        payableCostNoInvoice: 0,
-        excludedDebtCost: 0,
-      },
-    );
-  }, [processedItems]);
+  const totals = useMemo(
+    () => calculateTotals(processedItems),
+    [processedItems],
+  );
 
   const headerFilter = useMemo(
     () =>
@@ -184,7 +143,7 @@ export function useGaragePaymentProgressLogic({
       items: [
         {
           label: t("progress.viewMonthDetail", "Xem chi tiết đối soát tháng"),
-          icon: <Eye className="w-3.5 h-3.5" />,
+          icon: React.createElement(Eye, { className: "w-3.5 h-3.5" }),
           onClick: () => openMonthDetail(item),
         },
       ],

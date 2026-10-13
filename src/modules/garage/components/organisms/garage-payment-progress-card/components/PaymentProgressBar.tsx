@@ -4,7 +4,7 @@ import { Badge } from "@/shared/components/ui/badge";
 import {
   getBadgeVariant,
   getProgressColor,
-} from "../utils/paymentProgressHelpers";
+} from "../GaragePaymentProgressCard.helper";
 
 interface PaymentProgressBarProps {
   isReceipt: boolean;

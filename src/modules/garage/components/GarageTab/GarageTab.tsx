@@ -11,7 +11,7 @@ export function GarageTab(props: GarageTabProps = {}) {
 
   // 3-View Lazy Mounted Keep-Alive State (Synchronous render-time marking to prevent blank-frame flicker)
   const mountedViewsRef = useRef<Record<string, boolean>>({
-    dashboard: logic.currentTabKey === "dashboard",
+    overview: logic.currentTabKey === "overview",
     cases: logic.currentTabKey === "cases",
     services: logic.currentTabKey === "services",
   });
@@ -22,11 +22,11 @@ export function GarageTab(props: GarageTabProps = {}) {
 
   return (
     <div className="flex flex-col h-full flex-1 min-h-0 w-full overflow-hidden">
-      {/* ── View 0: Dashboard (Tổng quan Garage) ────────────────────────── */}
-      {mountedViewsRef.current["dashboard"] && (
+      {/* ── View 0: Overview (Tổng quan Garage) ────────────────────────── */}
+      {mountedViewsRef.current["overview"] && (
         <div
           className={
-            logic.currentTabKey === "dashboard"
+            logic.currentTabKey === "overview"
               ? "flex flex-col h-full flex-1 min-h-0 overflow-hidden"
               : "hidden"
           }
