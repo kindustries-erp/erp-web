@@ -53,7 +53,8 @@ describe("SidebarNav RBAC Guard", () => {
     expect(screen.queryByText("Tổng quan")).toBeNull();
     expect(screen.queryByText("QUẢN TRỊ")).toBeNull();
     expect(screen.queryByText("Quản lý tài liệu")).toBeNull();
-    expect(screen.getByText("Dịch vụ Garage")).toBeDefined();
+    expect(screen.getByText("Vụ việc Garage")).toBeDefined();
+    expect(screen.getByText("Công nợ garage")).toBeDefined();
     expect(screen.getByText("Chi phí vận hành Garage")).toBeDefined();
     expect(screen.queryByText("Dòng tiền xưởng")).toBeNull();
   });
@@ -69,11 +70,12 @@ describe("SidebarNav RBAC Guard", () => {
     );
 
     expect(screen.queryByText("Dòng tiền xưởng")).toBeNull();
-    expect(screen.queryByText("Dịch vụ Garage")).toBeNull();
+    expect(screen.queryByText("Vụ việc Garage")).toBeNull();
+    expect(screen.queryByText("Công nợ garage")).toBeNull();
     expect(screen.queryByText("Chi phí vận hành Garage")).toBeNull();
   });
 
-  it("displays Dịch vụ Garage and OPEX but never displays standalone Dòng tiền xưởng when user has GARAGE permission", () => {
+  it("displays flat Garage items and OPEX but never displays standalone Dòng tiền xưởng when user has GARAGE permission", () => {
     vi.mocked(useHasPermission).mockImplementation((resource) => {
       if (resource === ErpResource.GARAGE) return true;
       if (resource === ErpResource.GARAGE_CASHFLOW) return true;
@@ -85,7 +87,8 @@ describe("SidebarNav RBAC Guard", () => {
     );
 
     expect(screen.queryByText("Dòng tiền xưởng")).toBeNull();
-    expect(screen.getByText("Dịch vụ Garage")).toBeDefined();
+    expect(screen.getByText("Vụ việc Garage")).toBeDefined();
+    expect(screen.getByText("Công nợ garage")).toBeDefined();
     expect(screen.getByText("Chi phí vận hành Garage")).toBeDefined();
   });
 

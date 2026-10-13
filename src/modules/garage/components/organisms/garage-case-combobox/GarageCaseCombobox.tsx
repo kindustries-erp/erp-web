@@ -10,6 +10,7 @@ export const GarageCaseCombobox: React.FC<GarageCaseComboboxProps> = ({
   className,
   branchId,
   fallbackLabel,
+  fallbackTooltipContent,
 }) => {
   const { options, isLoading, isFetchingNextPage, fetchNextPage, setSearch } =
     useGarageCaseCombobox(branchId);
@@ -30,6 +31,7 @@ export const GarageCaseCombobox: React.FC<GarageCaseComboboxProps> = ({
         onScrollBottom={fetchNextPage}
         loading={isLoading || isFetchingNextPage}
         fallbackLabel={fallbackLabel}
+        fallbackTooltipContent={fallbackTooltipContent}
       />
     </div>
   );

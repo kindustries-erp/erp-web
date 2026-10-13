@@ -12,10 +12,17 @@ import {
   renderCaseCodeCell,
   renderLicensePlateCell,
   renderPaymentMethodCell,
+  renderPaymentContentCell,
   renderPartnerNameCell,
   renderNoteCell,
   renderSttCell,
+  createCashflowDateHeader,
 } from "./GarageCashflowTable.helper";
+
+import {
+  PAYMENT_METHOD_OPTIONS,
+  PAYMENT_CONTENT_OPTIONS,
+} from "./GarageCashflowTable.type";
 
 export { getGarageCashflowRowActions } from "./GarageCashflowTable.actions";
 
@@ -23,6 +30,7 @@ export const getGarageCashflowColumns = (
   filterBuilder: any,
   openDetail: (row: GarageCashflowVoucher, mode: "view" | "edit") => void,
   onOpenCaseDetail?: (caseCode: string) => void,
+  tableHook?: any,
 ): DataTableColumn<GarageCashflowVoucher>[] => {
   return [
     {
@@ -38,10 +46,7 @@ export const getGarageCashflowColumns = (
       key: "transDate",
       sortKey: "transDate",
       size: 110,
-      header: filterBuilder.date("transDate", "Ngày", {
-        hideFilter: true,
-        hideFooter: true,
-      }),
+      header: createCashflowDateHeader("transDate", "Ngày", tableHook),
       className: "text-right",
       cell: (row) => (
         <TableDateCell
@@ -55,10 +60,7 @@ export const getGarageCashflowColumns = (
       key: "createdAt",
       sortKey: "createdAt",
       size: 110,
-      header: filterBuilder.date("createdAt", "Ngày tạo", {
-        hideFilter: true,
-        hideFooter: true,
-      }),
+      header: createCashflowDateHeader("createdAt", "Ngày tạo", tableHook),
       className: "text-right",
       cell: (row) => (
         <TableDateCell date={row.createdAt} className="justify-end w-full" />
@@ -78,24 +80,6 @@ export const getGarageCashflowColumns = (
           onDetailClick={() => openDetail(row, "view")}
         />
       ),
-    },
-    {
-      key: "caseCode",
-      sortKey: "caseCode",
-      size: 160,
-      header: filterBuilder("caseCode", "Mã PDV", {
-        valueType: ColumnValueType.TEXT,
-      }),
-      cell: (row) => renderCaseCodeCell(row, onOpenCaseDetail),
-    },
-    {
-      key: "licensePlate",
-      sortKey: "licensePlate",
-      size: 150,
-      header: filterBuilder("licensePlate", "Biển số xe", {
-        valueType: ColumnValueType.TEXT,
-      }),
-      cell: renderLicensePlateCell,
     },
     {
       key: "thu",
@@ -124,19 +108,45 @@ export const getGarageCashflowColumns = (
     {
       key: "paymentMethod",
       sortKey: "paymentMethod",
-      size: 140,
+      size: 130,
       header: filterBuilder("paymentMethod", "Phương thức TT", {
         valueType: ColumnValueType.SELECT,
-        options: [
-          { label: "Tiền mặt", value: "Tiền mặt" },
-          { label: "Chuyển khoản", value: "Chuyển khoản" },
-          { label: "Ứng trước", value: "Ứng trước" },
-          { label: "Thẻ tín dụng", value: "Thẻ tín dụng" },
-          { label: "Cấn trừ", value: "Cấn trừ" },
-          { label: "Khác", value: "Khác" },
-        ],
+        filterOptions: PAYMENT_METHOD_OPTIONS,
       }),
       cell: renderPaymentMethodCell,
+    },
+    {
+      key: "paymentContent",
+      sortKey: "paymentContent",
+      size: 140,
+      header: filterBuilder("paymentContent", "Nội dung TT", {
+        valueType: ColumnValueType.SELECT,
+        filterOptions: PAYMENT_CONTENT_OPTIONS,
+        showBlankOption: true,
+      }),
+      cell: renderPaymentContentCell,
+    },
+    {
+      key: "caseCode",
+      sortKey: "caseCode",
+      size: 180,
+      className: "text-left",
+      header: filterBuilder("caseCode", "Mã PDV", {
+        valueType: ColumnValueType.TEXT,
+        showBlankOption: true,
+      }),
+      cell: (row) => renderCaseCodeCell(row, onOpenCaseDetail),
+    },
+    {
+      key: "licensePlate",
+      sortKey: "licensePlate",
+      size: 130,
+      className: "text-left",
+      header: filterBuilder("licensePlate", "Biển số xe", {
+        valueType: ColumnValueType.TEXT,
+        showBlankOption: true,
+      }),
+      cell: renderLicensePlateCell,
     },
     {
       key: "partnerName",
@@ -144,6 +154,7 @@ export const getGarageCashflowColumns = (
       size: 200,
       header: filterBuilder("partnerName", "Đối tác", {
         valueType: ColumnValueType.TEXT,
+        showBlankOption: true,
       }),
       cell: renderPartnerNameCell,
     },
@@ -152,6 +163,7 @@ export const getGarageCashflowColumns = (
       size: 250,
       header: filterBuilder("note", "Diễn giải", {
         valueType: ColumnValueType.TEXT,
+        showBlankOption: true,
       }),
       cell: renderNoteCell,
     },

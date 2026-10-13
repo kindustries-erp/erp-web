@@ -1,15 +1,16 @@
 import React from "react";
-import {
-  DrawerSection,
-  DrawerField,
-  DrawerRow,
-} from "@/shared/components/DrawerModal";
+import { DrawerSection, DrawerField } from "@/shared/components/DrawerModal";
 import { Combobox } from "@/shared/components/Combobox";
 import { Input } from "@/shared/components/ui/input";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { DatePicker } from "@/shared/components/DatePicker";
 import { PaymentMethodCombobox } from "../../molecules/payment-method-combobox";
-import { GarageCaseCombobox } from "../garage-case-combobox";
+import { PaymentContentCombobox } from "../../molecules/payment-content-combobox";
+import {
+  GarageCaseCombobox,
+  renderGarageCaseTooltipContent,
+} from "../garage-case-combobox";
+import { GarageCashflowDrawerViewSection } from "./GarageCashflowDrawerViewSection";
 import type { CreateGarageCashflowVoucherDto } from "../../../api/garageCashflowApi";
 import type { DrawerSectionProps } from "./GarageCashflowDrawer.type";
 
@@ -67,6 +68,14 @@ export const GarageCashflowDrawerGeneralSection: React.FC<
               }
             />
           </DrawerField>
+          <DrawerField label="Nội dung TT">
+            <PaymentContentCombobox
+              value={formData.paymentContent || ""}
+              onChange={(val: string) =>
+                setFormData((prev) => ({ ...prev, paymentContent: val }))
+              }
+            />
+          </DrawerField>
           <DrawerField label="Số tiền" required>
             <Input
               type="number"
@@ -105,6 +114,16 @@ export const GarageCashflowDrawerGeneralSection: React.FC<
                     : voucher.case.soChungTu
                   : undefined
               }
+              fallbackTooltipContent={
+                voucher?.case
+                  ? renderGarageCaseTooltipContent({
+                      bienSoXe: voucher.case.bienSoXe,
+                      soChungTu: voucher.case.soChungTu,
+                      id: voucher.case.id,
+                      khachHangName: voucher.case.khachHangName,
+                    })
+                  : undefined
+              }
             />
           </DrawerField>
           <DrawerField label="Đối tác">
@@ -139,52 +158,7 @@ export const GarageCashflowDrawerGeneralSection: React.FC<
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-2">
-          <DrawerRow
-            label="Ngày giao dịch"
-            value={
-              voucher?.transDate
-                ? new Date(voucher.transDate).toLocaleDateString("vi-VN")
-                : "—"
-            }
-          />
-          <DrawerRow label="Mã chứng từ" value={voucher?.voucherCode || "—"} />
-          <DrawerRow
-            label="Loại phiếu"
-            value={
-              (voucher?.voucherType || "").toUpperCase() === "RECEIPT"
-                ? "Phiếu Thu"
-                : "Phiếu Chi"
-            }
-          />
-          <DrawerRow
-            label="Phương thức TT"
-            value={voucher?.paymentMethod || "—"}
-          />
-          <DrawerRow
-            label="Số tiền"
-            value={`${(voucher?.amount || 0).toLocaleString("vi-VN")} đ`}
-          />
-          <DrawerRow
-            label="Mã Phiếu Dịch Vụ"
-            value={
-              voucher?.case?.soChungTu
-                ? voucher.case.soChungTu
-                : voucher?.caseId || "—"
-            }
-          />
-          <DrawerRow
-            label="Đối tác"
-            value={voucher?.partnerName || voucher?.case?.khachHangName || "—"}
-          />
-          <DrawerRow
-            label="Biển số xe"
-            value={voucher?.licensePlate || voucher?.case?.bienSoXe || "—"}
-          />
-          <div className="col-span-1 md:col-span-2">
-            <DrawerRow label="Ghi chú" value={voucher?.note || "—"} />
-          </div>
-        </div>
+        <GarageCashflowDrawerViewSection voucher={voucher} />
       )}
     </DrawerSection>
   );

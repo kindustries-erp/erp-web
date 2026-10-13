@@ -310,15 +310,10 @@ export function useNavItems(): NavSearchItem[] {
 
     // 6. Garage
     const garageSection = t("nav.sections.garage", "GARAGE");
-    const garageServicesGroup = t(
-      "nav.items.garageServicesGroup",
-      "Dịch vụ Garage",
-    );
     if (canReadGarage) {
       items.push({
         key: "garage-cases",
         label: t("nav.items.garageCases", "Phiếu dịch vụ"),
-        group: garageServicesGroup,
         section: garageSection,
         keywords: [
           "garage",
@@ -334,7 +329,6 @@ export function useNavItems(): NavSearchItem[] {
       items.push({
         key: "garage-debts",
         label: t("nav.items.garageDebts", "Công nợ garage"),
-        group: garageServicesGroup,
         section: garageSection,
         keywords: [
           "garage",

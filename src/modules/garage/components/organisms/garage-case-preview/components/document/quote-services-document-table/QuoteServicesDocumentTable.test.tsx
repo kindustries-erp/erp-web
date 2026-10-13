@@ -58,4 +58,22 @@ describe("QuoteServicesDocumentTable", () => {
       screen.getByText("Không có nhân công - dịch vụ"),
     ).toBeInTheDocument();
   });
+
+  it("renders GCN outsource cost column and subtotal correctly", () => {
+    const servicesWithGcn: QuoteLineItem[] = [
+      {
+        ...mockServices[0],
+        outsourceCost: 220000,
+      },
+    ];
+    render(
+      <QuoteServicesDocumentTable
+        services={servicesWithGcn}
+        servicesTotalAmount={350000}
+      />,
+    );
+
+    expect(screen.getByText("GCN")).toBeInTheDocument();
+    expect(screen.getAllByText("220.000").length).toBeGreaterThanOrEqual(1);
+  });
 });

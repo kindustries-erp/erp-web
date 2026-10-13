@@ -4,6 +4,7 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { GarageCashflowDrawer } from "./GarageCashflowDrawer";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
+import { garageCashflowApi } from "../../../api/garageCashflowApi";
 import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
 
 export const mockCreateMutate = vi.fn();
@@ -11,6 +12,10 @@ export const mockUpdateMutate = vi.fn();
 
 vi.mock("@/shared/hooks/useHasPermission", () => ({
   useHasPermission: vi.fn(),
+}));
+
+vi.mock("../../../api/garageCashflowApi", () => ({
+  garageCashflowApi: { checkDuplicates: vi.fn() },
 }));
 
 vi.mock("../../../hooks/useGarageCashflowList", () => ({
@@ -23,6 +28,7 @@ vi.mock("../../../hooks/useGarageCashflowList", () => ({
 // Mock sub-comboboxes
 vi.mock("../garage-case-combobox", () => ({
   GarageCaseCombobox: () => <div data-testid="mock-case-combobox" />,
+  renderGarageCaseTooltipContent: vi.fn(() => <div>mock-tooltip</div>),
 }));
 vi.mock("../erp-bank-transaction-combobox", () => ({
   ErpBankTransactionCombobox: () => <div data-testid="mock-bank-combobox" />,
@@ -32,6 +38,9 @@ vi.mock("../erp-cash-voucher-combobox", () => ({
 }));
 vi.mock("../../molecules/payment-method-combobox", () => ({
   PaymentMethodCombobox: () => <div data-testid="mock-pm-combobox" />,
+}));
+vi.mock("../../molecules/payment-content-combobox", () => ({
+  PaymentContentCombobox: () => <div data-testid="mock-pc-combobox" />,
 }));
 
 const queryClient = new QueryClient({
@@ -184,5 +193,82 @@ describe("GarageCashflowDrawer Organism", () => {
     expect(calledArg.data.case).toBeUndefined();
     expect(calledArg.data.rawData).toBeUndefined();
     expect(calledArg.data.id).toBeUndefined();
+  });
+
+  describe("duplicate warning", () => {
+    const empty = { items: [], total: 0 };
+    const dup = {
+      nearbyDate: {
+        items: [
+          {
+            id: "d1",
+            voucherCode: "PT-DUP-1",
+            voucherType: "RECEIPT",
+            amount: 2200000,
+            transDate: "2026-10-07",
+          },
+        ],
+        total: 1,
+      },
+      sameCase: empty,
+      samePlate: empty,
+    };
+
+    const renderCreate = (amount: number) => {
+      vi.mocked(useHasPermission).mockReturnValue(true);
+      const voucher: any = {
+        id: "tpl",
+        voucherCode: "X",
+        voucherType: "RECEIPT",
+        transDate: "2026-10-12",
+        amount,
+      };
+      return render(
+        <QueryClientProvider client={queryClient}>
+          <GarageCashflowDrawer
+            open={true}
+            onClose={vi.fn()}
+            voucher={voucher}
+            initialMode="create"
+          />
+        </QueryClientProvider>,
+      );
+    };
+
+    it("asks for confirmation on create when a duplicate exists", async () => {
+      vi.mocked(garageCashflowApi.checkDuplicates).mockResolvedValue(
+        dup as any,
+      );
+      renderCreate(2200000);
+      fireEvent.click(screen.getByText("Lưu"));
+      expect(await screen.findByText(/PT-DUP-1/)).toBeInTheDocument();
+      expect(mockCreateMutate).not.toHaveBeenCalled();
+
+      fireEvent.click(screen.getByText("Vẫn nhập tiếp"));
+      expect(mockCreateMutate).toHaveBeenCalledTimes(1);
+    });
+
+    it("keeps the form and does not save when user goes back", async () => {
+      vi.mocked(garageCashflowApi.checkDuplicates).mockResolvedValue(
+        dup as any,
+      );
+      renderCreate(2200000);
+      fireEvent.click(screen.getByText("Lưu"));
+      await screen.findByText(/PT-DUP-1/);
+      fireEvent.click(screen.getByText("Quay lại sửa"));
+      expect(mockCreateMutate).not.toHaveBeenCalled();
+      expect(screen.queryByText(/PT-DUP-1/)).not.toBeInTheDocument();
+    });
+
+    it("saves directly when nothing matches", async () => {
+      vi.mocked(garageCashflowApi.checkDuplicates).mockResolvedValue({
+        nearbyDate: empty,
+        sameCase: empty,
+        samePlate: empty,
+      } as any);
+      renderCreate(2200000);
+      fireEvent.click(screen.getByText("Lưu"));
+      await vi.waitFor(() => expect(mockCreateMutate).toHaveBeenCalledTimes(1));
+    });
   });
 });

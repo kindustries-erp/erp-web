@@ -111,4 +111,78 @@ describe("GarageCasePreview.helper", () => {
     expect(summary.partCost).toBe(350000);
     expect(summary.hasProfitData).toBe(true);
   });
+
+  it("parseQuoteLines extracts outsourceCost (GCN) correctly", () => {
+    const rawData = {
+      ListPhieuDichVuChiTiet: [
+        {
+          SanPhamCode: "DV-000220",
+          NoiDungChiTiet: "Đồng sửa cửa trước phải",
+          LoaiSanPhamCode: "DV",
+          GCN: 220000,
+        },
+      ],
+    };
+    const { services } = parseQuoteLines(rawData);
+    expect(services[0].outsourceCost).toBe(220000);
+  });
+
+  it("calculateProfitSummary calculates exact metrics matching real printed document GR-PDV2606-0025", () => {
+    const rawData = {
+      TienChuaThue: 1500000,
+      TongTienHang: 1275000,
+      TienChietKhau: 225000,
+      TyLeChietKhau: 15,
+      TienKhauTruBaoHiem: 500000,
+      TienChiPhiCheTai: 0,
+      TienSauCheTai: 775000,
+      TienThue: 102000,
+      TienThanhToanKH: 540000,
+      TienThanhToanBH: 837000,
+      TongTienThanhToan: 1377000,
+      TienHoaHongBaoHiem: 200000,
+      GiamDinhVienName: "GĐV Bảo Việt",
+      TienHoaHongMoiGioi: 0,
+      XeLamBaoHiem: true,
+    };
+    const grossProfit = {
+      DoanhThu: 1500000,
+      ChiPhi: 645000,
+      LoiNhuan: 855000,
+      BienLoiNhuan: 57,
+      journal_items: [
+        {
+          TaiKhoanNoCode: "1543",
+          ChiPhi: 200000,
+          NoiDung: "Hoa hồng bảo hiểm",
+        },
+        {
+          TaiKhoanNoCode: "1542",
+          ChiPhi: 220000,
+          NoiDung: "Thuê gia công pha sơn",
+        },
+        { TaiKhoanNoCode: "521", ChiPhi: 225000, NoiDung: "Chiết khấu" },
+      ],
+    };
+
+    const summary = calculateProfitSummary({}, rawData, grossProfit);
+
+    expect(summary.totalAmount).toBe(1500000);
+    expect(summary.discountAmount).toBe(225000);
+    expect(summary.subtotalAfterDiscount).toBe(1275000);
+    expect(summary.deductibleAmount).toBe(500000);
+    expect(summary.afterSanctionAmount).toBe(775000);
+    expect(summary.customerPay).toBe(540000);
+    expect(summary.insurancePay).toBe(837000);
+    expect(summary.totalPayable).toBe(1377000);
+    expect(summary.commissionGdv).toBe(200000);
+    expect(summary.outsourceLaborCost).toBe(220000);
+    expect(summary.costBreakdown?.outsourceCost).toBe(220000);
+    expect(summary.costBreakdown?.commissionCost).toBe(200000);
+    expect(summary.costBreakdown?.discountCost).toBe(225000);
+    expect(summary.costBreakdown?.totalCost).toBe(645000);
+    expect(summary.estimatedProfitPreTax).toBe(855000);
+    expect(summary.estimatedProfitAfterTax).toBe(957000);
+    expect(summary.isInsurance).toBe(true);
+  });
 });

@@ -15,11 +15,17 @@ export function QuoteDocumentCostSummary({
   const partCost = costBreakdown?.inventoryPartCost ?? partsTotalCost;
   const outsourceCost = costBreakdown?.outsourceCost ?? 0;
   const commissionCost = costBreakdown?.commissionCost ?? 0;
+  const discountCost = costBreakdown?.discountCost ?? 0;
   const finalTotalCost = costBreakdown?.totalCost ?? totalCost;
 
   if (finalTotalCost <= 0 && partCost <= 0) {
     return null;
   }
+
+  const gridColsClass =
+    discountCost > 0
+      ? "grid-cols-2 sm:grid-cols-3 md:grid-cols-5"
+      : "grid-cols-2 md:grid-cols-4";
 
   return (
     <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40 p-3 text-xs">
@@ -39,7 +45,9 @@ export function QuoteDocumentCostSummary({
         )}
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 pt-1 border-t border-slate-200/60 dark:border-slate-800/60">
+      <div
+        className={`grid ${gridColsClass} gap-2 pt-1 border-t border-slate-200/60 dark:border-slate-800/60`}
+      >
         <div className="bg-white dark:bg-slate-800/60 p-2 rounded border border-slate-200/60 dark:border-slate-700/50">
           <div className="text-[10px] text-slate-500 uppercase">
             {t("cases.quotePreview.tk1541", "1. Phụ tùng kho (1541)")}
@@ -64,6 +72,16 @@ export function QuoteDocumentCostSummary({
             {formatNumber(commissionCost)}
           </div>
         </div>
+        {discountCost > 0 && (
+          <div className="bg-white dark:bg-slate-800/60 p-2 rounded border border-slate-200/60 dark:border-slate-700/50">
+            <div className="text-[10px] text-rose-500 uppercase font-medium">
+              {t("cases.quotePreview.tk521", "4. Chiết khấu (521)")}
+            </div>
+            <div className="font-semibold tabular-nums text-rose-600 dark:text-rose-400 mt-0.5">
+              {formatNumber(discountCost)}
+            </div>
+          </div>
+        )}
         <div className="bg-white dark:bg-slate-800/60 p-2 rounded border border-slate-200/60 dark:border-slate-700/50">
           <div className="text-[10px] text-slate-500 uppercase font-medium text-slate-700 dark:text-slate-300">
             {t("cases.quotePreview.totalCostSummary", "Tổng chi phí")}

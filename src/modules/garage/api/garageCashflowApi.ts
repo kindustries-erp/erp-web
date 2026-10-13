@@ -10,6 +10,7 @@ export interface GarageCashflowVoucher {
   note?: string;
   amount: number;
   paymentMethod?: string;
+  paymentContent?: string;
   referenceNumber?: string;
   caseId?: string;
   erpBankTransactionId?: string;
@@ -45,6 +46,7 @@ export interface CreateGarageCashflowVoucherDto {
   licensePlate?: string;
   note?: string;
   paymentMethod?: string;
+  paymentContent?: string;
   referenceNumber?: string;
   caseId?: string;
   erpBankTransactionId?: string;
@@ -55,7 +57,46 @@ export interface CreateGarageCashflowVoucherDto {
 export type UpdateGarageCashflowVoucherDto =
   Partial<CreateGarageCashflowVoucherDto>;
 
+export interface CashflowDuplicateItem {
+  id: string;
+  voucherCode: string;
+  voucherType: "RECEIPT" | "PAYMENT";
+  amount: number;
+  transDate: string;
+  licensePlate?: string | null;
+  caseCode?: string | null;
+  partnerName?: string | null;
+}
+
+export interface CashflowDuplicateGroup {
+  items: CashflowDuplicateItem[];
+  total: number;
+}
+
+export interface CashflowDuplicateResult {
+  nearbyDate: CashflowDuplicateGroup;
+  sameCase: CashflowDuplicateGroup;
+  samePlate: CashflowDuplicateGroup;
+}
+
+export interface CashflowDuplicateParams {
+  amount: number;
+  transDate?: string;
+  caseId?: string;
+  licensePlate?: string;
+  excludeId?: string;
+}
+
 export const garageCashflowApi = {
+  checkDuplicates: async (
+    params: CashflowDuplicateParams,
+  ): Promise<CashflowDuplicateResult> => {
+    const res = await axiosInstance.get(
+      "/api/v1/greenway/cashflow-vouchers/duplicate-check",
+      { params },
+    );
+    return res.data;
+  },
   getList: async (params?: Record<string, any>) => {
     const res = await axiosInstance.get("/api/v1/greenway/cashflow-vouchers", {
       params,

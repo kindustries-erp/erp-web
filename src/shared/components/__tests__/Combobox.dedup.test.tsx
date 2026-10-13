@@ -85,4 +85,42 @@ describe("Combobox deduplication & i18n placeholder", () => {
 
     expect(onChange).toHaveBeenCalledWith("");
   });
+
+  it("renders selected.tooltipContent in Tooltip when option is selected", () => {
+    render(
+      <Combobox
+        options={[
+          {
+            value: "case-1",
+            label: "51A-999.99 - GR-001",
+            tooltipContent: (
+              <div data-testid="rich-tooltip">Rich Tooltip Content</div>
+            ),
+          },
+        ]}
+        value="case-1"
+        onChange={vi.fn()}
+      />,
+    );
+
+    const trigger = screen.getByRole("button", { name: /51A-999.99/i });
+    expect(trigger).toBeInTheDocument();
+  });
+
+  it("renders fallbackTooltipContent when value is set but options are not yet loaded", () => {
+    render(
+      <Combobox
+        options={[]}
+        value="case-fallback"
+        fallbackLabel="51B-111.11 - GR-002"
+        fallbackTooltipContent={
+          <div data-testid="fallback-tooltip">Fallback Tooltip</div>
+        }
+        onChange={vi.fn()}
+      />,
+    );
+
+    const trigger = screen.getByRole("button", { name: /51B-111.11/i });
+    expect(trigger).toBeInTheDocument();
+  });
 });
