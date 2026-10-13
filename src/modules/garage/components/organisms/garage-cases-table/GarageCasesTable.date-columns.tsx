@@ -14,6 +14,7 @@ export function buildDateColumns(
     label,
     header: makeHdr(key, label, {
       hideFilter: true,
+      hideFooter: true,
       isActive: Boolean(dateRanges[key]?.from || dateRanges[key]?.to),
       dateRangeSlot: ({ close }: { close: () => void }) => (
         <DateRangeColumnSlot

@@ -106,6 +106,8 @@ export function TableColumnHeaderFilter({
   hideSort = false,
 }: TableColumnHeaderFilterProps) {
   const { t } = useTranslation("table");
+  const effectiveHideFooter =
+    hideFooter ?? (Boolean(dateRangeSlot) && Boolean(hideFilter));
   const [open, setOpen] = useState(false);
   const [localSearch, setLocalSearch] = useState(() => {
     if (columnKey && getDropdownSearchState(columnKey) !== undefined) {
@@ -575,7 +577,7 @@ export function TableColumnHeaderFilter({
           )}
 
           {/* Footer Actions */}
-          {!hideFooter && (
+          {!effectiveHideFooter && (
             <div className="p-2 border-t border-border flex justify-between items-center bg-muted/30 rounded-b-xl">
               <Button
                 variant="ghost"
