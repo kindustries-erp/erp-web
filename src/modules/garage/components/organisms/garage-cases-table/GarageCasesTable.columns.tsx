@@ -33,6 +33,7 @@ export function buildGarageCasesColumns(ctx: ColumnContext) {
     opts: {
       align?: "left" | "center" | "right";
       hideFilter?: boolean;
+      hideFooter?: boolean;
       formatOptionLabel?: (val: string) => string;
       showBlankOption?: boolean;
       dateRangeSlot?: (props: { close: () => void }) => React.ReactNode;
@@ -50,6 +51,9 @@ export function buildGarageCasesColumns(ctx: ColumnContext) {
       onFilterChange={(vals) => onFilterChange(key, vals)}
       align={opts.align || "center"}
       hideFilter={opts.hideFilter}
+      hideFooter={
+        opts.hideFooter ?? (opts.hideFilter && Boolean(opts.dateRangeSlot))
+      }
       formatOptionLabel={opts.formatOptionLabel}
       showBlankOption={opts.showBlankOption}
       dateRangeSlot={opts.dateRangeSlot}

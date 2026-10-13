@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useQueryClient } from "@tanstack/react-query";
 import { DashboardTemplate } from "@/shared/components/DashboardTemplate";
 import { Button } from "@/shared/components/ui/Button";
 import { useFilterPanel } from "@/shared/hooks/useFilterPanel";
@@ -8,6 +9,7 @@ import { useGarageDebtsDashboard } from "../hooks/useGarageDebtsDashboard";
 import { GarageDebtsKpiGrid } from "./organisms/garage-debts-kpi-grid";
 import { GarageDebtsHorizonGrid } from "./organisms/garage-debts-horizon-grid";
 import { GarageDebtsAnalyticsCharts } from "./organisms/garage-debts-analytics-charts";
+import { GaragePaymentProgressCard } from "./organisms/garage-payment-progress-card";
 import { GarageTimeHorizonDetailDrawer } from "./organisms/garage-time-horizon-detail-drawer";
 import { Users, FileSpreadsheet } from "lucide-react";
 import type { TabItem } from "@/shared/components/PageLayout";
@@ -25,6 +27,7 @@ export const GarageDebtsDashboardTab: React.FC<
   GarageDebtsDashboardTabProps
 > = ({ tabs, activeTab, onTabChange, onExportClick, onOpenCustomerDetail }) => {
   const { t } = useTranslation(["garage", "debts", "common"]);
+  const queryClient = useQueryClient();
   const { selectedBranchId } = useGarageStore();
   const [selectedHorizon, setSelectedHorizon] =
     useState<GarageTimeHorizonKey | null>(null);
@@ -71,6 +74,9 @@ export const GarageDebtsDashboardTab: React.FC<
       loading={isFetching}
       onRefresh={() => {
         void refetch();
+        void queryClient.invalidateQueries({
+          queryKey: ["garage-dashboard-stats"],
+        });
       }}
       extraActions={
         onExportClick ? (
@@ -103,7 +109,10 @@ export const GarageDebtsDashboardTab: React.FC<
         isLoading={isLoading}
       />
 
-      {/* 4. Time Horizon Detail Drawer */}
+      {/* 4. Tiến độ Dòng tiền & Công nợ Dịch vụ */}
+      <GaragePaymentProgressCard />
+
+      {/* 5. Time Horizon Detail Drawer */}
       <GarageTimeHorizonDetailDrawer
         open={Boolean(selectedHorizon)}
         onClose={() => setSelectedHorizon(null)}

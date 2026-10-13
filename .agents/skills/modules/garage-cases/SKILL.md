@@ -107,6 +107,11 @@ src/modules/garage/
   9. `statusName`: Trạng thái dịch vụ (căn giữa, `KgaraCaseStatusBadge`).
   10. `collectionProgress` & `costProgress`: Tiến độ thu/chi dòng tiền.
 - **Table Headers**: 100% căn giữa (`text-center` / `align="center"`).
+- **Bộ lọc Cột Ngày (`DateRangeColumnSlot`)**: Đã được nâng cấp chuẩn kiến trúc Molecule L2 (`/ui-atomic-refactor`, folder-per-component `< 140 LoC`), tích hợp đầy đủ:
+  - **Hàng 1 (`Chọn nhanh`)**: DropdownMenu các presets động (*Hôm nay*, *Hôm qua*, *Tháng này*, *Tháng trước*, *Quý này*, *Quý trước*, *Năm nay*, *Tất cả*).
+  - **Hàng 2 (`Kỳ`)**: Combobox chọn nhanh 24 tháng gần nhất (`PERIOD_OPTS`) có ô tìm kiếm chuẩn như Drawer Xuất Excel.
+  - **Hàng 3 & 4 (`Từ ngày` / `Đến ngày`)**: Hai ô `DatePicker` độc lập, đồng bộ 2 chiều trơn tru với cả 2 hàng trên.
+  - **Bảo vệ footer duy nhất**: Bắt buộc cấu hình `hideFilter: true` và `hideFooter: true` (đồng thời được bảo vệ bởi cơ chế tự động fallback `effectiveHideFooter = hideFooter ?? (Boolean(dateRangeSlot) && hideFilter)` trong `TableColumnHeaderFilter`) để ngăn ngừa lặp đôi button "Xóa bộ lọc" và "Áp dụng".
 - **Cột Số, Tiền tệ & Biên LN**: Căn phải (`text-right font-semibold tabular-nums`). Số 0 hiển thị dấu gạch ngang `—`.
 - **Cột Ngày tháng & Thời gian**: Căn phải (`text-right`).
 - **Cột Trạng thái & Cột Bảo hiểm**: Căn giữa (`text-center`). Cột Bảo hiểm chỉ hiển thị icon khiên `ShieldCheck` neutral cho xe có bảo hiểm, `—` cho xe không bảo hiểm.

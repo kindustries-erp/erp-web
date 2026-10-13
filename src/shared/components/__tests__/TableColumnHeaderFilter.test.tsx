@@ -206,4 +206,35 @@ describe("TableColumnHeaderFilter", () => {
     ) as HTMLInputElement;
     expect(reopenedSearchInput.value).toBe("1187");
   });
+
+  it("automatically hides footer actions when dateRangeSlot is provided and hideFilter is true", () => {
+    renderWithClient(
+      <TableColumnHeaderFilter
+        title="Ngày tiếp nhận"
+        columnKey="caseDate"
+        sortState="none"
+        onSortChange={vi.fn()}
+        searchValue=""
+        onSearchChange={vi.fn()}
+        selectedFilters={[]}
+        onFilterChange={vi.fn()}
+        hideFilter={true}
+        dateRangeSlot={
+          <div data-testid="custom-date-slot">
+            <button>Slot Apply</button>
+          </div>
+        }
+      />,
+    );
+
+    // 1. Open Popover
+    fireEvent.click(screen.getByText("Ngày tiếp nhận"));
+
+    // 2. Custom date slot is rendered
+    expect(screen.getByTestId("custom-date-slot")).toBeDefined();
+
+    // 3. Footer actions of TableColumnHeaderFilter ("Xóa bộ lọc", "Áp dụng") are NOT rendered
+    expect(screen.queryByText("Áp dụng")).toBeNull();
+    expect(screen.queryByText("Xóa bộ lọc")).toBeNull();
+  });
 });

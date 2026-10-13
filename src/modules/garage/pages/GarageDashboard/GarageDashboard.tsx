@@ -5,7 +5,6 @@ import { Button } from "@/shared/components/ui/Button";
 
 import { GarageStatsCards } from "../../components/GarageStatsCards";
 import { GarageConversionFunnelCard } from "../../components/GarageConversionFunnelCard";
-import { GaragePaymentProgressCard } from "../../components/GaragePaymentProgressCard";
 import { GaragePnlSection } from "../../components/GaragePnlSection";
 
 import type { GarageDashboardProps } from "./types";
@@ -74,14 +73,6 @@ export function GarageDashboard(props: GarageDashboardProps = {}) {
 
         {/* Section 3: Báo cáo Lợi nhuận (P&L) Section (Header + Chart Xu Hướng + Bảng P&L) */}
         <GaragePnlSection />
-
-        {/* Section 4: Tiến độ Dòng tiền & Công nợ (Thu tiền KH & Trả tiền NCC) */}
-        <GaragePaymentProgressCard
-          collectionSummary={statsData?.collectionSummary}
-          costPaymentSummary={statsData?.costPaymentSummary}
-          trend={statsData?.trend}
-          loading={isLoadingStats}
-        />
       </div>
     </DashboardTemplate>
   );

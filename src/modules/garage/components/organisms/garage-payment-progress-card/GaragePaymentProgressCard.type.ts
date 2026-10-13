@@ -2,7 +2,7 @@ import type {
   GarageCollectionSummary,
   GarageCostPaymentSummary,
   GarageTrendItem,
-} from "../../api/garageDashboardApi";
+} from "../../../api/garageDashboardApi";
 
 export interface GaragePaymentProgressCardProps {
   collectionSummary?: GarageCollectionSummary;

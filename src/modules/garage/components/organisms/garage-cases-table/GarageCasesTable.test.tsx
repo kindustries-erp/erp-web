@@ -555,4 +555,40 @@ describe("GarageCasesTable Organism", () => {
     expect(cRose.textContent).toContain("-10.2%");
     expect(cRose.querySelector(".text-rose-800")).toBeDefined();
   });
+
+  it("date columns configure hideFooter: true to prevent double filter buttons", () => {
+    const ctx: any = {
+      t: (k: string, d?: string) => d || k,
+      tableState: { sorts: [], columnSearch: {}, columnFilters: {} },
+      dateRanges: {},
+      onDateRangeChange: vi.fn(),
+      onSortChange: vi.fn(),
+      onSearchChange: vi.fn(),
+      onFilterChange: vi.fn(),
+      fetchCaseColumnOptions: vi.fn(),
+      onOpenDetail: vi.fn(),
+      onOpenFinancials: vi.fn(),
+      onOpenConfig: vi.fn(),
+      canUpdateGarage: true,
+      branches: [],
+      activeColumnPresetKey: "overview",
+    };
+    const cols = buildGarageCasesColumns(ctx);
+    const dateColKeys = [
+      "caseDate",
+      "ngayHoanThanhCongViec",
+      "createdAt",
+      "updatedAt",
+      "dataAsOf",
+    ];
+
+    dateColKeys.forEach((key) => {
+      const col = cols.find((c) => c.key === key);
+      expect(col).toBeDefined();
+      const headerProps = (col?.header as any)?.props;
+      expect(headerProps.hideFilter).toBe(true);
+      expect(headerProps.hideFooter).toBe(true);
+      expect(headerProps.dateRangeSlot).toBeDefined();
+    });
+  });
 });
