@@ -47,6 +47,7 @@ export enum ErpResource {
   EMAIL_INGEST = "email_ingest",
   JOURNAL_ENTRIES = "journal_entries",
   GARAGE = "garage",
+  GARAGE_DEBTS = "garage_debts",
   GARAGE_CASHFLOW = "garage_cashflow",
   ACCOUNTING_CONFIGS = "accounting_configs",
   INVOICES = "invoices",
@@ -299,7 +300,11 @@ export const PERMISSION_RESOURCE_GROUPS: PermissionResourceGroup[] = [
     groupKey: "garage",
     labelKey: "rbac.groups.garage",
     defaultLabel: "Garage & Xưởng dịch vụ",
-    resources: [ErpResource.GARAGE, ErpResource.GARAGE_CASHFLOW],
+    resources: [
+      ErpResource.GARAGE,
+      ErpResource.GARAGE_DEBTS,
+      ErpResource.GARAGE_CASHFLOW,
+    ],
   },
   {
     groupKey: "vinfast",

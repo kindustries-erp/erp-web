@@ -171,5 +171,13 @@ src/modules/garage/
 - Cho phép người dùng tạo chế độ xem cá nhân hóa (Custom View), đổi tên, chọn nhanh bộ cột, sắp xếp thứ tự hiển thị và lưu trữ bền vững vào App Setting (`core_user_preferences`) lẫn LocalStorage cache.
 - Tích hợp `ViewModeCombobox` dùng chung (`src/shared/components/ViewModeCombobox/ViewModeCombobox.tsx`) với đầy đủ các thao tác Chọn nhanh, Chỉnh sửa (Pencil) và Xóa (Trash).
 
+## 6. RBAC Tách Công Nợ khỏi Vụ Việc
+
+- `GARAGE` (`garage`) dành cho màn hình vụ việc và các thao tác chỉnh sửa case.
+- `GARAGE_DEBTS` (`garage_debts`) dành cho trang công nợ, analytics, danh sách phải thu/phải trả và menu debts.
+- `GaragePartners` là page gate: user chỉ có `GARAGE_DEBTS:READ` vẫn truy cập được debts; thiếu quyền render `Forbidden`.
+- `GARAGE_CASHFLOW` tiếp tục kiểm soát riêng tab và bảng thu chi xưởng.
+- Navigation Garage render từng item theo permission độc lập; không dùng `GARAGE:READ` làm điều kiện bắt buộc cho debts.
+- Test RBAC co-located tại `GaragePartners.test.tsx`, `GarageNavSection.test.tsx` và `SidebarNav.rbac.test.tsx`.
 
 
