@@ -71,6 +71,23 @@ export function useGarageCashflowTable() {
     setPage(1);
   };
 
+  const toggleSort = (field: string) => {
+    setSorts((prev) => {
+      const next = [...prev];
+      const ascIdx = next.indexOf(field);
+      const descIdx = next.indexOf(`-${field}`);
+      if (ascIdx >= 0) {
+        next[ascIdx] = `-${field}`;
+      } else if (descIdx >= 0) {
+        next.splice(descIdx, 1);
+      } else {
+        next.push(field);
+      }
+      return next;
+    });
+    setPage(1);
+  };
+
   const setColumnFilter = (key: string, vals: string[]) => {
     setColumnFilters((prev) => ({ ...prev, [key]: vals }));
     setPage(1);
@@ -152,6 +169,7 @@ export function useGarageCashflowTable() {
     setPageSize,
     sorts,
     setSort,
+    toggleSort,
     columnFilters,
     setColumnFilter,
     columnSearch,

@@ -53,7 +53,12 @@ export function useGarageCashflowList() {
       return garageCashflowApi.getList({
         page,
         pageSize,
-        sorts,
+        sorts:
+          Array.isArray(sorts) && sorts.length > 0
+            ? sorts.join(",")
+            : typeof sorts === "string"
+              ? sorts
+              : undefined,
         column_filters: Object.keys(combinedFilters).length
           ? JSON.stringify(combinedFilters)
           : undefined,
