@@ -10,6 +10,7 @@ export interface GarageCashflowVoucher {
   note?: string;
   amount: number;
   paymentMethod?: string;
+  paymentContent?: string;
   referenceNumber?: string;
   caseId?: string;
   erpBankTransactionId?: string;
@@ -45,6 +46,7 @@ export interface CreateGarageCashflowVoucherDto {
   licensePlate?: string;
   note?: string;
   paymentMethod?: string;
+  paymentContent?: string;
   referenceNumber?: string;
   caseId?: string;
   erpBankTransactionId?: string;

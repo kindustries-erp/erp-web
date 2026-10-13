@@ -8,6 +8,7 @@ import {
   renderCaseCodeCell,
   renderLicensePlateCell,
   renderPaymentMethodCell,
+  renderPaymentContentCell,
 } from "./GarageCashflowTable.helper";
 import { getGarageCashflowColumns } from "./GarageCashflowTable.columns";
 import type { GarageCashflowVoucher } from "../../../api/garageCashflowApi";
@@ -176,17 +177,17 @@ describe("GarageCashflowTable", () => {
   });
 
   describe("renderPaymentMethodCell", () => {
-    it("renders Ứng trước badge with amber styling", () => {
+    it("renders Tiền mặt badge with emerald styling", () => {
       const mockVoucher = {
         ...mockRow,
-        paymentMethod: "Ứng trước",
+        paymentMethod: "Tiền mặt",
       } as any;
 
       const { container } = render(
         <div>{renderPaymentMethodCell(mockVoucher)}</div>,
       );
-      expect(screen.getByText("Ứng trước")).toBeInTheDocument();
-      expect(container.innerHTML).toContain("text-amber-600");
+      expect(screen.getByText("Tiền mặt")).toBeInTheDocument();
+      expect(container.innerHTML).toContain("text-emerald-600");
     });
 
     it("renders Chuyển khoản badge with sky styling", () => {
@@ -203,8 +204,36 @@ describe("GarageCashflowTable", () => {
     });
   });
 
+  describe("renderPaymentContentCell", () => {
+    it("renders KH thanh toán badge with emerald styling", () => {
+      const mockVoucher = {
+        ...mockRow,
+        paymentContent: "KH thanh toán",
+      } as any;
+
+      const { container } = render(
+        <div>{renderPaymentContentCell(mockVoucher)}</div>,
+      );
+      expect(screen.getByText("KH thanh toán")).toBeInTheDocument();
+      expect(container.innerHTML).toContain("text-emerald-600");
+    });
+
+    it("renders Ứng trước badge with amber styling", () => {
+      const mockVoucher = {
+        ...mockRow,
+        paymentContent: "Ứng trước",
+      } as any;
+
+      const { container } = render(
+        <div>{renderPaymentContentCell(mockVoucher)}</div>,
+      );
+      expect(screen.getByText("Ứng trước")).toBeInTheDocument();
+      expect(container.innerHTML).toContain("text-amber-600");
+    });
+  });
+
   describe("getGarageCashflowColumns", () => {
-    it("places caseCode and licensePlate right after paymentMethod", () => {
+    it("places paymentContent right after paymentMethod, followed by caseCode and licensePlate", () => {
       const mockFilterBuilder = vi.fn((key) => key) as any;
       mockFilterBuilder.date = vi.fn(() => "date");
       mockFilterBuilder.amount = vi.fn(() => "amount");
@@ -218,8 +247,9 @@ describe("GarageCashflowTable", () => {
       const keys = columns.map((c) => c.key);
       const paymentIndex = keys.indexOf("paymentMethod");
       expect(paymentIndex).toBeGreaterThan(-1);
-      expect(keys[paymentIndex + 1]).toBe("caseCode");
-      expect(keys[paymentIndex + 2]).toBe("licensePlate");
+      expect(keys[paymentIndex + 1]).toBe("paymentContent");
+      expect(keys[paymentIndex + 2]).toBe("caseCode");
+      expect(keys[paymentIndex + 3]).toBe("licensePlate");
     });
   });
 });

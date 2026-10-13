@@ -39,6 +39,9 @@ vi.mock("../erp-cash-voucher-combobox", () => ({
 vi.mock("../../molecules/payment-method-combobox", () => ({
   PaymentMethodCombobox: () => <div data-testid="mock-pm-combobox" />,
 }));
+vi.mock("../../molecules/payment-content-combobox", () => ({
+  PaymentContentCombobox: () => <div data-testid="mock-pc-combobox" />,
+}));
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: false } },

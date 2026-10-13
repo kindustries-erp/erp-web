@@ -79,6 +79,7 @@ export function useGarageCashflowDrawer({
           licensePlate: voucher.licensePlate || voucher.case?.bienSoXe || "",
           note: voucher.note || "",
           paymentMethod: voucher.paymentMethod || "",
+          paymentContent: voucher.paymentContent || "",
           referenceNumber: voucher.referenceNumber || "",
           caseId: voucher.caseId || "",
           erpBankTransactionId: voucher.erpBankTransactionId || "",
@@ -113,6 +114,7 @@ export function useGarageCashflowDrawer({
         licensePlate: formData.licensePlate?.trim() || undefined,
         note: formData.note?.trim() || undefined,
         paymentMethod: formData.paymentMethod || undefined,
+        paymentContent: formData.paymentContent?.trim() || undefined,
         referenceNumber: formData.referenceNumber?.trim() || undefined,
         caseId: formData.caseId?.trim() || undefined,
         erpBankTransactionId:
@@ -147,6 +149,7 @@ export function useGarageCashflowDrawer({
         licensePlate: formData.licensePlate?.trim() || undefined,
         note: formData.note?.trim() || undefined,
         paymentMethod: formData.paymentMethod || undefined,
+        paymentContent: formData.paymentContent?.trim() || undefined,
         referenceNumber: formData.referenceNumber?.trim() || undefined,
         caseId: formData.caseId?.trim() || undefined,
         erpBankTransactionId:

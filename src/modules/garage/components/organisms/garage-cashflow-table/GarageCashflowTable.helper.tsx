@@ -146,33 +146,7 @@ export const renderLicensePlateCell = (row: GarageCashflowVoucher) => {
   );
 };
 
-export const renderPaymentMethodCell = (row: GarageCashflowVoucher) => {
-  const method =
-    row.paymentMethod ||
-    (row.erpBankTransactionId
-      ? "Chuyển khoản"
-      : row.erpCashVoucherId
-        ? "Tiền mặt"
-        : "");
-
-  if (!method) return <span className="text-muted-foreground">—</span>;
-
-  const BADGE_STYLES: Record<string, string> = {
-    "Ứng trước": "bg-amber-500/10 text-amber-600 border-amber-500/20",
-    "Chuyển khoản": "bg-sky-500/10 text-sky-600 border-sky-500/20",
-    "Tiền mặt": "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
-    "Thẻ tín dụng": "bg-purple-500/10 text-purple-600 border-purple-500/20",
-    "Cấn trừ": "bg-indigo-500/10 text-indigo-600 border-indigo-500/20",
-  };
-  const badgeStyle =
-    BADGE_STYLES[method] ||
-    "bg-slate-500/10 text-slate-600 border-slate-500/20";
-
-  return (
-    <span
-      className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${badgeStyle}`}
-    >
-      {method}
-    </span>
-  );
-};
+export {
+  renderPaymentMethodCell,
+  renderPaymentContentCell,
+} from "./GarageCashflowTable.paymentCells";
