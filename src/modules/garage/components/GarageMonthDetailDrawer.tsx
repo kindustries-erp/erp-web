@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import {
   StandardFormDrawer,
@@ -18,6 +18,8 @@ import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import type { GarageTrendItem } from "../api/garageDashboardApi";
 import { GarageMonthClassificationCasesDrawer } from "./GarageMonthClassificationCasesDrawer";
+import { GaragePartnerMonthDetailDrawer } from "./organisms/garage-partner-month-detail-drawer";
+import { CustomerDetailDebtSwitch } from "./organisms/garage-customer-detail-drawer/components/CustomerDetailDebtSwitch";
 import { useGarageMonthReceivablesBreakdown } from "../hooks/useGarageMonthReceivablesBreakdown";
 import { MonthPayerKpiGrid } from "./organisms/garage-month-detail-drawer/components/MonthPayerKpiGrid";
 import { MonthInvoicePartnerTable } from "./organisms/garage-month-detail-drawer/components/MonthInvoicePartnerTable";
@@ -143,7 +145,15 @@ export function GarageMonthDetailDrawer({
   onClose,
 }: GarageMonthDetailDrawerProps) {
   const { t } = useTranslation(["garage", "common"]);
-  const isReceipt = activeTab === "RECEIPT";
+  const [currentTab, setCurrentTab] = useState<"RECEIPT" | "PAYMENT">(
+    activeTab || "RECEIPT",
+  );
+
+  useEffect(() => {
+    if (activeTab) setCurrentTab(activeTab);
+  }, [activeTab]);
+
+  const isReceipt = currentTab === "RECEIPT";
 
   const [classificationDrawerState, setClassificationDrawerState] = useState<{
     open: boolean;
@@ -157,6 +167,20 @@ export function GarageMonthDetailDrawer({
     filterKey: "",
     filterLabel: "",
     caseCodes: undefined,
+  });
+
+  const [partnerMonthDrawerState, setPartnerMonthDrawerState] = useState<{
+    open: boolean;
+    customerCode?: string | null;
+    customerName?: string | null;
+    taxCode?: string | null;
+    initialCases?: any[];
+  }>({
+    open: false,
+    customerCode: null,
+    customerName: null,
+    taxCode: null,
+    initialCases: undefined,
   });
 
   // Table Column State Hook for Client-side Filter & Sort
@@ -199,12 +223,12 @@ export function GarageMonthDetailDrawer({
   });
 
   const handleSelectPartnerGroup = (group: MonthlyReceivablesGroupItem) => {
-    setClassificationDrawerState({
+    setPartnerMonthDrawerState({
       open: true,
-      filterType: "PARTNER_GROUP",
-      filterKey: group.key,
-      filterLabel: `${group.payerType === "BH" ? "🛡️ " : "👤 "}${group.title}`,
-      caseCodes: group.cases.map((c) => c.soChungTu),
+      customerCode: group.taxCode || group.key,
+      customerName: group.title,
+      taxCode: group.taxCode,
+      initialCases: group.cases,
     });
   };
 
@@ -863,6 +887,23 @@ export function GarageMonthDetailDrawer({
         badgeCount: classificationRows.length,
         content: (
           <div className="space-y-4">
+            {/* Toolbar dưới main tab: Switch phải thu / phải trả nằm bên phải */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-2 border-b border-border/40 w-full shrink-0">
+              <span className="text-xs text-muted-foreground font-medium">
+                {isReceipt
+                  ? "Tiến độ dòng tiền & Phân loại nghiệp vụ (Phải thu)"
+                  : "Tiến độ dòng tiền & Phân loại chi phí (Phải trả)"}
+              </span>
+              <div className="flex items-center gap-2 shrink-0">
+                <CustomerDetailDebtSwitch
+                  value={isReceipt ? "receivables" : "payables"}
+                  onChange={(val) =>
+                    setCurrentTab(val === "receivables" ? "RECEIPT" : "PAYMENT")
+                  }
+                />
+              </div>
+            </div>
+
             <DrawerSection
               title={
                 <div className="flex items-center gap-2">
@@ -949,6 +990,21 @@ export function GarageMonthDetailDrawer({
         badgeCount: insuranceCompanies.length + customerPartners.length,
         content: (
           <div className="flex flex-col gap-3.5">
+            {/* Toolbar dưới main tab: Switch phải thu / phải trả nằm bên phải */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-2 border-b border-border/40 w-full shrink-0">
+              <span className="text-xs text-muted-foreground font-medium">
+                Chi tiết thu khách hàng & bảo hiểm theo đối tượng hóa đơn
+              </span>
+              <div className="flex items-center gap-2 shrink-0">
+                <CustomerDetailDebtSwitch
+                  value={isReceipt ? "receivables" : "payables"}
+                  onChange={(val) =>
+                    setCurrentTab(val === "receivables" ? "RECEIPT" : "PAYMENT")
+                  }
+                />
+              </div>
+            </div>
+
             {/* 2 Thẻ KPI tương phản Thu KH vs Thu BH */}
             <MonthPayerKpiGrid summary={breakdownSummary} />
 
@@ -1257,11 +1313,25 @@ export function GarageMonthDetailDrawer({
         filterType={classificationDrawerState.filterType}
         filterKey={classificationDrawerState.filterKey}
         filterLabel={classificationDrawerState.filterLabel}
-        activeTab={activeTab}
+        activeTab={currentTab}
         caseCodes={classificationDrawerState.caseCodes}
         onClose={() =>
           setClassificationDrawerState((prev) => ({ ...prev, open: false }))
         }
+      />
+
+      {/* Partner Month Detail Drawer */}
+      <GaragePartnerMonthDetailDrawer
+        open={partnerMonthDrawerState.open}
+        onClose={() =>
+          setPartnerMonthDrawerState((prev) => ({ ...prev, open: false }))
+        }
+        month={safeItem.label}
+        customerCode={partnerMonthDrawerState.customerCode}
+        customerName={partnerMonthDrawerState.customerName}
+        taxCode={partnerMonthDrawerState.taxCode}
+        initialDebtType={isReceipt ? "receivables" : "payables"}
+        initialCases={partnerMonthDrawerState.initialCases}
       />
     </>
   );

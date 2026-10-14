@@ -4,45 +4,58 @@ import { DrawerSection } from "@/shared/components/DrawerModal";
 import { DebtAgingDonutChart } from "@/shared/components/molecules/debt-aging-donut-chart";
 import { BarChart } from "@/shared/components/charts/BarChart";
 import { TrendingUp } from "lucide-react";
+import { CustomerMonthlyTrendTable } from "./CustomerMonthlyTrendTable";
 import type { AgingDonutItem, MonthlyTrendItem } from "../types";
 
 interface CustomerDebtAgingChartTabProps {
   agingDonutItems: AgingDonutItem[];
   monthlyTrendItems: MonthlyTrendItem[];
+  debtType?: "receivables" | "payables";
+  onSelectMonth?: (month: string) => void;
 }
 
 export const CustomerDebtAgingChartTab = React.memo(
   function CustomerDebtAgingChartTab({
     agingDonutItems,
     monthlyTrendItems,
+    debtType = "receivables",
+    onSelectMonth,
   }: CustomerDebtAgingChartTabProps) {
-    const { t } = useTranslation(["garage", "common"]);
+    const { t } = useTranslation(["garage", "debts", "common"]);
+    const isPayable = debtType === "payables";
 
     const totalAgingBalance = React.useMemo(
       () => agingDonutItems.reduce((acc, it) => acc + (it.value || 0), 0),
       [agingDonutItems],
     );
 
-    const chartDatasets = React.useMemo(() => {
-      return [
+    const chartDatasets = React.useMemo(
+      () => [
         {
-          label: t("customers.drawer.totalPaid", "Đã thu"),
+          label: isPayable
+            ? "Đã chi"
+            : t("customers.drawer.totalPaid", "Đã thu"),
           data: monthlyTrendItems.map((m) => m.paid),
-          color: "#10b981", // Emerald
+          color: "#10b981",
         },
         {
-          label: t("customers.drawer.balanceAmount", "Còn nợ"),
+          label: isPayable
+            ? "Còn phải chi"
+            : t("customers.drawer.balanceAmount", "Còn nợ"),
           data: monthlyTrendItems.map((m) => m.balance),
-          color: "#f59e0b", // Amber
+          color: isPayable ? "#f97316" : "#f59e0b",
         },
-      ];
-    }, [monthlyTrendItems, t]);
+      ],
+      [monthlyTrendItems, isPayable, t],
+    );
 
-    const chartLabels = React.useMemo(() => {
-      return monthlyTrendItems.map(
-        (m) => `T${m.month.slice(5)}/${m.month.slice(0, 4)}`,
-      );
-    }, [monthlyTrendItems]);
+    const chartLabels = React.useMemo(
+      () =>
+        monthlyTrendItems.map(
+          (m) => `T${m.month.slice(5)}/${m.month.slice(0, 4)}`,
+        ),
+      [monthlyTrendItems],
+    );
 
     return (
       <div className="space-y-4 flex flex-col flex-1 min-h-0 w-full overflow-y-auto pr-1">
@@ -83,6 +96,13 @@ export const CustomerDebtAgingChartTab = React.memo(
             </div>
           )}
         </DrawerSection>
+
+        {/* Section 3: Bảng danh sách chi tiết từng tháng */}
+        <CustomerMonthlyTrendTable
+          items={monthlyTrendItems}
+          isPayable={isPayable}
+          onSelectMonth={onSelectMonth}
+        />
       </div>
     );
   },

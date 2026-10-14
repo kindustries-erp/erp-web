@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
 import { PillTabs } from "@/shared/components/PillTabs";
@@ -10,7 +10,9 @@ import { CustomerVehicleDebtTab } from "./components/CustomerVehicleDebtTab";
 import { CustomerDebtAgingChartTab } from "./components/CustomerDebtAgingChartTab";
 import { CustomerSidebarSummary } from "./components/CustomerSidebarSummary";
 import { CustomerAuxiliaryModals } from "./components/CustomerAuxiliaryModals";
+import { GaragePartnerMonthDetailDrawer } from "../garage-partner-month-detail-drawer";
 import { useGarageCustomerDetailLogic } from "./hooks/useGarageCustomerDetailLogic";
+import { useCustomerSubTabs } from "./hooks/useCustomerSubTabs";
 import type { GarageCustomerDetailDrawerProps } from "./types";
 
 export function GarageCustomerDetailDrawer(
@@ -19,49 +21,25 @@ export function GarageCustomerDetailDrawer(
   const { open, onClose, customerCode, customerName, branchId } = props;
   const { t } = useTranslation(["garage", "common"]);
   const logic = useGarageCustomerDetailLogic(props);
+  const [selectedMonthDetail, setSelectedMonthDetail] = useState<string | null>(
+    null,
+  );
 
   const isPayables = logic.activeDebtType === "payables";
 
-  const subTabs = useMemo(
-    () => [
-      {
-        value: "cases",
-        label: t("customers.drawer.tabCases", "1. Phiếu DV hoàn thành"),
-        badge: logic.completedCases.length,
-      },
-      {
-        value: "pipeline",
-        label: isPayables
-          ? t("customers.drawer.tabPipelinePayables", "2. Xe đang làm (Dự chi)")
-          : t("customers.drawer.tabPipeline", "2. Xe đang làm (Dự thu)"),
-        badge:
-          logic.inProgressCases.length > 0
-            ? logic.inProgressCases.length
-            : undefined,
-      },
-      {
-        value: "vehicles",
-        label: t("customers.drawer.vehicleMatrixTitle", "3. Phân bổ theo xe"),
-        badge: logic.vehicleDebtStats.length,
-      },
-      {
-        value: "analytics",
-        label: t("customers.drawer.tabAnalytics", "4. Phân tích tuổi nợ"),
-      },
-    ],
-    [
-      isPayables,
-      logic.completedCases.length,
-      logic.inProgressCases.length,
-      logic.vehicleDebtStats.length,
-      t,
-    ],
-  );
+  const subTabs = useCustomerSubTabs({
+    isPayables,
+    completedCount: logic.completedCases.length,
+    inProgressCount: logic.inProgressCases.length,
+    vehicleCount: logic.vehicleDebtStats.length,
+    t,
+  });
 
   const leftContent = (
     <div className="flex flex-col gap-3 flex-1 min-h-0 w-full">
-      <div className="flex items-center justify-between gap-3 overflow-x-auto scrollbar-none max-w-full pb-1 shrink-0 border-b border-border/40">
-        <div className="flex items-center overflow-x-auto scrollbar-none">
+      {/* Sub-Tabs & Switch Công nợ chuẩn erp-invoice */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-2 border-b border-border/40 w-full shrink-0">
+        <div className="flex items-center overflow-x-auto scrollbar-none max-w-full">
           <PillTabs
             items={subTabs}
             value={logic.activeSubTab}
@@ -119,6 +97,8 @@ export function GarageCustomerDetailDrawer(
           <CustomerDebtAgingChartTab
             agingDonutItems={logic.agingDonutItems}
             monthlyTrendItems={logic.monthlyTrendItems}
+            debtType={logic.activeDebtType}
+            onSelectMonth={setSelectedMonthDetail}
           />
         )}
       </div>
@@ -168,6 +148,25 @@ export function GarageCustomerDetailDrawer(
         onCloseInvoiceLinking={() => logic.setInvoiceLinkingCase(null)}
         onRefresh={logic.refetch}
       />
+
+      <GaragePartnerMonthDetailDrawer
+        open={Boolean(selectedMonthDetail)}
+        onClose={() => setSelectedMonthDetail(null)}
+        month={selectedMonthDetail || ""}
+        customerCode={customerCode}
+        customerName={customerName}
+        branchId={branchId}
+        initialDebtType={logic.activeDebtType}
+        initialCases={logic.allCases}
+        onOpenCaseDetail={(code, edit) => {
+          logic.setSelectedCaseCode(code);
+          logic.setDrawerEditMode(Boolean(edit));
+        }}
+        onOpenSettlementModal={logic.setSettlementCase}
+        onOpenInvoiceLinkingModal={logic.setInvoiceLinkingCase}
+      />
     </>
   );
 }
+
+export default GarageCustomerDetailDrawer;
