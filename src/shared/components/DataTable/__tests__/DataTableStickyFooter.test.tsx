@@ -96,4 +96,22 @@ describe("DataTable Sticky Bottom Footer Suite", () => {
     expect(table).toBeInTheDocument();
     expect(table?.className).toContain("min-h-full");
   });
+
+  it("isolates the scroll container and keeps the table header sticky", () => {
+    const { container } = render(
+      <DataTable
+        items={mockItems}
+        columns={columns}
+        emptyLabel="Không có dữ liệu"
+        getRowKey={(r) => r.id}
+      />,
+    );
+
+    const scrollContainer = container.querySelector("div.overflow-y-auto");
+    const tableHeader = container.querySelector("thead");
+
+    expect(scrollContainer?.className).toContain("isolate");
+    expect(tableHeader?.className).toContain("sticky");
+    expect(tableHeader?.className).toContain("z-20");
+  });
 });

@@ -179,3 +179,16 @@ Resource RBAC: `garage`
 1. **TypeCheck & Linting**: Chạy `bun run check:ci` trong `erp-api/` và `erp-web/`.
 2. **Backend Unit Tests**: Chạy `bunx jest src/kgara-api-core/ --forceExit` (bắt buộc pass 100%).
 3. **Web Build**: Chạy `bun run build` trong `erp-web/` (bắt buộc pass 100%).
+
+## 7. Garage Month Detail Drawer - Debt Tables (2026-10)
+
+- `GarageMonthDetailDrawer` hiển thị đồng thời hai bảng `DataTable` chuẩn spreadsheet cho Phải thu và Phải trả; mỗi bảng có state/filter độc lập và các table ID `garage-month-detail-receivables-table` và `garage-month-detail-payables-table`.
+- Tab Đối tượng HĐ hiển thị riêng hai bảng Thu khách hàng và Thu bảo hiểm, dùng lần lượt `customerPartners` và `insuranceCompanies`, với table ID `garage-month-detail-customer-partners-table` và `garage-month-detail-insurance-companies-table`.
+- `CustomerDetailDebtSwitch` không còn được dùng trong hai khu vực bảng; click row vẫn mở classification hoặc partner detail drawer như trước.
+- Dữ liệu Đối tượng HĐ hiện chỉ có breakdown Phải thu từ `useGarageMonthReceivablesBreakdown`; không tạo payables partner breakdown trong frontend.
+
+## 8. Drawer Table Scroll Stacking Contract (2026-10)
+
+- Shared drawer stacking order: `DrawerModal` header `z-40`, `DrawerTopTabBar` `sticky z-30 isolate`, and `DataTable` header `sticky z-20`.
+- `DataTable` scroll containers use `isolate` with `overflow-x-auto overflow-y-auto` so nested table scrolling cannot paint over drawer headers or top tabs.
+- `DrawerModal` body and `StandardFormDrawer` left content use `flex flex-col min-h-0` to keep nested scroll areas bounded by the drawer viewport.

@@ -2,13 +2,12 @@ import React, { useMemo } from "react";
 import { Badge } from "@/shared/components/ui/badge";
 import { money } from "@/shared/utils/format";
 import { cn } from "@/shared/utils";
-import { Tooltip } from "@/core/components/ui/Tooltip";
 import type {
   DataTableColumn,
   ColumnFilterBuilder,
 } from "@/shared/components/DataTable";
 import type { MonthlyReceivablesGroupItem } from "../../../../api/garageDashboardApi";
-import { Eye, ShieldCheck, User, AlertTriangle } from "lucide-react";
+import { ShieldCheck, User, AlertTriangle } from "lucide-react";
 
 interface UseInvoicePartnerColumnsParams {
   headerFilter: ColumnFilterBuilder;
@@ -27,7 +26,7 @@ export function useInvoicePartnerColumns({
         size: 48,
         headerClassName: "text-center font-semibold",
         className: "text-center font-mono text-xs text-muted-foreground",
-        cell: (_: MonthlyReceivablesGroupItem, index: number) => index + 1,
+        cell: (_: MonthlyReceivablesGroupItem, index: number) => index,
       },
       {
         key: "payerType",
@@ -179,30 +178,6 @@ export function useInvoicePartnerColumns({
           "text-center font-mono tabular-nums text-xs text-foreground font-semibold",
         cell: (row: MonthlyReceivablesGroupItem) =>
           `${row.shareRate.toFixed(1)}%`,
-      },
-      {
-        key: "actions",
-        header: "",
-        size: 50,
-        headerClassName: "text-center",
-        className: "text-center",
-        cell: (row: MonthlyReceivablesGroupItem) => (
-          <Tooltip
-            content="Xem danh sách vụ việc của đối tượng này"
-            side="left"
-          >
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onSelectGroup?.(row);
-              }}
-              className="p-1.5 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <Eye className="w-3.5 h-3.5" />
-            </button>
-          </Tooltip>
-        ),
       },
     ],
     [headerFilter, onSelectGroup],

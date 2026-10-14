@@ -255,7 +255,7 @@ export function DrawerModal({
         {/* ── Fixed Header at Top of Panel ── */}
         <div
           className={cn(
-            "z-20 px-3 sm:px-4 py-2 sm:py-2.5 border-b border-border/80 table-header-glass flex items-center gap-2 sm:gap-2.5 flex-shrink-0 transition-shadow duration-200",
+            "z-40 px-3 sm:px-4 py-2 sm:py-2.5 border-b border-border/80 table-header-glass flex items-center gap-2 sm:gap-2.5 flex-shrink-0 transition-shadow duration-200",
             isScrolledTop
               ? "shadow-[0_4px_16px_-4px_rgba(15,23,42,0.08),0_2px_4px_-2px_rgba(15,23,42,0.04)]"
               : "shadow-none",
@@ -303,7 +303,12 @@ export function DrawerModal({
           ref={scrollContainerRef}
           className="flex-1 overflow-y-auto overflow-x-hidden flex flex-col min-h-0 relative"
         >
-          <div className={cn("flex-1 p-3 sm:p-4 md:p-[18px]", bodyClassName)}>
+          <div
+            className={cn(
+              "flex flex-1 flex-col min-h-0 p-3 sm:p-4 md:p-[18px]",
+              bodyClassName,
+            )}
+          >
             {children}
           </div>
         </div>

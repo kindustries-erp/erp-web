@@ -116,7 +116,7 @@ describe("StandardFormDrawer Mobile Responsive UI", () => {
     );
 
     const tabBar = baseElement.querySelector(
-      ".slide-panel div.sticky.top-0.z-10",
+      ".slide-panel div.sticky.top-0.z-30",
     );
     expect(tabBar).toBeInTheDocument();
     expect(tabBar).toHaveClass("-mx-3");
