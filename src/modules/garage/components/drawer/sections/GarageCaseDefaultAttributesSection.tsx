@@ -48,8 +48,10 @@ export function GarageCaseDefaultAttributesSection({
   });
 
   const categoryOptions = useMemo<ComboboxOption[]>(() => {
-    if (categories.length > 0) {
-      return categories.map((c) => {
+    // Nguồn duy nhất là API categories (value = category id); meta chỉ bổ sung mô tả hiển thị.
+    return categories
+      .filter((c) => c.isActive !== false)
+      .map((c) => {
         const nameDisplay = locale === "en" && c.nameEn ? c.nameEn : c.name;
         const meta = GARAGE_CASE_CLASSIFICATIONS[c.code];
         return {
@@ -58,13 +60,6 @@ export function GarageCaseDefaultAttributesSection({
           subLabel: c.description || meta?.subLabel,
         };
       });
-    }
-
-    return Object.values(GARAGE_CASE_CLASSIFICATIONS).map((c) => ({
-      value: c.value,
-      label: c.label,
-      subLabel: c.subLabel,
-    }));
   }, [categories, locale]);
 
   const resolvedCategory = useMemo(() => {

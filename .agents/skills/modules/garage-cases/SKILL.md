@@ -186,3 +186,16 @@ src/modules/garage/
 - Test RBAC co-located tại `GaragePartners.test.tsx`, `GarageNavSection.test.tsx` và `SidebarNav.rbac.test.tsx`.
 
 
+
+---
+
+## 7. Thuộc tính Mặc định vs Tùy chỉnh trong Drawer (từ 2026-10-14)
+
+- `GarageCaseDefaultAttributesSection`: phân loại + 2 cờ loại trừ (built-in, lưu cột `kgara_cases`). Dropdown phân loại lấy **hoàn toàn từ API categories** (value = category id, lọc `isActive !== false`); không còn fallback hard-code (hằng `GARAGE_CASE_CLASSIFICATIONS` chỉ còn dùng cho màu/nhãn badge).
+- `ModuleEntityCustomFieldsSection`: thuộc tính tùy chỉnh. `useGarageCaseDrawerLogic` khởi tạo/so sánh draft bằng `extractCaseCustomValues` (`utils/garageCaseCustomValues.ts`) từ `custom.byCode` + `attributeValues`, khóa theo `attrDefId`; lưu chỉ gửi `customAttributes` một lần (bỏ `attributes`).
+- Cần API trả `custom.byCode`: deploy **API trước, web sau**.
+- Trang `/custom-fields`: nút xóa thuộc tính hệ thống đã ẩn; category có `semanticKey` bị server chặn xóa (409).
+
+### 7.1. Draft phân loại (2026-10-14)
+- `useDraftCategorySelection` (`components/drawer/hooks/`): state nháp `categoryId` + `classification`. `setDraftCategoryId(null)` xóa luôn `classification` nháp; `reset` dùng cho khởi tạo/Hủy.
+- `useUpdateGarageCaseConfig` invalidate thêm `["garage-case-code"]` để drawer không giữ dữ liệu cũ sau khi đổi phân loại ở danh sách.
