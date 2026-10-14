@@ -32,7 +32,6 @@ import {
   Table as TableIcon,
   Eye,
   ShieldCheck,
-  User,
   AlertTriangle,
 } from "lucide-react";
 

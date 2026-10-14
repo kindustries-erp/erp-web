@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { InvoiceShapePage } from "./invoice-shape";
+import { InvoiceShapePage } from "./InvoiceShapePage";
 
 const queryClient = new QueryClient();
 

@@ -4,8 +4,12 @@ import { headerFilter } from "@/v2/shared/components/organisms/v2-standard-table
 import type { V2Column } from "@/v2/shared/components/organisms/v2-standard-table";
 import { TableColumnAlign } from "@/v2/shared/types/v2-table";
 import { Badge } from "@/v2/shared/ui";
-import { BRANCHES, POSTING_OPTIONS, formatMoney } from "./invoiceShape.data";
-import type { FakeInvoice } from "./invoiceShape.data";
+import {
+  BRANCHES,
+  POSTING_OPTIONS,
+  formatMoney,
+} from "@/v2/modules/finance-invoice/domain/entities/invoiceShape.data";
+import type { FakeInvoice } from "@/v2/modules/finance-invoice/domain/entities/invoiceShape.data";
 
 export type InvoiceView = "overview" | "audit";
 

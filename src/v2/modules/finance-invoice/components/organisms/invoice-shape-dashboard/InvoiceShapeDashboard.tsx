@@ -12,7 +12,7 @@ import {
   MONTH_LABELS,
   PARTNER_SHARE,
   VAT_BY_MONTH,
-} from "./invoiceShape.data";
+} from "@/v2/modules/finance-invoice/domain/entities/invoiceShape.data";
 
 const million = (value: number) => `${value.toLocaleString("vi-VN")} tr`;
 

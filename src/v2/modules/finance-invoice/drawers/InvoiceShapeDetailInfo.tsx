@@ -9,8 +9,11 @@ import {
   DrawerRow,
 } from "@/v2/shared/components/molecules/v2-drawer-field";
 import { DrawerSection } from "@/v2/shared/components/molecules/v2-drawer-section";
-import { BRANCHES, formatMoney } from "./invoiceShape.data";
-import type { FakeInvoice } from "./invoiceShape.data";
+import {
+  BRANCHES,
+  formatMoney,
+} from "@/v2/modules/finance-invoice/domain/entities/invoiceShape.data";
+import type { FakeInvoice } from "@/v2/modules/finance-invoice/domain/entities/invoiceShape.data";
 
 interface Props {
   form: FakeInvoice;

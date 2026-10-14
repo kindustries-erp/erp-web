@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { V2TableQuery } from "@/v2/shared/types/v2-table";
 import { TableSortState } from "@/v2/shared/types/v2-table";
-import { makeInvoices } from "./invoiceShape.data";
+import { makeInvoices } from "@/v2/modules/finance-invoice/domain/entities/invoiceShape.data";
 import { queryInvoices } from "./invoiceShape.logic";
 
 const rows = makeInvoices("IN");

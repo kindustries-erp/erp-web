@@ -1,13 +1,13 @@
 import * as React from "react";
 import type { useV2OverlayState } from "@/v2/shared/hooks/useV2OverlayState";
-import type { FakeInvoice } from "./invoiceShape.data";
-import { InvoiceShapeDetailDrawer } from "./InvoiceShapeDetailDrawer";
-import { InvoiceShapeExportDrawer } from "./InvoiceShapeExportDrawer";
+import type { FakeInvoice } from "@/v2/modules/finance-invoice/domain/entities/invoiceShape.data";
+import { InvoiceShapeDetailDrawer } from "@/v2/modules/finance-invoice/drawers/InvoiceShapeDetailDrawer";
+import { InvoiceShapeExportDrawer } from "@/v2/modules/finance-invoice/drawers/InvoiceShapeExportDrawer";
 import {
   InvoiceShapeBulkModal,
   InvoiceShapeImportModal,
 } from "./InvoiceShapeModals";
-import { InvoiceShapePostingDrawer } from "./InvoiceShapePostingDrawer";
+import { InvoiceShapePostingDrawer } from "@/v2/modules/finance-invoice/drawers/InvoiceShapePostingDrawer";
 
 export const DETAIL_PREFIX = "invoice:";
 

@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import * as viewportHook from "@/v2/shared/hooks/useViewport";
-import { InvoiceShapePage } from "./invoice-shape";
+import { InvoiceShapePage } from "@/v2/modules/finance-invoice";
 
 vi.mock("react-chartjs-2", () => {
   const stub = (name: string) => () => <div data-testid={name} />;

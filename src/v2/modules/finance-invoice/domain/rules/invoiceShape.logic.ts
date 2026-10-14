@@ -1,17 +1,15 @@
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { filterClientItems } from "@/v2/shared/components/organisms/v2-standard-table/v2TableFilter";
 import { sortClientItems } from "@/v2/shared/components/organisms/v2-standard-table/v2TableClient";
 import type { V2ClientFilterColumn } from "@/v2/shared/components/organisms/v2-standard-table/v2TableFilter";
 import { ColumnValueType } from "@/v2/shared/types/v2-table";
 import type { V2TableQuery } from "@/v2/shared/types/v2-table";
 import { toV2OffsetPage } from "@/v2/shared/utils/v2TableQueryParams";
-import type { V2ModuleListData } from "@/v2/shared/components/templates/v2-module-page/V2ModulePage.type";
-import { makeInvoices } from "./invoiceShape.data";
+import { makeInvoices } from "@/v2/modules/finance-invoice/domain/entities/invoiceShape.data";
 import type {
   FakeInvoice,
   InvoiceDirection,
   TaxTab,
-} from "./invoiceShape.data";
+} from "@/v2/modules/finance-invoice/domain/entities/invoiceShape.data";
 
 /** Mỗi cột có header filter/sort đều khai báo ở đây, khớp `key` của cột trong `invoiceShape.columns.tsx` */
 export const INVOICE_FILTER_COLUMNS: V2ClientFilterColumn<FakeInvoice>[] = [
@@ -74,33 +72,10 @@ export const queryInvoices = (
   };
 };
 
-const ROWS: Record<InvoiceDirection, FakeInvoice[]> = {
+export const INVOICE_ROWS: Record<InvoiceDirection, FakeInvoice[]> = {
   IN: makeInvoices("IN"),
   OUT: makeInvoices("OUT"),
 };
 
 export const findInvoice = (id: string): FakeInvoice | undefined =>
-  [...ROWS.IN, ...ROWS.OUT].find((row) => row.id === id);
-
-/** Hook giả có độ trễ để thấy trạng thái tải; có `refetch` cho nút Làm mới */
-export function useFakeInvoices(
-  direction: InvoiceDirection,
-  taxTab: TaxTab,
-  query: V2TableQuery,
-): V2ModuleListData<FakeInvoice> {
-  const result = useQuery({
-    queryKey: ["invoice-shape", direction, taxTab, query],
-    queryFn: async () => {
-      await new Promise((resolve) => setTimeout(resolve, 120));
-      return queryInvoices(ROWS[direction], query, taxTab);
-    },
-    placeholderData: keepPreviousData,
-  });
-  return {
-    items: result.data?.items ?? [],
-    total: result.data?.total ?? 0,
-    loading: result.isFetching,
-    refetch: () => void result.refetch(),
-    summaries: result.data?.summaries,
-  };
-}
+  [...INVOICE_ROWS.IN, ...INVOICE_ROWS.OUT].find((row) => row.id === id);

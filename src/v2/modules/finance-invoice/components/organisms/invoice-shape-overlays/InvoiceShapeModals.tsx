@@ -5,7 +5,7 @@ import { V2Combobox } from "@/v2/shared/components/molecules/v2-combobox";
 import { DrawerField } from "@/v2/shared/components/molecules/v2-drawer-field";
 import { V2FileUpload } from "@/v2/shared/components/molecules/v2-file-upload";
 import { V2Modal } from "@/v2/shared/components/molecules/v2-modal";
-import { BRANCHES } from "./invoiceShape.data";
+import { BRANCHES } from "@/v2/modules/finance-invoice/domain/entities/invoiceShape.data";
 
 interface BulkProps {
   open: boolean;

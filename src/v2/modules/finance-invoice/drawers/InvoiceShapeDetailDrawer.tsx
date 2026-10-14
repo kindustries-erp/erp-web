@@ -3,8 +3,8 @@ import { V2FilePreviewPanel } from "@/v2/shared/components/organisms/v2-file-pre
 import { DrawerSection } from "@/v2/shared/components/molecules/v2-drawer-section";
 import { V2StandardDrawer } from "@/v2/shared/components/organisms/v2-standard-drawer";
 import { Badge } from "@/v2/shared/ui";
-import { sampleInvoiceXml } from "./invoiceShape.data";
-import type { FakeInvoice } from "./invoiceShape.data";
+import { sampleInvoiceXml } from "@/v2/modules/finance-invoice/domain/entities/invoiceShape.data";
+import type { FakeInvoice } from "@/v2/modules/finance-invoice/domain/entities/invoiceShape.data";
 import { InvoiceShapeDetailFinance } from "./InvoiceShapeDetailFinance";
 import { InvoiceShapeDetailInfo } from "./InvoiceShapeDetailInfo";
 import { InvoiceShapeDetailLinks } from "./InvoiceShapeDetailLinks";
