@@ -3,6 +3,16 @@ import { DateRangeColumnSlot } from "@/shared/components/DataTable/DateRangeColu
 import { TableDateCell } from "@/shared/components/DataTable/TableDateCell";
 import type { ColumnContext } from "./GarageCasesTable.type";
 
+/**
+ * Ngày kết thúc chỉ lấy từ trường ERP đã đồng bộ (`ngayHoanThanhCongViec`).
+ * Không fallback sang `rawData` vì payload Kgara gốc vẫn giữ ngày cũ khi phiếu đã về Báo giá.
+ */
+export function resolveCompletionDisplayDate(item: {
+  ngayHoanThanhCongViec?: string | Date | null;
+}): string | Date | null {
+  return item.ngayHoanThanhCongViec || null;
+}
+
 export function buildDateColumns(
   ctx: ColumnContext,
   makeHdr: (key: string, title: string, opts?: any) => React.ReactNode,
@@ -37,9 +47,7 @@ export function buildDateColumns(
         key === "caseDate"
           ? item.caseDate || item.ngayTiepNhan || item.ngayPhatSinh
           : key === "ngayHoanThanhCongViec" || key === "completionDate"
-            ? item.ngayHoanThanhCongViec ||
-              item.rawData?.NgayHoanThanhCongViec ||
-              null
+            ? resolveCompletionDisplayDate(item)
             : item[key];
 
       return <TableDateCell date={rawDate} className="justify-end w-full" />;
