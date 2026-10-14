@@ -17,7 +17,7 @@ export const MonthPayerKpiGrid: React.FC<MonthPayerKpiGridProps> = ({
   const { customer, insurance } = summary;
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 w-full">
+    <div className="grid grid-cols-1 gap-3 w-full">
       {/* 👤 Card: Thu Khách Hàng */}
       <div className="flex flex-col rounded-xl border border-border/70 bg-gradient-to-br from-slate-500/[0.04] to-transparent p-3.5 gap-2.5 relative overflow-hidden">
         <div className="flex items-center justify-between">

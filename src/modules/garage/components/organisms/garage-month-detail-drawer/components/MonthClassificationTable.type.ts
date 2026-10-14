@@ -23,6 +23,5 @@ export interface MonthClassificationTableProps {
   debtType: MonthDebtType;
   totalBilled: number;
   tableId: string;
-  title: string;
   onSelectClassification: (row: MonthClassificationRow) => void;
 }

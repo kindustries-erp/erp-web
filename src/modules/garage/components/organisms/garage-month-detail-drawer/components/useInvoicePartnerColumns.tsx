@@ -1,7 +1,9 @@
 import React, { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { Badge } from "@/shared/components/ui/badge";
 import { money } from "@/shared/utils/format";
 import { cn } from "@/shared/utils";
+import { Tooltip } from "@/core/components/ui/Tooltip";
 import type {
   DataTableColumn,
   ColumnFilterBuilder,
@@ -18,6 +20,13 @@ export function useInvoicePartnerColumns({
   headerFilter,
   onSelectGroup,
 }: UseInvoicePartnerColumnsParams): DataTableColumn<MonthlyReceivablesGroupItem>[] {
+  const { t } = useTranslation("garage");
+  const compactHeader = (header: React.ReactNode, fullLabel: string) => (
+    <Tooltip content={fullLabel} side="top">
+      <span className="block min-w-0 truncate">{header}</span>
+    </Tooltip>
+  );
+
   return useMemo(
     () => [
       {
@@ -55,9 +64,10 @@ export function useInvoicePartnerColumns({
       },
       {
         key: "title",
-        header: headerFilter("title", "Đối tượng HĐ / Cty Bảo hiểm", {
-          align: "left",
-        }),
+        header: compactHeader(
+          headerFilter("title", "Đối tượng / Cty BH", { align: "left" }),
+          t("progress.columns.partnerTitleFull", "Đối tượng HĐ / Cty Bảo hiểm"),
+        ),
         size: 260,
         enableResizing: true,
         headerClassName: "font-semibold",
@@ -76,7 +86,10 @@ export function useInvoicePartnerColumns({
       },
       {
         key: "hasInvoice",
-        header: "Trạng thái HĐ & VAT",
+        header: compactHeader(
+          t("progress.columns.invoiceVatStatusShort", "HĐ & VAT"),
+          t("progress.columns.invoiceVatStatus", "Trạng thái HĐ & VAT"),
+        ),
         size: 190,
         enableResizing: true,
         headerClassName: "font-semibold",
@@ -118,9 +131,10 @@ export function useInvoicePartnerColumns({
       },
       {
         key: "caseCount",
-        header: headerFilter.numeric("caseCount", "Vụ việc", {
-          align: "center",
-        }),
+        header: compactHeader(
+          headerFilter.numeric("caseCount", "Vụ việc", { align: "center" }),
+          "Vụ việc",
+        ),
         size: 75,
         headerClassName: "text-center font-semibold",
         className: "text-center font-mono tabular-nums text-xs text-foreground",
@@ -128,7 +142,10 @@ export function useInvoicePartnerColumns({
       },
       {
         key: "billed",
-        header: headerFilter.amount("billed", "Phát sinh", { align: "right" }),
+        header: compactHeader(
+          headerFilter.amount("billed", "Phát sinh", { align: "right" }),
+          "Phát sinh",
+        ),
         size: 130,
         enableResizing: true,
         headerClassName: "text-right font-semibold",
@@ -138,7 +155,10 @@ export function useInvoicePartnerColumns({
       },
       {
         key: "paid",
-        header: headerFilter.amount("paid", "Đã thu", { align: "right" }),
+        header: compactHeader(
+          headerFilter.amount("paid", "Đã thu", { align: "right" }),
+          "Đã thu",
+        ),
         size: 110,
         enableResizing: true,
         headerClassName: "text-right font-semibold",
@@ -149,7 +169,10 @@ export function useInvoicePartnerColumns({
       },
       {
         key: "remaining",
-        header: headerFilter.amount("remaining", "Còn nợ", { align: "right" }),
+        header: compactHeader(
+          headerFilter.amount("remaining", "Còn nợ", { align: "right" }),
+          "Còn nợ",
+        ),
         size: 110,
         enableResizing: true,
         headerClassName: "text-right font-semibold",
@@ -169,9 +192,12 @@ export function useInvoicePartnerColumns({
       },
       {
         key: "shareRate",
-        header: headerFilter.numeric("shareRate", "Tỷ trọng", {
-          align: "center",
-        }),
+        header: compactHeader(
+          headerFilter.numeric("shareRate", "Tỷ trọng", {
+            align: "center",
+          }),
+          "Tỷ trọng",
+        ),
         size: 75,
         headerClassName: "text-center font-semibold",
         className:
@@ -180,6 +206,6 @@ export function useInvoicePartnerColumns({
           `${row.shareRate.toFixed(1)}%`,
       },
     ],
-    [headerFilter, onSelectGroup],
+    [headerFilter, onSelectGroup, t],
   );
 }

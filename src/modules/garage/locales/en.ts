@@ -1279,10 +1279,17 @@ export const garageEn = {
     tabs: {
       receivable: "Receivables",
       payable: "Payables",
+      partnerClassification: "Classification by partner",
     },
     columns: {
       month: "Month",
       caseCount: "Cases",
+      voucherCount: "Vouchers",
+      classificationTotalBilled: "Total billed",
+      voucherCountFull: "Vouchers",
+      partnerTitleFull: "Invoice partner / Insurance company",
+      invoiceVatStatusShort: "Inv. & VAT",
+      invoiceVatStatus: "Invoice & VAT status",
       revenue: "Revenue",
       totalBilled: "Total Receivable",
       paid: "Collected",
@@ -1305,6 +1312,15 @@ export const garageEn = {
       total: "TOTAL",
     },
     empty: "No transaction data in this period",
+    classificationEmpty: "No matching classification found",
+    partnerTableEmpty: "No invoice partners found",
+    sections: {
+      receivableClassification: "Receivables by business type",
+      payableClassification: "Payables by cost",
+      payerComposition: "Customer vs Insurance collections",
+      customerCollection: "Customer collections",
+      insuranceCollection: "Insurance collections",
+    },
   },
   services: {
     title: "Service Lines Detail",

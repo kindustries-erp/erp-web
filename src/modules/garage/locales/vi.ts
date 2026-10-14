@@ -1297,10 +1297,17 @@ export const garageVi = {
     tabs: {
       receivable: "Phải Thu",
       payable: "Phải Trả",
+      partnerClassification: "Phân loại theo đối tượng",
     },
     columns: {
       month: "Tháng",
       caseCount: "Số vụ việc",
+      voucherCount: "Số phiếu",
+      classificationTotalBilled: "Tổng phát sinh",
+      voucherCountFull: "Số phiếu",
+      partnerTitleFull: "Đối tượng HĐ / Cty Bảo hiểm",
+      invoiceVatStatusShort: "HĐ & VAT",
+      invoiceVatStatus: "Trạng thái HĐ & VAT",
       revenue: "Doanh Thu",
       totalBilled: "Tổng Phải Thu",
       paid: "Đã Thu",
@@ -1323,6 +1330,15 @@ export const garageVi = {
       total: "TỔNG CỘNG",
     },
     empty: "Chưa có dữ liệu giao dịch trong kỳ",
+    classificationEmpty: "Không tìm thấy phân loại phù hợp bộ lọc",
+    partnerTableEmpty: "Không có đối tượng hóa đơn",
+    sections: {
+      receivableClassification: "Bảng Phải thu theo nghiệp vụ",
+      payableClassification: "Bảng Phải trả theo chi phí",
+      payerComposition: "Cơ cấu Thu KH vs Thu BH",
+      customerCollection: "Thu khách hàng",
+      insuranceCollection: "Thu bảo hiểm",
+    },
   },
   services: {
     title: "Chi tiết phiếu dịch vụ",

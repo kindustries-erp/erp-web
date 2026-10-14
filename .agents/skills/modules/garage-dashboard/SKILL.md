@@ -192,3 +192,28 @@ Resource RBAC: `garage`
 - Shared drawer stacking order: `DrawerModal` header `z-40`, `DrawerTopTabBar` `sticky z-30 isolate`, and `DataTable` header `sticky z-20`.
 - `DataTable` scroll containers use `isolate` with `overflow-x-auto overflow-y-auto` so nested table scrolling cannot paint over drawer headers or top tabs.
 - `DrawerModal` body and `StandardFormDrawer` left content use `flex flex-col min-h-0` to keep nested scroll areas bounded by the drawer viewport.
+
+## 9. Month Debt Drawer Column & Right-Panel Contract (2026-10)
+
+- `MonthClassificationTable` chỉ hiển thị hai cột breakdown `remainingWithInvoice` và `remainingNoInvoice` cho `debtType="receivables"`; bảng payables chỉ hiển thị tổng `remaining` (`Còn phải trả`).
+- Right panel dùng chung cho hai tab Phải thu và chỉ hiển thị `DrawerSection` `Cơ cấu Thu KH vs Thu BH` chứa `MonthPayerKpiGrid`.
+- Tab `partner_breakdown` hiển thị nhãn `Phân loại theo đối tượng`; không cấp right panel riêng theo tab.
+- `MonthPayerKpiGrid` xếp hai card Thu Khách hàng và Thu Bảo hiểm theo một cột để vừa right panel rộng 300–360px; không render trùng ở left content.
+
+## 10. Standardize Drawer contract (2026-10)
+
+- `MonthClassificationTable` chỉ trả về `DataTable`; parent đặt bảng Phải thu và Phải trả trong hai `DrawerSection` riêng.
+- Cột `caseCount`/`Số phiếu` đứng ngay sau `name`; breakdown hóa đơn chỉ thuộc bảng receivables. Header style dùng `containerClassName` scoped để giữ nền đặc và bỏ blur.
+- Right panel dùng chung cho hai tab Phải thu, chỉ chứa `Cơ cấu Thu KH vs Thu BH`; tab partner hiển thị là `Phân loại theo đối tượng`. Khi không có breakdown, truyền `undefined` để ẩn panel.
+
+## 11. Drawer table pagination contract (2026-10)
+
+- Bốn bảng month-detail dùng header label ngắn kèm tooltip; không sửa style `DataTable` toàn cục.
+- Classification tables dùng viewport khoảng 5 dòng và giữ sticky/vertical/horizontal scroll.
+- Partner tables paginate sau filter client-side với state độc lập, mặc định 5 dòng/trang và options 5/10/20; summary tính trên toàn bộ dữ liệu đã lọc.
+
+## 12. Partner drawer sections (2026-10)
+
+- Thu khách hàng và Thu bảo hiểm phải nằm trong hai `DrawerSection` độc lập, mỗi section chứa trực tiếp một `DataTable`.
+- Partner tables dùng cùng DataTable/scroll/header contract với monthly detail tables; không gom hai bảng vào một section wrapper.
+- Cột Loại nghiệp vụ của classification table dùng `justify-start`/`text-left`.

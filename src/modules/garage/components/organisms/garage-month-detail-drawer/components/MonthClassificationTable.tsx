@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { Badge } from "@/shared/components/ui/badge";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/shared/components/ui/Button";
 import {
   DataTable,
@@ -21,11 +21,17 @@ export function MonthClassificationTable({
   debtType,
   totalBilled,
   tableId,
-  title,
   onSelectClassification,
 }: MonthClassificationTableProps) {
+  const { t } = useTranslation("garage");
   const tableHook = useTableColumnState(tableId);
   const isReceivable = debtType === "receivables";
+
+  const compactHeader = (header: React.ReactNode, fullLabel: string) => (
+    <Tooltip content={fullLabel} side="top">
+      <span className="block min-w-0 truncate">{header}</span>
+    </Tooltip>
+  );
 
   const headerFilter = useMemo(
     () =>
@@ -59,7 +65,10 @@ export function MonthClassificationTable({
       },
       {
         key: "name",
-        header: headerFilter("name", "Loại nghiệp vụ", { align: "left" }),
+        header: compactHeader(
+          headerFilter("name", "Loại nghiệp vụ", { align: "left" }),
+          "Loại nghiệp vụ",
+        ),
         size: 210,
         enableResizing: true,
         headerClassName: "text-left font-semibold",
@@ -69,7 +78,7 @@ export function MonthClassificationTable({
             type="button"
             variant="ghost"
             size="sm"
-            className="flex items-center gap-2 cursor-pointer group text-left w-full"
+            className="flex items-center justify-start gap-2 cursor-pointer group text-left w-full"
             onClick={() => onSelectClassification(row)}
           >
             <span className="shrink-0 group-hover:scale-110 transition-transform">
@@ -85,22 +94,31 @@ export function MonthClassificationTable({
                 </span>
               )}
             </span>
-            {row.caseCount > 0 && (
-              <Badge
-                variant="outline"
-                className="ml-auto text-[10px] px-1.5 py-0 shrink-0"
-              >
-                {row.caseCount}p
-              </Badge>
-            )}
           </Button>
         ),
       },
       {
+        key: "caseCount",
+        header: compactHeader(
+          headerFilter.numeric(
+            "caseCount",
+            t("progress.columns.voucherCount", "Số phiếu"),
+            { align: "center" },
+          ),
+          t("progress.columns.voucherCountFull", "Số phiếu"),
+        ),
+        size: 82,
+        enableResizing: true,
+        headerClassName: "text-center font-semibold",
+        className: "text-center font-mono tabular-nums text-xs",
+        cell: (row) => row.caseCount,
+      },
+      {
         key: "billed",
-        header: headerFilter.amount("billed", "Tổng phát sinh", {
-          align: "right",
-        }),
+        header: compactHeader(
+          headerFilter.amount("billed", "Tổng PS", { align: "right" }),
+          t("progress.columns.classificationTotalBilled", "Tổng phát sinh"),
+        ),
         size: 150,
         enableResizing: true,
         className: "text-right font-mono tabular-nums",
@@ -135,10 +153,11 @@ export function MonthClassificationTable({
       },
       {
         key: "paid",
-        header: headerFilter.amount(
-          "paid",
+        header: compactHeader(
+          headerFilter.amount("paid", isReceivable ? "Đã thu" : "Đã chi", {
+            align: "right",
+          }),
           isReceivable ? "Đã thu" : "Đã chi",
-          { align: "right" },
         ),
         size: 140,
         enableResizing: true,
@@ -149,10 +168,13 @@ export function MonthClassificationTable({
       },
       {
         key: "remaining",
-        header: headerFilter.amount(
-          "remaining",
+        header: compactHeader(
+          headerFilter.amount(
+            "remaining",
+            isReceivable ? "Còn thu" : "Còn trả",
+            { align: "right" },
+          ),
           isReceivable ? "Còn phải thu" : "Còn phải trả",
-          { align: "right" },
         ),
         size: 140,
         enableResizing: true,
@@ -172,44 +194,57 @@ export function MonthClassificationTable({
           </span>
         ),
       },
-      {
-        key: "remainingWithInvoice",
-        header: headerFilter.amount(
-          "remainingWithInvoice",
-          isReceivable ? "Còn phải thu có HĐ" : "Còn phải trả có HĐ",
-          { align: "right" },
-        ),
-        size: 150,
-        enableResizing: true,
-        className: "text-right font-mono tabular-nums",
-        cell: (row) =>
-          row.remainingWithInvoice > 0 ? money(row.remainingWithInvoice) : "—",
-      },
-      {
-        key: "remainingNoInvoice",
-        header: headerFilter.amount(
-          "remainingNoInvoice",
-          isReceivable ? "Còn phải thu không HĐ" : "Còn phải trả không HĐ",
-          { align: "right" },
-        ),
-        size: 160,
-        enableResizing: true,
-        className: "text-right font-mono tabular-nums",
-        cell: (row) =>
-          row.remainingNoInvoice > 0 ? money(row.remainingNoInvoice) : "—",
-      },
+      ...(isReceivable
+        ? [
+            {
+              key: "remainingWithInvoice",
+              header: compactHeader(
+                headerFilter.amount("remainingWithInvoice", "Còn thu có HĐ", {
+                  align: "right",
+                }),
+                "Còn phải thu có HĐ",
+              ),
+              size: 150,
+              enableResizing: true,
+              className: "text-right font-mono tabular-nums",
+              cell: (row: MonthClassificationRow) =>
+                row.remainingWithInvoice > 0
+                  ? money(row.remainingWithInvoice)
+                  : "—",
+            },
+            {
+              key: "remainingNoInvoice",
+              header: compactHeader(
+                headerFilter.amount("remainingNoInvoice", "Còn thu không HĐ", {
+                  align: "right",
+                }),
+                "Còn phải thu không HĐ",
+              ),
+              size: 160,
+              enableResizing: true,
+              className: "text-right font-mono tabular-nums",
+              cell: (row: MonthClassificationRow) =>
+                row.remainingNoInvoice > 0
+                  ? money(row.remainingNoInvoice)
+                  : "—",
+            },
+          ]
+        : []),
       {
         key: "shareRate",
-        header: headerFilter.numeric("shareRate", "Tỷ trọng", {
-          align: "center",
-        }),
+        header: compactHeader(
+          headerFilter.numeric("shareRate", "Tỷ trọng", {
+            align: "center",
+          }),
+          "Tỷ trọng",
+        ),
         size: 90,
         enableResizing: true,
         className: "text-center tabular-nums",
         cell: (row) => `${row.shareRate.toFixed(1)}%`,
       },
     ],
-    [headerFilter, isReceivable, onSelectClassification],
+    [headerFilter, isReceivable, onSelectClassification, t],
   );
 
   const summaryRow = useMemo(() => {
@@ -236,9 +271,10 @@ export function MonthClassificationTable({
 
     return {
       index: <span className="font-bold text-center block">Σ</span>,
-      name: (
-        <span className="font-bold text-xs uppercase">
-          TỔNG CỘNG ({totals.caseCount} phiếu)
+      name: <span className="font-bold text-xs uppercase">TỔNG CỘNG</span>,
+      caseCount: (
+        <span className="font-bold text-center block tabular-nums">
+          {totals.caseCount}
         </span>
       ),
       billed: (
@@ -256,35 +292,37 @@ export function MonthClassificationTable({
           {totals.remaining > 0 ? money(totals.remaining) : "—"}
         </span>
       ),
-      remainingWithInvoice:
-        totals.remainingWithInvoice > 0
-          ? money(totals.remainingWithInvoice)
-          : "—",
-      remainingNoInvoice:
-        totals.remainingNoInvoice > 0 ? money(totals.remainingNoInvoice) : "—",
+      ...(isReceivable
+        ? {
+            remainingWithInvoice:
+              totals.remainingWithInvoice > 0
+                ? money(totals.remainingWithInvoice)
+                : "—",
+            remainingNoInvoice:
+              totals.remainingNoInvoice > 0
+                ? money(totals.remainingNoInvoice)
+                : "—",
+          }
+        : {}),
       shareRate: `${totalBilled > 0 ? ((totals.billed / totalBilled) * 100).toFixed(1) : "0.0"}%`,
     };
-  }, [filteredRows, totalBilled]);
+  }, [filteredRows, isReceivable, totalBilled]);
 
   return (
-    <section className="flex flex-col gap-2">
-      <div className="flex items-center justify-between gap-2">
-        <h3 className="text-sm font-semibold text-foreground">{title}</h3>
-        <span className="text-xs text-muted-foreground">
-          {filteredRows.length}/{rows.length} phân loại
-        </span>
-      </div>
-      <DataTable
-        items={filteredRows}
-        getRowKey={(row) => row.key}
-        variant="spreadsheet"
-        columns={columns}
-        summaryRow={summaryRow}
-        emptyLabel="Không tìm thấy phân loại phù hợp bộ lọc"
-        enableColumnResizing
-        tableId={tableId}
-        onRowClick={onSelectClassification}
-      />
-    </section>
+    <DataTable
+      items={filteredRows}
+      getRowKey={(row) => row.key}
+      variant="spreadsheet"
+      columns={columns}
+      summaryRow={summaryRow}
+      emptyLabel={t(
+        "progress.classificationEmpty",
+        "Không tìm thấy phân loại phù hợp bộ lọc",
+      )}
+      enableColumnResizing
+      tableId={tableId}
+      containerClassName="max-h-[360px] overflow-x-auto overflow-y-auto [--table-header-bg:var(--surface)] [&_thead]:!bg-[var(--surface)] [&_thead]:!backdrop-blur-none [&_thead]:!shadow-[0_1px_0_0_var(--border)] [&_th]:border-border/80"
+      onRowClick={onSelectClassification}
+    />
   );
 }
