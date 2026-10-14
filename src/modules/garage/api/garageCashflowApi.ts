@@ -18,6 +18,7 @@ export interface GarageCashflowVoucher {
   createdAt: string;
   updatedAt: string;
   transDate: string;
+  createdBy?: string;
   case?: {
     id: string;
     khachHangName: string;

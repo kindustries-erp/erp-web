@@ -30,7 +30,7 @@ src/modules/garage/
 │   │   │   ├── GarageCasesTable.type.ts # Type contract & ColumnContext
 │   │   │   ├── GarageCasesTable.columns.tsx # Aggregator kết hợp các nhóm cột
 │   │   │   ├── GarageCasesTable.date-columns.tsx # Nhóm 5 cột ngày tháng
-│   │   │   ├── GarageCasesTable.general-columns.tsx # Nhóm 12 cột thông tin chung
+│   │   │   ├── GarageCasesTable.general-columns.tsx # Nhóm 11 cột thông tin chung (tích hợp Exclamation Tooltip phân loại KGara trong cột ERP)
 │   │   │   ├── GarageCasesTable.progress-columns.tsx # Nhóm 4 cột tiến độ thu/chi
 │   │   │   ├── GarageCasesTable.financial-columns.tsx # Nhóm 10 cột tài chính P&L
 │   │   │   └── GarageCasesTable.test.tsx # Unit tests kiểm tra 23 cột khớp view presets
@@ -103,7 +103,7 @@ src/modules/garage/
   5. `licensePlate`: Biển số xe (140px, font mono kèm icon Car).
   6. `customerCode` & `customerName`: Mã & Tên khách hàng.
   7. `doanhThu`, `chiPhi`, `loiNhuan`, `margin`: Nhóm chỉ số tài chính (căn phải, định dạng tiền tệ / %).
-  8. `classification`: Phân loại nghiệp vụ (căn giữa, badge tương tác).
+  8. `classification`: Phân loại ERP (170px, căn giữa, dropdown đổi nhanh tích hợp button icon exclamation kèm Tooltip hiển thị Phân loại KGara khi hover).
   9. `statusName`: Trạng thái dịch vụ (căn giữa, `KgaraCaseStatusBadge`).
   10. `collectionProgress` & `costProgress`: Tiến độ thu/chi dòng tiền.
 - **Table Headers**: 100% căn giữa (`text-center` / `align="center"`).

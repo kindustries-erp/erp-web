@@ -2,7 +2,14 @@ import React from "react";
 import { cn } from "@/shared/utils";
 import { Popover } from "@/core/components/ui/Popover";
 import { Tooltip } from "@/core/components/ui/Tooltip";
-import { Check, ChevronDown, Settings2, Loader2 } from "lucide-react";
+import { Button } from "@/shared/components/ui/Button";
+import {
+  Check,
+  ChevronDown,
+  Settings2,
+  Loader2,
+  AlertCircle,
+} from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useGarageCaseClassificationDropdown } from "./GarageCaseClassificationDropdown.hook";
 import { getClassificationDisplayMeta } from "./GarageCaseClassificationDropdown.helper";
@@ -99,9 +106,47 @@ export function GarageCaseClassificationDropdown({
 
   const { label, icon, colorClass } = getClassificationDisplayMeta(caseItem, t);
 
+  const kgaraClass =
+    caseItem.kgaraClassification ||
+    caseItem.rawData?.PhanLoaiKgara ||
+    caseItem.phanLoaiKgara;
+  const kgaraCode =
+    caseItem.kgaraClassificationCode || caseItem.rawData?.PhanLoaiKgaraCode;
+
+  const kgaraTooltipContent = (
+    <div className="text-left text-xs space-y-0.5 max-w-[240px]">
+      <div className="text-white font-semibold leading-snug">
+        <span className="text-slate-300 font-normal">
+          {t("cases.columns.kgaraClassificationFrom", "Phân loại từ KGara")}
+          :{" "}
+        </span>
+        {kgaraClass ? (
+          <span>
+            {kgaraClass}
+            {kgaraCode && (
+              <span className="text-slate-300 text-[11px] ml-1">
+                ({kgaraCode})
+              </span>
+            )}
+          </span>
+        ) : (
+          <span className="text-slate-400 italic">
+            {t("cases.common.unknown", "Chưa xác định")}
+          </span>
+        )}
+      </div>
+      <div className="text-slate-400 text-[10px]">
+        {t(
+          "cases.drawer.kgaraClassificationHint",
+          "Đồng bộ từ KGara - Bất biến",
+        )}
+      </div>
+    </div>
+  );
+
   return (
     <div
-      className={cn("inline-flex items-center justify-center", className)}
+      className={cn("inline-flex items-center justify-center gap-1", className)}
       onClick={(e) => e.stopPropagation()}
     >
       <Popover
@@ -148,6 +193,35 @@ export function GarageCaseClassificationDropdown({
           )}
         </button>
       </Popover>
+
+      <Tooltip content={kgaraTooltipContent} side="top">
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-sm"
+          onClick={(e) => {
+            e.stopPropagation();
+            onOpenDrawer?.();
+          }}
+          className={cn(
+            "w-5 h-5 p-0 rounded-md transition-colors shrink-0",
+            kgaraClass
+              ? "text-slate-400 hover:text-foreground hover:bg-slate-100 dark:hover:bg-slate-800"
+              : "text-muted-foreground/40 hover:text-muted-foreground hover:bg-slate-100/50 dark:hover:bg-slate-800/50",
+          )}
+          aria-label={t(
+            "cases.columns.kgaraClassificationFrom",
+            "Phân loại từ KGara",
+          )}
+          title={
+            kgaraClass
+              ? `${t("cases.columns.kgaraClassificationFrom", "Phân loại từ KGara")}: ${kgaraClass}`
+              : t("cases.columns.kgaraClassificationFrom", "Phân loại từ KGara")
+          }
+        >
+          <AlertCircle className="w-3.5 h-3.5" />
+        </Button>
+      </Tooltip>
     </div>
   );
 }

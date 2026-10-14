@@ -1,8 +1,12 @@
-import React from "react";
-import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
+import React, { useMemo } from "react";
+import {
+  StandardFormDrawer,
+  type DrawerTopTabItem,
+} from "@/shared/components/StandardFormDrawer";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
+import { DrawerAuditTimeline } from "@/shared/components/drawer/DrawerAuditTimeline";
 import { GarageCashflowDuplicateWarning } from "../../molecules/garage-cashflow-duplicate-warning";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, FileText, History } from "lucide-react";
 import { useT } from "@/core/i18n";
 import { Badge } from "@/shared/components/ui/badge";
 import type { GarageCashflowDrawerProps } from "./GarageCashflowDrawer.type";
@@ -26,6 +30,8 @@ export const GarageCashflowDrawer: React.FC<GarageCashflowDrawerProps> = ({
     handleSave,
     isPending,
     duplicate,
+    auditItems,
+    isAuditLoading,
   } = useGarageCashflowDrawer({
     open,
     onClose,
@@ -34,12 +40,51 @@ export const GarageCashflowDrawer: React.FC<GarageCashflowDrawerProps> = ({
   });
 
   const t = useT();
-  const sectionProps = {
-    mode,
-    voucher,
-    formData,
-    setFormData,
-  };
+  const sectionProps = useMemo(
+    () => ({
+      mode,
+      voucher,
+      formData,
+      setFormData,
+    }),
+    [mode, voucher, formData, setFormData],
+  );
+
+  const drawerTabs: DrawerTopTabItem[] | undefined = useMemo(() => {
+    if (!voucher) return undefined;
+
+    return [
+      {
+        key: "details",
+        label: t("garage:cashflowDrawer.tabDetails", "Chi tiết"),
+        icon: <FileText className="w-3.5 h-3.5" />,
+        content: (
+          <div className="space-y-4 pb-4">
+            <GarageCashflowDrawerGeneralSection {...sectionProps} />
+            <GarageCashflowDrawerSettlementSection {...sectionProps} />
+          </div>
+        ),
+      },
+      {
+        key: "history",
+        label: t("garage:cashflowDrawer.tabHistory", "Lịch sử & Kiểm duyệt"),
+        icon: <History className="w-3.5 h-3.5" />,
+        badgeCount: auditItems.length,
+        content: (
+          <div className="p-3 bg-surface/50 rounded-xl border border-border/70">
+            <DrawerAuditTimeline
+              items={auditItems}
+              loading={isAuditLoading}
+              emptyLabel={t(
+                "garage:cashflowDrawer.noHistory",
+                "Chưa có ghi nhận lịch sử.",
+              )}
+            />
+          </div>
+        ),
+      },
+    ];
+  }, [voucher, sectionProps, auditItems, isAuditLoading, t]);
 
   return (
     <>
@@ -50,26 +95,32 @@ export const GarageCashflowDrawer: React.FC<GarageCashflowDrawerProps> = ({
         onToggleEdit={canUpdate ? () => setMode("edit") : undefined}
         layout="1-column"
         size="md"
+        defaultTabKey="details"
+        tabs={drawerTabs}
         title={
           initialMode === "create"
-            ? "Tạo Phiếu Thu Chi Mới"
-            : `Phiếu ${voucher?.voucherCode || ""}`
+            ? t("garage:cashflowDrawer.createTitle", "Tạo Phiếu Thu Chi Mới")
+            : `${t("garage:cashflowDrawer.voucherPrefix", "Phiếu")} ${voucher?.voucherCode || ""}`
         }
         titleExtra={
           voucher && (
             <Badge variant="outline">
               {(voucher.voucherType || "").toUpperCase() === "RECEIPT"
-                ? "Thu"
-                : "Chi"}
+                ? t("garage:cashflowDrawer.typeReceipt", "Thu")
+                : t("garage:cashflowDrawer.typePayment", "Chi")}
             </Badge>
           )
         }
         actions={[
-          { label: "Đóng", onClick: onClose, variant: "outline" },
+          {
+            label: t("common:close", "Đóng"),
+            onClick: onClose,
+            variant: "outline",
+          },
           ...(mode === "edit" && canSave
             ? [
                 {
-                  label: "Lưu",
+                  label: t("common:save", "Lưu"),
                   onClick: handleSave,
                   primary: true,
                   loading: isPending,
@@ -79,10 +130,12 @@ export const GarageCashflowDrawer: React.FC<GarageCashflowDrawerProps> = ({
         ]}
         confirmOnClose={mode === "edit"}
         leftPanel={
-          <div className="space-y-4 pb-4">
-            <GarageCashflowDrawerGeneralSection {...sectionProps} />
-            <GarageCashflowDrawerSettlementSection {...sectionProps} />
-          </div>
+          !drawerTabs ? (
+            <div className="space-y-4 pb-4">
+              <GarageCashflowDrawerGeneralSection {...sectionProps} />
+              <GarageCashflowDrawerSettlementSection {...sectionProps} />
+            </div>
+          ) : undefined
         }
       />
       <ConfirmModal
