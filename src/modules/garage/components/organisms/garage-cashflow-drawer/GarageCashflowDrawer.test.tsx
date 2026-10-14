@@ -42,6 +42,19 @@ vi.mock("../../molecules/payment-method-combobox", () => ({
 vi.mock("../../molecules/payment-content-combobox", () => ({
   PaymentContentCombobox: () => <div data-testid="mock-pc-combobox" />,
 }));
+vi.mock("@/modules/auth/domain/authStore", () => ({
+  useAuthStore: (selector: any) =>
+    selector({
+      profile: { email: "user.test@liouni.com" },
+      employee: { email: "user.test@liouni.com" },
+    }),
+}));
+
+vi.mock("@/modules/system/api/usersCoreApi", () => ({
+  auditCoreApi: {
+    getEntityTimeline: vi.fn().mockResolvedValue([]),
+  },
+}));
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: false } },
@@ -62,6 +75,7 @@ const sampleVoucher: any = {
 describe("GarageCashflowDrawer Organism", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    queryClient.clear();
   });
 
   it("renders voucher details in view mode with license plate", () => {
@@ -269,6 +283,128 @@ describe("GarageCashflowDrawer Organism", () => {
       renderCreate(2200000);
       fireEvent.click(screen.getByText("Lưu"));
       await vi.waitFor(() => expect(mockCreateMutate).toHaveBeenCalledTimes(1));
+    });
+  });
+
+  describe("Tabs & Audit Timeline", () => {
+    it("renders Top Navigation Tabs in view mode and switches to Audit Timeline tab", async () => {
+      vi.mocked(useHasPermission).mockReturnValue(true);
+
+      render(
+        <QueryClientProvider client={queryClient}>
+          <GarageCashflowDrawer
+            open={true}
+            onClose={vi.fn()}
+            voucher={sampleVoucher}
+            initialMode="view"
+          />
+        </QueryClientProvider>,
+      );
+
+      // Verify Tab buttons
+      expect(screen.getByText("Chi tiết")).toBeInTheDocument();
+      const historyTabBtn = screen.getByText("Lịch sử & Kiểm duyệt");
+      expect(historyTabBtn).toBeInTheDocument();
+
+      // Switch to History tab
+      fireEvent.click(historyTabBtn);
+
+      // Verify Audit Timeline content rendered
+      expect(await screen.findByText("Khởi tạo phiếu thu")).toBeInTheDocument();
+      expect(screen.getByText(/5\.000\.000 đ/)).toBeInTheDocument();
+      expect(screen.getAllByText(/PT-GARA-261011-001/)).toHaveLength(2);
+      expect(screen.getByText("user.test@liouni.com")).toBeInTheDocument();
+    });
+
+    it("renders creator email when voucher has createdBy", async () => {
+      vi.mocked(useHasPermission).mockReturnValue(true);
+
+      const voucherWithCreator = {
+        ...sampleVoucher,
+        createdBy: "creator@liouni.com",
+      };
+
+      render(
+        <QueryClientProvider client={queryClient}>
+          <GarageCashflowDrawer
+            open={true}
+            onClose={vi.fn()}
+            voucher={voucherWithCreator}
+            initialMode="view"
+          />
+        </QueryClientProvider>,
+      );
+
+      fireEvent.click(screen.getByText("Lịch sử & Kiểm duyệt"));
+      expect(await screen.findByText("creator@liouni.com")).toBeInTheDocument();
+    });
+
+    it("renders another user update in the audit timeline when remote audit logs exist", async () => {
+      vi.mocked(useHasPermission).mockReturnValue(true);
+      const { auditCoreApi } =
+        await import("@/modules/system/api/usersCoreApi");
+      vi.mocked(auditCoreApi.getEntityTimeline).mockResolvedValueOnce([
+        {
+          id: "log-update-1",
+          actorUserId: "user-2",
+          actorEmail: "nhanvien2@liouni.com",
+          actionType: "UPDATE",
+          entityType: "garage_cashflow_voucher",
+          entityId: "voucher-1",
+          message: "Cập nhật phiếu thu PT-GARA-261011-001",
+          beforeSnapshot: { amount: 5000000 },
+          afterSnapshot: { amount: 6000000 },
+          createdAt: "2026-10-13T10:00:00Z",
+        } as any,
+      ]);
+
+      const voucherWithCreator = {
+        ...sampleVoucher,
+        createdBy: "creator@liouni.com",
+      };
+
+      render(
+        <QueryClientProvider client={queryClient}>
+          <GarageCashflowDrawer
+            open={true}
+            onClose={vi.fn()}
+            voucher={voucherWithCreator}
+            initialMode="view"
+          />
+        </QueryClientProvider>,
+      );
+
+      fireEvent.click(screen.getByText("Lịch sử & Kiểm duyệt"));
+
+      // Shows original creator from baseline
+      expect(await screen.findByText("creator@liouni.com")).toBeInTheDocument();
+      // Shows updater email from audit logs
+      expect(
+        await screen.findByText("nhanvien2@liouni.com"),
+      ).toBeInTheDocument();
+      expect(screen.getByText("Cập nhật phiếu")).toBeInTheDocument();
+    });
+
+    it("does not render Top Tabs in create mode", () => {
+      vi.mocked(useHasPermission).mockReturnValue(true);
+
+      render(
+        <QueryClientProvider client={queryClient}>
+          <GarageCashflowDrawer
+            open={true}
+            onClose={vi.fn()}
+            voucher={null}
+            initialMode="create"
+          />
+        </QueryClientProvider>,
+      );
+
+      // In create mode, top tabs should be hidden
+      expect(
+        screen.queryByText("Lịch sử & Kiểm duyệt"),
+      ).not.toBeInTheDocument();
+      expect(screen.getByText("Tạo Phiếu Thu Chi Mới")).toBeInTheDocument();
+      expect(screen.getByText("THÔNG TIN CHUNG")).toBeInTheDocument();
     });
   });
 });

@@ -1,29 +1,28 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
+import { auditCoreApi } from "@/modules/system/api/usersCoreApi";
+import { useT } from "@/core/i18n";
 import type {
   CreateGarageCashflowVoucherDto,
-  UpdateGarageCashflowVoucherDto,
   GarageCashflowVoucher,
 } from "../../../api/garageCashflowApi";
 import { useGarageCashflowList } from "../../../hooks/useGarageCashflowList";
 import type { DrawerModeType } from "./GarageCashflowDrawer.type";
 import { useGarageCashflowDuplicateGuard } from "./useGarageCashflowDuplicateGuard";
-
-const normPlate = (v?: string | null) =>
-  (v ?? "").replace(/[^0-9a-zA-Z]/g, "").toUpperCase();
-
-function duplicateFieldsChanged(
-  form: Partial<CreateGarageCashflowVoucherDto>,
-  voucher: GarageCashflowVoucher,
-): boolean {
-  return (
-    Number(form.amount) !== Number(voucher.amount) ||
-    (form.transDate || "") !== (voucher.transDate || "").slice(0, 10) ||
-    (form.caseId || "") !== (voucher.caseId || "") ||
-    normPlate(form.licensePlate) !== normPlate(voucher.licensePlate)
-  );
-}
+import {
+  buildInitialFormData,
+  buildCreatePayload,
+  buildUpdatePayload,
+} from "./GarageCashflowDrawer.state";
+import {
+  duplicateFieldsChanged,
+  buildBaselineCashflowAuditItems,
+  mergeAuditItems,
+} from "./GarageCashflowDrawer.helper";
+import type { DrawerAuditLogItem } from "@/shared/components/drawer/DrawerAuditTimeline";
+import { useAuthStore } from "@/modules/auth/domain/authStore";
 
 interface UseGarageCashflowDrawerParams {
   open: boolean;
@@ -38,6 +37,7 @@ export function useGarageCashflowDrawer({
   voucher,
   initialMode = "view",
 }: UseGarageCashflowDrawerParams) {
+  const t = useT();
   const { createMutation, updateMutation } = useGarageCashflowList();
 
   const canCreate = useHasPermission(
@@ -56,72 +56,25 @@ export function useGarageCashflowDrawer({
 
   const [formData, setFormData] = useState<
     Partial<CreateGarageCashflowVoucherDto>
-  >({});
+  >(() => buildInitialFormData(voucher));
 
   useEffect(() => {
     if (open) {
-      const targetMode =
-        initialMode === "create" ? "edit" : (initialMode as DrawerModeType);
-      setMode(targetMode);
-
-      if (voucher) {
-        setFormData({
-          voucherType: (voucher.voucherType || "").toUpperCase() as
-            | "RECEIPT"
-            | "PAYMENT",
-          voucherCode: voucher.voucherCode || "",
-          transDate: voucher.transDate
-            ? voucher.transDate.slice(0, 10)
-            : new Date().toISOString().slice(0, 10),
-          amount: Number(voucher.amount) || 0,
-          partnerName: voucher.partnerName || voucher.case?.khachHangName || "",
-          partnerPhone: voucher.partnerPhone || "",
-          licensePlate: voucher.licensePlate || voucher.case?.bienSoXe || "",
-          note: voucher.note || "",
-          paymentMethod: voucher.paymentMethod || "",
-          paymentContent: voucher.paymentContent || "",
-          referenceNumber: voucher.referenceNumber || "",
-          caseId: voucher.caseId || "",
-          erpBankTransactionId: voucher.erpBankTransactionId || "",
-          erpCashVoucherId: voucher.erpCashVoucherId || "",
-        });
-      } else {
-        setFormData({
-          voucherType: "RECEIPT",
-          transDate: new Date().toISOString().slice(0, 10),
-          amount: 0,
-        });
-      }
+      setMode(
+        initialMode === "create" ? "edit" : (initialMode as DrawerModeType),
+      );
+      setFormData(buildInitialFormData(voucher));
     }
   }, [open, voucher, initialMode]);
 
   const duplicateGuard = useGarageCashflowDuplicateGuard();
-
   const canSave = initialMode === "create" ? canCreate : canUpdate;
 
   const handleSave = useCallback(() => {
     if (!canSave) return;
 
     if (initialMode === "create") {
-      const createDto: CreateGarageCashflowVoucherDto = {
-        voucherType: (formData.voucherType || "RECEIPT").toUpperCase() as
-          | "RECEIPT"
-          | "PAYMENT",
-        amount: Number(formData.amount) || 0,
-        transDate: formData.transDate,
-        partnerName: formData.partnerName?.trim() || undefined,
-        partnerPhone: formData.partnerPhone?.trim() || undefined,
-        licensePlate: formData.licensePlate?.trim() || undefined,
-        note: formData.note?.trim() || undefined,
-        paymentMethod: formData.paymentMethod || undefined,
-        paymentContent: formData.paymentContent?.trim() || undefined,
-        referenceNumber: formData.referenceNumber?.trim() || undefined,
-        caseId: formData.caseId?.trim() || undefined,
-        erpBankTransactionId:
-          formData.erpBankTransactionId?.trim() || undefined,
-        erpCashVoucherId: formData.erpCashVoucherId?.trim() || undefined,
-      };
-
+      const createDto = buildCreatePayload(formData);
       const submit = () =>
         createMutation.mutate(createDto, { onSuccess: () => onClose() });
       if (createDto.amount > 0) {
@@ -138,25 +91,7 @@ export function useGarageCashflowDrawer({
         submit();
       }
     } else if (voucher) {
-      const updateDto: UpdateGarageCashflowVoucherDto = {
-        voucherType: formData.voucherType
-          ? (formData.voucherType.toUpperCase() as "RECEIPT" | "PAYMENT")
-          : undefined,
-        amount: Number(formData.amount) || 0,
-        transDate: formData.transDate,
-        partnerName: formData.partnerName?.trim() || undefined,
-        partnerPhone: formData.partnerPhone?.trim() || undefined,
-        licensePlate: formData.licensePlate?.trim() || undefined,
-        note: formData.note?.trim() || undefined,
-        paymentMethod: formData.paymentMethod || undefined,
-        paymentContent: formData.paymentContent?.trim() || undefined,
-        referenceNumber: formData.referenceNumber?.trim() || undefined,
-        caseId: formData.caseId?.trim() || undefined,
-        erpBankTransactionId:
-          formData.erpBankTransactionId?.trim() || undefined,
-        erpCashVoucherId: formData.erpCashVoucherId?.trim() || undefined,
-      };
-
+      const updateDto = buildUpdatePayload(formData);
       const submit = () =>
         updateMutation.mutate(
           { id: voucher.id, data: updateDto },
@@ -188,23 +123,46 @@ export function useGarageCashflowDrawer({
     voucher,
     createMutation,
     updateMutation,
-    onClose,
     duplicateGuard,
+    onClose,
   ]);
+
+  const { data: remoteAuditLogs, isLoading: isAuditLoading } = useQuery({
+    queryKey: ["garage-cashflow-audit", voucher?.id],
+    queryFn: () =>
+      auditCoreApi.getEntityTimeline(
+        "garage_cashflow_voucher",
+        voucher?.id || "",
+      ),
+    enabled: Boolean(open && voucher?.id),
+    staleTime: 30000,
+  });
+
+  const currentUserEmail = useAuthStore(
+    (s) => s.profile?.email || s.employee?.email,
+  );
+
+  const auditItems = useMemo<DrawerAuditLogItem[]>(() => {
+    if (!voucher) return [];
+    const baseline = buildBaselineCashflowAuditItems(
+      voucher,
+      t,
+      currentUserEmail,
+    );
+    return mergeAuditItems(baseline, remoteAuditLogs, t);
+  }, [voucher, remoteAuditLogs, currentUserEmail, t]);
 
   return {
     mode,
     setMode,
     formData,
     setFormData,
-    canCreate,
     canUpdate,
     canSave,
     handleSave,
-    isPending:
-      createMutation.isPending ||
-      updateMutation.isPending ||
-      duplicateGuard.isChecking,
+    isPending: createMutation.isPending || updateMutation.isPending,
     duplicate: duplicateGuard,
+    auditItems,
+    isAuditLoading,
   };
 }

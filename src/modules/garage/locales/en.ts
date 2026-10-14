@@ -198,6 +198,7 @@ export const garageEn = {
       classification: "ERP Classification",
       classificationErp: "ERP Classification",
       kgaraClassification: "KGara Classification",
+      kgaraClassificationFrom: "Classification from KGara",
       exclusionRules: "Exclusion Rules",
     },
     summary: {

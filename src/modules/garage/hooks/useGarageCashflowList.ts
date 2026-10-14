@@ -74,6 +74,7 @@ export function useGarageCashflowList() {
     onSuccess: () => {
       toast.success("Tạo phiếu thu/chi thành công");
       queryClient.invalidateQueries({ queryKey: ["garage-cashflow-list"] });
+      queryClient.invalidateQueries({ queryKey: ["garage-cashflow-audit"] });
     },
   });
 
@@ -88,6 +89,7 @@ export function useGarageCashflowList() {
     onSuccess: () => {
       toast.success("Cập nhật phiếu thu/chi thành công");
       queryClient.invalidateQueries({ queryKey: ["garage-cashflow-list"] });
+      queryClient.invalidateQueries({ queryKey: ["garage-cashflow-audit"] });
     },
   });
 
@@ -96,6 +98,7 @@ export function useGarageCashflowList() {
     onSuccess: () => {
       toast.success("Xóa phiếu thu/chi thành công");
       queryClient.invalidateQueries({ queryKey: ["garage-cashflow-list"] });
+      queryClient.invalidateQueries({ queryKey: ["garage-cashflow-audit"] });
     },
   });
 

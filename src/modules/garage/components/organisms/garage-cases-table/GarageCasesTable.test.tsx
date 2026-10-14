@@ -157,7 +157,7 @@ describe("GarageCasesTable Organism", () => {
       activeColumnPresetKey: "overview",
     };
     const cols = buildGarageCasesColumns(ctx);
-    expect(cols.length).toBe(24);
+    expect(cols.length).toBe(23);
     const keys = cols.map((c) => c.key);
     const expectedKeys = [
       "index",
@@ -166,7 +166,6 @@ describe("GarageCasesTable Organism", () => {
       "caseCode",
       "customer",
       "statusName",
-      "kgaraClassification",
       "classification",
       "exclusionRules",
       "branchName",
@@ -222,7 +221,7 @@ describe("GarageCasesTable Organism", () => {
       activeColumnPresetKey: "audit",
     };
     const cols = buildGarageCasesColumns(ctx);
-    expect(cols.length).toBe(24);
+    expect(cols.length).toBe(23);
     const keys = cols.map((c) => c.key);
 
     // In audit preset: receivables must be positioned BEFORE revenue, cost, profit, and hasInvoice is right before doanhThu
@@ -338,8 +337,7 @@ describe("GarageCasesTable Organism", () => {
     expect(sizeMap.ngayHoanThanhCongViec).toBe(130);
     expect(sizeMap.caseCode).toBe(180);
     expect(sizeMap.customer).toBe(200);
-    expect(sizeMap.kgaraClassification).toBe(150);
-    expect(sizeMap.classification).toBe(150);
+    expect(sizeMap.classification).toBe(170);
     expect(sizeMap.exclusionRules).toBe(150);
     expect(sizeMap.statusName).toBe(130);
     expect(sizeMap.doanhThu).toBe(140);

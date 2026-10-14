@@ -199,6 +199,7 @@ export const garageVi = {
       classification: "Phân loại ERP",
       classificationErp: "Phân loại ERP",
       kgaraClassification: "Phân loại KGara",
+      kgaraClassificationFrom: "Phân loại từ KGara",
       exclusionRules: "Quy tắc loại trừ",
     },
     summary: {
