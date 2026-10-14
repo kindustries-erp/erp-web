@@ -28,11 +28,15 @@ export function buildGeneralColumns(
       key: "index",
       label: "#",
       header: <span className="w-full block text-center">#</span>,
-      size: 50,
+      size: 40,
       enableResizing: false,
       hideable: false,
-      className: "text-center font-mono text-xs text-muted-foreground",
-      cell: (_: any, idx: number) => <span>{idx}</span>,
+      headerClassName: "text-center w-[40px] min-w-[40px]",
+      className:
+        "text-center w-[40px] min-w-[40px] font-mono text-xs text-muted-foreground",
+      cell: (_: any, idx: number) => (
+        <span className="w-full block text-center">{idx}</span>
+      ),
     },
     dateCols.caseDate,
     dateCols.completionDate,

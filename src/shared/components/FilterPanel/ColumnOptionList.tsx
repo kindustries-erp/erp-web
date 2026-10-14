@@ -104,7 +104,7 @@ export function ColumnOptionList({
         if (keywords.length === 0) {
           opts = descriptor.filterOptions;
         } else {
-          opts = descriptor.filterOptions.filter((opt) => {
+          const matchingOpts = descriptor.filterOptions.filter((opt) => {
             const labelLower = (opt.label || "").toLowerCase();
             const valueLower = (opt.value || "").toLowerCase();
             return keywords.some((kw) => {
@@ -114,6 +114,23 @@ export function ColumnOptionList({
               );
             });
           });
+          const matchingValues = new Set(matchingOpts.map((o) => o.value));
+          const missingSelected = isAllMatchingMode
+            ? []
+            : selectedValues
+                .filter((v) => !matchingValues.has(v) && v !== "__BLANK__")
+                .map((v) => {
+                  const found = descriptor.filterOptions?.find(
+                    (o) => o.value === v,
+                  );
+                  return (
+                    found || {
+                      label: formatCompositeFilterValue(v),
+                      value: v,
+                    }
+                  );
+                });
+          opts = [...missingSelected, ...matchingOpts];
         }
       }
     } else if (descriptor.key) {

@@ -14,7 +14,7 @@ export function buildGarageCasesColumns(ctx: ColumnContext) {
   } = ctx;
 
   const commonOptionProps = {
-    queryKeyPrefix: "garage-case-column-options",
+    queryKeyPrefix: `garage-case-column-options-${ctx.branchId || "all"}`,
     fetchOptions: fetchCaseColumnOptions,
     allFilters: tableState.columnFilters,
     enableSelectAllMatching: true,

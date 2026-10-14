@@ -48,4 +48,5 @@ export interface ColumnContext {
   canUpdateGarage?: boolean;
   branches?: any[];
   activeColumnPresetKey?: string;
+  branchId?: string;
 }

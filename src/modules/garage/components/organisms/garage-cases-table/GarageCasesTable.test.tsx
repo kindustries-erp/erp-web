@@ -133,6 +133,8 @@ describe("GarageCasesTable Organism", () => {
     const cols = buildGarageCasesColumns(ctx);
     const indexCol = cols.find((c) => c.key === "index");
     expect(indexCol).toBeDefined();
+    expect(indexCol?.size).toBe(40);
+    expect(indexCol?.className).toContain("w-[40px]");
 
     const cellResult = indexCol?.cell({}, 0);
     render(<span>{cellResult}</span>);
