@@ -1,6 +1,6 @@
-import { filterClientItems } from "@/v2/shared/components/organisms/v2-standard-table/v2TableFilter";
-import { sortClientItems } from "@/v2/shared/components/organisms/v2-standard-table/v2TableClient";
-import type { V2ClientFilterColumn } from "@/v2/shared/components/organisms/v2-standard-table/v2TableFilter";
+import { filterClientItems } from "@/v2/shared/components/organisms/v2-standard-table/utils/v2TableFilter";
+import { sortClientItems } from "@/v2/shared/components/organisms/v2-standard-table/utils/v2TableClient";
+import type { V2ClientFilterColumn } from "@/v2/shared/components/organisms/v2-standard-table/utils/v2TableFilter";
 import { ColumnValueType } from "@/v2/shared/types/v2-table";
 import type { V2TableQuery } from "@/v2/shared/types/v2-table";
 import { toV2OffsetPage } from "@/v2/shared/utils/v2TableQueryParams";

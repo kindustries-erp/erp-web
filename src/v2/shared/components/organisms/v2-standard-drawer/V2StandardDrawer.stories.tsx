@@ -15,12 +15,12 @@ import {
   MockTargetBreakdownTable,
   MockItemsCategoryBreakdown,
   MockAnalysisVarianceTab,
-} from "./V2StandardDrawer.mock";
+} from "./mocks/V2StandardDrawer.mock";
 import {
   goldenLeftTabs,
   goldenActionGroups,
   GoldenPreviewToggle,
-} from "./V2StandardDrawer.demo-golden-config";
+} from "./mocks/V2StandardDrawer.demo-golden-config";
 
 import type { Meta } from "@storybook/react";
 

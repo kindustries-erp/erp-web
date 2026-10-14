@@ -2,10 +2,10 @@ import type { Meta } from "@storybook/react";
 import React, { useMemo, useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { V2StandardTable } from "./V2StandardTable";
-import { V2StandardTableMobile } from "./V2StandardTable.mobile";
-import { useDemoActions } from "./V2StandardTable.mock";
-import { MOCK_ORDERS } from "./V2StandardTable.mock-server";
-import type { MockOrder } from "./V2StandardTable.mock-server";
+import { V2StandardTableMobile } from "./mobile/V2StandardTable.mobile";
+import { useDemoActions } from "./mocks/V2StandardTable.mock";
+import { MOCK_ORDERS } from "./mocks/V2StandardTable.mock-server";
+import type { MockOrder } from "./mocks/V2StandardTable.mock-server";
 import type { V2ColumnPreferencesStorage } from "./V2StandardTable.type";
 
 const queryClient = new QueryClient();

@@ -15,7 +15,9 @@ import type {
   V2TableQuery,
 } from "@/v2/shared/types/v2-table";
 
-export type V2TableMode = "server" | "client";
+/** Danh sách chế độ bảng (runtime), dùng làm nguồn sự thật cho `V2TableMode` và options của Storybook */
+export const V2_TABLE_MODES = ["server", "client"] as const;
+export type V2TableMode = (typeof V2_TABLE_MODES)[number];
 export type V2MobileSlot = "title" | "subtitle" | "meta" | "hidden";
 
 export interface V2ColumnFilterSpec {
