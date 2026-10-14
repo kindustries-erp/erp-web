@@ -373,4 +373,93 @@ export const garageDashboardApi = {
     });
     return data;
   },
+
+  getMonthlyReceivablesBreakdown: async (params: {
+    month: string;
+    branch_id?: string;
+  }): Promise<MonthlyReceivablesBreakdownResponse> => {
+    const { data } =
+      await axiosInstance.get<MonthlyReceivablesBreakdownResponse>(
+        `${BASE}/monthly-receivables-breakdown`,
+        { params },
+      );
+    return data;
+  },
 };
+
+export interface MonthlyReceivablesCaseItem {
+  id: string;
+  soChungTu: string;
+  bienSoXe: string;
+  khachHangName: string;
+  khachHangCode?: string | null;
+  amount: number;
+  paid: number;
+  remaining: number;
+  vatAmount: number;
+  invoiceNo?: string;
+  invoiceId?: string;
+  buyerName?: string;
+  vatWarning: boolean;
+}
+
+export interface MonthlyReceivablesGroupItem {
+  key: string;
+  payerType: "KH" | "BH";
+  title: string;
+  subLabel?: string;
+  buyerName: string;
+  companyName?: string;
+  customerName?: string;
+  taxCode?: string | null;
+  hasInvoice: boolean;
+  invoiceNos: string[];
+  hasVat: boolean;
+  vatAmount: number;
+  vatWarning: boolean;
+  caseCount: number;
+  billed: number;
+  paid: number;
+  remaining: number;
+  rate: number;
+  shareRate: number;
+  cases: MonthlyReceivablesCaseItem[];
+}
+
+export interface ReceivablesPayerSummary {
+  billed: number;
+  paid: number;
+  remaining: number;
+  rate: number;
+  caseCount: number;
+  withInvoiceAmount: number;
+  noInvoiceAmount: number;
+  vatAmount: number;
+  vatWithoutInvoiceAmount: number;
+}
+
+export interface ReceivablesVatWarningSummary {
+  hasVatWithoutInvoice: boolean;
+  totalVatWithoutInvoice: number;
+  casesWithVatNoInvoiceCount: number;
+}
+
+export interface MonthlyReceivablesSummary {
+  totalBilled: number;
+  totalPaid: number;
+  totalRemaining: number;
+  collectionRate: number;
+  caseCount: number;
+  customer: ReceivablesPayerSummary;
+  insurance: ReceivablesPayerSummary;
+  warning: ReceivablesVatWarningSummary;
+}
+
+export interface MonthlyReceivablesBreakdownResponse {
+  month: string;
+  monthLabel: string;
+  summary: MonthlyReceivablesSummary;
+  insuranceCompanies: MonthlyReceivablesGroupItem[];
+  customerPartners: MonthlyReceivablesGroupItem[];
+  allGroups: MonthlyReceivablesGroupItem[];
+}

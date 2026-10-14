@@ -1,6 +1,9 @@
 import React, { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
+import {
+  StandardFormDrawer,
+  type DrawerTopTabItem,
+} from "@/shared/components/StandardFormDrawer";
 import { DrawerSection } from "@/shared/components/DrawerModal";
 import { Badge } from "@/shared/components/ui/badge";
 import { money } from "@/shared/utils/format";
@@ -15,6 +18,10 @@ import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import type { GarageTrendItem } from "../api/garageDashboardApi";
 import { GarageMonthClassificationCasesDrawer } from "./GarageMonthClassificationCasesDrawer";
+import { useGarageMonthReceivablesBreakdown } from "../hooks/useGarageMonthReceivablesBreakdown";
+import { MonthPayerKpiGrid } from "./organisms/garage-month-detail-drawer/components/MonthPayerKpiGrid";
+import { MonthInvoicePartnerTable } from "./organisms/garage-month-detail-drawer/components/MonthInvoicePartnerTable";
+import type { MonthlyReceivablesGroupItem } from "../api/garageDashboardApi";
 import {
   Wallet,
   Truck,
@@ -24,6 +31,9 @@ import {
   HelpCircle,
   Table as TableIcon,
   Eye,
+  ShieldCheck,
+  User,
+  AlertTriangle,
 } from "lucide-react";
 
 interface GarageMonthDetailDrawerProps {
@@ -138,14 +148,16 @@ export function GarageMonthDetailDrawer({
 
   const [classificationDrawerState, setClassificationDrawerState] = useState<{
     open: boolean;
-    filterType: "CLASSIFICATION" | "INVOICE";
+    filterType: "CLASSIFICATION" | "INVOICE" | "PARTNER_GROUP";
     filterKey: string;
     filterLabel: string;
+    caseCodes?: string[];
   }>({
     open: false,
     filterType: "CLASSIFICATION",
     filterKey: "",
     filterLabel: "",
+    caseCodes: undefined,
   });
 
   // Table Column State Hook for Client-side Filter & Sort
@@ -174,6 +186,28 @@ export function GarageMonthDetailDrawer({
       },
     [item],
   );
+
+  // Hook lấy phân rã Phải thu Khách hàng & Bảo hiểm theo đối tượng HĐ
+  const {
+    summary: breakdownSummary,
+    insuranceCompanies,
+    customerPartners,
+    allGroups,
+    warning: vatWarningInfo,
+  } = useGarageMonthReceivablesBreakdown({
+    month: safeItem.label,
+    enabled: open && isReceipt,
+  });
+
+  const handleSelectPartnerGroup = (group: MonthlyReceivablesGroupItem) => {
+    setClassificationDrawerState({
+      open: true,
+      filterType: "PARTNER_GROUP",
+      filterKey: group.key,
+      filterLabel: `${group.payerType === "BH" ? "🛡️ " : "👤 "}${group.title}`,
+      caseCodes: group.cases.map((c) => c.soChungTu),
+    });
+  };
 
   const formatMonth = (m?: string) => {
     if (!m) return "";
@@ -284,10 +318,10 @@ export function GarageMonthDetailDrawer({
         name: "Sửa chữa chung",
         subLabel: "Bảo dưỡng định kỳ, sửa chữa tổng quát",
         icon: (
-          <Wrench className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+          <Wrench className="w-3.5 h-3.5 text-slate-600 dark:text-slate-400" />
         ),
         badgeClass:
-          "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/50 dark:text-blue-300 dark:border-blue-800/40",
+          "bg-slate-100 text-slate-850 border-slate-300 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700",
         caseCount: countScc,
         billed: billedScc,
         paid: paidScc,
@@ -819,81 +853,164 @@ export function GarageMonthDetailDrawer({
     };
   }, [filteredClassificationRows, mainBilled, isReceipt]);
 
-  // ── LEFT PANEL: Standard Table of Classifications ────────────────
-  const leftPanel = (
-    <div className="flex flex-col gap-4">
-      {/* Main Content: Table Phân loại theo Nghiệp vụ */}
-      <DrawerSection
-        title={
-          <div className="flex items-center gap-2">
-            <span>Bảng phân loại theo Nghiệp vụ (Classification)</span>
-            {classificationTableHook.activeFilterCount > 0 && (
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  classificationTableHook.resetFilters();
+  // ── Build Drawer Top Tabs (Main Tabs cấp Drawer chuẩn /standardize-drawer) ──
+  const drawerTabs = useMemo<DrawerTopTabItem[]>(() => {
+    const tabs: DrawerTopTabItem[] = [
+      // Main Tab 1: Phân loại Nghiệp vụ
+      {
+        key: "classification",
+        label: isReceipt ? "Phân loại Nghiệp vụ" : "Phân loại Chi phí",
+        icon: <TableIcon className="w-3.5 h-3.5" />,
+        badgeCount: classificationRows.length,
+        content: (
+          <div className="space-y-4">
+            <DrawerSection
+              title={
+                <div className="flex items-center gap-2">
+                  <span>
+                    {isReceipt
+                      ? "Bảng phân loại theo Nghiệp vụ (Classification)"
+                      : "Bảng phân loại Chi phí"}
+                  </span>
+                  {classificationTableHook.activeFilterCount > 0 && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        classificationTableHook.resetFilters();
+                      }}
+                      className="text-[11px] font-medium text-destructive hover:underline flex items-center gap-1 bg-destructive/10 px-2.5 py-0.5 rounded-full lowercase first-letter:uppercase tracking-normal font-sans"
+                    >
+                      <span>
+                        Xóa bộ lọc ({classificationTableHook.activeFilterCount})
+                      </span>
+                    </button>
+                  )}
+                </div>
+              }
+              collapsible={false}
+              titleExtra={
+                <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <TableIcon className="w-3.5 h-3.5 text-primary mr-1" />
+                  {filteredClassificationRows.length} /{" "}
+                  {classificationRows.length} phân loại
+                </div>
+              }
+            >
+              <DataTable
+                items={filteredClassificationRows}
+                getRowKey={(row) => row.key}
+                variant="spreadsheet"
+                columns={classificationColumns}
+                summaryRow={classificationSummaryRow}
+                emptyLabel="Không tìm thấy phân loại phù hợp bộ lọc"
+                enableColumnResizing={true}
+                tableId={classificationTableId}
+                onRowClick={(row: MonthClassificationRow) => {
+                  setClassificationDrawerState({
+                    open: true,
+                    filterType: "CLASSIFICATION",
+                    filterKey: row.key,
+                    filterLabel: row.name,
+                  });
                 }}
-                className="text-[11px] font-medium text-destructive hover:underline flex items-center gap-1 bg-destructive/10 px-2 py-0.5 rounded-full lowercase first-letter:uppercase tracking-normal font-sans"
-              >
-                <span>
-                  Xóa bộ lọc ({classificationTableHook.activeFilterCount})
-                </span>
-              </button>
-            )}
-          </div>
-        }
-        collapsible={true}
-        defaultCollapsed={false}
-        titleExtra={
-          <div className="flex items-center gap-1 text-xs text-muted-foreground">
-            <TableIcon className="w-3.5 h-3.5 text-primary mr-1" />
-            {filteredClassificationRows.length} / {classificationRows.length}{" "}
-            phân loại
-          </div>
-        }
-      >
-        <DataTable
-          items={filteredClassificationRows}
-          getRowKey={(row) => row.key}
-          variant="spreadsheet"
-          columns={classificationColumns}
-          summaryRow={classificationSummaryRow}
-          emptyLabel="Không tìm thấy phân loại phù hợp bộ lọc"
-          enableColumnResizing={true}
-          tableId={classificationTableId}
-          onRowClick={(row: MonthClassificationRow) => {
-            setClassificationDrawerState({
-              open: true,
-              filterType: "CLASSIFICATION",
-              filterKey: row.key,
-              filterLabel: row.name,
-            });
-          }}
-          rowHoverActions={(row: MonthClassificationRow) => [
-            {
-              groupLabel: "TRA CỨU",
-              items: [
-                {
-                  label: "Xem chi tiết danh sách vụ việc",
-                  icon: <Eye className="w-3.5 h-3.5" />,
-                  onClick: () => {
-                    setClassificationDrawerState({
-                      open: true,
-                      filterType: "CLASSIFICATION",
-                      filterKey: row.key,
-                      filterLabel: row.name,
-                    });
+                rowHoverActions={(row: MonthClassificationRow) => [
+                  {
+                    groupLabel: "TRA CỨU",
+                    items: [
+                      {
+                        label: "Xem chi tiết danh sách vụ việc",
+                        icon: <Eye className="w-3.5 h-3.5" />,
+                        onClick: () => {
+                          setClassificationDrawerState({
+                            open: true,
+                            filterType: "CLASSIFICATION",
+                            filterKey: row.key,
+                            filterLabel: row.name,
+                          });
+                        },
+                        quickAction: true,
+                      },
+                    ],
                   },
-                  quickAction: true,
-                },
-              ],
-            },
-          ]}
-        />
-      </DrawerSection>
-    </div>
-  );
+                ]}
+              />
+            </DrawerSection>
+          </div>
+        ),
+      },
+    ];
+
+    // Main Tab 2: Chi tiết Thu KH & Thu BH theo Đối tượng Hóa đơn (Chỉ hiển thị khi là Phải Thu)
+    if (isReceipt) {
+      tabs.push({
+        key: "partner_breakdown",
+        label: "Đối tượng HĐ (Thu KH & BH)",
+        icon: <ShieldCheck className="w-3.5 h-3.5" />,
+        badgeCount: insuranceCompanies.length + customerPartners.length,
+        content: (
+          <div className="flex flex-col gap-3.5">
+            {/* 2 Thẻ KPI tương phản Thu KH vs Thu BH */}
+            <MonthPayerKpiGrid summary={breakdownSummary} />
+
+            {/* Bảng Gom nhóm Đối tượng HĐ & Từng Cty BH (có PillTabs sub-navigation chuẩn erp-invoice) */}
+            <DrawerSection
+              title={
+                <div className="flex items-center gap-2">
+                  <span>Chi tiết Thu KH & Thu BH theo Đối tượng Hóa đơn</span>
+                  {vatWarningInfo?.hasVatWithoutInvoice && (
+                    <Badge
+                      variant="outline"
+                      className="bg-amber-500/15 text-amber-800 dark:text-amber-200 border-amber-500/35 font-bold text-[10px] gap-1 px-1.5"
+                    >
+                      <AlertTriangle className="w-3 h-3 text-amber-500" />
+                      Có {vatWarningInfo.casesWithVatNoInvoiceCount} vụ việc VAT
+                      chưa HĐ
+                    </Badge>
+                  )}
+                </div>
+              }
+              collapsible={false}
+              titleExtra={
+                <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <ShieldCheck className="w-3.5 h-3.5 text-indigo-500 mr-1" />
+                  {insuranceCompanies.length} Cty BH • {customerPartners.length}{" "}
+                  Khách hàng
+                </div>
+              }
+            >
+              <div className="pt-1">
+                <MonthInvoicePartnerTable
+                  insuranceCompanies={insuranceCompanies}
+                  customerPartners={customerPartners}
+                  allGroups={allGroups}
+                  warning={vatWarningInfo}
+                  totalBilled={breakdownSummary?.totalBilled ?? mainBilled}
+                  onSelectGroup={handleSelectPartnerGroup}
+                />
+              </div>
+            </DrawerSection>
+          </div>
+        ),
+      });
+    }
+
+    return tabs;
+  }, [
+    isReceipt,
+    classificationRows.length,
+    classificationTableHook,
+    filteredClassificationRows,
+    classificationColumns,
+    classificationSummaryRow,
+    classificationTableId,
+    insuranceCompanies,
+    customerPartners,
+    breakdownSummary,
+    vatWarningInfo,
+    allGroups,
+    mainBilled,
+  ]);
 
   // ── RIGHT PANEL: Separate Top-level DrawerSections ───────────────
   const rightPanel = (
@@ -935,6 +1052,41 @@ export function GarageMonthDetailDrawer({
         </div>
       </DrawerSection>
 
+      {/* 1.1. Section: Cơ cấu Thu KH vs Thu BH (Chỉ hiện khi Xem Phải thu) */}
+      {isReceipt && breakdownSummary && (
+        <DrawerSection
+          title="Cơ cấu Thu KH vs Thu BH"
+          collapsible={true}
+          defaultCollapsed={false}
+        >
+          <div className="flex flex-col rounded-xl border border-border/60 overflow-hidden bg-background/50 divide-y divide-border/40">
+            <MoneyRow
+              label="Thu Khách hàng"
+              value={breakdownSummary.customer.billed}
+              secondary={`Đã thu ${breakdownSummary.customer.rate.toFixed(1)}%`}
+              valueClass="font-bold text-foreground"
+            />
+            <MoneyRow
+              label="Thu Bảo hiểm"
+              value={breakdownSummary.insurance.billed}
+              secondary={`Đã thu ${breakdownSummary.insurance.rate.toFixed(1)}%`}
+              valueClass="font-bold text-indigo-600 dark:text-indigo-400"
+            />
+            {vatWarningInfo?.hasVatWithoutInvoice && (
+              <div className="flex items-center justify-between py-2 px-3 bg-amber-500/10 text-amber-900 dark:text-amber-200">
+                <span className="text-[11px] font-semibold flex items-center gap-1">
+                  <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                  VAT chưa xuất HĐ
+                </span>
+                <span className="text-[11px] font-mono font-bold">
+                  {money(vatWarningInfo.totalVatWithoutInvoice)}
+                </span>
+              </div>
+            )}
+          </div>
+        </DrawerSection>
+      )}
+
       {/* 2. Section: Thống kê số lượng vụ việc theo Phân loại */}
       <DrawerSection
         title="Thống kê Vụ việc theo Phân loại"
@@ -953,12 +1105,12 @@ export function GarageMonthDetailDrawer({
           </div>
 
           {/* Sửa chữa chung */}
-          <div className="flex flex-col items-center justify-center rounded-xl bg-blue-50/40 dark:bg-blue-950/30 border border-blue-200/50 dark:border-blue-800/30 p-2.5 gap-0.5">
-            <span className="text-xl font-bold tabular-nums text-blue-700 dark:text-blue-300">
+          <div className="flex flex-col items-center justify-center rounded-xl bg-slate-100/60 dark:bg-slate-800/50 border border-border/50 p-2.5 gap-0.5">
+            <span className="text-xl font-bold tabular-nums text-foreground">
               {countScc}
             </span>
             <span className="text-[11px] text-muted-foreground text-center font-medium flex items-center gap-1">
-              <Wrench className="w-3 h-3 text-blue-500" />
+              <Wrench className="w-3 h-3 text-slate-500" />
               Sửa chữa chung
             </span>
           </div>
@@ -1007,14 +1159,14 @@ export function GarageMonthDetailDrawer({
       >
         <div className="flex flex-col gap-1.5">
           {/* Sửa chữa chung */}
-          <div className="flex items-center justify-between rounded-lg bg-blue-50/30 dark:bg-blue-950/20 border border-blue-200/40 dark:border-blue-800/30 px-3 py-1.5">
+          <div className="flex items-center justify-between rounded-lg bg-slate-100/50 dark:bg-slate-800/40 border border-border/50 px-3 py-1.5">
             <div className="flex items-center gap-1.5 text-[12px] font-medium text-foreground">
-              <Wrench className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+              <Wrench className="w-3.5 h-3.5 text-slate-600 dark:text-slate-400" />
               Sửa chữa chung
             </div>
             <Badge
               variant="outline"
-              className="font-bold text-[11px] px-2 py-0 border tabular-nums bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-500/25"
+              className="font-bold text-[11px] px-2 py-0 border tabular-nums bg-slate-100 dark:bg-slate-800 text-foreground border-border"
             >
               {rateScc.toFixed(1)}%
             </Badge>
@@ -1090,9 +1242,10 @@ export function GarageMonthDetailDrawer({
         }
         size="xl"
         layout="2-columns"
+        tabs={drawerTabs}
+        defaultTabKey="classification"
         collapsibleRightPanel={true}
         rightPanelDefaultCollapsed={false}
-        leftPanel={leftPanel}
         rightPanel={rightPanel}
         actions={[{ label: "Đóng", variant: "outline", onClick: onClose }]}
       />
@@ -1106,6 +1259,7 @@ export function GarageMonthDetailDrawer({
         filterKey={classificationDrawerState.filterKey}
         filterLabel={classificationDrawerState.filterLabel}
         activeTab={activeTab}
+        caseCodes={classificationDrawerState.caseCodes}
         onClose={() =>
           setClassificationDrawerState((prev) => ({ ...prev, open: false }))
         }
