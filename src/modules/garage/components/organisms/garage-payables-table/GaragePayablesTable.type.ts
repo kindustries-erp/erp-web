@@ -8,7 +8,11 @@ export interface GaragePayablesTableProps {
   tabs?: TabItem[];
   activeTab?: string;
   onTabChange?: (tab: string) => void;
-  onOpenCustomerDetail?: (customer: { code: string; name: string }) => void;
+  onOpenCustomerDetail?: (customer: {
+    code: string;
+    name: string;
+    debtType?: "receivables" | "payables";
+  }) => void;
   onOpenSupplierDetail?: (supplier: {
     id: string;
     code: string;
@@ -22,7 +26,11 @@ export interface CreateBaseColumnsProps {
   getSortState: (key: string) => "asc" | "desc" | "none";
   listHook: ReturnType<typeof useGarageSuppliersList>;
   t: (key: string, fallback: string) => string;
-  onOpenCustomerDetail?: (customer: { code: string; name: string }) => void;
+  onOpenCustomerDetail?: (customer: {
+    code: string;
+    name: string;
+    debtType?: "receivables" | "payables";
+  }) => void;
   onOpenSupplierDetail?: (supplier: {
     id: string;
     code: string;

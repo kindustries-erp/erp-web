@@ -24,7 +24,11 @@ export function createBaseColumns({
 }: CreateBaseColumnsProps): DataTableColumn<SupplierDebtItem>[] {
   const handleOpenDetail = (row: SupplierDebtItem) => {
     if (onOpenCustomerDetail) {
-      onOpenCustomerDetail({ code: row.customerCode, name: row.customerName });
+      onOpenCustomerDetail({
+        code: row.customerCode,
+        name: row.customerName,
+        debtType: "payables",
+      });
     } else {
       onOpenSupplierDetail?.({
         id: row.id,

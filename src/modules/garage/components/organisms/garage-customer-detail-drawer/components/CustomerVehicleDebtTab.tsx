@@ -9,17 +9,19 @@ import type { VehicleDebtStat } from "../types";
 
 interface CustomerVehicleDebtTabProps {
   vehicleStats: VehicleDebtStat[];
+  debtType?: "receivables" | "payables";
 }
 
 export const CustomerVehicleDebtTab = React.memo(
   function CustomerVehicleDebtTab({
     vehicleStats,
+    debtType = "receivables",
   }: CustomerVehicleDebtTabProps) {
     const { t } = useTranslation(["garage", "common"]);
+    const isPayables = debtType === "payables";
 
     const columns: DataTableColumn<VehicleDebtStat>[] = useMemo(
       () => [
-        // 1. STT
         {
           key: "index",
           header: <span className="w-full block text-center">#</span>,
@@ -29,10 +31,8 @@ export const CustomerVehicleDebtTab = React.memo(
           headerClassName: "text-center w-[40px] min-w-[40px]",
           className:
             "text-center w-[40px] min-w-[40px] font-mono text-xs text-muted-foreground",
-          cell: (_: any, idx: number) => idx + 1,
+          cell: (_: any, idx: number) => idx,
         },
-
-        // 2. Biển số xe
         {
           key: "licensePlate",
           header: t("customers.drawer.licensePlate", "Biển số xe"),
@@ -46,8 +46,6 @@ export const CustomerVehicleDebtTab = React.memo(
             </span>
           ),
         },
-
-        // 3. Số vụ việc
         {
           key: "caseCount",
           className: "text-center",
@@ -61,12 +59,12 @@ export const CustomerVehicleDebtTab = React.memo(
             </Badge>
           ),
         },
-
-        // 4. Doanh thu hoàn thành
         {
           key: "totalRevenue",
           className: "text-right",
-          header: t("customers.drawer.totalAmount", "Doanh thu hoàn thành"),
+          header: isPayables
+            ? t("customers.drawer.totalCost", "Tổng chi phí")
+            : t("customers.drawer.totalAmount", "Doanh thu hoàn thành"),
           size: 140,
           minSize: 120,
           enableResizing: true,
@@ -76,12 +74,12 @@ export const CustomerVehicleDebtTab = React.memo(
             </span>
           ),
         },
-
-        // 5. Đã thu
         {
           key: "totalPaid",
           className: "text-right",
-          header: t("customers.drawer.paidAmount", "Đã thu"),
+          header: isPayables
+            ? t("customers.drawer.paidPayables", "Đã chi")
+            : t("customers.drawer.paidAmount", "Đã thu"),
           size: 130,
           minSize: 115,
           enableResizing: true,
@@ -91,12 +89,12 @@ export const CustomerVehicleDebtTab = React.memo(
             </span>
           ),
         },
-
-        // 6. Còn nợ
         {
           key: "totalBalance",
           className: "text-right",
-          header: t("customers.drawer.balanceAmount", "Còn nợ"),
+          header: isPayables
+            ? t("customers.drawer.balancePayables", "Còn phải chi")
+            : t("customers.drawer.balanceAmount", "Còn nợ"),
           size: 130,
           minSize: 115,
           enableResizing: true,
@@ -113,8 +111,6 @@ export const CustomerVehicleDebtTab = React.memo(
             </span>
           ),
         },
-
-        // 7. Tuổi nợ cao nhất
         {
           key: "maxAgingDays",
           className: "text-center",
@@ -151,7 +147,7 @@ export const CustomerVehicleDebtTab = React.memo(
           },
         },
       ],
-      [t],
+      [isPayables, t],
     );
 
     return (

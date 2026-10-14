@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
 import { PillTabs } from "@/shared/components/PillTabs";
 import { CustomerDetailHeader } from "./components/CustomerDetailHeader";
-import { CustomerKpiSummaryCards } from "./components/CustomerKpiSummaryCards";
+import { CustomerDetailDebtSwitch } from "./components/CustomerDetailDebtSwitch";
 import { CustomerCasesTableTab } from "./components/CustomerCasesTableTab";
 import { CustomerPipelineTab } from "./components/CustomerPipelineTab";
 import { CustomerVehicleDebtTab } from "./components/CustomerVehicleDebtTab";
@@ -20,6 +20,8 @@ export function GarageCustomerDetailDrawer(
   const { t } = useTranslation(["garage", "common"]);
   const logic = useGarageCustomerDetailLogic(props);
 
+  const isPayables = logic.activeDebtType === "payables";
+
   const subTabs = useMemo(
     () => [
       {
@@ -29,7 +31,9 @@ export function GarageCustomerDetailDrawer(
       },
       {
         value: "pipeline",
-        label: t("customers.drawer.tabPipeline", "2. Xe đang làm (Dự thu)"),
+        label: isPayables
+          ? t("customers.drawer.tabPipelinePayables", "2. Xe đang làm (Dự chi)")
+          : t("customers.drawer.tabPipeline", "2. Xe đang làm (Dự thu)"),
         badge:
           logic.inProgressCases.length > 0
             ? logic.inProgressCases.length
@@ -46,6 +50,7 @@ export function GarageCustomerDetailDrawer(
       },
     ],
     [
+      isPayables,
       logic.completedCases.length,
       logic.inProgressCases.length,
       logic.vehicleDebtStats.length,
@@ -54,15 +59,22 @@ export function GarageCustomerDetailDrawer(
   );
 
   const leftContent = (
-    <div className="flex flex-col gap-4 flex-1 min-h-0 w-full">
-      <CustomerKpiSummaryCards totals={logic.totals} />
+    <div className="flex flex-col gap-3 flex-1 min-h-0 w-full">
+      <div className="flex items-center justify-between gap-3 overflow-x-auto scrollbar-none max-w-full pb-1 shrink-0 border-b border-border/40">
+        <div className="flex items-center overflow-x-auto scrollbar-none">
+          <PillTabs
+            items={subTabs}
+            value={logic.activeSubTab}
+            onValueChange={logic.setActiveSubTab}
+          />
+        </div>
 
-      <div className="flex items-center overflow-x-auto scrollbar-none max-w-full pb-1 shrink-0">
-        <PillTabs
-          items={subTabs}
-          value={logic.activeSubTab}
-          onValueChange={logic.setActiveSubTab}
-        />
+        <div className="flex items-center gap-2 shrink-0">
+          <CustomerDetailDebtSwitch
+            value={logic.activeDebtType}
+            onChange={logic.setActiveDebtType}
+          />
+        </div>
       </div>
 
       <div className="flex-1 min-h-0 flex flex-col w-full">
@@ -70,11 +82,13 @@ export function GarageCustomerDetailDrawer(
           <CustomerCasesTableTab
             cases={logic.paginatedCompletedCases}
             totalCount={logic.filteredCompletedCases.length}
+            totals={logic.totals}
             page={logic.page}
             pageSize={logic.pageSize}
             onPageChange={logic.setPage}
             onPageSizeChange={logic.setPageSize}
             tableState={logic.tableState}
+            debtType={logic.activeDebtType}
             onOpenCaseDetail={(code, edit) => {
               logic.setSelectedCaseCode(code);
               logic.setDrawerEditMode(Boolean(edit));
@@ -95,7 +109,10 @@ export function GarageCustomerDetailDrawer(
         )}
 
         {logic.activeSubTab === "vehicles" && (
-          <CustomerVehicleDebtTab vehicleStats={logic.vehicleDebtStats} />
+          <CustomerVehicleDebtTab
+            vehicleStats={logic.vehicleDebtStats}
+            debtType={logic.activeDebtType}
+          />
         )}
 
         {logic.activeSubTab === "analytics" && (
@@ -136,6 +153,7 @@ export function GarageCustomerDetailDrawer(
             customerCode={customerCode}
             customerName={customerName}
             totals={logic.totals}
+            debtType={logic.activeDebtType}
           />
         }
       />

@@ -18,10 +18,27 @@ export function useGarageCustomerDetailLogic({
   open,
   customerCode,
   branchId,
+  debtType = "receivables",
+  onDebtTypeChange,
 }: GarageCustomerDetailDrawerProps) {
   const { t } = useTranslation(["garage", "common"]);
   const queryClient = useQueryClient();
   const { mutate: syncCaseDetail } = useSyncGarageCaseDetail();
+
+  const [activeDebtType, setActiveDebtType] = useState<
+    "receivables" | "payables"
+  >(debtType);
+  useEffect(() => {
+    if (debtType) setActiveDebtType(debtType);
+  }, [debtType]);
+
+  const handleDebtTypeChange = useCallback(
+    (newType: "receivables" | "payables") => {
+      setActiveDebtType(newType);
+      onDebtTypeChange?.(newType);
+    },
+    [onDebtTypeChange],
+  );
 
   const [selectedCaseCode, setSelectedCaseCode] = useState<string | null>(null);
   const [drawerEditMode, setDrawerEditMode] = useState<boolean>(false);
@@ -30,14 +47,10 @@ export function useGarageCustomerDetailLogic({
     null,
   );
 
-  // Sub-tabs navigation state
   const [activeSubTab, setActiveSubTab] = useState<string>("cases");
-
-  // Client-side pagination state
   const [page, setPage] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(10);
 
-  // Table client filter & sorting state hook
   const tableState = useTableColumnState(
     `garage-customer-cases-detail-${customerCode || "unknown"}`,
   );
@@ -55,7 +68,6 @@ export function useGarageCustomerDetailLogic({
     enabled: open && Boolean(customerCode),
   });
 
-  // Separate completed cases (official debt) vs in-progress cases (pipeline)
   const completedCases = useMemo(() => {
     return allCases.filter(
       (c: any) => c.isCompleted !== false && Boolean(c.ngayHoanThanhCongViec),
@@ -68,7 +80,6 @@ export function useGarageCustomerDetailLogic({
     );
   }, [allCases]);
 
-  // Reset pagination when table filter changes
   useEffect(() => {
     setPage(1);
   }, [
@@ -81,23 +92,23 @@ export function useGarageCustomerDetailLogic({
     tableState.dateTo,
   ]);
 
-  const totals = useMemo(() => {
-    return calculateCustomerDebtTotals(allCases);
-  }, [allCases]);
+  const totals = useMemo(
+    () => calculateCustomerDebtTotals(allCases, activeDebtType),
+    [allCases, activeDebtType],
+  );
+  const vehicleDebtStats = useMemo(
+    () => calculateVehicleDebtStats(allCases, activeDebtType),
+    [allCases, activeDebtType],
+  );
+  const agingDonutItems = useMemo(
+    () => calculateAgingDonutItems(totals),
+    [totals],
+  );
+  const monthlyTrendItems = useMemo(
+    () => calculateMonthlyTrendItems(allCases, activeDebtType),
+    [allCases, activeDebtType],
+  );
 
-  const vehicleDebtStats = useMemo(() => {
-    return calculateVehicleDebtStats(allCases);
-  }, [allCases]);
-
-  const agingDonutItems = useMemo(() => {
-    return calculateAgingDonutItems(totals);
-  }, [totals]);
-
-  const monthlyTrendItems = useMemo(() => {
-    return calculateMonthlyTrendItems(allCases);
-  }, [allCases]);
-
-  // Filtered completed cases for Tab 1
   const filteredCompletedCases = useMemo(() => {
     return filterClientItems(completedCases, tableState, {
       dateField: "ngayHoanThanhCongViec",
@@ -157,6 +168,8 @@ export function useGarageCustomerDetailLogic({
     monthlyTrendItems,
     activeSubTab,
     setActiveSubTab,
+    activeDebtType,
+    setActiveDebtType: handleDebtTypeChange,
     page,
     setPage,
     pageSize,

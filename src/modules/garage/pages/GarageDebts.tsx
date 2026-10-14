@@ -31,12 +31,9 @@ export function GarageDebts({
     (tab: string | null) => {
       if (tab === "cashflow" && canReadCashflow) return "cashflow";
       if (
-        tab === "receivables" ||
-        tab === "payables" ||
-        tab === "overview" ||
-        tab === "customers"
+        ["receivables", "payables", "overview", "customers"].includes(tab || "")
       )
-        return tab;
+        return tab as string;
       return "overview";
     },
     [canReadCashflow],
@@ -56,6 +53,7 @@ export function GarageDebts({
   const [selectedCustomer, setSelectedCustomer] = useState<{
     code: string;
     name: string;
+    debtType?: "receivables" | "payables";
   } | null>(null);
   const [selectedSupplier, setSelectedSupplier] = useState<{
     id: string;
@@ -90,9 +88,8 @@ export function GarageDebts({
   }, []);
 
   useEffect(() => {
-    if (activeTab === "cashflow" && !canReadCashflow) {
+    if (activeTab === "cashflow" && !canReadCashflow)
       handleTabChange("overview");
-    }
   }, [activeTab, canReadCashflow, handleTabChange]);
 
   const pageTabs: TabItem[] = useMemo(() => {
@@ -101,12 +98,11 @@ export function GarageDebts({
       { value: "receivables", label: t("partners.tabReceivables", "Phải thu") },
       { value: "payables", label: t("partners.tabPayables", "Phải trả") },
     ];
-    if (canReadCashflow) {
+    if (canReadCashflow)
       tabs.push({
         value: "cashflow",
         label: t("debts:tabs.cashflow", "Thu chi xưởng"),
       });
-    }
     return tabs;
   }, [t, canReadCashflow]);
 
@@ -119,7 +115,11 @@ export function GarageDebts({
           onTabChange={handleTabChange}
           onExportClick={() => setExportDrawerOpen(true)}
           onOpenCustomerDetail={(code, name) =>
-            setSelectedCustomer({ code, name: name || "" })
+            setSelectedCustomer({
+              code,
+              name: name || "",
+              debtType: "receivables",
+            })
           }
         />
       )}
@@ -129,7 +129,9 @@ export function GarageDebts({
           tabs={pageTabs}
           activeTab={activeTab}
           onTabChange={handleTabChange}
-          onOpenCustomerDetail={setSelectedCustomer}
+          onOpenCustomerDetail={(cust) =>
+            setSelectedCustomer({ ...cust, debtType: "payables" })
+          }
           onOpenSupplierDetail={setSelectedSupplier}
           onOpenExportDrawer={() => setExportDrawerOpen(true)}
         />
@@ -140,7 +142,9 @@ export function GarageDebts({
           tabs={pageTabs}
           activeTab={activeTab === "customers" ? "receivables" : activeTab}
           onTabChange={handleTabChange}
-          onOpenCustomerDetail={setSelectedCustomer}
+          onOpenCustomerDetail={(cust) =>
+            setSelectedCustomer({ ...cust, debtType: "receivables" })
+          }
           onOpenExportDrawer={() => setExportDrawerOpen(true)}
         />
       )}
@@ -159,6 +163,15 @@ export function GarageDebts({
         customerCode={selectedCustomer?.code || null}
         customerName={selectedCustomer?.name}
         branchId={selectedBranchId || undefined}
+        debtType={
+          selectedCustomer?.debtType ||
+          (activeTab === "payables" ? "payables" : "receivables")
+        }
+        onDebtTypeChange={(newDebtType) => {
+          setSelectedCustomer((prev) =>
+            prev ? { ...prev, debtType: newDebtType } : null,
+          );
+        }}
       />
 
       <GarageSupplierDetailDrawer
