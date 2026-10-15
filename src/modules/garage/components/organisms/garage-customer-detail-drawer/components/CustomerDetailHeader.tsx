@@ -54,7 +54,7 @@ export const CustomerDetailHeader = React.memo(function CustomerDetailHeader({
         </div>
       </div>
 
-      <div className="flex items-center gap-2 self-end sm:self-auto">
+      <div className="flex items-center gap-2.5 self-end sm:self-auto shrink-0">
         <Button
           variant="outline"
           size="sm"

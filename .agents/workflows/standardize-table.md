@@ -237,6 +237,12 @@ export function useExampleColumns(
 }
 ```
 
+#### 3. Nguyên Tắc Bảo Toàn Checked Options Khi Searchbox Active (Header Filter Standard)
+- **Ghim Checked Options Lên Đầu**: Khi ô searchbox có từ khóa tìm kiếm, toàn bộ options đang được tick chọn (`pendingFilters`) phải được giữ lại trên đầu danh sách `finalOptions` (cả Server Mode và Client Mode), kèm nhãn hiển thị đầy đủ thông qua cache nhãn `knownLabelsRef`.
+- **Chống Lọc Kép (Double-Filtering Prevention)**:
+  - Khi người dùng bấm **Áp dụng** với các checkbox cụ thể, `handleApply` tự động gọi `onSearchChange("")` và xóa sạch dropdown search state, tránh việc bảng dữ liệu vừa lọc `IN (checkboxes)` vừa lọc `LIKE %text%`.
+  - Trong logic lọc dữ liệu bảng (`applyTableState`), nếu cột đã có `columnFilters` cụ thể được chọn thì bỏ qua `columnSearch` của cột đó.
+
 ---
 
 ### 🔹 GIAI ĐOẠN 4: Lắp Ráp Table Organism & Subtotal Summary Cell (`[Name]Table.tsx`)

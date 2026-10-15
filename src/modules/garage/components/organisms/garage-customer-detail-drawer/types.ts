@@ -4,6 +4,8 @@ export interface GarageCustomerDetailDrawerProps {
   customerCode: string | null;
   customerName?: string;
   branchId?: string;
+  debtType?: "receivables" | "payables";
+  onDebtTypeChange?: (debtType: "receivables" | "payables") => void;
 }
 
 export interface CustomerDebtTotals {

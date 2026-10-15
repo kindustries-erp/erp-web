@@ -185,20 +185,55 @@ export function TableColumnHeaderFilter({
     enabled: open && !!shouldFetchOptions,
   });
 
+  const knownLabelsRef = useRef<Map<string, string>>(new Map());
+
+  // Register known labels from filterOptions
+  if (filterOptions) {
+    for (const opt of filterOptions) {
+      if (opt.value != null && opt.label != null) {
+        knownLabelsRef.current.set(String(opt.value), String(opt.label));
+      }
+    }
+  }
+
+  // Register known labels from optionsData
+  if (optionsData?.pages) {
+    for (const page of optionsData.pages) {
+      if (page.items) {
+        for (const item of page.items) {
+          if (typeof item === "object" && item !== null && item.value != null) {
+            knownLabelsRef.current.set(
+              String(item.value),
+              String(item.label || item.value),
+            );
+          } else if (item != null) {
+            knownLabelsRef.current.set(String(item), String(item));
+          }
+        }
+      }
+    }
+  }
+
   const finalOptions = useMemo(() => {
     let opts: { label: string; value: string }[];
+    const activeChecked = isAllMatchingMode
+      ? []
+      : pendingFilters.filter(
+          (v) => v !== "__ALL_MATCHING__" && v !== "__BLANK__",
+        );
+
     if (filterOptions && filterOptions.length > 0) {
-      if (!debouncedLocalSearch) {
+      if (!localSearch) {
         opts = filterOptions;
       } else {
-        const keywords = debouncedLocalSearch
+        const keywords = localSearch
           .split(";")
           .map((k) => k.trim())
           .filter(Boolean);
         if (keywords.length === 0) {
           opts = filterOptions;
         } else {
-          opts = filterOptions.filter((opt) => {
+          const matchingOpts = filterOptions.filter((opt) => {
             const labelLower = (opt.label || "").toLowerCase();
             const valueLower = (opt.value || "").toLowerCase();
             return keywords.some((kw) => {
@@ -217,6 +252,21 @@ export function TableColumnHeaderFilter({
               );
             });
           });
+          const matchingValues = new Set(matchingOpts.map((o) => o.value));
+          const missingChecked = activeChecked
+            .filter((v) => !matchingValues.has(v))
+            .map((v) => {
+              const found = filterOptions.find((o) => o.value === v);
+              return (
+                found || {
+                  label:
+                    knownLabelsRef.current.get(v) ||
+                    formatCompositeFilterValue(v),
+                  value: v,
+                }
+              );
+            });
+          opts = [...missingChecked, ...matchingOpts];
         }
       }
     } else if (columnKey) {
@@ -226,15 +276,12 @@ export function TableColumnHeaderFilter({
         (o: any) => o.value !== "" && o.value !== null && o.value !== undefined,
       );
       const apiValues = new Set(apiOptions.map((o: any) => o.value));
-      const isAllMatchingActive = selectedFilters[0] === "__ALL_MATCHING__";
-      const missingSelected = isAllMatchingActive
-        ? []
-        : selectedFilters
-            .filter((v) => !apiValues.has(v) && v !== "__BLANK__")
-            .map((v) => ({
-              label: formatCompositeFilterValue(v),
-              value: v,
-            }));
+      const missingSelected = activeChecked
+        .filter((v) => !apiValues.has(v))
+        .map((v) => ({
+          label: knownLabelsRef.current.get(v) || formatCompositeFilterValue(v),
+          value: v,
+        }));
       opts = [...missingSelected, ...apiOptions];
     } else {
       opts = filterOptions || [];
@@ -248,7 +295,9 @@ export function TableColumnHeaderFilter({
     optionsData,
     filterOptions,
     columnKey,
-    selectedFilters,
+    pendingFilters,
+    isAllMatchingMode,
+    localSearch,
     debouncedLocalSearch,
     showBlankOption,
   ]);
@@ -324,18 +373,21 @@ export function TableColumnHeaderFilter({
       if (pendingFilters[0] === "__ALL_MATCHING__") {
         onFilterChange(["__ALL_MATCHING__", localSearch]);
         onSearchChange(trimmedSearch);
+        if (columnKey) setDropdownSearchState(columnKey, trimmedSearch);
       } else {
         onFilterChange(pendingFilters);
-        onSearchChange(trimmedSearch);
+        onSearchChange("");
+        if (columnKey) setDropdownSearchState(columnKey, "");
       }
     } else if (trimmedSearch) {
       onSearchChange(trimmedSearch);
       onFilterChange([]);
+      if (columnKey) setDropdownSearchState(columnKey, trimmedSearch);
     } else {
       onSearchChange("");
       onFilterChange([]);
+      if (columnKey) setDropdownSearchState(columnKey, "");
     }
-    if (columnKey) setDropdownSearchState(columnKey, trimmedSearch);
     setOpen(false);
   };
 

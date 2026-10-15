@@ -60,6 +60,8 @@ export interface ModuleCategory {
   id: string;
   moduleKey: string;
   code: string;
+  /** Khóa nghiệp vụ do code sở hữu (vd OJ); có giá trị thì server không cho xóa. */
+  semanticKey?: string | null;
   name: string;
   nameEn?: string | null;
   description?: string | null;

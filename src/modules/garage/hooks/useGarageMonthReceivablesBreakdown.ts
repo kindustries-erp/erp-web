@@ -1,0 +1,104 @@
+import { useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
+import {
+  garageDashboardApi,
+  type MonthlyReceivablesBreakdownResponse,
+  type MonthlyReceivablesSummary,
+  type MonthlyReceivablesGroupItem,
+  type MonthlyReceivablesGroupCategorized,
+  type ReceivablesVatWarningSummary,
+} from "../api/garageDashboardApi";
+
+export interface UseGarageMonthReceivablesBreakdownParams {
+  month?: string;
+  branchId?: string;
+  enabled?: boolean;
+}
+
+const EMPTY_CATEGORIZED: MonthlyReceivablesGroupCategorized = {
+  all: [],
+  withInvoice: [],
+  pendingInvoice: [],
+  noInvoice: [],
+  totals: {
+    billed: 0,
+    paid: 0,
+    remaining: 0,
+    caseCount: 0,
+    partnerCount: 0,
+  },
+};
+
+export interface UseGarageMonthReceivablesBreakdownReturn {
+  breakdown?: MonthlyReceivablesBreakdownResponse;
+  summary?: MonthlyReceivablesSummary;
+  insuranceCompanies: MonthlyReceivablesGroupItem[];
+  customerPartners: MonthlyReceivablesGroupItem[];
+  allGroups: MonthlyReceivablesGroupItem[];
+  categorized?: {
+    insurance: MonthlyReceivablesGroupCategorized;
+    enterprise: MonthlyReceivablesGroupCategorized;
+    individual: MonthlyReceivablesGroupCategorized;
+  };
+  insuranceCategorized: MonthlyReceivablesGroupCategorized;
+  enterpriseCategorized: MonthlyReceivablesGroupCategorized;
+  individualCategorized: MonthlyReceivablesGroupCategorized;
+  warning?: ReceivablesVatWarningSummary;
+  isLoading: boolean;
+  isFetching: boolean;
+  refetch: () => Promise<void>;
+}
+
+export function useGarageMonthReceivablesBreakdown({
+  month,
+  branchId,
+  enabled = true,
+}: UseGarageMonthReceivablesBreakdownParams = {}): UseGarageMonthReceivablesBreakdownReturn {
+  const query = useQuery({
+    queryKey: ["garage-monthly-receivables-breakdown", month, branchId],
+    queryFn: () =>
+      garageDashboardApi.getMonthlyReceivablesBreakdown({
+        month: month || "",
+        branch_id: branchId || undefined,
+      }),
+    enabled: Boolean(month) && enabled,
+    staleTime: 30000,
+  });
+
+  const refetch = async () => {
+    await query.refetch();
+  };
+
+  const data = query.data;
+
+  const insuranceCategorized = useMemo(
+    () => data?.categorized?.insurance ?? EMPTY_CATEGORIZED,
+    [data?.categorized?.insurance],
+  );
+
+  const enterpriseCategorized = useMemo(
+    () => data?.categorized?.enterprise ?? EMPTY_CATEGORIZED,
+    [data?.categorized?.enterprise],
+  );
+
+  const individualCategorized = useMemo(
+    () => data?.categorized?.individual ?? EMPTY_CATEGORIZED,
+    [data?.categorized?.individual],
+  );
+
+  return {
+    breakdown: data,
+    summary: data?.summary,
+    insuranceCompanies: data?.insuranceCompanies || [],
+    customerPartners: data?.customerPartners || [],
+    allGroups: data?.allGroups || [],
+    categorized: data?.categorized,
+    insuranceCategorized,
+    enterpriseCategorized,
+    individualCategorized,
+    warning: data?.summary?.warning,
+    isLoading: query.isLoading,
+    isFetching: query.isFetching,
+    refetch,
+  };
+}

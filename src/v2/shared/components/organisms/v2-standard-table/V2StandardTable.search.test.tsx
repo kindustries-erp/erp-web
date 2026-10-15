@@ -1,9 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { act, fireEvent, renderHook, screen } from "@testing-library/react";
-import { V2StandardTableDesktop } from "./V2StandardTable.desktop";
-import { makeRows, mockViewport, renderTable } from "./V2StandardTable.fixture";
-import { useV2TableState } from "./V2StandardTable.state.hook";
-import { searchClientItems } from "./v2TableFilter";
+import { V2StandardTableDesktop } from "./desktop/V2StandardTable.desktop";
+import {
+  makeRows,
+  mockViewport,
+  renderTable,
+} from "./mocks/V2StandardTable.fixture";
+import { useV2TableState } from "./hooks/V2StandardTable.state.hook";
+import { searchClientItems } from "./utils/v2TableFilter";
 
 const typeSearch = (text: string) => {
   const box = screen.getByRole("textbox", { name: "Tìm kiếm..." });

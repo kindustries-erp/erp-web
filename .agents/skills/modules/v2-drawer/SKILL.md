@@ -30,16 +30,16 @@ description: Module tri thức Chuẩn Hóa Drawer V2 (V2StandardDrawer) theo ki
      - `<DrawerRelatedDeck>`: Horizon Divider Bar (`border-t border-border/60`) và Connected Context Deck ở đáy Main Body (dùng `V2Button`, `V2Text`, thẻ kính mờ `backdrop-blur-md`, collapsible).
    - **L3 (Organisms)**: `src/v2/shared/components/organisms/v2-standard-drawer/`:
      - `V2StandardDrawer.tsx`: Switcher nền tảng (< 20 LoC) dùng `useViewport()`.
-     - `V2StandardDrawer.desktop.tsx`: Floating Sheet Card (< 145 LoC) tích hợp `V2StandardDrawer.state-guard.tsx`, `V2StandardDrawer.desktop-columns.tsx`, `V2StandardDrawer.confirm-modal.tsx` và `DrawerRelatedDeck`.
-     - `V2StandardDrawer.desktop-columns.tsx`: Bố cục 2 cột Desktop (< 80 LoC), điều khiển hiệu ứng **Smooth CSS Transition Expand/Collapse** cho cột phải (`transition-all duration-300 ease-in-out`, co giãn `gap-0` <-> `gap-4 lg:gap-6`, `w-0 opacity-0` <-> `w-72 xl:w-80 opacity-100`, inner wrapper `min-w-[280px]` chống vỡ layout) và hiệu ứng **Tab Content Fade Transition** (`animate-in fade-in-50 duration-200`).
-     - `V2StandardDrawer.mobile-panels.tsx`: Bố cục cột và tabs trên Mobile (< 75 LoC) tích hợp sub tabs, main content, stacked right panel và related deck.
-     - `V2StandardDrawer.mobile.tsx`: Fullscreen Bottom Sheet (< 145 LoC, Grab Handle, Slide-up, Vertical Card Cascading Stack).
-     - `V2StandardDrawer.state-guard.tsx`: Trình bao bọc trạng thái Loading spinner và Error banner tập trung (< 50 LoC) dùng chung cho cả Desktop và Mobile.
-     - `V2StandardDrawer.confirm-modal.tsx`: Modal xác nhận đóng Drawer khi form bẩn / dirty state (< 40 LoC).
-     - `V2StandardDrawer.hook.ts`: Hook quản lý state tabs, fullscreen, right panel collapse, scroll detection, confirm close, multi-drawer stack coordination và phím tắt `Esc` 2 tầng (< 178 LoC).
-     - `v2DrawerStack.ts`: Module Stack Manager & hook `useV2DrawerStack` độc lập React tree, điều phối `depth`, `zIndex`, `isTopmost`, `isUnderlying`, `desktopShiftPx` (-20px) và `mobileTopOffsetPx` (+16px).
-     - `v2TabControl.ts`: Hook đồng bộ tab controlled/uncontrolled (< 25 LoC).
-     - `V2StandardDrawer.mock.tsx`: Mock data & components chuẩn vàng phục vụ Storybook và mô phỏng hóa đơn/chứng từ.
+     - `desktop/V2StandardDrawer.desktop.tsx`: Floating Sheet Card (< 145 LoC) tích hợp `state-guard/DrawerStateGuard.tsx`, `desktop-columns/DrawerDesktopColumns.tsx`, `confirm-modal/DrawerConfirmCloseModal.tsx` và `DrawerRelatedDeck`.
+     - `desktop-columns/DrawerDesktopColumns.tsx`: Bố cục 2 cột Desktop (< 80 LoC), điều khiển hiệu ứng **Smooth CSS Transition Expand/Collapse** cho cột phải (`transition-all duration-300 ease-in-out`, co giãn `gap-0` <-> `gap-4 lg:gap-6`, `w-0 opacity-0` <-> `w-72 xl:w-80 opacity-100`, inner wrapper `min-w-[280px]` chống vỡ layout) và hiệu ứng **Tab Content Fade Transition** (`animate-in fade-in-50 duration-200`).
+     - `mobile-panels/DrawerMobilePanels.tsx`: Bố cục cột và tabs trên Mobile (< 75 LoC) tích hợp sub tabs, main content, stacked right panel và related deck.
+     - `mobile/V2StandardDrawer.mobile.tsx`: Fullscreen Bottom Sheet (< 145 LoC, Grab Handle, Slide-up, Vertical Card Cascading Stack).
+     - `state-guard/DrawerStateGuard.tsx`: Trình bao bọc trạng thái Loading spinner và Error banner tập trung (< 50 LoC) dùng chung cho cả Desktop và Mobile.
+     - `confirm-modal/DrawerConfirmCloseModal.tsx`: Modal xác nhận đóng Drawer khi form bẩn / dirty state (< 40 LoC).
+     - `hooks/V2StandardDrawer.hook.ts`: Hook quản lý state tabs, fullscreen, right panel collapse, scroll detection, confirm close, multi-drawer stack coordination và phím tắt `Esc` 2 tầng (< 178 LoC).
+     - `utils/v2DrawerStack.ts`: Module Stack Manager & hook `useV2DrawerStack` độc lập React tree, điều phối `depth`, `zIndex`, `isTopmost`, `isUnderlying`, `desktopShiftPx` (-20px) và `mobileTopOffsetPx` (+16px).
+     - `utils/v2TabControl.ts`: Hook đồng bộ tab controlled/uncontrolled (< 25 LoC).
+     - `mocks/V2StandardDrawer.mock.tsx` (thư mục `mocks/`, không import từ production): Mock data & components chuẩn vàng phục vụ Storybook và mô phỏng hóa đơn/chứng từ.
      - `V2StandardDrawer.stories.tsx`: Storybook stories minh họa trực quan (Single Column, Hóa đơn GSM, Tab switching & Right panel collapse animation).
      - `V2StandardDrawer.test.tsx`: 15 test cases Vitest co-located phủ 100% desktop/mobile/fullscreen/confirm-modal/tabs/multi-drawer stacking/Esc priority.
 2. **Platform Split (Desktop vs Mobile)**:
@@ -284,7 +284,7 @@ export function ErpInvoiceDetailDrawer({ open, onClose, invoice }) {
 - [x] Khống chế kích thước file: 100% file thành phần đều `< 178 LoC` (tuân thủ /ui-atomic-refactor < 180 LoC).
 - [x] Tuân thủ No Blue Mandate: Không dùng class màu `blue-*`.
 - [x] Phím tắt `Esc` 2 tầng: Esc lần 1 thu nhỏ toàn màn hình, Esc lần 2 đóng drawer (hỏi confirm nếu đang edit).
-- [x] Multi-Drawer Stacking Store: `v2DrawerStack.ts` quản lý active stack cross-tree qua `useSyncExternalStore`, tự động cấp phát `zIndex = 50 + depth * 10`, `depth`, `isTopmost`, `isUnderlying`.
+- [x] Multi-Drawer Stacking Store: `utils/v2DrawerStack.ts` quản lý active stack cross-tree qua `useSyncExternalStore`, tự động cấp phát `zIndex = 50 + depth * 10`, `depth`, `isTopmost`, `isUnderlying`.
 - [x] Desktop Cascading Shift: Drawer con lùi sang trái `translateX(-20px * depth)` tạo hiệu ứng xếp lớp thẻ bài 3D, mép phải lộ dải thẻ 20px hòa hợp với `md:right-5`.
 - [x] Mobile Vertical Stack: Drawer con hạ đỉnh `16px * depth` kết hợp hiệu ứng `scale-[0.97]` và dim overlay làm mờ cho drawer cha bên dưới, tránh cắt xén mép ngang.
 - [x] Priority Guard: Phím `Escape` và click outside overlay chỉ áp dụng cho duy nhất drawer trên cùng (`isTopmost === true`), không đóng drawer cha bên dưới.
@@ -310,5 +310,15 @@ export function ErpInvoiceDetailDrawer({ open, onClose, invoice }) {
 
 - Bảng nhúng: `DrawerSection fitViewportHeight bodyClassName="flex flex-col overflow-hidden"` bao `V2StandardTable` (story `WithEmbeddedTable`). Không có `bodyClassName` thì thanh phân trang bị cắt và header không dính.
 - Panel phải xem trước hóa đơn/chứng từ: `V2FilePreviewPanel` (organism `v2-file-preview-panel`), module tải tệp rồi truyền `url` hoặc `text`.
-- Xếp tầng nhiều drawer được điều phối bằng `id` của drawer; trạng thái mở nên lấy từ `useV2OverlayState` để link/Back/tải lại giữ đúng chồng. Mẫu (use case finance-invoice): `src/v2/use-cases/finance-invoice/invoice-shape/` (drawer chi tiết + drawer hạch toán). Xem `v2-foundation`.
+- Xếp tầng nhiều drawer được điều phối bằng `id` của drawer; trạng thái mở nên lấy từ `useV2OverlayState` để link/Back/tải lại giữ đúng chồng. Mẫu (use case finance-invoice): `src/v2/modules/finance-invoice/` (drawer chi tiết + drawer hạch toán). Xem `v2-foundation`.
 
+
+## Cấu trúc thư mục (cập nhật)
+- Mỗi sub-component nằm trong folder riêng kebab-case, có `index.ts` và test co-located: `confirm-modal/`, `state-guard/`, `desktop-columns/`, `mobile-panels/`.
+- Dữ liệu demo và mock nằm trong `mocks/` (chỉ story và test import). Story `V2StandardDrawer.stories.tsx` import từ `./mocks/`.
+- Sub-component không có story riêng; được minh họa qua story của `V2StandardDrawer`.
+
+## Cấu trúc thư mục (cập nhật, mỗi component một folder)
+- Gốc: `V2StandardDrawer.tsx` (switcher), `V2StandardDrawer.type.ts`, `index.ts`, stories.
+- Component con, mỗi folder có `index.ts` hoặc file chính: `desktop/`, `mobile/`, `confirm-modal/`, `state-guard/`, `desktop-columns/`, `mobile-panels/`.
+- `hooks/`: hook state của drawer. `utils/`: stack đa drawer và tab controlled. `mocks/`: dữ liệu demo (không import từ production).

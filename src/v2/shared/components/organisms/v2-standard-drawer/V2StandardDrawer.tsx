@@ -1,7 +1,7 @@
 import React from "react";
 import { useViewport } from "@/v2/shared/hooks/useViewport";
-import { V2StandardDrawerDesktop } from "./V2StandardDrawer.desktop";
-import { V2StandardDrawerMobile } from "./V2StandardDrawer.mobile";
+import { V2StandardDrawerDesktop } from "./desktop/V2StandardDrawer.desktop";
+import { V2StandardDrawerMobile } from "./mobile/V2StandardDrawer.mobile";
 import type { V2StandardDrawerProps } from "./V2StandardDrawer.type";
 
 export const V2StandardDrawer: React.FC<V2StandardDrawerProps> = (props) => {

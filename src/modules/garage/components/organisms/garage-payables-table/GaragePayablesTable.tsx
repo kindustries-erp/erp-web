@@ -46,6 +46,7 @@ export const GaragePayablesTable: React.FC<GaragePayablesTableProps> = ({
         onOpenCustomerDetail({
           code: row.customerCode,
           name: row.customerName,
+          debtType: "payables",
         });
       } else if (onOpenSupplierDetail) {
         onOpenSupplierDetail({

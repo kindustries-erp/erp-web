@@ -3,6 +3,14 @@ import type {
   V2TabBarVariant,
   V2TabItemData,
 } from "@/v2/shared/components/molecules/v2-tab-bar";
+
+/** Biến thể thanh tab của trang module (runtime), là tập con của `V2TabBarVariant` */
+export const V2_MODULE_PAGE_TAB_VARIANTS = [
+  "header",
+  "page",
+] as const satisfies readonly V2TabBarVariant[];
+export type V2ModulePageTabVariant =
+  (typeof V2_MODULE_PAGE_TAB_VARIANTS)[number];
 import type { V2StandardTableProps } from "@/v2/shared/components/organisms/v2-standard-table";
 import type { V2TableQuery } from "@/v2/shared/types/v2-table";
 
@@ -60,7 +68,7 @@ export interface V2ModulePageProps<T> {
   onTabChange?: (key: string) => void;
   /** Giữ tab đang mở trên URL (`?tab=`). Mặc định true; tắt trong story/test cần cô lập */
   syncUrl?: boolean;
-  tabVariant?: Extract<V2TabBarVariant, "header" | "page">;
+  tabVariant?: V2ModulePageTabVariant;
   /** Drawer, modal do page quản lý */
   overlays?: React.ReactNode;
   className?: string;
