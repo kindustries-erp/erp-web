@@ -11,8 +11,10 @@ import type { GarageTrendItem } from "../api/garageDashboardApi";
 import { GarageMonthClassificationCasesDrawer } from "./GarageMonthClassificationCasesDrawer";
 import { GaragePartnerMonthDetailDrawer } from "./organisms/garage-partner-month-detail-drawer";
 import { useGarageMonthReceivablesBreakdown } from "../hooks/useGarageMonthReceivablesBreakdown";
+import { PillTabs } from "@/shared/components/PillTabs";
 import { MonthPayerKpiGrid } from "./organisms/garage-month-detail-drawer/components/MonthPayerKpiGrid";
-import { MonthInvoicePartnerTable } from "./organisms/garage-month-detail-drawer/components/MonthInvoicePartnerTable";
+import { MonthCostPayableKpiCard } from "./organisms/garage-month-detail-drawer/components/MonthCostPayableKpiCard";
+import { MonthPartnerCategorizedSection } from "./organisms/garage-month-detail-drawer/components/MonthPartnerCategorizedSection";
 import { MonthClassificationTable } from "./organisms/garage-month-detail-drawer/components/MonthClassificationTable";
 import type {
   MonthClassificationRow,
@@ -208,16 +210,44 @@ export function GarageMonthDetailDrawer({
     [item],
   );
 
+  const [partnerTypeFilter, setPartnerTypeFilter] = useState<
+    "all" | "enterprise" | "individual" | "insurance"
+  >("all");
+
   // Hook lấy phân rã Phải thu Khách hàng & Bảo hiểm theo đối tượng HĐ
   const {
     summary: breakdownSummary,
     insuranceCompanies,
     customerPartners,
+    insuranceCategorized,
+    enterpriseCategorized,
+    individualCategorized,
     warning: vatWarningInfo,
   } = useGarageMonthReceivablesBreakdown({
     month: safeItem.label,
     enabled: open && isReceipt,
   });
+
+  const safeCategorized = useMemo(() => {
+    const empty = {
+      all: [],
+      withInvoice: [],
+      pendingInvoice: [],
+      noInvoice: [],
+      totals: {
+        billed: 0,
+        paid: 0,
+        remaining: 0,
+        caseCount: 0,
+        partnerCount: 0,
+      },
+    };
+    return {
+      insurance: insuranceCategorized ?? empty,
+      enterprise: enterpriseCategorized ?? empty,
+      individual: individualCategorized ?? empty,
+    };
+  }, [insuranceCategorized, enterpriseCategorized, individualCategorized]);
 
   const handleSelectPartnerGroup = (group: MonthlyReceivablesGroupItem) => {
     setPartnerMonthDrawerState({
@@ -326,8 +356,12 @@ export function GarageMonthDetailDrawer({
       },
     ];
 
-    // Main Tab 2: Chi tiết Thu KH & Thu BH theo Đối tượng Hóa đơn (Chỉ hiển thị khi là Phải Thu)
+    // Main Tab 2: Chi tiết Thu KH (Doanh nghiệp, Cá nhân) & Thu BH theo Đối tượng Hóa đơn
     if (isReceipt) {
+      const { enterprise, individual, insurance } = safeCategorized;
+      const totalPartnerCount =
+        enterprise.all.length + individual.all.length + insurance.all.length;
+
       tabs.push({
         key: "partner_breakdown",
         label: t(
@@ -335,48 +369,98 @@ export function GarageMonthDetailDrawer({
           "Phân loại theo đối tượng",
         ),
         icon: <ShieldCheck className="w-3.5 h-3.5" />,
-        badgeCount: insuranceCompanies.length + customerPartners.length,
+        badgeCount: totalPartnerCount,
         content: (
           <div className="flex flex-col gap-3.5">
-            {vatWarningInfo?.hasVatWithoutInvoice && (
-              <div className="flex items-center gap-2 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-900 dark:text-amber-200 text-xs">
-                <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
-                <span>
-                  <strong>Cảnh báo VAT:</strong> Có{" "}
-                  {vatWarningInfo.casesWithVatNoInvoiceCount} vụ việc chưa xuất
-                  hoặc đính kèm hóa đơn điện tử.
-                </span>
-              </div>
+            {/* Top Toolbar Filter by Partner Group */}
+            <div className="flex items-center overflow-x-auto scrollbar-none pb-0.5">
+              <PillTabs<"all" | "enterprise" | "individual" | "insurance">
+                items={[
+                  {
+                    value: "all",
+                    label: t(
+                      "progress.partnerFilterTabs.all",
+                      "Tất cả đối tượng",
+                    ),
+                    badge: totalPartnerCount,
+                  },
+                  {
+                    value: "enterprise",
+                    label: t(
+                      "progress.partnerFilterTabs.enterprise",
+                      "KH Doanh nghiệp",
+                    ),
+                    badge: enterprise.all.length,
+                  },
+                  {
+                    value: "individual",
+                    label: t(
+                      "progress.partnerFilterTabs.individual",
+                      "KH Cá nhân",
+                    ),
+                    badge: individual.all.length,
+                  },
+                  {
+                    value: "insurance",
+                    label: t(
+                      "progress.partnerFilterTabs.insurance",
+                      "Bảo hiểm",
+                    ),
+                    badge: insurance.all.length,
+                  },
+                ]}
+                value={partnerTypeFilter}
+                onValueChange={setPartnerTypeFilter}
+              />
+            </div>
+
+            {/* 1. Khách hàng Doanh nghiệp */}
+            {(partnerTypeFilter === "all" ||
+              partnerTypeFilter === "enterprise") && (
+              <MonthPartnerCategorizedSection
+                title={t(
+                  "progress.sections.enterpriseCollection",
+                  "Thu Khách hàng Doanh nghiệp",
+                )}
+                categorized={enterprise}
+                tableIdPrefix="garage-month-detail-enterprise"
+                totalBilled={breakdownSummary?.totalBilled ?? mainBilled}
+                onSelectGroup={handleSelectPartnerGroup}
+                defaultCollapsed={false}
+              />
             )}
-            <DrawerSection
-              title={t(
-                "progress.sections.customerCollection",
-                "Thu khách hàng",
-              )}
-              titleExtra={`${customerPartners.length} đối tượng`}
-              collapsible
-              defaultCollapsed={false}
-            >
-              <MonthInvoicePartnerTable
-                items={customerPartners}
-                tableId="garage-month-detail-customer-partners-table"
+
+            {/* 2. Khách hàng Cá nhân */}
+            {(partnerTypeFilter === "all" ||
+              partnerTypeFilter === "individual") && (
+              <MonthPartnerCategorizedSection
+                title={t(
+                  "progress.sections.individualCollection",
+                  "Thu Khách hàng Cá nhân",
+                )}
+                categorized={individual}
+                tableIdPrefix="garage-month-detail-individual"
                 totalBilled={breakdownSummary?.totalBilled ?? mainBilled}
                 onSelectGroup={handleSelectPartnerGroup}
+                defaultCollapsed={false}
               />
-            </DrawerSection>
-            <DrawerSection
-              title={t("progress.sections.insuranceCollection", "Thu bảo hiểm")}
-              titleExtra={`${insuranceCompanies.length} đối tượng`}
-              collapsible
-              defaultCollapsed={false}
-            >
-              <MonthInvoicePartnerTable
-                items={insuranceCompanies}
-                tableId="garage-month-detail-insurance-companies-table"
+            )}
+
+            {/* 3. Bảo hiểm */}
+            {(partnerTypeFilter === "all" ||
+              partnerTypeFilter === "insurance") && (
+              <MonthPartnerCategorizedSection
+                title={t(
+                  "progress.sections.insuranceCollection",
+                  "Thu bảo hiểm",
+                )}
+                categorized={insurance}
+                tableIdPrefix="garage-month-detail-insurance"
                 totalBilled={breakdownSummary?.totalBilled ?? mainBilled}
                 onSelectGroup={handleSelectPartnerGroup}
+                defaultCollapsed={false}
               />
-            </DrawerSection>
+            )}
           </div>
         ),
       });
@@ -393,6 +477,8 @@ export function GarageMonthDetailDrawer({
     totalCost,
     insuranceCompanies,
     customerPartners,
+    safeCategorized,
+    partnerTypeFilter,
     breakdownSummary,
     vatWarningInfo,
     mainBilled,
@@ -400,9 +486,24 @@ export function GarageMonthDetailDrawer({
     handleSelectPartnerGroup,
   ]);
 
-  const rightPanel =
-    isReceipt && breakdownSummary ? (
-      <div className="flex flex-col gap-3.5 w-full">
+  const rightPanel = (
+    <div className="flex flex-col gap-3.5 w-full">
+      {/* Cảnh báo VAT chưa xuất HĐ (đưa sang cột phải theo yêu cầu) */}
+      {vatWarningInfo?.hasVatWithoutInvoice && (
+        <div className="flex items-start gap-2.5 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-900 dark:text-amber-200 text-xs shadow-sm">
+          <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+          <div className="flex flex-col gap-0.5">
+            <span className="font-bold">Cảnh báo hóa đơn VAT:</span>
+            <span>
+              Có <strong>{vatWarningInfo.casesWithVatNoInvoiceCount}</strong> vụ
+              việc chưa xuất hoặc đính kèm hóa đơn điện tử.
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* 1. Cơ cấu Thu KH vs Thu BH (chỉ khi ở tab Thu và có số liệu breakdown) */}
+      {isReceipt && breakdownSummary && (
         <DrawerSection
           title={t(
             "progress.sections.payerComposition",
@@ -413,8 +514,21 @@ export function GarageMonthDetailDrawer({
         >
           <MonthPayerKpiGrid summary={breakdownSummary} />
         </DrawerSection>
-      </div>
-    ) : undefined;
+      )}
+
+      {/* 2. Chi phí phát sinh & Còn nợ (Phải trả) */}
+      <DrawerSection
+        title={t(
+          "progress.sections.costAndPayables",
+          "Chi phí phát sinh & Còn nợ",
+        )}
+        collapsible
+        defaultCollapsed={false}
+      >
+        <MonthCostPayableKpiCard item={safeItem} />
+      </DrawerSection>
+    </div>
+  );
   if (!item) return null;
 
   return (

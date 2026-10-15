@@ -403,9 +403,21 @@ export interface MonthlyReceivablesCaseItem {
   vatWarning: boolean;
 }
 
+export type ReceivablesPartnerCategory =
+  | "INSURANCE"
+  | "ENTERPRISE"
+  | "INDIVIDUAL";
+
+export type ReceivablesInvoiceCategory =
+  | "WITH_INVOICE"
+  | "PENDING_INVOICE"
+  | "NO_INVOICE";
+
 export interface MonthlyReceivablesGroupItem {
   key: string;
   payerType: "KH" | "BH";
+  partnerCategory?: ReceivablesPartnerCategory;
+  invoiceCategory?: ReceivablesInvoiceCategory;
   title: string;
   subLabel?: string;
   buyerName: string;
@@ -455,6 +467,22 @@ export interface MonthlyReceivablesSummary {
   warning: ReceivablesVatWarningSummary;
 }
 
+export interface MonthlyReceivablesCategorizedTotals {
+  billed: number;
+  paid: number;
+  remaining: number;
+  caseCount: number;
+  partnerCount: number;
+}
+
+export interface MonthlyReceivablesGroupCategorized {
+  all: MonthlyReceivablesGroupItem[];
+  withInvoice: MonthlyReceivablesGroupItem[];
+  pendingInvoice: MonthlyReceivablesGroupItem[];
+  noInvoice: MonthlyReceivablesGroupItem[];
+  totals: MonthlyReceivablesCategorizedTotals;
+}
+
 export interface MonthlyReceivablesBreakdownResponse {
   month: string;
   monthLabel: string;
@@ -462,4 +490,9 @@ export interface MonthlyReceivablesBreakdownResponse {
   insuranceCompanies: MonthlyReceivablesGroupItem[];
   customerPartners: MonthlyReceivablesGroupItem[];
   allGroups: MonthlyReceivablesGroupItem[];
+  categorized?: {
+    insurance: MonthlyReceivablesGroupCategorized;
+    enterprise: MonthlyReceivablesGroupCategorized;
+    individual: MonthlyReceivablesGroupCategorized;
+  };
 }

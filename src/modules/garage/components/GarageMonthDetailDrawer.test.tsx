@@ -74,6 +74,45 @@ vi.mock("../hooks/useGarageMonthReceivablesBreakdown", () => ({
     insuranceCompanies: [],
     customerPartners: [],
     allGroups: [],
+    insuranceCategorized: {
+      all: [],
+      withInvoice: [],
+      pendingInvoice: [],
+      noInvoice: [],
+      totals: {
+        billed: 0,
+        paid: 0,
+        remaining: 0,
+        caseCount: 0,
+        partnerCount: 0,
+      },
+    },
+    enterpriseCategorized: {
+      all: [],
+      withInvoice: [],
+      pendingInvoice: [],
+      noInvoice: [],
+      totals: {
+        billed: 0,
+        paid: 0,
+        remaining: 0,
+        caseCount: 0,
+        partnerCount: 0,
+      },
+    },
+    individualCategorized: {
+      all: [],
+      withInvoice: [],
+      pendingInvoice: [],
+      noInvoice: [],
+      totals: {
+        billed: 0,
+        paid: 0,
+        remaining: 0,
+        caseCount: 0,
+        partnerCount: 0,
+      },
+    },
     warning: undefined,
   }),
 }));
@@ -151,7 +190,18 @@ describe("GarageMonthDetailDrawer payer cards", () => {
     ).toBeInTheDocument();
     expect(within(rightPanel).getByText(/Thu Khách Hàng/)).toBeInTheDocument();
     expect(within(rightPanel).getByText(/Thu Bảo Hiểm/)).toBeInTheDocument();
-    expect(within(leftPanel).getByText("Thu khách hàng")).toBeInTheDocument();
+    expect(
+      within(rightPanel).getByText("Chi phí phát sinh & Còn nợ"),
+    ).toBeInTheDocument();
+    expect(
+      within(rightPanel).getByText("Chi phí Dịch vụ & Phụ tùng"),
+    ).toBeInTheDocument();
+    expect(
+      within(leftPanel).getByText("Thu Khách hàng Doanh nghiệp"),
+    ).toBeInTheDocument();
+    expect(
+      within(leftPanel).getByText("Thu Khách hàng Cá nhân"),
+    ).toBeInTheDocument();
     expect(within(leftPanel).getByText("Thu bảo hiểm")).toBeInTheDocument();
     expect(within(leftPanel).queryByText(/Cơ cấu Thu KH vs Thu BH/)).toBeNull();
   });
@@ -166,9 +216,13 @@ describe("GarageMonthDetailDrawer payer cards", () => {
       />,
     );
 
+    const rightPanel = screen.getByTestId("drawer-right-panel");
     expect(
       screen.queryByText("Phân loại theo đối tượng"),
     ).not.toBeInTheDocument();
     expect(screen.queryByText("Cơ cấu Thu KH vs Thu BH")).toBeNull();
+    expect(
+      within(rightPanel).getByText("Chi phí phát sinh & Còn nợ"),
+    ).toBeInTheDocument();
   });
 });

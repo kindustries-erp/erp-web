@@ -15,12 +15,13 @@ interface MonthInvoicePartnerTableProps {
   items: MonthlyReceivablesGroupItem[];
   tableId: string;
   totalBilled?: number;
+  emptyLabel?: string;
   onSelectGroup?: (group: MonthlyReceivablesGroupItem) => void;
 }
 
 export const MonthInvoicePartnerTable: React.FC<
   MonthInvoicePartnerTableProps
-> = ({ items, tableId, totalBilled = 0, onSelectGroup }) => {
+> = ({ items, tableId, totalBilled = 0, emptyLabel, onSelectGroup }) => {
   const { t } = useTranslation("garage");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
@@ -123,10 +124,10 @@ export const MonthInvoicePartnerTable: React.FC<
         variant="spreadsheet"
         columns={columns}
         summaryRow={summaryRow}
-        emptyLabel={t(
-          "progress.partnerTableEmpty",
-          "Không có đối tượng hóa đơn",
-        )}
+        emptyLabel={
+          emptyLabel ||
+          t("progress.partnerTableEmpty", "Không có đối tượng hóa đơn")
+        }
         enableColumnResizing
         tableId={tableId}
         page={page}
