@@ -15,6 +15,10 @@ import type {
   MonthClassificationRow,
   MonthClassificationTableProps,
 } from "./MonthClassificationTable.type";
+import {
+  PaymentRemainingDebtCell,
+  renderDebtAmount,
+} from "../../garage-payment-progress-card/components/PaymentRemainingDebtCell";
 
 export function MonthClassificationTable({
   rows,
@@ -66,8 +70,12 @@ export function MonthClassificationTable({
       {
         key: "name",
         header: compactHeader(
-          headerFilter("name", "Loại nghiệp vụ", { align: "left" }),
-          "Loại nghiệp vụ",
+          headerFilter(
+            "name",
+            isReceivable ? "LOẠI NGHIỆP VỤ" : "LOẠI CHI PHÍ",
+            { align: "left" },
+          ),
+          isReceivable ? "Loại nghiệp vụ" : "Loại chi phí",
         ),
         size: 210,
         enableResizing: true,
@@ -78,13 +86,13 @@ export function MonthClassificationTable({
             type="button"
             variant="ghost"
             size="sm"
-            className="flex items-center justify-start gap-2 cursor-pointer group text-left w-full"
+            className="flex items-center justify-start gap-2 cursor-pointer group text-left w-full h-auto py-1 px-1.5"
             onClick={() => onSelectClassification(row)}
           >
             <span className="shrink-0 group-hover:scale-110 transition-transform">
               {row.icon}
             </span>
-            <span className="flex flex-col min-w-0">
+            <span className="flex flex-col min-w-0 text-left">
               <span className="font-semibold text-foreground text-xs truncate group-hover:text-primary group-hover:underline">
                 {row.name}
               </span>
@@ -100,48 +108,59 @@ export function MonthClassificationTable({
       {
         key: "caseCount",
         header: compactHeader(
-          headerFilter.numeric(
-            "caseCount",
-            t("progress.columns.voucherCount", "Số phiếu"),
-            { align: "center" },
-          ),
-          t("progress.columns.voucherCountFull", "Số phiếu"),
+          headerFilter.numeric("caseCount", "SỐ PHIẾU", { align: "center" }),
+          "Số phiếu",
         ),
-        size: 82,
+        size: 100,
         enableResizing: true,
         headerClassName: "text-center font-semibold",
-        className: "text-center font-mono tabular-nums text-xs",
-        cell: (row) => row.caseCount,
+        className: "text-center tabular-nums text-muted-foreground",
+        cell: (row) => (
+          <span className="inline-flex items-center px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-xs font-medium text-slate-700 dark:text-slate-300">
+            {row.caseCount} phiếu
+          </span>
+        ),
       },
       {
         key: "billed",
         header: compactHeader(
-          headerFilter.amount("billed", "Tổng PS", { align: "right" }),
-          t("progress.columns.classificationTotalBilled", "Tổng phát sinh"),
+          headerFilter.amount(
+            "billed",
+            isReceivable ? "TỔNG PHÁT SINH" : "TỔNG CHI PHÍ",
+            { align: "right" },
+          ),
+          isReceivable ? "Tổng phát sinh" : "Tổng chi phí",
         ),
-        size: 150,
+        size: 170,
         enableResizing: true,
+        headerClassName: "text-right font-semibold",
         className: "text-right font-mono tabular-nums",
         cell: (row) => {
           const rate = row.rate;
-          const label = isReceivable ? "thu" : "trả";
+          const label = isReceivable ? "thu" : "chi";
+          const isAllPaid = row.remaining <= 0 && row.paid > 0;
+          const isUnpaid = row.paid <= 0 && row.billed > 0;
           return (
             <Tooltip
-              content={`Đã ${label}: ${money(row.paid)} / ${money(row.billed)} (${rate.toFixed(1)}%)`}
+              content={`Đã ${label}: ${money(row.paid)} / ${money(row.billed)} (${rate.toFixed(1)}%) • Còn ${isReceivable ? "thu" : "trả"}: ${money(row.remaining)}`}
             >
-              <div className="flex flex-col gap-1 w-full">
-                <span className="font-semibold text-xs">
-                  {money(row.billed)}
-                </span>
-                <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">
+              <div className="flex flex-col gap-1 w-full py-0.5 justify-center cursor-default">
+                <div className="flex items-center justify-end text-xs tabular-nums leading-tight">
+                  <span className="font-semibold text-foreground font-mono">
+                    {money(row.billed)}
+                  </span>
+                </div>
+                <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
                   <div
                     className={cn(
-                      "h-full rounded-full",
-                      row.remaining <= 0 && row.paid > 0
-                        ? "bg-emerald-500"
-                        : isReceivable
-                          ? "bg-emerald-600"
-                          : "bg-slate-600",
+                      "h-full rounded-full transition-all duration-300",
+                      isAllPaid
+                        ? "bg-emerald-500 dark:bg-emerald-400"
+                        : isUnpaid
+                          ? "bg-transparent"
+                          : isReceivable
+                            ? "bg-emerald-600 dark:bg-emerald-500"
+                            : "bg-slate-600 dark:bg-slate-400",
                     )}
                     style={{ width: `${Math.min(100, Math.max(0, rate))}%` }}
                   />
@@ -154,16 +173,18 @@ export function MonthClassificationTable({
       {
         key: "paid",
         header: compactHeader(
-          headerFilter.amount("paid", isReceivable ? "Đã thu" : "Đã chi", {
+          headerFilter.amount("paid", isReceivable ? "ĐÃ THU" : "ĐÃ CHI", {
             align: "right",
           }),
           isReceivable ? "Đã thu" : "Đã chi",
         ),
         size: 140,
         enableResizing: true,
-        className: "text-right font-mono tabular-nums",
+        headerClassName: "text-right font-semibold",
+        className:
+          "text-right font-mono tabular-nums text-foreground font-medium",
         cell: (row) => (
-          <span className="font-semibold text-xs">{money(row.paid)}</span>
+          <span className="font-mono text-xs">{money(row.paid)}</span>
         ),
       },
       {
@@ -171,27 +192,22 @@ export function MonthClassificationTable({
         header: compactHeader(
           headerFilter.amount(
             "remaining",
-            isReceivable ? "Còn thu" : "Còn trả",
+            isReceivable ? "CÒN PHẢI THU" : "CÒN PHẢI TRẢ",
             { align: "right" },
           ),
           isReceivable ? "Còn phải thu" : "Còn phải trả",
         ),
-        size: 140,
+        size: 150,
         enableResizing: true,
-        className: "text-right font-mono tabular-nums",
+        headerClassName:
+          "text-center bg-slate-100 dark:bg-slate-800/60 font-semibold border-r border-border/50",
+        className:
+          "text-right font-medium tabular-nums bg-slate-50 dark:bg-slate-800/30 border-r border-border/30",
         cell: (row) => (
-          <span
-            className={cn(
-              "text-xs",
-              row.remaining > 0
-                ? isReceivable
-                  ? "font-bold text-amber-600"
-                  : "font-bold text-orange-600"
-                : "text-muted-foreground/60",
-            )}
-          >
-            {row.remaining > 0 ? money(row.remaining) : "—"}
-          </span>
+          <PaymentRemainingDebtCell
+            val={row.remaining || 0}
+            prefix={isReceivable ? "Còn phải thu" : "Còn phải trả"}
+          />
         ),
       },
       ...(isReceivable
@@ -199,52 +215,55 @@ export function MonthClassificationTable({
             {
               key: "remainingWithInvoice",
               header: compactHeader(
-                headerFilter.amount("remainingWithInvoice", "Còn thu có HĐ", {
-                  align: "right",
-                }),
+                headerFilter.amount(
+                  "remainingWithInvoice",
+                  "CÒN PHẢI THU CÓ HĐ",
+                  { align: "right" },
+                ),
                 "Còn phải thu có HĐ",
               ),
-              size: 150,
+              size: 160,
               enableResizing: true,
-              className: "text-right font-mono tabular-nums",
+              headerClassName: "text-right font-semibold",
+              className: "text-right font-medium tabular-nums font-mono",
               cell: (row: MonthClassificationRow) =>
-                row.remainingWithInvoice > 0
-                  ? money(row.remainingWithInvoice)
-                  : "—",
+                renderDebtAmount(row.remainingWithInvoice || 0),
             },
             {
               key: "remainingNoInvoice",
               header: compactHeader(
-                headerFilter.amount("remainingNoInvoice", "Còn thu không HĐ", {
-                  align: "right",
-                }),
+                headerFilter.amount(
+                  "remainingNoInvoice",
+                  "CÒN PHẢI THU KHÔNG HĐ",
+                  { align: "right" },
+                ),
                 "Còn phải thu không HĐ",
               ),
-              size: 160,
+              size: 165,
               enableResizing: true,
-              className: "text-right font-mono tabular-nums",
+              headerClassName: "text-right font-semibold",
+              className: "text-right font-medium tabular-nums font-mono",
               cell: (row: MonthClassificationRow) =>
-                row.remainingNoInvoice > 0
-                  ? money(row.remainingNoInvoice)
-                  : "—",
+                renderDebtAmount(row.remainingNoInvoice || 0),
             },
           ]
         : []),
       {
         key: "shareRate",
         header: compactHeader(
-          headerFilter.numeric("shareRate", "Tỷ trọng", {
+          headerFilter.numeric("shareRate", "TỶ TRỌNG", {
             align: "center",
           }),
           "Tỷ trọng",
         ),
         size: 90,
         enableResizing: true,
-        className: "text-center tabular-nums",
+        headerClassName: "text-center font-semibold",
+        className: "text-center font-mono tabular-nums text-xs",
         cell: (row) => `${row.shareRate.toFixed(1)}%`,
       },
     ],
-    [headerFilter, isReceivable, onSelectClassification, t],
+    [headerFilter, isReceivable, onSelectClassification],
   );
 
   const summaryRow = useMemo(() => {
@@ -270,41 +289,112 @@ export function MonthClassificationTable({
     const rate = totals.billed > 0 ? (totals.paid / totals.billed) * 100 : 0;
 
     return {
-      index: <span className="font-bold text-center block">Σ</span>,
-      name: <span className="font-bold text-xs uppercase">TỔNG CỘNG</span>,
+      index: (
+        <span className="w-full block text-center font-bold text-muted-foreground">
+          Σ
+        </span>
+      ),
+      name: (
+        <span className="font-bold text-center block uppercase tracking-wider text-xs text-foreground">
+          TỔNG CỘNG
+        </span>
+      ),
       caseCount: (
-        <span className="font-bold text-center block tabular-nums">
-          {totals.caseCount}
+        <span className="font-bold text-center block tabular-nums text-foreground">
+          {totals.caseCount} phiếu
         </span>
       ),
       billed: (
         <Tooltip
-          content={`Đã thanh toán: ${money(totals.paid)} (${rate.toFixed(1)}%)`}
+          content={
+            totals.billed > 0
+              ? `Đã ${isReceivable ? "thu" : "chi"}: ${money(totals.paid)} / ${money(totals.billed)} (${rate.toFixed(1)}%) • Còn ${isReceivable ? "thu" : "trả"}: ${money(totals.remaining)}`
+              : undefined
+          }
+          side="top"
         >
-          <span className="font-bold tabular-nums">{money(totals.billed)}</span>
+          <div className="flex flex-col gap-1 w-full py-0.5 justify-center cursor-default">
+            <div className="flex items-center justify-end text-xs tabular-nums leading-tight">
+              <span className="font-bold text-foreground font-mono">
+                {money(totals.billed)}
+              </span>
+            </div>
+            <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
+              <div
+                className={cn(
+                  "h-full rounded-full transition-all duration-300",
+                  totals.remaining <= 0 && totals.paid > 0
+                    ? "bg-emerald-500 dark:bg-emerald-400"
+                    : totals.paid <= 0
+                      ? "bg-transparent"
+                      : isReceivable
+                        ? "bg-emerald-600 dark:bg-emerald-500"
+                        : "bg-slate-600 dark:bg-slate-400",
+                )}
+                style={{
+                  width: `${Math.min(100, Math.max(0, rate))}%`,
+                }}
+              />
+            </div>
+          </div>
         </Tooltip>
       ),
       paid: (
-        <span className="font-bold tabular-nums">{money(totals.paid)}</span>
+        <span className="font-bold text-right block tabular-nums text-foreground font-mono">
+          {money(totals.paid)}
+        </span>
       ),
       remaining: (
-        <span className="font-bold tabular-nums">
+        <span
+          className={cn(
+            "font-mono font-bold text-right block tabular-nums",
+            totals.remaining > 0
+              ? "text-foreground"
+              : "text-muted-foreground/60",
+          )}
+        >
           {totals.remaining > 0 ? money(totals.remaining) : "—"}
         </span>
       ),
       ...(isReceivable
         ? {
-            remainingWithInvoice:
-              totals.remainingWithInvoice > 0
-                ? money(totals.remainingWithInvoice)
-                : "—",
-            remainingNoInvoice:
-              totals.remainingNoInvoice > 0
-                ? money(totals.remainingNoInvoice)
-                : "—",
+            remainingWithInvoice: (
+              <span
+                className={cn(
+                  "font-mono font-bold text-right block tabular-nums",
+                  totals.remainingWithInvoice > 0
+                    ? "text-foreground"
+                    : "text-muted-foreground/60",
+                )}
+              >
+                {totals.remainingWithInvoice > 0
+                  ? money(totals.remainingWithInvoice)
+                  : "—"}
+              </span>
+            ),
+            remainingNoInvoice: (
+              <span
+                className={cn(
+                  "font-mono font-bold text-right block tabular-nums",
+                  totals.remainingNoInvoice > 0
+                    ? "text-foreground"
+                    : "text-muted-foreground/60",
+                )}
+              >
+                {totals.remainingNoInvoice > 0
+                  ? money(totals.remainingNoInvoice)
+                  : "—"}
+              </span>
+            ),
           }
         : {}),
-      shareRate: `${totalBilled > 0 ? ((totals.billed / totalBilled) * 100).toFixed(1) : "0.0"}%`,
+      shareRate: (
+        <span className="font-bold text-center block tabular-nums text-foreground font-mono text-xs">
+          {totalBilled > 0
+            ? `${((totals.billed / totalBilled) * 100).toFixed(1)}%`
+            : "0.0%"}
+        </span>
+      ),
     };
   }, [filteredRows, isReceivable, totalBilled]);
 
@@ -321,7 +411,7 @@ export function MonthClassificationTable({
       )}
       enableColumnResizing
       tableId={tableId}
-      containerClassName="max-h-[360px] overflow-x-auto overflow-y-auto [--table-header-bg:var(--surface)] [&_thead]:!bg-[var(--surface)] [&_thead]:!backdrop-blur-none [&_thead]:!shadow-[0_1px_0_0_var(--border)] [&_th]:border-border/80"
+      containerClassName="max-h-[360px] overflow-x-auto overflow-y-auto"
       onRowClick={onSelectClassification}
     />
   );

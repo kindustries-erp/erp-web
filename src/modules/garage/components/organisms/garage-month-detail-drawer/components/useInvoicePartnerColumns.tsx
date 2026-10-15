@@ -2,7 +2,6 @@ import React, { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Badge } from "@/shared/components/ui/badge";
 import { money } from "@/shared/utils/format";
-import { cn } from "@/shared/utils";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import type {
   DataTableColumn,
@@ -31,15 +30,20 @@ export function useInvoicePartnerColumns({
     () => [
       {
         key: "index",
-        header: "#",
-        size: 48,
-        headerClassName: "text-center font-semibold",
-        className: "text-center font-mono text-xs text-muted-foreground",
-        cell: (_: MonthlyReceivablesGroupItem, index: number) => index,
+        header: <span className="w-full block text-center">#</span>,
+        size: 40,
+        enableResizing: false,
+        headerClassName: "text-center w-[40px] min-w-[40px]",
+        className: "text-center w-[40px] min-w-[40px]",
+        cell: (_: MonthlyReceivablesGroupItem, index: number) => (
+          <span className="w-full block text-center text-muted-foreground font-medium">
+            {index}
+          </span>
+        ),
       },
       {
         key: "payerType",
-        header: "Loại thu",
+        header: "LOẠI THU",
         size: 90,
         headerClassName: "text-center font-semibold",
         className: "text-center",
@@ -65,12 +69,14 @@ export function useInvoicePartnerColumns({
       {
         key: "title",
         header: compactHeader(
-          headerFilter("title", "Đối tượng / Cty BH", { align: "left" }),
+          headerFilter("title", "ĐỐI TƯỢNG HÓA ĐƠN / CTY BẢO HIỂM", {
+            align: "left",
+          }),
           t("progress.columns.partnerTitleFull", "Đối tượng HĐ / Cty Bảo hiểm"),
         ),
         size: 260,
         enableResizing: true,
-        headerClassName: "font-semibold",
+        headerClassName: "text-left font-semibold",
         cell: (row: MonthlyReceivablesGroupItem) => (
           <div className="flex flex-col py-0.5 max-w-full">
             <span className="font-semibold text-xs text-foreground truncate">
@@ -92,7 +98,7 @@ export function useInvoicePartnerColumns({
         ),
         size: 190,
         enableResizing: true,
-        headerClassName: "font-semibold",
+        headerClassName: "text-center font-semibold",
         cell: (row: MonthlyReceivablesGroupItem) => {
           if (row.vatWarning) {
             return (
@@ -132,59 +138,65 @@ export function useInvoicePartnerColumns({
       {
         key: "caseCount",
         header: compactHeader(
-          headerFilter.numeric("caseCount", "Vụ việc", { align: "center" }),
-          "Vụ việc",
+          headerFilter.numeric("caseCount", "SỐ VỤ VIỆC", { align: "center" }),
+          "Số vụ việc",
         ),
-        size: 75,
+        size: 100,
+        enableResizing: true,
         headerClassName: "text-center font-semibold",
-        className: "text-center font-mono tabular-nums text-xs text-foreground",
-        cell: (row: MonthlyReceivablesGroupItem) => row.caseCount,
+        className: "text-center tabular-nums text-muted-foreground",
+        cell: (row: MonthlyReceivablesGroupItem) => (
+          <span className="inline-flex items-center px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-xs font-medium text-slate-700 dark:text-slate-300">
+            {row.caseCount} phiếu
+          </span>
+        ),
       },
       {
         key: "billed",
         header: compactHeader(
-          headerFilter.amount("billed", "Phát sinh", { align: "right" }),
-          "Phát sinh",
+          headerFilter.amount("billed", "TỔNG PHÁT SINH", { align: "right" }),
+          "Tổng phát sinh",
         ),
-        size: 130,
+        size: 140,
         enableResizing: true,
         headerClassName: "text-right font-semibold",
         className:
-          "text-right font-mono tabular-nums font-bold text-xs text-foreground",
+          "text-right font-mono tabular-nums font-semibold text-xs text-foreground",
         cell: (row: MonthlyReceivablesGroupItem) => money(row.billed),
       },
       {
         key: "paid",
         header: compactHeader(
-          headerFilter.amount("paid", "Đã thu", { align: "right" }),
+          headerFilter.amount("paid", "ĐÃ THU", { align: "right" }),
           "Đã thu",
         ),
-        size: 110,
+        size: 120,
         enableResizing: true,
         headerClassName: "text-right font-semibold",
         className:
-          "text-right font-mono tabular-nums text-xs text-emerald-600 dark:text-emerald-400 font-semibold",
+          "text-right font-mono tabular-nums text-xs text-foreground font-medium",
         cell: (row: MonthlyReceivablesGroupItem) =>
           row.paid > 0 ? money(row.paid) : "—",
       },
       {
         key: "remaining",
         header: compactHeader(
-          headerFilter.amount("remaining", "Còn nợ", { align: "right" }),
-          "Còn nợ",
+          headerFilter.amount("remaining", "CÒN PHẢI THU", { align: "right" }),
+          "Còn phải thu",
         ),
-        size: 110,
+        size: 140,
         enableResizing: true,
-        headerClassName: "text-right font-semibold",
-        className: "text-right font-mono tabular-nums text-xs",
+        headerClassName:
+          "text-center bg-slate-100 dark:bg-slate-800/60 font-semibold border-r border-border/50",
+        className:
+          "text-right font-medium tabular-nums bg-slate-50 dark:bg-slate-800/30 border-r border-border/30",
         cell: (row: MonthlyReceivablesGroupItem) => (
           <span
-            className={cn(
-              "font-mono tabular-nums",
+            className={
               row.remaining > 0
-                ? "font-bold text-amber-600 dark:text-amber-400"
-                : "text-muted-foreground/60",
-            )}
+                ? "font-mono font-bold text-foreground text-[12px] tabular-nums"
+                : "font-mono text-muted-foreground/60 text-[11px]"
+            }
           >
             {row.remaining > 0 ? money(row.remaining) : "—"}
           </span>
@@ -193,15 +205,16 @@ export function useInvoicePartnerColumns({
       {
         key: "shareRate",
         header: compactHeader(
-          headerFilter.numeric("shareRate", "Tỷ trọng", {
+          headerFilter.numeric("shareRate", "TỶ TRỌNG", {
             align: "center",
           }),
           "Tỷ trọng",
         ),
-        size: 75,
+        size: 85,
+        enableResizing: true,
         headerClassName: "text-center font-semibold",
         className:
-          "text-center font-mono tabular-nums text-xs text-foreground font-semibold",
+          "text-center font-mono tabular-nums text-xs text-foreground font-medium",
         cell: (row: MonthlyReceivablesGroupItem) =>
           `${row.shareRate.toFixed(1)}%`,
       },

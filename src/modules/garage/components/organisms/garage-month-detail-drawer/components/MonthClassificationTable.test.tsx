@@ -97,7 +97,7 @@ describe("MonthClassificationTable data contract", () => {
     expect(screen.queryByText("remainingNoInvoice")).not.toBeInTheDocument();
   });
 
-  it("puts case count after the business type and scopes the solid header contract", () => {
+  it("puts case count after the business type and scopes the container scroll contract", () => {
     render(
       <MonthClassificationTable
         rows={[baseRow]}
@@ -113,7 +113,7 @@ describe("MonthClassificationTable data contract", () => {
     );
     expect(screen.getByTestId("column-keys")).toHaveAttribute(
       "data-container-class",
-      expect.stringContaining("backdrop-blur-none"),
+      expect.stringContaining("max-h-[360px]"),
     );
   });
 });

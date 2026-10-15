@@ -67,38 +67,50 @@ export const MonthInvoicePartnerTable: React.FC<
     const shareRate = totalBilled > 0 ? (totals.billed / totalBilled) * 100 : 0;
 
     return {
-      index: <span className="font-bold text-center block">Σ</span>,
+      index: (
+        <span className="w-full block text-center font-bold text-muted-foreground">
+          Σ
+        </span>
+      ),
       payerType: "",
       title: (
-        <span className="font-bold text-xs uppercase tracking-wider">
+        <span className="font-bold text-xs uppercase tracking-wider text-foreground">
           TỔNG CỘNG ({totals.caseCount} vụ việc)
         </span>
       ),
       hasInvoice: "",
       caseCount: (
-        <span className="font-bold text-center block">{totals.caseCount}</span>
+        <span className="font-bold text-center block tabular-nums text-foreground">
+          {totals.caseCount} phiếu
+        </span>
       ),
       billed: (
-        <span className="font-bold tabular-nums">{money(totals.billed)}</span>
+        <span className="font-bold text-right block tabular-nums text-foreground font-mono">
+          {money(totals.billed)}
+        </span>
       ),
       paid: (
-        <span className="font-bold tabular-nums text-emerald-600">
+        <span className="font-bold text-right block tabular-nums text-foreground font-mono">
           {money(totals.paid)}
         </span>
       ),
       remaining: (
         <span
           className={cn(
-            "font-bold tabular-nums",
+            "font-mono font-bold text-right block tabular-nums",
             totals.remaining > 0
-              ? "text-amber-600"
+              ? "text-foreground"
               : "text-muted-foreground/60",
           )}
         >
           {totals.remaining > 0 ? money(totals.remaining) : "—"}
         </span>
       ),
-      shareRate: `${shareRate.toFixed(1)}%`,
+      shareRate: (
+        <span className="font-bold text-center block tabular-nums text-foreground font-mono text-xs">
+          {shareRate.toFixed(1)}%
+        </span>
+      ),
       actions: "",
     };
   }, [filteredItems, totalBilled]);
@@ -127,7 +139,7 @@ export const MonthInvoicePartnerTable: React.FC<
           setPageSize(nextPageSize);
           setPage(1);
         }}
-        containerClassName="max-h-[360px] overflow-x-auto overflow-y-auto [--table-header-bg:var(--surface)] [&_thead]:!bg-[var(--surface)] [&_thead]:!backdrop-blur-none [&_thead]:!shadow-[0_1px_0_0_var(--border)] [&_th]:border-border/80"
+        containerClassName="max-h-[360px] overflow-x-auto overflow-y-auto"
         onRowClick={(row) => onSelectGroup?.(row)}
       />
     </div>
