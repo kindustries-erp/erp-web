@@ -43,7 +43,7 @@ export function useGaragePayablesSummaryRow({
       Number(listHook.summary.totalBalance ?? listHook.summary.totalCkCo) || 0;
 
     return {
-      customerName: (
+      licensePlate: (
         <SubtotalSummaryCell
           variantType="label"
           label={`${t("common:total", "Tổng cộng")}:`}

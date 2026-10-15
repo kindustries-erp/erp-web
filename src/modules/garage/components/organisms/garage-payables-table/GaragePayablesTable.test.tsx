@@ -71,9 +71,7 @@ describe("GaragePayablesTable", () => {
 
     expect(screen.getByText(/Công nợ phải trả/i)).toBeInTheDocument();
     expect(screen.getByText("51H02028")).toBeInTheDocument();
-    expect(screen.getByText("Khách hàng")).toBeInTheDocument();
-    expect(screen.getByText("CÔNG TY TNHH PHÁT TRIỂN")).toBeInTheDocument();
-    expect(screen.getByText("GR-KHA-000107")).toBeInTheDocument();
+    expect(screen.queryByText("Khách hàng")).not.toBeInTheDocument();
     expect(screen.getAllByText("2").length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText("phiếu")).toBeInTheDocument();
     expect(screen.getByText("15 ngày")).toBeInTheDocument();
