@@ -9,43 +9,74 @@ import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
 import { money } from "@/shared/utils/format";
 import { cn } from "@/shared/utils";
 import type { MonthlyReceivablesGroupItem } from "../../../../api/garageDashboardApi";
-import { useInvoicePartnerColumns } from "./useInvoicePartnerColumns";
+import type { MonthInvoiceCaseRow } from "./MonthInvoiceCaseRow.type";
+import {
+  flattenReceivablesGroupsToCases,
+  calculateCasesTotals,
+} from "./MonthInvoiceCaseRow.helper";
+import { useInvoiceCaseColumns } from "./MonthInvoiceCaseTable.columns";
 
-interface MonthInvoicePartnerTableProps {
+export interface MonthInvoicePartnerTableProps {
   items: MonthlyReceivablesGroupItem[];
   tableId: string;
   totalBilled?: number;
+  debtType?: "receivables" | "payables";
   emptyLabel?: string;
   onSelectGroup?: (group: MonthlyReceivablesGroupItem) => void;
+  onOpenCaseDetail?: (caseCode: string) => void;
 }
 
 export const MonthInvoicePartnerTable: React.FC<
   MonthInvoicePartnerTableProps
-> = ({ items, tableId, totalBilled = 0, emptyLabel, onSelectGroup }) => {
+> = ({
+  items,
+  tableId,
+  totalBilled = 0,
+  debtType = "receivables",
+  emptyLabel,
+  onSelectGroup,
+  onOpenCaseDetail,
+}) => {
   const { t } = useTranslation("garage");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
   const tableHook = useTableColumnState(tableId);
+
+  // Làm phẳng groups thành danh sách từng phiếu dịch vụ / xe
+  const caseRows = useMemo(
+    () => flattenReceivablesGroupsToCases(items, totalBilled, debtType),
+    [items, totalBilled, debtType],
+  );
+
   const headerFilter = useMemo(
     () =>
       createColumnHeaderFilter({
         listHook: tableHook,
-        items,
+        items: caseRows,
         defaultAlign: "center",
       }),
-    [items, tableHook],
+    [caseRows, tableHook],
   );
-  const columns = useInvoicePartnerColumns({ headerFilter, onSelectGroup });
+
+  const columns = useInvoiceCaseColumns({
+    headerFilter,
+    debtType,
+    onOpenCaseDetail,
+    onSelectGroup,
+  });
+
   const filteredItems = useMemo(
-    () => filterClientItems(items, tableHook),
-    [items, tableHook],
+    () => filterClientItems(caseRows, tableHook),
+    [caseRows, tableHook],
   );
+
   const totalPages = Math.max(1, Math.ceil(filteredItems.length / pageSize));
   const filterStateKey = JSON.stringify({
     sorts: tableHook.sorts,
     columnFilters: tableHook.columnFilters,
     columnSearch: tableHook.columnSearch,
   });
+
   const pageItems = useMemo(
     () => filteredItems.slice((page - 1) * pageSize, page * pageSize),
     [filteredItems, page, pageSize],
@@ -56,15 +87,7 @@ export const MonthInvoicePartnerTable: React.FC<
   }, [items, filterStateKey]);
 
   const summaryRow = useMemo(() => {
-    const totals = filteredItems.reduce(
-      (acc, row) => ({
-        billed: acc.billed + row.billed,
-        paid: acc.paid + row.paid,
-        remaining: acc.remaining + row.remaining,
-        caseCount: acc.caseCount + row.caseCount,
-      }),
-      { billed: 0, paid: 0, remaining: 0, caseCount: 0 },
-    );
+    const totals = calculateCasesTotals(filteredItems);
     const shareRate = totalBilled > 0 ? (totals.billed / totalBilled) * 100 : 0;
 
     return {
@@ -73,18 +96,15 @@ export const MonthInvoicePartnerTable: React.FC<
           Σ
         </span>
       ),
-      payerType: "",
-      title: (
+      caseCode: "",
+      partner: (
         <span className="font-bold text-xs uppercase tracking-wider text-foreground">
-          TỔNG CỘNG ({totals.caseCount} vụ việc)
+          TỔNG CỘNG ({totals.caseCount} phiếu
+          {totals.vehicleCount > 0 ? ` • ${totals.vehicleCount} xe` : ""})
         </span>
       ),
-      hasInvoice: "",
-      caseCount: (
-        <span className="font-bold text-center block tabular-nums text-foreground">
-          {totals.caseCount} phiếu
-        </span>
-      ),
+      payerType: "",
+      invoiceStatus: "",
       billed: (
         <span className="font-bold text-right block tabular-nums text-foreground font-mono">
           {money(totals.billed)}
@@ -112,7 +132,6 @@ export const MonthInvoicePartnerTable: React.FC<
           {shareRate.toFixed(1)}%
         </span>
       ),
-      actions: "",
     };
   }, [filteredItems, totalBilled]);
 
@@ -120,7 +139,7 @@ export const MonthInvoicePartnerTable: React.FC<
     <div className="w-full min-w-0">
       <DataTable
         items={pageItems}
-        getRowKey={(row) => row.key}
+        getRowKey={(row: MonthInvoiceCaseRow) => row.id}
         variant="spreadsheet"
         columns={columns}
         summaryRow={summaryRow}
@@ -132,7 +151,7 @@ export const MonthInvoicePartnerTable: React.FC<
         tableId={tableId}
         page={page}
         pageSize={pageSize}
-        pageSizeOptions={[5, 10, 20]}
+        pageSizeOptions={[5, 10, 20, 50]}
         total={filteredItems.length}
         totalPages={totalPages}
         onPage={setPage}
@@ -141,8 +160,9 @@ export const MonthInvoicePartnerTable: React.FC<
           setPage(1);
         }}
         containerClassName="max-h-[360px] overflow-x-auto overflow-y-auto"
-        onRowClick={(row) => onSelectGroup?.(row)}
       />
     </div>
   );
 };
+
+export const MonthInvoiceCaseTable = MonthInvoicePartnerTable;

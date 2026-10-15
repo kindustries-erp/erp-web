@@ -141,6 +141,10 @@ vi.mock("./organisms/garage-partner-month-detail-drawer", () => ({
   GaragePartnerMonthDetailDrawer: () => null,
 }));
 
+vi.mock("./GarageCaseStandaloneDrawer", () => ({
+  GarageCaseStandaloneDrawer: () => null,
+}));
+
 const item: GarageTrendItem = {
   label: "2026-10",
   revenue: 1_500_000,
