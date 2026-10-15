@@ -24,9 +24,9 @@ Module Hóa đơn Điện tử quản lý tập trung toàn bộ hóa đơn đ�
   - Sub-menu 2: **"Công nợ theo đối tượng"** (`/invoice-debts`) - Theo dõi, đối soát giao dịch và phân tích tuổi nợ chi tiết theo từng khách hàng, nhà cung cấp (Mặc định mở `?tab=overview`).
 - **Cấu trúc 6 Tabs trên giao diện chính (`/erp-invoices`)**:
   1. `tab=overview` (mặc định): **Tổng quan** (`InvoiceDashboard` - Báo cáo KPI, xu hướng dòng tiền, VAT, công nợ đối tác).
-  2. `tab=in`: **Hóa đơn mua vào** (Header Table, chiều `IN`, PillTab: `tax_tab` `[ Tất cả | Mới | Thay thế | Điều chỉnh ]` + `view_mode` Combobox).
+  2. `tab=in`: **Hóa đơn mua vào** (Header Table, chiều `IN`, Unified View & Filter Dropdown: `tax_tab` `[ Tất cả | Mới | Thay thế | Điều chỉnh ]` gom chung với `view_mode` Presets).
   3. `tab=in-lines`: **Chi tiết mua vào** (Lines Table, chiều `IN`, PillTab: `subcat` `[ Tất cả dòng | Hàng hóa | Chiết khấu ]`).
-  4. `tab=out`: **Hóa đơn bán ra** (Header Table, chiều `OUT`, PillTab: `tax_tab` + `view_mode` Combobox).
+  4. `tab=out`: **Hóa đơn bán ra** (Header Table, chiều `OUT`, Unified View & Filter Dropdown: `tax_tab` gom chung với `view_mode` Presets).
   5. `tab=out-lines`: **Chi tiết bán ra** (Lines Table, chiều `OUT`, PillTab: `subcat`).
   6. `tab=draft`: **Hóa đơn nháp** (`ErpInvoicesDraftPage` - Quản lý hóa đơn SInvoice Viettel nháp).
 - **Tiến trình Đồng bộ Tự động (5-Slot Heartbeat Cron & Live SSE)**:

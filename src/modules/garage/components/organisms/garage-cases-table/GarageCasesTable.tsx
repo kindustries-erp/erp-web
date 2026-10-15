@@ -3,8 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
 import { FileText, DownloadCloud } from "lucide-react";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate";
-import { GarageCaseStatusTabs } from "../../molecules/garage-case-status-tabs";
-import { GarageCaseViewModeCombobox } from "../../GarageCaseViewModeCombobox";
+import { GarageCaseViewModeCombobox } from "../../molecules/garage-case-view-mode-combobox";
 import { buildGarageCasesColumns } from "./GarageCasesTable.columns";
 import { useGarageCasesTable } from "./GarageCasesTable.hook";
 import {
@@ -15,7 +14,10 @@ import {
   buildGarageCaseCreateActions,
   buildGarageCaseRowActions,
 } from "./GarageCasesTable.actions";
-import { DEFAULT_GARAGE_CASE_COLUMN_VISIBILITY } from "../../../utils/garageCaseViewPresets";
+import {
+  DEFAULT_GARAGE_CASE_COLUMN_VISIBILITY,
+  GARAGE_CASE_STATUS_TABS,
+} from "../../../utils/garageCaseViewPresets";
 import type { GarageCasesTableProps } from "./GarageCasesTable.type";
 
 export function GarageCasesTable(props: GarageCasesTableProps) {
@@ -139,11 +141,6 @@ export function GarageCasesTable(props: GarageCasesTableProps) {
 
   const viewTabsNode = (
     <div className="w-full sm:w-auto flex items-center flex-wrap gap-2 py-0.5">
-      <GarageCaseStatusTabs
-        value={props.activeStatusTab}
-        onChange={props.onStatusTabChange}
-      />
-      <div className="hidden sm:block h-4 w-px bg-slate-300/80 dark:bg-zinc-700/80 shrink-0" />
       <GarageCaseViewModeCombobox
         presets={props.columnViewPresetsHook.presets}
         activePresetKey={props.activeColumnPresetKey}
@@ -151,6 +148,15 @@ export function GarageCasesTable(props: GarageCasesTableProps) {
         onCreateView={props.onCreateViewPreset}
         onEditView={props.onEditViewPreset}
         onDeleteView={props.onDeleteViewPreset}
+        filterGroup={{
+          title: t("cases.statusGroup", { defaultValue: "Trạng thái phiếu" }),
+          value: props.activeStatusTab,
+          onChange: props.onStatusTabChange,
+          items: GARAGE_CASE_STATUS_TABS.map((tab) => ({
+            value: tab.value,
+            label: t(tab.labelKey, { defaultValue: tab.defaultLabel }),
+          })),
+        }}
       />
     </div>
   );
