@@ -11,7 +11,6 @@ import { createAgingColumns } from "./GarageDebtsTable.agingColumns";
 interface UseGarageDebtsColumnsProps {
   listHook: ReturnType<typeof useGarageCustomersList>;
   selectedBranchId?: string | null;
-  branches?: any[];
   t: (key: string, fallback: string) => string;
   onOpenCustomerDetail: (customer: { code: string; name: string }) => void;
 }
@@ -19,7 +18,6 @@ interface UseGarageDebtsColumnsProps {
 export function useGarageDebtsColumns({
   listHook,
   selectedBranchId,
-  branches: _branches,
   t,
   onOpenCustomerDetail,
 }: UseGarageDebtsColumnsProps): DataTableColumn<CustomerDebtItem>[] {
