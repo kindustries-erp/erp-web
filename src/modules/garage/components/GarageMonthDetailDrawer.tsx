@@ -10,12 +10,14 @@ import { cn } from "@/shared/utils";
 import type { GarageTrendItem } from "../api/garageDashboardApi";
 import { GarageMonthClassificationCasesDrawer } from "./GarageMonthClassificationCasesDrawer";
 import { GaragePartnerMonthDetailDrawer } from "./organisms/garage-partner-month-detail-drawer";
+import { GarageCaseStandaloneDrawer } from "./GarageCaseStandaloneDrawer";
 import { useGarageMonthReceivablesBreakdown } from "../hooks/useGarageMonthReceivablesBreakdown";
 import { PillTabs } from "@/shared/components/PillTabs";
 import { MonthPayerKpiGrid } from "./organisms/garage-month-detail-drawer/components/MonthPayerKpiGrid";
 import { MonthCostPayableKpiCard } from "./organisms/garage-month-detail-drawer/components/MonthCostPayableKpiCard";
 import { MonthPartnerCategorizedSection } from "./organisms/garage-month-detail-drawer/components/MonthPartnerCategorizedSection";
 import { MonthClassificationTable } from "./organisms/garage-month-detail-drawer/components/MonthClassificationTable";
+import { CustomerDetailDebtSwitch } from "./organisms/garage-customer-detail-drawer/components/CustomerDetailDebtSwitch";
 import type {
   MonthClassificationRow,
   MonthDebtType,
@@ -152,9 +154,15 @@ export function GarageMonthDetailDrawer({
   const [currentTab, setCurrentTab] = useState<"RECEIPT" | "PAYMENT">(
     activeTab || "RECEIPT",
   );
+  const [partnerDebtType, setPartnerDebtType] = useState<
+    "receivables" | "payables"
+  >(activeTab === "PAYMENT" ? "payables" : "receivables");
 
   useEffect(() => {
-    if (activeTab) setCurrentTab(activeTab);
+    if (activeTab) {
+      setCurrentTab(activeTab);
+      setPartnerDebtType(activeTab === "PAYMENT" ? "payables" : "receivables");
+    }
   }, [activeTab]);
 
   const isReceipt = currentTab === "RECEIPT";
@@ -187,6 +195,8 @@ export function GarageMonthDetailDrawer({
     initialCases: undefined,
   });
 
+  const [selectedCaseCode, setSelectedCaseCode] = useState<string | null>(null);
+
   const safeItem = useMemo<GarageTrendItem>(
     () =>
       item ?? {
@@ -214,7 +224,7 @@ export function GarageMonthDetailDrawer({
     "all" | "enterprise" | "individual" | "insurance"
   >("all");
 
-  // Hook lấy phân rã Phải thu Khách hàng & Bảo hiểm theo đối tượng HĐ
+  // Hook lấy phân rã Phải thu / Phải trả theo đối tượng HĐ
   const {
     summary: breakdownSummary,
     insuranceCompanies,
@@ -225,7 +235,7 @@ export function GarageMonthDetailDrawer({
     warning: vatWarningInfo,
   } = useGarageMonthReceivablesBreakdown({
     month: safeItem.label,
-    enabled: open && isReceipt,
+    enabled: open,
   });
 
   const safeCategorized = useMemo(() => {
@@ -356,25 +366,32 @@ export function GarageMonthDetailDrawer({
       },
     ];
 
-    // Main Tab 2: Chi tiết Thu KH (Doanh nghiệp, Cá nhân) & Thu BH theo Đối tượng Hóa đơn
-    if (isReceipt) {
-      const { enterprise, individual, insurance } = safeCategorized;
-      const totalPartnerCount =
-        enterprise.all.length + individual.all.length + insurance.all.length;
+    // Main Tab 2: Chi tiết theo Đối tượng Hóa đơn & Đối tác (Phải thu / Phải trả)
+    const { enterprise, individual, insurance } = safeCategorized;
+    const totalPartnerCount =
+      enterprise.all.length + individual.all.length + insurance.all.length;
+    const isPayableBreakdown = partnerDebtType === "payables";
+    const effectiveBreakdownTotal = isPayableBreakdown
+      ? totalCost
+      : (breakdownSummary?.totalBilled ?? mainBilled);
 
-      tabs.push({
-        key: "partner_breakdown",
-        label: t(
-          "progress.tabs.partnerClassification",
-          "Phân loại theo đối tượng",
-        ),
-        icon: <ShieldCheck className="w-3.5 h-3.5" />,
-        badgeCount: totalPartnerCount,
-        content: (
-          <div className="flex flex-col gap-3.5">
-            {/* Top Toolbar Filter by Partner Group */}
-            <div className="flex items-center overflow-x-auto scrollbar-none pb-0.5">
+    tabs.push({
+      key: "partner_breakdown",
+      label: t(
+        "progress.tabs.partnerClassification",
+        "Phân loại theo đối tượng",
+      ),
+      icon: <ShieldCheck className="w-3.5 h-3.5" />,
+      badgeCount: totalPartnerCount,
+      content: (
+        <div className="flex flex-col gap-3.5">
+          {/* Top Toolbar Filter by Partner Group & Debt Switch (Single Row like erp-invoice) */}
+          <div className="flex items-center justify-between gap-3 w-full">
+            <div className="flex items-center overflow-x-auto scrollbar-none min-w-0">
               <PillTabs<"all" | "enterprise" | "individual" | "insurance">
+                size="sm"
+                className="w-auto"
+                headerClassName="flex-nowrap"
                 items={[
                   {
                     value: "all",
@@ -413,58 +430,89 @@ export function GarageMonthDetailDrawer({
                 onValueChange={setPartnerTypeFilter}
               />
             </div>
-
-            {/* 1. Khách hàng Doanh nghiệp */}
-            {(partnerTypeFilter === "all" ||
-              partnerTypeFilter === "enterprise") && (
-              <MonthPartnerCategorizedSection
-                title={t(
-                  "progress.sections.enterpriseCollection",
-                  "Thu Khách hàng Doanh nghiệp",
-                )}
-                categorized={enterprise}
-                tableIdPrefix="garage-month-detail-enterprise"
-                totalBilled={breakdownSummary?.totalBilled ?? mainBilled}
-                onSelectGroup={handleSelectPartnerGroup}
-                defaultCollapsed={false}
+            <div className="shrink-0 flex items-center">
+              <CustomerDetailDebtSwitch
+                className="w-auto"
+                value={partnerDebtType}
+                onChange={setPartnerDebtType}
               />
-            )}
-
-            {/* 2. Khách hàng Cá nhân */}
-            {(partnerTypeFilter === "all" ||
-              partnerTypeFilter === "individual") && (
-              <MonthPartnerCategorizedSection
-                title={t(
-                  "progress.sections.individualCollection",
-                  "Thu Khách hàng Cá nhân",
-                )}
-                categorized={individual}
-                tableIdPrefix="garage-month-detail-individual"
-                totalBilled={breakdownSummary?.totalBilled ?? mainBilled}
-                onSelectGroup={handleSelectPartnerGroup}
-                defaultCollapsed={false}
-              />
-            )}
-
-            {/* 3. Bảo hiểm */}
-            {(partnerTypeFilter === "all" ||
-              partnerTypeFilter === "insurance") && (
-              <MonthPartnerCategorizedSection
-                title={t(
-                  "progress.sections.insuranceCollection",
-                  "Thu bảo hiểm",
-                )}
-                categorized={insurance}
-                tableIdPrefix="garage-month-detail-insurance"
-                totalBilled={breakdownSummary?.totalBilled ?? mainBilled}
-                onSelectGroup={handleSelectPartnerGroup}
-                defaultCollapsed={false}
-              />
-            )}
+            </div>
           </div>
-        ),
-      });
-    }
+
+          {/* 1. Khách hàng Doanh nghiệp */}
+          {(partnerTypeFilter === "all" ||
+            partnerTypeFilter === "enterprise") && (
+            <MonthPartnerCategorizedSection
+              title={
+                isPayableBreakdown
+                  ? t(
+                      "progress.sections.enterprisePayment",
+                      "Chi Khách hàng Doanh nghiệp",
+                    )
+                  : t(
+                      "progress.sections.enterpriseCollection",
+                      "Thu Khách hàng Doanh nghiệp",
+                    )
+              }
+              categorized={enterprise}
+              tableIdPrefix="garage-month-detail-enterprise"
+              totalBilled={effectiveBreakdownTotal}
+              debtType={partnerDebtType}
+              isAllTab={partnerTypeFilter === "all"}
+              onSelectGroup={handleSelectPartnerGroup}
+              onOpenCaseDetail={setSelectedCaseCode}
+              defaultCollapsed={false}
+            />
+          )}
+
+          {/* 2. Khách hàng Cá nhân */}
+          {(partnerTypeFilter === "all" ||
+            partnerTypeFilter === "individual") && (
+            <MonthPartnerCategorizedSection
+              title={
+                isPayableBreakdown
+                  ? t(
+                      "progress.sections.individualPayment",
+                      "Chi Khách hàng Cá nhân",
+                    )
+                  : t(
+                      "progress.sections.individualCollection",
+                      "Thu Khách hàng Cá nhân",
+                    )
+              }
+              categorized={individual}
+              tableIdPrefix="garage-month-detail-individual"
+              totalBilled={effectiveBreakdownTotal}
+              debtType={partnerDebtType}
+              isAllTab={partnerTypeFilter === "all"}
+              onSelectGroup={handleSelectPartnerGroup}
+              onOpenCaseDetail={setSelectedCaseCode}
+              defaultCollapsed={false}
+            />
+          )}
+
+          {/* 3. Bảo hiểm */}
+          {(partnerTypeFilter === "all" ||
+            partnerTypeFilter === "insurance") && (
+            <MonthPartnerCategorizedSection
+              title={
+                isPayableBreakdown
+                  ? t("progress.sections.insurancePayment", "Chi bảo hiểm")
+                  : t("progress.sections.insuranceCollection", "Thu bảo hiểm")
+              }
+              categorized={insurance}
+              tableIdPrefix="garage-month-detail-insurance"
+              totalBilled={effectiveBreakdownTotal}
+              debtType={partnerDebtType}
+              isAllTab={partnerTypeFilter === "all"}
+              onSelectGroup={handleSelectPartnerGroup}
+              onOpenCaseDetail={setSelectedCaseCode}
+              defaultCollapsed={false}
+            />
+          )}
+        </div>
+      ),
+    });
 
     return tabs;
   }, [
@@ -479,6 +527,7 @@ export function GarageMonthDetailDrawer({
     customerPartners,
     safeCategorized,
     partnerTypeFilter,
+    partnerDebtType,
     breakdownSummary,
     vatWarningInfo,
     mainBilled,
@@ -600,6 +649,13 @@ export function GarageMonthDetailDrawer({
         taxCode={partnerMonthDrawerState.taxCode}
         initialDebtType={isReceipt ? "receivables" : "payables"}
         initialCases={partnerMonthDrawerState.initialCases}
+      />
+
+      {/* Case Standalone Drawer để xem chi tiết phiếu dịch vụ trực tiếp */}
+      <GarageCaseStandaloneDrawer
+        isOpen={Boolean(selectedCaseCode)}
+        caseCode={selectedCaseCode}
+        onClose={() => setSelectedCaseCode(null)}
       />
     </>
   );

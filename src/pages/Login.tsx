@@ -6,6 +6,11 @@ import { Button } from "@/shared/components/ui/Button";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+// Chỉ có trong build dev và khi đặt VITE_DEV_ADMIN_PASSWORD; build production không chứa mật khẩu.
+const DEV_ADMIN_PASSWORD: string | undefined = import.meta.env.DEV
+  ? import.meta.env.VITE_DEV_ADMIN_PASSWORD
+  : undefined;
+
 export function Login() {
   const { locale, toggleLocale } = useAppStore();
   const { loginAction, loading } = useAuthStore();
@@ -211,13 +216,15 @@ export function Login() {
             {loading ? t("login.loading") : t("login.submit")}
           </Button>
 
-          {(isLocalhost || isLioDevice) && (
+          {DEV_ADMIN_PASSWORD && (isLocalhost || isLioDevice) && (
             <Button
               type="button"
               variant="outline"
               size="lg"
               disabled={loading}
-              onClick={() => loginAction("admin@liouni.com", "admiN@123")}
+              onClick={() =>
+                loginAction("admin@liouni.com", DEV_ADMIN_PASSWORD)
+              }
               className="mt-2 font-semibold"
             >
               {t("login.quickLoginAdmin")}

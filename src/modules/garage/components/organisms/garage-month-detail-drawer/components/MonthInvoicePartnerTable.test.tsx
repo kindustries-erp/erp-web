@@ -49,7 +49,7 @@ vi.mock("@/shared/components/DataTable", () => {
         <button type="button" onClick={() => onPageSize(10)}>
           size-10
         </button>
-        <div data-testid="partner-summary">{summaryRow?.title}</div>
+        <div data-testid="partner-summary">{summaryRow?.partner}</div>
       </div>
     ),
   };
@@ -72,7 +72,19 @@ function makeItem(index: number): MonthlyReceivablesGroupItem {
     remaining: 50,
     rate: 50,
     shareRate: 10,
-    cases: [],
+    cases: [
+      {
+        id: `case-${index}`,
+        soChungTu: `GR-PDV2610-00${index}`,
+        bienSoXe: `51K-${index}`,
+        khachHangName: `Customer ${index}`,
+        amount: 100,
+        paid: 50,
+        remaining: 50,
+        vatAmount: 0,
+        vatWarning: false,
+      },
+    ],
   };
 }
 
@@ -92,7 +104,7 @@ describe("MonthInvoicePartnerTable pagination", () => {
       "1/3 (5) 12",
     );
     expect(screen.getByTestId("partner-summary")).toHaveTextContent(
-      "TỔNG CỘNG (12 vụ việc)",
+      "TỔNG CỘNG (12 phiếu • 12 xe)",
     );
     expect(screen.getByTestId("partner-table-container")).toHaveAttribute(
       "data-class",
