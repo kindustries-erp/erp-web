@@ -210,7 +210,7 @@ describe("GarageMonthDetailDrawer payer cards", () => {
     expect(within(leftPanel).queryByText(/Cơ cấu Thu KH vs Thu BH/)).toBeNull();
   });
 
-  it("does not expose invoice-partner content in payment mode", () => {
+  it("exposes invoice-partner content in payment mode with payables mode", () => {
     render(
       <GarageMonthDetailDrawer
         open
@@ -221,9 +221,7 @@ describe("GarageMonthDetailDrawer payer cards", () => {
     );
 
     const rightPanel = screen.getByTestId("drawer-right-panel");
-    expect(
-      screen.queryByText("Phân loại theo đối tượng"),
-    ).not.toBeInTheDocument();
+    expect(screen.getByText("Phân loại theo đối tượng")).toBeInTheDocument();
     expect(screen.queryByText("Cơ cấu Thu KH vs Thu BH")).toBeNull();
     expect(
       within(rightPanel).getByText("Chi phí phát sinh & Còn nợ"),

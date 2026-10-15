@@ -154,9 +154,15 @@ export function GarageMonthDetailDrawer({
   const [currentTab, setCurrentTab] = useState<"RECEIPT" | "PAYMENT">(
     activeTab || "RECEIPT",
   );
+  const [partnerDebtType, setPartnerDebtType] = useState<
+    "receivables" | "payables"
+  >(activeTab === "PAYMENT" ? "payables" : "receivables");
 
   useEffect(() => {
-    if (activeTab) setCurrentTab(activeTab);
+    if (activeTab) {
+      setCurrentTab(activeTab);
+      setPartnerDebtType(activeTab === "PAYMENT" ? "payables" : "receivables");
+    }
   }, [activeTab]);
 
   const isReceipt = currentTab === "RECEIPT";
@@ -217,9 +223,6 @@ export function GarageMonthDetailDrawer({
   const [partnerTypeFilter, setPartnerTypeFilter] = useState<
     "all" | "enterprise" | "individual" | "insurance"
   >("all");
-  const [partnerDebtType, setPartnerDebtType] = useState<
-    "receivables" | "payables"
-  >("receivables");
 
   // Hook lấy phân rã Phải thu / Phải trả theo đối tượng HĐ
   const {
