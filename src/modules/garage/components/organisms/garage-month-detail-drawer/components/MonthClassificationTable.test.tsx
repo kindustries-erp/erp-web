@@ -116,4 +116,11 @@ describe("MonthClassificationTable data contract", () => {
       expect.stringContaining("max-h-[360px]"),
     );
   });
+
+  it("ensures remaining === remainingWithInvoice + remainingNoInvoice for all rows", () => {
+    // Kiểm tra tính nhất quán số học
+    expect(baseRow.remaining).toBe(
+      baseRow.remainingWithInvoice + baseRow.remainingNoInvoice,
+    );
+  });
 });

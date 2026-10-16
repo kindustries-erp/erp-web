@@ -375,8 +375,11 @@ export const garageDashboardApi = {
   },
 
   getMonthlyReceivablesBreakdown: async (params: {
-    month: string;
+    month?: string;
+    horizon?: string;
     branch_id?: string;
+    date_from?: string;
+    date_to?: string;
   }): Promise<MonthlyReceivablesBreakdownResponse> => {
     const { data } =
       await axiosInstance.get<MonthlyReceivablesBreakdownResponse>(
@@ -495,6 +498,8 @@ export interface MonthlyReceivablesGroupCategorized {
 export interface MonthlyReceivablesBreakdownResponse {
   month: string;
   monthLabel: string;
+  horizon?: string;
+  trendItem?: GarageTrendItem;
   summary: MonthlyReceivablesSummary;
   insuranceCompanies: MonthlyReceivablesGroupItem[];
   customerPartners: MonthlyReceivablesGroupItem[];

@@ -1,88 +1,77 @@
 import React from "react";
 import { money } from "@/shared/utils/format";
 import { DrawerSection } from "@/shared/components/DrawerModal";
-import { Calendar, AlertTriangle, ShieldCheck } from "lucide-react";
+import { AlertTriangle, ShieldCheck } from "lucide-react";
+import { MonthPayerKpiGrid } from "../../garage-month-detail-drawer/components/MonthPayerKpiGrid";
+import { MonthCostPayableKpiCard } from "../../garage-month-detail-drawer/components/MonthCostPayableKpiCard";
 import type { GarageTimeHorizonCasesSummary } from "@/modules/garage/api/garageDebtsAnalyticsApi";
+import type {
+  MonthlyReceivablesSummary,
+  ReceivablesVatWarningSummary,
+  GarageTrendItem,
+} from "@/modules/garage/api/garageDashboardApi";
 
 export interface TimeHorizonRightPanelProps {
   summary?: GarageTimeHorizonCasesSummary;
+  breakdownSummary?: MonthlyReceivablesSummary;
+  trendItem?: GarageTrendItem;
+  vatWarningInfo?: ReceivablesVatWarningSummary;
+  isReceipt?: boolean;
 }
 
 export const TimeHorizonRightPanel: React.FC<TimeHorizonRightPanelProps> = ({
   summary,
+  breakdownSummary,
+  trendItem,
+  vatWarningInfo,
+  isReceipt = true,
 }) => {
   const recBal = summary?.receivableAmount || 0;
-  const recTotal = summary?.receivableTotalAmount || 0;
-  const recPaid = summary?.receivedAmount || 0;
-  const count = summary?.receivableCount || 0;
-  const rate = recTotal > 0 ? Math.round((recPaid / recTotal) * 1000) / 10 : 0;
 
   return (
-    <div className="space-y-4 text-xs">
-      <DrawerSection title="TỔNG QUAN MỐC THỜI GIAN">
-        <div className="space-y-2">
-          <div className="p-2.5 rounded-lg bg-surface border border-border/70 flex justify-between items-center">
-            <span className="text-muted-foreground flex items-center gap-1.5">
-              <Calendar className="w-3.5 h-3.5 text-primary" />
-              Mốc:
-            </span>
-            <span className="font-semibold text-foreground">
-              {summary?.horizonLabel || "Mốc thời gian"}
-            </span>
-          </div>
-
-          <div className="p-2.5 rounded-lg bg-surface border border-border/70 flex justify-between items-center">
-            <span className="text-muted-foreground">Số vụ việc:</span>
-            <span className="font-mono font-bold text-foreground">
-              {count} phiếu DV
+    <div className="flex flex-col gap-3.5 w-full text-xs">
+      {/* 1. Cảnh báo VAT chưa xuất HĐ */}
+      {vatWarningInfo?.hasVatWithoutInvoice && (
+        <div className="flex items-start gap-2.5 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-900 dark:text-amber-200 text-xs shadow-xs">
+          <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+          <div className="flex flex-col gap-0.5">
+            <span className="font-bold">Cảnh báo hóa đơn VAT:</span>
+            <span>
+              Có <strong>{vatWarningInfo.casesWithVatNoInvoiceCount}</strong> vụ
+              việc chưa xuất hoặc đính kèm hóa đơn điện tử.
             </span>
           </div>
         </div>
-      </DrawerSection>
+      )}
 
-      <DrawerSection title="VỊ THẾ DÒNG TIỀN">
-        <div className="space-y-2 tabular-nums">
-          <div className="flex justify-between items-center p-2 rounded bg-surface border border-border/60">
-            <span className="text-muted-foreground">Tổng phát sinh:</span>
-            <span className="font-mono font-semibold text-foreground">
-              {money(recTotal)}
-            </span>
-          </div>
+      {/* 2. Cơ cấu Thu KH vs Thu BH */}
+      {isReceipt && breakdownSummary && (
+        <DrawerSection
+          title="Cơ cấu Thu KH vs Thu BH"
+          collapsible
+          defaultCollapsed={false}
+        >
+          <MonthPayerKpiGrid summary={breakdownSummary} />
+        </DrawerSection>
+      )}
 
-          <div className="flex justify-between items-center p-2 rounded bg-surface border border-emerald-200/60 dark:border-emerald-900/40">
-            <span className="text-emerald-700 dark:text-emerald-400">
-              Đã thu:
-            </span>
-            <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">
-              {money(recPaid)}
-            </span>
-          </div>
+      {/* 3. Chi phí phát sinh & Còn nợ (Phải trả) */}
+      {trendItem && (
+        <DrawerSection
+          title="Chi phí phát sinh & Còn nợ"
+          collapsible
+          defaultCollapsed={false}
+        >
+          <MonthCostPayableKpiCard item={trendItem} />
+        </DrawerSection>
+      )}
 
-          <div className="flex justify-between items-center p-2 rounded bg-surface border border-rose-200/60 dark:border-rose-900/40">
-            <span className="text-rose-700 dark:text-rose-400">
-              Còn phải thu:
-            </span>
-            <span className="font-mono font-bold text-rose-600 dark:text-rose-400">
-              {money(recBal)}
-            </span>
-          </div>
-
-          <div className="pt-2">
-            <div className="flex justify-between text-[11px] mb-1">
-              <span className="text-muted-foreground">Tiến độ thu hồi:</span>
-              <span className="font-mono font-bold text-primary">{rate}%</span>
-            </div>
-            <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
-              <div
-                className="h-full bg-emerald-500 rounded-full transition-all duration-300"
-                style={{ width: `${rate}%` }}
-              />
-            </div>
-          </div>
-        </div>
-      </DrawerSection>
-
-      <DrawerSection title="ĐÁNH GIÁ RỦI RO">
+      {/* 4. Đánh giá rủi ro mốc thời gian */}
+      <DrawerSection
+        title="Đánh giá rủi ro mốc thời gian"
+        collapsible
+        defaultCollapsed={false}
+      >
         <div className="p-2.5 rounded-lg border border-border/70 bg-muted/20 flex items-start gap-2">
           {recBal > 0 ? (
             <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />

@@ -7,11 +7,15 @@ import {
   type MonthlyReceivablesGroupItem,
   type MonthlyReceivablesGroupCategorized,
   type ReceivablesVatWarningSummary,
+  type GarageTrendItem,
 } from "../api/garageDashboardApi";
 
 export interface UseGarageMonthReceivablesBreakdownParams {
   month?: string;
+  horizon?: string;
   branchId?: string;
+  dateFrom?: string;
+  dateTo?: string;
   enabled?: boolean;
 }
 
@@ -31,6 +35,7 @@ const EMPTY_CATEGORIZED: MonthlyReceivablesGroupCategorized = {
 
 export interface UseGarageMonthReceivablesBreakdownReturn {
   breakdown?: MonthlyReceivablesBreakdownResponse;
+  trendItem?: GarageTrendItem;
   summary?: MonthlyReceivablesSummary;
   insuranceCompanies: MonthlyReceivablesGroupItem[];
   customerPartners: MonthlyReceivablesGroupItem[];
@@ -51,17 +56,30 @@ export interface UseGarageMonthReceivablesBreakdownReturn {
 
 export function useGarageMonthReceivablesBreakdown({
   month,
+  horizon,
   branchId,
+  dateFrom,
+  dateTo,
   enabled = true,
 }: UseGarageMonthReceivablesBreakdownParams = {}): UseGarageMonthReceivablesBreakdownReturn {
   const query = useQuery({
-    queryKey: ["garage-monthly-receivables-breakdown", month, branchId],
+    queryKey: [
+      "garage-monthly-receivables-breakdown",
+      month,
+      horizon,
+      branchId,
+      dateFrom,
+      dateTo,
+    ],
     queryFn: () =>
       garageDashboardApi.getMonthlyReceivablesBreakdown({
-        month: month || "",
+        month: month || undefined,
+        horizon: horizon || undefined,
         branch_id: branchId || undefined,
+        date_from: dateFrom || undefined,
+        date_to: dateTo || undefined,
       }),
-    enabled: Boolean(month) && enabled,
+    enabled: Boolean(month || horizon) && enabled,
     staleTime: 30000,
   });
 
@@ -88,6 +106,7 @@ export function useGarageMonthReceivablesBreakdown({
 
   return {
     breakdown: data,
+    trendItem: data?.trendItem,
     summary: data?.summary,
     insuranceCompanies: data?.insuranceCompanies || [],
     customerPartners: data?.customerPartners || [],
