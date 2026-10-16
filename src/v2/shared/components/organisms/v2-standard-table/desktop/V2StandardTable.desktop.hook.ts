@@ -11,6 +11,7 @@ import { useV2TableSummary } from "../summary/V2StandardTable.summary.hook";
 import { useV2HeaderFilters } from "../hooks/V2StandardTable.filter.hook";
 import { useV2RowMenu } from "../hooks/V2StandardTable.menu.hook";
 import { useV2ColumnPreferences } from "../hooks/V2StandardTable.preferences.hook";
+import { useV2ViewPresets } from "../hooks/V2StandardTable.views.hook";
 import type { V2StandardTableProps } from "../V2StandardTable.type";
 
 /** Toàn bộ state và bảng TanStack của bản desktop; component chỉ lo JSX */
@@ -91,11 +92,19 @@ export function useV2DesktopTable<T>(props: V2StandardTableProps<T>) {
     canFilter: (c) => Boolean(c.filter && view.fetchOptionsFor(c)),
     committedSearchOf: (key) => state.query.columnSearch[key] ?? "",
   });
+  const viewPresets = useV2ViewPresets({
+    tableId,
+    viewModes: toolbarConfig?.viewModes,
+    filterGroup: toolbarConfig?.filterGroup,
+    prefs,
+    storage: props.viewPresetStorage,
+  });
   const { isFullscreen, toolbarProps } = useV2DesktopToolbar(
     prefs,
     columnsByKey,
     toolbarConfig,
     () => selection.onRowSelectionChange({}),
+    viewPresets,
   );
 
   return {

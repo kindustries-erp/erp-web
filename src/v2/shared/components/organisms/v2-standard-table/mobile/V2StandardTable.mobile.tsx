@@ -9,6 +9,7 @@ import { V2Text } from "@/v2/shared/components/atoms/v2-text";
 import { V2TableSelectCheckbox } from "@/v2/shared/components/molecules/v2-table-select-checkbox";
 import { cn } from "@/v2/shared/utils/cn";
 import { useV2TableController } from "../hooks/V2StandardTable.controller.hook";
+import { useV2ViewPresets } from "../hooks/V2StandardTable.views.hook";
 import { resolveMobileSlots } from "./V2StandardTable.mobile-slots";
 import { V2TableSkeletonCards } from "../skeleton";
 import { V2TableToolbar } from "../toolbar/V2StandardTable.toolbar";
@@ -18,6 +19,12 @@ export function V2StandardTableMobile<T>(props: V2StandardTableProps<T>) {
   const { columns, getRowKey, rowActions, loading = false } = props;
   const { t } = useV2Translation();
   const { state, view, selection } = useV2TableController(props);
+  // Mobile chỉ có nhóm lọc (không có chế độ xem tùy chỉnh): vẫn nhớ filter đã chọn
+  useV2ViewPresets({
+    tableId: props.tableId,
+    filterGroup: props.toolbar?.filterGroup,
+    storage: props.viewPresetStorage,
+  });
   const slots = React.useMemo(() => resolveMobileSlots(columns), [columns]);
   const selected = React.useMemo(
     () => new Set(selection.keys),

@@ -23,6 +23,11 @@ export interface V2ColumnPreferencesApi {
   toggleColumn: (columnKey: string) => void;
   setOrder: (keys: string[]) => void;
   setSizing: (sizing: Record<string, number>) => void;
+  /** Áp hiện/ẩn và thứ tự của một chế độ xem; bỏ key lạ, không để ẩn hết cột */
+  applyView: (view: {
+    visibility: Record<string, boolean>;
+    order: string[];
+  }) => void;
   reset: () => void;
 }
 
@@ -79,6 +84,23 @@ export const useV2ColumnPreferences = ({
     [],
   );
 
+  const applyView = useCallback(
+    (view: { visibility: Record<string, boolean>; order: string[] }) =>
+      setPrefs((current) => {
+        const known = new Set(columnKeys);
+        const visibility = Object.fromEntries(
+          Object.entries(view.visibility).filter(([key]) => known.has(key)),
+        );
+        const anyVisible = columnKeys.some((key) => visibility[key] !== false);
+        return {
+          ...current,
+          visibility: anyVisible ? visibility : {},
+          order: view.order.filter((key) => known.has(key)),
+        };
+      }),
+    [columnKeys],
+  );
+
   const reset = useCallback(() => {
     const empty = createEmptyPreferences();
     lastSaved.current = empty;
@@ -99,6 +121,7 @@ export const useV2ColumnPreferences = ({
     toggleColumn,
     setOrder,
     setSizing,
+    applyView,
     reset,
   };
 };

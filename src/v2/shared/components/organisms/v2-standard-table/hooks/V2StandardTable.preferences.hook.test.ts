@@ -88,4 +88,32 @@ describe("useV2ColumnPreferences", () => {
     expect(result.current.sizing).toEqual({});
     expect(storage.save).toHaveBeenCalledTimes(1);
   });
+
+  it("applyView sets visibility and order, drops unknown keys and keeps sizing", () => {
+    const storage = createStorage();
+    const { result } = setup(storage);
+    act(() => result.current.setSizing({ code: 300 }));
+    act(() =>
+      result.current.applyView({
+        visibility: { name: false, ghost: false },
+        order: ["qty", "ghost", "code"],
+      }),
+    );
+    expect(result.current.isVisible("name")).toBe(false);
+    expect(result.current.orderedKeys).toEqual(["qty", "code", "name"]);
+    expect(result.current.sizing).toEqual({ code: 300 });
+  });
+
+  it("applyView that would hide every column falls back to all visible", () => {
+    const { result } = setup();
+    act(() =>
+      result.current.applyView({
+        visibility: { code: false, name: false, qty: false },
+        order: [],
+      }),
+    );
+    expect(COLUMN_KEYS.every((key) => result.current.isVisible(key))).toBe(
+      true,
+    );
+  });
 });
