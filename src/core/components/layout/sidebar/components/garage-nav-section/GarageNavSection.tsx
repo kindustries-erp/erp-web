@@ -57,7 +57,7 @@ export function GarageNavSection({
         <NavItem
           collapsed={collapsed}
           icon={<Car className="w-4 h-4 opacity-65 flex-shrink-0" />}
-          label={t("nav.items.garageCases", "Phiếu dịch vụ")}
+          label={t("nav.items.garageCases", "Hoạt động garage")}
           active={isCasesActive}
           onClick={handleNavCases}
           contextPage="garage-cases"

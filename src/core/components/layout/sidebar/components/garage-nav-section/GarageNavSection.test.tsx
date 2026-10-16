@@ -16,7 +16,7 @@ vi.mock("@/core/i18n", () => ({
     const map: Record<string, string> = {
       "nav.sections.garage": "GARAGE",
       "nav.items.garageCashflow": "Thu chi garage",
-      "nav.items.garageCases": "Phiếu dịch vụ",
+      "nav.items.garageCases": "Hoạt động garage",
       "nav.items.garageDebts": "Công nợ garage",
       "nav.items.garageOpex": "Chi phí vận hành Garage",
     };
@@ -102,7 +102,7 @@ describe("GarageNavSection component", () => {
     expect(container.firstChild).toBeNull();
     expect(screen.queryByText("GARAGE")).toBeNull();
     expect(screen.queryByText("Thu chi garage")).toBeNull();
-    expect(screen.queryByText("Phiếu dịch vụ")).toBeNull();
+    expect(screen.queryByText("Hoạt động garage")).toBeNull();
     expect(screen.queryByText("Công nợ garage")).toBeNull();
     expect(screen.queryByText("Chi phí vận hành Garage")).toBeNull();
   });
@@ -122,7 +122,7 @@ describe("GarageNavSection component", () => {
 
     expect(screen.getByText("GARAGE")).toBeInTheDocument();
     expect(screen.getByText("Thu chi garage")).toBeInTheDocument();
-    expect(screen.queryByText("Phiếu dịch vụ")).toBeNull();
+    expect(screen.queryByText("Hoạt động garage")).toBeNull();
     expect(screen.queryByText("Công nợ garage")).toBeNull();
     expect(screen.queryByText("Chi phí vận hành Garage")).toBeNull();
 
@@ -145,12 +145,12 @@ describe("GarageNavSection component", () => {
 
     expect(screen.getByText("GARAGE")).toBeInTheDocument();
     expect(screen.queryByText("Thu chi garage")).toBeNull();
-    expect(screen.queryByText("Phiếu dịch vụ")).toBeNull();
+    expect(screen.queryByText("Hoạt động garage")).toBeNull();
     expect(screen.getByText("Công nợ garage")).toBeInTheDocument();
     expect(screen.queryByText("Chi phí vận hành Garage")).toBeNull();
   });
 
-  it("renders 4 flat nav items with Thu chi garage positioned above Phiếu dịch vụ", () => {
+  it("renders 4 flat nav items with Thu chi garage positioned above Hoạt động garage", () => {
     vi.mocked(useHasPermission).mockImplementation((resource) => {
       return (
         resource === ErpResource.GARAGE ||
@@ -169,16 +169,16 @@ describe("GarageNavSection component", () => {
 
     expect(screen.getByText("GARAGE")).toBeInTheDocument();
     expect(screen.getByText("Thu chi garage")).toBeInTheDocument();
-    expect(screen.getByText("Phiếu dịch vụ")).toBeInTheDocument();
+    expect(screen.getByText("Hoạt động garage")).toBeInTheDocument();
     expect(screen.getByText("Công nợ garage")).toBeInTheDocument();
     expect(screen.getByText("Chi phí vận hành Garage")).toBeInTheDocument();
 
-    // Verify order in DOM: Thu chi garage is before Phiếu dịch vụ
+    // Verify order in DOM: Thu chi garage is before Hoạt động garage
     const items = container.querySelectorAll(".nav-label");
     const labels = Array.from(items).map((el) => el.textContent?.trim());
     expect(labels).toEqual([
       "Thu chi garage",
-      "Phiếu dịch vụ",
+      "Hoạt động garage",
       "Công nợ garage",
       "Chi phí vận hành Garage",
     ]);

@@ -36,6 +36,8 @@ export const garageVi = {
     statusPending: "Chờ duyệt",
     statusApproved: "Đã duyệt",
     statusPaid: "Đã chi",
+    paymentStatusLocked:
+      "Phiếu đã chi, không thể cập nhật lại trạng thái thanh toán.",
     caseCode: "Mã Phiếu Dịch Vụ (Garage Case)",
     partnerName: "Đối tác",
     licensePlate: "Biển số xe",
@@ -48,7 +50,7 @@ export const garageVi = {
   tabs: {
     dashboard: "Tổng quan",
     overview: "Tổng quan",
-    cases: "Phiếu dịch vụ",
+    cases: "Hoạt động garage",
     services: "Chi tiết phiếu DV",
   },
   dashboard: {
@@ -159,7 +161,7 @@ export const garageVi = {
     },
   },
   cases: {
-    title: "Phiếu dịch vụ",
+    title: "Hoạt động garage",
     desc: "Quản lý phiếu dịch vụ & sổ báo giá Garage",
     tabs: {
       all: "Tất cả",
@@ -242,7 +244,7 @@ export const garageVi = {
       exclusionRules: "Quy tắc loại trừ",
     },
     summary: {
-      items: "Phiếu dịch vụ",
+      items: "Hoạt động garage",
       unit: "phiếu",
     },
     classification: {

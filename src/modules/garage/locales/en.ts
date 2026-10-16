@@ -36,6 +36,8 @@ export const garageEn = {
     statusPending: "Pending Approval",
     statusApproved: "Approved",
     statusPaid: "Paid",
+    paymentStatusLocked:
+      "Paid voucher: payment status can no longer be changed.",
     caseCode: "Service Case Code",
     partnerName: "Partner",
     licensePlate: "License Plate",
@@ -48,7 +50,7 @@ export const garageEn = {
   tabs: {
     dashboard: "Overview",
     overview: "Overview",
-    cases: "Service Cases",
+    cases: "Garage Activities",
     services: "Service Lines Detail",
   },
   dashboard: {
@@ -158,7 +160,7 @@ export const garageEn = {
     },
   },
   cases: {
-    title: "Service Cases",
+    title: "Garage Activities",
     desc: "Manage service cases & quotation logs",
     tabs: {
       all: "All",
@@ -241,7 +243,7 @@ export const garageEn = {
       exclusionRules: "Exclusion Rules",
     },
     summary: {
-      items: "Service Cases",
+      items: "Garage Activities",
       unit: "cases",
     },
     classification: {

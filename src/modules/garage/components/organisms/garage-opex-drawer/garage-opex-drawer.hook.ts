@@ -90,9 +90,11 @@ export function useGarageOpexDrawer({
     t,
   ]);
 
+  const isVoucherSourced = Boolean(initialData?.sourceCashflowVoucherId);
   const isReadOnlyRecord = Boolean(
     initialData?.isAutoCalculated ||
     initialData?.isReadOnly ||
+    isVoucherSourced ||
     id?.startsWith("auto-"),
   );
 
@@ -151,6 +153,7 @@ export function useGarageOpexDrawer({
   return {
     ...state,
     isReadOnlyRecord,
+    isVoucherSourced,
     handleSave,
     handleConfirmRecurringScope,
     ...options,

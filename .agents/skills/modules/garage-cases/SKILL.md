@@ -71,7 +71,7 @@ src/modules/garage/
 │   ├── vi.ts                        # Bản dịch tiếng Việt đầy đủ
 │   └── en.ts                        # Bản dịch tiếng Anh đầy đủ
 ├── pages/
-│   ├── GarageCases.tsx              # Trang chính Quản lý Phiếu dịch vụ
+│   ├── GarageCases.tsx              # Trang chính Quản lý Phiếu dịch vụ (nhãn UI từ 2026-10-17: "Hoạt động garage")
 │   ├── GarageCustomers.tsx          # Trang Quản lý Công nợ Khách hàng (SpreadsheetPageTemplate)
 │   ├── GarageDashboard.tsx          # Dashboard tổng quan hoạt động Garage
 │   ├── GaragePayables.tsx           # Sổ công nợ phải trả Garage (legacy)
@@ -215,3 +215,7 @@ Cùng cơ chế với "Xuất Excel hóa đơn": tạo job nền → tiến đ�
 
 **Công nợ**: `GarageDebtsExportDrawer` (đối tượng KH/NCC, kỳ mặc định từ `GARAGE_DEBT_BASELINE_DATE = 2026-07-01`) nhận `context` = `buildGarageDebtsExportContext(kind, listHook)` do `GarageDebtsTable`/`GaragePayablesTable` truyền qua `onOpenExportDrawer(context)`. Đổi đối tượng khác bảng đang mở thì tự về `by-period`. CSV client-side (`*.export.ts`) đã gỡ.
 
+
+## Đổi nhãn điều hướng (cập nhật 2026-10-17)
+- Nhãn UI của màn hình `garage-cases` đổi từ "Phiếu dịch vụ" thành **"Hoạt động garage"** (EN: "Garage Activities") ở sidebar (`nav.items.garageCases`), breadcrumb, tab `tabs.cases`, tiêu đề `cases.title`, nhãn tổng hợp `cases.summary.items`, command palette. Route `garage-cases` và key i18n giữ nguyên. Chuỗi nghiệp vụ như "Phiếu dịch vụ gần đây", "Phiếu dịch vụ Garage (RO)" giữ nguyên.
+- Thứ tự mục sidebar GARAGE không đổi: Thu chi garage → Hoạt động garage → Công nợ garage → Chi phí vận hành Garage.

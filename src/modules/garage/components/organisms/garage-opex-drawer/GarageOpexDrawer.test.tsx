@@ -35,6 +35,39 @@ describe("GarageOpexDrawer Component", () => {
     expect(screen.getByTestId("standard-form-drawer")).toBeInTheDocument();
   });
 
+  it("shows read-only notice for an opex row recorded from a cashflow voucher", () => {
+    render(
+      <GarageOpexDrawer
+        open={true}
+        onClose={vi.fn()}
+        mode="view"
+        setMode={vi.fn()}
+        isCreate={false}
+        id="opex-1"
+        initialData={
+          {
+            id: "opex-1",
+            periodYear: 2026,
+            periodMonth: 10,
+            period: "10/2026",
+            categoryKey: "CHI_PHI_TRUC_TIEP_KHAC",
+            categoryName: "Chi phí trực tiếp khác (Tính vào Giá vốn)",
+            amount: 1200000,
+            sourceCashflowVoucherId: "voucher-1",
+            createdAt: "",
+            updatedAt: "",
+          } as any
+        }
+      />,
+    );
+
+    expect(
+      screen.getByText(
+        "Khoản chi này được ghi nhận từ phiếu chi garage (Chỉ đọc). Vui lòng chỉnh sửa tại Thu chi garage.",
+      ),
+    ).toBeInTheDocument();
+  });
+
   it("does NOT contain VAT_TU_TIEU_HAO (Vật tư tiêu hao) in CATEGORY_PRESETS", () => {
     const vatTuTieuHao = CATEGORY_PRESETS.find(
       (preset) => preset.key === "VAT_TU_TIEU_HAO",

@@ -72,7 +72,7 @@ export const breadcrumbEn = {
   catalogAccounts: "Chart of Accounts",
   garage: "Garage",
   garageDashboard: "Garage Dashboard",
-  garageCases: "Service Cases",
+  garageCases: "Garage Activities",
   garageOpex: "Garage Operating Expenses",
   garageCashflow: "Garage Cashflow",
   garagePartnersGroup: "Debts",

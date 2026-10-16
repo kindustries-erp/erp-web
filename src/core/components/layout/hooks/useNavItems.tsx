@@ -338,7 +338,7 @@ export function useNavItems(): NavSearchItem[] {
     if (canReadGarage) {
       items.push({
         key: "garage-cases",
-        label: t("nav.items.garageCases", "Phiếu dịch vụ"),
+        label: t("nav.items.garageCases", "Hoạt động garage"),
         section: garageSection,
         keywords: [
           "garage",

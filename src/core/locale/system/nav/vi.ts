@@ -119,7 +119,7 @@ export const navVi = {
     catalogVoucherNumbering: "Số thứ tự CT",
     garage: "Garage",
     garageDashboard: "Tổng quan Garage",
-    garageCases: "Phiếu dịch vụ",
+    garageCases: "Hoạt động garage",
     garageOpex: "Chi phí vận hành Garage",
     garageCashflow: "Thu chi garage",
     garageServicesGroup: "Dịch vụ Garage",

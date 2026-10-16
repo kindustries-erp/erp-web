@@ -14,6 +14,8 @@ export interface GarageOpexItem {
   recurrenceUntilYear?: number | null;
   recurrenceUntilMonth?: number | null;
   recurrenceAnchorId?: string | null;
+  /** Có giá trị khi khoản chi được ghi nhận từ phiếu chi garage (chỉ đọc). */
+  sourceCashflowVoucherId?: string | null;
   createdBy?: string | null;
   isAutoCalculated?: boolean;
   isReadOnly?: boolean;
