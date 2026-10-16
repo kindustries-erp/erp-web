@@ -22,6 +22,14 @@ vi.mock("../garage-cashflow-drawer/GarageCashflowDrawer", () => ({
   GarageCashflowDrawer: () => <div data-testid="garage-cashflow-drawer" />,
 }));
 
+let exportDrawerPropsSpy: any = null;
+vi.mock("../garage-cashflow-export-drawer/GarageCashflowExportDrawer", () => ({
+  GarageCashflowExportDrawer: (props: any) => {
+    exportDrawerPropsSpy = props;
+    return <div data-testid="garage-cashflow-export-drawer" />;
+  },
+}));
+
 let caseDrawerPropsSpy: any = null;
 vi.mock("../../GarageCaseStandaloneDrawer", () => ({
   GarageCaseStandaloneDrawer: (props: any) => {
@@ -147,5 +155,28 @@ describe("GarageCashflowList Organism RBAC", () => {
 
     expect(caseDrawerPropsSpy.isOpen).toBe(true);
     expect(caseDrawerPropsSpy.caseCode).toBe("GR-202610-0012");
+  });
+
+  it("opens GarageCashflowExportDrawer when onExportExcel is called", () => {
+    vi.mocked(useHasPermission).mockReturnValue(true);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <GarageCashflowList />
+      </QueryClientProvider>,
+    );
+
+    expect(tablePropsSpy.onExportExcel).toBeDefined();
+    expect(exportDrawerPropsSpy.open).toBe(false);
+
+    act(() => {
+      tablePropsSpy.onExportExcel({
+        activeFilterCount: 2,
+        serverFilters: { paymentMethod: ["Tiền mặt"] },
+      });
+    });
+
+    expect(exportDrawerPropsSpy.open).toBe(true);
+    expect(exportDrawerPropsSpy.filterSummary.filterCount).toBe(2);
   });
 });

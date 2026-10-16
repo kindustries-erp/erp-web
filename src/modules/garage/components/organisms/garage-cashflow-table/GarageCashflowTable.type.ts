@@ -11,6 +11,7 @@ export interface GarageCashflowTableProps {
   onDelete?: (row: GarageCashflowVoucher) => void;
   onOpenCaseDetail?: (caseCode: string) => void;
   canDelete?: boolean;
+  onExportExcel?: (filterState: any) => void;
 }
 
 export const PAYMENT_METHOD_OPTIONS = [
