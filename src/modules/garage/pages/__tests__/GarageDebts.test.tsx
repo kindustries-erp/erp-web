@@ -8,10 +8,21 @@ vi.mock("@/modules/garage/store/garageStore", () => ({
   useGarageStore: () => ({ selectedBranchId: "branch-01" }),
 }));
 
-vi.mock("@/modules/garage/hooks/useGarage", () => ({
-  useGarageBranches: () => ({ data: [] }),
-  useSyncGarageCaseDetail: () => ({ mutate: vi.fn() }),
-}));
+vi.mock("@/modules/garage/hooks/useGarage", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("@/modules/garage/hooks/useGarage")>();
+  return {
+    ...actual,
+    useGarageBranches: () => ({ data: [] }),
+    useSyncGarageCaseDetail: () => ({ mutate: vi.fn() }),
+    useGarageCaseByCode: () => ({
+      data: null,
+      isLoading: false,
+      refetch: vi.fn(),
+    }),
+    useGarageCaseGrossProfit: () => ({ data: null, isLoading: false }),
+  };
+});
 
 vi.mock("@/modules/garage/hooks/useGarageCustomersList", () => ({
   useGarageCustomersList: () => ({

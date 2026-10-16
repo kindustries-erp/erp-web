@@ -13,8 +13,10 @@ import {
 } from "@/modules/garage/export/garageDebtsExportContext";
 import {
   branchHeaders,
+  garageAllDebtsExportScope,
   garageCustomersDebtExportScope,
   garageSuppliersDebtExportScope,
+  useGarageAllDebtsExportStore,
   useGarageCustomersDebtExportStore,
   useGarageSuppliersDebtExportStore,
   type GarageDebtsExportPayload,
@@ -38,7 +40,7 @@ export function useGarageDebtsExportDrawer({
   } = useGarageExportLabels();
 
   const [kind, setKind] = useState<GarageDebtsExportKind>(
-    context?.kind ?? "customers",
+    context?.kind ?? "all",
   );
   const [exportMode, setExportMode] = useState<ExportMode>("by-period");
   // Mặc định lấy toàn bộ công nợ từ mốc ghi nhận đến hôm nay (Tùy chỉnh).
@@ -51,10 +53,16 @@ export function useGarageDebtsExportDrawer({
   // Mỗi lần mở từ một bảng: chọn đúng đối tượng và dùng filter của bảng đó.
   useEffect(() => {
     if (!open) return;
-    setKind(context?.kind ?? "customers");
+    setKind(context?.kind ?? "all");
     setExportMode(context?.query ? "by-current-filter" : "by-period");
   }, [open, context?.kind, context?.query]);
 
+  const allDebts = useBackgroundExport<GarageDebtsExportPayload>({
+    scope: garageAllDebtsExportScope,
+    useStore: useGarageAllDebtsExportStore,
+    open: open && kind === "all",
+    messages,
+  });
   const customers = useBackgroundExport<GarageDebtsExportPayload>({
     scope: garageCustomersDebtExportScope,
     useStore: useGarageCustomersDebtExportStore,
@@ -67,7 +75,8 @@ export function useGarageDebtsExportDrawer({
     open: open && kind === "suppliers",
     messages,
   });
-  const exporter = kind === "customers" ? customers : suppliers;
+  const exporter =
+    kind === "all" ? allDebts : kind === "customers" ? customers : suppliers;
 
   const canUseCurrentFilter = Boolean(context?.query) && context?.kind === kind;
   const effectiveMode: ExportMode = canUseCurrentFilter

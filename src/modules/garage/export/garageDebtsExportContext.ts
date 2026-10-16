@@ -1,6 +1,6 @@
 import type { GarageDebtsTableQuery } from "./garageExportScopes";
 
-export type GarageDebtsExportKind = "customers" | "suppliers";
+export type GarageDebtsExportKind = "all" | "customers" | "suppliers";
 
 /** Bảng công nợ nào đang mở drawer, kèm điều kiện lọc của bảng đó. */
 export interface GarageDebtsExportContext {

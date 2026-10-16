@@ -21,6 +21,11 @@ export const garageCasesExportScope = makeScope(
   "garage-cases",
   `${BASE}/cases/export/excel`,
 );
+/** Xuất công nợ tổng hợp - cả khách hàng và nhà cung cấp (`GARAGE_DEBTS`). */
+export const garageAllDebtsExportScope = makeScope(
+  "garage-all-debts",
+  `${BASE}/debts/all/export`,
+);
 /** Xuất công nợ phải thu - khách hàng (`GARAGE_DEBTS`). */
 export const garageCustomersDebtExportScope = makeScope(
   "garage-customers-debt",
@@ -33,6 +38,7 @@ export const garageSuppliersDebtExportScope = makeScope(
 );
 
 export const useGarageCasesExportStore = createExportProgressStore();
+export const useGarageAllDebtsExportStore = createExportProgressStore();
 export const useGarageCustomersDebtExportStore = createExportProgressStore();
 export const useGarageSuppliersDebtExportStore = createExportProgressStore();
 

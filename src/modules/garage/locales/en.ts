@@ -937,13 +937,17 @@ export const garageEn = {
     activeFiltersCount: "{{count}} filters",
     noActiveFilters: "No active filters",
     sortInfo: "Sorting:",
+    conditionTitle: "Export Conditions",
     debts: {
       title: "Export garage debts to Excel",
       subtitle:
         "Create receivable / payable debt files and re-download them within 24 hours",
       target: "Report target",
+      targetAll: "All (Receivables & Payables)",
       customers: "Customers (receivables)",
       suppliers: "Suppliers (payables)",
+      receivables: "Receivables (Customers)",
+      payables: "Payables (Suppliers)",
       period: "Date range",
       dateFrom: "From date",
       dateTo: "To date",

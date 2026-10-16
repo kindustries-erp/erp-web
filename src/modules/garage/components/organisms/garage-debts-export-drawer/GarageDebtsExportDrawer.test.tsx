@@ -121,22 +121,24 @@ describe("GarageDebtsExportDrawer", () => {
     });
   });
 
-  it("hiển thị tiêu đề, đối tượng báo cáo và lịch sử của khách hàng theo mặc định", async () => {
+  it("hiển thị tiêu đề, đối tượng báo cáo (Combobox) và lịch sử tổng hợp theo mặc định", async () => {
     renderDrawer();
 
     expect(screen.getByText("Xuất Excel công nợ garage")).toBeDefined();
-    expect(screen.getByText("Khách hàng (phải thu)")).toBeDefined();
-    expect(screen.getByText("Nhà cung cấp (phải trả)")).toBeDefined();
+    expect(screen.getByText("Tất cả (Phải thu & Phải trả)")).toBeDefined();
+    expect(screen.getByText("Phải thu (Khách hàng)")).toBeDefined();
+    expect(screen.getByText("Phải trả (Nhà cung cấp)")).toBeDefined();
+    expect(screen.getByText("Điều kiện xuất dữ liệu")).toBeDefined();
     expect(screen.queryByText("Theo filter hiện tại")).toBeNull();
     await waitFor(() =>
       expect(axiosInstance.get).toHaveBeenCalledWith(
-        "/api/v1/greenway/cases/customers-debt/export/background/history",
+        "/api/v1/greenway/debts/all/export/background/history",
         { params: { page: 1, pageSize: 10 } },
       ),
     );
   });
 
-  it("xuất công nợ khách hàng theo kỳ (mốc 2026-07-01) kèm header chi nhánh", async () => {
+  it("xuất công nợ tổng hợp theo kỳ (mốc 2026-07-01) kèm header chi nhánh", async () => {
     renderDrawer();
 
     await act(async () => {
@@ -145,7 +147,7 @@ describe("GarageDebtsExportDrawer", () => {
 
     await waitFor(() => expect(axiosInstance.post).toHaveBeenCalledTimes(1));
     const [url, body, config] = (axiosInstance.post as any).mock.calls[0];
-    expect(url).toBe("/api/v1/greenway/cases/customers-debt/export/background");
+    expect(url).toBe("/api/v1/greenway/debts/all/export/background");
     expect(body.mode).toBe("by-period");
     expect(body.from).toBe("2026-07-01");
     expect(body.to).toMatch(/^\d{4}-\d{2}-\d{2}$/);
@@ -171,7 +173,8 @@ describe("GarageDebtsExportDrawer", () => {
   it("đổi sang đối tượng khác thì bỏ chế độ theo filter (filter thuộc bảng khác)", async () => {
     renderDrawer({ context });
 
-    fireEvent.click(screen.getByText("Khách hàng (phải thu)"));
+    const selects = screen.getAllByRole("combobox");
+    fireEvent.change(selects[0], { target: { value: "customers" } });
 
     await waitFor(() =>
       expect(screen.queryByTestId("garage-export-filter-preview")).toBeNull(),
@@ -183,7 +186,7 @@ describe("GarageDebtsExportDrawer", () => {
     });
     await waitFor(() => expect(axiosInstance.post).toHaveBeenCalledTimes(1));
     const [url, body] = (axiosInstance.post as any).mock.calls[0];
-    expect(url).toContain("/cases/customers-debt/export/background");
+    expect(url).toBe("/api/v1/greenway/cases/customers-debt/export/background");
     expect(body.mode).toBe("by-period");
   });
 

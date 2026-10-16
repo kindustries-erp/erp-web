@@ -45,7 +45,7 @@ export function GarageDebts({
   >(undefined);
 
   const openExportDrawer = useCallback((context?: GarageDebtsExportContext) => {
-    setExportContext(context ?? { kind: "customers" });
+    setExportContext(context ?? { kind: "all" });
     setExportDrawerOpen(true);
   }, []);
   const [selectedCustomer, setSelectedCustomer] = useState<{

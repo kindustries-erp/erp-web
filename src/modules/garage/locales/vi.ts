@@ -944,13 +944,17 @@ export const garageVi = {
     activeFiltersCount: "{{count}} điều kiện lọc",
     noActiveFilters: "Không có bộ lọc nào",
     sortInfo: "Sắp xếp:",
+    conditionTitle: "Điều kiện xuất dữ liệu",
     debts: {
       title: "Xuất Excel công nợ garage",
       subtitle:
         "Tạo file công nợ phải thu / phải trả và tải lại file đã tạo trong 24 tiếng",
       target: "Đối tượng báo cáo",
+      targetAll: "Tất cả (Phải thu & Phải trả)",
       customers: "Khách hàng (phải thu)",
       suppliers: "Nhà cung cấp (phải trả)",
+      receivables: "Phải thu (Khách hàng)",
+      payables: "Phải trả (Nhà cung cấp)",
       period: "Khoảng thời gian",
       dateFrom: "Từ ngày",
       dateTo: "Đến ngày",
