@@ -11,7 +11,6 @@ import {
   ArrowDownAZ,
   ArrowUpAZ,
   ListFilter,
-  Check,
   X,
   Loader2,
 } from "lucide-react";
@@ -446,45 +445,59 @@ export function TableColumnHeaderFilter({
           )}
         >
           {!hideSort && (
-            <div className="flex flex-col gap-1 border-b border-border p-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                className={cn(
-                  "justify-start font-normal rounded-sm h-8",
-                  sortState === "asc"
-                    ? "bg-primary/10 text-primary font-medium"
-                    : "",
-                )}
-                onClick={() => {
-                  onSortChange(sortState === "asc" ? "none" : "asc");
-                  setOpen(false);
-                }}
-              >
-                <ArrowDownAZ size={14} className="mr-2" />
-                {t("sortAsc", "Sắp xếp tăng dần")}
-                {sortState === "asc" && <Check size={14} className="ml-auto" />}
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className={cn(
-                  "justify-start font-normal rounded-sm h-8",
-                  sortState === "desc"
-                    ? "bg-primary/10 text-primary font-medium"
-                    : "",
-                )}
-                onClick={() => {
-                  onSortChange(sortState === "desc" ? "none" : "desc");
-                  setOpen(false);
-                }}
-              >
-                <ArrowUpAZ size={14} className="mr-2" />
-                {t("sortDesc", "Sắp xếp giảm dần")}
-                {sortState === "desc" && (
-                  <Check size={14} className="ml-auto" />
-                )}
-              </Button>
+            <div className="flex items-center gap-1 border-b border-border p-2">
+              <div className="flex min-w-0 flex-1 gap-0.5 rounded-lg bg-muted/60 p-0.5">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className={cn(
+                    "h-6 min-w-0 flex-1 gap-1 rounded-md px-1.5 text-[11px] font-normal transition-all",
+                    sortState === "asc"
+                      ? "bg-surface text-primary font-semibold shadow-2xs"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                  aria-label={t("sortAsc", "Sắp xếp tăng dần")}
+                  title={t("sortAsc", "Sắp xếp tăng dần")}
+                  onClick={() => {
+                    onSortChange(sortState === "asc" ? "none" : "asc");
+                    setOpen(false);
+                  }}
+                >
+                  <ArrowDownAZ size={13} className="shrink-0" />
+                  <span>{t("sortAscShort", "Tăng")}</span>
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className={cn(
+                    "h-6 min-w-0 flex-1 gap-1 rounded-md px-1.5 text-[11px] font-normal transition-all",
+                    sortState === "desc"
+                      ? "bg-surface text-primary font-semibold shadow-2xs"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                  aria-label={t("sortDesc", "Sắp xếp giảm dần")}
+                  title={t("sortDesc", "Sắp xếp giảm dần")}
+                  onClick={() => {
+                    onSortChange(sortState === "desc" ? "none" : "desc");
+                    setOpen(false);
+                  }}
+                >
+                  <ArrowUpAZ size={13} className="shrink-0" />
+                  <span>{t("sortDescShort", "Giảm")}</span>
+                </Button>
+              </div>
+              {sortState !== "none" && (
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  className="h-6 w-6 shrink-0 rounded-md p-0 text-muted-foreground hover:text-destructive"
+                  aria-label={t("clearSort", "Bỏ sắp xếp")}
+                  title={t("clearSort", "Bỏ sắp xếp")}
+                  onClick={() => onSortChange("none")}
+                >
+                  <X size={13} />
+                </Button>
+              )}
             </div>
           )}
 
@@ -641,6 +654,7 @@ export function TableColumnHeaderFilter({
                   if (columnKey) setDropdownSearchState(columnKey, "");
                   onSearchChange("");
                   onFilterChange([]);
+                  onSortChange("none");
                   setOpen(false);
                 }}
               >
