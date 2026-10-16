@@ -21,6 +21,10 @@ export const GarageCashflowDrawerGeneralSection: React.FC<
 > = ({ mode, voucher, formData, setFormData }) => {
   const t = useT();
 
+  // Phiếu chi đã "Đã chi" thì khóa trạng thái thanh toán và loại phiếu.
+  const isPaymentLocked =
+    voucher?.voucherType === "PAYMENT" && voucher?.paymentStatus === "PAID";
+
   const handleFieldChange =
     (field: keyof CreateGarageCashflowVoucherDto) =>
     (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -114,6 +118,7 @@ export const GarageCashflowDrawerGeneralSection: React.FC<
           >
             <Combobox
               value={formData.voucherType || ""}
+              disabled={isPaymentLocked}
               onChange={(val) =>
                 setFormData((prev) => ({
                   ...prev,
@@ -141,6 +146,7 @@ export const GarageCashflowDrawerGeneralSection: React.FC<
             >
               <Combobox
                 value={formData.paymentStatus || "PENDING"}
+                disabled={isPaymentLocked}
                 onChange={(val) =>
                   setFormData((prev) => ({
                     ...prev,
@@ -153,6 +159,14 @@ export const GarageCashflowDrawerGeneralSection: React.FC<
                   "— Chọn —",
                 )}
               />
+              {isPaymentLocked && (
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {t(
+                    "garage:cashflowDrawer.paymentStatusLocked",
+                    "Phiếu đã chi, không thể cập nhật lại trạng thái thanh toán.",
+                  )}
+                </p>
+              )}
             </DrawerField>
           )}
           <DrawerField

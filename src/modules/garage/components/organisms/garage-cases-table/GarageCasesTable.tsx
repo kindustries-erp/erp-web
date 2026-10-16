@@ -168,7 +168,7 @@ export function GarageCasesTable(props: GarageCasesTableProps) {
 
   return (
     <SpreadsheetPageTemplate
-      title={t("cases.title", "Phiếu dịch vụ")}
+      title={t("cases.title", "Hoạt động garage")}
       desc={t("cases.desc", "Quản lý phiếu dịch vụ & sổ báo giá Garage")}
       icon={<FileText className="w-5 h-5 text-slate-700" />}
       tableId="garage-cases-table"

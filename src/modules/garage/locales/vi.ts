@@ -36,6 +36,8 @@ export const garageVi = {
     statusPending: "Chờ duyệt",
     statusApproved: "Đã duyệt",
     statusPaid: "Đã chi",
+    paymentStatusLocked:
+      "Phiếu đã chi, không thể cập nhật lại trạng thái thanh toán.",
     caseCode: "Mã Phiếu Dịch Vụ (Garage Case)",
     partnerName: "Đối tác",
     licensePlate: "Biển số xe",
@@ -48,7 +50,7 @@ export const garageVi = {
   tabs: {
     dashboard: "Tổng quan",
     overview: "Tổng quan",
-    cases: "Phiếu dịch vụ",
+    cases: "Hoạt động garage",
     services: "Chi tiết phiếu DV",
   },
   dashboard: {
@@ -159,7 +161,7 @@ export const garageVi = {
     },
   },
   cases: {
-    title: "Phiếu dịch vụ",
+    title: "Hoạt động garage",
     desc: "Quản lý phiếu dịch vụ & sổ báo giá Garage",
     tabs: {
       all: "Tất cả",
@@ -242,7 +244,7 @@ export const garageVi = {
       exclusionRules: "Quy tắc loại trừ",
     },
     summary: {
-      items: "Phiếu dịch vụ",
+      items: "Hoạt động garage",
       unit: "phiếu",
     },
     classification: {
@@ -1196,6 +1198,7 @@ export const garageVi = {
       BAO_TRI: "Bảo trì",
       KHAU_HAO: "Khấu hao máy móc & thiết bị",
       HOA_HONG_TRUC_TIEP: "Hoa hồng trực tiếp DV (Tính vào Giá vốn)",
+      HHBH: "HHBH",
       CHI_PHI_TRUC_TIEP_KHAC: "Chi phí trực tiếp khác (Tính vào Giá vốn)",
       HOA_HONG_SALE: "Hoa hồng cho Sale",
       HOA_HONG_DV: "Hoa hồng cho DV",
@@ -1353,6 +1356,7 @@ export const garageVi = {
     grossProfitOjSub: "3.1. Trong đó: Lợi nhuận gộp mảng OJ",
     sellingExpensesHeader: "IV. Chi phí bán hàng",
     saleCommission: "4.1. Hoa hồng cho Sale (10%)",
+    hhbh: "4.2. HHBH",
     kyGuiProfitRate: "4.1.1. Tỷ lệ lãi gộp ký gửi / Lãi gộp",
     kyGuiProfitRateTooltip:
       "Tỷ lệ % lợi nhuận gộp từ các phiếu dịch vụ có phân loại Ký gửi/Nội bộ trên tổng lợi nhuận gộp toàn xưởng. Dùng làm hệ số phân bổ Lợi nhuận ròng để tính 10% hoa hồng cho bộ phận Sale.",

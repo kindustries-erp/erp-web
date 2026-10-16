@@ -251,12 +251,23 @@ export function GarageOpex() {
               onDetailClick={() => openDetail(row, "view")}
               className="font-normal text-xs text-foreground cursor-pointer hover:underline"
             />
-            {Boolean(row.isAutoCalculated || row.isReadOnly) && (
+            {Boolean(
+              row.isAutoCalculated ||
+              row.isReadOnly ||
+              row.sourceCashflowVoucherId,
+            ) && (
               <Tooltip
-                content={t(
-                  "opex.autoCalculatedTooltip",
-                  "Khoản hoa hồng này được tính toán tự động 100% từ Báo cáo P&L (Chỉ đọc)",
-                )}
+                content={
+                  row.sourceCashflowVoucherId
+                    ? t(
+                        "opex.voucherSourcedTooltip",
+                        "Ghi nhận từ phiếu chi garage (Chỉ đọc), chỉnh sửa tại Thu chi garage",
+                      )
+                    : t(
+                        "opex.autoCalculatedTooltip",
+                        "Khoản hoa hồng này được tính toán tự động 100% từ Báo cáo P&L (Chỉ đọc)",
+                      )
+                }
               >
                 <span className="inline-flex items-center justify-center h-4 w-4 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-300/80 dark:border-amber-700/60 cursor-help shrink-0 shadow-xs hover:bg-amber-500/20 transition-colors">
                   <Sparkles className="w-2.5 h-2.5" />
@@ -416,7 +427,10 @@ export function GarageOpex() {
   const getRowActions = useCallback(
     (row: GarageOpexItem): ActionDropdownItem[] => {
       const isAuto = Boolean(
-        row.isAutoCalculated || row.isReadOnly || row.id.startsWith("auto-"),
+        row.isAutoCalculated ||
+        row.isReadOnly ||
+        row.sourceCashflowVoucherId ||
+        row.id.startsWith("auto-"),
       );
 
       if (isAuto) {

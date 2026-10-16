@@ -119,7 +119,7 @@ export const navEn = {
     catalogVoucherNumbering: "Voucher Numbering",
     garage: "Garage",
     garageDashboard: "Garage Dashboard",
-    garageCases: "Service Cases",
+    garageCases: "Garage Activities",
     garageOpex: "Garage Operating Expenses",
     garageCashflow: "Garage Cashflow",
     garageServicesGroup: "Garage Services",

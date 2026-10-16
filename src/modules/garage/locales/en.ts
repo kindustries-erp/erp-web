@@ -36,6 +36,8 @@ export const garageEn = {
     statusPending: "Pending Approval",
     statusApproved: "Approved",
     statusPaid: "Paid",
+    paymentStatusLocked:
+      "Paid voucher: payment status can no longer be changed.",
     caseCode: "Service Case Code",
     partnerName: "Partner",
     licensePlate: "License Plate",
@@ -48,7 +50,7 @@ export const garageEn = {
   tabs: {
     dashboard: "Overview",
     overview: "Overview",
-    cases: "Service Cases",
+    cases: "Garage Activities",
     services: "Service Lines Detail",
   },
   dashboard: {
@@ -158,7 +160,7 @@ export const garageEn = {
     },
   },
   cases: {
-    title: "Service Cases",
+    title: "Garage Activities",
     desc: "Manage service cases & quotation logs",
     tabs: {
       all: "All",
@@ -241,7 +243,7 @@ export const garageEn = {
       exclusionRules: "Exclusion Rules",
     },
     summary: {
-      items: "Service Cases",
+      items: "Garage Activities",
       unit: "cases",
     },
     classification: {
@@ -1189,6 +1191,7 @@ export const garageEn = {
       BAO_TRI: "Maintenance",
       KHAU_HAO: "Depreciation & Machinery",
       HOA_HONG_TRUC_TIEP: "Direct Service Commission (COGS)",
+      HHBH: "HHBH",
       CHI_PHI_TRUC_TIEP_KHAC: "Other Direct Cost (COGS)",
       HOA_HONG_SALE: "Sales Commission",
       HOA_HONG_DV: "Service Commission",
@@ -1353,6 +1356,7 @@ export const garageEn = {
     kyGuiFormulaSubtitle:
       "Consignment GP: {{kyGuiGrossProfit}} đ / Total GP: {{totalGrossProfit}} đ",
     saleCommission: "Sales Commission (10%)",
+    hhbh: "4.2. HHBH",
     saleCommissionBadge: "10% × Net Profit × {{rate}}% Consignment",
     saleCommissionSubtitle:
       "Calculated on 10% of Net Profit based on Consignment Gross Profit share",

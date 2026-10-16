@@ -145,6 +145,56 @@ describe("GarageCashflowDrawer Organism", () => {
     expect(screen.getByText("Lưu")).toBeInTheDocument();
   });
 
+  it("locks payment status with a hint when editing a paid payment voucher", () => {
+    vi.mocked(useHasPermission).mockReturnValue(true);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <GarageCashflowDrawer
+          open={true}
+          onClose={vi.fn()}
+          voucher={{
+            ...sampleVoucher,
+            voucherType: "PAYMENT",
+            paymentStatus: "PAID",
+          }}
+          initialMode="edit"
+        />
+      </QueryClientProvider>,
+    );
+
+    expect(
+      screen.getByText(
+        "Phiếu đã chi, không thể cập nhật lại trạng thái thanh toán.",
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it("does not show the lock hint for a pending payment voucher", () => {
+    vi.mocked(useHasPermission).mockReturnValue(true);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <GarageCashflowDrawer
+          open={true}
+          onClose={vi.fn()}
+          voucher={{
+            ...sampleVoucher,
+            voucherType: "PAYMENT",
+            paymentStatus: "PENDING",
+          }}
+          initialMode="edit"
+        />
+      </QueryClientProvider>,
+    );
+
+    expect(
+      screen.queryByText(
+        "Phiếu đã chi, không thể cập nhật lại trạng thái thanh toán.",
+      ),
+    ).not.toBeInTheDocument();
+  });
+
   it("sanitizes payload and excludes nested case and rawData when updating voucher", () => {
     vi.mocked(useHasPermission).mockReturnValue(true);
 

@@ -114,7 +114,7 @@ describe("GarageCasesTable Organism", () => {
         <GarageCasesTable {...defaultProps} />
       </QueryClientProvider>,
     );
-    expect(screen.getByText("Phiếu dịch vụ")).toBeDefined();
+    expect(screen.getByText("Hoạt động garage")).toBeDefined();
   });
 
   it("STT column formats idx directly (zero-based index)", () => {

@@ -186,7 +186,7 @@ export function buildCasesSummaryRow({
         totalCount={totalCases}
         currentPageCount={visibleCases.length}
         cumulativeCount={cumCount}
-        itemTitle={t("cases.summary.items", "Phiếu dịch vụ")}
+        itemTitle={t("cases.summary.items", "Hoạt động garage")}
         itemUnit={t("cases.summary.unit", "phiếu")}
       />
     ),

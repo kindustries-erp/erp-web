@@ -6,7 +6,11 @@ import { CATEGORY_PRESETS } from "./garage-opex-drawer.constants";
 export function getGroupByCatKey(catKey: string): CostGroupType {
   const preset = CATEGORY_PRESETS.find((p) => p.key === catKey);
   if (preset) return preset.group;
-  if (catKey === "HOA_HONG_TRUC_TIEP" || catKey === "CHI_PHI_TRUC_TIEP_KHAC") {
+  if (
+    catKey === "HOA_HONG_TRUC_TIEP" ||
+    catKey === "CHI_PHI_TRUC_TIEP_KHAC" ||
+    catKey === "VAT_TU_TIEU_HAO"
+  ) {
     return "COGS";
   }
   if (catKey.startsWith("HOA_HONG_")) {
