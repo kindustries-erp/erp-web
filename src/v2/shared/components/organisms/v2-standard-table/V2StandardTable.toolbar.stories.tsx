@@ -41,10 +41,11 @@ export const WithFullToolbar = () => {
       rowActions={rowActions}
       enableRowSelection
       toolbar={{
-        pillTabs: {
+        filterGroup: {
+          title: "Bộ lọc dữ liệu",
           items: [
             { key: "all", label: "Tất cả" },
-            { key: "new", label: "Mới" },
+            { key: "new", label: "Mới", badgeCount: 4 },
             { key: "replace", label: "Thay thế" },
             { key: "adjust", label: "Điều chỉnh" },
           ],

@@ -8,6 +8,8 @@ export interface UseBankStatementExportSyncProps {
   historyData?: BankStatementExportHistoryResult;
   refetchHistory: () => Promise<any>;
   onDownload: (jobId: string, fileName?: string) => Promise<void>;
+  downloadedJobIdsRef?: React.MutableRefObject<Set<string>>;
+  onJobFinished?: (jobId: string) => void;
 }
 
 export function useBankStatementExportSync({
@@ -16,9 +18,13 @@ export function useBankStatementExportSync({
   historyData,
   refetchHistory,
   onDownload,
+  downloadedJobIdsRef: externalDownloadedJobIdsRef,
+  onJobFinished,
 }: UseBankStatementExportSyncProps) {
   const terminalRefreshGuardRef = useRef<string | null>(null);
-  const downloadedJobIdsRef = useRef<Set<string>>(new Set());
+  const internalDownloadedJobIdsRef = useRef<Set<string>>(new Set());
+  const downloadedJobIdsRef =
+    externalDownloadedJobIdsRef || internalDownloadedJobIdsRef;
 
   const progress = useBankStatementExportProgressStore();
 
@@ -34,6 +40,7 @@ export function useBankStatementExportSync({
     ) {
       downloadedJobIdsRef.current.add(activeJobId);
       void onDownload(activeJobId, progress.fileName);
+      onJobFinished?.(activeJobId);
     }
 
     // 2. Check historyData items for trackedJobId (fallback if SSE missed event)
@@ -43,7 +50,36 @@ export function useBankStatementExportSync({
       );
       if (historyItem) {
         downloadedJobIdsRef.current.add(trackedJobId);
+        // Sync to progress store so badges & percentage update immediately
+        progress.setProgress({
+          jobId: trackedJobId,
+          fileName: historyItem.fileName,
+          current: 100,
+          total: 100,
+          isRunning: false,
+          completed: true,
+          ready: true,
+          failed: false,
+          message: historyItem.message,
+        });
         void onDownload(trackedJobId, historyItem.fileName);
+        onJobFinished?.(trackedJobId);
+      }
+
+      // Handle FAILED state from history
+      const failedItem = historyData?.items?.find(
+        (it) => it.jobId === trackedJobId && it.status === "FAILED",
+      );
+      if (failedItem) {
+        progress.setProgress({
+          jobId: trackedJobId,
+          isRunning: false,
+          completed: false,
+          ready: false,
+          failed: true,
+          message: failedItem.message,
+        });
+        onJobFinished?.(trackedJobId);
       }
     }
 
@@ -67,7 +103,9 @@ export function useBankStatementExportSync({
     trackedJobId,
     historyData?.items,
     onDownload,
+    onJobFinished,
     refetchHistory,
+    downloadedJobIdsRef,
   ]);
 
   useEffect(() => {

@@ -99,14 +99,18 @@ describe("V2StandardTableMobile", () => {
     expect(screen.getByText("1–20 / 45")).toBeInTheDocument();
   });
 
-  it("toolbar rút gọn: có pill tabs, làm mới, tạo mới; không có chế độ xem và toàn màn hình", () => {
+  it("toolbar rút gọn: có nhóm lọc, làm mới, tạo mới; không có chế độ xem và toàn màn hình", () => {
     const onRefresh = vi.fn();
+    const onChange = vi.fn();
     render({
       toolbar: {
-        pillTabs: {
-          items: [{ key: "all", label: "Tất cả" }],
+        filterGroup: {
+          items: [
+            { key: "all", label: "Tất cả" },
+            { key: "new", label: "Mới" },
+          ],
           activeKey: "all",
-          onChange: vi.fn(),
+          onChange,
         },
         viewModes: {
           items: [{ key: "overview", label: "Tổng quan" }],
@@ -117,11 +121,14 @@ describe("V2StandardTableMobile", () => {
         create: { label: "Đồng bộ", onClick: vi.fn() },
       },
     });
-    expect(screen.getByRole("tab", { name: "Tất cả" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Đồng bộ" })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Làm mới" }));
     expect(onRefresh).toHaveBeenCalled();
-    expect(screen.queryByRole("button", { name: "Chế độ xem" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Toàn màn hình" })).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: "Bộ lọc dữ liệu" }));
+    expect(screen.queryByRole("option", { name: /Tổng quan/ })).toBeNull();
+    fireEvent.click(screen.getByRole("option", { name: /Mới/ }));
+    expect(onChange).toHaveBeenCalledWith("new");
   });
 });

@@ -3,21 +3,23 @@ import { Maximize2, Minimize2, RefreshCw } from "lucide-react";
 import { V2Button } from "@/v2/shared/components/atoms/v2-button";
 import { V2ToolbarIconButton } from "@/v2/shared/components/atoms/v2-toolbar-icon-button";
 import { V2TableFilterButton } from "@/v2/shared/components/atoms/v2-table-filter-button";
-import { V2Divider } from "@/v2/shared/components/atoms/v2-divider";
 import { V2ColumnToggle } from "@/v2/shared/components/molecules/v2-column-toggle";
 import type { V2ColumnToggleProps } from "@/v2/shared/components/molecules/v2-column-toggle";
 import { V2Dropdown } from "@/v2/shared/components/molecules/v2-dropdown";
 import type { V2DropdownGroup } from "@/v2/shared/components/molecules/v2-dropdown";
 import { V2SearchInput } from "@/v2/shared/components/molecules/v2-search-input";
 import { V2SplitButton } from "@/v2/shared/components/molecules/v2-split-button";
-import { V2TabBar } from "@/v2/shared/components/molecules/v2-tab-bar";
 import { V2TableSelectionChip } from "@/v2/shared/components/molecules/v2-table-selection-chip";
 import { V2ViewModeCombobox } from "@/v2/shared/components/molecules/v2-view-mode-combobox";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
+import type { V2ViewPresetsApi } from "../hooks/V2StandardTable.views.hook";
 import type { V2TableToolbarConfig } from "../V2StandardTable.type";
+import { V2TableViewModes } from "./V2StandardTable.viewmodes";
 
 export interface V2TableToolbarClusterProps {
   config: V2TableToolbarConfig;
+  /** Có thì chế độ xem tùy chỉnh (tạo/sửa/xóa, lưu) do bảng quản lý; không có thì chỉ hiện config */
+  viewPresets?: V2ViewPresetsApi;
   activeFilterCount: number;
   onClearAllFilters: () => void;
   selectedCount: number;
@@ -39,6 +41,7 @@ const menuOf = (groups?: V2DropdownGroup[], align: "start" | "end" = "end") =>
 
 export const V2TableToolbarCluster: React.FC<V2TableToolbarClusterProps> = ({
   config,
+  viewPresets,
   activeFilterCount,
   onClearAllFilters,
   selectedCount,
@@ -50,7 +53,7 @@ export const V2TableToolbarCluster: React.FC<V2TableToolbarClusterProps> = ({
   search,
 }) => {
   const { t } = useV2Translation();
-  const { pillTabs, viewModes, create } = config;
+  const { filterGroup, viewModes, create } = config;
   const fsLabel = isFullscreen
     ? t("v2.table.exitFullscreen", "Thoát toàn màn hình")
     : t("v2.table.fullscreen", "Toàn màn hình");
@@ -65,16 +68,21 @@ export const V2TableToolbarCluster: React.FC<V2TableToolbarClusterProps> = ({
           placeholder={config.search?.placeholder}
         />
       )}
-      {pillTabs && (
-        <V2TabBar
-          variant="button-group"
-          tabs={pillTabs.items}
-          activeTabKey={pillTabs.activeKey}
-          onTabChange={pillTabs.onChange}
-        />
-      )}
-      {pillTabs && viewModes && <V2Divider className="hidden sm:block" />}
-      {viewModes && <V2ViewModeCombobox {...viewModes} />}
+      {viewPresets
+        ? (viewPresets.viewModes || viewPresets.filterGroup) && (
+            <V2TableViewModes
+              presets={viewPresets}
+              columns={columnToggle?.columns ?? []}
+            />
+          )
+        : (viewModes || filterGroup) && (
+            <V2ViewModeCombobox
+              items={viewModes?.items}
+              activeKey={viewModes?.activeKey}
+              onSelect={viewModes?.onSelect}
+              filterGroup={filterGroup}
+            />
+          )}
       <V2TableSelectionChip
         count={selectedCount}
         onClear={onClearSelection}

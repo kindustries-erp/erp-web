@@ -20,6 +20,7 @@ interface V2TableToolbarProps {
   columnToggle?: V2ColumnToggleProps;
   /** Có config: cụm nút đầy đủ, đưa vào slot header nếu có `portalTarget` */
   config?: V2TableToolbarConfig;
+  viewPresets?: V2TableToolbarClusterProps["viewPresets"];
   portalTarget?: HTMLElement | null;
   onClearSelection?: () => void;
   loading?: boolean;
@@ -36,6 +37,7 @@ export const V2TableToolbar: React.FC<V2TableToolbarProps> = ({
   toolbarExtra,
   columnToggle,
   config,
+  viewPresets,
   portalTarget,
   onClearSelection,
   loading,
@@ -48,6 +50,7 @@ export const V2TableToolbar: React.FC<V2TableToolbarProps> = ({
   if (config) {
     const clusterProps: V2TableToolbarClusterProps = {
       config,
+      viewPresets,
       activeFilterCount,
       onClearAllFilters,
       selectedCount,

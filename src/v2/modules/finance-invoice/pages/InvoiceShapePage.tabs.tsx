@@ -15,7 +15,12 @@ import type { InvoiceView } from "@/v2/modules/finance-invoice/components/organi
 import { useFakeInvoices } from "@/v2/modules/finance-invoice/api/queries/useInvoiceShapeQuery";
 import { InvoiceShapeDashboard } from "@/v2/modules/finance-invoice/components/organisms/invoice-shape-dashboard/InvoiceShapeDashboard";
 import { DETAIL_PREFIX } from "@/v2/modules/finance-invoice/components/organisms/invoice-shape-overlays/InvoiceShapeOverlays";
-import { TAX_TABS, VIEW_MODES } from "./InvoiceShapePage.constants";
+import {
+  TAX_FILTER_TITLE,
+  TAX_TABS,
+  VIEW_MODES,
+  invoiceTableId,
+} from "./InvoiceShapePage.constants";
 import type { InvoiceShapePageState } from "./InvoiceShapePage.hook";
 
 const buildListTab = (
@@ -45,7 +50,7 @@ const buildListTab = (
     initialQuery: { pageSize: 20 },
     useData: (query) => useFakeInvoices(direction, taxTab, query),
     table: {
-      tableId: `invoice-shape-${direction}`,
+      tableId: invoiceTableId(direction),
       columns,
       getRowKey: (row) => row.id,
       enableRowSelection: true,
@@ -63,10 +68,12 @@ const buildListTab = (
         },
       ],
       toolbar: {
-        pillTabs: {
+        filterGroup: {
+          title: TAX_FILTER_TITLE,
           items: TAX_TABS,
           activeKey: taxTab,
           onChange: changeTaxTab,
+          allKey: "all",
         },
         viewModes: {
           items: VIEW_MODES,

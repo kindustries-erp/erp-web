@@ -6,10 +6,11 @@ import type { V2TableToolbarConfig } from "../V2StandardTable.type";
  * Kiểu `Required<...>` buộc khai báo đủ key: type gốc thêm key mà thiếu ở đây thì lỗi compile.
  */
 const DEMO_TOOLBAR: Required<V2TableToolbarConfig> = {
-  pillTabs: {
+  filterGroup: {
+    title: "Bộ lọc dữ liệu",
     items: [
       { key: "all", label: "Tất cả" },
-      { key: "new", label: "Mới" },
+      { key: "new", label: "Mới", badgeCount: 4 },
       { key: "replace", label: "Thay thế" },
       { key: "adjust", label: "Điều chỉnh" },
     ],

@@ -46,11 +46,15 @@ describe("InvoiceShape page (parity smoke test)", () => {
     expect(screen.getByTestId("bar")).toBeInTheDocument();
   });
 
-  it("loads a list tab on demand and shows rows and pill tabs without a global search", async () => {
+  it("loads a list tab on demand, shows rows and the tax filter group in the view popover", async () => {
     renderPage();
     fireEvent.click(screen.getByText("Hóa đơn mua vào"));
     expect(await screen.findByText("C26TGA-1001")).toBeInTheDocument();
-    expect(screen.getByText("Thay thế")).toBeInTheDocument();
+    expect(screen.queryByRole("option", { name: /Thay thế/ })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Chế độ xem" }));
+    expect(
+      screen.getByRole("option", { name: /Thay thế/ }),
+    ).toBeInTheDocument();
     expect(
       screen.queryByRole("textbox", { name: /Tìm số hóa đơn/ }),
     ).toBeNull();

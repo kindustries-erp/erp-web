@@ -8,9 +8,11 @@ export interface InvoiceExportDrawerShellProps {
   title: string;
   subtitle: string;
   icon: React.ReactNode;
-  /** Tiêu đề section bên trái (lịch sử / tóm tắt). */
-  leftTitle: string;
-  leftContent: React.ReactNode;
+  /** Tiêu đề section bên trái (lịch sử / tóm tắt) khi dùng leftContent đơn giản. */
+  leftTitle?: string;
+  leftContent?: React.ReactNode;
+  /** Khối nội dung / danh sách DrawerSection bên trái (vd: Cột xuất + Lịch sử xuất). */
+  leftSections?: React.ReactNode;
   /** Cột phải: thường là InvoiceExportConditionSection. */
   rightContent: React.ReactNode;
 }
@@ -24,6 +26,7 @@ export function InvoiceExportDrawerShell({
   icon,
   leftTitle,
   leftContent,
+  leftSections,
   rightContent,
 }: InvoiceExportDrawerShellProps) {
   return (
@@ -38,9 +41,17 @@ export function InvoiceExportDrawerShell({
       size="lg"
       leftPanel={
         <div className="space-y-4">
-          <DrawerSection title={leftTitle} collapsible defaultCollapsed={false}>
-            {leftContent}
-          </DrawerSection>
+          {leftSections ? (
+            leftSections
+          ) : (
+            <DrawerSection
+              title={leftTitle || ""}
+              collapsible
+              defaultCollapsed={false}
+            >
+              {leftContent}
+            </DrawerSection>
+          )}
         </div>
       }
       rightPanel={<div className="space-y-4">{rightContent}</div>}

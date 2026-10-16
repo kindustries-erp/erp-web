@@ -15,7 +15,7 @@ import type {
 const makeConfig = (
   overrides: Partial<V2TableToolbarConfig> = {},
 ): V2TableToolbarConfig => ({
-  pillTabs: {
+  filterGroup: {
     items: [
       { key: "all", label: "Tất cả" },
       { key: "new", label: "Mới" },
@@ -35,7 +35,10 @@ const makeConfig = (
 });
 
 describe("V2StandardTable toolbar", () => {
-  beforeEach(() => mockViewport(false));
+  beforeEach(() => {
+    mockViewport(false);
+    window.localStorage.clear();
+  });
   afterEach(() => vi.restoreAllMocks());
 
   it("không có `toolbar` thì giữ giao diện cũ (không có nút làm mới)", () => {
@@ -49,18 +52,19 @@ describe("V2StandardTable toolbar", () => {
   it("inline: đủ cụm nút và các callback chạy", () => {
     const config = makeConfig();
     renderTable(V2StandardTableDesktop, { toolbar: config });
-    expect(screen.getByRole("tab", { name: "Mới" })).toBeInTheDocument();
+    expect(screen.queryByRole("tab", { name: "Mới" })).toBeNull();
     expect(
       screen.getByRole("button", { name: "Chế độ xem" }),
     ).toHaveTextContent("Tổng quan");
     fireEvent.click(screen.getByRole("button", { name: "Bộ lọc" }));
     fireEvent.click(screen.getByRole("button", { name: "Làm mới" }));
     fireEvent.click(screen.getByRole("button", { name: "Đồng bộ" }));
-    fireEvent.click(screen.getByRole("tab", { name: "Mới" }));
     expect(config.onFilterToggle).toHaveBeenCalled();
     expect(config.onRefresh).toHaveBeenCalled();
     expect(config.create?.onClick).toHaveBeenCalled();
-    expect(config.pillTabs?.onChange).toHaveBeenCalledWith("new");
+    fireEvent.click(screen.getByRole("button", { name: "Chế độ xem" }));
+    fireEvent.click(screen.getByRole("option", { name: /Mới/ }));
+    expect(config.filterGroup?.onChange).toHaveBeenCalledWith("new");
     expect(
       screen.getByRole("button", { name: "Tùy chỉnh cột" }),
     ).toBeInTheDocument();

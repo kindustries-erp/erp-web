@@ -228,14 +228,20 @@ src/modules/erp-invoices-core/
 - **Bảng kê Đối tác / Nhà cung cấp (`InvoicePartnersTable`)**: Bảng tổng hợp giá trị mua/bán theo từng mã số thuế, hỗ trợ click mở `partner-invoice-drawer` để xem ngay danh sách hóa đơn của đối tác đó.
 
 ### 3.5. Drawer Xuất Excel Hóa Đơn (`invoice-export-drawer`)
-- **Hai chế độ xuất dữ liệu linh hoạt (`exportMode`)**:
-  - `by-period` (Theo kỳ - Mặc định): Cho phép chọn theo kỳ định sẵn hoặc tùy chỉnh khoảng ngày `dateFrom` - `dateTo`.
-  - `by-current-filter` (Theo filter hiện tại): Giữ nguyên toàn bộ các điều kiện lọc và tìm kiếm đang xem trên bảng (`search`, `column_filters`, `column_search`, `status`, `tag_id`, khoảng ngày bảng, `sort_by`, `sort_order`). Giao diện tự động ẩn picker ngày và hiển thị thẻ tóm tắt bộ lọc bảng (`currentFilterSummary`).
+- **Bố cục 2 Cột Chuẩn Hóa (`layout="2-columns"`)**:
+  - **Cột Trái (Left Panel)**: Gom 2 `DrawerSection` gồm:
+    1. `DrawerSection` **Cột xuất dữ liệu** (`InvoiceExportColumnSelector`): Bật/tắt 22 cột trên Sheet 1 ("Bảng kê") theo 5 nhóm nghiệp vụ, hiển thị lưới 3 cột `grid-cols-1 sm:grid-cols-2 md:grid-cols-3` thoáng đẹp, có nút Chọn tất cả/Mặc định/Bỏ chọn, tự động ghi nhớ vào `localStorage` (`erp_invoice_export_selected_columns`). Mở sẵn `defaultCollapsed={false}`.
+    2. `DrawerSection` **Lịch sử xuất file** (`StandardTable`): Danh sách các file kết quả xuất trong 24 giờ, tiến độ SSE thời gian thực và nút tải lại.
+  - **Cột Phải (Right Panel)**: Tập trung vào `DrawerSection` **Điều kiện xuất dữ liệu** (`InvoiceExportConditionSection`):
+    - Chế độ xuất: `by-period` (Theo kỳ) hoặc `by-current-filter` (Theo filter bảng hiện tại).
+    - Chuyển đổi kỳ bằng component chuẩn `<PillTabs<"month" | "quarter" | "custom">>` (`variant="pill"`, `size="sm"`): `[Theo tháng] | [Theo quý] | [Tùy chỉnh]` khớp với thiết kế sub-tabs trong Detail Drawer.
+    - Lựa chọn Tháng/Quý tự động tính `dateFrom` - `dateTo`.
+    - Nút bấm chính "Xuất Excel" kích hoạt tác vụ nền.
 - **Tác vụ nền & Lịch sử tải lại**: Hỗ trợ Server-Sent Events (SSE) theo dõi tiến độ nền, cơ chế tái sử dụng file đã xuất trong 24h và bảng lịch sử có thể resize cột.
 - **Kiến trúc Atomic Refactor (< 180 LoC, No Blue Mandate)**:
-  - Phân rã triệt để thành: `InvoiceExportDrawer.tsx` (98 LoC), `InvoiceExportDrawer.columns.tsx` (158 LoC), `InvoiceExportDrawer.hook.ts` (164 LoC), `InvoiceExportDrawer.sync.hook.ts` (147 LoC), `InvoiceExportDrawer.helper.tsx` (36 LoC).
-  - Molecules & Atoms: `InvoiceExportConditionSection.tsx` (120 LoC), `InvoiceExportModeSelector.tsx` (96 LoC), `InvoiceExportFilterPreview.tsx` (75 LoC), `CustomRadioIndicator.tsx` (28 LoC).
-  - **No Blue Mandate**: 0% màu xanh dương. Native browser `<input type="radio">` được bọc `sr-only` và thay bằng `CustomRadioIndicator` chuẩn tone neutral `foreground` / `background`. Badge trạng thái `RUNNING` dùng `amber` tone (`bg-amber-50 text-amber-700`).
+  - Phân rã triệt để thành: `InvoiceExportDrawer.tsx` (~110 LoC), `InvoiceExportDrawer.columns.tsx` (158 LoC), `InvoiceExportDrawer.hook.ts` (164 LoC), `InvoiceExportDrawer.scope.hook.ts` (~120 LoC), `InvoiceExportDrawer.sync.hook.ts` (147 LoC), `InvoiceExportDrawer.helper.tsx` (~115 LoC).
+  - Molecules & Atoms: `InvoiceExportConditionSection.tsx` (~140 LoC), `InvoiceExportColumnSelector.tsx` (~160 LoC), `InvoiceExportModeSelector.tsx` (96 LoC), `InvoiceExportFilterPreview.tsx` (75 LoC), `CustomRadioIndicator.tsx` (28 LoC).
+  - **No Blue Mandate**: 0% màu xanh dương. Native browser `<input type="radio">` và `<input type="checkbox">` được bọc `sr-only` và custom chuẩn tone neutral `foreground` / `background`. Badge trạng thái `RUNNING` dùng `amber` tone (`bg-amber-50 text-amber-700`).
 
 ### 3.6. Drawer Xuất PDF / Tải ZIP Hóa Đơn (`invoice-file-export-drawer`) & thành phần xuất dùng chung
 - **Dùng chung với drawer Excel** (nằm trong `invoice-export-drawer/`): `InvoiceExportDrawerShell` (khung `StandardFormDrawer` 2 cột: trái = lịch sử/thông tin, phải = điều kiện), `InvoiceExportConditionSection` (props mới: `modes`, `selectedCount`, `startLabel`, `startIcon`, `children`), `InvoiceExportModeSelector` (thêm mode `selected`, data-driven theo `modes[]`), `InvoiceExportFileTypeSelector` (checkbox PDF/XML), hook `useInvoiceExportScope` (`InvoiceExportDrawer.scope.hook.ts`: state kỳ/ngày/mode + `buildScopeQuery()`).
