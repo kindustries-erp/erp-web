@@ -445,16 +445,17 @@ export function TableColumnHeaderFilter({
           )}
         >
           {!hideSort && (
-            <div className="flex items-center gap-1 border-b border-border p-2">
-              <div className="flex min-w-0 flex-1 gap-0.5 rounded-lg bg-muted/60 p-0.5">
+            <div className="flex items-center gap-1.5 border-b border-border p-2">
+              <div className="flex min-w-0 flex-1 rounded-lg border border-border/80 bg-muted/60 shadow-2xs overflow-hidden divide-x divide-border/60">
                 <Button
+                  type="button"
                   variant="ghost"
                   size="sm"
                   className={cn(
-                    "h-6 min-w-0 flex-1 gap-1 rounded-md px-1.5 text-[11px] font-normal transition-all",
+                    "h-7 min-w-0 flex-1 gap-1.5 rounded-none border-0 px-2 text-xs font-medium transition-all select-none cursor-pointer",
                     sortState === "asc"
                       ? "bg-surface text-primary font-semibold shadow-2xs"
-                      : "text-muted-foreground hover:text-foreground",
+                      : "bg-surface/80 hover:bg-surface text-foreground/80 hover:text-foreground",
                   )}
                   aria-label={t("sortAsc", "Sắp xếp tăng dần")}
                   title={t("sortAsc", "Sắp xếp tăng dần")}
@@ -463,17 +464,26 @@ export function TableColumnHeaderFilter({
                     setOpen(false);
                   }}
                 >
-                  <ArrowDownAZ size={13} className="shrink-0" />
+                  <ArrowDownAZ
+                    size={14}
+                    className={cn(
+                      "shrink-0 transition-colors",
+                      sortState === "asc"
+                        ? "text-primary"
+                        : "text-muted-foreground",
+                    )}
+                  />
                   <span>{t("sortAscShort", "Tăng")}</span>
                 </Button>
                 <Button
+                  type="button"
                   variant="ghost"
                   size="sm"
                   className={cn(
-                    "h-6 min-w-0 flex-1 gap-1 rounded-md px-1.5 text-[11px] font-normal transition-all",
+                    "h-7 min-w-0 flex-1 gap-1.5 rounded-none border-0 px-2 text-xs font-medium transition-all select-none cursor-pointer",
                     sortState === "desc"
                       ? "bg-surface text-primary font-semibold shadow-2xs"
-                      : "text-muted-foreground hover:text-foreground",
+                      : "bg-surface/80 hover:bg-surface text-foreground/80 hover:text-foreground",
                   )}
                   aria-label={t("sortDesc", "Sắp xếp giảm dần")}
                   title={t("sortDesc", "Sắp xếp giảm dần")}
@@ -482,20 +492,29 @@ export function TableColumnHeaderFilter({
                     setOpen(false);
                   }}
                 >
-                  <ArrowUpAZ size={13} className="shrink-0" />
+                  <ArrowUpAZ
+                    size={14}
+                    className={cn(
+                      "shrink-0 transition-colors",
+                      sortState === "desc"
+                        ? "text-primary"
+                        : "text-muted-foreground",
+                    )}
+                  />
                   <span>{t("sortDescShort", "Giảm")}</span>
                 </Button>
               </div>
               {sortState !== "none" && (
                 <Button
+                  type="button"
                   variant="ghost"
                   size="icon-sm"
-                  className="h-6 w-6 shrink-0 rounded-md p-0 text-muted-foreground hover:text-destructive"
+                  className="h-7 w-7 shrink-0 rounded-md p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
                   aria-label={t("clearSort", "Bỏ sắp xếp")}
                   title={t("clearSort", "Bỏ sắp xếp")}
                   onClick={() => onSortChange("none")}
                 >
-                  <X size={13} />
+                  <X size={14} />
                 </Button>
               )}
             </div>

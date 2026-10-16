@@ -115,7 +115,6 @@ export function createBaseColumns({
           title={t("payables.columns.paidAmount", "Đã chi")}
           {...createFilterProps("paidAmount", "garage-paid-options")}
           align="right"
-          hideFilter
         />
       ),
       size: 150,
