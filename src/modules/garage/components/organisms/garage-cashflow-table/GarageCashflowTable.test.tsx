@@ -71,7 +71,7 @@ describe("GarageCashflowTable", () => {
       </QueryClientProvider>,
     );
 
-    expect(screen.getByText("Thu chi xưởng")).toBeInTheDocument();
+    expect(screen.getByText("Thu chi garage")).toBeInTheDocument();
     expect(screen.getByText("Tạo phiếu mới")).toBeInTheDocument();
   });
 
