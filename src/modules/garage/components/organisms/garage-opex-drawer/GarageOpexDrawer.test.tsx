@@ -68,10 +68,13 @@ describe("GarageOpexDrawer Component", () => {
     ).toBeInTheDocument();
   });
 
-  it("does NOT contain VAT_TU_TIEU_HAO (Vật tư tiêu hao) in CATEGORY_PRESETS", () => {
-    const vatTuTieuHao = CATEGORY_PRESETS.find(
-      (preset) => preset.key === "VAT_TU_TIEU_HAO",
-    );
-    expect(vatTuTieuHao).toBeUndefined();
+  it("VAT_TU_TIEU_HAO (Vật tư tiêu hao) thuộc nhóm COGS (Giá vốn)", () => {
+    const preset = CATEGORY_PRESETS.find((p) => p.key === "VAT_TU_TIEU_HAO");
+    expect(preset?.group).toBe("COGS");
+  });
+
+  it("HHBH thuộc nhóm COMMISSION (Hoa hồng)", () => {
+    const preset = CATEGORY_PRESETS.find((p) => p.key === "HHBH");
+    expect(preset?.group).toBe("COMMISSION");
   });
 });

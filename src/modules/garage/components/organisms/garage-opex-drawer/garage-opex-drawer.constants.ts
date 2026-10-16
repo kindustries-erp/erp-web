@@ -22,7 +22,7 @@ export const COST_GROUPS: CostGroupOption[] = [
 ];
 
 /**
- * Danh mục chi phí chuẩn hóa - Đã loại bỏ hoàn toàn VAT_TU_TIEU_HAO (Vật tư tiêu hao)
+ * Danh mục chi phí chuẩn hóa. VAT_TU_TIEU_HAO thuộc Giá vốn, HHBH thuộc Hoa hồng (mục 4.2 P&L).
  */
 export const CATEGORY_PRESETS: CategoryPreset[] = [
   // 1. Nhóm Chi phí vận hành (OPEX)
@@ -79,7 +79,22 @@ export const CATEGORY_PRESETS: CategoryPreset[] = [
     badge: "Giá vốn",
   },
 
+  {
+    key: "VAT_TU_TIEU_HAO",
+    group: "COGS",
+    labelKey: "categories.VAT_TU_TIEU_HAO",
+    defaultName: "Vật tư tiêu hao (Tính vào Giá vốn)",
+    badge: "Giá vốn",
+  },
+
   // 3. Nhóm Hoa hồng (Commission)
+  {
+    key: "HHBH",
+    group: "COMMISSION",
+    labelKey: "categories.HHBH",
+    defaultName: "HHBH",
+    badge: "Hoa hồng",
+  },
   {
     key: "HOA_HONG_KHAC",
     group: "COMMISSION",

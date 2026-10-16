@@ -6,6 +6,7 @@ import type { GaragePnlReportResponse } from "@/modules/garage/api/garageOpexApi
 import { PnlKyGuiCommissionDetailRows } from "./PnlKyGuiCommissionDetailRows";
 import { PnlAmountCell } from "./PnlAmountCell";
 import { PnlLevel1HeaderCell } from "./PnlLevel1HeaderCell";
+import { PnlHhbhRow } from "./PnlHhbhRow";
 
 interface PnlSellingExpenseRowsProps {
   report: GaragePnlReportResponse;
@@ -42,9 +43,15 @@ export function PnlSellingExpenseRows({
     isOjOnly ? 0 : prev2Report ? getSaleComm(prev2Report) : undefined,
   ];
   const [total0, total1, total2] = [
-    isOjOnly ? 0 : (report.sellingExpenses?.total ?? sale0),
-    isOjOnly ? 0 : (prevReport?.sellingExpenses?.total ?? sale1),
-    isOjOnly ? 0 : (prev2Report?.sellingExpenses?.total ?? sale2),
+    isOjOnly
+      ? (report.oj?.sellingExpensesTotal ?? 0)
+      : (report.sellingExpenses?.total ?? sale0),
+    isOjOnly
+      ? (prevReport?.oj?.sellingExpensesTotal ?? 0)
+      : (prevReport?.sellingExpenses?.total ?? sale1),
+    isOjOnly
+      ? (prev2Report?.oj?.sellingExpensesTotal ?? 0)
+      : (prev2Report?.sellingExpenses?.total ?? sale2),
   ];
   const kyGuiProfit =
     report.kyGui?.grossProfit ?? report.commission?.auto?.kyGuiGrossProfit ?? 0;
@@ -172,6 +179,15 @@ export function PnlSellingExpenseRows({
               isLoadingPrev2={isLoadingPrev2}
             />
           )}
+
+          <PnlHhbhRow
+            report={report}
+            prevReport={prevReport}
+            prev2Report={prev2Report}
+            isLoadingPrev={isLoadingPrev}
+            isLoadingPrev2={isLoadingPrev2}
+            isOjOnly={isOjOnly}
+          />
         </>
       )}
     </>
