@@ -363,14 +363,16 @@ export function ColumnFilterCard({
                   Sắp xếp
                 </span>
               </div>
-              <div className="flex p-0.5 rounded-lg bg-muted/60 gap-0.5">
-                <button
+              <div className="flex rounded-lg border border-border/80 bg-muted/60 shadow-2xs overflow-hidden divide-x divide-border/60">
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="sm"
                   className={cn(
-                    "flex-1 h-6 text-[11px] rounded-md flex items-center justify-center gap-1 transition-all cursor-pointer",
+                    "flex-1 h-7 text-xs rounded-none border-0 flex items-center justify-center gap-1.5 transition-all px-2 font-medium select-none cursor-pointer",
                     sortState === TableSortState.ASC
                       ? "bg-surface text-primary font-semibold shadow-2xs"
-                      : "text-muted-foreground hover:text-foreground",
+                      : "bg-surface/80 hover:bg-surface text-foreground/80 hover:text-foreground",
                   )}
                   onClick={() =>
                     onSortChange(
@@ -380,17 +382,26 @@ export function ColumnFilterCard({
                     )
                   }
                 >
-                  <ArrowDownAZ className="h-3 w-3 shrink-0" />
+                  <ArrowDownAZ
+                    className={cn(
+                      "h-3.5 w-3.5 shrink-0 transition-colors",
+                      sortState === TableSortState.ASC
+                        ? "text-primary"
+                        : "text-muted-foreground",
+                    )}
+                  />
                   <span>Tăng</span>
-                </button>
+                </Button>
 
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="sm"
                   className={cn(
-                    "flex-1 h-6 text-[11px] rounded-md flex items-center justify-center gap-1 transition-all cursor-pointer",
+                    "flex-1 h-7 text-xs rounded-none border-0 flex items-center justify-center gap-1.5 transition-all px-2 font-medium select-none cursor-pointer",
                     sortState === TableSortState.DESC
                       ? "bg-surface text-primary font-semibold shadow-2xs"
-                      : "text-muted-foreground hover:text-foreground",
+                      : "bg-surface/80 hover:bg-surface text-foreground/80 hover:text-foreground",
                   )}
                   onClick={() =>
                     onSortChange(
@@ -400,19 +411,28 @@ export function ColumnFilterCard({
                     )
                   }
                 >
-                  <ArrowUpAZ className="h-3 w-3 shrink-0" />
+                  <ArrowUpAZ
+                    className={cn(
+                      "h-3.5 w-3.5 shrink-0 transition-colors",
+                      sortState === TableSortState.DESC
+                        ? "text-primary"
+                        : "text-muted-foreground",
+                    )}
+                  />
                   <span>Giảm</span>
-                </button>
+                </Button>
 
                 {sortState !== TableSortState.NONE && (
-                  <button
+                  <Button
                     type="button"
-                    className="px-1.5 h-6 text-[10px] rounded-md text-muted-foreground hover:text-red-600 transition-colors cursor-pointer"
+                    variant="ghost"
+                    size="icon-sm"
+                    className="h-7 w-7 rounded-none border-0 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors shrink-0"
                     onClick={() => onSortChange(TableSortState.NONE)}
                     title="Bỏ sắp xếp"
                   >
-                    <X className="h-3 w-3" />
-                  </button>
+                    <X className="h-3.5 w-3.5" />
+                  </Button>
                 )}
               </div>
             </div>

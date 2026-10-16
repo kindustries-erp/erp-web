@@ -94,6 +94,10 @@ export function useNavItems(): NavSearchItem[] {
     ErpAction.READ,
   );
   const canReadGarage = useHasPermission(ErpResource.GARAGE, ErpAction.READ);
+  const canReadGarageCashflow = useHasPermission(
+    ErpResource.GARAGE_CASHFLOW,
+    ErpAction.READ,
+  );
 
   const canReadInvoices = useHasPermission(
     ErpResource.INVOICES,
@@ -310,6 +314,27 @@ export function useNavItems(): NavSearchItem[] {
 
     // 6. Garage
     const garageSection = t("nav.sections.garage", "GARAGE");
+    if (canReadGarageCashflow) {
+      items.push({
+        key: "garage-cashflow",
+        label: t("nav.items.garageCashflow", "Thu chi garage"),
+        section: garageSection,
+        keywords: [
+          "garage",
+          "thu chi garage",
+          "thu chi xuong",
+          "thu chi xưởng",
+          "dong tien xuong",
+          "dòng tiền xưởng",
+          "so quy",
+          "sổ quỹ",
+          "garage cashflow",
+          "phieu thu",
+          "phieu chi",
+        ],
+        icon: <Wallet className="w-4 h-4" />,
+      });
+    }
     if (canReadGarage) {
       items.push({
         key: "garage-cases",
@@ -339,13 +364,6 @@ export function useNavItems(): NavSearchItem[] {
           "phai thu",
           "phai tra",
           "tuoi no",
-          "thu chi xuong",
-          "thu chi xưởng",
-          "dong tien xuong",
-          "dòng tiền xưởng",
-          "so quy",
-          "sổ quỹ",
-          "garage cashflow",
         ],
         icon: <Users className="w-4 h-4" />,
       });

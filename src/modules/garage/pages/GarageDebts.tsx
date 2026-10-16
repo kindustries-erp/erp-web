@@ -7,9 +7,6 @@ import { GarageDebtsExportDrawer } from "../components/organisms/garage-debts-ex
 import { GarageDebtsTable } from "../components/organisms/garage-debts-table";
 import { GaragePayablesTable } from "../components/organisms/garage-payables-table";
 import { GarageSupplierDetailDrawer } from "../components/organisms/garage-supplier-detail-drawer";
-import { GarageCashflowList } from "../components/organisms/garage-cashflow-list";
-import { useHasPermission } from "@/shared/hooks/useHasPermission";
-import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
 import { ErpUrlQueryParam } from "@/shared/constants/urlParams";
 import type { TabItem } from "@/shared/components/PageLayout";
 
@@ -22,22 +19,14 @@ export function GarageDebts({
 }: GarageDebtsProps = {}) {
   const { t } = useTranslation(["garage", "debts", "common"]);
   const { selectedBranchId } = useGarageStore();
-  const canReadCashflow = useHasPermission(
-    ErpResource.GARAGE_CASHFLOW,
-    ErpAction.READ,
-  );
 
-  const getValidTab = useCallback(
-    (tab: string | null) => {
-      if (tab === "cashflow" && canReadCashflow) return "cashflow";
-      if (
-        ["receivables", "payables", "overview", "customers"].includes(tab || "")
-      )
-        return tab as string;
-      return "overview";
-    },
-    [canReadCashflow],
-  );
+  const getValidTab = useCallback((tab: string | null) => {
+    if (
+      ["receivables", "payables", "overview", "customers"].includes(tab || "")
+    )
+      return tab as string;
+    return "overview";
+  }, []);
 
   const [activeTab, setActiveTab] = useState<string>(() => {
     if (typeof window !== "undefined") {
@@ -87,24 +76,13 @@ export function GarageDebts({
     }
   }, []);
 
-  useEffect(() => {
-    if (activeTab === "cashflow" && !canReadCashflow)
-      handleTabChange("overview");
-  }, [activeTab, canReadCashflow, handleTabChange]);
-
   const pageTabs: TabItem[] = useMemo(() => {
-    const tabs: TabItem[] = [
+    return [
       { value: "overview", label: t("debts:tabs.overview", "Tổng quan") },
       { value: "receivables", label: t("partners.tabReceivables", "Phải thu") },
       { value: "payables", label: t("partners.tabPayables", "Phải trả") },
     ];
-    if (canReadCashflow)
-      tabs.push({
-        value: "cashflow",
-        label: t("debts:tabs.cashflow", "Thu chi xưởng"),
-      });
-    return tabs;
-  }, [t, canReadCashflow]);
+  }, [t]);
 
   return (
     <>
@@ -146,14 +124,6 @@ export function GarageDebts({
             setSelectedCustomer({ ...cust, debtType: "receivables" })
           }
           onOpenExportDrawer={() => setExportDrawerOpen(true)}
-        />
-      )}
-
-      {activeTab === "cashflow" && canReadCashflow && (
-        <GarageCashflowList
-          tabs={pageTabs}
-          activeTab={activeTab}
-          onTabChange={handleTabChange}
         />
       )}
 

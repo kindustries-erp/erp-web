@@ -3,7 +3,6 @@ import {
   TableColumnHeaderFilter,
   type DataTableColumn,
 } from "@/shared/components/DataTable";
-import { GarageCaseCustomerCell } from "../../molecules/garage-case-customer-cell";
 import { LicensePlateCell } from "@/modules/garage/components/atoms/license-plate-cell";
 import {
   SupplierCaseCountCell,
@@ -63,35 +62,11 @@ export function createBaseColumns({
           align="center"
         />
       ),
-      size: 150,
-      minSize: 130,
+      size: 130,
+      minSize: 110,
       enableResizing: true,
       cell: (row: SupplierDebtItem) => (
         <LicensePlateCell licensePlate={row.licensePlate} />
-      ),
-    },
-    {
-      key: "customer",
-      header: (
-        <TableColumnHeaderFilter
-          title={t("customers.columns.customer", "Khách hàng")}
-          {...createFilterProps("customer", "garage-payables-customer-options")}
-          showBlankOption={true}
-          enableSelectAllMatching={true}
-          align="center"
-        />
-      ),
-      size: 260,
-      minSize: 220,
-      enableResizing: true,
-      cell: (row: SupplierDebtItem) => (
-        <GarageCaseCustomerCell
-          item={{
-            customerName: row.customerName,
-            customerCode: row.customerCode,
-          }}
-          onOpenDetail={() => handleOpenDetail(row)}
-        />
       ),
     },
     {
@@ -140,7 +115,6 @@ export function createBaseColumns({
           title={t("payables.columns.paidAmount", "Đã chi")}
           {...createFilterProps("paidAmount", "garage-paid-options")}
           align="right"
-          hideFilter
         />
       ),
       size: 150,

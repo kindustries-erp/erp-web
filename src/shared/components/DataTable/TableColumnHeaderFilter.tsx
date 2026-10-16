@@ -11,7 +11,6 @@ import {
   ArrowDownAZ,
   ArrowUpAZ,
   ListFilter,
-  Check,
   X,
   Loader2,
 } from "lucide-react";
@@ -446,45 +445,78 @@ export function TableColumnHeaderFilter({
           )}
         >
           {!hideSort && (
-            <div className="flex flex-col gap-1 border-b border-border p-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                className={cn(
-                  "justify-start font-normal rounded-sm h-8",
-                  sortState === "asc"
-                    ? "bg-primary/10 text-primary font-medium"
-                    : "",
-                )}
-                onClick={() => {
-                  onSortChange(sortState === "asc" ? "none" : "asc");
-                  setOpen(false);
-                }}
-              >
-                <ArrowDownAZ size={14} className="mr-2" />
-                {t("sortAsc", "Sắp xếp tăng dần")}
-                {sortState === "asc" && <Check size={14} className="ml-auto" />}
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className={cn(
-                  "justify-start font-normal rounded-sm h-8",
-                  sortState === "desc"
-                    ? "bg-primary/10 text-primary font-medium"
-                    : "",
-                )}
-                onClick={() => {
-                  onSortChange(sortState === "desc" ? "none" : "desc");
-                  setOpen(false);
-                }}
-              >
-                <ArrowUpAZ size={14} className="mr-2" />
-                {t("sortDesc", "Sắp xếp giảm dần")}
-                {sortState === "desc" && (
-                  <Check size={14} className="ml-auto" />
-                )}
-              </Button>
+            <div className="flex items-center gap-1.5 border-b border-border p-2">
+              <div className="flex min-w-0 flex-1 rounded-lg border border-border/80 bg-muted/60 shadow-2xs overflow-hidden divide-x divide-border/60">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className={cn(
+                    "h-7 min-w-0 flex-1 gap-1.5 rounded-none border-0 px-2 text-xs font-medium transition-all select-none cursor-pointer",
+                    sortState === "asc"
+                      ? "bg-surface text-primary font-semibold shadow-2xs"
+                      : "bg-surface/80 hover:bg-surface text-foreground/80 hover:text-foreground",
+                  )}
+                  aria-label={t("sortAsc", "Sắp xếp tăng dần")}
+                  title={t("sortAsc", "Sắp xếp tăng dần")}
+                  onClick={() => {
+                    onSortChange(sortState === "asc" ? "none" : "asc");
+                    setOpen(false);
+                  }}
+                >
+                  <ArrowDownAZ
+                    size={14}
+                    className={cn(
+                      "shrink-0 transition-colors",
+                      sortState === "asc"
+                        ? "text-primary"
+                        : "text-muted-foreground",
+                    )}
+                  />
+                  <span>{t("sortAscShort", "Tăng")}</span>
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className={cn(
+                    "h-7 min-w-0 flex-1 gap-1.5 rounded-none border-0 px-2 text-xs font-medium transition-all select-none cursor-pointer",
+                    sortState === "desc"
+                      ? "bg-surface text-primary font-semibold shadow-2xs"
+                      : "bg-surface/80 hover:bg-surface text-foreground/80 hover:text-foreground",
+                  )}
+                  aria-label={t("sortDesc", "Sắp xếp giảm dần")}
+                  title={t("sortDesc", "Sắp xếp giảm dần")}
+                  onClick={() => {
+                    onSortChange(sortState === "desc" ? "none" : "desc");
+                    setOpen(false);
+                  }}
+                >
+                  <ArrowUpAZ
+                    size={14}
+                    className={cn(
+                      "shrink-0 transition-colors",
+                      sortState === "desc"
+                        ? "text-primary"
+                        : "text-muted-foreground",
+                    )}
+                  />
+                  <span>{t("sortDescShort", "Giảm")}</span>
+                </Button>
+              </div>
+              {sortState !== "none" && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  className="h-7 w-7 shrink-0 rounded-md p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                  aria-label={t("clearSort", "Bỏ sắp xếp")}
+                  title={t("clearSort", "Bỏ sắp xếp")}
+                  onClick={() => onSortChange("none")}
+                >
+                  <X size={14} />
+                </Button>
+              )}
             </div>
           )}
 
@@ -641,6 +673,7 @@ export function TableColumnHeaderFilter({
                   if (columnKey) setDropdownSearchState(columnKey, "");
                   onSearchChange("");
                   onFilterChange([]);
+                  onSortChange("none");
                   setOpen(false);
                 }}
               >

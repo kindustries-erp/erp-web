@@ -23,6 +23,73 @@ function renderWithClient(ui: React.ReactElement) {
 }
 
 describe("TableColumnHeaderFilter", () => {
+  it("renders ascending and descending sort actions in one row", () => {
+    const onSortChange = vi.fn();
+
+    renderWithClient(
+      <TableColumnHeaderFilter
+        title="Số hóa đơn"
+        columnKey="invoiceNo"
+        sortState="none"
+        onSortChange={onSortChange}
+        searchValue=""
+        onSearchChange={vi.fn()}
+        selectedFilters={[]}
+        onFilterChange={vi.fn()}
+      />,
+    );
+
+    fireEvent.click(screen.getByText("Số hóa đơn"));
+
+    const ascendingButton = screen.getByRole("button", {
+      name: "Sắp xếp tăng dần",
+    });
+    const descendingButton = screen.getByRole("button", {
+      name: "Sắp xếp giảm dần",
+    });
+
+    expect(ascendingButton.parentElement).toHaveClass(
+      "flex",
+      "rounded-lg",
+      "bg-muted/60",
+    );
+    expect(descendingButton.parentElement).toBe(ascendingButton.parentElement);
+    expect(screen.getByText("Tăng")).toBeInTheDocument();
+    expect(screen.getByText("Giảm")).toBeInTheDocument();
+
+    fireEvent.click(ascendingButton);
+    expect(onSortChange).toHaveBeenCalledWith("asc");
+
+    fireEvent.click(screen.getByText("Số hóa đơn"));
+    fireEvent.click(screen.getByRole("button", { name: "Sắp xếp giảm dần" }));
+    expect(onSortChange).toHaveBeenCalledWith("desc");
+  });
+
+  it("toggles the active sort off and exposes a clear sort action", () => {
+    const onSortChange = vi.fn();
+
+    renderWithClient(
+      <TableColumnHeaderFilter
+        title="Số hóa đơn"
+        columnKey="invoiceNo"
+        sortState="asc"
+        onSortChange={onSortChange}
+        searchValue=""
+        onSearchChange={vi.fn()}
+        selectedFilters={[]}
+        onFilterChange={vi.fn()}
+      />,
+    );
+
+    fireEvent.click(screen.getByText("Số hóa đơn"));
+    fireEvent.click(screen.getByRole("button", { name: "Sắp xếp tăng dần" }));
+    expect(onSortChange).toHaveBeenCalledWith("none");
+
+    fireEvent.click(screen.getByText("Số hóa đơn"));
+    fireEvent.click(screen.getByRole("button", { name: "Bỏ sắp xếp" }));
+    expect(onSortChange).toHaveBeenCalledWith("none");
+  });
+
   it("only calls onFilterChange and clears search when multi-select options are selected", () => {
     const onSearchChange = vi.fn();
     const onFilterChange = vi.fn();
@@ -142,6 +209,7 @@ describe("TableColumnHeaderFilter", () => {
     // 3. Verify
     expect(onSearchChange).toHaveBeenCalledWith("");
     expect(onFilterChange).toHaveBeenCalledWith([]);
+    expect(onSortChange).toHaveBeenCalledWith("none");
   });
 
   it("persists search keyword in searchbox when popover is reopened", () => {

@@ -37,9 +37,7 @@ jobs:
             sleep 2
             bun install --frozen-lockfile
           )
-      - run: bun run check:ci
-      - run: bun run test
-      - run: bun run build
+      - run: bun run verify:final
 
   build-and-push:
     name: Build & Push immutable Web image

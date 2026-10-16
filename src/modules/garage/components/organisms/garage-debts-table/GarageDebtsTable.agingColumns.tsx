@@ -27,6 +27,7 @@ export function createAgingColumns({
         <TableColumnHeaderFilter
           title={t("customers.columns.aging0_30", "0-30 ngày")}
           {...createFilterProps("aging0_30", "garage-aging0-30-options")}
+          hideFilter={true}
           align="right"
         />
       ),
@@ -55,6 +56,7 @@ export function createAgingColumns({
         <TableColumnHeaderFilter
           title={t("customers.columns.aging31_60", "31-60 ngày")}
           {...createFilterProps("aging31_60", "garage-aging31-60-options")}
+          hideFilter={true}
           align="right"
         />
       ),
@@ -83,6 +85,7 @@ export function createAgingColumns({
         <TableColumnHeaderFilter
           title={t("customers.columns.aging61_90", "61-90 ngày")}
           {...createFilterProps("aging61_90", "garage-aging61-90-options")}
+          hideFilter={true}
           align="right"
         />
       ),
@@ -111,6 +114,7 @@ export function createAgingColumns({
         <TableColumnHeaderFilter
           title={t("customers.columns.agingOver90", ">90 ngày")}
           {...createFilterProps("agingOver90", "garage-agingOver90-options")}
+          hideFilter={true}
           align="right"
         />
       ),

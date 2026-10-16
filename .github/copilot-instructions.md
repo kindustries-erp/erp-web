@@ -13,4 +13,4 @@
 - Reuse existing components, hooks and utils (`src/components/`) before creating new ones.
 - Follow gate order: DB -> API -> UI -> QC.
 - Mọi text hiển thị dùng i18n key, không hard-code.
-- Before push: `bun run check:ci` -> `bun run test` -> `bun run build` -> `git push`, chạy trong `erp-web` và push lên `github-industries erp-master`.
+- Before push: chạy `bun run verify:final` một lần trên commit cuối, sau đó push theo ERP Git workflow.

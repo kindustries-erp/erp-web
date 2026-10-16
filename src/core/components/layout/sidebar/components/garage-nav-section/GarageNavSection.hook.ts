@@ -6,6 +6,10 @@ export function useGarageNavSection({
   currentPage,
   navTo,
 }: Pick<GarageNavSectionProps, "currentPage" | "navTo">) {
+  const canReadGarageCashflow = useHasPermission(
+    ErpResource.GARAGE_CASHFLOW,
+    ErpAction.READ,
+  );
   const canReadGarageCases = useHasPermission(
     ErpResource.GARAGE,
     ErpAction.READ,
@@ -15,6 +19,8 @@ export function useGarageNavSection({
     ErpAction.READ,
   );
   const canReadGarageOpex = canReadGarageCases;
+
+  const isCashflowActive = currentPage === "garage-cashflow";
 
   const isCasesActive =
     currentPage === "garage-cases" || currentPage === "garage-dashboard";
@@ -26,17 +32,21 @@ export function useGarageNavSection({
 
   const isOpexActive = currentPage === "garage-opex";
 
+  const handleNavCashflow = () => navTo("garage-cashflow");
   const handleNavCases = () => navTo("garage-cases");
   const handleNavDebts = () => navTo("garage-debts");
   const handleNavOpex = () => navTo("garage-opex");
 
   return {
+    canReadGarageCashflow,
     canReadGarageCases,
     canReadGarageDebts,
     canReadGarageOpex,
+    isCashflowActive,
     isCasesActive,
     isDebtsActive,
     isOpexActive,
+    handleNavCashflow,
     handleNavCases,
     handleNavDebts,
     handleNavOpex,

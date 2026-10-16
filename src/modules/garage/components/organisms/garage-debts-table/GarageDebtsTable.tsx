@@ -30,7 +30,6 @@ export const GarageDebtsTable: React.FC<GarageDebtsTableProps> = ({
   const columns = useGarageDebtsColumns({
     listHook,
     selectedBranchId,
-    branches,
     t,
     onOpenCustomerDetail,
   });
