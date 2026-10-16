@@ -51,6 +51,7 @@ export function GarageDebts({
   const [selectedCustomer, setSelectedCustomer] = useState<{
     code: string;
     name: string;
+    licensePlate?: string;
     debtType?: "receivables" | "payables";
   } | null>(null);
   const [selectedSupplier, setSelectedSupplier] = useState<{
@@ -101,10 +102,15 @@ export function GarageDebts({
           activeTab={activeTab}
           onTabChange={handleTabChange}
           onExportClick={() => openExportDrawer()}
-          onOpenCustomerDetail={(code, name) =>
+          onOpenCustomerDetail={(
+            code: string,
+            name?: string,
+            licensePlate?: string,
+          ) =>
             setSelectedCustomer({
               code,
               name: name || "",
+              licensePlate,
               debtType: "receivables",
             })
           }
@@ -141,6 +147,7 @@ export function GarageDebts({
         onClose={() => setSelectedCustomer(null)}
         customerCode={selectedCustomer?.code || null}
         customerName={selectedCustomer?.name}
+        licensePlate={selectedCustomer?.licensePlate}
         branchId={selectedBranchId || undefined}
         debtType={
           selectedCustomer?.debtType ||

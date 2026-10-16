@@ -40,7 +40,7 @@ export interface StandardFormDrawerProps {
   /** Optional icon rendered in the drawer header */
   icon?: React.ReactNode;
 
-  title: string;
+  title?: React.ReactNode;
   titleExtra?: React.ReactNode;
   subtitle?: React.ReactNode;
 

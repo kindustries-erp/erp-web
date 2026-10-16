@@ -12,7 +12,11 @@ interface UseGarageDebtsColumnsProps {
   listHook: ReturnType<typeof useGarageCustomersList>;
   selectedBranchId?: string | null;
   t: (key: string, fallback: string) => string;
-  onOpenCustomerDetail: (customer: { code: string; name: string }) => void;
+  onOpenCustomerDetail: (customer: {
+    code: string;
+    name: string;
+    licensePlate?: string;
+  }) => void;
 }
 
 export function useGarageDebtsColumns({

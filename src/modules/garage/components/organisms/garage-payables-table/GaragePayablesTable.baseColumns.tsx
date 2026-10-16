@@ -26,6 +26,7 @@ export function createBaseColumns({
       onOpenCustomerDetail({
         code: row.customerCode,
         name: row.customerName,
+        licensePlate: row.licensePlate,
         debtType: "payables",
       });
     } else {

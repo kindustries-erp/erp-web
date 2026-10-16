@@ -12,6 +12,7 @@ export interface GaragePayablesTableProps {
   onOpenCustomerDetail?: (customer: {
     code: string;
     name: string;
+    licensePlate?: string;
     debtType?: "receivables" | "payables";
   }) => void;
   onOpenSupplierDetail?: (supplier: {
@@ -30,6 +31,7 @@ export interface CreateBaseColumnsProps {
   onOpenCustomerDetail?: (customer: {
     code: string;
     name: string;
+    licensePlate?: string;
     debtType?: "receivables" | "payables";
   }) => void;
   onOpenSupplierDetail?: (supplier: {

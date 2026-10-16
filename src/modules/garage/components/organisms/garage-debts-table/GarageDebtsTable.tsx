@@ -97,6 +97,7 @@ export const GarageDebtsTable: React.FC<GarageDebtsTableProps> = ({
                 onOpenCustomerDetail({
                   code: row.customerCode,
                   name: row.customerName,
+                  licensePlate: row.licensePlate,
                 }),
             },
           ],

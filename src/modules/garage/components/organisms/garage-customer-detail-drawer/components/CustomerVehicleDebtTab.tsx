@@ -10,12 +10,16 @@ import type { VehicleDebtStat } from "../types";
 interface CustomerVehicleDebtTabProps {
   vehicleStats: VehicleDebtStat[];
   debtType?: "receivables" | "payables";
+  selectedLicensePlate?: string | null;
+  onSelectVehicle?: (plate: string) => void;
 }
 
 export const CustomerVehicleDebtTab = React.memo(
   function CustomerVehicleDebtTab({
     vehicleStats,
     debtType = "receivables",
+    selectedLicensePlate,
+    onSelectVehicle,
   }: CustomerVehicleDebtTabProps) {
     const { t } = useTranslation(["garage", "common"]);
     const isPayables = debtType === "payables";
@@ -36,15 +40,47 @@ export const CustomerVehicleDebtTab = React.memo(
         {
           key: "licensePlate",
           header: t("customers.drawer.licensePlate", "Biển số xe"),
-          size: 150,
+          size: 160,
           minSize: 130,
           enableResizing: true,
-          cell: (row: VehicleDebtStat) => (
-            <span className="inline-flex items-center gap-1.5 font-mono font-bold text-foreground bg-muted/60 px-2 py-1 rounded text-xs whitespace-nowrap">
-              <Car className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-              {row.licensePlate}
-            </span>
-          ),
+          cell: (row: VehicleDebtStat) => {
+            const isSelected =
+              Boolean(selectedLicensePlate) &&
+              row.licensePlate.trim().toUpperCase() ===
+                (selectedLicensePlate || "").trim().toUpperCase();
+
+            return (
+              <button
+                type="button"
+                onClick={() => onSelectVehicle?.(row.licensePlate)}
+                className={cn(
+                  "inline-flex items-center gap-1.5 font-mono font-bold px-2 py-1 rounded text-xs whitespace-nowrap transition-all text-left",
+                  isSelected
+                    ? "bg-primary text-primary-foreground shadow-xs ring-2 ring-primary/40"
+                    : "text-foreground bg-muted/60 hover:bg-primary/15 hover:text-primary cursor-pointer",
+                )}
+                title={t(
+                  "customers.drawer.clickToFilterVehicle",
+                  "Nhấn để lọc chi tiết phiếu của xe này",
+                )}
+              >
+                <Car
+                  className={cn(
+                    "w-3.5 h-3.5 shrink-0",
+                    isSelected
+                      ? "text-primary-foreground"
+                      : "text-muted-foreground",
+                  )}
+                />
+                <span>{row.licensePlate}</span>
+                {isSelected && (
+                  <span className="text-[10px] ml-1 opacity-90 font-sans">
+                    ({t("common:active", "Đang xem")})
+                  </span>
+                )}
+              </button>
+            );
+          },
         },
         {
           key: "caseCount",

@@ -6,7 +6,11 @@ export interface GarageDebtsTableProps {
   tabs?: TabItem[];
   activeTab?: string;
   onTabChange?: (tab: string) => void;
-  onOpenCustomerDetail: (customer: { code: string; name: string }) => void;
+  onOpenCustomerDetail: (customer: {
+    code: string;
+    name: string;
+    licensePlate?: string;
+  }) => void;
   onOpenExportDrawer: (context: GarageDebtsExportContext) => void;
 }
 

@@ -2,11 +2,10 @@ import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
 import { PillTabs } from "@/shared/components/PillTabs";
+import { CustomerCaseFilterPopover } from "./components/CustomerCaseFilterPopover";
 import { CustomerDetailHeader } from "./components/CustomerDetailHeader";
 import { CustomerDetailDebtSwitch } from "./components/CustomerDetailDebtSwitch";
 import { CustomerCasesTableTab } from "./components/CustomerCasesTableTab";
-import { CustomerPipelineTab } from "./components/CustomerPipelineTab";
-import { CustomerVehicleDebtTab } from "./components/CustomerVehicleDebtTab";
 import { CustomerDebtAgingChartTab } from "./components/CustomerDebtAgingChartTab";
 import { CustomerSidebarSummary } from "./components/CustomerSidebarSummary";
 import { CustomerAuxiliaryModals } from "./components/CustomerAuxiliaryModals";
@@ -29,16 +28,14 @@ export function GarageCustomerDetailDrawer(
 
   const subTabs = useCustomerSubTabs({
     isPayables,
-    completedCount: logic.completedCases.length,
-    inProgressCount: logic.inProgressCases.length,
-    vehicleCount: logic.vehicleDebtStats.length,
+    totalCount: logic.statusCounts.all,
     t,
   });
 
   const leftContent = (
     <div className="flex flex-col gap-3 flex-1 min-h-0 w-full">
-      {/* Sub-Tabs & Switch Công nợ chuẩn erp-invoice */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-2 border-b border-border/40 w-full shrink-0">
+      {/* Sub-Tabs & Switch Công nợ chuẩn erp-invoice kèm Unified Filter Popover */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-1 w-full shrink-0">
         <div className="flex items-center overflow-x-auto scrollbar-none max-w-full">
           <PillTabs
             items={subTabs}
@@ -48,6 +45,17 @@ export function GarageCustomerDetailDrawer(
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
+          <CustomerCaseFilterPopover
+            vehicles={logic.availableVehicles}
+            selectedPlate={logic.selectedLicensePlate}
+            onSelectPlate={logic.setSelectedLicensePlate}
+            selectedStatus={logic.selectedCaseStatus}
+            onSelectStatus={logic.setSelectedCaseStatus}
+            statusCounts={logic.statusCounts}
+            filteredCount={logic.filteredCases.length}
+            debtType={logic.activeDebtType}
+          />
+
           <CustomerDetailDebtSwitch
             value={logic.activeDebtType}
             onChange={logic.setActiveDebtType}
@@ -58,8 +66,8 @@ export function GarageCustomerDetailDrawer(
       <div className="flex-1 min-h-0 flex flex-col w-full">
         {logic.activeSubTab === "cases" && (
           <CustomerCasesTableTab
-            cases={logic.paginatedCompletedCases}
-            totalCount={logic.filteredCompletedCases.length}
+            cases={logic.paginatedCases}
+            totalCount={logic.filteredCases.length}
             totals={logic.totals}
             page={logic.page}
             pageSize={logic.pageSize}
@@ -73,23 +81,6 @@ export function GarageCustomerDetailDrawer(
             }}
             onOpenSettlementModal={logic.setSettlementCase}
             onOpenInvoiceLinkingModal={logic.setInvoiceLinkingCase}
-          />
-        )}
-
-        {logic.activeSubTab === "pipeline" && (
-          <CustomerPipelineTab
-            cases={logic.inProgressCases}
-            onOpenCaseDetail={(code) => {
-              logic.setSelectedCaseCode(code);
-              logic.setDrawerEditMode(false);
-            }}
-          />
-        )}
-
-        {logic.activeSubTab === "vehicles" && (
-          <CustomerVehicleDebtTab
-            vehicleStats={logic.vehicleDebtStats}
-            debtType={logic.activeDebtType}
           />
         )}
 
@@ -111,11 +102,6 @@ export function GarageCustomerDetailDrawer(
         open={open}
         mode="view"
         onClose={onClose}
-        title={
-          customerName ||
-          customerCode ||
-          t("customers.drawer.title", "Hồ sơ công nợ")
-        }
         subtitle={
           <CustomerDetailHeader
             customerCode={customerCode}
@@ -133,6 +119,8 @@ export function GarageCustomerDetailDrawer(
             customerCode={customerCode}
             customerName={customerName}
             totals={logic.totals}
+            customerOverallTotals={logic.customerOverallTotals}
+            selectedLicensePlate={logic.selectedLicensePlate}
             debtType={logic.activeDebtType}
           />
         }

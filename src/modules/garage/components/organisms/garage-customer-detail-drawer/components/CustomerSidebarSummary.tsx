@@ -10,6 +10,8 @@ interface CustomerSidebarSummaryProps {
   customerCode: string | null;
   customerName?: string;
   totals: CustomerDebtTotals;
+  customerOverallTotals?: CustomerDebtTotals;
+  selectedLicensePlate?: string | null;
   debtType?: "receivables" | "payables";
 }
 
@@ -18,9 +20,14 @@ export const CustomerSidebarSummary = React.memo(
     customerCode,
     customerName,
     totals,
+    customerOverallTotals,
+    selectedLicensePlate,
     debtType = "receivables",
   }: CustomerSidebarSummaryProps) {
-    const { t } = useTranslation(["garage", "common"]);
+    const { t } = useTranslation(["garage", "debts", "common"]);
+    const isFilteredVehicle = Boolean(
+      selectedLicensePlate && selectedLicensePlate !== "ALL",
+    );
 
     return (
       <div className="space-y-4 w-full">
@@ -54,11 +61,40 @@ export const CustomerSidebarSummary = React.memo(
                 </span>
               }
             />
+            {isFilteredVehicle && (
+              <DrawerRow
+                label={t(
+                  "customers.columns.licensePlate",
+                  "Biển số xe đang xem",
+                )}
+                value={
+                  <Badge
+                    variant="secondary"
+                    className="font-mono font-bold text-primary bg-primary/10 border-primary/20"
+                  >
+                    {selectedLicensePlate}
+                  </Badge>
+                }
+              />
+            )}
             <DrawerRow
-              label={t("customers.columns.caseCount", "SL phiếu hoàn thành")}
+              label={
+                isFilteredVehicle
+                  ? t("customers.vehicleCompletedCases", "SL phiếu xe này")
+                  : t("customers.columns.caseCount", "SL phiếu hoàn thành")
+              }
               value={
                 <span className="font-mono font-semibold">
                   {totals.completedCount}
+                  {isFilteredVehicle &&
+                    customerOverallTotals &&
+                    customerOverallTotals.completedCount !==
+                      totals.completedCount && (
+                      <span className="text-[11px] font-normal text-muted-foreground ml-1">
+                        / {customerOverallTotals.completedCount}{" "}
+                        {t("customers.totalOfAll", "tổng")}
+                      </span>
+                    )}
                 </span>
               }
             />
@@ -66,7 +102,7 @@ export const CustomerSidebarSummary = React.memo(
               label={t("partners.vehiclesRegistered", "Số lượng phương tiện")}
               value={
                 <span className="font-mono font-semibold">
-                  {totals.vehicleCount} xe
+                  {(customerOverallTotals || totals).vehicleCount} xe
                 </span>
               }
             />

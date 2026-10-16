@@ -20,7 +20,11 @@ interface CreateBaseColumnsProps {
   getSortState: (key: string) => "asc" | "desc" | "none";
   listHook: ReturnType<typeof useGarageCustomersList>;
   t: (key: string, fallback: string) => string;
-  onOpenCustomerDetail: (customer: { code: string; name: string }) => void;
+  onOpenCustomerDetail: (customer: {
+    code: string;
+    name: string;
+    licensePlate?: string;
+  }) => void;
 }
 
 export function createBaseColumns({
@@ -59,7 +63,23 @@ export function createBaseColumns({
       minSize: 110,
       enableResizing: true,
       cell: (row: CustomerDebtItem) => (
-        <LicensePlateCell licensePlate={row.licensePlate} />
+        <button
+          type="button"
+          onClick={() =>
+            onOpenCustomerDetail({
+              code: row.customerCode,
+              name: row.customerName,
+              licensePlate: row.licensePlate,
+            })
+          }
+          className="text-left w-full hover:opacity-85 cursor-pointer focus:outline-none"
+          title={t(
+            "customers.viewDetailByPlate",
+            "Xem chi tiết công nợ xe này",
+          )}
+        >
+          <LicensePlateCell licensePlate={row.licensePlate} />
+        </button>
       ),
     },
     {
@@ -82,7 +102,13 @@ export function createBaseColumns({
             customerName: row.customerName,
             customerCode: row.customerCode,
           }}
-          onOpenDetail={onOpenCustomerDetail}
+          onOpenDetail={(cust) =>
+            onOpenCustomerDetail({
+              code: cust.code,
+              name: cust.name,
+              licensePlate: row.licensePlate,
+            })
+          }
         />
       ),
     },
@@ -109,6 +135,7 @@ export function createBaseColumns({
             onOpenCustomerDetail({
               code: row.customerCode,
               name: row.customerName,
+              licensePlate: row.licensePlate,
             })
           }
         />
