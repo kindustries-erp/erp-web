@@ -108,7 +108,7 @@ export const getGarageCashflowColumns = (
     {
       key: "paymentMethod",
       sortKey: "paymentMethod",
-      size: 130,
+      size: 160,
       header: filterBuilder("paymentMethod", "Phương thức TT", {
         valueType: ColumnValueType.SELECT,
         filterOptions: PAYMENT_METHOD_OPTIONS,
@@ -118,7 +118,7 @@ export const getGarageCashflowColumns = (
     {
       key: "paymentContent",
       sortKey: "paymentContent",
-      size: 140,
+      size: 160,
       header: filterBuilder("paymentContent", "Nội dung TT", {
         valueType: ColumnValueType.SELECT,
         filterOptions: PAYMENT_CONTENT_OPTIONS,
