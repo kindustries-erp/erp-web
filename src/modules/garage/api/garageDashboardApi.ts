@@ -363,20 +363,12 @@ export const garageDashboardApi = {
     return data;
   },
 
-  exportExcel: async (params?: {
+  getMonthlyReceivablesBreakdown: async (params: {
+    month?: string;
+    horizon?: string;
+    branch_id?: string;
     date_from?: string;
     date_to?: string;
-  }): Promise<Blob> => {
-    const { data } = await axiosInstance.get(`${BASE}/export`, {
-      params,
-      responseType: "blob",
-    });
-    return data;
-  },
-
-  getMonthlyReceivablesBreakdown: async (params: {
-    month: string;
-    branch_id?: string;
   }): Promise<MonthlyReceivablesBreakdownResponse> => {
     const { data } =
       await axiosInstance.get<MonthlyReceivablesBreakdownResponse>(
@@ -495,6 +487,8 @@ export interface MonthlyReceivablesGroupCategorized {
 export interface MonthlyReceivablesBreakdownResponse {
   month: string;
   monthLabel: string;
+  horizon?: string;
+  trendItem?: GarageTrendItem;
   summary: MonthlyReceivablesSummary;
   insuranceCompanies: MonthlyReceivablesGroupItem[];
   customerPartners: MonthlyReceivablesGroupItem[];

@@ -2,36 +2,28 @@ import React, { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { DrawerSection } from "@/shared/components/DrawerModal";
 import { Checkbox } from "@/shared/components/ui/checkbox";
-import { Button } from "@/shared/components/ui/Button";
 import {
   ALL_INVOICE_EXPORT_COLUMNS,
   type ExportColumnItem,
 } from "../InvoiceExportDrawer.helper";
+import {
+  INVOICE_EXPORT_GROUP_KEYS,
+  type InvoiceExportColumnSelectorProps,
+  type InvoiceExportGroupKey,
+} from "./InvoiceExportColumnSelector.type";
+import { InvoiceExportColumnActions } from "./InvoiceExportColumnActions";
 
-export interface InvoiceExportColumnSelectorProps {
-  selectedColumns: string[];
-  onChange: (columns: string[]) => void;
-  onResetDefault: () => void;
-  defaultCollapsed?: boolean;
-}
-
-const GROUP_KEYS = [
-  "general",
-  "partner",
-  "amountTax",
-  "operation",
-  "netOff",
-] as const;
+export type { InvoiceExportColumnSelectorProps };
 
 export function InvoiceExportColumnSelector({
   selectedColumns,
   onChange,
   onResetDefault,
-  defaultCollapsed = false,
+  defaultCollapsed = true,
 }: InvoiceExportColumnSelectorProps) {
   const { t } = useTranslation("erpInvoices");
 
-  const groupLabels: Record<(typeof GROUP_KEYS)[number], string> = useMemo(
+  const groupLabels: Record<InvoiceExportGroupKey, string> = useMemo(
     () => ({
       general: t("erpInvoices:exportDrawer.groupGeneral", "Thông tin chung"),
       partner: t("erpInvoices:exportDrawer.groupPartner", "Đối tác"),
@@ -46,7 +38,7 @@ export function InvoiceExportColumnSelector({
   );
 
   const columnsByGroup = useMemo(() => {
-    const map: Record<(typeof GROUP_KEYS)[number], ExportColumnItem[]> = {
+    const map: Record<InvoiceExportGroupKey, ExportColumnItem[]> = {
       general: [],
       partner: [],
       amountTax: [],
@@ -75,7 +67,7 @@ export function InvoiceExportColumnSelector({
     }
   };
 
-  const handleToggleGroup = (group: (typeof GROUP_KEYS)[number]) => {
+  const handleToggleGroup = (group: InvoiceExportGroupKey) => {
     const groupCols = columnsByGroup[group].map((c) => c.key);
     const allSelected = groupCols.every((k) => selectedColumns.includes(k));
     if (allSelected) {
@@ -92,127 +84,93 @@ export function InvoiceExportColumnSelector({
   return (
     <DrawerSection
       title={
-        <div className="flex items-center justify-between w-full pr-2">
+        <div className="flex items-center gap-1.5">
           <span>
             {t(
               "erpInvoices:exportDrawer.columnsSectionTitle",
               "Cột xuất dữ liệu",
             )}
           </span>
-          <span className="text-xs font-normal text-muted-foreground">
-            {t(
-              "erpInvoices:exportDrawer.columnsSelectedCount",
-              "Đã chọn {{count}}/{{total}} cột",
-              {
-                count: selectedCount,
-                total: totalCols,
-              },
-            )}
+          <span className="text-[11px] font-normal normal-case text-muted-foreground tracking-normal">
+            ({selectedCount}/{totalCols})
           </span>
         </div>
+      }
+      titleExtra={
+        <InvoiceExportColumnActions
+          onSelectAll={handleSelectAll}
+          onResetDefault={onResetDefault}
+          onDeselectAll={handleDeselectAll}
+        />
       }
       collapsible
       defaultCollapsed={defaultCollapsed}
     >
-      <div className="space-y-3 pt-1">
-        {/* Quick action buttons */}
-        <div className="flex items-center gap-1.5 flex-wrap pb-1 border-b border-border/50">
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="h-6 px-2 text-xs"
-            onClick={handleSelectAll}
-          >
-            {t("erpInvoices:exportDrawer.selectAllColumns", "Chọn tất cả")}
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="h-6 px-2 text-xs"
-            onClick={onResetDefault}
-          >
-            {t("erpInvoices:exportDrawer.defaultColumns", "Mặc định")}
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="h-6 px-2 text-xs text-muted-foreground hover:text-destructive"
-            onClick={handleDeselectAll}
-          >
-            {t("erpInvoices:exportDrawer.deselectAllColumns", "Bỏ chọn")}
-          </Button>
-        </div>
+      <div className="space-y-2.5 max-h-[300px] overflow-y-auto pr-1 pt-1">
+        {INVOICE_EXPORT_GROUP_KEYS.map((group) => {
+          const cols = columnsByGroup[group];
+          const groupCols = cols.map((c) => c.key);
+          const selectedInGroup = groupCols.filter((k) =>
+            selectedColumns.includes(k),
+          ).length;
+          const isAllGroupSelected = selectedInGroup === groupCols.length;
+          const isPartialGroup =
+            selectedInGroup > 0 && selectedInGroup < groupCols.length;
 
-        {/* Groups */}
-        <div className="space-y-2.5 max-h-[300px] overflow-y-auto pr-1">
-          {GROUP_KEYS.map((group) => {
-            const cols = columnsByGroup[group];
-            const groupCols = cols.map((c) => c.key);
-            const selectedInGroup = groupCols.filter((k) =>
-              selectedColumns.includes(k),
-            ).length;
-            const isAllGroupSelected = selectedInGroup === groupCols.length;
-            const isPartialGroup =
-              selectedInGroup > 0 && selectedInGroup < groupCols.length;
-
-            return (
+          return (
+            <div
+              key={group}
+              className="rounded border border-border/60 bg-muted/20 p-2 space-y-1.5"
+            >
               <div
-                key={group}
-                className="rounded border border-border/60 bg-muted/20 p-2 space-y-1.5"
+                className="flex items-center justify-between cursor-pointer select-none pb-1 border-b border-border/40"
+                onClick={() => handleToggleGroup(group)}
               >
-                <div
-                  className="flex items-center justify-between cursor-pointer select-none pb-1 border-b border-border/40"
-                  onClick={() => handleToggleGroup(group)}
-                >
-                  <div className="flex items-center gap-2">
-                    <Checkbox
-                      checked={
-                        isAllGroupSelected
-                          ? true
-                          : isPartialGroup
-                            ? "indeterminate"
-                            : false
-                      }
-                      onCheckedChange={() => handleToggleGroup(group)}
-                      onClick={(e) => e.stopPropagation()}
-                      aria-label={groupLabels[group]}
-                    />
-                    <span className="text-xs font-semibold text-foreground">
-                      {groupLabels[group]}
-                    </span>
-                  </div>
-                  <span className="text-[11px] text-muted-foreground">
-                    {selectedInGroup}/{groupCols.length}
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    checked={
+                      isAllGroupSelected
+                        ? true
+                        : isPartialGroup
+                          ? "indeterminate"
+                          : false
+                    }
+                    onCheckedChange={() => handleToggleGroup(group)}
+                    onClick={(e) => e.stopPropagation()}
+                    aria-label={groupLabels[group]}
+                  />
+                  <span className="text-xs font-semibold text-foreground">
+                    {groupLabels[group]}
                   </span>
                 </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-1.5 pt-0.5">
-                  {cols.map((col) => {
-                    const isChecked = selectedColumns.includes(col.key);
-                    return (
-                      <label
-                        key={col.key}
-                        className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground cursor-pointer select-none py-0.5"
-                      >
-                        <Checkbox
-                          checked={isChecked}
-                          onCheckedChange={() => handleToggleColumn(col.key)}
-                          aria-label={col.defaultLabel}
-                        />
-                        <span className="truncate" title={col.defaultLabel}>
-                          {col.defaultLabel}
-                        </span>
-                      </label>
-                    );
-                  })}
-                </div>
+                <span className="text-[11px] text-muted-foreground">
+                  {selectedInGroup}/{groupCols.length}
+                </span>
               </div>
-            );
-          })}
-        </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-1.5 pt-0.5">
+                {cols.map((col) => {
+                  const isChecked = selectedColumns.includes(col.key);
+                  return (
+                    <label
+                      key={col.key}
+                      className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground cursor-pointer select-none py-0.5"
+                    >
+                      <Checkbox
+                        checked={isChecked}
+                        onCheckedChange={() => handleToggleColumn(col.key)}
+                        aria-label={col.defaultLabel}
+                      />
+                      <span className="truncate" title={col.defaultLabel}>
+                        {col.defaultLabel}
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
       </div>
     </DrawerSection>
   );

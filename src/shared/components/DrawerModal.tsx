@@ -33,7 +33,7 @@ export interface DrawerModalProps {
 
   /** Header */
   icon?: React.ReactNode;
-  title: string;
+  title?: React.ReactNode;
   /** Inline element rendered right after the title text (e.g. status badge) */
   titleExtra?: React.ReactNode;
   subtitle?: React.ReactNode;
@@ -272,9 +272,11 @@ export function DrawerModal({
             </div>
           )}
           <div className="flex-1 min-w-0 flex items-center gap-1.5 sm:gap-2 flex-wrap">
-            <span className="text-sm font-semibold text-foreground leading-tight">
-              {title}
-            </span>
+            {title ? (
+              <span className="text-sm font-semibold text-foreground leading-tight">
+                {title}
+              </span>
+            ) : null}
             {titleExtra && (
               <div className="inline-flex items-center shrink-0">
                 {titleExtra}

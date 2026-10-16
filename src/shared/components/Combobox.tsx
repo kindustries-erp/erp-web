@@ -52,6 +52,8 @@ interface ComboboxProps {
   fallbackLabel?: string;
   fallbackTooltipContent?: React.ReactNode;
   variant?: "default" | "spreadsheet" | "ghost";
+  /** Khi bật, ẩn subLabel trên nút trigger để giữ nút thoáng đãng trên 1 dòng duy nhất */
+  hideTriggerSubLabel?: boolean;
 }
 
 export function Combobox({
@@ -71,6 +73,7 @@ export function Combobox({
   fallbackLabel,
   fallbackTooltipContent,
   variant = "default",
+  hideTriggerSubLabel = false,
 }: ComboboxProps) {
   const t = useT();
   const defaultPlaceholder = t("common.select", "— Chọn —");
@@ -219,7 +222,7 @@ export function Combobox({
                       ? fallbackLabel
                       : effectivePlaceholder}
                 </span>
-                {selected?.subLabel && (
+                {selected?.subLabel && !hideTriggerSubLabel && (
                   <span className="truncate text-[10px] text-[color:var(--muted-fg)] leading-tight mt-0.5">
                     {selected.subLabel}
                   </span>

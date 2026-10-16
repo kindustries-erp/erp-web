@@ -33,6 +33,32 @@ vi.mock("./hooks/useGarageCustomerDetailLogic", () => ({
     setActiveDebtType: vi.fn(),
     paginatedCompletedCases: [],
     filteredCompletedCases: [],
+    filteredCases: [],
+    paginatedCases: [],
+    selectedCaseStatus: "ALL",
+    setSelectedCaseStatus: vi.fn(),
+    statusCounts: { all: 0, completed: 0, inProgress: 0 },
+    selectedLicensePlate: props?.licensePlate || null,
+    setSelectedLicensePlate: vi.fn(),
+    availableVehicles: props?.licensePlate
+      ? [{ licensePlate: props.licensePlate, count: 3, balance: 1000000 }]
+      : [],
+    customerOverallTotals: {
+      totalCases: 0,
+      totalRevenue: 0,
+      totalPaid: 0,
+      totalBalance: 0,
+      maxAging: 0,
+      aging0_30: 0,
+      aging31_60: 0,
+      aging61_90: 0,
+      agingOver90: 0,
+      vehicleCount: 1,
+      recoveryRate: 0,
+      completedCount: 0,
+      inProgressCount: 0,
+      inProgressAmount: 0,
+    },
     page: 1,
     pageSize: 10,
     setPage: vi.fn(),
@@ -83,5 +109,22 @@ describe("GarageCustomerDetailDrawer", () => {
     );
 
     expect(screen.getAllByText("Công ty An Khánh").length).toBeGreaterThan(0);
+  });
+
+  it("renders customer drawer with filtered licensePlate", () => {
+    const queryClient = new QueryClient();
+    render(
+      <QueryClientProvider client={queryClient}>
+        <GarageCustomerDetailDrawer
+          open={true}
+          onClose={vi.fn()}
+          customerCode="KH-001"
+          customerName="Công ty An Khánh"
+          licensePlate="70A-45967"
+        />
+      </QueryClientProvider>,
+    );
+
+    expect(screen.getAllByText(/70A-45967/).length).toBeGreaterThan(0);
   });
 });

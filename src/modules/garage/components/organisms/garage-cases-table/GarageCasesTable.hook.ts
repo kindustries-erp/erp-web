@@ -3,6 +3,7 @@ import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
 import { useGarageCases, useGarageGrossProfit } from "../../../hooks/useGarage";
 import { garageApi } from "../../../api/garageApi";
 import { applyGarageCasesTableState } from "../../../utils/garageCasesTable";
+import type { GarageCasesTableQuery } from "../../../export/garageExportScopes";
 import type { GarageCasesTableProps } from "./GarageCasesTable.type";
 
 export function useGarageCasesTable(props: GarageCasesTableProps) {
@@ -85,6 +86,17 @@ export function useGarageCasesTable(props: GarageCasesTableProps) {
 
   const dateFrom = dateRanges["caseDate"]?.from || undefined;
   const dateTo = dateRanges["caseDate"]?.to || undefined;
+
+  // Điều kiện bảng đang xem, dùng cho xuất Excel "theo filter hiện tại".
+  const exportQuery = useMemo<GarageCasesTableQuery>(
+    () => ({
+      date_from: dateFrom,
+      date_to: dateTo,
+      filtersStr: serverFiltersStr,
+      sorts: tableState.sorts.length > 0 ? tableState.sorts : undefined,
+    }),
+    [dateFrom, dateTo, serverFiltersStr, tableState.sorts],
+  );
 
   const {
     data: casesData,
@@ -175,6 +187,7 @@ export function useGarageCasesTable(props: GarageCasesTableProps) {
     isFetching,
     refetch,
     activeFilterCount,
+    exportQuery,
     handleSortChange,
     handleSearchChange,
     handleFilterChange,

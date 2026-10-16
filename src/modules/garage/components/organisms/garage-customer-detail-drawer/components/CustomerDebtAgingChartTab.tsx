@@ -59,45 +59,54 @@ export const CustomerDebtAgingChartTab = React.memo(
 
     return (
       <div className="space-y-4 flex flex-col flex-1 min-h-0 w-full overflow-y-auto pr-1">
-        {/* Section 1: Phân bổ Tuổi nợ */}
-        <DebtAgingDonutChart
-          items={agingDonutItems}
-          totalBalance={totalAgingBalance}
-        />
+        {/* Row 1: Tỷ lệ 3:1 (Bên trái: Biến động theo tháng 75%, Bên phải: Cơ cấu phân bổ tuổi nợ 25%) */}
+        <div className="grid grid-cols-1 xl:grid-cols-4 gap-4 w-full items-start">
+          {/* Cột trái chiếm 3 phần (75%) */}
+          <div className="xl:col-span-3">
+            <DrawerSection
+              title={
+                <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                  <TrendingUp className="w-4 h-4 text-primary" />
+                  <span>
+                    {t(
+                      "customers.drawer.trendChartTitle",
+                      "Biến động phiếu dịch vụ theo tháng",
+                    )}
+                  </span>
+                </div>
+              }
+              collapsible={true}
+              defaultCollapsed={false}
+              className="p-3 border border-slate-200/80 dark:border-slate-800 flex flex-col"
+            >
+              {monthlyTrendItems.length > 0 ? (
+                <div className="h-[250px] w-full pt-2">
+                  <BarChart
+                    labels={chartLabels}
+                    datasets={chartDatasets}
+                    stacked={true}
+                    showLegend={true}
+                  />
+                </div>
+              ) : (
+                <div className="h-[250px] text-center text-xs text-muted-foreground flex items-center justify-center">
+                  {t("customers.noMonthlyData", "Chưa có dữ liệu theo tháng.")}
+                </div>
+              )}
+            </DrawerSection>
+          </div>
 
-        {/* Section 2: Biến động phát sinh & thanh toán theo tháng */}
-        <DrawerSection
-          title={
-            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">
-              <TrendingUp className="w-4 h-4 text-primary" />
-              <span>
-                {t(
-                  "customers.drawer.trendChartTitle",
-                  "Biến động phiếu dịch vụ theo tháng",
-                )}
-              </span>
-            </div>
-          }
-          collapsible={false}
-          className="p-3 border border-slate-200/80 dark:border-slate-800"
-        >
-          {monthlyTrendItems.length > 0 ? (
-            <div className="h-56 w-full pt-2">
-              <BarChart
-                labels={chartLabels}
-                datasets={chartDatasets}
-                stacked={true}
-                showLegend={true}
-              />
-            </div>
-          ) : (
-            <div className="py-6 text-center text-xs text-muted-foreground">
-              {t("customers.noMonthlyData", "Chưa có dữ liệu theo tháng.")}
-            </div>
-          )}
-        </DrawerSection>
+          {/* Cột phải chiếm 1 phần (25%) */}
+          <div className="xl:col-span-1">
+            <DebtAgingDonutChart
+              items={agingDonutItems}
+              totalBalance={totalAgingBalance}
+              className="p-3 border border-slate-200/80 dark:border-slate-800 h-full"
+            />
+          </div>
+        </div>
 
-        {/* Section 3: Bảng danh sách chi tiết từng tháng */}
+        {/* Row 2: Bảng danh sách chi tiết từng tháng */}
         <CustomerMonthlyTrendTable
           items={monthlyTrendItems}
           isPayable={isPayable}

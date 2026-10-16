@@ -7,6 +7,7 @@ import { GarageDebtsExportDrawer } from "../components/organisms/garage-debts-ex
 import { GarageDebtsTable } from "../components/organisms/garage-debts-table";
 import { GaragePayablesTable } from "../components/organisms/garage-payables-table";
 import { GarageSupplierDetailDrawer } from "../components/organisms/garage-supplier-detail-drawer";
+import type { GarageDebtsExportContext } from "../export/garageDebtsExportContext";
 import { ErpUrlQueryParam } from "@/shared/constants/urlParams";
 import type { TabItem } from "@/shared/components/PageLayout";
 
@@ -39,9 +40,18 @@ export function GarageDebts({
   });
 
   const [exportDrawerOpen, setExportDrawerOpen] = useState(false);
+  const [exportContext, setExportContext] = useState<
+    GarageDebtsExportContext | undefined
+  >(undefined);
+
+  const openExportDrawer = useCallback((context?: GarageDebtsExportContext) => {
+    setExportContext(context ?? { kind: "all" });
+    setExportDrawerOpen(true);
+  }, []);
   const [selectedCustomer, setSelectedCustomer] = useState<{
     code: string;
     name: string;
+    licensePlate?: string;
     debtType?: "receivables" | "payables";
   } | null>(null);
   const [selectedSupplier, setSelectedSupplier] = useState<{
@@ -91,11 +101,16 @@ export function GarageDebts({
           tabs={pageTabs}
           activeTab={activeTab}
           onTabChange={handleTabChange}
-          onExportClick={() => setExportDrawerOpen(true)}
-          onOpenCustomerDetail={(code, name) =>
+          onExportClick={() => openExportDrawer()}
+          onOpenCustomerDetail={(
+            code: string,
+            name?: string,
+            licensePlate?: string,
+          ) =>
             setSelectedCustomer({
               code,
               name: name || "",
+              licensePlate,
               debtType: "receivables",
             })
           }
@@ -111,7 +126,7 @@ export function GarageDebts({
             setSelectedCustomer({ ...cust, debtType: "payables" })
           }
           onOpenSupplierDetail={setSelectedSupplier}
-          onOpenExportDrawer={() => setExportDrawerOpen(true)}
+          onOpenExportDrawer={openExportDrawer}
         />
       )}
 
@@ -123,7 +138,7 @@ export function GarageDebts({
           onOpenCustomerDetail={(cust) =>
             setSelectedCustomer({ ...cust, debtType: "receivables" })
           }
-          onOpenExportDrawer={() => setExportDrawerOpen(true)}
+          onOpenExportDrawer={openExportDrawer}
         />
       )}
 
@@ -132,6 +147,7 @@ export function GarageDebts({
         onClose={() => setSelectedCustomer(null)}
         customerCode={selectedCustomer?.code || null}
         customerName={selectedCustomer?.name}
+        licensePlate={selectedCustomer?.licensePlate}
         branchId={selectedBranchId || undefined}
         debtType={
           selectedCustomer?.debtType ||
@@ -157,6 +173,7 @@ export function GarageDebts({
         open={exportDrawerOpen}
         onClose={() => setExportDrawerOpen(false)}
         branchId={selectedBranchId || undefined}
+        context={exportContext}
       />
     </>
   );

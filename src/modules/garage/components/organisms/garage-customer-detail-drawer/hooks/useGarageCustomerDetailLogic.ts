@@ -18,6 +18,7 @@ export function useGarageCustomerDetailLogic({
   open,
   customerCode,
   branchId,
+  licensePlate,
   debtType = "receivables",
   onDebtTypeChange,
 }: GarageCustomerDetailDrawerProps) {
@@ -40,12 +41,26 @@ export function useGarageCustomerDetailLogic({
     [onDebtTypeChange],
   );
 
+  const [selectedLicensePlate, setSelectedLicensePlate] = useState<
+    string | null
+  >(licensePlate ? licensePlate.trim() : null);
+
+  useEffect(() => {
+    if (open) {
+      setSelectedLicensePlate(licensePlate ? licensePlate.trim() : null);
+    }
+  }, [open, licensePlate, customerCode]);
+
   const [selectedCaseCode, setSelectedCaseCode] = useState<string | null>(null);
   const [drawerEditMode, setDrawerEditMode] = useState<boolean>(false);
   const [settlementCase, setSettlementCase] = useState<any | null>(null);
   const [invoiceLinkingCase, setInvoiceLinkingCase] = useState<any | null>(
     null,
   );
+
+  const [selectedCaseStatus, setSelectedCaseStatus] = useState<
+    "ALL" | "COMPLETED" | "IN_PROGRESS"
+  >("ALL");
 
   const [activeSubTab, setActiveSubTab] = useState<string>("cases");
   const [page, setPage] = useState<number>(1);
@@ -68,22 +83,105 @@ export function useGarageCustomerDetailLogic({
     enabled: open && Boolean(customerCode),
   });
 
+  const isMatchingVehicle = useCallback(
+    (caseItem: any, targetPlate: string | null) => {
+      if (!targetPlate || targetPlate === "ALL") return true;
+      const lp = (caseItem.bienSoXe || "").trim().toUpperCase();
+      const target = targetPlate.trim().toUpperCase();
+      if (target === "CHƯA CÓ BKS" || target === "NO_BKS") {
+        return !lp || lp === "CHƯA CÓ BKS" || lp === "NO_BKS";
+      }
+      return lp === target;
+    },
+    [],
+  );
+
+  const availableVehicles = useMemo(() => {
+    const map = new Map<
+      string,
+      { licensePlate: string; count: number; balance: number }
+    >();
+    allCases.forEach((c: any) => {
+      const lp = (c.bienSoXe || "").trim() || "Chưa có BKS";
+      const isComp =
+        c.isCompleted !== false && Boolean(c.ngayHoanThanhCongViec);
+      const bal =
+        activeDebtType === "payables"
+          ? (Number(c.chiPhi) || 0) - (Number(c.tienDaChi) || 0)
+          : (Number(c.tienCoThue) || 0) - (Number(c.tienDaThanhToan) || 0);
+
+      if (!map.has(lp)) {
+        map.set(lp, { licensePlate: lp, count: 0, balance: 0 });
+      }
+      const cur = map.get(lp)!;
+      if (isComp) {
+        cur.count += 1;
+        cur.balance += Math.max(0, bal);
+      }
+    });
+    return Array.from(map.values()).sort((a, b) => b.balance - a.balance);
+  }, [allCases, activeDebtType]);
+
+  const vehicleFilteredCases = useMemo(() => {
+    return allCases.filter((c: any) =>
+      isMatchingVehicle(c, selectedLicensePlate),
+    );
+  }, [allCases, selectedLicensePlate, isMatchingVehicle]);
+
+  const statusCounts = useMemo(() => {
+    let completed = 0;
+    let inProgress = 0;
+    vehicleFilteredCases.forEach((c: any) => {
+      if (c.isCompleted !== false && Boolean(c.ngayHoanThanhCongViec)) {
+        completed += 1;
+      } else {
+        inProgress += 1;
+      }
+    });
+    return {
+      all: vehicleFilteredCases.length,
+      completed,
+      inProgress,
+    };
+  }, [vehicleFilteredCases]);
+
+  const statusFilteredCases = useMemo(() => {
+    if (selectedCaseStatus === "COMPLETED") {
+      return vehicleFilteredCases.filter(
+        (c: any) => c.isCompleted !== false && Boolean(c.ngayHoanThanhCongViec),
+      );
+    }
+    if (selectedCaseStatus === "IN_PROGRESS") {
+      return vehicleFilteredCases.filter(
+        (c: any) => c.isCompleted === false || !c.ngayHoanThanhCongViec,
+      );
+    }
+    return vehicleFilteredCases;
+  }, [vehicleFilteredCases, selectedCaseStatus]);
+
   const completedCases = useMemo(() => {
     return allCases.filter(
-      (c: any) => c.isCompleted !== false && Boolean(c.ngayHoanThanhCongViec),
+      (c: any) =>
+        c.isCompleted !== false &&
+        Boolean(c.ngayHoanThanhCongViec) &&
+        isMatchingVehicle(c, selectedLicensePlate),
     );
-  }, [allCases]);
+  }, [allCases, selectedLicensePlate, isMatchingVehicle]);
 
   const inProgressCases = useMemo(() => {
     return allCases.filter(
-      (c: any) => c.isCompleted === false || !c.ngayHoanThanhCongViec,
+      (c: any) =>
+        (c.isCompleted === false || !c.ngayHoanThanhCongViec) &&
+        isMatchingVehicle(c, selectedLicensePlate),
     );
-  }, [allCases]);
+  }, [allCases, selectedLicensePlate, isMatchingVehicle]);
 
   useEffect(() => {
     setPage(1);
   }, [
     customerCode,
+    selectedLicensePlate,
+    selectedCaseStatus,
     activeSubTab,
     tableState.columnSearch,
     tableState.columnFilters,
@@ -92,10 +190,26 @@ export function useGarageCustomerDetailLogic({
     tableState.dateTo,
   ]);
 
-  const totals = useMemo(
+  const customerOverallTotals = useMemo(
     () => calculateCustomerDebtTotals(allCases, activeDebtType),
     [allCases, activeDebtType],
   );
+
+  const activeCases = useMemo(() => {
+    if (!selectedLicensePlate || selectedLicensePlate === "ALL")
+      return allCases;
+    return allCases.filter((c: any) =>
+      isMatchingVehicle(c, selectedLicensePlate),
+    );
+  }, [allCases, selectedLicensePlate, isMatchingVehicle]);
+
+  const activeTotals = useMemo(
+    () => calculateCustomerDebtTotals(activeCases, activeDebtType),
+    [activeCases, activeDebtType],
+  );
+
+  const totals = activeTotals;
+
   const vehicleDebtStats = useMemo(
     () => calculateVehicleDebtStats(allCases, activeDebtType),
     [allCases, activeDebtType],
@@ -105,20 +219,23 @@ export function useGarageCustomerDetailLogic({
     [totals],
   );
   const monthlyTrendItems = useMemo(
-    () => calculateMonthlyTrendItems(allCases, activeDebtType),
-    [allCases, activeDebtType],
+    () => calculateMonthlyTrendItems(activeCases, activeDebtType),
+    [activeCases, activeDebtType],
   );
 
-  const filteredCompletedCases = useMemo(() => {
-    return filterClientItems(completedCases, tableState, {
+  const filteredCases = useMemo(() => {
+    return filterClientItems(statusFilteredCases, tableState, {
       dateField: "ngayHoanThanhCongViec",
     });
-  }, [completedCases, tableState]);
+  }, [statusFilteredCases, tableState]);
 
-  const paginatedCompletedCases = useMemo(() => {
+  const paginatedCases = useMemo(() => {
     const start = (page - 1) * pageSize;
-    return filteredCompletedCases.slice(start, start + pageSize);
-  }, [filteredCompletedCases, page, pageSize]);
+    return filteredCases.slice(start, start + pageSize);
+  }, [filteredCases, page, pageSize]);
+
+  const filteredCompletedCases = filteredCases;
+  const paginatedCompletedCases = paginatedCases;
 
   const handleSyncFromKgara = useCallback(
     (caseId: string) => {
@@ -160,8 +277,18 @@ export function useGarageCustomerDetailLogic({
     allCases,
     completedCases,
     inProgressCases,
+    filteredCases,
+    paginatedCases,
     filteredCompletedCases,
     paginatedCompletedCases,
+    selectedLicensePlate,
+    setSelectedLicensePlate,
+    selectedCaseStatus,
+    setSelectedCaseStatus,
+    statusCounts,
+    availableVehicles,
+    activeTotals,
+    customerOverallTotals,
     totals,
     vehicleDebtStats,
     agingDonutItems,

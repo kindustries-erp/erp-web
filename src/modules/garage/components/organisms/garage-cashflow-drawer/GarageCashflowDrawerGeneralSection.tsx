@@ -4,8 +4,10 @@ import { Combobox } from "@/shared/components/Combobox";
 import { Input } from "@/shared/components/ui/input";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { DatePicker } from "@/shared/components/DatePicker";
+import { useT } from "@/core/i18n";
 import { PaymentMethodCombobox } from "../../molecules/payment-method-combobox";
 import { PaymentContentCombobox } from "../../molecules/payment-content-combobox";
+import { CashflowAmountInput } from "../../molecules/cashflow-amount-input";
 import {
   GarageCaseCombobox,
   renderGarageCaseTooltipContent,
@@ -17,17 +19,74 @@ import type { DrawerSectionProps } from "./GarageCashflowDrawer.type";
 export const GarageCashflowDrawerGeneralSection: React.FC<
   DrawerSectionProps
 > = ({ mode, voucher, formData, setFormData }) => {
+  const t = useT();
+
   const handleFieldChange =
     (field: keyof CreateGarageCashflowVoucherDto) =>
     (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
       setFormData((prev) => ({ ...prev, [field]: e.target.value }));
     };
 
+  const handleCaseChange = (val: string, opt?: any) => {
+    const updates: Partial<CreateGarageCashflowVoucherDto> = { caseId: val };
+    if (opt?.originalName) updates.partnerName = opt.originalName;
+    if (opt?.originalLicensePlate && !formData.licensePlate) {
+      updates.licensePlate = opt.originalLicensePlate;
+    }
+    setFormData((prev) => ({ ...prev, ...updates }));
+  };
+
+  const voucherTypeOptions = [
+    {
+      label: t("garage:cashflowDrawer.typeReceiptOption", "Thu (RECEIPT)"),
+      value: "RECEIPT",
+    },
+    {
+      label: t("garage:cashflowDrawer.typePaymentOption", "Chi (PAYMENT)"),
+      value: "PAYMENT",
+    },
+  ];
+
+  const paymentStatusOptions = [
+    {
+      label: t("garage:cashflowDrawer.statusPending", "Chờ duyệt"),
+      value: "PENDING",
+    },
+    {
+      label: t("garage:cashflowDrawer.statusApproved", "Đã duyệt"),
+      value: "APPROVED",
+    },
+    {
+      label: t("garage:cashflowDrawer.statusPaid", "Đã chi"),
+      value: "PAID",
+    },
+  ];
+
+  const caseFallbackLabel = voucher?.case?.soChungTu
+    ? voucher.case.bienSoXe
+      ? `${voucher.case.bienSoXe} - ${voucher.case.soChungTu}`
+      : voucher.case.soChungTu
+    : undefined;
+
+  const caseTooltip = voucher?.case
+    ? renderGarageCaseTooltipContent({
+        bienSoXe: voucher.case.bienSoXe,
+        soChungTu: voucher.case.soChungTu,
+        id: voucher.case.id,
+        khachHangName: voucher.case.khachHangName,
+      })
+    : undefined;
+
   return (
-    <DrawerSection title="THÔNG TIN CHUNG">
+    <DrawerSection
+      title={t("garage:cashflowDrawer.generalInfo", "THÔNG TIN CHUNG")}
+    >
       {mode === "edit" ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <DrawerField label="Ngày giao dịch" required>
+          <DrawerField
+            label={t("garage:cashflowDrawer.transDate", "Ngày giao dịch")}
+            required
+          >
             <DatePicker
               value={formData.transDate || ""}
               onChange={(val: string) =>
@@ -36,31 +95,69 @@ export const GarageCashflowDrawerGeneralSection: React.FC<
               className="w-full"
             />
           </DrawerField>
-          <DrawerField label="Mã chứng từ">
+          <DrawerField
+            label={t("garage:cashflowDrawer.voucherCode", "Mã chứng từ")}
+          >
             <Input
               value={formData.voucherCode || ""}
               onChange={handleFieldChange("voucherCode")}
-              placeholder="Tự động sinh nếu để trống"
+              placeholder={t(
+                "garage:cashflowDrawer.voucherCodePlaceholder",
+                "Tự động sinh nếu để trống",
+              )}
               className="w-full h-8 text-sm"
             />
           </DrawerField>
-          <DrawerField label="Loại phiếu" required>
+          <DrawerField
+            label={t("garage:cashflowDrawer.voucherType", "Loại phiếu")}
+            required
+          >
             <Combobox
               value={formData.voucherType || ""}
               onChange={(val) =>
                 setFormData((prev) => ({
                   ...prev,
-                  voucherType: val as "RECEIPT" | "PAYMENT",
+                  voucherType: val as any,
+                  paymentStatus:
+                    val === "PAYMENT"
+                      ? prev.paymentStatus || "PENDING"
+                      : undefined,
                 }))
               }
-              options={[
-                { label: "Thu (RECEIPT)", value: "RECEIPT" },
-                { label: "Chi (PAYMENT)", value: "PAYMENT" },
-              ]}
-              placeholder="— Chọn —"
+              options={voucherTypeOptions}
+              placeholder={t(
+                "garage:cashflowDrawer.selectPlaceholder",
+                "— Chọn —",
+              )}
             />
           </DrawerField>
-          <DrawerField label="Phương thức TT">
+          {formData.voucherType === "PAYMENT" && (
+            <DrawerField
+              label={t(
+                "garage:cashflowDrawer.paymentStatus",
+                "Trạng thái thanh toán",
+              )}
+              required
+            >
+              <Combobox
+                value={formData.paymentStatus || "PENDING"}
+                onChange={(val) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    paymentStatus: val as any,
+                  }))
+                }
+                options={paymentStatusOptions}
+                placeholder={t(
+                  "garage:cashflowDrawer.selectPlaceholder",
+                  "— Chọn —",
+                )}
+              />
+            </DrawerField>
+          )}
+          <DrawerField
+            label={t("garage:cashflowDrawer.paymentMethod", "Phương thức TT")}
+          >
             <PaymentMethodCombobox
               value={formData.paymentMethod || ""}
               onChange={(val: string) =>
@@ -68,7 +165,9 @@ export const GarageCashflowDrawerGeneralSection: React.FC<
               }
             />
           </DrawerField>
-          <DrawerField label="Nội dung TT">
+          <DrawerField
+            label={t("garage:cashflowDrawer.paymentContent", "Nội dung TT")}
+          >
             <PaymentContentCombobox
               value={formData.paymentContent || ""}
               onChange={(val: string) =>
@@ -76,64 +175,42 @@ export const GarageCashflowDrawerGeneralSection: React.FC<
               }
             />
           </DrawerField>
-          <DrawerField label="Số tiền" required>
-            <Input
-              type="number"
-              value={formData.amount || ""}
-              onChange={(e) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  amount: Number(e.target.value),
-                }))
+          <DrawerField
+            label={t("garage:cashflowDrawer.amount", "Số tiền")}
+            required
+          >
+            <CashflowAmountInput
+              value={formData.amount || 0}
+              onChange={(val: number) =>
+                setFormData((prev) => ({ ...prev, amount: val }))
               }
-              className="w-full h-8 text-sm"
             />
           </DrawerField>
-          <DrawerField label="Mã Phiếu Dịch Vụ (Garage Case)">
+          <DrawerField
+            label={t(
+              "garage:cashflowDrawer.caseCode",
+              "Mã Phiếu Dịch Vụ (Garage Case)",
+            )}
+          >
             <GarageCaseCombobox
               value={formData.caseId || ""}
-              onChange={(val: string, selectedOption?: any) => {
-                const updates: Partial<CreateGarageCashflowVoucherDto> = {
-                  caseId: val,
-                };
-                if (selectedOption?.originalName) {
-                  updates.partnerName = selectedOption.originalName;
-                }
-                if (
-                  selectedOption?.originalLicensePlate &&
-                  !formData.licensePlate
-                ) {
-                  updates.licensePlate = selectedOption.originalLicensePlate;
-                }
-                setFormData((prev) => ({ ...prev, ...updates }));
-              }}
-              fallbackLabel={
-                voucher?.case?.soChungTu
-                  ? voucher.case.bienSoXe
-                    ? `${voucher.case.bienSoXe} - ${voucher.case.soChungTu}`
-                    : voucher.case.soChungTu
-                  : undefined
-              }
-              fallbackTooltipContent={
-                voucher?.case
-                  ? renderGarageCaseTooltipContent({
-                      bienSoXe: voucher.case.bienSoXe,
-                      soChungTu: voucher.case.soChungTu,
-                      id: voucher.case.id,
-                      khachHangName: voucher.case.khachHangName,
-                    })
-                  : undefined
-              }
+              onChange={handleCaseChange}
+              fallbackLabel={caseFallbackLabel}
+              fallbackTooltipContent={caseTooltip}
             />
           </DrawerField>
-          <DrawerField label="Đối tác">
+          <DrawerField
+            label={t("garage:cashflowDrawer.partnerName", "Đối tác")}
+          >
             <Input
               value={formData.partnerName || ""}
               onChange={handleFieldChange("partnerName")}
               className="w-full h-8 text-sm"
             />
           </DrawerField>
-          <DrawerField label="Biển số xe">
+          <DrawerField
+            label={t("garage:cashflowDrawer.licensePlate", "Biển số xe")}
+          >
             <Input
               value={formData.licensePlate || ""}
               onChange={(e) =>
@@ -142,12 +219,15 @@ export const GarageCashflowDrawerGeneralSection: React.FC<
                   licensePlate: e.target.value.toUpperCase(),
                 }))
               }
-              placeholder="VD: 51A-123.45"
+              placeholder={t(
+                "garage:cashflowDrawer.licensePlatePlaceholder",
+                "VD: 51A-123.45",
+              )}
               className="w-full h-8 text-sm font-mono uppercase"
             />
           </DrawerField>
           <div className="col-span-1 md:col-span-2">
-            <DrawerField label="Ghi chú">
+            <DrawerField label={t("garage:cashflowDrawer.note", "Ghi chú")}>
               <Textarea
                 value={formData.note || ""}
                 onChange={handleFieldChange("note")}

@@ -1,6 +1,6 @@
 import React from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { GarageDashboard } from "../GarageDashboard";
 
@@ -14,6 +14,12 @@ vi.mock("react-chartjs-2", () => ({
 
 vi.mock("@/shared/components/KpiSparkline", () => ({
   KpiSparkline: () => <div data-testid="mock-sparkline" />,
+}));
+
+vi.mock("@/modules/garage/components/GarageDashboardExportDrawer", () => ({
+  GarageDashboardExportDrawer: ({ open }: { open: boolean }) => (
+    <div data-testid="export-drawer" data-open={open ? "true" : "false"} />
+  ),
 }));
 
 // Mock các API call
@@ -106,5 +112,23 @@ describe("GarageDashboard Atomic Refactor", () => {
     );
 
     expect(container).toBeTruthy();
+  });
+
+  it("nút Xuất Excel mở drawer xuất nền, không tải file trực tiếp", () => {
+    render(
+      <QueryClientProvider client={queryClient}>
+        <GarageDashboard />
+      </QueryClientProvider>,
+    );
+
+    const openStates = () =>
+      screen.getAllByTestId("export-drawer").map((el) => el.dataset.open);
+
+    // Checkpoint drawer cũng chứa một drawer xuất (đóng sẵn), nên có thể có nhiều phần tử
+    expect(openStates().every((open) => open === "false")).toBe(true);
+    fireEvent.click(
+      screen.getByRole("button", { name: /Xuất Excel|Export Excel/ }),
+    );
+    expect(openStates().filter((open) => open === "true")).toHaveLength(1);
   });
 });

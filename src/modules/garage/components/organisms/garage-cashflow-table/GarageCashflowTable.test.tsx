@@ -9,6 +9,7 @@ import {
   renderLicensePlateCell,
   renderPaymentMethodCell,
   renderPaymentContentCell,
+  renderPaymentStatusCell,
 } from "./GarageCashflowTable.helper";
 import { getGarageCashflowColumns } from "./GarageCashflowTable.columns";
 import type { GarageCashflowVoucher } from "../../../api/garageCashflowApi";
@@ -205,20 +206,46 @@ describe("GarageCashflowTable", () => {
   });
 
   describe("renderPaymentContentCell", () => {
-    it("renders KH thanh toán badge with emerald styling", () => {
+    it("renders 1. KH thanh toán badge with emerald styling", () => {
       const mockVoucher = {
         ...mockRow,
-        paymentContent: "KH thanh toán",
+        paymentContent: "1. KH thanh toán",
       } as any;
 
       const { container } = render(
         <div>{renderPaymentContentCell(mockVoucher)}</div>,
       );
-      expect(screen.getByText("KH thanh toán")).toBeInTheDocument();
+      expect(screen.getByText("1. KH thanh toán")).toBeInTheDocument();
       expect(container.innerHTML).toContain("text-emerald-600");
     });
 
-    it("renders Ứng trước badge with amber styling", () => {
+    it("renders 8. Vật tư tiêu hao badge with cyan styling", () => {
+      const mockVoucher = {
+        ...mockRow,
+        paymentContent: "8. Vật tư tiêu hao",
+      } as any;
+
+      const { container } = render(
+        <div>{renderPaymentContentCell(mockVoucher)}</div>,
+      );
+      expect(screen.getByText("8. Vật tư tiêu hao")).toBeInTheDocument();
+      expect(container.innerHTML).toContain("text-cyan-600");
+    });
+
+    it("renders 7. Phụ tùng / vật tư badge with orange styling", () => {
+      const mockVoucher = {
+        ...mockRow,
+        paymentContent: "7. Phụ tùng / vật tư",
+      } as any;
+
+      const { container } = render(
+        <div>{renderPaymentContentCell(mockVoucher)}</div>,
+      );
+      expect(screen.getByText("7. Phụ tùng / vật tư")).toBeInTheDocument();
+      expect(container.innerHTML).toContain("text-orange-600");
+    });
+
+    it("renders legacy Ứng trước badge with amber styling", () => {
       const mockVoucher = {
         ...mockRow,
         paymentContent: "Ứng trước",
@@ -232,7 +259,71 @@ describe("GarageCashflowTable", () => {
     });
   });
 
+  describe("renderPaymentStatusCell", () => {
+    it("renders dash for RECEIPT voucher", () => {
+      const mockReceipt = { ...mockRow, voucherType: "RECEIPT" } as any;
+      render(<div>{renderPaymentStatusCell(mockReceipt)}</div>);
+      expect(screen.getByText("—")).toBeInTheDocument();
+    });
+
+    it("renders Chờ duyệt for PAYMENT with PENDING status", () => {
+      const mockPayment = {
+        ...mockRow,
+        voucherType: "PAYMENT",
+        paymentStatus: "PENDING",
+      } as any;
+      const { container } = render(
+        <div>{renderPaymentStatusCell(mockPayment)}</div>,
+      );
+      expect(screen.getByText("Chờ duyệt")).toBeInTheDocument();
+      expect(container.innerHTML).toContain("text-amber-600");
+    });
+
+    it("renders Đã duyệt for PAYMENT with APPROVED status", () => {
+      const mockPayment = {
+        ...mockRow,
+        voucherType: "PAYMENT",
+        paymentStatus: "APPROVED",
+      } as any;
+      const { container } = render(
+        <div>{renderPaymentStatusCell(mockPayment)}</div>,
+      );
+      expect(screen.getByText("Đã duyệt")).toBeInTheDocument();
+      expect(container.innerHTML).toContain("text-indigo-600");
+    });
+
+    it("renders Đã chi for PAYMENT with PAID status", () => {
+      const mockPayment = {
+        ...mockRow,
+        voucherType: "PAYMENT",
+        paymentStatus: "PAID",
+      } as any;
+      const { container } = render(
+        <div>{renderPaymentStatusCell(mockPayment)}</div>,
+      );
+      expect(screen.getByText("Đã chi")).toBeInTheDocument();
+      expect(container.innerHTML).toContain("text-emerald-600");
+    });
+  });
+
   describe("getGarageCashflowColumns", () => {
+    it("sets column width to 160 for paymentMethod and paymentContent", () => {
+      const mockFilterBuilder = vi.fn((key) => key) as any;
+      mockFilterBuilder.date = vi.fn(() => "date");
+      mockFilterBuilder.amount = vi.fn(() => "amount");
+
+      const columns = getGarageCashflowColumns(
+        mockFilterBuilder,
+        vi.fn(),
+        vi.fn(),
+      );
+
+      const pmCol = columns.find((c) => c.key === "paymentMethod");
+      const pcCol = columns.find((c) => c.key === "paymentContent");
+      expect(pmCol?.size).toBe(160);
+      expect(pcCol?.size).toBe(160);
+    });
+
     it("places paymentContent right after paymentMethod, followed by caseCode and licensePlate", () => {
       const mockFilterBuilder = vi.fn((key) => key) as any;
       mockFilterBuilder.date = vi.fn(() => "date");
@@ -245,6 +336,8 @@ describe("GarageCashflowTable", () => {
       );
 
       const keys = columns.map((c) => c.key);
+      const chiIndex = keys.indexOf("chi");
+      expect(keys[chiIndex + 1]).toBe("paymentStatus");
       const paymentIndex = keys.indexOf("paymentMethod");
       expect(paymentIndex).toBeGreaterThan(-1);
       expect(keys[paymentIndex + 1]).toBe("paymentContent");

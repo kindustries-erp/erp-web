@@ -81,13 +81,25 @@ export function useCustomerCasesTableColumns({
         size: 115,
         minSize: 105,
         enableResizing: true,
-        cell: (row: any) => (
-          <TableDateCell
-            date={row.ngayHoanThanhCongViec || row.ngayPhatSinh}
-            format="date"
-            className="justify-end w-full"
-          />
-        ),
+        cell: (row: any) => {
+          if (
+            !row.ngayHoanThanhCongViec &&
+            (row.isCompleted === false || !row.isCompleted)
+          ) {
+            return (
+              <span className="inline-flex items-center text-[11px] font-medium text-amber-600 dark:text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20 whitespace-nowrap">
+                {t("customers.drawer.inProgressShort", "Đang làm")}
+              </span>
+            );
+          }
+          return (
+            <TableDateCell
+              date={row.ngayHoanThanhCongViec || row.ngayPhatSinh}
+              format="date"
+              className="justify-end w-full"
+            />
+          );
+        },
       },
       {
         key: isPayables ? "chiPhi" : "tienCoThue",

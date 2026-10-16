@@ -1,8 +1,11 @@
 import React from "react";
-import { FileSpreadsheet } from "lucide-react";
+import { FileSpreadsheet, RefreshCw } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { StandardTable } from "@/shared/components/StandardTable";
 import { DrawerSection } from "@/shared/components/DrawerModal";
+import { Button } from "@/shared/components/ui/Button";
+import { Tooltip } from "@/core/components/ui/Tooltip";
+import { cn } from "@/shared/utils";
 import { useInvoiceExportDrawer } from "./InvoiceExportDrawer.hook";
 import { useInvoiceExportColumns } from "./InvoiceExportDrawer.columns";
 import { InvoiceExportConditionSection } from "./components/InvoiceExportConditionSection";
@@ -45,13 +48,49 @@ export function InvoiceExportDrawer(props: InvoiceExportDrawerProps) {
             selectedColumns={hook.selectedColumns}
             onChange={hook.handleColumnsChange}
             onResetDefault={hook.handleResetDefaultColumns}
-            defaultCollapsed={false}
+            defaultCollapsed={true}
           />
           <DrawerSection
             title={t(
               "erpInvoices:exportDrawer.historyTitle",
               "Lịch sử xuất file",
             )}
+            titleExtra={
+              <Tooltip
+                content={t(
+                  "erpInvoices:exportDrawer.refreshHistory",
+                  "Làm mới lịch sử",
+                )}
+              >
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6 text-muted-foreground hover:text-foreground"
+                  title={t(
+                    "erpInvoices:exportDrawer.refreshHistory",
+                    "Làm mới lịch sử",
+                  )}
+                  aria-label={t(
+                    "erpInvoices:exportDrawer.refreshHistory",
+                    "Làm mới lịch sử",
+                  )}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    void hook.historyQuery.refetch();
+                  }}
+                  disabled={hook.historyQuery.isFetching}
+                >
+                  <RefreshCw
+                    className={cn(
+                      "w-3.5 h-3.5",
+                      hook.historyQuery.isFetching &&
+                        "animate-spin text-primary",
+                    )}
+                  />
+                </Button>
+              </Tooltip>
+            }
             collapsible
             defaultCollapsed={false}
           >

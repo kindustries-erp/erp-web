@@ -21,7 +21,7 @@ export function buildGarageCaseCreateActions(
         {
           label: t("cases.actions.exportExcel", "Xuất Excel"),
           icon: <FileSpreadsheet className="w-4 h-4 text-emerald-600" />,
-          onClick: () => props.onExportExcel?.(),
+          onClick: () => props.onExportExcel?.({}),
         },
       ],
     },

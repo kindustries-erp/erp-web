@@ -29,6 +29,12 @@ vi.mock("@/core/i18n", () => ({
   },
 }));
 
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (_key: string, fallback?: string) => fallback || _key,
+  }),
+}));
+
 vi.mock("@tanstack/react-query", () => ({
   useQuery: (opts: any) => {
     useQuerySpy(opts);
@@ -239,13 +245,16 @@ describe("BankStatementExportDrawer", () => {
     const exportBtn = screen.getByText("Xuất Excel");
     fireEvent.click(exportBtn);
 
-    expect(startExportExcelBackgroundSpy).toHaveBeenCalledWith({
-      sourceType: "BANK",
-      search: "Cong ty ABC",
-      bankAccountId: "acc-1",
-      startDate: "2026-10-01 00:00:00",
-      endDate: "2026-10-31 23:59:59",
-    });
+    expect(startExportExcelBackgroundSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        sourceType: "BANK",
+        search: "Cong ty ABC",
+        bankAccountId: "acc-1",
+        startDate: "2026-10-01 00:00:00",
+        endDate: "2026-10-31 23:59:59",
+        selected_columns: expect.any(Array),
+      }),
+    );
   });
 
   it("displays column filters and branch name in filter preview", () => {
@@ -336,5 +345,68 @@ describe("BankStatementExportDrawer", () => {
     expect(duplicateKeyWarnings).toHaveLength(0);
 
     consoleErrorSpy.mockRestore();
+  });
+
+  it("switches to quarter mode and automatically calculates dateFrom and dateTo", async () => {
+    startExportExcelBackgroundSpy.mockClear();
+
+    renderDrawer();
+
+    const quarterTab = screen.getByText("Theo quý");
+    expect(quarterTab).toBeInTheDocument();
+    fireEvent.click(quarterTab);
+
+    // Expect Quarter combobox to be rendered
+    const comboboxes = screen.getAllByTestId("combobox");
+    expect(comboboxes.length).toBeGreaterThanOrEqual(1);
+
+    // Trigger export
+    const exportBtn = screen.getByText("Xuất Excel");
+    fireEvent.click(exportBtn);
+
+    expect(startExportExcelBackgroundSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        sourceType: "BANK",
+        startDate: expect.stringMatching(/^\d{4}-\d{2}-01 00:00:00$/),
+        endDate: expect.stringMatching(/^\d{4}-\d{2}-\d{2} 23:59:59$/),
+      }),
+    );
+  });
+
+  it("renders column selector and toggles columns in bank statement export payload", () => {
+    startExportExcelBackgroundSpy.mockClear();
+    localStorage.clear();
+
+    renderDrawer();
+
+    // Column selector is rendered with count
+    expect(screen.getByText("Cột xuất dữ liệu")).toBeInTheDocument();
+    expect(screen.getByText("(21/21)")).toBeInTheDocument();
+
+    // Deselect all
+    const deselectButton = screen.getByText("Bỏ chọn");
+    fireEvent.click(deselectButton);
+    expect(screen.getByText("(0/21)")).toBeInTheDocument();
+
+    // Reset default
+    const defaultButton = screen.getByText("Mặc định");
+    fireEvent.click(defaultButton);
+    expect(screen.getByText("(21/21)")).toBeInTheDocument();
+
+    // Export with selected columns
+    const exportBtn = screen.getByText("Xuất Excel");
+    fireEvent.click(exportBtn);
+
+    expect(startExportExcelBackgroundSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        sourceType: "BANK",
+        selected_columns: expect.arrayContaining([
+          "stt",
+          "transDate",
+          "credit",
+          "description",
+        ]),
+      }),
+    );
   });
 });

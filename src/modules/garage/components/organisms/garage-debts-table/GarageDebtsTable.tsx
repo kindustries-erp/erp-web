@@ -3,8 +3,7 @@ import { useTranslation } from "react-i18next";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate";
 import { useGarageStore } from "@/modules/garage/store/garageStore";
 import { useGarageCustomersList } from "@/modules/garage/hooks/useGarageCustomersList";
-import { useGarageBranches } from "@/modules/garage/hooks/useGarage";
-import { Users, Eye, Download, FileSpreadsheet } from "lucide-react";
+import { Users, Eye, FileSpreadsheet } from "lucide-react";
 import type { ActionDropdownItem } from "@/shared/components/ActionDropdown";
 import type {
   GarageDebtsTableProps,
@@ -12,7 +11,7 @@ import type {
 } from "./GarageDebtsTable.type";
 import { useGarageDebtsColumns } from "./GarageDebtsTable.columns";
 import { useGarageDebtsSummaryRow } from "./GarageDebtsTable.summary";
-import { exportGarageDebtsCsv } from "./GarageDebtsTable.export";
+import { buildGarageDebtsExportContext } from "@/modules/garage/export/garageDebtsExportContext";
 
 export const GarageDebtsTable: React.FC<GarageDebtsTableProps> = ({
   tabs,
@@ -23,7 +22,6 @@ export const GarageDebtsTable: React.FC<GarageDebtsTableProps> = ({
 }) => {
   const { t } = useTranslation(["garage", "debts", "common"]);
   const { selectedBranchId } = useGarageStore();
-  const { data: branches } = useGarageBranches();
 
   const listHook = useGarageCustomersList(selectedBranchId || undefined);
 
@@ -36,9 +34,9 @@ export const GarageDebtsTable: React.FC<GarageDebtsTableProps> = ({
 
   const summaryRow = useGarageDebtsSummaryRow({ listHook, t });
 
-  const handleQuickExport = useCallback(() => {
-    void exportGarageDebtsCsv(listHook.data, branches, t);
-  }, [branches, listHook.data, t]);
+  const handleOpenExport = useCallback(() => {
+    onOpenExportDrawer(buildGarageDebtsExportContext("customers", listHook));
+  }, [listHook, onOpenExportDrawer]);
 
   const createActions = useMemo<ActionDropdownItem[]>(
     () => [
@@ -46,22 +44,14 @@ export const GarageDebtsTable: React.FC<GarageDebtsTableProps> = ({
         groupLabel: t("common:search", "Tra cứu"),
         items: [
           {
-            label: t(
-              "partners.exportCurrentView",
-              "Xuất nhanh dữ liệu hiện tại",
-            ),
-            icon: <Download className="w-4 h-4 text-primary" />,
-            onClick: handleQuickExport,
-          },
-          {
-            label: t("debts:exportDetailed", "Xuất báo cáo chi tiết..."),
+            label: t("debts.exportDetailed", "Xuất Excel theo kỳ / Nâng cao"),
             icon: <FileSpreadsheet className="w-4 h-4 text-emerald-600" />,
-            onClick: onOpenExportDrawer,
+            onClick: handleOpenExport,
           },
         ],
       },
     ],
-    [handleQuickExport, onOpenExportDrawer, t],
+    [handleOpenExport, t],
   );
 
   return (
@@ -107,6 +97,7 @@ export const GarageDebtsTable: React.FC<GarageDebtsTableProps> = ({
                 onOpenCustomerDetail({
                   code: row.customerCode,
                   name: row.customerName,
+                  licensePlate: row.licensePlate,
                 }),
             },
           ],

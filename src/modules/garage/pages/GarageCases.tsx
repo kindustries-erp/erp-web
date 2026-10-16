@@ -18,6 +18,7 @@ import { GarageCaseStandaloneDrawer } from "../components/GarageCaseStandaloneDr
 import { GarageCaseSyncDrawer } from "../components/GarageCaseSyncDrawer";
 import { GarageCaseViewConfigDrawer } from "../components/GarageCaseViewConfigDrawer";
 import { GarageCaseExportDrawer } from "../components/GarageCaseExportDrawer";
+import type { GarageCasesTableQuery } from "../export/garageExportScopes";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
 import type { TabItem } from "@/shared/components/PageLayout";
@@ -82,6 +83,9 @@ export function GarageCases({
   const [editingViewPreset, setEditingViewPreset] =
     useState<TableViewPreset | null>(null);
   const [exportDrawerOpen, setExportDrawerOpen] = useState(false);
+  const [exportTableQuery, setExportTableQuery] = useState<
+    GarageCasesTableQuery | undefined
+  >(undefined);
 
   const canCreateGarage = useHasPermission(
     ErpResource.GARAGE,
@@ -200,7 +204,10 @@ export function GarageCases({
           setSyncMode("gross-profit");
           setSyncDrawerOpen(true);
         }}
-        onExportExcel={() => setExportDrawerOpen(true)}
+        onExportExcel={(query) => {
+          setExportTableQuery(query);
+          setExportDrawerOpen(true);
+        }}
         onOpenDetail={(code) => {
           setDrawerEditMode(false);
           setDrawerInitialTab("quote_details");
@@ -277,6 +284,7 @@ export function GarageCases({
         open={exportDrawerOpen}
         onClose={() => setExportDrawerOpen(false)}
         initialBranchId={activeBranchId}
+        tableQuery={exportTableQuery}
       />
     </>
   );

@@ -20,7 +20,11 @@ export interface GarageDebtsDashboardTabProps {
   activeTab?: string;
   onTabChange?: (val: string) => void;
   onExportClick?: () => void;
-  onOpenCustomerDetail?: (code: string, name?: string) => void;
+  onOpenCustomerDetail?: (
+    code: string,
+    name?: string,
+    licensePlate?: string,
+  ) => void;
 }
 
 export const GarageDebtsDashboardTab: React.FC<

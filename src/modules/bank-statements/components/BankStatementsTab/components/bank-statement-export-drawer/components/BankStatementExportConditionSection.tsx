@@ -5,34 +5,13 @@ import { DrawerSection } from "@/shared/components/DrawerModal";
 import { Combobox } from "@/shared/components/Combobox";
 import { DatePicker } from "@/shared/components/DatePicker";
 import { Button } from "@/shared/components/ui/Button";
+import { PillTabs } from "@/shared/components/PillTabs";
 import { BankStatementExportModeSelector } from "./BankStatementExportModeSelector";
 import { BankStatementExportFilterPreview } from "./BankStatementExportFilterPreview";
-import type {
-  BankStatementExportMode,
-  BankStatementFilterSummary,
-} from "../BankStatementExportDrawer.type";
+import type { BankStatementPeriodType } from "../BankStatementExportDrawer.type";
+import type { BankStatementExportConditionSectionProps } from "./BankStatementExportConditionSection.type";
 
-export interface BankStatementExportConditionSectionProps {
-  type: "bank" | "cash";
-  exportMode: BankStatementExportMode;
-  onExportModeChange: (mode: BankStatementExportMode) => void;
-  period: string;
-  onPeriodChange: (period?: string) => void;
-  periodOptions: Array<{ value: string; label: string }>;
-  dateFrom: string;
-  onDateFromChange: (val?: string) => void;
-  dateTo: string;
-  onDateToChange: (val?: string) => void;
-  accountOptions: Array<{ value: string; label: string }>;
-  selectedAccountId: string;
-  onSelectedAccountIdChange: (val?: string) => void;
-  transactionTypeOptions: Array<{ value: string; label: string }>;
-  transactionType: string;
-  onTransactionTypeChange: (val?: string) => void;
-  currentFilterSummary?: BankStatementFilterSummary;
-  starting: boolean;
-  onStartExport: () => void;
-}
+export type { BankStatementExportConditionSectionProps };
 
 export function BankStatementExportConditionSection(
   props: BankStatementExportConditionSectionProps,
@@ -41,9 +20,14 @@ export function BankStatementExportConditionSection(
     type,
     exportMode,
     onExportModeChange,
+    periodType,
+    onPeriodTypeChange,
     period,
     onPeriodChange,
     periodOptions,
+    quarter,
+    onQuarterChange,
+    quarterOptions,
     dateFrom,
     onDateFromChange,
     dateTo,
@@ -74,18 +58,62 @@ export function BankStatementExportConditionSection(
 
         {exportMode === "by-period" ? (
           <div className="space-y-3 pt-1 border-t border-border/60">
-            <div>
-              <label className="text-xs font-medium text-muted-foreground block mb-1">
-                {t("bankStatement.period", "Kỳ")}
-              </label>
-              <Combobox
-                options={periodOptions}
-                value={period}
-                onChange={onPeriodChange}
-                placeholder={t("bankStatement.selectPeriod", "Chọn kỳ...")}
-                allowClear={false}
+            <div className="pt-0.5 pb-0.5">
+              <PillTabs<BankStatementPeriodType>
+                size="sm"
+                variant="pill"
+                className="w-full shrink-0"
+                listClassName="w-full grid grid-cols-3"
+                triggerClassName="justify-center flex-1"
+                value={periodType}
+                onValueChange={onPeriodTypeChange}
+                items={[
+                  {
+                    value: "month",
+                    label: t("bankStatement.periodTypeMonth", "Theo tháng"),
+                  },
+                  {
+                    value: "quarter",
+                    label: t("bankStatement.periodTypeQuarter", "Theo quý"),
+                  },
+                  {
+                    value: "custom",
+                    label: t("bankStatement.periodTypeCustom", "Tùy chỉnh"),
+                  },
+                ]}
               />
             </div>
+
+            {periodType === "month" && (
+              <div>
+                <label className="text-xs font-medium text-muted-foreground block mb-1">
+                  {t("bankStatement.period", "Kỳ")}
+                </label>
+                <Combobox
+                  options={periodOptions}
+                  value={period}
+                  onChange={onPeriodChange}
+                  placeholder={t("bankStatement.selectPeriod", "Chọn kỳ...")}
+                  allowClear={false}
+                />
+              </div>
+            )}
+
+            {periodType === "quarter" && (
+              <div>
+                <label className="text-xs font-medium text-muted-foreground block mb-1">
+                  {t("bankStatement.quarter", "Quý")}
+                </label>
+                <Combobox
+                  options={quarterOptions}
+                  value={quarter}
+                  onChange={onQuarterChange}
+                  placeholder={t("bankStatement.selectQuarter", "Chọn quý...")}
+                  allowClear={false}
+                />
+              </div>
+            )}
+
             <div>
               <label className="text-xs font-medium text-muted-foreground block mb-1">
                 {t("bankStatement.dateFrom", "Từ ngày")}

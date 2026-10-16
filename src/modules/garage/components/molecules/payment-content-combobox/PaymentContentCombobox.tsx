@@ -3,17 +3,18 @@ import { Combobox } from "@/shared/components/Combobox";
 import type { PaymentContentComboboxProps } from "./PaymentContentCombobox.type";
 
 export const PAYMENT_CONTENT_OPTIONS = [
-  { label: "KH thanh toán", value: "KH thanh toán" },
-  { label: "Tất toán", value: "Tất toán" },
-  { label: "BH thanh toán", value: "BH thanh toán" },
-  { label: "HHBH", value: "HHBH" },
-  { label: "Ứng trước", value: "Ứng trước" },
-  { label: "Cấn trừ", value: "Cấn trừ" },
-  { label: "Mua phụ tùng / vật tư", value: "Mua phụ tùng / vật tư" },
-  { label: "Chi phí vận hành", value: "Chi phí vận hành" },
-  { label: "Hoa hồng / nhân công", value: "Hoa hồng / nhân công" },
-  { label: "Hoàn ứng", value: "Hoàn ứng" },
-  { label: "Khác", value: "Khác" },
+  { label: "1. KH thanh toán", value: "1. KH thanh toán" },
+  { label: "2. Tất toán", value: "2. Tất toán" },
+  { label: "3. BH thanh toán", value: "3. BH thanh toán" },
+  { label: "4. HHBH", value: "4. HHBH" },
+  { label: "5. Ứng trước", value: "5. Ứng trước" },
+  { label: "6. Cấn trừ", value: "6. Cấn trừ" },
+  { label: "7. Phụ tùng / vật tư", value: "7. Phụ tùng / vật tư" },
+  { label: "8. Vật tư tiêu hao", value: "8. Vật tư tiêu hao" },
+  { label: "9. Chi phí vận hành", value: "9. Chi phí vận hành" },
+  { label: "10. Hoa hồng / nhân công", value: "10. Hoa hồng / nhân công" },
+  { label: "11. Hoàn ứng", value: "11. Hoàn ứng" },
+  { label: "12. Khác", value: "12. Khác" },
 ];
 
 export const PaymentContentCombobox: React.FC<PaymentContentComboboxProps> = ({

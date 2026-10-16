@@ -13,15 +13,16 @@ import {
   renderLicensePlateCell,
   renderPaymentMethodCell,
   renderPaymentContentCell,
+  renderPaymentStatusCell,
   renderPartnerNameCell,
   renderNoteCell,
   renderSttCell,
   createCashflowDateHeader,
 } from "./GarageCashflowTable.helper";
-
 import {
   PAYMENT_METHOD_OPTIONS,
   PAYMENT_CONTENT_OPTIONS,
+  PAYMENT_STATUS_OPTIONS,
 } from "./GarageCashflowTable.type";
 
 export { getGarageCashflowRowActions } from "./GarageCashflowTable.actions";
@@ -106,9 +107,19 @@ export const getGarageCashflowColumns = (
       cell: renderChiCell,
     },
     {
+      key: "paymentStatus",
+      sortKey: "paymentStatus",
+      size: 130,
+      header: filterBuilder("paymentStatus", "Trạng thái", {
+        valueType: ColumnValueType.SELECT,
+        filterOptions: PAYMENT_STATUS_OPTIONS,
+      }),
+      cell: renderPaymentStatusCell,
+    },
+    {
       key: "paymentMethod",
       sortKey: "paymentMethod",
-      size: 130,
+      size: 160,
       header: filterBuilder("paymentMethod", "Phương thức TT", {
         valueType: ColumnValueType.SELECT,
         filterOptions: PAYMENT_METHOD_OPTIONS,
@@ -118,7 +129,7 @@ export const getGarageCashflowColumns = (
     {
       key: "paymentContent",
       sortKey: "paymentContent",
-      size: 140,
+      size: 160,
       header: filterBuilder("paymentContent", "Nội dung TT", {
         valueType: ColumnValueType.SELECT,
         filterOptions: PAYMENT_CONTENT_OPTIONS,

@@ -11,6 +11,7 @@ export interface GarageCashflowVoucher {
   amount: number;
   paymentMethod?: string;
   paymentContent?: string;
+  paymentStatus?: "PENDING" | "APPROVED" | "PAID" | null;
   referenceNumber?: string;
   caseId?: string;
   erpBankTransactionId?: string;
@@ -48,6 +49,7 @@ export interface CreateGarageCashflowVoucherDto {
   note?: string;
   paymentMethod?: string;
   paymentContent?: string;
+  paymentStatus?: "PENDING" | "APPROVED" | "PAID";
   referenceNumber?: string;
   caseId?: string;
   erpBankTransactionId?: string;
@@ -147,6 +149,33 @@ export const garageCashflowApi = {
           pageSize,
           column_filters: columnFilters,
         },
+      },
+    );
+    return res.data;
+  },
+  startExportExcelBackground: async (
+    params: any,
+  ): Promise<{ jobId: string; message: string; reused?: boolean }> => {
+    const res = await axiosInstance.post(
+      "/api/v1/greenway/cashflow-vouchers/export/excel/background",
+      params,
+    );
+    return res.data;
+  },
+  listExportExcelHistory: async (page = 1, pageSize = 10) => {
+    const res = await axiosInstance.get(
+      "/api/v1/greenway/cashflow-vouchers/export/excel/background/history",
+      {
+        params: { page, pageSize },
+      },
+    );
+    return res.data;
+  },
+  downloadExportExcelFile: async (jobId: string) => {
+    const res = await axiosInstance.get(
+      `/api/v1/greenway/cashflow-vouchers/export/excel/background/${jobId}/download`,
+      {
+        responseType: "blob",
       },
     );
     return res.data;

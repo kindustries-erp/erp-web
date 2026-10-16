@@ -63,7 +63,7 @@ export function MonthClassificationTable({
         className: "text-center w-[40px] min-w-[40px]",
         cell: (_row, idx) => (
           <span className="w-full block text-center text-muted-foreground font-medium">
-            {idx}
+            {idx + 1}
           </span>
         ),
       },

@@ -27,6 +27,11 @@ export function buildInitialFormData(
       caseId: voucher.caseId || "",
       erpBankTransactionId: voucher.erpBankTransactionId || "",
       erpCashVoucherId: voucher.erpCashVoucherId || "",
+      paymentStatus:
+        voucher.paymentStatus ||
+        ((voucher.voucherType || "").toUpperCase() === "PAYMENT"
+          ? "PAID"
+          : undefined),
     };
   }
 
@@ -52,6 +57,10 @@ export function buildCreatePayload(
     note: formData.note?.trim() || undefined,
     paymentMethod: formData.paymentMethod || undefined,
     paymentContent: formData.paymentContent?.trim() || undefined,
+    paymentStatus:
+      (formData.voucherType || "RECEIPT").toUpperCase() === "PAYMENT"
+        ? formData.paymentStatus || "PENDING"
+        : undefined,
     referenceNumber: formData.referenceNumber?.trim() || undefined,
     caseId: formData.caseId?.trim() || undefined,
     erpBankTransactionId: formData.erpBankTransactionId?.trim() || undefined,
@@ -74,6 +83,12 @@ export function buildUpdatePayload(
     note: formData.note?.trim() || undefined,
     paymentMethod: formData.paymentMethod || undefined,
     paymentContent: formData.paymentContent?.trim() || undefined,
+    paymentStatus:
+      formData.voucherType?.toUpperCase() === "PAYMENT"
+        ? formData.paymentStatus || "PENDING"
+        : formData.voucherType?.toUpperCase() === "RECEIPT"
+          ? undefined
+          : formData.paymentStatus,
     referenceNumber: formData.referenceNumber?.trim() || undefined,
     caseId: formData.caseId?.trim() || undefined,
     erpBankTransactionId: formData.erpBankTransactionId?.trim() || undefined,
@@ -87,6 +102,7 @@ const FIELD_LABELS: Record<string, string> = {
   transDate: "Ngày giao dịch",
   paymentMethod: "Phương thức thanh toán",
   paymentContent: "Nội dung thanh toán",
+  paymentStatus: "Trạng thái thanh toán",
   partnerName: "Tên đối tác",
   partnerPhone: "Số điện thoại",
   licensePlate: "Biển số xe",
@@ -115,10 +131,17 @@ export function computeAuditDiffs(
       aVal !== undefined &&
       String(bVal) !== String(aVal)
     ) {
-      const formatVal = (v: unknown) =>
-        key === "amount" && typeof v === "number"
-          ? `${Number(v).toLocaleString("vi-VN")} đ`
-          : String(v || "—");
+      const formatVal = (v: unknown) => {
+        if (key === "amount" && typeof v === "number") {
+          return `${Number(v).toLocaleString("vi-VN")} đ`;
+        }
+        if (key === "paymentStatus") {
+          if (v === "PENDING") return "Chờ duyệt";
+          if (v === "APPROVED") return "Đã duyệt";
+          if (v === "PAID") return "Đã chi";
+        }
+        return String(v || "—");
+      };
       diffs.push({
         field: key,
         fieldLabel: t(`garage:fields.${key}`, label),
