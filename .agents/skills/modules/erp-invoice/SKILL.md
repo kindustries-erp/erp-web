@@ -239,7 +239,7 @@ src/modules/erp-invoices-core/
     - Nút bấm chính "Xuất Excel" kích hoạt tác vụ nền.
 - **Tác vụ nền & Lịch sử tải lại**: Hỗ trợ Server-Sent Events (SSE) theo dõi tiến độ nền, cơ chế tái sử dụng file đã xuất trong 24h và bảng lịch sử có thể resize cột.
 - **Kiến trúc Atomic Refactor (< 180 LoC, No Blue Mandate)**:
-  - Phân rã triệt để thành: `InvoiceExportDrawer.tsx` (~110 LoC), `InvoiceExportDrawer.columns.tsx` (158 LoC), `InvoiceExportDrawer.hook.ts` (164 LoC), `InvoiceExportDrawer.scope.hook.ts` (~120 LoC), `InvoiceExportDrawer.sync.hook.ts` (147 LoC), `InvoiceExportDrawer.helper.tsx` (~115 LoC).
+  - Phân rã triệt để thành: `InvoiceExportDrawer.tsx` (~110 LoC), `InvoiceExportDrawer.columns.tsx` (158 LoC), `InvoiceExportDrawer.hook.ts` (~92 LoC), `InvoiceExportDrawer.scope.hook.ts` (~120 LoC), `InvoiceExportDrawer.sync.hook.ts` (147 LoC), `InvoiceExportDrawer.helper.tsx` (~115 LoC).
   - Molecules & Atoms: `InvoiceExportConditionSection.tsx` (~140 LoC), `InvoiceExportColumnSelector.tsx` (~160 LoC), `InvoiceExportModeSelector.tsx` (96 LoC), `InvoiceExportFilterPreview.tsx` (75 LoC), `CustomRadioIndicator.tsx` (28 LoC).
   - **No Blue Mandate**: 0% màu xanh dương. Native browser `<input type="radio">` và `<input type="checkbox">` được bọc `sr-only` và custom chuẩn tone neutral `foreground` / `background`. Badge trạng thái `RUNNING` dùng `amber` tone (`bg-amber-50 text-amber-700`).
 

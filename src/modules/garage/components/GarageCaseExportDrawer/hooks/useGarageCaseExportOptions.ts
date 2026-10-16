@@ -1,10 +1,5 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  PERIOD_OPTS,
-  periodFirstDay,
-  periodLastDay,
-} from "@/modules/finance/utils/financeHelpers";
 import { GARAGE_CASE_CLASSIFICATIONS } from "@/modules/garage/components/GarageCaseClassificationBadge";
 
 export function useGarageCaseExportOptions(branches?: any[]) {
@@ -75,43 +70,10 @@ export function useGarageCaseExportOptions(branches?: any[]) {
     [t],
   );
 
-  const periodOptions = useMemo(
-    () => [
-      ...PERIOD_OPTS,
-      {
-        value: "custom",
-        label: t("cases.exportDrawer.customRange", "Tùy chỉnh khoảng ngày"),
-      },
-    ],
-    [t],
-  );
-
-  const createPeriodChangeHandler = (
-    setPeriod: (val: string) => void,
-    setDateFrom: (val: string) => void,
-    setDateTo: (val: string) => void,
-  ) => {
-    return (next?: string) => {
-      const value = next || "";
-      if (!value || value === "custom") {
-        setPeriod("custom");
-        return;
-      }
-
-      setPeriod(value);
-      if (value && value !== "custom") {
-        setDateFrom(periodFirstDay(value));
-        setDateTo(periodLastDay(value));
-      }
-    };
-  };
-
   return {
     branchOptions,
     classificationOptions,
     dateTypeOptions,
     statusOptions,
-    periodOptions,
-    createPeriodChangeHandler,
   };
 }

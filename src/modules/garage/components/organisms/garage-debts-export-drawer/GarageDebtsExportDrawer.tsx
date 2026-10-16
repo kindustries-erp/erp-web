@@ -1,95 +1,60 @@
 import React from "react";
-import { useTranslation } from "react-i18next";
+import { FileSpreadsheet } from "lucide-react";
+
 import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
-import { DrawerSection } from "@/shared/components/DrawerModal";
-import { PillTabs } from "@/shared/components/PillTabs";
-import { DatePicker } from "@/shared/components/DatePicker";
-import { Button } from "@/shared/components/ui/Button";
-import { Download, Users, Truck } from "lucide-react";
+import { GarageExportHistoryPanel } from "@/modules/garage/export/GarageExportSections";
 import type { GarageDebtsExportDrawerProps } from "./GarageDebtsExportDrawer.type";
 import { useGarageDebtsExportDrawer } from "./GarageDebtsExportDrawer.hook";
+import { GarageDebtsExportForm } from "./GarageDebtsExportForm";
 
-export const GarageDebtsExportDrawer: React.FC<
-  GarageDebtsExportDrawerProps
-> = ({ open, onClose, branchId }) => {
-  const { t } = useTranslation(["garage", "debts", "common"]);
-  const {
-    partnerType,
-    setPartnerType,
-    dateFrom,
-    setDateFrom,
-    dateTo,
-    setDateTo,
-    isExporting,
-    handleExport,
-  } = useGarageDebtsExportDrawer({ branchId, onClose });
+export const GarageDebtsExportDrawer: React.FC<GarageDebtsExportDrawerProps> = (
+  props,
+) => {
+  const state = useGarageDebtsExportDrawer(props);
+  const { t, exporter } = state;
+  const query = props.context?.query;
 
   return (
     <StandardFormDrawer
-      open={open}
+      open={props.open}
       mode="view"
-      onClose={onClose}
-      title={t("debts:exportDetailed", "Xuất Báo Cáo Công Nợ Garage")}
+      onClose={props.onClose}
+      title={t("exportJobs.debts.title", "Xuất Excel công nợ garage")}
       subtitle={t(
-        "garage:debts.exportSubtitle",
-        "Tùy chọn đối tượng, khoảng thời gian và tải xuống bảng kê",
+        "exportJobs.debts.subtitle",
+        "Tạo file công nợ phải thu / phải trả và tải lại file đã tạo trong 24 tiếng",
       )}
-      layout="1-column"
-      size="md"
+      icon={<FileSpreadsheet className="w-4 h-4 text-emerald-600" />}
+      layout="2-columns"
+      size="lg"
       leftPanel={
-        <div className="space-y-4 p-4 text-xs">
-          <DrawerSection title="1. ĐỐI TƯỢNG BÁO CÁO">
-            <PillTabs<"customers" | "suppliers">
-              value={partnerType}
-              onValueChange={setPartnerType}
-              items={[
-                { value: "customers", label: "Khách hàng", icon: Users },
-                {
-                  value: "suppliers",
-                  label: "Nhà cung cấp / Phụ tùng",
-                  icon: Truck,
-                },
-              ]}
-            />
-          </DrawerSection>
-
-          <DrawerSection title="2. KHOẢNG THỜI GIAN">
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="text-[11px] text-muted-foreground block mb-1">
-                  Từ ngày:
-                </label>
-                <DatePicker value={dateFrom} onChange={setDateFrom} />
-              </div>
-              <div>
-                <label className="text-[11px] text-muted-foreground block mb-1">
-                  Đến ngày:
-                </label>
-                <DatePicker value={dateTo} onChange={setDateTo} />
-              </div>
-            </div>
-          </DrawerSection>
-
-          <div className="pt-4 flex justify-end gap-2 border-t border-border/70">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onClose}
-              disabled={isExporting}
-            >
-              {t("common:cancel", "Đóng")}
-            </Button>
-            <Button
-              size="sm"
-              onClick={handleExport}
-              disabled={isExporting}
-              className="gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white"
-            >
-              <Download className="w-3.5 h-3.5" />
-              {isExporting ? "Đang xuất..." : "Tải xuống bảng kê"}
-            </Button>
-          </div>
-        </div>
+        <GarageExportHistoryPanel
+          tableId={`garage-${state.kind}-debt-export-history`}
+          labels={state.historyLabels}
+          history={exporter.historyQuery.data}
+          loading={
+            exporter.historyQuery.isLoading || exporter.historyQuery.isFetching
+          }
+          page={exporter.page}
+          pageSize={exporter.pageSize}
+          onPage={exporter.setPage}
+          onPageSize={exporter.setPageSize}
+          downloadingJobId={exporter.downloadingJobId}
+          progress={exporter.progress}
+          onDownload={exporter.handleDownload}
+        />
+      }
+      rightPanel={
+        <GarageDebtsExportForm
+          state={state}
+          filterSummary={{
+            from: query?.from,
+            to: query?.to,
+            q: query?.q,
+            sortCount: query?.sorts?.length,
+            filterCount: props.context?.filterCount ?? 0,
+          }}
+        />
       }
     />
   );

@@ -44,6 +44,7 @@ export function GarageCasesTable(props: GarageCasesTableProps) {
     isFetching,
     refetch,
     activeFilterCount,
+    exportQuery,
     handleSortChange,
     handleSearchChange,
     handleFilterChange,
@@ -130,8 +131,12 @@ export function GarageCasesTable(props: GarageCasesTableProps) {
   );
 
   const createActions = useMemo(
-    () => buildGarageCaseCreateActions(props, translate),
-    [props, translate],
+    () =>
+      buildGarageCaseCreateActions(
+        { ...props, onExportExcel: () => props.onExportExcel?.(exportQuery) },
+        translate,
+      ),
+    [props, translate, exportQuery],
   );
 
   const rowActions = useMemo(

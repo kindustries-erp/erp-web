@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate";
 import { useGarageStore } from "@/modules/garage/store/garageStore";
 import { useGarageSuppliersList } from "@/modules/garage/hooks/useGarageSuppliersList";
-import { Truck, Eye, Download, FileSpreadsheet } from "lucide-react";
+import { Truck, Eye, FileSpreadsheet } from "lucide-react";
 import type { ActionDropdownItem } from "@/shared/components/ActionDropdown";
 import type {
   GaragePayablesTableProps,
@@ -11,7 +11,7 @@ import type {
 } from "./GaragePayablesTable.type";
 import { useGaragePayablesColumns } from "./GaragePayablesTable.columns";
 import { useGaragePayablesSummaryRow } from "./GaragePayablesTable.summary";
-import { exportGaragePayablesCsv } from "./GaragePayablesTable.export";
+import { buildGarageDebtsExportContext } from "@/modules/garage/export/garageDebtsExportContext";
 
 export const GaragePayablesTable: React.FC<GaragePayablesTableProps> = ({
   tabs,
@@ -36,9 +36,9 @@ export const GaragePayablesTable: React.FC<GaragePayablesTableProps> = ({
 
   const summaryRow = useGaragePayablesSummaryRow({ listHook, t });
 
-  const handleQuickExport = useCallback(() => {
-    exportGaragePayablesCsv(listHook.data, t);
-  }, [listHook.data, t]);
+  const handleOpenExport = useCallback(() => {
+    onOpenExportDrawer(buildGarageDebtsExportContext("suppliers", listHook));
+  }, [listHook, onOpenExportDrawer]);
 
   const handleOpenDetail = useCallback(
     (row: SupplierDebtItem) => {
@@ -65,22 +65,14 @@ export const GaragePayablesTable: React.FC<GaragePayablesTableProps> = ({
         groupLabel: t("common:search", "Tra cứu"),
         items: [
           {
-            label: t(
-              "partners.exportCurrentView",
-              "Xuất nhanh dữ liệu hiện tại",
-            ),
-            icon: <Download className="w-4 h-4 text-primary" />,
-            onClick: handleQuickExport,
-          },
-          {
-            label: t("debts:exportDetailed", "Xuất báo cáo chi tiết..."),
+            label: t("debts.exportDetailed", "Xuất Excel theo kỳ / Nâng cao"),
             icon: <FileSpreadsheet className="w-4 h-4 text-emerald-600" />,
-            onClick: onOpenExportDrawer,
+            onClick: handleOpenExport,
           },
         ],
       },
     ],
-    [handleQuickExport, onOpenExportDrawer, t],
+    [handleOpenExport, t],
   );
 
   return (

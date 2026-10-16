@@ -1,42 +1,60 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
-import { useTranslation } from "react-i18next";
 import {
-  periodFirstDay,
-  periodLastDay,
-  periodFromExactRange,
-  initPeriod,
-} from "@/modules/finance/utils/financeHelpers";
-import {
-  garageApi,
-  type ExportCompletedCasesParams,
-} from "@/modules/garage/api/garageApi";
+  useBackgroundExport,
+  useExportPeriod,
+  type ExportMode,
+} from "@/shared/export-jobs";
 import { useGarageBranches } from "@/modules/garage/hooks/useGarage";
 import {
-  useGarageCaseExportHistory,
-  type GarageCaseExportHistoryItem,
-} from "./useGarageCaseExportHistory";
+  branchHeaders,
+  garageCasesExportScope,
+  useGarageCasesExportStore,
+  type GarageCasesExportPayload,
+  type GarageCasesTableQuery,
+} from "@/modules/garage/export/garageExportScopes";
+import { useGarageExportLabels } from "@/modules/garage/export/useGarageExportLabels";
 import { useGarageCaseExportOptions } from "./useGarageCaseExportOptions";
 
-export type { GarageCaseExportHistoryItem };
+export interface UseGarageCaseExportLogicOptions {
+  open: boolean;
+  initialBranchId?: string;
+  /** Điều kiện bảng đang xem (chế độ "theo filter hiện tại"). */
+  tableQuery?: GarageCasesTableQuery;
+}
 
-export function useGarageCaseExportLogic(initialBranchId?: string) {
-  const { t } = useTranslation("garage");
+/** Số điều kiện lọc cột trong `filtersStr` của bảng (để hiển thị tóm tắt). */
+export function countFilterKeys(filtersStr?: string): number {
+  if (!filtersStr) return 0;
+  try {
+    return Object.keys(JSON.parse(filtersStr) as object).length;
+  } catch {
+    return 0;
+  }
+}
+
+export function useGarageCaseExportLogic({
+  open,
+  initialBranchId,
+  tableQuery,
+}: UseGarageCaseExportLogicOptions) {
+  const {
+    t,
+    history,
+    mode: modeLabels,
+    period: periodLabels,
+    messages,
+  } = useGarageExportLabels();
   const { data: branches } = useGarageBranches();
-  const { historyItems, addHistoryItem, handleClearHistory } =
-    useGarageCaseExportHistory();
   const {
     branchOptions,
     classificationOptions,
     dateTypeOptions,
     statusOptions,
-    periodOptions,
-    createPeriodChangeHandler,
   } = useGarageCaseExportOptions(branches);
 
-  const [period, setPeriod] = useState(initPeriod());
-  const [dateFrom, setDateFrom] = useState(periodFirstDay(period));
-  const [dateTo, setDateTo] = useState(periodLastDay(period));
+  const [exportMode, setExportMode] = useState<ExportMode>("by-period");
+  const period = useExportPeriod({ initialUnit: "month" });
   const [dateType, setDateType] = useState<"completion_date" | "case_date">(
     "completion_date",
   );
@@ -47,8 +65,12 @@ export function useGarageCaseExportLogic(initialBranchId?: string) {
     useState<string>("");
   const [selectedStatus, setSelectedStatus] = useState<string>("completed");
 
-  const [exporting, setExporting] = useState(false);
-  const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  const exporter = useBackgroundExport<GarageCasesExportPayload>({
+    scope: garageCasesExportScope,
+    useStore: useGarageCasesExportStore,
+    open,
+    messages,
+  });
 
   useEffect(() => {
     if (initialBranchId && !selectedBranchId) {
@@ -56,135 +78,73 @@ export function useGarageCaseExportLogic(initialBranchId?: string) {
     }
   }, [initialBranchId, selectedBranchId]);
 
-  const handlePeriodChange = createPeriodChangeHandler(
-    setPeriod,
-    setDateFrom,
-    setDateTo,
+  const filterCount = useMemo(
+    () => countFilterKeys(tableQuery?.filtersStr),
+    [tableQuery?.filtersStr],
   );
 
-  useEffect(() => {
-    const nextPeriod = periodFromExactRange(dateFrom, dateTo);
-    setPeriod((prev) => (prev === nextPeriod ? prev : nextPeriod));
-  }, [dateFrom, dateTo]);
-
   const handleStartExport = async () => {
-    if (!dateFrom || !dateTo) {
+    const branchId = selectedBranchId || undefined;
+
+    if (exportMode === "by-current-filter") {
+      await exporter.start(
+        {
+          mode: "by-current-filter",
+          date_from: tableQuery?.date_from,
+          date_to: tableQuery?.date_to,
+          q: tableQuery?.q,
+          sorts: tableQuery?.sorts,
+          filtersStr: tableQuery?.filtersStr,
+        },
+        branchHeaders(branchId),
+      );
+      return;
+    }
+
+    if (!period.dateFrom || !period.dateTo) {
       toast.error(
         t(
-          "cases.exportDrawer.missingDateRange",
+          "exportJobs.missingDateRange",
           "Vui lòng chọn đầy đủ ngày bắt đầu và ngày kết thúc.",
         ),
       );
       return;
     }
 
-    try {
-      setExporting(true);
-      const branchName = selectedBranchId
-        ? branches?.find((b: any) => b.externalId === selectedBranchId)?.name
-        : undefined;
-
-      const exportParams: ExportCompletedCasesParams = {
-        date_from: dateFrom,
-        date_to: dateTo,
+    await exporter.start(
+      {
+        mode: "by-period",
+        date_from: period.dateFrom,
+        date_to: period.dateTo,
         date_type: dateType,
-        branchId: selectedBranchId || undefined,
         classification: selectedClassification || undefined,
         status: selectedStatus,
-      };
-
-      const fileName = await garageApi.exportCompletedCasesExcel(exportParams);
-
-      const newItem: GarageCaseExportHistoryItem = {
-        id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-        createdAt: new Date().toISOString(),
-        dateFrom,
-        dateTo,
-        dateType,
-        branchId: selectedBranchId || undefined,
-        branchName,
-        classification: selectedClassification || undefined,
-        status: selectedStatus,
-        fileName,
-      };
-
-      addHistoryItem(newItem);
-      toast.success(
-        t(
-          "cases.exportDrawer.exportSuccess",
-          "Xuất Excel bảng kê phiếu dịch vụ thành công.",
-        ),
-      );
-    } catch (error: any) {
-      toast.error(
-        error?.response?.data?.message ||
-          error?.message ||
-          t(
-            "cases.exportDrawer.exportFailed",
-            "Xuất Excel thất bại, vui lòng thử lại.",
-          ),
-      );
-    } finally {
-      setExporting(false);
-    }
-  };
-
-  const handleDownloadAgain = async (item: GarageCaseExportHistoryItem) => {
-    if (downloadingId) return;
-    try {
-      setDownloadingId(item.id);
-      await garageApi.exportCompletedCasesExcel({
-        date_from: item.dateFrom,
-        date_to: item.dateTo,
-        date_type: item.dateType,
-        branchId: item.branchId,
-        classification: item.classification,
-        status: item.status,
-        customFileName: item.fileName,
-      });
-      toast.success(
-        t("cases.exportDrawer.downloadAgainSuccess", "Đang tải lại file XLSX."),
-      );
-    } catch (error: any) {
-      toast.error(
-        error?.message ||
-          t(
-            "cases.exportDrawer.downloadFailed",
-            "Không thể tải file, vui lòng thử lại sau.",
-          ),
-      );
-    } finally {
-      setDownloadingId(null);
-    }
+      },
+      branchHeaders(branchId),
+    );
   };
 
   return {
     t,
+    historyLabels: history,
+    modeLabels,
+    periodLabels,
+    exportMode,
+    setExportMode,
     period,
-    setPeriod,
-    dateFrom,
-    setDateFrom,
-    dateTo,
-    setDateTo,
     dateType,
     setDateType,
     selectedBranchId,
-    setSelectedBranchId,
     selectedClassification,
     setSelectedClassification,
     selectedStatus,
     setSelectedStatus,
-    exporting,
-    downloadingId,
-    historyItems,
     branchOptions,
     classificationOptions,
     dateTypeOptions,
     statusOptions,
-    periodOptions,
-    handlePeriodChange,
+    filterCount,
+    exporter,
     handleStartExport,
-    handleDownloadAgain,
-    handleClearHistory,
   };
 }

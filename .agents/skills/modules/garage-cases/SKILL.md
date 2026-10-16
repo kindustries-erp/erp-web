@@ -199,3 +199,19 @@ src/modules/garage/
 ### 7.1. Draft phân loại (2026-10-14)
 - `useDraftCategorySelection` (`components/drawer/hooks/`): state nháp `categoryId` + `classification`. `setDraftCategoryId(null)` xóa luôn `classification` nháp; `reset` dùng cho khởi tạo/Hủy.
 - `useUpdateGarageCaseConfig` invalidate thêm `["garage-case-code"]` để drawer không giữ dữ liệu cũ sau khi đổi phân loại ở danh sách.
+
+## 8. Xuất Excel nền (cases & công nợ) — lớp dùng chung `shared/export-jobs`
+
+Cùng cơ chế với "Xuất Excel hóa đơn": tạo job nền → tiến độ SSE → tự tải khi xong → lịch sử 24 giờ tải lại. Lớp dùng chung nằm ở `src/shared/export-jobs/` (không phụ thuộc garage):
+- `createExportProgressStore()` — mỗi luồng 1 store zustand (cases, công nợ KH, công nợ NCC) trong `modules/garage/export/garageExportScopes.ts`.
+- `useBackgroundExportProgress(scope, store, enabled)` — kết nối SSE (`fetchEventSource` + Bearer) và `downloadReadyFile`.
+- `useBackgroundExport({ scope, useStore, open, messages })` — `useMutation` tạo job (body đúng DTO API, `forbidNonWhitelisted`), `useQuery` lịch sử (poll 10s khi SSE mất), tự tải chỉ job do phiên này tạo, tái dùng file (`reused`) tải ngay.
+- `ExportModeSelector` (`by-period` | `by-current-filter`), `ExportHistoryTable` (nhãn truyền qua props, i18n ở `garage:exportJobs.*`).
+- `exportPeriod.ts` (hàm thuần, có test biên: tuần ISO vắt năm, tháng 2 nhuận, quý) + `useExportPeriod` + `ExportPeriodPicker`: tab **Tuần | Tháng | Quý | Tùy chỉnh**; tuần = 12 tuần gần nhất (thứ Hai–Chủ nhật), tháng = 24 tháng, quý = 3 năm; chỉ tab Tùy chỉnh mở khóa ô ngày. Kết quả luôn là `dateFrom/dateTo` (`YYYY-MM-DD`) nên payload API không đổi.
+- Drawer cases và công nợ **dùng chung bố cục** qua `modules/garage/export/GarageExportSections.tsx` (`GarageExportModeAndPeriod`, `GarageExportStartButton`, `GarageExportHistoryPanel`): `layout="2-columns"`, trái = lịch sử, phải = chế độ + kỳ + nút Xuất. Cases thêm nhóm "Loại ngày / Phân loại / Trạng thái" (`GarageCaseExportExtraFields`, chỉ ở chế độ theo kỳ); công nợ thêm PillTabs đối tượng KH/NCC, mặc định Tùy chỉnh từ `2026-07-01` đến hôm nay.
+- Invoice **chưa** chuyển sang lớp này (vẫn dùng `useInvoiceExportProgress` + `useInvoiceExportProgressStore`); có thể gộp sau.
+
+**Cases**: `GarageCaseExportDrawer` nhận `tableQuery` (từ `useGarageCasesTable().exportQuery`: `date_from/date_to` = `caseDate`, `filtersStr`, `sorts`) qua `GarageCasesTable.onExportExcel(query)` → `GarageCases` giữ state. Chế độ `by-current-filter` chỉ hiện khi có `tableQuery`; chi nhánh gửi qua header `x-greenway-branch-id` (không đưa vào body). Lịch sử localStorage cũ đã bỏ, thay bằng lịch sử server.
+
+**Công nợ**: `GarageDebtsExportDrawer` (đối tượng KH/NCC, kỳ mặc định từ `GARAGE_DEBT_BASELINE_DATE = 2026-07-01`) nhận `context` = `buildGarageDebtsExportContext(kind, listHook)` do `GarageDebtsTable`/`GaragePayablesTable` truyền qua `onOpenExportDrawer(context)`. Đổi đối tượng khác bảng đang mở thì tự về `by-period`. CSV client-side (`*.export.ts`) đã gỡ.
+

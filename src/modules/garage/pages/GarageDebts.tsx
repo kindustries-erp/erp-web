@@ -7,6 +7,7 @@ import { GarageDebtsExportDrawer } from "../components/organisms/garage-debts-ex
 import { GarageDebtsTable } from "../components/organisms/garage-debts-table";
 import { GaragePayablesTable } from "../components/organisms/garage-payables-table";
 import { GarageSupplierDetailDrawer } from "../components/organisms/garage-supplier-detail-drawer";
+import type { GarageDebtsExportContext } from "../export/garageDebtsExportContext";
 import { ErpUrlQueryParam } from "@/shared/constants/urlParams";
 import type { TabItem } from "@/shared/components/PageLayout";
 
@@ -39,6 +40,14 @@ export function GarageDebts({
   });
 
   const [exportDrawerOpen, setExportDrawerOpen] = useState(false);
+  const [exportContext, setExportContext] = useState<
+    GarageDebtsExportContext | undefined
+  >(undefined);
+
+  const openExportDrawer = useCallback((context?: GarageDebtsExportContext) => {
+    setExportContext(context ?? { kind: "customers" });
+    setExportDrawerOpen(true);
+  }, []);
   const [selectedCustomer, setSelectedCustomer] = useState<{
     code: string;
     name: string;
@@ -91,7 +100,7 @@ export function GarageDebts({
           tabs={pageTabs}
           activeTab={activeTab}
           onTabChange={handleTabChange}
-          onExportClick={() => setExportDrawerOpen(true)}
+          onExportClick={() => openExportDrawer()}
           onOpenCustomerDetail={(code, name) =>
             setSelectedCustomer({
               code,
@@ -111,7 +120,7 @@ export function GarageDebts({
             setSelectedCustomer({ ...cust, debtType: "payables" })
           }
           onOpenSupplierDetail={setSelectedSupplier}
-          onOpenExportDrawer={() => setExportDrawerOpen(true)}
+          onOpenExportDrawer={openExportDrawer}
         />
       )}
 
@@ -123,7 +132,7 @@ export function GarageDebts({
           onOpenCustomerDetail={(cust) =>
             setSelectedCustomer({ ...cust, debtType: "receivables" })
           }
-          onOpenExportDrawer={() => setExportDrawerOpen(true)}
+          onOpenExportDrawer={openExportDrawer}
         />
       )}
 
@@ -157,6 +166,7 @@ export function GarageDebts({
         open={exportDrawerOpen}
         onClose={() => setExportDrawerOpen(false)}
         branchId={selectedBranchId || undefined}
+        context={exportContext}
       />
     </>
   );
