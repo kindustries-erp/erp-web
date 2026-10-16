@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { useT } from "@/core/i18n";
@@ -7,6 +7,7 @@ import {
   type BankStatementExportHistoryItem,
 } from "@/modules/bank-statements/api/bankStatementApi";
 import { useBankStatementExportProgress } from "@/modules/bank-statements/hooks/useBankStatementExportProgress";
+import { useBankStatementExportProgressStore } from "@/shared/stores/useBankStatementExportProgressStore";
 import { useBankStatementExportSync } from "./BankStatementExportDrawer.sync.hook";
 import { useBankStatementExportForm } from "./BankStatementExportDrawer.form.hook";
 import type { BankStatementExportMode } from "./BankStatementExportDrawer.type";
@@ -34,6 +35,9 @@ export function useBankStatementExportDrawer({
   const [downloadingJobId, setDownloadingJobId] = useState<string | null>(null);
   const [trackedJobId, setTrackedJobId] = useState<string | null>(null);
 
+  const downloadedJobIdsRef = useRef<Set<string>>(new Set());
+  const progress = useBankStatementExportProgressStore();
+
   const formHook = useBankStatementExportForm({ type, accountsData });
   const { downloadReadyFile } = useBankStatementExportProgress();
 
@@ -43,6 +47,22 @@ export function useBankStatementExportDrawer({
     enabled: open,
     staleTime: 30_000,
     refetchOnWindowFocus: false,
+    refetchInterval: (query) => {
+      if (!open) return false;
+      const data = query.state.data as
+        | { items?: Array<{ status: string; jobId: string }> }
+        | undefined;
+      const hasRunningFromHistory = Boolean(
+        data?.items?.some((item) => item.status === "RUNNING"),
+      );
+      const isJobTracked = Boolean(
+        trackedJobId && !downloadedJobIdsRef.current.has(trackedJobId),
+      );
+      if (hasRunningFromHistory || isJobTracked || progress.isRunning) {
+        return 2500;
+      }
+      return false;
+    },
   });
 
   const handleDownload = useCallback(
@@ -76,12 +96,18 @@ export function useBankStatementExportDrawer({
     [downloadingJobId, downloadReadyFile, historyQuery, t],
   );
 
-  const { progress } = useBankStatementExportSync({
+  useBankStatementExportSync({
     open,
     trackedJobId,
     historyData: historyQuery.data,
     refetchHistory: historyQuery.refetch,
     onDownload: handleDownload,
+    downloadedJobIdsRef,
+    onJobFinished: (finishedJobId) => {
+      if (trackedJobId === finishedJobId) {
+        setTrackedJobId(null);
+      }
+    },
   });
 
   const handleStartExport = async () => {
