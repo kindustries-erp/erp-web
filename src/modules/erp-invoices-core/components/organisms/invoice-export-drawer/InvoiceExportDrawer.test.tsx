@@ -116,7 +116,11 @@ vi.mock("@/shared/components/ui/Button", () => ({
 }));
 
 vi.mock("@/core/components/ui/Tooltip", () => ({
-  Tooltip: ({ children }: any) => <>{children}</>,
+  Tooltip: ({ content, children }: any) => (
+    <span title={content} aria-label={content}>
+      {children}
+    </span>
+  ),
 }));
 
 vi.mock("@/shared/components/ActionDropdown", () => ({
@@ -369,5 +373,26 @@ describe("InvoiceExportDrawer", () => {
         ]),
       }),
     );
+  });
+
+  it("triggers history refetch when clicking the refresh button in titleExtra", () => {
+    mockRefetch.mockClear();
+
+    render(
+      <InvoiceExportDrawer
+        open={true}
+        onClose={() => {}}
+        direction="IN"
+        buildBaseQuery={() => ({})}
+      />,
+    );
+
+    const refreshButton = screen.getByRole("button", {
+      name: "Làm mới lịch sử",
+    });
+    expect(refreshButton).toBeInTheDocument();
+
+    fireEvent.click(refreshButton);
+    expect(mockRefetch).toHaveBeenCalled();
   });
 });

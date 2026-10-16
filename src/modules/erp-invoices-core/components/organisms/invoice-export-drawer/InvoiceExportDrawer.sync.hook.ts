@@ -85,7 +85,7 @@ export function useInvoiceExportSync({
       const eventAgeMs = progress.lastEventAt
         ? now - progress.lastEventAt
         : Infinity;
-      return progress.sseConnected && eventAgeMs < 20_000 ? false : 10_000;
+      return progress.sseConnected && eventAgeMs < 20_000 ? false : 3_000;
     },
   });
 
@@ -109,6 +109,20 @@ export function useInvoiceExportSync({
       if (historyItem) {
         downloadedJobIdsRef.current.add(trackedJobId);
         void handleDownload(trackedJobId, historyItem.fileName);
+      }
+
+      const failedItem = historyQuery.data?.items?.find(
+        (it) => it.jobId === trackedJobId && it.status === "FAILED",
+      );
+      if (failedItem) {
+        progress.setProgress({
+          jobId: trackedJobId,
+          isRunning: false,
+          completed: false,
+          ready: false,
+          failed: true,
+          message: failedItem.message,
+        });
       }
     }
 

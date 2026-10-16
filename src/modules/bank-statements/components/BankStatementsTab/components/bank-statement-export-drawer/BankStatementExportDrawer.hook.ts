@@ -26,7 +26,6 @@ export function useBankStatementExportDrawer({
   buildBaseQuery,
 }: UseBankStatementExportDrawerProps) {
   const t = useT();
-
   const [exportMode, setExportMode] =
     useState<BankStatementExportMode>("by-period");
   const [page, setPage] = useState(1);
@@ -37,7 +36,6 @@ export function useBankStatementExportDrawer({
 
   const downloadedJobIdsRef = useRef<Set<string>>(new Set());
   const progress = useBankStatementExportProgressStore();
-
   const formHook = useBankStatementExportForm({ type, accountsData });
   const { downloadReadyFile } = useBankStatementExportProgress();
 
@@ -50,18 +48,12 @@ export function useBankStatementExportDrawer({
     refetchInterval: (query) => {
       if (!open) return false;
       const data = query.state.data as
-        | { items?: Array<{ status: string; jobId: string }> }
+        | { items?: Array<{ status: string }> }
         | undefined;
-      const hasRunningFromHistory = Boolean(
-        data?.items?.some((item) => item.status === "RUNNING"),
-      );
-      const isJobTracked = Boolean(
-        trackedJobId && !downloadedJobIdsRef.current.has(trackedJobId),
-      );
-      if (hasRunningFromHistory || isJobTracked || progress.isRunning) {
-        return 2500;
-      }
-      return false;
+      const hasRunning = data?.items?.some((it) => it.status === "RUNNING");
+      const isJobTracked =
+        trackedJobId && !downloadedJobIdsRef.current.has(trackedJobId);
+      return hasRunning || isJobTracked || progress.isRunning ? 2500 : false;
     },
   });
 
@@ -74,9 +66,7 @@ export function useBankStatementExportDrawer({
         typeof jobIdOrRow === "string" ? jobIdOrRow : jobIdOrRow.jobId;
       const fileName =
         typeof jobIdOrRow === "string" ? customFileName : jobIdOrRow.fileName;
-
       if (downloadingJobId) return;
-
       try {
         setDownloadingJobId(jobId);
         await downloadReadyFile(jobId, fileName);
@@ -104,9 +94,7 @@ export function useBankStatementExportDrawer({
     onDownload: handleDownload,
     downloadedJobIdsRef,
     onJobFinished: (finishedJobId) => {
-      if (trackedJobId === finishedJobId) {
-        setTrackedJobId(null);
-      }
+      if (trackedJobId === finishedJobId) setTrackedJobId(null);
     },
   });
 
@@ -114,7 +102,6 @@ export function useBankStatementExportDrawer({
     try {
       setStarting(true);
       let payload: any = {};
-
       if (exportMode === "by-current-filter") {
         const baseQuery = buildBaseQuery ? buildBaseQuery() : {};
         const restQuery = { ...baseQuery };
@@ -122,6 +109,7 @@ export function useBankStatementExportDrawer({
         delete restQuery.pageSize;
         payload = {
           sourceType: type === "bank" ? "BANK" : "CASH",
+          selected_columns: formHook.selectedColumns,
           ...restQuery,
         };
       } else {
@@ -138,6 +126,7 @@ export function useBankStatementExportDrawer({
           sourceType: type === "bank" ? "BANK" : "CASH",
           startDate: `${formHook.dateFrom} 00:00:00`,
           endDate: `${formHook.dateTo} 23:59:59`,
+          selected_columns: formHook.selectedColumns,
         };
         if (formHook.selectedAccountId) {
           if (type === "bank")
