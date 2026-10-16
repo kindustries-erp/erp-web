@@ -3,12 +3,6 @@ import { render, screen } from "@testing-library/react";
 import React from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { GarageDebts } from "../GarageDebts";
-import { useHasPermission } from "@/shared/hooks/useHasPermission";
-import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
-
-vi.mock("@/shared/hooks/useHasPermission", () => ({
-  useHasPermission: vi.fn(),
-}));
 
 vi.mock("@/modules/garage/store/garageStore", () => ({
   useGarageStore: () => ({ selectedBranchId: "branch-01" }),
@@ -55,11 +49,15 @@ vi.mock("@/modules/garage/hooks/useGarageDebtsDashboard", () => ({
   }),
 }));
 
-vi.mock("../../components/organisms/garage-cashflow-list", () => ({
-  GarageCashflowList: (props: any) => (
-    <div data-testid="garage-cashflow-list" data-active-tab={props.activeTab}>
-      Garage Cashflow List
-    </div>
+vi.mock("../../components/organisms/garage-debts-table", () => ({
+  GarageDebtsTable: () => (
+    <div data-testid="garage-debts-table">Debts Table</div>
+  ),
+}));
+
+vi.mock("../../components/organisms/garage-payables-table", () => ({
+  GaragePayablesTable: () => (
+    <div data-testid="garage-payables-table">Payables Table</div>
   ),
 }));
 
@@ -73,9 +71,7 @@ describe("GarageDebts Page RBAC & Tabs", () => {
     });
   });
 
-  it("renders default tabs without cashflow when user lacks GARAGE_CASHFLOW:READ", () => {
-    vi.mocked(useHasPermission).mockReturnValue(false);
-
+  it("renders default 3 tabs (Tổng quan, Phải thu, Phải trả) without cashflow tab", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <GarageDebts />
@@ -87,67 +83,39 @@ describe("GarageDebts Page RBAC & Tabs", () => {
     expect(screen.getByText("Phải thu")).toBeInTheDocument();
     expect(screen.getByText("Phải trả")).toBeInTheDocument();
     expect(screen.queryByText("Thu chi xưởng")).not.toBeInTheDocument();
+    expect(screen.queryByText("Thu chi garage")).not.toBeInTheDocument();
   });
 
-  it("renders cashflow tab when user has GARAGE_CASHFLOW:READ permission", () => {
-    vi.mocked(useHasPermission).mockImplementation(
-      (resource: string, action?: string) => {
-        if (
-          resource === ErpResource.GARAGE_CASHFLOW &&
-          action === ErpAction.READ
-        ) {
-          return true;
-        }
-        return false;
-      },
-    );
-
+  it("renders receivables tab when initialTab is receivables", () => {
     render(
       <QueryClientProvider client={queryClient}>
-        <GarageDebts />
+        <GarageDebts initialTab="receivables" />
+      </QueryClientProvider>,
+    );
+
+    expect(screen.getByTestId("garage-debts-table")).toBeInTheDocument();
+  });
+
+  it("renders payables tab when initialTab is payables", () => {
+    render(
+      <QueryClientProvider client={queryClient}>
+        <GarageDebts initialTab="payables" />
+      </QueryClientProvider>,
+    );
+
+    expect(screen.getByTestId("garage-payables-table")).toBeInTheDocument();
+  });
+
+  it("falls back to overview tab when initialTab is legacy cashflow", () => {
+    render(
+      <QueryClientProvider client={queryClient}>
+        <GarageDebts initialTab="cashflow" />
       </QueryClientProvider>,
     );
 
     expect(screen.getByText("Tổng quan")).toBeInTheDocument();
-    expect(screen.getByText("Phải thu")).toBeInTheDocument();
-    expect(screen.getByText("Phải trả")).toBeInTheDocument();
-    expect(screen.getByText("Thu chi xưởng")).toBeInTheDocument();
-  });
-
-  it("renders GarageCashflowList when active tab is cashflow and user has permission", () => {
-    vi.mocked(useHasPermission).mockImplementation(
-      (resource: string, action?: string) => {
-        if (
-          resource === ErpResource.GARAGE_CASHFLOW &&
-          action === ErpAction.READ
-        ) {
-          return true;
-        }
-        return false;
-      },
-    );
-
-    render(
-      <QueryClientProvider client={queryClient}>
-        <GarageDebts initialTab="cashflow" />
-      </QueryClientProvider>,
-    );
-
-    expect(screen.getByTestId("garage-cashflow-list")).toBeInTheDocument();
-  });
-
-  it("falls back to overview tab when initialTab is cashflow but user lacks permission", () => {
-    vi.mocked(useHasPermission).mockReturnValue(false);
-
-    render(
-      <QueryClientProvider client={queryClient}>
-        <GarageDebts initialTab="cashflow" />
-      </QueryClientProvider>,
-    );
-
     expect(
       screen.queryByTestId("garage-cashflow-list"),
     ).not.toBeInTheDocument();
-    expect(screen.getByText("Tổng quan")).toBeInTheDocument();
   });
 });

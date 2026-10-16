@@ -211,6 +211,11 @@ const GarageOpex = lazy(() =>
     default: m.GarageOpex,
   })),
 );
+const GarageCashflowPage = lazy(() =>
+  import("@/modules/garage/pages/GarageCashflowPage").then((m) => ({
+    default: m.GarageCashflowPage,
+  })),
+);
 
 const GaragePartners = lazy(() =>
   import("@/modules/garage/pages/GaragePartners").then((m) => ({
@@ -286,7 +291,7 @@ const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   "garage-dashboard": () => <GarageCasesPage initialTab="overview" />,
   "garage-cases": GarageCasesPage,
   "garage-opex": GarageOpex,
-  "garage-cashflow": () => <GaragePartners initialTab="cashflow" />,
+  "garage-cashflow": GarageCashflowPage,
   "garage-customers": GaragePartners,
   "garage-partners": GaragePartners,
   "garage-debts": GaragePartners,
@@ -315,6 +320,7 @@ const PAGE_PRELOADERS: Partial<Record<PageKey, PageLoader>> = {
   "erp-inventory-tracking-parts": () =>
     import("@/pages/inventory/InventoryTrackingPartsPage"),
   "erp-finished-goods": () => import("@/pages/manufacturing/FinishedGoodsPage"),
+  "garage-cashflow": () => import("@/modules/garage/pages/GarageCashflowPage"),
   "garage-partners": () => import("@/modules/garage/pages/GarageDebts"),
   "garage-debts": () => import("@/modules/garage/pages/GarageDebts"),
   "invoice-debts": () => import("@/pages/InvoiceDebtsPage"),

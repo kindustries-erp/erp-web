@@ -24,7 +24,7 @@ vi.mock("@/core/i18n", () => ({
       "nav.items.erpEmployees": "Nhân sự",
       "nav.sections.garage": "DỊCH VỤ GARAGE",
       "nav.items.garageCases": "Vụ việc Garage",
-      "nav.items.garageCashflow": "Dòng tiền xưởng",
+      "nav.items.garageCashflow": "Thu chi garage",
       "nav.items.garageServicesGroup": "Dịch vụ Garage",
       "nav.items.garageDebts": "Công nợ garage",
       "nav.items.garageOpex": "Chi phí vận hành Garage",
@@ -57,26 +57,39 @@ describe("SidebarNav RBAC Guard", () => {
     expect(screen.getByText("Vụ việc Garage")).toBeDefined();
     expect(screen.getByText("Công nợ garage")).toBeDefined();
     expect(screen.getByText("Chi phí vận hành Garage")).toBeDefined();
-    expect(screen.queryByText("Dòng tiền xưởng")).toBeNull();
+    expect(screen.queryByText("Thu chi garage")).toBeNull();
   });
 
-  it("hides GARAGE section when user lacks cases and debts permissions", () => {
+  it("renders GARAGE section with Thu chi garage when user only has GARAGE_CASHFLOW permission", () => {
     vi.mocked(useHasPermission).mockImplementation((resource) => {
       if (resource === ErpResource.GARAGE_CASHFLOW) return true;
       return false;
     });
 
     render(
-      <SidebarNav c={false} currentPage="garage-debts" navTo={mockNavTo} />,
+      <SidebarNav c={false} currentPage="garage-cashflow" navTo={mockNavTo} />,
     );
 
-    expect(screen.queryByText("Dòng tiền xưởng")).toBeNull();
+    expect(screen.getByText("Thu chi garage")).toBeDefined();
     expect(screen.queryByText("Vụ việc Garage")).toBeNull();
     expect(screen.queryByText("Công nợ garage")).toBeNull();
     expect(screen.queryByText("Chi phí vận hành Garage")).toBeNull();
   });
 
-  it("displays flat Garage items and OPEX but never displays standalone Dòng tiền xưởng when user has GARAGE permission", () => {
+  it("hides GARAGE section when user lacks all garage permissions", () => {
+    vi.mocked(useHasPermission).mockReturnValue(false);
+
+    render(
+      <SidebarNav c={false} currentPage="garage-debts" navTo={mockNavTo} />,
+    );
+
+    expect(screen.queryByText("Thu chi garage")).toBeNull();
+    expect(screen.queryByText("Vụ việc Garage")).toBeNull();
+    expect(screen.queryByText("Công nợ garage")).toBeNull();
+    expect(screen.queryByText("Chi phí vận hành Garage")).toBeNull();
+  });
+
+  it("displays all 4 flat Garage items when user has full garage permissions", () => {
     vi.mocked(useHasPermission).mockImplementation((resource) => {
       if (resource === ErpResource.GARAGE) return true;
       if (resource === ErpResource.GARAGE_DEBTS) return true;
@@ -88,7 +101,7 @@ describe("SidebarNav RBAC Guard", () => {
       <SidebarNav c={false} currentPage="garage-cases" navTo={mockNavTo} />,
     );
 
-    expect(screen.queryByText("Dòng tiền xưởng")).toBeNull();
+    expect(screen.getByText("Thu chi garage")).toBeDefined();
     expect(screen.getByText("Vụ việc Garage")).toBeDefined();
     expect(screen.getByText("Công nợ garage")).toBeDefined();
     expect(screen.getByText("Chi phí vận hành Garage")).toBeDefined();

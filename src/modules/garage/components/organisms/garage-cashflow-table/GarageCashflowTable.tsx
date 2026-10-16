@@ -5,6 +5,7 @@ import { createColumnHeaderFilter } from "@/shared/components/DataTable/createCo
 import type { GarageCashflowVoucher } from "../../../api/garageCashflowApi";
 import type { GarageCashflowTableProps } from "./GarageCashflowTable.type";
 import { useGarageCashflowTable } from "./GarageCashflowTable.hook";
+import { useT } from "@/core/i18n";
 import {
   getGarageCashflowColumns,
   getGarageCashflowRowActions,
@@ -21,6 +22,7 @@ export const GarageCashflowTable: React.FC<GarageCashflowTableProps> = ({
   onOpenCaseDetail,
   canDelete = true,
 }) => {
+  const t = useT();
   const tableHook = useGarageCashflowTable();
 
   const filterBuilder = useMemo(
@@ -65,8 +67,11 @@ export const GarageCashflowTable: React.FC<GarageCashflowTableProps> = ({
 
   return (
     <SpreadsheetPageTemplate
-      title="Thu chi xưởng"
-      desc="Quản lý Thu/Chi nội bộ tại xưởng và đối soát với dòng tiền ERP"
+      title={t("nav.items.garageCashflow", "Thu chi garage")}
+      desc={t(
+        "garage.cashflow.desc",
+        "Quản lý Thu/Chi nội bộ tại xưởng và đối soát với dòng tiền ERP",
+      )}
       icon={<ReceiptText className="w-5 h-5 text-slate-700" />}
       tabs={tabs}
       activeTab={activeTab}

@@ -15,6 +15,7 @@ vi.mock("@/core/i18n", () => ({
   useT: () => (key: string, fallback?: string) => {
     const map: Record<string, string> = {
       "nav.sections.garage": "GARAGE",
+      "nav.items.garageCashflow": "Thu chi garage",
       "nav.items.garageCases": "Phiếu dịch vụ",
       "nav.items.garageDebts": "Công nợ garage",
       "nav.items.garageOpex": "Chi phí vận hành Garage",
@@ -30,15 +31,17 @@ describe("useGarageNavSection hook", () => {
     vi.clearAllMocks();
   });
 
-  it("returns independent cases, debts, and opex permissions", () => {
+  it("returns independent cashflow, cases, debts, and opex permissions", () => {
     vi.mocked(useHasPermission).mockReturnValue(true);
     const { result } = renderHook(() =>
-      useGarageNavSection({ currentPage: "garage-cases", navTo: mockNavTo }),
+      useGarageNavSection({ currentPage: "garage-cashflow", navTo: mockNavTo }),
     );
+    expect(result.current.canReadGarageCashflow).toBe(true);
     expect(result.current.canReadGarageCases).toBe(true);
     expect(result.current.canReadGarageDebts).toBe(true);
     expect(result.current.canReadGarageOpex).toBe(true);
-    expect(result.current.isCasesActive).toBe(true);
+    expect(result.current.isCashflowActive).toBe(true);
+    expect(result.current.isCasesActive).toBe(false);
     expect(result.current.isDebtsActive).toBe(false);
     expect(result.current.isOpexActive).toBe(false);
   });
@@ -98,9 +101,33 @@ describe("GarageNavSection component", () => {
 
     expect(container.firstChild).toBeNull();
     expect(screen.queryByText("GARAGE")).toBeNull();
+    expect(screen.queryByText("Thu chi garage")).toBeNull();
     expect(screen.queryByText("Phiếu dịch vụ")).toBeNull();
     expect(screen.queryByText("Công nợ garage")).toBeNull();
     expect(screen.queryByText("Chi phí vận hành Garage")).toBeNull();
+  });
+
+  it("renders only cashflow when user has only GARAGE_CASHFLOW permission", () => {
+    vi.mocked(useHasPermission).mockImplementation((resource) => {
+      return resource === ErpResource.GARAGE_CASHFLOW;
+    });
+
+    render(
+      <GarageNavSection
+        collapsed={false}
+        currentPage="garage-cashflow"
+        navTo={mockNavTo}
+      />,
+    );
+
+    expect(screen.getByText("GARAGE")).toBeInTheDocument();
+    expect(screen.getByText("Thu chi garage")).toBeInTheDocument();
+    expect(screen.queryByText("Phiếu dịch vụ")).toBeNull();
+    expect(screen.queryByText("Công nợ garage")).toBeNull();
+    expect(screen.queryByText("Chi phí vận hành Garage")).toBeNull();
+
+    fireEvent.click(screen.getByText("Thu chi garage"));
+    expect(mockNavTo).toHaveBeenCalledWith("garage-cashflow");
   });
 
   it("renders only debts when user has GARAGE_DEBTS permission", () => {
@@ -117,33 +144,47 @@ describe("GarageNavSection component", () => {
     );
 
     expect(screen.getByText("GARAGE")).toBeInTheDocument();
+    expect(screen.queryByText("Thu chi garage")).toBeNull();
     expect(screen.queryByText("Phiếu dịch vụ")).toBeNull();
     expect(screen.getByText("Công nợ garage")).toBeInTheDocument();
     expect(screen.queryByText("Chi phí vận hành Garage")).toBeNull();
   });
 
-  it("renders 3 flat nav items when user has GARAGE and GARAGE_DEBTS permission", () => {
+  it("renders 4 flat nav items with Thu chi garage positioned above Phiếu dịch vụ", () => {
     vi.mocked(useHasPermission).mockImplementation((resource) => {
       return (
-        resource === ErpResource.GARAGE || resource === ErpResource.GARAGE_DEBTS
+        resource === ErpResource.GARAGE ||
+        resource === ErpResource.GARAGE_DEBTS ||
+        resource === ErpResource.GARAGE_CASHFLOW
       );
     });
 
-    render(
+    const { container } = render(
       <GarageNavSection
         collapsed={false}
-        currentPage="garage-cases"
+        currentPage="garage-cashflow"
         navTo={mockNavTo}
       />,
     );
 
     expect(screen.getByText("GARAGE")).toBeInTheDocument();
+    expect(screen.getByText("Thu chi garage")).toBeInTheDocument();
     expect(screen.getByText("Phiếu dịch vụ")).toBeInTheDocument();
     expect(screen.getByText("Công nợ garage")).toBeInTheDocument();
     expect(screen.getByText("Chi phí vận hành Garage")).toBeInTheDocument();
 
+    // Verify order in DOM: Thu chi garage is before Phiếu dịch vụ
+    const items = container.querySelectorAll(".nav-label");
+    const labels = Array.from(items).map((el) => el.textContent?.trim());
+    expect(labels).toEqual([
+      "Thu chi garage",
+      "Phiếu dịch vụ",
+      "Công nợ garage",
+      "Chi phí vận hành Garage",
+    ]);
+
     // Verify click triggers navigation
-    fireEvent.click(screen.getByText("Công nợ garage"));
-    expect(mockNavTo).toHaveBeenCalledWith("garage-debts");
+    fireEvent.click(screen.getByText("Thu chi garage"));
+    expect(mockNavTo).toHaveBeenCalledWith("garage-cashflow");
   });
 });
