@@ -11,6 +11,7 @@ export interface GarageCashflowVoucher {
   amount: number;
   paymentMethod?: string;
   paymentContent?: string;
+  paymentStatus?: "PENDING" | "APPROVED" | "PAID" | null;
   referenceNumber?: string;
   caseId?: string;
   erpBankTransactionId?: string;
@@ -48,6 +49,7 @@ export interface CreateGarageCashflowVoucherDto {
   note?: string;
   paymentMethod?: string;
   paymentContent?: string;
+  paymentStatus?: "PENDING" | "APPROVED" | "PAID";
   referenceNumber?: string;
   caseId?: string;
   erpBankTransactionId?: string;

@@ -80,3 +80,34 @@ export const renderPaymentContentCell = (row: GarageCashflowVoucher) => {
     </span>
   );
 };
+
+const STATUS_BADGE_STYLES: Record<string, string> = {
+  PENDING: "bg-amber-500/10 text-amber-600 border-amber-500/20",
+  APPROVED: "bg-indigo-500/10 text-indigo-600 border-indigo-500/20",
+  PAID: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
+};
+
+const STATUS_LABELS: Record<string, string> = {
+  PENDING: "Chờ duyệt",
+  APPROVED: "Đã duyệt",
+  PAID: "Đã chi",
+};
+
+export const renderPaymentStatusCell = (row: GarageCashflowVoucher) => {
+  if (row.voucherType !== "PAYMENT" || !row.paymentStatus) {
+    return <span className="text-muted-foreground">—</span>;
+  }
+
+  const badgeStyle =
+    STATUS_BADGE_STYLES[row.paymentStatus] ||
+    "bg-slate-500/10 text-slate-600 border-slate-500/20";
+  const label = STATUS_LABELS[row.paymentStatus] || row.paymentStatus;
+
+  return (
+    <span
+      className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${badgeStyle}`}
+    >
+      {label}
+    </span>
+  );
+};

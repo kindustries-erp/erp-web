@@ -47,6 +47,21 @@ export const GarageCashflowDrawerGeneralSection: React.FC<
     },
   ];
 
+  const paymentStatusOptions = [
+    {
+      label: t("garage:cashflowDrawer.statusPending", "Chờ duyệt"),
+      value: "PENDING",
+    },
+    {
+      label: t("garage:cashflowDrawer.statusApproved", "Đã duyệt"),
+      value: "APPROVED",
+    },
+    {
+      label: t("garage:cashflowDrawer.statusPaid", "Đã chi"),
+      value: "PAID",
+    },
+  ];
+
   const caseFallbackLabel = voucher?.case?.soChungTu
     ? voucher.case.bienSoXe
       ? `${voucher.case.bienSoXe} - ${voucher.case.soChungTu}`
@@ -100,7 +115,14 @@ export const GarageCashflowDrawerGeneralSection: React.FC<
             <Combobox
               value={formData.voucherType || ""}
               onChange={(val) =>
-                setFormData((prev) => ({ ...prev, voucherType: val as any }))
+                setFormData((prev) => ({
+                  ...prev,
+                  voucherType: val as any,
+                  paymentStatus:
+                    val === "PAYMENT"
+                      ? prev.paymentStatus || "PENDING"
+                      : undefined,
+                }))
               }
               options={voucherTypeOptions}
               placeholder={t(
@@ -109,6 +131,30 @@ export const GarageCashflowDrawerGeneralSection: React.FC<
               )}
             />
           </DrawerField>
+          {formData.voucherType === "PAYMENT" && (
+            <DrawerField
+              label={t(
+                "garage:cashflowDrawer.paymentStatus",
+                "Trạng thái thanh toán",
+              )}
+              required
+            >
+              <Combobox
+                value={formData.paymentStatus || "PENDING"}
+                onChange={(val) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    paymentStatus: val as any,
+                  }))
+                }
+                options={paymentStatusOptions}
+                placeholder={t(
+                  "garage:cashflowDrawer.selectPlaceholder",
+                  "— Chọn —",
+                )}
+              />
+            </DrawerField>
+          )}
           <DrawerField
             label={t("garage:cashflowDrawer.paymentMethod", "Phương thức TT")}
           >

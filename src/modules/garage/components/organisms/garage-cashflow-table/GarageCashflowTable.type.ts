@@ -20,4 +20,10 @@ export const PAYMENT_METHOD_OPTIONS = [
   { label: "Khác", value: "Khác" },
 ];
 
+export const PAYMENT_STATUS_OPTIONS = [
+  { label: "Chờ duyệt", value: "PENDING" },
+  { label: "Đã duyệt", value: "APPROVED" },
+  { label: "Đã chi", value: "PAID" },
+];
+
 export { PAYMENT_CONTENT_OPTIONS } from "../../molecules/payment-content-combobox";

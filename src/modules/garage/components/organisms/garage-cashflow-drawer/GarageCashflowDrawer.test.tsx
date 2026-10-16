@@ -405,6 +405,34 @@ describe("GarageCashflowDrawer Organism", () => {
       ).not.toBeInTheDocument();
       expect(screen.getByText("Tạo Phiếu Thu Chi Mới")).toBeInTheDocument();
       expect(screen.getByText("THÔNG TIN CHUNG")).toBeInTheDocument();
+      // Default is RECEIPT -> Payment status field should be hidden
+      expect(
+        screen.queryByText("Trạng thái thanh toán"),
+      ).not.toBeInTheDocument();
+    });
+
+    it("renders payment status row in view mode for PAYMENT voucher", () => {
+      vi.mocked(useHasPermission).mockReturnValue(true);
+
+      const paymentVoucher = {
+        ...sampleVoucher,
+        voucherType: "PAYMENT",
+        paymentStatus: "PAID",
+      };
+
+      render(
+        <QueryClientProvider client={queryClient}>
+          <GarageCashflowDrawer
+            open={true}
+            onClose={vi.fn()}
+            voucher={paymentVoucher}
+            initialMode="view"
+          />
+        </QueryClientProvider>,
+      );
+
+      expect(screen.getByText("Trạng thái")).toBeInTheDocument();
+      expect(screen.getByText("Đã chi")).toBeInTheDocument();
     });
   });
 });

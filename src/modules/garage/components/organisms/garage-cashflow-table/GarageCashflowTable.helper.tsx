@@ -149,4 +149,5 @@ export const renderLicensePlateCell = (row: GarageCashflowVoucher) => {
 export {
   renderPaymentMethodCell,
   renderPaymentContentCell,
+  renderPaymentStatusCell,
 } from "./GarageCashflowTable.paymentCells";

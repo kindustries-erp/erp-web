@@ -9,6 +9,7 @@ import {
   renderLicensePlateCell,
   renderPaymentMethodCell,
   renderPaymentContentCell,
+  renderPaymentStatusCell,
 } from "./GarageCashflowTable.helper";
 import { getGarageCashflowColumns } from "./GarageCashflowTable.columns";
 import type { GarageCashflowVoucher } from "../../../api/garageCashflowApi";
@@ -258,6 +259,53 @@ describe("GarageCashflowTable", () => {
     });
   });
 
+  describe("renderPaymentStatusCell", () => {
+    it("renders dash for RECEIPT voucher", () => {
+      const mockReceipt = { ...mockRow, voucherType: "RECEIPT" } as any;
+      render(<div>{renderPaymentStatusCell(mockReceipt)}</div>);
+      expect(screen.getByText("—")).toBeInTheDocument();
+    });
+
+    it("renders Chờ duyệt for PAYMENT with PENDING status", () => {
+      const mockPayment = {
+        ...mockRow,
+        voucherType: "PAYMENT",
+        paymentStatus: "PENDING",
+      } as any;
+      const { container } = render(
+        <div>{renderPaymentStatusCell(mockPayment)}</div>,
+      );
+      expect(screen.getByText("Chờ duyệt")).toBeInTheDocument();
+      expect(container.innerHTML).toContain("text-amber-600");
+    });
+
+    it("renders Đã duyệt for PAYMENT with APPROVED status", () => {
+      const mockPayment = {
+        ...mockRow,
+        voucherType: "PAYMENT",
+        paymentStatus: "APPROVED",
+      } as any;
+      const { container } = render(
+        <div>{renderPaymentStatusCell(mockPayment)}</div>,
+      );
+      expect(screen.getByText("Đã duyệt")).toBeInTheDocument();
+      expect(container.innerHTML).toContain("text-indigo-600");
+    });
+
+    it("renders Đã chi for PAYMENT with PAID status", () => {
+      const mockPayment = {
+        ...mockRow,
+        voucherType: "PAYMENT",
+        paymentStatus: "PAID",
+      } as any;
+      const { container } = render(
+        <div>{renderPaymentStatusCell(mockPayment)}</div>,
+      );
+      expect(screen.getByText("Đã chi")).toBeInTheDocument();
+      expect(container.innerHTML).toContain("text-emerald-600");
+    });
+  });
+
   describe("getGarageCashflowColumns", () => {
     it("sets column width to 160 for paymentMethod and paymentContent", () => {
       const mockFilterBuilder = vi.fn((key) => key) as any;
@@ -288,6 +336,8 @@ describe("GarageCashflowTable", () => {
       );
 
       const keys = columns.map((c) => c.key);
+      const chiIndex = keys.indexOf("chi");
+      expect(keys[chiIndex + 1]).toBe("paymentStatus");
       const paymentIndex = keys.indexOf("paymentMethod");
       expect(paymentIndex).toBeGreaterThan(-1);
       expect(keys[paymentIndex + 1]).toBe("paymentContent");
