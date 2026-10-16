@@ -251,6 +251,7 @@ export interface ErpInvoiceListParams {
   column_search?: string;
   column_filters?: string;
   unlinked_po_id?: string;
+  selected_columns?: string[];
 }
 
 export interface ErpInvoiceTotals {

@@ -1,6 +1,7 @@
 import React from "react";
 import { Play } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { PillTabs } from "@/shared/components/PillTabs";
 import { DrawerSection } from "@/shared/components/DrawerModal";
 import { Combobox } from "@/shared/components/Combobox";
 import { DatePicker } from "@/shared/components/DatePicker";
@@ -15,9 +16,14 @@ import { InvoiceExportFilterPreview } from "./InvoiceExportFilterPreview";
 export interface InvoiceExportConditionSectionProps {
   exportMode: InvoiceExportMode;
   onExportModeChange: (mode: InvoiceExportMode) => void;
+  periodType?: "month" | "quarter" | "custom";
+  onPeriodTypeChange?: (type: "month" | "quarter" | "custom") => void;
   period: string;
   onPeriodChange: (period?: string) => void;
   periodOptions: Array<{ value: string; label: string }>;
+  quarter?: string;
+  onQuarterChange?: (quarter?: string) => void;
+  quarterOptions?: Array<{ value: string; label: string }>;
   dateFrom?: string;
   onDateFromChange: (val?: string) => void;
   dateTo?: string;
@@ -38,9 +44,14 @@ export interface InvoiceExportConditionSectionProps {
 export function InvoiceExportConditionSection({
   exportMode,
   onExportModeChange,
+  periodType = "month",
+  onPeriodTypeChange,
   period,
   onPeriodChange,
   periodOptions,
+  quarter = "",
+  onQuarterChange,
+  quarterOptions = [],
   dateFrom,
   onDateFromChange,
   dateTo,
@@ -75,21 +86,79 @@ export function InvoiceExportConditionSection({
 
         {exportMode === "by-period" ? (
           <>
-            <div>
-              <label className="text-xs font-medium text-muted-foreground block mb-1">
-                {t("erpInvoices:exportDrawer.period", "Kỳ")}
-              </label>
-              <Combobox
-                options={periodOptions}
-                value={period}
-                onChange={(v) => onPeriodChange(v ?? "")}
-                placeholder={t(
-                  "erpInvoices:exportDrawer.selectPeriod",
-                  "Chọn kỳ...",
-                )}
-                allowClear={false}
-              />
-            </div>
+            {onPeriodTypeChange && (
+              <div className="pt-0.5 pb-0.5">
+                <PillTabs<"month" | "quarter" | "custom">
+                  size="sm"
+                  variant="pill"
+                  className="w-full shrink-0"
+                  listClassName="w-full grid grid-cols-3"
+                  triggerClassName="justify-center flex-1"
+                  value={periodType}
+                  onValueChange={onPeriodTypeChange}
+                  items={[
+                    {
+                      value: "month",
+                      label: t(
+                        "erpInvoices:exportDrawer.periodTypeMonth",
+                        "Theo tháng",
+                      ),
+                    },
+                    {
+                      value: "quarter",
+                      label: t(
+                        "erpInvoices:exportDrawer.periodTypeQuarter",
+                        "Theo quý",
+                      ),
+                    },
+                    {
+                      value: "custom",
+                      label: t(
+                        "erpInvoices:exportDrawer.periodTypeCustom",
+                        "Tùy chỉnh",
+                      ),
+                    },
+                  ]}
+                />
+              </div>
+            )}
+
+            {periodType === "month" && (
+              <div>
+                <label className="text-xs font-medium text-muted-foreground block mb-1">
+                  {t("erpInvoices:exportDrawer.period", "Kỳ")}
+                </label>
+                <Combobox
+                  options={periodOptions}
+                  value={period}
+                  onChange={(v) => onPeriodChange(v ?? "")}
+                  placeholder={t(
+                    "erpInvoices:exportDrawer.selectPeriod",
+                    "Chọn kỳ...",
+                  )}
+                  allowClear={false}
+                />
+              </div>
+            )}
+
+            {periodType === "quarter" && (
+              <div>
+                <label className="text-xs font-medium text-muted-foreground block mb-1">
+                  {t("erpInvoices:exportDrawer.quarter", "Quý")}
+                </label>
+                <Combobox
+                  options={quarterOptions}
+                  value={quarter}
+                  onChange={(v) => onQuarterChange?.(v ?? "")}
+                  placeholder={t(
+                    "erpInvoices:exportDrawer.selectQuarter",
+                    "Chọn quý...",
+                  )}
+                  allowClear={false}
+                />
+              </div>
+            )}
+
             <div>
               <label className="text-xs font-medium text-muted-foreground block mb-1">
                 {t("erpInvoices:exportDrawer.dateFrom", "Từ ngày")}
