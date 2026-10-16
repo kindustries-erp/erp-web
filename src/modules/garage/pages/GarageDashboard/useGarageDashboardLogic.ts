@@ -1,8 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery, useQueryClient, useIsFetching } from "@tanstack/react-query";
-import { format } from "date-fns";
-import toast from "react-hot-toast";
 import { garageDashboardApi } from "../../api/garageDashboardApi";
 import type { GarageDashboardProps } from "./types";
 
@@ -10,7 +8,7 @@ export function useGarageDashboardLogic(props: GarageDashboardProps = {}) {
   const { tabs, activeTab, onTabChange } = props;
   const { t } = useTranslation("garage");
   const queryClient = useQueryClient();
-  const [isExporting, setIsExporting] = useState(false);
+  const [exportDrawerOpen, setExportDrawerOpen] = useState(false);
 
   const isFetchingStats = useIsFetching({
     queryKey: ["garage-dashboard-stats"],
@@ -32,27 +30,8 @@ export function useGarageDashboardLogic(props: GarageDashboardProps = {}) {
     queryFn: () => garageDashboardApi.getCheckpointKpis(),
   });
 
-  const handleExportExcel = async () => {
-    try {
-      setIsExporting(true);
-      const blob = await garageDashboardApi.exportExcel();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      const timestamp = format(new Date(), "yyyyMMdd_HHmmss");
-      a.download = `Bao_cao_Tong_quan_Garage_${timestamp}.xlsx`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      window.URL.revokeObjectURL(url);
-      toast.success("Đã tải xuống file báo cáo Garage");
-    } catch (error) {
-      console.error(error);
-      toast.error("Lỗi khi xuất báo cáo Garage");
-    } finally {
-      setIsExporting(false);
-    }
-  };
+  const openExportDrawer = () => setExportDrawerOpen(true);
+  const closeExportDrawer = () => setExportDrawerOpen(false);
 
   const handleRefresh = () => {
     queryClient.invalidateQueries({ queryKey: ["garage-checkpoint-kpis"] });
@@ -69,8 +48,9 @@ export function useGarageDashboardLogic(props: GarageDashboardProps = {}) {
     activeTab,
     onTabChange,
     isRefreshing,
-    isExporting,
-    handleExportExcel,
+    exportDrawerOpen,
+    openExportDrawer,
+    closeExportDrawer,
     handleRefresh,
     statsData,
     isLoadingStats,

@@ -52,6 +52,13 @@ export const garageVi = {
     services: "Chi tiết phiếu DV",
   },
   dashboard: {
+    exportExcel: "Xuất Excel",
+    exportDrawer: {
+      title: "Xuất Excel báo cáo Garage",
+      subtitle:
+        "Báo cáo theo kỳ gồm Dashboard thu chi & công nợ (cảnh báo quá hạn), báo cáo lợi nhuận theo tháng, công nợ theo nhóm đối tượng và thu chi trong kỳ. Tải lại file đã tạo trong 24 tiếng",
+      note: "Đã thu, đã chi theo ngày giao dịch phiếu thu chi xưởng; nợ còn mở và tuổi nợ tính đến ngày xuất. Báo cáo lợi nhuận tính theo tháng chứa ngày kết thúc kỳ, chart hiển thị 12 tháng gần nhất.",
+    },
     title: "Tổng quan Garage",
     desc: "Báo cáo tổng quan hiệu quả hoạt động xưởng dịch vụ, doanh thu, chi phí và tình trạng phiếu sửa chữa",
     kpis: {

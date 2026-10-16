@@ -21,9 +21,8 @@ import {
   RotateCcw,
 } from "lucide-react";
 import { GarageCaseStandaloneDrawer } from "./GarageCaseStandaloneDrawer";
+import { GarageDashboardExportDrawer } from "./GarageDashboardExportDrawer";
 import { cn } from "@/shared/utils";
-import toast from "react-hot-toast";
-import { format } from "date-fns";
 
 export interface GarageCheckpointDrawerProps {
   open: boolean;
@@ -81,7 +80,7 @@ export function GarageCheckpointDrawer({
   >("all");
   const [classification, setClassification] = useState<string>("ALL");
   const [selectedCaseCode, setSelectedCaseCode] = useState<string | null>(null);
-  const [isExporting, setIsExporting] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: [
@@ -113,31 +112,6 @@ export function GarageCheckpointDrawer({
   const summary = data?.summary;
   const classificationSummary = data?.classificationSummary;
 
-  const handleExportExcel = async () => {
-    try {
-      setIsExporting(true);
-      const blob = await garageDashboardApi.exportExcel({
-        date_from: dateFrom,
-        date_to: dateTo,
-      });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      const timestamp = format(new Date(), "yyyyMMdd_HHmmss");
-      a.download = `Bao_cao_Chi_tiet_Garage_${periodLabel.replace(/\s+/g, "_")}_${timestamp}.xlsx`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      window.URL.revokeObjectURL(url);
-      toast.success("Đã tải xuống file Excel báo cáo");
-    } catch (error) {
-      console.error(error);
-      toast.error("Lỗi khi xuất file Excel");
-    } finally {
-      setIsExporting(false);
-    }
-  };
-
   const handleResetFilters = () => {
     setSearch("");
     setPaymentStatus("all");
@@ -168,8 +142,7 @@ export function GarageCheckpointDrawer({
               variant="outline"
               size="sm"
               className="h-7 text-xs gap-1"
-              disabled={isExporting}
-              onClick={handleExportExcel}
+              onClick={() => setExportOpen(true)}
             >
               <Download className="w-3.5 h-3.5" />
               Xuất Excel
@@ -672,6 +645,11 @@ export function GarageCheckpointDrawer({
         }
       />
 
+      <GarageDashboardExportDrawer
+        open={exportOpen}
+        onClose={() => setExportOpen(false)}
+        initialRange={{ from: dateFrom, to: dateTo }}
+      />
       <GarageCaseStandaloneDrawer
         isOpen={!!selectedCaseCode}
         caseCode={selectedCaseCode}

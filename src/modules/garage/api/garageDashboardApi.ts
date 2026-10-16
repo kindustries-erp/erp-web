@@ -363,17 +363,6 @@ export const garageDashboardApi = {
     return data;
   },
 
-  exportExcel: async (params?: {
-    date_from?: string;
-    date_to?: string;
-  }): Promise<Blob> => {
-    const { data } = await axiosInstance.get(`${BASE}/export`, {
-      params,
-      responseType: "blob",
-    });
-    return data;
-  },
-
   getMonthlyReceivablesBreakdown: async (params: {
     month?: string;
     horizon?: string;

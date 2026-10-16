@@ -49,9 +49,11 @@ Module `garage-dashboard` (được hiện thực tại `src/kgara-api-core/` v�
       - Donut Chart Phân Bổ Trạng Thái Phiếu DV (Hoàn tất, Đang xử lý, Báo giá, Tiếp nhận, Hủy).
     - **Tầng 3**: Bảng `<DataTable variant="spreadsheet">` chi tiết 4 phân loại ERP chuẩn `/standardize-table` (STT `#` 40px center, No Blue Mandate, SubtotalSummaryCell footer).
   - Dữ liệu tính toán độc lập tại `conversionFunnel` & `conversionFunnelByMonth` trong `garage-dashboard.service.ts`, phản hồi tức thì theo kỳ tháng được chọn.
-- **Xuất Báo Cáo Excel Chuyên Nghiệp**:
-  - `exportExcel`: Báo cáo Tổng quan Garage 2 sheets (Tổng quan tháng & Chi tiết phiếu dịch vụ).
-  - `exportPnlExcel`: Báo cáo P&L theo tháng chi tiết từng dòng doanh thu, chi phí, OPEX, hoa hồng và lợi nhuận ròng.
+- **Xuất Báo Cáo Excel Theo Kỳ (cập nhật 2026-10-16)**:
+  - Nút **Xuất Excel** ở `GarageDashboard` (và nút xuất trong `GarageCheckpointDrawer`, kỳ đặt sẵn = kỳ của checkpoint) mở `GarageDashboardExportDrawer` (`components/GarageDashboardExportDrawer/`, hook `useGarageDashboardExport`): `StandardFormDrawer` 2 cột, trái là lịch sử xuất (`GarageExportHistoryPanel`), phải là chọn kỳ Tuần/Tháng/Quý/Tùy chỉnh (`GarageExportModeAndPeriod`, không có chế độ theo filter) và nút Xuất. Mặc định tháng hiện tại; prop `initialRange` đặt sẵn kỳ tùy chỉnh.
+  - Cơ chế nền dùng `useBackgroundExport` với `garageDashboardExportScope` (`/api/v1/greenway/dashboard/export`), payload `{ from, to }`, header chi nhánh từ `useGarageStore` / chi nhánh đầu tiên. `garageDashboardApi.exportExcel` (tải blob trực tiếp) đã **xóa**.
+  - File Excel gồm sheet Dashboard thu chi & công nợ (card cảnh báo quá hạn + 4 KPI + 3 chart có nhãn, gọn một màn hình), sheet Báo cáo lợi nhuận (bảng P&L tháng báo cáo + 2 chart xếp dọc: combo 12 tháng và tỷ trọng chi phí), các sheet nhóm phải thu, phải trả, nợ quá hạn, thu chi trong kỳ (chi tiết ở skill API `garage-dashboard`).
+  - `exportPnlExcel`: Báo cáo P&L theo tháng chi tiết từng dòng doanh thu, chi phí, OPEX, hoa hồng và lợi nhuận ròng (không đổi).
 
 ---
 
@@ -112,7 +114,7 @@ erp-api/src/kgara-api-core/
 
 erp-web/src/modules/garage/
 ├── api/
-│   ├── garageDashboardApi.ts           # Axios Client gọi API stats, checkpoint-kpis, pnl-report, export
+│   ├── garageDashboardApi.ts           # Axios Client gọi API stats, checkpoint-kpis, pnl-report
 │   └── garageOpexApi.ts                # Axios Client gọi CRUD opex, columnOptions, applyRecurring, exportPnl
 ├── components/
 │   ├── GaragePnlSection.tsx            # Báo cáo P&L dạng bảng phân cấp card-shadow, đối soát dòng con tháng trước
@@ -139,7 +141,7 @@ Resource RBAC: `garage`
 | `GET` | `/checkpoint-kpis` | `{ resource: 'garage', action: 'read' }` | — | KPIs Sparkline Tháng/Tuần/Hôm nay |
 | `GET` | `/checkpoint-cases` | `{ resource: 'garage', action: 'read' }` | `date_from`, `date_to`, `page`, `pageSize` | Danh sách vụ việc chi tiết theo checkpoint |
 | `GET` | `/customers` | `{ resource: 'garage', action: 'read' }` | Query pagination, filters, sort | Danh sách khách hàng kèm doanh thu, lãi gộp & nợ |
-| `GET` | `/export` | `{ resource: 'garage', action: 'read' }` | `date_from`, `date_to` | Xuất file Excel báo cáo tổng quan 2 sheets |
+| `POST` | `/export/background` | `garage:read` + `garage_debts:read` | body `{ from?, to? }` | Job nền xuất báo cáo Garage theo kỳ (history, download, SSE cùng prefix `/export`). Thay endpoint cũ `GET /export` đã xóa |
 | `GET` | `/opex` | `{ resource: 'garage', action: 'read' }` | `year`, `month`, `date_from`, `date_to`, `page`, `pageSize`, `sorts`, `columnFilters`, `columnSearch` | Danh sách chi phí vận hành có phân trang, sort, filter |
 | `GET` | `/opex/column-options`| `{ resource: 'garage', action: 'read' }` | `column`, `search`, `page`, `pageSize`, `filtersStr` | Danh sách giá trị phân biệt phục vụ Header Filter |
 | `GET` | `/opex/:id` | `{ resource: 'garage', action: 'read' }` | `id` (uuid) | Chi tiết một khoản chi phí vận hành |

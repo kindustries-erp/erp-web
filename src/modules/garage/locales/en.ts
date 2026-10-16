@@ -52,6 +52,13 @@ export const garageEn = {
     services: "Service Lines Detail",
   },
   dashboard: {
+    exportExcel: "Export Excel",
+    exportDrawer: {
+      title: "Export Garage report to Excel",
+      subtitle:
+        "Period report with a collections & debt dashboard (overdue alerts), monthly profit report, receivables by partner group and cash in/out for the period. Re-download files created in the last 24 hours",
+      note: "Collected and paid amounts follow the cashflow voucher date; open debt and aging are calculated as of the export date. The profit report covers the month containing the period end date, with charts for the last 12 months.",
+    },
     title: "Garage Dashboard",
     desc: "Overview of workshop performance, revenue, cost, and service order statuses",
     kpis: {

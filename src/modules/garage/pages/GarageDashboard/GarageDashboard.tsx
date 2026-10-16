@@ -6,6 +6,7 @@ import { Button } from "@/shared/components/ui/Button";
 import { GarageStatsCards } from "../../components/GarageStatsCards";
 import { GarageConversionFunnelCard } from "../../components/GarageConversionFunnelCard";
 import { GaragePnlSection } from "../../components/GaragePnlSection";
+import { GarageDashboardExportDrawer } from "../../components/GarageDashboardExportDrawer";
 
 import type { GarageDashboardProps } from "./types";
 import { useGarageDashboardLogic } from "./useGarageDashboardLogic";
@@ -17,8 +18,9 @@ export function GarageDashboard(props: GarageDashboardProps = {}) {
     activeTab,
     onTabChange,
     isRefreshing,
-    isExporting,
-    handleExportExcel,
+    exportDrawerOpen,
+    openExportDrawer,
+    closeExportDrawer,
     handleRefresh,
     statsData,
     isLoadingStats,
@@ -41,13 +43,12 @@ export function GarageDashboard(props: GarageDashboardProps = {}) {
       onTabChange={onTabChange}
       extraActions={
         <Button
-          onClick={handleExportExcel}
-          disabled={isExporting}
+          onClick={openExportDrawer}
           variant="outline"
           className="h-8 gap-1"
         >
           <Download className="h-4 w-4" />
-          Xuất Excel
+          {t("dashboard.exportExcel", "Xuất Excel")}
         </Button>
       }
     >
@@ -74,6 +75,11 @@ export function GarageDashboard(props: GarageDashboardProps = {}) {
         {/* Section 3: Báo cáo Lợi nhuận (P&L) Section (Header + Chart Xu Hướng + Bảng P&L) */}
         <GaragePnlSection />
       </div>
+
+      <GarageDashboardExportDrawer
+        open={exportDrawerOpen}
+        onClose={closeExportDrawer}
+      />
     </DashboardTemplate>
   );
 }

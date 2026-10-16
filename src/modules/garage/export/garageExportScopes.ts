@@ -21,6 +21,11 @@ export const garageCasesExportScope = makeScope(
   "garage-cases",
   `${BASE}/cases/export/excel`,
 );
+/** Báo cáo Garage theo kỳ ở tab Tổng quan (`GARAGE` + `GARAGE_DEBTS`). */
+export const garageDashboardExportScope = makeScope(
+  "garage-dashboard",
+  `${BASE}/dashboard/export`,
+);
 /** Xuất công nợ tổng hợp - cả khách hàng và nhà cung cấp (`GARAGE_DEBTS`). */
 export const garageAllDebtsExportScope = makeScope(
   "garage-all-debts",
@@ -38,6 +43,7 @@ export const garageSuppliersDebtExportScope = makeScope(
 );
 
 export const useGarageCasesExportStore = createExportProgressStore();
+export const useGarageDashboardExportStore = createExportProgressStore();
 export const useGarageAllDebtsExportStore = createExportProgressStore();
 export const useGarageCustomersDebtExportStore = createExportProgressStore();
 export const useGarageSuppliersDebtExportStore = createExportProgressStore();
@@ -53,6 +59,12 @@ export interface GarageCasesExportPayload {
   q?: string;
   sorts?: string[];
   filtersStr?: string;
+}
+
+/** Body xuất nền báo cáo Garage theo kỳ (khớp `GarageDashboardExportDto`). */
+export interface GarageDashboardExportPayload {
+  from?: string;
+  to?: string;
 }
 
 /** Body xuất nền công nợ (khớp `GarageDebtsExportDto`). */
