@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate";
 import { useGarageStore } from "@/modules/garage/store/garageStore";
 import { useGarageSuppliersList } from "@/modules/garage/hooks/useGarageSuppliersList";
-import { Truck, Eye, FileSpreadsheet } from "lucide-react";
+import { Truck, Eye, FileSpreadsheet, DownloadCloud } from "lucide-react";
 import type { ActionDropdownItem } from "@/shared/components/ActionDropdown";
 import type {
   GaragePayablesTableProps,
@@ -34,6 +34,8 @@ export const GaragePayablesTable: React.FC<GaragePayablesTableProps> = ({
   onOpenCustomerDetail,
   onOpenSupplierDetail,
   onOpenExportDrawer,
+  canSyncGarage,
+  onSyncCases,
 }) => {
   const { t } = useTranslation(["garage", "debts", "common"]);
   const { selectedBranchId } = useGarageStore();
@@ -154,7 +156,7 @@ export const GaragePayablesTable: React.FC<GaragePayablesTableProps> = ({
   const createActions = useMemo<ActionDropdownItem[]>(
     () => [
       {
-        groupLabel: t("common:search", "Tra cứu"),
+        groupLabel: t("debts.actions.exportGroup", "Báo cáo & Xuất file"),
         items: [
           {
             label: t("debts.exportDetailed", "Xuất Excel theo kỳ / Nâng cao"),
@@ -163,8 +165,22 @@ export const GaragePayablesTable: React.FC<GaragePayablesTableProps> = ({
           },
         ],
       },
+      ...(canSyncGarage && onSyncCases
+        ? [
+            {
+              groupLabel: t("cases.actions.syncOptions", "Tùy chọn đồng bộ"),
+              items: [
+                {
+                  label: t("cases.actions.syncCases", "Đồng bộ phiếu dịch vụ"),
+                  icon: <DownloadCloud className="w-4 h-4 text-blue-600" />,
+                  onClick: onSyncCases,
+                },
+              ],
+            },
+          ]
+        : []),
     ],
-    [handleOpenExport, t],
+    [canSyncGarage, onSyncCases, handleOpenExport, t],
   );
 
   return (
@@ -181,6 +197,11 @@ export const GaragePayablesTable: React.FC<GaragePayablesTableProps> = ({
       tableId="garage-payables-table"
       defaultColumnVisibility={DEFAULT_GARAGE_PAYABLES_COLUMN_VISIBILITY}
       customActionsNode={viewTabsNode}
+      createLabel={t("debts.exportExcel", "Xuất Excel")}
+      createIcon={
+        <FileSpreadsheet className="w-4 h-4 mr-1.5 text-emerald-600" />
+      }
+      onCreate={handleOpenExport}
       createActions={createActions}
       items={listHook.data}
       columns={columns}

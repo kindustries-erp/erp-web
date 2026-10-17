@@ -1,5 +1,6 @@
 import React, { useMemo, useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
+import { useQueryClient } from "@tanstack/react-query";
 import { useGarageStore } from "../store/garageStore";
 import { GarageCustomerDetailDrawer } from "../components/organisms/garage-customer-detail-drawer";
 import { GarageDebtsDashboardTab } from "../components/GarageDebtsDashboardTab";
@@ -7,7 +8,10 @@ import { GarageDebtsExportDrawer } from "../components/organisms/garage-debts-ex
 import { GarageDebtsTable } from "../components/organisms/garage-debts-table";
 import { GaragePayablesTable } from "../components/organisms/garage-payables-table";
 import { GarageSupplierDetailDrawer } from "../components/organisms/garage-supplier-detail-drawer";
+import { GarageCaseSyncDrawer } from "../components/GarageCaseSyncDrawer";
 import type { GarageDebtsExportContext } from "../export/garageDebtsExportContext";
+import { useHasPermission } from "@/shared/hooks/useHasPermission";
+import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
 import { ErpUrlQueryParam } from "@/shared/constants/urlParams";
 import type { TabItem } from "@/shared/components/PageLayout";
 
@@ -19,7 +23,26 @@ export function GarageDebts({
   initialTab = "overview",
 }: GarageDebtsProps = {}) {
   const { t } = useTranslation(["garage", "debts", "common"]);
+  const queryClient = useQueryClient();
   const { selectedBranchId } = useGarageStore();
+
+  const canCreateGarage = useHasPermission(
+    ErpResource.GARAGE,
+    ErpAction.CREATE,
+  );
+  const canUpdateGarage = useHasPermission(
+    ErpResource.GARAGE,
+    ErpAction.UPDATE,
+  );
+  const canSyncGarage = canCreateGarage || canUpdateGarage;
+
+  const [syncDrawerOpen, setSyncDrawerOpen] = useState(false);
+
+  const handleSyncSuccess = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ["garage", "customers"] });
+    queryClient.invalidateQueries({ queryKey: ["garage", "suppliers"] });
+    queryClient.invalidateQueries({ queryKey: ["garage", "debts-dashboard"] });
+  }, [queryClient]);
 
   const getValidTab = useCallback((tab: string | null) => {
     if (
@@ -127,6 +150,8 @@ export function GarageDebts({
           }
           onOpenSupplierDetail={setSelectedSupplier}
           onOpenExportDrawer={openExportDrawer}
+          canSyncGarage={canSyncGarage}
+          onSyncCases={() => setSyncDrawerOpen(true)}
         />
       )}
 
@@ -139,6 +164,8 @@ export function GarageDebts({
             setSelectedCustomer({ ...cust, debtType: "receivables" })
           }
           onOpenExportDrawer={openExportDrawer}
+          canSyncGarage={canSyncGarage}
+          onSyncCases={() => setSyncDrawerOpen(true)}
         />
       )}
 
@@ -174,6 +201,18 @@ export function GarageDebts({
         onClose={() => setExportDrawerOpen(false)}
         branchId={selectedBranchId || undefined}
         context={exportContext}
+      />
+
+      <GarageCaseSyncDrawer
+        open={syncDrawerOpen}
+        onClose={() => setSyncDrawerOpen(false)}
+        onSuccess={handleSyncSuccess}
+        mode="cases"
+        title={t("cases.syncDrawer.titleCases", "Đồng bộ Sổ báo giá")}
+        description={t(
+          "cases.syncDrawer.descCases",
+          "Quét và đồng bộ các phiếu dịch vụ mới từ hệ thống dữ liệu.",
+        )}
       />
     </>
   );

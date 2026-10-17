@@ -41,12 +41,18 @@ export const garageSuppliersDebtExportScope = makeScope(
   "garage-suppliers-debt",
   `${BASE}/payables/suppliers-debt/export`,
 );
+/** Xuất chi phí vận hành Garage (`GARAGE`). */
+export const garageOpexExportScope = makeScope(
+  "garage-opex",
+  `${BASE}/opex/export`,
+);
 
 export const useGarageCasesExportStore = createExportProgressStore();
 export const useGarageDashboardExportStore = createExportProgressStore();
 export const useGarageAllDebtsExportStore = createExportProgressStore();
 export const useGarageCustomersDebtExportStore = createExportProgressStore();
 export const useGarageSuppliersDebtExportStore = createExportProgressStore();
+export const useGarageOpexExportStore = createExportProgressStore();
 
 /** Body xuất nền cases (khớp `GarageCasesExportDto`, không thêm field lạ). */
 export interface GarageCasesExportPayload {
@@ -79,12 +85,27 @@ export interface GarageDebtsExportPayload {
   column_search?: string;
 }
 
+/** Body xuất nền chi phí vận hành (khớp `GarageOpexExportDto`). */
+export interface GarageOpexExportPayload {
+  mode: "by-period" | "by-current-filter";
+  date_from?: string;
+  date_to?: string;
+  year?: number;
+  month?: number;
+  cost_group?: string;
+  category_key?: string;
+  sorts?: string[];
+  column_filters?: string;
+  column_search?: string;
+}
+
 /** Điều kiện của bảng đang xem, truyền từ bảng sang drawer. */
 export type GarageDebtsTableQuery = Omit<GarageDebtsExportPayload, "mode">;
 export type GarageCasesTableQuery = Pick<
   GarageCasesExportPayload,
   "date_from" | "date_to" | "q" | "sorts" | "filtersStr"
 >;
+export type GarageOpexTableQuery = Omit<GarageOpexExportPayload, "mode">;
 
 export function branchHeaders(branchId?: string): Record<string, string> {
   return { "x-greenway-branch-id": branchId || "" };
