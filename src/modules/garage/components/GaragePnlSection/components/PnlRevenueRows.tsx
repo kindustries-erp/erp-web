@@ -121,6 +121,7 @@ export function PnlRevenueRows({
                 amount={curOjRevenue}
                 revenue={report.revenue}
                 hideDelta
+                hideRate
                 tdClassName="py-1.5 px-4 text-right tabular-nums font-mono text-[11px] text-muted-foreground"
               />
               <PnlAmountCell
@@ -128,6 +129,7 @@ export function PnlRevenueRows({
                 revenue={prevReport?.revenue}
                 isLoading={isLoadingPrev}
                 hideDelta
+                hideRate
                 tdClassName="py-1.5 px-4 text-right tabular-nums font-mono text-[11px] text-muted-foreground"
               />
               <PnlAmountCell
@@ -135,6 +137,7 @@ export function PnlRevenueRows({
                 revenue={prev2Report?.revenue}
                 isLoading={isLoadingPrev2}
                 hideDelta
+                hideRate
                 tdClassName="py-1.5 px-4 text-right tabular-nums font-mono text-[11px] text-muted-foreground"
               />
             </tr>

@@ -56,7 +56,10 @@ export function GarageDashboard(props: GarageDashboardProps = {}) {
         {/* Section 1: KPI Hiệu quả Dịch vụ & Tiến độ thu tiền thực tế */}
         <GarageStatsCards />
 
-        {/* Section 2: Pipeline Dự Thu & Phễu Chuyển Đổi Dịch Vụ (3 Cards Độc Lập & Period Picker) */}
+        {/* Section 2: Báo cáo Lợi nhuận (P&L) Section (Header + Chart Xu Hướng + Bảng P&L) */}
+        <GaragePnlSection />
+
+        {/* Section 3: Pipeline Dự Thu & Phễu Chuyển Đổi Dịch Vụ (3 Cards Độc Lập & Period Picker) */}
         <GarageConversionFunnelCard
           funnel={statsData?.conversionFunnel}
           byMonth={statsData?.conversionFunnelByMonth}
@@ -71,9 +74,6 @@ export function GarageDashboard(props: GarageDashboardProps = {}) {
           }
           loading={isLoadingStats || isLoadingKpis}
         />
-
-        {/* Section 3: Báo cáo Lợi nhuận (P&L) Section (Header + Chart Xu Hướng + Bảng P&L) */}
-        <GaragePnlSection />
       </div>
 
       <GarageDashboardExportDrawer

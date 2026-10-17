@@ -61,9 +61,6 @@ export function PnlNetProfitRow({
   const rev1 = isOjOnly ? prevReport?.oj?.revenue : prevReport?.revenue;
   const rev2 = isOjOnly ? prev2Report?.oj?.revenue : prev2Report?.revenue;
 
-  const subCell =
-    "py-1.5 px-4 text-right tabular-nums font-mono text-[11px] text-muted-foreground";
-
   return (
     <>
       {/* VI. Lợi nhuận ròng Header */}
@@ -107,9 +104,9 @@ export function PnlNetProfitRow({
 
       {/* 6.1. Trong đó: Lợi nhuận ròng mảng OJ (Ẩn khi đang xem riêng OJ hoặc collapsed) */}
       {!isOjOnly && !isCollapsed && (
-        <tr className="text-muted-foreground bg-slate-50/30 dark:bg-slate-800/10 hover:bg-muted/10 transition-colors border-b border-border/20">
-          <td className="py-1.5 pl-14 pr-4">
-            <span className="text-[11px] italic">
+        <tr className="text-slate-700 dark:text-slate-300 bg-slate-50/30 dark:bg-slate-800/10 hover:bg-muted/10 transition-colors border-b border-border/20">
+          <td className="py-2 px-8 font-medium">
+            <span>
               {t("pnl.netProfitOjSub", "6.1. Trong đó: Lợi nhuận ròng mảng OJ")}
             </span>
           </td>
@@ -117,21 +114,21 @@ export function PnlNetProfitRow({
             amount={ojNetProfit0 !== 0 ? ojNetProfit0 : 0}
             hideDelta
             hideRate
-            tdClassName={subCell}
+            tdClassName="py-2 px-4 text-right tabular-nums font-mono font-semibold"
           />
           <PnlAmountCell
             amount={ojNetProfit1}
             isLoading={isLoadingPrev}
             hideDelta
             hideRate
-            tdClassName={subCell}
+            tdClassName="py-2 px-4 text-right tabular-nums font-mono text-slate-700 dark:text-slate-300"
           />
           <PnlAmountCell
             amount={ojNetProfit2}
             isLoading={isLoadingPrev2}
             hideDelta
             hideRate
-            tdClassName={subCell}
+            tdClassName="py-2 px-4 text-right tabular-nums font-mono text-muted-foreground"
           />
         </tr>
       )}

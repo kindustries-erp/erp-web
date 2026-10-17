@@ -171,7 +171,12 @@ export function PnlServiceCommissionRows({
             isLoadingPrev2={isLoadingPrev2}
             isOjOnly={isOjOnly}
           />
-          <PnlManualCommissionRows items={manualItems} isOjOnly={isOjOnly} />
+          <PnlManualCommissionRows
+            items={manualItems}
+            isOjOnly={isOjOnly}
+            isLoadingPrev={isLoadingPrev}
+            isLoadingPrev2={isLoadingPrev2}
+          />
         </>
       )}
     </>
