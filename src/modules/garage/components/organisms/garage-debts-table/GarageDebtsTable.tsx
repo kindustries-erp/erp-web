@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate";
 import { useGarageStore } from "@/modules/garage/store/garageStore";
 import { useGarageCustomersList } from "@/modules/garage/hooks/useGarageCustomersList";
-import { Users, Eye, FileSpreadsheet } from "lucide-react";
+import { Users, Eye, FileSpreadsheet, DownloadCloud } from "lucide-react";
 import type { ActionDropdownItem } from "@/shared/components/ActionDropdown";
 import type {
   GarageDebtsTableProps,
@@ -20,7 +20,7 @@ import {
 import {
   GARAGE_RECEIVABLES_COLUMN_VIEW_PRESETS,
   DEFAULT_GARAGE_RECEIVABLES_COLUMN_VISIBILITY,
-  GARAGE_DEBT_FILTER_ITEMS,
+  GARAGE_RECEIVABLE_AGING_FILTER_ITEMS,
 } from "@/modules/garage/utils/garageViewPresets";
 import { GarageViewModeCombobox } from "@/modules/garage/components/molecules/garage-view-mode-combobox";
 
@@ -33,6 +33,8 @@ export const GarageDebtsTable: React.FC<GarageDebtsTableProps> = ({
   onTabChange,
   onOpenCustomerDetail,
   onOpenExportDrawer,
+  canSyncGarage,
+  onSyncCases,
 }) => {
   const { t } = useTranslation(["garage", "debts", "common"]);
   const { selectedBranchId } = useGarageStore();
@@ -77,13 +79,13 @@ export const GarageDebtsTable: React.FC<GarageDebtsTableProps> = ({
       setActiveDebtFilter(val);
       if (val === "ALL") {
         listHook.setColumnFilter("paymentProgress", []);
-        listHook.setColumnFilter("maxAgingDays", []);
+        listHook.setColumnFilter("agingBucket", []);
       } else if (val === "HAS_DEBT") {
         listHook.setColumnFilter("paymentProgress", ["PARTIAL", "UNPAID"]);
-        listHook.setColumnFilter("maxAgingDays", []);
+        listHook.setColumnFilter("agingBucket", []);
       } else {
         listHook.setColumnFilter("paymentProgress", []);
-        listHook.setColumnFilter("maxAgingDays", [val]);
+        listHook.setColumnFilter("agingBucket", [val]);
       }
     },
     [listHook],
@@ -102,7 +104,7 @@ export const GarageDebtsTable: React.FC<GarageDebtsTableProps> = ({
           title: t("debts.filterGroup", { defaultValue: "Trạng thái nợ" }),
           value: activeDebtFilter,
           onChange: handleDebtFilterChange,
-          items: GARAGE_DEBT_FILTER_ITEMS.map((item) => ({
+          items: GARAGE_RECEIVABLE_AGING_FILTER_ITEMS.map((item) => ({
             value: item.value,
             label: item.label,
             dotColor: item.dotColor,
@@ -128,7 +130,7 @@ export const GarageDebtsTable: React.FC<GarageDebtsTableProps> = ({
   const createActions = useMemo<ActionDropdownItem[]>(
     () => [
       {
-        groupLabel: t("common:search", "Tra cứu"),
+        groupLabel: t("debts.actions.exportGroup", "Báo cáo & Xuất file"),
         items: [
           {
             label: t("debts.exportDetailed", "Xuất Excel theo kỳ / Nâng cao"),
@@ -137,8 +139,22 @@ export const GarageDebtsTable: React.FC<GarageDebtsTableProps> = ({
           },
         ],
       },
+      ...(canSyncGarage && onSyncCases
+        ? [
+            {
+              groupLabel: t("cases.actions.syncOptions", "Tùy chọn đồng bộ"),
+              items: [
+                {
+                  label: t("cases.actions.syncCases", "Đồng bộ phiếu dịch vụ"),
+                  icon: <DownloadCloud className="w-4 h-4 text-blue-600" />,
+                  onClick: onSyncCases,
+                },
+              ],
+            },
+          ]
+        : []),
     ],
-    [handleOpenExport, t],
+    [canSyncGarage, onSyncCases, handleOpenExport, t],
   );
 
   return (
@@ -155,6 +171,11 @@ export const GarageDebtsTable: React.FC<GarageDebtsTableProps> = ({
       tableId="garage-debts-table"
       defaultColumnVisibility={DEFAULT_GARAGE_RECEIVABLES_COLUMN_VISIBILITY}
       customActionsNode={viewTabsNode}
+      createLabel={t("debts.exportExcel", "Xuất Excel")}
+      createIcon={
+        <FileSpreadsheet className="w-4 h-4 mr-1.5 text-emerald-600" />
+      }
+      onCreate={handleOpenExport}
       createActions={createActions}
       items={listHook.data}
       columns={columns}

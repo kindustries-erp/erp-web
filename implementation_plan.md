@@ -1,3 +1,35 @@
+# Business Partners trên ERP Web V2
+
+RequestFeedback: false
+
+## Web Frontend
+
+- [x] **Task 3.1.1: Tạo domain/API/query V2**
+  - **DoD**: một module dùng chung CUSTOMER/VENDOR; query V2 ánh xạ đầy đủ hợp đồng API server-side.
+  - **Verification**: `bunx vitest run src/v2/modules/business-partners/api/businessPartnersApi.test.ts`
+- [x] **Task 3.2.1: Xây bảng và page Business Partner V2**
+  - **DoD**: 11 cột, desktop spreadsheet, mobile cards, filter/search/sort/page, preset tương thích V1.
+  - **Verification**: `bunx vitest run src/v2/modules/business-partners/tests/integration/BusinessPartnersPage.test.tsx`
+- [x] **Task 3.3.1: Xây drawer form và confirm delete**
+  - **DoD**: xem/tạo/sửa/xóa mềm, sinh mã, dirty guard, ba section và mutation refresh.
+  - **Verification**: `bunx vitest run src/v2/modules/business-partners/tests/integration/BusinessPartnersPage.test.tsx`
+- [x] **Task 3.2.2: Gắn route, RBAC và menu mobile Danh mục**
+  - **DoD**: `/v2/customers`, `/v2/suppliers`, ẩn route/action theo quyền; mobile truy cập qua Danh mục.
+  - **Verification**: `bunx vitest run src/v2/app/router/v2RouteConfig.test.ts src/v2/app/layouts/v2-app-layout/v2Navigation.test.ts`
+
+## QC & Knowledge
+
+- [x] **Task 4.1.1: Final Gate Web** — `build -> check:style -> full test` PASS trên working tree; wrapper `verify:final` yêu cầu commit sạch.
+- [x] **Task 4.3.1: Cập nhật module skill và walkthrough**
+
+## Session Checkpoint
+
+- **Active Task**: Không còn task đang thực hiện.
+- **Branch**: `erp-master` (behind remote 1 commit lúc bắt đầu)
+- **Verification**: 32 scoped Vitest tests PASS; build/style PASS; full suite 479 files, 2.092 tests PASS, 12 skipped.
+
+---
+
 # Bugfix Garage Debts: Tinh gọn bảng Phải trả và bố trí lại card Thu KH/Thu BH
 
 RequestFeedback: false

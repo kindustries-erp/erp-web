@@ -66,6 +66,8 @@ export interface ListBusinessPartnersParams {
   sortOrder?: string;
   column_filters?: string;
   column_search?: string;
+  column_operators?: string;
+  date_ranges?: string;
   date_from?: string;
   date_to?: string;
   status?: string;
@@ -94,6 +96,10 @@ export const businessPartnersCoreApi = {
           ...(params?.column_search
             ? { column_search: params.column_search }
             : {}),
+          ...(params?.column_operators
+            ? { column_operators: params.column_operators }
+            : {}),
+          ...(params?.date_ranges ? { date_ranges: params.date_ranges } : {}),
           ...(params?.date_from ? { date_from: params.date_from } : {}),
           ...(params?.date_to ? { date_to: params.date_to } : {}),
           ...(params?.status ? { status: params.status } : {}),

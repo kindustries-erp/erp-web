@@ -9,7 +9,7 @@ import {
 } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
-import { GarageDashboardExportDrawer } from "../GarageDashboardExportDrawer";
+import { GarageExportDrawer } from "../GarageExportDrawer";
 import axiosInstance from "@/core/api/axiosInstance";
 import toast from "react-hot-toast";
 
@@ -95,14 +95,19 @@ const historyResponse = {
 };
 
 function renderDrawer(
-  props: Partial<React.ComponentProps<typeof GarageDashboardExportDrawer>> = {},
+  props: Partial<React.ComponentProps<typeof GarageExportDrawer>> = {},
 ) {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   });
   return render(
     <QueryClientProvider client={client}>
-      <GarageDashboardExportDrawer open={true} onClose={vi.fn()} {...props} />
+      <GarageExportDrawer
+        open={true}
+        onClose={vi.fn()}
+        defaultReportType="period-all"
+        {...props}
+      />
     </QueryClientProvider>,
   );
 }
@@ -122,7 +127,16 @@ const exportAndGetCall = async () => {
   return (axiosInstance.post as any).mock.calls[0];
 };
 
-describe("GarageDashboardExportDrawer", () => {
+const ALL_PERIOD_SECTIONS = [
+  "overview",
+  "pnl",
+  "receivables",
+  "payables",
+  "overdue",
+  "cashflow",
+];
+
+describe("GarageExportDrawer - báo cáo kỳ", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.useFakeTimers({ toFake: ["Date"] });
@@ -148,12 +162,16 @@ describe("GarageDashboardExportDrawer", () => {
     expect(screen.queryByText("Theo filter hiện tại")).toBeNull();
   });
 
-  it("mặc định tháng hiện tại: POST { from, to } kèm header chi nhánh", async () => {
+  it("mặc định tháng hiện tại: POST { from, to, reportSections } kèm header chi nhánh", async () => {
     renderDrawer();
     const [url, body, config] = await exportAndGetCall();
 
     expect(url).toBe("/api/v1/greenway/dashboard/export/background");
-    expect(body).toEqual({ from: "2026-10-01", to: "2026-10-31" });
+    expect(body).toEqual({
+      from: "2026-10-01",
+      to: "2026-10-31",
+      reportSections: ALL_PERIOD_SECTIONS,
+    });
     expect(config.headers).toEqual({ "x-greenway-branch-id": "CN-01" });
   });
 
@@ -161,14 +179,22 @@ describe("GarageDashboardExportDrawer", () => {
     renderDrawer();
     await selectTab("Tuần");
     const [, week] = await exportAndGetCall();
-    expect(week).toEqual({ from: "2026-10-12", to: "2026-10-18" });
+    expect(week).toEqual({
+      from: "2026-10-12",
+      to: "2026-10-18",
+      reportSections: ALL_PERIOD_SECTIONS,
+    });
   });
 
   it("tab Quý: gửi cả quý hiện tại", async () => {
     renderDrawer();
     await selectTab("Quý");
     const [, body] = await exportAndGetCall();
-    expect(body).toEqual({ from: "2026-10-01", to: "2026-12-31" });
+    expect(body).toEqual({
+      from: "2026-10-01",
+      to: "2026-12-31",
+      reportSections: ALL_PERIOD_SECTIONS,
+    });
   });
 
   it("tab Tùy chỉnh: thiếu ngày thì báo lỗi và không gọi API", async () => {
@@ -189,6 +215,10 @@ describe("GarageDashboardExportDrawer", () => {
   it("initialRange đặt sẵn kỳ tùy chỉnh khi mở từ drawer chi tiết KPI", async () => {
     renderDrawer({ initialRange: { from: "2026-09-05", to: "2026-09-20" } });
     const [, body] = await exportAndGetCall();
-    expect(body).toEqual({ from: "2026-09-05", to: "2026-09-20" });
+    expect(body).toEqual({
+      from: "2026-09-05",
+      to: "2026-09-20",
+      reportSections: ALL_PERIOD_SECTIONS,
+    });
   });
 });

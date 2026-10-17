@@ -15,12 +15,11 @@ import {
 } from "../utils/garageCaseViewPresets";
 import { GarageCasesTable } from "../components/organisms/garage-cases-table";
 import { GarageCaseStandaloneDrawer } from "../components/GarageCaseStandaloneDrawer";
-import { GarageCaseSyncDrawer } from "../components/GarageCaseSyncDrawer";
 import { GarageCaseViewConfigDrawer } from "../components/GarageCaseViewConfigDrawer";
-import { GarageCaseExportDrawer } from "../components/GarageCaseExportDrawer";
-import type { GarageCasesTableQuery } from "../export/garageExportScopes";
-import { useHasPermission } from "@/shared/hooks/useHasPermission";
-import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
+import {
+  GarageHeaderActionDrawers,
+  useGarageHeaderActions,
+} from "../components/GarageHeaderActions";
 import type { TabItem } from "@/shared/components/PageLayout";
 
 export interface GarageCasesProps {
@@ -77,25 +76,11 @@ export function GarageCases({
   const [drawerEditMode, setDrawerEditMode] = useState<boolean>(false);
   const [drawerInitialTab, setDrawerInitialTab] =
     useState<string>("quote_details");
-  const [syncDrawerOpen, setSyncDrawerOpen] = useState(false);
-  const [syncMode, setSyncMode] = useState<"cases" | "gross-profit">("cases");
   const [viewConfigDrawerOpen, setViewConfigDrawerOpen] = useState(false);
   const [editingViewPreset, setEditingViewPreset] =
     useState<TableViewPreset | null>(null);
-  const [exportDrawerOpen, setExportDrawerOpen] = useState(false);
-  const [exportTableQuery, setExportTableQuery] = useState<
-    GarageCasesTableQuery | undefined
-  >(undefined);
-
-  const canCreateGarage = useHasPermission(
-    ErpResource.GARAGE,
-    ErpAction.CREATE,
-  );
-  const canUpdateGarage = useHasPermission(
-    ErpResource.GARAGE,
-    ErpAction.UPDATE,
-  );
-  const canSyncGarage = canCreateGarage || canUpdateGarage;
+  const headerActions = useGarageHeaderActions();
+  const { canUpdateGarage, canSyncGarage } = headerActions;
 
   const handleColumnPresetChange = (preset: TableViewPreset) => {
     setActiveColumnPresetKey(preset.key);
@@ -196,18 +181,9 @@ export function GarageCases({
         }
         onResetDateRanges={() => setDateRanges({})}
         canSyncGarage={canSyncGarage}
-        onSyncCases={() => {
-          setSyncMode("cases");
-          setSyncDrawerOpen(true);
-        }}
-        onSyncGrossProfit={() => {
-          setSyncMode("gross-profit");
-          setSyncDrawerOpen(true);
-        }}
-        onExportExcel={(query) => {
-          setExportTableQuery(query);
-          setExportDrawerOpen(true);
-        }}
+        onSyncCases={() => headerActions.openSync("cases")}
+        onSyncGrossProfit={() => headerActions.openSync("gross-profit")}
+        onExportExcel={headerActions.openExport}
         onOpenDetail={(code) => {
           setDrawerEditMode(false);
           setDrawerInitialTab("quote_details");
@@ -250,28 +226,6 @@ export function GarageCases({
         }}
         onSuccess={invalidateCases}
       />
-      <GarageCaseSyncDrawer
-        open={syncDrawerOpen}
-        mode={syncMode}
-        title={
-          syncMode === "gross-profit"
-            ? t("cases.syncDrawer.titleGrossProfit", "Đồng bộ Lợi nhuận gộp")
-            : t("cases.syncDrawer.titleCases", "Đồng bộ Sổ báo giá")
-        }
-        description={
-          syncMode === "gross-profit"
-            ? t(
-                "cases.syncDrawer.descGrossProfit",
-                "Cập nhật lại dữ liệu Doanh thu - Chi phí - Lợi nhuận gộp.",
-              )
-            : t(
-                "cases.syncDrawer.descCases",
-                "Đồng bộ phiếu dịch vụ và doanh thu chi phí từ hệ thống Garage về ERP.",
-              )
-        }
-        onClose={() => setSyncDrawerOpen(false)}
-        onSuccess={invalidateCases}
-      />
       <GarageCaseViewConfigDrawer
         open={viewConfigDrawerOpen}
         onClose={() => setViewConfigDrawerOpen(false)}
@@ -280,11 +234,11 @@ export function GarageCases({
         onSave={handleSaveViewPreset}
         onResetDefault={handleResetViewPreset}
       />
-      <GarageCaseExportDrawer
-        open={exportDrawerOpen}
-        onClose={() => setExportDrawerOpen(false)}
-        initialBranchId={activeBranchId}
-        tableQuery={exportTableQuery}
+      <GarageHeaderActionDrawers
+        actions={headerActions}
+        defaultReportType="cases-list"
+        branchId={activeBranchId}
+        onSyncSuccess={invalidateCases}
       />
     </>
   );

@@ -21,7 +21,7 @@ import {
   RotateCcw,
 } from "lucide-react";
 import { GarageCaseStandaloneDrawer } from "./GarageCaseStandaloneDrawer";
-import { GarageDashboardExportDrawer } from "./GarageDashboardExportDrawer";
+import { GarageExportDrawer } from "./GarageExportDrawer";
 import { cn } from "@/shared/utils";
 
 export interface GarageCheckpointDrawerProps {
@@ -645,9 +645,10 @@ export function GarageCheckpointDrawer({
         }
       />
 
-      <GarageDashboardExportDrawer
+      <GarageExportDrawer
         open={exportOpen}
         onClose={() => setExportOpen(false)}
+        defaultReportType="period-all"
         initialRange={{ from: dateFrom, to: dateTo }}
       />
       <GarageCaseStandaloneDrawer

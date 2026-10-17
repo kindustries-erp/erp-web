@@ -104,7 +104,7 @@ export const garageVi = {
       title: "Xuất Excel báo cáo Garage",
       subtitle:
         "Báo cáo theo kỳ gồm Dashboard thu chi & công nợ (cảnh báo quá hạn), báo cáo lợi nhuận theo tháng, công nợ theo nhóm đối tượng và thu chi trong kỳ. Tải lại file đã tạo trong 24 tiếng",
-      note: "Đã thu, đã chi theo ngày giao dịch phiếu thu chi xưởng; nợ còn mở và tuổi nợ tính đến ngày xuất. Báo cáo lợi nhuận tính theo tháng chứa ngày kết thúc kỳ, chart hiển thị 12 tháng gần nhất.",
+      note: "Đã thu, đã chi theo ngày giao dịch phiếu thu chi xưởng; công nợ trong kỳ tính trên phiếu hoàn thành trong kỳ, công nợ lũy kế là nợ còn mở đến ngày xuất. Chart tự gom theo ngày (kỳ ≤ 27 ngày), tuần (28-60 ngày) hoặc tháng (trên 60 ngày). Báo cáo lợi nhuận tính theo tháng chứa ngày kết thúc kỳ.",
     },
     title: "Tổng quan Garage",
     desc: "Báo cáo tổng quan hiệu quả hoạt động xưởng dịch vụ, doanh thu, chi phí và tình trạng phiếu sửa chữa",
@@ -957,6 +957,40 @@ export const garageVi = {
       unknown: "Không rõ",
       total: "Tổng cộng",
       notSynced: "Chưa đồng bộ",
+    },
+  },
+  exportReport: {
+    title: "Xuất Excel báo cáo Garage",
+    subtitle:
+      "Chọn loại báo cáo rồi chọn kỳ. Dù mở từ tab nào, cùng loại và cùng kỳ sẽ ra cùng một file. Tải lại file đã tạo trong 24 tiếng",
+    typeLabel: "Loại báo cáo",
+    typePlaceholder: "Chọn loại báo cáo",
+    types: {
+      casesList: "Bảng kê phiếu dịch vụ",
+      periodOverview: "Báo cáo (tổng quan)",
+      periodPnl: "Báo cáo lợi nhuận",
+      periodReceivables: "Công nợ phải thu",
+      periodPayables: "Công nợ phải trả",
+      periodOverdue: "Nợ quá hạn cần chú ý",
+      periodCashflow: "Thu chi trong kỳ",
+    },
+    multiHint:
+      "Chọn một hoặc nhiều mục. Chọn Bảng kê phiếu dịch vụ thì các mục báo cáo kỳ được bỏ chọn.",
+    typeDescs: {
+      casesList:
+        "Bảng kê phiếu kết thúc, theo dõi lãi lỗ, chi tiết dịch vụ & phụ tùng theo kỳ hoặc theo bộ lọc hiện tại.",
+      periodOverview:
+        "Thẻ thu chi và công nợ phát sinh, nợ lũy kế và các chart chính của kỳ.",
+      periodPnl:
+        "Báo cáo lợi nhuận 3 cấp theo tháng, kèm chart lợi nhuận và tỷ trọng chi phí.",
+      periodReceivables:
+        "Công nợ phải thu phát sinh trong kỳ, tách theo nhóm khách và có VAT / không VAT.",
+      periodPayables:
+        "Công nợ phải trả (nhà cung cấp) còn mở, tính đến ngày xuất.",
+      periodOverdue:
+        "Danh sách nợ quá hạn trên 30 ngày của cả phải thu và phải trả, tính đến ngày xuất.",
+      periodCashflow:
+        "Phiếu thu chi trong kỳ, kèm đã thu, đã chi, dự chi và dòng tiền ròng.",
     },
   },
   exportJobs: {

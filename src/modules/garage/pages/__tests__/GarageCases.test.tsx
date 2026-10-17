@@ -1,6 +1,6 @@
 import React from "react";
 import { describe, it, expect, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { GarageCases } from "../GarageCases";
 
@@ -30,6 +30,10 @@ vi.mock("../../components/organisms/garage-cases-table", () => ({
       <button onClick={() => props.onOpenDetail("CASE-101")}>
         Open Detail
       </button>
+      <button onClick={() => props.onExportExcel({ q: "abc" })}>Export</button>
+      <button onClick={() => props.onSyncGrossProfit()}>
+        Sync Gross Profit
+      </button>
     </div>
   ),
 }));
@@ -51,9 +55,14 @@ vi.mock("../../components/GarageCaseViewConfigDrawer", () => ({
     props.open ? <div data-testid="view-config-drawer" /> : null,
 }));
 
-vi.mock("../../components/GarageCaseExportDrawer", () => ({
-  GarageCaseExportDrawer: (props: any) =>
-    props.open ? <div data-testid="export-drawer" /> : null,
+vi.mock("../../components/GarageExportDrawer", () => ({
+  GarageExportDrawer: (props: any) =>
+    props.open ? (
+      <div
+        data-testid="export-drawer"
+        data-report-type={props.defaultReportType}
+      />
+    ) : null,
 }));
 
 vi.mock("@/shared/hooks/useHasPermission", () => ({
@@ -85,5 +94,28 @@ describe("GarageCases Page (L5)", () => {
 
     expect(screen.getByTestId("garage-cases-table")).toBeDefined();
     expect(screen.getByText("GarageCasesTable Mounted")).toBeDefined();
+  });
+  it("Xuất Excel mở drawer xuất chung, mặc định Bảng kê phiếu dịch vụ", () => {
+    render(
+      <QueryClientProvider client={queryClient}>
+        <GarageCases />
+      </QueryClientProvider>,
+    );
+    expect(screen.queryByTestId("export-drawer")).toBeNull();
+    fireEvent.click(screen.getByText("Export"));
+    expect(
+      screen.getByTestId("export-drawer").getAttribute("data-report-type"),
+    ).toBe("cases-list");
+  });
+
+  it("Đồng bộ Lợi nhuận gộp mở drawer đồng bộ", () => {
+    render(
+      <QueryClientProvider client={queryClient}>
+        <GarageCases />
+      </QueryClientProvider>,
+    );
+    expect(screen.queryByTestId("sync-drawer")).toBeNull();
+    fireEvent.click(screen.getByText("Sync Gross Profit"));
+    expect(screen.getByTestId("sync-drawer")).toBeDefined();
   });
 });

@@ -43,3 +43,14 @@ src/pages/
 7. **Floated Action Menu**: Hover theo dòng hiển thị 2 Quick Actions đầu tiên: 👁️ Xem chi tiết (`view` mode) và ✏️ Chỉnh sửa (`edit` mode), kèm menu ba chấm `...` (Xem chi tiết, Chỉnh sửa, Xóa).
 8. **Drawer Chi Tiết**: Tách riêng `BusinessPartnerDetailDrawer.tsx` theo chuẩn `standardize-drawer` (kích thước `md`, bố cục 1-column, chuyển đổi linh hoạt chế độ xem/sửa).
 9. **View Presets & Toàn Màn Hình**: Tích hợp `<ViewModeCombobox>` và `enableFullscreen={true}`.
+
+---
+
+## 4. ERP Web V2 Business Partners
+
+- Hai route `/v2/customers` và `/v2/suppliers` dùng chung `src/v2/modules/business-partners/`; `partnerType` lần lượt là `CUSTOMER` và `VENDOR`.
+- Page dùng `V2ModulePage` và `V2StandardTable` server mode. Bảng có 10 cột nghiệp vụ cộng cột STT tích hợp, hỗ trợ search, filter, sort, pagination, fullscreen và view preset.
+- Adapter preference tiếp tục dùng table ID V1: `erp-customers-table` và `erp-vendors-table`, vì vậy preset/cột đã lưu được chia sẻ giữa V1 và V2.
+- Drawer dùng `V2StandardDrawer` một cột với ba section: định danh; liên hệ và địa chỉ; trạng thái và ghi chú. Luồng create/edit/delete làm mới query list; dirty form dùng confirm modal.
+- Route và action kiểm tra resource `business_partners`. Mobile mở Khách hàng/Nhà cung cấp qua mục `Danh mục`, còn bộ lọc bảng mở trong modal mobile.
+- Locale của module đăng ký namespace `partners` cho VI/EN; component business dùng primitive V2 hiện có và không tạo design system riêng.

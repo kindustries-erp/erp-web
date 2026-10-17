@@ -10,6 +10,14 @@ describe("resolveV2Route", () => {
     expect(resolveV2Route("/v2/sales-orders/123")?.id).toBe("sales-orders");
   });
 
+  it("registers business partner routes with read permission", () => {
+    expect(resolveV2Route("/v2/customers")?.permission).toEqual({
+      collection: "business_partners",
+      action: "read",
+    });
+    expect(resolveV2Route("/v2/suppliers")?.id).toBe("suppliers");
+  });
+
   it("does not match a path that only shares a prefix", () => {
     expect(resolveV2Route("/v2/sales-orders-archive")).toBeNull();
   });

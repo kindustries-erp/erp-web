@@ -131,4 +131,11 @@ describe("V2StandardTableMobile", () => {
     fireEvent.click(screen.getByRole("option", { name: /Mới/ }));
     expect(onChange).toHaveBeenCalledWith("new");
   });
+
+  it("opens the column filter panel in a mobile modal", () => {
+    render({ toolbar: { filterPanel: {} } });
+    fireEvent.click(screen.getByRole("button", { name: "Bộ lọc" }));
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    expect(screen.getByText(/Bộ lọc theo cột/)).toBeInTheDocument();
+  });
 });

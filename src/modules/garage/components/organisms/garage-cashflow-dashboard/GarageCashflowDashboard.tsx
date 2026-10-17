@@ -1,22 +1,22 @@
-import React from "react";
-import { LayoutDashboard } from "lucide-react";
+import React, { useMemo } from "react";
+import { LayoutDashboard, FileSpreadsheet } from "lucide-react";
 import { DashboardTemplate } from "@/shared/components/DashboardTemplate";
+import type { ActionDropdownItem } from "@/shared/components/ActionDropdown";
 import { GarageCashflowKpiCards } from "../garage-cashflow-kpi-cards";
 import { GarageCashflowTrendPanel } from "../garage-cashflow-trend-panel";
 import { GarageCashflowBreakdownPanels } from "../garage-cashflow-breakdown-panels";
 import { GarageCashflowTopTxnsTable } from "../garage-cashflow-top-txns-table";
 import { GarageCashflowDrawer } from "../garage-cashflow-drawer/GarageCashflowDrawer";
+import { GarageCashflowExportDrawer } from "../garage-cashflow-export-drawer/GarageCashflowExportDrawer";
 import { GarageCaseStandaloneDrawer } from "../../GarageCaseStandaloneDrawer";
 import type { GarageCashflowDashboardProps } from "./GarageCashflowDashboard.type";
 import { useGarageCashflowDashboard } from "./GarageCashflowDashboard.hook";
 
 export const GarageCashflowDashboard: React.FC<
   GarageCashflowDashboardProps
-> = ({ tabs, activeTab, onTabChange, onOpenCaseDetail }) => {
+> = ({ tabs, activeTab, onTabChange, onOpenCaseDetail, onExportClick }) => {
   const {
     t,
-    filterConfig,
-    filter,
     data,
     isLoading,
     isFetching,
@@ -25,9 +25,28 @@ export const GarageCashflowDashboard: React.FC<
     setSelectedVoucher,
     selectedCaseCode,
     setSelectedCaseCode,
+    exportDrawerOpen,
+    setExportDrawerOpen,
+    handleOpenExport,
     handleOpenItem,
     handleOpenCase,
-  } = useGarageCashflowDashboard(onOpenCaseDetail);
+  } = useGarageCashflowDashboard(onOpenCaseDetail, onExportClick);
+
+  const createActions = useMemo<ActionDropdownItem[]>(
+    () => [
+      {
+        groupLabel: t("groupThaoTac", { defaultValue: "Thao tác" }),
+        items: [
+          {
+            label: t("debts.exportDetailed", "Xuất Excel theo kỳ / Nâng cao"),
+            icon: <FileSpreadsheet className="w-4 h-4 text-emerald-600" />,
+            onClick: handleOpenExport,
+          },
+        ],
+      },
+    ],
+    [handleOpenExport, t],
+  );
 
   return (
     <>
@@ -41,10 +60,14 @@ export const GarageCashflowDashboard: React.FC<
         tabs={tabs}
         activeTab={activeTab}
         onTabChange={onTabChange}
-        filterConfig={filterConfig}
-        filter={filter}
         loading={isFetching}
         onRefresh={handleRefresh}
+        onCreate={handleOpenExport}
+        createLabel={t("garage.cashflow.exportExcel", "Xuất Excel")}
+        createIcon={
+          <FileSpreadsheet className="w-4 h-4 mr-1.5 text-emerald-600" />
+        }
+        createActions={createActions}
       >
         <GarageCashflowKpiCards kpi={data?.kpi} loading={isLoading} />
         <GarageCashflowTrendPanel trend={data?.trend} loading={isLoading} />
@@ -77,6 +100,11 @@ export const GarageCashflowDashboard: React.FC<
           onClose={() => setSelectedCaseCode(null)}
         />
       )}
+
+      <GarageCashflowExportDrawer
+        open={exportDrawerOpen}
+        onClose={() => setExportDrawerOpen(false)}
+      />
     </>
   );
 };

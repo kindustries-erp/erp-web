@@ -1,12 +1,12 @@
 import React from "react";
-import { Download, LayoutDashboard } from "lucide-react";
+import { DownloadCloud, LayoutDashboard } from "lucide-react";
 import { DashboardTemplate } from "@/shared/components/DashboardTemplate";
-import { Button } from "@/shared/components/ui/Button";
 
 import { GarageStatsCards } from "../../components/GarageStatsCards";
 import { GarageConversionFunnelCard } from "../../components/GarageConversionFunnelCard";
 import { GaragePnlSection } from "../../components/GaragePnlSection";
-import { GarageDashboardExportDrawer } from "../../components/GarageDashboardExportDrawer";
+import { GarageHeaderActionDrawers } from "../../components/GarageHeaderActions";
+import { useGarageStore } from "../../store/garageStore";
 
 import type { GarageDashboardProps } from "./types";
 import { useGarageDashboardLogic } from "./useGarageDashboardLogic";
@@ -18,15 +18,14 @@ export function GarageDashboard(props: GarageDashboardProps = {}) {
     activeTab,
     onTabChange,
     isRefreshing,
-    exportDrawerOpen,
-    openExportDrawer,
-    closeExportDrawer,
+    headerActions,
     handleRefresh,
     statsData,
     isLoadingStats,
     kpisData,
     isLoadingKpis,
   } = useGarageDashboardLogic(props);
+  const { selectedBranchId } = useGarageStore();
 
   return (
     <DashboardTemplate
@@ -41,16 +40,14 @@ export function GarageDashboard(props: GarageDashboardProps = {}) {
       tabs={tabs}
       activeTab={activeTab}
       onTabChange={onTabChange}
-      extraActions={
-        <Button
-          onClick={openExportDrawer}
-          variant="outline"
-          className="h-8 gap-1"
-        >
-          <Download className="h-4 w-4" />
-          {t("dashboard.exportExcel", "Xuất Excel")}
-        </Button>
+      onCreate={
+        headerActions.canSyncGarage
+          ? () => headerActions.openSync("cases")
+          : undefined
       }
+      createLabel={t("cases.actions.syncCases", "Đồng bộ")}
+      createIcon={<DownloadCloud className="w-4 h-4 mr-1.5" />}
+      createActions={headerActions.createActions}
     >
       <div className="flex flex-col gap-6 mb-8">
         {/* Section 1: KPI Hiệu quả Dịch vụ & Tiến độ thu tiền thực tế */}
@@ -76,9 +73,11 @@ export function GarageDashboard(props: GarageDashboardProps = {}) {
         />
       </div>
 
-      <GarageDashboardExportDrawer
-        open={exportDrawerOpen}
-        onClose={closeExportDrawer}
+      <GarageHeaderActionDrawers
+        actions={headerActions}
+        defaultReportType="period-all"
+        branchId={selectedBranchId}
+        onSyncSuccess={handleRefresh}
       />
     </DashboardTemplate>
   );

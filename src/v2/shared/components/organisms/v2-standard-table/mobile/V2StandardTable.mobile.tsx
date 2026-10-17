@@ -13,16 +13,34 @@ import { useV2ViewPresets } from "../hooks/V2StandardTable.views.hook";
 import { resolveMobileSlots } from "./V2StandardTable.mobile-slots";
 import { V2TableSkeletonCards } from "../skeleton";
 import { V2TableToolbar } from "../toolbar/V2StandardTable.toolbar";
+import { V2Modal } from "@/v2/shared/components/molecules/v2-modal";
+import { useV2HeaderFilters } from "../hooks/V2StandardTable.filter.hook";
+import { useV2FilterPanelToolbar } from "../filterpanel/V2StandardTable.filterpanel.hook";
+import { V2TableFilterPanel } from "../filterpanel/V2StandardTable.filterpanel";
 import type { V2StandardTableProps } from "../V2StandardTable.type";
 
 export function V2StandardTableMobile<T>(props: V2StandardTableProps<T>) {
   const { columns, getRowKey, rowActions, loading = false } = props;
   const { t } = useV2Translation();
-  const { state, view, selection } = useV2TableController(props);
+  const { state, view, selection, columnsByKey } = useV2TableController(props);
+  const filters = useV2HeaderFilters({
+    tableId: props.tableId,
+    columnsByKey,
+    fetchOptionsFor: view.fetchOptionsFor,
+    filtersStrFor: view.filtersStrFor,
+  });
+  const { panel, toolbarConfig } = useV2FilterPanelToolbar({
+    toolbar: props.toolbar,
+    columns,
+    filters,
+    canFilter: (column) =>
+      Boolean(column.filter && view.fetchOptionsFor(column)),
+    committedSearchOf: (key) => state.query.columnSearch[key] ?? "",
+  });
   // Mobile chỉ có nhóm lọc (không có chế độ xem tùy chỉnh): vẫn nhớ filter đã chọn
   useV2ViewPresets({
     tableId: props.tableId,
-    filterGroup: props.toolbar?.filterGroup,
+    filterGroup: toolbarConfig?.filterGroup,
     storage: props.viewPresetStorage,
   });
   const slots = React.useMemo(() => resolveMobileSlots(columns), [columns]);
@@ -39,7 +57,7 @@ export function V2StandardTableMobile<T>(props: V2StandardTableProps<T>) {
         onClearAllFilters={state.resetAll}
         selectedCount={selection.selectedCount}
         toolbarExtra={props.toolbarExtra}
-        config={props.toolbar && { ...props.toolbar, viewModes: undefined }}
+        config={toolbarConfig && { ...toolbarConfig, viewModes: undefined }}
         onClearSelection={() => selection.onRowSelectionChange({})}
         loading={loading}
         search={{ value: state.query.search ?? "", onChange: state.setSearch }}
@@ -139,6 +157,21 @@ export function V2StandardTableMobile<T>(props: V2StandardTableProps<T>) {
         onPageSizeChange={state.setPageSize}
         className="mt-2"
       />
+      <V2Modal
+        open={panel.open}
+        onOpenChange={panel.setOpen}
+        title={t("v2.table.filter", "Bộ lọc")}
+        size="full"
+        bodyClassName="p-0"
+      >
+        <V2TableFilterPanel
+          panel={panel}
+          columns={columns}
+          state={state}
+          filters={filters}
+          extraContent={props.toolbar?.filterPanel?.extraContent}
+        />
+      </V2Modal>
     </div>
   );
 }

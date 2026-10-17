@@ -16,7 +16,17 @@ import {
 import { GarageOpexDrawer } from "../components/GarageOpexDrawer";
 import { garageOpexApi, type GarageOpexItem } from "../api/garageOpexApi";
 import toast from "react-hot-toast";
-import { ReceiptText, Eye, Pencil, Copy, Trash2, Sparkles } from "lucide-react";
+import {
+  ReceiptText,
+  Eye,
+  Pencil,
+  Copy,
+  Trash2,
+  Sparkles,
+  Plus,
+  FileSpreadsheet,
+  TrendingUp,
+} from "lucide-react";
 import type { ActionDropdownItem } from "@/shared/components/ActionDropdown";
 import { cn } from "@/shared/utils";
 import { usePageViewPresets } from "@/shared/hooks/usePageViewPresets";
@@ -30,6 +40,8 @@ import {
   GARAGE_OPEX_FILTER_ITEMS,
 } from "../utils/garageViewPresets";
 import { GarageViewModeCombobox } from "../components/molecules/garage-view-mode-combobox";
+import { GarageOpexExportDrawer } from "../components/organisms/garage-opex-export-drawer";
+import type { GarageOpexTableQuery } from "../export/garageExportScopes";
 
 const getCostGroupInfo = (
   categoryKey: string,
@@ -105,11 +117,80 @@ export function GarageOpex() {
   const [drawerMode, setDrawerMode] = useState<"view" | "edit">("view");
   const [isCreate, setIsCreate] = useState(false);
   const [selectedItem, setSelectedItem] = useState<GarageOpexItem | null>(null);
+  const [exportDrawerOpen, setExportDrawerOpen] = useState(false);
 
   // Delete modal state
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<GarageOpexItem | null>(null);
   const [deleting, setDeleting] = useState(false);
+
+  const exportQuery = useMemo<GarageOpexTableQuery>(() => {
+    const hasFilters = Object.keys(listHook.columnFilters).length > 0;
+    const hasSearch = Object.keys(listHook.columnSearch).length > 0;
+    return {
+      date_from: listHook.dateFrom || undefined,
+      date_to: listHook.dateTo || undefined,
+      cost_group: listHook.costGroup !== "ALL" ? listHook.costGroup : undefined,
+      sorts: listHook.sorts.length > 0 ? listHook.sorts : undefined,
+      column_filters: hasFilters
+        ? JSON.stringify(listHook.columnFilters)
+        : undefined,
+      column_search: hasSearch
+        ? JSON.stringify(listHook.columnSearch)
+        : undefined,
+    };
+  }, [listHook]);
+
+  const handleExportPnl = useCallback(async () => {
+    try {
+      toast.loading(t("opex.exportPnlLoading", "Đang tải báo cáo P&L..."), {
+        id: "pnl-export",
+      });
+      const blob = await garageOpexApi.exportPnlExcel();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `Garage_PNL_Report_${new Date().getFullYear()}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      toast.success(t("opex.exportPnlSuccess", "Tải báo cáo P&L thành công!"), {
+        id: "pnl-export",
+      });
+    } catch (err: any) {
+      toast.error(err?.message || "Không thể xuất báo cáo P&L", {
+        id: "pnl-export",
+      });
+    }
+  }, [t]);
+
+  const createActions = useMemo<ActionDropdownItem[]>(
+    () => [
+      {
+        groupLabel: t("opex.actions.reportsGroup", "Báo cáo & Xuất file"),
+        items: [
+          {
+            label: t(
+              "opex.actions.exportOpexExcel",
+              "Xuất Excel chi phí (Bảng kê)",
+            ),
+            icon: <FileSpreadsheet className="w-4 h-4 text-emerald-600" />,
+            onClick: () => setExportDrawerOpen(true),
+          },
+          {
+            label: t(
+              "opex.actions.exportPnlExcel",
+              "Tải báo cáo P&L (Lợi nhuận Garage)",
+            ),
+            icon: <TrendingUp className="w-4 h-4 text-emerald-600" />,
+            onClick: handleExportPnl,
+          },
+        ],
+      },
+    ],
+    [handleExportPnl, t],
+  );
 
   const openDetail = (item: GarageOpexItem, mode: "view" | "edit" = "view") => {
     setSelectedItem(item);
@@ -593,6 +674,8 @@ export function GarageOpex() {
         onRefresh={() => listHook.refetch()}
         onCreate={openCreate}
         createLabel={t("opex.actions.addExpense", "Thêm chi phí")}
+        createIcon={<Plus className="w-4 h-4 mr-1" />}
+        createActions={createActions}
         activeFilterCount={listHook.activeFilterCount}
         onClearAllFilters={() => {
           listHook.clearAllFilters();
@@ -625,6 +708,15 @@ export function GarageOpex() {
         isCreate={isCreate}
         initialData={selectedItem}
         onSuccess={() => listHook.refetch()}
+      />
+
+      {/* Drawer Xuất Excel chi phí */}
+      <GarageOpexExportDrawer
+        open={exportDrawerOpen}
+        onClose={() => setExportDrawerOpen(false)}
+        query={exportQuery}
+        filterCount={listHook.activeFilterCount}
+        initialCostGroup={listHook.costGroup}
       />
 
       {/* Modal xác nhận xóa */}

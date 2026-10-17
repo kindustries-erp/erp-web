@@ -69,8 +69,8 @@ vi.mock("../../components/GarageCaseViewConfigDrawer", () => ({
   GarageCaseViewConfigDrawer: () => null,
 }));
 
-vi.mock("../../components/GarageCaseExportDrawer", () => ({
-  GarageCaseExportDrawer: () => null,
+vi.mock("../../components/GarageExportDrawer", () => ({
+  GarageExportDrawer: () => null,
 }));
 
 describe("GarageCases Page - Edit Mode RBAC Triggers", () => {
