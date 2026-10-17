@@ -1,2 +1,4 @@
-export * from "./GarageDashboardExportDrawer";
-export type { GarageDashboardExportRange } from "./useGarageDashboardExport";
+export {
+  useGarageDashboardExport,
+  type GarageDashboardExportRange,
+} from "./useGarageDashboardExport";

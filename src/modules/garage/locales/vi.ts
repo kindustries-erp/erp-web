@@ -104,7 +104,7 @@ export const garageVi = {
       title: "Xuất Excel báo cáo Garage",
       subtitle:
         "Báo cáo theo kỳ gồm Dashboard thu chi & công nợ (cảnh báo quá hạn), báo cáo lợi nhuận theo tháng, công nợ theo nhóm đối tượng và thu chi trong kỳ. Tải lại file đã tạo trong 24 tiếng",
-      note: "Đã thu, đã chi theo ngày giao dịch phiếu thu chi xưởng; nợ còn mở và tuổi nợ tính đến ngày xuất. Báo cáo lợi nhuận tính theo tháng chứa ngày kết thúc kỳ, chart hiển thị 12 tháng gần nhất.",
+      note: "Đã thu, đã chi theo ngày giao dịch phiếu thu chi xưởng; công nợ trong kỳ tính trên phiếu hoàn thành trong kỳ, công nợ lũy kế là nợ còn mở đến ngày xuất. Chart tự gom theo ngày (kỳ ≤ 27 ngày), tuần (28-60 ngày) hoặc tháng (trên 60 ngày). Báo cáo lợi nhuận tính theo tháng chứa ngày kết thúc kỳ.",
     },
     title: "Tổng quan Garage",
     desc: "Báo cáo tổng quan hiệu quả hoạt động xưởng dịch vụ, doanh thu, chi phí và tình trạng phiếu sửa chữa",
@@ -957,6 +957,32 @@ export const garageVi = {
       unknown: "Không rõ",
       total: "Tổng cộng",
       notSynced: "Chưa đồng bộ",
+    },
+  },
+  exportReport: {
+    title: "Xuất Excel báo cáo Garage",
+    subtitle:
+      "Chọn loại báo cáo rồi chọn kỳ. Dù mở từ tab nào, cùng loại và cùng kỳ sẽ ra cùng một file. Tải lại file đã tạo trong 24 tiếng",
+    typeLabel: "Loại báo cáo",
+    typePlaceholder: "Chọn loại báo cáo",
+    types: {
+      casesList: "Bảng kê phiếu dịch vụ",
+      periodAll: "Tổng hợp tất cả",
+      periodBusiness: "Tình hình hoạt động kinh doanh (kèm chart)",
+      periodCashflowDebts: "Thu chi & công nợ",
+      periodOverdue: "Nợ quá hạn cần chú ý",
+    },
+    typeDescs: {
+      casesList:
+        "Bảng kê phiếu kết thúc, theo dõi lãi lỗ, chi tiết dịch vụ & phụ tùng theo kỳ hoặc theo bộ lọc hiện tại.",
+      periodAll:
+        "Dashboard card, số tổng và chart (thu chi, công nợ trong kỳ và lũy kế) kèm báo cáo lợi nhuận 3 cấp, công nợ, nợ quá hạn và thu chi trong kỳ.",
+      periodBusiness:
+        "Báo cáo lợi nhuận (P&L) 3 cấp theo tháng kèm chart doanh thu, giá vốn, lãi gộp theo ngày/tuần/tháng của kỳ và xu hướng 12 tháng.",
+      periodCashflowDebts:
+        "Dashboard card, số tổng và chart thu chi, công nợ trong kỳ và lũy kế đến ngày xuất, kèm công nợ theo nhóm đối tượng và phiếu thu chi trong kỳ.",
+      periodOverdue:
+        "Danh sách nợ quá hạn trên 30 ngày của cả phải thu và phải trả, tính đến ngày xuất.",
     },
   },
   exportJobs: {

@@ -1,48 +1,20 @@
 import React from "react";
-import {
-  FileSpreadsheet,
-  TrendingUp,
-  Eye,
-  Users,
-  Pencil,
-  SlidersHorizontal,
-  Scale,
-} from "lucide-react";
+import { Eye, Users, Pencil, SlidersHorizontal, Scale } from "lucide-react";
+import { buildGarageHeaderActions } from "../../GarageHeaderActions/buildGarageHeaderActions";
 import type { GarageCasesTableProps } from "./GarageCasesTable.type";
 
 export function buildGarageCaseCreateActions(
   props: GarageCasesTableProps,
   t: (key: string, def?: string) => string,
 ) {
-  return [
+  return buildGarageHeaderActions(
     {
-      groupLabel: t("cases.actions.exportGroup", "Báo cáo & Xuất file"),
-      items: [
-        {
-          label: t("cases.actions.exportExcel", "Xuất Excel"),
-          icon: <FileSpreadsheet className="w-4 h-4 text-emerald-600" />,
-          onClick: () => props.onExportExcel?.({}),
-        },
-      ],
+      canSyncGarage: props.canSyncGarage,
+      onExportExcel: () => props.onExportExcel?.({}),
+      onSyncGrossProfit: props.onSyncGrossProfit,
     },
-    ...(props.canSyncGarage
-      ? [
-          {
-            groupLabel: t("cases.actions.syncOptions", "Tùy chọn đồng bộ"),
-            items: [
-              {
-                label: t(
-                  "cases.actions.syncGrossProfit",
-                  "Đồng bộ Lợi nhuận gộp",
-                ),
-                icon: <TrendingUp className="w-4 h-4 text-emerald-600" />,
-                onClick: () => props.onSyncGrossProfit?.(),
-              },
-            ],
-          },
-        ]
-      : []),
-  ];
+    t,
+  );
 }
 
 export function buildGarageCaseRowActions(

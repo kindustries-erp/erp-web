@@ -3,6 +3,8 @@ import {
   type ExportJobScope,
 } from "@/shared/export-jobs";
 
+import type { GaragePeriodReportType } from "./garageExportReportTypes";
+
 const BASE = "/api/v1/greenway";
 
 function makeScope(key: string, root: string): ExportJobScope {
@@ -71,6 +73,7 @@ export interface GarageCasesExportPayload {
 export interface GarageDashboardExportPayload {
   from?: string;
   to?: string;
+  reportType?: GaragePeriodReportType;
 }
 
 /** Body xuất nền công nợ (khớp `GarageDebtsExportDto`). */

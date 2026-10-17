@@ -9,7 +9,7 @@ import {
 } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
-import { GarageCaseExportDrawer } from "../GarageCaseExportDrawer";
+import { GarageExportDrawer } from "../GarageExportDrawer";
 import axiosInstance from "@/core/api/axiosInstance";
 
 const standardTableSpy = vi.fn();
@@ -125,16 +125,17 @@ const tableQuery = {
 };
 
 function renderDrawer(
-  props: Partial<React.ComponentProps<typeof GarageCaseExportDrawer>> = {},
+  props: Partial<React.ComponentProps<typeof GarageExportDrawer>> = {},
 ) {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   });
   return render(
     <QueryClientProvider client={client}>
-      <GarageCaseExportDrawer
+      <GarageExportDrawer
         open={true}
         onClose={vi.fn()}
+        defaultReportType="cases-list"
         initialBranchId="CN-01"
         {...props}
       />
@@ -149,7 +150,7 @@ const selectTab = async (name: string) => {
   });
 };
 
-describe("GarageCaseExportDrawer", () => {
+describe("GarageExportDrawer - bảng kê phiếu dịch vụ", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     (axiosInstance.get as any).mockResolvedValue({ data: historyResponse });

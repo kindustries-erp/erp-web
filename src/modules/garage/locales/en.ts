@@ -104,7 +104,7 @@ export const garageEn = {
       title: "Export Garage report to Excel",
       subtitle:
         "Period report with a collections & debt dashboard (overdue alerts), monthly profit report, receivables by partner group and cash in/out for the period. Re-download files created in the last 24 hours",
-      note: "Collected and paid amounts follow the cashflow voucher date; open debt and aging are calculated as of the export date. The profit report covers the month containing the period end date, with charts for the last 12 months.",
+      note: "Collected and paid amounts follow the cashflow voucher date; period debt is based on cases completed in the period, cumulative debt is open debt as of the export date. Charts group by day (period up to 27 days), week (28-60 days) or month (over 60 days). The profit report covers the month containing the period end date.",
     },
     title: "Garage Dashboard",
     desc: "Overview of workshop performance, revenue, cost, and service order statuses",
@@ -348,6 +348,8 @@ export const garageEn = {
       netOffSettlement: "Bank Statement Net-off",
       linkInvoice: "Link Invoice",
       viewFilteredCases: "View Case List",
+      exportGroup: "Reports & File Export",
+      exportExcel: "Export Excel",
     },
     exportDrawer: {
       title: "Export Service Cases Excel",
@@ -950,6 +952,32 @@ export const garageEn = {
       unknown: "Unknown",
       total: "Total",
       notSynced: "Not synced",
+    },
+  },
+  exportReport: {
+    title: "Export Garage Report to Excel",
+    subtitle:
+      "Pick a report type, then a period. Whichever tab you open it from, the same type and period produce the same file. Generated files can be re-downloaded for 24 hours",
+    typeLabel: "Report type",
+    typePlaceholder: "Select report type",
+    types: {
+      casesList: "Service case list",
+      periodAll: "Full report",
+      periodBusiness: "Business performance (with charts)",
+      periodCashflowDebts: "Cash flow & debts",
+      periodOverdue: "Overdue debts",
+    },
+    typeDescs: {
+      casesList:
+        "Completed case list, profit & loss tracking and service & parts detail, by period or by the current filter.",
+      periodAll:
+        "Dashboard with cards, totals and charts (cash flow, period and cumulative debt) plus the 3-level profit report, debts, overdue debts and period cash flow.",
+      periodBusiness:
+        "3-level monthly profit & loss report with revenue, cost and gross profit charts by day/week/month of the period plus a 12-month trend.",
+      periodCashflowDebts:
+        "Dashboard with cards, totals and charts for cash flow, period and cumulative debt as of the export date, plus debts by partner group and period receipts/payments.",
+      periodOverdue:
+        "Receivables and payables overdue by more than 30 days, as of the export date.",
     },
   },
   exportJobs: {

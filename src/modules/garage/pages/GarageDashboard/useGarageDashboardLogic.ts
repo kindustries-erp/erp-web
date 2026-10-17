@@ -1,6 +1,6 @@
-import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery, useQueryClient, useIsFetching } from "@tanstack/react-query";
+import { useGarageHeaderActions } from "../../components/GarageHeaderActions";
 import { garageDashboardApi } from "../../api/garageDashboardApi";
 import type { GarageDashboardProps } from "./types";
 
@@ -8,7 +8,7 @@ export function useGarageDashboardLogic(props: GarageDashboardProps = {}) {
   const { tabs, activeTab, onTabChange } = props;
   const { t } = useTranslation("garage");
   const queryClient = useQueryClient();
-  const [exportDrawerOpen, setExportDrawerOpen] = useState(false);
+  const headerActions = useGarageHeaderActions();
 
   const isFetchingStats = useIsFetching({
     queryKey: ["garage-dashboard-stats"],
@@ -30,9 +30,6 @@ export function useGarageDashboardLogic(props: GarageDashboardProps = {}) {
     queryFn: () => garageDashboardApi.getCheckpointKpis(),
   });
 
-  const openExportDrawer = () => setExportDrawerOpen(true);
-  const closeExportDrawer = () => setExportDrawerOpen(false);
-
   const handleRefresh = () => {
     queryClient.invalidateQueries({ queryKey: ["garage-checkpoint-kpis"] });
     queryClient.invalidateQueries({ queryKey: ["garage-dashboard-stats"] });
@@ -48,9 +45,7 @@ export function useGarageDashboardLogic(props: GarageDashboardProps = {}) {
     activeTab,
     onTabChange,
     isRefreshing,
-    exportDrawerOpen,
-    openExportDrawer,
-    closeExportDrawer,
+    headerActions,
     handleRefresh,
     statsData,
     isLoadingStats,
