@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/shared/components/ui/Button";
 import { Combobox } from "@/shared/components/Combobox";
-import { GarageTrendChart } from "../GarageTrendChart";
+import { GaragePnlChartsCard } from "../GaragePnlCharts";
 import { GarageOpexDrawer } from "../GarageOpexDrawer";
 import { useGaragePnlLogic } from "./useGaragePnlLogic";
 import { PnlFinancialTable } from "./components/PnlFinancialTable";
@@ -55,9 +55,9 @@ export function GaragePnlSection() {
         <div className="h-px bg-slate-200/80 dark:bg-slate-700 flex-1 hidden md:block" />
       </div>
 
-      {/* Chart: Xu hướng Doanh thu, Chi phí & Lợi nhuận gộp */}
+      {/* 2 chart 12 tháng giống sheet "Báo cáo lợi nhuận" của file Excel, theo kỳ đang chọn */}
       <div className="w-full">
-        <GarageTrendChart />
+        <GaragePnlChartsCard year={selectedYear} month={selectedMonth} />
       </div>
 
       <div className="bg-surface border border-border rounded-xl card-shadow p-5 flex flex-col gap-4">

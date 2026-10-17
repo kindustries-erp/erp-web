@@ -29,6 +29,8 @@ export interface ClassificationTableRow {
   icon: React.ComponentType<{ className?: string }>;
   totalCount: number;
   totalAmount: number;
+  quotationCount: number;
+  quotationAmount: number;
   inProgressCount: number;
   inProgressAmount: number;
   completedCount: number;

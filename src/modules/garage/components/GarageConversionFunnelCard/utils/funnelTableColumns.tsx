@@ -55,13 +55,29 @@ export function getFunnelTableColumns(
       ),
     },
     {
+      key: "quotation",
+      header: t("dashboard.funnel.colQuotation", "Báo Giá"),
+      size: 140,
+      className: "text-right",
+      cell: (row) => (
+        <div className="flex flex-col items-end">
+          <span className="font-semibold text-violet-600 dark:text-violet-400 tabular-nums">
+            {row.quotationCount} {t("dashboard.funnel.vehiclesUnit", "xe")}
+          </span>
+          <span className="text-[11px] text-muted-foreground tabular-nums">
+            {shortMoney(row.quotationAmount)}
+          </span>
+        </div>
+      ),
+    },
+    {
       key: "inProgress",
       header: t("dashboard.funnel.colInProgress", "Đang Làm (Dự Thu)"),
       size: 160,
       className: "text-right",
       cell: (row) => (
         <div className="flex flex-col items-end">
-          <span className="font-semibold text-foreground tabular-nums">
+          <span className="font-semibold text-slate-600 dark:text-slate-300 tabular-nums">
             {row.inProgressCount} {t("dashboard.funnel.vehiclesUnit", "xe")}
           </span>
           <span className="text-[11px] text-muted-foreground tabular-nums">
@@ -93,7 +109,7 @@ export function getFunnelTableColumns(
       className: "text-right",
       cell: (row) => (
         <div className="flex flex-col items-end">
-          <span className="font-semibold text-destructive tabular-nums">
+          <span className="font-semibold text-rose-600 dark:text-rose-400 tabular-nums">
             {row.cancelledCount} {t("dashboard.funnel.vehiclesUnit", "xe")}
           </span>
           <span className="text-[11px] text-muted-foreground tabular-nums">
@@ -111,7 +127,7 @@ export function getFunnelTableColumns(
         <div className="flex items-center justify-center gap-2">
           <div className="w-16 h-2 bg-muted rounded-full overflow-hidden">
             <div
-              className="h-full bg-emerald-500 rounded-full transition-all duration-500"
+              className="h-full bg-emerald-600 rounded-full transition-all duration-500"
               style={{ width: `${row.completionRate}%` }}
             />
           </div>
@@ -127,6 +143,7 @@ export function getFunnelTableColumns(
 export function getFunnelSummaryRow(
   t: TFunction,
   totalIntake: { count: number; amount: number },
+  quotation: { count: number; amount: number },
   inProgress: { count: number; amount: number },
   completed: { count: number; amount: number; rate?: number },
   cancelled: { count: number; amount: number },
@@ -151,6 +168,15 @@ export function getFunnelSummaryRow(
         itemTitle={t("dashboard.funnel.vehiclesUnit", "xe")}
         subtotalQty={totalIntake.count}
         subtotalAmount={totalIntake.amount}
+      />
+    ),
+    quotation: (
+      <SubtotalSummaryCell
+        variantType="qty"
+        metricTitle={t("dashboard.funnel.colQuotation", "Báo giá")}
+        itemTitle={t("dashboard.funnel.vehiclesUnit", "xe")}
+        subtotalQty={quotation.count}
+        subtotalAmount={quotation.amount}
       />
     ),
     inProgress: (

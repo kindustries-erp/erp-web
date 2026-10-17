@@ -1,21 +1,32 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { CheckCircle2, Clock, Inbox, XCircle } from "lucide-react";
+import { CheckCircle2, Clock, FileText, Inbox, XCircle } from "lucide-react";
 import { money, shortMoney } from "@/shared/utils/format";
 import type { GarageProjectedPipeline } from "../../../api/garageDashboardApi";
 import { FunnelRateProgressBar } from "./FunnelRateProgressBar";
+import { FunnelStageCard } from "./FunnelStageCard";
+
+interface Stage {
+  count: number;
+  amount: number;
+  rate?: number;
+}
 
 interface FunnelOverviewCardsProps {
-  totalIntake: { count: number; amount: number; rate?: number };
-  inProgress: { count: number; amount: number; rate?: number };
-  completed: { count: number; amount: number; rate?: number };
-  cancelled: { count: number; amount: number; rate?: number };
+  totalIntake: Stage;
+  quotation: Stage;
+  inProgress: Stage;
+  completed: Stage;
+  cancelled: Stage;
   projectedToday?: GarageProjectedPipeline;
   projectedMonth?: GarageProjectedPipeline;
 }
 
+const SUB_CLASS = "text-[11px] text-muted-foreground";
+
 export function FunnelOverviewCards({
   totalIntake,
+  quotation,
   inProgress,
   completed,
   cancelled,
@@ -23,6 +34,7 @@ export function FunnelOverviewCards({
   projectedMonth,
 }: FunnelOverviewCardsProps) {
   const { t } = useTranslation("garage");
+  const unit = t("dashboard.funnel.casesUnit", "phiếu");
 
   return (
     <>
@@ -37,61 +49,55 @@ export function FunnelOverviewCards({
         </span>
       </div>
 
-      {/* TẦNG 1: 4 Cards Phễu Chuyển Đổi Tinh Gọn */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-        {/* Stage 1: Tiếp Nhận */}
-        <div className="p-3.5 rounded-xl border border-indigo-500/20 bg-indigo-50/40 dark:bg-indigo-950/20 flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-indigo-700 dark:text-indigo-400 flex items-center gap-1.5">
-              <Inbox className="w-4 h-4" />
-              {t("dashboard.funnel.stageIntake", "1. Tổng Tiếp Nhận")}
-            </span>
-            <span className="text-[11px] font-bold px-1.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300">
-              100%
-            </span>
-          </div>
-          <div className="mt-3">
-            <div className="text-xl font-bold text-foreground">
-              {totalIntake.count}{" "}
-              <span className="text-xs font-normal text-muted-foreground">
-                {t("dashboard.funnel.casesUnit", "phiếu")}
-              </span>
-            </div>
-            <div className="text-xs font-medium text-indigo-600 dark:text-indigo-400 mt-0.5">
-              {money(totalIntake.amount)}
-            </div>
-          </div>
-          <div className="text-[11px] text-muted-foreground mt-2 border-t border-indigo-100 dark:border-indigo-900/40 pt-1.5">
+      {/* TẦNG 1: 5 Cards Phễu Chuyển Đổi */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+        <FunnelStageCard
+          tone="teal"
+          icon={<Inbox className="w-4 h-4" />}
+          title={t("dashboard.funnel.stageIntake", "1. Tổng Tiếp Nhận")}
+          badge="100%"
+          count={totalIntake.count}
+          unit={unit}
+          amount={money(totalIntake.amount)}
+        >
+          <div className={SUB_CLASS}>
             {t(
               "dashboard.funnel.stageIntakeSub",
               "Tổng nhu cầu đưa xe vào xưởng",
             )}
           </div>
-        </div>
+        </FunnelStageCard>
 
-        {/* Stage 2: Đang Làm (Dự Thu) */}
-        <div className="p-3.5 rounded-xl border border-indigo-500/20 bg-indigo-50/20 dark:bg-indigo-950/15 flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-indigo-700 dark:text-indigo-400 flex items-center gap-1.5">
-              <Clock className="w-4 h-4" />
-              {t("dashboard.funnel.stageInProgress", "2. Đang Xử Lý (Dự thu)")}
-            </span>
-            <span className="text-[11px] font-bold px-1.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300">
-              {inProgress.rate ?? 0}%
-            </span>
+        <FunnelStageCard
+          tone="violet"
+          icon={<FileText className="w-4 h-4" />}
+          title={t("dashboard.funnel.stageQuotation", "2. Báo Giá")}
+          badge={`${quotation.rate ?? 0}%`}
+          count={quotation.count}
+          unit={unit}
+          amount={money(quotation.amount)}
+        >
+          <div className={SUB_CLASS}>
+            {t(
+              "dashboard.funnel.stageQuotationSub",
+              "Phiếu báo giá đang chờ khách duyệt",
+            )}
           </div>
-          <div className="mt-2.5">
-            <div className="text-xl font-bold text-foreground">
-              {inProgress.count}{" "}
-              <span className="text-xs font-normal text-muted-foreground">
-                {t("dashboard.funnel.casesUnit", "phiếu")}
-              </span>
-            </div>
-            <div className="text-xs font-medium text-indigo-600 dark:text-indigo-400 mt-0.5">
-              {money(inProgress.amount)}
-            </div>
-          </div>
-          <div className="mt-2 pt-1.5 border-t border-indigo-100 dark:border-indigo-900/40 flex flex-col gap-1 text-[10.5px]">
+        </FunnelStageCard>
+
+        <FunnelStageCard
+          tone="slate"
+          icon={<Clock className="w-4 h-4" />}
+          title={t(
+            "dashboard.funnel.stageInProgress",
+            "3. Đang Xử Lý (Dự thu)",
+          )}
+          badge={`${inProgress.rate ?? 0}%`}
+          count={inProgress.count}
+          unit={unit}
+          amount={money(inProgress.amount)}
+        >
+          <div className="flex flex-col gap-1 text-[10.5px]">
             <div className="flex items-center justify-between text-muted-foreground">
               <span>
                 • {t("dashboard.funnel.todayProjected", "Hôm nay")}:{" "}
@@ -99,7 +105,7 @@ export function FunnelOverviewCards({
                   {projectedToday?.totalCount || 0} xe
                 </strong>
               </span>
-              <span className="font-mono text-indigo-600 dark:text-indigo-400 font-medium">
+              <span className="font-mono text-slate-600 dark:text-slate-400 font-medium">
                 {shortMoney(projectedToday?.totalAmount || 0)}
               </span>
             </div>
@@ -115,76 +121,51 @@ export function FunnelOverviewCards({
               </span>
             </div>
           </div>
-        </div>
+        </FunnelStageCard>
 
-        {/* Stage 3: Hoàn Tất */}
-        <div className="p-3.5 rounded-xl border border-emerald-500/20 bg-emerald-50/40 dark:bg-emerald-950/20 flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5">
-              <CheckCircle2 className="w-4 h-4" />
-              {t(
-                "dashboard.funnel.stageCompleted",
-                "3. Đã Hoàn Thành (Doanh thu)",
-              )}
-            </span>
-            <span className="text-[11px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300">
-              {completed.rate ?? 0}%
-            </span>
-          </div>
-          <div className="mt-3">
-            <div className="text-xl font-bold text-foreground">
-              {completed.count}{" "}
-              <span className="text-xs font-normal text-muted-foreground">
-                {t("dashboard.funnel.casesUnit", "phiếu")}
-              </span>
-            </div>
-            <div className="text-xs font-medium text-emerald-600 dark:text-emerald-400 mt-0.5">
-              {money(completed.amount)}
-            </div>
-          </div>
-          <div className="text-[11px] text-emerald-600/80 dark:text-emerald-400/80 mt-2 border-t border-emerald-100 dark:border-emerald-900/40 pt-1.5">
+        <FunnelStageCard
+          tone="emerald"
+          icon={<CheckCircle2 className="w-4 h-4" />}
+          title={t(
+            "dashboard.funnel.stageCompleted",
+            "4. Đã Hoàn Thành (Doanh thu)",
+          )}
+          badge={`${completed.rate ?? 0}%`}
+          count={completed.count}
+          unit={unit}
+          amount={money(completed.amount)}
+        >
+          <div className="text-[11px] text-emerald-600/80 dark:text-emerald-400/80">
             {t(
               "dashboard.funnel.stageCompletedSub",
               "Doanh thu thực tế (Kế toán dồn tích)",
             )}
           </div>
-        </div>
+        </FunnelStageCard>
 
-        {/* Stage 4: Đã Hủy */}
-        <div className="p-3.5 rounded-xl border border-rose-500/20 bg-rose-50/40 dark:bg-rose-950/20 flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-rose-700 dark:text-rose-400 flex items-center gap-1.5">
-              <XCircle className="w-4 h-4" />
-              {t("dashboard.funnel.stageCancelled", "4. Hủy / Từ Chối")}
-            </span>
-            <span className="text-[11px] font-bold px-1.5 py-0.5 rounded bg-rose-100 dark:bg-rose-900/50 text-rose-700 dark:text-rose-300">
-              {cancelled.rate ?? 0}%
-            </span>
-          </div>
-          <div className="mt-3">
-            <div className="text-xl font-bold text-foreground">
-              {cancelled.count}{" "}
-              <span className="text-xs font-normal text-muted-foreground">
-                {t("dashboard.funnel.casesUnit", "phiếu")}
-              </span>
-            </div>
-            <div className="text-xs font-medium text-rose-600 dark:text-rose-400 mt-0.5">
-              {money(cancelled.amount)}
-            </div>
-          </div>
-          <div className="text-[11px] text-muted-foreground mt-2 border-t border-rose-100 dark:border-rose-900/40 pt-1.5">
+        <FunnelStageCard
+          tone="rose"
+          icon={<XCircle className="w-4 h-4" />}
+          title={t("dashboard.funnel.stageCancelled", "5. Hủy / Từ Chối")}
+          badge={`${cancelled.rate ?? 0}%`}
+          count={cancelled.count}
+          unit={unit}
+          amount={money(cancelled.amount)}
+        >
+          <div className={SUB_CLASS}>
             {t(
               "dashboard.funnel.stageCancelledSub",
               "Doanh thu tổn thất / khách hủy",
             )}
           </div>
-        </div>
+        </FunnelStageCard>
       </div>
 
       {/* Visual Progress Ratio Bar */}
       <FunnelRateProgressBar
         totalCount={totalIntake.count}
         completed={completed}
+        quotation={quotation}
         inProgress={inProgress}
         cancelled={cancelled}
       />

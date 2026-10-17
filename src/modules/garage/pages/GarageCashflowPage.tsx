@@ -1,5 +1,5 @@
 import React from "react";
-import { GarageCashflowList } from "../components/organisms/garage-cashflow-list";
+import { GarageCashflowTab } from "../components/organisms/garage-cashflow-tab";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
 import { Forbidden } from "@/pages/Forbidden";
@@ -17,7 +17,7 @@ export function GarageCashflowPage({
     return <Forbidden />;
   }
 
-  return <GarageCashflowList onOpenCaseDetail={onOpenCaseDetail} />;
+  return <GarageCashflowTab onOpenCaseDetail={onOpenCaseDetail} />;
 }
 
 export default GarageCashflowPage;

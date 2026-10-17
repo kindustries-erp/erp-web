@@ -13,10 +13,10 @@ vi.mock("@/pages/Forbidden", () => ({
   Forbidden: () => <div data-testid="forbidden-page">Access Denied</div>,
 }));
 
-vi.mock("../../components/organisms/garage-cashflow-list", () => ({
-  GarageCashflowList: (props: any) => (
-    <div data-testid="garage-cashflow-list" data-props={JSON.stringify(props)}>
-      Garage Cashflow List Content
+vi.mock("../../components/organisms/garage-cashflow-tab", () => ({
+  GarageCashflowTab: (props: any) => (
+    <div data-testid="garage-cashflow-tab" data-props={JSON.stringify(props)}>
+      Garage Cashflow Tab Content
     </div>
   ),
 }));
@@ -32,16 +32,14 @@ describe("GarageCashflowPage RBAC Guard", () => {
     render(<GarageCashflowPage />);
 
     expect(screen.getByTestId("forbidden-page")).toBeInTheDocument();
-    expect(
-      screen.queryByTestId("garage-cashflow-list"),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByTestId("garage-cashflow-tab")).not.toBeInTheDocument();
     expect(useHasPermission).toHaveBeenCalledWith(
       ErpResource.GARAGE_CASHFLOW,
       ErpAction.READ,
     );
   });
 
-  it("renders GarageCashflowList when user has GARAGE_CASHFLOW:READ permission", () => {
+  it("renders GarageCashflowTab when user has GARAGE_CASHFLOW:READ permission", () => {
     vi.mocked(useHasPermission).mockImplementation(
       (resource: string, action?: string) => {
         return (
@@ -54,6 +52,6 @@ describe("GarageCashflowPage RBAC Guard", () => {
     render(<GarageCashflowPage onOpenCaseDetail={mockOpenCaseDetail} />);
 
     expect(screen.queryByTestId("forbidden-page")).not.toBeInTheDocument();
-    expect(screen.getByTestId("garage-cashflow-list")).toBeInTheDocument();
+    expect(screen.getByTestId("garage-cashflow-tab")).toBeInTheDocument();
   });
 });

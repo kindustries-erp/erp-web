@@ -85,9 +85,9 @@ export function PnlGrossProfitRow({
 
       {/* 3.1. Trong đó: Lợi nhuận gộp mảng OJ (Ẩn khi đang xem riêng OJ hoặc khi collapsed) */}
       {!isOjOnly && !isCollapsed && (
-        <tr className="text-muted-foreground bg-slate-50/30 dark:bg-slate-800/10 hover:bg-muted/10 transition-colors border-b border-border/20">
-          <td className="py-1.5 pl-14 pr-4">
-            <span className="text-[11px] italic">
+        <tr className="text-slate-700 dark:text-slate-300 bg-slate-50/30 dark:bg-slate-800/10 hover:bg-muted/10 transition-colors border-b border-border/20">
+          <td className="py-2 px-8 font-medium">
+            <span>
               {t(
                 "pnl.grossProfitOjSub",
                 "3.1. Trong đó: Lợi nhuận gộp mảng OJ",
@@ -98,21 +98,24 @@ export function PnlGrossProfitRow({
             amount={curOjGrossProfit}
             customRate={report.oj?.grossMarginRate}
             hideDelta
-            tdClassName="py-1.5 px-4 text-right tabular-nums font-mono text-[11px] text-muted-foreground"
+            hideRate
+            tdClassName="py-2 px-4 text-right tabular-nums font-mono font-semibold"
           />
           <PnlAmountCell
             amount={prevOjGrossProfit}
             customRate={prevReport?.oj?.grossMarginRate}
             isLoading={isLoadingPrev}
             hideDelta
-            tdClassName="py-1.5 px-4 text-right tabular-nums font-mono text-[11px] text-muted-foreground"
+            hideRate
+            tdClassName="py-2 px-4 text-right tabular-nums font-mono text-slate-700 dark:text-slate-300"
           />
           <PnlAmountCell
             amount={prev2OjGrossProfit}
             customRate={prev2Report?.oj?.grossMarginRate}
             isLoading={isLoadingPrev2}
             hideDelta
-            tdClassName="py-1.5 px-4 text-right tabular-nums font-mono text-[11px] text-muted-foreground"
+            hideRate
+            tdClassName="py-2 px-4 text-right tabular-nums font-mono text-muted-foreground"
           />
         </tr>
       )}

@@ -151,6 +151,8 @@ export interface GarageConversionFunnelClassificationItem {
   name: string;
   totalCount: number;
   totalAmount: number;
+  quotationCount?: number;
+  quotationAmount?: number;
   inProgressCount: number;
   inProgressAmount: number;
   completedCount: number;
@@ -163,6 +165,8 @@ export interface GarageConversionFunnelClassificationItem {
 
 export interface GarageConversionFunnel {
   totalIntake: GarageConversionFunnelStage;
+  /** Phiếu báo giá (chưa hoàn thành, chưa hủy), tách khỏi `inProgress`. */
+  quotation?: GarageConversionFunnelStage;
   inProgress: GarageConversionFunnelStage;
   completed: GarageConversionFunnelStage;
   cancelled: GarageConversionFunnelStage;

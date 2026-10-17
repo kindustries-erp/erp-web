@@ -25,6 +25,7 @@ export function GarageConversionFunnelCard(
     activeFunnel,
     monthOptions,
     totalIntake,
+    quotation,
     inProgress,
     completed,
     cancelled,
@@ -104,6 +105,7 @@ export function GarageConversionFunnelCard(
           <div className="bg-surface border border-border rounded-xl card-shadow p-5 flex flex-col gap-4">
             <FunnelOverviewCards
               totalIntake={totalIntake}
+              quotation={quotation}
               inProgress={inProgress}
               completed={completed}
               cancelled={cancelled}
@@ -137,6 +139,7 @@ export function GarageConversionFunnelCard(
             <FunnelSpreadsheetTable
               tableRows={tableRows}
               totalIntake={totalIntake}
+              quotation={quotation}
               inProgress={inProgress}
               completed={completed}
               cancelled={cancelled}

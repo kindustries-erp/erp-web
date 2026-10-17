@@ -10,6 +10,20 @@ import {
   getGarageCashflowColumns,
   getGarageCashflowRowActions,
 } from "./GarageCashflowTable.columns";
+import { usePageViewPresets } from "@/shared/hooks/usePageViewPresets";
+import {
+  useUserPreferencesStore,
+  type TableViewPreset,
+} from "@/shared/hooks/useUserPreferences";
+import {
+  GARAGE_CASHFLOW_COLUMN_VIEW_PRESETS,
+  DEFAULT_GARAGE_CASHFLOW_COLUMN_VISIBILITY,
+  GARAGE_CASHFLOW_FILTER_ITEMS,
+} from "../../../utils/garageViewPresets";
+import { GarageViewModeCombobox } from "../../molecules/garage-view-mode-combobox";
+
+const columnPresetsTableId = "garage-cashflow-column-views";
+const actualTableId = "garage-cashflow-list";
 
 export const GarageCashflowTable: React.FC<GarageCashflowTableProps> = ({
   tabs,
@@ -25,6 +39,78 @@ export const GarageCashflowTable: React.FC<GarageCashflowTableProps> = ({
 }) => {
   const t = useT();
   const tableHook = useGarageCashflowTable();
+
+  const columnViewPresetsHook = usePageViewPresets({
+    tableId: columnPresetsTableId,
+    defaultPresets: GARAGE_CASHFLOW_COLUMN_VIEW_PRESETS,
+  });
+
+  const [activeColumnPresetKey, setActiveColumnPresetKey] =
+    React.useState<string>(() => {
+      const stored = useUserPreferencesStore
+        .getState()
+        .getTablePreference(actualTableId);
+      return stored?.activeView || "overview";
+    });
+
+  const handleColumnPresetChange = (preset: TableViewPreset) => {
+    setActiveColumnPresetKey(preset.key);
+    const currentPref = useUserPreferencesStore
+      .getState()
+      .getTablePreference(actualTableId) || {
+      columnOrder: [],
+      columnVisibility: {},
+    };
+    useUserPreferencesStore.getState().setTablePreferences(actualTableId, {
+      ...currentPref,
+      columnOrder: [],
+      columnVisibility:
+        preset.columnVisibility || DEFAULT_GARAGE_CASHFLOW_COLUMN_VISIBILITY,
+      activeView: preset.key,
+    });
+  };
+
+  const currentVoucherType = useMemo(() => {
+    const filterVal = tableHook.columnFilters["voucherType"];
+    if (filterVal && filterVal.length > 0) return filterVal[0];
+    return "ALL";
+  }, [tableHook.columnFilters]);
+
+  const handleVoucherTypeChange = useCallback(
+    (val: string) => {
+      if (val === "ALL") {
+        tableHook.setColumnFilter("voucherType", []);
+      } else {
+        tableHook.setColumnFilter("voucherType", [val]);
+      }
+    },
+    [tableHook],
+  );
+
+  const viewTabsNode = (
+    <div className="w-full sm:w-auto flex items-center flex-wrap gap-2 py-0.5">
+      <GarageViewModeCombobox
+        presets={columnViewPresetsHook.presets}
+        activePresetKey={activeColumnPresetKey}
+        onSelect={handleColumnPresetChange}
+        onCreateView={() => {}}
+        onEditView={() => {}}
+        onDeleteView={(key) => columnViewPresetsHook.deleteView(key)}
+        filterGroup={{
+          title: t("garage.cashflow.filterGroup", {
+            defaultValue: "Loại phiếu",
+          }),
+          value: currentVoucherType,
+          onChange: handleVoucherTypeChange,
+          items: GARAGE_CASHFLOW_FILTER_ITEMS.map((item) => ({
+            value: item.value,
+            label: item.label,
+            dotColor: item.dotColor,
+          })),
+        }}
+      />
+    </div>
+  );
 
   const filterBuilder = useMemo(
     () =>
@@ -111,7 +197,8 @@ export const GarageCashflowTable: React.FC<GarageCashflowTableProps> = ({
       onTabChange={onTabChange}
       tableId="garage-cashflow-list"
       columns={columns}
-      defaultColumnVisibility={{ createdAt: false }}
+      defaultColumnVisibility={DEFAULT_GARAGE_CASHFLOW_COLUMN_VISIBILITY}
+      customActionsNode={viewTabsNode}
       items={tableHook.data}
       total={tableHook.total}
       totalPages={tableHook.totalPages}
