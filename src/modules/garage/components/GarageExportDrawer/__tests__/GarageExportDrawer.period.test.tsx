@@ -127,6 +127,15 @@ const exportAndGetCall = async () => {
   return (axiosInstance.post as any).mock.calls[0];
 };
 
+const ALL_PERIOD_SECTIONS = [
+  "overview",
+  "pnl",
+  "receivables",
+  "payables",
+  "overdue",
+  "cashflow",
+];
+
 describe("GarageExportDrawer - báo cáo kỳ", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -153,7 +162,7 @@ describe("GarageExportDrawer - báo cáo kỳ", () => {
     expect(screen.queryByText("Theo filter hiện tại")).toBeNull();
   });
 
-  it("mặc định tháng hiện tại: POST { from, to, reportType } kèm header chi nhánh", async () => {
+  it("mặc định tháng hiện tại: POST { from, to, reportSections } kèm header chi nhánh", async () => {
     renderDrawer();
     const [url, body, config] = await exportAndGetCall();
 
@@ -161,7 +170,7 @@ describe("GarageExportDrawer - báo cáo kỳ", () => {
     expect(body).toEqual({
       from: "2026-10-01",
       to: "2026-10-31",
-      reportType: "all",
+      reportSections: ALL_PERIOD_SECTIONS,
     });
     expect(config.headers).toEqual({ "x-greenway-branch-id": "CN-01" });
   });
@@ -173,7 +182,7 @@ describe("GarageExportDrawer - báo cáo kỳ", () => {
     expect(week).toEqual({
       from: "2026-10-12",
       to: "2026-10-18",
-      reportType: "all",
+      reportSections: ALL_PERIOD_SECTIONS,
     });
   });
 
@@ -184,7 +193,7 @@ describe("GarageExportDrawer - báo cáo kỳ", () => {
     expect(body).toEqual({
       from: "2026-10-01",
       to: "2026-12-31",
-      reportType: "all",
+      reportSections: ALL_PERIOD_SECTIONS,
     });
   });
 
@@ -209,7 +218,7 @@ describe("GarageExportDrawer - báo cáo kỳ", () => {
     expect(body).toEqual({
       from: "2026-09-05",
       to: "2026-09-20",
-      reportType: "all",
+      reportSections: ALL_PERIOD_SECTIONS,
     });
   });
 });

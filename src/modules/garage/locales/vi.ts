@@ -967,22 +967,30 @@ export const garageVi = {
     typePlaceholder: "Chọn loại báo cáo",
     types: {
       casesList: "Bảng kê phiếu dịch vụ",
-      periodAll: "Tổng hợp tất cả",
-      periodBusiness: "Tình hình hoạt động kinh doanh (kèm chart)",
-      periodCashflowDebts: "Thu chi & công nợ",
+      periodOverview: "Báo cáo (tổng quan)",
+      periodPnl: "Báo cáo lợi nhuận",
+      periodReceivables: "Công nợ phải thu",
+      periodPayables: "Công nợ phải trả",
       periodOverdue: "Nợ quá hạn cần chú ý",
+      periodCashflow: "Thu chi trong kỳ",
     },
+    multiHint:
+      "Chọn một hoặc nhiều mục. Chọn Bảng kê phiếu dịch vụ thì các mục báo cáo kỳ được bỏ chọn.",
     typeDescs: {
       casesList:
         "Bảng kê phiếu kết thúc, theo dõi lãi lỗ, chi tiết dịch vụ & phụ tùng theo kỳ hoặc theo bộ lọc hiện tại.",
-      periodAll:
-        "Dashboard card, số tổng và chart (thu chi, công nợ trong kỳ và lũy kế) kèm báo cáo lợi nhuận 3 cấp, công nợ, nợ quá hạn và thu chi trong kỳ.",
-      periodBusiness:
-        "Báo cáo lợi nhuận (P&L) 3 cấp theo tháng kèm chart doanh thu, giá vốn, lãi gộp theo ngày/tuần/tháng của kỳ và xu hướng 12 tháng.",
-      periodCashflowDebts:
-        "Dashboard card, số tổng và chart thu chi, công nợ trong kỳ và lũy kế đến ngày xuất, kèm công nợ theo nhóm đối tượng và phiếu thu chi trong kỳ.",
+      periodOverview:
+        "Thẻ thu chi và công nợ phát sinh, nợ lũy kế và các chart chính của kỳ.",
+      periodPnl:
+        "Báo cáo lợi nhuận 3 cấp theo tháng, kèm chart lợi nhuận và tỷ trọng chi phí.",
+      periodReceivables:
+        "Công nợ phải thu phát sinh trong kỳ, tách theo nhóm khách và có VAT / không VAT.",
+      periodPayables:
+        "Công nợ phải trả (nhà cung cấp) còn mở, tính đến ngày xuất.",
       periodOverdue:
         "Danh sách nợ quá hạn trên 30 ngày của cả phải thu và phải trả, tính đến ngày xuất.",
+      periodCashflow:
+        "Phiếu thu chi trong kỳ, kèm đã thu, đã chi, dự chi và dòng tiền ròng.",
     },
   },
   exportJobs: {

@@ -68,6 +68,25 @@ vi.mock("@/shared/components/StandardTable", () => ({
   },
 }));
 
+vi.mock("@/shared/components/MultiCombobox", () => ({
+  MultiCombobox: ({ value, onChange, placeholder, options }: any) => (
+    <select
+      multiple
+      value={value}
+      aria-label={placeholder}
+      onChange={(e) =>
+        onChange?.(Array.from(e.target.selectedOptions, (o) => o.value))
+      }
+    >
+      {options?.map((opt: any) => (
+        <option key={opt.value} value={opt.value}>
+          {opt.label}
+        </option>
+      ))}
+    </select>
+  ),
+}));
+
 vi.mock("@/shared/components/Combobox", () => ({
   Combobox: ({ value, onChange, placeholder, options, disabled }: any) => (
     <div data-testid="combobox" data-disabled={disabled ? "true" : "false"}>

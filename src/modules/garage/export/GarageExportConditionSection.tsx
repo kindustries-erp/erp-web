@@ -18,9 +18,14 @@ import type { GarageExportFilterSummary } from "./GarageExportSections";
 export interface GarageExportConditionSectionProps {
   /** Nhãn trường chọn đối tượng/loại báo cáo (trường đầu tiên của section). */
   targetLabel: string;
-  targetValue: string;
-  targetOptions: Array<{ value: string; label: string }>;
-  onTargetChange: (value: string) => void;
+  /** Ô chọn đơn (mặc định dùng `targetValue`/`targetOptions`/`onTargetChange`). */
+  targetValue?: string;
+  targetOptions?: Array<{ value: string; label: string }>;
+  onTargetChange?: (value: string) => void;
+  /** Ô chọn tuỳ biến (vd combobox nhiều lựa chọn); thay cho ô chọn đơn. */
+  targetField?: React.ReactNode;
+  /** Chặn nút Xuất (vd chưa chọn mục nào). */
+  startDisabled?: boolean;
   /** Dòng mô tả nhỏ dưới ô chọn (vd nội dung của loại báo cáo đang chọn). */
   targetHint?: string;
   exportMode: ExportMode;
@@ -50,6 +55,7 @@ export function GarageExportConditionSection({
   targetValue,
   targetOptions,
   onTargetChange,
+  targetField,
   targetHint,
   exportMode,
   onExportModeChange,
@@ -59,6 +65,7 @@ export function GarageExportConditionSection({
   periodLabels,
   filterSummary,
   starting,
+  startDisabled = false,
   onStartExport,
   radioName,
   baselineNote,
@@ -77,13 +84,15 @@ export function GarageExportConditionSection({
           <label className="text-xs font-medium text-foreground">
             {targetLabel}
           </label>
-          <Combobox
-            options={targetOptions}
-            value={targetValue}
-            onChange={(v) => onTargetChange(v || targetValue)}
-            placeholder={targetLabel}
-            allowClear={false}
-          />
+          {targetField ?? (
+            <Combobox
+              options={targetOptions ?? []}
+              value={targetValue ?? ""}
+              onChange={(v) => onTargetChange?.(v || (targetValue ?? ""))}
+              placeholder={targetLabel}
+              allowClear={false}
+            />
+          )}
           {targetHint && (
             <p className="text-[11px] text-muted-foreground">{targetHint}</p>
           )}
@@ -122,7 +131,7 @@ export function GarageExportConditionSection({
           <Button
             className="w-full justify-center"
             onClick={onStartExport}
-            disabled={starting}
+            disabled={starting || startDisabled}
           >
             <Play className="w-4 h-4 mr-1.5" />
             {starting

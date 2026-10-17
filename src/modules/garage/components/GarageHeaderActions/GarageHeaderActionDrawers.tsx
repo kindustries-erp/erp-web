@@ -2,14 +2,14 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { GarageCaseSyncDrawer } from "../GarageCaseSyncDrawer";
 import { GarageExportDrawer } from "../GarageExportDrawer";
-import type { GarageExportReportType } from "../../export/garageExportReportTypes";
+import type { GarageExportDefaultReport } from "../../export/garageExportReportTypes";
 import type { GarageDashboardExportRange } from "../GarageDashboardExportDrawer";
 import type { GarageHeaderActionsState } from "./useGarageHeaderActions";
 
 export interface GarageHeaderActionDrawersProps {
   actions: GarageHeaderActionsState;
   /** Loại báo cáo chọn sẵn của drawer xuất ở tab đang mở. */
-  defaultReportType: GarageExportReportType;
+  defaultReportType: GarageExportDefaultReport;
   branchId?: string;
   initialRange?: GarageDashboardExportRange;
   onSyncSuccess: () => void;

@@ -962,22 +962,29 @@ export const garageEn = {
     typePlaceholder: "Select report type",
     types: {
       casesList: "Service case list",
-      periodAll: "Full report",
-      periodBusiness: "Business performance (with charts)",
-      periodCashflowDebts: "Cash flow & debts",
+      periodOverview: "Overview report",
+      periodPnl: "Profit report",
+      periodReceivables: "Receivables",
+      periodPayables: "Payables",
       periodOverdue: "Overdue debts",
+      periodCashflow: "Cash flow in period",
     },
+    multiHint:
+      "Pick one or more items. Choosing the Service case list drops the period items.",
     typeDescs: {
       casesList:
         "Completed case list, profit & loss tracking and service & parts detail, by period or by the current filter.",
-      periodAll:
-        "Dashboard with cards, totals and charts (cash flow, period and cumulative debt) plus the 3-level profit report, debts, overdue debts and period cash flow.",
-      periodBusiness:
-        "3-level monthly profit & loss report with revenue, cost and gross profit charts by day/week/month of the period plus a 12-month trend.",
-      periodCashflowDebts:
-        "Dashboard with cards, totals and charts for cash flow, period and cumulative debt as of the export date, plus debts by partner group and period receipts/payments.",
+      periodOverview:
+        "Cards and charts of the period: cash flow, period debts and cumulative debts.",
+      periodPnl:
+        "3-level monthly profit report with profit and cost-ratio charts.",
+      periodReceivables:
+        "Receivables incurred in the period, by partner group and with/without VAT.",
+      periodPayables: "Open payables to suppliers as of the export date.",
       periodOverdue:
         "Receivables and payables overdue by more than 30 days, as of the export date.",
+      periodCashflow:
+        "Cash receipts and payments in the period, with received, paid, planned and net cash flow.",
     },
   },
   exportJobs: {

@@ -3,8 +3,12 @@ import { FileSpreadsheet } from "lucide-react";
 import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
 import { GarageExportHistoryPanel } from "@/modules/garage/export/GarageExportSections";
 import { GarageExportConditionSection } from "@/modules/garage/export/GarageExportConditionSection";
+import { MultiCombobox } from "@/shared/components/MultiCombobox";
 import type { GarageCasesTableQuery } from "@/modules/garage/export/garageExportScopes";
-import type { GarageExportReportType } from "@/modules/garage/export/garageExportReportTypes";
+import {
+  type GarageExportDefaultReport,
+  type GarageExportReportType,
+} from "@/modules/garage/export/garageExportReportTypes";
 import { GarageCaseExportConditionFields } from "@/modules/garage/components/GarageCaseExportDrawer/components/GarageCaseExportConditionFields";
 import type { GarageDashboardExportRange } from "@/modules/garage/components/GarageDashboardExportDrawer";
 import { useGarageExportDrawerLogic } from "./hooks/useGarageExportDrawerLogic";
@@ -14,7 +18,7 @@ export interface GarageExportDrawerProps {
   open: boolean;
   onClose: () => void;
   /** Loại báo cáo chọn sẵn khi mở; người dùng đổi được trong drawer. */
-  defaultReportType: GarageExportReportType;
+  defaultReportType: GarageExportDefaultReport;
   initialBranchId?: string;
   /** Điều kiện bảng đang xem; thiếu thì ẩn chế độ "theo filter hiện tại". */
   tableQuery?: GarageCasesTableQuery;
@@ -38,7 +42,7 @@ export function GarageExportDrawer({
     initialRange,
   });
   const { exporter, t, cases, active } = logic;
-  const typeSelect = useGarageReportTypeOptions(logic.reportType);
+  const typeSelect = useGarageReportTypeOptions();
 
   return (
     <StandardFormDrawer
@@ -75,11 +79,17 @@ export function GarageExportDrawer({
         <div className="space-y-4 text-xs">
           <GarageExportConditionSection
             targetLabel={typeSelect.label}
-            targetValue={logic.reportType}
-            targetOptions={typeSelect.options}
-            onTargetChange={(value) =>
-              logic.setReportType(value as GarageExportReportType)
+            targetField={
+              <MultiCombobox
+                options={typeSelect.options}
+                value={logic.reportTypes}
+                onChange={(value) =>
+                  logic.setReportTypes(value as GarageExportReportType[])
+                }
+                placeholder={typeSelect.label}
+              />
             }
+            startDisabled={logic.reportTypes.length === 0}
             targetHint={typeSelect.hint}
             exportMode={active.exportMode}
             onExportModeChange={active.setExportMode}

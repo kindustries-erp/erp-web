@@ -3,7 +3,7 @@ import {
   type ExportJobScope,
 } from "@/shared/export-jobs";
 
-import type { GaragePeriodReportType } from "./garageExportReportTypes";
+import type { GaragePeriodReportSectionKey } from "./garageExportReportTypes";
 
 const BASE = "/api/v1/greenway";
 
@@ -73,7 +73,7 @@ export interface GarageCasesExportPayload {
 export interface GarageDashboardExportPayload {
   from?: string;
   to?: string;
-  reportType?: GaragePeriodReportType;
+  reportSections?: GaragePeriodReportSectionKey[];
 }
 
 /** Body xuất nền công nợ (khớp `GarageDebtsExportDto`). */

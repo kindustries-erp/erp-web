@@ -13,7 +13,7 @@ import {
   useGarageDashboardExportStore,
   type GarageDashboardExportPayload,
 } from "@/modules/garage/export/garageExportScopes";
-import type { GaragePeriodReportType } from "@/modules/garage/export/garageExportReportTypes";
+import type { GaragePeriodReportSectionKey } from "@/modules/garage/export/garageExportReportTypes";
 import { useGarageExportLabels } from "@/modules/garage/export/useGarageExportLabels";
 
 /** Khoảng ngày đặt sẵn khi mở drawer từ một ngữ cảnh có kỳ (vd drawer chi tiết KPI). */
@@ -25,14 +25,14 @@ export interface GarageDashboardExportRange {
 export interface UseGarageDashboardExportOptions {
   open: boolean;
   initialRange?: GarageDashboardExportRange;
-  /** Loại báo cáo kỳ; thiếu thì API xuất toàn bộ (`all`). */
-  reportType?: GaragePeriodReportType;
+  /** Các mục báo cáo kỳ đã chọn; thiếu thì API xuất toàn bộ. */
+  reportSections?: GaragePeriodReportSectionKey[];
 }
 
 export function useGarageDashboardExport({
   open,
   initialRange,
-  reportType,
+  reportSections,
 }: UseGarageDashboardExportOptions) {
   const {
     t,
@@ -78,7 +78,7 @@ export function useGarageDashboardExport({
       return;
     }
     await exporter.start(
-      { from: period.dateFrom, to: period.dateTo, reportType },
+      { from: period.dateFrom, to: period.dateTo, reportSections },
       branchHeaders(branchId),
     );
   };

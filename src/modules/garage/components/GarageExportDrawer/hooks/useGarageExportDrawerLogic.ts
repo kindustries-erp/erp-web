@@ -2,8 +2,11 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { GarageCasesTableQuery } from "@/modules/garage/export/garageExportScopes";
 import {
+  applyReportSelection,
+  defaultReportSelection,
   isCasesReport,
-  toPeriodReportType,
+  toPeriodSectionKeys,
+  type GarageExportDefaultReport,
   type GarageExportReportType,
 } from "@/modules/garage/export/garageExportReportTypes";
 import { useGarageCaseExportLogic } from "@/modules/garage/components/GarageCaseExportDrawer/hooks/useGarageCaseExportLogic";
@@ -14,8 +17,8 @@ import {
 
 export interface UseGarageExportDrawerLogicOptions {
   open: boolean;
-  /** Loại báo cáo chọn sẵn mỗi lần mở (tab Hoạt động: bảng kê; tab Tổng quan: tổng hợp). */
-  defaultReportType: GarageExportReportType;
+  /** Loại báo cáo chọn sẵn mỗi lần mở (tab Hoạt động: bảng kê; tab Tổng quan: mọi mục kỳ). */
+  defaultReportType: GarageExportDefaultReport;
   initialBranchId?: string;
   /** Điều kiện bảng đang xem; chỉ dùng cho bảng kê phiếu dịch vụ. */
   tableQuery?: GarageCasesTableQuery;
@@ -35,14 +38,18 @@ export function useGarageExportDrawerLogic({
   initialRange,
 }: UseGarageExportDrawerLogicOptions) {
   const { t } = useTranslation("garage");
-  const [reportType, setReportType] =
-    useState<GarageExportReportType>(defaultReportType);
+  const [reportTypes, setReportTypesState] = useState<GarageExportReportType[]>(
+    () => defaultReportSelection(defaultReportType),
+  );
 
   useEffect(() => {
-    if (open) setReportType(defaultReportType);
+    if (open) setReportTypesState(defaultReportSelection(defaultReportType));
   }, [open, defaultReportType]);
 
-  const isCases = isCasesReport(reportType);
+  const setReportTypes = (next: GarageExportReportType[]) =>
+    setReportTypesState((prev) => applyReportSelection(prev, next));
+
+  const isCases = reportTypes.some(isCasesReport);
   const cases = useGarageCaseExportLogic({
     open: open && isCases,
     initialBranchId,
@@ -51,7 +58,7 @@ export function useGarageExportDrawerLogic({
   const periodReport = useGarageDashboardExport({
     open: open && !isCases,
     initialRange,
-    reportType: toPeriodReportType(reportType),
+    reportSections: toPeriodSectionKeys(reportTypes),
   });
 
   // Hai nhánh có cùng bộ trường (chế độ, kỳ, exporter, nút Xuất) nên drawer dùng chung `active`
@@ -59,8 +66,8 @@ export function useGarageExportDrawerLogic({
 
   return {
     t,
-    reportType,
-    setReportType,
+    reportTypes,
+    setReportTypes,
     isCases,
     cases,
     active,
