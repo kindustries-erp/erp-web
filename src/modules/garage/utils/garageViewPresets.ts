@@ -335,3 +335,18 @@ export const GARAGE_DEBT_FILTER_ITEMS: ViewModeFilterItem<string>[] = [
   { value: "61-90", label: "61 - 90 ngày (Quá hạn)", dotColor: "rose" },
   { value: ">90", label: "> 90 ngày (Khó đòi)", dotColor: "rose" },
 ];
+
+/**
+ * Bộ lọc tuổi nợ của tab Phải thu. Lọc theo "xe có số dư trong mốc", khớp với
+ * tổng từng cột (key `agingBucket` ở API), tách khỏi GARAGE_DEBT_FILTER_ITEMS
+ * dùng chung với Phải trả.
+ */
+export const GARAGE_RECEIVABLE_AGING_FILTER_ITEMS: ViewModeFilterItem<string>[] =
+  [
+    { value: "ALL", label: "Tất cả" },
+    { value: "HAS_DEBT", label: "Đang còn nợ", dotColor: "amber" },
+    { value: "0-30", label: "Có nợ 0-30 ngày", dotColor: "emerald" },
+    { value: "31-60", label: "Có nợ 31-60 ngày", dotColor: "amber" },
+    { value: "61-90", label: "Có nợ 61-90 ngày", dotColor: "rose" },
+    { value: ">90", label: "Có nợ trên 90 ngày", dotColor: "rose" },
+  ];
