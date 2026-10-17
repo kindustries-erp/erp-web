@@ -8,7 +8,6 @@ import {
 import { TableText } from "@/shared/components/DataTable/TableText";
 import { Badge } from "@/shared/components/ui/badge";
 import { Tooltip } from "@/core/components/ui/Tooltip";
-import { PillTabs, type PillTabItem } from "@/shared/components/PillTabs";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import {
   useGarageOpexList,
@@ -20,6 +19,17 @@ import toast from "react-hot-toast";
 import { ReceiptText, Eye, Pencil, Copy, Trash2, Sparkles } from "lucide-react";
 import type { ActionDropdownItem } from "@/shared/components/ActionDropdown";
 import { cn } from "@/shared/utils";
+import { usePageViewPresets } from "@/shared/hooks/usePageViewPresets";
+import {
+  useUserPreferencesStore,
+  type TableViewPreset,
+} from "@/shared/hooks/useUserPreferences";
+import {
+  GARAGE_OPEX_COLUMN_VIEW_PRESETS,
+  DEFAULT_GARAGE_OPEX_COLUMN_VISIBILITY,
+  GARAGE_OPEX_FILTER_ITEMS,
+} from "../utils/garageViewPresets";
+import { GarageViewModeCombobox } from "../components/molecules/garage-view-mode-combobox";
 
 const getCostGroupInfo = (
   categoryKey: string,
@@ -52,9 +62,43 @@ const getCostGroupInfo = (
   };
 };
 
+const columnPresetsTableId = "garage-opex-column-views";
+const actualTableId = "garage-opex-table";
+
 export function GarageOpex() {
   const { t } = useTranslation("garage");
   const listHook = useGarageOpexList();
+
+  const columnViewPresetsHook = usePageViewPresets({
+    tableId: columnPresetsTableId,
+    defaultPresets: GARAGE_OPEX_COLUMN_VIEW_PRESETS,
+  });
+
+  const [activeColumnPresetKey, setActiveColumnPresetKey] = useState<string>(
+    () => {
+      const stored = useUserPreferencesStore
+        .getState()
+        .getTablePreference(actualTableId);
+      return stored?.activeView || "overview";
+    },
+  );
+
+  const handleColumnPresetChange = (preset: TableViewPreset) => {
+    setActiveColumnPresetKey(preset.key);
+    const currentPref = useUserPreferencesStore
+      .getState()
+      .getTablePreference(actualTableId) || {
+      columnOrder: [],
+      columnVisibility: {},
+    };
+    useUserPreferencesStore.getState().setTablePreferences(actualTableId, {
+      ...currentPref,
+      columnOrder: [],
+      columnVisibility:
+        preset.columnVisibility || DEFAULT_GARAGE_OPEX_COLUMN_VISIBILITY,
+      activeView: preset.key,
+    });
+  };
 
   // Drawer state
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -496,15 +540,29 @@ export function GarageOpex() {
     return { totalAmountSum: amt, totalOjSum: oj };
   }, [listHook.data]);
 
-  // Toolbar Quick Filter PillTabs Items
-  const pillTabItems: PillTabItem<CostGroupFilter>[] = useMemo(
-    () => [
-      { value: "ALL", label: t("opex.tabs.all", "Tất cả") },
-      { value: "OPEX", label: t("opex.tabs.opex", "CP Vận hành") },
-      { value: "COGS", label: t("opex.tabs.cogs", "Giá vốn (COGS)") },
-      { value: "COMMISSION", label: t("opex.tabs.commission", "Hoa hồng") },
-    ],
-    [t],
+  const viewTabsNode = (
+    <div className="w-full sm:w-auto flex items-center flex-wrap gap-2 py-0.5">
+      <GarageViewModeCombobox
+        presets={columnViewPresetsHook.presets}
+        activePresetKey={activeColumnPresetKey}
+        onSelect={handleColumnPresetChange}
+        onCreateView={() => {}}
+        onEditView={() => {}}
+        onDeleteView={(key) => columnViewPresetsHook.deleteView(key)}
+        filterGroup={{
+          title: t("opex.filterGroup", { defaultValue: "Nhóm chi phí" }),
+          value: listHook.costGroup,
+          onChange: (val) => listHook.setCostGroup(val as CostGroupFilter),
+          items: GARAGE_OPEX_FILTER_ITEMS.map((item) => ({
+            value: item.value,
+            label: t(`opex.tabs.${item.value.toLowerCase()}`, {
+              defaultValue: String(item.label),
+            }),
+            dotColor: item.dotColor,
+          })),
+        }}
+      />
+    </div>
   );
 
   return (
@@ -517,6 +575,7 @@ export function GarageOpex() {
         )}
         icon={<ReceiptText className="w-5 h-5 text-primary" />}
         tableId="garage-opex-table"
+        defaultColumnVisibility={DEFAULT_GARAGE_OPEX_COLUMN_VISIBILITY}
         items={listHook.data}
         columns={columns}
         getRowKey={(row) => row.id}
@@ -540,17 +599,7 @@ export function GarageOpex() {
           listHook.setCostGroup("ALL");
         }}
         rowActions={getRowActions}
-        customActionsNode={
-          <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
-            <PillTabs<CostGroupFilter>
-              value={listHook.costGroup}
-              onValueChange={(val) => listHook.setCostGroup(val)}
-              items={pillTabItems}
-              size="sm"
-              className="w-full sm:w-auto shrink-0"
-            />
-          </div>
-        }
+        customActionsNode={viewTabsNode}
         summaryRow={{
           amount: (
             <div className="flex flex-col items-end justify-center">
