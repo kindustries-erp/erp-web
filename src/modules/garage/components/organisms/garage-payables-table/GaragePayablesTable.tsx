@@ -20,7 +20,7 @@ import {
 import {
   GARAGE_PAYABLES_COLUMN_VIEW_PRESETS,
   DEFAULT_GARAGE_PAYABLES_COLUMN_VISIBILITY,
-  GARAGE_DEBT_FILTER_ITEMS,
+  GARAGE_PAYABLE_AGING_FILTER_ITEMS,
 } from "@/modules/garage/utils/garageViewPresets";
 import { GarageViewModeCombobox } from "@/modules/garage/components/molecules/garage-view-mode-combobox";
 
@@ -80,7 +80,7 @@ export const GaragePayablesTable: React.FC<GaragePayablesTableProps> = ({
       setActiveDebtFilter(val);
       if (val === "ALL") {
         listHook.setColumnFilter("balanceAmount", []);
-        listHook.setColumnFilter("maxAgingDays", []);
+        listHook.setColumnFilter("agingBucket", []);
       } else if (val === "HAS_DEBT") {
         listHook.setColumnFilter("balanceAmount", [
           "0-10m",
@@ -88,10 +88,10 @@ export const GaragePayablesTable: React.FC<GaragePayablesTableProps> = ({
           "20m-50m",
           ">50m",
         ]);
-        listHook.setColumnFilter("maxAgingDays", []);
+        listHook.setColumnFilter("agingBucket", []);
       } else {
         listHook.setColumnFilter("balanceAmount", []);
-        listHook.setColumnFilter("maxAgingDays", [val]);
+        listHook.setColumnFilter("agingBucket", [val]);
       }
     },
     [listHook],
@@ -110,7 +110,7 @@ export const GaragePayablesTable: React.FC<GaragePayablesTableProps> = ({
           title: t("debts.filterGroup", { defaultValue: "Trạng thái nợ" }),
           value: activeDebtFilter,
           onChange: handleDebtFilterChange,
-          items: GARAGE_DEBT_FILTER_ITEMS.map((item) => ({
+          items: GARAGE_PAYABLE_AGING_FILTER_ITEMS.map((item) => ({
             value: item.value,
             label: item.label,
             dotColor: item.dotColor,
