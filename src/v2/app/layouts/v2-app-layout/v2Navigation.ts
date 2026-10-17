@@ -1,7 +1,7 @@
 import {
   LayoutDashboard,
   Boxes,
-  FileText,
+  LibraryBig,
   Package,
   Settings,
 } from "lucide-react";
@@ -59,10 +59,10 @@ export function getV2NavItems(t: TranslationFn): V2SidebarNavItem[] {
       href: "/v2/sales-orders",
     },
     {
-      id: "purchasing",
-      label: t("nav.items.purchasing", "Mua hàng"),
-      icon: FileText,
-      href: "/v2/purchasing",
+      id: "catalog",
+      label: t("nav.items.catalog", "Danh mục"),
+      icon: LibraryBig,
+      href: "/v2/catalog",
     },
     {
       id: "inventory",

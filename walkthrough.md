@@ -1,3 +1,37 @@
+# Business Partners trên ERP Web V2
+
+## Kết quả
+
+- Thêm module dùng chung cho `/v2/customers` và `/v2/suppliers`, phân biệt bằng `CUSTOMER`/`VENDOR`.
+- Desktop dùng bảng server V2; mobile dùng card, menu thao tác và filter modal.
+- Drawer một cột có ba section, hỗ trợ xem/tạo/sửa, sinh mã, dirty guard và xóa mềm qua confirm modal.
+- Route và thao tác tuân theo quyền `business_partners`; menu mobile có mục `Danh mục`.
+- Preset tiếp tục dùng table ID V1 để giữ cấu hình cột đã lưu.
+
+## Verification
+
+```bash
+bunx vitest run src/v2/modules/business-partners/api/businessPartnersApi.test.ts src/v2/modules/business-partners/tests/integration/BusinessPartnersPage.test.tsx src/v2/shared/components/organisms/v2-standard-table/mobile/V2StandardTable.mobile.test.tsx src/v2/app/router/v2RouteConfig.test.ts
+bunx vitest run src/v2/app/layouts/v2-app-layout/v2Navigation.test.ts src/v2/app/layouts/v2-app-layout/v2Navigation.filter.test.ts src/v2/app/layouts/v2-app-layout/V2AppLayout.test.tsx
+bun run type:check
+```
+
+- Business Partner/route/mobile filter: 21 tests PASS, gồm create → mutation → refetch cho CUSTOMER và VENDOR.
+- Navigation/layout regression: 10 tests PASS.
+- ESLint scoped và TypeScript: PASS.
+- Build và style toàn repo: PASS.
+- Full Vitest: 479 files, 2.092 tests PASS, 12 skipped.
+- `verify:final` không được gọi trực tiếp vì guard yêu cầu working tree đã commit; chuỗi lệnh bên trong script đã chạy đầy đủ trên mã hiện tại.
+
+## Kiểm tra thủ công
+
+1. Mở `/v2/customers` và `/v2/suppliers` bằng tài khoản có quyền read.
+2. Kiểm tra search, filter, sort, pagination và preset trên desktop; mở filter và row action trên mobile.
+3. Tạo rồi sửa bằng fixture/mocked API; kiểm tra dirty guard, refresh bảng và confirm xóa.
+4. Mở route V1 tương ứng và xác nhận preset vẫn được đọc bằng cùng table ID.
+
+---
+
 # Garage Drawer Table Scroll Fix
 
 ## Change

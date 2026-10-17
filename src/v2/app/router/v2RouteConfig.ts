@@ -20,9 +20,21 @@ export const V2_ROUTES: V2RouteDef[] = [
     title: "Đơn bán hàng (Sales Orders)",
   },
   {
+    id: "customers",
+    path: "/v2/customers",
+    title: "Khách hàng",
+    permission: { collection: "business_partners", action: "read" },
+  },
+  {
     id: "purchasing",
     path: "/v2/purchasing",
     title: "Quản lý mua hàng (Purchasing)",
+  },
+  {
+    id: "suppliers",
+    path: "/v2/suppliers",
+    title: "Nhà cung cấp",
+    permission: { collection: "business_partners", action: "read" },
   },
   { id: "inventory", path: "/v2/inventory", title: "Kho vận (Inventory)" },
   {
