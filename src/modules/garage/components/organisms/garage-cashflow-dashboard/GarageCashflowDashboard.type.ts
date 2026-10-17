@@ -5,4 +5,5 @@ export interface GarageCashflowDashboardProps {
   activeTab?: string;
   onTabChange?: (val: string) => void;
   onOpenCaseDetail?: (caseCode: string) => void;
+  onExportClick?: () => void;
 }

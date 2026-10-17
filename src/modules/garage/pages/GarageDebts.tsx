@@ -125,6 +125,8 @@ export function GarageDebts({
           activeTab={activeTab}
           onTabChange={handleTabChange}
           onExportClick={() => openExportDrawer()}
+          canSyncGarage={canSyncGarage}
+          onSyncCases={() => setSyncDrawerOpen(true)}
           onOpenCustomerDetail={(
             code: string,
             name?: string,

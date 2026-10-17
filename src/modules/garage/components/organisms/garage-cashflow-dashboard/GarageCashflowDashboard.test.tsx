@@ -6,8 +6,6 @@ import { GarageCashflowDashboard } from "./GarageCashflowDashboard";
 vi.mock("./GarageCashflowDashboard.hook", () => ({
   useGarageCashflowDashboard: () => ({
     t: (key: string, fallback?: string) => fallback || key,
-    filterConfig: { period: true, custom: [] },
-    filter: { state: { custom: {} }, setField: vi.fn(), reset: vi.fn() },
     data: {
       kpi: {
         totalIn: 1000000,
@@ -29,14 +27,27 @@ vi.mock("./GarageCashflowDashboard.hook", () => ({
     setSelectedVoucher: vi.fn(),
     selectedCaseCode: null,
     setSelectedCaseCode: vi.fn(),
+    exportDrawerOpen: false,
+    setExportDrawerOpen: vi.fn(),
+    handleOpenExport: vi.fn(),
     handleOpenItem: vi.fn(),
     handleOpenCase: vi.fn(),
   }),
 }));
 
 vi.mock("@/shared/components/DashboardTemplate", () => ({
-  DashboardTemplate: ({ title, children }: any) => (
-    <div data-testid="mock-dashboard-template">
+  DashboardTemplate: ({
+    title,
+    createLabel,
+    filterConfig,
+    filter,
+    children,
+  }: any) => (
+    <div
+      data-testid="mock-dashboard-template"
+      data-create-label={createLabel}
+      data-has-filter={Boolean(filterConfig || filter)}
+    >
       <h1>{title}</h1>
       {children}
     </div>
@@ -65,15 +76,24 @@ vi.mock("../garage-cashflow-drawer/GarageCashflowDrawer", () => ({
   GarageCashflowDrawer: () => <div data-testid="mock-cashflow-drawer" />,
 }));
 
+vi.mock("../garage-cashflow-export-drawer/GarageCashflowExportDrawer", () => ({
+  GarageCashflowExportDrawer: ({ open }: any) =>
+    open ? <div data-testid="mock-export-drawer" /> : null,
+}));
+
 vi.mock("../../GarageCaseStandaloneDrawer", () => ({
   GarageCaseStandaloneDrawer: () => <div data-testid="mock-case-drawer" />,
 }));
 
 describe("GarageCashflowDashboard", () => {
-  it("renders DashboardTemplate with child organism panels", () => {
+  it("renders DashboardTemplate with export button, without filter config, and child panels", () => {
     render(<GarageCashflowDashboard />);
 
-    expect(screen.getByTestId("mock-dashboard-template")).toBeInTheDocument();
+    const template = screen.getByTestId("mock-dashboard-template");
+    expect(template).toBeInTheDocument();
+    expect(template).toHaveAttribute("data-create-label", "Xuất Excel");
+    expect(template).toHaveAttribute("data-has-filter", "false");
+
     expect(screen.getByTestId("mock-kpi-cards")).toBeInTheDocument();
     expect(screen.getByTestId("mock-trend-panel")).toBeInTheDocument();
     expect(screen.getByTestId("mock-breakdown-panels")).toBeInTheDocument();
