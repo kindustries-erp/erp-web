@@ -1,4 +1,49 @@
 export const garageEn = {
+  cashflow: {
+    tabs: {
+      dashboard: "Overview",
+      vouchers: "Cashflow Vouchers",
+    },
+    dashboard: {
+      title: "Garage Cashflow Overview",
+      desc: "Summary of receipts & payments, payment methods, trends and key transactions",
+    },
+    kpi: {
+      totalIn: "Cash In (Receipts)",
+      totalOut: "Cash Out (Payments)",
+      netCashflow: "Net Cashflow",
+      totalVouchers: "Total Vouchers",
+      vouchersCount: "vouchers",
+      receipts: "In",
+      payments: "Out",
+    },
+    trend: {
+      title: "Monthly Cashflow Trend",
+    },
+    breakdown: {
+      methodTitle: "Payment Method Breakdown",
+      contentTitle: "Payment Content Breakdown",
+    },
+    topTxns: {
+      topInTitle: "Top Cash Receipts",
+      topOutTitle: "Top Cash Payments",
+    },
+    table: {
+      paymentMethod: "Payment Method",
+      paymentStatus: "Payment Status",
+    },
+    method: {
+      cash: "Cash",
+      transfer: "Bank Transfer",
+      card: "Card",
+      fund: "Cashflow",
+    },
+    status: {
+      paid: "Paid",
+      approved: "Approved",
+      pending: "Pending",
+    },
+  },
   cashflowDuplicate: {
     title: "Possible duplicate voucher",
     intro:

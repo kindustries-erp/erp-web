@@ -90,6 +90,75 @@ export interface CashflowDuplicateParams {
   excludeId?: string;
 }
 
+export interface GarageCashflowDashboardParams {
+  dateFrom?: string;
+  dateTo?: string;
+  paymentMethod?: string;
+  paymentContent?: string;
+  branchId?: string;
+}
+
+export interface GarageCashflowKpiData {
+  totalIn: number;
+  totalOut: number;
+  net: number;
+  countIn: number;
+  countOut: number;
+  pendingOutAmount: number;
+  pendingOutCount: number;
+}
+
+export interface GarageCashflowBreakdownItem {
+  name: string;
+  amount: number;
+  count: number;
+  percentage?: number;
+}
+
+export interface GarageCashflowMethodBreakdown {
+  in: GarageCashflowBreakdownItem[];
+  out: GarageCashflowBreakdownItem[];
+}
+
+export interface GarageCashflowContentBreakdown {
+  in: GarageCashflowBreakdownItem[];
+  out: GarageCashflowBreakdownItem[];
+}
+
+export interface GarageCashflowTrendItem {
+  label: string;
+  cashIn: number;
+  cashOut: number;
+  net: number;
+}
+
+export interface GarageCashflowTopTransactionItem {
+  id: string;
+  voucherCode: string;
+  transDate: string;
+  amount: number;
+  partnerName?: string | null;
+  licensePlate?: string | null;
+  paymentMethod?: string | null;
+  paymentContent?: string | null;
+  paymentStatus?: "PENDING" | "APPROVED" | "PAID" | null;
+  caseCode?: string | null;
+  caseId?: string | null;
+}
+
+export interface GarageCashflowTopTransactions {
+  in: GarageCashflowTopTransactionItem[];
+  out: GarageCashflowTopTransactionItem[];
+}
+
+export interface GarageCashflowDashboardData {
+  kpi: GarageCashflowKpiData;
+  methodBreakdown: GarageCashflowMethodBreakdown;
+  contentBreakdown: GarageCashflowContentBreakdown;
+  trend: GarageCashflowTrendItem[];
+  topTransactions: GarageCashflowTopTransactions;
+}
+
 export const garageCashflowApi = {
   checkDuplicates: async (
     params: CashflowDuplicateParams,
@@ -106,9 +175,12 @@ export const garageCashflowApi = {
     });
     return res.data;
   },
-  getDashboard: async () => {
+  getDashboard: async (
+    params?: GarageCashflowDashboardParams,
+  ): Promise<GarageCashflowDashboardData> => {
     const res = await axiosInstance.get(
       "/api/v1/greenway/cashflow-vouchers/dashboard",
+      { params },
     );
     return res.data;
   },

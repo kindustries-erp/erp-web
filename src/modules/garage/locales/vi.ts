@@ -1,4 +1,49 @@
 export const garageVi = {
+  cashflow: {
+    tabs: {
+      dashboard: "Tổng quan",
+      vouchers: "Danh sách phiếu thu chi",
+    },
+    dashboard: {
+      title: "Tổng quan Thu Chi Xưởng",
+      desc: "Tổng hợp chỉ số thu chi, phương thức thanh toán, xu hướng và các giao dịch nổi bật",
+    },
+    kpi: {
+      totalIn: "Tiền vào (Thu)",
+      totalOut: "Tiền ra (Chi)",
+      netCashflow: "Dòng tiền ròng",
+      totalVouchers: "Tổng số phiếu",
+      vouchersCount: "phiếu",
+      receipts: "Thu",
+      payments: "Chi",
+    },
+    trend: {
+      title: "Xu hướng thu chi theo tháng",
+    },
+    breakdown: {
+      methodTitle: "Phân bổ theo Phương thức thanh toán",
+      contentTitle: "Phân bổ theo Nội dung thanh toán",
+    },
+    topTxns: {
+      topInTitle: "Top giao dịch thu lớn nhất",
+      topOutTitle: "Top giao dịch chi lớn nhất",
+    },
+    table: {
+      paymentMethod: "Phương thức",
+      paymentStatus: "Trạng thái",
+    },
+    method: {
+      cash: "Tiền mặt",
+      transfer: "Chuyển khoản",
+      card: "Thẻ",
+      fund: "Dòng tiền",
+    },
+    status: {
+      paid: "Đã thanh toán",
+      approved: "Đã duyệt",
+      pending: "Chờ duyệt",
+    },
+  },
   cashflowDuplicate: {
     title: "Phiếu thu/chi có thể bị trùng",
     intro:
