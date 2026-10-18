@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, within } from "@testing-library/react";
-import { useAppStore } from "@/core/config/appStore";
+import { useV2LocaleStore } from "@/v2/shared/stores/useV2LocaleStore";
 import { V2TablePagination } from "./V2TablePagination";
 
 const renderPagination = (
@@ -25,7 +25,7 @@ const pageButtons = () =>
     .filter((text) => /^\d+$/.test(text));
 
 describe("V2TablePagination", () => {
-  beforeEach(() => useAppStore.setState({ locale: "vi" }));
+  beforeEach(() => useV2LocaleStore.setState({ locale: "vi" }));
 
   it("matches the V1 layout: rows selector, range and page numbers", () => {
     renderPagination({ total: 400, page: 5 });

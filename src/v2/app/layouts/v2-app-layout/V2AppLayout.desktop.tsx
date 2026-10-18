@@ -40,7 +40,7 @@ export const V2AppLayoutDesktop: React.FC<V2AppLayoutProps> = ({
   );
 
   const fallbackBreadcrumbs = React.useMemo(
-    () => [{ label: t("nav.items.dashboard", "Tổng quan") }],
+    () => [{ label: t("v2.nav.items.dashboard", "Tổng quan") }],
     [t, locale],
   );
 
@@ -48,7 +48,7 @@ export const V2AppLayoutDesktop: React.FC<V2AppLayoutProps> = ({
     () => [
       {
         id: "dashboard",
-        label: t("nav.items.dashboard", "Tổng quan"),
+        label: t("v2.nav.items.dashboard", "Tổng quan"),
         icon: LayoutDashboard,
         isClosable: false,
       },

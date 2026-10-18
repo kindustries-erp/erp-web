@@ -28,7 +28,7 @@ export const V2DropdownMobile: React.FC<V2DropdownProps> = ({
 }) => {
   const { t } = useV2Translation();
   const resolvedTitle =
-    title ?? t("dropdown.optionsTitle", "Tùy chọn thao tác");
+    title ?? t("v2.dropdown.optionsTitle", "Tùy chọn thao tác");
   const [internalOpen, setInternalOpen] = React.useState(false);
   const isControlled = controlledOpen !== undefined;
   const open = isControlled ? controlledOpen : internalOpen;
@@ -42,7 +42,7 @@ export const V2DropdownMobile: React.FC<V2DropdownProps> = ({
     <button
       type="button"
       className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-muted-fg hover:bg-surface-hover hover:text-foreground cursor-pointer"
-      aria-label={t("common.actions", "Thao tác")}
+      aria-label={t("v2.common.actions", "Thao tác")}
     >
       <MoreHorizontal className="w-4 h-4" />
     </button>
@@ -105,7 +105,7 @@ export const V2DropdownMobile: React.FC<V2DropdownProps> = ({
             {resolvedTitle}
           </DialogTitle>
           <DialogClose
-            aria-label={t("common.close", "Đóng")}
+            aria-label={t("v2.common.close", "Đóng")}
             className="rounded-md p-1 opacity-70 hover:opacity-100 hover:bg-surface-hover text-muted-fg hover:text-foreground cursor-pointer"
           >
             <X className="h-4 w-4" />

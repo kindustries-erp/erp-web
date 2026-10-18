@@ -5,7 +5,7 @@ import {
   getCoreRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { useAppStore } from "@/core/config/appStore";
+import { useV2LocaleStore } from "@/v2/shared/stores/useV2LocaleStore";
 import { useV2ColumnPreferences } from "./V2StandardTable.preferences.hook";
 import { useV2TableColumns } from "./V2StandardTable.hook";
 import type {
@@ -111,7 +111,7 @@ const headerIds = (container: HTMLElement) =>
   );
 
 describe("useV2TableColumns", () => {
-  beforeEach(() => useAppStore.setState({ locale: "vi" }));
+  beforeEach(() => useV2LocaleStore.setState({ locale: "vi" }));
 
   it("renders the index column first with 1-based numbers", () => {
     const { container } = render(<Harness />);

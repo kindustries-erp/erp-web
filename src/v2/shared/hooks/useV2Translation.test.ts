@@ -1,12 +1,12 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
-import { useAppStore } from "@/core/config/appStore";
+import { useV2LocaleStore } from "@/v2/shared/stores/useV2LocaleStore";
 import { useV2Translation } from "./useV2Translation";
 
 describe("useV2Translation", () => {
   beforeEach(() => {
     act(() => {
-      useAppStore.getState().setLocale("vi");
+      useV2LocaleStore.getState().setLocale("vi");
     });
   });
 
@@ -27,10 +27,10 @@ describe("useV2Translation", () => {
     ).toBe("Đóng tab Đơn bán hàng");
   });
 
-  it("delegates to core navigation keys correctly", () => {
+  it("reads navigation labels from the V2 dictionary", () => {
     const { result } = renderHook(() => useV2Translation());
-    expect(result.current.t("nav.items.dashboard")).toBe("Tổng quan");
-    expect(result.current.t("nav.sections.sales")).toBe("BÁN HÀNG");
+    expect(result.current.t("v2.nav.items.dashboard")).toBe("Tổng quan");
+    expect(result.current.t("v2.nav.sections.sales")).toBe("BÁN HÀNG");
   });
 
   it("reactively switches translations when setLocale is called", () => {
@@ -52,8 +52,8 @@ describe("useV2Translation", () => {
     ).toBe("Close tab Sales Orders");
 
     // Core dictionary in English
-    expect(result.current.t("nav.items.dashboard")).toBe("Dashboard");
-    expect(result.current.t("nav.sections.sales")).toBe("SALES");
+    expect(result.current.t("v2.nav.items.dashboard")).toBe("Dashboard");
+    expect(result.current.t("v2.nav.sections.sales")).toBe("SALES");
   });
 
   it("returns fallback string when key is not found", () => {

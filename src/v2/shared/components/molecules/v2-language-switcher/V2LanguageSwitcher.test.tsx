@@ -1,12 +1,12 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { render, screen, fireEvent, act } from "@testing-library/react";
-import { useAppStore } from "@/core/config/appStore";
+import { useV2LocaleStore } from "@/v2/shared/stores/useV2LocaleStore";
 import { V2LanguageSwitcher } from "./V2LanguageSwitcher";
 
 describe("V2LanguageSwitcher", () => {
   beforeEach(() => {
     act(() => {
-      useAppStore.getState().setLocale("vi");
+      useV2LocaleStore.getState().setLocale("vi");
     });
   });
 
@@ -30,14 +30,14 @@ describe("V2LanguageSwitcher", () => {
 
     fireEvent.click(enBtn);
 
-    expect(useAppStore.getState().locale).toBe("en");
+    expect(useV2LocaleStore.getState().locale).toBe("en");
     expect(enBtn).toHaveAttribute("aria-pressed", "true");
     expect(viBtn).toHaveAttribute("aria-pressed", "false");
   });
 
   it("switches back to Vietnamese when clicking VI button", () => {
     act(() => {
-      useAppStore.getState().setLocale("en");
+      useV2LocaleStore.getState().setLocale("en");
     });
 
     render(<V2LanguageSwitcher />);
@@ -49,7 +49,7 @@ describe("V2LanguageSwitcher", () => {
 
     fireEvent.click(viBtn);
 
-    expect(useAppStore.getState().locale).toBe("vi");
+    expect(useV2LocaleStore.getState().locale).toBe("vi");
     expect(viBtn).toHaveAttribute("aria-pressed", "true");
     expect(enBtn).toHaveAttribute("aria-pressed", "false");
   });

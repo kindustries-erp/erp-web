@@ -1,7 +1,7 @@
 import { vi } from "vitest";
 import { render } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useAppStore } from "@/core/config/appStore";
+import { useV2LocaleStore } from "@/v2/shared/stores/useV2LocaleStore";
 import { V2TableDateCell } from "@/v2/shared/components/atoms/v2-table-date-cell";
 import * as viewportHook from "@/v2/shared/hooks/useViewport";
 import { TableColumnAlign } from "@/v2/shared/types/v2-table";
@@ -84,7 +84,7 @@ export const renderTable = (
   Component: TableComponent,
   overrides: Partial<V2StandardTableProps<DemoRow>> = {},
 ) => {
-  useAppStore.setState({ locale: "vi" });
+  useV2LocaleStore.setState({ locale: "vi" });
   const props: V2StandardTableProps<DemoRow> = {
     tableId: "t-test",
     columns: COLUMNS,

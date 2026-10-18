@@ -9,8 +9,8 @@ import {
 describe("v2Navigation", () => {
   it("generates navigation items with translated labels", () => {
     const mockT = (key: string, fallback?: string) => {
-      if (key === "nav.items.dashboard") return "Bảng điều khiển";
-      if (key === "nav.items.erpSalesOrders") return "Đơn hàng";
+      if (key === "v2.nav.items.dashboard") return "Bảng điều khiển";
+      if (key === "v2.nav.items.erpSalesOrders") return "Đơn hàng";
       return fallback ?? key;
     };
 
@@ -24,16 +24,16 @@ describe("v2Navigation", () => {
   it("generates 7 sections with translated labels in English", () => {
     const mockEnT = (key: string, fallback?: string) => {
       const enDict: Record<string, string> = {
-        "nav.sections.admin": "OVERVIEW",
-        "nav.sections.sales": "SALES",
-        "nav.sections.purchasing": "PURCHASING",
-        "nav.sections.inventory": "INVENTORY",
-        "nav.sections.manufacturing": "MANUFACTURING",
-        "nav.sections.accounting": "ACCOUNTING & CASHFLOW",
-        "nav.sections.settings": "SETTINGS",
-        "nav.items.dashboard": "Dashboard",
-        "nav.items.erpSalesOrders": "Sales Orders",
-        "nav.items.customers": "Customers",
+        "v2.nav.sections.admin": "OVERVIEW",
+        "v2.nav.sections.sales": "SALES",
+        "v2.nav.sections.purchasing": "PURCHASING",
+        "v2.nav.sections.inventory": "INVENTORY",
+        "v2.nav.sections.manufacturing": "MANUFACTURING",
+        "v2.nav.sections.accounting": "ACCOUNTING & CASHFLOW",
+        "v2.nav.sections.settings": "SETTINGS",
+        "v2.nav.items.dashboard": "Dashboard",
+        "v2.nav.items.erpSalesOrders": "Sales Orders",
+        "v2.nav.items.customers": "Customers",
       };
       return enDict[key] ?? fallback ?? key;
     };

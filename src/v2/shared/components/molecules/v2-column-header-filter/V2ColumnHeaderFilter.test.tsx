@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { fireEvent, screen, waitFor } from "@testing-library/react";
-import { useAppStore } from "@/core/config/appStore";
+import { useV2LocaleStore } from "@/v2/shared/stores/useV2LocaleStore";
 import {
   TableSortState,
   V2_ALL_MATCHING_VALUE,
@@ -13,7 +13,7 @@ import {
 } from "./V2ColumnHeaderFilter.fixture";
 
 describe("V2ColumnHeaderFilter", () => {
-  beforeEach(() => useAppStore.setState({ locale: "vi" }));
+  beforeEach(() => useV2LocaleStore.setState({ locale: "vi" }));
 
   it("hides the filter icon until hover when nothing is active", () => {
     renderFilter();

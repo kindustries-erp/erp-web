@@ -50,7 +50,7 @@ export const V2AppLayoutMobile: React.FC<V2AppLayoutProps> = ({
     : "catalog";
 
   const fallbackBreadcrumbs = React.useMemo(
-    () => [{ label: t("nav.items.dashboard", "Tổng quan") }],
+    () => [{ label: t("v2.nav.items.dashboard", "Tổng quan") }],
     [t, locale],
   );
 
@@ -79,7 +79,7 @@ export const V2AppLayoutMobile: React.FC<V2AppLayoutProps> = ({
       <V2Modal
         open={catalogOpen}
         onOpenChange={setCatalogOpen}
-        title={t("nav.items.catalog", "Danh mục")}
+        title={t("v2.nav.items.catalog", "Danh mục")}
         size="full"
       >
         <div className="space-y-4">

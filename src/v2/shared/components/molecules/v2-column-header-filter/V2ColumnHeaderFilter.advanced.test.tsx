@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { fireEvent, screen } from "@testing-library/react";
-import { useAppStore } from "@/core/config/appStore";
+import { useV2LocaleStore } from "@/v2/shared/stores/useV2LocaleStore";
 import {
   ColumnValueType,
   NumberFilterOperator,
@@ -9,7 +9,7 @@ import {
 import { isOpen, open, renderFilter } from "./V2ColumnHeaderFilter.fixture";
 
 describe("V2ColumnHeaderFilter advanced and date filters", () => {
-  beforeEach(() => useAppStore.setState({ locale: "vi" }));
+  beforeEach(() => useV2LocaleStore.setState({ locale: "vi" }));
 
   it("commits an operator filter together with Apply", () => {
     const props = renderFilter({ valueType: ColumnValueType.NUMBER });

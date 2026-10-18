@@ -1,6 +1,6 @@
 import { describe, it, expect, afterEach } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { useAppStore } from "@/core/config/appStore";
+import { useV2LocaleStore } from "@/v2/shared/stores/useV2LocaleStore";
 import { V2AppLayout } from "./V2AppLayout";
 
 describe("V2AppLayout Switcher", () => {
@@ -48,7 +48,7 @@ describe("V2AppLayout Switcher", () => {
   });
 
   it("tự động cập nhật nội dung đa ngôn ngữ khi thay đổi locale", () => {
-    useAppStore.setState({ locale: "vi" });
+    useV2LocaleStore.setState({ locale: "vi" });
     Object.defineProperty(window, "innerWidth", {
       writable: true,
       configurable: true,
