@@ -29,3 +29,10 @@ describe("parseFields", () => {
     expect(hasStatusField(parseFields("name:string"))).toBe(false);
   });
 });
+
+describe("decimal field (đồng bộ với api-module-v2)", () => {
+  it("accepts decimal and keeps it as a field type", () => {
+    const fields = parseFields("code:string:required,amount:decimal");
+    expect(fields.find((f) => f.name === "amount")?.type).toBe("decimal");
+  });
+});

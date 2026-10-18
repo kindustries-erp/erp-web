@@ -30,17 +30,20 @@ export function useSaveBusinessPartnerMutation(
       id
         ? businessPartnersV2Api.update(id, partnerType, form)
         : businessPartnersV2Api.create(partnerType, form),
-    onSuccess: async () => {
+    onSuccess: async (_data, { id }) => {
       await queryClient.invalidateQueries({
         queryKey: businessPartnerKeys.all,
       });
+      // Tiêu đề tách tạo/sửa như V1
       useV2ToastStore.getState().showToast({
         variant: "success",
-        title: t("v2.partners.form.saveSuccess", "Đã lưu đối tác thành công"),
+        title: id
+          ? t("v2.partners.form.updateSuccess", "Đã cập nhật thành công")
+          : t("v2.partners.form.createSuccess", "Đã tạo mới thành công"),
       });
       onSaved();
     },
-    onError: (error) => {
+    onError: (error, { id }) => {
       // Chứng từ đang tham chiếu đã được modal DOCUMENT_IN_USE giải thích
       if (isDocumentInUseError(error)) return;
       const fallback = t(
@@ -49,7 +52,9 @@ export function useSaveBusinessPartnerMutation(
       );
       useV2ToastStore.getState().showToast({
         variant: "destructive",
-        title: fallback,
+        title: id
+          ? t("v2.partners.form.updateError", "Cập nhật thất bại")
+          : t("v2.partners.form.createError", "Tạo mới thất bại"),
         description: extractV2ApiError(error, fallback),
       });
     },

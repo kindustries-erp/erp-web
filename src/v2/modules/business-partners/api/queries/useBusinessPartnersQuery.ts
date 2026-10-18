@@ -29,6 +29,8 @@ export function useBusinessPartnersQuery(
   return {
     items: (result.data?.items ?? []) as BusinessPartner[],
     total: result.data?.total ?? 0,
+    // Ô tổng cột mã = số đối tác khớp bộ lọc (không có cột số để cộng)
+    summaries: { code: result.data?.total ?? 0, ...result.data?.summaries },
     loading: result.isFetching,
     refetch: () => void result.refetch(),
   };

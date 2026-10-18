@@ -1,5 +1,5 @@
 /** Kiểu trường hỗ trợ trong `fields` của generator `v2-module` */
-export const V2_FIELD_TYPES = ["string", "text", "number", "date", "status"];
+export const V2_FIELD_TYPES = ["string", "text", "number", "decimal", "date", "status"];
 
 const NAME_PATTERN = /^[a-z][A-Za-z0-9]*$/;
 

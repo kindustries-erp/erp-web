@@ -63,14 +63,23 @@ src/v2/modules/business-partners/
 | Mã chỉ nhập khi tạo; nút sinh mã chỉ hiện khi tạo | Có |
 | Lọc khoảng ngày `createdAt` | Có (`date_ranges`, backend đã hỗ trợ) |
 | Page size mặc định 50 (màn hình ≥ 900px) / 20 | Có (`getDefaultPageSize` của V2) |
-| Toast tạo/sửa/xóa thành công và thất bại | Có (theo module, không qua interceptor) |
+| Toast tạo/sửa/xóa thành công và thất bại | Có, tiêu đề tách tạo/sửa như V1 (`createSuccess`/`updateSuccess`, `createError`/`updateError`) |
 | Toast thiếu tên đối tác | Có |
 | Toast lỗi tải danh sách và chi tiết | Có |
 | Modal chứng từ phụ thuộc khi xóa (409) | Có (`V2DocumentDependencyModal`) |
 | Lưu cột/view theo bảng, đồng bộ server | Có (mục 4) |
 | Chặn trang khi không có quyền đọc | Có (route guard) |
+| Ô tổng (summary row): số đối tác trên trang và tổng toàn bộ | Có, mới (cột mã, `variant: count`, `summaries.code = total`); V1 không có |
+
+Khác biệt có chủ đích: nút Sửa và Xóa ở hàng và nút Thêm được kiểm tra quyền `update`, `delete`, `create` (V1 hiện luôn). Mã được viết hoa ngay khi nhập (như V1).
 
 Khác biệt đã biết: thông báo lỗi mạng/timeout dùng chuỗi do caller truyền (V1 có chuỗi riêng); V2 không đặt cờ 403 toàn cục và không có luồng impersonation (đều là hạ tầng auth, không thuộc module này).
+
+## 6b. Tổng và đếm (API v2)
+
+- API trả `summaries` theo tên cột số. BP không có cột số nên `summaries` rỗng.
+- Hook `useBusinessPartnersQuery` đặt `summaries.code = total` và cột mã có `summary: { variant: "count", accessor: () => 1 }`. Subtotal trang là số dòng trên trang, total là số đối tác khớp bộ lọc.
+- Trong sinh mã plop: `decimal` là tiền (variant `amount`), `number` là số lượng (variant `qty`). Cả hai đều có ô tổng.
 
 ## 7. Kiểm thử
 
@@ -78,6 +87,8 @@ Khác biệt đã biết: thông báo lỗi mạng/timeout dùng chuỗi do call
 cd erp/erp-web
 bun run test src/v2/modules/business-partners/
 bun run test src/v2/shared/api src/v2/shared/preferences src/v2/shared/stores
+# Test mới: summary cột mã, summaries của hook query, tiêu đề toast tạo/sửa
+# (BusinessPartnerTable.columns.test.tsx, useBusinessPartnersQuery.test.tsx, useBusinessPartnerMutations.test.tsx)
 bunx tsc --noEmit
 ```
 

@@ -10,6 +10,7 @@ registerV2ModuleLocale("partners", {
     createCustomer: "Thêm khách hàng",
     createSupplier: "Thêm nhà cung cấp",
     empty: "Không có đối tác phù hợp",
+    summary: { count: "Số đối tác" },
     columns: {
       code: "Mã đối tác",
       name: "Tên đối tác",
@@ -48,9 +49,12 @@ registerV2ModuleLocale("partners", {
       notes: "Ghi chú",
       requiredName: "Tên đối tác là bắt buộc",
       generateCode: "Sinh mã mới",
-      saveSuccess: "Đã lưu đối tác thành công",
       loadError: "Không thể tải thông tin đối tác",
       saveError: "Không thể lưu thông tin đối tác",
+      createSuccess: "Đã tạo mới thành công",
+      updateSuccess: "Đã cập nhật thành công",
+      createError: "Tạo mới thất bại",
+      updateError: "Cập nhật thất bại",
     },
     delete: {
       title: "Xác nhận xóa",
@@ -68,6 +72,7 @@ registerV2ModuleLocale("partners", {
     createCustomer: "Add customer",
     createSupplier: "Add supplier",
     empty: "No matching business partners",
+    summary: { count: "Partners" },
     columns: {
       code: "Partner code",
       name: "Partner name",
@@ -102,9 +107,12 @@ registerV2ModuleLocale("partners", {
       notes: "Notes",
       requiredName: "Partner name is required",
       generateCode: "Generate new code",
-      saveSuccess: "Business partner saved",
       loadError: "Unable to load business partner",
       saveError: "Unable to save business partner",
+      createSuccess: "Business partner created",
+      updateSuccess: "Business partner updated",
+      createError: "Unable to create business partner",
+      updateError: "Unable to update business partner",
     },
     delete: {
       title: "Confirm deletion",

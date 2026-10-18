@@ -24,6 +24,8 @@ export interface BusinessPartnerListResultDto {
   page: number;
   pageSize: number;
   totalPages: number;
+  /** Tổng toàn bộ dòng khớp bộ lọc theo tên cột số; BP không có cột số nên thường rỗng */
+  summaries?: Record<string, number>;
 }
 
 export interface ColumnOptionDto {

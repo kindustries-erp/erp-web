@@ -23,6 +23,12 @@ export const buildBusinessPartnerColumns = (
     enableResizing: true,
     mobileSlot: "subtitle",
     filter: { valueType: ColumnValueType.TEXT },
+    // Summary row: số đối tác trên trang (subtotal) và tổng toàn bộ (total từ summaries.code)
+    summary: {
+      variant: "count",
+      accessor: () => 1,
+      metricTitle: t("v2.partners.summary.count", "Số đối tác"),
+    },
     cell: (row) => (
       <div className="flex w-full min-w-0 items-center gap-1.5">
         <V2TableText
