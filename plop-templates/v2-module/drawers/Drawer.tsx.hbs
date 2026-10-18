@@ -1,0 +1,83 @@
+import { V2StandardDrawer } from "@/v2/shared/components/organisms/v2-standard-drawer";
+import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
+{{#if hasStatus}}
+import { {{Entity}}StatusBadge } from "../components/molecules/{{entityKebab}}-status-badge";
+{{/if}}
+import { {{Entity}}FormSections } from "../components/organisms/{{entityKebab}}-form";
+import type { {{Entity}}DrawerState } from "./{{Entity}}Drawer.hook";
+import { use{{Entity}}Drawer } from "./{{Entity}}Drawer.hook";
+
+export function {{Entity}}Drawer(props: {{Entity}}DrawerState) {
+  const { t } = useV2Translation();
+  const state = use{{Entity}}Drawer(props);
+  const title = state.creating
+    ? t("v2.{{namespace}}.form.create", "Thêm mới")
+    : state.viewing
+      ? t("v2.{{namespace}}.form.detail", "Chi tiết")
+      : t("v2.{{namespace}}.form.edit", "Chỉnh sửa");
+
+  return (
+    <V2StandardDrawer
+      id={`{{entity}}-${props.recordId ?? "new"}`}
+      open={props.open}
+      onClose={props.onClose}
+      mode={state.creating ? "edit" : state.mode}
+      onToggleEdit={
+        state.viewing && props.canUpdate ? () => state.setMode("edit") : undefined
+      }
+      title={title}
+      subtitle={state.form.{{firstName}} || undefined}
+      titleExtra={
+{{#if hasStatus}}
+        !state.creating ? (
+          <{{Entity}}StatusBadge status={state.form.{{statusName}} } />
+        ) : undefined
+{{else}}
+        undefined
+{{/if}}
+      }
+      layout="1-column"
+      size="md"
+      loading={state.loading}
+      confirmOnClose={state.dirty && !state.viewing}
+      actions={
+        state.viewing
+          ? [
+              {
+                label: t("v2.common.close", "Đóng"),
+                onClick: props.onClose,
+                variant: "outline",
+              },
+            ]
+          : [
+              {
+                label: t("v2.common.cancel", "Hủy"),
+                onClick: props.onClose,
+                variant: "outline",
+                disabled: state.saving,
+              },
+              {
+                label: t("v2.common.save", "Lưu"),
+                onClick: state.submit,
+                primary: true,
+                loading: state.saving,
+                disabled: state.saving || state.loading,
+              },
+            ]
+      }
+    >
+      <{{Entity}}FormSections
+        form={state.form}
+        viewing={state.viewing}
+{{#if hasNextCode}}
+        codeEditable={state.codeEditable}
+        onRegenerateCode={state.regenerateCode}
+{{/if}}
+        errorField={state.errorField}
+        errorMessage={state.errorMessage}
+        t={t}
+        setField={state.setField}
+      />
+    </V2StandardDrawer>
+  );
+}

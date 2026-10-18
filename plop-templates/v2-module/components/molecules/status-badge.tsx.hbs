@@ -1,0 +1,21 @@
+import { Badge } from "@/v2/shared/ui";
+import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
+import { is{{Entity}}Inactive } from "../../../domain/rules/{{entity}}Rules";
+
+export interface {{Entity}}StatusBadgeProps {
+  status: string;
+}
+
+/** Nhãn trạng thái dùng chung giữa cột bảng và tiêu đề drawer */
+export function {{Entity}}StatusBadge({ status }: {{Entity}}StatusBadgeProps) {
+  const { t } = useV2Translation();
+  const inactive = is{{Entity}}Inactive(status);
+
+  return (
+    <Badge variant={inactive ? "secondary" : "default"}>
+      {inactive
+        ? t("v2.{{namespace}}.status.inactive", "Ngưng hoạt động")
+        : t("v2.{{namespace}}.status.active", "Hoạt động")}
+    </Badge>
+  );
+}

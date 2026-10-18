@@ -1,0 +1,121 @@
+{{#if hasNextCode}}
+import { RotateCw } from "lucide-react";
+import { V2Button } from "@/v2/shared/components/atoms";
+{{/if}}
+{{#if hasText}}
+import { V2Textarea } from "@/v2/shared/components/atoms";
+{{/if}}
+import { DrawerField } from "@/v2/shared/components/molecules/v2-drawer-field";
+import { DrawerSection } from "@/v2/shared/components/molecules/v2-drawer-section";
+{{#if hasStatus}}
+import { V2Combobox } from "@/v2/shared/components/molecules/v2-combobox";
+{{/if}}
+import {
+{{#if needsReadValue}}  V2ReadValue,
+{{/if}}  V2TextField,
+} from "@/v2/shared/components/molecules/v2-form-controls";
+import type { {{Entity}}FormValue } from "../../../domain/entities/{{entity}}";
+
+interface FormProps {
+  form: {{Entity}}FormValue;
+  viewing: boolean;
+{{#if hasNextCode}}
+  codeEditable: boolean;
+  onRegenerateCode: () => void;
+{{/if}}
+  errorField: string | null;
+  errorMessage: string;
+  t: (key: string, fallback?: string) => string;
+  setField: <K extends keyof {{Entity}}FormValue>(
+    key: K,
+    value: {{Entity}}FormValue[K],
+  ) => void;
+}
+
+export function {{Entity}}FormSections(props: FormProps) {
+  const { form, viewing, t, setField } = props;
+  return (
+    <DrawerSection title={t("v2.{{namespace}}.form.identity", "Thông tin")}>
+      <div className="grid gap-3 sm:grid-cols-2">
+{{#each formFields}}
+        <DrawerField
+          label={t("v2.{{../namespace}}.columns.{{name}}", "{{name}}")}
+          {{#if required}}required{{/if}}
+          error={props.errorField === "{{name}}" ? props.errorMessage : undefined}
+          {{#if isText}}className="sm:col-span-2"{{/if}}
+        >
+{{#if isFirst}}{{#if ../hasNextCode}}
+          <div className="flex gap-2">
+            <div className="min-w-0 flex-1">
+              <V2TextField
+                viewing={viewing}
+                value={form.{{name}} }
+                className="font-mono"
+                disabled={!props.codeEditable}
+                onChange={(v) => setField("{{name}}", v.toUpperCase())}
+              />
+            </div>
+            {!viewing && props.codeEditable && (
+              <V2Button
+                variant="outline"
+                size="icon-sm"
+                aria-label={t("v2.{{../namespace}}.form.generateCode", "Sinh mã mới")}
+                onClick={props.onRegenerateCode}
+              >
+                <RotateCw className="h-4 w-4" />
+              </V2Button>
+            )}
+          </div>
+{{else}}
+          <V2TextField
+            viewing={viewing}
+            value={form.{{name}} }
+            onChange={(v) => setField("{{name}}", v)}
+          />
+{{/if}}{{else}}{{#if isStatus}}
+          {viewing ? (
+            <V2ReadValue
+              value={
+                form.{{name}} === "INACTIVE"
+                  ? t("v2.{{../namespace}}.status.inactive", "Ngưng hoạt động")
+                  : t("v2.{{../namespace}}.status.active", "Hoạt động")
+              }
+            />
+          ) : (
+            <V2Combobox
+              searchable={false}
+              clearable={false}
+              value={form.{{name}} }
+              onValueChange={(v) =>
+                setField("{{name}}", v === "INACTIVE" ? "INACTIVE" : "ACTIVE")
+              }
+              options={[
+                { value: "ACTIVE", label: t("v2.{{../namespace}}.status.active", "Hoạt động") },
+                { value: "INACTIVE", label: t("v2.{{../namespace}}.status.inactive", "Ngưng hoạt động") },
+              ]}
+            />
+          )}
+{{else}}{{#if isText}}
+          {viewing ? (
+            <V2ReadValue value={form.{{name}} } />
+          ) : (
+            <V2Textarea
+              className="min-h-20"
+              value={form.{{name}} }
+              onChange={(e) => setField("{{name}}", e.target.value)}
+            />
+          )}
+{{else}}
+          <V2TextField
+            viewing={viewing}
+            value={form.{{name}} }
+            {{#if isNumber}}inputMode="decimal"{{/if}}
+            onChange={(v) => setField("{{name}}", v)}
+          />
+{{/if}}{{/if}}{{/if}}
+        </DrawerField>
+{{/each}}
+      </div>
+    </DrawerSection>
+  );
+}

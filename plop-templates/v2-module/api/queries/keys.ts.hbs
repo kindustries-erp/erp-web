@@ -1,0 +1,8 @@
+import type { V2TableQuery } from "@/v2/shared/types/v2-table";
+
+export const {{entityPlural}}Keys = {
+  all: ["v2-{{moduleKebab}}"] as const,
+  list: (query: V2TableQuery) =>
+    [...{{entityPlural}}Keys.all, "list", query] as const,
+  detail: (id: string) => [...{{entityPlural}}Keys.all, "detail", id] as const,
+};
