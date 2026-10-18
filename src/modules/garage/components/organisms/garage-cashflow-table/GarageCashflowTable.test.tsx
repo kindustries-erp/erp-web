@@ -245,6 +245,32 @@ describe("GarageCashflowTable", () => {
       expect(container.innerHTML).toContain("text-orange-600");
     });
 
+    it("renders 5. HH Bán hàng badge with fuchsia styling", () => {
+      const mockVoucher = {
+        ...mockRow,
+        paymentContent: "5. HH Bán hàng",
+      } as any;
+
+      const { container } = render(
+        <div>{renderPaymentContentCell(mockVoucher)}</div>,
+      );
+      expect(screen.getByText("5. HH Bán hàng")).toBeInTheDocument();
+      expect(container.innerHTML).toContain("text-fuchsia-600");
+    });
+
+    it("renders 6. HH Thưởng badge with pink styling", () => {
+      const mockVoucher = {
+        ...mockRow,
+        paymentContent: "6. HH Thưởng",
+      } as any;
+
+      const { container } = render(
+        <div>{renderPaymentContentCell(mockVoucher)}</div>,
+      );
+      expect(screen.getByText("6. HH Thưởng")).toBeInTheDocument();
+      expect(container.innerHTML).toContain("text-pink-600");
+    });
+
     it("renders legacy Ứng trước badge with amber styling", () => {
       const mockVoucher = {
         ...mockRow,
