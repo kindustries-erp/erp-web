@@ -28,8 +28,14 @@ registerV2ModuleLocale("partners", {
       legal: "Pháp nhân & Thuế",
       all: "Tất cả cột",
     },
-    status: { active: "Hoạt động", inactive: "Ngưng hoạt động" },
+    status: {
+      active: "Hoạt động",
+      inactive: "Ngưng hoạt động",
+      inactiveShort: "Ngưng",
+    },
+    listLoadError: "Không thể tải danh sách đối tác",
     form: {
+      missingInfo: "Thiếu thông tin",
       create: "Thêm {{type}} mới",
       detail: "Chi tiết {{type}}",
       edit: "Chỉnh sửa {{type}}",
@@ -76,8 +82,14 @@ registerV2ModuleLocale("partners", {
     },
     actions: { view: "View details", edit: "Edit", delete: "Delete" },
     views: { overview: "Overview", legal: "Legal & Tax", all: "All columns" },
-    status: { active: "Active", inactive: "Inactive" },
+    status: {
+      active: "Active",
+      inactive: "Inactive",
+      inactiveShort: "Inactive",
+    },
+    listLoadError: "Unable to load business partners",
     form: {
+      missingInfo: "Missing information",
       create: "Add new {{type}}",
       detail: "{{type}} details",
       edit: "Edit {{type}}",

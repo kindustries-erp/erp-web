@@ -1,4 +1,4 @@
-import { businessPartnersCoreApi } from "@/modules/business-partners-core/api/businessPartnersCoreApi";
+import { v2HttpClient } from "@/v2/shared/api/v2HttpClient";
 import type {
   V2FetchOptionsParams,
   V2TableQuery,
@@ -8,6 +8,16 @@ import type {
   BusinessPartnerFormValue,
   BusinessPartnerType,
 } from "../domain/entities/businessPartner";
+import type {
+  BusinessPartnerEnvelopeDto,
+  BusinessPartnerListResultDto,
+  BusinessPartnerPayloadDto,
+  ColumnOptionsResultDto,
+  NextCodeDto,
+} from "./dtos/businessPartner.dto";
+
+const BASE = "/api/v1/business-partners";
+const OPTIONS_PAGE_SIZE = 20;
 
 export const toBusinessPartnerListParams = (
   partnerType: BusinessPartnerType,
@@ -41,7 +51,7 @@ export const toBusinessPartnerListParams = (
 export const toBusinessPartnerPayload = (
   partnerType: BusinessPartnerType,
   form: BusinessPartnerFormValue,
-) => ({
+): BusinessPartnerPayloadDto => ({
   code: form.code.trim(),
   name: form.name.trim(),
   partnerType,
@@ -56,33 +66,69 @@ export const toBusinessPartnerPayload = (
 });
 
 export const businessPartnersV2Api = {
-  list: async (partnerType: BusinessPartnerType, query: V2TableQuery) =>
-    businessPartnersCoreApi.list(
-      toBusinessPartnerListParams(partnerType, query),
-    ),
-  options: (partnerType: BusinessPartnerType, params: V2FetchOptionsParams) =>
-    businessPartnersCoreApi.getColumnOptions({
-      column: params.columnKey,
-      search: params.search,
-      page: params.pageParam,
-      pageSize: 20,
-      filters: params.filtersStr,
-      partnerType,
-    }),
-  get: (id: string) => businessPartnersCoreApi.get(id),
-  nextCode: (partnerType: BusinessPartnerType) =>
-    businessPartnersCoreApi.getNextCode(partnerType),
-  create: (partnerType: BusinessPartnerType, form: BusinessPartnerFormValue) =>
-    businessPartnersCoreApi.create(toBusinessPartnerPayload(partnerType, form)),
-  update: (
+  list: async (partnerType: BusinessPartnerType, query: V2TableQuery) => {
+    const { data } = await v2HttpClient.get<BusinessPartnerListResultDto>(
+      BASE,
+      { params: toBusinessPartnerListParams(partnerType, query) },
+    );
+    return data;
+  },
+  options: async (
+    partnerType: BusinessPartnerType,
+    params: V2FetchOptionsParams,
+  ) => {
+    const { data } = await v2HttpClient.get<ColumnOptionsResultDto>(
+      `${BASE}/column-options`,
+      {
+        params: {
+          column: params.columnKey,
+          search: params.search,
+          page: params.pageParam,
+          pageSize: OPTIONS_PAGE_SIZE,
+          filters: params.filtersStr,
+          partnerType,
+        },
+      },
+    );
+    return data;
+  },
+  get: async (id: string): Promise<BusinessPartner> => {
+    const { data } = await v2HttpClient.get<BusinessPartnerEnvelopeDto>(
+      `${BASE}/${id}`,
+    );
+    return data.data as BusinessPartner;
+  },
+  nextCode: async (partnerType: BusinessPartnerType) => {
+    const { data } = await v2HttpClient.get<NextCodeDto>(`${BASE}/next-code`, {
+      params: { partnerType },
+    });
+    return data;
+  },
+  create: async (
+    partnerType: BusinessPartnerType,
+    form: BusinessPartnerFormValue,
+  ) => {
+    const { data } = await v2HttpClient.post<BusinessPartnerEnvelopeDto>(
+      BASE,
+      toBusinessPartnerPayload(partnerType, form),
+    );
+    return data.data as BusinessPartner;
+  },
+  update: async (
     id: string,
     partnerType: BusinessPartnerType,
     form: BusinessPartnerFormValue,
-  ) =>
-    businessPartnersCoreApi.update(
-      id,
+  ) => {
+    const { data } = await v2HttpClient.patch<BusinessPartnerEnvelopeDto>(
+      `${BASE}/${id}`,
       toBusinessPartnerPayload(partnerType, form),
-    ),
-  remove: (id: string): Promise<BusinessPartner> =>
-    businessPartnersCoreApi.remove(id) as Promise<BusinessPartner>,
+    );
+    return data.data as BusinessPartner;
+  },
+  remove: async (id: string) => {
+    const { data } = await v2HttpClient.delete<BusinessPartnerEnvelopeDto>(
+      `${BASE}/${id}`,
+    );
+    return data.data as BusinessPartner;
+  },
 };
