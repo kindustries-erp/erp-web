@@ -1,0 +1,81 @@
+import { registerV2ModuleLocale } from "@/v2/shared/locales";
+
+/** Chữ hiển thị của module; khóa dùng dạng `v2.{{namespace}}.<nhóm>.<khóa>` */
+registerV2ModuleLocale("{{namespace}}", {
+  vi: {
+    title: "{{{titleVi}}}",
+    description: "Quản lý {{{titleVi}}}",
+    list: "Danh sách",
+    create: "Thêm {{{titleVi}}}",
+    empty: "Không có dữ liệu",
+    listLoadError: "Không thể tải danh sách",
+    views: { overview: "Tổng quan", all: "Tất cả cột" },
+    actions: { view: "Xem chi tiết", edit: "Chỉnh sửa", delete: "Xóa" },
+    columns: {
+{{#each fields}}
+      {{name}}: "{{{name}}}",
+{{/each}}
+    },
+{{#if hasStatus}}
+    status: { active: "Hoạt động", inactive: "Ngưng hoạt động" },
+{{/if}}
+    form: {
+      identity: "Thông tin",
+      create: "Thêm {{{titleVi}}} mới",
+      edit: "Chỉnh sửa {{{titleVi}}}",
+      detail: "Chi tiết {{{titleVi}}}",
+      required: "Trường này là bắt buộc",
+      missingInfo: "Thiếu thông tin",
+      saveSuccess: "Đã lưu thành công",
+      saveError: "Không thể lưu dữ liệu",
+      loadError: "Không thể tải dữ liệu",
+{{#if hasNextCode}}
+      generateCode: "Sinh mã mới",
+{{/if}}
+    },
+    delete: {
+      title: "Xác nhận xóa",
+      message: "Bạn có chắc muốn xóa?",
+      success: "Đã xóa",
+      error: "Không thể xóa",
+    },
+  },
+  en: {
+    title: "{{{titleEn}}}",
+    description: "Manage {{{titleEn}}}",
+    list: "List",
+    create: "Add {{{titleEn}}}",
+    empty: "No data",
+    listLoadError: "Unable to load the list",
+    views: { overview: "Overview", all: "All columns" },
+    actions: { view: "View details", edit: "Edit", delete: "Delete" },
+    columns: {
+{{#each fields}}
+      {{name}}: "{{{name}}}",
+{{/each}}
+    },
+{{#if hasStatus}}
+    status: { active: "Active", inactive: "Inactive" },
+{{/if}}
+    form: {
+      identity: "Information",
+      create: "Add new {{{titleEn}}}",
+      edit: "Edit {{{titleEn}}}",
+      detail: "{{{titleEn}}} details",
+      required: "This field is required",
+      missingInfo: "Missing information",
+      saveSuccess: "Saved successfully",
+      saveError: "Unable to save",
+      loadError: "Unable to load data",
+{{#if hasNextCode}}
+      generateCode: "Generate code",
+{{/if}}
+    },
+    delete: {
+      title: "Confirm delete",
+      message: "Are you sure you want to delete?",
+      success: "Deleted",
+      error: "Unable to delete",
+    },
+  },
+});

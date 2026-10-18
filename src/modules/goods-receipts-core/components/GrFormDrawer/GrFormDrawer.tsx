@@ -27,7 +27,7 @@ import {
 import { GrFormSectionTitleExtra } from "./components/GrFormSectionTitleExtra";
 import { buildGrFormActions } from "./components/GrFormActions";
 import { GrFormExcelImport } from "./components/GrFormExcelImport";
-import { ModuleEntityCustomFieldsSection } from "@/shared/components/ModuleEntityCustomFieldsSection";
+import { ModuleEntityCustomFieldsSection } from "@/shared/components/organisms";
 
 export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
   const {

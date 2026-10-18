@@ -2,6 +2,7 @@ import React from "react";
 import { LayoutDashboard } from "lucide-react";
 import { PageLayout } from "@/shared/components/PageLayout";
 import { TableActionGroup } from "@/shared/components/TableActionGroup";
+import type { ActionDropdownItem } from "@/shared/components/ActionDropdown";
 import { FilterPanel } from "@/shared/components/FilterPanel";
 import type {
   FilterPanelConfig,
@@ -20,6 +21,11 @@ export interface DashboardTemplateProps {
   children: React.ReactNode;
   portalId?: string;
   extraActions?: React.ReactNode;
+  /** Nút chính (split button khi kèm `createActions`), giống `SpreadsheetPageTemplate`. */
+  onCreate?: () => void;
+  createLabel?: string;
+  createIcon?: React.ReactNode;
+  createActions?: ActionDropdownItem[];
   tabs?: TabItem[];
   activeTab?: string;
   onTabChange?: (val: string) => void;
@@ -37,6 +43,10 @@ export function DashboardTemplate({
   children,
   portalId = "dashboard",
   extraActions,
+  onCreate,
+  createLabel,
+  createIcon,
+  createActions,
   tabs,
   activeTab,
   onTabChange,
@@ -59,6 +69,10 @@ export function DashboardTemplate({
           activeFilterCount={filter?.activeFilterCount || 0}
           portalId={portalId}
           extraActions={extraActions}
+          onCreate={onCreate}
+          createLabel={createLabel}
+          createIcon={createIcon}
+          createActions={createActions}
         />
       }
     >

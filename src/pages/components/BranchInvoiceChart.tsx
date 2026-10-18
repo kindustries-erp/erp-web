@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Panel, PanelMore } from "@/shared/components/Panel";
 import { ChartSkeleton } from "@/shared/components/Skeleton";
 import { BarChart } from "@/shared/components/charts/BarChart";
-import { money } from "@/shared/utils/format";
+import { shortMoney } from "@/shared/utils/format";
 import { erpInvoiceDashboardApi } from "@/modules/erp-invoices-core/api/erpInvoiceDashboardApi";
 
 interface BranchInvoiceChartProps {
@@ -81,7 +81,7 @@ export function BranchInvoiceChart({
         {!isLoadingStats && cashTrendLabels.length > 0 ? (
           <BarChart
             labels={cashTrendLabels}
-            yCallback={(v) => money(Number(v))}
+            yCallback={(v) => shortMoney(Number(v))}
             datasets={datasets as any}
           />
         ) : isLoadingStats ? (

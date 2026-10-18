@@ -8,11 +8,18 @@ describe("useGarageTabLogic Routing & 2-Way URL Sync", () => {
     window.history.replaceState(null, "", "/garage-cases");
   });
 
-  it("initializes with default tab 'dashboard' and adds ?tab=dashboard to URL", () => {
+  it("initializes with default tab 'overview' and adds ?tab=overview to URL", () => {
     const { result } = renderHook(() => useGarageTabLogic());
 
-    expect(result.current.currentTabKey).toBe("dashboard");
-    expect(window.location.search).toContain("tab=dashboard");
+    expect(result.current.currentTabKey).toBe("overview");
+    expect(window.location.search).toContain("tab=overview");
+  });
+
+  it("translates legacy ?tab=dashboard to 'overview'", () => {
+    window.history.replaceState(null, "", "/garage-cases?tab=dashboard");
+    const { result } = renderHook(() => useGarageTabLogic());
+
+    expect(result.current.currentTabKey).toBe("overview");
   });
 
   it("initializes with 'cases' if URL already has ?tab=cases", () => {
@@ -47,17 +54,17 @@ describe("useGarageTabLogic Routing & 2-Way URL Sync", () => {
     expect(window.location.search).toContain("tab=services");
 
     act(() => {
-      result.current.handleTabChange("dashboard");
+      result.current.handleTabChange("overview");
     });
 
-    expect(result.current.currentTabKey).toBe("dashboard");
-    expect(window.location.search).toContain("tab=dashboard");
+    expect(result.current.currentTabKey).toBe("overview");
+    expect(window.location.search).toContain("tab=overview");
   });
 
   it("syncs state on popstate event (browser back/forward)", () => {
     const { result } = renderHook(() => useGarageTabLogic());
 
-    expect(result.current.currentTabKey).toBe("dashboard");
+    expect(result.current.currentTabKey).toBe("overview");
 
     act(() => {
       window.history.replaceState(null, "", "/garage-cases?tab=services");
@@ -67,11 +74,11 @@ describe("useGarageTabLogic Routing & 2-Way URL Sync", () => {
     expect(result.current.currentTabKey).toBe("services");
   });
 
-  it("provides 3 page tabs (dashboard, cases, services)", () => {
+  it("provides 3 page tabs (overview, cases, services)", () => {
     const { result } = renderHook(() => useGarageTabLogic());
 
     expect(result.current.pageTabs).toHaveLength(3);
-    expect(result.current.pageTabs[0].value).toBe("dashboard");
+    expect(result.current.pageTabs[0].value).toBe("overview");
     expect(result.current.pageTabs[1].value).toBe("cases");
     expect(result.current.pageTabs[2].value).toBe("services");
   });

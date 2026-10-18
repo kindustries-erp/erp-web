@@ -23,6 +23,11 @@ export interface ConfirmModalProps {
   danger?: boolean;
   zIndex?: number;
   confirmDisabled?: boolean;
+  /** Icon hiển thị cạnh tiêu đề (tùy chọn). */
+  icon?: React.ReactNode;
+  titleClassName?: string;
+  /** `sm` = 380px (mặc định), `md` = 480px. */
+  size?: "sm" | "md";
 }
 
 export function ConfirmModal({
@@ -36,6 +41,9 @@ export function ConfirmModal({
   loading = false,
   danger = true,
   confirmDisabled = false,
+  icon,
+  titleClassName,
+  size = "sm",
 }: ConfirmModalProps) {
   const t = useT();
 
@@ -44,10 +52,17 @@ export function ConfirmModal({
       <DialogContent
         hideCloseButton
         hideOverlay
-        className={cn("max-w-[380px] p-6")}
+        className={cn(size === "md" ? "max-w-[480px]" : "max-w-[380px]", "p-6")}
       >
         <DialogHeader className="text-left space-y-1.5 mb-2">
-          <DialogTitle className="text-sm font-semibold text-foreground">
+          <DialogTitle
+            className={cn(
+              "text-sm font-semibold text-foreground",
+              icon && "flex items-center gap-2.5",
+              titleClassName,
+            )}
+          >
+            {icon}
             {title || t("confirmModal.defaultTitle")}
           </DialogTitle>
           {typeof message === "string" ? (

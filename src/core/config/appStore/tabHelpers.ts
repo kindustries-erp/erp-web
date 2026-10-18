@@ -13,6 +13,10 @@ export function getPathWithPreservedSearch(
   } else if (instanceIndex === 2) {
     currentSearch.set("_i", "2");
   }
+  if (pageKey !== "garage-cases") {
+    currentSearch.delete("tab");
+    currentSearch.delete("caseId");
+  }
   const searchStr = currentSearch.toString();
   const basePath = pageToPath(pageKey);
   return `${basePath}${searchStr ? `?${searchStr}` : ""}`;

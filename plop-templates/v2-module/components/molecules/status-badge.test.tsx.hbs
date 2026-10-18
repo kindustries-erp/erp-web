@@ -1,0 +1,15 @@
+import { render, screen } from "@testing-library/react";
+import { describe, expect, it } from "vitest";
+import { {{Entity}}StatusBadge } from "./{{Entity}}StatusBadge";
+
+describe("{{Entity}}StatusBadge", () => {
+  it("shows the active label for ACTIVE records", () => {
+    render(<{{Entity}}StatusBadge status="ACTIVE" />);
+    expect(screen.getByText("Hoạt động")).toBeInTheDocument();
+  });
+
+  it("shows the inactive label for INACTIVE records", () => {
+    render(<{{Entity}}StatusBadge status="INACTIVE" />);
+    expect(screen.getByText("Ngưng hoạt động")).toBeInTheDocument();
+  });
+});

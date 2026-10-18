@@ -3,14 +3,12 @@ import { useTranslation } from "react-i18next";
 import { useChartTheme } from "@/shared/utils/chartTheme";
 import type { ComboboxOption } from "@/shared/components/Combobox";
 import type { GarageConversionFunnelCardProps } from "./types";
-import {
-  CLASSIFICATION_CONFIG,
-  formatMonthLabel,
-  getStatusColor,
-} from "./utils/funnelConfig";
+import { formatMonthLabel, getStatusColor } from "./utils/funnelConfig";
 import {
   calculateTimelineDatasets,
   calculateClassificationTableRows,
+  calculateClassificationDonutItems,
+  calculateStatusDonutItems,
 } from "./utils/funnelDataCalculators";
 import type { GarageConversionFunnelClassificationItem } from "../../api/garageDashboardApi";
 
@@ -77,6 +75,7 @@ export function useGarageConversionFunnelLogic(
 
   const {
     totalIntake = { count: 0, amount: 0, rate: 100 },
+    quotation = { count: 0, amount: 0, rate: 0 },
     inProgress = { count: 0, amount: 0, rate: 0 },
     completed = { count: 0, amount: 0, rate: 0 },
     cancelled = { count: 0, amount: 0, rate: 0 },
@@ -119,11 +118,10 @@ export function useGarageConversionFunnelLogic(
   ]);
 
   const classificationDonutItems = useMemo(() => {
-    return activeClassificationData.map((d) => ({
-      label: d.classificationName,
-      value: isAmount ? d.revenue || 0 : d.count || 0,
-      color: CLASSIFICATION_CONFIG[d.classificationKey]?.dot || "#64748b",
-    }));
+    return calculateClassificationDonutItems(
+      activeClassificationData,
+      isAmount,
+    );
   }, [activeClassificationData, isAmount]);
 
   const totalClassificationVal = useMemo(() => {
@@ -139,11 +137,11 @@ export function useGarageConversionFunnelLogic(
   }, [selectedMonth, statusDistributionByMonth, statusDistribution]);
 
   const statusDonutItems = useMemo(() => {
-    return activeStatusData.map((d, index) => ({
-      label: d.statusName,
-      value: isAmount ? d.revenue || 0 : d.count || 0,
-      color: getStatusColor(d.statusName, index),
-    }));
+    return calculateStatusDonutItems(
+      activeStatusData,
+      isAmount,
+      getStatusColor,
+    );
   }, [activeStatusData, isAmount]);
 
   const totalStatusVal = useMemo(() => {
@@ -168,6 +166,7 @@ export function useGarageConversionFunnelLogic(
     activeFunnel,
     monthOptions,
     totalIntake,
+    quotation,
     inProgress,
     completed,
     cancelled,

@@ -4,10 +4,10 @@ import { useAppStore } from "@/core/config/appStore";
 import { ErpUrlQueryParam } from "@/shared/constants/urlParams";
 import type { TabItem } from "@/shared/components/PageLayout";
 
-export type GarageTabKey = "dashboard" | "cases" | "services";
+export type GarageTabKey = "overview" | "cases" | "services";
 
 export interface GarageTabProps {
-  initialTab?: GarageTabKey;
+  initialTab?: GarageTabKey | "dashboard";
   instanceIndex?: 1 | 2;
 }
 
@@ -21,8 +21,9 @@ export function useGarageTabLogic({
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
       const tabParam = params.get(ErpUrlQueryParam.TAB);
+      if (tabParam === "dashboard") return "overview";
       if (
-        tabParam === "dashboard" ||
+        tabParam === "overview" ||
         tabParam === "cases" ||
         tabParam === "services"
       ) {
@@ -30,13 +31,13 @@ export function useGarageTabLogic({
       }
     }
     if (
-      propInitialTab === "dashboard" ||
+      propInitialTab === "overview" ||
       propInitialTab === "cases" ||
       propInitialTab === "services"
     ) {
       return propInitialTab;
     }
-    return "dashboard";
+    return "overview";
   };
 
   const [currentTabKey, setCurrentTabKey] =
@@ -56,7 +57,7 @@ export function useGarageTabLogic({
           ? "cases"
           : newTab === "services"
             ? "services"
-            : "dashboard";
+            : "overview";
       setCurrentTabKey(targetTab);
 
       if (typeof window !== "undefined") {
@@ -87,14 +88,16 @@ export function useGarageTabLogic({
     const handlePopState = () => {
       const params = new URLSearchParams(window.location.search);
       const tabParam = params.get(ErpUrlQueryParam.TAB);
-      if (
-        tabParam === "dashboard" ||
+      if (tabParam === "dashboard") {
+        setCurrentTabKey("overview");
+      } else if (
+        tabParam === "overview" ||
         tabParam === "cases" ||
         tabParam === "services"
       ) {
         setCurrentTabKey(tabParam);
       } else {
-        setCurrentTabKey("dashboard");
+        setCurrentTabKey("overview");
       }
     };
     window.addEventListener("popstate", handlePopState);
@@ -129,8 +132,11 @@ export function useGarageTabLogic({
 
   const pageTabs = useMemo<TabItem[]>(
     () => [
-      { value: "dashboard", label: t("tabs.dashboard", "Tổng quan") },
-      { value: "cases", label: t("tabs.cases", "Phiếu dịch vụ") },
+      {
+        value: "overview",
+        label: t("tabs.overview", t("tabs.dashboard", "Tổng quan")),
+      },
+      { value: "cases", label: t("tabs.cases", "Hoạt động garage") },
       { value: "services", label: t("tabs.services", "Chi tiết phiếu DV") },
     ],
     [t],

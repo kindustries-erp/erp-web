@@ -9,10 +9,8 @@ import {
   type ModuleAttributeFieldType,
   type ModuleAttributeOption,
 } from "@/core/api/moduleConfigApi";
-import {
-  ERP_MODULE_REGISTRY,
-  type ErpModuleDomain,
-} from "@/shared/components/ModuleCustomFieldConfigDrawer";
+import { ERP_MODULE_REGISTRY } from "@/shared/constants";
+import type { ErpModuleDomain } from "@/shared/types";
 
 export interface CustomFieldRow {
   id: string;
@@ -28,6 +26,9 @@ export interface CustomFieldRow {
   categoryId?: string | null;
   categoryCode?: string | null;
   categoryName?: string | null;
+  defaultDebitAccountId?: string | null;
+  defaultDebitAccountCode?: string | null;
+  defaultDebitAccountName?: string | null;
   parentAttrCode?: string | null;
   options?: ModuleAttributeOption[] | null;
   optionsCount: number;
@@ -185,6 +186,15 @@ export function useCustomFieldsList(
           categoryId: cat.id,
           categoryCode: cat.code,
           categoryName: catDisplayName,
+          defaultDebitAccountId: cat.defaultDebitAccountId || null,
+          defaultDebitAccountCode:
+            cat.defaultDebitAccount?.accountCode ||
+            cat.defaultDebitAccount?.account_code ||
+            null,
+          defaultDebitAccountName:
+            cat.defaultDebitAccount?.accountName ||
+            cat.defaultDebitAccount?.account_name ||
+            null,
           parentAttrCode: def.parentAttrCode || null,
           options: def.options || null,
           optionsCount: def.options?.length || 0,

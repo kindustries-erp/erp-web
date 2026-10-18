@@ -29,6 +29,8 @@ import { PageKey } from "@/shared/types";
 
 type PageLoader = () => Promise<unknown>;
 
+const V2App = lazy(() => import("@/v2/app/App"));
+
 const loadDashboard = () =>
   import("@/pages/Dashboard").then((m) => ({ default: m.Dashboard }));
 const Dashboard = lazy(loadDashboard);
@@ -209,6 +211,12 @@ const GarageOpex = lazy(() =>
     default: m.GarageOpex,
   })),
 );
+const GarageCashflowPage = lazy(() =>
+  import("@/modules/garage/pages/GarageCashflowPage").then((m) => ({
+    default: m.GarageCashflowPage,
+  })),
+);
+
 const GaragePartners = lazy(() =>
   import("@/modules/garage/pages/GaragePartners").then((m) => ({
     default: m.GaragePartners,
@@ -268,7 +276,7 @@ const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   "erp-invoices-in": () => <ErpInvoicesPage initialTab="in" />,
   "erp-invoices-out": () => <ErpInvoicesPage initialTab="out" />,
   "erp-invoices-draft": () => <ErpInvoicesPage initialTab="draft" />,
-  "invoice-dashboard": () => <ErpInvoicesPage initialTab="dashboard" />,
+  "invoice-dashboard": () => <ErpInvoicesPage initialTab="overview" />,
   "sys-tags": SysTagsPage,
   attachments: AttachmentsPage,
   "bank-statement": () => <BankStatementPage initialTab="bank" />,
@@ -280,9 +288,10 @@ const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   "settings-branch": SettingsBranch,
   "custom-fields": CustomFieldsPage,
   "invoice-debts": InvoiceDebtsPage,
-  "garage-dashboard": () => <GarageCasesPage initialTab="dashboard" />,
+  "garage-dashboard": () => <GarageCasesPage initialTab="overview" />,
   "garage-cases": GarageCasesPage,
   "garage-opex": GarageOpex,
+  "garage-cashflow": GarageCashflowPage,
   "garage-customers": GaragePartners,
   "garage-partners": GaragePartners,
   "garage-debts": GaragePartners,
@@ -311,6 +320,7 @@ const PAGE_PRELOADERS: Partial<Record<PageKey, PageLoader>> = {
   "erp-inventory-tracking-parts": () =>
     import("@/pages/inventory/InventoryTrackingPartsPage"),
   "erp-finished-goods": () => import("@/pages/manufacturing/FinishedGoodsPage"),
+  "garage-cashflow": () => import("@/modules/garage/pages/GarageCashflowPage"),
   "garage-partners": () => import("@/modules/garage/pages/GarageDebts"),
   "garage-debts": () => import("@/modules/garage/pages/GarageDebts"),
   "invoice-debts": () => import("@/pages/InvoiceDebtsPage"),
@@ -367,6 +377,7 @@ export default function App() {
 
   useEffect(() => {
     const sync = () => {
+      if (location.pathname.startsWith("/v2")) return;
       const parsed = pathToPage(location.pathname, location.search);
       if (parsed) {
         if (
@@ -423,6 +434,14 @@ export default function App() {
   function keepContentXLocked() {
     const el = contentRef.current;
     if (el && el.scrollLeft !== 0) el.scrollLeft = 0;
+  }
+
+  if (typeof window !== "undefined" && location.pathname.startsWith("/v2")) {
+    return (
+      <Suspense fallback={PAGE_FALLBACK}>
+        <V2App />
+      </Suspense>
+    );
   }
 
   if (!isLoggedIn) return <Login />;

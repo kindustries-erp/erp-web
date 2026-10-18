@@ -43,11 +43,12 @@ export interface GarageMonthClassificationCasesDrawerProps {
   open: boolean;
   month?: string; // e.g. "2026-07" or "07/2026"
   monthLabel?: string; // e.g. "Tháng 07/2026"
-  filterType: "CLASSIFICATION" | "INVOICE";
-  filterKey: string; // "SUA_CHUA_CHUNG" | "KY_GUI_NOI_BO" | "OJ_NGOAI" | "OTHER" | "WITH_INVOICE" | "NO_INVOICE"
+  filterType: "CLASSIFICATION" | "INVOICE" | "PARTNER_GROUP";
+  filterKey: string; // "SUA_CHUA_CHUNG" | "KY_GUI_NOI_BO" | "OJ_NGOAI" | "OTHER" | "WITH_INVOICE" | "NO_INVOICE" | "PARTNER_GROUP"
   filterLabel: string;
   activeTab?: "RECEIPT" | "PAYMENT";
   branchId?: string;
+  caseCodes?: string[];
   onClose: () => void;
 }
 
@@ -60,6 +61,7 @@ export function GarageMonthClassificationCasesDrawer({
   filterLabel,
   activeTab = "RECEIPT",
   branchId,
+  caseCodes,
   onClose,
 }: GarageMonthClassificationCasesDrawerProps) {
   const { t } = useTranslation(["garage", "common"]);
@@ -167,9 +169,14 @@ export function GarageMonthClassificationCasesDrawer({
       } else if (filterKey === "NO_INVOICE") {
         combined["hasInvoice"] = ["NO"];
       }
+    } else if (filterType === "PARTNER_GROUP") {
+      // 5. Lọc theo Nhóm Đối tượng HĐ / Cty Bảo hiểm
+      if (caseCodes && caseCodes.length > 0) {
+        combined["soChungTu"] = caseCodes;
+      }
     }
 
-    // 5. Kết hợp các date ranges do user lọc thêm
+    // 6. Kết hợp các date ranges do user lọc thêm
     Object.entries(dateRanges).forEach(([key, range]) => {
       if (range?.from || range?.to) {
         combined[key] = [`${range.from || ""}..${range.to || ""}`];
@@ -177,7 +184,15 @@ export function GarageMonthClassificationCasesDrawer({
     });
 
     return combined;
-  }, [columnFilters, dateFrom, dateTo, filterType, filterKey, dateRanges]);
+  }, [
+    columnFilters,
+    dateFrom,
+    dateTo,
+    filterType,
+    filterKey,
+    caseCodes,
+    dateRanges,
+  ]);
 
   const serverFiltersStr = useMemo(() => {
     return Object.keys(serverFiltersObject).length > 0
@@ -255,7 +270,10 @@ export function GarageMonthClassificationCasesDrawer({
         filtersStr,
       );
       return {
-        items: res.items.map((item: string) => {
+        items: res.items.map((item: any) => {
+          if (typeof item === "object" && item !== null) {
+            return item;
+          }
           if (columnKey === "classification") {
             return {
               label:

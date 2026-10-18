@@ -8,7 +8,6 @@ import {
 import { TableText } from "@/shared/components/DataTable/TableText";
 import { Badge } from "@/shared/components/ui/badge";
 import { Tooltip } from "@/core/components/ui/Tooltip";
-import { PillTabs, type PillTabItem } from "@/shared/components/PillTabs";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import {
   useGarageOpexList,
@@ -17,9 +16,32 @@ import {
 import { GarageOpexDrawer } from "../components/GarageOpexDrawer";
 import { garageOpexApi, type GarageOpexItem } from "../api/garageOpexApi";
 import toast from "react-hot-toast";
-import { ReceiptText, Eye, Pencil, Copy, Trash2, Sparkles } from "lucide-react";
+import {
+  ReceiptText,
+  Eye,
+  Pencil,
+  Copy,
+  Trash2,
+  Sparkles,
+  Plus,
+  FileSpreadsheet,
+  TrendingUp,
+} from "lucide-react";
 import type { ActionDropdownItem } from "@/shared/components/ActionDropdown";
 import { cn } from "@/shared/utils";
+import { usePageViewPresets } from "@/shared/hooks/usePageViewPresets";
+import {
+  useUserPreferencesStore,
+  type TableViewPreset,
+} from "@/shared/hooks/useUserPreferences";
+import {
+  GARAGE_OPEX_COLUMN_VIEW_PRESETS,
+  DEFAULT_GARAGE_OPEX_COLUMN_VISIBILITY,
+  GARAGE_OPEX_FILTER_ITEMS,
+} from "../utils/garageViewPresets";
+import { GarageViewModeCombobox } from "../components/molecules/garage-view-mode-combobox";
+import { GarageOpexExportDrawer } from "../components/organisms/garage-opex-export-drawer";
+import type { GarageOpexTableQuery } from "../export/garageExportScopes";
 
 const getCostGroupInfo = (
   categoryKey: string,
@@ -52,20 +74,123 @@ const getCostGroupInfo = (
   };
 };
 
+const columnPresetsTableId = "garage-opex-column-views";
+const actualTableId = "garage-opex-table";
+
 export function GarageOpex() {
   const { t } = useTranslation("garage");
   const listHook = useGarageOpexList();
+
+  const columnViewPresetsHook = usePageViewPresets({
+    tableId: columnPresetsTableId,
+    defaultPresets: GARAGE_OPEX_COLUMN_VIEW_PRESETS,
+  });
+
+  const [activeColumnPresetKey, setActiveColumnPresetKey] = useState<string>(
+    () => {
+      const stored = useUserPreferencesStore
+        .getState()
+        .getTablePreference(actualTableId);
+      return stored?.activeView || "overview";
+    },
+  );
+
+  const handleColumnPresetChange = (preset: TableViewPreset) => {
+    setActiveColumnPresetKey(preset.key);
+    const currentPref = useUserPreferencesStore
+      .getState()
+      .getTablePreference(actualTableId) || {
+      columnOrder: [],
+      columnVisibility: {},
+    };
+    useUserPreferencesStore.getState().setTablePreferences(actualTableId, {
+      ...currentPref,
+      columnOrder: [],
+      columnVisibility:
+        preset.columnVisibility || DEFAULT_GARAGE_OPEX_COLUMN_VISIBILITY,
+      activeView: preset.key,
+    });
+  };
 
   // Drawer state
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerMode, setDrawerMode] = useState<"view" | "edit">("view");
   const [isCreate, setIsCreate] = useState(false);
   const [selectedItem, setSelectedItem] = useState<GarageOpexItem | null>(null);
+  const [exportDrawerOpen, setExportDrawerOpen] = useState(false);
 
   // Delete modal state
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<GarageOpexItem | null>(null);
   const [deleting, setDeleting] = useState(false);
+
+  const exportQuery = useMemo<GarageOpexTableQuery>(() => {
+    const hasFilters = Object.keys(listHook.columnFilters).length > 0;
+    const hasSearch = Object.keys(listHook.columnSearch).length > 0;
+    return {
+      date_from: listHook.dateFrom || undefined,
+      date_to: listHook.dateTo || undefined,
+      cost_group: listHook.costGroup !== "ALL" ? listHook.costGroup : undefined,
+      sorts: listHook.sorts.length > 0 ? listHook.sorts : undefined,
+      column_filters: hasFilters
+        ? JSON.stringify(listHook.columnFilters)
+        : undefined,
+      column_search: hasSearch
+        ? JSON.stringify(listHook.columnSearch)
+        : undefined,
+    };
+  }, [listHook]);
+
+  const handleExportPnl = useCallback(async () => {
+    try {
+      toast.loading(t("opex.exportPnlLoading", "Đang tải báo cáo P&L..."), {
+        id: "pnl-export",
+      });
+      const blob = await garageOpexApi.exportPnlExcel();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `Garage_PNL_Report_${new Date().getFullYear()}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      toast.success(t("opex.exportPnlSuccess", "Tải báo cáo P&L thành công!"), {
+        id: "pnl-export",
+      });
+    } catch (err: any) {
+      toast.error(err?.message || "Không thể xuất báo cáo P&L", {
+        id: "pnl-export",
+      });
+    }
+  }, [t]);
+
+  const createActions = useMemo<ActionDropdownItem[]>(
+    () => [
+      {
+        groupLabel: t("opex.actions.reportsGroup", "Báo cáo & Xuất file"),
+        items: [
+          {
+            label: t(
+              "opex.actions.exportOpexExcel",
+              "Xuất Excel chi phí (Bảng kê)",
+            ),
+            icon: <FileSpreadsheet className="w-4 h-4 text-emerald-600" />,
+            onClick: () => setExportDrawerOpen(true),
+          },
+          {
+            label: t(
+              "opex.actions.exportPnlExcel",
+              "Tải báo cáo P&L (Lợi nhuận Garage)",
+            ),
+            icon: <TrendingUp className="w-4 h-4 text-emerald-600" />,
+            onClick: handleExportPnl,
+          },
+        ],
+      },
+    ],
+    [handleExportPnl, t],
+  );
 
   const openDetail = (item: GarageOpexItem, mode: "view" | "edit" = "view") => {
     setSelectedItem(item);
@@ -251,12 +376,23 @@ export function GarageOpex() {
               onDetailClick={() => openDetail(row, "view")}
               className="font-normal text-xs text-foreground cursor-pointer hover:underline"
             />
-            {Boolean(row.isAutoCalculated || row.isReadOnly) && (
+            {Boolean(
+              row.isAutoCalculated ||
+              row.isReadOnly ||
+              row.sourceCashflowVoucherId,
+            ) && (
               <Tooltip
-                content={t(
-                  "opex.autoCalculatedTooltip",
-                  "Khoản hoa hồng này được tính toán tự động 100% từ Báo cáo P&L (Chỉ đọc)",
-                )}
+                content={
+                  row.sourceCashflowVoucherId
+                    ? t(
+                        "opex.voucherSourcedTooltip",
+                        "Ghi nhận từ phiếu chi garage (Chỉ đọc), chỉnh sửa tại Thu chi garage",
+                      )
+                    : t(
+                        "opex.autoCalculatedTooltip",
+                        "Khoản hoa hồng này được tính toán tự động 100% từ Báo cáo P&L (Chỉ đọc)",
+                      )
+                }
               >
                 <span className="inline-flex items-center justify-center h-4 w-4 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-300/80 dark:border-amber-700/60 cursor-help shrink-0 shadow-xs hover:bg-amber-500/20 transition-colors">
                   <Sparkles className="w-2.5 h-2.5" />
@@ -416,7 +552,10 @@ export function GarageOpex() {
   const getRowActions = useCallback(
     (row: GarageOpexItem): ActionDropdownItem[] => {
       const isAuto = Boolean(
-        row.isAutoCalculated || row.isReadOnly || row.id.startsWith("auto-"),
+        row.isAutoCalculated ||
+        row.isReadOnly ||
+        row.sourceCashflowVoucherId ||
+        row.id.startsWith("auto-"),
       );
 
       if (isAuto) {
@@ -482,15 +621,29 @@ export function GarageOpex() {
     return { totalAmountSum: amt, totalOjSum: oj };
   }, [listHook.data]);
 
-  // Toolbar Quick Filter PillTabs Items
-  const pillTabItems: PillTabItem<CostGroupFilter>[] = useMemo(
-    () => [
-      { value: "ALL", label: t("opex.tabs.all", "Tất cả") },
-      { value: "OPEX", label: t("opex.tabs.opex", "CP Vận hành") },
-      { value: "COGS", label: t("opex.tabs.cogs", "Giá vốn (COGS)") },
-      { value: "COMMISSION", label: t("opex.tabs.commission", "Hoa hồng") },
-    ],
-    [t],
+  const viewTabsNode = (
+    <div className="w-full sm:w-auto flex items-center flex-wrap gap-2 py-0.5">
+      <GarageViewModeCombobox
+        presets={columnViewPresetsHook.presets}
+        activePresetKey={activeColumnPresetKey}
+        onSelect={handleColumnPresetChange}
+        onCreateView={() => {}}
+        onEditView={() => {}}
+        onDeleteView={(key) => columnViewPresetsHook.deleteView(key)}
+        filterGroup={{
+          title: t("opex.filterGroup", { defaultValue: "Nhóm chi phí" }),
+          value: listHook.costGroup,
+          onChange: (val) => listHook.setCostGroup(val as CostGroupFilter),
+          items: GARAGE_OPEX_FILTER_ITEMS.map((item) => ({
+            value: item.value,
+            label: t(`opex.tabs.${item.value.toLowerCase()}`, {
+              defaultValue: String(item.label),
+            }),
+            dotColor: item.dotColor,
+          })),
+        }}
+      />
+    </div>
   );
 
   return (
@@ -503,6 +656,7 @@ export function GarageOpex() {
         )}
         icon={<ReceiptText className="w-5 h-5 text-primary" />}
         tableId="garage-opex-table"
+        defaultColumnVisibility={DEFAULT_GARAGE_OPEX_COLUMN_VISIBILITY}
         items={listHook.data}
         columns={columns}
         getRowKey={(row) => row.id}
@@ -520,23 +674,15 @@ export function GarageOpex() {
         onRefresh={() => listHook.refetch()}
         onCreate={openCreate}
         createLabel={t("opex.actions.addExpense", "Thêm chi phí")}
+        createIcon={<Plus className="w-4 h-4 mr-1" />}
+        createActions={createActions}
         activeFilterCount={listHook.activeFilterCount}
         onClearAllFilters={() => {
           listHook.clearAllFilters();
           listHook.setCostGroup("ALL");
         }}
         rowActions={getRowActions}
-        customActionsNode={
-          <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
-            <PillTabs<CostGroupFilter>
-              value={listHook.costGroup}
-              onValueChange={(val) => listHook.setCostGroup(val)}
-              items={pillTabItems}
-              size="sm"
-              className="w-full sm:w-auto shrink-0"
-            />
-          </div>
-        }
+        customActionsNode={viewTabsNode}
         summaryRow={{
           amount: (
             <div className="flex flex-col items-end justify-center">
@@ -562,6 +708,15 @@ export function GarageOpex() {
         isCreate={isCreate}
         initialData={selectedItem}
         onSuccess={() => listHook.refetch()}
+      />
+
+      {/* Drawer Xuất Excel chi phí */}
+      <GarageOpexExportDrawer
+        open={exportDrawerOpen}
+        onClose={() => setExportDrawerOpen(false)}
+        query={exportQuery}
+        filterCount={listHook.activeFilterCount}
+        initialCostGroup={listHook.costGroup}
       />
 
       {/* Modal xác nhận xóa */}

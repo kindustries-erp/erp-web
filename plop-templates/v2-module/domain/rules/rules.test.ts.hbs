@@ -1,0 +1,31 @@
+import { describe, expect, it } from "vitest";
+import { empty{{Entity}}Form } from "../entities/{{entity}}";
+import {
+  is{{Entity}}FormDirty,
+  REQUIRED_{{entity}}_FIELDS,
+  validate{{Entity}}Form,
+} from "./{{entity}}Rules";
+
+describe("validate{{Entity}}Form", () => {
+  it("reports the first blank required field", () => {
+    expect(validate{{Entity}}Form(empty{{Entity}}Form())).toBe(REQUIRED_{{entity}}_FIELDS[0]);
+  });
+
+  it("accepts a form with every required field filled", () => {
+    const form = {
+      ...empty{{Entity}}Form(),
+      {{#each requiredFields}}
+      {{name}}: "x",
+      {{/each}}
+    };
+    expect(validate{{Entity}}Form(form)).toBeNull();
+  });
+});
+
+describe("is{{Entity}}FormDirty", () => {
+  it("detects changes against the initial snapshot", () => {
+    const initial = empty{{Entity}}Form();
+    expect(is{{Entity}}FormDirty({ ...initial }, initial)).toBe(false);
+    expect(is{{Entity}}FormDirty({ ...initial, {{requiredFields.0.name}}: "x" }, initial)).toBe(true);
+  });
+});

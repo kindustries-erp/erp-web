@@ -139,6 +139,8 @@ export interface ManualCashflowTabContentProps {
   onSetManualDate: (val: string) => void;
   onSetManualPartner: (val: string) => void;
   onSetManualNote: (val: string) => void;
+  onAddManualSettlement?: () => void;
+  manualDraftPending?: boolean;
 }
 
 export interface InvoiceTabContentProps {
@@ -213,4 +215,6 @@ export interface ReconciliationRightPanelProps {
   onToggleInvoice?: (inv: ErpInvoice) => void;
   onViewInvoiceDetail?: (id: string) => void;
   onSetInvoiceNote?: (note: string) => void;
+  hideDebtCashflowSection?: boolean;
+  hideGrossProfitSection?: boolean;
 }

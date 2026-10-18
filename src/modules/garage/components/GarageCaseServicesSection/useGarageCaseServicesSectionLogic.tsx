@@ -221,7 +221,7 @@ export function useGarageCaseServicesSectionLogic() {
             {
               label: t("cases.actions.reconcile", "Đối soát"),
               icon: <Scale className="w-4 h-4" />,
-              onClick: () => openCaseDetail(code, "view", "financials"),
+              onClick: () => openCaseDetail(code, "edit", "financials"),
             },
           ],
         },

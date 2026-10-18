@@ -27,6 +27,9 @@ import {
   AlertCircle,
   FileText,
   History,
+  Receipt,
+  ExternalLink,
+  Landmark,
 } from "lucide-react";
 import {
   accountingApi,
@@ -483,6 +486,26 @@ export function JournalEntryDetailDrawer({
         );
     }
   };
+
+  const handleOpenSourceDocument = useCallback(
+    (type: string, id: string | null | undefined) => {
+      if (!id) return;
+      if (type === "INVOICE") {
+        window.dispatchEvent(
+          new CustomEvent("open_erp_document", {
+            detail: { type: "erp_invoice", id },
+          }),
+        );
+      } else if (type === "BANK") {
+        window.dispatchEvent(
+          new CustomEvent("open_erp_document", {
+            detail: { type: "bank_transaction", id },
+          }),
+        );
+      }
+    },
+    [],
+  );
 
   // Actions footer
   const actions: DrawerAction[] = isEdit
@@ -1077,15 +1100,53 @@ export function JournalEntryDetailDrawer({
           />
           <DrawerRow
             label={t("journalEntries.drawer.reference", "Mã tham chiếu")}
-            value={
-              activeData?.reference || activeData?._reference ? (
+            value={(() => {
+              const ref = activeData?.reference || activeData?._reference;
+              const srcId = activeData?.sourceId || activeData?._sourceId;
+              if (!ref) return "—";
+
+              if (sourceType === "INVOICE" && srcId) {
+                return (
+                  <button
+                    type="button"
+                    onClick={() => handleOpenSourceDocument("INVOICE", srcId)}
+                    className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md font-mono text-xs font-semibold text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800/60 hover:bg-purple-100 dark:hover:bg-purple-900/60 hover:border-purple-300 transition-all cursor-pointer group shadow-xs"
+                    title={t(
+                      "journalEntries.drawer.viewInvoice",
+                      "Xem hóa đơn VAT liên quan",
+                    )}
+                  >
+                    <Receipt className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400 group-hover:scale-110 transition-transform" />
+                    <span>{ref}</span>
+                    <ExternalLink className="w-3 h-3 text-purple-500 opacity-70 group-hover:opacity-100 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
+                  </button>
+                );
+              }
+
+              if (sourceType === "BANK" && srcId) {
+                return (
+                  <button
+                    type="button"
+                    onClick={() => handleOpenSourceDocument("BANK", srcId)}
+                    className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md font-mono text-xs font-semibold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/60 hover:bg-blue-100 dark:hover:bg-blue-900/60 hover:border-blue-300 transition-all cursor-pointer group shadow-xs"
+                    title={t(
+                      "journalEntries.drawer.viewBankTxn",
+                      "Xem giao dịch ngân hàng",
+                    )}
+                  >
+                    <Landmark className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform" />
+                    <span>{ref}</span>
+                    <ExternalLink className="w-3 h-3 text-blue-500 opacity-70 group-hover:opacity-100 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
+                  </button>
+                );
+              }
+
+              return (
                 <span className="font-mono text-xs font-medium text-slate-800 dark:text-slate-200">
-                  {activeData.reference || activeData._reference}
+                  {ref}
                 </span>
-              ) : (
-                "—"
-              )
-            }
+              );
+            })()}
           />
         </div>
       </DrawerSection>

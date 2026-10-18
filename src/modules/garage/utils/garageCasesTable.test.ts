@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { applyGarageCasesTableState } from "./garageCasesTable";
+import {
+  applyGarageCasesTableState,
+  extractPhaiThuKhachHang,
+  extractPhaiThuBaoHiem,
+  extractVatAmount,
+} from "./garageCasesTable";
 
 describe("applyGarageCasesTableState", () => {
   const items = [
@@ -299,5 +304,198 @@ describe("applyGarageCasesTableState", () => {
       "",
     );
     expect(sortRes.map((r) => r.id)).toEqual(["f1", "f2"]);
+  });
+
+  describe("caseCode and columnSearch advanced filtering", () => {
+    it("filters caseCode with exact quotes", () => {
+      const res = applyGarageCasesTableState(items, {
+        sorts: [],
+        columnSearch: {},
+        columnFilters: { caseCode: ['"A001"'] },
+      });
+      expect(res).toHaveLength(1);
+      expect(res[0].id).toBe("1");
+    });
+
+    it("filters caseCode with semicolon multi-search", () => {
+      const res = applyGarageCasesTableState(items, {
+        sorts: [],
+        columnSearch: {},
+        columnFilters: { caseCode: ["A001;B002"] },
+      });
+      expect(res).toHaveLength(2);
+    });
+
+    it("matches license plate when filtering on caseCode column", () => {
+      const res = applyGarageCasesTableState(items, {
+        sorts: [],
+        columnSearch: {},
+        columnFilters: { caseCode: ["30A-11111"] },
+      });
+      expect(res).toHaveLength(1);
+      expect(res[0].id).toBe("1");
+    });
+
+    it("matches license plate without hyphens or punctuation (clean alphanumeric)", () => {
+      const res = applyGarageCasesTableState(items, {
+        sorts: [],
+        columnSearch: {},
+        columnFilters: { caseCode: ["30A11111"] },
+      });
+      expect(res).toHaveLength(1);
+      expect(res[0].id).toBe("1");
+    });
+
+    it("matches exact quote license plate with and without punctuation", () => {
+      const res1 = applyGarageCasesTableState(items, {
+        sorts: [],
+        columnSearch: {},
+        columnFilters: { caseCode: ['"30A-11111"'] },
+      });
+      expect(res1).toHaveLength(1);
+      expect(res1[0].id).toBe("1");
+
+      const res2 = applyGarageCasesTableState(items, {
+        sorts: [],
+        columnSearch: {},
+        columnFilters: { caseCode: ['"30A11111"'] },
+      });
+      expect(res2).toHaveLength(1);
+      expect(res2[0].id).toBe("1");
+    });
+
+    it("matches composite code:::plate and formatted code (plate)", () => {
+      const resComposite = applyGarageCasesTableState(items, {
+        sorts: [],
+        columnSearch: {},
+        columnFilters: { caseCode: ["A001:::30A-11111"] },
+      });
+      expect(resComposite).toHaveLength(1);
+      expect(resComposite[0].id).toBe("1");
+
+      const resFormatted = applyGarageCasesTableState(items, {
+        sorts: [],
+        columnSearch: {},
+        columnFilters: { caseCode: ["A001 (30A-11111)"] },
+      });
+      expect(resFormatted).toHaveLength(1);
+      expect(resFormatted[0].id).toBe("1");
+    });
+
+    it("handles columnSearch with semicolon multi-search and license plate", () => {
+      const res = applyGarageCasesTableState(items, {
+        sorts: [],
+        columnSearch: { caseCode: "30A-22222;XYZ" },
+        columnFilters: {},
+      });
+      expect(res).toHaveLength(1);
+      expect(res[0].id).toBe("2");
+
+      const resClean = applyGarageCasesTableState(items, {
+        sorts: [],
+        columnSearch: { caseCode: "30A22222;XYZ" },
+        columnFilters: {},
+      });
+      expect(resClean).toHaveLength(1);
+      expect(resClean[0].id).toBe("2");
+    });
+
+    it("handles caseCode with __ALL_MATCHING__", () => {
+      const res = applyGarageCasesTableState(items, {
+        sorts: [],
+        columnSearch: {},
+        columnFilters: { caseCode: ["__ALL_MATCHING__", "A001"] },
+      });
+      expect(res).toHaveLength(1);
+      expect(res[0].id).toBe("1");
+
+      const resPlate = applyGarageCasesTableState(items, {
+        sorts: [],
+        columnSearch: {},
+        columnFilters: { caseCode: ["__ALL_MATCHING__", "30A22222"] },
+      });
+      expect(resPlate).toHaveLength(1);
+      expect(resPlate[0].id).toBe("2");
+    });
+
+    it("prioritizes specific columnFilters over columnSearch to prevent double-filtering", () => {
+      // Giả sử người dùng chọn checkbox caseCode là A001 (id 1)
+      // nhưng trong searchbox trước đó còn sót từ khóa "30A-22222" (biển số của id 2)
+      const res = applyGarageCasesTableState(items, {
+        sorts: [],
+        columnSearch: { caseCode: "30A-22222" },
+        columnFilters: { caseCode: ["A001"] },
+      });
+      // Vẫn phải trả về item 1 vì checkbox A001 là lựa chọn cụ thể có quyền ưu tiên
+      expect(res).toHaveLength(1);
+      expect(res[0].id).toBe("1");
+    });
+  });
+
+  describe("extractPhaiThuKhachHang & extractPhaiThuBaoHiem", () => {
+    it("extracts customer and insurance amounts correctly for insurance cases with breakdown", () => {
+      const item = {
+        tienCoThue: 6561000,
+        rawData: {
+          XeLamBaoHiem: true,
+          TienThanhToanKH: 1620000,
+          TienThanhToanBH: 4941000,
+        },
+      };
+      expect(extractPhaiThuKhachHang(item)).toBe(1620000);
+      expect(extractPhaiThuBaoHiem(item)).toBe(4941000);
+    });
+
+    it("assigns full amount to customer when case is not insurance", () => {
+      const item = {
+        tienCoThue: 46900000,
+        rawData: {
+          XeLamBaoHiem: false,
+        },
+      };
+      expect(extractPhaiThuKhachHang(item)).toBe(46900000);
+      expect(extractPhaiThuBaoHiem(item)).toBe(0);
+    });
+
+    it("falls back to TienBaoHiemDuyet when TienThanhToanBH is missing for insurance vehicle", () => {
+      const item = {
+        tienCoThue: 10000000,
+        rawData: {
+          XeLamBaoHiem: true,
+          TienBaoHiemDuyet: 7000000,
+        },
+      };
+      expect(extractPhaiThuBaoHiem(item)).toBe(7000000);
+      expect(extractPhaiThuKhachHang(item)).toBe(3000000);
+    });
+  });
+
+  describe("extractVatAmount", () => {
+    it("extracts vatAmount from item directly when present", () => {
+      expect(extractVatAmount({ vatAmount: 250000 })).toBe(250000);
+    });
+
+    it("extracts tienThueKh or tienThue when present", () => {
+      expect(extractVatAmount({ tienThueKh: 300000 })).toBe(300000);
+      expect(extractVatAmount({ tienThue: 150000 })).toBe(150000);
+    });
+
+    it("falls back to rawData TienThueKH or TienThue", () => {
+      expect(
+        extractVatAmount({
+          rawData: { TienThueKH: 500000 },
+        }),
+      ).toBe(500000);
+      expect(
+        extractVatAmount({
+          rawData: { TienThue: 120000 },
+        }),
+      ).toBe(120000);
+    });
+
+    it("returns 0 when no VAT data exists", () => {
+      expect(extractVatAmount({})).toBe(0);
+      expect(extractVatAmount(null as any)).toBe(0);
+    });
   });
 });

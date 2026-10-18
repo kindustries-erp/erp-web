@@ -32,6 +32,12 @@ export interface BomCategory {
   code: string;
   name: string;
   description?: string | null;
+  defaultDebitAccountId?: string | null;
+  defaultDebitAccount?: {
+    id: string;
+    accountCode?: string;
+    accountName?: string;
+  } | null;
   isActive?: boolean;
   attributeDefs?: BomAttributeDef[];
   createdAt?: string;
@@ -42,6 +48,7 @@ export interface CreateBomCategoryPayload {
   code: string;
   name: string;
   description?: string;
+  defaultDebitAccountId?: string | null;
   isActive?: boolean;
 }
 

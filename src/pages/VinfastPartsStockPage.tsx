@@ -679,7 +679,7 @@ export const VinfastPartsStockTableView = React.memo(
     );
 
     const summaryRow = useVinfastPartsStockSummary({
-      items: data?.data || [],
+      items: data?.items || data?.data || [],
       summary: data?.summary,
       page: tabState.page,
       pageSize: tabState.pageSize,
@@ -772,7 +772,7 @@ export const VinfastPartsStockTableView = React.memo(
           rowActions={getRowActions}
           summaryRow={summaryRow}
           emptyLabel={t("common:noData", "Không có dữ liệu")}
-          items={data?.data || []}
+          items={data?.items || data?.data || []}
           columns={columns}
           loading={isLoading || isFetching}
           page={tabState.page}

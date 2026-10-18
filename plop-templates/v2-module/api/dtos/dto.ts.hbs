@@ -1,0 +1,41 @@
+/** Hình dạng bản ghi và payload của `{{{apiBase}}}` (khớp backend, không phụ thuộc V1) */
+
+export interface {{Entity}}Dto {
+  id: string;
+{{#each fields}}
+  {{name}}{{#unless required}}?{{/unless}}: {{tsType}}{{#unless required}} | null{{/unless}};
+{{/each}}
+  updatedAt?: string | null;
+}
+
+export interface {{Entity}}ListResultDto {
+  items: {{Entity}}Dto[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+export interface ColumnOptionsResultDto {
+  items: { label: string; value: string }[];
+  total: number;
+  next: number | null;
+}
+
+/** Backend bọc bản ghi đơn trong `{ message, data }` */
+export interface {{Entity}}EnvelopeDto {
+  message: string;
+  data: {{Entity}}Dto;
+}
+
+{{#if hasNextCode}}
+export interface NextCodeDto {
+  nextCode: string;
+}
+
+{{/if}}
+export interface {{Entity}}PayloadDto {
+{{#each formFields}}
+  {{name}}{{#unless required}}?{{/unless}}: {{tsType}};
+{{/each}}
+}

@@ -1,12 +1,12 @@
 import React from "react";
-import { Download, LayoutDashboard } from "lucide-react";
+import { DownloadCloud, LayoutDashboard } from "lucide-react";
 import { DashboardTemplate } from "@/shared/components/DashboardTemplate";
-import { Button } from "@/shared/components/ui/Button";
 
 import { GarageStatsCards } from "../../components/GarageStatsCards";
 import { GarageConversionFunnelCard } from "../../components/GarageConversionFunnelCard";
-import { GaragePaymentProgressCard } from "../../components/GaragePaymentProgressCard";
 import { GaragePnlSection } from "../../components/GaragePnlSection";
+import { GarageHeaderActionDrawers } from "../../components/GarageHeaderActions";
+import { useGarageStore } from "../../store/garageStore";
 
 import type { GarageDashboardProps } from "./types";
 import { useGarageDashboardLogic } from "./useGarageDashboardLogic";
@@ -18,14 +18,14 @@ export function GarageDashboard(props: GarageDashboardProps = {}) {
     activeTab,
     onTabChange,
     isRefreshing,
-    isExporting,
-    handleExportExcel,
+    headerActions,
     handleRefresh,
     statsData,
     isLoadingStats,
     kpisData,
     isLoadingKpis,
   } = useGarageDashboardLogic(props);
+  const { selectedBranchId } = useGarageStore();
 
   return (
     <DashboardTemplate
@@ -40,23 +40,23 @@ export function GarageDashboard(props: GarageDashboardProps = {}) {
       tabs={tabs}
       activeTab={activeTab}
       onTabChange={onTabChange}
-      extraActions={
-        <Button
-          onClick={handleExportExcel}
-          disabled={isExporting}
-          variant="outline"
-          className="h-8 gap-1"
-        >
-          <Download className="h-4 w-4" />
-          Xuất Excel
-        </Button>
+      onCreate={
+        headerActions.canSyncGarage
+          ? () => headerActions.openSync("cases")
+          : undefined
       }
+      createLabel={t("cases.actions.syncCases", "Đồng bộ")}
+      createIcon={<DownloadCloud className="w-4 h-4 mr-1.5" />}
+      createActions={headerActions.createActions}
     >
       <div className="flex flex-col gap-6 mb-8">
         {/* Section 1: KPI Hiệu quả Dịch vụ & Tiến độ thu tiền thực tế */}
         <GarageStatsCards />
 
-        {/* Section 2: Pipeline Dự Thu & Phễu Chuyển Đổi Dịch Vụ (3 Cards Độc Lập & Period Picker) */}
+        {/* Section 2: Báo cáo Lợi nhuận (P&L) Section (Header + Chart Xu Hướng + Bảng P&L) */}
+        <GaragePnlSection />
+
+        {/* Section 3: Pipeline Dự Thu & Phễu Chuyển Đổi Dịch Vụ (3 Cards Độc Lập & Period Picker) */}
         <GarageConversionFunnelCard
           funnel={statsData?.conversionFunnel}
           byMonth={statsData?.conversionFunnelByMonth}
@@ -71,18 +71,14 @@ export function GarageDashboard(props: GarageDashboardProps = {}) {
           }
           loading={isLoadingStats || isLoadingKpis}
         />
-
-        {/* Section 3: Báo cáo Lợi nhuận (P&L) Section (Header + Chart Xu Hướng + Bảng P&L) */}
-        <GaragePnlSection />
-
-        {/* Section 4: Tiến độ Dòng tiền & Công nợ (Thu tiền KH & Trả tiền NCC) */}
-        <GaragePaymentProgressCard
-          collectionSummary={statsData?.collectionSummary}
-          costPaymentSummary={statsData?.costPaymentSummary}
-          trend={statsData?.trend}
-          loading={isLoadingStats}
-        />
       </div>
+
+      <GarageHeaderActionDrawers
+        actions={headerActions}
+        defaultReportType="period-all"
+        branchId={selectedBranchId}
+        onSyncSuccess={handleRefresh}
+      />
     </DashboardTemplate>
   );
 }

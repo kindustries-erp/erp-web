@@ -149,4 +149,45 @@ describe("BankStatementsTab Unified Multi-Tab Coordinator", () => {
     // Check URL updated with tab=bank
     expect(window.location.search).toContain("tab=bank");
   });
+
+  it("serializes columnFilters to JSON string and maps sort params correctly", async () => {
+    const { useTableColumnStore } =
+      await import("@/shared/hooks/useTableColumnState");
+    useTableColumnStore
+      .getState()
+      .setColumnFilter("bank-statement-bank-table-v3", "correspondentName", [
+        "00003543046",
+      ]);
+    useTableColumnStore
+      .getState()
+      .setSort("bank-statement-bank-table-v3", "transDate", "desc");
+
+    window.history.replaceState(null, "", "/bank-statement?tab=bank");
+    render(
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <BankStatementsTab initialTab="bank" />
+        </TooltipProvider>
+      </QueryClientProvider>,
+    );
+
+    await waitFor(() => {
+      expect(bankStatementApi.getTransactions).toHaveBeenCalledWith(
+        expect.objectContaining({
+          column_filters: JSON.stringify({
+            correspondentName: ["00003543046"],
+          }),
+          sortBy: "transDate",
+          sortOrder: "DESC",
+        }),
+      );
+    });
+
+    const lastCall = (bankStatementApi.getTransactions as any).mock.calls.at(
+      -1,
+    )[0];
+    expect(lastCall.columnFilters).toBeUndefined();
+    expect(lastCall.columnSearch).toBeUndefined();
+    expect(lastCall.sorts).toBeUndefined();
+  });
 });

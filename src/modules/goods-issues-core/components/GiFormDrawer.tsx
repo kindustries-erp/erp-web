@@ -44,7 +44,7 @@ import {
   type UseGiDrawerReturn,
 } from "@/modules/goods-issues-core/hooks/useGiDrawer";
 import { InventoryVoucherFormDrawer } from "@/modules/inventory-core/components/inventory-voucher-drawer/InventoryVoucherFormDrawer";
-import { ModuleEntityCustomFieldsSection } from "@/shared/components/ModuleEntityCustomFieldsSection";
+import { ModuleEntityCustomFieldsSection } from "@/shared/components/organisms";
 import { AttributeTypeBadge } from "@/shared/components/AttributeTypeBadge";
 import { EntityTagSelector } from "@/modules/tags/components/EntityTagSelector";
 

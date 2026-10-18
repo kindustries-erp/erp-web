@@ -40,7 +40,7 @@ export interface StandardFormDrawerProps {
   /** Optional icon rendered in the drawer header */
   icon?: React.ReactNode;
 
-  title: string;
+  title?: React.ReactNode;
   titleExtra?: React.ReactNode;
   subtitle?: React.ReactNode;
 
@@ -454,7 +454,7 @@ export function StandardFormDrawer({
           )}
         >
           {/* Cột trái: Chi tiết / Main Content / Tab Content */}
-          <div className="flex-1 min-w-0 w-full order-2 lg:order-1 space-y-4 pb-3">
+          <div className="flex flex-1 flex-col min-h-0 min-w-0 w-full order-2 lg:order-1 space-y-4 pb-3">
             {renderedLeftContent}
           </div>
 

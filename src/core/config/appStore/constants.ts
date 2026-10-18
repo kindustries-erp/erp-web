@@ -142,7 +142,7 @@ export const SECTION_ROOTS: Partial<Record<PageKey, SectionRoot>> = {
     group: "accounting",
   },
   "invoice-debts": {
-    labelKey: "nav.items.debt",
+    labelKey: "nav.items.partnerDebts",
     group: "accounting",
   },
   "vinfast-parts": {
@@ -204,6 +204,10 @@ export const SECTION_ROOTS: Partial<Record<PageKey, SectionRoot>> = {
   },
   "garage-opex": {
     labelKey: "breadcrumb.garageOpex",
+    group: "garage",
+  },
+  "garage-cashflow": {
+    labelKey: "breadcrumb.garageCashflow",
     group: "garage",
   },
   "garage-customers": {
@@ -316,7 +320,7 @@ export const BREADCRUMBS: Partial<Record<PageKey, Array<[string, string?]>>> = {
     ["breadcrumb.accounting"],
     ["nav.items.erpInvoicesDraft"],
   ],
-  "invoice-debts": [["breadcrumb.accounting"], ["nav.items.debt"]],
+  "invoice-debts": [["breadcrumb.accounting"], ["nav.items.partnerDebts"]],
   "vinfast-parts": [["breadcrumb.vinfast"], ["nav.items.vinfastParts"]],
   "vinfast-parts-dashboard": [
     ["breadcrumb.vinfast"],
@@ -365,6 +369,7 @@ export const BREADCRUMBS: Partial<Record<PageKey, Array<[string, string?]>>> = {
   "garage-dashboard": [["breadcrumb.garage"], ["breadcrumb.garageDashboard"]],
   "garage-cases": [["breadcrumb.garage"], ["breadcrumb.garageCases"]],
   "garage-opex": [["breadcrumb.garage"], ["breadcrumb.garageOpex"]],
+  "garage-cashflow": [["breadcrumb.garage"], ["breadcrumb.garageCashflow"]],
   "garage-customers": [["breadcrumb.garage"], ["breadcrumb.garageDebts"]],
   "garage-partners": [["breadcrumb.garage"], ["breadcrumb.garageDebts"]],
   "garage-debts": [["breadcrumb.garage"], ["breadcrumb.garageDebts"]],

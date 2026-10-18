@@ -17,6 +17,9 @@ export interface GarageTrendItem {
   collectionRateDiff: number;
   costPaymentRateDiff: number;
   caseCount: number;
+  excludedDebtAmount?: number;
+  excludedDebtCaseCount?: number;
+  excludedDebtCost?: number;
 
   // Invoice breakdowns for Receivables
   caseCountWithInvoice?: number;
@@ -108,6 +111,8 @@ export interface GarageCollectionSummary {
   totalPaid: number;
   totalReceivable: number;
   collectionRate: number;
+  totalExcludedDebt?: number;
+  totalExcludedDebtCaseCount?: number;
 }
 
 export interface GarageCostPaymentSummary {
@@ -115,6 +120,7 @@ export interface GarageCostPaymentSummary {
   totalPaidCost: number;
   totalPayableCost: number;
   paymentRate: number;
+  totalExcludedDebtCost?: number;
 }
 
 export interface GarageStatusDistributionItem {
@@ -145,6 +151,8 @@ export interface GarageConversionFunnelClassificationItem {
   name: string;
   totalCount: number;
   totalAmount: number;
+  quotationCount?: number;
+  quotationAmount?: number;
   inProgressCount: number;
   inProgressAmount: number;
   completedCount: number;
@@ -157,6 +165,8 @@ export interface GarageConversionFunnelClassificationItem {
 
 export interface GarageConversionFunnel {
   totalIntake: GarageConversionFunnelStage;
+  /** Phiếu báo giá (chưa hoàn thành, chưa hủy), tách khỏi `inProgress`. */
+  quotation?: GarageConversionFunnelStage;
   inProgress: GarageConversionFunnelStage;
   completed: GarageConversionFunnelStage;
   cancelled: GarageConversionFunnelStage;
@@ -357,14 +367,139 @@ export const garageDashboardApi = {
     return data;
   },
 
-  exportExcel: async (params?: {
+  getMonthlyReceivablesBreakdown: async (params: {
+    month?: string;
+    horizon?: string;
+    branch_id?: string;
     date_from?: string;
     date_to?: string;
-  }): Promise<Blob> => {
-    const { data } = await axiosInstance.get(`${BASE}/export`, {
-      params,
-      responseType: "blob",
-    });
+  }): Promise<MonthlyReceivablesBreakdownResponse> => {
+    const { data } =
+      await axiosInstance.get<MonthlyReceivablesBreakdownResponse>(
+        `${BASE}/monthly-receivables-breakdown`,
+        { params },
+      );
     return data;
   },
 };
+
+export interface MonthlyReceivablesCaseItem {
+  id: string;
+  soChungTu: string;
+  bienSoXe: string;
+  khachHangName: string;
+  khachHangCode?: string | null;
+  amount: number;
+  paid: number;
+  remaining: number;
+  cost?: number;
+  paidCost?: number;
+  remainingCost?: number;
+  vatAmount: number;
+  invoiceNo?: string;
+  invoiceId?: string;
+  buyerName?: string;
+  vatWarning: boolean;
+}
+
+export type ReceivablesPartnerCategory =
+  | "INSURANCE"
+  | "ENTERPRISE"
+  | "INDIVIDUAL";
+
+export type ReceivablesInvoiceCategory =
+  | "WITH_INVOICE"
+  | "PENDING_INVOICE"
+  | "NO_INVOICE";
+
+export interface MonthlyReceivablesGroupItem {
+  key: string;
+  payerType: "KH" | "BH";
+  partnerCategory?: ReceivablesPartnerCategory;
+  invoiceCategory?: ReceivablesInvoiceCategory;
+  title: string;
+  subLabel?: string;
+  buyerName: string;
+  companyName?: string;
+  customerName?: string;
+  taxCode?: string | null;
+  hasInvoice: boolean;
+  invoiceNos: string[];
+  hasVat: boolean;
+  vatAmount: number;
+  vatWarning: boolean;
+  caseCount: number;
+  billed: number;
+  paid: number;
+  remaining: number;
+  cost?: number;
+  paidCost?: number;
+  remainingCost?: number;
+  rate: number;
+  shareRate: number;
+  cases: MonthlyReceivablesCaseItem[];
+}
+
+export interface ReceivablesPayerSummary {
+  billed: number;
+  paid: number;
+  remaining: number;
+  rate: number;
+  caseCount: number;
+  withInvoiceAmount: number;
+  noInvoiceAmount: number;
+  vatAmount: number;
+  vatWithoutInvoiceAmount: number;
+}
+
+export interface ReceivablesVatWarningSummary {
+  hasVatWithoutInvoice: boolean;
+  totalVatWithoutInvoice: number;
+  casesWithVatNoInvoiceCount: number;
+}
+
+export interface MonthlyReceivablesSummary {
+  totalBilled: number;
+  totalPaid: number;
+  totalRemaining: number;
+  collectionRate: number;
+  caseCount: number;
+  customer: ReceivablesPayerSummary;
+  insurance: ReceivablesPayerSummary;
+  warning: ReceivablesVatWarningSummary;
+}
+
+export interface MonthlyReceivablesCategorizedTotals {
+  billed: number;
+  paid: number;
+  remaining: number;
+  cost?: number;
+  paidCost?: number;
+  remainingCost?: number;
+  caseCount: number;
+  partnerCount: number;
+}
+
+export interface MonthlyReceivablesGroupCategorized {
+  all: MonthlyReceivablesGroupItem[];
+  withInvoice: MonthlyReceivablesGroupItem[];
+  pendingInvoice: MonthlyReceivablesGroupItem[];
+  noInvoice: MonthlyReceivablesGroupItem[];
+  totals: MonthlyReceivablesCategorizedTotals;
+}
+
+export interface MonthlyReceivablesBreakdownResponse {
+  month: string;
+  monthLabel: string;
+  horizon?: string;
+  trendItem?: GarageTrendItem;
+  summary: MonthlyReceivablesSummary;
+  insuranceCompanies: MonthlyReceivablesGroupItem[];
+  customerPartners: MonthlyReceivablesGroupItem[];
+  allGroups: MonthlyReceivablesGroupItem[];
+  categorized?: {
+    insurance: MonthlyReceivablesGroupCategorized;
+    enterprise: MonthlyReceivablesGroupCategorized;
+    individual: MonthlyReceivablesGroupCategorized;
+  };
+}

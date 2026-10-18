@@ -194,10 +194,10 @@ export function InvoiceDebtsDashboardTab({
 
   return (
     <DashboardTemplate
-      title={t("debts:title", "Công nợ")}
+      title={t("debts:title", "Công nợ theo đối tượng")}
       desc={t(
         "debts:dashboard.desc",
-        "Tổng hợp tình hình phải thu, phải trả, dự báo dòng tiền theo mốc thời gian và rủi ro tuổi nợ",
+        "Báo cáo tổng quan vị thế công nợ, dự báo dòng tiền và ma trận phân bổ tuổi nợ theo đối tác",
       )}
       icon={<ReceiptText className="w-5 h-5 text-primary" />}
       tabs={tabs}

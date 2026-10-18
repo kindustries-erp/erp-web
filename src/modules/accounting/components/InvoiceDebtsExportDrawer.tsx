@@ -45,9 +45,9 @@ function toDisplayDate(iso?: string) {
 }
 
 function toDisplayRange(dateFrom?: string, dateTo?: string) {
-  if (!dateFrom && !dateTo) return "-";
-  const from = dateFrom ? toDisplayDate(dateFrom).slice(0, 10) : "-";
-  const to = dateTo ? toDisplayDate(dateTo).slice(0, 10) : "-";
+  if (!dateFrom && !dateTo) return "Tất cả";
+  const from = dateFrom ? toDisplayDate(dateFrom).slice(0, 10) : "Đầu kỳ";
+  const to = dateTo ? toDisplayDate(dateTo).slice(0, 10) : "Hiện tại";
   return `${from} - ${to}`;
 }
 
@@ -156,6 +156,10 @@ export function InvoiceDebtsExportDrawer({
 
   const periodOptions = useMemo(
     () => [
+      {
+        value: "all",
+        label: t("debts:exportDrawer.allTime", "Tất cả thời gian"),
+      },
       ...PERIOD_OPTS,
       {
         value: "custom",
@@ -170,19 +174,27 @@ export function InvoiceDebtsExportDrawer({
 
   const handlePeriodChange = (next?: string) => {
     const value = next || "";
+    if (value === "all") {
+      setPeriod("all");
+      setDateFrom("");
+      setDateTo("");
+      return;
+    }
     if (!value || value === "custom") {
       setPeriod("");
       return;
     }
 
     setPeriod(value);
-    if (value && value !== "custom") {
-      setDateFrom(periodFirstDay(value));
-      setDateTo(periodLastDay(value));
-    }
+    setDateFrom(periodFirstDay(value));
+    setDateTo(periodLastDay(value));
   };
 
   useEffect(() => {
+    if (!dateFrom && !dateTo) {
+      setPeriod((prev) => (prev === "all" ? "all" : ""));
+      return;
+    }
     const nextPeriod = periodFromExactRange(dateFrom, dateTo);
     setPeriod((prev) => (prev === nextPeriod ? prev : nextPeriod));
   }, [dateFrom, dateTo]);
@@ -204,7 +216,7 @@ export function InvoiceDebtsExportDrawer({
   };
 
   const handleStartExport = async () => {
-    if (!dateFrom || !dateTo) {
+    if (period !== "all" && (!dateFrom || !dateTo)) {
       toast.error(
         t(
           "debts:exportDrawer.error.missingDateRange",
@@ -220,8 +232,8 @@ export function InvoiceDebtsExportDrawer({
       const payload: GetInvoiceDebtsQueryParams = {
         ...baseParams,
         partner_type: partnerType,
-        date_from: dateFrom,
-        date_to: dateTo,
+        date_from: dateFrom || undefined,
+        date_to: dateTo || undefined,
       };
       const result = await invoiceDebtsApi.startExportExcelBackground(payload);
       setTrackedJobId(result.jobId);

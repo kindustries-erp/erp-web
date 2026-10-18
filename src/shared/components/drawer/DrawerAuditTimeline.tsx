@@ -173,8 +173,20 @@ export function DrawerAuditTimeline({
             const isLatest = idx === 0;
             const { icon, badgeCls } = getActionMeta(item.actionType);
             const { formatted, full } = formatTimestamp(item.timestamp);
-            const actorDisplay =
-              item.actorName || item.actorEmail || t("Hệ thống");
+            const email = item.actorEmail?.trim();
+            const name = item.actorName?.trim();
+            const isSystemName =
+              !name ||
+              name === t("Hệ thống") ||
+              name.toLowerCase() === "hệ thống" ||
+              name.toLowerCase() === "system";
+
+            const showEmailOnly = Boolean(
+              email && (isSystemName || name === email),
+            );
+            const showNameAndEmail = Boolean(
+              email && !isSystemName && name !== email,
+            );
 
             return (
               <div
@@ -208,8 +220,22 @@ export function DrawerAuditTimeline({
                       <span className="text-[11px] text-muted-foreground/60">
                         •
                       </span>
-                      <span className="text-xs text-muted-foreground font-medium">
-                        {actorDisplay}
+                      <span
+                        className="text-xs text-muted-foreground font-medium inline-flex items-center gap-1"
+                        title={email || name || t("Hệ thống")}
+                      >
+                        {showEmailOnly ? (
+                          <span>{email}</span>
+                        ) : showNameAndEmail ? (
+                          <>
+                            <span>{name}</span>
+                            <span className="text-[11px] text-muted-foreground/70 font-mono">
+                              ({email})
+                            </span>
+                          </>
+                        ) : (
+                          <span>{name || t("Hệ thống")}</span>
+                        )}
                       </span>
                       {item.status && (
                         <span

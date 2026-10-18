@@ -42,6 +42,15 @@ export function useNavItems(): NavSearchItem[] {
   const { employee } = useAuthStore();
   const isAdminEmail = employee?.email === "admin@liouni.com";
 
+  const canReadDashboard = useHasPermission(
+    ErpResource.DASHBOARD,
+    ErpAction.READ,
+  );
+  const canReadAttachments = useHasPermission(
+    ErpResource.ATTACHMENTS,
+    ErpAction.READ,
+  );
+
   const canReadSalesOrders = useHasPermission(
     ErpResource.SALES_ORDERS,
     ErpAction.READ,
@@ -85,6 +94,10 @@ export function useNavItems(): NavSearchItem[] {
     ErpAction.READ,
   );
   const canReadGarage = useHasPermission(ErpResource.GARAGE, ErpAction.READ);
+  const canReadGarageCashflow = useHasPermission(
+    ErpResource.GARAGE_CASHFLOW,
+    ErpAction.READ,
+  );
 
   const canReadInvoices = useHasPermission(
     ErpResource.INVOICES,
@@ -134,13 +147,15 @@ export function useNavItems(): NavSearchItem[] {
     const items: NavSearchItem[] = [];
 
     // 1. Dashboard
-    items.push({
-      key: "dashboard",
-      label: t("nav.items.dashboard"),
-      section: t("nav.items.dashboard"),
-      keywords: ["dashboard", "home", "trang chu", "tong quan"],
-      icon: <LayoutDashboard className="w-4 h-4" />,
-    });
+    if (canReadDashboard) {
+      items.push({
+        key: "dashboard",
+        label: t("nav.items.dashboard"),
+        section: t("nav.items.dashboard"),
+        keywords: ["dashboard", "home", "trang chu", "tong quan"],
+        icon: <LayoutDashboard className="w-4 h-4" />,
+      });
+    }
 
     // 2. Sales
     const salesSection = t("nav.sections.sales");
@@ -299,10 +314,31 @@ export function useNavItems(): NavSearchItem[] {
 
     // 6. Garage
     const garageSection = t("nav.sections.garage", "GARAGE");
+    if (canReadGarageCashflow) {
+      items.push({
+        key: "garage-cashflow",
+        label: t("nav.items.garageCashflow", "Thu chi garage"),
+        section: garageSection,
+        keywords: [
+          "garage",
+          "thu chi garage",
+          "thu chi xuong",
+          "thu chi xưởng",
+          "dong tien xuong",
+          "dòng tiền xưởng",
+          "so quy",
+          "sổ quỹ",
+          "garage cashflow",
+          "phieu thu",
+          "phieu chi",
+        ],
+        icon: <Wallet className="w-4 h-4" />,
+      });
+    }
     if (canReadGarage) {
       items.push({
         key: "garage-cases",
-        label: t("nav.items.garageCases", "Phiếu dịch vụ"),
+        label: t("nav.items.garageCases", "Hoạt động garage"),
         section: garageSection,
         keywords: [
           "garage",
@@ -326,6 +362,7 @@ export function useNavItems(): NavSearchItem[] {
           "khach hang",
           "doi tac",
           "phai thu",
+          "phai tra",
           "tuoi no",
         ],
         icon: <Users className="w-4 h-4" />,
@@ -417,9 +454,22 @@ export function useNavItems(): NavSearchItem[] {
     if (canReadDebts) {
       items.push({
         key: "invoice-debts",
-        label: t("nav.items.debt", "Công nợ"),
+        label: t("nav.items.partnerDebts", "Công nợ theo đối tượng"),
         section: accountingSection,
         keywords: [
+          "cong no theo doi tuong",
+          "công nợ theo đối tượng",
+          "partner debts",
+          "debts by partner",
+          "chi tiet theo doi tuong",
+          "chi tiết theo đối tượng",
+          "doi tuong",
+          "đối tượng",
+          "partner details",
+          "so doi tuong",
+          "sổ đối tượng",
+          "giao dich",
+          "giao dịch",
           "cong no",
           "công nợ",
           "debts",
@@ -481,13 +531,15 @@ export function useNavItems(): NavSearchItem[] {
         icon: <UserSquare2 className="w-4 h-4" />,
       });
     }
-    items.push({
-      key: "attachments",
-      label: t("nav.items.attachments"),
-      section: adminSection,
-      keywords: ["tai lieu", "dinh kem", "attachments", "files"],
-      icon: <Paperclip className="w-4 h-4" />,
-    });
+    if (canReadAttachments) {
+      items.push({
+        key: "attachments",
+        label: t("nav.items.attachments"),
+        section: adminSection,
+        keywords: ["tai lieu", "dinh kem", "attachments", "files"],
+        icon: <Paperclip className="w-4 h-4" />,
+      });
+    }
 
     // 9. Settings (Hệ thống & Cài đặt)
     const settingsSection = t("nav.sections.settings");
@@ -600,6 +652,8 @@ export function useNavItems(): NavSearchItem[] {
     return items;
   }, [
     t,
+    canReadDashboard,
+    canReadAttachments,
     canReadSalesOrders,
     canReadCustomers,
     canReadSalesReports,

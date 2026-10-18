@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useErpInvoicesTabLogic } from "../components/ErpInvoicesTab/useErpInvoicesTabLogic";
+import { useErpInvoicesTabLogic } from "../components/organisms/erp-invoices-tab/ErpInvoicesTab.hook";
 import { useErpInvoiceListStore } from "../hooks/useErpInvoiceListStore";
 import { useErpInvoiceItemsStore } from "../hooks/useErpInvoiceItemsStore";
 

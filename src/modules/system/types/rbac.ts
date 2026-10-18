@@ -47,6 +47,8 @@ export enum ErpResource {
   EMAIL_INGEST = "email_ingest",
   JOURNAL_ENTRIES = "journal_entries",
   GARAGE = "garage",
+  GARAGE_DEBTS = "garage_debts",
+  GARAGE_CASHFLOW = "garage_cashflow",
   ACCOUNTING_CONFIGS = "accounting_configs",
   INVOICES = "invoices",
   INVOICE_DEBTS = "invoice_debts",
@@ -60,6 +62,8 @@ export enum ErpResource {
   VINFAST = "vinfast",
   PAYMENT_VOUCHERS = "payment_vouchers",
   CASHFLOW_VOUCHERS = "erp_cashflow_vouchers",
+  DASHBOARD = "dashboard",
+  ATTACHMENTS = "attachments",
 }
 
 export enum ErpAction {
@@ -212,6 +216,16 @@ export const RBAC_COLLECTIONS: CollectionDef[] = [
     label: "Tags",
     group: "Hệ thống",
   },
+  {
+    collection: "attachments",
+    label: "Quản lý tài liệu",
+    group: "Hệ thống",
+  },
+  {
+    collection: "dashboard",
+    label: "Tổng quan",
+    group: "Hệ thống",
+  },
   // Kế toán / Tài chính
   {
     collection: "invoices",
@@ -242,6 +256,12 @@ export interface PermissionResourceGroup {
 }
 
 export const PERMISSION_RESOURCE_GROUPS: PermissionResourceGroup[] = [
+  {
+    groupKey: "overview",
+    labelKey: "rbac.groups.overview",
+    defaultLabel: "Tổng quan",
+    resources: [ErpResource.DASHBOARD],
+  },
   {
     groupKey: "sales",
     labelKey: "rbac.groups.sales",
@@ -280,7 +300,11 @@ export const PERMISSION_RESOURCE_GROUPS: PermissionResourceGroup[] = [
     groupKey: "garage",
     labelKey: "rbac.groups.garage",
     defaultLabel: "Garage & Xưởng dịch vụ",
-    resources: [ErpResource.GARAGE],
+    resources: [
+      ErpResource.GARAGE,
+      ErpResource.GARAGE_DEBTS,
+      ErpResource.GARAGE_CASHFLOW,
+    ],
   },
   {
     groupKey: "vinfast",
@@ -314,6 +338,7 @@ export const PERMISSION_RESOURCE_GROUPS: PermissionResourceGroup[] = [
       ErpResource.ACTIVITY_LOGS,
       ErpResource.EMAIL_INGEST,
       ErpResource.SYS_TAGS,
+      ErpResource.ATTACHMENTS,
     ],
   },
 ];

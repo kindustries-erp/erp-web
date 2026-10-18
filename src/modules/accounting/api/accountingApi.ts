@@ -24,6 +24,8 @@ export interface ChartOfAccountItem {
   is_payable_account?: boolean;
   is_active?: boolean;
   isActive?: boolean;
+  is_deleted?: boolean;
+  isDeleted?: boolean;
   created_at?: string;
   createdAt?: string;
   updated_at?: string | null;

@@ -11,6 +11,7 @@ import {
 interface FunnelSpreadsheetTableProps {
   tableRows: ClassificationTableRow[];
   totalIntake: { count: number; amount: number };
+  quotation: { count: number; amount: number };
   inProgress: { count: number; amount: number };
   completed: { count: number; amount: number; rate?: number };
   cancelled: { count: number; amount: number };
@@ -19,6 +20,7 @@ interface FunnelSpreadsheetTableProps {
 export function FunnelSpreadsheetTable({
   tableRows,
   totalIntake,
+  quotation,
   inProgress,
   completed,
   cancelled,
@@ -28,8 +30,16 @@ export function FunnelSpreadsheetTable({
   const columns = useMemo(() => getFunnelTableColumns(t), [t]);
 
   const summaryRow = useMemo(
-    () => getFunnelSummaryRow(t, totalIntake, inProgress, completed, cancelled),
-    [t, totalIntake, inProgress, completed, cancelled],
+    () =>
+      getFunnelSummaryRow(
+        t,
+        totalIntake,
+        quotation,
+        inProgress,
+        completed,
+        cancelled,
+      ),
+    [t, totalIntake, quotation, inProgress, completed, cancelled],
   );
 
   return (

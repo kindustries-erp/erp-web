@@ -134,10 +134,19 @@ export interface ErpInvoice {
   pdfFiles?: any[] | null;
   xmlFileKey?: string | null;
   xmlImportId?: string | null;
+  syncId?: string | null;
+  msttcgp?: string | null;
+  providerCode?: string | null;
+  lookupUrl?: string | null;
+  lookupCode?: string | null;
+  pdfPath?: string | null;
+  pdfSource?: string | null;
+  pdfError?: string | null;
   taxInvoiceStatus?: number | null;
   taxProcessStatus?: number | null;
   relatedInvoiceNo?: string | null;
   relatedSerialNo?: string | null;
+  effectiveData?: InvoiceEffectiveData | null;
   createdAt?: string;
   updatedAt?: string;
   postingStatus?: string | null;
@@ -167,6 +176,8 @@ export interface ErpInvoice {
     valueText?: string | null;
     isGlobal?: boolean;
   }>;
+  hasBankNetOff?: boolean;
+  bankSettledAmount?: number;
 }
 
 export interface CreateErpInvoicePayload {
@@ -211,7 +222,7 @@ export interface CreateErpInvoicePayload {
   }[];
   accountingEnabled?: boolean;
   pendingDeletedPdfs?: string[];
-  pendingAddedAttachments?: import("../components/ErpInvoicePdfUpload").PendingAttachment[];
+  pendingAddedAttachments?: import("../components/organisms/erp-invoice-pdf-upload").PendingAttachment[];
 }
 
 export type UpdateErpInvoicePayload = Partial<CreateErpInvoicePayload>;
@@ -240,6 +251,7 @@ export interface ErpInvoiceListParams {
   column_search?: string;
   column_filters?: string;
   unlinked_po_id?: string;
+  selected_columns?: string[];
 }
 
 export interface ErpInvoiceTotals {
@@ -412,7 +424,89 @@ async function resolveBlobErrorMessage(
   return fallback;
 }
 
+export interface OriginalPdfDownloadResponse {
+  invoiceId: string;
+  invoiceNo: string;
+  success: boolean;
+  pdfSource: string | null;
+  pdfFileKey: string | null;
+  pdfError: string | null;
+}
+
+export interface OriginalPdfLookupInfoResponse {
+  invoiceId: string;
+  invoiceNo: string;
+  providerCode: string;
+  providerName: string;
+  msttcgp: string | null;
+  lookupCode: string | null;
+  lookupUrl: string | null;
+  pdfSource: string | null;
+  pdfFileKey: string | null;
+  pdfError: string | null;
+}
+
+export interface SyncAdvancedPayload {
+  companyTaxCode: string;
+  syncType: "purchase" | "sold";
+  queryType?: "query" | "sco-query" | "all";
+  fromDate: string;
+  toDate: string;
+}
+
+export interface SyncAdvancedResponse {
+  syncId: string;
+  totalFound: number;
+  status: string;
+}
+
+export interface SyncStatusResponse {
+  id: string;
+  status: string;
+  totalFound: number;
+  totalPdfSuccess: number;
+  totalPdfFailed: number;
+  errorMessage: string | null;
+}
+
 export const erpInvoicesCoreApi = {
+  downloadOriginalPdf: async (
+    invoiceId: string,
+  ): Promise<OriginalPdfDownloadResponse> => {
+    const { data } = await axiosInstance.post<OriginalPdfDownloadResponse>(
+      `${BASE}/original-pdf/${invoiceId}/download`,
+    );
+    return data;
+  },
+
+  getOriginalPdfLookupInfo: async (
+    invoiceId: string,
+  ): Promise<OriginalPdfLookupInfoResponse> => {
+    const { data } = await axiosInstance.get<OriginalPdfLookupInfoResponse>(
+      `${BASE}/original-pdf/${invoiceId}/lookup-info`,
+    );
+    return data;
+  },
+
+  syncAdvanced: async (
+    payload: SyncAdvancedPayload,
+  ): Promise<SyncAdvancedResponse> => {
+    const { data } = await axiosInstance.post<SyncAdvancedResponse>(
+      `${BASE}/original-pdf/sync-advanced`,
+      payload,
+    );
+    return data;
+  },
+
+  getOriginalPdfSyncStatus: async (
+    syncId: string,
+  ): Promise<SyncStatusResponse> => {
+    const { data } = await axiosInstance.get<SyncStatusResponse>(
+      `${BASE}/original-pdf/sync-status/${syncId}`,
+    );
+    return data;
+  },
+
   list: async (
     params?: ErpInvoiceListParams,
   ): Promise<ErpInvoiceListResponse> => {
@@ -456,6 +550,24 @@ export const erpInvoicesCoreApi = {
       page: number;
       totalPages: number;
     };
+  },
+
+  getColumnOptions: async (
+    column: string,
+    search: string,
+    page: number = 1,
+    pageSize: number = 20,
+    filtersStr?: string,
+    direction?: "IN" | "OUT",
+  ) => {
+    return erpInvoicesCoreApi.getInvoiceColumnOptions(
+      column,
+      search,
+      page,
+      pageSize,
+      filtersStr,
+      direction,
+    );
   },
 
   getItemColumnOptions: async (
@@ -513,9 +625,11 @@ export const erpInvoicesCoreApi = {
   },
 
   getBulkNetOffs: async (ids: string[]): Promise<any[]> => {
-    const { data } = await axiosInstance.post<any[]>(`${BASE}/bulk-net-offs`, {
-      ids,
-    });
+    const { data } = await axiosInstance.post<any[]>(
+      `${BASE}/bulk-net-offs`,
+      { ids },
+      { _silentSuccess: true },
+    );
     return data;
   },
 
@@ -524,9 +638,11 @@ export const erpInvoicesCoreApi = {
   ): Promise<Record<string, SmartNetOffSuggestionItem[]>> => {
     const { data } = await axiosInstance.post<
       Record<string, SmartNetOffSuggestionItem[]>
-    >(`${BASE}/smart-net-off-suggestions`, {
-      invoiceIds,
-    });
+    >(
+      `${BASE}/smart-net-off-suggestions`,
+      { invoiceIds },
+      { _silentSuccess: true },
+    );
     return data;
   },
 
@@ -554,6 +670,36 @@ export const erpInvoicesCoreApi = {
       updated: number;
       ids: string[];
     }>(`${BASE}/bulk-set-branch`, { ids, branchId });
+    return data;
+  },
+
+  setCategory: async (
+    id: string,
+    categoryId: string | null,
+  ): Promise<ErpInvoice> => {
+    const { data } = await axiosInstance.patch<ErpInvoice>(
+      `${BASE}/${id}/category`,
+      { categoryId },
+    );
+    return data;
+  },
+
+  bulkSetCategory: async (
+    invoiceIds: string[],
+    categoryId: string | null,
+  ): Promise<{ updated: number; total: number; errors: any[] }> => {
+    const { data } = await axiosInstance.patch<{
+      updated: number;
+      total: number;
+      errors: any[];
+    }>(`${BASE}/bulk-set-category`, { invoiceIds, categoryId });
+    return data;
+  },
+
+  aiClassifyAndAutoPost: async (id: string) => {
+    const { data } = await axiosInstance.post(
+      `${BASE}/${id}/ai-classify-autopost`,
+    );
     return data;
   },
 
@@ -702,10 +848,14 @@ export const erpInvoicesCoreApi = {
       } | null
     >
   > => {
-    const res = await axiosInstance.post(`${BASE}/preview-pdf-match`, {
-      filenames,
-      direction,
-    });
+    const res = await axiosInstance.post(
+      `${BASE}/preview-pdf-match`,
+      {
+        filenames,
+        direction,
+      },
+      { _silentSuccess: true },
+    );
     return res.data;
   },
 
@@ -820,7 +970,13 @@ export const erpInvoicesCoreApi = {
   },
 
   bulkDownloadFiles: async (payload: {
-    query: { date_from?: string; date_to?: string; direction?: string };
+    query: {
+      date_from?: string;
+      date_to?: string;
+      direction?: string;
+      status?: string;
+      search?: string;
+    };
     types: string[];
   }): Promise<Blob> => {
     try {
@@ -990,7 +1146,125 @@ export const erpInvoicesCoreApi = {
     }>(`${BASE}/${id}/traceability-graph`);
     return data as any;
   },
+
+  getAdjustmentReconciliation: async (
+    id: string,
+  ): Promise<AdjustmentReconciliationDto> => {
+    const { data } = await axiosInstance.get<AdjustmentReconciliationDto>(
+      `${BASE}/${id}/adjustment-reconciliation`,
+    );
+    return data;
+  },
+
+  executeAdjustmentNetoff: async (
+    payload: ExecuteAdjustmentNetoffPayload,
+  ): Promise<{
+    success: boolean;
+    netoffId: string;
+    offsetAmount: number;
+    message: string;
+  }> => {
+    const { data } = await axiosInstance.post<{
+      success: boolean;
+      netoffId: string;
+      offsetAmount: number;
+      message: string;
+    }>(`${BASE}/adjustment-netoff`, payload);
+    return data;
+  },
 };
+
+export interface InvoiceEffectiveData {
+  isAdjusted?: boolean;
+  hasInfoAdjustment?: boolean;
+  adjustingInvoiceId?: string;
+  adjustingInvoiceNo?: string;
+  adjustingSerialNo?: string;
+  adjustedAt?: string;
+  lastAdjustedAt?: string;
+  lastAdjustingInvoiceId?: string;
+  effectiveValues?: {
+    buyerTaxCode?: string;
+    buyerName?: string;
+    buyerAddress?: string;
+    licensePlate?: string;
+    buyerCccd?: string;
+    settlementOrder?: string;
+  };
+  diffLog?: Array<{
+    field: string;
+    fieldNameVi: string;
+    oldValue: string;
+    newValue: string;
+  }>;
+  infoDiffs?: Array<{
+    field: string;
+    fieldNameVi: string;
+    oldValue: string;
+    newValue: string;
+  }>;
+}
+
+export interface FinancialReconciliationDto {
+  originalAmount: number;
+  adjustedDeltaAmount: number;
+  netEffectiveAmount: number;
+  isFullyCancelled: boolean;
+  netoffOffsetAmount: number;
+  remainingDebt: number;
+}
+
+export interface ItemReconciliationDto {
+  itemCode: string | null;
+  description: string;
+  originalQty: number;
+  adjustedDeltaQty: number;
+  netEffectiveQty: number;
+  unit: string | null;
+  unitPrice: number;
+  netAmount: number;
+}
+
+export interface InfoDiffItemDto {
+  field: string;
+  fieldNameVi: string;
+  oldValue: string;
+  newValue: string;
+}
+
+export interface InfoDiffReconciliationDto {
+  hasInfoAdjustment: boolean;
+  diffs: InfoDiffItemDto[];
+}
+
+export interface RelatedInvoiceSummaryDto {
+  id: string;
+  invoiceNo: string;
+  serialNo: string | null;
+  invoiceDate: string | null;
+  totalAmount: number;
+  taxInvoiceStatus: number | null;
+  relationType: "ADJUSTING_FOR_THIS" | "ORIGINAL_OF_THIS";
+}
+
+export interface AdjustmentReconciliationDto {
+  invoiceId: string;
+  invoiceNo: string;
+  serialNo: string | null;
+  taxInvoiceStatus: number | null;
+  role: "ORIGINAL" | "ADJUSTING" | "REPLACEMENT" | "STANDARD";
+  financial: FinancialReconciliationDto;
+  itemReconciliations: ItemReconciliationDto[];
+  infoDiff: InfoDiffReconciliationDto;
+  relatedInvoices: RelatedInvoiceSummaryDto[];
+}
+
+export interface ExecuteAdjustmentNetoffPayload {
+  originalInvoiceId: string;
+  adjustingInvoiceId: string;
+  offsetAmount?: number;
+  notes?: string;
+}
 
 export interface BulkImportSkippedItem {
   filename: string;

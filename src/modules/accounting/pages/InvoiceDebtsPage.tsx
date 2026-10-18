@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo, useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate";
 import {
@@ -23,12 +23,13 @@ import type { TabItem } from "@/shared/components/PageLayout";
 import type { ActionDropdownItem } from "@/shared/components/ActionDropdown";
 import { useInvoiceDebtsList } from "../hooks/useInvoiceDebtsList";
 import { invoiceDebtsApi, type InvoiceDebtItem } from "../api/invoiceDebtsApi";
-import { InvoicePartnerDebtDetailDrawer } from "../components/InvoicePartnerDebtDetailDrawer";
+import { InvoicePartnerDebtDetailDrawer } from "../components/organisms/invoice-partner-debt-detail-drawer";
 import { InvoiceDebtsExportDrawer } from "../components/InvoiceDebtsExportDrawer";
 import { InvoiceDebtsDashboardTab } from "../components/InvoiceDebtsDashboardTab";
 import { useHasAnyPermission } from "@/shared/hooks/useHasPermission";
 import { ErpResource, ErpAction } from "@/modules/system/types/rbac";
 import { Forbidden } from "@/pages/Forbidden";
+import { useAppStore } from "@/core/config/appStore";
 
 export function InvoiceDebtsPage() {
   const { t } = useTranslation(["debts", "common"]);
@@ -61,12 +62,48 @@ export function InvoiceDebtsPage() {
     setActiveTab(validTab);
     if (typeof window !== "undefined") {
       const url = new URL(window.location.href);
-      if (validTab === "overview") {
-        url.searchParams.delete("tab");
+      url.searchParams.set("tab", validTab);
+      const fullUrl = url.toString();
+      window.history.replaceState(null, "", fullUrl);
+      useAppStore.getState().updateCurrentTabUrl("invoice-debts", fullUrl);
+    }
+  }, []);
+
+  // Sync initial URL and popstate listener
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const url = new URL(window.location.href);
+      const tabParam = url.searchParams.get("tab");
+      if (
+        !tabParam ||
+        (tabParam !== "customers" &&
+          tabParam !== "suppliers" &&
+          tabParam !== "overview")
+      ) {
+        url.searchParams.set("tab", "overview");
+        const fullUrl = url.toString();
+        window.history.replaceState(null, "", fullUrl);
+        useAppStore.getState().updateCurrentTabUrl("invoice-debts", fullUrl);
       } else {
-        url.searchParams.set("tab", validTab);
+        useAppStore
+          .getState()
+          .updateCurrentTabUrl("invoice-debts", url.toString());
       }
-      window.history.replaceState(null, "", url.toString());
+
+      const handlePopState = () => {
+        const params = new URLSearchParams(window.location.search);
+        const currentTab = params.get("tab");
+        if (
+          currentTab === "customers" ||
+          currentTab === "suppliers" ||
+          currentTab === "overview"
+        ) {
+          setActiveTab(currentTab);
+        }
+      };
+
+      window.addEventListener("popstate", handlePopState);
+      return () => window.removeEventListener("popstate", handlePopState);
     }
   }, []);
 
@@ -165,15 +202,10 @@ export function InvoiceDebtsPage() {
             icon: <FileSpreadsheet className="w-4 h-4 text-emerald-600" />,
             onClick: () => setExportDrawerOpen(true),
           },
-          {
-            label: t("debts:exportCurrentView", "Xuất nhanh dữ liệu hiện tại"),
-            icon: <Download className="w-4 h-4 text-primary" />,
-            onClick: handleQuickExport,
-          },
         ],
       },
     ],
-    [handleQuickExport, t],
+    [t],
   );
 
   // 4. Server-Side Column Header Filter Builder
@@ -1119,10 +1151,10 @@ export function InvoiceDebtsPage() {
         />
       ) : (
         <SpreadsheetPageTemplate<InvoiceDebtItem>
-          title={t("debts:title", "Công nợ")}
+          title={t("debts:title", "Công nợ theo đối tượng")}
           desc={t(
             "debts:desc",
-            "Theo dõi, đối soát và phân tích tổng hợp công nợ phải thu, phải trả và tuổi nợ theo Hóa đơn điện tử",
+            "Theo dõi, đối soát giao dịch và phân tích tuổi nợ chi tiết theo từng khách hàng, nhà cung cấp gắn với Hóa đơn điện tử",
           )}
           icon={<ReceiptText className="w-5 h-5 text-primary" />}
           tabs={pageTabs}
@@ -1158,11 +1190,12 @@ export function InvoiceDebtsPage() {
             listHook.setPage(1);
           }}
           onRefresh={() => listHook.refetch()}
-          createLabel={t("debts:exportExcel", "Xuất Excel")}
-          createIcon={
-            <FileSpreadsheet className="w-4 h-4 mr-1 text-primary-fg/80" />
-          }
-          onCreate={() => setExportDrawerOpen(true)}
+          createLabel={t(
+            "debts:exportCurrentView",
+            "Xuất nhanh dữ liệu hiện tại",
+          )}
+          createIcon={<Download className="w-4 h-4 mr-1 text-primary-fg/80" />}
+          onCreate={handleQuickExport}
           createActions={createActions}
           activeFilterCount={listHook.activeFilterCount}
           onClearAllFilters={listHook.clearAllFilters}

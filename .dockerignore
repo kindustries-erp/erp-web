@@ -4,3 +4,13 @@ dist/
 .git/
 *.log
 .env*
+storybook-static/
+docs/
+coverage/
+plop-templates/
+.github/
+.agents/
+.claude/
+.trae/
+build.log
+*.md

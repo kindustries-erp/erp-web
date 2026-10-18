@@ -1,0 +1,23 @@
+{{#if hasStatus}}
+export type {{Entity}}Status = "ACTIVE" | "INACTIVE";
+
+{{/if}}
+export interface {{Entity}} {
+  id: string;
+{{#each fields}}
+  {{name}}{{#unless required}}?{{/unless}}: {{tsType}}{{#unless required}} | null{{/unless}};
+{{/each}}
+  updatedAt?: string | null;
+}
+
+export interface {{Entity}}FormValue {
+{{#each formFields}}
+  {{name}}: string;
+{{/each}}
+}
+
+export const empty{{Entity}}Form = (): {{Entity}}FormValue => ({
+{{#each formFields}}
+  {{name}}: {{#if isStatus}}"ACTIVE"{{else}}""{{/if}},
+{{/each}}
+});

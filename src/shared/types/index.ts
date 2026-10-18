@@ -67,6 +67,7 @@ export type PageKey =
   | "garage-customers"
   | "garage-partners"
   | "garage-debts"
+  | "garage-cashflow"
   | "erp-finished-goods"
   | "after-sales"
   | "vinfast-parts"
@@ -155,3 +156,6 @@ export interface TabInstance {
   url?: string;
   search?: string;
 }
+
+export * from "./customFields";
+export * from "./customFieldSchemas";

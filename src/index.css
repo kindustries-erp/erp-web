@@ -24,8 +24,10 @@
 @layer utilities {
   *:focus,
   *:focus-visible,
-  *:focus-within {
+  *:focus-within,
+  *:active {
     outline: none !important;
+    -webkit-tap-highlight-color: transparent !important;
     --tw-ring-shadow: 0 0 #0000 !important;
   }
 }

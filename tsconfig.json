@@ -15,8 +15,8 @@
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "noFallthroughCasesInSwitch": true,
-    "baseUrl": ".",
     "paths": {
+      "@/v2/*": ["./src/v2/*"],
       "@/*": ["./src/*"]
     },
     "types": ["vite-plugin-pwa/client"]

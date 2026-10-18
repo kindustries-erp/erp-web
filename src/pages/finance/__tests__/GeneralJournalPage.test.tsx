@@ -27,11 +27,15 @@ vi.mock("@/core/config/appStore", () => ({
   useAppStore: () => ({ setCustomBreadcrumbs: vi.fn(), locale: "vi" }),
 }));
 
-vi.mock("@/modules/erp-invoices-core/components/InvoiceDetailWrapper", () => ({
-  InvoiceDetailWrapper: ({ invoiceId }: any) => (
-    <div data-testid="invoice-drawer">{invoiceId}</div>
-  ),
-}));
+vi.mock("@/modules/erp-invoices-core/components", async (importOriginal) => {
+  const actual: any = await importOriginal();
+  return {
+    ...actual,
+    InvoiceDetailWrapper: ({ invoiceId }: any) => (
+      <div data-testid="invoice-drawer">{invoiceId}</div>
+    ),
+  };
+});
 
 vi.mock("@/pages/finance/components/BankTransactionDetailDrawer", () => ({
   BankTransactionDetailDrawer: ({ transactionId }: any) => (
