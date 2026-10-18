@@ -248,6 +248,8 @@ describe("GarageCashflowDrawer Organism", () => {
       licensePlate: "3UR-3168658",
       note: "CIF:26985202",
       paymentMethod: "Chuyển khoản",
+      paymentContent: undefined,
+      paymentStatus: "PAID",
       caseId: "704a0916-3e78-4f93-be03-98461447c409",
       referenceNumber: undefined,
       erpBankTransactionId: undefined,
@@ -455,10 +457,8 @@ describe("GarageCashflowDrawer Organism", () => {
       ).not.toBeInTheDocument();
       expect(screen.getByText("Tạo Phiếu Thu Chi Mới")).toBeInTheDocument();
       expect(screen.getByText("THÔNG TIN CHUNG")).toBeInTheDocument();
-      // Default is RECEIPT -> Payment status field should be hidden
-      expect(
-        screen.queryByText("Trạng thái thanh toán"),
-      ).not.toBeInTheDocument();
+      // RECEIPT now supports payment status ("Dự thu" / "Đã thu")
+      expect(screen.getByText("Trạng thái thanh toán")).toBeInTheDocument();
     });
 
     it("renders payment status row in view mode for PAYMENT voucher", () => {

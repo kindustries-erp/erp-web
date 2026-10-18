@@ -22,9 +22,10 @@ export const PAYMENT_METHOD_OPTIONS = [
 ];
 
 export const PAYMENT_STATUS_OPTIONS = [
+  { label: "Dự thu", value: "EXPECTED" },
+  { label: "Đã thu / Đã chi", value: "PAID" },
   { label: "Chờ duyệt", value: "PENDING" },
   { label: "Đã duyệt", value: "APPROVED" },
-  { label: "Đã chi", value: "PAID" },
 ];
 
 export { PAYMENT_CONTENT_OPTIONS } from "../../molecules/payment-content-combobox";

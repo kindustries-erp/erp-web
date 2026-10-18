@@ -31,7 +31,7 @@ export function buildInitialFormData(
         voucher.paymentStatus ||
         ((voucher.voucherType || "").toUpperCase() === "PAYMENT"
           ? "PAID"
-          : undefined),
+          : "PAID"),
     };
   }
 
@@ -39,6 +39,7 @@ export function buildInitialFormData(
     voucherType: "RECEIPT",
     transDate: new Date().toISOString().slice(0, 10),
     amount: 0,
+    paymentStatus: "PAID",
   };
 }
 
@@ -60,7 +61,7 @@ export function buildCreatePayload(
     paymentStatus:
       (formData.voucherType || "RECEIPT").toUpperCase() === "PAYMENT"
         ? formData.paymentStatus || "PENDING"
-        : undefined,
+        : formData.paymentStatus || "PAID",
     referenceNumber: formData.referenceNumber?.trim() || undefined,
     caseId: formData.caseId?.trim() || undefined,
     erpBankTransactionId: formData.erpBankTransactionId?.trim() || undefined,
@@ -87,7 +88,7 @@ export function buildUpdatePayload(
       formData.voucherType?.toUpperCase() === "PAYMENT"
         ? formData.paymentStatus || "PENDING"
         : formData.voucherType?.toUpperCase() === "RECEIPT"
-          ? undefined
+          ? formData.paymentStatus || "PAID"
           : formData.paymentStatus,
     referenceNumber: formData.referenceNumber?.trim() || undefined,
     caseId: formData.caseId?.trim() || undefined,
@@ -138,7 +139,8 @@ export function computeAuditDiffs(
         if (key === "paymentStatus") {
           if (v === "PENDING") return "Chờ duyệt";
           if (v === "APPROVED") return "Đã duyệt";
-          if (v === "PAID") return "Đã chi";
+          if (v === "PAID") return "Đã thanh toán";
+          if (v === "EXPECTED") return "Dự thu";
         }
         return String(v || "—");
       };

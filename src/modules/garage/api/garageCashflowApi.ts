@@ -11,7 +11,7 @@ export interface GarageCashflowVoucher {
   amount: number;
   paymentMethod?: string;
   paymentContent?: string;
-  paymentStatus?: "PENDING" | "APPROVED" | "PAID" | null;
+  paymentStatus?: "PENDING" | "APPROVED" | "PAID" | "EXPECTED" | null;
   referenceNumber?: string;
   caseId?: string;
   erpBankTransactionId?: string;
@@ -49,7 +49,7 @@ export interface CreateGarageCashflowVoucherDto {
   note?: string;
   paymentMethod?: string;
   paymentContent?: string;
-  paymentStatus?: "PENDING" | "APPROVED" | "PAID";
+  paymentStatus?: "PENDING" | "APPROVED" | "PAID" | "EXPECTED";
   referenceNumber?: string;
   caseId?: string;
   erpBankTransactionId?: string;
@@ -141,7 +141,7 @@ export interface GarageCashflowTopTransactionItem {
   licensePlate?: string | null;
   paymentMethod?: string | null;
   paymentContent?: string | null;
-  paymentStatus?: "PENDING" | "APPROVED" | "PAID" | null;
+  paymentStatus?: "PENDING" | "APPROVED" | "PAID" | "EXPECTED" | null;
   caseCode?: string | null;
   caseId?: string | null;
 }

@@ -85,23 +85,45 @@ const STATUS_BADGE_STYLES: Record<string, string> = {
   PENDING: "bg-amber-500/10 text-amber-600 border-amber-500/20",
   APPROVED: "bg-indigo-500/10 text-indigo-600 border-indigo-500/20",
   PAID: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
-};
-
-const STATUS_LABELS: Record<string, string> = {
-  PENDING: "Chờ duyệt",
-  APPROVED: "Đã duyệt",
-  PAID: "Đã chi",
+  EXPECTED: "bg-amber-500/10 text-amber-600 border-amber-500/20",
 };
 
 export const renderPaymentStatusCell = (row: GarageCashflowVoucher) => {
-  if (row.voucherType !== "PAYMENT" || !row.paymentStatus) {
+  const isReceipt = (row.voucherType || "").toUpperCase() === "RECEIPT";
+  const isPayment = (row.voucherType || "").toUpperCase() === "PAYMENT";
+
+  if (!isReceipt && !isPayment) {
     return <span className="text-muted-foreground">—</span>;
   }
 
-  const badgeStyle =
-    STATUS_BADGE_STYLES[row.paymentStatus] ||
-    "bg-slate-500/10 text-slate-600 border-slate-500/20";
-  const label = STATUS_LABELS[row.paymentStatus] || row.paymentStatus;
+  let label = "";
+  let badgeStyle = "bg-slate-500/10 text-slate-600 border-slate-500/20";
+
+  if (isReceipt) {
+    if (row.paymentStatus === "EXPECTED") {
+      label = "Dự thu";
+      badgeStyle = STATUS_BADGE_STYLES.EXPECTED;
+    } else {
+      label = "Đã thu";
+      badgeStyle = STATUS_BADGE_STYLES.PAID;
+    }
+  } else if (isPayment) {
+    if (!row.paymentStatus) {
+      return <span className="text-muted-foreground">—</span>;
+    }
+    if (row.paymentStatus === "PENDING") {
+      label = "Chờ duyệt";
+      badgeStyle = STATUS_BADGE_STYLES.PENDING;
+    } else if (row.paymentStatus === "APPROVED") {
+      label = "Đã duyệt";
+      badgeStyle = STATUS_BADGE_STYLES.APPROVED;
+    } else if (row.paymentStatus === "PAID") {
+      label = "Đã chi";
+      badgeStyle = STATUS_BADGE_STYLES.PAID;
+    } else {
+      label = row.paymentStatus;
+    }
+  }
 
   return (
     <span
