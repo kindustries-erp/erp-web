@@ -39,6 +39,21 @@ describe("buildBusinessPartnerColumns", () => {
   });
 });
 
+describe("summary row", () => {
+  it("counts partners: each row adds 1 to the page subtotal, the total comes from summaries.code", () => {
+    const column = columns.find((item) => item.key === "code")!;
+
+    expect(column.summary).toMatchObject({ variant: "count" });
+    expect(column.summary?.accessor?.(partner("ACTIVE"))).toBe(1);
+  });
+
+  it("has no numeric column to sum, so only the code column carries a summary", () => {
+    expect(
+      columns.filter((item) => item.summary).map((item) => item.key),
+    ).toEqual(["code"]);
+  });
+});
+
 describe("PARTNER_VIEW_VISIBILITY", () => {
   it("keeps the legal view focused on tax and address columns", () => {
     expect(PARTNER_VIEW_VISIBILITY.legal.taxCode).toBe(true);

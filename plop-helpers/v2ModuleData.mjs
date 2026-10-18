@@ -26,10 +26,12 @@ const NAV_SECTIONS = ["overview", "sales", "purchasing", "inventory", "manufactu
 export function decorateFields(fields) {
   return fields.map((field, index) => ({
     ...field,
-    tsType: field.type === "number" ? "number" : "string",
+    tsType: field.type === "number" || field.type === "decimal" ? "number" : "string",
     isStatus: field.type === "status",
     isText: field.type === "text",
-    isNumber: field.type === "number",
+    // decimal là tiền (variant amount), number là số lượng (variant qty); cả hai đều có ô tổng
+    isNumber: field.type === "number" || field.type === "decimal",
+    summaryVariant: field.type === "decimal" ? "amount" : "qty",
     isDate: field.type === "date",
     isCreatedAt: field.name === "createdAt",
     isFirst: index === 0,

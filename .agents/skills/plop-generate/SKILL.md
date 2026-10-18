@@ -101,7 +101,8 @@ bun plop v2-module <moduleName> <EntityName> <PluralName> "<titleVi>" "<titleEn>
 - `routeInput`: đường dẫn `/v2/<routeInput>` (mặc định = moduleName).
 - `navSection`: `overview | sales | purchasing | inventory | manufacturing | accounting | settings`.
 - `tableInput`: id lưu cấu hình cột, mặc định `erp-<moduleName>-table`. Giữ đúng id V1 khi migrate để preference được nhận lại.
-- `fieldSpec`: `name:type[:required],...`, type ∈ `string | text | number | date | status`. `createdAt` (date) luôn có. Phải có ít nhất một trường `required`.
+- `fieldSpec`: `name:type[:required],...`, type ∈ `string | text | number | decimal | date | status`. `createdAt` (date) luôn có. Phải có ít nhất một trường `required`.
+  - `number` (số lượng, summary variant `qty`) và `decimal` (tiền, variant `amount`): cột có ô tổng trong summary row, căn phải, lọc kiểu số. Khớp với kiểu `decimal` của `api-module-v2`.
 - `hasNextCode`: `true` nếu backend có `GET .../next-code`. Khi `true`, trường đầu tiên phải là chuỗi và dùng làm mã.
 - `wire`: `true` để tự nối route/menu/i18n; `false` để chỉ sinh file.
 

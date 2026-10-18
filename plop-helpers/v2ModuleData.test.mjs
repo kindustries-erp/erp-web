@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildModuleData, camelCase, kebabCase, pascalCase } from "./v2ModuleData.mjs";
+import { buildModuleData, camelCase, decorateFields, kebabCase, pascalCase } from "./v2ModuleData.mjs";
 
 const base = {
   moduleName: "sample-items",
@@ -62,5 +62,19 @@ describe("buildModuleData", () => {
     expect(() =>
       buildModuleData({ ...base, hasNextCode: true, fieldSpec: "status:status:required,name:string:required" }),
     ).toThrow(/hasNextCode/);
+  });
+});
+
+
+describe("numeric summary flags", () => {
+  it("marks decimal as amount summary and number as qty summary", () => {
+    const [amount, qty] = decorateFields([
+      { name: "amount", type: "decimal", required: false },
+      { name: "qty", type: "number", required: false },
+    ]);
+    expect(amount.isNumber).toBe(true);
+    expect(amount.summaryVariant).toBe("amount");
+    expect(amount.tsType).toBe("number");
+    expect(qty.summaryVariant).toBe("qty");
   });
 });

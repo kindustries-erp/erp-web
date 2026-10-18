@@ -20,7 +20,7 @@ export const build{{EntityPlural}}Columns = (
   {
     key: "{{name}}",
     label: t("v2.{{../namespace}}.columns.{{name}}", "{{name}}"),
-    size: {{#if isDate}}135{{else}}{{#if isStatus}}125{{else}}170{{/if}}{{/if}},
+    size: {{#if isDate}}135{{else}}{{#if isStatus}}125{{else}}{{#if isNumber}}140{{else}}170{{/if}}{{/if}}{{/if}},
     enableResizing: true,
 {{#if isFirst}}
     mobileSlot: "subtitle",
@@ -43,6 +43,13 @@ export const build{{EntityPlural}}Columns = (
       ],
     },
     cell: (row) => <{{../Entity}}StatusBadge status={row.{{name}} ?? ""} />,
+{{else}}{{#if isNumber}}
+    align: TableColumnAlign.RIGHT,
+    mobileSlot: "meta",
+    filter: { valueType: ColumnValueType.NUMBER },
+    // Ô tổng: subtotal trang, lũy kế và tổng toàn bộ (lấy từ `summaries` của API)
+    summary: { variant: "{{summaryVariant}}" },
+    cell: (row) => <span className="block text-right tabular-nums">{value(row.{{name}})}</span>,
 {{else}}{{#if isDate}}
     align: TableColumnAlign.RIGHT,
     mobileSlot: "hidden",
@@ -55,7 +62,7 @@ export const build{{EntityPlural}}Columns = (
     cell: (row) => (
       <span className="block truncate">{value(row.{{name}})}</span>
     ),
-{{/if}}{{/if}}{{/if}}
+{{/if}}{{/if}}{{/if}}{{/if}}
   },
 {{/each}}
 ];
