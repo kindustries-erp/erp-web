@@ -20,6 +20,11 @@ export interface GarageCashflowVoucher {
   updatedAt: string;
   transDate: string;
   createdBy?: string;
+  isAutoCommission?: boolean;
+  pnlPeriodYear?: number | null;
+  pnlPeriodMonth?: number | null;
+  pnlCommissionType?: string | null;
+  pnlCommissionAnchorId?: string | null;
   case?: {
     id: string;
     khachHangName: string;
@@ -253,3 +258,24 @@ export const garageCashflowApi = {
     return res.data;
   },
 };
+
+export async function syncPnlCommissionVouchers(
+  year?: number,
+  month?: number,
+): Promise<{
+  year: number;
+  month: number;
+  saleCommission: number;
+  dvCommission: number;
+  syncedVouchers: number;
+}> {
+  const params: Record<string, any> = {};
+  if (year) params.year = year;
+  if (month) params.month = month;
+  const res = await axiosInstance.post(
+    "/api/v1/greenway/cashflow-vouchers/sync-pnl-commissions",
+    null,
+    { params },
+  );
+  return res.data;
+}

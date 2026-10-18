@@ -43,6 +43,8 @@ const CONTENT_BADGE_STYLES: Record<string, string> = {
   HHBH: "bg-purple-500/10 text-purple-600 border-purple-500/20",
   "5. HH Bán hàng": "bg-fuchsia-500/10 text-fuchsia-600 border-fuchsia-500/20",
   "HH Bán hàng": "bg-fuchsia-500/10 text-fuchsia-600 border-fuchsia-500/20",
+  "6. HH Xưởng": "bg-pink-500/10 text-pink-600 border-pink-500/20",
+  "HH Xưởng": "bg-pink-500/10 text-pink-600 border-pink-500/20",
   "6. HH Thưởng": "bg-pink-500/10 text-pink-600 border-pink-500/20",
   "HH Thưởng": "bg-pink-500/10 text-pink-600 border-pink-500/20",
   "7. Ứng trước": "bg-amber-500/10 text-amber-600 border-amber-500/20",
@@ -85,11 +87,18 @@ export const renderPaymentContentCell = (row: GarageCashflowVoucher) => {
     "bg-slate-500/10 text-slate-600 border-slate-500/20";
 
   return (
-    <span
-      className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${badgeStyle}`}
-    >
-      {content}
-    </span>
+    <div className="flex items-center gap-1.5 flex-wrap">
+      <span
+        className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${badgeStyle}`}
+      >
+        {content}
+      </span>
+      {row.isAutoCommission && (
+        <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-semibold bg-violet-500/15 text-violet-700 dark:text-violet-300 border border-violet-500/30">
+          P&L Auto
+        </span>
+      )}
+    </div>
   );
 };
 
@@ -124,7 +133,7 @@ export const renderPaymentStatusCell = (row: GarageCashflowVoucher) => {
       return <span className="text-muted-foreground">—</span>;
     }
     if (row.paymentStatus === "PENDING") {
-      label = "Chờ duyệt";
+      label = "Dự chi";
       badgeStyle = STATUS_BADGE_STYLES.PENDING;
     } else if (row.paymentStatus === "APPROVED") {
       label = "Đã duyệt";

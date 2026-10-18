@@ -21,7 +21,7 @@ describe("PaymentContentCombobox Molecule", () => {
       "3. BH thanh toán",
       "4. HHBH",
       "5. HH Bán hàng",
-      "6. HH Thưởng",
+      "6. HH Xưởng",
       "7. Ứng trước",
       "8. Cấn trừ",
       "9. Phụ tùng / vật tư",

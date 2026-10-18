@@ -24,7 +24,7 @@ export const PAYMENT_METHOD_OPTIONS = [
 export const PAYMENT_STATUS_OPTIONS = [
   { label: "Dự thu", value: "EXPECTED" },
   { label: "Đã thu / Đã chi", value: "PAID" },
-  { label: "Chờ duyệt", value: "PENDING" },
+  { label: "Dự chi", value: "PENDING" },
   { label: "Đã duyệt", value: "APPROVED" },
 ];
 

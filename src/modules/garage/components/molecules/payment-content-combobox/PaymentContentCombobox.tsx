@@ -8,7 +8,7 @@ export const PAYMENT_CONTENT_OPTIONS = [
   { label: "3. BH thanh toán", value: "3. BH thanh toán" },
   { label: "4. HHBH", value: "4. HHBH" },
   { label: "5. HH Bán hàng", value: "5. HH Bán hàng" },
-  { label: "6. HH Thưởng", value: "6. HH Thưởng" },
+  { label: "6. HH Xưởng", value: "6. HH Xưởng" },
   { label: "7. Ứng trước", value: "7. Ứng trước" },
   { label: "8. Cấn trừ", value: "8. Cấn trừ" },
   { label: "9. Phụ tùng / vật tư", value: "9. Phụ tùng / vật tư" },

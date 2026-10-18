@@ -41,7 +41,7 @@ export const garageVi = {
     status: {
       paid: "Đã thanh toán",
       approved: "Đã duyệt",
-      pending: "Chờ duyệt",
+      pending: "Dự chi",
       expected: "Dự thu",
       collected: "Đã thu",
     },
@@ -80,7 +80,7 @@ export const garageVi = {
     paymentContent: "Nội dung TT",
     amount: "Số tiền",
     paymentStatus: "Trạng thái thanh toán",
-    statusPending: "Chờ duyệt",
+    statusPending: "Dự chi",
     statusApproved: "Đã duyệt",
     statusPaid: "Đã chi",
     statusExpected: "Dự thu",

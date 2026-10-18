@@ -42,7 +42,7 @@ export function useGarageCashflowEditSection({
 
   const paymentStatusOptions = [
     {
-      label: t("garage:cashflowDrawer.statusPending", "Chờ duyệt"),
+      label: t("garage:cashflowDrawer.statusPending", "Dự chi"),
       value: "PENDING",
     },
     {

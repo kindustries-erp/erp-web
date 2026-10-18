@@ -137,7 +137,7 @@ export function computeAuditDiffs(
           return `${Number(v).toLocaleString("vi-VN")} đ`;
         }
         if (key === "paymentStatus") {
-          if (v === "PENDING") return "Chờ duyệt";
+          if (v === "PENDING") return "Dự chi";
           if (v === "APPROVED") return "Đã duyệt";
           if (v === "PAID") return "Đã thanh toán";
           if (v === "EXPECTED") return "Dự thu";

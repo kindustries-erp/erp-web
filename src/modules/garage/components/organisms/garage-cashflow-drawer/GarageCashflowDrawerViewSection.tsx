@@ -36,7 +36,7 @@ export const GarageCashflowDrawerViewSection: React.FC<
               ? "Dự thu"
               : "Đã thu"
             : voucher?.paymentStatus === "PENDING"
-              ? "Chờ duyệt"
+              ? "Dự chi"
               : voucher?.paymentStatus === "APPROVED"
                 ? "Đã duyệt"
                 : voucher?.paymentStatus === "PAID"
