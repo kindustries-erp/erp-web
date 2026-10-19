@@ -245,8 +245,8 @@ src/modules/erp-invoices-core/
 
 ### 3.6. Drawer Xuất PDF / Tải ZIP Hóa Đơn (`invoice-file-export-drawer`) & thành phần xuất dùng chung
 - **Dùng chung với drawer Excel** (nằm trong `invoice-export-drawer/`): `InvoiceExportDrawerShell` (khung `StandardFormDrawer` 2 cột: trái = lịch sử/thông tin, phải = điều kiện), `InvoiceExportConditionSection` (props mới: `modes`, `selectedCount`, `startLabel`, `startIcon`, `children`), `InvoiceExportModeSelector` (thêm mode `selected`, data-driven theo `modes[]`), `InvoiceExportFileTypeSelector` (checkbox PDF/XML), hook `useInvoiceExportScope` (`InvoiceExportDrawer.scope.hook.ts`: state kỳ/ngày/mode + `buildScopeQuery()`).
-- **`InvoiceFileExportDrawer`** (`invoice-file-export-drawer/`): ZIP PDF/XML đồng bộ (không job nền, không lịch sử). Mode `selected` (chỉ khi có `selectedIds`, mặc định khi có chọn) gọi `bulkDownloadSelected`; `by-period` / `by-current-filter` gọi `bulkDownloadFiles` (backend chỉ áp `date_from`, `date_to`, `direction`, `status`, `search`).
-- **Điểm mở**: menu header "Xuất PDF" (`handleExportPdf`) và bulk dropdown "Xuất PDF / Tải ZIP"; cùng state `fileExportDrawerOpen` trong `useInvoiceBulkActions`, render trong `InvoiceBulkModals`. Đã thay `DrawerModal` "Tải ZIP N hóa đơn đã chọn" cũ; drawer "Tải hàng loạt theo tháng" giữ nguyên.
+- **`InvoiceFileExportDrawer`** (`invoice-file-export-drawer/`): nút "Tải hóa đơn" (ZIP đồng bộ, không job nền, không lịch sử). Gói chỉ chứa đúng loại đã tick: PDF → chỉ PDF thật; XML → file .xml (kể cả khi nhà cung cấp gửi zip). Mode `selected` (chỉ khi có `selectedIds`, mặc định khi có chọn) gọi `bulkDownloadSelected`; `by-period` / `by-current-filter` gọi `bulkDownloadFiles` (backend chỉ áp `date_from`, `date_to`, `direction`, `status`, `search`).
+- **Điểm mở**: menu header "Xuất PDF" (`handleExportPdf`) và bulk dropdown "Xuất PDF / Tải ZIP" (tiêu đề drawer giữ nguyên); cùng state `fileExportDrawerOpen` trong `useInvoiceBulkActions`, render trong `InvoiceBulkModals`. Đã thay `DrawerModal` "Tải ZIP N hóa đơn đã chọn" cũ; drawer "Tải hàng loạt theo tháng" giữ nguyên.
 
 ---
 
@@ -292,6 +292,10 @@ export interface ErpInvoice {
 - `syncPortal(dto)` / `loginPortal(dto)` / `getPortalCaptcha()`: Tương tác Cổng thuế GDT.
 - `bulkImportBuyerXml(formData)` / `bulkImportSellerXml(formData)`: Upload hàng loạt XML/PDF.
 - `bulkDownloadFiles(query, types)` / `bulkDownloadSelected(ids, types)`: Tải ZIP hàng loạt.
+- Tab "Tài liệu & PDF" (`InvoiceDocumentWorkspace.helper.ts` → `normalizeInvoiceDocuments`): gộp `pdfFileKey`, `pdfFiles`, `attachments` và zip gốc từ `xmlFileKey` (nhãn theo tên file, chỉ tải, không xem trước). Zip gốc không tạo dòng attachment, nên HĐ từ cổng thuế vẫn hiện file dù không có `erp_invoice_attachments`.
+- Drawer "Tải hóa đơn" có 3 loại file: PDF, XML, ZIP (gói gốc NCC). Gửi `types` tương ứng lên `bulk-download-*`.
+- **Chỉnh sửa hàng loạt** (`bulk-edit-drawer/`): state phân loại/chi nhánh/ghi chú nằm ở `useBulkEditAssignments.ts`, seed snapshot một lần mỗi lần mở (không seed lại khi mảng HĐ đổi identity), nên không mất chỉnh sửa. Ghi chú bulk ghi vào `notes` (API `bulk-set-notes`).
+- **Ghi chú** trên thẻ "THÔNG TIN CHUNG" đọc `notes` (không đọc `description`, vốn là diễn giải/tên hàng từ cổng thuế). Ô sửa tay chỉ ghi `notes`.
 - `startExportExcelBackground(query)` / `getExportExcelBackgroundHistory()`: Quản lý xuất Excel nền.
 
 ---

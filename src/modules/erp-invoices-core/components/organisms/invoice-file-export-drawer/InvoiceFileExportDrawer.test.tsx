@@ -79,7 +79,7 @@ describe("InvoiceFileExportDrawer", () => {
     expect(screen.getAllByRole("radio")).toHaveLength(3);
     expect(screen.getAllByRole("radio")[0]).toBeChecked();
 
-    fireEvent.click(screen.getByText("Tải ZIP"));
+    fireEvent.click(screen.getByText("Tải hóa đơn"));
     await waitFor(() =>
       expect(bulkDownloadSelected).toHaveBeenCalledWith({
         ids: ["a", "b"],
@@ -96,13 +96,58 @@ describe("InvoiceFileExportDrawer", () => {
     expect(screen.getAllByRole("radio")).toHaveLength(2);
     expect(screen.getAllByRole("radio")[0]).toBeChecked();
 
-    fireEvent.click(screen.getByText("Tải ZIP"));
+    fireEvent.click(screen.getByText("Tải hóa đơn"));
     await waitFor(() => expect(bulkDownloadFiles).toHaveBeenCalledTimes(1));
     const arg = bulkDownloadFiles.mock.calls[0][0];
     expect(arg.types).toEqual(["pdf"]);
     expect(arg.query.direction).toBe("IN");
     expect(arg.query.date_from).toMatch(/T00:00:00$/);
     expect(arg.query.date_to).toMatch(/T23:59:59$/);
+  });
+
+  it("exports only XML when only the XML type is chosen", async () => {
+    render(<InvoiceFileExportDrawer {...baseProps} selectedIds={["a"]} />);
+
+    const [pdfBox, xmlBox] = screen.getAllByRole("checkbox");
+    fireEvent.click(pdfBox);
+    fireEvent.click(xmlBox);
+    fireEvent.click(screen.getByText("Tải hóa đơn"));
+
+    await waitFor(() =>
+      expect(bulkDownloadSelected).toHaveBeenCalledWith({
+        ids: ["a"],
+        types: ["xml"],
+      }),
+    );
+  });
+
+  it("exports both PDF and XML when both types are chosen", async () => {
+    render(<InvoiceFileExportDrawer {...baseProps} selectedIds={["a"]} />);
+
+    const [, xmlBox] = screen.getAllByRole("checkbox");
+    fireEvent.click(xmlBox);
+    fireEvent.click(screen.getByText("Tải hóa đơn"));
+
+    await waitFor(() => expect(bulkDownloadSelected).toHaveBeenCalledTimes(1));
+    const arg = bulkDownloadSelected.mock.calls[0][0];
+    expect(arg.types).toEqual(expect.arrayContaining(["pdf", "xml"]));
+    expect(arg.types).toHaveLength(2);
+  });
+
+  it("exports the provider ZIP when only the ZIP type is chosen", async () => {
+    render(<InvoiceFileExportDrawer {...baseProps} selectedIds={["a"]} />);
+
+    const [pdfBox, , zipBox] = screen.getAllByRole("checkbox");
+    fireEvent.click(pdfBox);
+    fireEvent.click(zipBox);
+    fireEvent.click(screen.getByText("Tải hóa đơn"));
+
+    await waitFor(() =>
+      expect(bulkDownloadSelected).toHaveBeenCalledWith({
+        ids: ["a"],
+        types: ["zip"],
+      }),
+    );
   });
 
   it("blocks the download when no file type is chosen", async () => {
@@ -112,7 +157,7 @@ describe("InvoiceFileExportDrawer", () => {
       .getAllByRole("checkbox")
       .filter((el) => (el as HTMLInputElement).checked);
     fireEvent.click(pdfBox);
-    fireEvent.click(screen.getByText("Tải ZIP"));
+    fireEvent.click(screen.getByText("Tải hóa đơn"));
 
     await waitFor(() => expect(bulkDownloadSelected).not.toHaveBeenCalled());
   });

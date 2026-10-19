@@ -143,11 +143,8 @@ export const ErpInvoiceGeneralInfoEdit = React.memo(
           <DrawerField label={t("notes", "Ghi chú")}>
             <BufferedTextarea
               className="w-full text-xs"
-              value={form?.notes || form?.description || ""}
-              onChange={(val) => {
-                fieldSet?.("notes", val);
-                fieldSet?.("description", val);
-              }}
+              value={form?.notes ?? ""}
+              onChange={(val) => fieldSet?.("notes", val)}
               placeholder={t("notesPlaceholder", "Nhập ghi chú...")}
               rows={3}
             />

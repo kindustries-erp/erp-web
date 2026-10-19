@@ -56,7 +56,7 @@ export function useInvoiceFileExportDrawer({
       toast.error(
         t(
           "erpInvoices:exportDrawer.error.missingFileType",
-          "Vui lòng chọn ít nhất 1 loại file (PDF hoặc XML)",
+          "Vui lòng chọn ít nhất 1 loại file (PDF, XML hoặc ZIP)",
         ),
       );
       return;
