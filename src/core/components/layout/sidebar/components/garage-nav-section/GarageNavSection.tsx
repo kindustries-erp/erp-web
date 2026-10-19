@@ -43,16 +43,6 @@ export function GarageNavSection({
       collapsed={collapsed}
       label={t("nav.sections.garage", "GARAGE")}
     >
-      {canReadGarageCashflow && (
-        <NavItem
-          collapsed={collapsed}
-          icon={<Wallet className="w-4 h-4 opacity-65 flex-shrink-0" />}
-          label={t("nav.items.garageCashflow", "Thu chi garage")}
-          active={isCashflowActive}
-          onClick={handleNavCashflow}
-          contextPage="garage-cashflow"
-        />
-      )}
       {canReadGarageCases && (
         <NavItem
           collapsed={collapsed}
@@ -61,6 +51,16 @@ export function GarageNavSection({
           active={isCasesActive}
           onClick={handleNavCases}
           contextPage="garage-cases"
+        />
+      )}
+      {canReadGarageCashflow && (
+        <NavItem
+          collapsed={collapsed}
+          icon={<Wallet className="w-4 h-4 opacity-65 flex-shrink-0" />}
+          label={t("nav.items.garageCashflow", "Thu chi garage")}
+          active={isCashflowActive}
+          onClick={handleNavCashflow}
+          contextPage="garage-cashflow"
         />
       )}
       {canReadGarageDebts && (

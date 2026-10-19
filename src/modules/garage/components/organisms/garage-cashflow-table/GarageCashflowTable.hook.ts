@@ -162,6 +162,7 @@ export function useGarageCashflowTable() {
     data: (data?.data ?? []) as GarageCashflowVoucher[],
     total: data?.total ?? 0,
     totalPages: data?.totalPages ?? 0,
+    totals: data?.totals,
     isLoading,
     page,
     setPage,

@@ -54,6 +54,8 @@ interface ComboboxProps {
   variant?: "default" | "spreadsheet" | "ghost";
   /** Khi bật, ẩn subLabel trên nút trigger để giữ nút thoáng đãng trên 1 dòng duy nhất */
   hideTriggerSubLabel?: boolean;
+  /** Gắn dropdown vào phần tử này thay vì `document.body` (cần khi nằm trong phần tử đang full screen). */
+  portalContainer?: HTMLElement | null;
 }
 
 export function Combobox({
@@ -74,6 +76,7 @@ export function Combobox({
   fallbackTooltipContent,
   variant = "default",
   hideTriggerSubLabel = false,
+  portalContainer,
 }: ComboboxProps) {
   const t = useT();
   const defaultPlaceholder = t("common.select", "— Chọn —");
@@ -248,7 +251,7 @@ export function Combobox({
         </Popover.Trigger>
       </Tooltip>
 
-      <Popover.Portal>
+      <Popover.Portal container={portalContainer ?? undefined}>
         <Popover.Content
           className="z-[9999] w-[var(--radix-popover-trigger-width)] min-w-[200px] flex flex-col rounded-lg popup-content overflow-hidden shadow-md"
           style={{ maxHeight: "280px" }}

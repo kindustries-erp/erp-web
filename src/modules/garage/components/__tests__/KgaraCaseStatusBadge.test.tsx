@@ -15,10 +15,12 @@ describe("KgaraCaseStatusBadge & getKgaraStatusLabel", () => {
     });
 
     it("maps known integer status codes correctly", () => {
-      expect(getKgaraStatusLabel(1)).toBe("Tiếp nhận");
-      expect(getKgaraStatusLabel(2)).toBe("Báo giá");
+      expect(getKgaraStatusLabel(0)).toBe("Tiếp nhận");
+      expect(getKgaraStatusLabel(1)).toBe("Báo giá");
+      expect(getKgaraStatusLabel(2)).toBe("Đang sửa");
       expect(getKgaraStatusLabel(3)).toBe("Kết thúc");
-      expect(getKgaraStatusLabel(4)).toBe("Đã hủy");
+      expect(getKgaraStatusLabel(9)).toBe("Đã hủy");
+      expect(getKgaraStatusLabel(4)).toBe("Trạng thái 4");
       expect(getKgaraStatusLabel(99)).toBe("Trạng thái 99");
     });
 
@@ -44,9 +46,14 @@ describe("KgaraCaseStatusBadge & getKgaraStatusLabel", () => {
       expect(screen.getByText("Kết thúc")).toBeDefined();
     });
 
-    it("renders number status 1 with warning variant label", () => {
-      render(<KgaraCaseStatusBadge status={1} />);
+    it("renders number status 0 as Tiếp nhận", () => {
+      render(<KgaraCaseStatusBadge status={0} />);
       expect(screen.getByText("Tiếp nhận")).toBeDefined();
+    });
+
+    it("renders number status 9 as Đã hủy", () => {
+      render(<KgaraCaseStatusBadge status={9} />);
+      expect(screen.getByText("Đã hủy")).toBeDefined();
     });
 
     it("renders text statuses correctly", () => {

@@ -150,7 +150,7 @@ describe("GarageNavSection component", () => {
     expect(screen.queryByText("Chi phí vận hành Garage")).toBeNull();
   });
 
-  it("renders 4 flat nav items with Thu chi garage positioned above Hoạt động garage", () => {
+  it("renders 4 flat nav items with Thu chi garage positioned below Hoạt động garage", () => {
     vi.mocked(useHasPermission).mockImplementation((resource) => {
       return (
         resource === ErpResource.GARAGE ||
@@ -168,17 +168,17 @@ describe("GarageNavSection component", () => {
     );
 
     expect(screen.getByText("GARAGE")).toBeInTheDocument();
-    expect(screen.getByText("Thu chi garage")).toBeInTheDocument();
     expect(screen.getByText("Hoạt động garage")).toBeInTheDocument();
+    expect(screen.getByText("Thu chi garage")).toBeInTheDocument();
     expect(screen.getByText("Công nợ garage")).toBeInTheDocument();
     expect(screen.getByText("Chi phí vận hành Garage")).toBeInTheDocument();
 
-    // Verify order in DOM: Thu chi garage is before Hoạt động garage
+    // Verify order in DOM: Thu chi garage is after Hoạt động garage
     const items = container.querySelectorAll(".nav-label");
     const labels = Array.from(items).map((el) => el.textContent?.trim());
     expect(labels).toEqual([
-      "Thu chi garage",
       "Hoạt động garage",
+      "Thu chi garage",
       "Công nợ garage",
       "Chi phí vận hành Garage",
     ]);

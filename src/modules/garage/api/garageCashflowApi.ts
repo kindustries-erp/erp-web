@@ -164,6 +164,20 @@ export interface GarageCashflowDashboardData {
   topTransactions: GarageCashflowTopTransactions;
 }
 
+export interface GarageCashflowTotals {
+  grandTotalThu: number;
+  grandTotalChi: number;
+  cumulativeThu: number;
+  cumulativeChi: number;
+}
+
+export interface GarageCashflowListResponse {
+  data: GarageCashflowVoucher[];
+  total: number;
+  totalPages?: number;
+  totals?: GarageCashflowTotals;
+}
+
 export const garageCashflowApi = {
   checkDuplicates: async (
     params: CashflowDuplicateParams,
@@ -174,7 +188,9 @@ export const garageCashflowApi = {
     );
     return res.data;
   },
-  getList: async (params?: Record<string, any>) => {
+  getList: async (
+    params?: Record<string, any>,
+  ): Promise<GarageCashflowListResponse> => {
     const res = await axiosInstance.get("/api/v1/greenway/cashflow-vouchers", {
       params,
     });

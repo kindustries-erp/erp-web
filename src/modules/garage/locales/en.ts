@@ -354,6 +354,7 @@ export const garageEn = {
       viewFilteredCases: "View Case List",
       exportGroup: "Reports & File Export",
       exportExcel: "Export Excel",
+      viewWorkflow: "View workflow diagram",
     },
     exportDrawer: {
       title: "Export Service Cases Excel",
@@ -1585,6 +1586,671 @@ export const garageEn = {
       partsCost: "Parts Cost",
       discountAmount: "Discount",
       warehouseCode: "Warehouse",
+    },
+  },
+  workflow: {
+    toolbar: {
+      zoomIn: "Zoom in",
+      zoomOut: "Zoom out",
+      fit: "Fit to view",
+      enterFullscreen: "Full screen",
+      exitFullscreen: "Exit full screen",
+      showRead: "Read-only flows",
+      hideRead: "Hide read-only flows",
+      flowsLabel: "Automatic flows:",
+      flowAll: "All flows",
+      flowAllHint: "Show every flow, nothing dimmed",
+      canvasLabel: "Diagram:",
+      clearSelection: "Clear selection",
+    },
+    legend: {
+      step: "Action order",
+      solidArrow: "Main flow",
+      dashedArrow: "To be verified",
+      readArrow: "Read-only data",
+      completed: "Completed (code 3)",
+      cancelled: "Cancelled (code 9)",
+    },
+    drawer: {
+      title: "Garage Hub Workflow Diagram",
+      subtitle:
+        "Two views: day-to-day operations for end users, module architecture for developers",
+      exportPng: "Download PNG",
+      exportPdf: "Download PDF",
+      tab: {
+        endUser: "End user",
+        dev: "Developer",
+      },
+    },
+    flows: {
+      forecast: "Completed case → auto-create expected receipt",
+      opex: "Save HHBH / consumables payment → auto-write OPEX",
+      commission: "Open P&L report → auto-create commission vouchers",
+      receipt:
+        "Save case-linked receipt/payment → auto-offset, reset expected receipt",
+      manual: "Manual (user actions)",
+    },
+    flowDescriptions: {
+      forecast:
+        "When the KGara sync sees a case move to Completed, the system automatically creates an expected-receipt voucher (EXPECTED) due in 7 days; if the case leaves Completed the voucher is cancelled.",
+      opex: "When a payment voucher with content HHBH or Consumables is saved as Approved or Paid, the system automatically writes an OPEX line in the same transaction.",
+      commission:
+        "When the P&L report is opened, the system runs in the background to create PENDING commission payment vouchers (and a delta voucher if P&L rises after payment); there is no dedicated cron.",
+      receipt:
+        "When a receipt or payment linked to a service case is saved, the system automatically offsets it against the case and resets the expected receipt to the remaining balance.",
+      manual:
+        "Actions users do on purpose: updating case status in KGara, manual offsets, entering operating expenses.",
+    },
+    endUser: {
+      title: "Garage operations: workshop, cash, receivables",
+      description:
+        "Operations flow from vehicle intake to receipts, receivables and reports. Numbers on cards show the order of actions; colored arrows A–D are the automatic flows.",
+      corner: "Department \\ Stage",
+      columns: {
+        c1: "Intake & Quote",
+        c2: "Repair",
+        c3: "Completed",
+        c4: "Cash & receivables",
+        c5: "Reconciliation & reports",
+      },
+      lanes: {
+        r1: "Workshop & advisors",
+        r2: "Automated system",
+        r3: "Accounting: receipts",
+        r4: "Accounting: payments",
+        r5: "Accounting: special payments",
+        r6: "Receivables & reconciliation",
+        r7: "Management & reports",
+      },
+      nodes: {
+        e1: { title: "Create case in KGara", badge1: "Vehicle intake, quote" },
+        e2: { title: "In repair", badge1: "Update line costs and notes" },
+        e3: {
+          title: "Completed",
+          badge1: "Vehicle handed over, work done",
+          badge2: "Cancelled (9): excluded from reports",
+        },
+        s1: {
+          title: "KGara sync",
+          badge1: "09:15 · 15:15 · 16:15 · 17:15 · 21:15",
+          badge2: "Manual sync button also available",
+        },
+        s2: {
+          title: "Checkpoint: cars in progress",
+          badge1: "Expected receipts for cars in progress",
+        },
+        s3: {
+          title: "System creates expected receipt",
+          badge1: "Completed case → EXPECTED receipt voucher",
+          badge2: "Outstanding ≤ 0 → not created",
+        },
+        s4: {
+          title: "Reset expected receipt",
+          badge1: "After each receipt or offset",
+        },
+        s5: {
+          title: "P&L commission",
+          badge1: "Opening the P&L report creates PENDING commission payments",
+          badge2: "Delta when P&L rises after PAID",
+        },
+        dt: {
+          title: "Expected receipt (EXPECTED)",
+          badge1: "Receipt voucher created when the case is completed",
+          badge2: "Due = completion + 7 days",
+          badge3: "Not yet counted as actual receipt",
+        },
+        t1: {
+          title: "Collect cash → Actual receipt",
+          badge1: "Receipt linked to the service case",
+          badge2: "Actual receipt = voucher no longer EXPECTED",
+          badge3: "Reduces receivables",
+        },
+        t2: {
+          title: "Bank statement matching",
+          badge1: "Match bank transactions",
+          badge2: "Off-book receipts when needed",
+        },
+        dc: {
+          title: "Planned payment (PENDING / APPROVED)",
+          badge1: "Payment voucher, cash not paid yet",
+          badge2: "Does not reduce payables yet",
+        },
+        p1: {
+          title: "Actual payment (PAID)",
+          badge1: "Reduces payables",
+          badge2: "PAID vouchers are locked",
+        },
+        p2: {
+          title: "Operating expense (OPEX)",
+          badge1: "Manual entry or monthly recurring",
+          badge2: "Receives HHBH and consumables",
+        },
+        hh: {
+          title: "HHBH (content 4)",
+          badge1: "Commission-group payment voucher",
+          badge2: "Does not reduce payables",
+          badge3: "Approved / paid → writes OPEX",
+          badge4: "P&L: item 4.2 Selling expenses",
+        },
+        vt: {
+          title: "Consumables (content 10)",
+          badge1: "Workshop consumables payment voucher",
+          badge2: "Does not reduce payables",
+          badge3: "Approved / paid → writes OPEX",
+          badge4: "P&L: Cost of sales",
+        },
+        d1: {
+          title: "Receivables",
+          badge1: "Customers and insurers, by aging",
+        },
+        d2: {
+          title: "VAT invoices",
+          badge1: "Sales (OUT), purchases (IN)",
+          badge2: "Offset against supplier payables",
+        },
+        m1: {
+          title: "Net cash flow",
+          badge1: "Actual receipts − actual payments",
+        },
+        m2: {
+          title: "Dashboard & P&L",
+          badge1: "Revenue, gross profit by completion date",
+          badge2: "Soft-deleted and cancelled cases excluded",
+        },
+      },
+      edges: {
+        ee1: "Start repair",
+        ee2: "Completed",
+        ee3: "System creates receipt",
+        ee4: "Update",
+        ee5: "Create voucher",
+        ee6: "Awaiting",
+        ee7: "Received",
+        ee8: "Offset",
+        ee9: "Paid",
+        ee10: "Write OPEX",
+        ee11: "Write OPEX",
+        ee12: "Commission voucher",
+        ee13: "Actual payment",
+        ee14: "Actual receipt",
+        ee15: "Expense",
+        ee16: "Receivable",
+      },
+    },
+    dev: {
+      title: "Garage module architecture",
+      description:
+        "Each box is a module. Colored arrows A–D are automatic flows through the Garage Hub; pick one to highlight it.",
+      lanes: {
+        activity: "Garage activity",
+        hub: "Garage Hub",
+        cashflow: "Cash flow",
+        opex: "OPEX",
+        read: "Reports & analytics (read-only)",
+      },
+      groups: {
+        sync: "SYNC",
+        kgara: "KGARA",
+        cases: "SERVICE CASES",
+        pnl: "P&L & DASHBOARD",
+        hub: "GARAGE HUB",
+        cashflow: "CASH FLOW",
+        opex: "OPEX",
+        debts: "RECEIVABLES & RECONCILIATION",
+      },
+      nodes: {
+        cron: {
+          title: "KgaraSyncScheduler",
+          badge1: "Cron 09:15 · 15:15 · 16:15 · 17:15 · 21:15",
+          badge2: "30-second heartbeat, each slot runs once",
+        },
+        kgaraApi: {
+          title: "KGara API",
+          badge1: "Service cases, details, debts",
+        },
+        sy: {
+          title: "SyncCaseService",
+          badge1: "Incremental watermark, 10-minute lookback",
+          badge2: "Soft-delete after 2 missed syncs",
+        },
+        caseFin: {
+          title: "KgaraCaseFinancialController",
+          badge1: "User offsets manually (HTTP)",
+          badge2: "Settlements, linked invoices IN / OUT",
+        },
+        pnlSvc: {
+          title: "GaragePnlService",
+          badge1: "User opens the P&L report (HTTP)",
+          badge2: "No cron",
+        },
+        tCases: { title: "kgara_cases", badge1: "Cases and line items" },
+        tSettlements: {
+          title: "kgara_case_settlements",
+          badge1: "Offsets between vouchers, bank lines, invoices",
+        },
+        lifecycle: {
+          title: "CaseLifecycleHandler",
+          badge1:
+            "Auto-triggered when a case changes status or a case-linked voucher is saved",
+          badge2:
+            "Moves to 3 → creates expected receipt; leaves 3 → cancels auto receipt",
+        },
+        forecast: {
+          title: "GarageCaseForecastService",
+          badge1: "Create, update, cancel expected receipts",
+          badge2: "Expected receipt = EXPECTED voucher, due +7 days",
+        },
+        settle: {
+          title: "CashflowSettleHandler",
+          badge1: "Auto-triggered when a payment voucher is saved",
+          badge2: "HHBH, consumables APPROVED/PAID → writes OPEX",
+        },
+        pnlCommission: {
+          title: "PnlCommissionHandler",
+          badge1: "Auto-triggered when the P&L report is opened",
+          badge2: "PENDING commission and delta vouchers",
+        },
+        tVouchers: {
+          title: "kgara_cashflow_vouchers",
+          badge1: "RECEIPT / PAYMENT, paymentStatus",
+          badge2: "Expected receipt EXPECTED, planned payment PENDING/APPROVED",
+        },
+        cfTx: {
+          title: "GarageCashflowTransactionService",
+          badge1: "User saves a cash voucher (HTTP)",
+          badge2: "Create, update, delete vouchers in a transaction",
+        },
+        opexSvc: {
+          title: "GarageOpexService",
+          badge1: "User enters manually (HTTP)",
+          badge2: "CRUD, monthly recurring",
+        },
+        tOpex: {
+          title: "kgara_operating_expenses",
+          badge1: "Operating expense, cost of sales, commission",
+          badge2: "HHBH → selling expense, consumables → cost of sales",
+        },
+        dash: {
+          title: "GarageDashboardService",
+          badge1: "Stats, pnl-trend, customers, opex",
+        },
+        chk: {
+          title: "GarageCheckpointService",
+          badge1: "KPIs by completion date",
+        },
+        debts: {
+          title: "GarageDebtsAnalyticsService",
+          badge1: "Aging, time horizons",
+        },
+        smart: {
+          title: "GarageSmartSettlementService",
+          badge1: "Suggested bank and invoice matches",
+        },
+        ledger: {
+          title: "Ledger handlers",
+          badge1: "Period and case ledgers (read)",
+        },
+      },
+      edges: {
+        d1: "On schedule",
+        d2: "Fetch cases",
+        d3: "Upsert",
+        d4: "On status change",
+        d5: "Create expected receipt",
+        d6: "Direct call",
+        d7: "Expected receipt",
+        d8: "Save voucher",
+        d9: "After save",
+        d10: "Write OPEX",
+        d11: "Sync commission",
+        d12: "Commission voucher",
+        d13: "Commission OPEX",
+        d14: "Auto offset",
+        d15: "Case-linked voucher",
+        d16: "Manual offset",
+        d17: "Recalculate balance",
+        d18: "CRUD, monthly",
+        r1: "Revenue, KPI",
+        r2: "Cash flow",
+        r3: "Expenses",
+        r4: "KPI",
+        r5: "Debts",
+        r6: "Offsets",
+        r7: "Suggested match",
+        r8: "Cash ledger",
+      },
+    },
+    guide: {
+      pageLabel: "Page",
+      toc: "Contents",
+      endUser: {
+        title: "Internal guide: garage operations, cash and receivables",
+        subtitle: "Companion to the workflow diagram, written for end users",
+        purpose: {
+          title: "Purpose and audience",
+          p1: "This document explains each step of the garage workflow in the system: from vehicle intake, repair and closing the case, to collecting cash, making payments, receivables and reporting. It is written for service advisors, accountants and managers and needs no technical knowledge.",
+          p2: "The diagram on the first page gives the overview. The following pages explain the details and serve as a reference when needed.",
+        },
+        howToRead: {
+          title: "How to read the diagram",
+          b1: "Each row is a responsible department: Workshop and advisors, Automated system, Accounting: receipts, Accounting: payments, Accounting: special payments, Receivables and reconciliation, Management and reports.",
+          b2: "Each column is a stage of the service case, from Intake and quote to Reconciliation and reports.",
+          b3: "The numbered circle on a card is the order of actions: following the numbers in ascending order walks through the whole workflow.",
+          b4: "Colored arrows A, B, C, D are things the system does by itself with no extra clicks. Arrow M is a manual user action.",
+          b5: "A dashed line is a background step or one that still needs verification. A dotted line is a read-only flow that feeds reports.",
+          b6: "A card with a green border is the Completed status (code 3); a card with a red border is Cancelled (code 9).",
+          b1ex: "To see who handles Actual payment, look at the row Accounting: payments.",
+          b2ex: "The card System creates expected receipt sits in the Completed column: it only happens once a case is Completed.",
+          b3ex: "Start at card 1 Create case, go to card 4 Completed, then card 5 System creates expected receipt.",
+          b4ex: "Arrow A creates the expected receipt from the Completed card without anyone creating a voucher by hand.",
+          b5ex: "Turn on the read-flow button to see the dotted lines from Actual payment and Actual receipt into Net cash flow.",
+          b6ex: "A car handed over is set to Completed (green border); a customer cancellation is set to Cancelled (red border) and leaves the reports.",
+        },
+        steps: {
+          title: "Operating steps",
+          intro:
+            "The steps below come straight from the diagram, in the same order as the numbers on the cards.",
+        },
+        money: {
+          title: "Money items explained",
+          dt: {
+            term: "Expected receipt (EXPECTED)",
+            text: "A receipt voucher the system creates automatically when a service case is completed, to remind that cash is due. The due date is the completion date plus 7 days. It is not counted as actual receipt and does not offset receivables. If the case leaves Completed, the expected receipt is cancelled automatically.",
+            example:
+              "A 5,200,000 VND case with a 2,000,000 VND deposit, completed 15 Oct: expected receipt 3,200,000 VND due 22 Oct. If the case leaves Completed, it is cancelled automatically.",
+          },
+          t1: {
+            term: "Actual receipt",
+            text: "A receipt voucher that is no longer an expected receipt and is not cancelled. It counts toward net cash flow and reduces the case's receivables.",
+            example:
+              "A customer transfers 3,200,000 VND and accounting records a receipt against the case: it is actual receipt and the case receivable drops to zero.",
+          },
+          dc: {
+            term: "Planned payment (PENDING / APPROVED)",
+            text: "A payment voucher that has been created but not paid yet: waiting for approval or already approved. It does not reduce payables yet.",
+            example:
+              "An 8,000,000 VND payment to a parts supplier is awaiting approval (PENDING): the supplier payable has not decreased.",
+          },
+          p1: {
+            term: "Actual payment (PAID)",
+            text: "A payment voucher that has been paid. It reduces payables and is locked: its status and type can no longer be changed.",
+            example:
+              "After transferring 8,000,000 VND to a supplier and setting PAID, the payable drops by 8,000,000 VND and the voucher type can no longer change.",
+          },
+          hh: {
+            term: "HHBH (content 4)",
+            text: "A payment voucher in the commission group. It does not reduce payables. When it is Approved or Paid, the system writes it to OPEX automatically and it appears in P&L item 4.2 Selling expenses.",
+            example:
+              "A 1,500,000 VND HHBH voucher becomes Approved: OPEX gets a 1,500,000 VND line under 4.2 Selling expenses and the case receivable is unchanged.",
+          },
+          vt: {
+            term: "Consumables (content 10)",
+            text: "A payment voucher for workshop consumables (the old code was 8). It does not reduce payables. When it is Approved or Paid, the system writes it to OPEX automatically and it appears in P&L under Cost of sales.",
+            example:
+              "A 600,000 VND voucher for grease (content 10), Paid: OPEX gets a 600,000 VND line and the P&L counts it in Cost of sales.",
+          },
+          opex: {
+            term: "OPEX",
+            text: "The garage's operating expenses: manual entries, monthly recurring items, commissions, plus HHBH and consumables written automatically by the system.",
+            example:
+              "Rent of 20,000,000 VND entered once and set to recur: the OPEX line appears automatically every month.",
+          },
+        },
+        flows: {
+          title: "Automatic flows",
+          intro:
+            "Each flow below runs automatically through the Garage Hub: the user only performs the starting action and the system handles the rest.",
+        },
+        rules: {
+          title: "Rules to remember",
+          b1: "A paid payment voucher (PAID) is locked: its status and type cannot be changed, so check carefully before paying.",
+          b2: "Sales commission, workshop commission and HHBH are not offset against the service case's receivables.",
+          b3: "If the amount still due on a case is zero or negative, the system does not create an expected receipt.",
+          b4: "Cancelled cases (code 9) and soft-deleted cases are excluded from revenue and gross-profit reports.",
+          b5: "Revenue, cost and gross profit are calculated by the case's work completion date.",
+          b6: "KGara sync runs at 09:15, 15:15, 16:15, 17:15 and 21:15. If you need newer data, press the manual sync button.",
+          b7: "Commission vouchers are only created when the P&L report is opened; there is no separate schedule.",
+          b1ex: "An 8,000,000 VND voucher is PAID with the wrong content: it cannot be fixed, so check the content before setting PAID.",
+          b2ex: "A 5,200,000 VND case has a 500,000 VND commission payment: the receivable is still based on 5,200,000 VND, the commission is not deducted.",
+          b3ex: "A customer paid the full 5,200,000 VND before completion: the outstanding amount is zero, so no expected receipt is created.",
+          b4ex: "A 3,000,000 VND cancelled case is not part of the month's revenue or gross profit.",
+          b5ex: "A car completed on 30 Sep is September revenue and gross profit even if the customer pays in October.",
+          b6ex: "Completed a case at 15:40 and need it now: press manual sync instead of waiting for 16:15.",
+          b7ex: "Until the P&L report is opened there is no PENDING commission voucher for that period; the first opening creates it.",
+        },
+        node: {
+          e1: {
+            explain:
+              "The service advisor creates the service case in KGara when the car arrives, records the car's condition and prepares the quote. Garage Hub does not have the case until the next KGara sync.",
+            example:
+              "A Vios 30A-123.45 arrives at 8:30. The advisor creates the case in KGara and quotes 4,500,000 VND. The case shows up in the system after the 09:15 sync.",
+          },
+          e2: {
+            explain:
+              "Technicians repair the car while the advisor updates each cost line (labour, parts) and notes in KGara. Every sync refreshes the case figures in the system.",
+            example:
+              "A technician needs extra brake pads worth 700,000 VND and the advisor adds a line. After the next sync the case total in the system is 5,200,000 VND.",
+          },
+          e3: {
+            explain:
+              "The advisor moves the case to Completed (code 3) when the car is handed over and the work is done. This is the revenue date and the trigger for the expected receipt. Cancelled cases (code 9) are excluded from reports.",
+            example:
+              "The car is handed over on 15 Oct and the case becomes Completed. After the next sync the system creates an expected receipt due 22 Oct. If the customer cancels, the case is set to Cancelled and no revenue is counted.",
+          },
+          s1: {
+            explain:
+              "The system pulls new and changed cases from KGara at fixed times each day. A manual sync button is available when fresh data is needed immediately. A case missing from KGara twice in a row is soft-deleted.",
+            example:
+              "An advisor completes a case at 15:40 and accounting needs to collect right away. Accounting presses manual sync instead of waiting for 16:15.",
+          },
+          s2: {
+            explain:
+              "A view of cars currently in repair and their expected receipts, helping managers estimate incoming cash.",
+            example:
+              "At the start of the week a manager opens the checkpoint, sees 12 cars in repair with 85,000,000 VND of expected receipts and plans the week's payments.",
+          },
+          s3: {
+            explain:
+              "When a case becomes Completed the system creates an EXPECTED receipt for the amount the customer still owes, due completion date plus 7 days. If the remaining amount is zero or negative, none is created.",
+            example:
+              "A 5,200,000 VND case with a 2,000,000 VND deposit gets an expected receipt of 3,200,000 VND. If the customer has paid in full, none is created.",
+          },
+          s4: {
+            explain:
+              "After every receipt or offset linked to a service case, the system recalculates the expected receipt from the new outstanding amount, so no manual edit is needed.",
+            example:
+              "The expected receipt is 3,200,000 VND and the customer pays 1,200,000 VND. It is reset to 2,000,000 VND.",
+          },
+          s5: {
+            explain:
+              "Opening the P&L report makes the system create a PENDING commission payment based on the P&L result. If a commission voucher is already PAID and the P&L grows, the system creates a delta voucher instead of editing the paid one.",
+            example:
+              "Accounting opens the September P&L and the system creates a 10,000,000 VND PENDING commission voucher. After it is paid, more revenue arrives and commission becomes 11,000,000 VND: a 1,000,000 VND delta voucher is created.",
+          },
+          dt: {
+            explain:
+              "A receipt voucher that reminds of money the customer is due to pay. It is not cash received, so it is not counted as actual receipt and does not reduce receivables.",
+            example:
+              "An expected receipt of 3,200,000 VND is due 22 Oct. If the customer has not paid by then, accounting uses it to chase payment.",
+          },
+          t1: {
+            explain:
+              "When the customer pays, accounting records a receipt linked to the service case. A receipt that is no longer EXPECTED counts as actual receipt: it reduces receivables and adds to net cash flow.",
+            example:
+              "A customer transfers 3,200,000 VND for a 5,200,000 VND case (2,000,000 VND already deposited). Accounting records the receipt against the case: receivables drop to zero and the expected receipt is reset.",
+          },
+          t2: {
+            explain:
+              "Accounting matches each bank statement line to a receipt. Money not tied to any service case can be recorded as off-book income.",
+            example:
+              "The statement shows a +3,200,000 VND line whose reference includes the licence plate. Accounting matches it to the customer's receipt; money without a matching case is recorded as off-book income.",
+          },
+          dc: {
+            explain:
+              "A payment voucher that is created but not yet paid: awaiting approval (PENDING) or approved (APPROVED). It is only a plan and does not reduce payables.",
+            example:
+              "Accounting raises an 8,000,000 VND payment to a parts supplier and the head approves it. It stays APPROVED and the supplier balance is still 8,000,000 VND until it is paid.",
+          },
+          p1: {
+            explain:
+              "A payment voucher where money has actually left. It reduces payables and is locked: its status and type can no longer change.",
+            example:
+              "After transferring 8,000,000 VND to a supplier and setting PAID, the payable falls by 8,000,000 VND. A wrong voucher content can no longer be fixed, so check carefully before PAID.",
+          },
+          p2: {
+            explain:
+              "The place where garage operating expenses are collected: manual entries, monthly recurring items, commissions, plus HHBH and consumables written automatically from payment vouchers.",
+            example:
+              "Rent of 20,000,000 VND is entered once and set to recur monthly: every month the system adds it to OPEX automatically.",
+          },
+          hh: {
+            explain:
+              "A payment voucher with content 4 (HHBH) is a selling expense and does not reduce receivables. When it is Approved or Paid, the system writes an OPEX line and the P&L reports it under 4.2 Selling expenses.",
+            example:
+              "A 1,500,000 VND HHBH voucher becomes Approved: OPEX gets a 1,500,000 VND line under 4.2 and the service case receivable does not change.",
+          },
+          vt: {
+            explain:
+              "A payment voucher with content 10 buys workshop consumables (grease, rags, paint...). It does not reduce payables. When Approved or Paid, the system writes OPEX and the P&L counts it under Cost of sales.",
+            example:
+              "A 600,000 VND voucher for grease, content 10, status Paid: OPEX gets a 600,000 VND line and the P&L counts it in that month's cost of sales.",
+          },
+          d1: {
+            explain:
+              "A list of amounts customers and insurers still owe, grouped by aging (days overdue).",
+            example:
+              "An insurer owes 15,000,000 VND for 45 days; it sits in a high aging bucket so accounting chases it first.",
+          },
+          d2: {
+            explain:
+              "Manages sales invoices (OUT) and purchase invoices (IN). A purchase invoice can offset supplier payables.",
+            example:
+              "Accounting receives an 8,000,000 VND parts invoice and offsets it against that supplier's payable.",
+          },
+          m1: {
+            explain:
+              "Actual receipts minus actual payments in the period. Expected receipts and planned payments are not real cash, so they are not counted.",
+            example:
+              "This month actual receipts are 120,000,000 VND and actual payments 90,000,000 VND: net cash flow 30,000,000 VND. Outstanding expected receipts are not included.",
+          },
+          m2: {
+            explain:
+              "Revenue and gross profit reports use the case's completion date. Cancelled and soft-deleted cases are excluded.",
+            example:
+              "A car completed on 30 Sep but paid on 5 Oct still counts as September revenue. Cancelled cases do not appear.",
+          },
+        },
+        flowExample: {
+          forecast:
+            "A 5,200,000 VND case with a 2,000,000 VND deposit is completed at 15:40. After the 16:15 sync the system creates a 3,200,000 VND expected receipt due in 7 days with no action from accounting.",
+          opex: "Accounting saves a 600,000 VND consumables voucher as Approved: the system adds an OPEX line, no re-entry needed.",
+          commission:
+            "Accounting opens the September P&L: the system creates a PENDING commission voucher. If it was paid and the P&L grows, a delta voucher is added.",
+          receipt:
+            "Accounting saves a 1,200,000 VND receipt linked to a case: the system offsets it and resets the expected receipt to 2,000,000 VND.",
+          manual:
+            "The advisor presses Start repair then Finish; accounting records Awaiting payment and Paid. These steps are done by users, not the system.",
+        },
+      },
+      dev: {
+        title: "Technical document: Garage module architecture",
+        subtitle:
+          "Companion to the architecture diagram, written for developers",
+        overview: {
+          title: "Overview",
+          p1: "The garage system has four modules: Garage activity (KGara sync, service cases, offsets, P&L), Garage Hub (money orchestration), Cash flow (vouchers) and OPEX (operating expenses). Most money logic goes through the Garage Hub, where handlers trigger themselves on events.",
+          p2: "On the diagram each box is a module, cards are services or data tables, colored arrows A–D are automatic flows, arrow M is a manual action and the read-only layer sits in the bottom band.",
+        },
+        modules: {
+          title: "Four modules",
+          intro:
+            "Services and data tables inside each box, taken directly from the diagram.",
+        },
+        flows: {
+          title: "Automatic flows in detail",
+          intro:
+            "Each flow lists its trigger, the calls in order (source → target, call mechanism) and the result written to the data tables.",
+        },
+        tables: {
+          title: "Data tables",
+          cases: {
+            term: "kgara_cases",
+            text: "Service cases and line items, synced from KGara. Column tinh_trang_dich_vu: 3 is Completed, 9 is Cancelled (the two codes verified in code).",
+            example:
+              "To find completed cases filter tinh_trang_dich_vu = 3; cancelled cases are 9 and excluded from reports.",
+          },
+          settlements: {
+            term: "kgara_case_settlements",
+            text: "Offsets between a service case and cash vouchers, bank lines and invoices. A receipt that is not EXPECTED always has an offset; a payment only when it is PAID and not in the HHBH, consumables or commission groups.",
+            example:
+              "A 1,200,000 VND receipt linked to a case creates one offset row here; an EXPECTED receipt does not.",
+          },
+          vouchers: {
+            term: "kgara_cashflow_vouchers",
+            text: "Cash vouchers. voucherType is RECEIPT or PAYMENT; paymentStatus is EXPECTED, PENDING, APPROVED, PAID or CANCELLED. A PAID payment is locked in status and type.",
+            example:
+              "A case's expected receipt is voucherType = RECEIPT with paymentStatus = EXPECTED. Once the customer pays, the new receipt is no longer EXPECTED.",
+          },
+          opex: {
+            term: "kgara_operating_expenses",
+            text: "Operating expenses: manual entries, monthly recurring items, auto-created commissions, HHBH (into selling expenses) and consumables (into cost of sales). Rows written from payment vouchers carry source_cashflow_voucher_id.",
+            example:
+              "An approved 1,500,000 VND HHBH creates one row here whose source_cashflow_voucher_id points to the original payment.",
+          },
+        },
+        mechanisms: {
+          title: "Trigger mechanisms",
+          b1: "Sync: KgaraSyncScheduler runs on a cron at 09:15, 15:15, 16:15, 17:15 and 21:15 (Vietnam time) plus a 30-second heartbeat so each slot runs only once. It only works when the ENABLE_CRON environment variable is true.",
+          b2: "Sync is incremental using the updatedSince watermark with a 10-minute lookback. A case missing twice in a row is soft-deleted and is restored automatically when it reappears.",
+          b3: "Garage Hub handlers are called directly through DI, not through a queue. CashflowSettleHandler runs in the same transaction as saving the voucher.",
+          b4: "PnlCommissionHandler runs fire-and-forget when the P&L report is opened and has no cron of its own. A PAID commission voucher never has its amount edited; the difference becomes a delta voucher.",
+          b5: "Cash ledger classification uses one shared function: actual receipt, expected receipt, actual payment, planned payment; CANCELLED vouchers are excluded from every total.",
+          b1ex: "A new environment shows no new cases: check ENABLE_CRON first.",
+          b2ex: "A case is removed from KGara: after two syncs in a row without it, it is soft-deleted; if KGara restores it, the next sync brings it back.",
+          b3ex: "If saving a payment fails midway, the offset and OPEX rows are not written either, because they share one transaction.",
+          b4ex: "The first September P&L opening creates 10,000,000 VND commission; after it is PAID and the P&L grows by 1,000,000 VND a 1,000,000 VND delta voucher is created.",
+          b5ex: "A 2,000,000 VND CANCELLED voucher is in neither Actual payments nor Planned payments in the ledger.",
+        },
+        verify: {
+          title: "Points to verify",
+          b1: "SyncCaseService calls both the Garage Hub (handleCaseTransition) and GarageCaseForecastService directly when a case changes status. The expected receipt may be written twice: check this before changing the flow.",
+          b2: "Status codes 0, 1 and 2 only appear in the API skill and have no constants in code. Only code 3 (Completed) and 9 (Cancelled) are verified in code.",
+          b1ex: "When a case completes, check kgara_cashflow_vouchers for two EXPECTED receipts on the same case before changing the flow.",
+          b2ex: "To show the In repair status use the label in KgaraCaseStatusBadge, but do not build business logic on codes 0, 1, 2 since they are not verified in code.",
+        },
+        codeRefs: {
+          title: "Where to read the code",
+          b1: "Garage Hub: erp-api/src/kgara-api-core/hub/ (garage-hub.service.ts and the handlers folder).",
+          b2: "Expected receipt: erp-api/src/kgara-api-core/services/garage-case-forecast.service.ts.",
+          b3: "Payment voucher rules: erp-api/src/kgara-api-core/helpers/garage-cashflow-payment-rules.ts; cash ledger classification: helpers/garage-ledger-classifier.ts.",
+          b4: "Sync schedule: erp-api/src/kgara-api-core/kgara-sync.scheduler.ts. Module knowledge: erp-api/.agents/skills/modules/garage-cashflow/SKILL.md.",
+          b1ex: "To learn which handler runs when a case changes status, start at garage-hub.service.ts.",
+          b2ex: "To change how the expected receipt amount or due date is computed, start reading this file.",
+          b3ex: "To add a payment content that must not reduce payables, check the rules in this file first.",
+          b4ex: "To change sync times edit the schedule in the scheduler; SKILL.md records the module's settled rules.",
+        },
+        moduleExample: {
+          activity:
+            "A new case does not arrive: check SyncCaseService, the updatedSince watermark and ENABLE_CRON first.",
+          hub: "No expected receipt after a case completes: read CaseLifecycleHandler then GarageCaseForecastService.",
+          cashflow:
+            "Cannot change the type of a PAID payment: the lock rule is in garage-cashflow-payment-rules.ts and GarageCashflowTransactionService applies it on save.",
+          opex: "An approved HHBH is missing from OPEX: query kgara_operating_expenses by the payment's source_cashflow_voucher_id.",
+          read: "Adding a new report: read through GarageDashboardService or the ledger handlers and never write back to source tables.",
+        },
+        flowExample: {
+          forecast:
+            "A 5,200,000 VND case with a 2,000,000 VND deposit moves to code 3. KgaraSyncScheduler runs at 16:15, SyncCaseService sees the status change and CaseLifecycleHandler calls GarageCaseForecastService, which creates a 3,200,000 VND EXPECTED receipt in kgara_cashflow_vouchers due in 7 days.",
+          opex: "Accounting saves a content-10 payment (600,000 VND, APPROVED) through GarageCashflowTransactionService. CashflowSettleHandler writes a cost-of-sales row into kgara_operating_expenses with source_cashflow_voucher_id pointing to the voucher.",
+          commission:
+            "Opening the September P&L: GaragePnlService calls PnlCommissionHandler (fire-and-forget), which creates a PENDING commission voucher and a commission OPEX row. If a PAID voucher exists and the P&L grows, a delta voucher is created and the old amount is not edited.",
+          receipt:
+            "Saving a 1,200,000 VND receipt linked to a case creates a row in kgara_case_settlements and then resets the case's expected receipt to 2,000,000 VND.",
+          manual:
+            "An accountant offsets an amount manually via KgaraCaseFinancialController (HTTP) or enters an expense by hand via GarageOpexService. No handler fires automatically here.",
+        },
+      },
+      exampleLabel: "Example",
     },
   },
 };

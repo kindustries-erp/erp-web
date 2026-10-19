@@ -314,6 +314,23 @@ export function useNavItems(): NavSearchItem[] {
 
     // 6. Garage
     const garageSection = t("nav.sections.garage", "GARAGE");
+    if (canReadGarage) {
+      items.push({
+        key: "garage-cases",
+        label: t("nav.items.garageCases", "Hoạt động garage"),
+        section: garageSection,
+        keywords: [
+          "garage",
+          "tong quan garage",
+          "dashboard",
+          "phieu dich vu",
+          "so bao gia",
+          "sua chua",
+          "xuong",
+        ],
+        icon: <Car className="w-4 h-4" />,
+      });
+    }
     if (canReadGarageCashflow) {
       items.push({
         key: "garage-cashflow",
@@ -336,21 +353,6 @@ export function useNavItems(): NavSearchItem[] {
       });
     }
     if (canReadGarage) {
-      items.push({
-        key: "garage-cases",
-        label: t("nav.items.garageCases", "Hoạt động garage"),
-        section: garageSection,
-        keywords: [
-          "garage",
-          "tong quan garage",
-          "dashboard",
-          "phieu dich vu",
-          "so bao gia",
-          "sua chua",
-          "xuong",
-        ],
-        icon: <Car className="w-4 h-4" />,
-      });
       items.push({
         key: "garage-debts",
         label: t("nav.items.garageDebts", "Công nợ garage"),
