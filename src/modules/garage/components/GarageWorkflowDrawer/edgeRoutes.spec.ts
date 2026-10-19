@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { estimateCardHeight } from "./GarageWorkflowCanvas";
 import { canvasBounds } from "./canvasBounds";
+import { canvasHeaderRects } from "./canvasHeaderRects";
 import {
   estimateLabelSize,
   placeLabels,
@@ -51,7 +52,7 @@ function labelSize(canvas: GarageWorkflowCanvasDefinition, edgeId: string) {
   return estimateLabelSize(
     edge.label?.fallback ?? "",
     edge.mechanism ?? "",
-    edge.step !== undefined,
+    edge.step !== undefined || edge.steps !== undefined,
   );
 }
 
@@ -80,15 +81,17 @@ function setup(canvas: GarageWorkflowCanvasDefinition, showRead: boolean) {
       rects.has(edge.target),
   );
   const cards = [...rects.values()];
+  const headers = canvasHeaderRects(canvas, { showRead });
+  const obstacles = [...cards, ...headers];
   const routes = routeEdges(
-    cards,
+    obstacles,
     canvasBounds(canvas, { showRead }),
     edges.map((edge) => ({
       source: rects.get(edge.source)!,
       target: rects.get(edge.target)!,
     })),
   );
-  return { edges, cards, routes };
+  return { edges, cards, obstacles, routes };
 }
 
 describe("đường đi và nhãn mũi tên trên dữ liệu thật", () => {
@@ -98,14 +101,14 @@ describe("đường đi và nhãn mũi tên trên dữ liệu thật", () => {
       [id, true] as const,
     ]),
   )(
-    "canvas %s (hiện luồng đọc: %s): mũi tên không cắt thẻ, nhãn không đè nhau và không đè thẻ",
+    "canvas %s (hiện luồng đọc: %s): mũi tên không cắt thẻ hay tiêu đề, nhãn không đè nhau và không đè thẻ hay tiêu đề",
     (id, showRead) => {
       const canvas = GARAGE_WORKFLOW_CANVASES[id];
-      const { edges, cards, routes } = setup(canvas, showRead);
+      const { edges, obstacles, routes } = setup(canvas, showRead);
 
       routes.forEach((route, index) => {
         expect(
-          crossesAnyCard(route.points, cards),
+          crossesAnyCard(route.points, obstacles),
           `mũi tên ${edges[index].id} cắt thẻ`,
         ).toBe(false);
       });
@@ -115,7 +118,7 @@ describe("đường đi và nhãn mũi tên trên dữ liệu thật", () => {
         points: routes[index].points,
         ...labelSize(canvas, edge.id),
       }));
-      const placements = placeLabels(requests, cards);
+      const placements = placeLabels(requests, obstacles);
       const boxes = requests.map((request) => {
         const point = placements.get(request.id)!;
         return {
@@ -135,8 +138,11 @@ describe("đường đi và nhãn mũi tên trên dữ liệu thật", () => {
             false,
           );
         });
-        cards.forEach((card, k) => {
-          expect(hits(a.rect, card), `nhãn ${a.id} đè thẻ ${k}`).toBe(false);
+        obstacles.forEach((obstacle, k) => {
+          expect(
+            hits(a.rect, obstacle),
+            `nhãn ${a.id} đè thẻ hoặc tiêu đề ${k}`,
+          ).toBe(false);
         });
       });
     },

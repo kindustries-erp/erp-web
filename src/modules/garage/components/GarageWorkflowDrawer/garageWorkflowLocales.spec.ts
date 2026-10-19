@@ -8,6 +8,41 @@ import {
   GARAGE_WORKFLOW_CANVAS_ORDER,
 } from "./garageWorkflowData";
 import type { GarageWorkflowText } from "./garageWorkflowTypes";
+import {
+  DEV_GUIDE,
+  END_USER_GUIDE,
+  GUIDE_PAGE_LABEL,
+  GUIDE_TOC_LABEL,
+} from "./guide/guideContent";
+import { GUIDE_DETAILS, GUIDE_EXAMPLE_LABEL } from "./guide/guideDetails";
+
+function collectGuideKeys(add: (text: GarageWorkflowText) => void) {
+  add(GUIDE_PAGE_LABEL);
+  add(GUIDE_TOC_LABEL);
+  add(GUIDE_EXAMPLE_LABEL);
+  Object.values(GUIDE_DETAILS).forEach(add);
+  [END_USER_GUIDE, DEV_GUIDE].forEach((guide) => {
+    add(guide.title);
+    add(guide.subtitle);
+    guide.sections.forEach((section) => {
+      add(section.title);
+      if (section.kind !== "static") {
+        if (section.intro) add(section.intro);
+        return;
+      }
+      section.blocks.forEach((block) => {
+        if (block.type === "paragraph") add(block.text);
+        if (block.type === "bullets") block.items.forEach(add);
+        if (block.type === "definitions") {
+          block.items.forEach((item) => {
+            add(item.term);
+            add(item.text);
+          });
+        }
+      });
+    });
+  });
+}
 
 function collectWorkflowKeys(): string[] {
   const keys = new Set<string>();
@@ -17,6 +52,10 @@ function collectWorkflowKeys(): string[] {
     const canvas = GARAGE_WORKFLOW_CANVASES[id];
     add(canvas.title);
     add(canvas.description);
+    canvas.flows?.forEach((flow) => {
+      add(flow.title);
+      add(flow.description);
+    });
     if (canvas.corner) add(canvas.corner.title);
     canvas.lanes.forEach((lane) => add(lane.title));
     canvas.columns.forEach((column) => add(column.title));
@@ -29,6 +68,8 @@ function collectWorkflowKeys(): string[] {
       if (edge.label) add(edge.label);
     });
   });
+
+  collectGuideKeys(add);
 
   keys.add("workflow.drawer.title");
   keys.add("workflow.drawer.subtitle");
@@ -44,6 +85,11 @@ function collectWorkflowKeys(): string[] {
     "exitFullscreen",
     "showRead",
     "hideRead",
+    "flowsLabel",
+    "flowAll",
+    "flowAllHint",
+    "canvasLabel",
+    "clearSelection",
   ].forEach((name) => keys.add(`workflow.toolbar.${name}`));
   [
     "step",

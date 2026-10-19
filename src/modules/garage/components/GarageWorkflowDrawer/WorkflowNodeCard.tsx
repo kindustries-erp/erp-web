@@ -1,6 +1,7 @@
 import React from "react";
 import { Handle, Position, type Node, type NodeProps } from "@xyflow/react";
 
+import { LANE_HEADER_LEFT, LANE_HEADER_TOP } from "./canvasHeaderRects";
 import { WORKFLOW_ICONS } from "./workflowIcons";
 import {
   WORKFLOW_CARD_MIN_HEIGHT,
@@ -51,6 +52,10 @@ export interface WorkflowCardData extends Record<string, unknown> {
   tone?: GarageWorkflowTone;
   /** Chữ nhóm nhỏ phía trên tên thẻ (đã dịch). */
   group?: string;
+  /** Mờ đi khi đang làm nổi một luồng không đi qua thẻ này. */
+  dimmed?: boolean;
+  /** Thẻ đang được chọn: có viền nhấn. */
+  selected?: boolean;
 }
 
 export interface WorkflowLaneData extends Record<string, unknown> {
@@ -107,7 +112,12 @@ export function WorkflowCardNode({ data }: NodeProps<WorkflowCardNode>) {
         borderLeft: `4px solid ${accent}`,
         backgroundColor: "#ffffff",
         color: "#0f172a",
-        boxShadow: "0 1px 2px rgba(15,23,42,0.08)",
+        boxShadow: data.selected
+          ? `0 0 0 3px ${accent}66, 0 3px 8px rgba(15,23,42,0.22)`
+          : "0 1px 2px rgba(15,23,42,0.08)",
+        opacity: data.dimmed ? 0.3 : 1,
+        cursor: "pointer",
+        transition: "opacity 150ms ease, box-shadow 150ms ease",
       }}
     >
       {HANDLE_SIDES.map((side) => (
@@ -191,9 +201,6 @@ export function WorkflowCardNode({ data }: NodeProps<WorkflowCardNode>) {
     </div>
   );
 }
-
-const LANE_HEADER_TOP = 40;
-const LANE_HEADER_LEFT = 200;
 
 export function WorkflowLaneNode({
   data,

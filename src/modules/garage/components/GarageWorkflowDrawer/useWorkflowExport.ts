@@ -3,6 +3,8 @@ import { useCallback, useState } from "react";
 import { toPng } from "html-to-image";
 import { jsPDF } from "jspdf";
 
+import { GUIDE_PAGE_MM } from "./guide/guideLayout";
+
 const A3_MM = { short: 297, long: 420 } as const;
 const PAGE_MARGIN_MM = 10;
 const EXPORT_PIXEL_RATIO = 2;
@@ -121,6 +123,14 @@ async function captureGraph(
   });
 }
 
+/** Chụp một trang hướng dẫn (phần tử A4 dựng sẵn) thành ảnh. */
+function captureGuidePage(page: HTMLElement): Promise<string> {
+  return toPng(page, {
+    pixelRatio: EXPORT_PIXEL_RATIO,
+    backgroundColor: EXPORT_BACKGROUND,
+  });
+}
+
 export function useWorkflowExport() {
   const [exporting, setExporting] = useState(false);
 
@@ -130,6 +140,7 @@ export function useWorkflowExport() {
       bounds: WorkflowBounds,
       fileBaseName: string,
       format: "png" | "pdf",
+      guidePages: HTMLElement[] = [],
     ) => {
       setExporting(true);
       try {
@@ -152,6 +163,18 @@ export function useWorkflowExport() {
           fitted.width,
           fitted.height,
         );
+        for (const page of guidePages) {
+          const pageImage = await captureGuidePage(page);
+          pdf.addPage("a4", "portrait");
+          pdf.addImage(
+            pageImage,
+            "PNG",
+            0,
+            0,
+            GUIDE_PAGE_MM.width,
+            GUIDE_PAGE_MM.height,
+          );
+        }
         pdf.save(`${fileBaseName}.pdf`);
       } finally {
         setExporting(false);
@@ -167,8 +190,12 @@ export function useWorkflowExport() {
   );
 
   const exportPdf = useCallback(
-    (container: HTMLElement, bounds: WorkflowBounds, fileBaseName: string) =>
-      run(container, bounds, fileBaseName, "pdf"),
+    (
+      container: HTMLElement,
+      bounds: WorkflowBounds,
+      fileBaseName: string,
+      guidePages: HTMLElement[] = [],
+    ) => run(container, bounds, fileBaseName, "pdf", guidePages),
     [run],
   );
 

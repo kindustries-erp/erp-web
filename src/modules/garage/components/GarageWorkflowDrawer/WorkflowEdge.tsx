@@ -28,6 +28,12 @@ export interface WorkflowEdgeData extends Record<string, unknown> {
   step?: number;
   /** Luồng chỉ đọc dữ liệu: nét chấm nhạt, ẩn mặc định. */
   read?: boolean;
+  /** Màu của luồng tự động mà mũi tên thuộc về (ghi đè màu mặc định). */
+  color?: string;
+  /** Nhãn số thứ tự theo luồng, ví dụ "A1" (thay cho `step`). */
+  stepLabel?: string;
+  /** Mờ đi khi đang làm nổi một luồng khác. */
+  dimmed?: boolean;
 }
 
 export type WorkflowEdgeType = Edge<WorkflowEdgeData, "workflow-edge">;
@@ -108,7 +114,10 @@ export function WorkflowEdge({
   const points = data?.points ?? [];
   const labelPoint = data?.labelPoint;
   const hasLabel = Boolean(
-    data?.label || data?.mechanism || data?.step !== undefined,
+    data?.label ||
+    data?.mechanism ||
+    data?.step !== undefined ||
+    data?.stepLabel !== undefined,
   );
 
   return (
@@ -118,8 +127,11 @@ export function WorkflowEdge({
         path={polylinePath(points)}
         markerEnd={markerEnd}
         style={{
-          stroke: data?.read ? EDGE_COLORS.read : EDGE_COLORS.stroke,
-          strokeWidth: data?.read ? 1.25 : 2,
+          stroke: data?.read
+            ? EDGE_COLORS.read
+            : (data?.color ?? EDGE_COLORS.stroke),
+          strokeWidth: data?.read ? 1.25 : 2.25,
+          opacity: data?.dimmed ? 0.12 : 1,
           strokeLinejoin: "round",
           strokeDasharray: data?.read
             ? "2 4"
@@ -136,6 +148,7 @@ export function WorkflowEdge({
               position: "absolute",
               transform: `translate(-50%, -50%) translate(${labelPoint.x}px, ${labelPoint.y}px)`,
               pointerEvents: "none",
+              opacity: data?.dimmed ? 0.15 : 1,
               /* Nhãn phải nằm trên mọi mũi tên (edge zIndex 30) và che đoạn đường bên dưới. */
               zIndex: 1000,
               display: "flex",
@@ -153,22 +166,23 @@ export function WorkflowEdge({
               boxShadow: "0 1px 2px rgba(15,23,42,0.1)",
             }}
           >
-            {data?.step !== undefined && (
+            {(data?.step !== undefined || data?.stepLabel !== undefined) && (
               <span
                 style={{
                   display: "inline-flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  width: 18,
+                  minWidth: 20,
                   height: 18,
-                  borderRadius: "50%",
-                  backgroundColor: "#0f172a",
+                  padding: "0 4px",
+                  borderRadius: 9,
+                  backgroundColor: data?.color ?? "#0f172a",
                   color: "#ffffff",
                   fontSize: 11,
                   fontWeight: 700,
                 }}
               >
-                {data.step}
+                {data.stepLabel ?? data.step}
               </span>
             )}
             <div style={{ display: "flex", flexDirection: "column" }}>

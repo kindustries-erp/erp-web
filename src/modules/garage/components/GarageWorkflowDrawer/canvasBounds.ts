@@ -19,7 +19,10 @@ export function canvasBounds(
   const columns = canvas.columns.filter(
     (column) => column.layer !== "read" || options.showRead,
   );
-  const base = unionBounds([...canvas.lanes, ...columns]);
+  const lanes = canvas.lanes.filter(
+    (lane) => lane.layer !== "read" || options.showRead,
+  );
+  const base = unionBounds([...lanes, ...columns]);
   if (!options.withHeading) return base;
   return {
     x: base.x,

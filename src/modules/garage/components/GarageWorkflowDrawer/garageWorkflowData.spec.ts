@@ -101,43 +101,54 @@ describe("garageWorkflowData", () => {
     },
   );
 
-  it("end-user là lưới 6 hàng bộ phận × 5 cột giai đoạn", () => {
+  it("end-user là lưới 7 hàng bộ phận × 5 cột giai đoạn", () => {
     const endUser = GARAGE_WORKFLOW_CANVASES["end-user"];
-    expect(endUser.lanes).toHaveLength(6);
+    expect(endUser.lanes).toHaveLength(7);
     expect(endUser.columns).toHaveLength(5);
     endUser.lanes.forEach((lane) =>
       expect(lane.width).toBeGreaterThan(lane.height),
     );
   });
 
-  it("dev là cây phân tầng 5 cột, không còn lane, cột cuối là lớp chỉ đọc", () => {
+  it("dev chia 4 khung module và 1 dải lớp chỉ đọc, không còn cột", () => {
     const dev = GARAGE_WORKFLOW_CANVASES.dev;
-    expect(dev.lanes).toHaveLength(0);
-    expect(dev.columns.map((column) => column.id)).toEqual([
-      "trigger",
-      "service",
+    expect(dev.columns).toHaveLength(0);
+    expect(dev.lanes.map((lane) => lane.id)).toEqual([
+      "activity",
       "hub",
-      "data",
+      "cashflow",
+      "opex",
       "read",
     ]);
     expect(
-      dev.columns
-        .filter((column) => column.layer === "read")
-        .map((column) => column.id),
+      dev.lanes.filter((lane) => lane.layer === "read").map((lane) => lane.id),
     ).toEqual(["read"]);
   });
 
-  it("dev: mọi thẻ lớp đọc nằm trong cột đọc, mũi tên đọc chỉ nối với thẻ lớp đọc hoặc bảng dữ liệu", () => {
+  it("dev: Hoạt động trái, Garage Hub giữa, Thu chi và OPEX bên phải", () => {
+    const lanes = new Map(
+      GARAGE_WORKFLOW_CANVASES.dev.lanes.map((lane) => [lane.id, lane]),
+    );
+    const activity = lanes.get("activity")!;
+    const hub = lanes.get("hub")!;
+    const cashflow = lanes.get("cashflow")!;
+    const opex = lanes.get("opex")!;
+
+    expect(activity.x + activity.width).toBeLessThanOrEqual(hub.x);
+    expect(hub.x + hub.width).toBeLessThanOrEqual(cashflow.x);
+    expect(cashflow.x).toBe(opex.x);
+    expect(cashflow.y + cashflow.height).toBeLessThanOrEqual(opex.y);
+  });
+
+  it("dev: thẻ lớp đọc nằm trong dải đọc, mũi tên đọc luôn nối với thẻ lớp đọc", () => {
     const dev = GARAGE_WORKFLOW_CANVASES.dev;
-    const readColumn = dev.columns.find((column) => column.id === "read")!;
+    const readLane = dev.lanes.find((lane) => lane.id === "read")!;
     const byId = new Map(dev.nodes.map((node) => [node.id, node]));
 
     dev.nodes
-      .filter((node) => node.layer === "read" && node.id !== "ledger")
+      .filter((node) => node.layer === "read")
       .forEach((node) =>
-        expect(contains(readColumn, node.x + 1, node.y + 1), node.id).toBe(
-          true,
-        ),
+        expect(contains(readLane, node.x + 1, node.y + 1), node.id).toBe(true),
       );
 
     dev.edges
@@ -151,21 +162,51 @@ describe("garageWorkflowData", () => {
       });
   });
 
-  it.each(canvases.map((canvas) => [canvas.id, canvas] as const))(
-    "canvas %s: có description và số thứ tự (step) liên tục từ 1",
-    (_id, canvas: GarageWorkflowCanvasDefinition) => {
-      expect(canvas.description.key.startsWith("workflow.")).toBe(true);
+  it("dev: có 4 luồng tự động A–D và luồng thủ công, mỗi luồng đánh số liên tục từ 1", () => {
+    const dev = GARAGE_WORKFLOW_CANVASES.dev;
+    const flows = dev.flows ?? [];
+    expect(flows.map((flow) => flow.letter)).toEqual(["A", "B", "C", "D", "M"]);
 
-      const steps =
-        canvas.id === "dev"
-          ? canvas.edges.map((edge) => edge.step)
-          : canvas.nodes.map((node) => node.step);
-      const defined = steps
-        .filter((step): step is number => step !== undefined)
+    flows.forEach((flow) => {
+      const steps = dev.edges
+        .filter((edge) => edge.flows?.includes(flow.id))
+        .map((edge) => edge.steps![flow.id])
         .sort((a, b) => a - b);
-      expect(defined).toEqual(defined.map((_, index) => index + 1));
-    },
-  );
+      expect(steps.length, flow.id).toBeGreaterThanOrEqual(3);
+      expect(steps, flow.id).toEqual(steps.map((_, index) => index + 1));
+    });
+  });
+
+  it("dev: mọi mũi tên chính thuộc ít nhất một luồng và chỉ nhắc luồng có thật", () => {
+    const dev = GARAGE_WORKFLOW_CANVASES.dev;
+    const flowIds = new Set((dev.flows ?? []).map((flow) => flow.id));
+
+    dev.edges
+      .filter((edge) => edge.kind !== "read")
+      .forEach((edge) => {
+        expect(edge.flows?.length, edge.id).toBeGreaterThan(0);
+        edge.flows!.forEach((id) =>
+          expect(flowIds.has(id), edge.id).toBe(true),
+        );
+      });
+  });
+
+  it("end-user: số thứ tự (step) trên thẻ liên tục từ 1 và canvas có description", () => {
+    const endUser = GARAGE_WORKFLOW_CANVASES["end-user"];
+    expect(endUser.description.key.startsWith("workflow.")).toBe(true);
+
+    const steps = endUser.nodes
+      .map((node) => node.step)
+      .filter((step): step is number => step !== undefined)
+      .sort((a, b) => a - b);
+    expect(steps).toEqual(steps.map((_, index) => index + 1));
+  });
+
+  it("dev có description", () => {
+    expect(
+      GARAGE_WORKFLOW_CANVASES.dev.description.key.startsWith("workflow."),
+    ).toBe(true);
+  });
 
   it("chỉ gắn statusCode cho mã đã xác minh trong code", () => {
     const verified = new Set<number>([
@@ -180,5 +221,123 @@ describe("garageWorkflowData", () => {
         }
       });
     });
+  });
+});
+
+describe("end-user: các khoản tiền được nêu rõ", () => {
+  const endUser = GARAGE_WORKFLOW_CANVASES["end-user"];
+  const titleOf = (id: string) =>
+    endUser.nodes.find((node) => node.id === id)?.title.fallback ?? "";
+  const badgesOf = (id: string) =>
+    (endUser.nodes.find((node) => node.id === id)?.badges ?? []).map(
+      (badge) => badge.fallback,
+    );
+
+  it("có thẻ riêng cho Dự thu, Thực thu, Dự chi, Thực chi, HHBH và Vật tư tiêu hao", () => {
+    expect(titleOf("dt")).toContain("Dự thu");
+    expect(titleOf("t1")).toContain("Thực thu");
+    expect(titleOf("dc")).toContain("Dự chi");
+    expect(titleOf("p1")).toContain("Thực chi");
+    expect(titleOf("hh")).toContain("HHBH");
+    expect(titleOf("vt")).toContain("Vật tư tiêu hao");
+  });
+
+  it("HHBH và Vật tư tiêu hao đều ghi rõ không trừ công nợ và ghi OPEX", () => {
+    ["hh", "vt"].forEach((id) => {
+      const badges = badgesOf(id).join(" | ");
+      expect(badges, id).toContain("Không trừ công nợ");
+      expect(badges, id).toContain("ghi OPEX");
+    });
+  });
+
+  it("HHBH và Vật tư tiêu hao nối tới thẻ OPEX", () => {
+    ["hh", "vt"].forEach((id) => {
+      expect(
+        endUser.edges.some(
+          (edge) => edge.source === id && edge.target === "p2",
+        ),
+        id,
+      ).toBe(true);
+    });
+  });
+});
+
+describe("end-user: luồng tự động dùng chung với canvas Dev", () => {
+  const endUser = GARAGE_WORKFLOW_CANVASES["end-user"];
+  const dev = GARAGE_WORKFLOW_CANVASES.dev;
+
+  it("có đủ luồng A, B, C, D và M, trùng định nghĩa với Dev", () => {
+    expect((endUser.flows ?? []).map((flow) => flow.letter)).toEqual([
+      "A",
+      "B",
+      "C",
+      "D",
+      "M",
+    ]);
+    expect(endUser.flows).toEqual(dev.flows);
+  });
+
+  it("mỗi luồng đánh số liên tục từ 1", () => {
+    (endUser.flows ?? []).forEach((flow) => {
+      const steps = endUser.edges
+        .filter((edge) => edge.flows?.includes(flow.id))
+        .map((edge) => edge.steps![flow.id])
+        .sort((a, b) => a - b);
+      expect(steps.length, flow.id).toBeGreaterThan(0);
+      expect(steps, flow.id).toEqual(steps.map((_, index) => index + 1));
+    });
+  });
+
+  it("mũi tên chính thuộc ít nhất một luồng, mũi tên đọc không thuộc luồng nào", () => {
+    endUser.edges.forEach((edge) => {
+      if (edge.kind === "read") {
+        expect(edge.flows, edge.id).toBeUndefined();
+      } else {
+        expect(edge.flows?.length, edge.id).toBeGreaterThan(0);
+      }
+    });
+  });
+
+  it("luồng B nối HHBH và Vật tư tiêu hao tới OPEX, luồng A đi qua bước sinh Dự thu", () => {
+    const sourcesOf = (flowId: string) =>
+      endUser.edges
+        .filter((edge) => edge.flows?.includes(flowId))
+        .map((edge) => `${edge.source}>${edge.target}`);
+
+    expect(sourcesOf("opex")).toEqual(
+      expect.arrayContaining(["hh>p2", "vt>p2"]),
+    );
+    expect(sourcesOf("forecast")).toEqual(
+      expect.arrayContaining(["e3>s3", "s3>dt"]),
+    );
+  });
+});
+
+describe("dev: khung OPEX thoáng", () => {
+  const lanes = new Map(
+    GARAGE_WORKFLOW_CANVASES.dev.lanes.map((lane) => [lane.id, lane]),
+  );
+
+  it("khe giữa khung Thu chi và OPEX đủ rộng làm kênh cho mũi tên và nhãn", () => {
+    const cashflow = lanes.get("cashflow")!;
+    const opex = lanes.get("opex")!;
+
+    expect(opex.y - (cashflow.y + cashflow.height)).toBeGreaterThanOrEqual(100);
+  });
+
+  it("đáy các khung Hoạt động, Garage Hub và OPEX thẳng hàng", () => {
+    const bottom = (id: string) => lanes.get(id)!.y + lanes.get(id)!.height;
+
+    expect(bottom("activity")).toBe(bottom("opex"));
+    expect(bottom("hub")).toBe(bottom("opex"));
+  });
+
+  it("OPEX có hai hàng thẻ và hoa hồng thẳng hàng với bảng operating_expenses", () => {
+    const dev = GARAGE_WORKFLOW_CANVASES.dev;
+    const y = (id: string) => dev.nodes.find((node) => node.id === id)!.y;
+
+    expect(y("opexSvc")).toBeGreaterThan(y("tOpex"));
+    expect(y("pnlCommission")).toBe(y("tOpex"));
+    expect(y("pnlSvc")).toBe(y("tOpex"));
   });
 });

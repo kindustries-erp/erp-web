@@ -15,11 +15,15 @@ import {
   useStore,
   type Edge,
   type Node,
+  type NodeMouseHandler,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { useTranslation } from "react-i18next";
 
+import type { ComboboxOption } from "@/shared/components/Combobox";
+
 import { canvasBounds } from "./canvasBounds";
+import { canvasHeaderRects, resolveLaneHeaderSide } from "./canvasHeaderRects";
 import {
   estimateLabelSize,
   placeLabels,
@@ -45,6 +49,12 @@ import {
 } from "./WorkflowNodeCard";
 import { useCanvasFullscreen } from "./useCanvasFullscreen";
 import {
+  computeFocus,
+  isEdgeDimmed,
+  isNodeDimmed,
+  type WorkflowFocus,
+} from "./workflowFocus";
+import {
   WORKFLOW_CARD_MIN_HEIGHT,
   WORKFLOW_NODE_WIDTH,
   type GarageWorkflowCanvasDefinition,
@@ -68,8 +78,6 @@ const Z_CARD = 10;
 const Z_HEADING = 20;
 const Z_EDGE = 30;
 
-/** Lane rộng hơn cao nhiều (hàng của lưới) thì tiêu đề nằm bên trái. */
-const HORIZONTAL_LANE_RATIO = 3;
 const CONTENT_PADDING = 24;
 
 /** Ước lượng chiều cao thẻ theo số dòng tiêu đề và badge; dùng tạm trước khi đo được chiều cao thật. */
@@ -95,8 +103,8 @@ function sameHeights(
   );
 }
 
-/** Khi khung đổi kích thước (vào/ra full screen, kéo drawer) thì fit lại toàn bộ sơ đồ. */
-function FitOnResize() {
+/** Fit lại toàn bộ sơ đồ khi khung đổi kích thước (vào/ra full screen, kéo drawer) hoặc đổi sơ đồ. */
+function FitOnResize({ canvasId }: { canvasId: string }) {
   const { fitView } = useReactFlow();
   const size = useStore((state) => `${state.width}x${state.height}`);
 
@@ -105,13 +113,21 @@ function FitOnResize() {
       void fitView({ padding: 0.05, duration: 0 });
     });
     return () => cancelAnimationFrame(frame);
-  }, [size, fitView]);
+  }, [size, fitView, canvasId]);
 
   return null;
 }
 
+interface FocusState {
+  canvasId: string;
+  focus: WorkflowFocus;
+}
+
 interface GarageWorkflowCanvasProps {
   canvas: GarageWorkflowCanvasDefinition;
+  /** Các sơ đồ có thể chọn trong dropdown trên toolbar, và callback khi đổi sơ đồ. */
+  canvasOptions: ComboboxOption[];
+  onSelectCanvas: (canvasId: string) => void;
   /** Hiện lớp chỉ đọc (thẻ, cột, mũi tên đọc). */
   showRead: boolean;
   onToggleRead: () => void;
@@ -131,6 +147,8 @@ export function GarageWorkflowCanvas(props: GarageWorkflowCanvasProps) {
 
 function CanvasFrame({
   canvas,
+  canvasOptions,
+  onSelectCanvas,
   showRead,
   onToggleRead,
   captureRef,
@@ -138,16 +156,29 @@ function CanvasFrame({
 }: GarageWorkflowCanvasProps) {
   const { t } = useTranslation("garage");
   const frameRef = useRef<HTMLDivElement | null>(null);
+  const [frameElement, setFrameElement] = useState<HTMLDivElement | null>(null);
   const { isFullscreen, toggle } = useCanvasFullscreen(frameRef);
   const { getNodes } = useReactFlow();
   const nodesInitialized = useNodesInitialized();
   const [measuredHeights, setMeasuredHeights] = useState<
     Record<string, number>
   >({});
+  // Trạng thái làm nổi bật gắn với id sơ đồ: đổi sơ đồ thì tự coi như chưa chọn gì.
+  const [focusState, setFocusState] = useState<FocusState>({
+    canvasId: canvas.id,
+    focus: null,
+  });
+  const focus = focusState.canvasId === canvas.id ? focusState.focus : null;
+  const updateFocus = useCallback(
+    (next: WorkflowFocus) =>
+      setFocusState({ canvasId: canvas.id, focus: next }),
+    [canvas.id],
+  );
 
   const setFrame = useCallback(
     (element: HTMLDivElement | null) => {
       frameRef.current = element;
+      setFrameElement(element);
       captureRef?.(element);
     },
     [captureRef],
@@ -155,10 +186,25 @@ function CanvasFrame({
 
   const hasReadLayer = canvas.edges.some((edge) => edge.kind === "read");
 
-  // Thẻ và cột đang hiển thị (lớp đọc chỉ hiện khi bật).
+  // Thẻ đang hiển thị (lớp đọc chỉ hiện khi bật).
   const visibleNodes = useMemo(
     () => canvas.nodes.filter((node) => showRead || node.layer !== "read"),
     [canvas, showRead],
+  );
+
+  const visibleEdges = useMemo(() => {
+    const ids = new Set(visibleNodes.map((node) => node.id));
+    return canvas.edges.filter(
+      (edge) =>
+        (showRead || edge.kind !== "read") &&
+        ids.has(edge.source) &&
+        ids.has(edge.target),
+    );
+  }, [canvas, showRead, visibleNodes]);
+
+  const focusResult = useMemo(
+    () => computeFocus(visibleEdges, focus),
+    [visibleEdges, focus],
   );
 
   const cardTexts = useMemo(
@@ -224,24 +270,25 @@ function CanvasFrame({
         ]
       : [];
 
-    const laneNodes: LaneNode[] = canvas.lanes.map((lane) => ({
-      id: `lane-${lane.id}`,
-      type: "workflow-lane",
-      position: { x: lane.x, y: lane.y },
-      width: lane.width,
-      height: lane.height,
-      zIndex: Z_LANE,
-      data: {
-        title: t(lane.title.key, lane.title.fallback),
-        tone: lane.tone,
-        icon: lane.icon,
-        headerSide:
-          lane.width > lane.height * HORIZONTAL_LANE_RATIO ? "left" : "top",
-      },
-      selectable: false,
-      draggable: false,
-      focusable: false,
-    }));
+    const laneNodes: LaneNode[] = canvas.lanes
+      .filter((lane) => showRead || lane.layer !== "read")
+      .map((lane) => ({
+        id: `lane-${lane.id}`,
+        type: "workflow-lane",
+        position: { x: lane.x, y: lane.y },
+        width: lane.width,
+        height: lane.height,
+        zIndex: Z_LANE,
+        data: {
+          title: t(lane.title.key, lane.title.fallback),
+          tone: lane.tone,
+          icon: lane.icon,
+          headerSide: resolveLaneHeaderSide(lane),
+        },
+        selectable: false,
+        draggable: false,
+        focusable: false,
+      }));
 
     const columnNodes: ColumnNode[] = canvas.columns
       .filter((column) => showRead || column.layer !== "read")
@@ -275,6 +322,8 @@ function CanvasFrame({
           group: node.group
             ? t(node.group.key, node.group.fallback)
             : undefined,
+          dimmed: isNodeDimmed(focusResult, node.id),
+          selected: focus?.kind === "node" && focus.id === node.id,
         },
         selectable: false,
         draggable: false,
@@ -289,7 +338,16 @@ function CanvasFrame({
       ...cardNodes,
     ];
     return allNodes;
-  }, [canvas, exportMode, showRead, t, visibleNodes, cardTexts]);
+  }, [
+    canvas,
+    exportMode,
+    showRead,
+    t,
+    visibleNodes,
+    cardTexts,
+    focusResult,
+    focus,
+  ]);
 
   // Sau khi xyflow đo xong, lấy chiều cao thật của thẻ để mũi tên chạm đúng tâm cạnh.
   useEffect(() => {
@@ -302,7 +360,8 @@ function CanvasFrame({
     setMeasuredHeights((prev) => (sameHeights(prev, next) ? prev : next));
   }, [nodesInitialized, getNodes, nodes]);
 
-  const edges = useMemo(() => {
+  // Đường đi và vị trí nhãn chỉ phụ thuộc bố cục, không đổi khi chọn luồng hay thẻ.
+  const routing = useMemo(() => {
     const routeBounds = canvasBounds(canvas, { showRead });
 
     const cardRects = new Map<string, RouteRect>(
@@ -318,15 +377,11 @@ function CanvasFrame({
       }),
     );
     const allRects = [...cardRects.values()];
+    // Thanh tiêu đề khung/cột cũng là vật cản: mũi tên và nhãn không được đè lên chữ tiêu đề.
+    const obstacles = [...allRects, ...canvasHeaderRects(canvas, { showRead })];
 
-    const visibleEdges = canvas.edges.filter(
-      (edge) =>
-        (showRead || edge.kind !== "read") &&
-        cardRects.has(edge.source) &&
-        cardRects.has(edge.target),
-    );
     const routes = routeEdges(
-      allRects,
+      obstacles,
       routeBounds,
       visibleEdges.map((edge) => ({
         source: cardRects.get(edge.source)!,
@@ -340,10 +395,10 @@ function CanvasFrame({
       ...estimateLabelSize(
         edge.label ? t(edge.label.key, edge.label.fallback) : "",
         edge.mechanism ?? "",
-        edge.step !== undefined,
+        edge.step !== undefined || edge.steps !== undefined,
       ),
     }));
-    const placements = placeLabels(labelRequests, allRects);
+    const placements = placeLabels(labelRequests, obstacles);
     const labelPoints = new Map<string, RoutePoint>(
       visibleEdges.map((edge, index) => [
         edge.id,
@@ -351,33 +406,90 @@ function CanvasFrame({
       ]),
     );
 
-    const flowEdges: WorkflowEdgeType[] = visibleEdges.map((edge, index) => ({
-      id: edge.id,
-      source: edge.source,
-      target: edge.target,
-      type: "workflow-edge",
-      zIndex: Z_EDGE,
-      markerEnd: {
-        type: MarkerType.ArrowClosed,
-        color: edge.kind === "read" ? "#94a3b8" : "#334155",
-        width: 16,
-        height: 16,
-      },
-      selectable: false,
-      data: {
-        points: routes[index].points,
-        labelPoint: labelPoints.get(edge.id)!,
-        label: edge.label ? t(edge.label.key, edge.label.fallback) : undefined,
-        mechanism: edge.mechanism,
-        dashed: edge.dashed,
-        read: edge.kind === "read",
-        step: edge.step,
-      },
-    }));
+    return { routes, labelPoints };
+  }, [
+    canvas,
+    showRead,
+    t,
+    visibleNodes,
+    visibleEdges,
+    cardTexts,
+    measuredHeights,
+  ]);
+
+  // Màu, nhãn số (A1, B2...), độ mờ và animation theo trạng thái làm nổi bật.
+  const edges = useMemo(() => {
+    const { routes, labelPoints } = routing;
+    const flowById = new Map(
+      (canvas.flows ?? []).map((flow) => [flow.id, flow]),
+    );
+    const activeFlowId = focus?.kind === "flow" ? focus.id : null;
+
+    const flowEdges: WorkflowEdgeType[] = visibleEdges.map((edge, index) => {
+      const read = edge.kind === "read";
+      const shownFlowId =
+        activeFlowId && edge.flows?.includes(activeFlowId)
+          ? activeFlowId
+          : edge.flows?.[0];
+      const flow = shownFlowId ? flowById.get(shownFlowId) : undefined;
+      const stepNumber = shownFlowId ? edge.steps?.[shownFlowId] : undefined;
+      const color = read ? undefined : flow?.color;
+
+      return {
+        id: edge.id,
+        source: edge.source,
+        target: edge.target,
+        type: "workflow-edge",
+        zIndex: Z_EDGE,
+        animated: focusResult.animatedEdges.has(edge.id),
+        markerEnd: {
+          type: MarkerType.ArrowClosed,
+          color: read ? "#94a3b8" : (color ?? "#334155"),
+          width: 16,
+          height: 16,
+        },
+        selectable: false,
+        data: {
+          points: routes[index].points,
+          labelPoint: labelPoints.get(edge.id)!,
+          label: edge.label
+            ? t(edge.label.key, edge.label.fallback)
+            : undefined,
+          mechanism: edge.mechanism,
+          dashed: edge.dashed,
+          read,
+          step: edge.step,
+          color,
+          stepLabel:
+            flow && stepNumber !== undefined
+              ? `${flow.letter}${stepNumber}`
+              : undefined,
+          dimmed: isEdgeDimmed(focusResult, edge.id),
+        },
+      };
+    });
 
     const allEdges: Edge[] = flowEdges;
     return allEdges;
-  }, [canvas, showRead, t, visibleNodes, cardTexts, measuredHeights]);
+  }, [canvas, routing, visibleEdges, focus, focusResult, t]);
+
+  const handleNodeClick = useCallback<NodeMouseHandler>(
+    (_, node) => {
+      if (node.type !== "workflow-card") return;
+      // Bấm lại đúng thẻ đang chọn thì bỏ chọn.
+      setFocusState((prev) => {
+        const current = prev.canvasId === canvas.id ? prev.focus : null;
+        const same = current?.kind === "node" && current.id === node.id;
+        return {
+          canvasId: canvas.id,
+          focus: same ? null : { kind: "node", id: node.id },
+        };
+      });
+    },
+    [canvas.id],
+  );
+
+  const handlePaneClick = useCallback(() => updateFocus(null), [updateFocus]);
 
   const toolbarLabels: WorkflowCanvasToolbarLabels = {
     zoomIn: t("workflow.toolbar.zoomIn", "Phóng to"),
@@ -393,7 +505,23 @@ function CanvasFrame({
     readArrow: t("workflow.legend.readArrow", "Chỉ đọc dữ liệu"),
     completed: t("workflow.legend.completed", "Kết thúc (mã 3)"),
     cancelled: t("workflow.legend.cancelled", "Hủy (mã 9)"),
+    canvasLabel: t("workflow.toolbar.canvasLabel", "Sơ đồ:"),
+    flowsLabel: t("workflow.toolbar.flowsLabel", "Luồng tự động:"),
+    flowAll: t("workflow.toolbar.flowAll", "Tất cả luồng"),
+    flowAllHint: t(
+      "workflow.toolbar.flowAllHint",
+      "Hiển thị mọi luồng, không làm mờ luồng nào",
+    ),
+    clearSelection: t("workflow.toolbar.clearSelection", "Bỏ chọn thẻ"),
   };
+
+  const toolbarFlows = (canvas.flows ?? []).map((flow) => ({
+    id: flow.id,
+    letter: flow.letter,
+    color: flow.color,
+    title: t(flow.title.key, flow.title.fallback),
+    description: t(flow.description.key, flow.description.fallback),
+  }));
 
   return (
     <div
@@ -411,6 +539,17 @@ function CanvasFrame({
         onToggleReadEdges={onToggleRead}
         hasReadEdges={hasReadLayer}
         labels={toolbarLabels}
+        canvasOptions={canvasOptions}
+        activeCanvasId={canvas.id}
+        onSelectCanvas={onSelectCanvas}
+        flows={toolbarFlows}
+        activeFlow={focus?.kind === "flow" ? focus.id : null}
+        onSelectFlow={(flowId) =>
+          updateFocus(flowId ? { kind: "flow", id: flowId } : null)
+        }
+        hasSelectedNode={focus?.kind === "node"}
+        onClearSelection={() => updateFocus(null)}
+        portalContainer={isFullscreen ? frameElement : null}
       />
       <div className="min-h-0 flex-1">
         <ReactFlow
@@ -426,10 +565,12 @@ function CanvasFrame({
           nodesConnectable={false}
           elementsSelectable={false}
           elevateEdgesOnSelect={false}
+          onNodeClick={handleNodeClick}
+          onPaneClick={handlePaneClick}
           proOptions={{ hideAttribution: true }}
         >
           <Background gap={24} size={1} color="#e2e8f0" />
-          <FitOnResize />
+          <FitOnResize canvasId={canvas.id} />
         </ReactFlow>
       </div>
     </div>

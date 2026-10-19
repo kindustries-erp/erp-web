@@ -147,7 +147,7 @@ export function estimateLabelSize(
 ): { width: number; height: number } {
   const textWidth = Math.max(label.length * 6.4, mechanism.length * 5.6);
   return {
-    width: 16 + (hasStep ? 22 : 0) + textWidth,
+    width: 16 + (hasStep ? 26 : 0) + textWidth,
     height: mechanism ? 34 : 20,
   };
 }

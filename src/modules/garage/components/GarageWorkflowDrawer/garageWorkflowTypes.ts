@@ -50,6 +50,10 @@ export interface GarageWorkflowLane extends GarageWorkflowRect {
   title: GarageWorkflowText;
   tone: GarageWorkflowTone;
   icon?: GarageWorkflowIconName;
+  /** Ghi đè vị trí thanh tiêu đề; mặc định lane rất rộng thì tiêu đề bên trái, còn lại ở trên. */
+  headerSide?: "top" | "left";
+  /** "read": khung của lớp chỉ đọc, ẩn mặc định và hiện cùng nút bật luồng đọc. */
+  layer?: "main" | "read";
 }
 
 /** Cột giai đoạn của lưới end-user, vẽ từ đầu đến cuối canvas. */
@@ -88,9 +92,24 @@ export interface GarageWorkflowEdge {
   step?: number;
   /** "read": luồng chỉ đọc dữ liệu, ẩn mặc định và hiện bằng nút bật trên thanh công cụ. */
   kind?: "main" | "read";
+  /** Các luồng tự động mà mũi tên này thuộc về (mũi tên dùng chung thuộc nhiều luồng). */
+  flows?: string[];
+  /** Số thứ tự của mũi tên trong từng luồng (id luồng → số), dùng khi mũi tên thuộc nhiều luồng. */
+  steps?: Record<string, number>;
   /** Cơ chế gọi, ví dụ DI, cron, HTTP, ghi DB (chỉ canvas dev dùng). */
   mechanism?: string;
   dashed?: boolean;
+}
+
+/** Một luồng tự động giữa các module: chữ cái, màu và tên hiển thị. */
+export interface GarageWorkflowFlow {
+  id: string;
+  letter: string;
+  /** Màu hex lấy từ bảng chart dashboard. */
+  color: string;
+  title: GarageWorkflowText;
+  /** Một câu mô tả luồng (kích hoạt → kết quả): tooltip trong dropdown và tài liệu hướng dẫn. */
+  description: GarageWorkflowText;
 }
 
 export interface GarageWorkflowCanvasDefinition {
@@ -100,6 +119,8 @@ export interface GarageWorkflowCanvasDefinition {
   description: GarageWorkflowText;
   /** Ô góc phía trên bên trái của lưới (chỉ canvas end-user). */
   corner?: GarageWorkflowRect & { title: GarageWorkflowText };
+  /** Các luồng tự động (chỉ canvas dev): dùng cho chip làm nổi luồng và màu mũi tên. */
+  flows?: GarageWorkflowFlow[];
   lanes: GarageWorkflowLane[];
   columns: GarageWorkflowColumn[];
   nodes: GarageWorkflowNode[];
