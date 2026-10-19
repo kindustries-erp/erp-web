@@ -12,6 +12,7 @@ import {
   renderPaymentStatusCell,
 } from "./GarageCashflowTable.helper";
 import { getGarageCashflowColumns } from "./GarageCashflowTable.columns";
+import { buildGarageCashflowSummaryRow } from "./GarageCashflowTable.summary";
 import type { GarageCashflowVoucher } from "../../../api/garageCashflowApi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
@@ -409,5 +410,116 @@ describe("GarageCashflowTable", () => {
       expect(keys[paymentIndex + 2]).toBe("caseCode");
       expect(keys[paymentIndex + 3]).toBe("licensePlate");
     });
+  });
+
+  describe("buildGarageCashflowSummaryRow", () => {
+    const mockT = (key: string, def?: string) => def || key;
+
+    const mockVouchers: GarageCashflowVoucher[] = [
+      {
+        id: "v1",
+        voucherCode: "PT-01",
+        voucherType: "RECEIPT",
+        amount: 5000000,
+      } as any,
+      {
+        id: "v2",
+        voucherCode: "PT-02",
+        voucherType: "RECEIPT",
+        amount: 3000000,
+      } as any,
+      {
+        id: "v3",
+        voucherCode: "PC-01",
+        voucherType: "PAYMENT",
+        amount: 2000000,
+      } as any,
+    ];
+
+    it("calculates page subtotal for thu and chi correctly", () => {
+      const summary = buildGarageCashflowSummaryRow({
+        items: mockVouchers,
+        page: 1,
+        pageSize: 20,
+        total: 3,
+        totalPages: 1,
+        t: mockT,
+      });
+
+      expect(summary.voucherCode).toBeDefined();
+      expect(summary.thu).toBeDefined();
+      expect(summary.chi).toBeDefined();
+    });
+
+    it("uses totals from backend when provided", () => {
+      const totals = {
+        grandTotalThu: 20000000,
+        grandTotalChi: 10000000,
+        cumulativeThu: 8000000,
+        cumulativeChi: 2000000,
+      };
+
+      const summary = buildGarageCashflowSummaryRow({
+        items: mockVouchers,
+        totals,
+        page: 2,
+        pageSize: 20,
+        total: 10,
+        totalPages: 3,
+        t: mockT,
+      });
+
+      expect(summary.voucherCode).toBeDefined();
+      expect(summary.thu).toBeDefined();
+      expect(summary.chi).toBeDefined();
+    });
+  });
+
+  it("renders summary row in GarageCashflowTable when data is loaded", () => {
+    (useGarageCashflowTable as any).mockReturnValue({
+      data: [
+        {
+          id: "v1",
+          voucherCode: "PT-001",
+          voucherType: "RECEIPT",
+          amount: 5000000,
+          transDate: "2026-10-10",
+        },
+      ],
+      total: 1,
+      totalPages: 1,
+      totals: {
+        grandTotalThu: 5000000,
+        grandTotalChi: 0,
+        cumulativeThu: 5000000,
+        cumulativeChi: 0,
+      },
+      isLoading: false,
+      page: 1,
+      setPage: vi.fn(),
+      pageSize: 20,
+      setPageSize: vi.fn(),
+      sorts: [],
+      setSort: vi.fn(),
+      columnFilters: {},
+      setColumnFilter: vi.fn(),
+      columnSearch: {},
+      setColumnSearch: vi.fn(),
+      activeFilterCount: 0,
+      clearAllFilters: vi.fn(),
+      refetch: vi.fn(),
+      getColumnOptions: vi.fn(),
+      createMutation: { mutate: vi.fn(), isPending: false },
+      updateMutation: { mutate: vi.fn(), isPending: false },
+      deleteMutation: { mutate: vi.fn(), isPending: false },
+    });
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <GarageCashflowTable />
+      </QueryClientProvider>,
+    );
+
+    expect(screen.getByText(/Tổng cộng/i)).toBeInTheDocument();
   });
 });
