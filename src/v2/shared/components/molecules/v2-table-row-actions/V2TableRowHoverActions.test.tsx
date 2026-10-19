@@ -1,13 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
-import { useAppStore } from "@/core/config/appStore";
+import { useV2LocaleStore } from "@/v2/shared/stores/useV2LocaleStore";
 import * as viewportHook from "@/v2/shared/hooks/useViewport";
 import { makeGroups } from "./V2TableRowActions.fixture";
 import { V2TableRowHoverActions } from "./V2TableRowHoverActions";
 
 describe("V2TableRowHoverActions", () => {
   beforeEach(() => {
-    useAppStore.setState({ locale: "vi" });
+    useV2LocaleStore.setState({ locale: "vi" });
     vi.spyOn(viewportHook, "useViewport").mockReturnValue({
       width: 1280,
       height: 800,

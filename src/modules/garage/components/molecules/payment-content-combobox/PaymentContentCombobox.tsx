@@ -7,14 +7,15 @@ export const PAYMENT_CONTENT_OPTIONS = [
   { label: "2. Tất toán", value: "2. Tất toán" },
   { label: "3. BH thanh toán", value: "3. BH thanh toán" },
   { label: "4. HHBH", value: "4. HHBH" },
-  { label: "5. Ứng trước", value: "5. Ứng trước" },
-  { label: "6. Cấn trừ", value: "6. Cấn trừ" },
-  { label: "7. Phụ tùng / vật tư", value: "7. Phụ tùng / vật tư" },
-  { label: "8. Vật tư tiêu hao", value: "8. Vật tư tiêu hao" },
-  { label: "9. Chi phí vận hành", value: "9. Chi phí vận hành" },
-  { label: "10. Hoa hồng / nhân công", value: "10. Hoa hồng / nhân công" },
-  { label: "11. Hoàn ứng", value: "11. Hoàn ứng" },
-  { label: "12. Khác", value: "12. Khác" },
+  { label: "5. HH Bán hàng", value: "5. HH Bán hàng" },
+  { label: "6. HH Xưởng", value: "6. HH Xưởng" },
+  { label: "7. Ứng trước", value: "7. Ứng trước" },
+  { label: "8. Cấn trừ", value: "8. Cấn trừ" },
+  { label: "9. Phụ tùng / vật tư", value: "9. Phụ tùng / vật tư" },
+  { label: "10. Vật tư tiêu hao", value: "10. Vật tư tiêu hao" },
+  { label: "11. Chi phí vận hành", value: "11. Chi phí vận hành" },
+  { label: "12. Hoàn ứng", value: "12. Hoàn ứng" },
+  { label: "13. Khác", value: "13. Khác" },
 ];
 
 export const PaymentContentCombobox: React.FC<PaymentContentComboboxProps> = ({

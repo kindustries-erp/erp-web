@@ -2,6 +2,34 @@ import { v2ViTable } from "./vi.table";
 
 export const v2Vi = {
   v2: {
+    nav: {
+      sections: {
+        admin: "QUẢN TRỊ",
+        sales: "BÁN HÀNG",
+        purchasing: "MUA HÀNG",
+        inventory: "KHO",
+        manufacturing: "SẢN XUẤT / XƯỞNG",
+        accounting: "KẾ TOÁN",
+        settings: "HỆ THỐNG",
+      },
+      items: {
+        dashboard: "Tổng quan",
+        erpSalesOrders: "Đơn bán hàng",
+        customers: "Khách hàng",
+        afterSales: "Hậu mãi & Bảo hành",
+        purchasing: "Đơn mua hàng",
+        suppliers: "Nhà cung cấp",
+        erpInventoryStock: "Tồn kho",
+        erpInventoryVouchers: "Chứng từ kho",
+        erpBom: "BOM",
+        erpProduction: "Sản xuất",
+        erpInvoices: "Hóa đơn",
+        cashflow: "Dòng tiền",
+        catalog: "Thiết lập chung",
+        inventoryGroup: "Kho",
+        // plop:v2-nav-items
+      },
+    },
     common: {
       close: "Đóng",
       save: "Lưu",

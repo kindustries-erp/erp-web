@@ -20,6 +20,6 @@ describe("GarageCashflowKpiCards (L3 Organism)", () => {
     expect(screen.getByText("Tiền vào (Thu)")).toBeInTheDocument();
     expect(screen.getByText("Tiền ra (Chi)")).toBeInTheDocument();
     expect(screen.getByText("Dòng tiền ròng")).toBeInTheDocument();
-    expect(screen.getByText("Chi chờ duyệt")).toBeInTheDocument();
+    expect(screen.getByText("Dự chi")).toBeInTheDocument();
   });
 });

@@ -1,11 +1,11 @@
 import { describe, it, expect } from "vitest";
 import { render, screen, act } from "@testing-library/react";
-import { useAppStore } from "@/core/config/appStore";
+import { useV2LocaleStore } from "@/v2/shared/stores/useV2LocaleStore";
 import { V2WelcomePage } from "./V2WelcomePage";
 
 describe("V2WelcomePage", () => {
   it("render nội dung mặc định tiếng Việt", () => {
-    useAppStore.setState({ locale: "vi" });
+    useV2LocaleStore.setState({ locale: "vi" });
     render(<V2WelcomePage />);
 
     expect(screen.getByText("Khung Ứng Dụng ERP V2")).toBeInTheDocument();
@@ -14,7 +14,7 @@ describe("V2WelcomePage", () => {
   });
 
   it("render nội dung tiếng Anh khi thay đổi locale sang EN", () => {
-    useAppStore.setState({ locale: "en" });
+    useV2LocaleStore.setState({ locale: "en" });
     const { rerender } = render(<V2WelcomePage />);
 
     expect(screen.getByText("ERP V2 Application Shell")).toBeInTheDocument();
@@ -23,7 +23,7 @@ describe("V2WelcomePage", () => {
 
     // Switch back to VI
     act(() => {
-      useAppStore.getState().setLocale("vi");
+      useV2LocaleStore.getState().setLocale("vi");
     });
     rerender(<V2WelcomePage />);
 

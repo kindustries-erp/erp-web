@@ -245,6 +245,43 @@ describe("GarageCashflowTable", () => {
       expect(container.innerHTML).toContain("text-orange-600");
     });
 
+    it("renders 5. HH Bán hàng badge with fuchsia styling", () => {
+      const mockVoucher = {
+        ...mockRow,
+        paymentContent: "5. HH Bán hàng",
+      } as any;
+
+      const { container } = render(
+        <div>{renderPaymentContentCell(mockVoucher)}</div>,
+      );
+      expect(screen.getByText("5. HH Bán hàng")).toBeInTheDocument();
+      expect(container.innerHTML).toContain("text-fuchsia-600");
+    });
+
+    it("renders 6. HH Xưởng badge with pink styling", () => {
+      const mockVoucher = {
+        ...mockRow,
+        paymentContent: "6. HH Xưởng",
+      } as any;
+
+      const { container } = render(
+        <div>{renderPaymentContentCell(mockVoucher)}</div>,
+      );
+      expect(screen.getByText("6. HH Xưởng")).toBeInTheDocument();
+      expect(container.innerHTML).toContain("text-pink-600");
+    });
+
+    it("renders P&L Auto tag when isAutoCommission is true", () => {
+      const mockVoucher = {
+        ...mockRow,
+        paymentContent: "6. HH Xưởng",
+        isAutoCommission: true,
+      } as any;
+
+      render(<div>{renderPaymentContentCell(mockVoucher)}</div>);
+      expect(screen.getByText("P&L Auto")).toBeInTheDocument();
+    });
+
     it("renders legacy Ứng trước badge with amber styling", () => {
       const mockVoucher = {
         ...mockRow,
@@ -260,13 +297,41 @@ describe("GarageCashflowTable", () => {
   });
 
   describe("renderPaymentStatusCell", () => {
-    it("renders dash for RECEIPT voucher", () => {
-      const mockReceipt = { ...mockRow, voucherType: "RECEIPT" } as any;
-      render(<div>{renderPaymentStatusCell(mockReceipt)}</div>);
-      expect(screen.getByText("—")).toBeInTheDocument();
+    it("renders Dự thu for RECEIPT with EXPECTED status", () => {
+      const mockReceipt = {
+        ...mockRow,
+        voucherType: "RECEIPT",
+        paymentStatus: "EXPECTED",
+      } as any;
+      const { container } = render(
+        <div>{renderPaymentStatusCell(mockReceipt)}</div>,
+      );
+      expect(screen.getByText("Dự thu")).toBeInTheDocument();
+      expect(container.innerHTML).toContain("text-amber-600");
     });
 
-    it("renders Chờ duyệt for PAYMENT with PENDING status", () => {
+    it("renders Đã thu for RECEIPT with PAID or null status", () => {
+      const mockReceipt = {
+        ...mockRow,
+        voucherType: "RECEIPT",
+        paymentStatus: "PAID",
+      } as any;
+      const { container } = render(
+        <div>{renderPaymentStatusCell(mockReceipt)}</div>,
+      );
+      expect(screen.getByText("Đã thu")).toBeInTheDocument();
+      expect(container.innerHTML).toContain("text-emerald-600");
+
+      const mockLegacyReceipt = {
+        ...mockRow,
+        voucherType: "RECEIPT",
+        paymentStatus: null,
+      } as any;
+      render(<div>{renderPaymentStatusCell(mockLegacyReceipt)}</div>);
+      expect(screen.getAllByText("Đã thu")).toHaveLength(2);
+    });
+
+    it("renders Dự chi for PAYMENT with PENDING status", () => {
       const mockPayment = {
         ...mockRow,
         voucherType: "PAYMENT",
@@ -275,7 +340,7 @@ describe("GarageCashflowTable", () => {
       const { container } = render(
         <div>{renderPaymentStatusCell(mockPayment)}</div>,
       );
-      expect(screen.getByText("Chờ duyệt")).toBeInTheDocument();
+      expect(screen.getByText("Dự chi")).toBeInTheDocument();
       expect(container.innerHTML).toContain("text-amber-600");
     });
 

@@ -11,7 +11,7 @@ describe("CashflowKpiBadge (L1 Atom)", () => {
 
   it("applies variant styling", () => {
     const { container } = render(
-      <CashflowKpiBadge label="Chờ duyệt" variant="amber" />,
+      <CashflowKpiBadge label="Dự chi" variant="amber" />,
     );
     expect(container.firstChild).toHaveClass("bg-amber-50");
   });

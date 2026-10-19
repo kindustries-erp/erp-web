@@ -39,7 +39,7 @@ export const V2DropdownDesktop: React.FC<V2DropdownProps> = ({
     <button
       type="button"
       className="inline-flex items-center justify-center w-7 h-7 rounded-lg text-muted-fg hover:bg-surface-hover hover:text-foreground cursor-pointer transition-colors"
-      aria-label={t("common.actions", "Thao tác")}
+      aria-label={t("v2.common.actions", "Thao tác")}
     >
       <MoreHorizontal className="w-4 h-4" />
     </button>

@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { act, fireEvent, render, screen } from "@testing-library/react";
-import { useAppStore } from "@/core/config/appStore";
+import { useV2LocaleStore } from "@/v2/shared/stores/useV2LocaleStore";
 import * as viewportHook from "@/v2/shared/hooks/useViewport";
 import { V2SubtotalSummaryCell } from "./V2SubtotalSummaryCell";
 import { OPEN_DELAY_MS } from "./V2SubtotalSummaryCell.hook";
@@ -10,7 +10,7 @@ const trigger = () =>
 
 describe("V2SubtotalSummaryCell", () => {
   beforeEach(() => {
-    useAppStore.setState({ locale: "vi" });
+    useV2LocaleStore.setState({ locale: "vi" });
     vi.spyOn(viewportHook, "useViewport").mockReturnValue({
       width: 1280,
       height: 800,

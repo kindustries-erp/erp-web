@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { renderHook } from "@testing-library/react";
-import { useAppStore } from "@/core/config/appStore";
+import { useV2LocaleStore } from "@/v2/shared/stores/useV2LocaleStore";
 import { registerV2ModuleLocale } from "@/v2/shared/locales";
 import { useV2Translation } from "./useV2Translation";
 
@@ -10,7 +10,7 @@ describe("useV2Translation with module locales", () => {
       vi: { title: "Hóa đơn điện tử", count: "{{n}} hóa đơn" },
       en: { title: "E-invoices", count: "{{n}} invoices" },
     });
-    useAppStore.setState({ locale: "vi" });
+    useV2LocaleStore.setState({ locale: "vi" });
   });
 
   it("resolves a module key in Vietnamese", () => {
@@ -19,7 +19,7 @@ describe("useV2Translation with module locales", () => {
   });
 
   it("follows the active locale", () => {
-    useAppStore.setState({ locale: "en" });
+    useV2LocaleStore.setState({ locale: "en" });
     const { result } = renderHook(() => useV2Translation());
     expect(result.current.t("v2.invoicetest.title")).toBe("E-invoices");
   });

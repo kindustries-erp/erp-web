@@ -1,10 +1,9 @@
-import { Badge } from "@/v2/shared/ui";
 import { V2StandardDrawer } from "@/v2/shared/components/organisms/v2-standard-drawer";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
-import { businessPartnersV2Api } from "../api/businessPartnersApi";
+import { BusinessPartnerStatusBadge } from "../components/molecules/business-partner-status-badge";
+import { BusinessPartnerFormSections } from "../components/organisms/business-partner-form";
 import type { BusinessPartnerDrawerState } from "./BusinessPartnerDrawer.hook";
 import { useBusinessPartnerDrawer } from "./BusinessPartnerDrawer.hook";
-import { BusinessPartnerFormSections } from "./BusinessPartnerFormSections";
 
 export function BusinessPartnerDrawer(props: BusinessPartnerDrawerState) {
   const { t } = useV2Translation();
@@ -22,12 +21,6 @@ export function BusinessPartnerDrawer(props: BusinessPartnerDrawerState) {
       : "v2.partners.form.edit";
   const title = t(titleKey, { defaultValue: type, type });
 
-  const regenerateCode = () => {
-    void businessPartnersV2Api
-      .nextCode(props.partnerType)
-      .then(({ nextCode }) => state.setField("code", nextCode));
-  };
-
   return (
     <V2StandardDrawer
       id={`business-partner-${props.partnerId ?? "new"}`}
@@ -43,13 +36,7 @@ export function BusinessPartnerDrawer(props: BusinessPartnerDrawerState) {
       subtitle={state.form.name || state.form.code}
       titleExtra={
         !state.creating ? (
-          <Badge
-            variant={state.form.status === "ACTIVE" ? "default" : "secondary"}
-          >
-            {state.form.status === "ACTIVE"
-              ? t("v2.partners.status.active", "Hoạt động")
-              : t("v2.partners.status.inactive", "Ngưng hoạt động")}
-          </Badge>
+          <BusinessPartnerStatusBadge status={state.form.status} />
         ) : undefined
       }
       layout="1-column"
@@ -85,10 +72,11 @@ export function BusinessPartnerDrawer(props: BusinessPartnerDrawerState) {
       <BusinessPartnerFormSections
         form={state.form}
         viewing={state.viewing}
+        codeEditable={state.codeEditable}
         nameError={state.nameError}
         t={t}
         setField={state.setField}
-        onRegenerateCode={regenerateCode}
+        onRegenerateCode={state.regenerateCode}
       />
     </V2StandardDrawer>
   );

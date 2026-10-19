@@ -77,18 +77,18 @@ export const GarageCashflowKpiCards: React.FC<GarageCashflowKpiCardsProps> = ({
         }
       />
 
-      {/* 4. Phiếu chi chờ duyệt */}
+      {/* 4. Phiếu chi dự chi (chờ duyệt) */}
       <KpiCard
-        label={t("garage.cashflow.kpi.pendingOut", "Chi chờ duyệt")}
+        label={t("garage.cashflow.kpi.pendingOut", "Dự chi")}
         value={money(pendingOutAmount)}
-        sub={`${pendingOutCount} ${t("garage.cashflow.pendingCount", "phiếu chờ duyệt")}`}
+        sub={`${pendingOutCount} ${t("garage.cashflow.pendingCount", "phiếu dự chi")}`}
         loading={loading}
         warn={pendingOutCount > 0}
         icon={<Clock className="w-4 h-4 text-amber-600" />}
         badge={
           <CashflowKpiBadge
             variant={pendingOutCount > 0 ? "amber" : "slate"}
-            label={pendingOutCount > 0 ? "Cần duyệt" : "Không có"}
+            label={pendingOutCount > 0 ? "Chưa chi" : "Không có"}
           />
         }
       />

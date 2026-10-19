@@ -1,6 +1,6 @@
 ---
 name: erp-web-v2-refactor
-description: "Cẩm nang kỹ thuật & Module tri thức Tái cấu trúc ERP Web v2 (Dual-Run /v2/, Atomic Design 5 tầng, Platform Split Desktop/Mobile, Pure Domain Rules, 3 Tầng Testing và Rolling Migration) trong erp-web"
+description: "Cẩm nang kỹ thuật và playbook migrate module V1 → V2 trong erp-web (src/v2/): cấu trúc module chuẩn sinh bởi plop `v2-module`, hạ tầng shared V2 (HTTP client, toast, preference, locale), luật i18n `v2.*`, luật không import V1, và bảng parity V1→V2."
 ---
 
 <!-- GENERATED FILE - DO NOT EDIT. Nguồn canonical (skill): .agents/skills/erp-web-v2-refactor/SKILL.md -->

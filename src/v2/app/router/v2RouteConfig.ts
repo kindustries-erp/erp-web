@@ -42,6 +42,7 @@ export const V2_ROUTES: V2RouteDef[] = [
     path: "/v2/settings",
     title: "Cấu hình hệ thống (Settings)",
   },
+  // plop:v2-routes
 ];
 
 /** Khớp theo tiền tố đường dẫn, ưu tiên route dài nhất */

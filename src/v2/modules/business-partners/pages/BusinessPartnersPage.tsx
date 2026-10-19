@@ -4,17 +4,17 @@ import { V2Button } from "@/v2/shared/components/atoms/v2-button";
 import { V2ConfirmModal } from "@/v2/shared/components/molecules/v2-confirm-modal";
 import { V2ModulePage } from "@/v2/shared/components/templates/v2-module-page";
 import type { V2ModuleTab } from "@/v2/shared/components/templates/v2-module-page/V2ModulePage.type";
-import { useBusinessPartnersQuery } from "../api/useBusinessPartnersQuery";
+import { useBusinessPartnersQuery } from "../api/queries/useBusinessPartnersQuery";
 import type {
   BusinessPartner,
   BusinessPartnerType,
 } from "../domain/entities/businessPartner";
 import { BusinessPartnerDrawer } from "../drawers/BusinessPartnerDrawer";
-import {
-  legacyPartnerColumnStorage,
-  legacyPartnerViewStorage,
-} from "../utils/businessPartnerPreferences";
 import { useBusinessPartnersPage } from "./useBusinessPartnersPage";
+import {
+  v2ColumnPreferencesStorage,
+  v2ViewPresetStorage,
+} from "@/v2/shared/preferences/v2TablePreferenceStorages";
 import "../businessPartners.locale";
 
 export interface BusinessPartnersPageProps {
@@ -54,8 +54,8 @@ export function BusinessPartnersPage({
                 businessPartnersV2Api.options(partnerType, params),
             ),
           rowActions: state.rowActions,
-          preferencesStorage: legacyPartnerColumnStorage,
-          viewPresetStorage: legacyPartnerViewStorage,
+          preferencesStorage: v2ColumnPreferencesStorage,
+          viewPresetStorage: v2ViewPresetStorage,
           emptyLabel: state.t("v2.partners.empty", "Không có đối tác phù hợp"),
           toolbar: {
             search: {},
@@ -81,7 +81,8 @@ export function BusinessPartnersPage({
             },
           },
         },
-        useData: (query) => useBusinessPartnersQuery(partnerType, query),
+        useData: (query) =>
+          useBusinessPartnersQuery(partnerType, query, state.onListError),
       },
     ],
     [partnerType, state],

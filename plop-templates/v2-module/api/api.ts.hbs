@@ -1,0 +1,114 @@
+import { v2HttpClient } from "@/v2/shared/api/v2HttpClient";
+import type {
+  V2FetchOptionsParams,
+  V2TableQuery,
+} from "@/v2/shared/types/v2-table";
+import type {
+  {{Entity}},
+  {{Entity}}FormValue,
+} from "../domain/entities/{{entity}}";
+import type {
+  {{Entity}}EnvelopeDto,
+  {{Entity}}ListResultDto,
+  {{Entity}}PayloadDto,
+  ColumnOptionsResultDto,
+{{#if hasNextCode}}
+  NextCodeDto,
+{{/if}}
+} from "./dtos/{{entity}}.dto";
+
+const BASE = "{{{apiBase}}}";
+const OPTIONS_PAGE_SIZE = 20;
+
+export const to{{EntityPlural}}ListParams = (query: V2TableQuery) => ({
+  page: query.page,
+  pageSize: query.pageSize,
+  search: query.search?.trim() || undefined,
+  sort: query.sorts.length
+    ? query.sorts
+        .map((sort) =>
+          sort.direction === "desc" ? `-${sort.columnKey}` : sort.columnKey,
+        )
+        .join(",")
+    : undefined,
+  column_filters: Object.keys(query.columnFilters).length
+    ? JSON.stringify(query.columnFilters)
+    : undefined,
+  column_search: Object.keys(query.columnSearch).length
+    ? JSON.stringify(query.columnSearch)
+    : undefined,
+  column_operators: Object.keys(query.columnOperators).length
+    ? JSON.stringify(query.columnOperators)
+    : undefined,
+  date_ranges: Object.keys(query.dateRanges).length
+    ? JSON.stringify(query.dateRanges)
+    : undefined,
+});
+
+export const to{{Entity}}Payload = (
+  form: {{Entity}}FormValue,
+): {{Entity}}PayloadDto => ({
+{{#each formFields}}
+{{#if isNumber}}
+  {{name}}: form.{{name}}.trim() ? Number(form.{{name}}) : undefined,
+{{else}}{{#if isStatus}}
+  {{name}}: form.{{name}},
+{{else}}{{#if required}}
+  {{name}}: form.{{name}}.trim(),
+{{else}}
+  {{name}}: form.{{name}}.trim() || undefined,
+{{/if}}{{/if}}{{/if}}
+{{/each}}
+});
+
+export const {{entityPlural}}V2Api = {
+  list: async (query: V2TableQuery) => {
+    const { data } = await v2HttpClient.get<{{Entity}}ListResultDto>(BASE, {
+      params: to{{EntityPlural}}ListParams(query),
+    });
+    return data;
+  },
+  options: async (params: V2FetchOptionsParams) => {
+    const { data } = await v2HttpClient.get<ColumnOptionsResultDto>(
+      `${BASE}/column-options`,
+      {
+        params: {
+          column: params.columnKey,
+          search: params.search,
+          page: params.pageParam,
+          pageSize: OPTIONS_PAGE_SIZE,
+          filters: params.filtersStr,
+        },
+      },
+    );
+    return data;
+  },
+  get: async (id: string): Promise<{{Entity}}> => {
+    const { data } = await v2HttpClient.get<{{Entity}}EnvelopeDto>(`${BASE}/${id}`);
+    return data.data as {{Entity}};
+  },
+{{#if hasNextCode}}
+  nextCode: async () => {
+    const { data } = await v2HttpClient.get<NextCodeDto>(`${BASE}/next-code`);
+    return data;
+  },
+{{/if}}
+  create: async (form: {{Entity}}FormValue) => {
+    const { data } = await v2HttpClient.post<{{Entity}}EnvelopeDto>(
+      BASE,
+      to{{Entity}}Payload(form),
+    );
+    return data.data as {{Entity}};
+  },
+  update: async (id: string, form: {{Entity}}FormValue) => {
+    const { data } = await v2HttpClient.patch<{{Entity}}EnvelopeDto>(
+      `${BASE}/${id}`,
+      to{{Entity}}Payload(form),
+    );
+    return data.data as {{Entity}};
+  },
+  remove: async (id: string) => {
+    const { data } = await v2HttpClient.delete<{{Entity}}EnvelopeDto>(`${BASE}/${id}`);
+    return data.data as {{Entity}};
+  },
+};

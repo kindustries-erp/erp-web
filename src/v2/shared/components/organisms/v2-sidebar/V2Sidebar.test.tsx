@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, act } from "@testing-library/react";
 import React from "react";
 import { LayoutDashboard, Users, Boxes } from "lucide-react";
-import { useAppStore } from "@/core/config/appStore";
+import { useV2LocaleStore } from "@/v2/shared/stores/useV2LocaleStore";
 import { V2Sidebar } from "./V2Sidebar";
 import { V2SidebarSectionData } from "./V2Sidebar.type";
 
@@ -43,7 +43,7 @@ const mockSections: V2SidebarSectionData[] = [
 describe("V2Sidebar Organism", () => {
   beforeEach(() => {
     act(() => {
-      useAppStore.getState().setLocale("vi");
+      useV2LocaleStore.getState().setLocale("vi");
     });
   });
 
@@ -97,7 +97,7 @@ describe("V2Sidebar Organism", () => {
     expect(screen.getByText("Quản trị viên")).toBeInTheDocument();
 
     act(() => {
-      useAppStore.getState().setLocale("en");
+      useV2LocaleStore.getState().setLocale("en");
     });
 
     rerender(<V2Sidebar sections={mockSections} activeId="dashboard" />);

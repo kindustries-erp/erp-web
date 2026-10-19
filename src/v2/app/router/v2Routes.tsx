@@ -9,7 +9,7 @@ import { Badge } from "@/v2/shared/ui";
 import { Clock } from "lucide-react";
 import { PermissionGuard } from "./guards";
 import { V2_DEFAULT_ROUTE_ID, resolveV2Route } from "./v2RouteConfig";
-import { BusinessPartnersPage } from "@/v2/modules/business-partners";
+import { V2_PAGE_REGISTRY } from "./v2PageRegistry";
 
 export const V2RouterView: React.FC = () => {
   const { employee, profile } = useAuthStore();
@@ -42,12 +42,7 @@ export const V2RouterView: React.FC = () => {
       return <V2WelcomePage />;
     }
 
-    const page =
-      activeRoute.id === "customers" ? (
-        <BusinessPartnersPage partnerType="CUSTOMER" />
-      ) : activeRoute.id === "suppliers" ? (
-        <BusinessPartnersPage partnerType="VENDOR" />
-      ) : null;
+    const page = V2_PAGE_REGISTRY[activeRoute.id]?.() ?? null;
 
     return (
       <PermissionGuard permission={activeRoute.permission}>

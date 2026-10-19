@@ -41,23 +41,37 @@ const CONTENT_BADGE_STYLES: Record<string, string> = {
   "BH thanh toán": "bg-indigo-500/10 text-indigo-600 border-indigo-500/20",
   "4. HHBH": "bg-purple-500/10 text-purple-600 border-purple-500/20",
   HHBH: "bg-purple-500/10 text-purple-600 border-purple-500/20",
+  "5. HH Bán hàng": "bg-fuchsia-500/10 text-fuchsia-600 border-fuchsia-500/20",
+  "HH Bán hàng": "bg-fuchsia-500/10 text-fuchsia-600 border-fuchsia-500/20",
+  "6. HH Xưởng": "bg-pink-500/10 text-pink-600 border-pink-500/20",
+  "HH Xưởng": "bg-pink-500/10 text-pink-600 border-pink-500/20",
+  "6. HH Thưởng": "bg-pink-500/10 text-pink-600 border-pink-500/20",
+  "HH Thưởng": "bg-pink-500/10 text-pink-600 border-pink-500/20",
+  "7. Ứng trước": "bg-amber-500/10 text-amber-600 border-amber-500/20",
   "5. Ứng trước": "bg-amber-500/10 text-amber-600 border-amber-500/20",
   "Ứng trước": "bg-amber-500/10 text-amber-600 border-amber-500/20",
+  "8. Cấn trừ": "bg-violet-500/10 text-violet-600 border-violet-500/20",
   "6. Cấn trừ": "bg-violet-500/10 text-violet-600 border-violet-500/20",
   "Cấn trừ": "bg-violet-500/10 text-violet-600 border-violet-500/20",
+  "9. Phụ tùng / vật tư":
+    "bg-orange-500/10 text-orange-600 border-orange-500/20",
   "7. Phụ tùng / vật tư":
     "bg-orange-500/10 text-orange-600 border-orange-500/20",
   "Phụ tùng / vật tư": "bg-orange-500/10 text-orange-600 border-orange-500/20",
   "Mua phụ tùng / vật tư":
     "bg-orange-500/10 text-orange-600 border-orange-500/20",
+  "10. Vật tư tiêu hao": "bg-cyan-500/10 text-cyan-600 border-cyan-500/20",
   "8. Vật tư tiêu hao": "bg-cyan-500/10 text-cyan-600 border-cyan-500/20",
   "Vật tư tiêu hao": "bg-cyan-500/10 text-cyan-600 border-cyan-500/20",
+  "11. Chi phí vận hành": "bg-rose-500/10 text-rose-600 border-rose-500/20",
   "9. Chi phí vận hành": "bg-rose-500/10 text-rose-600 border-rose-500/20",
   "Chi phí vận hành": "bg-rose-500/10 text-rose-600 border-rose-500/20",
   "10. Hoa hồng / nhân công": "bg-pink-500/10 text-pink-600 border-pink-500/20",
   "Hoa hồng / nhân công": "bg-pink-500/10 text-pink-600 border-pink-500/20",
+  "12. Hoàn ứng": "bg-amber-600/10 text-amber-700 border-amber-600/20",
   "11. Hoàn ứng": "bg-amber-600/10 text-amber-700 border-amber-600/20",
   "Hoàn ứng": "bg-amber-600/10 text-amber-700 border-amber-600/20",
+  "13. Khác": "bg-slate-500/10 text-slate-600 border-slate-500/20",
   "12. Khác": "bg-slate-500/10 text-slate-600 border-slate-500/20",
   Khác: "bg-slate-500/10 text-slate-600 border-slate-500/20",
 };
@@ -73,11 +87,18 @@ export const renderPaymentContentCell = (row: GarageCashflowVoucher) => {
     "bg-slate-500/10 text-slate-600 border-slate-500/20";
 
   return (
-    <span
-      className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${badgeStyle}`}
-    >
-      {content}
-    </span>
+    <div className="flex items-center gap-1.5 flex-wrap">
+      <span
+        className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${badgeStyle}`}
+      >
+        {content}
+      </span>
+      {row.isAutoCommission && (
+        <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-semibold bg-violet-500/15 text-violet-700 dark:text-violet-300 border border-violet-500/30">
+          P&L Auto
+        </span>
+      )}
+    </div>
   );
 };
 
@@ -85,23 +106,45 @@ const STATUS_BADGE_STYLES: Record<string, string> = {
   PENDING: "bg-amber-500/10 text-amber-600 border-amber-500/20",
   APPROVED: "bg-indigo-500/10 text-indigo-600 border-indigo-500/20",
   PAID: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
-};
-
-const STATUS_LABELS: Record<string, string> = {
-  PENDING: "Chờ duyệt",
-  APPROVED: "Đã duyệt",
-  PAID: "Đã chi",
+  EXPECTED: "bg-amber-500/10 text-amber-600 border-amber-500/20",
 };
 
 export const renderPaymentStatusCell = (row: GarageCashflowVoucher) => {
-  if (row.voucherType !== "PAYMENT" || !row.paymentStatus) {
+  const isReceipt = (row.voucherType || "").toUpperCase() === "RECEIPT";
+  const isPayment = (row.voucherType || "").toUpperCase() === "PAYMENT";
+
+  if (!isReceipt && !isPayment) {
     return <span className="text-muted-foreground">—</span>;
   }
 
-  const badgeStyle =
-    STATUS_BADGE_STYLES[row.paymentStatus] ||
-    "bg-slate-500/10 text-slate-600 border-slate-500/20";
-  const label = STATUS_LABELS[row.paymentStatus] || row.paymentStatus;
+  let label = "";
+  let badgeStyle = "bg-slate-500/10 text-slate-600 border-slate-500/20";
+
+  if (isReceipt) {
+    if (row.paymentStatus === "EXPECTED") {
+      label = "Dự thu";
+      badgeStyle = STATUS_BADGE_STYLES.EXPECTED;
+    } else {
+      label = "Đã thu";
+      badgeStyle = STATUS_BADGE_STYLES.PAID;
+    }
+  } else if (isPayment) {
+    if (!row.paymentStatus) {
+      return <span className="text-muted-foreground">—</span>;
+    }
+    if (row.paymentStatus === "PENDING") {
+      label = "Dự chi";
+      badgeStyle = STATUS_BADGE_STYLES.PENDING;
+    } else if (row.paymentStatus === "APPROVED") {
+      label = "Đã duyệt";
+      badgeStyle = STATUS_BADGE_STYLES.APPROVED;
+    } else if (row.paymentStatus === "PAID") {
+      label = "Đã chi";
+      badgeStyle = STATUS_BADGE_STYLES.PAID;
+    } else {
+      label = row.paymentStatus;
+    }
+  }
 
   return (
     <span

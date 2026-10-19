@@ -3,6 +3,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Lock, LogIn } from "lucide-react";
 import { useAuthStore } from "@/modules/auth/domain/authStore";
 import { V2Button, V2Text } from "@/v2/shared/components/atoms";
+import { V2DocumentDependencyModal } from "@/v2/shared/components/molecules/v2-document-dependency-modal";
+import { V2Toaster } from "@/v2/shared/components/molecules/v2-toaster";
+import { loadV2ServerPreferences } from "@/v2/shared/preferences/v2ServerPreferences";
 import { TooltipProvider } from "@/v2/shared/ui";
 import { AppProvidersProps } from "./AppProviders.type";
 
@@ -19,6 +22,10 @@ const queryClient = new QueryClient({
 export const AppProviders: React.FC<AppProvidersProps> = ({ children }) => {
   const { accessToken } = useAuthStore();
   const isAuthenticated = Boolean(accessToken);
+
+  React.useEffect(() => {
+    if (isAuthenticated) void loadV2ServerPreferences();
+  }, [isAuthenticated]);
 
   if (!isAuthenticated) {
     return (
@@ -52,7 +59,11 @@ export const AppProviders: React.FC<AppProvidersProps> = ({ children }) => {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider delayDuration={200}>{children}</TooltipProvider>
+      <TooltipProvider delayDuration={200}>
+        {children}
+        <V2Toaster />
+        <V2DocumentDependencyModal />
+      </TooltipProvider>
     </QueryClientProvider>
   );
 };

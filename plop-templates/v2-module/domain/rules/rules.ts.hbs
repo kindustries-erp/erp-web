@@ -1,0 +1,22 @@
+import type { {{Entity}}FormValue } from "../entities/{{entity}}";
+
+/** Trường bắt buộc, theo thứ tự hiển thị trên form */
+export const REQUIRED_{{entity}}_FIELDS = [{{#each requiredFields}}"{{name}}", {{/each}}] as const;
+
+export type {{Entity}}FormError = (typeof REQUIRED_{{entity}}_FIELDS)[number];
+
+/** Trả về trường bắt buộc đầu tiên đang trống, hoặc null nếu hợp lệ */
+export const validate{{Entity}}Form = (
+  form: {{Entity}}FormValue,
+): {{Entity}}FormError | null =>
+  REQUIRED_{{entity}}_FIELDS.find((name) => !form[name].trim()) ?? null;
+
+export const is{{Entity}}FormDirty = (
+  form: {{Entity}}FormValue,
+  initial: {{Entity}}FormValue,
+): boolean => JSON.stringify(form) !== JSON.stringify(initial);
+{{#if hasStatus}}
+
+export const is{{Entity}}Inactive = (status: string): boolean =>
+  status === "INACTIVE";
+{{/if}}

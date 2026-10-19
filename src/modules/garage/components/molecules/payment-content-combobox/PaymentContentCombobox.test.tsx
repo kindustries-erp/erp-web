@@ -12,21 +12,24 @@ describe("PaymentContentCombobox Molecule", () => {
     expect(screen.getByText("Chọn nội dung TT...")).toBeInTheDocument();
   });
 
-  it("contains 12 numbered options with updated labels", () => {
-    expect(PAYMENT_CONTENT_OPTIONS).toHaveLength(12);
+  it("contains 13 numbered options with updated labels", () => {
+    expect(PAYMENT_CONTENT_OPTIONS).toHaveLength(13);
     const values = PAYMENT_CONTENT_OPTIONS.map((o) => o.value);
-    expect(values).toContain("1. KH thanh toán");
-    expect(values).toContain("2. Tất toán");
-    expect(values).toContain("3. BH thanh toán");
-    expect(values).toContain("4. HHBH");
-    expect(values).toContain("5. Ứng trước");
-    expect(values).toContain("6. Cấn trừ");
-    expect(values).toContain("7. Phụ tùng / vật tư");
-    expect(values).toContain("8. Vật tư tiêu hao");
-    expect(values).toContain("9. Chi phí vận hành");
-    expect(values).toContain("10. Hoa hồng / nhân công");
-    expect(values).toContain("11. Hoàn ứng");
-    expect(values).toContain("12. Khác");
+    expect(values).toEqual([
+      "1. KH thanh toán",
+      "2. Tất toán",
+      "3. BH thanh toán",
+      "4. HHBH",
+      "5. HH Bán hàng",
+      "6. HH Xưởng",
+      "7. Ứng trước",
+      "8. Cấn trừ",
+      "9. Phụ tùng / vật tư",
+      "10. Vật tư tiêu hao",
+      "11. Chi phí vận hành",
+      "12. Hoàn ứng",
+      "13. Khác",
+    ]);
   });
 
   it("triggers onChange when selected", () => {

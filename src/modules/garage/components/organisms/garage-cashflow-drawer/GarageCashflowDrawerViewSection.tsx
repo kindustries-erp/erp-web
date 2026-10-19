@@ -28,20 +28,22 @@ export const GarageCashflowDrawerViewSection: React.FC<
             : "Phiếu Chi"
         }
       />
-      {(voucher?.voucherType || "").toUpperCase() === "PAYMENT" && (
-        <DrawerRow
-          label="Trạng thái"
-          value={
-            voucher?.paymentStatus === "PENDING"
-              ? "Chờ duyệt"
+      <DrawerRow
+        label="Trạng thái"
+        value={
+          (voucher?.voucherType || "").toUpperCase() === "RECEIPT"
+            ? voucher?.paymentStatus === "EXPECTED"
+              ? "Dự thu"
+              : "Đã thu"
+            : voucher?.paymentStatus === "PENDING"
+              ? "Dự chi"
               : voucher?.paymentStatus === "APPROVED"
                 ? "Đã duyệt"
                 : voucher?.paymentStatus === "PAID"
                   ? "Đã chi"
                   : "—"
-          }
-        />
-      )}
+        }
+      />
       <DrawerRow label="Phương thức TT" value={voucher?.paymentMethod || "—"} />
       <DrawerRow label="Nội dung TT" value={voucher?.paymentContent || "—"} />
       <DrawerRow

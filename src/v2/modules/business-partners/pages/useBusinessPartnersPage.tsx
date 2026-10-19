@@ -1,26 +1,24 @@
 import * as React from "react";
 import { Eye, Pencil, Trash2 } from "lucide-react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useUIStore } from "@/core/config/uiStore";
-import { extractApiError } from "@/shared/utils/apiError";
-import { useUserPreferencesStore } from "@/shared/hooks/useUserPreferences";
 import { useV2HasPermission } from "@/v2/shared/hooks/useV2HasPermission";
 import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
 import type { V2RowActionGroup } from "@/v2/shared/types/v2-table";
-import { businessPartnersV2Api } from "../api/businessPartnersApi";
-import { businessPartnerKeys } from "../api/useBusinessPartnersQuery";
-import { buildBusinessPartnerColumns } from "../components/businessPartnerColumns";
-import { PARTNER_VIEW_VISIBILITY } from "../components/businessPartnerViews";
+import { useV2ToastStore } from "@/v2/shared/stores/useV2ToastStore";
+import { useV2TablePreferencesStore } from "@/v2/shared/preferences/useV2TablePreferencesStore";
+import { applyV2SystemView } from "@/v2/shared/preferences/v2TablePreferenceStorages";
+import { extractV2ApiError } from "@/v2/shared/utils/v2ApiError";
+import { useRemoveBusinessPartnerMutation } from "../api/mutations/useBusinessPartnerMutations";
+import {
+  buildBusinessPartnerColumns,
+  PARTNER_VIEW_VISIBILITY,
+} from "../components/organisms/business-partner-table";
 import type {
   BusinessPartner,
   BusinessPartnerType,
 } from "../domain/entities/businessPartner";
-import { applyLegacySystemView } from "../utils/businessPartnerPreferences";
 
 export function useBusinessPartnersPage(partnerType: BusinessPartnerType) {
   const { t } = useV2Translation();
-  const queryClient = useQueryClient();
-  const showToast = useUIStore((s) => s.showToast);
   const canCreate = useV2HasPermission({
     collection: "business_partners",
     action: "create",
@@ -42,22 +40,31 @@ export function useBusinessPartnersPage(partnerType: BusinessPartnerType) {
     React.useState<BusinessPartner | null>(null);
   const [view, setView] = React.useState(
     () =>
-      useUserPreferencesStore.getState().getTablePreference(tableId)
-        ?.activeView ?? "overview",
+      useV2TablePreferencesStore.getState().tables[tableId]?.views?.activeKey ??
+      "overview",
   );
   const [tableKey, setTableKey] = React.useState(0);
 
   React.useEffect(() => {
-    const saved = useUserPreferencesStore
-      .getState()
-      .getTablePreference(tableId);
-    if (!saved)
-      applyLegacySystemView(
-        tableId,
-        "overview",
-        PARTNER_VIEW_VISIBILITY.overview,
-      );
+    if (!useV2TablePreferencesStore.getState().tables[tableId]?.columns) {
+      applyV2SystemView(tableId, "overview", PARTNER_VIEW_VISIBILITY.overview);
+    }
   }, [tableId]);
+
+  const onListError = React.useCallback(
+    (error: unknown) => {
+      const fallback = t(
+        "v2.partners.listLoadError",
+        "Không thể tải danh sách đối tác",
+      );
+      useV2ToastStore.getState().showToast({
+        variant: "destructive",
+        title: fallback,
+        description: extractV2ApiError(error, fallback),
+      });
+    },
+    [t],
+  );
 
   const open = React.useCallback(
     (id: string | null, mode: "view" | "edit") => setDrawer({ id, mode }),
@@ -94,34 +101,20 @@ export function useBusinessPartnersPage(partnerType: BusinessPartnerType) {
     [canDelete, canUpdate, open, t],
   );
 
-  const remove = useMutation({
-    mutationFn: (id: string) => businessPartnersV2Api.remove(id),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({
-        queryKey: businessPartnerKeys.all,
-      });
-      setDeleteTarget(null);
-      showToast({
-        variant: "success",
-        title: t("v2.partners.delete.success", "Đã xóa đối tác"),
-      });
-    },
-    onError: (error) =>
-      showToast({
-        variant: "destructive",
-        title: t("v2.partners.delete.error", "Không thể xóa đối tác"),
-        description: extractApiError(error),
-      }),
-  });
+  const remove = useRemoveBusinessPartnerMutation(t, () =>
+    setDeleteTarget(null),
+  );
+
   const selectView = (key: string) => {
     const visibility =
       PARTNER_VIEW_VISIBILITY[key as keyof typeof PARTNER_VIEW_VISIBILITY];
     setView(key);
     if (visibility) {
-      applyLegacySystemView(tableId, key, visibility);
+      applyV2SystemView(tableId, key, visibility);
       setTableKey((value) => value + 1);
     }
   };
+
   return {
     t,
     tableId,
@@ -138,6 +131,7 @@ export function useBusinessPartnersPage(partnerType: BusinessPartnerType) {
     remove,
     view,
     selectView,
+    onListError,
   };
 }
 

@@ -1,13 +1,17 @@
 import { Badge } from "@/v2/shared/ui";
+import { V2Tooltip } from "@/v2/shared/components/atoms/v2-tooltip";
 import { V2TableText } from "@/v2/shared/components/molecules/v2-table-text";
 import type { V2Column } from "@/v2/shared/components/organisms/v2-standard-table";
 import { ColumnValueType, TableColumnAlign } from "@/v2/shared/types/v2-table";
-import type { BusinessPartner } from "../domain/entities/businessPartner";
+import type { BusinessPartner } from "../../../domain/entities/businessPartner";
+import { isBusinessPartnerInactive } from "../../../domain/rules/businessPartnerRules";
+import { BusinessPartnerStatusBadge } from "../../molecules/business-partner-status-badge";
 
 type Translate = (key: string, fallback?: string) => string;
 
 const value = (text?: string | null) => text || "—";
 
+/** Cột STT do V2StandardTable tự render (`__index`), không khai báo ở đây */
 export const buildBusinessPartnerColumns = (
   t: Translate,
   openDetail: (id: string) => void,
@@ -19,12 +23,33 @@ export const buildBusinessPartnerColumns = (
     enableResizing: true,
     mobileSlot: "subtitle",
     filter: { valueType: ColumnValueType.TEXT },
+    // Summary row: số đối tác trên trang (subtotal) và tổng toàn bộ (total từ summaries.code)
+    summary: {
+      variant: "count",
+      accessor: () => 1,
+      metricTitle: t("v2.partners.summary.count", "Số đối tác"),
+    },
     cell: (row) => (
-      <V2TableText
-        text={row.code}
-        enableCopy
-        onDetailClick={() => openDetail(row.id)}
-      />
+      <div className="flex w-full min-w-0 items-center gap-1.5">
+        <V2TableText
+          className="min-w-0 flex-1"
+          text={row.code}
+          enableCopy
+          onDetailClick={() => openDetail(row.id)}
+        />
+        {isBusinessPartnerInactive(row.status) && (
+          <V2Tooltip
+            content={t("v2.partners.status.inactive", "Ngưng hoạt động")}
+          >
+            <Badge
+              variant="secondary"
+              className="h-4 shrink-0 px-1.5 py-0 text-[10px] font-medium"
+            >
+              {t("v2.partners.status.inactiveShort", "Ngưng")}
+            </Badge>
+          </V2Tooltip>
+        )}
+      </div>
     ),
   },
   {
@@ -125,13 +150,7 @@ export const buildBusinessPartnerColumns = (
         },
       ],
     },
-    cell: (row) => (
-      <Badge variant={row.status === "ACTIVE" ? "default" : "secondary"}>
-        {row.status === "ACTIVE"
-          ? t("v2.partners.status.active", "Hoạt động")
-          : t("v2.partners.status.inactive", "Ngưng hoạt động")}
-      </Badge>
-    ),
+    cell: (row) => <BusinessPartnerStatusBadge status={row.status} />,
   },
   {
     key: "createdAt",

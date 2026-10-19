@@ -1,14 +1,18 @@
 import { RotateCw } from "lucide-react";
-import { V2Button } from "@/v2/shared/components/atoms";
+import { V2Button, V2Textarea } from "@/v2/shared/components/atoms";
 import { DrawerField } from "@/v2/shared/components/molecules/v2-drawer-field";
 import { DrawerSection } from "@/v2/shared/components/molecules/v2-drawer-section";
 import { V2Combobox } from "@/v2/shared/components/molecules/v2-combobox";
-import type { BusinessPartnerFormValue } from "../domain/entities/businessPartner";
-import { ReadValue, TextInput } from "./BusinessPartnerFormControls";
+import type { BusinessPartnerFormValue } from "../../../domain/entities/businessPartner";
+import {
+  V2ReadValue as ReadValue,
+  V2TextField as TextInput,
+} from "@/v2/shared/components/molecules/v2-form-controls";
 
 interface FormProps {
   form: BusinessPartnerFormValue;
   viewing: boolean;
+  codeEditable: boolean;
   nameError: string;
   t: (key: string, fallback?: string) => string;
   setField: <K extends keyof BusinessPartnerFormValue>(
@@ -33,10 +37,11 @@ export function BusinessPartnerFormSections(props: FormProps) {
                   viewing={viewing}
                   value={form.code}
                   className="font-mono"
+                  disabled={!props.codeEditable}
                   onChange={(v) => setField("code", v.toUpperCase())}
                 />
               </div>
-              {!viewing && (
+              {!viewing && props.codeEditable && (
                 <V2Button
                   variant="outline"
                   size="icon-sm"
@@ -115,8 +120,8 @@ export function BusinessPartnerFormSections(props: FormProps) {
             {viewing ? (
               <ReadValue value={form.address} />
             ) : (
-              <textarea
-                className="min-h-20 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              <V2Textarea
+                className="min-h-20"
                 value={form.address}
                 onChange={(e) => setField("address", e.target.value)}
               />
@@ -161,8 +166,8 @@ export function BusinessPartnerFormSections(props: FormProps) {
           {viewing ? (
             <ReadValue value={form.notes} />
           ) : (
-            <textarea
-              className="min-h-20 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            <V2Textarea
+              className="min-h-20"
               value={form.notes}
               onChange={(e) => setField("notes", e.target.value)}
             />

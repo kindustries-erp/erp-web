@@ -42,6 +42,8 @@ export const garageEn = {
       paid: "Paid",
       approved: "Approved",
       pending: "Pending",
+      expected: "Expected",
+      collected: "Collected",
     },
   },
   cashflowDuplicate: {
@@ -81,6 +83,8 @@ export const garageEn = {
     statusPending: "Pending Approval",
     statusApproved: "Approved",
     statusPaid: "Paid",
+    statusExpected: "Expected",
+    statusCollected: "Collected",
     paymentStatusLocked:
       "Paid voucher: payment status can no longer be changed.",
     caseCode: "Service Case Code",

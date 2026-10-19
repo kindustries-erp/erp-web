@@ -3,6 +3,34 @@ import { v2EnTable } from "./en.table";
 
 export const v2En: V2Dictionary = {
   v2: {
+    nav: {
+      sections: {
+        admin: "ADMIN",
+        sales: "SALES",
+        purchasing: "PURCHASING",
+        inventory: "WAREHOUSE",
+        manufacturing: "MANUFACTURING / WORKSHOP",
+        accounting: "ACCOUNTING",
+        settings: "SYSTEM",
+      },
+      items: {
+        dashboard: "Dashboard",
+        erpSalesOrders: "Sales Orders",
+        customers: "Customers",
+        afterSales: "After-Sales & Warranty",
+        purchasing: "Purchasing",
+        suppliers: "Suppliers",
+        erpInventoryStock: "Stock",
+        erpInventoryVouchers: "Vouchers",
+        erpBom: "BOM",
+        erpProduction: "Production",
+        erpInvoices: "Invoices",
+        cashflow: "Cash Flow",
+        catalog: "General Settings",
+        inventoryGroup: "Inventory",
+        // plop:v2-nav-items
+      },
+    },
     common: {
       close: "Close",
       save: "Save",

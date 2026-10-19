@@ -41,7 +41,9 @@ export const garageVi = {
     status: {
       paid: "Đã thanh toán",
       approved: "Đã duyệt",
-      pending: "Chờ duyệt",
+      pending: "Dự chi",
+      expected: "Dự thu",
+      collected: "Đã thu",
     },
   },
   cashflowDuplicate: {
@@ -78,9 +80,11 @@ export const garageVi = {
     paymentContent: "Nội dung TT",
     amount: "Số tiền",
     paymentStatus: "Trạng thái thanh toán",
-    statusPending: "Chờ duyệt",
+    statusPending: "Dự chi",
     statusApproved: "Đã duyệt",
     statusPaid: "Đã chi",
+    statusExpected: "Dự thu",
+    statusCollected: "Đã thu",
     paymentStatusLocked:
       "Phiếu đã chi, không thể cập nhật lại trạng thái thanh toán.",
     caseCode: "Mã Phiếu Dịch Vụ (Garage Case)",

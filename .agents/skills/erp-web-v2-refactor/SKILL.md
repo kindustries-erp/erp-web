@@ -1,248 +1,167 @@
 ---
 name: erp-web-v2-refactor
-description: Cẩm nang kỹ thuật & Module tri thức Tái cấu trúc ERP Web v2 (Dual-Run /v2/, Atomic Design 5 tầng, Platform Split Desktop/Mobile, Pure Domain Rules, 3 Tầng Testing và Rolling Migration) trong erp-web
+description: Cẩm nang kỹ thuật và playbook migrate module V1 → V2 trong erp-web (src/v2/): cấu trúc module chuẩn sinh bởi plop `v2-module`, hạ tầng shared V2 (HTTP client, toast, preference, locale), luật i18n `v2.*`, luật không import V1, và bảng parity V1→V2.
 ---
 
 # 🚀 Kỹ Thuật Tái Cấu Trúc ERP Web v2 (`src/v2/`)
 
-Skill này chứa toàn bộ tri thức kỹ thuật, quy chuẩn kiến trúc, mẫu mã (code templates) và bộ công cụ kiểm toán tự động phục vụ chiến dịch nâng cấp và tái cấu trúc hệ thống `erp-web` lên phiên bản v2 độc lập tại thư mục `src/v2/`.
+Skill này là nguồn tri thức cho việc tạo và migrate module sang V2. Chạy theo workflow `/erp-web-v2-refactor`. Module mẫu đã hoàn chỉnh: `src/v2/modules/business-partners/`.
 
 ---
 
-## 🎯 7 Nguyên Tắc Kiến Trúc Sống Còn
+## 1. Nguyên tắc
 
-| # | Nguyên tắc | Quy định cụ thể |
+| # | Nguyên tắc | Thực tế hiện tại |
 | :--- | :--- | :--- |
-| 1 | **Dual-Run Route `/v2/`** | Chạy song song `/v2/*` và `/` (V1) trên cùng 1 bundle. Chia sẻ `useAuthStore` & Axios API client. Không dùng Bridge Adapter. |
-| 2 | **Shared UI vs Components (Import 1 Chiều)** | `src/v2/shared/ui/<name>/`: Mỗi primitive 1 subfolder riêng biệt (`button/`, `badge/`), kèm master barrel `@/v2/shared/ui`. Cài đặt qua `bun run ui:add <name>`. Atoms & Molecules ĐƯỢC PHÉP import từ `shared/ui` để wrap/custom. TUYỆT ĐỐI CẤM CHIỀU NGƯỢC LẠI (`shared/ui` không bao giờ import từ `atoms`/`molecules`). |
-| 3 | **Storybook CDD & Theme V2 Độc Lập** | Mọi Shared Component (Atoms, Molecules, Organisms) và UI Primitives bắt buộc có file `[ComponentName].stories.tsx` co-located. Cấu hình theme độc lập tại `src/v2/shared/styles/` (`v2-theme.css`, `index.css`) & `src/v2/shared/theme/` (`applyV2Theme`, 4 themes). Storybook chỉ quét `src/v2` và chỉ import style V2. |
-| 4 | **Platform Split (Desktop vs Mobile)** | Tách component tree: `[Name].desktop.tsx` & `[Name].mobile.tsx`. File entry `[Name].tsx` là Switcher (< 15 LoC) dùng `useViewport()`. |
-| 5 | **Testing Pyramid 3 Tầng** | Unit tests co-located cạnh source file; Integration tests tại `modules/<name>/tests/integration/`; E2E tests tại `src/v2/tests/e2e/`. |
-| 6 | **Giới Hạn Cứng < 180 LoC** | Cấm file vượt quá 180 LoC. Tách ngay `.hook.ts`, `.helper.ts`, sub-components nếu tiệm cận. |
-| 7 | **Rolling Migration User-Driven** | Agent KHÔNG tự ý di chuyển module nào khi chưa có lệnh rõ ràng từ User. Di chuyển cuốn chiếu từng module, bảo đảm zero regression. |
+| 1 | **Dual-Run `/v2/`** | `/v2/*` và `/` (V1) chạy song song trên cùng bundle. V2 dùng chung session qua `useAuthStore` (V1). |
+| 2 | **Không import V1** | Module và shared V2 không import `@/core`, `@/shared`, `@/modules` (trừ `@/modules/auth/domain/authStore`, session dùng chung). Kiểm bằng audit mục 7. |
+| 3 | **Key i18n `v2.*`** | Mọi `t()` dùng key có tiền tố `v2.`. Key không có tiền tố trả fallback, không đi sang V1. |
+| 4 | **Atomic** | `components/molecules/` và `components/organisms/`, mỗi thư mục kebab-case có `index.ts` và test co-located. |
+| 5 | **< 180 LoC** | Tách `.hook.ts`, helper, sub-component khi gần ngưỡng. |
+| 6 | **No Blue** | Dùng token ngữ cảnh (`bg-primary`, `text-muted-fg`...), không dùng `blue-*`. |
+| 7 | **Rolling migration** | Chỉ migrate module khi user ra lệnh. Mỗi module verify đủ audit trước khi báo xong. |
+| 8 | **Storybook** | Component trong `shared/` bắt buộc có `*.stories.tsx` (test `storyCoverage` kiểm). Module không bắt buộc. |
+
+**Đã quyết định, chưa áp dụng:** tách `*.desktop.tsx` / `*.mobile.tsx` cho module. Hiện các template dùng chung (`V2ModulePage`, `V2StandardDrawer`) đã responsive nên module chưa tách. Chỉ tách khi UX thực sự khác, và cần chốt với user.
 
 ---
 
-## 📋 Hệ Thống Quy Ước Đặt Tên & Cấu Trúc (Convention Table)
+## 2. Cây module chuẩn
 
-| Thành phần | Quy ước | Ví dụ |
+Sinh bởi `bun plop v2-module` (chi tiết ở skill `plop-generate`, Generator 5):
+
+```text
+src/v2/modules/<module>/
+├── api/
+│   ├── dtos/<entity>.dto.ts            # Hình dạng backend (không phụ thuộc V1)
+│   ├── <plural>Api.ts                  # <plural>V2Api qua v2HttpClient + toListParams + toPayload
+│   ├── queries/                        # <plural>Keys, use<Plural>Query (onError cho toast)
+│   └── mutations/                      # useSave<Entity>Mutation, useRemove<Entity>Mutation
+├── domain/
+│   ├── entities/<entity>.ts            # Entity + FormValue (mọi trường là string) + empty form
+│   └── rules/<entity>Rules.ts          # validate bắt buộc, dirty, trạng thái (+ test)
+├── components/
+│   ├── molecules/<entity>-status-badge/   # chỉ khi có trường status
+│   └── organisms/
+│       ├── <entity>-table/             # columns, views, index (+ test)
+│       └── <entity>-form/              # FormSections, index (+ test)
+├── drawers/                            # <Entity>Drawer.tsx + .hook.ts
+├── pages/                              # <Plural>Page.tsx + use<Plural>Page.tsx
+├── tests/integration/                  # Page + service mock
+├── <namespace>.locale.ts               # registerV2ModuleLocale(namespace, vi/en)
+└── index.ts
+```
+
+Điểm nối chung (marker, sinh tự động khi `wire = true`): route (`v2RouteConfig.ts`), menu (`v2Navigation.config.ts`), nhãn nav (`shared/locales/vi.ts|en.ts`), registry trang (`app/router/v2PageRegistry.tsx`). Thêm trang mới vào registry, không sửa `v2Routes.tsx`.
+
+---
+
+## 3. Hạ tầng shared V2 (dùng lại, không viết lại)
+
+| Nhu cầu | Dùng | File |
 | :--- | :--- | :--- |
-| **Thư mục domain** | `domain/` (số ít) | `src/v2/modules/sales-orders/domain/` |
-| **Thư mục module** | `kebab-case` | `sales-orders/`, `business-partners/`, `erp-invoices/` |
-| **Thư mục component** | `kebab-case` + `Folder-per-component` | `sales-status-badge/`, `sales-order-table/` |
-| **File component chính** | `PascalCase.tsx` | `SalesOrderTable.tsx` |
-| **File Platform Split** | `[Name].desktop.tsx` / `[Name].mobile.tsx` | `SalesOrderTable.desktop.tsx`, `SalesOrderTable.mobile.tsx` |
-| **File Hook dùng chung** | `use[PascalCase].ts` | `useViewport.ts`, `useSalesOrdersQuery.ts` |
-| **File Hook co-located** | `[ComponentName].hook.ts` | `SalesOrderTable.hook.ts` |
-| **File Type/Interface** | `[ComponentName].type.ts` hoặc `[name].entity.ts` | `SalesOrderTable.type.ts`, `sales-order.entity.ts` |
-| **File Unit Test co-located** | `[Name].test.ts` / `[Name].test.tsx` | `can-deliver-order.test.ts`, `useViewport.test.ts` |
-| **File Storybook co-located** | `[ComponentName].stories.tsx` | `V2Button.stories.tsx`, `V2Sidebar.stories.tsx` |
-| **Theme & Styles V2** | `src/v2/shared/styles/` & `src/v2/shared/theme/` | `v2-theme.css`, `v2ThemeHelper.ts` |
-| **Shadcn primitives** | `src/v2/shared/ui/<name>/` (Folder-per-component) | `@/v2/shared/ui` hoặc `@/v2/shared/ui/button` |
-| **Màu sắc** | No Blue Mandate — HSL Semantic Palette | CẤM dùng `bg-blue-600`, dùng `bg-primary` hoặc HSL token |
-| **Đa ngôn ngữ** | 100% i18n VI/EN | CẤM hardcode chuỗi string trong JSX, dùng `t('...')` |
+| Gọi API (token, refresh 401, retry GET, mở modal 409) | `v2HttpClient` | `src/v2/shared/api/v2HttpClient.ts` |
+| Thông báo lỗi từ server | `extractV2ApiError`, `isDocumentInUseError` | `src/v2/shared/utils/v2ApiError.ts` |
+| Toast | `useV2ToastStore` (+ `V2Toaster` đã mount ở `AppProviders`) | `src/v2/shared/stores/useV2ToastStore.ts` |
+| Modal chứng từ phụ thuộc (409) | `useV2DocumentDependencyStore` (+ `V2DocumentDependencyModal` đã mount) | `src/v2/shared/stores/`, `molecules/v2-document-dependency-modal/` |
+| Cấu hình cột/view theo bảng | `v2ColumnPreferencesStorage`, `v2ViewPresetStorage`, `applyV2SystemView` | `src/v2/shared/preferences/v2TablePreferenceStorages.ts` |
+| Đồng bộ preference lên server | `scheduleTablePreferenceSync` (key `v2:<tableId>`) | `src/v2/shared/preferences/v2TablePreferences.sync.ts` |
+| Nạp preference + ngôn ngữ khi đăng nhập | `loadV2ServerPreferences()` (một GET) | `src/v2/shared/preferences/v2ServerPreferences.ts` |
+| Ngôn ngữ V2 | `useV2LocaleStore` (seed một lần từ `erp-app` của V1) | `src/v2/shared/stores/useV2LocaleStore.ts` |
+| Dịch | `useV2Translation` (chỉ đọc dict V2 và module registry) | `src/v2/shared/hooks/useV2Translation.ts` |
+| Quyền | `useV2HasPermission` | `src/v2/shared/hooks/useV2HasPermission.ts` |
+| Ô nhập form chỉ đọc/sửa | `V2ReadValue`, `V2TextField` | `molecules/v2-form-controls/` |
+| Textarea | `V2Textarea` | `atoms/v2-textarea/` |
+| Khung trang / drawer / xác nhận | `V2ModulePage`, `V2StandardDrawer`, `V2ConfirmModal` | `templates/`, `organisms/`, `molecules/` |
+
+Preference bảng dùng store `useV2TablePreferencesStore` (persist key `v2_table_preferences`, `migrationVersion` = 1). Lần đầu chép cấu hình từ `erp_preferences` của V1 (chỉ đọc localStorage).
 
 ---
 
-## 💻 Code Patterns Mẫu Chuẩn
+## 4. Quy ước
 
-### 1. Switcher Pattern (< 15 LoC)
-File: `SalesOrderTable.tsx`
-```tsx
-import React from 'react';
-import { useViewport } from '@/v2/shared/hooks/useViewport';
-import { SalesOrderTableDesktop } from './SalesOrderTable.desktop';
-import { SalesOrderTableMobile } from './SalesOrderTable.mobile';
-import { SalesOrderTableProps } from './SalesOrderTable.type';
-
-export const SalesOrderTable: React.FC<SalesOrderTableProps> = (props) => {
-  const { isMobile } = useViewport();
-  return isMobile ? <SalesOrderTableMobile {...props} /> : <SalesOrderTableDesktop {...props} />;
-};
-```
-
-### 2. Viewport Hook & Breakpoint Engine
-File: `src/v2/shared/hooks/useViewport.ts`
-```ts
-import { useState, useEffect } from 'react';
-
-export interface ViewportState {
-  width: number;
-  isMobile: boolean;
-  isTablet: boolean;
-  isDesktop: boolean;
-}
-
-export function useViewport(): ViewportState {
-  const [width, setWidth] = useState<number>(() =>
-    typeof window !== 'undefined' ? window.innerWidth : 1280
-  );
-
-  useEffect(() => {
-    const handleResize = () => setWidth(window.innerWidth);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  return {
-    width,
-    isMobile: width < 768,
-    isTablet: width >= 768 && width < 1024,
-    isDesktop: width >= 1024,
-  };
-}
-```
-
-Co-located Test: `src/v2/shared/hooks/useViewport.test.ts`
-```ts
-import { describe, it, expect } from 'bun:test';
-import { renderHook, act } from '@testing-library/react';
-import { useViewport } from './useViewport';
-
-describe('useViewport Hook', () => {
-  it('phải nhận diện đúng Desktop khi width >= 1024px', () => {
-    global.innerWidth = 1200;
-    const { result } = renderHook(() => useViewport());
-    expect(result.current.isDesktop).toBe(true);
-    expect(result.current.isMobile).toBe(false);
-  });
-
-  it('phải nhận diện đúng Mobile khi width < 768px', () => {
-    global.innerWidth = 375;
-    const { result } = renderHook(() => useViewport());
-    expect(result.current.isMobile).toBe(true);
-    expect(result.current.isDesktop).toBe(false);
-  });
-});
-```
-
-### 3. Pure Business Domain Rule & Co-located Test
-File: `src/v2/modules/sales-orders/domain/rules/can-deliver-order.ts`
-```ts
-export interface OrderDeliveryCheckInput {
-  status: 'DRAFT' | 'CONFIRMED' | 'IN_DELIVERY' | 'DELIVERED' | 'CANCELLED';
-  remainingQuantity: number;
-  isCreditLocked?: boolean;
-}
-
-export interface DeliveryCheckResult {
-  canDeliver: boolean;
-  reason?: string;
-}
-
-export function canDeliverOrder(input: OrderDeliveryCheckInput): DeliveryCheckResult {
-  if (input.status === 'CANCELLED') {
-    return { canDeliver: false, reason: 'order_is_cancelled' };
-  }
-  if (input.status === 'DELIVERED') {
-    return { canDeliver: false, reason: 'order_already_delivered' };
-  }
-  if (input.isCreditLocked) {
-    return { canDeliver: false, reason: 'customer_credit_locked' };
-  }
-  if (input.remainingQuantity <= 0) {
-    return { canDeliver: false, reason: 'no_remaining_quantity' };
-  }
-  return { canDeliver: true };
-}
-```
-
-Co-located Test: `src/v2/modules/sales-orders/domain/rules/can-deliver-order.test.ts`
-```ts
-import { describe, it, expect } from 'bun:test';
-import { canDeliverOrder } from './can-deliver-order';
-
-describe('Domain Rule: canDeliverOrder', () => {
-  it('cho phép giao khi đơn đã xác nhận và còn số lượng', () => {
-    const result = canDeliverOrder({
-      status: 'CONFIRMED',
-      remainingQuantity: 5,
-    });
-    expect(result.canDeliver).toBe(true);
-  });
-
-  it('chặn giao khi khách hàng bị khóa công nợ', () => {
-    const result = canDeliverOrder({
-      status: 'CONFIRMED',
-      remainingQuantity: 5,
-      isCreditLocked: true,
-    });
-    expect(result.canDeliver).toBe(false);
-    expect(result.reason).toBe('customer_credit_locked');
-  });
-});
-```
+- **Namespace i18n:** `v2.<namespace>.<nhóm>.<khóa>`, với `namespace` = camelCase tên module. Nhóm cố định: `title`, `description`, `list`, `empty`, `create`, `listLoadError`, `columns.*`, `status.*`, `views.*`, `actions.*`, `form.*`, `delete.*`.
+- **Nav:** `v2.nav.items.<routeCamel>` và `v2.nav.sections.<section>`. Giá trị lấy đúng từ V1 khi migrate để UI không đổi.
+- **Chung:** `v2.common.close|cancel|save|actions`, `v2.dropdown.optionsTitle`.
+- **Cột STT:** do `V2StandardTable` tự render (`__index`). Không khai báo thêm cột `index`.
+- **Mã đối tác / mã chứng từ:** chỉ nhập khi tạo; sửa thì khóa. Nút sinh mã chỉ hiện khi tạo.
+- **Xóa:** xóa mềm, luôn có `V2ConfirmModal`.
+- **Lỗi:** mutation hiện toast; 409 `DOCUMENT_IN_USE` do modal chung xử lý (mutation không toast lại).
+- **Preference:** giữ nguyên `tableId` của V1 (`erp-<x>-table`) để người dùng không mất cấu hình cột.
 
 ---
 
-## 🛡️ Platform Split Decision Matrix
+## 5. Playbook migrate module V1 → V2
 
-```
-useViewport() → breakpoints:
-  mobile  : < 768px
-  tablet  : 768px – 1023px (mặc định xem như mobile trừ khi có UI riêng)
-  desktop : ≥ 1024px
-```
+1. **Đọc V1.** Liệt kê feature trong `src/modules/<x>-core/` (cột, filter, view, drawer và các tab, toast, quyền, preference, nút hành động, quy tắc nghiệp vụ, endpoint). Đây là nguồn cho bảng parity.
+2. **Chạy generator.** `bun plop v2-module ...` với tham số lấy từ V1 (`tableInput` = tableId V1, `fieldSpec` = cột và form V1, `permissionCollection` = resource V1). Dùng `wire = true`.
+3. **Chỉnh theo V1.**
+   - `api/dtos/`, `api/<plural>Api.ts`: khớp backend, thêm `toListParams` đặc thù, đường dẫn đúng.
+   - `domain/rules/`: quy tắc nghiệp vụ của V1 (khóa trường, validate, trạng thái).
+   - `views.ts`, `columns.tsx`: cột và view như V1.
+   - `<namespace>.locale.ts` và nav: nhãn đúng từ V1 (lấy giá trị thật, đừng đoán).
+   - `drawers/`, `pages/`: section, tab, row action, quyền create/update/delete.
+4. **Lập bảng parity** (mục 6), tick từng dòng bằng bằng chứng (code hoặc test).
+5. **Audit và kiểm thử** (mục 7). Chạy `bunx prettier --write` trên module trước khi kiểm tra.
+6. **So sánh thủ công** `/` (V1) và `/v2/<route>`: lọc, sort, đổi view, tạo, sửa, xóa, toast, quyền, ngôn ngữ VI/EN, tải lại giữ cấu hình.
+7. **Cập nhật skill module** `.agents/skills/modules/<module>/SKILL.md` (kiến trúc, parity, phần còn lại từ V1).
 
-| Tầng Atomic | Áp dụng Platform Split? | Giải pháp thực thi |
+---
+
+## 6. Bảng parity mẫu (business-partners)
+
+| Tính năng V1 | V2 | Ghi chú |
 | :--- | :---: | :--- |
-| **Atoms (L1)** | ❌ Không | Dùng Tailwind class responsive (`sm:`, `md:`, `lg:`) |
-| **Molecules (L2)** | ❌ Không | Dùng Tailwind class responsive |
-| **Organisms (L3)** | ✅ Bắt buộc khi layout khác biệt | Tách `[Name].desktop.tsx` (Table) và `[Name].mobile.tsx` (Card list) |
-| **Templates (L4)** | ✅ Bắt buộc | `SpreadsheetPageTemplate.desktop.tsx` vs `MobilePageTemplate.mobile.tsx` |
-| **Pages (L5)** | ✅ Bắt buộc khi UX khác biệt | Tách riêng file page Desktop và Mobile |
-| **App Shell** | ✅ Bắt buộc | `V2AppLayout.desktop.tsx` (Sidebar) vs `V2AppLayout.mobile.tsx` (Bottom Nav) |
-| **Drawers** | ✅ Bắt buộc | Desktop: Right Drawer (65vw); Mobile: Bottom Sheet trượt từ đáy |
-| **Modals / Dialogs** | ✅ Bắt buộc | Desktop: Centered Glass Modal (`V2Modal.desktop.tsx`, `V2ConfirmModal.desktop.tsx`); Mobile: Bottom Sheet (`V2Modal.mobile.tsx`, `V2ConfirmModal.mobile.tsx`) |
-| **Popovers** | ✅ Bắt buộc | Desktop: Floating Glass Panel (`V2Popover.desktop.tsx`); Mobile: Bottom Sheet Drawer với Grab Handle (`V2Popover.mobile.tsx`) |
-| **Tooltips** | ❌ Không split (Atom) | `V2Tooltip.tsx` (`AppTooltip`): Tự động bypass trên touch/mobile để chống kẹt hover |
+| Cột STT 1-based | ✅ | Có sẵn từ `V2StandardTable` |
+| Badge "Ngưng" cạnh mã khi INACTIVE + tooltip | ✅ | Cột mã trong `businessPartner-table` |
+| Copy mã, MST, điện thoại, email | ✅ | `V2TextField` tự thêm nút copy cho `font-mono` và email |
+| Mã chỉ nhập khi tạo, nút sinh mã chỉ khi tạo | ✅ | `codeEditable` từ rules |
+| Lọc khoảng ngày `createdAt` | ✅ | Backend hỗ trợ `date_ranges` |
+| Page size mặc định 50 (≥ 900px) / 20 | ✅ | `getDefaultPageSize` của V2 |
+| Toast tạo/sửa/xóa thành công và thất bại | ✅ | Theo module (không qua interceptor toàn cục) |
+| Toast thiếu thông tin, lỗi tải danh sách, lỗi tải chi tiết | ✅ | |
+| Modal chứng từ phụ thuộc khi xóa (409) | ✅ | `V2DocumentDependencyModal` |
+| Cột/view lưu theo bảng, đồng bộ server | ✅ | Key `v2:<tableId>` |
+| Chặn trang khi thiếu quyền đọc | ✅ | Route guard `PermissionGuard` |
+| Cờ 403 toàn cục, luồng impersonation | ❌ | Hạ tầng auth, không thuộc module (ghi nhận, chưa làm) |
 
 ---
 
-## 💡 AppPopover & AppTooltip Ergonomic Pattern
+## 7. Bẫy đã gặp
 
-### 1. V2Tooltip (Atom) — `src/v2/shared/components/atoms/v2-tooltip/`
-Cung cấp component gợi ý thao tác dạng 1 thẻ gọn nhẹ, tự xử lý độ trễ (delay 200ms) và vô hiệu hóa an toàn trên mobile touch:
-```tsx
-import { AppTooltip } from "@/v2/shared/components/atoms";
-
-// Sử dụng trực quan bao quanh bất kỳ trigger nào
-<AppTooltip content="Lưu lại chứng từ kho">
-  <V2Button variant="default">Lưu</V2Button>
-</AppTooltip>
-```
-
-### 2. V2Popover (Molecule) — `src/v2/shared/components/molecules/v2-popover/`
-Hỗ trợ Platform Split thông minh với Desktop Floating Glass Panel và Mobile Bottom Sheet Drawer:
-```tsx
-import { AppPopover } from "@/v2/shared/components/molecules";
-
-<AppPopover
-  title="Tùy chọn hiển thị"
-  content={<div>Nội dung bộ lọc nâng cao</div>}
->
-  <V2Button variant="outline">Tùy chọn</V2Button>
-</AppPopover>
-```
+- **Plop và prompt trùng tên:** câu trả lời prompt ghi đè dữ liệu đã xử lý trong template. Vì vậy prompt đặt tên `pluralName`, `fieldSpec`, `routeInput`, `tableInput`.
+- **Template có `{{` trong JSX:** `={{ ... }}` và `{{name}}}` bị Handlebars hiểu nhầm. Viết `={ { ... } }` và thêm khoảng trắng trước `}`.
+- **Marker chèn hai lần vào cùng file:** tag idempotent phải duy nhất theo từng lần chèn (`<module>:<vị trí>`).
+- **Import không dùng** trong module sinh ra: sinh cờ `hasText`, `needsReadValue`, `hasNextCode` để chỉ import khi cần.
+- **`resetKey` của `V2ModuleTab` là chuỗi**, không phải số.
+- **Trường `status` có thể null** từ backend: truyền `?? ""` cho badge.
+- **Mock test ngày:** `Intl` ném `RangeError` với chuỗi không phải ngày. Fixture phải đúng kiểu trường.
+- **`moduleRegistry.test`** kiểm tra `common.close` không có trong registry: đừng đổi key đó khi sửa dịch.
 
 ---
 
-
-## 🔍 Grep Audit Suite (Chạy trước khi Commit / Hoàn Tất Task)
+## 8. Kiểm toán (chạy trước khi báo hoàn tất)
 
 ```bash
-# 1. Kiểm tra vi phạm No Blue Mandate (phải trả về 0 kết quả)
-grep -rn "blue-" src/v2/modules/[module-name]/
-
-# 2. Kiểm tra file vượt ngưỡng 180 LoC
-find src/v2/modules/[module-name]/ -name "*.tsx" -o -name "*.ts" | xargs wc -l | awk '$1 > 180 {print}'
-
-# 3. Quét hardcode chuỗi text trong JSX
-grep -rn '>[A-ZÀ-Ỹa-zà-ỹ0-9 ]*<' src/v2/modules/[module-name]/
-
-# 4. Kiểm tra TypeScript toàn dự án
-cd erp/erp-web && bunx tsc --noEmit
-
-# 5. Chạy unit tests của module
-cd erp/erp-web && bun test src/v2/modules/[module-name]/
+cd erp/erp-web
+# Không import V1 (chỉ authStore được phép)
+grep -rnE "from \"@/(core|shared|modules|pages|components)/" src/v2/modules/<module> src/v2/shared --include="*.ts" --include="*.tsx" | grep -vE "\.test\.|\.stories\.|authStore"
+# Key dịch ngoài namespace v2.
+grep -rnP "\bt\(\s*\"(?!v2\.)[a-zA-Z]+\.[A-Za-z.]+\"" src/v2 --include="*.ts" --include="*.tsx" | grep -v "\.test\.\|stories"
+# No Blue và textarea thô
+grep -rn "blue-" src/v2/modules/<module>
+grep -rn "<textarea" src/v2/modules/<module>
+# Dưới 180 dòng
+find src/v2/modules/<module> -name "*.ts*" -exec wc -l {} + | awk '$1>180 && $2!="total"'
+# Chất lượng
+bunx tsc --noEmit && bun run check:ci && bun run test src/v2
 ```
+
+---
+
+## 9. Hạn chế đã biết
+
+- Generator chỉ sinh khung. Nhãn, quy tắc nghiệp vụ, quyền và endpoint thực phải chỉnh tay.
+- Chưa có tách desktop/mobile cho module (xem mục 1).
+- V2 vẫn dùng `authStore` của V1 cho session.
+- Chưa có E2E trong `src/v2/tests/e2e/`.
