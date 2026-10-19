@@ -12,14 +12,17 @@ export function getKgaraStatusLabel(status?: string | number | null): string {
   if (status === null || status === undefined || status === "") return "";
 
   if (typeof status === "number") {
+    // Mã theo erp-api garage-cases SKILL (cột tinh_trang_dich_vu)
     switch (status) {
-      case 1:
+      case 0:
         return "Tiếp nhận";
-      case 2:
+      case 1:
         return "Báo giá";
+      case 2:
+        return "Đang sửa";
       case 3:
         return "Kết thúc";
-      case 4:
+      case 9:
         return "Đã hủy";
       default:
         return `Trạng thái ${status}`;

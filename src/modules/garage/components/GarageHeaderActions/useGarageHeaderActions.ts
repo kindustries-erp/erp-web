@@ -29,6 +29,7 @@ export function useGarageHeaderActions() {
   const [exportTableQuery, setExportTableQuery] = useState<
     GarageCasesTableQuery | undefined
   >(undefined);
+  const [workflowDrawerOpen, setWorkflowDrawerOpen] = useState(false);
 
   const openSync = useCallback((mode: GarageSyncMode) => {
     setSyncMode(mode);
@@ -42,6 +43,9 @@ export function useGarageHeaderActions() {
   }, []);
   const closeExport = useCallback(() => setExportDrawerOpen(false), []);
 
+  const openWorkflow = useCallback(() => setWorkflowDrawerOpen(true), []);
+  const closeWorkflow = useCallback(() => setWorkflowDrawerOpen(false), []);
+
   const translate = useCallback(
     (key: string, def?: string): string =>
       t(key, { defaultValue: def }) as string,
@@ -54,11 +58,12 @@ export function useGarageHeaderActions() {
         {
           canSyncGarage,
           onExportExcel: () => openExport(),
+          onOpenWorkflow: () => openWorkflow(),
           onSyncGrossProfit: () => openSync("gross-profit"),
         },
         translate,
       ),
-    [canSyncGarage, openExport, openSync, translate],
+    [canSyncGarage, openExport, openSync, openWorkflow, translate],
   );
 
   return {
@@ -73,6 +78,9 @@ export function useGarageHeaderActions() {
     exportTableQuery,
     openExport,
     closeExport,
+    workflowDrawerOpen,
+    openWorkflow,
+    closeWorkflow,
   };
 }
 

@@ -228,3 +228,27 @@ Resource RBAC: `garage`
 - Thu khách hàng và Thu bảo hiểm phải nằm trong hai `DrawerSection` độc lập, mỗi section chứa trực tiếp một `DataTable`.
 - Partner tables dùng cùng DataTable/scroll/header contract với monthly detail tables; không gom hai bảng vào một section wrapper.
 - Cột Loại nghiệp vụ của classification table dùng `justify-start`/`text-left`.
+
+## 13. Sơ đồ quy trình Garage Hub (2026-10-19)
+
+- Nút "Xem sơ đồ quy trình" nằm trong nhóm "Báo cáo & Xuất file" của dropdown `GarageHeaderActions` (dùng chung tab Tổng quan và Hoạt động garage), mở `GarageWorkflowDrawer`.
+- Drawer có 2 tab, cùng một `StandardFormDrawer` (`size="xl"`):
+  - **Người dùng cuối**: lưới ô cờ ca-rô, hàng là bộ phận (`r1`..`r6`), cột là giai đoạn (`c1`..`c5`).
+  - **Kỹ thuật (Dev)**: cây phân tầng trái → phải, 5 cột: Nguồn kích hoạt, Service điều phối, Garage Hub, Dữ liệu, và Báo cáo & phân tích (lớp chỉ đọc, ẩn mặc định). Thẻ tô màu theo module (vạch trái + chữ nhóm), không còn lane. Nhãn mũi tên ghi cơ chế gọi (DI, cron, HTTP, ghi DB...) ở dòng dưới; số trên mũi tên là thứ tự gọi.
+- Thư mục `src/modules/garage/components/GarageWorkflowDrawer/`:
+  - `garageWorkflowTypes.ts`: kiểu dữ liệu lane, cột, node, edge; `step` (số thứ tự) và `description` của canvas.
+  - `endUserCanvasData.ts`, `devCanvasData.ts`: dữ liệu tĩnh của từng canvas. `garageWorkflowData.ts` ghép hai canvas và thứ tự tab.
+  - `GarageWorkflowCanvas.tsx`, `WorkflowNodeCard.tsx`, `WorkflowEdge.tsx`: React Flow readonly, màu hex tường minh (bảng màu trầm, icon theo bộ phận ở `workflowIcons.ts`), nhãn mũi tên là HTML có vòng số.
+  - `edgeRouter.ts`: định tuyến mũi tên trực giao trên lưới 10px bằng A* (tránh thẻ, ít rẽ). Canvas tính đường đi trước khi vẽ và đưa vào `data.points`; `edgeRoutes.spec.ts` kiểm tra không mũi tên nào cắt thẻ trên dữ liệu thật. Lớp xếp: lane/cột `zIndex -1`, thẻ `10`, tiêu đề xuất `20`, mũi tên `30`. Số thứ tự: end-user là vòng số trên thẻ, dev là tiền tố trên nhãn mũi tên.
+  - `edgeLabels.ts`: đặt nhãn trên đường đi, tránh đè thẻ, đè nhãn khác, ưu tiên ít cắt mũi tên khác. `routeEdges` định tuyến cả batch và phạt đi chồng lên mũi tên đã đi trước.
+  - `workflowPalette.ts`: màu lane lấy từ bảng chart dashboard (`PNL_PALETTE_LIGHT`), pha nhạt bằng `tonePalette`.
+  - Mũi tên có `kind: "read"` (chỉ đọc dữ liệu) ẩn mặc định, bật bằng nút trên thanh công cụ. Thanh công cụ nằm trên khung canvas, không đè sơ đồ.
+  - `WorkflowCanvasToolbar.tsx` (zoom, full screen, % zoom), `WorkflowLegend.tsx` (panel "Cách đọc", không vào ảnh xuất), `useCanvasFullscreen.ts` (Fullscreen API cho đúng khung canvas).
+  - `canvasBounds.ts`: khung bao canvas; `withHeading` cộng khối tiêu đề khi xuất.
+  - `useWorkflowExport.ts`: xuất PNG và PDF A3 (tự chọn ngang hoặc dọc) theo khung bao toàn bộ sơ đồ, nền trắng cố định, lọc controls/minimap/panel. Khi xuất, drawer bật `exportMode` để vẽ khối tiêu đề + mô tả phía trên sơ đồ, chờ 2 frame rồi chụp, sau đó tắt.
+- **Dữ liệu tĩnh**: sơ đồ không đọc backend. Khi đổi rule Hub, cashflow, hoa hồng, sync hoặc báo cáo ở API, phải cập nhật `endUserCanvasData.ts` / `devCanvasData.ts` và nhánh `workflow` trong `locales/vi.ts` + `en.ts`.
+- `statusCode` chỉ gắn cho mã đã xác minh trong code: `3` = Kết thúc (`KGARA_STATUS_COMPLETED`, tên hiển thị theo KGara), `9` = Hủy.
+- Test: `garageWorkflowData.spec.ts` (vị trí, chồng lấn, key), `workflowEdgeHandles.spec.ts`, `useWorkflowExport.spec.ts`, `garageWorkflowLocales.spec.ts` (parity vi/en), `GarageHeaderActions/buildGarageHeaderActions.spec.tsx`.
+- `KgaraCaseStatusBadge.tsx` dùng đúng mã của API skill: `0` Tiếp nhận, `1` Báo giá, `2` Đang sửa, `3` Kết thúc, `9` Đã hủy. Nếu đổi mã ở API thì sửa badge và test cùng lúc.
+- **Hiển thị mũi tên**: thẻ có chiều cao tối thiểu chung (`WORKFLOW_CARD_MIN_HEIGHT` = 112) để các thẻ cùng hàng có tâm cạnh thẳng hàng. Canvas đo chiều cao thật của thẻ (`useNodesInitialized` + `node.measured`) rồi mới định tuyến; đầu và cuối mũi tên căn đúng tâm cạnh thẻ, đoạn nằm trong khe giữa các cột/hàng thẻ được căn về giữa khe (`edgeGutters.ts`, nhiều mũi tên cùng khe chia slot đối xứng). Nhãn mũi tên là HTML `zIndex: 1000` nên luôn nằm trên mọi mũi tên.
+- **Lớp chỉ đọc**: thẻ/cột `layer: "read"` và mũi tên `kind: "read"` ẩn mặc định; trạng thái `showRead` nằm ở `GarageWorkflowDrawer` (theo từng canvas) để khung bao khi xuất PNG/PDF khớp với màn hình (`canvasBounds(canvas, { showRead })`).

@@ -4,7 +4,7 @@ import type { GaragePnlTrendPoint } from "../../api/garageOpexApi";
  * Bảng màu theo tông chart Dòng tiền (xanh lá #059669 = thu, cam #ea580c = chi), đã chạy
  * validate_palette. Thứ tự slot: Doanh thu, Chi phí, Lợi nhuận gộp, Đỏ, Tím, Teal, Vàng.
  */
-const PNL_PALETTE_LIGHT = [
+export const PNL_PALETTE_LIGHT = [
   "#059669",
   "#EA580C",
   "#475569",

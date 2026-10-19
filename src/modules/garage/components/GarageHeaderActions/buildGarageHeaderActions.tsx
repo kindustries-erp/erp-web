@@ -1,10 +1,11 @@
 import React from "react";
-import { FileSpreadsheet, TrendingUp } from "lucide-react";
+import { FileSpreadsheet, Network, TrendingUp } from "lucide-react";
 import type { ActionDropdownItem } from "@/shared/components/ActionDropdown";
 
 export interface GarageHeaderActionsConfig {
   canSyncGarage?: boolean;
   onExportExcel?: () => void;
+  onOpenWorkflow?: () => void;
   onSyncGrossProfit?: () => void;
 }
 
@@ -24,6 +25,11 @@ export function buildGarageHeaderActions(
           label: t("cases.actions.exportExcel", "Xuất Excel"),
           icon: <FileSpreadsheet className="w-4 h-4 text-emerald-600" />,
           onClick: () => config.onExportExcel?.(),
+        },
+        {
+          label: t("cases.actions.viewWorkflow", "Xem sơ đồ quy trình"),
+          icon: <Network className="w-4 h-4 text-violet-600" />,
+          onClick: () => config.onOpenWorkflow?.(),
         },
       ],
     },
