@@ -10,6 +10,7 @@ import {
   getGarageCashflowColumns,
   getGarageCashflowRowActions,
 } from "./GarageCashflowTable.columns";
+import { buildGarageCashflowSummaryRow } from "./GarageCashflowTable.summary";
 import { usePageViewPresets } from "@/shared/hooks/usePageViewPresets";
 import {
   useUserPreferencesStore,
@@ -184,6 +185,28 @@ export const GarageCashflowTable: React.FC<GarageCashflowTableProps> = ({
     [onExportExcel, tableHook, t],
   );
 
+  const summaryRow = useMemo(
+    () =>
+      buildGarageCashflowSummaryRow({
+        items: tableHook.data,
+        totals: tableHook.totals,
+        page: tableHook.page,
+        pageSize: tableHook.pageSize,
+        total: tableHook.total,
+        totalPages: tableHook.totalPages,
+        t,
+      }),
+    [
+      tableHook.data,
+      tableHook.totals,
+      tableHook.page,
+      tableHook.pageSize,
+      tableHook.total,
+      tableHook.totalPages,
+      t,
+    ],
+  );
+
   return (
     <SpreadsheetPageTemplate
       title={t("nav.items.garageCashflow", "Thu chi garage")}
@@ -199,6 +222,7 @@ export const GarageCashflowTable: React.FC<GarageCashflowTableProps> = ({
       columns={columns}
       defaultColumnVisibility={DEFAULT_GARAGE_CASHFLOW_COLUMN_VISIBILITY}
       customActionsNode={viewTabsNode}
+      summaryRow={summaryRow}
       items={tableHook.data}
       total={tableHook.total}
       totalPages={tableHook.totalPages}

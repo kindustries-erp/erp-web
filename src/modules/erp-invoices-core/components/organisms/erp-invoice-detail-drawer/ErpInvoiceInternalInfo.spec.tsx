@@ -255,3 +255,41 @@ describe("ErpInvoiceInternalSidebar", () => {
     expect(screen.getAllByText("Mặc định").length).toBeGreaterThanOrEqual(2);
   });
 });
+
+describe("ErpInvoiceInternalSidebar - Ghi chú", () => {
+  it("shows the notes value, not the item description", async () => {
+    renderWithQuery(
+      <ErpInvoiceInternalSidebar
+        form={
+          {
+            invoiceNo: "INV-126",
+            direction: "IN",
+            description: "Sơn màu đen 5M-21 - 1L/Lon",
+            notes: "Bổ sung Thiên Thủy 19/10",
+            globalAttributes: {},
+          } as any
+        }
+        editMode={false}
+        fieldSet={vi.fn()}
+        invoiceId="inv-126"
+        direction="IN"
+        detailInvoice={
+          {
+            id: "inv-126",
+            invoiceNo: "INV-126",
+            direction: "IN",
+            description: "Sơn màu đen 5M-21 - 1L/Lon",
+            notes: "Bổ sung Thiên Thủy 19/10",
+          } as any
+        }
+      />,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("Bổ sung Thiên Thủy 19/10")).toBeInTheDocument();
+    });
+    expect(
+      screen.queryByText("Sơn màu đen 5M-21 - 1L/Lon"),
+    ).not.toBeInTheDocument();
+  });
+});

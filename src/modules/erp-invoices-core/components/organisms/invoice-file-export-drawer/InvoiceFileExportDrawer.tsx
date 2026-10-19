@@ -22,7 +22,7 @@ export function InvoiceFileExportDrawer(props: InvoiceFileExportDrawerProps) {
       title={t("erpInvoices:fileExportDrawer.title", "Xuất PDF hóa đơn")}
       subtitle={t(
         "erpInvoices:fileExportDrawer.subtitle",
-        "Tải ZIP chứa file PDF/XML của hóa đơn theo kỳ, theo filter hoặc đã chọn",
+        "Tải các file hóa đơn đúng loại đã chọn (PDF và/hoặc XML), theo kỳ, theo filter hoặc đã chọn",
       )}
       icon={<FileArchive className="w-4 h-4" />}
       leftTitle={t("erpInvoices:fileExportDrawer.infoTitle", "Thông tin tải")}
@@ -65,7 +65,7 @@ export function InvoiceFileExportDrawer(props: InvoiceFileExportDrawerProps) {
           modes={hook.modes}
           selectedCount={selectedIds.length}
           startIcon={<Download className="w-4 h-4 mr-1.5" />}
-          startLabel={t("erpInvoices:fileExportDrawer.start", "Tải ZIP")}
+          startLabel={t("erpInvoices:fileExportDrawer.start", "Tải hóa đơn")}
         >
           <InvoiceExportFileTypeSelector
             value={hook.fileTypes}

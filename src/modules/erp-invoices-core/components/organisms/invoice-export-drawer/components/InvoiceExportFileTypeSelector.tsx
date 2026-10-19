@@ -2,7 +2,7 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { Checkbox } from "@/shared/components/ui/checkbox";
 
-export type InvoiceExportFileType = "pdf" | "xml";
+export type InvoiceExportFileType = "pdf" | "xml" | "zip";
 
 export interface InvoiceExportFileTypeSelectorProps {
   value: InvoiceExportFileType[];
@@ -30,6 +30,13 @@ export function InvoiceExportFileTypeSelector({
       label: t(
         "erpInvoices:exportDrawer.fileTypeXml",
         "File XML (Dữ liệu gốc hóa đơn điện tử)",
+      ),
+    },
+    {
+      type: "zip",
+      label: t(
+        "erpInvoices:exportDrawer.fileTypeZip",
+        "File ZIP (Gói hóa đơn gốc của nhà cung cấp)",
       ),
     },
   ];

@@ -2,6 +2,7 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { GarageCaseSyncDrawer } from "../GarageCaseSyncDrawer";
 import { GarageExportDrawer } from "../GarageExportDrawer";
+import { GarageWorkflowDrawer } from "../GarageWorkflowDrawer";
 import type { GarageExportDefaultReport } from "../../export/garageExportReportTypes";
 import type { GarageDashboardExportRange } from "../GarageDashboardExportDrawer";
 import type { GarageHeaderActionsState } from "./useGarageHeaderActions";
@@ -57,6 +58,10 @@ export function GarageHeaderActionDrawers({
         initialBranchId={branchId}
         tableQuery={actions.exportTableQuery}
         initialRange={initialRange}
+      />
+      <GarageWorkflowDrawer
+        open={actions.workflowDrawerOpen}
+        onClose={actions.closeWorkflow}
       />
     </>
   );

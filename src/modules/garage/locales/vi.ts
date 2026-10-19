@@ -355,6 +355,7 @@ export const garageVi = {
       viewFilteredCases: "Xem chi tiết danh sách vụ việc",
       exportGroup: "Báo cáo & Xuất file",
       exportExcel: "Xuất Excel",
+      viewWorkflow: "Xem sơ đồ quy trình",
     },
     exportDrawer: {
       title: "Xuất Excel bảng kê phiếu dịch vụ",
@@ -1602,6 +1603,666 @@ export const garageVi = {
       partsCost: "Giá vốn PT",
       discountAmount: "Chiết khấu",
       warehouseCode: "Mã kho",
+    },
+  },
+  workflow: {
+    toolbar: {
+      zoomIn: "Phóng to",
+      zoomOut: "Thu nhỏ",
+      fit: "Vừa khung",
+      enterFullscreen: "Toàn màn hình",
+      exitFullscreen: "Thoát toàn màn hình",
+      showRead: "Luồng đọc dữ liệu",
+      hideRead: "Ẩn luồng đọc",
+      flowsLabel: "Luồng tự động:",
+      flowAll: "Tất cả luồng",
+      flowAllHint: "Hiển thị mọi luồng, không làm mờ luồng nào",
+      canvasLabel: "Sơ đồ:",
+      clearSelection: "Bỏ chọn thẻ",
+    },
+    legend: {
+      step: "Số thứ tự thao tác",
+      solidArrow: "Luồng chính",
+      dashedArrow: "Cần xác minh",
+      readArrow: "Chỉ đọc dữ liệu",
+      completed: "Kết thúc (mã 3)",
+      cancelled: "Hủy (mã 9)",
+    },
+    drawer: {
+      title: "Sơ đồ quy trình Garage Hub",
+      subtitle:
+        "Hai góc nhìn: vận hành cho người dùng cuối, kiến trúc module cho dev",
+      exportPng: "Tải PNG",
+      exportPdf: "Tải PDF",
+      tab: {
+        endUser: "Người dùng cuối",
+        dev: "Kỹ thuật (Dev)",
+      },
+    },
+    flows: {
+      forecast: "Phiếu Kết thúc → tự sinh Dự thu",
+      opex: "Lưu phiếu chi HHBH / vật tư → tự ghi OPEX",
+      commission: "Mở báo cáo P&L → tự sinh phiếu hoa hồng",
+      receipt:
+        "Lưu phiếu thu/chi gắn phiếu dịch vụ → tự cấn trừ, đặt lại Dự thu",
+      manual: "Thủ công (người dùng thao tác)",
+    },
+    flowDescriptions: {
+      forecast:
+        "Khi sync KGara thấy phiếu chuyển sang Kết thúc, hệ thống tự sinh phiếu thu Dự thu (EXPECTED) hạn +7 ngày; rời Kết thúc thì phiếu tự bị hủy.",
+      opex: "Khi lưu phiếu chi nội dung HHBH hoặc Vật tư tiêu hao ở trạng thái Đã duyệt hoặc Đã chi, hệ thống tự ghi dòng chi phí vào OPEX trong cùng transaction.",
+      commission:
+        "Khi mở báo cáo P&L, hệ thống chạy nền để sinh phiếu chi hoa hồng PENDING (và phiếu delta nếu P&L tăng sau khi đã chi); không có cron riêng.",
+      receipt:
+        "Khi lưu phiếu thu hoặc chi có gắn phiếu dịch vụ, hệ thống tự cấn trừ vào phiếu và đặt lại Dự thu theo số còn phải thu.",
+      manual:
+        "Các thao tác người dùng chủ động làm: cập nhật trạng thái phiếu trên KGara, cấn trừ tay, nhập chi phí vận hành.",
+    },
+    endUser: {
+      title: "Vận hành garage: xưởng, thu chi, công nợ",
+      description:
+        "Luồng vận hành từ tiếp nhận xe đến thu chi, công nợ và báo cáo. Số trên thẻ là thứ tự thao tác; mũi tên màu A–D là các luồng tự động.",
+      corner: "Bộ phận \\ Giai đoạn",
+      columns: {
+        c1: "Tiếp nhận & Báo giá",
+        c2: "Sửa chữa",
+        c3: "Kết thúc",
+        c4: "Thu chi & Công nợ",
+        c5: "Đối soát & Báo cáo",
+      },
+      lanes: {
+        r1: "Xưởng & Cố vấn",
+        r2: "Hệ thống tự động",
+        r3: "Kế toán: thu tiền",
+        r4: "Kế toán: chi tiền",
+        r5: "Kế toán: chi đặc thù",
+        r6: "Công nợ & đối soát",
+        r7: "Quản lý & báo cáo",
+      },
+      nodes: {
+        e1: {
+          title: "Tạo phiếu trên KGara",
+          badge1: "Tiếp nhận xe, lập báo giá",
+        },
+        e2: { title: "Đang sửa", badge1: "Cập nhật chi phí dòng, ghi chú" },
+        e3: {
+          title: "Kết thúc",
+          badge1: "Giao xe, hoàn thành công việc",
+          badge2: "Hủy (9): loại khỏi báo cáo",
+        },
+        s1: {
+          title: "Đồng bộ KGara",
+          badge1: "09:15 · 15:15 · 16:15 · 17:15 · 21:15",
+          badge2: "Cũng có nút Đồng bộ tay",
+        },
+        s2: {
+          title: "Checkpoint xe đang làm",
+          badge1: "Dự thu theo xe đang làm",
+        },
+        s3: {
+          title: "Hệ thống sinh Dự thu",
+          badge1: "Phiếu Kết thúc → sinh phiếu thu EXPECTED",
+          badge2: "Còn phải thu ≤ 0 → không sinh",
+        },
+        s4: { title: "Đặt lại Dự thu", badge1: "Sau mỗi lần thu hoặc cấn trừ" },
+        s5: {
+          title: "Hoa hồng P&L",
+          badge1: "Mở báo cáo P&L: sinh phiếu chi hoa hồng PENDING",
+          badge2: "Delta khi P&L tăng sau PAID",
+        },
+        dt: {
+          title: "Dự thu (EXPECTED)",
+          badge1: "Phiếu thu tự sinh khi phiếu Kết thúc",
+          badge2: "Hạn = hoàn thành + 7 ngày",
+          badge3: "Chưa tính vào thực thu",
+        },
+        t1: {
+          title: "Thu tiền → Thực thu",
+          badge1: "Phiếu thu gắn phiếu dịch vụ",
+          badge2: "Thực thu = phiếu thu không còn EXPECTED",
+          badge3: "Trừ công nợ phải thu",
+        },
+        t2: {
+          title: "Đối soát sao kê",
+          badge1: "Khớp giao dịch ngân hàng",
+          badge2: "Thu ngoài sổ khi cần",
+        },
+        dc: {
+          title: "Dự chi (PENDING / APPROVED)",
+          badge1: "Phiếu chi chưa chi tiền",
+          badge2: "Chưa trừ công nợ phải trả",
+        },
+        p1: {
+          title: "Thực chi (PAID)",
+          badge1: "Trừ công nợ phải trả",
+          badge2: "Phiếu PAID bị khóa",
+        },
+        p2: {
+          title: "Chi phí vận hành (OPEX)",
+          badge1: "Nhập tay hoặc lặp hàng tháng",
+          badge2: "Nhận khoản HHBH và vật tư tiêu hao",
+        },
+        hh: {
+          title: "HHBH (nội dung 4)",
+          badge1: "Phiếu chi nhóm hoa hồng",
+          badge2: "Không trừ công nợ",
+          badge3: "Đã duyệt / đã chi → ghi OPEX",
+          badge4: "P&L: mục 4.2 Chi phí bán hàng",
+        },
+        vt: {
+          title: "Vật tư tiêu hao (nội dung 10)",
+          badge1: "Phiếu chi vật tư xưởng",
+          badge2: "Không trừ công nợ",
+          badge3: "Đã duyệt / đã chi → ghi OPEX",
+          badge4: "P&L: nhóm Giá vốn",
+        },
+        d1: {
+          title: "Công nợ phải thu",
+          badge1: "Khách hàng và bảo hiểm, theo tuổi nợ",
+        },
+        d2: {
+          title: "Hóa đơn VAT",
+          badge1: "Bán ra (OUT), mua vào (IN)",
+          badge2: "Cấn trừ công nợ phải trả NCC",
+        },
+        m1: { title: "Dòng tiền ròng", badge1: "Thực thu − Thực chi" },
+        m2: {
+          title: "Dashboard & P&L",
+          badge1: "Doanh thu, lãi gộp theo ngày hoàn thành",
+          badge2: "Bỏ phiếu đã xóa mềm và phiếu hủy",
+        },
+      },
+      edges: {
+        ee1: "Bắt đầu sửa",
+        ee2: "Hoàn tất",
+        ee3: "Hệ thống sinh dự thu",
+        ee4: "Cập nhật",
+        ee5: "Sinh phiếu thu",
+        ee6: "Chờ thu",
+        ee7: "Thu xong",
+        ee8: "Cấn trừ",
+        ee9: "Đã chi",
+        ee10: "Ghi OPEX",
+        ee11: "Ghi OPEX",
+        ee12: "Phiếu hoa hồng",
+        ee13: "Thực chi",
+        ee14: "Thực thu",
+        ee15: "Chi phí",
+        ee16: "Phải thu",
+      },
+    },
+    dev: {
+      title: "Kiến trúc module Garage",
+      description:
+        "Mỗi khung là một module. Mũi tên màu A–D là luồng tự động qua Garage Hub; chọn một luồng để làm nổi.",
+      lanes: {
+        activity: "Hoạt động garage",
+        hub: "Garage Hub",
+        cashflow: "Thu chi",
+        opex: "OPEX",
+        read: "Báo cáo & phân tích (chỉ đọc)",
+      },
+      groups: {
+        sync: "SYNC",
+        kgara: "KGARA",
+        cases: "PHIẾU DỊCH VỤ",
+        pnl: "P&L & DASHBOARD",
+        hub: "GARAGE HUB",
+        cashflow: "THU CHI",
+        opex: "OPEX",
+        debts: "CÔNG NỢ & ĐỐI SOÁT",
+      },
+      nodes: {
+        cron: {
+          title: "KgaraSyncScheduler",
+          badge1: "Cron 09:15 · 15:15 · 16:15 · 17:15 · 21:15",
+          badge2: "Heartbeat 30 giây, mỗi slot chạy một lần",
+        },
+        kgaraApi: {
+          title: "KGara API",
+          badge1: "Phiếu dịch vụ, chi tiết, công nợ",
+        },
+        sy: {
+          title: "SyncCaseService",
+          badge1: "Watermark tăng dần, lùi 10 phút",
+          badge2: "Xóa mềm sau 2 lần vắng",
+        },
+        caseFin: {
+          title: "KgaraCaseFinancialController",
+          badge1: "Người dùng cấn trừ tay (HTTP)",
+          badge2: "Settlements, linked invoices IN / OUT",
+        },
+        pnlSvc: {
+          title: "GaragePnlService",
+          badge1: "Người dùng mở báo cáo P&L (HTTP)",
+          badge2: "Không có cron",
+        },
+        tCases: { title: "kgara_cases", badge1: "Phiếu và dòng chi tiết" },
+        tSettlements: {
+          title: "kgara_case_settlements",
+          badge1: "Cấn trừ giữa phiếu, sao kê, hóa đơn",
+        },
+        lifecycle: {
+          title: "CaseLifecycleHandler",
+          badge1:
+            "Tự kích hoạt khi phiếu đổi trạng thái hoặc có phiếu thu/chi gắn phiếu",
+          badge2: "Chuyển sang 3 → sinh Dự thu; rời 3 → hủy Dự thu auto",
+        },
+        forecast: {
+          title: "GarageCaseForecastService",
+          badge1: "Tự sinh, cập nhật, hủy Dự thu",
+          badge2: "Dự thu = phiếu thu EXPECTED, hạn +7 ngày",
+        },
+        settle: {
+          title: "CashflowSettleHandler",
+          badge1: "Tự kích hoạt khi lưu phiếu chi",
+          badge2: "HHBH, vật tư tiêu hao APPROVED/PAID → ghi OPEX",
+        },
+        pnlCommission: {
+          title: "PnlCommissionHandler",
+          badge1: "Tự kích hoạt khi mở báo cáo P&L",
+          badge2: "Phiếu hoa hồng PENDING và delta",
+        },
+        tVouchers: {
+          title: "kgara_cashflow_vouchers",
+          badge1: "RECEIPT / PAYMENT, paymentStatus",
+          badge2: "Dự thu EXPECTED, dự chi PENDING/APPROVED",
+        },
+        cfTx: {
+          title: "GarageCashflowTransactionService",
+          badge1: "Người dùng lưu phiếu thu chi (HTTP)",
+          badge2: "Tạo, sửa, xóa phiếu trong transaction",
+        },
+        opexSvc: {
+          title: "GarageOpexService",
+          badge1: "Người dùng nhập tay (HTTP)",
+          badge2: "CRUD, lặp hàng tháng",
+        },
+        tOpex: {
+          title: "kgara_operating_expenses",
+          badge1: "Chi phí vận hành, giá vốn, hoa hồng",
+          badge2: "HHBH → chi phí bán hàng, vật tư tiêu hao → giá vốn",
+        },
+        dash: {
+          title: "GarageDashboardService",
+          badge1: "Stats, pnl-trend, customers, opex",
+        },
+        chk: {
+          title: "GarageCheckpointService",
+          badge1: "KPI theo ngày hoàn thành",
+        },
+        debts: {
+          title: "GarageDebtsAnalyticsService",
+          badge1: "Tuổi nợ, chân trời thời gian",
+        },
+        smart: {
+          title: "GarageSmartSettlementService",
+          badge1: "Gợi ý khớp sao kê và hóa đơn",
+        },
+        ledger: {
+          title: "Ledger handlers",
+          badge1: "Sổ quỹ theo kỳ và theo case (đọc)",
+        },
+      },
+      edges: {
+        d1: "Theo slot",
+        d2: "Kéo phiếu",
+        d3: "Upsert",
+        d4: "Khi đổi trạng thái",
+        d5: "Sinh Dự thu",
+        d6: "Gọi trực tiếp",
+        d7: "Phiếu Dự thu",
+        d8: "Lưu phiếu",
+        d9: "Sau khi lưu",
+        d10: "Ghi OPEX",
+        d11: "Sync hoa hồng",
+        d12: "Phiếu hoa hồng",
+        d13: "OPEX hoa hồng",
+        d14: "Tự cấn trừ",
+        d15: "Phiếu gắn phiếu DV",
+        d16: "Cấn trừ tay",
+        d17: "Tính lại phải thu",
+        d18: "CRUD, lặp tháng",
+        r1: "Doanh thu, KPI",
+        r2: "Thu chi",
+        r3: "Chi phí",
+        r4: "KPI",
+        r5: "Công nợ",
+        r6: "Cấn trừ",
+        r7: "Gợi ý khớp",
+        r8: "Sổ quỹ",
+      },
+    },
+    guide: {
+      pageLabel: "Trang",
+      toc: "Mục lục",
+      endUser: {
+        title: "Hướng dẫn nội bộ: vận hành garage, thu chi và công nợ",
+        subtitle: "Tài liệu đi kèm sơ đồ quy trình dành cho người dùng cuối",
+        purpose: {
+          title: "Mục đích và đối tượng",
+          p1: "Tài liệu này giải thích từng bước của quy trình garage trên hệ thống: từ lúc tiếp nhận xe, sửa chữa, kết thúc phiếu, đến thu tiền, chi tiền, công nợ và báo cáo. Dành cho cố vấn dịch vụ, kế toán và quản lý, không đòi hỏi kiến thức kỹ thuật.",
+          p2: "Sơ đồ ở trang đầu cho cái nhìn tổng thể. Các trang sau giải thích chi tiết và dùng để tra cứu khi cần.",
+        },
+        howToRead: {
+          title: "Cách đọc sơ đồ",
+          b1: "Mỗi hàng là một bộ phận chịu trách nhiệm: Xưởng và cố vấn, Hệ thống tự động, Kế toán thu tiền, Kế toán chi tiền, Kế toán chi đặc thù, Công nợ và đối soát, Quản lý và báo cáo.",
+          b2: "Mỗi cột là một giai đoạn của phiếu dịch vụ, từ Tiếp nhận và báo giá đến Đối soát và báo cáo.",
+          b3: "Vòng số trên thẻ là thứ tự thao tác: làm theo số tăng dần sẽ đi hết quy trình.",
+          b4: "Mũi tên màu A, B, C, D là những việc hệ thống tự làm, không cần ai bấm thêm. Mũi tên M là thao tác thủ công của người dùng.",
+          b5: "Nét đứt là bước chạy nền hoặc cần xác minh. Nét chấm là luồng chỉ đọc dữ liệu để tổng hợp báo cáo.",
+          b6: "Thẻ viền xanh lá là trạng thái Kết thúc (mã 3), thẻ viền đỏ là Hủy (mã 9).",
+          b1ex: "Muốn biết ai làm bước Thực chi, nhìn vào hàng Kế toán: chi tiền.",
+          b2ex: "Thẻ Hệ thống sinh Dự thu nằm ở cột Kết thúc: việc này chỉ xảy ra khi phiếu đã Kết thúc.",
+          b3ex: "Bắt đầu từ thẻ số 1 Tạo phiếu, đi tới số 4 Kết thúc, rồi số 5 Hệ thống sinh Dự thu.",
+          b4ex: "Mũi tên A sinh Dự thu từ thẻ Kết thúc mà không ai phải tạo phiếu bằng tay.",
+          b5ex: "Bật nút Luồng đọc dữ liệu để thấy các nét chấm từ Thực chi và Thực thu sang Dòng tiền ròng.",
+          b6ex: "Phiếu giao xe xong được đặt Kết thúc (viền xanh); phiếu khách hủy được đặt Hủy (viền đỏ) và rời khỏi báo cáo.",
+        },
+        steps: {
+          title: "Các bước vận hành",
+          intro:
+            "Các bước dưới đây lấy trực tiếp từ sơ đồ, theo đúng số thứ tự trên thẻ.",
+        },
+        money: {
+          title: "Giải thích các khoản tiền",
+          dt: {
+            term: "Dự thu (EXPECTED)",
+            text: "Phiếu thu do hệ thống tự tạo khi phiếu dịch vụ Kết thúc, để nhắc khoản phải thu. Hạn thu bằng ngày hoàn thành cộng 7 ngày. Chưa tính vào thực thu và không cấn trừ công nợ. Nếu phiếu rời khỏi Kết thúc thì phiếu Dự thu tự bị hủy.",
+            example:
+              "Phiếu 5.200.000đ, khách cọc 2.000.000đ, giao xe 15/10: Dự thu 3.200.000đ hạn 22/10. Nếu phiếu bị chuyển khỏi Kết thúc, Dự thu này tự hủy.",
+          },
+          t1: {
+            term: "Thực thu",
+            text: "Phiếu thu không còn ở trạng thái Dự thu và không bị hủy. Tính vào dòng tiền ròng và trừ công nợ phải thu của phiếu dịch vụ.",
+            example:
+              "Khách chuyển khoản 3.200.000đ, kế toán lập phiếu thu gắn phiếu dịch vụ: đây là thực thu và công nợ của phiếu về 0.",
+          },
+          dc: {
+            term: "Dự chi (PENDING / APPROVED)",
+            text: "Phiếu chi đã lập nhưng chưa chi tiền: đang chờ duyệt hoặc đã duyệt. Chưa trừ công nợ phải trả.",
+            example:
+              "Phiếu chi trả nhà cung cấp phụ tùng 8.000.000đ đang chờ duyệt (PENDING): công nợ nhà cung cấp chưa giảm.",
+          },
+          p1: {
+            term: "Thực chi (PAID)",
+            text: "Phiếu chi đã chi tiền. Trừ công nợ phải trả và bị khóa: không đổi được trạng thái hay loại phiếu.",
+            example:
+              "Chuyển khoản trả nhà cung cấp 8.000.000đ và đặt PAID: công nợ giảm 8.000.000đ, phiếu không đổi được loại nữa.",
+          },
+          hh: {
+            term: "HHBH (nội dung 4)",
+            text: "Phiếu chi thuộc nhóm hoa hồng. Không trừ công nợ. Khi ở trạng thái Đã duyệt hoặc Đã chi, hệ thống tự ghi vào OPEX và hiện ở P&L mục 4.2 Chi phí bán hàng.",
+            example:
+              "Phiếu chi HHBH 1.500.000đ chuyển Đã duyệt: OPEX có dòng 1.500.000đ ở mục 4.2 Chi phí bán hàng, công nợ phiếu dịch vụ không đổi.",
+          },
+          vt: {
+            term: "Vật tư tiêu hao (nội dung 10)",
+            text: "Phiếu chi vật tư dùng trong xưởng (mã cũ là 8). Không trừ công nợ. Khi ở trạng thái Đã duyệt hoặc Đã chi, hệ thống tự ghi vào OPEX và hiện ở P&L trong nhóm Giá vốn.",
+            example:
+              "Phiếu chi 600.000đ mua dầu mỡ (nội dung 10), Đã chi: OPEX có dòng 600.000đ, P&L tính vào Giá vốn.",
+          },
+          opex: {
+            term: "OPEX",
+            text: "Chi phí vận hành của garage: khoản nhập tay, khoản lặp hàng tháng, hoa hồng, cùng các khoản HHBH và vật tư tiêu hao do hệ thống tự ghi.",
+            example:
+              "Thuê mặt bằng 20.000.000đ nhập một lần và đặt lặp hàng tháng: mỗi tháng tự có dòng OPEX này.",
+          },
+        },
+        flows: {
+          title: "Các luồng tự động",
+          intro:
+            "Mỗi luồng dưới đây chạy tự động qua Garage Hub: người dùng chỉ cần thực hiện thao tác bắt đầu, phần còn lại hệ thống tự xử lý.",
+        },
+        rules: {
+          title: "Quy tắc cần nhớ",
+          b1: "Phiếu chi đã chi (PAID) bị khóa: không đổi được trạng thái hay loại phiếu, nên kiểm tra kỹ trước khi chi.",
+          b2: "Hoa hồng bán hàng, hoa hồng xưởng và HHBH không cấn trừ vào công nợ phiếu dịch vụ.",
+          b3: "Phiếu còn phải thu bằng 0 hoặc âm thì hệ thống không sinh Dự thu.",
+          b4: "Phiếu Hủy (mã 9) và phiếu đã xóa mềm bị loại khỏi báo cáo doanh thu và lãi gộp.",
+          b5: "Doanh thu, chi phí và lãi gộp tính theo ngày hoàn thành công việc của phiếu.",
+          b6: "Đồng bộ KGara chạy theo các mốc 09:15, 15:15, 16:15, 17:15, 21:15. Cần số liệu mới hơn thì bấm Đồng bộ tay.",
+          b7: "Phiếu hoa hồng chỉ được sinh khi mở báo cáo P&L, không có lịch chạy riêng.",
+          b1ex: "Phiếu chi 8.000.000đ đã PAID nhưng chọn nhầm nội dung: không sửa được, nên soát nội dung trước khi chuyển PAID.",
+          b2ex: "Phiếu dịch vụ 5.200.000đ có chi hoa hồng 500.000đ: công nợ phải thu của phiếu vẫn tính trên 5.200.000đ, hoa hồng không được trừ vào.",
+          b3ex: "Khách đã trả đủ 5.200.000đ trước khi Kết thúc: còn phải thu bằng 0 nên không có Dự thu.",
+          b4ex: "Phiếu Hủy 3.000.000đ không nằm trong doanh thu và lãi gộp của tháng.",
+          b5ex: "Xe hoàn thành 30/9 thì doanh thu và lãi gộp của phiếu nằm trong tháng 9, dù khách trả tiền sang tháng 10.",
+          b6ex: "Kết thúc phiếu lúc 15:40 mà muốn thấy ngay: bấm Đồng bộ tay thay vì chờ mốc 16:15.",
+          b7ex: "Chưa mở báo cáo P&L thì chưa có phiếu hoa hồng PENDING của kỳ đó; mở lần đầu hệ thống mới tạo.",
+        },
+        node: {
+          e1: {
+            explain:
+              "Cố vấn dịch vụ tạo phiếu dịch vụ trên phần mềm KGara khi xe vào xưởng, ghi tình trạng xe và lập báo giá cho khách. Garage Hub chưa có phiếu này cho tới lần đồng bộ KGara kế tiếp.",
+            example:
+              "Xe Vios 30A-123.45 vào xưởng lúc 8:30. Cố vấn tạo phiếu trên KGara và báo giá 4.500.000đ. Phiếu xuất hiện trong hệ thống sau mốc đồng bộ 09:15.",
+          },
+          e2: {
+            explain:
+              "Thợ sửa xe, cố vấn cập nhật chi phí từng dòng (công, phụ tùng) và ghi chú ngay trên KGara. Mỗi lần đồng bộ, hệ thống cập nhật lại số liệu của phiếu.",
+            example:
+              "Thợ báo cần thay thêm má phanh 700.000đ, cố vấn thêm một dòng vào phiếu. Ở lần đồng bộ sau, tổng phiếu trong hệ thống là 5.200.000đ.",
+          },
+          e3: {
+            explain:
+              "Cố vấn chuyển phiếu sang Kết thúc (mã 3) khi giao xe và hoàn thành công việc. Đây là mốc tính doanh thu và là điều kiện để hệ thống sinh Dự thu. Phiếu Hủy (mã 9) bị loại khỏi báo cáo.",
+            example:
+              "Giao xe ngày 15/10, phiếu chuyển Kết thúc. Sau lần đồng bộ kế tiếp, hệ thống tự tạo Dự thu hạn 22/10. Nếu khách hủy sửa chữa, đặt phiếu Hủy: phiếu không vào doanh thu.",
+          },
+          s1: {
+            explain:
+              "Hệ thống tự kéo phiếu mới và phiếu thay đổi từ KGara theo các mốc cố định trong ngày. Có nút Đồng bộ tay khi cần số liệu mới ngay. Phiếu vắng mặt trên KGara hai lần liên tiếp bị xóa mềm.",
+            example:
+              "Cố vấn kết thúc phiếu lúc 15:40 và kế toán cần thu tiền ngay. Kế toán bấm Đồng bộ tay thay vì chờ mốc 16:15.",
+          },
+          s2: {
+            explain:
+              "Màn hình theo dõi các xe đang sửa và khoản Dự thu tương ứng, giúp quản lý ước tính tiền sắp về.",
+            example:
+              "Đầu tuần quản lý mở checkpoint, thấy 12 xe đang làm với Dự thu dự kiến 85.000.000đ để cân đối tiền chi trong tuần.",
+          },
+          s3: {
+            explain:
+              "Khi phiếu chuyển sang Kết thúc, hệ thống tạo một phiếu thu EXPECTED bằng số tiền khách còn phải trả, hạn thu bằng ngày hoàn thành cộng 7 ngày. Nếu còn phải thu bằng 0 hoặc âm thì không tạo.",
+            example:
+              "Phiếu 5.200.000đ, khách đã cọc 2.000.000đ: Dự thu là 3.200.000đ. Nếu khách đã trả đủ thì không có Dự thu.",
+          },
+          s4: {
+            explain:
+              "Sau mỗi lần có phiếu thu hoặc cấn trừ gắn với phiếu dịch vụ, hệ thống tính lại Dự thu theo số còn phải thu mới nên không cần sửa tay.",
+            example:
+              "Dự thu đang là 3.200.000đ, khách trả thêm 1.200.000đ. Dự thu được đặt lại còn 2.000.000đ.",
+          },
+          s5: {
+            explain:
+              "Khi mở báo cáo P&L, hệ thống tự tạo phiếu chi hoa hồng trạng thái PENDING theo kết quả P&L. Nếu phiếu hoa hồng đã chi (PAID) mà P&L tăng thêm, hệ thống tạo phiếu chênh lệch (delta) thay vì sửa phiếu đã chi.",
+            example:
+              "Kế toán mở P&L tháng 9, hệ thống tạo phiếu hoa hồng 10.000.000đ PENDING. Sau khi chi, tháng đó có thêm doanh thu và hoa hồng thành 11.000.000đ: hệ thống sinh phiếu delta 1.000.000đ.",
+          },
+          dt: {
+            explain:
+              "Phiếu thu nhắc khoản khách sắp phải trả. Đây chưa phải tiền đã thu nên không vào thực thu và không trừ công nợ.",
+            example:
+              "Dự thu 3.200.000đ hạn 22/10. Đến hạn mà khách chưa trả, kế toán dùng nó để nhắc khách và theo dõi tiền về.",
+          },
+          t1: {
+            explain:
+              "Khi khách trả tiền, kế toán lập phiếu thu gắn với phiếu dịch vụ. Phiếu thu không còn ở trạng thái EXPECTED được tính là thực thu: trừ công nợ phải thu và cộng vào dòng tiền ròng.",
+            example:
+              "Khách chuyển khoản 3.200.000đ cho phiếu 5.200.000đ (đã cọc 2.000.000đ). Kế toán lập phiếu thu gắn phiếu dịch vụ: công nợ phải thu của phiếu về 0 và hệ thống đặt lại Dự thu.",
+          },
+          t2: {
+            explain:
+              "Kế toán khớp từng giao dịch trên sao kê ngân hàng với phiếu thu. Khoản không gắn với phiếu dịch vụ nào có thể ghi là thu ngoài sổ.",
+            example:
+              "Sao kê có dòng +3.200.000đ nội dung chuyển khoản có biển số xe. Kế toán khớp dòng này với phiếu thu của khách; dòng tiền không gắn phiếu nào được ghi thu ngoài sổ.",
+          },
+          dc: {
+            explain:
+              "Phiếu chi đã lập nhưng chưa chi tiền: đang chờ duyệt (PENDING) hoặc đã duyệt (APPROVED). Đây mới là kế hoạch chi, chưa trừ công nợ phải trả.",
+            example:
+              "Kế toán lập phiếu trả nhà cung cấp phụ tùng 8.000.000đ, trưởng bộ phận duyệt. Phiếu ở APPROVED, công nợ nhà cung cấp vẫn còn 8.000.000đ cho đến khi chi tiền.",
+          },
+          p1: {
+            explain:
+              "Phiếu chi đã chi tiền thật. Phiếu trừ công nợ phải trả và bị khóa: sau đó không đổi được trạng thái hay loại phiếu.",
+            example:
+              "Chuyển khoản trả nhà cung cấp 8.000.000đ rồi đặt PAID: công nợ giảm 8.000.000đ. Nếu chọn nhầm nội dung phiếu thì không sửa được nữa, nên soát kỹ trước khi đặt PAID.",
+          },
+          p2: {
+            explain:
+              "Nơi tập hợp chi phí vận hành của garage: khoản nhập tay, khoản lặp hàng tháng, hoa hồng, cùng khoản HHBH và vật tư tiêu hao do hệ thống tự ghi từ phiếu chi.",
+            example:
+              "Tiền thuê mặt bằng 20.000.000đ nhập một lần và đặt lặp hàng tháng: mỗi tháng hệ thống tự có khoản này trong OPEX.",
+          },
+          hh: {
+            explain:
+              "Phiếu chi nội dung 4 (HHBH) là chi phí bán hàng và không trừ công nợ. Khi phiếu ở trạng thái Đã duyệt hoặc Đã chi, hệ thống tự ghi một dòng OPEX và P&L đưa vào mục 4.2 Chi phí bán hàng.",
+            example:
+              "Phiếu chi HHBH 1.500.000đ chuyển Đã duyệt: OPEX tự có dòng 1.500.000đ ở mục 4.2, còn công nợ phiếu dịch vụ không đổi.",
+          },
+          vt: {
+            explain:
+              "Phiếu chi nội dung 10 mua vật tư dùng trong xưởng (dầu mỡ, giẻ lau, sơn...). Phiếu không trừ công nợ. Khi Đã duyệt hoặc Đã chi, hệ thống ghi OPEX và P&L tính vào nhóm Giá vốn.",
+            example:
+              "Phiếu chi 600.000đ mua dầu mỡ, nội dung 10, trạng thái Đã chi: OPEX có dòng 600.000đ và P&L tính vào Giá vốn của tháng.",
+          },
+          d1: {
+            explain:
+              "Danh sách các khoản khách hàng và công ty bảo hiểm còn nợ, phân theo tuổi nợ (số ngày đã quá hạn).",
+            example:
+              "Công ty bảo hiểm còn nợ 15.000.000đ đã 45 ngày, nằm ở nhóm tuổi nợ cao để kế toán đòi trước.",
+          },
+          d2: {
+            explain:
+              "Quản lý hóa đơn bán ra (OUT) và mua vào (IN). Hóa đơn mua vào có thể cấn trừ công nợ phải trả nhà cung cấp.",
+            example:
+              "Nhận hóa đơn mua phụ tùng 8.000.000đ của nhà cung cấp, kế toán cấn trừ hóa đơn vào công nợ phải trả của nhà cung cấp đó.",
+          },
+          m1: {
+            explain:
+              "Thực thu trừ Thực chi trong kỳ. Dự thu và Dự chi chưa phải tiền thật nên không được tính.",
+            example:
+              "Tháng này thực thu 120.000.000đ, thực chi 90.000.000đ: dòng tiền ròng 30.000.000đ. Dự thu còn lại chưa tính vào.",
+          },
+          m2: {
+            explain:
+              "Báo cáo doanh thu và lãi gộp tính theo ngày hoàn thành của phiếu. Phiếu Hủy và phiếu đã xóa mềm bị loại khỏi báo cáo.",
+            example:
+              "Xe hoàn thành 30/9 nhưng khách trả 5/10: doanh thu của phiếu vẫn nằm trong tháng 9. Phiếu Hủy không xuất hiện.",
+          },
+        },
+        flowExample: {
+          forecast:
+            "Phiếu 5.200.000đ, cọc 2.000.000đ, Kết thúc lúc 15:40. Sau mốc đồng bộ 16:15, hệ thống tạo Dự thu 3.200.000đ hạn +7 ngày mà kế toán không phải làm gì.",
+          opex: "Kế toán lưu phiếu chi vật tư tiêu hao 600.000đ ở trạng thái Đã duyệt: hệ thống tự thêm một dòng vào OPEX, không cần nhập lại.",
+          commission:
+            "Kế toán mở báo cáo P&L tháng 9: hệ thống tự tạo phiếu chi hoa hồng PENDING. Phiếu đã chi mà P&L tăng thì sinh thêm phiếu chênh lệch.",
+          receipt:
+            "Kế toán lưu phiếu thu 1.200.000đ gắn phiếu dịch vụ: hệ thống tự cấn trừ vào phiếu và đặt lại Dự thu còn 2.000.000đ.",
+          manual:
+            "Cố vấn bấm Bắt đầu sửa rồi Hoàn tất; kế toán ghi nhận Chờ thu và Đã chi. Các bước này do người dùng thực hiện, hệ thống không tự làm.",
+        },
+      },
+      dev: {
+        title: "Tài liệu kỹ thuật: kiến trúc module Garage",
+        subtitle: "Tài liệu đi kèm sơ đồ kiến trúc, dành cho lập trình viên",
+        overview: {
+          title: "Tổng quan",
+          p1: "Hệ thống garage gồm bốn module: Hoạt động garage (đồng bộ KGara, phiếu dịch vụ, cấn trừ, P&L), Garage Hub (điều phối nghiệp vụ tiền), Thu chi (phiếu thu chi) và OPEX (chi phí vận hành). Phần lớn nghiệp vụ tiền đi qua Garage Hub, nơi các handler tự kích hoạt khi có sự kiện.",
+          p2: "Trên sơ đồ, mỗi khung là một module, thẻ là service hoặc bảng dữ liệu, mũi tên màu A–D là các luồng tự động, mũi tên M là thao tác thủ công và lớp chỉ đọc nằm ở dải dưới cùng.",
+        },
+        modules: {
+          title: "Bốn module",
+          intro:
+            "Danh sách service và bảng dữ liệu trong từng khung, lấy trực tiếp từ sơ đồ.",
+        },
+        flows: {
+          title: "Luồng tự động chi tiết",
+          intro:
+            "Mỗi luồng gồm nguồn kích hoạt, các bước gọi theo thứ tự (nguồn → đích, cơ chế gọi) và kết quả ghi vào bảng dữ liệu.",
+        },
+        tables: {
+          title: "Bảng dữ liệu",
+          cases: {
+            term: "kgara_cases",
+            text: "Phiếu dịch vụ và dòng chi tiết, đồng bộ từ KGara. Cột tinh_trang_dich_vu: 3 là Kết thúc, 9 là Hủy (hai mã đã xác minh trong code).",
+            example:
+              "Tìm phiếu đã Kết thúc: lọc tinh_trang_dich_vu = 3; phiếu Hủy có giá trị 9 và bị loại khỏi báo cáo.",
+          },
+          settlements: {
+            term: "kgara_case_settlements",
+            text: "Cấn trừ giữa phiếu dịch vụ với phiếu thu chi, sao kê ngân hàng và hóa đơn. Phiếu thu không phải EXPECTED luôn có cấn trừ; phiếu chi chỉ có khi PAID và không thuộc nhóm HHBH, vật tư tiêu hao hay hoa hồng.",
+            example:
+              "Phiếu thu 1.200.000đ gắn phiếu dịch vụ tạo một dòng cấn trừ ở đây; phiếu Dự thu EXPECTED thì không.",
+          },
+          vouchers: {
+            term: "kgara_cashflow_vouchers",
+            text: "Phiếu thu chi. voucherType là RECEIPT hoặc PAYMENT; paymentStatus là EXPECTED, PENDING, APPROVED, PAID hoặc CANCELLED. Phiếu chi PAID bị khóa trạng thái và loại phiếu.",
+            example:
+              "Dự thu của một phiếu: voucherType = RECEIPT và paymentStatus = EXPECTED. Sau khi khách trả, phiếu thu mới không còn EXPECTED.",
+          },
+          opex: {
+            term: "kgara_operating_expenses",
+            text: "Chi phí vận hành: khoản nhập tay, khoản lặp hàng tháng, hoa hồng tự sinh, HHBH (vào chi phí bán hàng) và vật tư tiêu hao (vào giá vốn). Dòng tự ghi từ phiếu chi gắn source_cashflow_voucher_id.",
+            example:
+              "HHBH 1.500.000đ đã duyệt tạo một dòng ở đây, cột source_cashflow_voucher_id trỏ về phiếu chi gốc.",
+          },
+        },
+        mechanisms: {
+          title: "Cơ chế kích hoạt",
+          b1: "Sync: KgaraSyncScheduler chạy cron 09:15, 15:15, 16:15, 17:15, 21:15 (giờ Việt Nam) cùng heartbeat 30 giây để mỗi mốc chỉ chạy một lần. Chỉ hoạt động khi biến môi trường ENABLE_CRON là true.",
+          b2: "Sync tăng dần theo watermark updatedSince, lùi 10 phút. Phiếu vắng mặt 2 lần liên tiếp bị xóa mềm, xuất hiện lại thì tự phục hồi.",
+          b3: "Handler của Garage Hub được gọi trực tiếp qua DI, không dùng hàng đợi. CashflowSettleHandler chạy cùng transaction với việc lưu phiếu.",
+          b4: "PnlCommissionHandler chạy fire-and-forget khi mở báo cáo P&L, không có cron riêng. Phiếu hoa hồng đã PAID không bao giờ bị sửa số tiền; phần chênh lệch sinh phiếu delta.",
+          b5: "Phân loại sổ quỹ dùng chung một hàm: Thực thu, Dự thu, Thực chi, Dự chi; phiếu CANCELLED bị loại khỏi mọi tổng.",
+          b1ex: "Triển khai môi trường mới mà không thấy phiếu mới: kiểm tra ENABLE_CRON trước tiên.",
+          b2ex: "Phiếu bị xóa trên KGara: sau 2 lần sync liền không thấy thì bị xóa mềm; nếu KGara khôi phục, lần sync sau tự hiện lại.",
+          b3ex: "Lưu phiếu chi bị lỗi giữa chừng thì cấn trừ và OPEX cũng không được ghi, vì cùng một transaction.",
+          b4ex: "P&L tháng 9 mở lần đầu sinh hoa hồng 10.000.000đ; sau khi PAID mà P&L tăng 1.000.000đ thì sinh phiếu delta 1.000.000đ.",
+          b5ex: "Phiếu CANCELLED 2.000.000đ không nằm trong Thực chi hay Dự chi của sổ quỹ.",
+        },
+        verify: {
+          title: "Điểm cần xác minh",
+          b1: "SyncCaseService gọi cả Garage Hub (handleCaseTransition) lẫn GarageCaseForecastService trực tiếp khi phiếu đổi trạng thái. Có thể ghi trùng Dự thu: cần kiểm tra lại trước khi sửa luồng này.",
+          b2: "Các mã trạng thái 0, 1, 2 chỉ có trong skill API, không có hằng số trong code. Chỉ mã 3 (Kết thúc) và 9 (Hủy) đã được xác minh trong code.",
+          b1ex: "Khi phiếu chuyển Kết thúc, kiểm tra kgara_cashflow_vouchers xem có hai phiếu EXPECTED cho cùng một phiếu dịch vụ không trước khi sửa luồng.",
+          b2ex: "Cần hiển thị trạng thái Đang sửa thì dùng nhãn trong KgaraCaseStatusBadge, nhưng không viết logic nghiệp vụ dựa trên mã 0, 1, 2 vì chưa xác minh trong code.",
+        },
+        codeRefs: {
+          title: "Nơi đọc code",
+          b1: "Garage Hub: erp-api/src/kgara-api-core/hub/ (garage-hub.service.ts và thư mục handlers).",
+          b2: "Dự thu: erp-api/src/kgara-api-core/services/garage-case-forecast.service.ts.",
+          b3: "Quy tắc phiếu chi: erp-api/src/kgara-api-core/helpers/garage-cashflow-payment-rules.ts; phân loại sổ quỹ: helpers/garage-ledger-classifier.ts.",
+          b4: "Lịch sync: erp-api/src/kgara-api-core/kgara-sync.scheduler.ts. Tri thức module: erp-api/.agents/skills/modules/garage-cashflow/SKILL.md.",
+          b1ex: "Muốn biết handler nào chạy khi phiếu đổi trạng thái: bắt đầu từ garage-hub.service.ts.",
+          b2ex: "Đổi cách tính số tiền hay hạn của Dự thu: bắt đầu đọc file này.",
+          b3ex: "Thêm một nội dung phiếu chi mới không trừ công nợ: xem quy tắc trong file này trước.",
+          b4ex: "Đổi giờ đồng bộ: sửa lịch trong scheduler; SKILL.md ghi các quy tắc đã chốt của module.",
+        },
+        moduleExample: {
+          activity:
+            "Phiếu mới không vào hệ thống: kiểm tra SyncCaseService, watermark updatedSince và biến ENABLE_CRON trước.",
+          hub: "Dự thu không tự sinh khi phiếu Kết thúc: đọc CaseLifecycleHandler rồi GarageCaseForecastService.",
+          cashflow:
+            "Không đổi được loại phiếu chi PAID: quy tắc khóa nằm ở garage-cashflow-payment-rules.ts, GarageCashflowTransactionService áp dụng khi lưu.",
+          opex: "HHBH đã duyệt mà không thấy trong OPEX: tra kgara_operating_expenses theo source_cashflow_voucher_id của phiếu chi.",
+          read: "Thêm báo cáo mới: đọc qua GarageDashboardService hoặc Ledger handlers, không ghi ngược vào bảng nguồn.",
+        },
+        flowExample: {
+          forecast:
+            "Phiếu 5.200.000đ, cọc 2.000.000đ chuyển sang mã 3. KgaraSyncScheduler chạy 16:15, SyncCaseService thấy đổi trạng thái, CaseLifecycleHandler gọi GarageCaseForecastService tạo phiếu thu EXPECTED 3.200.000đ trong kgara_cashflow_vouchers, hạn +7 ngày.",
+          opex: "Kế toán lưu phiếu chi nội dung 10 (600.000đ, APPROVED) qua GarageCashflowTransactionService. CashflowSettleHandler ghi một dòng giá vốn vào kgara_operating_expenses với source_cashflow_voucher_id trỏ về phiếu.",
+          commission:
+            "Mở P&L tháng 9: GaragePnlService gọi PnlCommissionHandler (fire-and-forget) tạo phiếu chi hoa hồng PENDING và dòng OPEX hoa hồng. Phiếu đã PAID mà P&L tăng thì sinh phiếu delta, không sửa số tiền phiếu cũ.",
+          receipt:
+            "Lưu phiếu thu 1.200.000đ gắn phiếu dịch vụ: hệ thống tạo cấn trừ trong kgara_case_settlements, rồi đặt lại Dự thu của phiếu còn 2.000.000đ.",
+          manual:
+            "Kế toán cấn trừ tay một khoản qua KgaraCaseFinancialController (HTTP) hoặc nhập tay chi phí qua GarageOpexService. Không có handler tự chạy trong luồng này.",
+        },
+      },
+      exampleLabel: "Ví dụ",
     },
   },
 };

@@ -63,13 +63,8 @@ export const ErpInvoiceGeneralInfoSection = React.memo(
     const invoiceDate = invoice?.invoiceDate || form?.invoiceDate || "";
     const serialNo = invoice?.serialNo || form?.serialNo || "";
     const invoiceNo = invoice?.invoiceNo || form?.invoiceNo || "";
-    const notes = (
-      form?.notes ||
-      form?.description ||
-      invoice?.description ||
-      invoice?.notes ||
-      ""
-    )?.trim();
+    // Ghi chú = trường notes (bulk-edit và form). Không lấy description (diễn giải/tên hàng).
+    const notes = (form?.notes ?? invoice?.notes ?? "").trim();
     const effectiveInvoiceId = invoiceId ?? invoice?.id ?? null;
 
     if (editMode) {

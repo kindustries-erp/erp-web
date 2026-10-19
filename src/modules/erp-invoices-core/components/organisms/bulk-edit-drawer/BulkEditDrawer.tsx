@@ -21,6 +21,7 @@ import {
 } from "@/modules/erp-invoices-core/api/erpInvoicesCoreApi";
 import { moduleConfigApi } from "@/core/api/moduleConfigApi";
 import { CATEGORY_ACCOUNT_HINTS } from "@/modules/erp-invoices-core/components/organisms/erp-invoices-tab/utils";
+import { useBulkEditAssignments } from "./useBulkEditAssignments";
 import type {
   BranchOption,
   BulkEditDrawerProps,
@@ -70,6 +71,8 @@ const NotesInputCell = React.memo(function NotesInputCell({
   );
 });
 
+const EMPTY_INVOICES: ErpInvoice[] = [];
+
 // ── BulkEditDrawer ─────────────────────────────────────────────────────────
 
 export function BulkEditDrawer({
@@ -90,7 +93,7 @@ export function BulkEditDrawer({
   }, [invoices, selectedIds]);
 
   // Fetch missing invoices if any (e.g. selected across pages or prop delay)
-  const { data: missingInvoices = [] } = useQuery({
+  const { data: missingInvoices = EMPTY_INVOICES } = useQuery({
     queryKey: ["erp-invoices-bulk-edit-missing", missingIds],
     queryFn: async () => {
       if (missingIds.length === 0) return [];
@@ -137,52 +140,38 @@ export function BulkEditDrawer({
   const [bulkCategoryId, setBulkCategoryId] = useState<string | null>(null);
   const [bulkNotesValue, setBulkNotesValue] = useState("");
 
-  // --- Per-invoice assignments ---
-  const [branchAssignments, setBranchAssignments] = useState<
-    Record<string, string>
-  >({});
-  const [categoryAssignments, setCategoryAssignments] = useState<
-    Record<string, string>
-  >({});
-  const [notesAssignments, setNotesAssignments] = useState<
-    Record<string, string>
-  >({});
-
-  // --- Snapshots để detect dirty ---
-  const [initBranch, setInitBranch] = useState<Record<string, string>>({});
-  const [initCategory, setInitCategory] = useState<Record<string, string>>({});
-  const [initNotes, setInitNotes] = useState<Record<string, string>>({});
+  // --- Per-invoice assignments + snapshots (seed một lần mỗi lần mở) ---
+  const {
+    branchAssignments,
+    categoryAssignments,
+    notesAssignments,
+    initBranch,
+    initCategory,
+    initNotes,
+    setBranchAssignments,
+    setCategoryAssignments,
+    setNotesAssignments,
+    handleBranchChange,
+    handleCategoryChange,
+    handleNotesChange,
+  } = useBulkEditAssignments({
+    open,
+    selectedIds,
+    availableInvoices: allAvailableInvoices,
+  });
 
   // --- UI state ---
   const [saving, setSaving] = useState(false);
   const [invoiceSearch, setInvoiceSearch] = useState("");
 
-  // Init / reset khi drawer mở
+  // Reset ô áp dụng chung và tìm kiếm mỗi lần mở (không đụng assignments)
   useEffect(() => {
-    if (open && selectedIds.length > 0) {
-      const selectedInvs = allAvailableInvoices.filter((inv) =>
-        selectedIds.includes(inv.id),
-      );
-      const snapshotBranch: Record<string, string> = {};
-      const snapshotCategory: Record<string, string> = {};
-      const snapshotNotes: Record<string, string> = {};
-      selectedInvs.forEach((inv) => {
-        snapshotBranch[inv.id] = inv.branchId ?? "";
-        snapshotCategory[inv.id] = inv.categoryId ?? inv.category?.id ?? "";
-        snapshotNotes[inv.id] = inv.notes ?? "";
-      });
-      setBranchAssignments({ ...snapshotBranch });
-      setCategoryAssignments({ ...snapshotCategory });
-      setNotesAssignments({ ...snapshotNotes });
-      setInitBranch(snapshotBranch);
-      setInitCategory(snapshotCategory);
-      setInitNotes(snapshotNotes);
-      setBulkBranchId(null);
-      setBulkCategoryId(null);
-      setBulkNotesValue("");
-      setInvoiceSearch("");
-    }
-  }, [open, selectedIds, allAvailableInvoices]);
+    if (!open) return;
+    setBulkBranchId(null);
+    setBulkCategoryId(null);
+    setBulkNotesValue("");
+    setInvoiceSearch("");
+  }, [open]);
 
   // isDirty: so sánh assignments hiện tại vs snapshot
   const isDirty = useMemo(
@@ -218,18 +207,6 @@ export function BulkEditDrawer({
           inv.buyerName?.toLowerCase().includes(s),
       );
   }, [invoiceSearch, allAvailableInvoices, selectedIds]);
-
-  const handleBranchChange = useCallback((id: string, value: string) => {
-    setBranchAssignments((prev) => ({ ...prev, [id]: value }));
-  }, []);
-
-  const handleCategoryChange = useCallback((id: string, value: string) => {
-    setCategoryAssignments((prev) => ({ ...prev, [id]: value }));
-  }, []);
-
-  const handleNotesChange = useCallback((id: string, value: string) => {
-    setNotesAssignments((prev) => ({ ...prev, [id]: value }));
-  }, []);
 
   // Columns definition for DataTable
   const columns = useMemo<DataTableColumn<ErpInvoice>[]>(
