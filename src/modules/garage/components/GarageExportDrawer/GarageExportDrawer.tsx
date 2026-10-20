@@ -107,6 +107,7 @@ export function GarageExportDrawer({
               q: tableQuery?.q,
               sortCount: tableQuery?.sorts?.length,
               filterCount: cases.filterCount,
+              filtersStr: tableQuery?.filtersStr,
             }}
             starting={exporter.starting}
             onStartExport={active.handleStartExport}

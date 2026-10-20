@@ -122,6 +122,7 @@ export function GarageExportConditionSection({
             search={filterSummary.q}
             sortCount={filterSummary.sortCount}
             filterCount={filterSummary.filterCount}
+            filtersStr={filterSummary.filtersStr}
           />
         )}
 

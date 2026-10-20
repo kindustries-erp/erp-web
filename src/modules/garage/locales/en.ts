@@ -1047,6 +1047,13 @@ export const garageEn = {
   },
   exportJobs: {
     historyTitle: "Export history",
+    conditionContains: "contains",
+    conditionEmpty: "(empty)",
+    statusTab: {
+      quotation: "Quotation",
+      in_progress: "In progress",
+      completed: "Completed",
+    },
     emptyHistory: "No exported files yet",
     downloading: "Downloading...",
     downloadAgain: "Download again",

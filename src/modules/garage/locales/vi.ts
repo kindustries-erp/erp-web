@@ -1053,6 +1053,13 @@ export const garageVi = {
   },
   exportJobs: {
     historyTitle: "Lịch sử xuất file",
+    conditionContains: "chứa",
+    conditionEmpty: "(trống)",
+    statusTab: {
+      quotation: "Báo giá",
+      in_progress: "Đang làm",
+      completed: "Đã kết thúc",
+    },
     emptyHistory: "Chưa có file xuất nào",
     downloading: "Đang tải...",
     downloadAgain: "Tải lại file",

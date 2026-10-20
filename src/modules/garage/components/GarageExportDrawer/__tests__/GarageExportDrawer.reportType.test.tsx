@@ -224,6 +224,16 @@ describe("GarageExportDrawer - loại báo cáo: tab đơn + nội dung kỳ nhi
     expect(screen.queryByText("CỘT XUẤT DỮ LIỆU")).toBeNull();
   });
 
+  it("tab 'Báo cáo theo kỳ' đứng đầu, trước 'Bảng kê phiếu dịch vụ'", () => {
+    renderDrawer({ defaultReportType: "period-all" });
+    const tabs = Array.from(
+      screen
+        .getByText("Báo cáo theo kỳ")
+        .parentElement!.querySelectorAll("button"),
+    ).map((b) => b.textContent);
+    expect(tabs).toEqual(["Báo cáo theo kỳ", "Bảng kê phiếu dịch vụ"]);
+  });
+
   it("tab Hoạt động mở ở 'Bảng kê phiếu dịch vụ': hiện cột xuất, không hiện ô nội dung kỳ", () => {
     renderDrawer({ defaultReportType: "cases-list" });
     expect(

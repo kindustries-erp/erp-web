@@ -230,6 +230,34 @@ describe("GarageExportDrawer - bảng kê phiếu dịch vụ", () => {
     expect(config.headers).toEqual({ "x-greenway-branch-id": "CN-01" });
   });
 
+  it("chế độ theo filter hiện tại dùng chi nhánh hiện tại của bảng, không dùng chi nhánh cũ", async () => {
+    const client = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+    const drawer = (branch: string) => (
+      <QueryClientProvider client={client}>
+        <GarageExportDrawer
+          open={true}
+          onClose={vi.fn()}
+          defaultReportType="cases-list"
+          initialBranchId={branch}
+          tableQuery={tableQuery}
+        />
+      </QueryClientProvider>
+    );
+    const { rerender } = render(drawer("CN-01"));
+    rerender(drawer("CN-02"));
+
+    fireEvent.click(screen.getByLabelText(/Theo filter hiện tại/));
+    await act(async () => {
+      fireEvent.click(screen.getByText("Xuất Excel"));
+    });
+
+    await waitFor(() => expect(axiosInstance.post).toHaveBeenCalledTimes(1));
+    const [, , config] = (axiosInstance.post as any).mock.calls[0];
+    expect(config.headers).toEqual({ "x-greenway-branch-id": "CN-02" });
+  });
+
   it("chế độ theo filter hiện tại: gửi filtersStr, sorts và khoảng ngày của bảng", async () => {
     renderDrawer({ tableQuery });
 

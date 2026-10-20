@@ -15,12 +15,12 @@ export function useGarageReportTypeOptions() {
   const kindItems = useMemo(
     () => [
       {
-        value: "cases" as const,
-        label: t("exportReport.kinds.cases", "Bảng kê phiếu dịch vụ"),
-      },
-      {
         value: "period" as const,
         label: t("exportReport.kinds.period", "Báo cáo theo kỳ"),
+      },
+      {
+        value: "cases" as const,
+        label: t("exportReport.kinds.cases", "Bảng kê phiếu dịch vụ"),
       },
     ],
     [t],

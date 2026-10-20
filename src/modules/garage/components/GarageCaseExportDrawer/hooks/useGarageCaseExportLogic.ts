@@ -99,6 +99,7 @@ export function useGarageCaseExportLogic({
     const branchId = selectedBranchId || undefined;
 
     if (exportMode === "by-current-filter") {
+      // Bảng đang xem quyết định chi nhánh; không lấy từ state cũ của drawer.
       await exporter.start(
         {
           mode: "by-current-filter",
@@ -109,7 +110,7 @@ export function useGarageCaseExportLogic({
           filtersStr: tableQuery?.filtersStr,
           selectedColumns,
         },
-        branchHeaders(branchId),
+        branchHeaders(initialBranchId || undefined),
       );
       return;
     }
