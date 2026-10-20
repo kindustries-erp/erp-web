@@ -3,18 +3,47 @@ import { Badge } from "@/shared/components/ui/badge";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import { cn } from "@/shared/utils";
 
-interface KgaraCaseStatusBadgeProps {
-  status?: string;
+export interface KgaraCaseStatusBadgeProps {
+  status?: string | number | null;
   className?: string;
+}
+
+export function getKgaraStatusLabel(status?: string | number | null): string {
+  if (status === null || status === undefined || status === "") return "";
+
+  if (typeof status === "number") {
+    // Mã theo erp-api garage-cases SKILL (cột tinh_trang_dich_vu)
+    switch (status) {
+      case 0:
+        return "Tiếp nhận";
+      case 1:
+        return "Báo giá";
+      case 2:
+        return "Đang sửa";
+      case 3:
+        return "Kết thúc";
+      case 9:
+        return "Đã hủy";
+      default:
+        return `Trạng thái ${status}`;
+    }
+  }
+
+  if (typeof status !== "string") {
+    return String(status);
+  }
+
+  return status.trim();
 }
 
 export function KgaraCaseStatusBadge({
   status,
   className,
 }: KgaraCaseStatusBadgeProps) {
-  if (!status) return null;
+  const displayStatus = getKgaraStatusLabel(status);
+  if (!displayStatus) return null;
 
-  const s = status.toLowerCase();
+  const s = displayStatus.toLowerCase();
 
   let variant:
     | "default"
@@ -29,6 +58,7 @@ export function KgaraCaseStatusBadge({
   if (
     s.includes("kết thúc") ||
     s.includes("hoàn thành") ||
+    s.includes("hoàn tất") ||
     s.includes("giao xe") ||
     s.includes("xong") ||
     s.includes("đã thanh toán")
@@ -63,7 +93,7 @@ export function KgaraCaseStatusBadge({
   }
 
   return (
-    <Tooltip content={status}>
+    <Tooltip content={displayStatus}>
       <Badge
         variant={variant}
         className={cn(
@@ -71,7 +101,7 @@ export function KgaraCaseStatusBadge({
           className,
         )}
       >
-        {status}
+        {displayStatus}
       </Badge>
     </Tooltip>
   );

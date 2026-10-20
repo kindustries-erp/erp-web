@@ -26,7 +26,7 @@ export interface PendingAddedInvoice {
 function createClientId() {
   const maybeCrypto = (globalThis as any)?.crypto;
   if (maybeCrypto && typeof maybeCrypto.randomUUID === "function") {
-    return maybeCrypto.randomUUID();
+    return `tmp-${maybeCrypto.randomUUID()}`;
   }
   return `tmp-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 }

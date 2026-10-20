@@ -49,7 +49,7 @@ export function DrawerTopTabBar({
   return (
     <div
       className={cn(
-        "sticky top-0 z-10 -mx-3 -mt-3 sm:-mx-4 sm:-mt-4 md:-mx-[18px] md:-mt-[18px] px-3 sm:px-4 md:px-5 py-2 sm:py-2.5 mb-3 sm:mb-4 border-b border-border/70 flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 sm:gap-3 flex-shrink-0 transition-all backdrop-blur-md",
+        "sticky top-0 z-30 isolate -mx-3 -mt-3 sm:-mx-4 sm:-mt-4 md:-mx-[18px] md:-mt-[18px] px-3 sm:px-4 md:px-5 py-2 sm:py-2.5 mb-3 sm:mb-4 border-b border-border/70 flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 sm:gap-3 flex-shrink-0 transition-all backdrop-blur-md",
         className,
       )}
       style={{

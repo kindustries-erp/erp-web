@@ -13,6 +13,76 @@ export interface ExportCompletedCasesParams {
   customFileName?: string;
 }
 
+export interface KgaraCaseServiceRow {
+  id: string;
+  hdPhieuDichVuChiTietId?: string;
+  hdPhieuDichVuId?: string;
+  soChungTu?: string;
+  bienSoXe?: string;
+  khachHangCode?: string;
+  khachHangName?: string;
+  caseDate?: string;
+  completionDate?: string;
+  branchExternalId?: string;
+  branchName?: string;
+  status?: number;
+  statusName?: string;
+  classification?: string;
+  sanPhamCode?: string;
+  sanPhamName?: string;
+  noiDungChiTiet?: string;
+  loaiSanPhamCode?: string;
+  donViTinhText?: string;
+  soLuongHoaDon?: number;
+  donGia?: number;
+  tienChuaThue?: number;
+  thueSuat?: number;
+  tienCoThue?: number;
+  soGioCongLam?: number;
+  tienDichVu?: number;
+  tienPhuTung?: number;
+  giaVonPhuTung?: number;
+  tyLeChietKhauCt?: number;
+  tienChietKhauCt?: number;
+  khoCode?: string;
+  tienPhuPhi?: number;
+}
+
+export interface CaseServicesTotals {
+  soLuongHoaDon: number;
+  tienChuaThue: number;
+  tienCoThue: number;
+  tienDichVu: number;
+  tienPhuTung: number;
+  giaVonPhuTung: number;
+  tienChietKhauCt: number;
+  tienPhuPhi: number;
+}
+
+export interface CaseServicesResponse {
+  data: KgaraCaseServiceRow[];
+  pagination: {
+    page: number;
+    pageSize: number;
+    total: number;
+    totalPages: number;
+  };
+  totals?: {
+    grandTotal: CaseServicesTotals;
+    cumulative?: CaseServicesTotals;
+  };
+}
+
+export interface UpdateCaseConfigPayload {
+  categoryId?: string | null;
+  classification?: string | null;
+  excludeFromReports?: boolean;
+  excludeFromDebt?: boolean;
+  erpNotes?: string | null;
+  customAttributes?: Record<string, any>;
+  attributes?: Record<string, any>;
+}
+
 export const garageApi = {
   exportCompletedCasesExcel: async (
     params: ExportCompletedCasesParams,
@@ -37,12 +107,52 @@ export const garageApi = {
       },
     );
 
-    const now = new Date();
-    const pad = (n: number) => String(n).padStart(2, "0");
-    const timestamp = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
-    const fileName =
-      params.customFileName ||
-      `Bang_ke_phieu_dich_vu_ket_thuc_${timestamp}.xlsx`;
+    let fileName = params.customFileName;
+
+    if (!fileName) {
+      const disposition = res.headers?.["content-disposition"];
+      if (disposition) {
+        const match = disposition.match(
+          /filename\*?=(?:UTF-8'')?"?([^";]+)"?/i,
+        );
+        if (match?.[1]) {
+          fileName = decodeURIComponent(match[1]);
+        }
+      }
+    }
+
+    if (!fileName) {
+      const now = new Date();
+      const pad = (n: number) => String(n).padStart(2, "0");
+      const timestamp = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+
+      let classLabel = "Tat_ca_phan_loai";
+      if (params.classification && params.classification !== "ALL") {
+        const classMap: Record<string, string> = {
+          KY_GUI_NOI_BO: "Ky_gui_noi_bo",
+          SUA_CHUA_CHUNG: "Sua_chua_chung",
+          OJ: "OJ",
+          OJ_NGOAI: "OJ_ngoai",
+          KHAC: "Khac",
+        };
+        classLabel =
+          classMap[params.classification] ||
+          params.classification.replace(/[^a-zA-Z0-9_-]/g, "_");
+      }
+
+      let statusLabel = "Ket_thuc";
+      if (params.status) {
+        if (params.status.toLowerCase() === "all") {
+          statusLabel = "Tat_ca_trang_thai";
+        } else if (params.status.toLowerCase() === "completed") {
+          statusLabel = "Ket_thuc";
+        } else {
+          statusLabel = params.status.replace(/[^a-zA-Z0-9_-]/g, "_");
+        }
+      }
+
+      fileName = `Bang_ke_phieu_dich_vu_${classLabel}_${statusLabel}_${timestamp}.xlsx`;
+    }
 
     const blob = new Blob([res.data], {
       type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -121,11 +231,141 @@ export const garageApi = {
       },
     });
     return res.data as {
+      items: Array<string | { label: string; value: string }>;
+      total: number;
+      page: number;
+      totalPages: number;
+    };
+  },
+
+  getCaseServicesList: async (
+    branchId: string,
+    page: number = 1,
+    pageSize: number = 20,
+    q: string = "",
+    from?: string,
+    to?: string,
+    serviceType?: string,
+    filtersStr?: string,
+    sorts?: string | string[],
+  ): Promise<CaseServicesResponse> => {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      pageSize: pageSize.toString(),
+      q,
+    });
+    if (from) params.append("from", from);
+    if (to) params.append("to", to);
+    if (serviceType && serviceType !== "ALL")
+      params.append("serviceType", serviceType);
+    if (filtersStr) params.append("filtersStr", filtersStr);
+    if (sorts) {
+      if (Array.isArray(sorts)) {
+        sorts.forEach((s) => params.append("sorts", s));
+      } else {
+        params.append("sorts", sorts);
+      }
+    }
+
+    const res = await axiosInstance.get(
+      `${BASE}/cases/services?${params.toString()}`,
+      {
+        headers: {
+          "x-greenway-branch-id": branchId || "",
+        },
+      },
+    );
+    return res.data;
+  },
+
+  getCaseServiceColumnOptions: async (
+    branchId: string,
+    column: string,
+    search: string = "",
+    page: number = 1,
+    pageSize: number = 20,
+    filtersStr?: string,
+    serviceType?: string,
+  ) => {
+    const res = await axiosInstance.get(
+      `${BASE}/cases/services/column-options`,
+      {
+        params: {
+          column,
+          search,
+          page,
+          pageSize,
+          filtersStr,
+          serviceType: serviceType !== "ALL" ? serviceType : undefined,
+        },
+        headers: {
+          "x-greenway-branch-id": branchId || "",
+        },
+      },
+    );
+    return res.data as {
       items: string[];
       total: number;
       page: number;
       totalPages: number;
     };
+  },
+
+  exportCaseServicesExcel: async (params: {
+    branchId?: string;
+    from?: string;
+    to?: string;
+    serviceType?: string;
+    filtersStr?: string;
+    sorts?: string | string[];
+    q?: string;
+    customFileName?: string;
+  }): Promise<string> => {
+    const searchParams = new URLSearchParams();
+    if (params.from) searchParams.append("from", params.from);
+    if (params.to) searchParams.append("to", params.to);
+    if (params.serviceType && params.serviceType !== "ALL")
+      searchParams.append("serviceType", params.serviceType);
+    if (params.filtersStr) searchParams.append("filtersStr", params.filtersStr);
+    if (params.branchId) searchParams.append("branch_id", params.branchId);
+    if (params.q) searchParams.append("q", params.q);
+    if (params.sorts) {
+      if (Array.isArray(params.sorts)) {
+        params.sorts.forEach((s) => searchParams.append("sorts", s));
+      } else {
+        searchParams.append("sorts", params.sorts);
+      }
+    }
+
+    const res = await axiosInstance.get(
+      `${BASE}/cases/services/export/excel?${searchParams.toString()}`,
+      {
+        responseType: "blob",
+        headers: {
+          "x-greenway-branch-id": params.branchId || "",
+        },
+      },
+    );
+
+    const now = new Date();
+    const pad = (n: number) => String(n).padStart(2, "0");
+    const timestamp = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+    const fileName =
+      params.customFileName || `Chi_tiet_phieu_dich_vu_${timestamp}.xlsx`;
+
+    const blob = new Blob([res.data], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+
+    return fileName;
   },
 
   getCaseById: async (id: string) => {
@@ -146,10 +386,9 @@ export const garageApi = {
     );
     return res.data;
   },
-
   updateCaseConfig: async (
     caseId: string,
-    payload: { classification?: string | null; erpNotes?: string | null },
+    payload: UpdateCaseConfigPayload,
   ) => {
     const res = await axiosInstance.patch(
       `${BASE}/cases/${caseId}/config`,
@@ -204,6 +443,30 @@ export const garageApi = {
       {
         headers: {
           "x-greenway-branch-id": branchId,
+        },
+      },
+    );
+    return res.data;
+  },
+
+  syncCaseDetails: async (
+    branchId?: string,
+    from?: string,
+    to?: string,
+    force?: boolean,
+  ) => {
+    const params = new URLSearchParams();
+    if (from) params.append("from", from);
+    if (to) params.append("to", to);
+    if (force) params.append("force", "true");
+    if (branchId) params.append("branch_id", branchId);
+
+    const res = await axiosInstance.post(
+      `${BASE}/sync/case-details?${params.toString()}`,
+      {},
+      {
+        headers: {
+          "x-greenway-branch-id": branchId || "",
         },
       },
     );
@@ -509,7 +772,7 @@ export const garageApi = {
       },
     );
     return res.data as {
-      items: string[];
+      items: (string | { label: string; value: string })[];
       total: number;
       page: number;
       totalPages: number;
@@ -582,7 +845,7 @@ export const garageApi = {
       },
     );
     return res.data as {
-      items: string[];
+      items: (string | { label: string; value: string })[];
       total: number;
       page: number;
       totalPages: number;

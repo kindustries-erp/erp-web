@@ -5,6 +5,9 @@ description: Create or enhance a Drawer component using StandardFormDrawer to fo
 
 # 📋 Drawer Standards
 
+> 🚀 **V2 ARCHITECTURE NOTICE**: Đối với các màn hình hoặc module xây dựng trên kiến trúc ERP Web V2 (`src/v2/`), sử dụng **`<V2StandardDrawer>`** từ `@/v2/shared/components/organisms/v2-standard-drawer` (kèm `<V2TabBar>`, `<DrawerSection>`, `<DrawerField>`, `<DrawerRow>`, `<DrawerAuditTimeline>`). Xem chi tiết tại module skill:
+> 👉 [`v2-drawer`](../modules/v2-drawer/SKILL.md)
+
 > ⚡ **FAST-TRACK (PlopJS Generator)**: Để sinh nhanh component Drawer chuẩn (`1-column`, `2-columns`, hoặc `multi-tab`), chạy:
 > ```bash
 > bun plop drawer <moduleName> <componentName> <drawerType> <drawerSize> <hasStatus>
@@ -81,7 +84,7 @@ Toàn bộ kích thước Drawer trên Desktop được thiết kế co giãn li
 
 ## 3. Phân loại Kiến trúc Drawer trong Toàn hệ thống ERP
 
-Trong hệ thống Liouni ERP, Drawer được chuẩn hóa thành 3 mô hình kiến trúc rõ ràng:
+Trong hệ thống ERP, Drawer được chuẩn hóa thành 3 mô hình kiến trúc rõ ràng:
 
 ```mermaid
 graph TD

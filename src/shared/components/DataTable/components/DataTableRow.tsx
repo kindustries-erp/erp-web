@@ -30,6 +30,7 @@ export function DataTableRowInner<T>({
         data-context-menu-active={isContextMenuActive ? "true" : undefined}
         className={cn(
           "group",
+          variant === "spreadsheet" && "min-h-[38px] h-[38px]",
           onRowClick && "cursor-pointer",
           isExpanded && "bg-muted/5 font-medium border-l-2 border-l-primary",
           isContextMenuActive && "bg-primary/[0.04] dark:bg-primary/[0.08]",

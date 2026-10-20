@@ -1,0 +1,68 @@
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useV2ToastStore } from "@/v2/shared/stores/useV2ToastStore";
+import {
+  extractV2ApiError,
+  isDocumentInUseError,
+} from "@/v2/shared/utils/v2ApiError";
+import type { {{Entity}}FormValue } from "../../domain/entities/{{entity}}";
+import { {{entityPlural}}V2Api } from "../{{entityPlural}}Api";
+import { {{entityPlural}}Keys } from "../queries/{{entityPlural}}Keys";
+
+type Translate = (key: string, fallback?: string) => string;
+
+export interface Save{{Entity}}Input {
+  id: string | null;
+  form: {{Entity}}FormValue;
+}
+
+/** Tạo mới hoặc cập nhật; thành công làm mới danh sách và chạy `onSaved` */
+export function useSave{{Entity}}Mutation(t: Translate, onSaved: () => void) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, form }: Save{{Entity}}Input) =>
+      id ? {{entityPlural}}V2Api.update(id, form) : {{entityPlural}}V2Api.create(form),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: {{entityPlural}}Keys.all });
+      useV2ToastStore.getState().showToast({
+        variant: "success",
+        title: t("v2.{{namespace}}.form.saveSuccess", "Đã lưu thành công"),
+      });
+      onSaved();
+    },
+    onError: (error) => {
+      // Chứng từ đang tham chiếu đã được modal DOCUMENT_IN_USE giải thích
+      if (isDocumentInUseError(error)) return;
+      const fallback = t("v2.{{namespace}}.form.saveError", "Không thể lưu dữ liệu");
+      useV2ToastStore.getState().showToast({
+        variant: "destructive",
+        title: fallback,
+        description: extractV2ApiError(error, fallback),
+      });
+    },
+  });
+}
+
+/** Xóa mềm; thành công làm mới danh sách và chạy `onRemoved` */
+export function useRemove{{Entity}}Mutation(t: Translate, onRemoved: () => void) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => {{entityPlural}}V2Api.remove(id),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: {{entityPlural}}Keys.all });
+      useV2ToastStore.getState().showToast({
+        variant: "success",
+        title: t("v2.{{namespace}}.delete.success", "Đã xóa"),
+      });
+      onRemoved();
+    },
+    onError: (error) => {
+      if (isDocumentInUseError(error)) return;
+      const fallback = t("v2.{{namespace}}.delete.error", "Không thể xóa");
+      useV2ToastStore.getState().showToast({
+        variant: "destructive",
+        title: fallback,
+        description: extractV2ApiError(error, fallback),
+      });
+    },
+  });
+}

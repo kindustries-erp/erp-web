@@ -1,0 +1,1 @@
+export { ModuleEntityCustomFieldsSection } from "./ModuleEntityCustomFieldsSection";

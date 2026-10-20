@@ -1,18 +1,21 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ErpInvoicesTab } from "../components/ErpInvoicesTab/ErpInvoicesTab";
+import { ErpInvoicesTab } from "../components/organisms/erp-invoices-tab/ErpInvoicesTab";
 
 // Mocks for child sections
-vi.mock("../components/ErpInvoicesTab/components/InvoiceHeaderSection", () => ({
-  InvoiceHeaderSection: ({ direction, activeTab }: any) => (
-    <div data-testid={`view-header-${direction.toLowerCase()}`}>
-      Header {direction} - {activeTab}
-    </div>
-  ),
-}));
+vi.mock(
+  "../components/organisms/erp-invoices-tab/ErpInvoicesTabHeaderSection",
+  () => ({
+    InvoiceHeaderSection: ({ direction, activeTab }: any) => (
+      <div data-testid={`view-header-${direction.toLowerCase()}`}>
+        Header {direction} - {activeTab}
+      </div>
+    ),
+  }),
+);
 
-vi.mock("../components/ErpInvoiceItemsSection", () => ({
+vi.mock("../components/organisms/erp-invoice-items-section", () => ({
   ErpInvoiceItemsSection: ({ direction, activeTab }: any) => (
     <div data-testid={`view-items-${direction.toLowerCase()}`}>
       Items {direction} - {activeTab}
@@ -20,22 +23,34 @@ vi.mock("../components/ErpInvoiceItemsSection", () => ({
   ),
 }));
 
-vi.mock("../components/ErpInvoicesTab/components/InvoiceDrawers", () => ({
-  InvoiceDrawers: () => <div data-testid="invoice-drawers" />,
-}));
-
-vi.mock("../components/ErpInvoicesTab/components/InvoiceBulkModals", () => ({
-  InvoiceBulkModals: () => <div data-testid="invoice-bulk-modals" />,
-}));
+vi.mock(
+  "../components/organisms/erp-invoices-tab/ErpInvoicesTabDrawers",
+  () => ({
+    InvoiceDrawers: () => <div data-testid="invoice-drawers" />,
+  }),
+);
 
 vi.mock(
-  "../components/ErpInvoicesTab/components/InvoiceViewConfigDrawer",
+  "../components/organisms/erp-invoices-tab/ErpInvoicesTabBulkModals",
+  () => ({
+    InvoiceBulkModals: () => <div data-testid="invoice-bulk-modals" />,
+  }),
+);
+
+vi.mock(
+  "@/modules/erp-invoices-core/components/organisms/invoice-view-config-drawer",
   () => ({
     InvoiceViewConfigDrawer: () => (
       <div data-testid="invoice-view-config-drawer" />
     ),
   }),
 );
+
+vi.mock("@/pages/InvoiceDashboard", () => ({
+  InvoiceDashboard: ({ activeTab }: any) => (
+    <div data-testid="view-dashboard">Dashboard - {activeTab}</div>
+  ),
+}));
 
 vi.mock("@/shared/hooks/useHasPermission", () => ({
   useHasPermission: () => true,
@@ -94,7 +109,18 @@ describe("ErpInvoicesTab Synchronous Keep-Alive Mounting", () => {
     window.history.replaceState(null, "", "/erp-invoices");
   });
 
-  it("mounts initial tab 'in' immediately on first render", () => {
+  it("mounts initial tab 'overview' immediately on first render", () => {
+    render(<ErpInvoicesTab />, { wrapper: createWrapper() });
+
+    expect(screen.getByTestId("view-dashboard")).toBeDefined();
+    expect(screen.queryByTestId("view-header-in")).toBeNull();
+    expect(screen.queryByTestId("view-header-out")).toBeNull();
+    expect(screen.queryByTestId("view-items-in")).toBeNull();
+    expect(screen.queryByTestId("view-items-out")).toBeNull();
+  });
+
+  it("mounts initial tab 'in' when tab=in query param is provided", () => {
+    window.history.replaceState(null, "", "/erp-invoices?tab=in");
     render(<ErpInvoicesTab />, { wrapper: createWrapper() });
 
     expect(screen.getByTestId("view-header-in")).toBeDefined();

@@ -6,7 +6,10 @@ import { useQuery } from "@tanstack/react-query";
 
 vi.mock("@tanstack/react-query", () => ({
   useQuery: vi.fn(),
-  useMutation: vi.fn(),
+  useMutation: vi.fn().mockReturnValue({ mutate: vi.fn(), isPending: false }),
+  useQueryClient: vi.fn().mockReturnValue({
+    invalidateQueries: vi.fn(),
+  }),
   useInfiniteQuery: vi.fn().mockReturnValue({
     data: { pages: [{ items: [] }] },
     isLoading: false,
@@ -24,11 +27,15 @@ vi.mock("@/core/config/appStore", () => ({
   useAppStore: () => ({ setCustomBreadcrumbs: vi.fn(), locale: "vi" }),
 }));
 
-vi.mock("@/modules/erp-invoices-core/components/InvoiceDetailWrapper", () => ({
-  InvoiceDetailWrapper: ({ invoiceId }: any) => (
-    <div data-testid="invoice-drawer">{invoiceId}</div>
-  ),
-}));
+vi.mock("@/modules/erp-invoices-core/components", async (importOriginal) => {
+  const actual: any = await importOriginal();
+  return {
+    ...actual,
+    InvoiceDetailWrapper: ({ invoiceId }: any) => (
+      <div data-testid="invoice-drawer">{invoiceId}</div>
+    ),
+  };
+});
 
 vi.mock("@/pages/finance/components/BankTransactionDetailDrawer", () => ({
   BankTransactionDetailDrawer: ({ transactionId }: any) => (
@@ -125,17 +132,17 @@ describe("GeneralJournalPage", () => {
 
     render(<GeneralJournalPage />);
 
-    // Check invoice reference click
-    const invRef = screen.getAllByText("0000123")[0];
-    fireEvent.click(invRef);
+    // Check invoice reference drawer button click
+    const invBtn = screen.getAllByLabelText("Xem hóa đơn VAT liên quan")[0];
+    fireEvent.click(invBtn);
 
     await waitFor(() => {
       expect(screen.getByTestId("invoice-drawer")).toHaveTextContent("inv-1");
     });
 
-    // Check bank reference click
-    const bankRef = screen.getAllByText("PT001")[0];
-    fireEvent.click(bankRef);
+    // Check bank reference drawer button click
+    const bankBtn = screen.getAllByLabelText("Xem giao dịch ngân hàng")[0];
+    fireEvent.click(bankBtn);
 
     await waitFor(() => {
       expect(screen.getByTestId("bank-drawer")).toHaveTextContent("bank-1");

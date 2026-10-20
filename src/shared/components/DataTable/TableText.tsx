@@ -36,6 +36,8 @@ export interface TableTextProps {
   popoverContent?: React.ReactNode | (() => React.ReactNode);
   /** Custom popover icon, defaults to List */
   popoverIcon?: React.ReactNode;
+  /** Alignment of popover, defaults to "start" (left-aligned) */
+  popoverAlign?: "start" | "center" | "end";
 }
 
 export const TableText = React.memo(function TableText({
@@ -52,6 +54,7 @@ export const TableText = React.memo(function TableText({
   drawerTooltip = "Xem thông tin liên quan",
   popoverContent,
   popoverIcon = <List className="w-3.5 h-3.5" />,
+  popoverAlign = "center",
 }: TableTextProps) {
   const [copied, setCopied] = useState(false);
   const [popoverOpen, setPopoverOpen] = useState(false);
@@ -103,6 +106,7 @@ export const TableText = React.memo(function TableText({
           open={popoverOpen}
           onOpenChange={setPopoverOpen}
           side="bottom"
+          align={popoverAlign}
         >
           <Button
             variant="ghost"

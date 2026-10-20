@@ -2,24 +2,15 @@
 
 ## Required read order
 
-1. `.agents/context/current-truth.md`
-2. `.agents/context/working-contract.md`
-3. `.agents/tasks/current-lane.md`
-4. `.agents/AGENTS.md`
-5. `AGENTS.md`
-6. `.agents/rules/ai-instructions/technical-instructions.md`
-7. `.agents/context/system/app-structure.md`
-8. Relevant task file in `.agents/tasks/`
+1. `AGENTS.md` (router gộp của repo này)
+2. `.agents/AGENTS.md`
+3. `.agents/skills/liouni-erp-web-current-truth/SKILL.md`
+4. Workflow liên quan trong `.agents/workflows/` (ví dụ `plan-and-task.md`, `standardize-table.md`)
 
 ## Working rules
 
-- Reuse existing skills, hooks, and UI patterns before creating new artifacts.
+- Dùng `bun` / `bunx` only, không dùng `npm` hay `yarn`.
+- Reuse existing components, hooks and utils (`src/components/`) before creating new ones.
 - Follow gate order: DB -> API -> UI -> QC.
-- Use Bun/Bunx only.
-- No code without a task file in `.agents/tasks/`.
-- Respect pre-commit and pre-push hooks.
-- Before push, run this sequence explicitly: `bun run check:ci` -> `bun run test` (Vitest) -> `bun run build` -> `git push`.
-
-## Notes
-
-- Treat Directus and Gitea docs as historical/reference unless the task explicitly sets legacy scope.
+- Mọi text hiển thị dùng i18n key, không hard-code.
+- Before push: chạy `bun run verify:final` một lần trên commit cuối, sau đó push theo ERP Git workflow.

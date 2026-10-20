@@ -304,15 +304,120 @@ export function ExampleConfirmUsage() {
 
 ---
 
+## 9. Chuẩn Modal & Dialog Kiến Trúc V2 (`src/v2/`)
+
+Trong kiến trúc ERP Web v2 (`src/v2/`), toàn bộ hệ thống Modal tuân thủ quy chuẩn phân tầng nghiêm ngặt (Atomic Design & Platform Split) và quy tắc **No Lateral Import (không import ngang cấp giữa các Molecule)**:
+
+```mermaid
+graph TD
+    subgraph L1_UI_Primitives["Tầng 1: Shared UI Primitives & Atoms (@/v2/shared/ui & atoms)"]
+        RadixDialog["@radix-ui/react-dialog"] --> DialogPrimitive["@/v2/shared/ui/dialog\n(Dialog, DialogContent, DialogOverlay...)"]
+        V2ButtonAtom["@/v2/shared/components/atoms/v2-button\n(V2Button)"]
+    end
+
+    subgraph L2_Molecules["Tầng 2: Shared Molecules (@/v2/shared/components/molecules - Độc Lập)"]
+        DialogPrimitive -->|Import L1| V2ModalSwitcher["V2Modal (Switcher < 15 LoC)"]
+        DialogPrimitive -->|Import L1| V2ConfirmModalSwitcher["V2ConfirmModal (Switcher < 15 LoC)"]
+        V2ButtonAtom -->|Import L1| V2ConfirmModalSwitcher
+        
+        V2ModalSwitcher -->|Desktop ≥ 768px| V2ModalDesktop["V2Modal.desktop.tsx\n(Centered Glass Card, 5 Sizes)"]
+        V2ModalSwitcher -->|Mobile < 768px| V2ModalMobile["V2Modal.mobile.tsx\n(Bottom Sheet + Grab Handle)"]
+        
+        V2ConfirmModalSwitcher -->|Desktop ≥ 768px| V2ConfirmModalDesktop["V2ConfirmModal.desktop.tsx\n(Compact Dialog max-w-[380px])"]
+        V2ConfirmModalSwitcher -->|Mobile < 768px| V2ConfirmModalMobile["V2ConfirmModal.mobile.tsx\n(Bottom Sheet Confirm)"]
+    end
+```
+
+### 9.1. Tầng UI Primitive: `@/v2/shared/ui/dialog`
+- Đóng gói `@radix-ui/react-dialog` kết hợp với HSL CSS variables (`--modal-bg`, `--glass-blur`, `--popup-border`, `shadow-2xl`).
+- Cung cấp: `Dialog`, `DialogTrigger`, `DialogPortal`, `DialogOverlay`, `DialogContent`, `DialogHeader`, `DialogFooter`, `DialogTitle`, `DialogDescription`, `DialogClose`.
+
+### 9.2. Base Standard Modal: `V2Modal`
+- **Đường dẫn**: `@/v2/shared/components/molecules/v2-modal`
+- **Platform Split tự động**:
+  - **Desktop (≥ 768px)**: Căn giữa màn hình dạng thẻ kính nổi (`Centered Glass Card`), hỗ trợ 5 kích cỡ: `sm` (380px), `md` (480px), `lg` (560px), `xl` (680px), `full` (92vw/90vh).
+  - **Mobile (< 768px)**: Tự động chuyển thành **Bottom Sheet** kẹp đáy màn hình, tích hợp thanh kéo thao tác chạm (`grab handle bar`), cuộn tối đa `90vh`, safe-area padding cho thiết bị di động.
+- **Cách sử dụng**:
+```tsx
+import { useState } from "react";
+import { V2Modal } from "@/v2/shared/components/molecules/v2-modal";
+import { V2Button } from "@/v2/shared/components/atoms/v2-button";
+
+export function PartnerDetailModal() {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <V2Modal
+      open={open}
+      onOpenChange={setOpen}
+      size="md"
+      title="Hồ sơ đối tác"
+      description="Xem và cập nhật thông tin đối tác kinh doanh."
+      footer={
+        <div className="flex justify-end gap-2 w-full">
+          <V2Button variant="secondary" onClick={() => setOpen(false)}>Hủy</V2Button>
+          <V2Button variant="primary" onClick={() => setOpen(false)}>Lưu</V2Button>
+        </div>
+      }
+    >
+      <div className="text-sm">Nội dung form đối tác...</div>
+    </V2Modal>
+  );
+}
+```
+
+### 9.3. Reusable Confirm Modal: `V2ConfirmModal`
+- **Đường dẫn**: `@/v2/shared/components/molecules/v2-confirm-modal`
+- **Độc lập (No Lateral Import)**: Không import `V2Modal`, tự quản lý layout Desktop (`max-w-[380px]`) và Mobile Bottom Sheet bằng cách compose trực tiếp từ `@/v2/shared/ui/dialog` và `V2Button`.
+- **Variants**:
+  - `danger`: Icon `AlertTriangle` màu `destructive`, confirm button dạng `destructive`.
+  - `warning`: Icon `AlertCircle` màu `warning`.
+  - `primary`: Icon `HelpCircle` màu `primary`.
+- **Cách sử dụng**:
+```tsx
+import { useState } from "react";
+import { V2ConfirmModal } from "@/v2/shared/components/molecules/v2-confirm-modal";
+
+export function DeleteOrderAction() {
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const handleDelete = async () => {
+    setLoading(true);
+    try {
+      await apiDeleteOrder();
+      setOpen(false);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <V2ConfirmModal
+      open={open}
+      variant="danger"
+      title="Xác nhận xóa đơn hàng"
+      message="Đơn hàng SO-202610-001 sẽ bị hủy và không thể hoàn tác."
+      confirmLabel="Xóa đơn hàng"
+      cancelLabel="Bỏ qua"
+      isLoading={loading}
+      onConfirm={handleDelete}
+      onCancel={() => setOpen(false)}
+    />
+  );
+}
+```
+
+---
+
 ## Summary Checklist trước khi hoàn thành:
 
-- [ ] Modal sử dụng `<Dialog>` và `<DialogContent>` từ `@/shared/components/ui/Dialog` hoặc `<ConfirmModal>` từ `@/shared/components/ConfirmModal`?
-- [ ] Modal content có hiệu ứng glassmorphism (`backdrop-blur-xl`, `bg-surface/80`) chưa?
+- [ ] Modal sử dụng `<Dialog>` và `<DialogContent>` từ `@/shared/components/ui/Dialog` (V1) hoặc `@/v2/shared/ui/dialog` / `V2Modal` (V2)?
+- [ ] Modal content có hiệu ứng glassmorphism (`backdrop-blur-xl`, `bg-surface/80` hoặc `--modal-bg`) chưa?
 - [ ] Size variant (`max-w-[380px]` cho confirm/close alert, `max-w-[480px]` cho form, `max-w-[560px]` cho search/command) phù hợp use-case chưa?
 - [ ] Với Confirm Modal: thiết kế tối giản, sạch sẽ, không đóng khung/card lồng phức tạp bên trong hộp thoại?
 - [ ] Có `<DialogTitle>` (hoặc `<DialogTitle className="sr-only">`) để đảm bảo accessibility (ARIA) chưa?
 - [ ] Phím `Esc` và click outside overlay hoạt động bình thường chưa?
 - [ ] Scroll lock tự động hoạt động khi mở modal chưa?
-- [ ] Nếu là Command Palette: sử dụng layout `top-[15vh] translate-y-0`, `hideCloseButton`, và đăng ký global shortcut `⌘K` / `Ctrl+K` ở parent layout chưa?
 - [ ] Tất cả text tĩnh đều được bọc qua `t(...)` đa ngôn ngữ (i18n) chưa?
 

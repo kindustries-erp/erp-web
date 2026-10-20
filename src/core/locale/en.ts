@@ -51,9 +51,11 @@ import { bomConfigEn } from "@/core/locale/manufacturing/bomConfig/en";
 import { productionConfigEn } from "@/core/locale/manufacturing/productionConfig/en";
 import { changelogEn } from "@/core/locale/system/changelog/en";
 import { moduleConfigEn } from "@/core/locale/settings/moduleConfig/en";
+import { debtsEn } from "@/core/locale/accounting/debts/en";
 
 export const en: Dict = {
   ...legacyStringsEn,
+  debts: debtsEn,
   productionConfig: productionConfigEn,
   moduleConfig: moduleConfigEn,
   nav: navEn,

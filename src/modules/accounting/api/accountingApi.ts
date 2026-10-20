@@ -24,10 +24,30 @@ export interface ChartOfAccountItem {
   is_payable_account?: boolean;
   is_active?: boolean;
   isActive?: boolean;
+  is_deleted?: boolean;
+  isDeleted?: boolean;
   created_at?: string;
   createdAt?: string;
   updated_at?: string | null;
   updatedAt?: string | null;
+}
+
+export interface UpdateJournalEntryLinePayload {
+  id?: string;
+  accountId: string;
+  debit: number;
+  credit: number;
+  description?: string;
+}
+
+export interface UpdateJournalEntryPayload {
+  entryNo?: string;
+  date?: string;
+  documentDate?: string;
+  description?: string;
+  subjectName?: string;
+  branchId?: string;
+  lines?: UpdateJournalEntryLinePayload[];
 }
 
 export const accountingApi = {
@@ -80,6 +100,17 @@ export const accountingApi = {
   getJournalEntryById: async (id: string) => {
     const res = await axiosInstance.get(
       `/api/v1/accounting-core/journal-entries/${id}`,
+    );
+    return res.data.data;
+  },
+
+  updateJournalEntry: async (
+    id: string,
+    payload: UpdateJournalEntryPayload,
+  ) => {
+    const res = await axiosInstance.patch(
+      `/api/v1/accounting-core/journal-entries/${id}`,
+      payload,
     );
     return res.data.data;
   },

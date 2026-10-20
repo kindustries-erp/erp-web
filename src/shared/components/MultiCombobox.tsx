@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import * as Popover from "@radix-ui/react-popover";
+import * as Tooltip from "@radix-ui/react-tooltip";
 import { Check, ChevronDown, Search, X } from "lucide-react";
 import { cn } from "@/shared/utils";
 
@@ -41,7 +42,14 @@ export function MultiCombobox({
   const onSearchRef = useRef(onSearch);
   onSearchRef.current = onSearch;
 
+  const [tipOpen, setTipOpen] = useState(false);
   const selectedOptions = options.filter((o) => value.includes(o.value));
+  const selectedLabels = selectedOptions.map(
+    (o) => parseComboboxOptionDisplay(o).label,
+  );
+  const [firstSelected, ...restSelected] = selectedOptions;
+  // Tooltip chỉ hiện khi có từ hai mục và popover đang đóng
+  const tooltipEnabled = !open && selectedOptions.length > 1;
 
   const filtered = query.trim()
     ? options.filter((o) => {
@@ -95,55 +103,82 @@ export function MultiCombobox({
 
   return (
     <Popover.Root open={open} onOpenChange={setOpen}>
-      <Popover.Trigger asChild>
-        <button
-          type="button"
-          disabled={disabled || readOnly}
-          onClick={() => !(disabled || readOnly) && setOpen(!open)}
-          className={cn(
-            "flex flex-wrap items-center gap-1.5 justify-between w-full px-2 py-1.5 min-h-[36px] text-xs border rounded-xl transition-all outline-none",
-            open
-              ? "border-primary ring-2 ring-primary/10 bg-surface"
-              : "border-border bg-muted/20 hover:border-border-hover hover:bg-surface",
-            disabled
-              ? "opacity-60 cursor-not-allowed"
-              : readOnly
-                ? "cursor-default"
-                : "cursor-pointer",
-            className,
-          )}
+      <Tooltip.Provider delayDuration={200}>
+        <Tooltip.Root
+          open={tipOpen && tooltipEnabled}
+          onOpenChange={(next) => setTipOpen(next && tooltipEnabled)}
         >
-          <div className="flex flex-wrap gap-1 flex-1 text-left">
-            {selectedOptions.length > 0 ? (
-              selectedOptions.map((opt) => {
-                const { label: optLabel } = parseComboboxOptionDisplay(opt);
-                return (
-                  <span
-                    key={opt.value}
-                    className="bg-primary/10 text-primary px-1.5 py-0.5 rounded flex items-center gap-1 max-w-[140px]"
-                  >
-                    <span className="truncate">{optLabel}</span>
-                    {!readOnly && !disabled && (
-                      <X
-                        className="w-3 h-3 cursor-pointer hover:opacity-70"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleOption(opt.value);
-                        }}
-                      />
-                    )}
-                  </span>
-                );
-              })
-            ) : (
-              <span className="text-[color:var(--muted-fg)] px-1">
-                {placeholder}
-              </span>
-            )}
-          </div>
-          <ChevronDown className="w-3.5 h-3.5 shrink-0 text-[color:var(--muted-fg)] ml-2" />
-        </button>
-      </Popover.Trigger>
+          <Tooltip.Trigger asChild>
+            <Popover.Trigger asChild>
+              <button
+                type="button"
+                disabled={disabled || readOnly}
+                aria-label={
+                  selectedOptions.length > 0
+                    ? `${placeholder}: ${selectedOptions.length} mục đã chọn`
+                    : placeholder
+                }
+                onClick={() => !(disabled || readOnly) && setOpen(!open)}
+                className={cn(
+                  "flex items-center gap-1.5 justify-between w-full px-2 h-9 text-xs border rounded-xl transition-all outline-none",
+                  open
+                    ? "border-primary ring-2 ring-primary/10 bg-surface"
+                    : "border-border bg-muted/20 hover:border-border-hover hover:bg-surface",
+                  disabled
+                    ? "opacity-60 cursor-not-allowed"
+                    : readOnly
+                      ? "cursor-default"
+                      : "cursor-pointer",
+                  className,
+                )}
+              >
+                <div className="flex min-w-0 flex-1 items-center gap-1 overflow-hidden text-left">
+                  {firstSelected ? (
+                    <>
+                      <span className="bg-primary/10 text-primary px-1.5 py-0.5 rounded flex min-w-0 items-center gap-1">
+                        <span className="truncate">
+                          {parseComboboxOptionDisplay(firstSelected).label}
+                        </span>
+                        {!readOnly && !disabled && (
+                          <X
+                            className="w-3 h-3 shrink-0 cursor-pointer hover:opacity-70"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleOption(firstSelected.value);
+                            }}
+                          />
+                        )}
+                      </span>
+                      {restSelected.length > 0 && (
+                        <span className="shrink-0 rounded bg-primary/10 px-1.5 py-0.5 text-primary">
+                          +{restSelected.length}
+                        </span>
+                      )}
+                    </>
+                  ) : (
+                    <span className="text-[color:var(--muted-fg)] px-1 truncate">
+                      {placeholder}
+                    </span>
+                  )}
+                </div>
+                <ChevronDown className="w-3.5 h-3.5 shrink-0 text-[color:var(--muted-fg)] ml-2" />
+              </button>
+            </Popover.Trigger>
+          </Tooltip.Trigger>
+          <Tooltip.Portal>
+            <Tooltip.Content
+              side="bottom"
+              align="start"
+              sideOffset={4}
+              className="z-[9999] max-w-[320px] rounded-md bg-foreground px-2.5 py-2 text-xs text-background shadow-md"
+            >
+              {selectedLabels.map((label) => (
+                <div key={label}>{label}</div>
+              ))}
+            </Tooltip.Content>
+          </Tooltip.Portal>
+        </Tooltip.Root>
+      </Tooltip.Provider>
 
       <Popover.Portal>
         <Popover.Content

@@ -1,0 +1,125 @@
+import * as React from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useV2Translation } from "@/v2/shared/hooks/useV2Translation";
+import { useV2ToastStore } from "@/v2/shared/stores/useV2ToastStore";
+import { extractV2ApiError } from "@/v2/shared/utils/v2ApiError";
+import { {{entityPlural}}V2Api } from "../api/{{entityPlural}}Api";
+import { useSave{{Entity}}Mutation } from "../api/mutations/use{{Entity}}Mutations";
+import { {{entityPlural}}Keys } from "../api/queries/{{entityPlural}}Keys";
+import {
+  empty{{Entity}}Form,
+  type {{Entity}},
+  type {{Entity}}FormValue,
+} from "../domain/entities/{{entity}}";
+import {
+  is{{Entity}}FormDirty,
+  validate{{Entity}}Form,
+} from "../domain/rules/{{entity}}Rules";
+
+export interface {{Entity}}DrawerState {
+  open: boolean;
+  recordId: string | null;
+  mode: "view" | "edit";
+  canUpdate: boolean;
+  onClose: () => void;
+}
+
+const toForm = (data: {{Entity}}): {{Entity}}FormValue => ({
+{{#each formFields}}
+  {{name}}: {{#if isStatus}}data.{{name}} === "INACTIVE" ? "INACTIVE" : "ACTIVE"{{else}}{{#if isNumber}}data.{{name}} == null ? "" : String(data.{{name}}){{else}}data.{{name}} ?? ""{{/if}}{{/if}},
+{{/each}}
+});
+
+export function use{{Entity}}Drawer(state: {{Entity}}DrawerState) {
+  const { t } = useV2Translation();
+  const [mode, setMode] = React.useState(state.mode);
+  const [form, setForm] = React.useState<{{Entity}}FormValue>(empty{{Entity}}Form);
+  const [initial, setInitial] = React.useState<{{Entity}}FormValue>(empty{{Entity}}Form);
+  const [errorField, setErrorField] = React.useState<string | null>(null);
+  const creating = !state.recordId;
+  const detail = useQuery({
+    queryKey: {{entityPlural}}Keys.detail(state.recordId ?? "new"),
+    queryFn: () => {{entityPlural}}V2Api.get(state.recordId!),
+    enabled: state.open && Boolean(state.recordId),
+  });
+
+  React.useEffect(() => setMode(state.mode), [state.mode, state.open]);
+  React.useEffect(() => {
+    if (!state.open) return;
+    setErrorField(null);
+    if (detail.data) {
+      const loaded = toForm(detail.data);
+      setForm(loaded);
+      setInitial(loaded);
+    } else if (!state.recordId) {
+      const fresh = empty{{Entity}}Form();
+      setForm(fresh);
+      setInitial(fresh);
+{{#if hasNextCode}}
+      void {{entityPlural}}V2Api.nextCode().then(({ nextCode }) => {
+        setForm((value) => ({ ...value, {{firstName}}: nextCode }));
+        setInitial((value) => ({ ...value, {{firstName}}: nextCode }));
+      });
+{{/if}}
+    }
+  }, [state.open, state.recordId, detail.data]);
+
+  React.useEffect(() => {
+    if (!detail.error) return;
+    const fallback = t("v2.{{namespace}}.form.loadError", "Không thể tải dữ liệu");
+    useV2ToastStore.getState().showToast({
+      variant: "destructive",
+      title: fallback,
+      description: extractV2ApiError(detail.error, fallback),
+    });
+  }, [detail.error, t]);
+
+  const save = useSave{{Entity}}Mutation(t, state.onClose);
+
+  const setField = <K extends keyof {{Entity}}FormValue>(
+    key: K,
+    value: {{Entity}}FormValue[K],
+  ) => setForm((current) => ({ ...current, [key]: value }));
+
+{{#if hasNextCode}}
+  const regenerateCode = () => {
+    void {{entityPlural}}V2Api
+      .nextCode()
+      .then(({ nextCode }) => setField("{{firstName}}", nextCode));
+  };
+
+{{/if}}
+  const submit = () => {
+    const missing = validate{{Entity}}Form(form);
+    if (missing) {
+      setErrorField(missing);
+      useV2ToastStore.getState().showToast({
+        variant: "destructive",
+        title: t("v2.{{namespace}}.form.missingInfo", "Thiếu thông tin"),
+        description: t("v2.{{namespace}}.form.required", "Trường này là bắt buộc"),
+      });
+      return;
+    }
+    setErrorField(null);
+    save.mutate({ id: state.recordId, form });
+  };
+
+  return {
+    form,
+    setField,
+    mode,
+    setMode,
+    creating,
+    codeEditable: creating,
+    viewing: mode === "view" && !creating,
+    loading: detail.isFetching,
+    saving: save.isPending,
+    dirty: is{{Entity}}FormDirty(form, initial),
+    errorField,
+    errorMessage: t("v2.{{namespace}}.form.required", "Trường này là bắt buộc"),
+    submit,
+{{#if hasNextCode}}
+    regenerateCode,
+{{/if}}
+  };
+}

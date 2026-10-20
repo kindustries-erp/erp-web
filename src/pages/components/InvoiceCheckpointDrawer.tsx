@@ -2,7 +2,7 @@ import React from "react";
 import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
 import { Badge } from "@/shared/components/ui/badge";
 import { useTranslation } from "react-i18next";
-import { ErpInvoicesTab } from "@/modules/erp-invoices-core/components/ErpInvoicesTab";
+import { ErpInvoicesTab } from "@/modules/erp-invoices-core/components";
 
 export interface InvoiceCheckpointDrawerProps {
   open: boolean;

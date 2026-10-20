@@ -1,13 +1,13 @@
 import { FileText } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate/SpreadsheetPageTemplate";
-import { ErpInvoiceInternalDrawer } from "@/modules/erp-invoices-core/components/ErpInvoiceInternalDrawer";
-import { VietnamInvoiceTemplate } from "@/modules/erp-invoices-core/components/VietnamInvoiceTemplate";
 import {
+  ErpInvoiceInternalDrawer,
+  VietnamInvoiceTemplate,
   ErpInvoiceInternalSidebar,
   ErpInvoiceInternalMain,
-} from "@/modules/erp-invoices-core/components/ErpInvoiceInternalInfo";
-import { ErpInvoicePdfUpload } from "@/modules/erp-invoices-core/components/ErpInvoicePdfUpload";
+  ErpInvoicePdfUpload,
+} from "@/modules/erp-invoices-core/components";
 import { VinfastPartsExportDrawer } from "@/pages/components/VinfastPartsExportDrawer";
 import { VinfastPartsSyncDrawer } from "@/pages/components/VinfastPartsSyncDrawer";
 

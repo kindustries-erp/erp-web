@@ -9,23 +9,30 @@ export interface ComboboxOption {
   value: string;
   label: string;
   code?: string;
+  subCode?: string;
   searchText?: string;
   subLabel?: string;
+  tooltipContent?: React.ReactNode;
 }
 
 export function parseComboboxOptionDisplay(o?: ComboboxOption | null): {
   label: string;
   code?: string;
+  subCode?: string;
 } {
-  if (!o) return { label: "", code: undefined };
+  if (!o) return { label: "", code: undefined, subCode: undefined };
   if (o.code) {
-    return { label: o.label, code: o.code };
+    return { label: o.label, code: o.code, subCode: o.subCode };
   }
   const match = o.label.match(/^(.*?)\s*\[([^\]]+)\]$/);
   if (match) {
-    return { label: match[1].trim(), code: match[2].trim() };
+    return {
+      label: match[1].trim(),
+      code: match[2].trim(),
+      subCode: o.subCode,
+    };
   }
-  return { label: o.label, code: undefined };
+  return { label: o.label, code: undefined, subCode: o.subCode };
 }
 
 interface ComboboxProps {
@@ -43,7 +50,12 @@ interface ComboboxProps {
   loading?: boolean;
   onSearch?: (query: string) => void;
   fallbackLabel?: string;
-  variant?: "default" | "spreadsheet";
+  fallbackTooltipContent?: React.ReactNode;
+  variant?: "default" | "spreadsheet" | "ghost";
+  /** Khi bật, ẩn subLabel trên nút trigger để giữ nút thoáng đãng trên 1 dòng duy nhất */
+  hideTriggerSubLabel?: boolean;
+  /** Gắn dropdown vào phần tử này thay vì `document.body` (cần khi nằm trong phần tử đang full screen). */
+  portalContainer?: HTMLElement | null;
 }
 
 export function Combobox({
@@ -61,7 +73,10 @@ export function Combobox({
   loading,
   onSearch,
   fallbackLabel,
+  fallbackTooltipContent,
   variant = "default",
+  hideTriggerSubLabel = false,
+  portalContainer,
 }: ComboboxProps) {
   const t = useT();
   const defaultPlaceholder = t("common.select", "— Chọn —");
@@ -79,7 +94,23 @@ export function Combobox({
     return options.filter((o) => o.value !== "" && o.value !== undefined);
   }, [options, allowClear]);
 
-  const selected = options.find((o) => o.value === value);
+  const [cachedSelected, setCachedSelected] = useState<
+    ComboboxOption | undefined
+  >(undefined);
+
+  const selectedFromOptions = options.find((o) => o.value === value);
+  const selected =
+    selectedFromOptions ||
+    (cachedSelected?.value === value ? cachedSelected : undefined);
+
+  useEffect(() => {
+    if (selectedFromOptions) {
+      setCachedSelected(selectedFromOptions);
+    } else if (!value) {
+      setCachedSelected(undefined);
+    }
+  }, [value, selectedFromOptions]);
+
   const selectedDisplay = useMemo(
     () => parseComboboxOptionDisplay(selected),
     [selected],
@@ -133,14 +164,27 @@ export function Combobox({
     <Popover.Root open={open} onOpenChange={setOpen}>
       <Tooltip
         content={
-          selected
-            ? selectedDisplay.code
-              ? `${selectedDisplay.label} (${selectedDisplay.code})`
-              : selectedDisplay.label
-            : fallbackLabel || ""
+          selected?.tooltipContent ? (
+            selected.tooltipContent
+          ) : selected ? (
+            <div className="flex flex-col gap-0.5">
+              <span>
+                {selectedDisplay.label}
+                {selectedDisplay.code && ` (${selectedDisplay.code})`}
+                {selectedDisplay.subCode && ` (${selectedDisplay.subCode})`}
+              </span>
+              {selected.subLabel && (
+                <span className="text-white/70">{selected.subLabel}</span>
+              )}
+            </div>
+          ) : (
+            fallbackTooltipContent || fallbackLabel || ""
+          )
         }
         side="top"
-        disabled={!selected || open}
+        disabled={
+          open || (!selected && !fallbackLabel && !fallbackTooltipContent)
+        }
       >
         <Popover.Trigger asChild>
           <button
@@ -159,6 +203,11 @@ export function Combobox({
               variant === "spreadsheet" &&
                 open &&
                 "bg-white border-0 rounded-none shadow-none ring-0 outline-none",
+              variant === "ghost" &&
+                "px-2 py-1 text-xs border-0 rounded-lg shadow-none ring-0 outline-none bg-transparent hover:bg-slate-100/50 dark:hover:bg-slate-800/50",
+              variant === "ghost" &&
+                open &&
+                "bg-transparent border-0 ring-0 outline-none shadow-none",
               disabled
                 ? "opacity-60 cursor-not-allowed"
                 : readOnly
@@ -176,24 +225,33 @@ export function Combobox({
                       ? fallbackLabel
                       : effectivePlaceholder}
                 </span>
-                {selected?.subLabel && (
+                {selected?.subLabel && !hideTriggerSubLabel && (
                   <span className="truncate text-[10px] text-[color:var(--muted-fg)] leading-tight mt-0.5">
                     {selected.subLabel}
                   </span>
                 )}
               </span>
-              {selected && selectedDisplay.code && (
-                <span className="shrink-0 px-1.5 py-0.5 rounded text-[10px] font-mono font-medium text-muted-foreground bg-slate-100 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80">
-                  {selectedDisplay.code}
-                </span>
-              )}
+              {selected && (selectedDisplay.code || selectedDisplay.subCode) ? (
+                <div className="shrink-0 flex flex-col items-end gap-0.5">
+                  {selectedDisplay.code && (
+                    <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-medium text-muted-foreground bg-slate-100 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80">
+                      {selectedDisplay.code}
+                    </span>
+                  )}
+                  {selectedDisplay.subCode && (
+                    <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-medium text-muted-foreground bg-slate-100 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80">
+                      {selectedDisplay.subCode}
+                    </span>
+                  )}
+                </div>
+              ) : null}
             </span>
             <ChevronDown className="w-3.5 h-3.5 shrink-0 text-[color:var(--muted-fg)] ml-2" />
           </button>
         </Popover.Trigger>
       </Tooltip>
 
-      <Popover.Portal>
+      <Popover.Portal container={portalContainer ?? undefined}>
         <Popover.Content
           className="z-[9999] w-[var(--radix-popover-trigger-width)] min-w-[200px] flex flex-col rounded-lg popup-content overflow-hidden shadow-md"
           style={{ maxHeight: "280px" }}
@@ -266,7 +324,22 @@ export function Combobox({
                 const { label: itemLabel, code: itemCode } =
                   parseComboboxOptionDisplay(o);
                 return (
-                  <Tooltip key={o.value} content={itemLabel} side="right">
+                  <Tooltip
+                    key={o.value}
+                    content={
+                      o.tooltipContent ? (
+                        o.tooltipContent
+                      ) : o.subLabel ? (
+                        <div className="flex flex-col gap-0.5">
+                          <span>{itemLabel}</span>
+                          <span className="text-white/70">{o.subLabel}</span>
+                        </div>
+                      ) : (
+                        itemLabel
+                      )
+                    }
+                    side="right"
+                  >
                     <button
                       type="button"
                       onClick={() => {
@@ -295,10 +368,19 @@ export function Combobox({
                             </span>
                           )}
                         </div>
-                        {itemCode && (
-                          <span className="shrink-0 px-1.5 py-0.5 rounded text-[10px] font-mono font-medium text-muted-foreground bg-slate-100 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80 shadow-2xs group-hover/item:text-foreground transition-colors">
-                            {itemCode}
-                          </span>
+                        {(itemCode || o.subCode) && (
+                          <div className="shrink-0 flex flex-col items-end gap-0.5">
+                            {itemCode && (
+                              <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-medium text-muted-foreground bg-slate-100 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80 shadow-2xs group-hover/item:text-foreground transition-colors">
+                                {itemCode}
+                              </span>
+                            )}
+                            {o.subCode && (
+                              <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-medium text-muted-foreground bg-slate-100 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80 shadow-2xs group-hover/item:text-foreground transition-colors">
+                                {o.subCode}
+                              </span>
+                            )}
+                          </div>
                         )}
                       </div>
                     </button>

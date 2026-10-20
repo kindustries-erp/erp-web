@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { ErpInvoiceStandaloneDrawer } from "@/modules/erp-invoices-core/components/ErpInvoiceStandaloneDrawer";
+import { ErpInvoiceStandaloneDrawer } from "@/modules/erp-invoices-core/components";
 import { GarageCaseStandaloneDrawer } from "@/modules/garage/components/GarageCaseStandaloneDrawer";
 import { PurchaseOrderStandaloneDrawer } from "@/modules/purchase-orders-core/components/PurchaseOrderStandaloneDrawer";
 import { ErpSalesOrderStandaloneDrawer } from "@/modules/sales-orders-core/components/ErpSalesOrderStandaloneDrawer";

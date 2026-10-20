@@ -1,3 +1,7 @@
+import { buildModuleData } from "./plop-helpers/v2ModuleData.mjs";
+import { insertAtMarker } from "./plop-helpers/v2Wiring.mjs";
+import { moduleFileMap, wiringPlan } from "./plop-helpers/v2ModuleFiles.mjs";
+
 export default function (plop) {
   // Handlebars Helper: eq
   plop.setHelper("eq", function (a, b) {
@@ -261,5 +265,108 @@ export default function (plop) {
         templateFile: "plop-templates/table-section/TableSection.tsx.hbs",
       },
     ],
+  });
+
+  // 5. GENERATOR: Module V2 chuẩn (Dual-Run /v2/) — xem .agents/skills/erp-web-v2-refactor
+  plop.setGenerator("v2-module", {
+    description:
+      "Tạo module V2 chuẩn (API, domain, atomic components, drawer, page, locale, test) và nối route/menu/i18n",
+    prompts: [
+      {
+        type: "input",
+        name: "moduleName",
+        message: "Tên module (kebab-case, vd: sample-items):",
+        validate: (value) =>
+          /^[a-z][a-z0-9-]*$/.test(value) || "Dùng kebab-case, bắt đầu bằng chữ thường",
+      },
+      {
+        type: "input",
+        name: "entityName",
+        message: "Tên thực thể số ít (PascalCase, vd: SampleItem):",
+      },
+      {
+        type: "input",
+        name: "pluralName",
+        message: "Tên thực thể số nhiều (PascalCase, vd: SampleItems):",
+      },
+      { type: "input", name: "titleVi", message: "Tiêu đề tiếng Việt:" },
+      { type: "input", name: "titleEn", message: "Tiêu đề tiếng Anh:" },
+      {
+        type: "input",
+        name: "apiBase",
+        message: "Đường dẫn API (vd: /api/v1/sample-items):",
+      },
+      {
+        type: "input",
+        name: "permissionCollection",
+        message: "Collection quyền (vd: sample_items):",
+      },
+      {
+        type: "input",
+        name: "routeInput",
+        message: "Đường dẫn route (mặc định = tên module):",
+        default: (answers) => answers.moduleName,
+      },
+      {
+        type: "list",
+        name: "navSection",
+        message: "Nhóm menu:",
+        choices: [
+          "overview",
+          "sales",
+          "purchasing",
+          "inventory",
+          "manufacturing",
+          "accounting",
+          "settings",
+        ],
+        default: "settings",
+      },
+      {
+        type: "input",
+        name: "tableInput",
+        message: "Table ID lưu cấu hình cột (mặc định erp-<module>-table):",
+        default: (answers) => `erp-${answers.moduleName}-table`,
+      },
+      {
+        type: "input",
+        name: "fieldSpec",
+        message:
+          "Trường, dạng name:type[:required], ngăn bằng dấu phẩy (type: string|text|number|date|status):",
+      },
+      {
+        type: "confirm",
+        name: "hasNextCode",
+        message: "Có endpoint sinh mã tự động (next-code)?",
+        default: false,
+      },
+      {
+        type: "confirm",
+        name: "wire",
+        message: "Tự nối route, menu và i18n vào các file chung?",
+        default: true,
+      },
+    ],
+    actions: (answers) => {
+      // Ném lỗi trước khi ghi file nào, nên đầu vào sai không để lại module dở dang
+      const data = buildModuleData(answers);
+      const actions = moduleFileMap(data).map(([template, path]) => ({
+        type: "add",
+        path,
+        templateFile: `plop-templates/v2-module/${template}`,
+        data,
+      }));
+      if (answers.wire) {
+        for (const change of wiringPlan(data)) {
+          actions.push({
+            type: "modify",
+            path: change.file,
+            transform: (content) =>
+              insertAtMarker(content, change.marker, change.snippet, change.id).content,
+          });
+        }
+      }
+      return actions;
+    },
   });
 }

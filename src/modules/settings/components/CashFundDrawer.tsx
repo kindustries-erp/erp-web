@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState, useEffect, useMemo, type ChangeEvent } from "react";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
+import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
 import {
-  DrawerModal,
   DrawerSection,
   DrawerField,
+  type DrawerAction,
 } from "@/shared/components/DrawerModal";
-import { Button } from "@/shared/components/ui/Button";
+import { Input } from "@/shared/components/ui/input";
 import { DatePicker } from "@/shared/components/DatePicker";
 import { Checkbox } from "@/shared/components/ui/checkbox";
 import { Combobox } from "@/shared/components/Combobox";
@@ -15,9 +16,9 @@ import {
 } from "@/modules/bank-statements/api/bankStatementApi";
 import { getChartOfAccountsApi } from "@/modules/accounting/api/catalogApi";
 import { getBranchOptionsApi } from "@/modules/branches/api/branchApi";
-import { useQuery } from "@tanstack/react-query";
 import { useAppStore } from "@/core/config/appStore";
 import { useT } from "@/core/i18n";
+import { Wallet } from "lucide-react";
 import toast from "react-hot-toast";
 
 interface Props {
@@ -25,15 +26,36 @@ interface Props {
   onClose: () => void;
   cashBook: ErpCashBook | null;
   onSuccess: () => void;
+  mode?: "view" | "edit";
+  onToggleEdit?: () => void;
 }
 
-export function CashFundDrawer({ open, onClose, cashBook, onSuccess }: Props) {
+const CURRENCY_OPTIONS = [
+  { value: "VND", label: "VND" },
+  { value: "USD", label: "USD" },
+];
+
+export function CashFundDrawer({
+  open,
+  onClose,
+  cashBook,
+  onSuccess,
+  mode = "edit",
+  onToggleEdit,
+}: Props) {
   const t = useT();
   const queryClient = useQueryClient();
   const { currentBranchId } = useAppStore();
+
   const [selectedBranchId, setSelectedBranchId] = useState(
     currentBranchId || "",
   );
+  const [accountingAccountId, setAccountingAccountId] = useState("");
+  const [name, setName] = useState("");
+  const [currency, setCurrency] = useState("VND");
+  const [isActive, setIsActive] = useState(true);
+  const [openingBalance, setOpeningBalance] = useState<number>(0);
+  const [periodDate, setPeriodDate] = useState("");
 
   const { data: branchOptions = [] } = useQuery({
     queryKey: ["branchOptions"],
@@ -45,8 +67,7 @@ export function CashFundDrawer({ open, onClose, cashBook, onSuccess }: Props) {
     queryFn: getChartOfAccountsApi,
   });
 
-  const accountOptions = React.useMemo(() => {
-    // Ưu tiên nhóm 111* lên đầu cho tiền mặt
+  const accountOptions = useMemo(() => {
     const list = Array.isArray(accounts)
       ? accounts
       : (accounts as any).items || [];
@@ -63,14 +84,6 @@ export function CashFundDrawer({ open, onClose, cashBook, onSuccess }: Props) {
       label: `${a.accountCode || a.account_code} - ${a.accountName || a.account_name}`,
     }));
   }, [accounts]);
-
-  const [accountingAccountId, setAccountingAccountId] = useState("");
-
-  const [name, setName] = useState("");
-  const [currency, setCurrency] = useState("VND");
-  const [isActive, setIsActive] = useState(true);
-  const [openingBalance, setOpeningBalance] = useState<number>(0);
-  const [periodDate, setPeriodDate] = useState("");
 
   useEffect(() => {
     if (cashBook) {
@@ -90,13 +103,16 @@ export function CashFundDrawer({ open, onClose, cashBook, onSuccess }: Props) {
       setOpeningBalance(0);
       setPeriodDate("");
     }
-  }, [cashBook, open]);
+  }, [cashBook, open, currentBranchId]);
 
   const { mutate, isPending } = useMutation({
     mutationFn: () => {
-      if (!selectedBranchId) throw new Error("Branch ID is required");
+      if (!selectedBranchId)
+        throw new Error(t("settings.branchRequired", "Chi nhánh là bắt buộc"));
       if (!accountingAccountId)
-        throw new Error("Tài khoản kế toán là bắt buộc");
+        throw new Error(
+          t("settings.accountRequired", "Tài khoản kế toán là bắt buộc"),
+        );
       const payload = {
         branchId: selectedBranchId,
         accountingAccountId,
@@ -113,12 +129,13 @@ export function CashFundDrawer({ open, onClose, cashBook, onSuccess }: Props) {
       return bankStatementApi.createCashBook(payload);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["cash-books"],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["cashBooks"],
-      });
+      queryClient.invalidateQueries({ queryKey: ["cash-books"] });
+      queryClient.invalidateQueries({ queryKey: ["cashBooks"] });
+      toast.success(
+        cashBook
+          ? t("settings.updateSuccess", "Cập nhật sổ quỹ thành công")
+          : t("settings.createSuccess", "Tạo sổ quỹ thành công"),
+      );
       onSuccess();
       onClose();
     },
@@ -127,93 +144,155 @@ export function CashFundDrawer({ open, onClose, cashBook, onSuccess }: Props) {
     },
   });
 
+  const isReadOnly = mode === "view";
+
+  const actions: DrawerAction[] = useMemo(() => {
+    if (isReadOnly) {
+      return [
+        {
+          label: t("common.close", "Đóng"),
+          onClick: onClose,
+          variant: "outline",
+        },
+      ];
+    }
+    return [
+      {
+        label: t("common.cancel", "Hủy"),
+        onClick: onClose,
+        variant: "outline",
+      },
+      {
+        label: isPending
+          ? t("common.saving", "Đang lưu...")
+          : t("common.save", "Lưu"),
+        onClick: () => mutate(),
+        primary: true,
+        loading: isPending,
+        disabled: isPending || !name.trim() || !selectedBranchId,
+      },
+    ];
+  }, [isReadOnly, isPending, name, selectedBranchId, onClose, mutate, t]);
+
   return (
-    <DrawerModal
+    <StandardFormDrawer
       open={open}
       onClose={onClose}
-      title={cashBook ? t("common.edit") : t("panel.createNew")}
-    >
-      <div className="space-y-6">
-        <DrawerSection title="Thông tin chung">
-          <DrawerField label="Chi nhánh *" required>
-            <Combobox
-              options={branchOptions}
-              value={selectedBranchId}
-              onChange={setSelectedBranchId}
-              placeholder="-- Chọn chi nhánh --"
-            />
-          </DrawerField>
-
-          <DrawerField label="Tài khoản kế toán (111*) *" required>
-            <Combobox
-              options={accountOptions}
-              value={accountingAccountId}
-              onChange={setAccountingAccountId}
-              placeholder="-- Chọn tài khoản kế toán --"
-            />
-          </DrawerField>
-
-          <DrawerField label="Tên sổ quỹ *" required>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="w-full h-10 px-3 rounded-md border border-input bg-background"
-            />
-          </DrawerField>
-
-          <DrawerField label="Tiền tệ">
-            <select
-              value={currency}
-              onChange={(e) => setCurrency(e.target.value)}
-              className="w-full h-10 px-3 rounded-md border border-input bg-background"
+      mode={mode}
+      onToggleEdit={onToggleEdit}
+      layout="1-column"
+      size="sm"
+      confirmOnClose={mode === "edit"}
+      icon={<Wallet className="w-5 h-5 text-emerald-600" />}
+      title={
+        cashBook
+          ? t("common.edit", "Chỉnh sửa sổ quỹ")
+          : t("panel.createNew", "Tạo sổ quỹ mới")
+      }
+      subtitle={
+        cashBook
+          ? cashBook.name
+          : t("settings.cashFundDesc", "Thiết lập thông tin quỹ tiền mặt")
+      }
+      actions={actions}
+      leftPanel={
+        <div className="space-y-6">
+          <DrawerSection title={t("common.generalInfo", "Thông tin chung")}>
+            <DrawerField
+              label={t("thietlap.columns.branch", "Chi nhánh")}
+              required
             >
-              <option value="VND">VND</option>
-              <option value="USD">USD</option>
-            </select>
-          </DrawerField>
-
-          <DrawerField label="Trạng thái">
-            <div className="flex items-center space-x-2 h-10">
-              <Checkbox
-                checked={isActive}
-                onCheckedChange={(checked) => setIsActive(!!checked)}
+              <Combobox
+                options={branchOptions}
+                value={selectedBranchId}
+                onChange={setSelectedBranchId}
+                disabled={isReadOnly}
+                placeholder={t("settings.selectBranch", "-- Chọn chi nhánh --")}
               />
-              <span className="text-sm font-medium">Hoạt động</span>
-            </div>
-          </DrawerField>
-        </DrawerSection>
+            </DrawerField>
 
-        <DrawerSection title="Số dư ban đầu">
-          <DrawerField label="Ngày chốt số dư">
-            <DatePicker
-              value={periodDate}
-              onChange={(val) => setPeriodDate(val)}
-              className="w-full h-10 px-3 rounded-md border border-input bg-background"
-            />
-          </DrawerField>
-          <DrawerField label="Số dư">
-            <input
-              type="number"
-              value={openingBalance}
-              onChange={(e) => setOpeningBalance(Number(e.target.value))}
-              className="w-full h-10 px-3 rounded-md border border-input bg-background"
-            />
-          </DrawerField>
-        </DrawerSection>
+            <DrawerField
+              label={t("settings.cashAccount111", "Tài khoản kế toán (111*)")}
+              required
+            >
+              <Combobox
+                options={accountOptions}
+                value={accountingAccountId}
+                onChange={setAccountingAccountId}
+                disabled={isReadOnly}
+                placeholder={t(
+                  "settings.selectAccount",
+                  "-- Chọn tài khoản kế toán --",
+                )}
+              />
+            </DrawerField>
 
-        <div className="flex items-center justify-end space-x-2 pt-4 border-t">
-          <Button variant="outline" onClick={onClose}>
-            {t("common.cancel")}
-          </Button>
-          <Button
-            onClick={() => mutate()}
-            disabled={isPending || !name.trim() || !selectedBranchId}
+            <DrawerField
+              label={t("thietlap.columns.cashFundName", "Tên sổ quỹ")}
+              required
+            >
+              <Input
+                value={name}
+                onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                  setName(e.target.value)
+                }
+                disabled={isReadOnly}
+                placeholder={t(
+                  "settings.cashFundNamePlaceholder",
+                  "Nhập tên sổ quỹ...",
+                )}
+              />
+            </DrawerField>
+
+            <DrawerField label={t("thietlap.columns.currency", "Tiền tệ")}>
+              <Combobox
+                options={CURRENCY_OPTIONS}
+                value={currency}
+                onChange={setCurrency}
+                disabled={isReadOnly}
+              />
+            </DrawerField>
+
+            <DrawerField label={t("thietlap.columns.status", "Trạng thái")}>
+              <div className="flex items-center space-x-2 h-10">
+                <Checkbox
+                  checked={isActive}
+                  onCheckedChange={(checked) => setIsActive(!!checked)}
+                  disabled={isReadOnly}
+                />
+                <span className="text-sm font-medium">
+                  {isActive
+                    ? t("common.active", "Hoạt động")
+                    : t("common.inactive", "Ngưng hoạt động")}
+                </span>
+              </div>
+            </DrawerField>
+          </DrawerSection>
+
+          <DrawerSection
+            title={t("thietlap.columns.openingBalance", "Số dư ban đầu")}
           >
-            {t("common.save")}
-          </Button>
+            <DrawerField label={t("settings.periodDate", "Ngày chốt số dư")}>
+              <DatePicker
+                value={periodDate}
+                onChange={(val) => setPeriodDate(val)}
+                disabled={isReadOnly}
+                className="w-full"
+              />
+            </DrawerField>
+            <DrawerField label={t("settings.openingBalanceAmount", "Số dư")}>
+              <Input
+                type="number"
+                value={openingBalance}
+                onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                  setOpeningBalance(Number(e.target.value))
+                }
+                disabled={isReadOnly}
+              />
+            </DrawerField>
+          </DrawerSection>
         </div>
-      </div>
-    </DrawerModal>
+      }
+    />
   );
 }

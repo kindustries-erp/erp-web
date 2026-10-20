@@ -75,9 +75,16 @@ describe("pageUrl utilities", () => {
       expect(res?.tab).toBe("out-lines");
     });
 
+    it("handles erp-invoices default tab as dashboard", () => {
+      const res = pathToPage("/erp-invoices", "");
+      expect(res?.page).toBe("erp-invoices");
+      expect(res?.tab).toBe("dashboard");
+    });
+
     it("handles erp-invoices-in legacy redirect to erp-invoices", () => {
       const res = pathToPage("/erp-invoices-in", "");
       expect(res?.page).toBe("erp-invoices");
+      expect(res?.tab).toBe("in");
     });
 
     it("parses 4-tab values in erp-invoices", () => {

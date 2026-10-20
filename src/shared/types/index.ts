@@ -2,7 +2,6 @@ export type PageKey =
   | "opex"
   | "dashboard"
   | "cashflow"
-  | "cashflow-dashboard"
   | "cashflow-vouchers"
   | "cash-fund"
   | "bank-deposit"
@@ -13,6 +12,7 @@ export type PageKey =
   | "settings-accounts"
   | "receivables"
   | "payables"
+  | "invoice-debts"
   | "ledger"
   | "journal"
   | "journal-entry"
@@ -66,6 +66,8 @@ export type PageKey =
   | "garage-opex"
   | "garage-customers"
   | "garage-partners"
+  | "garage-debts"
+  | "garage-cashflow"
   | "erp-finished-goods"
   | "after-sales"
   | "vinfast-parts"
@@ -75,7 +77,8 @@ export type PageKey =
   | "vinfast-parts-stock"
   | "vinfast-parts-oto-stock"
   | "vinfast-parts-xemay-stock"
-  | "inventory-dashboard";
+  | "inventory-dashboard"
+  | "custom-fields";
 export type TxSource = "cash-fund" | "bank-deposit";
 
 export interface Transaction {
@@ -153,3 +156,6 @@ export interface TabInstance {
   url?: string;
   search?: string;
 }
+
+export * from "./customFields";
+export * from "./customFieldSchemas";

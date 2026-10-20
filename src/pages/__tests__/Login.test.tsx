@@ -114,6 +114,13 @@ describe("Login", () => {
     expect(passwordInput.type).toBe("password");
   });
 
+  it("hides the quick admin login when no dev password is configured", () => {
+    render(<Login />);
+    expect(
+      screen.queryByRole("button", { name: L.quickLoginAdmin }),
+    ).not.toBeInTheDocument();
+  });
+
   it("calls loginAction with trimmed credentials on valid submit", async () => {
     mockLoginAction.mockResolvedValueOnce(undefined);
     const { container } = render(<Login />);

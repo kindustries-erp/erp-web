@@ -1,0 +1,28 @@
+import { describe, expect, it } from "vitest";
+import { build{{EntityPlural}}Columns } from "./{{Entity}}Table.columns";
+import { {{viewConst}} } from "./{{Entity}}Table.views";
+
+const columns = build{{EntityPlural}}Columns(
+  (_key, fallback) => fallback ?? "",
+  () => undefined,
+);
+
+describe("build{{EntityPlural}}Columns", () => {
+  it("leaves the row number to V2StandardTable", () => {
+    expect(columns.map((column) => column.key)).not.toContain("index");
+  });
+
+  it("keeps every field as a column in the same order", () => {
+    expect(columns.map((column) => column.key)).toEqual([
+{{#each fields}}
+      "{{name}}",
+{{/each}}
+    ]);
+  });
+});
+
+describe("{{viewConst}}", () => {
+  it("shows all columns in the all view", () => {
+    expect(Object.values({{viewConst}}.all).every(Boolean)).toBe(true);
+  });
+});

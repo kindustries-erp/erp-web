@@ -38,6 +38,7 @@ vi.mock("@/core/config/appStore", () => {
   const store = {
     locale: "vi",
     openCustomFieldsDrawer: vi.fn(),
+    updateCurrentTabUrl: vi.fn(),
   };
   const useAppStore = vi.fn(() => store);
   (useAppStore as any).getState = () => store;

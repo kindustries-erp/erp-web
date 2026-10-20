@@ -244,3 +244,28 @@ export function readVietnameseCurrency(num: number): string {
   result = result.trim() + " đồng";
   return result.charAt(0).toUpperCase() + result.slice(1);
 }
+
+/**
+ * Format composite filter values (such as "invoice_no:::serial_no" or "tax_code:::partner_name")
+ * to user-friendly labels (e.g. "1066 (C25MDP)" or "(C25THP)").
+ */
+export function formatCompositeFilterValue(val?: string | null): string {
+  if (!val) return "";
+  if (val === "__BLANK__") return "(Trống)";
+  if (!val.includes(":::")) return val;
+
+  const parts = val.split(":::");
+  const first = parts[0]?.trim() || "";
+  const second = parts[1]?.trim() || "";
+
+  if (first && second) {
+    return `${first} (${second})`;
+  }
+  if (second && !first) {
+    return `(${second})`;
+  }
+  if (first && !second) {
+    return first;
+  }
+  return val;
+}

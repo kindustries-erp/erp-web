@@ -12,7 +12,9 @@ import {
   type ColumnFilterDescriptor,
   type TableListHookLike,
 } from "@/shared/components/DataTable/createColumnHeaderFilter";
+import { setDropdownSearchState } from "@/shared/components/DataTable/TableColumnHeaderFilter";
 import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
+import { formatCompositeFilterValue } from "@/shared/utils/format";
 import type {
   FilterPanelConfig,
   FilterPanelReturn,
@@ -350,8 +352,16 @@ export function useUnifiedTableFilter<T = any>(
   const activeChips = useMemo<ActiveFilterChipItem[]>(() => {
     const chips: ActiveFilterChipItem[] = [];
 
-    // 1. Column Search Chips
+    // 1. Column Search Chips (only if column doesn't have active columnFilters)
     Object.entries(columnSearch).forEach(([key, searchVal]) => {
+      const hasActiveColumnFilter = Boolean(
+        columnFilters[key] && columnFilters[key].length > 0,
+      );
+      if (hasActiveColumnFilter) {
+        // Skip duplicate search chip for the column because columnFilters already handles this column
+        return;
+      }
+
       if (searchVal && searchVal.trim().length > 0) {
         const desc = descriptorMap.get(key);
         const colTitle = desc?.titleText || key;
@@ -379,15 +389,19 @@ export function useUnifiedTableFilter<T = any>(
       if (vals && vals.length > 0) {
         const desc = descriptorMap.get(key);
         const colTitle = desc?.titleText || key;
+        const searchVal = columnSearch[key];
 
         let valDisplay: string;
         if (vals[0] === "__ALL_MATCHING__") {
-          valDisplay = "(Tất cả khớp tìm kiếm)";
+          const matchKw = vals[1] || searchVal;
+          valDisplay = matchKw
+            ? `(Khớp "${matchKw}")`
+            : "(Tất cả khớp tìm kiếm)";
         } else {
           const formattedVals = vals.map((v) => {
             if (v === "__BLANK__") return "(Trống)";
             if (desc?.formatOptionLabel) return desc.formatOptionLabel(v);
-            return v;
+            return formatCompositeFilterValue(v);
           });
 
           if (formattedVals.length <= 2) {
@@ -503,9 +517,12 @@ export function useUnifiedTableFilter<T = any>(
       if (chipId.startsWith("search-")) {
         const colKey = chipId.replace("search-", "");
         setColumnSearch(colKey, "");
+        setDropdownSearchState(colKey, "");
       } else if (chipId.startsWith("filter-")) {
         const colKey = chipId.replace("filter-", "");
         setColumnFilter(colKey, []);
+        setColumnSearch(colKey, "");
+        setDropdownSearchState(colKey, "");
       } else if (chipId === "date-range") {
         setDateRange(undefined, undefined);
       } else if (chipId.startsWith("sort-")) {

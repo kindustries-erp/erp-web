@@ -11,7 +11,7 @@ import { updateEntityTags } from "@/modules/tags/api/tagsApi";
 import { purchaseOrdersCoreApi } from "@/modules/purchase-orders-core/api/purchaseOrdersCoreApi";
 import { usePosting } from "@/shared/components/accounting/usePosting";
 import { moduleConfigApi } from "@/core/api/moduleConfigApi";
-import { validateModuleRequiredFields } from "@/shared/components/ModuleEntityCustomFieldsSection";
+import { validateModuleRequiredFields } from "@/shared/utils";
 import { toast } from "react-hot-toast";
 
 type Direction = "IN" | "OUT";
@@ -30,6 +30,7 @@ function emptyForm(direction: Direction = "IN"): CreateErpInvoicePayload {
     buyerTaxCode: "",
     buyerAddress: "",
     description: "",
+    notes: "",
     preVatAmount: 0,
     vatRate: 0,
     vatAmount: 0,
@@ -113,6 +114,7 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
       buyerTaxCode: inv.buyerTaxCode ?? "",
       buyerAddress: inv.buyerAddress ?? "",
       description: inv.description ?? "",
+      notes: inv.notes ?? "",
       preVatAmount: Number(inv.preVatAmount),
       vatRate: inv.vatRate != null ? Number(inv.vatRate) : undefined,
       vatAmount: Number(inv.vatAmount),
@@ -448,16 +450,6 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
       return;
     }
 
-    const pendingChanges = form.pendingDocumentChanges || [];
-    let linkedCount =
-      (detailInvoice?.voucherNetOffs?.length || 0) +
-      ((detailInvoice as any)?.relatedPos?.length || 0);
-
-    pendingChanges.forEach((p) => {
-      if (p.action === "ADD") linkedCount++;
-      else if (p.action === "REMOVE") linkedCount--;
-    });
-
     setSaving(true);
     setFormError(null);
     try {
@@ -722,16 +714,6 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
               err.message ||
               "Lỗi hạch toán tự động sau khi lưu.",
           );
-        }
-      } else if (
-        !wasPosted &&
-        form.branchId &&
-        (linkedCount > 0 || (form.totalAmount || 0) > 0)
-      ) {
-        try {
-          await erpInvoicesCoreApi.autoPostStandard(invoiceIdToProcess);
-        } catch (autoErr: any) {
-          console.warn("Auto-post standard failed (non-blocking)", autoErr);
         }
       }
 

@@ -50,9 +50,11 @@ import { bomConfigVi } from "@/core/locale/manufacturing/bomConfig/vi";
 import { productionConfigVi } from "@/core/locale/manufacturing/productionConfig/vi";
 import { changelogVi } from "@/core/locale/system/changelog/vi";
 import { moduleConfigVi } from "@/core/locale/settings/moduleConfig/vi";
+import { debtsVi } from "@/core/locale/accounting/debts/vi";
 
 export const vi = {
   ...legacyStringsVi,
+  debts: debtsVi,
   productionConfig: productionConfigVi,
   moduleConfig: moduleConfigVi,
   nav: navVi,

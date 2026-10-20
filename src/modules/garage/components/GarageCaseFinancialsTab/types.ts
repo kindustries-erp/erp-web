@@ -36,6 +36,7 @@ export interface GarageCaseFinancialsTabProps {
   ) => void;
   onRemoveInvoice?: (id: string) => void;
   initialSubTab?: FinancialsSubTabKey;
+  grossProfit?: any;
 }
 
 export interface GarageCaseFinancialsContextValue {

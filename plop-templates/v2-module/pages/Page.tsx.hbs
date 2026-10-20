@@ -1,0 +1,107 @@
+import * as React from "react";
+import { FileText } from "lucide-react";
+import { V2Button } from "@/v2/shared/components/atoms/v2-button";
+import { V2ConfirmModal } from "@/v2/shared/components/molecules/v2-confirm-modal";
+import { V2ModulePage } from "@/v2/shared/components/templates/v2-module-page";
+import type { V2ModuleTab } from "@/v2/shared/components/templates/v2-module-page/V2ModulePage.type";
+import {
+  v2ColumnPreferencesStorage,
+  v2ViewPresetStorage,
+} from "@/v2/shared/preferences/v2TablePreferenceStorages";
+import { use{{EntityPlural}}Query } from "../api/queries/use{{EntityPlural}}Query";
+import { {{Entity}}Drawer } from "../drawers/{{Entity}}Drawer";
+import type { {{Entity}} } from "../domain/entities/{{entity}}";
+import { use{{EntityPlural}}Page } from "./use{{EntityPlural}}Page";
+import "../{{namespace}}.locale";
+
+export function {{EntityPlural}}Page() {
+  const state = use{{EntityPlural}}Page();
+  const { t } = state;
+
+  const tabs = React.useMemo<V2ModuleTab<{{Entity}}>[]>(
+    () => [
+      {
+        key: "list",
+        label: t("v2.{{namespace}}.list", "Danh sách"),
+        kind: "list",
+        resetKey: `${state.tableId}-${state.tableKey}`,
+        table: {
+          tableId: state.tableId,
+          columns: state.columns,
+          getRowKey: (row) => row.id,
+          mode: "server",
+          fetchOptions: (params) =>
+            import("../api/{{entityPlural}}Api").then(({ {{entityPlural}}V2Api }) =>
+              {{entityPlural}}V2Api.options(params),
+            ),
+          rowActions: state.rowActions,
+          preferencesStorage: v2ColumnPreferencesStorage,
+          viewPresetStorage: v2ViewPresetStorage,
+          emptyLabel: t("v2.{{namespace}}.empty", "Không có dữ liệu"),
+          toolbar: {
+            search: {},
+            filterPanel: {},
+            enableFullscreen: true,
+            viewModes: {
+              items: [
+                { key: "overview", label: t("v2.{{namespace}}.views.overview", "Tổng quan") },
+                { key: "all", label: t("v2.{{namespace}}.views.all", "Tất cả cột") },
+              ],
+              activeKey: state.view,
+              onSelect: state.selectView,
+            },
+          },
+        },
+        useData: (query) => use{{EntityPlural}}Query(query, state.onListError),
+      },
+    ],
+    [state],
+  );
+
+  return (
+    <V2ModulePage<{{Entity}}>
+      title={t("v2.{{namespace}}.title", "{{{titleVi}}}")}
+      description={t("v2.{{namespace}}.description", "Quản lý {{{titleVi}}}")}
+      icon={<FileText className="h-4 w-4" />}
+      tabs={tabs}
+      actions={
+        state.canCreate ? (
+          <V2Button size="sm" onClick={() => state.open(null, "edit")}>
+            {t("v2.{{namespace}}.create", "Thêm {{{titleVi}}}")}
+          </V2Button>
+        ) : undefined
+      }
+      overlays={
+        <>
+          {state.drawer && (
+            <{{Entity}}Drawer
+              open
+              recordId={state.drawer.id}
+              mode={state.drawer.mode}
+              canUpdate={state.canUpdate}
+              onClose={() => state.setDrawer(null)}
+            />
+          )}
+          <V2ConfirmModal
+            open={Boolean(state.deleteTarget)}
+            title={t("v2.{{namespace}}.delete.title", "Xác nhận xóa")}
+            message={
+              state.deleteTarget
+                ? `${t("v2.{{namespace}}.delete.message", "Bạn có chắc muốn xóa?")} ${state.deleteTarget.{{firstName}} }`
+                : ""
+            }
+            confirmLabel={t("v2.{{namespace}}.actions.delete", "Xóa")}
+            cancelLabel={t("v2.common.cancel", "Hủy")}
+            variant="danger"
+            isLoading={state.remove.isPending}
+            onConfirm={() => {
+              if (state.deleteTarget) state.remove.mutate(state.deleteTarget.id);
+            }}
+            onCancel={() => state.setDeleteTarget(null)}
+            onOpenChange={(open) => !open && state.setDeleteTarget(null)}
+          />
+        </>
+      }
+    />
+  );
+}

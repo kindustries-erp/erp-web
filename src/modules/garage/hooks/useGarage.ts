@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { garageApi } from "../api/garageApi";
+import { garageApi, type UpdateCaseConfigPayload } from "../api/garageApi";
 import { toast } from "react-hot-toast";
 
 export const useGarageBranches = () => {
@@ -17,6 +17,8 @@ export function useGarageCases(
   from?: string,
   to?: string,
   filtersStr?: string,
+  includeDeleted?: string,
+  sorts?: string | string[],
 ) {
   return useQuery({
     queryKey: [
@@ -29,10 +31,21 @@ export function useGarageCases(
       from,
       to,
       filtersStr,
+      includeDeleted,
+      sorts,
     ],
     queryFn: () =>
-      garageApi.getCases(branchId!, page, pageSize, q, from, to, filtersStr),
-    enabled: !!branchId,
+      garageApi.getCases(
+        branchId || "",
+        page,
+        pageSize,
+        q,
+        from,
+        to,
+        filtersStr,
+        includeDeleted,
+        sorts,
+      ),
     staleTime: 1000 * 60,
   });
 }
@@ -100,8 +113,7 @@ export function useGarageGrossProfit(
 ) {
   return useQuery({
     queryKey: ["garage", "grossProfitReport", branchId, from, to],
-    queryFn: () => garageApi.getGrossProfitReport(branchId!, from, to),
-    enabled: !!branchId,
+    queryFn: () => garageApi.getGrossProfitReport(branchId || "", from, to),
   });
 }
 
@@ -187,6 +199,38 @@ export const useSyncGarageGrossProfit = () => {
     },
     onError: (error: any) => {
       toast.error(error.message || "Đồng bộ thất bại");
+    },
+  });
+};
+
+export const useSyncGarageCaseDetails = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (params: {
+      branchId?: string;
+      from?: string;
+      to?: string;
+      force?: boolean;
+    }) =>
+      garageApi.syncCaseDetails(
+        params.branchId,
+        params.from,
+        params.to,
+        params.force,
+      ),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["garage", "case-services"] });
+      queryClient.invalidateQueries({ queryKey: ["garage", "cases"] });
+      toast.success(
+        data?.message || "Đồng bộ chi tiết phiếu dịch vụ thành công!",
+      );
+    },
+    onError: (error: any) => {
+      toast.error(
+        error?.response?.data?.message ||
+          error?.message ||
+          "Đồng bộ chi tiết thất bại",
+      );
     },
   });
 };
@@ -277,13 +321,23 @@ export function useUpdateGarageCaseConfig() {
       payload,
     }: {
       caseId: string;
-      payload: { classification?: string | null; erpNotes?: string | null };
+      payload: UpdateCaseConfigPayload;
     }) => garageApi.updateCaseConfig(caseId, payload),
     onSuccess: (updatedCase) => {
       queryClient.invalidateQueries({ queryKey: ["garage", "cases"] });
       queryClient.invalidateQueries({
         queryKey: ["garage-case-column-options"],
       });
+      queryClient.invalidateQueries({
+        queryKey: ["garage-customers-debt"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["garage-pnl"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["garage-checkpoint"],
+      });
+      queryClient.invalidateQueries({ queryKey: ["garage-case-code"] });
       if (updatedCase?.id) {
         queryClient.invalidateQueries({
           queryKey: ["garage-case", updatedCase.id],

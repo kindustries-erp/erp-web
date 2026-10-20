@@ -141,6 +141,10 @@ export const SECTION_ROOTS: Partial<Record<PageKey, SectionRoot>> = {
     labelKey: "nav.items.erpInvoicesOut",
     group: "accounting",
   },
+  "invoice-debts": {
+    labelKey: "nav.items.partnerDebts",
+    group: "accounting",
+  },
   "vinfast-parts": {
     labelKey: "nav.items.vinfastParts",
     group: "vinfast",
@@ -173,6 +177,10 @@ export const SECTION_ROOTS: Partial<Record<PageKey, SectionRoot>> = {
     labelKey: "thietlap.tabs.quy",
     group: "settings",
   },
+  "custom-fields": {
+    labelKey: "nav.items.customFields",
+    group: "settings",
+  },
   "bank-statement": {
     labelKey: "bankStatement.bankTitle",
     group: "accounting",
@@ -182,8 +190,8 @@ export const SECTION_ROOTS: Partial<Record<PageKey, SectionRoot>> = {
     group: "accounting",
   },
   "email-inbox": { labelKey: "nav.items.emailInbox", group: "system" },
-  "cashflow-dashboard": {
-    labelKey: "nav.items.cashflowDashboard",
+  cashflow: {
+    labelKey: "nav.items.cashflow",
     group: "accounting",
   },
   "garage-dashboard": {
@@ -198,12 +206,20 @@ export const SECTION_ROOTS: Partial<Record<PageKey, SectionRoot>> = {
     labelKey: "breadcrumb.garageOpex",
     group: "garage",
   },
+  "garage-cashflow": {
+    labelKey: "breadcrumb.garageCashflow",
+    group: "garage",
+  },
   "garage-customers": {
-    labelKey: "breadcrumb.garageCustomers",
+    labelKey: "breadcrumb.garageDebts",
     group: "garage",
   },
   "garage-partners": {
-    labelKey: "breadcrumb.garagePartners",
+    labelKey: "breadcrumb.garageDebts",
+    group: "garage",
+  },
+  "garage-debts": {
+    labelKey: "breadcrumb.garageDebts",
     group: "garage",
   },
   opex: {
@@ -304,6 +320,7 @@ export const BREADCRUMBS: Partial<Record<PageKey, Array<[string, string?]>>> = {
     ["breadcrumb.accounting"],
     ["nav.items.erpInvoicesDraft"],
   ],
+  "invoice-debts": [["breadcrumb.accounting"], ["nav.items.partnerDebts"]],
   "vinfast-parts": [["breadcrumb.vinfast"], ["nav.items.vinfastParts"]],
   "vinfast-parts-dashboard": [
     ["breadcrumb.vinfast"],
@@ -341,18 +358,21 @@ export const BREADCRUMBS: Partial<Record<PageKey, Array<[string, string?]>>> = {
     ["bankStatement.cashTitle"],
   ],
   "email-inbox": [["nav.items.system"], ["nav.items.emailInbox"]],
-  "cashflow-dashboard": [
-    ["breadcrumb.accounting"],
-    ["nav.items.cashflow"],
-    ["nav.items.dashboard"],
-  ],
+  cashflow: [["breadcrumb.accounting"], ["nav.items.cashflow"]],
   "settings-branch": [["breadcrumb.settings"], ["thietlap.tabs.chi-nhanh"]],
   "settings-bank": [["breadcrumb.settings"], ["thietlap.tabs.ngan-hang"]],
+  "custom-fields": [
+    ["breadcrumb.settings"],
+    ["breadcrumb.catalog"],
+    ["nav.items.customFields"],
+  ],
   "garage-dashboard": [["breadcrumb.garage"], ["breadcrumb.garageDashboard"]],
   "garage-cases": [["breadcrumb.garage"], ["breadcrumb.garageCases"]],
   "garage-opex": [["breadcrumb.garage"], ["breadcrumb.garageOpex"]],
-  "garage-customers": [["breadcrumb.garage"], ["breadcrumb.garageCustomers"]],
-  "garage-partners": [["breadcrumb.garage"], ["breadcrumb.garagePartners"]],
+  "garage-cashflow": [["breadcrumb.garage"], ["breadcrumb.garageCashflow"]],
+  "garage-customers": [["breadcrumb.garage"], ["breadcrumb.garageDebts"]],
+  "garage-partners": [["breadcrumb.garage"], ["breadcrumb.garageDebts"]],
+  "garage-debts": [["breadcrumb.garage"], ["breadcrumb.garageDebts"]],
 };
 
 export const DUPLICATABLE_PAGES = new Set<PageKey>([

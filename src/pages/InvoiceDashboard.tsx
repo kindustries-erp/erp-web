@@ -17,8 +17,19 @@ import { BranchVatChart } from "./components/BranchVatChart";
 import { InvoiceStatsCards } from "./components/InvoiceStatsCards";
 import { Switch } from "@/shared/components/ui/switch";
 import { cn } from "@/shared/utils";
+import type { TabItem } from "@/shared/components/PageLayout";
 
-export function InvoiceDashboard() {
+export interface InvoiceDashboardProps {
+  tabs?: TabItem[];
+  activeTab?: string;
+  onTabChange?: (val: string) => void;
+}
+
+export function InvoiceDashboard({
+  tabs,
+  activeTab,
+  onTabChange,
+}: InvoiceDashboardProps = {}) {
   const { employee } = useAuthStore();
   const queryClient = useQueryClient();
   const isAdminEmail = employee?.email === "admin@liouni.com";
@@ -127,6 +138,9 @@ export function InvoiceDashboard() {
       title="Tổng quan Hóa đơn"
       desc="Theo dõi dòng tiền hóa đơn và công nợ đối tác"
       icon={<LayoutDashboard className="h-4 w-4" />}
+      tabs={tabs}
+      activeTab={activeTab}
+      onTabChange={onTabChange}
       filterConfig={filterConfig}
       filter={filter}
       loading={isRefreshing}
