@@ -3,6 +3,7 @@ import { FileSpreadsheet } from "lucide-react";
 import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
 import { GarageExportHistoryPanel } from "@/modules/garage/export/GarageExportSections";
 import { GarageExportConditionSection } from "@/modules/garage/export/GarageExportConditionSection";
+import { GarageCasesExportColumnSelector } from "@/modules/garage/export/GarageCasesExportColumnSelector";
 import { MultiCombobox } from "@/shared/components/MultiCombobox";
 import type { GarageCasesTableQuery } from "@/modules/garage/export/garageExportScopes";
 import {
@@ -55,25 +56,34 @@ export function GarageExportDrawer({
       layout="2-columns"
       size="lg"
       leftPanel={
-        <GarageExportHistoryPanel
-          tableId={
-            logic.isCases
-              ? "garage-cases-export-history"
-              : "garage-dashboard-export-history"
-          }
-          labels={logic.historyLabels}
-          history={exporter.historyQuery.data}
-          loading={
-            exporter.historyQuery.isLoading || exporter.historyQuery.isFetching
-          }
-          page={exporter.page}
-          pageSize={exporter.pageSize}
-          onPage={exporter.setPage}
-          onPageSize={exporter.setPageSize}
-          downloadingJobId={exporter.downloadingJobId}
-          progress={exporter.progress}
-          onDownload={exporter.handleDownload}
-        />
+        <div className="space-y-4">
+          {logic.isCases && (
+            <GarageCasesExportColumnSelector
+              selectedColumns={cases.selectedColumns}
+              onChange={cases.setSelectedColumns}
+            />
+          )}
+          <GarageExportHistoryPanel
+            tableId={
+              logic.isCases
+                ? "garage-cases-export-history"
+                : "garage-dashboard-export-history"
+            }
+            labels={logic.historyLabels}
+            history={exporter.historyQuery.data}
+            loading={
+              exporter.historyQuery.isLoading ||
+              exporter.historyQuery.isFetching
+            }
+            page={exporter.page}
+            pageSize={exporter.pageSize}
+            onPage={exporter.setPage}
+            onPageSize={exporter.setPageSize}
+            downloadingJobId={exporter.downloadingJobId}
+            progress={exporter.progress}
+            onDownload={exporter.handleDownload}
+          />
+        </div>
       }
       rightPanel={
         <div className="space-y-4 text-xs">
@@ -89,7 +99,10 @@ export function GarageExportDrawer({
                 placeholder={typeSelect.label}
               />
             }
-            startDisabled={logic.reportTypes.length === 0}
+            startDisabled={
+              logic.reportTypes.length === 0 ||
+              (logic.isCases && cases.selectedColumns.length === 0)
+            }
             targetHint={typeSelect.hint}
             exportMode={active.exportMode}
             onExportModeChange={active.setExportMode}
