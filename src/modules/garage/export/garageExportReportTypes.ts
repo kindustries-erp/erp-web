@@ -1,6 +1,9 @@
-/** Lựa chọn trong ô "Loại báo cáo" của drawer xuất Excel Garage (multi-select). */
-export const GARAGE_EXPORT_REPORT_TYPES = [
-  "cases-list",
+/** Loại báo cáo của drawer xuất Excel Garage: chọn một trong hai. */
+export const GARAGE_EXPORT_KINDS = ["cases", "period"] as const;
+export type GarageExportKind = (typeof GARAGE_EXPORT_KINDS)[number];
+
+/** Nội dung báo cáo kỳ: chọn nhiều mục. */
+export const PERIOD_REPORT_TYPES = [
   "period-overview",
   "period-pnl",
   "period-receivables",
@@ -8,8 +11,10 @@ export const GARAGE_EXPORT_REPORT_TYPES = [
   "period-overdue",
   "period-cashflow",
 ] as const;
-export type GarageExportReportType =
-  (typeof GARAGE_EXPORT_REPORT_TYPES)[number];
+export type PeriodReportType = (typeof PERIOD_REPORT_TYPES)[number];
+
+/** Mọi lựa chọn báo cáo (bảng kê phiếu dịch vụ + từng mục kỳ). */
+export type GarageExportReportType = "cases-list" | PeriodReportType;
 
 /** Giá trị đặt sẵn khi mở từ tab Tổng quan: chọn đủ mọi mục báo cáo kỳ. */
 export type GarageExportDefaultReport = GarageExportReportType | "period-all";
@@ -22,8 +27,6 @@ export type GaragePeriodReportSectionKey =
   | "payables"
   | "overdue"
   | "cashflow";
-
-type PeriodReportType = Exclude<GarageExportReportType, "cases-list">;
 
 const PERIOD_SECTION_KEY: Record<
   PeriodReportType,
@@ -51,37 +54,44 @@ export const GARAGE_EXPORT_REPORT_TYPE_KEY: Record<
   "period-cashflow": "periodCashflow",
 };
 
-/** Mọi mục báo cáo kỳ (lựa chọn mặc định của tab Tổng quan). */
-const ALL_PERIOD_TYPES = GARAGE_EXPORT_REPORT_TYPES.filter(
-  (type): type is PeriodReportType => type !== "cases-list",
-);
-
 export function isCasesReport(type: GarageExportReportType): boolean {
   return type === "cases-list";
 }
 
-/** Danh sách lựa chọn đặt sẵn khi mở drawer. */
-export function defaultReportSelection(
-  value: GarageExportDefaultReport,
-): GarageExportReportType[] {
-  return value === "period-all" ? [...ALL_PERIOD_TYPES] : [value];
+/**
+ * Loại và nội dung ban đầu khi mở drawer. Nội dung kỳ luôn có sẵn để khi người dùng
+ * đổi sang "Báo cáo theo kỳ" thì lựa chọn trước đó vẫn còn.
+ */
+export function defaultKindAndPeriods(value: GarageExportDefaultReport): {
+  kind: GarageExportKind;
+  periodTypes: PeriodReportType[];
+} {
+  if (value === "cases-list") {
+    return { kind: "cases", periodTypes: [...PERIOD_REPORT_TYPES] };
+  }
+  if (value === "period-all") {
+    return { kind: "period", periodTypes: [...PERIOD_REPORT_TYPES] };
+  }
+  return { kind: "period", periodTypes: [value] };
 }
 
-/**
- * Cập nhật lựa chọn sau một lần chọn trong combobox: bảng kê phiếu dịch vụ loại trừ các mục
- * kỳ, và không cho phép để trống (giữ lựa chọn cũ).
- */
-export function applyReportSelection(
-  prev: GarageExportReportType[],
-  next: GarageExportReportType[],
-): GarageExportReportType[] {
-  const added = next.find((type) => !prev.includes(type));
-  if (added === "cases-list") return ["cases-list"];
-  if (added) return next.filter((type) => !isCasesReport(type));
+/** Cập nhật nội dung kỳ sau một lần chọn; không cho để trống (giữ lựa chọn cũ). */
+export function applyPeriodSelection(
+  prev: PeriodReportType[],
+  next: PeriodReportType[],
+): PeriodReportType[] {
   return next.length > 0 ? next : prev;
 }
 
-/** Mục báo cáo kỳ gửi lên API; rỗng khi chỉ chọn bảng kê phiếu dịch vụ. */
+/** Lựa chọn báo cáo đang áp dụng theo loại. */
+export function reportTypesOf(
+  kind: GarageExportKind,
+  periodTypes: PeriodReportType[],
+): GarageExportReportType[] {
+  return kind === "cases" ? ["cases-list"] : periodTypes;
+}
+
+/** Mục báo cáo kỳ gửi lên API; rỗng khi là bảng kê phiếu dịch vụ. */
 export function toPeriodSectionKeys(
   types: GarageExportReportType[],
 ): GaragePeriodReportSectionKey[] {

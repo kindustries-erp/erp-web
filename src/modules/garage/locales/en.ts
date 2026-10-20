@@ -964,6 +964,11 @@ export const garageEn = {
     subtitle:
       "Pick a report type, then a period. Whichever tab you open it from, the same type and period produce the same file. Generated files can be re-downloaded for 24 hours",
     typeLabel: "Report type",
+    kinds: {
+      cases: "Service case list",
+      period: "Period report",
+    },
+    periodItemsLabel: "Report content",
     typePlaceholder: "Select report type",
     types: {
       casesList: "Service case list",
@@ -974,8 +979,7 @@ export const garageEn = {
       periodOverdue: "Overdue debts",
       periodCashflow: "Cash flow in period",
     },
-    multiHint:
-      "Pick one or more items. Choosing the Service case list drops the period items.",
+    multiHint: "Pick one or more period report items.",
     typeDescs: {
       casesList:
         "Completed case list, profit & loss tracking and service & parts detail, by period or by the current filter.",

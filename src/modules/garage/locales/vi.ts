@@ -969,6 +969,11 @@ export const garageVi = {
     subtitle:
       "Chọn loại báo cáo rồi chọn kỳ. Dù mở từ tab nào, cùng loại và cùng kỳ sẽ ra cùng một file. Tải lại file đã tạo trong 24 tiếng",
     typeLabel: "Loại báo cáo",
+    kinds: {
+      cases: "Bảng kê phiếu dịch vụ",
+      period: "Báo cáo theo kỳ",
+    },
+    periodItemsLabel: "Nội dung báo cáo",
     typePlaceholder: "Chọn loại báo cáo",
     types: {
       casesList: "Bảng kê phiếu dịch vụ",
@@ -979,8 +984,7 @@ export const garageVi = {
       periodOverdue: "Nợ quá hạn cần chú ý",
       periodCashflow: "Thu chi trong kỳ",
     },
-    multiHint:
-      "Chọn một hoặc nhiều mục. Chọn Bảng kê phiếu dịch vụ thì các mục báo cáo kỳ được bỏ chọn.",
+    multiHint: "Chọn một hoặc nhiều mục báo cáo kỳ.",
     typeDescs: {
       casesList:
         "Bảng kê phiếu kết thúc, theo dõi lãi lỗ, chi tiết dịch vụ & phụ tùng theo kỳ hoặc theo bộ lọc hiện tại.",
