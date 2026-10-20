@@ -34,6 +34,7 @@ vi.mock("../../components/organisms/garage-cases-table", () => ({
       <button onClick={() => props.onSyncGrossProfit()}>
         Sync Gross Profit
       </button>
+      <button onClick={() => props.onOpenWorkflow?.()}>View Workflow</button>
     </div>
   ),
 }));
@@ -63,6 +64,11 @@ vi.mock("../../components/GarageExportDrawer", () => ({
         data-report-type={props.defaultReportType}
       />
     ) : null,
+}));
+
+vi.mock("../../components/GarageWorkflowDrawer", () => ({
+  GarageWorkflowDrawer: (props: any) =>
+    props.open ? <div data-testid="workflow-drawer" /> : null,
 }));
 
 vi.mock("@/shared/hooks/useHasPermission", () => ({
@@ -117,5 +123,16 @@ describe("GarageCases Page (L5)", () => {
     expect(screen.queryByTestId("sync-drawer")).toBeNull();
     fireEvent.click(screen.getByText("Sync Gross Profit"));
     expect(screen.getByTestId("sync-drawer")).toBeDefined();
+  });
+
+  it("Xem sơ đồ quy trình mở GarageWorkflowDrawer", () => {
+    render(
+      <QueryClientProvider client={queryClient}>
+        <GarageCases />
+      </QueryClientProvider>,
+    );
+    expect(screen.queryByTestId("workflow-drawer")).toBeNull();
+    fireEvent.click(screen.getByText("View Workflow"));
+    expect(screen.getByTestId("workflow-drawer")).toBeDefined();
   });
 });

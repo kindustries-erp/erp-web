@@ -14,16 +14,31 @@ export const getPresetLabel = (
   preset: TableViewPreset,
   t: (key: string, opts?: any) => string,
 ): string => {
-  if (preset.key === "overview" || preset.key === "all_columns") {
+  if (preset.key === "overview") {
     if (
       !preset.label ||
       preset.label === "Tổng quan" ||
-      preset.label === "Tất cả cột" ||
       preset.label === "Overview"
     ) {
       return t("viewModeOverview", {
         defaultValue: t("cases.viewModeOverview", {
           defaultValue: "Tổng quan",
+        }),
+      });
+    }
+  }
+  if (preset.key === "all_columns") {
+    if (
+      !preset.label ||
+      preset.label === "Tất cả cột" ||
+      preset.label === "Tất cả các cột" ||
+      preset.label === "Đầy đủ" ||
+      preset.label === "All columns" ||
+      preset.label === "All Columns"
+    ) {
+      return t("viewModeAllColumns", {
+        defaultValue: t("cases.viewModeAllColumns", {
+          defaultValue: "Tất cả cột",
         }),
       });
     }

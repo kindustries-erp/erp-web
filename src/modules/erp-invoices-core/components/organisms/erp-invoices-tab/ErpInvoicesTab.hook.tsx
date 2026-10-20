@@ -974,12 +974,12 @@ export function useErpInvoicesTabLogic({
             { value: "in", label: t("inbound", "Hóa đơn mua vào") },
             {
               value: "in-lines",
-              label: t("inboundLines", "Chi tiết mua vào"),
+              label: t("inboundLines", "Bảng kê HHDV mua vào"),
             },
             { value: "out", label: t("outbound", "Hóa đơn bán ra") },
             {
               value: "out-lines",
-              label: t("outboundLines", "Chi tiết bán ra"),
+              label: t("outboundLines", "Bảng kê HHDV bán ra"),
             },
             { value: "draft", label: t("draftInvoices", "Hóa đơn nháp") },
           ]
