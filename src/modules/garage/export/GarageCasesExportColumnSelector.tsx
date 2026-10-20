@@ -29,7 +29,13 @@ export function GarageCasesExportColumnSelector({
     const map: Record<
       GarageCasesExportGroupKey,
       GarageCasesExportColumnItem[]
-    > = { general: [], receivable: [], payable: [], profit: [] };
+    > = {
+      general: [],
+      receivable: [],
+      payable: [],
+      profit: [],
+      system: [],
+    };
     for (const col of ALL_GARAGE_CASES_EXPORT_COLUMNS) {
       map[col.group].push(col);
     }

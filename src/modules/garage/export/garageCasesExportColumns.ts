@@ -4,6 +4,7 @@ export const GARAGE_CASES_EXPORT_GROUP_KEYS = [
   "receivable",
   "payable",
   "profit",
+  "system",
 ] as const;
 
 export type GarageCasesExportGroupKey =
@@ -61,11 +62,29 @@ export const ALL_GARAGE_CASES_EXPORT_COLUMNS: GarageCasesExportColumnItem[] = [
     group: "profit",
     defaultLabel: "Hóa đơn VAT liên kết",
   },
+
+  // Cột tùy chọn: không nằm trong mặc định, chỉ có khi người dùng chọn.
+  { key: "vatAmount", group: "receivable", defaultLabel: "Thuế GTGT" },
+  { key: "exclusionRules", group: "system", defaultLabel: "Quy tắc loại trừ" },
+  { key: "createdAt", group: "system", defaultLabel: "Ngày tạo" },
+  { key: "updatedAt", group: "system", defaultLabel: "Ngày cập nhật" },
+  { key: "dataAsOf", group: "system", defaultLabel: "Dữ liệu lúc" },
 ];
+
+/** Các cột nằm ngoài bộ mặc định 29 cột (chỉ xuất khi người dùng chọn). */
+const OPTIONAL_GARAGE_CASES_EXPORT_KEYS = new Set([
+  "vatAmount",
+  "exclusionRules",
+  "createdAt",
+  "updatedAt",
+  "dataAsOf",
+]);
 
 /** Mặc định xuất đủ mọi cột, khớp hành vi khi API không nhận `selectedColumns`. */
 export const DEFAULT_GARAGE_CASES_EXPORT_COLUMNS =
-  ALL_GARAGE_CASES_EXPORT_COLUMNS.map((column) => column.key);
+  ALL_GARAGE_CASES_EXPORT_COLUMNS.filter(
+    (column) => !OPTIONAL_GARAGE_CASES_EXPORT_KEYS.has(column.key),
+  ).map((column) => column.key);
 
 export const GARAGE_CASES_EXPORT_COLUMNS_STORAGE_KEY =
   "garage_cases_export_columns_v1";
