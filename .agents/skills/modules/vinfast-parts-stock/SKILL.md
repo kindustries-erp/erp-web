@@ -134,3 +134,6 @@ export const vinfastPartsStockExportApi = {
 3. **Cột Mã SKU**: Luôn sử dụng `<TableText>` có hỗ trợ `copyable`, `tooltip` và `onDetailClick` (Icon `Eye` mở chi tiết phụ tùng).
 4. **SSE Clean-up**: Mọi SSE connection trong drawer/store phải được dọn dẹp (unsubscribe / close) khi unmount component để tránh rò rỉ bộ nhớ.
 5. **Typecheck & CI**: Bắt buộc chạy `bun run check:ci` và `bun run test` thành công trước khi hoàn tất.
+
+## Theo dõi đồng bộ (giai đoạn 6)
+- `VinfastPartsSyncDrawer.tsx` dùng `useVinfastPartsSyncStatus` (polling `/vinfast-parts/sync/status`) và `reconcileSyncStatus` (`pages/hooks/vinfastSyncStatus.ts`) để gắn lại tiến trình khi đã có lượt đang chạy; xử lý 409 bằng cách theo dõi lượt đó.
