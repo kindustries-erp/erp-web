@@ -1,9 +1,9 @@
 import { useState, useCallback, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
+import type { InvoiceDetailViewMode } from "@/modules/erp-invoices-core/context/InvoicePreviewModeContext";
 import type { ErpInvoice } from "@/modules/erp-invoices-core/api/erpInvoicesCoreApi";
 import { invoiceDebtsApi } from "@/modules/accounting/api/invoiceDebtsApi";
 import { DEFAULT_STALE_TIME } from "@/shared/lib/queryKeys";
-import type { InvoiceDetailViewMode } from "@/modules/erp-invoices-core/context/InvoicePreviewModeContext";
 import type { ErpInvoicePartnerTabProps } from "./ErpInvoicePartnerTab.type";
 import type { PartnerSubTabMode } from "./ErpInvoicePartnerTabNav";
 import { normalizeInvoiceDocuments } from "../invoice-document-workspace/InvoiceDocumentWorkspace.helper";
@@ -11,36 +11,20 @@ import { normalizeInvoiceDocuments } from "../invoice-document-workspace/Invoice
 export function useErpInvoicePartnerTab({
   detailInvoice,
   direction,
-  defaultViewMode,
-  onViewModeChange,
+  defaultPartnerSubTab,
   form,
 }: ErpInvoicePartnerTabProps) {
   const [previewSubInvoice, setPreviewSubInvoice] = useState<ErpInvoice | null>(
     null,
   );
 
-  const isUrlLinesTab = useMemo(() => {
-    if (typeof window === "undefined") return false;
-    const s = window.location.search;
-    return (
-      s.includes("tab=in-lines") ||
-      s.includes("tab=out-lines") ||
-      s.includes("view=lines")
-    );
-  }, []);
-
-  const [viewMode, setViewMode] = useState<PartnerSubTabMode>(() => {
-    if (defaultViewMode) return defaultViewMode;
-    return isUrlLinesTab ? "lines" : "details";
-  });
-
-  const handleViewModeChange = useCallback(
-    (mode: PartnerSubTabMode) => {
-      setViewMode(mode);
-      onViewModeChange?.(mode);
-    },
-    [onViewModeChange],
+  const [partnerSubTab, setPartnerSubTab] = useState<PartnerSubTabMode>(
+    defaultPartnerSubTab || "invoices",
   );
+
+  const handlePartnerSubTabChange = useCallback((mode: PartnerSubTabMode) => {
+    setPartnerSubTab(mode);
+  }, []);
 
   const hasPdf = Boolean(
     detailInvoice?.pdfFileKey ||
@@ -98,8 +82,8 @@ export function useErpInvoicePartnerTab({
     });
 
   return {
-    viewMode,
-    handleViewModeChange,
+    partnerSubTab,
+    handlePartnerSubTabChange,
     detailViewMode,
     setDetailViewMode,
     hasPdf,
