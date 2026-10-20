@@ -25,9 +25,9 @@ Module Hóa đơn Điện tử quản lý tập trung toàn bộ hóa đơn đ�
 - **Cấu trúc 6 Tabs trên giao diện chính (`/erp-invoices`)**:
   1. `tab=overview` (mặc định): **Tổng quan** (`InvoiceDashboard` - Báo cáo KPI, xu hướng dòng tiền, VAT, công nợ đối tác).
   2. `tab=in`: **Hóa đơn mua vào** (Header Table, chiều `IN`, Unified View & Filter Dropdown: `tax_tab` `[ Tất cả | Mới | Thay thế | Điều chỉnh ]` gom chung với `view_mode` Presets).
-  3. `tab=in-lines`: **Chi tiết mua vào** (Lines Table, chiều `IN`, PillTab: `subcat` `[ Tất cả dòng | Hàng hóa | Chiết khấu ]`).
+  3. `tab=in-lines`: **Bảng kê HHDV mua vào** (Lines Table, chiều `IN`, PillTab: `subcat` `[ Tất cả dòng | Hàng hóa | Chiết khấu ]`).
   4. `tab=out`: **Hóa đơn bán ra** (Header Table, chiều `OUT`, Unified View & Filter Dropdown: `tax_tab` gom chung với `view_mode` Presets).
-  5. `tab=out-lines`: **Chi tiết bán ra** (Lines Table, chiều `OUT`, PillTab: `subcat`).
+  5. `tab=out-lines`: **Bảng kê HHDV bán ra** (Lines Table, chiều `OUT`, PillTab: `subcat`).
   6. `tab=draft`: **Hóa đơn nháp** (`ErpInvoicesDraftPage` - Quản lý hóa đơn SInvoice Viettel nháp).
 - **Tiến trình Đồng bộ Tự động (5-Slot Heartbeat Cron & Live SSE)**:
   - Hệ thống backend tự động đồng bộ định kỳ tại **5 mốc giờ chuẩn: 09:15, 15:15, 16:15, 17:15, 21:15 (Asia/Ho_Chi_Minh)**.

@@ -84,6 +84,10 @@ src/
   - Cột bên phải: Thông tin xuất kho tương ứng (Ngày xuất, Số HĐ bán, Biển số xe, Lệnh quyết toán).
   - Cột trạng thái: `Đã xuất` (màu xám nhạt) hoặc `Tồn kho` (màu xanh lá nổi bật).
 - **Bộ lọc nội bộ**: Cho phép lọc xem "Tất cả", "Chỉ hàng tồn kho", hoặc "Chỉ hàng đã xuất".
+- **Không tự tính FIFO**: `fifoTransform.ts` (`buildFlatLedgerRows`) chỉ ánh xạ dòng từ `GET /vinfast-parts/ledger/:sku`. Tồn lũy kế (`balanceQty`, `balanceValue`) và giá vốn lấy từ API, giữ nguyên thứ tự API. Nguồn sự thật là engine phía API.
+- **Cấu trúc sau khi tách** (`fifo-unit-ledger/`): `FifoUnitLedgerSection.tsx` (khung, nối hook) → `useFifoLedgerView.ts` (phân trang, lọc, sắp, tổng) → các hàm thuần `fifoFilters.ts`, `fifoOptions.ts`, `fifoSort.ts`, `fifoTotals.ts`. Bảng: `FifoFlatTable.tsx` → `FifoTableHeader.tsx` (+ `FifoHeaderCell.tsx`), `FifoTableRow.tsx`, `FifoTableFooter.tsx`; cấu hình cột ở `fifoColumns.ts`. Mọi file ≤ 200 dòng.
+- **Test**: `__tests__/` có test đặc tả (snapshot DOM) cho bảng và section, dữ liệu mẫu ở `fifoLedgerFixture.ts`; `fifoPure.test.ts` và `fifoTransform.test.ts` cho các hàm thuần.
+- **Nhãn trạng thái** (`FifoRowBadges.tsx`): "Trả hàng" cho dòng OUT điều chỉnh âm; "Thiếu hàng N" ở dòng xuất vượt tồn (`shortageDelta` = phần thiếu phát sinh tại dòng đó). Tồn âm hiển thị màu đỏ.
 
 ### 3.3. Drawer Đồng Bộ Hóa Đơn (`VinfastPartsSyncDrawer.tsx`)
 - Cho phép người dùng chủ động quét lại hóa đơn để tái tạo sổ cái phụ tùng.
