@@ -118,15 +118,6 @@ export function VoucherNetoffSelectionModal(
             remainingAfterNetOff={logic.remainingAfterNetOff}
             isOverRemaining={logic.isOverRemaining}
             suggestedDebtDiff={logic.suggestedDebtDiff}
-            filteredSuggestions={logic.filteredSuggestions}
-            isLoadingSuggestions={logic.isLoadingSuggestions}
-            handleSelectAllFilteredSuggestions={
-              logic.handleSelectAllFilteredSuggestions
-            }
-            selectedIds={logic.selectedIds}
-            netOffAmounts={logic.netOffAmounts}
-            handleAmountChange={logic.handleAmountChange}
-            handleToggleSuggestion={logic.handleToggleSuggestion}
             setDetailTxnId={logic.setDetailTxnId}
             existingCaseSettlements={props.existingCaseSettlements}
             existingInvoiceNetOffs={logic.existingInvoiceNetOffs}

@@ -4,19 +4,19 @@ import {
   DrawerAuditTimeline,
   DrawerDocumentTraceability,
 } from "@/shared/components/StandardFormDrawer";
-import { FileText, Wallet, Link2, BookOpen, History } from "lucide-react";
+import { FileText, Users, Link2, BookOpen, History } from "lucide-react";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/Button";
 import { VoucherNetoffSelectionModal } from "../voucher-netoff-selection-modal";
 import { PurchaseOrderSelectionModal } from "../purchase-order-selection-modal";
 import { SalesOrderSelectionModal } from "../sales-order-selection-modal";
 import { GarageCaseSelectionModal } from "../garage-case-selection-modal";
-import {
-  ErpInvoiceSettlementTab,
-  ErpInvoiceSettlementProvider,
-} from "../erp-invoice-settlement-tab";
+import { ErpInvoiceSettlementProvider } from "../erp-invoice-settlement-tab";
 import { ErpInvoiceSettlementRightPanel } from "../erp-invoice-settlement-right-panel";
-import { ErpInvoicePartnerTab } from "../erp-invoice-partner-tab";
+import {
+  ErpInvoicePartnerTab,
+  ErpInvoicePartnerSection,
+} from "../erp-invoice-partner-tab";
 import { PostedAccountingSummary } from "@/shared/components/accounting/PostedAccountingSummary";
 import { PostingSection } from "@/shared/components/accounting/PostingSection";
 import { resolvePurchaseDebitAccountCode } from "@/modules/erp-invoices-core/utils/invoiceTaxCodeAccounting";
@@ -66,7 +66,7 @@ export function ErpInvoiceDetailDrawer(props: ErpInvoiceDetailDrawerProps) {
     setShowSoModal,
     showGarageCaseModal,
     setShowGarageCaseModal,
-    setSubTabKey,
+    partnerDefaultSubTab,
     handleFetchGraph,
     handleSelectBankNetOff,
     handleSelectPo,
@@ -110,6 +110,8 @@ export function ErpInvoiceDetailDrawer(props: ErpInvoiceDetailDrawerProps) {
 
   const formAccountingEnabled = (form as any)?.accountingEnabled;
 
+  const isDirectionIn = (direction || detailInvoice?.direction) === "IN";
+
   // Build Top Navigation Tabs for Invoice
   const resolvedDrawerTabs = useMemo(() => {
     if (customTabs) return customTabs;
@@ -121,8 +123,12 @@ export function ErpInvoiceDetailDrawer(props: ErpInvoiceDetailDrawerProps) {
       (detailInvoice.voucherNetOffs?.length || 0) +
       ((detailInvoice as any).relatedPos?.length || 0);
 
+    const financialsBadgeCount =
+      form?.pendingDocumentChanges?.filter((p) => p.type === "BANK")?.length ||
+      0;
+
     return [
-      // 1. Tab Chi tiết (Hợp nhất: Thông tin HĐ + Đối tác + Hàng hóa + Analytics + Tài liệu đính kèm)
+      // 1. Tab Chi tiết: nội dung HĐ + xem trước / PDF
       {
         key: "invoice_details",
         label: t("tabDetails", "Chi tiết"),
@@ -131,8 +137,6 @@ export function ErpInvoiceDetailDrawer(props: ErpInvoiceDetailDrawerProps) {
           <ErpInvoicePartnerTab
             detailInvoice={detailInvoice}
             direction={direction}
-            defaultViewMode={partnerViewMode ?? "details"}
-            onViewModeChange={setSubTabKey}
             form={form}
             editMode={editMode}
             fieldSet={fieldSet}
@@ -143,26 +147,30 @@ export function ErpInvoiceDetailDrawer(props: ErpInvoiceDetailDrawerProps) {
         rightPanel,
       },
 
-      // 2. Tab Tài chính (Settlements & Cashflow)
+      // 2. Tab Chi tiết theo NCC/KH (đối tượng, HHDV, biến động & phân tích)
       {
-        key: "financials",
-        label: t("tabFinancials", "Tài chính"),
-        icon: <Wallet className="w-3.5 h-3.5" />,
-        badgeCount:
-          (detailInvoice.voucherNetOffs?.length || 0) +
-          (form?.pendingDocumentChanges?.filter((p) => p.type === "BANK")
-            ?.length || 0),
+        key: "invoice_partner",
+        label: isDirectionIn
+          ? t("tabSupplierDetails", "Chi tiết theo Nhà cung cấp")
+          : t("tabCustomerDetails", "Chi tiết theo Khách hàng"),
+        icon: <Users className="w-3.5 h-3.5" />,
         content: (
-          <ErpInvoiceSettlementTab
-            invoice={detailInvoice}
-            form={form}
-            editMode={editMode}
-            fieldSet={fieldSet}
+          <ErpInvoicePartnerSection
+            detailInvoice={detailInvoice}
             direction={direction}
-            onRefresh={onSyncDetail}
-            onStartEdit={startEdit}
+            defaultPartnerSubTab={partnerDefaultSubTab}
+            form={form}
           />
         ),
+        rightPanel,
+      },
+
+      // 3. Tab Chứng từ & Tài chính: sơ đồ liên kết; ghép nối qua dropdown mở drawer chọn
+      {
+        key: "linked_docs",
+        label: t("tabLinkedFinance", "Chứng từ & Tài chính"),
+        icon: <Link2 className="w-3.5 h-3.5" />,
+        badgeCount: linkedCount + financialsBadgeCount,
         rightPanel: (
           <ErpInvoiceSettlementRightPanel
             invoice={detailInvoice}
@@ -174,15 +182,6 @@ export function ErpInvoiceDetailDrawer(props: ErpInvoiceDetailDrawerProps) {
             onStartEdit={startEdit}
           />
         ),
-      },
-
-      // 3. Tab Mạng lưới chứng từ liên kết (Canvas Graph Traceability - Full Width)
-      {
-        key: "linked_docs",
-        label: t("tabLinkedDocs", "Chứng từ liên kết"),
-        icon: <Link2 className="w-3.5 h-3.5" />,
-        badgeCount: linkedCount,
-        hideRightPanel: true,
         content: (
           <DrawerDocumentTraceability
             rootId={detailInvoice.id}
@@ -464,7 +463,8 @@ export function ErpInvoiceDetailDrawer(props: ErpInvoiceDetailDrawerProps) {
     handleFetchGraph,
     rightPanel,
     partnerViewMode,
-    setSubTabKey,
+    partnerDefaultSubTab,
+    isDirectionIn,
     setShowNetOffModal,
     setShowPoModal,
     setShowSoModal,
@@ -503,7 +503,9 @@ export function ErpInvoiceDetailDrawer(props: ErpInvoiceDetailDrawerProps) {
         footerLeft={footerLeft}
         tabs={resolvedDrawerTabs}
         defaultTabKey={defaultTabKey}
-        activeTabKey={activeTabKey}
+        activeTabKey={
+          activeTabKey === "financials" ? "invoice_details" : activeTabKey
+        }
         onTabChange={onTabChange}
         leftPanel={!resolvedDrawerTabs ? children : undefined}
         rightPanel={!resolvedDrawerTabs ? rightPanel : undefined}

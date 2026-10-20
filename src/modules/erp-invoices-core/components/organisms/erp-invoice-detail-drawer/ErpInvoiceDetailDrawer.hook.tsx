@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useState, useCallback, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { RefreshCw, FileSpreadsheet, ChevronDown } from "lucide-react";
 import toast from "react-hot-toast";
@@ -6,6 +6,7 @@ import { erpInvoicesCoreApi } from "@/modules/erp-invoices-core/api/erpInvoicesC
 import type { ActionDropdownItem } from "@/shared/components/ActionDropdown";
 import { ActionDropdown } from "@/shared/components/ActionDropdown";
 import type { ErpInvoiceDetailDrawerProps } from "./ErpInvoiceDetailDrawer.type";
+import type { PartnerSubTabMode } from "../erp-invoice-partner-tab/ErpInvoicePartnerTabNav";
 
 export function useErpInvoiceDetailDrawer(props: ErpInvoiceDetailDrawerProps) {
   const {
@@ -19,6 +20,10 @@ export function useErpInvoiceDetailDrawer(props: ErpInvoiceDetailDrawerProps) {
     fieldSet,
     direction,
     editMode,
+    open,
+    activeTabKey,
+    onTabChange,
+    partnerViewMode,
   } = props;
 
   const { t } = useTranslation("erpInvoices");
@@ -26,9 +31,35 @@ export function useErpInvoiceDetailDrawer(props: ErpInvoiceDetailDrawerProps) {
   const [showPoModal, setShowPoModal] = useState(false);
   const [showSoModal, setShowSoModal] = useState(false);
   const [showGarageCaseModal, setShowGarageCaseModal] = useState(false);
-  const [subTabKey, setSubTabKey] = useState<
-    "details" | "invoices" | "lines" | "analytics" | "attachments"
-  >("details");
+
+  const isUrlLinesTab = useMemo(() => {
+    if (typeof window === "undefined") return false;
+    const s = window.location.search;
+    return (
+      s.includes("tab=in-lines") ||
+      s.includes("tab=out-lines") ||
+      s.includes("view=lines")
+    );
+  }, []);
+
+  const opensPartnerTab =
+    (partnerViewMode !== undefined && partnerViewMode !== "details") ||
+    isUrlLinesTab;
+  const partnerDefaultSubTab: PartnerSubTabMode =
+    partnerViewMode === "lines" || isUrlLinesTab ? "lines" : "invoices";
+
+  // Deep link "Đối soát dòng tiền" (activeTabKey="financials") → mở thẳng drawer Sao kê
+  useEffect(() => {
+    if (activeTabKey !== "financials") return;
+    setShowNetOffModal(true);
+    onTabChange?.("linked_docs");
+  }, [activeTabKey]);
+
+  // Deep link danh sách HHDV/đối tượng → main tab "Chi tiết theo NCC/KH" khi mở drawer
+  useEffect(() => {
+    if (!open || !opensPartnerTab) return;
+    onTabChange?.("invoice_partner");
+  }, [open, opensPartnerTab]);
 
   const handleFetchGraph = useCallback(
     (id: string) => erpInvoicesCoreApi.getTraceabilityGraph(id),
@@ -242,8 +273,7 @@ export function useErpInvoiceDetailDrawer(props: ErpInvoiceDetailDrawerProps) {
     setShowSoModal,
     showGarageCaseModal,
     setShowGarageCaseModal,
-    subTabKey,
-    setSubTabKey,
+    partnerDefaultSubTab,
     handleFetchGraph,
     handleSelectBankNetOff,
     handleSelectPo,

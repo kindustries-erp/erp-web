@@ -14,6 +14,10 @@ import {
   type GarageCasesTableQuery,
 } from "@/modules/garage/export/garageExportScopes";
 import { useGarageExportLabels } from "@/modules/garage/export/useGarageExportLabels";
+import {
+  loadSavedGarageCasesExportColumns,
+  saveGarageCasesExportColumns,
+} from "@/modules/garage/export/garageCasesExportColumns";
 import { useGarageCaseExportOptions } from "./useGarageCaseExportOptions";
 
 export interface UseGarageCaseExportLogicOptions {
@@ -64,6 +68,14 @@ export function useGarageCaseExportLogic({
   const [selectedClassification, setSelectedClassification] =
     useState<string>("");
   const [selectedStatus, setSelectedStatus] = useState<string>("completed");
+  const [selectedColumns, setSelectedColumnsState] = useState<string[]>(
+    loadSavedGarageCasesExportColumns,
+  );
+
+  const setSelectedColumns = (columns: string[]) => {
+    setSelectedColumnsState(columns);
+    saveGarageCasesExportColumns(columns);
+  };
 
   const exporter = useBackgroundExport<GarageCasesExportPayload>({
     scope: garageCasesExportScope,
@@ -87,6 +99,7 @@ export function useGarageCaseExportLogic({
     const branchId = selectedBranchId || undefined;
 
     if (exportMode === "by-current-filter") {
+      // Bảng đang xem quyết định chi nhánh; không lấy từ state cũ của drawer.
       await exporter.start(
         {
           mode: "by-current-filter",
@@ -95,8 +108,9 @@ export function useGarageCaseExportLogic({
           q: tableQuery?.q,
           sorts: tableQuery?.sorts,
           filtersStr: tableQuery?.filtersStr,
+          selectedColumns,
         },
-        branchHeaders(branchId),
+        branchHeaders(initialBranchId || undefined),
       );
       return;
     }
@@ -119,6 +133,7 @@ export function useGarageCaseExportLogic({
         date_type: dateType,
         classification: selectedClassification || undefined,
         status: selectedStatus,
+        selectedColumns,
       },
       branchHeaders(branchId),
     );
@@ -139,6 +154,8 @@ export function useGarageCaseExportLogic({
     setSelectedClassification,
     selectedStatus,
     setSelectedStatus,
+    selectedColumns,
+    setSelectedColumns,
     branchOptions,
     classificationOptions,
     dateTypeOptions,

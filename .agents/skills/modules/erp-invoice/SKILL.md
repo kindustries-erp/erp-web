@@ -115,9 +115,9 @@ src/modules/erp-invoices-core/
 │       │   └── context/                       # Context chia sẻ state chọn giao dịch & số dư
 │       ├── erp-invoice-unified-settlement-table/ # Bảng hợp nhất giao dịch ngân hàng & sổ quỹ
 │       ├── erp-invoice-partner-tab/           # Tab Đối tác & Chi tiết hóa đơn (Chuẩn Atomic 5 tầng < 180 LoC)
-│       │   ├── ErpInvoicePartnerTab.tsx       # Root Organism (< 150 LoC) - Quản lý 4 subtabs, luôn hiển thị Sub-tab 1
-│       │   ├── ErpInvoicePartnerTab.hook.ts   # Custom hook (< 150 LoC) - State sub-tabs, partner info, preview
-│       │   ├── ErpInvoicePartnerTabNav.tsx    # Molecule điều hướng subtabs & view mode toggles (< 150 LoC)
+│       │   ├── ErpInvoicePartnerTab.tsx       # Root Organism - 2 tab chính, tab đối tác chứa 3 tab con
+│       │   ├── ErpInvoicePartnerTab.hook.ts   # Custom hook - state tab chính/tab con, partner info, preview
+│       │   ├── ErpInvoicePartnerTabNav.tsx    # Molecule điều hướng 2 tầng tab & view mode toggles
 │       │   ├── ErpInvoicePartnerTabEmpty.tsx  # Molecule trạng thái rỗng khi đối tác chưa có MST/Tên (< 50 LoC)
 │       │   ├── ErpInvoicePartnerRightPanel.tsx# Section hồ sơ đối tác ở cột phải (< 150 LoC)
 │       │   └── ErpInvoicePartnerLinesSection/ # Sub-organism cho Sub-tab 3 (Chi tiết HHDV đối tác, < 180 LoC/file)
@@ -215,8 +215,10 @@ src/modules/erp-invoices-core/
 - **Các phân khu & Tabs chính**:
   1. `erp-invoice-general-info`: Số HĐ, ký hiệu, ngày lập, chi nhánh, thông tin người bán, thông tin người mua (MST, tên, địa chỉ, CCCD).
   2. `erp-invoice-detail-lines-table`: Bảng dòng mặt hàng động (Tên hàng, mã, ĐVT, số lượng, đơn giá, tiền trước thuế, thuế suất %, tiền thuế, chiết khấu, thành tiền).
-  3. `erp-invoice-settlement-tab` (Tab **Tài chính**): Tích hợp trực tiếp đối soát dòng tiền vào Drawer chi tiết, gồm Sub-Tabs (`1. Sao kê` / `2. Sổ quỹ`), Quick View Presets (`Tất cả`, `Gợi ý khớp`, `Đang chọn`, `Đã cấn trừ`), Bảng hợp nhất `erp-invoice-unified-settlement-table` fit height và Right Panel tính toán công nợ/tiến độ thanh toán.
-  4. `DrawerDocumentTraceability` (Tab **Chứng từ liên kết**): Mạng lưới liên kết đa tầng PO, SO, Bank Txn, Garage Cases.
+  3. `erp-invoice-settlement-tab` (Drawer **Sao kê / Sổ quỹ** mở từ dropdown "Ghép nối chứng từ" → Bank Txn, hoặc action "Đối soát dòng tiền" qua `activeTabKey="financials"`): Tích hợp đối soát dòng tiền, gồm Sub-Tabs (`1. Sao kê` / `2. Sổ quỹ`), Quick View Presets (`Tất cả`, `Gợi ý khớp`, `Đang chọn`, `Đã cấn trừ`), Bảng hợp nhất `erp-invoice-unified-settlement-table`; Right Panel công nợ/tiến độ thanh toán luôn hiện ở main tab Chứng từ & Tài chính. Drawer Sao kê (`VoucherNetoffSelectionModal`) hiển thị gợi ý khớp dạng dải pill oval cuộn ngang ngay trên bảng (`suggestion-pill-strip/`: `SuggestionPillStrip` → `SuggestionPill` + popover hover qua `useHoverIntent`, nội dung `SuggestionPopoverContent`). Pill chỉ đọc `filteredSuggestions`/`selectedIds`, không đọc state bảng nên không ảnh hưởng filter/phân trang. Hover (~250ms) hiện độ tin cậy, lý do (`reasons`) và nội dung sao kê đầy đủ; bấm pill để chọn. Banner "đủ 100%" đặt đầu danh sách; cột phải `VoucherNetoffRightPanel` chỉ còn chiều đối soát, tiến độ và các khối đã cấn trừ. Không còn ghim dòng gợi ý trong bảng.
+  4. `DrawerDocumentTraceability` (main tab **Chứng từ & Tài chính**): Sơ đồ liên kết đa tầng PO, SO, Bank Txn, Garage Cases. Dropdown "Ghép nối chứng từ" chọn loại nào thì mở drawer chọn tương ứng (Bank → Sao kê, PO, SO, Garage Case).
+  - Main tabs của drawer (thứ tự): `invoice_details` (**Chi tiết**: nội dung HĐ + toggle Xem trước/PDF) → `invoice_partner` (**Chi tiết theo NCC/KH**, `ErpInvoicePartnerSection`: sub-pill `invoices | lines | analytics`) → `linked_docs` (**Chứng từ & Tài chính**: sơ đồ liên kết, right panel công nợ) → `accounting` → `history`.
+  - Deep link: `activeTabKey="financials"` (action "Đối soát dòng tiền") mở main Chứng từ & Tài chính và drawer Sao kê; `partnerViewMode` `lines`/`invoices` hoặc URL `tab=in-lines|out-lines|view=lines` mở main NCC/KH (xử lý trong drawer hook).
   5. `erp-invoice-pdf-upload`: Danh sách các file PDF đính kèm, hỗ trợ xem trước inline qua PDF viewer (`erp-invoice-pdf-preview`) hoặc tải xuống.
   6. `erp-invoice-default-attributes-section`: Tích hợp 2 drawer sections: `Thuộc tính chung` (Global) và `Danh mục & Thuộc tính` (Category) từ Module Config.
 
