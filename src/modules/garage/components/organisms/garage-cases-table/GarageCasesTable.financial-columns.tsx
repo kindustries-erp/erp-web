@@ -131,7 +131,9 @@ export function buildFinancialColumns(
 
   const progressCols = buildProgressColumns(ctx, makeHdr);
   const isOverview =
-    !ctx.activeColumnPresetKey || ctx.activeColumnPresetKey === "overview";
+    !ctx.activeColumnPresetKey ||
+    ctx.activeColumnPresetKey === "overview" ||
+    ctx.activeColumnPresetKey === "all_columns";
   return isOverview
     ? [...revenueProfitCols, ...progressCols]
     : [...progressCols, ...revenueProfitCols];

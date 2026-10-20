@@ -117,11 +117,13 @@ src/modules/garage/
 - **Cột Trạng thái & Cột Bảo hiểm**: Căn giữa (`text-center`). Cột Bảo hiểm chỉ hiển thị icon khiên `ShieldCheck` neutral cho xe có bảo hiểm, `—` cho xe không bảo hiểm.
 - **Các cột Mã, Tên, Biển số xe**: Căn trái (`text-left`).
 
-### 3.3. Ẩn Mặc Định Cột (Default Column Visibility)
-- `branchName`: `false`.
-- `createdAt`: `false`.
-- `updatedAt`: `false`.
-- `dataAsOf`: `false`.
+### 3.3. Cấu hình Chế Độ Xem & Ẩn/Hiện Cột (View Presets & Column Visibility)
+- **Tổng quan (`overview`)**: Hiển thị mặc định 13 cột nghiệp vụ cốt lõi:
+  - `caseDate` (Ngày tiếp nhận), `ngayHoanThanhCongViec` (Ngày kết thúc), `caseCode` (Số chứng từ), `customer` (Khách hàng), `statusName` (Trạng thái), `classification` (Phân loại ERP), `hasInvoice` (VAT), `doanhThu` (DT), `chiPhi` (CP), `loiNhuan` (Lợi nhuận), `margin` (Biên LN), `collectionProgress` (Tổng phải thu), `costProgress` (Tổng phải trả).
+  - Ẩn mặc định các cột chi tiết công nợ lẻ: `exclusionRules`, `phaiThuKhachHang`, `phaiThuBaoHiem`, `tienConPhaiThanhToan`, `tienConPhaiChi`, `branchName`, `createdAt`, `updatedAt`, `dataAsOf`.
+- **Đối soát (`audit`)**: Bật `collectionProgress: true` (Tổng phải thu), đặt ngay bên trái cột `tienConPhaiThanhToan` (Còn phải thu).
+- **Tất cả cột (`all_columns`)**: Hiển thị toàn bộ 22 cột dữ liệu phiếu dịch vụ.
+- **Bảo vệ Cột Ngày (`DateRangeColumnSlot` & `TableColumnHeaderFilter`)**: `TableColumnHeaderFilter` có cơ chế `shouldFetchOptions = Boolean(columnKey) && !hideFilter && !hideFilterList`. Khi cột ngày truyền `hideFilter: true`, `useInfiniteQuery` hoàn toàn bị vô hiệu hóa, ngăn chặn triệt để việc tự ý gọi API Kho `/api/v1/inventory/stock/column-options` gây lỗi 403 Forbidden đối với normal user.
 
 ---
 

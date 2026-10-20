@@ -182,9 +182,9 @@ describe("GarageCasesTable Organism", () => {
       "chiPhi",
       "loiNhuan",
       "margin",
-      "collectionProgress",
       "phaiThuKhachHang",
       "phaiThuBaoHiem",
+      "collectionProgress",
       "tienConPhaiThanhToan",
       "costProgress",
       "tienConPhaiChi",
@@ -206,6 +206,11 @@ describe("GarageCasesTable Organism", () => {
     expect(hasInvoiceIdx).toBe(doanhThuIdx - 1);
     expect(doanhThuIdx).toBeLessThan(phaiThuKhIdx);
     expect(doanhThuIdx).toBeLessThan(phaiThuBhIdx);
+
+    // collectionProgress is placed directly before tienConPhaiThanhToan
+    const collectionProgressIdx = keys.indexOf("collectionProgress");
+    const tienConPhaiThanhToanIdx = keys.indexOf("tienConPhaiThanhToan");
+    expect(collectionProgressIdx).toBe(tienConPhaiThanhToanIdx - 1);
   });
 
   it("buildGarageCasesColumns places receivables before revenue/profit columns when in audit preset", () => {
@@ -237,6 +242,39 @@ describe("GarageCasesTable Organism", () => {
     expect(hasInvoiceIdx).toBe(doanhThuIdx - 1);
     expect(phaiThuKhIdx).toBeLessThan(doanhThuIdx);
     expect(phaiThuBhIdx).toBeLessThan(doanhThuIdx);
+
+    // collectionProgress is placed directly before tienConPhaiThanhToan
+    const collectionProgressIdx = keys.indexOf("collectionProgress");
+    const tienConPhaiThanhToanIdx = keys.indexOf("tienConPhaiThanhToan");
+    expect(collectionProgressIdx).toBe(tienConPhaiThanhToanIdx - 1);
+  });
+
+  it("buildGarageCasesColumns supports all_columns preset with revenue before receivables", () => {
+    const ctx: any = {
+      t: (k: string, d?: string) => d || k,
+      tableState: { sorts: [], columnSearch: {}, columnFilters: {} },
+      dateRanges: {},
+      onDateRangeChange: vi.fn(),
+      onSortChange: vi.fn(),
+      onSearchChange: vi.fn(),
+      onFilterChange: vi.fn(),
+      fetchCaseColumnOptions: vi.fn(),
+      onOpenDetail: vi.fn(),
+      onOpenFinancials: vi.fn(),
+      onOpenConfig: vi.fn(),
+      canUpdateGarage: true,
+      branches: [{ externalId: "b1", name: "Chi nhánh 1" }],
+      activeColumnPresetKey: "all_columns",
+    };
+    const cols = buildGarageCasesColumns(ctx);
+    expect(cols.length).toBe(23);
+    const keys = cols.map((c) => c.key);
+    const collectionProgressIdx = keys.indexOf("collectionProgress");
+    const tienConPhaiThanhToanIdx = keys.indexOf("tienConPhaiThanhToan");
+    expect(collectionProgressIdx).toBe(tienConPhaiThanhToanIdx - 1);
+    const doanhThuIdx = keys.indexOf("doanhThu");
+    const phaiThuKhIdx = keys.indexOf("phaiThuKhachHang");
+    expect(doanhThuIdx).toBeLessThan(phaiThuKhIdx);
   });
 
   it("buildCasesSummaryRow aggregates totals correctly with backend fields and customer label", () => {

@@ -100,7 +100,7 @@ export const garageVi = {
     dashboard: "Tổng quan",
     overview: "Tổng quan",
     cases: "Hoạt động garage",
-    services: "Chi tiết phiếu DV",
+    services: "Bảng kê phụ tùng & công",
   },
   dashboard: {
     exportExcel: "Xuất Excel",
@@ -225,7 +225,7 @@ export const garageVi = {
     viewMode: "Chế độ xem",
     viewModeOverview: "Tổng quan",
     viewModeAudit: "Đối soát",
-    viewModeAllColumns: "Tổng quan",
+    viewModeAllColumns: "Tất cả cột",
     viewModeFinancialProgress: "Đối soát",
     viewModeEdit: "Chỉnh sửa view",
     viewModeDelete: "Xóa view",

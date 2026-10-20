@@ -100,7 +100,7 @@ export const garageEn = {
     dashboard: "Overview",
     overview: "Overview",
     cases: "Garage Activities",
-    services: "Service Lines Detail",
+    services: "Parts & Labor Statement",
   },
   dashboard: {
     exportExcel: "Export Excel",
@@ -224,7 +224,7 @@ export const garageEn = {
     viewMode: "View Mode",
     viewModeOverview: "Overview",
     viewModeAudit: "Audit",
-    viewModeAllColumns: "Overview",
+    viewModeAllColumns: "All Columns",
     viewModeFinancialProgress: "Audit",
     viewModeEdit: "Edit View",
     viewModeDelete: "Delete View",
