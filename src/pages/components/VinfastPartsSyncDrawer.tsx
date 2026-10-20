@@ -12,6 +12,8 @@ import { RefreshCw, CheckCircle2 } from "lucide-react";
 import { useVinfastPartsSyncProgressStore } from "@/shared/stores/useVinfastPartsSyncProgressStore";
 import { Checkbox } from "@/shared/components/ui/checkbox";
 import { Combobox } from "@/shared/components/Combobox";
+import { useVinfastPartsSyncStatus } from "../hooks/useVinfastPartsSyncStatus";
+import { reconcileSyncStatus } from "../hooks/vinfastSyncStatus";
 
 interface SyncProgressEvent {
   message: string;
@@ -58,6 +60,19 @@ export function VinfastPartsSyncDrawer({
 
   const token = useAuthStore((s) => s.accessToken);
   const controllerRef = useRef<AbortController | null>(null);
+
+  // Trạng thái lấy định kỳ từ API: không phụ thuộc SSE (luồng sự kiện có thể bị proxy giữ lại)
+  const statusQuery = useVinfastPartsSyncStatus(open);
+  const lastLog = logs[logs.length - 1];
+  useEffect(() => {
+    const status = statusQuery.data;
+    if (!status) return;
+    const update = reconcileSyncStatus(status, isSyncing, lastLog);
+    if (update.isSyncing !== isSyncing) setSyncing(update.isSyncing);
+    if (update.progress !== undefined) setProgress(update.progress);
+    if (update.logMessage) addLog(update.logMessage);
+    // Chỉ phản ứng khi có dữ liệu trạng thái mới từ API
+  }, [statusQuery.data]);
 
   useEffect(() => {
     if (isSyncing && open && !sseConnected && token) {
@@ -149,6 +164,12 @@ export function VinfastPartsSyncDrawer({
         clearDb: clearDb,
       });
     } catch (err: any) {
+      if (err?.response?.status === 409) {
+        // Đã có lượt đồng bộ đang chạy: theo dõi tiến trình của lượt đó
+        setSyncing(true);
+        addLog("Đang có lượt đồng bộ chạy, theo dõi tiến trình...");
+        return;
+      }
       setSyncing(false);
       addLog(`Lỗi: ${err.message || "Không thể khởi tạo đồng bộ"}`);
     }
