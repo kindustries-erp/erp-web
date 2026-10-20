@@ -184,6 +184,7 @@ export function GarageCases({
         onSyncCases={() => headerActions.openSync("cases")}
         onSyncGrossProfit={() => headerActions.openSync("gross-profit")}
         onExportExcel={headerActions.openExport}
+        onOpenWorkflow={headerActions.openWorkflow}
         onOpenDetail={(code) => {
           setDrawerEditMode(false);
           setDrawerInitialTab("quote_details");

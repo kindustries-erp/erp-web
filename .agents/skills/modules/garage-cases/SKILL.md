@@ -219,3 +219,11 @@ Cùng cơ chế với "Xuất Excel hóa đơn": tạo job nền → tiến đ�
 ## Đổi nhãn điều hướng (cập nhật 2026-10-17)
 - Nhãn UI của màn hình `garage-cases` đổi từ "Phiếu dịch vụ" thành **"Hoạt động garage"** (EN: "Garage Activities") ở sidebar (`nav.items.garageCases`), breadcrumb, tab `tabs.cases`, tiêu đề `cases.title`, nhãn tổng hợp `cases.summary.items`, command palette. Route `garage-cases` và key i18n giữ nguyên. Chuỗi nghiệp vụ như "Phiếu dịch vụ gần đây", "Phiếu dịch vụ Garage (RO)" giữ nguyên.
 - Thứ tự mục sidebar GARAGE không đổi: Thu chi garage → Hoạt động garage → Công nợ garage → Chi phí vận hành Garage.
+
+## Sơ đồ quy trình Garage Hub & Chuẩn hóa UI Atomic (cập nhật 2026-10-20)
+- **Action Menu Xem sơ đồ quy trình**: Dropdown nút chính "Đồng bộ" tại tab Hoạt động garage (`garage-cases?tab=cases`) kết nối callback `onOpenWorkflow` xuyên suốt từ `GarageCases` (Page L5 qua `useGarageHeaderActions().openWorkflow`) xuống `GarageCasesTable` (Organism L3) và `buildGarageCaseCreateActions` (`GarageCasesTable.actions.tsx`), kích hoạt mở `GarageWorkflowDrawer` hiển thị sơ đồ quy trình toàn diện.
+- **Chuẩn hóa UI Atomic (< 180 LoC)**:
+  - `GarageCasesTable.tsx` được tinh gọn từ 211 LoC xuống 170 LoC (< 180 LoC).
+  - Tách sub-component phân tầng `GarageCaseViewTabs` (`GarageCasesTable.view-tabs.tsx`, 33 LoC) quản lý cụm view presets combobox & status tabs.
+  - Tách hàm tính toán nhãn tổng hợp `resolveTotalLabelCol` vào `GarageCasesTable.summary.tsx`.
+  - Tuân thủ No Blue Mandate: loại bỏ hoàn toàn các class `blue-*` khỏi bảng và summary row.

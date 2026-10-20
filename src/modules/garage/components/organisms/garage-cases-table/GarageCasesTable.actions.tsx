@@ -11,6 +11,7 @@ export function buildGarageCaseCreateActions(
     {
       canSyncGarage: props.canSyncGarage,
       onExportExcel: () => props.onExportExcel?.({}),
+      onOpenWorkflow: props.onOpenWorkflow,
       onSyncGrossProfit: props.onSyncGrossProfit,
     },
     t,

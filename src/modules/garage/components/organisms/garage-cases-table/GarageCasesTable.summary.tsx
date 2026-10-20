@@ -15,6 +15,21 @@ export function getGarageCaseRowClassName(item: any) {
   return undefined;
 }
 
+export function resolveTotalLabelCol(columnViewPresetsHook?: any): string {
+  const isHidden = columnViewPresetsHook?.isColumnHidden;
+  const colVis = columnViewPresetsHook?.activePreset?.columnVisibility;
+  const isCustVisible =
+    typeof isHidden === "function"
+      ? !isHidden("customer")
+      : colVis?.customer !== false;
+  if (isCustVisible) return "customer";
+  const isCodeVisible =
+    typeof isHidden === "function"
+      ? !isHidden("caseCode")
+      : colVis?.caseCode !== false;
+  return isCodeVisible ? "caseCode" : "customer";
+}
+
 export interface BuildSummaryRowParams {
   visibleCases: any[];
   profitCases: any[];
@@ -24,6 +39,7 @@ export interface BuildSummaryRowParams {
   totalCases: number;
   isNgayHoanThanhVisible?: boolean;
   totalLabelCol?: string;
+  columnViewPresetsHook?: any;
   t: (key: string, def?: string) => string;
 }
 
@@ -36,6 +52,7 @@ export function buildCasesSummaryRow({
   totalCases,
   isNgayHoanThanhVisible,
   totalLabelCol: customLabelCol,
+  columnViewPresetsHook,
   t,
 }: BuildSummaryRowParams) {
   const profitMap = new Map<string, any>();
@@ -93,7 +110,11 @@ export function buildCasesSummaryRow({
 
   const totalLabelCol =
     customLabelCol ||
-    (isNgayHoanThanhVisible ? "ngayHoanThanhCongViec" : "customer");
+    (columnViewPresetsHook
+      ? resolveTotalLabelCol(columnViewPresetsHook)
+      : isNgayHoanThanhVisible
+        ? "ngayHoanThanhCongViec"
+        : "customer");
   const totalPages = Math.ceil(totalCases / pageSize) || 1;
   const isP1 = page === 1;
 
@@ -255,7 +276,7 @@ export function buildCasesSummaryRow({
       totalPhaiThuBH,
       cumPhaiThuBH,
       totals?.grandTotalPhaiThuBaoHiem,
-      "font-bold text-blue-600 dark:text-blue-400",
+      "font-bold text-sky-600 dark:text-sky-400",
     ),
     costProgress: renderAmount(
       t("cases.columns.costProgress", "Tổng phải trả"),

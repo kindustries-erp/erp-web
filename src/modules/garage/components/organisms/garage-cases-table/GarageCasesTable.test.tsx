@@ -8,7 +8,10 @@ import {
   getGarageCaseRowClassName,
 } from "./GarageCasesTable.summary";
 import { buildGarageCasesColumns } from "./GarageCasesTable.columns";
-import { buildGarageCaseRowActions } from "./GarageCasesTable.actions";
+import {
+  buildGarageCaseCreateActions,
+  buildGarageCaseRowActions,
+} from "./GarageCasesTable.actions";
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
@@ -590,5 +593,29 @@ describe("GarageCasesTable Organism", () => {
       expect(headerProps.hideFooter).toBe(true);
       expect(headerProps.dateRangeSlot).toBeDefined();
     });
+  });
+
+  it("buildGarageCaseCreateActions includes onOpenWorkflow and invokes callback", () => {
+    const onOpenWorkflow = vi.fn();
+    const props: any = {
+      canSyncGarage: true,
+      onExportExcel: vi.fn(),
+      onOpenWorkflow,
+      onSyncGrossProfit: vi.fn(),
+    };
+    const actions = buildGarageCaseCreateActions(
+      props,
+      (k: string, d?: string) => d || k,
+    );
+    const exportGroup = actions.find(
+      (g: any) => g.groupLabel === "Báo cáo & Xuất file",
+    ) as any;
+    expect(exportGroup).toBeDefined();
+    const workflowAction = exportGroup?.items.find(
+      (item: any) => item.label === "Xem sơ đồ quy trình",
+    );
+    expect(workflowAction).toBeDefined();
+    workflowAction?.onClick();
+    expect(onOpenWorkflow).toHaveBeenCalledTimes(1);
   });
 });
