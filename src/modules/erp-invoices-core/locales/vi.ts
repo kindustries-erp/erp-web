@@ -35,9 +35,9 @@ export const erpInvoicesVi = {
   // Tabs
   dashboard: "Tổng quan",
   inbound: "Hóa đơn mua vào",
-  inboundLines: "Chi tiết mua vào",
+  inboundLines: "Bảng kê HHDV mua vào",
   outbound: "Hóa đơn bán ra",
-  outboundLines: "Chi tiết bán ra",
+  outboundLines: "Bảng kê HHDV bán ra",
   draftInvoices: "Hóa đơn nháp",
   tabAll: "Tất cả",
   tabNew: "Mới",
@@ -411,10 +411,10 @@ export const erpInvoicesVi = {
   "tabs.allLines": "Tất cả dòng",
   "tabs.normalLines": "Hàng hóa",
   "tabs.discountLines": "Chiết khấu",
-  inboundLinesTitle: "Chi tiết dòng hóa đơn đầu vào",
+  inboundLinesTitle: "Bảng kê HHDV mua vào",
   inboundLinesDesc:
     "Theo dõi và đối soát từng dòng diễn giải, mặt hàng, số lượng và thuế suất của hóa đơn đầu vào",
-  outboundLinesTitle: "Chi tiết dòng hóa đơn đầu ra",
+  outboundLinesTitle: "Bảng kê HHDV bán ra",
   outboundLinesDesc:
     "Theo dõi và đối soát từng dòng diễn giải, mặt hàng, số lượng và thuế suất của hóa đơn đầu ra",
   "columns.invoiceNo": "Số hóa đơn",

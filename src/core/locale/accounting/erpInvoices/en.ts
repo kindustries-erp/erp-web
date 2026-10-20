@@ -40,9 +40,9 @@ export const erpInvoicesEn = {
   // View Tabs
   dashboard: "Overview",
   inbound: "Inbound Invoices",
-  inboundLines: "Inbound Item Details",
+  inboundLines: "Inbound Goods & Services Schedule",
   outbound: "Outbound Invoices",
-  outboundLines: "Outbound Item Details",
+  outboundLines: "Outbound Goods & Services Schedule",
   draftInvoices: "Draft Invoices",
   tabAll: "All",
   tabNew: "New",
@@ -233,12 +233,12 @@ export const erpInvoicesEn = {
   "tabs.allLines": "All Lines",
   "tabs.normalLines": "Items",
   "tabs.discountLines": "Discounts",
-  inboundLinesTitle: "Inbound Invoice Line Items",
+  inboundLinesTitle: "Inbound Goods & Services Schedule",
   inboundLinesDesc:
-    "Track and reconcile individual line items, descriptions, quantities and VAT rates of inbound invoices",
-  outboundLinesTitle: "Outbound Invoice Line Items",
+    "Track and reconcile individual line items, descriptions, quantities and VAT rates of inbound goods and services",
+  outboundLinesTitle: "Outbound Goods & Services Schedule",
   outboundLinesDesc:
-    "Track and reconcile individual line items, descriptions, quantities and VAT rates of outbound invoices",
+    "Track and reconcile individual line items, descriptions, quantities and VAT rates of outbound goods and services",
   "columns.invoiceNo": "Invoice No",
   "columns.serialNo": "Serial",
   "columns.invoiceDate": "Invoice Date",
