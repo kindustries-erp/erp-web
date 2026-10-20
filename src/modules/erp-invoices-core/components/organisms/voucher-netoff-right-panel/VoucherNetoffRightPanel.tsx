@@ -8,7 +8,6 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { DrawerSection } from "@/shared/components/DrawerModal";
-import { Button } from "@/shared/components/ui/Button";
 import { money, formatGMT7 } from "@/shared/utils/format";
 import { cn } from "@/shared/utils";
 import { type VoucherNetoffRightPanelProps } from "./VoucherNetoffRightPanel.type";
